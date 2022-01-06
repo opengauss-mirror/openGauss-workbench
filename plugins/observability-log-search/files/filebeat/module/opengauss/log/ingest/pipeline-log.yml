@@ -1,0 +1,7 @@
+description: Pipeline for parsing PostgreSQL logs.
+processors:
+- grok:
+    field: raw_message
+    ignore_missing: true
+    patterns:
+    - '^%{GREEDYDATA:log_pre}%{WORD:log_level}(?m):  (?<log_msg>.*|/s)'

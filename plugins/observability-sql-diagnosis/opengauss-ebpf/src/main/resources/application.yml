@@ -1,0 +1,31 @@
+server:
+  port: 2321
+urlconfig:
+  bccUrl: /usr/share/bcc/tools
+  outputUrl: /opt/software/ebpf/output/
+  fgUrl: /opt/software/FlameGraph
+  httpUrl: http://39.108.219.254:9494/plugins/observability-sql-diagnosis/sqlDiagnosis/api/open/v1/diagnosisTasks/result
+
+ebpfconfig:
+  profile: ./profile -af -L
+  offcputime: ./offcputime -df -t
+  runqlen: ./runqlen -T 1
+  runqlat: ./runqlat -LT 1
+  memleak: ./memleak -p
+  stackcount: ./stackcount -p
+  cachestat: ./cachestat -T
+  cachetop: ./cachetop 1
+  ext4slower: ./ext4slower 1
+  ext4dist: ./ext4dist 1
+  xfsdist: ./xfsdist 1
+  xfsslower: ./xfsslower 1
+  biolatency: ./biolatency -DT 1
+  biosnoop: ./biosnoop -Q
+  filetop: ./filetop -Cr 10 -a
+  tcplife: ./tcplife -Tt
+  tcptop: ./tcptop -C 1
+
+osconfig:
+  mpstatP: mpstat -P ALL 1
+  sarq: sqr -q 1
+  pidstat1: pidstat 1

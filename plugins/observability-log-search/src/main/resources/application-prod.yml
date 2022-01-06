@@ -1,0 +1,5 @@
+elasticsearch:
+  # Clusters can be separated by ',' such as 127.0.0.1:9200,127.0.0.2:9200
+  uris: localhost:9200
+  username: elastic
+  password: changeme
