@@ -1,0 +1,18 @@
+spring:
+  autoconfigure:
+    exclude: org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
+
+prometheus:
+  server:
+    url: http://172.16.102.164:9090
+
+elasticsearch:
+  # Clusters can be separated by ',' such as 127.0.0.1:9200,127.0.0.2:9200
+  uris: 119.3.170.242:9200
+  username: elastic
+  password: changeme
+
+test.db:
+  url: jdbc:postgresql://172.16.102.164:15404/postgres?currentSchema=observability;serverTimezone=UTC
+  name: sysadmin
+  password: cnp200@HW

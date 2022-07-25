@@ -1,0 +1,28 @@
+* {
+  margin: 0;
+  padding: 0
+}
+body {
+  font-size: 12px;
+}
+/* HTML5 display-role reset for older browsers */
+article, aside, details, figcaption, figure,
+footer, header, hgroup, menu, nav, section {
+  display: block;
+}
+
+img {
+  border: none;
+}
+
+ul, li{
+  list-style-type: none;
+}
+
+div {
+  box-sizing: border-box;
+}
+
+button, input, optgroup, select, textarea {
+  font-family: inherit;
+}
