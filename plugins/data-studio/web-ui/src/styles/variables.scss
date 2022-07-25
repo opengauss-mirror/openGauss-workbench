@@ -1,0 +1,43 @@
+// base color
+$blue: #324157;
+$light-blue: #3a71a8;
+$red: #c03639;
+$pink: #e65d6e;
+$green: #30b08f;
+$tiffany: #4ab7bd;
+$yellow: #fec171;
+$panGreen: #30b08f;
+
+/* Global css variables */
+$primaryColor: var(--el-color-primary);
+$og-background-color: #fff;
+$og-border-color: #d3d3d3;
+$og-text-color: #d4d4d4;
+
+// sidebar
+$menuText: #bfcbd9;
+$menuActiveText: var(--el-color-primary);
+$subMenuActiveText: #f4f4f5;
+
+$menuBg: #304156;
+$menuHover: #263445;
+
+$subMenuBg: #1f2d3d;
+$subMenuHover: #001528;
+
+$sideBarWidth: 240px;
+
+:export {
+  menuText: $menuText;
+  menuActiveText: $menuActiveText;
+  subMenuActiveText: $subMenuActiveText;
+  menuBg: $menuBg;
+  menuHover: $menuHover;
+  subMenuBg: $subMenuBg;
+  subMenuHover: $subMenuHover;
+  sideBarWidth: $sideBarWidth;
+  primaryColor: $primaryColor;
+  og-background-color: $og-background-color;
+  og-border-color: $og-border-color;
+  og-text-color: $og-text-color;
+}
