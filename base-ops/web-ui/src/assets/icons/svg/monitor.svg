@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="16px" height="16px" viewBox="0 0 16 16" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>监控-未</title>
+    <g id="控件" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="监控-未" stroke="currentColor">
+            <path d="M7.48918971,14 L7.48918971,14 L4,14 C2.8954305,14 2,13.1045695 2,12 L2,4 C2,2.8954305 2.8954305,2 4,2 L12,2 C13.1045695,2 14,2.8954305 14,4 L14,8.41189927 L14,8.41189927" id="路径" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"></path>
+            <polyline id="路径-16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" points="4.12886373 9.5 6.5 7.06068193 8.16567418 8.82880713 11.7652263 5.32924864"></polyline>
+            <path d="M11.45,10 C12.4428135,10 13.342482,10.5976265 14.1851806,11.7024131 C13.3746755,13.4041306 12.48964,14 11.5,14 C10.5069863,14 9.60643604,13.402263 8.76219957,12.2977025 C9.57423757,10.5959842 10.4601548,10 11.45,10 Z" id="椭圆形" stroke="currentColor"></path>
+            <rect id="矩形" fill="currentColor" x="10.7" y="11.2" width="1.5" height="1.5" rx="0.75"></rect>
+        </g>
+    </g>
+</svg>

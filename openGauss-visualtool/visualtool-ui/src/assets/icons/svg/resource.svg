@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="16px" height="16px" viewBox="0 0 16 16" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>资源中心-未</title>
+    <defs>
+        <path d="M5.86873985,6.55555556 L2.14285714,6.55555556 L2.14285714,3 C2.14285714,2.44771525 2.52661307,2 3,2 L13,2 C13.4733869,2 13.8571429,2.44771525 13.8571429,3 L13.8571429,6.55555556 L8,6.55555556" id="path-1"></path>
+    </defs>
+    <g id="控件" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="资源中心-未">
+            <g id="路径" stroke-linecap="round" stroke-linejoin="round" stroke="currentColor">
+                <use xlink:href="#path-1"></use>
+                <use xlink:href="#path-1"></use>
+            </g>
+            <line x1="8" y1="11" x2="8" y2="12.3520136" id="直线" stroke="currentColor" stroke-linecap="square"></line>
+            <rect id="矩形" stroke="currentColor" x="5.5" y="12.5" width="5" height="2" rx="1"></rect>
+            <line x1="5.5" y1="13.5" x2="3.5" y2="13.5" id="直线-3" stroke="currentColor" stroke-linecap="round"></line>
+            <line x1="12.5" y1="13.5" x2="10.5" y2="13.5" id="直线-3备份" stroke="currentColor" stroke-linecap="round"></line>
+            <path d="M13.8571429,6.44 L13.8571429,9.91443061 C13.8571429,10.4667154 13.4733869,10.9144306 13,10.9144306 L3,10.9144306 C2.52661307,10.9144306 2.14285714,10.4667154 2.14285714,9.91443061 L2.14285714,6.44" id="路径" stroke="currentColor"></path>
+            <line x1="9.5" y1="4.4" x2="11.5" y2="4.4" id="直线-2" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"></line>
+            <line x1="9.5" y1="8.6" x2="11.5" y2="8.6" id="直线-2备份" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"></line>
+            <rect id="矩形" fill="currentColor" x="4" y="3.8" width="1.5" height="1.5" rx="0.75"></rect>
+            <rect id="矩形备份" fill="currentColor" x="4" y="7.9" width="1.5" height="1.5" rx="0.75"></rect>
+        </g>
+    </g>
+</svg>

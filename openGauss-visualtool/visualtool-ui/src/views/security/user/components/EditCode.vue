@@ -1,0 +1,94 @@
+<template>
+  <a-modal
+    :title="$t('components.EditCode.5m6nfosuqic0')"
+    v-model:visible="visible"
+    width="500px"
+    title-align="start"
+    modal-class="user-modal"
+  >
+    <a-form ref="formRef" :model="form" auto-label-width>
+      <a-form-item field="password" :label="$t('components.EditCode.5m6nfosus3k0')" :rules="[{
+        required: true,
+        message: $t('components.EditCode.5m6nfosusbo0')
+      }]">
+        <a-input-password v-model="form.password" :placeholder="$t('components.EditCode.5m6nfosusgc0')" maxlength="20" />
+      </a-form-item>
+    </a-form>
+    <template #footer>
+      <div class="modal-footer">
+        <a-button @click="visible = false">{{$t('components.EditCode.5m6nfosuskg0')}}</a-button>
+        <a-button type="primary" :disabled="loading" style="margin-left: 16px;" @click="confirmSubmit">{{$t('components.EditCode.5m6nfosuspc0')}}</a-button>
+      </div>
+    </template>
+  </a-modal>
+</template>
+
+<script setup lang="ts">
+  import { watch, ref, reactive, onMounted } from 'vue'
+  import { Message } from '@arco-design/web-vue'
+  import { FormInstance } from '@arco-design/web-vue/es/form'
+  import { useUserStore } from '@/store'
+  import useUser from '@/hooks/user'
+  import { resetCode } from '@/api/user'
+
+  const props = withDefaults(defineProps<{
+    open: boolean,
+    options?: any
+  }>(), {
+    open: false,
+    options: {}
+  })
+
+  const emits = defineEmits(['update:open'])
+
+  const { logout } = useUser()
+  const userStore = useUserStore()
+  const formRef = ref<FormInstance>()
+  const form = reactive<any>({})
+
+  const visible = ref<boolean>(false)
+  const loading = ref<boolean>(false)
+
+  watch(visible, (v) => {
+    emits('update:open', v)
+  })
+
+  watch(() => props.open, (v) => {
+    if (v) {
+      form['password'] = ''
+    }
+    visible.value = v
+  })
+
+  const confirmSubmit = () => {
+    formRef.value?.validate(valid => {
+      if (!valid) {
+        console.log(form)
+
+        resetCode({
+          userId: props.options.userId,
+          ...form
+        }).then(() => {
+          Message.success('Reset success')
+          visible.value = false
+
+          if (props.options.userId === userStore.userId) {
+            logout()
+          }
+        })
+      }
+    })
+  }
+
+  onMounted(() => {
+    visible.value = props.open
+  })
+</script>
+
+<style lang="less" scoped>
+.user-modal {
+  .modal-footer {
+    text-align: center;
+  }
+}
+</style>

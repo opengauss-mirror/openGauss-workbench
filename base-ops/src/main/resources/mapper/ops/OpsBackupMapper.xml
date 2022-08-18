@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.opengauss.admin.plugin.mapper.ops.OpsBackupMapper">
+
+
+    <select id="pageBackup" resultType="org.opengauss.admin.plugin.vo.ops.BackupVO">
+        select b.*,h.public_ip,h.private_ip,h.hostname,b.create_time from ops_backup b left join ops_host h on b.host_id = h.host_id
+        where 1=1
+        <if test="clusterId!=null and clusterId!=''">
+            AND b.cluster_id = #{clusterId}
+        </if>
+    </select>
+</mapper>

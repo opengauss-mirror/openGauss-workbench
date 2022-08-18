@@ -1,0 +1,115 @@
+package org.opengauss.admin.web.controller;
+
+import com.google.common.collect.Maps;
+import org.opengauss.admin.common.constant.Constants;
+import org.opengauss.admin.common.core.domain.AjaxResult;
+import org.opengauss.admin.common.core.domain.entity.SysMenu;
+import org.opengauss.admin.common.core.domain.entity.SysUser;
+import org.opengauss.admin.common.core.domain.model.LoginBody;
+import org.opengauss.admin.common.core.domain.model.LoginUser;
+import org.opengauss.admin.common.enums.SysMenuRouteOpenPosition;
+import org.opengauss.admin.common.utils.ServletUtils;
+import org.opengauss.admin.framework.web.service.SysLoginService;
+import org.opengauss.admin.framework.web.service.SysPermissionService;
+import org.opengauss.admin.framework.web.service.TokenService;
+import org.opengauss.admin.system.service.ISysMenuService;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
+import io.swagger.annotations.ApiOperation;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+/**
+ * common
+ *
+ * @author xielibo
+ */
+@RestController
+@Api(tags = "common")
+public class SysLoginController {
+
+    @Autowired
+    private SysLoginService loginService;
+
+    @Autowired
+    private TokenService tokenService;
+
+    @Autowired
+    private ISysMenuService menuService;
+
+    @Autowired
+    private SysPermissionService permissionService;
+
+    @PostMapping("/login")
+    @ApiOperation(value = "login", notes = "login")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "userName", value = "userName", required = true, paramType = "query", dataType = "string"),
+            @ApiImplicitParam(name = "password", value = "password", required = true, paramType = "query", dataType = "string"),
+    })
+    public AjaxResult login(@RequestBody LoginBody loginBody) {
+        AjaxResult ajax = AjaxResult.success();
+        String token = loginService.login(loginBody.getUsername(), loginBody.getPassword(), loginBody.getCode());
+        ajax.put(Constants.TOKEN, token);
+        return ajax;
+    }
+
+
+    /**
+     * get user info
+     */
+    @GetMapping("getInfo")
+    @ApiOperation(value = "get userInfo", notes = "get userInfo")
+    public AjaxResult getInfo() {
+        LoginUser loginUser = tokenService.getLoginUser(ServletUtils.getRequest());
+        SysUser user = loginUser.getUser();
+        Set<String> roles = permissionService.getRolePermission(user);
+        Set<String> permissions = permissionService.getMenuPermission(user);
+        AjaxResult ajax = AjaxResult.success();
+        ajax.put("user", user);
+        ajax.put("roles", roles);
+        ajax.put("permissions", permissions);
+        return ajax;
+    }
+
+    /**
+     * get routers
+     */
+    @GetMapping("getRouters")
+    @ApiOperation(value = "get routers", notes = "get routers")
+    public AjaxResult getRouters() {
+        LoginUser loginUser = tokenService.getLoginUser(ServletUtils.getRequest());
+        SysUser user = loginUser.getUser();
+        List<SysMenu> menus = menuService.selectMenuTreeByUserId(user.getUserId());
+        String language = ServletUtils.getRequest().getHeader("language");
+        return AjaxResult.success(menuService.buildMenus(menus, language));
+    }
+
+    /**
+     * get index instance router
+     */
+    @ApiOperation(value = "get index instance router", notes = "get index instance router")
+    @GetMapping("getIndexInstanceRouters")
+    public AjaxResult getIndexStanceRoute(){
+        List<SysMenu> sysMenus = menuService.selectSpecialRouteList(SysMenuRouteOpenPosition.INDEX_INSTANCE_DATA.getCode());
+        if (sysMenus.size() == 0) {
+            return AjaxResult.success();
+        }
+        SysMenu m = sysMenus.get(0);
+        if (StringUtils.isNotBlank(m.getPluginTheme())) {
+            Map<String, Object> routeQuery = Maps.newHashMap();
+            routeQuery.put("theme", m.getPluginTheme());
+            m.setQuery(routeQuery);
+        }
+        return AjaxResult.success(m);
+    }
+
+}

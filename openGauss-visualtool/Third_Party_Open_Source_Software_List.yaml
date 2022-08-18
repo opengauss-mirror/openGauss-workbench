@@ -1,0 +1,259 @@
+spring-boot-starter-web:
+  groupId: org.springframework.boot
+  artifactId: spring-boot-starter-web
+  version: 2.5.6
+  url: https://github.com/spring-projects/spring-boot
+spring-brick:
+  groupId: com.gitee.starblues
+  artifactId: spring-brick
+  version: 3.1.0
+  url: https://gitee.com/starblues/springboot-plugin-framework-parent/tree/master/spring-brick-bootstrap
+spring-brick-bootstrap:
+  groupId: com.gitee.starblues
+  artifactId: spring-brick-bootstrap
+  version: 3.1.0
+  url: https://gitee.com/starblues/springboot-plugin-framework-parent/tree/master/spring-brick-bootstrap
+lombok:
+  groupId: org.projectlombok
+  artifactId: lombok
+  version: 1.18.24
+  url: http://github.com/projectlombok/lombok
+druid-spring-boot-starter:
+  groupId: com.alibaba
+  artifactId: druid-spring-boot-starter
+  version: 1.2.6
+  url: https://wenshao@github.com/alibaba/druid.git
+fastjson:
+  groupId: com.alibaba
+  artifactId: fastjson
+  version: 1.2.78
+  url: 	https://github.com/alibaba/fastjson2
+mybatis-plus-boot-starter:
+  groupId: com.baomidou
+  artifactId: mybatis-plus-boot-starter
+  version: 3.5.0
+  url: https://github.com/baomidou/mybatis-plus
+baomidou:
+  groupId: com.baomidou
+  artifactId: mybatis-plus-boot-starter
+  version: 3.5.0
+  url: https://github.com/baomidou/mybatis-plus
+jsch:
+  groupId: com.jcraft
+  artifactId: jsch
+  version: 0.1.55
+  url: http://git.jcraft.com/jsch.git
+javax.servlet-api:
+  groupId: javax.servlet
+  artifactId: javax.servlet-api
+  version: 4.0.1
+  url: https://github.com/javaee/servlet-spec
+hutool-all:
+  groupId: cn.hutool
+  artifactId: hutool-all
+  version: 5.3.5
+  url: https://github:com/looly/hutool
+junit:
+  groupId: junit
+  artifactId: junit
+  version: 4.13
+  url: https://github.com/junit-team/junit4
+
+opengauss-jdbc:
+  groupId: org.opengauss
+  artifactId: opengauss-jdbc
+  version: 3.0.0
+  url: https://gitee.com/opengauss/openGauss-connector-jdbc
+knife4j-spring-boot-starter:
+  groupId: com.github.xiaoymin
+  artifactId: knife4j-spring-boot-starter
+  version: 3.0.3
+  url: https://gitee.com/xiaoym/knife4j
+javax.annotation-api:
+  groupId: javax.annotation
+  artifactId: javax.annotation-api
+  version: 1.3.2
+  url: http://jcp.org/en/jsr/detail?id=250
+istack-commons-runtime:
+  groupId: com.sun.istack
+  artifactId: istack-commons-runtime
+  version: 3.0.11
+  url: https://github.com/eclipse-ee4j/jaxb-istack-commons
+FastInfoset:
+  groupId: com.sun.istack
+  artifactId: FastInfoset
+  version: 1.2.18
+  url: https://projects.eclipse.org/projects/ee4j.jaxb-impl
+jaxb-api:
+  groupId: javax.xml.bind
+  artifactId: jaxb-api
+  version: 2.4.0-b180725.0427
+  url: https://github.com/javaee/jaxb-spec
+jaxb-runtime:
+  groupId: org.glassfish.jaxb
+  artifactId: jaxb-runtime
+  version: 2.4.0-b180725.0644
+  url: http://jaxb.java.net
+commons-lang3:
+  groupId: org.apache.commons
+  artifactId: commons-lang3
+  version: 3.12.0
+  url: https://commons.apache.org/proper/commons-lang/
+commons-io:
+  groupId: commons-io
+  artifactId: commons-io
+  version: 2.11.0
+  url: https://commons.apache.org/proper/commons-io/
+commons-fileupload:
+  groupId: commons-fileupload
+  artifactId: commons-fileupload
+  version: 1.4
+  url: http://commons.apache.org/proper/commons-fileupload/
+snakeyaml:
+  groupId: org.yaml
+  artifactId: snakeyaml
+  version: 1.28
+  url: http://www.snakeyaml.org
+jjwt:
+  groupId: io.jsonwebtoken
+  artifactId: jjwt
+  version: 0.9.1
+  url: https://github.com/jwtk/jjwt
+guava:
+  groupId: com.google.guava
+  artifactId: guava
+  version: 20.0
+  url: https://github.com/google/guava/
+commons-pool2:
+  groupId: org.apache.commons
+  artifactId: commons-pool2
+  version: 2.9.0
+  url: https://commons.apache.org/proper/commons-pool/
+commons-codec:
+  groupId: commons-codec
+  artifactId: commons-codec
+  version: 1.15
+  url: https://commons.apache.org/proper/commons-codec/
+easyexcel:
+  groupId: com.alibaba
+  artifactId: easyexcel
+  version: 3.1.1
+  url: https://github.com/alibaba/easyexcel/easyexcel
+spring-boot-starter-websocket:
+  groupId: org.springframework.boot
+  artifactId: spring-boot-starter-websocket
+  version: 2.5.6
+  url: https://github.com/spring-projects/spring-boot
+oshi-core:
+  groupId: com.github.oshi
+  artifactId: oshi-core
+  version: 5.8.0
+  url: https://github.com/oshi/oshi.git
+spring-boot-starter-actuator:
+  groupId: org.springframework.boot
+  artifactId: spring-boot-starter-actuator
+  version: 2.5.6
+  url: https://github.com/spring-projects/spring-boot
+micrometer-registry-prometheus:
+  groupId: io.micrometer
+  artifactId: micrometer-registry-prometheus
+  version: 1.7.5
+  url: https://github.com/micrometer-metrics/micrometer
+
+
+antv/x6:
+  cpeName: antv/x6
+  version: 1.32.10
+  url: https://github.com/antvis/X6
+antv/x6-vue-shapeantv/x6:
+  cpeName: antv/x6-vue-shape
+  version: 1.4.2
+  url: https://github.com/antvis/X6/pkgs/npm/x6-vue-shape
+arco-design/web-vue:
+  cpeName: arco-design/web-vue
+  version: 2.37.3
+  url: https://github:com/arco-design/arco-design-vue
+highlightjs/vue-plugin:
+  cpeName: highlightjs/vue-plugin
+  version: 2.1.0
+  url: https://github.com/highlightjs/vue-plugin
+vueuse/core:
+  cpeName: vueuse/core
+  version: 7.3.0
+  url: https://github.com/vueuse/vueuse
+animate.css:
+  cpeName: animate.css
+  version: 4.1.1
+  url: https://github.com/animate-css/animate.css
+axios:
+  cpeName: axios
+  version: 0.27.2
+  url: https://github.com/axios/axios
+core-js:
+  cpeName: core-js
+  version: 3.8.3
+  url: https://github.com/zloirock/core-js
+dayjs:
+  cpeName: dayjs
+  version: 1.11.4
+  url: https://github.com/iamkun/dayjs/
+echarts:
+  cpeName: echarts
+  version: 5.2.2
+  url: https://github.com/apache/echarts
+highlight.js:
+  cpeName: highlight.js
+  version: 11.6.0
+  url: https://github.com/highlightjs/highlight.js/
+mitt:
+  cpeName: mitt
+  version: 3.0.0
+  url: https://github.com/developit/mitt
+nprogress:
+  cpeName: nprogress
+  version: 0.2.0
+  url: https://github.com/rstacruz/nprogress
+pinia:
+  cpeName: pinia
+  version: 2.0.17
+  url: https://github.com/vuejs/pinia
+query-string:
+  cpeName: query-string
+  version: 7.1.1
+  url: https://github.com/sindresorhus/query-string
+jsencrypt:
+  cpeName: jsencrypt
+  version: 3.0.0-rc.1
+  url: https://github.com/travist/jsencrypt
+vue:
+  cpeName: vue
+  version: 3.2.13
+  url: https://github.com/vuejs/vue
+vue-echarts:
+  cpeName: vue-echarts
+  version: 6.2.3
+  url: https://github.com/ecomfe/vue-echarts
+vue-grid-layout:
+  cpeName: vue-grid-layout
+  version: 3.0.0-beta1
+  url: https://github.com/jbaysolutions/vue-grid-layout
+vue-i18n:
+  cpeName: vue-i18n
+  version: 9.3.0-beta.6
+  url: https://github.com/intlify/vue-i18n-next
+vue-router:
+  cpeName: vue-router
+  version: 4.0.3
+  url: https://github.com/vuejs/router
+vue-winbox:
+  cpeName: vue-winbox
+  version: 0.1.0
+  url: https://github.com/wobsoriano/vue-winbox
+wujie-vue3:
+  cpeName: wujie-vue3
+  version: 1.0.0
+  url: https://github.com/Tencent/wujie
+xterm:
+  cpeName: xterm
+  version: 4.19.0
+  url: https://github.com/xtermjs/xterm.js

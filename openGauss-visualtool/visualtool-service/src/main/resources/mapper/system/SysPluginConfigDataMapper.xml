@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.opengauss.admin.system.mapper.SysPluginConfigDataMapper">
+
+    <resultMap type="org.opengauss.admin.system.domain.SysPluginConfigData" id="SysPluginConfigDataResult">
+        <result property="id" column="id"/>
+        <result property="pluginId" column="plugin_id"/>
+        <result property="configData" column="config_data"/>
+    </resultMap>
+
+</mapper> 

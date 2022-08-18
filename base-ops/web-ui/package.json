@@ -1,0 +1,59 @@
+{
+  "name": "web-ui",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "vue-cli-service serve",
+    "build:prod": "vue-cli-service build",
+    "build:stage": "vue-cli-service build --mode staging",
+    "lint": "vue-cli-service lint"
+  },
+  "dependencies": {
+    "@antv/x6": "1.32.10",
+    "@antv/x6-vue-shape": "1.4.2",
+    "@arco-design/web-vue": "2.37.3",
+    "@highlightjs/vue-plugin": "2.1.0",
+    "@vueuse/core": "7.3.0",
+    "animate.css": "4.1.1",
+    "axios": "0.27.2",
+    "core-js": "^3.8.3",
+    "dayjs": "1.11.4",
+    "echarts": "5.2.2",
+    "highlight.js": "11.6.0",
+    "mitt": "3.0.0",
+    "pinia": "2.0.17",
+    "query-string": "7.1.1",
+    "jsencrypt": "3.0.0-rc.1",
+    "vue": "3.2.13",
+    "vue-echarts": "6.2.3",
+    "vue-grid-layout": "^3.0.0-beta1",
+    "vue-i18n": "^9.3.0-beta.6",
+    "vue-router": "4.0.3",
+    "vue-winbox": "^0.1.0",
+    "xterm": "4.19.0",
+    "xterm-addon-attach": "0.6.0",
+    "xterm-addon-fit": "0.5.0"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "5.4.0",
+    "@typescript-eslint/parser": "5.4.0",
+    "@vue/cli-plugin-babel": "~5.0.0",
+    "@vue/cli-plugin-eslint": "~5.0.0",
+    "@vue/cli-plugin-router": "~5.0.0",
+    "@vue/cli-plugin-typescript": "~5.0.0",
+    "@vue/cli-service": "~5.0.0",
+    "@vue/eslint-config-typescript": "9.1.0",
+    "eslint": "7.32.0",
+    "eslint-plugin-vue": "8.0.3",
+    "husky": "1.3.1",
+    "less": "4.0.0",
+    "less-loader": "8.0.0",
+    "svg-sprite-loader": "6.0.11",
+    "typescript": "4.5.5"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": ""
+    }
+  }
+}
