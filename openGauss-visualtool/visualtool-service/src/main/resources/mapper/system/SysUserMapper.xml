@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.opengauss.admin.system.mapper.SysUserMapper">
+
+
+    <resultMap id="SysUserResult" type="org.opengauss.admin.common.core.domain.entity.SysUser">
+        <id property="userId" column="user_id"/>
+        <result property="userName" column="user_name"/>
+        <result property="nickName" column="nick_name"/>
+        <result property="password" column="password"/>
+        <result property="createBy" column="create_by"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateBy" column="update_by"/>
+        <result property="updateTime" column="update_time"/>
+        <result property="remark" column="remark"/>
+        <result property="status" column="status"/>
+        <result property="roleName" column="role_name"/>
+    </resultMap>
+
+    <select id="selectUserVo" parameterType="org.opengauss.admin.common.core.domain.entity.SysUser" resultMap="SysUserResult">
+        SELECT
+        u.user_id,
+        u.user_name,
+        u.nick_name,
+        u.email,
+        u.avatar,
+        u.phonenumber,
+        u. PASSWORD,
+        u.sex,
+        u. STATUS,
+        u.del_flag,
+        u.login_ip,
+        u.login_date,
+        u.create_by,
+        u.create_time,
+        u.remark,
+        r.role_id,
+        r.role_name,
+        r.role_key,
+        r.role_sort,
+        r.data_scope,
+        r. STATUS AS role_status
+        FROM sys_user u
+        LEFT JOIN sys_user_role ur ON u.user_id = ur.user_id
+        LEFT JOIN sys_role r ON r.role_id = ur.role_id
+        WHERE
+        ${ew.getSqlSegment}
+    </select>
+
+    <select id="selectUserList" parameterType="org.opengauss.admin.common.core.domain.entity.SysUser" resultMap="SysUserResult">
+        SELECT
+        u.user_id,
+        u.nick_name,
+        u.user_name,
+        u.email,
+        u.avatar,
+        u.phonenumber,
+        u. PASSWORD,
+        u.sex,
+        u. STATUS,
+        u.del_flag,
+        u.login_ip,
+        u.login_date,
+        u.create_by,
+        u.create_time,
+        u.remark,
+        sr.role_name
+        FROM sys_user u left join sys_user_role sur on u.user_id = sur.user_id
+        left join sys_role sr on sur.role_id = sr.role_id
+        where u.del_flag = '0'
+        <if test="entity.userName != null and entity.userName != ''">
+            AND u.user_name like concat('%', #{entity.userName}, '%')
+        </if>
+        <if test="entity.status != null and entity.status != ''">
+            AND u.status = #{entity.status}
+        </if>
+        <if test="entity.phonenumber != null and entity.phonenumber != ''">
+            AND u.phonenumber like concat('%', #{entity.phonenumber}, '%')
+        </if>
+        <if test="entity.params.beginTime != null and entity.params.beginTime != ''">
+            AND date_format(u.create_time,'%y%m%d') &gt;= date_format(#{entity.params.beginTime},'%y%m%d')
+        </if>
+        <if test="entity.params.endTime != null and entity.params.endTime != ''">
+            AND date_format(u.create_time,'%y%m%d') &lt;= date_format(#{entity.params.endTime},'%y%m%d')
+        </if>
+        ${entity.params.dataScope}
+    </select>
+
+</mapper>

@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+echo "init env"
+/usr/bin/python3 -m venv venv
+source venv/bin/activate
+/usr/bin/python3 setup.py install
+echo "init config"
+chameleon set_configuration_files
+cp /home/synctool/.pg_chameleon/configuration/config-example.yml /home/synctool/.pg_chameleon/configuration/default.yml
+sed -i '72,98d' /home/synctool/.pg_chameleon/configuration/default.yml
+sed -i '23s/localhost/82.157.245.128/' /home/synctool/.pg_chameleon/configuration/default.yml
+sed -i '24s/5432/5432/' /home/synctool/.pg_chameleon/configuration/default.yml
+sed -i '25s/usr_replica/jim/' /home/synctool/.pg_chameleon/configuration/default.yml
+sed -i '26s/never_commit_password/1qaz2wsx#EDC$RFV/' /home/synctool/.pg_chameleon/configuration/default.yml
+sed -i '27s/db_replica/GaussDBvisualtool_dev/' /home/synctool/.pg_chameleon/configuration/default.yml
+sed -i '35s/localhost/39.106.43.127/' /home/synctool/.pg_chameleon/configuration/default.yml
+sed -i '36s/3306/3306/' /home/synctool/.pg_chameleon/configuration/default.yml
+sed -i '37s/usr_replica/sync_user/' /home/synctool/.pg_chameleon/configuration/default.yml
+sed -i '38s/never_commit_passwords/MOSyncb0711@hk@E42ICh*FSD_X^/' /home/synctool/.pg_chameleon/configuration/default.yml
+sed -i '42s/delphis_mediterranea/db_nft_music/' /home/synctool/.pg_chameleon/configuration/default.yml
+sed -i '42s/loxodonta_africana/db_nft_music/' /home/synctool/.pg_chameleon/configuration/default.yml
+echo "staring sync"
+chameleon create_replica_schema --config default
+chameleon add_source --config default --source mysql
+chameleon init_replica --config default --source mysql
+echo "end sync"

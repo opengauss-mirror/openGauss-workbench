@@ -1,0 +1,67 @@
+server:
+  tomcat:
+    uri-encoding: UTF-8
+    max-threads: 800
+    min-spare-threads: 30
+
+spring:
+  profiles:
+    active: dev
+  messages:
+    basename: i18n/messages
+  servlet:
+     multipart:
+       max-file-size:  200MB
+       max-request-size:  200MB
+  mvc:
+    async:
+      request-timeout: 60000
+  sql:
+    init:
+      mode: always
+      data-locations: classpath:db/openGauss-visualtool.sql
+token:
+    header: Authorization
+    secret: abcdefghijklmnopqrstuvwxyz
+    expireTime: 60
+  
+mybatis-plus:
+  typeAliasesPackage: org.opengauss.admin.**.domain
+  mapperLocations: classpath*:mapper/**/*Mapper.xml
+  configLocation: classpath:mybatis/mybatis-config.xml
+
+pagehelper:
+  helperDialect: postgresql
+  supportMethodsArguments: true
+  params: count=countSql 
+
+plugin:
+  mainPackage: org.opengauss.admin
+  runMode: prod
+  pluginPath:
+    - ~/visualtool-plugin
+
+management:
+  server:
+    port: 9494
+  endpoints:
+    enabled-by-default: false
+    web:
+      exposure:
+        include: 'prometheus'
+      base-path: "/"
+  endpoint:
+    prometheus:
+      enabled: true
+    health:
+      show-details: always
+  metrics:
+    enable:
+      jvm: false
+      logback: false
+      files: false
+      tomcat: false
+      executor: false
+      disk: false
+      uptime: false
+      integration: false

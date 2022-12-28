@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.opengauss.admin.system.mapper.SysPluginMapper">
+
+    <resultMap id="SysUserResult" type="org.opengauss.admin.system.domain.SysPlugin">
+        <id property="id" column="id"/>
+        <result property="pluginId" column="plugin_id"/>
+        <result property="bootstrapClass" column="bootstrap_class"/>
+        <result property="pluginDesc" column="plugin_desc"/>
+        <result property="logoPath" column="logo_path"/>
+        <result property="pluginType" column="plugin_type"/>
+        <result property="pluginVersion" column="plugin_version"/>
+        <result property="pluginProvider" column="plugin_provider"/>
+        <result property="pluginStatus" column="plugin_status"/>
+        <result property="isNeedConfigured" column="is_need_configured"/>
+        <result property="theme" column="theme"/>
+
+    </resultMap>
+
+
+    <sql id="selectSysPluginListVo">
+        SELECT
+            id,plugin_id,bootstrap_class,plugin_desc,logo_path,plugin_type,plugin_version,plugin_provider,plugin_status,is_need_configured,theme
+        FROM sys_plugins
+    </sql>
+
+    <select id="selectSysPluginListPage" parameterType="org.opengauss.admin.system.domain.SysPlugin" resultMap="SysUserResult">
+        <include refid="selectSysPluginListVo"/>
+        <where>
+            <if test="entity.pluginId != null and entity.pluginId != ''">
+                and (
+                    plugin_id like concat('%', #{entity.pluginId}, '%')
+                    or plugin_provider like concat('%', #{entity.pluginId}, '%')
+                    or plugin_desc like concat('%', #{entity.pluginId}, '%')
+                )
+            </if>
+            <if test="entity.pluginType != null ">
+                and plugin_type = #{entity.pluginType}
+            </if>
+            <if test="entity.pluginProvider != null and entity.pluginProvider != ''">
+                and plugin_provider = #{entity.pluginProvider}
+            </if>
+            <if test="entity.pluginStatus != null ">
+                and plugin_status = #{entity.pluginStatus}
+            </if>
+        </where>
+        order by id desc
+    </select>
+</mapper>

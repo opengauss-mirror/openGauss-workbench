@@ -1,0 +1,129 @@
+<template>
+  <a-modal
+    :title="$t('components.UpdateCode.5n7vbkp1s580')"
+    v-model:visible="visible"
+    width="500px"
+    title-align="start"
+    modal-class="user-code-modal"
+  >
+    <a-form ref="formRef" :model="form" auto-label-width>
+      <a-form-item field="oldPassword" :label="$t('components.UpdateCode.5n7vbkp1t2s0')" :rules="[{
+        required: true,
+        message: $t('components.UpdateCode.5n7vbkp1tb80')
+      }]">
+        <a-input-password v-model="form.oldPassword" :placeholder="$t('components.UpdateCode.5n7vbkp1tiw0')" maxlength="20" />
+      </a-form-item>
+      <a-form-item field="newPassword" :label="$t('components.UpdateCode.5n7vbkp1two0')" :rules="[
+        {
+          required: true,
+          message: $t('components.UpdateCode.5n7vbkp1u340')
+        },
+        {
+          required: true,
+          minLength: 6,
+          maxLength: 20,
+          message: $t('components.UpdateCode.5n7vbkp1u8o0')
+        }
+      ]">
+        <a-input-password v-model="form.newPassword" :placeholder="$t('components.UpdateCode.5n7vbkp1uyw0')" minLength="6" maxlength="20" />
+      </a-form-item>
+      <a-form-item field="checkPassword" :label="$t('components.UpdateCode.5n7vbkp1v8o0')" :rules="[
+        {
+          required: true,
+          message: $t('components.UpdateCode.5n7vbkp1vg00')
+        },
+        {
+          required: true,
+          validator: equalToPassword
+        }
+      ]">
+        <a-input-password v-model="form.checkPassword" :placeholder="$t('components.UpdateCode.5n7vbkp1vm40')" maxlength="20" />
+      </a-form-item>
+    </a-form>
+    <template #footer>
+      <div class="modal-footer">
+        <a-button @click="visible = false">{{$t('components.UpdateCode.5n7vbkp1vus0')}}</a-button>
+        <a-button type="primary" :disabled="loading" style="margin-left: 16px;" @click="confirmSubmit">{{$t('components.UpdateCode.5n7vbkp1vy00')}}</a-button>
+      </div>
+    </template>
+  </a-modal>
+</template>
+
+<script setup lang="ts">
+  import { watch, ref, reactive, onMounted } from 'vue'
+  import { Message } from '@arco-design/web-vue'
+  import { FormInstance } from '@arco-design/web-vue/es/form'
+  // import { useUserStore } from '@/store'
+  import useUser from '@/hooks/user'
+  import { updateCode } from '@/api/user'
+  import { useI18n } from 'vue-i18n'
+
+  const { t } = useI18n()
+  const props = withDefaults(defineProps<{
+    open: boolean,
+    options?: any
+  }>(), {
+    open: false,
+    options: {}
+  })
+
+  const emits = defineEmits(['update:open'])
+
+  const { logout } = useUser()
+  // const userStore = useUserStore()
+  const formRef = ref<FormInstance>()
+  const form = reactive<any>({})
+
+  const visible = ref<boolean>(false)
+  const loading = ref<boolean>(false)
+
+  watch(visible, (v) => {
+    emits('update:open', v)
+  })
+
+  watch(() => props.open, (v) => {
+    if (v) {
+      form['oldPassword'] = ''
+      form['newPassword'] = ''
+      form['checkPassword'] = ''
+    }
+    visible.value = v
+  })
+
+  const equalToPassword = (value: string, callback: any) => {
+    if (form.newPassword !== value) {
+      callback(new Error(t('components.UpdateCode.5n7vbkp1w7c0')))
+    } else {
+      callback()
+    }
+  }
+
+  const confirmSubmit = () => {
+    formRef.value?.validate(valid => {
+      if (!valid) {
+        console.log(form)
+        // return
+        updateCode({
+          oldPassword: form.oldPassword,
+          newPassword: form.newPassword
+        }).then(() => {
+          Message.success('Reset success')
+          visible.value = false
+          logout()
+        })
+      }
+    })
+  }
+
+  onMounted(() => {
+    visible.value = props.open
+  })
+</script>
+
+<style lang="less" scoped>
+.user-code-modal {
+  .modal-footer {
+    text-align: center;
+  }
+}
+</style>

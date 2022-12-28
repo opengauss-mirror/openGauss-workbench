@@ -1,0 +1,792 @@
+CREATE OR REPLACE FUNCTION create_sequences_not_exists() RETURNS integer AS 'BEGIN
+
+IF NOT EXISTS (SELECT 1 FROM information_schema.sequences WHERE sequence_schema=''public'' AND sequence_name=''sq_sys_log_config_id'' )
+THEN
+CREATE SEQUENCE "public"."sq_sys_log_config_id"
+INCREMENT 1
+MINVALUE  1
+MAXVALUE 9223372036854775807
+START 1
+CACHE 1;
+END IF;
+
+IF NOT EXISTS (SELECT 1 FROM information_schema.sequences WHERE sequence_schema=''public'' AND sequence_name=''sq_sys_menu_id'' )
+THEN
+CREATE SEQUENCE "public"."sq_sys_menu_id"
+INCREMENT 1
+MINVALUE  1
+MAXVALUE 9223372036854775807
+START 1000
+CACHE 1;
+END IF;
+
+IF NOT EXISTS (SELECT 1 FROM information_schema.sequences WHERE sequence_schema=''public'' AND sequence_name=''sq_sys_log_id'' )
+THEN
+CREATE SEQUENCE "public"."sq_sys_log_id"
+INCREMENT 1
+MINVALUE  1
+MAXVALUE 9223372036854775807
+START 1
+CACHE 1;
+END IF;
+
+IF NOT EXISTS (SELECT 1 FROM information_schema.sequences WHERE sequence_schema=''public'' AND sequence_name=''sq_sys_plugin_config_data_id'' )
+THEN
+CREATE SEQUENCE "public"."sq_sys_plugin_config_data_id"
+INCREMENT 1
+MINVALUE  1
+MAXVALUE 9223372036854775807
+START 1
+CACHE 1;
+END IF;
+
+IF NOT EXISTS (SELECT 1 FROM information_schema.sequences WHERE sequence_schema=''public'' AND sequence_name=''sq_sys_plugin_config_id'' )
+THEN
+CREATE SEQUENCE "public"."sq_sys_plugin_config_id"
+INCREMENT 1
+MINVALUE  1
+MAXVALUE 9223372036854775807
+START 1
+CACHE 1;
+END IF;
+
+IF NOT EXISTS (SELECT 1 FROM information_schema.sequences WHERE sequence_schema=''public'' AND sequence_name=''sq_sys_plugin_id'' )
+THEN
+CREATE SEQUENCE "public"."sq_sys_plugin_id"
+INCREMENT 1
+MINVALUE  1
+MAXVALUE 9223372036854775807
+START 1
+CACHE 1;
+END IF;
+
+IF NOT EXISTS (SELECT 1 FROM information_schema.sequences WHERE sequence_schema=''public'' AND sequence_name=''sq_sys_role_id'' )
+THEN
+CREATE SEQUENCE "public"."sq_sys_role_id"
+INCREMENT 1
+MINVALUE  1
+MAXVALUE 9223372036854775807
+START 100
+CACHE 1;
+END IF;
+
+IF NOT EXISTS (SELECT 1 FROM information_schema.sequences WHERE sequence_schema=''public'' AND sequence_name=''sq_sys_user_id'' )
+THEN
+CREATE SEQUENCE "public"."sq_sys_user_id"
+INCREMENT 1
+MINVALUE  1
+MAXVALUE 9223372036854775807
+START 2
+CACHE 1;
+END IF;
+
+IF NOT EXISTS (SELECT 1 FROM information_schema.sequences WHERE sequence_schema=''public'' AND sequence_name=''sq_sys_white_list_id'' )
+THEN
+CREATE SEQUENCE "public"."sq_sys_white_list_id"
+INCREMENT 1
+MINVALUE  1
+MAXVALUE 9223372036854775807
+START 1
+CACHE 1;
+END IF;
+
+RETURN 0;
+END;'
+LANGUAGE plpgsql;
+
+SELECT create_sequences_not_exists();
+DROP FUNCTION create_sequences_not_exists;
+
+
+CREATE TABLE IF NOT EXISTS "public"."ops_az" (
+                                                 "az_id" int8 NOT NULL PRIMARY KEY,
+                                                 "name" varchar(255) COLLATE "pg_catalog"."default" NOT NULL,
+    "priority" int2,
+    "address" varchar(255) COLLATE "pg_catalog"."default",
+    "remark" varchar(255) COLLATE "pg_catalog"."default",
+    "create_by" varchar(64) COLLATE "pg_catalog"."default",
+    "create_time" timestamp(6),
+    "update_by" varchar(64) COLLATE "pg_catalog"."default",
+    "update_time" timestamp(6)
+    )
+;
+COMMENT ON COLUMN "public"."ops_az"."az_id" IS 'az主键';
+COMMENT ON COLUMN "public"."ops_az"."name" IS 'az名称';
+COMMENT ON COLUMN "public"."ops_az"."priority" IS '优先级';
+COMMENT ON COLUMN "public"."ops_az"."address" IS '实际地理位置';
+COMMENT ON COLUMN "public"."ops_az"."remark" IS '描述';
+COMMENT ON COLUMN "public"."ops_az"."create_by" IS '创建者';
+COMMENT ON COLUMN "public"."ops_az"."create_time" IS '创建时间';
+COMMENT ON COLUMN "public"."ops_az"."update_by" IS '更新者';
+COMMENT ON COLUMN "public"."ops_az"."update_time" IS '更新时间';
+
+-- ----------------------------
+-- Table structure for ops_check
+-- ----------------------------
+
+CREATE TABLE IF NOT EXISTS "public"."ops_check" (
+    "check_id" varchar(255) COLLATE "pg_catalog"."default",
+    "cluster_id" varchar(255) COLLATE "pg_catalog"."default",
+    "check_res" text COLLATE "pg_catalog"."default",
+    "remark" varchar(255) COLLATE "pg_catalog"."default",
+    "create_by" varchar(64) COLLATE "pg_catalog"."default",
+    "create_time" timestamp(6),
+    "update_by" varchar(64) COLLATE "pg_catalog"."default",
+    "update_time" timestamp(6)
+    )
+;
+COMMENT ON COLUMN "public"."ops_check"."remark" IS '描述';
+COMMENT ON COLUMN "public"."ops_check"."create_by" IS '创建者';
+COMMENT ON COLUMN "public"."ops_check"."create_time" IS '创建时间';
+COMMENT ON COLUMN "public"."ops_check"."update_by" IS '更新者';
+COMMENT ON COLUMN "public"."ops_check"."update_time" IS '更新时间';
+
+-- ----------------------------
+-- Table structure for ops_cluster
+-- ----------------------------
+
+CREATE TABLE IF NOT EXISTS "public"."ops_cluster" (
+    "cluster_id" varchar(255) COLLATE "pg_catalog"."default" NOT NULL PRIMARY KEY,
+    "version" varchar(255) COLLATE "pg_catalog"."default",
+    "version_num" varchar(255) COLLATE "pg_catalog"."default",
+    "install_mode" varchar(64) COLLATE "pg_catalog"."default",
+    "deploy_type" varchar(64) COLLATE "pg_catalog"."default",
+    "cluster_name" varchar(255) COLLATE "pg_catalog"."default",
+    "install_package_path" varchar(255) COLLATE "pg_catalog"."default",
+    "database_password" varchar(255) COLLATE "pg_catalog"."default",
+    "database_username" varchar(255) COLLATE "pg_catalog"."default",
+    "remark" varchar(255) COLLATE "pg_catalog"."default",
+    "create_by" varchar(64) COLLATE "pg_catalog"."default",
+    "create_time" timestamp(6),
+    "update_by" varchar(64) COLLATE "pg_catalog"."default",
+    "update_time" timestamp(6),
+    "install_path" varchar(255) COLLATE "pg_catalog"."default",
+    "log_path" varchar(255) COLLATE "pg_catalog"."default",
+    "tmp_path" varchar(255) COLLATE "pg_catalog"."default",
+    "om_tools_path" varchar(255) COLLATE "pg_catalog"."default",
+    "core_path" varchar(255) COLLATE "pg_catalog"."default",
+    "port" varchar(255) COLLATE "pg_catalog"."default",
+    "enable_dcf" int2
+    )
+;
+COMMENT ON COLUMN "public"."ops_cluster"."cluster_id" IS '集群标识';
+COMMENT ON COLUMN "public"."ops_cluster"."version" IS '版本';
+COMMENT ON COLUMN "public"."ops_cluster"."version_num" IS '版本号';
+COMMENT ON COLUMN "public"."ops_cluster"."install_mode" IS '安装模式';
+COMMENT ON COLUMN "public"."ops_cluster"."deploy_type" IS '部署方式';
+COMMENT ON COLUMN "public"."ops_cluster"."cluster_name" IS '集群名称';
+COMMENT ON COLUMN "public"."ops_cluster"."install_package_path" IS '安装包路径';
+COMMENT ON COLUMN "public"."ops_cluster"."database_password" IS '数据库密码';
+COMMENT ON COLUMN "public"."ops_cluster"."database_username" IS '数据库用户名';
+COMMENT ON COLUMN "public"."ops_cluster"."remark" IS '描述';
+COMMENT ON COLUMN "public"."ops_cluster"."create_by" IS '创建者';
+COMMENT ON COLUMN "public"."ops_cluster"."create_time" IS '创建时间';
+COMMENT ON COLUMN "public"."ops_cluster"."update_by" IS '更新者';
+COMMENT ON COLUMN "public"."ops_cluster"."update_time" IS '更新时间';
+COMMENT ON COLUMN "public"."ops_cluster"."install_path" IS '企业版安装路径';
+COMMENT ON COLUMN "public"."ops_cluster"."log_path" IS '企业版日志路径';
+COMMENT ON COLUMN "public"."ops_cluster"."tmp_path" IS '企业版临时文件路径';
+COMMENT ON COLUMN "public"."ops_cluster"."om_tools_path" IS '企业版om路径';
+COMMENT ON COLUMN "public"."ops_cluster"."core_path" IS '企业版核心路径';
+COMMENT ON COLUMN "public"."ops_cluster"."port" IS '企业版端口';
+COMMENT ON COLUMN "public"."ops_cluster"."enable_dcf" IS '是否开启DCF  0否1是';
+
+-- ----------------------------
+-- Table structure for ops_cluster_node
+-- ----------------------------
+
+CREATE TABLE IF NOT EXISTS "public"."ops_cluster_node" (
+                                                           "cluster_node_id" int8 NOT NULL PRIMARY KEY,
+                                                           "cluster_role" varchar(255) COLLATE "pg_catalog"."default",
+    "host_id" int8,
+    "install_user_id" int8,
+    "install_path" varchar(255) COLLATE "pg_catalog"."default",
+    "data_path" varchar(255) COLLATE "pg_catalog"."default",
+    "pkg_path" varchar(255) COLLATE "pg_catalog"."default",
+    "install_demo_database" int2,
+    "cluster_id" varchar(255) COLLATE "pg_catalog"."default",
+    "is_install_cm" int2,
+    "is_cm_master" int2,
+    "cm_data_path" varchar(255) COLLATE "pg_catalog"."default",
+    "cm_port" varchar(255) COLLATE "pg_catalog"."default",
+    "xlog_path" varchar(255) COLLATE "pg_catalog"."default",
+    "remark" varchar(255) COLLATE "pg_catalog"."default",
+    "create_by" varchar(64) COLLATE "pg_catalog"."default",
+    "create_time" timestamp(6),
+    "update_by" varchar(64) COLLATE "pg_catalog"."default",
+    "update_time" timestamp(6)
+    )
+;
+COMMENT ON COLUMN "public"."ops_cluster_node"."cluster_role" IS '集群角色';
+COMMENT ON COLUMN "public"."ops_cluster_node"."host_id" IS '主机ID';
+COMMENT ON COLUMN "public"."ops_cluster_node"."install_user_id" IS '安装用户ID';
+COMMENT ON COLUMN "public"."ops_cluster_node"."install_path" IS '安装路径';
+COMMENT ON COLUMN "public"."ops_cluster_node"."data_path" IS '数据目录';
+COMMENT ON COLUMN "public"."ops_cluster_node"."pkg_path" IS '安装包目录';
+COMMENT ON COLUMN "public"."ops_cluster_node"."install_demo_database" IS '是否安装示例数据库';
+COMMENT ON COLUMN "public"."ops_cluster_node"."cluster_id" IS '集群ID';
+COMMENT ON COLUMN "public"."ops_cluster_node"."is_install_cm" IS '是否安装 CM';
+COMMENT ON COLUMN "public"."ops_cluster_node"."is_cm_master" IS '是否CM master';
+COMMENT ON COLUMN "public"."ops_cluster_node"."cm_data_path" IS 'cm数据路径';
+COMMENT ON COLUMN "public"."ops_cluster_node"."cm_port" IS 'cm端口';
+COMMENT ON COLUMN "public"."ops_cluster_node"."xlog_path" IS 'xlog路径';
+COMMENT ON COLUMN "public"."ops_cluster_node"."remark" IS '描述';
+COMMENT ON COLUMN "public"."ops_cluster_node"."create_by" IS '创建者';
+COMMENT ON COLUMN "public"."ops_cluster_node"."create_time" IS '创建时间';
+COMMENT ON COLUMN "public"."ops_cluster_node"."update_by" IS '更新者';
+COMMENT ON COLUMN "public"."ops_cluster_node"."update_time" IS '更新时间';
+
+-- ----------------------------
+-- Table structure for ops_encryption
+-- ----------------------------
+
+CREATE TABLE IF NOT EXISTS "public"."ops_encryption" (
+    "encryption_id" varchar(255) COLLATE "pg_catalog"."default" NOT NULL PRIMARY KEY,
+    "remark" varchar(255) COLLATE "pg_catalog"."default",
+    "create_by" varchar(64) COLLATE "pg_catalog"."default",
+    "create_time" timestamp(6),
+    "update_by" varchar(64) COLLATE "pg_catalog"."default",
+    "update_time" timestamp(6),
+    "encryption_key" varchar(255) COLLATE "pg_catalog"."default",
+    "public_key" varchar(1024) COLLATE "pg_catalog"."default",
+    "private_key" varchar(1024) COLLATE "pg_catalog"."default"
+    )
+;
+COMMENT ON COLUMN "public"."ops_encryption"."remark" IS '描述';
+COMMENT ON COLUMN "public"."ops_encryption"."create_by" IS '创建者';
+COMMENT ON COLUMN "public"."ops_encryption"."create_time" IS '创建时间';
+COMMENT ON COLUMN "public"."ops_encryption"."update_by" IS '更新者';
+COMMENT ON COLUMN "public"."ops_encryption"."update_time" IS '更新时间';
+
+-- ----------------------------
+-- Table structure for ops_host
+-- ----------------------------
+
+CREATE TABLE IF NOT EXISTS "public"."ops_host" (
+                                                   "host_id" int8 NOT NULL PRIMARY KEY,
+                                                   "hostname" varchar(255) COLLATE "pg_catalog"."default",
+    "private_ip" varchar(64) COLLATE "pg_catalog"."default" NOT NULL,
+    "public_ip" varchar(64) COLLATE "pg_catalog"."default" NOT NULL,
+    "port" int8 NOT NULL,
+    "az_id" int8,
+    "remark" varchar(255) COLLATE "pg_catalog"."default",
+    "create_by" varchar(64) COLLATE "pg_catalog"."default",
+    "create_time" timestamp(6),
+    "update_by" varchar(64) COLLATE "pg_catalog"."default",
+    "update_time" timestamp(6)
+    )
+;
+COMMENT ON COLUMN "public"."ops_host"."host_id" IS '主机id';
+COMMENT ON COLUMN "public"."ops_host"."hostname" IS '主机名';
+COMMENT ON COLUMN "public"."ops_host"."private_ip" IS '内网ip地址';
+COMMENT ON COLUMN "public"."ops_host"."public_ip" IS '公网ip地址';
+COMMENT ON COLUMN "public"."ops_host"."port" IS '端口';
+COMMENT ON COLUMN "public"."ops_host"."az_id" IS 'az_id';
+COMMENT ON COLUMN "public"."ops_host"."remark" IS '描述';
+COMMENT ON COLUMN "public"."ops_host"."create_by" IS '创建者';
+COMMENT ON COLUMN "public"."ops_host"."create_time" IS '创建时间';
+COMMENT ON COLUMN "public"."ops_host"."update_by" IS '更新者';
+COMMENT ON COLUMN "public"."ops_host"."update_time" IS '更新时间';
+
+-- ----------------------------
+-- Table structure for ops_host_user
+-- ----------------------------
+
+CREATE TABLE IF NOT EXISTS "public"."ops_host_user" (
+                                                        "host_user_id" int8 NOT NULL PRIMARY KEY,
+                                                        "username" varchar(255) COLLATE "pg_catalog"."default" NOT NULL,
+    "password" varchar(255) COLLATE "pg_catalog"."default",
+    "host_id" int8 NOT NULL,
+    "remark" varchar(255) COLLATE "pg_catalog"."default",
+    "create_by" varchar(64) COLLATE "pg_catalog"."default",
+    "create_time" timestamp(6),
+    "update_by" varchar(64) COLLATE "pg_catalog"."default",
+    "update_time" timestamp(6)
+    )
+;
+COMMENT ON COLUMN "public"."ops_host_user"."host_user_id" IS '主机用户主键';
+COMMENT ON COLUMN "public"."ops_host_user"."username" IS '用户名';
+COMMENT ON COLUMN "public"."ops_host_user"."password" IS '密码';
+COMMENT ON COLUMN "public"."ops_host_user"."host_id" IS '所属主机id';
+COMMENT ON COLUMN "public"."ops_host_user"."remark" IS '备注';
+COMMENT ON COLUMN "public"."ops_host_user"."create_by" IS '创建者';
+COMMENT ON COLUMN "public"."ops_host_user"."create_time" IS '创建时间';
+COMMENT ON COLUMN "public"."ops_host_user"."update_by" IS '更新者';
+COMMENT ON COLUMN "public"."ops_host_user"."update_time" IS '更新时间';
+
+-- ----------------------------
+-- Table structure for sys_log_config
+-- ----------------------------
+
+CREATE TABLE IF NOT EXISTS "public"."sys_log_config" (
+    "key" varchar(100) COLLATE "pg_catalog"."default" NOT NULL,
+    "value" varchar(500) COLLATE "pg_catalog"."default" NOT NULL,
+    "id" int4 NOT NULL PRIMARY KEY DEFAULT nextval('sq_sys_log_config_id'::regclass)
+    )
+;
+
+-- ----------------------------
+-- Table structure for sys_menu
+-- ----------------------------
+
+CREATE TABLE IF NOT EXISTS "public"."sys_menu" (
+    "menu_id" int8 NOT NULL PRIMARY KEY DEFAULT nextval('sq_sys_menu_id'::regclass),
+    "menu_name" varchar(50) COLLATE "pg_catalog"."default" NOT NULL,
+    "parent_id" int8,
+    "order_num" int4,
+    "path" varchar(200) COLLATE "pg_catalog"."default",
+    "component" varchar(255) COLLATE "pg_catalog"."default",
+    "query" varchar(255) COLLATE "pg_catalog"."default",
+    "is_frame" int4 DEFAULT 1,
+    "is_cache" int4 DEFAULT 0,
+    "menu_type" char(1) COLLATE "pg_catalog"."default",
+    "visible" char(1) COLLATE "pg_catalog"."default" DEFAULT 0,
+    "status" char(1) COLLATE "pg_catalog"."default" DEFAULT 0,
+    "perms" varchar(100) COLLATE "pg_catalog"."default",
+    "icon" varchar(100) COLLATE "pg_catalog"."default",
+    "create_by" varchar(64) COLLATE "pg_catalog"."default",
+    "create_time" timestamp(6),
+    "update_by" varchar(64) COLLATE "pg_catalog"."default",
+    "update_time" timestamp(6),
+    "remark" varchar(500) COLLATE "pg_catalog"."default",
+    "open_way" int4 DEFAULT 1,
+    "plugin_id" varchar(100) COLLATE "pg_catalog"."default",
+    "open_position" int2 DEFAULT 1,
+    "query_template" varchar(100) COLLATE "pg_catalog"."default",
+    "plugin_theme" varchar(50) COLLATE "pg_catalog"."default",
+    "menu_classify" int2 DEFAULT 1,
+    "menu_en_name" varchar(50) COLLATE "pg_catalog"."default"
+    )
+;
+COMMENT ON COLUMN "public"."sys_menu"."menu_id" IS '菜单ID';
+COMMENT ON COLUMN "public"."sys_menu"."menu_name" IS '菜单名称';
+COMMENT ON COLUMN "public"."sys_menu"."parent_id" IS '父菜单ID';
+COMMENT ON COLUMN "public"."sys_menu"."order_num" IS '显示顺序';
+COMMENT ON COLUMN "public"."sys_menu"."path" IS '路由地址';
+COMMENT ON COLUMN "public"."sys_menu"."component" IS '组件路径';
+COMMENT ON COLUMN "public"."sys_menu"."query" IS '路由参数';
+COMMENT ON COLUMN "public"."sys_menu"."is_frame" IS '是否为外链（0是 1否）';
+COMMENT ON COLUMN "public"."sys_menu"."is_cache" IS '是否缓存（0缓存 1不缓存）';
+COMMENT ON COLUMN "public"."sys_menu"."menu_type" IS '菜单类型（M目录 C菜单 F按钮）';
+COMMENT ON COLUMN "public"."sys_menu"."visible" IS '菜单状态（0显示 1隐藏）';
+COMMENT ON COLUMN "public"."sys_menu"."status" IS '菜单状态（0正常 1停用）';
+COMMENT ON COLUMN "public"."sys_menu"."perms" IS '权限标识';
+COMMENT ON COLUMN "public"."sys_menu"."icon" IS '菜单图标';
+COMMENT ON COLUMN "public"."sys_menu"."create_by" IS '创建者';
+COMMENT ON COLUMN "public"."sys_menu"."create_time" IS '创建时间';
+COMMENT ON COLUMN "public"."sys_menu"."update_by" IS '更新者';
+COMMENT ON COLUMN "public"."sys_menu"."update_time" IS '更新时间';
+COMMENT ON COLUMN "public"."sys_menu"."remark" IS '备注';
+COMMENT ON COLUMN "public"."sys_menu"."open_way" IS '打开方式；1：页面打开；2：弹窗打开';
+COMMENT ON COLUMN "public"."sys_menu"."plugin_id" IS '所属插件ID';
+COMMENT ON COLUMN "public"."sys_menu"."open_position" IS '打开位置；1：左边菜单；2：首页实例';
+COMMENT ON COLUMN "public"."sys_menu"."query_template" IS 'query参数模板';
+COMMENT ON COLUMN "public"."sys_menu"."plugin_theme" IS '插件主题';
+COMMENT ON COLUMN "public"."sys_menu"."menu_classify" IS '菜单分类；1：业务菜单；2：平台菜单';
+COMMENT ON COLUMN "public"."sys_menu"."menu_en_name" IS '英文名称';
+COMMENT ON TABLE "public"."sys_menu" IS '菜单权限表';
+
+-- ----------------------------
+-- Table structure for sys_oper_log
+-- ----------------------------
+
+CREATE TABLE IF NOT EXISTS "public"."sys_oper_log" (
+    "oper_id" int8 NOT NULL PRIMARY KEY DEFAULT nextval('sq_sys_log_id'::regclass),
+    "title" varchar(50) COLLATE "pg_catalog"."default",
+    "business_type" int4,
+    "method" varchar(100) COLLATE "pg_catalog"."default",
+    "request_method" varchar(10) COLLATE "pg_catalog"."default",
+    "operator_type" int4,
+    "oper_name" varchar(50) COLLATE "pg_catalog"."default",
+    "oper_url" varchar(255) COLLATE "pg_catalog"."default",
+    "oper_ip" varchar(128) COLLATE "pg_catalog"."default",
+    "oper_location" varchar(255) COLLATE "pg_catalog"."default",
+    "oper_param" varchar(2000) COLLATE "pg_catalog"."default",
+    "json_result" varchar(2000) COLLATE "pg_catalog"."default",
+    "status" int4,
+    "error_msg" varchar(2000) COLLATE "pg_catalog"."default",
+    "oper_time" timestamp(6)
+    )
+;
+COMMENT ON COLUMN "public"."sys_oper_log"."oper_id" IS '日志主键';
+COMMENT ON COLUMN "public"."sys_oper_log"."title" IS '模块标题';
+COMMENT ON COLUMN "public"."sys_oper_log"."business_type" IS '业务类型（0其它 1新增 2修改 3删除）';
+COMMENT ON COLUMN "public"."sys_oper_log"."method" IS '方法名称';
+COMMENT ON COLUMN "public"."sys_oper_log"."request_method" IS '请求方式';
+COMMENT ON COLUMN "public"."sys_oper_log"."operator_type" IS '操作类别（0其它 1后台用户 2手机端用户）';
+COMMENT ON COLUMN "public"."sys_oper_log"."oper_name" IS '操作人员';
+COMMENT ON COLUMN "public"."sys_oper_log"."oper_url" IS '请求URL';
+COMMENT ON COLUMN "public"."sys_oper_log"."oper_ip" IS '主机地址';
+COMMENT ON COLUMN "public"."sys_oper_log"."oper_location" IS '操作地点';
+COMMENT ON COLUMN "public"."sys_oper_log"."oper_param" IS '请求参数';
+COMMENT ON COLUMN "public"."sys_oper_log"."json_result" IS '返回参数';
+COMMENT ON COLUMN "public"."sys_oper_log"."status" IS '操作状态（0正常 1异常）';
+COMMENT ON COLUMN "public"."sys_oper_log"."error_msg" IS '错误消息';
+COMMENT ON COLUMN "public"."sys_oper_log"."oper_time" IS '操作时间';
+COMMENT ON TABLE "public"."sys_oper_log" IS '操作日志记录';
+
+-- ----------------------------
+-- Table structure for sys_plugin_config
+-- ----------------------------
+
+CREATE TABLE IF NOT EXISTS "public"."sys_plugin_config" (
+    "id" int8 NOT NULL PRIMARY KEY DEFAULT nextval('sq_sys_plugin_config_id'::regclass),
+    "plugin_id" varchar(100) COLLATE "pg_catalog"."default",
+    "config_json" varchar(1000) COLLATE "pg_catalog"."default"
+    )
+;
+COMMENT ON COLUMN "public"."sys_plugin_config"."id" IS '主键ID';
+COMMENT ON COLUMN "public"."sys_plugin_config"."plugin_id" IS '插件ID';
+COMMENT ON COLUMN "public"."sys_plugin_config"."config_json" IS '配置参数';
+COMMENT ON TABLE "public"."sys_plugin_config" IS '插件配置结构表';
+
+-- ----------------------------
+-- Table structure for sys_plugin_config_data
+-- ----------------------------
+
+CREATE TABLE IF NOT EXISTS "public"."sys_plugin_config_data" (
+    "id" int8 NOT NULL PRIMARY KEY DEFAULT nextval('sq_sys_plugin_config_data_id'::regclass),
+    "plugin_id" varchar(100) COLLATE "pg_catalog"."default",
+    "config_data" varchar(1000) COLLATE "pg_catalog"."default"
+    )
+;
+COMMENT ON COLUMN "public"."sys_plugin_config_data"."id" IS '主键ID';
+COMMENT ON COLUMN "public"."sys_plugin_config_data"."plugin_id" IS '插件ID';
+COMMENT ON COLUMN "public"."sys_plugin_config_data"."config_data" IS '配置数据';
+COMMENT ON TABLE "public"."sys_plugin_config_data" IS '插件配置数据';
+
+-- ----------------------------
+-- Table structure for sys_plugins
+-- ----------------------------
+
+CREATE TABLE IF NOT EXISTS "public"."sys_plugins" (
+    "id" int4 NOT NULL PRIMARY KEY DEFAULT nextval('sq_sys_plugin_id'::regclass),
+    "plugin_id" varchar(100) COLLATE "pg_catalog"."default",
+    "bootstrap_class" varchar(255) COLLATE "pg_catalog"."default",
+    "plugin_desc" text COLLATE "pg_catalog"."default",
+    "logo_path" varchar(255) COLLATE "pg_catalog"."default",
+    "plugin_type" int4,
+    "plugin_version" varchar(50) COLLATE "pg_catalog"."default",
+    "plugin_provider" varchar(50) COLLATE "pg_catalog"."default",
+    "plugin_status" int2 DEFAULT 1,
+    "is_need_configured" int2,
+    "theme" varchar(50) COLLATE "pg_catalog"."default"
+    )
+;
+COMMENT ON COLUMN "public"."sys_plugins"."id" IS '主键ID';
+COMMENT ON COLUMN "public"."sys_plugins"."plugin_id" IS '插件ID';
+COMMENT ON COLUMN "public"."sys_plugins"."bootstrap_class" IS '启动类';
+COMMENT ON COLUMN "public"."sys_plugins"."plugin_desc" IS '插件描述';
+COMMENT ON COLUMN "public"."sys_plugins"."logo_path" IS '插件Logo路径';
+COMMENT ON COLUMN "public"."sys_plugins"."plugin_type" IS '插件类别';
+COMMENT ON COLUMN "public"."sys_plugins"."plugin_version" IS '插件版本';
+COMMENT ON COLUMN "public"."sys_plugins"."plugin_provider" IS '插件提供者';
+COMMENT ON COLUMN "public"."sys_plugins"."plugin_status" IS '插件状态：1：启动；2：停用';
+COMMENT ON COLUMN "public"."sys_plugins"."is_need_configured" IS '是否需要配置数据';
+COMMENT ON COLUMN "public"."sys_plugins"."theme" IS '主题';
+
+-- ----------------------------
+-- Table structure for sys_role
+-- ----------------------------
+
+CREATE TABLE IF NOT EXISTS "public"."sys_role" (
+    "role_id" int8 NOT NULL PRIMARY KEY DEFAULT nextval('sq_sys_role_id'::regclass),
+    "role_name" varchar(30) COLLATE "pg_catalog"."default" NOT NULL,
+    "role_key" varchar(100) COLLATE "pg_catalog"."default",
+    "role_sort" int4,
+    "data_scope" char(1) COLLATE "pg_catalog"."default",
+    "menu_check_strictly" int2 DEFAULT 1,
+    "dept_check_strictly" int2,
+    "status" char(1) COLLATE "pg_catalog"."default" NOT NULL DEFAULT 0,
+    "del_flag" char(1) COLLATE "pg_catalog"."default" DEFAULT 0,
+    "create_by" varchar(64) COLLATE "pg_catalog"."default",
+    "create_time" timestamp(6),
+    "update_by" varchar(64) COLLATE "pg_catalog"."default",
+    "update_time" timestamp(6),
+    "remark" varchar(500) COLLATE "pg_catalog"."default"
+    )
+;
+COMMENT ON COLUMN "public"."sys_role"."role_id" IS '角色ID';
+COMMENT ON COLUMN "public"."sys_role"."role_name" IS '角色名称';
+COMMENT ON COLUMN "public"."sys_role"."role_key" IS '角色权限字符串';
+COMMENT ON COLUMN "public"."sys_role"."role_sort" IS '显示顺序';
+COMMENT ON COLUMN "public"."sys_role"."data_scope" IS '数据范围（1：全部数据权限 2：自定数据权限 3：本部门数据权限 4：本部门及以下数据权限）';
+COMMENT ON COLUMN "public"."sys_role"."menu_check_strictly" IS '菜单树选择项是否关联显示';
+COMMENT ON COLUMN "public"."sys_role"."dept_check_strictly" IS '医院树选择项是否关联显示';
+COMMENT ON COLUMN "public"."sys_role"."status" IS '角色状态（0正常 1停用）';
+COMMENT ON COLUMN "public"."sys_role"."del_flag" IS '删除标志（0代表存在 2代表删除）';
+COMMENT ON COLUMN "public"."sys_role"."create_by" IS '创建者';
+COMMENT ON COLUMN "public"."sys_role"."create_time" IS '创建时间';
+COMMENT ON COLUMN "public"."sys_role"."update_by" IS '更新者';
+COMMENT ON COLUMN "public"."sys_role"."update_time" IS '更新时间';
+COMMENT ON COLUMN "public"."sys_role"."remark" IS '备注';
+COMMENT ON TABLE "public"."sys_role" IS '角色信息表';
+
+-- ----------------------------
+-- Table structure for sys_role_menu
+-- ----------------------------
+
+CREATE TABLE IF NOT EXISTS "public"."sys_role_menu" (
+                                                        "role_id" int8 NOT NULL,
+                                                        "menu_id" int8 NOT NULL
+)
+;
+COMMENT ON COLUMN "public"."sys_role_menu"."role_id" IS '角色ID';
+COMMENT ON COLUMN "public"."sys_role_menu"."menu_id" IS '菜单ID';
+COMMENT ON TABLE "public"."sys_role_menu" IS '角色和菜单关联表';
+
+-- ----------------------------
+-- Table structure for sys_user
+-- ----------------------------
+
+CREATE TABLE IF NOT EXISTS "public"."sys_user" (
+    "user_id" int8 NOT NULL PRIMARY KEY DEFAULT nextval('sq_sys_user_id'::regclass),
+    "user_name" varchar(30) COLLATE "pg_catalog"."default" NOT NULL,
+    "nick_name" varchar(30) COLLATE "pg_catalog"."default" NOT NULL,
+    "user_type" varchar(2) COLLATE "pg_catalog"."default",
+    "email" varchar(50) COLLATE "pg_catalog"."default",
+    "phonenumber" varchar(11) COLLATE "pg_catalog"."default",
+    "sex" char(1) COLLATE "pg_catalog"."default",
+    "avatar" varchar(100) COLLATE "pg_catalog"."default",
+    "password" varchar(100) COLLATE "pg_catalog"."default",
+    "status" char(1) COLLATE "pg_catalog"."default",
+    "del_flag" char(1) COLLATE "pg_catalog"."default" DEFAULT 0,
+    "login_ip" varchar(128) COLLATE "pg_catalog"."default",
+    "login_date" timestamp(6),
+    "create_by" varchar(64) COLLATE "pg_catalog"."default",
+    "create_time" timestamp(6),
+    "update_by" varchar(64) COLLATE "pg_catalog"."default",
+    "update_time" timestamp(6),
+    "remark" varchar(500) COLLATE "pg_catalog"."default"
+    )
+;
+COMMENT ON COLUMN "public"."sys_user"."user_id" IS '用户ID';
+COMMENT ON COLUMN "public"."sys_user"."user_name" IS '用户账号';
+COMMENT ON COLUMN "public"."sys_user"."nick_name" IS '用户昵称';
+COMMENT ON COLUMN "public"."sys_user"."user_type" IS '用户类型（00系统用户）';
+COMMENT ON COLUMN "public"."sys_user"."email" IS '用户邮箱';
+COMMENT ON COLUMN "public"."sys_user"."phonenumber" IS '手机号码';
+COMMENT ON COLUMN "public"."sys_user"."sex" IS '用户性别（0男 1女 2未知）';
+COMMENT ON COLUMN "public"."sys_user"."avatar" IS '头像地址';
+COMMENT ON COLUMN "public"."sys_user"."password" IS '密码';
+COMMENT ON COLUMN "public"."sys_user"."status" IS '帐号状态（0正常 1停用）';
+COMMENT ON COLUMN "public"."sys_user"."del_flag" IS '删除标志（0代表存在 2代表删除）';
+COMMENT ON COLUMN "public"."sys_user"."login_ip" IS '最后登录IP';
+COMMENT ON COLUMN "public"."sys_user"."login_date" IS '最后登录时间';
+COMMENT ON COLUMN "public"."sys_user"."create_by" IS '创建者';
+COMMENT ON COLUMN "public"."sys_user"."create_time" IS '创建时间';
+COMMENT ON COLUMN "public"."sys_user"."update_by" IS '更新者';
+COMMENT ON COLUMN "public"."sys_user"."update_time" IS '更新时间';
+COMMENT ON COLUMN "public"."sys_user"."remark" IS '备注';
+COMMENT ON TABLE "public"."sys_user" IS '用户信息表';
+
+-- ----------------------------
+-- Table structure for sys_user_role
+-- ----------------------------
+
+CREATE TABLE IF NOT EXISTS "public"."sys_user_role" (
+                                                        "user_id" int8 NOT NULL,
+                                                        "role_id" int8 NOT NULL
+)
+;
+COMMENT ON COLUMN "public"."sys_user_role"."user_id" IS '用户ID';
+COMMENT ON COLUMN "public"."sys_user_role"."role_id" IS '角色ID';
+COMMENT ON TABLE "public"."sys_user_role" IS '用户和角色关联表';
+
+-- ----------------------------
+-- Table structure for sys_white_list
+-- ----------------------------
+
+CREATE TABLE IF NOT EXISTS "public"."sys_white_list" (
+    "id" int8 NOT NULL PRIMARY KEY DEFAULT nextval('sq_sys_white_list_id'::regclass),
+    "title" varchar(255) COLLATE "pg_catalog"."default",
+    "ip_list" varchar
+(
+    800
+) COLLATE "pg_catalog"."default",
+    "create_time" timestamp
+(
+    6
+)
+    )
+;
+COMMENT
+ON COLUMN "public"."sys_white_list"."id" IS '主键ID';
+COMMENT
+ON COLUMN "public"."sys_white_list"."title" IS '白名单名称';
+COMMENT
+ON COLUMN "public"."sys_white_list"."ip_list" IS 'ip列表，逗号隔开';
+COMMENT
+ON COLUMN "public"."sys_white_list"."create_time" IS '创建时间';
+
+
+CREATE TABLE IF NOT EXISTS "public"."ops_package_manager"
+(
+    "package_id" varchar
+(
+    255
+) COLLATE "pg_catalog"."default" NOT NULL PRIMARY KEY,
+    "os" varchar
+(
+    255
+) COLLATE "pg_catalog"."default",
+    "cpu_arch" varchar
+(
+    255
+) COLLATE "pg_catalog"."default",
+    "package_version" varchar
+(
+    255
+) COLLATE "pg_catalog"."default",
+    "package_version_num" varchar
+(
+    255
+) COLLATE "pg_catalog"."default",
+    "package_url" varchar
+(
+    1024
+) COLLATE "pg_catalog"."default",
+    "remark" varchar
+(
+    255
+) COLLATE "pg_catalog"."default",
+    "create_by" varchar
+(
+    64
+) COLLATE "pg_catalog"."default",
+    "create_time" timestamp
+(
+    6
+),
+    "update_by" varchar
+(
+    64
+) COLLATE "pg_catalog"."default",
+    "update_time" timestamp
+(
+    6
+)
+    );
+
+
+INSERT INTO "public"."ops_package_manager"("package_id", "os", "cpu_arch", "package_version", "package_version_num",
+                                           "package_url", "remark", "create_by", "create_time", "update_by",
+                                           "update_time")
+VALUES ('1604735048472268801', 'centos', 'x86_64', 'MINIMAL_LIST', '3.0.0',
+        'https://opengauss.obs.cn-south-1.myhuaweicloud.com/3.0.0/x86/openGauss-3.0.0-CentOS-64bit.tar.bz2', NULL,
+        'admin', '2022-12-19 15:07:04.749', 'admin', '2022-12-19 15:07:04.749') ON DUPLICATE KEY
+UPDATE NOTHING;
+INSERT INTO "public"."ops_package_manager"("package_id", "os", "cpu_arch", "package_version", "package_version_num",
+                                           "package_url", "remark", "create_by", "create_time", "update_by",
+                                           "update_time")
+VALUES ('1604855665214541825', 'openEuler', 'aarch64', 'ENTERPRISE', '3.0.0',
+        'https://opengauss.obs.cn-south-1.myhuaweicloud.com/3.0.0/arm/openGauss-3.0.0-openEuler-64bit-all.tar.gz', NULL,
+        'admin', '2022-12-19 23:06:22.02', 'admin', '2022-12-19 23:06:22.02') ON DUPLICATE KEY
+UPDATE NOTHING;
+INSERT INTO "public"."ops_package_manager"("package_id", "os", "cpu_arch", "package_version", "package_version_num",
+                                           "package_url", "remark", "create_by", "create_time", "update_by",
+                                           "update_time")
+VALUES ('1604857993288142850', 'openEuler', 'aarch64', 'LITE', '3.0.0',
+        'https://opengauss.obs.cn-south-1.myhuaweicloud.com/3.0.0/arm/openGauss-Lite-3.0.0-openEuler-aarch64.tar.gz',
+        NULL, 'admin', '2022-12-19 23:15:37.077', 'admin', '2022-12-19 23:15:37.077') ON DUPLICATE KEY
+UPDATE NOTHING;
+INSERT INTO "public"."ops_package_manager"("package_id", "os", "cpu_arch", "package_version", "package_version_num",
+                                           "package_url", "remark", "create_by", "create_time", "update_by",
+                                           "update_time")
+VALUES ('1605498723119550466', 'centos', 'x86_64', 'ENTERPRISE', '3.0.0',
+        'https://opengauss.obs.cn-south-1.myhuaweicloud.com/3.0.0/x86/openGauss-3.0.0-CentOS-64bit-all.tar.gz', NULL,
+        'admin', '2022-12-21 17:41:38.992', 'admin', '2022-12-21 17:41:38.992') ON DUPLICATE KEY
+UPDATE NOTHING;
+INSERT INTO "public"."ops_package_manager"("package_id", "os", "cpu_arch", "package_version", "package_version_num",
+                                           "package_url", "remark", "create_by", "create_time", "update_by",
+                                           "update_time")
+VALUES ('1605498799611072514', 'centos', 'x86_64', 'LITE', '3.0.0',
+        'https://opengauss.obs.cn-south-1.myhuaweicloud.com/3.0.0/x86/openGauss-Lite-3.0.0-CentOS-x86_64.tar.gz', NULL,
+        'admin', '2022-12-21 17:41:57.21', 'admin', '2022-12-21 17:41:57.21') ON DUPLICATE KEY
+UPDATE NOTHING;
+INSERT INTO "public"."ops_package_manager"("package_id", "os", "cpu_arch", "package_version", "package_version_num",
+                                           "package_url", "remark", "create_by", "create_time", "update_by",
+                                           "update_time")
+VALUES ('1606627277907599362', 'openEuler', 'aarch64', 'MINIMAL_LIST', '3.0.0',
+        'https://opengauss.obs.cn-south-1.myhuaweicloud.com/3.0.0/arm/openGauss-3.0.0-openEuler-64bit.tar.bz2', NULL,
+        'admin', '2022-12-24 20:26:07.402', 'admin', '2022-12-24 20:26:07.402') ON DUPLICATE KEY
+UPDATE NOTHING;
+INSERT INTO "public"."ops_package_manager"("package_id", "os", "cpu_arch", "package_version", "package_version_num",
+                                           "package_url", "remark", "create_by", "create_time", "update_by",
+                                           "update_time")
+VALUES ('1606627421516374017', 'openEuler', 'x86_64', 'ENTERPRISE', '3.0.0',
+        'https://opengauss.obs.cn-south-1.myhuaweicloud.com/3.0.0/x86_openEuler/openGauss-3.0.0-openEuler-64bit-all.tar.gz',
+        NULL, 'admin', '2022-12-24 20:26:41.641', 'admin', '2022-12-24 20:26:41.641') ON DUPLICATE KEY
+UPDATE NOTHING;
+INSERT INTO "public"."ops_package_manager"("package_id", "os", "cpu_arch", "package_version", "package_version_num",
+                                           "package_url", "remark", "create_by", "create_time", "update_by",
+                                           "update_time")
+VALUES ('1606627515523309570', 'openEuler', 'x86_64', 'MINIMAL_LIST', '3.0.0',
+        'https://opengauss.obs.cn-south-1.myhuaweicloud.com/3.0.0/x86_openEuler/openGauss-3.0.0-openEuler-64bit.tar.bz2',
+        NULL, 'admin', '2022-12-24 20:27:04.054', 'admin', '2022-12-24 20:27:04.054') ON DUPLICATE KEY
+UPDATE NOTHING;
+INSERT INTO "public"."ops_package_manager"("package_id", "os", "cpu_arch", "package_version", "package_version_num",
+                                           "package_url", "remark", "create_by", "create_time", "update_by",
+                                           "update_time")
+VALUES ('1606627585895342082', 'openEuler', 'x86_64', 'LITE', '3.0.0',
+        'https://opengauss.obs.cn-south-1.myhuaweicloud.com/3.0.0/x86_openEuler/openGauss-Lite-3.0.0-openEuler-x86_64.tar.gz',
+        NULL, 'admin', '2022-12-24 20:27:20.832', 'admin', '2022-12-24 20:27:20.832') ON DUPLICATE KEY
+UPDATE NOTHING;
+
+CREATE
+OR REPLACE FUNCTION init_data_fuc() RETURNS integer AS 'BEGIN
+
+ IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema=''public'' and table_name=''sys_role'') AND
+ NOT EXISTS (select 1 from "public"."sys_role")
+ THEN
+ INSERT INTO "public"."sys_role" ("role_id", "role_name", "role_key", "role_sort", "data_scope", "menu_check_strictly", "dept_check_strictly", "status", "del_flag", "create_by", "create_time", "update_by", "update_time", "remark") VALUES (1, ''超级管理员'', ''admin'', 1, ''1'', 1, 1, ''0'', ''0'', ''admin'', ''2021-11-01 09:38:10'', NULL, NULL, ''超级管理员'');
+ INSERT INTO "public"."sys_role" ("role_id", "role_name", "role_key", "role_sort", "data_scope", "menu_check_strictly", "dept_check_strictly", "status", "del_flag", "create_by", "create_time", "update_by", "update_time", "remark") VALUES (2, ''普通角色'', ''common'', 2, ''2'', 1, 1, ''0'', ''1'', ''admin'', ''2021-11-01 09:38:10'', NULL, NULL, ''普通角色'');
+ END IF;
+
+ IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema=''public'' and table_name=''sys_user'') AND
+ NOT EXISTS (select 1 from "public"."sys_user")
+ THEN
+ INSERT INTO "public"."sys_user" ("user_id", "user_name", "nick_name", "user_type", "email", "phonenumber", "sex", "avatar", "password", "status", "del_flag", "login_ip", "login_date", "create_by", "create_time", "update_by", "update_time", "remark") VALUES (1, ''admin'', ''超级管理员'', ''00'', NULL, NULL, NULL, NULL, ''$2a$10$MeXrFYhTOrDXqVDXPBDwrOnxg7NVe1ADX1qnhQe04m94VFKwq3cRy'', ''0'', ''0'', NULL, NULL, ''admin'', ''2021-11-01 09:38:09'', ''admin'', ''2022-11-23 13:58:14.047'', ''管理员'');
+ END IF;
+
+ IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema=''public'' and table_name=''sys_user_role'') AND
+ NOT EXISTS (select 1 from "public"."sys_user_role")
+ THEN
+ INSERT INTO "public"."sys_user_role" ("user_id", "role_id") VALUES (1, 1);
+ END IF;
+
+ IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema=''public'' and table_name=''sys_menu'') AND
+ NOT EXISTS (select 1 from "public"."sys_menu")
+ THEN
+ INSERT INTO "public"."sys_menu" ("menu_id", "menu_name", "parent_id", "order_num", "path", "component", "query", "is_frame", "is_cache", "menu_type", "visible", "status", "perms", "icon", "create_by", "create_time", "update_by", "update_time", "remark", "open_way", "plugin_id", "open_position", "query_template", "plugin_theme", "menu_classify", "menu_en_name") VALUES (2, ''资源中心'', 0, 2, ''/resource'', NULL, NULL, 1, 0, ''M'', ''0'', ''0'', NULL, ''resource'', ''admin'', ''2022-10-10 22:16:07.030737'', NULL, NULL, NULL, 1, NULL, 1, NULL, NULL, 1, ''Resources'');
+ INSERT INTO "public"."sys_menu" ("menu_id", "menu_name", "parent_id", "order_num", "path", "component", "query", "is_frame", "is_cache", "menu_type", "visible", "status", "perms", "icon", "create_by", "create_time", "update_by", "update_time", "remark", "open_way", "plugin_id", "open_position", "query_template", "plugin_theme", "menu_classify", "menu_en_name") VALUES (5, ''插件管理'', 0, 5, ''/plugin/manage'', ''plugin/manage/index'', NULL, 1, 0, ''C'', ''0'', ''0'', NULL, ''plugin'', ''admin'', ''2022-10-10 22:16:07.030737'', NULL, NULL, NULL, 1, NULL, 1, NULL, NULL, 2, ''Plugins'');
+ INSERT INTO "public"."sys_menu" ("menu_id", "menu_name", "parent_id", "order_num", "path", "component", "query", "is_frame", "is_cache", "menu_type", "visible", "status", "perms", "icon", "create_by", "create_time", "update_by", "update_time", "remark", "open_way", "plugin_id", "open_position", "query_template", "plugin_theme", "menu_classify", "menu_en_name") VALUES (6, ''安全中心'', 0, 6, ''/security'', NULL, NULL, 1, 0, ''M'', ''0'', ''0'', NULL, ''security'', ''admin'', ''2022-10-10 22:16:07.030737'', NULL, NULL, NULL, 1, NULL, 1, NULL, NULL, 2, ''Security'');
+ INSERT INTO "public"."sys_menu" ("menu_id", "menu_name", "parent_id", "order_num", "path", "component", "query", "is_frame", "is_cache", "menu_type", "visible", "status", "perms", "icon", "create_by", "create_time", "update_by", "update_time", "remark", "open_way", "plugin_id", "open_position", "query_template", "plugin_theme", "menu_classify", "menu_en_name") VALUES (7, ''日志中心'', 0, 7, ''/logs'', NULL, NULL, 1, 0, ''M'', ''0'', ''0'', NULL, ''logs'', ''admin'', ''2022-11-23 20:54:36.439'', NULL, NULL, NULL, 1, NULL, 1, NULL, NULL, 2, ''Logs'');
+ INSERT INTO "public"."sys_menu" ("menu_id", "menu_name", "parent_id", "order_num", "path", "component", "query", "is_frame", "is_cache", "menu_type", "visible", "status", "perms", "icon", "create_by", "create_time", "update_by", "update_time", "remark", "open_way", "plugin_id", "open_position", "query_template", "plugin_theme", "menu_classify", "menu_en_name") VALUES (201, ''数据库资源'', 2, 1, ''/resource/database'', ''resource/database/index'', NULL, 1, 0, ''C'', ''0'', ''0'', NULL, NULL, ''admin'', ''2022-10-10 22:16:07.030737'', NULL, NULL, NULL, 1, NULL, 1, NULL, NULL, 1, ''Database'');
+ INSERT INTO "public"."sys_menu" ("menu_id", "menu_name", "parent_id", "order_num", "path", "component", "query", "is_frame", "is_cache", "menu_type", "visible", "status", "perms", "icon", "create_by", "create_time", "update_by", "update_time", "remark", "open_way", "plugin_id", "open_position", "query_template", "plugin_theme", "menu_classify", "menu_en_name") VALUES (202, ''协议资源'', 2, 2, ''/resource/protocol'', ''resource/protocol/index'', NULL, 1, 0, ''C'', ''0'', ''0'', NULL, NULL, ''admin'', ''2022-10-10 22:16:07.030737'', NULL, NULL, NULL, 1, NULL, 1, NULL, NULL, 1, ''Protocol'');
+ INSERT INTO "public"."sys_menu" ("menu_id", "menu_name", "parent_id", "order_num", "path", "component", "query", "is_frame", "is_cache", "menu_type", "visible", "status", "perms", "icon", "create_by", "create_time", "update_by", "update_time", "remark", "open_way", "plugin_id", "open_position", "query_template", "plugin_theme", "menu_classify", "menu_en_name") VALUES (203, ''物理机资源'', 2, 3, ''/resource/physical'', ''resource/physical/index'', NULL, 1, 0, ''C'', ''0'', ''0'', NULL, NULL, ''admin'', ''2022-10-10 22:16:07.030737'', NULL, NULL, NULL, 1, NULL, 1, NULL, NULL, 1, ''Host'');
+ INSERT INTO "public"."sys_menu" ("menu_id", "menu_name", "parent_id", "order_num", "path", "component", "query", "is_frame", "is_cache", "menu_type", "visible", "status", "perms", "icon", "create_by", "create_time", "update_by", "update_time", "remark", "open_way", "plugin_id", "open_position", "query_template", "plugin_theme", "menu_classify", "menu_en_name") VALUES (204, ''AZ管理'', 2, 4, ''/resource/az'', ''resource/az/index'', NULL, 1, 0, ''C'', ''0'', ''0'', NULL, NULL, ''admin'', ''2022-10-10 22:16:07.030737'', NULL, NULL, NULL, 1, NULL, 1, NULL, NULL, 1, ''Az Manager'');
+ INSERT INTO "public"."sys_menu" ("menu_id", "menu_name", "parent_id", "order_num", "path", "component", "query", "is_frame", "is_cache", "menu_type", "visible", "status", "perms", "icon", "create_by", "create_time", "update_by", "update_time", "remark", "open_way", "plugin_id", "open_position", "query_template", "plugin_theme", "menu_classify", "menu_en_name") VALUES (601, ''账号管理'', 6, 1, ''/security/user'', ''security/user/index'', NULL, 1, 0, ''C'', ''0'', ''0'', NULL, NULL, ''admin'', ''2022-10-10 22:16:07.030737'', NULL, NULL, NULL, 1, NULL, 1, NULL, NULL, 2, ''Accounts'');
+ INSERT INTO "public"."sys_menu" ("menu_id", "menu_name", "parent_id", "order_num", "path", "component", "query", "is_frame", "is_cache", "menu_type", "visible", "status", "perms", "icon", "create_by", "create_time", "update_by", "update_time", "remark", "open_way", "plugin_id", "open_position", "query_template", "plugin_theme", "menu_classify", "menu_en_name") VALUES (602, ''角色与权限'', 6, 2, ''/security/role'', ''security/role/index'', NULL, 1, 0, ''C'', ''0'', ''0'', NULL, NULL, ''admin'', ''2022-10-10 22:16:07.030737'', NULL, NULL, NULL, 1, NULL, 1, NULL, NULL, 2, ''Roles'');
+ INSERT INTO "public"."sys_menu" ("menu_id", "menu_name", "parent_id", "order_num", "path", "component", "query", "is_frame", "is_cache", "menu_type", "visible", "status", "perms", "icon", "create_by", "create_time", "update_by", "update_time", "remark", "open_way", "plugin_id", "open_position", "query_template", "plugin_theme", "menu_classify", "menu_en_name") VALUES (603, ''菜单管理'', 6, 3, ''/security/menu'', ''security/menu/index'', NULL, 1, 0, ''C'', ''1'', ''0'', NULL, NULL, ''admin'', ''2022-10-10 22:16:07.030737'', NULL, NULL, NULL, 1, NULL, 1, NULL, NULL, 2, ''Menus'');
+ INSERT INTO "public"."sys_menu" ("menu_id", "menu_name", "parent_id", "order_num", "path", "component", "query", "is_frame", "is_cache", "menu_type", "visible", "status", "perms", "icon", "create_by", "create_time", "update_by", "update_time", "remark", "open_way", "plugin_id", "open_position", "query_template", "plugin_theme", "menu_classify", "menu_en_name") VALUES (604, ''访问白名单'', 6, 4, ''/security/whitelist'', ''security/whitelist/index'', NULL, 1, 0, ''C'', ''0'', ''0'', NULL, NULL, ''admin'', ''2022-10-10 22:16:07.030737'', NULL, NULL, NULL, 1, NULL, 1, NULL, NULL, 2, ''Whitelist'');
+ INSERT INTO "public"."sys_menu" ("menu_id", "menu_name", "parent_id", "order_num", "path", "component", "query", "is_frame", "is_cache", "menu_type", "visible", "status", "perms", "icon", "create_by", "create_time", "update_by", "update_time", "remark", "open_way", "plugin_id", "open_position", "query_template", "plugin_theme", "menu_classify", "menu_en_name") VALUES (605, ''个人中心'', 6, 5, ''/security/usercenter'', ''security/user/ucenter/index'', NULL, 1, 0, ''C'', ''1'', ''0'', NULL, NULL, ''admin'', NULL, NULL, NULL, NULL, 1, NULL, 1, NULL, NULL, 1, ''User Center'');
+ INSERT INTO "public"."sys_menu" ("menu_id", "menu_name", "parent_id", "order_num", "path", "component", "query", "is_frame", "is_cache", "menu_type", "visible", "status", "perms", "icon", "create_by", "create_time", "update_by", "update_time", "remark", "open_way", "plugin_id", "open_position", "query_template", "plugin_theme", "menu_classify", "menu_en_name") VALUES (701, ''系统日志'', 7, 1, ''/logs/sys-log'', ''logs/sys-log/index'', NULL, 1, 0, ''C'', ''0'', ''0'', NULL, NULL, ''admin'', ''2022-11-23 20:54:36.439'', NULL, NULL, NULL, 1, NULL, 1, NULL, NULL, 2, ''System Log'');
+ INSERT INTO "public"."sys_menu" ("menu_id", "menu_name", "parent_id", "order_num", "path", "component", "query", "is_frame", "is_cache", "menu_type", "visible", "status", "perms", "icon", "create_by", "create_time", "update_by", "update_time", "remark", "open_way", "plugin_id", "open_position", "query_template", "plugin_theme", "menu_classify", "menu_en_name") VALUES (702, ''操作日志'', 7, 2, ''/logs/oper-log'', ''logs/oper-log/index'', NULL, 1, 0, ''C'', ''0'', ''0'', NULL, NULL, ''admin'', ''2022-11-23 20:54:36.439'', NULL, NULL, NULL, 1, NULL, 1, NULL, NULL, 2, ''Operation Log'');
+ END IF;
+
+ IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema=''public'' and table_name=''sys_log_config'') AND
+ NOT EXISTS (select 1 from "public"."sys_log_config")
+ THEN
+ INSERT INTO "public"."sys_log_config" ("key", "value", "id") VALUES (''log_level'', ''info'', 1);
+ INSERT INTO "public"."sys_log_config" ("key", "value", "id") VALUES (''log_max_file_size'', ''5mb'', 3);
+ INSERT INTO "public"."sys_log_config" ("key", "value", "id") VALUES (''log_total_size_cap'', ''10gb'', 4);
+ INSERT INTO "public"."sys_log_config" ("key", "value", "id") VALUES (''log_max_history'', ''30'', 2);
+ END IF;
+
+ RETURN 0;
+ END;'
+ LANGUAGE plpgsql;
+
+select init_data_fuc();
+DROP FUNCTION init_data_fuc;

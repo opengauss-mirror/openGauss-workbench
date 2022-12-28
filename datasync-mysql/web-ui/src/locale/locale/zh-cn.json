@@ -1,0 +1,32 @@
+{
+  "home": {
+      "index": {
+          "5mq3d6o5yvc0": "在openGauss侧创建迁移时需要用到的用户以及database。",
+          "5mq3d6o5yzo0": "修改openGauss配置文件。将迁移工具所在机器IP地址加入白名单，修改openGauss监听地址。修改完毕后重启openGauss。",
+          "5mq3d6o5z6g0": "主机",
+          "5mq3d6o5zb00": "主机IP不能为空",
+          "5mq3d6o5zjk0": "请输入主机IP",
+          "5mq3d6o608g0": "端口",
+          "5mq3d6o60gk0": "主机端口不能为空",
+          "5mq3d6o60mc0": "请输入主机端口",
+          "5mq3d6o60po0": "用户名",
+          "5mq3d6o60t00": "用户名不能为空",
+          "5mq3d6o60vw0": "请输入用户名",
+          "5mq3d6o612g0": "密码",
+          "5mq3d6o615g0": "密码不能为空",
+          "5mq3d6o62lc0": "请输入密码",
+          "5mq3d6o66ys0": "请输入Database",
+          "5mq3d6o677g0": "目标数据库",
+          "5mq3d6o67ac0": "请输入Schema",
+          "5mq3d6o67dc0": "同步中",
+          "5mq3d6o67fo0": "开始同步",
+          "5mq3g65qkhw0": "为确保同步执行成功，需提前做好以下准备工作",
+          "5mq3g65qla00": "请在MySQL侧提前创建好用于复制的用户，并且对复制的数据库授予权限。",
+          "5mq3g65qlew0": "修改MySQL的配置文件，开启MySQL的复制功能。（一般是/etc/my.cnf或者/etc/my.cnf.d/mariadb-server.cnf）在 [mysqld] 配置块下修改如下配置（若没有[mysqld] 配置块新增即可），修改完毕后重启MySQL。",
+          "5mq3h1j5ees0": "Schema不能为空",
+          "5mq3hrx8s6o0": "MySQL数据库",
+          "5mq3ijy1z1s0": "Database不能为空",
+          "5mq3ijy1zw40": "Schema不能为空"
+      }
+  }
+}

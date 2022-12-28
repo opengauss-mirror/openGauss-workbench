@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.opengauss.admin.system.mapper.SysWhiteListMapper">
+
+    <resultMap id="SysWhiteListResult" type="org.opengauss.admin.system.domain.SysWhiteList">
+        <id property="id" column="id"/>
+        <result property="title" column="title"/>
+        <result property="ipList" column="ip_list"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+
+    <sql id="selectWhiteListVo">
+        SELECT
+            id,title,ip_list,create_time
+        FROM sys_white_list
+    </sql>
+
+    <select id="selectWhiteListPage" parameterType="org.opengauss.admin.system.domain.SysWhiteList" resultMap="SysWhiteListResult">
+        <include refid="selectWhiteListVo"/>
+        <where>
+            <if test="entity.title != null  and entity.title != ''">
+                and title like concat('%', #{entity.title}, '%')
+            </if>
+            <if test="entity.ipList != null  and entity.ipList != ''">
+                and ip_list like concat('%', #{entity.ipList}, '%')
+            </if>
+        </where>
+        order by id desc
+    </select>
+
+    <select id="selectWhiteListList" parameterType="org.opengauss.admin.system.domain.SysWhiteList" resultMap="SysWhiteListResult">
+        <include refid="selectWhiteListVo"/>
+        <where>
+            <if test="title != null  and title != ''">
+                and title like concat('%', #{title}, '%')
+            </if>
+            <if test="entity.ipList != null  and entity.ipList != ''">
+                and ip_list like concat('%', #{ipList}, '%')
+            </if>
+        </where>
+        order by id desc
+    </select>
+
+    <select id="countByIp" parameterType="String" resultType="Integer">
+        select count(1) from sys_white_list
+        where ip_list like concat('%', #{ip}, '%')
+    </select>
+
+</mapper>

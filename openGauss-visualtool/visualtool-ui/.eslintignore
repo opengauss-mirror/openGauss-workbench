@@ -1,0 +1,6 @@
+# Ignore public/*.js
+public/*.js
+# Ignore src/assets directory
+src/assets
+# Ignore src/views/modeling/style directory
+src/views/modeling/style

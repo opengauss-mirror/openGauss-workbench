@@ -1,0 +1,38 @@
+context:
+  listener:
+    classes: org.opengauss.admin.plugin.listener.BaseOpsPluginListener
+spring:
+  resources:
+    static-locations: classpath:resources,file:D://resources
+  datasource:
+    type: com.alibaba.druid.pool.DruidDataSource
+    driver-class-name: org.opengauss.Driver
+    url: jdbc:opengauss://82.157.245.128:5432/GaussDBvisualtool?currentSchema=public
+    username: jim
+    password: 1qaz2wsx#EDC$RFV
+    druid:
+      test-while-idle: false
+      test-on-borrow: true
+      validation-query: "select 1"
+      validation-query-timeout: 30000
+  sql:
+    init:
+      mode: always
+system:
+  defaultStoragePath: /Users/xielibo/uploadPath/gausstool
+# log config
+logging:
+  level:
+    org.opengauss.admin: debug
+    org.springframework: warn
+  file:
+    path: /Users/xielibo/base-ops/logs/
+mybatis-plus:
+  # Search for the specified package alias
+  typeAliasesPackage: org.opengauss.admin.plugin.domain
+
+  mapperLocations: classpath*:mapper/**/*.xml
+  # Load the global configuration file
+  configuration:
+    mapUnderscoreToCamelCase: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl

@@ -1,0 +1,32 @@
+{
+  "home": {
+      "index": {
+          "5mq3d6o5yvc0": "The user and database that need to be used when creating migration on the openGauss side.",
+          "5mq3d6o5yzo0": "Modify the openGauss configuration file. Add the IP address of the machine where the migration tool is located to the whitelist, and modify the openGauss listening address. Restart openGauss after modification.",
+          "5mq3d6o5z6g0": "Host",
+          "5mq3d6o5zb00": "Host IP cannot be empty",
+          "5mq3d6o5zjk0": "Please enter the host IP",
+          "5mq3d6o608g0": "Port",
+          "5mq3d6o60gk0": "Host port cannot be empty",
+          "5mq3d6o60mc0": "Please enter the host port",
+          "5mq3d6o60po0": "User",
+          "5mq3d6o60t00": "Username can not be empty",
+          "5mq3d6o60vw0": "please enter user name",
+          "5mq3d6o612g0": "Password",
+          "5mq3d6o615g0": "password can not be empty",
+          "5mq3d6o62lc0": "please enter password",
+          "5mq3d6o66ys0": "Please enter Database",
+          "5mq3d6o677g0": "Target Database",
+          "5mq3d6o67ac0": "Please enter Schema",
+          "5mq3d6o67dc0": "synchronizing",
+          "5mq3d6o67fo0": "start sync",
+          "5mq3g65qkhw0": "To ensure successful synchronization, the following preparations need to be made in advance",
+          "5mq3g65qla00": "Please create a user for replication on the MySQL side in advance and grant permissions to the replicated database.",
+          "5mq3g65qlew0": "Modify the MySQL configuration file and enable the MySQL replication function. (Usually /etc/my.cnf or /etc/my.cnf.d/mariadb-server.cnf) Modify the following configuration under the [mysqld] configuration block (if there is no [mysqld] configuration block, just add it), modify Restart MySQL when finished.",
+          "5mq3h1j5ees0": "Schema cannot be empty",
+          "5mq3hrx8s6o0": "MySQL Database",
+          "5mq3ijy1z1s0": "Database cannot be empty",
+          "5mq3ijy1zw40": "Schema cannot be empty"
+      }
+  }
+}
