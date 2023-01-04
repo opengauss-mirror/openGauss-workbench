@@ -43,7 +43,16 @@ public enum ResponseCode {
     MENU_ASSIGNED_NOT_DELETE(50114, "This menu has already been assigned and cannot be deleted"),
     USER_ACCOUNT_EXISTS_ERROR(50115, "user account is exists"),
     PLUGIN_MENU_HAS_OTHER_PLUGIN_SUBMENU_UNINSTALL_ERROR(50116, "This plugin menu has submenus for other plugins"),
+    ROLE_NAME_IS_NOT_EMPTY_ERROR(50117, "Role name cannot be empty"),
+    ROLE_NAME_MAX_LENGTH_ERROR(50118, "Role name length cannot exceed 25 characters"),
+    ROLE_REMARK_MAX_LENGTH_ERROR(50119, "Role remark length cannot exceed 200 characters"),
+    USER_NAME_MAX_LENGTH_ERROR(50120, "User account length cannot exceed 30 characters"),
+    USER_NICKNAME_MAX_LENGTH_ERROR(50121, "User nickname length cannot exceed 30 characters"),
+    USER_REMARK_MAX_LENGTH_ERROR(50122, "User remark length cannot exceed 200 characters"),
+    USER_TELEPHONE_MAX_LENGTH_ERROR(50123, "User telephone length cannot exceed 11 characters"),
 
+    WHITELIST_TITLE_MAX_LENGTH_ERROR(50124, "Whitelist title length cannot exceed 100 characters"),
+    WHITELIST_IPS_MAX_LENGTH_ERROR(50125, "Whitelist IP list length cannot exceed 200 characters"),
     ;
 
 

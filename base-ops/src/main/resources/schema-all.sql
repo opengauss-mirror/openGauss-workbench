@@ -3,7 +3,7 @@ CREATE OR REPLACE FUNCTION check_sequences() RETURNS integer AS '
         BEGIN
 IF NOT EXISTS (SELECT 1 FROM information_schema.sequences WHERE sequence_schema=''public'' AND sequence_name=''sq_modeling_data_flow_id'' )
 THEN
-CREATE SEQUENCE sq_modeling_data_flow_id
+CREATE SEQUENCE "public"."sq_modeling_data_flow_id"
 INCREMENT 1
 MINVALUE  1
 MAXVALUE 9223372036854775807

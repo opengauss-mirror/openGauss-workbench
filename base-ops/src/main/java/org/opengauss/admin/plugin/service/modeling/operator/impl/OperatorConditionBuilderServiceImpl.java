@@ -35,7 +35,8 @@ public class OperatorConditionBuilderServiceImpl extends BaseBuilderServiceImpl 
             for (int z=0; z<andGroupParams.size(); z++) {
                 JSONObject andItem = andGroupParams.getJSONObject(z);
                 if (andItem.getString("field") != null) {
-                    String sql = conditionConvert(andItem.getString("field"),andItem.getString("condition"),andItem.getString("value"),"string");
+                    String preparedParam = sqlObject.addParam(andItem.getString("value"));
+                    String sql = conditionConvert(andItem.getString("field"),andItem.getString("condition"),preparedParam);
                     andSqlList.add(sql);
                 }
             }
@@ -60,31 +61,27 @@ public class OperatorConditionBuilderServiceImpl extends BaseBuilderServiceImpl 
         return sqlObject;
     }
 
-    public String conditionConvert(String field,String condition,String value,String valueType)
+    public String conditionConvert(String field,String condition,String value)
     {
-        String valueTypeString = "string";
-        String valueConvert = value;
-        if (valueType.equals(valueTypeString)) {
-            valueConvert ="'" + value + "'";
-        }
+
         switch (condition) {
             case "equal":
-                return field + " = " + valueConvert;
+                return field + " = " + value;
 
             case "notEqual":
-                return field + " <> " + valueConvert;
+                return field + " <> " + value;
 
             case "lessThan":
-                return field + " < " + valueConvert;
+                return field + " < " + value;
 
             case "equalLessThan":
-                return field + " <= " + valueConvert;
+                return field + " <= " + value;
 
             case "greaterThan":
-                return field + " > " + valueConvert;
+                return field + " > " + value;
 
             case "equalGreaterThan":
-                return field + " >= " + valueConvert;
+                return field + " >= " + value;
 
             case "include":
                 return field +" like " + "'%"+value+"%'";

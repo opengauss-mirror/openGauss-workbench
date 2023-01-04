@@ -93,6 +93,18 @@ public class SysUserController extends BaseController {
                 && UserConstants.NOT_UNIQUE.equals(userService.checkEmailUnique(user))) {
             return AjaxResult.error(ResponseCode.USER_EMAIL_EXISTS_ERROR.code());
         }
+        if (user.getPhonenumber().length() > 11) {
+            return AjaxResult.error(ResponseCode.USER_TELEPHONE_MAX_LENGTH_ERROR.code());
+        }
+        if (user.getUserName().length() > 30) {
+            return AjaxResult.error(ResponseCode.USER_NAME_MAX_LENGTH_ERROR.code());
+        }
+        if (user.getNickName().length() > 30) {
+            return AjaxResult.error(ResponseCode.USER_NICKNAME_MAX_LENGTH_ERROR.code());
+        }
+        if (StringUtils.isNotEmpty(user.getRemark()) && user.getRemark().length() > 200) {
+            return AjaxResult.error(ResponseCode.USER_REMARK_MAX_LENGTH_ERROR.code());
+        }
         user.setCreateBy(getUsername());
         user.setPassword(SecurityUtils.encryptPassword(user.getPassword()));
         return toAjax(userService.insertUser(user));
@@ -115,6 +127,18 @@ public class SysUserController extends BaseController {
         } else if (StringUtils.isNotEmpty(user.getEmail())
                 && UserConstants.NOT_UNIQUE.equals(userService.checkEmailUnique(user))) {
             return AjaxResult.error(ResponseCode.USER_EMAIL_EXISTS_ERROR.code());
+        }
+        if (user.getPhonenumber().length() > 11) {
+            return AjaxResult.error(ResponseCode.USER_TELEPHONE_MAX_LENGTH_ERROR.code());
+        }
+        if (user.getUserName().length() > 30) {
+            return AjaxResult.error(ResponseCode.USER_NAME_MAX_LENGTH_ERROR.code());
+        }
+        if (user.getNickName().length() > 30) {
+            return AjaxResult.error(ResponseCode.USER_NICKNAME_MAX_LENGTH_ERROR.code());
+        }
+        if (StringUtils.isNotEmpty(user.getRemark()) && user.getRemark().length() > 200) {
+            return AjaxResult.error(ResponseCode.USER_REMARK_MAX_LENGTH_ERROR.code());
         }
         user.setUpdateBy(getUsername());
         return toAjax(userService.updateUser(user));

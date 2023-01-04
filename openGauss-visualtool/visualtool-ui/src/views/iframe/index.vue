@@ -26,7 +26,6 @@
   })
   const plugins = ref<any>([])
 
-  // 监听菜单是否收起
   watch(() => appStore.menuCollapse, (val) => {
     if (val) {
       plugins.value = [

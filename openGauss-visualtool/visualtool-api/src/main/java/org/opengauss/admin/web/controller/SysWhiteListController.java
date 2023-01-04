@@ -1,11 +1,13 @@
 package org.opengauss.admin.web.controller;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.github.pagehelper.util.StringUtil;
 import org.opengauss.admin.common.annotation.Log;
 import org.opengauss.admin.common.core.controller.BaseController;
 import org.opengauss.admin.common.core.domain.AjaxResult;
 import org.opengauss.admin.common.core.page.TableDataInfo;
 import org.opengauss.admin.common.enums.BusinessType;
+import org.opengauss.admin.common.enums.ResponseCode;
 import org.opengauss.admin.system.domain.SysWhiteList;
 import org.opengauss.admin.system.service.ISysWhiteListService;
 import io.swagger.annotations.Api;
@@ -75,6 +77,12 @@ public class SysWhiteListController extends BaseController {
     @PostMapping
     public AjaxResult add(@RequestBody SysWhiteList whiteList) {
         whiteList.setCreateTime(new Date());
+        if (whiteList.getTitle().length() > 100) {
+            return AjaxResult.error(ResponseCode.WHITELIST_TITLE_MAX_LENGTH_ERROR.code());
+        }
+        if (StringUtil.isNotEmpty(whiteList.getIpList()) && whiteList.getIpList().length() > 200) {
+            return AjaxResult.error(ResponseCode.WHITELIST_IPS_MAX_LENGTH_ERROR.code());
+        }
         return toAjax(iSysWhiteListService.save(whiteList));
     }
 
@@ -86,6 +94,12 @@ public class SysWhiteListController extends BaseController {
     @PreAuthorize("@ss.hasPermi('system:whiteList:edit')")
     @PutMapping
     public AjaxResult edit(@RequestBody SysWhiteList whiteList) {
+        if (whiteList.getTitle().length() > 100) {
+            return AjaxResult.error(ResponseCode.WHITELIST_TITLE_MAX_LENGTH_ERROR.code());
+        }
+        if (StringUtil.isNotEmpty(whiteList.getIpList()) && whiteList.getIpList().length() > 200) {
+            return AjaxResult.error(ResponseCode.WHITELIST_IPS_MAX_LENGTH_ERROR.code());
+        }
         return toAjax(iSysWhiteListService.updateById(whiteList));
     }
 

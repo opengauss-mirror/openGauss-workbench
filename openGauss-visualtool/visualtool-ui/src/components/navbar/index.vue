@@ -77,7 +77,7 @@
 </template>
 
 <script lang="ts" setup>
-  import { ref, computed, onMounted } from 'vue'
+  import { ref, watch, computed, onMounted } from 'vue'
   import useUser from '@/hooks/user'
   import useLocale from '@/hooks/locale'
   import { LOCALE_OPTIONS } from '@/locale'
@@ -99,6 +99,14 @@
 
   const theme = computed(() => {
     return appStore.theme
+  })
+
+  watch(() => appStore.menuCollapse, (val) => {
+    if (val) {
+      bus.$emit('opengauss-menu-collapse', '1')
+    } else {
+      bus.$emit('opengauss-menu-collapse', '0')
+    }
   })
 
   const handleToggleTheme = () => {

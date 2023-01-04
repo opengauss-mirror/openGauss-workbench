@@ -76,7 +76,14 @@ export default class FlowGraph {
         }
       }
     },
-    snapline: true, history: true, clipboard: true, keyboard: true,
+    snapline: true, 
+    history: {
+      enabled: true,
+      ignoreAdd: false,
+      ignoreRemove: false,
+      ignoreChange: true,
+    }, 
+    clipboard: true, keyboard: true,
     embedding: {
       enabled: true,
       findParent (this: { getNodes: any }, { node }: { node: Node }): any {
@@ -174,6 +181,7 @@ export default class FlowGraph {
         if (item.data && item.data.cells_type) item.cells_type = item.data.cells_type
         else if (item.shape === 'edge') item.cells_type = 'line'
       })
+      saveJsonData(dFStore.getFlowDataInfo.id as string, jsonData)
     })
     graph.on(`cell:removed`, (cell: KeyValue) => {
       if (cell.cell && cell.cell.cells_type === 'join') {

@@ -97,9 +97,11 @@ const init = (data?: KeyValue) => {
   if (data && data.indicator && data.dimension) {
     config.indicator = data.indicator
     config.dimension = data.dimension
+    config.showType = data.showType
   } else {
     config.indicator = { field: '', type: '', unit: '' }
     config.dimension = { field: '', num: 5 }
+    config.showType = { field: '', percentage: '' }
   }
 }
 const validate = () => {

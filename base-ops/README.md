@@ -141,7 +141,7 @@ openGauss的安装、运维场景对于初级用户或单纯想要测试openGaus
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
     driver-class-name: org.opengauss.Driver
-    url: jdbc:opengauss://xx.xxx.xxx.xxx:5432/一体化平台数据库名称?currentSchema=你的schema
+    url: jdbc:opengauss://xx.xxx.xxx.xxx:5432/一体化平台数据库名称?currentSchema=public
     username: 一体化平台数据库用户名
     password: 一体化平台数据库密码
   ```

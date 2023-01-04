@@ -45,6 +45,16 @@ onMounted(() => {
       changeLocale('zh-CN')
     }
   })
+
+  // menu collapse
+  const htmlStyle = document.getElementsByTagName('html')[0].style
+  window.$wujie?.bus.$on('opengauss-menu-collapse', val => {
+    if (val === '1') {
+      htmlStyle.setProperty('padding-left', '64px', 'important')
+    } else {
+      htmlStyle.setProperty('padding-left', '236px', 'important')
+    }
+  })
 })
 
 const locale = computed(() => {

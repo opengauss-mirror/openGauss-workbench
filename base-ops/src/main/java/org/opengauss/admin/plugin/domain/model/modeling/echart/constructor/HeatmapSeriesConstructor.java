@@ -59,7 +59,7 @@ public class HeatmapSeriesConstructor extends BaseSeriesConstructor {
         heatmapSeries.setLabel(new Label().setShow(true));
         heatmapSeries.setEmphasis(new Emphasis().setItemStyle(new ItemStyle().setShadowBlur(10).setShadowColor("rgba(0, 0, 0, 0.5)")));
 
-        HashMap<List<Integer>,Integer> result = new HashMap<>();
+        HashMap<List<Integer>,Float> result = new HashMap<>();
 
         queryData.forEach(item->{
             //X axis
@@ -74,10 +74,12 @@ public class HeatmapSeriesConstructor extends BaseSeriesConstructor {
                 xIndexList.forEach(xIndex->{
                     yIndexList.forEach(yIndex->{
                         List<Integer> target = List.of(xIndex,yIndex);
+                        float heatValue = Float.parseFloat(String.valueOf(item.get(indicator.getField())));
+
                         if (result.containsKey(List.of(xIndex,yIndex))) {
-                            result.replace(target,result.get(target) + 1);
+                            result.replace(target,result.get(target) + heatValue);
                         } else {
-                            result.put(target,1);
+                            result.put(target,heatValue);
                         }
                     });
                 });
@@ -85,11 +87,11 @@ public class HeatmapSeriesConstructor extends BaseSeriesConstructor {
 
         });
 
-        Iterator<Map.Entry<List<Integer>, Integer>> entries = result.entrySet().iterator();
-        List<List<Integer>> finalResult = new ArrayList<>();
+        Iterator<Map.Entry<List<Integer>, Float>> entries = result.entrySet().iterator();
+        List<List<Object>> finalResult = new ArrayList<>();
 
         while (entries.hasNext()) {
-            Map.Entry<List<Integer>, Integer> entry = entries.next();
+            Map.Entry<List<Integer>, Float> entry = entries.next();
             finalResult.add(List.of(entry.getKey().get(0),entry.getKey().get(1),entry.getValue()));
         }
 

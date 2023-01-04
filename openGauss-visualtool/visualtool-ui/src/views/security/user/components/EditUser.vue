@@ -65,7 +65,7 @@
         </a-col>
         <a-col :span="24">
           <a-form-item field="remark" :label="$t('components.EditUser.5m6nh3mgn9c0')">
-            <a-textarea v-model="form.remark" :placeholder="$t('components.EditUser.5m6nh3mgncw0')" allow-clear/>
+            <a-textarea v-model="form.remark" :placeholder="$t('components.EditUser.5m6nh3mgncw0')" allow-clear :max-length="200" show-word-limit />
           </a-form-item>
         </a-col>
       </a-row>

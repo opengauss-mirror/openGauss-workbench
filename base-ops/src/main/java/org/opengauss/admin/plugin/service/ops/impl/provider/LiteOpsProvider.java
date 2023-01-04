@@ -72,10 +72,18 @@ public class LiteOpsProvider extends AbstractOpsProvider {
         } else {
             installSingleNode(installContext);
         }
-        wsUtil.sendText(installContext.getRetSession(),"SAVE_INSTALL_CONTEXT");
-        OpsClusterContext opsClusterContext = saveContext(installContext);
+
         wsUtil.sendText(installContext.getRetSession(),"CREATE_REMOTE_USER");
+        OpsClusterContext opsClusterContext = new OpsClusterContext();
+        OpsClusterEntity opsClusterEntity = installContext.toOpsClusterEntity();
+        List<OpsClusterNodeEntity> opsClusterNodeEntities = installContext.getLiteInstallConfig().toOpsClusterNodeEntityList();
+        opsClusterContext.setOpsClusterEntity(opsClusterEntity);
+        opsClusterContext.setOpsClusterNodeEntityList(opsClusterNodeEntities);
+
         createRemoteUser(installContext, opsClusterContext);
+
+        wsUtil.sendText(installContext.getRetSession(),"SAVE_INSTALL_CONTEXT");
+        saveContext(installContext);
         wsUtil.sendText(installContext.getRetSession(),"FINISH");
     }
 
@@ -457,8 +465,7 @@ public class LiteOpsProvider extends AbstractOpsProvider {
         return installPath.substring(0, installPath.lastIndexOf("/"));
     }
 
-    private OpsClusterContext saveContext(InstallContext installContext) {
-        OpsClusterContext opsClusterContext = new OpsClusterContext();
+    private void saveContext(InstallContext installContext) {
         OpsClusterEntity opsClusterEntity = installContext.toOpsClusterEntity();
         List<OpsClusterNodeEntity> opsClusterNodeEntities = installContext.getLiteInstallConfig().toOpsClusterNodeEntityList();
 
@@ -467,10 +474,6 @@ public class LiteOpsProvider extends AbstractOpsProvider {
             opsClusterNodeEntity.setClusterId(opsClusterEntity.getClusterId());
         }
         opsClusterNodeService.saveBatch(opsClusterNodeEntities);
-
-        opsClusterContext.setOpsClusterEntity(opsClusterEntity);
-        opsClusterContext.setOpsClusterNodeEntityList(opsClusterNodeEntities);
-        return opsClusterContext;
     }
 
     @Override
