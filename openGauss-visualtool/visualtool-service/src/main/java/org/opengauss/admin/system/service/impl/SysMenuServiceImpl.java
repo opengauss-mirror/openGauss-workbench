@@ -86,7 +86,7 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
     public List<SysMenu> selectSpecialRouteList(Integer openPosition) {
         LambdaQueryWrapper<SysMenu> query = new QueryWrapper<SysMenu>().lambda();
         query.eq(SysMenu::getVisible, SysMenuVisible.HIDE.getCode());
-        query.eq(SysMenu::getOpenPosition, openPosition);
+        query.eq(openPosition != null, SysMenu::getOpenPosition, openPosition);
         query.orderByDesc(SysMenu::getCreateTime);
         return menuMapper.selectList(query);
     }
@@ -142,6 +142,7 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
             menus = menuMapper.selectList(q);
         } else {
             menus = menuMapper.selectMenuTreeByUserId(userId);
+            menus.addAll(selectSpecialRouteList(null));
         }
         return getChildPerms(menus, 0);
     }

@@ -39,7 +39,7 @@
         </div>
       </a-form-item>
       <a-form-item field="remark" :label="$t('components.EditRole.5m6nl1uvl5g0')">
-        <a-textarea v-model="form.remark" :placeholder="$t('components.EditRole.5m6nl1uvl8k0')" allow-clear/>
+        <a-textarea v-model="form.remark" :placeholder="$t('components.EditRole.5m6nl1uvl8k0')" allow-clear :max-length="200" show-word-limit />
       </a-form-item>
     </a-form>
     <template #footer>

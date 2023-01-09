@@ -77,11 +77,17 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
 
         doInstall(installContext);
 
-        wsUtil.sendText(installContext.getRetSession(),"SAVE_INSTALL_CONTEXT");
-        OpsClusterContext opsClusterContext = saveContext(installContext);
+        OpsClusterContext opsClusterContext = new OpsClusterContext();
+        OpsClusterEntity opsClusterEntity = installContext.toOpsClusterEntity();
+        List<OpsClusterNodeEntity> opsClusterNodeEntities = installContext.getEnterpriseInstallConfig().toOpsClusterNodeEntityList();
+        opsClusterContext.setOpsClusterEntity(opsClusterEntity);
+        opsClusterContext.setOpsClusterNodeEntityList(opsClusterNodeEntities);
 
         wsUtil.sendText(installContext.getRetSession(),"CREATE_REMOTE_USER");
         createRemoteUser(installContext, opsClusterContext);
+
+        wsUtil.sendText(installContext.getRetSession(),"SAVE_INSTALL_CONTEXT");
+        saveContext(installContext);
         wsUtil.sendText(installContext.getRetSession(),"FINISH");
         log.info("The installation is complete");
     }
@@ -545,8 +551,7 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
         restart(opsClusterContext);
     }
 
-    private OpsClusterContext saveContext(InstallContext installContext) {
-        OpsClusterContext opsClusterContext = new OpsClusterContext();
+    private void saveContext(InstallContext installContext) {
         OpsClusterEntity opsClusterEntity = installContext.toOpsClusterEntity();
         List<OpsClusterNodeEntity> opsClusterNodeEntities = installContext.getEnterpriseInstallConfig().toOpsClusterNodeEntityList();
 
@@ -555,10 +560,6 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
             opsClusterNodeEntity.setClusterId(opsClusterEntity.getClusterId());
         }
         opsClusterNodeService.saveBatch(opsClusterNodeEntities);
-
-        opsClusterContext.setOpsClusterEntity(opsClusterEntity);
-        opsClusterContext.setOpsClusterNodeEntityList(opsClusterNodeEntities);
-        return opsClusterContext;
     }
 
     private String generateClusterConfigXml(InstallContext installContext) {

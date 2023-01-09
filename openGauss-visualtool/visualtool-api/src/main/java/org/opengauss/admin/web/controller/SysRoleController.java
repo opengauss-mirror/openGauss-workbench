@@ -75,8 +75,17 @@ public class SysRoleController extends BaseController {
     })
     @PostMapping
     public AjaxResult add(@Validated @RequestBody SysRole role) {
+        if (StringUtils.isBlank(role.getRoleName())) {
+            return AjaxResult.error(ResponseCode.ROLE_NAME_IS_NOT_EMPTY_ERROR.code());
+        }
+        if (role.getRoleName().length() > 25) {
+            return AjaxResult.error(ResponseCode.ROLE_NAME_MAX_LENGTH_ERROR.code());
+        }
         if (UserConstants.NOT_UNIQUE.equals(roleService.checkRoleNameUnique(role))) {
             return AjaxResult.error(ResponseCode.ROLE_EXISTS_ERROR.code());
+        }
+        if (StringUtils.isNotEmpty(role.getRemark()) && role.getRemark().length() > 200) {
+            return AjaxResult.error(ResponseCode.ROLE_REMARK_MAX_LENGTH_ERROR.code());
         }
         role.setCreateBy(SecurityUtils.getUsername());
         return toAjax(roleService.insertRole(role));
@@ -92,8 +101,17 @@ public class SysRoleController extends BaseController {
     @PutMapping
     public AjaxResult edit(@Validated @RequestBody SysRole role) {
         roleService.checkRoleAllowed(role);
+        if (StringUtils.isBlank(role.getRoleName())) {
+            return AjaxResult.error(ResponseCode.ROLE_NAME_IS_NOT_EMPTY_ERROR.code());
+        }
+        if (role.getRoleName().length() > 25) {
+            return AjaxResult.error(ResponseCode.ROLE_NAME_MAX_LENGTH_ERROR.code());
+        }
         if (UserConstants.NOT_UNIQUE.equals(roleService.checkRoleNameUnique(role))) {
             return AjaxResult.error(ResponseCode.ROLE_EXISTS_ERROR.code());
+        }
+        if (StringUtils.isNotEmpty(role.getRemark()) && role.getRemark().length() > 200) {
+            return AjaxResult.error(ResponseCode.ROLE_REMARK_MAX_LENGTH_ERROR.code());
         }
         if (roleService.updateRole(role) > 0) {
             LoginUser loginUser = tokenService.getLoginUser(ServletUtils.getRequest());

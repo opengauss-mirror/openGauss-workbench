@@ -36,6 +36,8 @@ public class SysRole extends BaseEntity {
     /**
      * roleName
      */
+    @NotBlank(message = "roleName cannot be empty")
+    @Size(min = 0, max = 25, message = "roleName length cannot exceed 25 characters")
     private String roleName;
 
     /**
@@ -89,15 +91,11 @@ public class SysRole extends BaseEntity {
         return roleId != null && 1 == roleId;
     }
 
-    @NotBlank(message = "Role name cannot be empty")
-    @Size(min = 0, max = 30, message = "Character name length cannot exceed 30 characters")
     public String getRoleName() {
         return roleName;
     }
 
 
-    @NotBlank(message = "Permission character cannot be empty")
-    @Size(min = 0, max = 100, message = "The permission character length cannot exceed 100 characters")
     public String getRoleKey() {
         return roleKey;
     }

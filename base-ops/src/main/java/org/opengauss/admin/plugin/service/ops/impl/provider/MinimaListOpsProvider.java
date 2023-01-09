@@ -110,15 +110,20 @@ public class MinimaListOpsProvider extends AbstractOpsProvider {
             wsUtil.sendText(installContext.getRetSession(), "INSTALL");
             doInstall(installUserSession, retSession, installPath, installContext, nodeConfig);
 
+            OpsClusterContext opsClusterContext = new OpsClusterContext();
+            OpsClusterEntity opsClusterEntity = installContext.toOpsClusterEntity();
+            List<OpsClusterNodeEntity> opsClusterNodeEntities = installContext.getMinimalistInstallConfig().toOpsClusterNodeEntityList();
 
-            wsUtil.sendText(installContext.getRetSession(), "SAVE CONTEXT");
-            wsUtil.sendText(installContext.getRetSession(),"SAVE_INSTALL_CONTEXT");
-            OpsClusterContext opsClusterContext = saveContext(installContext);
+            opsClusterContext.setOpsClusterEntity(opsClusterEntity);
+            opsClusterContext.setOpsClusterNodeEntityList(opsClusterNodeEntities);
 
             wsUtil.sendText(installContext.getRetSession(), "CREATE REMOTE USER");
             wsUtil.sendText(installContext.getRetSession(),"CREATE_REMOTE_USER");
             createRemoteUser(installUserSession, retSession, installContext, dataPath, opsClusterContext);
 
+            wsUtil.sendText(installContext.getRetSession(), "SAVE CONTEXT");
+            wsUtil.sendText(installContext.getRetSession(),"SAVE_INSTALL_CONTEXT");
+            saveContext(installContext);
             wsUtil.sendText(installContext.getRetSession(),"FINISH");
             log.info("The installation is complete");
         }finally {
@@ -654,8 +659,7 @@ public class MinimaListOpsProvider extends AbstractOpsProvider {
         opsClusterNodeService.removeBatchByIds(opsClusterNodeEntityList.stream().map(OpsClusterNodeEntity::getClusterNodeId).collect(Collectors.toList()));
     }
 
-    private OpsClusterContext saveContext(InstallContext installContext) {
-        OpsClusterContext opsClusterContext = new OpsClusterContext();
+    private void saveContext(InstallContext installContext) {
         OpsClusterEntity opsClusterEntity = installContext.toOpsClusterEntity();
         List<OpsClusterNodeEntity> opsClusterNodeEntities = installContext.getMinimalistInstallConfig().toOpsClusterNodeEntityList();
 
@@ -664,10 +668,6 @@ public class MinimaListOpsProvider extends AbstractOpsProvider {
             opsClusterNodeEntity.setClusterId(opsClusterEntity.getClusterId());
         }
         opsClusterNodeService.saveBatch(opsClusterNodeEntities);
-
-        opsClusterContext.setOpsClusterEntity(opsClusterEntity);
-        opsClusterContext.setOpsClusterNodeEntityList(opsClusterNodeEntities);
-        return opsClusterContext;
     }
 
     private void doInstall(Session installUserSession, WsSession retSession, String pkgPath, InstallContext installContext, MinimalistInstallNodeConfig nodeConfig) {

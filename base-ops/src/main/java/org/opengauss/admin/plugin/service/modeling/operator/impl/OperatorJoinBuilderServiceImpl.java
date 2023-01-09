@@ -79,7 +79,7 @@ public class OperatorJoinBuilderServiceImpl extends BaseBuilderServiceImpl {
             List<String> andSqlList = new ArrayList<>();
             for (int z=0; z<andGroupParams.size(); z++) {
                 JSONObject andItem = andGroupParams.getJSONObject(z);
-                String sql = operatorConditionBuilderServiceImpl.conditionConvert(andItem.getString("field"),andItem.getString("condition"),andItem.getString("value"),andItem.getString("valueType"));
+                String sql = operatorConditionBuilderServiceImpl.conditionConvert(andItem.getString("field"),andItem.getString("condition"),andItem.getString("value"));
                 andSqlList.add(sql);
             }
             if (andSqlList.size() > 0)

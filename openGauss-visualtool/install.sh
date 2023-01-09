@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 echo "begin install..."
-
+sh ./uninstall.sh
 read -p "Do you want to automatically install dependencies (JDK, maven, node) ? (Press y|Y for Yes, any other key for No). " install_depency
 if [ "$install_depency" = "Y" -o "$install_depency" = "y" ]; then
   sh ./install-depency.sh

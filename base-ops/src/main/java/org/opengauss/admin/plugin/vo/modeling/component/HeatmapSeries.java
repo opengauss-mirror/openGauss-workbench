@@ -25,7 +25,7 @@ public class HeatmapSeries {
 
     private String name;
     private String type;
-    private List<List<Integer>> data;
+    private List<List<Object>> data;
     private Label label;
     private Emphasis emphasis;
     public void setName(String name) {
@@ -42,11 +42,11 @@ public class HeatmapSeries {
         return type;
     }
 
-    public HeatmapSeries setData(List<List<Integer>> data) {
+    public HeatmapSeries setData(List<List<Object>> data) {
         this.data = data;
         return this;
     }
-    public List<List<Integer>> getData() {
+    public List<List<Object>> getData() {
         return data;
     }
 

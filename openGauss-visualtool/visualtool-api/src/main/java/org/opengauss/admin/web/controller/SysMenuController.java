@@ -10,6 +10,7 @@ import org.opengauss.admin.common.core.domain.entity.SysRole;
 import org.opengauss.admin.common.core.domain.model.LoginUser;
 import org.opengauss.admin.common.enums.BusinessType;
 import org.opengauss.admin.common.enums.ResponseCode;
+import org.opengauss.admin.common.enums.SysMenuVisible;
 import org.opengauss.admin.common.utils.SecurityUtils;
 import org.opengauss.admin.common.utils.ServletUtils;
 import org.opengauss.admin.framework.web.service.TokenService;
@@ -94,6 +95,7 @@ public class SysMenuController extends BaseController {
     public AjaxResult roleMenuTreeselect(@PathVariable("roleId") Integer roleId) {
         LoginUser loginUser = tokenService.getLoginUser(ServletUtils.getRequest());
         List<SysMenu> menus = menuService.selectMenuList(loginUser.getUser().getUserId());
+        menus = menus.stream().filter(m -> m.getVisible().equals(SysMenuVisible.SHOW.getCode())).collect(Collectors.toList());
         AjaxResult ajax = AjaxResult.success();
         ajax.put("checkedKeys", menuService.selectMenuListByRoleId(roleId));
         List<TreeSelect> trees = menuService.buildMenuTreeSelect(menus);
