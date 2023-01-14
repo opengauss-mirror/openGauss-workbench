@@ -48,6 +48,17 @@ isArm64(){
       return 0
   fi
 }
+isOpenEuler(){
+  OS_NAME=$(uname -a)
+  OL_MARK="oe1"
+  if [[ $OS_NAME =~ $OL_MARK ]]
+  then
+    return 1
+  else
+    return 0
+  fi
+}
+
 yum install -y tar
 hasJdk
 if [ $? != 1 ]
@@ -57,16 +68,14 @@ then
     isArm64
     if [ $? != 1 ]
     then
-      yum install -y java-11-openjdk
+      wget https://mirrors.huaweicloud.com/kunpeng/archive/compiler/bisheng_jdk/bisheng-jdk-11.0.17-linux-x64.tar.gz
+      tar zxvf bisheng-jdk-11.0.17-linux-x64.tar.gz -C /etc/
+      mv /etc/bisheng-jdk-11.0.17 /etc/jdk11
+      rm -rf bisheng-jdk-11.0.17-linux-x64.tar.gz
     else
       wget https://mirrors.huaweicloud.com/kunpeng/archive/compiler/bisheng_jdk/bisheng-jdk-11.0.17-linux-aarch64.tar.gz
       tar zxvf bisheng-jdk-11.0.17-linux-aarch64.tar.gz -C /etc/
-      if [ ! -f "/usr/bin/java" ]; then
-        ln -s /etc/bisheng-jdk-11.0.17/bin/java /usr/bin/java
-      fi
-      if [ ! -f "/usr/local/bin/java" ]; then
-        ln -s /etc/bisheng-jdk-11.0.17/bin/java /usr/local/bin/java
-      fi
+      mv /etc/bisheng-jdk-11.0.17 /etc/jdk11
       rm -rf bisheng-jdk-11.0.17-linux-aarch64.tar.gz
     fi
     hasJdk
@@ -86,6 +95,7 @@ then
     wget --no-check-certificate  https://mirrors.tuna.tsinghua.edu.cn/apache/maven/maven-3/3.5.4/binaries/apache-maven-3.5.4-bin.tar.gz
 
     tar -zxvf apache-maven-3.5.4-bin.tar.gz -C /etc/
+    sed -i '30 i JAVA_HOME=/etc/jdk11' /etc/apache-maven-3.5.4/bin/mvn
     if [ ! -f "/usr/local/bin/mvn" ]; then
       ln -s /etc/apache-maven-3.5.4/bin/mvn /usr/local/bin/mvn
     fi

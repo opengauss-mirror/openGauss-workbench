@@ -718,7 +718,7 @@
             "AutomaticallySaving": "自动保存中",
             "page_empty": "正在开发中，敬请期待",
             "xConfig": "X轴配置",
-            "yConfig": "Y轴分布",
+            "yConfig": "Y轴配置",
             "xFB": "X轴分布",
             "xConfigMessage": "请选择X轴配置",
             "yConfigMessage": "请选择Y轴配置"

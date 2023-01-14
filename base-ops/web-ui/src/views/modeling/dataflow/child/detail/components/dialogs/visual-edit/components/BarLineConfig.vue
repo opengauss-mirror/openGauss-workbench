@@ -56,7 +56,7 @@
       </a-row>
       <div class="serie-config">
         <div class="content-header mb-s">
-          <div class="ch-title">{{$t('modeling.components.BarLineConfig.5m7in04peoo0')}}</div>
+          <div class="ch-title">{{$t('modeling.dy_common.yConfig')}}</div>
           <div></div>
         </div>
         <div class="mb">

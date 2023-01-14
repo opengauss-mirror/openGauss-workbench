@@ -1,2 +1,0 @@
-"use strict";(self["webpackChunkweb_ui"]=self["webpackChunkweb_ui"]||[]).push([[1579],{83744:function(n,e){e.Z=(n,e)=>{const c=n.__vccOpts||n;for(const[t,r]of e)c[t]=r;return c}},11579:function(n,e,c){c.r(e),c.d(e,{default:function(){return i}});var t=c(70821);const r={class:"modeling"};function o(n,e){return(0,t.openBlock)(),(0,t.createElementBlock)("div",r)}var u=c(83744);const s={},f=(0,u.Z)(s,[["render",o]]);var i=f}}]);
-//# sourceMappingURL=1579.db2f2704.js.map

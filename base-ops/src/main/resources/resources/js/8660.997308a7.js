@@ -1,2 +1,0 @@
-"use strict";(self["webpackChunkweb_ui"]=self["webpackChunkweb_ui"]||[]).push([[8660],{98660:function(e,n,o){o.r(n),o.d(n,{default:function(){return c}});var r=o(70821),t=o(96336),u=(0,r.defineComponent)({props:{...t.ZP.props},setup(e){const n=e,o=(0,r.computed)((()=>n));return(e,n)=>{const t=(0,r.resolveComponent)("a-select");return(0,r.openBlock)(),(0,r.createBlock)(t,(0,r.normalizeProps)((0,r.guardReactiveProps)((0,r.unref)(o))),null,16)}}});const s=u;var c=s}}]);
-//# sourceMappingURL=8660.997308a7.js.map

@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.opengauss.admin.system.mapper.SysTaskMapper">
+
+    <resultMap id="SysTaskResult" type="org.opengauss.admin.system.domain.SysTask">
+        <id property="id" column="id"/>
+        <result property="taskName" column="task_name"/>
+        <result property="taskType" column="task_type"/>
+        <result property="execStatus" column="exec_status"/>
+        <result property="execParams" column="exec_params"/>
+        <result property="execHostId" column="exec_host_id"/>
+        <result property="execProgress" column="exec_progress"/>
+        <result property="createTime" column="create_time"/>
+        <result property="finishTime" column="finish_time"/>
+        <result property="execTime" column="exec_time"/>
+        <result property="pluginId" column="plugin_id"/>
+    </resultMap>
+
+    <sql id="selectTaskVo">
+        SELECT
+            id,task_name,task_type,exec_status,exec_params,exec_host_id,exec_progress,
+           create_time,finish_time,exec_time,plugin_id
+        FROM sys_task
+    </sql>
+
+    <select id="selectTaskPage" parameterType="org.opengauss.admin.common.core.dto.SysTaskDto" resultMap="SysTaskResult">
+        <include refid="selectTaskVo"/>
+        <where>
+            <if test="entity.taskName != null  and entity.taskName != ''">
+                and task_name like concat('%', #{entity.taskName}, '%')
+            </if>
+            <if test="entity.taskType != null">
+                and task_type = #{entity.taskType}
+            </if>
+            <if test="entity.execStatus != null">
+                and exec_status = #{entity.execStatus}
+            </if>
+            <if test="entity.execStartTime != null and entity.execEndTime != null">
+                and exec_time between #{entity.execStartTime} and #{entity.execEndTime}
+            </if>
+            <if test="entity.finishStartTime != null and entity.finishEndTime != null">
+                and finish_time between #{entity.finishStartTime} and #{entity.finishEndTime}
+            </if>
+        </where>
+        order by id desc
+    </select>
+
+    <select id="selectTaskList" parameterType="org.opengauss.admin.common.core.dto.SysTaskDto" resultMap="SysTaskResult">
+        <include refid="selectTaskVo"/>
+        <where>
+            <if test="taskName != null  and taskName != ''">
+                and task_name like concat('%', #{taskName}, '%')
+            </if>
+            <if test="taskType != null">
+                and task_type = #{taskType}
+            </if>
+            <if test="execStatus != null">
+                and exec_status = #{execStatus}
+            </if>
+            <if test="execStartTime != null and execEndTime != null">
+                and exec_time between #{execStartTime} and #{execEndTime}
+            </if>
+            <if test="finishStartTime != null and finishEndTime != null">
+                and finish_time between #{finishStartTime} and #{finishEndTime}
+            </if>
+        </where>
+        order by id desc
+    </select>
+
+
+</mapper>

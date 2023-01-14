@@ -716,7 +716,7 @@
             "AutomaticallySaving": "Automatically Saving",
             "page_empty": "Under development, stay tuned",
             "xConfig": "X axis configuration",
-            "yConfig": "Y axis distribution",
+            "yConfig": "Y axis configuration",
             "xFB": "X-axis distribution",
             "xConfigMessage": "Please select the X-axis configuration",
             "yConfigMessage": "Please select the Y-axis configuration"
