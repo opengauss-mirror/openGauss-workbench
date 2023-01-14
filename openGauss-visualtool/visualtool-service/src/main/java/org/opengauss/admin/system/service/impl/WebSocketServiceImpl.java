@@ -31,7 +31,7 @@ public class WebSocketServiceImpl implements IWebSocketService {
         List<SocketExtract> extractByInterClass = extractFactory.getExtractByInterClass(pluginId, SocketExtract.class);
         if (extractByInterClass.size() > 0) {
             log.info("Get the SocketExtract implementation class. {}" , extractByInterClass.get(0).getClass().getPackage());
-            extractByInterClass.get(0).onOpen(sessionId, sessionId, session);
+            extractByInterClass.get(0).onOpen(pluginId, sessionId, session);
         } else {
             log.error("No implementation found");
         }
@@ -44,7 +44,7 @@ public class WebSocketServiceImpl implements IWebSocketService {
         List<SocketExtract> extractByInterClass = extractFactory.getExtractByInterClass(pluginId, SocketExtract.class);
         if (extractByInterClass.size() > 0) {
             log.info("Get the SocketExtract implementation class. {}" , extractByInterClass.get(0).getClass().getPackage());
-            extractByInterClass.get(0).onClose(sessionId,sessionId);
+            extractByInterClass.get(0).onClose(pluginId,sessionId);
         } else {
             log.error("No implementation found");
         }

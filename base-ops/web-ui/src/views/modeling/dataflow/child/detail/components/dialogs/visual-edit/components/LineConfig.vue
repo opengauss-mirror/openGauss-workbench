@@ -7,7 +7,7 @@
         <a-row>
           <a-col :span="7">{{$t('modeling.components.LineConfig.5m7ijyex0ts0')}}</a-col>
           <a-col :span="11" class="mr-s">
-            <a-select v-model="config.showType.dimension">
+            <a-select v-model="config.showType.dimension" :disabled="config.showType.key !== 1">
               <overflow-tooltip :text="item.label" v-for="(item, key) in stringOption" :key="key" :content="item.label">
                 <a-option :value="item.value"><icon-tag class="mr-s" v-if="item.isCustom" />{{ item.label }}</a-option>
               </overflow-tooltip>
@@ -43,7 +43,7 @@
     </div>
     <div class="serie-config">
       <div class="content-header mb-s">
-        <div class="ch-title">{{$t('modeling.components.LineConfig.5m7ijyex1x40')}}</div>
+        <div class="ch-title">{{$t('modeling.dy_common.yConfig')}}</div>
         <div></div>
       </div>
       <div class="mb">

@@ -45,7 +45,7 @@ public class Dimension {
         this.num = num;
     }
     public int getNum() {
-        return this.num == 0 ? 5 : this.num;
+        return this.num == 0 ? 100 : this.num;
     }
 
     public void addCategoryBody(CategoryBody categoryBody)

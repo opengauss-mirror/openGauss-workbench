@@ -1,1 +1,0 @@
-{"version":3,"file":"js/3134.ccf53a0f.js","mappings":"mHACA,cACE,gBAAiB,O","sources":["webpack://web-ui/./src/views/modeling/dataflow/locale/zh-CN.ts"],"sourcesContent":["\nexport default {\n  'dataflow.name': 'test'\n}\n"],"names":[],"sourceRoot":""}

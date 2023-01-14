@@ -6,10 +6,6 @@ spring:
     static-locations: classpath:resources,file:D://resources
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
-    driver-class-name: org.opengauss.Driver
-    url: jdbc:opengauss://xxx.xxx.xx.xx:xxxx/YOUR_DB_NAME?currentSchema=public
-    username: DB_USER
-    password: DB_PASSWORD
     druid:
       test-while-idle: false
       test-on-borrow: true

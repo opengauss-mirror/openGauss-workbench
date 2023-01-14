@@ -167,7 +167,7 @@ public class BarChartGenerateServiceImpl extends BaseGenerateServiceImpl {
         if (value == null) {
             return null;
         }
-        //default format yyyy-mm-dd , ignore hour,min,sec
+        //default format yyyy-mm-dd , ignore min,sec
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH");
         switch (particle) {
             case 1: {
@@ -175,11 +175,11 @@ public class BarChartGenerateServiceImpl extends BaseGenerateServiceImpl {
                 break;
             }
             case 2: {
-                sdf = new SimpleDateFormat("MM月");
+                sdf = new SimpleDateFormat("yyyy年MM月");
                 break;
             }
             case 3: {
-                sdf = new SimpleDateFormat("dd日");
+                sdf = new SimpleDateFormat("yyyy年MM月dd日");
                 break;
             }
             case 4: {

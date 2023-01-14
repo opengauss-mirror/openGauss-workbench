@@ -133,23 +133,9 @@ openGauss的安装、运维场景对于初级用户或单纯想要测试openGaus
   git clone git@gitee.com:opengauss/openGauss-workbench.git
   #进入根目录
   cd base-ops
-  #修改数据库连接信息
-  vim src/main/resources/application.yml
-  ```
-  
-  ```
-  datasource:
-    type: com.alibaba.druid.pool.DruidDataSource
-    driver-class-name: org.opengauss.Driver
-    url: jdbc:opengauss://xx.xxx.xxx.xxx:5432/一体化平台数据库名称?currentSchema=public
-    username: 一体化平台数据库用户名
-    password: 一体化平台数据库密码
-  ```
-  
-- ```
+  #编译打包
   mvn clean package -Dmaven.test.skip
-  ```
-
+  
 - 打包完成后在bsae-ops/target目录中找到base-ops-1.0.x-repackage.jar即为插件安装包。
 
 - 打开并登陆openGauss一体化平台，点击插件管理-安装插件，将上诉步骤获得的安装包上传并安装。

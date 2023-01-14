@@ -90,6 +90,16 @@ START 1
 CACHE 1;
 END IF;
 
+IF NOT EXISTS (SELECT 1 FROM information_schema.sequences WHERE sequence_schema=''public'' AND sequence_name=''sq_sys_task_id'' )
+THEN
+CREATE SEQUENCE "public"."sq_sys_task_id"
+INCREMENT 1
+MINVALUE  1
+MAXVALUE 9223372036854775807
+START 1
+CACHE 1;
+END IF;
+
 RETURN 0;
 END;'
 LANGUAGE plpgsql;
@@ -667,6 +677,47 @@ CREATE TABLE IF NOT EXISTS "public"."ops_package_manager"
     6
 )
     );
+
+
+
+CREATE TABLE IF NOT EXISTS "public"."sys_task" (
+ "id" int8 NOT NULL DEFAULT nextval('sq_sys_task_id'::regclass),
+ "task_name" varchar(255) COLLATE "pg_catalog"."default",
+ "task_type" int4,
+ "exec_status" int4,
+ "exec_params" varchar(512) COLLATE "pg_catalog"."default",
+ "exec_progress" float4,
+ "exec_host_id" int8,
+ "create_time" timestamp(6),
+ "finish_time" timestamp(6),
+ "exec_time" timestamp(6),
+ "plugin_id" varchar(100) COLLATE "pg_catalog"."default",
+ CONSTRAINT "sys_task_pkey" PRIMARY KEY ("id")
+);
+
+COMMENT ON COLUMN "public"."sys_task"."id" IS '主键ID';
+
+COMMENT ON COLUMN "public"."sys_task"."task_name" IS '任务名称';
+
+COMMENT ON COLUMN "public"."sys_task"."task_type" IS '操作类别（1数据迁移）';
+
+COMMENT ON COLUMN "public"."sys_task"."exec_status" IS '执行状态（0：未执行；1：执行中；2：已完成；3：执行失败）';
+
+COMMENT ON COLUMN "public"."sys_task"."exec_params" IS '执行参数';
+
+COMMENT ON COLUMN "public"."sys_task"."exec_progress" IS '执行进度';
+
+COMMENT ON COLUMN "public"."sys_task"."exec_host_id" IS '执行物理机ID';
+
+COMMENT ON COLUMN "public"."sys_task"."create_time" IS '创建时间';
+
+COMMENT ON COLUMN "public"."sys_task"."finish_time" IS '完成时间';
+
+COMMENT ON COLUMN "public"."sys_task"."exec_time" IS '执行时间';
+
+COMMENT ON COLUMN "public"."sys_task"."plugin_id" IS '插件ID';
+
+COMMENT ON TABLE "public"."sys_task" IS '平台任务表';
 
 
 INSERT INTO "public"."ops_package_manager"("package_id", "os", "cpu_arch", "package_version", "package_version_num",
