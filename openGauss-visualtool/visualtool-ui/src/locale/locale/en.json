@@ -35,7 +35,8 @@
             "5m6nfosusgc0": "Please enter a new password",
             "5m6nfosuskg0": "Cancel",
             "5m6nfosuspc0": "Confirm",
-            "5m6nfosustg0": "reset success"
+            "5m6nfosustg0": "reset success",
+            "5nsczb3r79w0": "6 to 20 characters in length"
         },
         "EditUser": {
             "5m6nh3mgjns0": "Revise",
@@ -63,6 +64,7 @@
             "5m6nh3mgnn40": "Successfully modified",
             "5m6nh3mgnpo0": "Added successfully",
             "5n7v8xco9u80": "6 to 20 characters in length",
+            "5nsg5pkyao80": "Mobile phone number format is incorrect",
             "else1": "Add",
             "else2": " User"
         },
@@ -105,7 +107,9 @@
             "5m6njon1zrg0": "please input your email",
             "5m6njon1zus0": "Cancel",
             "5m6njon1zxs0": "Confirm",
-            "5m6njon200w0": "Successfully modified"
+            "5m6njon200w0": "Modified success",
+            "5nslhhf6a7k0": "Mobile phone number format is incorrect",
+            "5nslhhf6z9o0": "E-mail format is incorrect"
         },
         "EditRole": {
             "5m6nl1uvgfk0": "Revise",
@@ -123,6 +127,7 @@
             "5m6nl1uvles0": "Confirm",
             "5m6nl1uvlk00": "Successfully modified",
             "5m6nl1uvlp00": "Added successfully",
+            "5nsfs3sdwwg0": "The character name is Chinese, English, numbers and their combinations, without special characters",
             "else1": "Add",
             "else2": " Role"
         },
@@ -137,6 +142,7 @@
             "5m6nmc7dwk00": "Confirm",
             "5m6nmc7dwr00": "Successfully modified",
             "5m6nmc7dwuo0": "Added successfully",
+            "5nse3d27z0k0": "IP format is incorrect",
             "else1": "Add",
             "else2": " Whitelist"
         },

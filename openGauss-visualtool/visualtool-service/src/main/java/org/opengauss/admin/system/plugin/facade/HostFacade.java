@@ -2,13 +2,13 @@ package org.opengauss.admin.system.plugin.facade;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.core.domain.model.ops.HostBody;
 import org.opengauss.admin.common.core.domain.model.ops.host.OpsHostVO;
 import org.opengauss.admin.system.mapper.ops.OpsHostMapper;
 import org.opengauss.admin.system.service.ops.IHostService;
 import org.opengauss.admin.system.service.ops.IHostUserService;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
@@ -67,5 +67,9 @@ public class HostFacade {
 
     public Long count() {
         return hostService.count();
+    }
+
+    public List<OpsHostEntity> listAll() {
+        return hostService.list();
     }
 }

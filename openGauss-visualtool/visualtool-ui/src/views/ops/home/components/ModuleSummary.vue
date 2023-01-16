@@ -53,9 +53,6 @@ import dataModelingImg from '@/assets/images/ops/data-modeling.png'
 import pluginImg from '@/assets/images/ops/plugin.png'
 import busiFlowImg from '@/assets/images/ops/busi-flow.png'
 import { onMounted, reactive } from 'vue'
-import { getDataFlowCount, getBusiFlowCount, getDataModelCount, getPluginCount } from '@/api/ops'
-import { KeyValue } from '@/types/global'
-import { Message } from '@arco-design/web-vue'
 
 reactive([dataFlowImg, dataModelingImg, pluginImg, busiFlowImg])
 
@@ -118,11 +115,13 @@ const getInstallPluginCount = () => {
     flex-direction: column;
     justify-content: flex-start;
     border-radius: 2px;
+
     .module-title {
       font-size: 16px;
       color: var(--color-text-1);
       margin-bottom: 5px;
     }
+
     .content {
       display: flex;
       justify-content: space-between;
@@ -132,6 +131,7 @@ const getInstallPluginCount = () => {
         font-size: 28px;
         color: var(--color-text-1);
       }
+
       .number-unit {
         font-size: 14px;
         color: var(--color-text-1);

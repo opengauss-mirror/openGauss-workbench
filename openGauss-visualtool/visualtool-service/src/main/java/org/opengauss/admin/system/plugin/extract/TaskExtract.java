@@ -14,18 +14,40 @@ import java.util.List;
 public interface TaskExtract {
 
     /**
-     * 获取子任务列表
+     * Get subtask details
      * @param taskId
      * @return
      */
     public List<BasePluginTaskDetailDto> getPluginTask(Integer taskId);
 
     /**
-     * 获取任务状态，从插件中的子任务汇总，具体逻辑由插件实现，返回平台定义的插件状态枚举
+     * Get the task status, summarize from the subtasks in the plug-in,
+     * the specific logic is implemented by the plug-in, and return the plug-in status enumeration defined by the platform
      * @param taskId
      * @return
      */
     public TaskExecProgressDto getTaskStatus(Integer taskId);
 
 
+    /**
+     * start task
+     * @param taskId
+     * @return
+     */
+    public void startTask(Integer taskId);
+
+
+    /**
+     * stop task
+     * @param taskId
+     * @return
+     */
+    public void stopTask(Integer taskId);
+
+    /**
+     * delete task
+     * @param taskId
+     * @return
+     */
+    public void deleteTask(Integer taskId);
 }

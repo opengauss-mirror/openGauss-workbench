@@ -7,11 +7,18 @@
     modal-class="role-modal"
   >
     <a-form ref="formRef" :model="form" auto-label-width>
-      <a-form-item field="roleName" :label="$t('components.EditRole.5m6nl1uvjes0')" :rules="[{
-        required: true,
-        message: $t('components.EditRole.5m6nl1uvjls0')
-      }]">
-        <a-input v-model="form.roleName" :placeholder="$t('components.EditRole.5m6nl1uvjp80')" maxlength="30" />
+      <a-form-item field="roleName" :label="$t('components.EditRole.5m6nl1uvjes0')" :rules="[
+        {
+          required: true,
+          message: $t('components.EditRole.5m6nl1uvjls0')
+        },
+        {
+          required: true,
+          match: /^[\u4e00-\u9fa50-9A-Za-z]*$/,
+          message: $t('components.EditRole.5nsfs3sdwwg0')
+        }
+      ]">
+        <a-input v-model.trim="form.roleName" :placeholder="$t('components.EditRole.5m6nl1uvjp80')" maxlength="30" />
       </a-form-item>
       <a-form-item field="status" :label="$t('components.EditRole.5m6nl1uvk7g0')">
         <a-radio-group v-model="form.status">

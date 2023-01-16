@@ -7,7 +7,7 @@
 #========================================================================
 
 hasJdk(){
-    java -version
+    /etc/jdk11/bin/java -version
     if [ $? -eq 0 ]; then
       return 1;
     else

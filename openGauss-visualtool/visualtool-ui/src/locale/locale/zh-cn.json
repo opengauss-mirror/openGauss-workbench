@@ -35,7 +35,8 @@
             "5m6nfosusgc0": "请输入新密码",
             "5m6nfosuskg0": "取消",
             "5m6nfosuspc0": "确定",
-            "5m6nfosustg0": "重置成功"
+            "5m6nfosustg0": "重置成功",
+            "5nsczb3r79w0": "长度在 6 到 20 个字符"
         },
         "EditUser": {
             "5m6nh3mgjns0": "修改",
@@ -63,6 +64,7 @@
             "5m6nh3mgnn40": "修改成功",
             "5m6nh3mgnpo0": "添加成功",
             "5n7v8xco9u80": "长度在 6 到 20 个字符",
+            "5nsg5pkyao80": "手机号码格式不正确",
             "else1": "添加",
             "else2": "账号"
         },
@@ -105,7 +107,9 @@
             "5m6njon1zrg0": "请输入邮箱",
             "5m6njon1zus0": "取消",
             "5m6njon1zxs0": "确定",
-            "5m6njon200w0": "修改成功"
+            "5m6njon200w0": "修改成功",
+            "5nslhhf6a7k0": "手机号码格式不正确",
+            "5nslhhf6z9o0": "邮箱格式不正确"
         },
         "EditRole": {
             "5m6nl1uvgfk0": "修改",
@@ -123,6 +127,7 @@
             "5m6nl1uvles0": "确定",
             "5m6nl1uvlk00": "修改成功",
             "5m6nl1uvlp00": "添加成功",
+            "5nsfs3sdwwg0": "角色名称为中文、英文、数字及其组合，不包含特殊字符",
             "else1": "添加",
             "else2": "角色"
         },
@@ -137,6 +142,7 @@
             "5m6nmc7dwk00": "确定",
             "5m6nmc7dwr00": "修改成功",
             "5m6nmc7dwuo0": "添加成功",
+            "5nse3d27z0k0": "IP格式不正确",
             "else1": "添加",
             "else2": "访问白名单"
         },

@@ -4,10 +4,7 @@
 
 <script lang="ts" setup>
 import VChart from 'vue-echarts'
-import { onMounted, reactive, ref } from 'vue'
-import { getBusiFlowType } from '@/api/ops'
-import { KeyValue } from '@/types/global'
-import { Message } from '@arco-design/web-vue'
+import { onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
 const option = ref<any>({
@@ -41,10 +38,6 @@ const option = ref<any>({
       data: []
     }
   ]
-})
-
-const data = reactive({
-  loading: false
 })
 
 onMounted(() => {

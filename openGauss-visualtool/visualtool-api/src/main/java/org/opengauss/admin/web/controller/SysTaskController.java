@@ -74,6 +74,32 @@ public class SysTaskController extends BaseController {
     @PreAuthorize("@ss.hasPermi('system:task:remove')")
     @DeleteMapping("/{ids}")
     public AjaxResult remove(@PathVariable Integer[] ids) {
-        return toAjax(sysTaskService.removeBatchByIds(Arrays.asList(ids)));
+        sysTaskService.deleteTask(ids);
+        return AjaxResult.success();
     }
+
+    /**
+     * start
+     */
+    @Log(title = "task", businessType = BusinessType.START)
+    @ApiOperation(value = "start", notes = "start")
+    @PreAuthorize("@ss.hasPermi('system:task:update')")
+    @PostMapping("/start/{id}")
+    public AjaxResult start(@PathVariable Integer id ) {
+        sysTaskService.startTask(id);
+        return AjaxResult.success();
+    }
+
+    /**
+     * stop
+     */
+    @Log(title = "task", businessType = BusinessType.STOP)
+    @ApiOperation(value = "stop", notes = "stop")
+    @PreAuthorize("@ss.hasPermi('system:task:update')")
+    @PostMapping("/stop/{id}")
+    public AjaxResult stop(@PathVariable Integer id ) {
+        sysTaskService.stopTask(id);
+        return AjaxResult.success();
+    }
+
 }

@@ -3,13 +3,13 @@
         :modal-style="{ width: '450px' }" :footer="false">
         <div class="flex-col-start">
             <a-button class="mb" type="primary" @click="handleAddUser('create')">{{
-                    $t('components.HostUserMng.5mpi1bru0w00')
+                $t('components.HostUserMng.5mpi1bru0w00')
             }}</a-button>
             <a-table class="full-w" :data="list.data" :columns="columns" :loading="list.loading" size="mini">
                 <template #operation="{ record }">
                     <div class="flex-row-start">
                         <a-link class="mr" @click="handleEditUser('update', record)">{{
-                                $t('components.HostUserMng.5mpi1bru1n40')
+                            $t('components.HostUserMng.5mpi1bru1n40')
                         }}</a-link>
                         <a-popconfirm :content="$t('components.HostUserMng.5mpi1bru2700')" type="warning"
                             :ok-text="$t('components.HostUserMng.5mpi1bru2lo0')"
@@ -27,7 +27,6 @@
 
 <script setup lang="ts">
 import { KeyValue } from '@/types/global'
-import { TableColumnData } from '@arco-design/web-vue'
 import { computed, reactive, ref } from 'vue'
 import { hostUserPage, editHostUser, delHostUser } from '@/api/ops' // eslint-disable-line
 import AddHostUser from './AddHostUser.vue'

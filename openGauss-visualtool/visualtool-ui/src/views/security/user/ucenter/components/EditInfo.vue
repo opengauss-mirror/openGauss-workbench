@@ -19,13 +19,26 @@
       }]">
         <a-input v-model="form.nickName" :placeholder="$t('components.EditInfo.5m6njon1xek0')" />
       </a-form-item>
-      <a-form-item field="phonenumber" :label="$t('components.EditInfo.5m6njon1xhg0')" :rules="[{
-        required: true,
-        message: $t('components.EditInfo.5m6njon1xkg0')
-      }]">
+      <a-form-item field="phonenumber" :label="$t('components.EditInfo.5m6njon1xhg0')" :rules="[
+        {
+          required: true,
+          message: $t('components.EditInfo.5m6njon1xkg0')
+        },
+        {
+          required: true,
+          match: /^(?:(?:\+|00)86)?1\d{10}$/,
+          message: $t('components.EditInfo.5nslhhf6a7k0')
+        }
+      ]">
         <a-input v-model="form.phonenumber" :placeholder="$t('components.EditInfo.5m6njon1zco0')" />
       </a-form-item>
-      <a-form-item field="email" :label="$t('components.EditInfo.5m6njon1zmw0')">
+      <a-form-item field="email" :label="$t('components.EditInfo.5m6njon1zmw0')" :rules="[
+        {
+          required: true,
+          match: /^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$/,
+          message: $t('components.EditInfo.5nslhhf6z9o0')
+        }
+      ]">
         <a-input v-model="form.email" :placeholder="$t('components.EditInfo.5m6njon1zrg0')" />
       </a-form-item>
     </a-form>
@@ -75,6 +88,7 @@
         form['phonenumber'] = userInfo.phonenumber
         form['email'] = userInfo.email
       }
+      formRef.value?.clearValidate()
     }
     visible.value = v
   })

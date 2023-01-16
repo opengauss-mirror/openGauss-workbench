@@ -20,8 +20,7 @@
         },
         {
           required: true,
-          minLength: 6,
-          maxLength: 20,
+          match: /^\S*(?=\S{6,20})(?=\S*[\dA-Za-z!@#$%^&*? ])\S*$/,
           message: $t('components.UpdateCode.5n7vbkp1u8o0')
         }
       ]">
@@ -72,7 +71,11 @@
   const { logout } = useUser()
   // const userStore = useUserStore()
   const formRef = ref<FormInstance>()
-  const form = reactive<any>({})
+  const form = reactive<any>({
+    oldPassword: ref(''),
+    newPassword: ref(''),
+    checkPassword: ref('')
+  })
 
   const visible = ref<boolean>(false)
   const loading = ref<boolean>(false)
@@ -83,9 +86,7 @@
 
   watch(() => props.open, (v) => {
     if (v) {
-      form['oldPassword'] = ''
-      form['newPassword'] = ''
-      form['checkPassword'] = ''
+      formRef.value?.resetFields()
     }
     visible.value = v
   })
