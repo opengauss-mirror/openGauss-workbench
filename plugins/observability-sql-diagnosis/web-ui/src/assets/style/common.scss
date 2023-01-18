@@ -1,0 +1,22 @@
+@use 'sass:math';
+@use "./color.scss" as *;
+@use 'sass:map';
+
+
+.search-form {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    margin-bottom: 20px;
+    .search-time-range{
+        width: 300px;
+    }
+    .filter {
+        display: flex;
+        margin-right: 15px;
+        align-items: center;
+    }
+    .seperator{
+       margin: auto;
+    }
+}

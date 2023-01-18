@@ -1,0 +1,18 @@
+module_version: "1.0"
+
+var:
+  - name: paths
+    default:
+      - /data/opengauss/install/data/datanode1/pg_log/*.log
+    os.darwin:
+      - /usr/local/var/postgres/*.log*
+      - /usr/local/var/postgres/*.csv
+    os.windows:
+      - "c:/Program Files/PostgreSQL/*/logs/*.log*"
+      - "c:/Program Files/PostgreSQL/*/logs/*.csv"
+
+ingest_pipeline:
+  - ingest/pipeline.yml
+  - ingest/pipeline-errorlog.yml
+  - ingest/pipeline-csv.yml
+input: config/errorlog.yml

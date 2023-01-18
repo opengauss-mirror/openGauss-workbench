@@ -1,0 +1,88 @@
+@use 'sass:math';
+@use './color.scss' as *;
+@use 'sass:map';
+
+html.dark {
+    --color-text-1: #ffffff;
+    --color-text-2: rgb(79, 91, 107);
+    --color-text-3: rgb(134, 143, 156);
+    --el-color-success: #67c23a;
+    --el-bg-color: rgb(35, 35, 36);
+    --el-bg-color-og: #212121;
+    --el-bg-color-og-hover: #323e43;
+    --el-bg-color-sub: #424242;
+    --el-bg-color-page: #303030;
+    --el-bg-color-overlay: #232324;
+    --el-color-success: #67c23a;
+    --el-color-warning: #e6a23c;
+    --el-color-danger: #f56c6c;
+    --el-color-error: #f56c6c;
+    --el-color-info: #909399;
+    --el-box-shadow: 0px 12px 32px 4px rgba(0, 0, 0, 0.36), 0px 8px 20px rgba(0, 0, 0, 0.72);
+    --el-box-shadow-light: 0px 0px 12px rgba(0, 0, 0, 0.72);
+    --el-box-shadow-lighter: 0px 0px 6px rgba(0, 0, 0, 0.72);
+    --el-box-shadow-dark: 0px 16px 48px 16px rgba(0, 0, 0, 0.72), 0px 12px 32px #000000, 0px 8px 16px -8px #000000;
+    --el-text-color-og: #d4d4d4;
+    --el-text-color-primary: #e5eaf3;
+    --el-text-color-regular: #cfd3dc;
+    --el-text-color-secondary: #a3a6ad;
+    --el-text-color-placeholder: #8d9095;
+    --el-text-color-disabled: #6c6e72;
+    --el-border-color-darker: #636466;
+    --el-border-color-dark: #58585b;
+    --el-border-color: rgb(72, 72, 73);
+    --el-border-color-light: #414243;
+    --el-border-color-lighter: #363637;
+    --el-border-color-extra-light: #2b2b2c;
+    --el-fill-color-darker: #424243;
+    --el-fill-color-dark: #39393a;
+    --el-fill-color: #303030;
+    --el-fill-color-light: #262727;
+    --el-fill-color-lighter: #1d1d1d;
+    --el-fill-color-extra-light: #191919;
+    --el-fill-color-blank: transparent;
+    --el-mask-color: rgba(0, 0, 0, 0.8);
+    --el-mask-color-extra-light: rgba(0, 0, 0, 0.3);
+    --el-button-color-small: #5c5c5c;
+    --el-table-cell: rgb(246, 246, 246);
+    --el-button-text-color: #ffffff;
+
+    
+    --el-dialog-background-color:rgb(42,42,43);
+    --primary-6: #e41d1d;
+    --main-background-color:rgb(35,35,36);
+    --color-neutral-2: rgb(52, 52, 53);
+    --color-fill-2: var(--color-neutral-2);
+    --color-text-2: hsla(0,0%,100%,.7);
+    --gray-9: rgb(223, 223, 223);
+    --color-secondary: rgba(223, 223, 223, 0.08);
+    --color-primary-light-1: rgba(228, 29, 29,0.2);
+    --el-color-primary: var(--primary-6);
+    --el-color-primary-light-3: var(--primary-6);
+    --el-menu-text-color: #cfcfcf;
+    --el-menu-hover-text-color: #cfcfcf;
+    --el-menu-bg-color: #212121;
+    --el-menu-hover-bg-color: #323e43;
+    --el-table-cell-center-background: #424242;
+    --el-color-primary-light-3: var(--primary-6);
+}
+
+:root.dark {
+    --el-dialog-background-color:rgb(42,42,43);
+    --primary-6: #e41d1d;
+    --main-background-color:rgb(35,35,36);
+    --color-neutral-2: rgb(52, 52, 53);
+    --color-fill-2: var(--color-neutral-2);
+    --color-text-2: hsla(0,0%,100%,.7);
+    --gray-9: rgb(223, 223, 223);
+    --color-secondary: rgba(223, 223, 223, 0.08);
+    --color-primary-light-1: rgba(228, 29, 29,0.2);
+    --el-color-primary: var(--primary-6);
+    --el-color-primary-light-3: var(--primary-6);
+    --el-menu-text-color: #cfcfcf;
+    --el-menu-hover-text-color: #cfcfcf;
+    --el-menu-bg-color: #212121;
+    --el-menu-hover-bg-color: #323e43;
+    --el-table-cell-center-background: #424242;
+    --el-color-primary-light-3: var(--primary-6);
+}

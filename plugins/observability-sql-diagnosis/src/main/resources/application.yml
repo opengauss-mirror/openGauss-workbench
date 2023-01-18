@@ -1,0 +1,26 @@
+## Spring配置
+context:
+  listener:
+    classes: com.nctigba.observability.sql.listener.PluginListener
+
+spring:
+  servlet:
+    multipart:
+      max-file-size: 20MB #单个文件最大为20M
+      max-request-size: 20MB #单次请求文件总数大小为20M
+  profiles:
+    active: '@profiles.active@'
+  resources:
+    static-locations: classpath:resources,file:D://static
+server.compression:
+  enabled: true
+  mime-types: application/javascript,text/css,application/json,application/xml,text/html,text/xml,text/plain
+mybatis-plus:
+  # 搜索指定包别名
+  typeAliasesPackage: com.nctigba.observability.entity
+  # 配置mapper的扫描，找到所有的mapper.xml映射文件
+  mapperLocations: classpath*:mapper/*.xml
+  # 加载全局的配置文件
+  configuration:
+    mapUnderscoreToCamelCase: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
