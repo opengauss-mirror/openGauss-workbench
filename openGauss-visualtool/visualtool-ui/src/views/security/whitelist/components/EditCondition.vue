@@ -13,7 +13,11 @@
       }]">
         <a-input v-model="form.title" :placeholder="$t('components.EditCondition.5m6nmc7dvkg0')" maxlength="30" />
       </a-form-item>
-      <a-form-item field="condition" :label="$t('components.EditCondition.5m6nmc7dvnk0')">
+      <a-form-item field="condition" :label="$t('components.EditCondition.5m6nmc7dvnk0')" :rules="[{
+        required: true,
+        match: /^(?:(?:^|,)(?:[0-9]|[1-9]\d|1\d{2}|2[0-4]\d|25[0-5])(?:\.(?:[0-9]|[1-9]\d|1\d{2}|2[0-4]\d|25[0-5])){3})+$/,
+        message: $t('components.EditCondition.5nse3d27z0k0')
+      }]">
         <a-textarea v-model="form.condition" :placeholder="$t('components.EditCondition.5m6nmc7dvrg0')" allow-clear/>
       </a-form-item>
     </a-form>

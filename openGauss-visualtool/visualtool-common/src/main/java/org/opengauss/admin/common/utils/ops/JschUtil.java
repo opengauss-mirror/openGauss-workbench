@@ -3,17 +3,17 @@ package org.opengauss.admin.common.utils.ops;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.SecureUtil;
+import com.jcraft.jsch.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.core.domain.model.ops.HostFile;
 import org.opengauss.admin.common.core.domain.model.ops.JschResult;
 import org.opengauss.admin.common.core.domain.model.ops.WsSession;
 import org.opengauss.admin.common.core.handler.ops.cache.WsConnectorManager;
 import org.opengauss.admin.common.enums.ops.HostFileTypeEnum;
 import org.opengauss.admin.common.exception.ops.OpsException;
-import com.jcraft.jsch.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -61,7 +61,7 @@ public class JschUtil {
      * @return ssh session
      */
     public Optional<Session> getSession(String host, Integer port, String username, String password) {
-        log.info("host:{},port:{},username:{},password:{}", host, port, username, password);
+        log.info("host:{},port:{},username:{}", host, port, username);
         return createSession(host, port, username, password);
     }
 
@@ -332,7 +332,7 @@ public class JschUtil {
                 autoResponse.forEach((k, v) -> {
                     if (resultStrBuilder.toString().trim().endsWith(k.trim())) {
                         try {
-                            out.write((v.trim() + "\n").getBytes(StandardCharsets.UTF_8));
+                            out.write((v.trim() + "\r").getBytes(StandardCharsets.UTF_8));
                             out.flush();
                         } catch (IOException e) {
                             log.error("Automatic response exception", e);
@@ -405,7 +405,7 @@ public class JschUtil {
                     if (resultStrBuilder.toString().trim().endsWith(k.trim())) {
                         try {
                             if (CollUtil.isNotEmpty(v)) {
-                                out.write((v.get(0) + "\n").getBytes(StandardCharsets.UTF_8));
+                                out.write((v.get(0) + "\r").getBytes(StandardCharsets.UTF_8));
                                 v.remove(0);
                                 out.flush();
                             }

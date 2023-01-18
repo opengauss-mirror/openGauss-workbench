@@ -216,9 +216,35 @@ public class HostUserServiceImpl extends ServiceImpl<OpsHostUserMapper, OpsHostU
             throw new OpsException("User information does not exist");
         }
 
+        String hostId = hostUserEntity.getHostId();
+        OpsHostEntity hostEntity = hostService.getById(hostId);
+        if (Objects.isNull(hostEntity)) {
+            throw new OpsException("host information does not exist");
+        }
+
         OpsHostUserEntity newEntity = hostUserBody.toEntity();
         newEntity.setHostId(hostUserEntity.getHostId());
         newEntity.setHostUserId(hostUserEntity.getHostUserId());
+
+        OpsHostUserEntity rootUserEntity = new OpsHostUserEntity();
+        rootUserEntity.setUsername("root");
+        rootUserEntity.setPassword(encryptionUtils.decrypt(hostUserBody.getRootPassword()));
+        if (physicalExist(hostEntity.getPublicIp(), hostEntity.getPort(), rootUserEntity, newEntity.getUsername())) {
+            try {
+                Session session = jschUtil.getSession(hostEntity.getPublicIp(), hostEntity.getPort(), hostUserBody.getUsername(), encryptionUtils.decrypt(hostUserBody.getPassword())).orElseThrow(() -> new OpsException("user already exists，incorrect password, please enter correct password"));
+                if (Objects.isNull(session)) {
+                    throw new OpsException("user already exists , incorrect password, please enter correct password");
+                } else {
+                    session.disconnect();
+                }
+            } catch (Exception e) {
+                log.error("connection exception:", e);
+                throw new OpsException("user already exists , incorrect password, please enter correct password");
+            }
+        } else {
+            createPhysicalUser(hostEntity.getPublicIp(), hostEntity.getPort(), rootUserEntity, newEntity.getUsername(), encryptionUtils.decrypt(hostUserBody.getRootPassword()));
+        }
+
         return updateById(newEntity);
     }
 

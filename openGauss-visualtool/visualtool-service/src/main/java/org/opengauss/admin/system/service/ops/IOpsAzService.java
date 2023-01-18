@@ -12,8 +12,11 @@ import org.opengauss.admin.common.core.domain.entity.ops.OpsAzEntity;
 public interface IOpsAzService extends IService<OpsAzEntity> {
     /**
      * Add Availability Zone
+     *
      * @param az
      * @return
      */
     boolean add(OpsAzEntity az);
+
+    boolean hasName(String name);
 }

@@ -13,19 +13,24 @@
           </div>
           <div>
             <a-input-search v-model="filter.search" :loading="list.loading" allowClear @search="isFilter"
-              @press-enter="isFilter" @clear="isFilter" :placeholder="$t('physical.index.5mphf11szdk0')" search-button />
+              @press-enter="isFilter" @clear="isFilter" :placeholder="$t('physical.index.5mphf11szdk0')"
+              search-button />
           </div>
         </div>
         <a-table class="d-a-table-row" :data="list.data" :columns="columns" :pagination="list.page"
           @page-change="currentPage" :loading="list.loading">
           <template #state="{ record }">
-            <a-tag :loading="record.loading" :color="getStateColor(record.state)">{{ getStateDesc(record.state) }}</a-tag>
+            <a-tag :loading="record.loading" :color="getStateColor(record.state)">{{
+              getStateDesc(record.state)
+            }}</a-tag>
           </template>
           <template #operation="{ record }">
             <div class="flex-row-start">
               <a-link class="mr" @click="showHostUserMng(record)">{{ $t('physical.index.5mphf11szks0') }}</a-link>
               <a-link class="mr" @click="handleTest(record)">{{ $t('physical.index.5mphf11syw80') }}</a-link>
-              <a-link class="mr" @click="handleAddHost('update', record)">{{ $t('physical.index.5mphf11szqo0') }}</a-link>
+              <a-link class="mr" @click="handleAddHost('update', record)">{{
+                $t('physical.index.5mphf11szqo0')
+              }}</a-link>
               <a-popconfirm :content="$t('physical.index.5mphf11szws0')" type="warning"
                 :ok-text="$t('physical.index.5mphf11t05c0')" :cancel-text="$t('physical.index.5mphf11t0bc0')"
                 @ok="deleteRows(record)">
@@ -44,7 +49,7 @@
 
 <script setup lang="ts">
 import { KeyValue } from '@/types/global'
-import { Message, TableColumnData } from '@arco-design/web-vue'
+import { Message } from '@arco-design/web-vue'
 import { computed, onMounted, reactive, ref } from 'vue'
 import { hostPage, delHost, hostPingById } from '@/api/ops' // eslint-disable-line
 import AddHost from './components/AddHost.vue'
@@ -147,12 +152,6 @@ const deleteRows = (record: KeyValue) => {
       })
       getListData()
     }
-  })
-}
-
-const testConnectAll = () => {
-  list.data.forEach((item: KeyValue) => {
-    handleTest(item)
   })
 }
 

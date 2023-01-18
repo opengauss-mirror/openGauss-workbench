@@ -17,4 +17,10 @@ public interface ISysTaskService extends IService<SysTask> {
     IPage<SysTask> selectList(IPage<SysTask> page, SysTaskDto task);
 
     List<SysTask> selectListAll(SysTaskDto task);
+
+    void deleteTask(Integer[] ids);
+
+    void startTask(Integer id);
+
+    void stopTask(Integer id);
 }

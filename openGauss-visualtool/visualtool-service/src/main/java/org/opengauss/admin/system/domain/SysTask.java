@@ -58,6 +58,8 @@ public class SysTask {
      */
     private String pluginId;
 
+    private Integer subTaskCount;
+
     /**
      * create time
      */
@@ -71,7 +73,7 @@ public class SysTask {
     private Date finishTime;
 
     /**
-     * finish time
+     * execTime time
      */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date execTime;

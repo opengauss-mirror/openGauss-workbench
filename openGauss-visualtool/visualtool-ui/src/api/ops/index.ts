@@ -152,3 +152,35 @@ export const azPage = (query: any) => {
 export const delAz = (azId: string) => {
   return axios.delete(`az/${azId}`)
 }
+
+// jdbc 
+export const jdbcPage = (query: any) => {
+  return axios.get('jdbcDbCluster/page', {
+    params: query
+  })
+}
+
+export const addJdbc = (data: KeyValue) => {
+  return axios.post('jdbcDbCluster/add', data)
+}
+
+export const editJdbc = (id: string, data: KeyValue) => {
+  return axios.put(`jdbcDbCluster/${id}`, data)
+}
+
+export const jdbcPing = (data: KeyValue) => {
+  return axios.post('jdbc/ping', data)
+}
+
+export const delJdbc = (jdbcId: string) => {
+  return axios.delete(`jdbcDbCluster/${jdbcId}`)
+}
+
+export const uploadFileJdbc = (data: KeyValue) => {
+  return axios.post('jdbcDbCluster/importAnalysis', data)
+}
+
+// cluster node ping
+export const jdbcNodePing = (data: KeyValue) => {
+  return axios.post('jdbcDbClusterNode/ping', data)
+}

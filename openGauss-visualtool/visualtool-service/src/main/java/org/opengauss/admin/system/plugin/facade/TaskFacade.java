@@ -27,7 +27,7 @@ public class TaskFacade {
      * @param pluginId
      * @return taskId
      */
-    public Integer saveTask(String pluginId, String hostId, String taskName, SysTaskType taskType){
+    public Integer saveTask(String pluginId, String hostId, String taskName, SysTaskType taskType, Integer subTaskCount){
         SysTask task = new SysTask();
         task.setPluginId(pluginId);
         task.setTaskType(taskType.getCode());
@@ -35,6 +35,7 @@ public class TaskFacade {
         task.setExecHostId(hostId);
         task.setCreateTime(new Date());
         task.setExecStatus(SysTaskStatus.CREATED.getCode());
+        task.setSubTaskCount(subTaskCount);
         sysTaskService.save(task);
         return task.getId();
     }

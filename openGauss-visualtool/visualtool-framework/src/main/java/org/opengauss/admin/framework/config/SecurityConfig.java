@@ -96,7 +96,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers("/websocket/**").anonymous()
                 .antMatchers("/ws/**").anonymous()
                 .antMatchers("/static-plugin/**").anonymous()
-//                .antMatchers("/plugins/**").anonymous()
                 .antMatchers("/plugins/observability-sql-diagnosis/sqlDiagnosis/api/open/v1/diagnosisTasks/**").anonymous()
                 .antMatchers("/login").anonymous()
                 .antMatchers("/modeling/visualization/report/share/**").permitAll()

@@ -15,4 +15,14 @@ public enum DeployTypeEnum {
      * single node
      */
     SINGLE_NODE;
+
+    public static DeployTypeEnum nameOf(String deployType) {
+        DeployTypeEnum[] enumConstants = DeployTypeEnum.class.getEnumConstants();
+        for (DeployTypeEnum enumConstant : enumConstants) {
+            if (enumConstant.name().equalsIgnoreCase(deployType)) {
+                return enumConstant;
+            }
+        }
+        return null;
+    }
 }

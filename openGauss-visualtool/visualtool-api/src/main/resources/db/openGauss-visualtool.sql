@@ -692,6 +692,7 @@ CREATE TABLE IF NOT EXISTS "public"."sys_task" (
  "finish_time" timestamp(6),
  "exec_time" timestamp(6),
  "plugin_id" varchar(100) COLLATE "pg_catalog"."default",
+ "sub_task_count" int8,
  CONSTRAINT "sys_task_pkey" PRIMARY KEY ("id")
 );
 
@@ -716,6 +717,8 @@ COMMENT ON COLUMN "public"."sys_task"."finish_time" IS '完成时间';
 COMMENT ON COLUMN "public"."sys_task"."exec_time" IS '执行时间';
 
 COMMENT ON COLUMN "public"."sys_task"."plugin_id" IS '插件ID';
+
+COMMENT ON COLUMN "public"."sys_task"."sub_task_count" IS '子任务数量';
 
 COMMENT ON TABLE "public"."sys_task" IS '平台任务表';
 
@@ -841,3 +844,100 @@ OR REPLACE FUNCTION init_data_fuc() RETURNS integer AS 'BEGIN
 
 select init_data_fuc();
 DROP FUNCTION init_data_fuc;
+
+
+CREATE TABLE IF NOT EXISTS "public"."ops_jdbcdb_cluster"
+(
+    "cluster_id" varchar
+(
+    255
+) COLLATE "pg_catalog"."default" NOT NULL PRIMARY KEY,
+    "name" varchar
+(
+    255
+) COLLATE "pg_catalog"."default",
+    "deploy_type" varchar
+(
+    255
+) COLLATE "pg_catalog"."default",
+    "db_type" varchar
+(
+    255
+) COLLATE "pg_catalog"."default",
+    "remark" varchar
+(
+    255
+) COLLATE "pg_catalog"."default",
+    "create_by" varchar
+(
+    64
+) COLLATE "pg_catalog"."default",
+    "create_time" timestamp
+(
+    6
+),
+    "update_by" varchar
+(
+    64
+) COLLATE "pg_catalog"."default",
+    "update_time" timestamp
+(
+    6
+)
+    );
+
+CREATE TABLE IF NOT EXISTS "public"."ops_jdbcdb_cluster_node"
+(
+    "cluster_node_id" varchar
+(
+    25
+) COLLATE "pg_catalog"."default" NOT NULL PRIMARY KEY,
+    "cluster_id" varchar
+(
+    255
+) COLLATE "pg_catalog"."default",
+    "name" varchar
+(
+    255
+) COLLATE "pg_catalog"."default",
+    "ip" varchar
+(
+    255
+) COLLATE "pg_catalog"."default",
+    "port" varchar
+(
+    255
+) COLLATE "pg_catalog"."default",
+    "username" varchar
+(
+    255
+) COLLATE "pg_catalog"."default",
+    "password" varchar
+(
+    255
+) COLLATE "pg_catalog"."default",
+    "url" varchar
+(
+    255
+) COLLATE "pg_catalog"."default",
+    "remark" varchar
+(
+    255
+) COLLATE "pg_catalog"."default",
+    "create_by" varchar
+(
+    64
+) COLLATE "pg_catalog"."default",
+    "create_time" timestamp
+(
+    6
+),
+    "update_by" varchar
+(
+    64
+) COLLATE "pg_catalog"."default",
+    "update_time" timestamp
+(
+    6
+)
+    );

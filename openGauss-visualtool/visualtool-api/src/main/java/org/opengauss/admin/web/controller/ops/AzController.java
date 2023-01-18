@@ -8,6 +8,7 @@ import org.opengauss.admin.common.core.controller.BaseController;
 import org.opengauss.admin.common.core.domain.AjaxResult;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsAzEntity;
 import org.opengauss.admin.common.core.page.TableDataInfo;
+import org.opengauss.admin.common.exception.ops.OpsException;
 import org.opengauss.admin.system.service.ops.IOpsAzService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
@@ -33,6 +34,11 @@ public class AzController extends BaseController {
         return toAjax(opsAzService.add(az));
     }
 
+    @GetMapping("/hasName")
+    public AjaxResult hasName(@RequestParam("name") String name) {
+        return AjaxResult.success(opsAzService.hasName(name));
+    }
+
     @GetMapping("/page")
     public TableDataInfo page(@RequestParam(required = false, value = "name") String name) {
         LambdaQueryWrapper<OpsAzEntity> queryWrapper = Wrappers.lambdaQuery(OpsAzEntity.class)
@@ -50,6 +56,14 @@ public class AzController extends BaseController {
     public AjaxResult edit(@PathVariable String azId,
                            @Validated @RequestBody OpsAzEntity az) {
         az.setAzId(azId);
+        LambdaQueryWrapper<OpsAzEntity> queryWrapper = Wrappers.lambdaQuery(OpsAzEntity.class)
+                .eq(OpsAzEntity::getName, az.getName())
+                .ne(OpsAzEntity::getAzId, azId);
+
+        if (opsAzService.count(queryWrapper) > 0) {
+            throw new OpsException("name already exists");
+        }
+
         return toAjax(opsAzService.updateById(az));
     }
 

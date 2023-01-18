@@ -7,11 +7,18 @@
     modal-class="user-modal"
   >
     <a-form ref="formRef" :model="form" auto-label-width>
-      <a-form-item field="password" :label="$t('components.EditCode.5m6nfosus3k0')" :rules="[{
-        required: true,
-        message: $t('components.EditCode.5m6nfosusbo0')
-      }]">
-        <a-input-password v-model="form.password" :placeholder="$t('components.EditCode.5m6nfosusgc0')" maxlength="20" />
+      <a-form-item field="password" :label="$t('components.EditCode.5m6nfosus3k0')" :rules="[
+        {
+          required: true,
+          message: $t('components.EditCode.5m6nfosusbo0')
+        },
+        {
+          required: true,
+          match: /^\S*(?=\S{6,20})(?=\S*[\dA-Za-z!@#$%^&*? ])\S*$/,
+          message: $t('components.EditCode.5nsczb3r79w0')
+        }
+      ]">
+        <a-input-password v-model="form.password" :placeholder="$t('components.EditCode.5m6nfosusgc0')" minlength="6" maxlength="20" />
       </a-form-item>
     </a-form>
     <template #footer>
@@ -44,7 +51,9 @@
   const { logout } = useUser()
   const userStore = useUserStore()
   const formRef = ref<FormInstance>()
-  const form = reactive<any>({})
+  const form = reactive<any>({
+    password: ref('')
+  })
 
   const visible = ref<boolean>(false)
   const loading = ref<boolean>(false)
@@ -55,7 +64,7 @@
 
   watch(() => props.open, (v) => {
     if (v) {
-      form['password'] = ''
+      formRef.value?.resetFields()
     }
     visible.value = v
   })

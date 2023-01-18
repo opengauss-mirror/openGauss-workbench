@@ -24,8 +24,7 @@
             },
             {
               required: true,
-              minLength: 6,
-              maxLength: 20,
+              match: /^\S*(?=\S{6,20})(?=\S*[\dA-Za-z!@#$%^&*? ])\S*$/,
               message: $t('components.EditUser.5n7v8xco9u80')
             }
           ]">
@@ -41,10 +40,17 @@
           </a-form-item>
         </a-col>
         <a-col :span="12">
-          <a-form-item field="phonenumber" :label="$t('components.EditUser.5m6nh3mgmds0')" :rules="[{
-            required: true,
-            message: $t('components.EditUser.5m6nh3mgmko0')
-          }]">
+          <a-form-item field="phonenumber" :label="$t('components.EditUser.5m6nh3mgmds0')" :rules="[
+            {
+              required: true,
+              message: $t('components.EditUser.5m6nh3mgmko0')
+            },
+            {
+              required: true,
+              match: /^(?:(?:\+|00)86)?1\d{10}$/,
+              message: $t('components.EditUser.5nsg5pkyao80')
+            }
+          ]">
             <a-input v-model="form.phonenumber" :placeholder="$t('components.EditUser.5m6nh3mgmp40')" />
           </a-form-item>
         </a-col>
@@ -123,6 +129,7 @@
         form['status'] = '0'
         form['remark'] = undefined
       }
+      formRef.value?.clearValidate()
       getUserRole(props.options.userId)
     }
     visible.value = v
