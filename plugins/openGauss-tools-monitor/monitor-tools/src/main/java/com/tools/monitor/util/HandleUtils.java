@@ -1,7 +1,12 @@
+/*
+ * Copyright (c) Huawei Technologies Co., Ltd. 2012-2022. All rights reserved.
+ */
+
 package com.tools.monitor.util;
 
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.ObjectUtil;
+import io.micrometer.core.instrument.Tag;
 import io.micrometer.core.instrument.Tags;
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -10,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.springframework.util.CollectionUtils;
 
 /**
  * HandleUtils
@@ -22,29 +28,24 @@ public class HandleUtils {
 
     private static final String KEXUE = "^[+-]?\\d+\\.?\\d*[Ee][+-]?\\d+$";
 
-    private static final String time = "^[1-9]\\d{3}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$";
-
     /**
-     * getMapToString01
+     * handelTag
      *
-     * @param map map
-     * @return Tags
+     * @param tags tags
+     * @return String
      */
-    public static Tags getMapToString01(Map<String, Object> map) {
-        Set<String> keySet = map.keySet();
-        String[] keyArray = keySet.toArray(new String[keySet.size()]);
-        Arrays.sort(keyArray);
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < keyArray.length; i++) {
-            if ((String.valueOf(map.get(keyArray[i]))).trim().length() > 0) {
-                sb.append(keyArray[i]).append("&").append(String.valueOf(map.get(keyArray[i])).trim());
-            }
-            if (i != keyArray.length - 1) {
-                sb.append("&");
-            }
+    public static String[] handelTag(List<Tag> tags) {
+        if (CollectionUtils.isEmpty(tags)) {
+            return new String[0];
         }
-        String[] array = sb.toString().split("&");
-        return Tags.of(array);
+        int size = tags.size() * 2 + 2;
+        String[] tagArray = new String[size];
+        int num = 0;
+        for (Tag tag : tags) {
+            tagArray[++num] = tag.getKey();
+            tagArray[++num] = tag.getValue();
+        }
+        return tagArray;
     }
 
     /**
@@ -55,7 +56,8 @@ public class HandleUtils {
      */
     public static Tags getMapToString(Map<String, Object> map) {
         Map<String, Object> collect = map.entrySet().stream()
-                .filter(item -> !item.getValue().toString().matches(ISNUM) && !item.getValue().toString().matches(KEXUE))
+                .filter(item -> !item.getValue().toString().matches(ISNUM)
+                        && !item.getValue().toString().matches(KEXUE))
                 .collect(Collectors.toMap(p -> p.getKey(), p -> p.getValue()));
         List<String> list = new ArrayList<>();
         for (Map.Entry<String, Object> entry : collect.entrySet()) {
@@ -73,13 +75,22 @@ public class HandleUtils {
      * @return map
      */
     public static Map<String, Object> getMap(Map<String, Object> map) {
-        Map<String, Object> collect = map.entrySet().stream()
-                .filter(item -> ObjectUtil.isNotEmpty(item.getValue()) && !item.getValue().toString().matches(ISNUM) && !item.getValue().toString().matches(KEXUE) && !item.getKey().equals("time") && !SqlUtil.contain(item.getKey()))
+        return map.entrySet().stream()
+                .filter(item ->
+                        ObjectUtil.isNotEmpty(item.getValue())
+                                && !item.getValue().toString().matches(ISNUM)
+                                && !item.getValue().toString().matches(KEXUE)
+                                && !item.getKey().equals("time")
+                                && !SqlUtil.contain(item.getKey()))
                 .collect(Collectors.toMap(p -> p.getKey(), p -> p.getValue()));
-        return collect;
     }
 
-
+    /**
+     * getBigDecimal
+     *
+     * @param value value
+     * @return BigDecimal
+     */
     public static BigDecimal getBigDecimal(Object value) {
         BigDecimal ret = null;
         if (value != null) {
@@ -92,12 +103,19 @@ public class HandleUtils {
             } else if (value instanceof Number) {
                 ret = new BigDecimal(((Number) value).doubleValue());
             } else {
-                throw new ClassCastException("Not possible to coerce [" + value + "] from class " + value.getClass() + " into a BigDecimal.");
+                throw new ClassCastException("getBigDecimal fail");
             }
         }
         return ret.setScale(1, BigDecimal.ROUND_HALF_UP);
     }
 
+    /**
+     * getZabbixMap
+     *
+     * @param map map
+     * @param num num
+     * @return String
+     */
     public static String getZabbixMap(Map<String, Object> map, int num) {
         dealMetric(map, num);
         Set<String> keySet = map.keySet();
@@ -107,16 +125,18 @@ public class HandleUtils {
         sb.append("{");
         for (int i = 0; i < keyArray.length; i++) {
             if ((String.valueOf(map.get(keyArray[i]))).trim().length() > 0) {
-                sb.append(keyArray[i]).append("=").append("\"").append(String.valueOf(map.get(keyArray[i])).trim()).append("\"").append(",");
+                sb.append(keyArray[i]).append("=")
+                        .append("\"").append(String.valueOf(map.get(keyArray[i])).trim())
+                        .append("\"").append(",");
             }
         }
         sb.append("}");
         return sb.toString();
     }
 
-    private static void dealMetric(Map<String, Object> metric, int i) {
+    private static void dealMetric(Map<String, Object> metric, int num) {
         if (CollectionUtil.isEmpty(metric)) {
-            metric.put("instance", "node" + i);
+            metric.put("instance", "node" + num);
         }
     }
 }

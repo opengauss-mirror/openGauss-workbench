@@ -22,6 +22,9 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class SqlUtil {
+    /**
+     * SQL_REGEX
+     */
     public static final String SQL_REGEX =
             "insert|alter|delete|update|drop|exec|chr|mid|master|truncate|char|declare|create|into";
 
@@ -30,6 +33,9 @@ public class SqlUtil {
      */
     public static final String DQL_SQL = "select";
 
+    /**
+     * SQL_PATTERN
+     */
     public static final String SQL_PATTERN = "[a-zA-Z0-9_\\ \\,\\.]+";
 
     /**

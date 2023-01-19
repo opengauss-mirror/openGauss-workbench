@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) Huawei Technologies Co., Ltd. 2012-2022. All rights reserved.
+ */
+
 package com.tools.monitor.entity;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
@@ -6,7 +10,6 @@ import lombok.Data;
 
 import java.util.Date;
 import java.util.List;
-
 
 /**
  * SysConfig
@@ -57,13 +60,25 @@ public class SysConfig {
 
     private String dataBaseName;
 
+    /**
+     * platform
+     */
     private String platform;
 
+    /**
+     * jobIds
+     */
     @JsonFormat(shape = JsonFormat.Shape.STRING)
     private List<Long> jobIds;
 
+    /**
+     * targets
+     */
     private List<SysJob> targets;
 
+    /**
+     * lastReleaseTime
+     */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm")
     private Date lastReleaseTime;
 

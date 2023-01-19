@@ -1,8 +1,11 @@
+/*
+ * Copyright (c) Huawei Technologies Co., Ltd. 2012-2022. All rights reserved.
+ */
+
 package com.tools.monitor.config;
 
-import lombok.Data;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.stereotype.Component;
 
 /**
  * FileConfig
@@ -10,29 +13,36 @@ import org.springframework.context.annotation.Configuration;
  * @author liu
  * @since 2022-10-01
  */
-@Configuration
-@Data
+@Component
+@ConfigurationProperties(prefix = "file")
 public class FileConfig {
+    private static String relationConfig;
 
-    public static String relationConfig;
+    private static String dataSourceConfig;
 
-    public static String dataSourceConfig;
+    private static String taskConfig;
 
-    public static String taskConfig;
+    public static String getRelationConfig() {
+        return relationConfig;
+    }
 
-    @Value("${file.setting.relation}")
     public void setRelationConfig(String relationConfig) {
-        this.relationConfig = relationConfig;
+        FileConfig.relationConfig = relationConfig;
     }
 
-    @Value("${file.setting.config}")
+    public static String getDataSourceConfig() {
+        return dataSourceConfig;
+    }
+
     public void setDataSourceConfig(String dataSourceConfig) {
-        this.dataSourceConfig = dataSourceConfig;
+        FileConfig.dataSourceConfig = dataSourceConfig;
     }
 
-    @Value("${file.setting.task}")
+    public static String getTaskConfig() {
+        return taskConfig;
+    }
+
     public void setTaskConfig(String taskConfig) {
-        this.taskConfig = taskConfig;
+        FileConfig.taskConfig = taskConfig;
     }
-
 }

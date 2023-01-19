@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) Huawei Technologies Co., Ltd. 2012-2022. All rights reserved.
+ */
+
 package com.tools.monitor.quartz.task;
 
 import cn.hutool.core.collection.CollectionUtil;
@@ -47,8 +51,9 @@ public class MonitorTask {
     /**
      * targetParams
      *
-     * @param params
-     * @param jobId
+     * @param params params
+     * @param name name
+     * @param jobId jobId
      */
     public void targetParams(String params, String name, Long jobId) {
         log.info(name);

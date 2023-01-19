@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) Huawei Technologies Co., Ltd. 2012-2022. All rights reserved.
+ */
+
 package com.tools.monitor.mapper;
 
 import cn.hutool.core.collection.CollectionUtil;
@@ -20,11 +24,10 @@ import org.springframework.stereotype.Service;
  */
 @Service
 public class SysSourceTargetMapper {
-
     /**
      * save
      *
-     * @param sysSourceTarget
+     * @param sysSourceTarget sysSourceTarget
      */
     public void save(SysSourceTarget sysSourceTarget) {
         List<SysSourceTarget> sysSourceTargets = deleteBySourceId(sysSourceTarget.getDataSourceId());
@@ -32,7 +35,7 @@ public class SysSourceTargetMapper {
         sysSourceTargets.add(sysSourceTarget);
         JsonSourceTarget jsonSourceTarget = new JsonSourceTarget();
         jsonSourceTarget.setSysSourceTarget(sysSourceTargets);
-        JsonUtilData.objectToJsonFile(FileConfig.relationConfig, jsonSourceTarget);
+        JsonUtilData.objectToJsonFile(FileConfig.getRelationConfig(), jsonSourceTarget);
     }
 
     /**
@@ -41,7 +44,8 @@ public class SysSourceTargetMapper {
      * @return list
      */
     public List<SysSourceTarget> getAll() {
-        JsonSourceTarget jsonSourceTarget = JsonUtilData.jsonFileToObject(FileConfig.relationConfig, JsonSourceTarget.class);
+        JsonSourceTarget jsonSourceTarget =
+                JsonUtilData.jsonFileToObject(FileConfig.getRelationConfig(), JsonSourceTarget.class);
         if (jsonSourceTarget == null || CollectionUtil.isEmpty(jsonSourceTarget.getSysSourceTarget())) {
             return new ArrayList<>();
         }
@@ -49,7 +53,7 @@ public class SysSourceTargetMapper {
     }
 
     /**
-     * getPublishJobIds
+     * Get all posted jobs
      *
      * @return list
      */
@@ -67,9 +71,9 @@ public class SysSourceTargetMapper {
     }
 
     /**
-     * getSourceIdByJobId
+     * Get host id according to jobid
      *
-     * @param jobId
+     * @param jobId jobId
      * @return list
      */
     public List<Long> getSourceIdByJobId(Long jobId) {
@@ -78,32 +82,39 @@ public class SysSourceTargetMapper {
         if (CollectionUtil.isNotEmpty(sysSourceTargets)) {
             for (SysSourceTarget sysSourceTarget : sysSourceTargets) {
                 List<Long> jobIds = sysSourceTarget.getJobIds();
-                if (CollectionUtil.isNotEmpty(jobIds)) {
-                    for (Long id : jobIds) {
-                        if (jobId.equals(id)) {
-                            sourceId.add(sysSourceTarget.getDataSourceId());
-                        }
-                    }
-                }
+                addSourceId(jobIds, sourceId, jobId, sysSourceTarget);
             }
         }
         return sourceId;
     }
 
-    /**
-     * getJobIdBySourceId
-     *
-     * @param dataSourceId
-     * @return list
-     */
-    public List<Long> getJobIdBySourceId(Long dataSourceId) {
-        return getAll().stream().filter(item -> dataSourceId.equals(item.getDataSourceId())).findFirst().orElse(new SysSourceTarget()).getJobIds();
+    private void addSourceId(List<Long> jobIds, List<Long> sourceId, Long jobId, SysSourceTarget sysSourceTarget) {
+        if (CollectionUtil.isNotEmpty(jobIds)) {
+            for (Long id : jobIds) {
+                if (jobId.equals(id)) {
+                    sourceId.add(sysSourceTarget.getDataSourceId());
+                }
+            }
+        }
     }
 
     /**
-     * sysSourceTargetById
+     * Get jobid according to data source id
      *
-     * @param id
+     * @param dataSourceId dataSourceId
+     * @return list
+     */
+    public List<Long> getJobIdBySourceId(Long dataSourceId) {
+        return getAll().stream()
+                .filter(item -> dataSourceId.equals(item.getDataSourceId()))
+                .findFirst()
+                .orElse(new SysSourceTarget()).getJobIds();
+    }
+
+    /**
+     * Obtain relation entity according to sourceid
+     *
+     * @param id id
      * @return SysSourceTarget
      */
     public SysSourceTarget sysSourceTargetById(Long id) {
@@ -120,9 +131,9 @@ public class SysSourceTargetMapper {
     }
 
     /**
-     * deleteBySourceId
+     * Delete relation based on host id
      *
-     * @param sourceId
+     * @param sourceId sourceId
      * @return list
      */
     public List<SysSourceTarget> deleteBySourceId(Long sourceId) {
@@ -136,7 +147,7 @@ public class SysSourceTargetMapper {
         sysSourceTargets.removeAll(result);
         JsonSourceTarget jsonSourceTarget = new JsonSourceTarget();
         jsonSourceTarget.setSysSourceTarget(sysSourceTargets);
-        JsonUtilData.objectToJsonFile(FileConfig.relationConfig, jsonSourceTarget);
+        JsonUtilData.objectToJsonFile(FileConfig.getRelationConfig(), jsonSourceTarget);
         return sysSourceTargets;
     }
 
@@ -162,7 +173,7 @@ public class SysSourceTargetMapper {
     /**
      * removeJobids
      *
-     * @param jobId
+     * @param jobId jobId
      */
     public void removeJobids(Long jobId) {
         List<Long> sourceId = getSourceIdByJobId(jobId);

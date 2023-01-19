@@ -1,6 +1,10 @@
+/*
+ * Copyright (c) Huawei Technologies Co., Ltd. 2012-2022. All rights reserved.
+ */
+
 package com.tools.monitor.service;
 
-import com.tools.monitor.entity.AjaxResult;
+import com.tools.monitor.entity.MonitorResult;
 import com.tools.monitor.entity.ResponseVO;
 import com.tools.monitor.entity.SysSourceTarget;
 import com.tools.monitor.entity.TargetSource;
@@ -15,36 +19,120 @@ import org.quartz.SchedulerException;
  * @since 2022-10-01
  */
 public interface ISysJobService {
-
+    /**
+     * selectAllJob
+     *
+     * @param page page
+     * @param size size
+     * @param job  job
+     * @return ResponseVO
+     */
     ResponseVO selectAllJob(Integer page, Integer size, SysJob job);
 
+    /**
+     * pauseJob
+     *
+     * @param job job
+     * @return int
+     * @throws SchedulerException SchedulerException
+     */
     int pauseJob(SysJob job) throws SchedulerException;
 
+    /**
+     * resumeJob
+     *
+     * @param job job
+     * @return int
+     * @throws SchedulerException SchedulerException
+     */
     int resumeJob(SysJob job) throws SchedulerException;
 
-    Boolean deleteJob(SysJob job) throws SchedulerException;
+    /**
+     * deleteTask
+     *
+     * @param task task
+     * @return Boolean
+     */
+    Boolean deleteTask(SysJob task);
 
-    void deleteJobByIds(Long[] jobIds) throws SchedulerException;
+    /**
+     * deleteTaskByIds
+     *
+     * @param ids ids
+     */
+    void deleteTaskByIds(Long[] ids);
 
-    void run(SysJob job) throws SchedulerException;
+    /**
+     * start
+     *
+     * @param job job
+     */
+    void start(SysJob job);
 
-    AjaxResult insertJob(SysJob job) throws SchedulerException, TaskException, TaskException;
+    /**
+     * insertTask
+     *
+     * @param task task
+     * @return MonitorResult
+     */
+    MonitorResult insertTask(SysJob task);
 
-    AjaxResult updateJob(SysJob job) throws SchedulerException, TaskException, TaskException;
+    /**
+     * updateTask
+     *
+     * @param task task
+     * @return MonitorResult
+     * @throws TaskException TaskException
+     * @throws SchedulerException SchedulerException
+     */
+    MonitorResult updateTask(SysJob task);
 
-    boolean checkCronExpressionIsValid(String cronExpression);
+    /**
+     * batchPublish
+     *
+     * @param targetSource targetSource
+     * @return MonitorResult
+     * @throws SchedulerException SchedulerException
+     */
+    MonitorResult batchPublish(TargetSource targetSource) throws SchedulerException;
 
-    AjaxResult batchPublish(TargetSource TargetSource) throws SchedulerException;
+    /**
+     * singlePublishPause
+     *
+     * @param sourceTarget sourceTarget
+     * @return MonitorResult
+     * @throws SchedulerException SchedulerException
+     */
+    MonitorResult singlePublishPause(SysSourceTarget sourceTarget);
 
-    AjaxResult singlePublishPause(SysSourceTarget sourceTarget) throws SchedulerException;
+    /**
+     * batchPublishPause
+     *
+     * @param targetSource targetSource
+     * @return MonitorResult
+     * @throws SchedulerException SchedulerException
+     */
+    MonitorResult batchPublishPause(TargetSource targetSource) throws SchedulerException;
 
-    AjaxResult batchPublishPause(TargetSource targetSource) throws SchedulerException;
-
+    /**
+     * selectGroup
+     *
+     * @return ResponseVO
+     */
     ResponseVO selectGroup();
 
+    /**
+     * checkJobIds
+     *
+     * @param jobIds jobIds
+     * @return ResponseVO
+     */
     ResponseVO checkJobIds(Long[] jobIds);
 
-    ResponseVO getResulter();
-
-    AjaxResult getDefaultTarget();
+    /**
+     * getDefaultTarget
+     *
+     * @return MonitorResult
+     */
+    MonitorResult getDefaultTarget();
 }

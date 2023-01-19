@@ -1,9 +1,13 @@
+/*
+ * Copyright (c) Huawei Technologies Co., Ltd. 2012-2022. All rights reserved.
+ */
+
 package com.tools.monitor.config.threadpool;
 
-import com.tools.monitor.util.Threads;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadPoolExecutor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -15,15 +19,20 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
  * @author liu
  * @since 2022-10-01
  */
+@Slf4j
 @Configuration
 public class ThreadPoolConfig {
-    private int corePoolSize = 50;
+    // Core thread pool size
+    private int coreThreadPoolSize = 40;
 
-    private int maxPoolSize = 200;
+    // Maximum number of threads that can be created
+    private int maxThreadPoolSize = 100;
 
-    private int queueCapacity = 1000;
+    // Maximum queue length
+    private int maxQueueCapacity = 1200;
 
-    private int keepAliveSeconds = 300;
+    // The idle time allowed by the thread pool to maintain threads
+    private int monitorMaxThreadAliveSeconds = 400;
 
     /**
      * threadPoolTaskExecutor
@@ -32,29 +41,29 @@ public class ThreadPoolConfig {
      */
     @Bean(name = "threadPoolTaskExecutor")
     public ThreadPoolTaskExecutor threadPoolTaskExecutor() {
-        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setMaxPoolSize(maxPoolSize);
-        executor.setCorePoolSize(corePoolSize);
-        executor.setQueueCapacity(queueCapacity);
-        executor.setKeepAliveSeconds(keepAliveSeconds);
-        executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
-        return executor;
+        ThreadPoolTaskExecutor monitor = new ThreadPoolTaskExecutor();
+        monitor.setMaxPoolSize(maxThreadPoolSize);
+        monitor.setCorePoolSize(coreThreadPoolSize);
+        monitor.setQueueCapacity(maxQueueCapacity);
+        monitor.setKeepAliveSeconds(monitorMaxThreadAliveSeconds);
+        // Thread pool processing strategy for rejected tasks (wireless programs are available)
+        monitor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
+        return monitor;
     }
 
     /**
-     * scheduledExecutorService
+     * Scheduled
      *
-     * @return ScheduledExecutorService
+     * @return  ScheduledExecutorService
      */
-    @Bean(name = "scheduledExecutorService")
-    protected ScheduledExecutorService scheduledExecutorService() {
-        return new ScheduledThreadPoolExecutor(corePoolSize,
+    @Bean(name = "monitorExecutorService")
+    protected ScheduledExecutorService monitorExecutorService() {
+           return new ScheduledThreadPoolExecutor(coreThreadPoolSize,
                 new BasicThreadFactory.Builder().namingPattern("schedule-pool-%d").daemon(true).build(),
                 new ThreadPoolExecutor.CallerRunsPolicy()) {
             @Override
-            protected void afterExecute(Runnable r, Throwable t) {
-                super.afterExecute(r, t);
-                Threads.printException(r, t);
+            protected void afterExecute(Runnable runnable, Throwable throwable) {
+                log.info("ThreadPoolConfig runnable throwable");
             }
         };
     }

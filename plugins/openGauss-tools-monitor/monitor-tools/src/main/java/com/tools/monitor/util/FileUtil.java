@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) Huawei Technologies Co., Ltd. 2012-2022. All rights reserved.
+ */
+
 package com.tools.monitor.util;
 
 import com.tools.monitor.exception.ParamsException;
@@ -17,18 +21,14 @@ public class FileUtil {
     /**
      * createFolder
      *
-     * @param folderPath
-     * @return
+     * @param folderPath folderPath
+     * @return File
      */
     public static File createFolder(String folderPath) {
         File folder = null;
-        try {
-            folder = new File(folderPath);
-            if (!folder.exists()) {
-                folder.mkdirs();
-            }
-        } catch (Exception exception) {
-            log.error("createFolder--->，{}", exception.getMessage());
+        folder = new File(folderPath);
+        if (!folder.exists()) {
+            folder.mkdirs();
         }
         return folder;
     }
@@ -36,8 +36,8 @@ public class FileUtil {
     /**
      * createFile
      *
-     * @param filePath
-     * @return
+     * @param filePath filePath
+     * @return File
      */
     public static File createFile(String filePath) {
         File file = new File(filePath);
@@ -47,7 +47,7 @@ public class FileUtil {
             }
         } catch (IOException exception) {
             log.error("createFile-->{}", exception.getMessage());
-            throw new ParamsException("File initialization failed");
+            throw new ParamsException("createFile fail");
         }
         return file;
     }

@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) Huawei Technologies Co., Ltd. 2012-2022. All rights reserved.
+ */
+
 package com.tools.monitor.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -12,7 +16,6 @@ import org.springframework.stereotype.Component;
 @Component
 @ConfigurationProperties(prefix = "postgresql")
 public class PostgresqlConfig {
-
     private static String prefix;
 
     private static String suffix;

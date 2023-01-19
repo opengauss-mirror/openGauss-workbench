@@ -1,12 +1,20 @@
+/*
+ * Copyright (c) Huawei Technologies Co., Ltd. 2012-2022. All rights reserved.
+ */
+
 package com.tools.monitor.util;
 
 import cn.hutool.core.io.FileUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.serializer.SerializerFeature;
-import lombok.extern.slf4j.Slf4j;
-
-import java.io.*;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * JsonUtilData
@@ -20,7 +28,7 @@ public class JsonUtilData {
      * objectToJsonFile
      *
      * @param finalPath finalPath
-     * @param object object
+     * @param object   object
      */
     public static void objectToJsonFile(String finalPath, Object object) {
         String json = JSON.toJSONString(object, SerializerFeature.DisableCircularReferenceDetect);
@@ -43,13 +51,14 @@ public class JsonUtilData {
      * @param finalPath finalPath
      * @param targetClass targetClass
      * @return t
-     * @param <T>
+     * @param <T> t
      */
     public static <T> T jsonFileToObject(String finalPath, Class<T> targetClass) {
         String jsonString;
+        T t = null;
         File file = new File(".", finalPath);
         if (!FileUtil.isNotEmpty(file)) {
-            return null;
+            return t;
         }
         try {
             FileInputStream inputStream = new FileInputStream(file);
@@ -58,11 +67,10 @@ public class JsonUtilData {
             inputStream.read(buffer);
             inputStream.close();
             jsonString = new String(buffer, StandardCharsets.UTF_8);
-            T object = JSON.parseObject(jsonString, targetClass);
-            return object;
+            return JSON.parseObject(jsonString, targetClass);
         } catch (IOException exception) {
             log.error("json-->object-->fail{}", "json conversion Entity class failed");
         }
-        return null;
+        return t;
     }
 }

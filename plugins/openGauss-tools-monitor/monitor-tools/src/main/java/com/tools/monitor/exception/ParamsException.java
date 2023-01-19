@@ -1,4 +1,10 @@
+/*
+ * Copyright (c) Huawei Technologies Co., Ltd. 2012-2022. All rights reserved.
+ */
+
 package com.tools.monitor.exception;
+
+import lombok.Data;
 
 /**
  * ParamsException
@@ -6,43 +12,48 @@ package com.tools.monitor.exception;
  * @author liu
  * @since 2022-10-01
  */
+@Data
 public class ParamsException extends RuntimeException {
     private Integer code = 300;
 
-    private String msg = "Parameter exception";
+    private String message = "System abnormality";
+
+    /**
+     * ParamsException
+     */
     public ParamsException() {
-        super("Parameter exception!");
+        super("System abnormality!");
     }
 
-    public ParamsException(String msg) {
-        super(msg);
-        this.msg = msg;
+    /**
+     * ParamsException
+     *
+     * @param message message
+     */
+    public ParamsException(String message) {
+        super(message);
+        this.message = message;
     }
 
+    /**
+     * ParamsException
+     *
+     * @param code code
+     */
     public ParamsException(Integer code) {
-        super("Parameter exception!");
+        super("System abnormality!");
         this.code = code;
     }
 
-    public ParamsException(Integer code, String msg) {
-        super(msg);
+    /**
+     * ParamsException
+     *
+     * @param code code
+     * @param message message
+     */
+    public ParamsException(Integer code, String message) {
+        super(message);
         this.code = code;
-        this.msg = msg;
-    }
-
-    public Integer getCode() {
-        return code;
-    }
-
-    public void setCode(Integer code) {
-        this.code = code;
-    }
-
-    public String getMsg() {
-        return msg;
-    }
-
-    public void setMsg(String msg) {
-        this.msg = msg;
+        this.message = message;
     }
 }

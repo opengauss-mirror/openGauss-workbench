@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) Huawei Technologies Co., Ltd. 2012-2022. All rights reserved.
+ */
+
 package com.tools.monitor.entity;
 
 import lombok.Data;
@@ -14,6 +18,9 @@ public class Release {
 
     private String hostid;
 
+    /**
+     * Release
+     */
     public Release() {
     }
 

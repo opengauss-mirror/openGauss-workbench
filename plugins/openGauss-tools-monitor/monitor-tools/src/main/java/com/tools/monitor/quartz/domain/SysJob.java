@@ -1,12 +1,14 @@
+/*
+ * Copyright (c) Huawei Technologies Co., Ltd. 2012-2022. All rights reserved.
+ */
+
 package com.tools.monitor.quartz.domain;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.tools.monitor.common.contant.ScheduleConstants;
-import com.tools.monitor.entity.BaseEntity;
+import com.tools.monitor.common.contant.ScheduleCommon;
+import com.tools.monitor.entity.BasicEntity;
 import java.util.List;
 import lombok.Data;
-
-import javax.validation.constraints.NotNull;
 
 /**
  * SysJob
@@ -15,9 +17,7 @@ import javax.validation.constraints.NotNull;
  * @since 2022-10-01
  */
 @Data
-public class SysJob extends BaseEntity {
-    private static final long serialVersionUID = 1L;
-
+public class SysJob extends BasicEntity {
     @JsonFormat(shape = JsonFormat.Shape.STRING)
     private Long jobId;
 
@@ -30,10 +30,8 @@ public class SysJob extends BaseEntity {
 
     private String target;
 
-    @NotNull(message = "Collection time interval cannot be empty")
     private Integer num;
 
-    @NotNull(message = "Unit cannot be empty")
     private String timeType;
 
     private Long time;
@@ -44,17 +42,15 @@ public class SysJob extends BaseEntity {
 
     private String jobGroup = "DEFAULT";
 
-    @NotNull(message = "Indicator group cannot be empty")
     private String targetGroup;
 
-    @NotNull(message = "Monitoring platform cannot be empty")
     private String platform;
 
     private String invokeTarget;
 
     private String cronExpression;
 
-    private String misfirePolicy = ScheduleConstants.MISFIRE_IGNORE_MISFIRES;
+    private String misfirePolicy = ScheduleCommon.MONITOR_IGNORE_MISFIRES;
 
     private String concurrent = "0";
 

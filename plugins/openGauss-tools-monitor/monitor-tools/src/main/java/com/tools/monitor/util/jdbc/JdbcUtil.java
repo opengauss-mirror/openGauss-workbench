@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) Huawei Technologies Co., Ltd. 2012-2022. All rights reserved.
+ */
+
 package com.tools.monitor.util.jdbc;
 
 import cn.hutool.core.collection.CollectionUtil;
@@ -24,14 +28,29 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class JdbcUtil {
+    /**
+     * executeSql
+     *
+     * @param datasource datasource
+     * @param sql        sql
+     * @return list
+     */
     public static List<JSONObject> executeSql(DataSource datasource, String sql) {
         return executeSql(datasource, sql, new ArrayList<Object>());
     }
 
+    /**
+     * executeSql
+     *
+     * @param datasource datasource
+     * @param sql sql
+     * @param jdbcParamValues jdbcParamValues
+     * @return list
+     */
     public static List<JSONObject> executeSql(DataSource datasource, String sql, List<Object> jdbcParamValues) {
         DruidPooledConnection connection = null;
         try {
-            connection = PoolManager.getPooledConnection(datasource);
+            connection = PoolManager.getMonitorConnection(datasource);
             PreparedStatement statement = connection.prepareStatement(sql);
             for (int i = 1; i <= jdbcParamValues.size(); i++) {
                 statement.setObject(i, jdbcParamValues.get(i - 1));
@@ -52,8 +71,8 @@ public class JdbcUtil {
                         try {
                             Object value = rs.getObject(t);
                             jo.put(t, value);
-                        } catch (SQLException e) {
-                            e.printStackTrace();
+                        } catch (SQLException exception) {
+                            log.error("executeSql-->{}", exception.getMessage());
                         }
                     });
                     list.add(jo);
@@ -63,8 +82,8 @@ public class JdbcUtil {
                 int updateCount = statement.getUpdateCount();
                 return new ArrayList<>();
             }
-        } catch (Exception e) {
-            log.error("executeSql-->{}", e.getMessage());
+        } catch (SQLException exception) {
+            log.error("executeSql-->{}", exception.getMessage());
         } finally {
             try {
                 if (connection != null) {
@@ -77,10 +96,18 @@ public class JdbcUtil {
         return new ArrayList<>();
     }
 
-    public static void batchExecuteSql(DataSource datasource, List<String> sqlList,String name,String hoatName) {
+    /**
+     * batchExecuteSql
+     *
+     * @param datasource datasource
+     * @param sqlList    sqlList
+     * @param name       name
+     * @param hoatName   hoatName
+     */
+    public static void batchExecuteSql(DataSource datasource, List<String> sqlList, String name, String hoatName) {
         DruidPooledConnection connection = null;
         try {
-            connection = PoolManager.getPooledConnection(datasource);
+            connection = PoolManager.getMonitorConnection(datasource);
             Statement statement = connection.createStatement();
             connection.setAutoCommit(false);
             if (CollectionUtil.isNotEmpty(sqlList)) {
@@ -103,7 +130,13 @@ public class JdbcUtil {
         }
     }
 
-
+    /**
+     * getResulte
+     *
+     * @param key key
+     * @param js  js
+     * @return Integer
+     */
     public static Integer getResulte(String key, List<JSONObject> js) {
         if (CollectionUtil.isNotEmpty(js)) {
             return js.get(0).getInteger(key);
@@ -111,6 +144,12 @@ public class JdbcUtil {
         return 0;
     }
 
+    /**
+     * getDataSource
+     *
+     * @param sysConfig sysConfig
+     * @return DataSource
+     */
     public static DataSource getDataSource(SysConfig sysConfig) {
         DataSource dataSource = new DataSource();
         dataSource.setId(UUID.randomUUID().toString(true));
@@ -122,6 +161,12 @@ public class JdbcUtil {
         return dataSource;
     }
 
+    /**
+     * getAllId
+     *
+     * @param jsonObjects jsonObjects
+     * @return WholeIds
+     */
     public static WholeIds getAllId(List<JSONObject> jsonObjects) {
         WholeIds wholeIds = new WholeIds();
         if (CollectionUtil.isNotEmpty(jsonObjects)) {
@@ -136,7 +181,7 @@ public class JdbcUtil {
                     wholeIds.setItemid(jsonObject.getInteger("nextid"));
                 }
                 if (jsonObject.get("field_name").equals("item_preprocid")) {
-                    wholeIds.setItem_preprocid(jsonObject.getInteger("nextid"));
+                    wholeIds.setItemPreprocid(jsonObject.getInteger("nextid"));
                 }
             }
         }
@@ -151,8 +196,8 @@ public class JdbcUtil {
         if (ObjectUtil.isEmpty(wholeIds.getInterfaceid())) {
             wholeIds.setInterfaceid(0);
         }
-        if (ObjectUtil.isEmpty(wholeIds.getItem_preprocid())) {
-            wholeIds.setItem_preprocid(0);
+        if (ObjectUtil.isEmpty(wholeIds.getItemPreprocid())) {
+            wholeIds.setItemPreprocid(0);
         }
         if (ObjectUtil.isEmpty(wholeIds.getItemid())) {
             wholeIds.setItemid(0);

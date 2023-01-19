@@ -1,42 +1,38 @@
+/*
+ * Copyright (c) Huawei Technologies Co., Ltd. 2012-2022. All rights reserved.
+ */
+
 package com.tools.monitor.mapper;
 
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.ObjectUtil;
-import com.tools.monitor.common.contant.Constants;
+import com.tools.monitor.common.contant.ConmmonShare;
 import com.tools.monitor.config.FileConfig;
 import com.tools.monitor.entity.JsonTask;
 import com.tools.monitor.quartz.domain.SysJob;
 import com.tools.monitor.util.AssertUtil;
 import com.tools.monitor.util.JsonUtilData;
-import org.springframework.stereotype.Service;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import org.springframework.stereotype.Service;
 
 /**
  * SysJobMapper
+ *
+ * @author liu
+ * @since 2022-10-01
  */
 @Service
 public class SysJobMapper {
-    /**
-     * selectJobList
-     *
-     * @param job
-     * @return list
-     */
-    public List<SysJob> selectJobList(SysJob job) {
-        return null;
-    }
-
     /**
      * selectJobAll
      *
      * @return list
      */
     public List<SysJob> selectJobAll() {
-        JsonTask jsonTask = JsonUtilData.jsonFileToObject(FileConfig.taskConfig, JsonTask.class);
+        JsonTask jsonTask = JsonUtilData.jsonFileToObject(FileConfig.getTaskConfig(), JsonTask.class);
         if (jsonTask == null || CollectionUtil.isEmpty(jsonTask.getSysJobs())) {
             return new ArrayList<>();
         }
@@ -44,35 +40,36 @@ public class SysJobMapper {
     }
 
     /**
-     * selectJobById
+     * Query scheduling task information by scheduling ID
      *
-     * @param jobId
+     * @param jobId jobId
      * @return SysJob
      */
     public SysJob selectJobById(Long jobId) {
-        List<SysJob> SysJobList = selectJobAll();
+        List<SysJob> sysJobList = selectJobAll();
         SysJob sysJob = null;
-        if (CollectionUtil.isNotEmpty(SysJobList)) {
-            sysJob = SysJobList.stream().filter(s -> Objects.equals(s.getJobId(), jobId)).findFirst().orElse(null);
+        if (CollectionUtil.isNotEmpty(sysJobList)) {
+            sysJob = sysJobList.stream().filter(s -> Objects.equals(s.getJobId(), jobId)).findFirst().orElse(null);
         }
         return sysJob;
     }
 
     /**
-     * selectBatchJobByIds
+     * Batch Query Scheduling Task Information by Scheduling IDS
      *
-     * @param ids
+     * @param ids ids
      * @return list
      */
     public List<SysJob> selectBatchJobByIds(List<Long> ids) {
         List<SysJob> sysJobs = selectJobAll();
         List<SysJob> result = new ArrayList<>();
-        if (CollectionUtil.isNotEmpty(ids)) {
-            for (Long id : ids) {
-                for (SysJob sysJob : sysJobs) {
-                    if (id.equals(sysJob.getJobId())) {
-                        result.add(sysJob);
-                    }
+        if (CollectionUtil.isEmpty(ids)) {
+            return new ArrayList<>();
+        }
+        for (Long id : ids) {
+            for (SysJob sysJob : sysJobs) {
+                if (id.equals(sysJob.getJobId())) {
+                    result.add(sysJob);
                 }
             }
         }
@@ -83,7 +80,7 @@ public class SysJobMapper {
     /**
      * deleteJobByIds
      *
-     * @param ids
+     * @param ids ids
      * @return Boolean
      */
     public Boolean deleteJobByIds(List<Long> ids) {
@@ -99,36 +96,40 @@ public class SysJobMapper {
         Boolean isDelete = sysJobs.removeAll(result);
         JsonTask jsonTask = new JsonTask();
         jsonTask.setSysJobs(sysJobs);
-        JsonUtilData.objectToJsonFile(FileConfig.taskConfig, jsonTask);
+        JsonUtilData.objectToJsonFile(FileConfig.getTaskConfig(), jsonTask);
         return isDelete;
     }
 
     /**
-     * updateJob
+     * Modify Scheduled Task Status
      *
-     * @param job
+     * @param job job
      * @return int
      */
     public int updateJob(SysJob job) {
         List<SysJob> sysJobs = selectJobAll();
         AssertUtil.isTrue(CollectionUtil.isEmpty(sysJobs), "No timed tasks");
-        SysJob sysJob = sysJobs.stream().filter(item -> ObjectUtil.isNotEmpty(item) && item.getJobId().equals(job.getJobId())).findFirst().orElse(null);
-        AssertUtil.isTrue(sysJob == null, "Timed task does not exist");
-        for (int i = 0; i < sysJobs.size(); i++) {
-            if (sysJobs.get(i).getJobId().equals(job.getJobId())) {
-                sysJobs.get(i).setStatus(job.getStatus());
+        SysJob sysJob = sysJobs.stream()
+                .filter(item -> ObjectUtil.isNotEmpty(item) && item.getJobId().equals(job.getJobId()))
+                .findFirst().orElse(null);
+        if (sysJob == null) {
+            return 0;
+        }
+        for (SysJob item : sysJobs) {
+            if (item.getJobId().equals(job.getJobId())) {
+                item.setStatus(job.getStatus());
             }
         }
         JsonTask jsonTask = new JsonTask();
         jsonTask.setSysJobs(sysJobs);
-        JsonUtilData.objectToJsonFile(FileConfig.taskConfig, jsonTask);
+        JsonUtilData.objectToJsonFile(FileConfig.getTaskConfig(), jsonTask);
         return 1;
     }
 
     /**
-     * insertJob
+     * Add scheduling task information
      *
-     * @param job
+     * @param job job
      * @return int
      */
     public int insertJob(SysJob job) {
@@ -136,7 +137,7 @@ public class SysJobMapper {
         sysJobs.add(job);
         JsonTask jsonTask = new JsonTask();
         jsonTask.setSysJobs(sysJobs);
-        JsonUtilData.objectToJsonFile(FileConfig.taskConfig, jsonTask);
+        JsonUtilData.objectToJsonFile(FileConfig.getTaskConfig(), jsonTask);
         return 1;
     }
 
@@ -150,10 +151,8 @@ public class SysJobMapper {
         if (CollectionUtil.isEmpty(sysJobs)) {
             return new ArrayList<>();
         }
-        List<String> list = sysJobs.stream().map(SysJob::getTargetGroup).distinct().collect(Collectors.toList());
-        if(CollectionUtil.isNotEmpty(list)){
-            list.remove(Constants.SYSTEMTARGET);
-        }
+        List<String> list = sysJobs.stream().filter(item -> !item.getTargetGroup().equals(ConmmonShare.SYSTEMTARGET))
+                .map(SysJob::getTargetGroup).distinct().collect(Collectors.toList());
         return list;
     }
 }

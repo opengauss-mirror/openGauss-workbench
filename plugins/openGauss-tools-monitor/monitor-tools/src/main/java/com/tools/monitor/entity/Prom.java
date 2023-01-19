@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) Huawei Technologies Co., Ltd. 2012-2022. All rights reserved.
+ */
+
 package com.tools.monitor.entity;
 
 import io.prometheus.client.Gauge;
@@ -15,6 +19,9 @@ public class Prom {
 
     private String gaugeName;
 
+    /**
+     * Prom
+     */
     public Prom() {
     }
 

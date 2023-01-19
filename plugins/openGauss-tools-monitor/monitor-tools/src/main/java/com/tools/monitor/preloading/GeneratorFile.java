@@ -1,6 +1,9 @@
+/*
+ * Copyright (c) Huawei Technologies Co., Ltd. 2012-2022. All rights reserved.
+ */
+
 package com.tools.monitor.preloading;
 
-import ch.ethz.ssh2.Connection;
 import com.tools.monitor.util.FileUtil;
 import java.io.File;
 import lombok.extern.slf4j.Slf4j;
@@ -18,18 +21,18 @@ import javax.annotation.PostConstruct;
 @Component
 @Slf4j
 public class GeneratorFile {
-
-    @Value("${file.setting.config}")
+    @Value("${file.dataSourceConfig}")
     private String config;
 
-    @Value("${file.setting.task}")
+    @Value("${file.taskConfig}")
     private String jobConfig;
 
-    @Value("${file.setting.relation}")
+    @Value("${file.relationConfig}")
     private String relationConfig;
 
-    private static Connection conn;
-
+    /**
+     * init
+     */
     @PostConstruct
     public void init() {
         File soucre = FileUtil.createFile(config);

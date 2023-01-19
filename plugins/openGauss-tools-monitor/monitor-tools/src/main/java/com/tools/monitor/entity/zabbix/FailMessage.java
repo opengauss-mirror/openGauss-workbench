@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) Huawei Technologies Co., Ltd. 2012-2022. All rights reserved.
+ */
+
 package com.tools.monitor.entity.zabbix;
 
 import lombok.Data;
@@ -16,6 +20,9 @@ public class FailMessage {
 
     private String failResion;
 
+    /**
+     * FailMessage
+     */
     public FailMessage() {
     }
 

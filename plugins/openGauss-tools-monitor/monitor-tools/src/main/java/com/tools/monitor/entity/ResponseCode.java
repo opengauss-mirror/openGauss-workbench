@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) Huawei Technologies Co., Ltd. 2012-2020. All rights reserved.
+ */
+
 package com.tools.monitor.entity;
 
 /**
@@ -8,17 +12,12 @@ package com.tools.monitor.entity;
  */
 public enum ResponseCode {
     RESPONSE_SUCCESS(200, "success"),
-
     RESPONSE_UNAUTH(300, "unauth"),
-
     RESPONSE_ERROR(400, "error"),
-
     RESPONSE_EXCEPTION(500, "exception"),
-
     RESPONSE_TARGET_ERR(600, "target_err");
 
     private Integer code;
-
     private String remark;
 
     private ResponseCode(Integer code, String remark) {

@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) Huawei Technologies Co., Ltd. 2012-2022. All rights reserved.
+ */
+
 package com.tools.monitor.entity.zabbix;
 
 import lombok.Data;
@@ -13,15 +17,26 @@ public class WholeIds {
     private Integer hostid;
     private Integer interfaceid;
     private Integer itemid;
-    private Integer item_preprocid;
+    private Integer itemPreprocid;
 
+    /**
+     * WholeIds
+     */
     public WholeIds() {
     }
 
-    public WholeIds(Integer hostid, Integer interfaceid, Integer itemid, Integer item_preprocid) {
+    /**
+     * WholeIds
+     *
+     * @param hostid hostid
+     * @param interfaceid interfaceid
+     * @param itemid itemid
+     * @param itemPreprocid itemPreprocid
+     */
+    public WholeIds(Integer hostid, Integer interfaceid, Integer itemid, Integer itemPreprocid) {
         this.hostid = hostid;
         this.interfaceid = interfaceid;
         this.itemid = itemid;
-        this.item_preprocid = item_preprocid;
+        this.itemPreprocid = itemPreprocid;
     }
 }

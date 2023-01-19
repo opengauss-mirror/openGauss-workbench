@@ -1,9 +1,12 @@
+/*
+ * Copyright (c) Huawei Technologies Co., Ltd. 2012-2022. All rights reserved.
+ */
+
 package com.tools.monitor.service;
 
+import java.util.List;
 import com.tools.monitor.entity.ResponseVO;
 import com.tools.monitor.entity.SysConfig;
-
-import java.util.List;
 
 /**
  * MonitorService
@@ -12,18 +15,57 @@ import java.util.List;
  * @since 2022-10-01
  */
 public interface MonitorService {
+    /**
+     * setSourceConfig
+     *
+     * @param sysConfig sysConfig
+     * @return ResponseVO
+     */
+    ResponseVO setSourceConfig(SysConfig sysConfig);
 
-	ResponseVO setSourceConfig(SysConfig sysConfig);
+    /**
+     * updateConfig
+     *
+     * @param sysConfig sysConfig
+     * @return ResponseVO
+     */
+    ResponseVO updateConfig(SysConfig sysConfig);
 
-	ResponseVO updateConfig(SysConfig sysConfig);
+    /**
+     * getDataSourceList
+     *
+     * @param page page
+     * @param size size
+     * @return ResponseVO
+     */
+    ResponseVO getDataSourceList(Integer page, Integer size);
 
-	ResponseVO getDataSourceList(Integer page, Integer size);
+    /**
+     * deleteConfigById
+     *
+     * @param ids ids
+     * @return ResponseVO
+     */
+    ResponseVO deleteConfigById(List<Long> ids);
 
-	ResponseVO deleteConfigById(List<Long> ids);
-
+    /**
+     * selectZabbixConfig
+     *
+     * @return ResponseVO
+     */
     ResponseVO selectZabbixConfig();
 
-	ResponseVO selectNagiosConfig();
+    /**
+     * selectNagiosConfig
+     *
+     * @return ResponseVO
+     */
+    ResponseVO selectNagiosConfig();
 
-	ResponseVO getDataSourceNameList();
+    /**
+     * getDataSourceNameList
+     *
+     * @return ResponseVO
+     */
+    ResponseVO getDataSourceNameList();
 }

@@ -1,14 +1,13 @@
+/*
+ * Copyright (c) Huawei Technologies Co., Ltd. 2012-2022. All rights reserved.
+ */
+
 package com.tools.monitor.service.impl;
 
 import ch.ethz.ssh2.Connection;
 import ch.ethz.ssh2.Session;
 import ch.ethz.ssh2.StreamGobbler;
 import cn.hutool.core.util.StrUtil;
-import com.tools.monitor.entity.SysConfig;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.stereotype.Service;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -16,6 +15,10 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import com.tools.monitor.entity.SysConfig;
+import org.springframework.stereotype.Service;
 
 /**
  * NagiosServiceImpl
@@ -28,7 +31,15 @@ import java.util.Map;
 public class NagiosServiceImpl {
     private static final String DEFAULT_PATH = "/usr/local/nagios";
 
-    private static final String WRAP_STR = "\n";
+    private static final String WRAP_STR = StrUtil.LF;
+
+    private static final String TABLE = StrUtil.TAB;
+
+    private static final String XIEG = StrUtil.SLASH;
+
+    private static final Connection EMPY = null;
+
+    private static final String STREMPY = null;
 
     private static final String START_CLIENT = "%s/bin/nrpe -c %s/etc/nrpe.cfg -d";
 
@@ -54,9 +65,13 @@ public class NagiosServiceImpl {
 
     private static final String CAT_COMMANDS = "cat %s/etc/objects/commands.cfg";
 
-    private static final String SERVICES_CONFIG = "define service{\n        use \t\t\tgeneric-service,service-pnp\n        host_name               client\n        service_description \t%s\n        check_command \t\tcheck_nrpe!%s\n\t}";
+    private static final String SERVICES_CONFIG = "define service{" + WRAP_STR
+            + "use" + TABLE + TABLE + TABLE + "generic-service,service-pnp" + WRAP_STR + "host_name               "
+            + "client" + WRAP_STR + "service_description" + TABLE + "%s" + WRAP_STR + "check_command" + TABLE + TABLE
+            + "check_nrpe!%s" + WRAP_STR + TABLE + "}";
 
-    private static final String COMMANDS_CONFIG = "define command{\n        command_name        %s\n        command_line        \\$USER1$/%s.sh\n        }";
+    private static final String COMMANDS_CONFIG = "define command{" + WRAP_STR + "command_name        %s" + WRAP_STR
+            + "command_line        \\$USER1$/%s.sh" + WRAP_STR + "        }";
 
     private static final String WRITE_SERVICES = "cd %s/etc/objects/&&echo \"%s\" >> services.cfg";
 
@@ -71,8 +86,8 @@ public class NagiosServiceImpl {
     /**
      * setConfig
      *
-     * @param map
-     * @param sysConfig
+     * @param map       map
+     * @param sysConfig sysConfig
      */
     public void setConfig(Map<String, Object> map, SysConfig sysConfig) {
         while (true) {
@@ -105,12 +120,14 @@ public class NagiosServiceImpl {
             for (Map.Entry<String, Object> entry : map.entrySet()) {
                 if (servicesResult != null && !servicesResult.contains(entry.getKey())) {
                     isStart = true;
-                    String config = WRAP_STR + String.format(Locale.ROOT, SERVICES_CONFIG, entry.getKey(), entry.getKey());
+                    String config = WRAP_STR
+                            + String.format(Locale.ROOT, SERVICES_CONFIG, entry.getKey(), entry.getKey());
                     servicesBuf.append(config);
                 }
                 if (commandsResult != null && !commandsResult.contains(entry.getKey())) {
                     isStart = true;
-                    String config = WRAP_STR + String.format(Locale.ROOT, COMMANDS_CONFIG, entry.getKey(), entry.getKey());
+                    String config = WRAP_STR
+                            + String.format(Locale.ROOT, COMMANDS_CONFIG, entry.getKey(), entry.getKey());
                     commandsBuf.append(config);
                 }
             }
@@ -146,7 +163,8 @@ public class NagiosServiceImpl {
             for (Map.Entry<String, Object> entry : map.entrySet()) {
                 if (configResult != null && !configResult.contains(entry.getKey())) {
                     isStart = true;
-                    String config = WRAP_STR + String.format(Locale.ROOT, NRPE_CONFIG, entry.getKey(), path, entry.getKey());
+                    String config = WRAP_STR
+                            + String.format(Locale.ROOT, NRPE_CONFIG, entry.getKey(), path, entry.getKey());
                     nrpeBuf.append(config);
                 }
                 if (shResult != null && !shResult.contains(entry.getKey())) {
@@ -171,12 +189,18 @@ public class NagiosServiceImpl {
                 }
                 command = String.format(Locale.ROOT, START_CLIENT, path, path);
                 executeCmd(command, connClient);
-                command = String.format(Locale.ROOT, "cd %s/libexec/&&chmod 777 *.sh", path);
+                command = String.format(Locale.ROOT, "cd %s" + XIEG + "libexec" + XIEG + "&&chmod 777 *.sh", path);
                 executeCmd(command, connClient);
             }
         }
     }
 
+    /**
+     * writeSh
+     *
+     * @param map       map
+     * @param sysConfig sysConfig
+     */
     public void writeSh(Map<String, Object> map, SysConfig sysConfig) {
         String path = DEFAULT_PATH;
         if (StrUtil.isNotBlank(sysConfig.getClientPath())) {
@@ -198,59 +222,82 @@ public class NagiosServiceImpl {
         }
     }
 
+    /**
+     * getConn
+     *
+     * @param hostIp   hostIp
+     * @param userName userName
+     * @param password password
+     * @return Connection
+     */
     public Connection getConn(String hostIp, String userName, String password) {
-        boolean flag = false;
+        boolean isFlag = false;
         try {
             Connection conn = new Connection(hostIp);
             conn.connect();
-            flag = conn.authenticateWithPassword(userName, password);
-            if (flag) {
-                log.info("Certification successful!");
+            isFlag = conn.authenticateWithPassword(userName, password);
+            if (isFlag) {
+                log.info("auth success!");
                 return conn;
             } else {
-                log.error(hostIp + "Certification fail!");
+                log.error(hostIp + "auth fail!");
                 conn.close();
-                return null;
+                return EMPY;
             }
         } catch (IOException e) {
-            return null;
+            return EMPY;
         }
     }
 
+    /**
+     * getWrite
+     *
+     * @param hostIp   hostIp
+     * @param userName userName
+     * @param password password
+     * @return Connection
+     */
     public static Connection getWrite(String hostIp, String userName, String password) {
         Connection connection = null;
-        boolean flag = false;
+        boolean isFlag = false;
         try {
             connection = new Connection(hostIp);
             connection.connect();
-            flag = connection.authenticateWithPassword(userName, password);
-            if (flag) {
-                log.info("Certification successful!");
+            isFlag = connection.authenticateWithPassword(userName, password);
+            if (isFlag) {
+                log.info("auth success!");
                 return connection;
             } else {
-                log.error(hostIp + "Certification fail!");
+                log.error(hostIp + "auth fail!");
                 connection.close();
-                return null;
+                return EMPY;
             }
-        } catch (IOException e) {
-            return null;
+        } catch (IOException exception) {
+            return EMPY;
         }
     }
 
+    /**
+     * executeCmdAndGetResult
+     *
+     * @param cmd  cmd
+     * @param conn conn
+     * @return String
+     */
     public String executeCmdAndGetResult(String cmd, Connection conn) {
         Session session = null;
         try {
             session = conn.openSession();
             session.execCommand(cmd);
             return processOut(session.getStdout());
-        } catch (IOException e) {
+        } catch (IOException exception) {
             log.info("executeCmdAndGetResult fail");
         } finally {
             if (session != null) {
                 session.close();
             }
         }
-        return null;
+        return STREMPY;
     }
 
     private boolean executeCmd(String cmd, Connection connect) {
@@ -279,10 +326,10 @@ public class NagiosServiceImpl {
                 if ((line = br.readLine()) == null) {
                     break;
                 }
-            } catch (IOException e) {
-                e.printStackTrace();
+            } catch (IOException exception) {
+                log.error("processOut-->{}", exception.getMessage());
             }
-            buff.append(line).append("\n");
+            buff.append(line).append(WRAP_STR);
         }
         return buff.toString();
     }

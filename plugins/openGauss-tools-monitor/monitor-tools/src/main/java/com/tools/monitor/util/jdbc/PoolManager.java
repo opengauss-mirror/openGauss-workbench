@@ -1,15 +1,18 @@
+/*
+ * Copyright (c) Huawei Technologies Co., Ltd. 2012-2022. All rights reserved.
+ */
+
 package com.tools.monitor.util.jdbc;
 
 import com.alibaba.druid.pool.DruidDataSource;
 import com.alibaba.druid.pool.DruidPooledConnection;
 import com.tools.monitor.entity.DataSource;
-import lombok.extern.slf4j.Slf4j;
-
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * PoolManager
@@ -19,67 +22,85 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 @Slf4j
 public class PoolManager {
+    /**
+     * map
+     */
+    static Map<String, DruidDataSource> zabbixMap = new HashMap<>();
 
-    private static Lock lock = new ReentrantLock();
+    private static Lock poolLock = new ReentrantLock();
 
-    private static Lock deleteLock = new ReentrantLock();
+    private static Lock pooldelLock = new ReentrantLock();
 
-    static Map<String, DruidDataSource> map = new HashMap<>();
-
-    public static DruidDataSource getJdbcConnectionPool(DataSource ds) {
-        if (map.containsKey(ds.getId())) {
-            return map.get(ds.getId());
+    /**
+     * getJdbcConnectionPool
+     *
+     * @param source source
+     * @return DruidDataSource
+     */
+    public static DruidDataSource getMonitorPool(DataSource source) {
+        if (zabbixMap.containsKey(source.getId())) {
+            return zabbixMap.get(source.getId());
         } else {
-            lock.lock();
+            poolLock.lock();
             try {
-                log.info(Thread.currentThread().getName() + "获取锁");
-                if (!map.containsKey(ds.getId())) {
-                    DruidDataSource druidDataSource = new DruidDataSource();
-                    druidDataSource.setInitialSize(5);
-                    druidDataSource.setMaxActive(20);
-                    druidDataSource.setMaxWait(60000);
-                    druidDataSource.setTimeBetweenEvictionRunsMillis(60000);
-                    druidDataSource.setMinEvictableIdleTimeMillis(300000);
-                    druidDataSource.setMaxEvictableIdleTimeMillis(900000);
-                    druidDataSource.setName("zabbix");
-                    druidDataSource.setUrl(ds.getUrl());
-                    druidDataSource.setUsername(ds.getUsername());
-                    druidDataSource.setPassword(ds.getPassword());
-                    druidDataSource.setDriverClassName(ds.getDriver());
-                    druidDataSource.setConnectionErrorRetryAttempts(3);       //失败后重连次数
-                    druidDataSource.setBreakAfterAcquireFailure(true);
-
-                    map.put(ds.getId(), druidDataSource);
-                    log.info("create Druid pool success：{}", ds.getName());
+                log.info(Thread.currentThread().getName() + "get key");
+                if (!zabbixMap.containsKey(source.getId())) {
+                    DruidDataSource monitorSource = new DruidDataSource();
+                    monitorSource.setInitialSize(5);
+                    monitorSource.setMaxActive(20);
+                    monitorSource.setMaxWait(60000);
+                    monitorSource.setTimeBetweenEvictionRunsMillis(60000);
+                    monitorSource.setMinEvictableIdleTimeMillis(300000);
+                    monitorSource.setMaxEvictableIdleTimeMillis(900000);
+                    monitorSource.setName("zabbix");
+                    monitorSource.setUrl(source.getUrl());
+                    monitorSource.setUsername(source.getUsername());
+                    monitorSource.setPassword(source.getPassword());
+                    monitorSource.setDriverClassName(source.getDriver());
+                    monitorSource.setConnectionErrorRetryAttempts(3);
+                    monitorSource.setBreakAfterAcquireFailure(true);
+                    zabbixMap.put(source.getId(), monitorSource);
+                    log.info("Druid connection monitorPool :{}", source.getName());
                 }
-                return map.get(ds.getId());
-            } catch (Exception e) {
-                return null;
+                return zabbixMap.get(source.getId());
             } finally {
-                lock.unlock();
+                poolLock.unlock();
             }
         }
     }
 
+    /**
+     * removeJdbcConnectionPool
+     *
+     * @param id id
+     */
     public static void removeJdbcConnectionPool(String id) {
-        deleteLock.lock();
+        pooldelLock.lock();
         try {
-            DruidDataSource druidDataSource = map.get(id);
+            DruidDataSource druidDataSource = zabbixMap.get(id);
             if (druidDataSource != null) {
                 druidDataSource.close();
-                map.remove(id);
+                zabbixMap.remove(id);
             }
-        } catch (Exception e) {
-            log.error(e.toString());
         } finally {
-            deleteLock.unlock();
+            pooldelLock.unlock();
         }
-
     }
 
-    public static DruidPooledConnection getPooledConnection(DataSource ds) throws SQLException {
-        DruidDataSource pool = PoolManager.getJdbcConnectionPool(ds);
-        DruidPooledConnection connection = pool.getConnection();
-        return connection;
+    /**
+     * getMonitorConnection
+     *
+     * @param source source
+     * @return DruidPooledConnection
+     */
+    public static DruidPooledConnection getMonitorConnection(DataSource source) {
+        DruidDataSource dataSource = PoolManager.getMonitorPool(source);
+        DruidPooledConnection druidPooledConnection = null;
+        try {
+            druidPooledConnection = dataSource.getConnection();
+        } catch (SQLException exception) {
+            log.error("getMonitorConnection fail-->{}", exception.getMessage());
+        }
+        return druidPooledConnection;
     }
 }

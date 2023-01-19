@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) Huawei Technologies Co., Ltd. 2012-2022. All rights reserved.
+ */
+
 package com.tools.monitor.entity.zabbix;
 
 import com.tools.monitor.entity.DataSource;
@@ -14,7 +18,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 public class ZabbixMessge {
     private Integer hostId;
 
-    private Integer father_item_id;
+    private Integer fatherItemId;
 
     private Integer itemPreprocId;
 
@@ -24,20 +28,23 @@ public class ZabbixMessge {
 
     private String hostName;
 
+    /**
+     * ZabbixMessge
+     */
     public ZabbixMessge() {
     }
 
-    public ZabbixMessge(Integer hostId, Integer father_item_id, Integer itemPreprocId, DataSource dataSource, String hostName) {
+    /**
+     * ZabbixMessge
+     *
+     * @param hostId       hostId
+     * @param fatherItemId fatherItemId
+     * @param dataSource   dataSource
+     * @param hostName     hostName
+     */
+    public ZabbixMessge(Integer hostId, Integer fatherItemId, DataSource dataSource, String hostName) {
         this.hostId = hostId;
-        this.father_item_id = father_item_id;
-        this.itemPreprocId = itemPreprocId;
-        this.dataSource = dataSource;
-        this.hostName = hostName;
-    }
-
-    public ZabbixMessge(Integer hostId, Integer father_item_id,  DataSource dataSource, String hostName) {
-        this.hostId = hostId;
-        this.father_item_id = father_item_id;
+        this.fatherItemId = fatherItemId;
         this.dataSource = dataSource;
         this.hostName = hostName;
     }

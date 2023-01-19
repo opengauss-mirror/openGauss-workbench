@@ -1,38 +1,13 @@
+/*
+ * Copyright (c) Huawei Technologies Co., Ltd. 2012-2022. All rights reserved.
+ */
+
 package com.tools.monitor.service.impl;
 
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
-import com.tools.monitor.common.contant.Constants;
-import com.tools.monitor.common.contant.HttpStatus;
-import com.tools.monitor.common.contant.ScheduleConstants;
-import com.tools.monitor.config.NagiosConfig;
-import com.tools.monitor.entity.AjaxResult;
-import com.tools.monitor.entity.MFilter;
-import com.tools.monitor.entity.ResponseVO;
-import com.tools.monitor.entity.SysConfig;
-import com.tools.monitor.entity.SysSourceTarget;
-import com.tools.monitor.entity.TargetSource;
-import com.tools.monitor.entity.zabbix.FailMessage;
-import com.tools.monitor.entity.zabbix.ZabbixMessge;
-import com.tools.monitor.exception.ParamsException;
-import com.tools.monitor.exception.job.TaskException;
-import com.tools.monitor.manager.AsyncManager;
-import com.tools.monitor.manager.factory.AsyncFactory;
-import com.tools.monitor.mapper.SysConfigMapper;
-import com.tools.monitor.mapper.SysJobMapper;
-import com.tools.monitor.mapper.SysSourceTargetMapper;
-import com.tools.monitor.quartz.domain.SysJob;
-import com.tools.monitor.quartz.util.CronUtils;
-import com.tools.monitor.quartz.util.ScheduleUtils;
-import com.tools.monitor.service.ISysJobService;
-import com.tools.monitor.service.MonitorService;
-import com.tools.monitor.service.SnowFlake;
-import com.tools.monitor.util.AssertUtil;
-import com.tools.monitor.util.Base64;
-import com.tools.monitor.util.HandleUtils;
-import com.tools.monitor.util.SqlUtil;
-import com.tools.monitor.util.StringUtils;
+import cn.hutool.http.HttpStatus;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
@@ -46,6 +21,31 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+import com.tools.monitor.common.contant.ConmmonShare;
+import com.tools.monitor.common.contant.ScheduleCommon;
+import com.tools.monitor.config.NagiosConfig;
+import com.tools.monitor.entity.MFilter;
+import com.tools.monitor.entity.MonitorResult;
+import com.tools.monitor.entity.ResponseVO;
+import com.tools.monitor.entity.SysConfig;
+import com.tools.monitor.entity.SysSourceTarget;
+import com.tools.monitor.entity.TargetSource;
+import com.tools.monitor.entity.zabbix.ZabbixMessge;
+import com.tools.monitor.exception.job.TaskException;
+import com.tools.monitor.manager.MonitorManager;
+import com.tools.monitor.manager.factory.AsyncFactory;
+import com.tools.monitor.mapper.SysConfigMapper;
+import com.tools.monitor.mapper.SysJobMapper;
+import com.tools.monitor.mapper.SysSourceTargetMapper;
+import com.tools.monitor.quartz.domain.SysJob;
+import com.tools.monitor.quartz.util.MonitorTaskUtils;
+import com.tools.monitor.service.ISysJobService;
+import com.tools.monitor.service.MonitorFlake;
+import com.tools.monitor.service.MonitorService;
+import com.tools.monitor.util.AssertUtil;
+import com.tools.monitor.util.Base64;
+import com.tools.monitor.util.HandleUtils;
+import com.tools.monitor.util.SqlUtil;
 import org.quartz.JobDataMap;
 import org.quartz.JobKey;
 import org.quartz.Scheduler;
@@ -53,6 +53,7 @@ import org.quartz.SchedulerException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.DependsOn;
+import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.stereotype.Service;
@@ -70,6 +71,11 @@ import javax.annotation.PostConstruct;
 @DependsOn("generatorFile")
 @Service
 public class SysJobServiceImpl implements ISysJobService {
+    private static final String ISNUM = "^(\\-|\\+)?\\d+(\\.\\d+)?$";
+
+    private static final String FITE = StrUtil.LF;
+
+    private static final String KEXUE = "^[+-]?\\d+\\.?\\d*[Ee][+-]?\\d+$";
 
     @Autowired
     private Scheduler scheduler;
@@ -98,22 +104,23 @@ public class SysJobServiceImpl implements ISysJobService {
     @Value("${date.pattern}")
     private String dataPattern;
 
-    private SnowFlake snowFlake = new SnowFlake(11, 11);
+    private MonitorFlake MonitorFlake = new MonitorFlake(11, 11);
 
     private JdbcTemplate jdbcTemplate;
 
-    public static List<FailMessage> failMessages = new ArrayList<>();
 
-    private static final String ISNUM = "^(\\-|\\+)?\\d+(\\.\\d+)?$";
-
-    private static final String KEXUE = "^[+-]?\\d+\\.?\\d*[Ee][+-]?\\d+$";
-
+    /**
+     * init
+     *
+     * @throws SchedulerException SchedulerException
+     * @throws TaskException      TaskException
+     */
     @PostConstruct
     public void init() throws SchedulerException, TaskException {
         scheduler.clear();
         List<SysJob> jobList = jobMapper.selectJobAll();
         for (SysJob job : jobList) {
-            ScheduleUtils.createScheduleJob(scheduler, job);
+            MonitorTaskUtils.createMonitorJob(scheduler, job);
         }
     }
 
@@ -122,16 +129,23 @@ public class SysJobServiceImpl implements ISysJobService {
      *
      * @param page page
      * @param size size
-     * @param job job
-     * @return ResponseVO
+     * @param job  job
+     * @return ResponseVO responseVO
      */
     @Override
     public ResponseVO selectAllJob(Integer page, Integer size, SysJob job) {
         List<SysJob> sysJobs = jobMapper.selectJobAll();
+        // 添加 发布信息
         addPublish(sysJobs, job);
         sortJob(sysJobs);
         List<String> platForm = sysJobs.stream().map(SysJob::getPlatform).distinct().collect(Collectors.toList());
         List<String> targetGroup = sysJobs.stream().map(SysJob::getTargetGroup).distinct().collect(Collectors.toList());
+        List<MFilter> form = new ArrayList<>();
+        List<MFilter> group = new ArrayList<>();
+        dealMap(platForm, targetGroup, form, group);
+        Map<String, Object> myResMap = new HashMap<>();
+        myResMap.put("platForm", form);
+        myResMap.put("targetGroup", group);
         sysJobs = filter(sysJobs, job);
         List<SysJob> resulte = new ArrayList<>();
         if (ObjectUtil.isNotEmpty(job) && ObjectUtil.isNotEmpty(job.getIsManagement()) && job.getIsManagement()) {
@@ -140,54 +154,63 @@ public class SysJobServiceImpl implements ISysJobService {
             resulte = sysJobs.stream().skip((page - 1) * size).limit(size).collect(Collectors.toList());
         }
         addIsCanUpdate(resulte);
-        List<MFilter> form = new ArrayList<>();
-        List<MFilter> group = new ArrayList<>();
-        dealMap(platForm, targetGroup, form, group);
-        Map<String, Object> myResMap = new HashMap<>();
         myResMap.put("tableData", resulte);
-        myResMap.put("platForm", form);
-        myResMap.put("targetGroup", group);
         return ResponseVO.pageResponseVO(sysJobs.size(), myResMap);
     }
 
     @Override
-    public AjaxResult getDefaultTarget() {
+    public MonitorResult getDefaultTarget() {
         List<SysJob> sysJobs = jobMapper.selectJobAll();
         if (CollectionUtil.isNotEmpty(sysJobs)) {
-            sysJobs = sysJobs.stream().filter(item -> item.getTargetGroup().equals(Constants.SYSTEMTARGET)).collect(Collectors.toList());
-            return AjaxResult.success(sysJobs);
+            sysJobs = sysJobs.stream()
+                    .filter(item -> item.getTargetGroup().equals(ConmmonShare.SYSTEMTARGET)).collect(Collectors.toList());
+            return MonitorResult.success(sysJobs);
         }
-        return AjaxResult.success(new ArrayList<>());
+        return MonitorResult.success(new ArrayList<>());
     }
 
     private void addIsCanUpdate(List<SysJob> resulte) {
         List<Long> publishJobIds = sourceTargetMapper.getPublishJobIds();
         List<SysConfig> sysConfigs = configMapper.getAllConfig();
         List<Long> ids = sysConfigs.stream().map(SysConfig::getDataSourceId).collect(Collectors.toList());
-        if (CollectionUtil.isNotEmpty(resulte)) {
-            for (SysJob sysJob : resulte) {
-                if (ObjectUtil.isNotEmpty(sysJob) && ObjectUtil.isNotEmpty(sysJob.getDataSourceId()) && !ids.contains(sysJob.getDataSourceId())) {
-                    sysJob.setDataSourceId(null);
-                }
-                if (CollectionUtil.isNotEmpty(publishJobIds)) {
-                    Long id = publishJobIds.stream().filter(item -> ObjectUtil.isNotEmpty(item) && item.equals(sysJob.getJobId())).findFirst().orElse(null);
-                    if (id == null) {
-                        sysJob.setIsCanUpdate(true);
-                    } else {
-                        sysJob.setIsCanUpdate(false);
-                    }
-                } else {
+        if (CollectionUtil.isEmpty(resulte)) {
+            return;
+        }
+        for (SysJob sysJob : resulte) {
+            if (ObjectUtil.isNotEmpty(sysJob)
+                    && ObjectUtil.isNotEmpty(sysJob.getDataSourceId())
+                    && !ids.contains(sysJob.getDataSourceId())) {
+                sysJob.setDataSourceId(null);
+            }
+            if (CollectionUtil.isNotEmpty(publishJobIds)) {
+                Long id = publishJobIds.stream()
+                        .filter(item -> ObjectUtil.isNotEmpty(item) && item.equals(sysJob.getJobId())).findFirst()
+                        .orElse(null);
+                if (id == null) {
                     sysJob.setIsCanUpdate(true);
+                } else {
+                    sysJob.setIsCanUpdate(false);
                 }
+            } else {
+                sysJob.setIsCanUpdate(true);
             }
         }
     }
 
+    /**
+     * addPublish
+     *
+     * @param sysJobs sysJobs
+     * @param job     job
+     */
     private void addPublish(List<SysJob> sysJobs, SysJob job) {
+        // Get published metrics for this host based on job
         if (ObjectUtil.isNotEmpty(job) && job.getDataSourceId() != null) {
             List<Long> jobIds = sourceTargetMapper.getJobIdBySourceId(job.getDataSourceId());
             for (SysJob sysJob : sysJobs) {
-                if (ObjectUtil.isNotEmpty(sysJob) && CollectionUtil.isNotEmpty(jobIds) && jobIds.contains(sysJob.getJobId())) {
+                if (ObjectUtil.isNotEmpty(sysJob)
+                        && CollectionUtil.isNotEmpty(jobIds)
+                        && jobIds.contains(sysJob.getJobId())) {
                     sysJob.setIsPbulish(true);
                 } else {
                     sysJob.setIsPbulish(false);
@@ -196,33 +219,56 @@ public class SysJobServiceImpl implements ISysJobService {
         }
     }
 
+    /**
+     * filter
+     *
+     * @param sysJobs sysJobs
+     * @param job     job
+     * @return list
+     */
     private List<SysJob> filter(List<SysJob> sysJobs, SysJob job) {
+        List<SysJob> result = new ArrayList<>();
         if (job != null) {
+            result = sysJobs;
             if (StrUtil.isNotEmpty(job.getPlatform())) {
                 List<String> platForm = Arrays.asList(job.getPlatform().split(","));
-                sysJobs = sysJobs.stream().filter(item -> platForm.contains(item.getPlatform())).collect(Collectors.toList());
+                result = sysJobs.stream()
+                        .filter(item -> platForm.contains(item.getPlatform()))
+                        .collect(Collectors.toList());
             }
             if (StrUtil.isNotEmpty(job.getTargetGroup())) {
                 List<String> targetGroup = Arrays.asList(job.getTargetGroup().split(","));
-                sysJobs = sysJobs.stream().filter(item -> targetGroup.contains(item.getTargetGroup())).collect(Collectors.toList());
+                result = sysJobs.stream()
+                        .filter(item -> targetGroup.contains(item.getTargetGroup()))
+                        .collect(Collectors.toList());
             }
             if (CollectionUtil.isNotEmpty(job.getTimeInterval()) && job.getTimeInterval().size() == 2) {
                 List<String> strings = job.getTimeInterval();
                 SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
                 try {
                     Date start = simpleDateFormat.parse(strings.get(0));
-                    Date end = simpleDateFormat.parse(strings.get(1).substring(0,10) + " " + "23:59:59");
-                    sysJobs = sysJobs.stream().filter(item -> !item.getCreateTime().before(start) && !item.getCreateTime().after(end)).collect(Collectors.toList());
+                    Date end = simpleDateFormat.parse(strings.get(1).substring(0, 10) + " " + "23:59:59");
+                    result = sysJobs.stream()
+                            .filter(item -> !item.getCreateTime().before(start) && !item.getCreateTime().after(end))
+                            .collect(Collectors.toList());
                 } catch (ParseException e) {
                     log.error("simpleDateFormat_parse,{}", e.getMessage());
                 }
             }
-            return sysJobs;
+            return result;
         } else {
             return sysJobs;
         }
     }
 
+    /**
+     * dealMap
+     *
+     * @param platForm    platForm
+     * @param targetGroup targetGroup
+     * @param form        form
+     * @param group       group
+     */
     private void dealMap(List<String> platForm, List<String> targetGroup, List<MFilter> form, List<MFilter> group) {
         for (String str : platForm) {
             MFilter mFilter = new MFilter();
@@ -238,6 +284,11 @@ public class SysJobServiceImpl implements ISysJobService {
         }
     }
 
+    /**
+     * sortJob
+     *
+     * @param sysJobs sysJobs
+     */
     private void sortJob(List<SysJob> sysJobs) {
         sysJobs.sort(Comparator.comparing(SysJob::getTime).reversed());
     }
@@ -245,29 +296,34 @@ public class SysJobServiceImpl implements ISysJobService {
     /**
      * batchPublish
      *
-     * @param targetSource
-     * @return
-     * @throws SchedulerException
+     * @param targetSource targetSource
+     * @return MonitorResult MonitorResult
+     * @throws SchedulerException SchedulerException
      */
     @Override
-    public AjaxResult batchPublish(TargetSource targetSource) throws SchedulerException {
-        if (ObjectUtil.isEmpty(targetSource) || CollectionUtil.isEmpty(targetSource.getDataSourceId()) || CollectionUtil.isEmpty(targetSource.getJobIds())) {
-            return AjaxResult.error("Publish information cannot be empty");
+    public MonitorResult batchPublish(TargetSource targetSource) throws SchedulerException {
+        if (ObjectUtil.isEmpty(targetSource)
+                || CollectionUtil.isEmpty(targetSource.getDataSourceId())
+                || CollectionUtil.isEmpty(targetSource.getJobIds())) {
+            return MonitorResult.error("Publish information cannot be empty");
         }
-        List<SysSourceTarget> list = new ArrayList<>();
-        List<Long> dateSource = targetSource.getDataSourceId();
         List<Long> jobIds = targetSource.getJobIds().stream().distinct().collect(Collectors.toList());
         List<SysJob> sysJobs = jobMapper.selectBatchJobByIds(jobIds);
-        List<SysJob> zabbix = sysJobs.stream().filter(item -> Constants.ZABBIX.equals(item.getPlatform())).collect(Collectors.toList());
-        List<SysJob> nagios = sysJobs.stream().filter(item -> Constants.NAGIOS.equals(item.getPlatform())).collect(Collectors.toList());
+        List<SysJob> zabbix = sysJobs.stream()
+                .filter(item -> ConmmonShare.ZABBIX.equals(item.getPlatform())).collect(Collectors.toList());
+        List<SysJob> nagios = sysJobs.stream()
+                .filter(item -> ConmmonShare.NAGIOS.equals(item.getPlatform())).collect(Collectors.toList());
+        // Determine if there is a zabbix data source nagios data source
         SysConfig zabbixConfig = configMapper.getZabbixConfig();
         SysConfig nagiosConfig = configMapper.getNagiosConfig();
         if (ObjectUtil.isEmpty(zabbixConfig) && CollectionUtil.isNotEmpty(zabbix)) {
-            return AjaxResult.error("Please configure the Zabbix data source information first");
+            return MonitorResult.error("Please configure the Zabbix data source information first");
         }
         if (ObjectUtil.isEmpty(nagiosConfig) && CollectionUtil.isNotEmpty(nagios)) {
-            return AjaxResult.error("Please configure Nagios configuration information first");
+            return MonitorResult.error("Please configure Nagios configuration information first");
         }
+        List<SysSourceTarget> list = new ArrayList<>();
+        List<Long> dateSource = targetSource.getDataSourceId();
         for (Long id : dateSource) {
             SysSourceTarget sourceTarget = new SysSourceTarget();
             sourceTarget.setDataSourceId(id);
@@ -275,52 +331,75 @@ public class SysJobServiceImpl implements ISysJobService {
             list.add(sourceTarget);
         }
         for (SysSourceTarget sourceTarget : list) {
-            singlePublish(sourceTarget, sysJobs, zabbix, zabbixConfig, nagios, nagiosConfig);
+            singlePublish(sourceTarget, sysJobs, zabbixConfig, nagiosConfig);
         }
-        return AjaxResult.success("Batch release was successful");
+        return MonitorResult.success("Batch release was successful");
     }
 
     /**
      * singlePublish
      *
-     * @param sourceTarget
-     * @param sysJobs
-     * @param zabbix
-     * @param zabbixConfig
-     * @param nagios
-     * @param nagiosConfig
-     * @return
-     * @throws SchedulerException
+     * @param sourceTarget sourceTarget
+     * @param sysJobs      sysJobs
+     * @param zabbixConfig zabbixConfig
+     * @param nagiosConfig nagiosConfig
+     * @return MonitorResult MonitorResult
+     * @throws SchedulerException SchedulerException
      */
-    public AjaxResult singlePublish(SysSourceTarget sourceTarget, List<SysJob> sysJobs, List<SysJob> zabbix, SysConfig zabbixConfig, List<SysJob> nagios, SysConfig nagiosConfig) throws SchedulerException {
+    public MonitorResult singlePublish(SysSourceTarget sourceTarget,
+                                       List<SysJob> sysJobs,
+                                       SysConfig zabbixConfig,
+                                       SysConfig nagiosConfig) throws SchedulerException {
         SysConfig sysConfig = configMapper.getConfigByid(sourceTarget.getDataSourceId());
         if (sysConfig == null) {
-            return AjaxResult.error("No information for this host");
+            return MonitorResult.error("No information for this host");
         }
+        // The indicator below this host needs to stop the original and release the latest
+        // Get the indicator information under the original host
         List<Long> oldJobIds = sourceTargetMapper.getJobIdBySourceId(sourceTarget.getDataSourceId());
+        // Get all jobs by jobids
         List<SysJob> oldSysJob = jobMapper.selectBatchJobByIds(oldJobIds);
         List<SysJob> newSysjob = jobMapper.selectBatchJobByIds(sourceTarget.getJobIds());
         oldSysJob.removeAll(newSysjob);
+        // Stop the old job first, after deleting it, open the job that is in use by other hosts
         stopTimeTask(oldSysJob);
+        // Save the latest host publishing information
         sourceTargetMapper.save(sourceTarget);
+        // delete
         List<String> remove = dealOldSysJob(oldSysJob, sysConfig.getConnectName());
-        AsyncManager.me().execute(AsyncFactory.removeRegistry(remove));
+        MonitorManager.mine().work(AsyncFactory.removeRegistry(remove));
+        // Filter out metrics that are used by other hosts
         List<SysJob> otherSysJob = sourceTargetMapper.getMoreThanOneSource(oldSysJob);
+        List<SysJob> zabbix = sysJobs.stream()
+                .filter(item -> ConmmonShare.ZABBIX.equals(item.getPlatform())).collect(Collectors.toList());
+        List<SysJob> nagios = sysJobs.stream()
+                .filter(item -> ConmmonShare.NAGIOS.equals(item.getPlatform())).collect(Collectors.toList());
         sysJobs.addAll(otherSysJob);
+        // Get rid of nagios.
         sysJobs.removeAll(nagios);
+        // Post the latest
         startTimeTask(sysJobs);
+        // Execute zabbix publishing tasks
         if (CollectionUtil.isNotEmpty(zabbix)) {
-            AsyncManager.me().execute(AsyncFactory.recordZabbix(zabbix, sysConfig, zabbixConfig));
+            MonitorManager.mine().work(AsyncFactory.recordZabbix(zabbix, sysConfig, zabbixConfig));
         }
         if (CollectionUtil.isNotEmpty(nagios)) {
-            AsyncManager.me().execute(AsyncFactory.recordNagios(nagios, sysConfig, nagiosConfig));
+            MonitorManager.mine().work(AsyncFactory.recordNagios(nagios, sysConfig, nagiosConfig));
         }
+        // Delayed execution of nagios
         if (CollectionUtil.isNotEmpty(nagios)) {
-            AsyncManager.me().execute(AsyncFactory.executeNagios(nagios));
+            MonitorManager.mine().work(AsyncFactory.executeNagios(nagios));
         }
-        return AjaxResult.success("Published successfully");
+        return MonitorResult.success("Published successfully");
     }
 
+    /**
+     * publishNagios
+     *
+     * @param nagios       nagios
+     * @param sysConfig    sysConfig
+     * @param nagiosConfig nagiosConfig
+     */
     public void publishNagios(List<SysJob> nagios, SysConfig sysConfig, SysConfig nagiosConfig) {
         Map<String, Object> all = new HashMap<>();
         sysConfig.setPassword(Base64.decode(sysConfig.getPassword()));
@@ -328,37 +407,52 @@ public class SysJobServiceImpl implements ISysJobService {
             DriverManagerDataSource dataSource = getDataSource(sysConfig);
             jdbcTemplate = new JdbcTemplate(dataSource);
             List<Map<String, Object>> list = executeSql(jdbcTemplate, sysJob.getTarget());
+            dealList(list);
             String name = sysConfig.getConnectName();
-            for (Map<String, Object> maps : list) {
-                for (Map.Entry<String, Object> entry : maps.entrySet()) {
-                    if (ObjectUtil.isEmpty(entry.getValue()) && !entry.getKey().equalsIgnoreCase("toastsize")) {
-                        maps.put(entry.getKey(), "default");
-                    }
-                    if (ObjectUtil.isEmpty(entry.getValue()) && entry.getKey().equalsIgnoreCase("toastsize")) {
-                        maps.put(entry.getKey(), "0");
-                    }
-                    if (entry.getValue().toString().startsWith(".")) {
-                        String value = "0" + entry.getValue().toString();
-                        maps.put(entry.getKey(), value);
-                    }
-                }
-            }
             Map<String, Object> nagiosMap = new HashMap<>();
-            for (int i = 0; i < list.size(); i++) {
-                Map<String, Object> arry = list.get(i);
-                Map<String, Object> metric = HandleUtils.getMap(arry);
-                dealMetric(metric, i);
-                for (Map.Entry<String, Object> entry : arry.entrySet()) {
-                    if (entry.getValue().toString().matches(ISNUM) || entry.getValue().toString().matches(KEXUE)) {
-                        nagiosMap.put(entry.getKey() + "_" + sysJob.getJobName() + "_" + name + "_" + i, entry.getValue());
-                        all.putAll(nagiosMap);
-                    }
-                }
-            }
+            addMap(list, all, name, sysJob, nagiosMap);
         }
         nagiosService.setConfig(all, nagiosConfig);
     }
 
+    private void addMap(List<Map<String, Object>> list, Map<String, Object> all,
+                        String name, SysJob sysJob, Map<String, Object> nagiosMap) {
+        for (int i = 0; i < list.size(); i++) {
+            Map<String, Object> arry = list.get(i);
+            Map<String, Object> metric = HandleUtils.getMap(arry);
+            dealMetric(metric, i);
+            for (Map.Entry<String, Object> entry : arry.entrySet()) {
+                if (entry.getValue().toString().matches(ISNUM) || entry.getValue().toString().matches(KEXUE)) {
+                    nagiosMap.put(entry.getKey()
+                            + "_" + sysJob.getJobName() + "_" + name + "_" + i, entry.getValue());
+                    all.putAll(nagiosMap);
+                }
+            }
+        }
+    }
+
+    private void dealList(List<Map<String, Object>> list) {
+        for (Map<String, Object> maps : list) {
+            for (Map.Entry<String, Object> entry : maps.entrySet()) {
+                if (ObjectUtil.isEmpty(entry.getValue()) && !entry.getKey().equalsIgnoreCase("toastsize")) {
+                    maps.put(entry.getKey(), "default");
+                }
+                if (ObjectUtil.isEmpty(entry.getValue()) && entry.getKey().equalsIgnoreCase("toastsize")) {
+                    maps.put(entry.getKey(), "0");
+                }
+                if (entry.getValue().toString().startsWith(".")) {
+                    String value = "0" + entry.getValue().toString();
+                    maps.put(entry.getKey(), value);
+                }
+            }
+        }
+    }
+
+    /**
+     * startNagios
+     *
+     * @param nagios nagios
+     */
     public void startNagios(List<SysJob> nagios) {
         try {
             Thread.sleep(NagiosConfig.getDelayTime());
@@ -368,17 +462,27 @@ public class SysJobServiceImpl implements ISysJobService {
         startTimeTask(nagios);
     }
 
+    /**
+     * singlePublishPause
+     *
+     * @param sourceTarget sourceTarget
+     * @return MonitorResult MonitorResult
+     * @throws SchedulerException SchedulerException
+     */
     @Override
-    public AjaxResult singlePublishPause(SysSourceTarget sourceTarget) throws SchedulerException {
+    public MonitorResult singlePublishPause(SysSourceTarget sourceTarget) {
         SysConfig sysConfig = configMapper.getConfigByid(sourceTarget.getDataSourceId());
         if (sysConfig == null) {
-            return AjaxResult.error("No information for this host");
+            return MonitorResult.error("No information for this host");
         }
         List<Long> jobs = sourceTarget.getJobIds();
+        // Collection of jobs that need to be deleted
         List<SysJob> sysJobs = jobMapper.selectBatchJobByIds(jobs);
         stopTimeTask(sysJobs);
+        // Handling oldSysJob modifying columns
+        // delete
         List<String> remove = dealOldSysJob(sysJobs, sysConfig.getConnectName());
-        AsyncManager.me().execute(AsyncFactory.removeRegistry(remove));
+        MonitorManager.mine().work(AsyncFactory.removeRegistry(remove));
         SysSourceTarget sysSourceTarget = sourceTargetMapper.sysSourceTargetById(sourceTarget.getDataSourceId());
         if (ObjectUtil.isNotEmpty(sysSourceTarget)) {
             List<Long> old = sysSourceTarget.getJobIds();
@@ -391,17 +495,23 @@ public class SysJobServiceImpl implements ISysJobService {
         }
         List<SysJob> otherSysJob = sourceTargetMapper.getMoreThanOneSource(sysJobs);
         startTimeTask(otherSysJob);
-        return AjaxResult.success("Stop publishing successfully");
+        return MonitorResult.success("Stop publishing successfully");
     }
 
-
+    /**
+     * startTimeTask
+     *
+     * @param sysJobs sysJobs
+     * @return int int
+     */
     private int startTimeTask(List<SysJob> sysJobs) {
         int num = 0;
         try {
             if (CollectionUtil.isNotEmpty(sysJobs)) {
                 for (SysJob sysJob : sysJobs) {
-                    AsyncManager.me().execute(AsyncFactory.executeOne(sysJob.getTarget(), sysJob.getJobName(), sysJob.getJobId()));
-                    sysJob.setStatus(ScheduleConstants.Status.NORMAL.getValue());
+                    MonitorManager.mine().work(
+                            AsyncFactory.executeOne(sysJob.getTarget(), sysJob.getJobName(), sysJob.getJobId()));
+                    sysJob.setStatus(ScheduleCommon.Status.NORMAL.getValue());
                     num = resumeJob(sysJob);
                 }
             }
@@ -416,7 +526,7 @@ public class SysJobServiceImpl implements ISysJobService {
         try {
             if (CollectionUtil.isNotEmpty(sysJobs)) {
                 for (SysJob sysJob : sysJobs) {
-                    sysJob.setStatus(ScheduleConstants.Status.PAUSE.getValue());
+                    sysJob.setStatus(ScheduleCommon.Status.PAUSE.getValue());
                     num = pauseJob(sysJob);
                 }
             }
@@ -428,102 +538,87 @@ public class SysJobServiceImpl implements ISysJobService {
 
     private List<String> dealOldSysJob(List<SysJob> sysJobs, String name) {
         List<String> remove = new ArrayList<>();
-        if (CollectionUtil.isNotEmpty(sysJobs)) {
-            for (SysJob sysJob : sysJobs) {
-                if (ObjectUtil.isNotEmpty(sysJob)) {
-                    List<String> column = sysJob.getColumn();
-                    if (CollectionUtil.isNotEmpty(column)) {
-                        column = column.stream().map(item -> item + name).collect(Collectors.toList());
-                        remove.addAll(column);
-                    }
+        if (CollectionUtil.isEmpty(sysJobs)) {
+            return remove;
+        }
+        for (SysJob sysJob : sysJobs) {
+            if (ObjectUtil.isNotEmpty(sysJob)) {
+                List<String> column = sysJob.getColumn();
+                if (CollectionUtil.isNotEmpty(column)) {
+                    column = column.stream().map(item -> item + name).collect(Collectors.toList());
+                    remove.addAll(column);
                 }
             }
         }
+
         return remove;
     }
 
-    /**
-     * pauseJob
-     *
-     * @param job
-     * @return
-     * @throws SchedulerException
-     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public int pauseJob(SysJob job) throws SchedulerException {
         Long jobId = job.getJobId();
         String jobGroup = job.getJobGroup();
-        job.setStatus(ScheduleConstants.Status.PAUSE.getValue());
+        job.setStatus(ScheduleCommon.Status.PAUSE.getValue());
         int rows = jobMapper.updateJob(job);
-        scheduler.pauseJob(ScheduleUtils.getJobKey(jobId, jobGroup));
+        scheduler.pauseJob(MonitorTaskUtils.getMonitorWorkKey(jobId, jobGroup));
         return rows;
     }
 
-    /**
-     * resumeJob
-     *
-     * @param job
-     * @return
-     * @throws SchedulerException
-     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public int resumeJob(SysJob job) throws SchedulerException {
         Long jobId = job.getJobId();
         String jobGroup = "DEFAULT";
         int rows = jobMapper.updateJob(job);
-        scheduler.resumeJob(ScheduleUtils.getJobKey(jobId, jobGroup));
+        scheduler.resumeJob(MonitorTaskUtils.getMonitorWorkKey(jobId, jobGroup));
         return rows;
     }
 
-    /**
-     * deleteJob
-     *
-     * @param job
-     * @return
-     * @throws SchedulerException
-     */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Boolean deleteJob(SysJob job) throws SchedulerException {
-        Long jobId = job.getJobId();
-        String jobGroup = job.getJobGroup();
+    public Boolean deleteTask(SysJob task) {
+        Long jobId = task.getJobId();
+        String jobGroup = task.getJobGroup();
         Boolean isDelete = jobMapper.deleteJobByIds(Arrays.asList(jobId));
         if (isDelete) {
-            scheduler.deleteJob(ScheduleUtils.getJobKey(jobId, jobGroup));
+            try {
+                scheduler.deleteJob(MonitorTaskUtils.getMonitorWorkKey(jobId, jobGroup));
+            } catch (SchedulerException exception) {
+                log.error("deleteTask-->{}", exception.getMessage());
+            }
         }
         return isDelete;
     }
 
-    /**
-     * deleteJobByIds
-     *
-     * @param jobIds
-     * @throws SchedulerException
-     */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void deleteJobByIds(Long[] jobIds) throws SchedulerException {
+    public void deleteTaskByIds(Long[] jobIds) {
+        // delete
         for (Long jobId : jobIds) {
             SysJob job = jobMapper.selectJobById(jobId);
-            deleteJob(job);
-            AsyncManager.me().execute(AsyncFactory.removeJobId(jobId));
-            if (!job.getPlatform().equals(Constants.NAGIOS)) {
+            deleteTask(job);
+            MonitorManager.mine().work(AsyncFactory.removeJobId(jobId));
+            if (!job.getPlatform().equals(ConmmonShare.NAGIOS)) {
                 List<Long> sourceId = sourceTargetMapper.getSourceIdByJobId(jobId);
                 List<SysConfig> sysConfigs = configMapper.getBatchById(sourceId);
-                if (CollectionUtil.isNotEmpty(sysConfigs)) {
-                    for (SysConfig sysConfig : sysConfigs) {
-                        if (ObjectUtil.isNotEmpty(job) && ObjectUtil.isNotEmpty(sysConfig) && ObjectUtil.isNotEmpty(sysConfig.getConnectName())) {
-                            List<String> remove = dealOldSysJob(Arrays.asList(job), sysConfig.getConnectName());
-                            AsyncManager.me().execute(AsyncFactory.removeRegistry(remove));
-                        }
-                    }
-                }
+                dealExec(sysConfigs, job);
             }
         }
     }
 
+    private void dealExec(List<SysConfig> sysConfigs, SysJob job) {
+        if (CollectionUtil.isNotEmpty(sysConfigs)) {
+            for (SysConfig sysConfig : sysConfigs) {
+                if (ObjectUtil.isNotEmpty(job)
+                        && ObjectUtil.isNotEmpty(sysConfig)
+                        && ObjectUtil.isNotEmpty(sysConfig.getConnectName())) {
+                    List<String> remove = dealOldSysJob(Arrays.asList(job), sysConfig.getConnectName());
+                    MonitorManager.mine().work(AsyncFactory.removeRegistry(remove));
+                }
+            }
+        }
+    }
 
     private void deleteRelation(Long jobId) {
         sourceTargetMapper.removeJobids(jobId);
@@ -537,26 +632,19 @@ public class SysJobServiceImpl implements ISysJobService {
                 List<SysConfig> sysConfigs = configMapper.getBatchById(sourceId);
                 List<String> nameList = sysConfigs.stream().map(SysConfig::getConnectName).collect(Collectors.toList());
                 return ResponseVO.successResponseVO("It is detected that the indicator is already in"
-                        + nameList + "Publish in the instance, delete the batch from the instance, continue?");
+                        + nameList + "Publish in the instance, delete the batch from the instance," +
+                        " whether to continue?");
             }
         }
         return ResponseVO.successResponseVO("");
     }
 
     @Override
-    public ResponseVO getResulter() {
-        if (CollectionUtil.isNotEmpty(failMessages)) {
-            return ResponseVO.successResponseVO(failMessages);
-        } else {
-            return ResponseVO.successResponseVO("Congratulations! All published successfully");
-        }
-
-    }
-
-    @Override
-    public AjaxResult batchPublishPause(TargetSource targetSource) throws SchedulerException {
-        if (ObjectUtil.isEmpty(targetSource) || CollectionUtil.isEmpty(targetSource.getDataSourceId()) || CollectionUtil.isEmpty(targetSource.getJobIds())) {
-            return AjaxResult.error("Publish information cannot be empty");
+    public MonitorResult batchPublishPause(TargetSource targetSource) throws SchedulerException {
+        if (ObjectUtil.isEmpty(targetSource)
+                || CollectionUtil.isEmpty(targetSource.getDataSourceId())
+                || CollectionUtil.isEmpty(targetSource.getJobIds())) {
+            return MonitorResult.error("Publish information cannot be empty");
         }
         List<SysSourceTarget> list = new ArrayList<>();
         List<Long> dateSource = targetSource.getDataSourceId();
@@ -569,7 +657,7 @@ public class SysJobServiceImpl implements ISysJobService {
         for (SysSourceTarget sourceTarget : list) {
             singlePublishPause(sourceTarget);
         }
-        return AjaxResult.success("Batch publishing stopped successfully");
+        return MonitorResult.success("Batch publishing stopped successfully");
     }
 
     @Override
@@ -577,161 +665,290 @@ public class SysJobServiceImpl implements ISysJobService {
         return ResponseVO.successResponseVO(jobMapper.getGroup());
     }
 
+    /**
+     * executeZabbix
+     *
+     * @param zabbix       zabbix
+     * @param sysConfig    sysConfig
+     * @param zabbixConfig zabbixConfig
+     */
     public void executeZabbix(List<SysJob> zabbix, SysConfig sysConfig, SysConfig zabbixConfig) {
+        // Insert host sql
         synchronized (this) {
             String name = sysConfig.getConnectName();
             JdbcTemplate openGaussTemplate = commonService.getTem(sysConfig);
-            if (ObjectUtil.isNotEmpty(zabbixConfig) && StrUtil.isNotBlank(zabbixConfig.getContainerPort()) && StrUtil.isNotBlank(zabbixConfig.getContainerIp())) {
-                ZabbixMessge zabbixMessge = zabbixService.insertNecessary(name, zabbixConfig.getContainerIp(), zabbixConfig.getContainerPort());
+            if (ObjectUtil.isNotEmpty(zabbixConfig)
+                    && StrUtil.isNotBlank(zabbixConfig.getContainerPort())
+                    && StrUtil.isNotBlank(zabbixConfig.getContainerIp())) {
+                ZabbixMessge zabbixMessge = zabbixService.insertNecessary(
+                        name, zabbixConfig.getContainerIp(), zabbixConfig.getContainerPort());
                 zabbixService.insertTarget(zabbixMessge, zabbix, openGaussTemplate);
             }
         }
     }
 
+    /**
+     * run
+     *
+     * @param job job
+     * @throws SchedulerException SchedulerException
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void run(SysJob job) throws SchedulerException {
+    public void start(SysJob job) {
         Long jobId = job.getJobId();
         String jobGroup = job.getJobGroup();
         SysJob properties = jobMapper.selectJobById(job.getJobId());
         JobDataMap dataMap = new JobDataMap();
-        dataMap.put(ScheduleConstants.TASK_PROPERTIES, properties);
-        scheduler.triggerJob(ScheduleUtils.getJobKey(jobId, jobGroup), dataMap);
+        dataMap.put(ScheduleCommon.MONITOR_PROPERTIES, properties);
+        try {
+            scheduler.triggerJob(MonitorTaskUtils.getMonitorWorkKey(jobId, jobGroup), dataMap);
+        } catch (SchedulerException exception) {
+            log.error("start-->{}", exception.getMessage());
+        }
     }
 
+    /**
+     * insertJob
+     *
+     * @param job job
+     * @return MonitorResult MonitorResult
+     * @throws SchedulerException SchedulerException
+     * @throws TaskException      TaskException
+     */
     @Override
-    public AjaxResult insertJob(SysJob job) throws SchedulerException, TaskException {
-        if (job.getTargetGroup().equalsIgnoreCase(Constants.SYSTEMTARGET) && !job.getIsCreate()) {
-            checkNum(job);
-            String cronExpression;
-            cronExpression = getCron(job.getNum(), job.getTimeType());
-            job.setCronExpression(cronExpression);
-            int rows = jobMapper.insertJob(job);
-            updateSchedulerJob(job, job.getJobGroup());
-            return AjaxResult.success("Modify successfully");
+    public MonitorResult insertTask(SysJob job) {
+        if (job.getTargetGroup().equalsIgnoreCase(ConmmonShare.SYSTEMTARGET) && !job.getIsCreate()) {
+            modifyDefault(job);
+            return MonitorResult.success("Modify successfully");
         }
         if (ObjectUtil.isEmpty(job) || ObjectUtil.isEmpty(job.getDataSourceId())) {
-            return AjaxResult.error("Verify that host information cannot be empty");
+            return MonitorResult.error("Verify that host information cannot be empty");
         }
-        if (job.getIsCreate() && job.getTargetGroup().equalsIgnoreCase(Constants.SYSTEMTARGET)) {
-            return AjaxResult.error("The custom group cannot be the system default group, please change the group name");
+        if (job.getIsCreate() && job.getTargetGroup().equalsIgnoreCase(ConmmonShare.SYSTEMTARGET)) {
+            return MonitorResult.error("The custom group cannot be the system default group," +
+                    "please change the group name");
         }
-        SysConfig zabbixConfig = configMapper.getZabbixConfig();
-        SysConfig nagiosConfig = configMapper.getNagiosConfig();
-        if (ObjectUtil.isEmpty(zabbixConfig) && job.getPlatform().equals(Constants.ZABBIX) && !job.getTargetGroup().equalsIgnoreCase(Constants.SYSTEMTARGET)) {
-            return AjaxResult.error("Please configure the Zabbix data source information first");
-        }
-        if (ObjectUtil.isEmpty(nagiosConfig) && job.getPlatform().equals(Constants.NAGIOS) && !job.getTargetGroup().equalsIgnoreCase(Constants.SYSTEMTARGET)) {
-            return AjaxResult.error("Please configure Nagios configuration information first");
+        String res = checkConfig(job);
+        if (StrUtil.isNotEmpty(res)) {
+            return MonitorResult.error(res);
         }
         List<SysJob> sysJobs = jobMapper.selectJobAll();
-        Integer max = 0;
-        if (CollectionUtil.isNotEmpty(sysJobs)) {
-            List<String> jobName = sysJobs.stream().map(SysJob::getJobName).collect(Collectors.toList());
-            List<String> finalName = jobName.stream().map(item -> item.substring(3)).collect(Collectors.toList());
-            List<Integer> codesInteger = finalName.stream().map(Integer::parseInt).collect(Collectors.toList());
-            max = codesInteger.stream().reduce(Integer::max).get();
-        }
-        max = max + 1;
+        Integer max = dealMax(sysJobs) + 1;
         if (job.getIsCreate()) {
             job.setJobName(job.getJobName() + max);
         }
-        String ajaxResult = checkTarget(job, sysJobs);
-        if (StrUtil.isNotBlank(ajaxResult)) {
-            return AjaxResult.error(ajaxResult);
+        String message = checkTarget(job, sysJobs);
+        if (StrUtil.isNotBlank(message)) {
+            return MonitorResult.error(message);
         }
         checkNum(job);
-        job.setStatus(ScheduleConstants.Status.PAUSE.getValue());
-        SysConfig sysConfig;
-        List<SysConfig> sysConfigs = configMapper.getAllConfig().stream().filter(item -> item.getPlatform().equals(Constants.PROM)).collect(Collectors.toList());
-        sysConfig = sysConfigs.stream().filter(item -> ObjectUtil.isNotEmpty(item.getDataSourceId()) && item.getDataSourceId().equals(job.getDataSourceId())).findFirst().orElse(null);
-        if (ObjectUtil.isEmpty(sysConfig)) {
-            sysConfigs = (List<SysConfig>) monitorService.getDataSourceList(1, 10).getData();
-            sysConfig = sysConfigs.stream().findFirst().orElse(null);
-        }
+        SysConfig sysConfig = getCheckConfig(job);
         if (sysConfig == null) {
-            return AjaxResult.error("Please configure the data source first");
+            return MonitorResult.error("Please configure the data source first");
         }
-        sysConfig.setPassword(Base64.decode(sysConfig.getPassword()));
         DriverManagerDataSource dataSource = getDataSource(sysConfig);
         jdbcTemplate = new JdbcTemplate(dataSource);
         List<Map<String, Object>> list = null;
         try {
             list = commonService.executeSql(jdbcTemplate, job.getTarget());
-        } catch (Exception e) {
-           return AjaxResult.error(e.getMessage());
+        } catch (DataAccessException exception) {
+            return MonitorResult.error(exception.getMessage());
         }
         if (CollectionUtil.isEmpty(list) && ObjectUtil.isNotEmpty(job.getIsFalse()) && !job.getIsFalse()) {
-            return AjaxResult.target("Unable to generate indicator");
+            return MonitorResult.target("Unable to generate indicator");
         }
-        dealSysJob(job, list);
-        job.setDataSourceId(sysConfig.getDataSourceId());
+        dealSysJob(job, list, sysConfig);
         int rows = jobMapper.insertJob(job);
         if (rows > 0) {
-            ScheduleUtils.createScheduleJob(scheduler, job);
+            MonitorTaskUtils.createMonitorJob(scheduler, job);
         }
-        return AjaxResult.success("Save successfully");
+        return MonitorResult.success("Save successfully");
     }
 
+    private String checkConfig(SysJob job) {
+        SysConfig zabbixConfig = configMapper.getZabbixConfig();
+        SysConfig nagiosConfig = configMapper.getNagiosConfig();
+        if (ObjectUtil.isEmpty(zabbixConfig) && job.getPlatform().equals(ConmmonShare.ZABBIX)
+                && !job.getTargetGroup().equalsIgnoreCase(ConmmonShare.SYSTEMTARGET)) {
+            return "Please configure the Zabbix data source information first";
+        }
+        if (ObjectUtil.isEmpty(nagiosConfig) && job.getPlatform().equals(ConmmonShare.NAGIOS)
+                && !job.getTargetGroup().equalsIgnoreCase(ConmmonShare.SYSTEMTARGET)) {
+            return "Please configure Nagios configuration information first";
+        }
+        return "";
+    }
+
+    private SysConfig getCheckConfig(SysJob job) {
+        List<SysConfig> sysConfigs = configMapper.getAllConfig()
+                .stream().filter(item -> item.getPlatform().equals(ConmmonShare.PROM)).collect(Collectors.toList());
+        SysConfig sysConfig = sysConfigs.stream().filter(item -> ObjectUtil.isNotEmpty(item.getDataSourceId())
+                && item.getDataSourceId().equals(job.getDataSourceId())).findFirst().orElse(null);
+        if (sysConfig != null) {
+            sysConfig.setPassword(Base64.decode(sysConfig.getPassword()));
+        }
+        return sysConfig;
+    }
+
+    private Integer dealMax(List<SysJob> sysJobs) {
+        Integer max = 0;
+        if (CollectionUtil.isNotEmpty(sysJobs)) {
+            List<String> jobName = sysJobs.stream().map(SysJob::getJobName).collect(Collectors.toList());
+            List<String> finalName = jobName
+                    .stream().map(item -> item.substring(3))
+                    .collect(Collectors.toList());
+            List<Integer> codesInteger = finalName.stream().map(Integer::parseInt).collect(Collectors.toList());
+            max = codesInteger.stream().reduce(Integer::max).get();
+        }
+        return max;
+    }
+
+    private void modifyDefault(SysJob job) {
+        checkNum(job);
+        String cronExpression = getCron(job.getNum(), job.getTimeType());
+        job.setCronExpression(cronExpression);
+        int rows = jobMapper.insertJob(job);
+        updateSchedulerJob(job, job.getJobGroup());
+    }
+
+    /**
+     * checkNum
+     *
+     * @param job job
+     */
     private void checkNum(SysJob job) {
-        if (ObjectUtil.isNotEmpty(job) && ObjectUtil.isNotEmpty(job.getNum()) && ObjectUtil.isNotEmpty(job.getTimeType())) {
-            if (job.getTimeType().equals(Constants.SECOND) || job.getTimeType().equals(Constants.MINUTE)) {
-                AssertUtil.isTrue(0 > job.getNum() || job.getNum() > 59, "The time interval should be greater than 0 and less than or equal to 59");
-            } else if (job.getTimeType().equals(Constants.HOUR)) {
-                AssertUtil.isTrue(0 > job.getNum() || job.getNum() > 23, "Time interval should be greater than 0 less than or equal to 23");
-            } else if (job.getTimeType().equals(Constants.DAY)) {
-                AssertUtil.isTrue(0 > job.getNum() || job.getNum() > 30, "Time interval should be greater than 0 less than or equal to 30");
-            } else if (job.getTimeType().equals(Constants.WEEK)) {
-                AssertUtil.isTrue(0 > job.getNum() || job.getNum() > 4, "Time interval should be greater than 0 less than or equal to 4");
-            } else if (job.getTimeType().equals(Constants.MONTH)) {
-                AssertUtil.isTrue(0 > job.getNum() || job.getNum() > 12, "Time interval should be greater than 0 and less than 12");
+        if (ObjectUtil.isNotEmpty(job)
+                && ObjectUtil.isNotEmpty(job.getNum())
+                && ObjectUtil.isNotEmpty(job.getTimeType())) {
+            if (job.getTimeType().equals(ConmmonShare.SECOND) || job.getTimeType().equals(ConmmonShare.MINUTE)) {
+                AssertUtil.isTrue(job.getNum() < 0 || job.getNum() > 59, "The time interval should be " +
+                        "greater than 0 and less than or equal to 59");
+            } else if (job.getTimeType().equals(ConmmonShare.HOUR)) {
+                AssertUtil.isTrue(job.getNum() < 0 || job.getNum() > 23, "Time interval should be " +
+                        "greater than 0 less than or equal to 23");
+            } else if (job.getTimeType().equals(ConmmonShare.DAY)) {
+                AssertUtil.isTrue(job.getNum() < 0 || job.getNum() > 30, "Time interval should be " +
+                        "greater than 0 less than or equal to 30");
+            } else if (job.getTimeType().equals(ConmmonShare.WEEK)) {
+                AssertUtil.isTrue(job.getNum() < 0 || job.getNum() > 4, "Time interval should be " +
+                        "greater than 0 less than or equal to 4");
+            } else if (job.getTimeType().equals(ConmmonShare.MONTH)) {
+                AssertUtil.isTrue(job.getNum() < 0 || job.getNum() > 12, "Time interval should be " +
+                        "greater than 0 and less than 12");
+            } else {
+                log.error("checkNum fail");
             }
         }
     }
 
-
+    /**
+     * checkTarget
+     *
+     * @param job     job
+     * @param sysJobs sysJobs
+     * @return String String
+     */
     private String checkTarget(SysJob job, List<SysJob> sysJobs) {
         String str = SqlUtil.checkDql(job.getTarget());
-        if(StrUtil.isNotEmpty(str)) {
+        if (StrUtil.isNotEmpty(str)) {
             return str;
         }
-        String sql = job.getTarget().replace(" ", "").replace("\n", "").replace(";", "");
-        if (Constants.PROM.equals(job.getPlatform())) {
-            List<String> prom = sysJobs.stream().filter(item -> item.getPlatform().equals(Constants.PROM)).map(SysJob::getTarget).collect(Collectors.toList());
-            prom = prom.stream().map(item -> item.replace(" ", "").replace("\n", "").replace(";", "")).collect(Collectors.toList());
-            if (prom.contains(sql)) {
+        String old = "";
+        if (ObjectUtil.isNotEmpty(job.getJobId())) {
+            SysJob sysJob = jobMapper.selectJobById(job.getJobId());
+            if (ObjectUtil.isNotEmpty(sysJob)) {
+                old = sysJob.getTarget().replace(" ", "")
+                        .replace(FITE, "")
+                        .replace(";", "");
+            }
+        }
+        String sql = job.getTarget().replace(" ", "")
+                .replace(FITE, "")
+                .replace(";", "");
+        if (ConmmonShare.PROM.equals(job.getPlatform())) {
+            List<String> prom = getProm(sysJobs);
+            if (prom.contains(sql) && job.getIsCreate()) {
                 return "Prometheus Metrics Duplicate";
             }
-        } else if (Constants.ZABBIX.equals(job.getPlatform())) {
-            List<String> zabbix = sysJobs.stream().filter(item -> item.getPlatform().equals(Constants.ZABBIX)).map(SysJob::getTarget).collect(Collectors.toList());
-            zabbix = zabbix.stream().map(item -> item.replace(" ", "").replace("\n", "").replace(";", "")).collect(Collectors.toList());
-            if (zabbix.contains(sql)) {
+            if (prom.contains(sql) && !job.getIsCreate() && !old.equals(sql)) {
+                return "Prometheus Metrics Duplicate";
+            }
+        } else if (ConmmonShare.ZABBIX.equals(job.getPlatform())) {
+            List<String> zabbix = getZabbix(sysJobs);
+            if (zabbix.contains(sql) && job.getIsCreate()) {
+                return "Zabbix Metrics Duplicate";
+            }
+            if (zabbix.contains(sql) && !job.getIsCreate() && !old.equals(sql)) {
                 return "Zabbix Metrics Duplicate";
             }
         } else {
-            List<String> nagios = sysJobs.stream().filter(item -> item.getPlatform().equals(Constants.NAGIOS)).map(SysJob::getTarget).collect(Collectors.toList());
-            nagios = nagios.stream().map(item -> item.replace(" ", "").replace("\n", "").replace(";", "")).collect(Collectors.toList());
-            if (nagios.contains(sql)) {
-                return "Nagios Metrics Duplicate";
+            List<String> nagios = getNagios(sysJobs);
+            if (nagios.contains(sql) && job.getIsCreate()) {
+                return "Nagios Indicator Duplicate";
+            }
+            if (nagios.contains(sql) && !job.getIsCreate() && !old.equals(sql)) {
+                return "Nagios Indicator Duplicate";
             }
         }
         return "";
     }
 
-    private void dealSysJob(SysJob sysJob, List<Map<String, Object>> list) {
+    private List<String> getNagios(List<SysJob> sysJobs) {
+        List<String> nagios = sysJobs.stream()
+                .filter(item -> item.getPlatform().equals(ConmmonShare.NAGIOS)).map(SysJob::getTarget)
+                .collect(Collectors.toList());
+        nagios = nagios.stream().map(item -> item.replace(" ", "")
+                        .replace(FITE, "")
+                        .replace(";", ""))
+                .collect(Collectors.toList());
+        return nagios;
+    }
+
+    private List<String> getZabbix(List<SysJob> sysJobs) {
+        List<String> zabbix = sysJobs.stream()
+                .filter(item -> item.getPlatform().equals(ConmmonShare.ZABBIX)).map(SysJob::getTarget)
+                .collect(Collectors.toList());
+        zabbix = zabbix.stream().map(item -> item.replace(" ", "")
+                .replace(FITE, "")
+                .replace(";", "")).collect(Collectors.toList());
+        return zabbix;
+    }
+
+    private List<String> getProm(List<SysJob> sysJobs) {
+        List<String> prom = sysJobs.stream()
+                .filter(item -> item.getPlatform().equals(ConmmonShare.PROM)).map(SysJob::getTarget)
+                .collect(Collectors.toList());
+        prom = prom.stream().map(item -> item.replace(" ", "")
+                        .replace(FITE, "")
+                        .replace(";", ""))
+                .collect(Collectors.toList());
+        return prom;
+    }
+
+    /**
+     * dealSysJob
+     *
+     * @param sysConfig sysConfig
+     * @param sysJob    sysJob
+     * @param list      list
+     */
+    private void dealSysJob(SysJob sysJob, List<Map<String, Object>> list, SysConfig sysConfig) {
         if (sysJob.getIsCreate()) {
-            sysJob.setJobId(snowFlake.nextId());
+            sysJob.setJobId(MonitorFlake.nextId());
         }
+        sysJob.setDataSourceId(sysConfig.getDataSourceId());
+        sysJob.setStatus(ScheduleCommon.Status.PAUSE.getValue());
         String target = sysJob.getTarget().replace(";", "");
         sysJob.setTarget(target);
         String jobId = sysJob.getJobId() + "L";
-        String invokeTarget = "monitorTask.targetParams('" + sysJob.getTarget() + "'" + "#" + "'" + sysJob.getJobName() + "'" + "#" + jobId + "$";
+        String invokeTarget = "monitorTask.targetParams('" + sysJob.getTarget() + "'" + "#" + "'"
+                + sysJob.getJobName() + "'" + "#" + jobId + "$";
         sysJob.setInvokeTarget(invokeTarget);
-        String cronExpression;
-        cronExpression = getCron(sysJob.getNum(), sysJob.getTimeType());
+        String cronExpression = getCron(sysJob.getNum(), sysJob.getTimeType());
         sysJob.setCronExpression(cronExpression);
         sysJob.setCreateBy("admin");
-        if (!sysJob.getTargetGroup().equals(Constants.SYSTEMTARGET)) {
+        if (!sysJob.getTargetGroup().equals(ConmmonShare.SYSTEMTARGET)) {
             SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
             String time = simpleDateFormat.format(new Date());
             try {
@@ -749,7 +966,6 @@ public class SysJobServiceImpl implements ISysJobService {
     }
 
     private List<String> getColumnList(List<Map<String, Object>> list, SysJob sysJob) {
-        List<String> columnList = new ArrayList<>();
         for (Map<String, Object> maps : list) {
             for (Map.Entry<String, Object> entry : maps.entrySet()) {
                 if (ObjectUtil.isEmpty(entry.getValue()) && !entry.getKey().equalsIgnoreCase("toastsize")) {
@@ -764,6 +980,7 @@ public class SysJobServiceImpl implements ISysJobService {
                 }
             }
         }
+        List<String> columnList = new ArrayList<>();
         for (int i = 0; i < list.size(); i++) {
             Map<String, Object> arry = list.get(i);
             Map<String, Object> metric = HandleUtils.getMap(arry);
@@ -779,33 +996,41 @@ public class SysJobServiceImpl implements ISysJobService {
         return columnList;
     }
 
-    private void dealMetric(Map<String, Object> metric, int i) {
+    private void dealMetric(Map<String, Object> metric, int num) {
         if (CollectionUtil.isEmpty(metric)) {
-            metric.put("instance", "node" + i);
+            metric.put("instance", "node" + num);
         }
     }
 
     private String getCron(Integer num, String timeType) {
         String cronExpression = "";
         String time = num.toString();
-        if (Constants.SECOND.equals(timeType)) {
+        if (ConmmonShare.SECOND.equals(timeType)) {
             cronExpression = "0/" + time + " * * * * ?";
-        } else if (Constants.MINUTE.equals(timeType)) {
+        } else if (ConmmonShare.MINUTE.equals(timeType)) {
             cronExpression = "0 */" + time + " * * * ?";
-        } else if (Constants.HOUR.equals(timeType)) {
+        } else if (ConmmonShare.HOUR.equals(timeType)) {
             cronExpression = "* * 0/" + time + " * * ?";
-        } else if (Constants.DAY.equals(timeType)) {
+        } else if (ConmmonShare.DAY.equals(timeType)) {
             cronExpression = "0 0 23 * * ?";
-        } else if (Constants.WEEK.equals(timeType)) {
+        } else if (ConmmonShare.WEEK.equals(timeType)) {
             cronExpression = "0 0 12 ? * WED";
-        } else if (Constants.MONTH.equals(timeType)) {
+        } else if (ConmmonShare.MONTH.equals(timeType)) {
             cronExpression = "0 15 10 15 * ?";
-        } else if (Constants.YEAR.equals(timeType)) {
+        } else if (ConmmonShare.YEAR.equals(timeType)) {
             cronExpression = "0 10,44 14 ? 3 WED";
+        } else {
+            log.error("getCron fail");
         }
         return cronExpression;
     }
 
+    /**
+     * getDataSource
+     *
+     * @param sysConfig sysConfig
+     * @return DriverManagerDataSource source
+     */
     public DriverManagerDataSource getDataSource(SysConfig sysConfig) {
         DriverManagerDataSource dataSource = new DriverManagerDataSource();
         dataSource.setUrl(sysConfig.getUrl());
@@ -814,60 +1039,86 @@ public class SysJobServiceImpl implements ISysJobService {
         return dataSource;
     }
 
+    /**
+     * getJdbcTemplate
+     *
+     * @param dataSource dataSource
+     * @return JdbcTemplate JdbcTemplate
+     */
     public JdbcTemplate getJdbcTemplate(DriverManagerDataSource dataSource) {
         return new JdbcTemplate(dataSource);
     }
 
+    /**
+     * executeSql
+     *
+     * @param jdbcTemplate jdbcTemplate
+     * @param sql          sql
+     * @return List<Map < String, Object>> list
+     */
     public List<Map<String, Object>> executeSql(JdbcTemplate jdbcTemplate, String sql) {
         List<Map<String, Object>> list = new ArrayList<>();
         try {
             list = jdbcTemplate.queryForList(sql);
-        } catch (Exception exception) {
+        } catch (DataAccessException exception) {
             log.error("SysJobServiceImpl_executeSql,{}", exception.getMessage());
         }
         return list;
     }
 
+    /**
+     * updateJob
+     *
+     * @param task task
+     * @return MonitorResult MonitorResult
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public AjaxResult updateJob(SysJob job) throws SchedulerException, TaskException {
-        if (job == null) {
-            return AjaxResult.error("Task is empty");
+    public MonitorResult updateTask(SysJob task) {
+        if (task == null) {
+            return MonitorResult.error("Task is empty");
         }
-        if (job.getTargetGroup().equalsIgnoreCase(Constants.SYSTEMTARGET) && job.getTime() > Constants.DEFAULTERNUM) {
-            return AjaxResult.error("Group cannot be the system default group");
+        if (task.getTargetGroup().equalsIgnoreCase(ConmmonShare.SYSTEMTARGET) && task.getTime() > ConmmonShare.DEFAULTERNUM) {
+            return MonitorResult.error("Group cannot be the system default group");
         }
         SysConfig zabbixConfig = configMapper.getZabbixConfig();
         SysConfig nagiosConfig = configMapper.getNagiosConfig();
-        if (ObjectUtil.isEmpty(zabbixConfig) && job.getPlatform().equals(Constants.ZABBIX)) {
-            return AjaxResult.error("Please configure the Zabbix data source information first");
+        if (ObjectUtil.isEmpty(zabbixConfig) && task.getPlatform().equals(ConmmonShare.ZABBIX)) {
+            return MonitorResult.error("Please configure the Zabbix data source information first");
         }
-        if (ObjectUtil.isEmpty(nagiosConfig) && job.getPlatform().equals(Constants.NAGIOS)) {
-            return AjaxResult.error("Please configure Nagios configuration information first");
+        if (ObjectUtil.isEmpty(nagiosConfig) && task.getPlatform().equals(ConmmonShare.NAGIOS)) {
+            return MonitorResult.error("Please configure Nagios configuration information first");
         }
-        AjaxResult ajaxResult = insertJob(job);
-        if (ajaxResult.get("code").equals(HttpStatus.SUCCESS)) {
-            jobMapper.deleteJobByIds(Arrays.asList(job.getJobId()));
-            insertJob(job);
+        MonitorResult MonitorResult = insertTask(task);
+        if (MonitorResult.get("code").equals(HttpStatus.HTTP_OK)) {
+            jobMapper.deleteJobByIds(Arrays.asList(task.getJobId()));
+            insertTask(task);
         }
         List<Long> publishJobIds = sourceTargetMapper.getPublishJobIds();
-        if (publishJobIds.contains(job.getJobId())) {
-            startTimeTask(Arrays.asList(job));
+        if (publishJobIds.contains(task.getJobId())) {
+            startTimeTask(Arrays.asList(task));
         }
-        return ajaxResult;
+        return MonitorResult;
     }
 
-    public void updateSchedulerJob(SysJob job, String jobGroup) throws SchedulerException, TaskException {
+    /**
+     * updateSchedulerJob
+     *
+     * @param job      job
+     * @param jobGroup jobGroup
+     * @throws SchedulerException SchedulerException
+     * @throws TaskException      TaskException
+     */
+    public void updateSchedulerJob(SysJob job, String jobGroup) {
         Long jobId = job.getJobId();
-        JobKey jobKey = ScheduleUtils.getJobKey(jobId, jobGroup);
-        if (scheduler.checkExists(jobKey)) {
-            scheduler.deleteJob(jobKey);
+        JobKey jobKey = MonitorTaskUtils.getMonitorWorkKey(jobId, jobGroup);
+        try {
+            if (scheduler.checkExists(jobKey)) {
+                scheduler.deleteJob(jobKey);
+            }
+        } catch (SchedulerException exception) {
+            log.error("updateSchedulerJob-->{}", exception.getMessage());
         }
-        ScheduleUtils.createScheduleJob(scheduler, job);
-    }
-
-    @Override
-    public boolean checkCronExpressionIsValid(String cronExpression) {
-        return CronUtils.isValid(cronExpression);
+        MonitorTaskUtils.createMonitorJob(scheduler, job);
     }
 }

@@ -1,13 +1,16 @@
+/*
+ * Copyright (c) Huawei Technologies Co., Ltd. 2012-2022. All rights reserved.
+ */
+
 package com.tools.monitor.manager.factory;
 
 import com.tools.monitor.entity.SysConfig;
 import com.tools.monitor.mapper.SysSourceTargetMapper;
 import com.tools.monitor.quartz.domain.SysJob;
 import com.tools.monitor.quartz.task.MonitorTask;
-import com.tools.monitor.quartz.util.spring.SpringUtils;
+import com.tools.monitor.quartz.util.spring.MonitSpringUtils;
 import com.tools.monitor.service.impl.MeterServiceImpl;
 import com.tools.monitor.service.impl.SysJobServiceImpl;
-
 import java.util.List;
 import java.util.Map;
 import java.util.TimerTask;
@@ -19,20 +22,21 @@ import java.util.TimerTask;
  * @since 2022-10-01
  */
 public class AsyncFactory {
-
-
     /**
      * recordZabbix
      *
-     * @param zabbix
-     * @param sysConfig
-     * @return
+     * @param zabbix       zabbix
+     * @param sysConfig    sysConfig
+     * @param zabbixConfig zabbixConfig
+     * @return TimerTask
      */
-    public static TimerTask recordZabbix(final List<SysJob> zabbix, final SysConfig sysConfig, final SysConfig zabbixConfig) {
+    public static TimerTask recordZabbix(final List<SysJob> zabbix,
+        final SysConfig sysConfig,
+        final SysConfig zabbixConfig) {
         return new TimerTask() {
             @Override
             public void run() {
-                SpringUtils.getBean(SysJobServiceImpl.class).executeZabbix(zabbix, sysConfig, zabbixConfig);
+                MonitSpringUtils.getClass(SysJobServiceImpl.class).executeZabbix(zabbix, sysConfig, zabbixConfig);
             }
         };
     }
@@ -40,14 +44,17 @@ public class AsyncFactory {
     /**
      * removeRegistry
      *
-     * @param gaugeName
+     * @param gaugeName gaugeName
      * @return TimerTask
      */
     public static TimerTask removeRegistry(final List<String> gaugeName) {
         return new TimerTask() {
+            /**
+             * run
+             */
             @Override
             public void run() {
-                SpringUtils.getBean(MeterServiceImpl.class).removeRegister(gaugeName);
+                MonitSpringUtils.getClass(MeterServiceImpl.class).removeRegister(gaugeName);
             }
         };
     }
@@ -55,14 +62,14 @@ public class AsyncFactory {
     /**
      * removeJobId
      *
-     * @param jobid
+     * @param jobid jobid
      * @return TimerTask
      */
     public static TimerTask removeJobId(final Long jobid) {
         return new TimerTask() {
             @Override
             public void run() {
-                SpringUtils.getBean(SysSourceTargetMapper.class).removeJobids(jobid);
+                MonitSpringUtils.getClass(SysSourceTargetMapper.class).removeJobids(jobid);
             }
         };
     }
@@ -70,16 +77,19 @@ public class AsyncFactory {
     /**
      * executeOne
      *
-     * @param params
-     * @param name
-     * @param jobId
+     * @param params params
+     * @param name   name
+     * @param jobId  jobId
      * @return TimerTask
      */
     public static TimerTask executeOne(final String params, final String name, final Long jobId) {
         return new TimerTask() {
+            /**
+             * run
+             */
             @Override
             public void run() {
-                SpringUtils.getBean(MonitorTask.class).targetParams(params, name, jobId);
+                MonitSpringUtils.getClass(MonitorTask.class).targetParams(params, name, jobId);
             }
         };
     }
@@ -87,14 +97,17 @@ public class AsyncFactory {
     /**
      * reportNagios
      *
-     * @param nagiosMap
+     * @param nagiosMap nagiosMap
      * @return TimerTask
      */
     public static TimerTask reportNagios(final Map<String, Object> nagiosMap) {
         return new TimerTask() {
+            /**
+             * run
+             */
             @Override
             public void run() {
-                SpringUtils.getBean(MeterServiceImpl.class).reportNagios(nagiosMap);
+                MonitSpringUtils.getClass(MeterServiceImpl.class).reportNagios(nagiosMap);
             }
         };
     }
@@ -102,16 +115,21 @@ public class AsyncFactory {
     /**
      * recordNagios
      *
-     * @param nagios
-     * @param sysConfig
-     * @param nagiosConfig
+     * @param nagios       nagios
+     * @param sysConfig    sysConfig
+     * @param nagiosConfig nagiosConfig
      * @return TimerTask
      */
-    public static TimerTask recordNagios(final List<SysJob> nagios, final SysConfig sysConfig, final SysConfig nagiosConfig) {
+    public static TimerTask recordNagios(final List<SysJob> nagios,
+        final SysConfig sysConfig,
+        final SysConfig nagiosConfig) {
         return new TimerTask() {
+            /**
+             * run
+             */
             @Override
             public void run() {
-                SpringUtils.getBean(SysJobServiceImpl.class).publishNagios(nagios, sysConfig, nagiosConfig);
+                MonitSpringUtils.getClass(SysJobServiceImpl.class).publishNagios(nagios, sysConfig, nagiosConfig);
             }
         };
     }
@@ -124,9 +142,12 @@ public class AsyncFactory {
      */
     public static TimerTask executeNagios(final List<SysJob> nagios) {
         return new TimerTask() {
+            /**
+             * run
+             */
             @Override
             public void run() {
-                SpringUtils.getBean(SysJobServiceImpl.class).startNagios(nagios);
+                MonitSpringUtils.getClass(SysJobServiceImpl.class).startNagios(nagios);
             }
         };
     }

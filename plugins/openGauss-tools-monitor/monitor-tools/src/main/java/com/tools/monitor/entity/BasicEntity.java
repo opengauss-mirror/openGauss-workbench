@@ -1,42 +1,64 @@
+/*
+ * Copyright (c) Huawei Technologies Co., Ltd. 2012-2022. All rights reserved.
+ */
+
 package com.tools.monitor.entity;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import java.io.Serializable;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * BaseEntity
+ * BasicEntity
  *
  * @author liu
  * @since 2022-10-01
  */
-public class BaseEntity implements Serializable {
-    private static final long serialVersionUID = 1L;
+public class BasicEntity {
+    /**
+     * searchContent
+     */
+    private String searchContent;
 
-    private String searchValue;
-
+    /**
+     * createBy
+     */
     private String createBy;
 
+    /**
+     * createTime
+     */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm")
     private Date createTime;
 
+    /**
+     * updateBy
+     */
     private String updateBy;
 
+    /**
+     * updateTime
+     */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm")
     private Date updateTime;
 
-    private String remark;
+    /**
+     * description
+     */
+    private String description;
 
-    private Map<String, Object> params;
+    /**
+     * paramMap
+     */
+    private Map<String, Object> paramMap;
 
-    public String getSearchValue() {
-        return searchValue;
+    public String getSearchContent() {
+        return searchContent;
     }
 
-    public void setSearchValue(String searchValue) {
-        this.searchValue = searchValue;
+    public void setSearchContent(String searchContent) {
+        this.searchContent = searchContent;
     }
 
     public String getCreateBy() {
@@ -71,22 +93,22 @@ public class BaseEntity implements Serializable {
         this.updateTime = updateTime;
     }
 
-    public String getRemark() {
-        return remark;
+    public String getDescription() {
+        return description;
     }
 
-    public void setRemark(String remark) {
-        this.remark = remark;
+    public void setDescription(String description) {
+        this.description = description;
     }
 
-    public Map<String, Object> getParams() {
-        if (params == null) {
-            params = new HashMap<>();
+    public Map<String, Object> getParamMap() {
+        if (null == paramMap) {
+            paramMap = new HashMap<>();
         }
-        return params;
+        return paramMap;
     }
 
-    public void setParams(Map<String, Object> params) {
-        this.params = params;
+    public void setParamMap(Map<String, Object> paramMap) {
+        this.paramMap = paramMap;
     }
 }

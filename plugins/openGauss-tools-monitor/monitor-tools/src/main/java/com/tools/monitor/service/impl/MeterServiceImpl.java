@@ -3,7 +3,7 @@ package com.tools.monitor.service.impl;
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.ObjectUtil;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
-import com.tools.monitor.common.contant.Constants;
+import com.tools.monitor.common.contant.ConmmonShare;
 import com.tools.monitor.entity.Prom;
 import com.tools.monitor.entity.SysConfig;
 import com.tools.monitor.mapper.SysConfigMapper;
@@ -12,19 +12,19 @@ import com.tools.monitor.service.MeterService;
 import com.tools.monitor.util.HandleUtils;
 import io.prometheus.client.CollectorRegistry;
 import io.prometheus.client.Gauge;
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
+import org.opengauss.admin.system.plugin.facade.MonitorToolsFacade;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
-import java.util.*;
-import org.opengauss.admin.system.plugin.facade.MonitorToolsFacade;
-
 /**
  * MeterServiceImpl
- *
- * @author liu
- * @since 2022-10-01
  */
 @Slf4j
 @Service
@@ -32,7 +32,6 @@ public class MeterServiceImpl implements MeterService {
     private static final String ISNUM = "^(\\-|\\+)?\\d+(\\.\\d+)?$";
 
     private static final String KEXUE = "^[+-]?\\d+\\.?\\d*[Ee][+-]?\\d+$";
-
 
     @Autowired
     public CollectorRegistry collectorRegistry;
@@ -53,10 +52,10 @@ public class MeterServiceImpl implements MeterService {
 
 
     /**
-     * empty:list  map value  null
+     * publish
      *
-     * @param list
-     * @param sysConfig
+     * @param list list
+     * @param sysConfig sysConfig
      */
     public void publish(List<Map<String, Object>> list, SysConfig sysConfig, String task, SysJob sysJob) {
         synchronized (this) {
@@ -84,14 +83,14 @@ public class MeterServiceImpl implements MeterService {
                 String[] value = getValue(metric);
                 for (Map.Entry<String, Object> entry : arry.entrySet()) {
                     if (entry.getValue().toString().matches(ISNUM) || entry.getValue().toString().matches(KEXUE)) {
-                        if (!sysJob.getPlatform().equals(Constants.NAGIOS)) {
+                        if (!sysJob.getPlatform().equals(ConmmonShare.NAGIOS)) {
                             monitorToolsService.reportRegister(entry.getKey() + "_" + task + "_" + name, entry.getValue(), key, value);
                         }
                         nagiosMap.put(entry.getKey() + "_" + task + "_" + name + "_" + i, entry.getValue());
                     }
                 }
             }
-            if (sysJob.getPlatform().equals(Constants.NAGIOS)) {
+            if (sysJob.getPlatform().equals(ConmmonShare.NAGIOS)) {
                 reportNagios(nagiosMap);
             }
         }
@@ -127,7 +126,7 @@ public class MeterServiceImpl implements MeterService {
     /**
      * reportNagios
      *
-     * @param nagiosMap
+     * @param nagiosMap nagiosMap
      */
     public void reportNagios(Map<String, Object> nagiosMap) {
         synchronized (this) {
@@ -144,9 +143,8 @@ public class MeterServiceImpl implements MeterService {
 
     /**
      * dealMetric
-     *
-     * @param metric
-     * @param i
+     * @param metric metric
+     * @param i i
      */
     public void dealMetric(Map<String, Object> metric, int i) {
         if (CollectionUtil.isEmpty(metric)) {
@@ -155,7 +153,10 @@ public class MeterServiceImpl implements MeterService {
     }
 
     /**
-     * map->key
+     * getValue
+     *
+     * @param metric metric
+     * @return String
      */
     public String[] getValue(Map<String, Object> metric) {
         Object[] objects = metric.values().toArray(new Object[metric.values().size()]);
@@ -163,7 +164,10 @@ public class MeterServiceImpl implements MeterService {
     }
 
     /**
-     * map->value
+     * getKey
+     *
+     * @param metric metric
+     * @return String
      */
     public String[] getKey(Map<String, Object> metric) {
         return metric.keySet().toArray(new String[metric.keySet().size()]);
@@ -172,7 +176,7 @@ public class MeterServiceImpl implements MeterService {
     /**
      * removeRegister
      *
-     * @param gaugeName
+     * @param gaugeName gaugeName
      */
     public void removeRegister(List<String> gaugeName) {
         monitorToolsService.removeRegister(gaugeName);
@@ -181,7 +185,7 @@ public class MeterServiceImpl implements MeterService {
     /**
      * remove
      *
-     * @param gaugeName
+     * @param gaugeName gaugeName
      */
     public void remove(List<String> gaugeName) {
         try {

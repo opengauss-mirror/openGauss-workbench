@@ -1,7 +1,8 @@
-package com.tools.monitor.quartz.util;
+/*
+ * Copyright (c) Huawei Technologies Co., Ltd. 2012-2022. All rights reserved.
+ */
 
-import com.tools.monitor.util.StringUtils;
-import org.apache.commons.lang3.exception.ExceptionUtils;
+package com.tools.monitor.quartz.util;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -16,25 +17,12 @@ public class ExceptionUtil {
     /**
      * getExceptionMessage
      *
-     * @param e
-     * @return
+     * @param throwable throwable
+     * @return String
      */
-    public static String getExceptionMessage(Throwable e) {
+    public static String getExceptionMessage(Throwable throwable) {
         StringWriter sw = new StringWriter();
-        e.printStackTrace(new PrintWriter(sw, true));
+        throwable.printStackTrace(new PrintWriter(sw, true));
         return sw.toString();
-    }
-
-    public static String getRootErrorMessage(Exception e) {
-        Throwable root = ExceptionUtils.getRootCause(e);
-        root = (root == null ? e : root);
-        if (root == null) {
-            return "";
-        }
-        String msg = root.getMessage();
-        if (msg == null) {
-            return "null";
-        }
-        return StringUtils.defaultString(msg);
     }
 }
