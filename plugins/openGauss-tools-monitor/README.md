@@ -59,7 +59,7 @@ openGauss-tools-monitor
 
 ### 架构图
 
-<img src="./image/jiagou.png"/>
+ yh<img src="./image/jiagou.png"/>
 
 ### 工具的安装windows
 

@@ -30,7 +30,7 @@ public class HttpHelper {
                 sb.append(line);
             }
         } catch (IOException e) {
-            LOGGER.warn("getBodyString出现问题！");
+            LOGGER.warn("There is a problem with getBodyString！");
         } finally {
             if (reader != null) {
                 try {

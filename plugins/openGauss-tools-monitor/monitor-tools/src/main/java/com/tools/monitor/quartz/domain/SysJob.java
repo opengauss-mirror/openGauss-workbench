@@ -30,10 +30,10 @@ public class SysJob extends BaseEntity {
 
     private String target;
 
-    @NotNull(message = "采集时间间隔不能为空")
+    @NotNull(message = "Collection time interval cannot be empty")
     private Integer num;
 
-    @NotNull(message = "单位不能为空")
+    @NotNull(message = "Unit cannot be empty")
     private String timeType;
 
     private Long time;
@@ -44,10 +44,10 @@ public class SysJob extends BaseEntity {
 
     private String jobGroup = "DEFAULT";
 
-    @NotNull(message = "指标分组不能为空")
+    @NotNull(message = "Indicator group cannot be empty")
     private String targetGroup;
 
-    @NotNull(message = "监控平台不能为空")
+    @NotNull(message = "Monitoring platform cannot be empty")
     private String platform;
 
     private String invokeTarget;

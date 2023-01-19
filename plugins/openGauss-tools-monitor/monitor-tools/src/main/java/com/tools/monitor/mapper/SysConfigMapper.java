@@ -153,15 +153,15 @@ public class SysConfigMapper {
         if (Constants.NAGIOS.equals(sysConfig.getPlatform())) {
             Boolean isServer = getConnection(sysConfig.getServerIp(), sysConfig.getServerName(), sysConfig.getServerPassword());
             if (!isServer) {
-                return "服务端连接失败!";
+                return "Server level connection failed!";
             } else if (StrUtil.isNotBlank(checkServerPath(sysConfig))) {
-                return "服务端路径不正确";
+                return "Incorrect server level path";
             }
             Boolean isClient = getConnection(sysConfig.getClientIp(), sysConfig.getClientName(), sysConfig.getClientPassword());
             if (!isClient) {
-                return "客户端连接失败!";
+                return "Client side connection failed!";
             } else if (StrUtil.isNotBlank(checkClientPath(sysConfig))) {
-                return "客户端路径不正确";
+                return "The client side path is incorrect";
             }
             //校验路径
             sysConfig.setClientPassword(Base64.encode(sysConfig.getClientPassword()));
@@ -205,7 +205,7 @@ public class SysConfigMapper {
         String comd = "cat " + sysConfig.getClientPath() + "/etc" + "/nrpe.cfg";
         System.out.println(comd);
         if (StrUtil.isEmpty(nagiosService.executeCmdAndGetResult(comd, connection))) {
-            return "客户端路径不正确";
+            return "The client side path is incorrect";
         }
         return "";
     }
@@ -220,7 +220,7 @@ public class SysConfigMapper {
         Connection connection = getConn(sysConfig.getServerIp(), sysConfig.getServerName(), sysConfig.getServerPassword());
         String comd = "cat " + sysConfig.getServerPath() + "/etc" + "/nagios.cfg";
         if (StrUtil.isEmpty(nagiosService.executeCmdAndGetResult(comd, connection))) {
-            return "服务端路径不正确";
+            return "Incorrect server level path";
         }
         return "";
     }
@@ -280,10 +280,10 @@ public class SysConfigMapper {
             connection.connect();
             flag = connection.authenticateWithPassword(userName, password);
             if (flag) {
-                log.info("认证成功！");
+                log.info("Certification successful!");
                 return connection;
             } else {
-                log.error(hostIp + "认证失败！");
+                log.error(hostIp + "Certification fail!");
                 connection.close();
                 return null;
             }
@@ -305,10 +305,10 @@ public class SysConfigMapper {
         SysConfig sysConfig1 = getConfigByid(sysConfig.getDataSourceId());
         SysSourceTarget sysSourceTarget = sourceTargetMapper.sysSourceTargetById(sysConfig.getDataSourceId());
         if (!sysConfig.getIp().equals(sysConfig1.getIp())) {
-            return "不允许修改Ip";
+            return "Modification of IP is not allowed.";
         }
         if (!sysConfig1.getConnectName().equals(sysConfig.getConnectName()) && nameList.contains(sysConfig.getConnectName())) {
-            return "实例名称不能重复";
+            return "Instance names cannot be repeated";
         }
         String msg = ConnectionUtil.getConnection(sysConfig);
         if (StrUtil.isNotBlank(msg)) {
@@ -332,10 +332,10 @@ public class SysConfigMapper {
         String name = connectName.stream().filter(itme -> itme.equals(sysConfig.getConnectName())).findFirst().orElse(null);
         String ip = ips.stream().filter(itme -> itme.equals(sysConfig.getIp())).findFirst().orElse(null);
         if (ObjectUtil.isNotEmpty(name)) {
-            return "实例名称不能重复";
+            return "Instance names cannot be repeated";
         }
         if (ObjectUtil.isNotEmpty(ip)) {
-            return "实例ip不能重复";
+            return "Instance ip cannot be repeated";
         }
         return "";
     }

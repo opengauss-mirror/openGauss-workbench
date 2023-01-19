@@ -466,8 +466,8 @@ public class Convert {
      * @param clazz
      * @param value
      * @param defaultValue
-     * @return
      * @param <E>
+     * @return
      */
     public static <E extends Enum<E>> E toEnum(Class<E> clazz, Object value, E defaultValue) {
         if (value == null) {
@@ -494,8 +494,8 @@ public class Convert {
      *
      * @param clazz
      * @param value
-     * @return
      * @param <E>
+     * @return
      */
     public static <E extends Enum<E>> E toEnum(Class<E> clazz, Object value) {
         return toEnum(clazz, value, null);
@@ -595,6 +595,7 @@ public class Convert {
 
     /**
      * str
+     *
      * @param obj
      * @param charsetName
      * @return

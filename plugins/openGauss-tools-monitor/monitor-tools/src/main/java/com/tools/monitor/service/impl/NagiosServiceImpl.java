@@ -205,10 +205,10 @@ public class NagiosServiceImpl {
             conn.connect();
             flag = conn.authenticateWithPassword(userName, password);
             if (flag) {
-                log.info("认证成功！");
+                log.info("Certification successful!");
                 return conn;
             } else {
-                log.error(hostIp + "认证失败！");
+                log.error(hostIp + "Certification fail!");
                 conn.close();
                 return null;
             }
@@ -225,10 +225,10 @@ public class NagiosServiceImpl {
             connection.connect();
             flag = connection.authenticateWithPassword(userName, password);
             if (flag) {
-                log.info("认证成功！");
+                log.info("Certification successful!");
                 return connection;
             } else {
-                log.error(hostIp + "认证失败！");
+                log.error(hostIp + "Certification fail!");
                 connection.close();
                 return null;
             }

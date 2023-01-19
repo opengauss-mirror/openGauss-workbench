@@ -252,7 +252,7 @@ public class SysJobServiceImpl implements ISysJobService {
     @Override
     public AjaxResult batchPublish(TargetSource targetSource) throws SchedulerException {
         if (ObjectUtil.isEmpty(targetSource) || CollectionUtil.isEmpty(targetSource.getDataSourceId()) || CollectionUtil.isEmpty(targetSource.getJobIds())) {
-            return AjaxResult.error("发布信息不能为空");
+            return AjaxResult.error("Publish information cannot be empty");
         }
         List<SysSourceTarget> list = new ArrayList<>();
         List<Long> dateSource = targetSource.getDataSourceId();
@@ -263,10 +263,10 @@ public class SysJobServiceImpl implements ISysJobService {
         SysConfig zabbixConfig = configMapper.getZabbixConfig();
         SysConfig nagiosConfig = configMapper.getNagiosConfig();
         if (ObjectUtil.isEmpty(zabbixConfig) && CollectionUtil.isNotEmpty(zabbix)) {
-            return AjaxResult.error("请先配置Zabbix数据源信息");
+            return AjaxResult.error("Please configure the Zabbix data source information first");
         }
         if (ObjectUtil.isEmpty(nagiosConfig) && CollectionUtil.isNotEmpty(nagios)) {
-            return AjaxResult.error("请先配置Nagios配置信息");
+            return AjaxResult.error("Please configure Nagios configuration information first");
         }
         for (Long id : dateSource) {
             SysSourceTarget sourceTarget = new SysSourceTarget();
@@ -277,7 +277,7 @@ public class SysJobServiceImpl implements ISysJobService {
         for (SysSourceTarget sourceTarget : list) {
             singlePublish(sourceTarget, sysJobs, zabbix, zabbixConfig, nagios, nagiosConfig);
         }
-        return AjaxResult.success("批量发布成功");
+        return AjaxResult.success("Batch release was successful");
     }
 
     /**
@@ -295,7 +295,7 @@ public class SysJobServiceImpl implements ISysJobService {
     public AjaxResult singlePublish(SysSourceTarget sourceTarget, List<SysJob> sysJobs, List<SysJob> zabbix, SysConfig zabbixConfig, List<SysJob> nagios, SysConfig nagiosConfig) throws SchedulerException {
         SysConfig sysConfig = configMapper.getConfigByid(sourceTarget.getDataSourceId());
         if (sysConfig == null) {
-            return AjaxResult.error("没有该主机信息");
+            return AjaxResult.error("No information for this host");
         }
         List<Long> oldJobIds = sourceTargetMapper.getJobIdBySourceId(sourceTarget.getDataSourceId());
         List<SysJob> oldSysJob = jobMapper.selectBatchJobByIds(oldJobIds);
@@ -318,7 +318,7 @@ public class SysJobServiceImpl implements ISysJobService {
         if (CollectionUtil.isNotEmpty(nagios)) {
             AsyncManager.me().execute(AsyncFactory.executeNagios(nagios));
         }
-        return AjaxResult.success("发布成功");
+        return AjaxResult.success("Published successfully");
     }
 
     public void publishNagios(List<SysJob> nagios, SysConfig sysConfig, SysConfig nagiosConfig) {
@@ -372,7 +372,7 @@ public class SysJobServiceImpl implements ISysJobService {
     public AjaxResult singlePublishPause(SysSourceTarget sourceTarget) throws SchedulerException {
         SysConfig sysConfig = configMapper.getConfigByid(sourceTarget.getDataSourceId());
         if (sysConfig == null) {
-            return AjaxResult.error("没有该主机信息");
+            return AjaxResult.error("No information for this host");
         }
         List<Long> jobs = sourceTarget.getJobIds();
         List<SysJob> sysJobs = jobMapper.selectBatchJobByIds(jobs);
@@ -391,7 +391,7 @@ public class SysJobServiceImpl implements ISysJobService {
         }
         List<SysJob> otherSysJob = sourceTargetMapper.getMoreThanOneSource(sysJobs);
         startTimeTask(otherSysJob);
-        return AjaxResult.success("停止发布成功");
+        return AjaxResult.success("Stop publishing successfully");
     }
 
 
@@ -445,7 +445,7 @@ public class SysJobServiceImpl implements ISysJobService {
     /**
      * pauseJob
      *
-     * @param job 调度信息
+     * @param job
      * @return
      * @throws SchedulerException
      */
@@ -536,7 +536,8 @@ public class SysJobServiceImpl implements ISysJobService {
             if (CollectionUtil.isNotEmpty(sourceId)) {
                 List<SysConfig> sysConfigs = configMapper.getBatchById(sourceId);
                 List<String> nameList = sysConfigs.stream().map(SysConfig::getConnectName).collect(Collectors.toList());
-                return ResponseVO.successResponseVO("检测到指标已在" + nameList + "实例中发布,将批量从实例中删除,是否继续?");
+                return ResponseVO.successResponseVO("It is detected that the indicator is already in"
+                        + nameList + "Publish in the instance, delete the batch from the instance, continue?");
             }
         }
         return ResponseVO.successResponseVO("");
@@ -547,7 +548,7 @@ public class SysJobServiceImpl implements ISysJobService {
         if (CollectionUtil.isNotEmpty(failMessages)) {
             return ResponseVO.successResponseVO(failMessages);
         } else {
-            return ResponseVO.successResponseVO("恭喜您！全部发布成功");
+            return ResponseVO.successResponseVO("Congratulations! All published successfully");
         }
 
     }
@@ -555,7 +556,7 @@ public class SysJobServiceImpl implements ISysJobService {
     @Override
     public AjaxResult batchPublishPause(TargetSource targetSource) throws SchedulerException {
         if (ObjectUtil.isEmpty(targetSource) || CollectionUtil.isEmpty(targetSource.getDataSourceId()) || CollectionUtil.isEmpty(targetSource.getJobIds())) {
-            return AjaxResult.error("发布信息不能为空");
+            return AjaxResult.error("Publish information cannot be empty");
         }
         List<SysSourceTarget> list = new ArrayList<>();
         List<Long> dateSource = targetSource.getDataSourceId();
@@ -568,7 +569,7 @@ public class SysJobServiceImpl implements ISysJobService {
         for (SysSourceTarget sourceTarget : list) {
             singlePublishPause(sourceTarget);
         }
-        return AjaxResult.success("批量发布停止成功");
+        return AjaxResult.success("Batch publishing stopped successfully");
     }
 
     @Override
@@ -607,21 +608,21 @@ public class SysJobServiceImpl implements ISysJobService {
             job.setCronExpression(cronExpression);
             int rows = jobMapper.insertJob(job);
             updateSchedulerJob(job, job.getJobGroup());
-            return AjaxResult.success("修改成功");
+            return AjaxResult.success("Modify successfully");
         }
         if (ObjectUtil.isEmpty(job) || ObjectUtil.isEmpty(job.getDataSourceId())) {
-            return AjaxResult.error("验证主机信息不能为空");
+            return AjaxResult.error("Verify that host information cannot be empty");
         }
         if (job.getIsCreate() && job.getTargetGroup().equalsIgnoreCase(Constants.SYSTEMTARGET)) {
-            return AjaxResult.error("自定义分组不能是系统默认分组,请更换分组名称");
+            return AjaxResult.error("The custom group cannot be the system default group, please change the group name");
         }
         SysConfig zabbixConfig = configMapper.getZabbixConfig();
         SysConfig nagiosConfig = configMapper.getNagiosConfig();
         if (ObjectUtil.isEmpty(zabbixConfig) && job.getPlatform().equals(Constants.ZABBIX) && !job.getTargetGroup().equalsIgnoreCase(Constants.SYSTEMTARGET)) {
-            return AjaxResult.error("请先配置Zabbix数据源信息");
+            return AjaxResult.error("Please configure the Zabbix data source information first");
         }
         if (ObjectUtil.isEmpty(nagiosConfig) && job.getPlatform().equals(Constants.NAGIOS) && !job.getTargetGroup().equalsIgnoreCase(Constants.SYSTEMTARGET)) {
-            return AjaxResult.error("请先配置Nagios配置信息");
+            return AjaxResult.error("Please configure Nagios configuration information first");
         }
         List<SysJob> sysJobs = jobMapper.selectJobAll();
         Integer max = 0;
@@ -649,7 +650,7 @@ public class SysJobServiceImpl implements ISysJobService {
             sysConfig = sysConfigs.stream().findFirst().orElse(null);
         }
         if (sysConfig == null) {
-            return AjaxResult.error("请先配置数据源");
+            return AjaxResult.error("Please configure the data source first");
         }
         sysConfig.setPassword(Base64.decode(sysConfig.getPassword()));
         DriverManagerDataSource dataSource = getDataSource(sysConfig);
@@ -661,7 +662,7 @@ public class SysJobServiceImpl implements ISysJobService {
            return AjaxResult.error(e.getMessage());
         }
         if (CollectionUtil.isEmpty(list) && ObjectUtil.isNotEmpty(job.getIsFalse()) && !job.getIsFalse()) {
-            return AjaxResult.target("无法生成指标");
+            return AjaxResult.target("Unable to generate indicator");
         }
         dealSysJob(job, list);
         job.setDataSourceId(sysConfig.getDataSourceId());
@@ -669,21 +670,21 @@ public class SysJobServiceImpl implements ISysJobService {
         if (rows > 0) {
             ScheduleUtils.createScheduleJob(scheduler, job);
         }
-        return AjaxResult.success("保存成功");
+        return AjaxResult.success("Save successfully");
     }
 
     private void checkNum(SysJob job) {
         if (ObjectUtil.isNotEmpty(job) && ObjectUtil.isNotEmpty(job.getNum()) && ObjectUtil.isNotEmpty(job.getTimeType())) {
             if (job.getTimeType().equals(Constants.SECOND) || job.getTimeType().equals(Constants.MINUTE)) {
-                AssertUtil.isTrue(0 > job.getNum() || job.getNum() > 59, "时间间隔应大于0小于等于59");
+                AssertUtil.isTrue(0 > job.getNum() || job.getNum() > 59, "The time interval should be greater than 0 and less than or equal to 59");
             } else if (job.getTimeType().equals(Constants.HOUR)) {
-                AssertUtil.isTrue(0 > job.getNum() || job.getNum() > 23, "时间间隔应大于0小于等于23");
+                AssertUtil.isTrue(0 > job.getNum() || job.getNum() > 23, "Time interval should be greater than 0 less than or equal to 23");
             } else if (job.getTimeType().equals(Constants.DAY)) {
-                AssertUtil.isTrue(0 > job.getNum() || job.getNum() > 30, "时间间隔应大于0小于等于30");
+                AssertUtil.isTrue(0 > job.getNum() || job.getNum() > 30, "Time interval should be greater than 0 less than or equal to 30");
             } else if (job.getTimeType().equals(Constants.WEEK)) {
-                AssertUtil.isTrue(0 > job.getNum() || job.getNum() > 4, "时间间隔应大于0小于等于4");
+                AssertUtil.isTrue(0 > job.getNum() || job.getNum() > 4, "Time interval should be greater than 0 less than or equal to 4");
             } else if (job.getTimeType().equals(Constants.MONTH)) {
-                AssertUtil.isTrue(0 > job.getNum() || job.getNum() > 12, "时间间隔应大于0小于12");
+                AssertUtil.isTrue(0 > job.getNum() || job.getNum() > 12, "Time interval should be greater than 0 and less than 12");
             }
         }
     }
@@ -699,38 +700,22 @@ public class SysJobServiceImpl implements ISysJobService {
             List<String> prom = sysJobs.stream().filter(item -> item.getPlatform().equals(Constants.PROM)).map(SysJob::getTarget).collect(Collectors.toList());
             prom = prom.stream().map(item -> item.replace(" ", "").replace("\n", "").replace(";", "")).collect(Collectors.toList());
             if (prom.contains(sql)) {
-                return "Prometheus指标重复";
+                return "Prometheus Metrics Duplicate";
             }
         } else if (Constants.ZABBIX.equals(job.getPlatform())) {
             List<String> zabbix = sysJobs.stream().filter(item -> item.getPlatform().equals(Constants.ZABBIX)).map(SysJob::getTarget).collect(Collectors.toList());
             zabbix = zabbix.stream().map(item -> item.replace(" ", "").replace("\n", "").replace(";", "")).collect(Collectors.toList());
             if (zabbix.contains(sql)) {
-                return "Zabbix指标重复";
+                return "Zabbix Metrics Duplicate";
             }
         } else {
             List<String> nagios = sysJobs.stream().filter(item -> item.getPlatform().equals(Constants.NAGIOS)).map(SysJob::getTarget).collect(Collectors.toList());
             nagios = nagios.stream().map(item -> item.replace(" ", "").replace("\n", "").replace(";", "")).collect(Collectors.toList());
             if (nagios.contains(sql)) {
-                return "Nagios指标重复";
+                return "Nagios Metrics Duplicate";
             }
         }
         return "";
-    }
-
-    private void checkCron(SysJob job) {
-        if (!CronUtils.isValid(job.getCronExpression())) {
-            throw new ParamsException("新增任务'" + job.getJobName() + "'失败，Cron表达式不正确");
-        } else if (StringUtils.containsIgnoreCase(job.getInvokeTarget(), Constants.LOOKUP_RMI)) {
-            throw new ParamsException("新增任务'" + job.getJobName() + "'失败，目标字符串不允许'rmi'调用");
-        } else if (StringUtils.containsAnyIgnoreCase(job.getInvokeTarget(), new String[]{Constants.LOOKUP_LDAP, Constants.LOOKUP_LDAPS})) {
-            throw new ParamsException("新增任务'" + job.getJobName() + "'失败，目标字符串不允许'ldap(s)'调用");
-        } else if (StringUtils.containsAnyIgnoreCase(job.getInvokeTarget(), new String[]{Constants.HTTP, Constants.HTTPS})) {
-            throw new ParamsException("新增任务'" + job.getJobName() + "'失败，目标字符串不允许'http(s)'调用");
-        } else if (StringUtils.containsAnyIgnoreCase(job.getInvokeTarget(), Constants.JOB_ERROR_STR)) {
-            throw new ParamsException("新增任务'" + job.getJobName() + "'失败，目标字符串存在违规");
-        } else if (!ScheduleUtils.whiteList(job.getInvokeTarget())) {
-            throw new ParamsException("新增任务'" + job.getJobName() + "'失败，目标字符串不在白名单内");
-        }
     }
 
     private void dealSysJob(SysJob sysJob, List<Map<String, Object>> list) {
@@ -847,18 +832,18 @@ public class SysJobServiceImpl implements ISysJobService {
     @Transactional(rollbackFor = Exception.class)
     public AjaxResult updateJob(SysJob job) throws SchedulerException, TaskException {
         if (job == null) {
-            return AjaxResult.error("任务为空");
+            return AjaxResult.error("Task is empty");
         }
         if (job.getTargetGroup().equalsIgnoreCase(Constants.SYSTEMTARGET) && job.getTime() > Constants.DEFAULTERNUM) {
-            return AjaxResult.error("分组不能是系统默认分组");
+            return AjaxResult.error("Group cannot be the system default group");
         }
         SysConfig zabbixConfig = configMapper.getZabbixConfig();
         SysConfig nagiosConfig = configMapper.getNagiosConfig();
         if (ObjectUtil.isEmpty(zabbixConfig) && job.getPlatform().equals(Constants.ZABBIX)) {
-            return AjaxResult.error("请先配置Zabbix数据源信息");
+            return AjaxResult.error("Please configure the Zabbix data source information first");
         }
         if (ObjectUtil.isEmpty(nagiosConfig) && job.getPlatform().equals(Constants.NAGIOS)) {
-            return AjaxResult.error("请先配置Nagios配置信息");
+            return AjaxResult.error("Please configure Nagios configuration information first");
         }
         AjaxResult ajaxResult = insertJob(job);
         if (ajaxResult.get("code").equals(HttpStatus.SUCCESS)) {

@@ -31,6 +31,6 @@ public class SysSourceTargetServiceImpl implements ISysSourceTargetService {
     @Override
     public AjaxResult save(SysSourceTarget sysSourceTarget) {
         sysSourceTargetMapper.save(sysSourceTarget);
-        return AjaxResult.success("保存成功");
+        return AjaxResult.success("Save successfully");
     }
 }

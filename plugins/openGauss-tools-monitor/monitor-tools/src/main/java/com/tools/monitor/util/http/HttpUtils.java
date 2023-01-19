@@ -36,10 +36,6 @@ public class HttpUtils {
         return sendGet(url, StringUtils.EMPTY);
     }
 
-    public static void main(String[] args) {
-        System.out.println(sendGet("http://127.0.0.1:8085/prometheus"));
-    }
-
     public static String sendGet(String url, String param) {
         return sendGet(url, param, Constants.UTF8);
     }

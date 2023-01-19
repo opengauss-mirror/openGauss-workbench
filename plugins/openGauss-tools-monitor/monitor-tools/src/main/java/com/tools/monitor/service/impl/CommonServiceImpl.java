@@ -76,7 +76,7 @@ public class CommonServiceImpl {
      */
     public JdbcTemplate getZabbixTem() {
         SysConfig sysConfig = configMapper.getZabbixConfig();
-        AssertUtil.isTrue(ObjectUtil.isEmpty(sysConfig), "请先配置zabbix数据库");
+        AssertUtil.isTrue(ObjectUtil.isEmpty(sysConfig), "Please configure the zabbix database first");
         DriverManagerDataSource dataSource = new DriverManagerDataSource();
         dataSource.setUrl(sysConfig.getUrl());
         dataSource.setUsername(sysConfig.getUserName());

@@ -9,9 +9,9 @@ package com.tools.monitor.exception;
 public class ParamsException extends RuntimeException {
     private Integer code = 300;
 
-    private String msg = "参数异常";
+    private String msg = "Parameter exception";
     public ParamsException() {
-        super("参数异常!");
+        super("Parameter exception!");
     }
 
     public ParamsException(String msg) {
@@ -20,7 +20,7 @@ public class ParamsException extends RuntimeException {
     }
 
     public ParamsException(Integer code) {
-        super("参数异常!");
+        super("Parameter exception!");
         this.code = code;
     }
 

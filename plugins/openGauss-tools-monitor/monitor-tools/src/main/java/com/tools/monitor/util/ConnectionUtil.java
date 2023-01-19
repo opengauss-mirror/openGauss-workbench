@@ -26,7 +26,7 @@ public class ConnectionUtil {
                     Class.forName(sysConfig.getDriver());
                     DriverManager.getConnection(sysConfig.getUrl(), sysConfig.getUserName(), sysConfig.getPassword());
                 } catch (SQLException | ClassNotFoundException exception) {
-                    return "请检查数据源信息";
+                    return "Please check the data source information";
                 }
                 return "";
             }
@@ -40,7 +40,7 @@ public class ConnectionUtil {
                 return obj;
             }
         } catch (TimeoutException | InterruptedException | ExecutionException ex) {
-            return "数据库连接信息有误!";
+            return "Incorrect database connection information!";
         } finally {
             executorService.shutdown();
         }

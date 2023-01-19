@@ -37,11 +37,11 @@ public class AjaxResult extends HashMap<String, Object> {
     }
 
     public static AjaxResult success() {
-        return AjaxResult.success("操作成功");
+        return AjaxResult.success("Operation successful");
     }
 
     public static AjaxResult success(Object data) {
-        return AjaxResult.success("操作成功", data);
+        return AjaxResult.success("Operation successful", data);
     }
 
     public static AjaxResult success(String msg) {
@@ -53,7 +53,7 @@ public class AjaxResult extends HashMap<String, Object> {
     }
 
     public static AjaxResult error() {
-        return AjaxResult.error("操作失败");
+        return AjaxResult.error("Operation fail");
     }
 
     public static AjaxResult error(String msg) {

@@ -111,9 +111,9 @@ public class SysJobMapper {
      */
     public int updateJob(SysJob job) {
         List<SysJob> sysJobs = selectJobAll();
-        AssertUtil.isTrue(CollectionUtil.isEmpty(sysJobs), "没有定时任务");
+        AssertUtil.isTrue(CollectionUtil.isEmpty(sysJobs), "No timed tasks");
         SysJob sysJob = sysJobs.stream().filter(item -> ObjectUtil.isNotEmpty(item) && item.getJobId().equals(job.getJobId())).findFirst().orElse(null);
-        AssertUtil.isTrue(sysJob == null, "定时任务不存在");
+        AssertUtil.isTrue(sysJob == null, "Timed task does not exist");
         for (int i = 0; i < sysJobs.size(); i++) {
             if (sysJobs.get(i).getJobId().equals(job.getJobId())) {
                 sysJobs.get(i).setStatus(job.getStatus());

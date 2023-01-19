@@ -51,12 +51,13 @@ public class MonitorServiceImpl implements MonitorService {
     @Override
     public ResponseVO setSourceConfig(SysConfig sysConfig) {
         if (ObjectUtil.isEmpty(sysConfig)) {
-            return ResponseVO.errorResponseVO("配置信息为空");
+            return ResponseVO.errorResponseVO("Configuration information is empty");
         }
         String name = sysConfig.getConnectName();
         if (!sysConfig.getPlatform().equals(Constants.NAGIOS)) {
             if (ObjectUtil.isEmpty(name) || !name.matches(CONNAME)) {
-                return ResponseVO.errorResponseVO("连接名称只支持英文、下划线、数字组合2-16个字符");
+                return ResponseVO.errorResponseVO("Connection name only supports English, " +
+                        "underscore, number combination 2-16 characters");
             }
         }
         sysConfig.setIsCreate(true);
@@ -64,13 +65,13 @@ public class MonitorServiceImpl implements MonitorService {
         if (StrUtil.isNotBlank(message)) {
             return ResponseVO.errorResponseVO(message);
         }
-        return ResponseVO.successResponseVO("数据源配置成功");
+        return ResponseVO.successResponseVO("Data source configured successfully");
     }
 
     @Override
     public ResponseVO updateConfig(SysConfig sysConfig) {
         if (ObjectUtil.isEmpty(sysConfig)) {
-            return ResponseVO.errorResponseVO("配置信息为空");
+            return ResponseVO.errorResponseVO("Configuration information is empty");
         }
         if (ObjectUtil.isNotEmpty(sysConfig) && StrUtil.isNotBlank(sysConfig.getPlatform())) {
             if (Constants.ZABBIX.equals(sysConfig.getPlatform()) || Constants.NAGIOS.equals(sysConfig.getPlatform())) {
@@ -88,7 +89,7 @@ public class MonitorServiceImpl implements MonitorService {
                 }
             }
         }
-        return ResponseVO.successResponseVO("修改成功");
+        return ResponseVO.successResponseVO("Modify successfully");
     }
 
     @Override
@@ -181,7 +182,7 @@ public class MonitorServiceImpl implements MonitorService {
             }
             configMapper.deleteBatchByIds(ids);
         }
-        return ResponseVO.successResponseVO("删除成功");
+        return ResponseVO.successResponseVO("Delete successfully");
     }
 
     @Override

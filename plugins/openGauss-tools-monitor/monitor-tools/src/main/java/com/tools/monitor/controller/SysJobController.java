@@ -93,7 +93,7 @@ public class SysJobController extends BaseController {
     @Log(title = "monitor-tools-job", businessType = BusinessType.DELETE, operatorType = OperatorType.PLUGIN)
     public AjaxResult remove(@RequestBody Long[] jobIds) throws SchedulerException, TaskException {
         jobService.deleteJobByIds(jobIds);
-        return AjaxResult.success("删除成功");
+        return AjaxResult.success("Delete successfully");
     }
 
     @PostMapping("/check")

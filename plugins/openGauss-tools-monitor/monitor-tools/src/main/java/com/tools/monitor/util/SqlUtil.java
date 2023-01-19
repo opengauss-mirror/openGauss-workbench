@@ -40,7 +40,7 @@ public class SqlUtil {
      */
     public static String escapeOrderBySql(String value) {
         if (StringUtils.isNotEmpty(value) && !isValidOrderBySql(value)) {
-            throw new ParamsException("参数不符合规范，不能进行查询");
+            throw new ParamsException("The parameters do not meet the specification and cannot be queried");
         }
         return value;
     }
@@ -89,7 +89,7 @@ public class SqlUtil {
         String[] sqlKeywords = StringUtils.split(SQL_REGEX, "\\|");
         for (String sqlKeyword : sqlKeywords) {
             if (StringUtils.indexOfIgnoreCase(value, sqlKeyword) > -1) {
-                throw new ParamsException("参数存在SQL注入风险");
+                throw new ParamsException("Parameters are at risk of SQL injection");
             }
         }
     }
@@ -103,22 +103,22 @@ public class SqlUtil {
     public static String checkDql(String value) {
         String result = value.toLowerCase(Locale.ROOT);
         if (result.contains("；")) {
-            return "非法语句";
+            return "Illegal statement";
         }
         String[] strings = result.split(";");
         if (strings.length > 1) {
-            return "非法语句";
+            return "Illegal statement";
         }
         List<String> list = Arrays.asList(result.split("\\s"));
         String select = list.stream().filter(item -> item.equals(DQL_SQL)).findFirst().orElse(null);
         if (ObjectUtil.isEmpty(select)) {
-            return "非查询语句";
+            return "Non-query statement";
         }
         String[] sqlKeywords = StringUtils.split(SQL_REGEX, "\\|");
         for (String sqlKeyword : sqlKeywords) {
             for (String str : list) {
                 if (sqlKeyword.equals(str)) {
-                    return "只支持查询语句";
+                    return "Only query statements are supported";
                 }
             }
         }

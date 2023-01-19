@@ -47,7 +47,7 @@ public class FileUtil {
             }
         } catch (IOException exception) {
             log.error("createFile-->{}", exception.getMessage());
-            throw new ParamsException("文件初始化失败");
+            throw new ParamsException("File initialization failed");
         }
         return file;
     }

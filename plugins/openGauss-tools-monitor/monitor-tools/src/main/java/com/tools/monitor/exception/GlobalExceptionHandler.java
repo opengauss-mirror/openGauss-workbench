@@ -32,7 +32,7 @@ public class GlobalExceptionHandler {
 	@ExceptionHandler(ParamsException.class)
 	@ResponseBody
 	public ResponseVO paramsExceptionHandler(ParamsException e){
-		if(e.getMsg().equals("无法生成指标")){
+		if(e.getMsg().equals("Unable to generate indicator")){
 			return ResponseVO.errorTarget(e.getMsg());
 		}
 		return ResponseVO.errorResponseVO(e.getMsg());
