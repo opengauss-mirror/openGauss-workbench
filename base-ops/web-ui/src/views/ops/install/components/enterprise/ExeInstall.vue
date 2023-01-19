@@ -6,13 +6,14 @@
       <div class="install-connect-c flex-col mb-xlg">
         <div class="ft-b mb">{{ $t('enterprise.ExeInstall.5mpm9j35a4o0') }}</div>
         <div class="mb">{{ $t('enterprise.ExeInstall.else1') }}: gaussdb</div>
-        <div>{{ $t('enterprise.ExeInstall.else2') }}: {{ dataPassword }}</div>
+        <!-- <div>{{ $t('enterprise.ExeInstall.else2') }}: {{ dataPassword }}</div> -->
       </div>
       <div class="flex-row">
         <a-button type="outline" class="mr" @click="goHome">{{
-            $t('enterprise.ExeInstall.5mpm9j35aa80')
+          $t('enterprise.ExeInstall.5mpm9j35aa80')
         }}</a-button>
-        <a-button type="primary" @click="$router.push({ name: 'DailyOps' })">{{ $t('enterprise.ExeInstall.5mpm9j35aec0')
+        <a-button type="primary" @click="$router.push({ name: 'DailyOps' })">{{
+          $t('enterprise.ExeInstall.5mpm9j35aec0')
         }}</a-button>
       </div>
     </div>

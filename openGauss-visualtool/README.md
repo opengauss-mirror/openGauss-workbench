@@ -25,7 +25,7 @@ openEuler 20.3LTS（x86_x64，ARM），centos7.x（x86_x64）
 > + 添加用户 **useradd og_ops**
 > + 设置密码 **passwd og_ops**
 > + 增加文件编辑权限 **chmod u+w /etc/sudoers**
-> + 编辑文件 **/etc/sudoers**，在文件底部增加：o**g_ops ALL=(ALL) NOPASSWD: ALL**
+> + 编辑文件 **/etc/sudoers**，在文件底部增加：**og_ops ALL=(ALL) NOPASSWD: ALL**
 > + 回收文件编辑权限 **chmod u-w /etc/sudoers**
 
 2、使用root用户，在项目根目录下执行install.sh脚本
@@ -37,6 +37,7 @@ openEuler 20.3LTS（x86_x64，ARM），centos7.x（x86_x64）
 4、访问地址http://ip:9494
 ### 注意事项：
 1、平台使用的数据库，当前仅支持openGauss数据库，并且需要提前创建database。
+2、需要将部署服务器IP配置在平台使用的数据库（openGauss）的白名单列表中。
 ## 卸载部署步骤
 1、在项目根目录下执行uninstall.sh脚本
 

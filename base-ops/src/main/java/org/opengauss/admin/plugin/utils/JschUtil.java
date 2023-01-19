@@ -64,7 +64,7 @@ public class JschUtil {
      * @return ssh session
      */
     public Optional<Session> getSession(String host, Integer port, String username, String password) {
-        log.info("host:{},port:{},username:{},password:{}",host,port,username,password);
+        log.info("host:{},port:{},username:{}",host,port,username);
         return createSession(host, port, username, password);
     }
 

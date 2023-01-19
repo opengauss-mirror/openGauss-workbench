@@ -119,6 +119,10 @@ const submit = () => {
         dataFlowAdd(sendData).then((res: KeyValue) => {
           dData.loading = false
           if (Number(res.code) === 200) {
+            window.$wujie?.props.methods.jump({
+              name: `Static-pluginBase-opsModelingDataflowDetail`,
+              query: { id: res.data }
+            })
             Message.success({ content: t('modeling.components.CU.submitok1') })
             emits(`finish`, 'create')
           }

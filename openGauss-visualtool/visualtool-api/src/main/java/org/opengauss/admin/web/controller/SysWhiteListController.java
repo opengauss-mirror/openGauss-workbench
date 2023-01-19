@@ -80,9 +80,13 @@ public class SysWhiteListController extends BaseController {
         if (whiteList.getTitle().length() > 100) {
             return AjaxResult.error(ResponseCode.WHITELIST_TITLE_MAX_LENGTH_ERROR.code());
         }
+        if (iSysWhiteListService.checkTitleExists(whiteList)) {
+            return AjaxResult.error(ResponseCode.WHITELIST_TITLE_EXISTS_ERROR.code());
+        }
         if (StringUtil.isNotEmpty(whiteList.getIpList()) && whiteList.getIpList().length() > 200) {
             return AjaxResult.error(ResponseCode.WHITELIST_IPS_MAX_LENGTH_ERROR.code());
         }
+
         return toAjax(iSysWhiteListService.save(whiteList));
     }
 
@@ -96,6 +100,9 @@ public class SysWhiteListController extends BaseController {
     public AjaxResult edit(@RequestBody SysWhiteList whiteList) {
         if (whiteList.getTitle().length() > 100) {
             return AjaxResult.error(ResponseCode.WHITELIST_TITLE_MAX_LENGTH_ERROR.code());
+        }
+        if (iSysWhiteListService.checkTitleExists(whiteList)) {
+            return AjaxResult.error(ResponseCode.WHITELIST_TITLE_EXISTS_ERROR.code());
         }
         if (StringUtil.isNotEmpty(whiteList.getIpList()) && whiteList.getIpList().length() > 200) {
             return AjaxResult.error(ResponseCode.WHITELIST_IPS_MAX_LENGTH_ERROR.code());

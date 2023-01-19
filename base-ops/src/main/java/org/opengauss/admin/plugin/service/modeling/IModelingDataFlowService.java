@@ -13,7 +13,7 @@ public interface IModelingDataFlowService extends IService<ModelingDataFlowEntit
 
     IPage<ModelingDataFlowEntity> selectList(IPage<ModelingDataFlowEntity> page, String name);
 
-    int insertDataFlow(ModelingDataFlowEntity dataFlowData);
+    Long insertDataFlow(ModelingDataFlowEntity dataFlowData);
 
     int deleteDataFlowByIds(String[] flowIds);
 

@@ -31,10 +31,13 @@ public class ModelingVisualizationReportsServiceImpl extends ServiceImpl<Modelin
     private IModelingDataFlowService modelingDataFlowService;
 
     @Override
-    public List<ModelingVisualizationReportsEntity> getByDataFlowId(Long dataFlowId) {
+    public List<ModelingVisualizationReportsEntity> getByDataFlowIdAndName(Long dataFlowId, String name) {
         LambdaQueryWrapper<ModelingVisualizationReportsEntity> queryWrapper = Wrappers.lambdaQuery(ModelingVisualizationReportsEntity.class)
                 .eq(ModelingVisualizationReportsEntity::getDataFlowId, dataFlowId)
                 .orderByAsc(ModelingVisualizationReportsEntity::getId);
+        if (name != null && !name.isEmpty()) {
+            queryWrapper.like(ModelingVisualizationReportsEntity::getName, name);
+        }
         return list(queryWrapper);
     }
 

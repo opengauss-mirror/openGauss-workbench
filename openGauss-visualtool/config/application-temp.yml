@@ -6,6 +6,11 @@ system:
     enabled: false
 server:
   port: 9494
+  ssl:
+    key-store: /ops/ssl/keystore.p12
+    key-store-password: 123456
+    key-store-type: PKCS12
+    enabled: true
   servlet:
     context-path: /
 logging:

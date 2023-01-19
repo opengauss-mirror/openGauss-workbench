@@ -7,7 +7,7 @@
             }}</a-button>
             <a-table class="full-w" :data="list.data" :columns="columns" :loading="list.loading" size="mini">
                 <template #operation="{ record }">
-                    <div class="flex-row-start">
+                    <div class="flex-row-start" v-if="record.username !== 'root'">
                         <a-link class="mr" @click="handleEditUser('update', record)">{{
                             $t('components.HostUserMng.5mpi1bru1n40')
                         }}</a-link>

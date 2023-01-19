@@ -35,4 +35,7 @@ public interface SysWhiteListMapper extends BaseMapper<SysWhiteList> {
 
 
     public Integer countByIp(@Param("ip") String ip);
+
+    public Integer countByTitle(SysWhiteList whiteList);
+
 }

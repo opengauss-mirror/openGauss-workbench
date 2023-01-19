@@ -7,7 +7,7 @@
         <a-button type="outline" class="mr" @click="goHome">
           返回首页
         </a-button>
-        <a-button type="primary" @click="$router.push({ name: 'DailyOps' })">
+        <a-button type="primary" @click="goOps">
           集群运维
         </a-button>
       </div>
@@ -93,6 +93,12 @@ const initTerm = (term: Terminal, ws?: WebSocket | undefined) => {
 const goHome = () => {
   window.$wujie?.props.methods.jump({
     name: 'Dashboard'
+  })
+}
+
+const goOps = () => {
+  window.$wujie?.props.methods.jump({
+    name: 'Static-pluginBase-opsMonitorDailyOps'
   })
 }
 

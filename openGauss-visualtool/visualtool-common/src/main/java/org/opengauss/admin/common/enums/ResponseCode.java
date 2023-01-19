@@ -36,7 +36,7 @@ public enum ResponseCode {
     USER_PHONE_EXISTS_ERROR(50107, "user phone is exists"),
     USER_EMAIL_EXISTS_ERROR(50108, "user email is exists"),
     USER_RESET_PASS_ORIGIN_PASS_ERROR(50109, "origin pass is error"),
-    USER_PASS_SAME_ERROR(50110, "pass is same"),
+    USER_PASS_SAME_ERROR(50110, "New password can't be same as old password!"),
     MENU_NAME_IS_EXISTS_ERROR(50111, "menu name is exists"),
     MENU_NOT_ADD_SELF_AS_SUBMENU_ERROR(50112, "A menu cannot add itself as a submenu"),
     MENU_HAS_SUBMENU_NOT_DELETE(50113, "This menu has a submenu, it is not allowed to delete"),
@@ -53,6 +53,8 @@ public enum ResponseCode {
 
     WHITELIST_TITLE_MAX_LENGTH_ERROR(50124, "Whitelist title length cannot exceed 100 characters"),
     WHITELIST_IPS_MAX_LENGTH_ERROR(50125, "Whitelist IP list length cannot exceed 200 characters"),
+
+    WHITELIST_TITLE_EXISTS_ERROR(50126, "Whitelist title already exists")
     ;
 
 

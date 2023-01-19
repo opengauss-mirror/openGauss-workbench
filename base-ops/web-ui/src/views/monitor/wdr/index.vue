@@ -95,6 +95,7 @@ import { Message, TableColumnData } from '@arco-design/web-vue'
 import { clusterList, downloadWdrFile, wdrList, wdrDelete } from '@/api/ops'
 import GenerateWdrDlg from './GenerateWdrDlg.vue'
 import SnapshotManage from '../snapshot/index.vue'
+import dayjs from 'dayjs'
 import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
 const filter = reactive<KeyValue>({
@@ -102,8 +103,8 @@ const filter = reactive<KeyValue>({
   hostId: '',
   wdrScope: 'CLUSTER',
   wdrType: 'DETAIL',
-  start: '',
-  end: '',
+  start: dayjs().format('YYYY-MM-DD') + ' 00:00:00',
+  end: dayjs().format('YYYY-MM-DD') + ' 23:59:59',
   wdrScopeList: [],
   wdrTypeList: [],
   clusterListLoading: false,
@@ -149,11 +150,7 @@ const initData = () => {
 }
 
 const getCurrentTime = computed(() => {
-  const date = new Date()
-  const year = date.getFullYear()
-  const month = date.getMonth()
-  const day = date.getDate()
-  return [new Date(year, month, day, 0, 0, 0), new Date(year, month, day, 23, 59, 59)]
+  return [dayjs().format('YYYY-MM-DD') + ' 00:00:00', dayjs().format('YYYY-MM-DD') + ' 23:59:59']
 })
 
 const getClusterList = () => new Promise(resolve => {

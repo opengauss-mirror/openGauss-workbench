@@ -49,6 +49,7 @@ axios.interceptors.response.use(
           okText: locale === 'en-US' ? 'Re-Login' : '重新登录',
           width: 'auto',
           async onOk () {
+            isTimeout = false
             const userStore = useUserStore()
 
             await userStore.logout()
@@ -58,21 +59,18 @@ axios.interceptors.response.use(
       }
       return Promise.reject('Please Log in')
     } else if (code === 500) {
-      isTimeout = true
       Message.error({
         content: msg,
         duration: 5 * 1000
       })
       return Promise.reject(new Error(msg))
     } else if (code !== 200) {
-      isTimeout = true
       Message.error({
         content: msg,
         duration: 5 * 1000
       })
       return Promise.reject('error')
     } else {
-      isTimeout = true
       return res.data
     }
   },

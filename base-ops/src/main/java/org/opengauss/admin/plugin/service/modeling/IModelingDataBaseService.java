@@ -21,7 +21,7 @@ public interface IModelingDataBaseService {
 
     List<Map<String, Object>> queryWithSqlObject(ModelingDataFlowSqlObject sqlObject) throws SQLException, ClassNotFoundException;
 
-    String updateWithSqlObject(ModelingDataFlowSqlObject sqlObject) throws SQLException, ClassNotFoundException;
+    String updateWithSqlObject(ModelingDataFlowSqlObject sqlObject, String queryType) throws SQLException, ClassNotFoundException;
 
     Object getSqlResult(ModelingDataFlowSqlObject sqlObject);
 

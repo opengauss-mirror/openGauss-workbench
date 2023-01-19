@@ -36,8 +36,8 @@ public class ModelingVisualizationReportController extends BaseController {
     private IModelingVisualizationReportsService modelingVisualizationReportsService;
 
     @GetMapping("/getListByDataFlowId/{flowId}")
-    public AjaxResult getListByDataFlowId(@PathVariable Long flowId) {
-        List<ModelingVisualizationReportsEntity> list = modelingVisualizationReportsService.getByDataFlowId(flowId);
+    public AjaxResult getListByDataFlowId(@PathVariable Long flowId,@RequestParam(value = "name",required = false) String name) {
+        List<ModelingVisualizationReportsEntity> list = modelingVisualizationReportsService.getByDataFlowIdAndName(flowId,name);
         return AjaxResult.success(list);
     }
 

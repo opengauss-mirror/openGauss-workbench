@@ -82,7 +82,7 @@ export default class Socket<T, RT> extends Heart {
     let wsUrl
     if (process.env.NODE_ENV === 'development') {
       // change by yourself
-      const host = '39.108.219.254:9494'
+      const host = '120.78.74.215:9494'
       wsUrl = `ws://${host}/ws/base-ops/${this.options.url}`
     } else {
       wsUrl = `ws://${window.location.host}/ws/base-ops/${this.options.url}`

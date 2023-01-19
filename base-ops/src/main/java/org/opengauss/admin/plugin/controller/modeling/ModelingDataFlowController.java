@@ -62,7 +62,7 @@ public class ModelingDataFlowController extends BaseController {
     @Log(title = "base-ops-dataflow",operatorType = OperatorType.PLUGIN,businessType = BusinessType.INSERT)
     @RequestMapping("/add")
     public AjaxResult add(@RequestBody ModelingDataFlowEntity dataFlowData) {
-        return toAjax(modelingDataFlowService.insertDataFlow(dataFlowData));
+        return AjaxResult.success(modelingDataFlowService.insertDataFlow(dataFlowData));
     }
 
     /**

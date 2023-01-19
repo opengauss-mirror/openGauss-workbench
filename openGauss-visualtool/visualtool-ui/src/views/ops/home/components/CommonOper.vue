@@ -3,7 +3,7 @@
     <div class="flex-col-start">
       <div class="ft-lg title">{{ $t('components.CommonOper.5mpimo1efn00') }}</div>
       <div class="content-c">
-        <div v-for="(item, index) in data.operationList" :key="index">
+        <div v-for="(item, index) in getOperList" :key="index">
           <div class="oper-item" @click="$router.push({ name: item.routeName })">
             {{ item.name }}
           </div>
@@ -15,23 +15,11 @@
 
 <script setup lang="ts">
 
-import { onMounted, reactive } from 'vue'
-import { KeyValue } from '@/types/global'
+import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
-const data: {
-  operationList: KeyValue
-} = reactive({
-  operationList: []
-})
 
-onMounted(() => {
-  const operArr = getOperList()
-  data.operationList = []
-  data.operationList = [...operArr]
-})
-
-const getOperList = () => {
+const getOperList = computed(() => {
   return [{
     name: t('components.CommonOper.5mpimo1egl80'),
     routeName: 'ResourcePhysical'
@@ -48,7 +36,7 @@ const getOperList = () => {
     name: t('components.CommonOper.5mpimo1ehfw0'),
     routeName: 'Static-pluginBase-opsMonitorBasic'
   }]
-}
+})
 </script>
 
 <style lang="less" scoped>
@@ -56,11 +44,13 @@ const getOperList = () => {
   background-color: var(--color-bg-2);
   padding: 15px;
   border-radius: 2px;
+
   .title {
     font-size: 16px;
     color: var(--color-text-1);
     margin-bottom: 5px;
   }
+
   .content-c {
     display: flex;
     flex-wrap: wrap;

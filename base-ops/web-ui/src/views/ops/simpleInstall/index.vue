@@ -10,10 +10,11 @@
         <a-form-item field="hostId" :label="$t('simpleInstall.index.5mpn813guf00')">
           <a-select :loading="data.hostLoading" v-model="data.form.hostId"
             :placeholder="$t('simpleInstall.index.5mpn813gukw0')" @change="getHostUser">
-            <a-option v-for="item in data.hostList" :key="item.hostId" :value="item.hostId">{{ item.privateIp
-    + '(' +
-    (item.publicIp ? item.publicIp : '--') + ')'
-}}</a-option>
+            <a-option v-for="item in data.hostList" :key="item.hostId" :value="item.hostId">{{
+              item.privateIp
+                + '(' +
+                (item.publicIp ? item.publicIp : '--') + ')'
+            }}</a-option>
           </a-select>
         </a-form-item>
         <a-form-item field="rootPassword" :label="$t('simpleInstall.index.else2')" validate-trigger="blur"
@@ -22,8 +23,9 @@
             allow-clear />
         </a-form-item>
       </a-form>
-      <a-button type="primary" size="large" @click="handleInstall">{{ $t('simpleInstall.index.5mpn813gut00')
-}}</a-button>
+      <a-button type="primary" size="large" @click="handleInstall">{{
+        $t('simpleInstall.index.5mpn813gut00')
+      }}</a-button>
     </div>
     <div class="install-panel" v-if="data.state !== -1">
       <div class="flex-col full-h" v-if="data.state !== 1">
@@ -36,8 +38,8 @@
               </a-progress>
             </div>
             <div>{{ $t('simpleInstall.index.5mpn813gv880') }} {{ $t('simpleInstall.index.5mpn813gvc40') }} {{
-    data.privateIp
-}}</div>
+              data.privateIp
+            }}</div>
           </div>
         </div>
         <div class="flex-row full-w full-h">
@@ -69,10 +71,11 @@
         </div>
         <div class="flex-row">
           <a-button type="outline" class="mr" @click="goHome">{{
-    $t('simpleInstall.index.5mpn813gw4c0')
-}}</a-button>
-          <a-button type="primary" @click="goOps">{{ $t('simpleInstall.index.5mpn813gw7w0')
-            }}</a-button>
+            $t('simpleInstall.index.5mpn813gw4c0')
+          }}</a-button>
+          <a-button type="primary" @click="goOps">{{
+            $t('simpleInstall.index.5mpn813gw7w0')
+          }}</a-button>
         </div>
       </div>
     </div>

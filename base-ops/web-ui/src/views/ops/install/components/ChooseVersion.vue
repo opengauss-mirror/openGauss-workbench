@@ -105,8 +105,10 @@ const getDescVersion = (): string => {
       return t('components.ChooseVersion.5mpmxod8za00')
     case OpenGaussVersionEnum.MINIMAL_LIST:
       return t('components.ChooseVersion.5mpmxod8yxs0')
-    default:
+    case OpenGaussVersionEnum.ENTERPRISE:
       return t('components.ChooseVersion.5mpmxod8zg00')
+    default:
+      return t('components.ChooseVersion.else2')
   }
 }
 

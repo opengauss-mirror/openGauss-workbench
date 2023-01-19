@@ -11,7 +11,7 @@
         <svg-icon v-if="nodeConfig.icon" class="bs-i" :icon-class="nodeConfig.icon"></svg-icon>
       </div>
       <div class="name">{{ nodeConfig.text }}</div>
-      <icon-play-circle class="base-node-play" v-show="showPlay" @click.stop="openVisual" />
+      <icon-bar-chart class="base-node-play" v-show="showPlay" @click.stop="openVisual" />
       <icon-settings class="base-node-settings" @click.stop="openConfig" />
     </div>
     <template #content>
@@ -25,7 +25,7 @@
 import { inject, onMounted, ref } from 'vue'
 import { IconSettings } from '@arco-design/web-vue/es/icon'
 import { Dropdown as ADropdown, Doption as ADoption } from '@arco-design/web-vue'
-import { IconCheck, IconPlayCircle } from '@arco-design/web-vue/es/icon'
+import { IconCheck, IconBarChart } from '@arco-design/web-vue/es/icon'
 import { Cell, Graph } from '@antv/x6'
 import { useModelCommonStore } from '@/store/modules/modeling/common'
 import { KeyValue } from '@antv/x6/lib/types'

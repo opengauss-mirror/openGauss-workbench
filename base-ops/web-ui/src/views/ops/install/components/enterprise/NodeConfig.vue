@@ -4,7 +4,7 @@
       <div class="flex-between " :style="{ width: '800px' }">
         <div class="ft-b ft-m mb">
           <span class="mr">{{ $t('enterprise.NodeConfig.5mpme7w69yc0') }}</span> <span class="ft-lg">{{
-              data.nodeList.length
+            data.nodeList.length
           }}</span>
         </div>
         <a-form :model="data.azForm" :rules="data.azRules" :style="{ width: '300px' }" auto-label-width ref="azFormRef">
@@ -12,7 +12,7 @@
             <a-select :loading="data.azListLoading" v-model="data.azForm.azId"
               :placeholder="$t('enterprise.NodeConfig.5mpme7w6ap00')" @change="azChange">
               <a-option v-for="item in data.azList" :key="item.azId" :value="item.azId">{{
-                  item.name
+                item.name
               }}</a-option>
             </a-select>
           </a-form-item>
@@ -35,7 +35,7 @@
               <a-select :loading="data.hostListLoading" v-model="formItem.hostId" @change="changeHostId(index)"
                 :placeholder="$t('enterprise.NodeConfig.5mpme7w6b3k0')">
                 <a-option v-for="item in data.hostList" :key="item.hostId" :value="item.hostId">{{
-                    item.privateIp
+                  item.privateIp
                     + '(' +
                     (item.publicIp ? item.publicIp : '--') + ')'
                 }}</a-option>
@@ -49,7 +49,7 @@
               <a-select v-model="formItem.installUserId" @change="changeInstallUserId($event, index)">
                 <a-option v-for="item in data.userListByHost[formItem.hostId]" :key="item.hostUserId"
                   :value="item.hostUserId">{{
-                      item.username
+                    item.username
                   }}</a-option>
               </a-select>
             </a-form-item>
@@ -60,15 +60,18 @@
                 </a-form-item>
               </a-col>
               <a-col :span="12">
-                <a-form-item field="isCMMaster" :label="$t('enterprise.NodeConfig.5mpme7w6be40')">
+                <a-form-item v-if="formItem.isInstallCM" field="isCMMaster"
+                  :label="$t('enterprise.NodeConfig.5mpme7w6be40')">
                   <a-switch v-model="formItem.isCMMaster" />
                 </a-form-item>
               </a-col>
             </a-row>
-            <a-form-item field="cmDataPath" :label="$t('enterprise.NodeConfig.else4')" validate-trigger="blur">
+            <a-form-item v-if="formItem.isInstallCM" field="cmDataPath" :label="$t('enterprise.NodeConfig.else4')"
+              validate-trigger="blur">
               <a-input v-model="formItem.cmDataPath" :placeholder="$t('enterprise.NodeConfig.5mpme7w6bhg0')" />
             </a-form-item>
-            <a-form-item field="cmPort" :label="$t('enterprise.NodeConfig.else5')" validate-trigger="blur">
+            <a-form-item v-if="formItem.isInstallCM" field="cmPort" :label="$t('enterprise.NodeConfig.else5')"
+              validate-trigger="blur">
               <a-input v-model="formItem.cmPort" :placeholder="$t('enterprise.NodeConfig.5mpme7w6bko0')" />
             </a-form-item>
             <div class="ft-m ft-b mb">

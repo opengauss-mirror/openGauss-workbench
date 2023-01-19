@@ -10,7 +10,7 @@
   "dependencies": {
     "@antv/x6": "1.32.10",
     "@antv/x6-vue-shape": "1.4.2",
-    "@arco-design/web-vue": "2.37.3",
+    "@arco-design/web-vue": "2.41.1",
     "@highlightjs/vue-plugin": "2.1.0",
     "@vueuse/core": "7.3.0",
     "animate.css": "4.1.1",

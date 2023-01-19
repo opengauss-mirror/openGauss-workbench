@@ -54,7 +54,7 @@ const columns = computed(() => [
   { title: t('packageManage.index.else1'), dataIndex: 'cpuArch', width: 170 },
   { title: t('packageManage.index.5myq5c8zns00'), dataIndex: 'packageVersion', slotName: 'version', width: 170 },
   { title: t('packageManage.index.5myq5c8zp680'), dataIndex: 'packageVersionNum', width: 170 },
-  { title: t('packageManage.index.5myq5c8zpu80'), dataIndex: 'packageUrl' },
+  { title: t('packageManage.index.5myq5c8zpu80'), dataIndex: 'packageUrl', ellipsis: true, tooltip: true },
   { title: t('packageManage.index.5myq5c8zq380'), slotName: 'operation', width: 180 }
 ])
 
@@ -64,7 +64,11 @@ const list: {
   loading: boolean
 } = reactive({
   data: [],
-  page: { total: 0, pageSize: 10 },
+  page: {
+    total: 0,
+    pageSize: 10,
+    'show-total': true
+  },
   loading: false
 })
 

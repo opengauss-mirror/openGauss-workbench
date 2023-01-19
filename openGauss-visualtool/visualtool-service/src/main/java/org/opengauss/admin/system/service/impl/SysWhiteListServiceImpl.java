@@ -51,4 +51,13 @@ public class SysWhiteListServiceImpl extends ServiceImpl<SysWhiteListMapper, Sys
         Integer count = sysWhiteListMapper.countByIp(ip);
         return count > 0;
     }
+
+    /**
+     * Check whether the title exists
+     */
+    public boolean checkTitleExists(SysWhiteList whiteList) {
+        Integer count = sysWhiteListMapper.countByTitle(whiteList);
+        return count > 0;
+    }
+
 }

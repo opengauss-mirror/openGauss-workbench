@@ -29,7 +29,7 @@
             <div class="flex-row">
               <a-tag class="mr" color="#86909C">{{ getRoleName(itemNode.clusterRole) }}</a-tag>
               {{ $t('enterprise.InstallPrompt.5mpmb9e6qmg0') }} {{ itemNode.privateIp }}({{
-                  itemNode.publicIp
+                itemNode.publicIp
               }})
             </div>
             <div class="flex-row">
@@ -50,12 +50,13 @@
             <a-divider></a-divider>
             <div class="flex-row">
               <div class="lable-w">{{ $t('enterprise.InstallPrompt.else4') }}</div>
-              <div>{{ itemNode.dataPath }}</div>
+              <div>{{ itemNode.xlogPath }}</div>
             </div>
             <a-divider></a-divider>
             <div class="flex-row">
               <div class="lable-w">{{ $t('enterprise.InstallPrompt.5mpmb9e6r0k0') }} CM</div>
-              <div>{{ itemNode.isInstallCM ? $t('enterprise.InstallPrompt.5mpmb9e6r4g0') :
+              <div>{{
+                itemNode.isInstallCM ? $t('enterprise.InstallPrompt.5mpmb9e6r4g0') :
                   $t('enterprise.InstallPrompt.5mpmb9e6r800')
               }}</div>
             </div>
