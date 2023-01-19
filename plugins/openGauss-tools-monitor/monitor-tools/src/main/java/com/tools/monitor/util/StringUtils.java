@@ -192,31 +192,31 @@ public class StringUtils extends org.apache.commons.lang3.StringUtils {
      * @return String
      */
     public static String substring(final String st, int star, int en) {
-        String str = st;
-        int start = star;
-        int end = en;
-        if (str == null) {
+        String character  = st;
+        int begin = star;
+        int finish = en;
+        if (character == null) {
             return NULLSTR;
         }
-        if (end < 0) {
-            end = str.length() + end;
+        if (finish < 0) {
+            finish = character.length() + finish;
         }
-        if (start < 0) {
-            start = str.length() + start;
+        if (begin < 0) {
+            begin = character.length() + begin;
         }
-        if (end > str.length()) {
-            end = str.length();
+        if (finish > character.length()) {
+            finish = character.length();
         }
-        if (start > end) {
+        if (begin > finish) {
             return NULLSTR;
         }
-        if (start < 0) {
-            start = 0;
+        if (begin < 0) {
+            begin = 0;
         }
-        if (end < 0) {
-            end = 0;
+        if (finish < 0) {
+            finish = 0;
         }
-        return str.substring(start, end);
+        return character.substring(begin, finish);
     }
 
     /**
