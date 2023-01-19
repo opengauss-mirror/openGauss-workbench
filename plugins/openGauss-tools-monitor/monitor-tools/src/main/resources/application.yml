@@ -1,0 +1,69 @@
+spring:
+  application:
+    name: monitor-tools
+  main:
+    allow-circular-references: true
+  jackson:
+    time-zone: GMT+8
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
+  resources:
+    static-locations: classpath:static
+#server:
+  #port: 8085
+
+# management配置在一体化平台，这里不起作用
+management:
+  server:
+    port: 9494
+  endpoints:
+    # 关闭所有的检查项
+    enabled-by-default: false
+    web:
+      exposure:
+        # 暴露监控接口，*为全部接口
+        include: 'prometheus'
+      ## 省掉了/actuator前缀
+      base-path: "/"
+  # 对外暴露prometheus接口并显示更多健康信息
+  endpoint:
+    prometheus:
+      enabled: true
+    health:
+      show-details: always
+  ## 关闭内置的检查项
+  metrics:
+    enable:
+      jvm: false
+      logback: false
+      files: false
+      tomcat: false
+      executor: false
+      disk: false
+      uptime: false
+      integration: false
+
+context:
+  listener:
+    classes: org.opengauss.admin.plugin.listener.PluginListener
+
+logging:
+  level:
+    root: INFO
+
+postgresql:
+  prefix: jdbc:postgresql://
+  suffix: /postgres
+  driver: org.postgresql.Driver
+mysql:
+  prefix: jdbc:mysql://
+  suffix: ?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=true&serverTimezone=GMT%2B8
+  driver: com.mysql.cj.jdbc.Driver
+  timeout: 3
+
+file.setting.config: config.json
+file.setting.relation: relation.json
+file.setting.task: task.json
+
+date.pattern: yyyy-MM-dd HH:mm

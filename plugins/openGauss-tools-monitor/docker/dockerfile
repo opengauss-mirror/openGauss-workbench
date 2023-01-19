@@ -1,0 +1,17 @@
+# 基础镜像
+FROM  openjdk:8-jre
+# author
+MAINTAINER tools
+
+# 挂载目录
+VOLUME /opt/tools
+# 创建目录
+RUN mkdir -p /opt/tools
+# 指定路径
+WORKDIR /opt/tools
+# 复制jar文件到路径
+COPY ./monitor-tools.jar /opt/tools/monitor-tools.jar
+# 暴露端口
+EXPOSE 8085
+# 启动认证服务
+ENTRYPOINT ["java","-jar","monitor-tools.jar"]
