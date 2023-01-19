@@ -34,24 +34,6 @@ public class SqlUtil {
     public static final String DQL_SQL = "select";
 
     /**
-     * SQL_PATTERN
-     */
-    public static final String SQL_PATTERN = "[a-zA-Z0-9_\\ \\,\\.]+";
-
-    /**
-     * escapeOrderBySql
-     *
-     * @param value value
-     * @return String
-     */
-    public static String escapeOrderBySql(String value) {
-        if (StringUtils.isNotEmpty(value) && !isValidOrderBySql(value)) {
-            throw new ParamsException("The parameters do not meet the specification and cannot be queried");
-        }
-        return value;
-    }
-
-    /**
      * contain
      *
      * @param key key
@@ -71,33 +53,6 @@ public class SqlUtil {
             return true;
         }
         return false;
-    }
-
-    /**
-     * isValidOrderBySql
-     *
-     * @param value value
-     * @return boolean
-     */
-    public static boolean isValidOrderBySql(String value) {
-        return value.matches(SQL_PATTERN);
-    }
-
-    /**
-     * filterKeyword
-     *
-     * @param value value
-     */
-    public static void filterKeyword(String value) {
-        if (StringUtils.isEmpty(value)) {
-            return;
-        }
-        String[] sqlKeywords = StringUtils.split(SQL_REGEX, "\\|");
-        for (String sqlKeyword : sqlKeywords) {
-            if (StringUtils.indexOfIgnoreCase(value, sqlKeyword) > -1) {
-                throw new ParamsException("Parameters are at risk of SQL injection");
-            }
-        }
     }
 
     /**

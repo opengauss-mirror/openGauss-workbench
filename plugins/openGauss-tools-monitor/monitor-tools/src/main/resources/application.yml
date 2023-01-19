@@ -46,7 +46,7 @@ management:
 
 context:
   listener:
-    classes: org.opengauss.admin.plugin.listener.PluginListener
+    classes: org.opengauss.admin.plugin.listener.MonitorListener
 
 logging:
   level:

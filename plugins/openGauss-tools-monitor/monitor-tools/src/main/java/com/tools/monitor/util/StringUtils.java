@@ -271,59 +271,22 @@ public class StringUtils extends org.apache.commons.lang3.StringUtils {
     }
 
     /**
-     * containsAnyIgnoreCase
+     * IncludeAnyCases
      *
-     * @param cs                  cs
+     * @param charSequence                  charSequence
      * @param searchCharSequences searchCharSequences
      * @return boolean
      */
-    public static boolean containsAnyIgnoreCase(CharSequence cs, CharSequence... searchCharSequences) {
-        if (isEmpty(cs) || isNothing(searchCharSequences)) {
+    public static boolean includeAnyCases(CharSequence charSequence, CharSequence... searchCharSequences) {
+        if (isEmpty(charSequence) || isNothing(searchCharSequences)) {
             return false;
         }
-        for (CharSequence testStr : searchCharSequences) {
-            if (containsIgnoreCase(cs, testStr)) {
+        for (CharSequence sequence : searchCharSequences) {
+            if (containsIgnoreCase(charSequence, sequence)) {
                 return true;
             }
         }
         return false;
-    }
-
-    /**
-     * toUnderScoreCase
-     *
-     * @param str str
-     * @return String
-     */
-    public static String toUnderScoreCase(String str) {
-        if (str == null) {
-            return "";
-        }
-        StringBuilder sb = new StringBuilder();
-        boolean isPreCharIsUpperCase = true;
-        boolean isCurreCharIsUpperCase = true;
-        boolean isNexteCharIsUpperCase = true;
-        for (int i = 0; i < str.length(); i++) {
-            char ch = str.charAt(i);
-            if (i > 0) {
-                isPreCharIsUpperCase = Character.isUpperCase(str.charAt(i - 1));
-            } else {
-                isPreCharIsUpperCase = false;
-            }
-            isCurreCharIsUpperCase = Character.isUpperCase(ch);
-            if (i < (str.length() - 1)) {
-                isNexteCharIsUpperCase = Character.isUpperCase(str.charAt(i + 1));
-            }
-            if (isPreCharIsUpperCase && isCurreCharIsUpperCase && !isNexteCharIsUpperCase) {
-                sb.append(SEPARATOR);
-            } else if ((i != 0 && !isPreCharIsUpperCase) && isCurreCharIsUpperCase) {
-                sb.append(SEPARATOR);
-            } else {
-                log.error("string");
-            }
-            sb.append(Character.toLowerCase(ch));
-        }
-        return sb.toString();
     }
 
     /**

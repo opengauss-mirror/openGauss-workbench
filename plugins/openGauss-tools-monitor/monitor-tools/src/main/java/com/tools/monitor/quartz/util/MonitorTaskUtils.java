@@ -133,9 +133,9 @@ public class MonitorTaskUtils {
         String name = StringUtils.substringBefore(str, "(");
         int num = StringUtils.countMatches(name, ".");
         if (num > 1) {
-            return StringUtils.containsAnyIgnoreCase(str, ConmmonShare.JOB_WHITELIST_STR);
+            return StringUtils.includeAnyCases(str, ConmmonShare.JOB_WHITELIST_STR);
         }
         Object obj = MonitSpringUtils.getStr(StringUtils.split(str, ".")[0]);
-        return StringUtils.containsAnyIgnoreCase(obj.getClass().getPackage().getName(), ConmmonShare.JOB_WHITELIST_STR);
+        return StringUtils.includeAnyCases(obj.getClass().getPackage().getName(), ConmmonShare.JOB_WHITELIST_STR);
     }
 }
