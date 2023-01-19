@@ -5,7 +5,6 @@
       <a-step>{{ installType === 'install' ? $t('lightweight.LightWeightInstall.5mpmmqzprz80') :
         $t('lightweight.LightWeightInstall.5mpmmqzps6w0')
       }}{{ $t('lightweight.LightWeightInstall.else1') }}</a-step>
-      <a-step>{{ $t('lightweight.LightWeightInstall.5mpmmqzpsao0') }}</a-step>
       <a-step>{{ installType === 'install' ? $t('lightweight.LightWeightInstall.5mpmmqzprz80') :
         $t('lightweight.LightWeightInstall.5mpmmqzps6w0')
       }}{{ $t('lightweight.LightWeightInstall.else2') }}</a-step>
@@ -17,9 +16,8 @@
     <a-divider />
     <deploy-way v-if="currStep === MINI_ENUM.DEPLOY" />
     <install-config v-if="currStep === MINI_ENUM.INSTALL" ref="installConfigRef" />
-    <env-monitor v-if="currStep === MINI_ENUM.ENV" ref="envRef" />
     <install-prompt v-if="currStep === MINI_ENUM.PROMPT" />
-    <exe-install v-if="currStep === MINI_ENUM.EXE" />
+    <exe-import v-if="currStep === MINI_ENUM.EXE"></exe-import>
   </div>
 </template>
 
@@ -28,8 +26,8 @@ import DeployWay from '../simple/DeployWay.vue'
 import EnvMonitor from './EnvMonitor.vue'
 import InstallConfig from './InstallConfig.vue'
 import { computed, ref } from 'vue'
-import ExeInstall from './ExeInstall.vue'
 import InstallPrompt from './InstallPrompt.vue'
+import ExeImport from '../ExeImport.vue'
 import { useOpsStore } from '@/store'
 
 const installStore = useOpsStore()
@@ -37,7 +35,6 @@ const installStore = useOpsStore()
 enum MINI_ENUM {
   DEPLOY = 1,
   INSTALL,
-  ENV,
   PROMPT,
   EXE
 }
@@ -51,11 +48,6 @@ const envRef = ref<InstanceType<typeof EnvMonitor> | null>(null)
 const beforeConfirm = async (): Promise<boolean> => {
   if (installProps.currStep === MINI_ENUM.INSTALL) {
     const res = await installConfigRef.value?.beforeConfirm()
-    if (!res) return false
-    return res
-  }
-  if (installProps.currStep === MINI_ENUM.ENV) {
-    const res = await envRef.value?.beforeConfirm()
     if (!res) return false
     return res
   }

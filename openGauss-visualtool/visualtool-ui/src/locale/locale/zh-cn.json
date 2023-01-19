@@ -240,7 +240,9 @@
             "5mpib0ippfc0": "描述",
             "5mpib0ippjg0": "请输入描述",
             "5mpib0ippoc0": "新增可用区",
-            "5mpib0ipprs0": "编辑可用区"
+            "5mpib0ipprs0": "编辑可用区",
+            "else1": "名称已存在",
+            "else2": "判断名称是否存在出错"
         },
         "SystemAlarm": {
             "cpuWarning": "CPU告警",
@@ -482,7 +484,9 @@
             "5m6nsk34ra40": "个人中心",
             "5m6nsk34rd00": "修改密码",
             "5m6nsk34rg40": "退出登录",
-            "5mpib9iig6o0": "openGauss DataKit"
+            "5mpib9iig6o0": "openGauss DataKit",
+            "5nu3bvtnu5o0": "点击切换为黑暗模式",
+            "5nu3bvtnuyk0": "点击切换为亮色模式"
         }
     },
     "tab-bar": {
@@ -608,8 +612,8 @@
         }
     },
     "footer": {
-      "index": {
-          "5msicm67hz00": "版权所有"
-      }
+        "index": {
+            "5msicm67hz00": "版权所有"
+        }
     }
 }

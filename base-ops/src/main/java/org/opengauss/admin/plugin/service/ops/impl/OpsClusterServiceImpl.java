@@ -587,34 +587,69 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
             throw new OpsException("Installation user information does not exist");
         }
 
-        opsNodeLogVO.setSystemLogPath("/var/log/gaussdb/" + hostUserEntity.getUsername() + "/pg_log");
-
-        Session session = jschUtil.getSession(hostEntity.getPublicIp(), hostEntity.getPort(), hostUserEntity.getUsername(), encryptionUtils.decrypt(hostUserEntity.getPassword())).orElse(null);
-        try {
-            String command = "echo $GAUSSLOG";
-            JschResult jschResult = jschUtil.executeCommand(command, session);
-            if (0 != jschResult.getExitCode()) {
-                log.error("Failed to get log path, exit code: {}, log: {}", jschResult.getExitCode(), jschResult.getResult());
-                throw new OpsException("Failed to get log path");
-            }
-
-            String result = jschResult.getResult();
-            if (StrUtil.isNotEmpty(result)) {
-                opsNodeLogVO.setOpLogPath(result + "/bin");
-                opsNodeLogVO.setPerformanceLogPath(result + "/gs_profile");
-            }
-        } catch (Exception e) {
-            log.error("Failed to get operation log path", e);
-        }finally {
-            if (Objects.nonNull(session) && session.isConnected()){
-                session.disconnect();
-            }
-        }
-
-        if (clusterEntity.getVersion() == OpenGaussVersionEnum.ENTERPRISE) {
+        if (OpenGaussVersionEnum.ENTERPRISE == clusterEntity.getVersion()){
+            opsNodeLogVO.setSystemLogPath(clusterEntity.getLogPath());
             opsNodeLogVO.setDumpLogPath(clusterEntity.getCorePath());
-        } else {
-            opsNodeLogVO.setDumpLogPath(clusterNode.getDataPath());
+
+            Session session = jschUtil.getSession(hostEntity.getPublicIp(), hostEntity.getPort(), hostUserEntity.getUsername(), encryptionUtils.decrypt(hostUserEntity.getPassword())).orElse(null);
+            try {
+                String command = "echo $GAUSSLOG";
+                JschResult jschResult = jschUtil.executeCommand(command, session);
+                if (0 != jschResult.getExitCode()) {
+                    log.error("Failed to get log path, exit code: {}, log: {}", jschResult.getExitCode(), jschResult.getResult());
+                    throw new OpsException("Failed to get log path");
+                }
+
+                String result = jschResult.getResult();
+                if (StrUtil.isNotEmpty(result)) {
+                    opsNodeLogVO.setOpLogPath(result);
+                    opsNodeLogVO.setPerformanceLogPath(result + "/gs_profile");
+                }
+            } catch (Exception e) {
+                log.error("Failed to get operation log path", e);
+            }finally {
+                if (Objects.nonNull(session) && session.isConnected()){
+                    session.disconnect();
+                }
+            }
+        }else {
+            String dataPath = clusterNode.getDataPath();
+            if (OpenGaussVersionEnum.MINIMAL_LIST == clusterEntity.getVersion()){
+                if (DeployTypeEnum.CLUSTER == clusterEntity.getDeployType()){
+                    ClusterRoleEnum clusterRole = clusterNode.getClusterRole();
+                    if (clusterRole == ClusterRoleEnum.MASTER){
+                        dataPath = dataPath + "/master";
+                    }else {
+                        dataPath = dataPath + "/slave";
+                    }
+                }else {
+                    dataPath = dataPath+"/single_node";
+                }
+            }
+            opsNodeLogVO.setSystemLogPath(dataPath + "/pg_log");
+
+            Session session = jschUtil.getSession(hostEntity.getPublicIp(), hostEntity.getPort(), hostUserEntity.getUsername(), encryptionUtils.decrypt(hostUserEntity.getPassword())).orElse(null);
+            try {
+                String command = "echo $GAUSSLOG";
+                JschResult jschResult = jschUtil.executeCommand(command, session);
+                if (0 != jschResult.getExitCode()) {
+                    log.error("Failed to get log path, exit code: {}, log: {}", jschResult.getExitCode(), jschResult.getResult());
+                    throw new OpsException("Failed to get log path");
+                }
+
+                String result = jschResult.getResult();
+                if (StrUtil.isNotEmpty(result)) {
+                    opsNodeLogVO.setOpLogPath(result);
+                    opsNodeLogVO.setPerformanceLogPath(result);
+                    opsNodeLogVO.setDumpLogPath(result);
+                }
+            } catch (Exception e) {
+                log.error("Failed to get operation log path", e);
+            }finally {
+                if (Objects.nonNull(session) && session.isConnected()){
+                    session.disconnect();
+                }
+            }
         }
 
         return opsNodeLogVO;
@@ -1300,7 +1335,8 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         try {
             connection = DBUtil.getSession(hostEntity.getPublicIp(), port, databaseUsername, databasePassword).orElseThrow(() -> new OpsException("Connection failed"));
         }catch (Exception e) {
-            log.error("get connection fail");
+            log.error("get connection fail",e);
+             throw new OpsException("connection fail");
         }finally {
             if (Objects.nonNull(connection)){
                 try {
@@ -2121,7 +2157,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
             String command = "gs_om -t status --detail";
             JschResult jschResult = null;
             try {
-                Map<String, String> res = new HashMap<>();
+                Map<String, Object> res = new HashMap<>();
                 try {
                     jschResult = jschUtil.executeCommand(command, ommSession);
                 } catch (InterruptedException e) {
@@ -2144,6 +2180,12 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                     res.put("cluster_state", clusterState);
                 }
 
+                Map<String,String> nodeState = new HashMap<>(1);
+                Map<String,String> nodeRole = new HashMap<>(1);
+                res.put("nodeState",nodeState);
+                res.put("nodeRole",nodeRole);
+
+
                 int datanodeStateIndex = result.indexOf("Datanode State");
                 if (datanodeStateIndex < 1) {
 
@@ -2155,7 +2197,8 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                     for (String s : dataNode) {
                         String[] s1 = s.replaceAll(" +", " ").split(" ");
                         if (s1.length == 8) {
-                            res.put(s1[1], s1[7].trim());
+                            nodeState.put(s1[1], s1[7].trim());
+                            nodeRole.put(s1[1],s1[6].trim());
                         }
                     }
                 }
@@ -2345,8 +2388,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         EnvProperty installUserProperty = new EnvProperty();
         installUserProperty.setName("install user");
         installUserProperty.setSortNum(3);
-        installUserProperty.setStatus(HostEnvStatusEnum.INFO);
-        installUserProperty.setStatusMessage("The installation user cannot be root, please ensure that the installation user has been created on the host");
+        installUserProperty.setStatus(HostEnvStatusEnum.NORMAL);
         return installUserProperty;
     }
 

@@ -153,6 +153,12 @@ export const delAz = (azId: string) => {
   return axios.delete(`az/${azId}`)
 }
 
+export const hasNameAZ = (data: KeyValue) => {
+  return axios.get('az/hasName', {
+    params: data
+  })
+}
+
 // jdbc 
 export const jdbcPage = (query: any) => {
   return axios.get('jdbcDbCluster/page', {

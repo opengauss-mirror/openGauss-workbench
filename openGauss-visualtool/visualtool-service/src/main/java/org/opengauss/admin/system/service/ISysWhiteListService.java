@@ -17,4 +17,6 @@ public interface ISysWhiteListService extends IService<SysWhiteList> {
     List<SysWhiteList> selectListAll(SysWhiteList whiteList);
 
     boolean checkIpExistsInWhiteList(String ip);
+
+    public boolean checkTitleExists(SysWhiteList whiteList);
 }

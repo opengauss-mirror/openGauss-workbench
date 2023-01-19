@@ -54,6 +54,7 @@
             "5mpmxod8z3w0": "The main use of the minimalist version of the installation is mainly for universities and personal testing environment, compared with the enterprise installation process is simpler and faster。",
             "5mpmxod8za00": "LITE",
             "5mpmxod8zg00": "ENTERPRISE",
+            "else2": "sharding+openLookeng",
             "5mpmxod8zlw0": "The installation of enterprise Edition is mainly used by enterprises or individuals with high requirements for database performance. The installation process is complex and the functions are more complete。",
             "5mpmxod8zs80": "install",
             "5mpmxod901g0": "import",

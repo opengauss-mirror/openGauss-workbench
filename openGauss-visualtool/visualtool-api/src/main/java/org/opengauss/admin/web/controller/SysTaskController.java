@@ -63,7 +63,7 @@ public class SysTaskController extends BaseController {
     @PreAuthorize("@ss.hasPermi('system:task:query')")
     @GetMapping(value = "/{id}")
     public AjaxResult getInfo(@PathVariable("id") Integer id) {
-        return AjaxResult.success(sysTaskService.getById(id));
+        return AjaxResult.success(sysTaskService.getDetailById(id));
     }
 
     /**

@@ -240,7 +240,9 @@
             "5mpib0ippfc0": "describe",
             "5mpib0ippjg0": "Please enter a description.",
             "5mpib0ippoc0": "Adding an Available Zone",
-            "5mpib0ipprs0": "Edit Availability zone"
+            "5mpib0ipprs0": "Edit Availability zone",
+            "else1": "Name already exists",
+            "else2": "Check whether the name is incorrect"
         },
         "SystemAlarm": {
             "cpuWarning": "CPU Alarm",
@@ -482,7 +484,9 @@
             "5m6nsk34ra40": "User Center",
             "5m6nsk34rd00": "Reset Password",
             "5m6nsk34rg40": "Logout",
-            "5mpib9iig6o0": "openGauss DataKit"
+            "5mpib9iig6o0": "openGauss DataKit",
+            "5nu3bvtnu5o0": "Click to switch to dark mode",
+            "5nu3bvtnuyk0": "Click to switch to bright color mode"
         }
     },
     "tab-bar": {

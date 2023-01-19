@@ -41,9 +41,9 @@ public class ModelingDataFlowServiceImpl extends ServiceImpl<ModelingDataFlowMap
      * @return result
      */
     @Override
-    public int insertDataFlow(ModelingDataFlowEntity dataFlowData) {
-        int row = modelingDataFlowMapper.insert(dataFlowData);
-        return row;
+    public Long insertDataFlow(ModelingDataFlowEntity dataFlowData) {
+        modelingDataFlowMapper.insert(dataFlowData);
+        return dataFlowData.getId();
     }
 
     /**

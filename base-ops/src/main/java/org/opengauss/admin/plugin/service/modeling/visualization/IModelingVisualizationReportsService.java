@@ -12,7 +12,7 @@ import java.util.List;
 */
 public interface IModelingVisualizationReportsService extends IService<ModelingVisualizationReportsEntity> {
 
-    public List<ModelingVisualizationReportsEntity> getByDataFlowId(Long dataFlowId);
+    public List<ModelingVisualizationReportsEntity> getByDataFlowIdAndName(Long dataFlowId,String name);
     public int add(ModelingVisualizationReportsEntity modelingVisualizationParams);
     public int deleteByIds(String[] paramIds);
     public ModelingVisualizationReportsEntity selectById(Integer reportId);

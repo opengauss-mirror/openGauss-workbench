@@ -48,4 +48,15 @@
         where ip_list like concat('%', #{ip}, '%')
     </select>
 
+    <select id="countByTitle" parameterType="org.opengauss.admin.system.domain.SysWhiteList"  resultType="Integer">
+        select count(1) from sys_white_list
+        <where>
+            <if test="title">
+                and title = #{title}
+            </if>
+            <if test="id != null and id != 0">
+                and id != #{id}
+            </if>
+        </where>
+    </select>
 </mapper>

@@ -1,6 +1,7 @@
 package org.opengauss.admin.system.plugin.extract;
 
 import org.opengauss.admin.system.plugin.beans.BasePluginTaskDetailDto;
+import org.opengauss.admin.system.plugin.beans.MigrationTaskDetail;
 import org.opengauss.admin.system.plugin.beans.TaskExecProgressDto;
 
 import java.util.List;
@@ -18,7 +19,7 @@ public interface TaskExtract {
      * @param taskId
      * @return
      */
-    public List<BasePluginTaskDetailDto> getPluginTask(Integer taskId);
+    public List<MigrationTaskDetail> getPluginTask(Integer taskId);
 
     /**
      * Get the task status, summarize from the subtasks in the plug-in,

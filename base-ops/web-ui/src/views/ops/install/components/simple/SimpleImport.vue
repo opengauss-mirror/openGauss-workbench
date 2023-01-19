@@ -8,9 +8,6 @@
         }}{{ $t('simple.SimpleInstall.else1') }}
       </a-step>
       <a-step>
-        {{ $t('simple.SimpleInstall.5mpmv5d5dak0') }}
-      </a-step>
-      <a-step>
         {{ installType === 'install' ? $t('simple.SimpleInstall.5mpmv5d5bmo0') : $t('simple.SimpleInstall.5mpmv5d5cyk0')
         }}{{ $t('simple.SimpleInstall.else2') }}
       </a-step>
@@ -23,25 +20,22 @@
     <a-divider />
     <deploy-way v-if="currStep === MINI_ENUM.DEPLOY" />
     <install-config :before-confirm="customeFunction" ref="installConfigRef" v-if="currStep === MINI_ENUM.INSTALL" />
-    <env-monitor v-if="currStep === MINI_ENUM.ENV" ref="envRef" />
     <install-prompt v-if="currStep === MINI_ENUM.PROMPT" />
-    <exe-install v-if="currStep === MINI_ENUM.EXE" />
+    <exe-import v-if="currStep === MINI_ENUM.EXE"></exe-import>
   </div>
 </template>
 
 <script setup lang="ts">
 import DeployWay from './DeployWay.vue'
 import InstallConfig from './InstallConfig.vue'
-import EnvMonitor from './EnvMonitor.vue'
-import ExeInstall from './ExeInstall.vue'
 import InstallPrompt from './InstallPrompt.vue'
+import ExeImport from '../ExeImport.vue'
 import { useOpsStore } from '@/store'
 
 import { computed, ref } from 'vue'
 enum MINI_ENUM {
   DEPLOY = 1,
   INSTALL,
-  ENV,
   PROMPT,
   EXE
 }
@@ -54,16 +48,10 @@ const instalProps = defineProps({
 })
 
 const installConfigRef = ref<InstanceType<typeof InstallConfig> | null>(null)
-const envRef = ref<InstanceType<typeof EnvMonitor> | null>(null)
 
 const beforeConfirm = async (): Promise<boolean> => {
   if (instalProps.currStep === MINI_ENUM.INSTALL) {
     const res = await installConfigRef.value?.beforeConfirm()
-    if (!res) return false
-    return res
-  }
-  if (instalProps.currStep === MINI_ENUM.ENV) {
-    const res = await envRef.value?.beforeConfirm()
     if (!res) return false
     return res
   }

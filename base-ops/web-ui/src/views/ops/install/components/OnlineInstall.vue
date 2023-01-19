@@ -1,8 +1,8 @@
 <template>
-  <div class="panel-c">
+  <div class="panel-c panel-overflow">
     <a-space direction="vertical" fill>
       <div class="mb ft-xlg">
-        {{ $t('components.OnlineInstall.else1') }}: {{ currInstallPackage ? currInstallPackage : '--' }}
+        {{ $t('components.OnlineInstall.else1') }}: {{ currInstallPackage? currInstallPackage: '--' }}
       </div>
       <div class="mb">
         {{ $t('components.OnlineInstall.5mpn3mp10hw0') }}: {{ data.targetPath }}
@@ -15,11 +15,11 @@
               <div class="center-item flex-between flex-row mb">
                 <svg-icon icon-class="ops-online-install" class="icon-size mr-lg"></svg-icon>
                 <div class="ft-main mr-xlg">{{ item.os }}-{{ item.cpuArch }}-{{ item.packageVersion }}-{{
-                    item.packageVersionNum
+                  item.packageVersionNum
                 }}
                 </div>
                 <a-button @click="downloadPackage(item)" v-if="!item.hasDownload">{{
-                    $t('components.OnlineInstall.5mpn3mp111s0')
+                  $t('components.OnlineInstall.5mpn3mp111s0')
                 }}</a-button>
                 <a-tag color="green" v-else>{{ $t('components.OnlineInstall.5mpn3mp117k0') }}</a-tag>
               </div>
@@ -163,5 +163,9 @@ const storeData = computed(() => installStore.getInstallConfig)
 .empty-content {
   font-weight: bold;
   color: var(--color-neutral-4);
+}
+
+.panel-overflow {
+  overflow: auto;
 }
 </style>

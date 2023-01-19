@@ -18,7 +18,8 @@
                   <div class="mr-s">{{ $t('operation.DailyOps.5mplp1xbyi40') }}</div>
                   <div class="mr">{{ clusterData.warningNum ? clusterData.warningNum : 0 }}</div>
 
-                  <a-button type="text" @click="showOneCheck(clusterData)">{{ $t('operation.DailyOps.5mplp1xbyqc0')
+                  <a-button type="text" @click="showOneCheck(clusterData)">{{
+                    $t('operation.DailyOps.5mplp1xbyqc0')
                   }}</a-button>
                 </div>
                 <icon-down class="open-close-c" v-if="!clusterData.isShow" @click="clusterData.isShow = true" />
@@ -34,7 +35,7 @@
                     <div class="flex-row mb">
                       <div class="mr-s">{{ $t('operation.DailyOps.5mplp1xbyxw0') }}</div>
                       <a-tag :color="getClusterColor(clusterData)">{{
-                          getClusterState(clusterData)
+                        getClusterState(clusterData)
                       }}</a-tag>
                     </div>
                     <div class="flex-row">
@@ -52,29 +53,31 @@
                   <div class="mb">{{ $t('operation.DailyOps.5mplp1xc0640') }}</div>
                   <div class="flex-row">
                     <a-button type="outline" class="mr" @click="handleEnable(clusterData, index)">{{
-                        $t('operation.DailyOps.5mplp1xc0c00')
+                      $t('operation.DailyOps.5mplp1xc0c00')
                     }}</a-button>
                     <a-button type="outline" class="mr" @click="handleStop(clusterData)">{{
-                        $t('operation.DailyOps.5mplp1xc0i80')
+                      $t('operation.DailyOps.5mplp1xc0i80')
                     }}</a-button>
                     <a-button type="outline" class="mr" @click="handleReset(clusterData, index)">{{
-                        $t('operation.DailyOps.5mplp1xc0o40')
+                      $t('operation.DailyOps.5mplp1xc0o40')
                     }}</a-button>
                     <a-button type="outline" class="mr" @click="handleBackupDlg(index)">{{
-                        $t('operation.DailyOps.5mplp1xc0u40')
+                      $t('operation.DailyOps.5mplp1xc0u40')
                     }}</a-button>
                     <a-popconfirm :content="$t('operation.DailyOps.5mplp1xc0zo0')" type="warning"
                       :ok-text="$t('operation.DailyOps.5mplp1xc1580')"
                       :cancel-text="$t('operation.DailyOps.5mplp1xc1b00')"
                       @ok="handleUninstall(clusterData, index, false)">
-                      <a-button type="outline" status="danger" class="mr">{{ $t('operation.DailyOps.5mplp1xc1gs0')
+                      <a-button type="outline" status="danger" class="mr">{{
+                        $t('operation.DailyOps.5mplp1xc1gs0')
                       }}</a-button>
                     </a-popconfirm>
                     <a-popconfirm :content="$t('operation.DailyOps.5mplp1xc0zo0')" type="warning"
                       :ok-text="$t('operation.DailyOps.5mplp1xc1580')"
                       :cancel-text="$t('operation.DailyOps.5mplp1xc1b00')"
                       @ok="handleUninstall(clusterData, index, true)">
-                      <a-button type="outline" status="danger" class="mr">{{ $t('operation.DailyOps.5mplp1xc1ms0')
+                      <a-button type="outline" status="danger" class="mr">{{
+                        $t('operation.DailyOps.5mplp1xc1ms0')
                       }}</a-button>
                     </a-popconfirm>
                   </div>
@@ -87,7 +90,8 @@
                     <div class="flex-between mb">
                       <div class="flex-row">
                         <div class="mr">{{ $t('operation.DailyOps.5mplp1xc1t80') }}</div>
-                        <div class="">{{ clusterData.clusterNodes[0].azAddress ? clusterData.clusterNodes[0].azAddress :
+                        <div class="">{{
+                          clusterData.clusterNodes[0].azAddress ? clusterData.clusterNodes[0].azAddress :
                             '--'
                         }}</div>
                       </div>
@@ -117,8 +121,10 @@
                           </div>
                           <div class="flex-row">
                             <div>{{ $t('operation.DailyOps.5mplp1xc2xs0') }}</div>
-                            <div>{{ clusterData.clusterNodes[0].kernel ? clusterData.clusterNodes[0].kernel : '-'
-                            }}{{ $t('operation.DailyOps.else1') }}{{ clusterData.clusterNodes[0].memorySize ?
+                            <div>{{
+                              clusterData.clusterNodes[0].kernel ? clusterData.clusterNodes[0].kernel : '-'
+                            }}{{ $t('operation.DailyOps.else1') }}{{
+  clusterData.clusterNodes[0].memorySize ?
     clusterData.clusterNodes[0].memorySize :
     '-'
 }}G</div>
@@ -147,7 +153,7 @@
                       <div class="flex-row mb-s" style="margin-left: 20px">
                         <div class="mr-s">{{ $t('operation.DailyOps.else2') }}{{ nodeIndex + 1 }}</div>
                         <a-tag :color="getInstanceStateColor(clusterData.clusterNodes[0])">{{
-                            getInstanceState(clusterData.clusterNodes[0])
+                          getInstanceState(clusterData.clusterNodes[0])
                         }}</a-tag>
                       </div>
                       <div class="flex-row">
@@ -163,6 +169,8 @@
                         <a-dropdown @select="handleInstanceOper($event, index, nodeIndex)">
                           <a-button>{{ $t('operation.DailyOps.5mplp1xc20k0') }}</a-button>
                           <template #content>
+                            <a-doption value="start">{{ $t('operation.DailyOps.5mplp1xc0c00') }}</a-doption>
+                            <a-doption value="stop">{{ $t('operation.DailyOps.5mplp1xc0i80') }}</a-doption>
                             <a-doption value="restart">{{ $t('operation.DailyOps.5mplp1xc0o40') }}</a-doption>
                           </template>
                         </a-dropdown>
@@ -174,13 +182,14 @@
                         <div class="flex-row mb">
                           <div class="mr-s">{{ $t('operation.DailyOps.5mplp1xc3740') }}</div>
                           <div>{{ clusterData.clusterNodes[0].session ? clusterData.clusterNodes[0].session : '--' }}{{
-                              $t('operation.DailyOps.else3')
+                            $t('operation.DailyOps.else3')
                           }}
                           </div>
                         </div>
                         <div class="flex-row ">
                           <div class="mr-s">{{ $t('operation.DailyOps.5mplp1xc3bw0') }}</div>
-                          <div>{{ clusterData.clusterNodes[0].connectNum ? clusterData.clusterNodes[0].connectNum : '--'
+                          <div>{{
+                            clusterData.clusterNodes[0].connectNum ? clusterData.clusterNodes[0].connectNum : '--'
                           }}{{ $t('operation.DailyOps.else3') }}</div>
                         </div>
                       </div>
@@ -188,7 +197,7 @@
                         <div class="flex-row mb">
                           <div class="mr-s">{{ $t('operation.DailyOps.5mplp1xc3hs0') }}</div>
                           <div>{{ clusterData.clusterNodes[0].lock ? clusterData.clusterNodes[0].lock : '--' }}{{
-                              $t('operation.DailyOps.else3')
+                            $t('operation.DailyOps.else3')
                           }}</div>
                         </div>
                         <div class="flex-row">
@@ -239,8 +248,8 @@
                         <div class="flex-row">
                           <div class="mr-s">{{ $t('operation.DailyOps.5mplp1xc2xs0') }}</div>
                           <div>{{ instance.kernel ? instance.kernel : '-' }}{{ $t('operation.DailyOps.else1') }}{{
-                              instance.memorySize ?
-                                instance.memorySize : '-'
+                            instance.memorySize ?
+                              instance.memorySize : '-'
                           }}G</div>
                         </div>
                       </div>
@@ -265,7 +274,7 @@
                     <div class="flex-row mb-s" style="margin-left: 20px">
                       <div class="mr-s">{{ $t('operation.DailyOps.else2') }}{{ nodeIndex + 1 }}</div>
                       <a-tag :color="getInstanceStateColor(instance)">{{
-                          getInstanceState(instance)
+                        getInstanceState(instance)
                       }}</a-tag>
                     </div>
                     <div class="flex-row">
@@ -322,7 +331,7 @@
       <svg-icon icon-class="ops-empty" class="empty-icon-size mb"></svg-icon>
       <div class="empty-content mb">{{ $t('operation.DailyOps.5mplp1xc3ss0') }}</div>
       <a-button type="outline" size="large" @click="$router.push({ name: 'OpsInstall' })">{{
-          $t('operation.DailyOps.5mplp1xc3xg0')
+        $t('operation.DailyOps.5mplp1xc3xg0')
       }}</a-button>
     </div>
     <div class="full-h flex-col" v-if="data.loading">
@@ -786,11 +795,11 @@ const handleHostOper = (type: any, clusterIndex: number, nodeIndex: number) => {
 const handleInstanceSwitchChange = (type: any, clusterIndex: number, nodeIndex: number) => {
   console.log('instance switch', type, clusterIndex, nodeIndex)
   let operType = type ? 'start' : 'stop'
-  handleInstanceOper(operType, clusterIndex, nodeIndex)
+  handleInstanceOper(operType, clusterIndex, nodeIndex, true)
 }
 
 // instance oper
-const handleInstanceOper = (type: any, clusterIndex: number, nodeIndex: number) => {
+const handleInstanceOper = (type: any, clusterIndex: number, nodeIndex: number, isSwitch: boolean = false) => {
   data.clusterList[clusterIndex].loading = true
   const term = getTermObj()
   const socketKey = new Date().getTime()
@@ -806,10 +815,12 @@ const handleInstanceOper = (type: any, clusterIndex: number, nodeIndex: number) 
     method?.then((res: KeyValue) => {
       if (Number(res.code) !== 200) {
         // Restore the original status if the stop/start fails
-        if (type === 'start') {
-          data.clusterList[clusterIndex].clusterNodes[nodeIndex].state = 'false'
-        } else if (type === 'stop') {
-          data.clusterList[clusterIndex].clusterNodes[nodeIndex].state = 'true'
+        if (isSwitch) {
+          if (type === 'start') {
+            data.clusterList[clusterIndex].clusterNodes[nodeIndex].state = 'false'
+          } else if (type === 'stop') {
+            data.clusterList[clusterIndex].clusterNodes[nodeIndex].state = 'true'
+          }
         }
         webSocket.destroy()
       } else {
@@ -818,10 +829,12 @@ const handleInstanceOper = (type: any, clusterIndex: number, nodeIndex: number) 
         initTerm(term, webSocket, data.clusterList[clusterIndex].clusterId)
       }
     }).catch(() => {
-      if (type === 'start') {
-        data.clusterList[clusterIndex].clusterNodes[nodeIndex].state = 'false'
-      } else if (type === 'stop') {
-        data.clusterList[clusterIndex].clusterNodes[nodeIndex].state = 'true'
+      if (isSwitch) {
+        if (type === 'start') {
+          data.clusterList[clusterIndex].clusterNodes[nodeIndex].state = 'false'
+        } else if (type === 'stop') {
+          data.clusterList[clusterIndex].clusterNodes[nodeIndex].state = 'true'
+        }
       }
       data.clusterList[clusterIndex].loading = false
       webSocket.destroy()
@@ -840,10 +853,12 @@ const handleInstanceOper = (type: any, clusterIndex: number, nodeIndex: number) 
           openHostWebSocket(data.clusterList[clusterIndex], data.clusterList[clusterIndex].clusterNodes[nodeIndex], clusterIndex, nodeIndex)
         }
       } else {
-        if (type === 'start') {
-          data.clusterList[clusterIndex].clusterNodes[nodeIndex].state = 'false'
-        } else if (type === 'stop') {
-          data.clusterList[clusterIndex].clusterNodes[nodeIndex].state = 'true'
+        if (isSwitch) {
+          if (type === 'start') {
+            data.clusterList[clusterIndex].clusterNodes[nodeIndex].state = 'false'
+          } else if (type === 'stop') {
+            data.clusterList[clusterIndex].clusterNodes[nodeIndex].state = 'true'
+          }
         }
         term.writeln(type + ' failed')
       }
@@ -937,7 +952,11 @@ const getInstanceStateColor = (instanceData: any) => {
 }
 
 const getDropdownList = (clusterData: KeyValue, nodeData: KeyValue) => {
-  const result = [{ label: t('operation.DailyOps.5mplp1xc0o40'), value: 'restart' }]
+  const result = [
+    { label: t('operation.DailyOps.5mplp1xc0c00'), value: 'start' },
+    { label: t('operation.DailyOps.5mplp1xc0i80'), value: 'stop' },
+    { label: t('operation.DailyOps.5mplp1xc0o40'), value: 'restart' }
+  ]
   if (clusterData.version === OpenGaussVersionEnum.ENTERPRISE && nodeData.clusterRole === ClusterRoleEnum.SLAVE) {
     result.push({ label: t('operation.DailyOps.5mplp1xc56k0'), value: 'switch' })
     result.push({ label: t('operation.DailyOps.5mplp1xc5cg0'), value: 'config' })

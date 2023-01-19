@@ -4,7 +4,7 @@
       <div class="mb" style="width: 50%;" v-for="(itemEnv, index) in data.nodeData" :key="index">
         <a-spin class="full-w" :loading="itemEnv.loading" :tip="$t('lightweight.EnvMonitor.5mpmgwswi880')">
           <div class="flex-col-start">
-            <a-alert class="mb" style="width: fit-content;" type="error"
+            <a-alert class="mb" style="width: fit-content;" type="warning"
               v-if="itemEnv.result !== -1 && itemEnv.noPassNum > 0">
               <div class="flex-row">
                 {{ $t('lightweight.EnvMonitor.5mpmgwswj8g0') }}
@@ -15,7 +15,7 @@
               <div class="flex-row">
                 <a-tag class="mr" color="#86909C">{{ getRoleName(itemEnv.clusterRole) }}</a-tag>
                 {{ $t('lightweight.EnvMonitor.5mpmgwswjlc0') }}: {{ itemEnv.privateIp }}({{
-                    itemEnv.publicIp
+                  itemEnv.publicIp
                 }})
               </div>
               <div class="flex-row">

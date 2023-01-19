@@ -6,14 +6,14 @@
       <div class="install-connect-c flex-col mb-xlg">
         <div class="ft-b mb">{{ $t('lightweight.ExeInstall.5mpmjd1mbdc0') }}</div>
         <div class="mb">{{ $t('lightweight.ExeInstall.5mpmjd1mbo00') }}: <span class="content">gaussdb</span></div>
-        <div>{{ $t('lightweight.ExeInstall.5mpmjd1mbxg0') }}: <span class="content">{{ dataPassword }}</span></div>
+        <!-- <div>{{ $t('lightweight.ExeInstall.5mpmjd1mbxg0') }}: <span class="content">{{ dataPassword }}</span></div> -->
       </div>
       <div class="flex-row">
         <a-button type="outline" class="mr" @click="goHome">{{
-            $t('lightweight.ExeInstall.5mpmjd1mc580')
+          $t('lightweight.ExeInstall.5mpmjd1mc580')
         }}</a-button>
         <a-button type="primary" @click="$router.push({ name: 'DailyOps' })">{{
-            $t('lightweight.ExeInstall.5mpmjd1mce00')
+          $t('lightweight.ExeInstall.5mpmjd1mce00')
         }}</a-button>
       </div>
     </div>

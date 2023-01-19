@@ -53,13 +53,13 @@ public class ModelingDataBaseServiceImpl
     }
 
     @Override
-    public String updateWithSqlObject(ModelingDataFlowSqlObject sqlObject) throws SQLException, ClassNotFoundException {
+    public String updateWithSqlObject(ModelingDataFlowSqlObject sqlObject, String queryType) throws SQLException, ClassNotFoundException {
         assert sqlObject != null;
 
         OpenGaussConnectorBody openGaussConnectorBody = new OpenGaussConnectorBody(sqlObject.getExecuteClusterNode());
         openGaussConnectorBody.setSchema(sqlObject.getExecuteSchema());
 
-        return update(openGaussConnectorBody,sqlObject.toSql());
+        return update(openGaussConnectorBody,sqlObject.toSql(),queryType);
     }
 
     @Override
@@ -68,7 +68,7 @@ public class ModelingDataBaseServiceImpl
             if (Objects.equals(sqlObject.getMainType(), "query")) {
                 return queryWithSqlObject(sqlObject);
             } else {
-                return updateWithSqlObject(sqlObject);
+                return updateWithSqlObject(sqlObject,sqlObject.getMainType());
             }
         } catch (SQLException | ClassNotFoundException e) {
             return e.getMessage();
@@ -132,24 +132,24 @@ public class ModelingDataBaseServiceImpl
         return null;
     }
 
-    public String update(OpenGaussConnectorBody openGaussConnectorBody, String sql) throws ClassNotFoundException, SQLException
+    public String update(OpenGaussConnectorBody openGaussConnectorBody, String sql, String queryType) throws ClassNotFoundException, SQLException
     {
         Connection conn = null;
         Class.forName("org.opengauss.Driver");
         String resultMessage;
         String openGaussUrl = "jdbc:opengauss://"+openGaussConnectorBody.getIp()+":"+openGaussConnectorBody.getPort()+"/"+openGaussConnectorBody.getDatabase()+"?currentSchema="+openGaussConnectorBody.getSchema();
         conn = DriverManager.getConnection(openGaussUrl, openGaussConnectorBody.getDbUser(), openGaussConnectorBody.getDbPassword());
-
+        //start transaction
+        conn.setAutoCommit(false);
         try {
             PreparedStatement preparedStatement = conn.prepareStatement(sql);
             preparedStatement.executeUpdate();
-            //start transaction
-            conn.setAutoCommit(false);
-            resultMessage = "database update success!";
+            conn.commit();
+            resultMessage = "database " + queryType + " success!";
         } catch (SQLException e) {
             conn.rollback();
             conn.close();
-            resultMessage = "database update failed:" + e.getMessage();
+            resultMessage = "database " + queryType + " failed:" + e.getMessage();
         }
 
         conn.close();

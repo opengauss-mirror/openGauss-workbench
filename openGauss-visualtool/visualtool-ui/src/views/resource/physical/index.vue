@@ -12,7 +12,7 @@
             </a-button>
           </div>
           <div>
-            <a-input-search v-model="filter.search" :loading="list.loading" allowClear @search="isFilter"
+            <a-input-search v-model="filter.name" :loading="list.loading" allowClear @search="isFilter"
               @press-enter="isFilter" @clear="isFilter" :placeholder="$t('physical.index.5mphf11szdk0')"
               search-button />
           </div>
@@ -58,7 +58,7 @@ import HostPwdDlg from './components/HostPwdDlg.vue'
 import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
 const filter = reactive({
-  search: '',
+  name: '',
   pageNum: 1,
   pageSize: 10
 })

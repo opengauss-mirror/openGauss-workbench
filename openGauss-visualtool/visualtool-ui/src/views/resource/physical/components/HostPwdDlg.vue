@@ -1,7 +1,7 @@
 <template>
   <a-modal :mask-closable="false" :esc-to-close="false" :visible="data.show" :title="data.title"
     :ok-loading="data.loading" :modal-style="{ width: '450px' }" @ok="handleOk" @cancel="close">
-    <a-form :model="data.formData" ref="formRef" :rules="data.rules" auto-label-width>
+    <a-form v-if="data.show" :model="data.formData" ref="formRef" :rules="data.rules" auto-label-width>
       <a-form-item :label="$t('components.HostPwdDlg.5mpi0giveys0')">
         {{ data.formData.privateIp }}({{ data.formData.publicIp }})
       </a-form-item>
@@ -75,6 +75,7 @@ const open = (hostData: KeyValue) => {
   data.formData.hostId = hostData.hostId
   data.formData.privateIp = hostData.privateIp
   data.formData.publicIp = hostData.publicIp
+  data.formData.password = ''
 }
 
 defineExpose({

@@ -5,16 +5,16 @@
       <div class="mb-xlg">{{ $t('components.ExeImport.5mpmzg3zqu80') }}</div>
       <div class="install-connect-c flex-col mb-lg">
         <div class="ft-b mb">{{ $t('components.ExeImport.5mpmzg3zrrw0') }}</div>
-        <div class="mb">{{ $t('components.ExeImport.5mpmzg3zs0o0') }}: <span class="content">gaussdb</span></div>
-        <div>{{ $t('components.ExeImport.5mpmzg3zs6w0') }}: <span class="content">{{
-            installStore.getMiniConfig.databasePassword
+        <div class="mb">{{ $t('components.ExeImport.5mpmzg3zs0o0') }}: <span class="content">{{
+          databaseUsername? databaseUsername: '--'
         }}</span></div>
       </div>
       <div class="flex-row">
-        <a-button type="outline" class="mr" @click="$router.push({ name: 'Dashboard' })">{{
-            $t('components.ExeImport.5mpmzg3zseo0')
+        <a-button type="outline" class="mr" @click="goHome">{{
+          $t('components.ExeImport.5mpmzg3zseo0')
         }}</a-button>
-        <a-button type="primary" @click="$router.push({ name: 'DailyOps' })">{{ $t('components.ExeImport.5mpmzg3zskw0')
+        <a-button type="primary" @click="goOps">{{
+          $t('components.ExeImport.5mpmzg3zskw0')
         }}</a-button>
       </div>
     </div>
@@ -37,6 +37,7 @@ import { importOpenGauss } from '@/api/ops'
 import { useOpsStore } from '@/store'
 import { KeyValue } from '@/types/global'
 import { useI18n } from 'vue-i18n'
+import { OpenGaussVersionEnum } from '@/types/ops/install'
 const { t } = useI18n()
 const installStore = useOpsStore()
 
@@ -46,6 +47,8 @@ enum exeResultEnum {
   FAIL = Number(0)
 }
 const exeResult = ref<number>(exeResultEnum.UN_INSTALL)
+
+const databaseUsername = ref('')
 
 const loading = ref(false)
 
@@ -70,6 +73,15 @@ const exeImportMini = () => {
     if (Number(res.code) === 200) {
       loadingFunc.setBackBtnShow(false)
       loadingFunc.setNextBtnShow(false)
+      if (param.openGaussVersion === OpenGaussVersionEnum.MINIMAL_LIST) {
+        databaseUsername.value = param.minimalistInstallConfig.databaseUsername
+      }
+      if (param.openGaussVersion === OpenGaussVersionEnum.LITE) {
+        databaseUsername.value = param.liteInstallConfig.databaseUsername
+      }
+      if (param.openGaussVersion === OpenGaussVersionEnum.ENTERPRISE) {
+        databaseUsername.value = param.enterpriseInstallConfig.databaseUsername
+      }
       exeResult.value = exeResultEnum.SUCESS
     } else {
       loading.value = false
@@ -86,6 +98,18 @@ const exeImportMini = () => {
   }).finally(() => {
     loadingFunc.cancelLoading()
     loading.value = false
+  })
+}
+
+const goHome = () => {
+  window.$wujie?.props.methods.jump({
+    name: 'Dashboard'
+  })
+}
+
+const goOps = () => {
+  window.$wujie?.props.methods.jump({
+    name: 'Static-pluginBase-opsMonitorDailyOps'
   })
 }
 

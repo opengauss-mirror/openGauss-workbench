@@ -6,13 +6,14 @@
       <div class="install-connect-c flex-col mb-xlg">
         <div class="ft-b mb">{{ $t('simple.ExeInstall.5mpmsp16oy40') }}</div>
         <div class="mb">{{ $t('simple.ExeInstall.5mpmsp16pb40') }}: <span class="content">gaussdb</span></div>
-        <div>{{ $t('simple.ExeInstall.5mpmsp16pig0') }}: <span class="content">{{ dataPassword }}</span></div>
+        <!-- <div>{{ $t('simple.ExeInstall.5mpmsp16pig0') }}: <span class="content">{{ dataPassword }}</span></div> -->
       </div>
       <div class="flex-row">
         <a-button type="outline" class="mr" @click="goHome">{{
-            $t('simple.ExeInstall.5mpmsp16pp80')
+          $t('simple.ExeInstall.5mpmsp16pp80')
         }}</a-button>
-        <a-button type="primary" @click="$router.push({ name: 'DailyOps' })">{{ $t('simple.ExeInstall.5mpmsp16pxs0')
+        <a-button type="primary" @click="goOps">{{
+          $t('simple.ExeInstall.5mpmsp16pxs0')
         }}</a-button>
       </div>
     </div>
@@ -231,6 +232,11 @@ const initTerm = (term: Terminal, ws: WebSocket | undefined) => {
 const goHome = () => {
   window.$wujie?.props.methods.jump({
     name: 'Dashboard'
+  })
+}
+const goOps = () => {
+  window.$wujie?.props.methods.jump({
+    name: 'Static-pluginBase-opsMonitorDailyOps'
   })
 }
 

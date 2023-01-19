@@ -12,8 +12,9 @@
             </a-button>
           </div>
           <div>
-            <a-input-search v-model="filter.search" :loading="list.loading" allowClear @search="getListData"
-              @press-enter="getListData" @clear="getListData" :placeholder="$t('az.index.5mpi9hkpgdw0')" search-button />
+            <a-input-search v-model="filter.name" :loading="list.loading" allowClear @search="getListData"
+              @press-enter="getListData" @clear="getListData" :placeholder="$t('az.index.5mpi9hkpgdw0')"
+              search-button />
           </div>
         </div>
         <a-table class="d-a-table-row" :data="list.data" :columns="columns" :pagination="list.page"
@@ -43,7 +44,7 @@ import AddAz from './components/AddAz.vue'
 import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
 const filter = reactive({
-  search: '',
+  name: '',
   pageNum: 1,
   pageSize: 10
 })

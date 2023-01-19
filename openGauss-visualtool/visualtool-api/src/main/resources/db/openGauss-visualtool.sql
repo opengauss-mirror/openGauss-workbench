@@ -846,98 +846,46 @@ select init_data_fuc();
 DROP FUNCTION init_data_fuc;
 
 
-CREATE TABLE IF NOT EXISTS "public"."ops_jdbcdb_cluster"
-(
-    "cluster_id" varchar
-(
-    255
-) COLLATE "pg_catalog"."default" NOT NULL PRIMARY KEY,
-    "name" varchar
-(
-    255
-) COLLATE "pg_catalog"."default",
-    "deploy_type" varchar
-(
-    255
-) COLLATE "pg_catalog"."default",
-    "db_type" varchar
-(
-    255
-) COLLATE "pg_catalog"."default",
-    "remark" varchar
-(
-    255
-) COLLATE "pg_catalog"."default",
-    "create_by" varchar
-(
-    64
-) COLLATE "pg_catalog"."default",
-    "create_time" timestamp
-(
-    6
-),
-    "update_by" varchar
-(
-    64
-) COLLATE "pg_catalog"."default",
-    "update_time" timestamp
-(
-    6
-)
+CREATE TABLE IF NOT EXISTS "public"."ops_jdbcdb_cluster_node"
+("cluster_node_id" varchar(25) COLLATE "pg_catalog"."default" NOT NULL PRIMARY KEY,
+    "cluster_id" varchar(255) COLLATE "pg_catalog"."default",
+    "name" varchar(255) COLLATE "pg_catalog"."default",
+    "ip" varchar(255) COLLATE "pg_catalog"."default",
+    "port" varchar(255) COLLATE "pg_catalog"."default",
+    "username" varchar(255) COLLATE "pg_catalog"."default",
+    "password" varchar(255) COLLATE "pg_catalog"."default",
+    "url" varchar(255) COLLATE "pg_catalog"."default",
+    "remark" varchar(255) COLLATE "pg_catalog"."default",
+    "create_by" varchar(64) COLLATE "pg_catalog"."default",
+    "create_time" timestamp(6),
+    "update_by" varchar(64) COLLATE "pg_catalog"."default",
+    "update_time" timestamp(6)
     );
 
-CREATE TABLE IF NOT EXISTS "public"."ops_jdbcdb_cluster_node"
+CREATE TABLE IF NOT EXISTS "public"."ops_jdbcdb_cluster"
 (
-    "cluster_node_id" varchar
-(
-    25
-) COLLATE "pg_catalog"."default" NOT NULL PRIMARY KEY,
-    "cluster_id" varchar
-(
-    255
-) COLLATE "pg_catalog"."default",
-    "name" varchar
-(
-    255
-) COLLATE "pg_catalog"."default",
-    "ip" varchar
-(
-    255
-) COLLATE "pg_catalog"."default",
-    "port" varchar
-(
-    255
-) COLLATE "pg_catalog"."default",
-    "username" varchar
-(
-    255
-) COLLATE "pg_catalog"."default",
-    "password" varchar
-(
-    255
-) COLLATE "pg_catalog"."default",
-    "url" varchar
-(
-    255
-) COLLATE "pg_catalog"."default",
-    "remark" varchar
-(
-    255
-) COLLATE "pg_catalog"."default",
-    "create_by" varchar
-(
-    64
-) COLLATE "pg_catalog"."default",
-    "create_time" timestamp
-(
-    6
-),
-    "update_by" varchar
-(
-    64
-) COLLATE "pg_catalog"."default",
-    "update_time" timestamp
-(
-    6
-)
+    "cluster_id" varchar(255) COLLATE "pg_catalog"."default" NOT NULL PRIMARY KEY,
+    "name" varchar(255) COLLATE "pg_catalog"."default",
+    "deploy_type" varchar(255) COLLATE "pg_catalog"."default",
+    "db_type" varchar(255) COLLATE "pg_catalog"."default",
+    "remark" varchar(255) COLLATE "pg_catalog"."default",
+    "create_by" varchar(64) COLLATE "pg_catalog"."default",
+    "create_time" timestamp(6),
+    "update_by" varchar(64) COLLATE "pg_catalog"."default",
+    "update_time" timestamp(6)
     );
+
+CREATE OR REPLACE FUNCTION add_user_field_func() RETURNS integer AS 'BEGIN
+IF
+( SELECT COUNT ( * ) AS ct1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ''sys_user'' AND COLUMN_NAME = ''update_pwd'' ) = 0
+THEN
+ALTER TABLE sys_user ADD COLUMN update_pwd int2 DEFAULT 0;
+COMMENT ON COLUMN "public"."sys_user"."update_pwd" IS ''是否修改密码；1：是；0：否'';
+END IF;
+RETURN 0;
+END;'
+LANGUAGE plpgsql;
+
+SELECT add_user_field_func();
+
+DROP FUNCTION add_user_field_func;

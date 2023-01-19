@@ -228,10 +228,10 @@ public class HostUserServiceImpl extends ServiceImpl<OpsHostUserMapper, OpsHostU
 
         OpsHostUserEntity rootUserEntity = new OpsHostUserEntity();
         rootUserEntity.setUsername("root");
-        rootUserEntity.setPassword(encryptionUtils.decrypt(hostUserBody.getRootPassword()));
+        rootUserEntity.setPassword(hostUserBody.getRootPassword());
         if (physicalExist(hostEntity.getPublicIp(), hostEntity.getPort(), rootUserEntity, newEntity.getUsername())) {
             try {
-                Session session = jschUtil.getSession(hostEntity.getPublicIp(), hostEntity.getPort(), hostUserBody.getUsername(), encryptionUtils.decrypt(hostUserBody.getPassword())).orElseThrow(() -> new OpsException("user already exists，incorrect password, please enter correct password"));
+                Session session = jschUtil.getSession(hostEntity.getPublicIp(), hostEntity.getPort(), hostUserBody.getUsername(), hostUserBody.getPassword()).orElseThrow(() -> new OpsException("user already exists，incorrect password, please enter correct password"));
                 if (Objects.isNull(session)) {
                     throw new OpsException("user already exists , incorrect password, please enter correct password");
                 } else {
@@ -242,7 +242,7 @@ public class HostUserServiceImpl extends ServiceImpl<OpsHostUserMapper, OpsHostU
                 throw new OpsException("user already exists , incorrect password, please enter correct password");
             }
         } else {
-            createPhysicalUser(hostEntity.getPublicIp(), hostEntity.getPort(), rootUserEntity, newEntity.getUsername(), encryptionUtils.decrypt(hostUserBody.getRootPassword()));
+            createPhysicalUser(hostEntity.getPublicIp(), hostEntity.getPort(), rootUserEntity, newEntity.getUsername(), hostUserBody.getRootPassword());
         }
 
         return updateById(newEntity);
