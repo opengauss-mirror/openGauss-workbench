@@ -14,11 +14,10 @@ const handleData = <T>(res: AxiosResponse<ApiResponse<T>, any>) => {
     if (res.data && (res.data.code === "200" || res.data.code === 200)) {
         return Promise.resolve(res.data.data)
     } else {
-        return Promise.reject(res?.data.msg || "请求错误").catch(err =>{
+        return Promise.reject(res?.data.msg || "请求错误").catch(err => {
             console.log(err);
-         })
+        })
     }
-    
 }
 
 export class Request {

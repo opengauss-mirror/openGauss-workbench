@@ -80,7 +80,8 @@ const props = withDefaults(defineProps<{
     bar?: boolean,
     stack?: boolean,
     enterable?: boolean,
-    translate?: boolean
+    translate?: boolean,
+    countByDataTimePicker: boolean,
 
 }>(), {
     xData: () => [],
@@ -90,7 +91,8 @@ const props = withDefaults(defineProps<{
     areaStyle: false,
     color: () => ['#37D4D1', '#00C7F9', '#0D86E2', '#425ADD', '#E64A19', '#9CCC65', '#A97526', '#2830FF', '#8B00E1', '#0F866A'],
     theme: 'dark',
-    translate: true
+    translate: true,
+    countByDataTimePicker: true,
 })
 const { brushRange, tab } = storeToRefs(useMonitorStore())
 const domId = uuid();
@@ -240,7 +242,7 @@ const renderChart = () => {
         series: data.length > 0 ? data : []
     }
     myChart.setOption(option, true)
-    if (Array.isArray(props.defaultBrushArea) && props.defaultBrushArea.length === 2 && props.xData.length > 0) {
+    if (!props.countByDataTimePicker && Array.isArray(props.defaultBrushArea) && props.defaultBrushArea.length === 2 && props.xData.length > 0) {
         console.log("defaultBrushArea", props.defaultBrushArea);
         nextTick(() => {
             let interval = (moment(props.defaultBrushArea![1]).valueOf() - moment(props.defaultBrushArea![0]).valueOf()) / 1000;
@@ -273,14 +275,9 @@ const renderChart = () => {
         useDataZoom(myChart)
     }
     if (brushRange.value.length > 0 && tab.value === 0) {
-        myChart.dispatchAction({ type: 'dataZoom', startValue: brushRange.value[0] || 0, endValue: brushRange.value[1] || 100 })
+        myChart.dispatchAction({ type: 'dataZoom', start: 0, end: 100 })
     }
 }
-watch(brushRange, r => {
-    if (tab.value === 0) {
-        myChart?.dispatchAction({ type: 'dataZoom', startValue: r[0] || 0, endValue: r[1] || 100 })
-    }
-})
 // lazy load
 const myEmit = defineEmits<{
     (event: 'load'): void,

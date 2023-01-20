@@ -51,6 +51,7 @@ onMounted(() => {
                                 scatterUnit="%"
                                 :scatterOpts="{type: 'line', symbol: 'none'}"
                                 :defaultBrushArea="props.fixedRangeTime"
+                                :countByDataTimePicker="false"
                             />
                         </div>
                         <div>{{ $t('metric.totalAverageUtilization') }}</div>
@@ -69,6 +70,7 @@ onMounted(() => {
                             name-fix="2"
                             unit="%"
                             :defaultBrushArea="props.fixedRangeTime"
+                            :countByDataTimePicker="false"
                         />
                     </div>
                 </my-card>
@@ -87,6 +89,7 @@ onMounted(() => {
                             unit="MB/s"
                             :formatter="(d: string) => toFixed((Number.parseFloat(d) / 1048576))"
                             :defaultBrushArea="props.fixedRangeTime"
+                            :countByDataTimePicker="false"
                         />
                     </div>
                 </my-card>
@@ -105,6 +108,7 @@ onMounted(() => {
                             :formatter="(d: string) => toFixed((Number.parseFloat(d) / 1024))"
                             unit="KB/s"
                             :defaultBrushArea="props.fixedRangeTime"
+                            :countByDataTimePicker="false"
                         />
                     </div>
                 </my-card>

@@ -5,14 +5,3 @@ spring:
 prometheus:
   server:
     url: http://172.16.107.108:9090
-
-elasticsearch:
-  # 集群可以用逗号隔开如127.0.0.1:9200,127.0.0.2:9200
-  uris: 119.3.170.242:9200
-  username: elastic
-  password: changeme
-
-test.db:
-  url: jdbc:postgresql://172.16.107.108:15400/postgres?currentSchema=observability;serverTimezone=UTC
-  name: opp
-  password: Vastbase@123

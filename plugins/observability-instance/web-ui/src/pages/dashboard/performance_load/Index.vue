@@ -4,12 +4,10 @@ import { useI18n } from 'vue-i18n';
 import ListMetric from './ListMetric.vue';
 import LazyLine from '../LazyLine.vue';
 import { useMonitorStore } from '../../../store/monitor';
-import { useWindowStore } from '../../../store/window';
 import { toFixed } from '../../../shared';
 import { storeToRefs } from 'pinia';
 import { getDatabaseMetrics } from '../../../api/prometheus';
 import { useIntervalTime } from '../../../hooks/time';
-import { i18n } from '../../../i18n';
  
 const { t } = useI18n();
 
@@ -20,9 +18,10 @@ const props = withDefaults(defineProps<{
 })
 
 const brushRangeSign = ref<boolean>(false);
+const tempSaveTime = ref<Array<Date>>([]);
+const tempSaveRangeTime = ref<number>(-2);
 
 const monitorStore = useMonitorStore()
-const { theme } = storeToRefs(useWindowStore());
 const { refreshTime, rangeTime, time, tab: topTab, autoRefresh, instanceId, brushRange, timeRange } = storeToRefs(useMonitorStore())
 
 const load = (checkTab?: boolean, checkRange?: boolean) => {
@@ -128,10 +127,29 @@ watch(instanceId, id => {
 }, { immediate: true })
 
 const clearZoom = () => {
-    brushRange.value = []
+    brushRange.value = [];
+    // reset
+    if (tempSaveRangeTime.value > 0) {
+        monitorStore.filters[0].rangeTime = tempSaveRangeTime.value;
+        monitorStore.filters[0].time = null;
+    } else {
+        monitorStore.filters[0].time = [tempSaveTime.value[0], tempSaveTime.value[1]];
+        monitorStore.filters[0].rangeTime = -1;
+    }
+    brushRangeSign.value = false;
+    // clear
+    tempSaveTime.value = [];
+    tempSaveRangeTime.value = -2;
 }
 
 watch(timeRange, () => {
+    if (tempSaveTime.value.length === 0 && tempSaveRangeTime.value === -2) {
+        if (rangeTime.value === -1) {
+            tempSaveTime.value = [time.value![0], time.value![1]];
+        } else {
+            tempSaveRangeTime.value = rangeTime.value;
+        }
+    }
     monitorStore.filters[0].time = [new Date(timeRange.value[0]), new Date(timeRange.value[1])];
     monitorStore.filters[0].rangeTime = -1;
     brushRangeSign.value = true;
@@ -141,7 +159,7 @@ watch(timeRange, () => {
 
 <template>
 <ListMetric />
-<div class="load-flex" :key="`${i18n.global.locale.value}-${theme}`">
+<div class="load-flex">
     <el-row :gutter="16" :key="nodeVersion">
         <el-col :span="props.nodeVersion === 'LITE' ? 24 : 12">
             <my-card :title="$t('dashboard.timeConsumption')" height="300" :legend="[
