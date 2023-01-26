@@ -89,6 +89,11 @@ public class SysUser extends BaseEntity {
     private String delFlag;
 
     /**
+     * updatePwd (0 No 1 Yes)
+     */
+    private String updatePwd;
+
+    /**
      * loginIp
      */
     @TableField(fill = FieldFill.INSERT)

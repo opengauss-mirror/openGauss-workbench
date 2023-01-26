@@ -237,7 +237,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
      */
     @Override
     public int resetUserPwd(String userName, String password) {
-        boolean result = this.update(new SysUser(), new UpdateWrapper<SysUser>().lambda().set(SysUser::getPassword, password).eq(SysUser::getUserName, userName));
+        boolean result = this.update(new SysUser(), new UpdateWrapper<SysUser>().lambda().set(SysUser::getPassword, password).set(SysUser::getUpdatePwd, 1).eq(SysUser::getUserName, userName));
         return result ? 1 : 0;
     }
 

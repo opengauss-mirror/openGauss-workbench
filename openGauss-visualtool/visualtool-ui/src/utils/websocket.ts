@@ -24,7 +24,7 @@ export class Heart {
   ServerHeartTimeOut!: number // heartbeat timer
   timeout = 5000
   // reset
-  reset(): void {
+  reset (): void {
     clearTimeout(this.heartTimeOut)
     clearTimeout(this.ServerHeartTimeOut)
   }
@@ -33,7 +33,7 @@ export class Heart {
    * start heartbeat
    * @param {Function} cb
    */
-  start(cb: Callback): void {
+  start (cb: Callback): void {
     this.heartTimeOut = setTimeout((e: Event) => {
       cb(e)
       this.ServerHeartTimeOut = setTimeout((e: Event) => {
@@ -74,7 +74,7 @@ export default class Socket<T, RT> extends Heart {
     } // error callback
   }
 
-  constructor(ops: Ioptions<RT>) {
+  constructor (ops: Ioptions<RT>) {
     super()
     Object.assign(this.options, ops)
     this.create()
@@ -83,7 +83,7 @@ export default class Socket<T, RT> extends Heart {
   /**
    * establish connection
    */
-  create(): void {
+  create (): void {
     if (!('WebSocket' in window)) {
       throw new Error('The current browser does not support it and cannot be used')
     }
@@ -110,7 +110,7 @@ export default class Socket<T, RT> extends Heart {
    * If the callback exists, call the callback, if there is no callback in OPTIONS
    * @param {Function} callback
    */
-  onopen(callback: Callback): void {
+  onopen (callback: Callback): void {
     this.ws.onopen = event => {
       if (typeof callback === 'function') {
         callback(event)
@@ -125,7 +125,7 @@ export default class Socket<T, RT> extends Heart {
    * If the callback exists, call the callback, if there is no callback in OPTIONS
    * @param {Function} callback
    */
-  onclose(callback: Callback): void {
+  onclose (callback: Callback): void {
     this.ws.onclose = event => {
       if (typeof callback === 'function') {
         callback(event)
@@ -140,7 +140,7 @@ export default class Socket<T, RT> extends Heart {
    * If the callback exists, call the callback, if there is no callback in OPTIONS
    * @param {Function} callback
    */
-  onerror(callback: Callback): void {
+  onerror (callback: Callback): void {
     this.ws.onerror = event => {
       if (typeof callback === 'function') {
         callback(event)
@@ -155,7 +155,7 @@ export default class Socket<T, RT> extends Heart {
    * If the callback exists, call the callback, if there is no callback in OPTIONS
    * @param {Function} callback
    */
-  onmessage(callback: MessageCallback<any>): void {
+  onmessage (callback: MessageCallback<any>): void {
     this.ws.onmessage = (event: MessageEvent<string>) => {
       const strMessage = event.data
       if (typeof callback === 'function') {
@@ -168,14 +168,14 @@ export default class Socket<T, RT> extends Heart {
    * Custom send message event
    * @param {String} data text sent
    */
-  send(data: T | string): void {
+  send (data: T | string): void {
     console.log('doNothing', data)
   }
 
   /**
    * destroy
    */
-  destroy(): void {
+  destroy (): void {
     super.reset()
     clearTimeout(this.reconnectTimer) // clear reconnection timer
     this.options.isRestory = true
