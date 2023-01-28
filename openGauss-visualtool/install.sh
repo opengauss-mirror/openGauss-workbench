@@ -40,8 +40,8 @@ stty echo
 echo "host: $host, port: $port  username: $username database: $database"
 cp config/application-temp.yml config/application-cus.yml
 sed -i "23s/ip:port/$host:$port/" config/application-cus.yml
-sed -i "24s/database/$database/" config/application-cus.yml
-sed -i "25s/dbuser/$username/" config/application-cus.yml
+sed -i "23s/database/$database/" config/application-cus.yml
+sed -i "24s/dbuser/$username/" config/application-cus.yml
 sed -i "25s/dbpassword/$password/" config/application-cus.yml
 
 mvn clean install -P prod -Dmaven.test.skip=true
