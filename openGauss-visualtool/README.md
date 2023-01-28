@@ -38,6 +38,7 @@ openEuler 20.3LTS（x86_x64，ARM），centos7.x（x86_x64）
 ### 注意事项：
 1、平台使用的数据库，当前仅支持openGauss数据库，并且需要提前创建database。
 2、需要将部署服务器IP配置在平台使用的数据库（openGauss）的白名单列表中。
+3、平台默认的登录账号密码：admin/admin123，请在首次登录后及时修改密码。
 ## 卸载部署步骤
 1、在项目根目录下执行uninstall.sh脚本
 

@@ -51,6 +51,7 @@
       </a-space>
     </a-form>
   </div>
+  <update-default-code v-model:open="editCodeVisible" :old-password="userInfo.password" @change-success="handleChangeSuccess" />
 </template>
 
 <script lang="ts" setup>
@@ -61,12 +62,15 @@
   import { useStorage } from '@vueuse/core'
   import { useUserStore } from '@/store'
   import useLoading from '@/hooks/loading'
-  import type { LoginData } from '@/api/user'
+  import { getUserInfo, LoginData } from '@/api/user'
+  import { isAdmin, isDefaultPwd } from '@/utils/user'
+  import UpdateDefaultCode from '@/views/login/components/UpdateDefaultCode.vue'
 
   const router = useRouter()
   const errorMessage = ref('')
   const { loading, setLoading } = useLoading()
   const userStore = useUserStore()
+  const editCodeVisible = ref<boolean>(false)
 
   const loginConfig = useStorage('login-config', {
     username: '',
@@ -77,6 +81,20 @@
     username: loginConfig.value.rememberMe ? loginConfig.value.username : '',
     password: loginConfig.value.rememberMe ? loginConfig.value.password : ''
   })
+
+  const handleChangeSuccess = (newPassword: string) => {
+    const { redirect, ...othersQuery } = router.currentRoute.value.query
+      router.push({
+        name: (redirect as string) || 'Dashboard',
+        query: {
+          ...othersQuery
+        }
+    })
+    const { rememberMe } = loginConfig.value
+        // The actual production environment requires encrypted storage.
+    loginConfig.value.username = rememberMe ? userInfo.username : ''
+    loginConfig.value.password = rememberMe ? newPassword : ''
+  }
 
   // Log in
   const handleSubmit = async ({
@@ -90,19 +108,26 @@
       setLoading(true)
       try {
         await userStore.login(values as LoginData)
-        const { redirect, ...othersQuery } = router.currentRoute.value.query
-        router.push({
-          name: (redirect as string) || 'Dashboard',
-          query: {
-            ...othersQuery
-          }
-        })
-        Message.success('Login success')
+        const { data } = await getUserInfo()
+        if (isAdmin(data) && isDefaultPwd(data)) {
+          editCodeVisible.value = true
+        } else {
+          const { redirect, ...othersQuery } = router.currentRoute.value.query
+          router.push({
+            name: (redirect as string) || 'Dashboard',
+            query: {
+              ...othersQuery
+            }
+          })
+          Message.success('Login success')
+        }
+
         const { rememberMe } = loginConfig.value
         const { username, password } = values
         // The actual production environment requires encrypted storage.
         loginConfig.value.username = rememberMe ? username : ''
         loginConfig.value.password = rememberMe ? password : ''
+
       } catch (err) {
         errorMessage.value = (err as Error).message
       } finally {

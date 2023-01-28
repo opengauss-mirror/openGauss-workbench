@@ -103,6 +103,7 @@ public class SysProfileController extends BaseController {
             return AjaxResult.error(ResponseCode.USER_PASS_SAME_ERROR.code());
         }
         if (userService.resetUserPwd(userName, SecurityUtils.encryptPassword(newPassword)) > 0) {
+            loginUser.getUser().setUpdatePwd("1");
             loginUser.getUser().setPassword(SecurityUtils.encryptPassword(newPassword));
             tokenService.setLoginUser(loginUser);
             return AjaxResult.success();

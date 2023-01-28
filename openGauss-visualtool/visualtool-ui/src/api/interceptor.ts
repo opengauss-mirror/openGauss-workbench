@@ -20,7 +20,7 @@ let isTimeout = false
 axios.interceptors.request.use(
   (config: AxiosRequestConfig) => {
     const token = getToken()
-    if (token) {
+    if (token && config.url !== '/login') {
       if (!config.headers) {
         config.headers = {}
       }

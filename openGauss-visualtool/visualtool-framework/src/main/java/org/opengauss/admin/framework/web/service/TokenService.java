@@ -58,6 +58,7 @@ public class TokenService {
                 String uuid = (String) claims.get(Constants.LOGIN_USER_KEY);
                 String userKey = getTokenKey(uuid);
                 LoginUser user = (LoginUser) loginCache.asMap().get(userKey);
+                setLoginUser(user);
                 return user;
             } catch (Exception e) {
             }

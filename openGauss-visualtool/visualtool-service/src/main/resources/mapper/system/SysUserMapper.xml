@@ -17,6 +17,7 @@
         <result property="remark" column="remark"/>
         <result property="status" column="status"/>
         <result property="roleName" column="role_name"/>
+        <result property="updatePwd" column="update_pwd"/>
     </resultMap>
 
     <select id="selectUserVo" parameterType="org.opengauss.admin.common.core.domain.entity.SysUser" resultMap="SysUserResult">
@@ -36,6 +37,7 @@
         u.create_by,
         u.create_time,
         u.remark,
+        u.update_pwd,
         r.role_id,
         r.role_name,
         r.role_key,

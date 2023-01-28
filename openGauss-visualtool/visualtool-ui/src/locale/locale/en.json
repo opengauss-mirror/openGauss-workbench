@@ -28,6 +28,23 @@
         }
     },
     "components": {
+        "UpdateDefaultCode": {
+            "5nus586u4jg0": "Rest Default Password",
+            "5n7vbkp1s580": "Change Password",
+            "5n7vbkp1t2s0": "Old Password",
+            "5n7vbkp1tb80": "Old password cannot be empty",
+            "5n7vbkp1tiw0": "Please enter old password",
+            "5n7vbkp1two0": "New Password",
+            "5n7vbkp1u340": "New password cannot be empty",
+            "5n7vbkp1u8o0": "6 to 20 characters in length",
+            "5n7vbkp1uyw0": "Please enter a new password",
+            "5n7vbkp1v8o0": "Confirm Password",
+            "5n7vbkp1vg00": "Confirm password can not be blank",
+            "5n7vbkp1vm40": "Please enter new password again",
+            "5n7vbkp1vus0": "Cancel",
+            "5n7vbkp1vy00": "Confirm",
+            "5n7vbkp1w7c0": "The two entered passwords do not match"
+        },
         "EditCode": {
             "5m6nfosuqic0": "Reset Password",
             "5m6nfosus3k0": "New Password",

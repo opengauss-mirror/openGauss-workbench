@@ -139,7 +139,7 @@ public class HostUserServiceImpl extends ServiceImpl<OpsHostUserMapper, OpsHostU
             }
             if (0 != jschResult.getExitCode()) {
                 log.error("create" + username + "User failed, exit code: {}, log: {}", jschResult.getExitCode(), jschResult.getResult());
-                throw new OpsException("create" + username + "User failed");
+                throw new OpsException("create " + username + " User failed");
             }
         } catch (IOException e) {
             log.error("create" + username + "User failed", e);
@@ -184,14 +184,11 @@ public class HostUserServiceImpl extends ServiceImpl<OpsHostUserMapper, OpsHostU
 
         Session session = jschUtil.getSession(publicIp, port, "root", encryptionUtils.decrypt(rootUser.getPassword())).orElseThrow(() -> new OpsException("root user login failed"));
         try {
-            String command = "cat /etc/passwd | awk -F ':' '{print $1}' | grep " + username + " | wc -l";
+            String command = "id -u " + username;
             JschResult jschResult = jschUtil.executeCommand(command, session);
             if (0 != jschResult.getExitCode()) {
-                log.error("query" + username + "User failed, exit code: {}, log: {}", jschResult.getExitCode(), jschResult.getResult());
-                throw new OpsException("query" + username + "User failed");
-            }
-
-            if (StrUtil.isNotEmpty(jschResult.getResult()) && !"0".equals(jschResult.getResult())) {
+                return false;
+            } else {
                 return true;
             }
         } catch (Exception e) {
@@ -199,13 +196,12 @@ public class HostUserServiceImpl extends ServiceImpl<OpsHostUserMapper, OpsHostU
             if (Objects.nonNull(session) && session.isConnected()) {
                 session.disconnect();
             }
-            throw new OpsException("query" + username + "User failed");
+            throw new OpsException("query " + username + " User failed");
         } finally {
             if (Objects.nonNull(session) && session.isConnected()) {
                 session.disconnect();
             }
         }
-        return false;
     }
 
     @Override
@@ -231,7 +227,7 @@ public class HostUserServiceImpl extends ServiceImpl<OpsHostUserMapper, OpsHostU
         rootUserEntity.setPassword(hostUserBody.getRootPassword());
         if (physicalExist(hostEntity.getPublicIp(), hostEntity.getPort(), rootUserEntity, newEntity.getUsername())) {
             try {
-                Session session = jschUtil.getSession(hostEntity.getPublicIp(), hostEntity.getPort(), hostUserBody.getUsername(), hostUserBody.getPassword()).orElseThrow(() -> new OpsException("user already exists，incorrect password, please enter correct password"));
+                Session session = jschUtil.getSession(hostEntity.getPublicIp(), hostEntity.getPort(), hostUserBody.getUsername(), encryptionUtils.decrypt(hostUserBody.getPassword())).orElseThrow(() -> new OpsException("user already exists，incorrect password, please enter correct password"));
                 if (Objects.isNull(session)) {
                     throw new OpsException("user already exists , incorrect password, please enter correct password");
                 } else {

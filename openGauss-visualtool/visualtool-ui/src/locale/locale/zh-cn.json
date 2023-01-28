@@ -28,6 +28,23 @@
         }
     },
     "components": {
+        "UpdateDefaultCode": {
+            "5nus586u4jg0": "重置默认密码",
+            "5n7vbkp1s580": "修改密码",
+            "5n7vbkp1t2s0": "旧密码",
+            "5n7vbkp1tb80": "旧密码不能为空",
+            "5n7vbkp1tiw0": "请输入旧密码",
+            "5n7vbkp1two0": "新密码",
+            "5n7vbkp1u340": "新密码不能为空",
+            "5n7vbkp1u8o0": "长度在 6 到 20 个字符",
+            "5n7vbkp1uyw0": "请输入新密码",
+            "5n7vbkp1v8o0": "确认密码",
+            "5n7vbkp1vg00": "确认密码不能为空",
+            "5n7vbkp1vm40": "请再次输入新密码",
+            "5n7vbkp1vus0": "取消",
+            "5n7vbkp1vy00": "确定",
+            "5n7vbkp1w7c0": "两次输入的密码不一致"
+        },
         "EditCode": {
             "5m6nfosuqic0": "重置密码",
             "5m6nfosus3k0": "新密码",
