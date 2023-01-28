@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <packaging>jar</packaging>
+
+    <parent>
+        <groupId>com.tools.monitor</groupId>
+        <artifactId>openGauss-tools-monitor</artifactId>
+        <version>1.0.0</version>
+    </parent>
+    <groupId>com.tools.monitor</groupId>
+    <artifactId>monitor-tools</artifactId>
+    <version>1.0.0</version>
+
+    <name>monitor-tools</name>
+    <!-- FIXME change it to the project's website -->
+    <url>http://www.example.com</url>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
+    </properties>
+
+    <dependencies>
+        <!--actuator -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+            <version>${boot.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-prometheus</artifactId>
+            <version>1.8.1</version>
+        </dependency>
+
+        <!-- Spring框架基本的核心工具 -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context-support</artifactId>
+            <version>5.3.15</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <version>${boot.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!--导入校验框架实现技术-->
+        <dependency>
+            <groupId>org.hibernate</groupId>
+            <artifactId>hibernate-validator</artifactId>
+            <version>6.0.18.Final</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-devtools</artifactId>
+            <version>${boot.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>42.2.26</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-jdbc</artifactId>
+            <version>5.3.12</version>
+        </dependency>
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>druid</artifactId>
+            <version>1.1.9</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>20.0</version>
+        </dependency>
+        <!-- swagger start 一体化平台不允许-->
+        <!--<dependency>
+            <groupId>io.springfox</groupId>
+            <artifactId>springfox-boot-starter</artifactId>
+            <version>3.0.0</version>
+        </dependency>
+        <dependency>
+            <groupId>io.swagger</groupId>
+            <artifactId>swagger-annotations</artifactId>
+            <version>1.5.21</version>
+        </dependency>
+        <dependency>
+            <groupId>io.swagger</groupId>
+            <artifactId>swagger-models</artifactId>
+            <version>1.5.21</version>
+        </dependency>-->
+        <!-- swagger end -->
+
+        <dependency>
+            <groupId>ch.ethz.ganymed</groupId>
+            <artifactId>ganymed-ssh2</artifactId>
+            <version>build210</version>
+        </dependency>
+
+        <!-- 定时任务 -->
+        <dependency>
+            <groupId>org.quartz-scheduler</groupId>
+            <artifactId>quartz</artifactId>
+            <version>2.3.2</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.mchange</groupId>
+                    <artifactId>c3p0</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>com.gitee.starblues</groupId>
+                <artifactId>spring-brick-maven-packager</artifactId>
+                <version>${spring-brick.version}</version>
+                <configuration>
+                    <mode>${plugin.build.mode}</mode>
+                    <pluginInfo>
+                        <id>monitor-tools</id>
+                        <bootstrapClass>org.opengauss.admin.plugin.PluginApplication</bootstrapClass>
+                        <version>1.0.0</version>
+                        <provider>openGauss-tools-monitor</provider>
+                        <description>数据库监控插件生成工具：提供一键式将openGauss自定义的监控SQL转换为Prometheus、Zabbix、Nagios监控平台插件，内置50个openGauss通用插件，覆盖对连接数、动态内存、共享内存、TPS、QPS、长连接等常用指标监控，可快速实现对openGauss的监控部署。</description>
+                        <configFileName>application.yml</configFileName>
+                        <detailJson>{"logo": "PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0Ij4KICA8ZyBpZD0i57uEXzEwMiIgZGF0YS1uYW1lPSLnu4QgMTAyIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgtMTI5IC03OCkiPgogICAgPHJlY3QgaWQ9IuefqeW9oiIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxMjkgNzgpIiBmaWxsPSIjZDhkOGQ4IiBvcGFjaXR5PSIwIi8+CiAgICA8cGF0aCBpZD0i6IGU5ZCIXzEwIiBkYXRhLW5hbWU9IuiBlOWQiCAxMCIgZD0iTS0zOTQzLjk2MS0xNDc3LjUybDYuMDYzLjAyMmEuNzUuNzUsMCwwLDEsLjc0Ny43NTMuNzUxLjc1MSwwLDAsMS0uNjUxLjc0MWwtLjEuMDA2LTYuMDYzLS4wMjJhLjc1Ljc1LDAsMCwxLS43NDctLjc1My43NS43NSwwLDAsMSwuNjUxLS43NDFaTS0zOTMxLTE0OTJhMywzLDAsMCwxLDIuOTk1LDIuODI0bC4wMDUuMTc2LS4wMDUsMy41NzNhLjc1Ljc1LDAsMCwxLS43NS43NS43NS43NSwwLDAsMS0uNzQzLS42NDhsLS4wMDctLjEuMDA1LTMuNTczYTEuNSwxLjUsMCwwLDAtMS4zNTUtMS40OTNsLS4xNDUtLjAwN2gtMTRhMS41LDEuNSwwLDAsMC0xLjQ5MywxLjM1NmwtLjAwNy4xNDR2Mi43NWg1YS43NS43NSwwLDAsMSwuNjI4LjM0MWwuMDUyLjA5NS44MjMsMS43ODUsMi4zNi01LjAzOWEuNzUuNzUsMCwwLDEsMS4yODMtLjEyN2wuMDYuMSwxLjAxOSwxLjkzOWEuNzUuNzUsMCwwLDEtLjMxNSwxLjAxMy43NS43NSwwLDAsMS0uOTU5LS4yMjhsLS4wNTMtLjA4Ny0uMzE2LS42LTIuNCw1LjEzMmEuNzUuNzUsMCwwLDEtMS4zLjFsLS4wNTYtLjEtMS4zLTIuODE0aC00LjUydjIuNzVhMS41LDEuNSwwLDAsMCwxLjM1NSwxLjQ5M2wuMTQ1LjAwN2g1Ljc1YS43NS43NSwwLDAsMSwuNzUuNzUuNzUuNzUsMCwwLDEtLjY0OC43NDNsLS4xLjAwN0gtMzk0NWEzLDMsMCwwLDEtMi45OTUtMi44MjRMLTM5NDgtMTQ4MnYtN2EzLDMsMCwwLDEsMi44MjQtMi45OTVsLjE3Ni0uMDA1WiIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoNDA3OC40ODYgMTU3My45OTkpIiBmaWxsPSIjMTkxOTE5IiBmaWxsLXJ1bGU9ImV2ZW5vZGQiLz4KICAgIDxwYXRoIGlkPSLlvaLnirbnu5PlkIgiIGQ9Ik0xMC44NTIsNi4wNDNjMS40MTUsMCwyLjE0Ni44MTQsMi4xNTYsMS44NDN2NC4xNzFBMS45NTUsMS45NTUsMCwwLDEsMTEuMDc5LDE0bC00LjEyMi0uMDQzYy0uOTg0LDAtMi4xMS0uNTEzLTIuMTMtMS41NDN2LS44SDMuNzY5YS41ODYuNTg2LDAsMSwxLDAtMS4xNjdINC44MjdWOS43SDMuNzY5YS41ODYuNTg2LDAsMSwxLDAtMS4xNjdINC44MjdWNy43MTZDNC44MzIsNi42NTksNS41MzEsNS45ODYsNi44LDZaTTEwLjUzNSw3LjIxLDYuODk0LDcuMTY3Yy0uNDg1LDAtLjc4MS4yLS43ODYuNjc2djQuMTcxYy4wMDUuNDU3LjM0OS43NzEuOTMyLjc3NmwzLjkwNi4wNDNhLjg3NS44NzUsMCwwLDAsLjg3LS45VjguMDE0Yy4wMDUtLjUyOS0uNC0uODE0LS45NjMtLjhaTTcuODkyLDkuODJhLjYxNC42MTQsMCwwLDEsLjY0MS41ODR2Ljk1OWEuNjQzLjY0MywwLDAsMS0xLjI4MSwwVjEwLjRBLjYxNC42MTQsMCwwLDEsNy44OTIsOS44MlpNOS4wODYsOC4xNzFhLjU4Ni41ODYsMCwxLDEsMCwxLjE2N0g3LjQyNWEuNTg2LjU4NiwwLDEsMSwwLTEuMTY3WiIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMTM3LjQxOCA4NCkiIGZpbGw9IiMxOTE5MTkiIGZpbGwtcnVsZT0iZXZlbm9kZCIvPgogIDwvZz4KPC9zdmc+CiA=","pluginType":1,"isNeedConfigured":0,"configAttrs":[],"theme":""}</detailJson>
+                    </pluginInfo>
+                    <prodConfig>
+                        <packageType>jar</packageType>
+                    </prodConfig>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>
