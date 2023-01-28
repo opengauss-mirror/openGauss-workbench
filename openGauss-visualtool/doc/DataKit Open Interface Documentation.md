@@ -4,7 +4,7 @@
 
 ## **接口路径**
 
-com.h.gauss.admin.system.plugin.facade.MenuFacade
+org.opengauss.admin.system.plugin.facade.MenuFacade
 
 ## **方法**
 
@@ -114,7 +114,7 @@ menuFacade.saveIndexInstanceRoute("moniter-plugin","实例监控插件","index")
 
 ## 接口路径
 
-com.h.gauss.admin.system.plugin.facade.PluginFacade
+org.opengauss.admin.system.plugin.facade.PluginFacade
 
 ## 方法
 
@@ -146,7 +146,7 @@ com.h.gauss.admin.system.plugin.facade.PluginFacade
 
 ## 接口路径
 
-com.h.gauss.admin.system.plugin.facade.OpsFacade
+org.opengauss.admin.system.plugin.facade.OpsFacade
 
 ## 方法
 
@@ -168,7 +168,7 @@ List<OpsClusterVO> 对象，详见对象结构说明。
 
 ## 接口路径
 
-com.h.gauss.admin.system.plugin.facade.WsFacade
+org.opengauss.admin.system.plugin.facade.WsFacade
 
 ## 方法
 
@@ -190,7 +190,7 @@ com.h.gauss.admin.system.plugin.facade.WsFacade
 
 ## 接口路径
 
-com.h.gauss.admin.system.plugin.facade.JdbcDbClusterFacade
+org.opengauss.admin.system.plugin.facade.JdbcDbClusterFacade
 
 ## 方法
 
@@ -214,7 +214,7 @@ Page<JdbcDbClusterVO> 对象，详见对象结构说明。
 
 ## 接口路径
 
-com.h.gauss.admin.system.plugin.facade.HostFacade
+org.opengauss.admin.system.plugin.facade.HostFacade
 
 ## 方法
 

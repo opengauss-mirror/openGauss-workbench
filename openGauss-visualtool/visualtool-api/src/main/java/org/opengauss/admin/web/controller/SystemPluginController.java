@@ -1,6 +1,7 @@
 package org.opengauss.admin.web.controller;
 
 import cn.hutool.core.codec.Base64;
+import cn.hutool.core.map.MapUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -160,20 +161,18 @@ public class SystemPluginController extends BaseController {
                     .setUnpackPlugin(false);
             PluginInfo pluginInfo = pluginOperator.uploadPlugin(uploadParam);
             if (pluginInfo != null) {
-                String detailJson = pluginInfo.getPluginDescriptor().getDetailJson();
-                JSONObject jo = null;
-                try {
-                    jo = JSON.parseObject(detailJson);
-                } catch (Exception e) {}
                 String logo = null;
                 Integer pluginType = null;
                 Integer isNeedConfigured = null;
                 String theme = null;
-                if (StringUtils.isNotBlank(detailJson) && jo != null) {
-                    logo = jo.getString("logo");
-                    pluginType = jo.getInteger("pluginType");
-                    isNeedConfigured = jo.getInteger("isNeedConfigured");
-                    theme = jo.getString("theme");
+                String configAttrs = null;
+                if (pluginInfo.getExtensionInfo() != null) {
+                    logo = MapUtil.getStr(pluginInfo.getExtensionInfo(), "logo");
+                    pluginType = MapUtil.getInt(pluginInfo.getExtensionInfo(), "pluginType");
+                    isNeedConfigured = MapUtil.getInt(pluginInfo.getExtensionInfo(), "isNeedConfigured");
+                    theme = MapUtil.getStr(pluginInfo.getExtensionInfo(), "theme");
+                    configAttrs = MapUtil.getStr(pluginInfo.getExtensionInfo(), "configAttrs");
+
                     if (!SysPluginTheme.DARK.getCode().equals(theme) && !SysPluginTheme.LIGHT.getCode().equals(theme)) {
                         theme = null;
                     }
@@ -182,7 +181,6 @@ public class SystemPluginController extends BaseController {
                         logo = FileUploadUtils.writeMenuSvgIcon(logo);
                     }
                 }
-
                 SysPlugin plugin = SysPlugin.builder().pluginId(pluginInfo.getPluginId())
                         .pluginDesc(pluginInfo.getPluginDescriptor().getDescription())
                         .bootstrapClass(pluginInfo.getPluginDescriptor().getPluginBootstrapClass())
@@ -194,7 +192,6 @@ public class SystemPluginController extends BaseController {
                 result.put("isNeedConfigured", isNeedConfigured);
                 result.put("pluginId", pluginInfo.getPluginId());
                 if (isNeedConfigured != null && isNeedConfigured == 1) {
-                    String configAttrs = jo.getString("configAttrs");
                     sysPluginConfigService.savePluginConfig(pluginInfo.getPluginId(), configAttrs);
                     result.put("configAttrs", configAttrs);
                     String alreadyData = sysPluginConfigDataService.getDataByPluginId(pluginInfo.getPluginId());

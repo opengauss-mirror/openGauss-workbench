@@ -20,7 +20,7 @@
 <dependency>
     <groupId>com.gitee.starblues</groupId>
     <artifactId>spring-brick</artifactId>
-    <version>3.1.0-eb-1</version>
+    <version>3.1.0</version>
 </dependency>
 ```
 
@@ -28,7 +28,7 @@
 
 ```YAML
 plugin:
-  mainPackage: com.h.gauss.admin
+  mainPackage: org.opengauss.admin
   runMode: dev
   pluginPath:
     - ~/visualtool-plugin
@@ -68,11 +68,11 @@ public class AdminApplication implements SpringBootstrap {
         <plugin>
             <groupId>com.gitee.starblues</groupId>
             <artifactId>spring-brick-maven-packager</artifactId>
-            <version>3.1.0-eb-1</version>
+            <version>3.1.0</version>
             <configuration>
                 <mode>main</mode>
                 <mainConfig>
-                    <mainClass>com.h.gauss.admin.AdminApplication</mainClass>
+                    <mainClass>org.opengauss.admin.AdminApplication</mainClass>
                     <packageType>jar</packageType>
                 </mainConfig>
             </configuration>

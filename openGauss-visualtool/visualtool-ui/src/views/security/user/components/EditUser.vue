@@ -24,7 +24,7 @@
             },
             {
               required: true,
-              match: /^\S*(?=\S{6,20})(?=\S*[\dA-Za-z!@#$%^&*? ])\S*$/,
+              match: /(?!^\d+$)(?!^[A-Za-z]+$)(?!^[^A-Za-z0-9]+$)(?!^.*[\u4E00-\u9FA5].*$)^\S{6,20}$/,
               message: $t('components.EditUser.5n7v8xco9u80')
             }
           ]">

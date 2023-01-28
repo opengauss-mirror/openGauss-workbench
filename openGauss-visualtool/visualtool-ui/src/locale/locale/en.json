@@ -36,7 +36,7 @@
             "5n7vbkp1tiw0": "Please enter old password",
             "5n7vbkp1two0": "New Password",
             "5n7vbkp1u340": "New password cannot be empty",
-            "5n7vbkp1u8o0": "6 to 20 characters in length",
+            "5n7vbkp1u8o0": "The length is between 6 and 20 numbers, letters, and special characters, at least two combinations",
             "5n7vbkp1uyw0": "Please enter a new password",
             "5n7vbkp1v8o0": "Confirm Password",
             "5n7vbkp1vg00": "Confirm password can not be blank",
@@ -53,7 +53,7 @@
             "5m6nfosuskg0": "Cancel",
             "5m6nfosuspc0": "Confirm",
             "5m6nfosustg0": "reset success",
-            "5nsczb3r79w0": "6 to 20 characters in length"
+            "5nsczb3r79w0": "The length is between 6 and 20 numbers, letters, and special characters, at least two combinations"
         },
         "EditUser": {
             "5m6nh3mgjns0": "Revise",
@@ -80,7 +80,7 @@
             "5m6nh3mgnkg0": "Confirm",
             "5m6nh3mgnn40": "Successfully modified",
             "5m6nh3mgnpo0": "Added successfully",
-            "5n7v8xco9u80": "6 to 20 characters in length",
+            "5n7v8xco9u80": "The length is between 6 and 20 numbers, letters, and special characters, at least two combinations",
             "5nsg5pkyao80": "Mobile phone number format is incorrect",
             "else1": "Add",
             "else2": " User"
@@ -92,7 +92,7 @@
             "5n7vbkp1tiw0": "Please enter old password",
             "5n7vbkp1two0": "New Password",
             "5n7vbkp1u340": "New password cannot be empty",
-            "5n7vbkp1u8o0": "6 to 20 characters in length",
+            "5n7vbkp1u8o0": "The length is between 6 and 20 numbers, letters, and special characters, at least two combinations",
             "5n7vbkp1uyw0": "Please enter a new password",
             "5n7vbkp1v8o0": "Confirm Password",
             "5n7vbkp1vg00": "Confirm password can not be blank",
