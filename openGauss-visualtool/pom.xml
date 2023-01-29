@@ -12,7 +12,7 @@
 
     <properties>
         <java.version>11</java.version>
-        <spring-brick.version>3.1.0-eb-1</spring-brick.version>
+        <spring-brick.version>3.1.0</spring-brick.version>
         <spring-boot.version>2.5.6</spring-boot.version>
         <admin.version>0.0.1-SNAPSHOT</admin.version>
         <mybatis-plus.version>3.5.0</mybatis-plus.version>
@@ -205,46 +205,6 @@
             </properties>
         </profile>
     </profiles>
-
-    <distributionManagement>
-        <snapshotRepository>
-            <id>og-snapshots</id>
-            <name>private Release</name>
-            <url>http://39.108.219.254:8081/repository/maven-snapshots/ </url>
-        </snapshotRepository>
-        <repository>
-            <id>og-releases</id>
-            <name>private Release</name>
-            <url>http://39.108.219.254:8081/repository/maven-releases/</url>
-        </repository>
-    </distributionManagement>
-
-    <repositories>
-        <repository>
-            <id>maven-public</id>
-            <name>private Release</name>
-            <url>http://39.108.219.254:8081/repository/maven-public/</url>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-        </repository>
-    </repositories>
-    <pluginRepositories>
-        <pluginRepository>
-            <id>maven-public</id>
-            <name>private Release</name>
-            <url>http://39.108.219.254:8081/repository/maven-public/</url>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-        </pluginRepository>
-    </pluginRepositories>
 
     <build>
         <plugins>

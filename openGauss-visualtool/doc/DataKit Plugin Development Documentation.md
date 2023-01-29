@@ -50,7 +50,7 @@
 <dependency>
   <groupId>com.gitee.starblues</groupId>
   <artifactId>spring-brick-bootstrap</artifactId>
-  <version>3.1.0-eb-1</version>
+  <version>3.1.0</version>
 </dependency>
 ```
 
@@ -58,7 +58,7 @@
 
 ```XML
 <dependency>
-    <groupId>com.h.gauss</groupId>
+    <groupId>org.opengauss</groupId>
     <artifactId>visualtool-service</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <!--如果不需要操作数据库和redis，则排除以下依赖-->
@@ -85,7 +85,7 @@
 
 #### 定义插件引导类
 
-> 注意：插件引导类包必须在主程序的包名之下，主程序的包名是com.h.gauss.admin，因此插件的引导类必须在com.h.gauss.admin.xxx之下。
+> 注意：插件引导类包必须在主程序的包名之下，主程序的包名是org.opengauss.admin，因此插件的引导类必须在org.opengauss.admin.xxx之下。
 
 定义插件`main`入口类,  继承`SpringPluginBootstrap`类,  然后在`main`函数中实例化当前引导类，并执行`run`方法即可。实现如下:
 
@@ -507,6 +507,42 @@ public AjaxResult test() {
 
 ![img](https://fullstack-dao.feishu.cn/space/api/box/stream/download/asynccode/?code=YTQyMDhkZDM3NzkwZjFlZjQ3YTdkOGJhNjgwZTM5NmVfd3pXZjZESWZWczQ3Z2JzMVRDbWdyTVNPbDlpd2tXMUNfVG9rZW46Ym94Y25USno1cGRFVk52ZTNDTkZxU0sxcTZnXzE2NzM4NzY5NzY6MTY3Mzg4MDU3Nl9WNA)
 
+## 插件扩展参数配置
+在插件中可以配置自定义的参数，以提供给平台获取使用，比如插件的Logo、插件的主题等。
+### 使用方式
+在插件中实现com.gitee.starblues.core.PluginExtensionInfo接口接口。例如：
+```Java
+@Component
+public class PluginExtensionInfoConfig implements PluginExtensionInfo {
+
+    @Override
+    public Map<String, Object> extensionInfo() {
+        Map<String, Object> map = new HashMap<>();
+        map.put("logo", "PHN2ZyB2ZXJzaW9uPSIxLjEiIGlkPSJDYXBhXzEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHg9IjBweCIgeT0iMHB4IgoJIHZpZXdCb3g9IjAgMCAzMTAgMzEwIiBzdHlsZT0iZW5hYmxlLWJhY2tncm91bmQ6bmV3IDAgMCAzMTAgMzEwOyIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSI+CjxwYXRoIGQ9Ik0zMDAuNTY0LDE3OS4zMTFMMjgyLjQsMTY4LjgyNGMwLjQ4OS00LjU0MywwLjc0Ny05LjE1NCwwLjc0Ny0xMy44MjRzLTAuMjU4LTkuMjgxLTAuNzQ3LTEzLjgyNGwxOC4xNjQtMTAuNDg3CgljMy44ODEtMi4yNDEsNi42NTgtNS44Niw3LjgxNi0xMC4xOTFjMS4xNi00LjMzLDAuNTY0LTguODU0LTEuNjc2LTEyLjczNWwtMzQuOTQzLTYwLjUyNGMtMi45OS01LjE4LTguNTY0LTguMzk2LTE0LjU1MS04LjM5NgoJYy0yLjkzLDAtNS44MjYsMC43NzgtOC4zNzcsMi4yNTFMMjMwLjYxOSw1MS42MWMtNy40MDItNS40MjktMTUuNDA2LTEwLjA4My0yMy44OTMtMTMuODQyVjE2Ljc4MwoJQzIwNi43MjcsNy41MjksMTk5LjE5NSwwLDE4OS45NDUsMGgtNjkuODkxYy05LjI1NCwwLTE2Ljc4MSw3LjUyOS0xNi43ODEsMTYuNzgzdjIwLjk4NWMtOC40ODYsMy43NTktMTYuNDksOC40MTMtMjMuODk0LDEzLjg0MgoJTDYxLjE2NCw0MS4wOTRjLTIuNTUxLTEuNDczLTUuNDQ1LTIuMjUtOC4zNzUtMi4yNWMtNS45ODYsMC0xMS41NjMsMy4yMTUtMTQuNTUzLDguMzk1TDMuMjk1LDEwNy43NjIKCWMtMi4yNDIsMy44ODEtMi44MzYsOC40MDYtMS42NzQsMTIuNzM2YzEuMTU2LDQuMzMsMy45MzUsNy45NDksNy44MTQsMTAuMTkxTDI3LjYsMTQxLjE3NmMtMC40ODksNC41NDMtMC43NDcsOS4xNTQtMC43NDcsMTMuODI0CglzMC4yNTgsOS4yODEsMC43NDcsMTMuODI0TDkuNDM1LDE3OS4zMTFjLTMuODc5LDIuMjQxLTYuNjU4LDUuODYtNy44MTQsMTAuMTkxYy0xLjE2Miw0LjMzLTAuNTY4LDguODU1LDEuNjc0LDEyLjczNWwzNC45NDEsNjAuNTI0CgljMi45OSw1LjE4LDguNTY2LDguMzk1LDE0LjU1Myw4LjM5NWMyLjkzLDAsNS44MjQtMC43NzcsOC4zNzUtMi4yNUw3OS4zOCwyNTguMzljNy40MDMsNS40MjksMTUuNDA3LDEwLjA4MywyMy44OTQsMTMuODQydjIwLjk4NgoJYzAsNC40ODIsMS43NDQsOC42OTUsNC45MTQsMTEuODY2YzMuMTc0LDMuMTY5LDcuMzg1LDQuOTE2LDExLjg2Nyw0LjkxNmg2OS44OTFjOS4yNSwwLDE2Ljc4MS03LjUyOSwxNi43ODEtMTYuNzgydi0yMC45ODYKCWM4LjQ4Ni0zLjc1OSwxNi40OS04LjQxMywyMy44OTMtMTMuODQybDE4LjIxNSwxMC41MTdjMi41NTEsMS40NzMsNS40NDcsMi4yNSw4LjM3NywyLjI1YzUuOTg2LDAsMTEuNTYxLTMuMjE1LDE0LjU1MS04LjM5NQoJbDM0Ljk0My02MC41MjNjMi4yNC0zLjg4MSwyLjgzNi04LjQwNiwxLjY3Ni0xMi43MzZDMzA3LjIyMywxODUuMTcyLDMwNC40NDUsMTgxLjU1MywzMDAuNTY0LDE3OS4zMTF6IE0xNTUsMjQ2LjEwMQoJYy0xOC4yMywwLTM1LjIwNy01LjM1Ny00OS40NDktMTQuNTc5bDMwLjgwMS0zMC44MDRjNi40NDksMi43NzIsMTMuNDUsNC4yNCwyMC42NzcsNC4yNDFjMC4wMDIsMCwwLjAwMywwLDAuMDA0LDAKCWMxNC4wMTEsMCwyNy4xNzUtNS40NjYsMzcuMDY0LTE1LjM5YzEzLjUtMTMuNTM2LDE4LjU0MS0zMy4zNjMsMTMuMTU1LTUxLjc0M2MtMC4zMTMtMS4wNjktMS4xNjgtMS44OTQtMi4yNDgtMi4xNjkKCWMtMS4wNzgtMC4yNzctMi4yMjUsMC4wNC0zLjAxMSwwLjgyOWwtMzIuOTcsMzMuMDY5Yy0xLjk3OS0wLjgwNC02Ljk2MS0zLjU0Mi0xNi4xODYtMTIuNzM2CgljLTkuMjI2LTkuMTk3LTExLjk3Ni0xNC4xNzMtMTIuNzgzLTE2LjE0OGwzMi45NjYtMzMuMDY5YzAuNzg3LTAuNzg5LDEuMDk4LTEuOTM1LDAuODItMy4wMTNjLTAuMjc4LTEuMDc5LTEuMTA1LTEuOTMxLTIuMTc1LTIuMjQxCgljLTQuNzUxLTEuMzc4LTkuNjc2LTIuMDc4LTE0LjYzNy0yLjA3OGMtMTQuMDE2LDAtMjcuMTgxLDUuNDY0LTM3LjA2OSwxNS4zODVjLTkuODczLDkuOTAzLTE1LjI5OSwyMy4wNTctMTUuMjgsMzcuMDM5CgljMC4wMSw3LjIwNCwxLjQ3NiwxNC4xOCw0LjI0LDIwLjYwNGwtMzAuNzIyLDMwLjcyNEM2OS4xNDUsMTg5Ljg2OCw2My44OTYsMTczLjA0Nyw2My44OTYsMTU1CgljMC01MC4zMTMsNDAuNzg3LTkxLjEwMiw5MS4xMDQtOTEuMTAyczkxLjEwMiw0MC43ODksOTEuMTAyLDkxLjEwMlMyMDUuMzE2LDI0Ni4xMDEsMTU1LDI0Ni4xMDF6Ii8+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+Cjwvc3ZnPg==");
+        map.put("theme", "dark");
+        map.put("pluginType", 1);
+        map.put("isNeedConfigured", 1);
+        map.put("configAttrs", "[{\"attrCode\":\"esHost\",\"attrLabel\":\"ES服务器\"},{\"attrCode\":\"esPort\",\"attrLabel\":\"端口\"}]");
+        return map;
+    }
+}
+```
+### 当前平台支持的扩展参数
+
+| 参数名称 | 类型   | 是否必填 | 描述                             |
+| -------- | ------ |------| -------------------------------- |
+| logo     | String | 是    | 必须是svg格式，传值内容必须是svg代码的Base64编码 |
+| pluginType     | Integer | 否    | 插件类型 |
+| isNeedConfigured     | Integer | 否    | 是否需要在主程序填写配置信息，默认0，1为需要 |
+| configAttrs     | List | 否    | 配置属性集合，json字符串。具体内容见下 |
+| theme     | String | 否    | 插件主题；可选项：dark（深色）light（浅色），默认light |
+
+**configAttrs单个元素**
+
+| 参数名称 | 类型   | 是否必填 | 描述                             |
+| -------- | ------ |-----| -------------------------------- |
+| attrLabel     | String | 是   | 属性标签 |
+| attrCode     | String | 是    | 属性Code |
 ## Maven打包配置
 
 ### 插件信息配置
@@ -532,11 +568,10 @@ public AjaxResult test() {
 ```XML
 <pluginInfo>
     <id>email-notice</id>
-    <bootstrapClass>com.h.gauss.admin.plugin.EmailNoticeApplication</bootstrapClass>
+    <bootstrapClass>org.opengauss.admin.plugin.EmailNoticeApplication</bootstrapClass>
     <version>1.0.0</version>
     <provider>xielibo</provider>
     <description>邮件通知插件</description>
-    <detailJson>{"iconPath":"https://img.wkepu.cn/p/20190605/914373f11904b0fbe671b3d7367ba2a1.jpg","pluginType":1}</detailJson>
 </pluginInfo>
 ```
 
@@ -549,45 +584,6 @@ public AjaxResult test() {
 | version        | String | 是       | 插件版本号。版本号要求见如下`版本号规则`                 |
 | provider       | String | 是       | 插件提供开发者名称                                       |
 | description    | String | 是       | 插件描述信息                                             |
-| detailJson     | json   | 是       | 扩展信息，json结构，包括图标(logo)、插件类型(pluginType) |
-
-##### detailJson
-
-| 参数名称         | 类型    | 是否必填 | 描述                                                   |
-| ---------------- | ------- | -------- | ------------------------------------------------------ |
-| logo             | String  | 是       | **必须是svg格式，传值内容必须是svg代码的Base64编码**   |
-| pluginType       | Integer | 是       | 插件类型                                               |
-| isNeedConfigured | Boolean | 否       | 是否需要在主程序填写配置信息，默认0，1为需要。         |
-| configAttrs      | List    | 是       | 配置属性集合                                           |
-| theme            | String  | 否       | 插件主题；可选项：dark（深色）light（浅色），默认light |
-
-**configAttrs单个元素**
-
-| 参数名称  | 类型   | 是否必填 | 描述     |
-| --------- | ------ | -------- | -------- |
-| attrLabel | String | 是       | 属性标签 |
-| attrCode  | String | 是       | 属性Code |
-
-#### detailJson样例
-
-```JSON
-{
-    "logo": "PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGNsYXNzPSJpb25pY29uIiB2aWV3Qm94PSIwIDAgNTEyIDUxMiI+PHRpdGxlPkFkZCBDaXJjbGU8L3RpdGxlPjxwYXRoIGQ9Ik00NDggMjU2YzAtMTA2LTg2LTE5Mi0xOTItMTkyUzY0IDE1MCA2NCAyNTZzODYgMTkyIDE5MiAxOTIgMTkyLTg2IDE5Mi0xOTJ6IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLW1pdGVybGltaXQ9IjEwIiBzdHJva2Utd2lkdGg9IjMyIi8+PHBhdGggZmlsbD0ibm9uZSIgc3Ryb2tlPSJjdXJyZW50Q29sb3IiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLXdpZHRoPSIzMiIgZD0iTTI1NiAxNzZ2MTYwTTMzNiAyNTZIMTc2Ii8+PC9zdmc+",
-    "pluginType": 1,
-    "isNeedConfigured": 1,
-    "configAttrs": [
-        {
-            "attrLabel": "ES服务器",
-            "attrCode": "esHost"
-        },
-        {
-            "attrLabel": "端口",
-            "attrCode": "esPort"
-        }
-    ],
-    "theme": "dark"
-}
-```
 
 #### 完整样例
 
@@ -598,7 +594,7 @@ public AjaxResult test() {
             <plugin>
                 <groupId>com.gitee.starblues</groupId>
                 <artifactId>spring-brick-maven-packager</artifactId>
-                <version>3.1.0-eb-1</version>
+                <version>3.1.0</version>
             </plugin>
         </plugins>
     </pluginManagement>
@@ -610,11 +606,10 @@ public AjaxResult test() {
                 <mode>prod</mode>
                 <pluginInfo>
                     <id>email-notice</id>
-                    <bootstrapClass>com.h.gauss.admin.plugin.EmailNoticeApplication</bootstrapClass>
+                    <bootstrapClass>org.opengauss.admin.plugin.EmailNoticeApplication</bootstrapClass>
                     <version>1.0.0</version>
                     <provider>xielibo</provider>
                     <description>邮件通知插件</description>
-                    <detailJson>{"logo":"PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGNsYXNzPSJpb25pY29uIiB2aWV3Qm94PSIwIDAgNTEyIDUxMiI+PHRpdGxlPkFkZCBDaXJjbGU8L3RpdGxlPjxwYXRoIGQ9Ik00NDggMjU2YzAtMTA2LTg2LTE5Mi0xOTItMTkyUzY0IDE1MCA2NCAyNTZzODYgMTkyIDE5MiAxOTIgMTkyLTg2IDE5Mi0xOTJ6IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLW1pdGVybGltaXQ9IjEwIiBzdHJva2Utd2lkdGg9IjMyIi8+PHBhdGggZmlsbD0ibm9uZSIgc3Ryb2tlPSJjdXJyZW50Q29sb3IiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLXdpZHRoPSIzMiIgZD0iTTI1NiAxNzZ2MTYwTTMzNiAyNTZIMTc2Ii8+PC9zdmc+","pluginType":1,"isNeedConfigured":1,"configAttrs":[{"attrLabel":"ES服务器","attrCode":"esHost"},{"attrLabel":"端口","attrCode":"esPort"}],"theme":"dark"}</detailJson>
                 </pluginInfo>
             </configuration>
             <executions>
@@ -720,7 +715,7 @@ public class AutowiredTypeDefinerImpl implements AutowiredTypeDefiner {
     @Override
     public void config(AutowiredTypeDefinerConfig config) {
         config
-            .add(AutowiredType.Type.MAIN, "com.h.gauss.admin.system.plugin.facade.MenuFacade")
+            .add(AutowiredType.Type.MAIN, "org.opengauss.admin.system.plugin.facade.MenuFacade")
             .add(AutowiredType.Type.MAIN, DataSource.class);
     }
 }

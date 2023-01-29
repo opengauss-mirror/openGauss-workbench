@@ -12,7 +12,7 @@
         <maven.compiler.target>11</maven.compiler.target>
         <lombok.version>1.18.24</lombok.version>
         <junit.version>4.13</junit.version>
-        <spring-brick.version>3.1.0-eb-1</spring-brick.version>
+        <spring-brick.version>3.1.0</spring-brick.version>
         <spring-boot.version>2.5.6</spring-boot.version>
     </properties>
 
@@ -60,34 +60,6 @@
         </dependency>
     </dependencies>
 
-    <repositories>
-        <repository>
-            <id>maven-public</id>
-            <name>private Release</name>
-            <url>http://39.108.219.254:8081/repository/maven-public/</url>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-        </repository>
-    </repositories>
-
-    <pluginRepositories>
-        <pluginRepository>
-            <id>maven-public</id>
-            <name>private Release</name>
-            <url>http://39.108.219.254:8081/repository/maven-public/</url>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-        </pluginRepository>
-    </pluginRepositories>
-
     <build>
         <pluginManagement>
             <plugins>
@@ -111,7 +83,6 @@
                         <version>1.0.0</version>
                         <provider>xielibo</provider>
                         <description>example</description>
-                        <detailJson>{"logo": "PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGNsYXNzPSJpb25pY29uIiB2aWV3Qm94PSIwIDAgNTEyIDUxMiI+PHRpdGxlPkFkZCBDaXJjbGU8L3RpdGxlPjxwYXRoIGQ9Ik00NDggMjU2YzAtMTA2LTg2LTE5Mi0xOTItMTkyUzY0IDE1MCA2NCAyNTZzODYgMTkyIDE5MiAxOTIgMTkyLTg2IDE5Mi0xOTJ6IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLW1pdGVybGltaXQ9IjEwIiBzdHJva2Utd2lkdGg9IjMyIi8+PHBhdGggZmlsbD0ibm9uZSIgc3Ryb2tlPSJjdXJyZW50Q29sb3IiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLXdpZHRoPSIzMiIgZD0iTTI1NiAxNzZ2MTYwTTMzNiAyNTZIMTc2Ii8+PC9zdmc+"}</detailJson>
                     </pluginInfo>
                 </configuration>
                 <executions>
