@@ -59,6 +59,9 @@ public class StartDebugImpl implements OperationInterface {
     @Autowired
     private FuncProcedureImpl funcProcedure;
 
+    @Autowired
+    private StopDebugImpl stopDebug;
+
     @Override
     public void operate(WebSocketServer webSocketServer, Object obj) throws Exception {
         log.info("startDebug obj is: " + obj);
@@ -66,47 +69,51 @@ public class StartDebugImpl implements OperationInterface {
         String windowName = paramReq.getWindowName();
         OperateStatusDO operateStatus = webSocketServer.getOperateStatus(windowName);
         operateStatus.setDebug(paramReq.isDebug());
-        Statement statement = webSocketServer.getStatement(windowName);
-        if (statement == null) {
-            Connection connection = webSocketServer.getConnection(windowName);
-            if (connection == null) {
-                connection = webSocketServer.createConnection(paramReq.getConnectionName(), paramReq.getWebUser());
-            }
-            statement = connection.createStatement();
-            webSocketServer.setStatement(windowName, statement);
-        }
         if (!operateStatus.isStartDebug()) {
             return;
         }
-
         String sql = paramReq.getSql();
         String name = DebugUtils.prepareName(sql);
         String schema = DebugUtils.prepareFuncName(sql).split("\\.")[0];
         log.info("startDebug sql is: " + sql);
 
-        ResultSet funcResult = statement.executeQuery(DebugUtils.getFuncSql(windowName, name, webSocketServer));
+        Statement statement = webSocketServer.getStatement(windowName);
+        ResultSet funcResult = null;
         Map<String, Object> paramMap = new HashMap<>();
-        while (funcResult.next()) {
-            paramMap.put(PRO_NAME, funcResult.getString(PRO_NAME));
-            paramMap.put(LAN_NAME, funcResult.getString(LAN_NAME));
-            paramMap.put(TYP_NAME, funcResult.getString(TYP_NAME));
-            paramMap.put(PRO_ARG_TYPES, funcResult.getString(PRO_ARG_TYPES));
-            paramMap.put(PRO_ALL_ARG_TYPES, funcResult.getString(PRO_ALL_ARG_TYPES));
-            paramMap.put(PRO_ARG_MODES, funcResult.getString(PRO_ARG_MODES));
-            paramMap.put(PRO_ARG_NAMES, funcResult.getString(PRO_ARG_NAMES));
-            paramMap.put(PRO_SRC, funcResult.getString(PRO_SRC));
-            paramMap.put(PRO_BIN, funcResult.getString(PRO_BIN));
-            paramMap.put(PRO_ARG_SRC, funcResult.getString(PRO_ARG_SRC));
-            paramMap.put(PRO_KIND, funcResult.getString(PRO_KIND));
-            paramMap.put(PRO_VOLATILE, funcResult.getString(PRO_VOLATILE));
-            paramMap.put(PRO_COST, funcResult.getInt(PRO_COST));
-            paramMap.put(PRO_ROWS, funcResult.getInt(PRO_ROWS));
-            paramMap.put(FEN_CED_MODE, funcResult.getBoolean(FEN_CED_MODE));
-            paramMap.put(PRO_SHIPPABLE, funcResult.getBoolean(PRO_SHIPPABLE));
-            paramMap.put(PRO_IS_STRICT, funcResult.getBoolean(PRO_IS_STRICT));
-            paramMap.put(PRO_RET_SET, funcResult.getBoolean(PRO_RET_SET));
+        try {
+            if (statement == null) {
+                Connection connection = webSocketServer.getConnection(windowName);
+                if (connection == null) {
+                    connection = webSocketServer.createConnection(paramReq.getConnectionName(), paramReq.getWebUser());
+                }
+                statement = connection.createStatement();
+                webSocketServer.setStatement(windowName, statement);
+            }
+            funcResult = statement.executeQuery(DebugUtils.getFuncSql(windowName, name, webSocketServer));
+            while (funcResult.next()) {
+                paramMap.put(PRO_NAME, funcResult.getString(PRO_NAME));
+                paramMap.put(LAN_NAME, funcResult.getString(LAN_NAME));
+                paramMap.put(TYP_NAME, funcResult.getString(TYP_NAME));
+                paramMap.put(PRO_ARG_TYPES, funcResult.getString(PRO_ARG_TYPES));
+                paramMap.put(PRO_ALL_ARG_TYPES, funcResult.getString(PRO_ALL_ARG_TYPES));
+                paramMap.put(PRO_ARG_MODES, funcResult.getString(PRO_ARG_MODES));
+                paramMap.put(PRO_ARG_NAMES, funcResult.getString(PRO_ARG_NAMES));
+                paramMap.put(PRO_SRC, funcResult.getString(PRO_SRC));
+                paramMap.put(PRO_BIN, funcResult.getString(PRO_BIN));
+                paramMap.put(PRO_ARG_SRC, funcResult.getString(PRO_ARG_SRC));
+                paramMap.put(PRO_KIND, funcResult.getString(PRO_KIND));
+                paramMap.put(PRO_VOLATILE, funcResult.getString(PRO_VOLATILE));
+                paramMap.put(PRO_COST, funcResult.getInt(PRO_COST));
+                paramMap.put(PRO_ROWS, funcResult.getInt(PRO_ROWS));
+                paramMap.put(FEN_CED_MODE, funcResult.getBoolean(FEN_CED_MODE));
+                paramMap.put(PRO_SHIPPABLE, funcResult.getBoolean(PRO_SHIPPABLE));
+                paramMap.put(PRO_IS_STRICT, funcResult.getBoolean(PRO_IS_STRICT));
+                paramMap.put(PRO_RET_SET, funcResult.getBoolean(PRO_RET_SET));
+            }
+            log.info("startDebug paramMap is: " + paramMap);
+        } catch (Exception e) {
+            stopDebug.operate(webSocketServer, paramReq);
         }
-        log.info("startDebug paramMap is: " + paramMap);
         if (CollectionUtils.isEmpty(paramMap)) {
             webSocketServer.sendMessage(windowName, window, "500",
                     "function/procedure doesn't exist!", null);

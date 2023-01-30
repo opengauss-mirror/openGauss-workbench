@@ -23,6 +23,7 @@ import static com.nctigba.datastudio.constants.SqlConstants.ABORT_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.DEBUG_INFO_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.PARENTHESES_SEMICOLON;
 import static com.nctigba.datastudio.constants.SqlConstants.TURN_OFF_SQL;
+import static com.nctigba.datastudio.enums.MessageEnum.paramWindow;
 import static com.nctigba.datastudio.enums.MessageEnum.text;
 
 /**
@@ -61,6 +62,18 @@ public class StopDebugImpl implements OperationInterface {
         Map<String, String> map = new HashMap<>();
         map.put(RESULT, "stop debug！");
         webSocketServer.sendMessage(windowName, text, SUCCESS, map);
+
+        Connection connection = webSocketServer.getConnection(windowName);
+        Statement statement = webSocketServer.getStatement(windowName);
+        if (statement != null) {
+            statement.close();
+            statement.cancel();
+            webSocketServer.setStatement(windowName, null);
+        }
+        if (connection != null) {
+            connection.close();
+            webSocketServer.setConnection(windowName, null);
+        }
     }
 
     @Override

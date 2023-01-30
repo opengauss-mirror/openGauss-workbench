@@ -81,5 +81,8 @@ public class AsyncHelper {
         }
         statement.close();
         webSocketServer.setStatement(windowName, null);
+        Connection connection = webSocketServer.getConnection(windowName);
+        connection.close();
+        webSocketServer.setConnection(windowName, null);
     }
 }
