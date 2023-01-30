@@ -131,7 +131,6 @@ defineExpose({ open })
       margin-bottom: 5px;
     }
     .content {
-      background-color: #fff;
       width: 100%;
       min-height: 200px;
       max-height: 500px;
@@ -153,12 +152,12 @@ defineExpose({ open })
       }
       .header {
         font-weight: bold;
-        background-color: rgba(202, 202, 202, 0.1);
+        background-color: var(--color-neutral-2);
       }
       table {
-        color: #000;
+        color: var(--color-text-1);
         border-collapse: collapse;
-        border-color:rgba(0, 0, 0, 0.2);
+        border-color: var(--color-border-3);
         td {
           padding: 3px 4px;
         }

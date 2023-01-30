@@ -1,7 +1,7 @@
 <template>
   <div class="custom-control-container">
     <div class="flex-row mb">
-      <div class="top-label mr-s">{{ $t('customControl.index.else1') }}:</div>
+      <div class="label-color top-label mr-s">{{ $t('customControl.index.else1') }}:</div>
       <a-select class="mr" style="width: 300px;" :loading="data.hostListLoading" v-model="data.hostId"
         :placeholder="$t('customControl.index.5mplgrscm4s0')" @change="hostChange">
         <a-option v-for="(item, index) in data.hostList" :key="index" :label="item.label" :value="item.value" />
@@ -26,6 +26,7 @@ import { FitAddon } from 'xterm-addon-fit'
 import { AttachAddon } from 'xterm-addon-attach'
 import 'xterm/css/xterm.css'
 import HostPwdDlg from './HostPwdDlg.vue'
+import { debounce } from '@antv/x6/lib/util/function/function'
 
 const data = reactive<KeyValue>({
   loading: false,
@@ -43,6 +44,17 @@ const termTerminal = ref<Terminal>()
 
 onMounted(() => {
   getHostList()
+  onTerminalResize()
+})
+
+const onTerminalResize = () => {
+  window.addEventListener('resize', onResize())
+}
+
+const onResize = debounce(function () {
+  setTimeout(() => {
+    fitAddon.value?.fit()
+  }, 500)
 })
 
 onBeforeUnmount(() => {
@@ -123,14 +135,16 @@ const openSocket = () => {
   })
 }
 
+let fitAddon = ref<FitAddon | undefined>()
+
 const initTerm = (term: Terminal, ws: WebSocket | undefined) => {
   if (ws) {
     const attachAddon = new AttachAddon(ws)
-    const fitAddon = new FitAddon()
+    fitAddon.value = new FitAddon()
     term.loadAddon(attachAddon)
-    term.loadAddon(fitAddon)
+    term.loadAddon(fitAddon.value)
     term.open(document.getElementById('xterm') as HTMLElement)
-    fitAddon.fit()
+    // fitAddon.value.fit()
     term.clear()
     term.focus()
     term.write('\r\n\x1b[33m$\x1b[0m ')
@@ -158,11 +172,9 @@ const getTermObj = (): Terminal => {
 <style lang="less" scoped>
 .custom-control-container {
   padding: 20px;
-  background-color: #FFF;
   border-radius: 8px;
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 138px - 40px);
 
   .top-label {
     white-space: nowrap;

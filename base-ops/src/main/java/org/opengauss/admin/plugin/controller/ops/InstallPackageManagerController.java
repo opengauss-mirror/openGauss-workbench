@@ -4,7 +4,6 @@ import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.core.domain.AjaxResult;
 import org.opengauss.admin.common.core.page.TableDataInfo;
@@ -34,7 +33,7 @@ public class InstallPackageManagerController extends BaseController {
     @PostMapping("/save")
     public AjaxResult save(@RequestBody OpsPackageManagerEntity packageManager){
         packageManager.setCreateTime(new Date());
-        opsPackageManagerService.save(packageManager);
+        opsPackageManagerService.save(packageManager.populatePackageUrl());
         return AjaxResult.success();
     }
 
@@ -48,7 +47,7 @@ public class InstallPackageManagerController extends BaseController {
     public AjaxResult update(@PathVariable("id") String id,@RequestBody OpsPackageManagerEntity packageManager){
         packageManager.setPackageId(id);
         packageManager.setUpdateTime(new Date());
-        opsPackageManagerService.updateById(packageManager);
+        opsPackageManagerService.updateById(packageManager.populatePackageUrl());
         return AjaxResult.success();
     }
 
@@ -59,14 +58,16 @@ public class InstallPackageManagerController extends BaseController {
     }
 
     @GetMapping("/page")
-    public TableDataInfo page(@RequestParam(value = "name",required = false) String name){
-        LambdaQueryWrapper<OpsPackageManagerEntity> queryWrapper = Wrappers.lambdaQuery(OpsPackageManagerEntity.class);
+    public TableDataInfo page(@RequestParam(value = "name",required = false) String name,@RequestParam(value = "packageVersion",required = false) OpenGaussVersionEnum packageVersion){
+        LambdaQueryWrapper<OpsPackageManagerEntity> queryWrapper = Wrappers.lambdaQuery(OpsPackageManagerEntity.class)
+                .eq(Objects.nonNull(packageVersion),OpsPackageManagerEntity::getPackageVersion, packageVersion);
+
         if (StrUtil.isNotEmpty(name)){
             queryWrapper.or().eq(OpsPackageManagerEntity::getOs, name).or()
                     .eq(OpsPackageManagerEntity::getCpuArch, name).or()
-                    .eq(OpsPackageManagerEntity::getPackageVersion, name).or()
                     .eq(OpsPackageManagerEntity::getPackageVersionNum, name);
         }
+
         IPage<OpsPackageManagerEntity> page = opsPackageManagerService.page(startPage(),queryWrapper);
         return getDataTable(page);
     }

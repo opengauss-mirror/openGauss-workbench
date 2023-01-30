@@ -125,13 +125,15 @@
 
 <script setup lang="ts">
   import { reactive, ref, onMounted } from 'vue'
-  import { useAppStore } from '@/store'
+  import { useAppStore, useTabBarStore } from '@/store'
   import { Message } from '@arco-design/web-vue'
   import { getToken } from '@/utils/auth'
   import { list, start, stop, uninstall } from '@/api/plugin'
   import PluginConfig from './components/PluginConfig.vue'
+  import { destroyPluginApp } from '@/utils/pluginApp'
 
   const appStore = useAppStore()
+  const tabBarStore = useTabBarStore()
   const loading = ref<boolean>(true)
   const doLoading = ref<boolean>(false)
 
@@ -223,6 +225,12 @@
         await stop(pluginId)
         doLoading.value = false
         Message.success('Stop success')
+        tabBarStore.tagList.forEach((item: any, index: any) => {
+          if (~item.fullPath.indexOf(`/${pluginId}/`)) {
+            tabBarStore.deleteTag(index, item)
+            destroyPluginApp(item.fullPath)
+          }
+        })
       } catch (e) {
         doLoading.value = false
       }
@@ -238,6 +246,12 @@
       await uninstall(pluginId)
       doLoading.value = false
       Message.success('Uninstall success')
+      tabBarStore.tagList.forEach((item: any, index: any) => {
+        if (~item.fullPath.indexOf(`/${pluginId}/`)) {
+          tabBarStore.deleteTag(index, item)
+          destroyPluginApp(item.fullPath)
+        }
+      })
     } catch (e) {
       doLoading.value = false
     }

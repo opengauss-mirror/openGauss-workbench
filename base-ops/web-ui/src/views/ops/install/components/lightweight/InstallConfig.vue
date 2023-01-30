@@ -6,7 +6,7 @@
           <div class="node-top full-w mb">
             <div class="flex-row">
               <a-tag class="mr-s" color="#86909C">{{ index === 0 ? $t('lightweight.InstallConfig.5mpmkfqy71w0') :
-                  $t('lightweight.InstallConfig.5mpmkfqy8400')
+                $t('lightweight.InstallConfig.5mpmkfqy8400')
               }}</a-tag>
               {{ $t('lightweight.InstallConfig.5mpmkfqy8es0') }}
             </div>
@@ -19,9 +19,10 @@
             </a-form-item>
             <a-form-item field="hostId" :label="$t('lightweight.InstallConfig.5mpmkfqy8vk0')">
               <a-select :loading="hostListLoading" v-model="formItem.hostId" @change="changeHostId(index)"
-                :placeholder="$t('lightweight.InstallConfig.5mpmkfqy91w0')">
+                :placeholder="$t('lightweight.InstallConfig.5mpmkfqy91w0')"
+                @popup-visible-change="hostPopupChange($event, index)">
                 <a-option v-for="item in hostList" :key="item.hostId" :value="item.hostId">{{
-                    item.privateIp
+                  item.privateIp
                     + '(' +
                     (item.publicIp ? item.publicIp : '--') + ')'
                 }}</a-option>
@@ -32,10 +33,12 @@
                 :placeholder="$t('lightweight.InstallConfig.5mpmkfqy9h80')" allow-clear />
             </a-form-item>
             <a-form-item field="installUserId" :label="$t('lightweight.InstallConfig.5mpmkfqy9rw0')">
-              <a-select v-model="formItem.installUserId" :placeholder="$t('lightweight.InstallConfig.5mpmkfqy9yo0')">
+              <a-select :loading="installUserLoading" v-model="formItem.installUserId"
+                :placeholder="$t('lightweight.InstallConfig.5mpmkfqy9yo0')"
+                @popup-visible-change="hostUserPopupChange($event, index)">
                 <a-option v-for="item in userListByHost[formItem.hostId]" :key="item.hostUserId"
                   :value="item.hostUserId">{{
-                      item.username
+                    item.username
                   }}</a-option>
               </a-select>
             </a-form-item>
@@ -52,8 +55,8 @@
             </a-form-item>
             <a-form-item field="databaseUsername" :label="$t('lightweight.InstallConfig.5mpmkfqyb4c0')"
               validate-trigger="blur" v-if="installType === 'import' && index === 0">
-              <a-input-password v-model="formItem.databaseUsername"
-                :placeholder="$t('lightweight.InstallConfig.5mpmkfqyb9w0')" allow-clear />
+              <a-input v-model="formItem.databaseUsername" :placeholder="$t('lightweight.InstallConfig.5mpmkfqyb9w0')"
+                allow-clear />
             </a-form-item>
             <a-form-item v-if="index === 0" field="databasePassword"
               :label="$t('lightweight.InstallConfig.5mpmkfqybf80')" validate-trigger="blur">
@@ -174,7 +177,7 @@ const getFormData = (): KeyValue => {
 }
 
 const hostObj = ref<KeyValue>({})
-const getHostList = () => {
+const getHostList = (index: number = 0) => {
   hostListLoading.value = true
   hostListAll().then((res: KeyValue) => {
     if (Number(res.code) === 200) {
@@ -183,12 +186,23 @@ const getHostList = () => {
       res.data.forEach((item: KeyValue) => {
         hostObj.value[item.hostId] = item
       })
-      if (data.nodeData.length && !data.nodeData[0].hostId) {
-        data.nodeData[0].hostId = hostList.value[0].hostId
-        data.nodeData[0].privateIp = hostList.value[0].privateIp
-        data.nodeData[0].publicIp = hostList.value[0].publicIp
+      if (data.nodeData.length) {
+        if (!data.nodeData[index].hostId) {
+          data.nodeData[index].hostId = hostList.value[0].hostId
+          data.nodeData[index].privateIp = hostList.value[0].privateIp
+          data.nodeData[index].publicIp = hostList.value[0].publicIp
+        } else {
+          const getOldHost = hostList.value.find((item: KeyValue) => {
+            return item.hostId === data.nodeData[index].hostId
+          })
+          if (!getOldHost) {
+            data.nodeData[index].hostId = ''
+            data.nodeData[index].privateIp = ''
+            data.nodeData[index].publicIp = ''
+          }
+        }
       }
-      changeHostId(0)
+      changeHostId(index)
     } else {
       Message.error(t('lightweight.InstallConfig.5mpmkfqycac0'))
     }
@@ -197,6 +211,7 @@ const getHostList = () => {
   })
 }
 
+const installUserLoading = ref<boolean>(false)
 const userListByHost = ref<KeyValue>({})
 const changeHostId = (index: number) => {
   const hostId = data.nodeData[index].hostId
@@ -208,6 +223,7 @@ const changeHostId = (index: number) => {
     if (userListByHost.value[hostId] && !data.nodeData[index].installUserId) {
       data.nodeData[index].installUserId = userListByHost.value[hostId][0].hostUserId
     } else {
+      installUserLoading.value = true
       hostUserListWithoutRoot(hostId).then((res: KeyValue) => {
         if (Number(res.code) === 200) {
           if (res.data.length) {
@@ -229,8 +245,22 @@ const changeHostId = (index: number) => {
         } else {
           Message.error('Description Failed to obtain user data from the host')
         }
+      }).finally(() => {
+        installUserLoading.value = false
       })
     }
+  }
+}
+
+const hostPopupChange = (val: boolean, index: number) => {
+  if (val) {
+    getHostList(index)
+  }
+}
+
+const hostUserPopupChange = (val: boolean, index: number) => {
+  if (val) {
+    changeHostId(index)
   }
 }
 

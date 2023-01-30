@@ -35,12 +35,12 @@
                   <icon-exclamation-circle-fill v-if="itemEnv.noPassNumHard > 0" class="mr" style="color: orange"
                     :size="30"></icon-exclamation-circle-fill>
                   <icon-check-circle-fill v-else style="color: green" class="mr" :size="30"></icon-check-circle-fill>
-                  <div class="ft-xlg">{{ $t('lightweight.EnvMonitor.5mpmgwswk640') }}</div>
+                  <div class="label-color ft-xlg">{{ $t('lightweight.EnvMonitor.5mpmgwswk640') }}</div>
                 </div>
                 <div class="hardware-env">
                   <div class="flex-col" v-if="itemEnv.hardwareEnv.envProperties.length">
                     <div class="flex-row mb" v-for="(item, index) in itemEnv.hardwareEnv.envProperties" :key="index">
-                      <div style="width: 250px;" class="flex-row">
+                      <div style="width: 250px;" class="label-color flex-row">
                         <div class="mr">{{ item.name }}:</div>
                         <div>{{ item.value }}</div>
                       </div>
@@ -63,12 +63,12 @@
                   <icon-exclamation-circle-fill v-if="itemEnv.noPassNumSoft > 0" class="mr" style="color: orange"
                     :size="30"></icon-exclamation-circle-fill>
                   <icon-check-circle-fill v-else style="color: green" class="mr" :size="30"></icon-check-circle-fill>
-                  <div class="ft-xlg">{{ $t('lightweight.EnvMonitor.5mpmgwswkb40') }}</div>
+                  <div class="label-color ft-xlg">{{ $t('lightweight.EnvMonitor.5mpmgwswkb40') }}</div>
                 </div>
                 <div class="hardware-env">
                   <div class="flex-col" v-if="itemEnv.softwareEnv.envProperties.length">
                     <div class="flex-row mb" v-for="(item, index) in itemEnv.softwareEnv.envProperties" :key="index">
-                      <div style="width: 250px;" class="flex-row">
+                      <div style="width: 250px;" class="label-color flex-row">
                         <div class="mr">{{ item.name }}:</div>
                         <div>{{ item.value }}</div>
                       </div>

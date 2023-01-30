@@ -1,6 +1,6 @@
 <template>
   <a-modal :mask-closable="false" :esc-to-close="false" :visible="data.show" :title="data.title" @cancel="close"
-    :modal-style="{ width: '900px', height: '600px' }" :footer="false">
+    :modal-style="{ width: '900px' }" :footer="false">
     <div class="snapshot-c">
       <a-spin class="full-w" :loading="data.createLoading" :tip="$t('snapshot.index.5mplywcvqh80')">
         <div class="flex-between mb">
@@ -177,7 +177,6 @@ defineExpose({
 <style lang="less" scoped>
 .snapshot-c {
   padding: 20px;
-  background-color: #FFF;
   border-radius: 8px;
 
   .top-label {

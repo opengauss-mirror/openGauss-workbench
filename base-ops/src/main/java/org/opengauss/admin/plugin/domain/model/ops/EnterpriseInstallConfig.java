@@ -38,6 +38,8 @@ public class EnterpriseInstallConfig implements ClusterInstallConfig {
 
     private String databasePassword;
 
+    private Boolean isInstallCM;
+
     private List<EnterpriseInstallNodeConfig> nodeConfigList;
     /**
      * AZ ID
@@ -80,6 +82,10 @@ public class EnterpriseInstallConfig implements ClusterInstallConfig {
 
         if (Objects.isNull(enableDCF)) {
             enableDCF = false;
+        }
+
+        if (Objects.isNull(isInstallCM)) {
+            throw new OpsException("Is it wrong to install CM");
         }
 
         if (CollUtil.isEmpty(nodeConfigList)) {

@@ -12,8 +12,8 @@ import java.util.Date;
 @Data
 public class DwrSnapshotVO {
     private String snapshot_id;
-    @JsonFormat(pattern = "yyyy-MM-dd")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date start_ts;
-    @JsonFormat(pattern = "yyyy-MM-dd")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date end_ts;
 }

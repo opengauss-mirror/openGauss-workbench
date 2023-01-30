@@ -22,7 +22,7 @@
           </div>
         </a-form-item>
           <div class="d-form-item-label mb-s">
-            <div class="label-text">{{$t('modeling.base.QueryOperator.5m7hhed94tg0')}}</div>
+            <div class="label-text label-color">{{$t('modeling.base.QueryOperator.5m7hhed94tg0')}}</div>
             <div class="d-control-add" @click="configOperateFields('add')">+</div>
           </div>
           <a-row align="center" v-for="(field, fieldKey) in config.fields" :key="`configFields${fieldKey}`" class="mb-s">

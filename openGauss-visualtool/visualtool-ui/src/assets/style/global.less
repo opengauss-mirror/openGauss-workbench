@@ -30,12 +30,18 @@ body {
 // body style
 .app-container {
   padding: 16px;
+
   .main-bd {
     background: var(--color-bg-2);
     border-radius: 2px;
     min-height: calc(100vh - 170px);
   }
 }
+
+.label-color {
+  color: var(--color-text-2)
+}
+
 
 // level
 .z-0 {
@@ -240,6 +246,7 @@ body {
   background-color: white;
   border-radius: 8px;
   padding: 20px;
+
   .tip-content {
     color: var(--color-neutral-4);
   }
@@ -249,4 +256,12 @@ body {
 input:-webkit-autofill,
 input:-webkit-autofill:focus {
   transition: background-color 600000s 0s, color 600000s 0s;
+}
+
+.arco-btn-primary[type='button'] {
+  color: var(--color-bg-2);
+
+  &:hover {
+    color: var(--color-bg-2);
+  }
 }

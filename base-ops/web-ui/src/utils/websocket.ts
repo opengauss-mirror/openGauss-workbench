@@ -78,14 +78,15 @@ export default class Socket<T, RT> extends Heart {
       throw new Error('The address does not exist, and the channel cannot be established')
     }
     // this.ws = null
-    console.log('get locaion host: ', window.location.host)
+    console.log('get locaion host: ', window.location.host, window.location.protocol)
     let wsUrl
     if (process.env.NODE_ENV === 'development') {
       // change by yourself
       const host = '120.78.74.215:9494'
-      wsUrl = `ws://${host}/ws/base-ops/${this.options.url}`
+      wsUrl = `wss://${host}/ws/base-ops/${this.options.url}`
     } else {
-      wsUrl = `ws://${window.location.host}/ws/base-ops/${this.options.url}`
+      const wsPrefix = window.location.protocol.includes('https') ? 'wss' : 'ws'
+      wsUrl = `${wsPrefix}://${window.location.host}/ws/base-ops/${this.options.url}`
     }
     this.ws = new WebSocket(wsUrl)
     this.onopen(this.options.openCb as Callback)

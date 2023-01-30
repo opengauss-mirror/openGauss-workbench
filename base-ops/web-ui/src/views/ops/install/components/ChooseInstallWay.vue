@@ -1,11 +1,11 @@
 <template>
   <div class="panel-c">
     <div class="panel-header">
-      <div class="mb ft-xlg">{{ $t('components.ChooseInstallWay.5mpmwx7b1eo0') }}</div>
+      <div class="label-color mb ft-xlg">{{ $t('components.ChooseInstallWay.5mpmwx7b1eo0') }}</div>
       <div class="flex-row-start">
-        <div class="mr">{{ $t('components.ChooseInstallWay.5mpmwx7b2580') }}:</div>
+        <div class="label-color mr">{{ $t('components.ChooseInstallWay.5mpmwx7b2580') }}:</div>
         <a-tag size="large" color="green">{{ currWay === InstallModeEnum.OFF_LINE ?
-            $t('components.ChooseInstallWay.5mpmwx7b2gg0') : $t('components.ChooseInstallWay.5mpmwx7b2p00')
+          $t('components.ChooseInstallWay.5mpmwx7b2gg0') : $t('components.ChooseInstallWay.5mpmwx7b2p00')
         }}</a-tag>
       </div>
     </div>
@@ -15,13 +15,13 @@
         @click="
         chooseWay(InstallModeEnum.OFF_LINE)">
         <svg-icon icon-class="ops-offline-install" class="icon-size image mb"></svg-icon>
-        <div class="ft-main">{{ $t('components.ChooseInstallWay.5mpmwx7b2gg0') }}</div>
+        <div class="label-color ft-main">{{ $t('components.ChooseInstallWay.5mpmwx7b2gg0') }}</div>
       </div>
       <div :class="'install-way-size card-item-c ' + (currWay === InstallModeEnum.ON_LINE ? 'center-item-active' : '')"
         @click="
         chooseWay(InstallModeEnum.ON_LINE)">
         <svg-icon icon-class="ops-online-install" class="icon-size image mb"></svg-icon>
-        <div class="ft-main">{{ $t('components.ChooseInstallWay.5mpmwx7b2p00') }}</div>
+        <div class="label-color ft-main">{{ $t('components.ChooseInstallWay.5mpmwx7b2p00') }}</div>
       </div>
     </div>
   </div>

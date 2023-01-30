@@ -4,14 +4,14 @@
       <div class="mb" style="width: 50%;">
         <div class="item-node-top flex-between full-w mb">
           <div class="flex-row">
-            <a-tag class="mr">{{ $t('enterprise.InstallPrompt.5mpmb9e6puk0') }}</a-tag>
+            <div class="mr">{{ $t('enterprise.InstallPrompt.5mpmb9e6puk0') }}</div>
             <div>{{ data.clusterInfo.clusterId }} - {{ data.clusterInfo.clusterName }}</div>
           </div>
           <div class="flex-row">
             <div>{{ $t('enterprise.InstallPrompt.else1') }}: AZ</div>
           </div>
         </div>
-        <div class="item-node-center">
+        <div class="label-color item-node-center">
           <div class="flex-row">
             <div class="lable-w">{{ $t('enterprise.InstallPrompt.else2') }}:</div>
             <div>{{ data.clusterInfo.installPath }}</div>
@@ -37,7 +37,7 @@
               <icon-up style="cursor: pointer;" v-else @click="itemNode.isShow = false" />
             </div>
           </div>
-          <div class="item-node-center full-w flex-col-start" v-show="itemNode.isShow">
+          <div class="label-color item-node-center full-w flex-col-start" v-show="itemNode.isShow">
             <div class="flex-row">
               <div class="lable-w">{{ $t('enterprise.InstallPrompt.5mpmb9e6qsc0') }}</div>
               <div>{{ itemNode.publicIp }}</div>

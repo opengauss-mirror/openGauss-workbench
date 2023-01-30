@@ -235,26 +235,53 @@ COMMENT ON COLUMN "public"."ops_cluster_node"."data_path" IS '数据目录';
 COMMENT ON COLUMN "public"."ops_cluster_node"."pkg_path" IS '安装包目录';
 COMMENT ON COLUMN "public"."ops_cluster_node"."install_demo_database" IS '是否安装示例数据库';
 COMMENT ON COLUMN "public"."ops_cluster_node"."cluster_id" IS '集群ID';
-COMMENT ON COLUMN "public"."ops_cluster_node"."is_install_cm" IS '是否安装 CM';
-COMMENT ON COLUMN "public"."ops_cluster_node"."is_cm_master" IS '是否CM master';
-COMMENT ON COLUMN "public"."ops_cluster_node"."cm_data_path" IS 'cm数据路径';
-COMMENT ON COLUMN "public"."ops_cluster_node"."cm_port" IS 'cm端口';
-COMMENT ON COLUMN "public"."ops_cluster_node"."xlog_path" IS 'xlog路径';
-COMMENT ON COLUMN "public"."ops_cluster_node"."remark" IS '描述';
-COMMENT ON COLUMN "public"."ops_cluster_node"."create_by" IS '创建者';
-COMMENT ON COLUMN "public"."ops_cluster_node"."create_time" IS '创建时间';
-COMMENT ON COLUMN "public"."ops_cluster_node"."update_by" IS '更新者';
-COMMENT ON COLUMN "public"."ops_cluster_node"."update_time" IS '更新时间';
+COMMENT
+ON COLUMN "public"."ops_cluster_node"."is_install_cm" IS '是否安装 CM';
+COMMENT
+ON COLUMN "public"."ops_cluster_node"."is_cm_master" IS '是否CM master';
+COMMENT
+ON COLUMN "public"."ops_cluster_node"."cm_data_path" IS 'cm数据路径';
+COMMENT
+ON COLUMN "public"."ops_cluster_node"."cm_port" IS 'cm端口';
+COMMENT
+ON COLUMN "public"."ops_cluster_node"."xlog_path" IS 'xlog路径';
+COMMENT
+ON COLUMN "public"."ops_cluster_node"."remark" IS '描述';
+COMMENT
+ON COLUMN "public"."ops_cluster_node"."create_by" IS '创建者';
+COMMENT
+ON COLUMN "public"."ops_cluster_node"."create_time" IS '创建时间';
+COMMENT
+ON COLUMN "public"."ops_cluster_node"."update_by" IS '更新者';
+COMMENT
+ON COLUMN "public"."ops_cluster_node"."update_time" IS '更新时间';
+
+ALTER TABLE "public"."ops_cluster_node"
+ALTER
+COLUMN "cluster_node_id" TYPE varchar(255) USING "cluster_node_id"::varchar(255);
 
 -- ----------------------------
 -- Table structure for ops_encryption
 -- ----------------------------
 
-CREATE TABLE IF NOT EXISTS "public"."ops_encryption" (
-    "encryption_id" varchar(255) COLLATE "pg_catalog"."default" NOT NULL PRIMARY KEY,
-    "remark" varchar(255) COLLATE "pg_catalog"."default",
-    "create_by" varchar(64) COLLATE "pg_catalog"."default",
-    "create_time" timestamp(6),
+CREATE TABLE IF NOT EXISTS "public"."ops_encryption"
+(
+    "encryption_id" varchar
+(
+    255
+) COLLATE "pg_catalog"."default" NOT NULL PRIMARY KEY,
+    "remark" varchar
+(
+    255
+) COLLATE "pg_catalog"."default",
+    "create_by" varchar
+(
+    64
+) COLLATE "pg_catalog"."default",
+    "create_time" timestamp
+(
+    6
+),
     "update_by" varchar(64) COLLATE "pg_catalog"."default",
     "update_time" timestamp(6),
     "encryption_key" varchar(255) COLLATE "pg_catalog"."default",

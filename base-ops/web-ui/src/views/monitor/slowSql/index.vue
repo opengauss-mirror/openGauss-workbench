@@ -2,21 +2,21 @@
   <div class="slow-sql-c">
     <div class="flex-row mb">
       <div class="flex-row mr">
-        <div class="top-label mr-s">{{ $t('slowSql.index.5mplw69rv000') }}</div>
+        <div class="label-color top-label mr-s">{{ $t('slowSql.index.5mplw69rv000') }}</div>
         <a-select class="select-w" :loading="filter.clusterListLoading" v-model="filter.clusterId"
           :placeholder="$t('slowSql.index.5mplw69rvmo0')" @change="getHostList">
           <a-option v-for="(item, index) in filter.clusterList" :key="index" :label="item.label" :value="item.value" />
         </a-select>
       </div>
       <div class="flex-row mr">
-        <div class="top-label mr-s">{{ $t('slowSql.index.5mplw69rvt40') }}</div>
+        <div class="label-color top-label mr-s">{{ $t('slowSql.index.5mplw69rvt40') }}</div>
         <a-select class="select-w" :loading="filter.hostListLoading" v-model="filter.hostId"
           :placeholder="$t('slowSql.index.5mplw69rvz80')">
           <a-option v-for="(item, index) in filter.hostList" :key="index" :label="item.label" :value="item.value" />
         </a-select>
       </div>
       <div class="flex-row mr">
-        <div class="query-label mr-s">{{ $t('slowSql.index.5mplw69rw300') }}</div>
+        <div class="label-color query-label mr-s">{{ $t('slowSql.index.5mplw69rw300') }}</div>
         <a-range-picker style="width: 360px; margin: 0 24px 0 0;" show-time :default-value="getCurrentTime"
           :allow-clear="false" :time-picker-props="{ defaultValue: ['00:00:00', '23:59:59'] }"
           format="YYYY-MM-DD HH:mm:ss" @ok="dateOnOk" />
@@ -166,9 +166,7 @@ const getHostList = () => new Promise(resolve => {
 <style lang="less" scoped>
 .slow-sql-c {
   padding: 20px;
-  background-color: #FFF;
   border-radius: 8px;
-  height: calc(100vh - 138px - 40px);
 
   .top-label {
     white-space: nowrap;

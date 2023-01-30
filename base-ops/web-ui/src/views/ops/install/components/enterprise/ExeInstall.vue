@@ -12,7 +12,7 @@
         <a-button type="outline" class="mr" @click="goHome">{{
           $t('enterprise.ExeInstall.5mpm9j35aa80')
         }}</a-button>
-        <a-button type="primary" @click="$router.push({ name: 'DailyOps' })">{{
+        <a-button type="primary" @click="goOps">{{
           $t('enterprise.ExeInstall.5mpm9j35aec0')
         }}</a-button>
       </div>
@@ -240,6 +240,14 @@ const goHome = () => {
   window.$wujie?.props.methods.jump({
     name: 'Dashboard'
   })
+  loadingFunc.initData()
+}
+
+const goOps = () => {
+  window.$wujie?.props.methods.jump({
+    name: 'Static-pluginBase-opsMonitorDailyOps'
+  })
+  loadingFunc.initData()
 }
 
 const beforeConfirm = async (): Promise<boolean> => {

@@ -12,7 +12,10 @@ const option = ref({
     trigger: 'item'
   },
   legend: {
-    left: 'left'
+    left: 'left',
+    textStyle: {
+      color: '#5470c6'
+    }
   },
   series: [
     {

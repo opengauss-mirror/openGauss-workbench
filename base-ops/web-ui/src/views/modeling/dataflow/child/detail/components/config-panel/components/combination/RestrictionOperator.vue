@@ -8,18 +8,18 @@
     <a-tab-pane key="1" :title="$t('modeling.combination.RestrictionOperator.5me6gnj6b8s0')">
       <div class="tab-content d-a-form">
         <a-row class="mb mt-s" align="center">
-          <a-col :span="4" class="mr-xs">{{$t('modeling.combination.RestrictionOperator.5me6gnj6bpc0')}}</a-col>
+          <a-col :span="4" class="mr-xs label-color">{{$t('modeling.combination.RestrictionOperator.5me6gnj6bpc0')}}</a-col>
           <a-col :span="15" class="mr-xs">
             <a-input-number v-model="iData.restriction.skip" @blur="save" />
           </a-col>
-          <a-col :span="3">{{$t('modeling.combination.RestrictionOperator.5me6gnj6bts0')}}</a-col>
+          <a-col :span="3" class="label-color">{{$t('modeling.combination.RestrictionOperator.5me6gnj6bts0')}}</a-col>
         </a-row>
         <a-row align="center">
-          <a-col :span="4" class="mr-xs">{{$t('modeling.combination.RestrictionOperator.5me6gnj6c3w0')}}</a-col>
+          <a-col :span="4" class="mr-xs label-color">{{$t('modeling.combination.RestrictionOperator.5me6gnj6c3w0')}}</a-col>
           <a-col :span="15" class="mr-xs">
             <a-input-number v-model="iData.restriction.limitCount" @blur="save" />
           </a-col>
-          <a-col :span="3">{{$t('modeling.combination.RestrictionOperator.5me6gnj6bts0')}}</a-col>
+          <a-col :span="3" class="label-color">{{$t('modeling.combination.RestrictionOperator.5me6gnj6bts0')}}</a-col>
         </a-row>
       </div>
     </a-tab-pane>

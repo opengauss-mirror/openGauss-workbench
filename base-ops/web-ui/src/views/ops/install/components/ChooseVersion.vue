@@ -1,12 +1,12 @@
 <template>
   <div class="panel-c">
     <div class="panel-header">
-      <div class="mb ft-xlg">{{ $t('components.ChooseVersion.5mpmxod8xno0') }}</div>
+      <div class="label-color mb ft-xlg">{{ $t('components.ChooseVersion.5mpmxod8xno0') }}</div>
       <div class="flex-row-start mb">
-        <div class="mr">{{ $t('components.ChooseVersion.5mpmxod8yh00') }}</div>
+        <div class="label-color mr">{{ $t('components.ChooseVersion.5mpmxod8yh00') }}</div>
         <a-tag class="mr" size="large" color="green">{{ getDescVersion() }}</a-tag>
         <div class="install-type flex-row">
-          <div class="label mr">{{ $t('components.ChooseVersion.5mpmxod8yr40') }}</div>
+          <div class="label-color label mr">{{ $t('components.ChooseVersion.5mpmxod8yr40') }}</div>
           <a-select style="width: 200px" v-model="data.installType" @change="installTypeChange">
             <a-option v-for="(item, index) in installTypes" :key="index" :label="item.label" :value="item.value">
             </a-option>
@@ -20,29 +20,29 @@
         :class="'version-c card-item-c mr-xlg ' + (currVersion === OpenGaussVersionEnum.MINIMAL_LIST ? 'center-item-active' : '')"
         @click="chooseVer(OpenGaussVersionEnum.MINIMAL_LIST)">
         <svg-icon icon-class="ops-mini-version" class="icon-size image mb"></svg-icon>
-        <div class="ft-lg mb">{{ $t('components.ChooseVersion.5mpmxod8yxs0') }}</div>
-        <div class="remark">{{ $t('components.ChooseVersion.5mpmxod8z3w0') }}</div>
+        <div class="label-color ft-lg mb">{{ $t('components.ChooseVersion.5mpmxod8yxs0') }}</div>
+        <div class="label-color remark">{{ $t('components.ChooseVersion.5mpmxod8z3w0') }}</div>
       </div>
       <div
         :class="'version-c card-item-c mr-xlg ' + (currVersion === OpenGaussVersionEnum.LITE ? 'center-item-active' : '')"
         @click="chooseVer(OpenGaussVersionEnum.LITE)">
         <svg-icon icon-class="ops-cluster" class="icon-size image mb"></svg-icon>
-        <div class="ft-lg mb">{{ $t('components.ChooseVersion.5mpmxod8za00') }}</div>
-        <div class="remark">{{ $t('components.ChooseVersion.else1') }}</div>
+        <div class="label-color ft-lg mb">{{ $t('components.ChooseVersion.5mpmxod8za00') }}</div>
+        <div class="label-color remark">{{ $t('components.ChooseVersion.else1') }}</div>
       </div>
       <div
         :class="'version-c card-item-c mr-xlg ' + (currVersion === OpenGaussVersionEnum.ENTERPRISE ? 'center-item-active' : '')"
         @click="chooseVer(OpenGaussVersionEnum.ENTERPRISE)">
         <svg-icon icon-class="ops-cluster" class="icon-size image mb"></svg-icon>
-        <div class="ft-lg mb">{{ $t('components.ChooseVersion.5mpmxod8zg00') }}</div>
-        <div class="remark">{{ $t('components.ChooseVersion.5mpmxod8zlw0') }}</div>
+        <div class="label-color ft-lg mb">{{ $t('components.ChooseVersion.5mpmxod8zg00') }}</div>
+        <div class="label-color remark">{{ $t('components.ChooseVersion.5mpmxod8zlw0') }}</div>
       </div>
       <div
         :class="'version-c card-item-c ' + (currVersion === OpenGaussVersionEnum.OPENlOOKENG ? 'center-item-active' : '')"
         @click="chooseVer(OpenGaussVersionEnum.OPENlOOKENG)">
         <svg-icon icon-class="ops-cluster" class="icon-size image mb"></svg-icon>
-        <div class="ft-lg mb">{{ $t('components.ChooseVersion.openLooKeng') }}</div>
-        <div class="remark">{{ $t('components.ChooseVersion.openLooKengRemark') }}</div>
+        <div class="label-color ft-lg mb">{{ $t('components.ChooseVersion.openLooKeng') }}</div>
+        <div class="label-color remark">{{ $t('components.ChooseVersion.openLooKengRemark') }}</div>
       </div>
     </div>
   </div>

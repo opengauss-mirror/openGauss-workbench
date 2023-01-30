@@ -1,17 +1,22 @@
 <template>
   <div class="log-center-container">
     <div class="flex-row">
-      <div class="query-label mr-s">{{ $t('logCenter.index.5mpllm8hjao0') }}</div>
+      <div class="label-color query-label mr-s">{{ $t('logCenter.index.5mpllm8hjao0') }}</div>
       <a-select class="select-w mr-lg" style="width: 200px" :loading="data.clusterListLoading" v-model="data.clusterId"
         :placeholder="$t('logCenter.index.5mpllm8hk7o0')" @change="getHostList">
         <a-option v-for="(item, index) in data.clusterList" :key="index" :label="item.label" :value="item.value" />
       </a-select>
-      <div class="query-label mr-s">{{ $t('logCenter.index.else1') }}</div>
+      <div class="label-color query-label mr-s">{{ $t('logCenter.index.else1') }}</div>
       <a-select class="select-w mr-lg" style="width: 200px" :loading="data.hostListLoading" v-model="data.hostId"
         :placeholder="$t('logCenter.index.5mpllm8hkk00')">
         <a-option v-for="(item, index) in data.hostList" :key="index" :label="item.label" :value="item.value" />
       </a-select>
-      <a-button type="primary" @click="getLogPath">{{ $t('logCenter.index.5mpllm8hkog0') }}</a-button>
+      <a-button type="outline" @click="getLogPath">
+        <template #icon>
+          <icon-search />
+        </template>
+        <template #default>{{ $t('logCenter.index.5mpllm8hkog0') }}</template>
+      </a-button>
     </div>
     <a-divider />
     <a-tabs class="log-content" type="card-gutter">
@@ -138,11 +143,9 @@ const getLogPath = () => {
 <style lang="less" scoped>
 .log-center-container {
   padding: 20px;
-  background-color: #FFF;
   border-radius: 8px;
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 138px - 40px);
 
   .query-label {
     white-space: nowrap;

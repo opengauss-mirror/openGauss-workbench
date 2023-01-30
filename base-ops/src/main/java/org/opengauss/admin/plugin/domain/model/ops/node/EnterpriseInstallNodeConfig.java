@@ -43,8 +43,6 @@ public class EnterpriseInstallNodeConfig {
 
     private String installUsername;
 
-    private Boolean isInstallCM;
-
     private Boolean isCMMaster;
 
     private String cmDataPath;
@@ -85,20 +83,9 @@ public class EnterpriseInstallNodeConfig {
             throw new OpsException("install user error");
         }
 
-        if (Objects.isNull(isInstallCM)) {
-            throw new OpsException("Is it wrong to install CM");
-        }
 
-        if (Objects.isNull(isCMMaster)) {
-            throw new OpsException("Whether it is the CM master node error");
-        }
-
-        if (isInstallCM && StrUtil.isEmpty(cmDataPath)) {
+        if (StrUtil.isEmpty(cmDataPath)) {
             throw new OpsException("cm data path error");
-        }
-
-        if (isInstallCM && Objects.isNull(cmPort)) {
-            throw new OpsException("cm port error");
         }
 
         if (StrUtil.isEmpty(dataPath)) {
@@ -116,7 +103,6 @@ public class EnterpriseInstallNodeConfig {
         opsClusterNodeEntity.setHostId(hostId);
         opsClusterNodeEntity.setInstallUserId(installUserId);
         opsClusterNodeEntity.setDataPath(dataPath);
-        opsClusterNodeEntity.setIsInstallCM(isInstallCM);
         opsClusterNodeEntity.setIsCMMaster(isCMMaster);
         opsClusterNodeEntity.setCmDataPath(cmDataPath);
         opsClusterNodeEntity.setCmPort(cmPort);

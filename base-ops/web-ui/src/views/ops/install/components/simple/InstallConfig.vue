@@ -2,15 +2,16 @@
   <div class="install-config-c">
     <div class="flex-row-center">
       <div class="flex-col-start">
-        <div class="ft-b mb">{{ $t('simple.InstallConfig.5mpmu0lapic0') }}</div>
+        <div class="label-color ft-b mb">{{ $t('simple.InstallConfig.5mpmu0lapic0') }}</div>
         <a-form :model="data.form" :rules="data.rules" :style="{ width: '800px' }" ref="formRef">
           <a-form-item field="clusterId" :label="$t('simple.InstallConfig.5mpmu0laqc80')" validate-trigger="blur">
             <a-input v-model="data.form.clusterId" :placeholder="$t('simple.InstallConfig.5mpmu0laqiw0')" />
           </a-form-item>
           <a-form-item field="hostId" :label="$t('simple.InstallConfig.5mpmu0laqow0')">
             <a-select :loading="hostListLoading" v-model="data.form.hostId" @change="changeHostId"
-              :placeholder="$t('simple.InstallConfig.5mpmu0laqss0')">
-              <a-option v-for="item in hostList" :key="item.hostId" :value="item.hostId">{{ item.privateIp
+              :placeholder="$t('simple.InstallConfig.5mpmu0laqss0')" @popup-visible-change="hostPopupChange">
+              <a-option v-for="item in hostList" :key="item.hostId" :value="item.hostId">{{
+                item.privateIp
                   + '(' +
                   (item.publicIp ? item.publicIp : '--') + ')'
               }}</a-option>
@@ -21,9 +22,10 @@
               allow-clear />
           </a-form-item>
           <a-form-item field="installUserId" :label="$t('simple.InstallConfig.5mpmu0lar0c0')">
-            <a-select v-model="data.form.installUserId">
+            <a-select :loading="installUserLoading" v-model="data.form.installUserId"
+              @popup-visible-change="hostUserPopupChange">
               <a-option v-for="item in userListByHost" :key="item.hostUserId" :value="item.hostUserId">{{
-                  item.username
+                item.username
               }}</a-option>
             </a-select>
           </a-form-item>
@@ -38,8 +40,8 @@
           </a-form-item>
           <a-form-item field="databaseUsername" :label="$t('simple.InstallConfig.5mpmu0larq40')" validate-trigger="blur"
             v-if="installType === 'import'">
-            <a-input-password v-model="data.form.databaseUsername"
-              :placeholder="$t('simple.InstallConfig.5mpmu0larto0')" allow-clear />
+            <a-input v-model="data.form.databaseUsername" :placeholder="$t('simple.InstallConfig.5mpmu0larto0')"
+              allow-clear />
           </a-form-item>
           <a-form-item field="databasePassword" :label="$t('simple.InstallConfig.5mpmu0larx00')"
             validate-trigger="blur">
@@ -158,6 +160,15 @@ const getHostList = () => {
         data.form.hostId = hostList.value[0].hostId
         data.form.privateIp = hostList.value[0].privateIp
         data.form.publicIp = hostList.value[0].publicIp
+      } else {
+        const getOldHost = hostList.value.find((item: KeyValue) => {
+          return item.hostId === data.form.hostId
+        })
+        if (!getOldHost) {
+          data.form.hostId = hostList.value[0].hostId
+          data.form.privateIp = hostList.value[0].privateIp
+          data.form.publicIp = hostList.value[0].publicIp
+        }
       }
       changeHostId()
     } else {
@@ -167,7 +178,7 @@ const getHostList = () => {
     hostListLoading.value = false
   })
 }
-
+const installUserLoading = ref<boolean>(false)
 const userListByHost = ref<KeyValue[]>([])
 const changeHostId = () => {
   if (data.form.hostId) {
@@ -175,6 +186,7 @@ const changeHostId = () => {
       data.form.privateIp = hostObj.value[data.form.hostId].privateIp
       data.form.publicIp = hostObj.value[data.form.hostId].publicIp
     }
+    installUserLoading.value = true
     hostUserListWithoutRoot(data.form.hostId).then((res: KeyValue) => {
       if (Number(res.code) === 200) {
         userListByHost.value = []
@@ -187,7 +199,21 @@ const changeHostId = () => {
       } else {
         Message.error('Failed to obtain user data from the host')
       }
+    }).finally(() => {
+      installUserLoading.value = false
     })
+  }
+}
+
+const hostPopupChange = (val: boolean) => {
+  if (val) {
+    getHostList()
+  }
+}
+
+const hostUserPopupChange = (val: boolean) => {
+  if (val) {
+    changeHostId()
   }
 }
 

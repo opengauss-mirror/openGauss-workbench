@@ -1,10 +1,10 @@
 <template>
   <div class="simple-install-c">
-    <div>{{ $t('simpleInstall.index.5mpn813gtvs0') }}</div>
+    <div class="label-color">{{ $t('simpleInstall.index.5mpn813gtvs0') }}</div>
     <a-divider class="mb-lg" />
     <div class="install-content" v-if="data.state === -1">
       <svg-icon icon-class="ops-mini-version" class="icon-size mb"></svg-icon>
-      <div class="ft-b ft-m mb">openGauss {{ $t('simpleInstall.index.else1') }}</div>
+      <div class="label-color ft-b ft-m mb">openGauss {{ $t('simpleInstall.index.else1') }}</div>
       <a-form class="mb" :model="data.form" :rules="data.rules" :style="{ width: '400px' }" ref="formRef"
         auto-label-width>
         <a-form-item field="hostId" :label="$t('simpleInstall.index.5mpn813guf00')">
@@ -30,16 +30,18 @@
     <div class="install-panel" v-if="data.state !== -1">
       <div class="flex-col full-h" v-if="data.state !== 1">
         <div class="install-doing mb">
-          <div class="ft-m ft-b mb-lg">{{ $t('simpleInstall.index.5mpn813guxc0') }}</div>
+          <div class="label-color ft-m ft-b mb-lg">{{ $t('simpleInstall.index.5mpn813guxc0') }}</div>
           <div class="flex-col-start full-w">
             <div class="progress-c mb">
               <a-progress :color="data.state === 1 ? 'green' : 'red'" :stroke-width="12"
                 :percent="data.installProgress">
               </a-progress>
             </div>
-            <div>{{ $t('simpleInstall.index.5mpn813gv880') }} {{ $t('simpleInstall.index.5mpn813gvc40') }} {{
-              data.privateIp
-            }}</div>
+            <div class="label-color">{{ $t('simpleInstall.index.5mpn813gv880') }} {{
+              $t('simpleInstall.index.5mpn813gvc40')
+            }} {{
+  data.privateIp
+}}</div>
           </div>
         </div>
         <div class="flex-row full-w full-h">
@@ -52,7 +54,7 @@
           <div class="flex-col-start" style="width: 50%;" v-if="data.state === 2">
             <div class="flex-between full-w mb">
               <div class="flex-row">
-                <div class="mr-s">{{ $t('simpleInstall.index.5mpn813gvjk0') }}</div>
+                <div class="label-color mr-s">{{ $t('simpleInstall.index.5mpn813gvjk0') }}</div>
                 <div>{{ data.privateIp }}</div>
               </div>
               <a-button type="primary" @click="retryInstall">{{ $t('simpleInstall.index.5mpn813gvmw0') }}</a-button>
@@ -367,17 +369,31 @@ const getHostUser = () => {
     })
   }
 }
-
 const goHome = () => {
+  initData()
   window.$wujie?.props.methods.jump({
     name: 'Dashboard'
   })
 }
 
 const goOps = () => {
+  initData()
   window.$wujie?.props.methods.jump({
     name: 'Static-pluginBase-opsMonitorDailyOps'
   })
+}
+
+const initData = () => {
+  data.state = -1
+  data.form = {
+    hostId: '',
+    rootPassword: '',
+    rootPasswordEncrypt: ''
+  }
+  data.installProgress = 0
+  data.privateIp = ''
+  data.installUserId = ''
+  data.installUsername = ''
 }
 
 </script>
@@ -385,11 +401,8 @@ const goOps = () => {
 <style lang="less" scoped>
 .simple-install-c {
   padding: 20px;
-  background-color: #FFF;
-  border-radius: 8px;
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 136px - 40px);
   box-sizing: border-box;
 
   .icon-size {

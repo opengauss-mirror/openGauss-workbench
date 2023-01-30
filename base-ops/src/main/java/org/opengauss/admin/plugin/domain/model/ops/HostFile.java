@@ -1,5 +1,6 @@
 package org.opengauss.admin.plugin.domain.model.ops;
 
+import cn.hutool.core.util.StrUtil;
 import org.opengauss.admin.plugin.enums.ops.HostFileTypeEnum;
 import lombok.Data;
 
@@ -20,12 +21,14 @@ public class HostFile {
      */
     private Long size;
 
+    private String openGaussVersionNum;
+
     public static HostFile build(File file) {
         HostFile hostFile = new HostFile();
         String fileName = file.getName();
         HostFileTypeEnum fileType = file.isFile() ? HostFileTypeEnum.FILE : HostFileTypeEnum.DIRECTORY;
         long length = file.length();
-
+        hostFile.setOpenGaussVersionNum(parseVersionNum(fileName));
         hostFile.setName(fileName);
         hostFile.setType(fileType);
         hostFile.setSize(length);
@@ -39,5 +42,26 @@ public class HostFile {
         hostFile.setType(hostFileTypeEnum);
         hostFile.setSize(size);
         return hostFile;
+    }
+
+    private static String parseVersionNum(String fileName) {
+        if (StrUtil.isNotEmpty(fileName)){
+            if (fileName.startsWith("openGauss-Lite-")){
+                String[] split = fileName.split("-");
+                if (split.length>=3){
+                    return split[2];
+                }else {
+                    return null;
+                }
+            }else if (fileName.startsWith("openGauss-")){
+                String[] split = fileName.split("-");
+                if (split.length>=2){
+                    return split[1];
+                }else {
+                    return null;
+                }
+            }
+        }
+        return null;
     }
 }

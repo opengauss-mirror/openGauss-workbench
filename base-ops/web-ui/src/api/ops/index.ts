@@ -100,8 +100,10 @@ export const getHostByClusterId = (data: KeyValue) => {
 }
 
 // host interface
-export const listInstallPackage = (path?: string) => {
-  return axios.get(path ? `opsCluster/listInstallPackage?path=${path}` : 'opsCluster/listInstallPackage')
+export const listInstallPackage = (data: any) => {
+  return axios.get('opsCluster/listInstallPackage', {
+    params: data
+  })
 }
 
 // page

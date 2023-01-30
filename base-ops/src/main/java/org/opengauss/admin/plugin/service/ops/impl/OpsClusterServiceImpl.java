@@ -1661,7 +1661,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
     }
 
     @Override
-    public ListDir listInstallPackage(String path) {
+    public ListDir listInstallPackage(String path, OpenGaussVersionEnum openGaussVersionEnum) {
         log.info("List installation package files,path:{}", path);
         path = getOrDefault(path);
         Assert.notEmpty(path, "Failed to get installation package path");
@@ -1669,11 +1669,37 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         ListDir listDir = new ListDir();
         listDir.setPath(path);
 
-        String[] extension = new String[]{".tar", "tar.bz2"};
-        listDir.setFiles(listFiles(path, extension));
+        String[] extension = null;
+        String[] namePart = null;
+
+        if (OpenGaussVersionEnum.ENTERPRISE == openGaussVersionEnum){
+            extension = new String[]{"-all.tar.gz"};
+        }else if (OpenGaussVersionEnum.LITE == openGaussVersionEnum){
+            namePart = new String[]{"-Lite-"};
+        }else if (OpenGaussVersionEnum.MINIMAL_LIST == openGaussVersionEnum){
+            extension = new String[]{".tar.bz2"};
+        }else {
+            extension = new String[]{".tar.gz",".tar.bz2"};
+        }
+
+        listDir.setFiles(listFiles(path, extension,namePart));
         return listDir;
     }
 
+    private boolean nameFilter(File file, String[] namePart) {
+        if (namePart == null || namePart.length<1){
+            return true;
+        }
+
+        String name = file.getName();
+        for (String s : namePart) {
+            if (name.contains(s)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
 
     private boolean extensionFilter(File file, String[] extension) {
         if (extension == null || extension.length < 1) {
@@ -1689,7 +1715,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         return false;
     }
 
-    private List<HostFile> listFiles(String path, String[] extension) {
+    private List<HostFile> listFiles(String path, String[] extension,String[] namePart) {
         log.info("List the files under the path: {}", path);
 
         List<HostFile> result = new ArrayList<>();
@@ -1701,13 +1727,13 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
 
             if (Objects.nonNull(files) && files.length > 0) {
                 for (File file : files) {
-                    if (extensionFilter(file, extension)) {
+                    if (extensionFilter(file, extension) && nameFilter(file,namePart)) {
                         result.add(HostFile.build(file));
                     }
                 }
             }
         } else {
-            if (filePath.exists() && extensionFilter(filePath, extension)) {
+            if (filePath.exists() && extensionFilter(filePath, extension) && nameFilter(filePath,namePart)) {
                 result.add(HostFile.build(filePath));
             }
         }

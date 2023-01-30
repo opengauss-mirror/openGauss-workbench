@@ -26,9 +26,12 @@ module.exports = defineConfig({
             'color-text-1': '#1D212A',
             'color-text-2': '#4E5A6A',
             'color-text-3': '#868F9C',
-            'dark-primary-6': '#E41D1D',
-            'dark-primary-5': '#E94842',
-            'dark-link-6': '#E41D1D'
+            'dark-primary-7': '#FCEF92',
+            'dark-primary-6': '#FCEF92',
+            'dark-primary-5': '#F8EFAE',
+            'dark-warning-6': '#FF7D01',
+            'dark-success-6': '#00B429',
+            'dark-link-6': '#FCEF92'
           },
           javascriptEnabled: true
         }
@@ -58,7 +61,7 @@ module.exports = defineConfig({
     proxy: {
       // detail: https://cli.vuejs.org/config/#devserver-proxy
       [process.env.VUE_APP_BASE_API]: {
-        target: 'http://39.108.219.254:9494',
+        target: 'https://120.78.74.215:9494',
         changeOrigin: true,
         pathRewrite: {
           ['^' + process.env.VUE_APP_BASE_API]: ''

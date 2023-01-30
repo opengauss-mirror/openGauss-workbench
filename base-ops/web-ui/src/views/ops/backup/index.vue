@@ -2,7 +2,7 @@
   <div class="upgrade-container" id="backup">
     <div class="flex-row-end mb">
       <div class="flex-row mr">
-        <div class="top-label mr-s">{{ $t('backup.index.else1') }}:</div>
+        <div class="label-color top-label mr-s">{{ $t('backup.index.else1') }}:</div>
         <a-select style="width: 200px;" :loading="data.clusterListLoading" v-model="data.clusterId" allow-clear
           :placeholder="$t('backup.index.5mpm2oya7bg0')">
           <a-option v-for="(item, index) in data.clusterList" :key="index" :label="item.label" :value="item.value" />
@@ -245,11 +245,8 @@ const createWinbox = (row: KeyValue) => {
 
 <style lang="less" scoped>
 .upgrade-container {
-  padding: 20px;
+  padding: 16px;
   box-sizing: border-box;
-  padding: 8px;
-  background-color: #FFF;
-  height: calc(100vh - 138px - 40px);
 
   .top-label {
     white-space: nowrap;

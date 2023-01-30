@@ -10,7 +10,7 @@
             <svg-icon icon-class="ops-instance" class="icon-size-s"></svg-icon>
           </div>
         </div>
-        <div class="ft-main">{{ $t('simple.DeployWay.5mpmphlozp00') }}</div>
+        <div class="label-color ft-main">{{ $t('simple.DeployWay.5mpmphlozp00') }}</div>
       </div>
       <div
         :class="'deploy-cluster-size card-item-c ' + (deployType === 'CLUSTER' ? 'center-item-active' : 'center-item')"
@@ -26,7 +26,7 @@
             <svg-icon icon-class="ops-instance" class="icon-size-s"></svg-icon>
           </div>
         </div>
-        <div class="ft-main">{{ $t('simple.DeployWay.5mpmphlp0nw0') }}</div>
+        <div class="label-color  ft-main">{{ $t('simple.DeployWay.5mpmphlp0nw0') }}</div>
       </div>
     </div>
   </div>

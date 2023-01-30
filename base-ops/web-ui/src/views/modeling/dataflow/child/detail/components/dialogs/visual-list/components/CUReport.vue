@@ -178,17 +178,15 @@ defineExpose({ open })
       .draw {
         height: 100%;
         flex: 1;
-        border: 1px solid #DADCE7;
+        border: 1px solid var(--color-border-3);
         padding-right: 20px;
         margin-right: 20px;
-        background-color: #f7f8fa;
         overflow: auto;
         .grid-item-content {
           width: 100%;
           height: 100%;
           border: 1px solid rgb(var(--primary-6));
           border-radius: 2px;
-          background-color: #fff;
           > img {
             width: 100%;
             height: 100%;
@@ -210,7 +208,7 @@ defineExpose({ open })
             color: rgb(var(--primary-6));
             font-weight: bold;
             font-size: 16px;
-            border-bottom: 1px solid #dededf;
+            border-bottom: 1px solid var(--color-border-3);
             box-sizing: border-box;
             padding: 10px 0;
           }
@@ -221,7 +219,7 @@ defineExpose({ open })
           box-sizing: border-box;
           padding: 0 10px;
           .config-row {
-            border-bottom: 1px solid #dededf;
+            border-bottom: 1px solid var(--color-border-3);
             box-sizing: border-box;
             padding: 10px 0;
             display: flex;
@@ -257,7 +255,7 @@ defineExpose({ open })
               margin: 0 auto;
               width: 200px;
               height: 200px;
-              border: 1px solid #dededf;
+              border: 1px solid var(--color-border-3);
               margin-bottom: 20px;
               border-radius: 4px;
               box-sizing: border-box;

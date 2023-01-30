@@ -2,7 +2,7 @@
   <div class="node-config-c">
     <div class="flex-col">
       <div class="flex-between " :style="{ width: '800px' }">
-        <div class="ft-b ft-m mb">
+        <div class="label-color ft-b ft-m mb">
           <span class="mr">{{ $t('enterprise.NodeConfig.5mpme7w69yc0') }}</span> <span class="ft-lg">{{
             data.nodeList.length
           }}</span>
@@ -33,7 +33,8 @@
           <a-form :model="formItem" :rules="data.rules" :style="{ width: '800px' }" auto-label-width :ref="setRefMap">
             <a-form-item field="hostId" :label="$t('enterprise.NodeConfig.5mpme7w6azo0')">
               <a-select :loading="data.hostListLoading" v-model="formItem.hostId" @change="changeHostId(index)"
-                :placeholder="$t('enterprise.NodeConfig.5mpme7w6b3k0')">
+                :placeholder="$t('enterprise.NodeConfig.5mpme7w6b3k0')"
+                @popup-visible-change="hostPopupChange($event, index)">
                 <a-option v-for="item in data.hostList" :key="item.hostId" :value="item.hostId">{{
                   item.privateIp
                     + '(' +
@@ -46,7 +47,8 @@
                 allow-clear />
             </a-form-item>
             <a-form-item field="installUserId" :label="$t('enterprise.NodeConfig.5mpme7w6bak0')">
-              <a-select v-model="formItem.installUserId" @change="changeInstallUserId($event, index)">
+              <a-select :loading="installUserLoading" v-model="formItem.installUserId"
+                @change="changeInstallUserId($event, index)" @popup-visible-change="hostUserPopupChange($event, index)">
                 <a-option v-for="item in data.userListByHost[formItem.hostId]" :key="item.hostUserId"
                   :value="item.hostUserId">{{
                     item.username
@@ -55,26 +57,20 @@
             </a-form-item>
             <a-row :gutter="24">
               <a-col :span="12">
-                <a-form-item field="isInstallCM" :label="$t('enterprise.NodeConfig.else3')">
-                  <a-switch v-model="formItem.isInstallCM" />
-                </a-form-item>
-              </a-col>
-              <a-col :span="12">
-                <a-form-item v-if="formItem.isInstallCM" field="isCMMaster"
-                  :label="$t('enterprise.NodeConfig.5mpme7w6be40')">
+                <a-form-item v-if="isInstallCM" field="isCMMaster" :label="$t('enterprise.NodeConfig.5mpme7w6be40')">
                   <a-switch v-model="formItem.isCMMaster" />
                 </a-form-item>
               </a-col>
             </a-row>
-            <a-form-item v-if="formItem.isInstallCM" field="cmDataPath" :label="$t('enterprise.NodeConfig.else4')"
+            <a-form-item v-if="isInstallCM" field="cmDataPath" :label="$t('enterprise.NodeConfig.else4')"
               validate-trigger="blur">
               <a-input v-model="formItem.cmDataPath" :placeholder="$t('enterprise.NodeConfig.5mpme7w6bhg0')" />
             </a-form-item>
-            <a-form-item v-if="formItem.isInstallCM" field="cmPort" :label="$t('enterprise.NodeConfig.else5')"
+            <a-form-item v-if="isInstallCM" field="cmPort" :label="$t('enterprise.NodeConfig.else5')"
               validate-trigger="blur">
               <a-input v-model="formItem.cmPort" :placeholder="$t('enterprise.NodeConfig.5mpme7w6bko0')" />
             </a-form-item>
-            <div class="ft-m ft-b mb">
+            <div class="label-color ft-m ft-b mb">
               {{ $t('enterprise.NodeConfig.5mpme7w6boc0') }}
             </div>
             <a-form-item field="dataPath" :label="$t('enterprise.NodeConfig.5mpme7w6brs0')" validate-trigger="blur">
@@ -93,7 +89,7 @@
 
 <script lang="ts" setup>
 
-import { onMounted, reactive, ref } from 'vue'
+import { onMounted, reactive, ref, computed } from 'vue'
 import { KeyValue } from '@/types/global'
 import { ClusterRoleEnum, EnterpriseInstallConfig } from '@/types/ops/install' // eslint-disable-line
 import { hostListAll, hostUserListWithoutRoot, azListAll } from '@/api/ops'
@@ -122,6 +118,8 @@ const data = reactive<KeyValue>({
   azList: [],
   userListByHost: {}
 })
+
+const isInstallCM = computed(() => installStore.getEnterpriseConfig.isInstallCM)
 
 const refList = ref<any>([])
 
@@ -167,7 +165,6 @@ const addNode = (index: number, isMaster?: boolean) => {
     hostname: '',
     installUserId: '',
     installUsername: '',
-    isInstallCM: true,
     isCMMaster: false,
     cmDataPath: '/opt/openGauss/data/cmserver',
     cmPort: '15300',
@@ -189,7 +186,7 @@ const removeNode = (index: number) => {
   }
 }
 
-const getHostList = () => {
+const getHostList = (index: number = 0) => {
   data.hostListLoading = true
   hostListAll().then((res: KeyValue) => {
     if (Number(res.code) === 200) {
@@ -198,18 +195,30 @@ const getHostList = () => {
       res.data.forEach((item: KeyValue) => {
         data.hostObj[item.hostId] = item
       })
-      if (data.nodeList.length && !data.nodeList[0].hostId) {
-        data.nodeList[0].hostId = data.hostList[0].hostId
-        data.nodeList[0].privateIp = data.hostList[0].privateIp
-        data.nodeList[0].publicIp = data.hostList[0].publicIp
+      if (data.nodeList.length && !data.nodeList[index].hostId) {
+        data.nodeList[index].hostId = data.hostList[index].hostId
+        data.nodeList[index].privateIp = data.hostList[index].privateIp
+        data.nodeList[index].publicIp = data.hostList[index].publicIp
       }
-      changeHostId(0)
+      changeHostId(index)
     } else {
       Message.error('Failed to obtain the host list data')
     }
   }).finally(() => {
     data.hostListLoading = false
   })
+}
+
+const hostPopupChange = (val: boolean, index: number) => {
+  if (val) {
+    getHostList(index)
+  }
+}
+
+const hostUserPopupChange = (val: boolean, index: number) => {
+  if (val) {
+    changeHostId(index)
+  }
 }
 
 const getAZList = () => {
@@ -239,6 +248,7 @@ const azChange = () => {
   }
 }
 
+const installUserLoading = ref<boolean>(false)
 const changeHostId = (index: number) => {
   const hostId = data.nodeList[index].hostId
   if (hostId) {
@@ -251,6 +261,7 @@ const changeHostId = (index: number) => {
       data.nodeList[index].installUserId = data.userListByHost[hostId][0].hostUserId
       data.nodeList[index].installUsername = data.userListByHost[hostId][0].username
     } else {
+      installUserLoading.value = true
       hostUserListWithoutRoot(hostId).then((res: KeyValue) => {
         if (Number(res.code) === 200) {
           if (res.data.length) {
@@ -278,6 +289,8 @@ const changeHostId = (index: number) => {
         } else {
           Message.error('Failed to obtain user data from the host')
         }
+      }).finally(() => {
+        installUserLoading.value = false
       })
     }
   }

@@ -17,6 +17,9 @@ import org.opengauss.admin.plugin.vo.modeling.Dimension;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 /**
@@ -103,6 +106,36 @@ public class BaseGenerateServiceImpl implements IModelingVisualizationChartGener
         }
 
         return dimension;
+    }
+
+    public String formatDateTimeDimension(Timestamp value , Integer particle) {
+        if (value == null) {
+            return null;
+        }
+        //default format yyyy-mm-dd , ignore min,sec
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH");
+        switch (particle) {
+            case 1: {
+                sdf = new SimpleDateFormat("yyyy年");
+                break;
+            }
+            case 2: {
+                sdf = new SimpleDateFormat("yyyy年MM月");
+                break;
+            }
+            case 3: {
+                sdf = new SimpleDateFormat("yyyy年MM月dd日");
+                break;
+            }
+            case 4: {
+                sdf = new SimpleDateFormat("HH时");
+                break;
+            }
+            default:{
+                break;
+            }
+        }
+        return sdf.format(new Date(value.getTime()));
     }
 }
 

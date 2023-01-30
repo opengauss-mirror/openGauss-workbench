@@ -4,7 +4,7 @@
       <div class="full-w mb" style="display: flex; justify-content:space-around">
         <div class="flex-col-start" style="width: 33.3%">
           <div class="flex-row mb">
-            <div class="top-label mr-s">{{ $t('wdr.index.5mpm1cuaq540') }}</div>
+            <div class="label-color top-label mr-s">{{ $t('wdr.index.5mpm1cuaq540') }}</div>
             <a-select style="width: 300px" :loading="filter.clusterListLoading" v-model="filter.clusterId"
               :placeholder="$t('wdr.index.5mpm1cuaqvk0')">
               <a-option v-for="(item, index) in filter.clusterList" :key="index" :label="item.label"
@@ -12,7 +12,7 @@
             </a-select>
           </div>
           <div class="flex-row ">
-            <div class="query-label mr-s">{{ $t('wdr.index.5mpm1cuar0w0') }}</div>
+            <div class="label-color query-label mr-s">{{ $t('wdr.index.5mpm1cuar0w0') }}</div>
             <a-range-picker style="width: 300px" show-time :default-value="getCurrentTime" :allow-clear="false"
               :time-picker-props="{ defaultValue: ['00:00:00', '23:59:59'] }" format="YYYY-MM-DD HH:mm:ss"
               @ok="dateOnOk" />
@@ -20,7 +20,7 @@
         </div>
         <div class="flex-col-start" style="width: 33.3%; margin-left: 100px">
           <div class="flex-row">
-            <div class="top-label mr-s">{{ $t('wdr.index.5mpm1cuar500') }}</div>
+            <div class="label-color top-label mr-s">{{ $t('wdr.index.5mpm1cuar500') }}</div>
             <a-select style="width: 300px" v-model="filter.wdrScope" :placeholder="$t('wdr.index.5mpm1cuar9s0')">
               <a-option v-for="(item, index) in filter.wdrScopeList" :key="index" :label="item.label"
                 :value="item.value" />
@@ -29,7 +29,7 @@
         </div>
         <div class="flex-col-end" style="width: 33.3%">
           <div class="flex-row mb">
-            <div class="top-label mr-s">{{ $t('wdr.index.5mpm1cuardo0') }}</div>
+            <div class="label-color top-label mr-s">{{ $t('wdr.index.5mpm1cuardo0') }}</div>
             <a-select style="width: 300px" v-model="filter.wdrType" :placeholder="$t('wdr.index.5mpm1cuarh00')">
               <a-option v-for="(item, index) in filter.wdrTypeList" :key="index" :label="item.label"
                 :value="item.value" />
@@ -271,9 +271,7 @@ const showSnapshot = () => {
 <style lang="less" scoped>
 .wdr-c {
   padding: 20px;
-  background-color: #FFF;
   border-radius: 8px;
-  height: calc(100vh - 136px - 40px);
 
   .top-label {
     white-space: nowrap;

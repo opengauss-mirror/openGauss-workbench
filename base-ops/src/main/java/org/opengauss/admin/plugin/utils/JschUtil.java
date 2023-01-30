@@ -504,17 +504,33 @@ public class JschUtil {
         response.setCharacterEncoding("utf-8");
         response.setHeader("Content-Disposition", "attachment;filename=" + filename);
 
+        OutputStream os = null;
         try (InputStream inputStream = sftp.get(path + "/" + filename);
              BufferedInputStream bis = new BufferedInputStream(inputStream)) {
             byte[] buff = new byte[1024];
-            OutputStream os = response.getOutputStream();
+            os = response.getOutputStream();
             int i = 0;
+            boolean empty = true;
             while ((i = bis.read(buff)) != -1) {
+                empty = false;
                 os.write(buff, 0, i);
-                os.flush();
             }
+
+            if (empty){
+                os.write(0);
+            }
+
+            os.flush();
         } catch (Exception e) {
             log.error("{}", e);
+        }finally {
+            if (Objects.nonNull(os)){
+                try {
+                    os.close();
+                } catch (IOException ignore) {
+
+                }
+            }
         }
     }
 

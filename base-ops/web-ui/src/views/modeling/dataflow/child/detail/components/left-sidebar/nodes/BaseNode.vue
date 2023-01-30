@@ -2,7 +2,13 @@
 <template>
   <a-dropdown trigger="contextMenu" alignPoint position="bl">
     <div
-      class="d-antv-node base-node-container" :class="{ 'd-antv-node-selected': antvSelected, 'd-antv-node-disabled': disabled }"
+      class="d-antv-node base-node-container" 
+      :class="{ 
+        'd-antv-node-selected1': antvSelected, 
+        'd-antv-node-disabled': disabled, 
+        'd-antv-node-dark': dAntvNodeDarkTheme,
+        'd-antv-node-dark-selected': dAntvNodeDarkTheme && antvSelected
+      }"
     >
       <div class="base-node-disabled" :class="{ 'open-base-node-disabled': nodeDisabledShow }">
         <div class="disabled-frame" @click="toggleDisbled"><icon-check v-show="disabled" /></div>
@@ -42,6 +48,8 @@ const antvSelected = ref<boolean>(false)
 const disabled = ref<boolean>(false)
 const nodeDisabledShow = ref<boolean>(false)
 const showPlay = ref<boolean>(false)
+
+const dAntvNodeDarkTheme = ref<boolean>(false)
 onMounted(() => {
   if (getNode) {
     let n: Cell = getNode()
@@ -51,6 +59,20 @@ onMounted(() => {
       nodeDisabledShow.value = current.showDisabledCheckbox ? current.showDisabledCheckbox : false
     })
   }
+
+  const theme = localStorage.getItem('opengauss-theme')
+  if (theme === 'dark') {
+    dAntvNodeDarkTheme.value = true
+  } else {
+    dAntvNodeDarkTheme.value = false
+  }
+  window.$wujie?.bus.$on('opengauss-theme-change', (val: string) => {
+    if (val === 'dark') {
+      dAntvNodeDarkTheme.value = true
+    } else {
+      dAntvNodeDarkTheme.value = false
+    }
+  })
 })
 const getName = () => getNode ? nodeConfig = getNode().getData() : setTimeout(() => { getName() }, 100)
 getName()
@@ -123,7 +145,7 @@ const toggleDisbled = () => {
     width: 100%;
     height: 100%;
     background: rgb(255, 255, 255);
-    box-shadow: 0px 2px 8px rgba(165, 165, 165, 0.33);
+    box-shadow: 0px 2px 10px rgb(201, 205, 212);
     border-radius: 4px;
     transition: opacity .3s;
     display: flex;
@@ -146,9 +168,9 @@ const toggleDisbled = () => {
         transform: translate(0, -50%);
         width: 16px;
         height: 16px;
-        border: 1px solid rgb(var(--primary-6));
+        border: 1px solid rgb(227, 29, 28);
         cursor: pointer;
-        color: rgb(var(--primary-6));
+        color: rgb(227, 29, 28);
         &::before {
           content: "";
           position: absolute;
@@ -157,7 +179,7 @@ const toggleDisbled = () => {
           width: 10px;
           height: 1px;
           transform: translate(100%, -50%);
-          background-color: rgb(var(--primary-6));
+          background-color: rgb(227, 29, 28);
         }
       }
     }
@@ -171,9 +193,9 @@ const toggleDisbled = () => {
     .base-node-icon {
       width: 42px;
       height: 42px;
-      background-color: rgba(var(--primary-6), .1);
+      background-color: rgba(227, 29, 28, .1);
       border-radius: 50%;
-      border: 1px solid rgba(var(--primary-6), .4);
+      border: 1px solid rgba(227, 29, 28, .4);
       display: flex;
       justify-content: center;
       align-items: center;
@@ -184,7 +206,7 @@ const toggleDisbled = () => {
         height: 18px;
         font-size: 18px;
         color: transparent;
-        fill: rgb(var(--primary-6));
+        fill: rgb(227, 29, 28);
       }
     }
     .base-node-settings {
@@ -213,4 +235,41 @@ const toggleDisbled = () => {
       cursor: default !important;
     }
   }
+  .d-antv-node-dark {
+    background-color: #171719 !important;
+    box-shadow: 0px 2px 10px rgb(201, 205, 212);
+    .base-node-icon {
+      background-color: rgba(252, 240, 147, .1) !important;
+      border: 1px solid rgba(252, 240, 147, .4) !important;
+      > .bs-i {
+        fill: rgb(252, 240, 147) !important;
+      }
+    }
+    .name, .base-node-play, .base-node-settings {
+      color: rgba(255, 255, 255, .9) !important;
+    }
+    .base-node-disabled {
+      .disabled-frame {
+        border: 1px solid rgb(252, 240, 147) !important;
+        color: rgb(252, 240, 147) !important;
+        &::before {
+          content: "";
+          position: absolute;
+          top: 50%;
+          right: 0;
+          width: 10px;
+          height: 1px;
+          transform: translate(100%, -50%);
+          background-color: rgb(252, 240, 147) !important;
+        }
+      }
+    }
+  }
+  
+.d-antv-node-selected1 {
+  border: 1px solid rgb(227, 29, 28) !important;
+}
+.d-antv-node-dark-selected {
+  border: 1px solid rgb(252, 240, 147) !important;
+}
 </style>

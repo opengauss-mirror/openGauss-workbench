@@ -7,7 +7,7 @@
                         <div class="flex-row">
                             <a-tag class="mr" color="#86909C">{{ $t('simple.InstallPrompt.5mpmunt3eco0') }}</a-tag>
                             {{ $t('simple.InstallPrompt.5mpmunt3ezw0') }}: {{ nodeData.privateIp }}({{
-                                    nodeData.publicIp
+                                nodeData.publicIp
                             }})
                         </div>
                         <div class="flex-row">
@@ -18,23 +18,23 @@
                     </div>
                     <div class="item-node-center full-w flex-col-start" v-show="nodeData.isShow">
                         <div class="flex-row">
-                            <div class="lable-w">{{ $t('simple.InstallPrompt.5mpmunt3f5k0') }}</div>
-                            <div>{{ nodeData.publicIp }}</div>
+                            <div class="label-color lable-w">{{ $t('simple.InstallPrompt.5mpmunt3f5k0') }}</div>
+                            <div class="label-color">{{ nodeData.publicIp }}</div>
                         </div>
                         <a-divider></a-divider>
                         <div class="flex-row">
-                            <div class="lable-w">{{ $t('simple.InstallPrompt.5mpmunt3f9s0') }}</div>
-                            <div>{{ nodeData.installPath }}</div>
+                            <div class="label-color lable-w">{{ $t('simple.InstallPrompt.5mpmunt3f9s0') }}</div>
+                            <div class="label-color">{{ nodeData.installPath }}</div>
                         </div>
                         <a-divider></a-divider>
                         <div class="flex-row">
-                            <div class="lable-w">{{ $t('simple.InstallPrompt.5mpmunt3fdc0') }}</div>
-                            <div>{{ nodeData.dataPath }}</div>
+                            <div class="label-color lable-w">{{ $t('simple.InstallPrompt.5mpmunt3fdc0') }}</div>
+                            <div class="label-color">{{ nodeData.dataPath }}</div>
                         </div>
                         <a-divider></a-divider>
                         <div class="flex-row">
-                            <div class="lable-w">{{ $t('simple.InstallPrompt.5mpmunt3fjc0') }}</div>
-                            <div>{{ nodeData.port }}</div>
+                            <div class="label-color lable-w">{{ $t('simple.InstallPrompt.5mpmunt3fjc0') }}</div>
+                            <div class="label-color">{{ nodeData.port }}</div>
                         </div>
                     </div>
                 </div>

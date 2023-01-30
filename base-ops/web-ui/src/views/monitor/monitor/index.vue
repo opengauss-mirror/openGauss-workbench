@@ -1,17 +1,17 @@
 <template>
   <div class="cluster-monitor-container">
     <div class="top full-w mb">
-      <div class="ft-b ft-m">{{ $t('monitor.index.5mplmn5z06k0') }}</div>
+      <div class="label-color ft-b ft-m">{{ $t('monitor.index.5mplmn5z06k0') }}</div>
       <div class="flex-row">
         <div class="flex-row mr">
-          <div class="top-label mr-s">{{ $t('monitor.index.5mplmn5z19w0') }}</div>
+          <div class="label-color top-label mr-s">{{ $t('monitor.index.5mplmn5z19w0') }}</div>
           <a-select class="select-w" :loading="data.clusterListLoading" v-model="data.clusterId"
             :placeholder="$t('monitor.index.5mplmn5z1lo0')" @change="getHostList">
             <a-option v-for="(item, index) in data.clusterList" :key="index" :label="item.label" :value="item.value" />
           </a-select>
         </div>
         <div class="flex-row">
-          <div class="top-label mr-s">{{ $t('monitor.index.5mplmn5z1qs0') }}</div>
+          <div class="label-color top-label mr-s">{{ $t('monitor.index.5mplmn5z1qs0') }}</div>
           <a-select class="select-w" :loading="data.hostListLoading" v-model="data.hostId"
             :placeholder="$t('monitor.index.5mplmn5z1uc0')" @change="hostChange">
             <a-option v-for="(item, index) in data.hostList" :key="index" :label="item.label" :value="item.value" />
@@ -21,34 +21,34 @@
     </div>
     <div class="flex-row mb">
       <div class="echart-container cpu-bg mr">
-        <div class="ft-b ft-lg mb">{{ $t('monitor.index.else1') }}</div>
+        <div class="label-color ft-b ft-lg mb">{{ $t('monitor.index.else1') }}</div>
         <v-chart class="echart" :option="data.cpu" />
       </div>
       <div class="echart-container memory-bg mr">
-        <div class="ft-b ft-lg mb">{{ $t('monitor.index.5mplmn5z1y80') }}</div>
+        <div class="label-color ft-b ft-lg mb">{{ $t('monitor.index.5mplmn5z1y80') }}</div>
         <v-chart class="echart" :option="data.memory" />
       </div>
       <div class="echart-container net-bg">
-        <div class="ft-b ft-lg mb">{{ $t('monitor.index.5mplmn5z2300') }}</div>
+        <div class="label-color ft-b ft-lg mb">{{ $t('monitor.index.5mplmn5z2300') }}</div>
         <v-chart class="echart" :option="data.net" />
       </div>
     </div>
     <div class="flex-row mb">
       <div class="echart-container lock-bg mr">
-        <div class="ft-b ft-lg mb">{{ $t('monitor.index.5mplmn5z2a00') }}</div>
+        <div class="label-color ft-b ft-lg mb">{{ $t('monitor.index.5mplmn5z2a00') }}</div>
         <v-chart class="echart" :option="data.lock" />
       </div>
       <div class="echart-container session-bg mr">
-        <div class="ft-b ft-lg mb">{{ $t('monitor.index.5mplmn5z2ms0') }}</div>
+        <div class="label-color ft-b ft-lg mb">{{ $t('monitor.index.5mplmn5z2ms0') }}</div>
         <v-chart class="echart" :option="data.session" />
       </div>
       <div class="echart-container connect-bg">
-        <div class="ft-b ft-lg mb">{{ $t('monitor.index.5mplmn5z30k0') }}</div>
+        <div class="label-color ft-b ft-lg mb">{{ $t('monitor.index.5mplmn5z30k0') }}</div>
         <v-chart class="echart" :option="data.connect" />
       </div>
     </div>
     <div class="session-top-ten-c">
-      <div class="ft-lg ft-b mb">{{ $t('monitor.index.5mplmn5z37w0') }}</div>
+      <div class="label-color ft-lg ft-b mb">{{ $t('monitor.index.5mplmn5z37w0') }}</div>
       <v-chart class="echart-sesion" :option="data.sessionTop"></v-chart>
     </div>
   </div>
@@ -225,10 +225,8 @@ const convertToDate = (time: number) => {
 .cluster-monitor-container {
   padding: 20px;
   border-radius: 8px;
-  background-color: #FFF;
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 138px - 40px);
   overflow-y: auto;
   box-sizing: border-box;
 
@@ -262,33 +260,33 @@ const convertToDate = (time: number) => {
   }
 
   .cpu-bg {
-    background-color: #F5F2FB;
+    background-color: var(--cpu-bg);
   }
 
   .memory-bg {
-    background-color: #ECF9FF;
+    background-color: var(--memory-bg);
   }
 
   .net-bg {
-    background-color: #FFF5E5;
+    background-color: var(--net-bg);
   }
 
   .lock-bg {
-    background-color: #E9F0FF;
+    background-color: var(--lock-bg);
   }
 
   .session-bg {
-    background-color: #FFECEC;
+    background-color: var(--session-bg);
   }
 
   .connect-bg {
-    background-color: #EEFFEC;
+    background-color: var(--connect-bg);
   }
 
   .session-top-ten-c {
     padding: 20px;
     border-radius: 4px;
-    background-color: #F2F8FF;
+    background-color: var(--session-top-bg);
 
     .echart-sesion {
       height: 700px;

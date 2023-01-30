@@ -7,6 +7,7 @@ import org.opengauss.admin.plugin.domain.entity.ops.OpsClusterEntity;
 import org.opengauss.admin.plugin.domain.model.ops.*;
 import org.opengauss.admin.plugin.domain.model.ops.env.HostEnv;
 import org.opengauss.admin.plugin.enums.ops.OpenGaussSupportOSEnum;
+import org.opengauss.admin.plugin.enums.ops.OpenGaussVersionEnum;
 import org.opengauss.admin.plugin.vo.ops.*;
 import org.opengauss.admin.plugin.vo.ops.SessionVO;
 import org.opengauss.admin.plugin.vo.ops.SlowSqlVO;
@@ -73,7 +74,7 @@ public interface IOpsClusterService extends IService<OpsClusterEntity> {
 
     void build(String clusterId, String hostId, String businessId);
 
-    ListDir listInstallPackage(String path);
+    ListDir listInstallPackage(String path, OpenGaussVersionEnum openGaussVersionEnum);
 
     HostEnv env(String hostId, OpenGaussSupportOSEnum expectedOs);
 

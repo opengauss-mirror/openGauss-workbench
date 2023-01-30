@@ -413,7 +413,6 @@ defineExpose({ open })
 <style scoped lang="less">
   .visual-edit-container{
     .container {
-      background-color: #f6f8ff;
       width: 100%;
       height: 100%;
       display: flex;
@@ -425,8 +424,7 @@ defineExpose({ open })
         .header {
           display: flex;
           align-items: center;
-          background: rgb(255, 255, 255);
-          border: 1px solid rgb(218, 220, 231);
+          border: 1px solid var(--color-border-3);
           border-radius: 1px;
           margin-bottom: 20px;
           height: 40px;
@@ -452,7 +450,7 @@ defineExpose({ open })
               display: inline-block;
               width: 1px;
               height: 26px;
-              background: rgb(227, 229, 237);
+              background: var(--color-border-3);
               margin-right: 15px;
             }
           }
@@ -471,9 +469,8 @@ defineExpose({ open })
             font-size: 20px;
             left: 1px;
             top: 1px;
-            background-color: #fff;
             cursor: pointer;
-            box-shadow: 0px 1px 4px rgba(0, 0, 0, 0.11);
+            box-shadow: 0 1px 4px var(--color-fill-4);
             transition: all .3s;
           }
           .hide-vm-toggle {
@@ -481,11 +478,10 @@ defineExpose({ open })
           }
           .visual-menu {
             width: 160px;
-            background-color: #fff;
             text-align: center;
             transition: all .3s;
             overflow: hidden;
-            border: 1px solid var(--color-neutral-4);
+            border: 1px solid var(--color-border-3);
             &:hover {
               .vm-toggle {
                 opacity: 1;
@@ -497,7 +493,7 @@ defineExpose({ open })
               padding: 10px;
               padding-left: 50px;
               margin-bottom: 10px;
-              border-bottom: 1px solid var(--color-neutral-4);
+              border-bottom: 1px solid var(--color-border-3);
             }
             .vm-content {
               width: 100%;
@@ -520,7 +516,6 @@ defineExpose({ open })
             margin-right: 0;
           }
           .chart-container {
-            background-color: #fff;
             flex: 1;
             height: 100%;
             > div {
@@ -534,9 +529,9 @@ defineExpose({ open })
         min-width: 420px;
         width: 420px;
         height: 100%;
-        background-color: #fff;
         display: flex;
         flex-direction: column;
+        border-left: 1px solid var(--color-border-3);
         .config-main {
           flex: 1;
           overflow: auto;
@@ -545,10 +540,10 @@ defineExpose({ open })
           padding: 20px 12px 0px 12px;
         }
         .common {
-          border-bottom: 1px solid #dededf;
+          border-bottom: 1px solid var(--color-border-3);
         }
         .config-footer {
-          border-top: 1px solid #dededf;
+          border-top: 1px solid var(--color-border-3);
           margin-top: auto;
           padding: 10px 0;
           display: flex;
@@ -570,7 +565,7 @@ defineExpose({ open })
       margin-right: 20px;
       border: 1px solid transparent;
       background-color: var(--color-fill-1);
-        border-radius: 10px;
+      border-radius: 10px;
       &:nth-of-type(3n) {
         margin-right: 0;
       }
@@ -585,7 +580,6 @@ defineExpose({ open })
         width: 100%;
       }
       &:hover {
-        background: rgb(247, 248, 250);
         border: 1px solid rgb(var(--primary-6));
         box-shadow: 0px 1px 15px rgba(var(--primary-6), 0.29);
       }

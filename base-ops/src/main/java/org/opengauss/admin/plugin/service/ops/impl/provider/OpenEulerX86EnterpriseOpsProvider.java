@@ -652,7 +652,7 @@ public class OpenEulerX86EnterpriseOpsProvider extends AbstractOpsProvider {
         backIp1.setAttribute("value", enterpriseInstallNodeConfig.getPrivateIp());
         device.appendChild(backIp1);
 
-        if (enterpriseInstallNodeConfig.getIsInstallCM()) {
+        if (enterpriseInstallConfig.getIsInstallCM()) {
             if (enterpriseInstallNodeConfig.getIsCMMaster()) {
                 Element cmsNum = document.createElement("PARAM");
                 cmsNum.setAttribute("name", "cmsNum");
@@ -666,7 +666,7 @@ public class OpenEulerX86EnterpriseOpsProvider extends AbstractOpsProvider {
 
                 Element cmServerListenIp1 = document.createElement("PARAM");
                 cmServerListenIp1.setAttribute("name", "cmServerListenIp1");
-                Object[] ips = nodeConfigList.stream().filter(EnterpriseInstallNodeConfig::getIsInstallCM).map(EnterpriseInstallNodeConfig::getPrivateIp).toArray();
+                Object[] ips = nodeConfigList.stream().map(EnterpriseInstallNodeConfig::getPrivateIp).toArray();
                 cmServerListenIp1.setAttribute("value", StringUtils.arrayToCommaDelimitedString(ips));
                 device.appendChild(cmServerListenIp1);
 
@@ -682,7 +682,7 @@ public class OpenEulerX86EnterpriseOpsProvider extends AbstractOpsProvider {
 
                 Element cmServerRelation = document.createElement("PARAM");
                 cmServerRelation.setAttribute("name", "cmServerRelation");
-                Object[] hostnames = nodeConfigList.stream().filter(EnterpriseInstallNodeConfig::getIsInstallCM).map(EnterpriseInstallNodeConfig::getHostname).toArray();
+                Object[] hostnames = nodeConfigList.stream().map(EnterpriseInstallNodeConfig::getHostname).toArray();
                 cmServerRelation.setAttribute("value", StringUtils.arrayToCommaDelimitedString(hostnames));
                 device.appendChild(cmServerRelation);
 
@@ -718,8 +718,8 @@ public class OpenEulerX86EnterpriseOpsProvider extends AbstractOpsProvider {
 
             Element dataNode1 = document.createElement("PARAM");
             dataNode1.setAttribute("name", "dataNode1");
-            List<EnterpriseInstallNodeConfig> nodeConfigs = nodeConfigList.stream().filter(EnterpriseInstallNodeConfig::getIsInstallCM).collect(Collectors.toList());
-            EnterpriseInstallNodeConfig master = nodeConfigs.stream().filter(EnterpriseInstallNodeConfig::getIsCMMaster).findFirst().orElseThrow(() -> new OpsException("CM master node information not found"));
+            List<EnterpriseInstallNodeConfig> nodeConfigs = nodeConfigList.stream().collect(Collectors.toList());
+            EnterpriseInstallNodeConfig master = nodeConfigs.stream().filter(node->node.getClusterRole()==ClusterRoleEnum.MASTER).findFirst().orElseThrow(() -> new OpsException("master node information not found"));
             StringBuilder dataNodeValue = new StringBuilder(master.getDataPath());
             for (EnterpriseInstallNodeConfig nodeConfig : nodeConfigs) {
                 if (!master.equals(nodeConfig)) {
@@ -797,7 +797,7 @@ public class OpenEulerX86EnterpriseOpsProvider extends AbstractOpsProvider {
             List<EnterpriseInstallNodeConfig> nodeConfigList = installContext.getEnterpriseInstallConfig().getNodeConfigList();
             for (int i = 0; i < nodeConfigList.size(); i++) {
                 EnterpriseInstallNodeConfig enterpriseInstallNodeConfig = nodeConfigList.get(i);
-                String format = MessageFormat.format(template, i + 1, enterpriseInstallNodeConfig.getPrivateIp(), String.valueOf(Objects.isNull(enterpriseInstallNodeConfig.getDcfPort())?16683:enterpriseInstallNodeConfig.getDcfPort()), enterpriseInstallNodeConfig.getIsCMMaster() ? "LEADER" : "FOLLOWER");
+                String format = MessageFormat.format(template, i + 1, enterpriseInstallNodeConfig.getPrivateIp(), String.valueOf(Objects.isNull(enterpriseInstallNodeConfig.getDcfPort())?16683:enterpriseInstallNodeConfig.getDcfPort()), enterpriseInstallNodeConfig.getClusterRole() == ClusterRoleEnum.MASTER ? "LEADER" : "FOLLOWER");
                 res.append(format);
                 res.append(",");
             }

@@ -15,6 +15,7 @@ import org.opengauss.admin.plugin.vo.modeling.component.*;
 import org.springframework.stereotype.Component;
 
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.*;
 /**
  * @author LZW
@@ -37,8 +38,15 @@ public class MixChartGenerateServiceImpl extends BaseGenerateServiceImpl {
         mixChartBody.setTitle(new Title().setText(mixChartParamsBody.getTitle()));
         mixChartBody.setTooltip(new Tooltip().setTrigger("axis"));
         mixChartBody.setGrid(new Grid().setBottom("40").setRight("3%").setLeft("3%").setContainLabel(true));
-        //gen X axis
-        Dimension xDimension = genXAxis();
+
+        //generate X axis config
+        Dimension xDimension;
+        if (mixChartParamsBody.getShowType().getKey() == 1) {
+            xDimension = genXAxis();
+        } else {
+            xDimension = genXAxisByTime();
+        }
+
         mixChartBody.setXAxis(new XAxis().setType("category").setBoundaryGap(true).setData(xDimension.getCategoryName()));
 
         genSeries(xDimension);
@@ -108,7 +116,6 @@ public class MixChartGenerateServiceImpl extends BaseGenerateServiceImpl {
             });
         } else {
             xDimension.setField(xDimensionKey);
-            xDimension.setNum(8);
             queryResult.forEach(item->{
                 String filedValue = (String) item.get(xDimensionKey);
                 if (filedValue != null) {
@@ -119,6 +126,31 @@ public class MixChartGenerateServiceImpl extends BaseGenerateServiceImpl {
                 }
             });
         }
+
+        return xDimension;
+    }
+
+    public Dimension genXAxisByTime(){
+        Dimension xDimension = new Dimension();
+        //get display dimension of X Axis
+        String xDimensionKey = mixChartParamsBody.getShowType().getDateField();
+        Integer particle = mixChartParamsBody.getShowType().getParticle();
+
+        xDimension.setField(xDimensionKey);
+        //enum value by field
+        queryResult.forEach(item->{
+            String filedValue = null;
+            if (item.get(xDimensionKey) != null && item.get(xDimensionKey).getClass() == Timestamp.class) {
+                filedValue = formatDateTimeDimension((Timestamp)item.get(xDimensionKey),particle);
+                item.put(xDimensionKey,filedValue);
+            }
+            if (filedValue != null) {
+                Categories category = new Categories();
+                category.setName(filedValue);
+                category.setValue(List.of(filedValue));
+                xDimension.addCategoryBody(category.toBody(xDimensionKey));
+            }
+        });
 
         return xDimension;
     }

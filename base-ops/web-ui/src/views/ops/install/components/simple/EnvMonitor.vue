@@ -2,7 +2,7 @@
   <div class="env-monitor-c">
     <div class="flex-col">
       <div class="flex-row-center" style="width: 50%">
-        <a-spin class="full-w" :loading="envData.loading" :tip="$t('simple.EnvMonitor.5mpmqpcxjpc0')">
+        <a-spin class="label-color full-w" :loading="envData.loading" :tip="$t('simple.EnvMonitor.5mpmqpcxjpc0')">
           <div class="flex-col-start">
             <a-alert class="mb" style="width: fit-content;" type="warning"
               v-if="envData.result !== -1 && envData.noPassNum > 0">
@@ -13,10 +13,10 @@
             </a-alert>
             <div class="env-item-c flex-between full-w mb">
               <div class="flex-row">
-                <a-tag class="mr" color="#86909C">{{ getRoleName(envData.clusterRole) }}</a-tag>
-                {{ $t('simple.EnvMonitor.5mpmqpcxkq80') }} {{ envData.privateIp }}({{
-                    envData.publicIp
-                }})
+                <a-tag class="title-color mr" color="#86909C">{{ getRoleName(envData.clusterRole) }}</a-tag>
+                <div class="title-color">{{ $t('simple.EnvMonitor.5mpmqpcxkq80') }} {{ envData.privateIp }}({{
+                  envData.publicIp
+                }})</div>
               </div>
               <div class="flex-row">
                 <a-button class="mr" type="text" long @click="envRetest(envData)">
@@ -41,8 +41,8 @@
                   <div class="flex-col" v-if="envData.hardwareEnv.envProperties.length">
                     <div class="flex-row mb" v-for="(item, index) in envData.hardwareEnv.envProperties" :key="index">
                       <div style="width: 250px;" class="flex-row">
-                        <div class="mr">{{ item.name }}:</div>
-                        <div>{{ item.value }}</div>
+                        <div class="label-color mr">{{ item.name }}:</div>
+                        <div class="label-color">{{ item.value }}</div>
                       </div>
                       <div style="min-width: 500px;" class="flex-row-start">
                         <div class="mr">
@@ -268,6 +268,10 @@ defineExpose({
 </script>
 
 <style lang="less" scoped>
+.title-color {
+  color: var(--color-black);
+}
+
 .env-monitor-c {
   height: calc(100% - 28px - 42px);
   overflow-y: auto;
