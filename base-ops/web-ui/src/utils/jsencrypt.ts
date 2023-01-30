@@ -3,7 +3,7 @@ import { getEntryKey } from '@/api/ops'
 import { KeyValue } from '@/types/global'
 
 // host password encryption
-export async function encryptPassword(pwd: string) {
+export async function encryptPassword (pwd: string) {
   let publicKey = ''
   const getPublicKey: KeyValue = await getEntryKey()
   if (Number(getPublicKey.code) === 200 && getPublicKey.key) {

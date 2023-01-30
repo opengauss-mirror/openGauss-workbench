@@ -186,7 +186,7 @@ const removeNode = (index: number) => {
   }
 }
 
-const getHostList = (index: number = 0) => {
+const getHostList = (index = 0) => {
   data.hostListLoading = true
   hostListAll().then((res: KeyValue) => {
     if (Number(res.code) === 200) {

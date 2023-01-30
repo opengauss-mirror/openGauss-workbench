@@ -19,12 +19,12 @@ export class Heart {
   heartTimeOut!: number
   ServerHeartTimeOut!: number
   timeout = 5000
-  reset(): void {
+  reset (): void {
     clearTimeout(this.heartTimeOut)
     clearTimeout(this.ServerHeartTimeOut)
   }
 
-  start(cb: Callback): void {
+  start (cb: Callback): void {
     this.heartTimeOut = setTimeout((e: Event) => {
       cb(e)
       this.ServerHeartTimeOut = setTimeout((e: Event) => {
@@ -64,13 +64,13 @@ export default class Socket<T, RT> extends Heart {
     }
   }
 
-  constructor(ops: Ioptions<RT>) {
+  constructor (ops: Ioptions<RT>) {
     super()
     Object.assign(this.options, ops)
     this.create()
   }
 
-  create(): void {
+  create (): void {
     if (!('WebSocket' in window)) {
       throw new Error('The current browser does not support it and cannot be used')
     }
@@ -94,7 +94,7 @@ export default class Socket<T, RT> extends Heart {
     this.onmessage(this.options.messageCb as MessageCallback<RT>)
   }
 
-  onopen(callback: Callback): void {
+  onopen (callback: Callback): void {
     this.ws.onopen = event => {
       if (typeof callback === 'function') {
         callback(event)
@@ -104,7 +104,7 @@ export default class Socket<T, RT> extends Heart {
     }
   }
 
-  onclose(callback: Callback): void {
+  onclose (callback: Callback): void {
     this.ws.onclose = event => {
       if (typeof callback === 'function') {
         callback(event)
@@ -114,7 +114,7 @@ export default class Socket<T, RT> extends Heart {
     }
   }
 
-  onerror(callback: Callback): void {
+  onerror (callback: Callback): void {
     this.ws.onerror = event => {
       if (typeof callback === 'function') {
         callback(event)
@@ -124,7 +124,7 @@ export default class Socket<T, RT> extends Heart {
     }
   }
 
-  onmessage(callback: MessageCallback<any>): void {
+  onmessage (callback: MessageCallback<any>): void {
     this.ws.onmessage = (event: MessageEvent<string>) => {
       const strMessage = event.data
       if (typeof callback === 'function') {
@@ -133,11 +133,11 @@ export default class Socket<T, RT> extends Heart {
     }
   }
 
-  send(data: T | string): void {
+  send (data: T | string): void {
     console.log('doNothing', data)
   }
 
-  destroy(): void {
+  destroy (): void {
     super.reset()
     clearTimeout(this.reconnectTimer)
     this.options.isRestory = true

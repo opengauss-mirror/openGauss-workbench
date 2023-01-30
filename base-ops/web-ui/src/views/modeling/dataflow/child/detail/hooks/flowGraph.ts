@@ -38,7 +38,7 @@ export default class FlowGraph {
       return true
     },
     scroller: {
-      enabled: true, pageVisible: false, pageBreak: true, pannable: false,padding:0
+      enabled: true, pageVisible: false, pageBreak: true, pannable: false, padding: 0
     },
     mousewheel: {
       enabled: true, modifiers: ['ctrl', 'meta'], minScale: 0.5, maxScale: 2
@@ -81,7 +81,7 @@ export default class FlowGraph {
       enabled: true,
       ignoreAdd: false,
       ignoreRemove: false,
-      ignoreChange: true,
+      ignoreChange: true
     }, 
     clipboard: true, keyboard: true,
     embedding: {

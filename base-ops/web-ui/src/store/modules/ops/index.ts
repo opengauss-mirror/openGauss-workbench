@@ -52,12 +52,12 @@ const installStore = defineStore('install', {
   },
 
   actions: {
-    setInstallContext(installInfo: KeyValue) {
+    setInstallContext (installInfo: KeyValue) {
       this.$patch(state => {
         Object.assign(state.installContext, installInfo)
       })
     },
-    setMiniConfig(config: MinimalistInstallConfig) {
+    setMiniConfig (config: MinimalistInstallConfig) {
       this.$patch(state => {
         const param = {
           clusterName: config.clusterName
@@ -70,7 +70,7 @@ const installStore = defineStore('install', {
         state.minimalistInstallConfig.nodeConfigList = config.nodeConfigList
       })
     },
-    setLiteConfig(config: LiteInstallConfig) {
+    setLiteConfig (config: LiteInstallConfig) {
       this.$patch(state => {
         state.liteInstallConfig.port = config.port
         state.liteInstallConfig.databaseUsername = config.databaseUsername
@@ -79,12 +79,12 @@ const installStore = defineStore('install', {
         state.liteInstallConfig.nodeConfigList = config.nodeConfigList
       })
     },
-    setEnterpriseConfig(config: EnterpriseInstallConfig) {
+    setEnterpriseConfig (config: EnterpriseInstallConfig) {
       this.$patch(state => {
         Object.assign(state.enterpriseInstallConfig, config)
       })
     },
-    resetInstall() {
+    resetInstall () {
       this.$reset()
     }
   }

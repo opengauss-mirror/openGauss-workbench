@@ -66,7 +66,6 @@ export const getJsonData = (id: string) => request({
   params: { id }
 })
 
-
 export const dataSourceDbAdd = (data?: KeyValue) => request({
   url: `modeling/dataSourceDb/add`, method: 'post',
   data: data ? data : {}

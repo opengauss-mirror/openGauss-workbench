@@ -802,7 +802,7 @@ const createWinbox = (clusterData: KeyValue, type?: string) => {
 
 // host oper
 const handleHostOper = (type: any, clusterIndex: number, nodeIndex: number) => {
-  console.log('host type', type);
+  console.log('host type', type)
   handleInstanceOper(type, clusterIndex, nodeIndex)
 }
 
@@ -814,7 +814,7 @@ const handleInstanceSwitchChange = (type: any, clusterIndex: number, nodeIndex: 
 }
 
 // instance oper
-const handleInstanceOper = (type: any, clusterIndex: number, nodeIndex: number, isSwitch: boolean = false) => {
+const handleInstanceOper = (type: any, clusterIndex: number, nodeIndex: number, isSwitch = false) => {
   data.clusterList[clusterIndex].loading = true
   const term = getTermObj()
   const socketKey = new Date().getTime()

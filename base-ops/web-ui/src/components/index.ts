@@ -24,9 +24,8 @@ use([
   GraphicComponent
 ])
 
-
 export default {
-  install(Vue: App) {
+  install (Vue: App) {
     Vue.component('svg-icon', SvgIcon)
   }
 }

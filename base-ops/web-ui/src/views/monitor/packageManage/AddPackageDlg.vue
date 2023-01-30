@@ -110,7 +110,6 @@ const osChange = () => {
   }
 }
 
-
 const open = (type: string, packageData?: KeyValue, defaultVersion?: string) => {
   data.show = true
   if (type === 'create') {

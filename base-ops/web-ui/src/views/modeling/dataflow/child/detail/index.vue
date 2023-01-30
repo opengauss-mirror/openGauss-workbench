@@ -93,7 +93,7 @@ const initAntv = async () => {
       if (Number(res.code) === 200 && res.data) {
         const item = res.data
         dFStore.setFlowDataInfo(item)
-        dFStore.setDatabaseInfo(item.dbName,item.clusterNodeId,item.schema).then(() => {
+        dFStore.setDatabaseInfo(item.dbName, item.clusterNodeId, item.schema).then(() => {
           isReady.value = true
           nextTick(async () => {
             graph = FlowGraph.init(optionR, route, antvMainCenterRef.value, {
@@ -116,8 +116,8 @@ const initAntv = async () => {
             setAutoSave()
           })
         }).catch((e) => {
-            console.log(e);
-            router.back();
+            console.log(e)
+            router.back()
         })
       } else {
         router.back()

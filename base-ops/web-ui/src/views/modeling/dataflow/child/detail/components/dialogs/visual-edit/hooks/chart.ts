@@ -13,7 +13,7 @@ export const clearChart = () => {
 }
 export const showLoading = () => {
   chart && chart.showLoading({
-    maskColor: 'rgba(255, 255, 255, 0.2)',
+    maskColor: 'rgba(255, 255, 255, 0.2)'
   })
 }
 export const hideLoading = () => {

@@ -27,8 +27,8 @@
   </div>
 </template>
 <script lang="ts" setup>
-import { KeyValue } from '@/types/global';
-import { ref, reactive, onMounted, inject } from 'vue';
+import { KeyValue } from '@/types/global'
+import { ref, reactive, onMounted, inject } from 'vue'
 import 'xterm/css/xterm.css'
 import { Terminal } from 'xterm'
 
@@ -43,7 +43,7 @@ const loadingFunc = inject<any>('loading')
 
 const data = reactive<KeyValue>({
   state: -1, // -1 un install  0 installing  1 success  2 fail
-  installProgress: 0,
+  installProgress: 0
 })
 
 onMounted(() => {
@@ -65,7 +65,6 @@ const autoProgress = () => {
     }
   }, 600)
 }
-
 
 const getTermObj = (): Terminal => {
   return new Terminal({
@@ -89,7 +88,6 @@ const initTerm = (term: Terminal, ws?: WebSocket | undefined) => {
   term.write('\r\n\x1b[33m$\x1b[0m ')
 }
 
-
 const goHome = () => {
   window.$wujie?.props.methods.jump({
     name: 'Dashboard'
@@ -105,7 +103,6 @@ const goOps = () => {
 }
 
 </script>
-
 
 <style lang="less" scoped>
 .exe-install-c {

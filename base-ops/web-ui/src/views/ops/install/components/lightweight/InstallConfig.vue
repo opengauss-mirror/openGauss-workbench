@@ -177,7 +177,7 @@ const getFormData = (): KeyValue => {
 }
 
 const hostObj = ref<KeyValue>({})
-const getHostList = (index: number = 0) => {
+const getHostList = (index = 0) => {
   hostListLoading.value = true
   hostListAll().then((res: KeyValue) => {
     if (Number(res.code) === 200) {

@@ -148,7 +148,7 @@ const openSocket = () => {
       wsConnectType: WsConnectType.SSH,
       businessId: `terminal_${socketKey}`
     }
-    console.log('show password', hostId.value, hostObj);
+    console.log('show password', hostId.value, hostObj)
 
     if (hostObj.value[hostId.value]) {
       const encryptPwd = await encryptPassword(hostObj.value[hostId.value].rootPassword)
