@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import org.opengauss.admin.common.exception.ops.OpsException;
 import org.opengauss.admin.plugin.domain.BaseEntity;
 import org.opengauss.admin.plugin.enums.ops.OpenGaussSupportOSEnum;
 import org.opengauss.admin.plugin.enums.ops.OpenGaussVersionEnum;
@@ -45,37 +46,43 @@ public class OpsPackageManagerEntity extends BaseEntity {
 
         res.append("/").append(packageVersionNum);
 
+        String cpuArch;
         switch (osInfoEnum){
-            case CENTOS_X86_64:res.append("/").append("x86");break;
-            case OPENEULER_ARCH64:res.append("/").append("arm");break;
-            case OPENEULER_X86_64: res.append("/").append("x86_openEuler");break;
+            case CENTOS_X86_64: cpuArch = "x86";break;
+            case OPENEULER_ARCH64: cpuArch = "arm";break;
+            case OPENEULER_X86_64: cpuArch = "x86_openEuler";break;
+            default: throw new OpsException("cpu architecture information error");
         }
+
+        res.append("/").append(cpuArch);
 
         res.append("/").append("openGauss-");
 
+        StringBuilder packageName = new StringBuilder("openGauss-");
+
         if (OpenGaussVersionEnum.LITE == packageVersion){
-            res.append("Lite-");
+            packageName.append("Lite-");
         }
 
-        res.append(packageVersionNum).append("-");
+        packageName.append(packageVersionNum).append("-");
 
         switch (osInfoEnum){
-            case CENTOS_X86_64: res.append("CentOS");break;
-            default: res.append("openEuler");
+            case CENTOS_X86_64: packageName.append("CentOS");break;
+            default: packageName.append("openEuler");
         }
 
         switch (packageVersion){
-            case ENTERPRISE: res.append("-64bit-all.tar.gz");break;
+            case ENTERPRISE: packageName.append("-64bit-all.tar.gz");break;
             case LITE:
                 switch (osInfoEnum){
-                    case OPENEULER_ARCH64: res.append("-aarch64.tar.gz");break;
-                    default: res.append("-x86_64.tar.gz");break;
+                    case OPENEULER_ARCH64: packageName.append("-aarch64.tar.gz");break;
+                    default: packageName.append("-x86_64.tar.gz");break;
                 }
                 break;
-            case MINIMAL_LIST:res.append("-64bit.tar.bz2");break;
+            case MINIMAL_LIST:packageName.append("-64bit.tar.bz2");break;
         }
 
-        this.setPackageUrl(res.toString());
+        this.setPackageUrl(res.append("/").append(packageName).toString());
 
         return this;
     }
