@@ -1,0 +1,103 @@
+@font-face {
+  font-family: "iconfont"; /* Project id 3692346 */
+  src: url('iconfont.woff2?t=1672818968228') format('woff2'),
+       url('iconfont.woff?t=1672818968228') format('woff'),
+       url('iconfont.ttf?t=1672818968228') format('truetype');
+}
+
+.iconfont {
+  font-family: "iconfont" !important;
+  font-size: 16px;
+  font-style: normal;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.icon-formatter-disabled:before {
+  content: "\e883";
+}
+
+.icon-formatter:before {
+  content: "\e609";
+}
+
+.icon-run:before {
+  content: "\e87e";
+}
+
+.icon-run-disabled:before {
+  content: "\e87f";
+}
+
+.icon-pause-disabled:before {
+  content: "\e880";
+}
+
+.icon-pause:before {
+  content: "\e7cb";
+}
+
+.icon-delete-disabled:before {
+  content: "\e881";
+}
+
+.icon-delete:before {
+  content: "\e63c";
+}
+
+.icon-debugstep:before {
+  content: "\e624";
+}
+
+.icon-debugstep-disabled:before {
+  content: "\e7bb";
+}
+
+.icon-stop:before {
+  content: "\e7b7";
+}
+
+.icon-stop-disabled:before {
+  content: "\e627";
+}
+
+.icon-debugclose-disabled:before {
+  content: "\e7ba";
+}
+
+.icon-debugstepinto-disabled:before {
+  content: "\e7b5";
+}
+
+.icon-debugstepout-disabled:before {
+  content: "\e7b6";
+}
+
+.icon-debugstepover:before {
+  content: "\e7b8";
+}
+
+.icon-debugopen:before {
+  content: "\e7b3";
+}
+
+.icon-debugopen-disabled:before {
+  content: "\e7b9";
+}
+
+.icon-debugstepinto:before {
+  content: "\e7b0";
+}
+
+.icon-debugstepout:before {
+  content: "\e7b1";
+}
+
+.icon-debugstepover-disabled:before {
+  content: "\e7b2";
+}
+
+.icon-debugclose:before {
+  content: "\e621";
+}
+

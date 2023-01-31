@@ -1,0 +1,40 @@
+## Spring Configuration
+context:
+  listener:
+    classes: com.nctigba.datastudio.listener.PluginListener
+
+spring:
+  datasource:
+    driver-class-name: org.sqlite.JDBC
+    url: 'jdbc:sqlite:databaseLink.db'
+  servlet:
+    multipart:
+      max-file-size: 20MB #The maximum size of a single file is 20M
+      max-request-size: 20MB #The total file size of a single request is 20M
+  profiles:
+    active: '@profiles.active@'
+  resources:
+    static-locations: classpath:resources,file:D://static
+  jackson:
+    time-zone: GMT+8
+    date-format: yyyy-MM-dd HH:mm:ss
+    serialization:
+      indent_output: true
+      fail_on_empty_beans: false
+    deserialization:
+      fail_on_unknown_properties: true
+    parser:
+      allow_unquoted_control_chars: true
+      allow_single_quotes: true
+server.compression:
+  enabled: true
+  mime-types: application/javascript,text/css,application/json,application/xml,text/html,text/xml,text/plain
+mybatis-plus:
+  # Search for the specified package alias
+  typeAliasesPackage: com.nctigba.datastudio.entity
+  # Configure mapper scanning and find all mapper.xml mapping files
+  mapperLocations: classpath*:mapper/*.xml
+  # Load global configuration file
+  configuration:
+    mapUnderscoreToCamelCase: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
