@@ -1,7 +1,11 @@
 <template>
-  <div class="upgrade-container">
-    <svg-icon icon-class="developing" class="icon-size mb"></svg-icon>
-    <div class="content ft-lg">{{ $t('migrate.index.5mpn6g8g9680') }}</div>
+  <div class="app-container">
+    <div class="main-bd">
+      <div class="upgrade-container">
+        <svg-icon icon-class="developing" class="icon-size mb"></svg-icon>
+        <div class="content ft-lg">{{ $t('protocol.index.5mpixm5ckcw0') }}</div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -10,9 +14,11 @@
 
 <style lang="less" scoped>
 .upgrade-container {
+  position: absolute;
+  left: 0;
+  top: 0;
   width: 100%;
   height: 100%;
-  background-color: #FFF;
   display: flex;
   flex-direction: column;
   justify-content: center;

@@ -1,6 +1,6 @@
 <template>
-  <div class="header-container">
-    <div class="toggle-antv-left" @click="clickBtn('antvLeft')">
+  <div class="header-container label-color">
+    <div class="toggle-antv-left label-color" @click="clickBtn('antvLeft')">
       <icon-menu-fold v-show="antvLeftShow" />
       <icon-menu-unfold v-show="!antvLeftShow" />
       <div class="text">{{$t('modeling.components.Header.5m78qbczrv40')}}</div>
@@ -231,8 +231,7 @@ defineExpose({ init })
     align-items: center;
     box-sizing: border-box;
     background-origin: padding-box;
-    background-color: #fff;
-    border-bottom: 1px solid #d3d3d3;
+    border-bottom: 1px solid var(--color-border-2);
     .toggle-antv-left {
       display: flex;
       align-items: center;

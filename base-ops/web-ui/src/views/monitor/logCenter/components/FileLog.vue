@@ -4,12 +4,12 @@
       <div v-if="data.fileList.length">
         <div v-for="(item, index) in data.fileList" :key="index">
           <div class="flex-row mb">
-            <div class="folder-c flex-row" v-if="item.type === 'DIRECTORY'" @click="getUnderFolder(item)">
+            <div class="label-color folder-c flex-row" v-if="item.type === 'DIRECTORY'" @click="getUnderFolder(item)">
               <icon-folder class="mr" />
-              <div class="mr">{{ item.name }}</div>
+              <div class=" mr">{{ item.name }}</div>
               <div>{{ item.size }}</div>
             </div>
-            <div class="flex-row" v-else>
+            <div class="value-color flex-row" v-else>
               <icon-file class="mr" />
               <div class="mr">{{ item.name }}</div>
               <div class="mr">{{ item.size }}</div>
@@ -116,7 +116,6 @@ const fileDownload = (file: any) => {
   padding: 20px;
 
   .folder-c {
-    color: blue;
     cursor: pointer;
   }
 

@@ -17,7 +17,6 @@ import LookengConfig from './LookengConfig.vue'
 import ExeInstall from './ExeInstall.vue'
 import { ref } from 'vue'
 
-
 enum STEP_ENUM {
   CONFIG = 1,
   EXE

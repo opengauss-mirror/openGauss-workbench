@@ -236,7 +236,6 @@ defineExpose({ open })
           height: 100%;
           border: 1px solid rgb(var(--primary-6));
           border-radius: 2px;
-          background-color: #fff;
           > img {
             width: 100%;
             height: 100%;

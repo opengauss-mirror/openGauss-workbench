@@ -25,8 +25,8 @@
         <a-input v-model="data.formData.packageVersionNum"
           :placeholder="$t('packageManage.AddPackageDlg.5myq6nnebew0')"></a-input>
       </a-form-item>
-      <a-form-item field="packageUrl" :label="$t('packageManage.AddPackageDlg.5myq6nnebis0')" validate-trigger="blur">
-        <a-input v-model="data.formData.packageUrl"
+      <a-form-item field="urlPrefix" :label="$t('packageManage.AddPackageDlg.5myq6nnebis0')" validate-trigger="blur">
+        <a-input v-model="data.formData.urlPrefix" disabled
           :placeholder="$t('packageManage.AddPackageDlg.5myq6nnebn40')"></a-input>
       </a-form-item>
     </a-form>
@@ -50,7 +50,8 @@ const data = reactive<KeyValue>({
     cpuArch: 'x86_64',
     packageVersion: 'MINIMAL_LIST',
     packageVersionNum: '3.0.0',
-    packageUrl: ''
+    packageUrl: '',
+    urlPrefix: 'https://opengauss.obs.cn-south-1.myhuaweicloud.com'
   },
   rules: {},
   osList: [],
@@ -109,7 +110,6 @@ const osChange = () => {
   }
 }
 
-
 const open = (type: string, packageData?: KeyValue, defaultVersion?: string) => {
   data.show = true
   if (type === 'create') {
@@ -121,7 +121,8 @@ const open = (type: string, packageData?: KeyValue, defaultVersion?: string) => 
       cpuArch: 'x86_64',
       packageVersion: 'MINIMAL_LIST',
       packageVersionNum: '3.0.0',
-      packageUrl: ''
+      packageUrl: '',
+      urlPrefix: 'https://opengauss.obs.cn-south-1.myhuaweicloud.com'
     })
     if (defaultVersion) {
       data.isViewVersion = true
@@ -136,7 +137,8 @@ const open = (type: string, packageData?: KeyValue, defaultVersion?: string) => 
         cpuArch: packageData.cpuArch,
         packageVersion: packageData.packageVersion,
         packageVersionNum: packageData.packageVersionNum,
-        packageUrl: packageData.packageUrl
+        packageUrl: packageData.packageUrl,
+        urlPrefix: 'https://opengauss.obs.cn-south-1.myhuaweicloud.com'
       })
     }
   }
@@ -154,10 +156,7 @@ const open = (type: string, packageData?: KeyValue, defaultVersion?: string) => 
   ]
   data.rules = {
     packageVersionNum: [{ required: true, 'validate-trigger': 'blur', message: t('packageManage.AddPackageDlg.5myq6nnebew0') }],
-    packageUrl: [{ required: true, 'validate-trigger': 'blur', message: t('packageManage.AddPackageDlg.5myq6nnebn40') }]
-  }
-  if (packageData) {
-    Object.assign(data.formData, packageData)
+    urlPrefix: [{ required: true, 'validate-trigger': 'blur', message: t('packageManage.AddPackageDlg.5myq6nnebn40') }]
   }
 }
 

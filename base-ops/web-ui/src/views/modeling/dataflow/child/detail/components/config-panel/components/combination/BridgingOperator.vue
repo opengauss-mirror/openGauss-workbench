@@ -29,15 +29,15 @@
           </a-form-item>
         </a-row>
         <div class="d-form-item-label mb-s">
-          <div class="label-text">{{$t('modeling.combination.BridgingOperator.5m82a7i02f40')}}</div>
+          <div class="label-text label-color">{{$t('modeling.combination.BridgingOperator.5m82a7i02f40')}}</div>
           <div class="d-control-add" @click="orOperate('add')">+</div>
         </div>
         <div class="or-frame">
           <div class="or-item" v-for="(orList, orKey) in iData.condition" :key="`or${orKey}`">
-            <div class="or-item-ortext" v-if="orKey !== 0">{{$t('modeling.combination.BridgingOperator.5m82a7i02kw0')}}</div>
+            <div class="or-item-ortext label-color" v-if="orKey !== 0">{{$t('modeling.combination.BridgingOperator.5m82a7i02kw0')}}</div>
             <div class="d-frame">
               <div class="d-form-item-label mb-s">
-                <div class="label-text">{{$t('modeling.combination.BridgingOperator.5m82a7i02p80')}}</div>
+                <div class="label-text label-color">{{$t('modeling.combination.BridgingOperator.5m82a7i02p80')}}</div>
                 <div class="d-control-add" @click="orOperate('addAnd', orKey)">+</div>
                 <div class="d-control-remove" @click="orOperate('delete', orKey)">-</div>
               </div>

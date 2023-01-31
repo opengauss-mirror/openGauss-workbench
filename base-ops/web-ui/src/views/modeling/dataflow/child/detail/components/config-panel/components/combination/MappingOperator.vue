@@ -4,7 +4,7 @@
     <a-tab-pane key="1" :title="$t('modeling.combination.MappingOperator.5me6giyzpck0')">
       <div class="tab-content d-a-form">
         <div class="d-form-item-label mb-s">
-          <div class="label-text">{{$t('modeling.combination.MappingOperator.5me6giyzq4s0')}}</div>
+          <div class="label-text label-color">{{$t('modeling.combination.MappingOperator.5me6giyzq4s0')}}</div>
           <div class="d-control-add" @click="operateMapping('add')">+</div>
         </div>
         <a-row align="center" class="mb-s" v-for="(item, key) in iData.mappings" :key="`item${key}`">

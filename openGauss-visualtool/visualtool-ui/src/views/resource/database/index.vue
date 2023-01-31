@@ -228,7 +228,6 @@ const currentPage = (e: number) => {
       padding: 20px;
       box-sizing: border-box;
       padding: 8px;
-      background-color: #FFF;
       height: calc(100vh - 138px - 40px);
 
       .top-label {

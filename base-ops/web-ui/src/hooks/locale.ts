@@ -10,7 +10,7 @@ export default function useLocale () {
   const changeLocale = (value: string) => {
     i18.locale.value = value
     localStorage.setItem('locale', value)
-    Message.success(value === 'zh-CN' ? '切换为简体中文' : 'Switch to English')
+    // Message.success(value === 'zh-CN' ? '切换为简体中文' : 'Switch to English')
   }
   return {
     currentLocale,

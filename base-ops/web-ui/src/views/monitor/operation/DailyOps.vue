@@ -6,7 +6,7 @@
           <div class="item-c mb">
             <div class="flex-between mb">
               <div class="flex-row ft-lg ft-b">
-                <div class="mr-s">{{ $t('operation.DailyOps.5mplp1xbxl40') }}</div>
+                <div class="label-color mr-s">{{ $t('operation.DailyOps.5mplp1xbxl40') }}</div>
                 <div class="main-color mr-s">{{ clusterData.clusterId ? clusterData.clusterId : '--' }}</div>
                 <div class="main-color mr-s">{{ clusterData.version ? getVersionName(clusterData.version) : '--' }}
                 </div>
@@ -15,7 +15,7 @@
               <div class="flex-row">
                 <div class="flex-row ft-b mr" v-if="clusterData.version === OpenGaussVersionEnum.ENTERPRISE">
                   <icon-exclamation-circle />
-                  <div class="mr-s">{{ $t('operation.DailyOps.5mplp1xbyi40') }}</div>
+                  <div class="label-color mr-s">{{ $t('operation.DailyOps.5mplp1xbyi40') }}</div>
                   <div class="mr">{{ clusterData.warningNum ? clusterData.warningNum : 0 }}</div>
 
                   <a-button type="text" @click="showOneCheck(clusterData)">{{
@@ -33,24 +33,24 @@
                   <svg-icon icon-class="ops-cluster" class="cluster-icon-size mr"></svg-icon>
                   <div class="flex-col-start">
                     <div class="flex-row mb">
-                      <div class="mr-s">{{ $t('operation.DailyOps.5mplp1xbyxw0') }}</div>
+                      <div class="label-color mr-s">{{ $t('operation.DailyOps.5mplp1xbyxw0') }}</div>
                       <a-tag :color="getClusterColor(clusterData)">{{
                         getClusterState(clusterData)
                       }}</a-tag>
                     </div>
                     <div class="flex-row">
-                      <div class="mr-s">{{ $t('operation.DailyOps.5mplp1xbzew0') }}</div>
+                      <div class="label-color mr-s">{{ $t('operation.DailyOps.5mplp1xbzew0') }}</div>
                       <div class="flex-row" v-if="clusterData.deployType === 'CLUSTER'">
-                        <div class="mr-s">{{ $t('operation.DailyOps.5mplp1xbzmw0') }}</div>
-                        <div class="ft-lg ft-b mr-s">{{ clusterData.clusterNodes.length - 1 }}</div>
+                        <div class="label-color mr-s">{{ $t('operation.DailyOps.5mplp1xbzmw0') }}</div>
+                        <div class="value-color ft-lg ft-b mr-s">{{ clusterData.clusterNodes.length - 1 }}</div>
                         {{ $t('operation.DailyOps.5mplp1xbztc0') }}
                       </div>
-                      <div class="ft-b" v-else>{{ $t('operation.DailyOps.5mplp1xc0000') }}</div>
+                      <div class="value-color ft-b" v-else>{{ $t('operation.DailyOps.5mplp1xc0000') }}</div>
                     </div>
                   </div>
                 </div>
                 <div class="flex-col-start">
-                  <div class="mb">{{ $t('operation.DailyOps.5mplp1xc0640') }}</div>
+                  <div class="label-color mb">{{ $t('operation.DailyOps.5mplp1xc0640') }}</div>
                   <div class="flex-row">
                     <a-button type="outline" class="mr" @click="handleEnable(clusterData, index)">{{
                       $t('operation.DailyOps.5mplp1xc0c00')
@@ -89,8 +89,8 @@
                   <div class="host-c simple-w">
                     <div class="flex-between mb">
                       <div class="flex-row">
-                        <div class="mr">{{ $t('operation.DailyOps.5mplp1xc1t80') }}</div>
-                        <div class="">{{
+                        <div class="label-color mr">{{ $t('operation.DailyOps.5mplp1xc1t80') }}</div>
+                        <div class="label-color">{{
                           clusterData.clusterNodes[0].azAddress ? clusterData.clusterNodes[0].azAddress :
                             '--'
                         }}</div>
@@ -108,20 +108,20 @@
                       <div class="host-info">
                         <div class="flex-col-start mr">
                           <div class="flex-row mb">
-                            <div>{{ $t('operation.DailyOps.5mplp1xc2gw0') }}</div>
-                            <div>{{ clusterData.clusterNodes[0].privateIp }}</div>
+                            <div class="label-color">{{ $t('operation.DailyOps.5mplp1xc2gw0') }}</div>
+                            <div class="value-color">{{ clusterData.clusterNodes[0].privateIp }}</div>
                           </div>
                           <div class="flex-row mb">
-                            <div>{{ $t('operation.DailyOps.5mplp1xc2ls0') }}</div>
-                            <div>{{ clusterData.clusterNodes[0].publicIp }}</div>
+                            <div class="label-color">{{ $t('operation.DailyOps.5mplp1xc2ls0') }}</div>
+                            <div class="value-color">{{ clusterData.clusterNodes[0].publicIp }}</div>
                           </div>
                           <div class="flex-row mb">
-                            <div>{{ $t('operation.DailyOps.5mplp1xc2sw0') }}</div>
-                            <div>{{ clusterData.clusterNodes[0].hostname }}</div>
+                            <div class="label-color">{{ $t('operation.DailyOps.5mplp1xc2sw0') }}</div>
+                            <div class="value-color">{{ clusterData.clusterNodes[0].hostname }}</div>
                           </div>
                           <div class="flex-row">
-                            <div>{{ $t('operation.DailyOps.5mplp1xc2xs0') }}</div>
-                            <div>{{
+                            <div class="label-color">{{ $t('operation.DailyOps.5mplp1xc2xs0') }}</div>
+                            <div class="value-color">{{
                               clusterData.clusterNodes[0].kernel ? clusterData.clusterNodes[0].kernel : '-'
                             }}{{ $t('operation.DailyOps.else1') }}{{
   clusterData.clusterNodes[0].memorySize ?
@@ -132,12 +132,18 @@
                         </div>
                         <div class="flex-col-start mr">
                           <div class="flex-row mb">
-                            <div class="mr-s">CPU:</div>
-                            <div>{{ clusterData.clusterNodes[0].cpu ? clusterData.clusterNodes[0].cpu : '--' }}%</div>
+                            <div class="label-color mr-s">CPU:</div>
+                            <div class="value-color">{{
+                              clusterData.clusterNodes[0].cpu ?
+                                clusterData.clusterNodes[0].cpu : '--'
+                            }}%</div>
                           </div>
                           <div class="flex-row mb">
-                            <div class="mr-s">{{ $t('operation.DailyOps.5mplp1xc32g0') }}</div>
-                            <div>{{ clusterData.clusterNodes[0].memory ? clusterData.clusterNodes[0].memory : '--' }}%
+                            <div class="label-color mr-s">{{ $t('operation.DailyOps.5mplp1xc32g0') }}</div>
+                            <div class="value-color">{{
+                              clusterData.clusterNodes[0].memory ?
+                                clusterData.clusterNodes[0].memory : '--'
+                            }}%
                             </div>
                           </div>
                         </div>
@@ -151,7 +157,7 @@
                     </div>
                     <div class="flex-between mb">
                       <div class="flex-row mb-s" style="margin-left: 20px">
-                        <div class="mr-s">{{ $t('operation.DailyOps.else2') }}{{ nodeIndex + 1 }}</div>
+                        <div class="label-color mr-s">{{ $t('operation.DailyOps.else2') }}{{ nodeIndex + 1 }}</div>
                         <a-tag :color="getInstanceStateColor(clusterData.clusterNodes[0])">{{
                           getInstanceState(clusterData.clusterNodes[0])
                         }}</a-tag>
@@ -180,28 +186,33 @@
                       <svg-icon icon-class="ops-instance" class="host-icon-size mr-lg"></svg-icon>
                       <div class="flex-col-start mr">
                         <div class="flex-row mb">
-                          <div class="mr-s">{{ $t('operation.DailyOps.5mplp1xc3740') }}</div>
-                          <div>{{ clusterData.clusterNodes[0].session ? clusterData.clusterNodes[0].session : '--' }}{{
-                            $t('operation.DailyOps.else3')
-                          }}
-                          </div>
+                          <div class="label-color mr-s">{{ $t('operation.DailyOps.5mplp1xc3740') }}</div>
+                          <div class="value-color mr-s">{{
+                            clusterData.clusterNodes[0].session ?
+                              clusterData.clusterNodes[0].session : '--'
+                          }}</div>
+                          <div class="label-color">{{ $t('operation.DailyOps.else3') }}</div>
                         </div>
                         <div class="flex-row ">
-                          <div class="mr-s">{{ $t('operation.DailyOps.5mplp1xc3bw0') }}</div>
-                          <div>{{
-                            clusterData.clusterNodes[0].connectNum ? clusterData.clusterNodes[0].connectNum : '--'
-                          }}{{ $t('operation.DailyOps.else3') }}</div>
+                          <div class="label-color mr-s">{{ $t('operation.DailyOps.5mplp1xc3bw0') }}</div>
+                          <div class="value-color mr-s">{{
+                            clusterData.clusterNodes[0].connectNum ?
+                              clusterData.clusterNodes[0].connectNum : '--'
+                          }}</div>
+                          <div class="label-color">{{ $t('operation.DailyOps.else3') }}</div>
                         </div>
                       </div>
                       <div class="flex-col-start">
                         <div class="flex-row mb">
-                          <div class="mr-s">{{ $t('operation.DailyOps.5mplp1xc3hs0') }}</div>
-                          <div>{{ clusterData.clusterNodes[0].lock ? clusterData.clusterNodes[0].lock : '--' }}{{
-                            $t('operation.DailyOps.else3')
+                          <div class="label-color mr-s">{{ $t('operation.DailyOps.5mplp1xc3hs0') }}</div>
+                          <div class="value-color mr-s">{{
+                            clusterData.clusterNodes[0].lock ?
+                              clusterData.clusterNodes[0].lock : '--'
                           }}</div>
+                          <div class="label-color">{{ $t('operation.DailyOps.else3') }}</div>
                         </div>
                         <div class="flex-row">
-                          <div class="mr-s">{{ $t('operation.DailyOps.5mplp1xc3no0') }}</div>
+                          <div class="label-color mr-s">{{ $t('operation.DailyOps.5mplp1xc3no0') }}</div>
                           <div>{{ clusterData.clusterNodes[0].azName ? clusterData.clusterNodes[0].azName : '--' }}
                           </div>
                         </div>
@@ -216,8 +227,8 @@
                 <div class="host-c node-w">
                   <div class="flex-between mb">
                     <div class="flex-row">
-                      <div class="mr">{{ $t('operation.DailyOps.5mplp1xc1t80') }}</div>
-                      <div class="">{{ instance.azAddress ? instance.azAddress : '--' }}</div>
+                      <div class="label-color mr">{{ $t('operation.DailyOps.5mplp1xc1t80') }}</div>
+                      <div class="label-color">{{ instance.azAddress ? instance.azAddress : '--' }}</div>
                     </div>
                     <a-dropdown @select="handleHostOper($event, index, nodeIndex)">
                       <a-button>{{ $t('operation.DailyOps.5mplp1xc20k0') }}</a-button>
@@ -232,35 +243,37 @@
                     <div class="host-info">
                       <div class="flex-col-start mr">
                         <div class="flex-row mb">
-                          <div class="mr-s">{{ $t('operation.DailyOps.5mplp1xc2gw0') }}</div>
-                          <div>{{ instance.privateIp }}</div>
+                          <div class="label-color mr-s">{{ $t('operation.DailyOps.5mplp1xc2gw0') }}</div>
+                          <div class="value-color">{{ instance.privateIp }}</div>
                         </div>
                         <div class="flex-row">
-                          <div class="mr-s">{{ $t('operation.DailyOps.5mplp1xc2ls0') }}</div>
-                          <div>{{ instance.publicIp }}</div>
+                          <div class="label-color mr-s">{{ $t('operation.DailyOps.5mplp1xc2ls0') }}</div>
+                          <div class="value-color">{{ instance.publicIp }}</div>
                         </div>
                       </div>
                       <div class="flex-col-start mr">
                         <div class="flex-row mb">
-                          <div class="mr-s">{{ $t('operation.DailyOps.5mplp1xc2sw0') }}</div>
-                          <div>{{ instance.hostname }}</div>
+                          <div class="label-color mr-s">{{ $t('operation.DailyOps.5mplp1xc2sw0') }}</div>
+                          <div class="value-color">{{ instance.hostname }}</div>
                         </div>
                         <div class="flex-row">
-                          <div class="mr-s">{{ $t('operation.DailyOps.5mplp1xc2xs0') }}</div>
-                          <div>{{ instance.kernel ? instance.kernel : '-' }}{{ $t('operation.DailyOps.else1') }}{{
-                            instance.memorySize ?
-                              instance.memorySize : '-'
-                          }}G</div>
+                          <div class="label-color mr-s">{{ $t('operation.DailyOps.5mplp1xc2xs0') }}</div>
+                          <div class="value-color">{{ instance.kernel ? instance.kernel : '-' }}{{
+                            $t('operation.DailyOps.else1')
+                          }}{{
+  instance.memorySize ?
+    instance.memorySize : '-'
+}}G</div>
                         </div>
                       </div>
                       <div class="flex-col-start mr">
                         <div class="flex-row mb">
-                          <div class="mr-s">CPU</div>
-                          <div>{{ instance.cpu ? instance.cpu : '--' }}%</div>
+                          <div class="label-color mr-s">CPU</div>
+                          <div class="value-color">{{ instance.cpu ? instance.cpu : '--' }}%</div>
                         </div>
                         <div class="flex-row">
-                          <div class="mr-s">{{ $t('operation.DailyOps.5mplp1xc32g0') }}</div>
-                          <div>{{ instance.memory ? instance.memory : '--' }}%</div>
+                          <div class="label-color mr-s">{{ $t('operation.DailyOps.5mplp1xc32g0') }}</div>
+                          <div class="value-color">{{ instance.memory ? instance.memory : '--' }}%</div>
                         </div>
                       </div>
                     </div>
@@ -272,7 +285,7 @@
                   </div>
                   <div class="flex-between">
                     <div class="flex-row mb-s" style="margin-left: 20px">
-                      <div class="mr-s">{{ $t('operation.DailyOps.else2') }}{{ nodeIndex + 1 }}</div>
+                      <div class="label-color mr-s">{{ $t('operation.DailyOps.else2') }}{{ nodeIndex + 1 }}</div>
                       <a-tag :color="getInstanceStateColor(instance)">{{
                         getInstanceState(instance)
                       }}</a-tag>
@@ -300,23 +313,25 @@
                     <svg-icon icon-class="ops-instance" class="host-icon-size mr-lg"></svg-icon>
                     <div class="flex-col-start mr">
                       <div class="flex-row mb">
-                        <div class="mr-s">{{ $t('operation.DailyOps.5mplp1xc3740') }}</div>
-                        <div>{{ instance.session ? instance.session : '--' }}{{ $t('operation.DailyOps.else3') }}</div>
+                        <div class="label-color mr-s">{{ $t('operation.DailyOps.5mplp1xc3740') }}</div>
+                        <div class="value-color mr-s">{{ instance.session ? instance.session : '--' }}</div>
+                        <div class="label-color">{{ $t('operation.DailyOps.else3') }}</div>
                       </div>
                       <div class="flex-row ">
-                        <div class="mr-s">{{ $t('operation.DailyOps.5mplp1xc3bw0') }}</div>
-                        <div>{{ instance.connectNum ? instance.connectNum : '--' }}{{ $t('operation.DailyOps.else3') }}
-                        </div>
+                        <div class="label-color mr-s">{{ $t('operation.DailyOps.5mplp1xc3bw0') }}</div>
+                        <div class="value-color mr-s">{{ instance.connectNum ? instance.connectNum : '--' }}</div>
+                        <div class="label-color">{{ $t('operation.DailyOps.else3') }}</div>
                       </div>
                     </div>
                     <div class="flex-col-start">
                       <div class="flex-row mb">
-                        <div class="mr-s">{{ $t('operation.DailyOps.5mplp1xc3hs0') }}</div>
-                        <div>{{ instance.lock ? instance.lock : '--' }}{{ $t('operation.DailyOps.else3') }}</div>
+                        <div class="label-color mr-s">{{ $t('operation.DailyOps.5mplp1xc3hs0') }}</div>
+                        <div class="value-color mr-s">{{ instance.lock ? instance.lock : '--' }}</div>
+                        <div class="label-color">{{ $t('operation.DailyOps.else3') }}</div>
                       </div>
                       <div class="flex-row">
-                        <div class="mr-s">{{ $t('operation.DailyOps.5mplp1xc3no0') }}</div>
-                        <div>{{ instance.azName ? instance.azName : '--' }}</div>
+                        <div class="label-color mr-s">{{ $t('operation.DailyOps.5mplp1xc3no0') }}</div>
+                        <div class="value-color">{{ instance.azName ? instance.azName : '--' }}</div>
                       </div>
                     </div>
                   </div>
@@ -787,7 +802,7 @@ const createWinbox = (clusterData: KeyValue, type?: string) => {
 
 // host oper
 const handleHostOper = (type: any, clusterIndex: number, nodeIndex: number) => {
-  console.log('host type', type);
+  console.log('host type', type)
   handleInstanceOper(type, clusterIndex, nodeIndex)
 }
 
@@ -799,7 +814,7 @@ const handleInstanceSwitchChange = (type: any, clusterIndex: number, nodeIndex: 
 }
 
 // instance oper
-const handleInstanceOper = (type: any, clusterIndex: number, nodeIndex: number, isSwitch: boolean = false) => {
+const handleInstanceOper = (type: any, clusterIndex: number, nodeIndex: number, isSwitch = false) => {
   data.clusterList[clusterIndex].loading = true
   const term = getTermObj()
   const socketKey = new Date().getTime()
@@ -974,7 +989,6 @@ const getDropdownList = (clusterData: KeyValue, nodeData: KeyValue) => {
 
 .daily-ops-c {
   padding: 20px 20px 0px;
-  height: calc(100vh - 178px);
   overflow-y: auto;
 
   .empty-icon-size {
@@ -990,11 +1004,11 @@ const getDropdownList = (clusterData: KeyValue, nodeData: KeyValue) => {
   .item-c {
     padding: 20px;
     border-radius: 8px;
-    background-color: white;
+    // background-color: white;
 
     .item-cluster-info {
       border: 1px solid #f2f3f5;
-      background-color: #f8f9fa;
+      // background-color: #f8f9fa;
       display: flex;
       align-items: center;
       justify-content: space-between;

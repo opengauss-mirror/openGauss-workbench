@@ -1,7 +1,7 @@
 <template>
   <div class="package-list">
     <div class="flex-between mb">
-      <div>
+      <div class="flex-row">
         <a-button type="primary" class="mr" @click="handleAdd('create')">
           <template #icon>
             <icon-plus />
@@ -9,7 +9,15 @@
           {{ $t('packageManage.index.5myq5c8yz7c0') }}
         </a-button>
       </div>
-      <div>
+      <div class="flex-row">
+        <div class="flex-row mr">
+          <div class="label-color top-label mr-s">{{ $t('packageManage.index.5myq5c8zns00') }}</div>
+          <a-select style="width: 200px;" v-model="filter.packageVersion" :placeholder="$t('packageManage.index.else3')"
+            allow-clear>
+            <a-option v-for="(item, index) in packageVersionList" :key="index" :label="item.label"
+              :value="item.value" />
+          </a-select>
+        </div>
         <a-input-search v-model="filter.name" :loading="list.loading" allowClear @search="isFilter"
           @press-enter="isFilter" @clear="isFilter" :placeholder="$t('packageManage.index.5myq5c8z8540')"
           search-button />
@@ -45,6 +53,7 @@ import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
 const filter = reactive({
   name: '',
+  packageVersion: '',
   pageNum: 1,
   pageSize: 10
 })
@@ -58,11 +67,7 @@ const columns = computed(() => [
   { title: t('packageManage.index.5myq5c8zq380'), slotName: 'operation', width: 180 }
 ])
 
-const list: {
-  data: Array<KeyValue>,
-  page: { total: number, pageSize: number },
-  loading: boolean
-} = reactive({
+const list = reactive<KeyValue>({
   data: [],
   page: {
     total: 0,
@@ -71,6 +76,12 @@ const list: {
   },
   loading: false
 })
+
+const packageVersionList = computed(() => [
+  { label: t('packageManage.AddPackageDlg.5myq6nnec400'), value: 'ENTERPRISE' },
+  { label: t('packageManage.AddPackageDlg.5myq6nnec8c0'), value: 'MINIMAL_LIST' },
+  { label: t('packageManage.AddPackageDlg.5myq6nnecc40'), value: 'LITE' }
+])
 
 onMounted(() => {
   getListData()
@@ -128,9 +139,14 @@ const getVersionName = (version: string) => {
 <style lang="less" scoped>
 .package-list {
   padding: 20px;
-  background-color: #FFF;
   border-radius: 8px;
-  height: calc(100vh - 136px - 40px);
 
+  .top-label {
+    white-space: nowrap;
+  }
+
+  .select-w {
+    width: 200px;
+  }
 }
 </style>

@@ -21,7 +21,7 @@
           </div>
         </a-form-item>
         <div class="d-form-item-label mb-s">
-          <div class="label-text">{{$t('modeling.base.UpdateOperator.5m7hr2f43zo0')}}</div>
+          <div class="label-text label-color">{{$t('modeling.base.UpdateOperator.5m7hr2f43zo0')}}</div>
           <div class="d-control-add" @click="operateList('list-add')">+</div>
         </div>
         <div class="update-field-frame mb-s" v-for="(item, listKey) in config.list" :key="`configlist${listKey}`">
@@ -46,7 +46,7 @@
             </a-col>
           </a-row>
           <a-row>
-            <a-col :span="2" style="height: 30px; line-height: 30px; text-align: center;">=</a-col>
+            <a-col class="label-color" :span="2" style="height: 30px; line-height: 30px; text-align: center;">=</a-col>
             <a-col :span="22">
               <a-row>
                 <a-col :span="24" class="mb-s">

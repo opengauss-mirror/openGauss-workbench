@@ -22,7 +22,7 @@
         <div class="list-type-1">
           <div class="list-frame mb-s" v-for="(list1Item, key) in config.list1" :key="`list1${key}`">
             <div class="d-form-item-label mb-s">
-              <div class="label-text">{{$t('modeling.base.InsertOperator.5m7hqzngewg0')}}</div>
+              <div class="label-text label-color">{{$t('modeling.base.InsertOperator.5m7hqzngewg0')}}</div>
               <div class="d-control-add" @click="operateConfigList1('add-list1-row', key)">+</div>
               <div class="d-control-remove" @click="operateConfigList1('delete-list1', key)">-</div>
             </div>

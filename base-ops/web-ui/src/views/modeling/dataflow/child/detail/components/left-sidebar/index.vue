@@ -129,7 +129,6 @@ defineExpose({ init, toggleMenu })
     .left-sidebar {
       display: flex;
       flex-direction: column;
-      background-color: #fff;
       padding-top: 15px;
       box-sizing: border-box;
       position: relative;
@@ -151,8 +150,8 @@ defineExpose({ init, toggleMenu })
           height: 30px;
           line-height: 30px;
           box-sizing: border-box;
-          background-color: #f8f8f8;
-          border: 1px solid rgb(228, 228, 228);
+          border: 1px solid transparent;
+          background-color: var(--color-fill-2);
           border-radius: 2px;
           transition: border .3s;
           input {
@@ -163,11 +162,11 @@ defineExpose({ init, toggleMenu })
             font-size: 14px;
             box-sizing: border-box;
             padding-left: 10px;
-            color: #000;
             height: 22px;
+            color: var(--color-text-1);
           }
           &:focus-within {
-            border-color: #b1b1b1;
+            border-color: rgb(var(--primary-6));
           }
           .search-icon {
             width: 30px;
@@ -177,18 +176,18 @@ defineExpose({ init, toggleMenu })
             justify-content: center;
             cursor: pointer;
             transition: all .3s;
-            &:hover {
-              background: #b1b1b1;
-            }
+            background-color: rgb(var(--primary-6));
+            color: var(--color-border-1);
             .icon {
               width: 14px !important;
               height: auto !important;
+              color: var(--color-border-1);
             }
           }
         }
       }
       .content {
-        border-top: 1px solid #d3d3d3;
+        border-top: 1px solid var(--color-border-2);
         box-sizing: border-box;
         width: 100%;
         min-width: 260px;
@@ -210,12 +209,10 @@ defineExpose({ init, toggleMenu })
               top: 0;
               width: 100%;
               height: 40px;
-              background-color: #0a1936;
-              background: linear-gradient(to bottom, #dddddd, #fff);
               display: flex;
               align-items: center;
-              color: #000;
               padding: 0 10px 0 8px;
+              color: var(--color-text-1);
               .group-arrow {
                 transform: rotate(-90deg);
                 margin-right: 10px;
@@ -242,8 +239,8 @@ defineExpose({ init, toggleMenu })
               width: 230px;
               height: 50px;
               line-height: 40px;
-              background: rgba(255, 255, 255, 0.08);
-              border: 1px solid rgba(255, 255, 255, 0.3);
+              border: 1px solid var(--color-border-2);
+              border-color: transparent;
               border-radius: 2px;
               margin: 0 auto 10px;
               box-sizing: border-box;
@@ -257,11 +254,11 @@ defineExpose({ init, toggleMenu })
                 font-size: 14px;
                 transition: all .1s;
                 transform: translateX(0);
-                color: #000;
+                color: var(--color-text-1);
                 .node-title-icon {
                   width: 30px;
                   height: 30px;
-                  background-color: #f9fbfd;
+                  background-color: var(--color-fill-2);
                   margin-right: 15px;
                   border: 1px solid #d7dae4;
                   border-radius: 4px;
@@ -274,22 +271,23 @@ defineExpose({ init, toggleMenu })
                     transition: all .5s;
                     font-size: 18px;
                     color: transparent;
-                    fill: #7c8aab;
+                    fill: var(--color-text-2);
                   }
                   .active-bg {
                     position: absolute;
                     left: 0;
                     top: 0;
                     width: 100%;
-                    background: linear-gradient(to bottom, #F34141, #FFB9B9);
+                    background: linear-gradient(180deg,rgb(var(--primary-6)),rgba(var(--primary-6),.2));
                     height: 100%;
                     opacity: 0;
                     transition: all .5s;
+                    border-radius: 3px;
                   }
                 }
               }
               &:hover {
-                box-shadow: 0px 2px 10px rgba(143, 123, 168, 0.32);
+                box-shadow: 0 2px 15px var(--color-fill-4);
                 border-radius: 2px;
                 .node-title {
                   .node-title-icon {

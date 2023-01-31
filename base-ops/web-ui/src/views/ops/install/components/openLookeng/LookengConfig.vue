@@ -51,8 +51,8 @@
   </div>
 </template>
 <script lang="ts" setup>
-import { KeyValue } from '@/types/global';
-import { reactive } from 'vue';
+import { KeyValue } from '@/types/global'
+import { reactive } from 'vue'
 
 const data = reactive<KeyValue>({
   form: {
@@ -71,7 +71,6 @@ const data = reactive<KeyValue>({
   },
   rules: {}
 })
-
 
 const beforeConfirm = async (): Promise<boolean> => {
   return true

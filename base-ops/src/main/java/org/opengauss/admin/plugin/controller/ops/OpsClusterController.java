@@ -6,6 +6,7 @@ import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.plugin.domain.model.ops.*;
 import org.opengauss.admin.plugin.domain.model.ops.env.HostEnv;
 import org.opengauss.admin.plugin.enums.ops.OpenGaussSupportOSEnum;
+import org.opengauss.admin.plugin.enums.ops.OpenGaussVersionEnum;
 import org.opengauss.admin.plugin.service.ops.IOpsClusterService;
 import org.opengauss.admin.plugin.vo.ops.SessionVO;
 import org.opengauss.admin.plugin.vo.ops.SlowSqlVO;
@@ -190,8 +191,8 @@ public class OpsClusterController extends BaseController {
     }
 
     @GetMapping("/listInstallPackage")
-    public AjaxResult listInstallPackage(@RequestParam(value = "path", required = false) String path) {
-        ListDir listDir = opsClusterService.listInstallPackage(path);
+    public AjaxResult listInstallPackage(@RequestParam(value = "path", required = false) String path, @RequestParam(value = "version",required = false) OpenGaussVersionEnum openGaussVersionEnum) {
+        ListDir listDir = opsClusterService.listInstallPackage(path,openGaussVersionEnum);
         return AjaxResult.success(listDir);
     }
 

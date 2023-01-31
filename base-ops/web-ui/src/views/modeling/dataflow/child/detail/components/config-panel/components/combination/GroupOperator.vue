@@ -8,7 +8,7 @@
     <a-tab-pane key="1" :title="$t('modeling.combination.GroupOperator.5me6gg5ogk00')">
       <div class="tab-content d-a-form">
         <div class="d-form-item-label mb-s">
-          <div class="label-text">{{$t('modeling.combination.GroupOperator.5me6gg5oh8c0')}}</div>
+          <div class="label-text label-color">{{$t('modeling.combination.GroupOperator.5me6gg5oh8c0')}}</div>
           <div class="d-control-add" @click="operateGroup('add')">+</div>
         </div>
         <a-row align="center" class="mb-s" v-for="(item, key) in iData.groups" :key="`item${key}`">

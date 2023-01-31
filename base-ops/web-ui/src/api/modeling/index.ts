@@ -3,7 +3,6 @@ import axios from 'axios'
 import { KeyValue } from '@antv/x6/lib/types'
 import i18n from '@/locale/index'
 
-
 export const selectDealDataFlowTest = (data?: any) => axios.post(`/select/dealDataFlowTest`, data ? data : {})
 
 export const getTableList = (dbName: string, clusterNodeId: string, schema: string, data?: any) => axios.get(`/modeling/dataflow/dataSourceDb/getTablesBySchema/${dbName}/${clusterNodeId}/${schema}`, data ? data : {})

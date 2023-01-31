@@ -94,7 +94,7 @@ export const useDataFlowStore = defineStore(`dataFlow`, {
     setFlowDataInfo (info: KeyValue) {
       this.$patch((state: stateType) => state.dataFlowInfo = info)
     },
-    setDatabaseInfo ( dbName: string, clusterNodeId: string, schema: string) {
+    setDatabaseInfo (dbName: string, clusterNodeId: string, schema: string) {
       return new Promise((resolve, reject) => {
         this.$patch((state: stateType) => {
           state.useDatabase = `${dbName}|,|${clusterNodeId}|,|${schema}`

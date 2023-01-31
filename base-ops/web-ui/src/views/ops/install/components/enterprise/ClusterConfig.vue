@@ -32,15 +32,19 @@
           </a-form-item>
           <a-form-item field="databaseUsername" :label="$t('enterprise.ClusterConfig.5mpm3ku3j6k0')"
             validate-trigger="blur" v-if="installType === 'import'">
-            <a-input-password v-model="data.form.databaseUsername"
-              :placeholder="$t('enterprise.ClusterConfig.5mpm3ku3j9s0')" allow-clear />
+            <a-input v-model="data.form.databaseUsername" :placeholder="$t('enterprise.ClusterConfig.5mpm3ku3j9s0')"
+              allow-clear />
           </a-form-item>
           <a-form-item field="databasePassword" :label="$t('enterprise.ClusterConfig.5mpm3ku3jdg0')"
             validate-trigger="blur">
             <a-input-password v-model="data.form.databasePassword"
               :placeholder="$t('enterprise.ClusterConfig.5mpm3ku3ji00')" allow-clear />
           </a-form-item>
-          <a-form-item field="enableDCF" :label="$t('enterprise.ClusterConfig.5mpm3ku3jkw0')">
+          <a-form-item field="isInstallCM" :label="$t('enterprise.NodeConfig.else3')">
+            <a-switch @change="isInstallCMChange" v-model="data.form.isInstallCM" />
+          </a-form-item>
+          <a-form-item v-if="data.form.isInstallCM" field="enableDCF"
+            :label="$t('enterprise.ClusterConfig.5mpm3ku3jkw0')">
             <a-checkbox v-model="data.form.enableDCF">
             </a-checkbox>
           </a-form-item>
@@ -77,7 +81,8 @@ const data: {
     port: '5432',
     enableDCF: false,
     databaseUsername: '',
-    databasePassword: ''
+    databasePassword: '',
+    isInstallCM: false
   },
   rules: {}
 })
@@ -116,7 +121,23 @@ const initData = () => {
         }
       }
     ],
-    clusterName: [{ required: true, 'validate-trigger': 'blur', message: t('enterprise.ClusterConfig.5mpm3ku3hr00') }],
+    clusterName: [
+      { required: true, 'validate-trigger': 'blur', message: t('enterprise.ClusterConfig.5mpm3ku3hr00') },
+      {
+        validator: (value: any, cb: any) => {
+          return new Promise(resolve => {
+            const reg = /^[0-9a-zA-Z_-]+$/
+            const re = new RegExp(reg)
+            if (re.test(value)) {
+              resolve(true)
+            } else {
+              cb(t('enterprise.ClusterConfig.else1'))
+              resolve(false)
+            }
+          })
+        }
+      }
+    ],
     installPath: [{ required: true, 'validate-trigger': 'blur', message: t('enterprise.ClusterConfig.5mpm3ku3i340') }],
     logPath: [{ required: true, 'validate-trigger': 'blur', message: t('enterprise.ClusterConfig.5mpm3ku3iag0') }],
     tmpPath: [{ required: true, 'validate-trigger': 'blur', message: t('enterprise.ClusterConfig.5mpm3ku3ihg0') }],
@@ -125,6 +146,12 @@ const initData = () => {
     port: [{ required: true, 'validate-trigger': 'blur', message: t('enterprise.ClusterConfig.5mpm3ku3j300') }],
     databaseUsername: [{ required: true, 'validate-trigger': 'blur', message: t('enterprise.ClusterConfig.5mpm3ku3j9s0') }],
     databasePassword: [{ required: true, 'validate-trigger': 'blur', message: t('enterprise.ClusterConfig.5mpm3ku3ji00') }]
+  }
+}
+
+const isInstallCMChange = (val: boolean) => {
+  if (!val) {
+    data.form.enableDCF = false
   }
 }
 

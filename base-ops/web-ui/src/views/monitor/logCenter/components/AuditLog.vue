@@ -1,11 +1,16 @@
 <template>
   <div class="audit-log-c">
     <div class="query-c mb">
-      <div class="query-label mr-s">{{ $t('components.AuditLog.else1') }}:</div>
+      <div class="label-color mr-s">{{ $t('components.AuditLog.else1') }}:</div>
       <a-range-picker style="width: 360px; margin: 0 24px 0 0;" show-time :default-value="getCurrentTime"
         :allow-clear="false" :time-picker-props="{ defaultValue: ['00:00:00', '23:59:59'] }"
         format="YYYY-MM-DD HH:mm:ss" @ok="dateOnOk" />
-      <a-button type="primary" @click="getAuditLog">{{ $t('components.AuditLog.5mplidlico80') }}</a-button>
+      <a-button type="outline" @click="getAuditLog">
+        <template #icon>
+          <icon-search />
+        </template>
+        <template #default>{{ $t('components.AuditLog.5mplidlico80') }}</template>
+      </a-button>
     </div>
     <a-table class="d-a-table-row full-h" :data="list.data" :columns="columns" :pagination="list.page"
       :page-change="currentPage" :loading="list.loading">

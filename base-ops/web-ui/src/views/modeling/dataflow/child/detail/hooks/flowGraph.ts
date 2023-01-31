@@ -12,7 +12,7 @@ const mCStore = useModelCommonStore()
 const edgeConfig = {
   attrs: {
     line: {
-      stroke: '#222c36', strokeWidth: 1,
+      stroke: '#fdef94', strokeWidth: 1,
       targetMarker: { name: 'classic', size: 8 }
     }
   },
@@ -24,12 +24,12 @@ export default class FlowGraph {
   public static graph: Graph
   private static option: Partial<Options.Manual> ={
     width: 1920, height: 1080, autoResize: true,
-    background: { color: '#fff' },
+    background: { color: 'var(--color-bg-1)' },
     grid: {
       size: 10, visible: true, type: 'doubleMesh',
       args: [
-        { color: '#e3e3e3', thickness: 1 },
-        { color: '#e3e3e3', thickness: 1, factor: 4 }
+        { color: '#888', thickness: 1 },
+        { color: '#888', thickness: 1, factor: 4 }
       ]
     },
 		interacting: function (cellView) {
@@ -38,7 +38,7 @@ export default class FlowGraph {
       return true
     },
     scroller: {
-      enabled: true, pageVisible: false, pageBreak: true, pannable: false,padding:0
+      enabled: true, pageVisible: false, pageBreak: true, pannable: false, padding: 0
     },
     mousewheel: {
       enabled: true, modifiers: ['ctrl', 'meta'], minScale: 0.5, maxScale: 2
@@ -81,7 +81,7 @@ export default class FlowGraph {
       enabled: true,
       ignoreAdd: false,
       ignoreRemove: false,
-      ignoreChange: true,
+      ignoreChange: true
     }, 
     clipboard: true, keyboard: true,
     embedding: {

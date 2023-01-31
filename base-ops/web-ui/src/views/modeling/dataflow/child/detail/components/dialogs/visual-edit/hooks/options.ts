@@ -8,7 +8,7 @@ export const indicatorType = [
   { value: 'mid', label: i18n.global.t('modeling.hooks.visual-edit.5m83coh1dcg0') }
 ]
 export const indicatorTypeSum = [
-  { value: 'sum', label: i18n.global.t('modeling.hooks.visual-edit.5m83coh1cb00') },
+  { value: 'sum', label: i18n.global.t('modeling.hooks.visual-edit.5m83coh1cb00') }
 ]
 export const chartTypes = [
   { value: 'bar', label: i18n.global.t('modeling.hooks.visual-edit.5m83coh1df40') },

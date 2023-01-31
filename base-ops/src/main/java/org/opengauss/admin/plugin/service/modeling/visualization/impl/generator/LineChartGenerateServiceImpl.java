@@ -14,6 +14,7 @@ import org.opengauss.admin.plugin.vo.modeling.component.*;
 import org.springframework.stereotype.Component;
 
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -37,8 +38,14 @@ public class LineChartGenerateServiceImpl extends BaseGenerateServiceImpl {
         lineChartBody.setTooltip(new Tooltip().setTrigger("axis"));
         lineChartBody.setGrid(new Grid().setBottom("40").setRight("3%").setLeft("3%").setContainLabel(true));
 
-        //generate x axis
-        Dimension xDimension = genXAxis();
+        //generate X axis config
+        Dimension xDimension;
+        if (lineChartParamsBody.getShowType().getKey() == 1) {
+            xDimension = genXAxis();
+        } else {
+            xDimension = genXAxisByTime();
+        }
+
         lineChartBody.setXAxis(new XAxis().setType("category").setBoundaryGap(true).setData(xDimension.getCategoryName()));
 
         //generate series data
@@ -93,6 +100,31 @@ public class LineChartGenerateServiceImpl extends BaseGenerateServiceImpl {
                 }
             });
         }
+
+        return xDimension;
+    }
+
+    public Dimension genXAxisByTime(){
+        Dimension xDimension = new Dimension();
+        //get display dimension of X Axis
+        String xDimensionKey = lineChartParamsBody.getShowType().getDateField();
+        Integer particle = lineChartParamsBody.getShowType().getParticle();
+
+        xDimension.setField(xDimensionKey);
+        //enum value by field
+        queryResult.forEach(item->{
+            String filedValue = null;
+            if (item.get(xDimensionKey) != null && item.get(xDimensionKey).getClass() == Timestamp.class) {
+                filedValue = formatDateTimeDimension((Timestamp)item.get(xDimensionKey),particle);
+                item.put(xDimensionKey,filedValue);
+            }
+            if (filedValue != null) {
+                Categories category = new Categories();
+                category.setName(filedValue);
+                category.setValue(List.of(filedValue));
+                xDimension.addCategoryBody(category.toBody(xDimensionKey));
+            }
+        });
 
         return xDimension;
     }

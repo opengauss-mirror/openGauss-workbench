@@ -18,8 +18,7 @@
         </div>
         <div class="table">
           <div class="header">
-            <img src="@/assets/images/modeling/data-flow-header.png" />
-            <div class="text">{{$t('modeling.dataflow.index.5m77w0y5brg0')}}</div>
+            <div class="text label-color">{{$t('modeling.dataflow.index.5m77w0y5brg0')}}</div>
           </div>
           <div class="content">
             <a-table
@@ -42,7 +41,7 @@
                   <template #default>{{$t('modeling.dataflow.index.5m77w0y5cgg0')}}</template>
                 </a-button>
                 <a-popconfirm :content="$t('modeling.dataflow.index.5m77w0y5fq00')" type="warning" :ok-text="$t('modeling.dataflow.index.5m77w0y5g400')" :cancel-text="$t('modeling.dataflow.index.5m77w0y5g9k0')" @ok="deleteRows(record)">
-                  <a-button size="mini" type="text">
+                  <a-button size="mini" type="text" status="danger">
                     <template #icon><icon-delete /></template>
                     <template #default>{{$t('modeling.dataflow.index.5m77w0y5ghc0')}}</template>
                   </a-button>
@@ -162,8 +161,7 @@ const toDetail = (record: KeyValue) => {
           align-items: center;
         }
         .table {
-          background-color: #fff;
-          border: 1px solid #e9e9e9;
+          border: 1px solid var(--color-border-2);;
           padding-bottom: 20px;
           .header {
             display: flex;
@@ -176,7 +174,6 @@ const toDetail = (record: KeyValue) => {
               margin-right: 15px;
             }
             .text {
-              color: #001f47;
               font-size: 16px;
               font-weight: bold;
             }

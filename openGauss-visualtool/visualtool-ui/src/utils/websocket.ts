@@ -95,9 +95,10 @@ export default class Socket<T, RT> extends Heart {
     let wsUrl
     if (process.env.NODE_ENV === 'development') {
       const host = '120.78.74.215:9494'
-      wsUrl = `ws://${host}/websocket/${this.options.url}`
+      wsUrl = `wss://${host}/websocket/${this.options.url}`
     } else {
-      wsUrl = `ws://${window.location.host}/websocket/${this.options.url}`
+      const wsPrefix = window.location.protocol.includes('https') ? 'wss' : 'ws'
+      wsUrl = `${wsPrefix}://${window.location.host}/websocket/${this.options.url}`
     }
     this.ws = new WebSocket(wsUrl)
     this.onopen(this.options.openCb as Callback)

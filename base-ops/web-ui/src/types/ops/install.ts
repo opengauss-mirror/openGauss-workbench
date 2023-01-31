@@ -97,7 +97,6 @@ export interface EnterpriseInstallNodeConfig {
   installUsername: string;
   azId: string;
   azName: string;
-  isInstallCM: boolean;
   isCMMaster: boolean;
   cmDataPath: string;
   cmPort: number;
@@ -115,6 +114,7 @@ export interface EnterpriseInstallConfig { // eslint-disable-line
   enableDCF: boolean;
   databaseUsername: string;
   databasePassword: string;
+  isInstallCM: boolean,
   azId: string;
   azName: string;
   nodeConfigList: EnterpriseInstallNodeConfig[];

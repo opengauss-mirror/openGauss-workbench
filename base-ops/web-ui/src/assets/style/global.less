@@ -30,7 +30,17 @@ body {
 .app-container {
   .main-bd {
     background: var(--color-bg-2);
+    border-radius: 2px;
+    min-height: calc(100vh - 178px);
   }
+}
+
+.label-color {
+  color: var(--color-text-2)
+}
+
+.value-color {
+  color: var(--color-text-1)
 }
 
 // z index
@@ -240,7 +250,6 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background-color: white;
   border-radius: 8px;
   padding: 20px;
 
@@ -251,4 +260,16 @@ body {
 
 .arco-message-list-top {
   left: 0;
+}
+
+.arco-btn-primary[type='button'] {
+  color: var(--color-bg-2);
+
+  &:hover {
+    color: var(--color-bg-2);
+  }
+}
+
+.arco-steps-item-process .arco-steps-icon {
+  color: var(--color-bg-2);
 }

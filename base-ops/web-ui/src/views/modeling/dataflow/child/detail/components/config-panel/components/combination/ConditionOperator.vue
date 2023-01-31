@@ -9,10 +9,10 @@
       <div class="tab-content d-a-form">
         <div class="or-frame" v-show="iData.or.length > 0">
           <div class="or-item" v-for="(orList, orKey) in iData.or" :key="`or${orKey}`">
-            <div class="or-item-ortext" v-if="orKey !== 0">{{$t('modeling.combination.ConditionOperator.5m82aq4s8cw0')}}</div>
+            <div class="or-item-ortext label-color" v-if="orKey !== 0">{{$t('modeling.combination.ConditionOperator.5m82aq4s8cw0')}}</div>
             <div class="d-frame">
               <div class="d-form-item-label mb-s">
-                <div class="label-text">{{$t('modeling.combination.ConditionOperator.5m82aq4s8gw0')}}</div>
+                <div class="label-text label-color">{{$t('modeling.combination.ConditionOperator.5m82aq4s8gw0')}}</div>
                 <div class="d-control-add" @click="orOperate('addAnd', orKey)">+</div>
                 <div class="d-control-remove" @click="orOperate('delete', orKey)">-</div>
               </div>

@@ -82,7 +82,7 @@
                 </a-select>
               </template>
               <template #operate="{ rowIndex }">
-                <a-button type="primary" status="warning" size="mini" @click="deleteRow(rowIndex)">{{$t('modeling.components.CustomDimensionDialog.5m7iksonrkg0')}}</a-button>
+                <a-button type="primary" status="danger" size="mini" @click="deleteRow(rowIndex)">{{$t('modeling.components.CustomDimensionDialog.5m7iksonrkg0')}}</a-button>
               </template>
             </a-table>
           </div>
@@ -235,7 +235,6 @@ defineExpose({ open })
       .menu {
         width: 160px;
         height: 768px;
-        background-color: #fff;
         text-align: center;
         transition: all .3s;
         overflow: hidden;

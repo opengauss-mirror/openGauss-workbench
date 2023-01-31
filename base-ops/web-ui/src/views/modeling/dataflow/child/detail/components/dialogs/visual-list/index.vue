@@ -183,8 +183,9 @@ defineExpose({ open })
         box-sizing: border-box;
         width: 300px;
         height: 275px;
-        background: rgb(247, 248, 250);
-        border: 1px solid rgb(218, 220, 231);
+        background: var(--color-fill-1);
+        border: 1px solid #dadce7;
+        border-color: var(--color-border-4);
         border-radius: 10px;
         box-sizing: border-box;
         padding: 10px;
@@ -193,7 +194,6 @@ defineExpose({ open })
         cursor: pointer;
         transition: all .3s;
         &:hover {
-          background: rgb(247, 248, 250);
           border: 1px solid rgb(var(--primary-6));
           box-shadow: 0px 1px 15px rgba(var(--primary-6), 0.29);;
           border-radius: 10px;
@@ -204,7 +204,7 @@ defineExpose({ open })
           display: flex;
           align-items: center;
           justify-content: center;
-          border: 1px solid rgb(218, 220, 231);
+          border-color: var(--color-border-3);
           border-radius: 11px;
           margin-bottom: 15px;
           img {

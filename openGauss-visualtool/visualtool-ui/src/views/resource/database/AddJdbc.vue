@@ -4,7 +4,7 @@
     <template #footer>
       <div class="flex-between">
         <div class="flex-row">
-          <div class="mr" v-if="data.formData.status === jdbcStatusEnum.unTest">待检测
+          <div class="label-color mr" v-if="data.formData.status === jdbcStatusEnum.unTest">待检测
           </div>
           <a-tag v-if="data.formData.status === jdbcStatusEnum.success" color="green">可用</a-tag>
           <a-tag v-if="data.formData.status === jdbcStatusEnum.fail" color="red">不可用</a-tag>

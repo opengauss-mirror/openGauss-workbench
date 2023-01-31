@@ -1,10 +1,10 @@
 <template>
   <div class="panel-c panel-overflow">
     <a-space direction="vertical" fill>
-      <div class="mb ft-xlg">
+      <div class="label-color mb ft-xlg">
         {{ $t('components.OnlineInstall.else1') }}: {{ currInstallPackage? currInstallPackage: '--' }}
       </div>
-      <div class="mb">
+      <div class="label-color mb">
         {{ $t('components.OnlineInstall.5mpn3mp10hw0') }}: {{ data.targetPath }}
       </div>
 
@@ -14,7 +14,7 @@
             <div v-for="item in data.packageList" :key="item.packageId">
               <div class="center-item flex-between flex-row mb">
                 <svg-icon icon-class="ops-online-install" class="icon-size mr-lg"></svg-icon>
-                <div class="ft-main mr-xlg">{{ item.os }}-{{ item.cpuArch }}-{{ item.packageVersion }}-{{
+                <div class="label-color ft-main mr-xlg">{{ item.os }}-{{ item.cpuArch }}-{{ item.packageVersion }}-{{
                   item.packageVersionNum
                 }}
                 </div>
@@ -136,7 +136,8 @@ const downloadPackage = (packageData: KeyValue) => {
           packageId: packageData.packageId,
           packagePath: data.targetPath,
           packageName: fileName,
-          installPackagePath: data.targetPath + fileName
+          installPackagePath: data.targetPath + fileName,
+          openGaussVersionNum: packageData.packageVersionNum
         })
         websocket.destroy()
       }

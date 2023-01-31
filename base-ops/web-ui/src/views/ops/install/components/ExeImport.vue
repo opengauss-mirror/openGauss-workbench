@@ -105,12 +105,14 @@ const goHome = () => {
   window.$wujie?.props.methods.jump({
     name: 'Dashboard'
   })
+  loadingFunc.initData()
 }
 
 const goOps = () => {
   window.$wujie?.props.methods.jump({
     name: 'Static-pluginBase-opsMonitorDailyOps'
   })
+  loadingFunc.initData()
 }
 
 const beforeConfirm = async (): Promise<boolean> => {

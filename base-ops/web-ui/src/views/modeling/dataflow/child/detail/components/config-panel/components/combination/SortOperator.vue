@@ -8,7 +8,7 @@
     <a-tab-pane key="1" :title="$t('modeling.combination.SortOperator.5m82bdo2r0w0')">
       <div class="tab-content d-a-form">
         <div class="d-form-item-label mb-s">
-          <div class="label-text">{{$t('modeling.combination.SortOperator.5m82bdo2rns0')}}</div>
+          <div class="label-text label-color">{{$t('modeling.combination.SortOperator.5m82bdo2rns0')}}</div>
           <div class="d-control-add" @click="operateSorts('add')">+</div>
         </div>
         <a-row align="center" class="mb-s" v-for="(item, key) in iData.sorts" :key="`item${key}`">

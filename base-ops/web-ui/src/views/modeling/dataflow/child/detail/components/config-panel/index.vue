@@ -125,7 +125,7 @@ defineExpose({ init, closeConfigPanel })
       height: calc(100% - 50px);
       width: 100%;
       min-width: 300px;
-      background-color: #ffffff;
+      background-color: var(--color-bg-2);
       color: #000;
       overflow: auto;
     }
@@ -137,7 +137,7 @@ defineExpose({ init, closeConfigPanel })
       box-sizing: border-box;
       width: 100%;
       padding: 0 30px;
-      background-color: #fff;
+      background-color: var(--color-bg-2);
       > * {
         width: 100%;
       }

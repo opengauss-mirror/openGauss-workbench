@@ -27,9 +27,23 @@ module.exports = defineConfig({
             'color-text-1': '#1D212A',
             'color-text-2': '#4E5A6A',
             'color-text-3': '#868F9C',
-            'dark-primary-6': '#E41D1D',
-            'dark-primary-5': '#E94842',
-            'dark-link-6': '#E41D1D'
+            'dark-primary-6': '#FCEF92',
+            'dark-primary-5': '#F8EFAE',
+            'dark-link-6': '#FCEF92',
+            'cpu-bg': '#F5F2FB',
+            'dark-cpu-bg': '#868F9C',
+            'lock-bg': '#E9F0FF',
+            'dark-lock-bg': '#868F9C',
+            'memory-bg': '#ECF9FF',
+            'dark-memory-bg': '#868F9C',
+            'connect-bg': '#EEFFEC',
+            'dark-connect-bg': '#868F9C',
+            'net-bg': '#FFF5E5',
+            'dark-net-bg': '#868F9C',
+            'session-bg': '#FFECEC',
+            'dark-session-bg': '#868F9C',
+            'session-top-bg': '#F2F8FF',
+            'dark-session-top-bg': '#868F9C',
           },
           javascriptEnabled: true
         }
@@ -60,11 +74,11 @@ module.exports = defineConfig({
     proxy: {
       // detail: https://cli.vuejs.org/config/#devserver-proxy
       [process.env.VUE_APP_BASE_API]: {
-        target: 'http://39.108.219.254:9494',
+        target: 'https://120.78.74.215:9494',
         changeOrigin: true
       },
       '/base_url': {
-        target: 'http://39.108.219.254:9494',
+        target: 'https://120.78.74.215:9494',
         changeOrigin: true,
         pathRewrite: {
           '^/base_url': ''

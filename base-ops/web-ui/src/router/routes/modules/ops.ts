@@ -20,7 +20,8 @@ const OPS: AppRouteRecordRaw = {
       meta: {
         title: '一键安装',
         requiresAuth: true,
-        roles: ['*']
+        roles: ['*'],
+        ignoreCache: true
       }
     },
     {

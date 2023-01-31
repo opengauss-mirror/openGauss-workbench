@@ -7,7 +7,7 @@
                         <div class="flex-row">
                             <a-tag class="mr" color="#86909C">{{ getRoleName(itemNode.clusterRole) }}</a-tag>
                             {{ $t('lightweight.InstallPrompt.5mpmly4bw340') }}: {{ itemNode.privateIp }}({{
-                                    itemNode.publicIp
+                                itemNode.publicIp
                             }})
                         </div>
                         <div class="flex-row">
@@ -16,7 +16,7 @@
                             <icon-up style="cursor: pointer;" v-else @click="itemNode.isShow = false" />
                         </div>
                     </div>
-                    <div class="item-node-center full-w flex-col-start" v-show="itemNode.isShow">
+                    <div class="label-color item-node-center full-w flex-col-start" v-show="itemNode.isShow">
                         <div class="flex-row">
                             <div class="lable-w">{{ $t('lightweight.InstallPrompt.5mpmly4bwww0') }}</div>
                             <div>{{ itemNode.publicIp }}</div>

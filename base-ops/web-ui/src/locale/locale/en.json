@@ -85,7 +85,9 @@
             "5mpn1nwazks0": "Please enter the installation directory",
             "5mpn1nwazok0": "MINI",
             "5mpn1nwazs80": "LITE",
-            "5mpn1nwazvg0": "ENTERPRISE"
+            "5mpn1nwazvg0": "ENTERPRISE",
+            "else1": "If the DataKit is installed offline, upload the installation package to the server where the DataKit is located.",
+            "else2": "The path can only be a Linux path"
         },
         "OnlineInstall": {
             "else1": "The installation package has been selected",
@@ -395,7 +397,8 @@
             "5mpm3ku3ji00": "Please enter the database password",
             "5mpm3ku3jkw0": "Enable database node self-selection at runtime",
             "5mpm3ku3jo00": "The cluster ID already exists, please re-enter",
-            "5mpm3ku3jqo0": "Determine whether there is an error in the cluster ID"
+            "5mpm3ku3jqo0": "Determine whether there is an error in the cluster ID",
+            "else1": "Please enter numbers, letters or underscores"
         },
         "EnterpriseInstall": {
             "else2": "prompt",
@@ -672,6 +675,8 @@
     "packageManage": {
         "index": {
             "else1": "CPU Arch",
+            "else2": "All",
+            "else3": "Please select a version name",
             "5myq5c8yz7c0": "Add Package",
             "5myq5c8z8540": "search...",
             "5myq5c8zmbk0": "update",

@@ -19,30 +19,30 @@ const useUserStore = defineStore('user', {
   }),
 
   getters: {
-    userInfo(state: any): any {
+    userInfo (state: any): any {
       return { ...state }
     }
   },
 
   actions: {
     // Set user's information
-    setInfo(partial: any) {
+    setInfo (partial: any) {
       this.$patch(partial)
     },
 
     // Reset user's information
-    resetInfo() {
+    resetInfo () {
       this.$reset()
     },
 
     // Get user's information
-    async info() {
+    async info () {
       const res = await getUserInfo()
 
       this.setInfo(res.data)
     },
 
-    logoutCallBack() {
+    logoutCallBack () {
       const appStore = useAppStore()
       this.resetInfo()
       clearToken()
@@ -50,7 +50,7 @@ const useUserStore = defineStore('user', {
       appStore.clearServerMenu()
     },
     // Logout
-    async logout() {
+    async logout () {
       try {
         await userLogout()
       } finally {

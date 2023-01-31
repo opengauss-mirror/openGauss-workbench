@@ -49,8 +49,8 @@ const roles = [
 ]
 const dData = reactive({
   show: false, loading: false, title: t('modeling.components.CU.5m6g1w13iaw0'),
-  formData: { name: '', users: [], dataBase: [], tags: '', clusterId: '', clusterNodeId: '', dbName:'', schema: '', user: '', remark: '', type: '' } as KeyValue,
-  formModal: { name: '', dataBase: [], tags: '', clusterId: '', clusterNodeId: '', dbName:'', schema: '', users: [
+  formData: { name: '', users: [], dataBase: [], tags: '', clusterId: '', clusterNodeId: '', dbName: '', schema: '', user: '', remark: '', type: '' } as KeyValue,
+  formModal: { name: '', dataBase: [], tags: '', clusterId: '', clusterNodeId: '', dbName: '', schema: '', users: [
     { id: 1, name: '', role: 1, type: 'creator' }
   ], remark: '', type: '' },
   rules: {}

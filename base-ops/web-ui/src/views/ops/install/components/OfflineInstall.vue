@@ -1,21 +1,22 @@
 <template>
   <div class="panel-c">
     <div class="panel-header">
-      <div class="mb ft-xlg">
-        {{ $t('components.OfflineInstall.5mpn1nway8c0') }} {{ data.currentVersion }}
+      <div class="label-color mb ft-xlg">
+        {{ $t('components.OfflineInstall.5mpn1nway8c0') }} {{ currentVersion }}
         {{ $t('components.OfflineInstall.5mpn1nwaywo0') }}
       </div>
-      <div class="mb">
+      <div class="label-color mb">
         {{ $t('components.OfflineInstall.5mpn1nwaz280') }} {{ (data.path && data.fileName) ? data.path + data.fileName :
-            'no choose'
+  'no choose'
         }}
       </div>
-      <a-link @click="showChangePath">{{ $t('components.OfflineInstall.5mpn1nwaz600') }}</a-link>
+      <a-link class="mb-s" @click="showChangePath">{{ $t('components.OfflineInstall.5mpn1nwaz600') }}</a-link>
     </div>
     <div class="panel-body">
       <div class="flex-col">
         <div v-for="(item, index) in data.files" :key="index">
-          <div :class="'install-package-card mb ' + (data.fileName === item.name ? 'center-item-active' : '')"
+          <div
+            :class="'label-color install-package-card mb ' + (data.fileName === item.name ? 'center-item-active' : '')"
             @click="choosePackge(item)">
             <svg-icon icon-class="ops-offline-install" class="icon-size-s mr"></svg-icon>
             <div class="ft-main">{{ item.name }}</div>
@@ -25,12 +26,14 @@
     </div>
     <a-modal :mask-closable="false" :visible="pathData.show" :title="pathData.title" :modal-style="{ width: '450px' }"
       @ok="dialogSubmit" @cancel="dialogClose">
-      <a-form :model="pathData.form" ref="formRef" auto-label-width :rules="pathData.rules">
-        <a-form-item field="path" :label="$t('components.OfflineInstall.5mpn1nwaz980')" validate-trigger="blur"
-          :rules="[{ required: true, message: $t('components.OfflineInstall.5mpn1nwazks0') }]">
+      <a-form class="mb" :model="pathData.form" ref="formRef" auto-label-width :rules="formRules">
+        <a-form-item field="path" :label="$t('components.OfflineInstall.5mpn1nwaz980')" validate-trigger="blur">
           <a-input v-model="pathData.form.path" :placeholder="$t('components.OfflineInstall.5mpn1nwazd40')"></a-input>
         </a-form-item>
       </a-form>
+      <div class="label-color">
+        {{ $t('components.OfflineInstall.else1') }}
+      </div>
     </a-modal>
   </div>
 </template>
@@ -49,9 +52,9 @@ const installStore = useOpsStore()
 
 const data = reactive<KeyValue>({
   path: '',
-  currentVersion: '',
   fileName: '',
-  files: []
+  files: [],
+  openGaussVersionNum: ''
 })
 
 const pathData = reactive({
@@ -59,32 +62,58 @@ const pathData = reactive({
   title: t('components.OfflineInstall.5mpn1nwazgw0'),
   form: {
     path: ''
-  },
-  rules: {
-    path: [{ required: true, 'validate-trigger': 'blur', message: t('components.OfflineInstall.5mpn1nwazks0') }]
+  }
+})
+
+const formRules = computed(() => {
+  return {
+    path: [
+      { required: true, 'validate-trigger': 'blur', message: t('components.OfflineInstall.5mpn1nwazks0') },
+      {
+        validator: (value: any, cb: any) => {
+          return new Promise(resolve => {
+            const reg = /^\/([\u4E00-\u9FA5A-Za-z0-9_]+\/?)+$/
+            const re = new RegExp(reg)
+            if (re.test(value)) {
+              resolve(true)
+            } else {
+              cb(t('components.OfflineInstall.else2'))
+              resolve(false)
+            }
+          })
+        }
+      }
+    ]
+  }
+})
+
+const currentVersion = computed(() => {
+  if (storeData.value && storeData.value.openGaussVersion) {
+    if (storeData.value.openGaussVersion === OpenGaussVersionEnum.MINIMAL_LIST) {
+      return t('components.OfflineInstall.5mpn1nwazok0')
+    } else if (storeData.value.openGaussVersion === OpenGaussVersionEnum.LITE) {
+      return t('components.OfflineInstall.5mpn1nwazs80')
+    } else {
+      return t('components.OfflineInstall.5mpn1nwazvg0')
+    }
   }
 })
 
 onMounted(() => {
-  if (storeData.value && storeData.value.openGaussVersion) {
-    if (storeData.value.openGaussVersion === OpenGaussVersionEnum.MINIMAL_LIST) {
-      data.currentVersion = t('components.OfflineInstall.5mpn1nwazok0')
-    } else if (storeData.value.openGaussVersion === OpenGaussVersionEnum.LITE) {
-      data.currentVersion = t('components.OfflineInstall.5mpn1nwazs80')
-    } else {
-      data.currentVersion = t('components.OfflineInstall.5mpn1nwazvg0')
-    }
-  }
   if (storeData.value && storeData.value.packagePath) {
     data.path = storeData.value.packagePath
-    getAllPackage(data.path)
   } else {
-    getAllPackage()
+    data.path = '/ops/files/'
   }
+  getAllPackage()
 })
 
-const getAllPackage = (path?: string) => new Promise(resolve => {
-  listInstallPackage(path).then((res: KeyValue) => {
+const getAllPackage = () => new Promise(resolve => {
+  const param = {
+    path: data.path,
+    version: storeData.value.openGaussVersion
+  }
+  listInstallPackage(param).then((res: KeyValue) => {
     if (Number(res.code) === 200) {
       data.files = []
       data.path = res.data.path
@@ -107,6 +136,7 @@ const getAllPackage = (path?: string) => new Promise(resolve => {
 })
 const choosePackge = (row: KeyValue) => {
   data.fileName = row.name
+  data.openGaussVersionNum = row.openGaussVersionNum
   setPathToStore()
 }
 
@@ -124,7 +154,11 @@ const showChangePath = () => {
 const dialogSubmit = () => {
   formRef.value?.validate().then(result => {
     if (!result) {
-      listInstallPackage(pathData.form.path).then((res: KeyValue) => {
+      const param = {
+        path: pathData.form.path,
+        version: storeData.value.openGaussVersion
+      }
+      listInstallPackage(param).then((res: KeyValue) => {
         if (Number(res.code) === 200) {
           if (res.data.files.length) {
             data.files = []
@@ -135,6 +169,7 @@ const dialogSubmit = () => {
             }
             if (res.data.files.length) {
               data.fileName = res.data.files[0].name
+              data.openGaussVersionNum = res.data.files[0].openGaussVersionNum
               setPathToStore()
             }
             pathData.show = false
@@ -155,7 +190,8 @@ const setPathToStore = () => {
     installStore.setInstallContext({
       packagePath: data.path,
       packageName: data.fileName,
-      installPackagePath: data.path + data.fileName
+      installPackagePath: data.path + data.fileName,
+      openGaussVersionNum: data.openGaussVersionNum
     })
   }
 }
@@ -181,7 +217,6 @@ const storeData = computed(() => installStore.getInstallConfig)
   justify-content: flex-start;
   align-items: center;
   cursor: pointer;
-  box-shadow: 0px 4px 20px 0px rgba(255, 255, 255, 0.5);
   transition: all 0.3s ease-in-out;
 
   &:hover {

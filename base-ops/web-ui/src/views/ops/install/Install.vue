@@ -9,10 +9,10 @@
     </div>
     <div class="install-footer">
       <a-button size="large" v-if="backBtnShow" :loading="loading" class="mr-lg" @click="handleBack">{{
-          $t('install.Install.5mpn60ejqkg0')
+        $t('install.Install.5mpn60ejqkg0')
       }}</a-button>
       <a-button size="large" v-if="nextBtnShow" :loading="loading" type="primary" @click="handleNext">{{
-          $t('install.Install.5mpn60ejriw0')
+        $t('install.Install.5mpn60ejriw0')
       }}</a-button>
     </div>
   </div>
@@ -49,6 +49,15 @@ const cancelLoading = () => {
   loading.value = false
 }
 
+const initData = () => {
+  installStore.resetInstall()
+  currComp.value = firstStep
+  currCompName.value = 'ChooseVersion'
+  stepComp.value = null
+  backBtnShow.value = true
+  nextBtnShow.value = true
+}
+
 const setBackBtnShow = (val: boolean) => {
   backBtnShow.value = val
 }
@@ -61,7 +70,8 @@ provide('loading', {
   toLoading,
   cancelLoading,
   setBackBtnShow,
-  setNextBtnShow
+  setNextBtnShow,
+  initData
 })
 
 onMounted(() => {
@@ -160,9 +170,7 @@ const installWayStore = computed(() => installStore.getInstallConfig)
 
 <style lang="less" scoped>
 .install {
-  background-color: white;
   padding: 20px;
-  height: calc(100vh - 138px - 40px);
   width: 100%;
   position: relative;
 

@@ -359,8 +359,8 @@ public class OpsWdrServiceImpl extends ServiceImpl<OpsWdrMapper, OpsWdrEntity> i
             while (resultSet.next()) {
                 DwrSnapshotVO dwrSnapshotVO = new DwrSnapshotVO();
                 dwrSnapshotVO.setSnapshot_id(resultSet.getString("snapshot_id"));
-                dwrSnapshotVO.setStart_ts(resultSet.getDate("start_ts"));
-                dwrSnapshotVO.setEnd_ts(resultSet.getDate("end_ts"));
+                dwrSnapshotVO.setStart_ts(resultSet.getTimestamp("start_ts"));
+                dwrSnapshotVO.setEnd_ts(resultSet.getTimestamp("end_ts"));
                 res.add(dwrSnapshotVO);
             }
         } catch (Exception e) {

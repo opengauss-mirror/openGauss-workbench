@@ -79,8 +79,8 @@ public abstract class AbstractOpsProvider implements ClusterOpsProvider, Initial
                 log.error("send websocket text fail",e);
             }
 
-            ensurePermission(jschUtil,rootSession, installUserName, pkgPath, retSession);
-            ensurePermission(jschUtil,rootSession, installUserName, installPath, retSession);
+            ensureStrictPermission(jschUtil,rootSession, installUserName, pkgPath, retSession);
+            ensureStrictPermission(jschUtil,rootSession, installUserName, installPath, retSession);
             ensureDataPathPermission(jschUtil,rootSession, installUserName, dataPath, retSession);
             log.info("Login and install user");
         }finally {
@@ -279,6 +279,28 @@ public abstract class AbstractOpsProvider implements ClusterOpsProvider, Initial
 
     protected void ensurePermission(JschUtil jschUtil,Session rootSession, String installUserName, String targetPath, WsSession wsSession) {
         chmod(jschUtil,rootSession, targetPath, wsSession);
+
+        String chown = MessageFormat.format(SshCommandConstants.CHOWN, installUserName, targetPath);
+
+        try {
+            JschResult jschResult = null;
+            try {
+                jschResult = jschUtil.executeCommand(chown, rootSession, wsSession);
+            } catch (InterruptedException e) {
+                throw new OpsException("thread is interrupted");
+            }
+            if (0 != jschResult.getExitCode()) {
+                log.error("Failed to grant permission, exit code: {}, error message: {}", jschResult.getExitCode(), jschResult.getResult());
+                throw new OpsException("Failed to grant permission");
+            }
+        } catch (IOException e) {
+            log.error("Failed to grant permission", e);
+            throw new OpsException("Failed to grant permission");
+        }
+    }
+
+    protected void ensureStrictPermission(JschUtil jschUtil,Session rootSession, String installUserName, String targetPath, WsSession wsSession) {
+        chmodFullPath(jschUtil,rootSession, targetPath, wsSession);
 
         String chown = MessageFormat.format(SshCommandConstants.CHOWN, installUserName, targetPath);
 

@@ -156,8 +156,8 @@
     </defs>
     <g id="页面-2" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
         <g id="监控-慢SQL查询-正在开发中" transform="translate(-725.000000, -418.000000)">
-            <rect fill="#F6F8FF" x="0" y="0" width="1440" height="1024"></rect>
-            <rect id="矩形备份-19" fill="#FFFFFF" fill-rule="nonzero" x="225" y="113" width="1200" height="835" rx="3"></rect>
+            <rect fill="none" x="0" y="0" width="1440" height="1024"></rect>
+            <rect id="矩形备份-19" fill="none" fill-rule="nonzero" x="225" y="113" width="1200" height="835" rx="3"></rect>
             <g id="编组-2" transform="translate(725.000000, 418.000000)" fill-rule="nonzero">
                 <g id="基础组件" opacity="0.9">
                     <g id="3">
