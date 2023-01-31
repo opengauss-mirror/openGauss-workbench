@@ -12,6 +12,7 @@ import org.opengauss.admin.plugin.domain.entity.ops.OpsPackageManagerEntity;
 import org.opengauss.admin.plugin.enums.ops.OpenGaussVersionEnum;
 import org.opengauss.admin.plugin.service.ops.IOpsPackageManagerService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Date;
@@ -29,11 +30,13 @@ public class InstallPackageManagerController extends BaseController {
 
     @Autowired
     private IOpsPackageManagerService opsPackageManagerService;
+    @Value("${installPackage.urlPrefix}")
+    private String installPackageUrlPrefix;
 
     @PostMapping("/save")
     public AjaxResult save(@RequestBody OpsPackageManagerEntity packageManager){
         packageManager.setCreateTime(new Date());
-        opsPackageManagerService.save(packageManager.populatePackageUrl());
+        opsPackageManagerService.save(packageManager.populatePackageUrl(installPackageUrlPrefix));
         return AjaxResult.success();
     }
 
@@ -47,7 +50,7 @@ public class InstallPackageManagerController extends BaseController {
     public AjaxResult update(@PathVariable("id") String id,@RequestBody OpsPackageManagerEntity packageManager){
         packageManager.setPackageId(id);
         packageManager.setUpdateTime(new Date());
-        opsPackageManagerService.updateById(packageManager.populatePackageUrl());
+        opsPackageManagerService.updateById(packageManager.populatePackageUrl(installPackageUrlPrefix));
         return AjaxResult.success();
     }
 

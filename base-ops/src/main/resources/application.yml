@@ -32,3 +32,6 @@ mybatis-plus:
   configuration:
     mapUnderscoreToCamelCase: true
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+installPackage:
+  urlPrefix: https://opengauss.obs.cn-south-1.myhuaweicloud.com

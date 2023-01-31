@@ -28,7 +28,7 @@ public class OpsPackageManagerEntity extends BaseEntity {
     private String packageVersionNum;
     private String packageUrl;
 
-    public OpsPackageManagerEntity populatePackageUrl() {
+    public OpsPackageManagerEntity populatePackageUrl(String installPackageUrlPrefix) {
         StringBuilder res = new StringBuilder();
 
         while (StrUtil.isNotEmpty(urlPrefix) && urlPrefix.endsWith("/")){
@@ -36,7 +36,7 @@ public class OpsPackageManagerEntity extends BaseEntity {
         }
 
         if (StrUtil.isEmpty(urlPrefix)){
-            urlPrefix = "https://opengauss.obs.cn-south-1.myhuaweicloud.com";
+            urlPrefix = installPackageUrlPrefix;
         }
 
         res.append(urlPrefix);
