@@ -56,8 +56,6 @@ public class OpsPackageManagerEntity extends BaseEntity {
 
         res.append("/").append(cpuArch);
 
-        res.append("/").append("openGauss-");
-
         StringBuilder packageName = new StringBuilder("openGauss-");
 
         if (OpenGaussVersionEnum.LITE == packageVersion){
