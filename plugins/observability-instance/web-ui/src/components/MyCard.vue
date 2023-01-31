@@ -84,9 +84,6 @@ const { overflow, isFinish, trigger } = useWidthOverflow(extraRef, dropdownRef)
 defineExpose({
     trigger
 })
-watch(overflow, o => {
-    console.log(props.title + ':', o)
-})
 </script>
 
 <template>

@@ -41,6 +41,7 @@ declare module '@vue/runtime-core' {
     MyBarLine: typeof import('./components/MyBarLine.vue')['default']
     MyBreadcrumb: typeof import('./layout/MyBreadcrumb.vue')['default']
     MyCard: typeof import('./components/MyCard.vue')['default']
+    MyDatePicker: typeof import('./components/MyDatePicker.vue')['default']
     MyHeader: typeof import('./layout/MyHeader.vue')['default']
     MyLine: typeof import('./components/MyLine.vue')['default']
     MyMenu: typeof import('./layout/MyMenu.vue')['default']

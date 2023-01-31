@@ -59,7 +59,9 @@ const {
             calc(list)
             totalCost.value = list[0].totalCost
             data.planData = list;
-            data.total = total
+            data.total = total;
+        } else if (code === 500) {
+            errorInfo.value = r?.data?.msg || 'failGetExecutionPlan';
         }
     }).catch((e) => {
         errorInfo.value = e;

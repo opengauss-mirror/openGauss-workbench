@@ -33,6 +33,9 @@ interface State {
      */
     fixedRangeTime: Array<string>,
     serverData: Record<string, {data: string[], time: string[], name: string}[]>,
+    promethuesStart: number,
+    promethuesEnd: number,
+    promethuesStep: number,
 }
 export const useMonitorStore = defineStore("monitor", {
     state: (): State => ({
@@ -57,6 +60,9 @@ export const useMonitorStore = defineStore("monitor", {
         timeRange: [],
         fixedRangeTime: [],
         serverData: {},
+        promethuesStart: 0,
+        promethuesEnd: 0,
+        promethuesStep: 60,
     }),
     getters: {
         refreshTime: (state: State) => {

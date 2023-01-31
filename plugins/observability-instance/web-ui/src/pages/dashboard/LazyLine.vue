@@ -1,9 +1,11 @@
 <script setup lang="ts">
+import moment from 'moment';
 import { LineData } from '../../components/MyLine.vue';
 import { useMonitorStore } from '../../store/monitor';
 import { storeToRefs } from 'pinia';
 import { toFixed } from '../../shared';
 import { useWindowStore } from '../../store/window';
+import { i18n } from '../../i18n';
 
 const props = withDefaults(defineProps<{
     querys?: string[],
@@ -18,7 +20,8 @@ const props = withDefaults(defineProps<{
     legendName?: string
     scatterOpts?: Record<string, any>
     lineWidth?: number,
-    defaultBrushArea?: string[]
+    defaultBrushArea?: string[],
+    countByDataTimePicker?: boolean
 }>(), {
     querys: () => [],
     names: () => [],
@@ -27,6 +30,7 @@ const props = withDefaults(defineProps<{
     scatterOpts: () => ({}),
     lineWidth: 2,
     dataKey: 'gauss_wait_events_value',
+    countByDataTimePicker: true
 })
 
 const xData = ref<string[]>([])
@@ -53,16 +57,37 @@ const load = (checkInView?: boolean, checkTab?: boolean) => {
 }
 
 const { theme } = storeToRefs(useWindowStore())
-const { rangeTime, time, tab, databaseData, serverData } = storeToRefs(useMonitorStore())
+const { rangeTime, time, tab, databaseData, serverData, promethuesStart, promethuesEnd, promethuesStep } = storeToRefs(useMonitorStore())
+
+const getXDataRange = (curData: Array<string>, t: Array<string>) => {
+    const newData = [];
+    const newXLabel: Array<string> = [];
+    if (Array.isArray(curData) && curData.length > 0 && Array.isArray(t)) {
+        let start = promethuesStart.value;
+        let end = promethuesEnd.value;
+        let step = promethuesStep.value;
+        for (let i = start; i <= end; i += step) {
+            const key = moment(i * 1000).format("YYYY-MM-DD HH:mm:ss");
+            const index = t.indexOf(key);
+            newXLabel.push(key);
+            if (index > -1) {
+                newData.push(curData[index])
+            } else {
+                newData.push(null)
+            }
+        }
+    }
+    return [newXLabel, newData];
+}
 
 const handleData = () => {
-    data.value = []
+    data.value = [];
     scatterData.value = undefined
     const baseData = tab.value === 0 ? databaseData : serverData
     if (!baseData) {
         return
     }
-    const names = props.names.length > 0 ? props.names : [props.dataKey]
+    const names = props.names.length > 0 ? props.names : [props.dataKey];
     names.forEach((name, i) => {
         const _data = baseData.value[props.nameIndexs.includes(i) ? `${name}${props.nameFix}` : name]
         if (_data) {
@@ -75,21 +100,30 @@ const handleData = () => {
                 }
             } else {
                 _data.forEach((item, j) => {
+                    const tempData = item.data.map(d => {
+                        let n = d.includes('.') ? toFixed(d) : d
+                        if (props.formatter) {
+                            n = props.formatter(n)
+                        }
+                        return n;
+                    });
+                    let curData = tempData;
+                    if (props.countByDataTimePicker) {
+                        const [newXLabel, newData] = getXDataRange(tempData, _data[0].time) as [string[], string[]];
+                        xData.value = newXLabel;
+                        curData = newData;
+                    }
                     data.value.push({
-                        data: item.data.map(d => {
-                            let n = d.includes('.') ? toFixed(d) : d
-                            if (props.formatter) {
-                                n = props.formatter(n)
-                            }
-                            return n;
-                        }),
+                        data: curData,
                         name: props.names.length > 0 ? name : item.name,
                         lineStyle: { color: props.color[props.legendName ? j : i], width: props.lineWidth },
                         itemStyle: { color: props.color[props.legendName ? j : i] },
                     })
                 })
                 if (_data.length > 0) {
-                    xData.value = _data[0].time
+                    if (!props.countByDataTimePicker) {
+                        xData.value = _data[0].time
+                    }
                 }
             }
         }
@@ -110,5 +144,7 @@ watch(serverData, () => { load(true, true) }, { deep: true })
     v-bind="$attrs"
     :theme="theme"
     :defaultBrushArea="defaultBrushArea"
+    :countByDataTimePicker="countByDataTimePicker"
+    :key="`${i18n.global.locale.value}`"
 />
 </template>

@@ -31,6 +31,9 @@ const { data, run: getDatabaseMetrics } = useRequest<Record<string, {data: strin
             step = Number.parseInt(`${(end - start) / 120}`)
         }
     }
+    monitorStore.promethuesStart = start;
+    monitorStore.promethuesEnd = end;
+    monitorStore.promethuesStep = step;
     return ogRequest.get("/observability/v1/monitoring/database-metrics", {
         // id: 'ogbrench',
         id: instanceId,

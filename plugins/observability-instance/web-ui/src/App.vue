@@ -34,7 +34,6 @@ const getWujieParam = () => {
     if (window.$wujie) {
         // @ts-ignore
         const { id } = window.$wujie.props;
-        console.log("instanceId:", id);
         if (typeof id === 'string' && id !== '') {
             monitorStore.instanceId = id;
         }
