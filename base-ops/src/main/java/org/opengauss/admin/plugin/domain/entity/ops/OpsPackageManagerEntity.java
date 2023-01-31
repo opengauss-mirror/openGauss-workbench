@@ -11,6 +11,8 @@ import org.opengauss.admin.plugin.domain.BaseEntity;
 import org.opengauss.admin.plugin.enums.ops.OpenGaussSupportOSEnum;
 import org.opengauss.admin.plugin.enums.ops.OpenGaussVersionEnum;
 
+import java.text.MessageFormat;
+
 /**
  * @author lhf
  * @date 2022/12/11 16:11
@@ -30,7 +32,7 @@ public class OpsPackageManagerEntity extends BaseEntity {
     private String packageUrl;
 
     public OpsPackageManagerEntity populatePackageUrl(String installPackageUrlPrefix) {
-        StringBuilder res = new StringBuilder();
+        String resTemplate = "{0}/{1}/{2}/{3}";
 
         while (StrUtil.isNotEmpty(urlPrefix) && urlPrefix.endsWith("/")){
             urlPrefix = urlPrefix.substring(0,urlPrefix.length()-1);
@@ -40,11 +42,7 @@ public class OpsPackageManagerEntity extends BaseEntity {
             urlPrefix = installPackageUrlPrefix;
         }
 
-        res.append(urlPrefix);
-
         OpenGaussSupportOSEnum osInfoEnum = OpenGaussSupportOSEnum.of(os, null, cpuArch);
-
-        res.append("/").append(packageVersionNum);
 
         String cpuArch;
         switch (osInfoEnum){
@@ -53,8 +51,6 @@ public class OpsPackageManagerEntity extends BaseEntity {
             case OPENEULER_X86_64: cpuArch = "x86_openEuler";break;
             default: throw new OpsException("cpu architecture information error");
         }
-
-        res.append("/").append(cpuArch);
 
         StringBuilder packageName = new StringBuilder("openGauss-");
 
@@ -80,7 +76,8 @@ public class OpsPackageManagerEntity extends BaseEntity {
             case MINIMAL_LIST:packageName.append("-64bit.tar.bz2");break;
         }
 
-        this.setPackageUrl(res.append("/").append(packageName).toString());
+        String formatRes = MessageFormat.format(resTemplate, urlPrefix, packageVersionNum, cpuArch, packageName);
+        this.setPackageUrl(formatRes);
 
         return this;
     }
