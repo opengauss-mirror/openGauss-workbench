@@ -45,9 +45,10 @@ axios.interceptors.response.use(
         const locale = localStorage.getItem('locale')
         Modal.error({
           title: locale === 'en-US' ? 'System Warning' : '系统提示',
-          content: locale === 'en-US' ? 'The login status has expired, you can stay on this page, or log in again' : '登录状态已过期，您可以继续留在该页面，或者重新登录',
+          content: locale === 'en-US' ? 'Your login status has expired, please refresh the page or log in again' : '您的登录状态已过期，请刷新页面或重新登录',
           okText: locale === 'en-US' ? 'Re-Login' : '重新登录',
           width: 'auto',
+          maskClosable: false,
           async onOk () {
             isTimeout = false
             const userStore = useUserStore()
