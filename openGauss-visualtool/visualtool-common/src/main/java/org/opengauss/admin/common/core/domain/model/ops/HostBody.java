@@ -1,10 +1,10 @@
 package org.opengauss.admin.common.core.domain.model.ops;
 
+import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
 import org.opengauss.admin.common.utils.ops.JschUtil;
-import lombok.Data;
-import lombok.extern.slf4j.Slf4j;
 
 import javax.validation.constraints.NotEmpty;
 
@@ -32,6 +32,7 @@ public class HostBody {
         hostEntity.setPort(port);
         hostEntity.setAzId(azId);
         hostEntity.setHostname(hostName);
+        hostEntity.setRemark(remark);
         return hostEntity;
     }
 
