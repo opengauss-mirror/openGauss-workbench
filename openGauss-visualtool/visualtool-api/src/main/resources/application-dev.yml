@@ -20,8 +20,10 @@ spring:
       test-while-idle: false
       test-on-borrow: true
       validation-query: "select 1"
-      validation-query-timeout: 30000
-
+      validation-query-timeout: 10000
+      connection-error-retry-attempts: 0
+      break-after-acquire-failure: true
+      max-wait: 3000
 swagger:
   enabled: true
   pathMapping: /dev-api

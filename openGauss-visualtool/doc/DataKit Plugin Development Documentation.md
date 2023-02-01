@@ -479,9 +479,9 @@ public AjaxResult send(String sessionId,String message) {
 
 ### 连接地址
 
-**前端****ws连接地址为：**`ws://ip:9494/ws/插件ID/ws会话ID`**
+**前端****ws连接地址为：**`wss://ip:9494/ws/插件ID/ws会话ID`**
 
-> ws会话ID有插件自己生成和维护。
+> ws会话ID由插件自己生成和维护。
 
 ## 插件中抛出异常
 
