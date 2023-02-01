@@ -73,7 +73,7 @@
         left join sys_role sr on sur.role_id = sr.role_id
         where u.del_flag = '0'
         <if test="entity.userName != null and entity.userName != ''">
-            AND u.user_name like concat('%', #{entity.userName}, '%')
+            AND (u.user_name like concat('%', #{entity.userName}, '%') or u.nick_name like concat('%', #{entity.userName}, '%') )
         </if>
         <if test="entity.status != null and entity.status != ''">
             AND u.status = #{entity.status}
