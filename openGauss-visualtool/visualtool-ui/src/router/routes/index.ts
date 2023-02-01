@@ -1,5 +1,6 @@
 import type { RouteRecordNormalized } from 'vue-router'
 import { filterAsyncRouter } from '@/utils/route'
+import i18n from '@/locale/index'
 
 const context = require.context('./modules', true, /\.ts$/)
 const modules = context.keys()
@@ -45,7 +46,7 @@ export const appRoutes: RouteRecordNormalized[] = formatModules(modules, [])
 export const DEFAULT_ROUTE_NAME = 'Dashboard'
 
 export const DEFAULT_ROUTE = {
-  title: localStorage.getItem('locale') === 'en-US' ? 'Home' : '首页',
+  title: i18n.global.t('components.login-form.5o62d201k380'),
   name: DEFAULT_ROUTE_NAME,
   fullPath: '/dashboard'
 }

@@ -307,7 +307,7 @@ const getList = () => new Promise(resolve => {
     if (Number(res.code) === 200) {
       resolve(true)
       data.clusterList = []
-      res.data.forEach((item: KeyValue, index: number) => {
+      res.data.forEach((item: KeyValue) => {
         item.isShow = true
         item.isConnected = true
         if (item.version === 'MINIMAL_LIST' && item.deployType === 'CLUSTER') {

@@ -4,6 +4,7 @@ import { Message, Modal } from '@arco-design/web-vue'
 import { useUserStore } from '@/store'
 import { getToken } from '@/utils/auth'
 import errorCode from '@/utils/errorCode'
+import i18n from '@/locale/index'
 
 export interface HttpResponse<T = unknown> {
   status: number;
@@ -42,11 +43,10 @@ axios.interceptors.response.use(
     if (code === 401) {
       if (!isTimeout) {
         isTimeout = true
-        const locale = localStorage.getItem('locale')
         Modal.error({
-          title: locale === 'en-US' ? 'System Warning' : '系统提示',
-          content: locale === 'en-US' ? 'Your login status has expired, please refresh the page or log in again' : '您的登录状态已过期，请刷新页面或重新登录',
-          okText: locale === 'en-US' ? 'Re-Login' : '重新登录',
+          title: i18n.global.t('components.login-form.5o61dvpc2o00'),
+          content: i18n.global.t('components.login-form.5o61dvpc5cs0'),
+          okText: i18n.global.t('components.login-form.5o61dvpc5o80'),
           width: 'auto',
           maskClosable: false,
           async onOk () {

@@ -4,6 +4,7 @@ import defaultSettings from '@/config/settings.json'
 import { getMenuList } from '@/api/user'
 import { filterAsyncRouter } from '@/utils/route'
 import { AppState } from './types'
+import i18n from '@/locale/index'
 
 const useAppStore = defineStore('app', {
   state: (): AppState => ({ ...defaultSettings }),
@@ -45,7 +46,6 @@ const useAppStore = defineStore('app', {
       this.hideMenu = value
     },
     async fetchServerMenuConfig () {
-      const locale = localStorage.getItem('locale') || 'zh-CN'
       try {
         const { data } = await getMenuList()
         data.unshift({
@@ -54,7 +54,7 @@ const useAppStore = defineStore('app', {
           component: 'DEFAULT_LAYOUT',
           redirect: '/dashboard',
           meta: {
-            title: locale === 'zh-CN' ? '首页' : 'Home',
+            title: i18n.global.t('components.login-form.5o62d201k380'),
             requiresAuth: false,
             icon: 'home',
             order: 0,
@@ -66,7 +66,7 @@ const useAppStore = defineStore('app', {
               name: 'Dashboard',
               component: 'ops/home/Index',
               meta: {
-                title: locale === 'zh-CN' ? '首页' : 'Home',
+                title: i18n.global.t('components.login-form.5o62d201k380'),
                 requiresAuth: true,
                 roles: ['*']
               }
