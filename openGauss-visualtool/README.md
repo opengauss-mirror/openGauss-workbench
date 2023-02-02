@@ -35,6 +35,14 @@ openEuler 20.3LTS（x86_x64，ARM），centos7.x（x86_x64）
 > servier.sh 支持参数（start|stop|restart|status）
 
 4、访问地址http://ip:9494
+## 升级步骤
+
+1、使用root用户，在项目根目录下执行upgrade.sh脚本
+
+2、使用og_ops用户，在项目根目录下执行server.sh restart启动服务
+
+3、访问地址http://ip:9494
+
 ### 注意事项：
 1、平台使用的数据库，当前仅支持openGauss数据库，并且需要提前创建database。
 2、需要将部署服务器IP配置在平台使用的数据库（openGauss）的白名单列表中。
