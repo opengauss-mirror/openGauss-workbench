@@ -49,12 +49,9 @@
   import { Message } from '@arco-design/web-vue'
   import { FormInstance } from '@arco-design/web-vue/es/form'
   // import { useUserStore } from '@/store'
-  import useUser from '@/hooks/user'
   import { updateCode } from '@/api/user'
   import { useI18n } from 'vue-i18n'
-  import { useRouter } from 'vue-router'
 
-  const router = useRouter()
   const { t } = useI18n()
   const props = withDefaults(defineProps<{
     open: boolean,
@@ -66,7 +63,6 @@
 
   const emits = defineEmits(['update:open', 'change-success'])
 
-  const { logout } = useUser()
   // const userStore = useUserStore()
   const formRef = ref<FormInstance>()
   const form = reactive<any>({

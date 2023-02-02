@@ -172,7 +172,11 @@
             "5m6noeap7a80": "记住密码",
             "5m6noeap7n40": "登录",
             "5m6noeap7y80": "登录成功",
-            "5mpi8serosw0": "openGauss DataKit"
+            "5mpi8serosw0": "openGauss DataKit",
+            "5o61dvpc2o00": "系统提示",
+            "5o61dvpc5cs0": "您的登录状态已过期，请刷新页面或重新登录",
+            "5o61dvpc5o80": "重新登录",
+            "5o62d201k380": "首页"
         },
         "EditConfig": {
             "5mjace1rbj80": "日志设置",

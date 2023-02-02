@@ -225,9 +225,10 @@
         await stop(pluginId)
         doLoading.value = false
         Message.success('Stop success')
-        tabBarStore.tagList.forEach((item: any, index: any) => {
+        const tagList: any[] = [...tabBarStore.tagList]
+        tagList.forEach((item: any) => {
           if (~item.fullPath.indexOf(`/${pluginId}/`)) {
-            tabBarStore.deleteTag(index, item)
+            tabBarStore.deleteTags(item)
             destroyPluginApp(item.fullPath)
           }
         })
@@ -246,9 +247,10 @@
       await uninstall(pluginId)
       doLoading.value = false
       Message.success('Uninstall success')
-      tabBarStore.tagList.forEach((item: any, index: any) => {
+      const tagList: any[] = [...tabBarStore.tagList]
+      tagList.forEach((item: any) => {
         if (~item.fullPath.indexOf(`/${pluginId}/`)) {
-          tabBarStore.deleteTag(index, item)
+          tabBarStore.deleteTags(item)
           destroyPluginApp(item.fullPath)
         }
       })

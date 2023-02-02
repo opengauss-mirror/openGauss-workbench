@@ -172,7 +172,11 @@
             "5m6noeap7a80": "Remember password",
             "5m6noeap7n40": "Login",
             "5m6noeap7y80": "login successful",
-            "5mpi8serosw0": "openGauss DataKit"
+            "5mpi8serosw0": "openGauss DataKit",
+            "5o61dvpc2o00": "System Warning",
+            "5o61dvpc5cs0": "Your login status has expired, please refresh the page or log in again",
+            "5o61dvpc5o80": "Re-Login",
+            "5o62d201k380": "Home"
         },
         "EditConfig": {
             "5mjace1rbj80": "Configuration",

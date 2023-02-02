@@ -60,7 +60,7 @@ import { FormInstance } from '@arco-design/web-vue/es/form'
 import { nextTick, reactive, ref, computed } from 'vue'
 import { addJdbc, editJdbc, jdbcNodePing } from '@/api/ops'
 import { Message } from '@arco-design/web-vue'
-import { useI18n } from 'vue-i18n'
+// import { useI18n } from 'vue-i18n'
 // import { encryptPassword } from '@/utils/jsencrypt'
 // const { t } = useI18n()
 enum jdbcStatusEnum {

@@ -32,12 +32,12 @@
 </template>
 
 <script setup lang="ts">
-import { Message, TableColumnData } from '@arco-design/web-vue'
+import { TableColumnData } from '@arco-design/web-vue'
 import { KeyValue } from '@/types/global'
 import { onMounted, reactive } from 'vue'
 import BusiFlowSummary from './echarts/BusiFlowSummary.vue'
 import DataSourceSummary from './echarts/DataSourceSummary.vue'
-import { getBusiFlowList } from '@/api/ops'
+// import { getBusiFlowList } from '@/api/ops'
 import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
 const columns: TableColumnData[] = [
