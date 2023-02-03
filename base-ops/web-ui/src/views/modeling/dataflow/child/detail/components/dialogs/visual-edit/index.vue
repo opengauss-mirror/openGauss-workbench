@@ -13,10 +13,6 @@
       <div class="container modeling-dialogs-visual-edit-index">
         <div class="main">
           <div class="header">
-            <div class="back" @click="close">
-              <IconArrowLeft />
-              {{$t('modeling.visual-edit.index.5m7ihlv0lrk0')}}
-            </div>
             <div class="title">{{ dData.title ? dData.title : $t('modeling.visual-edit.index.5m7ihlv0mig0') }}</div>
           </div>
           <div class="chart">
@@ -76,6 +72,7 @@
                 </div>
           </div>
           <div class="config-footer">
+            <a-button type="primary" status="danger" @click="close">{{$t('modeling.visual-edit.index.5m7ihlv0lrk0')}}</a-button>
             <a-button type="primary" @click="previewChart">{{$t('modeling.visual-edit.index.5m7ihlv0n7s0')}}</a-button>
             <a-button type="primary" @click="saveConfig">{{$t('modeling.visual-edit.index.5m7ihlv0na80')}}</a-button>
             <a-button type="primary" :loading="snapshot.loading" v-show="snapshot.option" @click="saveSnapshot">{{$t('modeling.visual-edit.index.5m7ihlv0ndo0')}}</a-button>
@@ -445,14 +442,7 @@ defineExpose({ open })
           .title {
             display: flex;
             align-items: center;
-            &::before {
-              content: "";
-              display: inline-block;
-              width: 1px;
-              height: 26px;
-              background: var(--color-border-3);
-              margin-right: 15px;
-            }
+            padding-left: 10px;
           }
         }
         .chart {
