@@ -2,10 +2,10 @@
 <template>
   <a-dropdown trigger="contextMenu" alignPoint position="bl">
     <div
-      class="d-antv-node base-node-container" 
-      :class="{ 
-        'd-antv-node-selected1': antvSelected, 
-        'd-antv-node-disabled': disabled, 
+      class="d-antv-node base-node-container"
+      :class="{
+        'd-antv-node-selected1': antvSelected,
+        'd-antv-node-disabled': disabled,
         'd-antv-node-dark': dAntvNodeDarkTheme,
         'd-antv-node-dark-selected': dAntvNodeDarkTheme && antvSelected
       }"
@@ -47,13 +47,14 @@ let nodeConfig = ref<KeyValue>({})
 const antvSelected = ref<boolean>(false)
 const disabled = ref<boolean>(false)
 const nodeDisabledShow = ref<boolean>(false)
-const showPlay = ref<boolean>(false)
+const showPlay = ref<boolean>(true)
 
 const dAntvNodeDarkTheme = ref<boolean>(false)
 onMounted(() => {
   if (getNode) {
     let n: Cell = getNode()
-    if (n && n.data && n.data.cells_type && n.data.cells_type !== 'dataSource') showPlay.value = true
+    console.log(n)
+    if (n && n.data && n.data.cells_type && n.data.cells_type === 'dataSource') showPlay.value = false
     n.on(`change:data`, ({ current }) => {
       antvSelected.value = current.antvSelected ? current.antvSelected : false
       nodeDisabledShow.value = current.showDisabledCheckbox ? current.showDisabledCheckbox : false
@@ -265,7 +266,7 @@ const toggleDisbled = () => {
       }
     }
   }
-  
+
 .d-antv-node-selected1 {
   border: 1px solid rgb(227, 29, 28) !important;
 }
