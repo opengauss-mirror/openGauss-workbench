@@ -27,7 +27,8 @@
             </div>
             <div class="flex-row">
               <icon-plus-circle class="add-icon-size mr" style="color: green" @click="addNode(index)" />
-              <icon-minus-circle class="remove-icon add-icon-size" v-if="index > 2" @click="removeNode(index)" />
+              <icon-minus-circle class="remove-icon add-icon-size"
+                v-if="(!isInstallCM && index > 0) || (isInstallCM && index > 2)" @click="removeNode(index)" />
             </div>
           </div>
           <a-form :model="formItem" :rules="data.rules" :style="{ width: '800px' }" auto-label-width :ref="setRefMap">
@@ -126,15 +127,20 @@ const refList = ref<any>([])
 onMounted(async () => {
   initData()
   if (Object.keys(installStore.getEnterpriseConfig).length && installStore.getEnterpriseConfig.nodeConfigList.length) {
+    console.log('1')
+
     await getHostList()
     installStore.getEnterpriseConfig.nodeConfigList.forEach((item, index) => {
       data.nodeList.push(item)
       changeHostId(index)
     })
   } else {
+    console.log('2', isInstallCM.value)
     addNode(0, true)
-    addNode(1, false)
-    addNode(1, false)
+    if (isInstallCM.value) {
+      addNode(1, false)
+      addNode(1, false)
+    }
     getHostList()
   }
   getAZList()

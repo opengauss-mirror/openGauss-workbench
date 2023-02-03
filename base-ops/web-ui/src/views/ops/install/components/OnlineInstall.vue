@@ -137,7 +137,8 @@ const downloadPackage = (packageData: KeyValue) => {
           packagePath: data.targetPath,
           packageName: fileName,
           installPackagePath: data.targetPath + fileName,
-          openGaussVersionNum: packageData.packageVersionNum
+          openGaussVersionNum: packageData.packageVersionNum,
+          installOs: (packageData.os + '_' + packageData.cpuArch).toLocaleUpperCase()
         })
         websocket.destroy()
       }

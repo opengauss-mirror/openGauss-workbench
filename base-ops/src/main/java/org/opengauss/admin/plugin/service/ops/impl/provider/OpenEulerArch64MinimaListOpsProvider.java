@@ -60,7 +60,7 @@ public class OpenEulerArch64MinimaListOpsProvider extends AbstractOpsProvider {
 
     @Override
     public OpenGaussSupportOSEnum os() {
-        return OpenGaussSupportOSEnum.OPENEULER_ARCH64;
+        return OpenGaussSupportOSEnum.OPENEULER_AARCH64;
     }
 
     @Override

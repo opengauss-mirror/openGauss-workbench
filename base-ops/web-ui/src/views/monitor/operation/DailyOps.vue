@@ -16,14 +16,15 @@
                 <div class="flex-row ft-b mr" v-if="clusterData.version === OpenGaussVersionEnum.ENTERPRISE">
                   <icon-exclamation-circle />
                   <div class="label-color mr-s">{{ $t('operation.DailyOps.5mplp1xbyi40') }}</div>
-                  <div class="mr">{{ clusterData.warningNum ? clusterData.warningNum : 0 }}</div>
+                  <div class="label-color mr">{{ clusterData.warningNum ? clusterData.warningNum : 0 }}</div>
 
                   <a-button type="text" @click="showOneCheck(clusterData)">{{
                     $t('operation.DailyOps.5mplp1xbyqc0')
                   }}</a-button>
                 </div>
-                <icon-down class="open-close-c" v-if="!clusterData.isShow" @click="clusterData.isShow = true" />
-                <icon-up class="open-close-c" v-else @click="clusterData.isShow = false" />
+                <icon-down class="label-color open-close-c" v-if="!clusterData.isShow"
+                  @click="clusterData.isShow = true" />
+                <icon-up class="label-color open-close-c" v-else @click="clusterData.isShow = false" />
               </div>
             </div>
             <div v-if="clusterData.isShow">
@@ -40,10 +41,11 @@
                     </div>
                     <div class="flex-row">
                       <div class="label-color mr-s">{{ $t('operation.DailyOps.5mplp1xbzew0') }}</div>
-                      <div class="flex-row" v-if="clusterData.deployType === 'CLUSTER'">
+                      <div class="flex-row"
+                        v-if="clusterData.deployType === 'CLUSTER' && clusterData.clusterNodes.length > 1">
                         <div class="label-color mr-s">{{ $t('operation.DailyOps.5mplp1xbzmw0') }}</div>
                         <div class="value-color ft-lg ft-b mr-s">{{ clusterData.clusterNodes.length - 1 }}</div>
-                        {{ $t('operation.DailyOps.5mplp1xbztc0') }}
+                        <div class="label-color">{{ $t('operation.DailyOps.5mplp1xbztc0') }}</div>
                       </div>
                       <div class="value-color ft-b" v-else>{{ $t('operation.DailyOps.5mplp1xc0000') }}</div>
                     </div>
@@ -68,7 +70,7 @@
                       :ok-text="$t('operation.DailyOps.5mplp1xc1580')"
                       :cancel-text="$t('operation.DailyOps.5mplp1xc1b00')"
                       @ok="handleUninstall(clusterData, index, false)">
-                      <a-button type="outline" status="danger" class="mr">{{
+                      <a-button type="outline" class="mr">{{
                         $t('operation.DailyOps.5mplp1xc1gs0')
                       }}</a-button>
                     </a-popconfirm>
@@ -76,7 +78,7 @@
                       :ok-text="$t('operation.DailyOps.5mplp1xc1580')"
                       :cancel-text="$t('operation.DailyOps.5mplp1xc1b00')"
                       @ok="handleUninstall(clusterData, index, true)">
-                      <a-button type="outline" status="danger" class="mr">{{
+                      <a-button type="outline" class="mr">{{
                         $t('operation.DailyOps.5mplp1xc1ms0')
                       }}</a-button>
                     </a-popconfirm>
@@ -158,8 +160,8 @@
                     <div class="flex-between mb">
                       <div class="flex-row mb-s" style="margin-left: 20px">
                         <div class="label-color mr-s">{{ $t('operation.DailyOps.else2') }}{{ nodeIndex + 1 }}</div>
-                        <a-tag :color="getInstanceStateColor(clusterData.clusterNodes[0])">{{
-                          getInstanceState(clusterData.clusterNodes[0])
+                        <a-tag :color="getInstanceStateColor(clusterData, clusterData.clusterNodes[0])">{{
+                          getInstanceState(clusterData, clusterData.clusterNodes[0])
                         }}</a-tag>
                       </div>
                       <div class="flex-row">
@@ -286,8 +288,8 @@
                   <div class="flex-between">
                     <div class="flex-row mb-s" style="margin-left: 20px">
                       <div class="label-color mr-s">{{ $t('operation.DailyOps.else2') }}{{ nodeIndex + 1 }}</div>
-                      <a-tag :color="getInstanceStateColor(instance)">{{
-                        getInstanceState(instance)
+                      <a-tag :color="getInstanceStateColor(clusterData, instance)">{{
+                        getInstanceState(clusterData, instance)
                       }}</a-tag>
                     </div>
                     <div class="flex-row">
@@ -456,7 +458,8 @@ const openWebSocket = (data: KeyValue, clusterIndex: number) => {
     openHostWebSocket(data, data.clusterNodes[0], clusterIndex, 0)
   } else {
     data.clusterNodes.forEach((item: KeyValue, index: number) => {
-      item.state = -1
+      item.state = 'false'
+      item.nodeState = -1
       // open websocket
       openHostWebSocket(data, item, clusterIndex, index)
     })
@@ -488,8 +491,10 @@ const openHostWebSocket = (clusterData: KeyValue, nodeData: KeyValue, clusterInd
   })
   websocket.onmessage((messageData: any) => {
     const eventData = JSON.parse(messageData)
-    console.log(`ops monitor data- ${clusterData.clusterId} - ${clusterData.privateIp}`, eventData, clusterIndex, index)
-    data.clusterList[clusterIndex].clusterNodes[index].state = eventData.state
+    console.log(`ops monitor data- ${clusterData.clusterId} - ${nodeData.privateIp}`, eventData, clusterIndex, index)
+    data.clusterList[clusterIndex].clusterNodes[index].nodeState = eventData.state
+    // reset instance nodeState and nodeRole
+    setInstanceState(data.clusterList[clusterIndex], data.clusterList[clusterIndex].clusterNodes[index])
     data.clusterList[clusterIndex].clusterNodes[index].cpu = eventData.cpu
     data.clusterList[clusterIndex].clusterNodes[index].memory = eventData.memory
     data.clusterList[clusterIndex].clusterNodes[index].lock = eventData.lock
@@ -502,6 +507,41 @@ const openHostWebSocket = (clusterData: KeyValue, nodeData: KeyValue, clusterInd
       }
     }
   })
+}
+
+const setInstanceState = (clusterData: KeyValue, instanceData: KeyValue) => {
+  if (clusterData.version === OpenGaussVersionEnum.ENTERPRISE) {
+    console.log('enterprise node state: ', instanceData.nodeState)
+    if (instanceData.nodeState !== -1) {
+      const stateObj = JSON.parse(instanceData.nodeState)
+      const currentHostname = instanceData.hostname
+      if (stateObj && currentHostname) {
+        // set node state
+        if (stateObj.nodeState[currentHostname] === 'Normal') {
+          instanceData.state = 'true'
+        } else {
+          instanceData.state = 'false'
+        }
+        // set node role
+        if (stateObj.nodeRole[currentHostname]) {
+          switch (stateObj.nodeRole[currentHostname]) {
+            case 'P':
+            case 'N':
+              instanceData.clusterRole = ClusterRoleEnum.MASTER
+              break
+            case 'S':
+              instanceData.clusterRole = ClusterRoleEnum.SLAVE
+              break
+            case 'C':
+              instanceData.clusterRole = ClusterRoleEnum.CASCADE
+              break
+          }
+        }
+      }
+    }
+  } else {
+    instanceData.state = instanceData.nodeState
+  }
 }
 
 const handleUninstall = (clusterData: KeyValue, index: number, force: boolean) => {
@@ -823,7 +863,7 @@ const handleInstanceOper = (type: any, clusterIndex: number, nodeIndex: number, 
     const param = {
       clusterId: data.clusterList[clusterIndex].clusterId,
       nodeIds: [data.clusterList[clusterIndex].clusterNodes[nodeIndex].nodeId],
-      wsConnectType: 'COMMAND_EXEC',
+      hostId: data.clusterList[clusterIndex].clusterNodes[nodeIndex].hostId,
       businessId: `${type}_instance_${data.clusterList[clusterIndex].clusterId}_${socketKey}`
     }
     const method = getInstanceMethod(type, param)
@@ -882,33 +922,48 @@ const handleInstanceOper = (type: any, clusterIndex: number, nodeIndex: number, 
 }
 
 const getInstanceMethod = (type: string, param: KeyValue) => {
+  const reqParam = {
+    clusterId: param.clusterId,
+    nodeIds: param.nodeIds,
+    businessId: param.businessId
+  }
+  const enterpriseParam = {
+    clusterId: param.clusterId,
+    hostId: param.hostId,
+    businessId: param.businessId
+  }
   switch (type) {
     case 'start':
-      return start(param)
+      return start(reqParam)
     case 'stop':
-      return stop(param)
+      return stop(reqParam)
     case 'restart':
-      return restart(param)
+      return restart(reqParam)
     case 'switch':
-      return switchover(param)
+      return switchover(enterpriseParam)
     case 'config':
-      return generateconf(param)
+      return generateconf(enterpriseParam)
     case 'build':
-      return build(param)
+      return build(enterpriseParam)
   }
 }
 
 const getClusterState = (clusterData: KeyValue) => {
   // all nodes is ok, cluster is ok
-  if (clusterData.clusterNodes.length) {
+  if (clusterData.version === OpenGaussVersionEnum.ENTERPRISE) {
+    if (clusterData.clusterNodes[0].nodeState) {
+      const stateObj = JSON.parse(clusterData.clusterNodes[0].nodeState)
+      return enterpriseClusterState(stateObj)
+    }
+  } else if (clusterData.clusterNodes.length) {
     const findOkNodes = clusterData.clusterNodes.filter((item: KeyValue) => {
-      return item.state === 'true'
+      return item.nodeState === 'true'
     })
     if (findOkNodes.length) {
       return t('operation.DailyOps.5mplp1xbz600')
     } else {
       const findHasCheckNodes = clusterData.clusterNodes.filter((item: KeyValue) => {
-        return item.state !== -1
+        return item.nodeState !== -1
       })
       if (findHasCheckNodes.length) {
         return t('operation.DailyOps.5mplp1xc4x80')
@@ -922,15 +977,20 @@ const getClusterState = (clusterData: KeyValue) => {
 
 const getClusterColor = (clusterData: KeyValue) => {
   // all nodes is ok, cluster is ok
-  if (clusterData.clusterNodes.length) {
+  if (clusterData.version === OpenGaussVersionEnum.ENTERPRISE) {
+    if (clusterData.clusterNodes[0].nodeState) {
+      const stateObj = JSON.parse(clusterData.clusterNodes[0].nodeState)
+      return enterpriseClusterStateColor(stateObj)
+    }
+  } else if (clusterData.clusterNodes.length) {
     const findOkNodes = clusterData.clusterNodes.filter((item: KeyValue) => {
-      return item.state === 'true'
+      return item.nodeState === 'true'
     })
     if (findOkNodes.length) {
       return 'green'
     } else {
       const findHasCheckNodes = clusterData.clusterNodes.filter((item: KeyValue) => {
-        return item.state !== -1
+        return item.nodeState !== -1
       })
       if (findHasCheckNodes.length) {
         return 'red'
@@ -942,26 +1002,101 @@ const getClusterColor = (clusterData: KeyValue) => {
   return 'gray'
 }
 
-const getInstanceState = (instanceData: KeyValue) => {
-  if (instanceData.state === -1) {
-    return t('operation.DailyOps.5mplp1xc51s0')
-  } else {
-    if (instanceData.state === 'true') {
+const enterpriseClusterState = (stateObj: KeyValue) => {
+  switch (stateObj.cluster_state) {
+    case 'Normal':
       return t('operation.DailyOps.5mplp1xbz600')
-    } else {
+    case 'Unavailable':
       return t('operation.DailyOps.5mplp1xc4x80')
-    }
+    case 'Degraded':
+      return t('operation.DailyOps.nodeField1')
+    default:
+      return t('operation.DailyOps.5mplp1xc51s0')
   }
 }
 
-const getInstanceStateColor = (instanceData: any) => {
-  if (instanceData.state === -1) {
-    return 'gray'
+const enterpriseClusterStateColor = (stateObj: KeyValue) => {
+  switch (stateObj.cluster_state) {
+    case 'Normal':
+      return 'green'
+    case 'Unavailable':
+      return 'red'
+    case 'Degraded':
+      return 'yellow'
+    default:
+      return 'gray'
+  }
+}
+
+const getInstanceState = (clusterData: KeyValue, instanceData: KeyValue) => {
+  if (clusterData.version === OpenGaussVersionEnum.ENTERPRISE) {
+    if (instanceData.nodeState === -1) {
+      return t('operation.DailyOps.5mplp1xc51s0')
+    } else if (instanceData.nodeState && instanceData.nodeState !== 'false') {
+      const stateObj = JSON.parse(instanceData.nodeState)
+      return getCurrentInstanceState(stateObj, instanceData)
+    } else {
+      return t('operation.DailyOps.5mplp1xc4x80')
+    }
   } else {
-    if (instanceData.state === 'true') {
+    if (instanceData.nodeState === -1) {
+      return t('operation.DailyOps.5mplp1xc51s0')
+    } else {
+      if (instanceData.nodeState === 'true') {
+        return t('operation.DailyOps.5mplp1xbz600')
+      } else {
+        return t('operation.DailyOps.5mplp1xc4x80')
+      }
+    }
+  }
+}
+const getCurrentInstanceState = (stateObj: KeyValue, instanceData: KeyValue) => {
+  const currentHostname = instanceData.hostname
+  if (stateObj && currentHostname) {
+    switch (stateObj.nodeState[currentHostname]) {
+      case 'Normal':
+        return t('operation.DailyOps.nodeState1')
+      case 'Need repair':
+        return t('operation.DailyOps.nodeState2')
+      case 'Starting':
+        return t('operation.DailyOps.nodeState3')
+      case 'Wait promoting':
+        return t('operation.DailyOps.nodeState4')
+      case 'Promoting':
+        return t('operation.DailyOps.nodeState5')
+      case 'Demoting':
+        return t('operation.DailyOps.nodeState6')
+      case 'Building':
+        return t('operation.DailyOps.nodeState7')
+      case 'Catchup':
+        return t('operation.DailyOps.nodeState8')
+      case 'Coredump':
+        return t('operation.DailyOps.nodeState9')
+      case 'Unknown':
+        return t('operation.DailyOps.nodeState10')
+    }
+  }
+  return t('operation.DailyOps.5mplp1xc51s0')
+}
+
+const getInstanceStateColor = (clusterData: KeyValue, instanceData: any) => {
+  if (clusterData.version === OpenGaussVersionEnum.ENTERPRISE) {
+    if (instanceData.nodeState === -1) {
+      return 'gray'
+    } else if (instanceData.nodeState && instanceData.nodeState !== 'false') {
       return 'green'
     } else {
       return 'red'
+    }
+  } else {
+    if (instanceData.nodeState === -1) {
+      return 'gray'
+    } else {
+      if (instanceData.nodeState === 'true') {
+        return 'green'
+      } else {
+        return 'red'
+      }
     }
   }
 }

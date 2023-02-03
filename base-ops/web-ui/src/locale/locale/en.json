@@ -265,7 +265,18 @@
             "5mplp1xc51s0": "Undetected",
             "5mplp1xc56k0": "Active/standby switchover",
             "5mplp1xc5cg0": "Generate configuration",
-            "nodeBuild": "Node rebuild"
+            "nodeBuild": "Node rebuild",
+            "nodeField1": "Have a fault",
+            "nodeState1": "available",
+            "nodeState2": "Need repair",
+            "nodeState3": "Starting",
+            "nodeState4": "Waiting to upgrade",
+            "nodeState5": "upgrading",
+            "nodeState6": "In demotion",
+            "nodeState7": "Need to rebuild",
+            "nodeState8": "Catch-up master",
+            "nodeState9": "collapse",
+            "nodeState10": "unknown"
         }
     },
     "slowSql": {

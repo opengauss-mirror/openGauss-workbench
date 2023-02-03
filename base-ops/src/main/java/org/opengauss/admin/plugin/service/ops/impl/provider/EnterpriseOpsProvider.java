@@ -497,54 +497,54 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
         String databasePassword = enterpriseInstallConfig.getDatabasePassword();
         Integer port = enterpriseInstallConfig.getPort();
 
-        EnterpriseInstallNodeConfig enterpriseInstallNodeConfig = nodeConfigList.stream().filter(nodeConfig -> nodeConfig.getClusterRole() == ClusterRoleEnum.MASTER).findFirst().orElseThrow(() -> new OpsException("master node not found"));
+        for (EnterpriseInstallNodeConfig enterpriseInstallNodeConfig : nodeConfigList) {
+            String hostId = enterpriseInstallNodeConfig.getHostId();
+            String installUserId = enterpriseInstallNodeConfig.getInstallUserId();
+            String dataPath = enterpriseInstallNodeConfig.getDataPath();
 
-        String hostId = enterpriseInstallNodeConfig.getHostId();
-        String installUserId = enterpriseInstallNodeConfig.getInstallUserId();
-        String dataPath = enterpriseInstallNodeConfig.getDataPath();
 
+            Session session = loginWithUser(jschUtil,encryptionUtils,installContext.getHostInfoHolders(), false, hostId, installUserId);
+            String listenerAddress = MessageFormat.format(SshCommandConstants.LISTENER, dataPath);
+            try {
+                JschResult jschResult = jschUtil.executeCommand(listenerAddress, session, retSession);
+                if (0 != jschResult.getExitCode()) {
+                    log.error("Failed to modify listening address, exit code: {}, log: {}", jschResult.getExitCode(), jschResult.getResult());
+                    throw new OpsException("Failed to modify listening address");
+                }
 
-        Session session = loginWithUser(jschUtil,encryptionUtils,installContext.getHostInfoHolders(), false, hostId, installUserId);
-        String listenerAddress = MessageFormat.format(SshCommandConstants.LISTENER, dataPath);
-        try {
-            JschResult jschResult = jschUtil.executeCommand(listenerAddress, session, retSession);
-            if (0 != jschResult.getExitCode()) {
-                log.error("Failed to modify listening address, exit code: {}, log: {}", jschResult.getExitCode(), jschResult.getResult());
+            } catch (Exception e) {
+                log.error("Failed to modify listening address", e);
                 throw new OpsException("Failed to modify listening address");
             }
 
-        } catch (Exception e) {
-            log.error("Failed to modify listening address", e);
-            throw new OpsException("Failed to modify listening address");
-        }
+            String hba = MessageFormat.format(SshCommandConstants.HBA, dataPath);
+            try {
+                JschResult jschResult = jschUtil.executeCommand(hba, session, retSession);
+                if (0 != jschResult.getExitCode()) {
+                    log.error("Failed to modify host, exit code: {}, log: {}", jschResult.getExitCode(), jschResult.getResult());
+                    throw new OpsException("Failed to modify host");
+                }
 
-        String hba = MessageFormat.format(SshCommandConstants.HBA, dataPath);
-        try {
-            JschResult jschResult = jschUtil.executeCommand(hba, session, retSession);
-            if (0 != jschResult.getExitCode()) {
-                log.error("Failed to modify host, exit code: {}, log: {}", jschResult.getExitCode(), jschResult.getResult());
+            } catch (Exception e) {
+                log.error("Failed to modify host", e);
                 throw new OpsException("Failed to modify host");
             }
 
-        } catch (Exception e) {
-            log.error("Failed to modify host", e);
-            throw new OpsException("Failed to modify host");
-        }
+            String clientLoginOpenGauss = MessageFormat.format(SshCommandConstants.LOGIN, String.valueOf(port));
+            try {
+                Map<String, String> response = new HashMap<>();
+                String createUser = MessageFormat.format("CREATE USER gaussdb WITH MONADMIN PASSWORD \"{0}\";\\q", databasePassword);
+                response.put("openGauss=#", createUser);
+                JschResult jschResult = jschUtil.executeCommand(clientLoginOpenGauss, session, retSession, response);
+                if (0 != jschResult.getExitCode()) {
+                    log.error("Failed to create user, exit code: {}, log: {}", jschResult.getExitCode(), jschResult.getResult());
+                    throw new OpsException("Failed to create user");
+                }
 
-        String clientLoginOpenGauss = MessageFormat.format(SshCommandConstants.LOGIN, String.valueOf(port));
-        try {
-            Map<String, String> response = new HashMap<>();
-            String createUser = MessageFormat.format("CREATE USER gaussdb WITH MONADMIN PASSWORD \"{0}\";\\q", databasePassword);
-            response.put("openGauss=#", createUser);
-            JschResult jschResult = jschUtil.executeCommand(clientLoginOpenGauss, session, retSession, response);
-            if (0 != jschResult.getExitCode()) {
-                log.error("Failed to create user, exit code: {}, log: {}", jschResult.getExitCode(), jschResult.getResult());
+            } catch (Exception e) {
+                log.error("Failed to create user", e);
                 throw new OpsException("Failed to create user");
             }
-
-        } catch (Exception e) {
-            log.error("Failed to create user", e);
-            throw new OpsException("Failed to create user");
         }
 
         opsClusterContext.setHostInfoHolders(installContext.getHostInfoHolders());

@@ -99,6 +99,7 @@ public class EnterpriseInstallNodeConfig {
 
     public OpsClusterNodeEntity toOpsClusterNodeEntity() {
         OpsClusterNodeEntity opsClusterNodeEntity = new OpsClusterNodeEntity();
+        opsClusterNodeEntity.setClusterNodeId(StrUtil.uuid());
         opsClusterNodeEntity.setClusterRole(clusterRole);
         opsClusterNodeEntity.setHostId(hostId);
         opsClusterNodeEntity.setInstallUserId(installUserId);
