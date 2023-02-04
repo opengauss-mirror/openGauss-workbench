@@ -27,8 +27,6 @@ public class MinimalistInstallNodeConfig {
 
     private String installPath;
 
-    private String dataPath;
-
     private Boolean isInstallDemoDatabase;
 
     public void checkConfig() {
@@ -48,10 +46,6 @@ public class MinimalistInstallNodeConfig {
             throw new OpsException("installation directory error");
         }
 
-        if (StrUtil.isEmpty(dataPath)) {
-            throw new OpsException("data directory error");
-        }
-
         if (Objects.isNull(isInstallDemoDatabase)) {
             isInstallDemoDatabase = false;
         }
@@ -64,7 +58,7 @@ public class MinimalistInstallNodeConfig {
         opsClusterNodeEntity.setHostId(hostId);
         opsClusterNodeEntity.setInstallUserId(installUserId);
         opsClusterNodeEntity.setInstallPath(installPath);
-        opsClusterNodeEntity.setDataPath(dataPath);
+        opsClusterNodeEntity.setDataPath(installPath+"/data");
         opsClusterNodeEntity.setPkgPath(installPath.substring(0, installPath.lastIndexOf("/")));
         opsClusterNodeEntity.setInstallDemoDatabase(isInstallDemoDatabase);
         return opsClusterNodeEntity;

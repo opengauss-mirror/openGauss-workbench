@@ -76,7 +76,7 @@ public class OpenEulerArch64MinimaListOpsProvider extends AbstractOpsProvider {
         MinimalistInstallNodeConfig nodeConfig = getSingleInstallNodeConfig(installContext);
         String hostId = nodeConfig.getHostId();
         String installPath = preparePath(nodeConfig.getInstallPath());
-        String dataPath = preparePath(nodeConfig.getDataPath());
+        String dataPath = installPath + "data";
 
         String installUserId = nodeConfig.getInstallUserId();
         String installUserName = null;
