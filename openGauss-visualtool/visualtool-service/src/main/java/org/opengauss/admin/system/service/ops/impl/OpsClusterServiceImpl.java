@@ -242,6 +242,14 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                 if (Objects.nonNull(ommSession) && ommSession.isConnected()) {
                     ommSession.disconnect();
                 }
+
+                if (wsSession!=null && Objects.nonNull(wsSession.getSession())){
+                    try {
+                        wsSession.getSession().close();
+                    } catch (IOException ignore) {
+                        log.error("close websocket session error ",ignore);
+                    }
+                }
             }
 
         });
