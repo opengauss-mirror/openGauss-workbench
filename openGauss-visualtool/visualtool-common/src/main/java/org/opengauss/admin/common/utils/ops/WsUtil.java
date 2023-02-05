@@ -42,4 +42,19 @@ public class WsUtil {
             });
         }
     }
+
+    public void close(WsSession wsSession) {
+        if (Objects.nonNull(wsSession)){
+            wsConnectorManager.removeByVal(wsSession);
+            Session session = wsSession.getSession();
+
+            if (Objects.nonNull(session)){
+                try {
+                    session.close();
+                } catch (IOException e) {
+                    log.error("close websocket session error : " ,e);
+                }
+            }
+        }
+    }
 }
