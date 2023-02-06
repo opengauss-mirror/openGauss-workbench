@@ -10,8 +10,14 @@
                 <div class="mr cluster-item-title">{{ clusterData.versionNum }}</div>
                 <div class="cluster-item-title">{{ clusterData.clusterId ? clusterData.clusterId : '--' }}</div>
               </div>
-              <icon-loading v-if="clusterData.isConnected" />
-              <a-tag v-else color="red">{{ $t('components.ClusterList.5mpinxl8frs0') }}</a-tag>
+              <icon-loading v-if="clusterData.isConnected === -1" />
+              <a-tag color="green" v-else-if="clusterData.isConnected === 1">{{
+                $t('components.ClusterList.else14')
+              }}</a-tag>
+              <a-link v-else @click="retryOpenWebSocket(clusterData, index)">{{
+                $t('components.ClusterList.else15')
+              }}</a-link>
+              <!-- <a-tag v-else color="red">{{ $t('components.ClusterList.5mpinxl8frs0') }}</a-tag> -->
             </div>
             <a-divider />
             <div v-if="clusterData.version === 'MINIMAL_LIST' && clusterData.deployType === 'CLUSTER'"
@@ -314,7 +320,7 @@ const getList = () => new Promise(resolve => {
       data.clusterList = []
       res.data.forEach((item: KeyValue) => {
         item.isShow = true
-        item.isConnected = true
+        item.isConnected = -1
         if (item.version === 'MINIMAL_LIST' && item.deployType === 'CLUSTER') {
           const slaveNode = JSON.parse(JSON.stringify(item.clusterNodes[0]))
           slaveNode.clusterRole = ClusterRoleEnum.SLAVE
@@ -403,6 +409,11 @@ const getRoleName = (type: ClusterRoleEnum) => {
   }
 }
 
+const retryOpenWebSocket = (data: KeyValue, clusterIndex: number) => {
+  data.isConnected = -1
+  openWebSocket(data, clusterIndex)
+}
+
 // Open webSocket
 const openWebSocket = (data: KeyValue, clusterIndex: number) => {
   if (data.version === 'MINIMAL_LIST' && data.deployType === 'CLUSTER') {
@@ -435,23 +446,36 @@ const openHostWebSocket = (clusterData: KeyValue, nodeData: KeyValue, clusterInd
     businessId: 'monitor_' + clusterData.clusterId + '_' + nodeData.hostId + '_' + socketKey
   }
   const websocket = new Socket({ url: `COMMAND_EXEC/${param.businessId}` })
+  if (data.clusterList[clusterIndex].clusterId === 'eee') {
+    setTimeout(() => {
+      console.log('time out ', websocket)
+    }, 10000)
+  }
   websocket.onopen(() => {
     // cluster monitoring
     clusterMonitor(param).then((res: KeyValue) => {
       if (Number(res.code) !== 200) {
-        data.clusterList[clusterIndex].isConnected = false
+        data.clusterList[clusterIndex].isConnected = 0
         websocket.destroy()
       } else {
+        data.clusterList[clusterIndex].isConnected = 1
         // Store this websocket as socketArr
         data.socketArr.push(websocket)
       }
     }).catch(() => {
-      data.clusterList[clusterIndex].isConnected = false
+      data.clusterList[clusterIndex].isConnected = 0
       websocket.destroy()
     })
   })
+  websocket.onerror(() => {
+    data.clusterList[clusterIndex].isConnected = 0
+  })
+  websocket.onclose(() => {
+    console.log(`on close cluster: ${data.clusterList[clusterIndex].clusterId}, host: ${data.clusterList[clusterIndex].clusterNodes[index].privateIp}`)
+    data.clusterList[clusterIndex].isConnected = 0
+  })
   websocket.onmessage((messageData: any) => {
-    console.log(`home page cluster: ${data.clusterList[clusterIndex].clusterId}, host: ${data.clusterList[clusterIndex].clusterNodes[index].privateIp}`, messageData)
+    // console.log(`home page cluster: ${data.clusterList[clusterIndex].clusterId}, host: ${data.clusterList[clusterIndex].clusterNodes[index].privateIp}`, messageData)
 
     const eventData = JSON.parse(messageData)
     data.clusterList[clusterIndex].clusterNodes[index].state = eventData.state

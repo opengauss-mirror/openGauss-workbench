@@ -393,6 +393,8 @@
             "else11": "nuclear",
             "else12": "Geographical location",
             "else13": "CPU Usage",
+            "else14": "Successful connection",
+            "else15": "Connection failed, retry connection",
             "5mpinxl8f0w0": "Trying to get cluster information",
             "5mpinxl8frs0": "Connection timeout",
             "5mpinxl8g2c0": "Memory Usage",

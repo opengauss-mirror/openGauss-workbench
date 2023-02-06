@@ -65,6 +65,11 @@ export const clusterMonitor = (data: KeyValue) => {
   })
 }
 
+// just del platform data
+export const delCluster = (clusterId: string) => {
+  return axios.delete(`opsCluster/remove/${clusterId}`)
+}
+
 export const start = (data: KeyValue) => {
   return axios.post('opsCluster/start', data)
 }

@@ -82,6 +82,14 @@
                         $t('operation.DailyOps.5mplp1xc1ms0')
                       }}</a-button>
                     </a-popconfirm>
+                    <a-popconfirm :content="$t('operation.DailyOps.else5')" type="warning"
+                      :ok-text="$t('operation.DailyOps.5mplp1xc1580')"
+                      :cancel-text="$t('operation.DailyOps.5mplp1xc1b00')"
+                      @ok="handleDelCluster(clusterData, index, true)">
+                      <a-button type="outline" class="mr">{{
+                        $t('operation.DailyOps.else4')
+                      }}</a-button>
+                    </a-popconfirm>
                   </div>
                 </div>
               </div>
@@ -347,9 +355,14 @@
     <div class="full-w full-h flex-col" v-if="data.clusterList.length === 0 && !data.loading">
       <svg-icon icon-class="ops-empty" class="empty-icon-size mb"></svg-icon>
       <div class="empty-content mb">{{ $t('operation.DailyOps.5mplp1xc3ss0') }}</div>
-      <a-button type="outline" size="large" @click="$router.push({ name: 'OpsInstall' })">{{
-        $t('operation.DailyOps.5mplp1xc3xg0')
-      }}</a-button>
+      <div class="flex-row">
+        <a-button class="mr" type="outline" size="large" @click="goInstall">{{
+          $t('operation.DailyOps.5mplp1xc3xg0')
+        }}</a-button>
+        <a-button type="outline" size="large" @click="getList">{{
+          $t('operation.DailyOps.else6')
+        }}</a-button>
+      </div>
     </div>
     <div class="full-h flex-col" v-if="data.loading">
       <a-spin :tip="$t('operation.DailyOps.5mplp1xc4200')" />
@@ -362,14 +375,13 @@
 <script lang="ts" setup>
 import { KeyValue } from '@/types/global'
 import { onBeforeUnmount, onMounted, reactive, ref } from 'vue'
-import { uninstallOpenGauss, clusterList, start, stop, restart, switchover, generateconf, build, clusterBackup } from '@/api/ops'
+import { clusterMonitor, delCluster, uninstallOpenGauss, clusterList, start, stop, restart, switchover, generateconf, build, clusterBackup } from '@/api/ops'
 import { useWinBox } from 'vue-winbox'
 import 'xterm/css/xterm.css'
 import { Terminal } from 'xterm'
 import { FitAddon } from 'xterm-addon-fit'
 import { AttachAddon } from 'xterm-addon-attach'
 import Socket from '@/utils/websocket'
-import { clusterMonitor } from '@/api/ops'
 import ClusterBackupDlg from '@/views/monitor/operation/ClusterBackupDlg.vue'
 import { ClusterRoleEnum, OpenGaussVersionEnum } from '@/types/ops/install'
 import OneCheck from '@/views/ops/home/components/OneCheck.vue'
@@ -398,6 +410,12 @@ onBeforeUnmount(() => {
     })
   }
 })
+
+const goInstall = () => {
+  window.$wujie?.props.methods.jump({
+    name: 'Static-pluginBase-opsOpsInstall'
+  })
+}
 
 const getList = () => new Promise(resolve => {
   data.loading = true
@@ -582,6 +600,17 @@ const handleUninstall = (clusterData: KeyValue, index: number, force: boolean) =
       clusterData.loading = false
       webSocket.destroy()
     }
+  })
+}
+
+const handleDelCluster = (clusterData: KeyValue, index: number) => {
+  clusterData.loading = true
+  delCluster(clusterData.clusterId).then((res: KeyValue) => {
+    if (Number(res.code) === 200) {
+      data.clusterList.splice(index, 1)
+    }
+  }).finally(() => {
+    clusterData.loading = false
   })
 }
 
@@ -774,7 +803,7 @@ const createXterm = (idName: string) => {
 const getTermObj = (): Terminal => {
   return new Terminal({
     fontSize: 14,
-    rows: 40,
+    rows: 20,
     cols: 100,
     cursorBlink: true,
     convertEol: true,

@@ -32,9 +32,9 @@
           <a-form-item field="installPath" :label="$t('simple.InstallConfig.5mpmu0lar480')" validate-trigger="blur">
             <a-input v-model="data.form.installPath" :placeholder="$t('simple.InstallConfig.5mpmu0lar800')" />
           </a-form-item>
-          <a-form-item field="dataPath" :label="$t('simple.InstallConfig.5mpmu0larbk0')" validate-trigger="blur">
+          <!-- <a-form-item field="dataPath" :label="$t('simple.InstallConfig.5mpmu0larbk0')" validate-trigger="blur">
             <a-input v-model="data.form.dataPath" :placeholder="$t('simple.InstallConfig.5mpmu0larew0')" />
-          </a-form-item>
+          </a-form-item> -->
           <a-form-item field="port" :label="$t('simple.InstallConfig.5mpmu0larj40')" validate-trigger="blur">
             <a-input-number v-model="data.form.port" :placeholder="$t('simple.InstallConfig.5mpmu0larmo0')" />
           </a-form-item>

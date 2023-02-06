@@ -27,11 +27,11 @@
                             <div class="label-color">{{ nodeData.installPath }}</div>
                         </div>
                         <a-divider></a-divider>
-                        <div class="flex-row">
+                        <!-- <div class="flex-row">
                             <div class="label-color lable-w">{{ $t('simple.InstallPrompt.5mpmunt3fdc0') }}</div>
                             <div class="label-color">{{ nodeData.dataPath }}</div>
                         </div>
-                        <a-divider></a-divider>
+                        <a-divider></a-divider> -->
                         <div class="flex-row">
                             <div class="label-color lable-w">{{ $t('simple.InstallPrompt.5mpmunt3fjc0') }}</div>
                             <div class="label-color">{{ nodeData.port }}</div>

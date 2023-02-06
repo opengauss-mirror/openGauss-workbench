@@ -29,13 +29,16 @@
 
 <script setup lang="ts">
 import { useOpsStore } from '@/store'
-import { computed, ComputedRef, onMounted, ref } from 'vue'
+import { computed, ComputedRef, onMounted, ref, inject } from 'vue'
 import { InstallModeEnum } from '@/types/ops/install'
 
 const currWay = ref(InstallModeEnum.OFF_LINE)
 const installWayStore = useOpsStore()
 
+const loadingFunc = inject<any>('loading')
+
 onMounted(() => {
+  loadingFunc.setBackBtnShow(true)
   if (installModeStoreVal.value) {
     currWay.value = installModeStoreVal.value
   } else {
