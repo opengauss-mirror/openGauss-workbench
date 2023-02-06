@@ -74,11 +74,11 @@ module.exports = defineConfig({
     proxy: {
       // detail: https://cli.vuejs.org/config/#devserver-proxy
       [process.env.VUE_APP_BASE_API]: {
-        target: 'https://120.78.74.215:9494',
+        target: process.env.API_BASE_URL,
         changeOrigin: true
       },
       '/base_url': {
-        target: 'https://120.78.74.215:9494',
+        target: process.env.API_BASE_URL,
         changeOrigin: true,
         pathRewrite: {
           '^/base_url': ''

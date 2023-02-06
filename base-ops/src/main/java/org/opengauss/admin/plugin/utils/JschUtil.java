@@ -260,7 +260,7 @@ public class JschUtil {
             ChannelSftp channel = (ChannelSftp) session.openChannel("sftp");
             channel.connect();
             JschProgressMonitor jschProgressMonitor = new JschProgressMonitor(wsSession);
-            channel.put(sourceFilePath, targetPath, jschProgressMonitor, ChannelSftp.RESUME);
+            channel.put(sourceFilePath.trim(), targetPath.trim(), jschProgressMonitor, ChannelSftp.OVERWRITE);
         } catch (Exception e) {
             log.error("sftp upload Failure", e);
             throw new OpsException("sftp upload Failure");

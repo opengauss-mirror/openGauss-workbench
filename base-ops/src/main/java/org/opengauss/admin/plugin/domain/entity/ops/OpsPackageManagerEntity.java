@@ -47,7 +47,7 @@ public class OpsPackageManagerEntity extends BaseEntity {
         String cpuArch;
         switch (osInfoEnum){
             case CENTOS_X86_64: cpuArch = "x86";break;
-            case OPENEULER_ARCH64: cpuArch = "arm";break;
+            case OPENEULER_AARCH64: cpuArch = "arm";break;
             case OPENEULER_X86_64: cpuArch = "x86_openEuler";break;
             default: throw new OpsException("cpu architecture information error");
         }
@@ -69,7 +69,7 @@ public class OpsPackageManagerEntity extends BaseEntity {
             case ENTERPRISE: packageName.append("-64bit-all.tar.gz");break;
             case LITE:
                 switch (osInfoEnum){
-                    case OPENEULER_ARCH64: packageName.append("-aarch64.tar.gz");break;
+                    case OPENEULER_AARCH64: packageName.append("-aarch64.tar.gz");break;
                     default: packageName.append("-x86_64.tar.gz");break;
                 }
                 break;

@@ -184,7 +184,7 @@ const installWayStore = computed(() => installStore.getInstallConfig)
     position: absolute;
     left: 50%;
     transform: translate(-50%, 0);
-    bottom: 20px;
+    bottom: 5px;
   }
 
   .transition-display {

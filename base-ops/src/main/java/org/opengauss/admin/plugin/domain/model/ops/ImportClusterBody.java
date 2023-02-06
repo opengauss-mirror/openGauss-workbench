@@ -67,8 +67,8 @@ public class ImportClusterBody {
             }
 
             int nodeSize = CollUtil.isEmpty(enterpriseInstallConfig.getNodeConfigList()) ? 0 : enterpriseInstallConfig.getNodeConfigList().size();
-            if (clusterDeploy && nodeSize < 2) {
-                throw new OpsException("In cluster mode, a maximum of two nodes can be installed");
+            if (clusterDeploy && enterpriseInstallConfig.getIsInstallCM() && nodeSize < 3) {
+                throw new OpsException("In cluster mode, a maximum of three nodes can be installed");
             }
 
             if (StrUtil.isEmpty(enterpriseInstallConfig.getDatabaseUsername())) {

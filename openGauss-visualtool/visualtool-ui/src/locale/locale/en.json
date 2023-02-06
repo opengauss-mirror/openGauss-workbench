@@ -409,7 +409,17 @@
             "5mpinxl8if40": "cascade",
             "5mpinxl8img0": "available",
             "5mpinxl8isw0": "Not available",
-            "5mpinxl8j000": "Not detected"
+            "5mpinxl8j000": "Not detected",
+            "nodeState1": "available",
+            "nodeState2": "Need repair",
+            "nodeState3": "Starting",
+            "nodeState4": "Waiting to upgrade",
+            "nodeState5": "upgrading",
+            "nodeState6": "In demotion",
+            "nodeState7": "Need to rebuild",
+            "nodeState8": "Catch-up master",
+            "nodeState9": "collapse",
+            "nodeState10": "unknown"
         },
         "BusiFlowSummary": {
             "5mpivn7fwjc0": "Data flow distribution",

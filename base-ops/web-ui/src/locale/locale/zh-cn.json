@@ -267,7 +267,18 @@
             "5mplp1xc51s0": "未检测",
             "5mplp1xc56k0": "主备切换",
             "5mplp1xc5cg0": "生成配置",
-            "nodeBuild": "节点重建"
+            "nodeBuild": "节点重建",
+            "nodeField1": "存在故障节点",
+            "nodeState1": "可用",
+            "nodeState2": "需要修复",
+            "nodeState3": "启动中",
+            "nodeState4": "等待升级中",
+            "nodeState5": "正在升级为主节点",
+            "nodeState6": "降级中",
+            "nodeState7": "启动失败，需要重建",
+            "nodeState8": "追赶主节点",
+            "nodeState9": "崩溃",
+            "nodeState10": "未知"
         }
     },
     "slowSql": {

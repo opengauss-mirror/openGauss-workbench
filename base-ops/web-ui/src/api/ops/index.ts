@@ -12,8 +12,10 @@ export const download = (data: downloadPackage) => {
   return axios.post(`opsCluster/download`, data ? data : {})
 }
 
-export const getEnvMonitorData = (hostId: string) => {
-  return axios.get(`opsCluster/env/${hostId}`)
+export const getEnvMonitorData = (hostId: string, data: KeyValue) => {
+  return axios.get(`opsCluster/env/${hostId}`, {
+    params: data
+  })
 }
 
 export const installOpenGauss = (data: KeyValue) => {

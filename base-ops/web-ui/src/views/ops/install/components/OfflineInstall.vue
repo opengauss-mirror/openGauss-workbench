@@ -123,9 +123,11 @@ const getAllPackage = () => new Promise(resolve => {
       data.files = res.data.files
       if (storeData.value && storeData.value.packageName) {
         data.fileName = storeData.value.packageName
+        data.openGaussVersionNum = storeData.value.openGaussVersionNum
       } else {
         if (data.files.length) {
           data.fileName = res.data.files[0].name
+          data.openGaussVersionNum = res.data.files[0].openGaussVersionNum
           setPathToStore()
         }
       }

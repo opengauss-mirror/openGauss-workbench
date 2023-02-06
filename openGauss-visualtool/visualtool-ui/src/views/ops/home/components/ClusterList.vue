@@ -25,29 +25,29 @@
                       <div class="flex-row mb">
                         <a-tag class="mr-s" color="#E41D1D">{{ getRoleName(instance.clusterRole) }}</a-tag>
                         <div class="mr-s instance-c-title">{{ $t('components.ClusterList.else1') }}{{ index + 1 }}</div>
-                        <a-tag :color="getInstanceStateColor(clusterData, clusterData.clusterNodes[0].state)">{{
-                            getInstanceState(clusterData, clusterData.clusterNodes[0].state)
+                        <a-tag :color="getInstanceStateColor(clusterData, clusterData.clusterNodes[0])">{{
+                          getInstanceState(clusterData, clusterData.clusterNodes[0])
                         }}</a-tag>
                       </div>
                       <div class="flex-row-center">
                         <svg-icon icon-class="ops-instance" class="mr" style="width: 50px; height: 50px;"></svg-icon>
                         <div class="flex-col-start">
                           <div class="mb-s txt">{{ $t('components.ClusterList.else2') }}: {{
-                              clusterData.clusterNodes[0].session ?
-                                clusterData.clusterNodes[0].session : '--'
+                            clusterData.clusterNodes[0].session ?
+                              clusterData.clusterNodes[0].session : '--'
                           }}{{ $t('components.ClusterList.else6') }}</div>
                           <div class="mb-s txt">{{ $t('components.ClusterList.else3') }}: {{
-                              clusterData.clusterNodes[0].connectNum ?
-                                clusterData.clusterNodes[0].connectNum : '--'
+                            clusterData.clusterNodes[0].connectNum ?
+                              clusterData.clusterNodes[0].connectNum : '--'
                           }}{{ $t('components.ClusterList.else6') }}</div>
                           <div class="mb-s txt">{{ $t('components.ClusterList.else4') }}: {{
-                              clusterData.clusterNodes[0].lock
-                                ? clusterData.clusterNodes[0].lock :
-                                '--'
+                            clusterData.clusterNodes[0].lock
+                              ? clusterData.clusterNodes[0].lock :
+                              '--'
                           }}{{ $t('components.ClusterList.else6') }}</div>
                           <div class="mb-s txt">{{ $t('components.ClusterList.else5') }}: {{
-                              clusterData.clusterNodes[0].azName ?
-                                clusterData.clusterNodes[0].azName : '--'
+                            clusterData.clusterNodes[0].azName ?
+                              clusterData.clusterNodes[0].azName : '--'
                           }}</div>
                         </div>
                       </div>
@@ -59,23 +59,28 @@
                   <div class="flex-row">
                     <div class="flex-col-start mr">
                       <div class="mb-s">{{ $t('components.ClusterList.else7') }}:</div>
-                      <div class="mb">{{ clusterData.clusterNodes[0].privateIp ? clusterData.clusterNodes[0].privateIp
+                      <div class="mb">{{
+                        clusterData.clusterNodes[0].privateIp ? clusterData.clusterNodes[0].privateIp
                           :
                           '--'
                       }}</div>
                       <div class="mb-s">{{ $t('components.ClusterList.else8') }}:</div>
-                      <div class="mb-s">{{ clusterData.clusterNodes[0].publicIp ? clusterData.clusterNodes[0].publicIp :
+                      <div class="mb-s">{{
+                        clusterData.clusterNodes[0].publicIp ? clusterData.clusterNodes[0].publicIp :
                           '--'
                       }}</div>
                     </div>
                     <div class="flex-col-start">
                       <div class="mb-s">{{ $t('components.ClusterList.else9') }}:</div>
-                      <div class="mb">{{ clusterData.clusterNodes[0].hostname ? clusterData.clusterNodes[0].hostname :
+                      <div class="mb">{{
+                        clusterData.clusterNodes[0].hostname ? clusterData.clusterNodes[0].hostname :
                           '--'
                       }}</div>
                       <div class="mb-s">{{ $t('components.ClusterList.else10') }}:</div>
-                      <div class="mb-s">{{ clusterData.clusterNodes[0].kernel ? clusterData.clusterNodes[0].kernel : '-'
-                      }}{{ $t('components.ClusterList.else11') }}{{ clusterData.clusterNodes[0].memorySize ?
+                      <div class="mb-s">{{
+                        clusterData.clusterNodes[0].kernel ? clusterData.clusterNodes[0].kernel : '-'
+                      }}{{ $t('components.ClusterList.else11') }}{{
+  clusterData.clusterNodes[0].memorySize ?
     clusterData.clusterNodes[0].memorySize : '-'
 }}G
                       </div>
@@ -86,11 +91,11 @@
               <div class="flex-col-start chart-con" style="width: 50%; padding: 12px 17px;">
                 <div class="flex-between full-w mb-s">
                   <div class="flex-row chart-con-title">{{ $t('components.ClusterList.else9') }}: {{
-                      clusterData.clusterNodes[0].hostname
+                    clusterData.clusterNodes[0].hostname
                   }}</div>
                   <div class="flex-row chart-con-title">{{ $t('components.ClusterList.else12') }}: {{
-                      clusterData.clusterNodes[0].azAddress ?
-                        clusterData.clusterNodes[0].azAddress : '--'
+                    clusterData.clusterNodes[0].azAddress ?
+                      clusterData.clusterNodes[0].azAddress : '--'
                   }}</div>
                 </div>
                 <div class="flex-between full-w">
@@ -138,7 +143,7 @@
                           <div class="flex-row">
                             <div class="text-nowrap mr-s in-title">{{ $t('components.ClusterList.else10') }}:</div>
                             <div class="txt">{{ instance.kernel ? instance.kernel : '-' }}{{
-                                $t('components.ClusterList.else11')
+                              $t('components.ClusterList.else11')
                             }}{{ instance.memorySize ? instance.memorySize : '-' }}G</div>
                           </div>
                         </div>
@@ -148,8 +153,8 @@
                       <div class="flex-row mb-s">
                         <a-tag class="mr-s" color="#E41D1D">{{ getRoleName(instance.clusterRole) }}</a-tag>
                         <div class="mr-s instance-c-title">{{ $t('components.ClusterList.else1') }}{{ index + 1 }}</div>
-                        <a-tag :color="getInstanceStateColor(clusterData, instance.state)">{{
-                            getInstanceState(clusterData, instance.state)
+                        <a-tag :color="getInstanceStateColor(clusterData, instance)">{{
+                          getInstanceState(clusterData, instance)
                         }}</a-tag>
                       </div>
                       <div class="flex-row-center">
@@ -159,19 +164,19 @@
                             <div class="flex-row mb-s">
                               <div class="mr-s in-title">{{ $t('components.ClusterList.else2') }}:</div>
                               <div class="text-nowrap txt">{{ instance.session ? instance.session : '--' }}{{
-                                  $t('components.ClusterList.else6')
+                                $t('components.ClusterList.else6')
                               }}</div>
                             </div>
                             <div class="flex-row mb-s">
                               <div class="text-nowrap mr-s in-title">{{ $t('components.ClusterList.else3') }}:</div>
                               <div class="text-nowrap txt">{{ instance.connectNum ? instance.connectNum : '--' }}{{
-                                  $t('components.ClusterList.else6')
+                                $t('components.ClusterList.else6')
                               }}</div>
                             </div>
                             <div class="flex-row mb-s">
                               <div class="mr-s in-title">{{ $t('components.ClusterList.else4') }}:</div>
                               <div class="text-nowrap txt">{{ instance.lock ? instance.lock : '--' }}{{
-                                  $t('components.ClusterList.else6')
+                                $t('components.ClusterList.else6')
                               }}</div>
                             </div>
                             <div class="flex-row">
@@ -189,8 +194,8 @@
                         <div class="mr-s">{{ $t('components.ClusterList.else9') }}: {{ instance.hostname }}</div>
                       </div>
                       <div class="flex-row chart-con-title">{{ $t('components.ClusterList.else12') }}: {{
-                          instance.azAddress ?
-                            instance.azAddress : '--'
+                        instance.azAddress ?
+                          instance.azAddress : '--'
                       }}</div>
                     </div>
                     <div class="flex-between full-w">
@@ -230,7 +235,7 @@
       <div class="flex-col">
         <svg-icon icon-class="ops-cluster" class="host-icon-size mb"></svg-icon>
         <a-button type="outline" size="large" @click="$router.push({ name: 'Static-pluginBase-opsOpsInstall' })">{{
-            $t('components.ClusterList.5mpinxl8gwg0')
+          $t('components.ClusterList.5mpinxl8gwg0')
         }}</a-button>
       </div>
     </div>
@@ -410,6 +415,7 @@ const openWebSocket = (data: KeyValue, clusterIndex: number) => {
   } else {
     data.clusterNodes.forEach((item: KeyValue, index: number) => {
       clearData()
+      item.state = -1
       item.cpuOption = JSON.parse(JSON.stringify(echartData.cpu))
       item.memoryOption = JSON.parse(JSON.stringify(echartData.memory))
       item.netOption = JSON.parse(JSON.stringify(echartData.net))
@@ -448,6 +454,8 @@ const openHostWebSocket = (clusterData: KeyValue, nodeData: KeyValue, clusterInd
     console.log(`home page cluster: ${data.clusterList[clusterIndex].clusterId}, host: ${data.clusterList[clusterIndex].clusterNodes[index].privateIp}`, messageData)
 
     const eventData = JSON.parse(messageData)
+    data.clusterList[clusterIndex].clusterNodes[index].state = eventData.state
+    // reset instance nodeState and nodeRole
     data.clusterList[clusterIndex].clusterNodes[index].lock = eventData.lock
     data.clusterList[clusterIndex].clusterNodes[index].session = eventData.session
     data.clusterList[clusterIndex].clusterNodes[index].connectNum = eventData.connectNum
@@ -488,29 +496,74 @@ const assemblyEchartsData = (nodeData: KeyValue, eventData: KeyValue) => {
   }
 }
 
-const getInstanceState = (clusterData: KeyValue, state: string) => {
+const getInstanceState = (clusterData: KeyValue, instanceData: KeyValue) => {
   if (clusterData.version === 'MINIMAL_LIST' || clusterData.version === 'LITE') {
-    // true or false
-    if (state === 'true') {
-      return t('components.ClusterList.5mpinxl8img0')
+    if (instanceData.state === -1) {
+      return t('components.ClusterList.5mpinxl8j000')
+    } else {
+      if (instanceData.state === 'true') {
+        return t('components.ClusterList.5mpinxl8img0')
+      } else {
+        return t('components.ClusterList.5mpinxl8isw0')
+      }
+    }
+  } else {
+    if (instanceData.state === -1) {
+      return t('components.ClusterList.5mpinxl8j000')
+    } else if (instanceData.state && instanceData.state !== 'false') {
+      const stateObj = JSON.parse(instanceData.state)
+      return getCurrentInstanceState(stateObj, instanceData)
     } else {
       return t('components.ClusterList.5mpinxl8isw0')
     }
-  } else {
-    return t('components.ClusterList.5mpinxl8j000')
   }
 }
 
-const getInstanceStateColor = (clusterData: KeyValue, state: string) => {
+const getCurrentInstanceState = (stateObj: KeyValue, instanceData: KeyValue) => {
+  const currentHostname = instanceData.hostname
+  if (stateObj && currentHostname && stateObj.nodeState) {
+    switch (stateObj.nodeState[currentHostname]) {
+      case 'Normal':
+        return t('components.ClusterList.nodeState1')
+      case 'Need repair':
+        return t('components.ClusterList.nodeState2')
+      case 'Starting':
+        return t('components.ClusterList.nodeState3')
+      case 'Wait promoting':
+        return t('components.ClusterList.nodeState4')
+      case 'Promoting':
+        return t('components.ClusterList.nodeState5')
+      case 'Demoting':
+        return t('components.ClusterList.nodeState6')
+      case 'Building':
+        return t('components.ClusterList.nodeState7')
+      case 'Catchup':
+        return t('components.ClusterList.nodeState8')
+      case 'Coredump':
+        return t('components.ClusterList.nodeState9')
+      case 'Unknown':
+        return t('components.ClusterList.nodeState10')
+    }
+  }
+  return t('components.ClusterList.5mpinxl8j000')
+}
+
+const getInstanceStateColor = (clusterData: KeyValue, instanceData: KeyValue) => {
   if (clusterData.version === 'MINIMAL_LIST' || clusterData.version === 'LITE') {
     // true or false
-    if (state === 'true') {
+    if (instanceData.state === 'true') {
       return 'green'
     } else {
       return 'red'
     }
   } else {
-    return 'gray'
+    if (instanceData.state === -1) {
+      return 'gray'
+    } else if (instanceData.state && instanceData.state !== 'false') {
+      return 'green'
+    } else {
+      return 'red'
+    }
   }
 }
 

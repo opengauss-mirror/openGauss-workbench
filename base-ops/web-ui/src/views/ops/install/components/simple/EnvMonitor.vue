@@ -160,7 +160,10 @@ onMounted(() => {
   loadingFunc.toLoading()
   getHostInfo()
   envData.loading = true
-  getEnvMonitorData(envData.hostId).then((res: KeyValue) => {
+  const param = {
+    expectedOs: installStore.getInstallConfig.installOs
+  }
+  getEnvMonitorData(envData.hostId, param).then((res: KeyValue) => {
     if (Number(res.code) === 200) {
       envData.result = 200
       envData.hardwareEnv.envProperties = res.data.hardwareEnv.envProperties
@@ -182,7 +185,10 @@ onMounted(() => {
 const envRetest = (envData: KeyValue) => {
   loadingFunc.toLoading()
   envData.loading = true
-  getEnvMonitorData(envData.hostId).then((res: KeyValue) => {
+  const param = {
+    expectedOs: installStore.getInstallConfig.installOs
+  }
+  getEnvMonitorData(envData.hostId, param).then((res: KeyValue) => {
     if (Number(res.code) === 200) {
       envData.result = 200
       envData.hardwareEnv.envProperties = res.data.hardwareEnv.envProperties

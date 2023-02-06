@@ -94,8 +94,7 @@ export default class Socket<T, RT> extends Heart {
     console.log('get locaion host: ', window.location.host)
     let wsUrl
     if (process.env.NODE_ENV === 'development') {
-      const host = '120.78.74.215:9494'
-      wsUrl = `wss://${host}/websocket/${this.options.url}`
+      wsUrl = `wss://${process.env.VUE_APP_WS_BASE_URL}/websocket/${this.options.url}`
     } else {
       const wsPrefix = window.location.protocol.includes('https') ? 'wss' : 'ws'
       wsUrl = `${wsPrefix}://${window.location.host}/websocket/${this.options.url}`

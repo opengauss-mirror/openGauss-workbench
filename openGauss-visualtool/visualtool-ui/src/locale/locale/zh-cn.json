@@ -409,7 +409,17 @@
             "5mpinxl8if40": "级联",
             "5mpinxl8img0": "可用",
             "5mpinxl8isw0": "不可用",
-            "5mpinxl8j000": "未检测"
+            "5mpinxl8j000": "未检测",
+            "nodeState1": "可用",
+            "nodeState2": "需要修复",
+            "nodeState3": "启动中",
+            "nodeState4": "等待升级中",
+            "nodeState5": "正在升级为主节点",
+            "nodeState6": "降级中",
+            "nodeState7": "启动失败，需要重建",
+            "nodeState8": "追赶主节点",
+            "nodeState9": "崩溃",
+            "nodeState10": "未知"
         },
         "BusiFlowSummary": {
             "5mpivn7fwjc0": "数据流分布",

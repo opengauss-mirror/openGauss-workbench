@@ -1425,7 +1425,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                 connection = DBUtil.getSession(hostEntity.getPublicIp(), clusterEntity.getPort(), clusterEntity.getDatabaseUsername(), clusterEntity.getDatabasePassword()).orElseThrow(() -> new OpsException("Unable to connect to the database"));
                 doMonitor(wsSession, ommSession, clusterEntity.getVersion(), connection, realDataPath);
             }catch (Exception e) {
-                log.error("get connection fail");
+                log.error("get connection fail , ip:{} , port:{}, username:{}", hostEntity.getPublicIp(),clusterEntity.getPort(),clusterEntity.getDatabaseUsername(), e);
             }finally {
                 if (Objects.nonNull(connection)){
                     try {
@@ -1860,7 +1860,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
     }
 
     private String doCheck(OpsHostUserEntity rootUserEntity, Session session) {
-
+        log.info("One-click self-test start");
         String command = "gs_check -e inspect";
 
         try {
@@ -1881,6 +1881,8 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                 session.disconnect();
             }
             throw new OpsException("One-click self-test results");
+        }finally {
+            log.info("One-click self-test end");
         }
         return null;
     }
@@ -2017,59 +2019,115 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         while (wsSession.getSession().isOpen()) {
             NodeMonitorVO nodeMonitorVO = new NodeMonitorVO();
             CountDownLatch countDownLatch = new CountDownLatch(11);
-            threadPoolTaskExecutor.submit(()->{
-                nodeMonitorVO.setTime(System.currentTimeMillis());
-                countDownLatch.countDown();
+            threadPoolTaskExecutor.submit(() -> {
+                try {
+                    nodeMonitorVO.setTime(System.currentTimeMillis());
+                }catch (Exception e){
+                    log.error("time error : ",e);
+                }finally {
+                    countDownLatch.countDown();
+                }
+
             });
 
-            threadPoolTaskExecutor.submit(()->{
-                nodeMonitorVO.setCpu(cpu(ommSession));
-                countDownLatch.countDown();
+            threadPoolTaskExecutor.submit(() -> {
+                try {
+                    nodeMonitorVO.setCpu(cpu(ommSession));
+                }catch (Exception e){
+                    log.error("cpu monitor error : ",e);
+                }finally {
+                    countDownLatch.countDown();
+                }
             });
 
-            threadPoolTaskExecutor.submit(()->{
-                nodeMonitorVO.setMemory(memory(ommSession));
-                countDownLatch.countDown();
+            threadPoolTaskExecutor.submit(() -> {
+                try {
+                    nodeMonitorVO.setMemory(memory(ommSession));
+                }catch (Exception e){
+                    log.error("memory monitor error : ",e);
+                }finally {
+                    countDownLatch.countDown();
+                }
             });
 
-            threadPoolTaskExecutor.submit(()->{
-                nodeMonitorVO.setNet(net(ommSession));
-                countDownLatch.countDown();
+            threadPoolTaskExecutor.submit(() -> {
+                try {
+                    nodeMonitorVO.setNet(net(ommSession));
+                }catch (Exception e){
+                    log.error("net monitor error : ",e);
+                }finally {
+                    countDownLatch.countDown();
+                }
             });
 
-            threadPoolTaskExecutor.submit(()->{
-                nodeMonitorVO.setState(state(ommSession, version, dataPath));
-                countDownLatch.countDown();
+            threadPoolTaskExecutor.submit(() -> {
+                try {
+                    nodeMonitorVO.setState(state(ommSession, version, dataPath));
+                }catch (Exception e){
+                    log.error("state monitor error : ",e);
+                }finally {
+                    countDownLatch.countDown();
+                }
             });
 
-            threadPoolTaskExecutor.submit(()->{
-                nodeMonitorVO.setLock(lock(connection));
-                countDownLatch.countDown();
+            threadPoolTaskExecutor.submit(() -> {
+                try {
+                    nodeMonitorVO.setLock(lock(connection));
+                }catch (Exception e){
+                    log.error("lock monitor error : ",e);
+                }finally {
+                    countDownLatch.countDown();
+                }
             });
 
-            threadPoolTaskExecutor.submit(()->{
-                nodeMonitorVO.setSession(session(connection));
-                countDownLatch.countDown();
+            threadPoolTaskExecutor.submit(() -> {
+                try {
+                    nodeMonitorVO.setSession(session(connection));
+                }catch (Exception e){
+                    log.error("session monitor error : ",e);
+                }finally {
+                    countDownLatch.countDown();
+                }
             });
 
-            threadPoolTaskExecutor.submit(()->{
-                nodeMonitorVO.setConnectNum(connectNum(connection));
-                countDownLatch.countDown();
+            threadPoolTaskExecutor.submit(() -> {
+                try {
+                    nodeMonitorVO.setConnectNum(connectNum(connection));
+                }catch (Exception e){
+                    log.error("connectNum monitor error : ",e);
+                }finally {
+                    countDownLatch.countDown();
+                }
             });
 
-            threadPoolTaskExecutor.submit(()->{
-                nodeMonitorVO.setSessionMemoryTop10(sessionMemoryTop10(connection));
-                countDownLatch.countDown();
+            threadPoolTaskExecutor.submit(() -> {
+                try {
+                    nodeMonitorVO.setSessionMemoryTop10(sessionMemoryTop10(connection));
+                }catch (Exception e){
+                    log.error("sessionMemoryTop10 monitor error : ",e);
+                }finally {
+                    countDownLatch.countDown();
+                }
             });
 
-            threadPoolTaskExecutor.submit(()->{
-                nodeMonitorVO.setKernel(kernel(ommSession));
-                countDownLatch.countDown();
+            threadPoolTaskExecutor.submit(() -> {
+                try {
+                    nodeMonitorVO.setKernel(kernel(ommSession));
+                }catch (Exception e){
+                    log.error("kernel monitor error : ",e);
+                }finally {
+                    countDownLatch.countDown();
+                }
             });
 
-            threadPoolTaskExecutor.submit(()->{
-                nodeMonitorVO.setMemorySize(memorySize(ommSession));
-                countDownLatch.countDown();
+            threadPoolTaskExecutor.submit(() -> {
+                try {
+                    nodeMonitorVO.setMemorySize(memorySize(ommSession));
+                }catch (Exception e){
+                    log.error("memorySize monitor error : ",e);
+                }finally {
+                    countDownLatch.countDown();
+                }
             });
 
             try {
@@ -2222,8 +2280,8 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                     String[] dataNode = dataNodeStateStr.split("\n");
                     for (String s : dataNode) {
                         String[] s1 = s.replaceAll(" +", " ").split(" ");
-                        if (s1.length == 8) {
-                            nodeState.put(s1[1], s1[7].trim());
+                        if (s1.length == 9) {
+                            nodeState.put(s1[1], s1[8].trim());
                             nodeRole.put(s1[1],s1[6].trim());
                         }
                     }

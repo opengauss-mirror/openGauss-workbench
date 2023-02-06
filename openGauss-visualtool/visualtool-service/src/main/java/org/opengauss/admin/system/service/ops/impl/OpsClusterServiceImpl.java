@@ -401,58 +401,114 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
             NodeMonitorVO nodeMonitorVO = new NodeMonitorVO();
             CountDownLatch countDownLatch = new CountDownLatch(11);
             threadPoolTaskExecutor.submit(() -> {
-                nodeMonitorVO.setTime(System.currentTimeMillis());
-                countDownLatch.countDown();
+                try {
+                    nodeMonitorVO.setTime(System.currentTimeMillis());
+                }catch (Exception e){
+                    log.error("time error : ",e);
+                }finally {
+                    countDownLatch.countDown();
+                }
+
             });
 
             threadPoolTaskExecutor.submit(() -> {
-                nodeMonitorVO.setCpu(cpu(ommSession));
-                countDownLatch.countDown();
+                try {
+                    nodeMonitorVO.setCpu(cpu(ommSession));
+                }catch (Exception e){
+                    log.error("cpu monitor error : ",e);
+                }finally {
+                    countDownLatch.countDown();
+                }
             });
 
             threadPoolTaskExecutor.submit(() -> {
-                nodeMonitorVO.setMemory(memory(ommSession));
-                countDownLatch.countDown();
+                try {
+                    nodeMonitorVO.setMemory(memory(ommSession));
+                }catch (Exception e){
+                    log.error("memory monitor error : ",e);
+                }finally {
+                    countDownLatch.countDown();
+                }
             });
 
             threadPoolTaskExecutor.submit(() -> {
-                nodeMonitorVO.setNet(net(ommSession));
-                countDownLatch.countDown();
+                try {
+                    nodeMonitorVO.setNet(net(ommSession));
+                }catch (Exception e){
+                    log.error("net monitor error : ",e);
+                }finally {
+                    countDownLatch.countDown();
+                }
             });
 
             threadPoolTaskExecutor.submit(() -> {
-                nodeMonitorVO.setState(state(ommSession, version, dataPath));
-                countDownLatch.countDown();
+                try {
+                    nodeMonitorVO.setState(state(ommSession, version, dataPath));
+                }catch (Exception e){
+                    log.error("state monitor error : ",e);
+                }finally {
+                    countDownLatch.countDown();
+                }
             });
 
             threadPoolTaskExecutor.submit(() -> {
-                nodeMonitorVO.setLock(lock(connection));
-                countDownLatch.countDown();
+                try {
+                    nodeMonitorVO.setLock(lock(connection));
+                }catch (Exception e){
+                    log.error("lock monitor error : ",e);
+                }finally {
+                    countDownLatch.countDown();
+                }
             });
 
             threadPoolTaskExecutor.submit(() -> {
-                nodeMonitorVO.setSession(session(connection));
-                countDownLatch.countDown();
+                try {
+                    nodeMonitorVO.setSession(session(connection));
+                }catch (Exception e){
+                    log.error("session monitor error : ",e);
+                }finally {
+                    countDownLatch.countDown();
+                }
             });
 
             threadPoolTaskExecutor.submit(() -> {
-                nodeMonitorVO.setConnectNum(connectNum(connection));
-                countDownLatch.countDown();
+                try {
+                    nodeMonitorVO.setConnectNum(connectNum(connection));
+                }catch (Exception e){
+                    log.error("connectNum monitor error : ",e);
+                }finally {
+                    countDownLatch.countDown();
+                }
             });
 
             threadPoolTaskExecutor.submit(() -> {
-                nodeMonitorVO.setSessionMemoryTop10(sessionMemoryTop10(connection));
-                countDownLatch.countDown();
+                try {
+                    nodeMonitorVO.setSessionMemoryTop10(sessionMemoryTop10(connection));
+                }catch (Exception e){
+                    log.error("sessionMemoryTop10 monitor error : ",e);
+                }finally {
+                    countDownLatch.countDown();
+                }
             });
 
             threadPoolTaskExecutor.submit(() -> {
-                nodeMonitorVO.setKernel(kernel(ommSession));
-                countDownLatch.countDown();
+                try {
+                    nodeMonitorVO.setKernel(kernel(ommSession));
+                }catch (Exception e){
+                    log.error("kernel monitor error : ",e);
+                }finally {
+                    countDownLatch.countDown();
+                }
             });
 
             threadPoolTaskExecutor.submit(() -> {
-                nodeMonitorVO.setMemorySize(memorySize(ommSession));
-                countDownLatch.countDown();
+                try {
+                    nodeMonitorVO.setMemorySize(memorySize(ommSession));
+                }catch (Exception e){
+                    log.error("memorySize monitor error : ",e);
+                }finally {
+                    countDownLatch.countDown();
+                }
             });
 
             try {
@@ -566,7 +622,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
             String command = "gs_om -t status --detail";
             JschResult jschResult = null;
             try {
-                Map<String, String> res = new HashMap<>();
+                Map<String, Object> res = new HashMap<>();
                 try {
                     jschResult = jschUtil.executeCommand(command, ommSession);
                 } catch (InterruptedException e) {
@@ -589,6 +645,12 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                     res.put("cluster_state", clusterState);
                 }
 
+                Map<String,String> nodeState = new HashMap<>(1);
+                Map<String,String> nodeRole = new HashMap<>(1);
+                res.put("nodeState",nodeState);
+                res.put("nodeRole",nodeRole);
+
+
                 int datanodeStateIndex = result.indexOf("Datanode State");
                 if (datanodeStateIndex < 1) {
 
@@ -599,8 +661,9 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                     String[] dataNode = dataNodeStateStr.split("\n");
                     for (String s : dataNode) {
                         String[] s1 = s.replaceAll(" +", " ").split(" ");
-                        if (s1.length == 8) {
-                            res.put(s1[1], s1[7].trim());
+                        if (s1.length == 9) {
+                            nodeState.put(s1[1], s1[8].trim());
+                            nodeRole.put(s1[1],s1[6].trim());
                         }
                     }
                 }
@@ -608,7 +671,6 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
             } catch (IOException e) {
                 log.error("Failed to get status information", e);
             }
-
         } else {
             String command = "gs_ctl status -D " + dataPath;
             JschResult jschResult = null;
