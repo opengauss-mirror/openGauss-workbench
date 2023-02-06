@@ -77,7 +77,7 @@ public class OpsClusterController extends BaseController {
     }
 
     @DeleteMapping("/remove/{clusterId}")
-    public AjaxResult remove(@PathVariable("String") String clusterId){
+    public AjaxResult remove(@PathVariable("clusterId") String clusterId){
         opsClusterService.removeCluster(clusterId);
         return AjaxResult.success();
     }
