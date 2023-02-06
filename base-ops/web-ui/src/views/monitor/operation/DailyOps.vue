@@ -507,6 +507,9 @@ const openHostWebSocket = (clusterData: KeyValue, nodeData: KeyValue, clusterInd
       websocket.destroy()
     })
   })
+  websocket.onclose(() => {
+    data.clusterList[clusterIndex].clusterNodes[index].state = 'false'
+  })
   websocket.onmessage((messageData: any) => {
     const eventData = JSON.parse(messageData)
     console.log(`ops monitor data- ${clusterData.clusterId} - ${nodeData.privateIp}`, eventData, clusterIndex, index)

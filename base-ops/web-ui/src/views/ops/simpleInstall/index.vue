@@ -69,7 +69,6 @@
         <div class="install-connect-c flex-col mb-xlg">
           <div class="ft-b mb">{{ $t('simpleInstall.index.5mpn813gvu40') }}</div>
           <div class="mb">{{ $t('simpleInstall.index.5mpn813gvxg0') }} <span class="content">gaussdb</span></div>
-          <div>{{ $t('simpleInstall.index.5mpn813gw100') }} <span class="content">1qaz2wsx#EDC</span></div>
         </div>
         <div class="flex-row">
           <a-button type="outline" class="mr" @click="goHome">{{
