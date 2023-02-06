@@ -76,6 +76,12 @@ public class OpsClusterController extends BaseController {
         return AjaxResult.success();
     }
 
+    @DeleteMapping("/remove/{clusterId}")
+    public AjaxResult remove(@PathVariable("String") String clusterId){
+        opsClusterService.removeCluster(clusterId);
+        return AjaxResult.success();
+    }
+
     @PostMapping("/restart")
     public AjaxResult restart(@RequestBody OpsClusterBody restartBody) {
         opsClusterService.restart(restartBody);

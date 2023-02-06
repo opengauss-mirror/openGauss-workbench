@@ -51,6 +51,7 @@ import org.opengauss.admin.plugin.vo.ops.SlowSqlVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 
@@ -1811,6 +1812,17 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         res.put("corePoolSize", corePoolSize);
         res.put("keepAliveSeconds", keepAliveSeconds);
         return res;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void removeCluster(String clusterId) {
+        List<OpsClusterNodeEntity> opsClusterNodeEntities = opsClusterNodeService.listClusterNodeByClusterId(clusterId);
+        if (CollUtil.isNotEmpty(opsClusterNodeEntities)){
+            opsClusterNodeService.removeBatchByIds(opsClusterNodeEntities.stream().map(OpsClusterNodeEntity::getClusterNodeId).collect(Collectors.toSet()));
+        }
+
+        removeById(clusterId);
     }
 
     private void doSwitchover(Session session, WsSession retWsSession, String dataPath) {
