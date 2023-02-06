@@ -286,9 +286,9 @@ public class OpsWdrServiceImpl extends ServiceImpl<OpsWdrMapper, OpsWdrEntity> i
 
             String wdrPath = "/home/" + userEntity.getUsername();
             String wdrName = "WDR-" + StrUtil.uuid() + ".html";
-            doGenerate(wdrPath, wdrName, startId, endId, WdrScopeEnum.CLUSTER, type, session, clusterEntity.getPort());
+            doGenerate(wdrPath, wdrName, startId, endId, WdrScopeEnum.NODE, type, session, clusterEntity.getPort());
             OpsWdrEntity opsWdrEntity = new OpsWdrEntity();
-            opsWdrEntity.setScope(WdrScopeEnum.CLUSTER);
+            opsWdrEntity.setScope(WdrScopeEnum.NODE);
             opsWdrEntity.setReportAt(new Date());
             opsWdrEntity.setReportType(type);
             opsWdrEntity.setReportName(wdrName);
@@ -297,6 +297,8 @@ public class OpsWdrServiceImpl extends ServiceImpl<OpsWdrMapper, OpsWdrEntity> i
             opsWdrEntity.setEndSnapshotId(endId);
             opsWdrEntity.setClusterId(clusterEntity.getClusterId());
             opsWdrEntity.setUserId(userEntity.getHostUserId());
+            opsWdrEntity.setHostId(hostId);
+            opsWdrEntity.setNodeId(nodeEntity.getClusterNodeId());
             save(opsWdrEntity);
         }finally {
             if (Objects.nonNull(session) && session.isConnected()){
@@ -339,6 +341,7 @@ public class OpsWdrServiceImpl extends ServiceImpl<OpsWdrMapper, OpsWdrEntity> i
             opsWdrEntity.setEndSnapshotId(endId);
             opsWdrEntity.setClusterId(clusterEntity.getClusterId());
             opsWdrEntity.setUserId(userEntity.getHostUserId());
+            opsWdrEntity.setNodeId(masterNodeEntity.getClusterNodeId());
             save(opsWdrEntity);
         }finally {
             if (Objects.nonNull(session) && session.isConnected()){
@@ -372,10 +375,14 @@ public class OpsWdrServiceImpl extends ServiceImpl<OpsWdrMapper, OpsWdrEntity> i
     private void doGenerate(String wdrPath, String wdrName, String startId, String endId, WdrScopeEnum scope, WdrTypeEnum type, Session session, Integer port) {
         String clientLoginOpenGauss = MessageFormat.format(SshCommandConstants.LOGIN, String.valueOf(port));
         try {
+            String nodeName = null;
+            if (scope == WdrScopeEnum.NODE){
+                nodeName = "pgxc_node_str()::cstring";
+            }
             Map<String, List<String>> response = new HashMap<>();
             List<String> responseList = new ArrayList<>();
             String startSql = "\\a \\t \\o " + wdrPath + "/" + wdrName + "\n";
-            String generateSql = "select generate_wdr_report('" + startId + "', '" + endId + "', '" + type.name().toLowerCase() + "', '" + scope.name().toLowerCase() + "'); \n";
+            String generateSql = "select generate_wdr_report('" + startId + "', '" + endId + "', '" + type.name().toLowerCase() + "', '" + scope.name().toLowerCase() + "'," + nodeName +"); \n";
             String endSql = "\\o \\a \\t \n \\q";
 
             responseList.add(startSql);
