@@ -30,7 +30,7 @@ public class WsConnectorManager {
      *
      * @param sessionId    business ID
      */
-    public void remove( String sessionId) {
+    public void remove(String sessionId) {
         CONNECTOR_CONTEXT.remove(sessionId);
     }
 
@@ -42,5 +42,13 @@ public class WsConnectorManager {
      */
     public Optional<WsSession> getSession(String sessionId) {
         return Optional.ofNullable(CONNECTOR_CONTEXT.get(sessionId));
+    }
+
+    public void removeByVal(WsSession wsSession) {
+        CONNECTOR_CONTEXT.forEach((k,v)->{
+            if (v.equals(wsSession)){
+                CONNECTOR_CONTEXT.remove(k);
+            }
+        });
     }
 }
