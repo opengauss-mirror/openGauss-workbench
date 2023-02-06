@@ -1125,6 +1125,7 @@ const getDropdownList = (clusterData: KeyValue, nodeData: KeyValue) => {
 .daily-ops-c {
   padding: 20px 20px 0px;
   overflow-y: auto;
+  height: calc(100vh - 178px);
 
   .empty-icon-size {
     width: 100px;
