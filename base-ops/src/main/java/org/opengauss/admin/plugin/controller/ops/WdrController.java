@@ -42,8 +42,8 @@ public class WdrController extends BaseController {
 
     @GetMapping("/list")
     public AjaxResult list(@RequestParam String clusterId,
-                           @RequestParam WdrScopeEnum wdrScope,
-                           @RequestParam WdrTypeEnum wdrType,
+                           @RequestParam(required = false) WdrScopeEnum wdrScope,
+                           @RequestParam(required = false) WdrTypeEnum wdrType,
                            @RequestParam(required = false) String hostId,
                            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date start,
                            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date end) {

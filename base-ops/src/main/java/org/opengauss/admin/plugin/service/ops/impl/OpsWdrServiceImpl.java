@@ -75,8 +75,8 @@ public class OpsWdrServiceImpl extends ServiceImpl<OpsWdrMapper, OpsWdrEntity> i
     public List<OpsWdrEntity> listWdr(String clusterId, WdrScopeEnum wdrScope, WdrTypeEnum wdrType, String hostId, Date start, Date end) {
         LambdaQueryWrapper<OpsWdrEntity> queryWrapper = Wrappers.lambdaQuery(OpsWdrEntity.class)
                 .eq(OpsWdrEntity::getClusterId, clusterId)
-                .eq(OpsWdrEntity::getScope, wdrScope.name())
-                .eq(OpsWdrEntity::getReportType, wdrType.name())
+                .eq(Objects.nonNull(wdrScope),OpsWdrEntity::getScope, wdrScope.name())
+                .eq(Objects.nonNull(wdrType),OpsWdrEntity::getReportType, wdrType.name())
                 .eq(StrUtil.isNotEmpty(hostId), OpsWdrEntity::getHostId, hostId)
                 .ge(Objects.nonNull(start), OpsWdrEntity::getReportAt, start)
                 .le(Objects.nonNull(end), OpsWdrEntity::getReportAt, end)
