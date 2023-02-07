@@ -72,13 +72,16 @@ const loadRateData = (data: any[]) => {
         ioRateData.value = []
         return
     }
-    ioRateData.value = data.map(d => ({
-        name: `${t(`metric.${d.name}`)}${t('dashboard.rate')}`,
-        cur: `${d.data[Math.max(0, d.data.length - 1)]}KB/s`,
-        min: `${toFixed(Math.min(...d.data))}KB/s`,
-        avg: `${d.data.length ? toFixed(d.data.reduce((a: number, s: string) => a + Number.parseFloat(s), 0) / d.data.length) : '0.00'}KB/s`,
-        max: `${toFixed(Math.max(...d.data))}KB/s`,
-    }))
+    ioRateData.value = data.map(d => {
+        const count = d.data.reduce((a: number, s: string) => s != null ? a + Number.parseFloat(s) : a, 0)
+        return {
+            name: `${t(`metric.${d.name}`)}${t('dashboard.rate')}`,
+            cur: `${d.data[Math.max(0, d.data.length - 1)]}KB/s`,
+            min: `${toFixed(Math.min(...d.data))}KB/s`,
+            avg: `${d.data.length ? toFixed(count / d.data.length) : '0.00'}KB/s`,
+            max: `${toFixed(Math.max(...d.data))}KB/s`,
+        }
+    })
 }
 const ioData = ref<{ name: string, cur: string, min: string, avg: string, max: string }[]>([])
 const loadData = (data: any[]) => {
@@ -86,13 +89,16 @@ const loadData = (data: any[]) => {
         ioData.value = []
         return
     }
-    ioData.value = data.map(d => ({
-        name: `${t(`metric.${d.name}`)}${t('dashboard.capacity')}`,
-        cur: `${d.data[Math.max(0, d.data.length - 1)]}MB/s`,
-        min: `${toFixed(Math.min(...d.data))}MB/s`,
-        avg: `${d.data.length ? toFixed(d.data.reduce((a: number, s: string) => a + Number.parseFloat(s), 0) / d.data.length) : '0.00'}MB/s`,
-        max: `${toFixed(Math.max(...d.data))}MB/s`,
-    }))
+    ioData.value = data.map(d => {
+        const count = d.data.reduce((a: number, s: string) => s != null ? a + Number.parseFloat(s) : a, 0)
+        return {
+            name: `${t(`metric.${d.name}`)}${t('dashboard.capacity')}`,
+            cur: `${d.data[Math.max(0, d.data.length - 1)]}MB/s`,
+            min: `${toFixed(Math.min(...d.data))}MB/s`,
+            avg: `${d.data.length ? toFixed(count / d.data.length) : '0.00'}MB/s`,
+            max: `${toFixed(Math.max(...d.data))}MB/s`,
+        }
+    })
 }
 
 const toTopSQL = () => {
