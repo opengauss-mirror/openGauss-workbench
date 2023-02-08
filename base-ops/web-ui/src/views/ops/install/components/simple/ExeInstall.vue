@@ -177,6 +177,10 @@ const openLogSocket = () => {
       logSocket.destroy()
     })
     initTermLog(term, logSocket.ws)
+    localStorage.setItem('Static-pluginBase-opsOpsInstall', '1')
+  })
+  logSocket.onclose(() => {
+    localStorage.removeItem('Static-pluginBase-opsOpsInstall')
   })
   logSocket.onmessage((messageData: any) => {
     term.writeln(messageData)

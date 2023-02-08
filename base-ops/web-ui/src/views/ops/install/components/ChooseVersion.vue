@@ -69,6 +69,7 @@ const installTypes = computed(() => [
 ])
 
 onMounted(() => {
+  localStorage.removeItem('Static-pluginBase-opsOpsInstall')
   loadingFunc.setBackBtnShow(false)
   if (versionStore.getInstallConfig.openGaussVersion) {
     currVersion.value = versionStore.getInstallConfig.openGaussVersion
