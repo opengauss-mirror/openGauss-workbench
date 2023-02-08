@@ -43,9 +43,17 @@
         <a-table :data="tableData" :bordered="false" stripe :pagination="pagination" @page-change="pageChange">
           <template #columns>
             <a-table-column :title="$t('user.index.5m6ni29ghe80')" data-index="userName"></a-table-column>
-            <a-table-column :title="$t('user.index.5m6ni29ghlc0')" data-index="nickName" align="center"></a-table-column>
+            <a-table-column :title="$t('user.index.5m6ni29ghlc0')" data-index="nickName" align="center">
+              <template #cell="{ record }">
+                {{ record.userId !== 1 ? record.nickName : $t('user.index.5obuyt8kr2o0') }}
+              </template>
+            </a-table-column>
             <a-table-column :title="$t('user.index.5m6ni29gdhw0')" data-index="phonenumber" align="center"></a-table-column>
-            <a-table-column :title="$t('user.index.5msnsk9mm9k0')" data-index="roleName" align="center"></a-table-column>
+            <a-table-column :title="$t('user.index.5msnsk9mm9k0')" data-index="roleName" align="center">
+              <template #cell="{ record }">
+                {{ record.userId !== 1 ? record.roleName : $t('user.index.5obuyt8kr2o0') }}
+              </template>
+            </a-table-column>
             <a-table-column :title="$t('user.index.5m6ni29gdrk0')" data-index="status" align="center">
               <template #cell="{ record }">
                 <div class="cell-con">
