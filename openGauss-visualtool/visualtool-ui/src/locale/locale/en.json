@@ -1,4 +1,22 @@
 {
+    "errorCode": {
+        "400": "Request params is bad",
+        "401": "Unauthorized",
+        "403": "Authorization expired",
+        "50101": "Plugin stop error",
+        "50102": "Plugin start error",
+        "50103": "Plugin uninstall error",
+        "50104": "Plugin install error",
+        "50105": "Role is exists",
+        "50107": "User phone is exists",
+        "50108": "User email is exists",
+        "50109": "Origin pass is error",
+        "50110": "New password can't be same as old password",
+        "50115": "User account is exists",
+        "50116": "This plugin menu has submenus for other plugins",
+        "50126": "Whitelist name already exists",
+        "default": "System unknown error, please feedback to administrator"
+    },
     "manage": {
         "index": {
             "5m5v55wx37o0": "Please input ID etc.",
