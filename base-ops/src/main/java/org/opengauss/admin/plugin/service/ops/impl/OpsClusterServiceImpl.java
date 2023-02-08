@@ -51,6 +51,7 @@ import org.opengauss.admin.plugin.vo.ops.SlowSqlVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 
@@ -63,6 +64,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 /**
@@ -1438,6 +1440,8 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                 if (Objects.nonNull(ommSession) && ommSession.isConnected()){
                     ommSession.disconnect();
                 }
+
+                wsUtil.close(wsSession);
             }
 
         });
@@ -1813,6 +1817,17 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         return res;
     }
 
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void removeCluster(String clusterId) {
+        List<OpsClusterNodeEntity> opsClusterNodeEntities = opsClusterNodeService.listClusterNodeByClusterId(clusterId);
+        if (CollUtil.isNotEmpty(opsClusterNodeEntities)){
+            opsClusterNodeService.removeBatchByIds(opsClusterNodeEntities.stream().map(OpsClusterNodeEntity::getClusterNodeId).collect(Collectors.toSet()));
+        }
+
+        removeById(clusterId);
+    }
+
     private void doSwitchover(Session session, WsSession retWsSession, String dataPath) {
         try {
             String command = "gs_ctl switchover -D " + dataPath;
@@ -2016,7 +2031,8 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
     }
 
     private void doMonitor(WsSession wsSession, Session ommSession, OpenGaussVersionEnum version, Connection connection, String dataPath) {
-        while (wsSession.getSession().isOpen()) {
+        AtomicBoolean hasError = new AtomicBoolean(false);
+        while (wsSession.getSession().isOpen() && !hasError.get()) {
             NodeMonitorVO nodeMonitorVO = new NodeMonitorVO();
             CountDownLatch countDownLatch = new CountDownLatch(11);
             threadPoolTaskExecutor.submit(() -> {
@@ -2024,6 +2040,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                     nodeMonitorVO.setTime(System.currentTimeMillis());
                 }catch (Exception e){
                     log.error("time error : ",e);
+                    hasError.set(true);
                 }finally {
                     countDownLatch.countDown();
                 }
@@ -2035,6 +2052,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                     nodeMonitorVO.setCpu(cpu(ommSession));
                 }catch (Exception e){
                     log.error("cpu monitor error : ",e);
+                    hasError.set(true);
                 }finally {
                     countDownLatch.countDown();
                 }
@@ -2045,6 +2063,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                     nodeMonitorVO.setMemory(memory(ommSession));
                 }catch (Exception e){
                     log.error("memory monitor error : ",e);
+                    hasError.set(true);
                 }finally {
                     countDownLatch.countDown();
                 }
@@ -2055,6 +2074,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                     nodeMonitorVO.setNet(net(ommSession));
                 }catch (Exception e){
                     log.error("net monitor error : ",e);
+                    hasError.set(true);
                 }finally {
                     countDownLatch.countDown();
                 }
@@ -2065,6 +2085,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                     nodeMonitorVO.setState(state(ommSession, version, dataPath));
                 }catch (Exception e){
                     log.error("state monitor error : ",e);
+                    hasError.set(true);
                 }finally {
                     countDownLatch.countDown();
                 }
@@ -2075,6 +2096,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                     nodeMonitorVO.setLock(lock(connection));
                 }catch (Exception e){
                     log.error("lock monitor error : ",e);
+                    hasError.set(true);
                 }finally {
                     countDownLatch.countDown();
                 }
@@ -2085,6 +2107,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                     nodeMonitorVO.setSession(session(connection));
                 }catch (Exception e){
                     log.error("session monitor error : ",e);
+                    hasError.set(true);
                 }finally {
                     countDownLatch.countDown();
                 }
@@ -2095,6 +2118,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                     nodeMonitorVO.setConnectNum(connectNum(connection));
                 }catch (Exception e){
                     log.error("connectNum monitor error : ",e);
+                    hasError.set(true);
                 }finally {
                     countDownLatch.countDown();
                 }
@@ -2105,6 +2129,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                     nodeMonitorVO.setSessionMemoryTop10(sessionMemoryTop10(connection));
                 }catch (Exception e){
                     log.error("sessionMemoryTop10 monitor error : ",e);
+                    hasError.set(true);
                 }finally {
                     countDownLatch.countDown();
                 }
@@ -2115,6 +2140,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                     nodeMonitorVO.setKernel(kernel(ommSession));
                 }catch (Exception e){
                     log.error("kernel monitor error : ",e);
+                    hasError.set(true);
                 }finally {
                     countDownLatch.countDown();
                 }
@@ -2125,6 +2151,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                     nodeMonitorVO.setMemorySize(memorySize(ommSession));
                 }catch (Exception e){
                     log.error("memorySize monitor error : ",e);
+                    hasError.set(true);
                 }finally {
                     countDownLatch.countDown();
                 }
@@ -2134,6 +2161,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                 countDownLatch.await();
             } catch (InterruptedException e) {
                 log.error("waiting for thread to be interrupted", e);
+                throw new OpsException("monitor error");
             }
 
             wsUtil.sendText(wsSession, JSON.toJSONString(nodeMonitorVO));
@@ -2158,6 +2186,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
             }
         } catch (Exception e) {
             log.error("Failed to query session memory top10", e);
+            throw new OpsException("Failed to query session memory top10");
         }
 
         return res;
@@ -2173,6 +2202,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
             }
         } catch (Exception e) {
             log.error("Failed to query the number of connections", e);
+            throw new OpsException("Failed to query the number of connections");
         }
 
         return res;
@@ -2188,6 +2218,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
             }
         } catch (Exception e) {
             log.error("Failed to query the number of connections", e);
+            throw new OpsException("Failed to query the number of connections");
         }
 
         return res;
@@ -2203,6 +2234,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
             }
         } catch (Exception e) {
             log.error("Failed to query the number of connections", e);
+            throw new OpsException("Failed to query the number of connections");
         }
 
         return res;
@@ -2213,13 +2245,14 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
             JschResult jschResult = jschUtil.executeCommand(SshCommandConstants.MEMORY_TOTAL, rootSession);
             if (0 != jschResult.getExitCode()) {
                 log.error("Query memory size failed, exit code: {}, message: {}", jschResult.getExitCode(), jschResult.getResult());
+                throw new OpsException("Failed to query memory size");
             } else {
                 return jschResult.getResult();
             }
         } catch (Exception e) {
             log.error("Failed to query memory size", e);
+            throw new OpsException("Failed to query memory size");
         }
-        return null;
     }
 
     private String kernel(Session rootSession) {
@@ -2227,13 +2260,14 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
             JschResult jschResult = jschUtil.executeCommand(SshCommandConstants.CPU_CORE_NUM, rootSession);
             if (0 != jschResult.getExitCode()) {
                 log.error("Failed to query core count, exit code: {}, message: {}", jschResult.getExitCode(), jschResult.getResult());
+                throw new OpsException("Failed to query the number of cores");
             } else {
                 return jschResult.getResult();
             }
         } catch (Exception e) {
             log.error("Failed to query the number of cores", e);
+            throw new OpsException("Failed to query the number of cores");
         }
-        return null;
     }
 
     private String state(Session ommSession, OpenGaussVersionEnum version, String dataPath) {
@@ -2289,6 +2323,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                 return JSON.toJSONString(res);
             } catch (IOException e) {
                 log.error("Failed to get status information", e);
+                throw new OpsException("Failed to get status information");
             }
 
         } else {
@@ -2313,9 +2348,9 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                 }
             } catch (IOException e) {
                 log.error("Failed to get status information", e);
+                throw new OpsException("Failed to get status information");
             }
         }
-        return null;
     }
 
     private List<NodeNetMonitor> net(Session rootSession) {
@@ -2346,6 +2381,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
             }
         } catch (IOException e) {
             log.error("Failed to get network information", e);
+            throw new OpsException("Failed to get network information");
         }
 
         return res;
@@ -2368,9 +2404,8 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
             return jschResult.getResult();
         } catch (IOException e) {
             log.error("Failed to get memory usage", e);
+            throw new OpsException("Failed to get memory usage");
         }
-
-        return null;
     }
 
     private String cpu(Session rootSession) {
@@ -2390,9 +2425,8 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
             return jschResult.getResult();
         } catch (IOException e) {
             log.error("Failed to get cpu usage", e);
+            throw new OpsException("Failed to get cpu usage");
         }
-
-        return null;
     }
 
     private void doUnInstall(UnInstallContext unInstallContext, Boolean force) {

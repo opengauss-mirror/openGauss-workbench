@@ -42,11 +42,11 @@ public class WdrController extends BaseController {
 
     @GetMapping("/list")
     public AjaxResult list(@RequestParam String clusterId,
-                           @RequestParam WdrScopeEnum wdrScope,
-                           @RequestParam WdrTypeEnum wdrType,
-                           @RequestParam(required = false) String hostId,
-                           @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date start,
-                           @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date end) {
+                           @RequestParam(required = false,value = "wdrScope") WdrScopeEnum wdrScope,
+                           @RequestParam(required = false,value = "wdrType") WdrTypeEnum wdrType,
+                           @RequestParam(required = false,value = "hostId") String hostId,
+                           @RequestParam(required = false,value = "start") @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date start,
+                           @RequestParam(required = false,value = "end") @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date end) {
         List<OpsWdrEntity> wdrList = wdrService.listWdr(clusterId, wdrScope, wdrType, hostId, start, end);
         return AjaxResult.success(wdrList);
     }

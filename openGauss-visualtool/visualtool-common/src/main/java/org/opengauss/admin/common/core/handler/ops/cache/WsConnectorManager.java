@@ -42,4 +42,12 @@ public class WsConnectorManager {
     public Optional<WsSession> getSession(String businessId) {
         return Optional.ofNullable(CONNECTOR_CONTEXT.get(businessId));
     }
+
+    public void removeByVal(WsSession wsSession) {
+        CONNECTOR_CONTEXT.forEach((k,v)->{
+            if (v.equals(wsSession)){
+                CONNECTOR_CONTEXT.remove(k);
+            }
+        });
+    }
 }

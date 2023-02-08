@@ -2,7 +2,7 @@
   <div class="exe-install-c">
     <div class="flex-col full-w full-h" v-if="exeResult === exeResultEnum.SUCESS">
       <svg-icon icon-class="ops-install-success" class="icon-size mb"></svg-icon>
-      <div class="mb-lg">{{ $t('simple.ExeInstall.5mpmsp16nuo0') }}</div>
+      <div class="label-color mb-lg">{{ $t('simple.ExeInstall.5mpmsp16nuo0') }}</div>
       <div class="install-connect-c flex-col mb-xlg">
         <div class="ft-b mb">{{ $t('simple.ExeInstall.5mpmsp16oy40') }}</div>
         <div class="mb">{{ $t('simple.ExeInstall.5mpmsp16pb40') }}: <span class="content">gaussdb</span></div>

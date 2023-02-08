@@ -56,6 +56,12 @@
     </div>
     <a-table class="d-a-table-row full-h" :data="list.data" :columns="columns" :pagination="list.page"
       :loading="list.loading">
+      <template #scope="{ record }">
+        {{ getScoptName(record.scope) }}
+      </template>
+      <template #reportType="{ record }">
+        {{ getReportTypeName(record.reportType) }}
+      </template>
       <template #operation="{ record }">
         <div class="flex-row-start">
           <a-button type="text" @click="viewWdr(record)">
@@ -101,8 +107,8 @@ const { t } = useI18n()
 const filter = reactive<KeyValue>({
   clusterId: '',
   hostId: '',
-  wdrScope: 'CLUSTER',
-  wdrType: 'DETAIL',
+  wdrScope: '',
+  wdrType: '',
   start: dayjs().format('YYYY-MM-DD') + ' 00:00:00',
   end: dayjs().format('YYYY-MM-DD') + ' 23:59:59',
   wdrScopeList: [],
@@ -114,9 +120,9 @@ const filter = reactive<KeyValue>({
 })
 
 const columns = computed(() => [
-  { title: t('wdr.index.5mpm1cuar500'), dataIndex: 'scope' },
+  { title: t('wdr.index.5mpm1cuar500'), dataIndex: 'scope', slotName: 'scope' },
   { title: t('wdr.index.5mpm1cuasys0'), dataIndex: 'reportAt' },
-  { title: t('wdr.index.5mpm1cuardo0'), dataIndex: 'reportType' },
+  { title: t('wdr.index.5mpm1cuardo0'), dataIndex: 'reportType', slotName: 'reportType' },
   { title: t('wdr.index.5mpm1cuat200'), dataIndex: 'reportName' },
   { title: t('wdr.index.5mpm1cuat4o0'), slotName: 'operation' }
 ])
@@ -139,10 +145,12 @@ onMounted(async () => {
 
 const initData = () => {
   filter.wdrScopeList = [
+    { label: t('wdr.index.5mpm1cuasvs0'), value: '' },
     { label: t('wdr.index.5mpm1cuasgo0'), value: 'CLUSTER' },
     { label: t('wdr.index.5mpm1cuask80'), value: 'NODE' }
   ]
   filter.wdrTypeList = [
+    { label: t('wdr.index.5mpm1cuasvs0'), value: '' },
     { label: t('wdr.index.5mpm1cuasng0'), value: 'DETAIL' },
     { label: t('wdr.index.5mpm1cuasr40'), value: 'SUMMARY' },
     { label: t('wdr.index.5mpm1cuasvs0'), value: 'ALL' }
@@ -150,7 +158,7 @@ const initData = () => {
 }
 
 const getCurrentTime = computed(() => {
-  return [dayjs().format('YYYY-MM-DD') + ' 00:00:00', dayjs().format('YYYY-MM-DD') + ' 23:59:59']
+  return [dayjs().subtract(7, 'day').format('YYYY-MM-DD') + ' 00:00:00', dayjs().format('YYYY-MM-DD') + ' 23:59:59']
 })
 
 const getClusterList = () => new Promise(resolve => {
@@ -254,6 +262,26 @@ const deleteRows = (record: KeyValue) => {
   }).finally(() => {
     list.loading = false
   })
+}
+
+const getScoptName = (val: string) => {
+  switch (val) {
+    case 'CLUSTER':
+      return t('wdr.index.5mpm1cuasgo0')
+    case 'NODE':
+      return t('wdr.index.5mpm1cuask80')
+  }
+}
+
+const getReportTypeName = (val: string) => {
+  switch (val) {
+    case 'DETAIL':
+      return t('wdr.index.5mpm1cuasng0')
+    case 'SUMMARY':
+      return t('wdr.index.5mpm1cuasr40')
+    case 'ALL':
+      return t('wdr.index.5mpm1cuasvs0')
+  }
 }
 
 const generateWdrRef = ref<null | InstanceType<typeof GenerateWdrDlg>>(null)

@@ -50,12 +50,14 @@
 
 <script setup lang="ts">
 import { useOpsStore } from '@/store'
-import { onMounted, reactive, ref, computed } from 'vue'
+import { onMounted, reactive, ref, computed, inject } from 'vue'
 import { OpenGaussVersionEnum } from '@/types/ops/install'
 import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
 const currVersion = ref(OpenGaussVersionEnum.MINIMAL_LIST)
 const versionStore = useOpsStore()
+
+const loadingFunc = inject<any>('loading')
 
 const data = reactive({
   installType: 'install'
@@ -67,6 +69,7 @@ const installTypes = computed(() => [
 ])
 
 onMounted(() => {
+  loadingFunc.setBackBtnShow(false)
   if (versionStore.getInstallConfig.openGaussVersion) {
     currVersion.value = versionStore.getInstallConfig.openGaussVersion
     data.installType = versionStore.getInstallConfig.installType

@@ -2,7 +2,7 @@
   <div class="exe-install-c">
     <div class="flex-col full-w full-h" v-if="exeResult === exeResultEnum.SUCESS">
       <svg-icon icon-class="ops-install-success" class="icon-size mb"></svg-icon>
-      <div class="mb-xlg">{{ $t('components.ExeImport.5mpmzg3zqu80') }}</div>
+      <div class="label-color mb-xlg">{{ $t('components.ExeImport.5mpmzg3zqu80') }}</div>
       <div class="install-connect-c flex-col mb-lg">
         <div class="ft-b mb">{{ $t('components.ExeImport.5mpmzg3zrrw0') }}</div>
         <div class="mb">{{ $t('components.ExeImport.5mpmzg3zs0o0') }}: <span class="content">{{

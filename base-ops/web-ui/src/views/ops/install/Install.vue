@@ -56,6 +56,7 @@ const initData = () => {
   stepComp.value = null
   backBtnShow.value = true
   nextBtnShow.value = true
+  loading.value = false
 }
 
 const setBackBtnShow = (val: boolean) => {

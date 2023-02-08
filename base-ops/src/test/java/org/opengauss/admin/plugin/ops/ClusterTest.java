@@ -190,7 +190,6 @@ public class ClusterTest {
         minimalistInstallNodeConfig.setRootPassword("123456");
         minimalistInstallNodeConfig.setInstallUserId("1");
         minimalistInstallNodeConfig.setInstallPath("/opt/install");
-        minimalistInstallNodeConfig.setDataPath("/opt/data");
         minimalistInstallNodeConfig.setIsInstallDemoDatabase(Boolean.TRUE);
         minimalistInstallNodeConfigs.add(minimalistInstallNodeConfig);
 

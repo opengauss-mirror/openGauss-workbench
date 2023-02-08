@@ -79,4 +79,6 @@ public interface IOpsClusterService extends IService<OpsClusterEntity> {
     HostEnv env(String hostId, OpenGaussSupportOSEnum expectedOs);
 
     Map<String, Integer> threadPoolMonitor();
+
+    void removeCluster(String clusterId);
 }
