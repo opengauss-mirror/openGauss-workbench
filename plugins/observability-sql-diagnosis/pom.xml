@@ -21,7 +21,7 @@
 
         <!-- dependency version -->
         <spring-boot.version>2.5.6</spring-boot.version>
-        <spring-brick.version>3.1.0-eb-1</spring-brick.version>
+        <spring-brick.version>3.1.0</spring-brick.version>
         <junit.version>4.13</junit.version>
         <mybatis-plus.version>3.5.2</mybatis-plus.version>
         <fastjson.version>1.2.78</fastjson.version>
@@ -149,17 +149,6 @@
 
     <repositories>
         <repository>
-            <id>maven-public</id>
-            <name>private Release</name>
-            <url>http://39.108.219.254:8081/repository/maven-public/</url>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-        </repository>
-        <repository>
             <id>gitee-eb-repo</id>
             <name>The Maven Repository on Gitee</name>
             <url>https://gitee.com/agile-adept-team/spring-brick-eb/tree/master/maven-repo</url>
@@ -168,17 +157,6 @@
 
 
     <pluginRepositories>
-        <pluginRepository>
-            <id>maven-public</id>
-            <name>private Release</name>
-            <url>http://39.108.219.254:8081/repository/maven-public/</url>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-        </pluginRepository>
         <pluginRepository>
             <id>gitee-eb-repo</id>
             <name>The Maven Repository on Gitee</name>
@@ -247,13 +225,6 @@
                         <version>${project.version}</version>
                         <provider>ncti-gba</provider>
                         <description>Intelligent OPS</description>
-                        <detailJson>{
-                            "logo":"PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJmZWF0aGVyIGZlYXRoZXItY29tcGFzcyI+PGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iMTAiPjwvY2lyY2xlPjxwb2x5Z29uIHBvaW50cz0iMTYuMjQgNy43NiAxNC4xMiAxNC4xMiA3Ljc2IDE2LjI0IDkuODggOS44OCAxNi4yNCA3Ljc2Ij48L3BvbHlnb24+PC9zdmc+",
-                            "pluginType":1,
-                            "isNeedConfigured":0,
-                            "theme":"light"
-                            }
-                        </detailJson>
                     </pluginInfo>
                 </configuration>
                 <executions>

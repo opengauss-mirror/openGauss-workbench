@@ -110,6 +110,7 @@ public class DiagnosisService {
 			task = taskMapper.selectById(id);
 		if (task == null)
 			return;
+		task.setState(null);
 		var s = new StopWatch();
 		try {
 			s.start();
