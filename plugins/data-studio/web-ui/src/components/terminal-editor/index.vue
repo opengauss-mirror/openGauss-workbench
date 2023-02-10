@@ -510,6 +510,11 @@
   onBeforeUnmount(() => {
     refreshCounter.counter = null;
     props.editorType == 'debug' && handleStopDebug();
+    ws.instance.send({
+      operation: 'close',
+      windowName: ws.sessionId,
+    });
+    ws.instance.close();
     Object.assign(ws, {
       name: '',
       instance: null,
