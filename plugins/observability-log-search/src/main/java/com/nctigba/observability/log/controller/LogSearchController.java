@@ -63,7 +63,7 @@ public class LogSearchController {
             esSearchQuery.setSearchPhrase(queryParam.getSearchPhrase());
             esSearchQuery.setLogLevel(queryParam.getLogLevel());
             esSearchQuery.setLogType(queryParam.getLogType());
-            esSearchQuery.setScollId(queryParam.getScollId());
+            esSearchQuery.setScrollId(queryParam.getScrollId());
             esSearchQuery.setRowCount(queryParam.getRowCount());
         }
         return logSearchService.getLogByQuery(esSearchQuery);
@@ -80,6 +80,5 @@ public class LogSearchController {
     public List<String> logLevelInfo() throws Exception {
         return logSearchService.getLogLevel();
     }
-
 
 }
