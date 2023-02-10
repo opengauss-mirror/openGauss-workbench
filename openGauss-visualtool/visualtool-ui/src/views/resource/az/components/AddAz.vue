@@ -54,6 +54,7 @@ const data = reactive({
   showButton: 'show',
   loading: false,
   status: hostStatusEnum.unTest,
+  oldname: '',
   formData: {
     azId: '',
     name: '',
@@ -70,22 +71,26 @@ const formRules = computed(() => {
     {
       validator: (value: any, cb: any) => {
         return new Promise(resolve => {
-          const param = {
-            name: value
-          }
-          hasNameAZ(param).then((res: KeyValue) => {
-            if (Number(res.code) === 200) {
-              if (res.data) {
-                cb(t('components.AddAz.else1'))
-                resolve(false)
-              } else {
-                resolve(true)
-              }
-            } else {
-              cb(t('components.AddAz.else2'))
-              resolve(false)
+          if (value !== data.oldname) {
+            const param = {
+              name: value
             }
-          })
+            hasNameAZ(param).then((res: KeyValue) => {
+              if (Number(res.code) === 200) {
+                if (res.data) {
+                  cb(t('components.AddAz.else1'))
+                  resolve(false)
+                } else {
+                  resolve(true)
+                }
+              } else {
+                cb(t('components.AddAz.else2'))
+                resolve(false)
+              }
+            })
+          } else {
+            resolve(true)
+          }
         })
       }
     }
@@ -139,9 +144,11 @@ const open = (type: string, editData?: KeyValue) => {
   data.status = hostStatusEnum.unTest
   data.loading = false
   if (type === 'update' && data) {
+    data.oldname = editData?.name
     data.title = t('components.AddAz.5mpib0ipprs0')
     Object.assign(data.formData, editData)
   } else {
+    data.oldname = ''
     data.title = t('components.AddAz.5mpib0ippoc0')
     Object.assign(data.formData, {
       privateIp: '',
