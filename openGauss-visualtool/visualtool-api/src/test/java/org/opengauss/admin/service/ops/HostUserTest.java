@@ -86,6 +86,10 @@ public class HostUserTest {
         public boolean removeById(Serializable id) {
             return true;
         }
+        @Override
+        public boolean edit(String hostUserId, HostUserBody hostUserBody) {
+            return true;
+        }
     };
     @Mock
     private JschUtil jschUtil;

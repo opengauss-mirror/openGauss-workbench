@@ -41,7 +41,7 @@ public class AzTest {
     @Test
     public void testAdd() {
         OpsAzEntity opsAzEntity = new OpsAzEntity();
-        boolean add = azService.add(opsAzEntity);
+        boolean add = azService.save(opsAzEntity);
         Assertions.assertTrue(add);
     }
 }
