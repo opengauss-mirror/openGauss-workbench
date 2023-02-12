@@ -119,7 +119,7 @@ export default {
             success: '正常',
             error: '异常',
         },
-        topsqlListTip: "To perform TopSQL monitoring, you need to set 'enable_stmt_track'、'enable_resource_track' parameter to 'on'，'track_stmt_stat_level' parameter Full SQL level to at least 'L0'",
+        topsqlListTip: "进行 TOPSQL 监控需要将数据库中的 enable_stmt_track、enable_resource_track 参数设置为 on，track_stmt_stat_level 参数 Full SQL 级别设置大于等于 L0",
         pleaseChooseinstanceId: "请选择实例",
     },
     metric: {
@@ -292,7 +292,7 @@ export default {
         isHasData: '暂无数据',
         failGetExecutionPlan: '获取不到执行计划',
         failResolveExecutionPlan: '无法解析该执行计划',
-        executionParamTip: "To perform Execution Plan, you need to set 'track_stmt_stat_level' parameter Full SQL level to at least 'L1'"
+        executionParamTip: "获取TOPSQL执行计划需要将数据库中的 track_stmt_stat_level 参数 Full SQL 级别设置大于等于 L1"
     },
     datasource: {
         diagnosisAddTaskSuccess: '诊断任务创建成功',

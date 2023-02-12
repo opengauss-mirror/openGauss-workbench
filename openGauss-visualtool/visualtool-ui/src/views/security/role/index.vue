@@ -39,7 +39,11 @@
       <div class="table-con">
         <a-table :data="tableData" :bordered="false" stripe :pagination="pagination" @page-change="pageChange">
           <template #columns>
-            <a-table-column :title="$t('role.index.5m6nlovf8ik0')" data-index="roleName" :width="180"></a-table-column>
+            <a-table-column :title="$t('role.index.5m6nlovf8ik0')" data-index="roleName" :width="180">
+              <template #cell="{ record }">
+                {{ record.roleId !== 1 ? record.roleName : $t('user.index.5obuyt8kr2o0') }}
+              </template>
+            </a-table-column>
             <a-table-column :title="$t('role.index.5m6nlovfawc0')" data-index="status" align="center">
               <template #cell="{ record }">
                 <div class="cell-con">

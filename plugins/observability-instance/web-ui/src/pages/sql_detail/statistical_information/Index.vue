@@ -32,8 +32,8 @@ watch(() => props.data, (res) => {
     // eslint-disable-next-line camelcase
     const { cpu_time, wait_time, db_time } = res;
     try {
-        const cpuTimeDb = Number.parseInt(cpu_time) / Number.parseInt(db_time) * 100;
-        const waitTimeDb = Number.parseInt(wait_time) / Number.parseInt(db_time) * 100;
+        const cpuTimeDb = Number.parseInt(db_time) !== 0 ? Number.parseInt(cpu_time) / Number.parseInt(db_time) * 100 : 0;
+        const waitTimeDb = Number.parseInt(db_time) !== 0 ? Number.parseInt(wait_time) / Number.parseInt(db_time) * 100 : 0;
         data.useTimeStatistical = [{
             name: 'waitTimeLabel',
             value: waitTimeDb,
