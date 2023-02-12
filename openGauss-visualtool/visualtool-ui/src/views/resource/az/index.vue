@@ -18,7 +18,7 @@
           </div>
         </div>
         <a-table class="d-a-table-row" :data="list.data" :columns="columns" :pagination="list.page"
-          @page-change="currentPage" :loading="list.loading">
+          @page-change="currentPage" @page-size-change="pageSizeChange" :loading="list.loading">
           <template #operation="{ record }">
             <div class="flex-row-start">
               <a-link class="mr" @click="handleAddAz('update', record)">{{ $t('az.index.5mpi9hkpgns0') }}</a-link>
@@ -64,13 +64,24 @@ const list: {
   loading: boolean
 } = reactive({
   data: [],
-  page: { pageSize: 10, total: 0 },
+  page: {
+    total: 0,
+    'show-total': true,
+    'show-jumper': true,
+    'show-page-size': true
+  },
   loading: false
 })
 
 // page
 const currentPage = (e: number) => {
   filter.pageNum = e
+  getListData()
+}
+
+const pageSizeChange = (e: number) => {
+  console.log('show page size change', e)
+  filter.pageSize = e
   getListData()
 }
 

@@ -195,6 +195,7 @@
             "5mjace1rd9o0": "示例:20kb、20mb、20gb"
         },
         "AddHost": {
+            "else1": "请输入正确的端口号",
             "currentStatus": "当前状态",
             "ipAddress": "IP地址",
             "5mphy3snvg80": "可用",

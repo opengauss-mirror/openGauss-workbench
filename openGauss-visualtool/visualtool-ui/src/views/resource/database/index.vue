@@ -20,14 +20,14 @@
           </div>
           <div class="flex-row">
             <div class="flex-row mr">
-              <div class="top-label mr-s">数据库实例名称:</div>
-              <a-input v-model="filter.search" placeholder="请输入数据库实例名称进行查询"></a-input>
+              <div class="label-color top-label mr-s">数据库实例名称:</div>
+              <a-input v-model="filter.name" placeholder="请输入数据库实例名称进行查询"></a-input>
             </div>
             <a-button type="primary" @click="getListData">查询</a-button>
           </div>
         </div>
         <a-table class="d-a-table-row full-h" :data="list.data" :columns="columns" :pagination="list.page"
-          :loading="list.loading" @page-change="currentPage">
+          :loading="list.loading" @page-change="currentPage" @page-size-change="pageSizeChange">
           <template #ip="{ record }">
             {{ record.nodes[0].ip }}
           </template>
@@ -102,14 +102,19 @@ const columns = computed(() => [
 ])
 
 const filter = reactive({
-  search: '',
+  name: '',
   pageNum: 1,
   pageSize: 10
 })
 
 const list = reactive<KeyValue>({
   data: [],
-  page: { page: 1, pageSize: 10, total: 0 },
+  page: {
+    total: 0,
+    'show-total': true,
+    'show-jumper': true,
+    'show-page-size': true
+  },
   loading: false,
   rowSelection: {
     type: 'checkbox',
@@ -217,6 +222,11 @@ const downloadTemplate = () => {
 
 const currentPage = (e: number) => {
   filter.pageNum = e
+  getListData()
+}
+
+const pageSizeChange = (e: number) => {
+  filter.pageSize = e
   getListData()
 }
 </script>

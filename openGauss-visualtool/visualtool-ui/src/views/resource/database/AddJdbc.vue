@@ -10,8 +10,8 @@
           <a-tag v-if="data.formData.status === jdbcStatusEnum.fail" color="red">不可用</a-tag>
         </div>
         <div>
-          <a-button :loading="data.loading" class="mr" @click="close">取消</a-button>
-          <a-button :loading="data.loading" class="mr" @click="handleTestHost(0)">测试连通性</a-button>
+          <a-button class="mr" @click="close">取消</a-button>
+          <a-button :loading="data.testLoading" class="mr" @click="handleTestHost(0)">测试连通性</a-button>
           <a-button :loading="data.loading" type="primary" @click="submit">确定</a-button>
         </div>
       </div>
@@ -72,6 +72,7 @@ enum jdbcStatusEnum {
 const data = reactive<KeyValue>({
   show: false,
   title: '',
+  testLoading: false,
   loading: false,
   formData: {
     name: '',
@@ -143,7 +144,6 @@ const submit = () => {
           data.loading = false
         })
       }
-      data.loading = false
     }
   }).catch()
 }
@@ -159,7 +159,7 @@ const handleTestHost = (index = 0) => {
   console.log('show index', index)
   formRef.value?.validate().then(async result => {
     if (!result) {
-      data.loading = true
+      data.testLoading = true
       // const instanceData = data.formData.nodes[index]
       // const encryptPwd = await encryptPassword(instanceData.password)
       // instanceData.password = encryptPwd
@@ -179,9 +179,8 @@ const handleTestHost = (index = 0) => {
       }).catch(() => {
         data.formData.status = jdbcStatusEnum.fail
       }).finally(() => {
-        data.loading = false
+        data.testLoading = false
       })
-      data.loading = false
     }
   })
 }

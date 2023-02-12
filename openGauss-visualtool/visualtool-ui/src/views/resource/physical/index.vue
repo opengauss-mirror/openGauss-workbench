@@ -18,7 +18,7 @@
           </div>
         </div>
         <a-table class="d-a-table-row" :data="list.data" :columns="columns" :pagination="list.page"
-          @page-change="currentPage" :loading="list.loading">
+          @page-change="currentPage" @page-size-change="pageSizeChange" :loading="list.loading">
           <template #state="{ record }">
             <a-tag :loading="record.loading" :color="getStateColor(record.state)">{{
               getStateDesc(record.state)
@@ -72,13 +72,14 @@ const columns = computed(() => [
   { title: t('physical.index.5mphf11tfjw0'), slotName: 'operation' }
 ])
 
-const list: {
-  data: Array<KeyValue>,
-  page: { total: number, pageSize: number },
-  loading: boolean
-} = reactive({
+const list = reactive<KeyValue>({
   data: [],
-  page: { total: 0, pageSize: 10 },
+  page: {
+    total: 0,
+    'show-total': true,
+    'show-jumper': true,
+    'show-page-size': true
+  },
   loading: false
 })
 
@@ -106,6 +107,11 @@ const getListData = () => new Promise(resolve => {
 
 const currentPage = (e: number) => {
   filter.pageNum = e
+  getListData()
+}
+
+const pageSizeChange = (e: number) => {
+  filter.pageSize = e
   getListData()
 }
 

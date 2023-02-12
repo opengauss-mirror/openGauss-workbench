@@ -131,6 +131,10 @@ const initData = () => {
       {
         validator: (value: any, cb: any) => {
           return new Promise(resolve => {
+            if (!value.trim()) {
+              cb(t('enterprise.ClusterConfig.else2'))
+              resolve(false)
+            }
             const param = {
               name: value
             }
@@ -151,11 +155,68 @@ const initData = () => {
         }
       }
     ],
-    port: [{ required: true, 'validate-trigger': 'blur', message: t('lightweight.InstallConfig.5mpmkfqyay80') }],
+    port: [
+      { required: true, 'validate-trigger': 'blur', message: t('lightweight.InstallConfig.5mpmkfqyay80') },
+      {
+        validator: (value: any, cb: any) => {
+          return new Promise(resolve => {
+            const reg = /^([0-9]|[1-9]\d{1,3}|[1-5]\d{4}|6[0-4]\d{4}|65[0-4]\d{2}|655[0-2]\d|6553[0-5])$/
+            const re = new RegExp(reg)
+            if (re.test(value)) {
+              resolve(true)
+            } else {
+              cb(t('simple.InstallConfig.else2'))
+              resolve(false)
+            }
+          })
+        }
+      }
+    ],
     rootPassword: [{ required: true, 'validate-trigger': 'blur', message: t('lightweight.InstallConfig.5mpmkfqy9h80') }],
-    installPath: [{ required: true, 'validate-trigger': 'blur', message: t('lightweight.InstallConfig.5mpmkfqyaas0') }],
-    dataPath: [{ required: true, 'validate-trigger': 'blur', message: t('lightweight.InstallConfig.5mpmkfqyan00') }],
-    databaseUsername: [{ required: true, 'validate-trigger': 'blur', message: t('lightweight.InstallConfig.5mpmkfqyb9w0') }],
+    installPath: [
+      { required: true, 'validate-trigger': 'blur', message: t('lightweight.InstallConfig.5mpmkfqyaas0') },
+      {
+        validator: (value: any, cb: any) => {
+          return new Promise(resolve => {
+            if (!value.trim()) {
+              cb(t('enterprise.ClusterConfig.else2'))
+              resolve(false)
+            } else {
+              resolve(true)
+            }
+          })
+        }
+      }
+    ],
+    dataPath: [
+      { required: true, 'validate-trigger': 'blur', message: t('lightweight.InstallConfig.5mpmkfqyan00') },
+      {
+        validator: (value: any, cb: any) => {
+          return new Promise(resolve => {
+            if (!value.trim()) {
+              cb(t('enterprise.ClusterConfig.else2'))
+              resolve(false)
+            } else {
+              resolve(true)
+            }
+          })
+        }
+      }
+    ],
+    databaseUsername: [
+      { required: true, 'validate-trigger': 'blur', message: t('lightweight.InstallConfig.5mpmkfqyb9w0') },
+      {
+        validator: (value: any, cb: any) => {
+          return new Promise(resolve => {
+            if (!value.trim()) {
+              cb(t('enterprise.ClusterConfig.else2'))
+              resolve(false)
+            } else {
+              resolve(true)
+            }
+          })
+        }
+      }],
     databasePassword: [{ required: true, 'validate-trigger': 'blur', message: t('lightweight.InstallConfig.5mpmkfqybo00') }]
   }
 }

@@ -32,7 +32,7 @@ import InstallPrompt from './InstallPrompt.vue'
 import ExeImport from '../ExeImport.vue'
 import { useOpsStore } from '@/store'
 
-import { computed, ref } from 'vue'
+import { onMounted, computed, ref, inject } from 'vue'
 enum MINI_ENUM {
   DEPLOY = 1,
   INSTALL,
@@ -45,6 +45,11 @@ const installStore = useOpsStore()
 const instalProps = defineProps({
   currStep: Number,
   customeFunction: Function
+})
+const loadingFunc = inject<any>('loading')
+
+onMounted(() => {
+  loadingFunc.setBackBtnShow(true)
 })
 
 const installConfigRef = ref<InstanceType<typeof InstallConfig> | null>(null)
