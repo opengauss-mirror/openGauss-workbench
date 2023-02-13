@@ -12,9 +12,6 @@
     <a-spin style="width: 100%; height: 100%;" :loading="dData.loading">
       <div class="container modeling-dialogs-visual-edit-index">
         <div class="main">
-          <div class="header">
-            <div class="title">{{ dData.title ? dData.title : $t('modeling.visual-edit.index.5m7ihlv0mig0') }}</div>
-          </div>
           <div class="chart">
             <div class="visual-menu" :class="{ 'hide-visual-menu': !menu.visible }">
               <div class="vm-header">{{$t('modeling.visual-edit.index.5m7ihlv0mmo0')}}</div>
@@ -72,7 +69,7 @@
                 </div>
           </div>
           <div class="config-footer">
-            <a-button type="primary" status="danger" @click="close">{{$t('modeling.visual-edit.index.5m7ihlv0lrk0')}}</a-button>
+            <a-button type="primary" @click="close">{{$t('modeling.visual-edit.index.5m7ihlv0lrk0')}}</a-button>
             <a-button type="primary" @click="previewChart">{{$t('modeling.visual-edit.index.5m7ihlv0n7s0')}}</a-button>
             <a-button type="primary" @click="saveConfig">{{$t('modeling.visual-edit.index.5m7ihlv0na80')}}</a-button>
             <a-button type="primary" :loading="snapshot.loading" v-show="snapshot.option" @click="saveSnapshot">{{$t('modeling.visual-edit.index.5m7ihlv0ndo0')}}</a-button>
