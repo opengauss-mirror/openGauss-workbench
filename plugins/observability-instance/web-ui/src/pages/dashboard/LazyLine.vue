@@ -92,8 +92,10 @@ const handleData = () => {
         const _data = baseData.value[props.nameIndexs.includes(i) ? `${name}${props.nameFix}` : name]
         if (_data) {
             if (props.hasScatterData && (props.names.length - 1 === i)) {
+                let curScatterData = _data[0]?.data.map(d => toFixed(d));
+                const [, newData] = getXDataRange(curScatterData, _data[0].time) as [string[], string[]];
                 scatterData.value = {
-                    data: _data[0]?.data.map(d => toFixed(d)),
+                    data: Array.isArray(newData) && newData.length > 0 ? newData : curScatterData,
                     name,
                     itemStyle: { color: props.color[i] },
                     ...props.scatterOpts

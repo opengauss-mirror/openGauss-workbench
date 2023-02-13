@@ -170,8 +170,12 @@ const openLogSocket = () => {
   const logSocket = new Socket({ url: `simple_installLog_${socketKey}` })
   terminalLogWs.value = logSocket
   logSocket.onopen(() => {
+    localStorage.setItem('Static-pluginBase-opsOpsSimpleInstall', '1')
     initTermLog(term, logSocket.ws)
     exeInstall(logSocket, `simple_installLog_${socketKey}`, term)
+  })
+  logSocket.onclose(() => {
+    localStorage.removeItem('Static-pluginBase-opsOpsSimpleInstall')
   })
   logSocket.onmessage((messageData: any) => {
     if (messageData === 'START') {

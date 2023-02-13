@@ -39,7 +39,7 @@ public class AnalyzeCaller implements Caller {
 	private static final String INDEX_SQL = "select row_to_json(t) from (select c2.relname,i.indisprimary,i.indisunique,i.indisclustered,i.indisvalid,\n"
 			+ "i.indisreplident,pg_catalog.pg_get_indexdef(i.indexrelid,0,true) as def\n"
 			+ "from pg_catalog.pg_class c, pg_catalog.pg_class c2,pg_catalog.pg_index i\n"
-			+ "where c2.relname='TABLENAME' and c.oid=i.indrelid and c2.oid=i.indexrelid) t";
+			+ "where c.relname='TABLENAME' and c.oid=i.indrelid and c2.oid=i.indexrelid) t";
 	private static final String TABLE_STRUCTURE_SQL = "select row_to_json(t) from (select a.attnum,a.attname,t.typname,a.attlen,a.attnotnull,b.description\n"
 			+ "from pg_catalog.pg_class c,pg_catalog.pg_attribute a\n"
 			+ "left outer join pg_catalog.pg_description b on a.attrelid=b.objoid and a.attnum=b.objsubid,pg_catalog.pg_type t\n"
@@ -48,6 +48,7 @@ public class AnalyzeCaller implements Caller {
 	private static final String PARTITION_LIST_SQL = "select row_to_json(t) from (select partstrategy, partkey, relpages, reltuples, relallvisible, interval from pg_partition WHERE parttype = 'r' and relname = 'TABLENAME') t";
 	private static final String DEBUG_QUERY_CHECK = "show track_stmt_parameter";
 	private static final String DEBUG_QUERY_ID_SQL = "select query_id from pg_stat_activity where sessionid = '%d' and state != 'idle' and query_id != 0";
+	private static final String QUERY_TABLE_ALL_ROWS = "SELECT reltuples FROM pg_class WHERE relname = 'TABLENAME'";
 	private final ClusterManager clusterManager;
 	private final DiagnosisTaskMapper diagnosisTaskMapper;
 	private final DiagnosisTaskResultMapper taskResultMapper;
@@ -139,14 +140,6 @@ public class AnalyzeCaller implements Caller {
 	 */
 	public JSONObject getExecutionPlanResult(ArrayList<String> rsList, String nodeId, Task task) {
 		JSONObject jsonResult = new JSONObject();
-		// get rows diff list
-		List<JSONObject> rowsDiffList = getRowsDiff(rsList);
-		jsonResult.put("rowsDiff", rowsDiffList);
-		// suggest: ResultType.ObjectRecommendedToUpdateStatistics
-		if (rowsDiffList != null && rowsDiffList.size() > 0) {
-			log.info("get ObjectRecommendedToUpdateStatistics success");
-			setTaskResultSuggestions(task.getId(), ResultType.ObjectRecommendedToUpdateStatistics, null);
-		}
 		// get execution analyze native query plan
 		jsonResult.put("queryPlan", rsList);
 		int peakMem = getPeakOrDiskMemory(rsList);
@@ -160,6 +153,15 @@ public class AnalyzeCaller implements Caller {
 		jsonResult.put("maxCostStepName", maxCostStepName);
 		// get connection
 		try (var conn = clusterManager.getConnectionByNodeId(nodeId)) {
+			// get rows diff list
+			List<JSONObject> rowsDiffList = getRowsDiff(rsList, maxCostTableName, conn);
+			jsonResult.put("rowsDiff", rowsDiffList);
+			// suggest: ResultType.ObjectRecommendedToUpdateStatistics
+			if (rowsDiffList != null && rowsDiffList.size() > 0) {
+				log.info("get ObjectRecommendedToUpdateStatistics success");
+				setTaskResultSuggestions(task.getId(), ResultType.ObjectRecommendedToUpdateStatistics, null);
+			}
+			// get work memory
 			String workMem = getWorkMem(conn);
 			jsonResult.put("workMem", workMem);
 			// get debug_query_id
@@ -417,11 +419,29 @@ public class AnalyzeCaller implements Caller {
 		}
 	}
 
-	public List<JSONObject> getRowsDiff(ArrayList<String> rsList) {
+	public List<JSONObject> getRowsDiff(ArrayList<String> rsList, String tableName, Connection conn) {
 		log.info("analyze caller getRowsDiff start");
 		List<JSONObject> result = new ArrayList<>();
+		int allRowsNum = -1;
+		// get all rows
+		try {
+			var stmt = conn.createStatement();
+			var rs = stmt.executeQuery(QUERY_TABLE_ALL_ROWS.replace("TABLENAME", tableName));
+			while (rs.next()) {
+				allRowsNum = rs.getInt(1);
+			}
+			stmt.close();
+		} catch (Exception e) {
+			log.error("get work memory fail:{}", e.getMessage());
+			return result;
+		}
+		if (allRowsNum < 0) {
+			return result;
+		}
+		// deal result
 		try {
 			LinkedList<String> modifyLines = new LinkedList<>(rsList);
+			double diff = allRowsNum * 0.2 + 1000;
 			for (String rs : rsList) {
 				if ((rs.contains("cost=") && !rs.contains("Result")) || rs.contains("Hash Cond") || rs.contains("->")) {
 					continue;
@@ -449,7 +469,7 @@ public class AnalyzeCaller implements Caller {
 				String estimateRows = mItemArr[1].substring(0, mItemArr[1].indexOf(" "));
 				String actualRows = mItemArr[2].substring(0, mItemArr[2].indexOf(" "));
 				if (StringUtils.isNotEmpty(estimateRows) && StringUtils.isNotEmpty(actualRows)
-						&& ((Integer.parseInt(estimateRows) - Integer.parseInt(actualRows)) >= 1000)) {
+						&& ((Integer.parseInt(estimateRows) - Integer.parseInt(actualRows)) >= diff)) {
 					jsonObject.put("estimateRows", mItemArr[1].substring(0, mItemArr[1].indexOf(" ")));
 					jsonObject.put("actualRows", mItemArr[2].substring(0, mItemArr[2].indexOf(" ")));
 					result.add(jsonObject);

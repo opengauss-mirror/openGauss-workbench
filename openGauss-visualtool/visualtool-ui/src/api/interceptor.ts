@@ -38,7 +38,7 @@ axios.interceptors.response.use(
   (response: AxiosResponse<HttpResponse>) => {
     const res = response
     const code = res.data.code || 200
-    const msg = (errorCode as any)[code] || res.data.msg || errorCode['default']
+    const msg = ((errorCode as any)[code] && i18n.global.t((errorCode as any)[code])) || res.data.msg || i18n.global.t(errorCode['default'])
 
     if (code === 401) {
       if (!isTimeout) {

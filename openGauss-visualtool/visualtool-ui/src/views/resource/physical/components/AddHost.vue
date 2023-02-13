@@ -4,19 +4,26 @@
     <template #footer>
       <div class="flex-between">
         <div class="flex-row">
-          <div class="mr" v-if="data.status !== hostStatusEnum.unTest">{{ $t('components.AddHost.currentStatus') }}
+          <div class="label-color mr" v-if="data.status !== hostStatusEnum.unTest">{{
+            $t('components.AddHost.currentStatus')
+          }}
           </div>
-          <a-tag v-if="data.status === hostStatusEnum.success" color="green">{{ $t('components.AddHost.5mphy3snvg80')
+          <a-tag v-if="data.status === hostStatusEnum.success" color="green">{{
+            $t('components.AddHost.5mphy3snvg80')
           }}</a-tag>
-          <a-tag v-if="data.status === hostStatusEnum.fail" color="red">{{ $t('components.AddHost.5mphy3snwq40')
+          <a-tag v-if="data.status === hostStatusEnum.fail" color="red">{{
+            $t('components.AddHost.5mphy3snwq40')
           }}</a-tag>
         </div>
         <div>
-          <a-button :loading="data.loading" class="mr" @click="close">{{ $t('components.AddHost.5mphy3snwxs0')
+          <a-button class="mr" @click="close">{{
+            $t('components.AddHost.5mphy3snwxs0')
           }}</a-button>
-          <a-button :loading="data.loading" class="mr" @click="handleTestHost">{{ $t('components.AddHost.5mphy3snx3o0')
+          <a-button :loading="data.testLoading" class="mr" @click="handleTestHost">{{
+            $t('components.AddHost.5mphy3snx3o0')
           }}</a-button>
-          <a-button :loading="data.loading" type="primary" @click="submit">{{ $t('components.AddHost.5mphy3snx7c0')
+          <a-button :loading="data.loading" type="primary" @click="submit">{{
+            $t('components.AddHost.5mphy3snx7c0')
           }}</a-button>
         </div>
       </div>
@@ -44,7 +51,7 @@
         <a-select :loading="data.azListLoading" v-model="data.formData.azId"
           :placeholder="$t('components.AddHost.5mphy3snyn80')">
           <a-option v-for="item in data.azList" :key="item.azId" :value="item.azId">{{
-              item.name
+            item.name
           }}</a-option>
         </a-select>
       </a-form-item>
@@ -74,6 +81,7 @@ const data = reactive<KeyValue>({
   show: false,
   title: t('components.AddHost.5mphy3snz5k0'),
   loading: false,
+  testLoading: false,
   status: hostStatusEnum.unTest,
   azListLoading: false,
   azList: [],
@@ -143,7 +151,7 @@ const close = () => {
 const handleTestHost = () => {
   formRef.value?.validate().then(async result => {
     if (!result) {
-      data.loading = true
+      data.testLoading = true
       const encryptPwd = await encryptPassword(data.formData.password)
       const param = {}
       Object.assign(param, {
@@ -164,7 +172,7 @@ const handleTestHost = () => {
       }).catch(() => {
         data.status = hostStatusEnum.fail
       }).finally(() => {
-        data.loading = false
+        data.testLoading = false
       })
     }
   })
