@@ -31,6 +31,11 @@
               :loading="list.loading"
               @page-change="currentPage"
             >
+              <template #pagination-left>
+                <div style="flex: 1; padding-left: 10px;">
+                  <a-button type="primary" @click="deleteMutl" size="mini" :loading="deleteMutlLoading">{{ $t('modeling.dy_common.batchDelete') }}</a-button>
+                </div>
+              </template>
               <template #operation="{ record }">
                 <a-button size="mini" type="text" @click="toDetail(record)">
                   <template #icon><icon-edit /></template>
@@ -58,7 +63,7 @@
 <script setup lang="ts">
 import { computed, reactive, ref } from 'vue'
 import CU from './components/CU.vue'
-import { Table as ATable, InputSearch as AInputSearch, Button as AButton, Popconfirm as APopconfirm, Message } from '@arco-design/web-vue'
+import { Table as ATable, InputSearch as AInputSearch, Button as AButton, Popconfirm as APopconfirm, Message, Modal } from '@arco-design/web-vue'
 import { IconPlus } from '@arco-design/web-vue/es/icon'
 import { dataFlowDelete, getList } from '@/api/modeling'
 import { KeyValue } from '@/api/modeling/request'
@@ -144,6 +149,23 @@ const toDetail = (record: KeyValue) => {
   window.$wujie?.props.methods.jump({
     name: `Static-pluginBase-opsModelingDataflowDetail`,
     query: { id: record.id }
+  })
+}
+const deleteMutlLoading = ref(false)
+const deleteMutl = () => {
+  if (list.selectedRowKeys.length === 0) return
+  Modal.warning({
+    title: `${t('modeling.dy_common.warning')}`,
+    content: `${t('modeling.dy_common.warningBatchDelete1')} ${list.selectedRowKeys.length} ${t('modeling.dy_common.warningBatchDelete2')}？`,
+    onOk: () => {
+      let sendData = list.selectedRowKeys.join(',')
+      dataFlowDelete(sendData).then((res: KeyValue) => {
+        if (Number(res.code) === 200) {
+          Message.success({ content: t('modeling.dataflow.index.5m77w0y5sak0') })
+          getListData()
+        }
+      })
+    }
   })
 }
 </script>

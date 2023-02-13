@@ -739,7 +739,11 @@
             "yConfig": "Y axis configuration",
             "xFB": "X-axis distribution",
             "xConfigMessage": "Please select the X-axis configuration",
-            "yConfigMessage": "Please select the Y-axis configuration"
+            "yConfigMessage": "Please select the Y-axis configuration",
+            "warning": "Warning",
+            "warningBatchDelete1": "Are you sure you want to delete these ",
+            "warningBatchDelete2": "streams",
+            "batchDelete": "Batch delete"
         },
         "table": {
             "index": {

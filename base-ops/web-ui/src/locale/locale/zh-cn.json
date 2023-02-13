@@ -741,7 +741,11 @@
             "yConfig": "Y轴配置",
             "xFB": "X轴分布",
             "xConfigMessage": "请选择X轴配置",
-            "yConfigMessage": "请选择Y轴配置"
+            "yConfigMessage": "请选择Y轴配置",
+            "warning": "警告",
+            "warningBatchDelete1": "确定要删除这",
+            "warningBatchDelete2": "个数据流吗",
+            "batchDelete": "批量删除"
         },
         "table": {
             "index": {
