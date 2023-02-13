@@ -16,6 +16,45 @@
 │   ├── com.xx.xx.modeling  //数据建模业务包
 ├── visualtool-ui           //前端模块
 ```
+## 数据库对象说明
+
+| 名称             | 类型  | 说明            |
+|----------------|-----|---------------|
+| sq_sys_log_config_id         | 序列  | 系统日志配置表自增序列   |
+| sq_sys_menu_id     | 序列  | 系统菜单表自增序列     |
+| sq_sys_log_id | 序列  | 系统操作日志表自增序列   |
+| sq_sys_plugin_config_data_id | 序列  | 系统插件配置数据表自增序列 |
+| sq_sys_plugin_config_id      | 序列  | 系统插件配置表自增序列   |
+| sq_sys_plugin_id      | 序列  | 系统插件表自增序列     |
+| sq_sys_role_id      | 序列  | 系统角色表自增序列     |
+| sq_sys_user_id      | 序列  | 系统用户表自增序列     |
+| sq_sys_white_list_id      | 序列  | 系统安全白名单表自增序列  |
+| sys_log_config      | 表   | 系统日志配置表       |
+| sys_menu      | 表   | 系统菜单表         |
+| sys_oper_log      | 表   | 系统操作日志表       |
+| sys_plugin_config      | 表   | 系统插件配置表       |
+| sys_plugin_config_data      | 表   | 系统插件配置数据表     |
+| sys_plugins      | 表   | 系统插件表         |
+| sys_role      | 表   | 系统角色表         |
+| sys_role_menu      | 表   | 系统角色与菜单关系表    |
+| sys_user      | 表   | 系统用户表         |
+| sys_user_role      | 表   | 系统用户与角色关系表    |
+| sys_white_list      | 表   | 系统安全白名单表      |
+| ops_az      | 表   | 系统可用区信息表      |
+| ops_backup      | 表   | 系统备份信息表       |
+| ops_check      | 表   | 系统一键自检信息表     |
+| ops_cluster      | 表   | 系统集群信息表       |
+| ops_cluster_node      | 表   | 系统集群节点信息表     |
+| ops_encryption      | 表   | 系统密钥信息表       |
+| ops_host      | 表   | 系统主机信息表       |
+| ops_host_user      | 表   | 系统主机用户信息表     |
+| ops_jdbcdb_cluster      | 表   | 系统数据库资源集群表    |
+| ops_jdbcdb_cluster_node      | 表   | 系统数据库资源集群节点表  |
+| ops_package_manager      | 表   | 系统安装包管理表      |
+| ops_wdr      | 表   | 系统WDR表        |
+
+
+
 ## 支持的服务器系统
 openEuler 20.3LTS（x86_x64，ARM），centos7.x（x86_x64）
 ## 安装步骤
@@ -45,11 +84,15 @@ openEuler 20.3LTS（x86_x64，ARM），centos7.x（x86_x64）
 
 ### 注意事项：
 1、平台使用的数据库，当前仅支持openGauss数据库，并且需要提前创建database。
-2、需要将部署服务器IP配置在平台使用的数据库（openGauss）的白名单列表中。
-3、平台默认的登录账号密码：admin/admin123，请在首次登录后及时修改密码。
-## 卸载部署步骤
-1、在项目根目录下执行uninstall.sh脚本
 
+2、需要将部署服务器IP配置在平台使用的数据库（openGauss）的白名单列表中。
+
+3、平台默认的登录账号密码：admin/admin123，请在首次登录后及时修改密码。
+
+## 卸载步骤
+1、在项目根目录下执行uninstall.sh脚本，卸载系统以及清理文件数据。
+
+2、手动清理数据库中所有的表和序列。
 ## 后端说明
 > 1、后端返回给前端的响应编码，统一在org.opengauss.admin.common.enums.ResponseCode中定义，按照规则划分模块，规则如下：
 + 501xx 一体化模块；比如50101、50102

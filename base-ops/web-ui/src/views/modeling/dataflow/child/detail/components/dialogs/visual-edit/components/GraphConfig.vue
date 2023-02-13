@@ -123,23 +123,23 @@ const validate = () => {
   let message = ''
   if (!config.node || !config.node.id) {
     flag = false
-    message += (message ? '；\n ' : '') + t('components.GraphConfig.5mjckw7can80')
+    message += (message ? '；\n ' : '') + t('modeling.components.GraphConfig.5mjckw7can80')
   }
   if (!config.node || !config.node.name) {
     flag = false
-    message += (message ? '；\n ' : '') + t('components.GraphConfig.5mjckw850is0')
+    message += (message ? '；\n ' : '') + t('modeling.components.GraphConfig.5mjckw850is0')
   }
   if (!config.relation || !config.relation.out) {
     flag = false
-    message += (message ? '；\n ' : '') + t('components.GraphConfig.5mjckw8511c0')
+    message += (message ? '；\n ' : '') + t('modeling.components.GraphConfig.5mjckw8511c0')
   }
   if (!config.relation || !config.relation.in) {
     flag = false
-    message += (message ? '；\n ' : '') + t('components.GraphConfig.5mjckw8516w0')
+    message += (message ? '；\n ' : '') + t('modeling.components.GraphConfig.5mjckw8516w0')
   }
   if (!config.relation || !config.relation.value) {
     flag = false
-    message += (message ? '；\n ' : '') + t('components.GraphConfig.5mjckw851bo0')
+    message += (message ? '；\n ' : '') + t('modeling.components.GraphConfig.5mjckw851bo0')
   }
   if (!flag) {
     Notification.error({

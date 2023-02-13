@@ -57,6 +57,7 @@ const initData = () => {
   backBtnShow.value = true
   nextBtnShow.value = true
   loading.value = false
+  localStorage.removeItem('Static-pluginBase-opsOpsInstall')
 }
 
 const setBackBtnShow = (val: boolean) => {

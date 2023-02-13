@@ -78,6 +78,7 @@ const list = reactive<KeyValue>({
 })
 
 const packageVersionList = computed(() => [
+  { label: t('packageManage.index.else2'), value: '' },
   { label: t('packageManage.AddPackageDlg.5myq6nnec400'), value: 'ENTERPRISE' },
   { label: t('packageManage.AddPackageDlg.5myq6nnec8c0'), value: 'MINIMAL_LIST' },
   { label: t('packageManage.AddPackageDlg.5myq6nnecc40'), value: 'LITE' }

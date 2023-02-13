@@ -74,7 +74,7 @@ public class OpenGaussTopSQLHandler implements TopSQLHandler {
             "select row_to_json(t) from (select c2.relname,i.indisprimary,i.indisunique,i.indisclustered,i.indisvalid,\n" +
                     "i.indisreplident,pg_catalog.pg_get_indexdef(i.indexrelid,0,true) as def\n" +
                     "from pg_catalog.pg_class c, pg_catalog.pg_class c2,pg_catalog.pg_index i\n" +
-                    "where c2.relname=? and c.oid=i.indrelid and c2.oid=i.indexrelid) t";
+                    "where c.relname=? and c.oid=i.indrelid and c2.oid=i.indexrelid) t";
     private static final String TABLE_STRUCTURE_SQL =
             "select row_to_json(t) from (select a.attnum,a.attname,t.typname,a.attlen,a.attnotnull,b.description\n" +
                     "from pg_catalog.pg_class c,pg_catalog.pg_attribute a\n" +
