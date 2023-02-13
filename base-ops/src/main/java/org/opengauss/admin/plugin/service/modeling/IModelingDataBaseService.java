@@ -3,7 +3,9 @@ package org.opengauss.admin.plugin.service.modeling;
 import org.opengauss.admin.common.core.domain.model.ops.OpsClusterNodeVO;
 import org.opengauss.admin.common.core.domain.model.ops.OpsClusterVO;
 import org.opengauss.admin.plugin.domain.model.modeling.ModelingDataFlowSqlObject;
+import org.opengauss.admin.plugin.domain.model.modeling.OpenGaussConnectorBody;
 
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
@@ -30,5 +32,11 @@ public interface IModelingDataBaseService {
     List<OpsClusterVO> getClusterListWithDataBaseName();
 
     OpsClusterNodeVO getClusterNodeById(String clusterNodeId);
+
+    ResultSet query(OpenGaussConnectorBody openGaussConnectorBody, String sql, List<String> params) throws ClassNotFoundException, SQLException;
+
+    String update(OpenGaussConnectorBody openGaussConnectorBody, String sql, String queryType) throws ClassNotFoundException, SQLException;
+
+    List<Map<String, Object>> convertList(ResultSet rs);
 
 }

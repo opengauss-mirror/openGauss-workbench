@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
 * @author Administrator
@@ -35,8 +36,15 @@ public class OperatorConditionBuilderServiceImpl extends BaseBuilderServiceImpl 
             for (int z=0; z<andGroupParams.size(); z++) {
                 JSONObject andItem = andGroupParams.getJSONObject(z);
                 if (andItem.getString("field") != null) {
-                    String preparedParam = sqlObject.addParam(andItem.getString("value"));
-                    String sql = conditionConvert(andItem.getString("field"),andItem.getString("condition"),preparedParam);
+                    String preparedParam;
+                    String condition = andItem.getString("condition");
+
+                    if (Objects.equals(condition, "include") || Objects.equals(condition, "notInclude")) {
+                        preparedParam = sqlObject.addParam("%" + andItem.getString("value") + "%");
+                    } else {
+                        preparedParam = sqlObject.addParam(andItem.getString("value"));
+                    }
+                    String sql = conditionConvert(andItem.getString("field"),condition,preparedParam);
                     andSqlList.add(sql);
                 }
             }
@@ -84,10 +92,10 @@ public class OperatorConditionBuilderServiceImpl extends BaseBuilderServiceImpl 
                 return field + " >= " + value;
 
             case "include":
-                return field +" like " + "'%"+value+"%'";
+                return field +" like " + value;
 
             case "notInclude":
-                return "notlike("+field+", '%"+value+"%')";
+                return "notlike("+field+"," +value+ ")";
 
             case "isNull":
                 return field+" = ''";

@@ -289,35 +289,16 @@ public class ModelingDataFlowSqlObject implements Serializable {
             return sql;
         }
 
-        int cols = params.size();
-
-        Object[] values = new Object[cols];
-
-        System.arraycopy(params.toArray(), 0, values, 0, cols);
-
-        for (int i = 0; i < cols; i++) {
-
-            Object value = values[i];
-
-            if (value instanceof Date) {
-
-                values[i] = "'" + value + "'";
-
-            } else if (value instanceof String) {
-
-                values[i] = "'" + value + "'";
-
-            } else if (value instanceof Boolean) {
-
-                values[i] = (Boolean) value ? 1 : 0;
-
-            }
-
+        Pattern pattern = Pattern.compile("\\?");
+        Matcher matcher = pattern.matcher(sql);
+        StringBuffer sb = new StringBuffer();
+        int index = 0;
+        while (matcher.find()) {
+            matcher.appendReplacement(sb, params.get(index++));
         }
+        matcher.appendTail(sb);
 
-        String statement = String.format(sql.replaceAll("\\?", "%s"), values);
-
-        return statement;
+        return sb.toString();
 
     }
 }
