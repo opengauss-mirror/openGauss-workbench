@@ -24,11 +24,12 @@
             <a-table
               class="d-a-table-row"
               :data="list.data" :columns="columns"
-              v-model:selectedKeys="list.selectedRowKeys"
               :pagination="list.page"
               rowKey="id"
               :bordered="false"
               :loading="list.loading"
+              :row-selection="list.rowSelection"
+              v-model:selectedKeys="list.selectedRowKeys"
               @page-change="currentPage"
             >
               <template #pagination-left>
@@ -87,9 +88,14 @@ const columns = computed(() => [
 const filter = reactive({
   search: '', loading: false
 })
-const list: { data: Array<KeyValue>, page: KeyValue, selectedRowKeys: string[], loading: boolean } = reactive({
+const list: { data: Array<KeyValue>, page: KeyValue, selectedRowKeys: string[], loading: boolean, rowSelection: any } = reactive({
   data: [], page: { pageNum: 1, current: 1, pageSize: 10, total: 10, size: 10 }, loading: false,
-  selectedRowKeys: []
+  selectedRowKeys: [],
+  rowSelection: {
+    type: 'checkbox',
+    showCheckedAll: true,
+    onlyCurrent: false
+  }
 })
 const isFilter = () => {
   filter.loading = true
