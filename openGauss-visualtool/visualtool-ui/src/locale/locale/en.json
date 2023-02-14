@@ -213,6 +213,7 @@
             "5mjace1rd9o0": "Example: 20kb,20mb,20gb"
         },
         "AddHost": {
+            "else1": "Please enter the correct port number",
             "currentStatus": "Current status",
             "ipAddress": "IP address",
             "5mphy3snvg80": "available",

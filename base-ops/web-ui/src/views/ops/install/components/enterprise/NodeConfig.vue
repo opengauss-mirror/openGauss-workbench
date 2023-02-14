@@ -154,10 +154,72 @@ const initData = () => {
     hostId: [{ required: true, 'validate-trigger': 'change', message: t('enterprise.NodeConfig.5mpme7w6c1w0') }],
     rootPassword: [{ required: true, 'validate-trigger': 'blur', message: t('enterprise.NodeConfig.5mpme7w6b700') }],
     installUserId: [{ required: true, 'validate-trigger': 'change', message: t('enterprise.NodeConfig.5mpme7w6c5g0') }],
-    cmPort: [{ required: true, 'validate-trigger': 'blur', message: t('enterprise.NodeConfig.5mpme7w6bko0') }],
-    cmDataPath: [{ required: true, 'validate-trigger': 'blur', message: t('enterprise.NodeConfig.5mpme7w6c8s0') }],
-    dataPath: [{ required: true, 'validate-trigger': 'blur', message: t('enterprise.NodeConfig.5mpme7w6cc40') }],
-    xlogPath: [{ required: true, 'validate-trigger': 'blur', message: t('enterprise.NodeConfig.5mpme7w6cfw0') }]
+    cmPort: [
+      { required: true, 'validate-trigger': 'blur', message: t('enterprise.NodeConfig.5mpme7w6bko0') },
+      {
+        validator: (value: any, cb: any) => {
+          return new Promise(resolve => {
+            if (!value.trim()) {
+              cb(t('enterprise.ClusterConfig.else2'))
+              resolve(false)
+            }
+            const reg = /^([0-9]|[1-9]\d{1,3}|[1-5]\d{4}|6[0-4]\d{4}|65[0-4]\d{2}|655[0-2]\d|6553[0-5])$/
+            const re = new RegExp(reg)
+            if (re.test(value)) {
+              resolve(true)
+            } else {
+              cb(t('simple.InstallConfig.else2'))
+              resolve(false)
+            }
+          })
+        }
+      }
+    ],
+    cmDataPath: [
+      { required: true, 'validate-trigger': 'blur', message: t('enterprise.NodeConfig.5mpme7w6c8s0') },
+      {
+        validator: (value: any, cb: any) => {
+          return new Promise(resolve => {
+            if (!value.trim()) {
+              cb(t('enterprise.ClusterConfig.else2'))
+              resolve(false)
+            } else {
+              resolve(true)
+            }
+          })
+        }
+      }
+    ],
+    dataPath: [
+      { required: true, 'validate-trigger': 'blur', message: t('enterprise.NodeConfig.5mpme7w6cc40') },
+      {
+        validator: (value: any, cb: any) => {
+          return new Promise(resolve => {
+            if (!value.trim()) {
+              cb(t('enterprise.ClusterConfig.else2'))
+              resolve(false)
+            } else {
+              resolve(true)
+            }
+          })
+        }
+      }
+    ],
+    xlogPath: [
+      { required: true, 'validate-trigger': 'blur', message: t('enterprise.NodeConfig.5mpme7w6cfw0') },
+      {
+        validator: (value: any, cb: any) => {
+          return new Promise(resolve => {
+            if (!value.trim()) {
+              cb(t('enterprise.ClusterConfig.else2'))
+              resolve(false)
+            } else {
+              resolve(true)
+            }
+          })
+        }
+      }
+    ]
   }
 }
 
@@ -249,7 +311,7 @@ const getAZList = () => {
 const azChange = () => {
   if (data.azForm.azId) {
     if (data.azObj[data.azForm.azId]) {
-      data.azForm.azName = data.azObj[data.azForm.azId].name
+      data.azForm.azName = data.azObj[data.azForm.azId]
     }
   }
 }

@@ -8,7 +8,7 @@
             <div>{{ data.clusterInfo.clusterId }} - {{ data.clusterInfo.clusterName }}</div>
           </div>
           <div class="flex-row">
-            <div>{{ $t('enterprise.InstallPrompt.else1') }}: AZ</div>
+            <div>{{ $t('enterprise.InstallPrompt.else1') }}: {{ data.clusterInfo.azName }}</div>
           </div>
         </div>
         <div class="label-color item-node-center">
@@ -95,7 +95,8 @@ onMounted(() => {
     clusterId: storeInstallData.clusterId,
     clusterName: storeInstallData.clusterName,
     installPath: storeEnterpriseData.installPath,
-    port: storeEnterpriseData.port
+    port: storeEnterpriseData.port,
+    azName: storeEnterpriseData.azName
   })
   storeEnterpriseData.nodeConfigList.forEach(item => {
     const itemNode = getNodeData()

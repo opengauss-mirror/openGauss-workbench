@@ -373,6 +373,7 @@
     "backup": {
         "index": {
             "else1": "集群标识",
+            "else2": "确定要恢复？",
             "5mpm2oya7bg0": "请选择集群名称",
             "5mpm2oya7y80": "搜索",
             "5mpm2oya83s0": "恢复",
@@ -381,6 +382,7 @@
             "5mpm2oya8ek0": "取消",
             "5mpm2oya8i80": "删除",
             "5mpm2oya8lk0": "集群标识",
+            "else3": "备份说明",
             "5mpm2oya8r80": "备份标识",
             "5mpm2oya8uo0": "所在机器",
             "5mpm2oya8y00": "备份路径",
@@ -401,8 +403,8 @@
             "5mpm3ku3iag0": "请输入日志目录",
             "5mpm3ku3ie40": "临时文件目录",
             "5mpm3ku3ihg0": "请输入临时文件目录",
-            "5mpm3ku3il80": "工作OM目录",
-            "5mpm3ku3iok0": "请输入工作OM目录",
+            "5mpm3ku3il80": "数据库工具目录",
+            "5mpm3ku3iok0": "请输入数据库工具目录",
             "5mpm3ku3is00": "数据库core目录",
             "5mpm3ku3ivk0": "请输入数据库core目录",
             "5mpm3ku3iz80": "端口号",
@@ -414,7 +416,8 @@
             "5mpm3ku3jkw0": "开启运行时数据库节点自选主",
             "5mpm3ku3jo00": "集群标识已存在,请重新输入",
             "5mpm3ku3jqo0": "判断集群标识是否存在出错",
-            "else1": "请输入数字,字母或者下划线"
+            "else1": "请输入数字,字母或者下划线",
+            "else2": "不能为纯空格"
         },
         "EnterpriseInstall": {
             "else2": "提示",
@@ -610,6 +613,7 @@
         },
         "InstallConfig": {
             "else1": "root密码",
+            "else2": "请输入正确的端口号",
             "5mpmu0lapic0": "节点配置",
             "5mpmu0laqc80": "集群标识",
             "5mpmu0laqiw0": "请输入集群标识",

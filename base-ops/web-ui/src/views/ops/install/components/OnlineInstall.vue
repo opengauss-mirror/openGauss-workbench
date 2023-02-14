@@ -2,7 +2,7 @@
   <div class="panel-c panel-overflow">
     <a-space direction="vertical" fill>
       <div class="label-color mb ft-xlg">
-        {{ $t('components.OnlineInstall.else1') }}: {{ currInstallPackage? currInstallPackage: '--' }}
+        {{ $t('components.OnlineInstall.else1') }}: {{ data.selectedPackageName ? data.selectedPackageName : '--' }}
       </div>
       <div class="label-color mb">
         {{ $t('components.OnlineInstall.5mpn3mp10hw0') }}: {{ data.targetPath }}
@@ -12,16 +12,33 @@
         <div class="flex-col panel-body">
           <div v-if="data.packageList.length">
             <div v-for="item in data.packageList" :key="item.packageId">
-              <div class="center-item flex-between flex-row mb">
-                <svg-icon icon-class="ops-online-install" class="icon-size mr-lg"></svg-icon>
-                <div class="label-color ft-main mr-xlg">{{ item.os }}-{{ item.cpuArch }}-{{ item.packageVersion }}-{{
-                  item.packageVersionNum
-                }}
+              <div v-if="item.hasDownload"
+                :class="'label-color install-package-card mb ' + (data.selectedPackageId === item.packageId ? 'center-item-active' : '')"
+                @click="setPackageName(item)">
+                <div class="center-item flex-between flex-row mb">
+                  <svg-icon icon-class="ops-online-install" class="icon-size mr-lg"></svg-icon>
+                  <div class="label-color ft-main mr-xlg" style="width: 160px;">{{ item.os }}-{{ item.cpuArch }}-{{
+                    item.packageVersion
+                  }}-{{
+  item.packageVersionNum
+}}
+                  </div>
+                  <a-tag color="green">{{ $t('components.OnlineInstall.5mpn3mp117k0') }}</a-tag>
                 </div>
-                <a-button @click="downloadPackage(item)" v-if="!item.hasDownload">{{
-                  $t('components.OnlineInstall.5mpn3mp111s0')
-                }}</a-button>
-                <a-tag color="green" v-else>{{ $t('components.OnlineInstall.5mpn3mp117k0') }}</a-tag>
+              </div>
+              <div v-else>
+                <div class="center-item flex-between flex-row mb">
+                  <svg-icon icon-class="ops-online-install" class="icon-size mr-lg"></svg-icon>
+                  <div class="label-color ft-main mr-xlg" style="width: 200px;">{{ item.os }}-{{ item.cpuArch }}-{{
+                    item.packageVersion
+                  }}-{{
+  item.packageVersionNum
+}}
+                  </div>
+                  <a-button @click="downloadPackage(item)">{{
+                    $t('components.OnlineInstall.5mpn3mp111s0')
+                  }}</a-button>
+                </div>
               </div>
             </div>
           </div>
@@ -58,7 +75,9 @@ const installStore = useOpsStore()
 const data = reactive<KeyValue>({
   loading: false,
   targetPath: '/ops/files/',
-  packageList: []
+  packageList: [],
+  selectedPackageId: '',
+  selectedPackageName: ''
 })
 
 const currInstallPackage = ref('')
@@ -95,6 +114,7 @@ const getPackageList = () => {
             return item.packageId === installStore.getInstallConfig.packageId
           })
           if (hasDownloadPackage) {
+            setPackageName(hasDownloadPackage)
             hasDownloadPackage.hasDownload = true
           }
         }
@@ -105,9 +125,22 @@ const getPackageList = () => {
   }
 }
 
+const setPackageName = (packageData: KeyValue) => {
+  data.selectedPackageId = packageData.packageId
+  data.selectedPackageName = `${packageData.os}-${packageData.cpuArch}-${packageData.packageVersionNum}-${packageData.packageVersion}`
+  const fileName = packageData.packageUrl.split('/')[packageData.packageUrl.split('/').length - 1]
+  installStore.setInstallContext({
+    packageId: packageData.packageId,
+    packagePath: data.targetPath,
+    packageName: fileName,
+    installPackagePath: data.targetPath + fileName,
+    openGaussVersionNum: packageData.packageVersionNum,
+    installOs: (packageData.os + '_' + packageData.cpuArch).toLocaleUpperCase()
+  })
+}
+
 const downloadPackage = (packageData: KeyValue) => {
   currPercent.value = 0
-  currInstallPackage.value = `${packageData.os}-${packageData.cpuArch}-${packageData.packageVersionNum}-${packageData.packageVersion}`
   // get url last fileName
   const fileName = packageData.packageUrl.split('/')[packageData.packageUrl.split('/').length - 1]
   const socketKey = new Date().getTime()
@@ -132,14 +165,7 @@ const downloadPackage = (packageData: KeyValue) => {
       if (Number(messageData) === 1) {
         percentLoading.value = false
         packageData.hasDownload = true
-        installStore.setInstallContext({
-          packageId: packageData.packageId,
-          packagePath: data.targetPath,
-          packageName: fileName,
-          installPackagePath: data.targetPath + fileName,
-          openGaussVersionNum: packageData.packageVersionNum,
-          installOs: (packageData.os + '_' + packageData.cpuArch).toLocaleUpperCase()
-        })
+        setPackageName(packageData)
         websocket.destroy()
       }
     }
@@ -169,5 +195,23 @@ const storeData = computed(() => installStore.getInstallConfig)
 
 .panel-overflow {
   overflow: auto;
+}
+
+.install-package-card {
+  width: 480px;
+  height: 100px;
+  padding: 24px;
+  border-radius: 8px;
+  border: 1px solid #C9CDD4;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.3s ease-in-out;
+
+  &:hover {
+    box-shadow: 0px 4px 20px 0px rgba(153, 153, 153, 0.6);
+    cursor: pointer;
+  }
 }
 </style>

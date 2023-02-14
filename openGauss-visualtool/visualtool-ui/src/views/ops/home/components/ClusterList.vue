@@ -446,11 +446,6 @@ const openHostWebSocket = (clusterData: KeyValue, nodeData: KeyValue, clusterInd
     businessId: 'monitor_' + clusterData.clusterId + '_' + nodeData.hostId + '_' + socketKey
   }
   const websocket = new Socket({ url: `COMMAND_EXEC/${param.businessId}` })
-  if (data.clusterList[clusterIndex].clusterId === 'eee') {
-    setTimeout(() => {
-      console.log('time out ', websocket)
-    }, 10000)
-  }
   websocket.onopen(() => {
     // cluster monitoring
     clusterMonitor(param).then((res: KeyValue) => {
@@ -466,9 +461,6 @@ const openHostWebSocket = (clusterData: KeyValue, nodeData: KeyValue, clusterInd
       data.clusterList[clusterIndex].isConnected = 0
       websocket.destroy()
     })
-  })
-  websocket.onerror(() => {
-    data.clusterList[clusterIndex].isConnected = 0
   })
   websocket.onclose(() => {
     console.log(`on close cluster: ${data.clusterList[clusterIndex].clusterId}, host: ${data.clusterList[clusterIndex].clusterNodes[index].privateIp}`)
