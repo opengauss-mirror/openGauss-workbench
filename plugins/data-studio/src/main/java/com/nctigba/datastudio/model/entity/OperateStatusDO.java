@@ -16,6 +16,10 @@ public class OperateStatusDO {
 
     private boolean singleStep;
 
+    private boolean startRun;
+
+    private boolean stopRun;
+
     public OperateStatusDO() {
         this.isDebug = true;
         init();
@@ -27,8 +31,13 @@ public class OperateStatusDO {
         this.stopDebug = false;
         this.breakPointStep = false;
         this.singleStep = false;
+        this.startRun = false;
+        this.stopRun = false;
     }
-
+    public void enableStopRun() {
+        this.startRun = true;
+        this.stopRun = false;
+    }
     public void enableStartDebug() {
         this.execute = true;
         this.startDebug = true;

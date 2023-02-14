@@ -6,6 +6,7 @@ export default class WebSocketClass {
   instance = null;
   callback = null;
   connected = false;
+  setIntervalWesocketPush = null;
   static instance: any;
 
   static getInstance(name, sessionId) {
@@ -34,11 +35,13 @@ export default class WebSocketClass {
 
     this.ws.onopen = () => {
       this.connected = true;
+      this.sendPing();
     };
     if (callback) this.callback = callback;
 
     this.ws.onclose = () => {
       this.connected = false;
+      clearInterval(this.setIntervalWesocketPush);
     };
 
     this.ws.onmessage = (msg: any) => {
@@ -71,6 +74,14 @@ export default class WebSocketClass {
     } else if (this.ws.readyState === 0) {
       this.connecting(data);
     }
+  }
+
+  sendPing(time = 1000 * 20, ping = 'ping') {
+    clearInterval(this.setIntervalWesocketPush);
+    this.ws.send(ping);
+    this.setIntervalWesocketPush = setInterval(() => {
+      this.ws.send(ping);
+    }, time);
   }
 
   // When sending data but the connection is not established, it will be processed and wait for retransmission

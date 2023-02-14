@@ -9,7 +9,10 @@ export default {
       'Please check whether the URL you entered is correct, or click the button below to return to the home page.',
     backHome: 'Back to Home',
     confirm: 'If you confirm',
-    if: '？',
+    systemPrompt: 'System prompt',
+    loginExpired: 'Login status has expired, please log in again',
+    signInAgain: 'Sign in again',
+    if: '?',
     colon: ':',
   },
   utils: {
