@@ -104,6 +104,7 @@ public class HostTest {
     public void testAdd() throws JSchException, IOException, InterruptedException {
         JschResult jschResult = new JschResult();
         jschResult.setExitCode(0);
+        jschResult.setResult("res");
         Mockito.doReturn("000000").when(encryptionUtils).decrypt(any());
         Mockito.doReturn(Optional.ofNullable(getJschSession())).when(jschUtil).getSession(any(), any(), any(), any());
         Mockito.doReturn(jschResult).when(jschUtil).executeCommand(any(), any());
@@ -157,6 +158,7 @@ public class HostTest {
         Mockito.doReturn(Optional.ofNullable(getJschSession())).when(jschUtil).getSession(any(), any(), any(), any());
         JschResult jschResult = new JschResult();
         jschResult.setExitCode(0);
+        jschResult.setResult("res");
         Mockito.doReturn(jschResult).when(jschUtil).executeCommand(any(), any());
         String hostId = "1";
         HostBody hostBody = new HostBody();

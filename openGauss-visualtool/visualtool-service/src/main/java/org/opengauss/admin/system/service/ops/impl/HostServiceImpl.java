@@ -26,7 +26,6 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.validation.constraints.NotEmpty;
 import java.util.List;
 import java.util.Objects;
 
@@ -59,15 +58,53 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
             throw new OpsException("host[" + hostEntity.getPublicIp() + "]already exists, please do not add it again");
         }
 
-        hostEntity = hostBody.toHostEntity(jschUtil, getHostName(jschUtil, encryptionUtils, hostBody.getPublicIp(), hostBody.getPort(), hostBody.getPassword()));
+        Session session = jschUtil.getSession(hostBody.getPublicIp(), hostBody.getPort(), "root", encryptionUtils.decrypt(hostBody.getPassword())).orElseThrow(() -> new OpsException("Failed to establish a session with the host"));
+        try {
+            hostEntity = hostBody.toHostEntity(getHostName(session),getOS(session),getCpuArch(session));
+        } finally {
+            if (Objects.nonNull(session) && session.isConnected()) {
+                session.disconnect();
+            }
+        }
         save(hostEntity);
 
         OpsHostUserEntity hostUserEntity = hostBody.toRootUser(hostEntity.getHostId());
         return hostUserService.save(hostUserEntity);
     }
 
-    private String getHostName(JschUtil jschUtil, EncryptionUtils encryptionUtils, @NotEmpty(message = "The IP address cannot be empty") String publicIp, Integer port, String password) {
-        Session session = jschUtil.getSession(publicIp, port, "root", encryptionUtils.decrypt(password)).orElseThrow(() -> new OpsException("Failed to establish a session with the host. Procedure"));
+    private String getCpuArch(Session rootSession) {
+        String command = "lscpu | grep Architecture: | head -n 1 | awk -F ':' '{print $2}'";
+        try {
+            JschResult jschResult = jschUtil.executeCommand(command, rootSession);
+            if (jschResult.getExitCode()!=0){
+                log.error("Failed to get cpu architecture information,exitCode:{},res:{}",jschResult.getExitCode(),jschResult.getResult());
+                throw new OpsException("Failed to get cpu architecture information");
+            }
+
+            return jschResult.getResult().trim();
+        } catch (Exception e) {
+            log.error("Failed to get cpu architecture information",e);
+            throw new OpsException("Failed to get cpu architecture information");
+        }
+    }
+
+    private String getOS(Session rootSession) {
+        String command = "cat /etc/os-release | grep ID= | head -n 1 | awk -F '=' '{print $2}' | sed 's/\\\"//g'";
+        try {
+            JschResult jschResult = jschUtil.executeCommand(command, rootSession);
+            if (jschResult.getExitCode()!=0){
+                log.error("Failed to get system information,exitCode:{},res:{}",jschResult.getExitCode(),jschResult.getResult());
+                throw new OpsException("Failed to get system information");
+            }
+
+            return jschResult.getResult().trim();
+        } catch (Exception e) {
+            log.error("Failed to get system information",e);
+            throw new OpsException("Failed to get system information");
+        }
+    }
+
+    private String getHostName(Session session) {
         try {
             JschResult jschResult = jschUtil.executeCommand(SshCommandConstants.HOSTNAME, session);
             if (0 != jschResult.getExitCode()) {
@@ -79,10 +116,6 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
         } catch (Exception e) {
             log.error("Failed to obtain the host name：{}", e);
             throw new OpsException("Failed to obtain the host name");
-        } finally {
-            if (Objects.nonNull(session) && session.isConnected()) {
-                session.disconnect();
-            }
         }
     }
 
@@ -148,7 +181,8 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
             root = hostBody.toRootUser(hostId);
         }
 
-        OpsHostEntity newHostEntity = hostBody.toHostEntity(jschUtil, getHostName(jschUtil, encryptionUtils, hostBody.getPublicIp(), hostBody.getPort(), hostBody.getPassword()));
+        Session session = jschUtil.getSession(hostBody.getPublicIp(), hostBody.getPort(), "root", encryptionUtils.decrypt(hostBody.getPassword())).orElseThrow(() -> new OpsException("Failed to establish a session with the host"));
+        OpsHostEntity newHostEntity = hostBody.toHostEntity(getHostName(session),getOS(session),getCpuArch(session));
         newHostEntity.setHostId(hostId);
         updateById(newHostEntity);
 
