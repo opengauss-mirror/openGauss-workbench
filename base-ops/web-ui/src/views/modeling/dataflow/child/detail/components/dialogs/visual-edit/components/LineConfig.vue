@@ -8,7 +8,7 @@
           <a-col :span="7">{{$t('modeling.components.LineConfig.5m7ijyex0ts0')}}</a-col>
           <a-col :span="11" class="mr-s">
             <a-select v-model="config.showType.dimension" :disabled="config.showType.key !== 1">
-              <overflow-tooltip :text="item.label" v-for="(item, key) in stringOption" :key="key" :content="item.label">
+              <overflow-tooltip :text="item.label" v-for="(item, key) in allOption" :key="key" :content="item.label">
                 <a-option :value="item.value"><icon-tag class="mr-s" v-if="item.isCustom" />{{ item.label }}</a-option>
               </overflow-tooltip>
             </a-select>
@@ -39,7 +39,7 @@
           </a-select>
         </a-col>
       </a-row>
- 
+
     </div>
     <div class="serie-config">
       <div class="content-header mb-s">
@@ -108,6 +108,7 @@ interface TypeIndicator { field: string, type: string, unit: string }
 interface TypeDimension { field: string, num: number }
 defineProps<{
   stringOption: KeyValue[],
+  allOption: KeyValue[],
   numberOption: KeyValue[],
   datetimeOption: KeyValue[]
 }>()
@@ -145,10 +146,6 @@ const validate = () => {
   if (!config.indicator[0] || !config.indicator[0].field) {
     flag = false
     message += (message ? '；\n ' : '') + t('modeling.components.LineConfig.5m7ijyex2e80')
-  }
-  if (!config.indicator[0] || !config.indicator[0].type) {
-    flag = false
-    message += (message ? '；\n ' : '') + t('modeling.components.LineConfig.5m7ijyex2gg0')
   }
   if (!config.indicator[0] || !config.indicator[0].unit) {
     flag = false

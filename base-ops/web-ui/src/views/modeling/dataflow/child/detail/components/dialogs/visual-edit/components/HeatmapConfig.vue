@@ -83,9 +83,12 @@
 <script setup lang="ts">
 import { reactive } from 'vue'
 import { IconPlus } from '@arco-design/web-vue/es/icon'
+import { Notification } from '@arco-design/web-vue'
 import { KeyValue } from '@antv/x6/lib/types'
 import { indicatorType, indicatorTypeSum } from '../hooks/options'
 import OverflowTooltip from '../../../../../../../components/OverflowTooltip.vue'
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
 interface TypeIndicator { field: string, type: string, unit: string }
 interface TypeDimension { field: string, num: number }
 defineProps<{
@@ -96,7 +99,7 @@ defineProps<{
 const emits = defineEmits(['openCDD'])
 const openCdd = () => emits('openCDD')
 const config = reactive({
-  indicator: { field: '', type: '', unit: '' } as TypeIndicator,
+  indicator: { field: '', type: 'sum', unit: '' } as TypeIndicator,
   x: { field: '', num: 5 } as TypeDimension,
   y: { field: '', num: 5 } as TypeDimension,
   range: [0, 100] as [number, number]
@@ -107,13 +110,33 @@ const init = (data?: KeyValue) => {
     config.x = data.x ? data.x : { field: '', num: 5 }
     config.y = data.y ? data.y : { field: '', num: 5 }
   } else {
-    config.indicator = { field: '', type: '', unit: '' }
+    config.indicator = { field: '', type: 'sum', unit: '' }
     config.x = { field: '', num: 5 }
     config.y = { field: '', num: 5 }
   }
 }
 const validate = () => {
   let flag = true
+  let message = ''
+  if (!config.indicator || !config.indicator.field) {
+    flag = false
+    message += (message ? '；\n ' : '') + t('modeling.dy_common.heatmapConfig.notice1')
+  }
+  if (!config.x || !config.x.field) {
+    flag = false
+    message += (message ? '；\n ' : '') + t('modeling.dy_common.heatmapConfig.notice2')
+  }
+  if (!config.y || !config.y.field) {
+    flag = false
+    message += (message ? '；\n ' : '') + t('modeling.dy_common.heatmapConfig.notice2')
+  }
+  if (!flag) {
+    Notification.error({
+      title: t('modeling.components.BarConfig.5m7insim3vc0'),
+      content: message,
+      closable: true
+    })
+  }
   return flag
 }
 defineExpose({ config, validate, init })

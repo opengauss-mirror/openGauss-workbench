@@ -42,7 +42,7 @@
                 </div>
               </a-col>
               <a-col :span="11" class="mr-xs">
-                <a-input :max-length="140" show-word-limit  v-model="row.value" :placeholder="$t('modeling.base.InsertOperator.5m7hqzngf200')" @blur="save('list1', config.list1)"></a-input>
+                <a-input v-model="row.value" :placeholder="$t('modeling.base.InsertOperator.5m7hqzngf200')" @blur="save('list1', config.list1)"></a-input>
               </a-col>
               <a-col :span="1">
                 <div class="d-control-remove" @click="operateConfigList1('delete-list1-row', key, rowKey)">-</div>
