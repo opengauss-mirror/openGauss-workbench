@@ -55,6 +55,8 @@ public class EnterpriseInstallNodeConfig {
 
     private String xlogPath;
 
+    private String azPriority;
+
     public void checkConfig() {
         if (Objects.isNull(clusterRole)) {
             throw new OpsException("Cluster role error");
@@ -94,6 +96,10 @@ public class EnterpriseInstallNodeConfig {
 
         if (StrUtil.isEmpty(xlogPath)) {
             throw new OpsException("[" + hostname + "]xlog path error");
+        }
+
+        if (StrUtil.isEmpty(azPriority)) {
+            throw new OpsException("[" + hostname + "]azPriority error");
         }
     }
 

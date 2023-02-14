@@ -29,6 +29,7 @@ import org.opengauss.admin.plugin.vo.ops.BackupVO;
 import org.opengauss.admin.plugin.vo.ops.RecoverInputDto;
 import org.opengauss.admin.system.plugin.facade.HostFacade;
 import org.opengauss.admin.system.plugin.facade.HostUserFacade;
+import org.opengauss.admin.system.plugin.facade.OpsFacade;
 import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
 import com.jcraft.jsch.Session;
 import lombok.extern.slf4j.Slf4j;
@@ -36,6 +37,7 @@ import org.opengauss.admin.plugin.service.ops.IOpsBackupService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 
@@ -181,6 +183,7 @@ public class OpsBackupService extends ServiceImpl<OpsBackupMapper, OpsBackupEnti
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void del(String id) {
         OpsBackupEntity backupEntity = getById(id);
         if (Objects.isNull(backupEntity)) {
@@ -205,17 +208,12 @@ public class OpsBackupService extends ServiceImpl<OpsBackupMapper, OpsBackupEnti
             throw new OpsException("Cluster node information does not exist");
         }
 
-        OpsHostUserEntity rootUserEntity = hostUserFacade.getRootUserByHostId(hostId);
-        if (Objects.isNull(rootUserEntity)) {
-            throw new OpsException("root user information not found");
+        OpsHostUserEntity installUserEntity = hostUserFacade.getRootUserByHostId(clusterNodeEntity.getInstallUserId());
+        if (Objects.isNull(installUserEntity)) {
+            throw new OpsException("install user information not found");
         }
-        threadPoolTaskExecutor.submit(() -> {
-            try {
-                doDel(backupEntity, hostEntity, rootUserEntity);
-            } catch (Exception e) {
-                log.error("failed to delete：", e);
-            }
-        });
+
+        doDel(backupEntity, hostEntity, installUserEntity);
 
         removeById(backupEntity);
     }
@@ -225,12 +223,12 @@ public class OpsBackupService extends ServiceImpl<OpsBackupMapper, OpsBackupEnti
         return backupMapper.pageBackup(page,clusterId);
     }
 
-    private void doDel(OpsBackupEntity backupEntity, OpsHostEntity hostEntity, OpsHostUserEntity rootUserEntity) {
-        Session rootSession = jschUtil.getSession(hostEntity.getPublicIp(), hostEntity.getPort(), rootUserEntity.getUsername(), encryptionUtils.decrypt(rootUserEntity.getPassword())).orElseThrow(() -> new OpsException("Failed to establish connection with host"));
+    private void doDel(OpsBackupEntity backupEntity, OpsHostEntity hostEntity, OpsHostUserEntity installUserEntity) {
+        Session installUserSession = jschUtil.getSession(hostEntity.getPublicIp(), hostEntity.getPort(), installUserEntity.getUsername(), encryptionUtils.decrypt(installUserEntity.getPassword())).orElseThrow(() -> new OpsException("Failed to establish connection with host"));
 
         try {
             String command = "rm -rf " + backupEntity.getBackupPath();
-            JschResult jschResult = jschUtil.executeCommand(command, rootSession);
+            JschResult jschResult = jschUtil.executeCommand(command, installUserSession);
             if (0 != jschResult.getExitCode()) {
                 log.error("Failed to delete backup，exitCode:{},msg:{}", jschResult.getExitCode(), jschResult.getResult());
                 throw new OpsException("Failed to delete backup");
@@ -239,8 +237,8 @@ public class OpsBackupService extends ServiceImpl<OpsBackupMapper, OpsBackupEnti
             log.error("Failed to delete backup", e);
             throw new OpsException("Failed to delete backup");
         }finally {
-            if (Objects.nonNull(rootSession) && rootSession.isConnected()){
-                rootSession.disconnect();
+            if (Objects.nonNull(installUserSession) && installUserSession.isConnected()){
+                installUserSession.disconnect();
             }
         }
     }

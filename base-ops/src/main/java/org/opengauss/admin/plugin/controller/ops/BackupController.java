@@ -44,5 +44,4 @@ public class BackupController extends BaseController {
         backupService.del(id);
         return AjaxResult.success();
     }
-
 }

@@ -41,10 +41,7 @@ public class EnterpriseInstallConfig implements ClusterInstallConfig {
     private Boolean isInstallCM;
 
     private List<EnterpriseInstallNodeConfig> nodeConfigList;
-    /**
-     * AZ ID
-     */
-    private String azId;
+
     /**
      * AZ Name
      */
@@ -74,10 +71,6 @@ public class EnterpriseInstallConfig implements ClusterInstallConfig {
 
         if (Objects.isNull(port)) {
             throw new OpsException("Port error");
-        }
-
-        if (StrUtil.isEmpty(azId) || StrUtil.isEmpty(azName)) {
-            throw new OpsException("AZ information is incorrect");
         }
 
         if (Objects.isNull(enableDCF)) {
