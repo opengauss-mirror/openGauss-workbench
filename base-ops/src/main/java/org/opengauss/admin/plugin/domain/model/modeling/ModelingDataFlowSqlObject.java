@@ -294,7 +294,7 @@ public class ModelingDataFlowSqlObject implements Serializable {
         StringBuffer sb = new StringBuffer();
         int index = 0;
         while (matcher.find()) {
-            matcher.appendReplacement(sb, params.get(index++));
+            matcher.appendReplacement(sb, "'" + params.get(index++) + "'");
         }
         matcher.appendTail(sb);
 

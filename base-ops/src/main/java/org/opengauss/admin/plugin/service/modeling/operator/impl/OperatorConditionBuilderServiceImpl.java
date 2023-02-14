@@ -104,7 +104,7 @@ public class OperatorConditionBuilderServiceImpl extends BaseBuilderServiceImpl 
                 return field+" <> ''";
 
             default:
-                return field + " " + condition + " '" + value + "'";
+                return field + " " + condition + value ;
         }
 
     }
