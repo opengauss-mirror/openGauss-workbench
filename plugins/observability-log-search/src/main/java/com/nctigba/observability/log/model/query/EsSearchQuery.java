@@ -27,7 +27,7 @@ public class EsSearchQuery {
     private Date endDate;
     private List<String> logType;
     private List<String> logLevel;
-    private String scollId;
+    private String scrollId;
 
     public void setStartDate(String startDate) {
         this.startDate = DateUtil.parseUTC(startDate);
@@ -67,4 +67,5 @@ public class EsSearchQuery {
                 && searchPhrase == null;
         return isEmptyObject;
     }
+
 }

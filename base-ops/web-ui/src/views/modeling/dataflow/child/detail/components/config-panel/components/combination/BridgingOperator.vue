@@ -61,8 +61,16 @@
                   />
                 </a-col>
                 <a-col :span="8" class="mr-xs">
-                  <a-select v-model="item.value" allow-create :placeholder="$t('modeling.combination.BridgingOperator.5m82a7i039g0')" :trigger-props="{ contentClass: 'd-a-select-dropdown' }"
-                    showSearch style="width: 100%;" @change="conditionValueChange(item)" @input-value-change="onInputOption">
+                  <a-select
+                    v-model="item.value"
+                    allow-create
+                    :placeholder="$t('modeling.combination.BridgingOperator.5m82a7i039g0')"
+                    :trigger-props="{ contentClass: 'd-a-select-dropdown' }"
+                    showSearch style="width: 100%;"
+                    @change="conditionValueChange(item)"
+                    @input-value-change="onInputOption"
+                    v-if="(item.condition !== 'notNull') && (item.condition !== 'isNull')"
+                  >
                     <template #label="{ data }"><overflow-tooltip :text="data?.label" :content="data?.label" :other-width="0">{{ data?.label }}</overflow-tooltip></template>
                     <overflow-tooltip :text="item.name" v-for="(item, key) in joinTableFieldsList" :key="`field${key}`" :content="`${item.name}`">
                       <a-option :value="`${iData.table}.${item.name}`" :label="item.name"></a-option>

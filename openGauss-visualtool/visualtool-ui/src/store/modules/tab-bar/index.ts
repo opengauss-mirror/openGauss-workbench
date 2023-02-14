@@ -21,31 +21,31 @@ const useAppStore = defineStore('tabBar', {
   }),
 
   getters: {
-    getTabList(): TagProps[] {
+    getTabList (): TagProps[] {
       return this.tagList
     },
-    getCacheList(): string[] {
+    getCacheList (): string[] {
       return Array.from(this.cacheTabList)
     }
   },
 
   actions: {
-    updateTabList(route: RouteLocationNormalized) {
+    updateTabList (route: RouteLocationNormalized) {
       this.tagList.push(formatTag(route))
       if (!route.meta.ignoreCache) {
         this.cacheTabList.add(route.name as string)
       }
     },
-    deleteTag(idx: number, tag: TagProps) {
+    deleteTag (idx: number, tag: TagProps) {
       this.tagList.splice(idx, 1)
       this.cacheTabList.delete(tag.name)
     },
-    deleteTags(tag: TagProps) {
+    deleteTags (tag: TagProps) {
       const idx = this.tagList.findIndex(item => item.name === tag.name)
       this.tagList.splice(idx, 1)
       this.cacheTabList.delete(tag.name)
     },
-    freshTabList(tags: TagProps[]) {
+    freshTabList (tags: TagProps[]) {
       this.tagList = tags
       this.cacheTabList.clear()
       // To judge ignoreCache first
@@ -54,7 +54,7 @@ const useAppStore = defineStore('tabBar', {
         .map((el) => el.name)
         .forEach((x) => this.cacheTabList.add(x))
     },
-    resetTabList() {
+    resetTabList () {
       this.tagList = [DEFAULT_ROUTE]
       this.cacheTabList.clear()
       this.cacheTabList.add(DEFAULT_ROUTE_NAME)

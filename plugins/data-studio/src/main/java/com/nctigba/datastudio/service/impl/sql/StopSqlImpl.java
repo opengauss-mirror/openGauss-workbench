@@ -3,6 +3,7 @@ package com.nctigba.datastudio.service.impl.sql;
 import com.alibaba.fastjson.JSON;
 import com.nctigba.datastudio.base.WebSocketServer;
 import com.nctigba.datastudio.model.PublicParamReq;
+import com.nctigba.datastudio.model.entity.OperateStatusDO;
 import com.nctigba.datastudio.service.OperationInterface;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -24,7 +25,9 @@ public class StopSqlImpl implements OperationInterface {
             if (statement != null) {
                 statement.close();
                 statement.cancel();
-                webSocketServer.setStatement(windowName, null);
+                OperateStatusDO operateStatus = webSocketServer.getOperateStatus(windowName);
+                operateStatus.enableStopRun();
+                webSocketServer.setOperateStatus(windowName, operateStatus);
             }
             webSocketServer.sendMessage(windowName, text, "Close successfully", null);
         } catch (Exception ex) {

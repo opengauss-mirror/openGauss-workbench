@@ -24,5 +24,6 @@ public class LogSearchQuery {
     private Date endDate;
     private List<String> logType;
     private List<String> logLevel;
-    private String scollId;
+    private String scrollId;
+
 }

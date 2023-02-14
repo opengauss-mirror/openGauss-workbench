@@ -1,5 +1,6 @@
 package org.opengauss.admin.service.ops;
 
+import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -25,6 +26,11 @@ public class AzTest {
         public boolean save(OpsAzEntity entity) {
             return true;
         }
+
+        @Override
+        public long count(Wrapper<OpsAzEntity> queryWrapper) {
+            return 0;
+        }
     };
 
     @BeforeClass
@@ -41,7 +47,8 @@ public class AzTest {
     @Test
     public void testAdd() {
         OpsAzEntity opsAzEntity = new OpsAzEntity();
-        boolean add = azService.save(opsAzEntity);
+        opsAzEntity.setName("abc");
+        boolean add = azService.add(opsAzEntity);
         Assertions.assertTrue(add);
     }
 }

@@ -41,7 +41,6 @@ public class LogSearchServiceImpl implements LogSearchService {
 
     @Autowired
     private EsLogSearchUtils esLogSearchUtils;
-
     @Autowired
     private ElasticsearchClient client;
 
@@ -181,7 +180,7 @@ public class LogSearchServiceImpl implements LogSearchService {
             var list = new ArrayList<LogDetailInfoDTO>();
             LogInfoDTO logInfoDTO = new LogInfoDTO();
             try {
-                if (queryParam.getScollId() == null) {
+                if (queryParam.getScrollId() == null) {
                     SearchResponse<HashMap> searchResponse = esLogSearchUtils.queryLogInfo(queryParam);
                     List<Hit<HashMap>> hits = searchResponse.hits().hits();
                     for (var decodeBeanHit : hits) {
@@ -204,8 +203,8 @@ public class LogSearchServiceImpl implements LogSearchService {
                     logInfoDTO.setScrollId(searchResponse.scrollId());
                     logInfoDTO.setLogs(list);
                 } else {
-                    ScrollResponse scrollResponse = client.scroll(s -> s.scrollId(queryParam.getScollId()).scroll(t -> t.time("10s")), HashMap.class);
-                    String scollId = scrollResponse.scrollId();
+                    ScrollResponse scrollResponse = client.scroll(s -> s.scrollId(queryParam.getScrollId()).scroll(t -> t.time("10s")), HashMap.class);
+                    String scrollId = scrollResponse.scrollId();
                     List<Hit<HashMap>> hit = scrollResponse.hits().hits();
                     for (var decodeBeanHit : hit) {
                         var docMap = decodeBeanHit.source();
@@ -224,7 +223,7 @@ public class LogSearchServiceImpl implements LogSearchService {
                             list.add(logDetailInfoDTO);
                         }
                     }
-                    logInfoDTO.setScrollId(scollId);
+                    logInfoDTO.setScrollId(scrollId);
                     logInfoDTO.setLogs(list);
                 }
             } catch (ElasticsearchException e) {

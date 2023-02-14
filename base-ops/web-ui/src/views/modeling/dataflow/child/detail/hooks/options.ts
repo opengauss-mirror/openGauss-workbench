@@ -80,8 +80,10 @@ export const options = () => ({
               type: 'BaseNode', cells_type: 'condition', text: i18n.global.t('modeling.hooks.index.5m83asjg7x40'), configName: 'ConditionOperator', icon: 'modeling-tiaojian',
               or: [],
               rule: (data: KeyValue) => data.or.filter((orItem: KeyValue) => {
-                return orItem.filter((andItem: KeyValue) => !(andItem.field && andItem.condition && andItem.value)).length !== 0
-              }).length === 0
+                return orItem.filter((andItem: KeyValue) => !(andItem.field && (
+                    (andItem.condition === 'isNull' || andItem.condition === 'notNull') ? true : (andItem.value ? true : false)
+                  ))).length !== 0
+                }).length === 0
             },
             ports: edge1.ports
           },
@@ -91,7 +93,9 @@ export const options = () => ({
               type: 'BaseNode', cells_type: 'join', text: i18n.global.t('modeling.hooks.index.5m83asjg7zs0'), configName: 'BridgingOperator', icon: 'modeling-qiaojie',
               table: '', connectType: '', condition: [],
               rule: (data: KeyValue) => data.table && data.connectType && data.condition.filter((orItem: KeyValue) => {
-                return orItem.filter((andItem: KeyValue) => !(andItem.field && andItem.condition && andItem.value)).length !== 0
+                return orItem.filter((andItem: KeyValue) => !(andItem.field && (
+                  (andItem.condition === 'isNull' || andItem.condition === 'notNull') ? true : (andItem.value ? true : false)
+                ))).length !== 0
               }).length === 0
             },
             ports: edge1.ports

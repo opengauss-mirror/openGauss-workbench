@@ -1,5 +1,13 @@
 import request from './request';
 
+// heartbeat
+export function heartbeat() {
+  return request({
+    url: '/dataStudio/web/v1/functionality/heartbeat',
+    method: 'get',
+  });
+}
+
 // createConnect
 export function createConnect(data) {
   return request({

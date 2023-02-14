@@ -26,7 +26,7 @@
 <script setup lang="ts">
 import ClusterConfig from '@/views/ops/install/components/enterprise/ClusterConfig.vue'
 import NodeConfig from '@/views/ops/install/components/enterprise/NodeConfig.vue'
-import { computed, ref } from 'vue'
+import { computed, ref, inject, onMounted } from 'vue'
 import EnvMonitor from './EnvMonitor.vue'
 import InstallPrompt from './InstallPrompt.vue'
 import ExeImport from '../ExeImport.vue'
@@ -43,6 +43,12 @@ enum STEP_ENUM {
 
 const installProps = defineProps({
   currStep: Number
+})
+
+const loadingFunc = inject<any>('loading')
+
+onMounted(() => {
+  loadingFunc.setBackBtnShow(true)
 })
 
 const clusterConfigRef = ref<InstanceType<typeof ClusterConfig> | null>(null)
