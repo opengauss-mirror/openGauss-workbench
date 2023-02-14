@@ -739,7 +739,11 @@
             "yConfig": "Y axis configuration",
             "xFB": "X-axis distribution",
             "xConfigMessage": "Please select the X-axis configuration",
-            "yConfigMessage": "Please select the Y-axis configuration"
+            "yConfigMessage": "Please select the Y-axis configuration",
+            "warning": "Warning",
+            "warningBatchDelete1": "Are you sure you want to delete these ",
+            "warningBatchDelete2": "streams",
+            "batchDelete": "Batch delete"
         },
         "table": {
             "index": {
@@ -1051,7 +1055,7 @@
         "dataflow": {
             "index": {
                 "5m77w0y57io0": "New stream",
-                "5m77w0y5b3k0": "Search...",
+                "5m77w0y5b3k0": "Enter Stream ID/Name",
                 "5m77w0y5brg0": "Data stream list",
                 "5m77w0y5caw0": "Modify",
                 "5m77w0y5cgg0": "Properties",

@@ -2,6 +2,7 @@ package org.opengauss.admin.plugin.service.modeling.impl;
 
 import com.alibaba.fastjson.JSONArray;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
+import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.core.domain.AjaxResult;
 import org.opengauss.admin.common.core.domain.model.ops.OpsClusterNodeVO;
 import org.opengauss.admin.common.core.domain.model.ops.OpsClusterVO;
@@ -21,6 +22,7 @@ import java.util.*;
 * @description ops facade
 * @createDate 2022-08-10 11:41:13
 */
+@Slf4j
 @Service
 public class ModelingDataBaseServiceImpl
     implements IModelingDataBaseService {
@@ -168,6 +170,8 @@ public class ModelingDataBaseServiceImpl
         if (sql == null || conn == null) {
             throw new RuntimeException("sql is empty");
         }
+        log.debug("prepared: " + sql);
+        log.debug("params: " + params);
 
         PreparedStatement preparedStatement = conn.prepareStatement(sql);
         if (params != null && params.size() > 0) {
@@ -175,6 +179,8 @@ public class ModelingDataBaseServiceImpl
                 preparedStatement.setString(i + 1, params.get(i));
             }
         }
+
+        log.debug("executing: " + preparedStatement.toString());
 
         resultSet = preparedStatement.executeQuery();
         conn.close();

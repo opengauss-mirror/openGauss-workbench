@@ -741,7 +741,11 @@
             "yConfig": "Y轴配置",
             "xFB": "X轴分布",
             "xConfigMessage": "请选择X轴配置",
-            "yConfigMessage": "请选择Y轴配置"
+            "yConfigMessage": "请选择Y轴配置",
+            "warning": "警告",
+            "warningBatchDelete1": "确定要删除这",
+            "warningBatchDelete2": "个数据流吗",
+            "batchDelete": "批量删除"
         },
         "table": {
             "index": {
@@ -809,7 +813,7 @@
                 "5m6g1w13i3g0": "管理权限",
                 "5m6g1w13i640": "开发权限",
                 "5m6g1w13i8k0": "访客权限",
-                "5m6g1w13iaw0": "新增数据流",
+                "5m6g1w13iaw0": "新建数据流",
                 "5m6g1w13id80": "请输入数据流ID",
                 "5m6g1w13ihs0": "请选择行为",
                 "5m6g1w13ik00": "请输入用户",
@@ -1053,7 +1057,7 @@
         "dataflow": {
             "index": {
                 "5m77w0y57io0": "新建数据流",
-                "5m77w0y5b3k0": "搜索...",
+                "5m77w0y5b3k0": "输入数据流ID/名称",
                 "5m77w0y5brg0": "数据流列表",
                 "5m77w0y5caw0": "修改",
                 "5m77w0y5cgg0": "属性",
