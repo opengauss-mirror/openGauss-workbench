@@ -57,7 +57,7 @@ public class HostServiceImpl implements IHostService {
                 throw new OpsException("Failed to probe data directory");
             }
 
-            return StrUtil.equalsIgnoreCase("0",StrUtil.trim(jschResult.getResult()));
+            return StrUtil.equalsIgnoreCase("0",StrUtil.trim(jschResult.getResult())) || jschResult.getResult().contains("No such file or directory");
         } catch (Exception e) {
             log.error("Failed to probe data directory",e);
             throw new OpsException("Failed to probe data directory");

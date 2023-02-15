@@ -208,7 +208,7 @@ public class OpsBackupService extends ServiceImpl<OpsBackupMapper, OpsBackupEnti
             throw new OpsException("Cluster node information does not exist");
         }
 
-        OpsHostUserEntity installUserEntity = hostUserFacade.getRootUserByHostId(clusterNodeEntity.getInstallUserId());
+        OpsHostUserEntity installUserEntity = hostUserFacade.getById(clusterNodeEntity.getInstallUserId());
         if (Objects.isNull(installUserEntity)) {
             throw new OpsException("install user information not found");
         }
