@@ -9,7 +9,7 @@
           <a-col :span="11" class="mr-s">
             <div class="select-comp-container">
             <a-select popup-container=".select-comp-container" v-model="config.showType.dimension" :disabled="config.showType.key !== 1">
-              <overflow-tooltip :text="item.label" v-for="(item, key) in stringOption" :key="key" :content="item.label">
+              <overflow-tooltip :text="item.label" v-for="(item, key) in allOption" :key="key" :content="item.label">
                 <a-option :value="item.value" v-if="!item.isCustom">{{ item.label }}</a-option>
                 <a-option :value="item.value" v-else><icon-tag class="mr-s" /><span>{{ item.label }}</span></a-option>
               </overflow-tooltip>
@@ -112,6 +112,7 @@ interface TypeIndicator { field: string, type: string, unit: string }
 interface TypeDimension { field: string, num: number }
 defineProps<{
   stringOption: KeyValue[],
+  allOption: KeyValue[],
   numberOption: KeyValue[],
   datetimeOption: KeyValue[]
 }>()
@@ -150,10 +151,6 @@ const validate = () => {
   if (!config.indicator[0] || !config.indicator[0].field) {
     flag = false
     message += (message ? '；\n ' : '') + t('modeling.components.BarConfig.5m7insim3o80')
-  }
-  if (!config.indicator[0] || !config.indicator[0].type) {
-    flag = false
-    message += (message ? '；\n ' : '') + t('modeling.components.BarConfig.5m7insim3qo0')
   }
   if (!config.indicator[0] || !config.indicator[0].unit) {
     flag = false
