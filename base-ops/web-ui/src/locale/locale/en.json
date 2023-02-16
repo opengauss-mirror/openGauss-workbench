@@ -731,23 +731,30 @@
     },
     "modeling": {
         "dy_common": {
-            "saveSuccess": "Saved successfully!",
-            "noResult": "No Result",
-            "saveFailed": "Save failed!",
-            "sqlyunxing": "SQL statement",
-            "saveAndClose": "Save configuration and close",
-            "AutomaticallySaved": "Automatically Saved",
-            "AutomaticallySaving": "Automatically Saving",
-            "page_empty": "Under development, stay tuned",
-            "xConfig": "X axis configuration",
-            "yConfig": "Y axis configuration",
-            "xFB": "X-axis distribution",
-            "xConfigMessage": "Please select the X-axis configuration",
-            "yConfigMessage": "Please select the Y-axis configuration",
-            "warning": "Warning",
-            "warningBatchDelete1": "Are you sure you want to delete these ",
-            "warningBatchDelete2": "streams",
-            "batchDelete": "Batch delete"
+          "saveSuccess": "Saved successfully!",
+          "noResult": "No Result",
+          "saveFailed": "Save failed!",
+          "sqlyunxing": "SQL statement",
+          "saveAndClose": "Save configuration and close",
+          "AutomaticallySaved": "Automatically Saved",
+          "AutomaticallySaving": "Automatically Saving",
+          "page_empty": "Under development, stay tuned",
+          "xConfig": "X axis configuration",
+          "yConfig": "Y axis configuration",
+          "xFB": "X-axis distribution",
+          "xConfigMessage": "Please select the X-axis configuration",
+          "yConfigMessage": "Please select the Y-axis configuration",
+          "warning": "Warning",
+          "warningBatchDelete1": "Are you sure you want to delete these ",
+          "warningBatchDelete2": "streams",
+          "batchDelete": "Batch delete",
+          "paste": "paste",
+          "isNo": "is no",
+          "heatmapConfig": {
+            "notice1": "Please select the statistical indicator field!",
+            "notice2": "Please select the X-axis distribution field!",
+            "notice3": "Please select the Y-axis configuration field!"
+          }
         },
         "table": {
             "index": {

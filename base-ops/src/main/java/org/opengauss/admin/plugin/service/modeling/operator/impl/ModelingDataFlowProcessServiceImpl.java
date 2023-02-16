@@ -195,7 +195,9 @@ public class ModelingDataFlowProcessServiceImpl implements IModelingDataFlowProc
                     op.setLevel(0);
                     op.setBelongsToMainOperatorId(op.getUid());
                     //add main operator`s uid as key in result map
-                    result.put(op.getUid(),new ArrayList<>());
+                    if (op.getDisable() == null || !op.getDisable()) {
+                        result.put(op.getUid(),new ArrayList<>());
+                    }
                 }
                 operatorParamsList.add(op);
             }
@@ -211,7 +213,10 @@ public class ModelingDataFlowProcessServiceImpl implements IModelingDataFlowProc
         operatorParamsList.removeIf(op -> op.getLevel() == null);
 
         operatorParamsList.forEach(operatorParams -> {
-            result.get(operatorParams.getBelongsToMainOperatorId()).add(operatorParams);
+            String uid = operatorParams.getBelongsToMainOperatorId();
+            if (result.containsKey(uid)) {
+                result.get(uid).add(operatorParams);
+            }
         });
 
         return result;

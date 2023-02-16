@@ -733,23 +733,30 @@
     },
     "modeling": {
         "dy_common": {
-            "saveSuccess": "保存成功！",
-            "noResult": "无结果",
-            "saveFailed": "保存失败！",
-            "sqlyunxing": "SQL语句",
-            "saveAndClose": "保存配置并关闭",
-            "AutomaticallySaved": "已自动保存",
-            "AutomaticallySaving": "自动保存中",
-            "page_empty": "正在开发中，敬请期待",
-            "xConfig": "X轴配置",
-            "yConfig": "Y轴配置",
-            "xFB": "X轴分布",
-            "xConfigMessage": "请选择X轴配置",
-            "yConfigMessage": "请选择Y轴配置",
-            "warning": "警告",
-            "warningBatchDelete1": "确定要删除这",
-            "warningBatchDelete2": "个数据流吗",
-            "batchDelete": "批量删除"
+          "saveSuccess": "保存成功！",
+          "noResult": "无结果",
+          "saveFailed": "保存失败！",
+          "sqlyunxing": "SQL语句",
+          "saveAndClose": "保存配置并关闭",
+          "AutomaticallySaved": "已自动保存",
+          "AutomaticallySaving": "自动保存中",
+          "page_empty": "正在开发中，敬请期待",
+          "xConfig": "X轴配置",
+          "yConfig": "Y轴配置",
+          "xFB": "X轴分布",
+          "xConfigMessage": "请选择X轴配置",
+          "yConfigMessage": "请选择Y轴配置",
+          "warning": "警告",
+          "warningBatchDelete1": "确定要删除这",
+          "warningBatchDelete2": "个数据流吗",
+          "batchDelete": "批量删除",
+          "paste": "粘贴",
+          "isNo": "无",
+          "heatmapConfig": {
+            "notice1": "请选择统计指标字段！",
+            "notice2": "请选择X轴分布字段！",
+            "notice3": "请选择Y轴配置字段！"
+          }
         },
         "table": {
             "index": {
