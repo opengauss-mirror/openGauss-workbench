@@ -117,7 +117,7 @@ public class MixChartGenerateServiceImpl extends BaseGenerateServiceImpl {
         } else {
             xDimension.setField(xDimensionKey);
             queryResult.forEach(item->{
-                String filedValue = (String) item.get(xDimensionKey);
+                String filedValue = item.get(xDimensionKey) == null ? "null" : item.get(xDimensionKey).toString();
                 if (filedValue != null) {
                     Categories category = new Categories();
                     category.setName(filedValue);
