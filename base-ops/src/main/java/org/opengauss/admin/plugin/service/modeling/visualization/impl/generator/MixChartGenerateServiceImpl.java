@@ -11,12 +11,13 @@ import org.opengauss.admin.plugin.vo.modeling.Categories;
 import org.opengauss.admin.plugin.vo.modeling.Dimension;
 import org.opengauss.admin.plugin.vo.modeling.MixChartParamsBody;
 import org.opengauss.admin.plugin.vo.modeling.component.*;
-import org.opengauss.admin.plugin.vo.modeling.component.*;
 import org.springframework.stereotype.Component;
 
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
+
 /**
  * @author LZW
  * @date 2022/10/29 22:38
@@ -56,6 +57,8 @@ public class MixChartGenerateServiceImpl extends BaseGenerateServiceImpl {
 
         ArrayList<String> yUnitsList = new ArrayList<>(yUnits);
 
+        AtomicInteger chartColorIndex = new AtomicInteger(0);
+
         //process bar chart info
         barSeriesConstructors.forEach(barSeriesConstructor -> {
             Map<String, List<Float>> seriesData = barSeriesConstructor.getSeriesData();
@@ -63,7 +66,12 @@ public class MixChartGenerateServiceImpl extends BaseGenerateServiceImpl {
                 List<Float> value = seriesData.get(key);
                 //get index of Y Axis
                 int yIndex = yUnitsList.indexOf(barSeriesConstructor.getYUnit());
-                series.add(new Series().setName(key).setType("bar").setData(value).setYAxisIndex(yIndex));
+                if (Objects.equals(key, "Total")) {
+                    chartColorIndex.addAndGet(1);
+                    series.add(new Series().setName(key + "-" + chartColorIndex).setType("bar").setData(value).setYAxisIndex(yIndex));
+                } else {
+                    series.add(new Series().setName(key).setType("bar").setData(value).setYAxisIndex(yIndex));
+                }
                 //merge categories
                 seriesKeys.addAll(barSeriesConstructor.getSeriesKey());
             }
@@ -76,7 +84,12 @@ public class MixChartGenerateServiceImpl extends BaseGenerateServiceImpl {
                 List<Float> value = seriesData.get(key);
                 //get index of Y Axis
                 int yIndex = yUnitsList.indexOf(lineSeriesConstructor.getYUnit());
-                series.add(new Series().setName(key).setType("line").setData(value).setYAxisIndex(yIndex));
+                if (Objects.equals(key, "Total")) {
+                    chartColorIndex.addAndGet(1);
+                    series.add(new Series().setName(key + "-" + chartColorIndex).setType("line").setData(value).setYAxisIndex(yIndex));
+                } else {
+                    series.add(new Series().setName(key).setType("line").setData(value).setYAxisIndex(yIndex));
+                }
                 //merge categories
                 seriesKeys.addAll(lineSeriesConstructor.getSeriesKey());
             }
