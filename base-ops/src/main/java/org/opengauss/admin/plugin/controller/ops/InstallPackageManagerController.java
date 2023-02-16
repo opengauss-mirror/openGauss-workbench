@@ -66,9 +66,10 @@ public class InstallPackageManagerController extends BaseController {
                 .eq(Objects.nonNull(packageVersion),OpsPackageManagerEntity::getPackageVersion, packageVersion);
 
         if (StrUtil.isNotEmpty(name)){
-            queryWrapper.or().like(OpsPackageManagerEntity::getOs, name).or()
+            queryWrapper.and(orWrapper->orWrapper.or().like(OpsPackageManagerEntity::getOs, name).or()
                     .like(OpsPackageManagerEntity::getCpuArch, name).or()
-                    .like(OpsPackageManagerEntity::getPackageVersionNum, name);
+                    .like(OpsPackageManagerEntity::getPackageVersionNum, name));
+
         }
 
         IPage<OpsPackageManagerEntity> page = opsPackageManagerService.page(startPage(),queryWrapper);
