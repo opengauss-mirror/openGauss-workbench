@@ -451,7 +451,7 @@ const validateSpecialFields = async () => {
           if ((installType.value !== 'import' && validResult[0]) || (installType.value === 'import' && !validResult[0])) {
             // port valid
             refList.value[i].setFields({
-              hostId: {
+              port: {
                 status: 'error',
                 message: data.nodeData[i].port + (installType.value === 'import' ? t('enterprise.NodeConfig.else10') : t('enterprise.NodeConfig.else11'))
               }

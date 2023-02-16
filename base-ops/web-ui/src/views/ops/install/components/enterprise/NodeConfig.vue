@@ -82,7 +82,8 @@
               <a-input v-model="formItem.xlogPath" :placeholder="$t('enterprise.NodeConfig.5mpme7w6byo0')" />
             </a-form-item>
             <a-form-item field="azPriority" :label="$t('enterprise.NodeConfig.else7')" v-if="installType !== 'import'">
-              <a-input-number v-model="formItem.azPriority" :placeholder="$t('enterprise.NodeConfig.else6')" />
+              <a-input-number :min="1" :max="10" v-model="formItem.azPriority"
+                :placeholder="$t('enterprise.NodeConfig.else6')" />
             </a-form-item>
           </a-form>
           <a-divider v-if="index < (data.nodeList.length - 1)" />
@@ -224,7 +225,8 @@ const initData = () => {
           })
         }
       }
-    ]
+    ],
+    azPriority: [{ required: true, 'validate-trigger': 'blur', message: t('enterprise.NodeConfig.else6') }]
   }
 }
 
