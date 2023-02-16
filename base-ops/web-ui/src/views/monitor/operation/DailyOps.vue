@@ -2,7 +2,7 @@
   <div class="daily-ops-c">
     <div v-if="data.clusterList.length && !data.loading">
       <div v-for="(clusterData, index) in data.clusterList" :key="index">
-        <a-spin class="full-w" :loading="clusterData.loading">
+        <a-spin class="full-w" :loading="clusterData.loading" v-if="!clusterData.isHidden">
           <div class="item-c mb">
             <div class="flex-between mb">
               <div class="flex-row ft-lg ft-b">
@@ -424,6 +424,7 @@ const getList = () => new Promise(resolve => {
       resolve(true)
       data.clusterList = []
       res.data.forEach((item: KeyValue, index: number) => {
+        item.isHidden = false
         item.isShow = true
         item.state = -1
         item.loading = false
@@ -512,7 +513,6 @@ const openHostWebSocket = (clusterData: KeyValue, nodeData: KeyValue, clusterInd
   })
   websocket.onmessage((messageData: any) => {
     const eventData = JSON.parse(messageData)
-    console.log(`ops monitor data- ${clusterData.clusterId} - ${nodeData.privateIp}`, eventData, clusterIndex, index)
     data.clusterList[clusterIndex].clusterNodes[index].nodeState = eventData.state
     // reset instance nodeState and nodeRole
     setInstanceState(data.clusterList[clusterIndex], data.clusterList[clusterIndex].clusterNodes[index])
@@ -532,7 +532,6 @@ const openHostWebSocket = (clusterData: KeyValue, nodeData: KeyValue, clusterInd
 
 const setInstanceState = (clusterData: KeyValue, instanceData: KeyValue) => {
   if (clusterData.version === OpenGaussVersionEnum.ENTERPRISE) {
-    console.log('enterprise node state: ', instanceData.nodeState)
     if (instanceData.nodeState !== -1) {
       const stateObj = JSON.parse(instanceData.nodeState)
       const currentHostname = instanceData.hostname
@@ -593,11 +592,11 @@ const handleUninstall = (clusterData: KeyValue, index: number, force: boolean) =
   webSocket.onmessage((messageData: any) => {
     if (messageData.indexOf('FINAL_EXECUTE_EXIT_CODE') > -1) {
       if (force) {
-        data.clusterList.splice(index, 1)
+        data.clusterList[index].isHidden = true
       } else {
         const flag = Number(messageData.split(':')[1])
         if (flag === 0) {
-          data.clusterList.splice(index, 1)
+          data.clusterList[index].isHidden = true
         }
       }
       clusterData.loading = false
@@ -610,7 +609,7 @@ const handleDelCluster = (clusterData: KeyValue, index: number) => {
   clusterData.loading = true
   delCluster(clusterData.clusterId).then((res: KeyValue) => {
     if (Number(res.code) === 200) {
-      data.clusterList.splice(index, 1)
+      data.clusterList[index].isHidden = true
     }
   }).finally(() => {
     clusterData.loading = false
@@ -742,7 +741,6 @@ const handleReset = (clusterData: KeyValue, index: number) => {
 const backupRef = ref<null | InstanceType<typeof ClusterBackupDlg>>(null)
 const backupClusterIndex = ref()
 const handleBackupDlg = (clusterIndex: number) => {
-  console.log('index: ', clusterIndex, data.clusterList[clusterIndex].clusterId)
   backupClusterIndex.value = clusterIndex
   backupRef.value?.open(data.clusterList[clusterIndex].clusterId)
 }
@@ -874,14 +872,15 @@ const createWinbox = (clusterData: KeyValue, type?: string) => {
 
 // host oper
 const handleHostOper = (type: any, clusterIndex: number, nodeIndex: number) => {
-  console.log('host type', type)
   handleInstanceOper(type, clusterIndex, nodeIndex)
 }
 
 // instance start or stop
 const handleInstanceSwitchChange = (type: any, clusterIndex: number, nodeIndex: number) => {
-  console.log('instance switch', type, clusterIndex, nodeIndex)
-  let operType = type ? 'start' : 'stop'
+  let operType = 'start'
+  if (type === 'false') {
+    operType = 'stop'
+  }
   handleInstanceOper(operType, clusterIndex, nodeIndex, true)
 }
 

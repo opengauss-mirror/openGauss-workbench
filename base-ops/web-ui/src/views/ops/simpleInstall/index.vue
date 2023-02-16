@@ -5,25 +5,45 @@
     <div class="install-content" v-if="data.state === -1">
       <svg-icon icon-class="ops-mini-version" class="icon-size mb"></svg-icon>
       <div class="label-color ft-b ft-m mb">openGauss {{ $t('simpleInstall.index.else1') }}</div>
-      <a-form class="mb" :model="data.form" :rules="data.rules" :style="{ width: '400px' }" ref="formRef"
+      <div class="mb" v-if="data.validVisible">
+        <a-link @click="goInstall">{{ $t('simpleInstall.index.else3') }}，<span style="text-decoration:underline">{{
+          $t('simpleInstall.index.else4')
+        }}</span></a-link>
+      </div>
+      <a-form class="mb" :model="data.form" :rules="formRules" :style="{ width: '400px' }" ref="formRef"
         auto-label-width>
         <a-form-item field="hostId" :label="$t('simpleInstall.index.5mpn813guf00')">
-          <a-select :loading="data.hostLoading" v-model="data.form.hostId"
-            :placeholder="$t('simpleInstall.index.5mpn813gukw0')" @change="getHostUser">
-            <a-option v-for="item in data.hostList" :key="item.hostId" :value="item.hostId">{{
-              item.privateIp
-                + '(' +
-                (item.publicIp ? item.publicIp : '--') + ')'
-            }}</a-option>
-          </a-select>
+          <div class="flex-row">
+            <a-select style="width: 313px;" class="mr" :loading="data.hostLoading" v-model="data.form.hostId"
+              :placeholder="$t('simpleInstall.index.5mpn813gukw0')" @change="hostChange">
+              <a-option v-for="item in data.hostList" :key="item.hostId" :value="item.hostId">{{
+                item.privateIp
+                  + '(' +
+                  (item.publicIp ? item.publicIp : '--') + ')'
+              }}</a-option>
+            </a-select>
+            <label class="label-color">{{ data.form.sysArch }}</label>
+          </div>
         </a-form-item>
-        <a-form-item field="rootPassword" :label="$t('simpleInstall.index.else2')" validate-trigger="blur"
-          :rules="[{ required: true, message: t('simpleInstall.index.5mpn813gupc0') }]">
+        <a-form-item field="rootPassword" :label="$t('simpleInstall.index.else2')" validate-trigger="blur">
           <a-input-password v-model="data.form.rootPassword" :placeholder="$t('simpleInstall.index.5mpn813gupc0')"
             allow-clear />
         </a-form-item>
+        <a-form-item field="install" :label="$t('simpleInstall.index.else5')" validate-trigger="change">
+          <a-select :loading="data.installLoading" v-model="data.form.install"
+            :placeholder="$t('simpleInstall.index.else6')" value-key="packageId">
+            <a-option v-for="item in data.installPackageList" :key="item.packageId" :value="item"
+              :label="item.packageVersionNum"></a-option>
+          </a-select>
+        </a-form-item>
+        <a-form-item field="installPath" :label="$t('simple.InstallConfig.5mpmu0lar480')" validate-trigger="blur">
+          <label class="label-color">{{ data.form.installPath }}</label>
+        </a-form-item>
+        <a-form-item field="port" :label="$t('simple.InstallConfig.5mpmu0larj40')" validate-trigger="blur">
+          <label class="label-color">{{ data.form.port }}</label>
+        </a-form-item>
       </a-form>
-      <a-button type="primary" size="large" @click="handleInstall">{{
+      <a-button type="primary" size="large" :loading="data.loading" @click="handleInstall">{{
         $t('simpleInstall.index.5mpn813gut00')
       }}</a-button>
     </div>
@@ -39,9 +59,7 @@
             </div>
             <div class="label-color">{{ $t('simpleInstall.index.5mpn813gv880') }} {{
               $t('simpleInstall.index.5mpn813gvc40')
-            }} {{
-  data.privateIp
-}}</div>
+            }} {{ data.privateIp }}</div>
           </div>
         </div>
         <div class="flex-row full-w full-h">
@@ -85,8 +103,8 @@
 
 <script lang="ts" setup>
 import { KeyValue } from '@/types/global'
-import { onBeforeUnmount, onMounted, reactive, ref } from 'vue'
-import { hostListAll, hostUserListWithoutRoot, quickInstall, openSSH } from '@/api/ops'
+import { onBeforeUnmount, onMounted, reactive, ref, computed } from 'vue'
+import { hostListAll, hostUserListWithoutRoot, quickInstall, openSSH, packageListAll, portUsed, pathEmpty } from '@/api/ops'
 import { Message } from '@arco-design/web-vue'
 import {
   ClusterRoleEnum,
@@ -106,10 +124,17 @@ import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
 const data = reactive<KeyValue>({
   state: -1, // -1 un install  0 installing  1 success  2 fail
+  loading: false,
   form: {
     hostId: '',
     rootPassword: '',
-    rootPasswordEncrypt: ''
+    rootPasswordEncrypt: '',
+    os: '',
+    cpuArch: '',
+    sysArch: '',
+    install: null,
+    port: 5432,
+    installPath: '/opt/openGauss'
   },
   installProgress: 0,
   privateIp: '',
@@ -118,10 +143,10 @@ const data = reactive<KeyValue>({
   hostLoading: false,
   hostObj: {},
   hostList: [],
-  rules: {
-    hostId: [{ required: true, 'validate-trigger': 'change', message: t('simpleInstall.index.5mpn813gwbk0') }],
-    rootPassword: [{ required: true, 'validate-trigger': 'blur', message: t('simpleInstall.index.5mpn813gupc0') }]
-  }
+  installLoading: false,
+  installObj: {},
+  installPackageList: [],
+  validVisible: false
 })
 
 // websocket
@@ -130,6 +155,25 @@ const terminalWs = ref<Socket<any, any> | undefined>()
 
 const termLog = ref<Terminal>()
 const termTerminal = ref<Terminal>()
+
+const formRules = computed(() => {
+  return {
+    hostId: [{ required: true, 'validate-trigger': 'change', message: t('simpleInstall.index.5mpn813gwbk0') }],
+    rootPassword: [{ required: true, 'validate-trigger': 'blur', message: t('simpleInstall.index.5mpn813gupc0') }],
+    install: [{
+      validator: (value: any, cb: any) => {
+        return new Promise(resolve => {
+          if (!Object.keys(value).length) {
+            cb(t('simpleInstall.index.else6'))
+            resolve(false)
+          } else {
+            resolve(true)
+          }
+        })
+      }
+    }]
+  }
+})
 
 onMounted(() => {
   getHostList()
@@ -146,10 +190,49 @@ const formRef = ref<FormInstance>()
 const handleInstall = async () => {
   const validRes = await formRef.value?.validate()
   if (!validRes) {
+    data.loading = true
     const encryptPwd = await encryptPassword(data.form.rootPassword)
     data.form.rootPasswordEncrypt = encryptPwd
-    data.state = 0
-    openLogSocket()
+    try {
+      //  port is used
+      const portParam = {
+        port: data.form.port,
+        rootPassword: data.form.rootPasswordEncrypt
+      }
+      const portValid: KeyValue = await portUsed(data.form.hostId, portParam)
+      if (Number(portValid.code) === 200) {
+        if (portValid.data) {
+          data.validVisible = true
+          data.loading = false
+          return
+        }
+      } else {
+        Message.error('Port check exception')
+        return
+      }
+      // installPath is not empty
+      const pathParam = {
+        path: data.form.installPath + '/data',
+        rootPassword: data.form.rootPasswordEncrypt
+      }
+      const pathValid: KeyValue = await pathEmpty(data.form.hostId, pathParam)
+      if (Number(pathValid.code) === 200) {
+        if (!pathValid.data) {
+          data.validVisible = true
+          return
+        }
+      } else {
+        Message.error('installPath check exception')
+        return
+      }
+      data.state = 0
+      openLogSocket()
+    } catch (error: any) {
+      console.error('port or installPath check exception', error)
+      Message.error('port or installPath check exception')
+    } finally {
+      data.loading = false
+    }
   }
 }
 
@@ -238,9 +321,10 @@ const openSocket = () => {
 
 const exeInstall = async (socket: Socket<any, any>, businessId: string, term: Terminal) => {
   const param = {
+    quickInstallResourceUrl: data.form.install.packageUrl,
     installContext: {
       openGaussVersion: OpenGaussVersionEnum.MINIMAL_LIST,
-      openGaussVersionNum: '3.0.0',
+      openGaussVersionNum: data.form.install.packageVersionNum,
       installMode: InstallModeEnum.OFF_LINE,
       installPackagePath: '/ops/files',
       // installPackagePath: 'E:/hw/installPackage/download/',
@@ -257,7 +341,6 @@ const exeInstall = async (socket: Socket<any, any>, businessId: string, term: Te
           rootPassword: data.form.rootPasswordEncrypt,
           installUserId: data.installUserId,
           installPath: '/opt/openGauss',
-          dataPath: '/opt/openGauss/data',
           isInstallDemoDatabase: true
         }]
       }
@@ -343,6 +426,10 @@ const getHostList = () => {
       })
       data.form.hostId = data.hostList[0].hostId
       data.privateIp = data.hostList[0].privateIp
+      data.form.os = data.hostList[0].os
+      data.form.cpuArch = data.hostList[0].cpuArch
+      data.form.sysArch = data.hostList[0].os + '_' + data.hostList[0].cpuArch
+      getInstallPackageList()
       getHostUser()
     } else {
       Message.error('Failed to obtain the host list data')
@@ -350,6 +437,43 @@ const getHostList = () => {
   }).finally(() => {
     data.hostLoading = false
   })
+}
+
+const getInstallPackageList = () => {
+  if (data.form.hostId) {
+    if (data.hostObj[data.form.hostId]) {
+      data.form.os = data.hostObj[data.form.hostId].os
+      data.form.cpuArch = data.hostObj[data.form.hostId].cpuArch
+      data.form.sysArch = data.hostObj[data.form.hostId].os + '_' + data.hostObj[data.form.hostId].cpuArch
+    }
+    data.installLoading = true
+    const param = {
+      os: data.form.os,
+      cpuArch: data.form.cpuArch,
+      packageVersion: 'MINIMAL_LIST'
+    }
+    packageListAll(param).then((res: any) => {
+      if (Number(res.code) === 200) {
+        res.data.forEach((item: KeyValue) => {
+          data.installObj[item.packageId] = item
+        })
+        data.installPackageList = []
+        data.installPackageList = res.data
+        if (res.data.length) {
+          data.form.install = res.data[0]
+        } else {
+          data.form.install = null
+        }
+      }
+    }).finally(() => {
+      data.installLoading = false
+    })
+  }
+}
+
+const hostChange = () => {
+  getInstallPackageList()
+  getHostUser()
 }
 
 const getHostUser = () => {
@@ -372,6 +496,14 @@ const getHostUser = () => {
     })
   }
 }
+
+const goInstall = () => {
+  data.validVisible = false
+  window.$wujie?.props.methods.jump({
+    name: 'Static-pluginBase-opsOpsInstall'
+  })
+}
+
 const goHome = () => {
   initData()
   window.$wujie?.props.methods.jump({
@@ -388,15 +520,7 @@ const goOps = () => {
 
 const initData = () => {
   data.state = -1
-  data.form = {
-    hostId: '',
-    rootPassword: '',
-    rootPasswordEncrypt: ''
-  }
-  data.installProgress = 0
-  data.privateIp = ''
-  data.installUserId = ''
-  data.installUsername = ''
+  getHostList()
 }
 
 </script>

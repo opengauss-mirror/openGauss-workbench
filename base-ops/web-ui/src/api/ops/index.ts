@@ -136,12 +136,28 @@ export const hostPing = (data: KeyValue) => {
   return axios.post('host/ping', data)
 }
 
-export const hostPingById = (hostId: string) => {
-  return axios.get(`host/ping/${hostId}`)
+export const hostPingById = (hostId: string, data: KeyValue) => {
+  return axios.get(`host/ping/${hostId}`, {
+    params: data
+  })
 }
 
 export const delHost = (hostId: string) => {
   return axios.delete(`host/${hostId}`)
+}
+
+// Whether the directory is empty
+export const pathEmpty = (hostId: string, data: KeyValue) => {
+  return axios.get(`host/pathEmpty/${hostId}`, {
+    params: data
+  })
+}
+
+// Whether the port is used
+export const portUsed = (hostId: string, data: KeyValue) => {
+  return axios.get(`host/portUsed/${hostId}`, {
+    params: data
+  })
 }
 
 export const hostUserPage = (hostId: string) => {

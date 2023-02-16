@@ -263,6 +263,17 @@ const isInstallCMChange = (val: boolean) => {
 
 const formRef = ref<FormInstance>()
 
+const saveStore = () => {
+  const param = JSON.parse(JSON.stringify(data.form))
+  installStore.setInstallContext({
+    clusterId: param.clusterId,
+    clusterName: param.clusterName,
+    deployType: DeployTypeEnum.CLUSTER
+  })
+  param.nodeConfigList = []
+  installStore.setEnterpriseConfig(param as EnterpriseInstallConfig)
+}
+
 const beforeConfirm = async (): Promise<boolean> => {
   const validRes = await formRef.value?.validate()
   if (!validRes) {
@@ -272,7 +283,13 @@ const beforeConfirm = async (): Promise<boolean> => {
       clusterName: param.clusterName,
       deployType: DeployTypeEnum.CLUSTER
     })
-    param.nodeConfigList = []
+    if (Object.keys(installStore.getEnterpriseConfig).length) {
+      if (param.isInstallCM !== installStore.getEnterpriseConfig.isInstallCM) {
+        param.nodeConfigList = []
+      }
+    } else {
+      param.nodeConfigList = []
+    }
     installStore.setEnterpriseConfig(param as EnterpriseInstallConfig)
     return true
   } else {
@@ -281,7 +298,8 @@ const beforeConfirm = async (): Promise<boolean> => {
 }
 
 defineExpose({
-  beforeConfirm
+  beforeConfirm,
+  saveStore
 })
 
 const installType = computed(() => installStore.getInstallConfig.installType)
