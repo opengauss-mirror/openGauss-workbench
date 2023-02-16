@@ -73,7 +73,7 @@
             <div class="flex-between full-w mb">
               <div class="flex-row">
                 <div class="label-color mr-s">{{ $t('simpleInstall.index.5mpn813gvjk0') }}</div>
-                <div>{{ data.privateIp }}</div>
+                <div class="label-color">{{ data.privateIp }}</div>
               </div>
               <a-button type="primary" @click="retryInstall">{{ $t('simpleInstall.index.5mpn813gvmw0') }}</a-button>
             </div>
@@ -104,7 +104,7 @@
 <script lang="ts" setup>
 import { KeyValue } from '@/types/global'
 import { onBeforeUnmount, onMounted, reactive, ref, computed } from 'vue'
-import { hostListAll, hostUserListWithoutRoot, quickInstall, openSSH, packageListAll, portUsed, pathEmpty } from '@/api/ops'
+import { hostListAll, hostUserListWithoutRoot, quickInstall, openSSH, packageListAll, portUsed, pathEmpty, hostPingById } from '@/api/ops'
 import { Message } from '@arco-design/web-vue'
 import {
   ClusterRoleEnum,
@@ -188,11 +188,39 @@ onBeforeUnmount(() => {
 
 const formRef = ref<FormInstance>()
 const handleInstall = async () => {
+  data.validVisible = false
   const validRes = await formRef.value?.validate()
   if (!validRes) {
     data.loading = true
     const encryptPwd = await encryptPassword(data.form.rootPassword)
     data.form.rootPasswordEncrypt = encryptPwd
+    // password is isok
+    try {
+      const param = {
+        rootPassword: encryptPwd
+      }
+      const passwordValid: KeyValue = await hostPingById(data.form.hostId, param)
+      if (Number(passwordValid.code) !== 200) {
+        formRef.value?.setFields({
+          rootPassword: {
+            status: 'error',
+            message: t('enterprise.NodeConfig.else8')
+          }
+        })
+        data.loading = false
+        return
+      }
+    } catch (err: any) {
+      formRef.value?.setFields({
+        rootPassword: {
+          status: 'error',
+          message: t('enterprise.NodeConfig.else8')
+        }
+      })
+      data.loading = false
+      return
+    }
+
     try {
       //  port is used
       const portParam = {

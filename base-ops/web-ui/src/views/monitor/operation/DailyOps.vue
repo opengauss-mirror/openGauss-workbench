@@ -14,7 +14,7 @@
               </div>
               <div class="flex-row">
                 <div class="flex-row ft-b mr" v-if="clusterData.version === OpenGaussVersionEnum.ENTERPRISE">
-                  <icon-exclamation-circle />
+                  <icon-exclamation-circle class="label-color" />
                   <div class="label-color mr-s">{{ $t('operation.DailyOps.5mplp1xbyi40') }}</div>
                   <div class="label-color mr">{{ clusterData.warningNum ? clusterData.warningNum : 0 }}</div>
 
@@ -512,19 +512,21 @@ const openHostWebSocket = (clusterData: KeyValue, nodeData: KeyValue, clusterInd
     data.clusterList[clusterIndex].clusterNodes[index].state = 'false'
   })
   websocket.onmessage((messageData: any) => {
-    const eventData = JSON.parse(messageData)
-    data.clusterList[clusterIndex].clusterNodes[index].nodeState = eventData.state
-    // reset instance nodeState and nodeRole
-    setInstanceState(data.clusterList[clusterIndex], data.clusterList[clusterIndex].clusterNodes[index])
-    data.clusterList[clusterIndex].clusterNodes[index].cpu = eventData.cpu
-    data.clusterList[clusterIndex].clusterNodes[index].memory = eventData.memory
-    data.clusterList[clusterIndex].clusterNodes[index].lock = eventData.lock
-    data.clusterList[clusterIndex].clusterNodes[index].session = eventData.session
-    data.clusterList[clusterIndex].clusterNodes[index].connectNum = eventData.connectNum
-    data.clusterList[clusterIndex].clusterNodes[index].kernel = eventData.kernel
-    if (eventData.memorySize) {
-      if (!isNaN(Number(eventData.memorySize))) {
-        data.clusterList[clusterIndex].clusterNodes[index].memorySize = (Number(eventData.memorySize) / 1024 / 1024).toFixed(2)
+    if (!data.clusterList[clusterIndex].loading) {
+      const eventData = JSON.parse(messageData)
+      data.clusterList[clusterIndex].clusterNodes[index].nodeState = eventData.state
+      // reset instance nodeState and nodeRole
+      setInstanceState(data.clusterList[clusterIndex], data.clusterList[clusterIndex].clusterNodes[index])
+      data.clusterList[clusterIndex].clusterNodes[index].cpu = eventData.cpu
+      data.clusterList[clusterIndex].clusterNodes[index].memory = eventData.memory
+      data.clusterList[clusterIndex].clusterNodes[index].lock = eventData.lock
+      data.clusterList[clusterIndex].clusterNodes[index].session = eventData.session
+      data.clusterList[clusterIndex].clusterNodes[index].connectNum = eventData.connectNum
+      data.clusterList[clusterIndex].clusterNodes[index].kernel = eventData.kernel
+      if (eventData.memorySize) {
+        if (!isNaN(Number(eventData.memorySize))) {
+          data.clusterList[clusterIndex].clusterNodes[index].memorySize = (Number(eventData.memorySize) / 1024 / 1024).toFixed(2)
+        }
       }
     }
   })

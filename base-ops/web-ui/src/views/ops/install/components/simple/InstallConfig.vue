@@ -298,9 +298,7 @@ const loadingFunc = inject<any>('loading')
 const beforeConfirm = async (): Promise<boolean> => {
   let validRes = true
   const tempRes = await formRef.value?.validate()
-  console.log('form validate 1', tempRes);
   if (tempRes) {
-    console.log('validate fail');
     validRes = false
   }
   if (validRes) {
@@ -321,7 +319,6 @@ const validatePort = async (port: number, password: string, hostId: string) => {
     rootPassword: password
   }
   const portValid: KeyValue = await portUsed(hostId, portParam)
-  console.log('show port valid', portValid)
   if (Number(portValid.code) === 200) {
     return portValid.data
   }
@@ -334,7 +331,6 @@ const validatePath = async (path: string, password: string, hostId: string) => {
     rootPassword: password
   }
   const pathValid: KeyValue = await pathEmpty(hostId, pathParam)
-  console.log('show path valid', pathValid)
   if (Number(pathValid.code) === 200) {
     return pathValid.data
   }
@@ -382,7 +378,7 @@ const validateSpecialFields = async () => {
       if ((installType.value !== 'import' && validResult[0]) || (installType.value === 'import' && !validResult[0])) {
         // port valid
         formRef.value?.setFields({
-          hostId: {
+          port: {
             status: 'error',
             message: data.form.port + (installType.value === 'import' ? t('enterprise.NodeConfig.else10') : t('enterprise.NodeConfig.else11'))
           }
@@ -392,7 +388,7 @@ const validateSpecialFields = async () => {
       if ((installType.value !== 'import' && !validResult[1]) || (installType.value === 'import' && validResult[1])) {
         // dataPath Valid
         formRef.value?.setFields({
-          dataPath: {
+          installPath: {
             status: 'error',
             message: installType.value === 'import' ? t('simple.InstallConfig.else3') : t('simple.InstallConfig.else4')
           }
