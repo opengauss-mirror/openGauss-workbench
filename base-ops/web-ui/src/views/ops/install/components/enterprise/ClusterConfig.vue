@@ -9,9 +9,6 @@
           <a-form-item field="clusterId" :label="$t('enterprise.ClusterConfig.5mpm3ku3hcg0')" validate-trigger="blur">
             <a-input v-model="data.form.clusterId" :placeholder="$t('enterprise.ClusterConfig.5mpm3ku3hik0')" />
           </a-form-item>
-          <a-form-item field="clusterName" :label="$t('enterprise.ClusterConfig.5mpm3ku3hn40')" validate-trigger="blur">
-            <a-input v-model="data.form.clusterName" :placeholder="$t('enterprise.ClusterConfig.5mpm3ku3hr00')" />
-          </a-form-item>
           <a-form-item field="installPath" :label="$t('enterprise.ClusterConfig.5mpm3ku3hv40')" validate-trigger="blur">
             <a-input v-model="data.form.installPath" :placeholder="$t('enterprise.ClusterConfig.5mpm3ku3i340')" />
           </a-form-item>
@@ -121,23 +118,6 @@ const initData = () => {
                 resolve(false)
               }
             })
-          })
-        }
-      }
-    ],
-    clusterName: [
-      { required: true, 'validate-trigger': 'blur', message: t('enterprise.ClusterConfig.5mpm3ku3hr00') },
-      {
-        validator: (value: any, cb: any) => {
-          return new Promise(resolve => {
-            const reg = /^[0-9a-zA-Z_-]+$/
-            const re = new RegExp(reg)
-            if (re.test(value)) {
-              resolve(true)
-            } else {
-              cb(t('enterprise.ClusterConfig.else1'))
-              resolve(false)
-            }
           })
         }
       }

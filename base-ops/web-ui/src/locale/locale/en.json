@@ -458,6 +458,8 @@
             "else2": "Install Path",
             "else3": "port",
             "else4": "XLOG dir",
+            "else5": "CM port",
+            "else6": "CM data path",
             "5mpmb9e6puk0": "Cluster Info",
             "5mpmb9e6qmg0": "nodeIP",
             "5mpmb9e6qsc0": "hostIp",

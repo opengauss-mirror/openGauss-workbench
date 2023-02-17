@@ -4,11 +4,11 @@
       <div class="mb" style="width: 50%;">
         <div class="item-node-top flex-between full-w mb">
           <div class="flex-row">
-            <div class="mr">{{ $t('enterprise.InstallPrompt.5mpmb9e6puk0') }}</div>
-            <div>{{ data.clusterInfo.clusterId }} - {{ data.clusterInfo.clusterName }}</div>
+            <div class="label-color mr">{{ $t('enterprise.InstallPrompt.5mpmb9e6puk0') }}</div>
+            <div class="label-color">{{ data.clusterInfo.clusterId }}</div>
           </div>
           <div class="flex-row">
-            <div v-if="installType !== 'import'">{{ $t('enterprise.InstallPrompt.else1') }}: {{
+            <div class="label-color" v-if="installType !== 'import'">{{ $t('enterprise.InstallPrompt.else1') }}: {{
               data.clusterInfo.azName
             }}</div>
           </div>
@@ -28,7 +28,7 @@
             <div class="lable-w">{{ $t('enterprise.InstallPrompt.5mpmb9e6r0k0') }} CM</div>
             <div>{{
               data.clusterInfo.isInstallCM ? $t('enterprise.InstallPrompt.5mpmb9e6r4g0') :
-                $t('enterprise.InstallPrompt.5mpmb9e6r800')
+              $t('enterprise.InstallPrompt.5mpmb9e6r800')
             }}</div>
           </div>
         </div>
@@ -38,13 +38,14 @@
           <div class="item-node-top flex-between full-w">
             <div class="flex-row">
               <a-tag class="mr" color="#86909C">{{ getRoleName(itemNode.clusterRole) }}</a-tag>
-              {{ $t('enterprise.InstallPrompt.5mpmb9e6qmg0') }} {{ itemNode.privateIp }}({{
+              <div class="label-color">{{ $t('enterprise.InstallPrompt.5mpmb9e6qmg0') }} {{ itemNode.privateIp }}({{
                 itemNode.publicIp
-              }})
+              }})</div>
             </div>
             <div class="flex-row">
-              <icon-down style="cursor: pointer;" v-if="!itemNode.isShow" @click="itemNode.isShow = true" />
-              <icon-up style="cursor: pointer;" v-else @click="itemNode.isShow = false" />
+              <icon-down class="label-color" style="cursor: pointer;" v-if="!itemNode.isShow"
+                @click="itemNode.isShow = true" />
+              <icon-up class="label-color" style="cursor: pointer;" v-else @click="itemNode.isShow = false" />
             </div>
           </div>
           <div class="label-color item-node-center full-w flex-col-start" v-show="itemNode.isShow">
@@ -61,6 +62,18 @@
             <div class="flex-row">
               <div class="lable-w">{{ $t('enterprise.InstallPrompt.else4') }}</div>
               <div>{{ itemNode.xlogPath }}</div>
+            </div>
+            <div class="full-w" v-if="data.clusterInfo.isInstallCM">
+              <a-divider></a-divider>
+              <div class="flex-row">
+                <div class="lable-w">{{ $t('enterprise.InstallPrompt.else5') }}</div>
+                <div>{{ itemNode.cmPort }}</div>
+              </div>
+              <a-divider></a-divider>
+              <div class="flex-row">
+                <div class="lable-w">{{ $t('enterprise.InstallPrompt.else6') }}</div>
+                <div>{{ itemNode.cmDataPath }}</div>
+              </div>
             </div>
           </div>
         </div>
@@ -108,7 +121,9 @@ onMounted(() => {
       publicIp: item.publicIp,
       privateIp: item.privateIp,
       dataPath: item.dataPath,
-      xlogPath: item.xlogPath
+      xlogPath: item.xlogPath,
+      cmPort: item.cmPort,
+      cmDataPath: item.cmDataPath
     })
     data.nodeData.push(itemNode)
   })
@@ -146,7 +161,7 @@ const installType = computed(() => installStore.getInstallConfig.installType)
   overflow-y: auto;
 
   .item-node-top {
-    background-color: #f2f3f5;
+    background-color: var(--color-text-4);
     line-height: 40px;
     border-radius: 4px;
     padding: 0 16px;
