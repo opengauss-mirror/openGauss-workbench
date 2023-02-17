@@ -19,7 +19,7 @@
       </div>
     </div>
     <div class="flex-col full-w full-h ft-lg" v-if="exeResult === exeResultEnum.FAIL">
-      <div class="flex-row">
+      <div class="label-color flex-row">
         <icon-close-circle-fill class="mr" style="color: red; width: 24px; height: 24px" />
         {{ $t('components.ExeImport.5mpmzg3zsu80') }} {{ failMsg }}
       </div>

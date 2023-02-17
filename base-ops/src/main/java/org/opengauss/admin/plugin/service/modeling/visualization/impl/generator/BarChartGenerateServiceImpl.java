@@ -95,7 +95,7 @@ public class BarChartGenerateServiceImpl extends BaseGenerateServiceImpl {
             xDimension.setField(xDimensionKey);
             //enum value by field
             queryResult.forEach(item->{
-                String filedValue = (String) item.get(xDimensionKey);
+                String filedValue = item.get(xDimensionKey) == null ? "null" : item.get(xDimensionKey).toString();
                 if (filedValue != null) {
                     Categories category = new Categories();
                     category.setName(filedValue);

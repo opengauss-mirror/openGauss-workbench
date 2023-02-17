@@ -5,7 +5,7 @@ import { getToken } from '@/utils/auth'
 import errorCode from '@/utils/errorCode'
 
 // need to update url path
-const whiteNameList = ['host/listAll', 'hostUser/listAll/', 'hostUser/listAllWithoutRoot/',
+const whiteNameList = ['host/listAll', 'host/ping', 'hostUser/listAll/', 'hostUser/listAllWithoutRoot/',
   'az/listAll', 'encryption/getKey']
 
 export interface HttpResponse<T = unknown> {

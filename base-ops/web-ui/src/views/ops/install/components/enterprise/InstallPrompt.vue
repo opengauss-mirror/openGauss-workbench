@@ -8,7 +8,9 @@
             <div>{{ data.clusterInfo.clusterId }} - {{ data.clusterInfo.clusterName }}</div>
           </div>
           <div class="flex-row">
-            <div>{{ $t('enterprise.InstallPrompt.else1') }}: AZ</div>
+            <div v-if="installType !== 'import'">{{ $t('enterprise.InstallPrompt.else1') }}: {{
+              data.clusterInfo.azName
+            }}</div>
           </div>
         </div>
         <div class="label-color item-node-center">
@@ -20,6 +22,14 @@
           <div class="flex-row">
             <div class="lable-w">{{ $t('enterprise.InstallPrompt.else3') }}:</div>
             <div>{{ data.clusterInfo.port }}</div>
+          </div>
+          <a-divider></a-divider>
+          <div class="flex-row">
+            <div class="lable-w">{{ $t('enterprise.InstallPrompt.5mpmb9e6r0k0') }} CM</div>
+            <div>{{
+              data.clusterInfo.isInstallCM ? $t('enterprise.InstallPrompt.5mpmb9e6r4g0') :
+                $t('enterprise.InstallPrompt.5mpmb9e6r800')
+            }}</div>
           </div>
         </div>
       </div>
@@ -52,14 +62,6 @@
               <div class="lable-w">{{ $t('enterprise.InstallPrompt.else4') }}</div>
               <div>{{ itemNode.xlogPath }}</div>
             </div>
-            <a-divider></a-divider>
-            <div class="flex-row">
-              <div class="lable-w">{{ $t('enterprise.InstallPrompt.5mpmb9e6r0k0') }} CM</div>
-              <div>{{
-                itemNode.isInstallCM ? $t('enterprise.InstallPrompt.5mpmb9e6r4g0') :
-                  $t('enterprise.InstallPrompt.5mpmb9e6r800')
-              }}</div>
-            </div>
           </div>
         </div>
       </div>
@@ -69,7 +71,7 @@
 <script lang="ts" setup>
 import { useOpsStore } from '@/store'
 import { KeyValue } from '@/types/global'
-import { inject, onMounted, reactive } from 'vue'
+import { inject, onMounted, reactive, computed } from 'vue'
 import { ClusterRoleEnum } from '@/types/ops/install'
 import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
@@ -95,7 +97,9 @@ onMounted(() => {
     clusterId: storeInstallData.clusterId,
     clusterName: storeInstallData.clusterName,
     installPath: storeEnterpriseData.installPath,
-    port: storeEnterpriseData.port
+    port: storeEnterpriseData.port,
+    azName: storeEnterpriseData.azName,
+    isInstallCM: storeEnterpriseData.isInstallCM
   })
   storeEnterpriseData.nodeConfigList.forEach(item => {
     const itemNode = getNodeData()
@@ -104,8 +108,7 @@ onMounted(() => {
       publicIp: item.publicIp,
       privateIp: item.privateIp,
       dataPath: item.dataPath,
-      xlogPath: item.xlogPath,
-      isInstallCM: item.isInstallCM
+      xlogPath: item.xlogPath
     })
     data.nodeData.push(itemNode)
   })
@@ -133,6 +136,8 @@ const getRoleName = (type: ClusterRoleEnum) => {
       return t('enterprise.InstallPrompt.5mpmb9e6rpo0')
   }
 }
+
+const installType = computed(() => installStore.getInstallConfig.installType)
 
 </script>
 <style lang="less" scoped>

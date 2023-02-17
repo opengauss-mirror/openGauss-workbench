@@ -21,4 +21,6 @@ public class OpsHostEntity extends BaseEntity {
     private String publicIp;
     private Integer port;
     private String azId;
+    private String os;
+    private String cpuArch;
 }

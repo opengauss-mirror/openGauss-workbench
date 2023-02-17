@@ -25,7 +25,7 @@ public class HostBody {
     private String remark;
     private Integer port;
 
-    public OpsHostEntity toHostEntity(JschUtil jschUtil, String hostName) {
+    public OpsHostEntity toHostEntity(String hostName,String os,String cpuArch) {
         OpsHostEntity hostEntity = new OpsHostEntity();
         hostEntity.setPublicIp(publicIp);
         hostEntity.setPrivateIp(privateIp);
@@ -33,6 +33,8 @@ public class HostBody {
         hostEntity.setAzId(azId);
         hostEntity.setHostname(hostName);
         hostEntity.setRemark(remark);
+        hostEntity.setOs(os);
+        hostEntity.setCpuArch(cpuArch);
         return hostEntity;
     }
 

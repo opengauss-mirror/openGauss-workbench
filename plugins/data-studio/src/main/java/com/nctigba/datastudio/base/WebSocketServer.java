@@ -1,5 +1,7 @@
 package com.nctigba.datastudio.base;
 
+import cn.hutool.core.thread.ThreadUtil;
+import cn.hutool.json.JSONUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.gitee.starblues.annotation.Extract;
@@ -57,11 +59,28 @@ public class WebSocketServer implements SocketExtract {
         }
 
         try {
+            boolean isJson = JSONUtil.isJson(message);
+            if (!isJson) {
+                return;
+            }
             JSONObject jsonObject = JSONObject.parseObject(message);
             String operation = jsonObject.getString("operation");
-
-            SpringApplicationContext.getApplicationContext().getBean(operation, OperationInterface.class)
-                    .operate(this, message);
+            if (StringUtils.isEmpty(operation)) {
+                return;
+            }
+            var aa = SpringApplicationContext.getApplicationContext().getBean(operation, OperationInterface.class);
+            ThreadUtil.execAsync(() -> {
+                try {
+                    aa.operate(this, message);
+                } catch (Exception e) {
+                    log.error("method error: ", e);
+                    try {
+                        sendMessage(sessionId, window, "500", e.getMessage(), e.getStackTrace());
+                    } catch (IOException ex) {
+                        log.error("method error: ", ex);
+                    }
+                }
+            });
         } catch (Exception e) {
             log.error("method error: ", e);
             try {

@@ -4,10 +4,20 @@
     <div class="left-sidebar" :class="[iData.open ? 'open' : 'close']">
       <div class="search">
         <div class="search-frame">
-          <input v-model="iData.search" type="text" :placeholder="$t('modeling.left-sidebar.index.5m78udtsry80')" @keydown.enter="onSearch" />
-          <div class="search-icon" @click="onSearch">
+          <!-- <input v-model="iData.search" type="text" :placeholder="$t('modeling.left-sidebar.index.5m78udtsry80')" @keydown.enter="onSearch" /> -->
+          <a-input-search
+            v-model="iData.search"
+            :style="{width:'100%'}"
+            :placeholder="$t('modeling.left-sidebar.index.5m78udtsry80')"
+            search-button
+            allow-clear
+            @clear="onSearch"
+            @search="onSearch"
+            @press-enter="onSearch"
+          />
+          <!-- <div class="search-icon" @click="onSearch">
             <icon-search />
-          </div>
+          </div> -->
         </div>
       </div>
       <div class="content">
@@ -154,36 +164,6 @@ defineExpose({ init, toggleMenu })
           background-color: var(--color-fill-2);
           border-radius: 2px;
           transition: border .3s;
-          input {
-            width: calc(100% - 30px);
-            border: none;
-            outline: none;
-            background-color: transparent;
-            font-size: 14px;
-            box-sizing: border-box;
-            padding-left: 10px;
-            height: 22px;
-            color: var(--color-text-1);
-          }
-          &:focus-within {
-            border-color: rgb(var(--primary-6));
-          }
-          .search-icon {
-            width: 30px;
-            height: 30px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all .3s;
-            background-color: rgb(var(--primary-6));
-            color: var(--color-border-1);
-            .icon {
-              width: 14px !important;
-              height: auto !important;
-              color: var(--color-border-1);
-            }
-          }
         }
       }
       .content {

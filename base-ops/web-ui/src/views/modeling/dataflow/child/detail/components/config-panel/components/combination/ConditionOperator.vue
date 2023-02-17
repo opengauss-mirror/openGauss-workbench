@@ -36,7 +36,14 @@
                   />
                 </a-col>
                 <a-col :span="8" class="mr-xs">
-                  <a-input :max-length="140" show-word-limit  v-model="item.value" :placeholder="$t('modeling.combination.ConditionOperator.5m82aq4s8ow0')" @blur="saveData('or', iData.or, iData.cell)" v-show="item.condition !== 'notNull'" />
+                  <a-input
+                    :max-length="140"
+                    show-word-limit
+                    v-model="item.value"
+                    :placeholder="$t('modeling.combination.ConditionOperator.5m82aq4s8ow0')"
+                    @blur="saveData('or', iData.or, iData.cell)"
+                    v-show="(item.condition !== 'notNull') && (item.condition !== 'isNull')"
+                  />
                 </a-col>
                 <a-col :span="1">
                   <div class="d-control-remove" @click="orOperate('deleteAnd', orKey, key)">-</div>

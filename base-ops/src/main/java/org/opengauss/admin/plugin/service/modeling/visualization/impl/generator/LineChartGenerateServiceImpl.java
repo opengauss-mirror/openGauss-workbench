@@ -91,7 +91,7 @@ public class LineChartGenerateServiceImpl extends BaseGenerateServiceImpl {
             xDimension.setNum(8);
             //enum value in query data
             queryResult.forEach(item->{
-                String filedValue = (String) item.get(xDimensionKey);
+                String filedValue = item.get(xDimensionKey) == null ? "null" : item.get(xDimensionKey).toString();
                 if (filedValue != null) {
                     Categories category = new Categories();
                     category.setName(filedValue);

@@ -24,6 +24,7 @@
       <a-doption key="1" @click="operateNode('cut')" v-if="!nodeConfig.operate || nodeConfig.operate.includes('cut')">{{$t('modeling.nodes.BaseNode.5m78v3ubttc0')}}</a-doption>
       <a-doption key="2" @click="operateNode('copy')" v-if="!nodeConfig.operate || nodeConfig.operate.includes('copy')">{{$t('modeling.nodes.BaseNode.5m78v3ubuac0')}}</a-doption>
       <a-doption key="3" @click="operateNode('delete')" v-if="!nodeConfig.operate || nodeConfig.operate.includes('delete')">{{$t('modeling.nodes.BaseNode.5m78v3ubuek0')}}</a-doption>
+      <a-doption key="4" @click="operateNode('paste')" v-if="!nodeConfig.operate || nodeConfig.operate.includes('delete')">{{$t('modeling.dy_common.paste')}}</a-doption>
     </template>
   </a-dropdown>
 </template>
@@ -37,6 +38,7 @@ import { useModelCommonStore } from '@/store/modules/modeling/common'
 import { KeyValue } from '@antv/x6/lib/types'
 import svgIcon from '@/components/svg-icon/index.vue'
 import { useDataFlowStore } from '@/store/modules/modeling/data-flow'
+import { getCheckedNodes } from '../../../utils/tools'
 const mCStore = useModelCommonStore()
 const dFStore = useDataFlowStore()
 const $t = mCStore.getI18n
@@ -125,12 +127,15 @@ const operateNode = (type: string) => {
   if (getGraph && getNode) {
     let g: Graph = getGraph()
     let n: Cell = getNode()
-    if (type === 'delete') {
-      g.removeNode(n.id)
-    } else if (type === 'copy') {
-      g.copy([n])
-      g.paste()
-    } else if (type === 'cut') g.cut([n])
+    if (type === 'delete') g.removeNode(n.id)
+    else if (type === 'copy') {
+      g.copy([n], { useLocalStorage: true })
+      g?.copy(getCheckedNodes(g), { useLocalStorage: true })
+    } else if (type === 'cut') {
+      g?.cut(getCheckedNodes(g), { useLocalStorage: true })
+    } else if (type === 'paste') {
+      g?.paste({ useLocalStorage: true })
+    }
   }
 }
 const toggleDisbled = () => {

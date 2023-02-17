@@ -29,21 +29,17 @@
       </div>
 
     </template>
-    <a-form :model="data.formData" ref="formRef" auto-label-width :rules="data.rules">
-      <a-form-item field="privateIp" :label="$t('components.AddHost.ipAddress')" validate-trigger="blur"
-        :rules="[{ required: true, message: $t('components.AddHost.5mphy3snxdo0') }]">
+    <a-form :model="data.formData" ref="formRef" auto-label-width :rules="formRules">
+      <a-form-item field="privateIp" :label="$t('components.AddHost.ipAddress')" validate-trigger="blur">
         <a-input v-model="data.formData.privateIp" :placeholder="$t('components.AddHost.5mphy3snxdo0')"></a-input>
       </a-form-item>
-      <a-form-item field="publicIp" :label="$t('components.AddHost.5mphy3snxis0')" validate-trigger="blur"
-        :rules="[{ required: true, message: $t('components.AddHost.5mphy3snxmw0') }]">
+      <a-form-item field="publicIp" :label="$t('components.AddHost.5mphy3snxis0')" validate-trigger="blur">
         <a-input v-model="data.formData.publicIp" :placeholder="$t('components.AddHost.5mphy3snxmw0')"></a-input>
       </a-form-item>
-      <a-form-item field="port" :label="$t('components.AddHost.5mphy3snxtc0')" validate-trigger="blur"
-        :rules="[{ required: true, message: $t('components.AddHost.5mphy3snxzk0') }]">
+      <a-form-item field="port" :label="$t('components.AddHost.5mphy3snxtc0')" validate-trigger="blur">
         <a-input-number v-model="data.formData.port" :placeholder="$t('components.AddHost.5mphy3snxzk0')" />
       </a-form-item>
-      <a-form-item field="password" :label="$t('components.AddHost.5mphy3sny4w0')" validate-trigger="blur"
-        :rules="[{ required: true, message: $t('components.AddHost.5mphy3snyao0') }]">
+      <a-form-item field="password" :label="$t('components.AddHost.5mphy3sny4w0')" validate-trigger="blur">
         <a-input-password v-model="data.formData.password" :placeholder="$t('components.AddHost.5mphy3snyao0')"
           allow-clear />
       </a-form-item>
@@ -65,7 +61,7 @@
 <script setup lang="ts">
 import { KeyValue } from '@/types/global'
 import { FormInstance } from '@arco-design/web-vue/es/form'
-import { nextTick, reactive, ref, toRaw } from 'vue'
+import { nextTick, reactive, ref, toRaw, computed } from 'vue'
 import { addHost, editHost, hostPing, azListAll } from '@/api/ops'
 import { Message } from '@arco-design/web-vue'
 import { useI18n } from 'vue-i18n'
@@ -93,11 +89,30 @@ const data = reactive<KeyValue>({
     password: '',
     azId: '',
     remark: ''
-  },
-  rules: {
+  }
+})
+
+const formRules = computed(() => {
+  return {
     privateIp: [{ required: true, 'validate-trigger': 'blur', message: t('components.AddHost.5mphy3snxdo0') }],
     publicIp: [{ required: true, 'validate-trigger': 'blur', message: t('components.AddHost.5mphy3snxmw0') }],
-    port: [{ required: true, 'validate-trigger': 'blur', message: t('components.AddHost.5mphy3snxzk0') }],
+    port: [
+      { required: true, 'validate-trigger': 'blur', message: t('components.AddHost.5mphy3snxzk0') },
+      {
+        validator: (value: any, cb: any) => {
+          return new Promise(resolve => {
+            const reg = /^([0-9]|[1-9]\d{1,3}|[1-5]\d{4}|6[0-4]\d{4}|65[0-4]\d{2}|655[0-2]\d|6553[0-5])$/
+            const re = new RegExp(reg)
+            if (re.test(value)) {
+              resolve(true)
+            } else {
+              cb(t('components.AddHost.else1'))
+              resolve(false)
+            }
+          })
+        }
+      }
+    ],
     password: [{ required: true, 'validate-trigger': 'blur', message: t('components.AddHost.5mphy3snyao0') }]
   }
 })

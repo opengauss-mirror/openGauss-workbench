@@ -119,6 +119,9 @@ public class SysMenuTest {
         Mockito.doReturn(menus).when(menuMapper).selectList(ArgumentMatchers.any());
         List<SysMenu> sysMenus = sysMenuService.selectMenuTreeByUserId(1);
         Assertions.assertTrue(sysMenus.size() > 0);
+        menus = new ArrayList<>();
+        Mockito.doReturn(menus).when(menuMapper).selectMenuTreeByUserId(ArgumentMatchers.any());
+        Mockito.doReturn(menus).when(menuMapper).selectList(ArgumentMatchers.any());
         sysMenus = sysMenuService.selectMenuTreeByUserId(100);
         Assertions.assertTrue(sysMenus.size() == 0);
     }

@@ -26,7 +26,7 @@
 <script setup lang="ts">
 import ClusterConfig from '@/views/ops/install/components/enterprise/ClusterConfig.vue'
 import NodeConfig from '@/views/ops/install/components/enterprise/NodeConfig.vue'
-import { computed, ref } from 'vue'
+import { computed, ref, inject, onMounted } from 'vue'
 import EnvMonitor from './EnvMonitor.vue'
 import InstallPrompt from './InstallPrompt.vue'
 import ExeImport from '../ExeImport.vue'
@@ -45,9 +45,24 @@ const installProps = defineProps({
   currStep: Number
 })
 
+const loadingFunc = inject<any>('loading')
+
+onMounted(() => {
+  loadingFunc.setBackBtnShow(true)
+})
+
 const clusterConfigRef = ref<InstanceType<typeof ClusterConfig> | null>(null)
 const nodeConfigRef = ref<InstanceType<typeof NodeConfig> | null>(null)
 const envRef = ref<InstanceType<typeof EnvMonitor> | null>(null)
+
+const saveStore = () => {
+  if (installProps.currStep === STEP_ENUM.CLUSTER) {
+    clusterConfigRef.value?.saveStore()
+  }
+  if (installProps.currStep === STEP_ENUM.NODE) {
+    nodeConfigRef.value?.saveStore()
+  }
+}
 
 const beforeConfirm = async (): Promise<boolean> => {
   if (installProps.currStep === STEP_ENUM.CLUSTER) {
@@ -65,7 +80,8 @@ const beforeConfirm = async (): Promise<boolean> => {
 const installType = computed(() => installStore.getInstallConfig.installType)
 
 defineExpose({
-  beforeConfirm
+  beforeConfirm,
+  saveStore
 })
 
 </script>

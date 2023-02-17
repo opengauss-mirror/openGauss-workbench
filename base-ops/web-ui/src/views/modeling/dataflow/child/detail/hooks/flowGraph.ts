@@ -7,6 +7,7 @@ import { RouteLocationNormalizedLoaded } from 'vue-router'
 import { KeyValue } from '@antv/x6/lib/types'
 import { PropsOptions } from '../types'
 import { lineConnect } from '../utils/validate'
+import { getCheckedNodes } from '../utils/tools'
 const dFStore = useDataFlowStore()
 const mCStore = useModelCommonStore()
 const edgeConfig = {
@@ -154,6 +155,7 @@ export default class FlowGraph {
     })
     graph.on('blank:click', () => {
       mCStore.setSelectNode(null, false)
+      graph.unselect(getCheckedNodes(graph))
     })
     graph.on('edge:mouseenter', ({ edge }) => {
       if (!edge.data || !edge.data.operate || (edge.data.operate && Array.isArray(edge.data.operate) && edge.data.operate.includes('showChangeArrow'))) {
@@ -182,6 +184,21 @@ export default class FlowGraph {
         else if (item.shape === 'edge') item.cells_type = 'line'
       })
       saveJsonData(dFStore.getFlowDataInfo.id as string, jsonData)
+    })
+    graph.bindKey([`ctrl+c`], () => {
+      graph.copy(getCheckedNodes(graph), { useLocalStorage: true })
+    })
+    graph.bindKey([`ctrl+x`], () => {
+      graph.cut(getCheckedNodes(graph), { useLocalStorage: true })
+    })
+    graph.bindKey([`ctrl+v`], () => {
+      graph.paste({ useLocalStorage: true })
+    })
+    graph.bindKey([`ctrl+z`], () => {
+      graph?.undo()
+    })
+    graph.bindKey([`ctrl+y`], () => {
+      graph?.redo()
     })
     graph.on(`cell:removed`, (cell: KeyValue) => {
       if (cell.cell && cell.cell.cells_type === 'join') {

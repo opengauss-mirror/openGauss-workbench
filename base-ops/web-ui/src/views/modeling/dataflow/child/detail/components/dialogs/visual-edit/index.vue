@@ -63,6 +63,7 @@
                       :numberOption="dData.number"
                       :stringOption="dData.string"
                       :datetimeOption="dData.datetime"
+                      :allOption="dData.all"
                       @openCDD="openCDD"
                     />
                   </a-spin>
@@ -120,7 +121,7 @@ let cell: Cell
 const visible = ref<boolean>(false)
 const dData = reactive({
   activeKey: '1', title: t('modeling.visual-edit.index.5m7ihlv0niw0'), loading: false,
-  number: [] as KeyValue[], string: [] as KeyValue[], datetime: [] as KeyValue[]
+  number: [] as KeyValue[], string: [] as KeyValue[], datetime: [] as KeyValue[], all: [] as KeyValue[]
 })
 const coms: { [key: string]: any } = {
   'bar': defineAsyncComponent(() => import(`./components/BarConfig.vue`)),
@@ -170,6 +171,7 @@ const getFieldsList = () => {
         let string = [] as KeyValue[]
         let number = [] as KeyValue[]
         let datetime = [] as KeyValue[]
+        let all = [] as KeyValue[]
         let data = res.query_data[0]
         for (let i in res.dimension_options) {
           let key = res.dimension_options[i]
@@ -180,16 +182,18 @@ const getFieldsList = () => {
           ) {
             datetime.push({ value: key, label: key })
           } else string.push({ value: key, label: key })
+          all.push({ value: key, label: key })
         }
         modelingVCGetListByOperatorId(cell.id).then((res2: KeyValue) => {
           dData.string = setCustomList(string, (res2 && res2.data && Array.isArray(res2.data)) ? res2.data : [])
           dData.number = number
           dData.datetime = datetime
+          dData.all = all
           setQueryData(res.query_data)
         }).catch(() => {
           dData.string = setCustomList(string, [])
           dData.number = number
-          dData.datetime = datetime
+          dData.all = all
           setQueryData(res.query_data)
         })
       }

@@ -8,7 +8,7 @@
           <a-col :span="7">{{$t('modeling.components.BarLineConfig.5m7in04pdbs0')}}</a-col>
           <a-col :span="11" class="mr-s">
             <a-select v-model="config.showType.dimension">
-              <overflow-tooltip :text="item.label" v-for="(item, key) in stringOption" :key="key" :content="item.label">
+              <overflow-tooltip :text="item.label" v-for="(item, key) in allOption" :key="key" :content="item.label">
                 <a-option :value="item.value"><icon-tag class="mr-s" v-if="item.isCustom" />{{ item.label }}</a-option>
               </overflow-tooltip>
             </a-select>
@@ -128,6 +128,7 @@ interface configModal {
 }
 defineProps<{
   stringOption: KeyValue[],
+  allOption: KeyValue[],
   numberOption: KeyValue[],
   datetimeOption: KeyValue[]
 }>()
@@ -186,10 +187,6 @@ const validate = () => {
         if (!item.field) {
           flag = false
           message += (message ? '；\n ' : '') + t('modeling.components.BarLineConfig.5m7in04pf600') + (key1 + 1) + t('modeling.components.BarLineConfig.5m7in04pfas0')
-        }
-        if (!item.type) {
-          flag = false
-          message += (message ? '；\n ' : '') + t('modeling.components.BarLineConfig.5m7in04pf600') + (key1 + 1) + t('modeling.components.BarLineConfig.5m7in04pfdg0')
         }
         if (!item.unit) {
           flag = false

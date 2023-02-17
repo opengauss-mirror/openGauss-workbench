@@ -373,6 +373,7 @@
     "backup": {
         "index": {
             "else1": "集群标识",
+            "else2": "确定要恢复？",
             "5mpm2oya7bg0": "请选择集群名称",
             "5mpm2oya7y80": "搜索",
             "5mpm2oya83s0": "恢复",
@@ -381,6 +382,7 @@
             "5mpm2oya8ek0": "取消",
             "5mpm2oya8i80": "删除",
             "5mpm2oya8lk0": "集群标识",
+            "else3": "备份说明",
             "5mpm2oya8r80": "备份标识",
             "5mpm2oya8uo0": "所在机器",
             "5mpm2oya8y00": "备份路径",
@@ -401,8 +403,8 @@
             "5mpm3ku3iag0": "请输入日志目录",
             "5mpm3ku3ie40": "临时文件目录",
             "5mpm3ku3ihg0": "请输入临时文件目录",
-            "5mpm3ku3il80": "工作OM目录",
-            "5mpm3ku3iok0": "请输入工作OM目录",
+            "5mpm3ku3il80": "数据库工具目录",
+            "5mpm3ku3iok0": "请输入数据库工具目录",
             "5mpm3ku3is00": "数据库core目录",
             "5mpm3ku3ivk0": "请输入数据库core目录",
             "5mpm3ku3iz80": "端口号",
@@ -414,7 +416,8 @@
             "5mpm3ku3jkw0": "开启运行时数据库节点自选主",
             "5mpm3ku3jo00": "集群标识已存在,请重新输入",
             "5mpm3ku3jqo0": "判断集群标识是否存在出错",
-            "else1": "请输入数字,字母或者下划线"
+            "else1": "请输入数字,字母或者下划线",
+            "else2": "不能为纯空格"
         },
         "EnterpriseInstall": {
             "else2": "提示",
@@ -474,6 +477,14 @@
             "else3": "否安装 CM",
             "else4": "CM数据路径",
             "else5": "CM端口号",
+            "else6": "请输入az优先级",
+            "else7": "AZ优先级",
+            "else8": "密码错误",
+            "else9": "密码校验异常",
+            "else10": "未检测到5432端口对应的实例",
+            "else11": "端口已被占用",
+            "else12": "未检测到数据目录下对应的实例信息",
+            "else13": "检测到数据目录不为空",
             "5mpme7w69yc0": "集群节点数",
             "5mpme7w6aj40": "所属AZ",
             "5mpme7w6ap00": "请选择所属AZ",
@@ -610,6 +621,9 @@
         },
         "InstallConfig": {
             "else1": "root密码",
+            "else2": "请输入正确的端口号",
+            "else3": "未检测到安装目录下对应的实例信息",
+            "else4": "检测到安装目录下的data不为空",
             "5mpmu0lapic0": "节点配置",
             "5mpmu0laqc80": "集群标识",
             "5mpmu0laqiw0": "请输入集群标识",
@@ -663,6 +677,10 @@
         "index": {
             "else1": "极简版",
             "else2": "root密码",
+            "else3": "已经安装了极简版单点",
+            "else4": "您可以选择其它版本进行安装",
+            "else5": "数据库版本",
+            "else6": "请选择数据库版本",
             "5mpn813gtvs0": "正在安装openGauss的极简版",
             "5mpn813guf00": "主机IP",
             "5mpn813gukw0": "请选择主机IP",
@@ -729,19 +747,30 @@
     },
     "modeling": {
         "dy_common": {
-            "saveSuccess": "保存成功！",
-            "noResult": "无结果",
-            "saveFailed": "保存失败！",
-            "sqlyunxing": "SQL语句",
-            "saveAndClose": "保存配置并关闭",
-            "AutomaticallySaved": "已自动保存",
-            "AutomaticallySaving": "自动保存中",
-            "page_empty": "正在开发中，敬请期待",
-            "xConfig": "X轴配置",
-            "yConfig": "Y轴配置",
-            "xFB": "X轴分布",
-            "xConfigMessage": "请选择X轴配置",
-            "yConfigMessage": "请选择Y轴配置"
+          "saveSuccess": "保存成功！",
+          "noResult": "无结果",
+          "saveFailed": "保存失败！",
+          "sqlyunxing": "SQL语句",
+          "saveAndClose": "保存配置并关闭",
+          "AutomaticallySaved": "已自动保存",
+          "AutomaticallySaving": "自动保存中",
+          "page_empty": "正在开发中，敬请期待",
+          "xConfig": "X轴配置",
+          "yConfig": "Y轴配置",
+          "xFB": "X轴分布",
+          "xConfigMessage": "请选择X轴配置",
+          "yConfigMessage": "请选择Y轴配置",
+          "warning": "警告",
+          "warningBatchDelete1": "确定要删除这",
+          "warningBatchDelete2": "个数据流吗",
+          "batchDelete": "批量删除",
+          "paste": "粘贴",
+          "isNo": "无",
+          "heatmapConfig": {
+            "notice1": "请选择统计指标字段！",
+            "notice2": "请选择X轴分布字段！",
+            "notice3": "请选择Y轴配置字段！"
+          }
         },
         "table": {
             "index": {
@@ -809,7 +838,7 @@
                 "5m6g1w13i3g0": "管理权限",
                 "5m6g1w13i640": "开发权限",
                 "5m6g1w13i8k0": "访客权限",
-                "5m6g1w13iaw0": "新增数据流",
+                "5m6g1w13iaw0": "新建数据流",
                 "5m6g1w13id80": "请输入数据流ID",
                 "5m6g1w13ihs0": "请选择行为",
                 "5m6g1w13ik00": "请输入用户",
@@ -1053,7 +1082,7 @@
         "dataflow": {
             "index": {
                 "5m77w0y57io0": "新建数据流",
-                "5m77w0y5b3k0": "搜索...",
+                "5m77w0y5b3k0": "输入数据流ID/名称",
                 "5m77w0y5brg0": "数据流列表",
                 "5m77w0y5caw0": "修改",
                 "5m77w0y5cgg0": "属性",

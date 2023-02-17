@@ -86,6 +86,10 @@ public class HostUserTest {
         public boolean removeById(Serializable id) {
             return true;
         }
+        @Override
+        public boolean edit(String hostUserId, HostUserBody hostUserBody) {
+            return true;
+        }
     };
     @Mock
     private JschUtil jschUtil;
@@ -145,10 +149,17 @@ public class HostUserTest {
     }
 
     @Test
-    public void testEdit() {
+    public void testEdit() throws Exception {
+        JschResult jschResult = new JschResult();
+        jschResult.setExitCode(0);
+        Mockito.doReturn("000000").when(encryptionUtils).decrypt(any());
+        Mockito.doReturn(Optional.ofNullable(getJschSession())).when(jschUtil).getSession(any(), any(), any(), any());
+        Mockito.doReturn(jschResult).when(jschUtil).executeCommand(any(), any());
+        Mockito.doReturn(jschResult).when(jschUtil).executeCommand(any(), any(), any());
         String hostUserId = "1";
         HostUserBody hostUserBody = new HostUserBody();
         hostUserBody.setHostId("1");
+        Mockito.doReturn(getMockHostEntity()).when(hostService).getById(any());
         boolean edit = hostUserService.edit(hostUserId, hostUserBody);
         Assertions.assertTrue(edit);
     }
