@@ -34,7 +34,9 @@ public class SlowLogService extends ServiceImpl<SlowLogMapper, StatementHistory>
 			if (slowLogQuery.getQueryCount())
 				page.setTotal(slowLogMapper.selectCount(wrapper));
 			page.setRecords(slowLogMapper
-					.selectList(wrapper.last(" limit " + (slowLogQuery.getPageNum() - 1) * slowLogQuery.getPageSize()
+					.selectList(wrapper
+							.orderByDesc(StatementHistory::getStartTime)
+							.last(" limit " + (slowLogQuery.getPageNum() - 1) * slowLogQuery.getPageSize()
 							+ "," + slowLogQuery.getPageSize())));
 			page.setCurrent(slowLogQuery.getPageNum()).setSize(slowLogQuery.getPageSize());
 			return page;
