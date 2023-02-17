@@ -9,13 +9,13 @@
         <span class="funcion-name">{{ $t('functionBar.execute') }}</span>
       </div>
     </div>
-    <div class="function-item-wrapper" v-if="barType.stop">
+    <div class="function-item-wrapper" v-if="barType.stopRun">
       <div
-        :class="['function-item', { disabled: !barStatus.stop }]"
-        @click="barStatus.stop && handleStop()"
+        :class="['function-item', { disabled: !barStatus.stopRun }]"
+        @click="barStatus.stopRun && handleStop()"
       >
-        <font-icon :icon="'pause' + (barStatus.stop ? '' : '-disabled')" />
-        <span class="funcion-name">{{ $t('functionBar.stop') }}</span>
+        <font-icon :icon="'pause' + (barStatus.stopRun ? '' : '-disabled')" />
+        <span class="funcion-name">{{ $t('functionBar.stopRun') }}</span>
       </div>
     </div>
     <div class="function-item-wrapper" v-if="barType.clear">
@@ -85,7 +85,7 @@
   }>();
   const emit = defineEmits<{
     (e: 'execute'): void;
-    (e: 'stop'): void;
+    (e: 'stopRun'): void;
     (e: 'clear'): void;
     (e: 'startDebug'): void;
     (e: 'stopDebug'): void;
@@ -97,7 +97,7 @@
   const barStatus = computed(() => {
     /* such as:
       execute: true,
-      stop: false,
+      stopRun: false,
       startDebug: false,
       stopDebug: false,
       breakPointStep: false,
@@ -108,7 +108,7 @@
   const barType = computed(() => {
     return {
       execute: ['sql', 'debug'].includes(props.type),
-      stop: ['sql'].includes(props.type),
+      stopRun: ['sql'].includes(props.type),
       clear: ['sql'].includes(props.type),
       startDebug: ['debug'].includes(props.type),
       stopDebug: ['debug'].includes(props.type),
@@ -123,7 +123,7 @@
   };
 
   const handleStop = () => {
-    emit('stop');
+    emit('stopRun');
   };
 
   const handleClear = () => {

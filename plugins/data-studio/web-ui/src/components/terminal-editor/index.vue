@@ -7,7 +7,7 @@
         :status="sqlData.barStatus"
         :readOnly="sqlData.readOnly"
         @execute="handleExecute"
-        @stop="handleStop"
+        @stopRun="handleStop"
         @clear="handleClear"
         @startDebug="handleStartDebug"
         @stopDebug="handleStopDebug"
@@ -94,7 +94,7 @@
       props.editorType == 'sql'
         ? {
             execute: true,
-            stop: false,
+            stopRun: false,
             clear: true,
           }
         : {
@@ -221,8 +221,11 @@
   );
 
   const changeSqlBarStatus = (type: 'init' | 'running') => {
-    sqlData.barStatus.execute = type === 'init';
-    sqlData.barStatus.stop = type !== 'init';
+    Object.assign(sqlData.barStatus, {
+      execute: type === 'init',
+      stopRun: type !== 'init',
+      clear: type === 'init',
+    });
   };
 
   interface Message {
@@ -238,9 +241,9 @@
       if (res.type == 'text') {
         if (
           props.editorType == 'sql' &&
-          ['End of execution', 'Close successfully'].includes(res.msg)
+          ['Button status request', 'Close successfully'].includes(res.msg)
         ) {
-          changeSqlBarStatus('init');
+          getButtonStatus();
         }
         showResult.value = true;
         const d = new Date();
@@ -252,8 +255,17 @@
           });
       }
       if (res.type == 'operateStatus') {
-        sqlData.barStatus = result;
-        sqlData.readOnly = !result?.execute;
+        if (props.editorType == 'sql') {
+          sqlData.barStatus = {
+            execute: result.startRun,
+            stopRun: result.stopRun,
+            clear: result.startRun,
+          };
+          sqlData.readOnly = !result?.startRun;
+        } else {
+          sqlData.barStatus = result;
+          sqlData.readOnly = !result?.execute;
+        }
         // can use 'startDebug' button = not isDebugging
         if (result.startDebug) {
           debug.isDebugging = false;
@@ -350,18 +362,17 @@
     } else {
       loading.value && loading.value.close();
       ElMessageBox.alert(res.msg, t('common.error'));
-      props.editorType == 'sql' && changeSqlBarStatus('init');
+      props.editorType == 'sql' && getButtonStatus();
     }
   };
 
   const getButtonStatus = () => {
-    props.editorType == 'debug' &&
-      ws.instance.send({
-        operation: 'operateStatus',
-        webUser: ws.webUser,
-        connectionName: ws.connectionName,
-        windowName: ws.sessionId,
-      });
+    ws.instance.send({
+      operation: 'operateStatus',
+      webUser: ws.webUser,
+      connectionName: ws.connectionName,
+      windowName: ws.sessionId,
+    });
   };
 
   const handleExecute = () => {

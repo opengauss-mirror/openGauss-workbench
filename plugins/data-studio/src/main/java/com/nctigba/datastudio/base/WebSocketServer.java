@@ -115,7 +115,7 @@ public class WebSocketServer implements SocketExtract {
      * @param obj
      * @throws IOException
      */
-    public void sendMessage(String sessionId, MessageEnum type, String code, String message, Object obj) throws IOException {
+    public synchronized void sendMessage(String sessionId, MessageEnum type, String code, String message, Object obj) throws IOException {
         WebDsResult result = WebDsResult.ok(type.toString(), message).addData(obj);
         result.setCode(code);
         wsFacade.sendMessage("webds-plugin", sessionId, JSON.toJSONString(result));

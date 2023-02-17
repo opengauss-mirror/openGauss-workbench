@@ -104,7 +104,7 @@ export default {
   },
   functionBar: {
     execute: 'compile / execute',
-    stop: 'stop',
+    stopRun: 'stop',
     clear: 'clear',
     startDebug: 'startDebug',
     stopDebug: 'stopDebug',
