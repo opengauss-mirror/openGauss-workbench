@@ -52,7 +52,6 @@ const filter = reactive({
 const columns = computed(() => [
   { title: t('az.index.azName'), dataIndex: 'name' },
   { title: t('az.index.5mpi9hkphvo0'), dataIndex: 'address' },
-  { title: t('az.index.5mpi9hkpi2o0'), dataIndex: 'priority' },
   { title: t('az.index.5mpi9hkpi940'), dataIndex: 'remark' },
   { title: t('az.index.5mpi9hkpif40'), slotName: 'operation' }
 ])

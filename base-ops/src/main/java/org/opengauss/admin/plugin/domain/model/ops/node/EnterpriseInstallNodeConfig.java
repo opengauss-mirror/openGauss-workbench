@@ -53,7 +53,7 @@ public class EnterpriseInstallNodeConfig {
 
     private String dataPath;
 
-    private String xlogPath;
+    private String azPriority;
 
     public void checkConfig() {
         if (Objects.isNull(clusterRole)) {
@@ -91,10 +91,6 @@ public class EnterpriseInstallNodeConfig {
         if (StrUtil.isEmpty(dataPath)) {
             throw new OpsException("[" + hostname + "]data path error");
         }
-
-        if (StrUtil.isEmpty(xlogPath)) {
-            throw new OpsException("[" + hostname + "]xlog path error");
-        }
     }
 
     public OpsClusterNodeEntity toOpsClusterNodeEntity() {
@@ -107,7 +103,6 @@ public class EnterpriseInstallNodeConfig {
         opsClusterNodeEntity.setIsCMMaster(isCMMaster);
         opsClusterNodeEntity.setCmDataPath(cmDataPath);
         opsClusterNodeEntity.setCmPort(cmPort);
-        opsClusterNodeEntity.setXlogPath(xlogPath);
         return opsClusterNodeEntity;
     }
 }

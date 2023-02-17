@@ -7,7 +7,8 @@
             data.nodeList.length
           }}</span>
         </div>
-        <a-form :model="data.azForm" :rules="data.azRules" :style="{ width: '300px' }" auto-label-width ref="azFormRef">
+        <a-form v-if="installType !== 'import'" :model="data.azForm" :rules="data.azRules" :style="{ width: '300px' }"
+          auto-label-width ref="azFormRef">
           <a-form-item field="azId" :label="$t('enterprise.NodeConfig.5mpme7w6aj40')" validate-trigger="change">
             <a-select :loading="data.azListLoading" v-model="data.azForm.azId"
               :placeholder="$t('enterprise.NodeConfig.5mpme7w6ap00')" @change="azChange">
@@ -80,6 +81,10 @@
             <a-form-item field="xlogPath" :label="$t('enterprise.NodeConfig.else1')" validate-trigger="blur">
               <a-input v-model="formItem.xlogPath" :placeholder="$t('enterprise.NodeConfig.5mpme7w6byo0')" />
             </a-form-item>
+            <a-form-item field="azPriority" :label="$t('enterprise.NodeConfig.else7')" v-if="installType !== 'import'">
+              <a-input-number :min="1" :max="10" v-model="formItem.azPriority"
+                :placeholder="$t('enterprise.NodeConfig.else6')" />
+            </a-form-item>
           </a-form>
           <a-divider v-if="index < (data.nodeList.length - 1)" />
         </div>
@@ -90,10 +95,10 @@
 
 <script lang="ts" setup>
 
-import { onMounted, reactive, ref, computed } from 'vue'
+import { onMounted, reactive, ref, computed, inject } from 'vue'
 import { KeyValue } from '@/types/global'
 import { ClusterRoleEnum, EnterpriseInstallConfig } from '@/types/ops/install' // eslint-disable-line
-import { hostListAll, hostUserListWithoutRoot, azListAll } from '@/api/ops'
+import { hostListAll, hostUserListWithoutRoot, azListAll, portUsed, pathEmpty, hostPingById } from '@/api/ops'
 import { Message } from '@arco-design/web-vue'
 import { useOpsStore } from '@/store'
 import { useI18n } from 'vue-i18n'
@@ -126,9 +131,8 @@ const refList = ref<any>([])
 
 onMounted(async () => {
   initData()
+  console.log('onMounted store', installStore.getEnterpriseConfig, Object.keys(installStore.getEnterpriseConfig).length, installStore.getEnterpriseConfig.nodeConfigList.length);
   if (Object.keys(installStore.getEnterpriseConfig).length && installStore.getEnterpriseConfig.nodeConfigList.length) {
-    console.log('1')
-
     await getHostList()
     installStore.getEnterpriseConfig.nodeConfigList.forEach((item, index) => {
       data.nodeList.push(item)
@@ -145,6 +149,8 @@ onMounted(async () => {
   }
   getAZList()
 })
+
+const installType = computed(() => installStore.getInstallConfig.installType)
 
 const initData = () => {
   data.azRules = {
@@ -219,11 +225,13 @@ const initData = () => {
           })
         }
       }
-    ]
+    ],
+    azPriority: [{ required: true, 'validate-trigger': 'blur', message: t('enterprise.NodeConfig.else6') }]
   }
 }
 
 const addNode = (index: number, isMaster?: boolean) => {
+  refList.value = []
   const nodeData = {
     clusterRole: ClusterRoleEnum.SLAVE,
     hostId: '',
@@ -237,7 +245,8 @@ const addNode = (index: number, isMaster?: boolean) => {
     cmDataPath: '/opt/openGauss/data/cmserver',
     cmPort: '15300',
     dataPath: '/opt/openGauss/install/data/dn',
-    xlogPath: '/opt/openGauss/install/data/xlog'
+    xlogPath: '/opt/openGauss/install/data/xlog',
+    azPriority: 1
   }
   if (isMaster) {
     nodeData.clusterRole = ClusterRoleEnum.MASTER
@@ -247,6 +256,7 @@ const addNode = (index: number, isMaster?: boolean) => {
 }
 
 const removeNode = (index: number) => {
+  refList.value = []
   if (index === 0) {
     Message.warning('The primary node cannot be removed')
   } else {
@@ -390,11 +400,26 @@ const setRefMap = (el: any) => {
 
 const azFormRef = ref<FormInstance>()
 
+const loadingFunc = inject<any>('loading')
+
+const saveStore = () => {
+  const nodes = JSON.parse(JSON.stringify(data.nodeList))
+  const param = {
+    azId: data.azForm.azId,
+    azName: data.azForm.azName,
+    nodeConfigList: nodes
+  }
+  installStore.setEnterpriseConfig(param as EnterpriseInstallConfig)
+  console.log('save store', installStore.getEnterpriseConfig)
+}
+
 const beforeConfirm = async (): Promise<boolean> => {
   let validRes = true
-  const azFormValidaRes = await azFormRef.value?.validate()
-  if (azFormValidaRes) {
-    validRes = false
+  if (installType.value !== 'import') {
+    const azFormValidaRes = await azFormRef.value?.validate()
+    if (azFormValidaRes) {
+      validRes = false
+    }
   }
   if (validRes) {
     for (let i = 0; i < refList.value.length; i++) {
@@ -407,6 +432,10 @@ const beforeConfirm = async (): Promise<boolean> => {
     }
   }
   if (validRes) {
+    loadingFunc.toLoading()
+    validRes = await validateSpecialFields()
+  }
+  if (validRes) {
     const nodes = JSON.parse(JSON.stringify(data.nodeList))
     const param = {
       azId: data.azForm.azId,
@@ -416,11 +445,137 @@ const beforeConfirm = async (): Promise<boolean> => {
     installStore.setEnterpriseConfig(param as EnterpriseInstallConfig)
     return true
   }
+  loadingFunc.cancelLoading()
   return false
 }
 
+const clusterData = computed(() => installStore.getEnterpriseConfig)
+
+const validatePort = async (port: number, password: string, hostId: string): Promise<any> => {
+  const portParam = {
+    port: port,
+    rootPassword: password
+  }
+  const portValid: KeyValue = await portUsed(hostId, portParam)
+  if (Number(portValid.code) === 200) {
+    return portValid.data
+  }
+  return false
+}
+
+const validatePath = async (path: string, password: string, hostId: string) => {
+  const pathParam = {
+    path: path,
+    rootPassword: password
+  }
+  const pathValid: KeyValue = await pathEmpty(hostId, pathParam)
+  if (Number(pathValid.code) === 200) {
+    return pathValid.data
+  }
+  return false
+}
+
+const validateSpecialFields = async () => {
+  let result = true
+  if (data.nodeList.length) {
+    for (let i = 0; i < data.nodeList.length; i++) {
+      refList.value[i].clearValidate()
+    }
+    for (let i = 0; i < data.nodeList.length; i++) {
+      if (data.nodeList[i].rootPassword) {
+        const validMethodArr = []
+        let isOkPwd = true
+        const encryptPwd = await encryptPassword(data.nodeList[i].rootPassword)
+        // password validate
+        try {
+          const param = {
+            rootPassword: encryptPwd
+          }
+          const passwordValid: KeyValue = await hostPingById(data.nodeList[i].hostId, param)
+          if (Number(passwordValid.code) !== 200) {
+            refList.value[i].setFields({
+              rootPassword: {
+                status: 'error',
+                message: t('enterprise.NodeConfig.else8')
+              }
+            })
+            result = false
+            isOkPwd = false
+          }
+        } catch (err: any) {
+          refList.value[i].setFields({
+            rootPassword: {
+              status: 'error',
+              message: t('enterprise.NodeConfig.else9')
+            }
+          })
+          result = false
+          isOkPwd = false
+        }
+        if (!isOkPwd) {
+          continue
+        }
+        //  cluster port is used
+        validMethodArr.push(validatePort(clusterData.value.port, encryptPwd, data.nodeList[i].hostId))
+        if (isInstallCM.value) {
+          validMethodArr.push(validatePort(data.nodeList[i].cmPort, encryptPwd, data.nodeList[i].hostId))
+        }
+        validMethodArr.push(validatePath(data.nodeList[i].dataPath, encryptPwd, data.nodeList[i].hostId))
+        if (validMethodArr.length) {
+          const validResult = await Promise.all(validMethodArr)
+          if ((installType.value !== 'import' && validResult[0]) || (installType.value === 'import' && !validResult[0])) {
+            // port valid
+            refList.value[i].setFields({
+              hostId: {
+                status: 'error',
+                message: clusterData.value.port + (installType.value === 'import' ? t('enterprise.NodeConfig.else10') : t('enterprise.NodeConfig.else11'))
+              }
+            })
+            result = false
+          }
+          if (isInstallCM.value) {
+            if ((installType.value !== 'import' && validResult[1]) || (installType.value === 'import' && !validResult[1])) {
+              // cmPort valid
+              refList.value[i].setFields({
+                cmPort: {
+                  status: 'error',
+                  message: data.nodeList[i].cmPort + (installType.value === 'import' ? t('enterprise.NodeConfig.else10') : t('enterprise.NodeConfig.else11'))
+                }
+              })
+              result = false
+            }
+            if ((installType.value !== 'import' && !validResult[2]) || (installType.value === 'import' && validResult[2])) {
+              // dataPath valid
+              refList.value[i].setFields({
+                dataPath: {
+                  status: 'error',
+                  message: installType.value === 'import' ? t('enterprise.NodeConfig.else12') : t('enterprise.NodeConfig.else13')
+                }
+              })
+              result = false
+            }
+          } else {
+            if ((installType.value !== 'import' && !validResult[1]) || (installType.value === 'import' && validResult[1])) {
+              // dataPath Valid
+              refList.value[i].setFields({
+                dataPath: {
+                  status: 'error',
+                  message: installType.value === 'import' ? t('enterprise.NodeConfig.else12') : t('enterprise.NodeConfig.else13')
+                }
+              })
+              result = false
+            }
+          }
+        }
+      }
+    }
+  }
+  return result
+}
+
 defineExpose({
-  beforeConfirm
+  beforeConfirm,
+  saveStore
 })
 
 </script>

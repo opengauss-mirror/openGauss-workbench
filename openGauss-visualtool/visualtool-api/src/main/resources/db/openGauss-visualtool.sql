@@ -916,3 +916,24 @@ LANGUAGE plpgsql;
 SELECT add_user_field_func();
 
 DROP FUNCTION add_user_field_func;
+
+CREATE OR REPLACE FUNCTION add_host_field_func() RETURNS integer AS 'BEGIN
+IF
+( SELECT COUNT ( * ) AS ct1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ''ops_host'' AND COLUMN_NAME = ''os'' ) = 0
+THEN
+ALTER TABLE ops_host ADD COLUMN os varchar(255);
+COMMENT ON COLUMN "public"."ops_host"."os" IS ''操作系统'';
+END IF;
+IF
+( SELECT COUNT ( * ) AS ct1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ''ops_host'' AND COLUMN_NAME = ''cpu_arch'' ) = 0
+THEN
+ALTER TABLE ops_host ADD COLUMN cpu_arch varchar(255);
+COMMENT ON COLUMN "public"."ops_host"."cpu_arch" IS ''CPU架构'';
+END IF;
+RETURN 0;
+END;'
+LANGUAGE plpgsql;
+
+SELECT add_host_field_func();
+
+DROP FUNCTION add_host_field_func;

@@ -52,13 +52,13 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref, inject } from 'vue'
 import { MiniNodeConfig, MinimalistInstallConfig, ClusterRoleEnum } from '@/types/ops/install'
 import { KeyValue } from '@/types/global'
 
 import { useOpsStore } from '@/store'
 import { FormInstance } from '@arco-design/web-vue/es/form'
-import { hostListAll, hostUserListWithoutRoot, hasName } from '@/api/ops'
+import { hostListAll, hostUserListWithoutRoot, hasName, portUsed, pathEmpty, hostPingById } from '@/api/ops'
 import { encryptPassword } from '@/utils/jsencrypt'
 import { Message } from '@arco-design/web-vue'
 import { useI18n } from 'vue-i18n'
@@ -278,28 +278,132 @@ const hostUserPopupChange = (val: boolean) => {
 
 const formRef = ref<FormInstance>()
 
-const beforeConfirm = async (): Promise<boolean> => {
-  const validRes = await formRef.value?.validate()
-  if (!validRes) {
-    const param = JSON.parse(JSON.stringify(data.form))
-    param.clusterRole = ClusterRoleEnum.MASTER
-    param.clusterName = ''
-    installStore.setInstallContext({ clusterId: param.clusterId })
-    const miniConfig = {
-      clusterName: '',
-      port: param.port,
-      databaseUsername: param.databaseUsername,
-      databasePassword: param.databasePassword,
-      nodeConfigList: [param as MiniNodeConfig]
-    }
-    installStore.setMiniConfig(miniConfig as MinimalistInstallConfig)
-    return true
-  } else {
-    return false
+const saveStore = () => {
+  const param = JSON.parse(JSON.stringify(data.form))
+  param.clusterRole = ClusterRoleEnum.MASTER
+  param.clusterName = ''
+  installStore.setInstallContext({ clusterId: param.clusterId })
+  const miniConfig = {
+    clusterName: '',
+    port: param.port,
+    databaseUsername: param.databaseUsername,
+    databasePassword: param.databasePassword,
+    nodeConfigList: [param as MiniNodeConfig]
   }
+  installStore.setMiniConfig(miniConfig as MinimalistInstallConfig)
 }
+
+const loadingFunc = inject<any>('loading')
+
+const beforeConfirm = async (): Promise<boolean> => {
+  let validRes = true
+  const tempRes = await formRef.value?.validate()
+  if (tempRes) {
+    validRes = false
+  }
+  if (validRes) {
+    loadingFunc.toLoading()
+    validRes = await validateSpecialFields()
+  }
+  if (validRes) {
+    saveStore()
+    return true
+  }
+  loadingFunc.cancelLoading()
+  return false
+}
+
+const validatePort = async (port: number, password: string, hostId: string) => {
+  const portParam = {
+    port: port,
+    rootPassword: password
+  }
+  const portValid: KeyValue = await portUsed(hostId, portParam)
+  if (Number(portValid.code) === 200) {
+    return portValid.data
+  }
+  return false
+}
+
+const validatePath = async (path: string, password: string, hostId: string) => {
+  const pathParam = {
+    path: path,
+    rootPassword: password
+  }
+  const pathValid: KeyValue = await pathEmpty(hostId, pathParam)
+  if (Number(pathValid.code) === 200) {
+    return pathValid.data
+  }
+  return false
+}
+
+const validateSpecialFields = async () => {
+  let result = true
+  formRef.value?.clearValidate()
+  if (data.form.rootPassword) {
+    const validMethodArr = []
+    const encryptPwd = await encryptPassword(data.form.rootPassword)
+    // password validate
+    try {
+      const param = {
+        rootPassword: encryptPwd
+      }
+      const passwordValid: KeyValue = await hostPingById(data.form.hostId, param)
+      if (Number(passwordValid.code) !== 200) {
+        formRef.value?.setFields({
+          rootPassword: {
+            status: 'error',
+            message: t('enterprise.NodeConfig.else8')
+          }
+        })
+        result = false
+      }
+    } catch (err: any) {
+      formRef.value?.setFields({
+        rootPassword: {
+          status: 'error',
+          message: t('enterprise.NodeConfig.else9')
+        }
+      })
+      result = false
+    }
+    if (!result) {
+      return result
+    }
+    //  cluster port is used
+    validMethodArr.push(validatePort(data.form.port, encryptPwd, data.form.hostId))
+    validMethodArr.push(validatePath(data.form.installPath + '/data', encryptPwd, data.form.hostId))
+    if (validMethodArr.length) {
+      const validResult = await Promise.all(validMethodArr)
+      if ((installType.value !== 'import' && validResult[0]) || (installType.value === 'import' && !validResult[0])) {
+        // port valid
+        formRef.value?.setFields({
+          port: {
+            status: 'error',
+            message: data.form.port + (installType.value === 'import' ? t('enterprise.NodeConfig.else10') : t('enterprise.NodeConfig.else11'))
+          }
+        })
+        result = false
+      }
+      if ((installType.value !== 'import' && !validResult[1]) || (installType.value === 'import' && validResult[1])) {
+        // dataPath Valid
+        formRef.value?.setFields({
+          installPath: {
+            status: 'error',
+            message: installType.value === 'import' ? t('simple.InstallConfig.else3') : t('simple.InstallConfig.else4')
+          }
+        })
+        result = false
+      }
+    }
+  }
+
+  return result
+}
+
 const installType = computed(() => installStore.getInstallConfig.installType)
 defineExpose({
+  saveStore,
   beforeConfirm
 })
 

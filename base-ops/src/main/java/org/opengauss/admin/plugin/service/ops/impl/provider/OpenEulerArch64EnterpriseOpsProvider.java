@@ -148,7 +148,7 @@ public class OpenEulerArch64EnterpriseOpsProvider extends AbstractOpsProvider {
         wsUtil.sendText(installContext.getRetSession(),"START_UNZIP_INSTALL_PACKAGE");
         decompress(jschUtil,rootSession, pkgPath, installPackageFullPath, retSession, "-xvf");
         // unzip CM
-        decompress(jschUtil,rootSession, pkgPath, pkgPath + "/openGauss-3.0.0-openEuler-64bit-om.tar.gz", retSession, "-zxvf");
+        decompress(jschUtil,rootSession, pkgPath, pkgPath + "/openGauss-"+installContext.getOpenGaussVersionNum()+"-openEuler-64bit-om.tar.gz", retSession, "-zxvf");
         wsUtil.sendText(installContext.getRetSession(),"END_UNZIP_INSTALL_PACKAGE");
 
         // write xml
@@ -646,7 +646,7 @@ public class OpenEulerArch64EnterpriseOpsProvider extends AbstractOpsProvider {
 
         Element azPriority = document.createElement("PARAM");
         azPriority.setAttribute("name", "azPriority");
-        azPriority.setAttribute("value", "1");
+        azPriority.setAttribute("value", enterpriseInstallNodeConfig.getAzPriority());
         device.appendChild(azPriority);
 
         Element backIp1 = document.createElement("PARAM");

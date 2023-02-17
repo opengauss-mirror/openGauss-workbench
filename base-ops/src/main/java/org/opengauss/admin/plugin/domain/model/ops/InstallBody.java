@@ -12,5 +12,7 @@ public class InstallBody {
 
     private Boolean quickInstall;
 
+    private String quickInstallResourceUrl;
+
     private String businessId;
 }
