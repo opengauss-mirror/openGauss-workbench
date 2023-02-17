@@ -151,6 +151,7 @@ const handleQuery = () => {
         ElMessage.warning(t('datasource.pleaseSelectInstance'))
         return
     }
+    page.currentPage = 1
     requestData()
 }
 const handleReset = () => {
