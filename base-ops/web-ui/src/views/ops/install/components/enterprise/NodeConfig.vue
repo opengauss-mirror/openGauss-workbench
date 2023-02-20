@@ -60,7 +60,7 @@
             <a-row :gutter="24">
               <a-col :span="12">
                 <a-form-item v-if="isInstallCM" field="isCMMaster" :label="$t('enterprise.NodeConfig.5mpme7w6be40')">
-                  <a-switch v-model="formItem.isCMMaster" />
+                  <a-switch v-model="formItem.isCMMaster" @change="handleNodeCMChange($event, index)" />
                 </a-form-item>
               </a-col>
             </a-row>
@@ -278,6 +278,26 @@ const hostUserPopupChange = (val: boolean, index: number) => {
   if (val) {
     changeHostId(index)
   }
+}
+
+const handleNodeCMChange = (val: boolean, index: number) => {
+  console.log('node isCMMaster change', val, index, data.nodeList.length)
+  if (val) {
+    data.nodeList.forEach((item: KeyValue, nodeIndex: number) => {
+      if (nodeIndex !== index) {
+        item.isCMMaster = false
+      }
+    })
+  } else {
+    const findTrueNode = data.nodeList.filter((item: KeyValue) => {
+      return item.isCMMaster === true
+    })
+    if (!findTrueNode.length) {
+      data.nodeList[index].isCMMaster = true
+      Message.warning('One node must be the primary node')
+    }
+  }
+
 }
 
 const getAZList = () => {

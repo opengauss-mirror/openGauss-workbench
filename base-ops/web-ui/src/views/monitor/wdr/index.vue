@@ -104,13 +104,18 @@ import SnapshotManage from '../snapshot/index.vue'
 import dayjs from 'dayjs'
 import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
+
+const getCurrentTime = computed(() => {
+  return [dayjs().subtract(7, 'day').format('YYYY-MM-DD') + ' 00:00:00', dayjs().format('YYYY-MM-DD') + ' 23:59:59']
+})
+
 const filter = reactive<KeyValue>({
   clusterId: '',
   hostId: '',
   wdrScope: '',
   wdrType: '',
-  start: dayjs().format('YYYY-MM-DD') + ' 00:00:00',
-  end: dayjs().format('YYYY-MM-DD') + ' 23:59:59',
+  start: getCurrentTime.value[0],
+  end: getCurrentTime.value[1],
   wdrScopeList: [],
   wdrTypeList: [],
   clusterListLoading: false,
@@ -156,10 +161,6 @@ const initData = () => {
     { label: t('wdr.index.5mpm1cuasvs0'), value: 'ALL' }
   ]
 }
-
-const getCurrentTime = computed(() => {
-  return [dayjs().subtract(7, 'day').format('YYYY-MM-DD') + ' 00:00:00', dayjs().format('YYYY-MM-DD') + ' 23:59:59']
-})
 
 const getClusterList = () => new Promise(resolve => {
   filter.clusterListLoading = true
@@ -209,10 +210,10 @@ const query = () => {
 const resetQuery = () => {
   Object.assign(filter, {
     clusterId: filter.clusterList[0].value,
-    wdrScope: 'CLUSTER',
-    wdrType: 'DETAIL',
-    start: '',
-    end: ''
+    wdrScope: '',
+    wdrType: '',
+    start: getCurrentTime.value[0],
+    end: getCurrentTime.value[1]
   })
 }
 

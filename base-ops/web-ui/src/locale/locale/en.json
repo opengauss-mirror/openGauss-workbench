@@ -180,6 +180,7 @@
     },
     "logCenter": {
         "index": {
+            "else1": "IP Address",
             "5mpllm8hjao0": "Cluster name",
             "5mpllm8hk7o0": "Please select the cluster name",
             "5mpllm8hkk00": "Please select the host IP address",
@@ -729,6 +730,7 @@
         },
         "AddPackageDlg": {
             "else1": "CPU Arch",
+            "else2": "Please fill in the correct address",
             "5myq6nnea2w0": "Owning System",
             "5myq6nneap40": "Select the owning system",
             "5myq6nneaw40": "Select the CPU Arch",

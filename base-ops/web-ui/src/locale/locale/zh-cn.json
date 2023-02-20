@@ -731,6 +731,7 @@
         },
         "AddPackageDlg": {
             "else1": "CPU架构",
+            "else2": "请填写正确的地址",
             "5myq6nnea2w0": "所属系统",
             "5myq6nneap40": "请选择所属系统",
             "5myq6nneaw40": "请选择CPU架构",

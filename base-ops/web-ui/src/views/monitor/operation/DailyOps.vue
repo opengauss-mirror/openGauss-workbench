@@ -514,6 +514,7 @@ const openHostWebSocket = (clusterData: KeyValue, nodeData: KeyValue, clusterInd
   websocket.onmessage((messageData: any) => {
     if (!data.clusterList[clusterIndex].loading) {
       const eventData = JSON.parse(messageData)
+      console.log('show message data', data.clusterList[clusterIndex].clusterId, data.clusterList[clusterIndex].clusterNodes[index].privateIp, eventData)
       data.clusterList[clusterIndex].clusterNodes[index].nodeState = eventData.state
       // reset instance nodeState and nodeRole
       setInstanceState(data.clusterList[clusterIndex], data.clusterList[clusterIndex].clusterNodes[index])
