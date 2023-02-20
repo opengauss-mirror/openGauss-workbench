@@ -2319,6 +2319,9 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                         if (s1.length == 9) {
                             nodeState.put(s1[1], s1[8].trim());
                             nodeRole.put(s1[1],s1[6].trim());
+                        }else if (s1.length == 8){
+                            nodeState.put(s1[1],s1[7].trim());
+                            nodeRole.put(s1[1],s1[5].trim());
                         }
                     }
                 }
