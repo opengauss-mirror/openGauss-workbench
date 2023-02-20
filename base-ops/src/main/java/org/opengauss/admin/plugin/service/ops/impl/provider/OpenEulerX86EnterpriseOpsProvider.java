@@ -744,7 +744,7 @@ public class OpenEulerX86EnterpriseOpsProvider extends AbstractOpsProvider {
     private void appendClusterParam(Document document, Element cluster, InstallContext installContext) {
         Element clusterName = document.createElement("PARAM");
         clusterName.setAttribute("name", "clusterName");
-        clusterName.setAttribute("value", installContext.getClusterName());
+        clusterName.setAttribute("value", installContext.getClusterId());
         cluster.appendChild(clusterName);
 
         Element nodeNames = document.createElement("PARAM");

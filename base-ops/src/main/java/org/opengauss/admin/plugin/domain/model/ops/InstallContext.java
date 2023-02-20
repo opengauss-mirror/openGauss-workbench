@@ -41,8 +41,6 @@ public class InstallContext implements Cloneable {
 
     private String clusterId;
 
-    private String clusterName;
-
     private WsSession retSession;
 
     private List<HostInfoHolder> hostInfoHolders;
@@ -122,7 +120,6 @@ public class InstallContext implements Cloneable {
         opsClusterEntity.setVersionNum(openGaussVersionNum);
         opsClusterEntity.setInstallMode(installMode);
         opsClusterEntity.setDeployType(deployType);
-        opsClusterEntity.setClusterName(clusterName);
         opsClusterEntity.setInstallPackagePath(installPackagePath);
         opsClusterEntity.setDatabaseUsername("gaussdb");
         if (openGaussVersion == OpenGaussVersionEnum.ENTERPRISE) {
