@@ -788,7 +788,7 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
             List<EnterpriseInstallNodeConfig> nodeConfigList = installContext.getEnterpriseInstallConfig().getNodeConfigList();
             for (int i = 0; i < nodeConfigList.size(); i++) {
                 EnterpriseInstallNodeConfig enterpriseInstallNodeConfig = nodeConfigList.get(i);
-                String format = MessageFormat.format(template, i + 1, enterpriseInstallNodeConfig.getPrivateIp(), String.valueOf(Objects.isNull(enterpriseInstallNodeConfig.getDcfPort())?16683:enterpriseInstallNodeConfig.getDcfPort()), enterpriseInstallNodeConfig.getClusterRole() == ClusterRoleEnum.MASTER ? "LEADER" : "FOLLOWER");
+                String format = MessageFormat.format(template, i + 1, enterpriseInstallNodeConfig.getPrivateIp(), String.valueOf(installContext.getEnterpriseInstallConfig().getPort()), enterpriseInstallNodeConfig.getClusterRole() == ClusterRoleEnum.MASTER ? "LEADER" : "FOLLOWER");
                 res.append(format);
                 res.append(",");
             }
