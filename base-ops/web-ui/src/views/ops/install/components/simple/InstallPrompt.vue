@@ -6,14 +6,15 @@
                     <div class="item-node-top flex-between full-w">
                         <div class="flex-row">
                             <a-tag class="mr" color="#86909C">{{ $t('simple.InstallPrompt.5mpmunt3eco0') }}</a-tag>
-                            {{ $t('simple.InstallPrompt.5mpmunt3ezw0') }}: {{ nodeData.privateIp }}({{
-                                nodeData.publicIp
-                            }})
+                            <div class="label-color">{{ $t('simple.InstallPrompt.5mpmunt3ezw0') }}: {{ nodeData.privateIp
+                            }}({{
+    nodeData.publicIp
+}})</div>
                         </div>
                         <div class="flex-row">
-                            <icon-down style="cursor: pointer;" v-if="!nodeData.isShow"
+                            <icon-down class="label-color" style="cursor: pointer;" v-if="!nodeData.isShow"
                                 @click="nodeData.isShow = true" />
-                            <icon-up style="cursor: pointer;" v-else @click="nodeData.isShow = false" />
+                            <icon-up class="label-color" style="cursor: pointer;" v-else @click="nodeData.isShow = false" />
                         </div>
                     </div>
                     <div class="item-node-center full-w flex-col-start" v-show="nodeData.isShow">
@@ -76,7 +77,7 @@ const installNodeConfig = computed(() => installStore.getMiniConfig.nodeConfigLi
 <style lang="less" scoped>
 .install-prompt-c {
     .item-node-top {
-        background-color: #f2f3f5;
+        background-color: var(--color-text-4);
         line-height: 40px;
         border-radius: 4px;
         padding: 0 16px;

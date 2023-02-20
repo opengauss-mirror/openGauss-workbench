@@ -40,20 +40,20 @@
                         <div class="flex-col-start">
                           <div class="mb-s txt">{{ $t('components.ClusterList.else2') }}: {{
                             clusterData.clusterNodes[0].session ?
-                              clusterData.clusterNodes[0].session : '--'
+                            clusterData.clusterNodes[0].session : '--'
                           }}{{ $t('components.ClusterList.else6') }}</div>
                           <div class="mb-s txt">{{ $t('components.ClusterList.else3') }}: {{
                             clusterData.clusterNodes[0].connectNum ?
-                              clusterData.clusterNodes[0].connectNum : '--'
+                            clusterData.clusterNodes[0].connectNum : '--'
                           }}{{ $t('components.ClusterList.else6') }}</div>
                           <div class="mb-s txt">{{ $t('components.ClusterList.else4') }}: {{
                             clusterData.clusterNodes[0].lock
-                              ? clusterData.clusterNodes[0].lock :
-                              '--'
+                            ? clusterData.clusterNodes[0].lock :
+                            '--'
                           }}{{ $t('components.ClusterList.else6') }}</div>
                           <div class="mb-s txt">{{ $t('components.ClusterList.else5') }}: {{
                             clusterData.clusterNodes[0].azName ?
-                              clusterData.clusterNodes[0].azName : '--'
+                            clusterData.clusterNodes[0].azName : '--'
                           }}</div>
                         </div>
                       </div>
@@ -67,27 +67,27 @@
                       <div class="mb-s">{{ $t('components.ClusterList.else7') }}:</div>
                       <div class="mb">{{
                         clusterData.clusterNodes[0].privateIp ? clusterData.clusterNodes[0].privateIp
-                          :
-                          '--'
+                        :
+                        '--'
                       }}</div>
                       <div class="mb-s">{{ $t('components.ClusterList.else8') }}:</div>
                       <div class="mb-s">{{
                         clusterData.clusterNodes[0].publicIp ? clusterData.clusterNodes[0].publicIp :
-                          '--'
+                        '--'
                       }}</div>
                     </div>
                     <div class="flex-col-start">
                       <div class="mb-s">{{ $t('components.ClusterList.else9') }}:</div>
                       <div class="mb">{{
                         clusterData.clusterNodes[0].hostname ? clusterData.clusterNodes[0].hostname :
-                          '--'
+                        '--'
                       }}</div>
                       <div class="mb-s">{{ $t('components.ClusterList.else10') }}:</div>
                       <div class="mb-s">{{
                         clusterData.clusterNodes[0].kernel ? clusterData.clusterNodes[0].kernel : '-'
                       }}{{ $t('components.ClusterList.else11') }}{{
   clusterData.clusterNodes[0].memorySize ?
-    clusterData.clusterNodes[0].memorySize : '-'
+  clusterData.clusterNodes[0].memorySize : '-'
 }}G
                       </div>
                     </div>
@@ -101,7 +101,7 @@
                   }}</div>
                   <div class="flex-row chart-con-title">{{ $t('components.ClusterList.else12') }}: {{
                     clusterData.clusterNodes[0].azAddress ?
-                      clusterData.clusterNodes[0].azAddress : '--'
+                    clusterData.clusterNodes[0].azAddress : '--'
                   }}</div>
                 </div>
                 <div class="flex-between full-w">
@@ -130,7 +130,8 @@
               <div class="flex-col-start full-w" v-for="(instance, index) in clusterData.clusterNodes" :key="index">
                 <div class="flex-between full-w">
                   <div class="host-instance-c mr" style="width: 50%;">
-                    <div class="flex-row mb-s" style="height: 50%;">
+                    <div class=" mb-s"
+                      style="height: 50%;display: flex; justify-content: space-around; align-items: center;">
                       <svg-icon icon-class="ops-host" class="host-icon-size mr"></svg-icon>
                       <div class="flex-row">
                         <div class="flex-col-start mr">
@@ -163,7 +164,7 @@
                           getInstanceState(clusterData, instance)
                         }}</a-tag>
                       </div>
-                      <div class="flex-row-center">
+                      <div class="" style="display: flex; justify-content: space-around; align-items: center;">
                         <svg-icon icon-class="ops-instance" class="instance-icon-size mr"></svg-icon>
                         <div class="flex-row">
                           <div class="flex-col-start mr">
@@ -201,7 +202,7 @@
                       </div>
                       <div class="flex-row chart-con-title">{{ $t('components.ClusterList.else12') }}: {{
                         instance.azAddress ?
-                          instance.azAddress : '--'
+                        instance.azAddress : '--'
                       }}</div>
                     </div>
                     <div class="flex-between full-w">
@@ -245,7 +246,7 @@
         }}</a-button>
       </div>
     </div>
-  </div>
+</div>
 </template>
 
 <script lang="ts" setup>

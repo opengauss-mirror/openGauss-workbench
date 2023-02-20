@@ -39,8 +39,8 @@
                 @popup-visible-change="hostPopupChange($event, index)">
                 <a-option v-for="item in data.hostList" :key="item.hostId" :value="item.hostId">{{
                   item.privateIp
-                    + '(' +
-                    (item.publicIp ? item.publicIp : '--') + ')'
+                  + '(' +
+                  (item.publicIp ? item.publicIp : '--') + ')'
                 }}</a-option>
               </a-select>
             </a-form-item>
@@ -78,11 +78,9 @@
             <a-form-item field="dataPath" :label="$t('enterprise.NodeConfig.5mpme7w6brs0')" validate-trigger="blur">
               <a-input v-model="formItem.dataPath" :placeholder="$t('enterprise.NodeConfig.5mpme7w6bv40')" />
             </a-form-item>
-            <a-form-item field="xlogPath" :label="$t('enterprise.NodeConfig.else1')" validate-trigger="blur">
-              <a-input v-model="formItem.xlogPath" :placeholder="$t('enterprise.NodeConfig.5mpme7w6byo0')" />
-            </a-form-item>
             <a-form-item field="azPriority" :label="$t('enterprise.NodeConfig.else7')" v-if="installType !== 'import'">
-              <a-input-number v-model="formItem.azPriority" :placeholder="$t('enterprise.NodeConfig.else6')" />
+              <a-input-number :min="1" :max="10" v-model="formItem.azPriority"
+                :placeholder="$t('enterprise.NodeConfig.else6')" />
             </a-form-item>
           </a-form>
           <a-divider v-if="index < (data.nodeList.length - 1)" />
@@ -210,21 +208,7 @@ const initData = () => {
         }
       }
     ],
-    xlogPath: [
-      { required: true, 'validate-trigger': 'blur', message: t('enterprise.NodeConfig.5mpme7w6cfw0') },
-      {
-        validator: (value: any, cb: any) => {
-          return new Promise(resolve => {
-            if (!value.trim()) {
-              cb(t('enterprise.ClusterConfig.else2'))
-              resolve(false)
-            } else {
-              resolve(true)
-            }
-          })
-        }
-      }
-    ]
+    azPriority: [{ required: true, 'validate-trigger': 'blur', message: t('enterprise.NodeConfig.else6') }]
   }
 }
 
@@ -243,7 +227,6 @@ const addNode = (index: number, isMaster?: boolean) => {
     cmDataPath: '/opt/openGauss/data/cmserver',
     cmPort: '15300',
     dataPath: '/opt/openGauss/install/data/dn',
-    xlogPath: '/opt/openGauss/install/data/xlog',
     azPriority: 1
   }
   if (isMaster) {

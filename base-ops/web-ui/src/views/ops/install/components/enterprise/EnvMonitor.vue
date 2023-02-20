@@ -14,9 +14,9 @@
             <div class="env-item-c flex-between full-w mb">
               <div class="flex-row">
                 <a-tag class="mr" color="#86909C">{{ getRoleName(itemEnv.clusterRole) }}</a-tag>
-                {{ $t('enterprise.EnvMonitor.else2') }}: {{ itemEnv.privateIp }}({{
+                <div class="label-color">{{ $t('enterprise.EnvMonitor.else2') }}: {{ itemEnv.privateIp }}({{
                   itemEnv.publicIp
-                }})
+                }})</div>
               </div>
               <div class="flex-row">
                 <a-button class="mr" type="text" long @click="envRetest(itemEnv)">
@@ -25,8 +25,9 @@
                   </template>
                   {{ $t('enterprise.EnvMonitor.5mpm5p9xfb80') }}
                 </a-button>
-                <icon-down style="cursor: pointer;" v-if="!itemEnv.isShow" @click="itemEnv.isShow = true" />
-                <icon-up style="cursor: pointer;" v-else @click="itemEnv.isShow = false" />
+                <icon-down class="label-color" style="cursor: pointer;" v-if="!itemEnv.isShow"
+                  @click="itemEnv.isShow = true" />
+                <icon-up class="label-color" style="cursor: pointer;" v-else @click="itemEnv.isShow = false" />
               </div>
             </div>
             <div v-show="itemEnv.isShow">
@@ -304,7 +305,7 @@ defineExpose({
   overflow-y: auto;
 
   .env-item-c {
-    background-color: #f2f3f5;
+    background-color: var(--color-text-4);
     line-height: 40px;
     border-radius: 4px;
     padding: 0 16px;
