@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.opengauss.admin.plugin.mapper.MigrationTaskStatusRecordMapper">
+
+    <resultMap id="MigrationTaskResult" type="org.opengauss.admin.plugin.domain.MigrationTaskStatusRecord">
+        <id property="id" column="id"/>
+        <result property="taskId" column="task_id"/>
+        <result property="operateId" column="operate_id"/>
+        <result property="statusId" column="status_id"/>
+        <result property="createTime" column="create_time"/>
+        <result property="title" column="title"/>
+        <result property="operateTitle" column="operate_title"/>
+    </resultMap>
+
+    <select id="selectByTaskId" resultMap="MigrationTaskResult">
+        select s.*,o.title as operate_title from tb_migration_task_status_record s
+        left join tb_migration_task_operate_record o on s.operate_id = o.id
+        where s.task_id=#{taskId}
+        order by s.create_time desc
+    </select>
+
+
+</mapper>

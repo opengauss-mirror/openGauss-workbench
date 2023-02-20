@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.opengauss.admin.plugin.mapper.MigrationMainTaskMapper">
+
+    <resultMap id="SysTaskResult" type="org.opengauss.admin.plugin.domain.MigrationMainTask">
+        <id property="id" column="id"/>
+        <result property="taskName" column="task_name"/>
+        <result property="execStatus" column="exec_status"/>
+        <result property="execProgress" column="exec_progress"/>
+        <result property="createTime" column="create_time"/>
+        <result property="finishTime" column="finish_time"/>
+        <result property="execTime" column="exec_time"/>
+        <result property="createUser" column="create_user"/>
+    </resultMap>
+
+    <sql id="selectTaskVo">
+        SELECT
+            id,task_name,exec_status,create_time,finish_time,exec_time,create_user,exec_progress
+        FROM tb_migration_main_task
+    </sql>
+
+    <select id="selectTaskPage" parameterType="org.opengauss.admin.common.core.dto.SysTaskDto" resultMap="SysTaskResult">
+        <include refid="selectTaskVo"/>
+        <where>
+            <if test="entity.taskName != null  and entity.taskName != ''">
+                and task_name like concat('%', #{entity.taskName}, '%')
+            </if>
+            <if test="entity.createUser != null  and entity.createUser != ''">
+                and create_user = #{entity.createUser}
+            </if>
+            <if test="entity.execStatus != null">
+                and exec_status = #{entity.execStatus}
+            </if>
+            <if test="entity.execStartTime != null and entity.execEndTime != null">
+                and exec_time between #{entity.execStartTime} and #{entity.execEndTime}
+            </if>
+            <if test="entity.finishStartTime != null and entity.finishEndTime != null">
+                and finish_time between #{entity.finishStartTime} and #{entity.finishEndTime}
+            </if>
+        </where>
+        order by id desc
+    </select>
+
+    <select id="selectTaskList" parameterType="org.opengauss.admin.common.core.dto.SysTaskDto" resultMap="SysTaskResult">
+        <include refid="selectTaskVo"/>
+        <where>
+            <if test="taskName != null  and taskName != ''">
+                and task_name like concat('%', #{taskName}, '%')
+            </if>
+            <if test="execStatus != null">
+                and exec_status = #{execStatus}
+            </if>
+            <if test="execStartTime != null and execEndTime != null">
+                and exec_time between #{execStartTime} and #{execEndTime}
+            </if>
+            <if test="finishStartTime != null and finishEndTime != null">
+                and finish_time between #{finishStartTime} and #{finishEndTime}
+            </if>
+        </where>
+        order by id desc
+    </select>
+
+    <select id="selectCreateUsers" resultType="String">
+        SELECT
+            DISTINCT create_user
+        FROM tb_migration_main_task
+    </select>
+
+
+</mapper>
