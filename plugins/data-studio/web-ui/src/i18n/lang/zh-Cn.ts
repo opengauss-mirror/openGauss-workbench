@@ -103,7 +103,7 @@ export default {
   },
   functionBar: {
     execute: '编译/执行',
-    stop: '停止',
+    stopRun: '停止',
     clear: '清空',
     startDebug: '开始调试',
     stopDebug: '停止调试',

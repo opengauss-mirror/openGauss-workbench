@@ -153,7 +153,7 @@ public class DbConnectionServiceImpl implements DbConnectionService {
                                 "WHERE pronamespace = (SELECT pg_namespace.oid FROM pg_namespace WHERE nspname = '" + schema.getSchema() + "')\n",
 
                         "select c.relname as relname from\n" +
-                                "pg_class c LEFT JOIN pg_namespace n ON n.oid = c.relnamespace \n" +
+                                "pg_class c INNER JOIN pg_namespace n ON n.oid = c.relnamespace \n" +
                                 "and n.nspname = '" + schema.getSchema() + "' where c.relkind = 'S'",
                         "select synname from PG_SYNONYM where synobjschema ='" + schema.getSchema() + "'",
                         schema.getSchema()
