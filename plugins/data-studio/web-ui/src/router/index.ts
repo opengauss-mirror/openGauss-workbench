@@ -51,6 +51,12 @@ export const constantRoutes: Array<RouteRecordRaw & extendRoute> = [
         meta: { title: '', icon: 'terminal', keepAlive: true },
       },
       {
+        path: '/debugChild/:id',
+        component: () => import('@/views/debugChild/index.vue'),
+        name: 'debugChild',
+        meta: { title: '', icon: 'terminal', keepAlive: true },
+      },
+      {
         path: '/view/:id',
         component: () => import('@/views/view/index.vue'),
         name: 'view',

@@ -21,9 +21,6 @@ public class PublicParamReq {
     // web user
     private String webUser;
 
-    // connection name
-    private String connectionName;
-
     // break point list
     private List<Integer> breakPoints;
 
@@ -45,13 +42,20 @@ public class PublicParamReq {
     // window name
     private String windowName;
 
+    // old window name
+    private String oldWindowName;
+
+    private boolean isCloseWindow;
+
+    // uuid
+    private String uuid;
+
     @Override
     public String toString() {
         return "PublicParamReq{" +
                 "operation='" + operation + '\'' +
                 ", sql='" + sql + '\'' +
                 ", webUser='" + webUser + '\'' +
-                ", connectionName='" + connectionName + '\'' +
                 ", breakPoints=" + breakPoints +
                 ", inputParams=" + inputParams +
                 ", line=" + line +
@@ -59,6 +63,9 @@ public class PublicParamReq {
                 ", schema='" + schema + '\'' +
                 ", isDebug=" + isDebug +
                 ", windowName='" + windowName + '\'' +
+                ", oldWindowName='" + oldWindowName + '\'' +
+                ", isCloseWindow='" + isCloseWindow + '\'' +
+                ", uuid='" + uuid + '\'' +
                 '}';
     }
 }

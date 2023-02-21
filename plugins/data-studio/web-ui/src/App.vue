@@ -50,7 +50,9 @@
     i18nLocale.value = lang;
     AppStore.setLanguage(lang);
     // set init theme(from platform)
-    const isPlatformDarkTheme = localStorage.getItem('opengauss-theme') == 'dark';
+    const isPlatformDarkTheme = localStorage.getItem('opengauss-theme')
+      ? localStorage.getItem('opengauss-theme') == 'dark'
+      : isDark.value;
     isDark.value = isPlatformDarkTheme;
     toggleDark(isPlatformDarkTheme);
     EventBus.listen(EventTypeName.OPEN_CONNECT_DIALOG, ({ dialogType, connectInfo: data }) => {
@@ -78,7 +80,7 @@
       AppStore.setLanguage(val);
     });
 
-    heartbeatTimer.value = setInterval(heartbeat, 20 * 1000);
+    heartbeatTimer.value = setInterval(heartbeat, 1000 * 60 * 15);
   });
   onUnmounted(() => {
     EventBus.unListen(EventTypeName.OPEN_CONNECT_DIALOG);

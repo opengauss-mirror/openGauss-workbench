@@ -1,11 +1,11 @@
 <!-- this component line number start with 1. -->
 <template>
-  <div class="terminal">
+  <div class="terminal" :id="id">
     <div class="editor" :style="{ height: editorHeight }">
       <FunctionBar
         :type="sqlData.barType"
         :status="sqlData.barStatus"
-        :readOnly="sqlData.readOnly"
+        :editorReadOnly="sqlData.readOnly"
         @execute="handleExecute"
         @stopRun="handleStop"
         @clear="handleClear"
@@ -13,6 +13,8 @@
         @stopDebug="handleStopDebug"
         @breakPointStep="handleBreakPointStep"
         @singleStep="handleSingleStep"
+        @stepIn="handleStepIn"
+        @stepOut="handleStepOut"
         @format="handleFormat"
       />
       <div class="monaco-wrapper" ref="monacoWrapper">
@@ -21,7 +23,7 @@
           :value="sqlData.sqlText"
           :height="monacoHeight"
           :readOnly="sqlData.readOnly"
-          :openDebug="props.editorType == 'debug'"
+          :openDebug="['debug', 'debugChild'].includes(props.editorType)"
           @addBreakPoint="(line) => handleBreakPoint(line, 'addBreakPoint')"
           @removeBreakPoint="(line) => handleBreakPoint(line, 'deleteBreakPoint')"
           @enableBreakPoint="(line) => handleBreakPoint(line, 'enableBreakPoint')"
@@ -57,11 +59,11 @@
   import ResultTabs from '@/components/ResultTabs.vue';
   import EnterParamsDialog from './EnterParamsDialog.vue';
   import { ElMessageBox } from 'element-plus';
-  import { onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
+  import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
   import createTemplate from './createTemplate';
   import { useRoute, useRouter } from 'vue-router';
   import WebSocketClass from '@/utils/websocket';
-  import { dateFormat, formatTableV2Data, formatTableData, loadingInstance } from '@/utils';
+  import { dateFormat, formatTableV2Data, formatTableData, loadingInstance, uuid } from '@/utils';
   import { useUserStore } from '@/store/modules/user';
   import { useTagsViewStore } from '@/store/modules/tagsView';
   import { useI18n } from 'vue-i18n';
@@ -74,7 +76,7 @@
   const { t } = useI18n();
   const props = withDefaults(
     defineProps<{
-      editorType: 'sql' | 'debug';
+      editorType: 'sql' | 'debug' | 'debugChild';
       initValue?: string;
     }>(),
     {
@@ -82,32 +84,40 @@
       initValue: '',
     },
   );
+  const barStatusMap = {
+    sql: {
+      execute: true,
+      stopRun: false,
+      clear: true,
+    },
+    debug: {
+      execute: true,
+      startDebug: false,
+      stopDebug: false,
+      breakPointStep: false,
+      singleStep: false,
+    },
+    debugChild: {
+      breakPointStep: true,
+      singleStep: true,
+      stepIn: true,
+      stepOut: true,
+    },
+  };
   const sqlData = reactive<{
     sqlText: string;
     readOnly: boolean;
     barStatus: Record<string, boolean>;
-    barType: 'sql' | 'debug';
+    barType: 'sql' | 'debug' | 'debugChild';
   }>({
     sqlText: props.initValue,
     readOnly: false,
-    barStatus:
-      props.editorType == 'sql'
-        ? {
-            execute: true,
-            stopRun: false,
-            clear: true,
-          }
-        : {
-            execute: true,
-            startDebug: false,
-            stopDebug: false,
-            breakPointStep: false,
-            singleStep: false,
-          },
+    barStatus: barStatusMap[props.editorType],
     barType: props.editorType,
   });
 
   const showResult = ref(false);
+  const id = 'terminal_' + uuid();
   const monacoWrapper = ref<HTMLElement>();
   const monacoHeight = ref('295px');
   const editorHeight = ref<string>('100%');
@@ -116,8 +126,19 @@
     name: '',
     webUser: '',
     connectionName: '',
+    uuid: '',
     sessionId: '',
+    dbname: '',
+    schema: '',
     instance: null,
+    rootWindowName: '',
+  });
+  const commonWsParams = computed(() => {
+    return {
+      webUser: ws.webUser,
+      uuid: ws.uuid,
+      windowName: ws.sessionId,
+    };
   });
   const loading = ref(null);
   const refreshCounter = reactive({
@@ -126,10 +147,12 @@
   });
   const isSaving = ref(false);
   const saveFileTitle = ref('');
+  const alreadyCloseWindow = ref(false);
   // set editor height
   watch(
     showResult,
     (val) => {
+      if (!TagsViewStore.getCurrentView(route)) return;
       editorHeight.value = val ? '380px' : '100%';
       setTimeout(() => {
         let padding =
@@ -168,13 +191,12 @@
   const paramsConfirm = () => {
     ws.instance.send({
       operation: 'inputParam',
-      webUser: ws.webUser,
-      connectionName: ws.connectionName,
-      windowName: ws.sessionId,
+      ...commonWsParams.value,
       sql: editorRef.value.getValue(),
       inputParams: enterParams.data.map((item) => ({ [item.type]: item.value })),
       breakPoints: editorRef.value.getAllLineDecorations(),
     });
+    getButtonStatus();
   };
   const paramsCancel = () => {
     handleStopDebug();
@@ -201,7 +223,7 @@
     (list) => {
       if (list.length) {
         setTimeout(() => {
-          editorRef.value.setCurrentBreakPoint(parseInt(list[list.length - 1].lineno) - 1);
+          editorRef.value.setCurrentBreakPoint(parseInt(list[0].lineno) - 1);
         }, 500);
       }
     },
@@ -237,11 +259,14 @@
   const onWebSocketMessage = (data: string) => {
     let res: Message = JSON.parse(data);
     if (res.code == '200') {
+      if (props.editorType == 'debug' && res.type != 'operateStatus') {
+        getButtonStatus();
+      }
       const result = res.data?.result;
       if (res.type == 'text') {
         if (
           props.editorType == 'sql' &&
-          ['Button status request', 'Close successfully'].includes(res.msg)
+          ['End of execution', 'Close successfully'].includes(res.msg)
         ) {
           getButtonStatus();
         }
@@ -267,8 +292,8 @@
           sqlData.readOnly = !result?.execute;
         }
         // can use 'startDebug' button = not isDebugging
-        if (result.startDebug) {
-          debug.isDebugging = false;
+        if (props.editorType == 'debug') {
+          debug.isDebugging = !result.startDebug;
         }
       }
       if (res.type == 'paramWindow') {
@@ -327,6 +352,14 @@
           editorRef.value.setValue(result);
           loading.value.close();
         }
+        if (route.name == 'debugChild') {
+          ws.instance.send({
+            operation: 'initStep',
+            ...commonWsParams.value,
+            oldWindowName: ws.rootWindowName,
+            sql: result,
+          });
+        }
       }
       if (res.type == 'refresh') {
         if (['createTerminal', 'createDebug'].includes(route.name as string)) {
@@ -345,9 +378,7 @@
                   operation: 'funcProcedure',
                   fullName: saveFileTitle.value,
                   schema: route.query.schema,
-                  webUser: ws.webUser,
-                  connectionName: ws.connectionName,
-                  windowName: ws.sessionId,
+                  ...commonWsParams.value,
                 });
               }
             }, 6000);
@@ -357,10 +388,39 @@
       if (res.type == 'variableHighLight') {
         debug.variableHighLight = result;
       }
+      if (res.type == 'newWindow') {
+        router.push({
+          path: `/debugChild/${encodeURIComponent(route.query.dbname as string)}_${result}`,
+          query: {
+            title: `${result}@${ws.connectionName}`,
+            funcname: result,
+            dbname: route.query.dbname,
+            connectInfoName: ws.connectionName,
+            schema: route.query.schema,
+            parentTagId: TagsViewStore.getCurrentView(route)?.id,
+            rootTagId:
+              route.name == 'debug'
+                ? TagsViewStore.getCurrentView(route)?.id
+                : route.query.rootTagId,
+            rootWindowName: ws.sessionId,
+            time: Date.now(),
+          },
+        });
+      }
+      if (res.type == 'closeWindow') {
+        const parentView = TagsViewStore.getViewById(route.query.parentTagId);
+        if (parentView?.fullPath) {
+          alreadyCloseWindow.value = true;
+          loading.value = loadingInstance();
+          TagsViewStore.delCurrentView(route);
+          router.push(parentView.fullPath);
+          loading.value.close();
+        }
+      }
     } else if (res.code == '500' && res.type == 'ignoreWindow' && isSaving.value) {
       return;
     } else {
-      loading.value && loading.value.close();
+      loading.value?.close();
       ElMessageBox.alert(res.msg, t('common.error'));
       props.editorType == 'sql' && getButtonStatus();
     }
@@ -369,9 +429,7 @@
   const getButtonStatus = () => {
     ws.instance.send({
       operation: 'operateStatus',
-      webUser: ws.webUser,
-      connectionName: ws.connectionName,
-      windowName: ws.sessionId,
+      ...commonWsParams.value,
     });
   };
 
@@ -381,9 +439,7 @@
       changeSqlBarStatus('running');
       ws.instance.send({
         operation: 'startRun',
-        webUser: ws.webUser,
-        connectionName: ws.connectionName,
-        windowName: ws.sessionId,
+        ...commonWsParams.value,
         sql: editorRef.value.getSelectionValue() || editorRef.value.getValue(),
       });
     }
@@ -391,9 +447,7 @@
       isSaving.value = true;
       ws.instance.send({
         operation: 'execute',
-        webUser: ws.webUser,
-        connectionName: ws.connectionName,
-        windowName: ws.sessionId,
+        ...commonWsParams.value,
         sql: editorRef.value.getValue(),
         isDebug: false,
       });
@@ -404,9 +458,7 @@
   const handleStop = () => {
     ws.instance.send({
       operation: 'stopRun',
-      webUser: ws.webUser,
-      connectionName: ws.connectionName,
-      windowName: ws.sessionId,
+      ...commonWsParams.value,
       sql: editorRef.value.getValue(),
     });
   };
@@ -422,45 +474,53 @@
     debug.isDebugging = true;
     ws.instance.send({
       operation: 'startDebug',
-      webUser: ws.webUser,
-      connectionName: ws.connectionName,
-      windowName: ws.sessionId,
+      ...commonWsParams.value,
       sql: editorRef.value.getValue(),
       breakPoints: editorRef.value.getAllLineDecorations(),
       isDebug: true,
     });
-    getButtonStatus();
   };
 
   const handleStopDebug = () => {
     ws.instance.send({
       operation: 'stopDebug',
-      webUser: ws.webUser,
-      connectionName: ws.connectionName,
-      windowName: ws.sessionId,
+      ...commonWsParams.value,
     });
-    getButtonStatus();
-    debug.isDebugging = true;
+    TagsViewStore.closeAllChildViews(TagsViewStore.getCurrentView(route)?.id, router);
+    debug.isDebugging = false;
   };
 
   const handleBreakPointStep = () => {
     ws.instance.send({
       operation: 'breakPointStep',
-      webUser: ws.webUser,
-      connectionName: ws.connectionName,
-      windowName: ws.sessionId,
+      ...commonWsParams.value,
+      oldWindowName: ws.rootWindowName,
     });
-    getButtonStatus();
   };
 
   const handleSingleStep = () => {
     ws.instance.send({
       operation: 'singleStep',
-      webUser: ws.webUser,
-      connectionName: ws.connectionName,
-      windowName: ws.sessionId,
+      ...commonWsParams.value,
+      oldWindowName: ws.rootWindowName,
     });
-    getButtonStatus();
+  };
+
+  const handleStepIn = () => {
+    ws.instance.send({
+      operation: 'stepIn',
+      ...commonWsParams.value,
+      oldWindowName: ws.rootWindowName,
+    });
+  };
+
+  const handleStepOut = (isUnMount?: boolean) => {
+    ws.instance.send({
+      operation: 'stepOut',
+      ...commonWsParams.value,
+      oldWindowName: ws.rootWindowName,
+      isCloseWindow: isUnMount,
+    });
   };
 
   const handleFormat = () => {
@@ -476,43 +536,50 @@
     debug.isDebugging &&
       ws.instance.send({
         operation: operation,
-        webUser: ws.webUser,
-        connectionName: ws.connectionName,
-        windowName: ws.sessionId,
+        ...commonWsParams.value,
         line: line + 1,
+        oldWindowName: ws.rootWindowName,
       });
   };
 
   // is create? and return default tempalate
   onMounted(async () => {
+    if (!TagsViewStore.getCurrentView(route)) return;
     if (['createTerminal', 'createDebug'].includes(route.name as string)) {
       const defaultTemplate: string = await createTemplate();
       editorRef.value.setValue(defaultTemplate);
     }
-    ws.name = route.query.connectInfoName as string;
-    ws.webUser = UserStore.userId;
-    ws.connectionName = route.query.connectInfoName as string;
-    ws.sessionId = (ws.name + '_' + route.query.time) as string;
+    if (['debugChild'].includes(props.editorType)) {
+      debug.isDebugging = true;
+      sqlData.readOnly = true;
+    }
+
+    Object.assign(ws, {
+      name: route.query.connectInfoName,
+      webUser: UserStore.userId,
+      connectionName: route.query.connectInfoName,
+      uuid: route.query.uuid,
+      sessionId: route.query.connectInfoName + '_' + route.query.time,
+      dbname: route.query.dbname,
+      schema: route.query.schema,
+      rootWindowName: route.query.rootWindowName,
+    });
     ws.instance = new WebSocketClass(ws.name, ws.sessionId, onWebSocketMessage);
+
     ws.instance.send({
       operation: 'connection',
-      webUser: ws.webUser,
-      connectionName: ws.connectionName,
-      windowName: ws.sessionId,
+      ...commonWsParams.value,
     });
-    if (route.name == 'debug') {
-      const { funcname, schema } = route.query;
+    if (['debug', 'debugChild'].includes(route.name as string)) {
+      const { funcname } = route.query;
       loading.value = loadingInstance();
       try {
         ws.instance.send({
           operation: 'funcProcedure',
           fullName: funcname,
-          schema,
-          webUser: ws.webUser,
-          connectionName: ws.connectionName,
-          windowName: ws.sessionId,
+          schema: ws.schema,
+          ...commonWsParams.value,
         });
-        getButtonStatus();
       } catch (error) {
         loading.value.close();
       }
@@ -520,11 +587,16 @@
   });
   onBeforeUnmount(() => {
     refreshCounter.counter = null;
-    props.editorType == 'debug' && handleStopDebug();
-    ws.instance.send({
-      operation: 'close',
-      windowName: ws.sessionId,
-    });
+    if (!ws.instance) return;
+    ['debug'].includes(props.editorType) && handleStopDebug();
+    ['debugChild'].includes(props.editorType) && !alreadyCloseWindow.value && handleStepOut(true);
+    // close websocket
+    if (!['debugChild'].includes(props.editorType)) {
+      ws.instance.send({
+        operation: 'close',
+        windowName: ws.sessionId,
+      });
+    }
     ws.instance.close();
     Object.assign(ws, {
       name: '',

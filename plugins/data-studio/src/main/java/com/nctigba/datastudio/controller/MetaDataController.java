@@ -36,10 +36,17 @@ public class MetaDataController {
     }
 
     @ApiOperation(value = "Database List")
+    @GetMapping(value = "/databaseList/{uuid}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public List<String> databaseList(@PathVariable("uuid") String uuid) throws Exception {
+        return queryMetaArrayService.databaseList(uuid);
+    }
+
+    @ApiOperation(value = "Database List")
     @GetMapping(value = "/schemaObjectList", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<DataListDTO> schemaObjectList(DatabaseMetaarrayIdSchemaQuery schema) throws Exception {
         return dbConnectionService.schemaObjectList(schema);
     }
+
     @ApiOperation(value = "Schema List")
     @GetMapping(value = "/schemaList", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<String> schemaList(DatabaseMetaarraySchemaQuery request) throws Exception {

@@ -38,13 +38,13 @@ public class WebSocketServer implements SocketExtract {
     @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
     private WsFacade wsFacade;
 
-    private Map<String, Map<String, Object>> paramMap = new HashMap<>();
+    private final Map<String, Map<String, Object>> paramMap = new HashMap<>();
 
-    private Map<String, Connection> connectionMap = new HashMap<>();
+    private final Map<String, Connection> connectionMap = new HashMap<>();
 
-    private Map<String, Statement> statementMap = new HashMap<>();
+    private final Map<String, Statement> statementMap = new HashMap<>();
 
-    private Map<String, OperateStatusDO> operationStatusMap = new HashMap<>();
+    private final Map<String, OperateStatusDO> operationStatusMap = new HashMap<>();
 
     @Override
     public void onOpen(String pluginId, String sessionId, Session session) {
@@ -58,37 +58,32 @@ public class WebSocketServer implements SocketExtract {
             return;
         }
 
-        try {
-            boolean isJson = JSONUtil.isJson(message);
-            if (!isJson) {
-                return;
-            }
-            JSONObject jsonObject = JSONObject.parseObject(message);
-            String operation = jsonObject.getString("operation");
-            if (StringUtils.isEmpty(operation)) {
-                return;
-            }
-            var aa = SpringApplicationContext.getApplicationContext().getBean(operation, OperationInterface.class);
-            ThreadUtil.execAsync(() -> {
-                try {
-                    aa.operate(this, message);
-                } catch (Exception e) {
-                    log.error("method error: ", e);
-                    try {
-                        sendMessage(sessionId, window, "500", e.getMessage(), e.getStackTrace());
-                    } catch (IOException ex) {
-                        log.error("method error: ", ex);
-                    }
-                }
-            });
-        } catch (Exception e) {
-            log.error("method error: ", e);
-            try {
-                sendMessage(sessionId, window, "500", e.getMessage(), e.getStackTrace());
-            } catch (IOException ex) {
-                log.error("method error: ", ex);
-            }
+        boolean isJson = JSONUtil.isJson(message);
+        if (!isJson) {
+            return;
         }
+        JSONObject jsonObject = JSONObject.parseObject(message);
+        String operation = jsonObject.getString("operation");
+        if (StringUtils.isEmpty(operation)) {
+            return;
+        }
+        var aa = SpringApplicationContext.getApplicationContext().getBean(operation, OperationInterface.class);
+        ThreadUtil.execAsync(() -> {
+            try {
+                aa.operate(this, message);
+            } catch (Exception e) {
+                log.error("method error: ", e);
+                try {
+                    sendMessage(sessionId, window, "500", e.getMessage(), e.getStackTrace());
+                    if (!operation.equals("startRun") && !operation.equals("stopRun")) {
+                        SpringApplicationContext.getApplicationContext().getBean("stopDebug", OperationInterface.class)
+                                .operate(this, message);
+                    }
+                } catch (Exception ex) {
+                    log.error("method error: ", ex);
+                }
+            }
+        });
     }
 
     @Override
@@ -121,7 +116,7 @@ public class WebSocketServer implements SocketExtract {
         wsFacade.sendMessage("webds-plugin", sessionId, JSON.toJSONString(result));
     }
 
-    public void sendMessage(String sessionId,MessageEnum type, String message, Object obj) throws IOException {
+    public void sendMessage(String sessionId, MessageEnum type, String message, Object obj) throws IOException {
         sendMessage(sessionId, type, "200", message, obj);
     }
 
@@ -133,9 +128,9 @@ public class WebSocketServer implements SocketExtract {
         this.connectionMap.put(sessionId, connection);
     }
 
-    public Connection createConnection(String connName, String webUser) throws Exception {
+    public Connection createConnection(String uuid, String winName) throws Exception {
         return SpringApplicationContext.getApplicationContext().getBean("connectionConfig",
-                ConnectionConfig.class).connectDatabase(connName, webUser);
+                ConnectionConfig.class).connectDatabaseMap(uuid, winName);
     }
 
     public Statement getStatement(String sessionId) {

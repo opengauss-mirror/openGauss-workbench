@@ -22,7 +22,6 @@
 		<spring-boot.version>2.5.6</spring-boot.version>
 		<spring-brick.version>3.1.0</spring-brick.version>
 		<junit.version>4.13</junit.version>
-		<mybatis-plus.version>3.5.2</mybatis-plus.version>
 		<fastjson.version>1.2.78</fastjson.version>
 		<lombok.version>1.18.24</lombok.version>
 		<hutool.version>5.0.3</hutool.version>
@@ -100,11 +99,6 @@
 
 		<!-- data -->
 		<dependency>
-			<groupId>com.baomidou</groupId>
-			<artifactId>mybatis-plus-boot-starter</artifactId>
-			<version>${mybatis-plus.version}</version>
-		</dependency>
-		<dependency>
 			<groupId>com.alibaba</groupId>
 			<artifactId>druid-spring-boot-starter</artifactId>
 			<version>1.2.8</version>
@@ -114,17 +108,11 @@
 			<artifactId>postgresql</artifactId>
 			<version>42.2.24</version>
 		</dependency>
-		<!-- elastic search java client -->
 		<dependency>
-			<groupId>co.elastic.clients</groupId>
-			<artifactId>elasticsearch-java</artifactId>
-			<version>${es-java-client.version}</version>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-databind</artifactId>
+			<version>${es-java-client-jackson-databind.version}</version>
 		</dependency>
-		<dependency>
-		<groupId>com.fasterxml.jackson.core</groupId>
-		<artifactId>jackson-databind</artifactId>
-		<version>${es-java-client-jackson-databind.version}</version>
-	</dependency>
 		<dependency>
 			<groupId>jakarta.json</groupId>
 			<artifactId>jakarta.json-api</artifactId>

@@ -119,6 +119,7 @@
     replace: false,
     connectionName: '',
     webUser: UserStore.userId,
+    uuid: '',
   });
   const rules = reactive<FormRules>({
     synonymName: [{ required: true, message: t('synonym.rules.name[0]'), trigger: 'blur' }],
@@ -141,6 +142,7 @@
     const data = await getSchemaList({
       connectionName: form.connectionName,
       webUser: form.webUser,
+      uuid: form.uuid,
     });
     list.schemaList = data as unknown as any[];
   };
@@ -154,6 +156,7 @@
       objectType: form.objectType,
       schema: form.schema,
       webUser: form.webUser,
+      uuid: form.uuid,
     });
     list.objectNameList = data as unknown as any[];
   };
@@ -163,6 +166,7 @@
   };
   const handleOpen = async () => {
     form.connectionName = connectData.value.connectInfo.name;
+    form.uuid = connectData.value.connectInfo.uuid;
     fetchSchemaList();
   };
   const handleClose = () => {

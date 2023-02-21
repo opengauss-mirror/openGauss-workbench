@@ -10,7 +10,9 @@ import org.springframework.util.CollectionUtils;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,6 +22,7 @@ import static com.nctigba.datastudio.constants.CommonConstants.COLUMN;
 import static com.nctigba.datastudio.constants.CommonConstants.OID;
 import static com.nctigba.datastudio.constants.CommonConstants.RESULT;
 import static com.nctigba.datastudio.constants.CommonConstants.SPACE;
+import static com.nctigba.datastudio.constants.CommonConstants.STATEMENT;
 import static com.nctigba.datastudio.constants.SqlConstants.COMMA;
 import static com.nctigba.datastudio.constants.SqlConstants.COMMA_SPACE;
 import static com.nctigba.datastudio.constants.SqlConstants.GET_PROC_PARAM_SQL;
@@ -30,6 +33,7 @@ import static com.nctigba.datastudio.constants.SqlConstants.PARENTHESES_RIGHT;
 import static com.nctigba.datastudio.constants.SqlConstants.PARENTHESES_SEMICOLON;
 import static com.nctigba.datastudio.constants.SqlConstants.POINT;
 import static com.nctigba.datastudio.constants.SqlConstants.QUOTES_SEMICOLON;
+
 @Slf4j
 public class DebugUtils {
     /**
@@ -57,28 +61,31 @@ public class DebugUtils {
             if (procedureIndex != -1) {
                 str = sql.substring(procedureIndex, start);
             }
-            sb.append(str.trim().split(SPACE)[1] + PARENTHESES_LEFT);
+            sb.append(str.trim().split(SPACE)[1]).append(PARENTHESES_LEFT);
         } else {
             sb.append(sql, first + 1, start + 1);
         }
         String[] splits = sql.substring(start + 1, end).split(COMMA);
+        for (String s : splits) {
+            log.info("DebugUtils prepareName splits is: " + s);
+        }
 
         boolean isParam = false;
-        for (int i = 0; i < splits.length; i++) {
-            if (!splits[i].trim().toLowerCase().startsWith("out")) {
-                String[] params = splits[i].trim().split(SPACE);
+        for (String split : splits) {
+            if (!split.trim().toLowerCase().startsWith("out ")) {
+                String[] params = split.trim().split(SPACE);
                 if (params.length == 1) {
-                    sb.append(params[0] + COMMA);
+                    sb.append(params[0]).append(COMMA);
                 } else if (params.length == 3) {
-                    sb.append(params[2] + COMMA);
+                    sb.append(params[2]).append(COMMA);
                 } else {
-                    sb.append(params[1] + COMMA);
+                    sb.append(params[1]).append(COMMA);
                 }
                 isParam = true;
             }
         }
         if (isParam) {
-            sb.deleteCharAt(sb.length()-1);
+            sb.deleteCharAt(sb.length() - 1);
         }
         sb.append(PARENTHESES_RIGHT);
         log.info("DebugUtils prepareName name is: " + sb);
@@ -119,7 +126,7 @@ public class DebugUtils {
     public static String prepareFuncName(String sql) {
         String[] split = sql.split("\\(");
         String[] s = split[0].split(SPACE);
-        log.info("DebugUtils prepareFuncName s is: " + s);
+        log.info("DebugUtils prepareFuncName s is: " + Arrays.toString(s));
         return s[s.length - 1];
     }
 
@@ -131,9 +138,11 @@ public class DebugUtils {
      */
     public static String prepareSql(PublicParamReq paramReq) {
         String sql = paramReq.getSql();
-        StringBuffer sb = new StringBuffer();
-        sb.append("select * from " + prepareFuncName(sql) + PARENTHESES_LEFT);
+        StringBuilder sb = new StringBuilder();
+        sb.append("select * from ").append(prepareFuncName(sql)).append(PARENTHESES_LEFT);
         List<Map<String, Object>> inputParams = paramReq.getInputParams();
+        log.info("DebugUtils prepareSql inputParams is: " + inputParams);
+
         if (!CollectionUtils.isEmpty(inputParams)) {
             for (int i = 0; i < inputParams.size(); i++) {
                 Map<String, Object> paramMap = inputParams.get(i);
@@ -143,7 +152,7 @@ public class DebugUtils {
                             || key.contains("float") || key.contains("double")) {
                         sb.append(paramMap.get(key));
                     } else {
-                        sb.append("'" + paramMap.get(key) + "'");
+                        sb.append("'").append(paramMap.get(key)).append("'");
                     }
                 }
 
@@ -167,7 +176,6 @@ public class DebugUtils {
      */
     public static Map<String, Object> parseResultSet(ResultSet resultSet) throws SQLException {
         ResultSetMetaData metaData = resultSet.getMetaData();
-
         Map<String, Object> map = new HashMap<>();
         List<String> columnList = new ArrayList<>();
         for (int i = 0; i < metaData.getColumnCount(); i++) {
@@ -212,16 +220,20 @@ public class DebugUtils {
     public static String getFuncSql(String windowName, String name, WebSocketServer webSocketServer) throws SQLException {
         List<String> oidList = new ArrayList<>();
         List<String> paramTypeList = getParamTypeList(name);
-        for (int i = 0; i < paramTypeList.size(); i++) {
-            ResultSet typeNameResult = webSocketServer.getStatement(windowName).executeQuery(GET_TYPE_OID_SQL
-                    + paramTypeList.get(i) + QUOTES_SEMICOLON);
+        for (String s : paramTypeList) {
+            Statement statement = (Statement) webSocketServer.getParamMap(windowName).get(STATEMENT);
+            if (statement == null) {
+                statement = webSocketServer.getStatement(windowName);
+            }
+            ResultSet typeNameResult = statement.executeQuery(GET_TYPE_OID_SQL + s + QUOTES_SEMICOLON);
             while (typeNameResult.next()) {
                 oidList.add(typeNameResult.getString(OID));
             }
         }
+        log.info("DebugUtils getFuncSql oidList is: " + oidList);
 
         StringBuilder sb = new StringBuilder();
-        sb.append(GET_PROC_SQL + getFuncName(name).trim() + GET_PROC_PARAM_SQL);
+        sb.append(GET_PROC_SQL).append(getFuncName(name).trim()).append(GET_PROC_PARAM_SQL);
 
         if (oidList.size() == 0) {
             sb.append(SPACE);
@@ -264,6 +276,7 @@ public class DebugUtils {
         int end = rightList.get(rightList.size() - 1);
 
         String substring = str.substring(start + 1, end);
+        log.info("DebugUtils getParamTypeList substring is: " + substring);
         String[] splits = substring.split(COMMA);
         for (String s : splits) {
             if (s.contains(PARENTHESES_LEFT)) {
@@ -275,5 +288,55 @@ public class DebugUtils {
 
         log.info("DebugUtils getParamTypeList paramType is: " + list);
         return list;
+    }
+
+    public static Map<String, String> getParamMap(String sql) {
+        log.info("DebugUtils getParamMap sql is: " + sql);
+        List<Integer> leftList = getIndexList(sql, PARENTHESES_LEFT);
+        List<Integer> rightList = getIndexList(sql, PARENTHESES_RIGHT);
+        sql = sql.replace("\n", " ");
+        int start = leftList.get(0);
+        int end = rightList.get(rightList.size() - 1);
+        String[] splits = sql.substring(start + 1, end).split(COMMA);
+        for (String s : splits) {
+            log.info("DebugUtils getParamMap splits is: " + s);
+        }
+
+        Map<String, String> map = new HashMap<>();
+        for (String split : splits) {
+            String[] params = split.trim().split(SPACE);
+            if (split.trim().toLowerCase().startsWith("out ")) {
+                map.put(params[1], "OUT");
+            } else {
+                if (split.trim().toLowerCase().startsWith("inout ")) {
+                    map.put(params[1], "INOUT");
+                    continue;
+                }
+                if (params.length == 1) {
+                    map.put("param", "IN");
+                } else {
+                    map.put(params[0], "IN");
+                }
+            }
+        }
+        log.info("DebugUtils getParamMap map is: " + map);
+        return map;
+    }
+
+    public static Map<String, Object> addMapParam(Map<String, Object> map, String sql) {
+        List<String> columnList = (List<String>) map.get(COLUMN);
+        List<List<Object>> dataList = (List<List<Object>>) map.get(RESULT);
+        columnList.add("paramType");
+
+        Map<String, String> paramMap = getParamMap(sql);
+        dataList.forEach(data -> {
+            String value = paramMap.get(data.get(0));
+            if (StringUtils.isEmpty(value)) {
+                data.add("temp");
+            } else {
+                data.add(value);
+            }
+        });
+        return map;
     }
 }

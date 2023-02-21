@@ -4,6 +4,7 @@ import lombok.Data;
 
 @Data
 public class SelectDataQuery {
+    private String uuid;
     private String webUser;
 
     private String connName;

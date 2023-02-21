@@ -16,6 +16,13 @@
   import { uuid } from '@/utils';
   import { isDark } from '@/hooks/dark';
 
+  interface Annotations {
+    row: number;
+    text: string;
+    column?: number;
+    type?: string;
+  }
+
   const props = withDefaults(
     defineProps<{
       modelValue?: string;
@@ -98,6 +105,8 @@
         mode: 'ace/mode/sql',
         showPrintMargin: false,
         readOnly: props.readOnly,
+        highlightGutterLine: false,
+        highlightActiveLine: false,
       }),
     );
     aceEditor.setOptions({
@@ -128,8 +137,6 @@
       }
       myEmit('update:modelValue', aceEditor.getValue());
     });
-    aceEditor.setHighlightActiveLine(false);
-    aceEditor.setHighlightGutterLine(false);
 
     if (aceRef.value && window && 'ResizeObserver' in window) {
       const observe = new ResizeObserver((_el) => {
@@ -154,7 +161,6 @@
   });
   const registerDebug = () => {
     aceEditor.on('guttermousemove', function (e) {
-      e.stop();
       const target = e.domEvent.target;
       if (target.className.indexOf('ace_gutter-cell') == -1) {
         return;
@@ -177,7 +183,7 @@
       if (target.className.indexOf('ace_gutter-cell') == -1) {
         return;
       }
-      if (e.clientX > 15 + target.getBoundingClientRect().left) {
+      if (e.clientX > 20 + target.getBoundingClientRect().left) {
         return;
       }
       const line = e.getDocumentPosition().row;
@@ -305,6 +311,25 @@
     removeBreakPoint();
   };
 
+  const setAnnotations = (annotations: Annotations[]) => {
+    const dueAnnotations = annotations.map((item) => {
+      return {
+        column: undefined,
+        type: 'error',
+        ...item,
+      };
+    });
+    aceEditor.getSession().setAnnotations(dueAnnotations);
+  };
+
+  const getAnnotations = () => {
+    return aceEditor.getSession().getAnnotations();
+  };
+
+  const clearAnnotations = () => {
+    aceEditor.getSession().clearAnnotations();
+  };
+
   onMounted(() => {
     initEditor();
     window.addEventListener('resize', resize);
@@ -327,6 +352,9 @@
     removeAllDiasbledBreakPoint,
     setCurrentBreakPoint,
     formatCode,
+    setAnnotations,
+    getAnnotations,
+    clearAnnotations,
   });
 </script>
 
@@ -334,9 +362,9 @@
   @mixin common-dot {
     content: '';
     position: absolute;
-    width: 12px;
-    height: 12px;
-    left: 2px;
+    width: 10px;
+    height: 10px;
+    left: 1px;
     top: 3px;
     border-radius: 50%;
   }
@@ -366,12 +394,19 @@
       background-size: contain;
       background-color: transparent;
       z-index: 9;
+      &.ace_error::before {
+        display: none;
+      }
     }
   }
   :deep(.current-hightline) {
     position: absolute;
     background-color: rgba(255, 255, 0, 0.7);
     z-index: 20;
+  }
+  :deep(.ace_gutter-cell.ace_error) {
+    background-size: 14px 14px;
+    background-position: 11px center;
   }
 </style>
 <style lang="scss">
