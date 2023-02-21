@@ -15,6 +15,8 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
+import java.io.IOException;
+
 /**
  * http util
  *
@@ -39,7 +41,28 @@ public class HTTPUtil {
         map.add("file", file);
         HttpEntity<MultiValueMap<String, Object>> request = new HttpEntity<>(map, headers);
         ResponseEntity<String> response = restTemplate.postForEntity(url, request, String.class);
-        log.info(response.getStatusCode() + ":" + response.getBody());
+        try {
+            log.info(response.getStatusCode() + ":" + response.getBody() + ":" + file.contentLength());
+        } catch (IOException e) {
+            log.info(e.getMessage());
+        }
+    }
+
+    /**
+     * http httpUrlPost
+     *
+     * @param url data type
+     */
+    public void httpsSendDate(String url, String data, String type) {
+        final RestTemplate restTemplate = new RestTemplate();
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+        MultiValueMap<String, Object> map = new LinkedMultiValueMap<>();
+        map.add("type", type);
+        map.add("data", data);
+        HttpEntity<MultiValueMap<String, Object>> request = new HttpEntity<>(map, headers);
+        ResponseEntity<String> response = restTemplate.postForEntity(url, request, String.class);
+        log.info(response.getStatusCode() + ":" + response.getBody() + ":" + data);
     }
 
 }

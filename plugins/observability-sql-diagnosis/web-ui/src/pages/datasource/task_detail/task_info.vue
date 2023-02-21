@@ -16,10 +16,25 @@
                 </div>
             </div>
         </div>
-        <!-- Essential information -->
+        <!-- Essential information for Root-->
         <template v-if="taskData.baseInfoData.length > 0 && requestType === 'UL'">
             <div class="report-header">{{ $t('datasource.taskInfo') }}</div>
             <p class="s-i-base-item" v-for="item in taskData.baseInfoData" :key="item.value">{{ item.label }}：<span v-html="item.value || '-'"></span></p>
+        </template>
+
+        <!-- Parameter Diagnosis -->
+        <template v-if="requestType === 'Param'">
+            <div class="report-header">{{ taskData.dataParameterConfig.title }}</div>
+            <p class="s-i-base-item title">{{ $t('datasource.paramName') }}</p>
+            <p class="s-i-base-item content">{{ taskData.dataParameterConfig.paramName }}</p>
+            <p class="s-i-base-item title">{{ $t('datasource.currentValue') }}</p>
+            <p class="s-i-base-item content">{{ taskData.dataParameterConfig.currentValue }}{{ taskData.dataParameterConfig.unit === null ? '' : '(' + taskData.dataParameterConfig.unit + ')' }}</p>
+            <p class="s-i-base-item title">{{ $t('datasource.paramDescription') }}</p>
+            <p class="s-i-base-item content">{{ taskData.dataParameterConfig.paramDescription }}</p>
+            <p class="s-i-base-item title">{{ $t('datasource.suggestValue') }}</p>
+            <p class="s-i-base-item content">{{ taskData.dataParameterConfig.suggestValue }}</p>
+            <p class="s-i-base-item title">{{ $t('datasource.suggestReason') }}</p>
+            <p class="s-i-base-item content">{{ taskData.dataParameterConfig.suggestReason }}</p>
         </template>
 
         <!-- Flame diagram -->
@@ -113,6 +128,7 @@ const taskData = reactive<{
     dataPieInfo: any
     dataPieColor: Array<string>
     dataSuggestion: any
+    dataParameterConfig: any
     taskInfo: {
         top: {
             type: string
@@ -141,6 +157,7 @@ const taskData = reactive<{
     dataPieInfo: [],
     dataPieColor: [],
     dataSuggestion: [],
+    dataParameterConfig: {},
     taskInfo: {
         top: {
             type: '',
@@ -253,6 +270,8 @@ watch(res, (res: Res) => {
                     value: String(Object.values(item)[0]),
                 })
             }
+        } else if (res.type === 'Param') {
+            taskData.dataParameterConfig = res.data
         } else {
             let resultData: any
             let svgInfo: any
@@ -327,6 +346,12 @@ text {
     .s-i-base-item {
         padding: 0 15px;
         margin-top: 12px;
+        &.title {
+            font-weight: bold;
+        }
+        &.content {
+            margin-top: 3px;
+        }
     }
 }
 .s-l-base {

@@ -1,5 +1,17 @@
 package com.nctigba.observability.sql.model.diagnosis;
 
+import cn.hutool.core.date.DateUtil;
+import com.baomidou.mybatisplus.annotation.*;
+import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.nctigba.observability.sql.model.diagnosis.result.Frame;
+import com.nctigba.observability.sql.model.diagnosis.result.FrameType;
+import com.nctigba.observability.sql.util.LocaleString;
+import lombok.Data;
+import lombok.experimental.Accessors;
+import org.apache.commons.lang3.StringUtils;
+import org.opengauss.admin.common.exception.CustomException;
+
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.time.LocalTime;
@@ -7,24 +19,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-
-import org.apache.commons.lang3.StringUtils;
-import org.opengauss.admin.common.exception.CustomException;
-
-import com.baomidou.mybatisplus.annotation.FieldFill;
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
-import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
-import com.fasterxml.jackson.annotation.JsonFormat;
-import com.nctigba.observability.sql.model.diagnosis.result.Frame;
-import com.nctigba.observability.sql.model.diagnosis.result.FrameType;
-import com.nctigba.observability.sql.util.LocaleString;
-
-import cn.hutool.core.date.DateUtil;
-import lombok.Data;
-import lombok.experimental.Accessors;
 
 @Data
 @TableName(value = "diagnosis_task", autoResultMap = true)
@@ -118,6 +112,7 @@ public class Task {
 		boolean offCpu = false;
 		boolean onCpu = false;
 		boolean explainAnalysis = false;
+		boolean paramAnalysis = false;
 	}
 
 	public String getCost() {

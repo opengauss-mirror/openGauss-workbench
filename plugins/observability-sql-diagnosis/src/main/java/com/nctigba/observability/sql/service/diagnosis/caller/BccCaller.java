@@ -86,6 +86,9 @@ public class BccCaller implements Caller {
 				if (e == GrabType.offcputime)
 					if (!task.getConf().isOffCpu())
 						continue;
+				if (e == GrabType.osParam)
+					if (!task.getConf().isParamAnalysis())
+						continue;
 				if (e.getAnalysis() == null)
 					continue;
 				String postForObject = HttpUtil.post(url,

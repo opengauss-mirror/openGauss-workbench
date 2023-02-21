@@ -9,7 +9,6 @@ import com.nctigba.ebpf.config.UrlConfig;
 import com.nctigba.ebpf.constants.EbpfType;
 import com.nctigba.ebpf.constants.FileType;
 import com.nctigba.ebpf.util.OSUtil;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -32,7 +31,7 @@ public class EbpfMonitorHandler {
      *
      * @param tid taskid monitorType
      */
-    public void startMonitor(String tid, String taskid, String monitorType) {
+    public String startMonitor(String tid, String taskid, String monitorType) {
         OSUtil toolUtil = new OSUtil();
         String bccUrl = "cd " + urlConfig.getBccUrl() + " &&";
         String outputUrl = urlConfig.getOutputUrl();
@@ -71,8 +70,7 @@ public class EbpfMonitorHandler {
         } else if (EbpfType.MEMLEAK.equals(monitorType)) {
             execcmd = bccUrl + ebpfConfig.getMemleak() + " " + " $(pidof allocs)" + fileUrl + FileType.DEFAULT;
         }
-        toolUtil.exec(execcmd);
-
+        return toolUtil.execCmd(execcmd);
     }
 
 
@@ -81,11 +79,18 @@ public class EbpfMonitorHandler {
      *
      * @param monitorType monitor ebpf type
      */
-    public void stopMonitor(String monitorType) {
+    public void stopMonitor(String monitorType, String pid) {
         OSUtil toolUtil = new OSUtil();
-        String execcmd = "ps -ef | grep ./" + monitorType + " | grep -v grep | grep python3 | awk '{print $2}';";
-        String pid = toolUtil.exec(execcmd).toString();
-        String killcmd = "kill -2 " + pid;
+        String execcmd = "ps -ef | grep ./" + monitorType + " | grep -v grep | grep python3 | awk '{print $2,$3}';";
+        String pids = toolUtil.exec(execcmd).toString();
+        String[] pidss = pids.split(System.lineSeparator());
+        String tid = null;
+        for (int i = 0; i < pidss.length; i++) {
+            if (pidss[i].contains(pid)) {
+                tid = pidss[i].substring(0, pidss[i].indexOf(" "));
+            }
+        }
+        String killcmd = "kill -2 " + tid;
         toolUtil.exec(killcmd);
     }
 
