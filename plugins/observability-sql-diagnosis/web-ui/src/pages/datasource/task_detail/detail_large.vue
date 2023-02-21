@@ -2,71 +2,87 @@
     <div class="s-i-base">
         <my-card :title="$t('datasource.detailTitle')" :bodyPadding="false" style="position: relative" v-if="!reportNodeList.includes(urlParam.nodesType)">
             <img src="@/assets/img/small.png" class="shrink-img" @click="goToTask" />
-        <!-- Suggestions -->
-        <div class="suggsiton-wrap" v-if="requestType === 'Suggestion' || (taskData.taskInfo && taskData.taskInfo.top.type === 'Suggestion') || (taskData.taskInfo && taskData.taskInfo.center.type === 'Suggestion')">
-            <div class="report-header">{{ taskData.dataSuggestion.title }}</div>
-            <div class="report-main-header">
-                <div class="report-main-suggestion">
-                    <el-icon color="#0093FF" size="18px">
-                        <WarningFilled />
-                    </el-icon>
-                    <div class="suggsiton-info">
-                        <template v-for="item in taskData.dataSuggestion.suggestions" :key="item">
-                            <span class="report-main-suggestion-text">{{ item }}</span>
-                        </template>
+            <!-- Suggestions -->
+            <div class="suggsiton-wrap" v-if="requestType === 'Suggestion' || (taskData.taskInfo && taskData.taskInfo.top.type === 'Suggestion') || (taskData.taskInfo && taskData.taskInfo.center.type === 'Suggestion')">
+                <div class="report-header">{{ taskData.dataSuggestion.title }}</div>
+                <div class="report-main-header">
+                    <div class="report-main-suggestion">
+                        <el-icon color="#0093FF" size="18px">
+                            <WarningFilled />
+                        </el-icon>
+                        <div class="suggsiton-info">
+                            <template v-for="item in taskData.dataSuggestion.suggestions" :key="item">
+                                <span class="report-main-suggestion-text">{{ item }}</span>
+                            </template>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-        <!-- Essential information -->
-        <template v-if="taskData.baseInfoData.length > 0 && requestType === 'UL'">
-            <div class="report-header">{{ $t('datasource.taskInfo') }}</div>
-            <p class="s-i-base-item" v-for="item in taskData.baseInfoData" :key="item.value">{{ item.label }}：<span v-html="item.value || '-'"></span></p>
-        </template>
 
-        <!-- Flame diagram -->
-        <div class="s-l-base" v-if="requestType === 'Frame'">
-            <div class="svg-top" v-if="taskData.taskInfo.top.type === 'Flamefigure'">
+            <!-- Essential information -->
+            <template v-if="taskData.baseInfoData.length > 0 && requestType === 'UL'">
+                <div class="report-header">{{ $t('datasource.taskInfo') }}</div>
+                <p class="s-i-base-item" v-for="item in taskData.baseInfoData" :key="item.value">{{ item.label }}：<span v-html="item.value || '-'"></span></p>
+            </template>
+
+            <!-- Parameter Diagnosis -->
+            <template v-if="requestType === 'Param'">
+                <div class="report-header">{{ taskData.dataParameterConfig.title }}</div>
+                <p class="s-i-base-item title">{{ $t('datasource.paramName') }}</p>
+                <p class="s-i-base-item content">{{ taskData.dataParameterConfig.paramName }}</p>
+                <p class="s-i-base-item title">{{ $t('datasource.currentValue') }}</p>
+                <p class="s-i-base-item content">{{ taskData.dataParameterConfig.currentValue }}{{ taskData.dataParameterConfig.unit === null ? '' : '(' + taskData.dataParameterConfig.unit + ')' }}</p>
+                <p class="s-i-base-item title">{{ $t('datasource.paramDescription') }}</p>
+                <p class="s-i-base-item content">{{ taskData.dataParameterConfig.paramDescription }}</p>
+                <p class="s-i-base-item title">{{ $t('datasource.suggestValue') }}</p>
+                <p class="s-i-base-item content">{{ taskData.dataParameterConfig.suggestValue }}</p>
+                <p class="s-i-base-item title">{{ $t('datasource.suggestReason') }}</p>
+                <p class="s-i-base-item content">{{ taskData.dataParameterConfig.suggestReason }}</p>
+            </template>
+
+            <!-- Flame diagram -->
+            <div class="s-l-base" v-if="requestType === 'Frame'">
+                <div class="svg-top" v-if="taskData.taskInfo.top.type === 'Flamefigure'">
                     <iframe class="svg-img-wrap" :srcdoc="svgFile" frameBorder="0" border="0"></iframe>
-                <p class="svg-title">{{ taskData.taskInfo.top.data.title }}</p>
-            </div>
-            <div class="svg-center" v-if="taskData.taskInfo.center.type === 'Paragraph'">
-                <div class="info-item" v-for="item in taskData.taskInfo.center.data" :key="item.title">
-                    <p class="item-title">{{ item.title }}</p>
-                    <p class="item-content">{{ item.paragraph }}</p>
+                    <p class="svg-title">{{ taskData.taskInfo.top.data.title }}</p>
+                </div>
+                <div class="svg-center" v-if="taskData.taskInfo.center.type === 'Paragraph'">
+                    <div class="info-item" v-for="item in taskData.taskInfo.center.data" :key="item.title">
+                        <p class="item-title">{{ item.title }}</p>
+                        <p class="item-content">{{ item.paragraph }}</p>
+                    </div>
                 </div>
             </div>
-        </div>
-        <!-- Tree Table -->
-        <div class="table-wrap" v-if="requestType === 'Table' || (taskData.taskInfo && taskData.taskInfo.top.type === 'Table') || (taskData.taskInfo && taskData.taskInfo.center.type === 'Table')">
-            <el-table ref="singleTableRef" :data="taskData.dataTableInfo.data" :style="{ width: '100%', marginBottom: '20px' }" border max-height="500">
-                <el-table-column type="index" />
-                <template v-for="item in taskData.dataTableInfo.columns" :key="item.id">
-                    <el-table-column :prop="item.key" :label="item.title" />
-                </template>
-            </el-table>
-        </div>
-        <!-- Thermodynamic diagram -->
-        <div class="chart-wrap" v-if="requestType === 'HeatMap' || (taskData.taskInfo && taskData.taskInfo.top.type === 'HeatMap') || (taskData.taskInfo && taskData.taskInfo.center.type === 'HeatMap')">
+            <!-- Tree Table -->
+            <div class="table-wrap" v-if="requestType === 'Table' || (taskData.taskInfo && taskData.taskInfo.top.type === 'Table') || (taskData.taskInfo && taskData.taskInfo.center.type === 'Table')">
+                <el-table ref="singleTableRef" :data="taskData.dataTableInfo.data" :style="{ width: '100%', marginBottom: '20px' }" border max-height="500">
+                    <el-table-column type="index" />
+                    <template v-for="item in taskData.dataTableInfo.columns" :key="item.id">
+                        <el-table-column :prop="item.key" :label="item.title" />
+                    </template>
+                </el-table>
+            </div>
+            <!-- Thermodynamic diagram -->
+            <div class="chart-wrap" v-if="requestType === 'HeatMap' || (taskData.taskInfo && taskData.taskInfo.top.type === 'HeatMap') || (taskData.taskInfo && taskData.taskInfo.center.type === 'HeatMap')">
                 <div class="chart-btn-wrap">
                     <span>{{ $t('datasource.showNum') }}</span>
                     <el-switch v-model="showNumFlag" @change="handleShowNum" style="--el-switch-on-color: #409eff; --el-switch-off-color: #dcdfe6" />
                 </div>
-            <template v-for="(item, index) in chartData" :key="index + '-'">
+                <template v-for="(item, index) in chartData" :key="index + '-'">
                     <heat-map :data="item.data" :xData="item.x" :yData="item.y" :title="item.name" :maxData="heatMapMax" :showNum="showNumFlag" :unit="item.unit" v-bind="$attrs"> </heat-map>
-            </template>
-        </div>
-        <!-- No result -->
-        <div class="noresult-wrap" v-if="requestType === 'NONE'">
-            <img src="@/assets/img/noresult.png" class="noresult-img" />
-            <p class="noresult-text">{{ $t('datasource.noResult') }}</p>
-        </div>
-        <!-- Thermodynamic diagram -->
-        <div class="chart-wrap" v-if="requestType === 'LineChart' || (taskData.taskInfo && taskData.taskInfo.top.type === 'LineChart') || (taskData.taskInfo && taskData.taskInfo.center.type === 'LineChart')">
-            <template v-for="(item, index) in chartData" :key="index + '-'">
-                <line-chart :data="item.data" :xData="item.xAxis.data" :series="item.series" :title="item.title"> </line-chart>
-            </template>
-        </div>
+                </template>
+            </div>
+            <!-- No result -->
+            <div class="noresult-wrap" v-if="requestType === 'NONE'">
+                <img src="@/assets/img/noresult.png" class="noresult-img" />
+                <p class="noresult-text">{{ $t('datasource.noResult') }}</p>
+            </div>
+            <!-- Thermodynamic diagram -->
+            <div class="chart-wrap" v-if="requestType === 'LineChart' || (taskData.taskInfo && taskData.taskInfo.top.type === 'LineChart') || (taskData.taskInfo && taskData.taskInfo.center.type === 'LineChart')">
+                <template v-for="(item, index) in chartData" :key="index + '-'">
+                    <line-chart :data="item.data" :xData="item.xAxis.data" :series="item.series" :title="item.title"> </line-chart>
+                </template>
+            </div>
         </my-card>
         <my-card :title="$t('datasource.reportDetail')" :bodyPadding="false" style="position: relative" v-if="reportNodeList.includes(urlParam.nodesType)">
             <ReportDetail :large="true" :id="urlParam.dbId" :reportId="urlParam.nodesType" />
@@ -139,6 +155,7 @@ const taskData = reactive<{
     dataPieInfo: any
     dataPieColor: Array<string>
     dataSuggestion: any
+    dataParameterConfig: any
     taskInfo: {
         top: {
             type: string
@@ -167,6 +184,7 @@ const taskData = reactive<{
     dataPieInfo: [],
     dataPieColor: [],
     dataSuggestion: [],
+    dataParameterConfig: {},
     taskInfo: {
         top: {
             type: '',
@@ -203,9 +221,8 @@ const goToTask = () => {
     emit('hideModel')
 }
 const handleShowNum = () => {
-    console.log(showNumFlag.value)
-        requestData()
-    }
+    requestData()
+}
 onMounted(() => {
     urlParam.dbId = props.id
     urlParam.nodesType = props.reportId
@@ -229,39 +246,39 @@ const { data: ret, run: requestSvg } = useRequest(
 const handleRequestData = (val: Res, type: string, cases: number) => {
     let dataType: any
     switch (cases) {
-    case 1:
-        if (val.type === type) {
-            dataType = val.child
-        } else if (val.child && val.child.top.type === type) {
-            dataType = val.child.top.data.data
-        } else if (val.child && val.child.center.type === type) {
-            dataType = val.child.center.data.data
-        } else {
-            dataType = []
-        }
-        break
-    case 2:
-        if (val.type === type) {
-            dataType = val.data.data
-        } else if (val.child && val.child.top.type === type) {
-            dataType = val.child.top.data
-        } else if (val.child && val.child.center.type === type) {
-            dataType = val.child.center.data
-        } else {
-            dataType = []
-        }
-        break
-    case 3:
-        if (val.type === type) {
-            dataType = val.data
-        } else if (val.child && val.child.top.type === type) {
-            dataType = val.child.top.data
-        } else if (val.child && val.child.center.type === type) {
-            dataType = val.child.center.data
-        } else {
-            dataType = []
-        }
-        break
+        case 1:
+            if (val.type === type) {
+                dataType = val.child
+            } else if (val.child && val.child.top.type === type) {
+                dataType = val.child.top.data.data
+            } else if (val.child && val.child.center.type === type) {
+                dataType = val.child.center.data.data
+            } else {
+                dataType = []
+            }
+            break
+        case 2:
+            if (val.type === type) {
+                dataType = val.data.data
+            } else if (val.child && val.child.top.type === type) {
+                dataType = val.child.top.data
+            } else if (val.child && val.child.center.type === type) {
+                dataType = val.child.center.data
+            } else {
+                dataType = []
+            }
+            break
+        case 3:
+            if (val.type === type) {
+                dataType = val.data
+            } else if (val.child && val.child.top.type === type) {
+                dataType = val.child.top.data
+            } else if (val.child && val.child.center.type === type) {
+                dataType = val.child.center.data
+            } else {
+                dataType = []
+            }
+            break
     }
 
     return dataType
@@ -280,6 +297,8 @@ watch(res, (res: Res) => {
                     value: String(Object.values(item)[0]),
                 })
             }
+        } else if (res.type === 'Param') {
+            taskData.dataParameterConfig = res.data
         } else {
             let resultData: any
             let svgInfo: any
