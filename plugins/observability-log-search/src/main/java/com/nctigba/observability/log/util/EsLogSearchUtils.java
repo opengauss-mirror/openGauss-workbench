@@ -1,20 +1,7 @@
 package com.nctigba.observability.log.util;
 
-import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.function.Function;
-
-import org.apache.commons.lang3.StringUtils;
-import org.opengauss.admin.common.exception.CustomException;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-import com.nctigba.observability.log.model.query.EsSearchQuery;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import co.elastic.clients.elasticsearch._types.Conflicts;
 import co.elastic.clients.elasticsearch._types.FieldValue;
 import co.elastic.clients.elasticsearch._types.SortOptions;
 import co.elastic.clients.elasticsearch._types.SortOrder;
@@ -23,7 +10,17 @@ import co.elastic.clients.elasticsearch.core.SearchResponse;
 import co.elastic.clients.elasticsearch.indices.GetIndexResponse;
 import co.elastic.clients.json.JsonData;
 import co.elastic.clients.util.ObjectBuilder;
+import com.nctigba.observability.log.model.query.EsSearchQuery;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.opengauss.admin.common.exception.CustomException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.util.function.Function;
 
 
 /**
@@ -59,6 +56,31 @@ public class EsLogSearchUtils {
                 return s;
             }, HashMap.class);
             return response;
+        } catch (IOException e) {
+            throw new CustomException(e.getMessage());
+        }
+    }
+
+    /**
+     * ES deleteLogInfo
+     *
+     */
+    public void deleteLogInfo() {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+        sdf.setTimeZone(TimeZone.getTimeZone("GMT+00:00"));
+        Date endDate = new Date();
+        endDate.setTime(endDate.getTime() - 1000);
+        try {
+            client.deleteByQuery(s -> {
+                s.index("ob-*");
+                s.query(f -> f.range(r ->
+                        r.field("@timestamp")
+                                .lt(JsonData.of(sdf.format(endDate)))));
+                s.conflicts(Conflicts.Proceed);
+                return s;
+            });
+            client.indices().clearCache();
+            client.indices().forcemerge();
         } catch (IOException e) {
             throw new CustomException(e.getMessage());
         }
@@ -178,7 +200,7 @@ public class EsLogSearchUtils {
      * @return query Function
      */
     public Function<Query.Builder, ObjectBuilder<Query>> query(EsSearchQuery queryParam) {
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
         boolean isPhrase = StringUtils.isNotBlank(queryParam.getSearchPhrase());
         boolean isLogLevel = queryParam.getLogLevel() != null && queryParam.getLogLevel().size() > 0;
         List<FieldValue> fieldValues = new ArrayList<>();
@@ -191,31 +213,86 @@ public class EsLogSearchUtils {
             }
         }
         if (isLogLevel && queryParam.hasDateFilter() && !isPhrase) {
-            return q -> {
-                q.bool(b -> b.filter(f -> f
-                                .range(r -> r.field("@timestamp").gte(JsonData.of(sdf.format(queryParam.getStartDate()))).lt(JsonData.of(sdf.format(queryParam.getEndDate())))))
-                        .must(r -> r.terms(f -> f.field("log_level.keyword").terms(g -> g.value(fieldValues))))
-                );
-                return q;
-            };
-
+            if(queryParam.getStartDate()!=null && queryParam.getEndDate()==null){
+                return q -> {
+                    q.bool(b -> b.filter(f -> f
+                                    .range(r -> r.field("@timestamp").gte(JsonData.of(sdf.format(queryParam.getStartDate())))))
+                            .must(r -> r.terms(f -> f.field("log_level.keyword").terms(g -> g.value(fieldValues))))
+                    );
+                    return q;
+                };
+            }else if(queryParam.getEndDate()!=null && queryParam.getStartDate()==null){
+                return q -> {
+                    q.bool(b -> b.filter(f -> f
+                                    .range(r -> r.field("@timestamp").lt(JsonData.of(sdf.format(queryParam.getEndDate())))))
+                            .must(r -> r.terms(f -> f.field("log_level.keyword").terms(g -> g.value(fieldValues))))
+                    );
+                    return q;
+                };
+            }else{
+                return q -> {
+                    q.bool(b -> b.filter(f -> f
+                                    .range(r -> r.field("@timestamp").gte(JsonData.of(sdf.format(queryParam.getStartDate()))).lt(JsonData.of(sdf.format(queryParam.getEndDate())))))
+                            .must(r -> r.terms(f -> f.field("log_level.keyword").terms(g -> g.value(fieldValues))))
+                    );
+                    return q;
+                };
+            }
         } else if (isLogLevel && queryParam.hasDateFilter() && isPhrase) {
-            return q -> {
-                q.bool(b -> b.filter(f -> f
-                                .range(r -> r.field("@timestamp").gte(JsonData.of(sdf.format(queryParam.getStartDate()))).lt(JsonData.of(sdf.format(queryParam.getEndDate())))))
-                        .must(r -> r.terms(f -> f.field("log_level.keyword").terms(g -> g.value(fieldValues))))
-                        .must(r -> r.matchPhrase(f -> f.field("message").query(queryParam.getSearchPhrase().toLowerCase())))
-                );
-                return q;
-            };
+            if(queryParam.getStartDate()!=null && queryParam.getEndDate()==null){
+                return q -> {
+                    q.bool(b -> b.filter(f -> f
+                                    .range(r -> r.field("@timestamp").gte(JsonData.of(sdf.format(queryParam.getStartDate())))))
+                            .must(r -> r.terms(f -> f.field("log_level.keyword").terms(g -> g.value(fieldValues))))
+                            .must(r -> r.matchPhrase(f -> f.field("message").query(queryParam.getSearchPhrase().toLowerCase())))
+                    );
+                    return q;
+                };
+            }else if(queryParam.getEndDate()!=null && queryParam.getStartDate()==null){
+                return q -> {
+                    q.bool(b -> b.filter(f -> f
+                                    .range(r -> r.field("@timestamp").lt(JsonData.of(sdf.format(queryParam.getEndDate())))))
+                            .must(r -> r.terms(f -> f.field("log_level.keyword").terms(g -> g.value(fieldValues))))
+                            .must(r -> r.matchPhrase(f -> f.field("message").query(queryParam.getSearchPhrase().toLowerCase())))
+                    );
+                    return q;
+                };
+            }else{
+                return q -> {
+                    q.bool(b -> b.filter(f -> f
+                                    .range(r -> r.field("@timestamp").gte(JsonData.of(sdf.format(queryParam.getStartDate()))).lt(JsonData.of(sdf.format(queryParam.getEndDate())))))
+                            .must(r -> r.terms(f -> f.field("log_level.keyword").terms(g -> g.value(fieldValues))))
+                            .must(r -> r.matchPhrase(f -> f.field("message").query(queryParam.getSearchPhrase().toLowerCase())))
+                    );
+                    return q;
+                };
+            }
         } else if (!isLogLevel && queryParam.hasDateFilter() && isPhrase) {
-            return q -> {
-                q.bool(b -> b.filter(f -> f
-                                .range(r -> r.field("@timestamp").gte(JsonData.of(sdf.format(queryParam.getStartDate()))).lt(JsonData.of(sdf.format(queryParam.getEndDate())))))
-                        .must(r -> r.matchPhrase(f -> f.field("message").query(queryParam.getSearchPhrase().toLowerCase())))
-                );
-                return q;
-            };
+            if(queryParam.getStartDate()!=null && queryParam.getEndDate()==null){
+                return q -> {
+                    q.bool(b -> b.filter(f -> f
+                                    .range(r -> r.field("@timestamp").gte(JsonData.of(sdf.format(queryParam.getStartDate())))))
+                            .must(r -> r.matchPhrase(f -> f.field("message").query(queryParam.getSearchPhrase().toLowerCase())))
+                    );
+                    return q;
+                };
+            }else if(queryParam.getEndDate()!=null && queryParam.getStartDate()==null){
+                return q -> {
+                    q.bool(b -> b.filter(f -> f
+                                    .range(r -> r.field("@timestamp").lt(JsonData.of(sdf.format(queryParam.getEndDate())))))
+                            .must(r -> r.matchPhrase(f -> f.field("message").query(queryParam.getSearchPhrase().toLowerCase())))
+                    );
+                    return q;
+                };
+            }else{
+                return q -> {
+                    q.bool(b -> b.filter(f -> f
+                                    .range(r -> r.field("@timestamp").gte(JsonData.of(sdf.format(queryParam.getStartDate()))).lt(JsonData.of(sdf.format(queryParam.getEndDate())))))
+                            .must(r -> r.matchPhrase(f -> f.field("message").query(queryParam.getSearchPhrase().toLowerCase())))
+                    );
+                    return q;
+                };
+            }
         } else if (isLogLevel && !queryParam.hasDateFilter() && isPhrase) {
             return q -> {
                 q.bool(b -> b.must(r -> r.terms(f -> f.field("log_level.keyword").terms(g -> g.value(fieldValues))))
@@ -234,12 +311,28 @@ public class EsLogSearchUtils {
                 return q;
             };
         } else {
-            return q -> {
-                q.bool(b -> b.filter(f -> f
-                        .range(r -> r.field("@timestamp").gte(JsonData.of(sdf.format(queryParam.getStartDate()))).lt(JsonData.of(sdf.format(queryParam.getEndDate())))))
-                );
-                return q;
-            };
+            if(queryParam.getStartDate()!=null && queryParam.getEndDate()==null){
+                return q -> {
+                    q.bool(b -> b.filter(f -> f
+                            .range(r -> r.field("@timestamp").gte(JsonData.of(sdf.format(queryParam.getStartDate())))))
+                    );
+                    return q;
+                };
+            }else if(queryParam.getEndDate()!=null && queryParam.getStartDate()==null){
+                return q -> {
+                    q.bool(b -> b.filter(f -> f
+                            .range(r -> r.field("@timestamp").lt(JsonData.of(sdf.format(queryParam.getEndDate())))))
+                    );
+                    return q;
+                };
+            }else{
+                return q -> {
+                    q.bool(b -> b.filter(f -> f
+                            .range(r -> r.field("@timestamp").gte(JsonData.of(sdf.format(queryParam.getStartDate()))).lt(JsonData.of(sdf.format(queryParam.getEndDate())))))
+                    );
+                    return q;
+                };
+            }
         }
 
     }
@@ -250,6 +343,6 @@ public class EsLogSearchUtils {
      * @param queryParam query order by queryParam
      */
     public Function<SortOptions.Builder, ObjectBuilder<SortOptions>> sort(EsSearchQuery queryParam) {
-        return sort -> sort.field(f -> f.field(queryParam.getSort()).order(SortOrder.Desc));
+        return queryParam.getOrder()!=null?sort -> sort.field(f -> f.field(queryParam.getSort()).order(SortOrder.Asc)):sort -> sort.field(f -> f.field(queryParam.getSort()).order(SortOrder.Desc));
     }
 }

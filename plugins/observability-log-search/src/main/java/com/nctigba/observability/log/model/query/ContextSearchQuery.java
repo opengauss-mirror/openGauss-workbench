@@ -8,21 +8,23 @@ import java.util.List;
 
 /**
  * <p>
- * Log-Search request dto
+ * Log-ContextSearch request dto
  * </p>
  *
  * @author luomeng@ncti-gba.cn
- * @since 2022/11/17 09:05
+ * @since 2023/02/01 09:05
  */
 @Data
-public class LogSearchQuery {
+public class ContextSearchQuery {
     private List<String> nodeId;
     private String searchPhrase;
-    @NotNull(message = "rowCount is empty")
     private int rowCount;
-    private Date startDate;
-    private Date endDate;
+    private Date LogDate;
     private List<String> logType;
     private List<String> logLevel;
     private String scrollId;
+    @NotNull(message = "aboveCount is empty")
+    private Integer aboveCount;
+    @NotNull(message = "belowCount is empty")
+    private Integer belowCount;
 }

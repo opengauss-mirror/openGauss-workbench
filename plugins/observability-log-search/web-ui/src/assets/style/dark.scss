@@ -49,14 +49,14 @@ html.dark {
 
     
     --el-dialog-background-color:rgb(42,42,43);
-    --primary-6: #e41d1d;
+    --primary-6: rgb(252,239,146);
     --main-background-color:rgb(35,35,36);
     --color-neutral-2: rgb(52, 52, 53);
     --color-fill-2: var(--color-neutral-2);
     --color-text-2: hsla(0,0%,100%,.7);
     --gray-9: rgb(223, 223, 223);
     --color-secondary: rgba(223, 223, 223, 0.08);
-    --color-primary-light-1: rgba(228, 29, 29,0.2);
+    --color-primary-light-1: rgba(252, 239, 146,0.2);
     --el-color-primary: var(--primary-6);
     --el-color-primary-light-3: var(--primary-6);
     --el-menu-text-color: #cfcfcf;
@@ -69,14 +69,14 @@ html.dark {
 
 :root.dark {
     --el-dialog-background-color:rgb(42,42,43);
-    --primary-6: #e41d1d;
+    --primary-6: rgb(252,239,146);
     --main-background-color:rgb(35,35,36);
     --color-neutral-2: rgb(52, 52, 53);
     --color-fill-2: var(--color-neutral-2);
     --color-text-2: hsla(0,0%,100%,.7);
     --gray-9: rgb(223, 223, 223);
     --color-secondary: rgba(223, 223, 223, 0.08);
-    --color-primary-light-1: rgba(228, 29, 29,0.2);
+    --color-primary-light-1: rgba(252, 239, 146,0.2);
     --el-color-primary: var(--primary-6);
     --el-color-primary-light-3: var(--primary-6);
     --el-menu-text-color: #cfcfcf;
@@ -85,4 +85,5 @@ html.dark {
     --el-menu-hover-bg-color: #323e43;
     --el-table-cell-center-background: #424242;
     --el-color-primary-light-3: var(--primary-6);
+    --color-bg-2: #232324;
 }

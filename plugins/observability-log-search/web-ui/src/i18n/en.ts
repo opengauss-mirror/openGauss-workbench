@@ -36,5 +36,7 @@ export default {
         type: 'Type',
         level: 'Level',
         logSearchTable: ['Time', 'Type', 'level', 'Log', 'Cluster ID', 'Instance ID'],
+        logContext: 'Log Context',
+        logContextPlaceholder: 'select please',
     }
 };
