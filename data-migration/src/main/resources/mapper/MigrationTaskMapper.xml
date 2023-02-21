@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.opengauss.admin.plugin.mapper.MigrationTaskMapper">
+
+    <resultMap id="MigrationTaskResult" type="org.opengauss.admin.plugin.domain.MigrationTask">
+        <id property="id" column="id"/>
+        <result property="sourceNodeId" column="source_node_id"/>
+        <result property="sourceDb" column="source_db"/>
+        <result property="sourceDbHost" column="source_db_host"/>
+        <result property="sourceDbPort" column="source_db_port"/>
+        <result property="sourceDbUser" column="source_db_user"/>
+        <result property="sourceDbPass" column="source_db_pass"/>
+        <result property="targetNodeId" column="target_node_id"/>
+        <result property="targetDb" column="target_db"/>
+        <result property="targetDbHost" column="target_db_host"/>
+        <result property="targetDbPort" column="target_db_port"/>
+        <result property="targetDbUser" column="target_db_user"/>
+        <result property="targetDbPass" column="target_db_pass"/>
+
+        <result property="runHostId" column="run_host_id"/>
+        <result property="runHost" column="run_host"/>
+        <result property="runPort" column="run_port"/>
+        <result property="runUser" column="run_user"/>
+        <result property="runPass" column="run_pass"/>
+
+        <result property="migrationOperations" column="migration_operations"/>
+        <result property="execStatus" column="exec_status"/>
+        <result property="createTime" column="create_time"/>
+        <result property="finishTime" column="finish_time"/>
+        <result property="execTime" column="exec_time"/>
+        <result property="mainTaskId" column="main_task_id"/>
+        <result property="migrationModelId" column="migration_model_id"/>
+        <result property="migrationProcess" column="migration_process"/>
+        <result property="runHostname" column="run_hostname"/>
+
+    </resultMap>
+
+    <select id="selectTaskPage" resultMap="MigrationTaskResult">
+        select * from tb_migration_task
+        where main_task_id = #{mainTaskId}
+        order by id desc
+    </select>
+
+
+    <select id="countByMainTaskIdGroupByModelId" resultType="map">
+        select count(1) as task_num,m.model_name from tb_migration_task t inner join tb_migration_task_model m on t.migration_model_id=m.id
+        where t.main_task_id = #{mainTaskId}
+        group by m.model_name
+    </select>
+
+    <select id="listByMainTaskId" resultMap="MigrationTaskResult">
+        select m.model_name,t.execStatus
+        from tb_migration_task t inner join tb_migration_task_model m on t.migration_model_id=m.id
+        where t.main_task_id = #{mainTaskId}
+    </select>
+
+</mapper>

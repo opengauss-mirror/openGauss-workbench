@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.opengauss.admin.plugin.mapper.MigrationTaskOperateRecordMapper">
+
+    <resultMap id="MigrationTaskResult" type="org.opengauss.admin.plugin.domain.MigrationTaskOperateRecord">
+        <id property="id" column="id"/>
+        <result property="taskId" column="task_id"/>
+        <result property="operUser" column="oper_user"/>
+        <result property="operTime" column="oper_time"/>
+        <result property="title" column="title"/>
+    </resultMap>
+
+
+
+</mapper>
