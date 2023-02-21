@@ -30,7 +30,7 @@ export default class WebSocketClass {
     const baseURL = import.meta.env.DEV
       ? `${import.meta.env.VITE_WS_BASE_URL}`
       : `${location.protocol == 'http:' ? 'ws:' : 'wss:'}//${location.host}`;
-    const url = `${baseURL}/ws/webds-plugin/${sessionId}`;
+    const url = `${baseURL}/ws/${import.meta.env.VITE_PLUGIN_NAME}/${sessionId}`;
     this.ws = new WebSocket(url);
 
     this.ws.onopen = () => {
@@ -76,7 +76,7 @@ export default class WebSocketClass {
     }
   }
 
-  sendPing(time = 1000 * 20, ping = 'ping') {
+  sendPing(time = 1000 * 60 * 15, ping = 'ping') {
     clearInterval(this.setIntervalWesocketPush);
     this.ws.send(ping);
     this.setIntervalWesocketPush = setInterval(() => {

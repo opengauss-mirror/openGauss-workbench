@@ -12,6 +12,7 @@ public interface OperationInterface<T> {
     }
 
     default T formatJson(String str) {
-        return JSON.parseObject(str, new TypeReference<T>() {});
+        return JSON.parseObject(str, new TypeReference<T>() {
+        });
     }
 }

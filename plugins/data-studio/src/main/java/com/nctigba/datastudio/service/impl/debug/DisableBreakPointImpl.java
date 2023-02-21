@@ -6,6 +6,7 @@ import com.nctigba.datastudio.model.PublicParamReq;
 import com.nctigba.datastudio.service.OperationInterface;
 import com.nctigba.datastudio.util.DebugUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import java.sql.ResultSet;
@@ -38,7 +39,11 @@ public class DisableBreakPointImpl implements OperationInterface {
         Map<Integer, String> breakPointMap = (Map<Integer, String>) webSocketServer.getParamMap(windowName).get(BREAK_POINT);
         log.info("disableBreakPoint breakPointMap is: " + breakPointMap);
 
-        Statement stat = (Statement) webSocketServer.getParamMap(windowName).get(STATEMENT);
+        String name = paramReq.getOldWindowName();
+        if (StringUtils.isEmpty(name)) {
+            name = windowName;
+        }
+        Statement stat = (Statement) webSocketServer.getParamMap(name).get(STATEMENT);
         if (stat == null) {
             return;
         }

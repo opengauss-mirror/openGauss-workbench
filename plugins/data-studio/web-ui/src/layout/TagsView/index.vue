@@ -152,7 +152,7 @@
   const addTags = () => {
     const { name } = route;
     if (name) {
-      TagsViewStore.addView(route);
+      TagsViewStore.addVisitedView(route);
     }
     return false;
   };
@@ -268,8 +268,8 @@
   }
 
   const createTerminal = () => {
-    const dbname = AppStore.currentConnectInfo.dataName;
     const connectInfoName = AppStore.currentConnectInfo.name;
+    const dbname = AppStore.lastestConnectDatabase.name;
     const terminalNum = TagsViewStore.maxTerminalNum + 1;
     const title = `${dbname}@${connectInfoName}(${terminalNum})`;
     const time = Date.now();
@@ -277,8 +277,9 @@
       path: '/createTerminal/' + time,
       query: {
         title,
-        dbname,
         connectInfoName,
+        uuid: AppStore.lastestConnectDatabase.uuid,
+        dbname,
         terminalNum,
         time,
       },

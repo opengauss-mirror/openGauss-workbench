@@ -6,6 +6,55 @@
   "description": "",
   "glyphs": [
     {
+      "icon_id": "33979523",
+      "name": "debugsinglestep-disabled",
+      "font_class": "debugsinglestep-disabled",
+      "unicode": "e605",
+      "unicode_decimal": 58885
+    },
+    {
+      "icon_id": "33979524",
+      "name": "debugsinglestep",
+      "font_class": "debugsinglestep",
+      "unicode": "e606",
+      "unicode_decimal": 58886
+    },
+    {
+      "icon_id": "33846229",
+      "name": "database-connected",
+      "font_class": "database-connected",
+      "unicode": "e602",
+      "unicode_decimal": 58882
+    },
+    {
+      "icon_id": "33846230",
+      "name": "database-disconnect",
+      "font_class": "database-disconnect",
+      "unicode": "e604",
+      "unicode_decimal": 58884
+    },
+    {
+      "icon_id": "1817682",
+      "name": "数据库",
+      "font_class": "shujuku",
+      "unicode": "e603",
+      "unicode_decimal": 58883
+    },
+    {
+      "icon_id": "21164516",
+      "name": "m-格式化文字",
+      "font_class": "m-geshihuawenzi",
+      "unicode": "e7f8",
+      "unicode_decimal": 59384
+    },
+    {
+      "icon_id": "26923966",
+      "name": "line_手势",
+      "font_class": "line_shoushi",
+      "unicode": "e675",
+      "unicode_decimal": 58997
+    },
+    {
       "icon_id": "33640391",
       "name": "order-setting-copy",
       "font_class": "formatter-disabled",

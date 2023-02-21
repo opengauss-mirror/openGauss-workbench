@@ -1,19 +1,16 @@
 package com.nctigba.datastudio.service.impl.sql;
 
 import com.nctigba.datastudio.config.ConnectionConfig;
-import com.nctigba.datastudio.enums.ParamTypeEnum;
 import com.nctigba.datastudio.model.query.DatabaseMetaarrayColumnQuery;
 import com.nctigba.datastudio.model.query.DatabaseMetaarrayQuery;
 import com.nctigba.datastudio.model.query.DatabaseMetaarraySchemaQuery;
 import com.nctigba.datastudio.service.QueryMetaArrayService;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.opengauss.admin.common.exception.CustomException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.ArrayList;
@@ -21,9 +18,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.nctigba.datastudio.constants.CommonConstants.SPACE;
+import static com.nctigba.datastudio.constants.SqlConstants.GET_DATABASE_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.GET_SCHEMA_NAME_SQL;
-import static com.nctigba.datastudio.constants.SqlConstants.GET_TYPENAME_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.QUOTES_PARENTHESES_SEMICOLON;
 import static com.nctigba.datastudio.constants.SqlConstants.QUOTES_SEMICOLON;
 import static com.nctigba.datastudio.constants.SqlConstants.SELECT_COLUMN_SQL;
@@ -32,7 +28,6 @@ import static com.nctigba.datastudio.constants.SqlConstants.SELECT_FUNCTION_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.SELECT_OBJECT_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.SELECT_OBJECT_WHERE_IN_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.SELECT_OBJECT_WHERE_SQL;
-import static com.nctigba.datastudio.constants.SqlConstants.SELECT_SYNONYM_SQL;
 
 @Slf4j
 @Service
@@ -40,12 +35,33 @@ public class QueryMetaArrayServiceImpl implements QueryMetaArrayService {
     @Autowired
     private ConnectionConfig connectionConfig;
 
+
+    public List<String> databaseList(String uuid) {
+        log.info("schemaList request is: " + uuid);
+        String sql;
+        List<String> databaseList = new ArrayList<>();
+        try {
+            Connection connection = connectionConfig.connectDatabase(uuid);
+            Statement statement = connection.createStatement();
+            sql = GET_DATABASE_SQL;
+            ResultSet resultSet = statement.executeQuery(sql);
+            while (resultSet.next()) {
+                databaseList.add(resultSet.getString("datname"));
+            }
+            log.info("schemaList response is: " + databaseList);
+            return databaseList;
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new CustomException(e.getMessage());
+        }
+    }
+
     public List<String> schemaList(DatabaseMetaarraySchemaQuery request) throws Exception {
         log.info("schemaList request is: " + request);
         String sql;
         List<String> schemaList = new ArrayList<>();
         try {
-            Connection connection = connectionConfig.connectDatabase(request.getConnectionName(), request.getWebUser());
+            Connection connection = connectionConfig.connectDatabase(request.getUuid());
             Statement statement = connection.createStatement();
             sql = GET_SCHEMA_NAME_SQL;
             ResultSet resultSet = statement.executeQuery(sql);
@@ -64,11 +80,11 @@ public class QueryMetaArrayServiceImpl implements QueryMetaArrayService {
         log.info("objectList request is: " + request);
         String sql;
         try {
-            Connection connection = connectionConfig.connectDatabase(request.getConnectionName(), request.getWebUser());
+            Connection connection = connectionConfig.connectDatabase(request.getUuid());
             Statement statement = connection.createStatement();
             List<String> objectList = new ArrayList<>();
             Map funTypeMap = new HashMap<>();
-            if (request.getObjectType().equals("ALL"))  {
+            if (request.getObjectType().equals("ALL")) {
                 sql = SELECT_FUNCTION_SQL + request.getSchema() + QUOTES_PARENTHESES_SEMICOLON;
                 ResultSet resultSet = statement.executeQuery(sql);
                 while (resultSet.next()) {
@@ -99,7 +115,7 @@ public class QueryMetaArrayServiceImpl implements QueryMetaArrayService {
                     objectList.add(resultSet.getString("relname"));
                 }
                 return objectList;
-            }else {
+            } else {
                 sql = SELECT_OBJECT_SQL + request.getSchema() + SELECT_OBJECT_WHERE_SQL + request.getObjectType() + QUOTES_SEMICOLON;
                 ResultSet resultSet = statement.executeQuery(sql);
                 while (resultSet.next()) {
@@ -119,7 +135,7 @@ public class QueryMetaArrayServiceImpl implements QueryMetaArrayService {
         String sql;
         List<String> columnList = new ArrayList<>();
         try {
-            Connection connection = connectionConfig.connectDatabase(request.getConnectionName(), request.getWebUser());
+            Connection connection = connectionConfig.connectDatabase(request.getUuid());
             Statement statement = connection.createStatement();
             sql = SELECT_COLUMN_SQL + request.getSchema() + SELECT_COLUMN_WHERE_SQL + request.getObjectName() + QUOTES_SEMICOLON;
             ResultSet resultSet = statement.executeQuery(sql);

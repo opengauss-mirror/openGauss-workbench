@@ -21,6 +21,7 @@
     schema: '',
     sequenceName: '',
     webUser: UserStore.userId,
+    uuid: '',
   });
   const loading = ref(false);
 
@@ -36,11 +37,12 @@
   };
 
   onMounted(() => {
-    const { connectInfoName, sequenceName, schema } = route.query;
+    const { connectInfoName, sequenceName, schema, uuid } = route.query;
     Object.assign(commonParams, {
       connectionName: connectInfoName,
       sequenceName,
       schema,
+      uuid,
     });
     getData();
   });

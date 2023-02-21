@@ -1,88 +1,43 @@
 <template>
   <div class="functions-wrapper">
-    <div class="function-item-wrapper" v-if="barType.execute">
-      <div
-        :class="['function-item', { disabled: !barStatus.execute }]"
-        @click="barStatus.execute && handleExecute()"
-      >
-        <font-icon :icon="'run' + (barStatus.execute ? '' : '-disabled')" />
-        <span class="funcion-name">{{ $t('functionBar.execute') }}</span>
+    <template v-for="(item, key) in displayButton" :key="key">
+      <div class="function-item-wrapper" v-if="item.show">
+        <div
+          :class="['function-item', { disabled: !item.enabled }]"
+          @click="item.enabled && item.on()"
+        >
+          <font-icon :icon="item.enabled ? item.icon : item.disabledIcon" />
+          <span class="funcion-name">{{ item.name }}</span>
+        </div>
       </div>
-    </div>
-    <div class="function-item-wrapper" v-if="barType.stopRun">
-      <div
-        :class="['function-item', { disabled: !barStatus.stopRun }]"
-        @click="barStatus.stopRun && handleStop()"
-      >
-        <font-icon :icon="'pause' + (barStatus.stopRun ? '' : '-disabled')" />
-        <span class="funcion-name">{{ $t('functionBar.stopRun') }}</span>
-      </div>
-    </div>
-    <div class="function-item-wrapper" v-if="barType.clear">
-      <div
-        :class="['function-item', { disabled: !barStatus.clear }]"
-        @click="barStatus.clear && handleClear()"
-      >
-        <font-icon :icon="'delete' + (barStatus.clear ? '' : '-disabled')" />
-        <span class="funcion-name">{{ $t('functionBar.clear') }}</span>
-      </div>
-    </div>
-    <div class="function-item-wrapper" v-if="barType.startDebug">
-      <div
-        :class="['function-item', { disabled: !barStatus.startDebug }]"
-        @click="barStatus.startDebug && handleStartDebug()"
-      >
-        <font-icon :icon="'debugopen' + (barStatus.startDebug ? '' : '-disabled')" />
-        <span class="funcion-name">{{ $t('functionBar.startDebug') }}</span>
-      </div>
-    </div>
-    <div class="function-item-wrapper" v-if="barType.stopDebug">
-      <div
-        :class="['function-item', { disabled: !barStatus.stopDebug }]"
-        @click="barStatus.stopDebug && handleStopDebug()"
-      >
-        <font-icon :icon="'debugclose' + (barStatus.stopDebug ? '' : '-disabled')" />
-        <span class="funcion-name">{{ $t('functionBar.stopDebug') }}</span>
-      </div>
-    </div>
-    <div class="function-item-wrapper" v-if="barType.breakPointStep">
-      <div
-        :class="['function-item', { disabled: !barStatus.breakPointStep }]"
-        @click="barStatus.breakPointStep && handleBreakPointStep()"
-      >
-        <font-icon :icon="'debugstep' + (barStatus.breakPointStep ? '' : '-disabled')" />
-        <span class="funcion-name">{{ $t('functionBar.breakPointStep') }}</span>
-      </div>
-    </div>
-    <div class="function-item-wrapper" v-if="barType.singleStep">
-      <div
-        :class="['function-item', { disabled: !barStatus.singleStep }]"
-        @click="barStatus.singleStep && handleSingleStep()"
-      >
-        <font-icon :icon="'debugstepinto' + (barStatus.singleStep ? '' : '-disabled')" />
-        <span class="funcion-name">{{ $t('functionBar.singleStep') }}</span>
-      </div>
-    </div>
-    <div class="function-item-wrapper" v-if="barType.format">
-      <div
-        :class="['function-item', { disabled: props.readOnly }]"
-        @click="!props.readOnly && handleFormat()"
-      >
-        <font-icon :icon="'formatter' + (!props.readOnly ? '' : '-disabled')" />
-        <span class="funcion-name">{{ $t('functionBar.format') }}</span>
-      </div>
-    </div>
+    </template>
   </div>
 </template>
 
 <script lang="ts" setup>
   import { computed } from 'vue';
+  import { useI18n } from 'vue-i18n';
 
-  const props = defineProps<{
-    type: 'sql' | 'debug';
-    status: Record<string, boolean>;
-    readOnly?: boolean;
-  }>();
+  const { t } = useI18n();
+  const props = withDefaults(
+    defineProps<{
+      type: 'sql' | 'debug' | 'debugChild';
+      status: Record<string, boolean>;
+      editorReadOnly?: boolean;
+      isGlobalEnable?: boolean;
+    }>(),
+    {
+      isGlobalEnable: true,
+    },
+  );
+  /* props.status such as:
+    execute: true,
+    stop: false,
+    startDebug: false,
+    stopDebug: false,
+    breakPointStep: false,
+    singleStep: false,
+  */
   const emit = defineEmits<{
     (e: 'execute'): void;
     (e: 'stopRun'): void;
@@ -91,32 +46,10 @@
     (e: 'stopDebug'): void;
     (e: 'breakPointStep'): void;
     (e: 'singleStep'): void;
+    (e: 'stepIn'): void;
+    (e: 'stepOut'): void;
     (e: 'format'): void;
   }>();
-
-  const barStatus = computed(() => {
-    /* such as:
-      execute: true,
-      stopRun: false,
-      startDebug: false,
-      stopDebug: false,
-      breakPointStep: false,
-      singleStep: false,
-    */
-    return props.status;
-  });
-  const barType = computed(() => {
-    return {
-      execute: ['sql', 'debug'].includes(props.type),
-      stopRun: ['sql'].includes(props.type),
-      clear: ['sql'].includes(props.type),
-      startDebug: ['debug'].includes(props.type),
-      stopDebug: ['debug'].includes(props.type),
-      breakPointStep: ['debug'].includes(props.type),
-      singleStep: ['debug'].includes(props.type),
-      format: ['sql'].includes(props.type),
-    };
-  });
 
   const handleExecute = () => {
     emit('execute');
@@ -145,10 +78,101 @@
   const handleSingleStep = () => {
     emit('singleStep');
   };
+  const handleStepInto = () => {
+    emit('stepIn');
+  };
+  const handleStepOut = () => {
+    emit('stepOut');
+  };
 
   const handleFormat = () => {
     emit('format');
   };
+
+  const displayButton = computed(() => {
+    return {
+      execute: {
+        name: t('functionBar.execute'),
+        show: ['sql', 'debug'].includes(props.type),
+        enabled: props.isGlobalEnable && props.status.execute,
+        on: handleExecute,
+        icon: 'run',
+        disabledIcon: 'run-disabled',
+      },
+      stopRun: {
+        name: t('functionBar.stopRun'),
+        show: ['sql'].includes(props.type),
+        enabled: props.isGlobalEnable && props.status.stopRun,
+        on: handleStop,
+        icon: 'pause',
+        disabledIcon: 'pause-disabled',
+      },
+      clear: {
+        name: t('functionBar.clear'),
+        show: ['sql'].includes(props.type),
+        enabled: props.status.clear,
+        on: handleClear,
+        icon: 'delete',
+        disabledIcon: 'delete-disabled',
+      },
+      startDebug: {
+        name: t('functionBar.startDebug'),
+        show: ['debug'].includes(props.type),
+        enabled: props.isGlobalEnable && props.status.startDebug,
+        on: handleStartDebug,
+        icon: 'debugopen',
+        disabledIcon: 'debugopen-disabled',
+      },
+      stopDebug: {
+        name: t('functionBar.stopDebug'),
+        show: ['debug'].includes(props.type),
+        enabled: props.isGlobalEnable && props.status.stopDebug,
+        on: handleStopDebug,
+        icon: 'debugclose',
+        disabledIcon: 'debugclose-disabled',
+      },
+      breakPointStep: {
+        name: t('functionBar.breakPointStep'),
+        show: ['debug', 'debugChild'].includes(props.type),
+        enabled: props.isGlobalEnable && props.status.breakPointStep,
+        on: handleBreakPointStep,
+        icon: 'debugstep',
+        disabledIcon: 'debugstep-disabled',
+      },
+      singleStep: {
+        name: t('functionBar.singleStep'),
+        show: ['debug', 'debugChild'].includes(props.type),
+        enabled: props.isGlobalEnable && props.status.singleStep,
+        on: handleSingleStep,
+        icon: 'debugsinglestep',
+        disabledIcon: 'debugsinglestep-disabled',
+      },
+      stepIn: {
+        name: t('functionBar.stepIn'),
+        show: ['debug', 'debugChild'].includes(props.type),
+        enabled: props.isGlobalEnable && props.status.stepIn,
+        on: handleStepInto,
+        icon: 'debugstepinto',
+        disabledIcon: 'debugstepinto-disabled',
+      },
+      stepOut: {
+        name: t('functionBar.stepOut'),
+        show: ['debug', 'debugChild'].includes(props.type),
+        enabled: props.isGlobalEnable && props.status.stepOut,
+        on: handleStepOut,
+        icon: 'debugstepout',
+        disabledIcon: 'debugstepout-disabled',
+      },
+      format: {
+        name: t('functionBar.format'),
+        show: ['sql'].includes(props.type),
+        enabled: !props.editorReadOnly,
+        on: handleFormat,
+        icon: 'formatter',
+        disabledIcon: 'formatter-disabled',
+      },
+    };
+  });
 </script>
 
 <style lang="scss" scoped>
@@ -176,7 +200,6 @@
       }
       &:hover {
         .funcion-name {
-          // background: #d8e5f3;
           background: var(--el-fill-color-light);
         }
       }

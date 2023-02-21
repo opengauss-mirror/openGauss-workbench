@@ -21,6 +21,7 @@
     connectionName: '',
     synonymName: '',
     webUser: UserStore.userId,
+    uuid: '',
   });
   const loading = ref(false);
 
@@ -41,10 +42,11 @@
       });
   };
   onMounted(() => {
-    const { connectInfoName, synonymName } = route.query;
+    const { connectInfoName, synonymName, uuid } = route.query;
     Object.assign(commonParams, {
       connectionName: connectInfoName,
       synonymName,
+      uuid,
     });
     getData();
   });

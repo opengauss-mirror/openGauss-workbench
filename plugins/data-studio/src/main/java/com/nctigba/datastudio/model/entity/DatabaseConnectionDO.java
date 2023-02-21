@@ -9,6 +9,7 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @Data
 public class DatabaseConnectionDO {
+    private String connectionid;
 
     private String id;
 

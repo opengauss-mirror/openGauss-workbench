@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Data
 public class DatabaseCreateViewDTO {
+    private String uuid;
     private String webUser;
     private String connectionName;
     private String viewName;

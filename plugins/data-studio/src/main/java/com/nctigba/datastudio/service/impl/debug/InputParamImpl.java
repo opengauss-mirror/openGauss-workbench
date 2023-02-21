@@ -1,9 +1,7 @@
 package com.nctigba.datastudio.service.impl.debug;
 
 import com.alibaba.fastjson.JSON;
-import com.nctigba.datastudio.base.SpringApplicationContext;
 import com.nctigba.datastudio.base.WebSocketServer;
-import com.nctigba.datastudio.config.ConnectionConfig;
 import com.nctigba.datastudio.model.PublicParamReq;
 import com.nctigba.datastudio.model.entity.OperateStatusDO;
 import com.nctigba.datastudio.service.OperationInterface;
@@ -56,9 +54,6 @@ public class InputParamImpl implements OperationInterface {
 
     @Autowired
     private AddBreakPointImpl addBreakPoint;
-
-    @Autowired
-    private BreakPointStepImpl breakPointStep;
 
     @Override
     public void operate(WebSocketServer webSocketServer, Object obj) throws Exception {
@@ -127,7 +122,7 @@ public class InputParamImpl implements OperationInterface {
         }
 
         asyncHelper.task(webSocketServer, paramReq);
-        Connection conn = webSocketServer.createConnection(paramReq.getConnectionName(), paramReq.getWebUser());
+        Connection conn = webSocketServer.createConnection(paramReq.getUuid(), windowName);
         Statement statNew = conn.createStatement();
         webSocketServer.setParamMap(windowName, OID, oid);
         webSocketServer.setParamMap(windowName, CONNECTION, conn);
@@ -147,10 +142,10 @@ public class InputParamImpl implements OperationInterface {
 
         ResultSet variableResult = statNew.executeQuery(INFO_LOCALS_SQL);
         Map<String, Object> variableMap = DebugUtils.parseResultSet(variableResult);
-        webSocketServer.sendMessage(windowName, variable, SUCCESS, variableMap);
+        webSocketServer.sendMessage(windowName, variable, SUCCESS, DebugUtils.addMapParam(variableMap, paramReq.getSql()));
     }
 
-    private List<Integer> getAvailableBreakPoints(String windowName, PublicParamReq paramReq, WebSocketServer webSocketServer) {
+    public List<Integer> getAvailableBreakPoints(String windowName, PublicParamReq paramReq, WebSocketServer webSocketServer) {
         List<Integer> list = new ArrayList<>();
         String sql = paramReq.getSql();
         List<Integer> breakPoints = paramReq.getBreakPoints();

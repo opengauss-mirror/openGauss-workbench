@@ -46,6 +46,7 @@
     connName: '',
     tableName: '',
     schema: '',
+    uuid: '',
   });
   const dataMap = reactive({
     DDL: {
@@ -128,12 +129,13 @@
   };
 
   onMounted(() => {
-    const { connectInfoName: connName, tableName, schema } = route.query;
+    const { connectInfoName: connName, tableName, schema, uuid } = route.query;
     Object.assign(commonParams, {
       webUser: UserStore.userId,
       connName,
       tableName,
       schema,
+      uuid,
     });
     getData(currentTabName.value);
   });

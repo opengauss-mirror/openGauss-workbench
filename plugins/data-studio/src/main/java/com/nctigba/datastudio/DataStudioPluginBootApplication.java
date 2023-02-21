@@ -12,21 +12,21 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.annotation.EnableAsync;
 
-@Profile({ "dev", "gba" })
+@Profile({"dev", "gba"})
 @SpringBootApplication(exclude = {
-		HibernateJpaAutoConfiguration.class,
-		RedisAutoConfiguration.class,
-		RedisRepositoriesAutoConfiguration.class })
+        HibernateJpaAutoConfiguration.class,
+        RedisAutoConfiguration.class,
+        RedisRepositoriesAutoConfiguration.class})
 @EnableAsync
 public class DataStudioPluginBootApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(DataStudioPluginBootApplication.class, args);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(DataStudioPluginBootApplication.class, args);
+    }
 
-	@Bean
-	@Primary
-	public MainApplicationContext test() {
-		return new EmptyMainApplicationContext();
-	}
+    @Bean
+    @Primary
+    public MainApplicationContext test() {
+        return new EmptyMainApplicationContext();
+    }
 }

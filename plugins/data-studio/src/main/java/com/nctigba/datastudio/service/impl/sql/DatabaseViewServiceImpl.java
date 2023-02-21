@@ -87,7 +87,7 @@ public class DatabaseViewServiceImpl implements DatabaseViewService {
         log.info("returnViewDDLData request is: " + request);
         try {
             String selectsql = SELECT_VIEW_DDL_SQL + request.getSchema() + SELECT_VIEWNAME_DDL_WHERE_SQL + request.getViewName() + SELECT_VIEW_DDL_WHERE_SQL;
-            Connection connection = connectionConfig.connectDatabase(request.getConnectionName(), request.getWebUser());
+            Connection connection = connectionConfig.connectDatabase(request.getUuid());
             Statement statement = connection.createStatement();
             ResultSet resultSet = statement.executeQuery(selectsql);
             log.info("returnViewDDLData sql is: " + selectsql);
@@ -105,7 +105,7 @@ public class DatabaseViewServiceImpl implements DatabaseViewService {
         log.info("createView request is: " + request);
         try {
             String ddl = splicingViewDDL(request);
-            Connection connection = connectionConfig.connectDatabase(request.getConnectionName(), request.getWebUser());
+            Connection connection = connectionConfig.connectDatabase(request.getUuid());
             Statement statement = connection.createStatement();
             statement.execute(ddl);
             log.info("createView response is: " + ddl);
@@ -120,7 +120,7 @@ public class DatabaseViewServiceImpl implements DatabaseViewService {
         log.info("dropView request is: " + request);
         try {
             ResultSet resultSet = returnViewDDLData(request);
-            Connection connection = connectionConfig.connectDatabase(request.getConnectionName(), request.getWebUser());
+            Connection connection = connectionConfig.connectDatabase(request.getUuid());
             Statement statement = connection.createStatement();
             while (resultSet.next()) {
                 if (resultSet.getString("relkind").equals("m")) {
@@ -144,7 +144,7 @@ public class DatabaseViewServiceImpl implements DatabaseViewService {
         log.info("selectView request is: " + request);
         try {
             String ddl = TABLE_DATA_SQL + request.getSchema() + POINT + request.getViewName() + LIMIT_SQL;
-            Connection connection = connectionConfig.connectDatabase(request.getConnectionName(), request.getWebUser());
+            Connection connection = connectionConfig.connectDatabase(request.getUuid());
             Statement statement = connection.createStatement();
             ResultSet resultSet = statement.executeQuery(ddl);
             Map<String, Object> resultMap = DebugUtils.parseResultSet(resultSet);

@@ -10,7 +10,7 @@
   import { ref, watch } from 'vue';
   import { useAppStore } from '@/store/modules/app';
   import EventBus, { EventTypeName } from '@/utils/event-bus';
-  import { connectMenuPersist } from '@/config';
+  import { connectListPersist } from '@/config';
 
   const route = useRoute();
   const router = useRouter();
@@ -21,7 +21,7 @@
     (route, oldRoute) => {
       setTimeout(() => {
         if (route.name == 'home' && route?.fullPath != oldRoute?.fullPath) {
-          const isDSConnect = connectMenuPersist.storage.getItem(connectMenuPersist.key);
+          const isDSConnect = connectListPersist.storage.getItem(connectListPersist.key);
           if (route.fullPath == '/home') {
             showHome.value = false;
             if (isDSConnect) {
@@ -29,6 +29,8 @@
                 path: '/home',
                 query: {
                   connectInfoName: AppStore.currentConnectInfo.name,
+                  uuid: AppStore.lastestConnectDatabase.uuid,
+                  dbname: AppStore.lastestConnectDatabase.name,
                   time: Date.now(),
                 },
               });

@@ -12,7 +12,8 @@ declare module 'axios' {
 const t = i18n.global.t;
 let showExpired = false;
 const service = axios.create({
-  baseURL: import.meta.env.MODE === 'production' ? '/plugins/webds-plugin' : '/',
+  baseURL:
+    import.meta.env.MODE === 'production' ? `/plugins/${import.meta.env.VITE_PLUGIN_NAME}` : '/',
   timeout: 3000000,
   withCredentials: true,
 });
@@ -43,6 +44,7 @@ service.interceptors.response.use(
         }).then(() => {
           if (parent !== self) {
             localStorage.removeItem('opengauss-token');
+            sessionStorage.clear();
             parent.location.reload();
           }
           return Promise.reject(response.data.msg);

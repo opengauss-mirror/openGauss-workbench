@@ -12,6 +12,7 @@ public enum MessageEnum {
     paramWindow,
     view,
     refresh,
-    variableHighLight,
+    newWindow,
+    closeWindow,
     other
 }
