@@ -18,10 +18,10 @@ import org.springframework.context.event.ContextRefreshedEvent;
  * @date: 2022/12/4 15:05
  */
 public class PluginListener implements ApplicationListener<ApplicationEvent> {
+	public static final String pluginId = "observability-instance";
 
     @Override
     public void onApplicationEvent(ApplicationEvent event) {
-        String pluginId = "observability-instance";
         if (event instanceof ApplicationEnvironmentPreparedEvent) {
         } else if (event instanceof ApplicationPreparedEvent) {
         } else if (event instanceof ContextRefreshedEvent) {

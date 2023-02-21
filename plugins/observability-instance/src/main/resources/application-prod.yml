@@ -1,3 +1,0 @@
-prometheus:
-  server:
-    url: http://119.3.170.242:9090

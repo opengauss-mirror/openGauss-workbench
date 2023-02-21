@@ -74,6 +74,7 @@ const loadRateData = (data: any[]) => {
     }
     ioRateData.value = data.map(d => {
         const count = d.data.reduce((a: number, s: string) => s != null ? a + Number.parseFloat(s) : a, 0)
+        console.log("count", count);
         return {
             name: `${t(`metric.${d.name}`)}${t('dashboard.rate')}`,
             cur: `${d.data[Math.max(0, d.data.length - 1)]}KB/s`,
@@ -91,6 +92,7 @@ const loadData = (data: any[]) => {
     }
     ioData.value = data.map(d => {
         const count = d.data.reduce((a: number, s: string) => s != null ? a + Number.parseFloat(s) : a, 0)
+        console.log("count", count);
         return {
             name: `${t(`metric.${d.name}`)}${t('dashboard.capacity')}`,
             cur: `${d.data[Math.max(0, d.data.length - 1)]}MB/s`,

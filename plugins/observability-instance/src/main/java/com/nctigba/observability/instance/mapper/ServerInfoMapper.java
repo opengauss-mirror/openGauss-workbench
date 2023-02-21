@@ -14,5 +14,4 @@ import com.nctigba.observability.instance.entity.ServerInfoEntity;
  */
 @Mapper
 public interface ServerInfoMapper extends BaseMapper<ServerInfoEntity> {
-
 }
