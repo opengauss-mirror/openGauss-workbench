@@ -55,7 +55,7 @@
         <a-textarea v-model="data.formData.remark" :placeholder="$t('components.AddHost.5mphy3snyxc0')"></a-textarea>
       </a-form-item>
     </a-form>
-  </a-modal>
+</a-modal>
 </template>
 
 <script setup lang="ts">

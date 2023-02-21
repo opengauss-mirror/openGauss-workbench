@@ -3,6 +3,8 @@ import type { AxiosRequestConfig, AxiosResponse } from 'axios'
 import { Message, Modal, Notification } from '@arco-design/web-vue'
 import { getToken } from '@/utils/auth'
 import errorCode from '@/utils/errorCode'
+import WujieVue from 'wujie-vue3'
+const { bus } = WujieVue
 
 // need to update url path
 const whiteNameList = ['host/listAll', 'host/ping', 'hostUser/listAll/', 'hostUser/listAllWithoutRoot/',
@@ -64,6 +66,7 @@ axios.interceptors.response.use(
     if (code === 401) {
       if (!isTimeout) {
         isTimeout = true
+        bus.$emit('opengauss-login-expired')
       }
       return Promise.reject('Invalid session, or session expired, please log in again.')
     } else if (code === 500) {

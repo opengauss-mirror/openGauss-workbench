@@ -102,7 +102,7 @@
                         <div class="label-color mr">{{ $t('operation.DailyOps.5mplp1xc1t80') }}</div>
                         <div class="label-color">{{
                           clusterData.clusterNodes[0].azAddress ? clusterData.clusterNodes[0].azAddress :
-                            '--'
+                          '--'
                         }}</div>
                       </div>
                       <a-dropdown @select="handleHostOper($event, index, 0)">
@@ -135,8 +135,8 @@
                               clusterData.clusterNodes[0].kernel ? clusterData.clusterNodes[0].kernel : '-'
                             }}{{ $t('operation.DailyOps.else1') }}{{
   clusterData.clusterNodes[0].memorySize ?
-    clusterData.clusterNodes[0].memorySize :
-    '-'
+  clusterData.clusterNodes[0].memorySize :
+  '-'
 }}G</div>
                           </div>
                         </div>
@@ -145,14 +145,14 @@
                             <div class="label-color mr-s">CPU:</div>
                             <div class="value-color">{{
                               clusterData.clusterNodes[0].cpu ?
-                                clusterData.clusterNodes[0].cpu : '--'
+                              clusterData.clusterNodes[0].cpu : '--'
                             }}%</div>
                           </div>
                           <div class="flex-row mb">
                             <div class="label-color mr-s">{{ $t('operation.DailyOps.5mplp1xc32g0') }}</div>
                             <div class="value-color">{{
                               clusterData.clusterNodes[0].memory ?
-                                clusterData.clusterNodes[0].memory : '--'
+                              clusterData.clusterNodes[0].memory : '--'
                             }}%
                             </div>
                           </div>
@@ -199,7 +199,7 @@
                           <div class="label-color mr-s">{{ $t('operation.DailyOps.5mplp1xc3740') }}</div>
                           <div class="value-color mr-s">{{
                             clusterData.clusterNodes[0].session ?
-                              clusterData.clusterNodes[0].session : '--'
+                            clusterData.clusterNodes[0].session : '--'
                           }}</div>
                           <div class="label-color">{{ $t('operation.DailyOps.else3') }}</div>
                         </div>
@@ -207,7 +207,7 @@
                           <div class="label-color mr-s">{{ $t('operation.DailyOps.5mplp1xc3bw0') }}</div>
                           <div class="value-color mr-s">{{
                             clusterData.clusterNodes[0].connectNum ?
-                              clusterData.clusterNodes[0].connectNum : '--'
+                            clusterData.clusterNodes[0].connectNum : '--'
                           }}</div>
                           <div class="label-color">{{ $t('operation.DailyOps.else3') }}</div>
                         </div>
@@ -217,7 +217,7 @@
                           <div class="label-color mr-s">{{ $t('operation.DailyOps.5mplp1xc3hs0') }}</div>
                           <div class="value-color mr-s">{{
                             clusterData.clusterNodes[0].lock ?
-                              clusterData.clusterNodes[0].lock : '--'
+                            clusterData.clusterNodes[0].lock : '--'
                           }}</div>
                           <div class="label-color">{{ $t('operation.DailyOps.else3') }}</div>
                         </div>
@@ -272,7 +272,7 @@
                             $t('operation.DailyOps.else1')
                           }}{{
   instance.memorySize ?
-    instance.memorySize : '-'
+  instance.memorySize : '-'
 }}G</div>
                         </div>
                       </div>
@@ -514,6 +514,7 @@ const openHostWebSocket = (clusterData: KeyValue, nodeData: KeyValue, clusterInd
   websocket.onmessage((messageData: any) => {
     if (!data.clusterList[clusterIndex].loading) {
       const eventData = JSON.parse(messageData)
+      console.log('show message data', data.clusterList[clusterIndex].clusterId, data.clusterList[clusterIndex].clusterNodes[index].privateIp, eventData)
       data.clusterList[clusterIndex].clusterNodes[index].nodeState = eventData.state
       // reset instance nodeState and nodeRole
       setInstanceState(data.clusterList[clusterIndex], data.clusterList[clusterIndex].clusterNodes[index])
@@ -1053,9 +1054,8 @@ const enterpriseClusterStateColor = (stateObj: KeyValue) => {
     case 'Normal':
       return 'green'
     case 'Unavailable':
-      return 'red'
     case 'Degraded':
-      return 'yellow'
+      return 'red'
     default:
       return 'gray'
   }

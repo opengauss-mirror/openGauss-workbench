@@ -460,6 +460,8 @@
             "else2": "安装路径",
             "else3": "端口",
             "else4": "XLOG目录",
+            "else5": "CM端口号",
+            "else6": "CM数据路径",
             "5mpmb9e6puk0": "集群信息",
             "5mpmb9e6qmg0": "节点ip",
             "5mpmb9e6qsc0": "主机IP",
@@ -729,6 +731,7 @@
         },
         "AddPackageDlg": {
             "else1": "CPU架构",
+            "else2": "请填写正确的地址",
             "5myq6nnea2w0": "所属系统",
             "5myq6nneap40": "请选择所属系统",
             "5myq6nneaw40": "请选择CPU架构",
