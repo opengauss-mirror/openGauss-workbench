@@ -98,10 +98,10 @@ public class OperatorConditionBuilderServiceImpl extends BaseBuilderServiceImpl 
                 return "notlike("+field+"," +value+ ")";
 
             case "isNull":
-                return field+" = ''";
+                return field+" is NULL";
 
             case "notNull":
-                return field+" <> ''";
+                return field+" is NOT NULL";
 
             default:
                 return field + " " + condition + value ;

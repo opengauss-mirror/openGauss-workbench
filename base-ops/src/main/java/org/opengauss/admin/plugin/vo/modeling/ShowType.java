@@ -24,7 +24,7 @@ public class ShowType {
     private int key;
     private String dimension;
     private String field;
-    private Integer percentage;
+    private Boolean percentage;
     private String dateField;
     private Integer particle;
     private Integer compareWay;
@@ -50,10 +50,10 @@ public class ShowType {
         return field;
     }
 
-    public void setPercentage(Integer percentage) {
+    public void setPercentage(Boolean percentage) {
         this.percentage = percentage;
     }
-    public Integer getPercentage() {
+    public Boolean getPercentage() {
         return percentage;
     }
 

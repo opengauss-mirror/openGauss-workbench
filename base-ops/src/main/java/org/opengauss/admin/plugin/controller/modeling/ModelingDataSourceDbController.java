@@ -59,6 +59,7 @@ public class ModelingDataSourceDbController extends BaseController {
                 if (Objects.equals(node.getNodeId(), clusterNodeId)) {
                     String querySchemaSql = "select * from information_schema.schemata where catalog_name = '" + dbName + "';";
                     try {
+                        node.setDbName(dbName);
                         List<Map<String, Object>> resultSet = modelingDataSourceDbService.executeWithClusterNode(node,querySchemaSql,null);
                         resultSet.forEach(ret->{
                             schemaList.add((String) ret.get("schema_name"));
