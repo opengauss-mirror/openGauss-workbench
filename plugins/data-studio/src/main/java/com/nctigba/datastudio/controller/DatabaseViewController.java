@@ -27,7 +27,7 @@ public class DatabaseViewController {
 
 
     @ApiOperation(value = "CREATE VIEW DDL")
-    @PostMapping(value = "/views/action",params ="action=createViewDdl" ,produces = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(value = "/views/action", params = "action=createViewDdl", produces = MediaType.APPLICATION_JSON_VALUE)
     public String createViewDDL(@RequestBody DatabaseCreateViewDTO request) throws Exception {
         return databaseViewService.createViewDDL(request);
     }

@@ -31,7 +31,7 @@ server.compression:
   mime-types: application/javascript,text/css,application/json,application/xml,text/html,text/xml,text/plain
 mybatis-plus:
   # 搜索指定包别名
-  typeAliasesPackage: com.nctigba.observability.entity
+  typeAliasesPackage: com.nctigba.observability.instance.entity
   # 配置mapper的扫描，找到所有的mapper.xml映射文件
   mapperLocations: classpath*:mapper/*.xml
   # 加载全局的配置文件

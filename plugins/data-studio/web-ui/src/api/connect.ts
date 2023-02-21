@@ -49,3 +49,10 @@ export const getDataLinkList = async (webUser: string) => {
     method: 'get',
   });
 };
+
+export const closeConnections = async (uuid: string) => {
+  return request({
+    url: `/dataStudio/web/v1/connections/close/${uuid}`,
+    method: 'delete',
+  });
+};

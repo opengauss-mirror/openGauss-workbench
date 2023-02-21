@@ -1,8 +1,9 @@
 <template>
   <a-modal :mask-closable="false" :esc-to-close="false" :visible="data.show" :title="data.title"
-    :ok-loading="data.loading" :modal-style="{ width: '450px', height: '550px' }" @ok="handleOk" @cancel="close"
+    :ok-loading="data.loading" :modal-style="{ width: '650px' }" @ok="handleOk" @cancel="close"
     :okText="$t('wdr.GenerateWdrDlg.5mpm0eufx3g0')">
-    <a-form :model="data.formData" ref="formRef" :label-col="{ style: { width: '100px' } }" :rules="data.rules">
+    <a-form :model="data.formData" ref="formRef" :label-col="{ style: { width: '100px' } }" :rules="data.rules"
+      auto-label-width>
       <a-form-item field="clusterId" :label="$t('wdr.GenerateWdrDlg.5mpm0eufxww0')" validate-trigger="change"
         :rules="[{ required: true, message: t('wdr.GenerateWdrDlg.5mpm0eufy340') }]">
         <a-select v-model="data.formData.clusterId" :placeholder="$t('wdr.GenerateWdrDlg.5mpm0eufy340')"
@@ -219,6 +220,4 @@ defineExpose({
 
 </script>
 
-<style lang="less" scoped>
-
-</style>
+<style lang="less" scoped></style>

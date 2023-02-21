@@ -17,6 +17,42 @@ export default {
         confirm: '确定',
         edit: '编辑',
         operate: '操作',
+        view: '查看',
+        download: '下载',
+        reset: '重置',
+        back: '返回'
+    },
+    install: {
+        install: '一键部署',
+        installAgent: '安装采集器',
+        installProxy: '安装代理',
+        installedAgent: '已安装采集器',
+        installedProxy: '已安装代理',
+        machine: '物理机',
+        rootPWD: 'Root用户密码',
+        proxyPort: '代理端口',
+        collectInstance: '采集实例',
+        collectProxy: '采集代理',
+        proxyRules: [
+            '请选择物理机',
+            '请输入Root用户密码',
+            '请输入代理端口号'
+        ],
+        collectorRules: [
+            '请选择实例',
+            '请输入Root用户密码'
+        ],
+    },
+    configParam: {
+        tabTitle: '系统与数据库配置',
+        systemConfig: '系统配置',
+        databaseConfig: '数据库配置',
+        paramDesc: '参数说明',
+        paramTuning: '参数调优',
+        suggestValue: '推荐值：',
+        suggestReason: '推荐原因：',
+        rootPWDTitle: '请输入Root用户密码',
+        rootPWD: 'Root用户密码',
     },
     dashboard: {
         name: '实例概览',
@@ -35,6 +71,39 @@ export default {
         ],
         instance: '实例监控',
         load: '系统负载',
+        systemConfig: {
+            tabName: '系统配置',
+            osTabName: '系统参数',
+            dbTabName: '数据库参数',
+        },
+        wdrReports: {
+            tabName: 'WDR报告',
+            clusterName: '集群名称',
+            hostId: '主机IP',
+            reportRange: '报告范围',
+            reportRangeSelect: ['集群', '节点'],
+            reportType: '报告类型',
+            reportTypeSelect: ['明细', '汇总', '全部'],
+            buildTime: '生产时间',
+            snapshotManage: '快照管理',
+            buildWDR: '生成WDR',
+            list: {
+                buildTime: '报告生成时间',
+                reportName: '报告名称'
+            },
+            snapshotManageDialog: {
+                dialogName: '快照管理',
+                createSnapshot: '创建快照',
+                snapshotID: '快照ID',
+                captureTime: '捕获时间'
+            },
+            buildWDRDialog: {
+                startSnapshot: '开始快照',
+                endSnapshot: '结束快照',
+                build: '生成',
+                buildSuccess: 'WDR生成成功'
+            }
+        },
         session: '会话管理',
         slow: '慢SQL',
         top: 'TOPSQL',

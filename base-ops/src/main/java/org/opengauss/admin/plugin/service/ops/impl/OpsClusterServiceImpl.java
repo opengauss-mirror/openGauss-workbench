@@ -400,6 +400,9 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         WsSession wsSession = wsConnectorManager.getSession(installBody.getBusinessId()).orElseThrow(() -> new OpsException("No output websocket session found"));
         wsUtil.sendText(wsSession, "START");
         installBody.setQuickInstall(Boolean.TRUE);
+        if (StrUtil.isEmpty(installBody.getQuickInstallResourceUrl())){
+            throw new OpsException("installation package path cannot be empty");
+        }
         List<MinimalistInstallNodeConfig> nodeConfigList = installBody.getInstallContext().getMinimalistInstallConfig().getNodeConfigList();
         if (CollUtil.isNotEmpty(nodeConfigList)){
             MinimalistInstallNodeConfig minimalistInstallNodeConfig = nodeConfigList.get(0);
@@ -420,9 +423,8 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
     private void downloadInstallPackage(InstallBody installBody) {
         String installPackagePath = installBody.getInstallContext().getInstallPackagePath();
 
-        OpenGaussSupportOSEnum os = installBody.getInstallContext().getOs();
-        String fileName = os.getInstallPackageName();
-        String resourceUrl = os.getInstallPackageResourceUrl();
+        String resourceUrl = installBody.getQuickInstallResourceUrl();
+        String fileName = resourceUrl.substring(resourceUrl.lastIndexOf("/")+1);
 
         WsSession wsSession = wsConnectorManager.getSession(installBody.getBusinessId()).orElseThrow(() -> new OpsException("No output websocket session found"));
         downloadUtil.download(resourceUrl, installPackagePath, fileName, wsSession);
@@ -2317,6 +2319,9 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                         if (s1.length == 9) {
                             nodeState.put(s1[1], s1[8].trim());
                             nodeRole.put(s1[1],s1[6].trim());
+                        }else if (s1.length == 8){
+                            nodeState.put(s1[1],s1[7].trim());
+                            nodeRole.put(s1[1],s1[5].trim());
                         }
                     }
                 }

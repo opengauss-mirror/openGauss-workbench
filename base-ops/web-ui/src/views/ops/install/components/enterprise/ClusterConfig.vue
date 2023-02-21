@@ -9,9 +9,6 @@
           <a-form-item field="clusterId" :label="$t('enterprise.ClusterConfig.5mpm3ku3hcg0')" validate-trigger="blur">
             <a-input v-model="data.form.clusterId" :placeholder="$t('enterprise.ClusterConfig.5mpm3ku3hik0')" />
           </a-form-item>
-          <a-form-item field="clusterName" :label="$t('enterprise.ClusterConfig.5mpm3ku3hn40')" validate-trigger="blur">
-            <a-input v-model="data.form.clusterName" :placeholder="$t('enterprise.ClusterConfig.5mpm3ku3hr00')" />
-          </a-form-item>
           <a-form-item field="installPath" :label="$t('enterprise.ClusterConfig.5mpm3ku3hv40')" validate-trigger="blur">
             <a-input v-model="data.form.installPath" :placeholder="$t('enterprise.ClusterConfig.5mpm3ku3i340')" />
           </a-form-item>
@@ -121,23 +118,6 @@ const initData = () => {
                 resolve(false)
               }
             })
-          })
-        }
-      }
-    ],
-    clusterName: [
-      { required: true, 'validate-trigger': 'blur', message: t('enterprise.ClusterConfig.5mpm3ku3hr00') },
-      {
-        validator: (value: any, cb: any) => {
-          return new Promise(resolve => {
-            const reg = /^[0-9a-zA-Z_-]+$/
-            const re = new RegExp(reg)
-            if (re.test(value)) {
-              resolve(true)
-            } else {
-              cb(t('enterprise.ClusterConfig.else1'))
-              resolve(false)
-            }
           })
         }
       }
@@ -263,6 +243,17 @@ const isInstallCMChange = (val: boolean) => {
 
 const formRef = ref<FormInstance>()
 
+const saveStore = () => {
+  const param = JSON.parse(JSON.stringify(data.form))
+  installStore.setInstallContext({
+    clusterId: param.clusterId,
+    clusterName: param.clusterName,
+    deployType: DeployTypeEnum.CLUSTER
+  })
+  param.nodeConfigList = []
+  installStore.setEnterpriseConfig(param as EnterpriseInstallConfig)
+}
+
 const beforeConfirm = async (): Promise<boolean> => {
   const validRes = await formRef.value?.validate()
   if (!validRes) {
@@ -272,7 +263,13 @@ const beforeConfirm = async (): Promise<boolean> => {
       clusterName: param.clusterName,
       deployType: DeployTypeEnum.CLUSTER
     })
-    param.nodeConfigList = []
+    if (Object.keys(installStore.getEnterpriseConfig).length) {
+      if (param.isInstallCM !== installStore.getEnterpriseConfig.isInstallCM) {
+        param.nodeConfigList = []
+      }
+    } else {
+      param.nodeConfigList = []
+    }
     installStore.setEnterpriseConfig(param as EnterpriseInstallConfig)
     return true
   } else {
@@ -281,7 +278,8 @@ const beforeConfirm = async (): Promise<boolean> => {
 }
 
 defineExpose({
-  beforeConfirm
+  beforeConfirm,
+  saveStore
 })
 
 const installType = computed(() => installStore.getInstallConfig.installType)

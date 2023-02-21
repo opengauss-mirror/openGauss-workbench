@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import static com.nctigba.datastudio.constants.SqlConstants.CONFIGURE_TIME;
 import static com.nctigba.datastudio.constants.SqlConstants.GET_DATABASELINK_COUNT_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.GET_DATA_Connection_NOT_PASSWORD_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.GET_DATA_Connection_SQL;
@@ -46,7 +47,7 @@ public class DatabaseConnectionDAO implements ApplicationRunner {
 
     public DatabaseConnectionUrlDO getByName(String name, String webUser) {
         DatabaseConnectionUrlDO databaseConnectionUrlDO = new DatabaseConnectionUrlDO();
-        jdbcTemplate.execute("create table if not exists DATABASELINK(type varchar(20),name varchar(20),driver varchar(100),url varchar(200),username varchar(40),userpassword varchar(60),webuser varchar(40));");
+        //jdbcTemplate.execute("create table if not exists DATABASELINK(type varchar(20),name varchar(20),driver varchar(100),url varchar(200),username varchar(40),userpassword varchar(60),webuser varchar(40));");
         Map<String, Object> count = jdbcTemplate.queryForMap(GET_DATABASELINK_COUNT_SQL + " name ='" + name + "' and webUser = '" + webUser + "'");
         if ((int) count.get("count") == 0) {
             return null;
@@ -56,7 +57,7 @@ public class DatabaseConnectionDAO implements ApplicationRunner {
             databaseConnectionUrlDO.setType((String) data.get("type"));
             databaseConnectionUrlDO.setName((String) data.get("name"));
             databaseConnectionUrlDO.setDriver((String) data.get("driver"));
-            databaseConnectionUrlDO.setUrl(GET_URL_JDBC + data.get("ip") + ":" + data.get("port") + "/" + data.get("dataName") + "?connectTimeout=30&socketTimeout=0");
+            databaseConnectionUrlDO.setUrl(GET_URL_JDBC + data.get("ip") + ":" + data.get("port") + "/" + data.get("dataName") + CONFIGURE_TIME);
             databaseConnectionUrlDO.setUserName((String) data.get("username"));
             databaseConnectionUrlDO.setPassword((String) data.get("userpassword"));
             databaseConnectionUrlDO.setWebUser((String) data.get("webuser"));
@@ -90,11 +91,32 @@ public class DatabaseConnectionDAO implements ApplicationRunner {
             databaseConnectionUrlDO.setType((String) data.get("type"));
             databaseConnectionUrlDO.setName((String) data.get("name"));
             databaseConnectionUrlDO.setDriver((String) data.get("driver"));
-            databaseConnectionUrlDO.setUrl(GET_URL_JDBC + data.get("ip") + ":" + data.get("port") + "/" + data.get("dataName") + "?connectTimeout=30&socketTimeout=0");
+            databaseConnectionUrlDO.setUrl(GET_URL_JDBC + data.get("ip") + ":" + data.get("port") + "/" + data.get("dataName") + CONFIGURE_TIME);
             databaseConnectionUrlDO.setUserName((String) data.get("username"));
             databaseConnectionUrlDO.setPassword((String) data.get("userpassword"));
             databaseConnectionUrlDO.setWebUser((String) data.get("webuser"));
             return databaseConnectionUrlDO;
+
+        }
+    }
+
+    public DatabaseConnectionDO getByIdDatabase(Integer id, String webUser) {
+        DatabaseConnectionDO databaseConnectionDO = new DatabaseConnectionDO();
+        Map<String, Object> count = jdbcTemplate.queryForMap(GET_DATABASELINK_COUNT_SQL + " id =" + id + "");
+        if ((int) count.get("count") == 0) {
+            return null;
+        } else {
+            Map<String, Object> data = jdbcTemplate.queryForMap(GET_DATA_Connection_SQL + " id =" + id + " and webUser = '" + webUser + "';");
+            databaseConnectionDO.setId(String.valueOf( data.get("id")));
+            databaseConnectionDO.setType((String) data.get("type"));
+            databaseConnectionDO.setName((String) data.get("name"));
+            databaseConnectionDO.setDriver((String) data.get("driver"));
+            databaseConnectionDO.setIp((String) data.get("ip"));
+            databaseConnectionDO.setPort((String) data.get("port"));
+            databaseConnectionDO.setUserName((String) data.get("username"));
+            databaseConnectionDO.setPassword((String) data.get("userpassword"));
+            databaseConnectionDO.setWebUser((String) data.get("webuser"));
+            return databaseConnectionDO;
 
         }
     }
@@ -106,7 +128,7 @@ public class DatabaseConnectionDAO implements ApplicationRunner {
             return null;
         } else {
             Map<String, Object> data = jdbcTemplate.queryForMap(GET_DATA_Connection_SQL + " id =" + id + " and webUser = '" + webUser + "';");
-            databaseConnectionDO.setId(String.valueOf(data.get("id")));
+            databaseConnectionDO.setId(String.valueOf( data.get("id")));
             databaseConnectionDO.setType((String) data.get("type"));
             databaseConnectionDO.setName((String) data.get("name"));
             databaseConnectionDO.setDriver((String) data.get("driver"));

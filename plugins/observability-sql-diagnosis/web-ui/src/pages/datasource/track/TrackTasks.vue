@@ -98,7 +98,7 @@ type Res =
     | {
           tableData: string[]
           total: number
-          current: number
+          pageNum: number
           records: string[]
       }
     | undefined
@@ -268,9 +268,9 @@ watch(ret, (ret: any[]) => {
 })
 watch(res, (res: Res) => {
     if (res && Object.keys(res).length) {
-        const { total, current } = res
+        const { total } = res
         tableData.value = res.records
-        Object.assign(page, { pageSize: page.pageSize, total, currentPage: current })
+        Object.assign(page, { pageSize: page.pageSize, total })
     } else {
         tableData.value = []
         Object.assign(page, { pageSize: page.pageSize, total: 0, currentPage: 1 })

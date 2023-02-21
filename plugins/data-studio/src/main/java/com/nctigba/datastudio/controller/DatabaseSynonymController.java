@@ -25,7 +25,6 @@ public class DatabaseSynonymController {
     DatabaseSynonymService databaseSynonymService;
 
 
-
     @ApiOperation(value = "CREATE SYNONYM DDL")
     @PostMapping(value = "/synonyms/action", params = "action=createSynonymDdl", produces = MediaType.APPLICATION_JSON_VALUE)
     public String createSequenceDDL(@RequestBody DatabaseCreateSynonymDTO request) throws Exception {

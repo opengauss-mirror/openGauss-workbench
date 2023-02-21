@@ -36,7 +36,7 @@ public class InstallPackageManagerController extends BaseController {
     @PostMapping("/save")
     public AjaxResult save(@RequestBody OpsPackageManagerEntity packageManager){
         packageManager.setCreateTime(new Date());
-        opsPackageManagerService.save(packageManager.populatePackageUrl(installPackageUrlPrefix));
+        opsPackageManagerService.save(packageManager);
         return AjaxResult.success();
     }
 
@@ -50,7 +50,7 @@ public class InstallPackageManagerController extends BaseController {
     public AjaxResult update(@PathVariable("id") String id,@RequestBody OpsPackageManagerEntity packageManager){
         packageManager.setPackageId(id);
         packageManager.setUpdateTime(new Date());
-        opsPackageManagerService.updateById(packageManager.populatePackageUrl(installPackageUrlPrefix));
+        opsPackageManagerService.updateById(packageManager);
         return AjaxResult.success();
     }
 
@@ -66,9 +66,10 @@ public class InstallPackageManagerController extends BaseController {
                 .eq(Objects.nonNull(packageVersion),OpsPackageManagerEntity::getPackageVersion, packageVersion);
 
         if (StrUtil.isNotEmpty(name)){
-            queryWrapper.or().eq(OpsPackageManagerEntity::getOs, name).or()
-                    .eq(OpsPackageManagerEntity::getCpuArch, name).or()
-                    .eq(OpsPackageManagerEntity::getPackageVersionNum, name);
+            queryWrapper.and(orWrapper->orWrapper.or().like(OpsPackageManagerEntity::getOs, name).or()
+                    .like(OpsPackageManagerEntity::getCpuArch, name).or()
+                    .like(OpsPackageManagerEntity::getPackageVersionNum, name));
+
         }
 
         IPage<OpsPackageManagerEntity> page = opsPackageManagerService.page(startPage(),queryWrapper);

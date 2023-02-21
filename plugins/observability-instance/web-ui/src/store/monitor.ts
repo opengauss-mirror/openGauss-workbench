@@ -53,6 +53,16 @@ export const useMonitorStore = defineStore("monitor", {
                 rangeTime: 1,
                 time: null
             },
+            {
+                refreshTime: 30,
+                rangeTime: 1,
+                time: null
+            },
+            {
+                refreshTime: 30,
+                rangeTime: 1,
+                time: null
+            },
         ],
         autoRefresh: false,
         instanceTimeRange: null,

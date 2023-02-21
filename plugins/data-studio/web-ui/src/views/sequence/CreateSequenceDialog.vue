@@ -133,6 +133,7 @@
     tableColumn: '',
     connectionName: '',
     webUser: UserStore.userId,
+    uuid: '',
   });
   const rules = reactive<FormRules>({
     sequenceName: [{ required: true, message: t('sequence.rules.name[0]'), trigger: 'blur' }],
@@ -182,9 +183,10 @@
     if (activeName.value === 'Sql') confirmForm(activeName.value);
   };
   const handleOpen = async () => {
-    form.schema = connectData.value.schema_name;
-    form.tableSchema = connectData.value.schema_name;
+    form.schema = connectData.value.schemaName;
+    form.tableSchema = connectData.value.schemaName;
     form.connectionName = connectData.value.connectInfo.name;
+    form.uuid = connectData.value.connectInfo.uuid;
     fetchTableName();
   };
   const fetchTableName = async () => {
@@ -193,6 +195,7 @@
       objectType: 'r',
       schema: form.schema,
       webUser: form.webUser,
+      uuid: form.uuid,
     });
     list.tableList = data as unknown as any[];
   };
@@ -203,6 +206,7 @@
       objectName: form.tableName,
       schema: form.schema,
       webUser: form.webUser,
+      uuid: form.uuid,
     });
     list.columnList = data as unknown as any[];
   };

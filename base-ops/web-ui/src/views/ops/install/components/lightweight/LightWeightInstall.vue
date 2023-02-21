@@ -24,7 +24,7 @@
 </template>
 
 <script setup lang="ts">
-import DeployWay from '../simple/DeployWay.vue'
+import DeployWay from './DeployWay.vue'
 import EnvMonitor from './EnvMonitor.vue'
 import InstallConfig from './InstallConfig.vue'
 import { computed, ref } from 'vue'
@@ -48,6 +48,12 @@ const installProps = defineProps({
 const installConfigRef = ref<InstanceType<typeof InstallConfig> | null>(null)
 const envRef = ref<InstanceType<typeof EnvMonitor> | null>(null)
 
+const saveStore = () => {
+  if (installProps.currStep === MINI_ENUM.INSTALL) {
+    installConfigRef.value?.saveStore()
+  }
+}
+
 const beforeConfirm = async (): Promise<boolean> => {
   if (installProps.currStep === MINI_ENUM.INSTALL) {
     const res = await installConfigRef.value?.beforeConfirm()
@@ -64,6 +70,7 @@ const beforeConfirm = async (): Promise<boolean> => {
 const installType = computed(() => installStore.getInstallConfig.installType)
 
 defineExpose({
+  saveStore,
   beforeConfirm
 })
 

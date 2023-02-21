@@ -3,13 +3,14 @@
 */
 import { defineStore } from 'pinia';
 import { storePersist } from '@/config';
-import { manualStringify } from '@/utils';
+import { manualStringify, loadingInstance } from '@/utils';
 
+let loading = null;
 export const useTagsViewStore = defineStore({
   id: 'tagsViewState',
   state: () => ({
     visitedViews: [],
-    cachedViews: [],
+    maxTagsId: 0,
   }),
   getters: {
     maxTerminalNum: (state) => {
@@ -26,9 +27,20 @@ export const useTagsViewStore = defineStore({
   actions: {
     // read value from storage
     initVisitedViews() {
-      this.visitedViews = JSON.parse(
+      const visitedViews = JSON.parse(
         storePersist.visitedViews.storage.getItem(storePersist.visitedViews.key) || '[]',
       );
+      this.visitedViews = visitedViews.filter((item) => item.name != 'debugChild');
+      const ids = this.visitedViews.map((item) => {
+        return item.id || 0;
+      });
+      this.maxTagsId = Math.max(...ids) || 0;
+    },
+    getCurrentView(route) {
+      return this.visitedViews.find((item) => item.path === route.path);
+    },
+    getViewById(id) {
+      return this.visitedViews.find((item) => item.id == id);
     },
     setVisitedViewsStorage() {
       const visitedViews = this.visitedViews.map((item) => {
@@ -39,9 +51,6 @@ export const useTagsViewStore = defineStore({
         storePersist.visitedViews.key,
         manualStringify(visitedViews),
       );
-    },
-    addView(view) {
-      this.addVisitedView(view);
     },
     removeView(routes) {
       return new Promise((resolve) => {
@@ -55,24 +64,22 @@ export const useTagsViewStore = defineStore({
 
       this.visitedViews.push(
         Object.assign({}, view, {
+          id: ++this.maxTagsId,
           title: view.meta?.title || view.query?.title || 'no-name',
+          connectInfoName: view.query?.connectInfoName,
+          dbname: view.query?.dbname,
           terminalNum: view.query?.terminalNum,
           isReload: true,
           loadTime: 1,
         }),
       );
       this.setVisitedViewsStorage();
-      if (view.meta.keepAlive) {
-        this.cachedViews.push(view.name);
-      }
     },
     delView(view) {
       return new Promise((resolve) => {
         this.delVisitedView(view);
-        this.delCachedView(view);
         resolve({
           visitedViews: [...this.visitedViews],
-          cachedViews: [...this.cachedViews],
         });
       });
     },
@@ -86,27 +93,38 @@ export const useTagsViewStore = defineStore({
         this.visitedViews = this.visitedViews.filter((v) => {
           return v.path !== view.path || v.meta.affix;
         });
-        this.cachedViews = this.cachedViews.filter((v) => {
-          return v.path !== view.path || v.meta.affix;
+        this.setVisitedViewsStorage();
+        resolve([...this.visitedViews]);
+      });
+    },
+    delViewById(id) {
+      this.visitedViews = this.visitedViews.filter((v) => {
+        return v.id != id || v.meta.affix;
+      });
+      this.setVisitedViewsStorage();
+      return this.visitedViews;
+    },
+    delViewByIds(ids: (string | number)[]) {
+      if (Array.isArray(ids)) {
+        this.visitedViews = this.visitedViews.filter((v) => {
+          return !ids.includes(v.id) || v.meta.affix;
+        });
+        this.setVisitedViewsStorage();
+      }
+      return this.visitedViews;
+    },
+    delDbViews(dbname) {
+      return new Promise((resolve) => {
+        this.visitedViews = this.visitedViews.filter((v) => {
+          return v.dbname !== dbname || v.meta.affix;
         });
         this.setVisitedViewsStorage();
         resolve([...this.visitedViews]);
       });
     },
-    delCachedView(view) {
-      return new Promise((resolve) => {
-        const index = this.cachedViews.indexOf(view.name);
-        index > -1 && this.cachedViews.splice(index, 1);
-        resolve([...this.cachedViews]);
-      });
-    },
-    clearVisitedView() {
-      this.delAllViews();
-    },
     delAllViews() {
       return new Promise((resolve) => {
         this.visitedViews = this.visitedViews.filter((v) => v.meta.affix);
-        this.cachedViews = this.visitedViews.filter((v) => v.meta.affix);
         this.setVisitedViewsStorage();
         resolve([...this.visitedViews]);
       });
@@ -124,13 +142,23 @@ export const useTagsViewStore = defineStore({
       if (view) {
         view.isReload = false;
         view.loadTime = view.loadTime + 1;
-        storePersist.visitedViews.storage.setItem(
-          storePersist.visitedViews.key,
-          manualStringify(this.visitedViews),
-        );
+        this.setVisitedViewsStorage();
         setTimeout(() => {
           view.isReload = true;
         }, 300);
+      }
+    },
+    closeAllChildViews(rootTagId, router) {
+      const rootDebugView = this.getViewById(rootTagId);
+      if (rootDebugView?.fullPath) {
+        loading = loadingInstance();
+        router.push(rootDebugView.fullPath);
+        const allChildDebugViewIds = this.visitedViews
+          .filter((item) => item.query?.rootTagId == rootTagId)
+          .map((item) => item.id);
+        this.delViewByIds(allChildDebugViewIds);
+        loading.close();
+        loading = null;
       }
     },
   },

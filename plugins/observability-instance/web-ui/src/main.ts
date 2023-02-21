@@ -6,6 +6,7 @@ import 'element-plus/theme-chalk/el-message.css'
 import 'element-plus/theme-chalk/dark/css-vars.css';
 import '@/assets/style/dark.scss'
 import '@/assets/style/reset.scss';
+import '@/assets/style/common.scss';
 import App from "./App.vue";
 import { createPinia } from "pinia";
 import piniaPluginPersistedstate from "pinia-plugin-persistedstate";

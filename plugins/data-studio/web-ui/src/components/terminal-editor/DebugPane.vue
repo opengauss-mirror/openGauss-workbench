@@ -79,21 +79,54 @@
           {{ $t('debugPane.variable') }}
         </div>
       </div>
-      <el-table
-        ref="singleTableRef"
-        :data="props.variableList"
-        border
-        max-height="290"
-        highlight-current-row
-        @row-click="handleRowClick"
-      >
+      <!-- <el-input
+        class="filter-input"
+        v-model="filterVariableText"
+        :placeholder="$t('debugPane.placeholder.variable')"
+        :prefix-icon="Search"
+      /> -->
+      <el-table ref="singleTableRef" :data="variableList" border max-height="290">
+        <!-- highlight-current-row
+        @row-click="handleRowClick" -->
         <el-table-column
           prop="varname"
           align="center"
           :label="$t('debugPane.variable')"
-          min-width="100"
+          :min-width="100"
           show-overflow-tooltip
-        />
+        >
+          <template #header>
+            <div v-if="showVariableInput" class="flex-header">
+              <div style="word-break: keep-all; margin-right: 5px">
+                {{ $t('debugPane.variable') }}
+              </div>
+              <!-- <el-input
+                v-model="filterVariableText"
+                :placeholder="$t('debugPane.placeholder.variable')"
+                :prefix-icon="Search"
+                clearable
+              /> -->
+              <div class="flex-header">
+                <el-icon @click="showVariableInput = false" class="icon-pointer"
+                  ><Search
+                /></el-icon>
+                <el-input
+                  class="border-bottom-input"
+                  v-model="filterVariableText"
+                  :placeholder="$t('debugPane.placeholder.variable')"
+                  clearable
+                />
+              </div>
+            </div>
+            <div v-else class="flex-header">
+              <div style="width: 12px"></div>
+              <span>{{ $t('debugPane.variable') }}</span>
+              <el-icon @click="showVariableInput = true" class="icon-pointer">
+                <Search />
+              </el-icon>
+            </div>
+          </template>
+        </el-table-column>
         <el-table-column
           prop="value"
           align="center"
@@ -112,8 +145,9 @@
   </div>
 </template>
 <script lang="ts" setup>
-  import { ref, watch } from 'vue';
+  import { computed, ref, watch } from 'vue';
   import { ElTable } from 'element-plus';
+  import { Search } from '@element-plus/icons-vue';
 
   interface Props {
     stackList: any[];
@@ -163,29 +197,60 @@
   };
 
   // table3 hightline
-  const currentRow = ref();
+  // const currentRow = ref();
+  const showVariableInput = ref(false);
+  const filterVariableText = ref('');
+  const variableList = computed(() => {
+    return filterVariableText.value
+      ? props.variableList.filter((item) => item.varname.indexOf(filterVariableText.value) > -1)
+      : props.variableList;
+  });
   const singleTableRef = ref<InstanceType<typeof ElTable>>();
-  const setCurrent = (row?: any) => {
-    singleTableRef.value!.setCurrentRow(row);
-    currentRow.value = row;
-  };
-  const handleRowClick = () => {
-    setCurrent(props.variableList[props.variableHighLight]);
-  };
-  watch(
-    () => props.variableHighLight,
-    (line) => {
-      typeof line == 'number' && handleRowClick();
-    },
-  );
+  // const setCurrent = (row?: any) => {
+  //   singleTableRef.value!.setCurrentRow(row);
+  //   currentRow.value = row;
+  // };
+  // const handleRowClick = () => {
+  //   setCurrent(props.variableList[props.variableHighLight]);
+  // };
+  // watch(
+  //   () => props.variableHighLight,
+  //   (line) => {
+  //     typeof line == 'number' && handleRowClick();
+  //   },
+  // );
   watch(
     () => props.variableList,
     (list) => {
-      list.length && handleRowClick();
+      // list.length && handleRowClick();
+      filterVariableText.value == '';
     },
   );
 </script>
 <style lang="scss" scoped>
+  .filter-input {
+    margin-bottom: 5px;
+  }
+  .flex-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .icon-pointer {
+    cursor: pointer;
+    :hover {
+      color: var(--normal-color);
+    }
+  }
+  .border-bottom-input {
+    box-shadow: none;
+    :deep(.el-input__wrapper) {
+      box-shadow: none;
+      .el-input__inner {
+        box-shadow: 0 1px 0 0 var(--el-input-border-color);
+      }
+    }
+  }
   :deep(.el-table) {
     .el-table__body tr:hover > td.el-table__cell {
       background: none;

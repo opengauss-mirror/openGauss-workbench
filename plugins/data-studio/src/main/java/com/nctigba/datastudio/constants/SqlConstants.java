@@ -20,6 +20,7 @@ public class SqlConstants {
     public static final String COMMA = ",";
 
     public static final String COMMA_SPACE = ", ";
+    public static final String CONFIGURE_TIME = "?connectTimeout=30&socketTimeout=0";
 
     public static final String TURN_ON_SQL = "select * from dbe_pldebugger.turn_on(";
 
@@ -53,6 +54,8 @@ public class SqlConstants {
 
     public static final String FINISH_SQL = "select * from dbe_pldebugger.finish();";
 
+    public static final String INFO_CODE_SQL = "select * from dbe_pldebugger.info_code(";
+
     public static final String TURN_OFF_SQL = "select * from dbe_pldebugger.turn_off(";
 
     public static final String ABORT_SQL = "select * from dbe_pldebugger.abort();";
@@ -73,6 +76,7 @@ public class SqlConstants {
     public static final String GET_PROC_PARAM_SQL = "' and proargtypes = '";
     public static final String GET_URL_JDBC = "jdbc:opengauss://";
     public static final String GET_TYPENAME_SQL = "select a.oid,a.typname from pg_type a where a.oid<9999";
+    public static final String GET_DATABASE_SQL = "select datname from pg_database;";
     public static final String GET_SCHEMA_NAME_SQL = "SELECT nspname as schema_name FROM pg_namespace where nspname not in ('blockchain','snapshot','dbe_perf','pkg_service','cstore','pg_toast');";
     public static final String GET_DATA_Connection_SQL = "select id, type , name , driver , ip, port ,dataname , username, userpassword ,webuser from DATABASELINK WHERE";
     public static final String GET_DATA_Connection_NOT_PASSWORD_SQL = "select id, type , name , driver , ip, port ,dataname , username, '' as userpassword ,webuser from DATABASELINK WHERE";
@@ -130,6 +134,8 @@ public class SqlConstants {
     public static final String VIEW_KEYWORD_SQL = "VIEW ";
     public static final String SEQUENCE_KEYWORD_SQL = "SEQUENCE ";
     public static final String SYNONYM_KEYWORD_SQL = "SYNONYM ";
+    public static final String DATABASE_SQL = "DATABASE ";
+    public static final String WITH_ENCODING_SQL = "WITH ENCODING '";
     public static final String REPLACE_KEYWORD_SQL = "OR REPLACE ";
     public static final String START_KEYWORD_SQL = "START WITH ";
     public static final String NO_MINVALUE_KEYWORD_SQL = "NO MINVALUE ";
@@ -145,6 +151,8 @@ public class SqlConstants {
     public static final String CONNECTIVES_SQL = "AS ";
     public static final String IF_EXISTS_SQL = "IF EXISTS ";
     public static final String DROP_SQL = "DROP ";
+    public static final String ALTER_SQL = "ALTER ";
+    public static final String RENAME_TO_SQL = "RENAME TO ";
     public static final String LIMIT_SQL = " LIMIT 500";
     public static final String SELECT_SEQUENCE_DDL_SQL = " SELECT sequence_schema,sequence_name,start_value,increment,minimum_value,maximum_value,cycle_option\n" +
             " FROM information_schema.sequences where sequence_schema = '";
@@ -162,4 +170,5 @@ public class SqlConstants {
     public static final String SELECT_FUNCTION_SQL = "SELECT proname,proargtypes FROM pg_proc\n" +
             "WHERE pronamespace = (SELECT pg_namespace.oid FROM pg_namespace WHERE nspname = '";
     public static final String SYNONYM_ATTRIBUTE_SQL = "select synname,synobjschema,rolname,synobjname from PG_SYNONYM  a inner join pg_authid b on a.synowner = b.oid where synname = '";
+    public static final String DATABASE_ATTRIBUTE_SQL = "select oid,datname,pg_encoding_to_char(encoding) as encoding,datallowconn,datconnlimit,dattablespace,datcollate,datctype from pg_database where datname = '";
 }

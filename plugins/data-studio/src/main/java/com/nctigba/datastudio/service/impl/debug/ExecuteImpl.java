@@ -1,9 +1,7 @@
 package com.nctigba.datastudio.service.impl.debug;
 
 import com.alibaba.fastjson.JSON;
-import com.nctigba.datastudio.base.SpringApplicationContext;
 import com.nctigba.datastudio.base.WebSocketServer;
-import com.nctigba.datastudio.config.ConnectionConfig;
 import com.nctigba.datastudio.model.PublicParamReq;
 import com.nctigba.datastudio.model.entity.OperateStatusDO;
 import com.nctigba.datastudio.service.OperationInterface;
@@ -42,34 +40,31 @@ public class ExecuteImpl implements OperationInterface {
         String sql = paramReq.getSql();
         String windowName = paramReq.getWindowName();
         Statement statement = webSocketServer.getStatement(windowName);
-        try {
-            if (statement == null) {
-                Connection connection = webSocketServer.getConnection(windowName);
-                if (connection == null) {
-                    connection = webSocketServer.createConnection(paramReq.getConnectionName(), paramReq.getWebUser());
-                }
-                statement = connection.createStatement();
-                webSocketServer.setStatement(windowName, statement);
+        if (statement == null) {
+            Connection connection = webSocketServer.getConnection(windowName);
+            if (connection == null) {
+                connection = webSocketServer.createConnection(paramReq.getUuid(), windowName);
+                webSocketServer.setConnection(windowName, connection);
             }
-            String name = DebugUtils.prepareName(sql);
-            log.info("execute name is: " + name);
-            ResultSet result = statement.executeQuery(DebugUtils.getFuncSql(windowName, name, webSocketServer));
-            if (!result.next()) {
-                statement.execute(sql);
-                OperateStatusDO operateStatus = webSocketServer.getOperateStatus(windowName);
-                operateStatus.enableStartDebug();
-                webSocketServer.setOperateStatus(windowName, operateStatus);
-
-                Map<String, String> resultMap = new HashMap<>();
-                resultMap.put(RESULT, name);
-                webSocketServer.sendMessage(windowName, refresh, SUCCESS, resultMap);
-                return;
-            }
-
-            statement.execute(sql);
-        } catch (Exception e) {
-            stopDebug.operate(webSocketServer, paramReq);
+            statement = connection.createStatement();
+            webSocketServer.setStatement(windowName, statement);
         }
+        String name = DebugUtils.prepareName(sql);
+        log.info("execute name is: " + name);
+        ResultSet result = statement.executeQuery(DebugUtils.getFuncSql(windowName, name, webSocketServer));
+        if (!result.next()) {
+            statement.execute(sql);
+            OperateStatusDO operateStatus = webSocketServer.getOperateStatus(windowName);
+            operateStatus.enableStartDebug();
+            webSocketServer.setOperateStatus(windowName, operateStatus);
+
+            Map<String, String> resultMap = new HashMap<>();
+            resultMap.put(RESULT, name);
+            webSocketServer.sendMessage(windowName, refresh, SUCCESS, resultMap);
+            return;
+        }
+
+        statement.execute(sql);
 
         OperateStatusDO operateStatus = webSocketServer.getOperateStatus(windowName);
         operateStatus.enableStartDebug();

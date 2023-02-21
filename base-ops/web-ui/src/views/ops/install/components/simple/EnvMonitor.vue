@@ -14,7 +14,7 @@
             <div class="env-item-c flex-between full-w mb">
               <div class="flex-row">
                 <a-tag class="title-color mr" color="#86909C">{{ getRoleName(envData.clusterRole) }}</a-tag>
-                <div class="title-color">{{ $t('simple.EnvMonitor.5mpmqpcxkq80') }} {{ envData.privateIp }}({{
+                <div class="label-color">{{ $t('simple.EnvMonitor.5mpmqpcxkq80') }} {{ envData.privateIp }}({{
                   envData.publicIp
                 }})</div>
               </div>
@@ -283,7 +283,7 @@ defineExpose({
   overflow-y: auto;
 
   .env-item-c {
-    background-color: #f2f3f5;
+    background-color: var(--color-text-4);
     line-height: 40px;
     border-radius: 4px;
     padding: 0 16px;

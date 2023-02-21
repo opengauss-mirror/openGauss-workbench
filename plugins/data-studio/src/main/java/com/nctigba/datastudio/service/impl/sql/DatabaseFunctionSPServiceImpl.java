@@ -1,13 +1,8 @@
 package com.nctigba.datastudio.service.impl.sql;
 
-import com.nctigba.datastudio.base.WebSocketServer;
 import com.nctigba.datastudio.config.ConnectionConfig;
-import com.nctigba.datastudio.model.dto.DatabaseCreateSequenceDTO;
-import com.nctigba.datastudio.model.dto.DatabaseDropSequenceDTO;
 import com.nctigba.datastudio.model.dto.DatabaseFunctionSPDTO;
-import com.nctigba.datastudio.model.dto.DatabaseSequenceDdlDTO;
 import com.nctigba.datastudio.service.DatabaseFunctionSPService;
-import com.nctigba.datastudio.service.DatabaseSequenceService;
 import com.nctigba.datastudio.util.DebugUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.exception.CustomException;
@@ -18,12 +13,21 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
-import static com.nctigba.datastudio.constants.CommonConstants.*;
-import static com.nctigba.datastudio.constants.CommonConstants.PRO_RET_SET;
-import static com.nctigba.datastudio.constants.SqlConstants.*;
-import static org.apache.commons.lang3.StringUtils.isNumeric;
+import static com.nctigba.datastudio.constants.CommonConstants.OID;
+import static com.nctigba.datastudio.constants.CommonConstants.PRO_KIND;
+import static com.nctigba.datastudio.constants.CommonConstants.SPACE;
+import static com.nctigba.datastudio.constants.SqlConstants.DROP_SQL;
+import static com.nctigba.datastudio.constants.SqlConstants.FUNCTION_KEYWORD_SQL;
+import static com.nctigba.datastudio.constants.SqlConstants.GET_PROC_PARAM_SQL;
+import static com.nctigba.datastudio.constants.SqlConstants.GET_PROC_SQL;
+import static com.nctigba.datastudio.constants.SqlConstants.GET_TYPE_OID_SQL;
+import static com.nctigba.datastudio.constants.SqlConstants.POINT;
+import static com.nctigba.datastudio.constants.SqlConstants.PROCEDURE_KEYWORD_SQL;
+import static com.nctigba.datastudio.constants.SqlConstants.QUOTES_SEMICOLON;
+import static com.nctigba.datastudio.constants.SqlConstants.SEMICOLON;
 
 @Slf4j
 @Service
@@ -35,7 +39,7 @@ public class DatabaseFunctionSPServiceImpl implements DatabaseFunctionSPService 
     public void dropFunctionSP(DatabaseFunctionSPDTO request) {
         log.info("dropFunctionSP request is: " + request);
         try {
-            Connection connection = connectionConfig.connectDatabase(request.getConnectionName(), request.getWebUser());
+            Connection connection = connectionConfig.connectDatabase(request.getUuid());
             Statement statement = connection.createStatement();
 
             ResultSet funcResult = statement.executeQuery(getFuncSql(request.getFunctionSPName(), statement));

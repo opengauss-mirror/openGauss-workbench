@@ -19,6 +19,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.nctigba.datastudio.constants.SqlConstants.CONFIGURE_TIME;
 import static com.nctigba.datastudio.constants.SqlConstants.GET_URL_JDBC;
 
 @Service
@@ -53,7 +54,7 @@ public class ClusterManager {
 
         public Connection connection() throws SQLException {
             return DriverManager.getConnection(
-                    GET_URL_JDBC + getPrivateIp() + ":" + getDbPort() + "/" + getDbName() + "?connectTimeout=30&socketTimeout=0",
+                    GET_URL_JDBC + getPrivateIp() + ":" + getDbPort() + "/" + getDbName() + CONFIGURE_TIME,
                     getDbUser(),
                     getDbUserPassword());
         }

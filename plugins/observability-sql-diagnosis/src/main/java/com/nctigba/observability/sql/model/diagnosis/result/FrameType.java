@@ -18,5 +18,6 @@ public enum FrameType {
 	HeatMap,
 	Table,
 	Suggestion,
-	Explain;
+	Explain,
+	Param;
 }

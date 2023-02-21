@@ -17,23 +17,18 @@ import static com.nctigba.datastudio.enums.MessageEnum.text;
 public class StopSqlImpl implements OperationInterface {
 
     @Override
-    public void operate(WebSocketServer webSocketServer, Object obj) {
-        try {
-            PublicParamReq paramReq = (PublicParamReq) obj;
-            String windowName = paramReq.getWindowName();
-            Statement statement = webSocketServer.getStatement(windowName);
-            if (statement != null) {
-                statement.close();
-                statement.cancel();
-                OperateStatusDO operateStatus = webSocketServer.getOperateStatus(windowName);
-                operateStatus.enableStopRun();
-                webSocketServer.setOperateStatus(windowName, operateStatus);
-            }
-            webSocketServer.sendMessage(windowName, text, "Close successfully", null);
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            throw new RuntimeException(ex);
+    public void operate(WebSocketServer webSocketServer, Object obj) throws Exception {
+        PublicParamReq paramReq = (PublicParamReq) obj;
+        String windowName = paramReq.getWindowName();
+        Statement statement = webSocketServer.getStatement(windowName);
+        if (statement != null) {
+            statement.close();
+            statement.cancel();
         }
+        OperateStatusDO operateStatus = webSocketServer.getOperateStatus(windowName);
+        operateStatus.enableStopRun();
+        webSocketServer.setOperateStatus(windowName, operateStatus);
+        webSocketServer.sendMessage(windowName, text, "Close successfully", null);
     }
 
     @Override

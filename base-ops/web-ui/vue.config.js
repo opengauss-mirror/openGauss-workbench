@@ -27,6 +27,8 @@ module.exports = defineConfig({
             'color-text-1': '#1D212A',
             'color-text-2': '#4E5A6A',
             'color-text-3': '#868F9C',
+            'color-text-4': '#f2f3f5',
+            'dark-color-text-4': '#4E5A6A',
             'dark-primary-6': '#FCEF92',
             'dark-primary-5': '#F8EFAE',
             'dark-link-6': '#FCEF92',

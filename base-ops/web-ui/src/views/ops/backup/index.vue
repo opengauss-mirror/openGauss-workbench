@@ -3,7 +3,7 @@
     <div class="flex-row-end mb">
       <div class="flex-row mr">
         <div class="label-color top-label mr-s">{{ $t('backup.index.else1') }}:</div>
-        <a-select style="width: 200px;" :loading="data.clusterListLoading" v-model="data.clusterId" allow-clear
+        <a-select style="width: 200px;" :loading="data.clusterListLoading" v-model="filter.clusterId" allow-clear
           :placeholder="$t('backup.index.5mpm2oya7bg0')">
           <a-option v-for="(item, index) in data.clusterList" :key="index" :label="item.label" :value="item.value" />
         </a-select>
@@ -67,7 +67,7 @@ const columns = computed(() => [
 ])
 
 const filter = reactive({
-  search: '',
+  clusterId: '',
   pageNum: 1,
   pageSize: 10
 })

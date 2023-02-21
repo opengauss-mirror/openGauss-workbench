@@ -16,6 +16,7 @@ import org.sqlite.JDBC;
 import org.sqlite.SQLiteDataSource;
 
 import com.baomidou.dynamic.datasource.provider.DynamicDataSourceProvider;
+import com.zaxxer.hikari.HikariDataSource;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -82,7 +83,10 @@ public class SqliteDataSourceIniter {
 				} catch (IOException e) {
 					throw new CustomException(e.getMessage());
 				}
-				return Map.of(Ds.diagnosis, sqLiteDataSource);
+				var ds = new HikariDataSource();
+				ds.setDataSource(sqLiteDataSource);
+				ds.setMaximumPoolSize(1);
+				return Map.of(Ds.diagnosis, ds);
 			}
 		};
 	}

@@ -13,13 +13,12 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.sql.Connection;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.Map;
 
 import static com.nctigba.datastudio.enums.MessageEnum.table;
 import static com.nctigba.datastudio.enums.MessageEnum.text;
+import static com.nctigba.datastudio.enums.MessageEnum.window;
 
 @Slf4j
 @Service("startRun")
@@ -36,37 +35,47 @@ public class StartSqlImpl implements OperationInterface {
 
         log.info("tableColumnList request is: " + paramReq);
         ThreadUtil.execAsync(() -> {
-        try {
-            webSocketServer.sendMessage(windowName, text, "Execution start", null);
-            boolean result = stat.execute(paramReq.getSql());
-            OperateStatusDO operateStatus = webSocketServer.getOperateStatus(windowName);
-            operateStatus.enableStopRun();
-            webSocketServer.setOperateStatus(windowName, operateStatus);
-            while (true) {
-                if (result) {
-                    webSocketServer.sendMessage(windowName, table, "Execution succeeded", DebugUtils.parseResultSet(stat.getResultSet()));
-                    webSocketServer.sendMessage(windowName, text, "Execution succeeded", null);
-                } else {
-                    if (stat.getUpdateCount() != -1) {
-                        webSocketServer.sendMessage(windowName, text, "Number of rows affected by successful execution" + stat.getUpdateCount(), null);
-                    } else {
-                        break;
-                    }
-                }
-                result = stat.getMoreResults();
-            }
-            webSocketServer.sendMessage(windowName, text, "End of execution", null);
-        } catch (IOException | SQLException e) {
-            throw new RuntimeException(e);
-        } finally {
             try {
-                stat.close();
-                stat.cancel();
-                webSocketServer.setStatement(windowName, null);
-            } catch (SQLException e) {
-                throw new RuntimeException(e);
+                webSocketServer.sendMessage(windowName, text, "Execution start", null);
+                boolean result = stat.execute(paramReq.getSql());
+                webSocketServer.sendMessage(windowName, text, "Button status request", null);
+                OperateStatusDO operateStatus = webSocketServer.getOperateStatus(windowName);
+                operateStatus.enableStopRun();
+                webSocketServer.setOperateStatus(windowName, operateStatus);
+                while (true) {
+                    if (result) {
+                        webSocketServer.sendMessage(windowName, table, "Execution succeeded", DebugUtils.parseResultSet(stat.getResultSet()));
+                        webSocketServer.sendMessage(windowName, text, "Execution succeeded", null);
+                    } else {
+                        if (stat.getUpdateCount() != -1) {
+                            webSocketServer.sendMessage(windowName, text, "Number of rows affected by successful execution" + stat.getUpdateCount(), null);
+                        } else {
+                            break;
+                        }
+                    }
+                    result = stat.getMoreResults();
+                }
+                webSocketServer.sendMessage(windowName, text, "End of execution", null);
+            } catch (IOException | SQLException e) {
+                e.printStackTrace();
+                try {
+                    webSocketServer.sendMessage(windowName, window, "500", e.getMessage(), e.getStackTrace());
+                    webSocketServer.sendMessage(windowName, text, "Button status request", null);
+                    OperateStatusDO operateStatus = webSocketServer.getOperateStatus(windowName);
+                    operateStatus.enableStopRun();
+                    webSocketServer.setOperateStatus(windowName, operateStatus);
+                } catch (IOException ex) {
+                    throw new RuntimeException(ex);
+                }
+            } finally {
+                try {
+                    stat.close();
+                    stat.cancel();
+                    webSocketServer.setStatement(windowName, null);
+                } catch (SQLException e) {
+                    throw new RuntimeException(e);
+                }
             }
-        }
         });
     }
 

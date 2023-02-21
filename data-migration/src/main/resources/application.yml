@@ -1,0 +1,39 @@
+migration:
+  taskRefreshIntervalsMillisecond: 15000
+  taskOfflineSchedulerIntervalsMillisecond: 10000
+  mainTaskRefreshIntervalsMillisecond: 60000
+  portalHome: /ops/portal
+
+
+context:
+  listener:
+    classes: org.opengauss.admin.plugin.listener.DataMigrationPluginListener
+spring:
+  resources:
+    static-locations: classpath:resources,file:D://resources
+  datasource:
+    type: com.alibaba.druid.pool.DruidDataSource
+    druid:
+      test-while-idle: false
+      test-on-borrow: true
+      validation-query: "select 1"
+      validation-query-timeout: 30000
+  sql:
+    init:
+      mode: always
+# log config
+logging:
+  level:
+    org.opengauss.admin: debug
+    org.springframework: warn
+  file:
+    path: /Users/xielibo/data-migration/logs/
+mybatis-plus:
+  # Search for the specified package alias
+  typeAliasesPackage: org.opengauss.admin.plugin.domain
+
+  mapperLocations: classpath*:mapper/*.xml
+  # Load the global configuration file
+  configuration:
+    mapUnderscoreToCamelCase: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl

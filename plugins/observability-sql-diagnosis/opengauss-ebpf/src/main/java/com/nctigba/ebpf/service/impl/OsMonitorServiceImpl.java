@@ -7,6 +7,7 @@ package com.nctigba.ebpf.service.impl;
 import com.nctigba.ebpf.handler.EbpfSendFileHandler;
 import com.nctigba.ebpf.handler.OsMonitorHandler;
 import com.nctigba.ebpf.service.OsMonitorService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -18,6 +19,8 @@ import org.springframework.stereotype.Service;
  * @since 2022/12/06 11:31
  */
 @Service
+@Slf4j
+@Async("ebpfPool")
 public class OsMonitorServiceImpl implements OsMonitorService {
 
     @Autowired
@@ -29,26 +32,14 @@ public class OsMonitorServiceImpl implements OsMonitorService {
     @Override
     public void getCpuMonitorData(String tid, String taskid, String monitorType) {
         try {
-            Runnable oneRunnable = () -> monitorHandler.startMonitor(taskid, monitorType);
-            Thread oneThread = new Thread(oneRunnable);
-            oneThread.setUncaughtExceptionHandler((tr, ex) -> System.out.println(tr.getName() + " : " + ex.getMessage()));
-            oneThread.start();
-            Runnable twoRunnable = () -> {
-                boolean isTrue = monitorHandler.monitor(tid);
-                if (isTrue) {
-                    monitorHandler.stopMonitor(monitorType);
-                }
-            };
-            Thread twoThread = new Thread(twoRunnable);
-            twoThread.setUncaughtExceptionHandler((tr, ex) -> System.out.println(tr.getName() + " : " + ex.getMessage()));
-            twoThread.start();
-            if (oneThread.isAlive() || twoThread.isAlive()) {
-                oneThread.join();
-                twoThread.join();
+            String monitorPid = monitorHandler.startMonitor(taskid, monitorType);
+            boolean isTrue = monitorHandler.monitor(tid);
+            if (isTrue) {
+                monitorHandler.stopMonitor(monitorType, monitorPid);
             }
             sendFileHandler.sendFile(taskid, monitorType);
         } catch (Exception e) {
-            e.printStackTrace();
+            log.info(e.getMessage());
         }
     }
 }

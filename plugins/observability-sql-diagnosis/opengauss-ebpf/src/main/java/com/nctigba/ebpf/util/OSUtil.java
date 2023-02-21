@@ -4,13 +4,13 @@
 
 package com.nctigba.ebpf.util;
 
+import lombok.extern.slf4j.Slf4j;
+
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
+import java.lang.reflect.Field;
 import java.nio.charset.Charset;
-
-import lombok.extern.slf4j.Slf4j;
-
 
 
 /**
@@ -41,6 +41,24 @@ public class OSUtil {
             br.close();
             return sb.toString();
         } catch (IOException | SecurityException | NullPointerException | IndexOutOfBoundsException e) {
+            log.info(e.getMessage());
+            return "exec fail!";
+        }
+    }
+
+    /**
+     * exec os cmd
+     *
+     * @param cmd os cmd
+     */
+    public String execCmd(String cmd) {
+        try {
+            String[] cmdA = {"/bin/sh", "-c", cmd};
+            Process process = Runtime.getRuntime().exec(cmdA);
+            Field pid = process.getClass().getDeclaredField("pid");
+            pid.setAccessible(true);
+            return String.valueOf(pid.getInt(process));
+        } catch (IOException | SecurityException | NullPointerException | IndexOutOfBoundsException | NoSuchFieldException | IllegalAccessException e) {
             log.info(e.getMessage());
             return "exec fail!";
         }

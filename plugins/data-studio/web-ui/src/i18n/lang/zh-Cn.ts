@@ -17,6 +17,9 @@ export default {
   utils: {
     colorError: '输入错误的{name}颜色值',
   },
+  rules: {
+    empty: '{0}不能为空',
+  },
   week: {
     Sunday: '日',
     Monday: '一',
@@ -28,6 +31,15 @@ export default {
   },
   siderbar: {},
   database: {
+    open: '打开连接',
+    close: '断开连接',
+    create: '创建数据库',
+    rename: '重命名数据库',
+    remove: '删除数据库',
+    property: '数据库属性',
+    name: '数据库名称',
+    encoder: '数据库编码',
+    connect: '连接数据库',
     list: '数据库列表',
     placeholder: '请输入过滤数据库对象',
     regular_table: '普通表',
@@ -40,6 +52,8 @@ export default {
     name: '连接名称',
     new: '新建连接',
     edit: '编辑连接',
+    delete: '删除连接',
+    disAllconnection: '断开所有连接',
     props: '连接属性',
     info: '连接信息',
     refresh: '刷新',
@@ -63,6 +77,11 @@ export default {
       type: '数据库类型',
       version: '版本信息',
     },
+    message: {
+      deleteConnect: '断开数据库连接可能会取消所有正在进行的数据库操作，确定要断开{name}吗？',
+      deleteAllConnect: '在删除连接之前所有数据库将被断开，确定要删除{name}服务器吗？',
+      deleteDatabase: '删除数据库前将会断开连接，确定要删除{name}数据库吗？',
+    },
     rules: {
       common: ['长度不可超过{count}个字符'],
       name: ['@:connection.name 不可为空'],
@@ -85,6 +104,7 @@ export default {
     synonym: '创建同义词',
     sequence: '创建序列',
     terminal: '新建终端',
+    openNewTerminal: '打开新终端',
   },
   delete: {
     functionSP: '删除函数/过程',
@@ -103,12 +123,14 @@ export default {
   },
   functionBar: {
     execute: '编译/执行',
-    stop: '停止',
+    stopRun: '停止',
     clear: '清空',
     startDebug: '开始调试',
     stopDebug: '停止调试',
-    breakPointStep: '断点步入',
-    singleStep: '单步调试',
+    breakPointStep: '继续执行',
+    singleStep: '单步执行',
+    stepIn: '函数步入',
+    stepOut: '函数退出',
     format: '格式化',
   },
   resultTab: {
@@ -147,6 +169,9 @@ export default {
     variable: '变量',
     value: '值',
     dataType: '数据类型',
+    placeholder: {
+      variable: '请输入变量名称',
+    },
   },
   table: {
     column: {

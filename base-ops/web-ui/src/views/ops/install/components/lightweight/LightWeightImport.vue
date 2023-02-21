@@ -51,6 +51,12 @@ onMounted(() => {
 const installConfigRef = ref<InstanceType<typeof InstallConfig> | null>(null)
 const envRef = ref<InstanceType<typeof EnvMonitor> | null>(null)
 
+const saveStore = () => {
+  if (installProps.currStep === MINI_ENUM.INSTALL) {
+    installConfigRef.value?.saveStore()
+  }
+}
+
 const beforeConfirm = async (): Promise<boolean> => {
   if (installProps.currStep === MINI_ENUM.INSTALL) {
     const res = await installConfigRef.value?.beforeConfirm()
@@ -62,6 +68,7 @@ const beforeConfirm = async (): Promise<boolean> => {
 const installType = computed(() => installStore.getInstallConfig.installType)
 
 defineExpose({
+  saveStore,
   beforeConfirm
 })
 

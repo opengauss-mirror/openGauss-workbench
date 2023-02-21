@@ -105,6 +105,7 @@
     sql: '',
     connectionName: '',
     webUser: UserStore.userId,
+    uuid: '',
   });
   const rules = reactive<FormRules>({
     viewName: [{ required: true, message: t('view.rules.name[0]'), trigger: 'blur' }],
@@ -119,8 +120,9 @@
   };
 
   const handleOpen = async () => {
-    form.schema = connectData.value.schema_name;
+    form.schema = connectData.value.schemaName;
     form.connectionName = connectData.value.connectInfo.name;
+    form.uuid = connectData.value.connectInfo.uuid;
   };
   const handleClose = () => {
     myEmit('update:modelValue', false);

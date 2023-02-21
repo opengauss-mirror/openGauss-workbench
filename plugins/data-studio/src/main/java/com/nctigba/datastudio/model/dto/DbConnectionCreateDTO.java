@@ -9,6 +9,8 @@ import lombok.NoArgsConstructor;
 @Data
 public class DbConnectionCreateDTO {
 
+    private String connectionid;
+
     private String id;
 
     private String type;
@@ -35,7 +37,7 @@ public class DbConnectionCreateDTO {
         databaseConnectionDO.setDataName(dataName);
         databaseConnectionDO.setUserName(userName);
         databaseConnectionDO.setPassword(password);
-        databaseConnectionDO.setWebUser("A");
+        databaseConnectionDO.setWebUser(webUser);
 
         return databaseConnectionDO;
     }

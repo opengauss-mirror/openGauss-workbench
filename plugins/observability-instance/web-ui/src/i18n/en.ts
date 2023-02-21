@@ -16,7 +16,16 @@ export default {
         cancel: 'cancel',
         confirm: 'confirm',
         edit: 'edit',
-        operate: 'operate'
+        operate: 'operate',
+        reset: 'Reset',
+        back: 'Back'
+    },
+    install: {
+        install: 'Install',
+        installAgent: 'Install Collector',
+        installProxy: 'Install Proxy',
+        installedAgent: 'Installed Collector',
+        installedProxy: 'Installed Proxy'
     },
     dashboard: {
         name: 'Dashboard',
@@ -35,6 +44,37 @@ export default {
         ],
         instance: 'Instance Monitoring',
         load: 'Performance Load',
+        systemConfig: {
+            tabName: 'System Configuration',
+            osTabName: 'System Parameter',
+            dbTabName: 'DB Parameter',
+        },
+        wdrReports: {
+            tabName: 'WDR Reports',
+            clusterName: 'Cluster Name',
+            hostId: 'Host IP',
+            reportRange: 'Report Scope',
+            reportType: 'Report Type',
+            buildTime: 'Production time',
+            snapshotManage: 'Snapshot Manage',
+            buildWDR: 'Generate WDR',
+            list: {
+                buildTime: 'Report Generation Time',
+                reportName: 'Report Name'
+            },
+            snapshotManageDialog: {
+                dialogName: 'Snapshot Manage',
+                createSnapshot: 'Create Snapshot',
+                snapshotID: 'Snapshot ID',
+                captureTime: 'Capture Time'
+            },
+            buildWDRDialog: {
+                startSnapshot: 'Start Snapshot',
+                endSnapshot: 'End Snapshot',
+                build: 'Generate',
+                buildSuccess: 'Generate suceed'
+            }
+        },
         session: 'Session Management',
         slow: 'Slow SQL',
         space: 'Spatial Analysis',

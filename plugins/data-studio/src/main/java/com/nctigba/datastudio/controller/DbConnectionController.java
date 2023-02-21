@@ -1,6 +1,7 @@
 package com.nctigba.datastudio.controller;
 
 import com.nctigba.datastudio.base.ClusterManager;
+import com.nctigba.datastudio.dao.ConnectionMapDAO;
 import com.nctigba.datastudio.model.dto.DbConnectionCreateDTO;
 import com.nctigba.datastudio.model.entity.DatabaseConnectionDO;
 import com.nctigba.datastudio.service.DbConnectionService;
@@ -42,7 +43,6 @@ public class DbConnectionController {
     }
 
 
-
     @ApiOperation(value = "Add connections")
     @PostMapping(value = "/connections", produces = MediaType.APPLICATION_JSON_VALUE)
     public DatabaseConnectionDO create(@RequestBody DbConnectionCreateDTO request) throws Exception {
@@ -59,10 +59,16 @@ public class DbConnectionController {
 
     @ApiOperation(value = "Delete Connectionll")
     @DeleteMapping(value = "/connections/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public void delete(@PathVariable("id") String id) throws Exception {
-        dbConnectionService.deleteDatabaseConnection(id);
+    public void deleteList(@PathVariable("id") String id) throws Exception {
+        dbConnectionService.deleteDatabaseConnectionList(id);
     }
 
+    @ApiOperation(value = "Delete Connectionll")
+    @DeleteMapping(value = "/connections/close/{uuid}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public void delete(@PathVariable("uuid") String uuid) throws Exception {
+        ConnectionMapDAO connectionMapDAO = new ConnectionMapDAO();
+        connectionMapDAO.deleteConnection(uuid);
+    }
 
     @ApiOperation(value = "Database Connectionll List")
     @GetMapping(value = "/connections", produces = MediaType.APPLICATION_JSON_VALUE)

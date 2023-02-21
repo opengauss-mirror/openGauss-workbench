@@ -1,11 +1,13 @@
 package com.nctigba.observability.log.service;
 
-import java.util.List;
-
+import com.nctigba.observability.log.model.dto.ContextSearchInfoDTO;
 import com.nctigba.observability.log.model.dto.LogDistroMapDTO;
 import com.nctigba.observability.log.model.dto.LogInfoDTO;
 import com.nctigba.observability.log.model.dto.LogTypeTreeDTO;
+import com.nctigba.observability.log.model.query.ContextSearchQuery;
 import com.nctigba.observability.log.model.query.EsSearchQuery;
+
+import java.util.List;
 
 /**
  * <p>
@@ -25,4 +27,5 @@ public interface LogSearchService {
     List<LogTypeTreeDTO> getLogType() throws Exception;
 
     List<String> getLogLevel() throws Exception;
+    ContextSearchInfoDTO getContextSearch(ContextSearchQuery queryParam) throws Exception;
 }

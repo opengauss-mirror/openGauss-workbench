@@ -71,41 +71,37 @@ public class FuncProcedureImpl implements OperationInterface {
         operateStatus.enableStartDebug();
         webSocketServer.setOperateStatus(windowName, operateStatus);
         Connection connection = webSocketServer.getConnection(windowName);
-        ResultSet funcResult = null;
-        Map<String, Object> paramMap = new HashMap<>();
-        try {
-            if (connection == null) {
-                connection = webSocketServer.createConnection(paramReq.getConnectionName(), paramReq.getWebUser());
-            }
-            Statement statement = connection.createStatement();
-            webSocketServer.setStatement(windowName, statement);
-            webSocketServer.setStatement(windowName, statement);
-
-            funcResult = statement.executeQuery(DebugUtils.getFuncSql(windowName, name, webSocketServer));
-            while (funcResult.next()) {
-                paramMap.put(PRO_NAME, funcResult.getString(PRO_NAME));
-                paramMap.put(LAN_NAME, funcResult.getString(LAN_NAME));
-                paramMap.put(TYP_NAME, funcResult.getString(TYP_NAME));
-                paramMap.put(PRO_ARG_TYPES, funcResult.getString(PRO_ARG_TYPES));
-                paramMap.put(PRO_ALL_ARG_TYPES, funcResult.getString(PRO_ALL_ARG_TYPES));
-                paramMap.put(PRO_ARG_MODES, funcResult.getString(PRO_ARG_MODES));
-                paramMap.put(PRO_ARG_NAMES, funcResult.getString(PRO_ARG_NAMES));
-                paramMap.put(PRO_SRC, funcResult.getString(PRO_SRC));
-                paramMap.put(PRO_BIN, funcResult.getString(PRO_BIN));
-                paramMap.put(PRO_ARG_SRC, funcResult.getString(PRO_ARG_SRC));
-                paramMap.put(PRO_KIND, funcResult.getString(PRO_KIND));
-                paramMap.put(PRO_VOLATILE, funcResult.getString(PRO_VOLATILE));
-                paramMap.put(PRO_COST, funcResult.getInt(PRO_COST));
-                paramMap.put(PRO_ROWS, funcResult.getInt(PRO_ROWS));
-                paramMap.put(FEN_CED_MODE, funcResult.getBoolean(FEN_CED_MODE));
-                paramMap.put(PRO_SHIPPABLE, funcResult.getBoolean(PRO_SHIPPABLE));
-                paramMap.put(PRO_IS_STRICT, funcResult.getBoolean(PRO_IS_STRICT));
-                paramMap.put(PRO_RET_SET, funcResult.getBoolean(PRO_RET_SET));
-            }
-            log.info("funcProcedure paramMap is: " + paramMap);
-        } catch (Exception e) {
-            stopDebug.operate(webSocketServer, paramReq);
+        if (connection == null) {
+            connection = webSocketServer.createConnection(paramReq.getUuid(), windowName);
+            webSocketServer.setConnection(windowName, connection);
         }
+        Statement statement = connection.createStatement();
+        webSocketServer.setStatement(windowName, statement);
+        webSocketServer.setStatement(windowName, statement);
+
+        ResultSet funcResult = statement.executeQuery(DebugUtils.getFuncSql(windowName, name, webSocketServer));
+        Map<String, Object> paramMap = new HashMap<>();
+        while (funcResult.next()) {
+            paramMap.put(PRO_NAME, funcResult.getString(PRO_NAME));
+            paramMap.put(LAN_NAME, funcResult.getString(LAN_NAME));
+            paramMap.put(TYP_NAME, funcResult.getString(TYP_NAME));
+            paramMap.put(PRO_ARG_TYPES, funcResult.getString(PRO_ARG_TYPES));
+            paramMap.put(PRO_ALL_ARG_TYPES, funcResult.getString(PRO_ALL_ARG_TYPES));
+            paramMap.put(PRO_ARG_MODES, funcResult.getString(PRO_ARG_MODES));
+            paramMap.put(PRO_ARG_NAMES, funcResult.getString(PRO_ARG_NAMES));
+            paramMap.put(PRO_SRC, funcResult.getString(PRO_SRC));
+            paramMap.put(PRO_BIN, funcResult.getString(PRO_BIN));
+            paramMap.put(PRO_ARG_SRC, funcResult.getString(PRO_ARG_SRC));
+            paramMap.put(PRO_KIND, funcResult.getString(PRO_KIND));
+            paramMap.put(PRO_VOLATILE, funcResult.getString(PRO_VOLATILE));
+            paramMap.put(PRO_COST, funcResult.getInt(PRO_COST));
+            paramMap.put(PRO_ROWS, funcResult.getInt(PRO_ROWS));
+            paramMap.put(FEN_CED_MODE, funcResult.getBoolean(FEN_CED_MODE));
+            paramMap.put(PRO_SHIPPABLE, funcResult.getBoolean(PRO_SHIPPABLE));
+            paramMap.put(PRO_IS_STRICT, funcResult.getBoolean(PRO_IS_STRICT));
+            paramMap.put(PRO_RET_SET, funcResult.getBoolean(PRO_RET_SET));
+        }
+        log.info("funcProcedure paramMap is: " + paramMap);
         if (CollectionUtils.isEmpty(paramMap)) {
             webSocketServer.sendMessage(windowName, ignoreWindow, "500", "function/procedure doesn't exist!", null);
             return;
@@ -136,11 +132,11 @@ public class FuncProcedureImpl implements OperationInterface {
         String proSrc = (String) map.get(PRO_SRC);
         String proArgSrc = (String) map.get(PRO_ARG_SRC);
 
-        sb.append("CREATE OR REPLACE PROCEDURE " + schema + POINT + proName + PARENTHESES_LEFT);
+        sb.append("CREATE OR REPLACE PROCEDURE ").append(schema).append(POINT).append(proName).append(PARENTHESES_LEFT);
         if (!StringUtils.isEmpty(proArgSrc)) {
             sb.append(proArgSrc);
         }
-        sb.append(")\nAS" + proSrc + ";\n/\n/");
+        sb.append(")\nAS").append(proSrc).append(";\n/\n/");
 
         log.info("funcProcedure parseProcedureSql is: " + sb);
         return sb.toString();
@@ -151,7 +147,7 @@ public class FuncProcedureImpl implements OperationInterface {
         String proArgModes = (String) map.get(PRO_ARG_MODES);
         String proArgNames = (String) map.get(PRO_ARG_NAMES);
 
-        sb.append("CREATE OR REPLACE FUNCTION " + schema + "." + map.get(PRO_NAME) + PARENTHESES_LEFT);
+        sb.append("CREATE OR REPLACE FUNCTION ").append(schema).append(".").append(map.get(PRO_NAME)).append(PARENTHESES_LEFT);
         if (!StringUtils.isEmpty(proArgModes)) {
             String proAllArgTypes = (String) map.get(PRO_ALL_ARG_TYPES);
             String[] argModes = proArgModes.substring(1, proArgModes.length() - 1).split(COMMA);
@@ -160,14 +156,18 @@ public class FuncProcedureImpl implements OperationInterface {
             for (int i = 0; i < argModes.length; i++) {
                 ResultSet typeNameResult = webSocketServer.getStatement(windowName).executeQuery(GET_OID_NAME_SQL + argTypes[i] + SEMICOLON);
                 while (typeNameResult.next()) {
-                    if ("o".equals(argModes[i].trim())) {
-                        sb.append("OUT ");
-                    } else if ("b".equals(argModes[i].trim())) {
-                        sb.append("INOUT ");
-                    } else if ("v".equals(argModes[i].trim())) {
-                        sb.append("VARIADIC ");
+                    switch (argModes[i].trim()) {
+                        case "o":
+                            sb.append("OUT ");
+                            break;
+                        case "b":
+                            sb.append("INOUT ");
+                            break;
+                        case "v":
+                            sb.append("VARIADIC ");
+                            break;
                     }
-                    sb.append(argNames[i] + SPACE + ParamTypeEnum.parseType(typeNameResult.getString(TYP_NAME)));
+                    sb.append(argNames[i]).append(SPACE).append(ParamTypeEnum.parseType(typeNameResult.getString(TYP_NAME)));
                 }
                 if (i != argModes.length - 1) {
                     sb.append(COMMA_SPACE);
@@ -193,7 +193,7 @@ public class FuncProcedureImpl implements OperationInterface {
                     for (int i = 0; i < argTypes.length; i++) {
                         ResultSet typeNameResult = webSocketServer.getStatement(windowName).executeQuery(GET_OID_NAME_SQL + argTypes[i] + SEMICOLON);
                         while (typeNameResult.next()) {
-                            sb.append(argNames[i] + SPACE + ParamTypeEnum.parseType(typeNameResult.getString(TYP_NAME)));
+                            sb.append(argNames[i]).append(SPACE).append(ParamTypeEnum.parseType(typeNameResult.getString(TYP_NAME)));
                         }
 
                         if (i != argTypes.length - 1) {
@@ -209,7 +209,7 @@ public class FuncProcedureImpl implements OperationInterface {
             sb.append("SETOF ");
         }
         String lanName = (String) map.get(LAN_NAME);
-        sb.append(ParamTypeEnum.parseType((String) map.get(TYP_NAME)) + "\n LANGUAGE " + lanName + "\n ");
+        sb.append(ParamTypeEnum.parseType((String) map.get(TYP_NAME))).append("\n LANGUAGE ").append(lanName).append("\n ");
         String proVolatile = (String) map.get(PRO_VOLATILE);
         if ("i".equals(proVolatile)) {
             sb.append("IMMUTABLE ");
@@ -231,17 +231,17 @@ public class FuncProcedureImpl implements OperationInterface {
         int proCost = (int) map.get(PRO_COST);
         int proRows = (int) map.get(PRO_ROWS);
         if ("plpgsql".equals(lanName) && proCost != 100) {
-            sb.append(" COST " + proCost);
+            sb.append(" COST ").append(proCost);
         }
         if ("plpgsql".equals(lanName) && proRows != 1000 && proRows != 0) {
-            sb.append(" ROWS " + proRows);
+            sb.append(" ROWS ").append(proRows);
         }
         sb.append("\nAS ");
         String proBin = (String) map.get(PRO_BIN);
         if (!StringUtils.isEmpty(proBin)) {
-            sb.append("'" + proBin + "', ");
+            sb.append("'").append(proBin).append("', ");
         }
-        sb.append("$$" + map.get(PRO_SRC) + "$$;\n/");
+        sb.append("$$").append(map.get(PRO_SRC)).append("$$;\n/");
 
         log.info("funcProcedure parseFunctionSql is: " + sb);
         return sb.toString();
