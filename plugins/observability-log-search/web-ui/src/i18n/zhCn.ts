@@ -37,5 +37,7 @@ export default {
         type: '类型',
         level: '级别',
         logSearchTable: ['时间', '类型', '级别', '日志', '集群ID', '实例ID'],
+        logContext: '上下文',
+        logContextPlaceholder: '请选择',
     },
 };

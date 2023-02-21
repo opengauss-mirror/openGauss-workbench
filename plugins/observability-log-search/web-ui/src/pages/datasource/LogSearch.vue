@@ -1,5 +1,17 @@
 <template>
     <div class="search-form">
+        <div class="filter" v-if="showContextCount">
+            <span>{{ $t('datasource.logContext') }}&nbsp;</span>
+            <el-select v-model="formData.contextCount" clearable placeholder="$t('datasource.logContextPlaceholder')">
+                <el-option
+                v-for="item in logContextCountList"
+                :key="item.value"
+                :label="item.label"
+                :value="item.value"
+                />
+            </el-select>
+            <el-button text bg type="" :icon="CloseBold" size="small" style="position: relative;top: -6px;left: 0;" @click="hideContextCount"/>
+        </div>
         <div class="filter">
             <el-input v-model="formData.searchText" style="width: 200px" :prefix-icon="Search" :placeholder="$t('datasource.logSearchPlaceholder')" />
         </div>
@@ -26,7 +38,7 @@
                     <my-card :title="$t('app.clusterAndInstance')" :bodyPadding="false" collapse>
                         <el-scrollbar height="150px" style="width: 200px">
                             <div class="tree">
-                                <el-tree ref="clusterTree" :data="treeData1" :props="defaultProps" show-checkbox @check="selectNodes">
+                                <el-tree ref="clusterTree" :data="treeData1" :props="defaultProps" node-key="value" :default-expanded-keys="nodeIds" :default-checked-keys="nodeIds" show-checkbox @check="selectNodes">
                                     <template #default="{ node }">
                                         <el-popover placement="right" width="auto" trigger="hover" :content="node.label">
                                             <template #reference>
@@ -60,7 +72,7 @@
             </div>
         </div>
         <div class="content-wrap-right">
-            <el-table :data="tableData" size="small" style="width: 100%">
+            <el-table :data="tableData" size="small" :row-style="tableRowStyle" style="width: 100%" @cell-mouse-enter="cellMouseEnter" @mouseleave="mouseLeave" ref="logTableData">
                 <el-table-column :label="$t('datasource.logSearchTable[0]')" width="160" align="center">
                     <template #default="scope">
                         <span>{{ dayjs.utc(scope.row.logTime).local().format('YYYY-MM-DD HH:mm:ss') }}</span>
@@ -73,7 +85,7 @@
                         <span v-if="scope.row.logData && scope.row.logData.length > 300">
                             <el-popover width="700px" trigger="hover" :content="scope.row.logData" popper-class="sql-popover-tip">
                                 <template #reference>
-                                    <span v-html="showHighLightWord(scope.row.logData.substr(0, 300)) + '...'"></span>
+                                    <span v-html="showHighLightWord(scope.row.logData.substr(0, 300)) + '...'" ></span>
                                 </template>
                             </el-popover>
                         </span>
@@ -86,6 +98,9 @@
             <p v-if="loading">Loading...</p>
             <p v-if="noMore">No more</p>
         </div>
+        <div v-if="showSearchBtn">
+            <el-button :icon="DCaret"  circle size="large" :style="searchBthStyle" @click="gotoNewLogSearch"/>
+        </div>
     </div>
 </template>
 
@@ -94,7 +109,7 @@ import qs from 'qs';
 import dayjs from 'dayjs';
 import ogRequest from '../../request';
 import { useRequest } from 'vue-request';
-import { Search, Refresh } from '@element-plus/icons-vue';
+import { Search, Refresh,DCaret,CloseBold } from '@element-plus/icons-vue';
 import { cloneDeep } from 'lodash-es';
 import { LineData } from '../../components/MyBar.vue';
 
@@ -109,6 +124,25 @@ const logTypeTree = ref<any>();
 const nodeIds = ref<string[]>([]);
 const typeNames = ref<string[]>([]);
 const logLevelSelected = ref<string[]>([]);
+const logContextCountList = ref<any[]>([{
+            label: '5条',
+            value: 5
+        },{
+            label: '10条',
+            value: 10
+        },{
+            label: '20条',
+            value: 20
+        },{
+            label: '30条',
+            value: 30
+        },{
+            label: '40条',
+            value: 40
+        },{
+            label: '50条',
+            value: 50
+        }])
 
 type LogsRes =
     | {
@@ -128,6 +162,7 @@ interface Tree {
     children?: Tree[];
 }
 const initFormData = {
+    contextCount: 20,
     searchText: '',
     dateValue: [],
 };
@@ -146,6 +181,7 @@ const treeData1 = ref<Array<Tree>>([]);
 const treeData2 = ref<Array<Tree>>([]);
 const logLevelData = ref<Array<String>>([]);
 const xData = ref<string[]>([]);
+const curLogData = ref<any>({logDate: '',logType: '',logData: '',logLevelSelected: '',typeNames: ''});
 
 const selectNodes = (item: Tree) => {
     nodeIds.value = [];
@@ -174,6 +210,9 @@ const scrollToBottom = () => {
     if (!noMore.value) listLogScrollData();
 };
 const refreshLog = () => {
+    if(formData.searchText) {
+        showContextCount.value = false
+    }
     noMore.value = false;
     loading.value = false;
     scrollId.value = null;
@@ -225,6 +264,136 @@ const treeTransform = (arr: any) => {
     }
     return obj;
 };
+
+const searchBthStyle = ref();
+
+const showSearchBtn = ref<boolean>(false);
+const curRow = ref();
+
+const cellMouseEnter =  (row: any,column: any, cell: any, event: any) => {
+    if(curRow.value == row) {
+        return;
+    }
+    let cellHeight = 0
+    let cellHeightStr = window.getComputedStyle(cell).getPropertyValue('height')
+    if(cellHeightStr && cellHeightStr.endsWith('px')) {
+        cellHeight = parseInt(cellHeightStr.replace('px',''))
+    }
+    searchBthStyle.value = {
+        'position': 'fixed',
+        'right': '30px',
+        'top': (event.pageY - event.offsetY + cellHeight / 2 - 15) + 'px',
+        'z-index': 1000
+    }
+    setTimeout(function(){},200)
+    showSearchBtn.value = true
+    curRow.value = row
+}
+const logTableData = ref()
+const mouseLeave =  (event: any) => {
+    let pageY = event.pageY 
+    let pageX = event.pageX
+    let top = logTableData.value.$el.getBoundingClientRect().top
+    let left = logTableData.value.$el.getBoundingClientRect().left
+    if(pageY <= top) {
+        showSearchBtn.value = false
+        curRow.value = {}
+        return
+    }
+    if(pageX <= left) {
+        showSearchBtn.value = false
+        curRow.value = {}
+        return
+    } 
+}
+const showContextCount = ref<boolean>(false);
+const router = useRouter()
+const gotoNewLogSearch = () => {
+    formData.searchText = '';
+    formData.dateValue = [];
+    formData.contextCount = 20;
+    if (process.env.mode === 'production') {
+        window.$wujie?.props.methods.jump({
+            name: `Static-pluginObservability-log-searchVemLog`,
+            query: {
+                showContextCount: 'true',
+                nodeIds: nodeIds.value && nodeIds.value.length > 0 ? nodeIds.value : [curRow.value.logNodeId],
+                typeNames: typeNames.value.length > 0 ? typeNames.value.join(',') : "",
+                logLevelSelected: logLevelSelected.value.length > 0 ? logLevelSelected.value.join(',') : "",
+                logTime: curRow.value.logTime,
+                logType: curRow.value.logType,
+                logData: curRow.value.logData,
+                date: new Date().getTime()
+            },
+        })
+    } else {
+        // const page = router.resolve({
+        //     path:`/vem/log`,
+        //     query: {
+        //         showContextCount: 'true',
+        //         nodeIds: nodeIds.value && nodeIds.value.length > 0 ? nodeIds.value : [curRow.value.logNodeId],
+        //         logTime: curRow.value.logTime,
+        //         logType: curRow.value.logType,
+        //         logData: curRow.value.logData,
+        //         date: new Date().getTime()
+        //     }
+        // })
+        // window.open(page.href,"_blank")
+        router.push({
+            path:`/vem/log`,
+            query: {
+                showContextCount: 'true',
+                nodeIds: nodeIds.value && nodeIds.value.length > 0 ? nodeIds.value : [curRow.value.logNodeId],
+                typeNames: typeNames.value.length > 0 ? typeNames.value.join(',') : "",
+                logLevelSelected: logLevelSelected.value.length > 0 ? logLevelSelected.value.join(',') : "",
+                logTime: curRow.value.logTime,
+                logType: curRow.value.logType,
+                logData: curRow.value.logData,
+                date: new Date().getTime()
+            }
+        })
+    }
+    // showContextCount.value = true
+}
+
+const tableRowStyle = ({row, rowIndex}) => {
+    if(showContextCount.value && curLogData.logData && curLogData.logData == row.logData && curLogData.logTime && curLogData.logTime == row.logTime) {
+        return {
+            'background-color': 'yellow'
+        }
+    }
+}
+
+const route = useRoute()
+watch(() => route.query, (res) => {
+    if(res && res.showContextCount && res.showContextCount == 'true') {
+        showContextCount.value = true
+        formData.contextCount = 20
+    }else {
+        showContextCount.value = false
+    }
+    if(res && res.nodeIds) {
+        nodeIds.value = res.nodeIds as string[] || []
+    }
+    if(res && res.logData) {
+        curLogData.logData = res.logData
+    }
+    if(res && res.logTime) {
+        curLogData.logTime = res.logTime
+    }
+    if(res && res.logType) {
+        curLogData.logType = res.logType
+    }
+    listLogTypeData();
+    listLogLevelData();
+    refreshLog();
+})
+
+const hideContextCount = () => {
+    showContextCount.value = false
+    formData.contextCount = 20
+    refreshLog();
+}
 
 // type data
 type LogType =
@@ -279,7 +448,32 @@ const {
 } = useRequest(
     () => {
         loading.value = true;
-        return ogRequest
+        if(showContextCount.value){
+            return ogRequest
+            .get(
+                '/logSearch/api/v1/logContextSearch?' +
+                    qs.stringify(
+                        filterNonNull({
+                            nodeId: nodeIds.value.length > 0 ? nodeIds.value.join(',') : null,
+                            logType: typeNames.value.length > 0 ? typeNames.value.join(',') : curLogData.typeNames ? curLogData.typeNames : null,
+                            logLevel: logLevelSelected.value.length > 0 ? logLevelSelected.value.join(',') : curLogData.value.logLevelSelected ? curLogData.value.logLevelSelected : null,
+                            logDate: dayjs.utc(curLogData.logTime).tz('Europe/London').format("YYYY-MM-DDTHH:mm:ss.SSS") + 'Z',
+                            // searchPhrase: curLogData.logData ? curLogData.logData : "",
+                            startDate: formData.dateValue.length ? formData.dateValue[0] : null,
+                            endDate: formData.dateValue.length ? formData.dateValue[1] : null,
+                            scrollId: scrollId.value,
+                            // rowCount: pageSize.value,
+                            rowCount: formData.contextCount * 2 + 1,
+                            aboveCount: formData.contextCount,
+                            belowCount: formData.contextCount
+                        })
+                    )
+            )
+            .finally(function () {
+                loading.value = false;
+            });
+        }else {
+            return ogRequest
             .get(
                 '/logSearch/api/v1/logs?' +
                     qs.stringify(
@@ -298,19 +492,20 @@ const {
             .finally(function () {
                 loading.value = false;
             });
+        }         
     },
     { manual: true }
 );
 function filterNonNull(obj) {
     return Object.fromEntries(Object.entries(obj).filter(([k, v]) => v));
-}
+};
 
 watch(error, () => {
     loading.value = false;
 });
 watch(logsData, (res: LogsRes) => {
     if (res && Object.keys(res).length) {
-        if (res.logs.length < pageSize.value) noMore.value = true;
+        if (res.logs.length < pageSize.value || showContextCount.value) noMore.value = true;
         tableData.value = tableData.value.concat(res.logs);
         scrollId.value = res.scrollId;
     } else {
@@ -327,9 +522,9 @@ const { data: mapData, run: refreshMap } = useRequest(
                 '/logSearch/api/v1/logDistributionMap?' +
                     qs.stringify(
                         filterNonNull({
-                            nodeId: nodeIds.value.length > 0 ? nodeIds.value.join(',') : null,
-                            logType: typeNames.value.length > 0 ? typeNames.value.join(',') : null,
-                            logLevel: logLevelSelected.value.length > 0 ? logLevelSelected.value.join(',') : null,
+                            nodeId: nodeIds.value.length > 0 ? nodeIds.value.join(',') as string: null,
+                            logType: typeNames.value.length > 0 ? typeNames.value.join(',') as string: null,
+                            logLevel: logLevelSelected.value.length > 0 ? logLevelSelected.value.join(',') as string : null,
                             searchPhrase: formData.searchText.length > 0 ? formData.searchText : null,
                             startDate: formData.dateValue.length ? formData.dateValue[0] : null,
                             endDate: formData.dateValue.length ? formData.dateValue[1] : null,
@@ -395,6 +590,31 @@ watch(mapData, (res: MapRes) => {
 });
 
 onMounted(() => {
+    let _showContextCount = window.$wujie?.props.data.showContextCount as string
+    let _nodeIds = window.$wujie?.props.data.nodeIds as string[]
+    let _logData = window.$wujie?.props.data.logData as string
+    let _logTime = window.$wujie?.props.data.logTime as string
+    let _logType = window.$wujie?.props.data.logType as string
+    let _typeNames = window.$wujie?.props.data.typeNames as string
+    let _logLevelSelected = window.$wujie?.props.data.logLevelSelected as string
+    let param = router.currentRoute.value.query
+    if(_showContextCount && _showContextCount == 'true') {
+        showContextCount.value = true
+    }else {
+        showContextCount.value = param && param.showContextCount && param.showContextCount == 'true' ? true:false
+    }
+     _nodeIds = _nodeIds && _nodeIds.length > 0 ? _nodeIds  : param && param.nodeIds ? param.nodeIds as string[] : []
+    if(typeof(_nodeIds) == 'string') {
+        nodeIds.value = []
+        nodeIds.value.push(_nodeIds)
+    }else {
+        nodeIds.value = _nodeIds
+    }
+    curLogData.logData = _logData ? _logData : param && param.logData ? param.logData : ""
+    curLogData.logTime = _logTime ? _logTime : param && param.logTime ? param.logTime : ""
+    curLogData.logType = _logType ? _logType : param && param.logType ? param.logType : ""
+    curLogData.typeNames = _typeNames ? _typeNames : param && param.typeNames ? param.typeNames : ""
+    curLogData.logLevelSelected = _logLevelSelected ? _logLevelSelected : param && param.logLevelSelected ? param.logLevelSelected : ""
     listClusterData();
     listLogTypeData();
     listLogLevelData();
