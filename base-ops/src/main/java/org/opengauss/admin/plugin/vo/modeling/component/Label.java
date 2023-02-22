@@ -24,6 +24,7 @@ public class Label {
     private String position;
     private int fontSize;
     private boolean show;
+    private String formatter;
 
     public Label setPosition(String position) {
         this.position = position;
@@ -47,5 +48,13 @@ public class Label {
     }
     public boolean getShow() {
         return show;
+    }
+
+    public Label setFormatter(String formatter) {
+        this.formatter = formatter;
+        return this;
+    }
+    public String getFormatter() {
+        return formatter;
     }
 }

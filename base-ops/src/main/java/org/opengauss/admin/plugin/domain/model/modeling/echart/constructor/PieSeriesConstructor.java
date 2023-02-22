@@ -43,14 +43,16 @@ public class PieSeriesConstructor extends BaseSeriesConstructor {
     private final List<Map<String, Object>> queryData;
 
     private String summaryType;
+    private Boolean displayPercentage;
 
     private Map<String,List<Float>> seriesData;
     public ArrayList<String> seriesKey;
 
-    public PieSeriesConstructor(Indicator indicator, Dimension dimension, Dimension subDimension, List<Map<String, Object>> queryData) {
+    public PieSeriesConstructor(Indicator indicator, Dimension dimension, Dimension subDimension, List<Map<String, Object>> queryData, Boolean displayPercentage) {
         this.indicator = indicator;
         this.dimension = dimension;
         this.subDimension = subDimension;
+        this.displayPercentage = displayPercentage;
 
         this.queryData = queryData;
     }
@@ -64,7 +66,9 @@ public class PieSeriesConstructor extends BaseSeriesConstructor {
         mainPieSeries.setSelectedMode("single");
         mainPieSeries.setType("pie");
         mainPieSeries.setLabelLine(new LabelLine().setLength(30));
-
+        if (displayPercentage) {
+            mainPieSeries.setLabel(new Label().setFormatter("{b}{d}%").setShow(true));
+        }
         List<PieData> pieDataList = new ArrayList<>();
         List<PieData> subPieDataList = new ArrayList<>();
 
@@ -117,7 +121,11 @@ public class PieSeriesConstructor extends BaseSeriesConstructor {
             mainPieSeries.setRadius(List.of("45%","60%"));
             PieSeries subPieSeries = new PieSeries();
 
-            subPieSeries.setLabel(new Label().setPosition("inner").setFontSize(14).setShow(true));
+            Label nl = new Label().setPosition("inner").setFontSize(14).setShow(true);
+            if (displayPercentage) {
+                nl.setFormatter("{b}{d}%");
+            }
+            subPieSeries.setLabel(nl);
             subPieSeries.setRadius(List.of("0","30%"));
             subPieSeries.setSelectedMode("single");
             subPieSeries.setType("pie");
