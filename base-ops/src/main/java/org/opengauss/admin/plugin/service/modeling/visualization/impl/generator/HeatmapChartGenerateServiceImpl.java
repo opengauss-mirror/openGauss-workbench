@@ -11,6 +11,7 @@ import org.opengauss.admin.plugin.vo.modeling.component.*;
 import org.springframework.stereotype.Component;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 /**
  * @author LZW
@@ -29,6 +30,11 @@ public class HeatmapChartGenerateServiceImpl extends BaseGenerateServiceImpl {
         //prepare dimension data
         Dimension xDimension = formatDimension(heatmapChartParamsBody.getX());
         Dimension yDimension = formatDimension(heatmapChartParamsBody.getY());
+
+        List<String> allKeys = new ArrayList<>(queryResult.get(0).keySet());
+        if (!allKeys.contains(heatmapChartParamsBody.getX().getField())) {
+            throw new RuntimeException("The field in the parameter is not found in the query result, please check whether the query table or condition has been replaced.");
+        }
 
         HeatmapChartBody heatmapChartBody = new HeatmapChartBody();
         heatmapChartBody.setTitle(new Title().setText(heatmapChartParamsBody.getTitle()));

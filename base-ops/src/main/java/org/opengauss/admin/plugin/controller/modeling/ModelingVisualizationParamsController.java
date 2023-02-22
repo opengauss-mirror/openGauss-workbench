@@ -105,7 +105,7 @@ public class ModelingVisualizationParamsController extends BaseController {
                 ajax.put("mapData", mapInfo);
             }
         } catch (Exception e) {
-            return AjaxResult.error("Database query error.Please check exception info : "+ e.getMessage() + "--" + Arrays.toString(e.getStackTrace()));
+            return AjaxResult.error("generate Chart error.Please check exception info : "+ e.getMessage());
         }
 
         return ajax;
