@@ -12,8 +12,8 @@
               :placeholder="$t('simple.InstallConfig.5mpmu0laqss0')" @popup-visible-change="hostPopupChange">
               <a-option v-for="item in hostList" :key="item.hostId" :value="item.hostId">{{
                 item.privateIp
-                  + '(' +
-                  (item.publicIp ? item.publicIp : '--') + ')'
+                + '(' +
+                (item.publicIp ? item.publicIp : '--') + ')'
               }}</a-option>
             </a-select>
           </a-form-item>
@@ -40,10 +40,9 @@
             <a-input v-model="data.form.databaseUsername" :placeholder="$t('simple.InstallConfig.5mpmu0larto0')"
               allow-clear />
           </a-form-item>
-          <a-form-item field="databasePassword" :label="$t('simple.InstallConfig.5mpmu0larx00')"
-            validate-trigger="blur">
-            <a-input-password v-model="data.form.databasePassword"
-              :placeholder="$t('simple.InstallConfig.5mpmu0las0k0')" allow-clear />
+          <a-form-item field="databasePassword" :label="$t('simple.InstallConfig.5mpmu0larx00')" validate-trigger="blur">
+            <a-input-password v-model="data.form.databasePassword" :placeholder="$t('simple.InstallConfig.5mpmu0las0k0')"
+              allow-clear />
           </a-form-item>
         </a-form>
       </div>
@@ -307,6 +306,7 @@ const beforeConfirm = async (): Promise<boolean> => {
   }
   if (validRes) {
     saveStore()
+    loadingFunc.cancelLoading()
     return true
   }
   loadingFunc.cancelLoading()

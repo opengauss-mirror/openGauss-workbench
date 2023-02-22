@@ -4,7 +4,7 @@
     :okText="$t('operation.ClusterBackupDlg.5mplmzbrmkg0')">
     <a-form :model="data.formData" ref="formRef" :label-col="{ style: { width: '200px' } }" :rules="data.rules">
       <a-form-item :label="$t('operation.ClusterBackupDlg.5mplmzbrntg0')">
-        <a-input v-model="data.formData.clusterId" disabled></a-input>
+        <div class="label-color">{{ data.formData.clusterId }}</div>
       </a-form-item>
       <a-form-item :label="$t('operation.ClusterBackupDlg.5mplmzbrosg0')">
         <a-textarea v-model="data.formData.remark"
@@ -67,6 +67,4 @@ defineExpose({
 
 </script>
 
-<style lang="scss" scoped>
-
-</style>
+<style lang="scss" scoped></style>

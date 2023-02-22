@@ -58,11 +58,6 @@
               <div class="lable-w">{{ $t('enterprise.InstallPrompt.5mpmb9e6qww0') }}</div>
               <div>{{ itemNode.dataPath }}</div>
             </div>
-            <a-divider></a-divider>
-            <div class="flex-row">
-              <div class="lable-w">{{ $t('enterprise.InstallPrompt.else4') }}</div>
-              <div>{{ itemNode.xlogPath }}</div>
-            </div>
             <div class="full-w" v-if="data.clusterInfo.isInstallCM">
               <a-divider></a-divider>
               <div class="flex-row">
