@@ -118,6 +118,7 @@ const init = (data?: KeyValue) => {
     config.relation = { out: '', in: '', value: '' }
   }
 }
+const noticeArr: string[] = []
 const validate = () => {
   let flag = true
   let message = ''
@@ -141,12 +142,39 @@ const validate = () => {
     flag = false
     message += (message ? '；\n ' : '') + t('modeling.components.GraphConfig.5mjckw851bo0')
   }
+  if (!config.node || !config.node.x) {
+    flag = false
+    message += (message ? '；\n ' : '') + t('modeling.components.GraphConfig.notice2')
+  }
+  if (!config.node || !config.node.y) {
+    flag = false
+    message += (message ? '；\n ' : '') + t('modeling.components.GraphConfig.notice3')
+  }
+  if (!config.node || !config.node.size) {
+    flag = false
+    message += (message ? '；\n ' : '') + t('modeling.components.GraphConfig.notice1')
+  }
   if (!flag) {
+    if (noticeArr.includes(message)) return flag
+    let isDelete = false
     Notification.error({
       title: t('modeling.components.BarConfig.5m7insim3vc0'),
       content: message,
-      closable: true
+      closable: true,
+      duration: 5 * 1000,
+      onClose: () => {
+        let index = noticeArr.indexOf(message)
+        if (index != -1) noticeArr.splice(index, 1)
+        isDelete = true
+      }
     })
+    noticeArr.push(message)
+    setTimeout(() => {
+      if (!isDelete) {
+        let index = noticeArr.indexOf(message)
+        if (index != -1) noticeArr.splice(index, 1)
+      }
+    }, 5 * 1000)
   }
   return flag
 }

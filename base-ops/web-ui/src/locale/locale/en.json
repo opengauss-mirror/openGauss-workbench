@@ -977,7 +977,10 @@
                 "5mjckw850is0": "Please select a node name!",
                 "5mjckw8511c0": "Please select the out node!",
                 "5mjckw8516w0": "Please select the check-in point!",
-                "5mjckw851bo0": "Please select a relationship value!"
+                "5mjckw851bo0": "Please select a relationship value!",
+                "notice1": "Please select node size",
+                "notice2": "Please select node X coordinate",
+                "notice3": "Please select node Y coordinate"
             },
             "CustomDimensionDialog": {
                 "5m7iksonqnk0": "Custom Dimension",

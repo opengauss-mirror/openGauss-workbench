@@ -978,7 +978,10 @@
                 "5mjckw850is0": "请选择节点名称！",
                 "5mjckw8511c0": "请选择出节点！",
                 "5mjckw8516w0": "请选择入检点！",
-                "5mjckw851bo0": "请选择关系值！"
+                "5mjckw851bo0": "请选择关系值！",
+                "notice1": "请选择节点尺寸",
+                "notice2": "请选择节点X坐标",
+                "notice3": "请选择节点Y坐标"
             },
             "CustomDimensionDialog": {
                 "5m7iksonqnk0": "自定义维度",

@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 /**
  * @author LZW
@@ -44,6 +45,12 @@ public class ScatterChartGenerateServiceImpl extends BaseGenerateServiceImpl {
                 .setZoom(scatterChartParamsBody.getZoom())
                 .setCenter(List.of(scatterChartParamsBody.getCenter().get(0), scatterChartParamsBody.getCenter().get(1)))
                 .setRoam(true)));
+
+        List<String> allKeys = new ArrayList<>(queryResult.get(0).keySet());
+        if (!allKeys.contains(scatterChartParamsBody.getLocation().getField())) {
+            throw new RuntimeException("The field in the parameter is not found in the query result, please check whether the query table or condition has been replaced.");
+        }
+
         List<ScatterSeries> series = genSeries(scatterChartParamsBody.getLocation());
         scatterChartBody.setSeries(series);
 

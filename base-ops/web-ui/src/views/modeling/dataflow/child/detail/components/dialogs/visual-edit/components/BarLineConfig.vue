@@ -167,6 +167,7 @@ const operate = (type: string, serieKey?: number, key1?: number) => {
     }
   }
 }
+const noticeArr: string[] = []
 const validate = () => {
   let flag = true
   let message = ''
@@ -196,11 +197,26 @@ const validate = () => {
     })
   }
   if (!flag) {
+    if (noticeArr.includes(message)) return flag
+    let isDelete = false
     Notification.error({
       title: t('modeling.components.BarLineConfig.5m7in04pfis0'),
       content: message,
-      closable: true
+      closable: true,
+      duration: 5 * 1000,
+      onClose: () => {
+        let index = noticeArr.indexOf(message)
+        if (index != -1) noticeArr.splice(index, 1)
+        isDelete = true
+      }
     })
+    noticeArr.push(message)
+    setTimeout(() => {
+      if (!isDelete) {
+        let index = noticeArr.indexOf(message)
+        if (index != -1) noticeArr.splice(index, 1)
+      }
+    }, 5 * 1000)
   }
   return flag
 }
