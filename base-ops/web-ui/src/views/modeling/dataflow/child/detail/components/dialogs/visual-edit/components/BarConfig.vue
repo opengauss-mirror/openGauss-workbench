@@ -141,6 +141,7 @@ const operate = (type: string, key1?: number) => {
     config.dimension.splice(key1, 1)
   }
 }
+const noticeArr: string[] = []
 const validate = () => {
   let flag = true
   let message = ''
@@ -157,11 +158,26 @@ const validate = () => {
     message += (message ? '；\n ' : '') + t('modeling.components.BarConfig.5m7insim3sw0')
   }
   if (!flag) {
+    if (noticeArr.includes(message)) return flag
+    let isDelete = false
     Notification.error({
       title: t('modeling.components.BarConfig.5m7insim3vc0'),
       content: message,
-      closable: true
+      closable: true,
+      duration: 5 * 1000,
+      onClose: () => {
+        let index = noticeArr.indexOf(message)
+        if (index != -1) noticeArr.splice(index, 1)
+        isDelete = true
+      }
     })
+    noticeArr.push(message)
+    setTimeout(() => {
+      if (!isDelete) {
+        let index = noticeArr.indexOf(message)
+        if (index != -1) noticeArr.splice(index, 1)
+      }
+    }, 5 * 1000)
   }
   return flag
 }

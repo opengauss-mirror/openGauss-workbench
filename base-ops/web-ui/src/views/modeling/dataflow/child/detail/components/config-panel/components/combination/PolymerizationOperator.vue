@@ -16,7 +16,7 @@
             <a-select v-model="item.field" :placeholder="$t('modeling.combination.PolymerizationOperator.5m82b2nqt4k0')" :trigger-props="{ contentClass: 'd-a-select-dropdown' }"
               showSearch style="width: 100%;" @change="save">
               <a-optgroup v-for="(group, groupKey) in fieldsList" :key="`fieldsGroup${groupKey}`"  :label="group.group">
-                      <template #label><overflow-tooltip :text="group.group" :content="group.group">{{ group.group }}</overflow-tooltip></template>
+                <template #label><overflow-tooltip :text="group.group" :content="group.group">{{ group.group }}</overflow-tooltip></template>
                 <overflow-tooltip :text="item.name" v-for="(item, key) in group.fields" :key="`field${key}`" :content="`${group.group} . ${item.name}`">
                   <a-option :value="`${group.group}.${item.name}`" :label="item.name"></a-option>
                 </overflow-tooltip>
@@ -74,7 +74,7 @@ const init = (cell: Cell) => {
   iData.polymerization = data.polymerization ? data.polymerization : []
 }
 const operatePolymerization = (type: string, key?: number) => {
-  if (type === 'add') iData.polymerization.push({ fields: null, way: null, alias: '' })
+  if (type === 'add') iData.polymerization.push({ field: null, way: null, alias: '' })
   else iData.polymerization.splice(key, 1)
   save()
 }
