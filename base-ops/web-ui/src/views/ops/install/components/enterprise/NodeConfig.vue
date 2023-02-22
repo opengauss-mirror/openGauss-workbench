@@ -444,6 +444,7 @@ const beforeConfirm = async (): Promise<boolean> => {
       nodeConfigList: nodes
     }
     installStore.setEnterpriseConfig(param as EnterpriseInstallConfig)
+    loadingFunc.cancelLoading()
     return true
   }
   loadingFunc.cancelLoading()
