@@ -1,12 +1,12 @@
 package com.nctigba.observability.log.model.query;
 
-import java.util.Date;
-import java.util.List;
-import java.util.Locale;
-
 import cn.hutool.core.date.DateUtil;
 import lombok.Data;
 import org.apache.commons.lang3.StringUtils;
+
+import java.util.Date;
+import java.util.List;
+import java.util.Locale;
 
 /**
  * <p>
@@ -27,7 +27,8 @@ public class EsSearchQuery {
     private Date endDate;
     private List<String> logType;
     private List<String> logLevel;
-    private String scollId;
+    private String scrollId;
+    private String order;
 
     public void setStartDate(String startDate) {
         this.startDate = DateUtil.parseUTC(startDate);
@@ -50,7 +51,7 @@ public class EsSearchQuery {
     }
 
     public boolean hasDateFilter() {
-        return startDate != null && endDate != null;
+        return startDate != null || endDate != null;
     }
 
     public void setSearchParse(String searchPhrase) {

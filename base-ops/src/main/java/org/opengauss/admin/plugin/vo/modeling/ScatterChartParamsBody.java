@@ -20,6 +20,7 @@ import lombok.Data;
 import org.opengauss.admin.plugin.vo.modeling.component.Location;
 
 import java.util.List;
+import java.util.Objects;
 
 /**
  * @author LZW
@@ -77,5 +78,12 @@ public class ScatterChartParamsBody {
     }
     public Location getLocation() {
         return location;
+    }
+
+    public void setCenter(List<Double> center) {
+        this.center = center;
+    }
+    public List<Double> getCenter() {
+        return center.stream().limit(2).anyMatch(Objects::isNull) ? List.of(0d, 0d) : center;
     }
 }

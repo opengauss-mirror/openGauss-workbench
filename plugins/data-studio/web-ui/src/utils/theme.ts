@@ -1,7 +1,8 @@
 import { getDarkColor, getLightColor } from '@/utils/index';
 
 export const changePrimary = (isDark) => {
-  const primaryColor = isDark ? '#282b33' : '#e41d1d';
+  // const primaryColor = isDark ? '#282b33' : '#e41d1d';
+  const primaryColor = '#e41d1d';
   // deep color
   document.documentElement.style.setProperty(
     '--el-color-primary-dark-2',

@@ -4,11 +4,13 @@
       <div class="mb" style="width: 50%;">
         <div class="item-node-top flex-between full-w mb">
           <div class="flex-row">
-            <div class="mr">{{ $t('enterprise.InstallPrompt.5mpmb9e6puk0') }}</div>
-            <div>{{ data.clusterInfo.clusterId }} - {{ data.clusterInfo.clusterName }}</div>
+            <div class="label-color mr">{{ $t('enterprise.InstallPrompt.5mpmb9e6puk0') }}</div>
+            <div class="label-color">{{ data.clusterInfo.clusterId }}</div>
           </div>
           <div class="flex-row">
-            <div>{{ $t('enterprise.InstallPrompt.else1') }}: AZ</div>
+            <div class="label-color" v-if="installType !== 'import'">{{ $t('enterprise.InstallPrompt.else1') }}: {{
+              data.clusterInfo.azName
+            }}</div>
           </div>
         </div>
         <div class="label-color item-node-center">
@@ -21,6 +23,14 @@
             <div class="lable-w">{{ $t('enterprise.InstallPrompt.else3') }}:</div>
             <div>{{ data.clusterInfo.port }}</div>
           </div>
+          <a-divider></a-divider>
+          <div class="flex-row">
+            <div class="lable-w">{{ $t('enterprise.InstallPrompt.5mpmb9e6r0k0') }} CM</div>
+            <div>{{
+              data.clusterInfo.isInstallCM ? $t('enterprise.InstallPrompt.5mpmb9e6r4g0') :
+              $t('enterprise.InstallPrompt.5mpmb9e6r800')
+            }}</div>
+          </div>
         </div>
       </div>
       <div class="mb" style="width: 50%;" v-for="(itemNode, index) in data.nodeData" :key="index">
@@ -28,13 +38,14 @@
           <div class="item-node-top flex-between full-w">
             <div class="flex-row">
               <a-tag class="mr" color="#86909C">{{ getRoleName(itemNode.clusterRole) }}</a-tag>
-              {{ $t('enterprise.InstallPrompt.5mpmb9e6qmg0') }} {{ itemNode.privateIp }}({{
+              <div class="label-color">{{ $t('enterprise.InstallPrompt.5mpmb9e6qmg0') }} {{ itemNode.privateIp }}({{
                 itemNode.publicIp
-              }})
+              }})</div>
             </div>
             <div class="flex-row">
-              <icon-down style="cursor: pointer;" v-if="!itemNode.isShow" @click="itemNode.isShow = true" />
-              <icon-up style="cursor: pointer;" v-else @click="itemNode.isShow = false" />
+              <icon-down class="label-color" style="cursor: pointer;" v-if="!itemNode.isShow"
+                @click="itemNode.isShow = true" />
+              <icon-up class="label-color" style="cursor: pointer;" v-else @click="itemNode.isShow = false" />
             </div>
           </div>
           <div class="label-color item-node-center full-w flex-col-start" v-show="itemNode.isShow">
@@ -52,13 +63,17 @@
               <div class="lable-w">{{ $t('enterprise.InstallPrompt.else4') }}</div>
               <div>{{ itemNode.xlogPath }}</div>
             </div>
-            <a-divider></a-divider>
-            <div class="flex-row">
-              <div class="lable-w">{{ $t('enterprise.InstallPrompt.5mpmb9e6r0k0') }} CM</div>
-              <div>{{
-                itemNode.isInstallCM ? $t('enterprise.InstallPrompt.5mpmb9e6r4g0') :
-                  $t('enterprise.InstallPrompt.5mpmb9e6r800')
-              }}</div>
+            <div class="full-w" v-if="data.clusterInfo.isInstallCM">
+              <a-divider></a-divider>
+              <div class="flex-row">
+                <div class="lable-w">{{ $t('enterprise.InstallPrompt.else5') }}</div>
+                <div>{{ itemNode.cmPort }}</div>
+              </div>
+              <a-divider></a-divider>
+              <div class="flex-row">
+                <div class="lable-w">{{ $t('enterprise.InstallPrompt.else6') }}</div>
+                <div>{{ itemNode.cmDataPath }}</div>
+              </div>
             </div>
           </div>
         </div>
@@ -69,7 +84,7 @@
 <script lang="ts" setup>
 import { useOpsStore } from '@/store'
 import { KeyValue } from '@/types/global'
-import { inject, onMounted, reactive } from 'vue'
+import { inject, onMounted, reactive, computed } from 'vue'
 import { ClusterRoleEnum } from '@/types/ops/install'
 import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
@@ -95,7 +110,9 @@ onMounted(() => {
     clusterId: storeInstallData.clusterId,
     clusterName: storeInstallData.clusterName,
     installPath: storeEnterpriseData.installPath,
-    port: storeEnterpriseData.port
+    port: storeEnterpriseData.port,
+    azName: storeEnterpriseData.azName,
+    isInstallCM: storeEnterpriseData.isInstallCM
   })
   storeEnterpriseData.nodeConfigList.forEach(item => {
     const itemNode = getNodeData()
@@ -105,7 +122,8 @@ onMounted(() => {
       privateIp: item.privateIp,
       dataPath: item.dataPath,
       xlogPath: item.xlogPath,
-      isInstallCM: item.isInstallCM
+      cmPort: item.cmPort,
+      cmDataPath: item.cmDataPath
     })
     data.nodeData.push(itemNode)
   })
@@ -134,6 +152,8 @@ const getRoleName = (type: ClusterRoleEnum) => {
   }
 }
 
+const installType = computed(() => installStore.getInstallConfig.installType)
+
 </script>
 <style lang="less" scoped>
 .install-prompt-c {
@@ -141,7 +161,7 @@ const getRoleName = (type: ClusterRoleEnum) => {
   overflow-y: auto;
 
   .item-node-top {
-    background-color: #f2f3f5;
+    background-color: var(--color-text-4);
     line-height: 40px;
     border-radius: 4px;
     padding: 0 16px;

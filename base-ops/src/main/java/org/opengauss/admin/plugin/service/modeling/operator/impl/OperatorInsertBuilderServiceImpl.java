@@ -5,8 +5,8 @@ import com.alibaba.fastjson.JSONObject;
 import org.opengauss.admin.plugin.domain.model.modeling.ModelingDataFlowSqlObject;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+
 /**
  * @author LZW
  * @date 2022/10/29 22:38
@@ -25,22 +25,34 @@ public class OperatorInsertBuilderServiceImpl extends BaseBuilderServiceImpl {
         //modify insert fields
         String insertFields = sqlObject.getInsertFieldsRegion();
         //get fields to insert
-        List<String> insertFieldString = new ArrayList<>();
+        List<String>  insertFieldString = new ArrayList<>();
         List<List<String>> insertValueString = new ArrayList<>();
 
         JSONArray prepareInsertData = params.getJSONArray("list1");
         if (!prepareInsertData.isEmpty()) {
+
             for (int i = 0; i < prepareInsertData.size(); i++) {
                 JSONArray fieldDataList = prepareInsertData.getJSONArray(i);
-                List<String> childValue = new ArrayList<>();
+                for (int z = 0; z < fieldDataList.size(); z++) {
+                    JSONObject data = fieldDataList.getJSONObject(z);
+                    String field = data.getString("field").split("\\.")[1];
+                    if (!insertFieldString.contains(field)) {
+                        insertFieldString.add(field);
+                    }
+                }
+            }
+
+            for (int i = 0; i < prepareInsertData.size(); i++) {
+                JSONArray fieldDataList = prepareInsertData.getJSONArray(i);
+                List<String> childValue = new ArrayList<>(Collections.nCopies(insertFieldString.size(), "''"));
                 for (int z = 0; z < fieldDataList.size(); z++) {
                     JSONObject data = fieldDataList.getJSONObject(z);
                     String field = data.getString("field").split("\\.")[1];
                     String value = data.getString("value");
-                    childValue.add(z,value);
-                    if (!insertFieldString.contains(field)) {
-                        insertFieldString.add(z,field);
+                    if (!value.chars().allMatch(Character::isDigit)) {
+                        value = "'" + value + "'";
                     }
+                    childValue.set(insertFieldString.indexOf(field),value);
                 }
                 insertValueString.add(i,childValue);
             }

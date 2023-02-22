@@ -52,6 +52,27 @@ const customFunction = () => {
 }
 
 const onPrev = () => {
+  if (installStore.value.openGaussVersion === OpenGaussVersionEnum.MINIMAL_LIST) {
+    if (installType.value === 'install') {
+      simpleInstallRef.value?.saveStore()
+    } else {
+      simpleImportRef.value?.saveStore()
+    }
+  }
+  if (installStore.value.openGaussVersion === OpenGaussVersionEnum.LITE) {
+    if (installType.value === 'install') {
+      liteInstallRef.value?.saveStore()
+    } else {
+      liteImportRef.value?.saveStore()
+    }
+  }
+  if (installStore.value.openGaussVersion === OpenGaussVersionEnum.ENTERPRISE) {
+    if (installType.value === 'install') {
+      enterpriseInstallRef.value?.saveStore()
+    } else {
+      enterpriseImportRef.value?.saveStore()
+    }
+  }
   currStep.value = Math.max(1, currStep.value - 1)
 }
 const onNext = async () => {

@@ -217,7 +217,8 @@ public class MonitoringController {
         return AppResult.ok("").addData(map);
     }
 
-    @GetMapping(value = "/server")
+    @SuppressWarnings("deprecation")
+	@GetMapping(value = "/server")
     public AppResult process(@RequestParam("id") String id) {
         OpsClusterNodeVOSub node = topSQLService.clusterNode(id);
         SSHOperator ssh = SSHPoolManager.getSSHOperator(node.getPrivateIp(), node.getHostPort(), "root",

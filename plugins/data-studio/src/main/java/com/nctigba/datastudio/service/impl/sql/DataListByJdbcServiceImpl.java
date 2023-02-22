@@ -103,4 +103,20 @@ public class DataListByJdbcServiceImpl implements DataListByJdbcService {
         }
         return dataList;
     }
+
+    @Override
+    public List<String> databaseListQuerySQL(String jdbcUrl, String username, String password, String sql) {
+        List<String> list = new ArrayList<>();
+        try (Connection connection = ConnectionUtils.connectGet(jdbcUrl, username, password)) {
+            PreparedStatement ps = connection.prepareStatement(sql);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                list.add(rs.getString("dataname"));
+            }
+
+        } catch (Exception e) {
+            throw new CustomException(e.getMessage());
+        }
+        return list;
+    }
 }

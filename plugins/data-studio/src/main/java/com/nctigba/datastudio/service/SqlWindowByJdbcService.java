@@ -9,5 +9,5 @@ public interface SqlWindowByJdbcService {
     List<String> schemaListQuerySQL(String jdbcUrl, String username, String password, String sql) throws Exception;
 
     DataListDTO dataListQuerySQL(String jdbcUrl, String username, String password, String tableSql,
-            String viewSql, String fun_prosSql, String schema_name) throws Exception;
+                                 String viewSql, String fun_prosSql, String schema_name) throws Exception;
 }

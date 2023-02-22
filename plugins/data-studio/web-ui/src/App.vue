@@ -27,6 +27,7 @@
   import { useTagsViewStore } from '@/store/modules/tagsView';
   import { isDark, toggleDark } from '@/hooks/dark';
   import { useI18n } from 'vue-i18n';
+  import { heartbeat } from '@/api/connect';
 
   const AppStore = useAppStore();
   const UserStore = useUserStore();
@@ -40,6 +41,7 @@
   const isConnectInfoVisible = ref(false);
   const connectType = ref<'create' | 'edit'>('create');
   const connectInfo = reactive<any>({});
+  const heartbeatTimer = ref(null);
 
   onMounted(() => {
     UserStore.userId = 'A';
@@ -48,7 +50,9 @@
     i18nLocale.value = lang;
     AppStore.setLanguage(lang);
     // set init theme(from platform)
-    const isPlatformDarkTheme = localStorage.getItem('opengauss-theme') == 'dark';
+    const isPlatformDarkTheme = localStorage.getItem('opengauss-theme')
+      ? localStorage.getItem('opengauss-theme') == 'dark'
+      : isDark.value;
     isDark.value = isPlatformDarkTheme;
     toggleDark(isPlatformDarkTheme);
     EventBus.listen(EventTypeName.OPEN_CONNECT_DIALOG, ({ dialogType, connectInfo: data }) => {
@@ -75,10 +79,14 @@
       i18nLocale.value = val;
       AppStore.setLanguage(val);
     });
+
+    heartbeatTimer.value = setInterval(heartbeat, 1000 * 60 * 15);
   });
   onUnmounted(() => {
     EventBus.unListen(EventTypeName.OPEN_CONNECT_DIALOG);
     EventBus.unListen(EventTypeName.OPEN_CONNECT_INFO_DIALOG);
+    clearInterval(heartbeatTimer.value);
+    heartbeatTimer.value = null;
   });
 </script>
 

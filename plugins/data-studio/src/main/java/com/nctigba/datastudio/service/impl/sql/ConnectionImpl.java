@@ -1,9 +1,7 @@
 package com.nctigba.datastudio.service.impl.sql;
 
 import com.alibaba.fastjson.JSON;
-import com.nctigba.datastudio.base.SpringApplicationContext;
 import com.nctigba.datastudio.base.WebSocketServer;
-import com.nctigba.datastudio.config.ConnectionConfig;
 import com.nctigba.datastudio.model.PublicParamReq;
 import com.nctigba.datastudio.service.OperationInterface;
 import lombok.extern.slf4j.Slf4j;
@@ -21,8 +19,8 @@ public class ConnectionImpl implements OperationInterface {
     public void operate(WebSocketServer webSocketServer, Object obj) throws Exception {
         PublicParamReq paramReq = (PublicParamReq) obj;
         String windowName = paramReq.getWindowName();
-        log.info("connection name is: " + paramReq.getConnectionName());
-        Connection connection = webSocketServer.createConnection(paramReq.getConnectionName(), paramReq.getWebUser());
+        log.info("connection paramReq is: " + paramReq);
+        Connection connection = webSocketServer.createConnection(paramReq.getUuid(), paramReq.getWindowName());
         webSocketServer.setConnection(windowName, connection);
         webSocketServer.sendMessage(windowName, other, "connect connection!", null);
     }

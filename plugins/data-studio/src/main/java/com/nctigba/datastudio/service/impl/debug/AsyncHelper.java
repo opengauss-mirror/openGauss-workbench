@@ -75,9 +75,11 @@ public class AsyncHelper {
         if (stat != null) {
             stat.close();
             stat.cancel();
+            webSocketServer.setParamMap(windowName, STATEMENT, null);
         }
         if (conn != null) {
             conn.close();
+            webSocketServer.setParamMap(windowName, CONNECTION, null);
         }
         statement.close();
         webSocketServer.setStatement(windowName, null);

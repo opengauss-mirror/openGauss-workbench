@@ -9,9 +9,6 @@
           <a-form-item field="clusterId" :label="$t('enterprise.ClusterConfig.5mpm3ku3hcg0')" validate-trigger="blur">
             <a-input v-model="data.form.clusterId" :placeholder="$t('enterprise.ClusterConfig.5mpm3ku3hik0')" />
           </a-form-item>
-          <a-form-item field="clusterName" :label="$t('enterprise.ClusterConfig.5mpm3ku3hn40')" validate-trigger="blur">
-            <a-input v-model="data.form.clusterName" :placeholder="$t('enterprise.ClusterConfig.5mpm3ku3hr00')" />
-          </a-form-item>
           <a-form-item field="installPath" :label="$t('enterprise.ClusterConfig.5mpm3ku3hv40')" validate-trigger="blur">
             <a-input v-model="data.form.installPath" :placeholder="$t('enterprise.ClusterConfig.5mpm3ku3i340')" />
           </a-form-item>
@@ -101,6 +98,10 @@ const initData = () => {
       {
         validator: (value: any, cb: any) => {
           return new Promise(resolve => {
+            if (!value.trim()) {
+              cb(t('enterprise.ClusterConfig.else2'))
+              resolve(false)
+            }
             const param = {
               name: value
             }
@@ -121,31 +122,116 @@ const initData = () => {
         }
       }
     ],
-    clusterName: [
-      { required: true, 'validate-trigger': 'blur', message: t('enterprise.ClusterConfig.5mpm3ku3hr00') },
+    installPath: [
+      { required: true, 'validate-trigger': 'blur', message: t('enterprise.ClusterConfig.5mpm3ku3i340') },
       {
         validator: (value: any, cb: any) => {
           return new Promise(resolve => {
-            const reg = /^[0-9a-zA-Z_-]+$/
+            if (!value.trim()) {
+              cb(t('enterprise.ClusterConfig.else2'))
+              resolve(false)
+            } else {
+              resolve(true)
+            }
+          })
+        }
+      }
+    ],
+    logPath: [
+      { required: true, 'validate-trigger': 'blur', message: t('enterprise.ClusterConfig.5mpm3ku3iag0') },
+      {
+        validator: (value: any, cb: any) => {
+          return new Promise(resolve => {
+            if (!value.trim()) {
+              cb(t('enterprise.ClusterConfig.else2'))
+              resolve(false)
+            } else {
+              resolve(true)
+            }
+          })
+        }
+      }
+    ],
+    tmpPath: [
+      { required: true, 'validate-trigger': 'blur', message: t('enterprise.ClusterConfig.5mpm3ku3ihg0') },
+      {
+        validator: (value: any, cb: any) => {
+          return new Promise(resolve => {
+            if (!value.trim()) {
+              cb(t('enterprise.ClusterConfig.else2'))
+              resolve(false)
+            } else {
+              resolve(true)
+            }
+          })
+        }
+      }
+    ],
+    omToolsPath: [
+      { required: true, 'validate-trigger': 'blur', message: t('enterprise.ClusterConfig.5mpm3ku3iok0') },
+      {
+        validator: (value: any, cb: any) => {
+          return new Promise(resolve => {
+            if (!value.trim()) {
+              cb(t('enterprise.ClusterConfig.else2'))
+              resolve(false)
+            } else {
+              resolve(true)
+            }
+          })
+        }
+      }
+    ],
+    corePath: [
+      { required: true, 'validate-trigger': 'blur', message: t('enterprise.ClusterConfig.5mpm3ku3ivk0') },
+      {
+        validator: (value: any, cb: any) => {
+          return new Promise(resolve => {
+            if (!value.trim()) {
+              cb(t('enterprise.ClusterConfig.else2'))
+              resolve(false)
+            } else {
+              resolve(true)
+            }
+          })
+        }
+      }
+    ],
+    port: [
+      { required: true, 'validate-trigger': 'blur', message: t('enterprise.ClusterConfig.5mpm3ku3j300') },
+      {
+        validator: (value: any, cb: any) => {
+          return new Promise(resolve => {
+            const reg = /^([0-9]|[1-9]\d{1,3}|[1-5]\d{4}|6[0-4]\d{4}|65[0-4]\d{2}|655[0-2]\d|6553[0-5])$/
             const re = new RegExp(reg)
             if (re.test(value)) {
               resolve(true)
             } else {
-              cb(t('enterprise.ClusterConfig.else1'))
+              cb(t('simple.InstallConfig.else2'))
               resolve(false)
             }
           })
         }
       }
     ],
-    installPath: [{ required: true, 'validate-trigger': 'blur', message: t('enterprise.ClusterConfig.5mpm3ku3i340') }],
-    logPath: [{ required: true, 'validate-trigger': 'blur', message: t('enterprise.ClusterConfig.5mpm3ku3iag0') }],
-    tmpPath: [{ required: true, 'validate-trigger': 'blur', message: t('enterprise.ClusterConfig.5mpm3ku3ihg0') }],
-    omToolsPath: [{ required: true, 'validate-trigger': 'blur', message: t('enterprise.ClusterConfig.5mpm3ku3iok0') }],
-    corePath: [{ required: true, 'validate-trigger': 'blur', message: t('enterprise.ClusterConfig.5mpm3ku3ivk0') }],
-    port: [{ required: true, 'validate-trigger': 'blur', message: t('enterprise.ClusterConfig.5mpm3ku3j300') }],
-    databaseUsername: [{ required: true, 'validate-trigger': 'blur', message: t('enterprise.ClusterConfig.5mpm3ku3j9s0') }],
-    databasePassword: [{ required: true, 'validate-trigger': 'blur', message: t('enterprise.ClusterConfig.5mpm3ku3ji00') }]
+    databaseUsername: [
+      { required: true, 'validate-trigger': 'blur', message: t('enterprise.ClusterConfig.5mpm3ku3j9s0') },
+      {
+        validator: (value: any, cb: any) => {
+          return new Promise(resolve => {
+            if (!value.trim()) {
+              cb(t('enterprise.ClusterConfig.else2'))
+              resolve(false)
+            } else {
+              resolve(true)
+            }
+          })
+        }
+      }
+    ],
+    databasePassword: [
+      { required: true, 'validate-trigger': 'blur', message: t('enterprise.ClusterConfig.5mpm3ku3ji00') }
+    ]
   }
 }
 
@@ -157,6 +243,17 @@ const isInstallCMChange = (val: boolean) => {
 
 const formRef = ref<FormInstance>()
 
+const saveStore = () => {
+  const param = JSON.parse(JSON.stringify(data.form))
+  installStore.setInstallContext({
+    clusterId: param.clusterId,
+    clusterName: param.clusterName,
+    deployType: DeployTypeEnum.CLUSTER
+  })
+  param.nodeConfigList = []
+  installStore.setEnterpriseConfig(param as EnterpriseInstallConfig)
+}
+
 const beforeConfirm = async (): Promise<boolean> => {
   const validRes = await formRef.value?.validate()
   if (!validRes) {
@@ -166,7 +263,13 @@ const beforeConfirm = async (): Promise<boolean> => {
       clusterName: param.clusterName,
       deployType: DeployTypeEnum.CLUSTER
     })
-    param.nodeConfigList = []
+    if (Object.keys(installStore.getEnterpriseConfig).length) {
+      if (param.isInstallCM !== installStore.getEnterpriseConfig.isInstallCM) {
+        param.nodeConfigList = []
+      }
+    } else {
+      param.nodeConfigList = []
+    }
     installStore.setEnterpriseConfig(param as EnterpriseInstallConfig)
     return true
   } else {
@@ -175,7 +278,8 @@ const beforeConfirm = async (): Promise<boolean> => {
 }
 
 defineExpose({
-  beforeConfirm
+  beforeConfirm,
+  saveStore
 })
 
 const installType = computed(() => installStore.getInstallConfig.installType)

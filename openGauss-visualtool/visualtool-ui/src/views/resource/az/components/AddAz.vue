@@ -23,10 +23,6 @@
       <a-form-item :label="$t('components.AddAz.5mpib0ipozw0')" field="address" validate-trigger="blur">
         <a-input v-model="data.formData.address" :placeholder="$t('components.AddAz.5mpib0ipp3k0')"></a-input>
       </a-form-item>
-      <a-form-item field="priority" :label="$t('components.AddAz.5mpib0ipp7w0')" validate-trigger="blur">
-        <a-input-number v-model="data.formData.priority" :placeholder="$t('components.AddAz.5mpib0ippbo0')" :min="1"
-          :max="10" />
-      </a-form-item>
       <a-form-item :label="$t('components.AddAz.5mpib0ippfc0')">
         <a-textarea v-model="data.formData.remark" :placeholder="$t('components.AddAz.5mpib0ippjg0')"></a-textarea>
       </a-form-item>
@@ -58,7 +54,6 @@ const data = reactive({
   formData: {
     azId: '',
     name: '',
-    priority: 1,
     address: '',
     remark: ''
   },
@@ -95,8 +90,7 @@ const formRules = computed(() => {
       }
     }
     ],
-    address: [{ required: true, 'validate-trigger': 'blur', message: t('components.AddAz.5mpib0ipp3k0') }],
-    priority: [{ required: true, 'validate-trigger': 'blur', message: t('components.AddAz.5mpib0ippbo0') }]
+    address: [{ required: true, 'validate-trigger': 'blur', message: t('components.AddAz.5mpib0ipp3k0') }]
   }
 })
 

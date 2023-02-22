@@ -1,14 +1,11 @@
 package com.nctigba.observability.log.controller;
 
-import javax.validation.Valid;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.List;
-
+import com.nctigba.observability.log.model.dto.ContextSearchInfoDTO;
 import com.nctigba.observability.log.model.dto.LogDistroMapDTO;
 import com.nctigba.observability.log.model.dto.LogInfoDTO;
-import com.nctigba.observability.log.model.query.EsSearchQuery;
 import com.nctigba.observability.log.model.dto.LogTypeTreeDTO;
+import com.nctigba.observability.log.model.query.ContextSearchQuery;
+import com.nctigba.observability.log.model.query.EsSearchQuery;
 import com.nctigba.observability.log.model.query.LogDistroMapQuery;
 import com.nctigba.observability.log.model.query.LogSearchQuery;
 import com.nctigba.observability.log.service.LogSearchService;
@@ -16,7 +13,15 @@ import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.propertyeditors.CustomDateEditor;
 import org.springframework.web.bind.WebDataBinder;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.InitBinder;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import javax.validation.Valid;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
 
 
 /**
@@ -34,7 +39,7 @@ public class LogSearchController {
 
     @InitBinder
     public void initBinder(WebDataBinder webDataBinder) {
-        webDataBinder.registerCustomEditor(Date.class, new CustomDateEditor(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'"), true));
+        webDataBinder.registerCustomEditor(Date.class, new CustomDateEditor(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"), true));
     }
 
     @ApiOperation("Log Distribution Map")
@@ -63,7 +68,7 @@ public class LogSearchController {
             esSearchQuery.setSearchPhrase(queryParam.getSearchPhrase());
             esSearchQuery.setLogLevel(queryParam.getLogLevel());
             esSearchQuery.setLogType(queryParam.getLogType());
-            esSearchQuery.setScollId(queryParam.getScollId());
+            esSearchQuery.setScrollId(queryParam.getScrollId());
             esSearchQuery.setRowCount(queryParam.getRowCount());
         }
         return logSearchService.getLogByQuery(esSearchQuery);
@@ -81,5 +86,11 @@ public class LogSearchController {
         return logSearchService.getLogLevel();
     }
 
+    @ApiOperation("Context Search")
+    @GetMapping(value = "/logContextSearch")
+    public ContextSearchInfoDTO logContextSearch(ContextSearchQuery queryParam) throws Exception {
+        System.out.println(queryParam.getLogDate());
+        return logSearchService.getContextSearch(queryParam);
+    }
 
 }

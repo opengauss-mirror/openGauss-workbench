@@ -53,11 +53,11 @@ public class DatabaseSynonymServiceImpl implements DatabaseSynonymService {
     }
 
     @Override
-    public Map<String, Object> synonymAttribute(DatabaseSynonymAttributeDTO request){
+    public Map<String, Object> synonymAttribute(DatabaseSynonymAttributeDTO request) {
         log.info("synonymAttribute request is: " + request);
         try {
-            String ddl = SYNONYM_ATTRIBUTE_SQL +request.getSynonymName()+ QUOTES_SEMICOLON;
-            Connection connection = connectionConfig.connectDatabase(request.getConnectionName(), request.getWebUser());
+            String ddl = SYNONYM_ATTRIBUTE_SQL + request.getSynonymName() + QUOTES_SEMICOLON;
+            Connection connection = connectionConfig.connectDatabase(request.getUuid());
             Statement statement = connection.createStatement();
             ResultSet resultSet = statement.executeQuery(ddl);
             Map<String, Object> resultMap = DebugUtils.parseResultSet(resultSet);
@@ -69,12 +69,13 @@ public class DatabaseSynonymServiceImpl implements DatabaseSynonymService {
             throw new CustomException(e.getMessage());
         }
     }
+
     @Override
     public void createSynonym(DatabaseCreateSynonymDTO request) {
         log.info("createSynonym request is: " + request);
         try {
             String ddl = splicingSequenceDDL(request);
-            Connection connection = connectionConfig.connectDatabase(request.getConnectionName(), request.getWebUser());
+            Connection connection = connectionConfig.connectDatabase(request.getUuid());
             Statement statement = connection.createStatement();
             statement.execute(ddl);
             log.info("createSynonym sql is: " + ddl);
@@ -88,7 +89,7 @@ public class DatabaseSynonymServiceImpl implements DatabaseSynonymService {
     public void dropSynonym(DatabaseDropSynonymDTO request) {
         log.info("dropSynonym request is: " + request);
         try {
-            Connection connection = connectionConfig.connectDatabase(request.getConnectionName(), request.getWebUser());
+            Connection connection = connectionConfig.connectDatabase(request.getUuid());
             Statement statement = connection.createStatement();
             String sql = DROP_SQL + SYNONYM_KEYWORD_SQL + request.getSchema() + POINT + request.getSynonymName();
             statement.execute(sql);

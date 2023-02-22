@@ -1,5 +1,13 @@
 import request from './request';
 
+// heartbeat
+export function heartbeat() {
+  return request({
+    url: '/dataStudio/web/v1/functionality/heartbeat',
+    method: 'get',
+  });
+}
+
 // createConnect
 export function createConnect(data) {
   return request({
@@ -39,5 +47,12 @@ export const getDataLinkList = async (webUser: string) => {
   return request({
     url: `/dataStudio/web/v1/connections?webUser=${webUser}`,
     method: 'get',
+  });
+};
+
+export const closeConnections = async (uuid: string) => {
+  return request({
+    url: `/dataStudio/web/v1/connections/close/${uuid}`,
+    method: 'delete',
   });
 };

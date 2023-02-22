@@ -44,6 +44,7 @@ public class DatabaseSequenceController {
     public void dropSequence(@RequestBody DatabaseDropSequenceDTO request) throws Exception {
         databaseSequenceService.dropSequence(request);
     }
+
     @ApiOperation(value = "RETURN SEQUENCE DDL")
     @PostMapping(value = "/sequenceDdls", produces = MediaType.APPLICATION_JSON_VALUE)
     public String returnSequenceDDL(@RequestBody DatabaseSequenceDdlDTO request) throws Exception {

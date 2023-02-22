@@ -90,8 +90,10 @@ public class BaseSeriesConstructor {
                 result = median(oriData);
                 break;
             }
-            default:
+            default: {
+                result = oriData.size() > 1 ? oriData.get(0) : 0;
                 break;
+            }
         }
 
         return result;

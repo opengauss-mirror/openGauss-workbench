@@ -9,11 +9,17 @@ export default {
       'Please check whether the URL you entered is correct, or click the button below to return to the home page.',
     backHome: 'Back to Home',
     confirm: 'If you confirm',
-    if: '？',
+    systemPrompt: 'System prompt',
+    loginExpired: 'Login status has expired, please log in again',
+    signInAgain: 'Sign in again',
+    if: '?',
     colon: ':',
   },
   utils: {
     colorError: 'Wrong {name} color value',
+  },
+  rules: {
+    empty: '{0} is required',
   },
   week: {
     Sunday: 'Sun',
@@ -26,7 +32,16 @@ export default {
   },
   siderbar: {},
   database: {
-    list: 'Database List',
+    open: 'open connection',
+    close: 'disconnect',
+    create: 'create database',
+    rename: 'rename database',
+    remove: 'remove database',
+    property: 'database properties',
+    name: 'database name',
+    encoder: 'database encoder',
+    connect: 'connect to database',
+    list: 'database List',
     placeholder: 'Please enter the filter database object',
     regular_table: 'regular table',
     function_process: 'function/process',
@@ -38,6 +53,8 @@ export default {
     name: 'connection name',
     new: 'new connection',
     edit: 'edit connection',
+    delete: 'remove connection',
+    disAllconnection: 'disconnect all',
     props: 'connection props',
     info: 'infomation',
     refresh: 'refresh',
@@ -61,6 +78,14 @@ export default {
       type: 'database Type',
       version: 'version',
     },
+    message: {
+      deleteConnect:
+        'Disconnecting the database may cancel all database operations in progress. Are you sure you want to disconnect {name}?',
+      deleteAllConnect:
+        'All databases will be disconnected before deleting the connection. Are you sure you want to delete the {name} server?',
+      deleteDatabase:
+        'The connection will be disconnected before deleting the database. Are you sure you want to delete the {name} database?',
+    },
     rules: {
       common: ['The length cannot exceed {count} characters'],
       name: ['@:connection.name is required'],
@@ -83,6 +108,7 @@ export default {
     synonym: 'create synonym',
     sequence: 'create sequence',
     terminal: 'create terminal',
+    openNewTerminal: 'open new terminal',
   },
   delete: {
     functionSP: 'delete function/process',
@@ -101,12 +127,14 @@ export default {
   },
   functionBar: {
     execute: 'compile / execute',
-    stop: 'stop',
+    stopRun: 'stop',
     clear: 'clear',
     startDebug: 'startDebug',
     stopDebug: 'stopDebug',
-    breakPointStep: 'breakPointStep',
+    breakPointStep: 'continue',
     singleStep: 'singleStep',
+    stepIn: 'stepInto',
+    stepOut: 'stepOut',
     format: 'format',
   },
   resultTab: {
@@ -145,6 +173,9 @@ export default {
     variable: 'Variable',
     value: 'value',
     dataType: 'DataType',
+    placeholder: {
+      variable: 'Please enter variable name',
+    },
   },
   table: {
     column: {

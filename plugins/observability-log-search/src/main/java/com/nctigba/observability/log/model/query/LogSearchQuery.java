@@ -1,10 +1,10 @@
 package com.nctigba.observability.log.model.query;
 
+import lombok.Data;
+
 import javax.validation.constraints.NotNull;
 import java.util.Date;
 import java.util.List;
-
-import lombok.Data;
 
 /**
  * <p>
@@ -24,5 +24,5 @@ public class LogSearchQuery {
     private Date endDate;
     private List<String> logType;
     private List<String> logLevel;
-    private String scollId;
+    private String scrollId;
 }

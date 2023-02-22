@@ -71,7 +71,7 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, ComputedRef, onMounted, reactive, ref } from 'vue'
+import { computed, ComputedRef, onMounted, reactive, ref, inject } from 'vue'
 import {
   ClusterRoleEnum,
   DeployTypeEnum,
@@ -80,7 +80,8 @@ import {
 } from '@/types/ops/install' // eslint-disable-line
 import { KeyValue } from '@/types/global'
 import { useOpsStore } from '@/store'
-import { hasName, hostListAll, hostUserListWithoutRoot } from '@/api/ops'
+import { hasName, hostListAll, hostUserListWithoutRoot, portUsed, pathEmpty, hostPingById } from '@/api/ops'
+import { encryptPassword } from '@/utils/jsencrypt'
 import { Message } from '@arco-design/web-vue'
 import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
@@ -131,6 +132,10 @@ const initData = () => {
       {
         validator: (value: any, cb: any) => {
           return new Promise(resolve => {
+            if (!value.trim()) {
+              cb(t('enterprise.ClusterConfig.else2'))
+              resolve(false)
+            }
             const param = {
               name: value
             }
@@ -151,11 +156,68 @@ const initData = () => {
         }
       }
     ],
-    port: [{ required: true, 'validate-trigger': 'blur', message: t('lightweight.InstallConfig.5mpmkfqyay80') }],
+    port: [
+      { required: true, 'validate-trigger': 'blur', message: t('lightweight.InstallConfig.5mpmkfqyay80') },
+      {
+        validator: (value: any, cb: any) => {
+          return new Promise(resolve => {
+            const reg = /^([0-9]|[1-9]\d{1,3}|[1-5]\d{4}|6[0-4]\d{4}|65[0-4]\d{2}|655[0-2]\d|6553[0-5])$/
+            const re = new RegExp(reg)
+            if (re.test(value)) {
+              resolve(true)
+            } else {
+              cb(t('simple.InstallConfig.else2'))
+              resolve(false)
+            }
+          })
+        }
+      }
+    ],
     rootPassword: [{ required: true, 'validate-trigger': 'blur', message: t('lightweight.InstallConfig.5mpmkfqy9h80') }],
-    installPath: [{ required: true, 'validate-trigger': 'blur', message: t('lightweight.InstallConfig.5mpmkfqyaas0') }],
-    dataPath: [{ required: true, 'validate-trigger': 'blur', message: t('lightweight.InstallConfig.5mpmkfqyan00') }],
-    databaseUsername: [{ required: true, 'validate-trigger': 'blur', message: t('lightweight.InstallConfig.5mpmkfqyb9w0') }],
+    installPath: [
+      { required: true, 'validate-trigger': 'blur', message: t('lightweight.InstallConfig.5mpmkfqyaas0') },
+      {
+        validator: (value: any, cb: any) => {
+          return new Promise(resolve => {
+            if (!value.trim()) {
+              cb(t('enterprise.ClusterConfig.else2'))
+              resolve(false)
+            } else {
+              resolve(true)
+            }
+          })
+        }
+      }
+    ],
+    dataPath: [
+      { required: true, 'validate-trigger': 'blur', message: t('lightweight.InstallConfig.5mpmkfqyan00') },
+      {
+        validator: (value: any, cb: any) => {
+          return new Promise(resolve => {
+            if (!value.trim()) {
+              cb(t('enterprise.ClusterConfig.else2'))
+              resolve(false)
+            } else {
+              resolve(true)
+            }
+          })
+        }
+      }
+    ],
+    databaseUsername: [
+      { required: true, 'validate-trigger': 'blur', message: t('lightweight.InstallConfig.5mpmkfqyb9w0') },
+      {
+        validator: (value: any, cb: any) => {
+          return new Promise(resolve => {
+            if (!value.trim()) {
+              cb(t('enterprise.ClusterConfig.else2'))
+              resolve(false)
+            } else {
+              resolve(true)
+            }
+          })
+        }
+      }],
     databasePassword: [{ required: true, 'validate-trigger': 'blur', message: t('lightweight.InstallConfig.5mpmkfqybo00') }]
   }
 }
@@ -270,6 +332,29 @@ const setRefMap = (el: any) => {
   }
 }
 
+const saveStore = () => {
+  const param = JSON.parse(JSON.stringify(data.nodeData))
+  if (param.length) {
+    // node use first node port
+    param.forEach((item: KeyValue) => {
+      item.port = param[0].port
+    })
+    installStore.setInstallContext({ clusterId: param[0].clusterId })
+    const liteConfig = {
+      clusterName: '',
+      port: param[0].port,
+      databaseUsername: param[0].databaseUsername,
+      databasePassword: param[0].databasePassword,
+      nodeConfigList: param as LiteNodeConfig[]
+    }
+    installStore.setLiteConfig(liteConfig as LiteInstallConfig)
+  }
+  console.log('show lite store data', installStore.getLiteConfig);
+
+}
+
+const loadingFunc = inject<any>('loading')
+
 const beforeConfirm = async (): Promise<boolean> => {
   let validRes = true
   for (let i = 0; i < refList.value.length; i++) {
@@ -281,28 +366,117 @@ const beforeConfirm = async (): Promise<boolean> => {
     }
   }
   if (validRes) {
-    const param = JSON.parse(JSON.stringify(data.nodeData))
-    if (param.length) {
-      // node use first node port
-      param.forEach((item: KeyValue) => {
-        item.port = param[0].port
-      })
-      installStore.setInstallContext({ clusterId: param[0].clusterId })
-      const liteConfig = {
-        clusterName: '',
-        port: param[0].port,
-        databaseUsername: param[0].databaseUsername,
-        databasePassword: param[0].databasePassword,
-        nodeConfigList: param as LiteNodeConfig[]
-      }
-      installStore.setLiteConfig(liteConfig as LiteInstallConfig)
-    }
+    loadingFunc.toLoading()
+    validRes = await validateSpecialFields()
+  }
+  if (validRes) {
+    saveStore()
     return true
+  }
+  loadingFunc.cancelLoading()
+  return false
+}
+
+const validatePort = async (port: number, password: string, hostId: string) => {
+  const portParam = {
+    port: port,
+    rootPassword: password
+  }
+  const portValid: KeyValue = await portUsed(hostId, portParam)
+  console.log('show port valid', portValid)
+  if (Number(portValid.code) === 200) {
+    return portValid.data
   }
   return false
 }
 
+const validatePath = async (path: string, password: string, hostId: string) => {
+  const pathParam = {
+    path: path,
+    rootPassword: password
+  }
+  const pathValid: KeyValue = await pathEmpty(hostId, pathParam)
+  console.log('show path valid', pathValid)
+  if (Number(pathValid.code) === 200) {
+    return pathValid.data
+  }
+  return false
+}
+
+const validateSpecialFields = async () => {
+  let result = true
+  if (data.nodeData.length) {
+    for (let i = 0; i < data.nodeData.length; i++) {
+      refList.value[i].clearValidate()
+    }
+    for (let i = 0; i < data.nodeData.length; i++) {
+      if (data.nodeData[i].rootPassword) {
+        const validMethodArr = []
+        let isOkPwd = true
+        const encryptPwd = await encryptPassword(data.nodeData[i].rootPassword)
+        // password validate
+        try {
+          const param = {
+            rootPassword: encryptPwd
+          }
+          const passwordValid: KeyValue = await hostPingById(data.nodeData[i].hostId, param)
+          if (Number(passwordValid.code) !== 200) {
+            refList.value[i].setFields({
+              rootPassword: {
+                status: 'error',
+                message: t('enterprise.NodeConfig.else8')
+              }
+            })
+            result = false
+            isOkPwd = false
+          }
+        } catch (err: any) {
+          refList.value[i].setFields({
+            rootPassword: {
+              status: 'error',
+              message: t('enterprise.NodeConfig.else9')
+            }
+          })
+          result = false
+          isOkPwd = false
+        }
+        if (!isOkPwd) {
+          continue
+        }
+        //  cluster port is used
+        validMethodArr.push(validatePort(data.nodeData[i].port, encryptPwd, data.nodeData[i].hostId))
+        validMethodArr.push(validatePath(data.nodeData[i].dataPath, encryptPwd, data.nodeData[i].hostId))
+        if (validMethodArr.length) {
+          const validResult = await Promise.all(validMethodArr)
+          if ((installType.value !== 'import' && validResult[0]) || (installType.value === 'import' && !validResult[0])) {
+            // port valid
+            refList.value[i].setFields({
+              port: {
+                status: 'error',
+                message: data.nodeData[i].port + (installType.value === 'import' ? t('enterprise.NodeConfig.else10') : t('enterprise.NodeConfig.else11'))
+              }
+            })
+            result = false
+          }
+          if ((installType.value !== 'import' && !validResult[1]) || (installType.value === 'import' && validResult[1])) {
+            // dataPath Valid
+            refList.value[i].setFields({
+              dataPath: {
+                status: 'error',
+                message: installType.value === 'import' ? t('enterprise.NodeConfig.else12') : t('enterprise.NodeConfig.else13')
+              }
+            })
+            result = false
+          }
+        }
+      }
+    }
+  }
+  return result
+}
+
 defineExpose({
+  saveStore,
   beforeConfirm
 })
 

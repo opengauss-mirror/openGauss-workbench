@@ -6,6 +6,7 @@ import com.nctigba.datastudio.model.PublicParamReq;
 import com.nctigba.datastudio.service.OperationInterface;
 import com.nctigba.datastudio.util.DebugUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import java.sql.ResultSet;
@@ -39,13 +40,17 @@ public class DeleteBreakPointImpl implements OperationInterface {
         Map<Integer, String> breakPointMap = (Map<Integer, String>) webSocketServer.getParamMap(windowName).get(BREAK_POINT);
         log.info("deleteBreakPoint breakPointMap is: " + breakPointMap);
 
-        Statement stat = (Statement) webSocketServer.getParamMap(windowName).get(STATEMENT);
+        String name = paramReq.getOldWindowName();
+        if (StringUtils.isEmpty(name)) {
+            name = windowName;
+        }
+        Statement stat = (Statement) webSocketServer.getParamMap(name).get(STATEMENT);
         if (stat == null) {
             return;
         }
 
         if (webSocketServer.checkLine(windowName, line)) {
-            Integer no = Integer.valueOf(breakPointMap.get(line));
+            int no = Integer.parseInt(breakPointMap.get(line));
             stat.execute(DELETE_BREAKPOINT_SQL + no + PARENTHESES_SEMICOLON);
             Iterator<Integer> iterator = breakPointMap.keySet().iterator();
             log.info("deleteBreakPoint iterator is: " + iterator);

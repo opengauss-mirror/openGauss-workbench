@@ -9,21 +9,15 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.sql.Connection;
-import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.HashMap;
 import java.util.Map;
 
 import static com.nctigba.datastudio.constants.CommonConstants.CONNECTION;
-import static com.nctigba.datastudio.constants.CommonConstants.FUNC_OID;
 import static com.nctigba.datastudio.constants.CommonConstants.RESULT;
 import static com.nctigba.datastudio.constants.CommonConstants.STATEMENT;
 import static com.nctigba.datastudio.constants.CommonConstants.SUCCESS;
 import static com.nctigba.datastudio.constants.SqlConstants.ABORT_SQL;
-import static com.nctigba.datastudio.constants.SqlConstants.DEBUG_INFO_SQL;
-import static com.nctigba.datastudio.constants.SqlConstants.PARENTHESES_SEMICOLON;
-import static com.nctigba.datastudio.constants.SqlConstants.TURN_OFF_SQL;
-import static com.nctigba.datastudio.enums.MessageEnum.paramWindow;
 import static com.nctigba.datastudio.enums.MessageEnum.text;
 
 /**
@@ -49,9 +43,11 @@ public class StopDebugImpl implements OperationInterface {
             if (statNew != null) {
                 statNew.close();
                 statNew.cancel();
+                webSocketServer.setParamMap(windowName, STATEMENT, null);
             }
             if (conn != null) {
                 conn.close();
+                webSocketServer.setParamMap(windowName, CONNECTION, null);
             }
         }
 

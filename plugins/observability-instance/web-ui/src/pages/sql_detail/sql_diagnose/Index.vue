@@ -1,7 +1,7 @@
 <template>
     <div class="search-form">
         <div class="filter">
-            <el-button type="primary" @click="handleModal">{{ $t('sql.sqlDiagnoseCreateTask') }}</el-button>
+            <el-button type="primary" @click="handleModal">{{ $t("sql.sqlDiagnoseCreateTask") }}</el-button>
         </div>
     </div>
     <div class="page-container">
@@ -20,7 +20,7 @@
                         <span v-if="scope.row.sql && scope.row.sql.length > 35">
                             <el-popover width="300" trigger="hover" :content="scope.row.sql" popper-class="sql-popover-tip">
                                 <template #reference>
-                                    <span>{{ scope.row.sql.substr(0, 35) + '...' }}</span>
+                                    <span>{{ scope.row.sql.substr(0, 35) + "..." }}</span>
                                 </template>
                             </el-popover>
                         </span>
@@ -30,25 +30,25 @@
                 <el-table-column prop="state" :label="$t('datasource.trackTable[2]')" width="100" align="center" />
                 <el-table-column :label="$t('datasource.trackTable[3]')" width="140" align="center">
                     <template #default="scope">
-                        {{ scope.row.starttime ? dayjs.utc(scope.row.starttime).local().format('YYYY-MM-DD HH:mm:ss') : '' }}
+                        {{ scope.row.starttime ? dayjs.utc(scope.row.starttime).local().format("YYYY-MM-DD HH:mm:ss") : "" }}
                     </template>
                 </el-table-column>
                 <el-table-column :label="$t('datasource.trackTable[4]')" width="140" align="center">
                     <template #default="scope">
-                        <div>{{ scope.row.endtime ? dayjs.utc(scope.row.endtime).local().format('YYYY-MM-DD HH:mm:ss') : '' }}</div>
+                        <div>{{ scope.row.endtime ? dayjs.utc(scope.row.endtime).local().format("YYYY-MM-DD HH:mm:ss") : "" }}</div>
                     </template>
                 </el-table-column>
                 <el-table-column prop="cost" :label="$t('datasource.trackTable[5]')" width="100" />
                 <el-table-column :label="$t('datasource.trackTable[6]')" width="140" align="center">
                     <template #default="scope">
-                        <div>{{ scope.row.createtime ? dayjs.utc(scope.row.createtime).local().format('YYYY-MM-DD HH:mm:ss') : '' }}</div>
+                        <div>{{ scope.row.createtime ? dayjs.utc(scope.row.createtime).local().format("YYYY-MM-DD HH:mm:ss") : "" }}</div>
                     </template>
                 </el-table-column>
                 <el-table-column prop="clusterId" :label="$t('datasource.trackTable[7]')" width="100" align="center" />
                 <el-table-column prop="nodeId" :label="$t('datasource.trackTable[8]')" width="100" align="center" />
                 <el-table-column :label="$t('datasource.trackTable[9]')" align="center" fixed="right" width="80">
                     <template #default="scope">
-                        <el-link size="small" type="primary" @click="handleDelete(scope.row)">{{ $t('app.delete') }}</el-link>
+                        <el-link size="small" type="primary" @click="handleDelete(scope.row)">{{ $t("app.delete") }}</el-link>
                     </template>
                 </el-table-column>
             </el-table>
@@ -59,149 +59,149 @@
 </template>
 
 <script setup lang="ts">
-import dayjs from 'dayjs'
-import utc from 'dayjs/plugin/utc';
-import timezone from 'dayjs/plugin/timezone';
-import { Delete } from '@element-plus/icons-vue'
-import 'element-plus/es/components/message-box/style/index'
-import { useRequest } from 'vue-request'
-import diagnosisRequest from '../../../request/diagnosis'
-import { i18n } from '../../../i18n'
-import { ElMessageBox } from 'element-plus'
-import TrackAdd from './trackAdd.vue'
-import { useI18n } from 'vue-i18n'
-const { t } = useI18n()
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
+import { Delete } from "@element-plus/icons-vue";
+import "element-plus/es/components/message-box/style/index";
+import { useRequest } from "vue-request";
+import diagnosisRequest from "../../../request/diagnosis";
+import { i18n } from "../../../i18n";
+import { ElMessageBox } from "element-plus";
+import TrackAdd from "./trackAdd.vue";
+import { useI18n } from "vue-i18n";
+const { t } = useI18n();
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
 const props = withDefaults(
     defineProps<{
-        dbid: any
-        sqlId: string | string[]
-        sqlText: string
-        dbName: string
+        dbid: any;
+        sqlId: string | string[];
+        sqlText: string;
+        dbName: string;
     }>(),
     {
-        dbid: '',
-        sqlId: '',
-        sqlText: '',
-        dbName: '',
+        dbid: "",
+        sqlId: "",
+        sqlText: "",
+        dbName: "",
     }
-)
+);
 type Res =
     | {
-          tableData: string[]
-          total: number
-          current: number
-          records: string[]
+          tableData: string[];
+          total: number;
+          current: number;
+          records: string[];
       }
-    | undefined
+    | undefined;
 
-const addModel = ref(false)
-const sqlText = ref('')
-const tableData = ref<Array<any>>([])
+const addModel = ref(false);
+const sqlText = ref("");
+const tableData = ref<Array<any>>([]);
 const page = reactive({
     currentPage: 1,
     pageSize: 10,
     total: 10,
-})
+});
 
 const queryData = computed(() => {
-    const { pageSize: pagesize, currentPage: current } = page
+    const { pageSize: pagesize, currentPage: current } = page;
     const queryObj = {
         dbName: props.dbName,
         pageNum: current,
         pageSize: pagesize,
         sqlId: props.sqlId,
-    }
-    return queryObj
-})
+    };
+    return queryObj;
+});
 onMounted(() => {
-    requestData()
-})
+    requestData();
+});
 const gotoTaskDetail = (id: string) => {
     window.$wujie?.props.methods.jump({
         name: `Static-pluginObservability-sql-diagnosisVemTrack_detail`,
         query: {
             id,
         },
-    })
-}
+    });
+};
 const handleModal = () => {
-    addModel.value = true
-}
+    addModel.value = true;
+};
 
 const changeModalCurrent = (val: boolean) => {
-    addModel.value = val
-}
+    addModel.value = val;
+};
 const bandleCovey = (code: number) => {
-    page.currentPage = 1
-    requestData()
-}
+    page.currentPage = 1;
+    requestData();
+};
 const handleSizeChange = (val: number) => {
-    page.currentPage = 1
-    page.pageSize = val
-    requestData()
-}
+    page.currentPage = 1;
+    page.pageSize = val;
+    requestData();
+};
 const handleCurrentChange = (val: number) => {
-    page.currentPage = val
-    requestData()
-}
+    page.currentPage = val;
+    requestData();
+};
 const handleDelete = (val: any) => {
-    ElMessageBox.confirm(t('datasource.confirmToDeleteTask'))
+    ElMessageBox.confirm(t("datasource.confirmToDeleteTask"))
         .then(() => {
-            hanleDelete(val.id)
+            hanleDelete(val.id);
         })
         .catch(() => {
-            console.log('cancel')
+            console.log("cancel");
             // catch error
-        })
-}
+        });
+};
 watch(
     () => props.sqlText,
     (newValue) => {
-        sqlText.value = newValue
+        sqlText.value = newValue;
     },
     { immediate: true }
-)
+);
 
 const { data: res, run: requestData } = useRequest(
     () => {
-        return diagnosisRequest.get('/sqlDiagnosis/api/v1/diagnosisTasks', queryData.value)
+        return diagnosisRequest.get("/sqlDiagnosis/api/v1/diagnosisTasks", queryData.value);
     },
     { manual: true }
-)
+);
 
 // Delete one task
 const hanleDelete = (id: string) => {
     useRequest(
         () => {
-            return diagnosisRequest.delete(`/sqlDiagnosis/api/v1/diagnosisTasks/${id}`)
+            return diagnosisRequest.delete(`/sqlDiagnosis/api/v1/diagnosisTasks/${id}`);
         },
         {
             onSuccess: (data) => {
                 if (JSON.stringify(data)) {
-                    requestData()
+                    requestData();
                 }
             },
         }
-    )
-}
+    );
+};
 watch(res, (res: Res) => {
     if (res && Object.keys(res).length) {
-        const { total, current } = res
-        tableData.value = res.records
-        Object.assign(page, { pageSize: page.pageSize, total, currentPage: current })
+        const { total } = res;
+        tableData.value = res.records;
+        Object.assign(page, { pageSize: page.pageSize, total });
     } else {
-        tableData.value = []
-        Object.assign(page, { pageSize: page.pageSize, total: 0, currentPage: 1 })
+        tableData.value = [];
+        Object.assign(page, { pageSize: page.pageSize, total: 0, currentPage: 1 });
     }
-})
+});
 </script>
 
 <style scoped lang="scss">
-.el-link.el-link--primary{
+.el-link.el-link--primary {
     color: var(--primary-6) !important;
 }
 .el-button {
@@ -210,7 +210,7 @@ watch(res, (res: Res) => {
     border: none !important;
 }
 .el-button.el-button--primary {
-    color: #fff !important;
+    color: var(--color-bg-2) !important;
     background-color: var(--primary-6) !important;
 }
 .el-button.el-button--primary.search-button {

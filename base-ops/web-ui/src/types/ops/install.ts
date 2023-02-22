@@ -102,6 +102,7 @@ export interface EnterpriseInstallNodeConfig {
   cmPort: number;
   dataPath: string;
   xlogPath: string;
+  azPriority: number;
 }
 
 export interface EnterpriseInstallConfig { // eslint-disable-line

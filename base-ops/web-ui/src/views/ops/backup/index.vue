@@ -3,7 +3,7 @@
     <div class="flex-row-end mb">
       <div class="flex-row mr">
         <div class="label-color top-label mr-s">{{ $t('backup.index.else1') }}:</div>
-        <a-select style="width: 200px;" :loading="data.clusterListLoading" v-model="data.clusterId" allow-clear
+        <a-select style="width: 200px;" :loading="data.clusterListLoading" v-model="filter.clusterId" allow-clear
           :placeholder="$t('backup.index.5mpm2oya7bg0')">
           <a-option v-for="(item, index) in data.clusterList" :key="index" :label="item.label" :value="item.value" />
         </a-select>
@@ -11,13 +11,16 @@
       <a-button type="primary" @click="getListData">{{ $t('backup.index.5mpm2oya7y80') }}</a-button>
     </div>
     <a-table class="d-a-table-row full-h" :data="list.data" :columns="columns" :pagination="list.page"
-      :loading="list.loading" @page-change="currentPage">
+      :loading="list.loading" @page-change="currentPage" @page-size-change="pageSizeChange">
       <template #host="{ record }">
         {{ record.privateIp }}({{ record.publicIp }})
       </template>
       <template #operation="{ record }">
         <div class="flex-row-start">
-          <a-link class="mr" @click="handleRecover(record)">{{ $t('backup.index.5mpm2oya83s0') }}</a-link>
+          <a-popconfirm :content="$t('backup.index.else2')" type="warning" :ok-text="$t('backup.index.5mpm2oya8b00')"
+            :cancel-text="$t('backup.index.5mpm2oya8ek0')" @ok="handleRecover(record)">
+            <a-link class="mr">{{ $t('backup.index.5mpm2oya83s0') }}</a-link>
+          </a-popconfirm>
           <a-popconfirm :content="$t('backup.index.5mpm2oya87g0')" type="warning"
             :ok-text="$t('backup.index.5mpm2oya8b00')" :cancel-text="$t('backup.index.5mpm2oya8ek0')"
             @ok="handleDel(record)">
@@ -56,25 +59,27 @@ const data: {
 const columns = computed(() => [
   { title: t('backup.index.5mpm2oya8lk0'), dataIndex: 'clusterId' },
   { title: t('backup.index.5mpm2oya8r80'), dataIndex: 'backupId' },
+  { title: t('backup.index.else3'), dataIndex: 'remark', ellipsis: true, tooltip: true },
   { title: t('backup.index.5mpm2oya8uo0'), dataIndex: 'hostId', slotName: 'host' },
-  { title: t('backup.index.5mpm2oya8y00'), dataIndex: 'backupPath' },
+  { title: t('backup.index.5mpm2oya8y00'), dataIndex: 'backupPath', ellipsis: true, tooltip: true },
   { title: t('backup.index.5mpm2oya9280'), dataIndex: 'createTime' },
   { title: t('backup.index.5mpm2oya95o0'), slotName: 'operation' }
 ])
 
 const filter = reactive({
-  search: '',
+  clusterId: '',
   pageNum: 1,
   pageSize: 10
 })
 
-const list: {
-  data: Array<KeyValue>,
-  page: { page: number, pageSize: number, total: number },
-  loading: boolean
-} = reactive({
+const list = reactive<KeyValue>({
   data: [],
-  page: { page: 1, pageSize: 10, total: 0 },
+  page: {
+    total: 0,
+    'show-total': true,
+    'show-jumper': true,
+    'show-page-size': true
+  },
   loading: false
 })
 
@@ -118,8 +123,14 @@ const currentPage = (e: number) => {
   getListData()
 }
 
+const pageSizeChange = (e: number) => {
+  filter.pageSize = e
+  getListData()
+}
+
 const handleRecover = (row: KeyValue) => {
   list.loading = true
+  const term = getTermObj()
   const socketKey = new Date().getTime()
   const webSocket = new Socket({ url: `backup_${row.backupId}_${socketKey}` })
   webSocket.onopen(() => {
@@ -133,13 +144,10 @@ const handleRecover = (row: KeyValue) => {
       } else {
         createXterm(row.backupId)
         createWinbox(row)
-        const term = getTermObj()
         initTerm(term, webSocket, row.backupId)
       }
     }).catch(() => {
       list.loading = false
-      console.log('catch destroy')
-
       webSocket.destroy()
     })
   })
@@ -177,7 +185,7 @@ const createXterm = (idName: string) => {
   div.setAttributeNode(divClass)
   const styleClass = document.createAttribute('style')
   div.setAttributeNode(styleClass)
-  document.getElementById('backup')?.append(div)
+  div.style.marginTop = '35px'
 }
 
 const getTermObj = (): Terminal => {
@@ -213,13 +221,15 @@ const initTerm = (term: Terminal, socket: Socket<any, any> | null, xtermId: stri
 const createWinbox = (row: KeyValue) => {
   const createWindow = useWinBox()
   createWindow({
-    id: row.backId,
-    title: row.clusterId + ' backup recover',
+    id: row.backupId,
+    title: row.backupId + ' backup recover',
     mount: document.getElementById(row.backupId),
     class: ['custom-winbox', 'no-full', 'no-max'],
     background: '#1D2129',
     x: 'center',
     y: 'center',
+    width: '50%',
+    height: '50%',
     onClose: function () {
       list.loading = false
       getListData()

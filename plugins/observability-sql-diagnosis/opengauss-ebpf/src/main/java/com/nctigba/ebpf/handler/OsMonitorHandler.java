@@ -31,7 +31,7 @@ public class OsMonitorHandler {
      *
      * @param taskid monitorType
      */
-    public void startMonitor(String taskid, String monitorType) {
+    public String startMonitor(String taskid, String monitorType) {
         OSUtil toolUtil = new OSUtil();
         String outputUrl = urlConfig.getOutputUrl();
         String fileUrl = " > " + outputUrl + taskid + monitorType;
@@ -43,7 +43,7 @@ public class OsMonitorHandler {
         } else if (CpuType.SAR.equals(monitorType)) {
             execcmd = cpuConfig.getSar() + fileUrl + FileType.DEFAULT;
         }
-        toolUtil.exec(execcmd);
+        return toolUtil.execCmd(execcmd);
 
     }
 
@@ -52,14 +52,20 @@ public class OsMonitorHandler {
      *
      * @param monitorType stop
      */
-    public void stopMonitor(String monitorType) {
+    public void stopMonitor(String monitorType, String pid) {
         OSUtil toolUtil = new OSUtil();
         String type = monitorType.substring(0, monitorType.length() - 1);
         String param = monitorType.substring(monitorType.length() - 1);
-        String execcmd = "ps -ef|grep " + type + " | grep -v grep | grep " + param + " | awk '{print $2}' | xargs kill -2";
-        String pid = toolUtil.exec(execcmd).toString();
-        System.out.printf(pid);
-        String killcmd = "kill -2 " + pid;
+        String execcmd = "ps -ef|grep " + type + " | grep -v grep | grep " + param + " | awk '{print $2,$3}'";
+        String pids = toolUtil.exec(execcmd).toString();
+        String[] pidss = pids.split(System.lineSeparator());
+        String tid = null;
+        for (int i = 0; i < pidss.length; i++) {
+            if (pidss[i].contains(pid) && pid != pidss[i].substring(0, pidss[i].indexOf(" "))) {
+                tid = pidss[i].substring(0, pidss[i].indexOf(" "));
+            }
+        }
+        String killcmd = "kill -2 " + tid;
         toolUtil.exec(killcmd);
     }
 
@@ -73,7 +79,7 @@ public class OsMonitorHandler {
         String monitorCmd = "ps -eLf |grep gaussdb|grep -v grep|awk '{print $4}'";
         while (true) {
             String monitorpid = toolUtil.exec(monitorCmd).toString();
-            if (!monitorpid.contains("\n" + tid + "\n")) {
+            if (!monitorpid.contains(System.lineSeparator() + tid + System.lineSeparator())) {
                 break;
             }
         }

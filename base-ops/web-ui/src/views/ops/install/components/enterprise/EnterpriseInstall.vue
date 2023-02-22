@@ -5,11 +5,11 @@
       <a-step>{{ $t('enterprise.EnterpriseInstall.5mpm4jewye00') }}</a-step>
       <a-step>{{ $t('enterprise.EnterpriseInstall.5mpm4jewykk0') }}</a-step>
       <a-step>{{ installType === 'install' ? $t('enterprise.EnterpriseInstall.5mpm4jewyp40') :
-          $t('enterprise.EnterpriseInstall.5mpm4jewysw0')
+        $t('enterprise.EnterpriseInstall.5mpm4jewysw0')
       }}{{ $t('enterprise.EnterpriseInstall.else2') }}</a-step>
       <a-step>{{ $t('enterprise.EnterpriseInstall.else3') }}{{ installType === 'install' ?
-          $t('enterprise.EnterpriseInstall.5mpm4jewyp40') :
-          $t('enterprise.EnterpriseInstall.5mpm4jewysw0')
+        $t('enterprise.EnterpriseInstall.5mpm4jewyp40') :
+        $t('enterprise.EnterpriseInstall.5mpm4jewysw0')
       }}</a-step>
     </a-steps>
     <a-divider />
@@ -55,6 +55,15 @@ const clusterConfigRef = ref<InstanceType<typeof ClusterConfig> | null>(null)
 const nodeConfigRef = ref<InstanceType<typeof NodeConfig> | null>(null)
 const envRef = ref<InstanceType<typeof EnvMonitor> | null>(null)
 
+const saveStore = () => {
+  if (installProps.currStep === STEP_ENUM.CLUSTER) {
+    clusterConfigRef.value?.saveStore()
+  }
+  if (installProps.currStep === STEP_ENUM.NODE) {
+    nodeConfigRef.value?.saveStore()
+  }
+}
+
 const beforeConfirm = async (): Promise<boolean> => {
   if (installProps.currStep === STEP_ENUM.CLUSTER) {
     const res = await clusterConfigRef.value?.beforeConfirm()
@@ -76,7 +85,8 @@ const beforeConfirm = async (): Promise<boolean> => {
 const installType = computed(() => installStore.getInstallConfig.installType)
 
 defineExpose({
-  beforeConfirm
+  beforeConfirm,
+  saveStore
 })
 
 </script>

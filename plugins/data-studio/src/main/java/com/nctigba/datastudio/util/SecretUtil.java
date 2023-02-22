@@ -7,18 +7,18 @@ import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
 public class SecretUtil {
-    
-    private static String KEY = "R0JBLU5DVEktRFM=";
-    private static String IV = "1234567890000000";
+
+    private static final String KEY = "R0JBLU5DVEktRFM=";
+    private static final String IV = "1234567890000000";
 
     public static String encrypt(String data) {
         return encrypt(data, KEY, IV);
     }
-    
+
     public static String desEncrypt(String data) {
         return desEncrypt(data, KEY, IV);
     }
-    
+
     static String encrypt(String data, String key, String iv) {
         try {
             Cipher cipher = Cipher.getInstance("AES/CBC/NoPadding");
@@ -41,7 +41,7 @@ public class SecretUtil {
             return null;
         }
     }
-    
+
     private static String desEncrypt(String data, String key, String iv) {
         try {
             byte[] encrypted1 = new Base64().decode(data);

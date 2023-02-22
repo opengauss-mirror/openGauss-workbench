@@ -19,30 +19,30 @@ import org.springframework.context.event.ContextRefreshedEvent;
  **/
 public class PluginListener implements ApplicationListener<ApplicationEvent> {
 
-	@Override
-	public void onApplicationEvent(ApplicationEvent event) {
-		if (event instanceof ApplicationEnvironmentPreparedEvent) {
-			System.out.println("扩展实现初始化环境变量");
-		} else if (event instanceof ApplicationPreparedEvent) {
-			System.out.println("扩展实现环境初始化完成");
-		} else if (event instanceof ContextRefreshedEvent) {
-			System.out.println("扩展实现ApplicationContext被刷新");
-		} else if (event instanceof ApplicationReadyEvent) {
-			MainApplicationContext context = ((ApplicationReadyEvent) event).getApplicationContext()
-					.getBean(MainApplicationContext.class);
-			SpringBeanFactory factory = context.getSpringBeanFactory();
-			MenuFacade menuFacade = factory.getBean(MenuFacade.class);
-			if (menuFacade != null) {
-				menuFacade.savePluginMenu("webds-plugin", "业务开发", "DataStudio",10, "index");
-			}
-		} else if (event instanceof ContextClosedEvent) {
-			MainApplicationContext context = ((ContextClosedEvent) event).getApplicationContext()
-					.getBean(MainApplicationContext.class);
-			SpringBeanFactory factory = context.getSpringBeanFactory();
-			MenuFacade menuFacade = factory.getBean(MenuFacade.class);
-			if (menuFacade != null) {
-				menuFacade.deletePluginMenu("webds-plugin");
-			}
-		}
-	}
+    @Override
+    public void onApplicationEvent(ApplicationEvent event) {
+        if (event instanceof ApplicationEnvironmentPreparedEvent) {
+            System.out.println("扩展实现初始化环境变量");
+        } else if (event instanceof ApplicationPreparedEvent) {
+            System.out.println("扩展实现环境初始化完成");
+        } else if (event instanceof ContextRefreshedEvent) {
+            System.out.println("扩展实现ApplicationContext被刷新");
+        } else if (event instanceof ApplicationReadyEvent) {
+            MainApplicationContext context = ((ApplicationReadyEvent) event).getApplicationContext()
+                    .getBean(MainApplicationContext.class);
+            SpringBeanFactory factory = context.getSpringBeanFactory();
+            MenuFacade menuFacade = factory.getBean(MenuFacade.class);
+            if (menuFacade != null) {
+                menuFacade.savePluginMenu("webds-plugin", "业务开发", "DataStudio", 10, "index");
+            }
+        } else if (event instanceof ContextClosedEvent) {
+            MainApplicationContext context = ((ContextClosedEvent) event).getApplicationContext()
+                    .getBean(MainApplicationContext.class);
+            SpringBeanFactory factory = context.getSpringBeanFactory();
+            MenuFacade menuFacade = factory.getBean(MenuFacade.class);
+            if (menuFacade != null) {
+                menuFacade.deletePluginMenu("webds-plugin");
+            }
+        }
+    }
 }

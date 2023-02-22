@@ -7,10 +7,12 @@ import com.nctigba.datastudio.model.query.DatabaseMetaarraySchemaQuery;
 import java.util.List;
 
 public interface QueryMetaArrayService {
-    List<String> schemaList(DatabaseMetaarraySchemaQuery request) throws Exception;
+    List<String> databaseList(String uuid) throws Exception;
 
     List<String> objectList(DatabaseMetaarrayQuery request) throws Exception;
 
     List<String> tableColumnList(DatabaseMetaarrayColumnQuery request) throws Exception;
+
+    List<String> schemaList(DatabaseMetaarraySchemaQuery request) throws Exception;
 
 }

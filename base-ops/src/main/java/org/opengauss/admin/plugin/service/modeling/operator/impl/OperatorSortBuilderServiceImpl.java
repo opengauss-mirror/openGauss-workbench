@@ -45,16 +45,14 @@ public class OperatorSortBuilderServiceImpl extends BaseBuilderServiceImpl {
 
     private static final HashMap<String,String> SORT_CONVERT = new HashMap<String,String>(){{
         this.put("asc","asc");
-        this.put("desc","desc");
+        this.put("des","desc");
     }};
 
     private String sortConvert(String field,String value)
     {
         switch (value) {
-            case "py_asc":
-                return "convert_to("+field+",'GB18030') asc";
-            case "py_desc":
-                return "convert_to("+field+",'GB18030') desc";
+            case "phoneticize":
+                return " NLSSORT ("+field+",'nls_sort=schinese_pinying_m')";
             default:
                 return field + " " + SORT_CONVERT.get(value);
         }

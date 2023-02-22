@@ -96,7 +96,7 @@ public class DatabaseSequenceServiceImpl implements DatabaseSequenceService {
         log.info("createSequence request is: " + request);
         try {
             String ddl = splicingSequenceDDL(request);
-            Connection connection = connectionConfig.connectDatabase(request.getConnectionName(), request.getWebUser());
+            Connection connection = connectionConfig.connectDatabase(request.getUuid());
             Statement statement = connection.createStatement();
             statement.execute(ddl);
             log.info("createSequence sql is: " + ddl);
@@ -110,7 +110,7 @@ public class DatabaseSequenceServiceImpl implements DatabaseSequenceService {
     public void dropSequence(DatabaseDropSequenceDTO request) {
         log.info("dropSequence request is: " + request);
         try {
-            Connection connection = connectionConfig.connectDatabase(request.getConnectionName(), request.getWebUser());
+            Connection connection = connectionConfig.connectDatabase(request.getUuid());
             Statement statement = connection.createStatement();
             String sql = DROP_SQL + SEQUENCE_KEYWORD_SQL + request.getSchema() + POINT + request.getSequenceName();
             statement.execute(sql);
@@ -126,7 +126,7 @@ public class DatabaseSequenceServiceImpl implements DatabaseSequenceService {
         log.info("returnSequenceDDL request is: " + request);
         try {
             String selectSql = SELECT_SEQUENCE_DDL_SQL + request.getSchema() + SELECT_SEQUENCE_DDL_WHERE_SQL + request.getSequenceName() + QUOTES_SEMICOLON;
-            Connection connection = connectionConfig.connectDatabase(request.getConnectionName(), request.getWebUser());
+            Connection connection = connectionConfig.connectDatabase(request.getUuid());
             Statement statement = connection.createStatement();
             ResultSet resultSet = statement.executeQuery(selectSql);
             String ddl = "";

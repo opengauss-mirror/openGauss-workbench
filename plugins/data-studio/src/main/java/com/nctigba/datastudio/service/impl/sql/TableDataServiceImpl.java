@@ -43,7 +43,7 @@ public class TableDataServiceImpl implements TableDataService {
     @Override
     public Map<String, Object> tableData(SelectDataQuery request) throws Exception {
         log.info("tableData request is: " + request);
-        Connection connection = connectionConfig.connectDatabase(request.getConnName(), request.getWebUser());
+        Connection connection = connectionConfig.connectDatabase(request.getUuid());
         Statement statement = connection.createStatement();
 
         ResultSet resultSet = statement.executeQuery(TABLE_DATA_SQL +
@@ -56,7 +56,7 @@ public class TableDataServiceImpl implements TableDataService {
     @Override
     public Map<String, Object> tableColumn(SelectDataQuery request) throws Exception {
         log.info("tableColumn request is: " + request);
-        Connection connection = connectionConfig.connectDatabase(request.getConnName(), request.getWebUser());
+        Connection connection = connectionConfig.connectDatabase(request.getUuid());
         Statement statement = connection.createStatement();
 
         ResultSet oidResult = statement.executeQuery(GET_CLASS_OID_SQL + request.getTableName()
@@ -75,7 +75,7 @@ public class TableDataServiceImpl implements TableDataService {
     @Override
     public Map<String, Object> tableIndex(SelectDataQuery request) throws Exception {
         log.info("tableIndex request is: " + request);
-        Connection connection = connectionConfig.connectDatabase(request.getConnName(), request.getWebUser());
+        Connection connection = connectionConfig.connectDatabase(request.getUuid());
         Statement statement = connection.createStatement();
 
         ResultSet resultSet = statement.executeQuery(GET_INDEX_SQL + request.getTableName()
@@ -88,7 +88,7 @@ public class TableDataServiceImpl implements TableDataService {
     @Override
     public Map<String, Object> tableConstraint(SelectDataQuery request) throws Exception {
         log.info("tableConstraint request is: " + request);
-        Connection connection = connectionConfig.connectDatabase(request.getConnName(), request.getWebUser());
+        Connection connection = connectionConfig.connectDatabase(request.getUuid());
         Statement statement = connection.createStatement();
 
         ResultSet resultSet = statement.executeQuery(GET_CONSTRAINT_SQL + request.getSchema()
@@ -102,7 +102,7 @@ public class TableDataServiceImpl implements TableDataService {
     public Map<String, String> tableDdl(SelectDataQuery request) throws Exception {
         log.info("tableDdl request is: " + request);
         Map<String, String> resultMap = new HashMap<>();
-        Connection connection = connectionConfig.connectDatabase(request.getConnName(), request.getWebUser());
+        Connection connection = connectionConfig.connectDatabase(request.getUuid());
         Statement statement = connection.createStatement();
 
         ResultSet resultSet = statement.executeQuery(TABLE_DEF_SQL +

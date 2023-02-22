@@ -117,7 +117,7 @@ public class LineSeriesConstructor extends BaseSeriesConstructor {
 
     public Map<String,List<Float>> getSeriesData() {
         queryData.forEach(item->{
-            String xValue = (String) item.get(xDimension.getField());
+            String xValue = item.get(xDimension.getField()) == null ? "null" : item.get(xDimension.getField()).toString();
             List<Integer> xIndexList = xDimension.indexListByValue(xValue);
             if (xIndexList.size() > 0) {
                 //Temporarily only counting single indicators
@@ -126,7 +126,7 @@ public class LineSeriesConstructor extends BaseSeriesConstructor {
                 List<String> categoryGroup = new ArrayList<>();
                 //The field corresponding to the statistical dimension is evaluated
                 dimensions.forEach(dim->{
-                    String categoryValue = (String) item.get(dim.getField());
+                    String categoryValue = item.get(dim.getField()).toString();
                     String mapperKey = dim.getField()+categoryValue;
                     //Find the mapped category name
                     if (categoryDimensionValueMapper.containsKey(mapperKey)) {

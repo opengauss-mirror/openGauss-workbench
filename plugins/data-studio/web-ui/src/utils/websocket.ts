@@ -6,6 +6,7 @@ export default class WebSocketClass {
   instance = null;
   callback = null;
   connected = false;
+  setIntervalWesocketPush = null;
   static instance: any;
 
   static getInstance(name, sessionId) {
@@ -29,16 +30,18 @@ export default class WebSocketClass {
     const baseURL = import.meta.env.DEV
       ? `${import.meta.env.VITE_WS_BASE_URL}`
       : `${location.protocol == 'http:' ? 'ws:' : 'wss:'}//${location.host}`;
-    const url = `${baseURL}/ws/webds-plugin/${sessionId}`;
+    const url = `${baseURL}/ws/${import.meta.env.VITE_PLUGIN_NAME}/${sessionId}`;
     this.ws = new WebSocket(url);
 
     this.ws.onopen = () => {
       this.connected = true;
+      this.sendPing();
     };
     if (callback) this.callback = callback;
 
     this.ws.onclose = () => {
       this.connected = false;
+      clearInterval(this.setIntervalWesocketPush);
     };
 
     this.ws.onmessage = (msg: any) => {
@@ -71,6 +74,14 @@ export default class WebSocketClass {
     } else if (this.ws.readyState === 0) {
       this.connecting(data);
     }
+  }
+
+  sendPing(time = 1000 * 60 * 15, ping = 'ping') {
+    clearInterval(this.setIntervalWesocketPush);
+    this.ws.send(ping);
+    this.setIntervalWesocketPush = setInterval(() => {
+      this.ws.send(ping);
+    }, time);
   }
 
   // When sending data but the connection is not established, it will be processed and wait for retransmission

@@ -11,7 +11,7 @@
   </div>
 </template>
 
-<script lang="ts" setup>
+<script lang="ts" setup name="layout">
   import { computed } from 'vue';
   import { useSettingStore } from '@/store/modules/setting';
   import Sidebar from './Sidebar/index.vue';

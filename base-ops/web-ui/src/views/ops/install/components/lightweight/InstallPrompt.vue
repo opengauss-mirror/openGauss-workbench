@@ -6,14 +6,15 @@
                     <div class="item-node-top flex-between full-w">
                         <div class="flex-row">
                             <a-tag class="mr" color="#86909C">{{ getRoleName(itemNode.clusterRole) }}</a-tag>
-                            {{ $t('lightweight.InstallPrompt.5mpmly4bw340') }}: {{ itemNode.privateIp }}({{
-                                itemNode.publicIp
-                            }})
+                            <div class="label-color">{{ $t('lightweight.InstallPrompt.5mpmly4bw340') }}: {{
+                                itemNode.privateIp }}({{
+        itemNode.publicIp
+    }})</div>
                         </div>
                         <div class="flex-row">
-                            <icon-down style="cursor: pointer;" v-if="!itemNode.isShow"
+                            <icon-down class="label-color" style="cursor: pointer;" v-if="!itemNode.isShow"
                                 @click="itemNode.isShow = true" />
-                            <icon-up style="cursor: pointer;" v-else @click="itemNode.isShow = false" />
+                            <icon-up class="label-color" style="cursor: pointer;" v-else @click="itemNode.isShow = false" />
                         </div>
                     </div>
                     <div class="label-color item-node-center full-w flex-col-start" v-show="itemNode.isShow">
@@ -107,7 +108,7 @@ const getRoleName = (type: ClusterRoleEnum) => {
     overflow-y: auto;
 
     .item-node-top {
-        background-color: #f2f3f5;
+        background-color: var(--color-text-4);
         line-height: 40px;
         border-radius: 4px;
         padding: 0 16px;

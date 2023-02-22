@@ -1,5 +1,6 @@
 import axios, { AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios';
-import { ElMessage } from 'element-plus';
+import { ElMessage, ElMessageBox } from 'element-plus';
+import { i18n } from '@/i18n/index';
 
 declare module 'axios' {
   interface AxiosResponse {
@@ -8,8 +9,11 @@ declare module 'axios' {
   }
 }
 
+const t = i18n.global.t;
+let showExpired = false;
 const service = axios.create({
-  baseURL: import.meta.env.MODE === 'production' ? '/plugins/webds-plugin' : '/',
+  baseURL:
+    import.meta.env.MODE === 'production' ? `/plugins/${import.meta.env.VITE_PLUGIN_NAME}` : '/',
   timeout: 3000000,
   withCredentials: true,
 });
@@ -29,6 +33,24 @@ service.interceptors.request.use(
 
 service.interceptors.response.use(
   (response: AxiosResponse) => {
+    if (response.data?.code == 401) {
+      !showExpired &&
+        ElMessageBox({
+          message: t('common.loginExpired'),
+          title: t('common.systemPrompt'),
+          type: 'error',
+          showClose: false,
+          closeOnClickModal: false,
+        }).then(() => {
+          if (parent !== self) {
+            localStorage.removeItem('opengauss-token');
+            sessionStorage.clear();
+            parent.location.reload();
+          }
+          return Promise.reject(response.data.msg);
+        });
+      showExpired = true;
+    }
     if (response.data?.code == 500) {
       ElMessage({
         message: response.data.msg,

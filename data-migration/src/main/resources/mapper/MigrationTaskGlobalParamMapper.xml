@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.opengauss.admin.plugin.mapper.MigrationTaskGlobalParamMapper">
+
+    <resultMap id="MigrationTaskResult" type="org.opengauss.admin.plugin.domain.MigrationTaskGlobalParam">
+        <id property="id" column="id"/>
+        <result property="paramDesc" column="param_desc"/>
+        <result property="paramKey" column="param_key"/>
+        <result property="paramValue" column="param_value"/>
+        <result property="mainTaskId" column="main_task_id"/>
+    </resultMap>
+
+
+
+</mapper>

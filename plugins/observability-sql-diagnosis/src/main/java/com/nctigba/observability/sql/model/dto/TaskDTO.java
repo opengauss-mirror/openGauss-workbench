@@ -4,7 +4,6 @@ import com.nctigba.observability.sql.model.diagnosis.Task;
 import com.nctigba.observability.sql.model.diagnosis.Task.config;
 import com.nctigba.observability.sql.model.diagnosis.TaskState;
 import com.nctigba.observability.sql.model.diagnosis.TaskType;
-
 import io.swagger.annotations.ApiParam;
 import lombok.Data;
 
@@ -23,10 +22,11 @@ public class TaskDTO {
 	private Boolean onCpu;
 	private Boolean offCpu;
 	private Boolean explainAnalysis;
+	private Boolean paramAnalysis;
 
 	public Task toTask() {
 		return new Task().setClusterId(clusterId).setNodeId(nodeId).setSqlId(sqlId).setDbName(dbName).setName(name)
-				.setSql(sql).setConf(new config().setOnCpu(onCpu).setOffCpu(offCpu).setExplainAnalysis(explainAnalysis))
+				.setSql(sql).setConf(new config().setOnCpu(onCpu).setOffCpu(offCpu).setExplainAnalysis(explainAnalysis).setParamAnalysis(paramAnalysis))
 				.setTasktype(TaskType.manual).setState(TaskState.create);
 	}
 }

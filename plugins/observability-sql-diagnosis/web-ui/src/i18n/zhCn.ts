@@ -1,3 +1,5 @@
+import { ja } from "element-plus/es/locale";
+
 export default {
     app: {
         name: '一体化平台',
@@ -282,6 +284,11 @@ export default {
         failResolveExecutionPlan: '无法解析该执行计划',
     },
     datasource: {
+        paramName: '参数名称',
+        currentValue: '当前值',
+        paramDescription: '参数说明',
+        suggestValue: '推荐取值',
+        suggestReason: '推荐原因',
         pleaseSelectInstance: '请先选择集群与实例',
         confirmToDeleteTask: '确定要删除该任务吗?',
         showNum: '显示数值',

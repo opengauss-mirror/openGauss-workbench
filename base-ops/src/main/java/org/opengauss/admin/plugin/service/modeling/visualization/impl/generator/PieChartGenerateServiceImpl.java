@@ -55,7 +55,7 @@ public class PieChartGenerateServiceImpl extends BaseGenerateServiceImpl {
             subDimension = formatDimension(subDimension);
         }
 
-        pieSeriesConstructor = new PieSeriesConstructor( pieChartParamsBody.getIndicator(), dimension, subDimension, queryResult);
+        pieSeriesConstructor = new PieSeriesConstructor( pieChartParamsBody.getIndicator(), dimension, subDimension, queryResult,pieChartParamsBody.getShowType().getPercentage());
 
     }
 

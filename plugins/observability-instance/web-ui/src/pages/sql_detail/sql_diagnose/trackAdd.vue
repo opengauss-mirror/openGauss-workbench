@@ -204,9 +204,6 @@ watch(rez, (rez: Rez) => {
     &:deep(.el-dialog .el-dialog__header) {
         text-align: center;
     }
-    &:deep(.el-dialog .el-dialog__title) {
-        color: #fff;
-    }
     &:deep(.el-form-item--small .el-form-item__label) {
         width: 110px;
     }

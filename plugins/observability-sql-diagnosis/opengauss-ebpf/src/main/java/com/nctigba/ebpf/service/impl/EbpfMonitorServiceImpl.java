@@ -10,7 +10,10 @@ import com.nctigba.ebpf.handler.EbpfSendFileHandler;
 import com.nctigba.ebpf.service.EbpfMonitorService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+
+import java.util.concurrent.TimeUnit;
 
 /**
  * ebpf service impl
@@ -20,6 +23,7 @@ import org.springframework.stereotype.Service;
  */
 @Service
 @Slf4j
+@Async("ebpfPool")
 public class EbpfMonitorServiceImpl implements EbpfMonitorService {
 
     @Autowired
@@ -31,23 +35,12 @@ public class EbpfMonitorServiceImpl implements EbpfMonitorService {
     @Override
     public void ebpfMonitor(String tid, String taskid, String monitorType) {
         try {
-            Runnable oneRunnable = () -> monitorHandler.startMonitor(tid, taskid, monitorType);
-            Thread oneThread = new Thread(oneRunnable);
-            oneThread.setUncaughtExceptionHandler((tr, ex) -> System.out.println(tr.getName() + " : " + ex.getMessage()));
-            oneThread.start();
-            Runnable twoRunnable = () -> {
-                boolean isTrue = monitorHandler.monitor(tid);
-                if (isTrue) {
-                    monitorHandler.stopMonitor(monitorType);
-                }
-            };
-            Thread twoThread = new Thread(twoRunnable);
-            twoThread.setUncaughtExceptionHandler((tr, ex) -> System.out.println(tr.getName() + " : " + ex.getMessage()));
-            twoThread.start();
-            if (oneThread.isAlive() || twoThread.isAlive()) {
-                oneThread.join();
-                twoThread.join();
+            String monitorPid = monitorHandler.startMonitor(tid, taskid, monitorType);
+            boolean isTrue = monitorHandler.monitor(tid);
+            if (isTrue) {
+                monitorHandler.stopMonitor(monitorType, monitorPid);
             }
+            TimeUnit.SECONDS.sleep(1);
             if (EbpfType.PROFILE.equals(monitorType) || EbpfType.OFFCPUTIME.equals(monitorType) || EbpfType.MEMLEAK.equals(monitorType)) {
                 sendFileHandler.createSvg(taskid, monitorType);
             }

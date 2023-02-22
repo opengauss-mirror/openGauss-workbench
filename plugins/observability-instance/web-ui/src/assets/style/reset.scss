@@ -153,9 +153,6 @@ body {
 .el-picker-panel__icon-btn .el-icon{
     color:var(--el-text-color-og);
 }
-.el-picker__popper {
-    left: calc(100% - 655px) !important;
-}
 .in-active-path .el-cascader-node__label {
     color: var(--el-color-tabbar-active) !important;
 }
@@ -224,7 +221,7 @@ body {
 
 // button for message box
 .el-message-box__btns .el-button.el-button--primary {
-    color: #fff !important;
+    color: var(--color-bg-2) !important;
     background-color: var(--primary-6) !important;
 }
 .el-message-box__btns .el-button.el-button--primary.search-button {

@@ -32,7 +32,7 @@ import InstallPrompt from './InstallPrompt.vue'
 import ExeImport from '../ExeImport.vue'
 import { useOpsStore } from '@/store'
 
-import { computed, ref } from 'vue'
+import { onMounted, computed, ref, inject } from 'vue'
 enum MINI_ENUM {
   DEPLOY = 1,
   INSTALL,
@@ -46,8 +46,19 @@ const instalProps = defineProps({
   currStep: Number,
   customeFunction: Function
 })
+const loadingFunc = inject<any>('loading')
+
+onMounted(() => {
+  loadingFunc.setBackBtnShow(true)
+})
 
 const installConfigRef = ref<InstanceType<typeof InstallConfig> | null>(null)
+
+const saveStore = () => {
+  if (instalProps.currStep === MINI_ENUM.INSTALL) {
+    installConfigRef.value?.saveStore()
+  }
+}
 
 const beforeConfirm = async (): Promise<boolean> => {
   if (instalProps.currStep === MINI_ENUM.INSTALL) {
@@ -59,6 +70,7 @@ const beforeConfirm = async (): Promise<boolean> => {
 }
 
 defineExpose({
+  saveStore,
   beforeConfirm
 })
 

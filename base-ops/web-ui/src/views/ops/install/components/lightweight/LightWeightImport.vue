@@ -25,7 +25,7 @@
 import DeployWay from '../simple/DeployWay.vue'
 import EnvMonitor from './EnvMonitor.vue'
 import InstallConfig from './InstallConfig.vue'
-import { computed, ref } from 'vue'
+import { computed, ref, inject, onMounted } from 'vue'
 import InstallPrompt from './InstallPrompt.vue'
 import ExeImport from '../ExeImport.vue'
 import { useOpsStore } from '@/store'
@@ -42,8 +42,20 @@ const installProps = defineProps({
   currStep: Number
 })
 
+const loadingFunc = inject<any>('loading')
+
+onMounted(() => {
+  loadingFunc.setBackBtnShow(true)
+})
+
 const installConfigRef = ref<InstanceType<typeof InstallConfig> | null>(null)
 const envRef = ref<InstanceType<typeof EnvMonitor> | null>(null)
+
+const saveStore = () => {
+  if (installProps.currStep === MINI_ENUM.INSTALL) {
+    installConfigRef.value?.saveStore()
+  }
+}
 
 const beforeConfirm = async (): Promise<boolean> => {
   if (installProps.currStep === MINI_ENUM.INSTALL) {
@@ -56,6 +68,7 @@ const beforeConfirm = async (): Promise<boolean> => {
 const installType = computed(() => installStore.getInstallConfig.installType)
 
 defineExpose({
+  saveStore,
   beforeConfirm
 })
 
