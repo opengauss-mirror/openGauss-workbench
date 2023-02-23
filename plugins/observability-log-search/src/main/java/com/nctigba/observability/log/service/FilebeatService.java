@@ -2,11 +2,11 @@ package com.nctigba.observability.log.service;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.sql.ResultSet;
 import java.util.Arrays;
-import java.util.List;
 
-import org.opengauss.admin.common.core.domain.entity.ops.OpsClusterNodeEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
 import org.opengauss.admin.common.core.domain.model.ops.WsSession;
@@ -15,7 +15,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Service;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType.Type;
@@ -25,8 +24,8 @@ import com.nctigba.observability.log.service.AbstractInstaller.Step.status;
 import com.nctigba.observability.log.util.SshSession;
 import com.nctigba.observability.log.util.SshSession.command;
 
-import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.io.IoUtil;
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 
 @Service
@@ -41,7 +40,7 @@ public class FilebeatService extends AbstractInstaller {
 	@Autowired
 	private ClusterManager clusterManager;
 
-	public void install(WsSession wsSession, String hostId) {
+	public void install(WsSession wsSession, String nodeId) {
 		// @formatter:off
 		var steps = Arrays.asList(
 				new Step("初始化"),
@@ -58,37 +57,41 @@ public class FilebeatService extends AbstractInstaller {
 		int curr = 0;
 
 		curr = nextStep(wsSession, steps, curr);
-		var env = envMapper.selectOne(Wrappers.<NctigbaEnv>lambdaQuery().eq(NctigbaEnv::getHostid, hostId)
-				.eq(NctigbaEnv::getType, type.FILEBEAT));
-		if (env != null)
-			throw new RuntimeException("filebeat exists");
-		var esEnv = envMapper.selectOne(Wrappers.<NctigbaEnv>lambdaQuery().eq(NctigbaEnv::getType, type.ELASTICSEARCH));
-		if (esEnv == null)
-			throw new RuntimeException("elasticsearch not exist");
-
-		curr = nextStep(wsSession, steps, curr);
-		List<OpsClusterNodeEntity> opsClusterNodeEntities = opsClusterNodeService
-				.list(new LambdaQueryWrapper<OpsClusterNodeEntity>().eq(OpsClusterNodeEntity::getHostId, hostId));
-		if (CollUtil.isEmpty(opsClusterNodeEntities))
-			throw new RuntimeException("No cluster node information found");
-
-		curr = nextStep(wsSession, steps, curr);
-		OpsClusterNodeEntity opsClusterNodeEntity = opsClusterNodeEntities.stream()
-				.filter(node -> node.getHostId().equals(hostId)).findFirst()
-				.orElseThrow(() -> new RuntimeException("The node information corresponding to the host is not found"));
-		String installUserId = opsClusterNodeEntity.getInstallUserId();
-		OpsHostUserEntity user = hostUserFacade.getById(installUserId);
-		OpsHostEntity hostEntity = hostFacade.getById(hostId);
-		if (hostEntity == null)
-			throw new RuntimeException("host not found");
 		try {
+			var node = clusterManager.getOpsNodeById(nodeId);
+			if (node == null)
+				throw new RuntimeException("node not found");
+			curr = nextStep(wsSession, steps, curr);
+			var hostId = node.getHostId();
+			OpsHostEntity hostEntity = hostFacade.getById(hostId);
+			var env = envMapper.selectOne(Wrappers.<NctigbaEnv>lambdaQuery().eq(NctigbaEnv::getHostid, hostId)
+					.eq(NctigbaEnv::getType, type.FILEBEAT));
+			if (env != null)
+				throw new RuntimeException("filebeat exists");
+			var esEnv = envMapper
+					.selectOne(Wrappers.<NctigbaEnv>lambdaQuery().eq(NctigbaEnv::getType, type.ELASTICSEARCH));
+			if (esEnv == null)
+				throw new RuntimeException("elasticsearch not exist");
+
+			curr = nextStep(wsSession, steps, curr);
+			System.out.println(opsClusterNodeService);
+			var opsClusterNodeEntity = opsClusterNodeService.getById(nodeId);
+			if (opsClusterNodeEntity == null)
+				throw new RuntimeException("No cluster node information found");
+
+			curr = nextStep(wsSession, steps, curr);
+			String installUserId = opsClusterNodeEntity.getInstallUserId();
+			OpsHostUserEntity user = hostUserFacade.getById(installUserId);
+			if (hostEntity == null)
+				throw new RuntimeException("host not found");
+
 			curr = nextStep(wsSession, steps, curr);
 			var session = SshSession.connect(hostEntity.getPublicIp(), hostEntity.getPort(), user.getUsername(),
 					encryptionUtils.decrypt(user.getPassword()));
 
 			curr = nextStep(wsSession, steps, curr);
 			var arch = session.execute(command.ARCH);
-			String name = NAME + arch;
+			String name = NAME + arch(arch);
 			String tar = name + TAR;
 			if (!session.test(command.STAT.parse(name))) {
 				if (!session.test(command.STAT.parse(tar)))
@@ -97,22 +100,29 @@ public class FilebeatService extends AbstractInstaller {
 			}
 			curr = nextStep(wsSession, steps, curr);
 			String cd = "cd " + name + " && ";
-			// fielbeat_conf.zip
-			File f = File.createTempFile("filebeat_conf", "tar.gz");
-			var in = loader.getResource("filebeat_conf.tar.gz").getInputStream();
-			IoUtil.copy(in, new FileOutputStream(f));
-			session.upload(f.getCanonicalPath(), "./");
+			// filebeat_conf.zip
+			File f = File.createTempFile("filebeat_conf", ".tar.gz");
+			try (var in = loader.getResource("filebeat_conf.tar.gz").getInputStream();
+					var out = new FileOutputStream(f);) {
+				System.out.println(f.getCanonicalPath());
+				IoUtil.copy(in, out);
+			}
+			session.upload(f.getCanonicalPath(), "./filebeat_conf.tar.gz");
 			f.delete();
 			session.execute("tar -xvf filebeat_conf.tar.gz");
 			var esHost = hostFacade.getById(esEnv.getHostid());
 
 			// opengauss log path
-			var node = clusterManager.getOpsNodeById(opsClusterNodeEntity.getClusterNodeId());
-			var logPath = node.connection().createStatement().executeQuery("select setting from pg_settings where name = 'log_directory'").getString(1);
+			ResultSet rs = node.connection().createStatement()
+					.executeQuery("select setting from pg_settings where name = 'log_directory'");
+			rs.next();
+			var logPath = rs.getString(1);
 
-			session.execute("cd filebeat_conf && ./conf.sh " + esHost.getPublicIp() + ":" + esEnv.getPort() + " "
+			session.execute("cd filebeat_conf && sh conf.sh " + esHost.getPublicIp() + ":" + esEnv.getPort() + " "
 					+ opsClusterNodeEntity.getClusterNodeId() + " " + logPath + " " + logPath + " " + logPath);
-			session.execute("cp -fr filebeat_conf/* filebeat-8.3.3/");
+			session.execute("cp -fr filebeat_conf/* " + name + "/");
+			session.execute("rm -rf filebeat_conf");
+			session.execute("rm -f filebeat_conf.tar.gz");
 
 			curr = nextStep(wsSession, steps, curr);
 			session.execute(
@@ -125,12 +135,63 @@ public class FilebeatService extends AbstractInstaller {
 			curr = nextStep(wsSession, steps, curr);
 			envMapper.insert(env);
 			sendMsg(wsSession, steps, curr, status.DONE);
-		} catch (IOException e) {
-			steps.get(curr).setState(status.ERROR);
-			wsUtil.sendText(wsSession, JSONUtil.toJsonStr(steps));
 		} catch (Exception e) {
 			steps.get(curr).setState(status.ERROR);
 			wsUtil.sendText(wsSession, JSONUtil.toJsonStr(steps));
+			var sw = new StringWriter();
+			try (var pw = new PrintWriter(sw);) {
+				e.printStackTrace(pw);
+			}
+			wsUtil.sendText(wsSession, sw.toString());
+		}
+	}
+
+	public void uninstall(WsSession wsSession, String nodeId) {
+		// @formatter:off
+		var steps = Arrays.asList(
+				new Step("初始化"),
+				new Step("连接主机"),
+				new Step("查找filebeat进程号"),
+				new Step("停止filebeat"),
+				new Step("卸载完成"));
+		// @formatter:on
+		var curr = 0;
+
+		try {
+			curr = nextStep(wsSession, steps, curr);
+			var node = clusterManager.getOpsNodeById(nodeId);
+			var env = envMapper.selectOne(Wrappers.<NctigbaEnv>lambdaQuery().eq(NctigbaEnv::getType, type.FILEBEAT)
+					.eq(NctigbaEnv::getHostid, node.getHostId()));
+			if (env == null)
+				throw new RuntimeException("filebeat not found");
+			curr = nextStep(wsSession, steps, curr);
+			OpsHostEntity hostEntity = hostFacade.getById(node.getHostId());
+			if (hostEntity == null)
+				throw new RuntimeException("host not found");
+			env.setHost(hostEntity);
+			var user = hostUserFacade.listHostUserByHostId(hostEntity.getHostId()).stream().filter(e -> {
+				return env.getUsername().equals(e.getUsername());
+			}).findFirst().orElse(null);
+			try (var sshsession = SshSession.connect(hostEntity.getPublicIp(), hostEntity.getPort(), user.getUsername(),
+					encryptionUtils.decrypt(user.getPassword()));) {
+				curr = nextStep(wsSession, steps, curr);
+				var nodePid = sshsession.execute(command.PS.parse("filebeat"));
+				if (StrUtil.isNotBlank(nodePid)) {
+					curr = nextStep(wsSession, steps, curr);
+					sshsession.execute(command.KILL.parse(nodePid));
+				} else
+					curr = skipStep(wsSession, steps, curr);
+				envMapper.deleteById(env);
+				sendMsg(wsSession, steps, curr, status.DONE);
+			}
+		} catch (Exception e) {
+			steps.get(curr).setState(status.ERROR);
+			wsUtil.sendText(wsSession, JSONUtil.toJsonStr(steps));
+			var sw = new StringWriter();
+			try (var pw = new PrintWriter(sw);) {
+				e.printStackTrace(pw);
+			}
+			wsUtil.sendText(wsSession, sw.toString());
 		}
 	}
 }

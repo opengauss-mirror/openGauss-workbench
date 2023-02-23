@@ -1,6 +1,24 @@
 package com.nctigba.observability.log.util;
 
-import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TimeZone;
+import java.util.function.Function;
+
+import org.apache.commons.lang3.StringUtils;
+import org.opengauss.admin.common.exception.CustomException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import com.nctigba.observability.log.config.ElasticsearchProvider;
+import com.nctigba.observability.log.model.query.EsSearchQuery;
+
 import co.elastic.clients.elasticsearch._types.Conflicts;
 import co.elastic.clients.elasticsearch._types.FieldValue;
 import co.elastic.clients.elasticsearch._types.SortOptions;
@@ -10,17 +28,6 @@ import co.elastic.clients.elasticsearch.core.SearchResponse;
 import co.elastic.clients.elasticsearch.indices.GetIndexResponse;
 import co.elastic.clients.json.JsonData;
 import co.elastic.clients.util.ObjectBuilder;
-import com.nctigba.observability.log.model.query.EsSearchQuery;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.opengauss.admin.common.exception.CustomException;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-
-import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.function.Function;
 
 
 /**
@@ -31,12 +38,11 @@ import java.util.function.Function;
  * @author luomeng@ncti-gba.cn
  * @since 2022/11/17 09:15
  */
-@Slf4j
 @Component
 public class EsLogSearchUtils {
 
     @Autowired
-    private ElasticsearchClient client;
+    private ElasticsearchProvider clientProvider;
 
     /**
      * ES queryLogInfo
@@ -44,9 +50,11 @@ public class EsLogSearchUtils {
      * @param queryParam query log info by queryParam
      * @return logInfo SearchResponse
      */
-    public SearchResponse<HashMap> queryLogInfo(EsSearchQuery queryParam) {
+    @SuppressWarnings("rawtypes")
+	public SearchResponse<HashMap> queryLogInfo(EsSearchQuery queryParam) {
         SearchResponse<HashMap> response;
         try {
+        	var client = clientProvider.client();
             response = client.search(s -> {
                 s.index(this.getIndexName(queryParam));
                 s.size(queryParam.getRowCount());
@@ -71,6 +79,7 @@ public class EsLogSearchUtils {
         Date endDate = new Date();
         endDate.setTime(endDate.getTime() - 1000);
         try {
+        	var client = clientProvider.client();
             client.deleteByQuery(s -> {
                 s.index("ob-*");
                 s.query(f -> f.range(r ->
@@ -94,6 +103,7 @@ public class EsLogSearchUtils {
      */
     public long queryLogCount(EsSearchQuery queryParam) {
         try {
+        	var client = clientProvider.client();
             return client.count(c -> {
                 c.index(this.getIndexName(queryParam));
                 c.query(this.query(queryParam));
@@ -113,6 +123,7 @@ public class EsLogSearchUtils {
     public Set<String> indexList(String indexName) {
         Set<String> indexs;
         try {
+        	var client = clientProvider.client();
             GetIndexResponse getIndexResponse = client.indices().get(builder -> builder.index(indexName));
             indexs = getIndexResponse.result().keySet();
         } catch (IOException e) {
@@ -127,8 +138,10 @@ public class EsLogSearchUtils {
      * @param queryParam query log level by queryParam
      * @return logLevel SearchResponse
      */
-    public SearchResponse<Map> queryLogLevel(EsSearchQuery queryParam) {
+    @SuppressWarnings("rawtypes")
+	public SearchResponse<Map> queryLogLevel(EsSearchQuery queryParam) {
         try {
+        	var client = clientProvider.client();
             return client.search(s -> {
                 s.index(this.getIndexName(queryParam));
                 s.size(5000);

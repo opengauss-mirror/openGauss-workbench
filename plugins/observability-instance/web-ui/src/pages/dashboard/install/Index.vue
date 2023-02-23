@@ -81,8 +81,8 @@ const {
     loading: loadingCollector,
 } = useRequest(
     () => {
-        return ogRequest
-            .get("/observability/v1/topsql/cluster", {})
+        return restRequest
+            .get("/observability/v1/environment/exporter", {})
             .then(function (res) {
                 return res;
             })

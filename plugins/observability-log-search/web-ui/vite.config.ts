@@ -1,16 +1,16 @@
-import { defineConfig, loadEnv } from 'vite'
-import vue from '@vitejs/plugin-vue'
-import AutoImport from 'unplugin-auto-import/vite'
-import Components from 'unplugin-vue-components/vite'
-import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
-import { createSvgIconsPlugin } from 'vite-plugin-svg-icons'
+import { defineConfig, loadEnv } from 'vite';
+import vue from '@vitejs/plugin-vue';
+import AutoImport from 'unplugin-auto-import/vite';
+import Components from 'unplugin-vue-components/vite';
+import { ElementPlusResolver } from 'unplugin-vue-components/resolvers';
+import { createSvgIconsPlugin } from 'vite-plugin-svg-icons';
 import { resolve } from 'path';
 
 // https://vitejs.dev/config/
 export default defineConfig(({ command, mode }) => {
-    loadEnv(mode, process.cwd()); 
+    loadEnv(mode, process.cwd());
     return {
-        base: mode === 'production' ? "/static-plugin/observability-log-search/" : '/',
+        base: mode === 'production' ? '/static-plugin/observability-log-search/' : '/',
         plugins: [
             vue(),
             AutoImport({
@@ -20,26 +20,28 @@ export default defineConfig(({ command, mode }) => {
                 eslintrc: {
                     enabled: false,
                     filepath: './.eslintrc-auto-import.json',
-                    globalsPropValue: true
-                }
+                    globalsPropValue: true,
+                },
             }),
             Components({
-                resolvers: [ElementPlusResolver({
-                    importStyle: 'sass'
-                })],
+                resolvers: [
+                    ElementPlusResolver({
+                        importStyle: 'sass',
+                    }),
+                ],
                 dts: 'src/components.d.ts',
-                dirs: ['src/components', 'src/layout']
+                dirs: ['src/components', 'src/layout'],
             }),
             createSvgIconsPlugin({
                 iconDirs: [resolve(process.cwd(), 'src/assets/svg')],
                 symbolId: 'icon-[dir]-[name]',
-                inject: 'body-first'
-            })
+                inject: 'body-first',
+            }),
         ],
         define: {
             'process.env': {
-                mode
-            }
+                mode,
+            },
         },
         resolve: {
             alias: {
@@ -49,14 +51,16 @@ export default defineConfig(({ command, mode }) => {
         css: {
             preprocessorOptions: {
                 scss: {
-                    additionalData: `@use "@/assets/style/theme.scss" as *;@use "@/assets/style/color.scss" as *;`
-                }
-            }
+                    additionalData: `@use "@/assets/style/theme.scss" as *;@use "@/assets/style/color.scss" as *;`,
+                },
+            },
         },
         server: {
             proxy: {
-                '^/logSearch': 'http://localhost:8080/'
-            }
-        }
-    }
-})
+                '^/logSearch': 'http://localhost:9494/plugins/observability-log-search',
+                '^/observability': 'http://localhost:9494/plugins/observability-log-search',
+                "^/encryption": "http://localhost:9494",
+            },
+        },
+    };
+});

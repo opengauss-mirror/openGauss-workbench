@@ -3,11 +3,18 @@ package com.nctigba.observability.sql.service.diagnosis.caller;
 import java.sql.SQLException;
 import java.util.Map;
 
-import org.springframework.beans.factory.annotation.Value;
+import org.opengauss.admin.system.plugin.facade.HostFacade;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.gitee.starblues.bootstrap.annotation.AutowiredType;
+import com.gitee.starblues.bootstrap.annotation.AutowiredType.Type;
 import com.nctigba.observability.sql.mapper.DiagnosisTaskMapper;
+import com.nctigba.observability.sql.mapper.NctigbaEnvMapper;
+import com.nctigba.observability.sql.model.NctigbaEnv;
+import com.nctigba.observability.sql.model.NctigbaEnv.type;
 import com.nctigba.observability.sql.model.diagnosis.Task;
 import com.nctigba.observability.sql.model.diagnosis.TaskState;
 import com.nctigba.observability.sql.model.diagnosis.grab.GrabType;
@@ -22,16 +29,18 @@ import lombok.RequiredArgsConstructor;
 public class BccCaller implements Caller {
 	private final ClusterManager clusterManager;
 	private final DiagnosisTaskMapper mapper;
+	private final NctigbaEnvMapper envMapper;
+	@Autowired
+	@AutowiredType(Type.PLUGIN_MAIN)
+	private HostFacade hostFacade;
 
-	@Value("${agent.port:2321}")
-	private String port;
-
-	// private final DictionaryConfigMapper dictionaryConfigMapper;
 	@Override
 	@Async
 	public void start(Task task) {
 		Integer lwpid = null;
 		var node = clusterManager.getOpsNodeById(task.getNodeId());
+		var agent = envMapper.selectOne(Wrappers.<NctigbaEnv>lambdaQuery().eq(NctigbaEnv::getHostid, task.getNodeId()).eq(NctigbaEnv::getType, type.AGENT));
+		var host = hostFacade.getById(agent.getHostid());
 		try (var conn = node.connection()) {
 			var watch = new StopWatch();
 			watch.start();
@@ -77,7 +86,7 @@ public class BccCaller implements Caller {
 			mapper.updateById(task);
 			// var config = dictionaryConfigMapper.selectById(task.getNodeId() +
 			// "agentPort");
-			var url = "http://" + node.getPublicIp() + ":"+ port + "/ebpf/v1/ebpfMonitor";
+			var url = "http://" + host.getPublicIp() + ":"+ agent.getPort() + "/ebpf/v1/ebpfMonitor";
 			// call post
 			for (GrabType e : GrabType.values()) {
 				if (e == GrabType.profile)

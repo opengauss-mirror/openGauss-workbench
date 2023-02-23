@@ -1,6 +1,35 @@
 package com.nctigba.observability.log.service.impl;
 
-import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import java.io.IOException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TimeZone;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.nctigba.observability.log.config.ElasticsearchProvider;
+import com.nctigba.observability.log.model.dto.ContextSearchDTO;
+import com.nctigba.observability.log.model.dto.ContextSearchInfoDTO;
+import com.nctigba.observability.log.model.dto.LogDetailInfoDTO;
+import com.nctigba.observability.log.model.dto.LogDistroMapDTO;
+import com.nctigba.observability.log.model.dto.LogDistroMapInfoDTO;
+import com.nctigba.observability.log.model.dto.LogInfoDTO;
+import com.nctigba.observability.log.model.dto.LogTypeTreeDTO;
+import com.nctigba.observability.log.model.query.ContextSearchQuery;
+import com.nctigba.observability.log.model.query.EsSearchQuery;
+import com.nctigba.observability.log.service.LogSearchService;
+import com.nctigba.observability.log.util.EsLogSearchUtils;
+
 import co.elastic.clients.elasticsearch._types.ElasticsearchException;
 import co.elastic.clients.elasticsearch._types.aggregations.Aggregate;
 import co.elastic.clients.elasticsearch._types.aggregations.StringTermsAggregate;
@@ -8,23 +37,8 @@ import co.elastic.clients.elasticsearch._types.aggregations.StringTermsBucket;
 import co.elastic.clients.elasticsearch.core.ScrollResponse;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
 import co.elastic.clients.elasticsearch.core.search.Hit;
-import com.nctigba.observability.log.model.dto.*;
-import com.nctigba.observability.log.model.query.ContextSearchQuery;
-import com.nctigba.observability.log.model.query.EsSearchQuery;
-import com.nctigba.observability.log.service.LogSearchService;
-import com.nctigba.observability.log.util.EsLogSearchUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
-import java.io.IOException;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.time.Duration;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.*;
 
 
 /**
@@ -44,7 +58,7 @@ public class LogSearchServiceImpl implements LogSearchService {
     private EsLogSearchUtils esLogSearchUtils;
 
     @Autowired
-    private ElasticsearchClient client;
+    private ElasticsearchProvider client;
 
     @Override
     public List<LogDistroMapDTO> getLogDistroMap(EsSearchQuery queryParam) throws ParseException {
@@ -206,7 +220,7 @@ public class LogSearchServiceImpl implements LogSearchService {
                     logInfoDTO.setScrollId(searchResponse.scrollId());
                     logInfoDTO.setLogs(list);
                 } else {
-                    ScrollResponse scrollResponse = client.scroll(s -> s.scrollId(queryParam.getScrollId()).scroll(t -> t.time("10s")), HashMap.class);
+                    ScrollResponse scrollResponse = client.client().scroll(s -> s.scrollId(queryParam.getScrollId()).scroll(t -> t.time("10s")), HashMap.class);
                     String scollId = scrollResponse.scrollId();
                     List<Hit<HashMap>> hit = scrollResponse.hits().hits();
                     for (var decodeBeanHit : hit) {
@@ -457,7 +471,7 @@ public class LogSearchServiceImpl implements LogSearchService {
                     contextSearchInfoDTO.setScrollId(searchResponse.scrollId());
                     contextSearchInfoDTO.setLogs(list);
                 } else {
-                    ScrollResponse scrollResponse = client.scroll(s -> s.scrollId(queryParam.getScrollId()).scroll(t -> t.time("10s")), HashMap.class);
+                    ScrollResponse scrollResponse = client.client().scroll(s -> s.scrollId(queryParam.getScrollId()).scroll(t -> t.time("10s")), HashMap.class);
                     String scollId = scrollResponse.scrollId();
                     List<Hit<HashMap>> hit = scrollResponse.hits().hits();
                     for (var decodeBeanHit : hit) {

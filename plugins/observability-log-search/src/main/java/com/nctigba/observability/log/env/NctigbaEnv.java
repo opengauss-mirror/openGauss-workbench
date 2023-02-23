@@ -1,6 +1,9 @@
 package com.nctigba.observability.log.env;
 
+import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
+
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 
@@ -18,6 +21,8 @@ public class NctigbaEnv {
 	String username;
 	String path;
 	Integer port;
+	@TableField(exist = false)
+	OpsHostEntity host;
 
 	public enum type {
 		PROMETHEUS,NODE_EXPORTER,OPENGAUSS_EXPORTER,

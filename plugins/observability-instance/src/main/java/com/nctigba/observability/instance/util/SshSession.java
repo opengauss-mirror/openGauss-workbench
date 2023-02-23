@@ -35,7 +35,9 @@ public class SshSession implements AutoCloseable {
 		APPEND_FILE(""),
 		CHECK_USER("cat /etc/passwd | awk -F \":\" \"'{print $1}\"|grep {0} | wc -l"),
 		CREATE_USER("useradd omm && echo ''{0} ALL=(ALL) ALL'' >> /etc/sudoers"),
-		CHANGE_PASSWORD("passwd {1}"),;
+		CHANGE_PASSWORD("passwd {1}"),
+		PS("ps -ef|grep {0} |grep -v grep |awk ''{print $2}''"),
+		KILL("kill -9 {0}");
 
 		private String cmd;
 

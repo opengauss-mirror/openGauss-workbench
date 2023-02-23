@@ -40,7 +40,7 @@ watch(tab, (v) => {
         tabLoaded[v] = true;
     }
 });
-const isCollapse = ref(false);
+const isCollapse = ref(true);
 const toggleCollapse = () => {
     isCollapse.value = !isCollapse.value;
 };
@@ -112,19 +112,21 @@ watch(opsClusterData, (res: Res) => {
 });
 
 watch(clusterNodeId, (res) => {
-    let curInstanceId = instanceId.value;
-    if (typeof res === "string") {
-        curInstanceId = res;
-    } else if (Array.isArray(res) && res.length > 0) {
-        curInstanceId = res[res.length - 1];
-    }
-    // get connection status
-    runConnectStatus(curInstanceId);
-    // set instanceId value
-    instanceId.value = curInstanceId;
-    useMonitorStore().instanceId = curInstanceId;
-    // useMonitorStore().tab = 0;
-    nodeVersion.value = getVersionByNodeId(curInstanceId);
+    console.log('clusterNodeId1')
+    // let curInstanceId = instanceId.value;
+    // if (typeof res === "string") {
+    //     curInstanceId = res;
+    // } else if (Array.isArray(res) && res.length > 0) {
+    //     curInstanceId = res[res.length - 1];
+    // }
+    // // get connection status
+    // runConnectStatus(curInstanceId);
+    // // set instanceId value
+    // instanceId.value = curInstanceId;
+    // useMonitorStore().instanceId = curInstanceId;
+    // // useMonitorStore().tab = 0;
+    // nodeVersion.value = getVersionByNodeId(curInstanceId);
+    console.log('clusterNodeId2')
 });
 
 watch(connectStatusData, (res) => {

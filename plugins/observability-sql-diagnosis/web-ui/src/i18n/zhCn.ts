@@ -26,6 +26,28 @@ export default {
         lastOneHour: '最近一小时',
         lastThreeHour: '最近三小时',
         lastSixHour: '最近六小时',
+        back: '返回'
+    },
+    install: {
+        install: '一键部署',
+        installAgent: '安装采集器',
+        installProxy: '安装代理',
+        installedAgent: '已安装采集器',
+        installedProxy: '已安装代理',
+        machine: '物理机',
+        rootPWD: 'Root用户密码',
+        proxyPort: '代理端口',
+        collectInstance: '采集实例',
+        collectProxy: '采集代理',
+        proxyRules: [
+            '请选择物理机',
+            '请输入Root用户密码',
+            '请输入代理端口号'
+        ],
+        collectorRules: [
+            '请选择实例',
+            '请输入Root用户密码'
+        ],
     },
     dashboard: {
         name: '实例概览',
@@ -284,6 +306,7 @@ export default {
         failResolveExecutionPlan: '无法解析该执行计划',
     },
     datasource: {
+        paramAnalysis: '参数诊断',
         paramName: '参数名称',
         currentValue: '当前值',
         paramDescription: '参数说明',

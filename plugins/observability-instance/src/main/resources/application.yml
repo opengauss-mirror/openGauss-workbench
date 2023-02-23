@@ -8,6 +8,10 @@ spring:
     multipart:
       max-file-size: 20MB #单个文件最大为20M
       max-request-size: 20MB #单次请求文件总数大小为20M
+  sql:
+    init:
+      mode: always
+      continue-on-error: true
   profiles:
     active: '@profiles.active@'
   resources:

@@ -22,12 +22,11 @@ import com.nctigba.observability.instance.util.SshSession;
 import com.nctigba.observability.instance.util.SshSession.command;
 
 import cn.hutool.core.thread.ThreadUtil;
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import lombok.Data;
-import lombok.extern.slf4j.Slf4j;
 
 @Service
-@Slf4j
 public class PrometheusService extends AbstractInstaller {
 	private static final String PROMETHEUS_USER = "Prometheus";
 	private static final String PATH = "https://mirrors.tuna.tsinghua.edu.cn/github-release/prometheus/prometheus/LatestRelease/";
@@ -49,7 +48,6 @@ public class PrometheusService extends AbstractInstaller {
 		curr = nextStep(wsSession, steps, curr);
 		check(hostId);
 
-		log.info(encryptionUtils.decrypt(rootPassword));
 		curr = nextStep(wsSession, steps, curr);
 		var env = new NctigbaEnv().setHostid(hostId).setPort(9090).setUsername(PROMETHEUS_USER)
 				.setType(type.PROMETHEUS);
@@ -183,6 +181,55 @@ scrape_configs:
 				List<String> targets;
 				Map<String, String> labels;
 			}
+		}
+	}
+
+	public void uninstall(WsSession wsSession, String id) {
+		// @formatter:off
+		var steps = Arrays.asList(
+				new Step("初始化"),
+				new Step("连接主机"),
+				new Step("查找prometheus进程号"),
+				new Step("停止prometheus"),
+				new Step("卸载完成"));
+		// @formatter:on
+		var curr = 0;
+
+		try {
+			curr = nextStep(wsSession, steps, curr);
+			var env = envMapper.selectById(id);
+			if (env == null)
+				throw new RuntimeException("id not found");
+
+			curr = nextStep(wsSession, steps, curr);
+			OpsHostEntity hostEntity = hostFacade.getById(env.getHostid());
+			if (hostEntity == null)
+				throw new RuntimeException("host not found");
+			env.setHost(hostEntity);
+
+			var user = hostUserFacade.listHostUserByHostId(hostEntity.getHostId()).stream().filter(e -> {
+				return env.getUsername().equals(e.getUsername());
+			}).findFirst().orElse(null);
+			try (var sshsession = SshSession.connect(hostEntity.getPublicIp(), hostEntity.getPort(), user.getUsername(),
+					encryptionUtils.decrypt(user.getPassword()));) {
+				curr = nextStep(wsSession, steps, curr);
+				var pid = sshsession.execute(command.PS.parse("prometheus"));
+				if(StrUtil.isNotBlank(pid)) {
+					curr = nextStep(wsSession, steps, curr);
+					sshsession.execute(command.KILL.parse(pid));
+				} else
+					curr = skipStep(wsSession, steps, curr);
+				envMapper.deleteById(id);
+				sendMsg(wsSession, steps, curr, status.DONE);
+			}
+		} catch (Exception e) {
+			steps.get(curr).setState(status.ERROR);
+			wsUtil.sendText(wsSession, JSONUtil.toJsonStr(steps));
+			var sw = new StringWriter();
+			try (var pw = new PrintWriter(sw);) {
+				e.printStackTrace(pw);
+			}
+			wsUtil.sendText(wsSession, sw.toString());
 		}
 	}
 }

@@ -214,6 +214,11 @@ body {
     cursor: pointer;
 }
 
+// check-box
+.el-checkbox__inner::after {
+    border-color: var(--color-bg-2) !important;
+}
+
 #app {
     height: 100%;
     --vem-header-height: 40px;
@@ -228,3 +233,4 @@ body {
         --el-color-primary-light-#{$i}: #{mix(#fff, #732fcb, math.percentage(math.div($i, 10)))};
     }
 }
+
