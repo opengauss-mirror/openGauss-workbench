@@ -17,10 +17,9 @@ public class ConnectionDTO {
     private String dbPassword;
 
 
-    public void setConnectionDTO(DatabaseConnectionUrlDO databaseConnectionUrlDO, String socketSet) {
+    public void setConnectionDTO(DatabaseConnectionUrlDO databaseConnectionUrlDO) {
         Date date = new Date();
         this.lastDate = date;
-        this.socketSet.add(socketSet);
         this.url = databaseConnectionUrlDO.getUrl();
         this.dbUser = databaseConnectionUrlDO.getUserName();
         this.dbPassword = databaseConnectionUrlDO.getPassword();

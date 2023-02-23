@@ -53,7 +53,7 @@ public class DbConnectionServiceImpl implements DbConnectionService {
                 dataList.setConnectionid(uuid);
                 ConnectionDTO connectionDTO = new ConnectionDTO();
                 DatabaseConnectionUrlDO databaseConnectionUrlDO = databaseConnectionDAO.getByName(request.getName(), request.getWebUser());
-                connectionDTO.setConnectionDTO(databaseConnectionUrlDO, null);
+                connectionDTO.setConnectionDTO(databaseConnectionUrlDO);
                 ConnectionMapDAO.setConMap(uuid, connectionDTO);
                 return dataList;
             } catch (Exception e) {
@@ -105,7 +105,7 @@ public class DbConnectionServiceImpl implements DbConnectionService {
 
             ConnectionDTO connectionDTO = new ConnectionDTO();
             DatabaseConnectionUrlDO databaseConnectionUrlDO = databaseConnectionDAO.getByName(request.getName(), request.getWebUser());
-            connectionDTO.setConnectionDTO(databaseConnectionUrlDO, null);
+            connectionDTO.setConnectionDTO(databaseConnectionUrlDO);
             ConnectionMapDAO.setConMap(request.getConnectionid(), connectionDTO);
             return dataList;
         } catch (Exception e) {
@@ -124,7 +124,7 @@ public class DbConnectionServiceImpl implements DbConnectionService {
             dataList.setConnectionid(uuid);
             ConnectionDTO connectionDTO = new ConnectionDTO();
             DatabaseConnectionUrlDO databaseConnectionUrlDO = databaseConnectionDAO.getByName(request.getName(), request.getWebUser());
-            connectionDTO.setConnectionDTO(databaseConnectionUrlDO, null);
+            connectionDTO.setConnectionDTO(databaseConnectionUrlDO);
             ConnectionMapDAO.setConMap(uuid, connectionDTO);
             return dataList;
         } catch (Exception e) {

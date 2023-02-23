@@ -21,6 +21,9 @@ export default {
   rules: {
     empty: '{0} is required',
   },
+  message: {
+    deleteFile: 'Successfully deleted, please refresh the connection list!',
+  },
   week: {
     Sunday: 'Sun',
     Monday: 'Mon',
@@ -35,7 +38,7 @@ export default {
     open: 'open connection',
     close: 'disconnect',
     create: 'create database',
-    rename: 'rename database',
+    edit: 'edit database properties',
     remove: 'remove database',
     property: 'database properties',
     name: 'database name',
@@ -48,6 +51,17 @@ export default {
     view: 'view',
     synonym: 'synonym',
     sequence: 'sequence',
+    attribute: 'attribute',
+    value: 'value',
+    info: {
+      name: 'datname',
+      encoding: 'encoding',
+      datallowconn: 'datallowconn',
+      datconnlimit: 'datconnlimit',
+      dattablespace: 'dattablespace',
+      datcollate: 'datcollate',
+      datctype: 'datctype',
+    },
   },
   connection: {
     name: 'connection name',

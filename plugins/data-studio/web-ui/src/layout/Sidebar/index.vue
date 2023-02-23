@@ -70,8 +70,8 @@
             <li @click="openConnectDialog('edit')">{{ $t('connection.edit') }}</li>
             <li @click="handleDeleteConnect">{{ $t('connection.delete') }}</li>
             <li @click="handleDisAllconnection">{{ $t('connection.disAllconnection') }}</li>
-            <li @click="dbDialog = true">{{ $t('database.create') }}</li>
-            <li @click="refresh('database')">{{ $t('connection.refresh') }}</li>
+            <li @click="handleCreateDb">{{ $t('database.create') }}</li>
+            <li @click="refresh('connection')">{{ $t('connection.refresh') }}</li>
           </ul>
           <ul
             v-if="treeContext.databaseVisible"
@@ -81,25 +81,25 @@
               }
             "
           >
-            <li :class="{ disabled: treeContextDbStatus }">
+            <li :class="{ disabled: treeContextDbStatus }" @click="handleDbConnect(true)">
               {{ $t('database.open') }}
             </li>
-            <li :class="{ disabled: !treeContextDbStatus }">
+            <li :class="{ disabled: !treeContextDbStatus }" @click="handleDbConnect(false)">
               {{ $t('database.close') }}
             </li>
-            <li :class="{ disabled: !treeContextDbStatus }">
+            <li :class="{ disabled: !treeContextDbStatus }" @click="handleOpenNewTerminal">
               {{ $t('create.openNewTerminal') }}
             </li>
-            <li :class="{ disabled: treeContextDbStatus }">
-              {{ $t('database.rename') }}
+            <li :class="{ disabled: treeContextDbStatus }" @click="handleEditDb">
+              {{ $t('database.edit') }}
             </li>
-            <li :class="{ disabled: treeContextDbStatus }">
+            <li :class="{ disabled: treeContextDbStatus }" @click="hanldeDeleteDb">
               {{ $t('database.remove') }}
             </li>
-            <li :class="{ disabled: !treeContextDbStatus }">
+            <li :class="{ disabled: !treeContextDbStatus }" @click="handleDbInfo">
               {{ $t('database.property') }}
             </li>
-            <li :class="{ disabled: !treeContextDbStatus }" @click="refresh('schema')">
+            <li :class="{ disabled: !treeContextDbStatus }" @click="refresh('database')">
               {{ $t('connection.refresh') }}
             </li>
           </ul>
@@ -111,7 +111,7 @@
               }
             "
           >
-            <li @click="refreshMode"> {{ $t('connection.refresh') }}</li>
+            <li @click="refresh('mode')"> {{ $t('connection.refresh') }}</li>
           </ul>
           <ul
             v-if="treeContext.terminalCollectVisible"
@@ -231,7 +231,13 @@
         </div>
       </div>
     </div>
-    <CreateDbDialog type="create" v-if="dbDialog" v-model="dbDialog" />
+    <CreateDbDialog :type="createDbType" v-if="showCreateDbDialog" v-model="showCreateDbDialog" />
+    <DbInfoDialog
+      v-if="showDbInfoDialog"
+      v-model="showDbInfoDialog"
+      :uuid="currentContextNodeData.uuid"
+      :databaseName="currentContextNodeData.label"
+    />
     <CreateViewDialog type="create" :connectData="currentContextNodeData" v-model="viewDialog" />
     <CreateSynonymDialog
       type="create"
@@ -250,6 +256,7 @@
   import { Search } from '@element-plus/icons-vue';
   import { ElMessage, ElMessageBox, ElTree } from 'element-plus';
   import CreateDbDialog from './CreateDbDialog.vue';
+  import DbInfoDialog from './DbInfoDialog.vue';
   import CreateViewDialog from '@/views/view/CreateViewDialog.vue';
   import CreateSynonymDialog from '@/views/synonym/CreateSynonymDialog.vue';
   import CreateSequenceDialog from '@/views/sequence/CreateSequenceDialog.vue';
@@ -267,7 +274,7 @@
   import { dropView } from '@/api/view';
   import { dropSequence } from '@/api/sequence';
   import { dropSynonym } from '@/api/synonym';
-  import { getDatabaseList } from '@/api/database';
+  import { getDatabaseList, openDatabaseConnection, deleteDatabase } from '@/api/database';
   import { useUserStore } from '@/store/modules/user';
   import { connectListPersist } from '@/config';
 
@@ -300,7 +307,10 @@
     label: string;
     isLeaf?: boolean;
     type?: string;
+    isConnect?: boolean;
+    uuid?: string;
     children?: Tree[];
+    connectInfo: ConnectInfo;
   }
   interface ConnectInfo {
     name: string;
@@ -308,17 +318,16 @@
     ip: string;
     port: string;
     userName: string;
+    uuid?: string;
     type?: string;
     driver?: '';
     password?: string;
     webUser: string;
   }
-  interface ConnectInfoMap {
-    [id: string]: { connectedDatabase: string[] } & ConnectInfo;
-  }
 
   const treeClass = ref('no-tree');
-  const dbDialog = ref(false);
+  const showCreateDbDialog = ref(false);
+  const showDbInfoDialog = ref(false);
   const viewDialog = ref(false);
   const synonymDialog = ref(false);
   const sequenceDialog = ref(false);
@@ -343,58 +352,25 @@
   const currentContextNodeData = reactive({
     id: '',
     uuid: '',
-    connectInfo: { id: '', name: '' },
+    connectInfo: { id: '', name: '' } as ConnectInfo,
+    databaseId: '',
     databaseName: '',
+    schemaId: '',
     schemaName: '',
     label: '',
     children: [],
   });
   let loading = ref(null);
-
-  onMounted(async () => {
-    // maybe update database list, and schema, databaseName... so must close all tabs.
-    EventBus.listen(EventTypeName.GET_DATABASE_LIST, async (connectData) => {
-      EventBus.notify(EventTypeName.CLOSE_ALL_TAB);
-      connectData && Object.assign(connectInfo, connectData);
-      const { dataName, connectionid, ...Info } = connectData;
-      AppStore.connectListMap[connectData.id] = {
-        ...Info,
-        connectedDatabase: [connectData.dataName],
-      };
-      AppStore.lastestConnectDatabase = {
-        name: dataName,
-        uuid: connectionid,
-      };
-      await fetchDBList(Info, connectionid);
-      parent.location.reload();
-    });
-    // only update database list. not schema/databaseName...
-    EventBus.listen(EventTypeName.UPDATE_DATABASE_LIST, (connectData) => {
-      connectData && Object.assign(connectInfo, connectData);
-      const { dataName, connectionid, ...Info } = connectData;
-      AppStore.connectListMap[connectData.id] = {
-        ...Info,
-        connectedDatabase: [connectData.dataName],
-      };
-      AppStore.lastestConnectDatabase = {
-        name: dataName,
-        uuid: connectionid,
-      };
-      fetchDBList(Info, connectionid);
-    });
-
-    connectionList.value = getAllConnectList();
-  });
-  onUnmounted(() => {
-    EventBus.unListen(EventTypeName.GET_DATABASE_LIST);
-    EventBus.unListen(EventTypeName.UPDATE_DATABASE_LIST);
-  });
+  const createDbType = ref<'create' | 'edit'>('create');
 
   const loadNode = async (node, resolve) => {
+    console.log('node', node);
+    
     if (node.data.children && node.data.children.length) {
       return resolve(node.data.children);
     } else if (node.data?.type == 'database' && node.data?.isConnect) {
       const data = await fetchSchemaList(
+        node.data.id,
         node.data.id,
         node.data.label,
         node.data.uuid,
@@ -405,8 +381,10 @@
       const data = await fetchSchemaContentList(
         node.data.id,
         node.data.uuid,
-        node.data.label,
+        node.data.databaseId,
         node.data.databaseName,
+        node.data.id,
+        node.data.label,
         node.data.connectInfo,
       );
       connectionList.value.forEach((connectItem) => {
@@ -426,10 +404,7 @@
           }
         }
       });
-      connectListPersist.storage.setItem(
-        connectListPersist.key,
-        JSON.stringify(connectionList.value),
-      );
+      updateConnectListPersist();
       return resolve(data);
     } else {
       return resolve([]);
@@ -459,30 +434,23 @@
             type: 'database',
             isLeaf: false,
             children: [],
-            isConnect: AppStore.connectListMap[connectInfo.id]?.connectedDatabase.includes(dbName),
+            isConnect:
+              AppStore.connectListMap[connectInfo.id]?.connectedDatabase.findIndex(
+                (item) => item.name == dbName,
+              ) > -1,
           };
         }),
       };
-      // for (let i = 0; i < root.children.length; i++) {
-      //   if (root.children[i].label == dataName) {
-      //     await fetchSchemaList(root.children[i].id, dataName, cloneConnectInfo);
-      //     break;
-      //   }
-      // }
-
       connectionList.value = getAllConnectList(root);
       AppStore.updateCurrentNode(root);
-      connectListPersist.storage.setItem(
-        connectListPersist.key,
-        JSON.stringify(connectionList.value),
-      );
+      updateConnectListPersist();
     } finally {
       loading.value.close();
     }
     return true;
   };
 
-  const fetchSchemaList = async (parentId, databaseName, uuid, connectInfo) => {
+  const fetchSchemaList = async (parentId, databaseId, databaseName, uuid, connectInfo) => {
     const data = (await getSchemaList({
       uuid,
       connectionName: connectInfo.userName,
@@ -496,6 +464,7 @@
         label: schemaName,
         connectInfo,
         databaseName,
+        databaseId,
         uuid,
         type: schemaName === 'public' ? 'public' : 'person',
         isLeaf: false,
@@ -514,14 +483,19 @@
         }
       }
     });
-    connectListPersist.storage.setItem(
-      connectListPersist.key,
-      JSON.stringify(connectionList.value),
-    );
+    updateConnectListPersist();
     return schemaList;
   };
 
-  const fetchSchemaContentList = async (parentId, uuid, schemaName, databaseName, connectInfo) => {
+  const fetchSchemaContentList = async (
+    parentId,
+    uuid,
+    databaseId,
+    databaseName,
+    schemaId,
+    schemaName,
+    connectInfo,
+  ) => {
     const data = (await getSchemaObjectList({
       connectionName: connectInfo.name,
       webUser: UserStore.userId,
@@ -530,12 +504,30 @@
     })) as unknown as any[];
     let arr = [];
     if (data.length) {
-      arr = handleSchemaList(data[0], parentId, uuid, schemaName, databaseName, connectInfo);
+      arr = handleSchemaList(
+        data[0],
+        parentId,
+        uuid,
+        databaseId,
+        databaseName,
+        schemaId,
+        schemaName,
+        connectInfo,
+      );
     }
     return arr;
   };
   // User Mode - public/no public
-  const handleSchemaList = (obj, parentId, uuid, schemaName, databaseName, connectInfo) => {
+  const handleSchemaList = (
+    obj,
+    parentId,
+    uuid,
+    databaseId,
+    databaseName,
+    schemaId,
+    schemaName,
+    connectInfo,
+  ) => {
     const array = [];
     const order = ['table', 'fun_pro', 'sequence', 'view', 'synonym'];
     let keys = Object.keys(obj);
@@ -554,15 +546,19 @@
         type,
         key,
         connectInfo,
-        schemaName,
+        databaseId,
         databaseName,
+        schemaId,
+        schemaName,
         children: handleTypeList(
           obj[key],
           zType,
           keyId,
           uuid,
-          schemaName,
+          databaseId,
           databaseName,
+          schemaId,
+          schemaName,
           connectInfo,
         ),
         isLeaf: false,
@@ -603,15 +599,27 @@
     return obj;
   };
   // User Mode-children data - [table/func/view]...
-  const handleTypeList = (array, zType, parentId, uuid, schemaName, databaseName, connectInfo) => {
+  const handleTypeList = (
+    array,
+    zType,
+    parentId,
+    uuid,
+    databaseId,
+    databaseName,
+    schemaId,
+    schemaName,
+    connectInfo,
+  ) => {
     return array.map((item) => ({
       id: `${parentId}_${item}`,
       parentId,
       uuid,
       label: item,
       type: zType,
-      schemaName,
+      databaseId,
       databaseName,
+      schemaId,
+      schemaName,
       connectInfo,
       isLeaf: true,
     }));
@@ -640,9 +648,32 @@
     treeContext.rootVisible = false;
     EventBus.notify(EventTypeName.OPEN_CONNECT_INFO_DIALOG, currentContextNodeData.connectInfo);
   };
+  const updateConnectListPersist = () => {
+    connectListPersist.storage.setItem(
+      connectListPersist.key,
+      JSON.stringify(connectionList.value),
+    );
+  };
+  // const updateLastestConnectDatabse = (rootId, databaseName, uuid) => {
+  //   AppStore.lastestConnectDatabase = { rootId, databaseName, uuid };
+  // };
+  const updateConnectListMap = () => {
+    const obj = {};
+    connectionList.value.forEach((list) => {
+      obj[list.id] = {
+        info: { ...list.connectInfo },
+        connectedDatabase: list.children
+          .filter((item) => item.isConnect)
+          .map((item) => ({ name: item.label, uuid: item.uuid })),
+      };
+    });
+    AppStore.connectListMap = obj;
+  };
   const handleDeleteConnect = () => {
     treeContext.rootVisible = false;
-    ElMessageBox.confirm(t('connection.message.deleteConnect')).then(async () => {
+    ElMessageBox.confirm(
+      t('connection.message.deleteConnect', { name: currentContextNodeData.connectInfo.name }),
+    ).then(async () => {
       for (let i = 0; i < currentContextNodeData.children.length; i++) {
         const db = currentContextNodeData.children[i];
         if (db.isConnect) {
@@ -650,12 +681,21 @@
         }
       }
       const index = connectionList.value.findIndex((item) => item.id == currentContextNodeData.id);
+      treeRef.value.remove(treeRef.value.getNode(currentContextNodeData.id));
       index > -1 && connectionList.value.splice(index, 1);
+      if (AppStore.currentConnectNode.id == currentContextNodeData.id) {
+        AppStore.currentConnectNode = connectionList.value[0] || {};
+      }
+      updateConnectListPersist();
+      updateConnectListMap();
+      if (connectionList.value.length == 0) router.push('/home');
     });
   };
   const handleDisAllconnection = () => {
     treeContext.rootVisible = false;
-    ElMessageBox.confirm(t('connection.message.deleteAllConnect')).then(async () => {
+    ElMessageBox.confirm(
+      t('connection.message.deleteAllConnect', { name: currentContextNodeData.connectInfo.name }),
+    ).then(async () => {
       for (let i = 0; i < connectionList.value.length; i++) {
         const list = connectionList.value[i];
         if (list.id == currentContextNodeData.id) {
@@ -664,77 +704,172 @@
             if (db.isConnect) {
               await closeConnections(db.uuid);
               db.children = [];
+              db.isConnect = false;
+              db.uuid = '';
             }
           }
         }
       }
-      connectListPersist.storage.setItem(
-        connectListPersist.key,
-        JSON.stringify(connectionList.value),
-      );
+      if (AppStore.currentConnectNode.id == currentContextNodeData.id) {
+        AppStore.currentConnectNode = connectionList.value[0] || {};
+      }
+      updateConnectListPersist();
+      updateConnectListMap();
     });
   };
-  const refresh = (mode: 'database' | 'schema') => {
-    if (mode == 'database') {
+  const handleDbConnect = async (willOpen) => {
+    treeContext.databaseVisible = false;
+    const { id } = currentContextNodeData.connectInfo;
+    let mergeObj = {};
+    if (willOpen) {
+      const params = {
+        id,
+        dataName: currentContextNodeData.label,
+        webUser: UserStore.userId,
+      };
+      const res: any = await openDatabaseConnection(params);
+      mergeObj = { uuid: res.connectionid };
+      AppStore.lastestConnectDatabase = {
+        rootId: id,
+        databaseName: currentContextNodeData.label,
+        uuid: res.connectionid,
+      };
+    } else {
+      await closeConnections(currentContextNodeData.uuid);
+      mergeObj = { uuid: '' };
+    }
+    for (let i = 0; i < connectionList.value.length; i++) {
+      const list = connectionList.value[i];
+      if (list.id == currentContextNodeData.connectInfo.id) {
+        for (let j = 0; j < list.children.length; j++) {
+          const db = list.children[j];
+          if (db.id == currentContextNodeData.id) {
+            Object.assign(db, {
+              isConnect: willOpen,
+              ...mergeObj,
+            });
+            break;
+          }
+        }
+        break;
+      }
+    }
+    updateConnectListPersist();
+    updateConnectListMap();
+  };
+  const handleOpenNewTerminal = () => {
+    treeContext.databaseVisible = false;
+    const { name: connectInfoName, id: rootId } = currentContextNodeData.connectInfo;
+    const dbname = currentContextNodeData.label;
+    const terminalNum = TagsViewStore.maxTerminalNum + 1;
+    const title = `${dbname}@${connectInfoName}(${terminalNum})`;
+    const time = Date.now();
+    router.push({
+      path: '/createTerminal/' + time,
+      query: {
+        title,
+        rootId,
+        connectInfoName,
+        uuid: currentContextNodeData.uuid,
+        dbname,
+        // schema: 
+        terminalNum,
+        time,
+      },
+    });
+  };
+  const handleCreateDb = () => {
+    treeContext.rootVisible = false;
+    showCreateDbDialog.value = true;
+    createDbType.value = 'create';
+  };
+  const handleEditDb = () => {
+    treeContext.databaseVisible = false;
+    showCreateDbDialog.value = true;
+    createDbType.value = 'edit';
+  };
+  const hanldeDeleteDb = () => {
+    treeContext.databaseVisible = false;
+    ElMessageBox.confirm(
+      t('connection.message.deleteDatabase', { name: currentContextNodeData.label }),
+    ).then(async () => {
+      const res = await deleteDatabase({
+        uuid: currentContextNodeData.uuid,
+        databaseName: currentContextNodeData.label,
+      });
+      console.log('hanldeDeleteDb', res);
+      
+    });
+  };
+  const handleDbInfo = () => {
+    treeContext.databaseVisible = false;
+    showDbInfoDialog.value = true;
+  };
+  interface RefreshOptions {
+    connectInfo: ConnectInfo | undefined;
+    connectionId: string;
+    uuid: string;
+    databaseName: string;
+    schemaId: string;
+    nodeId: string;
+  }
+  const refresh = (
+    mode: 'connection' | 'database' | 'mode',
+    options: Partial<RefreshOptions> = {
+      connectInfo: undefined,
+      connectionId: '',
+      uuid: '',
+      databaseName: '',
+      schemaId: '',
+      nodeId: '',
+    },
+  ) => {
+    if (mode == 'connection') {
       treeContext.rootVisible = false;
-      fetchDBList(currentContextNodeData.connectInfo, currentContextNodeData.uuid);
-    } else if (mode == 'schema') {
+      fetchDBList(
+        options.connectInfo || currentContextNodeData.connectInfo,
+        options.uuid || currentContextNodeData.uuid,
+      );
+    } else if (mode == 'database') {
       treeContext.databaseVisible = false;
       connectionList.value.forEach((item) => {
-        if (item.id == currentContextNodeData.connectInfo.id) {
+        if (item.id == (options.connectionId || currentContextNodeData.connectInfo.id)) {
           const dbList = item.children;
           for (let j = 0; j < dbList.length; j++) {
-            if (dbList[j].label == currentContextNodeData.label) {
+            if (dbList[j].label == (options.databaseName || currentContextNodeData.label)) {
               dbList[j].children = [];
               break;
             }
           }
         }
       });
-      let node = treeRef.value.getNode(currentContextNodeData.id);
-      if (node) {
-        node.loaded = false;
-        node.expand();
-      }
-    }
-  };
-  const refreshMode = async () => {
-    treeContext.modeVisible = false;
-    // clear node.children
-    connectionList.value.forEach((item) => {
-      if (item.id == currentContextNodeData.connectInfo.id) {
-        const dbList = item.children;
-        for (let j = 0; j < dbList.length; j++) {
-          if (dbList[j].label == currentContextNodeData.databaseName) {
-            const schemaList = dbList[j].children;
-            for (let k = 0; k < schemaList.length; k++) {
-              if (schemaList[k].id == currentContextNodeData.id) {
-                schemaList[k].children = [];
-                break;
+    } else if (mode == 'mode') {
+      treeContext.modeVisible = false;
+      connectionList.value.forEach((item) => {
+        if (item.id == (options.connectionId || currentContextNodeData.connectInfo.id)) {
+          const dbList = item.children;
+          for (let j = 0; j < dbList.length; j++) {
+            if (dbList[j].label == (options.databaseName || currentContextNodeData.databaseName)) {
+              const schemaList = dbList[j].children;
+              for (let k = 0; k < schemaList.length; k++) {
+                if (schemaList[k].id == (options.schemaId || currentContextNodeData.id)) {
+                  schemaList[k].children = [];
+                  break;
+                }
               }
+              break;
             }
-            break;
           }
         }
-      }
-    });
-    let node = treeRef.value.getNode(currentContextNodeData.id);
+      });
+    }
+    let node = treeRef.value.getNode(options.nodeId || currentContextNodeData.id);
     if (node) {
       node.loaded = false;
       node.expand();
     }
   };
 
-  watch(connectionList, (val) => {
-    treeClass.value = val.length ? 'tree' : 'no-tree';
-  });
-
-  // Filter TreeNode
-  watch(filterTreeText, (val) => {
-    treeRef.value!.filter(val);
-    treeClass.value = treeRef.value.isEmpty ? 'no-tree' : 'tree';
-    if (!val) resetExpandNodes();
-  });
   const filterNode = (value: string, data: Tree) => {
     if (!value) return true;
     if (!data.label) return false;
@@ -751,9 +886,10 @@
     });
     if (node.isLeaf) {
       const { schemaName, databaseName, uuid } = target;
-      const { name: connectInfoName } = target.connectInfo;
+      const { name: connectInfoName, id: rootId } = target.connectInfo;
       const commonParams = {
         title: `${schemaName}.${target.label}-${databaseName}@${connectInfoName}`,
+        rootId,
         connectInfoName,
         uuid,
         dbname: databaseName,
@@ -846,9 +982,9 @@
   });
   const treeContextDbStatus = computed(() => {
     return Boolean(
-      AppStore.connectListMap[currentContextNodeData.connectInfo.id]?.connectedDatabase.includes(
-        currentContextNodeData.label,
-      ),
+      AppStore.connectListMap[currentContextNodeData.connectInfo.id]?.connectedDatabase.findIndex(
+        (item) => item.name == currentContextNodeData.label,
+      ) > -1,
     );
   });
   const handleContextmenu = (event, data) => {
@@ -974,9 +1110,17 @@
         schema: currentContextNodeData.schemaName,
         [type + 'Name']: currentContextNodeData.label,
         webUser: UserStore.userId,
+        uuid: currentContextNodeData.uuid,
       };
       await api(params);
-      ElMessage.success(`${t(`delete.${type}`)}${t('success')}`);
+      ElMessage.success(t('message.deleteFile'));
+      // ElMessage.success(`${t(`delete.${type}`)}${t('success')}`);
+      // refresh('mode', {
+      //   connectionId: currentContextNodeData.connectInfo.id,
+      //   databaseName: currentContextNodeData.databaseName,
+      //   schemaId: currentContextNodeData.schemaId,
+      //   nodeId: currentContextNodeData.schemaId,
+      // });
     });
   };
 
@@ -1012,11 +1156,79 @@
           }
         });
         connectionList.value = list;
-        connectListPersist.storage.setItem(connectListPersist.key, JSON.stringify(list));
+        updateConnectListPersist();
       }
     },
     { immediate: true, deep: true },
   );
+
+  watch(
+    connectionList,
+    (val) => {
+      treeClass.value = val.length ? 'tree' : 'no-tree';
+    },
+    { deep: true },
+  );
+
+  watch(filterTreeText, (val) => {
+    treeRef.value!.filter(val);
+    treeClass.value = treeRef.value.isEmpty ? 'no-tree' : 'tree';
+    if (!val) resetExpandNodes();
+  });
+
+  onMounted(async () => {
+    // maybe update database list, and schema, databaseName... so must close all tabs.
+    EventBus.listen(EventTypeName.GET_DATABASE_LIST, async (connectData) => {
+      EventBus.notify(EventTypeName.CLOSE_ALL_TAB);
+      connectData && Object.assign(connectInfo, connectData);
+      const { connectionid, ...info } = connectData;
+      AppStore.connectListMap[connectData.id] = {
+        info,
+        connectedDatabase: [
+          {
+            name: connectData.dataName,
+            uuid: connectionid,
+          },
+        ],
+      };
+      AppStore.lastestConnectDatabase = {
+        rootId: connectData.id,
+        databaseName: connectData.dataName,
+        uuid: connectionid,
+      };
+      await fetchDBList(info, connectionid);
+      parent.location.reload();
+    });
+    EventBus.listen(EventTypeName.UPDATE_DATABASE_LIST, (connectData) => {
+      connectData && Object.assign(connectInfo, connectData);
+      const { connectionid, ...info } = connectData;
+      AppStore.connectListMap[connectData.id] = {
+        info,
+        connectedDatabase: [
+          {
+            name: connectData.dataName,
+            uuid: connectionid,
+          },
+        ],
+      };
+      AppStore.lastestConnectDatabase = {
+        rootId: connectData.id,
+        databaseName: connectData.dataName,
+        uuid: connectionid,
+      };
+      fetchDBList(info, connectionid);
+    });
+    // EventBus.listen(EventTypeName.REFRESH_DATABASE_LIST, (config) => {
+    //   refresh(config.mode, config.options);
+    // });
+
+    connectionList.value = getAllConnectList();
+  });
+  onUnmounted(() => {
+    EventBus.unListen(EventTypeName.GET_DATABASE_LIST);
+    EventBus.unListen(EventTypeName.UPDATE_DATABASE_LIST);
+    // EventBus.unListen(EventTypeName.REFRESH_DATABASE_LIST);
+  });
 </script>
 
 <style lang="scss">

@@ -35,6 +35,9 @@ public class DbConnectionController {
     @Resource
     private DbConnectionService dbConnectionService;
 
+    @Resource
+    private ConnectionMapDAO connectionMapDAO;
+
     @GetMapping(value = "/clusters", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<OpsClusterVO> allCluster() throws Exception {
         List<OpsClusterVO> list = clusterManager.getAllOpsCluster();
@@ -63,10 +66,9 @@ public class DbConnectionController {
         dbConnectionService.deleteDatabaseConnectionList(id);
     }
 
-    @ApiOperation(value = "Delete Connectionll")
+    @ApiOperation(value = "Delete connections")
     @DeleteMapping(value = "/connections/close/{uuid}", produces = MediaType.APPLICATION_JSON_VALUE)
     public void delete(@PathVariable("uuid") String uuid) throws Exception {
-        ConnectionMapDAO connectionMapDAO = new ConnectionMapDAO();
         connectionMapDAO.deleteConnection(uuid);
     }
 

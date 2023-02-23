@@ -2,11 +2,11 @@
   <div class="db-dialog">
     <el-dialog
       v-model="visible"
-      :title="$t('database.create')"
+      :title="props.type == 'create' ? $t('database.create') : $t('database.edit')"
       :width="500"
       align-center
       :close-on-click-modal="false"
-      @open="handleOpen"
+      @opened="handleOpen"
       @close="handleClose"
     >
       <div class="dialog_body">
@@ -16,10 +16,10 @@
           </el-form-item>
           <el-form-item
             v-if="props.type == 'create'"
-            prop="encoder"
+            prop="databaseCode"
             :label="$t('database.encoder')"
           >
-            <el-select v-model="form.encoder">
+            <el-select v-model="form.databaseCode">
               <el-option label="UTF-8" value="UTF-8" />
               <el-option label="GBK" value="GBK" />
               <el-option label="LATIN1" value="LATIN1" />
@@ -43,17 +43,16 @@
   </div>
 </template>
 <script lang="ts" setup>
-  import { computed, ref, reactive, Ref } from 'vue';
+  import { computed, ref, reactive } from 'vue';
   import { ElMessage, FormInstance, FormRules } from 'element-plus';
   import { useI18n } from 'vue-i18n';
-  // import { createViewDdl } from '@/api/view';
   import { useUserStore } from '@/store/modules/user';
   import { createDatabase } from '@/api/database';
 
   const props = withDefaults(
     defineProps<{
       modelValue: boolean;
-      type: 'create' | 'rename';
+      type: 'create' | 'edit';
       // connectData: any;
     }>(),
     {
@@ -75,14 +74,13 @@
   // const connectData = computed(() => props.connectData);
   const form = reactive({
     name: '',
-    encoder: 'UTF-8',
+    databaseCode: 'UTF-8',
     isConnect: false,
-    // connectionName: '',
     webUser: UserStore.userId,
   });
   const rules = reactive<FormRules>({
     name: [{ required: true, message: t('rules.empty', [t('database.name')]), trigger: 'blur' }],
-    encoder: [
+    databaseCode: [
       { required: true, message: t('rules.empty', [t('database.encoder')]), trigger: 'change' },
     ],
   });
@@ -96,10 +94,17 @@
     ruleFormRef.value.resetFields();
   };
   const confirmForm = async () => {
-    ruleFormRef.value.validate((valid) => {
+    ruleFormRef.value.validate(async (valid) => {
       if (valid) {
         console.log(123);
-        
+        if (props.type == 'create') {
+          const res = await createDatabase({
+            databaseName: form.name,
+            databaseCode: form.databaseCode,
+          });
+          console.log('create-db:', res);
+          
+        }
         // api[type](form).then((res) => {
         //   ElMessage.success(`${t('create.view')}${t('success')}`);
         //   handleClose();
@@ -107,13 +112,6 @@
       }
     });
   };
-  // const resetForm = () => {
-  //   Object.assign(form, {
-  //     name: '',
-  //     encoder: 'VIEW',
-  //   });
-  //   ruleFormRef.value.clearValidate();
-  // };
 </script>
 
 <style lang="scss" scoped>
