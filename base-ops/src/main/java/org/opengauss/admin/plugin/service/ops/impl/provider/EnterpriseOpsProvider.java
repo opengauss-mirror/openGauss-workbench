@@ -810,9 +810,9 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
 
         WsSession retSession = unInstallContext.getRetSession();
 
-        OpsClusterNodeEntity opsClusterNodeEntity = unInstallContext.getOpsClusterNodeEntityList().get(0);
+        OpsClusterNodeEntity opsClusterNodeEntity = unInstallContext.getOpsClusterNodeEntityList().stream().filter(opsClusterNodeEntity1 -> ClusterRoleEnum.MASTER==opsClusterNodeEntity1.getClusterRole()).findFirst().orElseThrow(()->new OpsException("master node not found"));
 
-        HostInfoHolder hostInfoHolder = unInstallContext.getHostInfoHolders().get(0);
+        HostInfoHolder hostInfoHolder = unInstallContext.getHostInfoHolders().stream().filter(hostInfoHolder1 -> hostInfoHolder1.getHostEntity().getHostId().equalsIgnoreCase(opsClusterNodeEntity.getHostId())).findFirst().orElseThrow(()->new OpsException("host information not found"));
         OpsHostEntity hostEntity = hostInfoHolder.getHostEntity();
         OpsHostUserEntity hostUserEntity = hostInfoHolder.getHostUserEntities().stream().filter(userInfo -> opsClusterNodeEntity.getInstallUserId().equals(userInfo.getHostUserId())).findFirst().orElseThrow(() -> new OpsException("No install user info user found"));
         Session session = sshLogin(jschUtil,encryptionUtils,hostEntity, hostUserEntity);
