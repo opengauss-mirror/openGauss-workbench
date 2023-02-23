@@ -3,20 +3,16 @@ package com.nctigba.datastudio.dao;
 
 import com.nctigba.datastudio.base.WebSocketServer;
 import com.nctigba.datastudio.model.dto.ConnectionDTO;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
 
 import java.sql.Connection;
-import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
 
-
+@Slf4j
+@Repository
 public class ConnectionMapDAO {
     public static Map<String, ConnectionDTO> conMap = new HashMap<>(1);
 
@@ -42,7 +38,7 @@ public class ConnectionMapDAO {
                         try {
                             overtimeCloseSocket(connectionDTO.getSocketSet());
                             conMap.remove(key);
-                        } catch (SQLException e) {
+                        } catch (Exception e) {
                             throw new RuntimeException(e);
                         }
                     }
@@ -57,9 +53,13 @@ public class ConnectionMapDAO {
 
     public void deleteConnection(String uuid) {
         try {
+            log.info("wyl is: " + uuid);
             ConnectionDTO connectionDTO = conMap.get(uuid);
+            log.info("wyl is: " + connectionDTO);
             overtimeCloseSocket(connectionDTO.getSocketSet());
+            log.info("socketSet is: " + conMap);
             conMap.remove(uuid);
+            log.info("socketSet is: " + conMap);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -68,15 +68,18 @@ public class ConnectionMapDAO {
     @Autowired
     WebSocketServer webSocketServer;
 
-    public void overtimeCloseSocket(HashSet socketSet) throws SQLException {
-        Iterator iterator = socketSet.iterator();
+    public void overtimeCloseSocket(HashSet socketSet) throws Exception {
+        log.info("socketSet is: " + socketSet);
+        Iterator<String> iterator = socketSet.iterator();
+        log.info("iterator is: " + iterator);
         while (iterator.hasNext()) {
-            Statement statement = webSocketServer.getStatement((String) iterator.next());
+            String winNmae = iterator.next();
+            Statement statement = webSocketServer.getStatement(winNmae);
+            Connection connection = webSocketServer.getConnection(winNmae);
             if (statement != null) {
                 statement.close();
                 statement.cancel();
             }
-            Connection connection = webSocketServer.getConnection((String) iterator.next());
             if (connection != null) {
                 connection.close();
             }

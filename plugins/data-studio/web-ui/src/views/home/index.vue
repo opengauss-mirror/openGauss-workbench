@@ -28,9 +28,10 @@
               router.replace({
                 path: '/home',
                 query: {
+                  rootId: AppStore.lastestConnectDatabase.rootId,
                   connectInfoName: AppStore.currentConnectInfo.name,
                   uuid: AppStore.lastestConnectDatabase.uuid,
-                  dbname: AppStore.lastestConnectDatabase.name,
+                  dbname: AppStore.lastestConnectDatabase.databaseName,
                   time: Date.now(),
                 },
               });

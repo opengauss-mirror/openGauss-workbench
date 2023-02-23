@@ -62,14 +62,16 @@ public class CreateDatabaseServiceImpl implements CreateDatabaseService {
     @Override
     public DatabaseConnectionDO connectionDatabase(DatabaseConnectionDO database) throws Exception {
         log.info("connectionDatabase request is: " + database);
+        ConnectionDTO connectionDTO = new ConnectionDTO();
+        DatabaseConnectionUrlDO databaseConnectionUrlDO = new DatabaseConnectionUrlDO();
         DatabaseConnectionDO databaseConnectionDO = databaseConnectionDAO.getByIdDatabase(Integer.parseInt(database.getId()), database.getWebUser());
         String uuid = UUID.randomUUID().toString();
         databaseConnectionDO.setConnectionid(uuid);
         databaseConnectionDO.setDataName(database.getDataName());
-        ConnectionDTO connectionDTO = new ConnectionDTO();
-        DatabaseConnectionUrlDO databaseConnectionUrlDO = databaseConnectionDAO.getById(Integer.parseInt(database.getId()), database.getWebUser());
         databaseConnectionUrlDO.setUrl(GET_URL_JDBC + databaseConnectionDO.getIp() + ":" + databaseConnectionDO.getPort() + "/" + database.getDataName() + CONFIGURE_TIME);
-        connectionDTO.setConnectionDTO(databaseConnectionUrlDO, null);
+        databaseConnectionUrlDO.setUserName(databaseConnectionDO.getUserName());
+        databaseConnectionUrlDO.setPassword(databaseConnectionDO.getPassword());
+        connectionDTO.setConnectionDTO(databaseConnectionUrlDO);
         ConnectionMapDAO.setConMap(uuid, connectionDTO);
         return databaseConnectionDO;
     }

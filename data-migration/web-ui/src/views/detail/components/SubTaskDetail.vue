@@ -25,7 +25,7 @@
         <a-progress size="large" :percent="subTaskInfo.execStatus === 100 ? 1 : (subTaskInfo.migrationProcess || 0)" />
       </div>
       <div v-if="tabActive === 1 && subTaskInfo.migrationModelId === 1" class="table-con">
-        <a-table :data="tableData" :bordered="false" stripe :pagination="false" :default-expanded-keys="['tables']">
+        <a-table :data="tableData" :bordered="false" stripe :pagination="false" :default-expanded-keys="['table']">
           <template #columns>
             <a-table-column :title="`源库：${subTaskInfo.sourceDb}`" data-index="name"></a-table-column>
             <a-table-column :title="`目的库：${subTaskInfo.targetDb}`" data-index="name"></a-table-column>
@@ -294,10 +294,10 @@ const getSubTaskDetail = () => {
     ]
 
     const fullProcessDetail = JSON.parse(res.data.fullProcess.execResultDetail)
-    const dealData = ['tables', 'views', 'function', 'trigger', 'procedure'].map(item => {
+    const dealData = ['table', 'view', 'function', 'trigger', 'procedure'].map(item => {
       const nameMap = {
-        'tables': '表',
-        'views': '视图',
+        'table': '表',
+        'view': '视图',
         'function': '函数',
         'trigger': '触发器',
         'procedure': '存储过程'
