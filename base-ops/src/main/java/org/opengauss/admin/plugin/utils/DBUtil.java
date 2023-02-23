@@ -32,7 +32,7 @@ public class DBUtil {
         Properties info = new Properties();
         info.setProperty("user", username);
         info.setProperty("password", password);
-        info.setProperty("connectTimeout", "30000");
+        info.setProperty("connectTimeout", "30");
         Class.forName(driver);
         Connection conn = DriverManager.getConnection(sourceURL, info);
 

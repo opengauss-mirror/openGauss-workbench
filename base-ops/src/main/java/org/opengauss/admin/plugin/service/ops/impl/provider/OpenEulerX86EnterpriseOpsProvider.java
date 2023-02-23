@@ -861,33 +861,45 @@ public class OpenEulerX86EnterpriseOpsProvider extends AbstractOpsProvider {
             log.error("No nodes to restart");
         }
 
-        for (String restartNodeId : restartNodeIds) {
-            doRestartNode(restartNodeId, opsClusterContext);
+        if (opsClusterContext.getOpsClusterNodeEntityList().size() == restartNodeIds.size()){
+            doRestartCluster(opsClusterContext);
+        }else{
+            for (String restartNodeId : restartNodeIds) {
+                doRestartNode(restartNodeId, opsClusterContext);
+            }
+        }
+    }
+
+    private void doRestartCluster(OpsClusterContext opsClusterContext) {
+        OpsClusterNodeEntity startNodeEntity = opsClusterContext.getOpsClusterNodeEntityList().get(0);
+        WsSession retSession = opsClusterContext.getRetSession();
+        Session ommUserSession = loginWithUser(jschUtil,encryptionUtils,opsClusterContext.getHostInfoHolders(), false, startNodeEntity.getHostId(), startNodeEntity.getInstallUserId());
+        OmStatusModel omStatusModel = omStatus(jschUtil,ommUserSession,retSession);
+        if (Objects.isNull(omStatusModel)){
+            throw new OpsException("gs_om status fail");
+        }
+
+        String command = null;
+        if (omStatusModel.isInstallCm()){
+            command = "cm_ctl stop && cm_ctl start";
+        }else {
+            command = "gs_om -t restart";
+        }
+
+        try {
+            JschResult jschResult = jschUtil.executeCommand(command, ommUserSession, retSession);
+            if (0 != jschResult.getExitCode()) {
+                throw new OpsException("startup error，exit code " + jschResult.getExitCode());
+            }
+        } catch (Exception e) {
+            log.error("An exception occurred during startup", e);
+            throw new OpsException("An exception occurred during startup");
         }
     }
 
     private void doRestartNode(String restartNodeId, OpsClusterContext opsClusterContext) {
-        OpsClusterNodeEntity restartNodeEntity = opsClusterContext.getOpsClusterNodeEntityList().stream().filter(opsClusterNodeEntity -> opsClusterNodeEntity.getClusterNodeId().equals(restartNodeId)).findFirst().orElse(null);
-        if (Objects.isNull(restartNodeEntity)) {
-            log.error("No restart node information found:{}", restartNodeId);
-        }
-
-        WsSession retSession = opsClusterContext.getRetSession();
-        String dataPath = restartNodeEntity.getDataPath();
-        log.info("login restart user");
-        Session restartUserSession = loginWithUser(jschUtil,encryptionUtils,opsClusterContext.getHostInfoHolders(), false, restartNodeEntity.getHostId(), restartNodeEntity.getInstallUserId());
-
-        String restartCommand = MessageFormat.format(SshCommandConstants.LITE_RESTART, dataPath);
-        try {
-            JschResult jschResult = jschUtil.executeCommand(restartCommand, restartUserSession, retSession);
-            if (0 != jschResult.getExitCode()) {
-                log.error("restart error，exit code{},msg:{}", jschResult.getExitCode(), jschResult.getResult());
-                throw new OpsException("restart error，exit code " + jschResult.getExitCode());
-            }
-        } catch (Exception e) {
-            log.error("An exception occurred during the restart process", e);
-            throw new OpsException("restart exception");
-        }
+        doStopNode(restartNodeId,opsClusterContext);
+        doStartNode(restartNodeId,opsClusterContext);
     }
 
     @Override
@@ -902,8 +914,39 @@ public class OpenEulerX86EnterpriseOpsProvider extends AbstractOpsProvider {
             log.error("No node to start");
         }
 
-        for (String startNodeId : startNodeIds) {
-            doStartNode(startNodeId, opsClusterContext);
+        if (opsClusterContext.getOpsClusterNodeEntityList().size() == startNodeIds.size()){
+            doStartCluster(opsClusterContext);
+        }else{
+            for (String startNodeId : startNodeIds) {
+                doStartNode(startNodeId, opsClusterContext);
+            }
+        }
+    }
+
+    private void doStartCluster(OpsClusterContext opsClusterContext) {
+        OpsClusterNodeEntity startNodeEntity = opsClusterContext.getOpsClusterNodeEntityList().get(0);
+        WsSession retSession = opsClusterContext.getRetSession();
+        Session ommUserSession = loginWithUser(jschUtil,encryptionUtils,opsClusterContext.getHostInfoHolders(), false, startNodeEntity.getHostId(), startNodeEntity.getInstallUserId());
+        OmStatusModel omStatusModel = omStatus(jschUtil,ommUserSession,retSession);
+        if (Objects.isNull(omStatusModel)){
+            throw new OpsException("gs_om status fail");
+        }
+
+        String command = null;
+        if (omStatusModel.isInstallCm()){
+            command = "cm_ctl start";
+        }else {
+            command = "gs_om -t start";
+        }
+
+        try {
+            JschResult jschResult = jschUtil.executeCommand(command, ommUserSession, retSession);
+            if (0 != jschResult.getExitCode()) {
+                throw new OpsException("startup error，exit code " + jschResult.getExitCode());
+            }
+        } catch (Exception e) {
+            log.error("An exception occurred during startup", e);
+            throw new OpsException("An exception occurred during startup");
         }
     }
 
@@ -916,11 +959,29 @@ public class OpenEulerX86EnterpriseOpsProvider extends AbstractOpsProvider {
         WsSession retSession = opsClusterContext.getRetSession();
         String dataPath = startNodeEntity.getDataPath();
         log.info("Login to start user");
-        Session restartUserSession = loginWithUser(jschUtil,encryptionUtils,opsClusterContext.getHostInfoHolders(), false, startNodeEntity.getHostId(), startNodeEntity.getInstallUserId());
+        Session ommUserSession = loginWithUser(jschUtil,encryptionUtils,opsClusterContext.getHostInfoHolders(), false, startNodeEntity.getHostId(), startNodeEntity.getInstallUserId());
 
-        String restartCommand = MessageFormat.format(SshCommandConstants.LITE_START, dataPath);
+        OmStatusModel omStatusModel = omStatus(jschUtil,ommUserSession,retSession);
+        if (Objects.isNull(omStatusModel)){
+            throw new OpsException("gs_om status fail");
+        }
+
+        String command = null;
+        if (omStatusModel.isInstallCm()){
+            String hostId = startNodeEntity.getHostId();
+            OpsHostEntity opsHostEntity = opsClusterContext.getHostInfoHolders().stream().map(HostInfoHolder::getHostEntity).filter(host -> host.getHostId().equalsIgnoreCase(hostId)).findFirst().orElseThrow(() -> new OpsException("no host found"));
+            String hostname = opsHostEntity.getHostname();
+            String nodeId = omStatusModel.getHostnameMapNodeId().get(hostname);
+
+            if (StrUtil.isNotEmpty(nodeId)){
+                command = "cm_ctl start -n " + nodeId + " -D "+dataPath;
+            }
+        }else {
+            command = MessageFormat.format(SshCommandConstants.LITE_START, dataPath);
+        }
+
         try {
-            JschResult jschResult = jschUtil.executeCommand(restartCommand, restartUserSession, retSession);
+            JschResult jschResult = jschUtil.executeCommand(command, ommUserSession, retSession);
             if (0 != jschResult.getExitCode()) {
                 throw new OpsException("startup error，exit code " + jschResult.getExitCode());
             }
@@ -942,8 +1003,39 @@ public class OpenEulerX86EnterpriseOpsProvider extends AbstractOpsProvider {
             log.error("no node to stop");
         }
 
-        for (String stopNodeId : stopNodeIds) {
-            doStopNode(stopNodeId, opsClusterContext);
+        if (opsClusterContext.getOpsClusterNodeEntityList().size() == stopNodeIds.size()){
+            doStopCluster(opsClusterContext);
+        }else{
+            for (String stopNodeId : stopNodeIds) {
+                doStopNode(stopNodeId, opsClusterContext);
+            }
+        }
+    }
+
+    private void doStopCluster(OpsClusterContext opsClusterContext) {
+        OpsClusterNodeEntity startNodeEntity = opsClusterContext.getOpsClusterNodeEntityList().get(0);
+        WsSession retSession = opsClusterContext.getRetSession();
+        Session ommUserSession = loginWithUser(jschUtil,encryptionUtils,opsClusterContext.getHostInfoHolders(), false, startNodeEntity.getHostId(), startNodeEntity.getInstallUserId());
+        OmStatusModel omStatusModel = omStatus(jschUtil,ommUserSession,retSession);
+        if (Objects.isNull(omStatusModel)){
+            throw new OpsException("gs_om status fail");
+        }
+
+        String command = null;
+        if (omStatusModel.isInstallCm()){
+            command = "cm_ctl stop";
+        }else {
+            command = "gs_om -t stop";
+        }
+
+        try {
+            JschResult jschResult = jschUtil.executeCommand(command, ommUserSession, retSession);
+            if (0 != jschResult.getExitCode()) {
+                throw new OpsException("startup error，exit code " + jschResult.getExitCode());
+            }
+        } catch (Exception e) {
+            log.error("An exception occurred during startup", e);
+            throw new OpsException("An exception occurred during startup");
         }
     }
 
@@ -978,11 +1070,29 @@ public class OpenEulerX86EnterpriseOpsProvider extends AbstractOpsProvider {
         WsSession retSession = opsClusterContext.getRetSession();
         String dataPath = stopNodeEntity.getDataPath();
         log.info("login stop user");
-        Session restartUserSession = loginWithUser(jschUtil,encryptionUtils,opsClusterContext.getHostInfoHolders(), false, stopNodeEntity.getHostId(), stopNodeEntity.getInstallUserId());
+        Session ommUserSession = loginWithUser(jschUtil,encryptionUtils,opsClusterContext.getHostInfoHolders(), false, stopNodeEntity.getHostId(), stopNodeEntity.getInstallUserId());
 
-        String restartCommand = MessageFormat.format(SshCommandConstants.LITE_STOP, dataPath);
+        OmStatusModel omStatusModel = omStatus(jschUtil,ommUserSession,retSession);
+        if (Objects.isNull(omStatusModel)){
+            throw new OpsException("gs_om status fail");
+        }
+
+        String command = null;
+        if (omStatusModel.isInstallCm()){
+            String hostId = stopNodeEntity.getHostId();
+            OpsHostEntity opsHostEntity = opsClusterContext.getHostInfoHolders().stream().map(HostInfoHolder::getHostEntity).filter(host -> host.getHostId().equalsIgnoreCase(hostId)).findFirst().orElseThrow(() -> new OpsException("no host found"));
+            String hostname = opsHostEntity.getHostname();
+            String nodeId = omStatusModel.getHostnameMapNodeId().get(hostname);
+
+            if (StrUtil.isNotEmpty(nodeId)){
+                command = "cm_ctl stop -n " + nodeId + " -D " + dataPath;
+            }
+        }else {
+            command = MessageFormat.format(SshCommandConstants.LITE_START, dataPath);
+        }
+
         try {
-            JschResult jschResult = jschUtil.executeCommand(restartCommand, restartUserSession, retSession);
+            JschResult jschResult = jschUtil.executeCommand(command, ommUserSession, retSession);
             if (0 != jschResult.getExitCode()) {
                 throw new OpsException("stop error，exit code " + jschResult.getExitCode());
             }
