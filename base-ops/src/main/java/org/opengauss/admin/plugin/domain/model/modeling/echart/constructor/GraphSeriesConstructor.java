@@ -65,14 +65,16 @@ public class GraphSeriesConstructor extends BaseSeriesConstructor {
         queryData.forEach(item->{
             GraphNode node = new GraphNode();
             node.setId((String) item.get(nodeParams.getId()));
-            if ((float)(item.get(nodeParams.getX())) > 0 && (float) item.get(nodeParams.getY()) > 0) {
-                node.setX((float)item.get(nodeParams.getX()));
-                node.setY((float)item.get(nodeParams.getY()));
+            float xPosition = toFloat(item.get(nodeParams.getX()));
+            float yPosition = toFloat(item.get(nodeParams.getY()));
+            if (xPosition > 0 && yPosition > 0) {
+                node.setX(xPosition);
+                node.setY(yPosition);
             }
-            node.setValue((float) item.get(relationParams.getValue()));
+            node.setValue(toFloat(item.get(relationParams.getValue())));
             node.setCategory(1);
             node.setName((String) item.get(nodeParams.getName()));
-            node.setSymbolSize((float)item.get(nodeParams.getSize()));
+            node.setSymbolSize(toFloat(item.get(nodeParams.getSize())));
             node.setLabel(new Label().setShow(true));
             nodeList.add(node);
 
@@ -88,4 +90,19 @@ public class GraphSeriesConstructor extends BaseSeriesConstructor {
         return List.of(mainSeries);
     }
 
+    public static float toFloat(Object value) {
+        if (value == null) {
+            return 0.0f;
+        } else if (value instanceof Number) {
+            return ((Number) value).floatValue();
+        } else if (value instanceof String) {
+            try {
+                return Float.parseFloat((String) value);
+            } catch (NumberFormatException e) {
+                return 0.0f;
+            }
+        } else {
+            return 0.0f;
+        }
+    }
 }
