@@ -13,6 +13,8 @@
           </a-select>
         </div>
       </div>
+      <div v-if="data.installType === 'import'" style="color: red; font-weight: bold; font-size: large;">请注意:
+        5.0.0及以后的版本系统可以区分极简版、轻量版和企业版,之前的版本只能区分企业版和非企业版。请核实您选择的版本和即将导入的版本是否对应</div>
     </div>
     <a-divider></a-divider>
     <div class="flex-row-center panel-body">

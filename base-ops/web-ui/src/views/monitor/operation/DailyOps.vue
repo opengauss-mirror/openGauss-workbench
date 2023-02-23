@@ -300,7 +300,7 @@
                         getInstanceState(clusterData, instance)
                       }}</a-tag>
                     </div>
-                    <div class="flex-row">
+                    <div class="flex-row" v-if="instance.cmState !== CMStateEnum.Down">
                       <a-switch class="mr" v-model="instance.state" checked-value="true" unchecked-value="false"
                         @change="handleInstanceSwitchChange($event, index, nodeIndex)">
                         <template #checked>
@@ -383,7 +383,7 @@ import { FitAddon } from 'xterm-addon-fit'
 import { AttachAddon } from 'xterm-addon-attach'
 import Socket from '@/utils/websocket'
 import ClusterBackupDlg from '@/views/monitor/operation/ClusterBackupDlg.vue'
-import { ClusterRoleEnum, OpenGaussVersionEnum } from '@/types/ops/install'
+import { ClusterRoleEnum, OpenGaussVersionEnum, CMStateEnum } from '@/types/ops/install'
 import OneCheck from '@/views/ops/home/components/OneCheck.vue'
 import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
@@ -464,8 +464,16 @@ const getRoleName = (type: ClusterRoleEnum) => {
       return t('operation.DailyOps.5mplp1xc4jw0')
     case ClusterRoleEnum.SLAVE:
       return t('operation.DailyOps.5mplp1xbztc0')
-    default:
+    case ClusterRoleEnum.CASCADE:
       return t('operation.DailyOps.5mplp1xc4oc0')
+    case ClusterRoleEnum.PENDING:
+      return t('operation.DailyOps.else7')
+    case ClusterRoleEnum.UNKNOWN:
+      return t('operation.DailyOps.else8')
+    case ClusterRoleEnum.DOWN:
+      return t('operation.DailyOps.else9')
+    case ClusterRoleEnum.ABNORMAL:
+      return t('operation.DailyOps.else10')
   }
 }
 
@@ -479,6 +487,7 @@ const openWebSocket = (data: KeyValue, clusterIndex: number) => {
     data.clusterNodes.forEach((item: KeyValue, index: number) => {
       item.state = 'false'
       item.nodeState = -1
+      item.cmState = ''
       // open websocket
       openHostWebSocket(data, item, clusterIndex, index)
     })
@@ -535,28 +544,46 @@ const openHostWebSocket = (clusterData: KeyValue, nodeData: KeyValue, clusterInd
 
 const setInstanceState = (clusterData: KeyValue, instanceData: KeyValue) => {
   if (clusterData.version === OpenGaussVersionEnum.ENTERPRISE) {
-    if (instanceData.nodeState !== -1) {
+    if (instanceData.nodeState && instanceData.nodeState !== -1) {
       const stateObj = JSON.parse(instanceData.nodeState)
       const currentHostname = instanceData.hostname
       if (stateObj && currentHostname) {
-        // set node state
+        // set node switch state
         if (stateObj.nodeState[currentHostname] === 'Normal') {
           instanceData.state = 'true'
         } else {
           instanceData.state = 'false'
         }
+        // set all nodes state
+        clusterData.clusterNodes.forEach((item: KeyValue) => {
+          item.nodeState = instanceData.nodeState
+        })
+        // set node cm_state
+        instanceData.cmState = stateObj.cmState[currentHostname]
         // set node role
         if (stateObj.nodeRole[currentHostname]) {
           switch (stateObj.nodeRole[currentHostname]) {
-            case 'P':
-            case 'N':
+            case 'Primary':
+            case 'Normal':
               instanceData.clusterRole = ClusterRoleEnum.MASTER
               break
-            case 'S':
+            case 'Standby':
               instanceData.clusterRole = ClusterRoleEnum.SLAVE
               break
-            case 'C':
+            case 'Cascade Standby':
               instanceData.clusterRole = ClusterRoleEnum.CASCADE
+              break
+            case 'Pending':
+              instanceData.clusterRole = ClusterRoleEnum.PENDING
+              break
+            case 'Unknown':
+              instanceData.clusterRole = ClusterRoleEnum.UNKNOWN
+              break
+            case 'Down':
+              instanceData.clusterRole = ClusterRoleEnum.DOWN
+              break
+            case 'Abnormal':
+              instanceData.clusterRole = ClusterRoleEnum.ABNORMAL
               break
           }
         }
@@ -692,12 +719,22 @@ const handleStop = (clusterData: KeyValue) => {
       const flag = Number(messageData.split(':')[1])
       if (flag === 0) {
         // success
+        // if enterprise set nodes cm_state Down
+        stopSuccessBefore(clusterData)
         term.writeln('stop success')
       } else {
         term.writeln('stop failed')
       }
     }
   })
+}
+
+const stopSuccessBefore = (clusterData: KeyValue) => {
+  if (clusterData.version === OpenGaussVersionEnum.ENTERPRISE) {
+    clusterData.clusterNodes.forEach((item: KeyValue) => {
+      item.cmState = CMStateEnum.Down
+    })
+  }
 }
 
 const handleReset = (clusterData: KeyValue, index: number) => {
@@ -1089,7 +1126,7 @@ const getCurrentInstanceState = (stateObj: KeyValue, instanceData: KeyValue) => 
     switch (stateObj.nodeState[currentHostname]) {
       case 'Normal':
         return t('operation.DailyOps.nodeState1')
-      case 'Need repair':
+      case 'Need repair(Disconnected)':
         return t('operation.DailyOps.nodeState2')
       case 'Starting':
         return t('operation.DailyOps.nodeState3')
@@ -1107,6 +1144,8 @@ const getCurrentInstanceState = (stateObj: KeyValue, instanceData: KeyValue) => 
         return t('operation.DailyOps.nodeState9')
       case 'Unknown':
         return t('operation.DailyOps.nodeState10')
+      case 'Manually stopped':
+        return t('operation.DailyOps.else11')
     }
   }
   return t('operation.DailyOps.5mplp1xc51s0')
