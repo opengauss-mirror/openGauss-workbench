@@ -17,9 +17,11 @@ import com.jcraft.jsch.Session;
 import com.jcraft.jsch.SftpProgressMonitor;
 
 import cn.hutool.core.thread.ThreadUtil;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@Getter
 public class SshSession implements AutoCloseable {
 	private static final int SESSION_TIMEOUT = 10000;
 	private static final int CHANNEL_TIMEOUT = 50000;

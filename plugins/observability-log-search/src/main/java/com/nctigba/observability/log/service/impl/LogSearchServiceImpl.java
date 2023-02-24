@@ -197,7 +197,7 @@ public class LogSearchServiceImpl implements LogSearchService {
             var list = new ArrayList<LogDetailInfoDTO>();
             LogInfoDTO logInfoDTO = new LogInfoDTO();
             try {
-                if (queryParam.getScrollId() == null) {
+                if (queryParam.getScrollId() == null || "".equals(queryParam.getScrollId())) {
                     SearchResponse<HashMap> searchResponse = esLogSearchUtils.queryLogInfo(queryParam);
                     List<Hit<HashMap>> hits = searchResponse.hits().hits();
                     for (var decodeBeanHit : hits) {
@@ -221,7 +221,7 @@ public class LogSearchServiceImpl implements LogSearchService {
                     logInfoDTO.setLogs(list);
                 } else {
                     ScrollResponse scrollResponse = client.client().scroll(s -> s.scrollId(queryParam.getScrollId()).scroll(t -> t.time("10s")), HashMap.class);
-                    String scollId = scrollResponse.scrollId();
+                    String scrollId = scrollResponse.scrollId();
                     List<Hit<HashMap>> hit = scrollResponse.hits().hits();
                     for (var decodeBeanHit : hit) {
                         var docMap = decodeBeanHit.source();
@@ -240,7 +240,7 @@ public class LogSearchServiceImpl implements LogSearchService {
                             list.add(logDetailInfoDTO);
                         }
                     }
-                    logInfoDTO.setScrollId(scollId);
+                    logInfoDTO.setScrollId(scrollId);
                     logInfoDTO.setLogs(list);
                 }
             } catch (ElasticsearchException e) {
@@ -281,6 +281,9 @@ public class LogSearchServiceImpl implements LogSearchService {
     @Override
     public ContextSearchInfoDTO getContextSearch(ContextSearchQuery queryParam) throws ParseException {
         List<ContextSearchDTO> aboveList=this.getAboveList(queryParam);
+        if (aboveList.size() < 1) {
+            return null;
+        }
         ContextSearchDTO contextSearchDto=aboveList.get(aboveList.size()-1);
         String time= (String) contextSearchDto.getLogTime();
         SimpleDateFormat stringFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -288,7 +291,7 @@ public class LogSearchServiceImpl implements LogSearchService {
         Date d=stringFormat.parse(time.substring(0,19).replace("T"," "));
         long times = d.getTime();
         Date startDate = new Date();
-        startDate.setTime(times - 1000 * 60 * 60 * 8);
+        startDate.setTime(times - 1000 * 60 * 60 * Integer.valueOf(time.substring(time.indexOf("+") + 1, time.lastIndexOf(":"))));
         String s=stringFormat.format(startDate)+time.substring(19,23);
         Date sdd=sFormat.parse(s);
         queryParam.setLogDate(sdd);
@@ -368,7 +371,8 @@ public class LogSearchServiceImpl implements LogSearchService {
         queryParam.setLogType(param.getLogType());
         queryParam.setLogLevel(param.getLogLevel());
         queryParam.setRowCount(param.getAboveCount());
-        queryParam.setEndDate(param.getLogDate());
+        queryParam.setStartDate(param.getLogDate());
+        queryParam.setOrder("ASC");
         int nodeIdCount = 0;
         if (queryParam.getNodeId() != null) {
             nodeIdCount = queryParam.getNodeId().size();
@@ -426,9 +430,8 @@ public class LogSearchServiceImpl implements LogSearchService {
         queryParam.setLogType(param.getLogType());
         queryParam.setLogLevel(param.getLogLevel());
         queryParam.setRowCount(param.getAboveCount()+param.getBelowCount()+1);
-        queryParam.setStartDate(param.getLogDate());
+        queryParam.setEndDate(param.getLogDate());
         queryParam.setScrollId(param.getScrollId());
-        queryParam.setOrder("ASC");
         int nodeIdCount = 0;
         if (queryParam.getNodeId() != null) {
             nodeIdCount = queryParam.getNodeId().size();
@@ -448,7 +451,7 @@ public class LogSearchServiceImpl implements LogSearchService {
             var list = new ArrayList<ContextSearchDTO>();
             ContextSearchInfoDTO contextSearchInfoDTO=new ContextSearchInfoDTO();
             try {
-                if (queryParam.getScrollId() == null) {
+                if (queryParam.getScrollId() == null || "".equals(queryParam.getScrollId())) {
                     SearchResponse<HashMap> searchResponse = esLogSearchUtils.queryLogInfo(queryParam);
                     List<Hit<HashMap>> hits = searchResponse.hits().hits();
                     for (var decodeBeanHit : hits) {
@@ -472,7 +475,7 @@ public class LogSearchServiceImpl implements LogSearchService {
                     contextSearchInfoDTO.setLogs(list);
                 } else {
                     ScrollResponse scrollResponse = client.client().scroll(s -> s.scrollId(queryParam.getScrollId()).scroll(t -> t.time("10s")), HashMap.class);
-                    String scollId = scrollResponse.scrollId();
+                    String scrollId = scrollResponse.scrollId();
                     List<Hit<HashMap>> hit = scrollResponse.hits().hits();
                     for (var decodeBeanHit : hit) {
                         var docMap = decodeBeanHit.source();
@@ -491,7 +494,7 @@ public class LogSearchServiceImpl implements LogSearchService {
                             list.add(contextSearchDto);
                         }
                     }
-                    contextSearchInfoDTO.setScrollId(scollId);
+                    contextSearchInfoDTO.setScrollId(scrollId);
                     contextSearchInfoDTO.setLogs(list);
                 }
                 return contextSearchInfoDTO;
