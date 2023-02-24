@@ -269,7 +269,7 @@
 
   const createTerminal = () => {
     const connectInfoName = AppStore.currentConnectInfo.name;
-    const dbname = AppStore.lastestConnectDatabase.name;
+    const dbname = AppStore.lastestConnectDatabase.databaseName;
     const terminalNum = TagsViewStore.maxTerminalNum + 1;
     const title = `${dbname}@${connectInfoName}(${terminalNum})`;
     const time = Date.now();
@@ -277,6 +277,7 @@
       path: '/createTerminal/' + time,
       query: {
         title,
+        rootId: AppStore.lastestConnectDatabase.rootId,
         connectInfoName,
         uuid: AppStore.lastestConnectDatabase.uuid,
         dbname,

@@ -11,7 +11,7 @@ export function getDatabaseList(uuid) {
 // create database
 export function createDatabase(data) {
   return request({
-    url: '/dataStudio/web/v1/metaData/database/create',
+    url: '/dataStudio/web/v1/database/create',
     method: 'post',
     data,
   });
@@ -26,10 +26,19 @@ export function deleteDatabase(data) {
   });
 }
 
+// get database attribute
+export function getDatabaseAttribute(data) {
+  return request({
+    url: '/dataStudio/web/v1/database/attribute',
+    method: 'get',
+    params: data,
+  });
+}
+
 // open database connection
 export function openDatabaseConnection(data) {
   return request({
-    url: '/dataStudio/web/v1/metaData/database/connection',
+    url: '/dataStudio/web/v1/database/connection',
     method: 'post',
     data,
   });

@@ -19,7 +19,7 @@
     <div class="progress-con">
       <span class="progress-info">总进度</span>
       <a-progress size="large" :percent="task.execStatus === 2 ? 1: (task.execProgress || 0)" />
-      <a-button type="text" @click="getTaskDetail">
+      <a-button type="text" @click="loopSubTaskStatus">
         <template #icon>
           <icon-refresh />
         </template>
