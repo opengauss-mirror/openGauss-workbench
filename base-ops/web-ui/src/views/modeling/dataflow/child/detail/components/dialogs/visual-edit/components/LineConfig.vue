@@ -5,7 +5,7 @@
     <a-radio-group direction="vertical" v-model="config.showType.key" style="width: 100%;">
       <a-radio :value="1" class="d-data-flow-radio">
         <a-row>
-          <a-col :span="7">{{$t('modeling.components.LineConfig.5m7ijyex0ts0')}}</a-col>
+          <a-col :span="7"><span style="color: #f53f3f; font-weight: bold;" v-if="config.showType.key === 1">* </span>{{$t('modeling.components.LineConfig.5m7ijyex0ts0')}}</a-col>
           <a-col :span="11" class="mr-s">
             <a-select v-model="config.showType.dimension" :disabled="config.showType.key !== 1">
               <overflow-tooltip :text="item.label" v-for="(item, key) in allOption" :key="key" :content="item.label">
@@ -22,7 +22,7 @@
     </a-radio-group>
     <div class="mb" :style="{ 'padding-left': '28px', 'box-sizing': 'border-box', opacity: config.showType.key === 2 ? 1 : 0.5 }">
       <a-row align="center" class="mb-s">
-        <a-col :span="7">{{$t('modeling.components.LineConfig.5m7ijyex1oo0')}}</a-col>
+        <a-col :span="7"><span style="color: #f53f3f; font-weight: bold;" v-if="config.showType.key === 2">* </span>{{$t('modeling.components.LineConfig.5m7ijyex1oo0')}}</a-col>
         <a-col :span="14">
           <a-select v-model="config.showType.dateField" :disabled="config.showType.key !== 2">
             <overflow-tooltip :text="item.label" v-for="(item, key) in datetimeOption" :key="key" :content="item.label">
@@ -32,7 +32,7 @@
         </a-col>
       </a-row>
       <a-row align="center" class="mb-s">
-        <a-col :span="7">{{$t('modeling.components.LineConfig.5m7ijyex1r80')}}</a-col>
+        <a-col :span="7"><span style="color: #f53f3f; font-weight: bold;" v-if="config.showType.key === 2">* </span>{{$t('modeling.components.LineConfig.5m7ijyex1r80')}}</a-col>
         <a-col :span="14">
           <a-select v-model="config.showType.particle" :disabled="config.showType.key !== 2">
             <a-option v-for="(item, key) in particles" :key="`particles${key}`" :value="item.value">{{ item.label }}</a-option>
@@ -49,11 +49,14 @@
       <div class="mb">
         <a-row align="center" class="mb-s" v-for="(item, key) in config.indicator" :key="`indicator${key}`">
           <a-col class="mr-xs" :span="9">
-            <a-select v-model="item.field" :placeholder="$t('modeling.components.LineConfig.5mpu292dkhc0')">
-              <overflow-tooltip :text="item.label" v-for="(item, key) in numberOption" :key="key" :content="item.label">
-                <a-option :value="item.value">{{ item.label }}</a-option>
-              </overflow-tooltip>
-            </a-select>
+            <div style="display: flex">
+              <span style="color: #f53f3f; font-weight: bold; margin-right: 5px;">*</span>
+              <a-select v-model="item.field" :placeholder="$t('modeling.components.LineConfig.5mpu292dkhc0')">
+                <overflow-tooltip :text="item.label" v-for="(item, key) in numberOption" :key="key" :content="item.label">
+                  <a-option :value="item.value">{{ item.label }}</a-option>
+                </overflow-tooltip>
+              </a-select>
+            </div>
           </a-col>
           <a-col class="mr-xs" :span="6">
             <a-select v-model="item.type" :placeholder="$t('modeling.components.LineConfig.5mpu292dky40')">
@@ -61,9 +64,12 @@
             </a-select>
           </a-col>
           <a-col class="mr-xs" :span="8">
-            <a-input :max-length="140"  v-model="item.unit">
-              <template #prepend>{{$t('modeling.components.LineConfig.5m7ijyex2040')}}</template>
-            </a-input>
+            <div style="display: flex">
+              <span style="color: #f53f3f; font-weight: bold; margin-right: 5px;">*</span>
+              <a-input :max-length="140"  v-model="item.unit">
+                <template #prepend>{{$t('modeling.components.LineConfig.5m7ijyex2040')}}</template>
+              </a-input>
+            </div>
           </a-col>
         </a-row>
       </div>

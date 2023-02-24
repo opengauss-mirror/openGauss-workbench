@@ -62,7 +62,11 @@ public class ModelingDataFlowController extends BaseController {
     @Log(title = "base-ops-dataflow",operatorType = OperatorType.PLUGIN,businessType = BusinessType.INSERT)
     @RequestMapping("/add")
     public AjaxResult add(@RequestBody ModelingDataFlowEntity dataFlowData) {
-        return AjaxResult.success(modelingDataFlowService.insertDataFlow(dataFlowData));
+        if (modelingDataFlowService.findByName(dataFlowData.getName()).isEmpty()) {
+            return AjaxResult.success(modelingDataFlowService.insertDataFlow(dataFlowData));
+        } else {
+            return AjaxResult.error("The data flow with the same name already exists, please try again with a different name.");
+        }
     }
 
     /**

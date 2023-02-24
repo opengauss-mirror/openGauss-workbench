@@ -9,16 +9,22 @@
       <div class="mb">
         <a-row align="center" class="mb-s">
           <a-col class="mr-xs" :span="9">
-            <a-select v-model="config.indicator.field" :placeholder="$t('modeling.components.PieConfig.5mpu2f4wcy80')">
-              <overflow-tooltip :text="item.label" v-for="(item, key) in numberOption" :key="key" :content="item.label">
-                <a-option :value="item.value">{{ item.label }}</a-option>
-              </overflow-tooltip>
-            </a-select>
+            <div style="display: flex">
+              <span style="color: #f53f3f; font-weight: bold; margin-right: 5px;">*</span>
+              <a-select v-model="config.indicator.field" :placeholder="$t('modeling.components.PieConfig.5mpu2f4wcy80')">
+                <overflow-tooltip :text="item.label" v-for="(item, key) in numberOption" :key="key" :content="item.label">
+                  <a-option :value="item.value">{{ item.label }}</a-option>
+                </overflow-tooltip>
+              </a-select>
+            </div>
           </a-col>
           <a-col class="mr-xs" :span="6">
-            <a-select v-model="config.indicator.type" :placeholder="$t('modeling.components.PieConfig.5mpu2f4wdd40')">
-              <a-option v-for="(item, key) in indicatorTypeSum" :key="`a${key}`" :value="item.value">{{ item.label }}</a-option>
-            </a-select>
+            <div style="display: flex">
+              <span style="color: #f53f3f; font-weight: bold; margin-right: 5px;">*</span>
+              <a-select v-model="config.indicator.type" :placeholder="$t('modeling.components.PieConfig.5mpu2f4wdd40')">
+                <a-option v-for="(item, key) in indicatorTypeSum" :key="`a${key}`" :value="item.value">{{ item.label }}</a-option>
+              </a-select>
+            </div>
           </a-col>
           <a-col class="mr-xs" :span="8">
             <a-input :max-length="140" v-model="config.indicator.unit">

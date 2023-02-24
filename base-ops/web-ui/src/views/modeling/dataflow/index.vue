@@ -77,7 +77,6 @@ mCStore.setI18n(t)
 const columns = computed(() => [
   { title: t('modeling.dataflow.index.5m77w0y5in80'), dataIndex: 'name' },
   { title: t('modeling.dataflow.index.5m77w0y5ivk0'), dataIndex: 'tags' },
-  { title: t('modeling.dataflow.index.5m77w0y5jtg0'), dataIndex: 'type' },
   { title: t('modeling.dataflow.index.5m77w0y5mb80'), dataIndex: 'clusterId' },
   { title: t('modeling.dataflow.index.5m77w0y5mgc0'), dataIndex: 'clusterNodeId' },
   { title: 'Schema', dataIndex: 'schema' },

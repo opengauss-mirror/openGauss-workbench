@@ -56,7 +56,7 @@ public class ScatterSeriesConstructor extends BaseSeriesConstructor {
         Map<String,Float> seriesTemp = new HashMap<>();
         queryData.forEach(item->{
             String loc = (String) item.get(location.getField());
-            float yValue = Float.parseFloat(String.valueOf(item.get(indicator.getField())));
+            float yValue = toFloat(String.valueOf(item.get(indicator.getField())));
             if (seriesTemp.containsKey(loc)) {
                 seriesTemp.replace(loc,seriesTemp.get(loc) + yValue);
             } else {

@@ -4,7 +4,7 @@
     <div class="d-title-1 mb-s">{{$t('modeling.components.GraphConfig.5m7ikjwuoig0')}}</div>
     <div class="mb">
       <a-row align="center" class="mb">
-        <a-col class="mr-xs" :span="5">{{$t('modeling.components.GraphConfig.5m7ikjwuphs0')}}</a-col>
+        <a-col class="mr-xs" :span="5"><span style="color: #f53f3f; font-weight: bold; margin-right: 5px;">*</span>{{$t('modeling.components.GraphConfig.5m7ikjwuphs0')}}</a-col>
         <a-col class="mr-xs" :span="18">
           <a-select v-model="config.node.id" :placeholder="$t('modeling.components.GraphConfig.5m7ikjwuphs0')">
             <overflow-tooltip :text="item.label" v-for="(item, key) in stringOption" :key="key" :content="item.label">
@@ -14,7 +14,7 @@
         </a-col>
       </a-row>
       <a-row align="center" class="mb">
-        <a-col class="mr-xs" :span="5">{{$t('modeling.components.GraphConfig.5m7ikjwupmw0')}}</a-col>
+        <a-col class="mr-xs" :span="5"><span style="color: #f53f3f; font-weight: bold; margin-right: 5px;">*</span>{{$t('modeling.components.GraphConfig.5m7ikjwupmw0')}}</a-col>
         <a-col class="mr-xs" :span="18">
           <a-select v-model="config.node.name" :placeholder="$t('modeling.components.GraphConfig.5m7ikjwupmw0')">
             <overflow-tooltip :text="item.label" v-for="(item, key) in stringOption" :key="key" :content="item.label">
@@ -24,7 +24,7 @@
         </a-col>
       </a-row>
       <a-row align="center" class="mb">
-        <a-col class="mr-xs" :span="5">{{$t('modeling.components.GraphConfig.5m7ikjwupsg0')}}</a-col>
+        <a-col class="mr-xs" :span="5"><span style="color: #f53f3f; font-weight: bold; margin-right: 5px;">*</span>{{$t('modeling.components.GraphConfig.5m7ikjwupsg0')}}</a-col>
         <a-col class="mr-xs" :span="18">
           <a-select v-model="config.node.x" :placeholder="$t('modeling.components.GraphConfig.5m7ikjwupsg0')">
             <overflow-tooltip :text="item.label" v-for="(item, key) in numberOption" :key="key" :content="item.label">
@@ -34,7 +34,7 @@
         </a-col>
       </a-row>
       <a-row align="center" class="mb">
-        <a-col class="mr-xs" :span="5">{{$t('modeling.components.GraphConfig.5m7ikjwupv40')}}</a-col>
+        <a-col class="mr-xs" :span="5"><span style="color: #f53f3f; font-weight: bold; margin-right: 5px;">*</span>{{$t('modeling.components.GraphConfig.5m7ikjwupv40')}}</a-col>
         <a-col class="mr-xs" :span="18">
           <a-select v-model="config.node.y" :placeholder="$t('modeling.components.GraphConfig.5m7ikjwupv40')">
             <overflow-tooltip :text="item.label" v-for="(item, key) in numberOption" :key="key" :content="item.label">
@@ -44,7 +44,7 @@
         </a-col>
       </a-row>
       <a-row align="center" class="mb">
-        <a-col class="mr-xs" :span="5">{{$t('modeling.components.GraphConfig.5m7ikjwupxw0')}}</a-col>
+        <a-col class="mr-xs" :span="5"><span style="color: #f53f3f; font-weight: bold; margin-right: 5px;">*</span>{{$t('modeling.components.GraphConfig.5m7ikjwupxw0')}}</a-col>
         <a-col class="mr-xs" :span="18">
           <a-select v-model="config.node.size" :placeholder="$t('modeling.components.GraphConfig.5m7ikjwupxw0')">
             <overflow-tooltip :text="item.label" v-for="(item, key) in numberOption" :key="key" :content="item.label">
@@ -57,7 +57,7 @@
     <div class="d-title-1 mb-s">{{$t('modeling.components.GraphConfig.5m7ikjwuq0w0')}}</div>
     <div class="mb">
       <a-row align="center" class="mb">
-        <a-col class="mr-xs" :span="5">{{$t('modeling.components.GraphConfig.5m7ikjwuq3c0')}}</a-col>
+        <a-col class="mr-xs" :span="5"><span style="color: #f53f3f; font-weight: bold; margin-right: 5px;">*</span>{{$t('modeling.components.GraphConfig.5m7ikjwuq3c0')}}</a-col>
         <a-col class="mr-xs" :span="18">
           <a-select v-model="config.relation.out" :placeholder="$t('modeling.components.GraphConfig.5m7ikjwuq3c0')">
             <overflow-tooltip :text="item.label" v-for="(item, key) in stringOption" :key="key" :content="item.label">
@@ -67,7 +67,7 @@
         </a-col>
       </a-row>
       <a-row align="center" class="mb">
-        <a-col class="mr-xs" :span="5">{{$t('modeling.components.GraphConfig.5m7ikjwuq600')}}</a-col>
+        <a-col class="mr-xs" :span="5"><span style="color: #f53f3f; font-weight: bold; margin-right: 5px;">*</span>{{$t('modeling.components.GraphConfig.5m7ikjwuq600')}}</a-col>
         <a-col class="mr-xs" :span="18">
           <a-select v-model="config.relation.in" :placeholder="$t('modeling.components.GraphConfig.5m7ikjwuq600')">
             <overflow-tooltip :text="item.label" v-for="(item, key) in stringOption" :key="key" :content="item.label">
@@ -77,7 +77,7 @@
         </a-col>
       </a-row>
       <a-row align="center" class="mb">
-        <a-col class="mr-xs" :span="5">{{$t('modeling.components.GraphConfig.5m7ikjwuq8k0')}}</a-col>
+        <a-col class="mr-xs" :span="5"><span style="color: #f53f3f; font-weight: bold; margin-right: 5px;">*</span>{{$t('modeling.components.GraphConfig.5m7ikjwuq8k0')}}</a-col>
         <a-col class="mr-xs" :span="18">
           <a-select v-model="config.relation.value" :placeholder="$t('modeling.components.GraphConfig.5m7ikjwuq8k0')">
             <overflow-tooltip :text="item.label" v-for="(item, key) in numberOption" :key="key" :content="item.label">
