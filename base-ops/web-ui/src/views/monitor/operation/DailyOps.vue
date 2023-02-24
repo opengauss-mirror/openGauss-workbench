@@ -1,6 +1,6 @@
 <template>
   <div class="daily-ops-c">
-    <div v-if="data.clusterList.length && !data.loading">
+    <div v-if="showClusterInfo">
       <div v-for="(clusterData, index) in data.clusterList" :key="index">
         <a-spin class="full-w" :loading="clusterData.loading" v-if="!clusterData.isHidden">
           <div class="item-c mb">
@@ -352,7 +352,7 @@
         </a-spin>
       </div>
     </div>
-    <div class="full-w full-h flex-col" v-if="data.clusterList.length === 0 && !data.loading">
+    <div class="full-w full-h flex-col" v-if="showInit">
       <svg-icon icon-class="ops-empty" class="empty-icon-size mb"></svg-icon>
       <div class="empty-content mb">{{ $t('operation.DailyOps.5mplp1xc3ss0') }}</div>
       <div class="flex-row">
@@ -374,7 +374,7 @@
 
 <script lang="ts" setup>
 import { KeyValue } from '@/types/global'
-import { onBeforeUnmount, onMounted, reactive, ref } from 'vue'
+import { onBeforeUnmount, onMounted, reactive, ref, computed } from 'vue'
 import { clusterMonitor, delCluster, uninstallOpenGauss, clusterList, start, stop, restart, switchover, generateconf, build, clusterBackup } from '@/api/ops'
 import { useWinBox } from 'vue-winbox'
 import 'xterm/css/xterm.css'
@@ -416,6 +416,20 @@ const goInstall = () => {
     name: 'Static-pluginBase-opsOpsInstall'
   })
 }
+
+const showClusterInfo = computed(() => {
+  const normalClusters = data.clusterList.filter((item: KeyValue) => {
+    return item.isHidden === false
+  })
+  return normalClusters.length > 0 && !data.loading
+})
+
+const showInit = computed(() => {
+  const normalClusters = data.clusterList.filter((item: KeyValue) => {
+    return item.isHidden === false
+  })
+  return normalClusters.length === 0 && !data.loading
+})
 
 const getList = () => new Promise(resolve => {
   data.loading = true
@@ -627,6 +641,7 @@ const handleUninstall = (clusterData: KeyValue, index: number, force: boolean) =
         const flag = Number(messageData.split(':')[1])
         if (flag === 0) {
           data.clusterList[index].isHidden = true
+
         }
       }
       clusterData.loading = false
