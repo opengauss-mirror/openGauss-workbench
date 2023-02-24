@@ -90,19 +90,4 @@ public class GraphSeriesConstructor extends BaseSeriesConstructor {
         return List.of(mainSeries);
     }
 
-    public static float toFloat(Object value) {
-        if (value == null) {
-            return 0.0f;
-        } else if (value instanceof Number) {
-            return ((Number) value).floatValue();
-        } else if (value instanceof String) {
-            try {
-                return Float.parseFloat((String) value);
-            } catch (NumberFormatException e) {
-                return 0.0f;
-            }
-        } else {
-            return 0.0f;
-        }
-    }
 }

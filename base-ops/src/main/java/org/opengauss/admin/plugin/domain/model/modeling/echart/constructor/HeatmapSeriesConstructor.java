@@ -74,7 +74,7 @@ public class HeatmapSeriesConstructor extends BaseSeriesConstructor {
                 xIndexList.forEach(xIndex->{
                     yIndexList.forEach(yIndex->{
                         List<Integer> target = List.of(xIndex,yIndex);
-                        float heatValue = Float.parseFloat(String.valueOf(item.get(indicator.getField())));
+                        float heatValue = toFloat(String.valueOf(item.get(indicator.getField())));
 
                         if (result.containsKey(List.of(xIndex,yIndex))) {
                             result.replace(target,result.get(target) + heatValue);

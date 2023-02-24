@@ -94,7 +94,7 @@ public class PieSeriesConstructor extends BaseSeriesConstructor {
             //Outer circle data
             String xValue = (String) item.get(dimension.getField());
             List<Integer> xIndexList = dimension.indexListByValue(xValue);
-            float yValue = Float.parseFloat(String.valueOf(item.get(indicator.getField())));
+            float yValue = toFloat(String.valueOf(item.get(indicator.getField())));
 
             if (xIndexList.size() > 0)
             {

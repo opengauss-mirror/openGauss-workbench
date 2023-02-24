@@ -121,7 +121,7 @@ public class BarSeriesConstructor extends BaseSeriesConstructor {
             List<Integer> xIndexList = xDimension.indexListByValue(xValue);
             if (xIndexList.size() > 0) {
                 //Temporarily only counting single indicators
-                Float yValue = Float.parseFloat(String.valueOf(item.get(indicatorFieldList.get(0))));
+                Float yValue = toFloat(String.valueOf(item.get(indicatorFieldList.get(0))));
 
                 List<String> categoryGroup = new ArrayList<>();
                 //The field corresponding to the statistical dimension is evaluated
