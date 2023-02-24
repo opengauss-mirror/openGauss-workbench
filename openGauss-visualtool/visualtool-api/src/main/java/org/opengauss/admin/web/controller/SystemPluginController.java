@@ -166,8 +166,10 @@ public class SystemPluginController extends BaseController {
                 Integer isNeedConfigured = null;
                 String theme = null;
                 String configAttrs = null;
+                String descriptionEn = null;
                 if (pluginInfo.getExtensionInfo() != null) {
                     logo = MapUtil.getStr(pluginInfo.getExtensionInfo(), "logo");
+                    descriptionEn = MapUtil.getStr(pluginInfo.getExtensionInfo(), "descriptionEn");
                     pluginType = MapUtil.getInt(pluginInfo.getExtensionInfo(), "pluginType");
                     isNeedConfigured = MapUtil.getInt(pluginInfo.getExtensionInfo(), "isNeedConfigured");
                     theme = MapUtil.getStr(pluginInfo.getExtensionInfo(), "theme");
@@ -182,7 +184,7 @@ public class SystemPluginController extends BaseController {
                     }
                 }
                 SysPlugin plugin = SysPlugin.builder().pluginId(pluginInfo.getPluginId())
-                        .pluginDesc(pluginInfo.getPluginDescriptor().getDescription())
+                        .pluginDesc(pluginInfo.getPluginDescriptor().getDescription()).pluginDescEn(descriptionEn)
                         .bootstrapClass(pluginInfo.getPluginDescriptor().getPluginBootstrapClass())
                         .pluginProvider(pluginInfo.getPluginDescriptor().getProvider()).isNeedConfigured(isNeedConfigured)
                         .pluginType(pluginType).logoPath(logo).pluginVersion(pluginInfo.getPluginDescriptor().getPluginVersion())
