@@ -731,8 +731,17 @@ const handleStop = (clusterData: KeyValue) => {
 
 const stopSuccessBefore = (clusterData: KeyValue) => {
   if (clusterData.version === OpenGaussVersionEnum.ENTERPRISE) {
+    const tempNodeState: {
+      nodeState: KeyValue,
+      cluster_state: string
+    } = {
+      nodeState: {},
+      cluster_state: 'Unavailable'
+    }
     clusterData.clusterNodes.forEach((item: KeyValue) => {
       item.cmState = CMStateEnum.Down
+      tempNodeState.nodeState[item.hostname] = 'Manually stopped'
+      item.nodeState = JSON.stringify(tempNodeState)
     })
   }
 }
@@ -975,7 +984,7 @@ const handleInstanceOper = (type: any, clusterIndex: number, nodeIndex: number, 
       if (flag === 0) {
         // success
         term.writeln(type + ' success')
-        if (type === 'restart' || type === 'start') {
+        if (type === 'restart' || type === 'start' || type === 'build') {
           openHostWebSocket(data.clusterList[clusterIndex], data.clusterList[clusterIndex].clusterNodes[nodeIndex], clusterIndex, nodeIndex)
         }
       } else {
@@ -1179,6 +1188,9 @@ const getDropdownList = (clusterData: KeyValue, nodeData: KeyValue) => {
     { label: t('operation.DailyOps.5mplp1xc0i80'), value: 'stop' },
     { label: t('operation.DailyOps.5mplp1xc0o40'), value: 'restart' }
   ]
+  if (clusterData.version === OpenGaussVersionEnum.ENTERPRISE && nodeData.clusterRole === ClusterRoleEnum.MASTER) {
+    result.push({ label: t('operation.DailyOps.5mplp1xc5cg0'), value: 'config' })
+  }
   if (clusterData.version === OpenGaussVersionEnum.ENTERPRISE && nodeData.clusterRole === ClusterRoleEnum.SLAVE) {
     result.push({ label: t('operation.DailyOps.5mplp1xc56k0'), value: 'switch' })
     result.push({ label: t('operation.DailyOps.5mplp1xc5cg0'), value: 'config' })
