@@ -93,4 +93,11 @@ public class InstallPackageManagerController extends BaseController {
         return AjaxResult.success(list);
     }
 
+    @GetMapping("/getCpuArch")
+    public AjaxResult getCpuArch(@RequestParam("installPackagePath") String installPackagePath,
+                                 @RequestParam("version") OpenGaussVersionEnum version){
+        String arch = opsPackageManagerService.getCpuArchByPackagePath(installPackagePath,version);
+        return AjaxResult.success(arch);
+    }
+
 }

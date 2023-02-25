@@ -3006,34 +3006,18 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         osProperty.setSortNum(1);
 
         try {
-            JschResult jschResult = null;
-            try {
-                jschResult = jschUtil.executeCommand(SshCommandConstants.OS, session);
-            } catch (InterruptedException e) {
-                throw new OpsException("thread is interrupted");
-            }
-            if (jschResult.getExitCode() == 0) {
-                String os = jschResult.getResult();
-                try {
-                    osProperty.setValue(os);
+            final String os = getOS(session);
+            final String cpuArch = getCpuArch(session);
+            osProperty.setValue(os);
 
-                    if (expectedOs.match(os)) {
-                        osProperty.setStatus(HostEnvStatusEnum.NORMAL);
-                    }else {
-                        osProperty.setStatus(HostEnvStatusEnum.ERROR);
-                        osProperty.setStatusMessage("The operating system does not match the installation package information");
-                    }
-                }catch (Exception e){
-                    log.error("Parse command response error", e);
-                    osProperty.setStatus(HostEnvStatusEnum.ERROR);
-                    osProperty.setStatusMessage("Only supports openEuler 20.03LTS and CentOS 7.6 operating systems");
-                }
+            if (expectedOs.match(os,cpuArch)) {
+                osProperty.setStatus(HostEnvStatusEnum.NORMAL);
             }else {
-                osProperty.setValue("unknown");
                 osProperty.setStatus(HostEnvStatusEnum.ERROR);
-                osProperty.setStatusMessage("Only supports openEuler 20.03LTS and CentOS 7.6 operating systems");
+                osProperty.setStatusMessage("The operating system does not match the installation package information");
             }
-        } catch (IOException e) {
+
+        } catch (Exception e) {
             log.error("Parse command response error：", e);
 
             osProperty.setStatus(HostEnvStatusEnum.ERROR);

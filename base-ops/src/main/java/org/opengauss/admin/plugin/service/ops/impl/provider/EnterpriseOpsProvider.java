@@ -107,7 +107,7 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
         // root
         Session rootSession = loginWithUser(jschUtil,encryptionUtils, installContext.getHostInfoHolders(), true, masterHostId, null);
 
-        String pkgPath = preparePath("/opt/software/openGauss");
+        String pkgPath = preparePath(installContext.getEnterpriseInstallConfig().getInstallPackagePath());
         ensureDirExist(jschUtil,rootSession, pkgPath, retSession);
         chmodFullPath(jschUtil,rootSession, pkgPath, retSession);
 
