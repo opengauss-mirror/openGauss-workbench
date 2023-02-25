@@ -937,3 +937,18 @@ LANGUAGE plpgsql;
 SELECT add_host_field_func();
 
 DROP FUNCTION add_host_field_func;
+
+CREATE OR REPLACE FUNCTION add_sys_plugin_desc_en_field_func() RETURNS integer AS 'BEGIN
+IF
+( SELECT COUNT ( * ) AS ct1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ''sys_plugins'' AND COLUMN_NAME = ''plugin_desc_en'' ) = 0
+THEN
+ALTER TABLE sys_plugins ADD COLUMN plugin_desc_en text COLLATE "pg_catalog"."default";
+COMMENT ON COLUMN "public"."sys_plugins"."plugin_desc_en" IS ''插件英文描述'';
+END IF;
+RETURN 0;
+END;'
+LANGUAGE plpgsql;
+
+SELECT add_sys_plugin_desc_en_field_func();
+
+DROP FUNCTION add_sys_plugin_desc_en_field_func;
