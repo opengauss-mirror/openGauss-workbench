@@ -630,6 +630,7 @@
             "else2": "Please enter the correct port number",
             "else3": "Empty data in the installation directory is detected",
             "else4": "data in the installation directory is not empty",
+            "else5": "At least 8 characters, including at least three of the upper case letters (A-Z), lower case letters (a-z), digits (0-9), and non-alphanumeric characters",
             "5mpmu0lapic0": "Node configuration",
             "5mpmu0laqc80": "Cluster ID",
             "5mpmu0laqiw0": "Please enter the cluster ID",
