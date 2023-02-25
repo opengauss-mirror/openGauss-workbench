@@ -18,9 +18,19 @@ export enum DeployTypeEnum {
 export enum ClusterRoleEnum {
   MASTER = 'MASTER',
   SLAVE = 'SLAVE',
-  CASCADE = 'CASCADE'
+  CASCADE = 'CASCADE',
+  PENDING = 'PENDING',
+  UNKNOWN = 'UNKNOWN',
+  DOWN = 'DOWN',
+  ABNORMAL = 'ABNORMAL',
+  STOPED = 'STOPED'
 }
 
+export enum CMStateEnum {
+  Primary = 'Primary',
+  Standby = 'Standby',
+  Down = 'Down'
+}
 export enum WsConnectTypeEnum {
   DOWNLOAD_INSTALL_PACKAGE = 'DOWNLOAD_INSTALL_PACKAGE',
   SSH = 'SSH',

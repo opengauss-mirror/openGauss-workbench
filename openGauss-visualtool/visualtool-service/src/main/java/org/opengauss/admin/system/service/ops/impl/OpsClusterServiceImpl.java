@@ -682,13 +682,23 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                     String[] dataNode = dataNodeStateStr.split("\n");
                     for (String s : dataNode) {
                         String[] s1 = s.replaceAll(" +", " ").split(" ");
-                        if (s1.length == 9) {
-                            nodeState.put(s1[1], s1[8].trim());
-                            nodeRole.put(s1[1],s1[6].trim());
-                        }else if (s1.length == 8){
-                            nodeState.put(s1[1],s1[7].trim());
-                            nodeRole.put(s1[1],s1[5].trim());
+
+                        String state = "";
+                        for (int i = 7; i < s1.length; i++) {
+                            state += (s1[i] + " ");
                         }
+
+                        if (s1.length>=8){
+                            nodeState.put(s1[1], state.trim());
+                            nodeRole.put(s1[1], s1[6]);
+                        }
+//                        if (s1.length == 9) {
+//                            nodeState.put(s1[1], s1[8].trim());
+//                            nodeRole.put(s1[1],s1[7].trim());
+//                        }else if (s1.length == 8){
+//                            nodeState.put(s1[1],s1[7].trim());
+//                            nodeRole.put(s1[1],s1[6].trim());
+//                        }
                     }
                 }
                 return JSON.toJSONString(res);

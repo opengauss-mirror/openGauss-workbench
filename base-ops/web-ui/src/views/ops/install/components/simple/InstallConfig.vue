@@ -154,7 +154,21 @@ const initData = () => {
         }
       }
     ],
-    rootPassword: [{ required: true, 'validate-trigger': 'blur', message: t('simple.InstallConfig.5mpmu0laqwo0') }],
+    rootPassword: [
+      { required: true, 'validate-trigger': 'blur', message: t('simple.InstallConfig.5mpmu0laqwo0') },
+      {
+        validator: (value: any, cb: any) => {
+          return new Promise(resolve => {
+            if (!value.trim()) {
+              cb(t('enterprise.ClusterConfig.else2'))
+              resolve(false)
+            } else {
+              resolve(true)
+            }
+          })
+        }
+      }
+    ],
     installPath: [
       { required: true, 'validate-trigger': 'blur', message: t('simple.InstallConfig.5mpmu0lar800') },
       {
@@ -200,7 +214,23 @@ const initData = () => {
         }
       }
     ],
-    databasePassword: [{ required: true, 'validate-trigger': 'blur', message: t('simple.InstallConfig.5mpmu0las0k0') }]
+    databasePassword: [
+      { required: true, 'validate-trigger': 'blur', message: t('simple.InstallConfig.5mpmu0las0k0') },
+      {
+        validator: (value: any, cb: any) => {
+          return new Promise(resolve => {
+            const reg = /^(?![\da-z]+$)(?![\dA-Z]+$)(?![\d~!@#$%^&*()_=+\|{};:,<.>/?]+$)(?![a-zA-Z]+$)(?![a-z~!@#$%^&*()_=+\|{};:,<.>/?]+$)(?![A-Z~!@#$%^&*()_=+\|{};:,<.>/?]+$)[\da-zA-z~!@#$%^&*()_=+\|{};:,<.>/?]{8,}$/
+            const re = new RegExp(reg)
+            if (re.test(value)) {
+              resolve(true)
+            } else {
+              cb(t('simple.InstallConfig.else5'))
+              resolve(false)
+            }
+          })
+        }
+      }
+    ]
   }
 }
 
