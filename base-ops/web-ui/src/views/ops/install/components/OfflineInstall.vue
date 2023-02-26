@@ -12,17 +12,21 @@
       </div>
       <a-link class="mb-s" @click="showChangePath">{{ $t('components.OfflineInstall.5mpn1nwaz600') }}</a-link>
     </div>
-    <div class="panel-body">
-      <div class="flex-col">
-        <div v-for="(item, index) in data.files" :key="index">
-          <div :class="'label-color install-package-card mb ' + (data.fileName === item.name ? 'center-item-active' : '')"
-            @click="choosePackge(item)">
-            <svg-icon icon-class="ops-offline-install" class="icon-size-s mr"></svg-icon>
-            <div class="ft-main">{{ item.name }}</div>
+    <a-spin class="flex-row-center" width="50%" :loading="data.getArchLoading"
+      :tip="$t('components.OfflineInstall.else3')">
+      <div class="panel-body">
+        <div class="flex-col">
+          <div v-for="(item, index) in data.files" :key="index">
+            <div
+              :class="'label-color install-package-card mb ' + (data.fileName === item.name ? 'center-item-active' : '')"
+              @click="choosePackge(item)">
+              <svg-icon icon-class="ops-offline-install" class="icon-size-s mr"></svg-icon>
+              <div class="ft-main">{{ item.name }}</div>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </a-spin>
     <a-modal :mask-closable="false" :visible="pathData.show" :title="pathData.title" :modal-style="{ width: '450px' }"
       @ok="dialogSubmit" @cancel="dialogClose">
       <a-form class="mb" :model="pathData.form" ref="formRef" auto-label-width :rules="formRules">
@@ -55,7 +59,8 @@ const data = reactive<KeyValue>({
   path: '',
   fileName: '',
   files: [],
-  openGaussVersionNum: ''
+  openGaussVersionNum: '',
+  getArchLoading: false
 })
 
 const pathData = reactive({
@@ -191,11 +196,11 @@ const dialogSubmit = () => {
 const setPathToStore = () => {
   if (data.fileName && data.path) {
     loadingFunc.toLoading()
+    data.getArchLoading = true
     const param = {
       installPackagePath: data.path + data.fileName,
       version: storeData.value.openGaussVersion
     }
-    console.log('show param', param)
     getPackageCpuArch(param).then((res: KeyValue) => {
       if (Number(res.code) === 200) {
         let cpuArchStr = res.msg
@@ -214,6 +219,7 @@ const setPathToStore = () => {
       }
     }).finally(() => {
       loadingFunc.cancelLoading()
+      data.getArchLoading = false
     })
   }
 }

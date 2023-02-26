@@ -87,7 +87,8 @@
             "5mpn1nwazs80": "LITE",
             "5mpn1nwazvg0": "ENTERPRISE",
             "else1": "If the DataKit is installed offline, upload the installation package to the server where the DataKit is located.",
-            "else2": "The path can only be a Linux path"
+            "else2": "The path can only be a Linux path",
+            "else3": "The CPU architecture information of the installation package is being obtained. Please wait"
         },
         "OnlineInstall": {
             "else1": "The installation package has been selected",
@@ -95,7 +96,10 @@
             "5mpn3mp111s0": "download",
             "5mpn3mp117k0": "Downloaded",
             "5mpn3mp11cg0": "Download completed",
-            "5mpn3mp11g00": "Download Progress"
+            "5mpn3mp11g00": "Download Progress",
+            "else2": "Obtaining the installation package",
+            "else3": "No installation package information is available",
+            "else4": "Add an installation package"
         },
         "OneCheck": {
             "clusterName": "Cluster Name",

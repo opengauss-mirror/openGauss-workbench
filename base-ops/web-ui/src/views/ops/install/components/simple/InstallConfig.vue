@@ -342,6 +342,7 @@ const saveStore = () => {
     nodeConfigList: [param as MiniNodeConfig]
   }
   installStore.setMiniConfig(miniConfig as MinimalistInstallConfig)
+  console.log('show installStore mini', installStore.getMiniConfig)
 }
 
 const loadingFunc = inject<any>('loading')
