@@ -199,7 +199,7 @@ public class OpenEulerX86LiteOpsProvider extends AbstractOpsProvider {
         try {
             log.info("perform installation");
             // install
-            String command = MessageFormat.format(SshCommandConstants.LITE_SINGLE_INSTALL, databasePassword, pkgPath, dataPath, installPath,String.valueOf(port));
+            String command = MessageFormat.format(SshCommandConstants.LITE_SINGLE_INSTALL, databasePassword, installPath, dataPath, installPath,String.valueOf(port));
 
             wsUtil.sendText(installContext.getRetSession(),"START_EXE_INSTALL_COMMAND");
             try {
@@ -375,7 +375,7 @@ public class OpenEulerX86LiteOpsProvider extends AbstractOpsProvider {
         try {
             log.info("perform installation");
             // install
-            String command = MessageFormat.format(SshCommandConstants.LITE_SLAVE_INSTALL, databasePassword, pkgPath, dataPath, installPath, slaveHostInfo.getHostEntity().getPrivateIp(), String.valueOf(installContext.getLiteInstallConfig().getPort()+1), masterHostInfo.getHostEntity().getPrivateIp(), String.valueOf(installContext.getLiteInstallConfig().getPort()+1));
+            String command = MessageFormat.format(SshCommandConstants.LITE_SLAVE_INSTALL, databasePassword, installPath, dataPath, installPath, slaveHostInfo.getHostEntity().getPrivateIp(), String.valueOf(installContext.getLiteInstallConfig().getPort()+1), masterHostInfo.getHostEntity().getPrivateIp(), String.valueOf(installContext.getLiteInstallConfig().getPort()+1));
             wsUtil.sendText(installContext.getRetSession(),"START_EXE_INSTALL_COMMAND");
             try {
                 JschResult jschResult = jschUtil.executeCommand(command, installUserSession, installContext.getRetSession());
@@ -442,7 +442,7 @@ public class OpenEulerX86LiteOpsProvider extends AbstractOpsProvider {
         try {
             log.info("perform installation");
             // install
-            String command = MessageFormat.format(SshCommandConstants.LITE_MASTER_INSTALL, databasePassword, pkgPath, dataPath, installPath, masterHostInfo.getHostEntity().getPrivateIp(), String.valueOf(installContext.getLiteInstallConfig().getPort()+1), slaveHostInfo.getHostEntity().getPrivateIp(), String.valueOf(installContext.getLiteInstallConfig().getPort()+1));
+            String command = MessageFormat.format(SshCommandConstants.LITE_MASTER_INSTALL, databasePassword, installPath, dataPath, installPath, masterHostInfo.getHostEntity().getPrivateIp(), String.valueOf(installContext.getLiteInstallConfig().getPort()+1), slaveHostInfo.getHostEntity().getPrivateIp(), String.valueOf(installContext.getLiteInstallConfig().getPort()+1));
 
             wsUtil.sendText(installContext.getRetSession(),"START_EXE_INSTALL_COMMAND");
             try {
