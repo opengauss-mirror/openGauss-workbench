@@ -7,7 +7,7 @@
       </div>
       <div class="label-color mb">
         {{ $t('components.OfflineInstall.5mpn1nwaz280') }} {{ (data.path && data.fileName) ? data.path + data.fileName :
-  'no choose'
+          'no choose'
         }}
       </div>
       <a-link class="mb-s" @click="showChangePath">{{ $t('components.OfflineInstall.5mpn1nwaz600') }}</a-link>
@@ -15,8 +15,7 @@
     <div class="panel-body">
       <div class="flex-col">
         <div v-for="(item, index) in data.files" :key="index">
-          <div
-            :class="'label-color install-package-card mb ' + (data.fileName === item.name ? 'center-item-active' : '')"
+          <div :class="'label-color install-package-card mb ' + (data.fileName === item.name ? 'center-item-active' : '')"
             @click="choosePackge(item)">
             <svg-icon icon-class="ops-offline-install" class="icon-size-s mr"></svg-icon>
             <div class="ft-main">{{ item.name }}</div>
@@ -193,9 +192,40 @@ const setPathToStore = () => {
       packagePath: data.path,
       packageName: data.fileName,
       installPackagePath: data.path + data.fileName,
-      openGaussVersionNum: data.openGaussVersionNum
+      openGaussVersionNum: data.openGaussVersionNum,
+      installOs: getInstallOs()
     })
   }
+}
+
+enum osEnum {
+  CENTOS = 'CENTOS',
+  OPENEULER = 'OPENEULER'
+}
+enum cpuArchEnum {
+  X86_64 = 'X86_64',
+  AARCH64 = 'AARCH64'
+}
+
+const getInstallOs = () => {
+  let os = ''
+  let cpuArch = ''
+  const fileName = data.fileName.toLocaleUpperCase()
+  if (fileName.includes(osEnum.CENTOS)) {
+    os = osEnum.CENTOS
+    if (fileName.includes(cpuArchEnum.X86_64)) {
+      cpuArch = cpuArchEnum.X86_64
+    }
+  } else if (fileName.includes(osEnum.OPENEULER)) {
+    os = osEnum.OPENEULER
+    if (fileName.includes(cpuArchEnum.X86_64)) {
+      cpuArch = cpuArchEnum.X86_64
+    } else if (fileName.includes(cpuArchEnum.AARCH64)) {
+      cpuArch = cpuArchEnum.AARCH64
+    }
+  }
+  console.log('show expectedOs', (os + '_' + cpuArch).toLocaleUpperCase())
+  return ''
 }
 
 const dialogClose = () => {

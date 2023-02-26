@@ -155,7 +155,21 @@ const initData = () => {
   }
   data.rules = {
     hostId: [{ required: true, 'validate-trigger': 'change', message: t('enterprise.NodeConfig.5mpme7w6c1w0') }],
-    rootPassword: [{ required: true, 'validate-trigger': 'blur', message: t('enterprise.NodeConfig.5mpme7w6b700') }],
+    rootPassword: [
+      { required: true, 'validate-trigger': 'blur', message: t('enterprise.NodeConfig.5mpme7w6b700') },
+      {
+        validator: (value: any, cb: any) => {
+          return new Promise(resolve => {
+            if (!value.trim()) {
+              cb(t('enterprise.ClusterConfig.else2'))
+              resolve(false)
+            } else {
+              resolve(true)
+            }
+          })
+        }
+      }
+    ],
     installUserId: [{ required: true, 'validate-trigger': 'change', message: t('enterprise.NodeConfig.5mpme7w6c5g0') }],
     cmPort: [
       { required: true, 'validate-trigger': 'blur', message: t('enterprise.NodeConfig.5mpme7w6bko0') },

@@ -49,7 +49,7 @@
                   <div class="version" :title="item.pluginVersion">{{item.pluginVersion}}</div>
                   <div class="author" v-if="item.pluginProvider" :title="item.pluginProvider">{{item.pluginProvider}}</div>
                 </div>
-                <div class="plugin-desc" :title="item.pluginDesc">{{item.pluginDesc}}</div>
+                <div class="plugin-desc" :title="currentLocale === 'zh-CN' ? item.pluginDesc : item.pluginDescEn">{{ currentLocale === 'zh-CN' ? item.pluginDesc : item.pluginDescEn }}</div>
               </div>
             </div>
             <div class="item-btn-con">
@@ -131,9 +131,11 @@
   import { list, start, stop, uninstall } from '@/api/plugin'
   import PluginConfig from './components/PluginConfig.vue'
   import { destroyPluginApp } from '@/utils/pluginApp'
+  import useLocale from '@/hooks/locale'
 
   const appStore = useAppStore()
   const tabBarStore = useTabBarStore()
+  const { currentLocale } = useLocale()
   const loading = ref<boolean>(true)
   const doLoading = ref<boolean>(false)
 

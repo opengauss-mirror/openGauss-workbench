@@ -16,13 +16,15 @@
         <result property="pluginStatus" column="plugin_status"/>
         <result property="isNeedConfigured" column="is_need_configured"/>
         <result property="theme" column="theme"/>
+        <result property="pluginDescEn" column="plugin_desc_en"/>
 
     </resultMap>
 
 
     <sql id="selectSysPluginListVo">
         SELECT
-            id,plugin_id,bootstrap_class,plugin_desc,logo_path,plugin_type,plugin_version,plugin_provider,plugin_status,is_need_configured,theme
+            id,plugin_id,bootstrap_class,plugin_desc,logo_path,plugin_type,plugin_version,
+               plugin_provider,plugin_status,is_need_configured,theme,plugin_desc_en
         FROM sys_plugins
     </sql>
 

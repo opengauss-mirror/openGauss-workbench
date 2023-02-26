@@ -3,6 +3,7 @@ package org.opengauss.admin.plugin.service.ops.impl;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.lang.Assert;
+import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
@@ -1295,53 +1296,99 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         Integer port = null;
         String databaseUsername = null;
         String databasePassword = null;
-        String hostId = null;
+        String masterHostId = null;
+        String masterNodeInstallUserId = null;
+        String masterHostUsername = null;
+        String masterHostPassword = null;
         if (OpenGaussVersionEnum.MINIMAL_LIST == openGaussVersion) {
             port = importClusterBody.getMinimalistInstallConfig().getPort();
             databaseUsername = importClusterBody.getMinimalistInstallConfig().getDatabaseUsername();
             databasePassword = importClusterBody.getMinimalistInstallConfig().getDatabasePassword();
-            hostId = importClusterBody
+            MinimalistInstallNodeConfig masterNode = importClusterBody
                     .getMinimalistInstallConfig()
                     .getNodeConfigList().stream()
                     .filter(node -> node.getClusterRole() == ClusterRoleEnum.MASTER)
-                    .findFirst().orElseThrow(() -> new OpsException("masternode not found"))
-                    .getHostId();
+                    .findFirst().orElseThrow(() -> new OpsException("masternode not found"));
+            masterHostId = masterNode.getHostId();
+            masterNodeInstallUserId = masterNode.getInstallUserId();
         } else if (OpenGaussVersionEnum.LITE == openGaussVersion) {
             port = importClusterBody.getLiteInstallConfig().getPort();
             databaseUsername = importClusterBody.getLiteInstallConfig().getDatabaseUsername();
             databasePassword = importClusterBody.getLiteInstallConfig().getDatabasePassword();
-            hostId = importClusterBody.getLiteInstallConfig()
+            LiteInstallNodeConfig masterNode = importClusterBody.getLiteInstallConfig()
                     .getNodeConfigList()
                     .stream()
                     .filter(node -> node.getClusterRole() == ClusterRoleEnum.MASTER)
                     .findFirst()
-                    .orElseThrow(() -> new OpsException("masternode not found"))
-                    .getHostId();
+                    .orElseThrow(() -> new OpsException("masternode not found"));
+            masterHostId = masterNode.getHostId();
+            masterNodeInstallUserId = masterNode.getInstallUserId();
         } else if (OpenGaussVersionEnum.ENTERPRISE == openGaussVersion) {
             port = importClusterBody.getEnterpriseInstallConfig().getPort();
             databaseUsername = importClusterBody.getEnterpriseInstallConfig().getDatabaseUsername();
             databasePassword = importClusterBody.getEnterpriseInstallConfig().getDatabasePassword();
-            hostId = importClusterBody.getEnterpriseInstallConfig()
+            EnterpriseInstallNodeConfig masterNode = importClusterBody.getEnterpriseInstallConfig()
                     .getNodeConfigList()
                     .stream()
                     .filter(node -> node.getClusterRole() == ClusterRoleEnum.MASTER)
                     .findFirst()
-                    .orElseThrow(() -> new OpsException("masternode not found"))
-                    .getHostId();
+                    .orElseThrow(() -> new OpsException("masternode not found"));
+            masterHostId = masterNode.getHostId();
+            masterNodeInstallUserId = masterNode.getInstallUserId();
         }
 
-        OpsHostEntity hostEntity = hostFacade.getById(hostId);
+        OpsHostUserEntity masterNodeInstallUser = hostUserFacade.getById(masterNodeInstallUserId);
+        if (Objects.isNull(masterNodeInstallUser)){
+            throw new OpsException("install user not found");
+        }else {
+            masterHostUsername = masterNodeInstallUser.getUsername();
+            masterHostPassword = masterNodeInstallUser.getPassword();
+        }
+
+        OpsHostEntity hostEntity = hostFacade.getById(masterHostId);
         if (Objects.isNull(hostEntity)) {
             throw new OpsException("host not found");
         }
 
+        Session ommSession = jschUtil.getSession(hostEntity.getPublicIp(),hostEntity.getPort(),masterHostUsername,encryptionUtils.decrypt(masterHostPassword)).orElseThrow(()->new OpsException("Failed to establish connection with host " + hostEntity.getPublicIp()));
         Connection connection = null;
         try {
+            Integer majorVersion = judgeMajorVersion(ommSession);
+            OpenGaussVersionEnum openGaussVersionEnum = judgeOpenGaussVersion(majorVersion,ommSession,connection);
+            boolean versionMatch = false;
+            if (majorVersion>=5){
+                if (importClusterBody.getOpenGaussVersion() == openGaussVersionEnum){
+                    versionMatch = true;
+                }
+            }else {
+                if (importClusterBody.getOpenGaussVersion() == OpenGaussVersionEnum.ENTERPRISE){
+                    if (openGaussVersionEnum == OpenGaussVersionEnum.ENTERPRISE){
+                        versionMatch = true;
+                    }
+                }else {
+                    if (openGaussVersionEnum != OpenGaussVersionEnum.ENTERPRISE){
+                        versionMatch = true;
+                    }
+                }
+            }
+
+            if (!versionMatch){
+                log.error("The selected version does not match the actual version,select version:{},actual version:{}",importClusterBody.getOpenGaussVersion(),openGaussVersionEnum);
+                throw new OpsException("The selected version does not match the actual version");
+            }
+
             connection = DBUtil.getSession(hostEntity.getPublicIp(), port, databaseUsername, databasePassword).orElseThrow(() -> new OpsException("Connection failed"));
+        }catch (OpsException e){
+            log.error("ops exception ",e);
+            throw e;
         }catch (Exception e) {
             log.error("get connection fail",e);
-             throw new OpsException("connection fail");
+            throw new OpsException("connection fail");
         }finally {
+            if (Objects.nonNull(ommSession) && ommSession.isConnected()){
+                ommSession.disconnect();
+            }
+
             if (Objects.nonNull(connection)){
                 try {
                     connection.close();
@@ -1372,6 +1419,79 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                 opsClusterNodeEntity.setClusterId(opsClusterEntity.getClusterId());
             }
             opsClusterNodeService.saveBatch(opsClusterNodeEntities);
+        }
+    }
+
+    private OpenGaussVersionEnum judgeOpenGaussVersion(Integer majorVersion, Session ommSession, Connection connection) {
+        boolean enterprise = enterpriseVersion(ommSession);
+        if (enterprise){
+            return OpenGaussVersionEnum.ENTERPRISE;
+        }
+
+        if (majorVersion>=5){
+            boolean lite = liteVersion(connection);
+            if (lite){
+                return OpenGaussVersionEnum.LITE;
+            }
+
+            return OpenGaussVersionEnum.MINIMAL_LIST;
+        }else {
+            return OpenGaussVersionEnum.MINIMAL_LIST;
+        }
+    }
+
+    private boolean liteVersion(Connection connection) {
+        String sql = "select version()";
+
+        try (PreparedStatement preparedStatement = connection.prepareStatement(sql);
+             ResultSet resultSet = preparedStatement.executeQuery();){
+            if (resultSet.next()){
+                String version = resultSet.getString("version");
+                return version.contains("lite");
+            }
+        }catch (Exception e){
+            log.error("query version fail",e);
+            throw new OpsException("query version fail");
+        }
+
+        return false;
+    }
+
+    private boolean enterpriseVersion(Session ommSession) {
+        String command = "which gs_om";
+        JschResult jschResult = null;
+        try {
+            jschResult = jschUtil.executeCommand(command, ommSession);
+
+            if (0 != jschResult.getExitCode()) {
+                return false;
+            }
+
+            return true;
+        } catch (Exception e) {
+            log.error("Failed to get openGauss major version", e);
+            throw new OpsException("Failed to get openGauss major version");
+        }
+    }
+
+    private Integer judgeMajorVersion(Session ommSession) {
+        String command = "gsql -V";
+        JschResult jschResult = null;
+        try {
+            jschResult = jschUtil.executeCommand(command, ommSession);
+
+            if (0 != jschResult.getExitCode()) {
+                log.error("Failed to get openGauss major version, exit code: {}, log: {}", jschResult.getExitCode(), jschResult.getResult());
+                throw new OpsException("Failed to get openGauss major version");
+            }
+
+            String result = jschResult.getResult();
+            String majorVersion = result.substring(16, 17);
+            log.info("openGauss Major version:{}",majorVersion);
+            return Integer.parseInt(majorVersion);
+        } catch (Exception e) {
+            log.error("Failed to get openGauss major version", e);
+            throw new OpsException("Failed to get openGauss major version");
         }
     }
 
@@ -2288,10 +2408,33 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                     throw new OpsException("Failed to get status information");
                 }
 
+                Map<String,String> nodeState = new HashMap<>(1);
+                Map<String,String> nodeRole = new HashMap<>(1);
+                Map<String,String> cmState = new HashMap<>(1);
+                res.put("nodeState",nodeState);
+                res.put("nodeRole",nodeRole);
+                res.put("cmState",cmState);
+
                 String result = jschResult.getResult();
+                int cmIndex = result.indexOf("CMServer State");
+                if (cmIndex<0){
+
+                }else {
+                    int splitIndex = result.indexOf("------------------", cmIndex);
+                    String dataNodeStateStr = result.substring(splitIndex);
+
+                    String[] dataNode = dataNodeStateStr.split("\n");
+                    for (String s : dataNode) {
+                        String[] s1 = s.replaceAll(" +", " ").split(" ");
+                        if (s1.length == 6) {
+                            cmState.put(s1[1], s1[5].trim());
+                        }
+                    }
+                }
+
                 int clusterStateIndex = result.indexOf("cluster_state");
                 String clusterState = null;
-                if (clusterStateIndex < 1) {
+                if (clusterStateIndex < 0) {
 
                 } else {
                     int splitIndex = result.indexOf(":", clusterStateIndex);
@@ -2300,14 +2443,9 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                     res.put("cluster_state", clusterState);
                 }
 
-                Map<String,String> nodeState = new HashMap<>(1);
-                Map<String,String> nodeRole = new HashMap<>(1);
-                res.put("nodeState",nodeState);
-                res.put("nodeRole",nodeRole);
-
 
                 int datanodeStateIndex = result.indexOf("Datanode State");
-                if (datanodeStateIndex < 1) {
+                if (datanodeStateIndex < 0) {
 
                 } else {
                     int splitIndex = result.indexOf("------------------", datanodeStateIndex);
@@ -2316,13 +2454,23 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                     String[] dataNode = dataNodeStateStr.split("\n");
                     for (String s : dataNode) {
                         String[] s1 = s.replaceAll(" +", " ").split(" ");
-                        if (s1.length == 9) {
-                            nodeState.put(s1[1], s1[8].trim());
-                            nodeRole.put(s1[1],s1[6].trim());
-                        }else if (s1.length == 8){
-                            nodeState.put(s1[1],s1[7].trim());
-                            nodeRole.put(s1[1],s1[5].trim());
+
+                        String state = "";
+                        for (int i = 7; i < s1.length; i++) {
+                            state += (s1[i] + " ");
                         }
+
+                        if (s1.length>=8){
+                            nodeState.put(s1[1], state.trim());
+                            nodeRole.put(s1[1], s1[6]);
+                        }
+//                        if (s1.length == 9) {
+//                            nodeState.put(s1[1], s1[8].trim());
+//                            nodeRole.put(s1[1],s1[7].trim());
+//                        }else if (s1.length == 8){
+//                            nodeState.put(s1[1],s1[7].trim());
+//                            nodeRole.put(s1[1],s1[6].trim());
+//                        }
                     }
                 }
                 return JSON.toJSONString(res);

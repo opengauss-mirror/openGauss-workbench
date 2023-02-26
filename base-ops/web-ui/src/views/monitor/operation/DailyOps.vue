@@ -1,6 +1,6 @@
 <template>
   <div class="daily-ops-c">
-    <div v-if="data.clusterList.length && !data.loading">
+    <div v-if="showClusterInfo">
       <div v-for="(clusterData, index) in data.clusterList" :key="index">
         <a-spin class="full-w" :loading="clusterData.loading" v-if="!clusterData.isHidden">
           <div class="item-c mb">
@@ -300,7 +300,7 @@
                         getInstanceState(clusterData, instance)
                       }}</a-tag>
                     </div>
-                    <div class="flex-row">
+                    <div class="flex-row" v-if="instance.cmState !== CMStateEnum.Down">
                       <a-switch class="mr" v-model="instance.state" checked-value="true" unchecked-value="false"
                         @change="handleInstanceSwitchChange($event, index, nodeIndex)">
                         <template #checked>
@@ -352,7 +352,7 @@
         </a-spin>
       </div>
     </div>
-    <div class="full-w full-h flex-col" v-if="data.clusterList.length === 0 && !data.loading">
+    <div class="full-w full-h flex-col" v-if="showInit">
       <svg-icon icon-class="ops-empty" class="empty-icon-size mb"></svg-icon>
       <div class="empty-content mb">{{ $t('operation.DailyOps.5mplp1xc3ss0') }}</div>
       <div class="flex-row">
@@ -374,7 +374,7 @@
 
 <script lang="ts" setup>
 import { KeyValue } from '@/types/global'
-import { onBeforeUnmount, onMounted, reactive, ref } from 'vue'
+import { onBeforeUnmount, onMounted, reactive, ref, computed } from 'vue'
 import { clusterMonitor, delCluster, uninstallOpenGauss, clusterList, start, stop, restart, switchover, generateconf, build, clusterBackup } from '@/api/ops'
 import { useWinBox } from 'vue-winbox'
 import 'xterm/css/xterm.css'
@@ -383,7 +383,7 @@ import { FitAddon } from 'xterm-addon-fit'
 import { AttachAddon } from 'xterm-addon-attach'
 import Socket from '@/utils/websocket'
 import ClusterBackupDlg from '@/views/monitor/operation/ClusterBackupDlg.vue'
-import { ClusterRoleEnum, OpenGaussVersionEnum } from '@/types/ops/install'
+import { ClusterRoleEnum, OpenGaussVersionEnum, CMStateEnum } from '@/types/ops/install'
 import OneCheck from '@/views/ops/home/components/OneCheck.vue'
 import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
@@ -416,6 +416,20 @@ const goInstall = () => {
     name: 'Static-pluginBase-opsOpsInstall'
   })
 }
+
+const showClusterInfo = computed(() => {
+  const normalClusters = data.clusterList.filter((item: KeyValue) => {
+    return item.isHidden === false
+  })
+  return normalClusters.length > 0 && !data.loading
+})
+
+const showInit = computed(() => {
+  const normalClusters = data.clusterList.filter((item: KeyValue) => {
+    return item.isHidden === false
+  })
+  return normalClusters.length === 0 && !data.loading
+})
 
 const getList = () => new Promise(resolve => {
   data.loading = true
@@ -464,8 +478,16 @@ const getRoleName = (type: ClusterRoleEnum) => {
       return t('operation.DailyOps.5mplp1xc4jw0')
     case ClusterRoleEnum.SLAVE:
       return t('operation.DailyOps.5mplp1xbztc0')
-    default:
+    case ClusterRoleEnum.CASCADE:
       return t('operation.DailyOps.5mplp1xc4oc0')
+    case ClusterRoleEnum.PENDING:
+      return t('operation.DailyOps.else7')
+    case ClusterRoleEnum.UNKNOWN:
+      return t('operation.DailyOps.else8')
+    case ClusterRoleEnum.DOWN:
+      return t('operation.DailyOps.else9')
+    case ClusterRoleEnum.ABNORMAL:
+      return t('operation.DailyOps.else10')
   }
 }
 
@@ -479,6 +501,7 @@ const openWebSocket = (data: KeyValue, clusterIndex: number) => {
     data.clusterNodes.forEach((item: KeyValue, index: number) => {
       item.state = 'false'
       item.nodeState = -1
+      item.cmState = ''
       // open websocket
       openHostWebSocket(data, item, clusterIndex, index)
     })
@@ -535,28 +558,46 @@ const openHostWebSocket = (clusterData: KeyValue, nodeData: KeyValue, clusterInd
 
 const setInstanceState = (clusterData: KeyValue, instanceData: KeyValue) => {
   if (clusterData.version === OpenGaussVersionEnum.ENTERPRISE) {
-    if (instanceData.nodeState !== -1) {
+    if (instanceData.nodeState && instanceData.nodeState !== -1) {
       const stateObj = JSON.parse(instanceData.nodeState)
       const currentHostname = instanceData.hostname
       if (stateObj && currentHostname) {
-        // set node state
+        // set node switch state
         if (stateObj.nodeState[currentHostname] === 'Normal') {
           instanceData.state = 'true'
         } else {
           instanceData.state = 'false'
         }
+        // set all nodes state
+        clusterData.clusterNodes.forEach((item: KeyValue) => {
+          item.nodeState = instanceData.nodeState
+        })
+        // set node cm_state
+        instanceData.cmState = stateObj.cmState[currentHostname]
         // set node role
         if (stateObj.nodeRole[currentHostname]) {
           switch (stateObj.nodeRole[currentHostname]) {
-            case 'P':
-            case 'N':
+            case 'Primary':
+            case 'Normal':
               instanceData.clusterRole = ClusterRoleEnum.MASTER
               break
-            case 'S':
+            case 'Standby':
               instanceData.clusterRole = ClusterRoleEnum.SLAVE
               break
-            case 'C':
+            case 'Cascade Standby':
               instanceData.clusterRole = ClusterRoleEnum.CASCADE
+              break
+            case 'Pending':
+              instanceData.clusterRole = ClusterRoleEnum.PENDING
+              break
+            case 'Unknown':
+              instanceData.clusterRole = ClusterRoleEnum.UNKNOWN
+              break
+            case 'Down':
+              instanceData.clusterRole = ClusterRoleEnum.DOWN
+              break
+            case 'Abnormal':
+              instanceData.clusterRole = ClusterRoleEnum.ABNORMAL
               break
           }
         }
@@ -600,6 +641,7 @@ const handleUninstall = (clusterData: KeyValue, index: number, force: boolean) =
         const flag = Number(messageData.split(':')[1])
         if (flag === 0) {
           data.clusterList[index].isHidden = true
+
         }
       }
       clusterData.loading = false
@@ -692,12 +734,31 @@ const handleStop = (clusterData: KeyValue) => {
       const flag = Number(messageData.split(':')[1])
       if (flag === 0) {
         // success
+        // if enterprise set nodes cm_state Down
+        stopSuccessBefore(clusterData)
         term.writeln('stop success')
       } else {
         term.writeln('stop failed')
       }
     }
   })
+}
+
+const stopSuccessBefore = (clusterData: KeyValue) => {
+  if (clusterData.version === OpenGaussVersionEnum.ENTERPRISE) {
+    const tempNodeState: {
+      nodeState: KeyValue,
+      cluster_state: string
+    } = {
+      nodeState: {},
+      cluster_state: 'Unavailable'
+    }
+    clusterData.clusterNodes.forEach((item: KeyValue) => {
+      item.cmState = CMStateEnum.Down
+      tempNodeState.nodeState[item.hostname] = 'Manually stopped'
+      item.nodeState = JSON.stringify(tempNodeState)
+    })
+  }
 }
 
 const handleReset = (clusterData: KeyValue, index: number) => {
@@ -938,7 +999,7 @@ const handleInstanceOper = (type: any, clusterIndex: number, nodeIndex: number, 
       if (flag === 0) {
         // success
         term.writeln(type + ' success')
-        if (type === 'restart' || type === 'start') {
+        if (type === 'restart' || type === 'start' || type === 'build') {
           openHostWebSocket(data.clusterList[clusterIndex], data.clusterList[clusterIndex].clusterNodes[nodeIndex], clusterIndex, nodeIndex)
         }
       } else {
@@ -1089,7 +1150,7 @@ const getCurrentInstanceState = (stateObj: KeyValue, instanceData: KeyValue) => 
     switch (stateObj.nodeState[currentHostname]) {
       case 'Normal':
         return t('operation.DailyOps.nodeState1')
-      case 'Need repair':
+      case 'Need repair(Disconnected)':
         return t('operation.DailyOps.nodeState2')
       case 'Starting':
         return t('operation.DailyOps.nodeState3')
@@ -1107,6 +1168,8 @@ const getCurrentInstanceState = (stateObj: KeyValue, instanceData: KeyValue) => 
         return t('operation.DailyOps.nodeState9')
       case 'Unknown':
         return t('operation.DailyOps.nodeState10')
+      case 'Manually stopped':
+        return t('operation.DailyOps.else11')
     }
   }
   return t('operation.DailyOps.5mplp1xc51s0')
@@ -1140,6 +1203,9 @@ const getDropdownList = (clusterData: KeyValue, nodeData: KeyValue) => {
     { label: t('operation.DailyOps.5mplp1xc0i80'), value: 'stop' },
     { label: t('operation.DailyOps.5mplp1xc0o40'), value: 'restart' }
   ]
+  if (clusterData.version === OpenGaussVersionEnum.ENTERPRISE && nodeData.clusterRole === ClusterRoleEnum.MASTER) {
+    result.push({ label: t('operation.DailyOps.5mplp1xc5cg0'), value: 'config' })
+  }
   if (clusterData.version === OpenGaussVersionEnum.ENTERPRISE && nodeData.clusterRole === ClusterRoleEnum.SLAVE) {
     result.push({ label: t('operation.DailyOps.5mplp1xc56k0'), value: 'switch' })
     result.push({ label: t('operation.DailyOps.5mplp1xc5cg0'), value: 'config' })

@@ -13,8 +13,7 @@
           </div>
           <div>
             <a-input-search v-model="filter.name" :loading="list.loading" allowClear @search="isFilter"
-              @press-enter="isFilter" @clear="isFilter" :placeholder="$t('physical.index.5mphf11szdk0')"
-              search-button />
+              @press-enter="isFilter" @clear="isFilter" :placeholder="$t('physical.index.5mphf11szdk0')" search-button />
           </div>
         </div>
         <a-table class="d-a-table-row" :data="list.data" :columns="columns" :pagination="list.page"
@@ -83,7 +82,12 @@ const list = reactive<KeyValue>({
   loading: false
 })
 
+const data = reactive<KeyValue>({
+  hasTestObj: {}
+})
+
 onMounted(() => {
+  data.hasTestObj = {}
   getListData()
 })
 
@@ -93,8 +97,13 @@ const getListData = () => new Promise(resolve => {
     if (Number(res.code) === 200) {
       resolve(true)
       list.data = []
+      console.log('show hasTest obj ', data.hasTestObj)
       res.rows.forEach((item: KeyValue) => {
-        item.state = -1
+        if (data.hasTestObj[item.hostId]) {
+          item.state = data.hasTestObj[item.hostId]
+        } else {
+          item.state = -1
+        }
         item.loading = false
         list.data.push(item)
       })
@@ -144,6 +153,7 @@ const handleTestConnect = (hostData: any) => {
       } else {
         currRecord.value.state = 0
       }
+      data.hasTestObj[hostData.hostId] = currRecord.value.state
     }).finally(() => {
       currRecord.value.loading = false
     })

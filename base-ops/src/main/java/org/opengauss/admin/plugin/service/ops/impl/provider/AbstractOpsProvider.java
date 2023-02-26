@@ -16,7 +16,9 @@ import org.springframework.beans.factory.InitializingBean;
 
 import java.io.IOException;
 import java.text.MessageFormat;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -368,6 +370,51 @@ public abstract class AbstractOpsProvider implements ClusterOpsProvider, Initial
         }
 
         return path + "/";
+    }
+
+    protected OmStatusModel omStatus(JschUtil jschUtil,Session ommUserSession, WsSession retSession) {
+        OmStatusModel omStatusModel = new OmStatusModel();
+        try {
+            String statusCommand = "gs_om -t status --detail";
+            JschResult jschResult = jschUtil.executeCommand(statusCommand, ommUserSession);
+            if (0 != jschResult.getExitCode()) {
+                throw new OpsException("startup error,gs_om status fail,exit code " + jschResult.getExitCode());
+            }
+
+
+            String result = jschResult.getResult();
+            Map<String,String> nodeIdMapHostname = new HashMap<>();
+            Map<String,String> hostnameMapNodeId = new HashMap<>();
+            omStatusModel.setInstallCm(result.contains("[  CMServer State   ]"));
+            omStatusModel.setNodeIdMapHostname(nodeIdMapHostname);
+            omStatusModel.setHostnameMapNodeId(hostnameMapNodeId);
+
+            if (omStatusModel.isInstallCm()){
+                int datanodeStateIndex = result.indexOf("[  CMServer State   ]");
+                if (datanodeStateIndex < 0) {
+
+                } else {
+                    int splitIndex = result.indexOf("------------------", datanodeStateIndex);
+                    String dataNodeStateStr = result.substring(splitIndex);
+                    String[] dataNode = dataNodeStateStr.split("\n");
+                    for (String s : dataNode) {
+                        if (StrUtil.isEmpty(s)){
+                            break;
+                        }
+                        String[] s1 = s.replaceAll(" +", " ").split(" ");
+                        if (s1.length > 2) {
+                            nodeIdMapHostname.put(s1[0], s1[1]);
+                            hostnameMapNodeId.put(s1[1], s1[0]);
+                        }
+                    }
+                }
+            }
+        }catch (Exception e){
+            log.error("An exception occurred during startup,gs_om status fail", e);
+            throw new OpsException("An exception occurred during startup,gs_om status fail");
+        }
+
+        return omStatusModel;
     }
 
     @Override
