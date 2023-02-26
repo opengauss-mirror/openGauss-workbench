@@ -190,12 +190,12 @@ public class LiteOpsProvider extends AbstractOpsProvider {
             throw new OpsException("Installation user ID does not exist");
         }
 
-        Session installUserSession = beforeInstall(jschUtil,encryptionUtils,installContext, installPath, dataPath, pkgPath, hostId, installUserId, installUserName, "-xvf");
+        Session installUserSession = beforeInstall(jschUtil,encryptionUtils,installContext, pkgPath, dataPath, pkgPath, hostId, installUserId, installUserName, "-xvf");
 
         try {
             log.info("perform installation");
             // install
-            String command = MessageFormat.format(SshCommandConstants.LITE_SINGLE_INSTALL, databasePassword, installPath, dataPath, installPath,String.valueOf(port));
+            String command = MessageFormat.format(SshCommandConstants.LITE_SINGLE_INSTALL, databasePassword, pkgPath, dataPath, installPath,String.valueOf(port));
 
             wsUtil.sendText(installContext.getRetSession(),"START_EXE_INSTALL_COMMAND");
             try {
@@ -364,12 +364,12 @@ public class LiteOpsProvider extends AbstractOpsProvider {
         }
 
         slaveNodeConfig.setInstallUserId(installUserId);
-        Session installUserSession = beforeInstall(jschUtil, encryptionUtils, installContext, installPath, dataPath, pkgPath, slaveHostId, installUserId, installUserName, "-xvf");
+        Session installUserSession = beforeInstall(jschUtil, encryptionUtils, installContext, pkgPath, dataPath, pkgPath, slaveHostId, installUserId, installUserName, "-xvf");
 
         try {
             log.info("perform installation");
             // install
-            String command = MessageFormat.format(SshCommandConstants.LITE_SLAVE_INSTALL, databasePassword, installPath, dataPath, installPath, slaveHostInfo.getHostEntity().getPrivateIp(), String.valueOf(installContext.getLiteInstallConfig().getPort()+1), masterHostInfo.getHostEntity().getPrivateIp(), String.valueOf(installContext.getLiteInstallConfig().getPort()+1));
+            String command = MessageFormat.format(SshCommandConstants.LITE_SLAVE_INSTALL, databasePassword, pkgPath, dataPath, installPath, slaveHostInfo.getHostEntity().getPrivateIp(), String.valueOf(installContext.getLiteInstallConfig().getPort()+1), masterHostInfo.getHostEntity().getPrivateIp(), String.valueOf(installContext.getLiteInstallConfig().getPort()+1));
             wsUtil.sendText(installContext.getRetSession(),"START_EXE_INSTALL_COMMAND");
             try {
                 JschResult jschResult = jschUtil.executeCommand(command, installUserSession, installContext.getRetSession());
@@ -431,11 +431,11 @@ public class LiteOpsProvider extends AbstractOpsProvider {
 
         masterNodeConfig.setInstallUserId(installUserId);
 
-        Session installUserSession = beforeInstall(jschUtil, encryptionUtils, installContext, installPath, dataPath, pkgPath, masterHostId, installUserId, installUserName, "-xvf");
+        Session installUserSession = beforeInstall(jschUtil, encryptionUtils, installContext, pkgPath, dataPath, pkgPath, masterHostId, installUserId, installUserName, "-xvf");
         try {
             log.info("perform installation");
             // install
-            String command = MessageFormat.format(SshCommandConstants.LITE_MASTER_INSTALL, databasePassword, installPath, dataPath, installPath, masterHostInfo.getHostEntity().getPrivateIp(), String.valueOf(installContext.getLiteInstallConfig().getPort()+1), slaveHostInfo.getHostEntity().getPrivateIp(), String.valueOf(installContext.getLiteInstallConfig().getPort()+1));
+            String command = MessageFormat.format(SshCommandConstants.LITE_MASTER_INSTALL, databasePassword, pkgPath, dataPath, installPath, masterHostInfo.getHostEntity().getPrivateIp(), String.valueOf(installContext.getLiteInstallConfig().getPort()+1), slaveHostInfo.getHostEntity().getPrivateIp(), String.valueOf(installContext.getLiteInstallConfig().getPort()+1));
 
             wsUtil.sendText(installContext.getRetSession(),"START_EXE_INSTALL_COMMAND");
             try {
