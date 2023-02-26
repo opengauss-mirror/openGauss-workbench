@@ -10,6 +10,8 @@ import org.opengauss.admin.plugin.domain.entity.ops.OpsPackageManagerEntity;
 import org.opengauss.admin.plugin.enums.ops.OpenGaussVersionEnum;
 import org.opengauss.admin.plugin.mapper.ops.OpsPackageManagerMapper;
 import org.opengauss.admin.plugin.service.ops.IOpsPackageManagerService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
@@ -23,6 +25,10 @@ import java.nio.charset.StandardCharsets;
 @Slf4j
 @Service
 public class OpsPackageManagerService extends ServiceImpl<OpsPackageManagerMapper, OpsPackageManagerEntity> implements IOpsPackageManagerService {
+
+    @Autowired
+    private ThreadPoolTaskExecutor threadPoolTaskExecutor;
+
     @Override
     public String getCpuArchByPackagePath(String installPackagePath, OpenGaussVersionEnum version) {
         if (!FileUtil.exist(installPackagePath)){
@@ -58,47 +64,59 @@ public class OpsPackageManagerService extends ServiceImpl<OpsPackageManagerMappe
         FileUtil.mkdir(tempAbsoluteFolder);
 
         try {
-            Process tar = Runtime.getRuntime().exec("tar -jxf " + installPackagePath + " -C " + tempAbsoluteFolder);
-            int exitCode = tar.waitFor();
-            if (0!=exitCode){
-                throw new OpsException("Failed to decompress the installation package with exitCode " + exitCode);
+            try {
+                Process tar = Runtime.getRuntime().exec("tar -jxf " + installPackagePath + " -C " + tempAbsoluteFolder);
+                int exitCode = tar.waitFor();
+                if (0!=exitCode){
+                    throw new OpsException("Failed to decompress the installation package with exitCode " + exitCode);
+                }
+            } catch (IOException | InterruptedException e) {
+                log.error("Failed to decompress the installation package",e);
+                throw new OpsException("Failed to decompress the installation package");
             }
-        } catch (IOException | InterruptedException e) {
-            log.error("Failed to decompress the installation package",e);
-            throw new OpsException("Failed to decompress the installation package");
-        }
 
-        try {
-            Process file = Runtime.getRuntime().exec("file " + tempAbsoluteFolder + File.separator + "bin" + File.separator + "gs_ctl");
-            int exitCode = file.waitFor();
-            if (0!=exitCode){
-                throw new OpsException("Failed to get cpu arch with exitCode " + exitCode);
-            }
-            String res = IoUtil.read(file.getInputStream(), StandardCharsets.UTF_8);
-            if (StrUtil.isEmpty(res)){
-                log.error("Failed to get cpu arch:{}");
-                throw new OpsException("Failed to get cpu arch");
-            }else {
-                final String[] split = res.split(",");
-                if (split.length<2){
-                    log.error("Failed to get cpu arch:{}",res);
+            try {
+                Process file = Runtime.getRuntime().exec("file " + tempAbsoluteFolder + File.separator + "bin" + File.separator + "gs_ctl");
+                int exitCode = file.waitFor();
+                if (0!=exitCode){
+                    throw new OpsException("Failed to get cpu arch with exitCode " + exitCode);
+                }
+                String res = IoUtil.read(file.getInputStream(), StandardCharsets.UTF_8);
+                if (StrUtil.isEmpty(res)){
+                    log.error("Failed to get cpu arch:{}");
                     throw new OpsException("Failed to get cpu arch");
-                }
+                }else {
+                    final String[] split = res.split(",");
+                    if (split.length<2){
+                        log.error("Failed to get cpu arch:{}",res);
+                        throw new OpsException("Failed to get cpu arch");
+                    }
 
-                String trim = split[1].trim();
-                final String[] s = trim.split(" ");
+                    String trim = split[1].trim();
+                    final String[] s = trim.split(" ");
 
-                if (s.length==1){
-                    return s[0];
-                }if (s.length>1){
-                    return s[s.length-1];
+                    if (s.length==1){
+                        return s[0];
+                    }if (s.length>1){
+                        return s[s.length-1];
+                    }
                 }
+            }catch (IOException | InterruptedException e){
+                log.error("Failed to get cpu arch",e);
+                throw new OpsException("Failed to get cpu arch");
             }
-        }catch (IOException | InterruptedException e){
-            log.error("Failed to get cpu arch",e);
-            throw new OpsException("Failed to get cpu arch");
+            return null;
+        }finally {
+            threadPoolTaskExecutor.submit(()->{
+                String command = "rm -rf " + tempAbsoluteFolder;
+                try {
+                    final Process exec = Runtime.getRuntime().exec(command);
+                    exec.waitFor();
+                } catch (Exception ignore) {
+
+                }
+            });
         }
-        return null;
     }
 
     private String getEnterprisePackageCpuArch(String installPackagePath) {
@@ -108,66 +126,79 @@ public class OpsPackageManagerService extends ServiceImpl<OpsPackageManagerMappe
         String tempFolder = "temp-enterprise-"+ StrUtil.uuid();
         String tempAbsoluteFolder = FileUtil.getParent(installPackagePath,1) + File.separator + tempFolder;
         FileUtil.mkdir(tempAbsoluteFolder);
-        try {
-            String command = "tar -xvf " + installPackagePath + " -C " + tempAbsoluteFolder;
-            Process tar = Runtime.getRuntime().exec(command);
-            int exitCode = tar.waitFor();
-            if (0!=exitCode){
-                log.error("command:{}",command);
-                throw new OpsException("Failed to decompress the installation package with exitCode " + exitCode);
-            }
-        } catch (IOException | InterruptedException e) {
-            log.error("Failed to decompress the installation package",e);
-            throw new OpsException("Failed to decompress the installation package");
-        }
 
         try {
-            String command = "tar -xvf " +  tempAbsoluteFolder+File.separator + "openGauss-" +version+ "-"+system+"-64bit-cm.tar.gz " + " -C " + tempAbsoluteFolder;
-            Process tar = Runtime.getRuntime().exec(command);
-            int exitCode = tar.waitFor();
-            if (0!=exitCode){
-                log.error("command:{}",command);
-                throw new OpsException("Failed to decompress the installation package with exitCode " + exitCode);
+            try {
+                String command = "tar -xvf " + installPackagePath + " -C " + tempAbsoluteFolder;
+                Process tar = Runtime.getRuntime().exec(command);
+                int exitCode = tar.waitFor();
+                if (0!=exitCode){
+                    log.error("command:{}",command);
+                    throw new OpsException("Failed to decompress the installation package with exitCode " + exitCode);
+                }
+            } catch (IOException | InterruptedException e) {
+                log.error("Failed to decompress the installation package",e);
+                throw new OpsException("Failed to decompress the installation package");
             }
-        } catch (IOException | InterruptedException e) {
-            log.error("Failed to decompress the installation package",e);
-            throw new OpsException("Failed to decompress the installation package");
-        }
 
-        try {
-            String command = "file " + tempAbsoluteFolder + File.separator + "bin" + File.separator + "cm_ctl";
-            Process file = Runtime.getRuntime().exec(command);
-            int exitCode = file.waitFor();
-            if (0!=exitCode){
-                log.error("command:{}",command);
-                throw new OpsException("Failed to get cpu arch with exitCode " + exitCode);
+            try {
+                String command = "tar -xvf " +  tempAbsoluteFolder+File.separator + "openGauss-" +version+ "-"+system+"-64bit-cm.tar.gz " + " -C " + tempAbsoluteFolder;
+                Process tar = Runtime.getRuntime().exec(command);
+                int exitCode = tar.waitFor();
+                if (0!=exitCode){
+                    log.error("command:{}",command);
+                    throw new OpsException("Failed to decompress the installation package with exitCode " + exitCode);
+                }
+            } catch (IOException | InterruptedException e) {
+                log.error("Failed to decompress the installation package",e);
+                throw new OpsException("Failed to decompress the installation package");
             }
-            String res = IoUtil.read(file.getInputStream(), StandardCharsets.UTF_8);
-            if (StrUtil.isEmpty(res)){
-                log.error("Failed to get cpu arch:{}");
-                throw new OpsException("Failed to get cpu arch");
-            }else {
-                final String[] split = res.split(",");
-                if (split.length<2){
-                    log.error("Failed to get cpu arch:{}",res);
+
+            try {
+                String command = "file " + tempAbsoluteFolder + File.separator + "bin" + File.separator + "cm_ctl";
+                Process file = Runtime.getRuntime().exec(command);
+                int exitCode = file.waitFor();
+                if (0!=exitCode){
+                    log.error("command:{}",command);
+                    throw new OpsException("Failed to get cpu arch with exitCode " + exitCode);
+                }
+                String res = IoUtil.read(file.getInputStream(), StandardCharsets.UTF_8);
+                if (StrUtil.isEmpty(res)){
+                    log.error("Failed to get cpu arch:{}");
                     throw new OpsException("Failed to get cpu arch");
-                }
+                }else {
+                    final String[] split = res.split(",");
+                    if (split.length<2){
+                        log.error("Failed to get cpu arch:{}",res);
+                        throw new OpsException("Failed to get cpu arch");
+                    }
 
-                String trim = split[1].trim();
-                final String[] s = trim.split(" ");
+                    String trim = split[1].trim();
+                    final String[] s = trim.split(" ");
 
-                if (s.length==1){
-                    return s[0];
-                }if (s.length>1){
-                    return s[s.length-1];
+                    if (s.length==1){
+                        return s[0];
+                    }if (s.length>1){
+                        return s[s.length-1];
+                    }
                 }
+            }catch (IOException | InterruptedException e){
+                log.error("Failed to get cpu arch",e);
+                throw new OpsException("Failed to get cpu arch");
             }
-        }catch (IOException | InterruptedException e){
-            log.error("Failed to get cpu arch",e);
-            throw new OpsException("Failed to get cpu arch");
-        }
 
-        return null;
+            return null;
+        }finally {
+            threadPoolTaskExecutor.submit(()->{
+                String command = "rm -rf " + tempAbsoluteFolder;
+                try {
+                    final Process exec = Runtime.getRuntime().exec(command);
+                    exec.waitFor();
+                } catch (Exception ignore) {
+
+                }
+            });
+        }
     }
 
     private String getSystem(String installPackagePath) {
