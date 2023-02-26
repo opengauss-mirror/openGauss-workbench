@@ -2814,9 +2814,9 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
             if (jschResult.getExitCode() == 0) {
                 String freeHardDisk = jschResult.getResult();
                 try {
-                    freeHardDiskProperty.setValue(freeHardDisk);
+                    int freeHardDiskGB = calcDisk(freeHardDisk);
+                    freeHardDiskProperty.setValue(freeHardDiskGB+"G");
 
-                    int freeHardDiskGB = Integer.parseInt(freeHardDisk.substring(0, freeHardDisk.length() - 1));
                     freeHardDiskProperty.setStatus(HostEnvStatusEnum.NORMAL);
 
                     int suggestedNum = 2;
@@ -2839,6 +2839,19 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
             freeHardDiskProperty.setStatusMessage("min 2.0GB");
         }
         return freeHardDiskProperty;
+    }
+
+    private int calcDisk(String freeHardDisk) {
+        Integer res = 0;
+        final String[] split = freeHardDisk.split("\n");
+        for (String s : split) {
+            try {
+                res += Integer.parseInt(s.replace("G"," ").trim());
+            }catch (Exception ignore){
+
+            }
+        }
+        return res;
     }
 
     private EnvProperty cpuFrequencyPropertyDetect(Session session) {

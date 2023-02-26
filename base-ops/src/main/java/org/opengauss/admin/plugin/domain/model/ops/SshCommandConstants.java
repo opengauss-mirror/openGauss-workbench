@@ -40,7 +40,7 @@ public interface SshCommandConstants {
     /**
      * free hard disk space
      */
-    String FREE_HARD_DISK = "df -BG | awk -F ' ' '{print $4}' | sort | head -n 1";
+    String FREE_HARD_DISK = "df -BG | awk -F ' ' '{print $4}' | sort";
     /**
      * rely
      */
