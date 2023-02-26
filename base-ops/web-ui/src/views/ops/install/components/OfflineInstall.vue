@@ -38,8 +38,8 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, nextTick, onMounted, reactive, ref } from 'vue'
-import { listInstallPackage } from '@/api/ops'
+import { computed, nextTick, onMounted, reactive, ref, inject } from 'vue'
+import { listInstallPackage, getPackageCpuArch } from '@/api/ops'
 import { KeyValue } from '@/types/global'
 import { useOpsStore } from '@/store'
 import { FormInstance } from '@arco-design/web-vue/es/form'
@@ -48,6 +48,8 @@ import { OpenGaussVersionEnum } from '@/types/ops/install'
 import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
 const installStore = useOpsStore()
+
+const loadingFunc = inject<any>('loading')
 
 const data = reactive<KeyValue>({
   path: '',
@@ -188,12 +190,30 @@ const dialogSubmit = () => {
 
 const setPathToStore = () => {
   if (data.fileName && data.path) {
-    installStore.setInstallContext({
-      packagePath: data.path,
-      packageName: data.fileName,
+    loadingFunc.toLoading()
+    const param = {
       installPackagePath: data.path + data.fileName,
-      openGaussVersionNum: data.openGaussVersionNum,
-      installOs: getInstallOs()
+      version: storeData.value.openGaussVersion
+    }
+    console.log('show param', param)
+    getPackageCpuArch(param).then((res: KeyValue) => {
+      if (Number(res.code) === 200) {
+        let cpuArchStr = res.msg
+        if (cpuArchStr.includes('-')) {
+          cpuArchStr = cpuArchStr.replace('-', '_')
+        }
+        const temp = getInstallOs() + '_' + cpuArchStr.toLocaleUpperCase()
+        installStore.setInstallContext({
+          packagePath: data.path,
+          packageName: data.fileName,
+          installPackagePath: data.path + data.fileName,
+          openGaussVersionNum: data.openGaussVersionNum,
+          installOs: temp
+        })
+        console.log('show cpuArch', installStore.getInstallConfig)
+      }
+    }).finally(() => {
+      loadingFunc.cancelLoading()
     })
   }
 }
@@ -209,29 +229,18 @@ enum cpuArchEnum {
 
 const getInstallOs = () => {
   let os = ''
-  let cpuArch = ''
   const fileName = data.fileName.toLocaleUpperCase()
   if (fileName.includes(osEnum.CENTOS)) {
     os = osEnum.CENTOS
-    if (fileName.includes(cpuArchEnum.X86_64)) {
-      cpuArch = cpuArchEnum.X86_64
-    }
   } else if (fileName.includes(osEnum.OPENEULER)) {
     os = osEnum.OPENEULER
-    if (fileName.includes(cpuArchEnum.X86_64)) {
-      cpuArch = cpuArchEnum.X86_64
-    } else if (fileName.includes(cpuArchEnum.AARCH64)) {
-      cpuArch = cpuArchEnum.AARCH64
-    }
   }
-  console.log('show expectedOs', (os + '_' + cpuArch).toLocaleUpperCase())
-  return ''
+  return os
 }
 
 const dialogClose = () => {
   pathData.show = false
 }
-
 const storeData = computed(() => installStore.getInstallConfig)
 
 </script>

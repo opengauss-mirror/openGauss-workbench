@@ -64,9 +64,9 @@ axios.interceptors.response.use(
     if (code === 401) {
       if (!isTimeout) {
         isTimeout = true
-        // @ts-ignore
-        window.$wujie?.bus.$emit('opengauss-login-expired')
       }
+      // @ts-ignore
+      window.$wujie?.bus.$emit('opengauss-login-expired')
       return Promise.reject('Invalid session, or session expired, please log in again.')
     } else if (code === 500) {
       isTimeout = true

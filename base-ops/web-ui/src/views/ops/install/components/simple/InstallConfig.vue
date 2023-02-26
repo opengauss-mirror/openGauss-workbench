@@ -32,6 +32,10 @@
           <a-form-item field="installPath" :label="$t('simple.InstallConfig.5mpmu0lar480')" validate-trigger="blur">
             <a-input v-model="data.form.installPath" :placeholder="$t('simple.InstallConfig.5mpmu0lar800')" />
           </a-form-item>
+          <a-form-item v-if="installType !== 'import'" field="installPackagePath"
+            :label="$t('simple.InstallConfig.else6')" validate-trigger="blur">
+            <a-input v-model="data.form.installPackagePath" :placeholder="$t('simple.InstallConfig.else7')" />
+          </a-form-item>
           <a-form-item field="port" :label="$t('simple.InstallConfig.5mpmu0larj40')" validate-trigger="blur">
             <a-input-number v-model="data.form.port" :placeholder="$t('simple.InstallConfig.5mpmu0larmo0')" />
           </a-form-item>
@@ -72,6 +76,7 @@ const data = reactive({
     publicIp: '',
     installUserId: '',
     installPath: '/opt/openGauss',
+    installPackagePath: '/opt/software/openGauss',
     dataPath: '/opt/openGauss/data',
     port: Number(5432),
     databaseUsername: '',
@@ -96,6 +101,7 @@ onMounted(() => {
       publicIp: miniConfig.nodeConfigList[0].publicIp,
       installUserId: miniConfig.nodeConfigList[0].installUserId,
       installPath: miniConfig.nodeConfigList[0].installPath,
+      installPackagePath: miniConfig.nodeConfigList[0].installPackagePath,
       dataPath: miniConfig.nodeConfigList[0].dataPath,
       port: miniConfig.port,
       databaseUsername: miniConfig.databaseUsername,
@@ -171,6 +177,21 @@ const initData = () => {
     ],
     installPath: [
       { required: true, 'validate-trigger': 'blur', message: t('simple.InstallConfig.5mpmu0lar800') },
+      {
+        validator: (value: any, cb: any) => {
+          return new Promise(resolve => {
+            if (!value.trim()) {
+              cb(t('enterprise.ClusterConfig.else2'))
+              resolve(false)
+            } else {
+              resolve(true)
+            }
+          })
+        }
+      }
+    ],
+    installPackagePath: [
+      { required: true, 'validate-trigger': 'blur', message: t('simple.InstallConfig.else7') },
       {
         validator: (value: any, cb: any) => {
           return new Promise(resolve => {
@@ -317,6 +338,7 @@ const saveStore = () => {
     port: param.port,
     databaseUsername: param.databaseUsername,
     databasePassword: param.databasePassword,
+    installPackagePath: param.installPackagePath,
     nodeConfigList: [param as MiniNodeConfig]
   }
   installStore.setMiniConfig(miniConfig as MinimalistInstallConfig)
@@ -403,8 +425,16 @@ const validateSpecialFields = async () => {
     //  cluster port is used
     validMethodArr.push(validatePort(data.form.port, encryptPwd, data.form.hostId))
     validMethodArr.push(validatePath(data.form.installPath + '/data', encryptPwd, data.form.hostId))
+    if (installType.value !== 'import') {
+      validMethodArr.push(validatePath(data.form.installPackagePath, encryptPwd, data.form.hostId))
+    }
     if (validMethodArr.length) {
-      const validResult = await Promise.all(validMethodArr)
+      let validResult
+      try {
+        validResult = await Promise.all(validMethodArr)
+      } catch (err: any) {
+        return result = false
+      }
       if ((installType.value !== 'import' && validResult[0]) || (installType.value === 'import' && !validResult[0])) {
         // port valid
         formRef.value?.setFields({
@@ -421,6 +451,16 @@ const validateSpecialFields = async () => {
           installPath: {
             status: 'error',
             message: installType.value === 'import' ? t('simple.InstallConfig.else3') : t('simple.InstallConfig.else4')
+          }
+        })
+        result = false
+      }
+      if (installType.value !== 'import' && !validResult[2]) {
+        // installPackagePath Valid
+        formRef.value?.setFields({
+          installPackagePath: {
+            status: 'error',
+            message: installType.value === 'import' ? t('enterprise.NodeConfig.else14') : t('enterprise.NodeConfig.else15')
           }
         })
         result = false

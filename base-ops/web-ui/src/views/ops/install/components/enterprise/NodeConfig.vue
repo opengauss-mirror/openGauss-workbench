@@ -533,10 +533,11 @@ const validateSpecialFields = async () => {
         }
         //  cluster port is used
         validMethodArr.push(validatePort(clusterData.value.port, encryptPwd, data.nodeList[i].hostId))
+        validMethodArr.push(validatePath(data.nodeList[i].dataPath, encryptPwd, data.nodeList[i].hostId))
+        validMethodArr.push(validatePath(clusterData.value.installPackagePath, encryptPwd, data.nodeList[i].hostId))
         if (isInstallCM.value) {
           validMethodArr.push(validatePort(data.nodeList[i].cmPort, encryptPwd, data.nodeList[i].hostId))
         }
-        validMethodArr.push(validatePath(data.nodeList[i].dataPath, encryptPwd, data.nodeList[i].hostId))
         if (validMethodArr.length) {
           const validResult = await Promise.all(validMethodArr)
           if ((installType.value !== 'import' && validResult[0]) || (installType.value === 'import' && !validResult[0])) {
@@ -549,34 +550,34 @@ const validateSpecialFields = async () => {
             })
             result = false
           }
+          if ((installType.value !== 'import' && !validResult[1]) || (installType.value === 'import' && validResult[1])) {
+            // dataPath valid
+            refList.value[i].setFields({
+              dataPath: {
+                status: 'error',
+                message: installType.value === 'import' ? t('enterprise.NodeConfig.else12') : t('enterprise.NodeConfig.else13')
+              }
+            })
+            result = false
+          }
+
+          if ((installType.value !== 'import' && !validResult[2]) || (installType.value === 'import' && validResult[2])) {
+            // installPackagePath valid
+            refList.value[i].setFields({
+              hostId: {
+                status: 'error',
+                message: installType.value === 'import' ? t('enterprise.NodeConfig.else14') : t('enterprise.NodeConfig.else16')
+              }
+            })
+            result = false
+          }
           if (isInstallCM.value) {
-            if ((installType.value !== 'import' && validResult[1]) || (installType.value === 'import' && !validResult[1])) {
+            if ((installType.value !== 'import' && validResult[3]) || (installType.value === 'import' && !validResult[3])) {
               // cmPort valid
               refList.value[i].setFields({
                 cmPort: {
                   status: 'error',
                   message: data.nodeList[i].cmPort + (installType.value === 'import' ? t('enterprise.NodeConfig.else10') : t('enterprise.NodeConfig.else11'))
-                }
-              })
-              result = false
-            }
-            if ((installType.value !== 'import' && !validResult[2]) || (installType.value === 'import' && validResult[2])) {
-              // dataPath valid
-              refList.value[i].setFields({
-                dataPath: {
-                  status: 'error',
-                  message: installType.value === 'import' ? t('enterprise.NodeConfig.else12') : t('enterprise.NodeConfig.else13')
-                }
-              })
-              result = false
-            }
-          } else {
-            if ((installType.value !== 'import' && !validResult[1]) || (installType.value === 'import' && validResult[1])) {
-              // dataPath Valid
-              refList.value[i].setFields({
-                dataPath: {
-                  status: 'error',
-                  message: installType.value === 'import' ? t('enterprise.NodeConfig.else12') : t('enterprise.NodeConfig.else13')
                 }
               })
               result = false
