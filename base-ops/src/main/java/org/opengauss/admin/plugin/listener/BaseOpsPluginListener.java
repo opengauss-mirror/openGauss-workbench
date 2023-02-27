@@ -42,8 +42,9 @@ public class BaseOpsPluginListener implements ApplicationListener<ApplicationEve
                 menuFacade.savePluginMenu(pluginId, "自定义控制台", "custom control",6, "monitor/customControl", monitorParent.getMenuId());
                 menuFacade.savePluginMenu(pluginId, "安装包管理", "package manage",7, "monitor/packageManage", monitorParent.getMenuId());
 
-                MenuVo modelingParent = menuFacade.savePluginMenu(pluginId, "业务设计", "business design",2, "modeling");
-                menuFacade.savePluginMenu(pluginId, "数据流设计", "data flow design", 1,"modeling/dataflow", modelingParent.getMenuId());
+                MenuVo modelingParent = menuFacade.savePluginMenu(pluginId, "业务建模", "business modeling",2, "modeling");
+                menuFacade.savePluginMenu(pluginId, "模型设计", "model design", 1,"modeling/modelDesign", modelingParent.getMenuId());
+                menuFacade.savePluginMenu(pluginId, "报表设计", "data flow design", 2,"modeling/dataflow", modelingParent.getMenuId());
                 menuFacade.savePluginRoute(pluginId, "数据流详情", "modeling/dataflow/detail", modelingParent.getMenuId());
 
                 MenuVo opsInstallParent = menuFacade.savePluginMenu(pluginId, "安装部署", "install", 1,"ops");

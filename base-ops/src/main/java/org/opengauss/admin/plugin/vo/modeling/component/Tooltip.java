@@ -23,6 +23,8 @@ package org.opengauss.admin.plugin.vo.modeling.component;
 public class Tooltip {
 
     private String trigger;
+    private String formatter;
+
     public Tooltip setTrigger(String trigger) {
         this.trigger = trigger;
         return this;
@@ -31,4 +33,11 @@ public class Tooltip {
         return trigger;
     }
 
+    public Tooltip setFormatter(String formatter) {
+        this.formatter = formatter;
+        return this;
+    }
+    public String getFormatter() {
+        return formatter;
+    }
 }

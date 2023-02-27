@@ -33,7 +33,7 @@ public class PieChartGenerateServiceImpl extends BaseGenerateServiceImpl {
 
         PieChartBody pieChartBody = new PieChartBody();
         pieChartBody.setTitle(new Title().setText(pieChartParamsBody.getTitle()));
-        pieChartBody.setTooltip(new Tooltip().setTrigger("axis"));
+        pieChartBody.setTooltip(new Tooltip().setTrigger("item").setFormatter("{b} {c}"));
 
         List<String> allKeys = new ArrayList<>(queryResult.get(0).keySet());
         if (!allKeys.contains(pieChartParamsBody.getDimension().getField())) {
