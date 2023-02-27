@@ -18,7 +18,21 @@ const props = withDefaults(
     }
 );
 
-onMounted(() => {});
+// nodeId sync
+const emit = defineEmits(["nodeIdChanged"]);
+const clusterComponent = ref(null);
+const culsterLoaded = ref<boolean>(false);
+const initNodeId = ref<string>("");
+const syncNodeId = (syncNodeIdVal: string) => {
+    if (!culsterLoaded.value) initNodeId.value = syncNodeIdVal;
+    else {
+        clusterComponent.value.setNodeId(syncNodeIdVal);
+    }
+};
+defineExpose({
+    syncNodeId,
+});
+
 const nodeId = ref<string>("");
 const data = reactive<{
     dbParamData: Array<Record<string, string>>;
@@ -40,6 +54,11 @@ const changeModalSnapshotManage = (val: boolean) => {
 // cluster component
 const handleClusterValue = (val: any) => {
     nodeId.value = val.length > 1 ? val[1] : "";
+    emit("nodeIdChanged", nodeId.value);
+};
+const clusterLoaded = (val: any) => {
+    culsterLoaded.value = true;
+    if (initNodeId.value) clusterComponent.value.setNodeId(initNodeId.value);
 };
 
 const handleQuery = () => {
@@ -112,7 +131,7 @@ const color = computed(() => {
             <div class="filter title" style="margin-right: auto">{{ $t("configParam.tabTitle") }}</div>
 
             <div class="filter">
-                <ClusterCascader notClearable autoSelectFirst :title="$t('datasource.cluterTitle')" @getCluster="handleClusterValue" />
+                <ClusterCascader notClearable ref="clusterComponent" @loaded="clusterLoaded" :title="$t('datasource.cluterTitle')" @getCluster="handleClusterValue" />
             </div>
             <div class="query filter">
                 <el-button type="primary" @click="handleQuery">{{ $t("app.query") }}</el-button>

@@ -166,28 +166,48 @@ setup.kibana:
 # ---------------------------- Elasticsearch Output ----------------------------
 output.elasticsearch:
   # Array of hosts to connect to.
-  hosts: ["119.3.170.242:9200"]
+  hosts: ["127.0.0.1:9200"]
   indices:
-    - index: "ob-opengauss-run-log-ogbrench2"
+    - index: "ob-opengauss-run-log"
       when.contains:
         fields:
           log_type: "opengauss-run-log"
-    - index: "ob-opengauss-slow-log-ogbrench2"
+    - index: "ob-opengauss-slow-log"
       when.contains:
         fields:
           log_type: "opengauss-slow-log"
-    - index: "ob-opengauss-error-log-ogbrench2"
+    - index: "ob-opengauss-error-log"
       when.contains:
         fields:
           log_type: "opengauss-error-log"
-    - index: "ob-os-run-log-ogbrench2"
+    - index: "ob-os-run-log"
       when.contains:
         fields:
           log_type: "os-run-log"
-    - index: "ob-os-error-log-ogbrench2"
+    - index: "ob-os-error-log"
       when.contains:
         fields:
           log_type: "os-error-log"
+    - index: "ob-opengauss-gsctl-log"
+      when.contains:
+        fields:
+          log_type: "opengauss-gsctl-log"
+    - index: "ob-opengauss-gsgus-log"
+      when.contains:
+        fields:
+          log_type: "opengauss-gsguc-log"
+    - index: "ob-opengauss-gsom-log"
+      when.contains:
+        fields:
+          log_type: "opengauss-gsom-log"
+    - index: "ob-opengauss-gslocal-log"
+      when.contains:
+        fields:
+          log_type: "opengauss-gslocal-log"
+    - index: "ob-opengauss-gsinstall-log"
+      when.contains:
+        fields:
+          log_type: "opengauss-gsinstall-log"
   # Protocol - either `http` (default) or `https`.
   #protocol: "https"
 
