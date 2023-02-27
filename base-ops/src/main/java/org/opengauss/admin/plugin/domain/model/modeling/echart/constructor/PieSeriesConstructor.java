@@ -65,9 +65,9 @@ public class PieSeriesConstructor extends BaseSeriesConstructor {
         mainPieSeries.setRadius(List.of("0%","60%"));
         mainPieSeries.setSelectedMode("single");
         mainPieSeries.setType("pie");
-        mainPieSeries.setLabelLine(new LabelLine().setLength(30));
-        if (displayPercentage) {
-            mainPieSeries.setLabel(new Label().setFormatter("{b}{d}%").setShow(true));
+        mainPieSeries.setLabelLine(new LabelLine().setLength(30).setShow(true));
+        if (displayPercentage != null && displayPercentage) {
+            mainPieSeries.setLabel(new Label().setFormatter("{b}\n\n占比{d}%").setFontSize(12).setShow(true));
         }
         List<PieData> pieDataList = new ArrayList<>();
         List<PieData> subPieDataList = new ArrayList<>();
@@ -94,7 +94,7 @@ public class PieSeriesConstructor extends BaseSeriesConstructor {
             //Outer circle data
             String xValue = (String) item.get(dimension.getField());
             List<Integer> xIndexList = dimension.indexListByValue(xValue);
-            float yValue = Float.parseFloat(String.valueOf(item.get(indicator.getField())));
+            float yValue = toFloat(String.valueOf(item.get(indicator.getField())));
 
             if (xIndexList.size() > 0)
             {
@@ -121,9 +121,9 @@ public class PieSeriesConstructor extends BaseSeriesConstructor {
             mainPieSeries.setRadius(List.of("45%","60%"));
             PieSeries subPieSeries = new PieSeries();
 
-            Label nl = new Label().setPosition("inner").setFontSize(14).setShow(true);
-            if (displayPercentage) {
-                nl.setFormatter("{b}{d}%");
+            Label nl = new Label().setPosition("inner").setFontSize(11).setShow(true);
+            if (displayPercentage != null && displayPercentage) {
+                nl.setFormatter("{b}\n\n占比{d}%");
             }
             subPieSeries.setLabel(nl);
             subPieSeries.setRadius(List.of("0","30%"));

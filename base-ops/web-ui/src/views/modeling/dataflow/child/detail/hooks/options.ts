@@ -78,7 +78,7 @@ export const options = () => ({
             width: 180, height: 35, shape: 'vue-shape',
             data: {
               type: 'BaseNode', cells_type: 'condition', text: i18n.global.t('modeling.hooks.index.5m83asjg7x40'), configName: 'ConditionOperator', icon: 'modeling-tiaojian',
-              or: [],
+              or: [[{ field: null, condition: null, value: '' }]],
               rule: (data: KeyValue) => data.or.filter((orItem: KeyValue) => {
                 return orItem.filter((andItem: KeyValue) => !(andItem.field && (
                     (andItem.condition === 'isNull' || andItem.condition === 'notNull') ? true : (andItem.value ? true : false)
@@ -128,7 +128,8 @@ export const options = () => ({
             data: {
               type: 'BaseNode', cells_type: 'polymerization', text: i18n.global.t('modeling.hooks.index.5m83asjg8ak0'), icon: 'modeling-juhe',
               configName: 'PolymerizationOperator',
-              polymerization: []
+              polymerization: [],
+              rule: (data: KeyValue) => data.polymerization.filter((item: KeyValue) => (!item.field || !item.way || !item.alias)).length === 0
             },
             ports: edge1.ports
           }, {

@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.IService;
 import org.opengauss.admin.plugin.domain.entity.modeling.ModelingDataFlowEntity;
 
+import java.util.List;
+
 /**
 * @author LZW
 * @description modeling_data_flow
@@ -18,5 +20,7 @@ public interface IModelingDataFlowService extends IService<ModelingDataFlowEntit
     int deleteDataFlowByIds(String[] flowIds);
 
     int updateDataFlow(ModelingDataFlowEntity dataFlowData);
+
+    List<ModelingDataFlowEntity> findByName(String name);
 
 }

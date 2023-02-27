@@ -13,6 +13,8 @@ import org.opengauss.admin.plugin.vo.modeling.component.Tooltip;
 import org.springframework.stereotype.Component;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author LZW
@@ -31,7 +33,12 @@ public class PieChartGenerateServiceImpl extends BaseGenerateServiceImpl {
 
         PieChartBody pieChartBody = new PieChartBody();
         pieChartBody.setTitle(new Title().setText(pieChartParamsBody.getTitle()));
-        pieChartBody.setTooltip(new Tooltip().setTrigger("axis"));
+        pieChartBody.setTooltip(new Tooltip().setTrigger("item").setFormatter("{b} {c}"));
+
+        List<String> allKeys = new ArrayList<>(queryResult.get(0).keySet());
+        if (!allKeys.contains(pieChartParamsBody.getDimension().getField())) {
+            throw new RuntimeException("The field in the parameter is not found in the query result, please check whether the query table or condition has been replaced.");
+        }
 
         genSeries();
 

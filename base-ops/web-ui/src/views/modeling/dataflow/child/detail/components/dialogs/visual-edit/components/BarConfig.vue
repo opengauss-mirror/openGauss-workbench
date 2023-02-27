@@ -5,7 +5,7 @@
     <a-radio-group direction="vertical" v-model="config.showType.key" style="width: 100%;">
       <a-radio :value="1" class="d-data-flow-radio">
         <a-row>
-          <a-col :span="7">{{$t('modeling.components.BarConfig.5m7insim1uc0')}}</a-col>
+          <a-col :span="7"><span style="color: #f53f3f; font-weight: bold;" v-if="config.showType.key === 1">* </span>{{$t('modeling.components.BarConfig.5m7insim1uc0')}}</a-col>
           <a-col :span="11" class="mr-s">
             <div class="select-comp-container">
             <a-select popup-container=".select-comp-container" v-model="config.showType.dimension" :disabled="config.showType.key !== 1">
@@ -25,7 +25,7 @@
     </a-radio-group>
     <div class="mb" :style="{ 'padding-left': '28px', 'box-sizing': 'border-box', opacity: config.showType.key === 2 ? 1 : 0.5 }">
       <a-row align="center" class="mb-s">
-        <a-col :span="7">{{$t('modeling.components.BarConfig.5m7insim2yc0')}}</a-col>
+        <a-col :span="7"><span style="color: #f53f3f; font-weight: bold;" v-if="config.showType.key === 2">* </span>{{$t('modeling.components.BarConfig.5m7insim2yc0')}}</a-col>
         <a-col :span="14">
           <a-select v-model="config.showType.dateField" :disabled="config.showType.key !== 2">
             <overflow-tooltip :text="item.label" v-for="(item, key) in datetimeOption" :key="key" :content="item.label">
@@ -35,7 +35,7 @@
         </a-col>
       </a-row>
       <a-row align="center" class="mb-s">
-        <a-col :span="7">{{$t('modeling.components.BarConfig.5m7insim3280')}}</a-col>
+        <a-col :span="7"><span style="color: #f53f3f; font-weight: bold;" v-if="config.showType.key === 2">* </span>{{$t('modeling.components.BarConfig.5m7insim3280')}}</a-col>
         <a-col :span="14">
           <a-select v-model="config.showType.particle" :disabled="config.showType.key !== 2">
             <a-option v-for="(item, key) in particles" :key="`particles${key}`" :value="item.value">{{ item.label }}</a-option>
@@ -52,11 +52,14 @@
       <div class="mb">
         <a-row align="center" class="mb-s" v-for="(item, key) in config.indicator" :key="`indicator${key}`">
           <a-col class="mr-xs" :span="9">
-            <a-select v-model="item.field" :placeholder="$t('modeling.components.LineConfig.5mpu292dkhc0')">
-              <overflow-tooltip :text="item.label" v-for="(item, key) in numberOption" :key="key" :content="item.label">
-                <a-option :value="item.value">{{ item.label }}</a-option>
-              </overflow-tooltip>
-            </a-select>
+            <div style="display: flex">
+              <span style="color: #f53f3f; font-weight: bold; margin-right: 5px;">*</span>
+              <a-select v-model="item.field" :placeholder="$t('modeling.components.LineConfig.5mpu292dkhc0')">
+                <overflow-tooltip :text="item.label" v-for="(item, key) in numberOption" :key="key" :content="item.label">
+                  <a-option :value="item.value">{{ item.label }}</a-option>
+                </overflow-tooltip>
+              </a-select>
+            </div>
           </a-col>
           <a-col class="mr-xs" :span="6">
             <a-select v-model="item.type" :placeholder="$t('modeling.components.LineConfig.5mpu292dky40')">
@@ -64,9 +67,12 @@
             </a-select>
           </a-col>
           <a-col class="mr-xs" :span="8">
-            <a-input :max-length="140"  v-model="item.unit">
-              <template #prepend>{{$t('modeling.components.BarConfig.5m7insim3ak0')}}</template>
-            </a-input>
+            <div style="display: flex">
+              <span style="color: #f53f3f; font-weight: bold; margin-right: 5px;">*</span>
+              <a-input :max-length="140"  v-model="item.unit">
+                <template #prepend>{{$t('modeling.components.BarConfig.5m7insim3ak0')}}</template>
+              </a-input>
+            </div>
           </a-col>
         </a-row>
       </div>
@@ -141,6 +147,7 @@ const operate = (type: string, key1?: number) => {
     config.dimension.splice(key1, 1)
   }
 }
+const noticeArr: string[] = []
 const validate = () => {
   let flag = true
   let message = ''
@@ -157,11 +164,26 @@ const validate = () => {
     message += (message ? '；\n ' : '') + t('modeling.components.BarConfig.5m7insim3sw0')
   }
   if (!flag) {
+    if (noticeArr.includes(message)) return flag
+    let isDelete = false
     Notification.error({
       title: t('modeling.components.BarConfig.5m7insim3vc0'),
       content: message,
-      closable: true
+      closable: true,
+      duration: 5 * 1000,
+      onClose: () => {
+        let index = noticeArr.indexOf(message)
+        if (index != -1) noticeArr.splice(index, 1)
+        isDelete = true
+      }
     })
+    noticeArr.push(message)
+    setTimeout(() => {
+      if (!isDelete) {
+        let index = noticeArr.indexOf(message)
+        if (index != -1) noticeArr.splice(index, 1)
+      }
+    }, 5 * 1000)
   }
   return flag
 }

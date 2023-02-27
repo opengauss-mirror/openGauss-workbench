@@ -35,6 +35,8 @@ public class SysPlugin {
      */
     private String pluginDesc;
 
+    private String pluginDescEn;
+
     /**
      * logoPath
      */

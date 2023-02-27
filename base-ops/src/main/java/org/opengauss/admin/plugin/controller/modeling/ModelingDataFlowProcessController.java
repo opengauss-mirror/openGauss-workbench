@@ -78,11 +78,8 @@ public class ModelingDataFlowProcessController extends BaseController {
     public AjaxResult getResultFieldsByOperator(@RequestBody JSONObject params) {
         AjaxResult ajax = AjaxResult.success();
         ModelingDataFlowSqlObject sqlObject = modelingDataFlowProcessService.getSqlObjectByTargetOperatorId(params,params.getString("id"),params.getString("dataFlowId"));
-        ModelingDataFlowEntity dataFlow = modelingDataFlowService.getById(params.getString("dataFlowId"));
-
         List<Map<String, Object>> result;
         try {
-            sqlObject.initDataBase(modelingDataBaseService.getClusterNodeById(dataFlow.getClusterNodeId()),dataFlow.getSchema());
             result = modelingDataBaseService.queryWithSqlObject(sqlObject);
         } catch (SQLException | ClassNotFoundException e) {
             return AjaxResult.error("Database query error.Please check exception info : "+ e.getMessage());

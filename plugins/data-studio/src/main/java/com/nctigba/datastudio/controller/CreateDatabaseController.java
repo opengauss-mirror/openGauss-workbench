@@ -7,11 +7,7 @@ import com.nctigba.datastudio.model.entity.DatabaseConnectionDO;
 import com.nctigba.datastudio.service.CreateDatabaseService;
 import io.swagger.annotations.Api;
 import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import java.util.Map;
@@ -26,22 +22,22 @@ public class CreateDatabaseController {
 
 
     @PostMapping(value = "/database/create", produces = MediaType.APPLICATION_JSON_VALUE)
-    public void createDatabase(CreateDatabaseDTO database) throws Exception {
+    public void createDatabase(@RequestBody CreateDatabaseDTO database) throws Exception {
         creaeteDatabaseService.createDatabase(database);
     }
 
     @PostMapping(value = "/database/connection", produces = MediaType.APPLICATION_JSON_VALUE)
-    public DatabaseConnectionDO connectionDatabase(DatabaseConnectionDO database) throws Exception {
+    public DatabaseConnectionDO connectionDatabase(@RequestBody DatabaseConnectionDO database) throws Exception {
         return creaeteDatabaseService.connectionDatabase(database);
     }
 
     @DeleteMapping(value = "/database/delete", produces = MediaType.APPLICATION_JSON_VALUE)
-    public void deleteDatabase(DatabaseNameDTO database) throws Exception {
+    public void deleteDatabase(@RequestBody DatabaseNameDTO database) throws Exception {
         creaeteDatabaseService.deleteDatabase(database);
     }
 
     @PostMapping(value = "/database/rename", produces = MediaType.APPLICATION_JSON_VALUE)
-    public void renameDatabase(RenameDatabaseDTO database) throws Exception {
+    public void renameDatabase(@RequestBody RenameDatabaseDTO database) throws Exception {
         creaeteDatabaseService.renameDatabase(database);
     }
 
