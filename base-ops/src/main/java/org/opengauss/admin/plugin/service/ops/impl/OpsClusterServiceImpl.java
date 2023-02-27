@@ -2814,9 +2814,9 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
             if (jschResult.getExitCode() == 0) {
                 String freeHardDisk = jschResult.getResult();
                 try {
-                    freeHardDiskProperty.setValue(freeHardDisk);
+                    int freeHardDiskGB = calcDisk(freeHardDisk);
+                    freeHardDiskProperty.setValue(freeHardDiskGB+"G");
 
-                    int freeHardDiskGB = Integer.parseInt(freeHardDisk.substring(0, freeHardDisk.length() - 1));
                     freeHardDiskProperty.setStatus(HostEnvStatusEnum.NORMAL);
 
                     int suggestedNum = 2;
@@ -2839,6 +2839,19 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
             freeHardDiskProperty.setStatusMessage("min 2.0GB");
         }
         return freeHardDiskProperty;
+    }
+
+    private int calcDisk(String freeHardDisk) {
+        Integer res = 0;
+        final String[] split = freeHardDisk.split("\n");
+        for (String s : split) {
+            try {
+                res += Integer.parseInt(s.replace("G"," ").trim());
+            }catch (Exception ignore){
+
+            }
+        }
+        return res;
     }
 
     private EnvProperty cpuFrequencyPropertyDetect(Session session) {
@@ -3006,34 +3019,18 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         osProperty.setSortNum(1);
 
         try {
-            JschResult jschResult = null;
-            try {
-                jschResult = jschUtil.executeCommand(SshCommandConstants.OS, session);
-            } catch (InterruptedException e) {
-                throw new OpsException("thread is interrupted");
-            }
-            if (jschResult.getExitCode() == 0) {
-                String os = jschResult.getResult();
-                try {
-                    osProperty.setValue(os);
+            final String os = getOS(session);
+            final String cpuArch = getCpuArch(session);
+            osProperty.setValue(os);
 
-                    if (expectedOs.match(os)) {
-                        osProperty.setStatus(HostEnvStatusEnum.NORMAL);
-                    }else {
-                        osProperty.setStatus(HostEnvStatusEnum.ERROR);
-                        osProperty.setStatusMessage("The operating system does not match the installation package information");
-                    }
-                }catch (Exception e){
-                    log.error("Parse command response error", e);
-                    osProperty.setStatus(HostEnvStatusEnum.ERROR);
-                    osProperty.setStatusMessage("Only supports openEuler 20.03LTS and CentOS 7.6 operating systems");
-                }
+            if (expectedOs.match(os,cpuArch)) {
+                osProperty.setStatus(HostEnvStatusEnum.NORMAL);
             }else {
-                osProperty.setValue("unknown");
                 osProperty.setStatus(HostEnvStatusEnum.ERROR);
-                osProperty.setStatusMessage("Only supports openEuler 20.03LTS and CentOS 7.6 operating systems");
+                osProperty.setStatusMessage("The operating system does not match the installation package information");
             }
-        } catch (IOException e) {
+
+        } catch (Exception e) {
             log.error("Parse command response error：", e);
 
             osProperty.setStatus(HostEnvStatusEnum.ERROR);

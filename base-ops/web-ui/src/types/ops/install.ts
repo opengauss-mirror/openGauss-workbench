@@ -69,6 +69,7 @@ export interface MiniNodeConfig {
 export interface MinimalistInstallConfig {
   clusterName: string;
   port: number;
+  installPackagePath: string;
   databaseUsername: string;
   databasePassword: string;
   databasePasswordOriginal: string;
@@ -90,6 +91,7 @@ export interface LiteNodeConfig {
 
 export interface LiteInstallConfig {
   clusterName: string;
+  installPackagePath: string;
   port: number;
   databaseUsername: string;
   databasePassword: string;
@@ -117,6 +119,7 @@ export interface EnterpriseInstallNodeConfig {
 
 export interface EnterpriseInstallConfig { // eslint-disable-line
   installPath: string;
+  installPackagePath: string;
   logPath: string;
   tmpPath: string;
   omToolsPath: string;

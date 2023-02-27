@@ -87,7 +87,8 @@
             "5mpn1nwazs80": "LITE",
             "5mpn1nwazvg0": "ENTERPRISE",
             "else1": "If the DataKit is installed offline, upload the installation package to the server where the DataKit is located.",
-            "else2": "The path can only be a Linux path"
+            "else2": "The path can only be a Linux path",
+            "else3": "The CPU architecture information of the installation package is being obtained. Please wait"
         },
         "OnlineInstall": {
             "else1": "The installation package has been selected",
@@ -95,7 +96,10 @@
             "5mpn3mp111s0": "download",
             "5mpn3mp117k0": "Downloaded",
             "5mpn3mp11cg0": "Download completed",
-            "5mpn3mp11g00": "Download Progress"
+            "5mpn3mp11g00": "Download Progress",
+            "else2": "Obtaining the installation package",
+            "else3": "No installation package information is available",
+            "else4": "Add an installation package"
         },
         "OneCheck": {
             "clusterName": "Cluster Name",
@@ -491,6 +495,9 @@
             "else11": "The port is occupied",
             "else12": "The instance in the data directory is not detected",
             "else13": "Data directory detected is not empty",
+            "else14": "The installation package information in the installation package directory is not detected",
+            "else15": "The installation package directory is not empty",
+            "else16": "The installation package directory is not empty, Please click the previous step to modify",
             "5mpme7w69yc0": "nodeNumber",
             "5mpme7w6aj40": "BelongAZ",
             "5mpme7w6ap00": "Select an AZ",
@@ -631,6 +638,9 @@
             "else3": "Empty data in the installation directory is detected",
             "else4": "data in the installation directory is not empty",
             "else5": "At least 8 characters, including at least three of the upper case letters (A-Z), lower case letters (a-z), digits (0-9), and non-alphanumeric characters",
+            "else6": "InstallPackage path",
+            "else7": "Please enter the installPackage path",
+            "else8": "The installation package path is not empty",
             "5mpmu0lapic0": "Node configuration",
             "5mpmu0laqc80": "Cluster ID",
             "5mpmu0laqiw0": "Please enter the cluster ID",

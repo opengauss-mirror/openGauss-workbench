@@ -46,6 +46,10 @@
               validate-trigger="blur">
               <a-input v-model="formItem.installPath" :placeholder="$t('lightweight.InstallConfig.5mpmkfqyaas0')" />
             </a-form-item>
+            <a-form-item field="installPackagePath" :label="$t('simple.InstallConfig.else6')" validate-trigger="blur">
+              <a-input v-model="formItem.installPackagePath" :placeholder="$t('simple.InstallConfig.else7')"
+                @blur="handleInstallPackageBlur(index)" />
+            </a-form-item>
             <a-form-item field="dataPath" :label="$t('lightweight.InstallConfig.5mpmkfqyah00')" validate-trigger="blur">
               <a-input v-model="formItem.dataPath" :placeholder="$t('lightweight.InstallConfig.5mpmkfqyan00')" />
             </a-form-item>
@@ -203,6 +207,21 @@ const initData = () => {
         }
       }
     ],
+    installPackagePath: [
+      { required: true, 'validate-trigger': 'blur', message: t('simple.InstallConfig.else7') },
+      {
+        validator: (value: any, cb: any) => {
+          return new Promise(resolve => {
+            if (!value.trim()) {
+              cb(t('enterprise.ClusterConfig.else2'))
+              resolve(false)
+            } else {
+              resolve(true)
+            }
+          })
+        }
+      }
+    ],
     dataPath: [
       { required: true, 'validate-trigger': 'blur', message: t('lightweight.InstallConfig.5mpmkfqyan00') },
       {
@@ -262,6 +281,7 @@ const getFormData = (): KeyValue => {
     publicIp: '',
     installUserId: '',
     installPath: '/opt/software/openGauss/install',
+    installPackagePath: '/opt/software/openGauss',
     dataPath: '/opt/software/openGauss/data',
     port: Number(5432),
     databaseUsername: '',
@@ -357,6 +377,14 @@ const hostUserPopupChange = (val: boolean, index: number) => {
   }
 }
 
+const handleInstallPackageBlur = (index: number) => {
+  console.log('installPackagePath blur', index)
+  const path = data.nodeData[index].installPackagePath
+  data.nodeData.forEach((item: KeyValue) => {
+    item.installPackagePath = path
+  })
+}
+
 const setRefMap = (el: any) => {
   if (el) {
     refList.value.push(el)
@@ -376,12 +404,11 @@ const saveStore = () => {
       port: param[0].port,
       databaseUsername: param[0].databaseUsername,
       databasePassword: param[0].databasePassword,
+      installPackagePath: param[0].installPackagePath,
       nodeConfigList: param as LiteNodeConfig[]
     }
     installStore.setLiteConfig(liteConfig as LiteInstallConfig)
   }
-  console.log('show lite store data', installStore.getLiteConfig);
-
 }
 
 const loadingFunc = inject<any>('loading')
@@ -478,6 +505,7 @@ const validateSpecialFields = async () => {
         //  cluster port is used
         validMethodArr.push(validatePort(data.nodeData[i].port, encryptPwd, data.nodeData[i].hostId))
         validMethodArr.push(validatePath(data.nodeData[i].dataPath, encryptPwd, data.nodeData[i].hostId))
+        validMethodArr.push(validatePath(data.nodeData[i].installPackagePath, encryptPwd, data.nodeData[i].hostId))
         if (validMethodArr.length) {
           const validResult = await Promise.all(validMethodArr)
           if ((installType.value !== 'import' && validResult[0]) || (installType.value === 'import' && !validResult[0])) {
@@ -496,6 +524,16 @@ const validateSpecialFields = async () => {
               dataPath: {
                 status: 'error',
                 message: installType.value === 'import' ? t('enterprise.NodeConfig.else12') : t('enterprise.NodeConfig.else13')
+              }
+            })
+            result = false
+          }
+          if ((installType.value !== 'import' && !validResult[2]) || (installType.value === 'import' && validResult[2])) {
+            // dataPath Valid
+            refList.value[i].setFields({
+              installPackagePath: {
+                status: 'error',
+                message: installType.value === 'import' ? t('enterprise.NodeConfig.else14') : t('enterprise.NodeConfig.else15')
               }
             })
             result = false

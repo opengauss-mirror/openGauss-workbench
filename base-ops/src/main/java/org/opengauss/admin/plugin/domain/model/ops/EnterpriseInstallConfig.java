@@ -19,6 +19,7 @@ import java.util.Objects;
  **/
 @Data
 public class EnterpriseInstallConfig implements ClusterInstallConfig {
+    private String installPackagePath;
 
     private String installPath;
 

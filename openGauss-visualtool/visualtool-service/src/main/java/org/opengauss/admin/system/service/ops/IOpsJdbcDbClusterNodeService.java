@@ -28,4 +28,6 @@ public interface IOpsJdbcDbClusterNodeService extends IService<OpsJdbcDbClusterN
     void add(String clusterId, JdbcDbClusterNodeInputDto clusterNodeInput);
 
     boolean ping(JdbcDbClusterNodeInputDto clusterNodeInput);
+
+    void monitor(String clusterNodeId, String businessId);
 }

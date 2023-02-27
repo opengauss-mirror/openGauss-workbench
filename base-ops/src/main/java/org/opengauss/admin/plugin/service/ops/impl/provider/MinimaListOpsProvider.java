@@ -103,7 +103,7 @@ public class MinimaListOpsProvider extends AbstractOpsProvider {
         nodeConfig.setInstallUserId(installUserId);
 
         wsUtil.sendText(installContext.getRetSession(), "BEFORE INSTALL");
-        Session installUserSession = beforeInstall(jschUtil, encryptionUtils, installContext, installPath, dataPath, installPath, hostId, installUserId, installUserName, "-jxf");
+        Session installUserSession = beforeInstall(jschUtil, encryptionUtils, installContext, installPath, dataPath, installContext.getMinimalistInstallConfig().getInstallPackagePath(), hostId, installUserId, installUserName, "-jxf");
         try {
             log.info("perform installation");
             // install

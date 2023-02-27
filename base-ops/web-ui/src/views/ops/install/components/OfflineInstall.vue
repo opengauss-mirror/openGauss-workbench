@@ -12,17 +12,21 @@
       </div>
       <a-link class="mb-s" @click="showChangePath">{{ $t('components.OfflineInstall.5mpn1nwaz600') }}</a-link>
     </div>
-    <div class="panel-body">
-      <div class="flex-col">
-        <div v-for="(item, index) in data.files" :key="index">
-          <div :class="'label-color install-package-card mb ' + (data.fileName === item.name ? 'center-item-active' : '')"
-            @click="choosePackge(item)">
-            <svg-icon icon-class="ops-offline-install" class="icon-size-s mr"></svg-icon>
-            <div class="ft-main">{{ item.name }}</div>
+    <a-spin class="flex-row-center" width="50%" :loading="data.getArchLoading"
+      :tip="$t('components.OfflineInstall.else3')">
+      <div class="panel-body">
+        <div class="flex-col">
+          <div v-for="(item, index) in data.files" :key="index">
+            <div
+              :class="'label-color install-package-card mb ' + (data.fileName === item.name ? 'center-item-active' : '')"
+              @click="choosePackge(item)">
+              <svg-icon icon-class="ops-offline-install" class="icon-size-s mr"></svg-icon>
+              <div class="ft-main">{{ item.name }}</div>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </a-spin>
     <a-modal :mask-closable="false" :visible="pathData.show" :title="pathData.title" :modal-style="{ width: '450px' }"
       @ok="dialogSubmit" @cancel="dialogClose">
       <a-form class="mb" :model="pathData.form" ref="formRef" auto-label-width :rules="formRules">
@@ -38,8 +42,8 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, nextTick, onMounted, reactive, ref } from 'vue'
-import { listInstallPackage } from '@/api/ops'
+import { computed, nextTick, onMounted, reactive, ref, inject } from 'vue'
+import { listInstallPackage, getPackageCpuArch } from '@/api/ops'
 import { KeyValue } from '@/types/global'
 import { useOpsStore } from '@/store'
 import { FormInstance } from '@arco-design/web-vue/es/form'
@@ -49,11 +53,14 @@ import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
 const installStore = useOpsStore()
 
+const loadingFunc = inject<any>('loading')
+
 const data = reactive<KeyValue>({
   path: '',
   fileName: '',
   files: [],
-  openGaussVersionNum: ''
+  openGaussVersionNum: '',
+  getArchLoading: false
 })
 
 const pathData = reactive({
@@ -188,12 +195,31 @@ const dialogSubmit = () => {
 
 const setPathToStore = () => {
   if (data.fileName && data.path) {
-    installStore.setInstallContext({
-      packagePath: data.path,
-      packageName: data.fileName,
+    loadingFunc.toLoading()
+    data.getArchLoading = true
+    const param = {
       installPackagePath: data.path + data.fileName,
-      openGaussVersionNum: data.openGaussVersionNum,
-      installOs: getInstallOs()
+      version: storeData.value.openGaussVersion
+    }
+    getPackageCpuArch(param).then((res: KeyValue) => {
+      if (Number(res.code) === 200) {
+        let cpuArchStr = res.msg
+        if (cpuArchStr.includes('-')) {
+          cpuArchStr = cpuArchStr.replace('-', '_')
+        }
+        const temp = getInstallOs() + '_' + cpuArchStr.toLocaleUpperCase()
+        installStore.setInstallContext({
+          packagePath: data.path,
+          packageName: data.fileName,
+          installPackagePath: data.path + data.fileName,
+          openGaussVersionNum: data.openGaussVersionNum,
+          installOs: temp
+        })
+        console.log('show cpuArch', installStore.getInstallConfig)
+      }
+    }).finally(() => {
+      loadingFunc.cancelLoading()
+      data.getArchLoading = false
     })
   }
 }
@@ -209,29 +235,18 @@ enum cpuArchEnum {
 
 const getInstallOs = () => {
   let os = ''
-  let cpuArch = ''
   const fileName = data.fileName.toLocaleUpperCase()
   if (fileName.includes(osEnum.CENTOS)) {
     os = osEnum.CENTOS
-    if (fileName.includes(cpuArchEnum.X86_64)) {
-      cpuArch = cpuArchEnum.X86_64
-    }
   } else if (fileName.includes(osEnum.OPENEULER)) {
     os = osEnum.OPENEULER
-    if (fileName.includes(cpuArchEnum.X86_64)) {
-      cpuArch = cpuArchEnum.X86_64
-    } else if (fileName.includes(cpuArchEnum.AARCH64)) {
-      cpuArch = cpuArchEnum.AARCH64
-    }
   }
-  console.log('show expectedOs', (os + '_' + cpuArch).toLocaleUpperCase())
-  return ''
+  return os
 }
 
 const dialogClose = () => {
   pathData.show = false
 }
-
 const storeData = computed(() => installStore.getInstallConfig)
 
 </script>

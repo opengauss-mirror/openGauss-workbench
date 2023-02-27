@@ -116,7 +116,7 @@ public class OpenEulerX86EnterpriseOpsProvider extends AbstractOpsProvider {
         // root
         Session rootSession = loginWithUser(jschUtil,encryptionUtils, installContext.getHostInfoHolders(), true, masterHostId, null);
 
-        String pkgPath = preparePath("/opt/software/openGauss");
+        String pkgPath = preparePath(installContext.getEnterpriseInstallConfig().getInstallPackagePath());
         ensureDirExist(jschUtil,rootSession, pkgPath, retSession);
         chmodFullPath(jschUtil,rootSession, "/opt/software", retSession);
         //chmodFullPath(jschUtil,rootSession, pkgPath, retSession);
