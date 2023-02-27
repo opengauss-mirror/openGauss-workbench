@@ -105,7 +105,8 @@ export default {
                 startSnapshot: '开始快照',
                 endSnapshot: '结束快照',
                 build: '生成',
-                buildSuccess: 'WDR生成成功'
+                buildSuccess: 'WDR生成成功',
+                buildFail: 'WDR生成失败',
             }
         },
         session: '会话管理',

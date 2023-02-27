@@ -14,12 +14,20 @@
             <div class="table-wrapper">
                 <el-tabs v-model="activeName" @tab-click="handleClick">
                     <el-tab-pane :label="t('install.installedAgent')" name="collector" v-loading="loadingCollector">
-                        <el-tree :data="collectorList" :props="collectorProps" />
+                        <el-tree :data="collectorList" :props="collectorProps" #default="{ node }">
+                            <span class="custom-tree-node show-hide">
+                                <span>{{ node.label }}</span>
+                                <span style="display: none" v-if="node.isLeaf">
+                                    <el-link type="primary" @click="showUninstallAgent(node)">{{ $t('install.uninstall') }}</el-link>
+                                </span>
+                            </span>
+                        </el-tree>
                     </el-tab-pane>
                 </el-tabs>
             </div>
         </div>
         <InstallAgent v-if="installCollectorShown" :show="installCollectorShown" @changeModal="changeModalInstallCollector" />
+        <UninstallAgent :node="uninstallAgentNode" v-if="uninstallAgentShown" :show="uninstallAgentShown" @changeModal="changeModalUninstallAgent" @installed="agentUninstalled()" />
 
         <my-message v-if="errorInfo" type="error" :tip="errorInfo" defaultTip="" />
     </div>
@@ -30,6 +38,7 @@ import { useRequest } from 'vue-request'
 import ogRequest from '../../../request'
 import { useI18n } from 'vue-i18n'
 import InstallAgent from './installAgent.vue'
+import UninstallAgent from './uninstallAgent.vue'
 
 const { t } = useI18n()
 
@@ -47,6 +56,21 @@ const showInstallCollector = () => {
 }
 const changeModalInstallCollector = (val: boolean) => {
     installCollectorShown.value = val
+}
+
+// uinstallAgent
+const uninstallAgentShown = ref(false)
+const uninstallAgentNode = ref<any>()
+const showUninstallAgent = (node: any) => {
+    uninstallAgentNode.value = node
+    uninstallAgentShown.value = true
+}
+const changeModalUninstallAgent = (val: boolean) => {
+    uninstallAgentShown.value = val
+}
+const agentUninstalled = (code: number) => {
+    activeName.value = 'agent'
+    refreshCollectors()
 }
 
 // Collector list
@@ -123,4 +147,16 @@ const handleClick = (tab: any, event: Event) => {
 
 <style scoped lang="scss">
 @import '../../../assets/style/style1.scss';
+
+.custom-tree-node {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 14px;
+    padding-right: 8px;
+}
+.show-hide:hover :nth-child(2) {
+    display: inline-block !important;
+}
 </style>

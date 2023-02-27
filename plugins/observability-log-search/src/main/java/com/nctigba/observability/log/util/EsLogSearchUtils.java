@@ -65,7 +65,7 @@ public class EsLogSearchUtils {
             }, HashMap.class);
             return response;
         } catch (IOException e) {
-            throw new CustomException(e.getMessage());
+            throw new CustomException("", e);
         }
     }
 
@@ -91,7 +91,7 @@ public class EsLogSearchUtils {
             client.indices().clearCache();
             client.indices().forcemerge();
         } catch (IOException e) {
-            throw new CustomException(e.getMessage());
+            throw new CustomException("", e);
         }
     }
 
@@ -110,7 +110,7 @@ public class EsLogSearchUtils {
                 return c;
             }).count();
         } catch (IOException e) {
-            throw new CustomException(e.getMessage());
+            throw new CustomException("", e);
         }
     }
 
@@ -127,7 +127,7 @@ public class EsLogSearchUtils {
             GetIndexResponse getIndexResponse = client.indices().get(builder -> builder.index(indexName));
             indexs = getIndexResponse.result().keySet();
         } catch (IOException e) {
-            throw new CustomException(e.getMessage());
+            throw new CustomException("", e);
         }
         return indexs;
     }
@@ -152,7 +152,7 @@ public class EsLogSearchUtils {
                 return s;
             }, Map.class);
         } catch (IOException e) {
-            throw new CustomException(e.getMessage());
+            throw new CustomException("", e);
         }
     }
 

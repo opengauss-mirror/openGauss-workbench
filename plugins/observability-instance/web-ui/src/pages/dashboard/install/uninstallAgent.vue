@@ -55,6 +55,7 @@ watch(
 
 onMounted(() => {
     formData.label = props.node.label
+    formData.nodeId = props.node.data.nodeId
 });
 
 // form data

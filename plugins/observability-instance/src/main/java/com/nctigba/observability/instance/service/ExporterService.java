@@ -204,7 +204,6 @@ public class ExporterService extends AbstractInstaller {
 		var curr = 0;
 
 		try {
-			curr = nextStep(wsSession, steps, curr);
 			var node = clusterManager.getOpsNodeById(nodeId);
 			var nodeenv = envMapper.selectOne(Wrappers.<NctigbaEnv>lambdaQuery()
 					.eq(NctigbaEnv::getType, type.NODE_EXPORTER).eq(NctigbaEnv::getHostid, node.getHostId()));
@@ -234,7 +233,6 @@ public class ExporterService extends AbstractInstaller {
 				} else
 					curr = skipStep(wsSession, steps, curr);
 				envMapper.deleteById(nodeenv);
-				curr = nextStep(wsSession, steps, curr);
 
 				curr = nextStep(wsSession, steps, curr);
 				var gaussPid = sshsession.execute(command.PS.parse("opengauss_exporter"));

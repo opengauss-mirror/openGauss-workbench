@@ -92,7 +92,7 @@ const install = async () => {
 const sendData = async () => {
     const encryptPwd = await encryptPassword(formData.rootPassword);
     const sendData = {
-        key: "uninstall prometheus",
+        key: "uninstall elasticsearch",
         hostId: formData.nodeId,
         rootPassword: encryptPwd,
     };

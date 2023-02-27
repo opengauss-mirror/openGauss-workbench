@@ -44,8 +44,8 @@ public class FilebeatService extends AbstractInstaller {
 		// @formatter:off
 		var steps = Arrays.asList(
 				new Step("初始化"),
-				new Step("检查filebeat环境存在"),
 				new Step("检查数据库集群信息"),
+				new Step("检查filebeat环境存在"),
 				new Step("检查安装用户"),
 				new Step("连接主机"),
 				new Step("安装filebeat"),

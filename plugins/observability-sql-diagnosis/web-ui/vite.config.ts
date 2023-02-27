@@ -58,6 +58,7 @@ export default defineConfig(({ command, mode }) => {
             proxy: {
                 '^/sqlDiagnosis': 'http://localhost:9494/plugins/observability-sql-diagnosis',
                 '^/observability': 'http://localhost:9494/plugins/observability-sql-diagnosis',
+                "^/encryption": "http://localhost:9494",
             }
         }
     }

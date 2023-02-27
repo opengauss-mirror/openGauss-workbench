@@ -170,50 +170,71 @@ watch(ret, (ret: Ret) => {
 watch(res, (res: Res) => {
     const isAll = queryData.value.all === 'true'
     if (res && Object.keys(res).length) {
-        nodes.value.push({ id: 1, pid: 0, label: res.title, type: res.type, originalHidden: res.hidden, hidden: isAll ? false : res.hidden, none: res.hidden, image: { unselected: iconA, selected: iconB } })
-        for (let [i, r] of res.child.entries()) {
-            if (r && (r.hidden === false || isAll)) {
-                nodes.value.push({ id: i + 2, pid: 1, label: r.title, type: r.type, originalHidden: r.hidden, hidden: isAll ? false : r.hidden, none: r.hidden, image: { unselected: iconA, selected: iconB } })
-                if (r.child && r.child.length > 0) {
-                    for (const [k, j] of r.child.entries()) {
-                        if (j && (j.hidden === false || isAll)) {
-                            nodes.value.push({ id: `${i + 2}-${k}`, pid: i + 1, label: j.title, type: j.type, originalHidden: j.hidden, hidden: isAll ? false : j.hidden, none: j.hidden, image: { unselected: iconA, selected: iconB } })
-                            if (j.child && j.child.length > 0) {
-                                for (const [x, y] of j.child.entries()) {
-                                    if (y && (y.hidden === false || isAll)) {
-                                        nodes.value.push({ id: `${i + 2}-${k}-${x}`, pid: `${i + 1}-${k}`, label: y.title, type: y.type, originalHidden: y.hidden, hidden: isAll ? false : y.hidden, none: y.hidden, image: { unselected: iconA, selected: iconB } })
-                                        if (y.child && y.child.length > 0) {
-                                            for (const [m, n] of y.child.entries()) {
-                                                if (n && (n.hidden === false || isAll)) {
-                                                    nodes.value.push({ id: `${i + 2}-${k}-${x}-${m}`, pid: `${i + 2}-${k}-${x}`, label: n.title, type: n.type, originalHidden: n.hidden, hidden: isAll ? false : n.hidden, none: n.hidden, image: { unselected: iconA, selected: iconB } })
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
+        let node = { id: '1', pid: '0', label: res.title, type: res.type, originalHidden: res.hidden, hidden: isAll ? false : res.hidden, none: res.hidden, image: { unselected: iconA, selected: iconB } }
+        nodes.value.push(node)
+        let curNodes = [{ id: '1', pid: '0', label: res.title, type: res.type, originalHidden: res.hidden, hidden: isAll ? false : res.hidden, none: res.hidden, image: { unselected: iconA, selected: iconB },child: res.child }]
+        let nextNodes = []
+        while(curNodes.length > 0) {
+            for(let node0 of curNodes) {
+                if(!node0.child || node0.child?.length <= 0) {
+                    continue;
+                }
+                for (let [i, r] of node0.child.entries()) {
+                    if (r && (r.hidden === false || isAll)) {
+                        node = { id: node0.id + '-' + i,pid: node0.id, label: r.title, type: r.type, originalHidden: r.hidden, hidden: isAll ? false : r.hidden, none: r.hidden, image: { unselected: iconA, selected: iconB } };
+                        nodes.value.push(node)
+                        nextNodes.push(Object.assign(node,{child: r.child}))
                     }
+                    
                 }
             }
+            curNodes = nextNodes;
+            nextNodes = [];
         }
+        // for (let [i, r] of res.child.entries()) {
+        //     if (r && (r.hidden === false || isAll)) {
+        //         nodes.value.push({ id: i + 2, pid: 1, label: r.title, type: r.type, originalHidden: r.hidden, hidden: isAll ? false : r.hidden, none: r.hidden, image: { unselected: iconA, selected: iconB } })
+        //         if (r.child && r.child.length > 0) {
+        //             for (const [k, j] of r.child.entries()) {
+        //                 if (j && (j.hidden === false || isAll)) {
+        //                     nodes.value.push({ id: `${i + 2}-${k}`, pid: i + 1, label: j.title, type: j.type, originalHidden: j.hidden, hidden: isAll ? false : j.hidden, none: j.hidden, image: { unselected: iconA, selected: iconB } })
+        //                     if (j.child && j.child.length > 0) {
+        //                         for (const [x, y] of j.child.entries()) {
+        //                             if (y && (y.hidden === false || isAll)) {
+        //                                 nodes.value.push({ id: `${i + 2}-${k}-${x}`, pid: `${i + 1}-${k}`, label: y.title, type: y.type, originalHidden: y.hidden, hidden: isAll ? false : y.hidden, none: y.hidden, image: { unselected: iconA, selected: iconB } })
+        //                                 if (y.child && y.child.length > 0) {
+        //                                     for (const [m, n] of y.child.entries()) {
+        //                                         if (n && (n.hidden === false || isAll)) {
+        //                                             nodes.value.push({ id: `${i + 2}-${k}-${x}-${m}`, pid: `${i + 2}-${k}-${x}`, label: n.title, type: n.type, originalHidden: n.hidden, hidden: isAll ? false : n.hidden, none: n.hidden, image: { unselected: iconA, selected: iconB } })
+        //                                         }
+        //                                     }
+        //                                 }
+        //                             }
+        //                         }
+        //                     }
+        //                 }
+        //             }
+        //         }
+        //     }
+        // }
 
         nextTick(() => {
             for (let q of nodes.value) {
-                if (q && typeof q.id === 'number' && q.pid !== 0) {
-                    edges.value.push({ from: q.pid, to: q.id })
-                }
-                if (q && typeof q.id === 'string') {
-                    if (q.id.split('-').length === 2) {
-                        edges.value.push({ from: Number(q.id.split('-')[0]), to: q.id })
-                    }
-                    if (q.id.split('-').length === 3) {
-                        edges.value.push({ from: `${q.id.split('-')[0]}-${q.id.split('-')[1]}`, to: q.id })
-                    }
-                    if (q.id.split('-').length === 4) {
-                        edges.value.push({ from: `${q.id.split('-')[0]}-${q.id.split('-')[1]}-${q.id.split('-')[2]}`, to: q.id })
-                    }
-                }
+                edges.value.push({ from: q.pid, to: q.id })
+                // if (q && typeof q.id === 'number' && q.pid !== 0) {
+                //     edges.value.push({ from: q.pid, to: q.id })
+                // }
+                // if (q && typeof q.id === 'string') {
+                //     if (q.id.split('-').length === 2) {
+                //         edges.value.push({ from: Number(q.id.split('-')[0]), to: q.id })
+                //     }
+                //     if (q.id.split('-').length === 3) {
+                //         edges.value.push({ from: `${q.id.split('-')[0]}-${q.id.split('-')[1]}`, to: q.id })
+                //     }
+                //     if (q.id.split('-').length === 4) {
+                //         edges.value.push({ from: `${q.id.split('-')[0]}-${q.id.split('-')[1]}-${q.id.split('-')[2]}`, to: q.id })
+                //     }
+                // }
             }
         })
     }

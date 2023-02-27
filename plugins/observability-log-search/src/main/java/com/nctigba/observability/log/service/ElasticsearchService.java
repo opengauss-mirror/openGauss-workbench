@@ -96,7 +96,7 @@ public class ElasticsearchService extends AbstractInstaller {
 					+ "xpack.security.transport.ssl.enabled: false"
 					, elasticConfigFile);
 			// @formatter:on
-			session.upload(elasticConfigFile.getAbsolutePath(), SRC + "/elasticsearch.yml");
+			session.upload(elasticConfigFile.getAbsolutePath(), SRC + "/config/elasticsearch.yml");
 			elasticConfigFile.delete();
 			String cd = "cd " + SRC + " && ";
 			session.execute(cd + " echo '-Xms1g' >>jvm.options && echo '-Xmx1g' >>jvm.options");

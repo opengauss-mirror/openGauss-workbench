@@ -12,13 +12,39 @@
                 </div>
             </div>
             <div class="search-form">
+                <div class="filter">
+                    <!-- <div class="el-input el-input-group el-input-group--append el-input--suffix">
+                        <div class="el-input__wrapper">
+                            <span class="el-input__inner">上下文</span>
+                            <span class="el-input-group__append">
+                                <el-select v-model="formData.contextCount" clearable placeholder="$t('datasource.logContextPlaceholder')">
+                                    <el-option v-for="item in logContextCountList" :key="item.value" :label="item.label" :value="item.value" />
+                                </el-select>
+                            </span>
+                            <span class="el-input__suffix">
+                                <span class="el-input__suffix-inner">
+                                    <el-icon class="el-input__icon"><CloseBold /></el-icon>
+                                </span>
+                            </span>
+                        </div>
+                    </div> -->
+                    
+                </div>
                 <div class="filter" v-if="showContextCount">
-                    <span>{{ $t('datasource.logContext') }}&nbsp;</span>
+                    <!-- <span>{{ $t('datasource.logContext') }}&nbsp;</span>
                     <el-select v-model="formData.contextCount" clearable placeholder="$t('datasource.logContextPlaceholder')">
                         <el-option v-for="item in logContextCountList" :key="item.value" :label="item.label" :value="item.value" />
                     </el-select>
-                    <!-- top: -6px; -->
-                    <el-button text bg type="" :icon="CloseBold" size="small" style="position: relative;  left: 0" @click="hideContextCount" />
+                    <el-button text bg type="" :icon="CloseBold" size="small" style="position: relative;  left: 0" @click="hideContextCount" /> -->
+                    <div class="log-context">
+                        <span>{{ $t('datasource.logContext') }}&nbsp;&nbsp;</span>
+                        <select v-model="formData.contextCount">
+                            <option v-for="item in logContextCountList" :label="item.label" :value="item.value"></option>
+                        </select>
+                        <!-- top: -6px; -->
+                        <el-icon class="el-input__icon" @click="hideContextCount" style="position: relative;  left: 0;top:2px;cursor:pointer"><CloseBold /></el-icon>
+                        <!-- <el-button text bg type="" :icon="CloseBold" size="small" style="position: relative;  left: 0" @click="hideContextCount" /> -->
+                    </div>
                 </div>
                 <div class="filter">
                     <el-input v-model="formData.searchText" style="width: 200px" :prefix-icon="Search" :placeholder="$t('datasource.logSearchPlaceholder')" />
@@ -231,7 +257,7 @@ const scrollToBottom = () => {
     if (!noMore.value) listLogScrollData();
 };
 const refreshLog = () => {
-    if(formData.searchText) {
+    if(formData.searchText || formData.dateValue && formData.dateValue.length > 0) {
         showContextCount.value = false
     }
     noMore.value = false;
@@ -482,8 +508,8 @@ const {
                             logLevel: logLevelSelected.value.length > 0 ? logLevelSelected.value.join(',') : curLogData.value.logLevelSelected ? curLogData.value.logLevelSelected : null,
                             logDate: dayjs.utc(curLogData.logTime).tz('Europe/London').format("YYYY-MM-DDTHH:mm:ss.SSS") + 'Z',
                             // searchPhrase: curLogData.logData ? curLogData.logData : "",
-                            startDate: formData.dateValue.length ? formData.dateValue[0] : null,
-                            endDate: formData.dateValue.length ? formData.dateValue[1] : null,
+                            // startDate: formData.dateValue.length ? formData.dateValue[0] : null,
+                            // endDate: formData.dateValue.length ? formData.dateValue[1] : null,
                             scrollId: scrollId.value,
                             // rowCount: pageSize.value,
                             rowCount: formData.contextCount * 2 + 1,
@@ -506,8 +532,8 @@ const {
                             logType: typeNames.value.length > 0 ? typeNames.value.join(',') : null,
                             searchPhrase: formData.searchText.length > 0 ? formData.searchText : null,
                             logLevel: logLevelSelected.value.length > 0 ? logLevelSelected.value.join(',') : null,
-                            startDate: formData.dateValue.length ? formData.dateValue[0] : null,
-                            endDate: formData.dateValue.length ? formData.dateValue[1] : null,
+                            startDate: formData.dateValue.length ? dayjs.utc(formData.dateValue[0]).format("YYYY-MM-DDTHH:mm:ss.SSS") + 'Z' : null,
+                            endDate: formData.dateValue.length ? dayjs.utc(formData.dateValue[1]).format("YYYY-MM-DDTHH:mm:ss.SSS") + 'Z' : null,
                             scrollId: scrollId.value,
                             rowCount: pageSize.value,
                         })
@@ -551,8 +577,8 @@ const { data: mapData, run: refreshMap } = useRequest(
                             logType: typeNames.value.length > 0 ? (typeNames.value.join(',') as string) : null,
                             logLevel: logLevelSelected.value.length > 0 ? (logLevelSelected.value.join(',') as string) : null,
                             searchPhrase: formData.searchText.length > 0 ? formData.searchText : null,
-                            startDate: formData.dateValue.length ? formData.dateValue[0] : null,
-                            endDate: formData.dateValue.length ? formData.dateValue[1] : null,
+                            startDate: formData.dateValue.length ? dayjs.utc(formData.dateValue[0]).format("YYYY-MM-DDTHH:mm:ss.SSS") + 'Z' : null,
+                            endDate: formData.dateValue.length ? dayjs.utc(formData.dateValue[1]).format("YYYY-MM-DDTHH:mm:ss.SSS") + 'Z' : null,
                         })
                     )
             )
@@ -737,4 +763,14 @@ onMounted(() => {
 .infinite-list .infinite-list-item + .list-item {
     margin-top: 10px;
 }
+.log-context {
+    background-color: #f2f3f5;border: solid #dcdfe6;font-size:13px;border-radius:5px;color: #babcc2;padding:1px 7px
+}
+.log-context select {
+    border: none;background-color: #f2f3f5;width: 100px;font-size:15px;outline:none;
+    // appearance:none; //去掉倒三角
+}
+// .log-context select:focus-visible{
+//     border: 0;
+// }
 </style>

@@ -104,8 +104,8 @@ public class AgentService extends AbstractInstaller {
 		var steps = Arrays.asList(
 				new Step("初始化"),
 				new Step("连接主机"),
-				new Step("查找filebeat进程号"),
-				new Step("停止filebeat"),
+				new Step("查找agent进程号"),
+				new Step("停止agent"),
 				new Step("卸载完成"));
 		// @formatter:on
 		var curr = 0;
@@ -116,7 +116,7 @@ public class AgentService extends AbstractInstaller {
 			var env = envMapper.selectOne(Wrappers.<NctigbaEnv>lambdaQuery().eq(NctigbaEnv::getType, type.AGENT)
 					.eq(NctigbaEnv::getHostid, node.getHostId()));
 			if (env == null)
-				throw new RuntimeException("filebeat not found");
+				throw new RuntimeException("agent not found");
 			curr = nextStep(wsSession, steps, curr);
 			OpsHostEntity hostEntity = hostFacade.getById(node.getHostId());
 			if (hostEntity == null)

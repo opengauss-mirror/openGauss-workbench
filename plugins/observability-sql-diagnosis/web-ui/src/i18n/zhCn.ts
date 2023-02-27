@@ -29,6 +29,10 @@ export default {
         back: '返回'
     },
     install: {
+        uninstall: '卸载',
+        uninstallProxy: '卸载代理',
+        uninstallAgent: '卸载采集器',
+        uninstallQuick: '一键卸载',
         install: '一键部署',
         installAgent: '安装采集器',
         installProxy: '安装代理',

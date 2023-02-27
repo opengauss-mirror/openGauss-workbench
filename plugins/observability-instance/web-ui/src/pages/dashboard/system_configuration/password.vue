@@ -53,6 +53,7 @@ async function handleconfirmModel() {
     const encryptPwd = await encryptPassword(formData.rootPassword);
     emit("confirm", encryptPwd);
     visible.value = false;
+    formData.rootPassword = ''
     emit("changeModal", visible.value);
 }
 const connectionFormRef = ref<FormInstance>();
@@ -62,10 +63,12 @@ const connectionFormRules = reactive<FormRules>({
 
 const handleCancelModel = () => {
     visible.value = false;
+    formData.rootPassword = ''
     emit("changeModal", visible.value);
 };
 const closeDialog = () => {
     visible.value = false;
+    formData.rootPassword = ''
     emit("changeModal", visible.value);
 };
 </script>

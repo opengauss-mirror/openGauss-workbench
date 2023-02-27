@@ -1,6 +1,6 @@
 <template>
     <div class="task-dialog">
-        <el-dialog width="800px" :title="$t('dashboard.wdrReports.snapshotManageDialog.dialogName')" v-model="visible" :close-on-click-modal="false" draggable @close="taskClose">
+        <el-dialog width="800px" :title="$t('dashboard.wdrReports.snapshotManageDialog.dialogName')" v-model="show" :close-on-click-modal="false" draggable @close="taskClose">
             <div class="dialog-content" v-loading="creatingSnapshot || reading">
                 <div class="search-form">
                     <div class="filter" style="margin-right: auto">
@@ -31,7 +31,7 @@
 import { useRequest } from "vue-request";
 import restRequest from "../../../request/restful";
 
-const visible = ref(false);
+// const visible = ref(false);
 const props = withDefaults(
     defineProps<{
         show: boolean;
@@ -56,13 +56,13 @@ const changePageCurrent = (data: number) => {
     Object.assign(page, data);
     requestData();
 };
-watch(
-    () => props.show,
-    (newValue) => {
-        visible.value = newValue;
-    },
-    { immediate: true }
-);
+// watch(
+//     () => props.show,
+//     (newValue) => {
+//         visible.value = newValue;
+//     },
+//     { immediate: true }
+// );
 
 const cluster = ref<Array<any>>([]);
 const handleClusterValue = (val: any) => {
@@ -74,9 +74,10 @@ const handleQuery = () => {
 };
 
 const handelBuild = () => {
-    createSnapshot();
+   createSnapshot()
+
 };
-const { run: createSnapshot, loading: creatingSnapshot } = useRequest(
+const { data:createRes, run: createSnapshot, loading: creatingSnapshot } = useRequest(
     () => {
         return restRequest
             .get("/wdr/createSnapshot", {
@@ -88,8 +89,24 @@ const { run: createSnapshot, loading: creatingSnapshot } = useRequest(
             })
             .catch(function (res) {});
     },
-    { manual: true }
+    { manual: true,
+        // onSuccess:  res => {
+        //     reading.value=true
+        //     setTimeout(() => {
+        //         requestData();
+        //     },800)
+        // },
+    }
 );
+
+watch(createRes,(createRes) => {
+    if(createRes && createRes.code === 200) {
+        reading.value=true
+        setTimeout(() => {
+            requestData();
+        },800)
+    }
+})
 
 // list Data
 const tableData = ref<Array<any>>([]);
@@ -133,6 +150,11 @@ watch(res, (res: Res) => {
         tableData.value = [];
     }
 });
+
+const emits = defineEmits(['changeModal']);
+const taskClose = () => {
+    emits('changeModal',false)
+}
 </script>
 
 <style lang="scss" scoped>

@@ -238,7 +238,7 @@ const { run: hanleDelete, loading: deleting } = useRequest(
 
                     <div class="filter">
                         <span>{{ $t("dashboard.wdrReports.buildTime") }}&nbsp;</span>
-                        <MyDatePicker v-model="formData.dateValue" type="datetimerange" style="width: 300px" />
+                        <MyDatePicker v-model="formData.dateValue" :teleported="true" type="datetimerange" style="width: 300px" />
                     </div>
                 </div>
 
