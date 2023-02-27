@@ -8,6 +8,7 @@ import org.opengauss.admin.common.core.domain.AjaxResult;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.core.domain.model.ops.HostBody;
 import org.opengauss.admin.common.core.domain.model.ops.host.OpsHostVO;
+import org.opengauss.admin.common.core.domain.model.ops.host.SSHBody;
 import org.opengauss.admin.common.core.page.TableDataInfo;
 import org.opengauss.admin.system.service.ops.IHostService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -66,5 +67,11 @@ public class HostController extends BaseController {
     public AjaxResult edit(@PathVariable String hostId,
                            @RequestBody @Validated HostBody hostBody) {
         return toAjax(hostService.edit(hostId, hostBody));
+    }
+
+    @PostMapping("/ssh")
+    public AjaxResult ssh(@RequestBody SSHBody sshBody) {
+        hostService.ssh(sshBody);
+        return AjaxResult.success();
     }
 }

@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.core.domain.model.ops.HostBody;
 import org.opengauss.admin.common.core.domain.model.ops.host.OpsHostVO;
+import org.opengauss.admin.common.core.domain.model.ops.host.SSHBody;
 
 /**
  * @author lhf
@@ -54,4 +55,6 @@ public interface IHostService extends IService<OpsHostEntity> {
     boolean edit(String hostId, HostBody hostBody);
 
     IPage<OpsHostVO> pageHost(Page page, String name);
+
+    void ssh(SSHBody sshBody);
 }
