@@ -952,3 +952,8 @@ LANGUAGE plpgsql;
 SELECT add_sys_plugin_desc_en_field_func();
 
 DROP FUNCTION add_sys_plugin_desc_en_field_func;
+
+delete from "public"."sys_menu" where menu_id = 202;
+update "public"."sys_menu" set menu_name = '实例管理', order_num = 1 where menu_id = 201;
+update "public"."sys_menu" set menu_name = '设备管理', order_num = 2 where menu_id = 203;
+update "public"."sys_menu" set order_num = 4 where menu_id = 204;
