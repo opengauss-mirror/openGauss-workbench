@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.plugin.domain.MigrationTaskOperateRecord;
+import org.opengauss.admin.plugin.enums.TaskOperate;
 import org.opengauss.admin.plugin.mapper.MigrationTaskOperateRecordMapper;
 import org.opengauss.admin.plugin.service.MigrationTaskOperateRecordService;
 import org.springframework.stereotype.Service;
@@ -21,11 +22,12 @@ public class MigrationTaskOperateRecordServiceImpl extends ServiceImpl<Migration
 
 
     @Override
-    public void saveRecord(Integer taskId, String title, String operUser) {
+    public void saveRecord(Integer taskId, TaskOperate operate, String operUser) {
         MigrationTaskOperateRecord record = new MigrationTaskOperateRecord();
-        record.setTitle(title);
+        record.setTitle(operate.getCommand());
         record.setTaskId(taskId);
         record.setOperUser(operUser);
+        record.setOperType(operate.getCode());
         record.setOperTime(new Date());
         this.save(record);
     }
@@ -35,6 +37,14 @@ public class MigrationTaskOperateRecordServiceImpl extends ServiceImpl<Migration
         LambdaQueryWrapper<MigrationTaskOperateRecord> query = new LambdaQueryWrapper<>();
         query.eq(MigrationTaskOperateRecord::getTaskId, taskId);
         query.last(" limit 1").orderByDesc(MigrationTaskOperateRecord::getOperTime);
+        return getOne(query);
+    }
+
+    @Override
+    public MigrationTaskOperateRecord getRecordByTaskIdAndOperType(Integer taskId, Integer oerType) {
+        LambdaQueryWrapper<MigrationTaskOperateRecord> query = new LambdaQueryWrapper<>();
+        query.eq(MigrationTaskOperateRecord::getTaskId, taskId).eq(MigrationTaskOperateRecord::getOperType, oerType);
+        query.last(" limit 1");
         return getOne(query);
     }
 

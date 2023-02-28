@@ -27,3 +27,11 @@ export function subTaskStopIncremental (id) {
 export function subTaskDetail (id) {
   return axios.get(`/plugins/data-migration/migration/subTaskInfo/${id}`)
 }
+
+export function downloadLog (id, query) {
+  return axios.get(`/plugins/data-migration/migration/subTask/log/download/${id}`, { params: query })
+}
+
+export function taskEditInfo (id) {
+  return axios.get(`/plugins/data-migration/migration/editInfo/${id}`)
+}

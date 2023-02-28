@@ -1,8 +1,11 @@
 package org.opengauss.admin.plugin.service.impl;
 
+import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.map.MapUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
+import org.opengauss.admin.plugin.constants.TaskConstant;
 import org.opengauss.admin.plugin.domain.MigrationTaskOperateRecord;
 import org.opengauss.admin.plugin.domain.MigrationTaskStatusRecord;
 import org.opengauss.admin.plugin.mapper.MigrationTaskStatusRecordMapper;
@@ -11,8 +14,8 @@ import org.opengauss.admin.plugin.service.MigrationTaskStatusRecordService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.Date;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author xielibo
@@ -29,12 +32,36 @@ public class MigrationTaskStatusRecordServiceImpl extends ServiceImpl<MigrationT
     @Autowired
     private MigrationTaskStatusRecordMapper migrationTaskStatusRecordMapper;
 
+
     @Override
-    public void saveRecord(Integer taskId, Integer statusId, String title, Date time) {
+    public void saveTaskRecord(Integer taskId, List<Map<String, Object>> statusRecord) {
         LambdaQueryWrapper<MigrationTaskStatusRecord> query = new LambdaQueryWrapper<>();
         query.eq(MigrationTaskStatusRecord::getTaskId, taskId);
-        query.last("limit 1").orderByDesc(MigrationTaskStatusRecord::getCreateTime);
-        MigrationTaskStatusRecord lastRecord = this.getOne(query);
+        this.remove(query);
+        Map<Integer, List<Map<String, Object>>> status = statusRecord.stream().collect(Collectors.groupingBy(r -> MapUtil.getInt(r, "status")));
+        status.entrySet().stream().forEach(m -> {
+            Integer operateType = TaskConstant.TASK_STATUS_OPERATE_MAPPING.get(m.getKey());
+            if (operateType != null) {
+                MigrationTaskStatusRecord record = new MigrationTaskStatusRecord();
+                MigrationTaskOperateRecord lastOperateRecord = migrationTaskOperateRecordService.getRecordByTaskIdAndOperType(taskId, operateType);
+                if (lastOperateRecord != null) {
+                    record.setOperateId(lastOperateRecord.getId());
+                }
+                record.setStatusId(m.getKey());
+                record.setTaskId(taskId);
+                if (m.getValue().size() > 0) {
+                    Long timestamp = MapUtil.getLong(m.getValue().get(0), "timestamp");
+                    record.setCreateTime(DateUtil.date(timestamp));
+                }
+                this.save(record);
+            }
+        });
+
+    }
+
+    @Override
+    public void saveRecord(Integer taskId, Integer statusId, String title, Date time) {
+        MigrationTaskStatusRecord lastRecord = getLastByTaskId(taskId);
         if (lastRecord == null || !lastRecord.getStatusId().equals(statusId)) {
             MigrationTaskStatusRecord record = new MigrationTaskStatusRecord();
             record.setTitle(title);
@@ -47,6 +74,15 @@ public class MigrationTaskStatusRecordServiceImpl extends ServiceImpl<MigrationT
             }
             this.save(record);
         }
+    }
+
+    @Override
+    public MigrationTaskStatusRecord getLastByTaskId(Integer taskId) {
+        LambdaQueryWrapper<MigrationTaskStatusRecord> query = new LambdaQueryWrapper<>();
+        query.eq(MigrationTaskStatusRecord::getTaskId, taskId);
+        query.last("limit 1").orderByDesc(MigrationTaskStatusRecord::getCreateTime);
+        MigrationTaskStatusRecord lastRecord = this.getOne(query);
+        return lastRecord;
     }
 
     @Override

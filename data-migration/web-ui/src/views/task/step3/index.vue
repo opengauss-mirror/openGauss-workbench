@@ -45,10 +45,23 @@
         <template #columns>
           <a-table-column title="物理机IP" data-index="publicIp"></a-table-column>
           <a-table-column title="物理机名称+OS" data-index="hostname"></a-table-column>
-          <a-table-column title="配置信息" data-index=""></a-table-column>
+          <a-table-column title="配置信息">
+            <template #cell="{ record }">
+              {{ record.os ? '系统：' + record.os + ',' : '' }}
+              {{ record.os ? 'CPU架构：' + record.cpuArch : '' }}
+            </template>
+          </a-table-column>
           <a-table-column title="最大子任务数" data-index="d"></a-table-column>
-          <a-table-column title="正在执行子任务数" data-index="e"></a-table-column>
-          <a-table-column title="正在执行的子任务" data-index="f"></a-table-column>
+          <a-table-column title="正在执行子任务数" data-index="tasks" align="center">
+            <template #cell="{ record }">
+              {{ record.tasks.length }}
+            </template>
+          </a-table-column>
+          <a-table-column title="正在执行的子任务" data-index="tasks">
+            <template #cell="{ record }">
+              {{ record.tasks.map(item => `#${item.id}`).join(', ')}}
+            </template>
+          </a-table-column>
         </template>
       </a-table>
     </div>
@@ -56,11 +69,15 @@
 </template>
 
 <script setup>
-import { reactive, ref, onMounted } from 'vue'
+import { reactive, ref, onMounted, toRaw } from 'vue'
 import { hostsData } from '@/api/task'
 
 const props = defineProps({
   subTaskConfig: {
+    type: Array,
+    default: () => []
+  },
+  hostData: {
     type: Array,
     default: () => []
   }
@@ -114,6 +131,7 @@ const getHostsData = () => {
 
 onMounted(() => {
   getHostsData()
+  selectedKeys.value = toRaw(props.hostData)
 })
 </script>
 

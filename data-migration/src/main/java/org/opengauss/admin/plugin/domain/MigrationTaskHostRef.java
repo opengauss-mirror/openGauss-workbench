@@ -49,7 +49,7 @@ public class MigrationTaskHostRef {
     @TableField(exist = false)
     private Integer tempPlaceholderCount = 0;
     @TableField(exist = false)
-    private Integer maxRunCount = 3;
+    private Integer maxRunCount = 6;
 
 
     public Integer getRunnableCount() {

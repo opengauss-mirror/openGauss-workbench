@@ -103,7 +103,7 @@
           <a-table-column title="源库名" data-index="sourceDBName" :width="200" ellipsis tooltip></a-table-column>
           <a-table-column title="目的实例名" data-index="targetNodeName" :width="200" ellipsis tooltip></a-table-column>
           <a-table-column title="目的库名" data-index="targetDBName" :width="200" ellipsis tooltip></a-table-column>
-          <a-table-column data-index="mode" :width="120">
+          <a-table-column data-index="mode" :width="130">
             <template #title>
               <div>
                 <span>迁移过程模式</span>
@@ -111,7 +111,7 @@
                   <icon-question-circle style="cursor: pointer;margin-left: 3px;" size="15" />
                   <template #content>
                     <p>离线模式：自动执行全量迁移，完成后自动结束，释放资源。</p>
-                    <p>在线模式：自动执行全量秦阿姨+增量迁移，用户手动启动反向迁移，需要用户操作结束迁移，释放资源。</p>
+                    <p>在线模式：自动执行全量迁移+增量迁移，用户手动启动反向迁移，需要用户操作结束迁移，释放资源。</p>
                   </template>
                 </a-popover>
               </div>
@@ -211,12 +211,12 @@ const searchTreeData = (keyword, searchData) => {
   return loop(searchData)
 }
 
-const getMatchSourceIndex = (title) => {
+const getMatchSourceIndex = (title) => { // eslint-disable-line
   if (!searchSourceKey.value) return -1
   return title.toLowerCase().indexOf(searchSourceKey.value.toLowerCase())
 }
 
-const getMatchTargetIndex = (title) => {
+const getMatchTargetIndex = (title) => { // eslint-disable-line
   if (!searchTargetKey.value) return -1
   return title.toLowerCase().indexOf(searchTargetKey.value.toLowerCase())
 }
@@ -266,7 +266,7 @@ const deepTargetTreeData = (data) => {
         key: item.clusterId || item.nodeId,
         icon: () => h(compile('<svg-icon icon-class="cluster" style="font-size: 16px;" />')),
         level: item.clusterId ? 0 : 1,
-        children: deepTargetTreeData(item.clusterNodes),
+        children: deepTargetTreeData(item.clusterNodes.map(child => ({ ...child, versionNum: item.versionNum }))),
         ...item
       }
     } else {
@@ -310,6 +310,7 @@ const getSourceClusterDbsData = (nodeData) => {
 
 // get target db data
 const getTargetClusterDbsData = (nodeData) => {
+  console.log(nodeData)
   return targetClusterDbsData({
     azAddress: nodeData.azAddress,
     azName: nodeData.azName,
@@ -339,6 +340,7 @@ const getTargetClusterDbsData = (nodeData) => {
           password: nodeData.dbUserPassword,
           port: nodeData.dbPort,
           username: nodeData.dbUser,
+          versionNum: nodeData.versionNum,
           nodeId: nodeData.nodeId
         },
         isSelect: item.isSelect,
@@ -406,9 +408,18 @@ const handleAddSql = () => {
   addSqlVisible.value = true
 }
 
+// init
+const init = (val) => {
+  tableData.value = toRaw(val || props.subTaskConfig)
+}
+
+defineExpose({
+  init
+})
+
 onMounted(() => {
   getClustersData()
-  tableData.value = toRaw(props.subTaskConfig)
+  init()
 })
 </script>
 

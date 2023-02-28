@@ -276,12 +276,21 @@ const getUserList = () => {
 
 // jump to the page of task-detail
 const goDetail = row => {
-  window.$wujie?.props.methods.jump({
-    name: `Static-pluginData-migrationTaskDetail`,
-    query: {
-      id: row.id
-    }
-  })
+  if (row.execStatus === 0) {
+    window.$wujie?.props.methods.jump({
+      name: `Static-pluginData-migrationTaskConfig`,
+      query: {
+        id: row.id
+      }
+    })
+  } else {
+    window.$wujie?.props.methods.jump({
+      name: `Static-pluginData-migrationTaskDetail`,
+      query: {
+        id: row.id
+      }
+    })
+  }
 }
 
 onMounted(() => {

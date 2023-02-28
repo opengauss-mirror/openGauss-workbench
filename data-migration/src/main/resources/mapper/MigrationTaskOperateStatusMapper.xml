@@ -12,13 +12,14 @@
         <result property="createTime" column="create_time"/>
         <result property="title" column="title"/>
         <result property="operateTitle" column="operate_title"/>
+        <result property="operateType" column="oper_type"/>
     </resultMap>
 
     <select id="selectByTaskId" resultMap="MigrationTaskResult">
-        select s.*,o.title as operate_title from tb_migration_task_status_record s
+        select s.*,o.title as operate_title,o.oper_type from tb_migration_task_status_record s
         left join tb_migration_task_operate_record o on s.operate_id = o.id
         where s.task_id=#{taskId}
-        order by s.create_time desc
+        order by s.create_time
     </select>
 
 

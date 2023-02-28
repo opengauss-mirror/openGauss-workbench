@@ -39,4 +39,6 @@ public interface MigrationTaskService extends IService<MigrationTask> {
     List<Map<String, Object>> countByMainTaskIdGroupByModel(Integer mainTaskId);
 
     void runTask(MigrationTaskHostRef h, MigrationTask t, List<MigrationTaskGlobalParam> globalParams);
+
+    void doOfflineTaskRunScheduler();
 }

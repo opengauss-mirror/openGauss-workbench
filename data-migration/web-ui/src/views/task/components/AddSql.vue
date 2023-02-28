@@ -46,8 +46,8 @@
 </template>
 
 <script setup>
-import { reactive, ref, watch, toRaw, onMounted } from 'vue'
-import { Message } from '@arco-design/web-vue'
+import { reactive, ref, watch, onMounted } from 'vue'
+// import { Message } from '@arco-design/web-vue'
 
 const props = defineProps({
   open: Boolean
@@ -66,7 +66,7 @@ watch(visible, (v) => {
 })
 
 watch(() => props.open, (v) => {
-  if (v) {}
+  // if (v) {}
   visible.value = v
 })
 
@@ -77,7 +77,7 @@ const cancel = () => {
 const confirmSubmit = () => {
   formRef.value?.validate(valid => {
     if (!valid) {
-      const params = {}
+      // const params = {}
 
       // pluginConfigData(params).then((res: any) => {
       //   console.log(res)

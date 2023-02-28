@@ -5,23 +5,23 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.opengauss.admin.common.core.domain.model.LoginUser;
+import org.opengauss.admin.common.utils.SecurityUtils;
 import org.opengauss.admin.plugin.domain.*;
+import org.opengauss.admin.plugin.enums.TaskOperate;
 import org.opengauss.admin.plugin.enums.TaskStatus;
 import org.opengauss.admin.plugin.handler.PortalHandle;
 import org.opengauss.admin.plugin.mapper.MigrationTaskMapper;
 import org.opengauss.admin.plugin.service.*;
-import org.opengauss.admin.system.plugin.facade.*;
+import org.opengauss.admin.system.plugin.facade.HostUserFacade;
 import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author xielibo
@@ -57,6 +57,9 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
 
     @Autowired
     private MigrationTaskStatusRecordService migrationTaskStatusRecordService;
+
+    @Autowired
+    private MigrationTaskOperateRecordService migrationTaskOperateRecordService;
 
     @Value("${migration.taskOfflineSchedulerIntervalsMillisecond}")
     private Long taskOfflineSchedulerIntervalsMillisecond;
@@ -95,13 +98,19 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
         result.put("task", task);
         MigrationTaskExecResultDetail fullProcess = migrationTaskExecResultDetailService.getByTaskIdAndProcessType(taskId, 1);
         result.put("fullProcess", fullProcess);
+        List<String> logPaths = new ArrayList<>();
+        if (!task.getExecStatus().equals(TaskStatus.NOT_RUN.getCode())) {
+            logPaths = PortalHandle.getPortalLogPath(task.getRunHost(), task.getRunPort(), task.getRunUser(), task.getRunPass(), task, portalHome);
+        }
+        result.put("logs", logPaths);
         if (task.getMigrationModelId().equals(2)) {
             MigrationTaskExecResultDetail incrementalProcess = migrationTaskExecResultDetailService.getByTaskIdAndProcessType(taskId, 2);
-            result.put("incrementalProcess", fullProcess);
+            result.put("incrementalProcess", incrementalProcess);
             MigrationTaskExecResultDetail reverseProcess = migrationTaskExecResultDetailService.getByTaskIdAndProcessType(taskId, 3);
             result.put("reverseProcess", reverseProcess);
             List<MigrationTaskStatusRecord> migrationTaskStatusRecords = migrationTaskStatusRecordService.selectByTaskId(taskId);
-            result.put("statusRecords", migrationTaskStatusRecords);
+            Map<Integer, List<MigrationTaskStatusRecord>> recordMap = migrationTaskStatusRecords.stream().collect(Collectors.groupingBy(MigrationTaskStatusRecord::getOperateType));
+            result.put("statusRecords", recordMap);
         }
         return result;
     }
@@ -182,34 +191,68 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
 
     @Override
     public void runTask(MigrationTaskHostRef h, MigrationTask t, List<MigrationTaskGlobalParam> globalParams) {
+        LoginUser loginUser = SecurityUtils.getLoginUser();
         PortalHandle.startPortal(h, t, getTaskParam(globalParams, t), portalHome);
         MigrationTask update = MigrationTask.builder().id(t.getId()).runHostId(h.getRunHostId()).runHost(h.getHost()).runHostname(h.getHostName())
                 .runPort(h.getPort()).runUser(h.getUser()).runPass(h.getPassword()).execStatus(TaskStatus.FULL_START.getCode()).execTime(new Date()).build();
+        migrationTaskOperateRecordService.saveRecord(t.getId(), TaskOperate.RUN, loginUser.getUsername());
         this.updateById(update);
     }
 
+    public static String escapeChars(String s) {
+        if (StringUtils.isBlank(s)) {
+            return s;
+        }
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            // These characters are part of the query syntax and must be escaped
+            if (c == '\\' || c == '+' || c == '-' || c == '!' || c == '(' || c == ')'
+                    || c == ':' || c == '^'	|| c == '[' || c == ']' || c == '\"'
+                    || c == '{' || c == '}' || c == '~' || c == '*' || c == '?'
+                    || c == '|' || c == '&' || c == ';' || c == '/' || c == '.'
+                    || c == '$' || Character.isWhitespace(c)) {
+                sb.append('\\');
+            }
+            sb.append(c);
+        }
+        return sb.toString();
+    }
+
     private Map<String,String> getTaskParam(List<MigrationTaskGlobalParam> globalParams, MigrationTask task) {
+        if (globalParams == null) {
+            globalParams = migrationTaskGlobalParamService.selectByMainTaskId(task.getMainTaskId());
+        }
+        Map<String, String> globalParamMap = globalParams.stream().collect(Collectors.toMap(g -> g.getParamKey(), g -> g.getParamValue()));
+        List<MigrationTaskParam> migrationTaskParams = migrationTaskParamService.selectByTaskId(task.getId());
+        if (migrationTaskParams.size() > 0) {
+            Map<String, String> taskParamMap = migrationTaskParams.stream().collect(Collectors.toMap(p -> p.getParamKey(), p -> p.getParamValue()));
+            globalParamMap.putAll(taskParamMap);
+        }
         Map<String, String> resultMap = new HashMap<>();
         resultMap.put("mysql.user.name", task.getSourceDbUser());
-        resultMap.put("mysql.user.password", task.getSourceDbPass());
+        resultMap.put("mysql.user.password", escapeChars(task.getSourceDbPass()));
         resultMap.put("mysql.database.host", task.getSourceDbHost());
         resultMap.put("mysql.database.port", task.getSourceDbPort());
         resultMap.put("mysql.database.name", task.getSourceDb());
 
         resultMap.put("opengauss.user.name", task.getTargetDbUser());
-        resultMap.put("opengauss.user.password", task.getTargetDbPass());
+        resultMap.put("opengauss.user.password", escapeChars(task.getTargetDbPass()));
         resultMap.put("opengauss.database.host", task.getTargetDbHost());
         resultMap.put("opengauss.database.port", task.getTargetDbPort());
         resultMap.put("opengauss.database.name", task.getTargetDb());
         resultMap.put("opengauss.database.schema", task.getSourceDb());
-
+        if (globalParamMap.keySet().size() > 0) {
+            resultMap.putAll(globalParamMap);
+        }
         return resultMap;
     }
 
     /**
      * Subtask Execution Offline Scheduler
      */
-    private void doOfflineTaskRunScheduler(){
+    @Override
+    public void doOfflineTaskRunScheduler(){
         while(true) {
             Integer waitRunCount = this.countTaskByStatus(TaskStatus.WAIT_RESOURCE);
             if (waitRunCount > 0) {
@@ -231,21 +274,6 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
                 e.printStackTrace();
             }
         }
-    }
-
-    @Autowired
-    private ThreadPoolTaskExecutor threadPoolTaskExecutor;
-
-    @PostConstruct
-    public void offlineTaskRunScheduler(){
-        threadPoolTaskExecutor.submit(() -> {
-            try {
-                doOfflineTaskRunScheduler();
-            } catch (Exception e) {
-                e.printStackTrace();
-                log.error("OffLineTaskRunScheduler error", e);
-            }
-        });
     }
 
 }
