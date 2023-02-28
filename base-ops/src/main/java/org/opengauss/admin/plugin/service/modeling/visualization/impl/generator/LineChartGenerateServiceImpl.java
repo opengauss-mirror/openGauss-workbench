@@ -38,6 +38,11 @@ public class LineChartGenerateServiceImpl extends BaseGenerateServiceImpl {
         lineChartBody.setTooltip(new Tooltip().setTrigger("axis"));
         lineChartBody.setGrid(new Grid().setBottom("40").setRight("3%").setLeft("3%").setContainLabel(true));
 
+        List<String> allKeys = new ArrayList<>(queryResult.get(0).keySet());
+        if (!allKeys.contains(lineChartParamsBody.getShowType().getDimension())) {
+            throw new RuntimeException("The field in the parameter is not found in the query result, please check whether the query table or condition has been replaced.");
+        }
+
         //generate X axis config
         Dimension xDimension;
         if (lineChartParamsBody.getShowType().getKey() == 1) {

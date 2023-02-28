@@ -20,6 +20,9 @@ export default {
   rules: {
     empty: '{0}不能为空',
   },
+  message: {
+    deleteFile: '删除成功，请刷新连接列表！',
+  },
   week: {
     Sunday: '日',
     Monday: '一',
@@ -34,7 +37,7 @@ export default {
     open: '打开连接',
     close: '断开连接',
     create: '创建数据库',
-    rename: '重命名数据库',
+    edit: '编辑数据库属性',
     remove: '删除数据库',
     property: '数据库属性',
     name: '数据库名称',
@@ -47,6 +50,17 @@ export default {
     view: '视图',
     synonym: '同义词',
     sequence: '序列',
+    attribute: '属性',
+    value: '值',
+    info: {
+      name: '名称',
+      encoding: '字符编码',
+      datallowconn: '是否允许连接',
+      datconnlimit: '连接数限制',
+      dattablespace: '默认表空间',
+      datcollate: '排序规则',
+      datctype: '字符类型',
+    },
   },
   connection: {
     name: '连接名称',

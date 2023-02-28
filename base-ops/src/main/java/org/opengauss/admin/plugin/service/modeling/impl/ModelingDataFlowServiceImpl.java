@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.opengauss.admin.plugin.domain.entity.modeling.ModelingDataFlowEntity;
 
 import java.util.Arrays;
+import java.util.List;
 
 /**
 * @author LZW
@@ -70,6 +71,16 @@ public class ModelingDataFlowServiceImpl extends ServiceImpl<ModelingDataFlowMap
         return row;
     }
 
+    /**
+     * check name
+     *
+     * @param name dataflow name
+     * @return result
+     */
+    @Override
+    public List<ModelingDataFlowEntity> findByName(String name) {
+        return modelingDataFlowMapper.findByName(name);
+    }
 }
 
 

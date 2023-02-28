@@ -6,6 +6,7 @@
         :type="sqlData.barType"
         :status="sqlData.barStatus"
         :editorReadOnly="sqlData.readOnly"
+        :isGlobalEnable="isGlobalEnable"
         @execute="handleExecute"
         @stopRun="handleStop"
         @clear="handleClear"
@@ -22,7 +23,7 @@
           ref="editorRef"
           :value="sqlData.sqlText"
           :height="monacoHeight"
-          :readOnly="sqlData.readOnly"
+          :readOnly="!isGlobalEnable || sqlData.readOnly"
           :openDebug="['debug', 'debugChild'].includes(props.editorType)"
           @addBreakPoint="(line) => handleBreakPoint(line, 'addBreakPoint')"
           @removeBreakPoint="(line) => handleBreakPoint(line, 'deleteBreakPoint')"
@@ -64,13 +65,16 @@
   import { useRoute, useRouter } from 'vue-router';
   import WebSocketClass from '@/utils/websocket';
   import { dateFormat, formatTableV2Data, formatTableData, loadingInstance, uuid } from '@/utils';
+  import { useAppStore } from '@/store/modules/app';
   import { useUserStore } from '@/store/modules/user';
   import { useTagsViewStore } from '@/store/modules/tagsView';
   import { useI18n } from 'vue-i18n';
   import EventBus, { EventTypeName } from '@/utils/event-bus';
+  import { connectListPersist } from '@/config';
 
   const route = useRoute();
   const router = useRouter();
+  const AppStore = useAppStore();
   const UserStore = useUserStore();
   const TagsViewStore = useTagsViewStore();
   const { t } = useI18n();
@@ -116,6 +120,7 @@
     barType: props.editorType,
   });
 
+  // const isGlobalEnable = ref(true);
   const showResult = ref(false);
   const id = 'terminal_' + uuid();
   const monacoWrapper = ref<HTMLElement>();
@@ -125,6 +130,7 @@
   const ws = reactive({
     name: '',
     webUser: '',
+    rootId: '',
     connectionName: '',
     uuid: '',
     sessionId: '',
@@ -139,6 +145,9 @@
       uuid: ws.uuid,
       windowName: ws.sessionId,
     };
+  });
+  const isGlobalEnable = computed(() => {
+    return AppStore.connectedDatabase.findIndex((item) => item.uuid == ws.uuid) > -1;
   });
   const loading = ref(null);
   const refreshCounter = reactive({
@@ -270,6 +279,20 @@
         ) {
           getButtonStatus();
         }
+        // if (
+        //   props.editorType == 'sql' &&
+        //   ['Number of rows affected by successful execution'].includes(res.msg)
+        // ) {
+        //   let list = JSON.parse(connectListPersist.storage.getItem(connectListPersist.key) || '[]');
+        //   EventBus.notify(EventTypeName.REFRESH_DATABASE_LIST, {
+        //     mode: 'connection',
+        //     options: {
+        //       connectInfo: list.find((item) => item.id == ws.rootId),
+        //       uuid: ws.uuid,
+        //       nodeId: ws.rootId,
+        //     },
+        //   });
+        // }
         showResult.value = true;
         const d = new Date();
         (result || res.msg) &&
@@ -557,6 +580,7 @@
     Object.assign(ws, {
       name: route.query.connectInfoName,
       webUser: UserStore.userId,
+      rootId: route.query.rootId,
       connectionName: route.query.connectInfoName,
       uuid: route.query.uuid,
       sessionId: route.query.connectInfoName + '_' + route.query.time,

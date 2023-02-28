@@ -18,7 +18,7 @@ const RESOURCE: AppRouteRecordRaw = {
       name: 'ResourceDatabase',
       component: () => import('@/views/resource/database/index.vue'),
       meta: {
-        title: '数据库资源',
+        title: '实例管理',
         requiresAuth: true,
         roles: ['*']
       }
@@ -38,7 +38,7 @@ const RESOURCE: AppRouteRecordRaw = {
       name: 'ResourcePhysical',
       component: () => import('@/views/resource/physical/index.vue'),
       meta: {
-        title: '物理机资源',
+        title: '设备管理',
         requiresAuth: true,
         roles: ['*']
       }

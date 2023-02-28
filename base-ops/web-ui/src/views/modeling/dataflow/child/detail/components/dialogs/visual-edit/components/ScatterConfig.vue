@@ -7,16 +7,22 @@
     <div class="mb">
       <a-row align="center" class="mb-s">
         <a-col class="mr-xs" :span="9">
-          <a-select v-model="config.indicator.field" :placeholder="$t('modeling.components.LineConfig.5mpu292dkhc0')">
-            <overflow-tooltip :text="item.label" v-for="(item, key) in numberOption" :key="key" :content="item.label">
-              <a-option :value="item.value"><icon-tag class="mr-s" v-if="item.isCustom" />{{ item.label }}</a-option>
-            </overflow-tooltip>
-          </a-select>
+          <div style="display: flex">
+            <span style="color: #f53f3f; font-weight: bold; margin-right: 5px;">*</span>
+            <a-select v-model="config.indicator.field" :placeholder="$t('modeling.components.LineConfig.5mpu292dkhc0')">
+              <overflow-tooltip :text="item.label" v-for="(item, key) in numberOption" :key="key" :content="item.label">
+                <a-option :value="item.value"><icon-tag class="mr-s" v-if="item.isCustom" />{{ item.label }}</a-option>
+              </overflow-tooltip>
+            </a-select>
+          </div>
         </a-col>
         <a-col class="mr-xs" :span="6">
-          <a-select v-model="config.indicator.type" :placeholder="$t('modeling.components.LineConfig.5mpu292dky40')">
-            <a-option v-for="(item, key) in indicatorTypeSum" :key="`a${key}`" :value="item.value">{{ item.label }}</a-option>
-          </a-select>
+          <div style="display: flex">
+            <span style="color: #f53f3f; font-weight: bold; margin-right: 5px;">*</span>
+            <a-select v-model="config.indicator.type" :placeholder="$t('modeling.components.LineConfig.5mpu292dky40')">
+              <a-option v-for="(item, key) in indicatorTypeSum" :key="`a${key}`" :value="item.value">{{ item.label }}</a-option>
+            </a-select>
+          </div>
         </a-col>
         <a-col class="mr-xs" :span="8">
           <a-input :max-length="140" model="config.indicator.unit">
@@ -30,7 +36,7 @@
     </div>
     <div class="mb">
       <a-row align="center" class="mb-s">
-        <a-col :span="5">{{$t('modeling.components.ScatterConfig.5m7iiczn9b80')}}</a-col>
+        <a-col :span="5"><span style="color: #f53f3f; font-weight: bold; margin-right: 5px;">*</span>{{$t('modeling.components.ScatterConfig.5m7iiczn9b80')}}</a-col>
         <a-col class="mr-xs" :span="18">
           <a-select v-model="config.location.field" :placeholder="$t('modeling.components.ScatterConfig.5m7iiczn9b80')">
             <overflow-tooltip :text="item.label" v-for="(item, key) in stringOption" :key="key" :content="item.label">
@@ -68,7 +74,7 @@
         <a-button style="margin-left: auto;" type="primary" size="mini" @click="openUpload">{{$t('modeling.components.ScatterConfig.5m7iiczn9wk0')}}</a-button>
       </div>
       <a-row align="center" class="mb-s">
-        <a-col :span="5">{{$t('modeling.components.ScatterConfig.5m7iiczn9zg0')}}</a-col>
+        <a-col :span="5"><span style="color: #f53f3f; font-weight: bold; margin-right: 5px;">*</span>{{$t('modeling.components.ScatterConfig.5m7iiczn9zg0')}}</a-col>
         <a-col :span="17">
           <a-select v-model="config.location.commonValue" :loading="dOptions.mapJson.loading" :placeholder="$t('modeling.components.ScatterConfig.5mjcl4pctfw0')">
             <a-option v-for="(item, key) in dOptions.mapJson.list" :key="`option${key}`" :value="item.id" :label="item.registerName" class="scatter-config-container-a-option-dy">
@@ -164,6 +170,7 @@ const init = (data?: KeyValue) => {
     config.location = { field: '', type: '', commonValue: '', diyValue: 'LLA', area: 0 }
   }
 }
+const noticeArr: string[] = []
 const validate = () => {
   let flag = true
   let message = ''
@@ -184,11 +191,26 @@ const validate = () => {
     message += (message ? '；\n ' : '') + t('modeling.components.ScatterConfig.5mjcl4pcuk00')
   }
   if (!flag) {
+    if (noticeArr.includes(message)) return flag
+    let isDelete = false
     Notification.error({
       title: t('modeling.components.BarConfig.5m7insim3vc0'),
       content: message,
-      closable: true
+      closable: true,
+      duration: 5 * 1000,
+      onClose: () => {
+        let index = noticeArr.indexOf(message)
+        if (index != -1) noticeArr.splice(index, 1)
+        isDelete = true
+      }
     })
+    noticeArr.push(message)
+    setTimeout(() => {
+      if (!isDelete) {
+        let index = noticeArr.indexOf(message)
+        if (index != -1) noticeArr.splice(index, 1)
+      }
+    }, 5 * 1000)
   }
   return flag
 }

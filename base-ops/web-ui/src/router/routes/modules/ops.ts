@@ -35,11 +35,21 @@ const OPS: AppRouteRecordRaw = {
       }
     },
     {
+      path: '/ops/batchInstall',
+      name: 'batchInstall',
+      component: () => import('@/views/ops/batchInstall/index.vue'),
+      meta: {
+        title: '批量安装',
+        requiresAuth: true,
+        roles: ['*']
+      }
+    },
+    {
       path: '/ops/upgrade',
       name: 'Upgrade',
       component: () => import('@/views/ops/upgrade/index.vue'),
       meta: {
-        title: '集群升级',
+        title: '批量升级',
         requiresAuth: true,
         roles: ['*']
       }

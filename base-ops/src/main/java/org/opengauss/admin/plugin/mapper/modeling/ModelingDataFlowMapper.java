@@ -1,8 +1,11 @@
 package org.opengauss.admin.plugin.mapper.modeling;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import org.apache.ibatis.annotations.Select;
 import org.opengauss.admin.plugin.domain.entity.modeling.ModelingDataFlowEntity;
 import org.apache.ibatis.annotations.Mapper;
+
+import java.util.List;
 
 /**
 * @author LZW
@@ -12,7 +15,8 @@ import org.apache.ibatis.annotations.Mapper;
 */
 @Mapper
 public interface ModelingDataFlowMapper extends BaseMapper<ModelingDataFlowEntity> {
-
+    @Select("SELECT * FROM modeling_data_flow WHERE name = #{name}")
+    List<ModelingDataFlowEntity> findByName(String name);
 }
 
 
