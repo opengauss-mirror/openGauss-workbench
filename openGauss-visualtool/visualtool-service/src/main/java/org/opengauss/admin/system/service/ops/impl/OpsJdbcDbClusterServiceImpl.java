@@ -391,6 +391,7 @@ public class OpsJdbcDbClusterServiceImpl extends ServiceImpl<OpsJdbcDbClusterMap
             throw new OpsException("Cluster node information does not exist");
         }
 
+        Date now = new Date();
         List<OpsJdbcDbClusterNodeEntity> clusterNodeEntityList = new ArrayList<>();
         for (JdbcDbClusterNodeInputDto node : nodes) {
             String url = node.getUrl();
@@ -410,7 +411,8 @@ public class OpsJdbcDbClusterServiceImpl extends ServiceImpl<OpsJdbcDbClusterMap
             opsJdbcDbClusterNodeEntity.setUsername(node.getUsername());
             opsJdbcDbClusterNodeEntity.setPassword(node.getPassword());
             opsJdbcDbClusterNodeEntity.setUrl(url);
-            opsJdbcDbClusterNodeEntity.setCreateTime(new Date());
+            opsJdbcDbClusterNodeEntity.setCreateTime(now);
+            opsJdbcDbClusterNodeEntity.setUpdateTime(now);
             opsJdbcDbClusterNodeEntity.setRemark(node.getRemark());
 
             clusterNodeEntityList.add(opsJdbcDbClusterNodeEntity);
@@ -439,7 +441,10 @@ public class OpsJdbcDbClusterServiceImpl extends ServiceImpl<OpsJdbcDbClusterMap
         clusterEntity.setName(clusterInput.getClusterName());
         clusterEntity.setDeployType(clusterInput.getDeployType());
         clusterEntity.setDbType(dbType);
-        clusterEntity.setCreateTime(new Date());
+
+        Date now = new Date();
+        clusterEntity.setCreateTime(now);
+        clusterEntity.setUpdateTime(now);
 
         save(clusterEntity);
         return clusterEntity;
