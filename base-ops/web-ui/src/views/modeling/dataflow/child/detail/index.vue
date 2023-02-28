@@ -282,8 +282,8 @@ const closeConfigPancel = () => {
     width: 100% !important;
     height: 100% !important;
     &::-webkit-scrollbar {
-      width: 5px;
-      height: 5px;
+      width: 10px;
+      height: 10px;
       position: absolute;
     }
     &::-webkit-scrollbar-track {

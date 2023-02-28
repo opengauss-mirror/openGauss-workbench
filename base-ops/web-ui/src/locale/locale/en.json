@@ -772,6 +772,8 @@
             "warningBatchDelete1": "Are you sure you want to delete these ",
             "warningBatchDelete2": "streams",
             "batchDelete": "Batch delete",
+            "deleteText": "Delete",
+            "deleteNotice": "Are you sure you want to delete?",
             "paste": "paste",
             "isNo": "is no",
             "heatmapConfig": {
