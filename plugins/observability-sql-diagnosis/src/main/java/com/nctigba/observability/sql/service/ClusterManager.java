@@ -60,12 +60,10 @@ public class ClusterManager {
 		if (StringUtils.isBlank(nodeId))
 			return;
 		var ds = (DynamicRoutingDataSource) dataSource;
-		// 数据源存在则切换
 		if (ds.getDataSources().containsKey(nodeId)) {
 			DynamicDataSourceContextHolder.push(nodeId);
 			return;
 		}
-		// 不存在则添加
 		var node = getOpsNodeById(nodeId);
 		if (node == null)
 			return;
@@ -116,13 +114,6 @@ public class ClusterManager {
 	@EqualsAndHashCode(callSuper = true)
 	public static class OpsClusterNodeVOSub extends OpsClusterNodeVO {
 		private String version;
-
-		@Override
-		public Integer getDbPort() {
-			if ("1584444406327418882".equals(getNodeId()))
-				return 9190;
-			return super.getDbPort();
-		}
 
 		public OpsClusterNodeVOSub(OpsClusterNodeVO opsClusterNodeVO, String version) {
 			BeanUtils.copyProperties(opsClusterNodeVO, this);

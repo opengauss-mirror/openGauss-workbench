@@ -1,6 +1,11 @@
 package com.nctigba.observability.sql.service.diagnosis.caller;
 
-import com.alibaba.fastjson.JSONObject;
+import java.math.BigInteger;
+import java.util.regex.Pattern;
+
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Service;
+
 import com.nctigba.observability.sql.mapper.DiagnosisTaskMapper;
 import com.nctigba.observability.sql.mapper.DiagnosisTaskResultMapper;
 import com.nctigba.observability.sql.model.diagnosis.Task;
@@ -11,17 +16,9 @@ import com.nctigba.observability.sql.model.param.DatabaseParamData;
 import com.nctigba.observability.sql.model.param.ParamDto;
 import com.nctigba.observability.sql.service.ClusterManager;
 import com.nctigba.observability.sql.util.LocaleString;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.stereotype.Service;
-
-import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.regex.Pattern;
 
 @Service
 @Slf4j

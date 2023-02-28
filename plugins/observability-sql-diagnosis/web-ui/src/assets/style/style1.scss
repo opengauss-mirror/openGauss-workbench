@@ -1,0 +1,60 @@
+@use 'sass:math';
+@use "./color.scss" as *;
+@use 'sass:map';
+
+.el-link.el-link--primary{
+    color: var(--primary-6) !important;
+}
+.el-button {
+    color: var(--color-text-2) !important;
+    background-color: var(--color-secondary) !important;
+    border: none !important;
+}
+.el-button.el-button--primary {
+    color: var(--color-bg-2)  !important;
+    background-color: var(--primary-6) !important;
+}
+.el-button.el-button--primary.search-button {
+    color: var(--primary-6) !important;
+    background-color: rgb(255, 255, 255, 0) !important;
+    border: 1px solid var(--primary-6) !important;
+}
+:deep(.el-pagination) {
+    display: flex;
+    justify-content: flex-end;
+}
+.deleteBtn {
+    color: #d4d4d4;
+}
+.deleteBtn-icon {
+    position: relative;
+    top: 2px;
+    right: 5px;
+}
+:deep(.el-range-editor--small.el-input__wrapper) {
+    width: 240px;
+}
+
+.dialog {
+    &:deep(.el-dialog .el-dialog__header) {
+        text-align: center;
+    }
+    &:deep(.el-form-item--small .el-form-item__label) {
+        width: 110px;
+    }
+    &:deep(.el-dialog .el-dialog__footer) {
+        border: none !important;
+    }
+    .form-textarea {
+        width: 100%;
+        &:deep(.el-textarea__inner) {
+            height: 100px;
+        }
+    }
+    .dialog-content {
+        padding-bottom: 180px;
+    }
+    .option-wrap {
+        margin-right: 20px;
+    }
+}

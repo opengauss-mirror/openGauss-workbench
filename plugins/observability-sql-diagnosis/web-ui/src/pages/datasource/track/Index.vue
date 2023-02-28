@@ -1,9 +1,11 @@
 <script setup lang="ts">
+import { Fold, Expand } from '@element-plus/icons-vue'
 import { storeToRefs } from 'pinia'
 import { useMonitorStore } from '../../../store/monitor'
 import TrackSlowLog from './TrackSlowLog.vue'
 import TrackTasks from './TrackTasks.vue'
 import { i18n } from '../../../i18n'
+import Install from '../../datasource/install/Index.vue';
 
 const clusterNodeId = ref()
 
@@ -32,22 +34,44 @@ watch(rangeTime, (r) => {
         filters.value[tab.value].time = null
     }
 })
+
+const isCollapse = ref(true)
+const toggleCollapse = () => {
+    isCollapse.value = !isCollapse.value
+}
 </script>
 
 <template>
-    <div class="tab-wrapper" :key="clusterNodeId" style="height: 100%">
-        <el-tabs v-model="tab" type="border-card" style="height: 100%">
-            <el-tab-pane :label="$t('datasource.slowSQL')" :name="0">
-                <track-slow-log v-if="tabLoaded[0] || tab === 0" />
-            </el-tab-pane>
-            <el-tab-pane :label="$t('datasource.sqlTrackTask')" :name="1">
-                <track-tasks v-if="tabLoaded[1] || tab === 1" :instanceId="instanceId" />
-            </el-tab-pane>
-        </el-tabs>
-    </div>
+    <el-container>
+        <el-aside :width="isCollapse ? '0px' : '300px'">
+            <div style="height: 23px"></div>
+            <Install />
+        </el-aside>
+        <el-main style="position: relative">
+            <div>
+                <div style="position: absolute; left: 22px; top: 32px; z-index: 9999" @click="toggleCollapse">
+                    <el-icon v-if="!isCollapse" size="20px"><Fold /></el-icon>
+                    <el-icon v-if="isCollapse" size="20px"><Expand /></el-icon>
+                </div>
+            </div>
+            <div class="tab-wrapper" :key="clusterNodeId" style="height: 100%">
+                <el-tabs v-model="tab" type="border-card" style="height: 100%">
+                    <el-tab-pane :label="$t('datasource.slowSQL')" :name="0">
+                        <track-slow-log v-if="tabLoaded[0] || tab === 0" />
+                    </el-tab-pane>
+                    <el-tab-pane :label="$t('datasource.sqlTrackTask')" :name="1">
+                        <track-tasks v-if="tabLoaded[1] || tab === 1" :instanceId="instanceId" />
+                    </el-tab-pane>
+                </el-tabs>
+            </div>
+        </el-main>
+    </el-container>
 </template>
 
 <style scoped lang="scss">
+.el-tabs__header {
+    margin-left: 50px !important;
+}
 .cluster-container {
     height: 40px;
     background-color: #424242;

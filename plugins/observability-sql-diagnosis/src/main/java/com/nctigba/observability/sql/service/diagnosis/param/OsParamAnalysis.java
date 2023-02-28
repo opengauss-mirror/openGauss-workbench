@@ -1,10 +1,20 @@
 package com.nctigba.observability.sql.service.diagnosis.param;
 
-import com.alibaba.fastjson.JSONObject;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.math.BigInteger;
+import java.util.regex.Pattern;
+
+import org.apache.commons.lang3.StringUtils;
+import org.opengauss.admin.common.exception.CustomException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
 import com.nctigba.observability.sql.mapper.DiagnosisTaskResultMapper;
 import com.nctigba.observability.sql.model.diagnosis.Task;
 import com.nctigba.observability.sql.model.diagnosis.grab.GrabType;
-import com.nctigba.observability.sql.model.diagnosis.result.Frame;
 import com.nctigba.observability.sql.model.diagnosis.result.FrameType;
 import com.nctigba.observability.sql.model.diagnosis.result.ResultType;
 import com.nctigba.observability.sql.model.diagnosis.result.TaskResult;
@@ -12,20 +22,6 @@ import com.nctigba.observability.sql.model.param.OsParamData;
 import com.nctigba.observability.sql.model.param.ParamDto;
 import com.nctigba.observability.sql.service.diagnosis.ResultAnalysis;
 import com.nctigba.observability.sql.util.LocaleString;
-import org.apache.commons.lang3.StringUtils;
-import org.opengauss.admin.common.exception.CustomException;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
-
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.regex.Pattern;
 
 @Service
 public class OsParamAnalysis implements ResultAnalysis {

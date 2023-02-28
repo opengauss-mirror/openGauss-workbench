@@ -219,6 +219,11 @@ body {
     cursor: pointer;
 }
 
+// check-box
+.el-checkbox__inner::after {
+    border-color: var(--color-bg-2) !important;
+}
+
 // button for message box
 .el-message-box__btns .el-button.el-button--primary {
     color: var(--color-bg-2) !important;

@@ -1,117 +1,159 @@
 <template>
-    <div class="search-form">
-        <div class="filter" v-if="showContextCount">
-            <span>{{ $t('datasource.logContext') }}&nbsp;</span>
-            <el-select v-model="formData.contextCount" clearable placeholder="$t('datasource.logContextPlaceholder')">
-                <el-option
-                v-for="item in logContextCountList"
-                :key="item.value"
-                :label="item.label"
-                :value="item.value"
-                />
-            </el-select>
-            <el-button text bg type="" :icon="CloseBold" size="small" style="position: relative;top: -6px;left: 0;" @click="hideContextCount"/>
-        </div>
-        <div class="filter">
-            <el-input v-model="formData.searchText" style="width: 200px" :prefix-icon="Search" :placeholder="$t('datasource.logSearchPlaceholder')" />
-        </div>
-        <div class="filter">
-            <span>{{ $t('datasource.logSearchTime') }}&nbsp;</span>
-            <MyDatePicker v-model="formData.dateValue" class="search-time-range" type="datetimerange" :valueFormatToUTC="true" />
-        </div>
-        <el-button type="primary" class="search-button" @click="refreshLog" :title="$t('app.query')" :icon="Search">{{ $t('app.query') }}</el-button>
-        <el-button @click="clean" :title="$t('app.reset')" :icon="Refresh">{{ $t('app.reset') }}</el-button>
-    </div>
+    <el-container>
+        <el-aside :width="isCollapse ? '0px' : '300px'">
+            <div style="height: 23px"></div>
+            <Install />
+        </el-aside>
+        <el-main style="position: relative;overflow: visible;">
+            <div>
+                <div style="position: absolute; left: 20px; top: 22px; z-index: 9999" @click="toggleCollapse">
+                    <el-icon v-if="!isCollapse" size="20px"><Fold /></el-icon>
+                    <el-icon v-if="isCollapse" size="20px"><Expand /></el-icon>
+                </div>
+            </div>
+            <div class="search-form">
+                <div class="filter">
+                    <!-- <div class="el-input el-input-group el-input-group--append el-input--suffix">
+                        <div class="el-input__wrapper">
+                            <span class="el-input__inner">上下文</span>
+                            <span class="el-input-group__append">
+                                <el-select v-model="formData.contextCount" clearable placeholder="$t('datasource.logContextPlaceholder')">
+                                    <el-option v-for="item in logContextCountList" :key="item.value" :label="item.label" :value="item.value" />
+                                </el-select>
+                            </span>
+                            <span class="el-input__suffix">
+                                <span class="el-input__suffix-inner">
+                                    <el-icon class="el-input__icon"><CloseBold /></el-icon>
+                                </span>
+                            </span>
+                        </div>
+                    </div> -->
+                    
+                </div>
+                <div class="filter" v-if="showContextCount">
+                    <!-- <span>{{ $t('datasource.logContext') }}&nbsp;</span>
+                    <el-select v-model="formData.contextCount" clearable placeholder="$t('datasource.logContextPlaceholder')">
+                        <el-option v-for="item in logContextCountList" :key="item.value" :label="item.label" :value="item.value" />
+                    </el-select>
+                    <el-button text bg type="" :icon="CloseBold" size="small" style="position: relative;  left: 0" @click="hideContextCount" /> -->
+                    <div class="log-context">
+                        <span>{{ $t('datasource.logContext') }}&nbsp;&nbsp;</span>
+                        <select v-model="formData.contextCount">
+                            <option v-for="item in logContextCountList" :label="item.label" :value="item.value"></option>
+                        </select>
+                        <!-- top: -6px; -->
+                        <el-icon class="el-input__icon" @click="hideContextCount" style="position: relative;  left: 0;top:2px;cursor:pointer"><CloseBold /></el-icon>
+                        <!-- <el-button text bg type="" :icon="CloseBold" size="small" style="position: relative;  left: 0" @click="hideContextCount" /> -->
+                    </div>
+                </div>
+                <div class="filter">
+                    <el-input v-model="formData.searchText" style="width: 200px" :prefix-icon="Search" :placeholder="$t('datasource.logSearchPlaceholder')" />
+                </div>
+                <div class="filter">
+                    <span>{{ $t('datasource.logSearchTime') }}&nbsp;</span>
+                    <MyDatePicker v-model="formData.dateValue" class="search-time-range" type="datetimerange" :valueFormatToUTC="true" />
+                </div>
+                <el-button type="primary" class="search-button" @click="refreshLog" :title="$t('app.query')" :icon="Search">{{ $t('app.query') }}</el-button>
+                <el-button @click="clean" :title="$t('app.reset')" :icon="Refresh">{{ $t('app.reset') }}</el-button>
+            </div>
 
-    <div>
-        <my-card :title="$t('datasource.logDistributionMap')" :legend="waitLegends" :bodyPadding="false" ref="cardRef" collapse>
-            <div class="loading-cover" v-if="refreshingBar" v-loading="refreshingBar"></div>
-            <div class="line-wrap-chart" style="height: 250px">
-                <my-bar v-if="showBar" :yname="$t('datasource.numberofLogs')" :xData="xData" :data="showData" :unit="$t('datasource.unit')" />
+            <div>
+                <my-card :title="$t('datasource.logDistributionMap')" :legend="waitLegends" :bodyPadding="false" ref="cardRef" collapse>
+                    <div class="loading-cover" v-if="refreshingBar" v-loading="refreshingBar"></div>
+                    <div class="line-wrap-chart" style="height: 250px">
+                        <my-bar v-if="showBar" :yname="$t('datasource.numberofLogs')" :xData="xData" :data="showData" :unit="$t('datasource.unit')" />
+                    </div>
+                </my-card>
             </div>
-        </my-card>
-    </div>
-    <div class="content-wrap" v-infinite-scroll="scrollToBottom">
-        <div class="content-wrap-left">
-            <div class="tree-wrap">
-                <div class="tree-item">
-                    <my-card :title="$t('app.clusterAndInstance')" :bodyPadding="false" collapse>
-                        <el-scrollbar height="150px" style="width: 200px">
-                            <div class="tree">
-                                <el-tree ref="clusterTree" :data="treeData1" :props="defaultProps" node-key="value" :default-expanded-keys="nodeIds" :default-checked-keys="nodeIds" show-checkbox @check="selectNodes">
-                                    <template #default="{ node }">
-                                        <el-popover placement="right" width="auto" trigger="hover" :content="node.label">
-                                            <template #reference>
-                                                <span class="cluster-item">{{ node.label }}</span>
+            <div class="content-wrap" v-infinite-scroll="scrollToBottom"  :infinite-scroll-disabled="!canScroll">
+                <div class="content-wrap-left">
+                    <div class="tree-wrap">
+                        <div class="tree-item">
+                            <my-card :title="$t('app.clusterAndInstance')" :bodyPadding="false" collapse>
+                                <el-scrollbar height="150px" style="width: 200px">
+                                    <div class="tree">
+                                        <el-tree ref="clusterTree" :data="treeData1" :props="defaultProps" node-key="value" :default-expanded-keys="nodeIds" :default-checked-keys="nodeIds" show-checkbox @check="selectNodes">
+                                            <template #default="{ node }">
+                                                <el-popover placement="right" width="auto" trigger="hover" :content="node.label">
+                                                    <template #reference>
+                                                        <span class="cluster-item">{{ node.label }}</span>
+                                                    </template>
+                                                </el-popover>
                                             </template>
-                                        </el-popover>
-                                    </template>
-                                </el-tree>
-                            </div>
-                        </el-scrollbar>
-                    </my-card>
+                                        </el-tree>
+                                    </div>
+                                </el-scrollbar>
+                            </my-card>
+                        </div>
+                        <div class="tree-item">
+                            <my-card :title="$t('datasource.type')" :bodyPadding="false" collapse collapsed>
+                                <el-scrollbar height="150px">
+                                    <el-tree ref="logTypeTree" :data="treeData2" :props="defaultProps" show-checkbox @check="selectTypes" />
+                                </el-scrollbar>
+                            </my-card>
+                        </div>
+                        <div class="tree-item">
+                            <my-card :title="$t('datasource.level')" :bodyPadding="false" collapse collapsed>
+                                <el-scrollbar height="150px">
+                                    <div class="tree-item-option">
+                                        <el-checkbox-group v-model="logLevelSelected" @change="selectLevels">
+                                            <el-checkbox v-for="item in logLevelData" :label="item" :key="item" />
+                                        </el-checkbox-group>
+                                    </div>
+                                </el-scrollbar>
+                            </my-card>
+                        </div>
+                    </div>
                 </div>
-                <div class="tree-item">
-                    <my-card :title="$t('datasource.type')" :bodyPadding="false" collapse collapsed>
-                        <el-scrollbar height="150px">
-                            <el-tree ref="logTypeTree" :data="treeData2" :props="defaultProps" show-checkbox @check="selectTypes" />
-                        </el-scrollbar>
-                    </my-card>
+                <div class="content-wrap-right">
+                    <el-table :data="tableData" size="small" :row-style="tableRowStyle" style="width: 100%" @cell-mouse-enter="cellMouseEnter" @mouseleave="mouseLeave" ref="logTableData">
+                        <el-table-column :label="$t('datasource.logSearchTable[0]')" width="160" align="center">
+                            <template #default="scope">
+                                <span>{{ dayjs.utc(scope.row.logTime).local().format('YYYY-MM-DD HH:mm:ss') }}</span>
+                            </template>
+                        </el-table-column>
+                        <el-table-column :label="$t('datasource.logSearchTable[1]')" prop="logType" show-overflow-tooltip width="120" align="center" />
+                        <el-table-column :label="$t('datasource.logSearchTable[2]')" prop="logLevel" show-overflow-tooltip width="100" align="center" />
+                        <el-table-column :label="$t('datasource.logSearchTable[3]')" header-align="center">
+                            <template #default="scope">
+                                <span v-if="scope.row.logData && scope.row.logData.length > 300">
+                                    <el-popover width="700px" trigger="hover" :content="scope.row.logData" popper-class="sql-popover-tip">
+                                        <template #reference>
+                                            <span v-html="showHighLightWord(scope.row.logData.substr(0, 300)) + '...'"></span>
+                                        </template>
+                                    </el-popover>
+                                </span>
+                                <span v-else v-html="showHighLightWord(scope.row.logData)"></span>
+                            </template>
+                        </el-table-column>
+                        <el-table-column :label="$t('datasource.logSearchTable[4]')" header-align="center" show-overflow-tooltip prop="logClusterId" width="100" />
+                        <el-table-column :label="$t('datasource.logSearchTable[5]')" header-align="center" show-overflow-tooltip prop="logNodeId" width="100" />
+                    </el-table>
+                    <p v-if="loading">Loading...</p>
+                    <p v-if="noMore">No more</p>
                 </div>
-                <div class="tree-item">
-                    <my-card :title="$t('datasource.level')" :bodyPadding="false" collapse collapsed>
-                        <el-scrollbar height="150px">
-                            <div class="tree-item-option">
-                                <el-checkbox-group v-model="logLevelSelected" @change="selectLevels">
-                                    <el-checkbox v-for="item in logLevelData" :label="item" :key="item" />
-                                </el-checkbox-group>
-                            </div>
-                        </el-scrollbar>
-                    </my-card>
+                <div v-if="showSearchBtn">
+                    <el-button :icon="DCaret" circle size="large" :style="searchBthStyle" @click="gotoNewLogSearch" />
                 </div>
             </div>
-        </div>
-        <div class="content-wrap-right">
-            <el-table :data="tableData" size="small" :row-style="tableRowStyle" style="width: 100%" @cell-mouse-enter="cellMouseEnter" @mouseleave="mouseLeave" ref="logTableData">
-                <el-table-column :label="$t('datasource.logSearchTable[0]')" width="160" align="center">
-                    <template #default="scope">
-                        <span>{{ dayjs.utc(scope.row.logTime).local().format('YYYY-MM-DD HH:mm:ss') }}</span>
-                    </template>
-                </el-table-column>
-                <el-table-column :label="$t('datasource.logSearchTable[1]')" prop="logType" show-overflow-tooltip width="120" align="center" />
-                <el-table-column :label="$t('datasource.logSearchTable[2]')" prop="logLevel" show-overflow-tooltip width="100" align="center" />
-                <el-table-column :label="$t('datasource.logSearchTable[3]')" header-align="center">
-                    <template #default="scope">
-                        <span v-if="scope.row.logData && scope.row.logData.length > 300">
-                            <el-popover width="700px" trigger="hover" :content="scope.row.logData" popper-class="sql-popover-tip">
-                                <template #reference>
-                                    <span v-html="showHighLightWord(scope.row.logData.substr(0, 300)) + '...'" ></span>
-                                </template>
-                            </el-popover>
-                        </span>
-                        <span v-else v-html="showHighLightWord(scope.row.logData)"></span>
-                    </template>
-                </el-table-column>
-                <el-table-column :label="$t('datasource.logSearchTable[4]')" header-align="center" show-overflow-tooltip prop="logClusterId" width="100" />
-                <el-table-column :label="$t('datasource.logSearchTable[5]')" header-align="center" show-overflow-tooltip prop="logNodeId" width="100" />
-            </el-table>
-            <p v-if="loading">Loading...</p>
-            <p v-if="noMore">No more</p>
-        </div>
-        <div v-if="showSearchBtn">
-            <el-button :icon="DCaret"  circle size="large" :style="searchBthStyle" @click="gotoNewLogSearch"/>
-        </div>
-    </div>
+        </el-main>
+    </el-container>
 </template>
 
 <script lang="ts" setup>
+import { Fold, Expand } from '@element-plus/icons-vue';
 import qs from 'qs';
 import dayjs from 'dayjs';
 import ogRequest from '../../request';
 import { useRequest } from 'vue-request';
-import { Search, Refresh,DCaret,CloseBold } from '@element-plus/icons-vue';
+import { Search, Refresh, DCaret, CloseBold } from '@element-plus/icons-vue';
 import { cloneDeep } from 'lodash-es';
 import { LineData } from '../../components/MyBar.vue';
+import { useWindowStore } from "../../store/window";
+import { storeToRefs } from 'pinia';
+import Install from './install/Index.vue';
+
+const { theme } = storeToRefs(useWindowStore())
 
 const pageSize = ref(30);
 const loading = ref(false);
@@ -183,6 +225,11 @@ const logLevelData = ref<Array<String>>([]);
 const xData = ref<string[]>([]);
 const curLogData = ref<any>({logDate: '',logType: '',logData: '',logLevelSelected: '',typeNames: ''});
 
+const isCollapse = ref(true);
+const toggleCollapse = () => {
+    isCollapse.value = !isCollapse.value;
+};
+
 const selectNodes = (item: Tree) => {
     nodeIds.value = [];
     clusterTree.value!.getCheckedNodes(true).forEach((item: any) => {
@@ -204,13 +251,13 @@ const selectLevels = (item: Tree) => {
     });
     refreshLog();
 };
-
+const canScroll = ref<boolean>(true)
 // functions
 const scrollToBottom = () => {
     if (!noMore.value) listLogScrollData();
 };
 const refreshLog = () => {
-    if(formData.searchText) {
+    if(formData.searchText || formData.dateValue && formData.dateValue.length > 0) {
         showContextCount.value = false
     }
     noMore.value = false;
@@ -274,40 +321,40 @@ const cellMouseEnter =  (row: any,column: any, cell: any, event: any) => {
     if(curRow.value == row) {
         return;
     }
-    let cellHeight = 0
-    let cellHeightStr = window.getComputedStyle(cell).getPropertyValue('height')
-    if(cellHeightStr && cellHeightStr.endsWith('px')) {
-        cellHeight = parseInt(cellHeightStr.replace('px',''))
+    let cellHeight = 0;
+    let cellHeightStr = window.getComputedStyle(cell).getPropertyValue('height');
+    if (cellHeightStr && cellHeightStr.endsWith('px')) {
+        cellHeight = parseInt(cellHeightStr.replace('px', ''));
     }
     searchBthStyle.value = {
-        'position': 'fixed',
-        'right': '30px',
-        'top': (event.pageY - event.offsetY + cellHeight / 2 - 15) + 'px',
-        'z-index': 1000
+        position: 'fixed',
+        right: '30px',
+        top: event.pageY - event.offsetY + cellHeight / 2 - 15 + 'px',
+        'z-index': 1000,
+    };
+    setTimeout(function () {}, 200);
+    showSearchBtn.value = true;
+    curRow.value = row;
+};
+const logTableData = ref();
+const mouseLeave = (event: any) => {
+    let pageY = event.pageY;
+    let pageX = event.pageX;
+    let top = logTableData.value.$el.getBoundingClientRect().top;
+    let left = logTableData.value.$el.getBoundingClientRect().left;
+    if (pageY <= top) {
+        showSearchBtn.value = false;
+        curRow.value = {};
+        return;
     }
-    setTimeout(function(){},200)
-    showSearchBtn.value = true
-    curRow.value = row
-}
-const logTableData = ref()
-const mouseLeave =  (event: any) => {
-    let pageY = event.pageY 
-    let pageX = event.pageX
-    let top = logTableData.value.$el.getBoundingClientRect().top
-    let left = logTableData.value.$el.getBoundingClientRect().left
-    if(pageY <= top) {
-        showSearchBtn.value = false
-        curRow.value = {}
-        return
+    if (pageX <= left) {
+        showSearchBtn.value = false;
+        curRow.value = {};
+        return;
     }
-    if(pageX <= left) {
-        showSearchBtn.value = false
-        curRow.value = {}
-        return
-    } 
-}
+};
 const showContextCount = ref<boolean>(false);
-const router = useRouter()
+const router = useRouter();
 const gotoNewLogSearch = () => {
     formData.searchText = '';
     formData.dateValue = [];
@@ -318,14 +365,14 @@ const gotoNewLogSearch = () => {
             query: {
                 showContextCount: 'true',
                 nodeIds: nodeIds.value && nodeIds.value.length > 0 ? nodeIds.value : [curRow.value.logNodeId],
-                typeNames: typeNames.value.length > 0 ? typeNames.value.join(',') : "",
-                logLevelSelected: logLevelSelected.value.length > 0 ? logLevelSelected.value.join(',') : "",
+                typeNames: typeNames.value.length > 0 ? typeNames.value.join(',') : '',
+                logLevelSelected: logLevelSelected.value.length > 0 ? logLevelSelected.value.join(',') : '',
                 logTime: curRow.value.logTime,
                 logType: curRow.value.logType,
                 logData: curRow.value.logData,
-                date: new Date().getTime()
+                date: new Date().getTime(),
             },
-        })
+        });
     } else {
         // const page = router.resolve({
         //     path:`/vem/log`,
@@ -340,26 +387,28 @@ const gotoNewLogSearch = () => {
         // })
         // window.open(page.href,"_blank")
         router.push({
-            path:`/vem/log`,
+            path: `/vem/log`,
             query: {
                 showContextCount: 'true',
                 nodeIds: nodeIds.value && nodeIds.value.length > 0 ? nodeIds.value : [curRow.value.logNodeId],
-                typeNames: typeNames.value.length > 0 ? typeNames.value.join(',') : "",
-                logLevelSelected: logLevelSelected.value.length > 0 ? logLevelSelected.value.join(',') : "",
+                typeNames: typeNames.value.length > 0 ? typeNames.value.join(',') : '',
+                logLevelSelected: logLevelSelected.value.length > 0 ? logLevelSelected.value.join(',') : '',
                 logTime: curRow.value.logTime,
                 logType: curRow.value.logType,
                 logData: curRow.value.logData,
-                date: new Date().getTime()
-            }
-        })
+                date: new Date().getTime(),
+            },
+        });
     }
     // showContextCount.value = true
 }
 
 const tableRowStyle = ({row, rowIndex}) => {
     if(showContextCount.value && curLogData.logData && curLogData.logData == row.logData && curLogData.logTime && curLogData.logTime == row.logTime) {
-        return {
-            'background-color': 'yellow'
+        return theme.value === 'dark' ? {
+            'background-color': 'rgba(235,223,132,0.2)',
+        } : {
+            'background-color': 'rgba(238,102,102,0.1)',
         }
     }
 }
@@ -459,8 +508,8 @@ const {
                             logLevel: logLevelSelected.value.length > 0 ? logLevelSelected.value.join(',') : curLogData.value.logLevelSelected ? curLogData.value.logLevelSelected : null,
                             logDate: dayjs.utc(curLogData.logTime).tz('Europe/London').format("YYYY-MM-DDTHH:mm:ss.SSS") + 'Z',
                             // searchPhrase: curLogData.logData ? curLogData.logData : "",
-                            startDate: formData.dateValue.length ? formData.dateValue[0] : null,
-                            endDate: formData.dateValue.length ? formData.dateValue[1] : null,
+                            // startDate: formData.dateValue.length ? formData.dateValue[0] : null,
+                            // endDate: formData.dateValue.length ? formData.dateValue[1] : null,
                             scrollId: scrollId.value,
                             // rowCount: pageSize.value,
                             rowCount: formData.contextCount * 2 + 1,
@@ -473,6 +522,7 @@ const {
                 loading.value = false;
             });
         }else {
+            canScroll.value = false
             return ogRequest
             .get(
                 '/logSearch/api/v1/logs?' +
@@ -482,8 +532,8 @@ const {
                             logType: typeNames.value.length > 0 ? typeNames.value.join(',') : null,
                             searchPhrase: formData.searchText.length > 0 ? formData.searchText : null,
                             logLevel: logLevelSelected.value.length > 0 ? logLevelSelected.value.join(',') : null,
-                            startDate: formData.dateValue.length ? formData.dateValue[0] : null,
-                            endDate: formData.dateValue.length ? formData.dateValue[1] : null,
+                            startDate: formData.dateValue.length ? dayjs.utc(formData.dateValue[0]).format("YYYY-MM-DDTHH:mm:ss.SSS") + 'Z' : null,
+                            endDate: formData.dateValue.length ? dayjs.utc(formData.dateValue[1]).format("YYYY-MM-DDTHH:mm:ss.SSS") + 'Z' : null,
                             scrollId: scrollId.value,
                             rowCount: pageSize.value,
                         })
@@ -505,12 +555,13 @@ watch(error, () => {
 });
 watch(logsData, (res: LogsRes) => {
     if (res && Object.keys(res).length) {
-        if (res.logs.length < pageSize.value || showContextCount.value) noMore.value = true;
+        if ( res.logs && res.logs.length < pageSize.value || showContextCount.value) noMore.value = true;
         tableData.value = tableData.value.concat(res.logs);
         scrollId.value = res.scrollId;
     } else {
         tableData.value = [];
     }
+    canScroll.value = true
 });
 
 // map data
@@ -522,12 +573,12 @@ const { data: mapData, run: refreshMap } = useRequest(
                 '/logSearch/api/v1/logDistributionMap?' +
                     qs.stringify(
                         filterNonNull({
-                            nodeId: nodeIds.value.length > 0 ? nodeIds.value.join(',') as string: null,
-                            logType: typeNames.value.length > 0 ? typeNames.value.join(',') as string: null,
-                            logLevel: logLevelSelected.value.length > 0 ? logLevelSelected.value.join(',') as string : null,
+                            nodeId: nodeIds.value.length > 0 ? (nodeIds.value.join(',') as string) : null,
+                            logType: typeNames.value.length > 0 ? (typeNames.value.join(',') as string) : null,
+                            logLevel: logLevelSelected.value.length > 0 ? (logLevelSelected.value.join(',') as string) : null,
                             searchPhrase: formData.searchText.length > 0 ? formData.searchText : null,
-                            startDate: formData.dateValue.length ? formData.dateValue[0] : null,
-                            endDate: formData.dateValue.length ? formData.dateValue[1] : null,
+                            startDate: formData.dateValue.length ? dayjs.utc(formData.dateValue[0]).format("YYYY-MM-DDTHH:mm:ss.SSS") + 'Z' : null,
+                            endDate: formData.dateValue.length ? dayjs.utc(formData.dateValue[1]).format("YYYY-MM-DDTHH:mm:ss.SSS") + 'Z' : null,
                         })
                     )
             )
@@ -590,31 +641,31 @@ watch(mapData, (res: MapRes) => {
 });
 
 onMounted(() => {
-    let _showContextCount = window.$wujie?.props.data.showContextCount as string
-    let _nodeIds = window.$wujie?.props.data.nodeIds as string[]
-    let _logData = window.$wujie?.props.data.logData as string
-    let _logTime = window.$wujie?.props.data.logTime as string
-    let _logType = window.$wujie?.props.data.logType as string
-    let _typeNames = window.$wujie?.props.data.typeNames as string
-    let _logLevelSelected = window.$wujie?.props.data.logLevelSelected as string
-    let param = router.currentRoute.value.query
-    if(_showContextCount && _showContextCount == 'true') {
-        showContextCount.value = true
-    }else {
-        showContextCount.value = param && param.showContextCount && param.showContextCount == 'true' ? true:false
+    let _showContextCount = window.$wujie?.props.data.showContextCount as string;
+    let _nodeIds = window.$wujie?.props.data.nodeIds as string[];
+    let _logData = window.$wujie?.props.data.logData as string;
+    let _logTime = window.$wujie?.props.data.logTime as string;
+    let _logType = window.$wujie?.props.data.logType as string;
+    let _typeNames = window.$wujie?.props.data.typeNames as string;
+    let _logLevelSelected = window.$wujie?.props.data.logLevelSelected as string;
+    let param = router.currentRoute.value.query;
+    if (_showContextCount && _showContextCount == 'true') {
+        showContextCount.value = true;
+    } else {
+        showContextCount.value = param && param.showContextCount && param.showContextCount == 'true' ? true : false;
     }
-     _nodeIds = _nodeIds && _nodeIds.length > 0 ? _nodeIds  : param && param.nodeIds ? param.nodeIds as string[] : []
-    if(typeof(_nodeIds) == 'string') {
-        nodeIds.value = []
-        nodeIds.value.push(_nodeIds)
-    }else {
-        nodeIds.value = _nodeIds
+    _nodeIds = _nodeIds && _nodeIds.length > 0 ? _nodeIds : param && param.nodeIds ? (param.nodeIds as string[]) : [];
+    if (typeof _nodeIds == 'string') {
+        nodeIds.value = [];
+        nodeIds.value.push(_nodeIds);
+    } else {
+        nodeIds.value = _nodeIds;
     }
-    curLogData.logData = _logData ? _logData : param && param.logData ? param.logData : ""
-    curLogData.logTime = _logTime ? _logTime : param && param.logTime ? param.logTime : ""
-    curLogData.logType = _logType ? _logType : param && param.logType ? param.logType : ""
-    curLogData.typeNames = _typeNames ? _typeNames : param && param.typeNames ? param.typeNames : ""
-    curLogData.logLevelSelected = _logLevelSelected ? _logLevelSelected : param && param.logLevelSelected ? param.logLevelSelected : ""
+    curLogData.logData = _logData ? _logData : param && param.logData ? param.logData : '';
+    curLogData.logTime = _logTime ? _logTime : param && param.logTime ? param.logTime : '';
+    curLogData.logType = _logType ? _logType : param && param.logType ? param.logType : '';
+    curLogData.typeNames = _typeNames ? _typeNames : param && param.typeNames ? param.typeNames : '';
+    curLogData.logLevelSelected = _logLevelSelected ? _logLevelSelected : param && param.logLevelSelected ? param.logLevelSelected : '';
     listClusterData();
     listLogTypeData();
     listLogLevelData();
@@ -712,4 +763,14 @@ onMounted(() => {
 .infinite-list .infinite-list-item + .list-item {
     margin-top: 10px;
 }
+.log-context {
+    background-color: #f2f3f5;border: solid #dcdfe6;font-size:13px;border-radius:5px;color: #babcc2;padding:1px 7px
+}
+.log-context select {
+    border: none;background-color: #f2f3f5;width: 100px;font-size:15px;outline:none;
+    // appearance:none; //去掉倒三角
+}
+// .log-context select:focus-visible{
+//     border: 0;
+// }
 </style>

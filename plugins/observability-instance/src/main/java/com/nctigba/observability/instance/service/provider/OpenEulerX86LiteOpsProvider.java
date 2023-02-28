@@ -8,7 +8,7 @@ import org.opengauss.admin.common.core.domain.model.ops.JschResult;
 import org.opengauss.admin.common.enums.ops.ClusterRoleEnum;
 import org.opengauss.admin.common.enums.ops.OpenGaussVersionEnum;
 import org.opengauss.admin.common.exception.ops.OpsException;
-import org.opengauss.admin.common.utils.ops.JschUtil;
+import com.nctigba.observability.instance.util.JschUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

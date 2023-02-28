@@ -135,18 +135,39 @@ const {
 } = useRequest(
     () => {
         return restRequest.post("/wdr/generate", formData).then(function (res) {
+            console.log("aaaaaaaa")
             return res;
         });
     },
-    { manual: true }
+    { manual: true,
+      onSuccess: (res) => {
+        if(res && res.code === 200) {
+            const msg = t("dashboard.wdrReports.buildWDRDialog.buildSuccess");
+            ElMessage({
+                showClose: true,
+                message: msg,
+                type: "success",
+            });
+        }else {
+            const msg = t("dashboard.wdrReports.buildWDRDialog.buildFail");
+            ElMessage({
+                showClose: true,
+                message: msg,
+                type: "error",
+            });
+        }
+        
+      }
+     }
 );
 watch(rez, (rez) => {
-    const msg = t("dashboard.wdrReports.buildWDRDialog.buildSuccess");
-    ElMessage({
-        showClose: true,
-        message: msg,
-        type: "success",
-    });
+    //提示写这里，页面会出现两次提示，原因暂时不明，改写在上面的useRequest的onSuccess方法中
+    // const msg = t("dashboard.wdrReports.buildWDRDialog.buildSuccess");
+    // ElMessage({
+    //     showClose: true,
+    //     message: msg,
+    //     type: "success",
+    // });
     emit("conveyFlag");
     visible.value = false;
     emit("changeModal", visible.value);

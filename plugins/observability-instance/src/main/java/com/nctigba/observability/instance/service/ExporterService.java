@@ -3,6 +3,8 @@ package com.nctigba.observability.instance.service;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.Map;
@@ -27,6 +29,7 @@ import com.nctigba.observability.instance.util.YamlUtil;
 
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.io.IoUtil;
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.core.util.URLUtil;
 import cn.hutool.http.HttpUtil;
 import cn.hutool.json.JSONUtil;
@@ -112,9 +115,13 @@ public class ExporterService extends AbstractInstaller {
 			curr = nextStep(wsSession, steps, curr);
 			sendMsg(wsSession, steps, curr, status.DONE);
 		} catch (IOException e) {
-			e.printStackTrace();
 			steps.get(curr).setState(status.ERROR);
 			wsUtil.sendText(wsSession, JSONUtil.toJsonStr(steps));
+			var sw = new StringWriter();
+			try (var pw = new PrintWriter(sw);) {
+				e.printStackTrace(pw);
+			}
+			wsUtil.sendText(wsSession, sw.toString());
 		}
 	}
 
@@ -177,9 +184,75 @@ public class ExporterService extends AbstractInstaller {
 		session.execute("export DATA_SOURCE_NAME='" + url
 				+ "' && nohup ./opengauss_exporter --config=og_exporter.yml 2>&1 & \r", false);
 		var gaussEnv = new NctigbaEnv().setHostid(hostId).setPort(9187).setUsername(user.getUsername())
-				.setType(type.OPENGAUSS_EXPORTER).setPath("./");
+				.setType(type.OPENGAUSS_EXPORTER).setPath(".");
 		envMapper.insert(gaussEnv);
 		// 验证
 		return gaussEnv;
+	}
+
+	public void uninstall(WsSession wsSession, String nodeId) {
+		// @formatter:off
+		var steps = Arrays.asList(
+				new Step("初始化"),
+				new Step("连接主机"),
+				new Step("查找nodeExporter进程号"),
+				new Step("停止nodeExporter"),
+				new Step("查找opengaussExporter进程号"),
+				new Step("停止opengaussExporter"),
+				new Step("卸载完成"));
+		// @formatter:on
+		var curr = 0;
+
+		try {
+			var node = clusterManager.getOpsNodeById(nodeId);
+			var nodeenv = envMapper.selectOne(Wrappers.<NctigbaEnv>lambdaQuery()
+					.eq(NctigbaEnv::getType, type.NODE_EXPORTER).eq(NctigbaEnv::getHostid, node.getHostId()));
+			var expenv = envMapper.selectOne(Wrappers.<NctigbaEnv>lambdaQuery()
+					.eq(NctigbaEnv::getType, type.OPENGAUSS_EXPORTER).eq(NctigbaEnv::getHostid, node.getHostId()));
+
+			if (nodeenv == null && expenv == null)
+				throw new RuntimeException("exporters not found");
+
+			curr = nextStep(wsSession, steps, curr);
+			OpsHostEntity hostEntity = hostFacade.getById(node.getHostId());
+			if (hostEntity == null)
+				throw new RuntimeException("host not found");
+			nodeenv.setHost(hostEntity);
+			expenv.setHost(hostEntity);
+
+			var user = hostUserFacade.listHostUserByHostId(hostEntity.getHostId()).stream().filter(e -> {
+				return nodeenv.getUsername().equals(e.getUsername());
+			}).findFirst().orElse(null);
+			try (var sshsession = SshSession.connect(hostEntity.getPublicIp(), hostEntity.getPort(), user.getUsername(),
+					encryptionUtils.decrypt(user.getPassword()));) {
+				curr = nextStep(wsSession, steps, curr);
+				var nodePid = sshsession.execute(command.PS.parse("node_exporter"));
+				if (StrUtil.isNotBlank(nodePid)) {
+					curr = nextStep(wsSession, steps, curr);
+					sshsession.execute(command.KILL.parse(nodePid));
+				} else
+					curr = skipStep(wsSession, steps, curr);
+				envMapper.deleteById(nodeenv);
+
+				curr = nextStep(wsSession, steps, curr);
+				var gaussPid = sshsession.execute(command.PS.parse("opengauss_exporter"));
+				if (StrUtil.isNotBlank(gaussPid)) {
+					curr = nextStep(wsSession, steps, curr);
+					sshsession.execute(command.KILL.parse(gaussPid));
+				} else
+					curr = skipStep(wsSession, steps, curr);
+				envMapper.deleteById(expenv);
+
+				sendMsg(wsSession, steps, curr, status.DONE);
+			}
+		} catch (Exception e) {
+			steps.get(curr).setState(status.ERROR);
+			wsUtil.sendText(wsSession, JSONUtil.toJsonStr(steps));
+			var sw = new StringWriter();
+			try (var pw = new PrintWriter(sw);) {
+				e.printStackTrace(pw);
+			}
+			wsUtil.sendText(wsSession, sw.toString());
+		}
 	}
 }

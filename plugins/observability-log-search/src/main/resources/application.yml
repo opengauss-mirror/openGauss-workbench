@@ -15,6 +15,10 @@ spring:
   datasource:
     dynamic:
       strict: false #Strictly match data sources,Default false. true:Throw exception when the specified data source is not matched,false:Use default data source
+  sql:
+    init:
+      mode: always
+      continue-on-error: true
   jackson:
     time-zone: GMT+8
     date-format: yyyy-MM-dd HH:mm:ss

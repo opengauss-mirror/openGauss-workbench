@@ -214,6 +214,11 @@ body {
     cursor: pointer;
 }
 
+// check-box
+.el-checkbox__inner::after {
+    border-color: var(--color-bg-2) !important;
+}
+
 #app {
     height: 100%;
     --vem-header-height: 40px;
@@ -224,6 +229,7 @@ body {
     --el-bg-color-overlay: $og-background-color;
     --el-color-primary: var(--primary-6);
     --el-text-color-primary: var(--el-text-color-og);
+    --el-checkbox-checked-icon-color: var(-color-bg-2) !important;
     @for $i from 1 through 9 {
         --el-color-primary-light-#{$i}: #{mix(#fff, #732fcb, math.percentage(math.div($i, 10)))};
     }

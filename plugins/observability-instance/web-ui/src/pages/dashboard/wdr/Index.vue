@@ -17,6 +17,27 @@ const props = withDefaults(
     }
 );
 
+// nodeId sync
+const emit = defineEmits(["nodeIdChanged"]);
+const clusterComponent = ref(null);
+const culsterLoaded = ref<boolean>(false);
+const initNodeId = ref<string>("");
+const syncNodeId = (syncNodeIdVal: string) => {
+    if (!culsterLoaded.value) initNodeId.value = syncNodeIdVal;
+    else {
+        clusterComponent.value.setNodeId(syncNodeIdVal);
+        if (syncNodeIdVal !== cluster.value[1]) {
+            Object.assign(page, { pageSize: page.pageSize, total: 0, currentPage: 1 });
+            nextTick(() => {
+                requestData();
+            });
+        }
+    }
+};
+defineExpose({
+    syncNodeId,
+});
+
 const initFormData = {
     reportRange: "CLUSTER",
     reportType: "DETAIL",
@@ -60,6 +81,14 @@ const handleReset = () => {
 const cluster = ref<Array<any>>([]);
 const handleClusterValue = (val: any) => {
     cluster.value = val;
+    emit("nodeIdChanged", cluster.value[1]);
+};
+const clusterLoaded = (val: any) => {
+    culsterLoaded.value = true;
+    if (initNodeId.value) clusterComponent.value.setNodeId(initNodeId.value);
+    nextTick(() => {
+        requestData();
+    });
 };
 const {
     data: res,
@@ -97,9 +126,9 @@ type Res =
     | undefined;
 watch(res, (res: Res) => {
     if (res && res.records && res.records.length) {
-        const { total } = res
+        const { total } = res;
         tableData.value = res.records;
-        Object.assign(page, { pageSize: page.pageSize, total })
+        Object.assign(page, { pageSize: page.pageSize, total });
     } else {
         tableData.value = [];
     }
@@ -130,7 +159,6 @@ const { run: handleView, loading: viewing } = useRequest(
                 wdrId: row?.wdrId,
             })
             .then(function (res) {
-                console.log('res',res)
                 const newWindow = window.open(row.reportName, "_blank");
                 newWindow?.document.write(res.data);
             })
@@ -190,7 +218,7 @@ const { run: hanleDelete, loading: deleting } = useRequest(
             <div class="search-form-multirow">
                 <div class="row">
                     <div class="filter">
-                        <ClusterCascader @loaded="requestData" notClearable autoSelectFirst :title="$t('dashboard.wdrReports.clusterName')" @getCluster="handleClusterValue" />
+                        <ClusterCascader ref="clusterComponent" @loaded="clusterLoaded" notClearable :title="$t('dashboard.wdrReports.clusterName')" @getCluster="handleClusterValue" />
                     </div>
                     <div class="filter">
                         <span>{{ $t("dashboard.wdrReports.reportRange") }}&nbsp;</span>
@@ -210,7 +238,7 @@ const { run: hanleDelete, loading: deleting } = useRequest(
 
                     <div class="filter">
                         <span>{{ $t("dashboard.wdrReports.buildTime") }}&nbsp;</span>
-                        <MyDatePicker v-model="formData.dateValue" type="datetimerange" style="width: 300px" />
+                        <MyDatePicker v-model="formData.dateValue" :teleported="true" type="datetimerange" style="width: 300px" />
                     </div>
                 </div>
 
