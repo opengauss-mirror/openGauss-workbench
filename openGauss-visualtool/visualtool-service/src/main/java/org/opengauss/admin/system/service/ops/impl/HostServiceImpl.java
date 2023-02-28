@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.jcraft.jsch.ChannelShell;
 import com.jcraft.jsch.Session;
 import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.constant.ops.SshCommandConstants;
@@ -14,7 +15,11 @@ import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
 import org.opengauss.admin.common.core.domain.model.ops.HostBody;
 import org.opengauss.admin.common.core.domain.model.ops.JschResult;
+import org.opengauss.admin.common.core.domain.model.ops.WsSession;
 import org.opengauss.admin.common.core.domain.model.ops.host.OpsHostVO;
+import org.opengauss.admin.common.core.domain.model.ops.host.SSHBody;
+import org.opengauss.admin.common.core.handler.ops.cache.TaskManager;
+import org.opengauss.admin.common.core.handler.ops.cache.WsConnectorManager;
 import org.opengauss.admin.common.exception.ops.OpsException;
 import org.opengauss.admin.common.utils.ops.JschUtil;
 import org.opengauss.admin.system.mapper.ops.OpsHostMapper;
@@ -28,6 +33,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.Future;
 
 /**
  * @author lhf
@@ -49,6 +55,8 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
     private EncryptionUtils encryptionUtils;
     @Autowired
     private IOpsClusterService clusterService;
+    @Autowired
+    private WsConnectorManager wsConnectorManager;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -195,6 +203,20 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
     @Override
     public IPage<OpsHostVO> pageHost(Page page, String name) {
         return hostMapper.pageHost(page, name);
+    }
+
+    @Override
+    public void ssh(SSHBody sshBody) {
+        WsSession wsSession = wsConnectorManager.getSession(sshBody.getBusinessId()).orElseThrow(()->new OpsException("websocket session not exist"));
+
+        Session session = jschUtil.getSession(sshBody.getIp(), sshBody.getSshPort(), sshBody.getSshUsername(), encryptionUtils.decrypt(sshBody.getSshPassword()))
+                .orElseThrow(() -> new OpsException("Failed to establish session with host"));
+
+        ChannelShell channelShell = jschUtil.openChannelShell(session);
+
+        Future<?> future = threadPoolTaskExecutor.submit(() -> jschUtil.channelToWsSession(channelShell, wsSession));
+
+        TaskManager.registry(sshBody.getBusinessId(), future);
     }
 
     private OpsHostEntity getByPublicIp(String publicIp) {
