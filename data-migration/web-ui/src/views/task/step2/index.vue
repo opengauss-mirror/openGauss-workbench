@@ -141,6 +141,8 @@ const handleParamsConfig = (mode, row) => {
   paramsConfigVisible.value = true
   configMode.value = mode
   subTaskInfo.value = row
+  const originFilterData = toRaw(props.subTaskConfig).filter(item => !item.taskParamsObject.basic.length && !item.taskParamsObject.more.length) || []
+  countUseDefault.value = originFilterData.length
 }
 
 const pageChange = current => {

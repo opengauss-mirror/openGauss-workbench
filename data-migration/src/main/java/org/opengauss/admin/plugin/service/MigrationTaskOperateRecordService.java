@@ -2,6 +2,7 @@ package org.opengauss.admin.plugin.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import org.opengauss.admin.plugin.domain.MigrationTaskOperateRecord;
+import org.opengauss.admin.plugin.enums.TaskOperate;
 
 /**
  * @author xielibo
@@ -9,7 +10,9 @@ import org.opengauss.admin.plugin.domain.MigrationTaskOperateRecord;
  */
 public interface MigrationTaskOperateRecordService extends IService<MigrationTaskOperateRecord> {
 
-    void saveRecord(Integer taskId, String title, String operUser);
+    void saveRecord(Integer taskId,TaskOperate operate, String operUser);
 
     MigrationTaskOperateRecord getLastRecordByTaskId(Integer taskId);
+
+    MigrationTaskOperateRecord getRecordByTaskIdAndOperType(Integer taskId, Integer oerType);
 }

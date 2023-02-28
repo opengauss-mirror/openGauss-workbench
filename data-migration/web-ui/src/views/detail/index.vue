@@ -47,7 +47,7 @@
               {{ execSubStatusMap(record.execStatus) }}
             </template>
           </a-table-column>
-          <a-table-column title="操作" align="center" :width="300" fixed="right">
+          <a-table-column title="操作" align="center" :width="340" fixed="right">
             <template #cell="{ record }">
               <a-button
                 size="mini"
@@ -82,7 +82,7 @@
                 <template #default>停止增量</template>
               </a-button>
               <a-button
-                v-if="record.migrationModelId === 2 && record.execStatus === 3"
+                v-if="record.migrationModelId === 2 && (record.execStatus === 3 || record.execStatus === 9)"
                 size="mini"
                 type="text"
                 @click="startSubReverse(record)"
@@ -224,6 +224,7 @@ const stopTask = async () => {
 const stopSubTask = row => {
   subTaskFinish(row.id).then(() => {
     Message.success('Stop success')
+    loopSubTaskStatus()
     getSubTaskList()
   })
 }
@@ -232,14 +233,20 @@ const stopSubTask = row => {
 const stopSubIncrease = row => {
   subTaskStopIncremental(row.id).then(() => {
     Message.success('Stop success')
+    loopSubTaskStatus()
     getSubTaskList()
   })
 }
 
 // start sub task reverse
 const startSubReverse = row => {
+  if (row.targetDbVersion.substring(0, 3) === '3.0') {
+    Message.error(`${row.targetDbVersion} version of openGauss does not support reverse migration`)
+    return
+  }
   subTaskStartReverse(row.id).then(() => {
     Message.success('Start success')
+    loopSubTaskStatus()
     getSubTaskList()
   })
 }

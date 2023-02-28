@@ -1,5 +1,6 @@
 package org.opengauss.admin.plugin.controller;
 
+import cn.hutool.core.date.DateUtil;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import org.opengauss.admin.common.annotation.Log;
 import org.opengauss.admin.common.core.domain.AjaxResult;
@@ -10,10 +11,17 @@ import org.opengauss.admin.plugin.domain.MigrationMainTask;
 import org.opengauss.admin.plugin.domain.MigrationTask;
 import org.opengauss.admin.plugin.dto.MigrationMainTaskDto;
 import org.opengauss.admin.plugin.dto.MigrationTaskDto;
+import org.opengauss.admin.plugin.handler.PortalHandle;
 import org.opengauss.admin.plugin.service.MigrationMainTaskService;
 import org.opengauss.admin.plugin.service.MigrationTaskService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.nio.charset.StandardCharsets;
+import java.util.Date;
 
 /**
  * @author xielibo
@@ -67,6 +75,14 @@ public class MigrationTaskController extends BaseController {
     }
 
     /**
+     * getEditInfo
+     */
+    @GetMapping(value = "/editInfo/{id}")
+    public AjaxResult getEditInfo(@PathVariable("id") Integer id) {
+        return AjaxResult.success(migrationMainTaskService.getMigrationTaskDtoById(id));
+    }
+
+    /**
      * refreshStatus
      */
     @GetMapping(value = "/refreshStatus/{id}")
@@ -74,8 +90,6 @@ public class MigrationTaskController extends BaseController {
         migrationMainTaskService.refreshTaskStatusByPortal(id);
         return AjaxResult.success();
     }
-
-
 
     /**
      * delete task
@@ -162,4 +176,20 @@ public class MigrationTaskController extends BaseController {
         return AjaxResult.success(migrationTaskService.getTaskDetailById(id));
     }
 
+    /**
+     * Download log file by filepath
+     */
+    @GetMapping("/subTask/log/download/{id}")
+    public ResponseEntity<ByteArrayResource> logDownload(@PathVariable Integer id, String filePath) throws Exception {
+        MigrationTask task = migrationTaskService.getById(id);
+        byte[] bytes = PortalHandle.getTaskLogs(task.getRunHost(), task.getRunPort(), task.getRunUser(), task.getRunPass(), task, filePath).getBytes(StandardCharsets.UTF_8);
+        ByteArrayResource bar = new ByteArrayResource(bytes);
+        String logName = filePath.substring(filePath.lastIndexOf("/") + 1);
+        String date = DateUtil.format(new Date(),"yyyyMMdd");
+        String filename = "log_" + id + "_" + date + "_" + logName;
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .header("Content-disposition", "attachment; filename=" + filename)
+                .body(bar);
+    }
 }

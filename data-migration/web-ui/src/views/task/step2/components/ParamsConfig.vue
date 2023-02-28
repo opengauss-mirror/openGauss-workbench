@@ -98,7 +98,7 @@ const taskParams = reactive({
 })
 
 const basicRowClass = (row) => {
-  if (basicEditData.value.some(item => item.id === row.raw.id)) {
+  if (basicEditData.value.some(item => item.paramKey === row.raw.paramKey)) {
     return 'row-changed'
   } else {
     return ''
@@ -106,7 +106,7 @@ const basicRowClass = (row) => {
 }
 
 const moreRowClass = (row) => {
-  if (moreEditData.value.some(item => item.id === row.raw.id)) {
+  if (moreEditData.value.some(item => item.paramKey === row.raw.paramKey)) {
     return 'row-changed'
   } else {
     return ''
@@ -180,14 +180,14 @@ const getDefaultParams = () => {
       if (props.globalParams.basic.length) {
         basicEditData.value = props.globalParams.basic
         basicData.value = basicData.value.map(item => {
-          const findItem = basicEditData.value.find(fItem => fItem.id === item.id)
+          const findItem = basicEditData.value.find(fItem => fItem.paramKey === item.paramKey)
           return findItem || item
         })
       }
       if (props.globalParams.more.length) {
         moreEditData.value = props.globalParams.more
         moreData.value = moreData.value.map(item => {
-          const findItem = moreEditData.value.find(fItem => fItem.id === item.id)
+          const findItem = moreEditData.value.find(fItem => fItem.paramKey === item.paramKey)
           return findItem || item
         })
       }
@@ -197,14 +197,14 @@ const getDefaultParams = () => {
       if (taskParams.basic.length) {
         basicEditData.value = taskParams.basic
         basicData.value = basicData.value.map(item => {
-          const findItem = basicEditData.value.find(fItem => fItem.id === item.id)
+          const findItem = basicEditData.value.find(fItem => fItem.paramKey === item.paramKey)
           return findItem || item
         })
       }
       if (taskParams.more.length) {
         moreEditData.value = taskParams.more
         moreData.value = moreData.value.map(item => {
-          const findItem = moreEditData.value.find(fItem => fItem.id === item.id)
+          const findItem = moreEditData.value.find(fItem => fItem.paramKey === item.paramKey)
           return findItem || item
         })
       }

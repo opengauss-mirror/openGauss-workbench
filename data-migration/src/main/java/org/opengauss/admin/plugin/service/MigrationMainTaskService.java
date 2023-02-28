@@ -25,6 +25,8 @@ public interface MigrationMainTaskService extends IService<MigrationMainTask> {
 
     Map<String, Object> getDetailById(Integer taskId);
 
+    MigrationTaskDto getMigrationTaskDtoById(Integer taskId);
+
     void saveTask(MigrationTaskDto taskDto);
 
     @Transactional
@@ -46,4 +48,5 @@ public interface MigrationMainTaskService extends IService<MigrationMainTask> {
 
     void refreshTaskStatusByPortal(Integer taskId);
 
+    void doRefreshMainTaskStatus();
 }

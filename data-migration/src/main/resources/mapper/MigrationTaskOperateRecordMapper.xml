@@ -10,6 +10,7 @@
         <result property="operUser" column="oper_user"/>
         <result property="operTime" column="oper_time"/>
         <result property="title" column="title"/>
+        <result property="operType" column="oper_type"/>
     </resultMap>
 
 

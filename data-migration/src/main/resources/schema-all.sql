@@ -156,6 +156,7 @@ CREATE TABLE IF NOT EXISTS "public"."tb_migration_task" (
   "migration_model_id" int8,
   "migration_process" varchar(10) COLLATE "pg_catalog"."default",
   "run_hostname" varchar(255) COLLATE "pg_catalog"."default",
+  "target_db_version" varchar(20) COLLATE "pg_catalog"."default",
   CONSTRAINT "tb_migration_task_pkey" PRIMARY KEY ("id")
 );
 
@@ -210,6 +211,7 @@ COMMENT ON COLUMN "public"."tb_migration_task"."main_task_id" IS '平台主任�
 COMMENT ON COLUMN "public"."tb_migration_task"."migration_model_id" IS '操作模式ID';
 COMMENT ON COLUMN "public"."tb_migration_task"."migration_process" IS '迁移进度';
 COMMENT ON COLUMN "public"."tb_migration_task"."run_hostname" IS '运行环境hostname';
+COMMENT ON COLUMN "public"."tb_migration_task"."target_db_version" IS '目标数据库版本';
 COMMENT ON TABLE "public"."tb_migration_task" IS '迁移子任务表';
 
 
@@ -217,7 +219,7 @@ COMMENT ON TABLE "public"."tb_migration_task" IS '迁移子任务表';
 CREATE TABLE IF NOT EXISTS "public"."tb_migration_task_exec_result_detail" (
   "id" int8 NOT NULL DEFAULT nextval('sq_tb_task_exec_result_detail_id'::regclass),
   "task_id" int8,
-  "exec_result_detail" varchar(1000) COLLATE "pg_catalog"."default",
+  "exec_result_detail" text COLLATE "pg_catalog"."default",
   "create_time" timestamp(6),
   "process_type" int2,
   CONSTRAINT "tb_task_exec_result_detail_pkey" PRIMARY KEY ("id")
@@ -343,6 +345,7 @@ CREATE TABLE IF NOT EXISTS "public"."tb_migration_task_operate_record" (
   "title" varchar(255) COLLATE "pg_catalog"."default",
   "oper_time" timestamp(6),
   "oper_user" varchar(255) COLLATE "pg_catalog"."default",
+  "oper_type" int2,
   CONSTRAINT "tb_task_process_record_pkey" PRIMARY KEY ("id")
 );
 
@@ -355,6 +358,8 @@ COMMENT ON COLUMN "public"."tb_migration_task_operate_record"."title" IS '操作
 COMMENT ON COLUMN "public"."tb_migration_task_operate_record"."oper_time" IS '操作时间';
 
 COMMENT ON COLUMN "public"."tb_migration_task_operate_record"."oper_user" IS '操作人';
+
+COMMENT ON COLUMN "public"."tb_migration_task_operate_record"."oper_type" IS '操作类型；1：启动；2：停止增量；3：启动反向；100：结束迁移';
 
 COMMENT ON TABLE "public"."tb_migration_task_operate_record" IS '任务操作记录表';
 
@@ -379,9 +384,6 @@ COMMENT ON COLUMN "public"."tb_migration_task_status_record"."status_id" IS '状
 
 COMMENT ON COLUMN "public"."tb_migration_task_status_record"."create_time" IS '记录时间';
 
-COMMENT ON TABLE "public"."tb_migration_task_status_record" IS '任务状态记录表';
-
-
 CREATE OR REPLACE FUNCTION init_migration_data_fuc() RETURNS integer AS 'BEGIN
 
     IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema=''public'' and table_name=''tb_migration_task_model'') AND
@@ -393,9 +395,86 @@ CREATE OR REPLACE FUNCTION init_migration_data_fuc() RETURNS integer AS 'BEGIN
         VALUES (2, ''在线模式'', ''start_plan3'');
     END IF;
 
+    IF EXISTS(SELECT 1 FROM information_schema.tables WHERE table_schema = ''public'' and table_name = ''tb_migration_task_init_global_param'') AND
+       NOT EXISTS(select 1 from "public"."tb_migration_task_init_global_param")
+    THEN
+        INSERT INTO "public"."tb_migration_task_init_global_param" ("id", "param_key", "param_value", "param_desc")
+        VALUES (1, ''sink.query-dop'', ''8'', ''sink端数据库并行查询会话配置'');
+        INSERT INTO "public"."tb_migration_task_init_global_param" ("id", "param_key", "param_value", "param_desc")
+        VALUES (2, ''sink.minIdle'', ''10'', ''默认最小连接数量'');
+        INSERT INTO "public"."tb_migration_task_init_global_param" ("id", "param_key", "param_value", "param_desc")
+        VALUES (3, ''sink.maxActive'', ''20'', ''默认激活数据库连接数量'');
+        INSERT INTO "public"."tb_migration_task_init_global_param" ("id", "param_key", "param_value", "param_desc")
+        VALUES (4, ''sink.initialSize'', ''5'', ''初始化连接池大小'');
+        INSERT INTO "public"."tb_migration_task_init_global_param" ("id", "param_key", "param_value", "param_desc")
+        VALUES (5, ''sink.debezium-time-period'', ''1'', ''Debezium增量校验时间段：24*60单位：分钟，即每隔1小时增量校验一次。'');
+        INSERT INTO "public"."tb_migration_task_init_global_param" ("id", "param_key", "param_value", "param_desc")
+        VALUES (7, ''source.query-dop'', ''8'', ''source端数据库并行查询会话配置'');
+        INSERT INTO "public"."tb_migration_task_init_global_param" ("id", "param_key", "param_value", "param_desc")
+        VALUES (8, ''source.minIdle'', ''10'', ''默认最小连接数量'');
+        INSERT INTO "public"."tb_migration_task_init_global_param" ("id", "param_key", "param_value", "param_desc")
+        VALUES (9, ''source.maxActive'', ''20'', ''默认激活数据库连接数量'');
+        INSERT INTO "public"."tb_migration_task_init_global_param" ("id", "param_key", "param_value", "param_desc")
+        VALUES (10, ''source.initialSize'', ''5'', ''默认初始连接池大小'');
+        INSERT INTO "public"."tb_migration_task_init_global_param" ("id", "param_key", "param_value", "param_desc")
+        VALUES (12, ''source.debezium-num-period'', ''1000'', ''Debezium增量校验数量的阈值，默认值为1000，应大于100'');
+        INSERT INTO "public"."tb_migration_task_init_global_param" ("id", "param_key", "param_value", "param_desc")
+        VALUES (11, ''source.debezium-time-period'', ''1'', ''Debezium增量校验时间段：24*60单位：分钟，即每隔1小时增量校验一次'');
+        INSERT INTO "public"."tb_migration_task_init_global_param" ("id", "param_key", "param_value", "param_desc")
+        VALUES (13, ''rules.enable'', ''false'', ''规则过滤，true代表开启，false代表关闭'');
+        INSERT INTO "public"."tb_migration_task_init_global_param" ("id", "param_key", "param_value", "param_desc")
+        VALUES (14, ''rules.table'', ''0'',''配置表过滤规则，可通过添加黑白名单，对当前数据库中待校验表进行过滤，黑白名单为互斥规则，配置有白名单时，会忽略配置的黑名单规则。可同时配置多组白名单或者黑名单。如果配置多组白名单或黑名单，那么会依次按照白名单去筛选表。值为table规则的数量'');
+        INSERT INTO "public"."tb_migration_task_init_global_param" ("id", "param_key", "param_value", "param_desc")
+        VALUES (15, ''rules.table.name1'', ''white'', ''配置规则名称，黑名单或者白名单，white|black'');
+        INSERT INTO "public"."tb_migration_task_init_global_param" ("id", "param_key", "param_value", "param_desc")
+        VALUES (17, ''rules.table.name2'', ''white'', ''如果有多个黑白名单，就会配置过滤名称2'');
+        INSERT INTO "public"."tb_migration_task_init_global_param" ("id", "param_key", "param_value", "param_desc")
+        VALUES (18, ''rules.table.text2'', NULL, ''如果有多个黑白名单，就会配置正则2'');
+        INSERT INTO "public"."tb_migration_task_init_global_param" ("id", "param_key", "param_value", "param_desc")
+        VALUES (19, ''rules.row'', ''0'',''配置行级过滤规则，规则继承table规则类；允许配置多组行过滤规则；行级规则等效于select * from table order by primaryKey asc limit offset,count; 如果多组规则配置的正则表达式过滤出的表产生交集，那么行过滤条件只生效最先匹配到的规则条件。值为row规则的数量'');
+        INSERT INTO "public"."tb_migration_task_init_global_param" ("id", "param_key", "param_value", "param_desc")
+        VALUES (20, ''rules.row.name1'', NULL, ''配置规则表名过滤正则表达式，用于匹配表名称；name规则不可为空，不可重复'');
+        INSERT INTO "public"."tb_migration_task_init_global_param" ("id", "param_key", "param_value", "param_desc")
+        VALUES (22, ''rules.row.name2'', NULL, ''如果有多个黑白名单，就会配置过滤名称2'');
+        INSERT INTO "public"."tb_migration_task_init_global_param" ("id", "param_key", "param_value", "param_desc")
+        VALUES (23, ''rules.row.text2'', NULL, ''如果有多个黑白名单，就会配置过滤规则2'');
+        INSERT INTO "public"."tb_migration_task_init_global_param" ("id", "param_key", "param_value", "param_desc")
+        VALUES (24, ''rules.column'', ''0'', ''列过滤规则，用于对表字段列进行过滤校验。可配置多组规则，name不可重复，重复会进行规则去重。值为column规则的数量。'');
+        INSERT INTO "public"."tb_migration_task_init_global_param" ("id", "param_key", "param_value", "param_desc")
+        VALUES (25, ''rules.column.name1'', NULL, ''待过滤字段的表名称'');
+        INSERT INTO "public"."tb_migration_task_init_global_param" ("id", "param_key", "param_value", "param_desc")
+        VALUES (26, ''rules.column.text1'', NULL, ''配置当前表待过滤的字段名称列表，如果某字段名称不属于当前表，则该字段不生效'');
+        INSERT INTO "public"."tb_migration_task_init_global_param" ("id", "param_key", "param_value", "param_desc")
+        VALUES (27, ''rules.column.attribute1'', ''exclude'',''当前表过滤字段模式，include包含text配置的字段，exclude排除text配置的字段；如果为include模式，text默认添加主键字段，不论text是否配置；如果为exclude模式，text默认不添加主键字段，不论是否配置'');
+        INSERT INTO "public"."tb_migration_task_init_global_param" ("id", "param_key", "param_value", "param_desc")
+        VALUES (28, ''rules.column.name2'', NULL, ''如果有多个规则，就会配置过滤名称2'');
+        INSERT INTO "public"."tb_migration_task_init_global_param" ("id", "param_key", "param_value", "param_desc")
+        VALUES (29, ''rules.column.text2'', NULL, ''如果有多个规则，就会配置过滤规则2'');
+        INSERT INTO "public"."tb_migration_task_init_global_param" ("id", "param_key", "param_value", "param_desc")
+        VALUES (31, ''type.override'', ''1'', ''全量迁移类型转换数量，值为类型转换规则的数量'');
+        INSERT INTO "public"."tb_migration_task_init_global_param" ("id", "param_key", "param_value", "param_desc")
+        VALUES (30, ''rules.column.attribute2'', ''include'', ''如果有多个规则，就会配置过滤模式2'');
+        INSERT INTO "public"."tb_migration_task_init_global_param" ("id", "param_key", "param_value", "param_desc")
+        VALUES (32, ''override.type'', ''tinyint(1)'', ''全量迁移类型转换mysql数据类型'');
+        INSERT INTO "public"."tb_migration_task_init_global_param" ("id", "param_key", "param_value", "param_desc")
+        VALUES (33, ''override.to'', ''boolean'', ''全量迁移类型转换opengauss数据种类'');
+        INSERT INTO "public"."tb_migration_task_init_global_param" ("id", "param_key", "param_value", "param_desc")
+        VALUES (34, ''override.tables'', ''"*"'', ''全量迁移类型转换适用的表'');
+        INSERT INTO "public"."tb_migration_task_init_global_param" ("id", "param_key", "param_value", "param_desc")
+        VALUES (6, ''sink.debezium-num-period'', ''1000'', ''Debezium增量校验数量的阈值，默认值为1000，应大于100'');
+        INSERT INTO "public"."tb_migration_task_init_global_param" ("id", "param_key", "param_value", "param_desc")
+        VALUES (16, ''rules.table.text1'', NULL, ''配置规则内容，为正则表达式'');
+        INSERT INTO "public"."tb_migration_task_init_global_param" ("id", "param_key", "param_value", "param_desc")
+        VALUES (21, ''rules.row.text1'', ''0,0'', ''配置行过滤规则的具体条件，配置格式为[offset,count]，必须为数字，否则该规则无效'');
+    END IF;
+
+
     RETURN 0;
 END;'
     LANGUAGE plpgsql;
+
+
+COMMENT ON TABLE "public"."tb_migration_task_status_record" IS '任务状态记录表';
 
 select init_migration_data_fuc();
 DROP FUNCTION init_migration_data_fuc;
