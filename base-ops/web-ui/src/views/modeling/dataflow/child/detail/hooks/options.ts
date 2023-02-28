@@ -26,7 +26,7 @@ export const options = () => ({
             width: 180, height: 35, shape: 'vue-shape',
             data: {
               type: 'BaseNode', cells_type: 'query', text: i18n.global.t('modeling.hooks.index.5m83asjg7480'), configName: 'QueryOperator', icon: 'modeling-chaxun',
-              table: '', fields: [],
+              table: '', fields: [{field:undefined}],
               rule: (data: KeyValue) => Boolean(data.table) && data.fields.filter((item: KeyValue) => !item.value).length === 0
             },
             ports: edge1.ports
