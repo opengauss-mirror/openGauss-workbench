@@ -252,6 +252,8 @@ public class OpsJdbcDbClusterNodeServiceImpl extends ServiceImpl<OpsJdbcDbCluste
 
                     }
                 }
+
+                wsUtil.close(wsSession);
             }
         });
         TaskManager.registry(businessId, future);
@@ -319,7 +321,7 @@ public class OpsJdbcDbClusterNodeServiceImpl extends ServiceImpl<OpsJdbcDbCluste
 
             wsUtil.sendText(wsSession, JSON.toJSONString(jdbcMonitorVO));
             try {
-                TimeUnit.SECONDS.sleep(1L);
+                TimeUnit.SECONDS.sleep(5L);
             } catch (InterruptedException e) {
                 throw new OpsException("thread is interrupted");
             }
