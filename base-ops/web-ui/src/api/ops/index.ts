@@ -316,3 +316,9 @@ export const addPackage = (data: KeyValue) => {
 export const editPackage = (azId: string, data: KeyValue) => {
   return axios.put(`installPackageManager/update/${azId}`, data)
 }
+
+export const getPackageCpuArch = (data: KeyValue) => {
+  return axios.get('installPackageManager/getCpuArch', {
+    params: data
+  })
+}

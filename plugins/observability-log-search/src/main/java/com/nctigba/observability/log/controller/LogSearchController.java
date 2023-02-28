@@ -89,7 +89,6 @@ public class LogSearchController {
     @ApiOperation("Context Search")
     @GetMapping(value = "/logContextSearch")
     public ContextSearchInfoDTO logContextSearch(ContextSearchQuery queryParam) throws Exception {
-        System.out.println(queryParam.getLogDate());
         return logSearchService.getContextSearch(queryParam);
     }
 

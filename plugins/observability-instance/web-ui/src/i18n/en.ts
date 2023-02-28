@@ -72,7 +72,8 @@ export default {
                 startSnapshot: 'Start Snapshot',
                 endSnapshot: 'End Snapshot',
                 build: 'Generate',
-                buildSuccess: 'Generate suceed'
+                buildSuccess: 'Generate suceed',
+                buildFail: 'Generate fail',
             }
         },
         session: 'Session Management',

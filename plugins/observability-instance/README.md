@@ -263,7 +263,7 @@ After=network.target
 
    目前可以从插件的集群/实例下拉框中，获取到实例的ID
 
-   <img src="doc\1.png" alt="image-20221216153920466" style="zoom: 33%;" />
+   <img src="doc/1.png" alt="image-20221216153920466" style="zoom: 33%;" />
 
 3. 修改Prometheus配置文件
 
@@ -326,7 +326,7 @@ After=network.target
 
    target如果State状态为UP，代表该exporter能正常采集到数据，实例监控插件接入此Prometheus后可读取相关数据
 
-   ![image-20221216155652896](doc\2.png)
+   ![image-20221216155652896](doc/2.png)
 
 ## 使用说明
 

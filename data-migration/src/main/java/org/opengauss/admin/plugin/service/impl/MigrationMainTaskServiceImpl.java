@@ -16,6 +16,7 @@ import org.opengauss.admin.plugin.dto.MigrationMainTaskDto;
 import org.opengauss.admin.plugin.dto.MigrationTaskDto;
 import org.opengauss.admin.plugin.enums.MainTaskStatus;
 import org.opengauss.admin.plugin.enums.MigrationErrorCode;
+import org.opengauss.admin.plugin.enums.TaskOperate;
 import org.opengauss.admin.plugin.enums.TaskStatus;
 import org.opengauss.admin.plugin.handler.PortalHandle;
 import org.opengauss.admin.plugin.mapper.MigrationMainTaskMapper;
@@ -26,7 +27,6 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.annotation.PostConstruct;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.*;
@@ -127,7 +127,34 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
         result.put("counts", countMap);
         result.put("hosts", hosts);
         result.put("task", task);
+        List<MigrationTaskGlobalParam> globalParams = migrationTaskGlobalParamService.selectByMainTaskId(taskId);
+        result.put("globalParams", globalParams);
         return result;
+    }
+
+
+    /**
+     * Get task detail
+     * @param taskId
+     * @return
+     */
+    @Override
+    public MigrationTaskDto getMigrationTaskDtoById(Integer taskId) {
+        MigrationMainTask task = this.getById(taskId);
+        MigrationTaskDto dto = new MigrationTaskDto();
+        dto.setTaskId(task.getId());
+        dto.setTaskName(task.getTaskName());
+
+        List<MigrationTaskGlobalParam> globalParams = migrationTaskGlobalParamService.selectByMainTaskId(taskId);
+        dto.setGlobalParams(globalParams);
+        List<MigrationTask> tasks = migrationTaskService.listByMainTaskId(taskId);
+        tasks.stream().forEach(t -> {
+            t.setTaskParams(migrationTaskParamService.selectByTaskId(t.getId()));
+        });
+        dto.setTasks(tasks);
+        List<MigrationTaskHostRef> hosts = migrationTaskHostRefService.listByMainTaskId(taskId);
+        dto.setHostIds(hosts.stream().map(MigrationTaskHostRef::getRunHostId).collect(Collectors.toList()));
+        return dto;
     }
 
     @Override
@@ -186,7 +213,7 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
         MigrationMainTask update = new MigrationMainTask();
         update.setTaskName(taskDto.getTaskName());
         update.setId(taskDto.getTaskId());
-        this.updateById(mainTask);
+        this.updateById(update);
 
         migrationTaskParamService.deleteByMainTaskId(taskDto.getTaskId());
         migrationTaskService.deleteByMainTaskId(taskDto.getTaskId());
@@ -206,18 +233,22 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
                 batchTaskParams.addAll(batchTaskParams);
             }
         });
-
-        migrationTaskParamService.saveBatch(batchTaskParams);
+        batchTaskParams.stream().forEach(tp -> {
+            tp.setId(null);
+            migrationTaskParamService.save(tp);
+        });
         migrationTaskHostRefService.deleteByMainTaskId(taskDto.getTaskId());
-        List<MigrationTaskHostRef> hostList = taskDto.getHostIds().stream().map(h -> {
+        taskDto.getHostIds().stream().forEach(h -> {
             MigrationTaskHostRef hostRef = MigrationTaskHostRef.builder().runHostId(h).mainTaskId(mainTask.getId()).createTime(new Date()).build();
-            return hostRef;
-        }).collect(Collectors.toList());
-        migrationTaskHostRefService.saveBatch(hostList);
+            migrationTaskHostRefService.save(hostRef);
+        });
 
         migrationTaskGlobalParamService.deleteByMainTaskId(taskDto.getTaskId());
-        taskDto.getGlobalParams().stream().forEach(param -> param.setMainTaskId(mainTask.getId()));
-        migrationTaskGlobalParamService.saveBatch(taskDto.getGlobalParams());
+        taskDto.getGlobalParams().stream().forEach(param -> {
+            param.setId(null);
+            param.setMainTaskId(mainTask.getId());
+            migrationTaskGlobalParamService.save(param);
+        });
         return AjaxResult.success();
     }
 
@@ -309,9 +340,11 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
     @Override
     public void finishTask(Integer id){
         List<MigrationTask> tasks = migrationTaskService.listByMainTaskId(id);
+        LoginUser loginUser = SecurityUtils.getLoginUser();
         tasks.stream().forEach(t -> {
             PortalHandle.finishPortal(t.getRunHost(),t.getRunPort(),t.getRunUser(),t.getRunPass(), t, portalHome);
             MigrationTask update = MigrationTask.builder().id(t.getId()).execStatus(TaskStatus.MIGRATION_FINISH.getCode()).finishTime(new Date()).build();
+            migrationTaskOperateRecordService.saveRecord(t.getId(), TaskOperate.FINISH_MIGRATION, loginUser.getUsername());
             migrationTaskService.updateById(update);
         });
        updateStatus(id, MainTaskStatus.FINISH);
@@ -327,6 +360,8 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
                 subTask.getRunUser(),subTask.getRunPass(), subTask, portalHome);
         MigrationTask update = MigrationTask.builder().id(subTask.getId()).execStatus(TaskStatus.MIGRATION_FINISH.getCode()).finishTime(new Date()).build();
         migrationTaskService.updateById(update);
+        LoginUser loginUser = SecurityUtils.getLoginUser();
+        migrationTaskOperateRecordService.saveRecord(subTask.getId(), TaskOperate.FINISH_MIGRATION, loginUser.getUsername());
         return AjaxResult.success();
     }
 
@@ -337,13 +372,15 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
             return AjaxResult.error(MigrationErrorCode.SUB_TASK_NOT_EXISTS_ERROR.getCode(), MigrationErrorCode.SUB_TASK_NOT_EXISTS_ERROR.getMsg());
         }
         if (subTask.getExecStatus() != TaskStatus.INCREMENTAL_START.getCode()
-            || subTask.getExecStatus() != TaskStatus.INCREMENTAL_RUNNING.getCode()) {
+            && subTask.getExecStatus() != TaskStatus.INCREMENTAL_RUNNING.getCode()) {
             return AjaxResult.error(MigrationErrorCode.SUB_TASK_NOT_IN_INCREMENTAL_ERROR.getCode(), MigrationErrorCode.SUB_TASK_NOT_IN_INCREMENTAL_ERROR.getMsg());
         }
         PortalHandle.stopIncrementalPortal(subTask.getRunHost(), subTask.getRunPort(),
                 subTask.getRunUser(), subTask.getRunPass(), subTask, portalHome);
         MigrationTask update = MigrationTask.builder().id(subTask.getId()).execStatus(TaskStatus.INCREMENTAL_STOP.getCode()).execTime(new Date()).build();
         migrationTaskService.updateById(update);
+        LoginUser loginUser = SecurityUtils.getLoginUser();
+        migrationTaskOperateRecordService.saveRecord(subTask.getId(), TaskOperate.STOP_INCREMENTAL, loginUser.getUsername());
         return AjaxResult.success();
     }
 
@@ -360,6 +397,8 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
                 subTask.getRunUser(), subTask.getRunPass(), subTask, portalHome);
         MigrationTask update = MigrationTask.builder().id(subTask.getId()).execStatus(TaskStatus.REVERSE_START.getCode()).execTime(new Date()).build();
         migrationTaskService.updateById(update);
+        LoginUser loginUser = SecurityUtils.getLoginUser();
+        migrationTaskOperateRecordService.saveRecord(subTask.getId(), TaskOperate.START_REVERSE, loginUser.getUsername());
         return AjaxResult.success();
     }
 
@@ -390,7 +429,6 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
      * @param mainTaskId
      */
     private void syncRefreshTaskStatusByPortal(Integer mainTaskId) {
-
         List<MigrationTask> tasks = migrationTaskService.listByMainTaskId(mainTaskId);
         List<MigrationTask> runningTasks = tasks.stream().filter(t -> {
             return t.getExecStatus().equals(TaskStatus.FULL_START.getCode()) ||
@@ -401,6 +439,7 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
                     t.getExecStatus().equals(TaskStatus.FULL_CHECK_FINISH.getCode()) ||
                     t.getExecStatus().equals(TaskStatus.INCREMENTAL_START.getCode()) ||
                     t.getExecStatus().equals(TaskStatus.INCREMENTAL_RUNNING.getCode()) ||
+                    t.getExecStatus().equals(TaskStatus.INCREMENTAL_STOP.getCode()) ||
                     t.getExecStatus().equals(TaskStatus.REVERSE_START.getCode()) ||
                     t.getExecStatus().equals(TaskStatus.REVERSE_RUNNING.getCode());
         }).collect(Collectors.toList());
@@ -415,33 +454,54 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
                     Map<String, Object> lastStatus = statusResultList.get(statusResultList.size() - 1);
                     Integer state = MapUtil.getInt(lastStatus, "status");
                     Long timestamp = MapUtil.getLong(lastStatus, "timestamp");
-
-                    if(!state.equals(t.getExecStatus())) {
-                        MigrationTask update = MigrationTask.builder().id(t.getId()).execStatus(state).build();
-                        migrationTaskStatusRecordService.saveRecord(t.getId(), state, null, DateUtil.date(timestamp));
-                        BigDecimal migrationProcess = null;
+                    MigrationTaskStatusRecord lastStatusRecord = migrationTaskStatusRecordService.getLastByTaskId(t.getId());
+                    if(lastStatusRecord == null || !state.equals(lastStatusRecord.getStatusId())) {
+                        MigrationTask update = MigrationTask.builder().id(t.getId()).build();
+                        migrationTaskStatusRecordService.saveTaskRecord(t.getId(), statusResultList);
+                        BigDecimal migrationProcess = new BigDecimal(0);
                         if (TaskStatus.FULL_START.getCode().equals(state) || TaskStatus.FULL_RUNNING.getCode().equals(state) ||
                                 TaskStatus.FULL_FINISH.getCode().equals(state) || TaskStatus.FULL_CHECK_START.getCode().equals(state) ||
                                 TaskStatus.FULL_CHECKING.getCode().equals(state) || TaskStatus.FULL_CHECK_FINISH.getCode().equals(state)) {
                             String portalProcess = PortalHandle.getPortalFullProcess(t.getRunHost(), t.getRunPort(), t.getRunUser(), t.getRunPass(), t, portalHome);
-                            log.info("get portal full process content: {}, subTaskId: {}", portalStatus, t.getId());
+                            log.info("get portal full process content: {}, subTaskId: {}", portalProcess, t.getId());
                             migrationTaskExecResultDetailService.saveOrUpdateByTaskId(t.getId(), portalProcess.trim(), 1);
                             migrationProcess = calculateFullMigrationProgress(portalProcess);
                         } else if (TaskStatus.INCREMENTAL_START.getCode().equals(state) || TaskStatus.INCREMENTAL_RUNNING.getCode().equals(state)) {
                             String portalProcess = PortalHandle.getPortalIncrementalProcess(t.getRunHost(), t.getRunPort(), t.getRunUser(), t.getRunPass(), t, portalHome);
-                            log.info("get portal incremental process content: {}, subTaskId: {}", portalStatus, t.getId());
+                            log.info("get portal incremental process content: {}, subTaskId: {}", portalProcess, t.getId());
                             migrationTaskExecResultDetailService.saveOrUpdateByTaskId(t.getId(), portalProcess.trim(), 2);
-                            if (Float.parseFloat(t.getMigrationProcess()) > 0) {
-                                migrationProcess = new BigDecimal(0.85f).divide(new BigDecimal(t.getMigrationProcess()));
+                            if(t.getMigrationProcess() == null) {
+                                String portalFullProcess = PortalHandle.getPortalFullProcess(t.getRunHost(), t.getRunPort(), t.getRunUser(), t.getRunPass(), t, portalHome);
+                                log.info("get portal full process content: {}, subTaskId: {}", portalFullProcess, t.getId());
+                                migrationTaskExecResultDetailService.saveOrUpdateByTaskId(t.getId(), portalFullProcess.trim(), 1);
+                                migrationProcess = calculateFullMigrationProgress(portalFullProcess);
+                                if (migrationProcess.intValue() > 0) {
+                                    migrationProcess = new BigDecimal(0.85f).divide(migrationProcess, 4, BigDecimal.ROUND_HALF_UP);
+                                }
+                            } else {
+                                if (Float.parseFloat(t.getMigrationProcess()) > 0) {
+                                    migrationProcess = new BigDecimal(0.85f).divide(new BigDecimal(t.getMigrationProcess()), 4, BigDecimal.ROUND_HALF_UP);
+                                }
                             }
                         } else if (TaskStatus.REVERSE_START.getCode().equals(state) || TaskStatus.REVERSE_RUNNING.getCode().equals(state)) {
                             String portalProcess = PortalHandle.getPortalReverseProcess(t.getRunHost(), t.getRunPort(), t.getRunUser(), t.getRunPass(), t, portalHome);
-                            log.info("get portal reverse process content: {}, subTaskId: {}", portalStatus, t.getId());
+                            log.info("get portal reverse process content: {}, subTaskId: {}", portalProcess, t.getId());
                             migrationTaskExecResultDetailService.saveOrUpdateByTaskId(t.getId(), portalProcess.trim(), 3);
-                            if (Float.parseFloat(t.getMigrationProcess()) > 0) {
-                                migrationProcess = new BigDecimal(0.95f).divide(new BigDecimal(t.getMigrationProcess()));
+                            if(t.getMigrationProcess() == null) {
+                                String portalFullProcess = PortalHandle.getPortalFullProcess(t.getRunHost(), t.getRunPort(), t.getRunUser(), t.getRunPass(), t, portalHome);
+                                log.info("get portal full process content: {}, subTaskId: {}", portalFullProcess, t.getId());
+                                migrationTaskExecResultDetailService.saveOrUpdateByTaskId(t.getId(), portalFullProcess.trim(), 1);
+                                migrationProcess = calculateFullMigrationProgress(portalFullProcess);
+                                if (migrationProcess.intValue() > 0) {
+                                    migrationProcess = new BigDecimal(0.95f).divide(migrationProcess, 4, BigDecimal.ROUND_HALF_UP);
+                                }
+                            } else {
+                                if (Float.parseFloat(t.getMigrationProcess()) > 0) {
+                                    migrationProcess = new BigDecimal(0.95f).divide(new BigDecimal(t.getMigrationProcess()), 4, BigDecimal.ROUND_HALF_UP);
+                                }
                             }
                         }
+                        update.setExecStatus(state);
                         update.setMigrationProcess(migrationProcess.setScale(2, RoundingMode.UP).toPlainString());
                         if (TaskStatus.FULL_CHECK_FINISH.getCode().equals(state) && t.getMigrationModelId().equals(1)) {
                             update.setExecStatus(TaskStatus.MIGRATION_FINISH.getCode());
@@ -464,19 +524,19 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
      */
     private BigDecimal calculateFullMigrationProgress(String portalProcess) {
         Map<String, Object> processMap = JSON.parseObject(portalProcess);
-        List<Map<String, Object>> tables = (List<Map<String, Object>>) processMap.get("tables");
-        List<Map<String, Object>> views = (List<Map<String, Object>>) processMap.get("views");
+        List<Map<String, Object>> tables = (List<Map<String, Object>>) processMap.get("table");
+        List<Map<String, Object>> views = (List<Map<String, Object>>) processMap.get("view");
         List<Map<String, Object>> funcs = (List<Map<String, Object>>) processMap.get("function");
         List<Map<String, Object>> triggers = (List<Map<String, Object>>) processMap.get("trigger");
         List<Map<String, Object>> produces = (List<Map<String, Object>>) processMap.get("procedure");
 
         Integer total = tables.size() * 10 + views.size() + funcs.size() + triggers.size() + produces.size();
 
-        int tableFinishCount = Math.toIntExact(tables.stream().filter(m -> MapUtil.getInt(m, "status").equals(5)).count());
-        int viewFinishCount = Math.toIntExact(views.stream().filter(m -> MapUtil.getInt(m, "status").equals(5)).count());
-        int funcsFinishCount = Math.toIntExact(funcs.stream().filter(m -> MapUtil.getInt(m, "status").equals(5)).count());
-        int triggersFinishCount = Math.toIntExact(triggers.stream().filter(m -> MapUtil.getInt(m, "status").equals(5)).count());
-        int producesFinishCount = Math.toIntExact(produces.stream().filter(m -> MapUtil.getInt(m, "status").equals(5)).count());
+        int tableFinishCount = Math.toIntExact(tables.stream().filter(m -> MapUtil.getInt(m, "status").equals(3)).count());
+        int viewFinishCount = Math.toIntExact(views.stream().filter(m -> MapUtil.getInt(m, "status").equals(3)).count());
+        int funcsFinishCount = Math.toIntExact(funcs.stream().filter(m -> MapUtil.getInt(m, "status").equals(3)).count());
+        int triggersFinishCount = Math.toIntExact(triggers.stream().filter(m -> MapUtil.getInt(m, "status").equals(3)).count());
+        int producesFinishCount = Math.toIntExact(produces.stream().filter(m -> MapUtil.getInt(m, "status").equals(3)).count());
 
         Integer totalFinishCount = tableFinishCount * 10 + viewFinishCount + funcsFinishCount + triggersFinishCount + producesFinishCount;
         BigDecimal result = new BigDecimal(0);
@@ -489,7 +549,8 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
     /**
      * Update main task status and progress bar based on subtask status
      */
-    private void doRefreshMainTaskStatus() {
+    @Override
+    public void doRefreshMainTaskStatus() {
         while(true) {
             if (countByProcessing() > 0) {
                 List<MigrationMainTask> migrationMainTasks = listByProcessing();
@@ -548,17 +609,5 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
                 this.updateById(mainTask);
             }
         }
-    }
-
-    @PostConstruct
-    public void refreshMainTaskStatus(){
-        threadPoolTaskExecutor.submit(() -> {
-            try {
-                doRefreshMainTaskStatus();
-            } catch (Exception e) {
-                e.printStackTrace();
-                log.error("RefreshMainTaskStatus error", e);
-            }
-        });
     }
 }

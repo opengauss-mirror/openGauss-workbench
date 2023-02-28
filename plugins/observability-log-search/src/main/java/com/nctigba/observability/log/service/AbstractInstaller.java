@@ -51,7 +51,7 @@ public abstract class AbstractInstaller {
 		if (user == null && rootPassword != null) {
 			var body = new HostUserBody();
 			body.setHostId(hostEntity.getHostId());
-			body.setPassword(StrUtil.uuid());
+			body.setPassword(encryptionUtils.encrypt(StrUtil.uuid()));
 			body.setRootPassword(rootPassword);
 			body.setUsername(username);
 			hostUserFacade.add(body);
@@ -62,6 +62,13 @@ public abstract class AbstractInstaller {
 		if (user == null)
 			throw new RuntimeException("user not found");
 		return user;
+	}
+
+	protected int skipStep(WsSession wsSession, List<Step> steps, int curr) {
+		steps.get(curr).setState(status.SKIP);
+		curr++;
+		sendMsg(wsSession, steps, curr, status.DOING);
+		return curr;
 	}
 
 	/**

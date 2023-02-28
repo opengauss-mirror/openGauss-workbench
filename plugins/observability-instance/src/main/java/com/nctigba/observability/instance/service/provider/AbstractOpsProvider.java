@@ -12,7 +12,7 @@ import org.opengauss.admin.common.core.domain.model.ops.HostInfoHolder;
 import org.opengauss.admin.common.core.domain.model.ops.JschResult;
 import org.opengauss.admin.common.core.domain.model.ops.WsSession;
 import org.opengauss.admin.common.exception.ops.OpsException;
-import org.opengauss.admin.common.utils.ops.JschUtil;
+import com.nctigba.observability.instance.util.JschUtil;
 import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
 import org.springframework.beans.factory.InitializingBean;
 

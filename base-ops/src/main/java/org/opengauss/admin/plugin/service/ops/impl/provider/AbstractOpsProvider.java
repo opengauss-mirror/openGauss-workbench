@@ -74,7 +74,7 @@ public abstract class AbstractOpsProvider implements ClusterOpsProvider, Initial
             } catch (IOException e) {
                 log.error("send websocket text fail",e);
             }
-            decompress(jschUtil,rootSession, pkgPath, installPackageFullPath, retSession, decompressArgs);
+            decompress(jschUtil,rootSession, installPath, installPackageFullPath, retSession, decompressArgs);
             try {
                 retSession.getSession().getBasicRemote().sendText("END_UNZIP_INSTALL_PACKAGE");
             } catch (IOException e) {

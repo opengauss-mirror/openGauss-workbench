@@ -67,6 +67,7 @@ const installStore = defineStore('install', {
         state.minimalistInstallConfig.port = config.port
         state.minimalistInstallConfig.databaseUsername = config.databaseUsername
         state.minimalistInstallConfig.databasePassword = config.databasePassword
+        state.minimalistInstallConfig.installPackagePath = config.installPackagePath
         state.minimalistInstallConfig.nodeConfigList = []
         state.minimalistInstallConfig.nodeConfigList = config.nodeConfigList
       })
@@ -76,6 +77,7 @@ const installStore = defineStore('install', {
         state.liteInstallConfig.port = config.port
         state.liteInstallConfig.databaseUsername = config.databaseUsername
         state.liteInstallConfig.databasePassword = config.databasePassword
+        state.liteInstallConfig.installPackagePath = config.installPackagePath
         state.liteInstallConfig.nodeConfigList = []
         state.liteInstallConfig.nodeConfigList = config.nodeConfigList
       })

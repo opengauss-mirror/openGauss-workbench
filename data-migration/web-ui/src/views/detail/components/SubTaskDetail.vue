@@ -83,8 +83,80 @@
       <div v-if="tabActive === 1 && subTaskInfo.migrationModelId === 2" class="record-con">
         <div class="record-title">在线迁移过程记录</div>
         <div class="record-list">
-          <a-steps :default-current="4" type="dot" direction="vertical">
-            <a-step>
+          <a-steps :default-current="Object.keys(statusRecords).length + 1" type="dot" direction="vertical">
+            <a-step v-for="(value, key) in statusRecords" :key="key">
+              <div class="record-item-hd">
+                <span class="hd-info">{{ recordsMap(key) }}</span>
+                <span class="hd-time">by {{ taskInfo.createUser }}, {{ subTaskInfo.execTime }}</span>
+              </div>
+              <a-card hoverable>
+                <div class="record-item-con">
+                  <div v-for="item in value" :key="item.id" class="record-item">
+                    <div class="record-item-info">
+                      <span class="info">{{ execSubStatusMap(item.statusId) }} <i v-if="item.statusId === 2" @click="globalVisible = !globalVisible">{{ globalVisible ? '收起' : '查看' }}</i></span>
+                      <span class="time">{{ item.createTime }}</span>
+                    </div>
+                    <div v-if="item.statusId === 2 && globalVisible" class="table-con">
+                      <a-table :data="tableData" :bordered="false" stripe :pagination="false" :default-expanded-keys="['table']">
+                        <template #columns>
+                          <a-table-column :title="`源库：${subTaskInfo.sourceDb}`" data-index="name"></a-table-column>
+                          <a-table-column :title="`目的库：${subTaskInfo.targetDb}`" data-index="name"></a-table-column>
+                          <a-table-column data-index="status" align="center">
+                            <template #title>
+                              <span>迁移状态</span>
+                              <a-popover content-class="pop-con">
+                                <span style="margin-left: 5px;cursor: pointer;"><icon-filter /></span>
+                                <template #content>
+                                  <div class="filter-con">
+                                    <span>仅显示错误数据：</span>
+                                    <a-switch v-model="onlyError" size="small" @change="filterTableData(1)" />
+                                  </div>
+                                </template>
+                              </a-popover>
+                            </template>
+                            <template #cell="{ record }">
+                              <a-progress v-if="record.status === 1 || record.status === 2" :percent="record.percent" />
+                              <icon-check-circle-fill v-if="record.status === 3 || record.status === 4 || record.status === 5" size="16" style="color: #00B429;" />
+                              <a-popover title="错误详情" position="tr">
+                                <icon-close-circle-fill v-if="record.status === 6" size="16" style="color: #FF7D01;" />
+                                <template #content>
+                                  <p>{{ record.msg }}</p>
+                                </template>
+                              </a-popover>
+                            </template>
+                          </a-table-column>
+                          <a-table-column data-index="status" align="center">
+                            <template #title>
+                              <span>迁移校验</span>
+                              <a-popover content-class="pop-con">
+                                <span style="margin-left: 5px;cursor: pointer;"><icon-filter /></span>
+                                <template #content>
+                                  <div class="filter-con">
+                                    <span>仅显示错误数据：</span>
+                                    <a-switch v-model="onlyCheckError" size="small" @change="filterTableData(2)" />
+                                  </div>
+                                </template>
+                              </a-popover>
+                            </template>
+                            <template #cell="{ record }">
+                              <a-progress v-if="record.status === 4" :percent="record.percent" />
+                              <icon-check-circle-fill v-if="record.status === 5" size="16" style="color: #00B429;" />
+                              <a-popover title="错误详情" position="tr">
+                                <icon-close-circle-fill v-if="record.status === 6" size="16" style="color: #FF7D01;" />
+                                <template #content>
+                                  <p>{{ record.msg }}</p>
+                                </template>
+                              </a-popover>
+                            </template>
+                          </a-table-column>
+                        </template>
+                      </a-table>
+                    </div>
+                  </div>
+                </div>
+              </a-card>
+            </a-step>
+            <!-- <a-step>
               <div class="record-item-hd">
                 <span class="hd-info">迁移过程开始（自动）</span>
                 <span class="hd-time">by admin, 2023-1-23 10:10:00</span>
@@ -133,40 +205,24 @@
                   </div>
                 </div>
               </a-card>
-            </a-step>
-            <a-step>
-              <div class="record-item-hd">
-                <span class="hd-info">停止增量（人工操作）</span>
-                <span class="hd-time">by admin, 2023-1-23 10:10:00</span>
-              </div>
-              <a-card hoverable>
-                <div class="record-item-con">
-                  <div class="record-item">
-                    <span class="info">增量迁移：已停止</span>
-                    <span class="time">2023-1-23 10:10:00</span>
-                  </div>
-                </div>
-              </a-card>
-            </a-step>
-            <a-step>
-              <div class="record-item-hd">
-                <span class="hd-info">启动反向（人工操作）</span>
-                <span class="hd-time">by admin, 2023-1-23 10:10:00</span>
-              </div>
-              <a-card hoverable>
-                <div class="record-item-con">
-                  <div class="record-item">
-                    <span class="info">反向迁移：开始</span>
-                    <span class="time">2023-1-23 10:10:00</span>
-                  </div>
-                </div>
-              </a-card>
-            </a-step>
+            </a-step> -->
           </a-steps>
         </div>
       </div>
       <div v-if="tabActive === 2" class="log-con">
-        <div class="log-detail-info" v-html="taskLog"></div>
+        <a-list>
+          <a-list-item v-for="item in logData" :key="item.url">
+            <div class="log-detail-info">{{ item.name }}</div>
+            <template #actions>
+              <a-button type="text" size="mini" @click="handleDownloadLog(item.url)">
+                <template #icon>
+                  <icon-download />
+                </template>
+                下载日志
+              </a-button>
+            </template>
+          </a-list-item>
+        </a-list>
       </div>
     </div>
   </a-drawer>
@@ -174,7 +230,7 @@
 
 <script setup>
 import { ref, watch, onMounted } from 'vue'
-import { subTaskDetail } from '@/api/detail'
+import { subTaskDetail, downloadLog } from '@/api/detail'
 import dayjs from 'dayjs'
 
 const props = defineProps({
@@ -188,7 +244,6 @@ const emits = defineEmits(['update:open'])
 
 const visible = ref(false)
 const tabActive = ref(1)
-const taskLog = ref('暂无数据')
 const globalVisible = ref(false)
 const subTaskInfo = ref({})
 const descData = ref([])
@@ -216,6 +271,17 @@ const execSubStatusMap = (status) => {
   return maps[status]
 }
 
+// record map
+const recordsMap = (key) => {
+  const maps = {
+    1: '启动迁移',
+    2: '停止增量',
+    3: '启动反向',
+    100: '结束迁移'
+  }
+  return maps[key]
+}
+
 watch(visible, (v) => {
   emits('update:open', v)
 })
@@ -234,6 +300,8 @@ const tabChange = tab => {
 
 const tableData = ref([])
 const originData = ref([])
+const statusRecords = ref({})
+const logData = ref([])
 const onlyError = ref(false)
 const onlyCheckError = ref(false)
 
@@ -258,6 +326,26 @@ const filterTableData = (type) => {
     onlyCheckError.value = false
     tableData.value = oData
   }
+}
+
+const handleDownloadLog = (url) => {
+  downloadLog(subTaskInfo.value.id, { filePath: url }).then(res => {
+    console.log(res)
+    if (res) {
+      const blob = new Blob([res], {
+        type: 'text/plain'
+      })
+      const a = document.createElement('a')
+      const URL = window.URL || window.webkitURL
+      const herf = URL.createObjectURL(blob)
+      a.href = herf
+      a.download = url
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      window.URL.revokeObjectURL(herf)
+    }
+  })
 }
 
 const getSubTaskDetail = () => {
@@ -293,31 +381,48 @@ const getSubTaskDetail = () => {
       }
     ]
 
-    const fullProcessDetail = JSON.parse(res.data.fullProcess.execResultDetail)
-    const dealData = ['table', 'view', 'function', 'trigger', 'procedure'].map(item => {
-      const nameMap = {
-        'table': '表',
-        'view': '视图',
-        'function': '函数',
-        'trigger': '触发器',
-        'procedure': '存储过程'
-      }
+    // 全量表格数据
+    const fullProcessDetail = res.data.fullProcess?.execResultDetail ? JSON.parse(res.data.fullProcess?.execResultDetail) : null
+    if (fullProcessDetail) {
+      const dealData = ['table', 'view', 'function', 'trigger', 'procedure'].map(item => {
+        const nameMap = {
+          'table': '表',
+          'view': '视图',
+          'function': '函数',
+          'trigger': '触发器',
+          'procedure': '存储过程'
+        }
 
+        return {
+          key: item,
+          name: nameMap[item],
+          status: '',
+          msg: '',
+          children: fullProcessDetail[item].map(child => {
+            return {
+              key: Math.random(),
+              ...child
+            }
+          })
+        }
+      })
+      originData.value = JSON.parse(JSON.stringify(dealData))
+      tableData.value = dealData
+    }
+
+    // 过程记录
+    if (subTaskInfo.value.migrationModelId === 2) {
+      statusRecords.value = res.data.statusRecords
+    }
+
+    // log
+    logData.value = res.data.logs.map(item => {
+      const name = item.substring(item.lastIndexOf('/') + 1)
       return {
-        key: item,
-        name: nameMap[item],
-        status: '',
-        msg: '',
-        children: fullProcessDetail[item].map(child => {
-          return {
-            key: Math.random(),
-            ...child
-          }
-        })
+        name,
+        url: item
       }
     })
-    originData.value = JSON.parse(JSON.stringify(dealData))
-    tableData.value = dealData
   })
 }
 
@@ -401,20 +506,22 @@ onMounted(() => {
       }
       .record-item-con {
         .record-item {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          .info {
-            font-size: 13px;
-            i {
-              cursor: pointer;
-              font-style: normal;
-              color: rgb(var(--primary-6));
+          .record-item-info {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            .info {
+              font-size: 13px;
+              i {
+                cursor: pointer;
+                font-style: normal;
+                color: rgb(var(--primary-6));
+              }
             }
-          }
-          .time {
-            font-size: 12px;
-            color: var(--color-text-3);
+            .time {
+              font-size: 12px;
+              color: var(--color-text-3);
+            }
           }
         }
       }
@@ -424,12 +531,6 @@ onMounted(() => {
     margin-top: 10px;
     .log-detail-info {
       white-space: pre-wrap;
-      background: #e2e2e2;
-      border-radius: 4px;
-      line-height: 20px;
-      padding: 10px;
-      max-height: calc(100vh - 200px);
-      overflow-y: auto;
     }
   }
 }

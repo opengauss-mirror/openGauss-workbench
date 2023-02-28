@@ -36,4 +36,7 @@ public class MigrationTaskStatusRecord {
 
     @TableField(exist = false)
     private String operateTitle;
+
+    @TableField(exist = false)
+    private Integer operateType;
 }

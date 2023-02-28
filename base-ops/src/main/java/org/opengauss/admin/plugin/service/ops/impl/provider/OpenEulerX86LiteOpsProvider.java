@@ -163,7 +163,7 @@ public class OpenEulerX86LiteOpsProvider extends AbstractOpsProvider {
         LiteInstallNodeConfig installNodeConfig = installContext.getLiteInstallConfig().getNodeConfigList().get(0);
 
         String installPath = preparePath(installNodeConfig.getInstallPath());
-        String pkgPath = preparePath(judgePkgPath(installPath));
+        String pkgPath = preparePath(installContext.getLiteInstallConfig().getInstallPackagePath());
         String dataPath = preparePath(installNodeConfig.getDataPath());
         String hostId = installNodeConfig.getHostId();
         String databasePassword = installContext.getLiteInstallConfig().getDatabasePassword();
@@ -195,7 +195,7 @@ public class OpenEulerX86LiteOpsProvider extends AbstractOpsProvider {
             throw new OpsException("Installation user ID does not exist");
         }
 
-        Session installUserSession = beforeInstall(jschUtil,encryptionUtils,installContext, installPath, dataPath, pkgPath, hostId, installUserId, installUserName, "-xvf");
+        Session installUserSession = beforeInstall(jschUtil,encryptionUtils,installContext, pkgPath, dataPath, pkgPath, hostId, installUserId, installUserName, "-xvf");
         try {
             log.info("perform installation");
             // install
@@ -335,7 +335,7 @@ public class OpenEulerX86LiteOpsProvider extends AbstractOpsProvider {
         wsUtil.sendText(installContext.getRetSession(),"START_SLAVE");
         log.info("Start installing the standby node");
         String installPath = preparePath(slaveNodeConfig.getInstallPath());
-        String pkgPath = preparePath(judgePkgPath(installPath));
+        String pkgPath = preparePath(installContext.getLiteInstallConfig().getInstallPackagePath());
         String dataPath = preparePath(slaveNodeConfig.getDataPath());
         String masterHostId = masterNodeConfig.getHostId();
         String slaveHostId = slaveNodeConfig.getHostId();
@@ -371,7 +371,7 @@ public class OpenEulerX86LiteOpsProvider extends AbstractOpsProvider {
         }
 
         slaveNodeConfig.setInstallUserId(installUserId);
-        Session installUserSession = beforeInstall(jschUtil, encryptionUtils, installContext, installPath, dataPath, pkgPath, slaveHostId, installUserId, installUserName, "-xvf");
+        Session installUserSession = beforeInstall(jschUtil, encryptionUtils, installContext, pkgPath, dataPath, pkgPath, slaveHostId, installUserId, installUserName, "-xvf");
         try {
             log.info("perform installation");
             // install
@@ -401,7 +401,7 @@ public class OpenEulerX86LiteOpsProvider extends AbstractOpsProvider {
         wsUtil.sendText(installContext.getRetSession(),"START_MASTER");
         log.info("Start installing the master node");
         String installPath = preparePath(masterNodeConfig.getInstallPath());
-        String pkgPath = preparePath(judgePkgPath(installPath));
+        String pkgPath = preparePath(installContext.getLiteInstallConfig().getInstallPackagePath());
         String dataPath = preparePath(masterNodeConfig.getDataPath());
         String masterHostId = masterNodeConfig.getHostId();
         String slaveHostId = slaveNodeConfig.getHostId();
@@ -438,7 +438,7 @@ public class OpenEulerX86LiteOpsProvider extends AbstractOpsProvider {
 
         masterNodeConfig.setInstallUserId(installUserId);
 
-        Session installUserSession = beforeInstall(jschUtil, encryptionUtils, installContext, installPath, dataPath, pkgPath, masterHostId, installUserId, installUserName, "-xvf");
+        Session installUserSession = beforeInstall(jschUtil, encryptionUtils, installContext, pkgPath, dataPath, pkgPath, masterHostId, installUserId, installUserName, "-xvf");
         try {
             log.info("perform installation");
             // install

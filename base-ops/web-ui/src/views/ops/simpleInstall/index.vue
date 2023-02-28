@@ -10,16 +10,15 @@
           $t('simpleInstall.index.else4')
         }}</span></a-link>
       </div>
-      <a-form class="mb" :model="data.form" :rules="formRules" :style="{ width: '400px' }" ref="formRef"
-        auto-label-width>
+      <a-form class="mb" :model="data.form" :rules="formRules" :style="{ width: '400px' }" ref="formRef" auto-label-width>
         <a-form-item field="hostId" :label="$t('simpleInstall.index.5mpn813guf00')">
           <div class="flex-row">
             <a-select style="width: 313px;" class="mr" :loading="data.hostLoading" v-model="data.form.hostId"
               :placeholder="$t('simpleInstall.index.5mpn813gukw0')" @change="hostChange">
               <a-option v-for="item in data.hostList" :key="item.hostId" :value="item.hostId">{{
                 item.privateIp
-                  + '(' +
-                  (item.publicIp ? item.publicIp : '--') + ')'
+                + '(' +
+                (item.publicIp ? item.publicIp : '--') + ')'
               }}</a-option>
             </a-select>
             <label class="label-color">{{ data.form.sysArch }}</label>
@@ -53,8 +52,7 @@
           <div class="label-color ft-m ft-b mb-lg">{{ $t('simpleInstall.index.5mpn813guxc0') }}</div>
           <div class="flex-col-start full-w">
             <div class="progress-c mb">
-              <a-progress :color="data.state === 1 ? 'green' : 'red'" :stroke-width="12"
-                :percent="data.installProgress">
+              <a-progress :color="data.state === 1 ? 'green' : 'red'" :stroke-width="12" :percent="data.installProgress">
               </a-progress>
             </div>
             <div class="label-color">{{ $t('simpleInstall.index.5mpn813gv880') }} {{
@@ -361,6 +359,7 @@ const exeInstall = async (socket: Socket<any, any>, businessId: string, term: Te
       clusterName: '',
       minimalistInstallConfig: {
         port: Number(5432),
+        installPackagePath: '/opt/software/openGauss',
         databaseUsername: '',
         databasePassword: '1qaz2wsx#EDC',
         nodeConfigList: [{

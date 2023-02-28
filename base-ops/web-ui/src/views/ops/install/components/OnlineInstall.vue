@@ -8,7 +8,7 @@
         {{ $t('components.OnlineInstall.5mpn3mp10hw0') }}: {{ data.targetPath }}
       </div>
 
-      <a-spin class="full-w" :loading="data.loading" tip="正在获取安装包">
+      <a-spin class="full-w" :loading="data.loading" :tip="$t('components.OnlineInstall.else2')">
         <div class="flex-col panel-body">
           <div v-if="data.packageList.length">
             <div v-for="item in data.packageList" :key="item.packageId">
@@ -44,8 +44,9 @@
           </div>
           <div class="flex-col" v-if="data.packageList.length === 0 && !data.loading">
             <svg-icon icon-class="ops-empty" class="icon-size mb-lg"></svg-icon>
-            <div class="empty-content mb">暂无安装包信息</div>
-            <a-button type="outline" size="large" @click="handleAddPackage">添加安装包</a-button>
+            <div class="empty-content mb">{{ $t('components.OnlineInstall.else3') }}</div>
+            <a-button type="outline" size="large" @click="handleAddPackage">{{ $t('components.OnlineInstall.else4')
+            }}</a-button>
           </div>
         </div>
       </a-spin>
@@ -79,8 +80,6 @@ const data = reactive<KeyValue>({
   selectedPackageId: '',
   selectedPackageName: ''
 })
-
-const currInstallPackage = ref('')
 
 const processVisible = ref<boolean>(false)
 

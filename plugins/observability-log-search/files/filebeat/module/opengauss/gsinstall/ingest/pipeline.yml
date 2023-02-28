@@ -1,0 +1,72 @@
+description: Pipeline for parsing opengauss logs.
+processors:
+- set:
+    field: event.ingested
+    value: '{{_ingest.timestamp}}'
+
+- grok:
+    field: message
+    patterns:
+    - '^.%{DATETIME:opengauss-log-time}%{CHAR:separator}%{GREEDYDATA:raw_message}'
+    pattern_definitions:
+      DATETIME: '[-0-9]+ %{TIME}'
+      CHAR: .
+      GREEDYDATA: |-
+        (.|
+        |	)*
+- set:
+    field: clusterId
+    value: gba-cluster
+- set:
+    field: nodeId
+    value: test238
+- set:
+    field: log_level
+    value: LOG
+- date:
+    field: opengauss-log-time
+    target_field: '@timestamp'
+    timezone: '+08:00'
+    formats:
+    - yyyy-MM-dd HH:mm:ss.SSS
+    - yyyy-MM-dd HH:mm:ss
+- script:
+    lang: painless
+    source: ctx.event.duration = Math.round(ctx.temp.duration * params.scale)
+    params:
+      scale: 1000000
+    if: ctx.temp?.duration != null
+- remove:
+    field: temp.duration
+    ignore_missing: true
+- set:
+    field: event.kind
+    value: event
+- append:
+    field: event.category
+    value:
+      - database
+- set:
+    field: event.type
+    value:
+      - info
+    if: "ctx?.postgresql?.log?.sql_state_code == null || (ctx.postgresql.log.sql_state_code ==~ /^0[012].*/)"
+- set:
+    field: event.type
+    value:
+      - error
+    if: "ctx?.postgresql?.log?.sql_state_code != null && ! (ctx.postgresql.log.sql_state_code ==~ /^0[012].*/)"
+- append:
+    field: related.user
+    value: "{{user.name}}"
+    if: "ctx?.user?.name != null"
+- remove:
+    field:
+    - separator
+- remove:
+    field:
+    - raw_message
+on_failure:
+- set:
+    field: error.message
+    value: '{{ _ingest.on_failure_message }}'

@@ -10,13 +10,12 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public enum OpenGaussSupportOSEnum {
-    CENTOS_X86_64("centos","openGauss-3.0.0-CentOS-64bit.tar.bz2","https://opengauss.obs.cn-south-1.myhuaweicloud.com/3.0.0/x86/openGauss-3.0.0-CentOS-64bit.tar.bz2"),
-    OPENEULER_AARCH64("openEuler","openGauss-3.0.0-openEuler-64bit.tar.bz2","https://opengauss.obs.cn-south-1.myhuaweicloud.com/3.0.0/arm/openGauss-3.0.0-openEuler-64bit.tar.bz2"),
-    OPENEULER_X86_64("openEuler","openGauss-3.0.0-openEuler-64bit.tar.bz2","https://opengauss.obs.cn-south-1.myhuaweicloud.com/3.0.0/x86_openEuler/openGauss-3.0.0-openEuler-64bit.tar.bz2");
+    CENTOS_X86_64("centos","x86_64"),
+    OPENEULER_AARCH64("openEuler","aarch64"),
+    OPENEULER_X86_64("openEuler","x86_64");
 
     private String osId;
-    private String installPackageName;
-    private String installPackageResourceUrl;
+    private String cpuArch;
 
     public static OpenGaussSupportOSEnum of(String osInfo, String osVersionInfo, String cpuArchInfo) {
         if ("centos".equalsIgnoreCase(osInfo) && "x86_64".equalsIgnoreCase(cpuArchInfo)){
@@ -33,7 +32,7 @@ public enum OpenGaussSupportOSEnum {
         return CENTOS_X86_64;
     }
 
-    public boolean match(String os) {
-        return this.getOsId().equalsIgnoreCase(os);
+    public boolean match(String os,String cpuArch) {
+        return this.getOsId().equalsIgnoreCase(os) && this.getCpuArch().equalsIgnoreCase(cpuArch);
     }
 }

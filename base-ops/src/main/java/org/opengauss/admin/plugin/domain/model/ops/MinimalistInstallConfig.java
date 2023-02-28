@@ -18,6 +18,7 @@ import java.util.List;
  **/
 @Data
 public class MinimalistInstallConfig implements ClusterInstallConfig {
+    private String installPackagePath;
 
     private Integer port;
 

@@ -19,6 +19,7 @@ import java.util.Objects;
  **/
 @Data
 public class LiteInstallConfig implements ClusterInstallConfig {
+    private String installPackagePath;
     private Integer port;
     private String databaseUsername;
     private String databasePassword;

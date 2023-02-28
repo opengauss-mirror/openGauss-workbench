@@ -12,6 +12,9 @@
           <a-form-item field="installPath" :label="$t('enterprise.ClusterConfig.5mpm3ku3hv40')" validate-trigger="blur">
             <a-input v-model="data.form.installPath" :placeholder="$t('enterprise.ClusterConfig.5mpm3ku3i340')" />
           </a-form-item>
+          <a-form-item field="installPackagePath" :label="$t('simple.InstallConfig.else6')" validate-trigger="blur">
+            <a-input v-model="data.form.installPackagePath" :placeholder="$t('simple.InstallConfig.else7')" />
+          </a-form-item>
           <a-form-item field="logPath" :label="$t('enterprise.ClusterConfig.5mpm3ku3i6s0')" validate-trigger="blur">
             <a-input v-model="data.form.logPath" :placeholder="$t('enterprise.ClusterConfig.5mpm3ku3iag0')" />
           </a-form-item>
@@ -71,6 +74,7 @@ const data: {
     clusterId: '',
     clusterName: '',
     installPath: '/opt/openGauss/install/app',
+    installPackagePath: '/opt/software/openGauss',
     logPath: '/opt/openGauss/log/omm',
     tmpPath: '/opt/openGauss/tmp',
     omToolsPath: '/opt/openGauss/install/om',
@@ -124,6 +128,21 @@ const initData = () => {
     ],
     installPath: [
       { required: true, 'validate-trigger': 'blur', message: t('enterprise.ClusterConfig.5mpm3ku3i340') },
+      {
+        validator: (value: any, cb: any) => {
+          return new Promise(resolve => {
+            if (!value.trim()) {
+              cb(t('enterprise.ClusterConfig.else2'))
+              resolve(false)
+            } else {
+              resolve(true)
+            }
+          })
+        }
+      }
+    ],
+    installPackagePath: [
+      { required: true, 'validate-trigger': 'blur', message: t('simple.InstallConfig.else7') },
       {
         validator: (value: any, cb: any) => {
           return new Promise(resolve => {

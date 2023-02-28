@@ -33,7 +33,7 @@
 
 <script lang="ts" setup>
 import { cloneDeep } from "lodash-es";
-import { FormRules } from "element-plus";
+import { FormRules, FormInstance } from "element-plus";
 import { useI18n } from "vue-i18n";
 import WebSocketClass from "../../../utils/websocket";
 import { encryptPassword } from "../../../utils/jsencrypt";
@@ -65,6 +65,7 @@ const formData = reactive(cloneDeep(initFormData));
 const changeMachine = (val: any) => {
     formData.nodeId = val;
 };
+const connectionFormRef = ref<FormInstance>();
 const connectionFormRules = reactive<FormRules>({
     nodeId: [{ required: true, message: t("install.proxyRules[0]"), trigger: "blur" }],
     rootPassword: [{ required: true, message: t("install.proxyRules[1]"), trigger: "blur" }],
@@ -81,6 +82,8 @@ const ws = reactive({
     instance: null,
 });
 const install = async () => {
+    let result = await connectionFormRef.value?.validate();
+    if (!result) return;
     started.value = true;
     ws.name = moment(new Date()).format("YYYYMMDDHHmmss") as string; // websocket connection name
     ws.sessionId = moment(new Date()).format("YYYYMMDDHHmmss") as string; // websocket connection id

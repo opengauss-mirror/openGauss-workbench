@@ -41,4 +41,10 @@ public class JdbcDbClusterNodeController extends BaseController {
         return AjaxResult.success(opsJdbcDbClusterNodeService.ping(clusterNodeInput));
     }
 
+    @GetMapping("/monitor/{clusterNodeId}")
+    public AjaxResult monitor(@PathVariable("clusterNodeId") String clusterNodeId,@RequestParam("businessId") String businessId){
+        opsJdbcDbClusterNodeService.monitor(clusterNodeId,businessId);
+        return AjaxResult.success();
+    }
+
 }

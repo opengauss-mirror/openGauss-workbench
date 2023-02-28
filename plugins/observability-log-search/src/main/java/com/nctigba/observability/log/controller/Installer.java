@@ -55,8 +55,14 @@ public class Installer implements SocketExtract {
 				case "elasticsearch":
 					elasticsearchService.install(session, obj.getStr("hostId"), obj.getStr("rootPassword"));
 					break;
+				case "uninstall elasticsearch":
+					elasticsearchService.uninstall(session, obj.getStr("id"));
+					break;
 				case "filebeat":
 					filebeatService.install(session, obj.getStr("nodeId"));
+					break;
+				case "uninstall filebeat":
+					filebeatService.uninstall(session, obj.getStr("nodeId"));
 				}
 			} catch (Exception e) {
 				wsFacade.sendMessage(PluginListener.pluginId, sessionId, e.getMessage());

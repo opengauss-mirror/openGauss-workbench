@@ -16,9 +16,9 @@ import com.gitee.starblues.spring.SpringBeanFactory;
  * @date: 2022/12/4 15:05
  */
 public class PluginListener implements ApplicationListener<ApplicationEvent> {
+	public static final String pluginId = "observability-sql-diagnosis";
 	@Override
 	public void onApplicationEvent(ApplicationEvent event) {
-		String pluginId = "observability-sql-diagnosis";
 		if (event instanceof ApplicationReadyEvent) {
 			MainApplicationContext context = ((ApplicationReadyEvent) event).getApplicationContext()
 					.getBean(MainApplicationContext.class);
