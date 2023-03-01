@@ -48,17 +48,7 @@ observability-instance 项目目前版本为 1.0.0，主要目的是为 openGaus
 git clone git@gitee.com:opengauss/openGauss-workbench.git
 #进入根目录
 cd plugins/observability-instance
-#修改Promtheus的连接信息
-vim src/main/resources/application-prod.yml
-```
-
-  ```
-prometheus:
-  server:
-    url: http://127.0.0.1:9090
-  ```
-
-```
+#执行maven命令打包
 mvn clean package -P prod
 ```
 
@@ -68,265 +58,53 @@ mvn clean package -P prod
 
 ## 数据采集部署说明
 
-实例监控插件需要在数据库所在服务器部署node-exporter、openGauss-prometheus-exporter，以及部署Prometheus存储采集数据，相关部署说明如下
+### 一、部署数据采集代理
 
-### 一、node-exporter安装
-
-1. 下载服务器对应版本的node-exporter安装包（插件测试中使用1.3.1版本）
-
-   下载地址：https://github.com/prometheus/node_exporter/releases
-
-   以arm64平台为例：
-    ```
-   wget https://github.com/prometheus/node_exporter/releases/download/v1.3.1/node_exporter-1.3.1.linux-arm64.tar.gz
-    ```
-
-2. 解压安装包
-
-   ```
-   tar xvfz node_exporter-1.3.1.linux-arm64.tar.gz
-   ```
-
-3. 可以直接启动应用
-
-   ```
-   cd /data/node-exporter/node_exporter-1.3.1.linux-arm64/
-   ./node_exporter --collector.systemd
-   ```
-   
-4. 配置开机启动
-
-   创建文件
-
-```
-vim /usr/lib/systemd/system/node_exporter.service
-```
-
-   添加以下内容，注意路径根据自己解压路径修改
-   ```
-   [Service]
-   ExecStart=/data/node-exporter/node_exporter-1.3.1.linux-arm64/node_exporter --collector.systemd
-   ExecReload=/bin/kill -HUP $MAINPID
-   KillMode=process
-   Restart=on-failure
-   
-   
-   [Install]
-   WantedBy=multi-user.target
-   
-   [Unit]
-   Description=node_exporter
-After=network.target
-   ```
-   执行命令启动程序
-   ```
-   systemctl daemon-reload
-   
-   systemctl enable node_exporter.service
-   
-   systemctl start node_exporter.service
-   ```
-
-
-5. 验证安装成功
-
-   程序默认端口为9100，也可以通过--web.listen-address=":6000"参数指定端口
-
-   ```
-   curl http://localhost:9100/metrics
-   ```
-
-   以上操作有采集数据返回即代表node-exporter安装成功
-
-### 二、openGauss-exporter安装
-
-1. 安装方式
-
-   openGauss-exporter支持源码编译运行和docker运行
-
-   具体安装方式查看https://gitee.com/opengauss/openGauss-prometheus-exporter
-
-   以下以docker安装为例
-
-2. 安装docker
-
-   拉取包并解压
-
-   ```
-   mkdir /data/docker-server
-   wget https://download.docker.com/linux/static/stable/aarch64/docker-18.09.8.tgz --no-check-certificate 
-   wget https://download.docker.com/linux/static/stable/x86_64/docker-18.09.8.tgz --no-check-certificate
-   tar xvpf docker-18.09.8.tgz -C /data/docker-server
-   ```
-
-   复制文件
-
-   ```
-   cp -p -f /data/docker-server/docker/* /usr/bin
-   ```
-
-   配置 docker.service
-
-   ```
-   vim /usr/lib/systemd/system/docker.service
-   ```
-
-   输入以下内容
-
-   ```
-   [Unit]
-   Description=Docker Application Container Engine
-   Documentation=http://docs.docker.com
-   After=network.target docker.socket
-   [Service]
-   Type=notify
-   EnvironmentFile=-/run/flannel/docker
-   WorkingDirectory=/usr/local/bin
-   ExecStart=/usr/bin/dockerd -H tcp://0.0.0.0:9877 -H unix:///var/run/docker.sock --selinux-enabled=false --log-opt max-size=1g 
-   ExecReload=/bin/kill -s HUP
-   \# Having non-zero Limit*s causes performance problems due to accounting overhead
-   \# in the kernel. We recommend using cgroups to do container-local accounting. 
-   LimitNOFILE=infinity
-   LimitNPROC=infinity
-   LimitCORE=infinity
-   \# Uncomment TasksMax if your systemd version supports it. 
-   \# Only systemd 226 and above support this version. 
-   \#TasksMax=infinity
-   TimeoutStartSec=0
-   \# set delegate yes so that systemd does not reset the cgroups of docker containers 
-   Delegate=yes
-   \# kill only the docker process, not all processes in the cgroup 
-   KillMode=process
-   Restart=on-failure
-   [Install]
-   WantedBy=multi-user.target
-   ```
-
-   启动 docker
-
-   ```
-   systemctl daemon-reload
-   systemctl restart docker
-   systemctl enable docker
-   ```
-
-3. 使用源码中配置文件运行openGauss-exporter
-
-   在插件源码根目录下，有og_exporter.yml文件，该文件基于openGauss-exporter源码中的配置文件添加一些额外的数据采集
-
-   使用docker运行时可以使用以下命令指定配置文件启动openGauss-exporter
-
-   ```
-   mkdir -p /data/docker-vol/openGauss-exporter
-   ```
-
-   复制配置源码中预设的配置文件，注意文件路径对应自己的源码下载路径
-
-   ```
-   cp 源码下载路径/plugins/observability-instance/files/og_exporter.yml /data/docker-vol/openGauss-exporter/og_exporter.yml
-   ```
-
-   执行以下命令启动openGauss-exporter
-
-   注意修改语句中username、password、localhost、5432，对应值为数据库连接信息的账号、密码、IP、端口
-
-   密码中如果有特殊字符，需要做URLencode处理
-
-   ```
-   docker run -d --net=host -e \
-   DATA_SOURCE_NAME="postgresql://username:password@localhost:5432/postgres?sslmode=disable" \
-   -v /data/docker-vol/openGauss-exporter:/data/docker-vol/openGauss-exporter \
-   --name opex2 \
-   enmotech/opengauss_exporter \
-   --config /data/docker-vol/openGauss-exporter/og_exporter.yml
-   ```
-
-4. 测试数据采集
-
-   程序默认端口为9187
-
-   ```
-   curl http://localhost:9187/metrics
-   ```
-
-   以上操作有采集数据返回即代表node-exporter安装成功
-
-### 三、Prometheus安装与配置
-
-1. Prometheus安装
-
-   具体安装方式参考官网：https://prometheus.io/docs/prometheus/latest/installation/
-
-   以下以docker安装为例
-
-2. 打开实例监控插件，获取数据库实例的节点ID
-
-   目前可以从插件的集群/实例下拉框中，获取到实例的ID
+1. 点击“实例监控”插件首页左上角的折叠按钮，打开“安装部署”侧边栏
 
    <img src="doc/1.png" alt="image-20221216153920466" style="zoom: 33%;" />
 
-3. 修改Prometheus配置文件
+2. 点击“安装代理”按钮，弹出安装框
 
-   修改源码下载路径/plugins/observability-instance/files/prometheus.yml的prometheus配置文件
+   <img src="doc/2.png" alt="image-20221216153920466" style="zoom: 33%;" />
 
-   将2个job"node_exporter","gauss_exporter"的IP、端口和instance label做如下修改
+3. 选择对应物理机，输入Root密码，点击“一键部署”即可完成安装
 
-   IP：修改为2个exporter所在服务器的内部IP（prometheus和exporter同一环境时）或外部IP，请不要使用localhost和127.0.0.1
+   <img src="doc/3.png" alt="image-20221216153920466" style="zoom: 43%;" />
 
-   端口：2个exporter使用的端口
+4. 安装完成后，即可在“已安装代理”TAB中看到对应采集代理的信息
 
-   instance label：2中获取到的实例ID
+   <img src="doc/4.png" alt="image-20221216153920466" style="zoom: 43%;" />
 
-   例子如下
+### 二、部署数据采集器
 
-   ```
-     - job_name: "node_exporter"
-       static_configs:
-         - targets: ["192.168.110.19:9100"]
-           labels:
-                   instance: '1603653090037374978'
-   
-   
-     - job_name: "gauss_exporter"
-       static_configs:
-         - targets: ["192.168.110.19:9187"]
-           labels:
-                   instance: '1603653090037374978'
-   ```
+1. 点击“安装采集器”按钮，弹出安装框
 
-4. 搭建prometheus
+   <img src="doc/5.png" alt="image-20221216153920466" style="zoom: 43%;" />
 
-   创建文件夹
+2. 选择对应数据库实例，输入Root密码，点击“一键部署”即可完成安装
 
-   ```
-   mkdir -p /data/docker/prometheus
-   ```
+   <img src="doc/6.png" alt="image-20221216153920466" style="zoom: 43%;" />
 
-   复制修改后的配置文件和授权
+3. 安装完成后，即可在“已安装采集器”TAB中看到对应采集采集器的信息
 
-   ```
-   cp 源码下载路径/plugins/observability-instance/files/prometheus.yml /data/docker/prometheus/prometheus.yml
-   chmod 777 /data/docker/prometheus/*
-   ```
+   <img src="doc/7.png" alt="image-20221216153920466" style="zoom: 43%;" />
 
-   启动prometheus
+### 三、查看数据
 
-   ```
-   docker run -d -p 9090:9090 \
-   -v /data/docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml \
-   -v /etc/localtime:/etc/localtime \
-   --name prom \
-   --privileged=true \
-   prom/prometheus
-   ```
+1. 实例对应的采集器安装完成后，即可通过“实例监控“插件中各功能的“集群/实例”控件，过滤查看对应的实例的数据
 
-5. 访问prometheus的web端查看target是否正常
+   <img src="doc/8.png" alt="image-20221216153920466" style="zoom: 43%;" />
 
-   访问http://prometheus的IP地址:9090/targets
+### 四、卸载
 
-   target如果State状态为UP，代表该exporter能正常采集到数据，实例监控插件接入此Prometheus后可读取相关数据
+1. 在“已安装采集器”和“已安装代理”列表中，鼠标悬停后会显示“卸载”按钮，点击卸载按钮，打开卸载窗口
 
-   ![image-20221216155652896](doc/2.png)
+   <img src="doc/9.png" alt="image-20221216153920466" style="zoom: 53%;" />
+
+2. 输入Root密码后，点击“一键卸载”，即可进行卸载操作
+
+   <img src="doc/10.png" alt="image-20221216153920466" style="zoom: 53%;" />
 
 ## 使用说明
 
