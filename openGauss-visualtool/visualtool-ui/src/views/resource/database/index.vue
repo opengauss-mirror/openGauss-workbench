@@ -26,48 +26,22 @@
             <a-button type="primary" @click="getListData">查询</a-button>
           </div>
         </div>
-        <a-table class="d-a-table-row full-h" :data="list.data" :columns="columns" :pagination="list.page"
-          :loading="list.loading" @page-change="currentPage" @page-size-change="pageSizeChange">
-          <template #ip="{ record }">
-            {{ record.nodes[0].ip }}
+        <a-table class="full-h" :data="list.data" :columns="columns" :pagination="list.page" :loading="list.loading"
+          @page-change="currentPage" @page-size-change="pageSizeChange" row-key="clusterId" @expand="handleExpand"
+          :expandable="expandable">
+          <template #status="{ record }">
+            <a-tag bordered v-if="record.state === -1">checking</a-tag>
+            <a-tag bordered color="red" v-if="record.state === 0">error</a-tag>
+            <a-tag bordered color="green" v-if="record.state === 1">running</a-tag>
           </template>
-          <template #port="{ record }">
-            {{ record.nodes[0].port }}
-          </template>
-          <template #baseInfo="{}">
-            <div class="flex-row">
-              <div class="flex-col mr">
-                <div>20</div>
-                <div>会话</div>
-              </div>
-              <div class="flex-col mr">
-                <div>2</div>
-                <div>连接数</div>
-              </div>
-              <div class="flex-col mr">
-                <div>20MB</div>
-                <div>内存占用</div>
-              </div>
-              <div class="flex-col mr">
-                <div>200</div>
-                <div>qps</div>
-              </div>
-              <div class="flex-col">
-                <div>300</div>
-                <div>tps</div>
-              </div>
-            </div>
-          </template>
-          <template #warning="{}">
-            --
-          </template>
-          <template #status="{}">
-            <a-tag color="green">running</a-tag>
-          </template>
+          <!-- <template #expand-icon="{ expanded }">
+          </template> -->
+          <!-- <template #expand-row="{ record }">
+            <div>我是展开行{{ JSON.stringify(record.nodes) }}</div>
+          </template> -->
           <template #operation="{ record }">
             <div class="flex-row">
               <a-link class="mr" @click="handleDetail(record)">详情</a-link>
-              <a-link class="mr" @click="handleWarningConfig(record)">告警配置</a-link>
               <a-link class="mr" @click="handleAdd('update', record)">修改</a-link>
               <a-popconfirm content="确定要删除？" type="warning" ok-text="确定" cancel-text="取消" @ok="handleDel(record)">
                 <a-link status="danger">删除</a-link>
@@ -83,22 +57,54 @@
 
 <script lang="ts" setup>
 import { KeyValue } from '@/types/global'
-import { onMounted, reactive, computed, ref } from 'vue'
+import { onMounted, reactive, computed, ref, h } from 'vue'
 import { Message, Modal } from '@arco-design/web-vue'
-// import { useI18n } from 'vue-i18n'
 import { jdbcPage, delJdbc, uploadFileJdbc } from '@/api/ops'
 import AddJdbc from './AddJdbc.vue'
+// import { useI18n } from 'vue-i18n'
 // const { t } = useI18n()
+import JdbcNodeTable from './JdbcNodeTable.vue'
+const expandable = reactive<KeyValue>({
+  title: '',
+  width: 50,
+  expandedRowKeys: [],
+  defaultExpandAllRows: true,
+  expandedRowRender: (record: KeyValue) => {
+    if (record.nodes && record.nodes.length > 0) {
+      return h('div', {}, [
+        h(JdbcNodeTable, {
+          nodes: record.nodes,
+          onValidRes(val: boolean) {
+            console.log('receive state', val)
+            record.state = val
+          }
+        })
+      ])
+    }
+    return ''
+  }
+})
+
+const handleExpand = (rowKey: string | number) => {
+  if (expandable.expandedRowKeys.length > 0) {
+    let index = expandable.expandedRowKeys.indexOf(rowKey)
+    if (index > -1) {
+      expandable.expandedRowKeys.splice(index, 1)
+    } else {
+      // expandable.expandedRowKeys.splice(0, expandable.expandedRowKeys.length)
+      expandable.expandedRowKeys.push(rowKey)
+    }
+  } else {
+    expandable.expandedRowKeys.push(rowKey)
+  }
+}
 
 const columns = computed(() => [
-  { title: '实例名称', dataIndex: 'name' },
+  { title: '集群名称', dataIndex: 'name' },
   { title: '类型', dataIndex: 'dbType' },
-  { title: 'IP地址', slotName: 'ip' },
-  { title: '端口', slotName: 'port' },
-  { title: '基本信息', slotName: 'baseInfo' },
-  { title: '告警', slotName: 'warning' },
-  { title: '状态', slotName: 'status' },
-  { title: '操作', slotName: 'operation' }
+  { title: '状态', dataIndex: 'status', slotName: 'status' },
+  { title: '更新时间', dataIndex: 'updateTime' },
+  { title: '操作', slotName: 'operation', width: 350 }
 ])
 
 const filter = reactive({
@@ -132,10 +138,12 @@ const getListData = () => {
   jdbcPage(filter).then((res: KeyValue) => {
     if (Number(res.code) === 200) {
       list.data = []
+      expandable.expandedRowKeys = []
       res.rows.forEach((item: KeyValue) => {
         item.state = -1
         item.loading = false
         list.data.push(item)
+        expandable.expandedRowKeys.push(item.clusterId)
       })
       list.page.total = res.total
     }
@@ -194,10 +202,6 @@ const handleAdd = (type: string, data?: KeyValue) => {
 }
 
 const handleDetail = (record: KeyValue) => {
-  console.log('show record', record)
-}
-
-const handleWarningConfig = (record: KeyValue) => {
   console.log('show record', record)
 }
 
