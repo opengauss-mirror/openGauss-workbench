@@ -192,7 +192,8 @@ public class OpsWdrService extends ServiceImpl<OpsWdrMapper, OpsWdrEntity> {
 			responseList.add(sql);
 
 			response.put("openGauss=#", responseList);
-			JschResult jschResult = jschUtil.executeCommandWithSerialResponse(clientLoginOpenGauss, session, response, null);
+			JschResult jschResult = jschUtil.executeCommandWithSerialResponse(clientLoginOpenGauss, session, response,
+					null);
 			if (0 != jschResult.getExitCode()) {
 				log.error("Generate wdr snapshot exception, exit code: {}, log: {}", jschResult.getExitCode(),
 						jschResult.getResult());
@@ -318,11 +319,12 @@ public class OpsWdrService extends ServiceImpl<OpsWdrMapper, OpsWdrEntity> {
 			clusterOpsProviderManager.provider(clusterEntity.getVersion(), null)
 					.orElseThrow(() -> new OpsException("The current version does not support"))
 					.enableWdrSnapshot(session, clusterEntity, opsClusterNodeEntities, WdrScopeEnum.CLUSTER, null);
+
 			String wdrPath = "/home/" + userEntity.getUsername();
 			String wdrName = "WDR-" + StrUtil.uuid() + ".html";
-			doGenerate(wdrPath, wdrName, startId, endId, WdrScopeEnum.CLUSTER, type, session, clusterEntity.getPort());
+			doGenerate(wdrPath, wdrName, startId, endId, WdrScopeEnum.NODE, type, session, clusterEntity.getPort());
 			OpsWdrEntity opsWdrEntity = new OpsWdrEntity();
-			opsWdrEntity.setScope(WdrScopeEnum.CLUSTER);
+			opsWdrEntity.setScope(WdrScopeEnum.NODE);
 			opsWdrEntity.setReportAt(new Date());
 			opsWdrEntity.setReportType(type);
 			opsWdrEntity.setReportName(wdrName);
@@ -331,6 +333,8 @@ public class OpsWdrService extends ServiceImpl<OpsWdrMapper, OpsWdrEntity> {
 			opsWdrEntity.setEndSnapshotId(endId);
 			opsWdrEntity.setClusterId(clusterEntity.getClusterId());
 			opsWdrEntity.setUserId(userEntity.getHostUserId());
+			opsWdrEntity.setHostId(hostId);
+			opsWdrEntity.setNodeId(nodeEntity.getClusterNodeId());
 			save(opsWdrEntity);
 		} finally {
 			if (Objects.nonNull(session) && session.isConnected()) {
@@ -381,6 +385,7 @@ public class OpsWdrService extends ServiceImpl<OpsWdrMapper, OpsWdrEntity> {
 			opsWdrEntity.setEndSnapshotId(endId);
 			opsWdrEntity.setClusterId(clusterEntity.getClusterId());
 			opsWdrEntity.setUserId(userEntity.getHostUserId());
+			opsWdrEntity.setNodeId(masterNodeEntity.getClusterNodeId());
 			save(opsWdrEntity);
 		} finally {
 			if (Objects.nonNull(session) && session.isConnected()) {
@@ -405,13 +410,13 @@ public class OpsWdrService extends ServiceImpl<OpsWdrMapper, OpsWdrEntity> {
 			responseList.add(endSql);
 
 			response.put("openGauss=#", responseList);
-			JschResult jschResult = jschUtil.executeCommandWithSerialResponse(clientLoginOpenGauss, session, response, null);
+			JschResult jschResult = jschUtil.executeCommandWithSerialResponse(clientLoginOpenGauss, session, response,
+					null);
 			if (0 != jschResult.getExitCode()) {
 				log.error("Generated wdr exception, exit code: {}, log: {}", jschResult.getExitCode(),
 						jschResult.getResult());
 				throw new OpsException("generate wdr exception");
 			}
-
 		} catch (Exception e) {
 			log.error("generate wdr exception", e);
 			throw new OpsException("generate wdr exception");

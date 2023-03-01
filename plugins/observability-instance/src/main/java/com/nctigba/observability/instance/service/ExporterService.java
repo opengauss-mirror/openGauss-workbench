@@ -6,7 +6,9 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.text.MessageFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashSet;
 import java.util.Map;
 
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
@@ -100,6 +102,7 @@ public class ExporterService extends AbstractInstaller {
 				conf.scrape_configs
 						.add(generateConfig("opengauss", nodeId, node.getPublicIp() + ":" + gaussEnv.getPort()));
 				conf.scrape_configs.add(generateConfig("node", nodeId, node.getPublicIp() + ":" + nodeEnv.getPort()));
+				conf.scrape_configs = new ArrayList<>(new LinkedHashSet<>(conf.scrape_configs));
 				var prometheusConfigFile = File.createTempFile("prom", ".tmp");
 				FileUtil.appendUtf8String(YamlUtil.dump(conf), prometheusConfigFile);
 				promSession.execute("rm " + promEnv.getPath() + "/prometheus.yml");
@@ -148,7 +151,7 @@ public class ExporterService extends AbstractInstaller {
 				session.execute(command.WGET.parse(NODE_EXPORTER_PATH + tar));
 			session.execute(command.TAR.parse(tar));
 		}
-		session.execute("cd " + name + " && nohup ./node_exporter --collector.systemd 2>&1 & \r", false);
+		session.executeNoWait("cd " + name + " && ./node_exporter --collector.systemd");
 		var nodeEnv = new NctigbaEnv().setHostid(hostId).setPort(9100).setUsername(user.getUsername())
 				.setType(type.NODE_EXPORTER).setPath(name);
 		envMapper.insert(nodeEnv);
@@ -181,8 +184,8 @@ public class ExporterService extends AbstractInstaller {
 		var url = MessageFormat.format("postgresql://{0}:{1}@{2}:{3,number,#}/{4}", node.getDbUser(),
 				URLUtil.encodeAll(node.getDbUserPassword()), hostEntity.getPublicIp(), node.getDbPort(),
 				node.getDbName());
-		session.execute("export DATA_SOURCE_NAME='" + url
-				+ "' && nohup ./opengauss_exporter --config=og_exporter.yml 2>&1 & \r", false);
+		session.executeNoWait("export DATA_SOURCE_NAME='" + url
+				+ "' && ./opengauss_exporter --config=og_exporter.yml");
 		var gaussEnv = new NctigbaEnv().setHostid(hostId).setPort(9187).setUsername(user.getUsername())
 				.setType(type.OPENGAUSS_EXPORTER).setPath(".");
 		envMapper.insert(gaussEnv);

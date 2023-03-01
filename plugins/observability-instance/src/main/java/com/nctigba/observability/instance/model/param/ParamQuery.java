@@ -11,4 +11,6 @@ public class ParamQuery {
     private String nodeId;
     @ApiModelProperty("password")
     private String password;
+    @ApiModelProperty("is Refresh (1 or 0)")
+    private String isRefresh;
 }

@@ -23,6 +23,7 @@ const clusterComponent = ref(null);
 const culsterLoaded = ref<boolean>(false);
 const initNodeId = ref<string>("");
 const syncNodeId = (syncNodeIdVal: string) => {
+    if (syncNodeIdVal === null || syncNodeIdVal === "") return;
     if (!culsterLoaded.value) initNodeId.value = syncNodeIdVal;
     else {
         clusterComponent.value.setNodeId(syncNodeIdVal);
@@ -85,10 +86,12 @@ const handleClusterValue = (val: any) => {
 };
 const clusterLoaded = (val: any) => {
     culsterLoaded.value = true;
-    if (initNodeId.value) clusterComponent.value.setNodeId(initNodeId.value);
-    nextTick(() => {
-        requestData();
-    });
+    if (initNodeId.value) {
+        clusterComponent.value.setNodeId(initNodeId.value);
+        nextTick(() => {
+            requestData();
+        });
+    }
 };
 const {
     data: res,
@@ -160,7 +163,7 @@ const { run: handleView, loading: viewing } = useRequest(
             })
             .then(function (res) {
                 const newWindow = window.open(row.reportName, "_blank");
-                newWindow?.document.write(res.data);
+                newWindow?.document.write(res);
             })
             .catch(function (res) {});
     },
@@ -175,8 +178,8 @@ const { run: handleDownload, loading: downloading } = useRequest(
                 wdrId: row?.wdrId,
             })
             .then(function (res) {
-                if (res.data) {
-                    const blob = new Blob([res.data], {
+                if (res) {
+                    const blob = new Blob([res], {
                         type: "text/plain",
                     });
                     const a = document.createElement("a");

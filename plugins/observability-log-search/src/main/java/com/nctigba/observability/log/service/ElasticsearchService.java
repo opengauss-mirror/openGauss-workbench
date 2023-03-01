@@ -8,6 +8,8 @@ import java.util.Arrays;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.core.domain.model.ops.WsSession;
 import org.opengauss.admin.common.utils.http.HttpUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Service;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
@@ -28,6 +30,9 @@ public class ElasticsearchService extends AbstractInstaller {
 	private static final String NAME = "elasticsearch-8.3.3-linux-";
 	private static final String SRC = "elasticsearch-8.3.3";
 
+	@Autowired
+	private ResourceLoader loader;
+
 	public void install(WsSession wsSession, String hostId, String rootPassword) {
 		// @formatter:off
 		var steps = Arrays.asList(
@@ -45,8 +50,7 @@ public class ElasticsearchService extends AbstractInstaller {
 		try {
 			curr = nextStep(wsSession, steps, curr);
 			check();
-			var env = new NctigbaEnv().setHostid(hostId).setPort(9200)
-					.setType(type.ELASTICSEARCH).setPath(SRC);
+			var env = new NctigbaEnv().setHostid(hostId).setPort(9200).setType(type.ELASTICSEARCH).setPath(SRC);
 
 			curr = nextStep(wsSession, steps, curr);
 			OpsHostEntity hostEntity = hostFacade.getById(hostId);
@@ -98,17 +102,17 @@ public class ElasticsearchService extends AbstractInstaller {
 			// @formatter:on
 			session.upload(elasticConfigFile.getAbsolutePath(), SRC + "/config/elasticsearch.yml");
 			elasticConfigFile.delete();
-			String cd = "cd " + SRC + " && ";
-			session.execute(cd + " echo '-Xms1g' >>jvm.options && echo '-Xmx1g' >>jvm.options");
+			var in = loader.getResource(NAME).getInputStream();
+			session.upload(in, SRC + "/config/jvm.options");
 
 			curr = nextStep(wsSession, steps, curr);
-			session.execute(cd + " ./bin/elasticsearch -d &", false);
+			String cd = "cd " + SRC + "/config && ";
+			session.executeNoWait(cd + " ./bin/elasticsearch -d");
 
 			curr = nextStep(wsSession, steps, curr);
 			// 调用http验证es
-			String str = HttpUtils.sendGet("http://" + env.getHost().getPublicIp() + ":"+env.getPort(),
-					null);
-			if(!JSONUtil.isJsonObj(str))
+			String str = HttpUtils.sendGet("http://" + env.getHost().getPublicIp() + ":" + env.getPort(), null);
+			if (!JSONUtil.isJsonObj(str))
 				throw new RuntimeException("elasticsearch 启动失败");
 
 			curr = nextStep(wsSession, steps, curr);
@@ -162,7 +166,7 @@ public class ElasticsearchService extends AbstractInstaller {
 					encryptionUtils.decrypt(user.getPassword()));) {
 				curr = nextStep(wsSession, steps, curr);
 				var pid = sshsession.execute(command.PS.parse("elasticsearch"));
-				if(StrUtil.isNotBlank(pid)) {
+				if (StrUtil.isNotBlank(pid)) {
 					curr = nextStep(wsSession, steps, curr);
 					sshsession.execute(command.KILL.parse(pid));
 				} else

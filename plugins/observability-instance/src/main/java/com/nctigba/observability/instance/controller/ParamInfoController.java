@@ -1,8 +1,11 @@
 package com.nctigba.observability.instance.controller;
 
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 import com.nctigba.observability.instance.dto.param.DatabaseParamDTO;
 import com.nctigba.observability.instance.dto.param.OsParamDTO;
+import com.nctigba.observability.instance.entity.NctigbaParamInfo;
+import com.nctigba.observability.instance.mapper.NctigbaParamInfoMapper;
 import com.nctigba.observability.instance.model.param.ParamQuery;
 import com.nctigba.observability.instance.service.ParamInfoService;
 import io.swagger.annotations.ApiOperation;
@@ -30,10 +33,13 @@ public class ParamInfoController {
     private final ParamInfoService paramInfoService;
 
     @Autowired
+    private NctigbaParamInfoMapper mapper;
+
+    @Autowired
     @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
     protected EncryptionUtils encryptionUtils;
 
-    @ApiOperation("Database Param Info")
+    /*@ApiOperation("Database Param Info")
     @GetMapping(value = "/databaseParamInfo")
     public List<DatabaseParamDTO> databaseParamInfo(ParamQuery paramQuery) {
         return paramInfoService.getDatabaseParamInfo(paramQuery);
@@ -47,5 +53,18 @@ public class ParamInfoController {
             paramQuery.setPassword(password);
         }
         return paramInfoService.getOsParamInfo(paramQuery);
+    }*/
+    @ApiOperation("Param Info")
+    @GetMapping(value = "/paramInfo")
+    public List<NctigbaParamInfo> databaseParamInfo(ParamQuery paramQuery) {
+        if("1".equals(paramQuery.getIsRefresh())){
+            /*if(paramQuery.getPassword()!=null && !"".equals(paramQuery.getPassword())){
+                String password=encryptionUtils.decrypt(paramQuery.getPassword());
+                paramQuery.setPassword(password);
+            }*/
+            return paramInfoService.getParamInfo(paramQuery);
+        }else{
+            return mapper.selectList(Wrappers.emptyWrapper());
+        }
     }
 }

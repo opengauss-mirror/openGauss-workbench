@@ -35,7 +35,7 @@ const isSuccessResponse = (res: any) => {
     if (res.status === 200) {
         if (res.data === undefined) {
             return true
-        } else if (Object.keys(res.data).length === 2 && res.data.code && res.data.msg && res.data.code !== 200) {
+        } else if (Object.keys(res.data).length === 2 && typeof res.data.code !== 'undefined' && typeof res.data.msg !== 'undefined' && res.data.code !== 200) {
             return false
         } else return true
     } else return false
