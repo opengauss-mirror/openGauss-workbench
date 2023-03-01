@@ -102,8 +102,8 @@ public class ElasticsearchService extends AbstractInstaller {
 			// @formatter:on
 			session.upload(elasticConfigFile.getAbsolutePath(), SRC + "/config/elasticsearch.yml");
 			elasticConfigFile.delete();
-			var in = loader.getResource(NAME).getInputStream();
-			session.upload(in, SRC + "/config/jvm.options");
+//			var in = loader.getResource("jvm.options").getInputStream();
+//			session.upload(in, SRC + "/config/jvm.options");
 
 			curr = nextStep(wsSession, steps, curr);
 			String cd = "cd " + SRC + "/config && ";
