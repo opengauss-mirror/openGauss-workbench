@@ -51,7 +51,7 @@ public class SshSession implements AutoCloseable {
 
 	public boolean test(String command) throws IOException {
 		try {
-			execute(command, null);
+			execute(command);
 			return true;
 		} catch (RuntimeException e) {
 			return false;
@@ -59,32 +59,28 @@ public class SshSession implements AutoCloseable {
 	}
 
 	public String execute(command command) throws IOException {
-		return execute(command.cmd, null, null, true);
+		return execute(command.cmd, null, true);
 	}
 
 	public String execute(command command, Map<String, String> autoResponse) throws IOException {
-		return execute(command.cmd, autoResponse, null, true);
+		return execute(command.cmd, autoResponse, true);
 	}
 
 	public String execute(String command) throws IOException {
-		return execute(command, null, null, true);
-	}
-
-	public String execute(String command, Boolean pty) throws IOException {
-		return execute(command, null, pty, true);
+		return execute(command, null, true);
 	}
 
 	public String executeNoWait(String command) throws IOException {
-		return execute(command, null, null, false);
+		return execute(command, null, false);
 	}
 
-	public String execute(String command, Map<String, String> autoResponse, Boolean pty, boolean wait) throws IOException {
+	public String execute(String command, Map<String, String> autoResponse, boolean wait) throws IOException {
 		log.info("Execute an order：{}", command);
 		ChannelExec channelExec;
 		try {
 			channelExec = (ChannelExec) session.openChannel("exec");
 			channelExec.setPtyType("dump");
-			channelExec.setPty(pty == null ? true : pty);
+			channelExec.setPty(true);
 		} catch (JSchException e) {
 			throw new OpsException("Obtaining the exec channel fails");
 		}
@@ -107,8 +103,6 @@ public class SshSession implements AutoCloseable {
 				String msg = new String(tmp, 0, i);
 				resultStrBuilder.append(msg);
 			}
-			if (pty != null && !pty)
-				return resultStrBuilder.toString().trim();
 			if (!wait && autoResponse == null && resultStrBuilder.length() > 0)
 				return resultStrBuilder.toString().trim();
 			if (channelExec.isClosed()) {
