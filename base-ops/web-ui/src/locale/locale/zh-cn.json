@@ -783,6 +783,8 @@
             "warningBatchDelete1": "确定要删除这",
             "warningBatchDelete2": "个数据流吗",
             "batchDelete": "批量删除",
+            "deleteText": "删除",
+            "deleteNotice": "确定要删除？",
             "paste": "粘贴",
             "isNo": "无",
             "heatmapConfig": {
