@@ -294,13 +294,17 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
         if (mainTask == null) {
             return AjaxResult.error(MigrationErrorCode.MAIN_TASK_NOT_EXISTS_ERROR.getCode(), MigrationErrorCode.MAIN_TASK_NOT_EXISTS_ERROR.getMsg());
         }
-        if (mainTask.getExecStatus() != TaskStatus.NOT_RUN.getCode()) {
+        if (!mainTask.getExecStatus().equals(TaskStatus.NOT_RUN.getCode())) {
             return AjaxResult.error(MigrationErrorCode.MAIN_TASK_IS_RUNNING_ERROR.getCode(), MigrationErrorCode.MAIN_TASK_IS_RUNNING_ERROR.getMsg());
         }
         List<MigrationTask> tasks = migrationTaskService.listByMainTaskId(id);
         List<MigrationTaskHostRef> hosts = migrationTaskHostRefService.listByMainTaskId(id);
         List<MigrationTaskGlobalParam> globalParams = migrationTaskGlobalParamService.selectByMainTaskId(id);
-        checkInstallPortal(hosts);
+
+        if (!checkInstallPortal(hosts)) {
+            return AjaxResult.error(MigrationErrorCode.PORTAL_INSTALL_ERROR.getCode(), MigrationErrorCode.PORTAL_INSTALL_ERROR.getMsg());
+        }
+
         Integer totalRunnableCount = hosts.stream().mapToInt(MigrationTaskHostRef::getRunnableCount).sum();
         if (totalRunnableCount > tasks.size()) { //The number of host executable tasks is greater than the total number of tasks
             for (int x = 0; x < tasks.size(); x++) {
@@ -330,11 +334,27 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
         return AjaxResult.success();
     }
 
-    private void checkInstallPortal(List<MigrationTaskHostRef> hosts) {
+    private boolean unInstallPortal(List<MigrationTaskHostRef> hosts) {
         //check install
-        hosts.stream().forEach(h -> {
-            PortalHandle.checkAndInstallPortal(h, portalHome);
-        });
+        for (MigrationTaskHostRef h : hosts) {
+            boolean flag = PortalHandle.checkInstallPortal(h, portalHome);
+            if(!flag){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean checkInstallPortal(List<MigrationTaskHostRef> hosts) {
+        //check install
+        for (MigrationTaskHostRef h : hosts) {
+            boolean flag = PortalHandle.checkAndInstallPortal(h, portalHome);
+            if(!flag){
+                log.info("The portal is not installed, and the installation is in progress, host: {}", h.getHost());
+                return false;
+            }
+        }
+        return true;
     }
 
     @Override
@@ -453,7 +473,6 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
                     List<Map<String, Object>> statusResultList = statusList.stream().sorted(Comparator.comparing(m -> MapUtil.getLong(m,"timestamp"))).collect(Collectors.toList());
                     Map<String, Object> lastStatus = statusResultList.get(statusResultList.size() - 1);
                     Integer state = MapUtil.getInt(lastStatus, "status");
-                    Long timestamp = MapUtil.getLong(lastStatus, "timestamp");
                     MigrationTask update = MigrationTask.builder().id(t.getId()).build();
                     migrationTaskStatusRecordService.saveTaskRecord(t.getId(), statusResultList);
                     BigDecimal migrationProcess = new BigDecimal(0);
@@ -504,6 +523,10 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
                     if (TaskStatus.FULL_CHECK_FINISH.getCode().equals(state) && t.getMigrationModelId().equals(1)) {
                         update.setExecStatus(TaskStatus.MIGRATION_FINISH.getCode());
                         update.setFinishTime(new Date());
+                    }
+                    if (TaskStatus.MIGRATION_ERROR.getCode().equals(state)) {
+                        String msg = MapUtil.getStr(lastStatus, "msg");
+                        update.setStatusDesc(msg);
                     }
                     migrationTaskService.updateById(update);
                 }

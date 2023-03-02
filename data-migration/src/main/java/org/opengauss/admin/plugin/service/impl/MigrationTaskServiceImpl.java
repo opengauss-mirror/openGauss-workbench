@@ -18,6 +18,7 @@ import org.opengauss.admin.system.plugin.facade.HostUserFacade;
 import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -65,6 +66,9 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
     private Long taskOfflineSchedulerIntervalsMillisecond;
     @Value("${migration.portalHome}")
     private String portalHome;
+
+    @Autowired
+    private ThreadPoolTaskExecutor threadPoolTaskExecutor;
 
     /**
      * Query the sub task page list by mainTaskId
@@ -197,6 +201,38 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
                 .runPort(h.getPort()).runUser(h.getUser()).runPass(h.getPassword()).execStatus(TaskStatus.FULL_START.getCode()).execTime(new Date()).build();
         migrationTaskOperateRecordService.saveRecord(t.getId(), TaskOperate.RUN, loginUser.getUsername());
         this.updateById(update);
+    }
+
+    public void runTaskAndCheck(MigrationTaskHostRef h, MigrationTask t, List<MigrationTaskGlobalParam> globalParams) {
+        LoginUser loginUser = SecurityUtils.getLoginUser();
+        boolean flag = PortalHandle.checkInstallPortal(h, portalHome);
+        if (flag) {
+            PortalHandle.startPortal(h, t, getTaskParam(globalParams, t), portalHome);
+            MigrationTask update = MigrationTask.builder().id(t.getId()).runHostId(h.getRunHostId()).runHost(h.getHost()).runHostname(h.getHostName())
+                    .runPort(h.getPort()).runUser(h.getUser()).runPass(h.getPassword()).execStatus(TaskStatus.FULL_START.getCode()).execTime(new Date()).build();
+            this.updateById(update);
+        } else {
+            // unInstall
+            MigrationTask update = MigrationTask.builder().id(t.getId()).runHostId(h.getRunHostId()).runHost(h.getHost()).runHostname(h.getHostName())
+                    .runPort(h.getPort()).runUser(h.getUser()).runPass(h.getPassword()).execStatus(TaskStatus.INSTALL_PORTAL.getCode()).execTime(new Date()).build();
+            this.updateById(update);
+            threadPoolTaskExecutor.submit(() -> {
+                try {
+                    boolean installResult = PortalHandle.checkAndInstallPortal(h, portalHome);
+                    if(!installResult){
+                        MigrationTask updateError = MigrationTask.builder().id(t.getId()).runHostId(h.getRunHostId()).runHost(h.getHost()).runHostname(h.getHostName())
+                                .runPort(h.getPort()).runUser(h.getUser()).runPass(h.getPassword()).execStatus(TaskStatus.MIGRATION_ERROR.getCode()).build();
+                        this.updateById(updateError);
+                    } else {
+                        runTaskAndCheck(h, t, globalParams);
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    log.error("OffLineTaskRunScheduler error", e);
+                }
+            });
+        }
+        migrationTaskOperateRecordService.saveRecord(t.getId(), TaskOperate.RUN, loginUser.getUsername());
     }
 
     public static String escapeChars(String s) {

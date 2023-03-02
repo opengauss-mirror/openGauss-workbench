@@ -25,7 +25,8 @@ public enum TaskStatus {
     REVERSE_STOP(12, "reverse_stop"),
     MIGRATION_FINISH(100, "migration_finish"),
     MIGRATION_ERROR(500, "error"),
-    WAIT_RESOURCE(1000, "wait_resource")
+    WAIT_RESOURCE(1000, "wait_resource"),
+    INSTALL_PORTAL(2000, "install portal")
     ;
 
     private final Integer code;

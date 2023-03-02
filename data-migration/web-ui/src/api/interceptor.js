@@ -4,7 +4,7 @@ import { getToken } from '@/utils/auth'
 import errorCode from '@/utils/errorCode'
 
 axios.defaults.baseURL = process.env.VUE_APP_BASE_API || ''
-axios.defaults.timeout = 120000
+axios.defaults.timeout = 1200000
 
 axios.interceptors.request.use(
   (config) => {

@@ -384,6 +384,8 @@ COMMENT ON COLUMN "public"."tb_migration_task_status_record"."status_id" IS '状
 
 COMMENT ON COLUMN "public"."tb_migration_task_status_record"."create_time" IS '记录时间';
 
+COMMENT ON TABLE "public"."tb_migration_task_status_record" IS '任务状态记录表';
+
 CREATE OR REPLACE FUNCTION init_migration_data_fuc() RETURNS integer AS 'BEGIN
 
     IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema=''public'' and table_name=''tb_migration_task_model'') AND
@@ -472,9 +474,21 @@ CREATE OR REPLACE FUNCTION init_migration_data_fuc() RETURNS integer AS 'BEGIN
     RETURN 0;
 END;'
     LANGUAGE plpgsql;
-
-
-COMMENT ON TABLE "public"."tb_migration_task_status_record" IS '任务状态记录表';
-
 select init_migration_data_fuc();
 DROP FUNCTION init_migration_data_fuc;
+
+
+CREATE OR REPLACE FUNCTION add_migration_task_status_desc_field_func() RETURNS integer AS 'BEGIN
+IF
+( SELECT COUNT ( * ) AS ct1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ''tb_migration_task'' AND COLUMN_NAME = ''status_desc'' ) = 0
+THEN
+ALTER TABLE tb_migration_task ADD COLUMN status_desc varchar(512) COLLATE "pg_catalog"."default";
+COMMENT ON COLUMN "public"."tb_migration_task"."status_desc" IS ''状态说明'';
+END IF;
+RETURN 0;
+END;'
+LANGUAGE plpgsql;
+
+SELECT add_migration_task_status_desc_field_func();
+
+DROP FUNCTION add_migration_task_status_desc_field_func;
