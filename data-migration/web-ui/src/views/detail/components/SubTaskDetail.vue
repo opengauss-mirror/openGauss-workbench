@@ -93,7 +93,11 @@
                 <div class="record-item-con">
                   <div v-for="item in value" :key="item.id" class="record-item">
                     <div class="record-item-info">
-                      <span class="info">{{ execSubStatusMap(item.statusId) }} <i v-if="item.statusId === 2" @click="globalVisible = !globalVisible">{{ globalVisible ? '收起' : '查看' }}</i></span>
+                      <span class="info">
+                        {{ execSubStatusMap(item.statusId) }}
+                        <i v-if="item.statusId === 2" @click="globalVisible = !globalVisible">{{ globalVisible ? '收起' : '查看' }}</i>
+                        <i v-if="item.statusId === 8" @click="increaseVisible = !increaseVisible">{{ increaseVisible ? '收起' : '查看' }}</i>
+                      </span>
                       <span class="time">{{ item.createTime }}</span>
                     </div>
                     <div v-if="item.statusId === 2 && globalVisible" class="table-con">
@@ -152,60 +156,32 @@
                         </template>
                       </a-table>
                     </div>
+                    <div v-if="item.statusId === 8 && increaseVisible" class="list-con">
+                      <div class="list-item-con">
+                        <div class="list-title">
+                          <div class="list-title-l">
+                            <icon-info-circle size="15" />
+                            <span>累计增量迁移对象数：{{ increaseData.count }} 条</span>
+                          </div>
+                          <div class="list-title-r">
+                            <span>{{ increaseData.createTime }}</span>
+                          </div>
+                        </div>
+                        <div class="list-info-em">
+                          <span>增量抽取速度：{{ increaseData.sourceSpeed || 0 }} 条/s</span>
+                        </div>
+                        <div class="list-info-em">
+                          <span>增量写入速度：{{ increaseData.sinkspeed || 0 }} 条/s</span>
+                        </div>
+                        <div class="list-info">
+                          <span>剩余待写入数据：{{ increaseData.rest }} 条</span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </a-card>
             </a-step>
-            <!-- <a-step>
-              <div class="record-item-hd">
-                <span class="hd-info">迁移过程开始（自动）</span>
-                <span class="hd-time">by admin, 2023-1-23 10:10:00</span>
-              </div>
-              <a-card hoverable>
-                <div class="record-item-con">
-                  <div class="record-item">
-                    <span class="info">全量迁移：开始</span>
-                    <span class="time">2023-1-23 10:10:00</span>
-                  </div>
-                  <div class="record-item">
-                    <span class="info">全量迁移：进行中 <i @click="globalVisible = !globalVisible">查看</i></span>
-                    <span class="time">2023-1-23 10:10:00</span>
-                  </div>
-                  <div v-if="globalVisible" class="table-con">
-                    <a-table :data="tableData" :bordered="false" stripe :pagination="false">
-                      <template #columns>
-                        <a-table-column title="源库：user-profile-abc" data-index="a"></a-table-column>
-                        <a-table-column title="目的库：user-profile-storage-abc" data-index="b"></a-table-column>
-                        <a-table-column title="迁移状态" data-index="c" align="center">
-                          <template #cell="{ record }">
-                            <icon-check-circle-fill v-if="record.c === 'ok'" size="16" style="color: #00B429;" />
-                            <a-popover title="错误详情" position="tr">
-                              <icon-close-circle-fill v-if="record.c !== 'ok'" size="16" style="color: #FF7D01;" />
-                              <template #content>
-                                <p>Here is the text content</p>
-                                <p>Here is the text content</p>
-                              </template>
-                            </a-popover>
-                          </template>
-                        </a-table-column>
-                      </template>
-                    </a-table>
-                  </div>
-                  <div class="record-item">
-                    <span class="info">全量迁移：已完成</span>
-                    <span class="time">2023-1-23 10:10:00</span>
-                  </div>
-                  <div class="record-item">
-                    <span class="info">增量迁移：开始</span>
-                    <span class="time">2023-1-23 10:10:00</span>
-                  </div>
-                  <div class="record-item">
-                    <span class="info">增量迁移：进行中</span>
-                    <span class="time">2023-1-23 10:10:00</span>
-                  </div>
-                </div>
-              </a-card>
-            </a-step> -->
           </a-steps>
         </div>
       </div>
@@ -245,8 +221,10 @@ const emits = defineEmits(['update:open'])
 const visible = ref(false)
 const tabActive = ref(1)
 const globalVisible = ref(false)
+const increaseVisible = ref(false)
 const subTaskInfo = ref({})
 const descData = ref([])
+const increaseData = ref({})
 
 // sub task status map
 const execSubStatusMap = (status) => {
@@ -289,6 +267,13 @@ watch(visible, (v) => {
 watch(() => props.open, (v) => {
   if (v) {
     tabActive.value = props.tab
+    globalVisible.value = false
+    increaseVisible.value = false
+    increaseData.value = {}
+    tableData.value = []
+    logData.value = []
+    onlyError.value = false
+    onlyCheckError.value = false
     getSubTaskDetail()
   }
   visible.value = v
@@ -339,7 +324,7 @@ const handleDownloadLog = (url) => {
       const URL = window.URL || window.webkitURL
       const herf = URL.createObjectURL(blob)
       a.href = herf
-      a.download = url
+      a.download = url.substring(url.lastIndexOf('/') + 1)
       document.body.appendChild(a)
       a.click()
       document.body.removeChild(a)
@@ -413,6 +398,15 @@ const getSubTaskDetail = () => {
     // 过程记录
     if (subTaskInfo.value.migrationModelId === 2) {
       statusRecords.value = res.data.statusRecords
+    }
+
+    // 增量迁移详情
+    const increaseProcessDetail = res.data.incrementalProcess?.execResultDetail ? JSON.parse(res.data.incrementalProcess?.execResultDetail) : null
+    if (increaseProcessDetail) {
+      increaseData.value = {
+        createTime: res.data.incrementalProcess.createTime,
+        ...increaseProcessDetail
+      }
     }
 
     // log
@@ -521,6 +515,48 @@ onMounted(() => {
             .time {
               font-size: 12px;
               color: var(--color-text-3);
+            }
+          }
+          .list-con {
+            border: 1px solid var(--color-border-1);
+            border-radius: 3px;
+            padding: 5px 10px;
+            .list-item-con {
+              .list-title {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                .list-title-l {
+                  .arco-icon {
+                    color: rgb(var(--primary-6));
+                  }
+                  span {
+                    font-size: 14px;
+                    margin-left: 3px;
+                    color: var(--color-text-2);
+                  }
+                }
+                .list-title-r {
+                  span {
+                    font-size: 12px;
+                    color: var(--color-text-3);
+                  }
+                }
+              }
+              .list-info-em {
+                margin-left: 18px;
+                span {
+                  font-size: 12px;
+                  color: rgb(var(--warning-6));
+                }
+              }
+              .list-info {
+                margin-left: 18px;
+                span {
+                  font-size: 12px;
+                  color: var(--color-text-2);
+                }
+              }
             }
           }
         }

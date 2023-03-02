@@ -20,6 +20,11 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletResponse;
+import java.io.BufferedInputStream;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
@@ -180,16 +185,22 @@ public class MigrationTaskController extends BaseController {
      * Download log file by filepath
      */
     @GetMapping("/subTask/log/download/{id}")
-    public ResponseEntity<ByteArrayResource> logDownload(@PathVariable Integer id, String filePath) throws Exception {
+    public void logDownload(@PathVariable Integer id, String filePath, HttpServletResponse response) throws Exception {
         MigrationTask task = migrationTaskService.getById(id);
         byte[] bytes = PortalHandle.getTaskLogs(task.getRunHost(), task.getRunPort(), task.getRunUser(), task.getRunPass(), task, filePath).getBytes(StandardCharsets.UTF_8);
-        ByteArrayResource bar = new ByteArrayResource(bytes);
         String logName = filePath.substring(filePath.lastIndexOf("/") + 1);
-        String date = DateUtil.format(new Date(),"yyyyMMdd");
+        String date = DateUtil.format(new Date(), "yyyyMMdd");
         String filename = "log_" + id + "_" + date + "_" + logName;
-        return ResponseEntity.ok()
-                .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                .header("Content-disposition", "attachment; filename=" + filename)
-                .body(bar);
+
+        response.reset();
+        response.setContentType("application/octet-stream");
+        response.setCharacterEncoding("utf-8");
+        response.setContentLength(bytes.length);
+        response.setHeader("Content-Disposition", "attachment;filename=" + filename);
+
+        OutputStream os = response.getOutputStream();
+        os.write(bytes);
+        os.flush();
     }
+
 }
