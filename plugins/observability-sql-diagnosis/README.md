@@ -68,100 +68,46 @@ SQL诊断插件支持查询慢SQL，支持对SQL执行诊断任务。SQL诊断�
 
 - 刷新页面可在右侧菜单栏看到”智能运维”一级菜单下的“SQL诊断”二级菜单即为安装成功。
 
-## agent部署说明
 
-SQL诊断模块需要在数据库所在服务器部署agent模块进行采集数据。agent模块依赖BCC、Flame Graph、Python3，具体部署方式如下
+## 数据采集部署说明
 
-### 1、agent部署
+### 一、部署数据采集器
 
-- ```
-  #下载源码：
-  git clone git@gitee.com:opengauss/openGauss-workbench.git
-  #进入根目录
-  cd plugins\observability-sql-diagnosis\opengauss-ebpf
-  #修改agent回调插件的地址
-  vim src/main/resources/application.yml
-  ```
-  
-  ```
-  urlconfig:
-    httpUrl: http://一体化平台IP:一体化平台端口/plugins/observability-sql-diagnosis/sqlDiagnosis/api/open/v1/diagnosisTasks/result
-  ```
-  
-- ```
-  mvn clean package -P prod
-  ```
+1. 点击“实例监控”插件首页左上角的折叠按钮，打开“安装部署”侧边栏
 
-- 打包完成后在plugins\observability-sql-diagnosis\opengauss-ebpf目录中找到opengauss-ebpf-1.0.0-SNAPSHOT.jar
+   <img src="doc/1.png" alt="image-20221216153920466" style="zoom: 43%;" />
 
-- 在数据库所在服务器部署agent
+   
 
+2. 点击“安装代理”按钮，弹出安装框
 
-    nohup java -jar opengauss-ebpf-1.0.0-SNAPSHOT.jar &
+   <img src="doc/2.png" alt="image-20221216153920466" style="zoom: 43%;" />
 
-### 2、BCC安装
+3. 选择对应数据库实例，输入Root密码，点击“一键部署”即可完成安装
 
-以下为openEuler 20.03 (LTS)下的安装步骤：
+   <img src="doc/3.png" alt="image-20221216153920466" style="zoom: 43%;" />
 
-（1）yum安装
+4. 安装完成后，即可在“已安装采集器”TAB中看到对应采集采集器的信息
 
-    yum install bcc-tools
+   <img src="doc/4.png" alt="image-20221216153920466" style="zoom: 43%;" />
 
-（2）源码安装
+### 二、使用功能
 
-    # Install build dependencies：
-    sudo yum groupinstall -y "Development tools"
-    sudo yum install -y elfutils-libelf-devel cmake3 git bison flex ncurses-devel
-    sudo yum install -y luajit luajit-devel  # for Lua support
-    
-    # Install and compile LLVM：
-    curl  -LO  http://releases.llvm.org/7.0.1/llvm-7.0.1.src.tar.xz
-    curl  -LO  http://releases.llvm.org/7.0.1/cfe-7.0.1.src.tar.xz
-    tar -xf cfe-7.0.1.src.tar.xz
-    tar -xf llvm-7.0.1.src.tar.xz
-    
-    mkdir clang-build
-    mkdir llvm-build
-    
-    cd llvm-build
-    cmake3 -G "Unix Makefiles" -DLLVM_TARGETS_TO_BUILD="BPF;X86" \
-    -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr ../llvm-7.0.1.src
-    make
-    sudo make install
-    
-    cd ../clang-build
-    cmake3 -G "Unix Makefiles" -DLLVM_TARGETS_TO_BUILD="BPF;X86" \
-    -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr ../cfe-7.0.1.src
-    make
-    sudo make install
-    cd ..
-    
-    # Install and compile BCC：
-    git clone GitHub - iovisor/bcc: BCC - Tools for BPF-based Linux IO analysis, networking, monitoring, and more
-    mkdir bcc/build; cd bcc/build
-    cmake .. -DCMAKE_INSTALL_PREFIX=/usr
-    make
-    sudo make install
+1. 实例对应的采集器安装完成后，即可使用SQL诊断功能，创建对应实例的诊断任务
 
+   <img src="doc/5.png" alt="image-20221216153920466" style="zoom: 43%;" />
+   
+   
 
-### 3、Flame Graph安装
+### 三、卸载
 
-根据agent源码opengauss-ebpf中application.yml配置文件里面的路径urlconfig.fgUrl，默认值为/opt/software/FlameGraph
+1. 在“已安装采集器列表中，鼠标悬停后会显示“卸载”按钮，点击卸载按钮，打开卸载窗口
 
-在对应文件夹中拉取相应源码即可
+   <img src="doc/6.png" alt="image-20221216153920466" style="zoom: 53%;" />
 
-    mkdir -p /opt/software/FlameGraph
-    cd /opt/software/FlameGraph
-    git clone https://github.com/brendangregg/FlameGraph.git
+2. 输入Root密码后，点击“一键卸载”，即可进行卸载操作
 
-### 4、Python3安装
-
-BCC只支持python3以上版本，如果默认python版本python2时，需修改版本
-
-    ll /usr/bin/python*
-    rm -f /usr/bin/python
-    ln -s /usr/bin/python3 /usr/bin/python
-
+   <img src="doc/7.png" alt="image-20221216153920466" style="zoom: 53%;" />
 ## 使用说明
 
 - 具体使用方式见使用文档
