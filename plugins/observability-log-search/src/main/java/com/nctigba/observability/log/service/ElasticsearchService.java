@@ -7,7 +7,6 @@ import java.util.Arrays;
 
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.core.domain.model.ops.WsSession;
-import org.opengauss.admin.common.utils.http.HttpUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Service;
@@ -20,7 +19,9 @@ import com.nctigba.observability.log.util.SshSession;
 import com.nctigba.observability.log.util.SshSession.command;
 
 import cn.hutool.core.io.FileUtil;
+import cn.hutool.core.thread.ThreadUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.http.HttpUtil;
 import cn.hutool.json.JSONUtil;
 
 @Service
@@ -106,14 +107,18 @@ public class ElasticsearchService extends AbstractInstaller {
 //			session.upload(in, SRC + "/config/jvm.options");
 
 			curr = nextStep(wsSession, steps, curr);
-			String cd = "cd " + SRC + "/config && ";
-			session.executeNoWait(cd + " ./bin/elasticsearch -d");
+			String cd = "cd " + SRC + " && ";
+			session.execute(cd + " ./bin/elasticsearch -d");
 
 			curr = nextStep(wsSession, steps, curr);
 			// 调用http验证es
-			String str = HttpUtils.sendGet("http://" + env.getHost().getPublicIp() + ":" + env.getPort(), null);
-			if (!JSONUtil.isJsonObj(str))
-				throw new RuntimeException("elasticsearch 启动失败");
+			for (int i = 0; i < 3; i++) {
+				ThreadUtil.sleep(3000L);
+				String str = HttpUtil.get("http://" + env.getHost().getPublicIp() + ":" + env.getPort());
+				if (!JSONUtil.isJsonObj(str))
+					if (i == 2)
+						throw new RuntimeException("elasticsearch 启动失败," + str);
+			}
 
 			curr = nextStep(wsSession, steps, curr);
 			// 生成数据库记录,入库

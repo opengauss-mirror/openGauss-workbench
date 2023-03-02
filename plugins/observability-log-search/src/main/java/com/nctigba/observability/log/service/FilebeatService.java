@@ -125,7 +125,7 @@ public class FilebeatService extends AbstractInstaller {
 			session.execute("rm -f filebeat_conf.tar.gz");
 
 			curr = nextStep(wsSession, steps, curr);
-			session.executeNoWait(
+			session.execute(
 					cd + " ./filebeat modules enable system opengauss && ./filebeat -e -c filebeat.yml");
 			// 调用http
 			// 生成数据库记录,入库
