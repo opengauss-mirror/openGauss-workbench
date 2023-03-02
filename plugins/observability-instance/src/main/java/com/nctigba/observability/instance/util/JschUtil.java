@@ -8,12 +8,10 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.servlet.http.HttpServletResponse;
@@ -514,6 +512,7 @@ public class JschUtil {
 		private String username;
 		private String password;
 
+		@SuppressWarnings("unused")
 		public String summary() {
 			return SecureUtil.md5(this.host + "_" + this.port + "_" + this.username + "_" + this.password);
 		}

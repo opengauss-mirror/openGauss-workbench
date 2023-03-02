@@ -66,7 +66,7 @@ public class AgentService extends AbstractInstaller {
 			f.delete();
 			curr = nextStep(wsSession, steps, curr);
 			// exec
-			session.execute("nohup java -jar " + NAME + " 2>&1 & ", false);
+			session.executeNoWait("nohup java -jar " + NAME);
 			env.setPath(".");
 			curr = nextStep(wsSession, steps, curr);
 			envMapper.insert(env);

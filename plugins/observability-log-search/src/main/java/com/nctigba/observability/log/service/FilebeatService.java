@@ -126,7 +126,7 @@ public class FilebeatService extends AbstractInstaller {
 
 			curr = nextStep(wsSession, steps, curr);
 			session.execute(
-					cd + " ./filebeat modules enable system opengauss && nohup ./filebeat -e -c filebeat.yml 2>&1 &");
+					cd + " ./filebeat modules enable system opengauss && ./filebeat -e -c filebeat.yml");
 			// 调用http
 			// 生成数据库记录,入库
 			env = new NctigbaEnv().setHostid(hostId).setUsername(user.getUsername()).setType(type.FILEBEAT)

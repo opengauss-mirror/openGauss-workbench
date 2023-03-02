@@ -70,6 +70,7 @@ const toggleCollapse = () => {
 const nodeIdChangedByOtherTabs = ref<string>("");
 const nodeIdChanged = (nodeId: any) => {
     nodeIdChangedByOtherTabs.value = nodeId;
+    lastNodeId.value = nodeId;
 };
 
 const autoRefreshFn = () => {
