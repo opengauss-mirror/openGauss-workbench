@@ -92,22 +92,21 @@ const initTerm = (term: Terminal, ws: WebSocket | undefined) => {
 
 const getTermObj = (): Terminal => {
   return new Terminal({
-    rendererType: 'dom',
+    // rendererType: 'dom',
     fontSize: 14,
     rows: 40,
     cols: 90,
     cursorBlink: true,
     convertEol: true,
     disableStdin: false,
-    lineHeight: 2,
-    letterSpacing: 5,
+    // lineHeight: 2,
+    // letterSpacing: 5,
     cursorStyle: 'underline',
     theme: {
       background: 'black'
     }
   })
 }
-
 
 const open = (sshData: KeyValue) => {
   data.show = true

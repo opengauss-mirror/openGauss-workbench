@@ -34,14 +34,9 @@
             <a-tag bordered color="red" v-if="record.state === 0">error</a-tag>
             <a-tag bordered color="green" v-if="record.state === 1">running</a-tag>
           </template>
-          <!-- <template #expand-icon="{ expanded }">
-          </template> -->
-          <!-- <template #expand-row="{ record }">
-            <div>我是展开行{{ JSON.stringify(record.nodes) }}</div>
-          </template> -->
           <template #operation="{ record }">
             <div class="flex-row">
-              <a-link class="mr" @click="handleDetail(record)">详情</a-link>
+              <!-- <a-link class="mr" @click="handleDetail(record)">详情</a-link> -->
               <a-link class="mr" @click="handleAdd('update', record)">修改</a-link>
               <a-popconfirm content="确定要删除？" type="warning" ok-text="确定" cancel-text="取消" @ok="handleDel(record)">
                 <a-link status="danger">删除</a-link>
@@ -236,6 +231,10 @@ const pageSizeChange = (e: number) => {
 </script>
 
 <style lang="less" scoped>
+:deep(.arco-table-container .arco-table-content-scroll-x) {
+  overflow: scroll;
+}
+
 .app-container {
   .main-bd {
     .upgrade-container {

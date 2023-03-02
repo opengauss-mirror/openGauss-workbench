@@ -3,7 +3,8 @@
     <div v-for="(node, index) in data.nodeList" :key="index">
       <div class="node-detail-c">
         <div class="flex-col-start mr">
-          <div class="mb-s">OpenEuler</div>
+          <a-tag color="green" bordered v-if="node.os">{{ node.os }}</a-tag>
+          <a-tag class="mb-s" bordered>未检测到系统</a-tag>
           <div class="flex-row mb-s">
             <div class="mr-s" style="width: 160px;">IP地址: {{ node.ip }}</div>
             <icon-code-square :size="25" style="cursor: pointer;" @click="showTerminal(node.ip)" />
@@ -17,28 +18,28 @@
           <a-tag v-if="node.state === 1" color="green" bordered>连接成功</a-tag>
         </div>
         <div class="flex-col mr">
-          <div class="monitor-data">{{ node.connNum }}</div>
+          <div class="monitor-data">{{ node.connNum ? node.connNum : '--' }}</div>
           <div>连接数</div>
         </div>
         <div class="flex-col mr">
-          <div class="monitor-data">{{ node.qps }}</div>
+          <div class="monitor-data">{{ node.qps ? node.qps : '--' }}</div>
           <div>qps</div>
         </div>
         <div class="flex-col mr">
-          <div class="monitor-data">{{ node.tps }}</div>
+          <div class="monitor-data">{{ node.tps ? node.tps : '--' }}</div>
           <div>tps</div>
         </div>
         <div class="flex-col mr" style="width: 120px;">
-          <div class="monitor-data">{{ node.tableSpaceUsed }}MB</div>
+          <div class="monitor-data">{{ node.tableSpaceUsed ? node.tableSpaceUsed : '--' }}MB</div>
           <div>表空间占用</div>
         </div>
         <div class="flex-col mr" style="width: 120px;">
-          <div class="monitor-data">{{ node.memoryUsed }}GB</div>
+          <div class="monitor-data">{{ node.memoryUsed ? node.memoryUsed : '--' }}GB</div>
           <div>内存占用</div>
         </div>
-        <div class="flex-col mr">
+        <!-- <div class="flex-col mr">
           <a-link>详情</a-link>
-        </div>
+        </div> -->
       </div>
       <a-divider v-if="index !== props.nodes.length - 1"></a-divider>
     </div>

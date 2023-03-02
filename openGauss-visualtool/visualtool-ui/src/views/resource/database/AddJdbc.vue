@@ -1,5 +1,5 @@
 <template>
-  <a-modal :mask-closable="false" :esc-to-close="false" :visible="data.show" :title="data.title"
+  <a-modal :mask-closable="false" :esc-to-close="false" :visible="data.show" :title="data.title" :unmount-on-close="true"
     :ok-loading="data.loading" :modal-style="{ width: '650px' }" @cancel="close">
     <template #footer>
       <div class="flex-between">
@@ -17,7 +17,7 @@
       </div>
     </template>
     <a-form :model="data.form" ref="formRef" auto-label-width :rules="formRules">
-      <a-form-item field="name" label="集群名称" validate-trigger="blur" :rules="[{ required: true, message: '请输入实例名称' }]">
+      <a-form-item field="name" label="集群名称" validate-trigger="blur">
         <a-input v-model="data.form.name" placeholder="请输入实例名称"></a-input>
       </a-form-item>
       <a-form-item label="数据库类型" validate-trigger="change">
@@ -28,15 +28,14 @@
         </a-select>
       </a-form-item>
     </a-form>
-    <a-tabs type="card-gutter" :editable="true" @add="handleAdd" @delete="handleDelete" v-model:activeKey="data.activeTab"
+    <a-tabs type="card-gutter" :editable="true" @add="handleAdd" @delete="handleDelete" v-model="data.activeTab"
       show-add-button auto-switch>
-      <a-tab-pane v-for="(item, index) of data.form.nodes" :key="item.id" :closable="data.form.nodes.length > 1">
+      <a-tab-pane v-for="item of data.form.nodes" :key="item.id" :closable="data.form.nodes.length > 1">
         <template #title>
           <a-tooltip content="不可用" v-if="item.status === jdbcStatusEnum.fail">
             <icon-exclamation-circle-fill />
           </a-tooltip>
-          {{ item.ip ? item.ip : '实例' + (index
-            + 1) }}
+          {{ item.ip.trim() ? item.ip : '实例' + item.tabName }}
         </template>
         <div class="jdbc-instance-c">
           <jdbc-instance :form-data="item" :ref="(el: any) => setRefMap(el, item.id)"></jdbc-instance>
@@ -75,16 +74,29 @@ const data = reactive<KeyValue>({
     status: jdbcStatusEnum.unTest
   },
   activeTab: '',
-  rules: {
-    name: [{ required: true, 'validate-trigger': 'blur', message: '请输入集群名称' }]
-  },
   dbTypes: [
     { label: 'MYSQL', value: 'mysql' }
   ]
 })
 
 const formRules = computed(() => {
-  return {}
+  return {
+    name: [
+      { required: true, 'validate-trigger': 'blur', message: '请输入集群名称' },
+      {
+        validator: (value: any, cb: any) => {
+          return new Promise(resolve => {
+            if (!value.trim()) {
+              cb('不能为纯空格')
+              resolve(false)
+            } else {
+              resolve(true)
+            }
+          })
+        }
+      }
+    ]
+  }
 })
 
 const refObj = ref<KeyValue>({})
@@ -181,11 +193,12 @@ const close = () => {
     formRef.value?.clearValidate()
     formRef.value?.resetFields()
   })
+  delRefObj()
 }
 
 const handleTestHost = () => {
-  console.log('show refList', refList.value);
-
+  console.log('show refList', refList.value)
+  data.testLoading = true
   const methodArr = []
   for (let i = 0; i < refList.value.length; i++) {
     if (refList.value[i]) {
@@ -207,7 +220,6 @@ const handleTestHost = () => {
       }
     }
     Promise.all(methodTestArr).then((testRes) => {
-      console.log('test result', testRes)
       const noPass = testRes.filter((item: KeyValue) => {
         return item.res === false
       })
@@ -217,6 +229,8 @@ const handleTestHost = () => {
         return
       }
       data.form.status = jdbcStatusEnum.success
+    }).finally(() => {
+      data.testLoading = false
     })
   })
 }
@@ -225,19 +239,21 @@ const handleAdd = () => {
   const id = new Date().getTime() + ''
   data.form.nodes.push({
     id: id,
+    tabName: data.form.nodes.length + 1,
     url: '',
     urlSuffix: '',
     ip: '',
     port: 3306,
     username: '',
     password: '',
-    remark: '',
     props: [{
       name: '',
       value: ''
     }],
     status: jdbcStatusEnum.unTest
   })
+  console.log('show id', id, refObj.value);
+
   data.activeTab = id
 }
 
@@ -323,6 +339,12 @@ const open = (type: string, editData?: KeyValue) => {
       status: jdbcStatusEnum.unTest
     })
     handleAdd()
+  }
+}
+
+const delRefObj = () => {
+  for (let key in refObj.value) {
+    delete refObj.value[key]
   }
 }
 

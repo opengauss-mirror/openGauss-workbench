@@ -23,21 +23,21 @@ const privateKey = 'MIICeAIBADANBgkqhkiG9w0BAQEFAASCAmIwggJeAgEAAoGBAPFEkDAkYwcE
   'zexW0T/Mnc5U6X9+'
 
 // encryption
-export function encrypt(txt: any) {
+export function encrypt (txt: any) {
   const encryptor = new JSEncrypt()
   encryptor.setPublicKey(publicKey) // set public key
   return encryptor.encrypt(txt) // encrypt data
 }
 
 // decrypt
-export function decrypt(txt: any) {
+export function decrypt (txt: any) {
   const encryptor = new JSEncrypt()
   encryptor.setPrivateKey(privateKey) // set private key
   return encryptor.decrypt(txt) // decrypt the data
 }
 
 // host password encryption
-export async function encryptPassword(pwd: string) {
+export async function encryptPassword (pwd: string) {
   let publicKey = ''
   const getPublicKey: KeyValue = await getEntryKey()
   if (Number(getPublicKey.code) === 200 && getPublicKey.key) {
