@@ -91,7 +91,7 @@ public class BaseSeriesConstructor {
                 break;
             }
             default: {
-                result = oriData.size() > 1 ? oriData.get(0) : 0;
+                result = oriData.get(0);
                 break;
             }
         }

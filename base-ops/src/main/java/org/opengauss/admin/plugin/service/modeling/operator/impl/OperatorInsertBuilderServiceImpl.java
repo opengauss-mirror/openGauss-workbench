@@ -49,7 +49,9 @@ public class OperatorInsertBuilderServiceImpl extends BaseBuilderServiceImpl {
                     JSONObject data = fieldDataList.getJSONObject(z);
                     String field = data.getString("field").split("\\.")[1];
                     String value = data.getString("value");
-                    if (!value.chars().allMatch(Character::isDigit)) {
+                    if (Objects.equals(value, "null")) {
+                        value = "''";
+                    } else if (!value.chars().allMatch(Character::isDigit)) {
                         value = "'" + value + "'";
                     }
                     childValue.set(insertFieldString.indexOf(field),value);
