@@ -14,7 +14,6 @@ import com.jcraft.jsch.ChannelSftp;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
-import com.jcraft.jsch.SftpProgressMonitor;
 
 import cn.hutool.core.thread.ThreadUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -52,7 +51,7 @@ public class SshSession implements AutoCloseable {
 
 	public boolean test(String command) throws IOException {
 		try {
-			execute(command, null);
+			execute(command);
 			return true;
 		} catch (RuntimeException e) {
 			return false;
@@ -60,28 +59,28 @@ public class SshSession implements AutoCloseable {
 	}
 
 	public String execute(command command) throws IOException {
-		return execute(command.cmd, null, null);
+		return execute(command.cmd, null, true);
 	}
 
 	public String execute(command command, Map<String, String> autoResponse) throws IOException {
-		return execute(command.cmd, autoResponse, null);
+		return execute(command.cmd, autoResponse, true);
 	}
 
 	public String execute(String command) throws IOException {
-		return execute(command, null, null);
+		return execute(command, null, true);
 	}
 
-	public String execute(String command, Boolean pty) throws IOException {
-		return execute(command, null, pty);
+	public String executeNoWait(String command) throws IOException {
+		return execute(command, null, false);
 	}
 
-	public String execute(String command, Map<String, String> autoResponse, Boolean pty) throws IOException {
+	public String execute(String command, Map<String, String> autoResponse, boolean wait) throws IOException {
 		log.info("Execute an order：{}", command);
 		ChannelExec channelExec;
 		try {
 			channelExec = (ChannelExec) session.openChannel("exec");
 			channelExec.setPtyType("dump");
-			channelExec.setPty(pty == null ? true : pty);
+			channelExec.setPty(true);
 		} catch (JSchException e) {
 			throw new OpsException("Obtaining the exec channel fails");
 		}
@@ -104,7 +103,7 @@ public class SshSession implements AutoCloseable {
 				String msg = new String(tmp, 0, i);
 				resultStrBuilder.append(msg);
 			}
-			if (pty != null && !pty)
+			if (!wait && autoResponse == null && resultStrBuilder.length() > 0)
 				return resultStrBuilder.toString().trim();
 			if (channelExec.isClosed()) {
 				if (in.available() > 0) {
@@ -137,35 +136,7 @@ public class SshSession implements AutoCloseable {
 		try {
 			ChannelSftp channel = (ChannelSftp) session.openChannel("sftp");
 			channel.connect();
-			channel.put(source, target, new SftpProgressMonitor() {
-				private long count = 0;
-				// Final file size
-				private long max = 0;
-				// The progress of
-				private long percent = -1;
-
-				@Override
-				public void init(int op, String src, String dest, long max) {
-					this.max = max;
-					System.out.println(op);
-				}
-
-				@Override
-				public boolean count(long count) {
-					this.count += count;
-					if (percent >= this.count * 100 / max) {
-						return true;
-					}
-					percent = this.count * 100 / max;
-					System.out.println("Completed " + this.count + "(" + percent + "%) out of " + max + ".");
-					return false;
-				}
-
-				@Override
-				public void end() {
-					System.out.println("end");
-				}
-			}, ChannelSftp.RESUME);
+			channel.put(source, target, ChannelSftp.RESUME);
 		} catch (Exception e) {
 			log.error("upload fail", e);
 			throw new RuntimeException(e);

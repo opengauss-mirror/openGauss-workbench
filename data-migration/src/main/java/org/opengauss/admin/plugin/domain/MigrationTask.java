@@ -75,6 +75,8 @@ public class MigrationTask {
     @TableField(exist = false)
     private List<MigrationTaskParam> taskParams;
 
+    private String statusDesc;
+
     @Tolerate
     public MigrationTask(){
 

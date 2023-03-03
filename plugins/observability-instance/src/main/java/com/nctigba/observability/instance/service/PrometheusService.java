@@ -3,7 +3,6 @@ package com.nctigba.observability.instance.service;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -106,10 +105,7 @@ public class PrometheusService extends AbstractInstaller {
 	}
 
 	private void exec(SshSession session, NctigbaEnv env) throws IOException {
-		session.execute(MessageFormat.format("echo ''{0}'' > {1}",
-				"cd " + env.getPath() + "\n./prometheus --web.enable-lifecycle --config.file=prometheus.yml &",
-				"start.sh"));
-		session.execute("sh start.sh", false);
+		session.executeNoWait("cd " + env.getPath() + " && ./prometheus --web.enable-lifecycle --config.file=prometheus.yml");
 	}
 
 	private void check(NctigbaEnv env) {
@@ -181,6 +177,19 @@ scrape_configs:
 				List<String> targets;
 				Map<String, String> labels;
 			}
+
+			@Override
+			public int hashCode() {
+				return job_name.hashCode();
+			}
+
+			@Override
+			public boolean equals(Object o) {
+				if (!(o instanceof job))
+					return false;
+				var j = (job) o;
+				return j.getJob_name().equals(this.job_name);
+			}
 		}
 	}
 
@@ -214,7 +223,7 @@ scrape_configs:
 					encryptionUtils.decrypt(user.getPassword()));) {
 				curr = nextStep(wsSession, steps, curr);
 				var pid = sshsession.execute(command.PS.parse("prometheus"));
-				if(StrUtil.isNotBlank(pid)) {
+				if (StrUtil.isNotBlank(pid)) {
 					curr = nextStep(wsSession, steps, curr);
 					sshsession.execute(command.KILL.parse(pid));
 				} else

@@ -39,7 +39,7 @@ public class BccCaller implements Caller {
 	public void start(Task task) {
 		Integer lwpid = null;
 		var node = clusterManager.getOpsNodeById(task.getNodeId());
-		var agent = envMapper.selectOne(Wrappers.<NctigbaEnv>lambdaQuery().eq(NctigbaEnv::getHostid, task.getNodeId()).eq(NctigbaEnv::getType, type.AGENT));
+		var agent = envMapper.selectOne(Wrappers.<NctigbaEnv>lambdaQuery().eq(NctigbaEnv::getHostid, node.getHostId()).eq(NctigbaEnv::getType, type.AGENT));
 		var host = hostFacade.getById(agent.getHostid());
 		try (var conn = node.connection()) {
 			var watch = new StopWatch();

@@ -26,32 +26,48 @@ public class PortalHandle {
     private static final String REPLACE_BLANK_ENTER = "\\s{2,}|\t|\r|\n";
     private static final Pattern REPLACE_P = Pattern.compile(REPLACE_BLANK_ENTER);
 
-    public static void checkAndInstallPortal(MigrationTaskHostRef host, String portalHome) {
+    public static boolean checkInstallPortal(MigrationTaskHostRef host, String portalHome) {
         String checkInstallPortalResult = ShellUtil.execCommandGetResult(host.getHost(), host.getPort(), host.getUser(), host.getPassword(),
                 "[ -d " + portalHome + " ] && echo 1 || echo 0");
-        if (Integer.parseInt(checkInstallPortalResult.trim()) == 0) {
-            log.info("The portal is not installed, and the installation is in progress, host: {}", host.getHost());
-            installPortal(host, portalHome);
-        }
+        return Integer.parseInt(checkInstallPortalResult.trim()) == 1;
     }
 
-    public static void installPortal(MigrationTaskHostRef host, String portalHome) {
+    public static boolean checkAndInstallPortal(MigrationTaskHostRef host, String portalHome) {
+        if (!checkInstallPortal(host, portalHome)) {
+            log.info("The portal is not installed, and the installation is in progress, host: {}", host.getHost());
+            return installPortal(host, portalHome);
+        }
+        return true;
+    }
+
+    public static boolean installPortal(MigrationTaskHostRef host, String portalHome) {
         //download portal
         String base = portalHome.substring(0, portalHome.lastIndexOf("/") + 1);
-        ShellUtil.execCommand(host.getHost(), host.getPort(), host.getUser(), host.getPassword(),
+        log.info("wget download portal");
+        String wgetResult = ShellUtil.execCommandGetResult(host.getHost(), host.getPort(), host.getUser(), host.getPassword(),
                 "wget -P " + base + " http://39.108.219.254:9898/portal.zip");
-        ShellUtil.execCommand(host.getHost(), host.getPort(), host.getUser(), host.getPassword(),
-                "unzip -d " + portalHome + " " + base + "portal.zip");
+
+        String unzipShell = "unzip -d " + portalHome + " " + base + "portal.zip";
+        log.info("unzip portal, {}", unzipShell);
+        ShellUtil.execCommandGetResult(host.getHost(), host.getPort(), host.getUser(), host.getPassword(),
+                unzipShell);
 
         log.info("portal install");
         initPortalConfig(host, portalHome);
-        ShellUtil.execCommand(host.getHost(), host.getPort(), host.getUser(), host.getPassword(),
+        String installToolResult = ShellUtil.execCommandGetResult(host.getHost(), host.getPort(), host.getUser(), host.getPassword(),
                 "java -Dpath=" + portalHome + "/ -Dorder=install_mysql_all_migration_tools -Dskip=true -jar " + portalHome + "/portalControl-1.0-SNAPSHOT-exec.jar");
+        log.info("portal exec install command result {}", installToolResult);
+        if(installToolResult.contains("Install all migration tools success.")) {
+            return true;
+        } else if(installToolResult.contains("Error message: ")) {
+            return false;
+        }
+        return false;
     }
 
     public static void initPortalConfig(MigrationTaskHostRef host, String portalHome) {
         ShellUtil.execCommand(host.getHost(), host.getPort(), host.getUser(), host.getPassword(),
-                "sed -i 's#/data1/lt/test/portal#/" + portalHome + "#g' " + portalHome + "/config/toolspath.properties");
+                "sed -i 's#/opt/portal#" + portalHome + "#g' " + portalHome + "/config/toolspath.properties");
     }
 
     /**

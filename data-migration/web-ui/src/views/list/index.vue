@@ -109,6 +109,7 @@
               </a-button>
               <a-button
                 v-if="record.execStatus === 0"
+                :loading="startLoading"
                 size="mini"
                 type="text"
                 @click="startTask(record)"
@@ -144,6 +145,7 @@ import { list, start, stop, deleteTask, userList } from '@/api/list'
 import dayjs from 'dayjs'
 
 const loading = ref(true)
+const startLoading = ref(false)
 
 const form = reactive({
   taskName: undefined,
@@ -238,8 +240,14 @@ const createTask = () => {
 
 // start task
 const startTask = async row => {
-  await start(row.id)
-  Message.success('Start success')
+  try {
+    startLoading.value = true
+    await start(row.id)
+    Message.success('Start success')
+    startLoading.value = false
+  } catch (e) {
+    startLoading.value = false
+  }
   getList()
 }
 

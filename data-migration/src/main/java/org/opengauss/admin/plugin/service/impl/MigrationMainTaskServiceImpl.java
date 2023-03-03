@@ -294,13 +294,17 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
         if (mainTask == null) {
             return AjaxResult.error(MigrationErrorCode.MAIN_TASK_NOT_EXISTS_ERROR.getCode(), MigrationErrorCode.MAIN_TASK_NOT_EXISTS_ERROR.getMsg());
         }
-        if (mainTask.getExecStatus() != TaskStatus.NOT_RUN.getCode()) {
+        if (!mainTask.getExecStatus().equals(TaskStatus.NOT_RUN.getCode())) {
             return AjaxResult.error(MigrationErrorCode.MAIN_TASK_IS_RUNNING_ERROR.getCode(), MigrationErrorCode.MAIN_TASK_IS_RUNNING_ERROR.getMsg());
         }
         List<MigrationTask> tasks = migrationTaskService.listByMainTaskId(id);
         List<MigrationTaskHostRef> hosts = migrationTaskHostRefService.listByMainTaskId(id);
         List<MigrationTaskGlobalParam> globalParams = migrationTaskGlobalParamService.selectByMainTaskId(id);
-        checkInstallPortal(hosts);
+
+        if (!checkInstallPortal(hosts)) {
+            return AjaxResult.error(MigrationErrorCode.PORTAL_INSTALL_ERROR.getCode(), MigrationErrorCode.PORTAL_INSTALL_ERROR.getMsg());
+        }
+
         Integer totalRunnableCount = hosts.stream().mapToInt(MigrationTaskHostRef::getRunnableCount).sum();
         if (totalRunnableCount > tasks.size()) { //The number of host executable tasks is greater than the total number of tasks
             for (int x = 0; x < tasks.size(); x++) {
@@ -330,11 +334,27 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
         return AjaxResult.success();
     }
 
-    private void checkInstallPortal(List<MigrationTaskHostRef> hosts) {
+    private boolean unInstallPortal(List<MigrationTaskHostRef> hosts) {
         //check install
-        hosts.stream().forEach(h -> {
-            PortalHandle.checkAndInstallPortal(h, portalHome);
-        });
+        for (MigrationTaskHostRef h : hosts) {
+            boolean flag = PortalHandle.checkInstallPortal(h, portalHome);
+            if(!flag){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean checkInstallPortal(List<MigrationTaskHostRef> hosts) {
+        //check install
+        for (MigrationTaskHostRef h : hosts) {
+            boolean flag = PortalHandle.checkAndInstallPortal(h, portalHome);
+            if(!flag){
+                log.info("The portal is not installed, and the installation is in progress, host: {}", h.getHost());
+                return false;
+            }
+        }
+        return true;
     }
 
     @Override
@@ -453,62 +473,62 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
                     List<Map<String, Object>> statusResultList = statusList.stream().sorted(Comparator.comparing(m -> MapUtil.getLong(m,"timestamp"))).collect(Collectors.toList());
                     Map<String, Object> lastStatus = statusResultList.get(statusResultList.size() - 1);
                     Integer state = MapUtil.getInt(lastStatus, "status");
-                    Long timestamp = MapUtil.getLong(lastStatus, "timestamp");
-                    MigrationTaskStatusRecord lastStatusRecord = migrationTaskStatusRecordService.getLastByTaskId(t.getId());
-                    if(lastStatusRecord == null || !state.equals(lastStatusRecord.getStatusId())) {
-                        MigrationTask update = MigrationTask.builder().id(t.getId()).build();
-                        migrationTaskStatusRecordService.saveTaskRecord(t.getId(), statusResultList);
-                        BigDecimal migrationProcess = new BigDecimal(0);
-                        if (TaskStatus.FULL_START.getCode().equals(state) || TaskStatus.FULL_RUNNING.getCode().equals(state) ||
-                                TaskStatus.FULL_FINISH.getCode().equals(state) || TaskStatus.FULL_CHECK_START.getCode().equals(state) ||
-                                TaskStatus.FULL_CHECKING.getCode().equals(state) || TaskStatus.FULL_CHECK_FINISH.getCode().equals(state)) {
-                            String portalProcess = PortalHandle.getPortalFullProcess(t.getRunHost(), t.getRunPort(), t.getRunUser(), t.getRunPass(), t, portalHome);
-                            log.info("get portal full process content: {}, subTaskId: {}", portalProcess, t.getId());
-                            migrationTaskExecResultDetailService.saveOrUpdateByTaskId(t.getId(), portalProcess.trim(), 1);
-                            migrationProcess = calculateFullMigrationProgress(portalProcess);
-                        } else if (TaskStatus.INCREMENTAL_START.getCode().equals(state) || TaskStatus.INCREMENTAL_RUNNING.getCode().equals(state)) {
-                            String portalProcess = PortalHandle.getPortalIncrementalProcess(t.getRunHost(), t.getRunPort(), t.getRunUser(), t.getRunPass(), t, portalHome);
-                            log.info("get portal incremental process content: {}, subTaskId: {}", portalProcess, t.getId());
-                            migrationTaskExecResultDetailService.saveOrUpdateByTaskId(t.getId(), portalProcess.trim(), 2);
-                            if(t.getMigrationProcess() == null) {
-                                String portalFullProcess = PortalHandle.getPortalFullProcess(t.getRunHost(), t.getRunPort(), t.getRunUser(), t.getRunPass(), t, portalHome);
-                                log.info("get portal full process content: {}, subTaskId: {}", portalFullProcess, t.getId());
-                                migrationTaskExecResultDetailService.saveOrUpdateByTaskId(t.getId(), portalFullProcess.trim(), 1);
-                                migrationProcess = calculateFullMigrationProgress(portalFullProcess);
-                                if (migrationProcess.intValue() > 0) {
-                                    migrationProcess = new BigDecimal(0.85f).divide(migrationProcess, 4, BigDecimal.ROUND_HALF_UP);
-                                }
-                            } else {
-                                if (Float.parseFloat(t.getMigrationProcess()) > 0) {
-                                    migrationProcess = new BigDecimal(0.85f).divide(new BigDecimal(t.getMigrationProcess()), 4, BigDecimal.ROUND_HALF_UP);
-                                }
+                    MigrationTask update = MigrationTask.builder().id(t.getId()).build();
+                    migrationTaskStatusRecordService.saveTaskRecord(t.getId(), statusResultList);
+                    BigDecimal migrationProcess = new BigDecimal(0);
+                    if (TaskStatus.FULL_START.getCode().equals(state) || TaskStatus.FULL_RUNNING.getCode().equals(state) ||
+                            TaskStatus.FULL_FINISH.getCode().equals(state) || TaskStatus.FULL_CHECK_START.getCode().equals(state) ||
+                            TaskStatus.FULL_CHECKING.getCode().equals(state) || TaskStatus.FULL_CHECK_FINISH.getCode().equals(state)) {
+                        String portalProcess = PortalHandle.getPortalFullProcess(t.getRunHost(), t.getRunPort(), t.getRunUser(), t.getRunPass(), t, portalHome);
+                        log.info("get portal full process content: {}, subTaskId: {}", portalProcess, t.getId());
+                        migrationTaskExecResultDetailService.saveOrUpdateByTaskId(t.getId(), portalProcess.trim(), 1);
+                        migrationProcess = calculateFullMigrationProgress(portalProcess);
+                    } else if (TaskStatus.INCREMENTAL_START.getCode().equals(state) || TaskStatus.INCREMENTAL_RUNNING.getCode().equals(state)) {
+                        String portalProcess = PortalHandle.getPortalIncrementalProcess(t.getRunHost(), t.getRunPort(), t.getRunUser(), t.getRunPass(), t, portalHome);
+                        log.info("get portal incremental process content: {}, subTaskId: {}", portalProcess, t.getId());
+                        migrationTaskExecResultDetailService.saveOrUpdateByTaskId(t.getId(), portalProcess.trim(), 2);
+                        if(t.getMigrationProcess() == null) {
+                            String portalFullProcess = PortalHandle.getPortalFullProcess(t.getRunHost(), t.getRunPort(), t.getRunUser(), t.getRunPass(), t, portalHome);
+                            log.info("get portal full process content: {}, subTaskId: {}", portalFullProcess, t.getId());
+                            migrationTaskExecResultDetailService.saveOrUpdateByTaskId(t.getId(), portalFullProcess.trim(), 1);
+                            migrationProcess = calculateFullMigrationProgress(portalFullProcess);
+                            if (migrationProcess.intValue() > 0) {
+                                migrationProcess = new BigDecimal(0.85f).divide(migrationProcess, 4, BigDecimal.ROUND_HALF_UP);
                             }
-                        } else if (TaskStatus.REVERSE_START.getCode().equals(state) || TaskStatus.REVERSE_RUNNING.getCode().equals(state)) {
-                            String portalProcess = PortalHandle.getPortalReverseProcess(t.getRunHost(), t.getRunPort(), t.getRunUser(), t.getRunPass(), t, portalHome);
-                            log.info("get portal reverse process content: {}, subTaskId: {}", portalProcess, t.getId());
-                            migrationTaskExecResultDetailService.saveOrUpdateByTaskId(t.getId(), portalProcess.trim(), 3);
-                            if(t.getMigrationProcess() == null) {
-                                String portalFullProcess = PortalHandle.getPortalFullProcess(t.getRunHost(), t.getRunPort(), t.getRunUser(), t.getRunPass(), t, portalHome);
-                                log.info("get portal full process content: {}, subTaskId: {}", portalFullProcess, t.getId());
-                                migrationTaskExecResultDetailService.saveOrUpdateByTaskId(t.getId(), portalFullProcess.trim(), 1);
-                                migrationProcess = calculateFullMigrationProgress(portalFullProcess);
-                                if (migrationProcess.intValue() > 0) {
-                                    migrationProcess = new BigDecimal(0.95f).divide(migrationProcess, 4, BigDecimal.ROUND_HALF_UP);
-                                }
-                            } else {
-                                if (Float.parseFloat(t.getMigrationProcess()) > 0) {
-                                    migrationProcess = new BigDecimal(0.95f).divide(new BigDecimal(t.getMigrationProcess()), 4, BigDecimal.ROUND_HALF_UP);
-                                }
+                        } else {
+                            if (Float.parseFloat(t.getMigrationProcess()) > 0) {
+                                migrationProcess = new BigDecimal(0.85f).divide(new BigDecimal(t.getMigrationProcess()), 4, BigDecimal.ROUND_HALF_UP);
                             }
                         }
-                        update.setExecStatus(state);
-                        update.setMigrationProcess(migrationProcess.setScale(2, RoundingMode.UP).toPlainString());
-                        if (TaskStatus.FULL_CHECK_FINISH.getCode().equals(state) && t.getMigrationModelId().equals(1)) {
-                            update.setExecStatus(TaskStatus.MIGRATION_FINISH.getCode());
-                            update.setFinishTime(new Date());
+                    } else if (TaskStatus.REVERSE_START.getCode().equals(state) || TaskStatus.REVERSE_RUNNING.getCode().equals(state)) {
+                        String portalProcess = PortalHandle.getPortalReverseProcess(t.getRunHost(), t.getRunPort(), t.getRunUser(), t.getRunPass(), t, portalHome);
+                        log.info("get portal reverse process content: {}, subTaskId: {}", portalProcess, t.getId());
+                        migrationTaskExecResultDetailService.saveOrUpdateByTaskId(t.getId(), portalProcess.trim(), 3);
+                        if(t.getMigrationProcess() == null) {
+                            String portalFullProcess = PortalHandle.getPortalFullProcess(t.getRunHost(), t.getRunPort(), t.getRunUser(), t.getRunPass(), t, portalHome);
+                            log.info("get portal full process content: {}, subTaskId: {}", portalFullProcess, t.getId());
+                            migrationTaskExecResultDetailService.saveOrUpdateByTaskId(t.getId(), portalFullProcess.trim(), 1);
+                            migrationProcess = calculateFullMigrationProgress(portalFullProcess);
+                            if (migrationProcess.intValue() > 0) {
+                                migrationProcess = new BigDecimal(0.95f).divide(migrationProcess, 4, BigDecimal.ROUND_HALF_UP);
+                            }
+                        } else {
+                            if (Float.parseFloat(t.getMigrationProcess()) > 0) {
+                                migrationProcess = new BigDecimal(0.95f).divide(new BigDecimal(t.getMigrationProcess()), 4, BigDecimal.ROUND_HALF_UP);
+                            }
                         }
-                        migrationTaskService.updateById(update);
                     }
+                    update.setExecStatus(state);
+                    update.setMigrationProcess(migrationProcess.setScale(2, RoundingMode.UP).toPlainString());
+                    if (TaskStatus.FULL_CHECK_FINISH.getCode().equals(state) && t.getMigrationModelId().equals(1)) {
+                        update.setExecStatus(TaskStatus.MIGRATION_FINISH.getCode());
+                        update.setFinishTime(new Date());
+                    }
+                    if (TaskStatus.MIGRATION_ERROR.getCode().equals(state)) {
+                        String msg = MapUtil.getStr(lastStatus, "msg");
+                        update.setStatusDesc(msg);
+                    }
+                    migrationTaskService.updateById(update);
                 }
             });
             //refresh mainTask
@@ -591,7 +611,7 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
                 ){
                     incrementalAndReverseRunningCount3 += 1;
                 }
-                if(t.getExecStatus().equals(TaskStatus.MIGRATION_FINISH.getCode()) ||t.getExecStatus().equals(TaskStatus.MIGRATION_ERROR.getCode())){
+                if (t.getExecStatus().equals(TaskStatus.MIGRATION_FINISH.getCode()) || t.getExecStatus().equals(TaskStatus.MIGRATION_ERROR.getCode())) {
                     finishCount4 += 1;
                 }
             }
