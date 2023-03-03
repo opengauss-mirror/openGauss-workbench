@@ -16,8 +16,9 @@ public class JdbcDbClusterNodeVO {
     private String username;
     private String password;
     private String url;
+    private String os;
 
-    public static JdbcDbClusterNodeVO of(OpsJdbcDbClusterNodeEntity clusterNodeEntity) {
+    public static JdbcDbClusterNodeVO of(OpsJdbcDbClusterNodeEntity clusterNodeEntity, String os) {
         JdbcDbClusterNodeVO jdbcDbClusterNodeVO = new JdbcDbClusterNodeVO();
         jdbcDbClusterNodeVO.setClusterNodeId(clusterNodeEntity.getClusterNodeId());
         jdbcDbClusterNodeVO.setName(clusterNodeEntity.getName());
@@ -26,6 +27,7 @@ public class JdbcDbClusterNodeVO {
         jdbcDbClusterNodeVO.setUsername(clusterNodeEntity.getUsername());
         jdbcDbClusterNodeVO.setPassword(clusterNodeEntity.getPassword());
         jdbcDbClusterNodeVO.setUrl(clusterNodeEntity.getUrl());
+        jdbcDbClusterNodeVO.setOs(os);
         return jdbcDbClusterNodeVO;
     }
 }

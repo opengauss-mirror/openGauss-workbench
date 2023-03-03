@@ -8,6 +8,9 @@ import org.opengauss.admin.common.core.domain.model.ops.HostBody;
 import org.opengauss.admin.common.core.domain.model.ops.host.OpsHostVO;
 import org.opengauss.admin.common.core.domain.model.ops.host.SSHBody;
 
+import java.util.Map;
+import java.util.Set;
+
 /**
  * @author lhf
  * @date 2022/8/7 22:27
@@ -57,4 +60,6 @@ public interface IHostService extends IService<OpsHostEntity> {
     IPage<OpsHostVO> pageHost(Page page, String name);
 
     void ssh(SSHBody sshBody);
+
+    Map<String, String> mapOsByIps(Set<String> ipSet);
 }

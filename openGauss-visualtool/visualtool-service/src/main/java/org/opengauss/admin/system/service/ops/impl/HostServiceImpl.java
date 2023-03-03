@@ -32,9 +32,9 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.Future;
+import java.util.stream.Collectors;
 
 /**
  * @author lhf
@@ -220,6 +220,19 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
         Future<?> future = threadPoolTaskExecutor.submit(() -> jschUtil.channelToWsSession(channelShell, wsSession));
 
         TaskManager.registry(sshBody.getBusinessId(), future);
+    }
+
+    @Override
+    public Map<String, String> mapOsByIps(Set<String> ipSet) {
+        if (CollUtil.isEmpty(ipSet)){
+            return Collections.emptyMap();
+        }
+
+        LambdaQueryWrapper<OpsHostEntity> queryWrapper = Wrappers.lambdaQuery(OpsHostEntity.class)
+                .in(OpsHostEntity::getPublicIp, ipSet);
+
+        List<OpsHostEntity> hostList = list(queryWrapper);
+        return hostList.stream().collect(Collectors.toMap(OpsHostEntity::getPublicIp,OpsHostEntity::getOs));
     }
 
     private OpsHostEntity getByPublicIp(String publicIp) {

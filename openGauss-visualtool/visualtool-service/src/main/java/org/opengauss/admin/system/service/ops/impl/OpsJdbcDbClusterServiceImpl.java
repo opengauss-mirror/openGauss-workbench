@@ -16,6 +16,7 @@ import org.opengauss.admin.common.enums.ops.DeployTypeEnum;
 import org.opengauss.admin.common.exception.ops.OpsException;
 import org.opengauss.admin.common.utils.ops.JdbcUtil;
 import org.opengauss.admin.system.mapper.ops.OpsJdbcDbClusterMapper;
+import org.opengauss.admin.system.service.ops.IHostService;
 import org.opengauss.admin.system.service.ops.IOpsJdbcDbClusterNodeService;
 import org.opengauss.admin.system.service.ops.IOpsJdbcDbClusterService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,6 +40,8 @@ public class OpsJdbcDbClusterServiceImpl extends ServiceImpl<OpsJdbcDbClusterMap
 
     @Autowired
     private IOpsJdbcDbClusterNodeService opsJdbcDbClusterNodeService;
+    @Autowired
+    private IHostService hostService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -366,6 +369,8 @@ public class OpsJdbcDbClusterServiceImpl extends ServiceImpl<OpsJdbcDbClusterMap
 
         Set<String> clusterIds = records.stream().map(OpsJdbcDbClusterEntity::getClusterId).collect(Collectors.toSet());
         Map<String, List<OpsJdbcDbClusterNodeEntity>> clusterNodeMap = opsJdbcDbClusterNodeService.mapClusterNodesByClusterId(clusterIds);
+        final Set<String> ipSet = clusterNodeMap.values().stream().flatMap(val -> val.stream()).map(OpsJdbcDbClusterNodeEntity::getIp).collect(Collectors.toSet());
+        Map<String,String> ipOsMap = hostService.mapOsByIps(ipSet);
 
         for (OpsJdbcDbClusterEntity record : records) {
             List<JdbcDbClusterNodeVO> nodes = new ArrayList<>();
@@ -375,7 +380,7 @@ public class OpsJdbcDbClusterServiceImpl extends ServiceImpl<OpsJdbcDbClusterMap
             List<OpsJdbcDbClusterNodeEntity> clusterNodeEntityList = clusterNodeMap.get(clusterId);
             if (CollUtil.isNotEmpty(clusterNodeEntityList)) {
                 for (OpsJdbcDbClusterNodeEntity clusterNodeEntity : clusterNodeEntityList) {
-                    nodes.add(JdbcDbClusterNodeVO.of(clusterNodeEntity));
+                    nodes.add(JdbcDbClusterNodeVO.of(clusterNodeEntity,ipOsMap.get(clusterNodeEntity.getIp())));
                 }
             }
 
