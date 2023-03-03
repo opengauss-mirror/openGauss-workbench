@@ -39,7 +39,7 @@ public class ScatterSeries {
     private Emphasis emphasis;
     private ItemStyle itemStyle;
     private int geoIndex;
-
+    private String selectedMode;
 
     public void setRoam(boolean roam) {
         this.roam = roam;
@@ -123,5 +123,12 @@ public class ScatterSeries {
     }
     public int getGeoIndex() {
         return geoIndex;
+    }
+
+    public void setSelectedMode(String selectedMode) {
+        this.selectedMode = selectedMode;
+    }
+    public String getSelectedMode() {
+        return selectedMode;
     }
 }
