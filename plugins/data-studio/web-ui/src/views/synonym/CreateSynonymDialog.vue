@@ -166,7 +166,7 @@
   };
   const handleOpen = async () => {
     form.connectionName = connectData.value.connectInfo.name;
-    form.uuid = connectData.value.connectInfo.uuid;
+    form.uuid = connectData.value.uuid;
     fetchSchemaList();
   };
   const handleClose = () => {

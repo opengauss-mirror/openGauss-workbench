@@ -75,19 +75,11 @@
     <div class="pane">
       <div class="title-wrapper">
         <div class="title">
-          <el-icon @click="handleRowClick"><CaretBottom /></el-icon>
+          <el-icon><CaretBottom /></el-icon>
           {{ $t('debugPane.variable') }}
         </div>
       </div>
-      <!-- <el-input
-        class="filter-input"
-        v-model="filterVariableText"
-        :placeholder="$t('debugPane.placeholder.variable')"
-        :prefix-icon="Search"
-      /> -->
       <el-table ref="singleTableRef" :data="variableList" border max-height="290">
-        <!-- highlight-current-row
-        @row-click="handleRowClick" -->
         <el-table-column
           prop="varname"
           align="center"
@@ -100,12 +92,6 @@
               <div style="word-break: keep-all; margin-right: 5px">
                 {{ $t('debugPane.variable') }}
               </div>
-              <!-- <el-input
-                v-model="filterVariableText"
-                :placeholder="$t('debugPane.placeholder.variable')"
-                :prefix-icon="Search"
-                clearable
-              /> -->
               <div class="flex-header">
                 <el-icon @click="showVariableInput = false" class="icon-pointer"
                   ><Search
@@ -138,7 +124,13 @@
           prop="vartype"
           align="center"
           :label="$t('debugPane.dataType')"
-          width="65"
+          width="70"
+        />
+        <el-table-column
+          prop="paramType"
+          align="center"
+          :label="$t('debugPane.paramType')"
+          width="70"
         />
       </el-table>
     </div>
@@ -197,7 +189,6 @@
   };
 
   // table3 hightline
-  // const currentRow = ref();
   const showVariableInput = ref(false);
   const filterVariableText = ref('');
   const variableList = computed(() => {
@@ -206,23 +197,9 @@
       : props.variableList;
   });
   const singleTableRef = ref<InstanceType<typeof ElTable>>();
-  // const setCurrent = (row?: any) => {
-  //   singleTableRef.value!.setCurrentRow(row);
-  //   currentRow.value = row;
-  // };
-  // const handleRowClick = () => {
-  //   setCurrent(props.variableList[props.variableHighLight]);
-  // };
-  // watch(
-  //   () => props.variableHighLight,
-  //   (line) => {
-  //     typeof line == 'number' && handleRowClick();
-  //   },
-  // );
   watch(
     () => props.variableList,
-    (list) => {
-      // list.length && handleRowClick();
+    () => {
       filterVariableText.value == '';
     },
   );
@@ -270,7 +247,7 @@
     }
   }
   .DebugPane {
-    width: 350px;
+    width: 370px;
     flex-shrink: 0;
     padding-left: 15px;
   }

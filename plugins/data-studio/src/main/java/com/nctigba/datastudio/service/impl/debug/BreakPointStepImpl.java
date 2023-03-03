@@ -9,10 +9,15 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.sql.ResultSet;
 import java.sql.Statement;
 
+import static com.nctigba.datastudio.constants.CommonConstants.FUNC_OID;
+import static com.nctigba.datastudio.constants.CommonConstants.OID;
 import static com.nctigba.datastudio.constants.CommonConstants.STATEMENT;
+import static com.nctigba.datastudio.constants.CommonConstants.SUCCESS;
 import static com.nctigba.datastudio.constants.SqlConstants.CONTINUE_SQL;
+import static com.nctigba.datastudio.enums.MessageEnum.closeWindow;
 
 /**
  * break point step
@@ -27,17 +32,30 @@ public class BreakPointStepImpl implements OperationInterface {
     public void operate(WebSocketServer webSocketServer, Object obj) throws Exception {
         log.info("breakPointStep obj is: " + obj);
         PublicParamReq paramReq = (PublicParamReq) obj;
-        String windowName = paramReq.getOldWindowName();
-        if (StringUtils.isEmpty(windowName)) {
-            windowName = paramReq.getWindowName();
+        String name = paramReq.getOldWindowName();
+        String windowName = paramReq.getWindowName();
+        if (StringUtils.isEmpty(name)) {
+            name = windowName;
         }
 
         try {
-            Statement stat = (Statement) webSocketServer.getParamMap(windowName).get(STATEMENT);
+            Statement stat = (Statement) webSocketServer.getParamMap(name).get(STATEMENT);
             if (stat == null) {
                 return;
             }
-            stat.executeQuery(CONTINUE_SQL);
+            String oid = (String) webSocketServer.getParamMap(windowName).get(OID);
+            log.info("breakPointStep oid is: " + oid);
+            ResultSet resultSet = stat.executeQuery(CONTINUE_SQL);
+            String newOid = "";
+            while (resultSet.next()) {
+                newOid = resultSet.getString(FUNC_OID);
+                log.info("breakPointStep newOid is: " + newOid);
+            }
+
+            if (!oid.equals(newOid)) {
+                webSocketServer.sendMessage(windowName, closeWindow, SUCCESS, null);
+                paramReq.setCloseWindow(true);
+            }
             singleStep.showDebugInfo(webSocketServer, paramReq);
         } catch (Exception e) {
             e.printStackTrace();

@@ -33,7 +33,8 @@ public class DbConnectionServiceImpl implements DbConnectionService {
 
     @Resource
     private DatabaseConnectionDAO databaseConnectionDAO;
-
+    @Resource
+    private ConnectionMapDAO connectionMapDAO;
     @Resource
     private MetaDataByJdbcService metaDataByJdbcService;
 
@@ -57,7 +58,7 @@ public class DbConnectionServiceImpl implements DbConnectionService {
                 ConnectionMapDAO.setConMap(uuid, connectionDTO);
                 return dataList;
             } catch (Exception e) {
-                throw new CustomException(e.getMessage());
+                throw new CustomException(e.getMessage(),e);
             }
         } else {
             return loginDatabaseConnection(request);
@@ -69,7 +70,7 @@ public class DbConnectionServiceImpl implements DbConnectionService {
         try {
             databaseConnectionDAO.deleteTable(Integer.parseInt(id));
         } catch (Exception e) {
-            throw new CustomException(e.getMessage());
+            throw new CustomException(e.getMessage(),e);
         }
     }
 
@@ -80,7 +81,7 @@ public class DbConnectionServiceImpl implements DbConnectionService {
             atabaseConnectionEntity.setPassword("");
             return atabaseConnectionEntity;
         } catch (Exception e) {
-            throw new CustomException(e.getMessage());
+            throw new CustomException(e.getMessage(),e);
         }
     }
 
@@ -91,7 +92,7 @@ public class DbConnectionServiceImpl implements DbConnectionService {
             databaseConnectionEntity = databaseConnectionDAO.selectTable(webUser);
             return databaseConnectionEntity;
         } catch (Exception e) {
-            throw new CustomException(e.getMessage());
+            throw new CustomException(e.getMessage(),e);
         }
     }
 
@@ -100,16 +101,18 @@ public class DbConnectionServiceImpl implements DbConnectionService {
         try {
             DatabaseConnectionDO conn = request.toDatabaseConnection();
             test(request);
+            connectionMapDAO.deleteConnection(request.getConnectionid());
             databaseConnectionDAO.updateTable(conn);
             DatabaseConnectionDO dataList = databaseConnectionDAO.getAttributeByName(request.getName(), request.getWebUser());
-
+            String uuid = UUID.randomUUID().toString();
+            dataList.setConnectionid(uuid);
             ConnectionDTO connectionDTO = new ConnectionDTO();
             DatabaseConnectionUrlDO databaseConnectionUrlDO = databaseConnectionDAO.getByName(request.getName(), request.getWebUser());
             connectionDTO.setConnectionDTO(databaseConnectionUrlDO);
-            ConnectionMapDAO.setConMap(request.getConnectionid(), connectionDTO);
+            connectionMapDAO.setConMap(uuid, connectionDTO);
             return dataList;
         } catch (Exception e) {
-            throw new CustomException(e.getMessage());
+            throw new CustomException(e.getMessage(),e);
         }
     }
 
@@ -128,7 +131,7 @@ public class DbConnectionServiceImpl implements DbConnectionService {
             ConnectionMapDAO.setConMap(uuid, connectionDTO);
             return dataList;
         } catch (Exception e) {
-            throw new CustomException(e.getMessage());
+            throw new CustomException(e.getMessage(),e);
         }
     }
 
@@ -168,7 +171,7 @@ public class DbConnectionServiceImpl implements DbConnectionService {
             return listDataList;
         } catch (Exception e) {
             e.printStackTrace();
-            throw new CustomException(e.getMessage());
+            throw new CustomException(e.getMessage(),e);
         }
     }
 
@@ -176,10 +179,12 @@ public class DbConnectionServiceImpl implements DbConnectionService {
     @Override
     public List<DataListDTO> schemaObjectList(DatabaseMetaarrayIdSchemaQuery schema) {
         try {
+            if(!conMap.containsKey(schema.getUuid())){
+                throw new CustomException("The current connection does not exist");
+            }
             ConnectionDTO connectionDTO = conMap.get(schema.getUuid());
             List<DataListDTO> listDataList = new ArrayList<>();
-            DataListDTO dataList = new DataListDTO();
-            dataList = dataListByJdbcService.dataListQuerySQL(
+            DataListDTO dataList = dataListByJdbcService.dataListQuerySQL(
                     connectionDTO.getUrl(),
                     connectionDTO.getDbUser(),
                     connectionDTO.getDbPassword(),
@@ -200,7 +205,7 @@ public class DbConnectionServiceImpl implements DbConnectionService {
             return listDataList;
         } catch (Exception e) {
             e.printStackTrace();
-            throw new CustomException(e.getMessage());
+            throw new CustomException(e.getMessage(),e);
         }
     }
 

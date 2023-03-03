@@ -9,6 +9,8 @@ public class SqlConstants {
 
     public static final String SEMICOLON = ";";
 
+    public static final String QUOTES = "'";
+
     public static final String QUOTES_SEMICOLON = "';";
 
     public static final String PARENTHESES_SEMICOLON = ");";
@@ -132,10 +134,21 @@ public class SqlConstants {
     public static final String MATERIALIZED_VIEW_SQL = "MATERIALIZED ";
     public static final String COMMON_VIEW_SQL = "OR REPLACE ";
     public static final String VIEW_KEYWORD_SQL = "VIEW ";
+    public static final String SELECT_KEYWORD_SQL = "SELECT ";
+    public static final String COUNT_SQL = " count(1) as count " ;
+    public static final String FROM_CLASS_SQL = " from PG_CLASS c INNER JOIN pg_namespace n ON n.oid = c.relnamespace\n" +
+            "and n.nspname = '" ;
+    public static final String FROM_CLASS_WHERE_SQL = "' where relname = '" ;
+    public static final String RELKIND_SQL = "' and relkind = '" ;
     public static final String SEQUENCE_KEYWORD_SQL = "SEQUENCE ";
     public static final String SYNONYM_KEYWORD_SQL = "SYNONYM ";
+    public static final String WITH_KEYWORD_SQL = " WITH ";
     public static final String DATABASE_SQL = "DATABASE ";
-    public static final String WITH_ENCODING_SQL = "WITH ENCODING '";
+    public static final String WITH_ENCODING_SQL = " WITH ENCODING '";
+    public static final String LC_COLLATE_SQL = "' LC_COLLATE '";
+    public static final String LC_CTYPE_SQL = "' LC_CTYPE '";
+    public static final String CONNECTION_LIMIT_SQL = " CONNECTION LIMIT ";
+    public static final String DBCOMPATIBILITY_SQL = "' DBCOMPATIBILITY '";
     public static final String REPLACE_KEYWORD_SQL = "OR REPLACE ";
     public static final String START_KEYWORD_SQL = "START WITH ";
     public static final String NO_MINVALUE_KEYWORD_SQL = "NO MINVALUE ";
@@ -152,7 +165,7 @@ public class SqlConstants {
     public static final String IF_EXISTS_SQL = "IF EXISTS ";
     public static final String DROP_SQL = "DROP ";
     public static final String ALTER_SQL = "ALTER ";
-    public static final String RENAME_TO_SQL = "RENAME TO ";
+    public static final String RENAME_TO_SQL = " RENAME TO ";
     public static final String LIMIT_SQL = " LIMIT 500";
     public static final String SELECT_SEQUENCE_DDL_SQL = " SELECT sequence_schema,sequence_name,start_value,increment,minimum_value,maximum_value,cycle_option\n" +
             " FROM information_schema.sequences where sequence_schema = '";
@@ -170,5 +183,7 @@ public class SqlConstants {
     public static final String SELECT_FUNCTION_SQL = "SELECT proname,proargtypes FROM pg_proc\n" +
             "WHERE pronamespace = (SELECT pg_namespace.oid FROM pg_namespace WHERE nspname = '";
     public static final String SYNONYM_ATTRIBUTE_SQL = "select synname,synobjschema,rolname,synobjname from PG_SYNONYM  a inner join pg_authid b on a.synowner = b.oid where synname = '";
-    public static final String DATABASE_ATTRIBUTE_SQL = "select oid,datname,pg_encoding_to_char(encoding) as encoding,datallowconn,datconnlimit,dattablespace,datcollate,datctype from pg_database where datname = '";
+    public static final String SYNONYM_COUNT_SQL = "select count(1) count from PG_SYNONYM  where synname = '";
+    public static final String DATABASE_ATTRIBUTE_SQL = "select ds.oid,ds.datname,pg_encoding_to_char(ds.encoding) as encoding,ds.datallowconn,ds.datconnlimit,ts.spcname,ds.datcollate,ds.datctype from pg_database ds left join pg_tablespace ts on ts.oid = ds.dattablespace where ds.datname = '";
+    public static final String DATABASE_UPDATA_ATTRIBUTE_SQL = "select datname as databaseName,pg_encoding_to_char(encoding) as databaseCode,datcompatibility as compatibleType,datcollate as collation,datctype as characterType,datconnlimit as conRestrictions from pg_database where datname = '";
 }

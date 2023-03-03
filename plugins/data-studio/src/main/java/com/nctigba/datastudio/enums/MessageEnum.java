@@ -2,6 +2,7 @@ package com.nctigba.datastudio.enums;
 
 public enum MessageEnum {
     text,
+    button,
     table,
     window,
     ignoreWindow,

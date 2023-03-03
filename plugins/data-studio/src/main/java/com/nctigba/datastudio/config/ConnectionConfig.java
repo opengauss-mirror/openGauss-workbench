@@ -6,6 +6,7 @@ import com.nctigba.datastudio.model.dto.ConnectionDTO;
 import com.nctigba.datastudio.model.entity.DatabaseConnectionUrlDO;
 import com.nctigba.datastudio.service.impl.sql.DbConnectionServiceImpl;
 import com.nctigba.datastudio.util.ConnectionUtils;
+import org.opengauss.admin.common.exception.CustomException;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -18,32 +19,11 @@ public class ConnectionConfig {
     @Resource
     private DbConnectionServiceImpl dbConnectionServiceImpl;
 
-    public Connection connectDatabase(Integer id, String webUser) throws Exception {
-        DatabaseConnectionUrlDO dbConn = dbConnectionServiceImpl.getDatabaseConnectionById(id, webUser);
-        Connection connection = ConnectionUtils.connectGet(
-                dbConn.getUrl(),
-                dbConn.getUserName(),
-                dbConn.getPassword());
-        return connection;
-    }
-
-    public Connection connectDatabase(String name, String webUser) throws Exception {
-        DatabaseConnectionUrlDO dbConn = dbConnectionServiceImpl.getDatabaseConnectionByName(name, webUser);
-        Connection connection = ConnectionUtils.connectGet(
-                dbConn.getUrl(),
-                dbConn.getUserName(),
-                dbConn.getPassword());
-        return connection;
-    }
-
     public Connection connectDatabase(String uuid) throws Exception {
-        ConnectionDTO connectionDTO;
-        try{
-            connectionDTO = conMap.get(uuid);
-        }catch ( Exception e)
-        {
-            throw new DbswitchException("not found uuid=" + uuid);
+        if(!conMap.containsKey(uuid)){
+            throw new CustomException("The current connection does not exist");
         }
+        ConnectionDTO connectionDTO = conMap.get(uuid);
         Connection connection = ConnectionUtils.connectGet(
                 connectionDTO.getUrl(),
                 connectionDTO.getDbUser(),
@@ -54,6 +34,9 @@ public class ConnectionConfig {
     }
 
     public Connection connectDatabaseMap(String uuid, String winName) throws Exception {
+        if(!conMap.containsKey(uuid)){
+            throw new CustomException("The current connection does not exist");
+        }
         ConnectionDTO connectionDTO = conMap.get(uuid);
         Connection connection = ConnectionUtils.connectGet(
                 connectionDTO.getUrl(),
