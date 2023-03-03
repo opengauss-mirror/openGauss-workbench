@@ -25,6 +25,8 @@ public class ScatterChartGenerateServiceImpl extends BaseGenerateServiceImpl {
 
     private ScatterChartParamsBody scatterChartParamsBody;
 
+    private ScatterSeriesConstructor scatterSeriesConstructor;
+
     @Autowired
     private IModelingVisualizationGeoFilesService modelingVisualizationGeoFilesService;
 
@@ -35,9 +37,7 @@ public class ScatterChartGenerateServiceImpl extends BaseGenerateServiceImpl {
 
         ScatterChartBody scatterChartBody = new ScatterChartBody();
         scatterChartBody.setTitle(new Title().setText(scatterChartParamsBody.getTitle()));
-        scatterChartBody.setTooltip(new Tooltip().setTrigger("axis"));
-        scatterChartBody.setVisualMap(new VisualMap().setMax(1000000).setMin(0).setText(List.of("high","low"))
-                .setInRange(new InRange().setColor(List.of("lightskyblue","yellow","orangered"))));
+        scatterChartBody.setTooltip(new Tooltip().setTrigger("item").setFormatter("{b}<br/>{c}"));
 
         ModelingVisualizationGeoFilesEntity geoFile = modelingVisualizationGeoFilesService.getById(scatterChartParamsBody.getLocation().getCommonValue());
 
@@ -54,11 +54,14 @@ public class ScatterChartGenerateServiceImpl extends BaseGenerateServiceImpl {
         List<ScatterSeries> series = genSeries(scatterChartParamsBody.getLocation());
         scatterChartBody.setSeries(series);
 
+        scatterChartBody.setVisualMap(new VisualMap().setMax(scatterSeriesConstructor.maxValue).setMin(0).setText(List.of("high","low"))
+                .setInRange(new InRange().setColor(List.of("lightskyblue","yellow","orangered"))));
+
         return JSONObject.toJSONString(scatterChartBody);
     }
 
     public List<ScatterSeries> genSeries(Location location){
-        ScatterSeriesConstructor scatterSeriesConstructor = new ScatterSeriesConstructor(scatterChartParamsBody.getIndicator(), location, queryResult);
+        scatterSeriesConstructor = new ScatterSeriesConstructor(scatterChartParamsBody.getIndicator(), location, queryResult,scatterChartParamsBody.getLocation().getArea());
         return scatterSeriesConstructor.getSeriesData();
     }
 

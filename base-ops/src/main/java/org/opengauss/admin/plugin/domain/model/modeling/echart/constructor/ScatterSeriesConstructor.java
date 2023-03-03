@@ -23,10 +23,9 @@ import org.opengauss.admin.plugin.vo.modeling.component.Encode;
 import org.opengauss.admin.plugin.vo.modeling.component.Location;
 import org.opengauss.admin.plugin.vo.modeling.component.ScatterSeries;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
+
 /**
  * @author LZW
  * @date 2022/10/29 22:38
@@ -37,6 +36,7 @@ public class ScatterSeriesConstructor extends BaseSeriesConstructor {
 
     private final Indicator indicator;
     private final Location location;
+    private final int highLight;
 
     private final List<Map<String, Object>> queryData;
 
@@ -44,18 +44,24 @@ public class ScatterSeriesConstructor extends BaseSeriesConstructor {
 
     private Map<String,List<Float>> seriesData;
     public ArrayList<String> seriesKey;
+    public int maxValue;
 
-    public ScatterSeriesConstructor(Indicator indicator, Location location, List<Map<String, Object>> queryData) {
+    public ScatterSeriesConstructor(Indicator indicator, Location location, List<Map<String, Object>> queryData, int highLight) {
         this.indicator = indicator;
         this.location = location;
         this.queryData = queryData;
+        this.highLight = highLight;
     }
 
     public List<ScatterSeries> getSeriesData()  {
 
         Map<String,Float> seriesTemp = new HashMap<>();
         queryData.forEach(item->{
-            String loc = (String) item.get(location.getField());
+            String loc = "";
+            Object field = item.get(location.getField());
+            if (field != null) {
+                loc = ((String) field).trim();
+            }
             float yValue = toFloat(String.valueOf(item.get(indicator.getField())));
             if (seriesTemp.containsKey(loc)) {
                 seriesTemp.replace(loc,seriesTemp.get(loc) + yValue);
@@ -63,13 +69,27 @@ public class ScatterSeriesConstructor extends BaseSeriesConstructor {
                 seriesTemp.put(loc,yValue);
             }
         });
-        System.out.println(seriesTemp);
+
+        List<Map.Entry<String, Float>> list = new ArrayList<>(seriesTemp.entrySet());
+
+        list.sort(Map.Entry.comparingByValue(Comparator.reverseOrder()));
+
+        List<String> topLoc = list.stream()
+                .limit(highLight)
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toList());
+
+        maxValue = (int) Math.ceil(list.get(0).getValue());
 
         //Format
         List<Map<String,String>> seriesResult = new ArrayList<>();
         seriesTemp.forEach( (key,var) -> {
             if (key != null) {
-                seriesResult.add(Map.of("name", key, "value", var.toString()));
+                if (topLoc.contains(key)) {
+                    seriesResult.add(Map.of("name", key, "value", var.toString(),"selected","true"));
+                } else {
+                    seriesResult.add(Map.of("name", key, "value", var.toString()));
+                }
             }
         });
 
@@ -80,6 +100,7 @@ public class ScatterSeriesConstructor extends BaseSeriesConstructor {
         scatterSeries.setData(seriesResult);
         scatterSeries.setEncode(new Encode().setValue(2));
         scatterSeries.setGeoIndex(0);
+        scatterSeries.setSelectedMode("multiple");
 
         return List.of(scatterSeries);
     }
