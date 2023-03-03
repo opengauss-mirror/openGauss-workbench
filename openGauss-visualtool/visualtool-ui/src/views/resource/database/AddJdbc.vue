@@ -1,56 +1,47 @@
 <template>
-  <a-modal :mask-closable="false" :esc-to-close="false" :visible="data.show" :title="data.title"
+  <a-modal :mask-closable="false" :esc-to-close="false" :visible="data.show" :title="data.title" :unmount-on-close="true"
     :ok-loading="data.loading" :modal-style="{ width: '650px' }" @cancel="close">
     <template #footer>
       <div class="flex-between">
         <div class="flex-row">
-          <div class="label-color mr" v-if="data.formData.status === jdbcStatusEnum.unTest">待检测
+          <div class="label-color mr" v-if="data.form.status === jdbcStatusEnum.unTest">待检测
           </div>
-          <a-tag v-if="data.formData.status === jdbcStatusEnum.success" color="green">可用</a-tag>
-          <a-tag v-if="data.formData.status === jdbcStatusEnum.fail" color="red">不可用</a-tag>
+          <a-tag v-if="data.form.status === jdbcStatusEnum.success" color="green">可用</a-tag>
+          <a-tag v-if="data.form.status === jdbcStatusEnum.fail" color="red">不可用</a-tag>
         </div>
         <div>
           <a-button class="mr" @click="close">取消</a-button>
-          <a-button :loading="data.testLoading" class="mr" @click="handleTestHost(0)">测试连通性</a-button>
+          <a-button :loading="data.testLoading" class="mr" @click="handleTestHost()">测试连通性</a-button>
           <a-button :loading="data.loading" type="primary" @click="submit">确定</a-button>
         </div>
       </div>
-
     </template>
-    <a-form :model="data.formData" ref="formRef" auto-label-width :rules="data.rules">
-      <a-form-item field="name" label="实例名称" validate-trigger="blur" :rules="[{ required: true, message: '请输入实例名称' }]">
-        <a-input v-model="data.formData.name" placeholder="请输入实例名称"></a-input>
+    <a-form :model="data.form" ref="formRef" auto-label-width :rules="formRules">
+      <a-form-item field="name" label="集群名称" validate-trigger="blur">
+        <a-input v-model="data.form.name" placeholder="请输入实例名称"></a-input>
       </a-form-item>
       <a-form-item label="数据库类型" validate-trigger="change">
-        <a-select class="select-w" v-model="data.formData.dbType" placeholder="请选择数据库类型">
+        <a-select class="select-w" v-model="data.form.dbType" placeholder="请选择数据库类型">
           <a-option v-for="item in data.dbTypes" :key="item.value" :value="item.value">{{
             item.label
           }}</a-option>
         </a-select>
       </a-form-item>
-      <a-form-item field="ip" label="IP地址" validate-trigger="blur" :rules="[{ required: true, message: '请输入IP地址' }]">
-        <a-input v-model="data.formData.ip" placeholder="请输入IP地址" />
-      </a-form-item>
-      <a-form-item field="port" label="端口" validate-trigger="blur" :rules="[{ required: true, message: '请输入端口' }]">
-        <a-input-number v-model="data.formData.port" placeholder="请输入端口" />
-      </a-form-item>
-      <a-form-item field="username" label="用户名" validate-trigger="blur"
-        :rules="[{ required: true, message: '请输入用户名' }]">
-        <a-input v-model="data.formData.username" placeholder="请输入用户名" />
-      </a-form-item>
-      <a-form-item field="password" label="密码" validate-trigger="blur" :rules="[{ required: true, message: '请输入密码' }]">
-        <a-input-password v-model="data.formData.password" placeholder="请输入密码" allow-clear />
-      </a-form-item>
-      <a-form-item field="url" label="连接地址" validate-trigger="blur">
-        <div class="flex-row" style="width: 100%;">
-          <a-input class="mr-s" disabled v-model="url"></a-input>
-          <a-input v-model="data.formData.urlSuffix" placeholder="请输入扩展属性" />
-        </div>
-      </a-form-item>
-      <!-- <a-form-item label="说明">
-        <a-textarea v-model="data.formData.remark" placeholder="请输入说明"></a-textarea>
-      </a-form-item> -->
     </a-form>
+    <a-tabs type="card-gutter" :editable="true" @add="handleAdd" @delete="handleDelete" v-model="data.activeTab"
+      show-add-button auto-switch>
+      <a-tab-pane v-for="item of data.form.nodes" :key="item.id" :closable="data.form.nodes.length > 1">
+        <template #title>
+          <a-tooltip content="不可用" v-if="item.status === jdbcStatusEnum.fail">
+            <icon-exclamation-circle-fill />
+          </a-tooltip>
+          {{ item.ip.trim() ? item.ip : '实例' + item.tabName }}
+        </template>
+        <div class="jdbc-instance-c">
+          <jdbc-instance :form-data="item" :ref="(el: any) => setRefMap(el, item.id)"></jdbc-instance>
+        </div>
+      </a-tab-pane>
+    </a-tabs>
   </a-modal>
 </template>
 
@@ -58,8 +49,9 @@
 import { KeyValue } from '@/types/global'
 import { FormInstance } from '@arco-design/web-vue/es/form'
 import { nextTick, reactive, ref, computed } from 'vue'
-import { addJdbc, editJdbc, jdbcNodePing } from '@/api/ops'
+import { addJdbc, editJdbc } from '@/api/ops'
 import { Message } from '@arco-design/web-vue'
+import JdbcInstance from './JdbcInstance.vue'
 // import { useI18n } from 'vue-i18n'
 // import { encryptPassword } from '@/utils/jsencrypt'
 // const { t } = useI18n()
@@ -74,78 +66,126 @@ const data = reactive<KeyValue>({
   title: '',
   testLoading: false,
   loading: false,
-  formData: {
+  form: {
+    clusterId: '',
     name: '',
-    url: '',
-    urlSuffix: '',
     dbType: 'mysql',
-    ip: '',
-    port: 3306,
-    username: '',
-    password: '',
-    remark: '',
+    nodes: [],
     status: jdbcStatusEnum.unTest
   },
-  rules: {
-    name: [{ required: true, 'validate-trigger': 'blur', message: '请输入集群名称' }]
-  },
+  activeTab: '',
   dbTypes: [
     { label: 'MYSQL', value: 'mysql' }
   ]
 })
 
+const formRules = computed(() => {
+  return {
+    name: [
+      { required: true, 'validate-trigger': 'blur', message: '请输入集群名称' },
+      {
+        validator: (value: any, cb: any) => {
+          return new Promise(resolve => {
+            if (!value.trim()) {
+              cb('不能为纯空格')
+              resolve(false)
+            } else {
+              resolve(true)
+            }
+          })
+        }
+      }
+    ]
+  }
+})
+
+const refObj = ref<KeyValue>({})
+const setRefMap = (el: HTMLElement, key: string) => {
+  if (!refObj.value[key]) {
+    refObj.value[key] = el
+  }
+}
+
+const refList = computed(() => {
+  const result = []
+  const refs = Object.keys(refObj.value)
+  if (refs.length) {
+    for (let key in refObj.value) {
+      if (refObj.value[key]) {
+        result.push(refObj.value[key])
+      }
+    }
+  }
+  return result
+})
+
 const emits = defineEmits([`finish`])
 const formRef = ref<null | FormInstance>(null)
 const submit = () => {
-  formRef.value?.validate().then(async result => {
-    if (!result) {
-      data.loading = true
-      let urlStr = url.value
-      if (data.formData.urlSuffix) {
-        urlStr = urlStr + '?' + data.formData.urlSuffix
-      }
-      const param = {
-        clusterName: data.formData.name,
-        deployType: 'SINGLE_NODE',
-        nodes: [{
-          url: urlStr,
-          username: data.formData.username,
-          password: data.formData.password
-        }],
-        remark: data.formData.remark
-      }
-      // const param = Object.assign({}, data.formData)
-      // for (let i = 0; i < param.nodes.length; i++) {
-      //   const instanceData = param.nodes[i]
-      //   const encryptPwd = await encryptPassword(instanceData.password)
-      //   instanceData.password = encryptPwd
-      // }
-      console.log('show save param', param)
-      if (data.formData.clusterId) {
-        editJdbc(data.formData.clusterId, param).then((res: KeyValue) => {
-          data.loading = false
-          if (Number(res.code) === 200) {
-            Message.success({ content: `Modified success` })
-            emits(`finish`)
-          }
-          close()
-        }).finally(() => {
-          data.loading = false
-        })
-      } else {
-        addJdbc(param).then((res: KeyValue) => {
-          data.loading = false
-          if (Number(res.code) === 200) {
-            Message.success({ content: `Create success` })
-            emits(`finish`)
-          }
-          close()
-        }).finally(() => {
-          data.loading = false
-        })
-      }
+  const methodArr = []
+  for (let i = 0; i < refList.value.length; i++) {
+    if (refList.value[i]) {
+      methodArr.push(refList.value[i].formValidate())
     }
-  }).catch()
+  }
+  methodArr.push(formRef.value?.validate())
+  Promise.all(methodArr).then((res) => {
+    console.log('validRes', res)
+    const validRes = res.filter((item: KeyValue) => {
+      return item && item.res === false
+    })
+    console.log('validRes', validRes)
+    if (validRes.length) {
+      data.activeTab = validRes[0].id
+      return
+    }
+    if (res[methodArr.length - 1]) {
+      return
+    }
+
+    // save
+    data.loading = true
+
+    const param: {
+      clusterName: string,
+      dbType: string,
+      deployType: string,
+      nodes: Array<KeyValue>
+    } = {
+      clusterName: data.form.name,
+      dbType: data.form.dbType,
+      deployType: data.form.nodes.length > 1 ? 'CLUSTER' : 'SINGLE_NODE',
+      nodes: []
+    }
+    data.form.nodes.forEach((item: any) => {
+      item.extendProps = JSON.stringify(item.props)
+      param.nodes.push(item)
+    })
+
+    if (data.form.clusterId) {
+      editJdbc(data.form.clusterId, param).then((res: KeyValue) => {
+        data.loading = false
+        if (Number(res.code) === 200) {
+          Message.success({ content: `Modified success` })
+          emits(`finish`)
+        }
+        close()
+      }).finally(() => {
+        data.loading = false
+      })
+    } else {
+      addJdbc(param).then((res: KeyValue) => {
+        data.loading = false
+        if (Number(res.code) === 200) {
+          Message.success({ content: `Create success` })
+          emits(`finish`)
+        }
+        close()
+      }).finally(() => {
+        data.loading = false
+      })
+    }
+  })
 }
 const close = () => {
   data.show = false
@@ -153,44 +193,114 @@ const close = () => {
     formRef.value?.clearValidate()
     formRef.value?.resetFields()
   })
+  delRefObj()
 }
 
-const handleTestHost = (index = 0) => {
-  console.log('show index', index)
-  formRef.value?.validate().then(async result => {
-    if (!result) {
-      data.testLoading = true
-      // const instanceData = data.formData.nodes[index]
-      // const encryptPwd = await encryptPassword(instanceData.password)
-      // instanceData.password = encryptPwd
-      // console.log('show jdbc param', instanceData)
-      const param = {
-        username: data.formData.username,
-        password: data.formData.password,
-        url: url.value
-      }
-      jdbcNodePing(param).then((res: KeyValue) => {
-        if (Number(res.code) === 200 && res.data) {
-          // ok
-          data.formData.status = jdbcStatusEnum.success
-        } else {
-          data.formData.status = jdbcStatusEnum.fail
-        }
-      }).catch(() => {
-        data.formData.status = jdbcStatusEnum.fail
-      }).finally(() => {
-        data.testLoading = false
-      })
+const handleTestHost = () => {
+  console.log('show refList', refList.value)
+  data.testLoading = true
+  const methodArr = []
+  for (let i = 0; i < refList.value.length; i++) {
+    if (refList.value[i]) {
+      methodArr.push(refList.value[i].formValidate())
     }
+  }
+  Promise.all(methodArr).then((res) => {
+    const validRes = res.filter((item: KeyValue) => {
+      return item.res === false
+    })
+    if (validRes.length) {
+      data.activeTab = validRes[0].id
+      return
+    }
+    const methodTestArr = []
+    for (let i = 0; i < refList.value.length; i++) {
+      if (refList.value[i]) {
+        methodTestArr.push(refList.value[i].handelTest())
+      }
+    }
+    Promise.all(methodTestArr).then((testRes) => {
+      const noPass = testRes.filter((item: KeyValue) => {
+        return item.res === false
+      })
+      if (noPass.length) {
+        data.activeTab = noPass[0].id
+        data.form.status = jdbcStatusEnum.fail
+        return
+      }
+      data.form.status = jdbcStatusEnum.success
+    }).finally(() => {
+      data.testLoading = false
+    })
   })
 }
 
-const url = computed(() => {
-  if (data.formData.dbType === 'mysql') {
-    return `jdbc:mysql://${data.formData.ip ? data.formData.ip : '{IP}'}:${data.formData.port ? data.formData.port : '{port}'}`
+const handleAdd = () => {
+  const id = new Date().getTime() + ''
+  data.form.nodes.push({
+    id: id,
+    tabName: data.form.nodes.length + 1,
+    url: '',
+    urlSuffix: '',
+    ip: '',
+    port: 3306,
+    username: '',
+    password: '',
+    props: [{
+      name: '',
+      value: ''
+    }],
+    status: jdbcStatusEnum.unTest
+  })
+  console.log('show id', id, refObj.value);
+
+  data.activeTab = id
+}
+
+const handleDelete = (val: any) => {
+  if (refObj.value[val]) {
+    delete refObj.value[val]
   }
-  return 'jdbc:{dbType}://{IP}:{port}'
-})
+  data.form.nodes = data.form.nodes.filter((item: KeyValue) => {
+    return item.id !== val
+  })
+  data.activeTab = data.form.nodes[0].id
+}
+
+const getProps = (url: string): KeyValue[] => {
+  const result: KeyValue[] = []
+  if (!url) {
+    result.push({
+      name: '',
+      value: ''
+    })
+    return result
+  }
+  const urlSuffix = url.split('?')[1]
+  if (!urlSuffix) {
+    result.push({
+      name: '',
+      value: ''
+    })
+    return result
+  }
+  const extendPropsArr = urlSuffix.split('&')
+  extendPropsArr.forEach((item: string) => {
+    const itemArr = item.split('=')
+    const temp = {
+      name: itemArr[0],
+      value: itemArr[1]
+    }
+    result.push(temp)
+  })
+  if (!result.length) {
+    result.push({
+      name: '',
+      value: ''
+    })
+  }
+  return result
+}
 
 const open = (type: string, editData?: KeyValue) => {
   data.show = true
@@ -199,44 +309,42 @@ const open = (type: string, editData?: KeyValue) => {
     data.title = '修改数据源'
     console.log('update jdbc', editData)
     if (editData) {
-      let urlSuffixTemp
-      if (editData.nodes[0].url) {
-        const urlTemp = editData.nodes[0].url
-        urlSuffixTemp = urlTemp.split('?')[1]
-      }
-      Object.assign(data.formData, {
+      Object.assign(data.form, {
         clusterId: editData.clusterId,
         name: editData.name,
-        ip: editData.nodes[0].ip,
-        port: Number(editData.nodes[0].port),
-        urlSuffix: urlSuffixTemp,
-        username: editData.nodes[0].username,
-        password: '',
-        remark: editData.remark
+        nodes: []
       })
+      editData.nodes.forEach((item: KeyValue) => {
+        const temp = {
+          id: item.clusterNodeId,
+          url: item.url,
+          ip: item.ip,
+          port: Number(item.port),
+          username: item.username,
+          password: item.password,
+          props: getProps(item.url),
+          status: jdbcStatusEnum.unTest
+        }
+        data.form.nodes.push(temp)
+      })
+      data.activeTab = data.form.nodes[0].id
     }
   } else {
     data.title = '新增数据源'
-    Object.assign(data.formData, {
-      // nodes: [{
-      //   name: '',
-      //   url: '',
-      //   username: '',
-      //   password: '',
-      //   status: hostStatusEnum.unTest
-      // }],
+    Object.assign(data.form, {
       clusterId: '',
       name: '',
-      url: '',
       dbType: 'mysql',
-      ip: '',
-      port: 3306,
-      urlSuffix: '',
-      username: '',
-      password: '',
-      status: jdbcStatusEnum.unTest,
-      remark: ''
+      nodes: [],
+      status: jdbcStatusEnum.unTest
     })
+    handleAdd()
+  }
+}
+
+const delRefObj = () => {
+  for (let key in refObj.value) {
+    delete refObj.value[key]
   }
 }
 
@@ -245,3 +353,8 @@ defineExpose({
 })
 
 </script>
+<style lang="less" scoped>
+.jdbc-instance-c {
+  padding: 15px;
+}
+</style>

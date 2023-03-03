@@ -94,6 +94,10 @@ export const hostPing = (data: KeyValue) => {
   return axios.post('host/ping', data)
 }
 
+export const hostSSH = (data: KeyValue) => {
+  return axios.post('host/ssh', data)
+}
+
 export const hostPingById = (hostId: string, data: KeyValue) => {
   return axios.get(`host/ping/${hostId}`, {
     params: data
@@ -189,4 +193,10 @@ export const uploadFileJdbc = (data: KeyValue) => {
 // cluster node ping
 export const jdbcNodePing = (data: KeyValue) => {
   return axios.post('jdbcDbClusterNode/ping', data)
+}
+
+export const jdbcNodeMonitor = (clusterNodeId: any, data: KeyValue) => {
+  return axios.get(`jdbcDbClusterNode/monitor/${clusterNodeId}`, {
+    params: data
+  })
 }
