@@ -22,6 +22,12 @@ export default {
   },
   message: {
     deleteFile: '删除成功，请刷新连接列表！',
+    connectSuccess: '连接成功！',
+    createSuccess: '创建成功！',
+    disconnectSuccess: '断开成功！',
+    editSuccess: '修改成功！',
+    deleteSuccess: '删除成功！',
+    noConnectionAvailable: '没有可用的连接',
   },
   week: {
     Sunday: '日',
@@ -42,6 +48,10 @@ export default {
     property: '数据库属性',
     name: '数据库名称',
     encoder: '数据库编码',
+    compatibleType: '兼容类型',
+    collation: '排序规则',
+    characterType: '字符类型',
+    conRestrictions: '连接限制',
     connect: '连接数据库',
     list: '数据库列表',
     placeholder: '请输入过滤数据库对象',
@@ -183,6 +193,7 @@ export default {
     variable: '变量',
     value: '值',
     dataType: '数据类型',
+    paramType: '参数类型',
     placeholder: {
       variable: '请输入变量名称',
     },

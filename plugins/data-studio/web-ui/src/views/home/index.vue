@@ -21,15 +21,17 @@
     (route, oldRoute) => {
       setTimeout(() => {
         if (route.name == 'home' && route?.fullPath != oldRoute?.fullPath) {
-          const isDSConnect = connectListPersist.storage.getItem(connectListPersist.key);
           if (route.fullPath == '/home') {
+            const isDSConnect = JSON.parse(
+              connectListPersist.storage.getItem(connectListPersist.key) || '[]',
+            );
             showHome.value = false;
-            if (isDSConnect) {
+            if (isDSConnect.length) {
               router.replace({
                 path: '/home',
                 query: {
                   rootId: AppStore.lastestConnectDatabase.rootId,
-                  connectInfoName: AppStore.currentConnectInfo.name,
+                  connectInfoName: AppStore.currentConnectInfo?.name,
                   uuid: AppStore.lastestConnectDatabase.uuid,
                   dbname: AppStore.lastestConnectDatabase.databaseName,
                   time: Date.now(),

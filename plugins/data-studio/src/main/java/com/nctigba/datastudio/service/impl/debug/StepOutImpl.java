@@ -46,6 +46,7 @@ public class StepOutImpl implements OperationInterface {
         }
 
         Map<Integer, String> breakPointMap = (Map<Integer, String>) webSocketServer.getParamMap(windowName).get(BREAK_POINT);
+        log.info("stepOut breakPointMap is: " + breakPointMap);
         if (!CollectionUtils.isEmpty(breakPointMap)) {
             Set<Integer> integers = breakPointMap.keySet();
             for (Integer i : integers) {
@@ -63,7 +64,7 @@ public class StepOutImpl implements OperationInterface {
             log.info("stepOut newOid is: " + newOid);
         }
 
-        if (!oid.equals(newOid) && paramReq.isCloseWindow()) {
+        if (!oid.equals(newOid) && !paramReq.isCloseWindow()) {
             webSocketServer.sendMessage(windowName, closeWindow, SUCCESS, null);
         }
         singleStep.showDebugInfo(webSocketServer, paramReq);

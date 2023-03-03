@@ -45,6 +45,9 @@ public class CreateDatabaseController {
     public Map<String, Object> databaseAttribute(DatabaseNameDTO request) throws Exception {
         return creaeteDatabaseService.databaseAttribute(request);
     }
-
+    @GetMapping(value = "/database/attribute/update", produces = MediaType.APPLICATION_JSON_VALUE)
+    public Map<String, Object> databaseAttributeUpdate(DatabaseNameDTO request) throws Exception {
+        return creaeteDatabaseService.databaseAttributeUpdate(request);
+    }
 
 }

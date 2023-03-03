@@ -64,6 +64,7 @@
 
 <script lang="ts" setup name="TagsView">
   import { computed, nextTick, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
+  import { ElMessage } from 'element-plus';
   import betterScroll from './betterScroll.vue';
   import LangButton from '@/components/LangButton.vue';
   import { useRoute, useRouter } from 'vue-router';
@@ -72,6 +73,7 @@
   import { useTagsViewStore } from '@/store/modules/tagsView';
   import { usePermissionStore } from '@/store/modules/permission';
   import { useAppStore } from '@/store/modules/app';
+  import { useI18n } from 'vue-i18n';
   import vClickOutside from '@/directives/clickOutside';
   import EventBus, { EventTypeName } from '@/utils/event-bus';
 
@@ -81,6 +83,7 @@
   const TagsViewStore = useTagsViewStore();
   const PermissionStore = usePermissionStore();
   const AppStore = useAppStore();
+  const { t } = useI18n();
 
   const isInFrame = ref(self !== parent);
 
@@ -269,7 +272,9 @@
 
   const createTerminal = () => {
     const connectInfoName = AppStore.currentConnectInfo.name;
-    const dbname = AppStore.lastestConnectDatabase.databaseName;
+    const { databaseName: dbname, rootId, uuid } = AppStore.lastestConnectDatabase;
+    if (!uuid) return ElMessage.warning(t('message.noConnectionAvailable'));
+
     const terminalNum = TagsViewStore.maxTerminalNum + 1;
     const title = `${dbname}@${connectInfoName}(${terminalNum})`;
     const time = Date.now();
@@ -277,9 +282,9 @@
       path: '/createTerminal/' + time,
       query: {
         title,
-        rootId: AppStore.lastestConnectDatabase.rootId,
+        rootId,
         connectInfoName,
-        uuid: AppStore.lastestConnectDatabase.uuid,
+        uuid,
         dbname,
         terminalNum,
         time,

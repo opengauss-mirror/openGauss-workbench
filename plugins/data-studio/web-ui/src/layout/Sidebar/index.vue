@@ -66,12 +66,30 @@
               }
             "
           >
-            <li @click="openConnectInfo()">{{ $t('connection.props') }}</li>
-            <li @click="openConnectDialog('edit')">{{ $t('connection.edit') }}</li>
+            <li @click="openConnectInfo()"> {{ $t('connection.props') }} </li>
+            <li @click="openConnectDialog('edit')"> {{ $t('connection.edit') }} </li>
             <li @click="handleDeleteConnect">{{ $t('connection.delete') }}</li>
-            <li @click="handleDisAllconnection">{{ $t('connection.disAllconnection') }}</li>
-            <li @click="handleCreateDb">{{ $t('database.create') }}</li>
-            <li @click="refresh('connection')">{{ $t('connection.refresh') }}</li>
+            <li
+              :class="{ disabled: !treeContextFindAvailableUuid }"
+              @click="treeContextFindAvailableUuid && handleDisAllconnection()"
+            >
+              {{ $t('connection.disAllconnection') }}
+            </li>
+            <li
+              :class="{ disabled: !treeContextFindAvailableUuid }"
+              @click="!!treeContextFindAvailableUuid && handleCreateDb()"
+            >
+              {{ $t('database.create') }}
+            </li>
+            <li
+              :class="{ disabled: !treeContextFindAvailableUuid }"
+              @click="
+                treeContextFindAvailableUuid &&
+                  refresh('connection', { uuid: treeContextFindAvailableUuid })
+              "
+            >
+              {{ $t('connection.refresh') }}
+            </li>
           </ul>
           <ul
             v-if="treeContext.databaseVisible"
@@ -81,25 +99,66 @@
               }
             "
           >
-            <li :class="{ disabled: treeContextDbStatus }" @click="handleDbConnect(true)">
+            <li
+              :class="{ disabled: treeContextDbStatus }"
+              @click="
+                !treeContextDbStatus &&
+                  handleDbConnect(
+                    currentContextNodeData.connectInfo.id,
+                    currentContextNodeData.id,
+                    true,
+                  )
+              "
+            >
               {{ $t('database.open') }}
             </li>
-            <li :class="{ disabled: !treeContextDbStatus }" @click="handleDbConnect(false)">
+            <li
+              :class="{ disabled: !treeContextDbStatus }"
+              @click="
+                treeContextDbStatus &&
+                  handleDbConnect(
+                    currentContextNodeData.connectInfo.id,
+                    currentContextNodeData.id,
+                    false,
+                  )
+              "
+            >
               {{ $t('database.close') }}
             </li>
-            <li :class="{ disabled: !treeContextDbStatus }" @click="handleOpenNewTerminal">
+            <li
+              :class="{ disabled: !treeContextDbStatus }"
+              @click="treeContextDbStatus && handleOpenNewTerminal()"
+            >
               {{ $t('create.openNewTerminal') }}
             </li>
-            <li :class="{ disabled: treeContextDbStatus }" @click="handleEditDb">
+            <li
+              :class="{ disabled: treeContextDbStatus }"
+              @click="!treeContextDbStatus && handleEditDb()"
+            >
               {{ $t('database.edit') }}
             </li>
-            <li :class="{ disabled: treeContextDbStatus }" @click="hanldeDeleteDb">
+            <li
+              :class="{ disabled: treeContextDbStatus }"
+              @click="!treeContextDbStatus && hanldeDeleteDb()"
+            >
               {{ $t('database.remove') }}
             </li>
-            <li :class="{ disabled: !treeContextDbStatus }" @click="handleDbInfo">
+            <li
+              :class="{ disabled: !treeContextDbStatus }"
+              @click="treeContextDbStatus && handleDbInfo()"
+            >
               {{ $t('database.property') }}
             </li>
-            <li :class="{ disabled: !treeContextDbStatus }" @click="refresh('database')">
+            <li
+              :class="{ disabled: !treeContextDbStatus }"
+              @click="
+                treeContextDbStatus &&
+                  refresh('database', {
+                    rootId: currentContextNodeData.connectInfo.id,
+                    databaseId: currentContextNodeData.id,
+                  })
+              "
+            >
               {{ $t('connection.refresh') }}
             </li>
           </ul>
@@ -111,7 +170,17 @@
               }
             "
           >
-            <li @click="refresh('mode')"> {{ $t('connection.refresh') }}</li>
+            <li
+              @click="
+                refresh('mode', {
+                  rootId: currentContextNodeData.connectInfo.id,
+                  databaseId: currentContextNodeData.databaseId,
+                  schemaId: currentContextNodeData.id,
+                })
+              "
+            >
+              {{ $t('connection.refresh') }}
+            </li>
           </ul>
           <ul
             v-if="treeContext.terminalCollectVisible"
@@ -231,7 +300,14 @@
         </div>
       </div>
     </div>
-    <CreateDbDialog :type="createDbType" v-if="showCreateDbDialog" v-model="showCreateDbDialog" />
+    <CreateDbDialog
+      v-if="showCreateDbDialog"
+      v-model="showCreateDbDialog"
+      :type="createDbType"
+      :data="currentContextNodeData"
+      :uuid="treeContextFindAvailableUuid"
+      @success="createDbSuccess"
+    />
     <DbInfoDialog
       v-if="showDbInfoDialog"
       v-model="showDbInfoDialog"
@@ -260,10 +336,10 @@
   import CreateViewDialog from '@/views/view/CreateViewDialog.vue';
   import CreateSynonymDialog from '@/views/synonym/CreateSynonymDialog.vue';
   import CreateSequenceDialog from '@/views/sequence/CreateSequenceDialog.vue';
-  import { computed, onMounted, reactive, ref, onUnmounted, watch } from 'vue';
+  import { computed, nextTick, onMounted, reactive, ref, onUnmounted, watch } from 'vue';
   import { useRoute, useRouter } from 'vue-router';
-  import { useTagsViewStore } from '@/store/modules/tagsView';
   import { useAppStore } from '@/store/modules/app';
+  import { useTagsViewStore } from '@/store/modules/tagsView';
   import vClickOutside from '@/directives/clickOutside';
   import EventBus, { EventTypeName } from '@/utils/event-bus';
   import { getSchemaList, getSchemaObjectList } from '@/api/metaData';
@@ -279,6 +355,9 @@
   import { connectListPersist } from '@/config';
 
   const AppStore = useAppStore();
+  const TagsViewStore = useTagsViewStore();
+  const route = useRoute();
+  const router = useRouter();
   const treeRef = ref<InstanceType<typeof ElTree>>();
   const filterTreeText = ref<string>('');
   const input2 = ref<string>('');
@@ -304,7 +383,9 @@
 
   interface Tree {
     id: string;
+    parentId: string;
     label: string;
+    name: string;
     isLeaf?: boolean;
     type?: string;
     isConnect?: boolean;
@@ -358,54 +439,85 @@
     schemaId: '',
     schemaName: '',
     label: '',
+    name: '',
     children: [],
   });
   let loading = ref(null);
   const createDbType = ref<'create' | 'edit'>('create');
 
-  const loadNode = async (node, resolve) => {
-    console.log('node', node);
-    
-    if (node.data.children && node.data.children.length) {
-      return resolve(node.data.children);
-    } else if (node.data?.type == 'database' && node.data?.isConnect) {
-      const data = await fetchSchemaList(
-        node.data.id,
-        node.data.id,
-        node.data.label,
-        node.data.uuid,
-        node.data.connectInfo,
-      );
-      resolve(data);
-    } else if (['public', 'person'].includes(node.data?.type)) {
-      const data = await fetchSchemaContentList(
-        node.data.id,
-        node.data.uuid,
-        node.data.databaseId,
-        node.data.databaseName,
-        node.data.id,
-        node.data.label,
-        node.data.connectInfo,
-      );
-      connectionList.value.forEach((connectItem) => {
-        if (connectItem.id == node.data.connectInfo.id) {
-          const dbList = connectItem.children;
-          for (let j = 0; j < dbList.length; j++) {
-            if (dbList[j].label == node.data.databaseName) {
-              const schemaList = dbList[j].children;
-              for (let k = 0; k < schemaList.length; k++) {
-                if (schemaList[k].id == node.data.id) {
-                  schemaList[k].children = data;
-                  break;
-                }
+  const isActive = (rou) => {
+    return rou.path === route.path;
+  };
+  const routerGo = (tag) => {
+    router.push({
+      path: tag.path,
+      query: tag.query,
+    });
+  };
+  const findNode = (
+    options: { rootId: string; databaseId?: string; schemaId?: string } = {
+      rootId: '',
+      databaseId: '',
+      schemaId: '',
+    },
+  ) => {
+    for (let i = 0; i < connectionList.value.length; i++) {
+      const cListItem = connectionList.value[i];
+      if (cListItem.id == options.rootId) {
+        if (!options.databaseId) return cListItem;
+        for (let j = 0; j < cListItem.children.length; j++) {
+          const dbListItem = cListItem.children[j];
+          if (dbListItem.id == options.databaseId) {
+            if (!options.schemaId) return dbListItem;
+            for (let k = 0; k < dbListItem.children.length; k++) {
+              const schemaItem = dbListItem.children[k];
+              if (schemaItem.id == options.schemaId) {
+                return schemaItem;
               }
-              break;
             }
           }
         }
-      });
-      updateConnectListPersist();
-      return resolve(data);
+      }
+    }
+  };
+  const loadNode = async (node, resolve) => {
+    if (node.data.children && node.data.children.length) {
+      return resolve(node.data.children);
+    } else if (node.data?.type == 'database' && node.data?.isConnect) {
+      try {
+        const data = await fetchSchemaList(
+          node.data.id,
+          node.data.id,
+          node.data.label,
+          node.data.uuid,
+          node.data.connectInfo,
+        );
+        resolve(data);
+      } catch (error) {
+        return resolve([]);
+      }
+    } else if (['public', 'person'].includes(node.data?.type)) {
+      try {
+        const data = await fetchSchemaContentList(
+          node.data.id,
+          node.data.uuid,
+          node.data.databaseId,
+          node.data.databaseName,
+          node.data.id,
+          node.data.label,
+          node.data.connectInfo,
+        );
+        const schemaNode = findNode({
+          rootId: node.data.connectInfo.id,
+          databaseId: node.data.databaseId,
+          schemaId: node.data.id,
+        });
+        schemaNode.children = data;
+        updateConnectListPersist();
+        return resolve(data);
+      } catch (error) {
+        return resolve([]);
+      }
     } else {
       return resolve([]);
     }
@@ -421,23 +533,26 @@
         id,
         parentId: null,
         label: `${name} (${ip}:${port})`,
+        name,
         type: 'root',
         connectInfo: cloneConnectInfo,
         isLeaf: false,
         children: data.map((dbName) => {
+          const isConnect =
+            AppStore.connectListMap[connectInfo.id]?.connectedDatabase.findIndex(
+              (item) => item.name == dbName,
+            ) > -1;
           return {
             id: `${id}_${dbName}`,
             parentId: id,
-            uuid,
+            uuid: isConnect ? uuid : '',
             label: dbName,
+            name: dbName,
             connectInfo: cloneConnectInfo,
             type: 'database',
             isLeaf: false,
             children: [],
-            isConnect:
-              AppStore.connectListMap[connectInfo.id]?.connectedDatabase.findIndex(
-                (item) => item.name == dbName,
-              ) > -1,
+            isConnect,
           };
         }),
       };
@@ -450,10 +565,53 @@
     return true;
   };
 
+  const insertDbItem = (rootId, databaseName, connectInfo, isConnect, uuid = '') => {
+    const databaseId = `${rootId}_${databaseName}`;
+    connectionList.value.forEach((list) => {
+      if (list.id == rootId) {
+        list.children.push({
+          id: databaseId,
+          parentId: rootId,
+          uuid: isConnect ? uuid : '',
+          label: databaseName,
+          name: databaseName,
+          connectInfo: JSON.parse(JSON.stringify(connectInfo)),
+          type: 'database',
+          isLeaf: false,
+          children: [],
+          isConnect,
+        });
+      }
+    });
+    updateConnectListPersist();
+    isConnect &&
+      nextTick(() => {
+        handleDbConnect(rootId, databaseId, isConnect);
+      });
+  };
+  const deleteDbItem = (rootId, databaseId) => {
+    treeRef.value.remove(databaseId);
+    for (let i = 0; i < connectionList.value.length; i++) {
+      const list = connectionList.value[i];
+      if (list.id == rootId) {
+        for (let j = 0; j < list.children.length; j++) {
+          const db = list.children[j];
+          if (db.id == databaseId) {
+            list.children.splice(j, 1);
+            break;
+          }
+        }
+        break;
+      }
+    }
+    updateConnectListPersist();
+    updateConnectListMap();
+  };
+
   const fetchSchemaList = async (parentId, databaseId, databaseName, uuid, connectInfo) => {
     const data = (await getSchemaList({
       uuid,
-      connectionName: connectInfo.userName,
+      connectionName: connectInfo.name,
       webUser: UserStore.userId,
     })) as unknown as string[];
     const schemaList = [];
@@ -462,6 +620,7 @@
         id: `${parentId}_${schemaName}`,
         parentId,
         label: schemaName,
+        name: schemaName,
         connectInfo,
         databaseName,
         databaseId,
@@ -472,17 +631,8 @@
       };
       schemaName === 'public' ? schemaList.unshift(obj) : schemaList.push(obj);
     });
-    connectionList.value.forEach((item) => {
-      if (item.id == connectInfo.id) {
-        const dbList = item.children;
-        for (let j = 0; j < dbList.length; j++) {
-          if (dbList[j].label == databaseName) {
-            dbList[j].children = schemaList;
-            break;
-          }
-        }
-      }
-    });
+    const dbNode = findNode({ rootId: connectInfo.id, databaseId });
+    dbNode.children = schemaList;
     updateConnectListPersist();
     return schemaList;
   };
@@ -536,13 +686,14 @@
     });
     keys.forEach((key) => {
       if (!order.includes(key)) return;
-      const { label, type, zType } = sortType(key);
+      const { label, type, childType } = sortType(key);
       const keyId = `${parentId}_${key}`;
       array.push({
         id: keyId,
         parentId,
         uuid,
         label: `${label} (${obj[key].length})`,
+        name: label,
         type,
         key,
         connectInfo,
@@ -552,7 +703,7 @@
         schemaName,
         children: handleTypeList(
           obj[key],
-          zType,
+          childType,
           keyId,
           uuid,
           databaseId,
@@ -568,32 +719,32 @@
   };
   // User Mode-children
   const sortType = (key) => {
-    const obj = { label: '', type: '', zType: '' };
+    const obj = { label: '', type: '', childType: '' };
     switch (key) {
       case 'table':
         obj.label = t('database.regular_table');
         obj.type = 'tableCollect';
-        obj.zType = 'table';
+        obj.childType = 'table';
         break;
       case 'fun_pro':
         obj.label = t('database.function_process');
         obj.type = 'terminalCollect';
-        obj.zType = 'terminal';
+        obj.childType = 'terminal';
         break;
       case 'view':
         obj.label = t('database.view');
         obj.type = 'viewCollect';
-        obj.zType = 'view';
+        obj.childType = 'view';
         break;
       case 'synonym':
         obj.label = t('database.synonym');
         obj.type = 'synonymCollect';
-        obj.zType = 'synonym';
+        obj.childType = 'synonym';
         break;
       case 'sequence':
         obj.label = t('database.sequence');
         obj.type = 'sequenceCollect';
-        obj.zType = 'sequence';
+        obj.childType = 'sequence';
         break;
     }
     return obj;
@@ -601,7 +752,7 @@
   // User Mode-children data - [table/func/view]...
   const handleTypeList = (
     array,
-    zType,
+    childType,
     parentId,
     uuid,
     databaseId,
@@ -615,7 +766,8 @@
       parentId,
       uuid,
       label: item,
-      type: zType,
+      name: item,
+      type: childType,
       databaseId,
       databaseName,
       schemaId,
@@ -637,11 +789,12 @@
     }
     return list;
   };
-  const openConnectDialog = (type) => {
+  const openConnectDialog = (type: 'create' | 'edit') => {
     treeContext.rootVisible = false;
     EventBus.notify(EventTypeName.OPEN_CONNECT_DIALOG, {
       dialogType: type,
       connectInfo: currentContextNodeData.connectInfo,
+      uuid: type == 'create' ? '' : treeContextFindAvailableUuid.value,
     });
   };
   const openConnectInfo = () => {
@@ -654,9 +807,6 @@
       JSON.stringify(connectionList.value),
     );
   };
-  // const updateLastestConnectDatabse = (rootId, databaseName, uuid) => {
-  //   AppStore.lastestConnectDatabase = { rootId, databaseName, uuid };
-  // };
   const updateConnectListMap = () => {
     const obj = {};
     connectionList.value.forEach((list) => {
@@ -676,9 +826,7 @@
     ).then(async () => {
       for (let i = 0; i < currentContextNodeData.children.length; i++) {
         const db = currentContextNodeData.children[i];
-        if (db.isConnect) {
-          await closeConnections(db.uuid);
-        }
+        db.isConnect && (await closeConnections(db.uuid));
       }
       const index = connectionList.value.findIndex((item) => item.id == currentContextNodeData.id);
       treeRef.value.remove(treeRef.value.getNode(currentContextNodeData.id));
@@ -717,45 +865,55 @@
       updateConnectListMap();
     });
   };
-  const handleDbConnect = async (willOpen) => {
+  const handleDbConnect = async (rootId, databaseId, willOpen) => {
     treeContext.databaseVisible = false;
-    const { id } = currentContextNodeData.connectInfo;
+    const rootData = findNode({ rootId });
+    const dbData = findNode({ rootId, databaseId });
+    if (!rootData) return;
     let mergeObj = {};
+    let lastestConnectDatabase = {
+      rootId: '',
+      databaseName: '',
+      uuid: '',
+    };
     if (willOpen) {
       const params = {
-        id,
-        dataName: currentContextNodeData.label,
+        id: rootData.connectInfo.id,
+        dataName: dbData.name,
         webUser: UserStore.userId,
       };
       const res: any = await openDatabaseConnection(params);
+      ElMessage.success(t('message.connectSuccess'));
       mergeObj = { uuid: res.connectionid };
-      AppStore.lastestConnectDatabase = {
-        rootId: id,
-        databaseName: currentContextNodeData.label,
+      lastestConnectDatabase = {
+        rootId,
+        databaseName: dbData.name,
         uuid: res.connectionid,
       };
     } else {
-      await closeConnections(currentContextNodeData.uuid);
+      await closeConnections(dbData.uuid);
+      ElMessage.success(t('message.disconnectSuccess'));
       mergeObj = { uuid: '' };
     }
-    for (let i = 0; i < connectionList.value.length; i++) {
-      const list = connectionList.value[i];
-      if (list.id == currentContextNodeData.connectInfo.id) {
-        for (let j = 0; j < list.children.length; j++) {
-          const db = list.children[j];
-          if (db.id == currentContextNodeData.id) {
-            Object.assign(db, {
-              isConnect: willOpen,
-              ...mergeObj,
-            });
-            break;
-          }
-        }
-        break;
-      }
-    }
+    Object.assign(dbData, {
+      isConnect: willOpen,
+      ...mergeObj,
+    });
     updateConnectListPersist();
     updateConnectListMap();
+    if (!willOpen) {
+      const firstAvailableDatabase: any = Object.values(AppStore.connectListMap).find(
+        (list: any) => list.connectedDatabase?.length > 0,
+      );
+      if (firstAvailableDatabase) {
+        lastestConnectDatabase = {
+          rootId: firstAvailableDatabase.info.id,
+          databaseName: firstAvailableDatabase.connectedDatabase[0].name,
+          uuid: firstAvailableDatabase.connectedDatabase[0].uuid,
+        };
+      }
+    }
+    AppStore.lastestConnectDatabase = lastestConnectDatabase;
   };
   const handleOpenNewTerminal = () => {
     treeContext.databaseVisible = false;
@@ -772,7 +930,7 @@
         connectInfoName,
         uuid: currentContextNodeData.uuid,
         dbname,
-        // schema: 
+        // schema:
         terminalNum,
         time,
       },
@@ -782,6 +940,38 @@
     treeContext.rootVisible = false;
     showCreateDbDialog.value = true;
     createDbType.value = 'create';
+  };
+  const createDbSuccess = (data) => {
+    showCreateDbDialog.value = false;
+    if (createDbType.value == 'create') {
+      insertDbItem(
+        currentContextNodeData.id,
+        data.name,
+        currentContextNodeData.connectInfo,
+        data.isConnect,
+      );
+    } else {
+      const rootId = currentContextNodeData.connectInfo.id;
+      const db = findNode({
+        rootId,
+        databaseId: currentContextNodeData.id,
+        schemaId: '',
+      });
+      const newId = `${rootId}_${data.name}`;
+      Object.assign(db as any, {
+        id: newId,
+        isConnect: false,
+        label: data.name,
+        name: data.name,
+      });
+      treeRef.value.updateKeyChildren(newId, findNode({ rootId }).children);
+      updateConnectListPersist();
+      if (data.isConnect) {
+        nextTick(() => {
+          handleDbConnect(rootId, newId, true);
+        });
+      }
+    }
   };
   const handleEditDb = () => {
     treeContext.databaseVisible = false;
@@ -793,12 +983,12 @@
     ElMessageBox.confirm(
       t('connection.message.deleteDatabase', { name: currentContextNodeData.label }),
     ).then(async () => {
-      const res = await deleteDatabase({
-        uuid: currentContextNodeData.uuid,
+      await deleteDatabase({
+        uuid: treeContextFindAvailableUuid.value,
         databaseName: currentContextNodeData.label,
       });
-      console.log('hanldeDeleteDb', res);
-      
+      ElMessage.success(t('message.deleteSuccess'));
+      deleteDbItem(currentContextNodeData.connectInfo.id, currentContextNodeData.id);
     });
   };
   const handleDbInfo = () => {
@@ -807,61 +997,41 @@
   };
   interface RefreshOptions {
     connectInfo: ConnectInfo | undefined;
-    connectionId: string;
+    rootId: string;
     uuid: string;
-    databaseName: string;
+    databaseId: string;
     schemaId: string;
     nodeId: string;
   }
-  const refresh = (
+  const refresh = async (
     mode: 'connection' | 'database' | 'mode',
     options: Partial<RefreshOptions> = {
       connectInfo: undefined,
-      connectionId: '',
+      rootId: '',
       uuid: '',
-      databaseName: '',
+      databaseId: '',
       schemaId: '',
       nodeId: '',
     },
   ) => {
     if (mode == 'connection') {
       treeContext.rootVisible = false;
-      fetchDBList(
+      await fetchDBList(
         options.connectInfo || currentContextNodeData.connectInfo,
         options.uuid || currentContextNodeData.uuid,
       );
     } else if (mode == 'database') {
       treeContext.databaseVisible = false;
-      connectionList.value.forEach((item) => {
-        if (item.id == (options.connectionId || currentContextNodeData.connectInfo.id)) {
-          const dbList = item.children;
-          for (let j = 0; j < dbList.length; j++) {
-            if (dbList[j].label == (options.databaseName || currentContextNodeData.label)) {
-              dbList[j].children = [];
-              break;
-            }
-          }
-        }
-      });
+      const dbNode = findNode({ rootId: options.rootId, databaseId: options.databaseId });
+      dbNode.children = [];
     } else if (mode == 'mode') {
       treeContext.modeVisible = false;
-      connectionList.value.forEach((item) => {
-        if (item.id == (options.connectionId || currentContextNodeData.connectInfo.id)) {
-          const dbList = item.children;
-          for (let j = 0; j < dbList.length; j++) {
-            if (dbList[j].label == (options.databaseName || currentContextNodeData.databaseName)) {
-              const schemaList = dbList[j].children;
-              for (let k = 0; k < schemaList.length; k++) {
-                if (schemaList[k].id == (options.schemaId || currentContextNodeData.id)) {
-                  schemaList[k].children = [];
-                  break;
-                }
-              }
-              break;
-            }
-          }
-        }
+      const schemaNode = findNode({
+        rootId: options.rootId,
+        databaseId: options.databaseId,
+        schemaId: options.schemaId,
       });
+      schemaNode.children = [];
     }
     let node = treeRef.value.getNode(options.nodeId || currentContextNodeData.id);
     if (node) {
@@ -875,10 +1045,6 @@
     if (!data.label) return false;
     return data.label.includes(value);
   };
-
-  // const handleTreeCurrentChange = (target) => {
-  //   AppStore.updateCurrentNode(target.data);
-  // };
 
   const handleNodeClick = (target, node) => {
     Object.keys(treeContext).forEach((item) => {
@@ -945,23 +1111,11 @@
     }
   };
 
-  const TagsViewStore = useTagsViewStore();
   const visitedViews = computed(() => {
     return input2.value
       ? TagsViewStore.visitedViews.filter((item) => item.title.includes(input2.value))
       : TagsViewStore.visitedViews;
   });
-  const route = useRoute();
-  const router = useRouter();
-  const isActive = (rou) => {
-    return rou.path === route.path;
-  };
-  const routerGo = (tag) => {
-    router.push({
-      path: tag.path,
-      query: tag.query,
-    });
-  };
 
   const treeContext = reactive({
     MenuStyles: {
@@ -987,6 +1141,9 @@
       ) > -1,
     );
   });
+  const treeContextFindAvailableUuid = computed(() => {
+    return AppStore.connectListMap[currentContextNodeData.connectInfo.id]?.connectedDatabase[0]?.uuid;
+  });
   const handleContextmenu = (event, data) => {
     const type = data.type;
     Object.assign(currentContextNodeData, data);
@@ -997,45 +1154,22 @@
     Object.keys(treeContext).forEach((item) => {
       if (item.indexOf('Visible') !== -1) treeContext[item] = false;
     });
-    switch (type) {
-      case 'root':
-        treeContext.rootVisible = true;
-        break;
-      case 'database':
-        treeContext.databaseVisible = true;
-        break;
-      case 'public':
-        treeContext.modeVisible = true;
-        break;
-      case 'person':
-        treeContext.modeVisible = true;
-        break;
-      case 'terminalCollect':
-        treeContext.terminalCollectVisible = true;
-        break;
-      case 'terminal':
-        treeContext.functionSP = true;
-        break;
-      case 'viewCollect':
-        treeContext.viewCollectVisible = true;
-        break;
-      case 'view':
-        treeContext.viewVisible = true;
-        break;
-      case 'sequence':
-        treeContext.sequenceVisible = true;
-        break;
-      case 'sequenceCollect':
-        treeContext.sequenceCollectVisible = true;
-        break;
-      case 'synonymCollect':
-        treeContext.synonymCollectVisible = true;
-        break;
-      case 'synonym':
-        treeContext.synonymVisible = true;
-        break;
-      default:
-        break;
+    const typeMap = {
+      root: 'rootVisible',
+      database: 'databaseVisible',
+      public: 'modeVisible',
+      person: 'modeVisible',
+      terminalCollect: 'terminalCollectVisible',
+      terminal: 'functionSP',
+      viewCollect: 'viewCollectVisible',
+      view: 'viewVisible',
+      sequence: 'sequenceVisible',
+      sequenceCollect: 'sequenceCollectVisible',
+      synonymCollect: 'synonymCollectVisible',
+      synonym: 'synonymVisible',
+    };
+    if (Object.prototype.hasOwnProperty.call(typeMap, type)) {
+      treeContext[typeMap[type]] = true;
     }
   };
   const hanldeCreate = (type: 'function' | 'procedure' | 'sql') => {
@@ -1054,6 +1188,7 @@
         dbname: connectInfo.dataName,
         connectInfoName: connectInfo.name,
         connectInfoId: connectInfo.id,
+        uuid: currentContextNodeData.uuid,
         schema: currentContextNodeData.schemaName,
         time,
       },
@@ -1114,13 +1249,6 @@
       };
       await api(params);
       ElMessage.success(t('message.deleteFile'));
-      // ElMessage.success(`${t(`delete.${type}`)}${t('success')}`);
-      // refresh('mode', {
-      //   connectionId: currentContextNodeData.connectInfo.id,
-      //   databaseName: currentContextNodeData.databaseName,
-      //   schemaId: currentContextNodeData.schemaId,
-      //   nodeId: currentContextNodeData.schemaId,
-      // });
     });
   };
 
@@ -1218,16 +1346,12 @@
       };
       fetchDBList(info, connectionid);
     });
-    // EventBus.listen(EventTypeName.REFRESH_DATABASE_LIST, (config) => {
-    //   refresh(config.mode, config.options);
-    // });
 
     connectionList.value = getAllConnectList();
   });
   onUnmounted(() => {
     EventBus.unListen(EventTypeName.GET_DATABASE_LIST);
     EventBus.unListen(EventTypeName.UPDATE_DATABASE_LIST);
-    // EventBus.unListen(EventTypeName.REFRESH_DATABASE_LIST);
   });
 </script>
 
