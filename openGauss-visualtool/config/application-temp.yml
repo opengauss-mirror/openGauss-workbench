@@ -31,3 +31,6 @@ spring:
       connection-error-retry-attempts: 0
       break-after-acquire-failure: true
       max-wait: 3000
+management:
+  server:
+    port: 9494
