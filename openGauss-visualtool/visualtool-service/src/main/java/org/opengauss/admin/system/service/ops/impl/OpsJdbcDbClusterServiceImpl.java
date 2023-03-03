@@ -154,16 +154,16 @@ public class OpsJdbcDbClusterServiceImpl extends ServiceImpl<OpsJdbcDbClusterMap
 
             for (JdbcDbClusterNodeInputDto node : nodes) {
                 boolean nodeWrong = false;
-                String name = node.getName();
-                if (StrUtil.isEmpty(name)) {
-                    if (nodeWrong) {
-                        node.setRemark(node.getRemark() + "，Node name cannot be empty");
-                    } else {
-                        node.setRemark("Node name cannot be empty");
-                    }
-
-                    nodeWrong = true;
-                }
+//                String name = node.getName();
+//                if (StrUtil.isEmpty(name)) {
+//                    if (nodeWrong) {
+//                        node.setRemark(node.getRemark() + "，Node name cannot be empty");
+//                    } else {
+//                        node.setRemark("Node name cannot be empty");
+//                    }
+//
+//                    nodeWrong = true;
+//                }
 
                 String url = node.getUrl();
                 try {
