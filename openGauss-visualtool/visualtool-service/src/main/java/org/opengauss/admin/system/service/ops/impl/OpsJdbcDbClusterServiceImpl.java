@@ -275,15 +275,12 @@ public class OpsJdbcDbClusterServiceImpl extends ServiceImpl<OpsJdbcDbClusterMap
 
             Cluster cluster = (Cluster) o;
 
-            if (name != null ? !name.equals(cluster.name) : cluster.name != null) return false;
-            return deployType != null ? deployType.equals(cluster.deployType) : cluster.deployType == null;
+            return name.equals(cluster.name);
         }
 
         @Override
         public int hashCode() {
-            int result = name != null ? name.hashCode() : 0;
-            result = 31 * result + (deployType != null ? deployType.hashCode() : 0);
-            return result;
+            return name.hashCode();
         }
     }
 
@@ -326,6 +323,10 @@ public class OpsJdbcDbClusterServiceImpl extends ServiceImpl<OpsJdbcDbClusterMap
                 if (col.length != 4) {
                     throw new OpsException("The data in row " + lineNum + " is wrong");
                 } else {
+                    if (StrUtil.isEmpty(col[0].trim()) && StrUtil.isEmpty(col[1].trim())&& StrUtil.isEmpty(col[2].trim())&& StrUtil.isEmpty(col[3].trim())){
+                        continue;
+                    }
+
                     Cluster thatCluster = new Cluster(col[0], null);
                     ClusterNode thatClusterNode = new ClusterNode(null, col[1], col[2], col[3]);
 
