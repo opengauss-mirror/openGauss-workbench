@@ -4,41 +4,46 @@
     <template #footer>
       <div class="flex-between">
         <div class="flex-row">
-          <div class="label-color mr" v-if="data.form.status === jdbcStatusEnum.unTest">待检测
+          <div class="label-color mr" v-if="data.form.status === jdbcStatusEnum.unTest">{{ $t('database.AddJdbc.else1') }}
           </div>
-          <a-tag v-if="data.form.status === jdbcStatusEnum.success" color="green">可用</a-tag>
-          <a-tag v-if="data.form.status === jdbcStatusEnum.fail" color="red">不可用</a-tag>
+          <a-tag v-if="data.form.status === jdbcStatusEnum.success" color="green">{{ $t('database.AddJdbc.5oxhkhiks5k0')
+          }}</a-tag>
+          <a-tag v-if="data.form.status === jdbcStatusEnum.fail" color="red">{{ $t('database.AddJdbc.5oxhkhimwfg0')
+          }}</a-tag>
         </div>
         <div>
-          <a-button class="mr" @click="close">取消</a-button>
-          <a-button :loading="data.testLoading" class="mr" @click="handleTestHost()">测试连通性</a-button>
-          <a-button :loading="data.loading" type="primary" @click="submit">确定</a-button>
+          <a-button class="mr" @click="close">{{ $t('database.AddJdbc.5oxhkhimwy00') }}</a-button>
+          <a-button :loading="data.testLoading" class="mr" @click="handleTestHost()">{{
+            $t('database.AddJdbc.5oxhkhimx5c0') }}</a-button>
+          <a-button :loading="data.loading" type="primary" @click="submit">{{ $t('database.AddJdbc.5oxhkhimxbg0')
+          }}</a-button>
         </div>
       </div>
     </template>
     <a-form :model="data.form" ref="formRef" auto-label-width :rules="formRules">
-      <a-form-item field="name" label="集群名称" validate-trigger="blur">
-        <a-input v-model="data.form.name" placeholder="请输入实例名称"></a-input>
+      <a-form-item field="name" :label="$t('database.AddJdbc.5oxhkhimxho0')" validate-trigger="blur">
+        <a-input v-model="data.form.name" :placeholder="$t('database.AddJdbc.5oxhkhimxno0')"></a-input>
       </a-form-item>
-      <a-form-item label="数据库类型" validate-trigger="change">
-        <a-select class="select-w" v-model="data.form.dbType" placeholder="请选择数据库类型">
+      <a-form-item :label="$t('database.AddJdbc.5oxhkhimxto0')" validate-trigger="change">
+        <a-select class="select-w" v-model="data.form.dbType" :placeholder="$t('database.AddJdbc.5oxhkhimxzw0')">
           <a-option v-for="item in data.dbTypes" :key="item.value" :value="item.value">{{
             item.label
           }}</a-option>
         </a-select>
       </a-form-item>
     </a-form>
-    <a-tabs type="card-gutter" :editable="true" @add="handleAdd" @delete="handleDelete" v-model="data.activeTab"
-      show-add-button auto-switch>
+    <a-tabs type="card-gutter" :editable="true" @tab-click="handleTabClick" @add="handleAdd" @delete="handleDelete"
+      v-model:active-key="data.activeTab" show-add-button auto-switch>
       <a-tab-pane v-for="item of data.form.nodes" :key="item.id" :closable="data.form.nodes.length > 1">
         <template #title>
-          <a-tooltip content="不可用" v-if="item.status === jdbcStatusEnum.fail">
+          <a-tooltip :content="$t('database.AddJdbc.5oxhkhimwfg0')" v-if="item.status === jdbcStatusEnum.fail">
             <icon-exclamation-circle-fill />
           </a-tooltip>
-          {{ item.ip.trim() ? item.ip : '实例' + item.tabName }}
+          {{ item.ip.trim() ? item.ip : $t('database.AddJdbc.5oxhkhimyio0') + item.tabName }}
         </template>
         <div class="jdbc-instance-c">
-          <jdbc-instance :form-data="item" :ref="(el: any) => setRefMap(el, item.id)"></jdbc-instance>
+          <jdbc-instance :form-data="item" :host-list="data.hostList"
+            :ref="(el: any) => setRefMap(el, item.id)"></jdbc-instance>
         </div>
       </a-tab-pane>
     </a-tabs>
@@ -49,12 +54,12 @@
 import { KeyValue } from '@/types/global'
 import { FormInstance } from '@arco-design/web-vue/es/form'
 import { nextTick, reactive, ref, computed } from 'vue'
-import { addJdbc, editJdbc } from '@/api/ops'
+import { addJdbc, editJdbc, hostListAll } from '@/api/ops'
 import { Message } from '@arco-design/web-vue'
 import JdbcInstance from './JdbcInstance.vue'
-// import { useI18n } from 'vue-i18n'
+import { useI18n } from 'vue-i18n'
 // import { encryptPassword } from '@/utils/jsencrypt'
-// const { t } = useI18n()
+const { t } = useI18n()
 enum jdbcStatusEnum {
   unTest = -1,
   success = 1,
@@ -66,6 +71,7 @@ const data = reactive<KeyValue>({
   title: '',
   testLoading: false,
   loading: false,
+  getHostLoading: false,
   form: {
     clusterId: '',
     name: '',
@@ -73,6 +79,7 @@ const data = reactive<KeyValue>({
     nodes: [],
     status: jdbcStatusEnum.unTest
   },
+  hostList: [],
   activeTab: '',
   dbTypes: [
     { label: 'MYSQL', value: 'mysql' }
@@ -82,12 +89,12 @@ const data = reactive<KeyValue>({
 const formRules = computed(() => {
   return {
     name: [
-      { required: true, 'validate-trigger': 'blur', message: '请输入集群名称' },
+      { required: true, 'validate-trigger': 'blur', message: t('database.AddJdbc.5oxhkhimz480') },
       {
         validator: (value: any, cb: any) => {
           return new Promise(resolve => {
             if (!value.trim()) {
-              cb('不能为纯空格')
+              cb(t('database.AddJdbc.5oxhkhimzcg0'))
               resolve(false)
             } else {
               resolve(true)
@@ -118,6 +125,26 @@ const refList = computed(() => {
   }
   return result
 })
+
+const getHostList = () => {
+  data.getHostLoading = true
+  hostListAll().then((res: KeyValue) => {
+    console.log('show hostLIst', res)
+    data.hostList = []
+    if (Number(res.code) === 200) {
+      if (res.data.length) {
+        res.data.forEach((item: KeyValue) => {
+          data.hostList.push({
+            label: item.publicIp,
+            value: item.publicIp
+          })
+        })
+      }
+    }
+  }).finally(() => {
+    data.getHostLoading = false
+  })
+}
 
 const emits = defineEmits([`finish`])
 const formRef = ref<null | FormInstance>(null)
@@ -198,7 +225,6 @@ const close = () => {
 
 const handleTestHost = () => {
   console.log('show refList', refList.value)
-  data.testLoading = true
   const methodArr = []
   for (let i = 0; i < refList.value.length; i++) {
     if (refList.value[i]) {
@@ -213,6 +239,7 @@ const handleTestHost = () => {
       data.activeTab = validRes[0].id
       return
     }
+    data.testLoading = true
     const methodTestArr = []
     for (let i = 0; i < refList.value.length; i++) {
       if (refList.value[i]) {
@@ -235,6 +262,11 @@ const handleTestHost = () => {
   })
 }
 
+const handleTabClick = (val: any) => {
+  console.log('show handle tab click', val)
+
+}
+
 const handleAdd = () => {
   const id = new Date().getTime() + ''
   data.form.nodes.push({
@@ -252,9 +284,9 @@ const handleAdd = () => {
     }],
     status: jdbcStatusEnum.unTest
   })
-  console.log('show id', id, refObj.value);
-
-  data.activeTab = id
+  nextTick(() => {
+    data.activeTab = id
+  })
 }
 
 const handleDelete = (val: any) => {
@@ -264,7 +296,9 @@ const handleDelete = (val: any) => {
   data.form.nodes = data.form.nodes.filter((item: KeyValue) => {
     return item.id !== val
   })
-  data.activeTab = data.form.nodes[0].id
+  nextTick(() => {
+    data.activeTab = data.form.nodes[0].id
+  })
 }
 
 const getProps = (url: string): KeyValue[] => {
@@ -305,8 +339,10 @@ const getProps = (url: string): KeyValue[] => {
 const open = (type: string, editData?: KeyValue) => {
   data.show = true
   data.loading = false
+  data.testLoading = false
+  getHostList()
   if (type === 'update' && data) {
-    data.title = '修改数据源'
+    data.title = t('database.AddJdbc.5oxhkhimzmw0')
     console.log('update jdbc', editData)
     if (editData) {
       Object.assign(data.form, {
@@ -330,7 +366,7 @@ const open = (type: string, editData?: KeyValue) => {
       data.activeTab = data.form.nodes[0].id
     }
   } else {
-    data.title = '新增数据源'
+    data.title = t('database.AddJdbc.5oxhkhimzww0')
     Object.assign(data.form, {
       clusterId: '',
       name: '',

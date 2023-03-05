@@ -8,25 +8,25 @@
               <template #icon>
                 <icon-plus />
               </template>
-              创建</a-button>
+              {{ $t('database.index.5oxhr0qz15w0') }}</a-button>
             <a-space direction="vertical" :style="{ width: '100%' }" class="mr-s">
               <a-upload action="/" @before-upload="beforeUpload" />
             </a-space>
-            <a-button type="outline" @click="downloadTemplate">
+            <a-button :loading="list.downloadLoading" type="outline" @click="downloadTemp">
               <template #icon>
                 <icon-download />
               </template>
-              下载模板</a-button>
+              {{ $t('database.index.5oxhr0qz2bs0') }}</a-button>
           </div>
           <div class="flex-row">
             <div class="flex-row mr">
-              <div class="label-color top-label mr-s">数据库实例名称:</div>
-              <a-input v-model="filter.name" placeholder="请输入数据库实例名称进行查询"></a-input>
+              <div class="label-color top-label mr-s">{{ $t('database.index.else1') }}:</div>
+              <a-input v-model="filter.name" :placeholder="$t('database.index.5oxhr0qz2s00')"></a-input>
             </div>
-            <a-button type="primary" @click="getListData">查询</a-button>
+            <a-button type="primary" @click="getListData">{{ $t('database.index.5oxhr0qz30g0') }}</a-button>
           </div>
         </div>
-        <a-table class="full-h" :data="list.data" :columns="columns" :pagination="list.page" :loading="list.loading"
+        <a-table style="height: 95%" :data="list.data" :columns="columns" :pagination="list.page" :loading="list.loading"
           @page-change="currentPage" @page-size-change="pageSizeChange" row-key="clusterId" @expand="handleExpand"
           :expandable="expandable">
           <template #status="{ record }">
@@ -36,15 +36,17 @@
           </template>
           <template #operation="{ record }">
             <div class="flex-row">
-              <!-- <a-link class="mr" @click="handleDetail(record)">详情</a-link> -->
-              <a-link class="mr" @click="handleAdd('update', record)">修改</a-link>
-              <a-popconfirm content="确定要删除？" type="warning" ok-text="确定" cancel-text="取消" @ok="handleDel(record)">
-                <a-link status="danger">删除</a-link>
+              <a-link class="mr" @click="handleAdd('update', record)">{{ $t('database.index.5oxhr0qz37o0') }}</a-link>
+              <a-popconfirm :content="$t('database.index.5oxhr0qz3f40')" type="warning"
+                :ok-text="$t('database.index.5oxhr0qz3m80')" :cancel-text="$t('database.index.5oxhr0qz3t80')"
+                @ok="handleDel(record)">
+                <a-link status="danger">{{ $t('database.index.5oxhr0qz40k0') }}</a-link>
               </a-popconfirm>
             </div>
           </template>
         </a-table>
         <add-jdbc ref="addJdbcRef" @finish="getListData"></add-jdbc>
+        <host-import-dlg ref="hostImportDlgRef"></host-import-dlg>
       </div>
     </div>
   </div>
@@ -54,11 +56,12 @@
 import { KeyValue } from '@/types/global'
 import { onMounted, reactive, computed, ref, h } from 'vue'
 import { Message, Modal } from '@arco-design/web-vue'
-import { jdbcPage, delJdbc, uploadFileJdbc } from '@/api/ops'
+import { jdbcPage, delJdbc, uploadFileJdbc, downloadTemplate, uploadRealJdbc } from '@/api/ops'
 import AddJdbc from './AddJdbc.vue'
-// import { useI18n } from 'vue-i18n'
-// const { t } = useI18n()
+import HostImportDlg from './HostImportDlg.vue'
 import JdbcNodeTable from './JdbcNodeTable.vue'
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
 const expandable = reactive<KeyValue>({
   title: '',
   width: 50,
@@ -69,7 +72,7 @@ const expandable = reactive<KeyValue>({
       return h('div', {}, [
         h(JdbcNodeTable, {
           nodes: record.nodes,
-          onValidRes(val: boolean) {
+          onValidRes (val: boolean) {
             console.log('receive state', val)
             record.state = val
           }
@@ -95,11 +98,11 @@ const handleExpand = (rowKey: string | number) => {
 }
 
 const columns = computed(() => [
-  { title: '集群名称', dataIndex: 'name' },
-  { title: '类型', dataIndex: 'dbType' },
-  { title: '状态', dataIndex: 'status', slotName: 'status' },
-  { title: '更新时间', dataIndex: 'updateTime' },
-  { title: '操作', slotName: 'operation', width: 350 }
+  { title: t('database.index.5oxhr0qz48w0'), dataIndex: 'name' },
+  { title: t('database.index.5oxhr0qz4fs0'), dataIndex: 'dbType' },
+  { title: t('database.index.5oxhr0qz4no0'), dataIndex: 'status', slotName: 'status' },
+  { title: t('database.index.5oxhr0qz4zk0'), dataIndex: 'updateTime' },
+  { title: t('database.index.5oxhr0qz58o0'), slotName: 'operation', width: 350 }
 ])
 
 const filter = reactive({
@@ -117,6 +120,7 @@ const list = reactive<KeyValue>({
     'show-page-size': true
   },
   loading: false,
+  downloadLoading: false,
   rowSelection: {
     type: 'checkbox',
     showCheckedAll: true
@@ -150,8 +154,8 @@ const getListData = () => {
 const beforeUpload = (file?: any) => {
   return new Promise((resolve, reject) => {
     Modal.confirm({
-      title: '上传确认',
-      content: `确认上传 ${file.name}`,
+      title: t('database.index.5oxhr0qz5g40'),
+      content: `${t('database.index.else2')} ${file.name}`,
       onOk: () => {
         if (file) {
           handleUpload(file)
@@ -162,8 +166,9 @@ const beforeUpload = (file?: any) => {
   })
 }
 
-const handleUpload = (fileData: any) => {
-  const fileObj = fileData.file
+const hostImportDlgRef = ref<null | InstanceType<typeof HostImportDlg>>(null)
+// import analysis
+const handleUpload = (fileObj: any) => {
   const index1 = fileObj.name.lastIndexOf('.')
   const index2 = fileObj.name.length
   const type = fileObj.name.substring(index1, index2)
@@ -181,23 +186,37 @@ const handleUpload = (fileData: any) => {
     list.loading = true
     uploadFileJdbc(data).then((res: KeyValue) => {
       if (Number(res.code) === 200) {
-        list.loading = false
-        Message.success('Import successfully')
-        getListData()
+        if (res.data.succNum === res.data.total) {
+          handleRealUpload(fileObj)
+        }
+        if (res.data.failNum > 0 && res.data.failDetail.length) {
+          hostImportDlgRef.value?.open(res.data.failDetail)
+        }
       }
-    }).catch(() => {
+    }).finally(() => {
       list.loading = false
     })
   }
 }
 
+// real import
+const handleRealUpload = (fileObj: any) => {
+  const data = new FormData()
+  data.append('file', fileObj)
+  list.loading = true
+  uploadRealJdbc(data).then((res: KeyValue) => {
+    if (Number(res.code) === 200) {
+      Message.success('Import successfully')
+      getListData()
+    }
+  }).finally(() => {
+    list.loading = false
+  })
+}
+
 const addJdbcRef = ref<null | InstanceType<typeof AddJdbc>>(null)
 const handleAdd = (type: string, data?: KeyValue) => {
   addJdbcRef.value?.open(type, data)
-}
-
-const handleDetail = (record: KeyValue) => {
-  console.log('show record', record)
 }
 
 const handleDel = (record: KeyValue) => {
@@ -211,12 +230,28 @@ const handleDel = (record: KeyValue) => {
   })
 }
 
-const downloadTemplate = () => {
-  // window.location.href = './jdbcTemplate.json'
-  var a = document.createElement('a')
-  a.download = 'jdbc-template.csv'
-  a.href = './template.csv'
-  a.click()
+const downloadTemp = () => {
+  list.downloadLoading = true
+  downloadTemplate().then((res: any) => {
+    if (res) {
+      const blob = new Blob([res], {
+        type: 'text/plain'
+      })
+      const a = document.createElement('a')
+      const URL = window.URL || window.webkitURL
+      const herf = URL.createObjectURL(blob)
+      a.href = herf
+      a.download = 'jdbc-template.csv'
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      window.URL.revokeObjectURL(herf)
+    } else {
+      Message.error('Download failed, please try again')
+    }
+  }).finally(() => {
+    list.downloadLoading = false
+  })
 }
 
 const currentPage = (e: number) => {

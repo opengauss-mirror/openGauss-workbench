@@ -151,7 +151,7 @@ onMounted(() => {
       okText: t('components.login-form.5o61dvpc5o80'),
       width: 'auto',
       maskClosable: false,
-      async onOk() {
+      async onOk () {
         const userStore = useUserStore()
 
         await userStore.logout()

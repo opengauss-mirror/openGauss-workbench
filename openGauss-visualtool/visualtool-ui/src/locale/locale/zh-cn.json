@@ -647,8 +647,98 @@
         }
     },
     "database": {
+        "AddJdbc": {
+            "else1": "待检测",
+            "5oxhkhiks5k0": "可用",
+            "5oxhkhimwfg0": "不可用",
+            "5oxhkhimwy00": "取消",
+            "5oxhkhimx5c0": "测试连通性",
+            "5oxhkhimxbg0": "确定",
+            "5oxhkhimxho0": "集群名称",
+            "5oxhkhimxno0": "请输入实例名称",
+            "5oxhkhimxto0": "数据库类型",
+            "5oxhkhimxzw0": "请选择数据库类型",
+            "5oxhkhimyio0": "实例",
+            "5oxhkhimz480": "请输入集群名称",
+            "5oxhkhimzcg0": "不能为纯空格",
+            "5oxhkhimzmw0": "修改数据源",
+            "5oxhkhimzww0": "新增数据源"
+        },
+        "HostImportDlg": {
+            "5oxhmjuzltc0": "解析结果：有以下错误数据，请修改后重新上传",
+            "5oxhmjuzmxw0": "集群名称",
+            "5oxhmjuzn9s0": "连接地址",
+            "5oxhmjuznig0": "解析结果",
+            "5oxhmjuzz7w0": "导入解析"
+        },
+        "HostPwdDlg": {
+            "5oxhni610s00": "IP地址",
+            "5oxhni611qo0": "端口号",
+            "5oxhni6126o0": "请输入SSH端口号",
+            "5oxhni612g00": "用户名",
+            "5oxhni612mo0": "请输入用户名",
+            "5oxhni612vk0": "密码",
+            "5oxhni6132k0": "root密码",
+            "5oxhni6138s0": "请输入密码",
+            "5oxhni613ik0": "请输入正确的端口号",
+            "5oxhni613ow0": "不能为纯空格",
+            "5oxhni613us0": "SSH连接信息"
+        },
+        "HostTerminal": {
+            "else1": "IP地址",
+            "5oxhoh5r6ls0": "终端"
+        },
         "index": {
-            "5mpifmij0v00": "正在开发中,敬请期待"
+            "else1": "集群名称",
+            "else2": "确认上传",
+            "5oxhr0qz15w0": "创建",
+            "5oxhr0qz2bs0": "下载模板",
+            "5oxhr0qz2s00": "请输入集群名称进行查询",
+            "5oxhr0qz30g0": "查询",
+            "5oxhr0qz37o0": "修改",
+            "5oxhr0qz3f40": "确定要删除？",
+            "5oxhr0qz3m80": "确定",
+            "5oxhr0qz3t80": "取消",
+            "5oxhr0qz40k0": "删除",
+            "5oxhr0qz48w0": "集群名称",
+            "5oxhr0qz4fs0": "类型",
+            "5oxhr0qz4no0": "状态",
+            "5oxhr0qz4zk0": "更新时间",
+            "5oxhr0qz58o0": "操作",
+            "5oxhr0qz5g40": "上传确认"
+        },
+        "JdbcInstance": {
+            "5oxhtcbo8ac0": "IP地址",
+            "5oxhtcbo9fg0": "请选择或输入IP",
+            "5oxhtcbo9ps0": "端口",
+            "5oxhtcbo9xc0": "请输入端口号",
+            "5oxhtcboa240": "用户名",
+            "5oxhtcboa7c0": "请输入用户名",
+            "5oxhtcboac00": "密码",
+            "5oxhtcboags0": "请输入密码",
+            "5oxhtcboap00": "连接扩展属性",
+            "5oxhtcboatc0": "新增",
+            "5oxhtcboaxc0": "删除",
+            "5oxhtcbob1s0": "连接地址",
+            "5oxhtcbob640": "扩展名",
+            "5oxhtcbobac0": "扩展值",
+            "5oxhtcbobe80": "操作",
+            "5oxhtcbobhs0": "请选择或输入IP地址",
+            "5oxhtcboblw0": "请输入正确的IP地址",
+            "5oxhtcbobpk0": "请输入正确的端口号",
+            "5oxhtcbobtc0": "不能为纯空格",
+            "5oxhtcboc2c0": "请输入用户密码"
+        },
+        "JdbcNodeTable": {
+            "else1": "IP地址",
+            "else2": "端口",
+            "else3": "节点",
+            "5oxhv6qcm6w0": "检测系统",
+            "5oxhv6qcnak0": "主",
+            "5oxhv6qcnnk0": "备",
+            "5oxhv6qcnuk0": "连接数",
+            "5oxhv6qco4c0": "表空间占用",
+            "5oxhv6qcobk0": "内存占用"
         }
     },
     "echarts": {

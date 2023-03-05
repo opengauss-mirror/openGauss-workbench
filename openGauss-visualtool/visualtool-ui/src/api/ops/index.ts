@@ -164,6 +164,11 @@ export const hasNameAZ = (data: KeyValue) => {
 }
 
 // jdbc 
+
+export const downloadTemplate = () => {
+  return axios.get('jdbcDbCluster/downloadTemplate')
+}
+
 export const jdbcPage = (query: any) => {
   return axios.get('jdbcDbCluster/page', {
     params: query
@@ -188,6 +193,10 @@ export const delJdbc = (jdbcId: string) => {
 
 export const uploadFileJdbc = (data: KeyValue) => {
   return axios.post('jdbcDbCluster/importAnalysis', data)
+}
+
+export const uploadRealJdbc = (data: KeyValue) => {
+  return axios.post('jdbcDbCluster/importCluster', data)
 }
 
 // cluster node ping
