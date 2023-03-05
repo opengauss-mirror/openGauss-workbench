@@ -323,11 +323,11 @@ public class OpsJdbcDbClusterServiceImpl extends ServiceImpl<OpsJdbcDbClusterMap
                 }
 
                 String[] col = line.split(",");
-                if (col.length != 6) {
+                if (col.length != 4) {
                     throw new OpsException("The data in row " + lineNum + " is wrong");
                 } else {
-                    Cluster thatCluster = new Cluster(col[0], col[1]);
-                    ClusterNode thatClusterNode = new ClusterNode(col[2], col[3], col[4], col[5]);
+                    Cluster thatCluster = new Cluster(col[0], null);
+                    ClusterNode thatClusterNode = new ClusterNode(null, col[1], col[2], col[3]);
 
                     Set<ClusterNode> clusterNodes = clusterListMap.get(thatCluster);
                     if (Objects.isNull(clusterNodes)) {
