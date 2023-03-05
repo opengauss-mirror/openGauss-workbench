@@ -3,6 +3,7 @@ package org.opengauss.admin.web.controller.ops;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.opengauss.admin.common.core.controller.BaseController;
 import org.opengauss.admin.common.core.domain.AjaxResult;
+import org.opengauss.admin.common.core.domain.model.ops.jdbc.JdbcDbClusterImportAnalysisVO;
 import org.opengauss.admin.common.core.domain.model.ops.jdbc.JdbcDbClusterInputDto;
 import org.opengauss.admin.common.core.domain.model.ops.jdbc.JdbcDbClusterVO;
 import org.opengauss.admin.common.core.page.TableDataInfo;
@@ -49,8 +50,8 @@ public class JdbcDbClusterController extends BaseController {
 
     @PostMapping("/importAnalysis")
     public AjaxResult importAnalysis(@RequestParam("file") MultipartFile file) {
-        List<JdbcDbClusterInputDto> jdbcDbClusterNode = opsJdbcDbClusterService.importAnalysis(file);
-        return AjaxResult.success(jdbcDbClusterNode);
+        JdbcDbClusterImportAnalysisVO analysisVO = opsJdbcDbClusterService.importAnalysis(file);
+        return AjaxResult.success(analysisVO);
     }
 
     @PostMapping("/importCluster")

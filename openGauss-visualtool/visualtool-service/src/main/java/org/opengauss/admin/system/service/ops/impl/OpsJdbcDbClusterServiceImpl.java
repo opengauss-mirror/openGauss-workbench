@@ -109,7 +109,7 @@ public class OpsJdbcDbClusterServiceImpl extends ServiceImpl<OpsJdbcDbClusterMap
     }
 
     @Override
-    public List<JdbcDbClusterInputDto> importAnalysis(MultipartFile file) {
+    public JdbcDbClusterImportAnalysisVO importAnalysis(MultipartFile file) {
         List<JdbcDbClusterInputDto> jdbcDbClusterInputDto = null;
         try {
             jdbcDbClusterInputDto = parseCSV(file);
@@ -124,7 +124,8 @@ public class OpsJdbcDbClusterServiceImpl extends ServiceImpl<OpsJdbcDbClusterMap
             throw new OpsException(msg);
         }
 
-        return analysisWrongNodes(jdbcDbClusterInputDto);
+        List<JdbcDbClusterInputDto> jdbcDbClusterInputDtos = analysisWrongNodes(jdbcDbClusterInputDto);
+        return JdbcDbClusterImportAnalysisVO.of(jdbcDbClusterInputDto,jdbcDbClusterInputDtos);
     }
 
     private List<JdbcDbClusterInputDto> analysisWrongNodes(List<JdbcDbClusterInputDto> jdbcDbClusterInputDto) {
@@ -326,7 +327,7 @@ public class OpsJdbcDbClusterServiceImpl extends ServiceImpl<OpsJdbcDbClusterMap
                     throw new OpsException("The data in row " + lineNum + " is wrong");
                 } else {
                     Cluster thatCluster = new Cluster(col[0], col[1]);
-                    ClusterNode thatClusterNode = new ClusterNode(col[2], col[3], col[3], col[4]);
+                    ClusterNode thatClusterNode = new ClusterNode(col[2], col[3], col[4], col[5]);
 
                     Set<ClusterNode> clusterNodes = clusterListMap.get(thatCluster);
                     if (Objects.isNull(clusterNodes)) {
@@ -356,6 +357,18 @@ public class OpsJdbcDbClusterServiceImpl extends ServiceImpl<OpsJdbcDbClusterMap
 
         if (CollUtil.isEmpty(clusterList)) {
             throw new OpsException("The cluster content read from the file is empty");
+        }
+
+        for (JdbcDbClusterInputDto inputDto : clusterList) {
+            DeployTypeEnum deployType = inputDto.getDeployType();
+            if (Objects.isNull(deployType)){
+                List<JdbcDbClusterNodeInputDto> nodes = inputDto.getNodes();
+                if (CollUtil.isEmpty(nodes) || nodes.size()<2){
+                    inputDto.setDeployType(DeployTypeEnum.SINGLE_NODE);
+                }else {
+                    inputDto.setDeployType(DeployTypeEnum.CLUSTER);
+                }
+            }
         }
         return clusterList;
     }
