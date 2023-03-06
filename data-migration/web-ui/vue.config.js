@@ -5,6 +5,7 @@ const resolve = dir => path.join(__dirname, './', dir)
 const port = process.env.port || process.env.npm_config_port || 80
 
 module.exports = defineConfig({
+  productionSourceMap: false,
   runtimeCompiler: true,
   transpileDependencies: false,
   lintOnSave: false,

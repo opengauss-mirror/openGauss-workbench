@@ -283,7 +283,8 @@ const getTaskDetail = () => {
   taskDetail(id).then(res => {
     task.value = res.data.task
     const taskInfo = res.data.task
-    const subTaskCount = res.data.counts
+    const offlineCounts = res.data.offlineCounts
+    const onlineCounts = res.data.onlineCounts
     const hosts = res.data.hosts
     descData.value = [
       {
@@ -292,7 +293,7 @@ const getTaskDetail = () => {
       },
       {
         label: '子任务数量：',
-        value: subTaskCount['1'] + subTaskCount['2']
+        value: offlineCounts['total'] + onlineCounts['total']
       },
       {
         label: '分配执行机器：',
@@ -304,7 +305,7 @@ const getTaskDetail = () => {
       },
       {
         label: '子任务数量（离线模式）：',
-        value: subTaskCount['1'],
+        value: `总数：${offlineCounts['total']}，未启动：${offlineCounts['notRunCount']}，执行中：${offlineCounts['runningCount']}，迁移完成：${offlineCounts['finishCount']}，迁移失败：${offlineCounts['errorCount']}`,
         span: 2
       },
       {
@@ -313,7 +314,7 @@ const getTaskDetail = () => {
       },
       {
         label: '子任务数量（在线模式）：',
-        value: subTaskCount['2'],
+        value: `总数：${onlineCounts['total']}，未启动：${onlineCounts['notRunCount']}，执行中：${onlineCounts['runningCount']}，迁移完成：${onlineCounts['finishCount']}，迁移失败：${onlineCounts['errorCount']}`,
         span: 2
       }
     ]
