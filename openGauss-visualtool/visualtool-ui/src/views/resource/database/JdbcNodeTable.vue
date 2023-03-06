@@ -3,8 +3,9 @@
     <div v-for="(node, index) in data.nodeList" :key="index">
       <div class="node-detail-c">
         <div class="flex-col-start mr">
-          <a-tag color="green" bordered v-if="node.os">{{ node.os }}</a-tag>
-          <a-tag class="cursor-c mb-s" bordered @click="handleGetOs(node.ip)">{{ $t('database.JdbcNodeTable.5oxhv6qcm6w0')
+          <a-tag class="mb-s" color="green" bordered v-if="node.os">{{ node.os }}</a-tag>
+          <a-tag class="cursor-c mb-s" bordered v-else @click="handleGetOs(node.ip)">{{
+            $t('database.JdbcNodeTable.5oxhv6qcm6w0')
           }}</a-tag>
           <div class="flex-row mb-s">
             <div class="mr-s" style="width: 160px;">{{ $t('database.JdbcNodeTable.else1') }}: {{ node.ip }}</div>
@@ -13,8 +14,7 @@
           <div>{{ $t('database.JdbcNodeTable.else2') }}: {{ node.port }}</div>
         </div>
         <div class="flex-row mr">
-          <div class="node-role mr">{{ node.role === 'MASTER' ? $t('database.JdbcNodeTable.5oxhv6qcnak0') :
-            $t('database.JdbcNodeTable.5oxhv6qcnnk0') }}</div>
+          <div class="node-role mr">{{ getNodeRole(node.role) }}</div>
           <div :class="'node-state-c ' + getNodeStateColor(node.state)"></div>
         </div>
         <div class="flex-col mr">
@@ -51,6 +51,8 @@ import Socket from '@/utils/websocket'
 import { jdbcNodeMonitor } from '@/api/ops'
 import HostPwdDlg from './HostPwdDlg.vue'
 import HostTerminal from './HostTerminal.vue'
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
 const data = reactive<KeyValue>({
   socketArr: [],
   nodeList: []
@@ -96,6 +98,16 @@ const getNodeStateColor = (state: number) => {
       return 'check-pass'
     case 0:
       return 'check-error'
+  }
+}
+
+const getNodeRole = (role?: string) => {
+  if (!role) {
+    return t('database.JdbcNodeTable.else4')
+  } else if (role === 'MASTER') {
+    return t('database.JdbcNodeTable.5oxhv6qcnak0')
+  } else {
+    return t('database.JdbcNodeTable.5oxhv6qcnnk0')
   }
 }
 
@@ -185,8 +197,8 @@ const handleFinish = () => {
   }
 
   .node-role {
-    width: 50px;
     height: 40px;
+    padding: 10px;
     display: flex;
     justify-content: center;
     align-items: center;

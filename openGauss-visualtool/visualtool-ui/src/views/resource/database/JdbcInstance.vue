@@ -127,7 +127,21 @@ const formRules = computed(() => {
         }
       }
     ],
-    password: [{ required: true, message: t('database.JdbcInstance.5oxhtcboc2c0') }]
+    password: [
+      { required: true, message: t('database.JdbcInstance.5oxhtcboc2c0') },
+      {
+        validator: (value: any, cb: any) => {
+          return new Promise(resolve => {
+            if (!value.trim()) {
+              cb(t('database.JdbcInstance.5oxhtcbobtc0'))
+              resolve(false)
+            } else {
+              resolve(true)
+            }
+          })
+        }
+      }
+    ]
   }
 })
 
