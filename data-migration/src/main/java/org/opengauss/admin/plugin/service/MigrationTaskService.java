@@ -24,6 +24,8 @@ public interface MigrationTaskService extends IService<MigrationTask> {
 
     Map<String, Object> getTaskDetailById(Integer taskId);
 
+    Map<String, Object> getSingleTaskStatusAndProcessByProtal(MigrationTask t);
+
     Integer countRunningByTargetDb(String targetDb);
 
     Integer countRunningByHostId(String hostId);

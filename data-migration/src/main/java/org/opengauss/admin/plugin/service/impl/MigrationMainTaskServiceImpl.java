@@ -31,6 +31,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 /**
@@ -107,6 +108,54 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
         return list(query);
     }
 
+    private Map<String, Integer> calculateTaskCount(List<MigrationTask> tasks, Integer modelId) {
+        Map<String, Integer> countMap = new HashMap<>();
+        countMap.put("total", tasks.size());
+        long notRunCount = tasks.stream().filter(t -> {
+            return t.getExecStatus().equals(TaskStatus.NOT_RUN.getCode()) ||
+                    t.getExecStatus().equals(TaskStatus.WAIT_RESOURCE.getCode());
+        }).count();
+
+        Predicate<MigrationTask> runningFilter = t -> {
+         return t.getExecStatus().equals(TaskStatus.FULL_START.getCode()) ||
+                    t.getExecStatus().equals(TaskStatus.FULL_RUNNING.getCode()) ||
+                    t.getExecStatus().equals(TaskStatus.FULL_FINISH.getCode()) ||
+                    t.getExecStatus().equals(TaskStatus.FULL_CHECK_START.getCode()) ||
+                    t.getExecStatus().equals(TaskStatus.FULL_CHECKING.getCode());
+        };
+        if (modelId.equals(2)) {
+            runningFilter = t -> {
+                return t.getExecStatus().equals(TaskStatus.FULL_START.getCode()) ||
+                        t.getExecStatus().equals(TaskStatus.FULL_RUNNING.getCode()) ||
+                        t.getExecStatus().equals(TaskStatus.FULL_FINISH.getCode()) ||
+                        t.getExecStatus().equals(TaskStatus.FULL_CHECK_START.getCode()) ||
+                        t.getExecStatus().equals(TaskStatus.FULL_CHECKING.getCode()) ||
+                        t.getExecStatus().equals(TaskStatus.FULL_CHECK_FINISH.getCode()) ||
+                        t.getExecStatus().equals(TaskStatus.INCREMENTAL_START.getCode()) ||
+                        t.getExecStatus().equals(TaskStatus.INCREMENTAL_RUNNING.getCode()) ||
+                        t.getExecStatus().equals(TaskStatus.INCREMENTAL_STOP.getCode()) ||
+                        t.getExecStatus().equals(TaskStatus.REVERSE_START.getCode()) ||
+                        t.getExecStatus().equals(TaskStatus.REVERSE_RUNNING.getCode());
+            };
+        }
+        long runningCount = tasks.stream().filter(runningFilter).count();
+        Predicate<MigrationTask> finishFilter = t -> {
+            return t.getExecStatus().equals(TaskStatus.MIGRATION_FINISH.getCode());
+        };
+        if (modelId.equals(1)) {
+            finishFilter = t -> {
+                return t.getExecStatus().equals(TaskStatus.MIGRATION_FINISH.getCode()) ||
+                        t.getExecStatus().equals(TaskStatus.FULL_CHECK_FINISH.getCode());
+            };
+        }
+        long finishCount = tasks.stream().filter(finishFilter).count();
+        long errorCount = tasks.stream().filter(t -> t.getExecStatus().equals(TaskStatus.MIGRATION_ERROR.getCode())).count();
+        countMap.put("notRunCount", Math.toIntExact(notRunCount));
+        countMap.put("runningCount", Math.toIntExact(runningCount));
+        countMap.put("finishCount", Math.toIntExact(finishCount));
+        countMap.put("errorCount", Math.toIntExact(errorCount));
+        return countMap;
+    }
 
     /**
      * Get task detail
@@ -118,13 +167,11 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
         Map<String, Object> result = new HashMap<>();
         MigrationMainTask task = this.getById(taskId);
         List<MigrationTask> tasks = migrationTaskService.listByMainTaskId(taskId);
-        Map<Integer, Long> countMap = new HashMap<>();
-        countMap.put(1, 0l);
-        countMap.put(2, 0l);
-        Map<Integer, Long> countResult = tasks.stream().collect(Collectors.groupingBy(MigrationTask::getMigrationModelId, Collectors.counting()));
-        countMap.putAll(countResult);
+        List<MigrationTask> offlineTasks = tasks.stream().filter(t -> t.getMigrationModelId().equals(1)).collect(Collectors.toList());
+        List<MigrationTask> onlineTasks = tasks.stream().filter(t -> t.getMigrationModelId().equals(2)).collect(Collectors.toList());
         List<MigrationTaskHostRef> hosts = migrationTaskHostRefService.listByMainTaskId(taskId);
-        result.put("counts", countMap);
+        result.put("offlineCounts", calculateTaskCount(offlineTasks, 1));
+        result.put("onlineCounts", calculateTaskCount(onlineTasks, 2));
         result.put("hosts", hosts);
         result.put("task", task);
         List<MigrationTaskGlobalParam> globalParams = migrationTaskGlobalParamService.selectByMainTaskId(taskId);
@@ -466,70 +513,7 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
         if(runningTasks.size() > 0) {
             taskRefreshRecord.put(mainTaskId, DateUtil.date().getTime());
             runningTasks.forEach(t -> {
-                String portalStatus = PortalHandle.getPortalStatus(t.getRunHost(), t.getRunPort(), t.getRunUser(), t.getRunPass(), t, portalHome);
-                log.info("get portal stauts content: {}, subTaskId: {}", portalStatus, t.getId());
-                if (StringUtils.isNotEmpty(portalStatus)) {
-                    List<Map<String,Object>> statusList = (List<Map<String, Object>>) JSON.parse(portalStatus);
-                    List<Map<String, Object>> statusResultList = statusList.stream().sorted(Comparator.comparing(m -> MapUtil.getLong(m,"timestamp"))).collect(Collectors.toList());
-                    Map<String, Object> lastStatus = statusResultList.get(statusResultList.size() - 1);
-                    Integer state = MapUtil.getInt(lastStatus, "status");
-                    MigrationTask update = MigrationTask.builder().id(t.getId()).build();
-                    migrationTaskStatusRecordService.saveTaskRecord(t.getId(), statusResultList);
-                    BigDecimal migrationProcess = new BigDecimal(0);
-                    if (TaskStatus.FULL_START.getCode().equals(state) || TaskStatus.FULL_RUNNING.getCode().equals(state) ||
-                            TaskStatus.FULL_FINISH.getCode().equals(state) || TaskStatus.FULL_CHECK_START.getCode().equals(state) ||
-                            TaskStatus.FULL_CHECKING.getCode().equals(state) || TaskStatus.FULL_CHECK_FINISH.getCode().equals(state)) {
-                        String portalProcess = PortalHandle.getPortalFullProcess(t.getRunHost(), t.getRunPort(), t.getRunUser(), t.getRunPass(), t, portalHome);
-                        log.info("get portal full process content: {}, subTaskId: {}", portalProcess, t.getId());
-                        migrationTaskExecResultDetailService.saveOrUpdateByTaskId(t.getId(), portalProcess.trim(), 1);
-                        migrationProcess = calculateFullMigrationProgress(portalProcess);
-                    } else if (TaskStatus.INCREMENTAL_START.getCode().equals(state) || TaskStatus.INCREMENTAL_RUNNING.getCode().equals(state)) {
-                        String portalProcess = PortalHandle.getPortalIncrementalProcess(t.getRunHost(), t.getRunPort(), t.getRunUser(), t.getRunPass(), t, portalHome);
-                        log.info("get portal incremental process content: {}, subTaskId: {}", portalProcess, t.getId());
-                        migrationTaskExecResultDetailService.saveOrUpdateByTaskId(t.getId(), portalProcess.trim(), 2);
-                        if(t.getMigrationProcess() == null) {
-                            String portalFullProcess = PortalHandle.getPortalFullProcess(t.getRunHost(), t.getRunPort(), t.getRunUser(), t.getRunPass(), t, portalHome);
-                            log.info("get portal full process content: {}, subTaskId: {}", portalFullProcess, t.getId());
-                            migrationTaskExecResultDetailService.saveOrUpdateByTaskId(t.getId(), portalFullProcess.trim(), 1);
-                            migrationProcess = calculateFullMigrationProgress(portalFullProcess);
-                            if (migrationProcess.intValue() > 0) {
-                                migrationProcess = new BigDecimal(0.85f).divide(migrationProcess, 4, BigDecimal.ROUND_HALF_UP);
-                            }
-                        } else {
-                            if (Float.parseFloat(t.getMigrationProcess()) > 0) {
-                                migrationProcess = new BigDecimal(0.85f).divide(new BigDecimal(t.getMigrationProcess()), 4, BigDecimal.ROUND_HALF_UP);
-                            }
-                        }
-                    } else if (TaskStatus.REVERSE_START.getCode().equals(state) || TaskStatus.REVERSE_RUNNING.getCode().equals(state)) {
-                        String portalProcess = PortalHandle.getPortalReverseProcess(t.getRunHost(), t.getRunPort(), t.getRunUser(), t.getRunPass(), t, portalHome);
-                        log.info("get portal reverse process content: {}, subTaskId: {}", portalProcess, t.getId());
-                        migrationTaskExecResultDetailService.saveOrUpdateByTaskId(t.getId(), portalProcess.trim(), 3);
-                        if(t.getMigrationProcess() == null) {
-                            String portalFullProcess = PortalHandle.getPortalFullProcess(t.getRunHost(), t.getRunPort(), t.getRunUser(), t.getRunPass(), t, portalHome);
-                            log.info("get portal full process content: {}, subTaskId: {}", portalFullProcess, t.getId());
-                            migrationTaskExecResultDetailService.saveOrUpdateByTaskId(t.getId(), portalFullProcess.trim(), 1);
-                            migrationProcess = calculateFullMigrationProgress(portalFullProcess);
-                            if (migrationProcess.intValue() > 0) {
-                                migrationProcess = new BigDecimal(0.95f).divide(migrationProcess, 4, BigDecimal.ROUND_HALF_UP);
-                            }
-                        } else {
-                            if (Float.parseFloat(t.getMigrationProcess()) > 0) {
-                                migrationProcess = new BigDecimal(0.95f).divide(new BigDecimal(t.getMigrationProcess()), 4, BigDecimal.ROUND_HALF_UP);
-                            }
-                        }
-                    }
-                    update.setExecStatus(state);
-                    update.setMigrationProcess(migrationProcess.setScale(2, RoundingMode.UP).toPlainString());
-                    if (TaskStatus.FULL_CHECK_FINISH.getCode().equals(state) && t.getMigrationModelId().equals(1)) {
-                        update.setExecStatus(TaskStatus.MIGRATION_FINISH.getCode());
-                        update.setFinishTime(new Date());
-                    }
-                    if (TaskStatus.MIGRATION_ERROR.getCode().equals(state)) {
-                        String msg = MapUtil.getStr(lastStatus, "msg");
-                        update.setStatusDesc(msg);
-                    }
-                    migrationTaskService.updateById(update);
-                }
+                migrationTaskService.getSingleTaskStatusAndProcessByProtal(t);
             });
             //refresh mainTask
             MigrationMainTask task = this.getById(mainTaskId);
@@ -537,34 +521,7 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
         }
     }
 
-    /**
-     * Calculate the progress bar of the full migration subtask
-     * @param portalProcess
-     * @return
-     */
-    private BigDecimal calculateFullMigrationProgress(String portalProcess) {
-        Map<String, Object> processMap = JSON.parseObject(portalProcess);
-        List<Map<String, Object>> tables = (List<Map<String, Object>>) processMap.get("table");
-        List<Map<String, Object>> views = (List<Map<String, Object>>) processMap.get("view");
-        List<Map<String, Object>> funcs = (List<Map<String, Object>>) processMap.get("function");
-        List<Map<String, Object>> triggers = (List<Map<String, Object>>) processMap.get("trigger");
-        List<Map<String, Object>> produces = (List<Map<String, Object>>) processMap.get("procedure");
 
-        Integer total = tables.size() * 10 + views.size() + funcs.size() + triggers.size() + produces.size();
-
-        int tableFinishCount = Math.toIntExact(tables.stream().filter(m -> MapUtil.getInt(m, "status").equals(3)).count());
-        int viewFinishCount = Math.toIntExact(views.stream().filter(m -> MapUtil.getInt(m, "status").equals(3)).count());
-        int funcsFinishCount = Math.toIntExact(funcs.stream().filter(m -> MapUtil.getInt(m, "status").equals(3)).count());
-        int triggersFinishCount = Math.toIntExact(triggers.stream().filter(m -> MapUtil.getInt(m, "status").equals(3)).count());
-        int producesFinishCount = Math.toIntExact(produces.stream().filter(m -> MapUtil.getInt(m, "status").equals(3)).count());
-
-        Integer totalFinishCount = tableFinishCount * 10 + viewFinishCount + funcsFinishCount + triggersFinishCount + producesFinishCount;
-        BigDecimal result = new BigDecimal(0);
-        if (totalFinishCount > 0 && total > 0) {
-            result = new BigDecimal((float) totalFinishCount / total);
-        }
-        return result;
-    }
 
     /**
      * Update main task status and progress bar based on subtask status
