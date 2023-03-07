@@ -188,15 +188,20 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
 
         if (Objects.isNull(root)) {
             root = hostBody.toRootUser(hostId);
+            hostUserService.save(root);
+        }else {
+            if (hostBody.getIsRemember()){
+                root.setPassword(hostBody.getPassword());
+                hostUserService.updateById(root);
+            }else {
+                hostUserService.cleanPassword(root.getHostUserId());
+            }
         }
 
         Session session = jschUtil.getSession(hostBody.getPublicIp(), hostBody.getPort(), "root", encryptionUtils.decrypt(hostBody.getPassword())).orElseThrow(() -> new OpsException("Failed to establish a session with the host"));
         OpsHostEntity newHostEntity = hostBody.toHostEntity(getHostName(session),getOS(session),getCpuArch(session));
         newHostEntity.setHostId(hostId);
         updateById(newHostEntity);
-
-        root.setPassword(hostBody.getPassword());
-        hostUserService.saveOrUpdate(root);
 
         return true;
     }
@@ -233,6 +238,35 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
 
         List<OpsHostEntity> hostList = list(queryWrapper);
         return hostList.stream().collect(Collectors.toMap(OpsHostEntity::getPublicIp,OpsHostEntity::getOs));
+    }
+
+    @Override
+    public List<OpsHostEntity> listAll(String azId) {
+        LambdaQueryWrapper<OpsHostEntity> queryWrapper =
+                Wrappers.lambdaQuery(OpsHostEntity.class)
+                        .eq(StrUtil.isNotEmpty(azId), OpsHostEntity::getAzId, azId);
+
+        List<OpsHostEntity> list = list(queryWrapper);
+        populateIsRemember(list);
+        return list;
+    }
+
+    private void populateIsRemember(List<OpsHostEntity> list) {
+        final List<String> hostIds = list.stream().map(OpsHostEntity::getHostId).collect(Collectors.toList());
+        if (CollUtil.isNotEmpty(hostIds)){
+            final List<OpsHostUserEntity> opsHostUserEntities = hostUserService.listHostUserByHostIdList(hostIds);
+            List<String> isRememberHostIds = new ArrayList<>();
+            for (OpsHostUserEntity opsHostUserEntity : opsHostUserEntities) {
+                final String username = opsHostUserEntity.getUsername();
+                if ("root".equalsIgnoreCase(username) && StrUtil.isNotEmpty(opsHostUserEntity.getPassword())){
+                    isRememberHostIds.add(opsHostUserEntity.getHostId());
+                }
+            }
+
+            for (OpsHostEntity opsHostEntity : list) {
+                opsHostEntity.setIsRemember(isRememberHostIds.contains(opsHostEntity.getHostId()));
+            }
+        }
     }
 
     private OpsHostEntity getByPublicIp(String publicIp) {

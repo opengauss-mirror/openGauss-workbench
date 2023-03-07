@@ -20,6 +20,7 @@ public class HostBody {
     @NotEmpty(message = "The Intranet IP address cannot be empty")
     private String privateIp;
     private String password;
+    private Boolean isRemember;
     @NotEmpty(message = "Please select AZ")
     private String azId;
     private String remark;
@@ -42,6 +43,9 @@ public class HostBody {
         OpsHostUserEntity hostUserEntity = new OpsHostUserEntity();
         hostUserEntity.setUsername("root");
         hostUserEntity.setHostId(hostId);
+        if (isRemember){
+            hostUserEntity.setPassword(password);
+        }
         return hostUserEntity;
     }
 }

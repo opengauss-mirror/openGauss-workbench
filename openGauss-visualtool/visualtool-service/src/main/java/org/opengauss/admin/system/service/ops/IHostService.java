@@ -8,6 +8,7 @@ import org.opengauss.admin.common.core.domain.model.ops.HostBody;
 import org.opengauss.admin.common.core.domain.model.ops.host.OpsHostVO;
 import org.opengauss.admin.common.core.domain.model.ops.host.SSHBody;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -62,4 +63,6 @@ public interface IHostService extends IService<OpsHostEntity> {
     void ssh(SSHBody sshBody);
 
     Map<String, String> mapOsByIps(Set<String> ipSet);
+
+    List<OpsHostEntity> listAll(String azId);
 }
