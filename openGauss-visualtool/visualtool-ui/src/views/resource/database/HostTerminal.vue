@@ -2,7 +2,7 @@
   <a-modal :mask-closable="false" :visible="data.show" :title="data.title" :render-to-body="false"
     :unmount-on-close="true" :modal-style="{ width: '850px', height: '700px' }" :footer="false" @cancel="close">
     <div class="flex-col-start">
-      <label class="mb-s">IP地址: {{ data.formData.ip }}</label>
+      <label class="mb-s">{{ $t('database.HostTerminal.else1') }} - {{ data.formData.ip }}</label>
       <div class="xterm-c">
         <div id="xterm" class="xterm"></div>
       </div>
@@ -21,7 +21,8 @@ import { Terminal } from 'xterm'
 import { FitAddon } from 'xterm-addon-fit'
 import { AttachAddon } from 'xterm-addon-attach'
 import 'xterm/css/xterm.css'
-
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
 const data = reactive<KeyValue>({
   show: false,
   loading: false,
@@ -110,7 +111,7 @@ const getTermObj = (): Terminal => {
 
 const open = (sshData: KeyValue) => {
   data.show = true
-  data.title = '终端'
+  data.title = t('database.HostTerminal.5oxhoh5r6ls0')
   Object.assign(data.formData, {
     ip: sshData.ip,
     sshPort: sshData.sshPort,

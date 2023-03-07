@@ -1,18 +1,20 @@
 <template>
   <a-form :model="form" ref="formRef" auto-label-width :rules="formRules">
-    <a-form-item field="ip" label="IP地址" validate-trigger="blur">
-      <a-input v-model="form.ip" placeholder="请输入IP地址" />
+    <a-form-item field="ip" :label="$t('database.JdbcInstance.5oxhtcbo8ac0')" validate-trigger="change">
+      <a-select v-model="form.ip" :placeholder="$t('database.JdbcInstance.5oxhtcbo9fg0')" allow-create>
+        <a-option v-for="item in props.hostList" :key="item.value" :label="item.label" :value="item.value"></a-option>
+      </a-select>
     </a-form-item>
-    <a-form-item field="port" label="端口" validate-trigger="blur">
-      <a-input-number v-model="form.port" placeholder="请输入端口号" />
+    <a-form-item field="port" :label="$t('database.JdbcInstance.5oxhtcbo9ps0')" validate-trigger="blur">
+      <a-input-number v-model="form.port" :placeholder="$t('database.JdbcInstance.5oxhtcbo9xc0')" />
     </a-form-item>
-    <a-form-item field="username" label="用户名" validate-trigger="blur">
-      <a-input v-model="form.username" placeholder="请输入用户名" />
+    <a-form-item field="username" :label="$t('database.JdbcInstance.5oxhtcboa240')" validate-trigger="blur">
+      <a-input v-model="form.username" :placeholder="$t('database.JdbcInstance.5oxhtcboa7c0')" />
     </a-form-item>
-    <a-form-item field="password" label="密码" validate-trigger="blur">
-      <a-input-password v-model="form.password" placeholder="请输入密码" allow-clear />
+    <a-form-item field="password" :label="$t('database.JdbcInstance.5oxhtcboac00')" validate-trigger="blur">
+      <a-input-password v-model="form.password" :placeholder="$t('database.JdbcInstance.5oxhtcboags0')" allow-clear />
     </a-form-item>
-    <a-form-item label="连接扩展属性">
+    <a-form-item :label="$t('database.JdbcInstance.5oxhtcboap00')">
       <a-table class="full-w" :data="form.props" :columns="columns" size="mini" :pagination="false">
         <template #name="{ rowIndex }">
           <a-input size="mini" v-model="form.props[rowIndex].name" />
@@ -22,13 +24,14 @@
         </template>
         <template #operation="{ rowIndex }">
           <div class="flex-row-start">
-            <a-link class="mr-s" @click="handleUrlAdd(rowIndex)">新增</a-link>
-            <a-link v-if="rowIndex > 0" @click="handleUrlDel(rowIndex)">删除</a-link>
+            <a-link class="mr-s" @click="handleUrlAdd(rowIndex)">{{ $t('database.JdbcInstance.5oxhtcboatc0') }}</a-link>
+            <a-link v-if="rowIndex > 0" @click="handleUrlDel(rowIndex)">{{ $t('database.JdbcInstance.5oxhtcboaxc0')
+            }}</a-link>
           </div>
         </template>
       </a-table>
     </a-form-item>
-    <a-form-item field="url" label="连接地址" validate-trigger="blur">
+    <a-form-item field="url" :label="$t('database.JdbcInstance.5oxhtcbob1s0')" validate-trigger="blur">
       <div class="flex-row" style="width: 100%;">
         {{ jdbcUrl }}
       </div>
@@ -41,7 +44,8 @@ import { KeyValue } from '@/types/global'
 import { FormInstance } from '@arco-design/web-vue/es/form'
 import { PropType, ref, computed, defineProps, watch } from 'vue'
 import { jdbcNodePing } from '@/api/ops'
-
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
 enum jdbcStatusEnum {
   unTest = -1,
   success = 1,
@@ -50,6 +54,10 @@ enum jdbcStatusEnum {
 
 const props = defineProps({
   formData: {
+    type: Object as PropType<KeyValue>,
+    required: true
+  },
+  hostList: {
     type: Object as PropType<KeyValue>,
     required: true
   }
@@ -63,15 +71,15 @@ const form = computed({
 })
 
 const columns = computed(() => [
-  { title: '扩展名', dataIndex: 'name', slotName: 'name' },
-  { title: '扩展值', dataIndex: 'value', slotName: 'value' },
-  { title: '操作', slotName: 'operation', width: 130 }
+  { title: t('database.JdbcInstance.5oxhtcbob640'), dataIndex: 'name', slotName: 'name' },
+  { title: t('database.JdbcInstance.5oxhtcbobac0'), dataIndex: 'value', slotName: 'value' },
+  { title: t('database.JdbcInstance.5oxhtcbobe80'), slotName: 'operation', width: 130 }
 ])
 
 const formRules = computed(() => {
   return {
     ip: [
-      { required: true, message: '请输入IP地址' },
+      { required: true, message: t('database.JdbcInstance.5oxhtcbobhs0') },
       {
         validator: (value: any, cb: any) => {
           return new Promise(resolve => {
@@ -80,7 +88,7 @@ const formRules = computed(() => {
             if (re.test(value)) {
               resolve(true)
             } else {
-              cb('请输入正确的IP地址')
+              cb(t('database.JdbcInstance.5oxhtcboblw0'))
               resolve(false)
             }
           })
@@ -88,7 +96,7 @@ const formRules = computed(() => {
       }
     ],
     port: [
-      { required: true, message: '请输入端口号' },
+      { required: true, message: t('database.JdbcInstance.5oxhtcbo9xc0') },
       {
         validator: (value: any, cb: any) => {
           return new Promise(resolve => {
@@ -97,7 +105,7 @@ const formRules = computed(() => {
             if (re.test(value)) {
               resolve(true)
             } else {
-              cb('请输入正确的端口号')
+              cb(t('database.JdbcInstance.5oxhtcbobpk0'))
               resolve(false)
             }
           })
@@ -105,12 +113,12 @@ const formRules = computed(() => {
       }
     ],
     username: [
-      { required: true, message: '请输入用户名' },
+      { required: true, message: t('database.JdbcInstance.5oxhtcboa7c0') },
       {
         validator: (value: any, cb: any) => {
           return new Promise(resolve => {
             if (!value.trim()) {
-              cb('不能为纯空格')
+              cb(t('database.JdbcInstance.5oxhtcbobtc0'))
               resolve(false)
             } else {
               resolve(true)
@@ -119,14 +127,23 @@ const formRules = computed(() => {
         }
       }
     ],
-    password: [{ required: true, message: '请输入用户密码' }]
+    password: [
+      { required: true, message: t('database.JdbcInstance.5oxhtcboc2c0') },
+      {
+        validator: (value: any, cb: any) => {
+          return new Promise(resolve => {
+            if (!value.trim()) {
+              cb(t('database.JdbcInstance.5oxhtcbobtc0'))
+              resolve(false)
+            } else {
+              resolve(true)
+            }
+          })
+        }
+      }
+    ]
   }
 })
-
-// const initData = () => {
-//   formRef.value?.clearValidate()
-//   formRef.value?.resetFields()
-// }
 
 const handleUrlAdd = (index: number) => {
   form.value.props?.splice(index + 1, 0, {

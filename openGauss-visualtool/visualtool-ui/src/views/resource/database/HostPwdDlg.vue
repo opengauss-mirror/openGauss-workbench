@@ -3,17 +3,21 @@
     :ok-loading="data.loading" :modal-style="{ width: '450px' }" @ok="handleOk" @cancel="close">
     <a-form :model="data.formData" :rules="formRules" ref="formRef" :label-col="{ style: { width: '100px' } }"
       auto-label-width>
-      <a-form-item label="IP地址">
+      <a-form-item :label="$t('database.HostPwdDlg.5oxhni610s00')">
         <label>{{ data.formData.ip }}</label>
       </a-form-item>
-      <a-form-item field="sshPort" label="端口号" validate-trigger="blur">
-        <a-input-number v-model="data.formData.sshPort" placeholder="请输入SSH端口号" />
+      <a-form-item field="sshPort" :label="$t('database.HostPwdDlg.5oxhni611qo0')" validate-trigger="blur">
+        <a-input-number v-model="data.formData.sshPort" :placeholder="$t('database.HostPwdDlg.5oxhni6126o0')" />
       </a-form-item>
-      <a-form-item field="sshUsername" label="用户名" validate-trigger="blur">
-        <a-input v-model="data.formData.sshUsername" placeholder="请输入用户名" />
+      <a-form-item v-if="data.type === 'terminal'" field="sshUsername" :label="$t('database.HostPwdDlg.5oxhni612g00')"
+        validate-trigger="blur">
+        <a-input v-model="data.formData.sshUsername" :placeholder="$t('database.HostPwdDlg.5oxhni612mo0')" />
       </a-form-item>
-      <a-form-item field="sshPassword" label="密码" validate-trigger="blur">
-        <a-input-password v-model="data.formData.sshPassword" placeholder="请输入用户密码" allow-clear />
+      <a-form-item field="sshPassword"
+        :label="data.type === 'terminal' ? $t('database.HostPwdDlg.5oxhni612vk0') : $t('database.HostPwdDlg.5oxhni6132k0')"
+        validate-trigger="blur">
+        <a-input-password v-model="data.formData.sshPassword" :placeholder="$t('database.HostPwdDlg.5oxhni6138s0')"
+          allow-clear />
       </a-form-item>
     </a-form>
   </a-modal>
@@ -25,9 +29,15 @@ import { nextTick, reactive, ref, computed } from 'vue'
 import { KeyValue } from '@/types/global'
 import { FormInstance } from '@arco-design/web-vue/es/form'
 import { encryptPassword } from '@/utils/jsencrypt'
+import { addHost } from '@/api/ops'
+import { Message } from '@arco-design/web-vue'
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
 const data = reactive<KeyValue>({
   show: false,
   loading: false,
+  // os(get host os)  terminal(create terminal)
+  type: 'terminal',
   formData: {
     ip: '',
     sshPort: 22,
@@ -39,7 +49,7 @@ const data = reactive<KeyValue>({
 const formRules = computed(() => {
   return {
     sshPort: [
-      { required: true, message: '请输入SSH端口号' },
+      { required: true, message: t('database.HostPwdDlg.5oxhni6126o0') },
       {
         validator: (value: any, cb: any) => {
           return new Promise(resolve => {
@@ -48,7 +58,7 @@ const formRules = computed(() => {
             if (re.test(value)) {
               resolve(true)
             } else {
-              cb('请输入正确的端口号')
+              cb(t('database.HostPwdDlg.5oxhni613ik0'))
               resolve(false)
             }
           })
@@ -56,12 +66,12 @@ const formRules = computed(() => {
       }
     ],
     sshUsername: [
-      { required: true, message: '请输入用户名' },
+      { required: true, message: t('database.HostPwdDlg.5oxhni612mo0') },
       {
         validator: (value: any, cb: any) => {
           return new Promise(resolve => {
             if (!value.trim()) {
-              cb('不能为纯空格')
+              cb(t('database.HostPwdDlg.5oxhni613ow0'))
               resolve(false)
             } else {
               resolve(true)
@@ -70,7 +80,7 @@ const formRules = computed(() => {
         }
       }
     ],
-    sshPassword: [{ required: true, message: '请输入用户密码' }]
+    sshPassword: [{ required: true, message: t('database.HostPwdDlg.5oxhni6138s0') }]
   }
 })
 
@@ -89,21 +99,41 @@ const handleOk = () => {
   formRef.value?.validate().then(async result => {
     if (!result) {
       const encryptPwd = await encryptPassword(data.formData.sshPassword)
-      emits(`finish`, {
-        ip: data.formData.ip,
-        sshPort: 22,
-        sshUsername: data.formData.sshUsername,
-        sshPassword: encryptPwd
-      })
-      close()
+      if (data.type === 'getOs') {
+        data.loading = true
+        // save host
+        const param = {
+          privateIp: data.formData.ip,
+          publicIp: data.formData.ip,
+          port: data.formData.sshPort,
+          password: encryptPwd
+        }
+        addHost(param).then((res: KeyValue) => {
+          if (Number(res.code) === 200) {
+            Message.success('Successful detection')
+            close()
+          }
+        }).finally(() => {
+          data.loading = false
+        })
+      } else {
+        emits(`finish`, {
+          ip: data.formData.ip,
+          sshPort: data.formData.sshPort,
+          sshUsername: data.formData.sshUsername,
+          sshPassword: encryptPwd
+        })
+        close()
+      }
     }
   })
 }
 
-const open = (ip: string) => {
+const open = (ip: string, type: string) => {
   data.show = true
-  data.title = 'SSH连接信息'
+  data.title = t('database.HostPwdDlg.5oxhni613us0')
   data.formData.ip = ip
+  data.type = type
 }
 
 defineExpose({

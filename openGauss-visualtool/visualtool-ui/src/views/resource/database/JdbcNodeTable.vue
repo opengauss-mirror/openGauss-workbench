@@ -3,23 +3,23 @@
     <div v-for="(node, index) in data.nodeList" :key="index">
       <div class="node-detail-c">
         <div class="flex-col-start mr">
-          <a-tag color="green" bordered v-if="node.os">{{ node.os }}</a-tag>
-          <a-tag class="mb-s" bordered>未检测到系统</a-tag>
+          <a-tag class="mb-s" color="green" bordered v-if="node.os">{{ node.os }}</a-tag>
+          <a-tag class="cursor-c mb-s" bordered v-else @click="handleGetOs(node.ip)">{{
+            $t('database.JdbcNodeTable.5oxhv6qcm6w0')
+          }}</a-tag>
           <div class="flex-row mb-s">
-            <div class="mr-s" style="width: 160px;">IP地址: {{ node.ip }}</div>
+            <div class="mr-s" style="width: 160px;">{{ $t('database.JdbcNodeTable.else1') }}: {{ node.ip }}</div>
             <icon-code-square :size="25" style="cursor: pointer;" @click="showTerminal(node.ip)" />
           </div>
-          <div>端口: {{ node.port }}</div>
+          <div>{{ $t('database.JdbcNodeTable.else2') }}: {{ node.port }}</div>
         </div>
-        <div class="flex-col mr">
-          <div class="node-role">{{ node.role === 'MASTER' ? '主' : '备' }}节点</div>
-          <a-tag v-if="node.state === -1" bordered>未连接</a-tag>
-          <a-tag v-if="node.state === 0" color="red" bordered>连接失败</a-tag>
-          <a-tag v-if="node.state === 1" color="green" bordered>连接成功</a-tag>
+        <div class="flex-row mr">
+          <div class="node-role mr">{{ getNodeRole(node.role) }}</div>
+          <div :class="'node-state-c ' + getNodeStateColor(node.state)"></div>
         </div>
         <div class="flex-col mr">
           <div class="monitor-data">{{ node.connNum ? node.connNum : '--' }}</div>
-          <div>连接数</div>
+          <div>{{ $t('database.JdbcNodeTable.5oxhv6qcnuk0') }}</div>
         </div>
         <div class="flex-col mr">
           <div class="monitor-data">{{ node.qps ? node.qps : '--' }}</div>
@@ -29,17 +29,14 @@
           <div class="monitor-data">{{ node.tps ? node.tps : '--' }}</div>
           <div>tps</div>
         </div>
-        <div class="flex-col mr" style="width: 120px;">
+        <div class="flex-col mr" style="width: 130px;">
           <div class="monitor-data">{{ node.tableSpaceUsed ? node.tableSpaceUsed : '--' }}MB</div>
-          <div>表空间占用</div>
+          <div>{{ $t('database.JdbcNodeTable.5oxhv6qco4c0') }}</div>
         </div>
         <div class="flex-col mr" style="width: 120px;">
           <div class="monitor-data">{{ node.memoryUsed ? node.memoryUsed : '--' }}GB</div>
-          <div>内存占用</div>
+          <div>{{ $t('database.JdbcNodeTable.5oxhv6qcobk0') }}</div>
         </div>
-        <!-- <div class="flex-col mr">
-          <a-link>详情</a-link>
-        </div> -->
       </div>
       <a-divider v-if="index !== props.nodes.length - 1"></a-divider>
     </div>
@@ -54,7 +51,8 @@ import Socket from '@/utils/websocket'
 import { jdbcNodeMonitor } from '@/api/ops'
 import HostPwdDlg from './HostPwdDlg.vue'
 import HostTerminal from './HostTerminal.vue'
-
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
 const data = reactive<KeyValue>({
   socketArr: [],
   nodeList: []
@@ -90,8 +88,28 @@ watch(stateComp, (val: boolean) => {
   } else {
     emits('validRes', 0)
   }
-
 })
+
+const getNodeStateColor = (state: number) => {
+  switch (state) {
+    case -1:
+      return 'un-check'
+    case 1:
+      return 'check-pass'
+    case 0:
+      return 'check-error'
+  }
+}
+
+const getNodeRole = (role?: string) => {
+  if (!role) {
+    return t('database.JdbcNodeTable.else4')
+  } else if (role === 'MASTER') {
+    return t('database.JdbcNodeTable.5oxhv6qcnak0')
+  } else {
+    return t('database.JdbcNodeTable.5oxhv6qcnnk0')
+  }
+}
 
 const openMonitor = () => {
   data.nodeList.filter((item: KeyValue, index: number) => {
@@ -139,10 +157,18 @@ const openNodeMonitor = (nodeData: KeyValue, index: number) => {
 }
 
 const hostPwdRef = ref<null | InstanceType<typeof HostPwdDlg>>(null)
+
+const handleGetOs = (ip: string) => {
+  console.log('show terminal')
+  if (ip) {
+    hostPwdRef.value?.open(ip, 'getOs')
+  }
+}
+
 const showTerminal = (ip: string) => {
   console.log('show terminal')
   if (ip) {
-    hostPwdRef.value?.open(ip)
+    hostPwdRef.value?.open(ip, 'terminal')
   }
 }
 
@@ -166,14 +192,35 @@ const handleFinish = () => {
   display: flex;
   justify-content: space-around;
 
+  .cursor-c {
+    cursor: pointer;
+  }
+
   .node-role {
-    width: 50px;
     height: 40px;
+    padding: 10px;
     display: flex;
     justify-content: center;
     align-items: center;
     background-color: var(--color-text-4);
-    margin-bottom: 10px;
+  }
+
+  .node-state-c {
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+  }
+
+  .un-check {
+    background-color: gray;
+  }
+
+  .check-pass {
+    background-color: green;
+  }
+
+  .check-error {
+    background-color: red
   }
 
   .monitor-data {
