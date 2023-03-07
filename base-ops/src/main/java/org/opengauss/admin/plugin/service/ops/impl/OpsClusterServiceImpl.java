@@ -483,7 +483,13 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
             for (HostInfoHolder hostInfoHolder : hostInfoHolderList) {
                 List<OpsHostUserEntity> userEntities = hostInfoHolder.getHostUserEntities();
                 OpsHostUserEntity rootUserEntity = userEntities.stream().filter(userEntity -> "root".equals(userEntity.getUsername())).findFirst().orElseThrow(() -> new OpsException("Host not found[" + hostInfoHolder.getHostEntity().getPublicIp() + "]root user information"));
-                rootUserEntity.setPassword(hostPasswdMap.get(rootUserEntity.getHostId()));
+                if (StrUtil.isEmpty(rootUserEntity.getPassword())){
+                    if (StrUtil.isNotEmpty(hostPasswdMap.get(rootUserEntity.getHostId()))){
+                        rootUserEntity.setPassword(hostPasswdMap.get(rootUserEntity.getHostId()));
+                    }else {
+                        throw new OpsException("root password does not exist");
+                    }
+                }
             }
 
             installContext.setHostInfoHolders(hostInfoHolderList);
@@ -536,7 +542,14 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
 
         List<OpsHostUserEntity> hostUserList = hostUserFacade.listHostUserByHostId(opsHostEntity.getHostId());
         OpsHostUserEntity rootUserEntity = hostUserList.stream().filter(opsHostUserEntity -> "root".equalsIgnoreCase(opsHostUserEntity.getUsername())).findFirst().orElseThrow(() -> new OpsException("[" + opsHostEntity.getHostname() + "]root user not found"));
-        rootUserEntity.setPassword(sshBody.getRootPassword());
+        if (StrUtil.isEmpty(rootUserEntity.getPassword())){
+            if (StrUtil.isNotEmpty(sshBody.getRootPassword())){
+                rootUserEntity.setPassword(sshBody.getRootPassword());
+            }else {
+                throw new OpsException("root password not found");
+            }
+        }
+
 
         ChannelShell channelShell = sshChannelManager.initChannelShell(sshBody, opsHostEntity, rootUserEntity).orElseThrow(() -> new OpsException("Connection establishment failed"));
 

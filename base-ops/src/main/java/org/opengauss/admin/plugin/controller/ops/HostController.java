@@ -18,12 +18,12 @@ public class HostController extends BaseController {
     private IHostService hostService;
 
     @GetMapping("/pathEmpty/{id}")
-    public AjaxResult pathEmpty(@PathVariable("id") String id,@RequestParam("path") String path,@RequestParam("rootPassword") String rootPassword){
+    public AjaxResult pathEmpty(@PathVariable("id") String id,@RequestParam("path") String path,@RequestParam(value = "rootPassword",required = false) String rootPassword){
         return AjaxResult.success(hostService.pathEmpty(id,path,rootPassword));
     }
 
     @GetMapping("/portUsed/{id}")
-    public AjaxResult portUsed(@PathVariable("id") String id,@RequestParam("port") Integer port,@RequestParam("rootPassword") String rootPassword){
+    public AjaxResult portUsed(@PathVariable("id") String id,@RequestParam("port") Integer port,@RequestParam(value = "rootPassword",required = false) String rootPassword){
         return AjaxResult.success(hostService.portUsed(id,port,rootPassword));
     }
 }

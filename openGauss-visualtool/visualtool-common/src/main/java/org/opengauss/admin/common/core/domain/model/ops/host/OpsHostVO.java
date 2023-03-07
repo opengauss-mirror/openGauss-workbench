@@ -16,4 +16,5 @@ public class OpsHostVO {
     private String azId;
     private String azName;
     private String remark;
+    private Boolean isRemember;
 }

@@ -5,11 +5,13 @@ import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 import com.jcraft.jsch.Session;
 import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
+import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
 import org.opengauss.admin.common.exception.ops.OpsException;
 import org.opengauss.admin.plugin.domain.model.ops.JschResult;
 import org.opengauss.admin.plugin.service.ops.IHostService;
 import org.opengauss.admin.plugin.utils.JschUtil;
 import org.opengauss.admin.system.plugin.facade.HostFacade;
+import org.opengauss.admin.system.plugin.facade.HostUserFacade;
 import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -27,6 +29,9 @@ public class HostServiceImpl implements IHostService {
     @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
     private HostFacade hostFacade;
     @Autowired
+    @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
+    private HostUserFacade hostUserFacade;
+    @Autowired
     private JschUtil jschUtil;
     @Autowired
     @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
@@ -36,6 +41,15 @@ public class HostServiceImpl implements IHostService {
         OpsHostEntity hostEntity = hostFacade.getById(id);
         if (Objects.isNull(hostEntity)){
             throw new OpsException("host information not found");
+        }
+
+        OpsHostUserEntity rootUserEntity = hostUserFacade.getRootUserByHostId(id);
+        if (Objects.nonNull(rootUserEntity) && StrUtil.isNotEmpty(rootUserEntity.getPassword())){
+            rootPassword = rootUserEntity.getPassword();
+        }
+
+        if (StrUtil.isEmpty(rootPassword)){
+            throw new OpsException("root password does not exist");
         }
 
         Session rootSession = jschUtil.getSession(hostEntity.getPublicIp(), hostEntity.getPort(), "root", encryptionUtils.decrypt(rootPassword)).orElseThrow(() -> new OpsException("Failed to establish connection with host"));
@@ -69,6 +83,15 @@ public class HostServiceImpl implements IHostService {
         OpsHostEntity hostEntity = hostFacade.getById(id);
         if (Objects.isNull(hostEntity)){
             throw new OpsException("host information not found");
+        }
+
+        OpsHostUserEntity rootUserEntity = hostUserFacade.getRootUserByHostId(id);
+        if (Objects.nonNull(rootUserEntity) && StrUtil.isNotEmpty(rootUserEntity.getPassword())){
+            rootPassword = rootUserEntity.getPassword();
+        }
+
+        if (StrUtil.isEmpty(rootPassword)){
+            throw new OpsException("root password does not exist");
         }
 
         Session rootSession = jschUtil.getSession(hostEntity.getPublicIp(), hostEntity.getPort(), "root", encryptionUtils.decrypt(rootPassword)).orElseThrow(() -> new OpsException("Failed to establish connection with host"));

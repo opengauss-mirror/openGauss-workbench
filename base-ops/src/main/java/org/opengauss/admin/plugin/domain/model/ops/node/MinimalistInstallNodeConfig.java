@@ -38,10 +38,6 @@ public class MinimalistInstallNodeConfig {
             throw new OpsException("host information error");
         }
 
-        if (StrUtil.isEmpty(rootPassword)){
-            throw new OpsException("root password error");
-        }
-
         if (StrUtil.isEmpty(installPath)) {
             throw new OpsException("installation directory error");
         }

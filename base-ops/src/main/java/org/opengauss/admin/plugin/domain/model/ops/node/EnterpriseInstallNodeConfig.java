@@ -63,10 +63,6 @@ public class EnterpriseInstallNodeConfig {
             throw new OpsException("wrong host id");
         }
 
-        if (StrUtil.isEmpty(rootPassword)){
-            throw new OpsException("wrong root password");
-        }
-
         if (StrUtil.isEmpty(publicIp)) {
             throw new OpsException("public IP error");
         }
