@@ -129,20 +129,6 @@
         </dependency>
     </dependencies>
 
-    <repositories>
-        <repository>
-            <id>maven-public</id>
-            <name>private Release</name>
-            <url>http://39.108.219.254:8081/repository/maven-public/</url>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-        </repository>
-    </repositories>
-
     <pluginRepositories>
         <pluginRepository>
             <id>maven-public</id>
