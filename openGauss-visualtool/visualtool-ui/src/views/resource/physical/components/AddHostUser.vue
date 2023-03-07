@@ -5,8 +5,8 @@
             <a-form-item :label="$t('components.AddHostUser.5mphzt9pc0g0')">
                 {{ userData.formData.privateIp }}({{ userData.formData.publicIp }})
             </a-form-item>
-            <a-form-item field="rootPassword" :label="$t('components.AddHostUser.rootPassword')" validate-trigger="blur"
-                :rules="[{ required: true, message: $t('components.AddHostUser.5mphzt9pdak0') }]">
+            <a-form-item v-if="userData.isNeedPwd" field="rootPassword" :label="$t('components.AddHostUser.rootPassword')"
+                validate-trigger="blur" :rules="[{ required: true, message: $t('components.AddHostUser.5mphzt9pdak0') }]">
                 <a-input-password v-model="userData.formData.rootPassword"
                     :placeholder="$t('components.AddHostUser.5mphzt9pdak0')" allow-clear />
             </a-form-item>
@@ -35,6 +35,7 @@ const { t } = useI18n()
 const userData = reactive({
     show: false,
     title: t('components.AddHostUser.5mphzt9peog0'),
+    isNeedPwd: true,
     formData: {
         id: '',
         hostId: '',
@@ -93,6 +94,7 @@ const close = () => {
 
 const open = (type: string, hostData: KeyValue, data?: KeyValue) => {
     userData.show = true
+    userData.isNeedPwd = !hostData.isRemember
     if (type === 'create') {
         userData.title = t('components.AddHostUser.5mphzt9peog0')
         Object.assign(userData.formData, {

@@ -138,7 +138,13 @@ const currRecord = ref<KeyValue>({})
 const hostPwdRef = ref<null | InstanceType<typeof HostPwdDlg>>(null)
 const handleTest = (record: KeyValue) => {
   currRecord.value = record
-  hostPwdRef.value?.open(record)
+  if (!record.isRemember) {
+    hostPwdRef.value?.open(record)
+  } else {
+    handleTestConnect({
+      hostId: record.hostId
+    })
+  }
 }
 
 const handleTestConnect = (hostData: any) => {

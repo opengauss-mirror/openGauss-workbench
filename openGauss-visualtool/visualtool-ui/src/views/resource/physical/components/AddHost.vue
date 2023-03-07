@@ -42,6 +42,8 @@
       <a-form-item field="password" :label="$t('components.AddHost.5mphy3sny4w0')" validate-trigger="blur">
         <a-input-password v-model="data.formData.password" :placeholder="$t('components.AddHost.5mphy3snyao0')"
           allow-clear />
+        <a-checkbox style="width: 150px" v-model="data.formData.isRemember">{{ $t('components.AddHost.else2')
+        }}</a-checkbox>
       </a-form-item>
       <a-form-item :label="$t('components.AddHost.5mphy3snyg40')">
         <a-select :loading="data.azListLoading" v-model="data.formData.azId"
@@ -55,7 +57,7 @@
         <a-textarea v-model="data.formData.remark" :placeholder="$t('components.AddHost.5mphy3snyxc0')"></a-textarea>
       </a-form-item>
     </a-form>
-</a-modal>
+  </a-modal>
 </template>
 
 <script setup lang="ts">
@@ -87,6 +89,7 @@ const data = reactive<KeyValue>({
     publicIp: '',
     port: 22,
     password: '',
+    isRemember: false,
     azId: '',
     remark: ''
   }
@@ -174,6 +177,7 @@ const handleTestHost = () => {
         publicIp: data.formData.publicIp,
         port: data.formData.port,
         password: encryptPwd,
+        isRemember: data.formData.isRemember,
         azId: data.formData.azId,
         remark: data.formData.remark
       })
@@ -213,12 +217,14 @@ const open = (type: string, editData?: KeyValue) => {
   if (type === 'update' && data) {
     data.title = t('components.AddHost.5mphy3snzrk0')
     Object.assign(data.formData, editData)
+    data.formData.isRemember = false
   } else {
     data.title = t('components.AddHost.5mphy3snz5k0')
     Object.assign(data.formData, {
       privateIp: '',
       publicIp: '',
       password: '',
+      isRemember: false,
       port: 22,
       azId: '',
       remark: ''

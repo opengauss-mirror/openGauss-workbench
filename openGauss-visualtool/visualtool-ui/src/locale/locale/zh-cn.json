@@ -214,6 +214,7 @@
         },
         "AddHost": {
             "else1": "请输入正确的端口号",
+            "else2": "记住密码",
             "currentStatus": "当前状态",
             "ipAddress": "内网IP",
             "5mphy3snvg80": "可用",
