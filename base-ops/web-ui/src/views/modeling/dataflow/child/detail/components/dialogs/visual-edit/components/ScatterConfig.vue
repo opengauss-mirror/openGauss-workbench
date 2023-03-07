@@ -60,13 +60,6 @@
           <a-input-number v-model="config.zoom" ></a-input-number>
         </a-col>
       </a-row>
-      <a-row align="center">
-        <a-col :span="5">{{$t('modeling.components.ScatterConfig.5m7iiczn9ow0')}}</a-col>
-        <a-col :span="8">
-          <a-input-number v-model="config.location.area"></a-input-number>
-        </a-col>
-        <a-col :span="2" style="padding-left: 10px;"> {{$t('modeling.components.ScatterConfig.5m7iiczn9rk0')}}</a-col>
-      </a-row>
     </div>
     <div>
       <div class="mb-s flex-row">
@@ -94,6 +87,27 @@
           <a-select v-model="config.location.diyValue">
             <a-option :value="'LLA'">{{$t('modeling.components.ScatterConfig.5m7iicznaec0')}}</a-option>
           </a-select>
+        </a-col>
+      </a-row>
+      <div class="mb-s flex-row">
+        <div class="ch-title">{{$t('modeling.dy_common.geoMapLabelColor0')}}</div>
+      </div>
+      <a-row align="center" class="mb-s color-config">
+        <a-col :span="5">{{$t('modeling.dy_common.geoMapLabelColor1')}}</a-col>
+        <a-col :span="17">
+          <input v-model="config.colorConfig[0]" type="color" style="width: 100%" />
+        </a-col>
+      </a-row>
+      <a-row align="center" class="mb-s color-config">
+        <a-col :span="5">{{$t('modeling.dy_common.geoMapLabelColor2')}}</a-col>
+        <a-col :span="17">
+          <input v-model="config.colorConfig[1]" type="color" style="width: 100%" />
+        </a-col>
+      </a-row>
+      <a-row align="center" class="mb-s color-config">
+        <a-col :span="5">{{$t('modeling.dy_common.geoMapLabelColor3')}}</a-col>
+        <a-col :span="17">
+          <input v-model="config.colorConfig[2]" type="color" style="width: 100%" />
         </a-col>
       </a-row>
     </div>
@@ -153,6 +167,7 @@ const dOptions = reactive({
 const config = reactive({
   indicator: { field: '', type: '', unit: '' } as TypeIndicator,
   location: { field: '', type: '', commonValue: '', diyValue: 1, area: 0 } as TypeLocationConfig,
+  colorConfig: ['#FF4800', '#FFFE00', '#89CEF5'],
   center: [undefined, undefined] as Array<undefined | number>,
   zoom: 0 as number | undefined
 })
@@ -163,11 +178,13 @@ const init = (data?: KeyValue) => {
     config.zoom = data.zoom ? data.zoom : 0
     config.indicator = data.indicator ? data.indicator : { field: '', type: '', unit: '' }
     config.location = data.location ? data.location : { field: '', type: '', commonValue: '', diyValue: 1, area: 0 }
+    config.colorConfig = data.colorConfig ? data.colorConfig : ['#FF4800', '#FFFE00', '#89CEF5']
   } else {
     config.center = [undefined, undefined]
     config.zoom = 0
     config.indicator = { field: '', type: '', unit: '' }
     config.location = { field: '', type: '', commonValue: '', diyValue: 'LLA', area: 0 }
+    config.colorConfig = ['#FF4800', '#FFFE00', '#89CEF5']
   }
 }
 const noticeArr: string[] = []

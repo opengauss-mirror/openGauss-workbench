@@ -73,14 +73,18 @@
           </a-col>
         </a-row>
       </div>
-      <div class="content-header mb-s">
+      <div class="content-header mb-s modeling-ve-config-h">
         <div class="ch-title">{{$t('modeling.components.LineConfig.5m7ijyex22w0')}}</div>
         <a-button type="primary" shape="circle" size="mini" @click="operate('add-dimension')"><icon-plus /></a-button>
-        <a-button size="mini" type="outline" @click="openCdd"><template #icon><icon-tags /></template>{{$t('modeling.components.LineConfig.5m7ijyex2540')}}</a-button>
+        <a-button class="ml" size="mini" type="outline" @click="openCdd"><template #icon><icon-tags /></template>{{$t('modeling.components.LineConfig.5m7ijyex2540')}}</a-button>
+        <a-tooltip content-class="modeling-ve-config-h-tooltip" :content="$t('modeling.dy_common.chartTips1')">
+          <div class="qs"><icon-question-circle-fill /></div>
+        </a-tooltip>
       </div>
       <div>
         <a-row align="center" class="mb-s" v-for="(item, key) in config.dimension" :key="`dimension${key}`">
-          <a-col class="mr-xs" :span="12">
+          <a-col class="mr-xs" :span="12" style="display: flex">
+            <span style="color: #f53f3f; font-weight: bold; margin-right: 5px;">*</span>
             <a-select v-model="item.field" :placeholder="$t('modeling.components.LineConfig.5mpu292dkhc0')">
               <overflow-tooltip :text="item.label" v-for="(item, key) in stringOption" :key="key" :content="item.label">
                 <a-option :value="item.value" :disabled="checkDisabled([item], config.showType.dimension)"><icon-tag class="mr-s" v-if="item.isCustom" />{{ item.label }}</a-option>
@@ -102,7 +106,7 @@
 </template>
 <script setup lang="ts">
 import { reactive } from 'vue'
-import { IconPlus } from '@arco-design/web-vue/es/icon'
+import { IconPlus, IconQuestionCircleFill } from '@arco-design/web-vue/es/icon'
 import { KeyValue } from '@antv/x6/lib/types'
 import { indicatorType, compareWays, particles } from '../hooks/options'
 import { Notification } from '@arco-design/web-vue'
@@ -131,7 +135,7 @@ const init = (data?: KeyValue) => {
     if (data.showType) config.showType = data.showType
   } else {
     config.indicator = [{ field: '', type: '', unit: '' }]
-    config.dimension = [{ field: '', num: 5 }]
+    config.dimension = []
   }
 }
 const operate = (type: string, key1?: number) => {
@@ -158,6 +162,10 @@ const validate = () => {
     flag = false
     message += (message ? '；\n ' : '') + t('modeling.components.LineConfig.5m7ijyex2jc0')
   }
+  config.dimension.forEach((item: any, key: number) => {
+    flag = false
+    message += (message ? '；\n ' : '') + `${t('modeling.dy_common.chartNotice1')}${key + 1}${t('modeling.dy_common.chartNotice2')}`
+  })
   if (!flag) {
     if (noticeArr.includes(message)) return flag
     let isDelete = false
@@ -195,9 +203,23 @@ defineExpose({ config, validate, init })
         font-size: 16px;
         font-weight: bold;
       }
-      > * {
-        &:last-child {
-          margin-left: auto;
+      .ml {
+        margin-left: auto;
+      }
+      .qs {
+        width: 20px;
+        height: 20px;
+        // background-color: rgb(var(--primary-6));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-left: 5px;
+        border-radius: 50%;
+        color: #fff;
+        cursor: pointer;
+        svg {
+          color: rgb(var(--primary-6));
+          font-size: 20px;
         }
       }
     }
@@ -213,5 +235,8 @@ defineExpose({ config, validate, init })
     .arco-radio-label {
       width: 100%;
     }
+  }
+  .modeling-ve-config-h-tooltip {
+    white-space: pre-wrap;
   }
 </style>

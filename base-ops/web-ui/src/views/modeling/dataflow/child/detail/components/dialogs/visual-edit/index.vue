@@ -31,7 +31,7 @@
                 <a-button type="primary" @click="operateMenu('add')"><template #icon><icon-plus /></template>{{$t('modeling.visual-edit.index.5m7ihlv0ms00')}}</a-button>
               </div>
             </div>
-            <div class="chart-container">
+            <div class="chart-container" :style="{ marginLeft: !menu.visible ? '45px' : '0' }">
               <div id="chartDiv" ref="chartRef" />
             </div>
             <div class="vm-toggle" @click="toggleMenu" :class="{ 'hide-vm-toggle': !menu.visible }">

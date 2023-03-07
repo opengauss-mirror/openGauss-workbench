@@ -5,6 +5,8 @@ import { KeyValue } from '@antv/x6/lib/types'
 import { Notification } from '@arco-design/web-vue'
 import i18n from '@/locale/index'
 const mCStore = useModelCommonStore()
+
+const noticeArr: string[] = []
 export const checkData = (data: any): boolean => {
   let check = true
   let message = ``
@@ -28,7 +30,30 @@ export const checkData = (data: any): boolean => {
       }
     })
   }
-  if (!check && message) Notification.error({ position: 'bottomRight', content: message, closable: true, duration: 10 * 1000 })
+
+  if (!check && message) {
+    if (noticeArr.includes(message)) return check
+    let isDelete = false
+    Notification.error({
+      position: 'bottomRight',
+      content: message,
+      closable: true,
+      duration: 10 * 1000,
+      onClose: () => {
+        const index = noticeArr.indexOf(message)
+        if (index != -1) noticeArr.splice(index, 1)
+        isDelete = true
+      }
+    })
+    noticeArr.push(message)
+    setTimeout(() => {
+      if (!isDelete) {
+        const index = noticeArr.indexOf(message)
+        if (index != -1) noticeArr.splice(index, 1)
+      }
+    }, 10 * 1000)
+  }
+
   return check
 }
 export const jsonFormat = (graph: Graph) => {
