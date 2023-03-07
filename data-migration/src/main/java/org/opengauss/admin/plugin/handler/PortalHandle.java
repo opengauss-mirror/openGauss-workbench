@@ -43,6 +43,8 @@ public class PortalHandle {
     public static boolean installPortal(MigrationTaskHostRef host, String portalHome) {
         //download portal
         String base = portalHome.substring(0, portalHome.lastIndexOf("/") + 1);
+        ShellUtil.execCommandGetResult(host.getHost(), host.getPort(), host.getUser(), host.getPassword(),
+                "mkdir -p " + base);
         log.info("wget download portal");
         String wgetResult = ShellUtil.execCommandGetResult(host.getHost(), host.getPort(), host.getUser(), host.getPassword(),
                 "wget -P " + base + " http://39.108.219.254:9898/portal.zip");
@@ -53,7 +55,7 @@ public class PortalHandle {
                 unzipShell);
 
         log.info("portal install");
-        initPortalConfig(host, portalHome);
+//        initPortalConfig(host, portalHome);
         String installToolResult = ShellUtil.execCommandGetResult(host.getHost(), host.getPort(), host.getUser(), host.getPassword(),
                 "java -Dpath=" + portalHome + "/ -Dorder=install_mysql_all_migration_tools -Dskip=true -jar " + portalHome + "/portalControl-1.0-SNAPSHOT-exec.jar");
         log.info("portal exec install command result {}", installToolResult);
