@@ -11,6 +11,8 @@ import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextClosedEvent;
 import org.springframework.context.event.ContextRefreshedEvent;
 
+import static com.nctigba.datastudio.constants.CommonConstants.WEBDS_PLUGIN;
+
 /**
  * @className: ImplListener
  * @description: TODO
@@ -33,7 +35,7 @@ public class PluginListener implements ApplicationListener<ApplicationEvent> {
             SpringBeanFactory factory = context.getSpringBeanFactory();
             MenuFacade menuFacade = factory.getBean(MenuFacade.class);
             if (menuFacade != null) {
-                menuFacade.savePluginMenu("webds-plugin", "业务开发", "DataStudio", 10, "index");
+                menuFacade.savePluginMenu(WEBDS_PLUGIN, "业务开发", "DataStudio", 10, "index");
             }
         } else if (event instanceof ContextClosedEvent) {
             MainApplicationContext context = ((ContextClosedEvent) event).getApplicationContext()
@@ -41,7 +43,7 @@ public class PluginListener implements ApplicationListener<ApplicationEvent> {
             SpringBeanFactory factory = context.getSpringBeanFactory();
             MenuFacade menuFacade = factory.getBean(MenuFacade.class);
             if (menuFacade != null) {
-                menuFacade.deletePluginMenu("webds-plugin");
+                menuFacade.deletePluginMenu(WEBDS_PLUGIN);
             }
         }
     }

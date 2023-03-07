@@ -6,6 +6,7 @@ import com.nctigba.datastudio.model.PublicParamReq;
 import com.nctigba.datastudio.model.entity.OperateStatusDO;
 import com.nctigba.datastudio.service.OperationInterface;
 import com.nctigba.datastudio.util.DebugUtils;
+import com.nctigba.datastudio.util.LocaleString;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -39,6 +40,7 @@ public class ExecuteImpl implements OperationInterface {
         PublicParamReq paramReq = (PublicParamReq) obj;
         String sql = paramReq.getSql();
         String windowName = paramReq.getWindowName();
+        String schema = DebugUtils.prepareFuncName(sql).split("\\.")[0];
         Statement statement = webSocketServer.getStatement(windowName);
         if (statement == null) {
             Connection connection = webSocketServer.getConnection(windowName);
@@ -51,7 +53,7 @@ public class ExecuteImpl implements OperationInterface {
         }
         String name = DebugUtils.prepareName(sql);
         log.info("execute name is: " + name);
-        ResultSet result = statement.executeQuery(DebugUtils.getFuncSql(windowName, name, webSocketServer));
+        ResultSet result = statement.executeQuery(DebugUtils.getFuncSql(windowName, schema, name, webSocketServer));
         if (!result.next()) {
             statement.execute(sql);
             OperateStatusDO operateStatus = webSocketServer.getOperateStatus(windowName);
@@ -72,7 +74,7 @@ public class ExecuteImpl implements OperationInterface {
         webSocketServer.setOperateStatus(windowName, operateStatus);
 
         Map<String, String> map = new HashMap<>();
-        map.put(RESULT, "build success！");
+        map.put(RESULT, LocaleString.transLanguageWs("1002", webSocketServer));
         webSocketServer.sendMessage(windowName, text, SUCCESS, map);
         startDebug.operate(webSocketServer, paramReq);
     }

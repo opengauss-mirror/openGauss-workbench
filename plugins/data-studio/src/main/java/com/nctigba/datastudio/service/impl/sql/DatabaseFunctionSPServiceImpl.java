@@ -21,7 +21,7 @@ import static com.nctigba.datastudio.constants.CommonConstants.PRO_KIND;
 import static com.nctigba.datastudio.constants.CommonConstants.SPACE;
 import static com.nctigba.datastudio.constants.SqlConstants.DROP_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.FUNCTION_KEYWORD_SQL;
-import static com.nctigba.datastudio.constants.SqlConstants.GET_PROC_PARAM_SQL;
+import static com.nctigba.datastudio.constants.SqlConstants.GET_PROC_TYPE_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.GET_PROC_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.GET_TYPE_OID_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.POINT;
@@ -72,7 +72,7 @@ public class DatabaseFunctionSPServiceImpl implements DatabaseFunctionSPService 
         }
 
         StringBuilder sb = new StringBuilder();
-        sb.append(GET_PROC_SQL + DebugUtils.getFuncName(name) + GET_PROC_PARAM_SQL);
+        sb.append(GET_PROC_SQL + DebugUtils.getFuncName(name) + GET_PROC_TYPE_SQL);
 
         if (oidList.size() == 0) {
             sb.append(SPACE);

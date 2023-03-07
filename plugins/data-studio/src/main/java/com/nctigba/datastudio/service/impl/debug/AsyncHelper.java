@@ -4,6 +4,7 @@ import com.nctigba.datastudio.base.WebSocketServer;
 import com.nctigba.datastudio.model.PublicParamReq;
 import com.nctigba.datastudio.model.entity.OperateStatusDO;
 import com.nctigba.datastudio.util.DebugUtils;
+import com.nctigba.datastudio.util.LocaleString;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -18,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 
 import static com.nctigba.datastudio.constants.CommonConstants.CONNECTION;
+import static com.nctigba.datastudio.constants.CommonConstants.FIVE_HUNDRED;
 import static com.nctigba.datastudio.constants.CommonConstants.OID;
 import static com.nctigba.datastudio.constants.CommonConstants.RESULT;
 import static com.nctigba.datastudio.constants.CommonConstants.STATEMENT;
@@ -47,7 +49,7 @@ public class AsyncHelper {
                     webSocketServer.sendMessage(windowName, text, SUCCESS, map);
                 } else {
                     Map<String, String> messageMap = new HashMap<>();
-                    messageMap.put(RESULT, "debugging is over. Please check the result set on the right!");
+                    messageMap.put(RESULT, LocaleString.transLanguageWs("1007", webSocketServer));
                     webSocketServer.sendMessage(windowName, text, SUCCESS, messageMap);
                     webSocketServer.sendMessage(windowName, table, SUCCESS, map);
                 }
@@ -55,7 +57,7 @@ public class AsyncHelper {
                 webSocketServer.sendMessage(windowName, text, SUCCESS, map);
             }
         } catch (Exception e) {
-            webSocketServer.sendMessage(windowName, window, "500", e.getMessage(), e.getStackTrace());
+            webSocketServer.sendMessage(windowName, window, FIVE_HUNDRED, e.getMessage(), e.getStackTrace());
         }
 
         OperateStatusDO operateStatusDO = webSocketServer.getOperateStatus(windowName);

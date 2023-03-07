@@ -56,7 +56,7 @@
         </li>
         <li @click="closeCurrentTab">{{ $t('windows.closeCurrentTab') }}</li>
         <li @click="closeOtherTab">{{ $t('windows.closeOtherTab') }}</li>
-        <li @click="closeAllTab">{{ $t('windows.closeAllTab') }}</li>
+        <li @click="closeAllTabToLast">{{ $t('windows.closeAllTab') }}</li>
       </ul>
     </div>
   </div>
@@ -198,6 +198,10 @@
   };
 
   const closeAllTab = async () => {
+    TagsViewStore.delAllViews();
+    contextMenu.visible = false;
+  };
+  const closeAllTabToLast = async () => {
     let visitedViews = await TagsViewStore.delAllViews();
     toLastView(visitedViews, route);
     contextMenu.visible = false;
@@ -271,9 +275,9 @@
   }
 
   const createTerminal = () => {
-    const connectInfoName = AppStore.currentConnectInfo.name;
+    const connectInfoName = AppStore.currentConnectInfo?.name;
     const { databaseName: dbname, rootId, uuid } = AppStore.lastestConnectDatabase;
-    if (!uuid) return ElMessage.warning(t('message.noConnectionAvailable'));
+    if (!(uuid && connectInfoName)) return ElMessage.warning(t('message.noConnectionAvailable'));
 
     const terminalNum = TagsViewStore.maxTerminalNum + 1;
     const title = `${dbname}@${connectInfoName}(${terminalNum})`;
@@ -320,12 +324,16 @@
     EventBus.listen(EventTypeName.CLOSE_SELECTED_TAB, (view) => {
       closeSelectedTag(view);
     });
+    EventBus.listen(EventTypeName.CLOSE_ALL_TAB_TO_LAST, () => {
+      closeAllTabToLast();
+    });
     EventBus.listen(EventTypeName.CLOSE_ALL_TAB, () => {
       closeAllTab();
     });
   });
   onUnmounted(() => {
     EventBus.unListen(EventTypeName.CLOSE_SELECTED_TAB);
+    EventBus.unListen(EventTypeName.CLOSE_ALL_TAB_TO_LAST);
     EventBus.unListen(EventTypeName.CLOSE_ALL_TAB);
   });
 </script>
@@ -379,14 +387,14 @@
     border: 1px solid #d8dce5;
     user-select: none;
     &.home {
-      color: red;
+      color: var(--el-color-primary);
     }
     &.active .tag-icon {
       display: block;
     }
     &.active {
       background-color: var(--normal-color);
-      color: #fff;
+      color: var(--color-bg-2);
       border-color: var(--normal-color);
     }
   }
@@ -442,15 +450,14 @@
       white-space: nowrap;
       list-style: none;
       margin: 0;
-      color: var(--normal-color);
       cursor: pointer;
       outline: 0;
       &.disabled {
-        color: #c5c8ce;
+        color: var(--color-text-4);
         cursor: not-allowed;
       }
       &:not(.disabled):hover {
-        background-color: var(--color-secondary-disabled);
+        background-color: var(--color-fill-2);
       }
     }
   }

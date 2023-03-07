@@ -8,6 +8,7 @@ import com.nctigba.datastudio.service.OperationInterface;
 import com.nctigba.datastudio.util.DebugUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -17,13 +18,17 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static com.nctigba.datastudio.constants.CommonConstants.FUNC_OID;
+import static com.nctigba.datastudio.constants.CommonConstants.LINE_FEED;
+import static com.nctigba.datastudio.constants.CommonConstants.LINE_NO;
 import static com.nctigba.datastudio.constants.CommonConstants.OID;
 import static com.nctigba.datastudio.constants.CommonConstants.RESULT;
 import static com.nctigba.datastudio.constants.CommonConstants.STATEMENT;
 import static com.nctigba.datastudio.constants.CommonConstants.SUCCESS;
 import static com.nctigba.datastudio.constants.SqlConstants.INFO_CODE_SQL;
+import static com.nctigba.datastudio.constants.SqlConstants.NEXT_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.PARENTHESES_SEMICOLON;
 import static com.nctigba.datastudio.constants.SqlConstants.STEP_SQL;
+import static com.nctigba.datastudio.enums.MessageEnum.closeWindow;
 import static com.nctigba.datastudio.enums.MessageEnum.newWindow;
 
 /**
@@ -41,6 +46,7 @@ public class StepInImpl implements OperationInterface {
         PublicParamReq paramReq = (PublicParamReq) obj;
         String name = paramReq.getOldWindowName();
         String windowName = paramReq.getWindowName();
+        String oldWindowName = paramReq.getOldWindowName();
         if (StringUtils.isEmpty(name)) {
             name = windowName;
         }
@@ -56,12 +62,20 @@ public class StepInImpl implements OperationInterface {
         String oid = (String) webSocketServer.getParamMap(windowName).get(OID);
         log.info("stepIn oid is: " + oid);
         ResultSet resultSet = stat.executeQuery(STEP_SQL);
-        String newOid = "";
+        String newOid = Strings.EMPTY;
+        int lineNo = -1;
         while (resultSet.next()) {
+            lineNo = resultSet.getInt(LINE_NO);
             newOid = resultSet.getString(FUNC_OID);
             log.info("stepIn newOid is: " + newOid);
         }
-
+        if (lineNo == 0 && StringUtils.isNotEmpty(oldWindowName)) {
+            stat.execute(NEXT_SQL);
+            webSocketServer.sendMessage(windowName, closeWindow, SUCCESS, null);
+            paramReq.setCloseWindow(true);
+            singleStep.showDebugInfo(webSocketServer, paramReq);
+            return;
+        }
         if (oid.equals(newOid)) {
             singleStep.showDebugInfo(webSocketServer, paramReq);
         } else {
@@ -69,7 +83,7 @@ public class StepInImpl implements OperationInterface {
             ResultSet infoCodeResult = stat.executeQuery(INFO_CODE_SQL + newOid + PARENTHESES_SEMICOLON);
             StringBuilder sb = new StringBuilder();
             while (infoCodeResult.next()) {
-                sb.append(infoCodeResult.getString("query")).append("\n");
+                sb.append(infoCodeResult.getString("query")).append(LINE_FEED);
             }
             log.info("stepIn sb is: " + sb);
             map.put(RESULT, DebugUtils.prepareName(sb.toString()));

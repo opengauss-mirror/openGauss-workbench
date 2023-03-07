@@ -45,10 +45,14 @@ public class PublicParamReq {
     // old window name
     private String oldWindowName;
 
+    // is close window
     private boolean isCloseWindow;
 
     // uuid
     private String uuid;
+
+    // language
+    private String language;
 
     @Override
     public String toString() {
@@ -66,6 +70,7 @@ public class PublicParamReq {
                 ", oldWindowName='" + oldWindowName + '\'' +
                 ", isCloseWindow='" + isCloseWindow + '\'' +
                 ", uuid='" + uuid + '\'' +
+                ", language='" + language + '\'' +
                 '}';
     }
 }

@@ -70,7 +70,6 @@
   import { useTagsViewStore } from '@/store/modules/tagsView';
   import { useI18n } from 'vue-i18n';
   import EventBus, { EventTypeName } from '@/utils/event-bus';
-  import { connectListPersist } from '@/config';
 
   const route = useRoute();
   const router = useRouter();
@@ -100,6 +99,8 @@
       stopDebug: false,
       breakPointStep: false,
       singleStep: false,
+      stepIn: false,
+      stepOut: false,
     },
     debugChild: {
       breakPointStep: true,
@@ -120,7 +121,6 @@
     barType: props.editorType,
   });
 
-  // const isGlobalEnable = ref(true);
   const showResult = ref(false);
   const id = 'terminal_' + uuid();
   const monacoWrapper = ref<HTMLElement>();
@@ -131,6 +131,7 @@
     name: '',
     webUser: '',
     rootId: '',
+    parentId: '',
     connectionName: '',
     uuid: '',
     sessionId: '',
@@ -157,6 +158,7 @@
   const isSaving = ref(false);
   const saveFileTitle = ref('');
   const alreadyCloseWindow = ref(false);
+  const hasStepIntoChild = ref(false);
   // set editor height
   watch(
     showResult,
@@ -173,6 +175,13 @@
     },
     {
       immediate: true,
+    },
+  );
+
+  watch(
+    () => AppStore.language,
+    (value) => {
+      changeServerLanguage(value);
     },
   );
 
@@ -259,6 +268,18 @@
     });
   };
 
+  const handleChangeDebugButton = (status: boolean) => {
+    if (['debug', 'debugChild'].includes(props.editorType)) {
+      Object.assign(sqlData.barStatus, {
+        breakPointStep: status,
+        singleStep: status,
+        stepIn: status,
+        stepOut: status,
+      });
+      hasStepIntoChild.value = !status;
+    }
+  };
+
   interface Message {
     code: string;
     data?: any;
@@ -266,9 +287,11 @@
     type: string;
   }
   const onWebSocketMessage = (data: string) => {
+    if (!isGlobalEnable.value) return;
     let res: Message = JSON.parse(data);
     if (res.code == '200') {
-      if (props.editorType == 'debug' && res.type != 'operateStatus') {
+      if (hasStepIntoChild.value) return;
+      if (props.editorType == 'debug' && res.type != 'operateStatus' && !hasStepIntoChild.value) {
         getButtonStatus();
       }
       const result = res.data?.result;
@@ -279,20 +302,6 @@
         ) {
           getButtonStatus();
         }
-        // if (
-        //   props.editorType == 'sql' &&
-        //   ['Number of rows affected by successful execution'].includes(res.msg)
-        // ) {
-        //   let list = JSON.parse(connectListPersist.storage.getItem(connectListPersist.key) || '[]');
-        //   EventBus.notify(EventTypeName.REFRESH_DATABASE_LIST, {
-        //     mode: 'connection',
-        //     options: {
-        //       connectInfo: list.find((item) => item.id == ws.rootId),
-        //       uuid: ws.uuid,
-        //       nodeId: ws.rootId,
-        //     },
-        //   });
-        // }
         showResult.value = true;
         const d = new Date();
         (result || res.msg) &&
@@ -319,7 +328,7 @@
         }
         // can use 'startDebug' button = not isDebugging
         if (props.editorType == 'debug') {
-          debug.isDebugging = !result.startDebug;
+          debug.isDebugging = !(result.startDebug || result.execute);
         }
       }
       if (res.type == 'paramWindow') {
@@ -371,6 +380,7 @@
               connectInfoName: route.query.connectInfoName,
               terminalNum: TagsViewStore.maxTerminalNum + 1,
               schema: route.query.schema,
+              uuid: ws.uuid,
               time: Date.now(),
             },
           });
@@ -415,6 +425,7 @@
         debug.variableHighLight = result;
       }
       if (res.type == 'newWindow') {
+        handleChangeDebugButton(false);
         router.push({
           path: `/debugChild/${encodeURIComponent(route.query.dbname as string)}_${result}`,
           query: {
@@ -457,6 +468,13 @@
     ws.instance.send({
       operation: 'operateStatus',
       ...commonWsParams.value,
+    });
+  };
+
+  const changeServerLanguage = (language) => {
+    ws.instance.send({
+      operation: 'changeLanguage',
+      language,
     });
   };
 
@@ -574,6 +592,12 @@
       });
   };
 
+  const notifyParentWindow = (options: { tagId: ''; buttonStatus: true }) => {
+    if (TagsViewStore.getCurrentView(route)?.id == options.tagId) {
+      handleChangeDebugButton(options.buttonStatus);
+    }
+  };
+
   // is create? and return default tempalate
   onMounted(async () => {
     if (!TagsViewStore.getCurrentView(route)) return;
@@ -590,6 +614,7 @@
       name: route.query.connectInfoName,
       webUser: UserStore.userId,
       rootId: route.query.rootId,
+      parentId: route.query.parentTagId,
       connectionName: route.query.connectInfoName,
       uuid: route.query.uuid,
       sessionId: route.query.connectInfoName + '_' + route.query.time,
@@ -601,8 +626,10 @@
 
     ws.instance.send({
       operation: 'connection',
+      language: AppStore.language,
       ...commonWsParams.value,
     });
+    EventBus.listen(EventTypeName.UPDATE_DEBUG_BUTTON, notifyParentWindow);
     if (['debug', 'debugChild'].includes(route.name as string)) {
       const { funcname } = route.query;
       loading.value = loadingInstance();
@@ -624,7 +651,12 @@
     ['debug'].includes(props.editorType) && handleStopDebug();
     ['debugChild'].includes(props.editorType) && !alreadyCloseWindow.value && handleStepOut(true);
     // close websocket
-    if (!['debugChild'].includes(props.editorType)) {
+    if (['debugChild'].includes(props.editorType)) {
+      EventBus.notify(EventTypeName.UPDATE_DEBUG_BUTTON, {
+        tagId: ws.parentId,
+        buttonStatus: true,
+      });
+    } else {
       ws.instance.send({
         operation: 'close',
         windowName: ws.sessionId,
@@ -635,6 +667,7 @@
       name: '',
       instance: null,
     });
+    EventBus.unListen(EventTypeName.UPDATE_DEBUG_BUTTON, notifyParentWindow);
   });
 </script>
 

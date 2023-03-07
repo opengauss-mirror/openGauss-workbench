@@ -28,7 +28,7 @@
             <span>{{ item.name }}</span>
           </div>
           <template #dropdown>
-            <el-dropdown-menu>
+            <el-dropdown-menu class="result-dropdown">
               <el-dropdown-item @click="removeTab(item.name)">
                 {{ $t('resultTab.closeCurrentTab') }}
               </el-dropdown-item>

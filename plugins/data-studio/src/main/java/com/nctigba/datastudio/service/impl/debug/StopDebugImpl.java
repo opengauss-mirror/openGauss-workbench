@@ -5,6 +5,7 @@ import com.nctigba.datastudio.base.WebSocketServer;
 import com.nctigba.datastudio.model.PublicParamReq;
 import com.nctigba.datastudio.model.entity.OperateStatusDO;
 import com.nctigba.datastudio.service.OperationInterface;
+import com.nctigba.datastudio.util.LocaleString;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -56,7 +57,7 @@ public class StopDebugImpl implements OperationInterface {
         webSocketServer.setOperateStatus(windowName, operateStatus);
 
         Map<String, String> map = new HashMap<>();
-        map.put(RESULT, "stop debug！");
+        map.put(RESULT, LocaleString.transLanguageWs("1003", webSocketServer));
         webSocketServer.sendMessage(windowName, text, SUCCESS, map);
 
         Connection connection = webSocketServer.getConnection(windowName);

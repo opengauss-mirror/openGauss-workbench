@@ -51,7 +51,7 @@
     encoding: t('database.info.encoding'),
     datallowconn: t('database.info.datallowconn'),
     datconnlimit: t('database.info.datconnlimit'),
-    dattablespace: t('database.info.dattablespace'),
+    spcname: t('database.info.dattablespace'),
     datcollate: t('database.info.datcollate'),
     datctype: t('database.info.datctype'),
   };

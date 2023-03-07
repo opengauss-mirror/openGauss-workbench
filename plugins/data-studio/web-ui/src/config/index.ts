@@ -15,3 +15,13 @@ export const connectListPersist = {
   key: 'DS_connectList',
   storage: sessionStorage,
 };
+
+export const loadVersionTimePersist = {
+  key: 'DS_version',
+  storage: sessionStorage,
+};
+
+export const prevTokenPersist = {
+  key: 'DS_prevToken',
+  storage: localStorage,
+};

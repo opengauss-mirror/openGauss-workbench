@@ -13,6 +13,7 @@ import com.nctigba.datastudio.model.entity.DatabaseConnectionUrlDO;
 import com.nctigba.datastudio.service.CreateDatabaseService;
 import com.nctigba.datastudio.service.MetaDataByJdbcService;
 import com.nctigba.datastudio.util.DebugUtils;
+import com.nctigba.datastudio.util.LocaleString;
 import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.exception.CustomException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,7 +53,7 @@ public class CreateDatabaseServiceImpl implements CreateDatabaseService {
             if (Integer.valueOf(request.getConRestrictions()) >= -1){
                 ddl = ddl +QUOTES+ CONNECTION_LIMIT_SQL + request.getConRestrictions()+ SEMICOLON;
             }else{
-                throw new CustomException("The number of connections is greater than - 1");
+                throw new CustomException(LocaleString.transLanguage("2013"));
             }
 
             statement.execute(ddl);
@@ -109,7 +110,7 @@ public class CreateDatabaseServiceImpl implements CreateDatabaseService {
                         log.info("deleteDatabase sql is: " + ddl);
                     }
                 }else{
-                    throw new CustomException("The number of connections is greater than - 1");
+                    throw new CustomException(LocaleString.transLanguage("2013"));
                 }
             }else {
                 ddl = ALTER_SQL + DATABASE_SQL + request.getOldDatabaseName() + RENAME_TO_SQL + request.getDatabaseName() + SEMICOLON;

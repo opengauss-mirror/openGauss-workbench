@@ -70,7 +70,7 @@ public class AddBreakPointImpl implements OperationInterface {
         log.info("AddBreakPointImpl new breakPointMap is: " + breakPointMap);
 
         ResultSet bpResult = stat.executeQuery(INFO_BREAKPOINT_PRE + differ + INFO_BREAKPOINT_SQL);
-        webSocketServer.sendMessage(windowName, breakPoint, SUCCESS, DebugUtils.parseResultSet(bpResult));
+        webSocketServer.sendMessage(windowName, breakPoint, SUCCESS, DebugUtils.parseBeakPoint(bpResult, oid));
     }
 
     @Override

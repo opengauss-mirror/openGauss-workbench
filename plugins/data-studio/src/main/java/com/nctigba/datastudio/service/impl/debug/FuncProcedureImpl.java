@@ -7,8 +7,10 @@ import com.nctigba.datastudio.model.PublicParamReq;
 import com.nctigba.datastudio.model.entity.OperateStatusDO;
 import com.nctigba.datastudio.service.OperationInterface;
 import com.nctigba.datastudio.util.DebugUtils;
+import com.nctigba.datastudio.util.LocaleString;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -21,6 +23,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static com.nctigba.datastudio.constants.CommonConstants.FEN_CED_MODE;
+import static com.nctigba.datastudio.constants.CommonConstants.FIVE_HUNDRED;
 import static com.nctigba.datastudio.constants.CommonConstants.LAN_NAME;
 import static com.nctigba.datastudio.constants.CommonConstants.PRO_ALL_ARG_TYPES;
 import static com.nctigba.datastudio.constants.CommonConstants.PRO_ARG_MODES;
@@ -79,7 +82,7 @@ public class FuncProcedureImpl implements OperationInterface {
         webSocketServer.setStatement(windowName, statement);
         webSocketServer.setStatement(windowName, statement);
 
-        ResultSet funcResult = statement.executeQuery(DebugUtils.getFuncSql(windowName, name, webSocketServer));
+        ResultSet funcResult = statement.executeQuery(DebugUtils.getFuncSql(windowName, schema, name, webSocketServer));
         Map<String, Object> paramMap = new HashMap<>();
         while (funcResult.next()) {
             paramMap.put(PRO_NAME, funcResult.getString(PRO_NAME));
@@ -103,7 +106,7 @@ public class FuncProcedureImpl implements OperationInterface {
         }
         log.info("funcProcedure paramMap is: " + paramMap);
         if (CollectionUtils.isEmpty(paramMap)) {
-            webSocketServer.sendMessage(windowName, ignoreWindow, "500", "function/procedure doesn't exist!", null);
+            webSocketServer.sendMessage(windowName, ignoreWindow, FIVE_HUNDRED, LocaleString.transLanguageWs("1006", webSocketServer), null);
             return;
         }
 
@@ -116,7 +119,7 @@ public class FuncProcedureImpl implements OperationInterface {
 
     public String parseResult(String windowName, Map<String, Object> map, WebSocketServer webSocketServer, String schema) throws SQLException {
         String proKind = (String) map.get(PRO_KIND);
-        String sql = "";
+        String sql = Strings.EMPTY;
         if ("f".equals(proKind)) {
             sql = parseFunctionSql(windowName, map, webSocketServer, schema);
         } else if ("p".equals(proKind)) {
@@ -126,7 +129,7 @@ public class FuncProcedureImpl implements OperationInterface {
         return sql;
     }
 
-    public String parseProcedureSql(Map<String, Object> map, String schema) throws SQLException {
+    public String parseProcedureSql(Map<String, Object> map, String schema) {
         StringBuilder sb = new StringBuilder();
         String proName = (String) map.get(PRO_NAME);
         String proSrc = (String) map.get(PRO_SRC);

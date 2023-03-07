@@ -316,14 +316,16 @@
     />
     <CreateViewDialog type="create" :connectData="currentContextNodeData" v-model="viewDialog" />
     <CreateSynonymDialog
+      v-if="synonymDialog"
+      v-model="synonymDialog"
       type="create"
       :connectData="currentContextNodeData"
-      v-model="synonymDialog"
     />
     <CreateSequenceDialog
+      v-if="sequenceDialog"
+      v-model="sequenceDialog"
       type="create"
       :connectData="currentContextNodeData"
-      v-model="sequenceDialog"
     />
   </div>
 </template>
@@ -538,14 +540,14 @@
         connectInfo: cloneConnectInfo,
         isLeaf: false,
         children: data.map((dbName) => {
-          const isConnect =
-            AppStore.connectListMap[connectInfo.id]?.connectedDatabase.findIndex(
-              (item) => item.name == dbName,
-            ) > -1;
+          const hasConnectDb = AppStore.connectListMap
+            .find((item) => item.id === connectInfo.id)
+            ?.connectedDatabase.find((item) => item.name == dbName);
+          const isConnect = !!hasConnectDb;
           return {
             id: `${id}_${dbName}`,
             parentId: id,
-            uuid: isConnect ? uuid : '',
+            uuid: hasConnectDb?.uuid || '',
             label: dbName,
             name: dbName,
             connectInfo: cloneConnectInfo,
@@ -605,7 +607,7 @@
       }
     }
     updateConnectListPersist();
-    updateConnectListMap();
+    refreshConnectListMap();
   };
 
   const fetchSchemaList = async (parentId, databaseId, databaseName, uuid, connectInfo) => {
@@ -807,42 +809,63 @@
       JSON.stringify(connectionList.value),
     );
   };
-  const updateConnectListMap = () => {
-    const obj = {};
-    connectionList.value.forEach((list) => {
-      obj[list.id] = {
-        info: { ...list.connectInfo },
-        connectedDatabase: list.children
+  const refreshConnectListMap = () => {
+    AppStore.connectListMap = connectionList.value.map((listItem) => {
+      return {
+        id: listItem.connectInfo.id,
+        info: { ...listItem.connectInfo },
+        connectedDatabase: listItem.children
           .filter((item) => item.isConnect)
           .map((item) => ({ name: item.label, uuid: item.uuid })),
       };
     });
-    AppStore.connectListMap = obj;
+  };
+  const rotateLastestConnectDatabase = () => {
+    let lastestConnectDatabase = {
+      rootId: '',
+      databaseName: '',
+      uuid: '',
+    };
+    const firstAvailableDatabase: any = AppStore.connectListMap.find(
+      (listItem) => listItem.connectedDatabase?.length > 0,
+    );
+    if (firstAvailableDatabase) {
+      lastestConnectDatabase = {
+        rootId: firstAvailableDatabase.info.id,
+        databaseName: firstAvailableDatabase.connectedDatabase[0].name,
+        uuid: firstAvailableDatabase.connectedDatabase[0].uuid,
+      };
+    }
+    AppStore.lastestConnectDatabase = lastestConnectDatabase;
   };
   const handleDeleteConnect = () => {
     treeContext.rootVisible = false;
     ElMessageBox.confirm(
-      t('connection.message.deleteConnect', { name: currentContextNodeData.connectInfo.name }),
+      t('message.deleteConnect', { name: currentContextNodeData.connectInfo.name }),
     ).then(async () => {
       for (let i = 0; i < currentContextNodeData.children.length; i++) {
         const db = currentContextNodeData.children[i];
         db.isConnect && (await closeConnections(db.uuid));
       }
-      const index = connectionList.value.findIndex((item) => item.id == currentContextNodeData.id);
+      // const index = connectionList.value.findIndex((item) => item.id == currentContextNodeData.id);
       treeRef.value.remove(treeRef.value.getNode(currentContextNodeData.id));
-      index > -1 && connectionList.value.splice(index, 1);
-      if (AppStore.currentConnectNode.id == currentContextNodeData.id) {
-        AppStore.currentConnectNode = connectionList.value[0] || {};
-      }
+      // index > -1 && connectionList.value.splice(index, 1);
       updateConnectListPersist();
-      updateConnectListMap();
-      if (connectionList.value.length == 0) router.push('/home');
+      refreshConnectListMap();
+      rotateLastestConnectDatabase();
+      if (connectionList.value.length == 0) {
+        // EventBus.notify(EventTypeName.CLOSE_ALL_TAB);
+        router.push('/home');
+      }
+      AppStore.currentConnectNode =
+        connectionList.value.find((item) => item.id == AppStore.lastestConnectDatabase.rootId) ||
+        {};
     });
   };
   const handleDisAllconnection = () => {
     treeContext.rootVisible = false;
     ElMessageBox.confirm(
-      t('connection.message.deleteAllConnect', { name: currentContextNodeData.connectInfo.name }),
+      t('message.disConnect', { name: currentContextNodeData.connectInfo.name }),
     ).then(async () => {
       for (let i = 0; i < connectionList.value.length; i++) {
         const list = connectionList.value[i];
@@ -862,7 +885,7 @@
         AppStore.currentConnectNode = connectionList.value[0] || {};
       }
       updateConnectListPersist();
-      updateConnectListMap();
+      refreshConnectListMap();
     });
   };
   const handleDbConnect = async (rootId, databaseId, willOpen) => {
@@ -871,11 +894,6 @@
     const dbData = findNode({ rootId, databaseId });
     if (!rootData) return;
     let mergeObj = {};
-    let lastestConnectDatabase = {
-      rootId: '',
-      databaseName: '',
-      uuid: '',
-    };
     if (willOpen) {
       const params = {
         id: rootData.connectInfo.id,
@@ -885,35 +903,32 @@
       const res: any = await openDatabaseConnection(params);
       ElMessage.success(t('message.connectSuccess'));
       mergeObj = { uuid: res.connectionid };
-      lastestConnectDatabase = {
+      AppStore.lastestConnectDatabase = {
         rootId,
         databaseName: dbData.name,
         uuid: res.connectionid,
       };
     } else {
+      await ElMessageBox.confirm(t('message.disConnect', { name: currentContextNodeData.name }));
       await closeConnections(dbData.uuid);
       ElMessage.success(t('message.disconnectSuccess'));
       mergeObj = { uuid: '' };
     }
     Object.assign(dbData, {
       isConnect: willOpen,
+      isLeaf: !willOpen,
       ...mergeObj,
     });
-    updateConnectListPersist();
-    updateConnectListMap();
-    if (!willOpen) {
-      const firstAvailableDatabase: any = Object.values(AppStore.connectListMap).find(
-        (list: any) => list.connectedDatabase?.length > 0,
-      );
-      if (firstAvailableDatabase) {
-        lastestConnectDatabase = {
-          rootId: firstAvailableDatabase.info.id,
-          databaseName: firstAvailableDatabase.connectedDatabase[0].name,
-          uuid: firstAvailableDatabase.connectedDatabase[0].uuid,
-        };
-      }
+    treeRef.value.updateKeyChildren(dbData.id, dbData.children);
+    const node = treeRef.value.getNode(dbData.id);
+    if (node) {
+      node.loaded = false;
+      node.updateLeafState();
+      node.collapse();
     }
-    AppStore.lastestConnectDatabase = lastestConnectDatabase;
+    updateConnectListPersist();
+    refreshConnectListMap();
+    !willOpen && rotateLastestConnectDatabase();
   };
   const handleOpenNewTerminal = () => {
     treeContext.databaseVisible = false;
@@ -930,7 +945,6 @@
         connectInfoName,
         uuid: currentContextNodeData.uuid,
         dbname,
-        // schema:
         terminalNum,
         time,
       },
@@ -964,7 +978,7 @@
         label: data.name,
         name: data.name,
       });
-      treeRef.value.updateKeyChildren(newId, findNode({ rootId }).children);
+      treeRef.value.updateKeyChildren(newId, db.children);
       updateConnectListPersist();
       if (data.isConnect) {
         nextTick(() => {
@@ -980,16 +994,16 @@
   };
   const hanldeDeleteDb = () => {
     treeContext.databaseVisible = false;
-    ElMessageBox.confirm(
-      t('connection.message.deleteDatabase', { name: currentContextNodeData.label }),
-    ).then(async () => {
-      await deleteDatabase({
-        uuid: treeContextFindAvailableUuid.value,
-        databaseName: currentContextNodeData.label,
-      });
-      ElMessage.success(t('message.deleteSuccess'));
-      deleteDbItem(currentContextNodeData.connectInfo.id, currentContextNodeData.id);
-    });
+    ElMessageBox.confirm(t('message.deleteDatabase', { name: currentContextNodeData.label })).then(
+      async () => {
+        await deleteDatabase({
+          uuid: treeContextFindAvailableUuid.value,
+          databaseName: currentContextNodeData.label,
+        });
+        ElMessage.success(t('message.deleteSuccess'));
+        deleteDbItem(currentContextNodeData.connectInfo.id, currentContextNodeData.id);
+      },
+    );
   };
   const handleDbInfo = () => {
     treeContext.databaseVisible = false;
@@ -1136,13 +1150,15 @@
   });
   const treeContextDbStatus = computed(() => {
     return Boolean(
-      AppStore.connectListMap[currentContextNodeData.connectInfo.id]?.connectedDatabase.findIndex(
-        (item) => item.name == currentContextNodeData.label,
-      ) > -1,
+      AppStore.connectListMap
+        .find((listItem) => listItem.id === currentContextNodeData.connectInfo.id)
+        ?.connectedDatabase.findIndex((item) => item.name == currentContextNodeData.label) > -1,
     );
   });
   const treeContextFindAvailableUuid = computed(() => {
-    return AppStore.connectListMap[currentContextNodeData.connectInfo.id]?.connectedDatabase[0]?.uuid;
+    return AppStore.connectListMap.find(
+      (listItem) => listItem.id === currentContextNodeData.connectInfo.id,
+    )?.connectedDatabase[0]?.uuid;
   });
   const handleContextmenu = (event, data) => {
     const type = data.type;
@@ -1307,10 +1323,12 @@
   onMounted(async () => {
     // maybe update database list, and schema, databaseName... so must close all tabs.
     EventBus.listen(EventTypeName.GET_DATABASE_LIST, async (connectData) => {
-      EventBus.notify(EventTypeName.CLOSE_ALL_TAB);
+      EventBus.notify(EventTypeName.CLOSE_ALL_TAB_TO_LAST);
       connectData && Object.assign(connectInfo, connectData);
       const { connectionid, ...info } = connectData;
-      AppStore.connectListMap[connectData.id] = {
+      const isRepeatIndex = AppStore.connectListMap.findIndex((item) => item.id == connectData.id);
+      const connectListMapItem = {
+        id: connectData.id,
         info,
         connectedDatabase: [
           {
@@ -1319,6 +1337,9 @@
           },
         ],
       };
+      isRepeatIndex > -1
+        ? AppStore.connectListMap.splice(isRepeatIndex, 1, connectListMapItem)
+        : AppStore.connectListMap.unshift(connectListMapItem);
       AppStore.lastestConnectDatabase = {
         rootId: connectData.id,
         databaseName: connectData.dataName,
@@ -1330,7 +1351,9 @@
     EventBus.listen(EventTypeName.UPDATE_DATABASE_LIST, (connectData) => {
       connectData && Object.assign(connectInfo, connectData);
       const { connectionid, ...info } = connectData;
-      AppStore.connectListMap[connectData.id] = {
+      const isRepeatIndex = AppStore.connectListMap.findIndex((item) => item.id == connectData.id);
+      const connectListMapItem = {
+        id: connectData.id,
         info,
         connectedDatabase: [
           {
@@ -1339,6 +1362,9 @@
           },
         ],
       };
+      isRepeatIndex > -1
+        ? AppStore.connectListMap.splice(isRepeatIndex, 1, connectListMapItem)
+        : AppStore.connectListMap.unshift(connectListMapItem);
       AppStore.lastestConnectDatabase = {
         rootId: connectData.id,
         databaseName: connectData.dataName,
@@ -1346,7 +1372,6 @@
       };
       fetchDBList(info, connectionid);
     });
-
     connectionList.value = getAllConnectList();
   });
   onUnmounted(() => {
@@ -1390,10 +1415,10 @@
     .el-tree-node__label,
   .el-tree--highlight-current .el-tree-node.is-current > .el-tree-node__content {
     background-color: var(--el-color-primary) !important;
-    color: #fff;
+    color: var(--color-bg-2);
     i,
     .icon {
-      color: #fff;
+      color: var(--color-bg-2);
     }
   }
 </style>
@@ -1478,14 +1503,14 @@
       }
       &.home,
       &.home .icon {
-        color: red;
+        color: var(--el-color-primary);
       }
       &.active {
         background-color: var(--normal-color);
       }
       &.active,
       &.active .icon {
-        color: #fff;
+        color: var(--color-bg-2);
       }
     }
   }
@@ -1510,16 +1535,14 @@
       white-space: nowrap;
       list-style: none;
       margin: 0;
-      color: var(--normal-color);
       cursor: pointer;
       outline: 0;
       &.disabled {
-        // color: #c5c8ce;
-        color: var(--el-color-info);
+        color: var(--color-text-4);
         cursor: not-allowed;
       }
       &:not(.disabled):hover {
-        background-color: var(--color-secondary-disabled);
+        background-color: var(--color-fill-2);
       }
     }
   }

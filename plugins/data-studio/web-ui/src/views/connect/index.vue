@@ -44,7 +44,14 @@
           <el-input v-model="form.ip" />
         </el-form-item>
         <el-form-item prop="port" class="port" :label="$t('connection.port')">
-          <el-input-number v-model="form.port" :min="1" :max="65535" controls-position="right" />
+          <el-input-number
+            v-model="form.port"
+            :min="1"
+            :max="65535"
+            :step="1"
+            step-strictly
+            controls-position="right"
+          />
           <span>{{ $t('connection.maximum') }}: 65535</span>
         </el-form-item>
         <el-form-item prop="dataName" :label="$t('connection.database')">
@@ -54,7 +61,11 @@
           <el-input v-model="form.userName" />
         </el-form-item>
         <el-form-item prop="password" :label="$t('connection.password')">
-          <el-input v-model="form.password" :type="isShowPwd ? 'text' : 'password'">
+          <el-input
+            v-model="form.password"
+            :type="isShowPwd ? 'text' : 'password'"
+            @keyup.enter="confirmForm(ruleFormRef)"
+          >
             <template #suffix>
               <el-icon class="el-input__icon" @click="isShowPwd = !isShowPwd">
                 <View v-if="isShowPwd" />
@@ -106,7 +117,7 @@
       connectInfo: {
         id: string | number;
       };
-      uuid: string;
+      uuid?: string;
     }>(),
     {
       modelValue: false,
@@ -139,32 +150,32 @@
   });
   const rules = reactive<FormRules>({
     name: [
-      { required: true, message: t('connection.rules.name[0]'), trigger: 'blur' },
-      { min: 1, max: 30, message: t('connection.rules.common[0]', 30), trigger: 'blur' },
+      { required: true, message: t('rules.empty', [t('connection.name')]), trigger: 'blur' },
+      { min: 1, max: 30, message: t('rules.charLength', 30), trigger: 'blur' },
     ],
     ip: [
-      { required: true, message: t('connection.rules.ip[0]'), trigger: 'blur' },
-      { min: 1, max: 30, message: t('connection.rules.common[0]', 30), trigger: 'blur' },
+      { required: true, message: t('rules.empty', [t('connection.host')]), trigger: 'blur' },
+      { min: 1, max: 30, message: t('rules.charLength', 30), trigger: 'blur' },
     ],
     port: [
-      { required: true, message: t('connection.rules.port[0]'), trigger: 'blur' },
+      { required: true, message: t('rules.empty', [t('connection.port')]), trigger: 'blur' },
       {
-        message: t('connection.rules.port[1]'),
+        message: t('connection.rules.port[0]'),
         trigger: 'blur',
         pattern: /^[0-9]+$/,
       },
     ],
     dataName: [
-      { required: true, message: t('connection.rules.dataName[0]'), trigger: 'blur' },
-      { min: 1, max: 30, message: t('connection.rules.common[0]', 30), trigger: 'blur' },
+      { required: true, message: t('rules.empty', [t('connection.database')]), trigger: 'blur' },
+      { min: 1, max: 30, message: t('rules.charLength', 30), trigger: 'blur' },
     ],
     userName: [
-      { required: true, message: t('connection.rules.username[0]'), trigger: 'blur' },
-      { min: 1, max: 30, message: t('connection.rules.common[0]', 30), trigger: 'blur' },
+      { required: true, message: t('rules.empty', [t('connection.username')]), trigger: 'blur' },
+      { min: 1, max: 30, message: t('rules.charLength', 30), trigger: 'blur' },
     ],
     password: [
-      { required: true, message: t('connection.rules.password[0]'), trigger: 'blur' },
-      { min: 1, max: 30, message: t('connection.rules.common[0]', 30), trigger: 'blur' },
+      { required: true, message: t('rules.empty', [t('connection.password')]), trigger: 'blur' },
+      { min: 1, max: 30, message: t('rules.charLength', 30), trigger: 'blur' },
     ],
   });
   const connectListInfo = reactive({
@@ -259,7 +270,7 @@
       port: String(form.port),
       password: Crypto.encrypt(form.password),
       webUser: UserStore.userId,
-      uuid: props.uuid || undefined,
+      connectionid: props.uuid || undefined,
     };
     const data =
       props.type === 'create' ? await createConnect(params) : await updateConnect(params);

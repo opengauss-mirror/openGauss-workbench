@@ -4,6 +4,7 @@ import com.nctigba.datastudio.config.ConnectionConfig;
 import com.nctigba.datastudio.model.query.SelectDataQuery;
 import com.nctigba.datastudio.service.TableDataService;
 import com.nctigba.datastudio.util.DebugUtils;
+import com.nctigba.datastudio.util.LocaleString;
 import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.exception.CustomException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -95,7 +96,7 @@ public class TableDataServiceImpl implements TableDataService {
                 count.next();
                 int a = count.getInt("count");
                 if(a==0){
-                    throw new CustomException("The table does not exist");
+                    throw new CustomException(LocaleString.transLanguage("2007"));
                 }
             }
             try(ResultSet resultSet = statement.executeQuery(TABLE_DEF_SQL +

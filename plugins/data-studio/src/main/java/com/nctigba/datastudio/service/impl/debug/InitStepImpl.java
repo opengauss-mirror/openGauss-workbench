@@ -7,6 +7,7 @@ import com.nctigba.datastudio.model.entity.OperateStatusDO;
 import com.nctigba.datastudio.service.OperationInterface;
 import com.nctigba.datastudio.util.DebugUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -43,6 +44,8 @@ public class InitStepImpl implements OperationInterface {
         PublicParamReq paramReq = (PublicParamReq) obj;
         String windowName = paramReq.getWindowName();
         String oldWindowName = paramReq.getOldWindowName();
+        String sql = paramReq.getSql();
+        String schema = DebugUtils.prepareFuncName(sql).split("\\.")[0];
         OperateStatusDO operateStatus = webSocketServer.getOperateStatus(windowName);
         operateStatus.enableStopDebug();
         webSocketServer.setOperateStatus(windowName, operateStatus);
@@ -51,9 +54,9 @@ public class InitStepImpl implements OperationInterface {
         if (stat == null) {
             return;
         }
-        String name = DebugUtils.prepareName(paramReq.getSql());
-        ResultSet oidResult = stat.executeQuery(DebugUtils.getFuncSql(oldWindowName, name, webSocketServer));
-        String oid = "";
+        String name = DebugUtils.prepareName(sql);
+        ResultSet oidResult = stat.executeQuery(DebugUtils.getFuncSql(oldWindowName, schema, name, webSocketServer));
+        String oid = Strings.EMPTY;
         while (oidResult.next()) {
             oid = oidResult.getString(OID);
             webSocketServer.setParamMap(windowName, OID, oid);
