@@ -18,6 +18,7 @@ import org.opengauss.admin.common.core.domain.model.ops.JschResult;
 import org.opengauss.admin.common.core.domain.model.ops.WsSession;
 import org.opengauss.admin.common.core.domain.model.ops.host.OpsHostVO;
 import org.opengauss.admin.common.core.domain.model.ops.host.SSHBody;
+import org.opengauss.admin.common.core.handler.ops.cache.SSHChannelManager;
 import org.opengauss.admin.common.core.handler.ops.cache.TaskManager;
 import org.opengauss.admin.common.core.handler.ops.cache.WsConnectorManager;
 import org.opengauss.admin.common.exception.ops.OpsException;
@@ -31,9 +32,9 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.Future;
+import java.util.stream.Collectors;
 
 /**
  * @author lhf
@@ -187,15 +188,20 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
 
         if (Objects.isNull(root)) {
             root = hostBody.toRootUser(hostId);
+            hostUserService.save(root);
+        }else {
+            if (Objects.nonNull(hostBody.getIsRemember()) && hostBody.getIsRemember()){
+                root.setPassword(hostBody.getPassword());
+                hostUserService.updateById(root);
+            }else {
+                hostUserService.cleanPassword(root.getHostUserId());
+            }
         }
 
         Session session = jschUtil.getSession(hostBody.getPublicIp(), hostBody.getPort(), "root", encryptionUtils.decrypt(hostBody.getPassword())).orElseThrow(() -> new OpsException("Failed to establish a session with the host"));
         OpsHostEntity newHostEntity = hostBody.toHostEntity(getHostName(session),getOS(session),getCpuArch(session));
         newHostEntity.setHostId(hostId);
         updateById(newHostEntity);
-
-        root.setPassword(hostBody.getPassword());
-        hostUserService.saveOrUpdate(root);
 
         return true;
     }
@@ -214,9 +220,53 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
 
         ChannelShell channelShell = jschUtil.openChannelShell(session);
 
+        SSHChannelManager.registerChannelShell(sshBody.getBusinessId(),channelShell);
+
         Future<?> future = threadPoolTaskExecutor.submit(() -> jschUtil.channelToWsSession(channelShell, wsSession));
 
         TaskManager.registry(sshBody.getBusinessId(), future);
+    }
+
+    @Override
+    public Map<String, String> mapOsByIps(Set<String> ipSet) {
+        if (CollUtil.isEmpty(ipSet)){
+            return Collections.emptyMap();
+        }
+
+        LambdaQueryWrapper<OpsHostEntity> queryWrapper = Wrappers.lambdaQuery(OpsHostEntity.class)
+                .in(OpsHostEntity::getPublicIp, ipSet);
+
+        List<OpsHostEntity> hostList = list(queryWrapper);
+        return hostList.stream().collect(Collectors.toMap(OpsHostEntity::getPublicIp,OpsHostEntity::getOs));
+    }
+
+    @Override
+    public List<OpsHostEntity> listAll(String azId) {
+        LambdaQueryWrapper<OpsHostEntity> queryWrapper =
+                Wrappers.lambdaQuery(OpsHostEntity.class)
+                        .eq(StrUtil.isNotEmpty(azId), OpsHostEntity::getAzId, azId);
+
+        List<OpsHostEntity> list = list(queryWrapper);
+        populateIsRemember(list);
+        return list;
+    }
+
+    private void populateIsRemember(List<OpsHostEntity> list) {
+        final List<String> hostIds = list.stream().map(OpsHostEntity::getHostId).collect(Collectors.toList());
+        if (CollUtil.isNotEmpty(hostIds)){
+            final List<OpsHostUserEntity> opsHostUserEntities = hostUserService.listHostUserByHostIdList(hostIds);
+            List<String> isRememberHostIds = new ArrayList<>();
+            for (OpsHostUserEntity opsHostUserEntity : opsHostUserEntities) {
+                final String username = opsHostUserEntity.getUsername();
+                if ("root".equalsIgnoreCase(username) && StrUtil.isNotEmpty(opsHostUserEntity.getPassword())){
+                    isRememberHostIds.add(opsHostUserEntity.getHostId());
+                }
+            }
+
+            for (OpsHostEntity opsHostEntity : list) {
+                opsHostEntity.setIsRemember(isRememberHostIds.contains(opsHostEntity.getHostId()));
+            }
+        }
     }
 
     private OpsHostEntity getByPublicIp(String publicIp) {

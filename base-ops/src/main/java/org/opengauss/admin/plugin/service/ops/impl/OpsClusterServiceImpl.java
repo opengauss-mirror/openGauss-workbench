@@ -1353,7 +1353,8 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         Session ommSession = jschUtil.getSession(hostEntity.getPublicIp(),hostEntity.getPort(),masterHostUsername,encryptionUtils.decrypt(masterHostPassword)).orElseThrow(()->new OpsException("Failed to establish connection with host " + hostEntity.getPublicIp()));
         Connection connection = null;
         try {
-            Integer majorVersion = judgeMajorVersion(ommSession);
+            String versionNum = getVersionNum(ommSession);
+            Integer majorVersion = Integer.valueOf(versionNum.substring(0,1));
             OpenGaussVersionEnum openGaussVersionEnum = judgeOpenGaussVersion(majorVersion,ommSession,connection);
             boolean versionMatch = false;
             if (majorVersion>=5){
@@ -1474,24 +1475,24 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         }
     }
 
-    private Integer judgeMajorVersion(Session ommSession) {
+    private String getVersionNum(Session ommSession) {
         String command = "gsql -V";
         JschResult jschResult = null;
         try {
             jschResult = jschUtil.executeCommand(command, ommSession);
 
             if (0 != jschResult.getExitCode()) {
-                log.error("Failed to get openGauss major version, exit code: {}, log: {}", jschResult.getExitCode(), jschResult.getResult());
-                throw new OpsException("Failed to get openGauss major version");
+                log.error("Failed to get openGauss version, exit code: {}, log: {}", jschResult.getExitCode(), jschResult.getResult());
+                throw new OpsException("Failed to get openGauss version");
             }
 
             String result = jschResult.getResult();
-            String majorVersion = result.substring(16, 17);
-            log.info("openGauss Major version:{}",majorVersion);
-            return Integer.parseInt(majorVersion);
+            String majorVersion = result.substring(16, 21);
+            log.info("openGauss version:{}",majorVersion);
+            return result;
         } catch (Exception e) {
-            log.error("Failed to get openGauss major version", e);
-            throw new OpsException("Failed to get openGauss major version");
+            log.error("Failed to get openGauss version", e);
+            throw new OpsException("Failed to get openGauss version");
         }
     }
 

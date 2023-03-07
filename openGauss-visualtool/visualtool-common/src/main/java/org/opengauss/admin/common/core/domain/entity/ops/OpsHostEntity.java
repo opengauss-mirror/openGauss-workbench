@@ -1,5 +1,6 @@
 package org.opengauss.admin.common.core.domain.entity.ops;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import org.opengauss.admin.common.core.domain.BaseEntity;
@@ -23,4 +24,6 @@ public class OpsHostEntity extends BaseEntity {
     private String azId;
     private String os;
     private String cpuArch;
+    @TableField(exist = false)
+    private Boolean isRemember;
 }

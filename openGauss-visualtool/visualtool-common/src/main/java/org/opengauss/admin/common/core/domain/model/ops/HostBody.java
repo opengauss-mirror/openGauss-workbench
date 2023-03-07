@@ -7,6 +7,7 @@ import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
 import org.opengauss.admin.common.utils.ops.JschUtil;
 
 import javax.validation.constraints.NotEmpty;
+import java.util.Objects;
 
 /**
  * @author lhf
@@ -20,6 +21,7 @@ public class HostBody {
     @NotEmpty(message = "The Intranet IP address cannot be empty")
     private String privateIp;
     private String password;
+    private Boolean isRemember;
     @NotEmpty(message = "Please select AZ")
     private String azId;
     private String remark;
@@ -42,6 +44,9 @@ public class HostBody {
         OpsHostUserEntity hostUserEntity = new OpsHostUserEntity();
         hostUserEntity.setUsername("root");
         hostUserEntity.setHostId(hostId);
+        if (Objects.nonNull(isRemember) && isRemember){
+            hostUserEntity.setPassword(password);
+        }
         return hostUserEntity;
     }
 }

@@ -3,6 +3,7 @@ package org.opengauss.admin.system.service.ops.impl;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.jcraft.jsch.Session;
@@ -276,5 +277,13 @@ public class HostUserServiceImpl extends ServiceImpl<OpsHostUserMapper, OpsHostU
                 .eq(OpsHostUserEntity::getHostId, hostId)
                 .eq(OpsHostUserEntity::getUsername, "root");
         return getOne(queryWrapper, false);
+    }
+
+    @Override
+    public void cleanPassword(String hostUserId) {
+        final LambdaUpdateWrapper<OpsHostUserEntity> updateWrapper = Wrappers.lambdaUpdate(OpsHostUserEntity.class)
+                .set(OpsHostUserEntity::getPassword, null)
+                .eq(OpsHostUserEntity::getHostUserId, hostUserId);
+        update(updateWrapper);
     }
 }

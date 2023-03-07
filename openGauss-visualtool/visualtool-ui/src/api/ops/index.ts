@@ -94,6 +94,10 @@ export const hostPing = (data: KeyValue) => {
   return axios.post('host/ping', data)
 }
 
+export const hostSSH = (data: KeyValue) => {
+  return axios.post('host/ssh', data)
+}
+
 export const hostPingById = (hostId: string, data: KeyValue) => {
   return axios.get(`host/ping/${hostId}`, {
     params: data
@@ -160,6 +164,11 @@ export const hasNameAZ = (data: KeyValue) => {
 }
 
 // jdbc 
+
+export const downloadTemplate = () => {
+  return axios.get('jdbcDbCluster/downloadTemplate')
+}
+
 export const jdbcPage = (query: any) => {
   return axios.get('jdbcDbCluster/page', {
     params: query
@@ -186,7 +195,17 @@ export const uploadFileJdbc = (data: KeyValue) => {
   return axios.post('jdbcDbCluster/importAnalysis', data)
 }
 
+export const uploadRealJdbc = (data: KeyValue) => {
+  return axios.post('jdbcDbCluster/importCluster', data)
+}
+
 // cluster node ping
 export const jdbcNodePing = (data: KeyValue) => {
   return axios.post('jdbcDbClusterNode/ping', data)
+}
+
+export const jdbcNodeMonitor = (clusterNodeId: any, data: KeyValue) => {
+  return axios.get(`jdbcDbClusterNode/monitor/${clusterNodeId}`, {
+    params: data
+  })
 }
