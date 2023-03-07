@@ -190,7 +190,7 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
             root = hostBody.toRootUser(hostId);
             hostUserService.save(root);
         }else {
-            if (hostBody.getIsRemember()){
+            if (Objects.nonNull(hostBody.getIsRemember()) && hostBody.getIsRemember()){
                 root.setPassword(hostBody.getPassword());
                 hostUserService.updateById(root);
             }else {
