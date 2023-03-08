@@ -205,8 +205,10 @@ const validate = () => {
         }
       })
       serie.dimension.forEach((item22: any, key22: number) => {
-        flag = false
-        message += (message ? '；\n ' : '') + `${t('modeling.dy_common.chartNotice3')}${key1 + 1}${t('modeling.dy_common.chartNotice4')}${key22 + 1}${t('modeling.dy_common.chartNotice2')}`
+        if (!item22.field) {
+          flag = false
+          message += (message ? '；\n ' : '') + `${t('modeling.dy_common.chartNotice3')}${key1 + 1}${t('modeling.dy_common.chartNotice4')}${key22 + 1}${t('modeling.dy_common.chartNotice2')}`
+        }
       })
     })
   }

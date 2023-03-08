@@ -143,6 +143,24 @@ const open = (graph: Graph, data: any, type: string) => {
         let arr: KeyValue[] = []
         for (let i in res.data) arr.push({ name: i, sql: res.data[i] })
         dData.sql = arr
+        nextTick(() => {
+          let sqlDoms = document.getElementById('RunSqlPanel')?.querySelector('.pgsql')?.children
+          if (sqlDoms && sqlDoms.length > 0) {
+            for (let dom of sqlDoms) {
+              let index = sqlCodeDisplayBlock.findIndex(item => (item.key === dom.innerHTML.toUpperCase()))
+              if (index != -1) {
+                let i = sqlCodeDisplayBlock[index]
+                if (i.br === 1) {
+                  dom.innerHTML = `<br />${dom.innerHTML}`
+                } else if (i.br === 2) {
+                  dom.innerHTML = `${dom.innerHTML}<br />`
+                } else if (i.br === 3) {
+                  dom.innerHTML = `<br />${dom.innerHTML}<br />`
+                }
+              }
+            }
+          }
+        })
       })
     }
   }

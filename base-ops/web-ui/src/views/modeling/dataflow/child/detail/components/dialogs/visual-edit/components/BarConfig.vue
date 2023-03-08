@@ -168,8 +168,10 @@ const validate = () => {
     message += (message ? '；\n ' : '') + t('modeling.components.BarConfig.5m7insim3sw0')
   }
   config.dimension.forEach((item: any, key: number) => {
-    flag = false
-    message += (message ? '；\n ' : '') + `${t('modeling.dy_common.chartNotice1')}${key + 1}${t('modeling.dy_common.chartNotice2')}`
+    if (!item.field) {
+      flag = false
+      message += (message ? '；\n ' : '') + `${t('modeling.dy_common.chartNotice1')}${key + 1}${t('modeling.dy_common.chartNotice2')}`
+    }
   })
   if (!flag) {
     if (noticeArr.includes(message)) return flag
