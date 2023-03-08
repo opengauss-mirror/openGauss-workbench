@@ -1502,7 +1502,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
             String result = jschResult.getResult();
             String majorVersion = result.substring(16, 21);
             log.info("openGauss version:{}",majorVersion);
-            return result;
+            return majorVersion;
         } catch (Exception e) {
             log.error("Failed to get openGauss version", e);
             throw new OpsException("Failed to get openGauss version");
