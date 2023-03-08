@@ -44,7 +44,8 @@
                 }}</a-option>
               </a-select>
             </a-form-item>
-            <a-form-item field="rootPassword" :label="$t('enterprise.NodeConfig.else2')" validate-trigger="blur">
+            <a-form-item v-if="formItem.isNeedPwd" field="rootPassword" :label="$t('enterprise.NodeConfig.else2')"
+              validate-trigger="blur">
               <a-input-password v-model="formItem.rootPassword" :placeholder="$t('enterprise.NodeConfig.5mpme7w6b700')"
                 allow-clear />
             </a-form-item>
@@ -231,6 +232,7 @@ const addNode = (index: number, isMaster?: boolean) => {
   const nodeData = {
     clusterRole: ClusterRoleEnum.SLAVE,
     hostId: '',
+    isNeedPwd: false,
     rootPassword: '',
     publicIp: '',
     privateIp: '',
@@ -349,6 +351,7 @@ const changeHostId = (index: number) => {
       data.nodeList[index].privateIp = data.hostObj[hostId].privateIp
       data.nodeList[index].publicIp = data.hostObj[hostId].publicIp
       data.nodeList[index].hostname = data.hostObj[hostId].hostname
+      data.nodeList[index].isNeedPwd = !data.hostObj[hostId].isRemember
     }
     if (data.userListByHost[hostId] && !data.nodeList[index].installUserId) {
       data.nodeList[index].installUserId = data.userListByHost[hostId][0].hostUserId
@@ -498,90 +501,91 @@ const validateSpecialFields = async () => {
       refList.value[i].clearValidate()
     }
     for (let i = 0; i < data.nodeList.length; i++) {
+      const validMethodArr = []
+      let isOkPwd = true
+      let encryptPwd = ''
       if (data.nodeList[i].rootPassword) {
-        const validMethodArr = []
-        let isOkPwd = true
-        const encryptPwd = await encryptPassword(data.nodeList[i].rootPassword)
-        // password validate
-        try {
-          const param = {
-            rootPassword: encryptPwd
-          }
-          const passwordValid: KeyValue = await hostPingById(data.nodeList[i].hostId, param)
-          if (Number(passwordValid.code) !== 200) {
-            refList.value[i].setFields({
-              rootPassword: {
-                status: 'error',
-                message: t('enterprise.NodeConfig.else8')
-              }
-            })
-            result = false
-            isOkPwd = false
-          }
-        } catch (err: any) {
+        encryptPwd = await encryptPassword(data.nodeList[i].rootPassword)
+      }
+      // password validate
+      try {
+        const param = {
+          rootPassword: encryptPwd
+        }
+        const passwordValid: KeyValue = await hostPingById(data.nodeList[i].hostId, param)
+        if (Number(passwordValid.code) !== 200) {
           refList.value[i].setFields({
             rootPassword: {
               status: 'error',
-              message: t('enterprise.NodeConfig.else9')
+              message: t('enterprise.NodeConfig.else8')
             }
           })
           result = false
           isOkPwd = false
         }
-        if (!isOkPwd) {
-          continue
-        }
-        //  cluster port is used
-        validMethodArr.push(validatePort(clusterData.value.port, encryptPwd, data.nodeList[i].hostId))
-        validMethodArr.push(validatePath(data.nodeList[i].dataPath, encryptPwd, data.nodeList[i].hostId))
-        validMethodArr.push(validatePath(clusterData.value.installPackagePath, encryptPwd, data.nodeList[i].hostId))
-        if (isInstallCM.value) {
-          validMethodArr.push(validatePort(data.nodeList[i].cmPort, encryptPwd, data.nodeList[i].hostId))
-        }
-        if (validMethodArr.length) {
-          const validResult = await Promise.all(validMethodArr)
-          if ((installType.value !== 'import' && validResult[0]) || (installType.value === 'import' && !validResult[0])) {
-            // port valid
-            refList.value[i].setFields({
-              hostId: {
-                status: 'error',
-                message: clusterData.value.port + (installType.value === 'import' ? t('enterprise.NodeConfig.else10') : t('enterprise.NodeConfig.else11'))
-              }
-            })
-            result = false
+      } catch (err: any) {
+        refList.value[i].setFields({
+          rootPassword: {
+            status: 'error',
+            message: t('enterprise.NodeConfig.else9')
           }
-          if ((installType.value !== 'import' && !validResult[1]) || (installType.value === 'import' && validResult[1])) {
-            // dataPath valid
-            refList.value[i].setFields({
-              dataPath: {
-                status: 'error',
-                message: installType.value === 'import' ? t('enterprise.NodeConfig.else12') : t('enterprise.NodeConfig.else13')
-              }
-            })
-            result = false
-          }
-
-          if ((installType.value !== 'import' && !validResult[2]) || (installType.value === 'import' && validResult[2])) {
-            // installPackagePath valid
-            refList.value[i].setFields({
-              hostId: {
-                status: 'error',
-                message: installType.value === 'import' ? t('enterprise.NodeConfig.else14') : t('enterprise.NodeConfig.else16')
-              }
-            })
-            result = false
-          }
-          if (isInstallCM.value) {
-            if ((installType.value !== 'import' && validResult[3]) || (installType.value === 'import' && !validResult[3])) {
-              // cmPort valid
-              refList.value[i].setFields({
-                cmPort: {
-                  status: 'error',
-                  message: data.nodeList[i].cmPort + (installType.value === 'import' ? t('enterprise.NodeConfig.else10') : t('enterprise.NodeConfig.else11'))
-                }
-              })
-              result = false
+        })
+        result = false
+        isOkPwd = false
+      }
+      if (!isOkPwd) {
+        continue
+      }
+      //  cluster port is used
+      validMethodArr.push(validatePort(clusterData.value.port, encryptPwd, data.nodeList[i].hostId))
+      validMethodArr.push(validatePath(data.nodeList[i].dataPath, encryptPwd, data.nodeList[i].hostId))
+      validMethodArr.push(validatePath(clusterData.value.installPackagePath, encryptPwd, data.nodeList[i].hostId))
+      if (isInstallCM.value) {
+        validMethodArr.push(validatePort(data.nodeList[i].cmPort, encryptPwd, data.nodeList[i].hostId))
+      }
+      if (validMethodArr.length) {
+        const validResult = await Promise.all(validMethodArr)
+        if ((installType.value !== 'import' && validResult[0]) || (installType.value === 'import' && !validResult[0])) {
+          // port valid
+          refList.value[i].setFields({
+            hostId: {
+              status: 'error',
+              message: clusterData.value.port + (installType.value === 'import' ? t('enterprise.NodeConfig.else10') : t('enterprise.NodeConfig.else11'))
             }
+          })
+          result = false
+        }
+        if ((installType.value !== 'import' && !validResult[1]) || (installType.value === 'import' && validResult[1])) {
+          // dataPath valid
+          refList.value[i].setFields({
+            dataPath: {
+              status: 'error',
+              message: installType.value === 'import' ? t('enterprise.NodeConfig.else12') : t('enterprise.NodeConfig.else13')
+            }
+          })
+          result = false
+        }
+
+        if ((installType.value !== 'import' && !validResult[2]) || (installType.value === 'import' && validResult[2])) {
+          // installPackagePath valid
+          refList.value[i].setFields({
+            hostId: {
+              status: 'error',
+              message: installType.value === 'import' ? t('enterprise.NodeConfig.else14') : t('enterprise.NodeConfig.else16')
+            }
+          })
+          result = false
+        }
+        if (isInstallCM.value) {
+          if ((installType.value !== 'import' && validResult[3]) || (installType.value === 'import' && !validResult[3])) {
+            // cmPort valid
+            refList.value[i].setFields({
+              cmPort: {
+                status: 'error',
+                message: data.nodeList[i].cmPort + (installType.value === 'import' ? t('enterprise.NodeConfig.else10') : t('enterprise.NodeConfig.else11'))
+              }
+            })
+            result = false
           }
         }
       }

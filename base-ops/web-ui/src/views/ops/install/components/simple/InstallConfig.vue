@@ -17,7 +17,8 @@
               }}</a-option>
             </a-select>
           </a-form-item>
-          <a-form-item field="rootPassword" :label="$t('simple.InstallConfig.else1')" validate-trigger="blur">
+          <a-form-item v-if="data.isNeedPwd" field="rootPassword" :label="$t('simple.InstallConfig.else1')"
+            validate-trigger="blur">
             <a-input-password v-model="data.form.rootPassword" :placeholder="$t('simple.InstallConfig.5mpmu0laqwo0')"
               allow-clear />
           </a-form-item>
@@ -68,6 +69,7 @@ import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
 const installStore = useOpsStore()
 const data = reactive({
+  isNeedPwd: false,
   form: {
     clusterId: '',
     hostId: '',
@@ -294,6 +296,7 @@ const changeHostId = () => {
     if (hostObj.value[data.form.hostId]) {
       data.form.privateIp = hostObj.value[data.form.hostId].privateIp
       data.form.publicIp = hostObj.value[data.form.hostId].publicIp
+      data.isNeedPwd = !hostObj.value[data.form.hostId].isRemember
     }
     installUserLoading.value = true
     hostUserListWithoutRoot(data.form.hostId).then((res: KeyValue) => {

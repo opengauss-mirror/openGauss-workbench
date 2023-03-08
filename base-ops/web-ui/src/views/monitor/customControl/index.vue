@@ -77,7 +77,14 @@ const getHostList = () => {
         })
       })
       data.hostId = data.hostList[0].value
-      openDlgToValid(data.hostId)
+      console.log('show is need pwd', data.hostId, data.hostObj[data.hostId]);
+      if (!data.hostObj[data.hostId].isRemember) {
+        openDlgToValid(data.hostId)
+      } else {
+        handleConnect({
+          hostId: data.hostId
+        })
+      }
     }
   }).finally(() => {
     data.hostListLoading = false
@@ -88,7 +95,13 @@ const hostChange = () => {
   if (data.hostId) {
     terminalWs.value?.destroy()
     termTerminal.value?.dispose()
-    openDlgToValid(data.hostId)
+    if (!data.hostObj[data.hostId].isRemember) {
+      openDlgToValid(data.hostId)
+    } else {
+      handleConnect({
+        hostId: data.hostId
+      })
+    }
   }
 }
 

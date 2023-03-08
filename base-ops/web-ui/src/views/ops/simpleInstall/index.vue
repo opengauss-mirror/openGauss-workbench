@@ -14,7 +14,8 @@
         <a-form-item field="hostId" :label="$t('simpleInstall.index.5mpn813guf00')">
           <div class="flex-row">
             <a-select style="width: 313px;" class="mr" :loading="data.hostLoading" v-model="data.form.hostId"
-              :placeholder="$t('simpleInstall.index.5mpn813gukw0')" @change="hostChange">
+              :placeholder="$t('simpleInstall.index.5mpn813gukw0')" @change="hostChange"
+              @popup-visible-change="hostVisibleChange">
               <a-option v-for="item in data.hostList" :key="item.hostId" :value="item.hostId">{{
                 item.privateIp
                 + '(' +
@@ -24,7 +25,8 @@
             <label class="label-color">{{ data.form.sysArch }}</label>
           </div>
         </a-form-item>
-        <a-form-item field="rootPassword" :label="$t('simpleInstall.index.else2')" validate-trigger="blur">
+        <a-form-item v-if="data.isNeedPwd" field="rootPassword" :label="$t('simpleInstall.index.else2')"
+          validate-trigger="blur">
           <a-input-password v-model="data.form.rootPassword" :placeholder="$t('simpleInstall.index.5mpn813gupc0')"
             allow-clear />
         </a-form-item>
@@ -139,6 +141,7 @@ const data = reactive<KeyValue>({
   installUserId: '',
   installUsername: '',
   hostLoading: false,
+  isNeedPwd: false,
   hostObj: {},
   hostList: [],
   installLoading: false,
@@ -472,6 +475,7 @@ const getInstallPackageList = () => {
       data.form.os = data.hostObj[data.form.hostId].os
       data.form.cpuArch = data.hostObj[data.form.hostId].cpuArch
       data.form.sysArch = data.hostObj[data.form.hostId].os + '_' + data.hostObj[data.form.hostId].cpuArch
+      data.isNeedPwd = !data.hostObj[data.form.hostId].isRemember
     }
     data.installLoading = true
     const param = {
@@ -495,6 +499,12 @@ const getInstallPackageList = () => {
     }).finally(() => {
       data.installLoading = false
     })
+  }
+}
+
+const hostVisibleChange = (val: boolean) => {
+  if (val) {
+    getHostList()
   }
 }
 
