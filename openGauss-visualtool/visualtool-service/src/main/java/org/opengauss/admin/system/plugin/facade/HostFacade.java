@@ -70,6 +70,6 @@ public class HostFacade {
     }
 
     public List<OpsHostEntity> listAll() {
-        return hostService.list();
+        return hostService.listAll(null);
     }
 }

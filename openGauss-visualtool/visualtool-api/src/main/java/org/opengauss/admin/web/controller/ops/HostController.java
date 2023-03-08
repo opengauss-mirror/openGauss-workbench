@@ -38,7 +38,7 @@ public class HostController extends BaseController {
 
     @GetMapping("/listAll")
     public AjaxResult listAll(@RequestParam(value = "azId", required = false) String azId) {
-        List<OpsHostEntity> hostEntityList = hostService.list(Wrappers.lambdaQuery(OpsHostEntity.class).eq(StrUtil.isNotEmpty(azId), OpsHostEntity::getAzId, azId));
+        List<OpsHostEntity> hostEntityList = hostService.listAll(azId);
         return AjaxResult.success(hostEntityList);
     }
 

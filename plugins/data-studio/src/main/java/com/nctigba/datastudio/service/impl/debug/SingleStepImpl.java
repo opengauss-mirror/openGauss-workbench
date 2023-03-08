@@ -56,13 +56,14 @@ public class SingleStepImpl implements OperationInterface {
             name = windowName;
         }
         int differ = (int) webSocketServer.getParamMap(name).get(DIFFER);
+        log.info("singleStep showDebugInfo differ is: " + differ);
         Statement stat = (Statement) webSocketServer.getParamMap(name).get(STATEMENT);
         if (stat == null) {
             return;
         }
 
         try {
-            if (paramReq.getOperation().equals("stepOut")) {
+            if (paramReq.getOperation().equals("stepOut") || paramReq.isCloseWindow()) {
                 name = oldWindowName;
             } else {
                 name = windowName;

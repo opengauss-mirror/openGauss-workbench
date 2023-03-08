@@ -106,6 +106,7 @@
       connectInfo: {
         id: string | number;
       };
+      uuid: string;
     }>(),
     {
       modelValue: false,
@@ -258,6 +259,7 @@
       port: String(form.port),
       password: Crypto.encrypt(form.password),
       webUser: UserStore.userId,
+      uuid: props.uuid || undefined,
     };
     const data =
       props.type === 'create' ? await createConnect(params) : await updateConnect(params);

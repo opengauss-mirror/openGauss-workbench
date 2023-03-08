@@ -186,7 +186,7 @@
     form.schema = connectData.value.schemaName;
     form.tableSchema = connectData.value.schemaName;
     form.connectionName = connectData.value.connectInfo.name;
-    form.uuid = connectData.value.connectInfo.uuid;
+    form.uuid = connectData.value.uuid;
     fetchTableName();
   };
   const fetchTableName = async () => {

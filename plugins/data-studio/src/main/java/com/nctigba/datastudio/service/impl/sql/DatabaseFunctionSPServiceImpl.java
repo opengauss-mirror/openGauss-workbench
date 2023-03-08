@@ -38,26 +38,24 @@ public class DatabaseFunctionSPServiceImpl implements DatabaseFunctionSPService 
     @Override
     public void dropFunctionSP(DatabaseFunctionSPDTO request) {
         log.info("dropFunctionSP request is: " + request);
-        try {
-            Connection connection = connectionConfig.connectDatabase(request.getUuid());
-            Statement statement = connection.createStatement();
-
-            ResultSet funcResult = statement.executeQuery(getFuncSql(request.getFunctionSPName(), statement));
-            String proKind = "";
-            while (funcResult.next()) {
-                proKind = funcResult.getString(PRO_KIND);
-            }
-            String sql = "";
-            if ("f".equals(proKind)) {
-                sql = DROP_SQL + FUNCTION_KEYWORD_SQL + request.getSchema() + POINT + request.getFunctionSPName() + SEMICOLON;
-            } else if ("p".equals(proKind)) {
-                sql = DROP_SQL + PROCEDURE_KEYWORD_SQL + request.getSchema() + POINT + request.getFunctionSPName() + SEMICOLON;
-            }
-            statement.execute(sql);
-            log.info("dropFunctionSP sql is: " + sql);
+        try(Connection connection = connectionConfig.connectDatabase(request.getUuid());
+            Statement statement = connection.createStatement()){
+            try(ResultSet funcResult = statement.executeQuery(getFuncSql(request.getFunctionSPName(), statement));){
+                String proKind = "";
+                while (funcResult.next()) {
+                    proKind = funcResult.getString(PRO_KIND);
+                }
+                String sql = "";
+                if ("f".equals(proKind)) {
+                    sql = DROP_SQL + FUNCTION_KEYWORD_SQL + request.getSchema() + POINT + request.getFunctionSPName() + SEMICOLON;
+                } else if ("p".equals(proKind)) {
+                    sql = DROP_SQL + PROCEDURE_KEYWORD_SQL + request.getSchema() + POINT + request.getFunctionSPName() + SEMICOLON;
+                }
+                statement.execute(sql);
+                log.info("dropFunctionSP sql is: " + sql);}
         } catch (Exception e) {
             e.printStackTrace();
-            throw new CustomException(e.getMessage());
+            throw new CustomException(e.getMessage(),e);
         }
     }
 
@@ -65,10 +63,11 @@ public class DatabaseFunctionSPServiceImpl implements DatabaseFunctionSPService 
         List<String> oidList = new ArrayList<>();
         List<String> paramTypeList = DebugUtils.getParamTypeList(name);
         for (int i = 0; i < paramTypeList.size(); i++) {
-            ResultSet typeNameResult = statement.executeQuery(GET_TYPE_OID_SQL
-                    + paramTypeList.get(i) + QUOTES_SEMICOLON);
-            while (typeNameResult.next()) {
-                oidList.add(typeNameResult.getString(OID));
+            try(ResultSet typeNameResult = statement.executeQuery(GET_TYPE_OID_SQL
+                    + paramTypeList.get(i) + QUOTES_SEMICOLON)){
+                while (typeNameResult.next()) {
+                    oidList.add(typeNameResult.getString(OID));
+                }
             }
         }
 

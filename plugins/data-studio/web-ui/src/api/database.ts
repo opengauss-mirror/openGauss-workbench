@@ -17,10 +17,28 @@ export function createDatabase(data) {
   });
 }
 
+// rename database
+export function renameDatabase(data) {
+  return request({
+    url: '/dataStudio/web/v1/database/rename',
+    method: 'post',
+    data,
+  });
+}
+
+// update database
+export function updateDatabase(data) {
+  return request({
+    url: '/dataStudio/web/v1/database/attribute/update',
+    method: 'get',
+    params: data,
+  });
+}
+
 // delete database
 export function deleteDatabase(data) {
   return request({
-    url: '/dataStudio/web/v1/metaData/database/delete',
+    url: '/dataStudio/web/v1/database/delete',
     method: 'delete',
     data,
   });

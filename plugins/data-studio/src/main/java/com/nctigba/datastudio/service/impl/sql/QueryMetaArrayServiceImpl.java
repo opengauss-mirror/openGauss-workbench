@@ -52,19 +52,16 @@ public class QueryMetaArrayServiceImpl implements QueryMetaArrayService {
             return databaseList;
         } catch (Exception e) {
             e.printStackTrace();
-            throw new CustomException(e.getMessage());
+            throw new CustomException(e.getMessage(),e);
         }
     }
 
     public List<String> schemaList(DatabaseMetaarraySchemaQuery request) throws Exception {
         log.info("schemaList request is: " + request);
-        String sql;
         List<String> schemaList = new ArrayList<>();
-        try {
-            Connection connection = connectionConfig.connectDatabase(request.getUuid());
+        try(Connection connection = connectionConfig.connectDatabase(request.getUuid());
             Statement statement = connection.createStatement();
-            sql = GET_SCHEMA_NAME_SQL;
-            ResultSet resultSet = statement.executeQuery(sql);
+            ResultSet resultSet = statement.executeQuery(GET_SCHEMA_NAME_SQL);){
             while (resultSet.next()) {
                 schemaList.add(resultSet.getString("schema_name"));
             }
@@ -72,61 +69,55 @@ public class QueryMetaArrayServiceImpl implements QueryMetaArrayService {
             return schemaList;
         } catch (Exception e) {
             e.printStackTrace();
-            throw new CustomException(e.getMessage());
+            throw new CustomException(e.getMessage(),e);
         }
     }
 
     public List<String> objectList(DatabaseMetaarrayQuery request) throws Exception {
         log.info("objectList request is: " + request);
-        String sql;
-        try {
-            Connection connection = connectionConfig.connectDatabase(request.getUuid());
-            Statement statement = connection.createStatement();
+        try(Connection connection = connectionConfig.connectDatabase(request.getUuid());
+            Statement statement = connection.createStatement();){
             List<String> objectList = new ArrayList<>();
-            Map funTypeMap = new HashMap<>();
             if (request.getObjectType().equals("ALL")) {
-                sql = SELECT_FUNCTION_SQL + request.getSchema() + QUOTES_PARENTHESES_SEMICOLON;
-                ResultSet resultSet = statement.executeQuery(sql);
-                while (resultSet.next()) {
-                    objectList.add(resultSet.getString("proname"));
+                try(ResultSet resultSet = statement.executeQuery(SELECT_FUNCTION_SQL + request.getSchema() + QUOTES_PARENTHESES_SEMICOLON);
+                    ResultSet resultSetView = statement.executeQuery(SELECT_OBJECT_SQL + request.getSchema() + SELECT_OBJECT_WHERE_IN_SQL + "v','m" + QUOTES_PARENTHESES_SEMICOLON);
+                    ResultSet resultSetTable = statement.executeQuery(SELECT_OBJECT_SQL + request.getSchema() + SELECT_OBJECT_WHERE_SQL + "r" + QUOTES_SEMICOLON);
+                ){
+                    while (resultSet.next()) {
+                        objectList.add(resultSet.getString("proname"));
+                    }while (resultSetView.next()) {
+                        objectList.add(resultSetView.getString("relname"));
+                    }while (resultSetTable.next()) {
+                        objectList.add(resultSetTable.getString("relname"));
+                    }
+                    return objectList;
                 }
-                sql = SELECT_OBJECT_SQL + request.getSchema() + SELECT_OBJECT_WHERE_IN_SQL + "v','m" + QUOTES_PARENTHESES_SEMICOLON;
-                ResultSet resultSetView = statement.executeQuery(sql);
-                while (resultSetView.next()) {
-                    objectList.add(resultSetView.getString("relname"));
-                }
-                sql = SELECT_OBJECT_SQL + request.getSchema() + SELECT_OBJECT_WHERE_SQL + "r" + QUOTES_SEMICOLON;
-                ResultSet resultSetTable = statement.executeQuery(sql);
-                while (resultSetTable.next()) {
-                    objectList.add(resultSetTable.getString("relname"));
-                }
-                return objectList;
             } else if (request.getObjectType().equals("FUN_PRO")) {
-                sql = SELECT_FUNCTION_SQL + request.getSchema() + QUOTES_PARENTHESES_SEMICOLON;
-                ResultSet resultSet = statement.executeQuery(sql);
-                while (resultSet.next()) {
-                    objectList.add(resultSet.getString("proname"));
+                try(ResultSet resultSet = statement.executeQuery(SELECT_FUNCTION_SQL + request.getSchema() + QUOTES_PARENTHESES_SEMICOLON);){
+                    while (resultSet.next()) {
+                        objectList.add(resultSet.getString("proname"));
+                    }
+                    return objectList;
                 }
-                return objectList;
             } else if (request.getObjectType().equals("VIEW")) {
-                sql = SELECT_OBJECT_SQL + request.getSchema() + SELECT_OBJECT_WHERE_IN_SQL + "v','m" + QUOTES_PARENTHESES_SEMICOLON;
-                ResultSet resultSet = statement.executeQuery(sql);
-                while (resultSet.next()) {
-                    objectList.add(resultSet.getString("relname"));
+                try(ResultSet resultSet = statement.executeQuery(SELECT_OBJECT_SQL + request.getSchema() + SELECT_OBJECT_WHERE_IN_SQL + "v','m" + QUOTES_PARENTHESES_SEMICOLON);){
+                    while (resultSet.next()) {
+                        objectList.add(resultSet.getString("relname"));
+                    }
+                    return objectList;
                 }
-                return objectList;
             } else {
-                sql = SELECT_OBJECT_SQL + request.getSchema() + SELECT_OBJECT_WHERE_SQL + request.getObjectType() + QUOTES_SEMICOLON;
-                ResultSet resultSet = statement.executeQuery(sql);
-                while (resultSet.next()) {
-                    objectList.add(resultSet.getString("relname"));
+                try(ResultSet resultSet = statement.executeQuery(SELECT_OBJECT_SQL + request.getSchema() + SELECT_OBJECT_WHERE_SQL + request.getObjectType() + QUOTES_SEMICOLON);){
+                    while (resultSet.next()) {
+                        objectList.add(resultSet.getString("relname"));
+                    }
+                    log.info("objectList response is: " + objectList);
+                    return objectList;
                 }
-                log.info("objectList response is: " + objectList);
-                return objectList;
             }
         } catch (Exception e) {
             e.printStackTrace();
-            throw new CustomException(e.getMessage());
+            throw new CustomException(e.getMessage(),e);
         }
     }
 
@@ -134,11 +125,9 @@ public class QueryMetaArrayServiceImpl implements QueryMetaArrayService {
         log.info("tableColumnList request is: " + request);
         String sql;
         List<String> columnList = new ArrayList<>();
-        try {
-            Connection connection = connectionConfig.connectDatabase(request.getUuid());
+        try(Connection connection = connectionConfig.connectDatabase(request.getUuid());
             Statement statement = connection.createStatement();
-            sql = SELECT_COLUMN_SQL + request.getSchema() + SELECT_COLUMN_WHERE_SQL + request.getObjectName() + QUOTES_SEMICOLON;
-            ResultSet resultSet = statement.executeQuery(sql);
+            ResultSet resultSet = statement.executeQuery(SELECT_COLUMN_SQL + request.getSchema() + SELECT_COLUMN_WHERE_SQL + request.getObjectName() + QUOTES_SEMICOLON);){
             while (resultSet.next()) {
                 columnList.add(resultSet.getString("column_name"));
             }
@@ -146,7 +135,7 @@ public class QueryMetaArrayServiceImpl implements QueryMetaArrayService {
             return columnList;
         } catch (Exception e) {
             e.printStackTrace();
-            throw new CustomException(e.getMessage());
+            throw new CustomException(e.getMessage(),e);
         }
     }
 

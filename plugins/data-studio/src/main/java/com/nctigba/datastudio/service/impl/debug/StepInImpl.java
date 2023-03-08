@@ -39,15 +39,16 @@ public class StepInImpl implements OperationInterface {
     public void operate(WebSocketServer webSocketServer, Object obj) throws Exception {
         log.info("stepIn obj is: " + obj);
         PublicParamReq paramReq = (PublicParamReq) obj;
-        String windowName = paramReq.getOldWindowName();
-        if (StringUtils.isEmpty(windowName)) {
-            windowName = paramReq.getWindowName();
+        String name = paramReq.getOldWindowName();
+        String windowName = paramReq.getWindowName();
+        if (StringUtils.isEmpty(name)) {
+            name = windowName;
         }
-        OperateStatusDO operateStatus = webSocketServer.getOperateStatus(windowName);
+        OperateStatusDO operateStatus = webSocketServer.getOperateStatus(name);
         if (!operateStatus.isStepIn()) {
             return;
         }
-        Statement stat = (Statement) webSocketServer.getParamMap(windowName).get(STATEMENT);
+        Statement stat = (Statement) webSocketServer.getParamMap(name).get(STATEMENT);
         if (stat == null) {
             return;
         }
@@ -70,8 +71,9 @@ public class StepInImpl implements OperationInterface {
             while (infoCodeResult.next()) {
                 sb.append(infoCodeResult.getString("query")).append("\n");
             }
+            log.info("stepIn sb is: " + sb);
             map.put(RESULT, DebugUtils.prepareName(sb.toString()));
-            webSocketServer.sendMessage(windowName, newWindow, SUCCESS, map);
+            webSocketServer.sendMessage(name, newWindow, SUCCESS, map);
         }
     }
 

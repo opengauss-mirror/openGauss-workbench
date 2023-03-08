@@ -26,4 +26,6 @@ public interface IHostUserService extends IService<OpsHostUserEntity> {
     OpsHostUserEntity getOmmUserByHostId(String hostId);
 
     OpsHostUserEntity getRootUserByHostId(String hostId);
+
+    void cleanPassword(String hostUserId);
 }

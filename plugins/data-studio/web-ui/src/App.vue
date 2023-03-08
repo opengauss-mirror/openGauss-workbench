@@ -7,6 +7,7 @@
     v-model="isConnectVisible"
     :type="connectType"
     :connectInfo="connectInfo"
+    :uuid="availableUuid"
   />
   <ConnectInfoDialog
     v-if="AppStore.isReloadRouter"
@@ -41,6 +42,7 @@
   const isConnectInfoVisible = ref(false);
   const connectType = ref<'create' | 'edit'>('create');
   const connectInfo = reactive<any>({});
+  const availableUuid = ref('');
   const heartbeatTimer = ref(null);
 
   onMounted(() => {
@@ -55,13 +57,17 @@
       : isDark.value;
     isDark.value = isPlatformDarkTheme;
     toggleDark(isPlatformDarkTheme);
-    EventBus.listen(EventTypeName.OPEN_CONNECT_DIALOG, ({ dialogType, connectInfo: data }) => {
-      Object.assign(connectInfo, data);
-      connectType.value = dialogType;
-      setTimeout(() => {
-        isConnectVisible.value = true;
-      }, 400);
-    });
+    EventBus.listen(
+      EventTypeName.OPEN_CONNECT_DIALOG,
+      ({ dialogType, connectInfo: data, uuid }) => {
+        Object.assign(connectInfo, data);
+        connectType.value = dialogType;
+        availableUuid.value = uuid;
+        setTimeout(() => {
+          isConnectVisible.value = true;
+        }, 400);
+      },
+    );
     EventBus.listen(EventTypeName.OPEN_CONNECT_INFO_DIALOG, (data) => {
       Object.assign(connectInfo, data);
       isConnectInfoVisible.value = true;
@@ -87,6 +93,7 @@
     EventBus.unListen(EventTypeName.OPEN_CONNECT_INFO_DIALOG);
     clearInterval(heartbeatTimer.value);
     heartbeatTimer.value = null;
+    sessionStorage.clear();
   });
 </script>
 

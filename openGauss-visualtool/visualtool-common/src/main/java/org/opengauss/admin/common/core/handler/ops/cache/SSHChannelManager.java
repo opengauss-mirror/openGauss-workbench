@@ -15,4 +15,8 @@ public class SSHChannelManager {
     public static Optional<ChannelShell> getChannelShell(String businessId) {
         return Optional.ofNullable(CHANNEL_CONTEXT.get(businessId));
     }
+
+    public static void registerChannelShell(String businessId, ChannelShell channelShell) {
+        CHANNEL_CONTEXT.put(businessId,channelShell);
+    }
 }

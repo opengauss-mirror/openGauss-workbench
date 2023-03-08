@@ -1,5 +1,6 @@
 package com.nctigba.datastudio.service.impl.sql;
 
+import com.alibaba.druid.util.StringUtils;
 import com.nctigba.datastudio.config.ConnectionConfig;
 import com.nctigba.datastudio.dao.ConnectionMapDAO;
 import com.nctigba.datastudio.dao.DatabaseConnectionDAO;
@@ -10,6 +11,7 @@ import com.nctigba.datastudio.model.dto.RenameDatabaseDTO;
 import com.nctigba.datastudio.model.entity.DatabaseConnectionDO;
 import com.nctigba.datastudio.model.entity.DatabaseConnectionUrlDO;
 import com.nctigba.datastudio.service.CreateDatabaseService;
+import com.nctigba.datastudio.service.MetaDataByJdbcService;
 import com.nctigba.datastudio.util.DebugUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.exception.CustomException;
@@ -23,17 +25,7 @@ import java.sql.Statement;
 import java.util.Map;
 import java.util.UUID;
 
-import static com.nctigba.datastudio.constants.SqlConstants.ALTER_SQL;
-import static com.nctigba.datastudio.constants.SqlConstants.CONFIGURE_TIME;
-import static com.nctigba.datastudio.constants.SqlConstants.CREATE_SQL;
-import static com.nctigba.datastudio.constants.SqlConstants.DATABASE_ATTRIBUTE_SQL;
-import static com.nctigba.datastudio.constants.SqlConstants.DATABASE_SQL;
-import static com.nctigba.datastudio.constants.SqlConstants.DROP_SQL;
-import static com.nctigba.datastudio.constants.SqlConstants.GET_URL_JDBC;
-import static com.nctigba.datastudio.constants.SqlConstants.QUOTES_SEMICOLON;
-import static com.nctigba.datastudio.constants.SqlConstants.RENAME_TO_SQL;
-import static com.nctigba.datastudio.constants.SqlConstants.SEMICOLON;
-import static com.nctigba.datastudio.constants.SqlConstants.WITH_ENCODING_SQL;
+import static com.nctigba.datastudio.constants.SqlConstants.*;
 
 @Slf4j
 @Service
@@ -43,19 +35,31 @@ public class CreateDatabaseServiceImpl implements CreateDatabaseService {
 
     @Resource
     private DatabaseConnectionDAO databaseConnectionDAO;
-
+    @Resource
+    private MetaDataByJdbcService metaDataByJdbcService;
     @Override
     public void createDatabase(CreateDatabaseDTO request) throws Exception {
         log.info("createDatabase request is: " + request);
-        try {
-            String ddl = CREATE_SQL + DATABASE_SQL + request.getDatabaseName() + WITH_ENCODING_SQL + request.getDatabaseCode() + QUOTES_SEMICOLON;
-            Connection connection = connectionConfig.connectDatabase(request.getUuid());
-            Statement statement = connection.createStatement();
+        try(Connection connection = connectionConfig.connectDatabase(request.getUuid());
+            Statement statement = connection.createStatement()) {
+            String ddl = CREATE_SQL + DATABASE_SQL + request.getDatabaseName() + WITH_ENCODING_SQL + request.getDatabaseCode() + DBCOMPATIBILITY_SQL + request.getCompatibleType();
+            if (!StringUtils.isEmpty(request.getCollation())){
+                ddl = ddl + LC_COLLATE_SQL + request.getCollation();
+            }
+            if (!StringUtils.isEmpty(request.getCharacterType())){
+                ddl = ddl + LC_CTYPE_SQL + request.getCharacterType();
+            }
+            if (Integer.valueOf(request.getConRestrictions()) >= -1){
+                ddl = ddl +QUOTES+ CONNECTION_LIMIT_SQL + request.getConRestrictions()+ SEMICOLON;
+            }else{
+                throw new CustomException("The number of connections is greater than - 1");
+            }
+
             statement.execute(ddl);
             log.info("createDatabase sql is: " + ddl);
         } catch (Exception e) {
             e.printStackTrace();
-            throw new CustomException(e.getMessage());
+            throw new CustomException(e.getMessage(),e);
         }
     }
 
@@ -71,6 +75,8 @@ public class CreateDatabaseServiceImpl implements CreateDatabaseService {
         databaseConnectionUrlDO.setUrl(GET_URL_JDBC + databaseConnectionDO.getIp() + ":" + databaseConnectionDO.getPort() + "/" + database.getDataName() + CONFIGURE_TIME);
         databaseConnectionUrlDO.setUserName(databaseConnectionDO.getUserName());
         databaseConnectionUrlDO.setPassword(databaseConnectionDO.getPassword());
+        metaDataByJdbcService.testQuerySQL(databaseConnectionUrlDO.getUrl(),databaseConnectionUrlDO.getUserName(),databaseConnectionUrlDO.getPassword(),
+                "SELECT 1");
         connectionDTO.setConnectionDTO(databaseConnectionUrlDO);
         ConnectionMapDAO.setConMap(uuid, connectionDTO);
         return databaseConnectionDO;
@@ -79,48 +85,79 @@ public class CreateDatabaseServiceImpl implements CreateDatabaseService {
     @Override
     public void deleteDatabase(DatabaseNameDTO request) throws Exception {
         log.info("deleteDatabase request is: " + request);
-        try {
-            String ddl = DROP_SQL + DATABASE_SQL + request.getDatabaseName() + SEMICOLON;
-            Connection connection = connectionConfig.connectDatabase(request.getUuid());
-            Statement statement = connection.createStatement();
+        String ddl = DROP_SQL + DATABASE_SQL + request.getDatabaseName() + SEMICOLON;
+        try(Connection connection = connectionConfig.connectDatabase(request.getUuid());
+            Statement statement = connection.createStatement()) {
             statement.execute(ddl);
             log.info("deleteDatabase sql is: " + ddl);
         } catch (Exception e) {
             e.printStackTrace();
-            throw new CustomException(e.getMessage());
+            throw new CustomException(e.getMessage(),e);
         }
     }
 
     @Override
     public void renameDatabase(RenameDatabaseDTO request) throws Exception {
         log.info("deleteDatabase request is: " + request);
-        try {
-            String ddl = ALTER_SQL + DATABASE_SQL + request.getOldDatabaseName() + RENAME_TO_SQL + request.getDatabaseName() + SEMICOLON;
-            Connection connection = connectionConfig.connectDatabase(request.getUuid());
-            Statement statement = connection.createStatement();
-            statement.execute(ddl);
-            log.info("deleteDatabase sql is: " + ddl);
+        String ddl = null;
+        try(Connection connection = connectionConfig.connectDatabase(request.getUuid())) {
+            if(request.getOldDatabaseName().equals(request.getDatabaseName())){
+                if (Integer.valueOf(request.getConRestrictions()) >= -1){
+                    ddl = ALTER_SQL + DATABASE_SQL + request.getOldDatabaseName() + WITH_KEYWORD_SQL +CONNECTION_LIMIT_SQL+ request.getConRestrictions() + SEMICOLON;
+                    try(Statement statement = connection.createStatement()){
+                        statement.execute(ddl);
+                        log.info("deleteDatabase sql is: " + ddl);
+                    }
+                }else{
+                    throw new CustomException("The number of connections is greater than - 1");
+                }
+            }else {
+                ddl = ALTER_SQL + DATABASE_SQL + request.getOldDatabaseName() + RENAME_TO_SQL + request.getDatabaseName() + SEMICOLON;
+                try(Statement statement = connection.createStatement()){
+                    statement.execute(ddl);
+                    log.info("deleteDatabase sql is: " + ddl);
+                }
+            }
         } catch (Exception e) {
             e.printStackTrace();
-            throw new CustomException(e.getMessage());
+            throw new CustomException(e.getMessage(),e);
         }
     }
 
     @Override
     public Map<String, Object> databaseAttribute(DatabaseNameDTO request) throws Exception {
         log.info("deleteDatabase request is: " + request);
-        try {
+        Map<String, Object> resultMap;
+        try(Connection connection = connectionConfig.connectDatabase(request.getUuid());
+            Statement statement = connection.createStatement()) {
             String ddl = DATABASE_ATTRIBUTE_SQL + request.getDatabaseName() + QUOTES_SEMICOLON;
-            Connection connection = connectionConfig.connectDatabase(request.getUuid());
-            Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery(ddl);
-            Map<String, Object> resultMap = DebugUtils.parseResultSet(resultSet);
-            log.info("synonymAttribute sql is: " + ddl);
-            log.info("synonymAttribute response is: " + resultMap);
+            try(ResultSet resultSet = statement.executeQuery(ddl);){
+                resultMap = DebugUtils.parseResultSet(resultSet);
+                log.info("synonymAttribute sql is: " + ddl);
+                log.info("synonymAttribute response is: " + resultMap);
+            }
             return resultMap;
         } catch (Exception e) {
             e.printStackTrace();
-            throw new CustomException(e.getMessage());
+            throw new CustomException(e.getMessage(),e);
+        }
+    }
+    @Override
+    public Map<String, Object> databaseAttributeUpdate(DatabaseNameDTO request) throws Exception {
+        log.info("deleteDatabase request is: " + request);
+        Map<String, Object> resultMap;
+        try(Connection connection = connectionConfig.connectDatabase(request.getUuid());
+            Statement statement = connection.createStatement()) {
+            String ddl = DATABASE_UPDATA_ATTRIBUTE_SQL + request.getDatabaseName() + QUOTES_SEMICOLON;
+            try(ResultSet resultSet = statement.executeQuery(ddl)) {
+                resultMap = DebugUtils.parseResultSet(resultSet);
+                log.info("synonymAttribute sql is: " + ddl);
+                log.info("synonymAttribute response is: " + resultMap);
+            }
+            return resultMap;
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new CustomException(e.getMessage(),e);
         }
     }
 }

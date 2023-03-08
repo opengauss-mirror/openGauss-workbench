@@ -3,6 +3,7 @@ package org.opengauss.admin.system.service.ops;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsJdbcDbClusterEntity;
+import org.opengauss.admin.common.core.domain.model.ops.jdbc.JdbcDbClusterImportAnalysisVO;
 import org.opengauss.admin.common.core.domain.model.ops.jdbc.JdbcDbClusterInputDto;
 import org.opengauss.admin.common.core.domain.model.ops.jdbc.JdbcDbClusterVO;
 import org.springframework.web.multipart.MultipartFile;
@@ -22,7 +23,7 @@ public interface IOpsJdbcDbClusterService extends IService<OpsJdbcDbClusterEntit
 
     void update(String clusterId, JdbcDbClusterInputDto clusterInput);
 
-    List<JdbcDbClusterInputDto> importAnalysis(MultipartFile file);
+    JdbcDbClusterImportAnalysisVO importAnalysis(MultipartFile file);
 
     void importCluster(MultipartFile file);
 

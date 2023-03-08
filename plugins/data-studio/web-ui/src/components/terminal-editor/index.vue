@@ -15,7 +15,7 @@
         @breakPointStep="handleBreakPointStep"
         @singleStep="handleSingleStep"
         @stepIn="handleStepIn"
-        @stepOut="handleStepOut"
+        @stepOut="handleStepOut(false)"
         @format="handleFormat"
       />
       <div class="monaco-wrapper" ref="monacoWrapper">
@@ -302,6 +302,9 @@
             text: `[SUCCESS] ${result || res.msg}`,
           });
       }
+      if (res.type == 'button') {
+        getButtonStatus();
+      }
       if (res.type == 'operateStatus') {
         if (props.editorType == 'sql') {
           sqlData.barStatus = {
@@ -419,6 +422,7 @@
             funcname: result,
             dbname: route.query.dbname,
             connectInfoName: ws.connectionName,
+            uuid: ws.uuid,
             schema: route.query.schema,
             parentTagId: TagsViewStore.getCurrentView(route)?.id,
             rootTagId:
@@ -458,6 +462,7 @@
 
   const handleExecute = () => {
     tabList.value = [];
+    tabValue.value = 'home';
     if (props.editorType == 'sql') {
       changeSqlBarStatus('running');
       ws.instance.send({
@@ -518,6 +523,7 @@
       operation: 'breakPointStep',
       ...commonWsParams.value,
       oldWindowName: ws.rootWindowName,
+      sql: editorRef.value.getValue(),
     });
   };
 
@@ -526,6 +532,7 @@
       operation: 'singleStep',
       ...commonWsParams.value,
       oldWindowName: ws.rootWindowName,
+      sql: editorRef.value.getValue(),
     });
   };
 
@@ -534,6 +541,7 @@
       operation: 'stepIn',
       ...commonWsParams.value,
       oldWindowName: ws.rootWindowName,
+      sql: editorRef.value.getValue(),
     });
   };
 
@@ -543,6 +551,7 @@
       ...commonWsParams.value,
       oldWindowName: ws.rootWindowName,
       isCloseWindow: isUnMount,
+      sql: editorRef.value.getValue(),
     });
   };
 

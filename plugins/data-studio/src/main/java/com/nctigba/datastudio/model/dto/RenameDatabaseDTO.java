@@ -10,4 +10,5 @@ public class RenameDatabaseDTO {
     private String uuid;
     private String databaseName;
     private String oldDatabaseName;
+    private String conRestrictions;
 }

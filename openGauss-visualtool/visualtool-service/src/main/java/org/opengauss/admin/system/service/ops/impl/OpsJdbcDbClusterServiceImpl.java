@@ -16,6 +16,7 @@ import org.opengauss.admin.common.enums.ops.DeployTypeEnum;
 import org.opengauss.admin.common.exception.ops.OpsException;
 import org.opengauss.admin.common.utils.ops.JdbcUtil;
 import org.opengauss.admin.system.mapper.ops.OpsJdbcDbClusterMapper;
+import org.opengauss.admin.system.service.ops.IHostService;
 import org.opengauss.admin.system.service.ops.IOpsJdbcDbClusterNodeService;
 import org.opengauss.admin.system.service.ops.IOpsJdbcDbClusterService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,6 +40,8 @@ public class OpsJdbcDbClusterServiceImpl extends ServiceImpl<OpsJdbcDbClusterMap
 
     @Autowired
     private IOpsJdbcDbClusterNodeService opsJdbcDbClusterNodeService;
+    @Autowired
+    private IHostService hostService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -106,7 +109,7 @@ public class OpsJdbcDbClusterServiceImpl extends ServiceImpl<OpsJdbcDbClusterMap
     }
 
     @Override
-    public List<JdbcDbClusterInputDto> importAnalysis(MultipartFile file) {
+    public JdbcDbClusterImportAnalysisVO importAnalysis(MultipartFile file) {
         List<JdbcDbClusterInputDto> jdbcDbClusterInputDto = null;
         try {
             jdbcDbClusterInputDto = parseCSV(file);
@@ -121,7 +124,8 @@ public class OpsJdbcDbClusterServiceImpl extends ServiceImpl<OpsJdbcDbClusterMap
             throw new OpsException(msg);
         }
 
-        return analysisWrongNodes(jdbcDbClusterInputDto);
+        List<JdbcDbClusterInputDto> jdbcDbClusterInputDtos = analysisWrongNodes(jdbcDbClusterInputDto);
+        return JdbcDbClusterImportAnalysisVO.of(jdbcDbClusterInputDto,jdbcDbClusterInputDtos);
     }
 
     private List<JdbcDbClusterInputDto> analysisWrongNodes(List<JdbcDbClusterInputDto> jdbcDbClusterInputDto) {
@@ -151,16 +155,16 @@ public class OpsJdbcDbClusterServiceImpl extends ServiceImpl<OpsJdbcDbClusterMap
 
             for (JdbcDbClusterNodeInputDto node : nodes) {
                 boolean nodeWrong = false;
-                String name = node.getName();
-                if (StrUtil.isEmpty(name)) {
-                    if (nodeWrong) {
-                        node.setRemark(node.getRemark() + "，Node name cannot be empty");
-                    } else {
-                        node.setRemark("Node name cannot be empty");
-                    }
-
-                    nodeWrong = true;
-                }
+//                String name = node.getName();
+//                if (StrUtil.isEmpty(name)) {
+//                    if (nodeWrong) {
+//                        node.setRemark(node.getRemark() + "，Node name cannot be empty");
+//                    } else {
+//                        node.setRemark("Node name cannot be empty");
+//                    }
+//
+//                    nodeWrong = true;
+//                }
 
                 String url = node.getUrl();
                 try {
@@ -271,15 +275,12 @@ public class OpsJdbcDbClusterServiceImpl extends ServiceImpl<OpsJdbcDbClusterMap
 
             Cluster cluster = (Cluster) o;
 
-            if (name != null ? !name.equals(cluster.name) : cluster.name != null) return false;
-            return deployType != null ? deployType.equals(cluster.deployType) : cluster.deployType == null;
+            return name.equals(cluster.name);
         }
 
         @Override
         public int hashCode() {
-            int result = name != null ? name.hashCode() : 0;
-            result = 31 * result + (deployType != null ? deployType.hashCode() : 0);
-            return result;
+            return name.hashCode();
         }
     }
 
@@ -319,11 +320,15 @@ public class OpsJdbcDbClusterServiceImpl extends ServiceImpl<OpsJdbcDbClusterMap
                 }
 
                 String[] col = line.split(",");
-                if (col.length != 6) {
+                if (col.length != 4) {
                     throw new OpsException("The data in row " + lineNum + " is wrong");
                 } else {
-                    Cluster thatCluster = new Cluster(col[0], col[1]);
-                    ClusterNode thatClusterNode = new ClusterNode(col[2], col[3], col[3], col[4]);
+                    if (StrUtil.isEmpty(col[0].trim()) && StrUtil.isEmpty(col[1].trim())&& StrUtil.isEmpty(col[2].trim())&& StrUtil.isEmpty(col[3].trim())){
+                        continue;
+                    }
+
+                    Cluster thatCluster = new Cluster(col[0], null);
+                    ClusterNode thatClusterNode = new ClusterNode(null, col[1], col[2], col[3]);
 
                     Set<ClusterNode> clusterNodes = clusterListMap.get(thatCluster);
                     if (Objects.isNull(clusterNodes)) {
@@ -354,6 +359,18 @@ public class OpsJdbcDbClusterServiceImpl extends ServiceImpl<OpsJdbcDbClusterMap
         if (CollUtil.isEmpty(clusterList)) {
             throw new OpsException("The cluster content read from the file is empty");
         }
+
+        for (JdbcDbClusterInputDto inputDto : clusterList) {
+            DeployTypeEnum deployType = inputDto.getDeployType();
+            if (Objects.isNull(deployType)){
+                List<JdbcDbClusterNodeInputDto> nodes = inputDto.getNodes();
+                if (CollUtil.isEmpty(nodes) || nodes.size()<2){
+                    inputDto.setDeployType(DeployTypeEnum.SINGLE_NODE);
+                }else {
+                    inputDto.setDeployType(DeployTypeEnum.CLUSTER);
+                }
+            }
+        }
         return clusterList;
     }
 
@@ -366,6 +383,8 @@ public class OpsJdbcDbClusterServiceImpl extends ServiceImpl<OpsJdbcDbClusterMap
 
         Set<String> clusterIds = records.stream().map(OpsJdbcDbClusterEntity::getClusterId).collect(Collectors.toSet());
         Map<String, List<OpsJdbcDbClusterNodeEntity>> clusterNodeMap = opsJdbcDbClusterNodeService.mapClusterNodesByClusterId(clusterIds);
+        final Set<String> ipSet = clusterNodeMap.values().stream().flatMap(val -> val.stream()).map(OpsJdbcDbClusterNodeEntity::getIp).collect(Collectors.toSet());
+        Map<String,String> ipOsMap = hostService.mapOsByIps(ipSet);
 
         for (OpsJdbcDbClusterEntity record : records) {
             List<JdbcDbClusterNodeVO> nodes = new ArrayList<>();
@@ -375,7 +394,7 @@ public class OpsJdbcDbClusterServiceImpl extends ServiceImpl<OpsJdbcDbClusterMap
             List<OpsJdbcDbClusterNodeEntity> clusterNodeEntityList = clusterNodeMap.get(clusterId);
             if (CollUtil.isNotEmpty(clusterNodeEntityList)) {
                 for (OpsJdbcDbClusterNodeEntity clusterNodeEntity : clusterNodeEntityList) {
-                    nodes.add(JdbcDbClusterNodeVO.of(clusterNodeEntity));
+                    nodes.add(JdbcDbClusterNodeVO.of(clusterNodeEntity,ipOsMap.get(clusterNodeEntity.getIp())));
                 }
             }
 
@@ -391,6 +410,7 @@ public class OpsJdbcDbClusterServiceImpl extends ServiceImpl<OpsJdbcDbClusterMap
             throw new OpsException("Cluster node information does not exist");
         }
 
+        Date now = new Date();
         List<OpsJdbcDbClusterNodeEntity> clusterNodeEntityList = new ArrayList<>();
         for (JdbcDbClusterNodeInputDto node : nodes) {
             String url = node.getUrl();
@@ -410,7 +430,8 @@ public class OpsJdbcDbClusterServiceImpl extends ServiceImpl<OpsJdbcDbClusterMap
             opsJdbcDbClusterNodeEntity.setUsername(node.getUsername());
             opsJdbcDbClusterNodeEntity.setPassword(node.getPassword());
             opsJdbcDbClusterNodeEntity.setUrl(url);
-            opsJdbcDbClusterNodeEntity.setCreateTime(new Date());
+            opsJdbcDbClusterNodeEntity.setCreateTime(now);
+            opsJdbcDbClusterNodeEntity.setUpdateTime(now);
             opsJdbcDbClusterNodeEntity.setRemark(node.getRemark());
 
             clusterNodeEntityList.add(opsJdbcDbClusterNodeEntity);
@@ -439,7 +460,10 @@ public class OpsJdbcDbClusterServiceImpl extends ServiceImpl<OpsJdbcDbClusterMap
         clusterEntity.setName(clusterInput.getClusterName());
         clusterEntity.setDeployType(clusterInput.getDeployType());
         clusterEntity.setDbType(dbType);
-        clusterEntity.setCreateTime(new Date());
+
+        Date now = new Date();
+        clusterEntity.setCreateTime(now);
+        clusterEntity.setUpdateTime(now);
 
         save(clusterEntity);
         return clusterEntity;

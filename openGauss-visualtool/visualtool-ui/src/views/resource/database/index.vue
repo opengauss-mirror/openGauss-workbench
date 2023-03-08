@@ -8,74 +8,45 @@
               <template #icon>
                 <icon-plus />
               </template>
-              创建</a-button>
+              {{ $t('database.index.5oxhr0qz15w0') }}</a-button>
             <a-space direction="vertical" :style="{ width: '100%' }" class="mr-s">
               <a-upload action="/" @before-upload="beforeUpload" />
             </a-space>
-            <a-button type="outline" @click="downloadTemplate">
+            <a-button :loading="list.downloadLoading" type="outline" @click="downloadTemp">
               <template #icon>
                 <icon-download />
               </template>
-              下载模板</a-button>
+              {{ $t('database.index.5oxhr0qz2bs0') }}</a-button>
           </div>
           <div class="flex-row">
             <div class="flex-row mr">
-              <div class="label-color top-label mr-s">数据库实例名称:</div>
-              <a-input v-model="filter.name" placeholder="请输入数据库实例名称进行查询"></a-input>
+              <div class="label-color top-label mr-s">{{ $t('database.index.else1') }}:</div>
+              <a-input v-model="filter.name" :placeholder="$t('database.index.5oxhr0qz2s00')"></a-input>
             </div>
-            <a-button type="primary" @click="getListData">查询</a-button>
+            <a-button type="primary" @click="getListData">{{ $t('database.index.5oxhr0qz30g0') }}</a-button>
           </div>
         </div>
-        <a-table class="d-a-table-row full-h" :data="list.data" :columns="columns" :pagination="list.page"
-          :loading="list.loading" @page-change="currentPage" @page-size-change="pageSizeChange">
-          <template #ip="{ record }">
-            {{ record.nodes[0].ip }}
-          </template>
-          <template #port="{ record }">
-            {{ record.nodes[0].port }}
-          </template>
-          <template #baseInfo="{}">
-            <div class="flex-row">
-              <div class="flex-col mr">
-                <div>20</div>
-                <div>会话</div>
-              </div>
-              <div class="flex-col mr">
-                <div>2</div>
-                <div>连接数</div>
-              </div>
-              <div class="flex-col mr">
-                <div>20MB</div>
-                <div>内存占用</div>
-              </div>
-              <div class="flex-col mr">
-                <div>200</div>
-                <div>qps</div>
-              </div>
-              <div class="flex-col">
-                <div>300</div>
-                <div>tps</div>
-              </div>
-            </div>
-          </template>
-          <template #warning="{}">
-            --
-          </template>
-          <template #status="{}">
-            <a-tag color="green">running</a-tag>
+        <a-table style="height: 95%" :data="list.data" :columns="columns" :pagination="list.page" :loading="list.loading"
+          @page-change="currentPage" @page-size-change="pageSizeChange" row-key="clusterId" @expand="handleExpand"
+          :expandable="expandable">
+          <template #status="{ record }">
+            <a-tag bordered v-if="record.state === -1">checking</a-tag>
+            <a-tag bordered color="red" v-if="record.state === 0">error</a-tag>
+            <a-tag bordered color="green" v-if="record.state === 1">running</a-tag>
           </template>
           <template #operation="{ record }">
             <div class="flex-row">
-              <a-link class="mr" @click="handleDetail(record)">详情</a-link>
-              <a-link class="mr" @click="handleWarningConfig(record)">告警配置</a-link>
-              <a-link class="mr" @click="handleAdd('update', record)">修改</a-link>
-              <a-popconfirm content="确定要删除？" type="warning" ok-text="确定" cancel-text="取消" @ok="handleDel(record)">
-                <a-link status="danger">删除</a-link>
+              <a-link class="mr" @click="handleAdd('update', record)">{{ $t('database.index.5oxhr0qz37o0') }}</a-link>
+              <a-popconfirm :content="$t('database.index.5oxhr0qz3f40')" type="warning"
+                :ok-text="$t('database.index.5oxhr0qz3m80')" :cancel-text="$t('database.index.5oxhr0qz3t80')"
+                @ok="handleDel(record)">
+                <a-link status="danger">{{ $t('database.index.5oxhr0qz40k0') }}</a-link>
               </a-popconfirm>
             </div>
           </template>
         </a-table>
         <add-jdbc ref="addJdbcRef" @finish="getListData"></add-jdbc>
+        <host-import-dlg ref="hostImportDlgRef"></host-import-dlg>
       </div>
     </div>
   </div>
@@ -83,22 +54,55 @@
 
 <script lang="ts" setup>
 import { KeyValue } from '@/types/global'
-import { onMounted, reactive, computed, ref } from 'vue'
+import { onMounted, reactive, computed, ref, h } from 'vue'
 import { Message, Modal } from '@arco-design/web-vue'
-// import { useI18n } from 'vue-i18n'
-import { jdbcPage, delJdbc, uploadFileJdbc } from '@/api/ops'
+import { jdbcPage, delJdbc, uploadFileJdbc, downloadTemplate, uploadRealJdbc } from '@/api/ops'
 import AddJdbc from './AddJdbc.vue'
-// const { t } = useI18n()
+import HostImportDlg from './HostImportDlg.vue'
+import JdbcNodeTable from './JdbcNodeTable.vue'
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
+const expandable = reactive<KeyValue>({
+  title: '',
+  width: 50,
+  expandedRowKeys: [],
+  defaultExpandAllRows: true,
+  expandedRowRender: (record: KeyValue) => {
+    if (record.nodes && record.nodes.length > 0) {
+      return h('div', {}, [
+        h(JdbcNodeTable, {
+          nodes: record.nodes,
+          onValidRes (val: boolean) {
+            console.log('receive state', val)
+            record.state = val
+          }
+        })
+      ])
+    }
+    return ''
+  }
+})
+
+const handleExpand = (rowKey: string | number) => {
+  if (expandable.expandedRowKeys.length > 0) {
+    let index = expandable.expandedRowKeys.indexOf(rowKey)
+    if (index > -1) {
+      expandable.expandedRowKeys.splice(index, 1)
+    } else {
+      // expandable.expandedRowKeys.splice(0, expandable.expandedRowKeys.length)
+      expandable.expandedRowKeys.push(rowKey)
+    }
+  } else {
+    expandable.expandedRowKeys.push(rowKey)
+  }
+}
 
 const columns = computed(() => [
-  { title: '实例名称', dataIndex: 'name' },
-  { title: '类型', dataIndex: 'dbType' },
-  { title: 'IP地址', slotName: 'ip' },
-  { title: '端口', slotName: 'port' },
-  { title: '基本信息', slotName: 'baseInfo' },
-  { title: '告警', slotName: 'warning' },
-  { title: '状态', slotName: 'status' },
-  { title: '操作', slotName: 'operation' }
+  { title: t('database.index.5oxhr0qz48w0'), dataIndex: 'name' },
+  { title: t('database.index.5oxhr0qz4fs0'), dataIndex: 'dbType' },
+  { title: t('database.index.5oxhr0qz4no0'), dataIndex: 'status', slotName: 'status' },
+  { title: t('database.index.5oxhr0qz4zk0'), dataIndex: 'updateTime' },
+  { title: t('database.index.5oxhr0qz58o0'), slotName: 'operation', width: 350 }
 ])
 
 const filter = reactive({
@@ -116,6 +120,7 @@ const list = reactive<KeyValue>({
     'show-page-size': true
   },
   loading: false,
+  downloadLoading: false,
   rowSelection: {
     type: 'checkbox',
     showCheckedAll: true
@@ -132,10 +137,12 @@ const getListData = () => {
   jdbcPage(filter).then((res: KeyValue) => {
     if (Number(res.code) === 200) {
       list.data = []
+      expandable.expandedRowKeys = []
       res.rows.forEach((item: KeyValue) => {
         item.state = -1
         item.loading = false
         list.data.push(item)
+        expandable.expandedRowKeys.push(item.clusterId)
       })
       list.page.total = res.total
     }
@@ -147,8 +154,8 @@ const getListData = () => {
 const beforeUpload = (file?: any) => {
   return new Promise((resolve, reject) => {
     Modal.confirm({
-      title: '上传确认',
-      content: `确认上传 ${file.name}`,
+      title: t('database.index.5oxhr0qz5g40'),
+      content: `${t('database.index.else2')} ${file.name}`,
       onOk: () => {
         if (file) {
           handleUpload(file)
@@ -159,8 +166,9 @@ const beforeUpload = (file?: any) => {
   })
 }
 
-const handleUpload = (fileData: any) => {
-  const fileObj = fileData.file
+const hostImportDlgRef = ref<null | InstanceType<typeof HostImportDlg>>(null)
+// import analysis
+const handleUpload = (fileObj: any) => {
   const index1 = fileObj.name.lastIndexOf('.')
   const index2 = fileObj.name.length
   const type = fileObj.name.substring(index1, index2)
@@ -178,27 +186,37 @@ const handleUpload = (fileData: any) => {
     list.loading = true
     uploadFileJdbc(data).then((res: KeyValue) => {
       if (Number(res.code) === 200) {
-        list.loading = false
-        Message.success('Import successfully')
-        getListData()
+        if (res.data.succNum === res.data.total) {
+          handleRealUpload(fileObj)
+        }
+        if (res.data.failNum > 0 && res.data.failDetail.length) {
+          hostImportDlgRef.value?.open(res.data.failDetail)
+        }
       }
-    }).catch(() => {
+    }).finally(() => {
       list.loading = false
     })
   }
 }
 
+// real import
+const handleRealUpload = (fileObj: any) => {
+  const data = new FormData()
+  data.append('file', fileObj)
+  list.loading = true
+  uploadRealJdbc(data).then((res: KeyValue) => {
+    if (Number(res.code) === 200) {
+      Message.success('Import successfully')
+      getListData()
+    }
+  }).finally(() => {
+    list.loading = false
+  })
+}
+
 const addJdbcRef = ref<null | InstanceType<typeof AddJdbc>>(null)
 const handleAdd = (type: string, data?: KeyValue) => {
   addJdbcRef.value?.open(type, data)
-}
-
-const handleDetail = (record: KeyValue) => {
-  console.log('show record', record)
-}
-
-const handleWarningConfig = (record: KeyValue) => {
-  console.log('show record', record)
 }
 
 const handleDel = (record: KeyValue) => {
@@ -212,12 +230,28 @@ const handleDel = (record: KeyValue) => {
   })
 }
 
-const downloadTemplate = () => {
-  // window.location.href = './jdbcTemplate.json'
-  var a = document.createElement('a')
-  a.download = 'jdbc-template.csv'
-  a.href = './template.csv'
-  a.click()
+const downloadTemp = () => {
+  list.downloadLoading = true
+  downloadTemplate().then((res: any) => {
+    if (res) {
+      const blob = new Blob([res], {
+        type: 'text/plain'
+      })
+      const a = document.createElement('a')
+      const URL = window.URL || window.webkitURL
+      const herf = URL.createObjectURL(blob)
+      a.href = herf
+      a.download = 'jdbc-template.csv'
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      window.URL.revokeObjectURL(herf)
+    } else {
+      Message.error('Download failed, please try again')
+    }
+  }).finally(() => {
+    list.downloadLoading = false
+  })
 }
 
 const currentPage = (e: number) => {
@@ -232,6 +266,10 @@ const pageSizeChange = (e: number) => {
 </script>
 
 <style lang="less" scoped>
+:deep(.arco-table-container .arco-table-content-scroll-x) {
+  overflow: scroll;
+}
+
 .app-container {
   .main-bd {
     .upgrade-container {
