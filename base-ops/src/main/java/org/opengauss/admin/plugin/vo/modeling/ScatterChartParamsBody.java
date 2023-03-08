@@ -37,6 +37,7 @@ public class ScatterChartParamsBody {
     private Location location;
     private Double zoom;
     private List<Double> center;
+    private List<String> colorConfig;
 
     public void setTitle(String title) {
         this.title = title;
@@ -85,5 +86,12 @@ public class ScatterChartParamsBody {
     }
     public List<Double> getCenter() {
         return center.stream().limit(2).anyMatch(Objects::isNull) ? List.of(0d, 0d) : center;
+    }
+
+    public void setColorConfig(List<String> colorConfig) {
+        this.colorConfig = colorConfig;
+    }
+    public List<String> getColorConfig() {
+        return colorConfig;
     }
 }

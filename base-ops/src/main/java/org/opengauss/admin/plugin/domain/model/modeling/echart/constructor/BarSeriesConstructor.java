@@ -126,7 +126,7 @@ public class BarSeriesConstructor extends BaseSeriesConstructor {
                 List<String> categoryGroup = new ArrayList<>();
                 //The field corresponding to the statistical dimension is evaluated
                 dimensions.forEach(dim->{
-                    String categoryValue = item.get(dim.getField()).toString();
+                    String categoryValue = item.get(dim.getField()) == null ? "null" : item.get(dim.getField()) .toString();
                     String mapperKey = dim.getField()+categoryValue;
                     //Find the mapped category name
                     if (categoryDimensionValueMapper.containsKey(mapperKey)) {
