@@ -16,6 +16,7 @@ import org.springframework.stereotype.Component;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 /**
@@ -58,17 +59,36 @@ public class LineChartGenerateServiceImpl extends BaseGenerateServiceImpl {
 
         List<Series> series = new ArrayList<>();
         Map<String, List<Float>> seriesData = lineSeriesConstructor.getSeriesData();
+        float minValue = Float.MAX_VALUE;
+
         for(String key : seriesData.keySet()){
             List<Float> value = seriesData.get(key);
             //add y index for each series
-            series.add(new Series().setName(key).setType("line").setData(value).setYAxisIndex(0));
+            Series s = new Series().setType("line").setData(value).setYAxisIndex(0);
+            if (lineChartParamsBody.getDimension().size() > 0) {
+                s.setName(key);
+            }
+            series.add(s);
+
+            //get min value for y axis
+            float currentMinValue = Collections.min(value);
+            if (currentMinValue < minValue) {
+                minValue = currentMinValue;
+            }
+        }
+
+        if (minValue > 0 && minValue < Float.MAX_VALUE)
+        {
+            minValue = minValue * 0.8f;
+        } else {
+            minValue = 0;
         }
 
         lineChartBody.setSeries(series);
 
         lineChartBody.setLegend(new Legend("scroll").setData(lineSeriesConstructor.getSeriesKey()).setBottom(10));
 
-        lineChartBody.setYAxis(new YAxis().setType("value").setAxisLabel(new AxisLabel(lineSeriesConstructor.getYUnit())));
+        lineChartBody.setYAxis(new YAxis().setMin(minValue).setType("value").setAxisLabel(new AxisLabel(lineSeriesConstructor.getYUnit())));
 
         return JSONObject.toJSONString(lineChartBody);
     }
@@ -92,8 +112,6 @@ public class LineChartGenerateServiceImpl extends BaseGenerateServiceImpl {
             });
         } else {
             xDimension.setField(xDimensionKey);
-            //limit size 8
-            xDimension.setNum(8);
             //enum value in query data
             queryResult.forEach(item->{
                 String filedValue = item.get(xDimensionKey) == null ? "null" : item.get(xDimensionKey).toString();

@@ -27,6 +27,8 @@ public class YAxis {
     private boolean alignTicks;
     private AxisLine axisLine;
     private AxisLabel axisLabel;
+    private float min;
+
     public YAxis setType(String type) {
         this.type = type;
         return this;
@@ -73,6 +75,14 @@ public class YAxis {
     }
     public AxisLabel getAxisLabel() {
         return axisLabel;
+    }
+
+    public YAxis setMin(float min) {
+        this.min = min;
+        return this;
+    }
+    public float getMin() {
+        return min;
     }
 
 }

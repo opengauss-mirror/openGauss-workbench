@@ -46,8 +46,8 @@
         <a-col :span="6"><span style="color: #f53f3f; font-weight: bold; margin-right: 5px;">*</span>{{$t('modeling.components.BarLineConfig.5m7in04pegw0')}}</a-col>
         <a-col :span="17">
           <a-radio-group v-model="serie.chartType">
-            <a-radio :value="`bar`">{{$t('modeling.components.BarLineConfig.5m7in04pej80')}}</a-radio>
-            <a-radio :value="`line`">{{$t('modeling.components.BarLineConfig.5m7in04pemg0')}}</a-radio>
+            <a-radio :value="`line`">{{$t('modeling.components.BarLineConfig.5m7in04pej80')}}</a-radio>
+            <a-radio :value="`bar`">{{$t('modeling.components.BarLineConfig.5m7in04pemg0')}}</a-radio>
           </a-radio-group>
         </a-col>
         <a-col :span="2" v-if="serieKey !== 0">
