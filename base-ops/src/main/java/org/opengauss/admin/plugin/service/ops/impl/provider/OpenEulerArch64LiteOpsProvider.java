@@ -646,7 +646,7 @@ public class OpenEulerArch64LiteOpsProvider extends AbstractOpsProvider {
         OpsHostUserEntity hostUserEntity = hostInfoHolder.getHostUserEntities().stream().filter(userInfo -> opsClusterNodeEntity.getInstallUserId().equals(userInfo.getHostUserId())).findFirst().orElseThrow(() -> new OpsException("Installation user info user not found"));
         Session session = sshLogin(jschUtil,encryptionUtils,hostEntity, hostUserEntity);
 
-        doUnInstall(retSession, session, opsClusterNodeEntity.getPkgPath());
+        doUnInstall(retSession, session, unInstallContext.getOpsClusterEntity().getInstallPackagePath());
         removeContext(unInstallContext);
     }
 
@@ -687,7 +687,7 @@ public class OpenEulerArch64LiteOpsProvider extends AbstractOpsProvider {
             OpsHostUserEntity hostUserEntity = hostInfoHolder.getHostUserEntities().stream().filter(userInfo -> opsClusterNodeEntity.getInstallUserId().equals(userInfo.getHostUserId())).findFirst().orElseThrow(() -> new OpsException("Installation user info user not found"));
             Session session = sshLogin(jschUtil,encryptionUtils,hostEntity, hostUserEntity);
 
-            doUnInstall(retSession, session, opsClusterNodeEntity.getPkgPath());
+            doUnInstall(retSession, session, unInstallContext.getOpsClusterEntity().getInstallPackagePath());
         }
 
         removeContext(unInstallContext);
