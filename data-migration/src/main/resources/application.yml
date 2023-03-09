@@ -25,7 +25,7 @@ logging:
     org.opengauss.admin: debug
     org.springframework: warn
   file:
-    path: /Users/xielibo/data-migration/logs/
+    path: /ops/server/openGauss-visualtool/logs/data-migration/
 mybatis-plus:
   # Search for the specified package alias
   typeAliasesPackage: org.opengauss.admin.plugin.domain
