@@ -14,23 +14,29 @@ import { computed, onMounted } from 'vue'
 import enUS from '@arco-design/web-vue/es/locale/lang/en-us'
 import zhCN from '@arco-design/web-vue/es/locale/lang/zh-cn'
 import useLocale from '@/hooks/locale'
+import useTheme from '@/hooks/theme'
 
 const { currentLocale, changeLocale } = useLocale()
+const { changeTheme } = useTheme()
 
 onMounted(() => {
   // theme change
   const theme = localStorage.getItem('opengauss-theme')
   if (theme === 'dark') {
     document.body.setAttribute('arco-theme', 'dark')
+    changeTheme('dark')
   } else {
     document.body.removeAttribute('arco-theme')
+    changeTheme('')
   }
 
   window.$wujie?.bus.$on('opengauss-theme-change', val => {
     if (val === 'dark') {
       document.body.setAttribute('arco-theme', 'dark')
+      changeTheme('dark')
     } else {
       document.body.removeAttribute('arco-theme')
+      changeTheme('')
     }
   })
 

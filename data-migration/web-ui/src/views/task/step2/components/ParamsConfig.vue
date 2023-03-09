@@ -52,7 +52,7 @@
     </div>
     <template #footer>
       <div class="footer-con">
-        <a-button v-if="props.mode !== 1 && (basicEditData.length || moreEditData.length)" type="outline" style="margin-right: 10px;" @click="resetDefault">恢复默认值</a-button>
+        <a-button v-if="basicEditData.length || moreEditData.length" type="outline" style="margin-right: 10px;" @click="resetDefault">恢复默认值</a-button>
         <a-button type="primary" @click="saveParams()">保存</a-button>
       </div>
     </template>

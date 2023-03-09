@@ -468,6 +468,7 @@ onMounted(() => {
     }
     .sql-tree-con {
       height: 350px;
+      padding-bottom: 30px;
       overflow-y: auto;
     }
     .sql-selected-con {
