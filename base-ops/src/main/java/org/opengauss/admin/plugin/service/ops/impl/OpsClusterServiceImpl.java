@@ -1372,7 +1372,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         Session ommSession = jschUtil.getSession(hostEntity.getPublicIp(),hostEntity.getPort(),masterHostUsername,encryptionUtils.decrypt(masterHostPassword)).orElseThrow(()->new OpsException("Failed to establish connection with host " + hostEntity.getPublicIp()));
         Connection connection = null;
         try {
-            String versionNum = getVersionNum(ommSession);
+            String versionNum = getVersionNum(ommSession,importClusterBody.getEnvPath());
             Integer majorVersion = Integer.valueOf(versionNum.substring(0,1));
             OpenGaussVersionEnum openGaussVersionEnum = judgeOpenGaussVersion(majorVersion,ommSession,connection);
             boolean versionMatch = false;
@@ -1494,11 +1494,11 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         }
     }
 
-    private String getVersionNum(Session ommSession) {
+    private String getVersionNum(Session ommSession, String envPath) {
         String command = "gsql -V";
         JschResult jschResult = null;
         try {
-            jschResult = jschUtil.executeCommand(command, ommSession);
+            jschResult = jschUtil.executeCommand(command, ommSession,envPath);
 
             if (0 != jschResult.getExitCode()) {
                 log.error("Failed to get openGauss version, exit code: {}, log: {}", jschResult.getExitCode(), jschResult.getResult());
