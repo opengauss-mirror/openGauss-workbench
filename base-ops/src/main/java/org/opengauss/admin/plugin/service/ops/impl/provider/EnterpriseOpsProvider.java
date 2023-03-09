@@ -919,7 +919,7 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
         OpsClusterNodeEntity startNodeEntity = opsClusterContext.getOpsClusterNodeEntityList().get(0);
         WsSession retSession = opsClusterContext.getRetSession();
         Session ommUserSession = loginWithUser(jschUtil,encryptionUtils,opsClusterContext.getHostInfoHolders(), false, startNodeEntity.getHostId(), startNodeEntity.getInstallUserId());
-        OmStatusModel omStatusModel = omStatus(jschUtil,ommUserSession,retSession);
+        OmStatusModel omStatusModel = omStatus(jschUtil,ommUserSession,retSession, opsClusterContext.getOpsClusterEntity().getEnvPath());
         if (Objects.isNull(omStatusModel)){
             throw new OpsException("gs_om status fail");
         }
@@ -972,7 +972,7 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
         OpsClusterNodeEntity startNodeEntity = opsClusterContext.getOpsClusterNodeEntityList().get(0);
         WsSession retSession = opsClusterContext.getRetSession();
         Session ommUserSession = loginWithUser(jschUtil,encryptionUtils,opsClusterContext.getHostInfoHolders(), false, startNodeEntity.getHostId(), startNodeEntity.getInstallUserId());
-        OmStatusModel omStatusModel = omStatus(jschUtil,ommUserSession,retSession);
+        OmStatusModel omStatusModel = omStatus(jschUtil,ommUserSession,retSession, opsClusterContext.getOpsClusterEntity().getEnvPath());
         if (Objects.isNull(omStatusModel)){
             throw new OpsException("gs_om status fail");
         }
@@ -1006,7 +1006,7 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
         log.info("Login to start user");
         Session ommUserSession = loginWithUser(jschUtil,encryptionUtils,opsClusterContext.getHostInfoHolders(), false, startNodeEntity.getHostId(), startNodeEntity.getInstallUserId());
 
-        OmStatusModel omStatusModel = omStatus(jschUtil,ommUserSession,retSession);
+        OmStatusModel omStatusModel = omStatus(jschUtil,ommUserSession,retSession, opsClusterContext.getOpsClusterEntity().getEnvPath());
         if (Objects.isNull(omStatusModel)){
             throw new OpsException("gs_om status fail");
         }
@@ -1061,7 +1061,7 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
         OpsClusterNodeEntity startNodeEntity = opsClusterContext.getOpsClusterNodeEntityList().get(0);
         WsSession retSession = opsClusterContext.getRetSession();
         Session ommUserSession = loginWithUser(jschUtil,encryptionUtils,opsClusterContext.getHostInfoHolders(), false, startNodeEntity.getHostId(), startNodeEntity.getInstallUserId());
-        OmStatusModel omStatusModel = omStatus(jschUtil,ommUserSession,retSession);
+        OmStatusModel omStatusModel = omStatus(jschUtil,ommUserSession,retSession,opsClusterContext.getOpsClusterEntity().getEnvPath());
         if (Objects.isNull(omStatusModel)){
             throw new OpsException("gs_om status fail");
         }
@@ -1117,7 +1117,7 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
         log.info("login stop user");
         Session ommUserSession = loginWithUser(jschUtil,encryptionUtils,opsClusterContext.getHostInfoHolders(), false, stopNodeEntity.getHostId(), stopNodeEntity.getInstallUserId());
 
-        OmStatusModel omStatusModel = omStatus(jschUtil,ommUserSession,retSession);
+        OmStatusModel omStatusModel = omStatus(jschUtil,ommUserSession,retSession, opsClusterContext.getOpsClusterEntity().getEnvPath());
         if (Objects.isNull(omStatusModel)){
             throw new OpsException("gs_om status fail");
         }

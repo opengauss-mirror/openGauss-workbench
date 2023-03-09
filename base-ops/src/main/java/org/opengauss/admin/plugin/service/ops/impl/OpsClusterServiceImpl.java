@@ -1374,7 +1374,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         try {
             String versionNum = getVersionNum(ommSession,importClusterBody.getEnvPath());
             Integer majorVersion = Integer.valueOf(versionNum.substring(0,1));
-            OpenGaussVersionEnum openGaussVersionEnum = judgeOpenGaussVersion(majorVersion,ommSession,connection);
+            OpenGaussVersionEnum openGaussVersionEnum = judgeOpenGaussVersion(majorVersion,ommSession,connection,importClusterBody.getEnvPath());
             boolean versionMatch = false;
             if (majorVersion>=5){
                 if (importClusterBody.getOpenGaussVersion() == openGaussVersionEnum){
@@ -1442,8 +1442,8 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         }
     }
 
-    private OpenGaussVersionEnum judgeOpenGaussVersion(Integer majorVersion, Session ommSession, Connection connection) {
-        boolean enterprise = enterpriseVersion(ommSession);
+    private OpenGaussVersionEnum judgeOpenGaussVersion(Integer majorVersion, Session ommSession, Connection connection, String envPath) {
+        boolean enterprise = enterpriseVersion(ommSession,envPath);
         if (enterprise){
             return OpenGaussVersionEnum.ENTERPRISE;
         }
@@ -1477,11 +1477,11 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         return false;
     }
 
-    private boolean enterpriseVersion(Session ommSession) {
+    private boolean enterpriseVersion(Session ommSession, String envPath) {
         String command = "which gs_om";
         JschResult jschResult = null;
         try {
-            jschResult = jschUtil.executeCommand(command, ommSession);
+            jschResult = jschUtil.executeCommand(command, ommSession,envPath);
 
             if (0 != jschResult.getExitCode()) {
                 return false;
@@ -1695,7 +1695,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         Future<?> future = threadPoolTaskExecutor.submit(() -> {
             try {
                 RequestContextHolder.setRequestAttributes(context);
-                doGenerateconf(session, retWsSession);
+                doGenerateconf(session, retWsSession,clusterEntity.getEnvPath());
             }finally {
                 if (Objects.nonNull(session) && session.isConnected()){
                     session.disconnect();
@@ -1737,7 +1737,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         Future<?> future = threadPoolTaskExecutor.submit(() -> {
             try {
                 RequestContextHolder.setRequestAttributes(context);
-                doSwitchover(session, retWsSession, nodeEntity.getDataPath());
+                doSwitchover(session, retWsSession, nodeEntity.getDataPath(), clusterEntity.getEnvPath());
             }finally {
                 if (Objects.nonNull(session) && session.isConnected()){
                     session.disconnect();
@@ -1779,7 +1779,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         Future<?> future = threadPoolTaskExecutor.submit(() -> {
             try {
                 RequestContextHolder.setRequestAttributes(context);
-                doBuild(session, retWsSession, nodeEntity.getDataPath());
+                doBuild(session, retWsSession, nodeEntity.getDataPath(),clusterEntity.getEnvPath());
             }finally {
                 if (Objects.nonNull(session) && session.isConnected()){
                     session.disconnect();
@@ -1790,11 +1790,11 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         TaskManager.registry(businessId, future);
     }
 
-    private void doBuild(Session session, WsSession retWsSession, String dataPath) {
+    private void doBuild(Session session, WsSession retWsSession, String dataPath, String envPath) {
         String command = "gs_ctl build -D " + dataPath;
 
         try {
-            JschResult jschResult = jschUtil.executeCommand(command, session, retWsSession);
+            JschResult jschResult = jschUtil.executeCommand(command, envPath, session, retWsSession);
             if (0 != jschResult.getExitCode()) {
                 log.error("A build error occurred, exit code {}", jschResult.getExitCode());
                 throw new OpsException("A build error occurred");
@@ -1970,10 +1970,10 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         removeById(clusterId);
     }
 
-    private void doSwitchover(Session session, WsSession retWsSession, String dataPath) {
+    private void doSwitchover(Session session, WsSession retWsSession, String dataPath, String envPath) {
         try {
             String command = "gs_ctl switchover -D " + dataPath;
-            JschResult jschResult = jschUtil.executeCommand(command, session, retWsSession);
+            JschResult jschResult = jschUtil.executeCommand(command, envPath, session, retWsSession);
             if (0 != jschResult.getExitCode()) {
                 log.error("Active-standby switchover failed, exit code {}", jschResult.getExitCode());
                 throw new OpsException("Active-standby switchover failed");
@@ -1986,7 +1986,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
 
         try {
             String command = "gs_om -t refreshconf";
-            JschResult jschResult = jschUtil.executeCommand(command, session, retWsSession);
+            JschResult jschResult = jschUtil.executeCommand(command, envPath, session, retWsSession);
             if (0 != jschResult.getExitCode()) {
                 log.error("Active-standby switchover failed, exit code {}", jschResult.getExitCode());
                 throw new OpsException("Active-standby switchover failed");
@@ -2000,11 +2000,11 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         wsUtil.sendText(retWsSession, "FINAL_EXECUTE_EXIT_CODE:0");
     }
 
-    private void doGenerateconf(Session session, WsSession retWsSession) {
+    private void doGenerateconf(Session session, WsSession retWsSession, String envPath) {
         String command = "gs_om -t generateconf -X /opt/software/openGauss/cluster_config.xml --distribute";
 
         try {
-            JschResult jschResult = jschUtil.executeCommand(command, session, retWsSession);
+            JschResult jschResult = jschUtil.executeCommand(command, envPath, session, retWsSession);
             if (0 != jschResult.getExitCode()) {
                 log.error("A generateconf error occurred, exit code {}", jschResult.getExitCode());
                 throw new OpsException("A generateconf error occurred");
@@ -2476,11 +2476,17 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                         String[] s1 = s.replaceAll(" +", " ").split(" ");
 
                         String state = "";
-                        for (int i = 7; i < s1.length; i++) {
-                            state += (s1[i] + " ");
-                        }
 
-                        if (s1.length>=8){
+                        if (s1.length>=9){
+                            for (int i = 8; i < s1.length; i++) {
+                                state += (s1[i] + " ");
+                            }
+                            nodeState.put(s1[1], state.trim());
+                            nodeRole.put(s1[1], s1[7]);
+                        }else if (s1.length>=8){
+                            for (int i = 7; i < s1.length; i++) {
+                                state += (s1[i] + " ");
+                            }
                             nodeState.put(s1[1], state.trim());
                             nodeRole.put(s1[1], s1[6]);
                         }

@@ -684,11 +684,17 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                         String[] s1 = s.replaceAll(" +", " ").split(" ");
 
                         String state = "";
-                        for (int i = 7; i < s1.length; i++) {
-                            state += (s1[i] + " ");
-                        }
 
-                        if (s1.length>=8){
+                        if (s1.length>=9){
+                            for (int i = 8; i < s1.length; i++) {
+                                state += (s1[i] + " ");
+                            }
+                            nodeState.put(s1[1], state.trim());
+                            nodeRole.put(s1[1], s1[7]);
+                        }else if (s1.length>=8){
+                            for (int i = 7; i < s1.length; i++) {
+                                state += (s1[i] + " ");
+                            }
                             nodeState.put(s1[1], state.trim());
                             nodeRole.put(s1[1], s1[6]);
                         }
