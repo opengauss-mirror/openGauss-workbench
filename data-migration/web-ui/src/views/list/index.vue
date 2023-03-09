@@ -15,6 +15,7 @@
             <a-option :value="0">未启动</a-option>
             <a-option :value="1">迁移中</a-option>
             <a-option :value="2">已完成</a-option>
+            <a-option :value="501">环境错误</a-option>
           </a-select>
         </a-form-item>
         <a-form-item field="execStartTime" style="margin-left: -17px;">
@@ -84,7 +85,7 @@
           <a-table-column title="任务创建时间" data-index="createTime" :width="200"></a-table-column>
           <a-table-column title="执行开始时间" data-index="execTime" :width="200"></a-table-column>
           <a-table-column title="任务完成时间" data-index="finishTime" :width="200"></a-table-column>
-          <a-table-column title="操作" align="center" :width="240" fixed="right">
+          <a-table-column title="操作" align="center" :width="300" fixed="right">
             <template #cell="{ record }">
               <a-button
                 size="mini"
@@ -108,7 +109,7 @@
                 <template #default>结束迁移</template>
               </a-button>
               <a-button
-                v-if="record.execStatus === 0"
+                v-if="record.execStatus === 0 || record.execStatus === 501"
                 :loading="startLoading"
                 size="mini"
                 type="text"
@@ -119,7 +120,19 @@
                 </template>
                 <template #default>启动</template>
               </a-button>
-              <a-popconfirm v-if="record.execStatus === 0" content="你确认删除此任务吗？" @ok="deleteTheTask(record)">
+              <a-button
+                v-if="record.execStatus === 501"
+                :loading="startLoading"
+                size="mini"
+                type="text"
+                @click="handleDownloadLog(record)"
+              >
+                <template #icon>
+                  <icon-download />
+                </template>
+                <template #default>日志</template>
+              </a-button>
+              <a-popconfirm v-if="record.execStatus === 0 || record.execStatus === 501" content="你确认删除此任务吗？" @ok="deleteTheTask(record)">
                 <a-button
                   size="mini"
                   type="text"
@@ -141,7 +154,7 @@
 <script setup>
 import { reactive, ref, onMounted } from 'vue'
 import { Message } from '@arco-design/web-vue'
-import { list, start, stop, deleteTask, userList } from '@/api/list'
+import { list, start, stop, deleteTask, userList, downloadEnvLog } from '@/api/list'
 import dayjs from 'dayjs'
 
 const loading = ref(true)
@@ -181,7 +194,8 @@ const execStatusMap = (status) => {
   const maps = {
     0: '未启动',
     1: '迁移中',
-    2: '已完成'
+    2: '已完成',
+    501: '环境错误'
   }
   return maps[status]
 }
@@ -284,7 +298,7 @@ const getUserList = () => {
 
 // jump to the page of task-detail
 const goDetail = row => {
-  if (row.execStatus === 0) {
+  if (row.execStatus === 0 || row.execStatus === 501) {
     window.$wujie?.props.methods.jump({
       name: `Static-pluginData-migrationTaskConfig`,
       query: {
@@ -299,6 +313,26 @@ const goDetail = row => {
       }
     })
   }
+}
+
+// download log
+const handleDownloadLog = row => {
+  downloadEnvLog(row.id).then(res => {
+    if (res) {
+      const blob = new Blob([res], {
+        type: 'text/plain'
+      })
+      const a = document.createElement('a')
+      const URL = window.URL || window.webkitURL
+      const herf = URL.createObjectURL(blob)
+      a.href = herf
+      a.download = row.taskName
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      window.URL.revokeObjectURL(herf)
+    }
+  })
 }
 
 onMounted(() => {
