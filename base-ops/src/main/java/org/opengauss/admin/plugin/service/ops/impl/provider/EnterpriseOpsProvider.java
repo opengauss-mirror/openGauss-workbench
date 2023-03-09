@@ -1133,7 +1133,7 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
                 command = "cm_ctl stop -n " + nodeId + " -D " + dataPath;
             }
         }else {
-            command = MessageFormat.format(SshCommandConstants.LITE_START, dataPath);
+            command = MessageFormat.format(SshCommandConstants.LITE_STOP, dataPath);
         }
 
         try {
