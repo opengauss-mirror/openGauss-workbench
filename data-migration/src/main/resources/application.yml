@@ -2,8 +2,6 @@ migration:
   taskRefreshIntervalsMillisecond: 15000
   taskOfflineSchedulerIntervalsMillisecond: 10000
   mainTaskRefreshIntervalsMillisecond: 60000
-  portalHome: /ops/portal
-
 
 context:
   listener:

@@ -12,7 +12,8 @@ public enum MainTaskStatus {
 
     NOT_RUN(0, "not run"),
     RUNNING(1, "migrating"),
-    FINISH(2, "finish")
+    FINISH(2, "finish"),
+    INSTALL_PORTAL_ERROR(501, "install_portal_error")
     ;
 
     private final Integer code;

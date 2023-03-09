@@ -90,6 +90,16 @@ START 1
 CACHE 1;
 END IF;
 
+IF NOT EXISTS(SELECT 1 FROM information_schema.sequences WHERE sequence_schema = ''public'' AND sequence_name = ''sq_tb_main_task_env_error_host_id'')
+THEN
+CREATE SEQUENCE "public"."sq_tb_main_task_env_error_host_id"
+    INCREMENT 1
+    MINVALUE 1
+    MAXVALUE 9223372036854775807
+    START 1
+    CACHE 1;
+END IF;
+
 RETURN 0;
 END;'
 LANGUAGE plpgsql;
@@ -492,3 +502,24 @@ LANGUAGE plpgsql;
 SELECT add_migration_task_status_desc_field_func();
 
 DROP FUNCTION add_migration_task_status_desc_field_func;
+
+
+CREATE TABLE IF NOT EXISTS "public"."tb_main_task_env_error_host" (
+    "id" int8 NOT NULL DEFAULT nextval('sq_tb_main_task_env_error_host_id'::regclass),
+    "run_host_id" varchar(64) COLLATE "pg_catalog"."default",
+    "run_host" varchar(64) COLLATE "pg_catalog"."default",
+    "run_port" varchar(64) COLLATE "pg_catalog"."default",
+    "run_user" varchar(64) COLLATE "pg_catalog"."default",
+    "run_pass" varchar(512) COLLATE "pg_catalog"."default",
+    "main_task_id" int8,
+    CONSTRAINT "tb_main_task_env_error_host_pkey" PRIMARY KEY ("id")
+);
+
+COMMENT ON COLUMN "public"."tb_main_task_env_error_host"."id" IS '主键ID';
+COMMENT ON COLUMN "public"."tb_main_task_env_error_host"."run_host_id" IS '机器ID';
+COMMENT ON COLUMN "public"."tb_main_task_env_error_host"."run_host" IS '机器ip';
+COMMENT ON COLUMN "public"."tb_main_task_env_error_host"."run_port" IS '机器端口';
+COMMENT ON COLUMN "public"."tb_main_task_env_error_host"."run_user" IS '机器用户';
+COMMENT ON COLUMN "public"."tb_main_task_env_error_host"."run_pass" IS '机器密码';
+COMMENT ON COLUMN "public"."tb_main_task_env_error_host"."main_task_id" IS '主任务ID';
+
