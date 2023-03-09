@@ -104,6 +104,47 @@ public class HostServiceImpl implements IHostService {
         }
     }
 
+    @Override
+    public boolean fileExist(String id, String file, String rootPassword) {
+        OpsHostEntity hostEntity = hostFacade.getById(id);
+        if (Objects.isNull(hostEntity)){
+            throw new OpsException("host information not found");
+        }
+
+        OpsHostUserEntity rootUserEntity = hostUserFacade.getRootUserByHostId(id);
+        if (Objects.nonNull(rootUserEntity) && StrUtil.isNotEmpty(rootUserEntity.getPassword())){
+            rootPassword = rootUserEntity.getPassword();
+        }
+
+        if (StrUtil.isEmpty(rootPassword)){
+            throw new OpsException("root password does not exist");
+        }
+
+        Session rootSession = jschUtil.getSession(hostEntity.getPublicIp(), hostEntity.getPort(), "root", encryptionUtils.decrypt(rootPassword)).orElseThrow(() -> new OpsException("Failed to establish connection with host"));
+        try {
+            return fileExist(rootSession,file);
+        }finally {
+            if (Objects.nonNull(rootSession) && rootSession.isConnected()){
+                rootSession.disconnect();
+            }
+        }
+    }
+
+    private boolean fileExist(Session rootSession, String file) {
+        String command = "[ -f '"+ file +"' ]";
+        try {
+            JschResult jschResult = jschUtil.executeCommand(command, rootSession);
+            if (jschResult.getExitCode()!=0){
+                return false;
+            }
+
+            return true;
+        } catch (Exception e) {
+            log.error("Failed to find file",e);
+            throw new OpsException("Failed to find file");
+        }
+    }
+
     private boolean portUsed(Session rootSession, Integer port) {
         String command = "lsof -i:"+port;
         try {

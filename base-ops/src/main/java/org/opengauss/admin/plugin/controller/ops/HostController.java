@@ -26,4 +26,9 @@ public class HostController extends BaseController {
     public AjaxResult portUsed(@PathVariable("id") String id,@RequestParam("port") Integer port,@RequestParam(value = "rootPassword",required = false) String rootPassword){
         return AjaxResult.success(hostService.portUsed(id,port,rootPassword));
     }
+
+    @GetMapping("/fileExist/{id}")
+    public AjaxResult fileExist(@PathVariable("id") String id,@RequestParam("file") String file,@RequestParam(value = "rootPassword",required = false) String rootPassword){
+        return AjaxResult.success(hostService.fileExist(id,file,rootPassword));
+    }
 }
