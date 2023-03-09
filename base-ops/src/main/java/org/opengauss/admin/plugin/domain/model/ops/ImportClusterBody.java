@@ -33,6 +33,8 @@ public class ImportClusterBody {
 
     private LiteInstallConfig liteInstallConfig;
 
+    private String envPath;
+
     private String clusterId;
 
     private String clusterName;
@@ -118,6 +120,7 @@ public class ImportClusterBody {
         opsClusterEntity.setInstallMode(installMode);
         opsClusterEntity.setDeployType(deployType);
         opsClusterEntity.setClusterName(clusterName);
+        opsClusterEntity.setEnvPath(envPath);
 
         if (openGaussVersion == OpenGaussVersionEnum.ENTERPRISE) {
             opsClusterEntity.setDatabaseUsername(enterpriseInstallConfig.getDatabaseUsername());

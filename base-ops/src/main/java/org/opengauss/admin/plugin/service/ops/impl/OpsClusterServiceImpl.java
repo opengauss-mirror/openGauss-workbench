@@ -1567,7 +1567,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
             Connection connection = null;
             try {
                 connection = DBUtil.getSession(hostEntity.getPublicIp(), clusterEntity.getPort(), clusterEntity.getDatabaseUsername(), clusterEntity.getDatabasePassword()).orElseThrow(() -> new OpsException("Unable to connect to the database"));
-                doMonitor(wsSession, ommSession, clusterEntity.getVersion(), connection, realDataPath);
+                doMonitor(wsSession, ommSession, clusterEntity.getVersion(), connection, realDataPath,clusterEntity.getEnvPath());
             }catch (Exception e) {
                 log.error("get connection fail , ip:{} , port:{}, username:{}", hostEntity.getPublicIp(),clusterEntity.getPort(),clusterEntity.getDatabaseUsername(), e);
             }finally {
@@ -2172,7 +2172,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         return checkItemVO;
     }
 
-    private void doMonitor(WsSession wsSession, Session ommSession, OpenGaussVersionEnum version, Connection connection, String dataPath) {
+    private void doMonitor(WsSession wsSession, Session ommSession, OpenGaussVersionEnum version, Connection connection, String dataPath, String envPath) {
         AtomicBoolean hasError = new AtomicBoolean(false);
         while (wsSession.getSession().isOpen() && !hasError.get()) {
             NodeMonitorVO nodeMonitorVO = new NodeMonitorVO();
@@ -2224,7 +2224,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
 
             threadPoolTaskExecutor.submit(() -> {
                 try {
-                    nodeMonitorVO.setState(state(ommSession, version, dataPath));
+                    nodeMonitorVO.setState(state(ommSession, version, dataPath,envPath));
                 }catch (Exception e){
                     log.error("state monitor error : ",e);
                     hasError.set(true);
@@ -2412,14 +2412,14 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         }
     }
 
-    private String state(Session ommSession, OpenGaussVersionEnum version, String dataPath) {
+    private String state(Session ommSession, OpenGaussVersionEnum version, String dataPath, String envPath) {
         if (OpenGaussVersionEnum.ENTERPRISE == version) {
             String command = "gs_om -t status --detail";
             JschResult jschResult = null;
             try {
                 Map<String, Object> res = new HashMap<>();
                 try {
-                    jschResult = jschUtil.executeCommand(command, ommSession);
+                    jschResult = jschUtil.executeCommand(command, ommSession, envPath);
                 } catch (InterruptedException e) {
                     throw new OpsException("thread is interrupted");
                 }

@@ -35,4 +35,5 @@ public class OpsClusterEntity extends BaseEntity {
     private String corePath;
     private Integer port;
     private Boolean enableDcf;
+    private String envPath;
 }

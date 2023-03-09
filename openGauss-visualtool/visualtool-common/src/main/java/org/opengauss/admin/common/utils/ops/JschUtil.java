@@ -82,6 +82,23 @@ public class JschUtil {
      *
      * @param command Instructions to execute
      * @param session session
+     * @param env     env path
+     * @return SSH Result
+     * @throws IOException IO Exception
+     */
+    public JschResult executeCommand(String command, Session session,String env) throws IOException, InterruptedException {
+        if (StrUtil.isNotEmpty(env)){
+            command = "source " + env + " && " + command;
+        }
+
+        return executeCommand(command, session, null, null);
+    }
+
+    /**
+     * ChannelExec
+     *
+     * @param command Instructions to execute
+     * @param session session
      * @return SSH Result
      */
     public JschResult executeCommand(String command, Session session, Map<String, String> autoResponse) throws IOException, InterruptedException {

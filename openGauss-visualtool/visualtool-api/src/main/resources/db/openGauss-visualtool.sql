@@ -917,6 +917,21 @@ SELECT add_user_field_func();
 
 DROP FUNCTION add_user_field_func;
 
+CREATE OR REPLACE FUNCTION add_cluster_field_func() RETURNS integer AS 'BEGIN
+IF
+( SELECT COUNT ( * ) AS ct1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ''ops_cluster'' AND COLUMN_NAME = ''env_path'' ) = 0
+THEN
+ALTER TABLE ops_cluster ADD COLUMN env_path varchar(255);
+COMMENT ON COLUMN "public"."ops_cluster"."env_path" IS ''环境变量文件路径'';
+END IF;
+RETURN 0;
+END;'
+LANGUAGE plpgsql;
+
+SELECT add_cluster_field_func();
+
+DROP FUNCTION add_cluster_field_func;
+
 CREATE OR REPLACE FUNCTION add_host_field_func() RETURNS integer AS 'BEGIN
 IF
 ( SELECT COUNT ( * ) AS ct1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ''ops_host'' AND COLUMN_NAME = ''os'' ) = 0

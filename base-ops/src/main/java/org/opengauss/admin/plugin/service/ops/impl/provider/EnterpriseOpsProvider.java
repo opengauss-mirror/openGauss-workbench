@@ -823,7 +823,7 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
 
         String uninstallCommand = "gs_uninstall --delete-data";
         try {
-            JschResult jschResult = jschUtil.executeCommand(uninstallCommand, session, retSession);
+            JschResult jschResult = jschUtil.executeCommand(uninstallCommand, opsClusterEntity.getEnvPath(), session, retSession);
             if (0 != jschResult.getExitCode()) {
                 throw new OpsException("Uninstall error，exit code " + jschResult.getExitCode());
             }
@@ -932,7 +932,7 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
         }
 
         try {
-            JschResult jschResult = jschUtil.executeCommand(command, ommUserSession, retSession);
+            JschResult jschResult = jschUtil.executeCommand(command, opsClusterContext.getOpsClusterEntity().getEnvPath(), ommUserSession, retSession);
             if (0 != jschResult.getExitCode()) {
                 throw new OpsException("startup error，exit code " + jschResult.getExitCode());
             }
@@ -985,7 +985,7 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
         }
 
         try {
-            JschResult jschResult = jschUtil.executeCommand(command, ommUserSession, retSession);
+            JschResult jschResult = jschUtil.executeCommand(command, opsClusterContext.getOpsClusterEntity().getEnvPath(), ommUserSession, retSession);
             if (0 != jschResult.getExitCode()) {
                 throw new OpsException("startup error，exit code " + jschResult.getExitCode());
             }
@@ -1026,7 +1026,7 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
         }
 
         try {
-            JschResult jschResult = jschUtil.executeCommand(command, ommUserSession, retSession);
+            JschResult jschResult = jschUtil.executeCommand(command, opsClusterContext.getOpsClusterEntity().getEnvPath(), ommUserSession, retSession);
             if (0 != jschResult.getExitCode()) {
                 throw new OpsException("startup error，exit code " + jschResult.getExitCode());
             }
@@ -1074,7 +1074,7 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
         }
 
         try {
-            JschResult jschResult = jschUtil.executeCommand(command, ommUserSession, retSession);
+            JschResult jschResult = jschUtil.executeCommand(command, opsClusterContext.getOpsClusterEntity().getEnvPath(), ommUserSession, retSession);
             if (0 != jschResult.getExitCode()) {
                 throw new OpsException("startup error，exit code " + jschResult.getExitCode());
             }
@@ -1094,7 +1094,7 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
         }
 
         try {
-            JschResult jschResult = jschUtil.executeCommand(command, session);
+            JschResult jschResult = jschUtil.executeCommand(command, session, clusterEntity.getEnvPath());
             if (0 != jschResult.getExitCode()) {
                 log.error("set enable_wdr_snapshot parameter failed, exit code: {}, error message: {}", jschResult.getExitCode(), jschResult.getResult());
                 throw new OpsException("Failed to set the enable_wdr_snapshot parameter");
@@ -1137,7 +1137,7 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
         }
 
         try {
-            JschResult jschResult = jschUtil.executeCommand(command, ommUserSession, retSession);
+            JschResult jschResult = jschUtil.executeCommand(command, opsClusterContext.getOpsClusterEntity().getEnvPath(), ommUserSession, retSession);
             if (0 != jschResult.getExitCode()) {
                 throw new OpsException("stop error，exit code " + jschResult.getExitCode());
             }
