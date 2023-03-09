@@ -1695,7 +1695,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         Future<?> future = threadPoolTaskExecutor.submit(() -> {
             try {
                 RequestContextHolder.setRequestAttributes(context);
-                doGenerateconf(session, retWsSession,clusterEntity.getEnvPath());
+                doGenerateconf(session, retWsSession,clusterEntity.getXmlConfigPath(), clusterEntity.getEnvPath());
             }finally {
                 if (Objects.nonNull(session) && session.isConnected()){
                     session.disconnect();
@@ -2000,8 +2000,8 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         wsUtil.sendText(retWsSession, "FINAL_EXECUTE_EXIT_CODE:0");
     }
 
-    private void doGenerateconf(Session session, WsSession retWsSession, String envPath) {
-        String command = "gs_om -t generateconf -X /opt/software/openGauss/cluster_config.xml --distribute";
+    private void doGenerateconf(Session session, WsSession retWsSession, String xmlConfigPath, String envPath) {
+        String command = "gs_om -t generateconf -X "+xmlConfigPath+" --distribute";
 
         try {
             JschResult jschResult = jschUtil.executeCommand(command, envPath, session, retWsSession);

@@ -836,7 +836,7 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
 
         try {
             Optional<OpsHostUserEntity> rootUserEntity = hostInfoHolder.getHostUserEntities().stream().filter(userEntity -> "root".equalsIgnoreCase(userEntity.getUsername())).findFirst();
-            cleanEnv(unInstallContext.getHostInfoHolders(),hostEntity,rootUserEntity,hostUserEntity,retSession,opsClusterEntity.getInstallPackagePath());
+            cleanEnv(unInstallContext.getHostInfoHolders(),hostEntity,rootUserEntity,hostUserEntity,retSession,opsClusterEntity.getInstallPackagePath(),opsClusterEntity.getXmlConfigPath());
             wsUtil.sendText(retSession,"ENV_CLEAN_SUCCESS");
         }catch (Exception e){
             log.error("env clean fail:",e);
@@ -844,14 +844,14 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
         }
     }
 
-    private void cleanEnv(List<HostInfoHolder> hostInfoHolders, OpsHostEntity hostEntity, Optional<OpsHostUserEntity> rootUserEntityOption, OpsHostUserEntity hostUserEntity, WsSession retSession, String installPackagePath) throws IOException, InterruptedException {
+    private void cleanEnv(List<HostInfoHolder> hostInfoHolders, OpsHostEntity hostEntity, Optional<OpsHostUserEntity> rootUserEntityOption, OpsHostUserEntity hostUserEntity, WsSession retSession, String installPackagePath, String xmlConfigPath) throws IOException, InterruptedException {
         final OpsHostUserEntity rootUserEntity = rootUserEntityOption.orElseThrow(() -> new OpsException("root user information not found"));
         final Session rootSession = jschUtil.getSession(hostEntity.getPublicIp(), hostEntity.getPort(), rootUserEntity.getUsername(), encryptionUtils.decrypt(rootUserEntity.getPassword())).orElseThrow(() -> new OpsException("The root user failed to establish a connection"));
 
         try {
-            String commandTemplate = "cd {0} && ./gs_postuninstall -U {1} -X {2}/cluster_config.xml --delete-user --delete-group";
+            String commandTemplate = "cd {0} && ./gs_postuninstall -U {1} -X {2} --delete-user --delete-group";
 
-            String command = MessageFormat.format(commandTemplate,installPackagePath+"/script",hostUserEntity.getUsername(),installPackagePath);
+            String command = MessageFormat.format(commandTemplate,installPackagePath+"/script",hostUserEntity.getUsername(), xmlConfigPath);
             Map<String,String> authResponse = new HashMap<>();
             authResponse.put("(yes/no)?","yes");
             authResponse.put("Password:",encryptionUtils.decrypt(rootUserEntity.getPassword()));

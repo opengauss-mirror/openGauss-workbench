@@ -924,6 +924,12 @@ THEN
 ALTER TABLE ops_cluster ADD COLUMN env_path varchar(255);
 COMMENT ON COLUMN "public"."ops_cluster"."env_path" IS ''环境变量文件路径'';
 END IF;
+IF
+( SELECT COUNT ( * ) AS ct1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ''ops_cluster'' AND COLUMN_NAME = ''xml_config_path'' ) = 0
+THEN
+ALTER TABLE ops_cluster ADD COLUMN env_path varchar(255);
+COMMENT ON COLUMN "public"."ops_cluster"."xml_config_path" IS ''xml配置文件路径'';
+END IF;
 RETURN 0;
 END;'
 LANGUAGE plpgsql;
