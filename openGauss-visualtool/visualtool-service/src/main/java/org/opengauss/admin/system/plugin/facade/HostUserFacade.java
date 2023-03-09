@@ -67,4 +67,8 @@ public class HostUserFacade {
     public List<OpsHostUserEntity> listByIds(Collection ids) {
         return hostUserService.listByIds(ids);
     }
+
+    public void removeByIds(Collection<String> ids){
+        hostUserService.removeByIds(ids);
+    }
 }
