@@ -40,13 +40,27 @@
             <a-input-password v-model="data.form.databasePassword"
               :placeholder="$t('enterprise.ClusterConfig.5mpm3ku3ji00')" allow-clear />
           </a-form-item>
-          <a-form-item field="isInstallCM" :label="$t('enterprise.NodeConfig.else3')">
-            <a-switch @change="isInstallCMChange" v-model="data.form.isInstallCM" />
+          <a-row :gutter="16">
+            <a-col :span="12">
+              <a-form-item field="isInstallCM" :label="$t('enterprise.NodeConfig.else3')">
+                <a-switch @change="isInstallCMChange" v-model="data.form.isInstallCM" />
+              </a-form-item>
+            </a-col>
+            <a-col :span="12">
+              <a-form-item v-if="data.form.isInstallCM" field="enableDCF"
+                :label="$t('enterprise.ClusterConfig.5mpm3ku3jkw0')">
+                <a-checkbox v-model="data.form.enableDCF">
+                </a-checkbox>
+              </a-form-item>
+            </a-col>
+          </a-row>
+          <a-form-item v-if="installType === 'import'" field="isEnvSeparate" :label="$t('simple.InstallConfig.else11')"
+            validate-trigger="blur">
+            <a-switch v-model="data.form.isEnvSeparate" />
           </a-form-item>
-          <a-form-item v-if="data.form.isInstallCM" field="enableDCF"
-            :label="$t('enterprise.ClusterConfig.5mpm3ku3jkw0')">
-            <a-checkbox v-model="data.form.enableDCF">
-            </a-checkbox>
+          <a-form-item v-if="data.form.isEnvSeparate" field="envPath" :label="$t('simple.InstallConfig.else9')"
+            validate-trigger="blur">
+            <a-input v-model="data.form.envPath" :placeholder="$t('simple.InstallConfig.else10')" />
           </a-form-item>
         </a-form>
       </div>
@@ -83,7 +97,9 @@ const data: {
     enableDCF: false,
     databaseUsername: '',
     databasePassword: '',
-    isInstallCM: false
+    isInstallCM: false,
+    isEnvSeparate: false,
+    envPath: ''
   },
   rules: {}
 })
@@ -264,6 +280,21 @@ const initData = () => {
           })
         }
       }
+    ],
+    envPath: [
+      { required: true, 'validate-trigger': 'blur', message: t('simple.InstallConfig.else10') },
+      {
+        validator: (value: any, cb: any) => {
+          return new Promise(resolve => {
+            if (!value.trim()) {
+              cb(t('enterprise.ClusterConfig.else2'))
+              resolve(false)
+            } else {
+              resolve(true)
+            }
+          })
+        }
+      }
     ]
   }
 }
@@ -294,8 +325,10 @@ const beforeConfirm = async (): Promise<boolean> => {
     installStore.setInstallContext({
       clusterId: param.clusterId,
       clusterName: param.clusterName,
-      deployType: DeployTypeEnum.CLUSTER
+      deployType: DeployTypeEnum.CLUSTER,
+      envPath: param.envPath
     })
+    console.log('get envPath', installStore.getInstallConfig)
     if (Object.keys(installStore.getEnterpriseConfig).length) {
       if (param.isInstallCM !== installStore.getEnterpriseConfig.isInstallCM) {
         param.nodeConfigList = []

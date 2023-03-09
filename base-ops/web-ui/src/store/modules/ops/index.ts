@@ -16,6 +16,7 @@ const installStore = defineStore('install', {
         packageName: '',
         installPackagePath: '',
         deployType: DeployTypeEnum.SINGLE_NODE,
+        envPath: '',
         clusterId: '',
         clusterName: ''
       },

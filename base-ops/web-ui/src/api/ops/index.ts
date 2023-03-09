@@ -160,6 +160,13 @@ export const portUsed = (hostId: string, data: KeyValue) => {
   })
 }
 
+// Whether the file is exist
+export const fileExist = (hostId: string, data: KeyValue) => {
+  return axios.get(`host/fileExist/${hostId}`, {
+    params: data
+  })
+}
+
 export const hostUserPage = (hostId: string) => {
   return axios.get(`hostUser/page/${hostId}`)
 }

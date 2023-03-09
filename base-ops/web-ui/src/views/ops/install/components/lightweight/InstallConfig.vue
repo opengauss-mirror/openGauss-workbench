@@ -68,6 +68,14 @@
               <a-input-password v-model="formItem.databasePassword"
                 :placeholder="$t('lightweight.InstallConfig.5mpmkfqybo00')" allow-clear />
             </a-form-item>
+            <a-form-item v-if="installType === 'import' && index === 0" field="isEnvSeparate"
+              :label="$t('simple.InstallConfig.else11')" validate-trigger="blur">
+              <a-switch v-model="formItem.isEnvSeparate" />
+            </a-form-item>
+            <a-form-item v-if="formItem.isEnvSeparate" field="envPath" :label="$t('simple.InstallConfig.else9')"
+              validate-trigger="blur">
+              <a-input v-model="formItem.envPath" :placeholder="$t('simple.InstallConfig.else10')" />
+            </a-form-item>
           </a-form>
         </div>
       </div>
@@ -85,7 +93,7 @@ import {
 } from '@/types/ops/install' // eslint-disable-line
 import { KeyValue } from '@/types/global'
 import { useOpsStore } from '@/store'
-import { hasName, hostListAll, hostUserListWithoutRoot, portUsed, pathEmpty, hostPingById } from '@/api/ops'
+import { hasName, hostListAll, hostUserListWithoutRoot, portUsed, pathEmpty, fileExist, hostPingById } from '@/api/ops'
 import { encryptPassword } from '@/utils/jsencrypt'
 import { Message } from '@arco-design/web-vue'
 import { useI18n } from 'vue-i18n'
@@ -269,6 +277,21 @@ const initData = () => {
           })
         }
       }
+    ],
+    envPath: [
+      { required: true, 'validate-trigger': 'blur', message: t('simple.InstallConfig.else10') },
+      {
+        validator: (value: any, cb: any) => {
+          return new Promise(resolve => {
+            if (!value.trim()) {
+              cb(t('enterprise.ClusterConfig.else2'))
+              resolve(false)
+            } else {
+              resolve(true)
+            }
+          })
+        }
+      }
     ]
   }
 }
@@ -287,7 +310,9 @@ const getFormData = (): KeyValue => {
     dataPath: '/opt/software/openGauss/data',
     port: Number(5432),
     databaseUsername: '',
-    databasePassword: ''
+    databasePassword: '',
+    isEnvSeparate: false,
+    envPath: ''
   }
 }
 
@@ -445,7 +470,6 @@ const validatePort = async (port: number, password: string, hostId: string) => {
     rootPassword: password
   }
   const portValid: KeyValue = await portUsed(hostId, portParam)
-  console.log('show port valid', portValid)
   if (Number(portValid.code) === 200) {
     return portValid.data
   }
@@ -458,7 +482,18 @@ const validatePath = async (path: string, password: string, hostId: string) => {
     rootPassword: password
   }
   const pathValid: KeyValue = await pathEmpty(hostId, pathParam)
-  console.log('show path valid', pathValid)
+  if (Number(pathValid.code) === 200) {
+    return pathValid.data
+  }
+  return false
+}
+
+const validateFile = async (file: string, password: string, hostId: string) => {
+  const pathParam = {
+    file: file,
+    rootPassword: password
+  }
+  const pathValid: KeyValue = await fileExist(hostId, pathParam)
   if (Number(pathValid.code) === 200) {
     return pathValid.data
   }
@@ -511,17 +546,22 @@ const validateSpecialFields = async () => {
       validMethodArr.push(validatePort(data.nodeData[i].port, encryptPwd, data.nodeData[i].hostId))
       validMethodArr.push(validatePath(data.nodeData[i].dataPath, encryptPwd, data.nodeData[i].hostId))
       validMethodArr.push(validatePath(data.nodeData[i].installPackagePath, encryptPwd, data.nodeData[i].hostId))
+      if (data.nodeData[i].isEnvSeparate) {
+        validMethodArr.push(validateFile(data.nodeData[i].envPath, encryptPwd, data.nodeData[i].hostId))
+      }
       if (validMethodArr.length) {
         const validResult = await Promise.all(validMethodArr)
-        if ((installType.value !== 'import' && validResult[0]) || (installType.value === 'import' && !validResult[0])) {
-          // port valid
-          refList.value[i].setFields({
-            port: {
-              status: 'error',
-              message: data.nodeData[i].port + (installType.value === 'import' ? t('enterprise.NodeConfig.else10') : t('enterprise.NodeConfig.else11'))
-            }
-          })
-          result = false
+        if (i === 0) {
+          if ((installType.value !== 'import' && validResult[0]) || (installType.value === 'import' && !validResult[0])) {
+            // port valid
+            refList.value[i].setFields({
+              port: {
+                status: 'error',
+                message: data.nodeData[i].port + (installType.value === 'import' ? t('enterprise.NodeConfig.else10') : t('enterprise.NodeConfig.else11'))
+              }
+            })
+            result = false
+          }
         }
         if ((installType.value !== 'import' && !validResult[1]) || (installType.value === 'import' && validResult[1])) {
           // dataPath Valid
@@ -539,6 +579,16 @@ const validateSpecialFields = async () => {
             installPackagePath: {
               status: 'error',
               message: installType.value === 'import' ? t('enterprise.NodeConfig.else14') : t('enterprise.NodeConfig.else15')
+            }
+          })
+          result = false
+        }
+        if (data.nodeData[i].isEnvSeparate && !validResult[3]) {
+          // dataPath Valid
+          refList.value[i].setFields({
+            envPath: {
+              status: 'error',
+              message: t('enterprise.NodeConfig.else17')
             }
           })
           result = false

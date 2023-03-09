@@ -96,7 +96,7 @@
 import { onMounted, reactive, ref, computed, inject } from 'vue'
 import { KeyValue } from '@/types/global'
 import { ClusterRoleEnum, EnterpriseInstallConfig } from '@/types/ops/install' // eslint-disable-line
-import { hostListAll, hostUserListWithoutRoot, azListAll, portUsed, pathEmpty, hostPingById } from '@/api/ops'
+import { hostListAll, hostUserListWithoutRoot, azListAll, portUsed, pathEmpty, fileExist, hostPingById } from '@/api/ops'
 import { Message } from '@arco-design/web-vue'
 import { useOpsStore } from '@/store'
 import { useI18n } from 'vue-i18n'
@@ -428,7 +428,6 @@ const saveStore = () => {
     nodeConfigList: nodes
   }
   installStore.setEnterpriseConfig(param as EnterpriseInstallConfig)
-  console.log('save store', installStore.getEnterpriseConfig)
 }
 
 const beforeConfirm = async (): Promise<boolean> => {
@@ -494,6 +493,18 @@ const validatePath = async (path: string, password: string, hostId: string) => {
   return false
 }
 
+const validateFile = async (file: string, password: string, hostId: string) => {
+  const pathParam = {
+    file: file,
+    rootPassword: password
+  }
+  const pathValid: KeyValue = await fileExist(hostId, pathParam)
+  if (Number(pathValid.code) === 200) {
+    return pathValid.data
+  }
+  return false
+}
+
 const validateSpecialFields = async () => {
   let result = true
   if (data.nodeList.length) {
@@ -543,6 +554,9 @@ const validateSpecialFields = async () => {
       if (isInstallCM.value) {
         validMethodArr.push(validatePort(data.nodeList[i].cmPort, encryptPwd, data.nodeList[i].hostId))
       }
+      if (installStore.getInstallConfig.envPath) {
+        validMethodArr.push(validateFile(installStore.getInstallConfig.envPath, encryptPwd, data.nodeList[i].hostId))
+      }
       if (validMethodArr.length) {
         const validResult = await Promise.all(validMethodArr)
         if ((installType.value !== 'import' && validResult[0]) || (installType.value === 'import' && !validResult[0])) {
@@ -587,7 +601,29 @@ const validateSpecialFields = async () => {
             })
             result = false
           }
+          if (installStore.getInstallConfig.envPath && !validResult[4]) {
+            // envPath valid
+            refList.value[i].setFields({
+              hostId: {
+                status: 'error',
+                message: t('enterprise.NodeConfig.else17')
+              }
+            })
+            result = false
+          }
+        } else {
+          if (installStore.getInstallConfig.envPath && !validResult[3]) {
+            // envPath valid
+            refList.value[i].setFields({
+              hostId: {
+                status: 'error',
+                message: t('enterprise.NodeConfig.else17')
+              }
+            })
+            result = false
+          }
         }
+
       }
     }
   }
