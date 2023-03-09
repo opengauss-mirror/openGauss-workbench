@@ -39,7 +39,7 @@
           </a-table-column>
           <a-table-column title="执行机器">
             <template #cell="{ record }">
-              {{ record.runHost }}（{{ record.runHostname }}）
+              <span style="cursor: pointer;" @click="handleTerminal(record)">{{ record.runHost }}（{{ record.runHostname }}）</span>
             </template>
           </a-table-column>
           <a-table-column title="当前状态">
@@ -131,6 +131,9 @@
 
     <!-- sub task detail -->
     <sub-task-detail v-model:open="subTaskDetailVisible" :task-info="task" :sub-task-id="subTaskId" :tab="tabIndex" />
+
+    <!-- machine terminal -->
+    <mac-terminal v-model:open="terminalVisible" :host="macHost" />
   </div>
 </template>
 
@@ -138,6 +141,7 @@
 import { reactive, ref, onMounted, onBeforeUnmount } from 'vue'
 import { Message } from '@arco-design/web-vue'
 import SubTaskDetail from './components/SubTaskDetail.vue'
+import MacTerminal from './components/MacTerminal.vue'
 import { stop } from '@/api/list'
 import { taskDetail, refreshStatus, subTaskList, subTaskFinish, subTaskStartReverse, subTaskStopIncremental } from '@/api/detail'
 
@@ -199,6 +203,14 @@ const pageChange = (current) => {
 const subTaskDetailVisible = ref(false)
 const subTaskId = ref()
 const tabIndex = ref(1)
+
+const terminalVisible = ref(false)
+const macHost = ref({})
+
+const handleTerminal = row => {
+  terminalVisible.value = true
+  macHost.value = row
+}
 
 const handleDetail = row => {
   subTaskDetailVisible.value = true
@@ -386,6 +398,7 @@ onBeforeUnmount(() => {
     .progress-info {
       white-space: nowrap;
       margin-right: 10px;
+      color: var(--color-text-1);
     }
   }
   .table-con {

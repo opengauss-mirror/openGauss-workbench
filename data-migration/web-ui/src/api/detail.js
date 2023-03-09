@@ -35,3 +35,11 @@ export function downloadLog (id, query) {
 export function taskEditInfo (id) {
   return axios.get(`/plugins/data-migration/migration/editInfo/${id}`)
 }
+
+export function openSSH (data) {
+  return axios.post('/plugins/base-ops/opsCluster/ssh', data)
+}
+
+export function getEntryKey () {
+  return axios.get('/encryption/getKey')
+}

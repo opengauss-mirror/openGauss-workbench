@@ -63,7 +63,7 @@
       </a-space>
     </div>
     <div class="table-con">
-      <a-table :loading="loading" row-key="id" :data="tableData" :row-selection="rowSelection" v-model:selectedKeys="selectedKeys" :bordered="false" stripe :pagination="pagination" @page-change="pageChange">
+      <a-table :loading="loading" row-key="id" :data="tableData" :row-selection="rowSelection" v-model:selectedKeys="selectedKeys" :bordered="false" :stripe="!currentTheme" :hoverable="!currentTheme" :pagination="pagination" @page-change="pageChange">
         <template #columns>
           <a-table-column title="任务名称" data-index="taskName" :width="150" fixed="left"></a-table-column>
           <a-table-column title="创建人" data-index="createUser" :width="100"></a-table-column>
@@ -110,7 +110,7 @@
               </a-button>
               <a-button
                 v-if="record.execStatus === 0 || record.execStatus === 501"
-                :loading="startLoading"
+                :loading="record.startLoading"
                 size="mini"
                 type="text"
                 @click="startTask(record)"
@@ -122,7 +122,7 @@
               </a-button>
               <a-button
                 v-if="record.execStatus === 501"
-                :loading="startLoading"
+                :loading="record.startLoading"
                 size="mini"
                 type="text"
                 @click="handleDownloadLog(record)"
@@ -156,9 +156,11 @@ import { reactive, ref, onMounted } from 'vue'
 import { Message } from '@arco-design/web-vue'
 import { list, start, stop, deleteTask, userList, downloadEnvLog } from '@/api/list'
 import dayjs from 'dayjs'
+import useTheme from '@/hooks/theme'
+
+const { currentTheme } = useTheme()
 
 const loading = ref(true)
-const startLoading = ref(false)
 
 const form = reactive({
   taskName: undefined,
@@ -255,12 +257,12 @@ const createTask = () => {
 // start task
 const startTask = async row => {
   try {
-    startLoading.value = true
+    row.startLoading = true
     await start(row.id)
     Message.success('Start success')
-    startLoading.value = false
+    row.startLoading = false
   } catch (e) {
-    startLoading.value = false
+    row.startLoading = false
   }
   getList()
 }
