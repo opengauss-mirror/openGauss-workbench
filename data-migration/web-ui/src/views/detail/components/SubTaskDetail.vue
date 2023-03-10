@@ -1,8 +1,9 @@
 <template>
   <a-drawer
     v-model:visible="visible"
-    width="50%"
+    width="60%"
     :footer="false"
+    :unmount-on-close="true"
   >
     <template #title>
       <div class="title-con">
@@ -18,7 +19,7 @@
     </template>
     <div class="task-detail-con">
       <div class="task-desc-con">
-        <a-descriptions :data="descData" layout="inline-horizontal" :column="2" table-layout="fixed" bordered />
+        <a-descriptions :data="descData" layout="inline-horizontal" :column="5" bordered />
       </div>
       <div v-if="tabActive === 1 && subTaskInfo.migrationModelId === 1" class="progress-con">
         <span class="progress-info">进度</span>
@@ -43,7 +44,16 @@
                 </a-popover>
               </template>
               <template #cell="{ record }">
-                <a-progress v-if="record.status === 1 || record.status === 2" :percent="record.percent" />
+                <a-popover>
+                  <icon-bar-chart v-if="!record.status" class="data-count" size="16" />
+                  <template #content>
+                    <p>等待数：{{ record.counts.waitCount }}</p>
+                    <p>执行数：{{ record.counts.runningCount }}</p>
+                    <p>完成数：{{ record.counts.finishCount }}</p>
+                    <p>失败数：{{ record.counts.errorCount }}</p>
+                  </template>
+                </a-popover>
+                <span v-if="record.status === 1 || record.status === 2">{{ record.percent ? (record.percent * 100).toFixed(2) : '-' }}%</span>
                 <icon-check-circle-fill v-if="record.status === 3 || record.status === 4 || record.status === 5" size="16" style="color: #00B429;" />
                 <a-popover title="错误详情" position="tr">
                   <icon-close-circle-fill v-if="record.status === 6" size="16" style="color: #FF7D01;" />
@@ -67,7 +77,7 @@
                 </a-popover>
               </template>
               <template #cell="{ record }">
-                <a-progress v-if="record.status === 4" :percent="record.percent" />
+                <span v-if="record.status === 4">{{ record.percent ? (record.percent * 100).toFixed(2) : '-' }}%</span>
                 <icon-check-circle-fill v-if="record.status === 5" size="16" style="color: #00B429;" />
                 <a-popover title="错误详情" position="tr">
                   <icon-close-circle-fill v-if="record.status === 6" size="16" style="color: #FF7D01;" />
@@ -87,7 +97,7 @@
             <a-step v-for="(value, key) in statusRecords" :key="key">
               <div class="record-item-hd">
                 <span class="hd-info">{{ recordsMap(key) }}</span>
-                <span class="hd-time">by {{ taskInfo.createUser }}, {{ subTaskInfo.execTime }}</span>
+                <span class="hd-time">by {{ value[0].operateUser || '-' }}, {{ value[0].operateTime || '-' }}</span>
               </div>
               <a-card hoverable>
                 <div class="record-item-con">
@@ -119,7 +129,16 @@
                               </a-popover>
                             </template>
                             <template #cell="{ record }">
-                              <a-progress v-if="record.status === 1 || record.status === 2" :percent="record.percent" />
+                              <a-popover>
+                                <icon-bar-chart v-if="!record.status" class="data-count" size="16" />
+                                <template #content>
+                                  <p>等待数：{{ record.counts.waitCount }}</p>
+                                  <p>执行数：{{ record.counts.runningCount }}</p>
+                                  <p>完成数：{{ record.counts.finishCount }}</p>
+                                  <p>失败数：{{ record.counts.errorCount }}</p>
+                                </template>
+                              </a-popover>
+                              <span v-if="record.status === 1 || record.status === 2">{{ record.percent ? (record.percent * 100).toFixed(2) : '-' }}%</span>
                               <icon-check-circle-fill v-if="record.status === 3 || record.status === 4 || record.status === 5" size="16" style="color: #00B429;" />
                               <a-popover title="错误详情" position="tr">
                                 <icon-close-circle-fill v-if="record.status === 6" size="16" style="color: #FF7D01;" />
@@ -143,7 +162,7 @@
                               </a-popover>
                             </template>
                             <template #cell="{ record }">
-                              <a-progress v-if="record.status === 4" :percent="record.percent" />
+                              <span v-if="record.status === 4">{{ record.percent ? (record.percent * 100).toFixed(2) : '-' }}%</span>
                               <icon-check-circle-fill v-if="record.status === 5" size="16" style="color: #00B429;" />
                               <a-popover title="错误详情" position="tr">
                                 <icon-close-circle-fill v-if="record.status === 6" size="16" style="color: #FF7D01;" />
@@ -315,7 +334,6 @@ const filterTableData = (type) => {
 
 const handleDownloadLog = (url) => {
   downloadLog(subTaskInfo.value.id, { filePath: url }).then(res => {
-    console.log(res)
     if (res) {
       const blob = new Blob([res], {
         type: 'text/plain'
@@ -339,32 +357,89 @@ const getSubTaskDetail = () => {
     const seconds = subTaskInfo.value.finishTime ? dayjs(subTaskInfo.value.finishTime).diff(dayjs(subTaskInfo.value.execTime), 'seconds') : dayjs().diff(dayjs(subTaskInfo.value.execTime), 'seconds')
     const hour = parseInt(seconds / 3600)
     const minute = parseInt((seconds - hour * 3600) / 60)
-    descData.value = [
+
+    const offlineDesc = [
       {
         label: '属于任务：',
-        value: props.taskInfo.taskName
+        value: props.taskInfo.taskName,
+        span: 3
       },
       {
         label: '创建时间：',
-        value: subTaskInfo.value.createTime
+        value: subTaskInfo.value.createTime,
+        span: 2
       },
       {
         label: '源库名：',
-        value: subTaskInfo.value.sourceDb
+        value: subTaskInfo.value.sourceDb,
+        span: 3
       },
       {
         label: '目的库名：',
-        value: subTaskInfo.value.targetDb
+        value: subTaskInfo.value.targetDb,
+        span: 2
       },
       {
         label: '执行开始时间：',
-        value: subTaskInfo.value.execTime
+        value: subTaskInfo.value.execTime,
+        span: 3
       },
       {
         label: '已执行：',
-        value: `${hour ? hour + '小时' : ''} ${minute ? minute + '分钟' : ''}`
+        value: `${hour ? hour + '小时' : ''} ${minute ? minute + '分钟' : ''}`,
+        span: 2
+      },
+      {
+        label: '迁移情况：',
+        value: `总迁移对象数量：${(res.data.totalWaitCount || 0) + (res.data.totalRunningCount || 0) + (res.data.totalFinishCount || 0) + (res.data.totalErrorCount || 0)}，未开始：${res.data.totalWaitCount || 0}，迁移中：${res.data.totalRunningCount || 0}，成功：${res.data.totalFinishCount || 0}，失败：${res.data.totalErrorCount || 0}`,
+        span: 5
       }
     ]
+
+    const onlineDesc = [
+      {
+        label: '属于任务：',
+        value: props.taskInfo.taskName,
+        span: 3
+      },
+      {
+        label: '创建时间：',
+        value: subTaskInfo.value.createTime,
+        span: 2
+      },
+      {
+        label: '全量迁移：',
+        value: res.data.fullProcess ? `总迁移对象：${(res.data.totalWaitCount || 0) + (res.data.totalRunningCount || 0) + (res.data.totalFinishCount || 0) + (res.data.totalErrorCount || 0)}，未开始：${res.data.totalWaitCount || 0}，迁移中：${res.data.totalRunningCount || 0}，成功：${res.data.totalFinishCount || 0}，失败：${res.data.totalErrorCount || 0}` : '未启动',
+        span: 3
+      },
+      {
+        label: '执行时间：',
+        value: subTaskInfo.value.execTime,
+        span: 2
+      },
+      {
+        label: '增量迁移：',
+        value: res.data.incrementalProcess ? `总迁移对象：${0}，未开始：${0}，迁移中：${0}，成功：${0}，失败：${0}` : '未启动',
+        span: 3
+      },
+      {
+        label: '源库至目的库：',
+        value: `${subTaskInfo.value.sourceDb} 至 ${subTaskInfo.value.targetDb}`,
+        span: 2
+      },
+      {
+        label: '反向迁移：',
+        value: res.data.reverseProcess ? `总迁移对象：${0}，未开始：${0}，迁移中：${0}，成功：${0}，失败：${0}` : '未启动',
+        span: 3
+      },
+      {
+        label: '已执行：',
+        value: `${hour ? hour + '小时' : ''} ${minute ? minute + '分钟' : ''}`,
+        span: 2
+      }
+    ]
+
+    descData.value = res.data.task.migrationModelId === 1 ? offlineDesc : onlineDesc
 
     // 全量表格数据
     const fullProcessDetail = res.data.fullProcess?.execResultDetail ? JSON.parse(res.data.fullProcess?.execResultDetail) : null
@@ -378,11 +453,21 @@ const getSubTaskDetail = () => {
           'procedure': '存储过程'
         }
 
+        const countMap = {
+          'table': 'tableCounts',
+          'view': 'viewCounts',
+          'function': 'funcCounts',
+          'trigger': 'triggerCounts',
+          'procedure': 'produceCounts'
+        }
+
         return {
           key: item,
           name: nameMap[item],
           status: '',
           msg: '',
+          countKey: countMap[item],
+          counts: res.data[countMap[item]] || {},
           children: fullProcessDetail[item].map(child => {
             return {
               key: Math.random(),
@@ -427,7 +512,7 @@ onMounted(() => {
 
 <style lang="less" scoped>
 .title-con {
-  width: calc(50vw - 60px);
+  width: calc(60vw - 60px);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -466,6 +551,12 @@ onMounted(() => {
     .progress-info {
       white-space: nowrap;
       margin-right: 10px;
+    }
+  }
+  .table-con {
+    .data-count {
+      cursor: pointer;
+      color: var(--color-text-3);
     }
   }
   .record-con {

@@ -214,6 +214,7 @@
         },
         "AddHost": {
             "else1": "请输入正确的端口号",
+            "else2": "记住密码",
             "currentStatus": "当前状态",
             "ipAddress": "内网IP",
             "5mphy3snvg80": "可用",
@@ -449,6 +450,12 @@
             "5mpivn7fxjk0": "集群",
             "5mpivn7fxnc0": "类型",
             "5mpivn7fxrk0": "查询数量"
+        },
+        "EditSysSettings": {
+          "5mpivn7fwjc1": "修改系统设置",
+          "5mpivn7fwjc2": "文件上传路径",
+          "5mpivn7fwjc6": "请输入文件上传路径",
+          "5mpivn7fwjc9": "文件路径不正确"
         }
     },
     "user": {
@@ -536,6 +543,7 @@
             "5m6nsk34r7c0": "集群运维",
             "5m6nsk34ra40": "个人中心",
             "5m6nsk34rd00": "修改密码",
+            "5m6nsk34rd01": "系统设置",
             "5m6nsk34rg40": "退出登录",
             "5mpib9iig6o0": "openGauss DataKit",
             "5nu3bvtnu5o0": "点击切换为黑暗模式",

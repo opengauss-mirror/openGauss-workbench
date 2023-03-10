@@ -8,4 +8,6 @@ public interface IHostService {
     boolean pathEmpty(String id, String path, String rootPassword);
 
     boolean portUsed(String id, Integer port, String rootPassword);
+
+    boolean fileExist(String id, String file, String rootPassword);
 }

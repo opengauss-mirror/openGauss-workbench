@@ -8,16 +8,15 @@ import org.opengauss.admin.plugin.domain.model.ops.*;
 import org.opengauss.admin.plugin.domain.model.ops.env.HostEnv;
 import org.opengauss.admin.plugin.enums.ops.OpenGaussSupportOSEnum;
 import org.opengauss.admin.plugin.enums.ops.OpenGaussVersionEnum;
-import org.opengauss.admin.plugin.vo.ops.*;
 import org.opengauss.admin.plugin.vo.ops.SessionVO;
 import org.opengauss.admin.plugin.vo.ops.SlowSqlVO;
+import org.opengauss.admin.plugin.vo.ops.*;
 
 import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 import java.util.Map;
 
 /**
- *
  * @author lhf
  * @date 2022/8/6 17:37
  **/
@@ -74,7 +73,7 @@ public interface IOpsClusterService extends IService<OpsClusterEntity> {
 
     void build(String clusterId, String hostId, String businessId);
 
-    ListDir listInstallPackage(String path, OpenGaussVersionEnum openGaussVersionEnum);
+    ListDir listInstallPackage(OpenGaussVersionEnum openGaussVersionEnum, Integer userId);
 
     HostEnv env(String hostId, OpenGaussSupportOSEnum expectedOs);
 

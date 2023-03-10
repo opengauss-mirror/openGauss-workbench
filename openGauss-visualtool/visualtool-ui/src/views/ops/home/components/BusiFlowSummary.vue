@@ -1,5 +1,5 @@
 <template>
-  <div class="flow-summary-c flex-col mb">
+  <div class="flow-summary-c flex-col">
     <div class="flex-row full-w mb">
       <div class="flex-col" style="width: 50%">
         <div class="flow-summary-title">{{ $t('components.BusiFlowSummary.5mpivn7fwjc0') }}</div>

@@ -99,7 +99,19 @@ public class HostUserServiceImpl extends ServiceImpl<OpsHostUserMapper, OpsHostU
         }
 
         OpsHostUserEntity rootUser = getRootUserByHostId(hostId);
-        rootUser.setPassword(hostUserBody.getRootPassword());
+        if (Objects.isNull(rootUser)){
+            rootUser = new OpsHostUserEntity();
+            rootUser.setUsername("root");
+            rootUser.setPassword(hostUserBody.getPassword());
+        }
+
+        if (StrUtil.isEmpty(rootUser.getPassword())){
+            if (StrUtil.isNotEmpty(hostUserBody.getRootPassword())){
+                rootUser.setPassword(hostUserBody.getRootPassword());
+            }else {
+                throw new OpsException("root password does not exist");
+            }
+        }
 
         if (physicalExist(hostEntity.getPublicIp(), hostEntity.getPort(), rootUser, username)) {
             try {
@@ -223,9 +235,21 @@ public class HostUserServiceImpl extends ServiceImpl<OpsHostUserMapper, OpsHostU
         newEntity.setHostId(hostUserEntity.getHostId());
         newEntity.setHostUserId(hostUserEntity.getHostUserId());
 
-        OpsHostUserEntity rootUserEntity = new OpsHostUserEntity();
-        rootUserEntity.setUsername("root");
-        rootUserEntity.setPassword(hostUserBody.getRootPassword());
+        OpsHostUserEntity rootUserEntity = getRootUserByHostId(hostId);
+        if (Objects.isNull(rootUserEntity)){
+            rootUserEntity = new OpsHostUserEntity();
+            rootUserEntity.setUsername("root");
+            rootUserEntity.setPassword(hostUserBody.getPassword());
+        }
+
+        if (StrUtil.isEmpty(rootUserEntity.getPassword())){
+            if (StrUtil.isNotEmpty(hostUserBody.getRootPassword())){
+                rootUserEntity.setPassword(hostUserBody.getRootPassword());
+            }else {
+                throw new OpsException("root password does not exist");
+            }
+        }
+
         if (physicalExist(hostEntity.getPublicIp(), hostEntity.getPort(), rootUserEntity, newEntity.getUsername())) {
             try {
                 Session session = jschUtil.getSession(hostEntity.getPublicIp(), hostEntity.getPort(), hostUserBody.getUsername(), encryptionUtils.decrypt(hostUserBody.getPassword())).orElseThrow(() -> new OpsException("user already exists，incorrect password, please enter correct password"));

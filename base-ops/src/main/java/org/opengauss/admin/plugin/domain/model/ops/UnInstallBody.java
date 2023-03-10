@@ -2,6 +2,8 @@ package org.opengauss.admin.plugin.domain.model.ops;
 
 import lombok.Data;
 
+import java.util.Map;
+
 
 /**
  * @author lhf
@@ -16,4 +18,6 @@ public class UnInstallBody {
     private UnInstallContext unInstallContext;
 
     private Boolean force;
+
+    private Map<String,String> rootPasswords;
 }

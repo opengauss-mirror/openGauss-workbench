@@ -28,6 +28,9 @@
       <template #version="{ record }">
         {{ getVersionName(record.packageVersion) }}
       </template>
+      <template #packagePath="{ record }">
+        {{ getPackagePath(record.packagePath) }}
+      </template>
       <template #operation="{ record }">
         <div class="flex-row-start">
           <a-link class="mr" @click="handleAdd('update', record)">{{ $t('packageManage.index.5myq5c8zmbk0') }}</a-link>
@@ -59,11 +62,14 @@ const filter = reactive({
 })
 
 const columns = computed(() => [
-  { title: t('packageManage.index.5myq5c8znkk0'), dataIndex: 'os', width: 170 },
-  { title: t('packageManage.index.else1'), dataIndex: 'cpuArch', width: 170 },
-  { title: t('packageManage.index.5myq5c8zns00'), dataIndex: 'packageVersion', slotName: 'version', width: 170 },
-  { title: t('packageManage.index.5myq5c8zp680'), dataIndex: 'packageVersionNum', width: 170 },
+  { title: t('packageManage.index.5myq5c8zpu83'), dataIndex: 'type'},
+  { title: t('packageManage.index.5myq5c8znkk0'), dataIndex: 'os' },
+  { title: t('packageManage.index.else1'), dataIndex: 'cpuArch' },
+  { title: t('packageManage.index.5myq5c8zns00'), dataIndex: 'packageVersion', slotName: 'version' },
+  { title: t('packageManage.index.5myq5c8zp680'), dataIndex: 'packageVersionNum' },
   { title: t('packageManage.index.5myq5c8zpu80'), dataIndex: 'packageUrl', ellipsis: true, tooltip: true },
+  { title: t('packageManage.index.5myq5c8zpu82'), dataIndex: 'packagePath', slotName: 'packagePath', ellipsis: true, tooltip: true },
+  { title: t('packageManage.index.5myq5c8zpu84'), dataIndex: 'remark', width: 180 },
   { title: t('packageManage.index.5myq5c8zq380'), slotName: 'operation', width: 180 }
 ])
 
@@ -88,18 +94,17 @@ onMounted(() => {
   getListData()
 })
 
-const getListData = () => new Promise(resolve => {
+const getListData = () => {
   list.loading = true
   packagePage(filter).then((res: KeyValue) => {
     if (Number(res.code) === 200) {
-      resolve(true)
       list.data = res.rows
       list.page.total = res.total
-    } else resolve(false)
+    }
   }).finally(() => {
     list.loading = false
   })
-})
+}
 
 const currentPage = (e: number) => {
   filter.pageNum = e
@@ -134,6 +139,16 @@ const getVersionName = (version: string) => {
   } else {
     return t('packageManage.index.5myq5c8zw680')
   }
+}
+
+const getPackagePath = (value: string) => {
+  if (value) {
+    const result = JSON.parse(value)
+    if (result) {
+      return result.name
+    }
+  }
+  return ''
 }
 
 </script>

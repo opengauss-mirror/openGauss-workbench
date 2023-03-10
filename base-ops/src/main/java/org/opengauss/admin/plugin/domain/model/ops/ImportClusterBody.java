@@ -33,6 +33,10 @@ public class ImportClusterBody {
 
     private LiteInstallConfig liteInstallConfig;
 
+    private String envPath;
+
+    private String xmlConfigPath;
+
     private String clusterId;
 
     private String clusterName;
@@ -118,6 +122,7 @@ public class ImportClusterBody {
         opsClusterEntity.setInstallMode(installMode);
         opsClusterEntity.setDeployType(deployType);
         opsClusterEntity.setClusterName(clusterName);
+        opsClusterEntity.setEnvPath(envPath);
 
         if (openGaussVersion == OpenGaussVersionEnum.ENTERPRISE) {
             opsClusterEntity.setDatabaseUsername(enterpriseInstallConfig.getDatabaseUsername());
@@ -129,14 +134,22 @@ public class ImportClusterBody {
             opsClusterEntity.setCorePath(enterpriseInstallConfig.getCorePath());
             opsClusterEntity.setPort(enterpriseInstallConfig.getPort());
             opsClusterEntity.setEnableDcf(enterpriseInstallConfig.getEnableDCF());
+            opsClusterEntity.setInstallPackagePath(enterpriseInstallConfig.getInstallPackagePath());
+            if (StrUtil.isEmpty(xmlConfigPath)){
+                opsClusterEntity.setXmlConfigPath(enterpriseInstallConfig.getInstallPackagePath()+"/cluster_config.xml");
+            }else {
+                opsClusterEntity.setXmlConfigPath(xmlConfigPath);
+            }
         } else if (openGaussVersion == OpenGaussVersionEnum.LITE) {
             opsClusterEntity.setPort(liteInstallConfig.getPort());
             opsClusterEntity.setDatabaseUsername(liteInstallConfig.getDatabaseUsername());
             opsClusterEntity.setDatabasePassword(liteInstallConfig.getDatabasePassword());
+            opsClusterEntity.setInstallPackagePath(liteInstallConfig.getInstallPackagePath());
         } else if (openGaussVersion == OpenGaussVersionEnum.MINIMAL_LIST) {
             opsClusterEntity.setPort(minimalistInstallConfig.getPort());
             opsClusterEntity.setDatabaseUsername(minimalistInstallConfig.getDatabaseUsername());
             opsClusterEntity.setDatabasePassword(minimalistInstallConfig.getDatabasePassword());
+            opsClusterEntity.setInstallPackagePath(minimalistInstallConfig.getInstallPackagePath());
         }
 
         return opsClusterEntity;

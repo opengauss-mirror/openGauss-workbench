@@ -97,7 +97,7 @@
       </div>
     </div>
     <div class="table-con">
-      <a-table :data="tableData" :bordered="false" stripe :pagination="false">
+      <a-table :data="tableData" :bordered="false" :stripe="!currentTheme" :hoverable="!currentTheme" :pagination="false">
         <template #columns>
           <a-table-column title="源实例名" data-index="sourceNodeName" :width="200" ellipsis tooltip></a-table-column>
           <a-table-column title="源库名" data-index="sourceDBName" :width="200" ellipsis tooltip></a-table-column>
@@ -152,6 +152,9 @@ import { reactive, ref, computed, watch, onMounted, toRaw, h, compile } from 'vu
 import { Message } from '@arco-design/web-vue'
 import AddSql from '../components/AddSql.vue'
 import { clustersData, sourceClusterDbsData, targetClusterDbsData } from '@/api/task'
+import useTheme from '@/hooks/theme'
+
+const { currentTheme } = useTheme()
 
 const props = defineProps({
   subTaskConfig: {
@@ -468,6 +471,7 @@ onMounted(() => {
     }
     .sql-tree-con {
       height: 350px;
+      padding-bottom: 30px;
       overflow-y: auto;
     }
     .sql-selected-con {

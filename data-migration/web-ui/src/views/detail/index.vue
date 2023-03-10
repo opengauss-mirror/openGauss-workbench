@@ -27,7 +27,7 @@
       </a-button>
     </div>
     <div class="table-con">
-      <a-table :data="tableData" :bordered="false" stripe :pagination="pagination" @page-change="pageChange">
+      <a-table :data="tableData" :bordered="false" :stripe="!currentTheme" :hoverable="!currentTheme" :pagination="pagination" @page-change="pageChange">
         <template #columns>
           <a-table-column title="子任务ID" data-index="id"></a-table-column>
           <a-table-column title="源库名" data-index="sourceDb"></a-table-column>
@@ -39,7 +39,7 @@
           </a-table-column>
           <a-table-column title="执行机器">
             <template #cell="{ record }">
-              {{ record.runHost }}（{{ record.runHostname }}）
+              <span class="mac-txt" @click="handleTerminal(record)">{{ record.runHost }}（{{ record.runHostname }}）</span>
             </template>
           </a-table-column>
           <a-table-column title="当前状态">
@@ -131,6 +131,9 @@
 
     <!-- sub task detail -->
     <sub-task-detail v-model:open="subTaskDetailVisible" :task-info="task" :sub-task-id="subTaskId" :tab="tabIndex" />
+
+    <!-- machine terminal -->
+    <mac-terminal v-model:open="terminalVisible" :host="macHost" />
   </div>
 </template>
 
@@ -138,8 +141,12 @@
 import { reactive, ref, onMounted, onBeforeUnmount } from 'vue'
 import { Message } from '@arco-design/web-vue'
 import SubTaskDetail from './components/SubTaskDetail.vue'
+import MacTerminal from './components/MacTerminal.vue'
 import { stop } from '@/api/list'
 import { taskDetail, refreshStatus, subTaskList, subTaskFinish, subTaskStartReverse, subTaskStopIncremental } from '@/api/detail'
+import useTheme from '@/hooks/theme'
+
+const { currentTheme } = useTheme()
 
 const task = ref({})
 const descData = ref([])
@@ -199,6 +206,14 @@ const pageChange = (current) => {
 const subTaskDetailVisible = ref(false)
 const subTaskId = ref()
 const tabIndex = ref(1)
+
+const terminalVisible = ref(false)
+const macHost = ref({})
+
+const handleTerminal = row => {
+  terminalVisible.value = true
+  macHost.value = row
+}
 
 const handleDetail = row => {
   subTaskDetailVisible.value = true
@@ -283,7 +298,8 @@ const getTaskDetail = () => {
   taskDetail(id).then(res => {
     task.value = res.data.task
     const taskInfo = res.data.task
-    const subTaskCount = res.data.counts
+    const offlineCounts = res.data.offlineCounts
+    const onlineCounts = res.data.onlineCounts
     const hosts = res.data.hosts
     descData.value = [
       {
@@ -292,7 +308,7 @@ const getTaskDetail = () => {
       },
       {
         label: '子任务数量：',
-        value: subTaskCount['1'] + subTaskCount['2']
+        value: offlineCounts['total'] + onlineCounts['total']
       },
       {
         label: '分配执行机器：',
@@ -304,7 +320,7 @@ const getTaskDetail = () => {
       },
       {
         label: '子任务数量（离线模式）：',
-        value: subTaskCount['1'],
+        value: `总数：${offlineCounts['total']}，未启动：${offlineCounts['notRunCount']}，执行中：${offlineCounts['runningCount']}，迁移完成：${offlineCounts['finishCount']}，迁移失败：${offlineCounts['errorCount']}`,
         span: 2
       },
       {
@@ -313,7 +329,7 @@ const getTaskDetail = () => {
       },
       {
         label: '子任务数量（在线模式）：',
-        value: subTaskCount['2'],
+        value: `总数：${onlineCounts['total']}，未启动：${onlineCounts['notRunCount']}，执行中：${onlineCounts['runningCount']}，迁移完成：${onlineCounts['finishCount']}，迁移失败：${onlineCounts['errorCount']}`,
         span: 2
       }
     ]
@@ -385,11 +401,18 @@ onBeforeUnmount(() => {
     .progress-info {
       white-space: nowrap;
       margin-right: 10px;
+      color: var(--color-text-1);
     }
   }
   .table-con {
     margin-top: 20px;
     padding: 0 20px 30px;
+    .mac-txt {
+      cursor: pointer;
+      &:hover {
+        color: rgb(var(--primary-6));
+      }
+    }
   }
 }
 </style>

@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { MinimalistInstallConfig, LiteInstallConfig, EnterpriseInstallConfig, OpenGaussVersionEnum, InstallModeEnum, DeployTypeEnum, WsConnectTypeEnum } from '@/types/ops/install'
+import { OpenLookengInstallConfig, MinimalistInstallConfig, LiteInstallConfig, EnterpriseInstallConfig, OpenGaussVersionEnum, InstallModeEnum, DeployTypeEnum, WsConnectTypeEnum } from '@/types/ops/install'
 import { KeyValue } from '@antv/x6/lib/types'
 
 const installStore = defineStore('install', {
@@ -16,12 +16,14 @@ const installStore = defineStore('install', {
         packageName: '',
         installPackagePath: '',
         deployType: DeployTypeEnum.SINGLE_NODE,
+        envPath: '',
         clusterId: '',
         clusterName: ''
       },
       minimalistInstallConfig: {} as MinimalistInstallConfig,
       liteInstallConfig: {} as LiteInstallConfig,
-      enterpriseInstallConfig: {} as EnterpriseInstallConfig
+      enterpriseInstallConfig: {} as EnterpriseInstallConfig,
+      openLookengInstallConfig: {} as OpenLookengInstallConfig
     }
   },
 
@@ -30,6 +32,7 @@ const installStore = defineStore('install', {
     getMiniConfig: state => state.minimalistInstallConfig,
     getLiteConfig: state => state.liteInstallConfig,
     getEnterpriseConfig: state => state.enterpriseInstallConfig,
+    getOpenLookengInstallConfig: state => state.openLookengInstallConfig,
     getInstallParam: (state): KeyValue => {
       const param = {
         installContext: {
@@ -85,6 +88,11 @@ const installStore = defineStore('install', {
     setEnterpriseConfig(config: EnterpriseInstallConfig) {
       this.$patch(state => {
         Object.assign(state.enterpriseInstallConfig, config)
+      })
+    },
+    setOpenLookengConfig(config: OpenLookengInstallConfig) {
+      this.$patch(state => {
+        Object.assign(state.openLookengInstallConfig, config)
       })
     },
     resetInstall() {

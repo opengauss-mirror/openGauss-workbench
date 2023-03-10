@@ -1,6 +1,7 @@
 import axios from 'axios'
 import { KeyValue } from '@/types/global'
 import { downloadPackage, SSHBody } from '@/types/ops/install'
+import { UploadInfo } from '@/types/resource/package'
 // import { hostData, hostUserData } from '@/types/resource/host'
 
 // get Key
@@ -160,6 +161,13 @@ export const portUsed = (hostId: string, data: KeyValue) => {
   })
 }
 
+// Whether the file is exist
+export const fileExist = (hostId: string, data: KeyValue) => {
+  return axios.get(`host/fileExist/${hostId}`, {
+    params: data
+  })
+}
+
 export const hostUserPage = (hostId: string) => {
   return axios.get(`hostUser/page/${hostId}`)
 }
@@ -288,7 +296,7 @@ export const backupDel = (id: string) => {
   return axios.delete('backup/del/' + id)
 }
 
-// package manage 
+// package manage
 export const packageListAll = (data: KeyValue) => {
   return axios.get('installPackageManager/list', {
     params: data
@@ -309,16 +317,34 @@ export const packageDel = (id: string) => {
   return axios.delete('installPackageManager/' + id)
 }
 
-export const addPackage = (data: KeyValue) => {
-  return axios.post('installPackageManager/save', data)
+export const addPackage = (data: FormData) => {
+  return axios.post('installPackageManager', data)
 }
 
-export const editPackage = (azId: string, data: KeyValue) => {
-  return axios.put(`installPackageManager/update/${azId}`, data)
+export const editPackage = (data: FormData) => {
+  return axios.put(`installPackageManager`, data)
 }
 
 export const getPackageCpuArch = (data: KeyValue) => {
   return axios.get('installPackageManager/getCpuArch', {
     params: data
   })
+}
+
+export const analysisPkg = (pkgName: string, pkgType: string) => {
+  return axios.get('installPackageManager/analysisPkg', {
+    params: { pkgName: pkgName, pkgType: pkgType }
+  })
+}
+
+export const uploadPkgTar = (file: File) => {
+  return axios.post('installPackageManager/upload', file)
+}
+
+export const delPkgTar = (path: string, id?: string) => {
+  return axios.delete('installPackageManager/delPkgTar', { params: { path: path, id: id } })
+}
+
+export const getSysUploadPath = () => {
+  return axios.get('installPackageManager/sysUploadPath')
 }

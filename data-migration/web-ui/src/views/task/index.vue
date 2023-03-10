@@ -160,6 +160,7 @@ const getTaskDetail = id => {
     subTaskConfig.value = data.tasks.map(item => {
       return {
         mode: item.migrationModelId,
+        configType: !item.taskParams.length ? 1 : 2,
         sourceDBName: item.sourceDb,
         sourceNodeName: item.sourceDbHost,
         sourceNodeInfo: {

@@ -12,19 +12,19 @@
     <div class="search-con">
       <a-form :model="form" layout="inline">
         <a-form-item field="sourcedbKey">
-          <a-input v-model.trim="form.sourcedbKey" allow-clear placeholder="请输入源实例名/库名" @change="getFilterData"></a-input>
+          <a-input v-model.trim="form.sourcedbKey" allow-clear placeholder="请输入源实例名/库名" style="width: 180px;" @change="getFilterData"></a-input>
         </a-form-item>
         <a-form-item field="targetdbKey">
-          <a-input v-model.trim="form.targetdbKey" allow-clear placeholder="请输入目的实例名/库名" @change="getFilterData"></a-input>
+          <a-input v-model.trim="form.targetdbKey" allow-clear placeholder="请输入目的实例名/库名" style="width: 180px;" @change="getFilterData"></a-input>
         </a-form-item>
         <a-form-item field="mode">
-          <a-select v-model="form.mode" placeholder="请选择迁移模式" allow-clear @change="getFilterData">
+          <a-select v-model="form.mode" placeholder="请选择迁移模式" allow-clear style="width: 160px;" @change="getFilterData">
             <a-option :value="1">离线模式</a-option>
             <a-option :value="2">在线模式</a-option>
           </a-select>
         </a-form-item>
         <a-form-item field="configType">
-          <a-select v-model="form.configType" placeholder="请选择配置类型" allow-clear @change="getFilterData">
+          <a-select v-model="form.configType" placeholder="请选择配置类型" allow-clear style="width: 160px;" @change="getFilterData">
             <a-option :value="1">默认配置</a-option>
             <a-option :value="2">个性化配置</a-option>
           </a-select>
@@ -46,7 +46,7 @@
       </a-form>
     </div>
     <div class="table-con">
-      <a-table :data="tableData" :bordered="false" stripe :pagination="pagination" @page-change="pageChange">
+      <a-table :data="tableData" :bordered="false" :stripe="!currentTheme" :hoverable="!currentTheme" :pagination="pagination" @page-change="pageChange">
         <template #columns>
           <a-table-column title="源实例名" data-index="sourceNodeName"></a-table-column>
           <a-table-column title="源IP和端口">
@@ -93,6 +93,9 @@
 <script setup>
 import { reactive, ref, onMounted, toRaw } from 'vue'
 import ParamsConfig from './components/ParamsConfig.vue'
+import useTheme from '@/hooks/theme'
+
+const { currentTheme } = useTheme()
 
 const props = defineProps({
   subTaskConfig: {
@@ -130,6 +133,7 @@ const syncGlobalParams = params => {
 const syncTaskParams = params => {
   subTaskInfo.value = {
     ...subTaskInfo.value,
+    configType: params.basic.length || params.more.length ? 2 : 1,
     taskParamsObject: params
   }
   const idx = tableData.value.findIndex(item => item.sourceDBName === subTaskInfo.value.sourceDBName && item.targetDBName === subTaskInfo.value.targetDBName)

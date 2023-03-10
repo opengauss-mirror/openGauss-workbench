@@ -1,8 +1,8 @@
 package org.opengauss.admin.plugin.controller.ops;
 
-import org.opengauss.admin.plugin.base.BaseController;
 import org.opengauss.admin.common.core.domain.AjaxResult;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
+import org.opengauss.admin.plugin.base.BaseController;
 import org.opengauss.admin.plugin.domain.model.ops.*;
 import org.opengauss.admin.plugin.domain.model.ops.env.HostEnv;
 import org.opengauss.admin.plugin.enums.ops.OpenGaussSupportOSEnum;
@@ -53,13 +53,13 @@ public class OpsClusterController extends BaseController {
     }
 
     @PostMapping("/upgrade")
-    public AjaxResult upgrade(@RequestBody UpgradeBody upgradeBody){
+    public AjaxResult upgrade(@RequestBody UpgradeBody upgradeBody) {
         opsClusterService.upgrade(upgradeBody);
         return AjaxResult.success();
     }
 
     @PostMapping("/upgradeRollback")
-    public AjaxResult upgradeRollback(@RequestBody UpgradeBody upgradeBody){
+    public AjaxResult upgradeRollback(@RequestBody UpgradeBody upgradeBody) {
         opsClusterService.upgradeRollback(upgradeBody);
         return AjaxResult.success();
     }
@@ -77,7 +77,7 @@ public class OpsClusterController extends BaseController {
     }
 
     @DeleteMapping("/remove/{clusterId}")
-    public AjaxResult remove(@PathVariable("clusterId") String clusterId){
+    public AjaxResult remove(@PathVariable("clusterId") String clusterId) {
         opsClusterService.removeCluster(clusterId);
         return AjaxResult.success();
     }
@@ -138,7 +138,7 @@ public class OpsClusterController extends BaseController {
 
     @GetMapping("/download")
     public void download(@RequestParam String hostId, @RequestParam String path, @RequestParam String filename, HttpServletResponse response) {
-        opsClusterService.download(hostId, path, filename,response);
+        opsClusterService.download(hostId, path, filename, response);
     }
 
     @GetMapping("/listCluster")
@@ -191,20 +191,20 @@ public class OpsClusterController extends BaseController {
     }
 
     @GetMapping("/build")
-    public AjaxResult build(@RequestParam String clusterId, @RequestParam String hostId, @RequestParam String businessId){
+    public AjaxResult build(@RequestParam String clusterId, @RequestParam String hostId, @RequestParam String businessId) {
         opsClusterService.build(clusterId, hostId, businessId);
         return AjaxResult.success();
     }
 
     @GetMapping("/listInstallPackage")
-    public AjaxResult listInstallPackage(@RequestParam(value = "path", required = false) String path, @RequestParam(value = "version",required = false) OpenGaussVersionEnum openGaussVersionEnum) {
-        ListDir listDir = opsClusterService.listInstallPackage(path,openGaussVersionEnum);
+    public AjaxResult listInstallPackage(@RequestParam(value = "version", required = false) OpenGaussVersionEnum openGaussVersionEnum) {
+        ListDir listDir = opsClusterService.listInstallPackage(openGaussVersionEnum, getUserId());
         return AjaxResult.success(listDir);
     }
 
     @GetMapping("/env/{hostId}")
-    public AjaxResult env(@PathVariable("hostId") String hostId, @RequestParam(value = "expectedOs",defaultValue = "CENTOS_X86_64") OpenGaussSupportOSEnum expectedOs) {
-        HostEnv hostEnv = opsClusterService.env(hostId,expectedOs);
+    public AjaxResult env(@PathVariable("hostId") String hostId, @RequestParam(value = "expectedOs", defaultValue = "CENTOS_X86_64") OpenGaussSupportOSEnum expectedOs) {
+        HostEnv hostEnv = opsClusterService.env(hostId, expectedOs);
         return AjaxResult.success(hostEnv);
     }
 

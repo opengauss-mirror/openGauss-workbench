@@ -80,6 +80,24 @@ public class JschUtil {
         return executeCommand(command, session, null, null);
     }
 
+
+    /**
+     * ChannelExec
+     *
+     * @param command Instructions to execute
+     * @param session session
+     * @param env     env path
+     * @return SSH Result
+     * @throws IOException IO Exception
+     */
+    public JschResult executeCommand(String command, Session session,String env) throws IOException, InterruptedException {
+        if (StrUtil.isNotEmpty(env)){
+            command = "source " + env + " && " + command;
+        }
+
+        return executeCommand(command, session, null, null);
+    }
+
     /**
      * ChannelExec
      *
@@ -90,6 +108,25 @@ public class JschUtil {
      * @throws IOException IO Exception
      */
     public JschResult executeCommand(String command, Session session, WsSession wsSession) throws IOException, InterruptedException {
+        return executeCommand(command, session, wsSession, null);
+    }
+
+
+    /**
+     * ChannelExec
+     *
+     * @param command   Instructions to execute
+     * @param env       env
+     * @param session   session
+     * @param wsSession websocket session
+     * @return SSH Result
+     * @throws IOException IO Exception
+     */
+    public JschResult executeCommand(String command,String env, Session session, WsSession wsSession) throws IOException, InterruptedException {
+        if (StrUtil.isNotEmpty(env)){
+            command = "source " + env + " && " + command;
+        }
+
         return executeCommand(command, session, wsSession, null);
     }
 

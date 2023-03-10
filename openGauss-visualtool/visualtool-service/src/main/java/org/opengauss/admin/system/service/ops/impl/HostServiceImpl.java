@@ -162,7 +162,13 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
         }
 
         OpsHostUserEntity root = opsHostUserEntities.stream().filter(opsHostUserEntity -> "root".equals(opsHostUserEntity.getUsername())).findFirst().orElseThrow(() -> new OpsException("root user information not found"));
-        root.setPassword(rootPassword);
+        if (StrUtil.isEmpty(root.getPassword())){
+            if (StrUtil.isEmpty(rootPassword)){
+                throw new OpsException("root password does not exist");
+            }else {
+                root.setPassword(rootPassword);
+            }
+        }
 
         Session session = jschUtil.getSession(hostEntity.getPublicIp(), hostEntity.getPort(), "root", encryptionUtils.decrypt(root.getPassword())).orElse(null);
         if (session != null) {
@@ -208,7 +214,10 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
 
     @Override
     public IPage<OpsHostVO> pageHost(Page page, String name) {
-        return hostMapper.pageHost(page, name);
+        final IPage<OpsHostVO> opsHostVOIPage = hostMapper.pageHost(page, name);
+        final List<OpsHostVO> records = opsHostVOIPage.getRecords();
+        populateIsRememberVO(records);
+        return opsHostVOIPage;
     }
 
     @Override
@@ -249,6 +258,24 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
         List<OpsHostEntity> list = list(queryWrapper);
         populateIsRemember(list);
         return list;
+    }
+
+    private void populateIsRememberVO(List<OpsHostVO> list) {
+        final List<String> hostIds = list.stream().map(OpsHostVO::getHostId).collect(Collectors.toList());
+        if (CollUtil.isNotEmpty(hostIds)){
+            final List<OpsHostUserEntity> opsHostUserEntities = hostUserService.listHostUserByHostIdList(hostIds);
+            List<String> isRememberHostIds = new ArrayList<>();
+            for (OpsHostUserEntity opsHostUserEntity : opsHostUserEntities) {
+                final String username = opsHostUserEntity.getUsername();
+                if ("root".equalsIgnoreCase(username) && StrUtil.isNotEmpty(opsHostUserEntity.getPassword())){
+                    isRememberHostIds.add(opsHostUserEntity.getHostId());
+                }
+            }
+
+            for (OpsHostVO opsHostEntity : list) {
+                opsHostEntity.setIsRemember(isRememberHostIds.contains(opsHostEntity.getHostId()));
+            }
+        }
     }
 
     private void populateIsRemember(List<OpsHostEntity> list) {

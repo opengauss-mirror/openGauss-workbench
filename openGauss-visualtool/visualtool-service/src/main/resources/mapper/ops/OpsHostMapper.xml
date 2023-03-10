@@ -12,5 +12,6 @@
         <if test="name!=null and name!=''">
             AND (h.public_ip like #{name} OR h.private_ip like #{name})
         </if>
+        ORDER BY h.update_time DESC
     </select>
 </mapper>
