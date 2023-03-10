@@ -226,7 +226,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                 try {
                     Class.forName(driver);
                     connection = DriverManager.getConnection(sourceURL, info);
-                    doMonitor(wsSession, ommSession, clusterEntity.getVersion(), connection, realDataPath);
+                    doMonitor(wsSession, ommSession, clusterEntity.getVersion(), connection, realDataPath, clusterEntity.getEnvPath());
                 } catch (Exception e) {
                     log.error("Failed to obtain a connection", e);
                 }
@@ -398,7 +398,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         return checkItemVO;
     }
 
-    private void doMonitor(WsSession wsSession, Session ommSession, OpenGaussVersionEnum version, Connection connection, String dataPath) {
+    private void doMonitor(WsSession wsSession, Session ommSession, OpenGaussVersionEnum version, Connection connection, String dataPath, String envPath) {
         AtomicBoolean hasError = new AtomicBoolean(false);
         while (wsSession.getSession().isOpen() && !hasError.get()) {
             NodeMonitorVO nodeMonitorVO = new NodeMonitorVO();
@@ -450,7 +450,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
 
             threadPoolTaskExecutor.submit(() -> {
                 try {
-                    nodeMonitorVO.setState(state(ommSession, version, dataPath));
+                    nodeMonitorVO.setState(state(ommSession, version, dataPath, envPath));
                 }catch (Exception e){
                     log.error("state monitor error : ",e);
                     hasError.set(true);
@@ -638,14 +638,14 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         }
     }
 
-    private String state(Session ommSession, OpenGaussVersionEnum version, String dataPath) {
+    private String state(Session ommSession, OpenGaussVersionEnum version, String dataPath, String envPath) {
         if (OpenGaussVersionEnum.ENTERPRISE == version) {
             String command = "gs_om -t status --detail";
             JschResult jschResult = null;
             try {
                 Map<String, Object> res = new HashMap<>();
                 try {
-                    jschResult = jschUtil.executeCommand(command, ommSession);
+                    jschResult = jschUtil.executeCommand(command, ommSession, envPath);
                 } catch (InterruptedException e) {
                     throw new OpsException("thread is interrupted");
                 }
@@ -684,11 +684,17 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                         String[] s1 = s.replaceAll(" +", " ").split(" ");
 
                         String state = "";
-                        for (int i = 7; i < s1.length; i++) {
-                            state += (s1[i] + " ");
-                        }
 
-                        if (s1.length>=8){
+                        if (s1.length>=9){
+                            for (int i = 8; i < s1.length; i++) {
+                                state += (s1[i] + " ");
+                            }
+                            nodeState.put(s1[1], state.trim());
+                            nodeRole.put(s1[1], s1[7]);
+                        }else if (s1.length>=8){
+                            for (int i = 7; i < s1.length; i++) {
+                                state += (s1[i] + " ");
+                            }
                             nodeState.put(s1[1], state.trim());
                             nodeRole.put(s1[1], s1[6]);
                         }

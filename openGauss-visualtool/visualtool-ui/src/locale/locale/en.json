@@ -214,6 +214,7 @@
         },
         "AddHost": {
             "else1": "Please enter the correct port number",
+            "else2": "Remember",
             "currentStatus": "Current status",
             "ipAddress": "Intranet IP",
             "5mphy3snvg80": "available",

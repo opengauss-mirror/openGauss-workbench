@@ -140,7 +140,7 @@ public class HostUserTest {
         Mockito.doReturn("000000").when(encryptionUtils).decrypt(any());
         Mockito.doReturn(Optional.ofNullable(getJschSession())).when(jschUtil).getSession(any(), any(), any(), any());
         Mockito.doReturn(jschResult).when(jschUtil).executeCommand(any(), any());
-        Mockito.doReturn(jschResult).when(jschUtil).executeCommand(any(), any(), any());
+        Mockito.doReturn(jschResult).when(jschUtil).executeCommand(any(), any(), "");
         Mockito.doReturn(getMockHostEntity()).when(hostService).getById(any());
         HostUserBody hostUserBody = new HostUserBody();
         hostUserBody.setHostId("1");
@@ -155,7 +155,7 @@ public class HostUserTest {
         Mockito.doReturn("000000").when(encryptionUtils).decrypt(any());
         Mockito.doReturn(Optional.ofNullable(getJschSession())).when(jschUtil).getSession(any(), any(), any(), any());
         Mockito.doReturn(jschResult).when(jschUtil).executeCommand(any(), any());
-        Mockito.doReturn(jschResult).when(jschUtil).executeCommand(any(), any(), any());
+        Mockito.doReturn(jschResult).when(jschUtil).executeCommand(any(), any(), "");
         String hostUserId = "1";
         HostUserBody hostUserBody = new HostUserBody();
         hostUserBody.setHostId("1");

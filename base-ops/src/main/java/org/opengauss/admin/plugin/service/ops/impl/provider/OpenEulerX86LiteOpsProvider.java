@@ -559,7 +559,7 @@ public class OpenEulerX86LiteOpsProvider extends AbstractOpsProvider {
         String command = "gs_guc reload -D " + dataPath + " -c \"enable_wdr_snapshot=on\"";
 
         try {
-            JschResult jschResult = jschUtil.executeCommand(command, session);
+            JschResult jschResult = jschUtil.executeCommand(command, session, clusterEntity.getEnvPath());
             if (0 != jschResult.getExitCode()) {
                 log.error("set enable_wdr_snapshot parameter failed, exit code: {}, error message: {}", jschResult.getExitCode(), jschResult.getResult());
                 throw new OpsException("Failed to set the enable_wdr_snapshot parameter");
@@ -583,7 +583,7 @@ public class OpenEulerX86LiteOpsProvider extends AbstractOpsProvider {
 
         String restartCommand = MessageFormat.format(SshCommandConstants.LITE_STOP, dataPath);
         try {
-            JschResult jschResult = jschUtil.executeCommand(restartCommand, restartUserSession, retSession);
+            JschResult jschResult = jschUtil.executeCommand(restartCommand, opsClusterContext.getOpsClusterEntity().getEnvPath(), restartUserSession, retSession);
             if (0 != jschResult.getExitCode()) {
                 throw new OpsException("stop error, exit code" + jschResult.getExitCode());
             }
@@ -606,7 +606,7 @@ public class OpenEulerX86LiteOpsProvider extends AbstractOpsProvider {
 
         String restartCommand = MessageFormat.format(SshCommandConstants.LITE_START, dataPath);
         try {
-            JschResult jschResult = jschUtil.executeCommand(restartCommand, restartUserSession, retSession);
+            JschResult jschResult = jschUtil.executeCommand(restartCommand, opsClusterContext.getOpsClusterEntity().getEnvPath(), restartUserSession, retSession);
             if (0 != jschResult.getExitCode()) {
                 throw new OpsException("startup error，exit code " + jschResult.getExitCode());
             }
@@ -629,7 +629,7 @@ public class OpenEulerX86LiteOpsProvider extends AbstractOpsProvider {
 
         String restartCommand = MessageFormat.format(SshCommandConstants.LITE_RESTART, dataPath);
         try {
-            JschResult jschResult = jschUtil.executeCommand(restartCommand, restartUserSession, retSession);
+            JschResult jschResult = jschUtil.executeCommand(restartCommand, opsClusterContext.getOpsClusterEntity().getEnvPath(), restartUserSession, retSession);
             if (0 != jschResult.getExitCode()) {
                 throw new OpsException("restart error，exit code " + jschResult.getExitCode());
             }
@@ -649,7 +649,7 @@ public class OpenEulerX86LiteOpsProvider extends AbstractOpsProvider {
         OpsHostUserEntity hostUserEntity = hostInfoHolder.getHostUserEntities().stream().filter(userInfo -> opsClusterNodeEntity.getInstallUserId().equals(userInfo.getHostUserId())).findFirst().orElseThrow(() -> new OpsException("Installation user info user not found"));
         Session session = sshLogin(jschUtil,encryptionUtils,hostEntity, hostUserEntity);
 
-        doUnInstall(retSession, session, opsClusterNodeEntity.getPkgPath());
+        doUnInstall(retSession, session, unInstallContext.getOpsClusterEntity().getInstallPackagePath(), unInstallContext.getOpsClusterEntity().getEnvPath());
         removeContext(unInstallContext);
     }
 
@@ -661,13 +661,13 @@ public class OpenEulerX86LiteOpsProvider extends AbstractOpsProvider {
         opsClusterNodeService.removeBatchByIds(opsClusterNodeEntityList.stream().map(OpsClusterNodeEntity::getClusterNodeId).collect(Collectors.toList()));
     }
 
-    private void doUnInstall(WsSession retSession, Session session, String path) {
+    private void doUnInstall(WsSession retSession, Session session, String path, String envPath) {
         String command = MessageFormat.format(SshCommandConstants.LITE_UNINSTALL, path);
 
         try {
             JschResult result = null;
             try {
-                result = jschUtil.executeCommand(command, session, retSession);
+                result = jschUtil.executeCommand(command, envPath, session, retSession);
             } catch (InterruptedException e) {
                 throw new OpsException("thread is interrupted");
             }
@@ -690,7 +690,7 @@ public class OpenEulerX86LiteOpsProvider extends AbstractOpsProvider {
             OpsHostUserEntity hostUserEntity = hostInfoHolder.getHostUserEntities().stream().filter(userInfo -> opsClusterNodeEntity.getInstallUserId().equals(userInfo.getHostUserId())).findFirst().orElseThrow(() -> new OpsException("Installation user info user not found"));
             Session session = sshLogin(jschUtil,encryptionUtils,hostEntity, hostUserEntity);
 
-            doUnInstall(retSession, session, opsClusterNodeEntity.getPkgPath());
+            doUnInstall(retSession, session, unInstallContext.getOpsClusterEntity().getInstallPackagePath(), unInstallContext.getOpsClusterEntity().getEnvPath());
         }
 
         removeContext(unInstallContext);

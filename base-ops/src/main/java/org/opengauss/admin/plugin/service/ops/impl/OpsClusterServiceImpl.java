@@ -483,7 +483,13 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
             for (HostInfoHolder hostInfoHolder : hostInfoHolderList) {
                 List<OpsHostUserEntity> userEntities = hostInfoHolder.getHostUserEntities();
                 OpsHostUserEntity rootUserEntity = userEntities.stream().filter(userEntity -> "root".equals(userEntity.getUsername())).findFirst().orElseThrow(() -> new OpsException("Host not found[" + hostInfoHolder.getHostEntity().getPublicIp() + "]root user information"));
-                rootUserEntity.setPassword(hostPasswdMap.get(rootUserEntity.getHostId()));
+                if (StrUtil.isEmpty(rootUserEntity.getPassword())){
+                    if (StrUtil.isNotEmpty(hostPasswdMap.get(rootUserEntity.getHostId()))){
+                        rootUserEntity.setPassword(hostPasswdMap.get(rootUserEntity.getHostId()));
+                    }else {
+                        throw new OpsException("root password does not exist");
+                    }
+                }
             }
 
             installContext.setHostInfoHolders(hostInfoHolderList);
@@ -536,7 +542,14 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
 
         List<OpsHostUserEntity> hostUserList = hostUserFacade.listHostUserByHostId(opsHostEntity.getHostId());
         OpsHostUserEntity rootUserEntity = hostUserList.stream().filter(opsHostUserEntity -> "root".equalsIgnoreCase(opsHostUserEntity.getUsername())).findFirst().orElseThrow(() -> new OpsException("[" + opsHostEntity.getHostname() + "]root user not found"));
-        rootUserEntity.setPassword(sshBody.getRootPassword());
+        if (StrUtil.isEmpty(rootUserEntity.getPassword())){
+            if (StrUtil.isNotEmpty(sshBody.getRootPassword())){
+                rootUserEntity.setPassword(sshBody.getRootPassword());
+            }else {
+                throw new OpsException("root password not found");
+            }
+        }
+
 
         ChannelShell channelShell = sshChannelManager.initChannelShell(sshBody, opsHostEntity, rootUserEntity).orElseThrow(() -> new OpsException("Connection establishment failed"));
 
@@ -947,7 +960,13 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                 for (HostInfoHolder hostInfoHolder : hostInfoHolderList) {
                     List<OpsHostUserEntity> userEntities = hostInfoHolder.getHostUserEntities();
                     OpsHostUserEntity rootUserEntity = userEntities.stream().filter(userEntity -> "root".equals(userEntity.getUsername())).findFirst().orElseThrow(() -> new OpsException("[" + hostInfoHolder.getHostEntity().getPublicIp() + "]root user information not found"));
-                    userEntities.remove(rootUserEntity);
+                    if (StrUtil.isEmpty(rootUserEntity.getPassword())){
+                        if (StrUtil.isNotEmpty(unInstallBody.getRootPasswords().get(rootUserEntity.getHostId()))){
+                            rootUserEntity.setPassword(unInstallBody.getRootPasswords().get(rootUserEntity.getHostId()));
+                        }else {
+                            throw new OpsException("root password not found");
+                        }
+                    }
                 }
 
                 unInstallContext.setHostInfoHolders(hostInfoHolderList);
@@ -1353,9 +1372,9 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         Session ommSession = jschUtil.getSession(hostEntity.getPublicIp(),hostEntity.getPort(),masterHostUsername,encryptionUtils.decrypt(masterHostPassword)).orElseThrow(()->new OpsException("Failed to establish connection with host " + hostEntity.getPublicIp()));
         Connection connection = null;
         try {
-            String versionNum = getVersionNum(ommSession);
+            String versionNum = getVersionNum(ommSession,importClusterBody.getEnvPath());
             Integer majorVersion = Integer.valueOf(versionNum.substring(0,1));
-            OpenGaussVersionEnum openGaussVersionEnum = judgeOpenGaussVersion(majorVersion,ommSession,connection);
+            OpenGaussVersionEnum openGaussVersionEnum = judgeOpenGaussVersion(majorVersion,ommSession,connection,importClusterBody.getEnvPath());
             boolean versionMatch = false;
             if (majorVersion>=5){
                 if (importClusterBody.getOpenGaussVersion() == openGaussVersionEnum){
@@ -1423,8 +1442,8 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         }
     }
 
-    private OpenGaussVersionEnum judgeOpenGaussVersion(Integer majorVersion, Session ommSession, Connection connection) {
-        boolean enterprise = enterpriseVersion(ommSession);
+    private OpenGaussVersionEnum judgeOpenGaussVersion(Integer majorVersion, Session ommSession, Connection connection, String envPath) {
+        boolean enterprise = enterpriseVersion(ommSession,envPath);
         if (enterprise){
             return OpenGaussVersionEnum.ENTERPRISE;
         }
@@ -1458,11 +1477,11 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         return false;
     }
 
-    private boolean enterpriseVersion(Session ommSession) {
+    private boolean enterpriseVersion(Session ommSession, String envPath) {
         String command = "which gs_om";
         JschResult jschResult = null;
         try {
-            jschResult = jschUtil.executeCommand(command, ommSession);
+            jschResult = jschUtil.executeCommand(command, ommSession,envPath);
 
             if (0 != jschResult.getExitCode()) {
                 return false;
@@ -1475,11 +1494,11 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         }
     }
 
-    private String getVersionNum(Session ommSession) {
+    private String getVersionNum(Session ommSession, String envPath) {
         String command = "gsql -V";
         JschResult jschResult = null;
         try {
-            jschResult = jschUtil.executeCommand(command, ommSession);
+            jschResult = jschUtil.executeCommand(command, ommSession,envPath);
 
             if (0 != jschResult.getExitCode()) {
                 log.error("Failed to get openGauss version, exit code: {}, log: {}", jschResult.getExitCode(), jschResult.getResult());
@@ -1489,7 +1508,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
             String result = jschResult.getResult();
             String majorVersion = result.substring(16, 21);
             log.info("openGauss version:{}",majorVersion);
-            return result;
+            return majorVersion;
         } catch (Exception e) {
             log.error("Failed to get openGauss version", e);
             throw new OpsException("Failed to get openGauss version");
@@ -1548,7 +1567,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
             Connection connection = null;
             try {
                 connection = DBUtil.getSession(hostEntity.getPublicIp(), clusterEntity.getPort(), clusterEntity.getDatabaseUsername(), clusterEntity.getDatabasePassword()).orElseThrow(() -> new OpsException("Unable to connect to the database"));
-                doMonitor(wsSession, ommSession, clusterEntity.getVersion(), connection, realDataPath);
+                doMonitor(wsSession, ommSession, clusterEntity.getVersion(), connection, realDataPath,clusterEntity.getEnvPath());
             }catch (Exception e) {
                 log.error("get connection fail , ip:{} , port:{}, username:{}", hostEntity.getPublicIp(),clusterEntity.getPort(),clusterEntity.getDatabaseUsername(), e);
             }finally {
@@ -1676,7 +1695,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         Future<?> future = threadPoolTaskExecutor.submit(() -> {
             try {
                 RequestContextHolder.setRequestAttributes(context);
-                doGenerateconf(session, retWsSession);
+                doGenerateconf(session, retWsSession,clusterEntity.getXmlConfigPath(), clusterEntity.getEnvPath());
             }finally {
                 if (Objects.nonNull(session) && session.isConnected()){
                     session.disconnect();
@@ -1718,7 +1737,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         Future<?> future = threadPoolTaskExecutor.submit(() -> {
             try {
                 RequestContextHolder.setRequestAttributes(context);
-                doSwitchover(session, retWsSession, nodeEntity.getDataPath());
+                doSwitchover(session, retWsSession, nodeEntity.getDataPath(), clusterEntity.getEnvPath());
             }finally {
                 if (Objects.nonNull(session) && session.isConnected()){
                     session.disconnect();
@@ -1760,7 +1779,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         Future<?> future = threadPoolTaskExecutor.submit(() -> {
             try {
                 RequestContextHolder.setRequestAttributes(context);
-                doBuild(session, retWsSession, nodeEntity.getDataPath());
+                doBuild(session, retWsSession, nodeEntity.getDataPath(),clusterEntity.getEnvPath());
             }finally {
                 if (Objects.nonNull(session) && session.isConnected()){
                     session.disconnect();
@@ -1771,11 +1790,11 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         TaskManager.registry(businessId, future);
     }
 
-    private void doBuild(Session session, WsSession retWsSession, String dataPath) {
+    private void doBuild(Session session, WsSession retWsSession, String dataPath, String envPath) {
         String command = "gs_ctl build -D " + dataPath;
 
         try {
-            JschResult jschResult = jschUtil.executeCommand(command, session, retWsSession);
+            JschResult jschResult = jschUtil.executeCommand(command, envPath, session, retWsSession);
             if (0 != jschResult.getExitCode()) {
                 log.error("A build error occurred, exit code {}", jschResult.getExitCode());
                 throw new OpsException("A build error occurred");
@@ -1951,10 +1970,10 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         removeById(clusterId);
     }
 
-    private void doSwitchover(Session session, WsSession retWsSession, String dataPath) {
+    private void doSwitchover(Session session, WsSession retWsSession, String dataPath, String envPath) {
         try {
             String command = "gs_ctl switchover -D " + dataPath;
-            JschResult jschResult = jschUtil.executeCommand(command, session, retWsSession);
+            JschResult jschResult = jschUtil.executeCommand(command, envPath, session, retWsSession);
             if (0 != jschResult.getExitCode()) {
                 log.error("Active-standby switchover failed, exit code {}", jschResult.getExitCode());
                 throw new OpsException("Active-standby switchover failed");
@@ -1967,7 +1986,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
 
         try {
             String command = "gs_om -t refreshconf";
-            JschResult jschResult = jschUtil.executeCommand(command, session, retWsSession);
+            JschResult jschResult = jschUtil.executeCommand(command, envPath, session, retWsSession);
             if (0 != jschResult.getExitCode()) {
                 log.error("Active-standby switchover failed, exit code {}", jschResult.getExitCode());
                 throw new OpsException("Active-standby switchover failed");
@@ -1981,11 +2000,11 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         wsUtil.sendText(retWsSession, "FINAL_EXECUTE_EXIT_CODE:0");
     }
 
-    private void doGenerateconf(Session session, WsSession retWsSession) {
-        String command = "gs_om -t generateconf -X /opt/software/openGauss/cluster_config.xml --distribute";
+    private void doGenerateconf(Session session, WsSession retWsSession, String xmlConfigPath, String envPath) {
+        String command = "gs_om -t generateconf -X "+xmlConfigPath+" --distribute";
 
         try {
-            JschResult jschResult = jschUtil.executeCommand(command, session, retWsSession);
+            JschResult jschResult = jschUtil.executeCommand(command, envPath, session, retWsSession);
             if (0 != jschResult.getExitCode()) {
                 log.error("A generateconf error occurred, exit code {}", jschResult.getExitCode());
                 throw new OpsException("A generateconf error occurred");
@@ -2153,7 +2172,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         return checkItemVO;
     }
 
-    private void doMonitor(WsSession wsSession, Session ommSession, OpenGaussVersionEnum version, Connection connection, String dataPath) {
+    private void doMonitor(WsSession wsSession, Session ommSession, OpenGaussVersionEnum version, Connection connection, String dataPath, String envPath) {
         AtomicBoolean hasError = new AtomicBoolean(false);
         while (wsSession.getSession().isOpen() && !hasError.get()) {
             NodeMonitorVO nodeMonitorVO = new NodeMonitorVO();
@@ -2205,7 +2224,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
 
             threadPoolTaskExecutor.submit(() -> {
                 try {
-                    nodeMonitorVO.setState(state(ommSession, version, dataPath));
+                    nodeMonitorVO.setState(state(ommSession, version, dataPath,envPath));
                 }catch (Exception e){
                     log.error("state monitor error : ",e);
                     hasError.set(true);
@@ -2393,14 +2412,14 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         }
     }
 
-    private String state(Session ommSession, OpenGaussVersionEnum version, String dataPath) {
+    private String state(Session ommSession, OpenGaussVersionEnum version, String dataPath, String envPath) {
         if (OpenGaussVersionEnum.ENTERPRISE == version) {
             String command = "gs_om -t status --detail";
             JschResult jschResult = null;
             try {
                 Map<String, Object> res = new HashMap<>();
                 try {
-                    jschResult = jschUtil.executeCommand(command, ommSession);
+                    jschResult = jschUtil.executeCommand(command, ommSession, envPath);
                 } catch (InterruptedException e) {
                     throw new OpsException("thread is interrupted");
                 }
@@ -2457,11 +2476,17 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                         String[] s1 = s.replaceAll(" +", " ").split(" ");
 
                         String state = "";
-                        for (int i = 7; i < s1.length; i++) {
-                            state += (s1[i] + " ");
-                        }
 
-                        if (s1.length>=8){
+                        if (s1.length>=9){
+                            for (int i = 8; i < s1.length; i++) {
+                                state += (s1[i] + " ");
+                            }
+                            nodeState.put(s1[1], state.trim());
+                            nodeRole.put(s1[1], s1[7]);
+                        }else if (s1.length>=8){
+                            for (int i = 7; i < s1.length; i++) {
+                                state += (s1[i] + " ");
+                            }
                             nodeState.put(s1[1], state.trim());
                             nodeRole.put(s1[1], s1[6]);
                         }

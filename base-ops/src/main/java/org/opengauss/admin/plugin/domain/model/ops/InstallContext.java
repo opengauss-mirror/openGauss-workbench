@@ -120,9 +120,9 @@ public class InstallContext implements Cloneable {
         opsClusterEntity.setVersionNum(openGaussVersionNum);
         opsClusterEntity.setInstallMode(installMode);
         opsClusterEntity.setDeployType(deployType);
-        opsClusterEntity.setInstallPackagePath(installPackagePath);
         opsClusterEntity.setDatabaseUsername("gaussdb");
         if (openGaussVersion == OpenGaussVersionEnum.ENTERPRISE) {
+            opsClusterEntity.setInstallPackagePath(enterpriseInstallConfig.getInstallPackagePath());
             opsClusterEntity.setDatabasePassword(enterpriseInstallConfig.getDatabasePassword());
             opsClusterEntity.setInstallPath(enterpriseInstallConfig.getInstallPath());
             opsClusterEntity.setLogPath(enterpriseInstallConfig.getLogPath());
@@ -131,10 +131,13 @@ public class InstallContext implements Cloneable {
             opsClusterEntity.setCorePath(enterpriseInstallConfig.getCorePath());
             opsClusterEntity.setPort(enterpriseInstallConfig.getPort());
             opsClusterEntity.setEnableDcf(enterpriseInstallConfig.getEnableDCF());
+            opsClusterEntity.setXmlConfigPath(enterpriseInstallConfig.getInstallPackagePath()+"/cluster_config.xml");
         } else if (openGaussVersion == OpenGaussVersionEnum.LITE) {
+            opsClusterEntity.setInstallPackagePath(liteInstallConfig.getInstallPackagePath());
             opsClusterEntity.setPort(liteInstallConfig.getPort());
             opsClusterEntity.setDatabasePassword(liteInstallConfig.getDatabasePassword());
         } else if (openGaussVersion == OpenGaussVersionEnum.MINIMAL_LIST) {
+            opsClusterEntity.setInstallPackagePath(minimalistInstallConfig.getInstallPackagePath());
             opsClusterEntity.setPort(minimalistInstallConfig.getPort());
             opsClusterEntity.setDatabasePassword(minimalistInstallConfig.getDatabasePassword());
         }

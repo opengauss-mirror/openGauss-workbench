@@ -5,7 +5,6 @@ import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
 import org.opengauss.admin.common.exception.ops.OpsException;
 import org.opengauss.admin.plugin.domain.model.ops.*;
-import org.opengauss.admin.plugin.domain.model.ops.*;
 import org.opengauss.admin.plugin.service.ops.ClusterOpsProvider;
 import org.opengauss.admin.plugin.service.ops.impl.ClusterOpsProviderManager;
 import org.opengauss.admin.plugin.utils.JschUtil;
@@ -372,11 +371,11 @@ public abstract class AbstractOpsProvider implements ClusterOpsProvider, Initial
         return path + "/";
     }
 
-    protected OmStatusModel omStatus(JschUtil jschUtil,Session ommUserSession, WsSession retSession) {
+    protected OmStatusModel omStatus(JschUtil jschUtil, Session ommUserSession, WsSession retSession, String envPath) {
         OmStatusModel omStatusModel = new OmStatusModel();
         try {
             String statusCommand = "gs_om -t status --detail";
-            JschResult jschResult = jschUtil.executeCommand(statusCommand, ommUserSession);
+            JschResult jschResult = jschUtil.executeCommand(statusCommand, ommUserSession,envPath);
             if (0 != jschResult.getExitCode()) {
                 throw new OpsException("startup error,gs_om status fail,exit code " + jschResult.getExitCode());
             }

@@ -54,7 +54,7 @@ public class HostController extends BaseController {
     }
 
     @GetMapping("/ping/{hostId}")
-    public AjaxResult ping(@PathVariable String hostId, @RequestParam("rootPassword") String rootPassword) {
+    public AjaxResult ping(@PathVariable String hostId, @RequestParam(value = "rootPassword",required = false) String rootPassword) {
         return toAjax(hostService.ping(hostId, rootPassword));
     }
 

@@ -426,7 +426,7 @@ public class OpenEulerArch64MinimaListOpsProvider extends AbstractOpsProvider {
         if (DeployTypeEnum.CLUSTER == deployType) {
             String masterStartCommand = MessageFormat.format(SshCommandConstants.MINIMAL_LIST_MASTER_START, dataPath);
             try {
-                JschResult jschResult = jschUtil.executeCommand(masterStartCommand, startUserSession, retSession);
+                JschResult jschResult = jschUtil.executeCommand(masterStartCommand,opsClusterEntity.getEnvPath(), startUserSession, retSession);
                 if (0 != jschResult.getExitCode()) {
                     throw new OpsException("startup error，exit code " + jschResult.getExitCode());
                 }
@@ -437,7 +437,7 @@ public class OpenEulerArch64MinimaListOpsProvider extends AbstractOpsProvider {
 
             String slaveStartCommand = MessageFormat.format(SshCommandConstants.MINIMAL_LIST_SLAVE_START, dataPath);
             try {
-                JschResult jschResult = jschUtil.executeCommand(slaveStartCommand, startUserSession, retSession);
+                JschResult jschResult = jschUtil.executeCommand(slaveStartCommand, opsClusterEntity.getEnvPath(),startUserSession, retSession);
                 if (0 != jschResult.getExitCode()) {
                     throw new OpsException("startup error，exit code " + jschResult.getExitCode());
                 }
@@ -448,7 +448,7 @@ public class OpenEulerArch64MinimaListOpsProvider extends AbstractOpsProvider {
         } else {
             String startCommand = MessageFormat.format(SshCommandConstants.MINIMAL_LIST_SINGLE_START, dataPath);
             try {
-                JschResult jschResult = jschUtil.executeCommand(startCommand, startUserSession, retSession);
+                JschResult jschResult = jschUtil.executeCommand(startCommand, opsClusterEntity.getEnvPath(),startUserSession, retSession);
                 if (0 != jschResult.getExitCode()) {
                     throw new OpsException("startup error，exit code " + jschResult.getExitCode());
                 }
@@ -496,7 +496,7 @@ public class OpenEulerArch64MinimaListOpsProvider extends AbstractOpsProvider {
         String command = "gs_guc reload -D " + dataPath + " -c \"enable_wdr_snapshot=on\"";
 
         try {
-            JschResult jschResult = jschUtil.executeCommand(command, session);
+            JschResult jschResult = jschUtil.executeCommand(command, session, clusterEntity.getEnvPath());
             if (0 != jschResult.getExitCode()) {
                 log.error("set enable_wdr_snapshot parameter failed, exit code: {}, error message: {}", jschResult.getExitCode(), jschResult.getResult());
                 throw new OpsException("Failed to query the enable_wdr_snapshot parameter");
@@ -520,7 +520,7 @@ public class OpenEulerArch64MinimaListOpsProvider extends AbstractOpsProvider {
         if (DeployTypeEnum.CLUSTER == deployType) {
             String masterStopCommand = MessageFormat.format(SshCommandConstants.MINIMAL_LIST_MASTER_STOP, dataPath);
             try {
-                JschResult jschResult = jschUtil.executeCommand(masterStopCommand, stopUserSession, retSession);
+                JschResult jschResult = jschUtil.executeCommand(masterStopCommand, opsClusterEntity.getEnvPath(), stopUserSession, retSession);
                 if (0 != jschResult.getExitCode()) {
                     throw new OpsException("stop error，exit code " + jschResult.getExitCode());
                 }
@@ -531,7 +531,7 @@ public class OpenEulerArch64MinimaListOpsProvider extends AbstractOpsProvider {
 
             String slaveStopCommand = MessageFormat.format(SshCommandConstants.MINIMAL_LIST_SLAVE_STOP, dataPath);
             try {
-                JschResult jschResult = jschUtil.executeCommand(slaveStopCommand, stopUserSession, retSession);
+                JschResult jschResult = jschUtil.executeCommand(slaveStopCommand, opsClusterEntity.getEnvPath(), stopUserSession, retSession);
                 if (0 != jschResult.getExitCode()) {
                     throw new OpsException("stop error，exit code " + jschResult.getExitCode());
                 }
@@ -542,7 +542,7 @@ public class OpenEulerArch64MinimaListOpsProvider extends AbstractOpsProvider {
         } else {
             String stopCommand = MessageFormat.format(SshCommandConstants.MINIMAL_LIST_SINGLE_STOP, dataPath);
             try {
-                JschResult jschResult = jschUtil.executeCommand(stopCommand, stopUserSession, retSession);
+                JschResult jschResult = jschUtil.executeCommand(stopCommand, opsClusterEntity.getEnvPath(), stopUserSession, retSession);
                 if (0 != jschResult.getExitCode()) {
                     throw new OpsException("stop error，exit code " + jschResult.getExitCode());
                 }
@@ -562,7 +562,7 @@ public class OpenEulerArch64MinimaListOpsProvider extends AbstractOpsProvider {
         if (DeployTypeEnum.CLUSTER == deployType) {
             String masterRestartCommand = MessageFormat.format(SshCommandConstants.MINIMAL_LIST_MASTER_RESTART, dataPath);
             try {
-                JschResult jschResult = jschUtil.executeCommand(masterRestartCommand, restartUserSession, retSession);
+                JschResult jschResult = jschUtil.executeCommand(masterRestartCommand, opsClusterEntity.getEnvPath(), restartUserSession, retSession);
                 if (0 != jschResult.getExitCode()) {
                     throw new OpsException("restart error，exit code " + jschResult.getExitCode());
                 }
@@ -573,7 +573,7 @@ public class OpenEulerArch64MinimaListOpsProvider extends AbstractOpsProvider {
 
             String slaveRestartCommand = MessageFormat.format(SshCommandConstants.MINIMAL_LIST_SLAVE_RESTART, dataPath);
             try {
-                JschResult jschResult = jschUtil.executeCommand(slaveRestartCommand, restartUserSession, retSession);
+                JschResult jschResult = jschUtil.executeCommand(slaveRestartCommand, opsClusterEntity.getEnvPath(), restartUserSession, retSession);
                 if (0 != jschResult.getExitCode()) {
                     throw new OpsException("restart error，exit code " + jschResult.getExitCode());
                 }
@@ -584,7 +584,7 @@ public class OpenEulerArch64MinimaListOpsProvider extends AbstractOpsProvider {
         } else {
             String restartCommand = MessageFormat.format(SshCommandConstants.MINIMAL_LIST_SINGLE_RESTART, dataPath);
             try {
-                JschResult jschResult = jschUtil.executeCommand(restartCommand, restartUserSession, retSession);
+                JschResult jschResult = jschUtil.executeCommand(restartCommand, opsClusterEntity.getEnvPath(), restartUserSession, retSession);
                 if (0 != jschResult.getExitCode()) {
                     throw new OpsException("restart error，exit code " + jschResult.getExitCode());
                 }
@@ -605,7 +605,7 @@ public class OpenEulerArch64MinimaListOpsProvider extends AbstractOpsProvider {
             // uninstall master
             String masterCommand = MessageFormat.format(SshCommandConstants.MINIMAL_LIST_MASTER_UNINSTALL, dataPath);
             try {
-                JschResult jschResult = jschUtil.executeCommand(masterCommand, unInstallUserSession, retSession);
+                JschResult jschResult = jschUtil.executeCommand(masterCommand, opsClusterEntity.getEnvPath(), unInstallUserSession, retSession);
                 if (0 != jschResult.getExitCode()) {
                     throw new OpsException("Uninstall error，exit code " + jschResult.getExitCode());
                 }
@@ -616,7 +616,7 @@ public class OpenEulerArch64MinimaListOpsProvider extends AbstractOpsProvider {
             // uninstall slave
             String slaveCommand = MessageFormat.format(SshCommandConstants.MINIMAL_LIST_SLAVE_UNINSTALL, dataPath);
             try {
-                JschResult jschResult = jschUtil.executeCommand(slaveCommand, unInstallUserSession, retSession);
+                JschResult jschResult = jschUtil.executeCommand(slaveCommand, opsClusterEntity.getEnvPath(), unInstallUserSession, retSession);
                 if (0 != jschResult.getExitCode()) {
                     throw new OpsException("Uninstall error，exit code " + jschResult.getExitCode());
                 }
@@ -637,7 +637,7 @@ public class OpenEulerArch64MinimaListOpsProvider extends AbstractOpsProvider {
             // single uninstall
             String command = MessageFormat.format(SshCommandConstants.MINIMAL_LIST_SINGLE_UNINSTALL, dataPath);
             try {
-                JschResult jschResult = jschUtil.executeCommand(command, unInstallUserSession, retSession);
+                JschResult jschResult = jschUtil.executeCommand(command, opsClusterEntity.getEnvPath(), unInstallUserSession, retSession);
                 if (0 != jschResult.getExitCode()) {
                     throw new OpsException("Uninstall error，exit code " + jschResult.getExitCode());
                 }

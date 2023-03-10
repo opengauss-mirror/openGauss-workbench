@@ -18,6 +18,7 @@ import org.opengauss.admin.plugin.service.ops.IOpsClusterNodeService;
 import org.opengauss.admin.plugin.service.ops.IOpsClusterService;
 import org.opengauss.admin.plugin.utils.JschUtil;
 import org.opengauss.admin.plugin.utils.WsUtil;
+import org.opengauss.admin.system.plugin.facade.HostUserFacade;
 import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
 import com.jcraft.jsch.Session;
 import lombok.extern.slf4j.Slf4j;
@@ -53,6 +54,9 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
     private IOpsClusterService opsClusterService;
     @Autowired
     private IOpsClusterNodeService opsClusterNodeService;
+    @Autowired
+    @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
+    private HostUserFacade hostUserFacade;
     @Autowired
     private JschUtil jschUtil;
     @Autowired
@@ -819,7 +823,7 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
 
         String uninstallCommand = "gs_uninstall --delete-data";
         try {
-            JschResult jschResult = jschUtil.executeCommand(uninstallCommand, session, retSession);
+            JschResult jschResult = jschUtil.executeCommand(uninstallCommand, opsClusterEntity.getEnvPath(), session, retSession);
             if (0 != jschResult.getExitCode()) {
                 throw new OpsException("Uninstall error，exit code " + jschResult.getExitCode());
             }
@@ -829,6 +833,54 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
         }
 
         removeContext(unInstallContext);
+
+        try {
+            Optional<OpsHostUserEntity> rootUserEntity = hostInfoHolder.getHostUserEntities().stream().filter(userEntity -> "root".equalsIgnoreCase(userEntity.getUsername())).findFirst();
+            cleanEnv(unInstallContext.getHostInfoHolders(),hostEntity,rootUserEntity,hostUserEntity,retSession,opsClusterEntity.getInstallPackagePath(),opsClusterEntity.getXmlConfigPath());
+            wsUtil.sendText(retSession,"ENV_CLEAN_SUCCESS");
+        }catch (Exception e){
+            log.error("env clean fail:",e);
+            wsUtil.sendText(retSession,"ENV_CLEAN_FAIL");
+        }
+    }
+
+    private void cleanEnv(List<HostInfoHolder> hostInfoHolders, OpsHostEntity hostEntity, Optional<OpsHostUserEntity> rootUserEntityOption, OpsHostUserEntity hostUserEntity, WsSession retSession, String installPackagePath, String xmlConfigPath) throws IOException, InterruptedException {
+        final OpsHostUserEntity rootUserEntity = rootUserEntityOption.orElseThrow(() -> new OpsException("root user information not found"));
+        final Session rootSession = jschUtil.getSession(hostEntity.getPublicIp(), hostEntity.getPort(), rootUserEntity.getUsername(), encryptionUtils.decrypt(rootUserEntity.getPassword())).orElseThrow(() -> new OpsException("The root user failed to establish a connection"));
+
+        try {
+            String commandTemplate = "cd {0} && ./gs_postuninstall -U {1} -X {2} --delete-user --delete-group";
+
+            String command = MessageFormat.format(commandTemplate,installPackagePath+"/script",hostUserEntity.getUsername(), xmlConfigPath);
+            Map<String,String> authResponse = new HashMap<>();
+            authResponse.put("(yes/no)?","yes");
+            authResponse.put("Password:",encryptionUtils.decrypt(rootUserEntity.getPassword()));
+            final JschResult jschResult = jschUtil.executeCommand(command, rootSession, retSession, authResponse);
+            if (0!=jschResult.getExitCode()){
+                log.error("clean env fail,exitCode:{},exitMsg:{}",jschResult.getExitCode(),jschResult.getExitCode());
+                throw new OpsException("clean env fail");
+            }
+        }finally {
+            rootSession.disconnect();
+        }
+
+        String delMutualTrustCommand = "rm -rf ~/.ssh";
+        for (HostInfoHolder hostInfoHolder : hostInfoHolders) {
+            OpsHostEntity currentHost = hostInfoHolder.getHostEntity();
+            List<OpsHostUserEntity> hostUserEntities = hostInfoHolder.getHostUserEntities();
+            final OpsHostUserEntity rootUser = hostUserEntities.stream().filter(user -> "root".equalsIgnoreCase(user.getUsername())).findFirst().orElseThrow(() -> new OpsException("root user information not found"));
+
+            final Session session = jschUtil.getSession(currentHost.getPublicIp(), currentHost.getPort(), rootUser.getUsername(), encryptionUtils.decrypt(rootUser.getPassword())).orElseThrow(() -> new OpsException("The root user failed to establish a connection"));
+            try {
+                final JschResult jschResult = jschUtil.executeCommand(delMutualTrustCommand, session, retSession);
+                if (0!=jschResult.getExitCode()){
+                    log.error("del MutualTrust fail,exitCode:{},exitMsg:{}",jschResult.getExitCode(),jschResult.getResult());
+                    throw new OpsException("del MutualTrust fail");
+                }
+            }finally {
+                session.disconnect();
+            }
+        }
     }
 
     private void removeContext(UnInstallContext unInstallContext) {
@@ -837,6 +889,9 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
 
         List<OpsClusterNodeEntity> opsClusterNodeEntityList = unInstallContext.getOpsClusterNodeEntityList();
         opsClusterNodeService.removeBatchByIds(opsClusterNodeEntityList.stream().map(OpsClusterNodeEntity::getClusterNodeId).collect(Collectors.toList()));
+
+        List<String> installUserId = opsClusterNodeEntityList.stream().map(OpsClusterNodeEntity::getInstallUserId).collect(Collectors.toList());
+        hostUserFacade.removeByIds(installUserId);
     }
 
     @Override
@@ -864,7 +919,7 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
         OpsClusterNodeEntity startNodeEntity = opsClusterContext.getOpsClusterNodeEntityList().get(0);
         WsSession retSession = opsClusterContext.getRetSession();
         Session ommUserSession = loginWithUser(jschUtil,encryptionUtils,opsClusterContext.getHostInfoHolders(), false, startNodeEntity.getHostId(), startNodeEntity.getInstallUserId());
-        OmStatusModel omStatusModel = omStatus(jschUtil,ommUserSession,retSession);
+        OmStatusModel omStatusModel = omStatus(jschUtil,ommUserSession,retSession, opsClusterContext.getOpsClusterEntity().getEnvPath());
         if (Objects.isNull(omStatusModel)){
             throw new OpsException("gs_om status fail");
         }
@@ -877,7 +932,7 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
         }
 
         try {
-            JschResult jschResult = jschUtil.executeCommand(command, ommUserSession, retSession);
+            JschResult jschResult = jschUtil.executeCommand(command, opsClusterContext.getOpsClusterEntity().getEnvPath(), ommUserSession, retSession);
             if (0 != jschResult.getExitCode()) {
                 throw new OpsException("startup error，exit code " + jschResult.getExitCode());
             }
@@ -917,7 +972,7 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
         OpsClusterNodeEntity startNodeEntity = opsClusterContext.getOpsClusterNodeEntityList().get(0);
         WsSession retSession = opsClusterContext.getRetSession();
         Session ommUserSession = loginWithUser(jschUtil,encryptionUtils,opsClusterContext.getHostInfoHolders(), false, startNodeEntity.getHostId(), startNodeEntity.getInstallUserId());
-        OmStatusModel omStatusModel = omStatus(jschUtil,ommUserSession,retSession);
+        OmStatusModel omStatusModel = omStatus(jschUtil,ommUserSession,retSession, opsClusterContext.getOpsClusterEntity().getEnvPath());
         if (Objects.isNull(omStatusModel)){
             throw new OpsException("gs_om status fail");
         }
@@ -930,7 +985,7 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
         }
 
         try {
-            JschResult jschResult = jschUtil.executeCommand(command, ommUserSession, retSession);
+            JschResult jschResult = jschUtil.executeCommand(command, opsClusterContext.getOpsClusterEntity().getEnvPath(), ommUserSession, retSession);
             if (0 != jschResult.getExitCode()) {
                 throw new OpsException("startup error，exit code " + jschResult.getExitCode());
             }
@@ -951,7 +1006,7 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
         log.info("Login to start user");
         Session ommUserSession = loginWithUser(jschUtil,encryptionUtils,opsClusterContext.getHostInfoHolders(), false, startNodeEntity.getHostId(), startNodeEntity.getInstallUserId());
 
-        OmStatusModel omStatusModel = omStatus(jschUtil,ommUserSession,retSession);
+        OmStatusModel omStatusModel = omStatus(jschUtil,ommUserSession,retSession, opsClusterContext.getOpsClusterEntity().getEnvPath());
         if (Objects.isNull(omStatusModel)){
             throw new OpsException("gs_om status fail");
         }
@@ -971,7 +1026,7 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
         }
 
         try {
-            JschResult jschResult = jschUtil.executeCommand(command, ommUserSession, retSession);
+            JschResult jschResult = jschUtil.executeCommand(command, opsClusterContext.getOpsClusterEntity().getEnvPath(), ommUserSession, retSession);
             if (0 != jschResult.getExitCode()) {
                 throw new OpsException("startup error，exit code " + jschResult.getExitCode());
             }
@@ -1006,7 +1061,7 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
         OpsClusterNodeEntity startNodeEntity = opsClusterContext.getOpsClusterNodeEntityList().get(0);
         WsSession retSession = opsClusterContext.getRetSession();
         Session ommUserSession = loginWithUser(jschUtil,encryptionUtils,opsClusterContext.getHostInfoHolders(), false, startNodeEntity.getHostId(), startNodeEntity.getInstallUserId());
-        OmStatusModel omStatusModel = omStatus(jschUtil,ommUserSession,retSession);
+        OmStatusModel omStatusModel = omStatus(jschUtil,ommUserSession,retSession,opsClusterContext.getOpsClusterEntity().getEnvPath());
         if (Objects.isNull(omStatusModel)){
             throw new OpsException("gs_om status fail");
         }
@@ -1019,7 +1074,7 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
         }
 
         try {
-            JschResult jschResult = jschUtil.executeCommand(command, ommUserSession, retSession);
+            JschResult jschResult = jschUtil.executeCommand(command, opsClusterContext.getOpsClusterEntity().getEnvPath(), ommUserSession, retSession);
             if (0 != jschResult.getExitCode()) {
                 throw new OpsException("startup error，exit code " + jschResult.getExitCode());
             }
@@ -1039,7 +1094,7 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
         }
 
         try {
-            JschResult jschResult = jschUtil.executeCommand(command, session);
+            JschResult jschResult = jschUtil.executeCommand(command, session, clusterEntity.getEnvPath());
             if (0 != jschResult.getExitCode()) {
                 log.error("set enable_wdr_snapshot parameter failed, exit code: {}, error message: {}", jschResult.getExitCode(), jschResult.getResult());
                 throw new OpsException("Failed to set the enable_wdr_snapshot parameter");
@@ -1062,7 +1117,7 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
         log.info("login stop user");
         Session ommUserSession = loginWithUser(jschUtil,encryptionUtils,opsClusterContext.getHostInfoHolders(), false, stopNodeEntity.getHostId(), stopNodeEntity.getInstallUserId());
 
-        OmStatusModel omStatusModel = omStatus(jschUtil,ommUserSession,retSession);
+        OmStatusModel omStatusModel = omStatus(jschUtil,ommUserSession,retSession, opsClusterContext.getOpsClusterEntity().getEnvPath());
         if (Objects.isNull(omStatusModel)){
             throw new OpsException("gs_om status fail");
         }
@@ -1078,11 +1133,11 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
                 command = "cm_ctl stop -n " + nodeId + " -D " + dataPath;
             }
         }else {
-            command = MessageFormat.format(SshCommandConstants.LITE_START, dataPath);
+            command = MessageFormat.format(SshCommandConstants.LITE_STOP, dataPath);
         }
 
         try {
-            JschResult jschResult = jschUtil.executeCommand(command, ommUserSession, retSession);
+            JschResult jschResult = jschUtil.executeCommand(command, opsClusterContext.getOpsClusterEntity().getEnvPath(), ommUserSession, retSession);
             if (0 != jschResult.getExitCode()) {
                 throw new OpsException("stop error，exit code " + jschResult.getExitCode());
             }

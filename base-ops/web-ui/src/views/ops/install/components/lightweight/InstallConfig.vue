@@ -28,7 +28,8 @@
                 }}</a-option>
               </a-select>
             </a-form-item>
-            <a-form-item field="rootPassword" :label="$t('lightweight.InstallConfig.else1')" validate-trigger="blur">
+            <a-form-item v-if="formItem.isNeedPwd" field="rootPassword" :label="$t('lightweight.InstallConfig.else1')"
+              validate-trigger="blur">
               <a-input-password v-model="formItem.rootPassword"
                 :placeholder="$t('lightweight.InstallConfig.5mpmkfqy9h80')" allow-clear />
             </a-form-item>
@@ -67,6 +68,14 @@
               <a-input-password v-model="formItem.databasePassword"
                 :placeholder="$t('lightweight.InstallConfig.5mpmkfqybo00')" allow-clear />
             </a-form-item>
+            <a-form-item v-if="installType === 'import' && index === 0" field="isEnvSeparate"
+              :label="$t('simple.InstallConfig.else11')" validate-trigger="blur">
+              <a-switch v-model="formItem.isEnvSeparate" />
+            </a-form-item>
+            <a-form-item v-if="formItem.isEnvSeparate" field="envPath" :label="$t('simple.InstallConfig.else9')"
+              validate-trigger="blur">
+              <a-input v-model="formItem.envPath" :placeholder="$t('simple.InstallConfig.else10')" />
+            </a-form-item>
           </a-form>
         </div>
       </div>
@@ -84,7 +93,7 @@ import {
 } from '@/types/ops/install' // eslint-disable-line
 import { KeyValue } from '@/types/global'
 import { useOpsStore } from '@/store'
-import { hasName, hostListAll, hostUserListWithoutRoot, portUsed, pathEmpty, hostPingById } from '@/api/ops'
+import { hasName, hostListAll, hostUserListWithoutRoot, portUsed, pathEmpty, fileExist, hostPingById } from '@/api/ops'
 import { encryptPassword } from '@/utils/jsencrypt'
 import { Message } from '@arco-design/web-vue'
 import { useI18n } from 'vue-i18n'
@@ -268,6 +277,21 @@ const initData = () => {
           })
         }
       }
+    ],
+    envPath: [
+      { required: true, 'validate-trigger': 'blur', message: t('simple.InstallConfig.else10') },
+      {
+        validator: (value: any, cb: any) => {
+          return new Promise(resolve => {
+            if (!value.trim()) {
+              cb(t('enterprise.ClusterConfig.else2'))
+              resolve(false)
+            } else {
+              resolve(true)
+            }
+          })
+        }
+      }
     ]
   }
 }
@@ -276,6 +300,7 @@ const getFormData = (): KeyValue => {
   return {
     clusterId: '',
     hostId: '',
+    isNeedPwd: false,
     rootPassword: '',
     privateIp: '',
     publicIp: '',
@@ -285,7 +310,9 @@ const getFormData = (): KeyValue => {
     dataPath: '/opt/software/openGauss/data',
     port: Number(5432),
     databaseUsername: '',
-    databasePassword: ''
+    databasePassword: '',
+    isEnvSeparate: false,
+    envPath: ''
   }
 }
 
@@ -332,6 +359,7 @@ const changeHostId = (index: number) => {
     if (hostObj.value[hostId]) {
       data.nodeData[index].privateIp = hostObj.value[hostId].privateIp
       data.nodeData[index].publicIp = hostObj.value[hostId].publicIp
+      data.nodeData[index].isNeedPwd = !hostObj.value[hostId].isRemember
     }
     if (userListByHost.value[hostId] && !data.nodeData[index].installUserId) {
       data.nodeData[index].installUserId = userListByHost.value[hostId][0].hostUserId
@@ -442,7 +470,6 @@ const validatePort = async (port: number, password: string, hostId: string) => {
     rootPassword: password
   }
   const portValid: KeyValue = await portUsed(hostId, portParam)
-  console.log('show port valid', portValid)
   if (Number(portValid.code) === 200) {
     return portValid.data
   }
@@ -455,7 +482,18 @@ const validatePath = async (path: string, password: string, hostId: string) => {
     rootPassword: password
   }
   const pathValid: KeyValue = await pathEmpty(hostId, pathParam)
-  console.log('show path valid', pathValid)
+  if (Number(pathValid.code) === 200) {
+    return pathValid.data
+  }
+  return false
+}
+
+const validateFile = async (file: string, password: string, hostId: string) => {
+  const pathParam = {
+    file: file,
+    rootPassword: password
+  }
+  const pathValid: KeyValue = await fileExist(hostId, pathParam)
   if (Number(pathValid.code) === 200) {
     return pathValid.data
   }
@@ -469,45 +507,51 @@ const validateSpecialFields = async () => {
       refList.value[i].clearValidate()
     }
     for (let i = 0; i < data.nodeData.length; i++) {
+      const validMethodArr = []
+      let isOkPwd = true
+      let encryptPwd = ''
       if (data.nodeData[i].rootPassword) {
-        const validMethodArr = []
-        let isOkPwd = true
-        const encryptPwd = await encryptPassword(data.nodeData[i].rootPassword)
-        // password validate
-        try {
-          const param = {
-            rootPassword: encryptPwd
-          }
-          const passwordValid: KeyValue = await hostPingById(data.nodeData[i].hostId, param)
-          if (Number(passwordValid.code) !== 200) {
-            refList.value[i].setFields({
-              rootPassword: {
-                status: 'error',
-                message: t('enterprise.NodeConfig.else8')
-              }
-            })
-            result = false
-            isOkPwd = false
-          }
-        } catch (err: any) {
+        encryptPwd = await encryptPassword(data.nodeData[i].rootPassword)
+      }
+      // password validate
+      try {
+        const param = {
+          rootPassword: encryptPwd
+        }
+        const passwordValid: KeyValue = await hostPingById(data.nodeData[i].hostId, param)
+        if (Number(passwordValid.code) !== 200) {
           refList.value[i].setFields({
             rootPassword: {
               status: 'error',
-              message: t('enterprise.NodeConfig.else9')
+              message: t('enterprise.NodeConfig.else8')
             }
           })
           result = false
           isOkPwd = false
         }
-        if (!isOkPwd) {
-          continue
-        }
-        //  cluster port is used
-        validMethodArr.push(validatePort(data.nodeData[i].port, encryptPwd, data.nodeData[i].hostId))
-        validMethodArr.push(validatePath(data.nodeData[i].dataPath, encryptPwd, data.nodeData[i].hostId))
-        validMethodArr.push(validatePath(data.nodeData[i].installPackagePath, encryptPwd, data.nodeData[i].hostId))
-        if (validMethodArr.length) {
-          const validResult = await Promise.all(validMethodArr)
+      } catch (err: any) {
+        refList.value[i].setFields({
+          rootPassword: {
+            status: 'error',
+            message: t('enterprise.NodeConfig.else9')
+          }
+        })
+        result = false
+        isOkPwd = false
+      }
+      if (!isOkPwd) {
+        continue
+      }
+      //  cluster port is used
+      validMethodArr.push(validatePort(data.nodeData[i].port, encryptPwd, data.nodeData[i].hostId))
+      validMethodArr.push(validatePath(data.nodeData[i].dataPath, encryptPwd, data.nodeData[i].hostId))
+      validMethodArr.push(validatePath(data.nodeData[i].installPackagePath, encryptPwd, data.nodeData[i].hostId))
+      if (data.nodeData[i].isEnvSeparate) {
+        validMethodArr.push(validateFile(data.nodeData[i].envPath, encryptPwd, data.nodeData[i].hostId))
+      }
+      if (validMethodArr.length) {
+        const validResult = await Promise.all(validMethodArr)
+        if (i === 0) {
           if ((installType.value !== 'import' && validResult[0]) || (installType.value === 'import' && !validResult[0])) {
             // port valid
             refList.value[i].setFields({
@@ -518,26 +562,36 @@ const validateSpecialFields = async () => {
             })
             result = false
           }
-          if ((installType.value !== 'import' && !validResult[1]) || (installType.value === 'import' && validResult[1])) {
-            // dataPath Valid
-            refList.value[i].setFields({
-              dataPath: {
-                status: 'error',
-                message: installType.value === 'import' ? t('enterprise.NodeConfig.else12') : t('enterprise.NodeConfig.else13')
-              }
-            })
-            result = false
-          }
-          if ((installType.value !== 'import' && !validResult[2]) || (installType.value === 'import' && validResult[2])) {
-            // dataPath Valid
-            refList.value[i].setFields({
-              installPackagePath: {
-                status: 'error',
-                message: installType.value === 'import' ? t('enterprise.NodeConfig.else14') : t('enterprise.NodeConfig.else15')
-              }
-            })
-            result = false
-          }
+        }
+        if ((installType.value !== 'import' && !validResult[1]) || (installType.value === 'import' && validResult[1])) {
+          // dataPath Valid
+          refList.value[i].setFields({
+            dataPath: {
+              status: 'error',
+              message: installType.value === 'import' ? t('enterprise.NodeConfig.else12') : t('enterprise.NodeConfig.else13')
+            }
+          })
+          result = false
+        }
+        if ((installType.value !== 'import' && !validResult[2]) || (installType.value === 'import' && validResult[2])) {
+          // dataPath Valid
+          refList.value[i].setFields({
+            installPackagePath: {
+              status: 'error',
+              message: installType.value === 'import' ? t('enterprise.NodeConfig.else14') : t('enterprise.NodeConfig.else15')
+            }
+          })
+          result = false
+        }
+        if (data.nodeData[i].isEnvSeparate && !validResult[3]) {
+          // dataPath Valid
+          refList.value[i].setFields({
+            envPath: {
+              status: 'error',
+              message: t('enterprise.NodeConfig.else17')
+            }
+          })
+          result = false
         }
       }
     }
