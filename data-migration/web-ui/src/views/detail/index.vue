@@ -39,7 +39,7 @@
           </a-table-column>
           <a-table-column title="执行机器">
             <template #cell="{ record }">
-              <span style="cursor: pointer;" @click="handleTerminal(record)">{{ record.runHost }}（{{ record.runHostname }}）</span>
+              <span class="mac-txt" @click="handleTerminal(record)">{{ record.runHost }}（{{ record.runHostname }}）</span>
             </template>
           </a-table-column>
           <a-table-column title="当前状态">
@@ -407,6 +407,12 @@ onBeforeUnmount(() => {
   .table-con {
     margin-top: 20px;
     padding: 0 20px 30px;
+    .mac-txt {
+      cursor: pointer;
+      &:hover {
+        color: rgb(var(--primary-6));
+      }
+    }
   }
 }
 </style>
