@@ -1,8 +1,6 @@
 package org.opengauss.admin.plugin.service.impl;
 
 import cn.hutool.core.date.DateUtil;
-import cn.hutool.core.map.MapUtil;
-import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -10,7 +8,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.core.domain.AjaxResult;
 import org.opengauss.admin.common.core.domain.model.LoginUser;
 import org.opengauss.admin.common.utils.SecurityUtils;
-import org.opengauss.admin.common.utils.StringUtils;
 import org.opengauss.admin.plugin.domain.*;
 import org.opengauss.admin.plugin.dto.MigrationMainTaskDto;
 import org.opengauss.admin.plugin.dto.MigrationTaskDto;
@@ -71,6 +68,8 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
 
     @Value("${migration.mainTaskRefreshIntervalsMillisecond}")
     private Long mainTaskRefreshIntervalsMillisecond;
+    @Value("${migration.portalPkgDownloadUrl}")
+    private String portalPkgDownloadUrl;
 
     private static Map<Integer, Long> taskRefreshRecord = new ConcurrentHashMap<>();
     /**
@@ -343,7 +342,7 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
         if (mainTask == null) {
             return AjaxResult.error(MigrationErrorCode.MAIN_TASK_NOT_EXISTS_ERROR.getCode(), MigrationErrorCode.MAIN_TASK_NOT_EXISTS_ERROR.getMsg());
         }
-        if (!mainTask.getExecStatus().equals(TaskStatus.NOT_RUN.getCode())) {
+        if (mainTask.getExecStatus().equals(MainTaskStatus.RUNNING.getCode()) || mainTask.getExecStatus().equals(MainTaskStatus.FINISH.getCode())) {
             return AjaxResult.error(MigrationErrorCode.MAIN_TASK_IS_RUNNING_ERROR.getCode(), MigrationErrorCode.MAIN_TASK_IS_RUNNING_ERROR.getMsg());
         }
         List<MigrationTask> tasks = migrationTaskService.listByMainTaskId(id);
@@ -400,7 +399,7 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
     private boolean checkInstallPortal(Integer mainTaskId, List<MigrationTaskHostRef> hosts) {
         //check install
         for (MigrationTaskHostRef h : hosts) {
-            boolean flag = PortalHandle.checkAndInstallPortal(h);
+            boolean flag = PortalHandle.checkAndInstallPortal(h, portalPkgDownloadUrl);
             if(!flag){
                 mainTaskEnvErrorHostService.saveRecord(mainTaskId, h);
                 return false;
