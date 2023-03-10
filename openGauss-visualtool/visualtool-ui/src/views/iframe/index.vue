@@ -39,7 +39,7 @@
       plugins.value = [
         {
           cssBeforeLoaders: [
-            { content: 'html{padding-top: 113px !important;padding-left: 236px !important;height: 100%}' }
+            { content: 'html{padding-top: 113px !important;padding-left: 228px !important;height: 100%}' }
           ]
         }
       ]
@@ -71,7 +71,7 @@
         width: calc(100vw - 16px);
         height: 100%;
         margin-top: -113px;
-        margin-left: -236px;
+        margin-left: -228px;
         &.iframe-clp {
           margin-left: -64px;
         }

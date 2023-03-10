@@ -7,7 +7,6 @@ export interface AppState {
   menu: boolean;
   hideMenu: boolean;
   menuCollapse: boolean;
-  footer: boolean;
   themeColor: string;
   menuWidth: number;
   globalSettings: boolean;

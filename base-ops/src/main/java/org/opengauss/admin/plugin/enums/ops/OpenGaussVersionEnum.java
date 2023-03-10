@@ -18,5 +18,5 @@ public enum OpenGaussVersionEnum {
     /**
      * Light weight version
      */
-    LITE,
+    LITE
 }

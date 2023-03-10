@@ -100,6 +100,16 @@ START 1
 CACHE 1;
 END IF;
 
+IF NOT EXISTS (SELECT 1 FROM information_schema.sequences WHERE sequence_schema=''public'' AND sequence_name=''sq_sys_setting_id'' )
+THEN
+CREATE SEQUENCE "public"."sq_sys_setting_id"
+INCREMENT 1
+MINVALUE  1
+MAXVALUE 9223372036854775807
+START 1000
+CACHE 1;
+END IF;
+
 RETURN 0;
 END;'
 LANGUAGE plpgsql;
@@ -902,6 +912,26 @@ CREATE TABLE IF NOT EXISTS "public"."ops_jdbcdb_cluster"
     "update_time" timestamp(6)
     );
 
+-- ----------------------------
+-- Table structure for sys_setting
+-- ----------------------------
+CREATE TABLE IF NOT EXISTS "public"."sys_setting"(
+    "id" int4 NOT NULL DEFAULT nextval('sq_sys_setting_id'::regclass),
+    "user_id" int8 NOT NULL,
+    "upload_path" text COLLATE "pg_catalog"."default" NOT NULL
+);
+COMMENT
+ON COLUMN "public"."sys_setting"."id" IS 'ID';
+COMMENT
+ON COLUMN "public"."sys_setting"."user_id" IS '关联的用户ID';
+COMMENT
+ON COLUMN "public"."sys_setting"."upload_path" IS '文件上传目录';
+
+-- ----------------------------
+-- Records of sys_setting
+-- ----------------------------
+INSERT INTO "public"."sys_setting"VALUES (1, 1, '/ops/files');
+
 CREATE OR REPLACE FUNCTION add_user_field_func() RETURNS integer AS 'BEGIN
 IF
 ( SELECT COUNT ( * ) AS ct1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ''sys_user'' AND COLUMN_NAME = ''update_pwd'' ) = 0
@@ -978,3 +1008,21 @@ delete from "public"."sys_menu" where menu_id = 202;
 update "public"."sys_menu" set menu_name = '实例管理', order_num = 1 where menu_id = 201;
 update "public"."sys_menu" set menu_name = '设备管理', order_num = 2 where menu_id = 203;
 update "public"."sys_menu" set order_num = 4 where menu_id = 204;
+
+CREATE
+OR REPLACE FUNCTION add_field_ops_package_manager() RETURNS integer AS '
+BEGIN
+IF
+( SELECT COUNT ( * ) AS ct1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ''ops_package_manager'' AND (COLUMN_NAME = ''package_path'' OR COLUMN_NAME = ''type'') ) = 0
+THEN
+ALTER TABLE ops_package_manager ADD COLUMN "package_path" text;
+ALTER TABLE ops_package_manager ADD COLUMN "type" varchar(255);
+UPDATE ops_package_manager set type = ''openGauss'';
+END IF;
+RETURN 0;
+ END;'
+LANGUAGE plpgsql;
+
+SELECT add_field_ops_package_manager();
+
+DROP FUNCTION add_field_ops_package_manager;
