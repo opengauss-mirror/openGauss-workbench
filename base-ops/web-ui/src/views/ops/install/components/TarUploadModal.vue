@@ -1,14 +1,7 @@
 <template>
   <a-modal :mask-closable="false" :esc-to-close="false" :ok-loading="submitLoading" :visible="data.show"
-           :title="data.title" :modal-style="{ width: '50vw' }" @ok="handleBeforeOk" @on-cancel="close(false, $event)"
-           @cancel="close(false, $event)">
+           :title="data.title" :modal-style="{ width: '50vw' }" @ok="handleBeforeOk" @on-cancel="close(false, $event)" @cancel="close(true, $event)">
     <a-form :model="data.formData" :rules="data.rules" ref="formRef" auto-label-width>
-      <a-form-item field="type" :label="$t('packageManage.index.5myq5c8zpu83')">
-        <a-select v-model="data.formData.type" :placeholder="$t('packageManage.AddPackageDlg.5myq6nneap41')"
-                  @change="onTypeChange">
-          <a-option v-for="(item, index) of data.typeList" :key="index" :value="item.value" :label="item.label"/>
-        </a-select>
-      </a-form-item>
       <a-form-item field="os" :label="$t('packageManage.AddPackageDlg.5myq6nnea2w0')">
         <a-select v-model="data.formData.os" :placeholder="$t('packageManage.AddPackageDlg.5myq6nneap40')"
                   @change="osChange">
@@ -16,28 +9,21 @@
         </a-select>
       </a-form-item>
       <a-form-item :label="$t('packageManage.AddPackageDlg.else1')">
-        <a-select v-model="data.formData.cpuArch" :placeholder="$t('packageManage.AddPackageDlg.5myq6nneaw40')"
-                  @change="getPackageUrl">
+        <a-select v-model="data.formData.cpuArch" :placeholder="$t('packageManage.AddPackageDlg.5myq6nneaw40')">
           <a-option v-for="(item, index) of data.cpuArchList" :key="index" :value="item.value" :label="item.label"/>
         </a-select>
       </a-form-item>
       <a-form-item :label="$t('packageManage.AddPackageDlg.5myq6nneb180')">
-        <a-select v-if="data.formData.type === PackageType.OPENGAUSS" v-model="data.formData.packageVersion"
+        <a-select v-model="data.formData.packageVersion"
                   :placeholder="$t('packageManage.AddPackageDlg.5myq6nneb5w0')"
-                  :disabled="data.isViewVersion" @change="getPackageUrl">
+                  :disabled="data.isViewVersion">
           <a-option v-for="(item, index) of data.packageVersionList" :key="index" :value="item.value"
                     :label="item.label"/>
         </a-select>
-        <a-input v-else v-model="data.formData.packageVersion"
-                 :placeholder="$t('packageManage.AddPackageDlg.5myq6nneb5w0')"/>
       </a-form-item>
       <a-form-item field="packageVersionNum" :label="$t('packageManage.AddPackageDlg.5myq6nnebag0')">
-        <a-input v-model="data.formData.packageVersionNum" @blur="getPackageUrl"
+        <a-input v-model="data.formData.packageVersionNum"
                  :placeholder="$t('packageManage.AddPackageDlg.5myq6nnebew0')"></a-input>
-      </a-form-item>
-      <a-form-item field="packageUrl" :label="$t('packageManage.AddPackageDlg.5myq6nnebis0')">
-        <a-textarea v-model.trim="data.formData.packageUrl" auto-size
-                    :placeholder="$t('packageManage.AddPackageDlg.5myq6nnebn40')"/>
       </a-form-item>
       <a-form-item field="packagePath" :label="$t('packageManage.AddPackageDlg.5myq6nnebn41')">
         <a-upload
@@ -60,8 +46,8 @@
                   <icon-plus :style="{fontSize: '48px', color: '#86909C'}"/>
                 </div>
                 <div class="tips-1">
-                  <span>{{$t('packageManage.AddPackageDlg.5myq6nnecc47')}}</span>
-                  <div v-if="data.systemUploadPath">{{$t('packageManage.AddPackageDlg.5myq6nnecc48') + data.systemUploadPath + $t('packageManage.AddPackageDlg.5myq6nnecc49')}}}</div>
+                  <span>{{ $t('packageManage.AddPackageDlg.5myq6nnecc47') }}</span>
+                  <div v-if="data.systemUploadPath">{{$t('packageManage.AddPackageDlg.5myq6nnecc48') + data.systemUploadPath + $t('packageManage.AddPackageDlg.5myq6nnecc49')}}</div>
                 </div>
               </div>
             </div>
@@ -79,7 +65,7 @@
 import { KeyValue } from '@/types/global'
 import { FormInstance } from '@arco-design/web-vue/es/form'
 import { nextTick, reactive, ref } from 'vue'
-import { addPackage, analysisPkg, delPkgTar, editPackage, getSysUploadPath } from '@/api/ops'
+import { addPackage, analysisPkg, delPkgTar, getSysUploadPath } from '@/api/ops'
 import { FileItem, Message } from '@arco-design/web-vue'
 import { useI18n } from 'vue-i18n'
 import { OpenGaussVersionEnum } from '@/types/ops/install'
@@ -103,16 +89,13 @@ const data = reactive<KeyValue>({
     packageVersionNum: '3.0.0',
     packageUrl: '',
     packagePath: {},
-    remark: '',
-    urlPrefix: 'https://opengauss.obs.cn-south-1.myhuaweicloud.com'
+    remark: ''
   },
   rules: {},
   osList: [],
   cpuArchList: [],
   packageVersionList: [],
-  typeList: [],
   fileList: [],
-  type: '',
   systemUploadPath: ''
 })
 
@@ -139,35 +122,24 @@ const handleBeforeOk = () => {
       })
       if (data.fileList.length > 0) {
         const file = data.fileList[0]
-        // onlu init file need here
+        // only init file need here
         if (file.status === 'init') {
           params.append('file', file.file)
         }
       }
-      if (data.formData.packageId) {
-        // edit
-        editPackage(params).then(() => {
-          Message.success({ content: `Modified success` })
-          emits(`finish`)
-          close(false)
-        }).finally(() => {
-          submitLoading.value = false
-        })
-      } else {
-        addPackage(params).then(() => {
-          Message.success({ content: `Create success` })
-          emits(`finish`)
-          close(false)
-        }).finally(() => {
-          submitLoading.value = false
-        })
-      }
+      addPackage(params).then(() => {
+        Message.success({ content: `Create success` })
+        emits(`finish`)
+        close(false)
+      }).finally(() => {
+        submitLoading.value = false
+      })
     }
   })
 }
 
 const close = (flag: boolean, e?: Event) => {
-  if (data.fileList.length > 0 && data.fileList[0].status === 'done' && data.type === 'create' && flag) {
+  if (data.fileList.length > 0 && data.fileList[0].status === 'done' && flag) {
     return new Promise((resolve, reject) => {
       Modal.confirm({
         title: t('packageManage.AddPackageDlg.5myq6nnecc41'),
@@ -194,10 +166,7 @@ const doClose = () => {
 }
 
 const osChange = () => {
-  if (data.formData.os === OS.All) {
-    data.cpuArchList = [{ label: CpuArch.NOARCH, value: CpuArch.NOARCH }]
-    data.formData.cpuArch = CpuArch.NOARCH
-  } else if (data.formData.os === OS.CENTOS) {
+  if (data.formData.os === OS.CENTOS) {
     data.cpuArchList = [
       { label: CpuArch.X86_64, value: CpuArch.X86_64 }
     ]
@@ -208,139 +177,29 @@ const osChange = () => {
       { label: CpuArch.AARCH64, value: CpuArch.AARCH64 }
     ]
   }
-  getPackageUrl()
 }
 
-const onTypeChange = () => {
-  formRef.value?.clearValidate()
-  // will add package version in future
-  switch (data.formData.type) {
-    case PackageType.OPENGAUSS:
-      data.formData.packageVersion = OpenGaussVersionEnum.MINIMAL_LIST
-      data.formData.os = OS.CENTOS
-      data.formData.cpuArch = CpuArch.X86_64
-      data.formData.packageVersionNum = '3.0.0'
-      getPackageUrl()
-      break
-    default:
-      data.formData.packageVersion = ''
-      data.formData.packageVersionNum = ''
-      data.formData.os = OS.All
-      data.formData.cpuArch = CpuArch.NOARCH
-      data.formData.packageUrl = ''
-      break
-  }
-}
-
-const getPackageUrl = () => {
-  if (data.formData.type === PackageType.OPENGAUSS) {
-    data.formData.packageUrl = `https://opengauss.obs.cn-south-1.myhuaweicloud.com/${data.formData.packageVersionNum}/${getSysArch()}/${getPackageName()}`
-  } else {
-    return ''
-  }
-}
-
-const getSysArch = () => {
-  if (data.formData.cpuArch === CpuArch.X86_64) {
-    if (data.formData.os === OS.OPEN_EULER) {
-      return SysArch.X86_OPEN_EULER
-    }
-    return SysArch.X86
-  }
-  return SysArch.ARM
-}
-
-const getPackageName = () => {
-  let result = 'openGauss-'
-  if (data.formData.packageVersion === OpenGaussVersionEnum.LITE) {
-    result = result + 'Lite-' + data.formData.packageVersionNum + '-'
-    if (data.formData.os === 'centos') {
-      result += ('CentOS-' + data.formData.cpuArch + '.tar.gz')
-    } else {
-      result += ('openEuler-' + data.formData.cpuArch + '.tar.gz')
-    }
-  } else if (data.formData.packageVersion === OpenGaussVersionEnum.MINIMAL_LIST) {
-    result = result + data.formData.packageVersionNum + '-'
-    if (data.formData.os === OS.CENTOS) {
-      result += 'CentOS-64bit.tar.bz2'
-    } else {
-      result += 'openEuler-64bit.tar.bz2'
-    }
-  } else {
-    result = result + data.formData.packageVersionNum + '-'
-    if (data.formData.os === OS.CENTOS) {
-      result += 'CentOS-64bit-all.tar.gz'
-    } else {
-      result += 'openEuler-64bit-all.tar.gz'
-    }
-  }
-  return result
-}
-
-const open = (type: string, packageData?: KeyValue, defaultVersion?: string) => {
+const open = (defaultVersion?: string) => {
   data.show = true
-  data.type = type
+  data.title = t('packageManage.AddPackageDlg.5myq6nnebrc0')
   getSystemSetting()
-  if (type === 'create') {
-    data.title = t('packageManage.AddPackageDlg.5myq6nnebrc0')
-    // init formData
-    Object.assign(data.formData, {
-      packageId: '',
-      os: OS.CENTOS,
-      cpuArch: CpuArch.X86_64,
-      packageVersion: OpenGaussVersionEnum.MINIMAL_LIST,
-      packageVersionNum: '3.0.0',
-      packageUrl: '',
-      type: PackageType.OPENGAUSS
-    })
-    if (defaultVersion) {
-      data.isViewVersion = true
-      data.formData.packageVersion = defaultVersion
-    }
-    getPackageUrl()
-  } else {
-    data.title = t('packageManage.AddPackageDlg.5myq6nnebwo0')
-    if (packageData) {
-      Object.assign(data.formData, {
-        packageId: packageData.packageId,
-        os: packageData.os,
-        cpuArch: packageData.cpuArch,
-        packageVersion: packageData.packageVersion,
-        packageVersionNum: packageData.packageVersionNum,
-        packageUrl: packageData.packageUrl,
-        packagePath: JSON.parse(packageData.packagePath) as UploadInfo,
-        type: packageData.type,
-        remark: packageData.remark
-      })
-      if (data.formData.packagePath?.realPath) {
-        data.fileList = [{
-          uid: '-1',
-          name: data.formData.packagePath.name,
-          url: data.formData.packagePath.realPath
-        }]
-      }
-    }
-  }
-  initData()
-}
-
-const getSystemSetting = () => {
-  getSysUploadPath().then(res => {
-    data.systemUploadPath = res.data
+  // init formData
+  Object.assign(data.formData, {
+    packageId: '',
+    os: OS.CENTOS,
+    cpuArch: CpuArch.X86_64,
+    packageVersion: OpenGaussVersionEnum.MINIMAL_LIST,
+    packageVersionNum: '3.0.0',
+    packageUrl: '',
+    type: PackageType.OPENGAUSS
   })
-}
-
-const initData = () => {
+  if (defaultVersion) {
+    data.isViewVersion = true
+    data.formData.packageVersion = defaultVersion
+  }
   data.osList = [
     { label: OS.CENTOS, value: OS.CENTOS },
     { label: OS.OPEN_EULER, value: OS.OPEN_EULER }
-  ]
-  data.typeList = [
-    { label: 'OpenGauss', value: PackageType.OPENGAUSS },
-    { label: 'Zookeeper', value: PackageType.ZOOKEEPER },
-    { label: 'ShardingProxy', value: PackageType.SHARDING_PROXY },
-    { label: 'OpenLooKeng', value: PackageType.OPENLOOKENG },
-    { label: 'DistributeDeploy', value: PackageType.DISTRIBUTE_DEPLOY }
   ]
   data.packageVersionList = [
     { label: t('packageManage.AddPackageDlg.5myq6nnec400'), value: OpenGaussVersionEnum.ENTERPRISE },
@@ -353,38 +212,20 @@ const initData = () => {
       'validate-trigger': 'blur',
       message: t('packageManage.AddPackageDlg.5myq6nnebew0')
     }],
-    urlPrefix: [{ required: true, 'validate-trigger': 'blur', message: t('packageManage.AddPackageDlg.5myq6nnebn40') }],
-    packageUrl: [
-      {
-        validator: (value: any, cb: any) => {
-          return new Promise((resolve, reject) => {
-            if (!value && data.fileList.length <= 0) {
-              cb(t('packageManage.AddPackageDlg.5myq6nnecc43'))
-              resolve(false)
-              return
-            }
-            if (data.fileList.length <= 0 && !value) {
-              cb(t('packageManage.AddPackageDlg.5myq6nnecc44'))
-              resolve(false)
-              return
-            }
-            if (data.fileList.length > 0 && !value) {
-              cb()
-              resolve(true)
-              return
-            }
-            const reg = /http(s)?:\/\/([\w-]+\.)+[\w-]+(\/[\w- .\/?%&=]*)?/
-            const re = new RegExp(reg)
-            if (re.test(value)) {
-              resolve(true)
-            } else {
-              cb(t('packageManage.AddPackageDlg.else2'))
-              resolve(false)
-            }
-          })
-        }
+    packagePath: [{
+      validator: (value: any, cb: any) => {
+        return new Promise((resolve, reject) => {
+          if (data.fileList.length <= 0) {
+            cb(t('packageManage.AddPackageDlg.5myq6nnecc50'))
+            resolve(false)
+            return
+          } else {
+            cb()
+            resolve(true)
+          }
+        })
       }
-    ]
+    }]
   }
 }
 
@@ -429,15 +270,19 @@ const handleUploadSuccess = (file: FileItem) => {
     data.formData.packagePath = file.response.data as UploadInfo
     Message.success('Upload success')
   } else {
-    file.status = 'error'
     Message.error(file.response.msg)
   }
+}
+
+const getSystemSetting = () => {
+  getSysUploadPath().then(res => {
+    data.systemUploadPath = res.data
+  })
 }
 
 defineExpose({
   open
 })
-
 </script>
 <style lang="less" scoped>
 .upload-info {

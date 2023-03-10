@@ -105,7 +105,6 @@ public class BaseController {
 
     /**
      * response result
-     *
      */
     protected AjaxResult toAjax(int rows) {
         return rows > 0 ? AjaxResult.success() : AjaxResult.error();
@@ -113,7 +112,6 @@ public class BaseController {
 
     /**
      * response result
-     *
      */
     protected AjaxResult toAjax(boolean result) {
         return result ? success() : error();
@@ -159,7 +157,7 @@ public class BaseController {
      * Get the currently logged in userId
      */
     public Integer getUserId() {
-        return getLoginUser().getUserId();
+        return getLoginUser().getUser().getUserId();
     }
 
     /**

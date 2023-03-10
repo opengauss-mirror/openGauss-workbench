@@ -2,7 +2,7 @@
   <div class="simple-install-c">
     <div class="label-color">{{ $t('simpleInstall.index.5mpn813gtvs0') }}</div>
     <a-divider class="mb-lg" />
-    <div class="install-content" v-if="data.state === -1">
+    <div class="install-content flex-col" v-if="data.state === -1">
       <svg-icon icon-class="ops-mini-version" class="icon-size mb"></svg-icon>
       <div class="label-color ft-b ft-m mb">openGauss {{ $t('simpleInstall.index.else1') }}</div>
       <div class="mb" v-if="data.validVisible">
@@ -575,11 +575,6 @@ const initData = () => {
   }
 
   .install-content {
-    margin-top: 100px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
   }
 
   .install-doing {

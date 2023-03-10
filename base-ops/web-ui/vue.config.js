@@ -9,6 +9,7 @@ module.exports = defineConfig({
   transpileDependencies: false,
   lintOnSave: false,
   publicPath: "/static-plugin/base-ops/",
+  productionSourceMap: false,
   css: {
     loaderOptions: {
       less: {

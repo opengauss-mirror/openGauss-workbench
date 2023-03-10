@@ -134,6 +134,25 @@ export interface EnterpriseInstallConfig { // eslint-disable-line
   nodeConfigList: EnterpriseInstallNodeConfig[];
 }
 
+export interface OpenLookengInstallConfig {
+  shardingInstallHostId: '',
+  shardingInstallUserId: '',
+  shardingInstallPassword: '',
+  shardingInstallPath: '',
+  shardingTarId: '',
+  shardingPort: 0,
+  zkTarId: '',
+  zkPort: 0,
+  tableName: '',
+  column: '',
+  olkInstallHostId: '',
+  olkInstallUserId: '',
+  olkInstallPassword: '',
+  olkInstallPath: '',
+  olkTarId: '',
+  olkPort: 0,
+}
+
 export interface downloadPackage {
   resourceUrl: string,
   targetPath: string,

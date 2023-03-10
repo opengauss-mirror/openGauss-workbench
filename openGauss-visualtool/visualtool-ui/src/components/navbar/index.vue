@@ -2,7 +2,7 @@
   <div class="navbar">
     <div class="left-side">
       <a-space>
-        <img src="@/assets/logo.png" alt="logo" />
+        <img src="@/assets/logo.png" alt="logo"/>
         <a-typography-title :style="{ margin: 0, fontSize: '14px', color: '#fff' }" :heading="5">
           {{ $t('navbar.index.5mpib9iig6o0') }}
         </a-typography-title>
@@ -32,7 +32,7 @@
           <template #content>
             <a-doption>
               <a-space @click="$router.push({ name: 'SecurityUsercenter' })">
-                <icon-user />
+                <icon-user/>
                 <span>
                   {{ $t('navbar.index.5m6nsk34ra40') }}
                 </span>
@@ -40,15 +40,23 @@
             </a-doption>
             <a-doption>
               <a-space @click="handleCode">
-                <icon-lock />
+                <icon-lock/>
                 <span>
                   {{ $t('navbar.index.5m6nsk34rd00') }}
                 </span>
               </a-space>
             </a-doption>
             <a-doption>
+              <a-space @click="handleSysSetting">
+                <icon-settings/>
+                <span>
+                  {{ $t('navbar.index.5m6nsk34rd01') }}
+                </span>
+              </a-space>
+            </a-doption>
+            <a-doption>
               <a-space @click="handleLogout">
-                <icon-export />
+                <icon-export/>
                 <span>
                   {{ $t('navbar.index.5m6nsk34rg40') }}
                 </span>
@@ -60,15 +68,16 @@
       <li>
         <a-tooltip :content="theme === 'light' ? $t('navbar.index.5nu3bvtnu5o0') : $t('navbar.index.5nu3bvtnuyk0')">
           <div class="nav-btn" @click="handleToggleTheme">
-            <icon-moon-fill v-if="theme === 'dark'" />
-            <icon-sun-fill v-else />
+            <icon-moon-fill v-if="theme === 'dark'"/>
+            <icon-sun-fill v-else/>
           </div>
         </a-tooltip>
       </li>
     </ul>
   </div>
   <!-- reset -->
-  <update-code v-model:open="editCodeVisible" :options="currentEditUser" />
+  <update-code v-model:open="editCodeVisible" :options="currentEditUser"/>
+  <system-setting v-model:open="sysSettingVisible" :options="currentEditUser"/>
 </template>
 
 <script lang="ts" setup>
@@ -82,6 +91,7 @@ import { destroyPluginApp } from '@/utils/pluginApp'
 import UpdateCode from '@/views/security/user/components/UpdateCode.vue'
 import WujieVue from 'wujie-vue3'
 import { useI18n } from 'vue-i18n'
+import SystemSetting from "@/views/security/systemSetting/SystemSetting.vue";
 
 const { t } = useI18n()
 const { bus } = WujieVue
@@ -95,6 +105,7 @@ const tabBarStore = useTabBarStore()
 
 const currentEditUser = ref({})
 const editCodeVisible = ref<boolean>(false)
+const sysSettingVisible = ref<boolean>(false)
 
 const userName = computed(() => userStore.userName)
 
@@ -131,6 +142,13 @@ const handleCode = () => {
     userId: userStore.userId
   }
   editCodeVisible.value = true
+}
+
+const handleSysSetting = () => {
+  currentEditUser.value = {
+    userId: userStore.userId
+  }
+  sysSettingVisible.value = true
 }
 
 const handleLogout = () => {
