@@ -11,10 +11,6 @@ import com.nctigba.observability.sql.model.StatementHistory;
 import com.nctigba.observability.sql.model.query.SlowLogQuery;
 import com.nctigba.observability.sql.service.SlowLogService;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-
-@Api(tags = "Slow SQL")
 @RestController
 @RequestMapping("/sqlDiagnosis/api/v1")
 public class SlowLogController extends ControllerConfig {
@@ -22,7 +18,6 @@ public class SlowLogController extends ControllerConfig {
 	private SlowLogService slowLogService;
 
 	@GetMapping("/slowSqls")
-	@ApiOperation(value = "List Slow SQLs", notes = "List Slow SQLs")
 	public MyPage<StatementHistory> listSlowSQLs(SlowLogQuery slowLogQuery) {
 		return slowLogService.listSlowSQLs(slowLogQuery);
 	}

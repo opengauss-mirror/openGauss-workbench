@@ -25,12 +25,15 @@ public class ParamMonitorServiceImpl implements ParamMonitorService {
         HTTPUtil httpUtil=new HTTPUtil();
         String httpUrl = urlConfig.getHttpUrl();
         String outputUrl = urlConfig.getOutputUrl();
+        String isExist=osUtil.execCmd("cat "+outputUrl);
+        if(isExist.contains("No such file or directory")){
+            osUtil.exec("mkdir "+outputUrl);
+        }
         String fileUrl = " > " + outputUrl + taskid + monitorType;
         String url = httpUrl.substring(0, httpUrl.lastIndexOf("/") + 1) + taskid + httpUrl.substring(httpUrl.lastIndexOf("/"));
         String cmd="sysctl -a "+ fileUrl + FileType.DEFAULT;;
         osUtil.exec(cmd);
         FileSystemResource file = new FileSystemResource(outputUrl + taskid + monitorType + FileType.DEFAULT);
-        //String paramValue=osUtil.exec(cmd).toString().replace("\n","").replace("\t"," ");
         httpUtil.httpUrlPost(url,file,monitorType);
     }
 }

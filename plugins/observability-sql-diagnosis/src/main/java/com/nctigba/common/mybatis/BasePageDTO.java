@@ -15,19 +15,19 @@
  */
 package com.nctigba.common.mybatis;
 
-import com.baomidou.mybatisplus.core.metadata.OrderItem;
-import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.experimental.Accessors;
-import springfox.documentation.annotations.ApiIgnore;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Predicate;
+
+import com.baomidou.mybatisplus.core.metadata.OrderItem;
+import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.Accessors;
 
 /**
  * @description: Base page DTO，when trans to mybatis by PageBaseQuery,select
@@ -44,7 +44,6 @@ public class BasePageDTO<T> implements MyPage<T> {
 	private List<T> records = Collections.emptyList();
 	private long total = 0;
 
-	@ApiIgnore
 	@JsonIgnore
 	public long getSize() {
 		return size;
@@ -52,7 +51,6 @@ public class BasePageDTO<T> implements MyPage<T> {
 
 	private long size = 10;
 
-	@ApiIgnore
 	@JsonIgnore
 	public long getCurrent() {
 		return current;
@@ -64,7 +62,6 @@ public class BasePageDTO<T> implements MyPage<T> {
 
 	private long current = 1;
 
-	@ApiIgnore
 	@JsonIgnore
 	public List<OrderItem> getOrders() {
 		return orders;
@@ -72,7 +69,6 @@ public class BasePageDTO<T> implements MyPage<T> {
 
 	private List<OrderItem> orders = new ArrayList<>();
 
-	@ApiIgnore
 	@JsonIgnore
 	public boolean isOptimizeCountSql() {
 		return optimizeCountSql;
@@ -196,7 +192,6 @@ public class BasePageDTO<T> implements MyPage<T> {
 		this.orders = orders;
 	}
 
-	@ApiIgnore
 	@JsonIgnore
 	@Override
 	public boolean optimizeCountSql() {
@@ -204,7 +199,6 @@ public class BasePageDTO<T> implements MyPage<T> {
 	}
 
 	@Override
-	@ApiIgnore
 	@JsonIgnore
 	public boolean isSearchCount() {
 		if (total < 0) {

@@ -63,7 +63,7 @@ const getClusterValue = (val: string[]) => {
     else emit("getCluster", val);
 };
 const setNodeId = (val: string) => {
-    if ((val === "") || (val === null) || val === undefined) return;
+    if (val === "" || val === null || val === undefined) return;
     nextTick(() => {
         if (clusterList.value.length <= 0) return;
         for (let p1 = 0; p1 < clusterList.value.length; p1++) {
@@ -94,7 +94,7 @@ const { data: rer, run: clusterData } = useRequest(
 watch(rer, (rer: Rer) => {
     if (rer && Object.keys(rer).length) {
         clusterList.value = treeTransform(rer);
-        emit("loaded");
+        emit("loaded", rer);
     }
 });
 </script>

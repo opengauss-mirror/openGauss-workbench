@@ -1,6 +1,7 @@
 package com.nctigba.observability.sql.service;
 
 import java.net.http.WebSocket;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
@@ -22,6 +23,7 @@ import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.experimental.Accessors;
 
 public abstract class AbstractInstaller {
 	protected static final String TAR = ".tar.gz";
@@ -93,12 +95,18 @@ public abstract class AbstractInstaller {
 		wsUtil.sendText(wsSession, JSONUtil.toJsonStr(steps));
 	}
 
+	protected synchronized void addMsg(WsSession wsSession, List<Step> steps, int curr, String msg) {
+		steps.get(curr).getMsg().add(msg);
+		wsUtil.sendText(wsSession, JSONUtil.toJsonStr(steps));
+	}
+
 	@Data
 	@NoArgsConstructor
+	@Accessors(chain = true)
 	public static class Step {
 		String name;
 		status state = status.TODO;
-		String msg;
+		List<String> msg = new ArrayList<>();
 
 		public Step(String name) {
 			this.name = name;

@@ -34,7 +34,7 @@
                 <template v-else>
                     <my-card :title="$t('datasource.detailTitle')" :bodyPadding="false" style="position: relative" v-if="!reportNodeList.includes(nodesType)">
                         <img src="@/assets/img/large.png" class="shrink-img" @click="goToTask" />
-                        <TaskInfo :nodesType="nodesType" />
+                        <TaskInfo @goto-large="showLarge = true" :nodesType="nodesType" />
                     </my-card>
                     <my-card :title="$t('datasource.reportDetail')" :bodyPadding="false" style="position: relative" v-if="reportNodeList.includes(nodesType)">
                         <img src="@/assets/img/large.png" class="shrink-img" @click="goToTask" />
@@ -115,7 +115,6 @@ onMounted(() => {
     requestData()
     requestResult()
 })
-
 const showLargeWindow = () => {
     showLarge.value = true
 }
@@ -172,24 +171,23 @@ watch(res, (res: Res) => {
     if (res && Object.keys(res).length) {
         let node = { id: '1', pid: '0', label: res.title, type: res.type, originalHidden: res.hidden, hidden: isAll ? false : res.hidden, none: res.hidden, image: { unselected: iconA, selected: iconB } }
         nodes.value.push(node)
-        let curNodes = [{ id: '1', pid: '0', label: res.title, type: res.type, originalHidden: res.hidden, hidden: isAll ? false : res.hidden, none: res.hidden, image: { unselected: iconA, selected: iconB },child: res.child }]
+        let curNodes = [{ id: '1', pid: '0', label: res.title, type: res.type, originalHidden: res.hidden, hidden: isAll ? false : res.hidden, none: res.hidden, image: { unselected: iconA, selected: iconB }, child: res.child }]
         let nextNodes = []
-        while(curNodes.length > 0) {
-            for(let node0 of curNodes) {
-                if(!node0.child || node0.child?.length <= 0) {
-                    continue;
+        while (curNodes.length > 0) {
+            for (let node0 of curNodes) {
+                if (!node0.child || node0.child?.length <= 0) {
+                    continue
                 }
                 for (let [i, r] of node0.child.entries()) {
                     if (r && (r.hidden === false || isAll)) {
-                        node = { id: node0.id + '-' + i,pid: node0.id, label: r.title, type: r.type, originalHidden: r.hidden, hidden: isAll ? false : r.hidden, none: r.hidden, image: { unselected: iconA, selected: iconB } };
+                        node = { id: node0.id + '-' + i, pid: node0.id, label: r.title, type: r.type, originalHidden: r.hidden, hidden: isAll ? false : r.hidden, none: r.hidden, image: { unselected: iconA, selected: iconB } }
                         nodes.value.push(node)
-                        nextNodes.push(Object.assign(node,{child: r.child}))
+                        nextNodes.push(Object.assign(node, { child: r.child }))
                     }
-                    
                 }
             }
-            curNodes = nextNodes;
-            nextNodes = [];
+            curNodes = nextNodes
+            nextNodes = []
         }
         // for (let [i, r] of res.child.entries()) {
         //     if (r && (r.hidden === false || isAll)) {

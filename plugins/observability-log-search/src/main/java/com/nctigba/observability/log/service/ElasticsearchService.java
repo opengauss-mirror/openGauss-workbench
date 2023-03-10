@@ -12,14 +12,17 @@ import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Service;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.nctigba.observability.log.config.ElasticsearchProvider;
 import com.nctigba.observability.log.env.NctigbaEnv;
 import com.nctigba.observability.log.env.NctigbaEnv.type;
 import com.nctigba.observability.log.service.AbstractInstaller.Step.status;
+import com.nctigba.observability.log.util.Download;
 import com.nctigba.observability.log.util.SshSession;
 import com.nctigba.observability.log.util.SshSession.command;
 
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.thread.ThreadUtil;
+import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.HttpUtil;
 import cn.hutool.json.JSONUtil;
@@ -27,14 +30,16 @@ import cn.hutool.json.JSONUtil;
 @Service
 public class ElasticsearchService extends AbstractInstaller {
 	private static final String ELASTICSEARCH_USER = "Elasticsearch";
-	private static final String PATH = "https://artifacts.elastic.co/downloads/elasticsearch/";
-	private static final String NAME = "elasticsearch-8.3.3-linux-";
-	private static final String SRC = "elasticsearch-8.3.3";
+	public static final String PATH = "https://artifacts.elastic.co/downloads/elasticsearch/";
+	public static final String NAME = "elasticsearch-8.3.3-linux-";
+	public static final String SRC = "elasticsearch-8.3.3";
 
 	@Autowired
 	private ResourceLoader loader;
+	@Autowired
+	private ElasticsearchProvider provider;
 
-	public void install(WsSession wsSession, String hostId, String rootPassword) {
+	public void install(WsSession wsSession, String hostId, String rootPassword, Integer port) {
 		// @formatter:off
 		var steps = Arrays.asList(
 				new Step("初始化"),
@@ -50,14 +55,21 @@ public class ElasticsearchService extends AbstractInstaller {
 
 		try {
 			curr = nextStep(wsSession, steps, curr);
-			check();
-			var env = new NctigbaEnv().setHostid(hostId).setPort(9200).setType(type.ELASTICSEARCH).setPath(SRC);
+			var env = envMapper.selectOne(Wrappers.<NctigbaEnv>lambdaQuery().eq(NctigbaEnv::getType, type.ELASTICSEARCH));
+			if (env != null)
+				throw new RuntimeException("elasticsearch exists");
+			env = new NctigbaEnv().setHostid(hostId).setPort(port).setType(type.ELASTICSEARCH).setPath(SRC);
 
 			curr = nextStep(wsSession, steps, curr);
 			OpsHostEntity hostEntity = hostFacade.getById(hostId);
 			if (hostEntity == null)
 				throw new RuntimeException("host not found");
 			env.setHost(hostEntity);
+			try (var session = SshSession.connect(hostEntity.getPublicIp(), hostEntity.getPort(), "root",
+					encryptionUtils.decrypt(rootPassword));) {
+			} catch (Exception e) {
+				throw new RuntimeException("root password error");
+			}
 			var user = getUser(hostEntity, ELASTICSEARCH_USER, rootPassword);
 			env.setUsername(user.getUsername());
 			var session = SshSession.connect(hostEntity.getPublicIp(), hostEntity.getPort(), ELASTICSEARCH_USER,
@@ -69,12 +81,14 @@ public class ElasticsearchService extends AbstractInstaller {
 			String tar = name + TAR;
 			if (!session.test(command.STAT.parse(SRC))) {
 				if (!session.test(command.STAT.parse(tar))) {
-					var esPkg = envMapper.selectOne(
-							Wrappers.<NctigbaEnv>lambdaQuery().eq(NctigbaEnv::getType, type.ELASTICSEARCH_PKG));
-					if (esPkg != null)
-						session.upload(esPkg.getPath(), "./");
-					else
-						session.execute(command.WGET.parse(PATH + tar));
+					var pkg = envMapper.selectOne(Wrappers.<NctigbaEnv>lambdaQuery().like(NctigbaEnv::getPath, tar));
+					if (pkg == null) {
+						var f = Download.download(PATH + tar, "pkg/" + tar);
+						pkg = new NctigbaEnv().setPath(f.getCanonicalPath()).setType(type.ELASTICSEARCH_PKG);
+						addMsg(wsSession, steps, curr, "安装包下载成功");
+						save(pkg);
+					}
+					session.upload(pkg.getPath(), tar);
 				}
 				session.execute(command.TAR.parse(tar));
 			}
@@ -91,6 +105,7 @@ public class ElasticsearchService extends AbstractInstaller {
 					+ "discovery.seed_hosts: [\"127.0.0.1\"]" + System.lineSeparator()
 					+ "node.name: node1" + System.lineSeparator() 
 					+ "network.host: 0.0.0.0" + System.lineSeparator()
+					+ "http.port: " + port + System.lineSeparator()
 					+ "http.host: 0.0.0.0" + System.lineSeparator() 
 					+ "transport.host: 0.0.0.0" + System.lineSeparator()
 					+ "http.cors.enabled: true" + System.lineSeparator()
@@ -103,21 +118,23 @@ public class ElasticsearchService extends AbstractInstaller {
 			// @formatter:on
 			session.upload(elasticConfigFile.getAbsolutePath(), SRC + "/config/elasticsearch.yml");
 			elasticConfigFile.delete();
-//			var in = loader.getResource("jvm.options").getInputStream();
-//			session.upload(in, SRC + "/config/jvm.options");
+			var in = loader.getResource("jvm.options").getInputStream();
+			session.upload(in, SRC + "/config/jvm.options");
 
 			curr = nextStep(wsSession, steps, curr);
 			String cd = "cd " + SRC + " && ";
-			session.execute(cd + " ./bin/elasticsearch -d");
+			session.executeNoWait(cd + " ./bin/elasticsearch -d &");
 
 			curr = nextStep(wsSession, steps, curr);
 			// 调用http验证es
-			for (int i = 0; i < 3; i++) {
+			for (int i = 0; i < 10; i++) {
 				ThreadUtil.sleep(3000L);
-				String str = HttpUtil.get("http://" + env.getHost().getPublicIp() + ":" + env.getPort());
-				if (!JSONUtil.isJsonObj(str))
-					if (i == 2)
-						throw new RuntimeException("elasticsearch 启动失败," + str);
+				try {
+					HttpUtil.get("http://" + env.getHost().getPublicIp() + ":" + env.getPort());
+				} catch (Exception e) {
+					if (i == 9)
+						throw new RuntimeException("elasticsearch 启动失败");
+				}
 			}
 
 			curr = nextStep(wsSession, steps, curr);
@@ -125,7 +142,7 @@ public class ElasticsearchService extends AbstractInstaller {
 			envMapper.insert(env);
 			sendMsg(wsSession, steps, curr, status.DONE);
 		} catch (Exception e) {
-			steps.get(curr).setState(status.ERROR);
+			steps.get(curr).setState(status.ERROR).getMsg().add(e.getMessage());
 			wsUtil.sendText(wsSession, JSONUtil.toJsonStr(steps));
 			var sw = new StringWriter();
 			try (var pw = new PrintWriter(sw);) {
@@ -133,12 +150,6 @@ public class ElasticsearchService extends AbstractInstaller {
 			}
 			wsUtil.sendText(wsSession, sw.toString());
 		}
-	}
-
-	private void check() {
-		var env = envMapper.selectOne(Wrappers.<NctigbaEnv>lambdaQuery().eq(NctigbaEnv::getType, type.ELASTICSEARCH));
-		if (env != null)
-			throw new RuntimeException("elasticsearch exists");
 	}
 
 	public void uninstall(WsSession wsSession, String id) {
@@ -171,16 +182,17 @@ public class ElasticsearchService extends AbstractInstaller {
 					encryptionUtils.decrypt(user.getPassword()));) {
 				curr = nextStep(wsSession, steps, curr);
 				var pid = sshsession.execute(command.PS.parse("elasticsearch"));
-				if (StrUtil.isNotBlank(pid)) {
+				if (StrUtil.isNotBlank(pid) && NumberUtil.isLong(pid)) {
 					curr = nextStep(wsSession, steps, curr);
 					sshsession.execute(command.KILL.parse(pid));
 				} else
 					curr = skipStep(wsSession, steps, curr);
 				envMapper.deleteById(id);
+				provider.clear();
 				sendMsg(wsSession, steps, curr, status.DONE);
 			}
 		} catch (Exception e) {
-			steps.get(curr).setState(status.ERROR);
+			steps.get(curr).setState(status.ERROR).getMsg().add(e.getMessage());
 			wsUtil.sendText(wsSession, JSONUtil.toJsonStr(steps));
 			var sw = new StringWriter();
 			try (var pw = new PrintWriter(sw);) {

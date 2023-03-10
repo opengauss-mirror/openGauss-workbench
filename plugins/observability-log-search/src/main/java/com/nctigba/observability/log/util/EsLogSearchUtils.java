@@ -1,6 +1,5 @@
 package com.nctigba.observability.log.util;
 
-import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -11,14 +10,12 @@ import java.util.Set;
 import java.util.TimeZone;
 import java.util.function.Function;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.opengauss.admin.common.exception.CustomException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
 import com.nctigba.observability.log.config.ElasticsearchProvider;
 import com.nctigba.observability.log.model.query.EsSearchQuery;
-
 import co.elastic.clients.elasticsearch._types.Conflicts;
 import co.elastic.clients.elasticsearch._types.FieldValue;
 import co.elastic.clients.elasticsearch._types.SortOptions;
@@ -39,6 +36,7 @@ import co.elastic.clients.util.ObjectBuilder;
  * @since 2022/11/17 09:15
  */
 @Component
+@Slf4j
 public class EsLogSearchUtils {
 
     @Autowired
@@ -51,35 +49,36 @@ public class EsLogSearchUtils {
      * @return logInfo SearchResponse
      */
     @SuppressWarnings("rawtypes")
-	public SearchResponse<HashMap> queryLogInfo(EsSearchQuery queryParam) {
+    public SearchResponse<HashMap> queryLogInfo(EsSearchQuery queryParam) {
         SearchResponse<HashMap> response;
         try {
-        	var client = clientProvider.client();
+            var client = clientProvider.client();
             response = client.search(s -> {
                 s.index(this.getIndexName(queryParam));
                 s.size(queryParam.getRowCount());
                 s.query(this.query(queryParam));
-                s.sort(this.sort(queryParam))
-                        .scroll(t -> t.time("10s"));
+                s.sort(this.sort(queryParam));
+                if (queryParam.getSorts() != null && !queryParam.getSorts().isEmpty())
+                    s.searchAfter(queryParam.getSorts());
                 return s;
             }, HashMap.class);
             return response;
-        } catch (IOException e) {
-            throw new CustomException("", e);
+        } catch (Exception e) {
+            log.info(e.getMessage());
+            return null;
         }
     }
 
     /**
      * ES deleteLogInfo
-     *
      */
     public void deleteLogInfo() {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
         sdf.setTimeZone(TimeZone.getTimeZone("GMT+00:00"));
         Date endDate = new Date();
-        endDate.setTime(endDate.getTime() - 1000);
+        endDate.setTime(endDate.getTime() - 15 * 24 * 60 * 60 * 1000);
         try {
-        	var client = clientProvider.client();
+            var client = clientProvider.client();
             client.deleteByQuery(s -> {
                 s.index("ob-*");
                 s.query(f -> f.range(r ->
@@ -90,8 +89,9 @@ public class EsLogSearchUtils {
             });
             client.indices().clearCache();
             client.indices().forcemerge();
-        } catch (IOException e) {
-            throw new CustomException("", e);
+        } catch (Exception e) {
+            log.info(e.getMessage());
+            return;
         }
     }
 
@@ -103,14 +103,41 @@ public class EsLogSearchUtils {
      */
     public long queryLogCount(EsSearchQuery queryParam) {
         try {
-        	var client = clientProvider.client();
+            var client = clientProvider.client();
             return client.count(c -> {
                 c.index(this.getIndexName(queryParam));
                 c.query(this.query(queryParam));
                 return c;
             }).count();
-        } catch (IOException e) {
-            throw new CustomException("", e);
+        } catch (Exception e) {
+            log.info(e.getMessage());
+            return 0;
+        }
+    }
+
+    /**
+     * ES queryLogCount
+     *
+     * @return logCount long
+     */
+    public SearchResponse<HashMap> queryLogCounts(EsSearchQuery queryParam) {
+        SearchResponse<HashMap> response;
+        try {
+            var client = clientProvider.client();
+            response = client.search(s -> {
+                s.index(this.getIndexName(queryParam));
+                s.size(0);
+                s.query(this.query(queryParam));
+                s.aggregations("agg1", agg -> agg.histogram(histogram ->
+                                histogram.field("@timestamp").interval(Double.valueOf(queryParam.getInterval())))
+                        .aggregations("agg2", c -> c.terms(t -> t.field("_index")))
+                );
+                return s;
+            }, HashMap.class);
+            return response;
+        } catch (Exception e) {
+            log.info(e.getMessage());
+            return null;
         }
     }
 
@@ -123,11 +150,12 @@ public class EsLogSearchUtils {
     public Set<String> indexList(String indexName) {
         Set<String> indexs;
         try {
-        	var client = clientProvider.client();
+            var client = clientProvider.client();
             GetIndexResponse getIndexResponse = client.indices().get(builder -> builder.index(indexName));
             indexs = getIndexResponse.result().keySet();
-        } catch (IOException e) {
-            throw new CustomException("", e);
+        } catch (Exception e) {
+            log.info(e.getMessage());
+            return null;
         }
         return indexs;
     }
@@ -139,9 +167,9 @@ public class EsLogSearchUtils {
      * @return logLevel SearchResponse
      */
     @SuppressWarnings("rawtypes")
-	public SearchResponse<Map> queryLogLevel(EsSearchQuery queryParam) {
+    public SearchResponse<Map> queryLogLevel(EsSearchQuery queryParam) {
         try {
-        	var client = clientProvider.client();
+            var client = clientProvider.client();
             return client.search(s -> {
                 s.index(this.getIndexName(queryParam));
                 s.size(5000);
@@ -151,8 +179,9 @@ public class EsLogSearchUtils {
                                 .field("log_level.keyword")));
                 return s;
             }, Map.class);
-        } catch (IOException e) {
-            throw new CustomException("", e);
+        } catch (Exception e) {
+            log.info(e.getMessage());
+            return null;
         }
     }
 
@@ -226,7 +255,7 @@ public class EsLogSearchUtils {
             }
         }
         if (isLogLevel && queryParam.hasDateFilter() && !isPhrase) {
-            if(queryParam.getStartDate()!=null && queryParam.getEndDate()==null){
+            if (queryParam.getStartDate() != null && queryParam.getEndDate() == null) {
                 return q -> {
                     q.bool(b -> b.filter(f -> f
                                     .range(r -> r.field("@timestamp").gte(JsonData.of(sdf.format(queryParam.getStartDate())))))
@@ -234,7 +263,7 @@ public class EsLogSearchUtils {
                     );
                     return q;
                 };
-            }else if(queryParam.getEndDate()!=null && queryParam.getStartDate()==null){
+            } else if (queryParam.getEndDate() != null && queryParam.getStartDate() == null) {
                 return q -> {
                     q.bool(b -> b.filter(f -> f
                                     .range(r -> r.field("@timestamp").lt(JsonData.of(sdf.format(queryParam.getEndDate())))))
@@ -242,7 +271,7 @@ public class EsLogSearchUtils {
                     );
                     return q;
                 };
-            }else{
+            } else {
                 return q -> {
                     q.bool(b -> b.filter(f -> f
                                     .range(r -> r.field("@timestamp").gte(JsonData.of(sdf.format(queryParam.getStartDate()))).lt(JsonData.of(sdf.format(queryParam.getEndDate())))))
@@ -252,7 +281,7 @@ public class EsLogSearchUtils {
                 };
             }
         } else if (isLogLevel && queryParam.hasDateFilter() && isPhrase) {
-            if(queryParam.getStartDate()!=null && queryParam.getEndDate()==null){
+            if (queryParam.getStartDate() != null && queryParam.getEndDate() == null) {
                 return q -> {
                     q.bool(b -> b.filter(f -> f
                                     .range(r -> r.field("@timestamp").gte(JsonData.of(sdf.format(queryParam.getStartDate())))))
@@ -261,7 +290,7 @@ public class EsLogSearchUtils {
                     );
                     return q;
                 };
-            }else if(queryParam.getEndDate()!=null && queryParam.getStartDate()==null){
+            } else if (queryParam.getEndDate() != null && queryParam.getStartDate() == null) {
                 return q -> {
                     q.bool(b -> b.filter(f -> f
                                     .range(r -> r.field("@timestamp").lt(JsonData.of(sdf.format(queryParam.getEndDate())))))
@@ -270,7 +299,7 @@ public class EsLogSearchUtils {
                     );
                     return q;
                 };
-            }else{
+            } else {
                 return q -> {
                     q.bool(b -> b.filter(f -> f
                                     .range(r -> r.field("@timestamp").gte(JsonData.of(sdf.format(queryParam.getStartDate()))).lt(JsonData.of(sdf.format(queryParam.getEndDate())))))
@@ -281,7 +310,7 @@ public class EsLogSearchUtils {
                 };
             }
         } else if (!isLogLevel && queryParam.hasDateFilter() && isPhrase) {
-            if(queryParam.getStartDate()!=null && queryParam.getEndDate()==null){
+            if (queryParam.getStartDate() != null && queryParam.getEndDate() == null) {
                 return q -> {
                     q.bool(b -> b.filter(f -> f
                                     .range(r -> r.field("@timestamp").gte(JsonData.of(sdf.format(queryParam.getStartDate())))))
@@ -289,7 +318,7 @@ public class EsLogSearchUtils {
                     );
                     return q;
                 };
-            }else if(queryParam.getEndDate()!=null && queryParam.getStartDate()==null){
+            } else if (queryParam.getEndDate() != null && queryParam.getStartDate() == null) {
                 return q -> {
                     q.bool(b -> b.filter(f -> f
                                     .range(r -> r.field("@timestamp").lt(JsonData.of(sdf.format(queryParam.getEndDate())))))
@@ -297,7 +326,7 @@ public class EsLogSearchUtils {
                     );
                     return q;
                 };
-            }else{
+            } else {
                 return q -> {
                     q.bool(b -> b.filter(f -> f
                                     .range(r -> r.field("@timestamp").gte(JsonData.of(sdf.format(queryParam.getStartDate()))).lt(JsonData.of(sdf.format(queryParam.getEndDate())))))
@@ -324,21 +353,21 @@ public class EsLogSearchUtils {
                 return q;
             };
         } else {
-            if(queryParam.getStartDate()!=null && queryParam.getEndDate()==null){
+            if (queryParam.getStartDate() != null && queryParam.getEndDate() == null) {
                 return q -> {
                     q.bool(b -> b.filter(f -> f
                             .range(r -> r.field("@timestamp").gte(JsonData.of(sdf.format(queryParam.getStartDate())))))
                     );
                     return q;
                 };
-            }else if(queryParam.getEndDate()!=null && queryParam.getStartDate()==null){
+            } else if (queryParam.getEndDate() != null && queryParam.getStartDate() == null) {
                 return q -> {
                     q.bool(b -> b.filter(f -> f
                             .range(r -> r.field("@timestamp").lt(JsonData.of(sdf.format(queryParam.getEndDate())))))
                     );
                     return q;
                 };
-            }else{
+            } else {
                 return q -> {
                     q.bool(b -> b.filter(f -> f
                             .range(r -> r.field("@timestamp").gte(JsonData.of(sdf.format(queryParam.getStartDate()))).lt(JsonData.of(sdf.format(queryParam.getEndDate())))))
@@ -356,6 +385,6 @@ public class EsLogSearchUtils {
      * @param queryParam query order by queryParam
      */
     public Function<SortOptions.Builder, ObjectBuilder<SortOptions>> sort(EsSearchQuery queryParam) {
-        return queryParam.getOrder()!=null?sort -> sort.field(f -> f.field(queryParam.getSort()).order(SortOrder.Asc)):sort -> sort.field(f -> f.field(queryParam.getSort()).order(SortOrder.Desc));
+        return queryParam.getOrder() != null ? sort -> sort.field(f -> f.field(queryParam.getSort()).order(SortOrder.Asc)) : sort -> sort.field(f -> f.field(queryParam.getSort()).order(SortOrder.Desc));
     }
 }

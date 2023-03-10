@@ -44,7 +44,7 @@
             </div>
 
             <template #footer>
-                <el-button style="padding: 5px 20px" type="primary" @click="handleconfirmModel">{{ $t('datasource.createTask') }}</el-button>
+                <el-button style="padding: 5px 20px" :loading="addTasking" type="primary" @click="handleconfirmModel">{{ $t('datasource.createTask') }}</el-button>
                 <el-button style="padding: 5px 20px" @click="handleCancelModel">{{ $t('app.cancel') }}</el-button>
             </template>
         </el-dialog>
@@ -176,10 +176,9 @@ const { data: ret, run: dbData } = useRequest(
     },
     { manual: true }
 )
-const { data: rez, run: addTasks } = useRequest(
+const { data: rez, run: addTasks,loading: addTasking } = useRequest(
     () => {
         const msg = t('datasource.diagnosisAddTaskSuccess')
-        console.log('msg', msg)
         return ogRequest
             .post('/sqlDiagnosis/api/v1/diagnosisTasks', queryData.value, {
                 headers: {

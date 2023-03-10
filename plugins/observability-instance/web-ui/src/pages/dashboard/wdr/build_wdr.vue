@@ -105,8 +105,8 @@ watch(res, (res) => {
     if (res && res.records && res.records.length) {
         tableData.value = res.records;
         if (tableData.value.length > 0) {
-            formData.startId = tableData.value[0].snapshotId;
-            formData.endId = tableData.value[tableData.value.length - 1].snapshotId;
+            formData.startId = tableData.value[tableData.value.length - 1].snapshotId;
+            formData.endId = tableData.value[0].snapshotId;
         }
     } else {
         tableData.value = [];
@@ -135,7 +135,6 @@ const {
 } = useRequest(
     () => {
         return restRequest.post("/wdr/generate", formData).then(function (res) {
-            console.log("aaaaaaaa")
             return res;
         });
     },

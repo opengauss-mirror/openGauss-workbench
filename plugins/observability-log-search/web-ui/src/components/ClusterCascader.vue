@@ -94,7 +94,7 @@ const { data: rer, run: clusterData } = useRequest(
 watch(rer, (rer: Rer) => {
     if (rer && Object.keys(rer).length) {
         clusterList.value = treeTransform(rer);
-        emit('loaded');
+        emit("loaded", rer);
     }
 });
 </script>

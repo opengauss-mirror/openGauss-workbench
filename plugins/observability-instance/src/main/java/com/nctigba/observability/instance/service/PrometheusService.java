@@ -13,9 +13,11 @@ import org.opengauss.admin.common.core.domain.model.ops.WsSession;
 import org.springframework.stereotype.Service;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.nctigba.common.web.exception.CustomException;
 import com.nctigba.observability.instance.entity.NctigbaEnv;
 import com.nctigba.observability.instance.entity.NctigbaEnv.type;
 import com.nctigba.observability.instance.service.AbstractInstaller.Step.status;
+import com.nctigba.observability.instance.util.Download;
 import com.nctigba.observability.instance.util.HttpUtils;
 import com.nctigba.observability.instance.util.SshSession;
 import com.nctigba.observability.instance.util.SshSession.command;
@@ -28,44 +30,91 @@ import lombok.Data;
 @Service
 public class PrometheusService extends AbstractInstaller {
 	private static final String PROMETHEUS_USER = "Prometheus";
-	private static final String PATH = "https://mirrors.tuna.tsinghua.edu.cn/github-release/prometheus/prometheus/LatestRelease/";
-	private static final String NAME = "prometheus-2.42.0.linux-";
+	public static final String PATH = "https://github.com/prometheus/prometheus/releases/download/v2.42.0/";
+	public static final String NAME = "prometheus-2.42.0.linux-";
 
-	public void install(WsSession wsSession, String hostId, String rootPassword) {
+	public void install(WsSession wsSession, String hostId, String rootPassword, Integer promport) {
 		// @formatter:off
 		var steps = Arrays.asList(
-				new Step("初始化"),
-				new Step("检查本机prometheus环境存在"),
-				new Step("连接主机"),
-				new Step("下载prometheus安装包,解压缩"),
+				new Step("开始安装"),
+				new Step("检查Prometheus安装环境"),
+				new Step("检查用户信息, 连接主机"),
+				new Step("安装Prometheus"),
 				new Step("启动prometheus"),
 				new Step("验证prometheus启动状态"),
 				new Step("安装完成"));
 		// @formatter:on
 		var curr = 0;
-
-		curr = nextStep(wsSession, steps, curr);
-		check(hostId);
-
-		curr = nextStep(wsSession, steps, curr);
-		var env = new NctigbaEnv().setHostid(hostId).setPort(9090).setUsername(PROMETHEUS_USER)
+		var env = new NctigbaEnv().setHostid(hostId).setPort(promport).setUsername(PROMETHEUS_USER)
 				.setType(type.PROMETHEUS);
-		try (var sshsession = connect(env, rootPassword);) {
+
+		try {
 			curr = nextStep(wsSession, steps, curr);
-			env.setPath(wget(sshsession));
+
+			if (envMapper
+					.selectOne(Wrappers.<NctigbaEnv>lambdaQuery().eq(NctigbaEnv::getType, type.PROMETHEUS)) != null)
+				throw new RuntimeException("只允许安装1个Prometheus实例");
 
 			curr = nextStep(wsSession, steps, curr);
-			exec(sshsession, env);
-			ThreadUtil.sleep(3000L);
+			OpsHostEntity hostEntity = hostFacade.getById(env.getHostid());
+			if (hostEntity == null)
+				throw new RuntimeException("host not found");
+			env.setHost(hostEntity);
+			try (var session = SshSession.connect(hostEntity.getPublicIp(), hostEntity.getPort(), "root",
+					encryptionUtils.decrypt(rootPassword));) {
+			} catch (Exception e) {
+				throw new RuntimeException("root password error");
+			}
+			try (var sshsession = connect(env, rootPassword, steps, curr);) {
+				curr = nextStep(wsSession, steps, curr);
+				var arch = sshsession.execute(command.ARCH);
+				String name = NAME + arch(arch);
+				String tar = name + TAR;
+				if (!sshsession.test(command.STAT.parse(name))) {
+					if (!sshsession.test(command.STAT.parse(tar))) {
+						// sshsession.execute(command.WGET.parse(PATH + tar));
+						var pkg = envMapper
+								.selectOne(Wrappers.<NctigbaEnv>lambdaQuery().like(NctigbaEnv::getPath, tar));
+						if (pkg == null) {
+							var f = Download.download(PATH + tar, "pkg/" + tar);
+							pkg = new NctigbaEnv().setPath(f.getCanonicalPath()).setType(type.PROMETHEUS_PKG);
+							addMsg(wsSession, steps, curr, "安装包下载成功");
+							save(pkg);
+						}
+						sshsession.upload(pkg.getPath(), tar);
+						addMsg(wsSession, steps, curr, "安装包传输成功");
+					} else
+						addMsg(wsSession, steps, curr, "当前路径下已存在安装包，使用该安装包安装成功");
+					sshsession.execute(command.TAR.parse(tar));
+				}
+				env.setPath(name);
 
-			curr = nextStep(wsSession, steps, curr);
-			check(env);
+				curr = nextStep(wsSession, steps, curr);
+				sshsession.executeNoWait(
+						"cd " + env.getPath() + " && ./prometheus --web.enable-lifecycle --web.listen-address=:"
+								+ promport + " --config.file=prometheus.yml &");
+				ThreadUtil.sleep(3000L);
 
-			curr = nextStep(wsSession, steps, curr);
-			envMapper.insert(env);
-			sendMsg(wsSession, steps, curr, status.DONE);
+				curr = nextStep(wsSession, steps, curr);
+				for (int i = 0; i < 10; i++) {
+					ThreadUtil.sleep(3000L);
+					try {
+						String str = HttpUtils.sendGet("http://" + env.getHost().getPublicIp() + ":" + env.getPort()
+								+ "/api/v1/status/runtimeinfo", null);
+						if (StringUtils.isBlank(str))
+							throw new CustomException();
+					} catch (Exception e) {
+						if (i == 9)
+							throw new RuntimeException("prometheus 启动失败");
+					}
+				}
+
+				curr = nextStep(wsSession, steps, curr);
+				envMapper.insert(env);
+				sendMsg(wsSession, steps, curr, status.DONE);
+			}
 		} catch (Exception e) {
-			steps.get(curr).setState(status.ERROR);
+			steps.get(curr).setState(status.ERROR).getMsg().add(e.getMessage());
 			wsUtil.sendText(wsSession, JSONUtil.toJsonStr(steps));
 			var sw = new StringWriter();
 			try (var pw = new PrintWriter(sw);) {
@@ -75,44 +124,14 @@ public class PrometheusService extends AbstractInstaller {
 		}
 	}
 
-	private void check(String hostId) {
-		var env = envMapper.selectOne(Wrappers.<NctigbaEnv>lambdaQuery().eq(NctigbaEnv::getHostid, hostId)
-				.eq(NctigbaEnv::getType, type.PROMETHEUS));
-		if (env != null)
-			throw new RuntimeException();
-	}
-
-	private SshSession connect(NctigbaEnv env, String rootPassword) throws IOException {
+	private SshSession connect(NctigbaEnv env, String rootPassword, List<Step> steps, int curr) throws IOException {
 		OpsHostEntity hostEntity = hostFacade.getById(env.getHostid());
 		if (hostEntity == null)
 			throw new RuntimeException("host not found");
 		env.setHost(hostEntity);
-		var user = getUser(hostEntity, PROMETHEUS_USER, rootPassword);
+		var user = getUser(hostEntity, PROMETHEUS_USER, rootPassword, steps, curr);
 		return SshSession.connect(hostEntity.getPublicIp(), hostEntity.getPort(), PROMETHEUS_USER,
 				encryptionUtils.decrypt(user.getPassword()));
-	}
-
-	private String wget(SshSession session) throws IOException {
-		var arch = session.execute(command.ARCH);
-		String name = NAME + arch(arch);
-		String tar = name + TAR;
-		if (!session.test(command.STAT.parse(name))) {
-			if (!session.test(command.STAT.parse(tar)))
-				session.execute(command.WGET.parse(PATH + tar));
-			session.execute(command.TAR.parse(tar));
-		}
-		return name;
-	}
-
-	private void exec(SshSession session, NctigbaEnv env) throws IOException {
-		session.executeNoWait("cd " + env.getPath() + " && ./prometheus --web.enable-lifecycle --config.file=prometheus.yml");
-	}
-
-	private void check(NctigbaEnv env) {
-		String str = HttpUtils.sendGet("http://" + env.getHost().getPublicIp() + ":9090/api/v1/status/runtimeinfo",
-				null);
-		if (StringUtils.isBlank(str))
-			throw new RuntimeException("prometheus 启动失败");
 	}
 
 	/**
@@ -232,7 +251,7 @@ scrape_configs:
 				sendMsg(wsSession, steps, curr, status.DONE);
 			}
 		} catch (Exception e) {
-			steps.get(curr).setState(status.ERROR);
+			steps.get(curr).setState(status.ERROR).getMsg().add(e.getMessage());
 			wsUtil.sendText(wsSession, JSONUtil.toJsonStr(steps));
 			var sw = new StringWriter();
 			try (var pw = new PrintWriter(sw);) {

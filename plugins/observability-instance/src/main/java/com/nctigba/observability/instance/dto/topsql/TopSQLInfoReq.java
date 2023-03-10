@@ -1,6 +1,5 @@
 package com.nctigba.observability.instance.dto.topsql;
 
-import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 /**
@@ -13,8 +12,6 @@ import lombok.Data;
  */
 @Data
 public class TopSQLInfoReq {
-    @ApiModelProperty("instance node info id")
     private String id;
-    @ApiModelProperty("TopSQL unique query id")
     private String sqlId;
 }

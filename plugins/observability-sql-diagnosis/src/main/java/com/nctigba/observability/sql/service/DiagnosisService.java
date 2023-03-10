@@ -48,6 +48,7 @@ public class DiagnosisService {
 	}
 
 	public void delete(Integer id) {
+		taskCreator.remove(id);
 		taskMapper.deleteById(id);
 	}
 

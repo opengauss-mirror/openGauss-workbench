@@ -1,10 +1,20 @@
 <template>
     <div class="dialog">
-        <el-dialog width="400px" :title="t('install.installAgent')" v-model="visible" :close-on-click-modal="false" draggable @close="closeDialog">
+        <el-dialog :width="dialogWith" :title="t('install.installAgent')" v-model="visible" :close-on-click-modal="false" draggable @close="closeDialog">
             <div class="dialog-content" v-show="installData.length != 0">
                 <div>
                     <el-steps direction="vertical" :active="doingIndex">
-                        <el-step v-for="item in installData" :key="item.name" :title="item.name" />
+                        <el-step v-for="item in installData" :key="item.name" :title="item.name" >
+                            <template #description >
+                                <div v-for="msg in item.msg"><b>{{ msg }}</b></div>
+                                <el-input v-if="item.error"
+                                    v-model="item.error"
+                                    :rows="5"
+                                    type="textarea"
+                                    readonly
+                                />
+                            </template>
+                        </el-step>
                     </el-steps>
                 </div>
             </div>
@@ -16,68 +26,77 @@
                     <el-form-item :label="t('install.rootPWD')" prop="rootPassword">
                         <el-input v-model="formData.rootPassword" show-password style="width: 200px; margin: 0 4px" />
                     </el-form-item>
+                    <el-form-item :label="t('install.proxyPort')" prop="port">
+                        <el-input v-model="formData.port" style="width: 200px; margin: 0 4px" />
+                    </el-form-item>
+                    <el-form-item :label="t('install.callbackPath')" prop="callbackPath">
+                        <el-input v-model="formData.callbackPath" style="width: 200px; margin: 0 4px" />
+                    </el-form-item>
                 </el-form>
             </div>
 
             <template #footer>
-                <el-button v-if="installData.length === 0" :loading="started" style="padding: 5px 20px" type="primary" @click="install">{{ $t("install.install") }}</el-button>
-                <el-button v-if="installData.length != 0" style="padding: 5px 20px" @click="back">{{ $t("app.back") }}</el-button>
-                <el-button style="padding: 5px 20px" @click="handleCancelModel">{{ $t("app.cancel") }}</el-button>
+                <el-button v-if="installData.length === 0" :loading="started" style="padding: 5px 20px" type="primary" @click="install">{{ $t('install.install') }}</el-button>
+                <el-button v-if="installData.length != 0" style="padding: 5px 20px" @click="back">{{ $t('app.back') }}</el-button>
+                <el-button style="padding: 5px 20px" @click="handleCancelModel">{{ $t('app.cancel') }}</el-button>
             </template>
         </el-dialog>
     </div>
 </template>
 
 <script lang="ts" setup>
-import { cloneDeep } from "lodash-es";
-import { FormRules, FormInstance } from "element-plus";
-import { useI18n } from "vue-i18n";
-import WebSocketClass from "../../../utils/websocket";
-import { encryptPassword } from "../../../utils/jsencrypt";
-import moment from "moment";
-const { t } = useI18n();
+import { cloneDeep } from 'lodash-es'
+import { FormRules, FormInstance, ElMessage } from 'element-plus'
+import { useI18n } from 'vue-i18n'
+import WebSocketClass from '../../../utils/websocket'
+import { encryptPassword } from '../../../utils/jsencrypt'
+import ogRequest from '../../../request'
+import moment from 'moment'
+const { t } = useI18n()
 
-const visible = ref(false);
+const visible = ref(false)
 const props = withDefaults(
     defineProps<{
-        show: boolean;
+        show: boolean
     }>(),
     {}
-);
+)
 watch(
     () => props.show,
     (newValue) => {
-        visible.value = newValue;
+        visible.value = newValue
     },
     { immediate: true }
-);
+)
 
 // form data
 const initFormData = {
     nodeId: "",
     rootPassword: "",
-    port: "9090",
+    port: "2321",
+    callbackPath: location.protocol + "//" + window.location.host
 };
 const formData = reactive(cloneDeep(initFormData));
 const connectionFormRef = ref<FormInstance>();
 const connectionFormRules = reactive<FormRules>({
-    nodeId: [{ required: true, message: t("install.collectorRules[0]"), trigger: "blur" }],
-    rootPassword: [{ required: true, message: t("install.collectorRules[1]"), trigger: "blur" }],
-});
+    nodeId: [{ required: true, message: t('install.collectorRules[0]'), trigger: 'blur' }],
+    rootPassword: [{ required: true, message: t('install.collectorRules[1]'), trigger: 'blur' }],
+    port: [{ required: true, message: t('install.proxyRules[2]'), trigger: 'blur' }],
+})
 // cluster component
 const handleClusterValue = (val: any) => {
-    formData.nodeId = val.length > 1 ? val[1] : "";
-};
+    formData.nodeId = val.length > 1 ? val[1] : ''
+}
 
-const started = ref(false);
-const installSucceed = ref(false);
+const started = ref(false)
+const installSucceed = ref(false)
 const ws = reactive({
-    name: "",
-    webUser: "",
-    connectionName: "",
-    sessionId: "",
+    name: '',
+    webUser: '',
+    connectionName: '',
+    sessionId: '',
     instance: null,
-});
+})
 const install = async () => {
     let result = await connectionFormRef.value?.validate();
     if (!result) return;
@@ -88,53 +107,69 @@ const install = async () => {
     sendData();
 };
 const sendData = async () => {
-    const encryptPwd = await encryptPassword(formData.rootPassword);
+    const encryptPwd = await encryptPassword(formData.rootPassword)
     const sendData = {
-        key: "agent",
+        key: 'agent',
         nodeId: formData.nodeId,
         rootPassword: encryptPwd,
-    };
-    ws.instance.send(sendData);
-};
+        port: formData.port,
+        callbackPath: formData.callbackPath,
+    }
+    ws.instance.send(sendData)
+}
 const onWebSocketMessage = (data: Array<any>) => {
-    if (Array.isArray(installData.value)) installData.value = JSON.parse(data);
+    // if (Array.isArray(installData.value)) installData.value = JSON.parse(data);
+    if (data) {
+        try {
+            installData.value = JSON.parse(data)
+        } catch (error) {
+            installData.value.forEach((item) => {
+                if (item.state === 'ERROR') {
+                    item['error'] = data
+                    dialogWith.value = '800px'
+                }
+            })
+        } 
+    }
 };
 
 // action
 const back = () => {
-    started.value = false;
-    ws.instance.close();
-    installData.value = [];
-};
+    started.value = false
+    dialogWith.value = '400px'
+    ws.instance.close()
+    installData.value = []
+}
 
 // list Data
-const installData = ref<Array<any>>([]);
+const installData = ref<Array<any>>([])
+const dialogWith = ref<string>('400px')
 const doingIndex = computed(() => {
     for (let index = 0; index < installData.value.length; index++) {
-        const element = installData.value[index];
-        if (element.state === "DOING" || element.state === "ERROR") return index;
+        const element = installData.value[index]
+        if (element.state === 'DOING' || element.state === 'ERROR') return index
     }
-    if (!installSucceed.value) installSucceed.value = true;
-    return installData.value.length;
-});
+    if (installData.value.length > 0 && !installSucceed.value) installSucceed.value = true
+    return installData.value.length
+})
 
 // dialog
-const emit = defineEmits(["changeModal", "installed"]);
+const emit = defineEmits(['changeModal', 'installed'])
 const handleCancelModel = () => {
-    visible.value = false;
-    if (installSucceed.value) emit("installed");
-    emit("changeModal", visible.value);
-};
+    visible.value = false
+    if (installSucceed.value) emit('installed')
+    emit('changeModal', visible.value)
+}
 const closeDialog = () => {
-    visible.value = false;
-    if (installSucceed.value) emit("installed");
-    emit("changeModal", visible.value);
-};
+    visible.value = false
+    if (installSucceed.value) emit('installed')
+    emit('changeModal', visible.value)
+}
 
 onBeforeUnmount(() => {
-    if (ws.instance) ws.instance.close();
-});
+    if (ws.instance) ws.instance.close()
+})
 </script>
 <style lang="scss" scoped>
-@import "../../../assets/style/style1.scss";
+@import '../../../assets/style/style1.scss';
 </style>

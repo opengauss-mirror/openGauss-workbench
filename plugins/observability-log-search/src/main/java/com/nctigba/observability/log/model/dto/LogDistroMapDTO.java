@@ -17,7 +17,6 @@ import lombok.Data;
  */
 @Data
 public class LogDistroMapDTO {
-    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'")
-    private Date dateTime;
+    private String dateTime;
     List<LogDistroMapInfoDTO> logCounts;
 }

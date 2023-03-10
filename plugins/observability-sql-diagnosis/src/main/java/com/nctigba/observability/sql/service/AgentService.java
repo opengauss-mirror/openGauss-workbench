@@ -23,10 +23,8 @@ import com.nctigba.observability.sql.util.SshSession.command;
 import cn.hutool.core.io.IoUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
-import lombok.extern.slf4j.Slf4j;
 
 @Service
-@Slf4j
 public class AgentService extends AbstractInstaller {
 	private static final String AGENT_USER = "root";
 	private static final String NAME = "opengauss-ebpf-1.0.0-SNAPSHOT.jar";
@@ -35,44 +33,78 @@ public class AgentService extends AbstractInstaller {
 	@Autowired
 	private ClusterManager clusterManager;
 
-	public void install(WsSession wsSession, String nodeId, String rootPassword) {
+	public void install(WsSession wsSession, String nodeId, String rootPassword, String callbackPath) {
 		// @formatter:off
 		var steps = Arrays.asList(
 				new Step("初始化"),
 				new Step("检查本机agent环境存在"),
 				new Step("连接主机"),
+				new Step("检查python环境"),
+				new Step("安装bcc-tools"),
+				new Step("安装FlameGraph"),
 				new Step("传输agent安装包"),
 				new Step("启动agent"),
 				new Step("安装完成"));
 		// @formatter:on
 		var curr = 0;
+		try {
+			if (StrUtil.isBlank(callbackPath))
+				throw new RuntimeException("callback host null");
 
-		curr = nextStep(wsSession, steps, curr);
-		var node = clusterManager.getOpsNodeById(nodeId);
-		var hostId = node.getHostId();
-		check(hostId);
-
-		log.info(encryptionUtils.decrypt(rootPassword));
-		curr = nextStep(wsSession, steps, curr);
-		var env = new NctigbaEnv().setHostid(hostId).setPort(2321).setUsername(AGENT_USER).setType(type.AGENT);
-		try (var session = connect(env, rootPassword);) {
 			curr = nextStep(wsSession, steps, curr);
-			// upload
-			File f = File.createTempFile("opengauss-ebpf-1.0.0-SNAPSHOT", ".jar");
-			try (var in = loader.getResource(NAME).getInputStream(); var out = new FileOutputStream(f);) {
-				IoUtil.copy(in, out);
+			var node = clusterManager.getOpsNodeById(nodeId);
+			var hostId = node.getHostId();
+			check(hostId);
+
+			curr = nextStep(wsSession, steps, curr);
+			var env = envMapper.selectOne(Wrappers.<NctigbaEnv>lambdaQuery().eq(NctigbaEnv::getType, type.AGENT)
+					.eq(NctigbaEnv::getHostid, hostId));
+			if (env != null)
+				throw new RuntimeException("agent exists");
+
+			env = new NctigbaEnv().setHostid(hostId).setPort(2321).setUsername(AGENT_USER).setType(type.AGENT);
+			try (var session = connect(env, rootPassword);) {
+				curr = nextStep(wsSession, steps, curr);
+				var python_v = session.execute("python --version");
+				if (!python_v.toLowerCase().startsWith("python "))
+					throw new RuntimeException("python version err, curr:" + python_v);
+				addMsg(wsSession, steps, curr, python_v);
+				curr = nextStep(wsSession, steps, curr);
+				// bcc-tool
+				if (!session.test(command.STAT.parse("/usr/share/bcc/tools")))
+					session.execute("yum install bcc-tools");
+				else
+					addMsg(wsSession, steps, curr, "bcc exists");
+				curr = nextStep(wsSession, steps, curr);
+				File graph = File.createTempFile("FlameGraph", ".zip");
+				try (var in = loader.getResource("FlameGraph.zip").getInputStream();
+						var out = new FileOutputStream(graph);) {
+					IoUtil.copy(in, out);
+				}
+				session.execute("mkdir -p /opt/software");
+				session.execute("rm -rf /opt/software/FlameGraph*");
+				session.upload(graph.getCanonicalPath(), "/opt/software/FlameGraph.zip");
+				session.execute("cd /opt/software && unzip FlameGraph.zip && cd FlameGraph && chmod +x flamegraph.pl");
+
+				curr = nextStep(wsSession, steps, curr);
+				// upload
+				File f = File.createTempFile("opengauss-ebpf-1.0.0-SNAPSHOT", ".jar");
+				try (var in = loader.getResource(NAME).getInputStream(); var out = new FileOutputStream(f);) {
+					IoUtil.copy(in, out);
+				}
+				session.upload(f.getCanonicalPath(), "./" + NAME);
+				f.delete();
+				curr = nextStep(wsSession, steps, curr);
+				// exec
+				session.executeNoWait("java --add-opens java.base/java.lang=ALL-UNNAMED -jar " + NAME
+						+ " --diagnosis_host=" + callbackPath + " &");
+				env.setPath(".");
+				curr = nextStep(wsSession, steps, curr);
+				envMapper.insert(env);
+				sendMsg(wsSession, steps, curr, status.DONE);
 			}
-			session.upload(f.getCanonicalPath(), "./" + NAME);
-			f.delete();
-			curr = nextStep(wsSession, steps, curr);
-			// exec
-			session.executeNoWait("nohup java -jar " + NAME);
-			env.setPath(".");
-			curr = nextStep(wsSession, steps, curr);
-			envMapper.insert(env);
-			sendMsg(wsSession, steps, curr, status.DONE);
 		} catch (Exception e) {
-			steps.get(curr).setState(status.ERROR);
+			steps.get(curr).setState(status.ERROR).getMsg().add(e.getMessage());
 			wsUtil.sendText(wsSession, JSONUtil.toJsonStr(steps));
 			var sw = new StringWriter();
 			try (var pw = new PrintWriter(sw);) {
@@ -86,7 +118,7 @@ public class AgentService extends AbstractInstaller {
 		var env = envMapper.selectOne(Wrappers.<NctigbaEnv>lambdaQuery().eq(NctigbaEnv::getHostid, hostId)
 				.eq(NctigbaEnv::getType, type.AGENT));
 		if (env != null)
-			throw new RuntimeException();
+			throw new RuntimeException("agent exists");
 	}
 
 	private SshSession connect(NctigbaEnv env, String rootPassword) throws IOException {
@@ -117,7 +149,6 @@ public class AgentService extends AbstractInstaller {
 					.eq(NctigbaEnv::getHostid, node.getHostId()));
 			if (env == null)
 				throw new RuntimeException("agent not found");
-			curr = nextStep(wsSession, steps, curr);
 			OpsHostEntity hostEntity = hostFacade.getById(node.getHostId());
 			if (hostEntity == null)
 				throw new RuntimeException("host not found");
@@ -131,11 +162,13 @@ public class AgentService extends AbstractInstaller {
 					sshsession.execute(command.KILL.parse(nodePid));
 				} else
 					curr = skipStep(wsSession, steps, curr);
+				curr = nextStep(wsSession, steps, curr);
 				envMapper.deleteById(env);
+
 				sendMsg(wsSession, steps, curr, status.DONE);
 			}
 		} catch (Exception e) {
-			steps.get(curr).setState(status.ERROR);
+			steps.get(curr).setState(status.ERROR).getMsg().add(e.getMessage());
 			wsUtil.sendText(wsSession, JSONUtil.toJsonStr(steps));
 			var sw = new StringWriter();
 			try (var pw = new PrintWriter(sw);) {

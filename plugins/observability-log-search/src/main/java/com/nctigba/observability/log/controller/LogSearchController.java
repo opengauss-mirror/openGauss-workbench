@@ -69,6 +69,7 @@ public class LogSearchController {
             esSearchQuery.setLogType(queryParam.getLogType());
             esSearchQuery.setScrollId(queryParam.getScrollId());
             esSearchQuery.setRowCount(queryParam.getRowCount());
+            esSearchQuery.setSorts(queryParam.getSorts());
         }
         return logSearchService.getLogByQuery(esSearchQuery);
     }

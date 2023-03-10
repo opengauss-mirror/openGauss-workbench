@@ -18,10 +18,8 @@ public class DeleteIndexDataTask {
     private EsLogSearchUtils esLogSearchUtils;
 
     @Scheduled(cron = "${taskCron.autoDeleteIndexData}")
-    public void execute(){
-        //esLogSearchUtils.deleteLogInfo();
-        SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        System.out.println("测试定时任务:"+df.format(new Date()));
+    public void execute() {
+        esLogSearchUtils.deleteLogInfo();
     }
 
 }

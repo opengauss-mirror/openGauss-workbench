@@ -34,6 +34,10 @@ public class OsMonitorHandler {
     public String startMonitor(String taskid, String monitorType) {
         OSUtil toolUtil = new OSUtil();
         String outputUrl = urlConfig.getOutputUrl();
+        String isExist=toolUtil.execCmd("cat "+outputUrl);
+        if(isExist.contains("No such file or directory")){
+            toolUtil.exec("mkdir "+outputUrl);
+        }
         String fileUrl = " > " + outputUrl + taskid + monitorType;
         String execcmd = null;
         if (CpuType.MPSTAT.equals(monitorType)) {

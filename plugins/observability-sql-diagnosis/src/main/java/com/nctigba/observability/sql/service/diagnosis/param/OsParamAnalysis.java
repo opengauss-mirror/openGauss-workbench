@@ -1,20 +1,5 @@
 package com.nctigba.observability.sql.service.diagnosis.param;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.math.BigInteger;
-import java.util.regex.Pattern;
-
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.nctigba.observability.sql.mapper.NctigbaParamInfoMapper;
-import com.nctigba.observability.sql.model.param.NctigbaParamInfo;
-import org.apache.commons.lang3.StringUtils;
-import org.opengauss.admin.common.exception.CustomException;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
-
 import com.nctigba.observability.sql.mapper.DiagnosisTaskResultMapper;
 import com.nctigba.observability.sql.model.diagnosis.Task;
 import com.nctigba.observability.sql.model.diagnosis.grab.GrabType;
@@ -25,83 +10,93 @@ import com.nctigba.observability.sql.model.param.OsParamData;
 import com.nctigba.observability.sql.model.param.ParamDto;
 import com.nctigba.observability.sql.service.diagnosis.ResultAnalysis;
 import com.nctigba.observability.sql.util.LocaleString;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.opengauss.admin.common.exception.CustomException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+import org.sqlite.JDBC;
+
+import javax.script.ScriptEngineManager;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.sql.*;
 
 @Service
 public class OsParamAnalysis implements ResultAnalysis {
     @Autowired
     private DiagnosisTaskResultMapper resultMapper;
 
-    @Autowired
-    private NctigbaParamInfoMapper mapper;
-
     @Override
     public void analysis(GrabType grabType, Task task, MultipartFile file) {
+        task.addRemarks("start get osParam info:");
         try {
+            Connection connect = connect_sqlite();
+            Statement statement = connect.createStatement();
             var reader = new BufferedReader(new InputStreamReader(file.getInputStream()));
             while (reader.ready()) {
                 var line = reader.readLine();
                 if (StringUtils.isBlank(line))
                     continue;
-                String name=line.substring(0,line.indexOf("=")).trim();
-                OsParamData[] fields=OsParamData.values();
+                String name = line.substring(0, line.indexOf("=")).trim();
+                OsParamData[] fields = OsParamData.values();
                 String nodeName = null;
-                for(int j=0;j<fields.length;j++){
-                    if(fields[j].getParamName().equals(name)){
-                        nodeName=fields[j].toString();
+                for (int j = 0; j < fields.length; j++) {
+                    if (fields[j].getParamName().equals(name)) {
+                        nodeName = fields[j].toString();
                     }
                 }
-                if(nodeName==null)
+                if (nodeName == null)
                     continue;
-                String paramData=line.substring(line.indexOf("=")+1).replace("\t","").trim();
-                NctigbaParamInfo nctigbaParamInfo=mapper.selectOne(Wrappers.<NctigbaParamInfo>lambdaQuery().eq(NctigbaParamInfo::getParamName,name));
-                //Pattern pattern=Pattern.compile("[0-9]*");
-                ParamDto paramDto=new ParamDto();
-                boolean isEmpty="".equals(paramData) && paramData!=null && nctigbaParamInfo.getSuggestValue()!=null && !"".equals(nctigbaParamInfo.getSuggestValue());
-                //boolean isMatch=pattern.matcher(paramData).matches() && pattern.matcher(nctigbaParamInfo.getSuggestValue()).matches();
-                if(!isEmpty && "compare".equals(nctigbaParamInfo.getDiagnosis())){
-                    BigInteger a = new BigInteger(paramData);
-                    BigInteger b = new BigInteger(nctigbaParamInfo.getSuggestValue());
-                    if(a.compareTo(b)>0){
-                        paramDto.setTitle(LocaleString.format("Param.turnDown")+LocaleString.format(nodeName+".title")+LocaleString.format("Param.define"));
-                    }else if(a.compareTo(b)<0){
-                        paramDto.setTitle(LocaleString.format("Param.turnUp")+LocaleString.format(nodeName+".title")+LocaleString.format("Param.define"));
-                    }else{
-                        paramDto.setTitle(LocaleString.format(nodeName+".title"));
+                String paramData = line.substring(line.indexOf("=") + 1).replace("\t", "");
+                String selectSql = "select * from param_info where paramName='" + name + "';";
+                ResultSet result = statement.executeQuery(selectSql);
+                if (result.next()) {
+                    ParamDto paramDto = new ParamDto();
+                    paramDto.setParamName(result.getString("paramName"));
+                    paramDto.setCurrentValue(paramData);
+                    paramDto.setUnit(result.getString("unit"));
+                    paramDto.setParamDescription(result.getString("paramDetail"));
+                    paramDto.setSuggestValue(result.getString("suggestValue"));
+                    paramDto.setSuggestReason(result.getString("suggestExplain"));
+                    TaskResult taskResult = new TaskResult();
+                    if (result.getString("diagnosisRule") != null || !"".equals(result.getString("diagnosisRule"))) {
+                        var manager = new ScriptEngineManager();
+                        var t = manager.getEngineByName("javascript");
+                        var bindings = t.createBindings();
+                        bindings.put("actualValue", paramData.trim());
+                        Object object = t.eval(result.getString("diagnosisRule"), bindings);
+                        if (object!=null && "true".equals(object.toString())) {
+                            taskResult.setState(TaskResult.ResultState.NoAdvice);
+                        } else {
+                            paramDto.setTitle(LocaleString.format("Param.revise") + LocaleString.format(nodeName + ".title") + LocaleString.format("Param.define"));
+                            taskResult.setState(TaskResult.ResultState.Suggestions);
+                        }
+                    } else {
+                        taskResult.setState(TaskResult.ResultState.NoAdvice);
                     }
-                }else if(!isEmpty && "equal".equals(nctigbaParamInfo.getDiagnosis())){
-                    if(nctigbaParamInfo.getDiagnosis().equals(paramData)){
-                        paramDto.setTitle(LocaleString.format(nodeName+".title"));
-                    }else{
-                        paramDto.setTitle(LocaleString.format("Param.revise")+LocaleString.format(nodeName+".title")+LocaleString.format("Param.define"));
-                    }
-                }else if(!isEmpty && "range".equals(nctigbaParamInfo.getDiagnosis())){
-                    String startRang=nctigbaParamInfo.getDiagnosis().substring(0,nctigbaParamInfo.getDiagnosis().indexOf("-"));
-                    String endRang=nctigbaParamInfo.getDiagnosis().substring(nctigbaParamInfo.getDiagnosis().indexOf("-")+1);
-                    if(Integer.valueOf(startRang)<=Integer.valueOf(paramData) && Integer.valueOf(paramData)<=Integer.valueOf(endRang)){
-                        paramDto.setTitle(LocaleString.format(nodeName+".title"));
-                    }else{
-                        paramDto.setTitle(LocaleString.format("Param.revise")+LocaleString.format(nodeName+".title")+LocaleString.format("Param.define"));
-                    }
-                }else{
-                    paramDto.setTitle(LocaleString.format(nodeName+".title"));
+                    taskResult.setTaskid(task.getId());
+                    taskResult.setResultType(ResultType.valueOf(nodeName));
+                    taskResult.setFrameType(FrameType.Param);
+                    taskResult.setData(paramDto);
+                    resultMapper.insert(taskResult);
                 }
-                paramDto.setParamName(nctigbaParamInfo.getParamName());
-                paramDto.setCurrentValue(paramData);
-                paramDto.setUnit(nctigbaParamInfo.getUnit());
-                paramDto.setParamDescription(nctigbaParamInfo.getParamDetail());
-                paramDto.setSuggestValue(nctigbaParamInfo.getSuggestValue());
-                paramDto.setSuggestReason(nctigbaParamInfo.getSuggestExplain());
-                TaskResult taskResult = new TaskResult();
-                taskResult.setTaskid(task.getId());
-                taskResult.setResultType(ResultType.valueOf(nodeName));
-                taskResult.setFrameType(FrameType.Param);
-                taskResult.setState(TaskResult.ResultState.Suggestions);
-                taskResult.setData(paramDto);
-                resultMapper.insert(taskResult);
 
             }
-        } catch (IOException e) {
+            statement.close();
+        } catch (Exception e) {
             throw new CustomException("osParam err", e);
         }
+    }
+
+    public static synchronized Connection connect_sqlite() {
+        Connection conn;
+        try {
+            conn = DriverManager.getConnection(JDBC.PREFIX + "data/paramInfo.db");
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        return conn;
     }
 }

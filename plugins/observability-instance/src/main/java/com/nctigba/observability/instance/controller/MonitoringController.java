@@ -27,8 +27,6 @@ import com.nctigba.observability.instance.service.ClusterManager.OpsClusterNodeV
 import com.nctigba.observability.instance.util.SSHOperator;
 
 import cn.hutool.json.JSONObject;
-import io.swagger.annotations.ApiImplicitParams;
-import io.swagger.annotations.ApiOperation;
 import lombok.RequiredArgsConstructor;
 
 /**
@@ -125,16 +123,12 @@ public class MonitoringController {
             "sum(gauss_global_pagewriter_status_remain_dirty_page_num{instance='ogbrench'})");
 
     @PostMapping("/point")
-    @ApiOperation(value = "Get data at specified time point", notes = "Get data at specified time point")
-    @ApiImplicitParams({})
     public AppResult point(@RequestBody MonitoringParam monitoringParam) {
         // The specified time point can only be returned in table data format
         return AppResult.ok("").addData(monitoringService.getPointMonitoringData(monitoringParam));
     }
 
     @PostMapping("/range")
-    @ApiOperation(value = "Get data in specified time period", notes = "Get data in specified time period")
-    @ApiImplicitParams({})
     public AppResult range(@RequestBody MonitoringParam monitoringParam) {
         return AppResult.ok("").addData(monitoringService.getRangeMonitoringData(monitoringParam));
     }

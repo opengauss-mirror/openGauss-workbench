@@ -1,6 +1,5 @@
 package com.nctigba.common.web.model.query;
 
-import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 /**
@@ -11,8 +10,6 @@ import lombok.Data;
 
 @Data
 public class InstanceQuery {
-	@ApiModelProperty(value = "cluster ID", required = true)
 	private String clusterId;
-	@ApiModelProperty(value = "database node ID", required = true)
 	private String nodeId;
 }

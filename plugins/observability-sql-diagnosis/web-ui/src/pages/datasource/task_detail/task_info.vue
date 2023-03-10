@@ -39,7 +39,7 @@
 
         <!-- Flame diagram -->
         <div class="s-l-base" v-if="requestType === 'Frame'">
-            <div class="svg-top" v-if="taskData.taskInfo.top.type === 'Flamefigure'">
+            <div class="svg-top" v-if="taskData.taskInfo.top.type === 'Flamefigure'" @click="gotoLarge">
                 <div class="svg-img-wrap" v-html="svgFile"></div>
                 <p class="svg-title">{{ taskData.taskInfo.top.data.title }}</p>
             </div>
@@ -202,6 +202,11 @@ onMounted(() => {
     requestData()
 })
 
+const emit = defineEmits(['gotoLarge'])
+const gotoLarge = () => {
+    emit('gotoLarge')
+}
+
 const { data: res, run: requestData } = useRequest(
     () => {
         return ogRequest.get('/sqlDiagnosis/api/v1/diagnosisTasks/' + queryData.value.id + '/suggestions/' + queryData.value.type)
@@ -316,7 +321,7 @@ watch(res, (res: Res) => {
 // 获取svg图片
 watch(ret, (res: any) => {
     if (res && Object.keys(res).length) {
-        svgFile.value = res.replace('opacity:0.1;', 'opacity:0.7;')
+        svgFile.value = res.replace('opacity:0.1;', 'opacity:0.7;').replace('>Search<', '><').replace('>ic<', '><')
     }
 })
 </script>
