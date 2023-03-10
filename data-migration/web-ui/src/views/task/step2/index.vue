@@ -46,7 +46,7 @@
       </a-form>
     </div>
     <div class="table-con">
-      <a-table :data="tableData" :bordered="false" stripe :pagination="pagination" @page-change="pageChange">
+      <a-table :data="tableData" :bordered="false" :stripe="!currentTheme" :hoverable="!currentTheme" :pagination="pagination" @page-change="pageChange">
         <template #columns>
           <a-table-column title="源实例名" data-index="sourceNodeName"></a-table-column>
           <a-table-column title="源IP和端口">
@@ -93,6 +93,9 @@
 <script setup>
 import { reactive, ref, onMounted, toRaw } from 'vue'
 import ParamsConfig from './components/ParamsConfig.vue'
+import useTheme from '@/hooks/theme'
+
+const { currentTheme } = useTheme()
 
 const props = defineProps({
   subTaskConfig: {
