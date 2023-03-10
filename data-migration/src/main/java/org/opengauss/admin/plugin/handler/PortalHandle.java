@@ -29,8 +29,6 @@ public class PortalHandle {
     public static boolean checkInstallPortal(MigrationTaskHostRef host) {
         String checkInstallPortalResult = ShellUtil.execCommandGetResult(host.getHost(), host.getPort(), host.getUser(), host.getPassword(),
                 "cat ~/portal/logs/portal_.log | grep 'Install all migration tools success'");
-//        String checkInstallPortalResult = ShellUtil.execCommandGetResult(host.getHost(), host.getPort(), host.getUser(), host.getPassword(),
-//                "[ -d ~/portal ] && echo 1 || echo 0");
         return StringUtils.isNotBlank(checkInstallPortalResult.trim());
     }
 
