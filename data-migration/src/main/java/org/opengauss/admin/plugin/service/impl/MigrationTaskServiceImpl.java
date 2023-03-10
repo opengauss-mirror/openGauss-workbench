@@ -204,13 +204,17 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
             BigDecimal migrationProcess = new BigDecimal(0);
             String portalFullProcess = PortalHandle.getPortalFullProcess(t.getRunHost(), t.getRunPort(), t.getRunUser(), t.getRunPass(), t);
             log.info("get portal full process content: {}, subTaskId: {}", portalFullProcess, t.getId());
-            migrationTaskExecResultDetailService.saveOrUpdateByTaskId(t.getId(), portalFullProcess.trim(), 1);
-            migrationProcess = calculateFullMigrationProgress(portalFullProcess);
+            if (StringUtils.isNotBlank(portalFullProcess)) {
+                migrationTaskExecResultDetailService.saveOrUpdateByTaskId(t.getId(), portalFullProcess.trim(), 1);
+                migrationProcess = calculateFullMigrationProgress(portalFullProcess);
+            }
             result.put("fullProcess", portalFullProcess);
             if (TaskStatus.INCREMENTAL_START.getCode().equals(state) || TaskStatus.INCREMENTAL_RUNNING.getCode().equals(state)) {
                 String portalIncrementalProcess = PortalHandle.getPortalIncrementalProcess(t.getRunHost(), t.getRunPort(), t.getRunUser(), t.getRunPass(), t);
                 log.info("get portal incremental process content: {}, subTaskId: {}", portalIncrementalProcess, t.getId());
-                migrationTaskExecResultDetailService.saveOrUpdateByTaskId(t.getId(), portalIncrementalProcess.trim(), 2);
+                if (StringUtils.isNotBlank(portalIncrementalProcess)) {
+                    migrationTaskExecResultDetailService.saveOrUpdateByTaskId(t.getId(), portalIncrementalProcess.trim(), 2);
+                }
                 if(t.getMigrationProcess() == null) {
                     if (migrationProcess.intValue() > 0) {
                         migrationProcess = new BigDecimal(0.85f).divide(migrationProcess, 4, BigDecimal.ROUND_HALF_UP);
@@ -224,7 +228,9 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
             } else if (TaskStatus.REVERSE_START.getCode().equals(state) || TaskStatus.REVERSE_RUNNING.getCode().equals(state)) {
                 String portaReverselProcess = PortalHandle.getPortalReverseProcess(t.getRunHost(), t.getRunPort(), t.getRunUser(), t.getRunPass(), t);
                 log.info("get portal reverse process content: {}, subTaskId: {}", portaReverselProcess, t.getId());
-                migrationTaskExecResultDetailService.saveOrUpdateByTaskId(t.getId(), portaReverselProcess.trim(), 3);
+                if (StringUtils.isNotBlank(portaReverselProcess)) {
+                    migrationTaskExecResultDetailService.saveOrUpdateByTaskId(t.getId(), portaReverselProcess.trim(), 3);
+                }
                 if(t.getMigrationProcess() == null) {
                     if (migrationProcess.intValue() > 0) {
                         migrationProcess = new BigDecimal(0.95f).divide(migrationProcess, 4, BigDecimal.ROUND_HALF_UP);
