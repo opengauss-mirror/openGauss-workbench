@@ -91,7 +91,7 @@ import { destroyPluginApp } from '@/utils/pluginApp'
 import UpdateCode from '@/views/security/user/components/UpdateCode.vue'
 import WujieVue from 'wujie-vue3'
 import { useI18n } from 'vue-i18n'
-import SystemSetting from "@/views/security/systemSetting/SystemSetting.vue";
+import SystemSetting from '@/views/security/systemSetting/SystemSetting.vue'
 
 const { t } = useI18n()
 const { bus } = WujieVue

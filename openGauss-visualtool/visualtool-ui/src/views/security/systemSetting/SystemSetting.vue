@@ -26,14 +26,14 @@
 </template>
 
 <script setup lang="ts">
-import {watch, ref, reactive, onMounted} from 'vue'
-import {Message} from '@arco-design/web-vue'
-import {FormInstance} from '@arco-design/web-vue/es/form'
-import {listSysSetting, updateSysSetting} from '@/api/sysSetting'
-import {SysSetting} from '@/types/sysSetting'
-import {useI18n} from 'vue-i18n'
+import { watch, ref, reactive, onMounted } from 'vue'
+import { Message } from '@arco-design/web-vue'
+import { FormInstance } from '@arco-design/web-vue/es/form'
+import { listSysSetting, updateSysSetting } from '@/api/sysSetting'
+import { SysSetting } from '@/types/sysSetting'
+import { useI18n } from 'vue-i18n'
 
-const {t} = useI18n()
+const { t } = useI18n()
 
 const props = withDefaults(defineProps<{
   open: boolean,
