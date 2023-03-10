@@ -2,7 +2,7 @@ migration:
   taskRefreshIntervalsMillisecond: 15000
   taskOfflineSchedulerIntervalsMillisecond: 10000
   mainTaskRefreshIntervalsMillisecond: 60000
-
+  portalPkgDownloadUrl: http://39.108.219.254:9898/portal.zip
 context:
   listener:
     classes: org.opengauss.admin.plugin.listener.DataMigrationPluginListener

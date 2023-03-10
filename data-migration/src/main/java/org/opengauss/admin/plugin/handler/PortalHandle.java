@@ -34,10 +34,10 @@ public class PortalHandle {
         return StringUtils.isNotBlank(checkInstallPortalResult.trim());
     }
 
-    public static boolean checkAndInstallPortal(MigrationTaskHostRef host) {
+    public static boolean checkAndInstallPortal(MigrationTaskHostRef host, String portalDownUrl) {
         if (!checkInstallPortal(host)) {
             log.info("The portal is not installed, and the installation is in progress, host: {}", host.getHost());
-            return installPortal(host);
+            return installPortal(host,portalDownUrl);
         }
         return true;
     }
@@ -47,12 +47,12 @@ public class PortalHandle {
                 "rm -rf  ~/portal*");
     }
 
-    public static boolean installPortal(MigrationTaskHostRef host) {
+    public static boolean installPortal(MigrationTaskHostRef host, String portalDownUrl) {
         removePortalPkg(host);
         //download portal
         log.info("wget download portal");
         String wgetResult = ShellUtil.execCommandGetResult(host.getHost(), host.getPort(), host.getUser(), host.getPassword(),
-                "wget -P ~ http://39.108.219.254:9898/portal.zip -O portal.zip");
+                "wget -P ~ " + portalDownUrl + " -O portal.zip");
 
         String unzipShell = "unzip -d ~/portal ~/portal.zip";
         log.info("unzip portal, {}", unzipShell);

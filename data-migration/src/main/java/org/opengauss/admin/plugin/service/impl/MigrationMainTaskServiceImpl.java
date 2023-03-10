@@ -68,6 +68,8 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
 
     @Value("${migration.mainTaskRefreshIntervalsMillisecond}")
     private Long mainTaskRefreshIntervalsMillisecond;
+    @Value("${migration.portalPkgDownloadUrl}")
+    private String portalPkgDownloadUrl;
 
     private static Map<Integer, Long> taskRefreshRecord = new ConcurrentHashMap<>();
     /**
@@ -397,7 +399,7 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
     private boolean checkInstallPortal(Integer mainTaskId, List<MigrationTaskHostRef> hosts) {
         //check install
         for (MigrationTaskHostRef h : hosts) {
-            boolean flag = PortalHandle.checkAndInstallPortal(h);
+            boolean flag = PortalHandle.checkAndInstallPortal(h, portalPkgDownloadUrl);
             if(!flag){
                 mainTaskEnvErrorHostService.saveRecord(mainTaskId, h);
                 return false;

@@ -69,6 +69,9 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
     @Value("${migration.taskOfflineSchedulerIntervalsMillisecond}")
     private Long taskOfflineSchedulerIntervalsMillisecond;
 
+    @Value("${migration.portalPkgDownloadUrl}")
+    private String portalPkgDownloadUrl;
+
     @Autowired
     private ThreadPoolTaskExecutor threadPoolTaskExecutor;
 
@@ -376,7 +379,7 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
             this.updateById(update);
             threadPoolTaskExecutor.submit(() -> {
                 try {
-                    boolean installResult = PortalHandle.checkAndInstallPortal(h);
+                    boolean installResult = PortalHandle.checkAndInstallPortal(h, portalPkgDownloadUrl);
                     if(!installResult){
                         MigrationTask updateError = MigrationTask.builder().id(t.getId()).runHostId(h.getRunHostId()).runHost(h.getHost()).runHostname(h.getHostName())
                                 .runPort(h.getPort()).runUser(h.getUser()).runPass(h.getPassword()).execStatus(TaskStatus.MIGRATION_ERROR.getCode()).build();
