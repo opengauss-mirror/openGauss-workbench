@@ -27,7 +27,7 @@
       </a-button>
     </div>
     <div class="table-con">
-      <a-table :data="tableData" :bordered="false" stripe :pagination="pagination" @page-change="pageChange">
+      <a-table :data="tableData" :bordered="false" :stripe="!currentTheme" :hoverable="!currentTheme" :pagination="pagination" @page-change="pageChange">
         <template #columns>
           <a-table-column title="子任务ID" data-index="id"></a-table-column>
           <a-table-column title="源库名" data-index="sourceDb"></a-table-column>
@@ -144,6 +144,9 @@ import SubTaskDetail from './components/SubTaskDetail.vue'
 import MacTerminal from './components/MacTerminal.vue'
 import { stop } from '@/api/list'
 import { taskDetail, refreshStatus, subTaskList, subTaskFinish, subTaskStartReverse, subTaskStopIncremental } from '@/api/detail'
+import useTheme from '@/hooks/theme'
+
+const { currentTheme } = useTheme()
 
 const task = ref({})
 const descData = ref([])

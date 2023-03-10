@@ -41,7 +41,7 @@
         <span class="tips-item">迁移子任务：<b>{{ props.subTaskConfig.length }}</b>个</span>
         <span class="tips-item">已选择机器：<b>{{ selectedKeys.length }}</b>台</span>
       </div>
-      <a-table :loading="loading" row-key="hostId" :data="tableData" :row-selection="rowSelection" v-model:selectedKeys="selectedKeys" :bordered="false" stripe :pagination="pagination" @page-change="pageChange" @selection-change="selectionChange">
+      <a-table :loading="loading" row-key="hostId" :data="tableData" :row-selection="rowSelection" v-model:selectedKeys="selectedKeys" :bordered="false" :stripe="!currentTheme" :hoverable="!currentTheme" :pagination="pagination" @page-change="pageChange" @selection-change="selectionChange">
         <template #columns>
           <a-table-column title="物理机IP" data-index="publicIp"></a-table-column>
           <a-table-column title="物理机名称+OS" data-index="hostname"></a-table-column>
@@ -71,6 +71,9 @@
 <script setup>
 import { reactive, ref, onMounted, toRaw } from 'vue'
 import { hostsData } from '@/api/task'
+import useTheme from '@/hooks/theme'
+
+const { currentTheme } = useTheme()
 
 const props = defineProps({
   subTaskConfig: {
