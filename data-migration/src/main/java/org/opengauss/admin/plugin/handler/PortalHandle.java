@@ -28,8 +28,10 @@ public class PortalHandle {
 
     public static boolean checkInstallPortal(MigrationTaskHostRef host) {
         String checkInstallPortalResult = ShellUtil.execCommandGetResult(host.getHost(), host.getPort(), host.getUser(), host.getPassword(),
-                "[ -d ~/portal ] && echo 1 || echo 0");
-        return Integer.parseInt(checkInstallPortalResult.trim()) == 1;
+                "cat ~/portal/logs/portal_.log | grep 'Install all migration tools success'");
+//        String checkInstallPortalResult = ShellUtil.execCommandGetResult(host.getHost(), host.getPort(), host.getUser(), host.getPassword(),
+//                "[ -d ~/portal ] && echo 1 || echo 0");
+        return StringUtils.isNotBlank(checkInstallPortalResult.trim());
     }
 
     public static boolean checkAndInstallPortal(MigrationTaskHostRef host) {
@@ -40,11 +42,17 @@ public class PortalHandle {
         return true;
     }
 
+    public static void removePortalPkg(MigrationTaskHostRef host) {
+        ShellUtil.execCommandGetResult(host.getHost(), host.getPort(), host.getUser(), host.getPassword(),
+                "rm -rf  ~/portal*");
+    }
+
     public static boolean installPortal(MigrationTaskHostRef host) {
+        removePortalPkg(host);
         //download portal
         log.info("wget download portal");
         String wgetResult = ShellUtil.execCommandGetResult(host.getHost(), host.getPort(), host.getUser(), host.getPassword(),
-                "wget -P ~ http://39.108.219.254:9898/portal.zip");
+                "wget -P ~ http://39.108.219.254:9898/portal.zip -O portal.zip");
 
         String unzipShell = "unzip -d ~/portal ~/portal.zip";
         log.info("unzip portal, {}", unzipShell);
