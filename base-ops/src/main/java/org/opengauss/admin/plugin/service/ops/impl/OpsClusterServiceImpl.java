@@ -1272,7 +1272,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                     opsClusterNodeVO.setPublicIp(hostEntity.getPublicIp());
                     opsClusterNodeVO.setPrivateIp(hostEntity.getPrivateIp());
                     opsClusterNodeVO.setHostPort(hostEntity.getPort());
-                    opsClusterNodeVO.setRootPassword(rootUser.getPassword());
+                    opsClusterNodeVO.setIsRemember(StrUtil.isNotEmpty(rootUser.getPassword()));
                     opsClusterNodeVO.setHostname(hostEntity.getHostname());
                     opsClusterNodeVO.setHostId(hostEntity.getHostId());
                     opsClusterNodeVO.setDbPort(opsClusterEntity.getPort());

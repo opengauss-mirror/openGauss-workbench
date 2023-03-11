@@ -22,7 +22,8 @@ public class OpsClusterNodeVO {
     private String dbUser;
     private String dbUserPassword;
     private Integer hostPort;
-    private String rootPassword;
+    //private String rootPassword;
+    private Boolean isRemember;
     private String installUserName;
 
     public static OpsClusterNodeVO of(OpsClusterNodeEntity opsClusterNodeEntity) {
