@@ -964,11 +964,14 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                 for (HostInfoHolder hostInfoHolder : hostInfoHolderList) {
                     List<OpsHostUserEntity> userEntities = hostInfoHolder.getHostUserEntities();
                     OpsHostUserEntity rootUserEntity = userEntities.stream().filter(userEntity -> "root".equals(userEntity.getUsername())).findFirst().orElseThrow(() -> new OpsException("[" + hostInfoHolder.getHostEntity().getPublicIp() + "]root user information not found"));
-                    if (StrUtil.isEmpty(rootUserEntity.getPassword())) {
-                        if (StrUtil.isNotEmpty(unInstallBody.getRootPasswords().get(rootUserEntity.getHostId()))) {
-                            rootUserEntity.setPassword(unInstallBody.getRootPasswords().get(rootUserEntity.getHostId()));
-                        } else {
-                            throw new OpsException("root password not found");
+
+                    if (clusterEntity.getVersion()==OpenGaussVersionEnum.ENTERPRISE){
+                        if (StrUtil.isEmpty(rootUserEntity.getPassword())) {
+                            if (StrUtil.isNotEmpty(unInstallBody.getRootPasswords().get(rootUserEntity.getHostId()))) {
+                                rootUserEntity.setPassword(unInstallBody.getRootPasswords().get(rootUserEntity.getHostId()));
+                            } else {
+                                throw new OpsException("root password not found");
+                            }
                         }
                     }
                 }
