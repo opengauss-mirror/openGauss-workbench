@@ -112,7 +112,7 @@ const onNext = async () => {
   if (installStore.value.openGaussVersion === OpenGaussVersionEnum.OPENlOOKENG) {
     const res = await lookengInstallRef.value?.beforeConfirm()
     if (res) {
-      currStep.value = Math.min(2, currStep.value + 1)
+      currStep.value = Math.min(3, currStep.value + 1)
     }
   }
 }
