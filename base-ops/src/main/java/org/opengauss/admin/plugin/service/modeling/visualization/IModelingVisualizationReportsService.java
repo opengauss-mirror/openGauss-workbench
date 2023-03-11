@@ -14,7 +14,7 @@ public interface IModelingVisualizationReportsService extends IService<ModelingV
 
     public List<ModelingVisualizationReportsEntity> getByDataFlowIdAndName(Long dataFlowId,String name);
     public int add(ModelingVisualizationReportsEntity modelingVisualizationParams);
-    public int deleteByIds(String[] paramIds);
+    public int deleteByIds(String[] reportIds);
     public ModelingVisualizationReportsEntity selectById(Integer reportId);
     public int update(ModelingVisualizationReportsEntity modelingVisualizationParams);
 

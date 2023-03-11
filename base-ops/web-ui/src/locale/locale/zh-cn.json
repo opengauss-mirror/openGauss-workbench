@@ -61,7 +61,7 @@
             "5mpmxod907k0": "选中的版本",
             "else1": "openGauss轻量版在各台机器上分别执行安装操作，因为轻量版版本没有OM，CM等组件，所以安装，卸载，升级等OM功能需要分别在各个节点上手动操作。",
             "openLooKeng": "sharding+openLookeng",
-            "openLooKengRemark": "openLooKeng是一种\"开箱即用\"的引擎，支持在任何地点（包括地理上的远程数据源）对任何数据进行原位分析。它通过SQL 2003接口提供了所有数据的全局视图。openLooKeng具有高可用性、自动伸缩、内置缓存和索引支持，为企业工作负载提供了所需的可靠性"
+            "openLooKengRemark": "openLooKeng是一种\"开箱即用\"的引擎，支持在任何地点（包括地理上的远程数据源）对任何数据进行原位分析。它通过SQL 2003接口提供了所有数据的全局视图。"
         },
         "ExeImport": {
             "5mpmzg3zqu80": "恭喜您导入成功",
@@ -78,7 +78,7 @@
             "5mpn1nway8c0": "请选择OpenGauss",
             "5mpn1nwaywo0": "要使用的安装包",
             "5mpn1nwaz280": "已选择安装包",
-            "5mpn1nwaz600": "未列出我想要的安装包？点击更改",
+            "5mpn1nwaz600": "未列出我想要的安装包？点击上传",
             "5mpn1nwaz980": "安装包目录",
             "5mpn1nwazd40": "请输入安装包目录路径",
             "5mpn1nwazgw0": "安装包路径",
@@ -741,10 +741,13 @@
             "5myq5c8zn100": "确定",
             "5myq5c8zn7k0": "取消",
             "5myq5c8znew0": "删除",
+            "5myq5c8zpu83": "安装包类型",
             "5myq5c8znkk0": "所属系统",
             "5myq5c8zns00": "版本名称",
             "5myq5c8zp680": "版本号",
-            "5myq5c8zpu80": "安装包路径",
+            "5myq5c8zpu80": "在线安装包路径",
+            "5myq5c8zpu82": "离线安装包路径",
+            "5myq5c8zpu84": "备注",
             "5myq5c8zq380": "操作",
             "5myq5c8zu5w0": "企业版",
             "5myq5c8zuxc0": "极简版",
@@ -755,6 +758,7 @@
             "else2": "请填写正确的地址",
             "5myq6nnea2w0": "所属系统",
             "5myq6nneap40": "请选择所属系统",
+            "5myq6nneap41": "请选择安装包类型",
             "5myq6nneaw40": "请选择CPU架构",
             "5myq6nneb180": "版本名称",
             "5myq6nneb5w0": "请选择版本名称",
@@ -762,11 +766,25 @@
             "5myq6nnebew0": "请输入版本号",
             "5myq6nnebis0": "在线地址",
             "5myq6nnebn40": "请输入在线地址",
-            "5myq6nnebrc0": "新增安装包配置",
-            "5myq6nnebwo0": "修改安装包配置",
+            "5myq6nnebn41": "离线安装包",
+            "5myq6nnebn42": "请上传离线安装包",
+            "5myq6nnebn43": "备注",
+            "5myq6nnebn44": "请输入备注",
+            "5myq6nnebrc0": "新增安装包",
+            "5myq6nnebwo0": "修改安装包",
             "5myq6nnec400": "企业版",
             "5myq6nnec8c0": "极简版",
-            "5myq6nnecc40": "轻量版"
+            "5myq6nnecc40": "轻量版",
+            "5myq6nnecc41": "关闭确认",
+            "5myq6nnecc42": "您已经上传了文件，如果此时取消将导致已经上传的文件无法被删除，您可以先删除文件后再关闭",
+            "5myq6nnecc43":  "请输入在线地址或者增加离线安装包",
+            "5myq6nnecc44":  "请输入在线地址",
+            "5myq6nnecc45":  "确认删除",
+            "5myq6nnecc46":  "?一旦删除将无法恢复安装包文件",
+            "5myq6nnecc47":  "可以上传任意文件作为安装包",
+            "5myq6nnecc48":  "当前的上传路径为: ",
+            "5myq6nnecc49":  "，您可以在系统设置中进行更改",
+            "5myq6nnecc50":  "请选择一个安装包进行上传"
         }
     },
     "modeling": {
@@ -788,13 +806,24 @@
             "warningBatchDelete1": "确定要删除这",
             "warningBatchDelete2": "个数据流吗",
             "batchDelete": "批量删除",
+            "deleteText": "删除",
+            "deleteNotice": "确定要删除？",
             "paste": "粘贴",
             "isNo": "无",
             "heatmapConfig": {
                 "notice1": "请选择统计指标字段！",
                 "notice2": "请选择X轴分布字段！",
                 "notice3": "请选择Y轴配置字段！"
-            }
+            },
+            "chartTips1": "统计维度：在X轴选择的字段基础之上，再次进行多个维度的分组可在此处配置，每个维度可以设置只取前N条，避免条目过多展示效果不好。如：在X轴选择了品牌字段（brand_type)后，还想在看到不同品牌内赠品和非赠品的销售情况差异，则可以在统计维度添加一条，选择是否赠品字段（present）。\n\n自定义维度：可以通过自定义配置，对某个字段的所有枚举值进行分类，并形成一个新的统计维度，该统计维度使用方法与常规字段一致，用户完成新增自定义维度并保存后，则可以在该算子中任意图表使用。",
+            "chartNotice1": "请选择第",
+            "chartNotice2": "个统计维度的类型！",
+            "chartNotice3": "请选择[第",
+            "chartNotice4": "个副图]的第",
+            "geoMapLabelColor0": "热力颜色配置",
+            "geoMapLabelColor1": "热力低值",
+            "geoMapLabelColor2": "热力中值",
+            "geoMapLabelColor3": "热力高值"
         },
         "table": {
             "index": {

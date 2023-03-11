@@ -20,6 +20,10 @@ export function migrationSave (payload) {
   return axios.post('/plugins/data-migration/migration/save', payload)
 }
 
+export function migrationUpdate (payload) {
+  return axios.post('/plugins/data-migration/migration/update', payload)
+}
+
 export function defaultParams () {
   return axios.get('/plugins/data-migration/param/default')
 }

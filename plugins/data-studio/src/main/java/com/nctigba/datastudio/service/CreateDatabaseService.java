@@ -18,5 +18,6 @@ public interface CreateDatabaseService {
 
     Map<String, Object> databaseAttribute(DatabaseNameDTO database) throws Exception;
 
+    Map<String, Object> databaseAttributeUpdate(DatabaseNameDTO database) throws Exception;
 
 }

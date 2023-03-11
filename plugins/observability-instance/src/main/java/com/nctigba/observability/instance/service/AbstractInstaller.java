@@ -65,6 +65,12 @@ public abstract class AbstractInstaller {
 		return user;
 	}
 
+	protected int skipStep(WsSession wsSession, List<Step> steps, int curr) {
+		steps.get(curr).setState(status.SKIP);
+		curr++;
+		sendMsg(wsSession, steps, curr, status.DOING);
+		return curr;
+	}
 	/**
 	 * change current step to {@code DONE} and next step to {@code DOING}, send to
 	 * {@link WebSocket}

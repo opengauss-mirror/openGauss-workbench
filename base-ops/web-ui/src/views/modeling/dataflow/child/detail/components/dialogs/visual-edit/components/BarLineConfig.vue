@@ -46,8 +46,8 @@
         <a-col :span="6"><span style="color: #f53f3f; font-weight: bold; margin-right: 5px;">*</span>{{$t('modeling.components.BarLineConfig.5m7in04pegw0')}}</a-col>
         <a-col :span="17">
           <a-radio-group v-model="serie.chartType">
-            <a-radio :value="`bar`">{{$t('modeling.components.BarLineConfig.5m7in04pej80')}}</a-radio>
-            <a-radio :value="`line`">{{$t('modeling.components.BarLineConfig.5m7in04pemg0')}}</a-radio>
+            <a-radio :value="`line`">{{$t('modeling.components.BarLineConfig.5m7in04pej80')}}</a-radio>
+            <a-radio :value="`bar`">{{$t('modeling.components.BarLineConfig.5m7in04pemg0')}}</a-radio>
           </a-radio-group>
         </a-col>
         <a-col :span="2" v-if="serieKey !== 0">
@@ -86,14 +86,18 @@
             </a-col>
           </a-row>
         </div>
-        <div class="content-header mb-s">
+        <div class="content-header mb-s modeling-ve-config-h">
           <div class="ch-title">{{$t('modeling.components.BarLineConfig.5m7in04peu00')}}</div>
           <a-button type="primary" shape="circle" size="mini" @click="operate('add-dimension', serieKey)"><icon-plus /></a-button>
-          <a-button size="mini" type="outline" @click="openCdd"><template #icon><icon-tags /></template>{{$t('modeling.components.BarLineConfig.5m7in04pewg0')}}</a-button>
+          <a-button class="ml" size="mini" type="outline" @click="openCdd"><template #icon><icon-tags /></template>{{$t('modeling.components.BarLineConfig.5m7in04pewg0')}}</a-button>
+          <a-tooltip content-class="modeling-ve-config-h-tooltip" :content="$t('modeling.dy_common.chartTips1')">
+            <div class="qs"><icon-question-circle-fill /></div>
+          </a-tooltip>
         </div>
         <div>
           <a-row align="center" class="mb-s" v-for="(item, key) in serie.dimension" :key="`dimension${key}`">
-            <a-col class="mr-xs" :span="12">
+            <a-col class="mr-xs" :span="12" style="display: flex">
+              <span style="color: #f53f3f; font-weight: bold; margin-right: 5px;">*</span>
               <a-select v-model="item.field" :placeholder="$t('modeling.components.LineConfig.5mpu292dky40')">
                 <overflow-tooltip :text="item.label" v-for="(item, key) in stringOption" :key="key" :content="item.label">
                   <a-option :value="item.value" :disabled="checkDisabled([item], config.showType.dimension)"><icon-tag class="mr-s" v-if="item.isCustom" />{{ item.label }}</a-option>
@@ -117,7 +121,7 @@
 </template>
 <script setup lang="ts">
 import { reactive } from 'vue'
-import { IconPlus } from '@arco-design/web-vue/es/icon'
+import { IconPlus, IconQuestionCircleFill } from '@arco-design/web-vue/es/icon'
 import { KeyValue } from '@antv/x6/lib/types'
 import { indicatorType, compareWays, particles } from '../hooks/options'
 import { Notification } from '@arco-design/web-vue'
@@ -143,7 +147,7 @@ const openCdd = () => emits('openCDD')
 const getModal = () => {
   let modal: configModal = {
     indicator: [{ field: '', type: '', unit: '' }],
-    dimension: [{ field: '', num: 5 }]
+    dimension: []
   }
   return modal
 }
@@ -200,6 +204,12 @@ const validate = () => {
           message += (message ? '；\n ' : '') + t('modeling.components.BarLineConfig.5m7in04pf600') + (key1 + 1) + t('modeling.components.BarLineConfig.5m7in04pfgs0')
         }
       })
+      serie.dimension.forEach((item22: any, key22: number) => {
+        if (!item22.field) {
+          flag = false
+          message += (message ? '；\n ' : '') + `${t('modeling.dy_common.chartNotice3')}${key1 + 1}${t('modeling.dy_common.chartNotice4')}${key22 + 1}${t('modeling.dy_common.chartNotice2')}`
+        }
+      })
     })
   }
   if (!flag) {
@@ -239,9 +249,23 @@ defineExpose({ config, validate, init })
         font-size: 16px;
         font-weight: bold;
       }
-      > * {
-        &:last-child {
-          margin-left: auto;
+      .ml {
+        margin-left: auto;
+      }
+      .qs {
+        width: 20px;
+        height: 20px;
+        // background-color: rgb(var(--primary-6));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-left: 5px;
+        border-radius: 50%;
+        color: #fff;
+        cursor: pointer;
+        svg {
+          color: rgb(var(--primary-6));
+          font-size: 20px;
         }
       }
     }
@@ -268,5 +292,8 @@ defineExpose({ config, validate, init })
     .arco-radio-label {
       width: 100%;
     }
+  }
+  .modeling-ve-config-h-tooltip {
+    white-space: pre-wrap;
   }
 </style>

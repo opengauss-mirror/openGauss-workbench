@@ -16,11 +16,11 @@
       </a-steps>
     </div>
     <!-- step1 -->
-    <step1 v-if="currentStep === 1" :sub-task-config="subTaskConfig" @syncConfig="syncSubTask" />
+    <step1 v-if="currentStep === 1" ref="stepOneComp" :sub-task-config="subTaskConfig" @syncConfig="syncSubTask" />
     <!-- step2 -->
     <step2 v-if="currentStep === 2" :sub-task-config="subTaskConfig" :global-params="globalParamsObject" @syncConfig="syncSubTask" @syncGlobalParams="syncGlobalParams" />
     <!-- step3 -->
-    <step3 v-if="currentStep === 3" :sub-task-config="subTaskConfig" @syncHost="syncHost" />
+    <step3 v-if="currentStep === 3" :sub-task-config="subTaskConfig" :host-data="selectedHosts" @syncHost="syncHost" />
     <div class="submit-con">
       <a-button v-if="currentStep === 2 || currentStep === 3" type="outline" class="btn-item" @click="onPrev">上一步</a-button>
       <a-button v-if="currentStep === 1 || currentStep === 2" type="primary" class="btn-item" @click="onNext">下一步</a-button>
@@ -30,14 +30,16 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { Message } from '@arco-design/web-vue'
 import Step1 from './step1'
 import Step2 from './step2'
 import Step3 from './step3'
-import { migrationSave } from '@/api/task'
+import { migrationSave, migrationUpdate } from '@/api/task'
+import { taskEditInfo } from '@/api/detail'
 
 const currentStep = ref(1)
+const taskId = ref()
 const taskName = ref('')
 const subTaskConfig = ref([])
 const globalParamsObject = reactive({
@@ -45,6 +47,7 @@ const globalParamsObject = reactive({
   more: []
 })
 const selectedHosts = ref([])
+const stepOneComp = ref(null)
 
 // prev step
 const onPrev = () => {
@@ -92,7 +95,7 @@ const saveConfig = () => {
     return
   }
 
-  migrationSave({
+  const params = {
     taskName: taskName.value,
     globalParams: [...globalParamsObject.basic.map(item => ({ paramKey: item.paramKey, paramValue: item.paramValue, paramDesc: item.paramDesc })), ...globalParamsObject.more.map(item => ({ paramKey: item.paramKey, paramValue: item.paramValue, paramDesc: item.paramDesc }))],
     hostIds: selectedHosts.value,
@@ -110,22 +113,89 @@ const saveConfig = () => {
         targetDbPass: item.targetNodeInfo.password,
         targetDbPort: item.targetNodeInfo.port,
         targetDbUser: item.targetNodeInfo.username,
+        targetDbVersion: item.targetNodeInfo.versionNum,
         targetNodeId: item.targetNodeInfo.nodeId,
         taskParams: [...item.taskParamsObject.basic.map(item => ({ paramKey: item.paramKey, paramValue: item.paramValue, paramDesc: item.paramDesc })), ...item.taskParamsObject.more.map(item => ({ paramKey: item.paramKey, paramValue: item.paramValue, paramDesc: item.paramDesc }))]
       }
     })
-  }).then(() => {
-    Message.success('Save success')
-    window.$wujie?.bus.$emit('data-migration-update')
-    window.$wujie?.bus.$emit('opengauss-close-tab', {
-      name: 'Static-pluginData-migrationTaskConfig',
-      fullPath: '/static-plugin/data-migration/taskConfig'
+  }
+
+  if (taskId.value) {
+    params['taskId'] = taskId.value
+    migrationUpdate(params).then(() => {
+      Message.success('Update success')
+      window.$wujie?.bus.$emit('data-migration-update')
+      window.$wujie?.bus.$emit('opengauss-close-tab', {
+        name: 'Static-pluginData-migrationTaskConfig',
+        fullPath: '/static-plugin/data-migration/taskConfig'
+      })
+      window.$wujie?.props.methods.jump({
+        name: `Static-pluginData-migrationIndex`
+      })
     })
-    window.$wujie?.props.methods.jump({
-      name: `Static-pluginData-migrationIndex`
+  } else {
+    migrationSave(params).then(() => {
+      Message.success('Save success')
+      window.$wujie?.bus.$emit('data-migration-update')
+      window.$wujie?.bus.$emit('opengauss-close-tab', {
+        name: 'Static-pluginData-migrationTaskConfig',
+        fullPath: '/static-plugin/data-migration/taskConfig'
+      })
+      window.$wujie?.props.methods.jump({
+        name: `Static-pluginData-migrationIndex`
+      })
     })
+  }
+}
+
+// get task detail
+const getTaskDetail = id => {
+  taskEditInfo(id).then(res => {
+    const data = res.data
+    taskId.value = data.taskId
+    taskName.value = data.taskName
+    selectedHosts.value = data.hostIds
+    globalParamsObject.basic = data.globalParams
+    globalParamsObject.more = []
+    subTaskConfig.value = data.tasks.map(item => {
+      return {
+        mode: item.migrationModelId,
+        configType: !item.taskParams.length ? 1 : 2,
+        sourceDBName: item.sourceDb,
+        sourceNodeName: item.sourceDbHost,
+        sourceNodeInfo: {
+          host: item.sourceDbHost,
+          password: item.sourceDbPass,
+          port: item.sourceDbPort,
+          username: item.sourceDbUser,
+          nodeId: item.sourceNodeId
+        },
+        targetDBName: item.targetDb,
+        targetNodeName: item.targetDbHost,
+        targetNodeInfo: {
+          host: item.targetDbHost,
+          password: item.targetDbPass,
+          port: item.targetDbPort,
+          username: item.targetDbUser,
+          versionNum: item.targetDbVersion,
+          nodeId: item.targetNodeId
+        },
+        taskParamsObject: {
+          basic: item.taskParams,
+          more: []
+        }
+      }
+    })
+    stepOneComp.value.init(subTaskConfig.value)
   })
 }
+
+onMounted(() => {
+  const id = window.$wujie?.props.data.id
+  if (id) {
+    getTaskDetail(id)
+  }
+})
 </script>
 
 <style lang="less" scoped>

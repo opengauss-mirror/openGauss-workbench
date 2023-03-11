@@ -3,8 +3,8 @@ package org.opengauss.admin.common.core.domain.entity;
 import com.baomidou.mybatisplus.annotation.*;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.opengauss.admin.common.core.domain.BaseEntity;
 import lombok.Data;
+import org.opengauss.admin.common.core.domain.BaseEntity;
 
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
@@ -20,6 +20,75 @@ import java.util.List;
 public class SysUser extends BaseEntity {
 
     private static final long serialVersionUID = 1L;
+    /**
+     * userId
+     */
+    @TableId(value = "user_id", type = IdType.AUTO)
+    private Integer userId;
+    /**
+     * userName
+     */
+    private String userName;
+    /**
+     * nickName
+     */
+    private String nickName;
+    /**
+     * email
+     */
+    private String email;
+    /**
+     * phonenumber
+     */
+    private String phonenumber;
+    /**
+     * sex
+     */
+    private String sex;
+    /**
+     * avatar
+     */
+    private String avatar;
+    /**
+     * password
+     */
+    @TableField(updateStrategy = FieldStrategy.NOT_EMPTY)
+    private String password;
+    /**
+     * salt
+     */
+    @TableField(exist = false)
+    private String salt;
+    /**
+     * status(0:normal 1:disabled)
+     */
+    private String status;
+    /**
+     * delFlag(0 No 1 Yes)
+     */
+    @TableLogic
+    private String delFlag;
+    /**
+     * updatePwd (0 No 1 Yes)
+     */
+    private String updatePwd;
+    /**
+     * loginIp
+     */
+    @TableField(fill = FieldFill.INSERT)
+    private String loginIp;
+    /**
+     * roles
+     */
+    @TableField(exist = false)
+    private List<SysRole> roles;
+    /**
+     * roleIds
+     */
+    @TableField(exist = false)
+    private Integer roleIds;
+    @TableField(exist = false)
+    private String roleName;
 
     public SysUser() {
 
@@ -29,100 +98,17 @@ public class SysUser extends BaseEntity {
         this.userId = userId;
     }
 
-    /**
-     * userId
-     */
-    @TableId(value = "user_id", type = IdType.AUTO)
-    private Integer userId;
-
-    /**
-     * userName
-     */
-    private String userName;
-
-    /**
-     * nickName
-     */
-    private String nickName;
-
-    /**
-     * email
-     */
-    private String email;
-
-    /**
-     * phonenumber
-     */
-    private String phonenumber;
-
-    /**
-     * sex
-     */
-    private String sex;
-
-    /**
-     * avatar
-     */
-    private String avatar;
-
-    /**
-     * password
-     */
-    @TableField(updateStrategy = FieldStrategy.NOT_EMPTY)
-    private String password;
-
-    /**
-     * salt
-     */
-    @TableField(exist = false)
-    private String salt;
-
-    /**
-     * status(0:normal 1:disabled)
-     */
-    private String status;
-
-    /**
-     * delFlag(0 No 1 Yes)
-     */
-    @TableLogic
-    private String delFlag;
-
-    /**
-     * updatePwd (0 No 1 Yes)
-     */
-    private String updatePwd;
-
-    /**
-     * loginIp
-     */
-    @TableField(fill = FieldFill.INSERT)
-    private String loginIp;
-
-    /**
-     * roles
-     */
-    @TableField(exist = false)
-    private List<SysRole> roles;
-
-    /**
-     * roleIds
-     */
-    @TableField(exist = false)
-    private Integer roleIds;
-
-    @TableField(exist = false)
-    private String roleName;
-
-
-    public boolean isAdmin() {
-        return isAdmin(this.userId);
-    }
-
     public static boolean isAdmin(Integer userId) {
         return userId != null && userId.equals(1);
     }
 
+    public static Integer getAdminUserId() {
+        return 1;
+    }
+
+    public boolean isAdmin() {
+        return isAdmin(userId);
+    }
 
     @Size(min = 0, max = 30, message = "User nickname length cannot exceed 30 characters")
     public String getNickName() {

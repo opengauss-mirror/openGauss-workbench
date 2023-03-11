@@ -18,17 +18,14 @@ public class OperatorLimitBuilderServiceImpl extends BaseBuilderServiceImpl {
         JSONObject restriction = params.getJSONObject("restriction");
 
         if (!restriction.isEmpty()) {
-            String skip = restriction.getString("skip");
-
             String limitCount = restriction.getString("limitCount");
-            if (skip!=null) {
-                skip = skip+",";
-            }else {
-                skip = "";
+            if (limitCount != null) {
+                oriSql += "limit "+ limitCount + " ";
             }
 
-            if (limitCount!=null) {
-                oriSql += "limit "+skip+limitCount+" ";
+            String skip = restriction.getString("skip");
+            if (skip != null) {
+                oriSql += "offset " + skip + " ";
             }
         }
 

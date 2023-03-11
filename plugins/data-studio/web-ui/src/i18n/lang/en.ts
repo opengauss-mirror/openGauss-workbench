@@ -23,6 +23,12 @@ export default {
   },
   message: {
     deleteFile: 'Successfully deleted, please refresh the connection list!',
+    connectSuccess: 'Connection succeeded!',
+    createSuccess: 'created successfully!',
+    disconnectSuccess: 'Disconnected successfully!',
+    editSuccess: 'Edit successfully',
+    deleteSuccess: 'Remove successfully!',
+    noConnectionAvailable: 'No connection available',
   },
   week: {
     Sunday: 'Sun',
@@ -43,6 +49,10 @@ export default {
     property: 'database properties',
     name: 'database name',
     encoder: 'database encoder',
+    compatibleType: 'compatible type',
+    collation: 'collation',
+    characterType: 'character type',
+    conRestrictions: 'connection restrictions',
     connect: 'connect to database',
     list: 'database List',
     placeholder: 'Please enter the filter database object',
@@ -187,6 +197,7 @@ export default {
     variable: 'Variable',
     value: 'value',
     dataType: 'DataType',
+    paramType: 'ParamType',
     placeholder: {
       variable: 'Please enter variable name',
     },

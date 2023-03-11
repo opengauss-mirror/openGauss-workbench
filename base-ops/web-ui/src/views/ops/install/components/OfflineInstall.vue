@@ -6,14 +6,15 @@
         {{ $t('components.OfflineInstall.5mpn1nwaywo0') }}
       </div>
       <div class="label-color mb">
-        {{ $t('components.OfflineInstall.5mpn1nwaz280') }} {{ (data.path && data.fileName) ? data.path + data.fileName :
-          'no choose'
+        {{ $t('components.OfflineInstall.5mpn1nwaz280') }} {{
+          (data.path && data.fileName) ? data.path + data.fileName :
+            'no choose'
         }}
       </div>
-      <a-link class="mb-s" @click="showChangePath">{{ $t('components.OfflineInstall.5mpn1nwaz600') }}</a-link>
+      <a-link class="mb-s" @click="showUploadModal">{{ $t('components.OfflineInstall.5mpn1nwaz600') }}</a-link>
     </div>
     <a-spin class="flex-row-center" width="50%" :loading="data.getArchLoading"
-      :tip="$t('components.OfflineInstall.else3')">
+            :tip="$t('components.OfflineInstall.else3')">
       <div class="panel-body">
         <div class="flex-col">
           <div v-for="(item, index) in data.files" :key="index">
@@ -27,70 +28,33 @@
         </div>
       </div>
     </a-spin>
-    <a-modal :mask-closable="false" :visible="pathData.show" :title="pathData.title" :modal-style="{ width: '450px' }"
-      @ok="dialogSubmit" @cancel="dialogClose">
-      <a-form class="mb" :model="pathData.form" ref="formRef" auto-label-width :rules="formRules">
-        <a-form-item field="path" :label="$t('components.OfflineInstall.5mpn1nwaz980')" validate-trigger="blur">
-          <a-input v-model="pathData.form.path" :placeholder="$t('components.OfflineInstall.5mpn1nwazd40')"></a-input>
-        </a-form-item>
-      </a-form>
-      <div class="label-color">
-        {{ $t('components.OfflineInstall.else1') }}
-      </div>
-    </a-modal>
+    <tar-upload-modal ref="tarUploadModal" @finish="dialogSubmit"></tar-upload-modal>
   </div>
 </template>
 
 <script lang="ts" setup>
-import { computed, nextTick, onMounted, reactive, ref, inject } from 'vue'
+import { computed, onMounted, reactive, ref, inject } from 'vue'
 import { listInstallPackage, getPackageCpuArch } from '@/api/ops'
 import { KeyValue } from '@/types/global'
 import { useOpsStore } from '@/store'
 import { FormInstance } from '@arco-design/web-vue/es/form'
 import { Message } from '@arco-design/web-vue'
 import { OpenGaussVersionEnum } from '@/types/ops/install'
+import TarUploadModal from './TarUploadModal.vue'
 import { useI18n } from 'vue-i18n'
+
 const { t } = useI18n()
 const installStore = useOpsStore()
 
 const loadingFunc = inject<any>('loading')
 
+const tarUploadModal = ref<null | InstanceType<typeof TarUploadModal>>(null)
+
 const data = reactive<KeyValue>({
-  path: '',
   fileName: '',
   files: [],
   openGaussVersionNum: '',
   getArchLoading: false
-})
-
-const pathData = reactive({
-  show: false,
-  title: t('components.OfflineInstall.5mpn1nwazgw0'),
-  form: {
-    path: ''
-  }
-})
-
-const formRules = computed(() => {
-  return {
-    path: [
-      { required: true, 'validate-trigger': 'blur', message: t('components.OfflineInstall.5mpn1nwazks0') },
-      {
-        validator: (value: any, cb: any) => {
-          return new Promise(resolve => {
-            const reg = /^\/([\u4E00-\u9FA5A-Za-z0-9_]+\/?)+$/
-            const re = new RegExp(reg)
-            if (re.test(value)) {
-              resolve(true)
-            } else {
-              cb(t('components.OfflineInstall.else2'))
-              resolve(false)
-            }
-          })
-        }
-      }
-    ]
-  }
 })
 
 const currentVersion = computed(() => {
@@ -102,21 +66,17 @@ const currentVersion = computed(() => {
     } else {
       return t('components.OfflineInstall.5mpn1nwazvg0')
     }
+  } else {
+    return ''
   }
 })
 
 onMounted(() => {
-  if (storeData.value && storeData.value.packagePath) {
-    data.path = storeData.value.packagePath
-  } else {
-    data.path = '/ops/files/'
-  }
   getAllPackage()
 })
 
-const getAllPackage = () => new Promise(resolve => {
+const getAllPackage = () => {
   const param = {
-    path: data.path,
     version: storeData.value.openGaussVersion
   }
   listInstallPackage(param).then((res: KeyValue) => {
@@ -137,11 +97,9 @@ const getAllPackage = () => new Promise(resolve => {
           setPathToStore()
         }
       }
-      resolve(true)
-    } else resolve(false)
+    }
   })
-
-})
+}
 const choosePackge = (row: KeyValue) => {
   data.fileName = row.name
   data.openGaussVersionNum = row.openGaussVersionNum
@@ -149,48 +107,35 @@ const choosePackge = (row: KeyValue) => {
 }
 
 const formRef = ref<null | FormInstance>(null)
-const showChangePath = () => {
-  pathData.form.path = ''
-  nextTick(() => {
-    formRef.value?.clearValidate()
-    formRef.value?.resetFields()
-  })
-  pathData.show = true
-  pathData.title = t('components.OfflineInstall.5mpn1nwazgw0')
+const showUploadModal = () => {
+  tarUploadModal.value?.open()
 }
 
 const dialogSubmit = () => {
-  formRef.value?.validate().then(result => {
-    if (!result) {
-      const param = {
-        path: pathData.form.path,
-        version: storeData.value.openGaussVersion
-      }
-      listInstallPackage(param).then((res: KeyValue) => {
-        if (Number(res.code) === 200) {
-          if (res.data.files.length) {
-            data.files = []
-            data.files = res.data.files
-            data.path = res.data.path
-            if (!data.path.endsWith('/')) {
-              data.path += '/'
-            }
-            if (res.data.files.length) {
-              data.fileName = res.data.files[0].name
-              data.openGaussVersionNum = res.data.files[0].openGaussVersionNum
-              setPathToStore()
-            }
-            pathData.show = false
-          } else {
-            Message.warning('No files in the directory were detected')
-          }
-        } else {
-          Message.error(`Failed to obtain the installation package in the directory: ${res.msg}`)
+  const param = {
+    version: storeData.value.openGaussVersion
+  }
+  listInstallPackage(param).then((res: KeyValue) => {
+    if (Number(res.code) === 200) {
+      if (res.data.files.length) {
+        data.files = []
+        data.files = res.data.files
+        data.path = res.data.path
+        if (!data.path.endsWith('/')) {
+          data.path += '/'
         }
-      })
+        if (res.data.files.length) {
+          data.fileName = res.data.files[0].name
+          data.openGaussVersionNum = res.data.files[0].openGaussVersionNum
+          setPathToStore()
+        }
+      } else {
+        Message.warning('No files in the directory were detected')
+      }
+    } else {
+      Message.error(`Failed to obtain the installation package in the directory: ${res.msg}`)
     }
   })
-
 }
 
 const setPathToStore = () => {
@@ -228,6 +173,7 @@ enum osEnum {
   CENTOS = 'CENTOS',
   OPENEULER = 'OPENEULER'
 }
+
 enum cpuArchEnum {
   X86_64 = 'X86_64',
   AARCH64 = 'AARCH64'
@@ -244,9 +190,6 @@ const getInstallOs = () => {
   return os
 }
 
-const dialogClose = () => {
-  pathData.show = false
-}
 const storeData = computed(() => installStore.getInstallConfig)
 
 </script>

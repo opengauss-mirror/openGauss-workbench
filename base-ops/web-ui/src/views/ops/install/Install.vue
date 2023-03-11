@@ -172,10 +172,10 @@ const installWayStore = computed(() => installStore.getInstallConfig)
 
 <style lang="less" scoped>
 .install {
-  padding: 20px;
+  padding: 16px;
   width: 100%;
   position: relative;
-
+  height: calc(100vh - 130px);
   &-body {
     // height: calc(100vh - 180px);
   }
@@ -186,7 +186,7 @@ const installWayStore = computed(() => installStore.getInstallConfig)
     position: absolute;
     left: 50%;
     transform: translate(-50%, 0);
-    bottom: 5px;
+    bottom: 0;
   }
 
   .transition-display {

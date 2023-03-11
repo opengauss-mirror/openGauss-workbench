@@ -65,7 +65,11 @@ public class BarChartGenerateServiceImpl extends BaseGenerateServiceImpl {
         for(String key : seriesData.keySet()){
             List<Float> value = seriesData.get(key);
             //add type and yAxis index
-            series.add(new Series().setName(key).setType("bar").setData(value).setYAxisIndex(0));
+            Series s = new Series().setType("bar").setData(value).setYAxisIndex(0);
+            if (barChartParamsBody.getDimension().size() > 0) {
+                s.setName(key);
+            }
+            series.add(s);
         }
 
         barChartBody.setSeries(series);

@@ -1,7 +1,7 @@
 system:
   defaultStoragePath: /Users/xielibo/uploadPath/gausstool
   whitelist:
-      enabled: false
+    enabled: false
 server:
   port: 9494
   servlet:
@@ -13,7 +13,7 @@ spring:
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
     driver-class-name: org.opengauss.Driver
-    url: jdbc:opengauss://82.157.245.128:5432/GaussDBvisualtool_dev?currentSchema=public
+    url: jdbc:opengauss://120.48.145.206:5432/GaussDBvisualtool_dev?currentSchema=public
     username: jim
     password: 1qaz2wsx#EDC$RFV
     druid:

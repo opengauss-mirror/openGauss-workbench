@@ -58,9 +58,9 @@ public class ModelingVisualizationReportController extends BaseController {
     /**
      * delete
      */
-    @DeleteMapping("/delete/{flowIds}")
-    public AjaxResult delete(@PathVariable String[] flowIds) {
-        return toAjax(modelingVisualizationReportsService.deleteByIds(flowIds));
+    @DeleteMapping("/delete/{reportIds}")
+    public AjaxResult delete(@PathVariable String[] reportIds) {
+        return toAjax(modelingVisualizationReportsService.deleteByIds(reportIds));
     }
 
 

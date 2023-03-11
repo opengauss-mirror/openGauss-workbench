@@ -1,7 +1,7 @@
 <template>
     <div class="filter">
         <span>{{ props.title }}&nbsp;</span>
-        <el-cascader v-model="cluster" :options="clusterList" @change="getClusterValue" style="max-width: 200px" :style="{width:width?width+'px':'auto'}" :clearable="!notClearable" />
+        <el-cascader v-model="cluster" :options="clusterList" @change="getClusterValue" style="max-width: 200px" :style="{ width: width ? width + 'px' : 'auto' }" :clearable="!notClearable" />
     </div>
 </template>
 
@@ -47,9 +47,9 @@ const treeTransform = (arr: any) => {
                 label: item.clusterId ? item.clusterId : item.azName + "_" + item.publicIp,
                 value: item.clusterId ? item.clusterId : item[props.instanceValueKey],
                 children: props.clusterOnly ? null : treeTransform(item.clusterNodes),
+                nodeId: item.nodeId ? item.nodeId : null,
             });
         });
-        // now only support one level
         if (props.autoSelectFirst && obj.length > 0) {
             if (props.clusterOnly) cluster.value = [obj[0].value];
             else if (obj[0].children.length > 0) cluster.value = [obj[0].value, obj[0].children[0].value];
@@ -59,10 +59,27 @@ const treeTransform = (arr: any) => {
     return obj;
 };
 const getClusterValue = (val: string[]) => {
-    console.log("getClusterValue");
     if (val == null) emit("getCluster", []);
     else emit("getCluster", val);
 };
+const setNodeId = (val: string) => {
+    if ((val === "") || (val === null) || val === undefined) return;
+    nextTick(() => {
+        if (clusterList.value.length <= 0) return;
+        for (let p1 = 0; p1 < clusterList.value.length; p1++) {
+            const clusterTemp = clusterList.value[p1];
+            for (let p2 = 0; p2 < clusterTemp.children.length; p2++) {
+                const node = clusterTemp.children[p2];
+                if (node.nodeId === val) {
+                    cluster.value = [clusterTemp.value, node.value];
+                    emit("getCluster", cluster.value);
+                    return;
+                }
+            }
+        }
+    });
+};
+defineExpose({ setNodeId });
 
 onMounted(() => {
     clusterData();

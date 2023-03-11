@@ -25,3 +25,24 @@
     # Filebeat will choose the paths depending on your OS.
     #var.paths:
 
+  # gs_ctl logs
+  gsctl:
+    enabled: true
+
+  # gs_guc logs
+  gsguc:
+    enabled: true
+
+  # gs_local logs
+  gslocal:
+    enabled: true
+
+  # gs_install logs
+  gsinstall:
+    enabled: true
+
+  # gs_om logs
+  gsom:
+    enabled: true
+  
+

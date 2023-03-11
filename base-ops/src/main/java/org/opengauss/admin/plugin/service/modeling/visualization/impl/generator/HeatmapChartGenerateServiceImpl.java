@@ -41,7 +41,11 @@ public class HeatmapChartGenerateServiceImpl extends BaseGenerateServiceImpl {
         heatmapChartBody.setTooltip(new Tooltip().setTrigger("axis"));
         heatmapChartBody.setXAxis(new XAxis().setBoundaryGap(true).setData(xDimension.getCategoryName()).setType("category").setSplitArea(new SplitArea().setShow(true)));
         heatmapChartBody.setYAxis(new XAxis().setBoundaryGap(true).setData(yDimension.getCategoryName()).setType("category").setSplitArea(new SplitArea().setShow(true)));
-        heatmapChartBody.setVisualMap(new VisualMap().setBottom("5").setCalculable(true).setMin(0).setMax(100).setLeft("center").setOrient("horizontal"));
+        int heatMin = heatmapChartParamsBody.getRange().stream()
+                .findFirst().orElse(0);
+        int heatMax = heatmapChartParamsBody.getRange().stream()
+                .skip(1).findFirst().orElse(100);
+        heatmapChartBody.setVisualMap(new VisualMap().setBottom("5").setCalculable(true).setMin(heatMin).setMax(heatMax).setLeft("center").setOrient("horizontal"));
         heatmapChartBody.setSeries(genSeries(xDimension,yDimension));
 
         return JSONObject.toJSONString(heatmapChartBody);

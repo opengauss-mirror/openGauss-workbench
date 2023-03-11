@@ -16,19 +16,7 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.Map;
 
-import static com.nctigba.datastudio.constants.SqlConstants.COMMON_VIEW_SQL;
-import static com.nctigba.datastudio.constants.SqlConstants.CONNECTIVES_SQL;
-import static com.nctigba.datastudio.constants.SqlConstants.CREATE_SQL;
-import static com.nctigba.datastudio.constants.SqlConstants.DROP_SQL;
-import static com.nctigba.datastudio.constants.SqlConstants.IF_EXISTS_SQL;
-import static com.nctigba.datastudio.constants.SqlConstants.LIMIT_SQL;
-import static com.nctigba.datastudio.constants.SqlConstants.MATERIALIZED_VIEW_SQL;
-import static com.nctigba.datastudio.constants.SqlConstants.POINT;
-import static com.nctigba.datastudio.constants.SqlConstants.SELECT_VIEWNAME_DDL_WHERE_SQL;
-import static com.nctigba.datastudio.constants.SqlConstants.SELECT_VIEW_DDL_SQL;
-import static com.nctigba.datastudio.constants.SqlConstants.SELECT_VIEW_DDL_WHERE_SQL;
-import static com.nctigba.datastudio.constants.SqlConstants.TABLE_DATA_SQL;
-import static com.nctigba.datastudio.constants.SqlConstants.VIEW_KEYWORD_SQL;
+import static com.nctigba.datastudio.constants.SqlConstants.*;
 
 @Slf4j
 @Service
@@ -61,8 +49,7 @@ public class DatabaseViewServiceImpl implements DatabaseViewService {
     @Override
     public String returnViewDDL(DatabaseViewDdlDTO request) throws Exception {
         log.info("returnViewDDL request is: " + request);
-        try {
-            ResultSet resultSet = returnViewDDLData(request);
+        try(ResultSet resultSet = returnViewDDLData(request)) {
             String viewType;
             String ddl = null;
             while (resultSet.next()) {
@@ -77,7 +64,7 @@ public class DatabaseViewServiceImpl implements DatabaseViewService {
             return ddl;
         } catch (Exception e) {
             e.printStackTrace();
-            throw new CustomException(e.getMessage());
+            throw new CustomException(e.getMessage(),e);
         }
 
     }
@@ -85,17 +72,24 @@ public class DatabaseViewServiceImpl implements DatabaseViewService {
     @Override
     public ResultSet returnViewDDLData(DatabaseViewDdlDTO request) throws Exception {
         log.info("returnViewDDLData request is: " + request);
-        try {
+        try(Connection connection = connectionConfig.connectDatabase(request.getUuid());
+            Statement statement = connection.createStatement()){
             String selectsql = SELECT_VIEW_DDL_SQL + request.getSchema() + SELECT_VIEWNAME_DDL_WHERE_SQL + request.getViewName() + SELECT_VIEW_DDL_WHERE_SQL;
-            Connection connection = connectionConfig.connectDatabase(request.getUuid());
-            Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery(selectsql);
-            log.info("returnViewDDLData sql is: " + selectsql);
-            log.info("returnViewDDLData response is: " + resultSet);
-            return resultSet;
+            try(ResultSet count = statement.executeQuery(SELECT_KEYWORD_SQL + COUNT_SQL +FROM_CLASS_SQL+
+                    request.getSchema() + FROM_CLASS_WHERE_SQL + request.getViewName() + RELKIND_SQL+ "v" + QUOTES_SEMICOLON)){
+                count.next();
+                int a = count.getInt("count");
+                if(a==0){
+                    throw new CustomException("The view does not exist");
+                }
+            }
+            try(ResultSet resultSet = statement.executeQuery(selectsql)){
+                log.info("returnViewDDLData sql is: " + selectsql);
+                log.info("returnViewDDLData response is: " + resultSet);
+                return resultSet;}
         } catch (Exception e) {
             e.printStackTrace();
-            throw new CustomException(e.getMessage());
+            throw new CustomException(e.getMessage(),e);
         }
 
     }
@@ -103,25 +97,23 @@ public class DatabaseViewServiceImpl implements DatabaseViewService {
     @Override
     public void createView(DatabaseCreateViewDTO request) {
         log.info("createView request is: " + request);
-        try {
+        try(Connection connection = connectionConfig.connectDatabase(request.getUuid());
+            Statement statement = connection.createStatement();){
             String ddl = splicingViewDDL(request);
-            Connection connection = connectionConfig.connectDatabase(request.getUuid());
-            Statement statement = connection.createStatement();
             statement.execute(ddl);
             log.info("createView response is: " + ddl);
         } catch (Exception e) {
             e.printStackTrace();
-            throw new CustomException(e.getMessage());
+            throw new CustomException(e.getMessage(),e);
         }
     }
 
     @Override
     public void dropView(DatabaseViewDdlDTO request) {
         log.info("dropView request is: " + request);
-        try {
-            ResultSet resultSet = returnViewDDLData(request);
-            Connection connection = connectionConfig.connectDatabase(request.getUuid());
+        try(Connection connection = connectionConfig.connectDatabase(request.getUuid());
             Statement statement = connection.createStatement();
+            ResultSet resultSet = returnViewDDLData(request)){
             while (resultSet.next()) {
                 if (resultSet.getString("relkind").equals("m")) {
                     String materializedSql = DROP_SQL + MATERIALIZED_VIEW_SQL + VIEW_KEYWORD_SQL + IF_EXISTS_SQL + request.getSchema() + POINT + request.getViewName();
@@ -135,25 +127,24 @@ public class DatabaseViewServiceImpl implements DatabaseViewService {
             }
         } catch (Exception e) {
             e.printStackTrace();
-            throw new CustomException(e.getMessage());
+            throw new CustomException(e.getMessage(),e);
         }
     }
 
     @Override
     public Map<String, Object> selectView(DatabaseSelectViewDTO request) {
         log.info("selectView request is: " + request);
-        try {
-            String ddl = TABLE_DATA_SQL + request.getSchema() + POINT + request.getViewName() + LIMIT_SQL;
-            Connection connection = connectionConfig.connectDatabase(request.getUuid());
+        String ddl = TABLE_DATA_SQL + request.getSchema() + POINT + request.getViewName() + LIMIT_SQL;
+        try(Connection connection = connectionConfig.connectDatabase(request.getUuid());
             Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery(ddl);
+            ResultSet resultSet = statement.executeQuery(ddl);){
             Map<String, Object> resultMap = DebugUtils.parseResultSet(resultSet);
             log.info("selectView sql is: " + ddl);
             log.info("selectView response is: " + resultMap);
             return resultMap;
         } catch (Exception e) {
             e.printStackTrace();
-            throw new CustomException(e.getMessage());
+            throw new CustomException(e.getMessage(),e);
         }
     }
 }

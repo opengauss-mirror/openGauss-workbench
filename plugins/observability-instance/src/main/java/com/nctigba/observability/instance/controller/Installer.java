@@ -1,6 +1,8 @@
 package com.nctigba.observability.instance.controller;
 
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 
 import javax.websocket.Session;
 
@@ -55,12 +57,21 @@ public class Installer implements SocketExtract {
 				case "prometheus":
 					prometheusService.install(session, obj.getStr("hostId"), obj.getStr("rootPassword"));
 					break;
+				case "uninstall prometheus":
+					prometheusService.uninstall(session, obj.getStr("id"));
+					break;
 				case "exporter":
 					exporterService.install(session, obj.getStr("nodeId"), obj.getStr("rootPassword"));
+					break;
+				case "uninstall exporter":
+					exporterService.uninstall(session, obj.getStr("nodeId"));
 				}
 			} catch (Exception e) {
-				e.printStackTrace();
-				wsFacade.sendMessage(PluginListener.pluginId, sessionId, e.toString());
+				var sw = new StringWriter();
+				try (var pw = new PrintWriter(sw);) {
+					e.printStackTrace(pw);
+				}
+				wsFacade.sendMessage(PluginListener.pluginId, sessionId, sw.toString());
 			}
 		});
 		System.out.println("接收到消息并处理。。。。。。。。" + message);

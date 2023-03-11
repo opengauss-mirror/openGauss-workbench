@@ -3,8 +3,12 @@ package com.nctigba.observability.instance.service;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.text.MessageFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashSet;
 import java.util.Map;
 
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
@@ -27,6 +31,7 @@ import com.nctigba.observability.instance.util.YamlUtil;
 
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.io.IoUtil;
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.core.util.URLUtil;
 import cn.hutool.http.HttpUtil;
 import cn.hutool.json.JSONUtil;
@@ -97,6 +102,7 @@ public class ExporterService extends AbstractInstaller {
 				conf.scrape_configs
 						.add(generateConfig("opengauss", nodeId, node.getPublicIp() + ":" + gaussEnv.getPort()));
 				conf.scrape_configs.add(generateConfig("node", nodeId, node.getPublicIp() + ":" + nodeEnv.getPort()));
+				conf.scrape_configs = new ArrayList<>(new LinkedHashSet<>(conf.scrape_configs));
 				var prometheusConfigFile = File.createTempFile("prom", ".tmp");
 				FileUtil.appendUtf8String(YamlUtil.dump(conf), prometheusConfigFile);
 				promSession.execute("rm " + promEnv.getPath() + "/prometheus.yml");
@@ -112,9 +118,13 @@ public class ExporterService extends AbstractInstaller {
 			curr = nextStep(wsSession, steps, curr);
 			sendMsg(wsSession, steps, curr, status.DONE);
 		} catch (IOException e) {
-			e.printStackTrace();
 			steps.get(curr).setState(status.ERROR);
 			wsUtil.sendText(wsSession, JSONUtil.toJsonStr(steps));
+			var sw = new StringWriter();
+			try (var pw = new PrintWriter(sw);) {
+				e.printStackTrace(pw);
+			}
+			wsUtil.sendText(wsSession, sw.toString());
 		}
 	}
 
@@ -141,7 +151,7 @@ public class ExporterService extends AbstractInstaller {
 				session.execute(command.WGET.parse(NODE_EXPORTER_PATH + tar));
 			session.execute(command.TAR.parse(tar));
 		}
-		session.execute("cd " + name + " && nohup ./node_exporter --collector.systemd 2>&1 & \r", false);
+		session.executeNoWait("cd " + name + " && ./node_exporter --collector.systemd");
 		var nodeEnv = new NctigbaEnv().setHostid(hostId).setPort(9100).setUsername(user.getUsername())
 				.setType(type.NODE_EXPORTER).setPath(name);
 		envMapper.insert(nodeEnv);
@@ -174,12 +184,78 @@ public class ExporterService extends AbstractInstaller {
 		var url = MessageFormat.format("postgresql://{0}:{1}@{2}:{3,number,#}/{4}", node.getDbUser(),
 				URLUtil.encodeAll(node.getDbUserPassword()), hostEntity.getPublicIp(), node.getDbPort(),
 				node.getDbName());
-		session.execute("export DATA_SOURCE_NAME='" + url
-				+ "' && nohup ./opengauss_exporter --config=og_exporter.yml 2>&1 & \r", false);
+		session.executeNoWait("export DATA_SOURCE_NAME='" + url
+				+ "' && ./opengauss_exporter --config=og_exporter.yml");
 		var gaussEnv = new NctigbaEnv().setHostid(hostId).setPort(9187).setUsername(user.getUsername())
-				.setType(type.OPENGAUSS_EXPORTER).setPath("./");
+				.setType(type.OPENGAUSS_EXPORTER).setPath(".");
 		envMapper.insert(gaussEnv);
 		// 验证
 		return gaussEnv;
+	}
+
+	public void uninstall(WsSession wsSession, String nodeId) {
+		// @formatter:off
+		var steps = Arrays.asList(
+				new Step("初始化"),
+				new Step("连接主机"),
+				new Step("查找nodeExporter进程号"),
+				new Step("停止nodeExporter"),
+				new Step("查找opengaussExporter进程号"),
+				new Step("停止opengaussExporter"),
+				new Step("卸载完成"));
+		// @formatter:on
+		var curr = 0;
+
+		try {
+			var node = clusterManager.getOpsNodeById(nodeId);
+			var nodeenv = envMapper.selectOne(Wrappers.<NctigbaEnv>lambdaQuery()
+					.eq(NctigbaEnv::getType, type.NODE_EXPORTER).eq(NctigbaEnv::getHostid, node.getHostId()));
+			var expenv = envMapper.selectOne(Wrappers.<NctigbaEnv>lambdaQuery()
+					.eq(NctigbaEnv::getType, type.OPENGAUSS_EXPORTER).eq(NctigbaEnv::getHostid, node.getHostId()));
+
+			if (nodeenv == null && expenv == null)
+				throw new RuntimeException("exporters not found");
+
+			curr = nextStep(wsSession, steps, curr);
+			OpsHostEntity hostEntity = hostFacade.getById(node.getHostId());
+			if (hostEntity == null)
+				throw new RuntimeException("host not found");
+			nodeenv.setHost(hostEntity);
+			expenv.setHost(hostEntity);
+
+			var user = hostUserFacade.listHostUserByHostId(hostEntity.getHostId()).stream().filter(e -> {
+				return nodeenv.getUsername().equals(e.getUsername());
+			}).findFirst().orElse(null);
+			try (var sshsession = SshSession.connect(hostEntity.getPublicIp(), hostEntity.getPort(), user.getUsername(),
+					encryptionUtils.decrypt(user.getPassword()));) {
+				curr = nextStep(wsSession, steps, curr);
+				var nodePid = sshsession.execute(command.PS.parse("node_exporter"));
+				if (StrUtil.isNotBlank(nodePid)) {
+					curr = nextStep(wsSession, steps, curr);
+					sshsession.execute(command.KILL.parse(nodePid));
+				} else
+					curr = skipStep(wsSession, steps, curr);
+				envMapper.deleteById(nodeenv);
+
+				curr = nextStep(wsSession, steps, curr);
+				var gaussPid = sshsession.execute(command.PS.parse("opengauss_exporter"));
+				if (StrUtil.isNotBlank(gaussPid)) {
+					curr = nextStep(wsSession, steps, curr);
+					sshsession.execute(command.KILL.parse(gaussPid));
+				} else
+					curr = skipStep(wsSession, steps, curr);
+				envMapper.deleteById(expenv);
+
+				sendMsg(wsSession, steps, curr, status.DONE);
+			}
+		} catch (Exception e) {
+			steps.get(curr).setState(status.ERROR);
+			wsUtil.sendText(wsSession, JSONUtil.toJsonStr(steps));
+			var sw = new StringWriter();
+			try (var pw = new PrintWriter(sw);) {
+				e.printStackTrace(pw);
+			}
+			wsUtil.sendText(wsSession, sw.toString());
+		}
 	}
 }

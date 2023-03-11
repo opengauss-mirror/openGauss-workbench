@@ -36,4 +36,14 @@ public class MigrationTaskStatusRecord {
 
     @TableField(exist = false)
     private String operateTitle;
+
+    @TableField(exist = false)
+    private Integer operateType;
+
+    @TableField(exist = false)
+    private String operateUser;
+
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @TableField(exist = false)
+    private Date operateTime;
 }

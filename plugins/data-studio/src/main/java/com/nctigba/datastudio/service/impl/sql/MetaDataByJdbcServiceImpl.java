@@ -21,7 +21,7 @@ public class MetaDataByJdbcServiceImpl implements MetaDataByJdbcService {
         try (Connection connection = ConnectionUtils.connectGet(jdbcUrl, userName, password)) {
             connection.prepareStatement(sql);
         } catch (Exception e) {
-            throw new CustomException(e.getMessage());
+            throw new CustomException(e.getMessage(),e);
         }
     }
 }

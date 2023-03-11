@@ -28,8 +28,7 @@ export default class WebSocketClass {
             return console.log("Your browser does not support WebSocket");
         }
         const baseURL = import.meta.env.DEV ? `${import.meta.env.VITE_WS_BASE_URL}` : `${location.protocol == "http:" ? "ws:" : "wss:"}//${location.host}`;
-        // const url = `${baseURL}/ws/observability-instance-test/${sessionId}`;
-        const url = `ws://10.10.9.221:9494/ws/observability-instance-test/${sessionId}`;
+        const url = `${baseURL}/ws/observability-instance/${sessionId}`;
         this.ws = new WebSocket(url);
 
         this.ws.onopen = () => {

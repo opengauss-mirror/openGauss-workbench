@@ -61,6 +61,12 @@
                     <template #icon><icon-share-alt /></template>
                     <template #default>{{$t('modeling.visual-list.index.5m7iox8oksk0')}}</template>
                   </a-button>
+                  <a-popconfirm :content="$t('modeling.dy_common.deleteNotice')" type="warning" :ok-text="$t('modeling.dataflow.index.5m77w0y5g400')" :cancel-text="$t('modeling.dataflow.index.5m77w0y5g9k0')" @ok="deleteReport(record)">
+                    <a-button size="mini" type="text" status="danger">
+                      <template #icon><icon-delete /></template>
+                      <template #default>{{$t('modeling.dy_common.deleteText')}}</template>
+                    </a-button>
+                  </a-popconfirm>
                 </template>
               </a-table>
             </div>

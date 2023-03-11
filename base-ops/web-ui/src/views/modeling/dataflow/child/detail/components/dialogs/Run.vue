@@ -18,6 +18,9 @@
                   autodetect
                   language="pgSQL"
                   :code="item.sql"
+                  ref="runSqlRef"
+                  id="RunSqlPanel"
+                  v-if="dData.show"
                 />
               </div>
               <div class="info-1" v-show="dData.isRun">{{$t('modeling.dialogs.Run.5m7iqlci0400')}}</div>
@@ -59,7 +62,7 @@ import {
   Modal as AModal,
   Spin as ASpin
 } from '@arco-design/web-vue'
-import { reactive } from 'vue'
+import { reactive, ref } from 'vue'
 import { checkData } from '../../utils/operateJson'
 import 'highlight.js/lib/common'
 import hljsVuePlugin from '@highlightjs/vue-plugin'
@@ -67,6 +70,7 @@ import hljs from 'highlight.js/lib/core'
 import pgsql from 'highlight.js/lib/languages/pgsql'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
+import { nextTick } from 'vue'
 const route = useRoute()
 const { t } = useI18n()
 hljs.registerLanguage('pgsql', pgsql)
@@ -82,6 +86,12 @@ const dData = reactive({
   jsonData: {} as KeyValue,
   data: [] as Array<KeyValue>
 })
+const runSqlRef = ref<any>()
+const sqlCodeDisplayBlock = [
+  { key: 'FROM', br: 3 },
+  { key: 'ORDER', br: 1 },
+  { key: 'BY', br: 2 }
+]
 const open = (graph: Graph, data: any, type: string) => {
   if (dFStore.getFlowDataInfo) {
     dData.show = true
@@ -95,6 +105,24 @@ const open = (graph: Graph, data: any, type: string) => {
         let arr: KeyValue[] = []
         for (let i in res.data) arr.push({ name: i, sql: res.data[i] })
         dData.sql = arr
+        nextTick(() => {
+          let sqlDoms = document.getElementById('RunSqlPanel')?.querySelector('.pgsql')?.children
+          if (sqlDoms && sqlDoms.length > 0) {
+            for (let dom of sqlDoms) {
+              let index = sqlCodeDisplayBlock.findIndex(item => (item.key === dom.innerHTML.toUpperCase()))
+              if (index != -1) {
+                let i = sqlCodeDisplayBlock[index]
+                if (i.br === 1) {
+                  dom.innerHTML = `<br />${dom.innerHTML}`
+                } else if (i.br === 2) {
+                  dom.innerHTML = `${dom.innerHTML}<br />`
+                } else if (i.br === 3) {
+                  dom.innerHTML = `<br />${dom.innerHTML}<br />`
+                }
+              }
+            }
+          }
+        })
         if (checkData(dData.jsonData) && dFStore.getFlowDataInfo) {
           runSql({ ...dData.jsonData, dataFlowId: window.$wujie?.props.data.id }).then((res: KeyValue) => {
             dData.loading = false
@@ -115,6 +143,24 @@ const open = (graph: Graph, data: any, type: string) => {
         let arr: KeyValue[] = []
         for (let i in res.data) arr.push({ name: i, sql: res.data[i] })
         dData.sql = arr
+        nextTick(() => {
+          let sqlDoms = document.getElementById('RunSqlPanel')?.querySelector('.pgsql')?.children
+          if (sqlDoms && sqlDoms.length > 0) {
+            for (let dom of sqlDoms) {
+              let index = sqlCodeDisplayBlock.findIndex(item => (item.key === dom.innerHTML.toUpperCase()))
+              if (index != -1) {
+                let i = sqlCodeDisplayBlock[index]
+                if (i.br === 1) {
+                  dom.innerHTML = `<br />${dom.innerHTML}`
+                } else if (i.br === 2) {
+                  dom.innerHTML = `${dom.innerHTML}<br />`
+                } else if (i.br === 3) {
+                  dom.innerHTML = `<br />${dom.innerHTML}<br />`
+                }
+              }
+            }
+          }
+        })
       })
     }
   }
@@ -198,10 +244,13 @@ defineExpose({ open })
     max-height: 200px;
     overflow: auto;
   }
-  .hljs-keyword {
-    display: block;
-  }
-  .hljs-title {
+  // .hljs-keyword {
+  //   display: block;
+  // }
+  // .hljs-title {
+  //   display: block;
+  // }
+  .display-block {
     display: block;
   }
 }

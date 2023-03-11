@@ -47,7 +47,6 @@ public class DatabaseConnectionDAO implements ApplicationRunner {
 
     public DatabaseConnectionUrlDO getByName(String name, String webUser) {
         DatabaseConnectionUrlDO databaseConnectionUrlDO = new DatabaseConnectionUrlDO();
-        //jdbcTemplate.execute("create table if not exists DATABASELINK(type varchar(20),name varchar(20),driver varchar(100),url varchar(200),username varchar(40),userpassword varchar(60),webuser varchar(40));");
         Map<String, Object> count = jdbcTemplate.queryForMap(GET_DATABASELINK_COUNT_SQL + " name ='" + name + "' and webUser = '" + webUser + "'");
         if ((int) count.get("count") == 0) {
             return null;

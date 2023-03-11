@@ -86,7 +86,9 @@ public enum ResultType {
 	TcpTimestamps(OsParamInfo),
 	ExtfragThreshold(OsParamInfo),
 	OvercommitRatio(OsParamInfo),
-	Mtu(OsParamInfo)
+	Mtu(OsParamInfo),
+	HotFunction(OnCpu),
+	ColdFunction(OffCpu)
 	;
 
 	private ResultType parent;

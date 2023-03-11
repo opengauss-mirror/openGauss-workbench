@@ -164,7 +164,7 @@ openGuass用户以往查看日志，需要登录服务器查看或者下载对�
 
    进入日志检索插件功能中，在集群/实例控件中，可以获取到集群ID和实例ID
 
-   <img src="doc\1.png" alt="1.png" style="zoom:50%;" />
+   <img src="doc/1.png" alt="1.png" style="zoom:50%;" />
 
 2. 安装filebeat
 

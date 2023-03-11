@@ -4,18 +4,24 @@ package com.nctigba.datastudio.dao;
 import com.nctigba.datastudio.base.WebSocketServer;
 import com.nctigba.datastudio.model.dto.ConnectionDTO;
 import lombok.extern.slf4j.Slf4j;
+import org.opengauss.admin.common.exception.CustomException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Repository;
 
 import java.sql.Connection;
 import java.sql.Statement;
 import java.util.*;
 
+import static java.util.concurrent.TimeUnit.HOURS;
+import static java.util.concurrent.TimeUnit.MINUTES;
+
 @Slf4j
 @Repository
+@EnableScheduling
 public class ConnectionMapDAO {
     public static Map<String, ConnectionDTO> conMap = new HashMap<>(1);
-
     public static void setConMap(String uuiD, ConnectionDTO con) throws Exception {
         if (conMap.size() < 100) {
             conMap.put(uuiD, con);
@@ -25,43 +31,39 @@ public class ConnectionMapDAO {
 
     }
 
+//    @Scheduled(fixedRate=2 ,timeUnit = HOURS)
+    @Scheduled(fixedRate=2 ,timeUnit = MINUTES)
     public void overtime() {
-        TimerTask timerTask = new TimerTask() {
-            @Override
-            public void run() {
-                Date nowData = new Date();
-                for (String key : conMap.keySet()) {
-                    ConnectionDTO connectionDTO = conMap.get(key);
-                    Date lastDate = connectionDTO.getLastDate();
-                    long diff = nowData.getTime() - lastDate.getTime();
-                    if (diff > 2 * 60 * 60 * 1000) {
-                        try {
-                            overtimeCloseSocket(connectionDTO.getSocketSet());
-                            conMap.remove(key);
-                        } catch (Exception e) {
-                            throw new RuntimeException(e);
-                        }
-                    }
+        Date nowData = new Date();
+        for (String key : conMap.keySet()) {
+            ConnectionDTO connectionDTO = conMap.get(key);
+            Date lastDate = connectionDTO.getLastDate();
+            long diff = nowData.getTime() - lastDate.getTime();
+            if (diff > 2 * 60 * 60 * 1000) {
+                try {
+                    overtimeCloseSocket(connectionDTO.getSocketSet());
+                    conMap.remove(key);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
                 }
             }
-        };
-
-        Timer timer = new Timer();
-
-        timer.schedule(timerTask, 1000, 2 * 60 * 60 * 1000);
+        }
     }
 
     public void deleteConnection(String uuid) {
+        if(!conMap.containsKey(uuid)){
+            throw new CustomException("The current connection does not exist");
+        }
         try {
-            log.info("wyl is: " + uuid);
-            ConnectionDTO connectionDTO = conMap.get(uuid);
-            log.info("wyl is: " + connectionDTO);
+            ConnectionDTO connectionDTO= conMap.get(uuid);
+            log.info("connectionDTO is: " + connectionDTO);
             overtimeCloseSocket(connectionDTO.getSocketSet());
-            log.info("socketSet is: " + conMap);
+            log.info("old conMap is: " + conMap);
             conMap.remove(uuid);
-            log.info("socketSet is: " + conMap);
+            log.info("new conMap is: " + conMap);
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            e.printStackTrace();
+            throw new CustomException(e.getMessage(),e);
         }
     }
 
@@ -86,24 +88,4 @@ public class ConnectionMapDAO {
         }
     }
 
-    public static void main(String[] args) {
-        ConnectionDTO con = new ConnectionDTO();
-        conMap.put("1", con);
-        conMap.put("2", con);
-        conMap.put("3", con);
-        conMap.put("4", con);
-        conMap.put("5", con);
-        HashSet<String> set = new HashSet<String>();
-        set.add("1");
-        set.add("2");
-        set.add("3");
-        set.add("4");
-        set.add("5");
-        //创建一个迭代器
-        Iterator iterator = set.iterator();
-        //输出迭代之后的值
-        while (iterator.hasNext()) {
-            System.out.println(iterator.next());
-        }
-    }
 }

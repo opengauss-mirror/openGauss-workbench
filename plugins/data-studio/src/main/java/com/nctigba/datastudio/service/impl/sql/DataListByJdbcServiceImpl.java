@@ -24,15 +24,15 @@ public class DataListByJdbcServiceImpl implements DataListByJdbcService {
     @Override
     public List<String> schemaListQuerySQL(String jdbcUrl, String username, String password, String sql) {
         List<String> list = new ArrayList<>();
-        try (Connection connection = ConnectionUtils.connectGet(jdbcUrl, username, password)) {
-            PreparedStatement ps = connection.prepareStatement(sql);
-            ResultSet rs = ps.executeQuery();
+        try (Connection connection = ConnectionUtils.connectGet(jdbcUrl, username, password);
+             PreparedStatement ps = connection.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 list.add(rs.getString("schema_name"));
             }
 
         } catch (Exception e) {
-            throw new CustomException(e.getMessage());
+            throw new CustomException(e.getMessage(),e);
         }
         return list;
     }
@@ -46,19 +46,19 @@ public class DataListByJdbcServiceImpl implements DataListByJdbcService {
         List<String> synonym = new ArrayList<>();
         List<String> fun_pro = new ArrayList<>();
         Map funTypeMap = new HashMap<>();
-        try (Connection connection = ConnectionUtils.connectGet(jdbcUrl, username, password)) {
-            PreparedStatement tableValue = connection.prepareStatement(tableSql);
-            PreparedStatement viewValue = connection.prepareStatement(viewSql);
-            PreparedStatement fun_proValue = connection.prepareStatement(fun_prosSql);
-            PreparedStatement sequenceValue = connection.prepareStatement(sequenceSql);
-            PreparedStatement synonymValue = connection.prepareStatement(synonymSql);
-            PreparedStatement fun_type = connection.prepareStatement(GET_TYPENAME_SQL);
-            ResultSet rs1 = tableValue.executeQuery();
-            ResultSet rs2 = viewValue.executeQuery();
-            ResultSet rs3 = fun_proValue.executeQuery();
-            ResultSet rs4 = fun_type.executeQuery();
-            ResultSet rs5 = sequenceValue.executeQuery();
-            ResultSet rs6 = synonymValue.executeQuery();
+        try (Connection connection = ConnectionUtils.connectGet(jdbcUrl, username, password);
+             PreparedStatement tableValue = connection.prepareStatement(tableSql);
+             PreparedStatement viewValue = connection.prepareStatement(viewSql);
+             PreparedStatement fun_proValue = connection.prepareStatement(fun_prosSql);
+             PreparedStatement sequenceValue = connection.prepareStatement(sequenceSql);
+             PreparedStatement synonymValue = connection.prepareStatement(synonymSql);
+             PreparedStatement fun_type = connection.prepareStatement(GET_TYPENAME_SQL);
+             ResultSet rs1 = tableValue.executeQuery();
+             ResultSet rs2 = viewValue.executeQuery();
+             ResultSet rs3 = fun_proValue.executeQuery();
+             ResultSet rs4 = fun_type.executeQuery();
+             ResultSet rs5 = sequenceValue.executeQuery();
+             ResultSet rs6 = synonymValue.executeQuery();) {
             while (rs1.next()) {
                 table.add(rs1.getString("tablename"));
             }
@@ -99,7 +99,7 @@ public class DataListByJdbcServiceImpl implements DataListByJdbcService {
             dataList.setSynonym(synonym);
             dataList.setFun_pro(fun_pro);
         } catch (Exception e) {
-            throw new CustomException(e.getMessage());
+            throw new CustomException(e.getMessage(),e);
         }
         return dataList;
     }
@@ -107,15 +107,15 @@ public class DataListByJdbcServiceImpl implements DataListByJdbcService {
     @Override
     public List<String> databaseListQuerySQL(String jdbcUrl, String username, String password, String sql) {
         List<String> list = new ArrayList<>();
-        try (Connection connection = ConnectionUtils.connectGet(jdbcUrl, username, password)) {
-            PreparedStatement ps = connection.prepareStatement(sql);
-            ResultSet rs = ps.executeQuery();
+        try (Connection connection = ConnectionUtils.connectGet(jdbcUrl, username, password);
+             PreparedStatement ps = connection.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 list.add(rs.getString("dataname"));
             }
 
         } catch (Exception e) {
-            throw new CustomException(e.getMessage());
+            throw new CustomException(e.getMessage(),e);
         }
         return list;
     }

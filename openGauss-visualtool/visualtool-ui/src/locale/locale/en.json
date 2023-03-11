@@ -450,6 +450,12 @@
             "5mpivn7fxjk0": "cluster",
             "5mpivn7fxnc0": "type",
             "5mpivn7fxrk0": "Number of queries"
+        },
+        "EditSysSettings": {
+          "5mpivn7fwjc1": "Edit System Setting",
+          "5mpivn7fwjc2": "File Upload Path",
+          "5mpivn7fwjc6": "Please input file upload path",
+          "5mpivn7fwjc9": "File path is not correct"
         }
     },
     "user": {
@@ -537,6 +543,7 @@
             "5m6nsk34r7c0": "Cluster operation and maintenance",
             "5m6nsk34ra40": "User Center",
             "5m6nsk34rd00": "Reset Password",
+            "5m6nsk34rd01": "System Setting",
             "5m6nsk34rg40": "Logout",
             "5mpib9iig6o0": "openGauss DataKit",
             "5nu3bvtnu5o0": "Click to switch to dark mode",

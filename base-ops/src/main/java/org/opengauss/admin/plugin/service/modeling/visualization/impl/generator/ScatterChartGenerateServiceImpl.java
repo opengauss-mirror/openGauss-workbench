@@ -7,6 +7,7 @@ import org.opengauss.admin.plugin.domain.model.modeling.echart.ScatterChartBody;
 import org.opengauss.admin.plugin.domain.model.modeling.echart.constructor.ScatterSeriesConstructor;
 
 import org.opengauss.admin.plugin.service.modeling.IModelingVisualizationGeoFilesService;
+import org.opengauss.admin.plugin.utils.GeoUtils;
 import org.opengauss.admin.plugin.vo.modeling.ScatterChartParamsBody;
 import org.opengauss.admin.plugin.vo.modeling.component.*;
 import org.opengauss.admin.plugin.vo.modeling.component.*;
@@ -25,6 +26,8 @@ public class ScatterChartGenerateServiceImpl extends BaseGenerateServiceImpl {
 
     private ScatterChartParamsBody scatterChartParamsBody;
 
+    private ScatterSeriesConstructor scatterSeriesConstructor;
+
     @Autowired
     private IModelingVisualizationGeoFilesService modelingVisualizationGeoFilesService;
 
@@ -35,16 +38,22 @@ public class ScatterChartGenerateServiceImpl extends BaseGenerateServiceImpl {
 
         ScatterChartBody scatterChartBody = new ScatterChartBody();
         scatterChartBody.setTitle(new Title().setText(scatterChartParamsBody.getTitle()));
-        scatterChartBody.setTooltip(new Tooltip().setTrigger("axis"));
-        scatterChartBody.setVisualMap(new VisualMap().setMax(1000000).setMin(0).setText(List.of("high","low"))
-                .setInRange(new InRange().setColor(List.of("lightskyblue","yellow","orangered"))));
+        scatterChartBody.setTooltip(new Tooltip().setTrigger("item").setFormatter("{b}<br/>{c}"));
 
         ModelingVisualizationGeoFilesEntity geoFile = modelingVisualizationGeoFilesService.getById(scatterChartParamsBody.getLocation().getCommonValue());
+        //compute geo`s center and config
+        double[] center = GeoUtils.getGeoJsonCenter(geoFile.getGeoJson());
 
-        scatterChartBody.setGeo(List.of(new Geo().setMap(geoFile.getRegisterName())
-                .setZoom(scatterChartParamsBody.getZoom())
-                .setCenter(List.of(scatterChartParamsBody.getCenter().get(0), scatterChartParamsBody.getCenter().get(1)))
-                .setRoam(true)));
+        //if roam is config
+        double centerX = scatterChartParamsBody.getCenter().get(0) != 0 ? scatterChartParamsBody.getCenter().get(0) : center[0];
+        double centerY = scatterChartParamsBody.getCenter().get(1) != 0 ? scatterChartParamsBody.getCenter().get(1) : center[1];
+        double zoom = scatterChartParamsBody.getZoom() > 0 ? scatterChartParamsBody.getZoom() : 1.0;
+
+        scatterChartBody.setGeo(List.of(
+                new Geo().setMap(geoFile.getRegisterName())
+                        .setZoom(zoom)
+                        .setCenter(List.of(centerX, centerY))
+                        .setRoam(true)));
 
         List<String> allKeys = new ArrayList<>(queryResult.get(0).keySet());
         if (!allKeys.contains(scatterChartParamsBody.getLocation().getField())) {
@@ -54,11 +63,14 @@ public class ScatterChartGenerateServiceImpl extends BaseGenerateServiceImpl {
         List<ScatterSeries> series = genSeries(scatterChartParamsBody.getLocation());
         scatterChartBody.setSeries(series);
 
+        scatterChartBody.setVisualMap(new VisualMap().setMax(scatterSeriesConstructor.maxValue).setMin(0).setText(List.of("high","low"))
+                .setInRange(new InRange().setColor(List.of(scatterChartParamsBody.getColorConfig().get(0),scatterChartParamsBody.getColorConfig().get(1),scatterChartParamsBody.getColorConfig().get(2)))));
+
         return JSONObject.toJSONString(scatterChartBody);
     }
 
     public List<ScatterSeries> genSeries(Location location){
-        ScatterSeriesConstructor scatterSeriesConstructor = new ScatterSeriesConstructor(scatterChartParamsBody.getIndicator(), location, queryResult);
+        scatterSeriesConstructor = new ScatterSeriesConstructor(scatterChartParamsBody.getIndicator(), location, queryResult,scatterChartParamsBody.getLocation().getArea());
         return scatterSeriesConstructor.getSeriesData();
     }
 

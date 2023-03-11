@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.opengauss.admin.plugin.mapper.MainTaskEnvErrorHostMapper">
+
+    <resultMap id="MigrationTaskResult" type="org.opengauss.admin.plugin.domain.MainTaskEnvErrorHost">
+        <id property="id" column="id"/>
+        <result property="mainTaskId" column="main_task_id"/>
+        <result property="runHostId" column="run_host_id"/>
+        <result property="runHost" column="run_host"/>
+        <result property="runPort" column="run_port"/>
+        <result property="runUser" column="run_user"/>
+        <result property="runPass" column="run_port"/>
+    </resultMap>
+
+</mapper>

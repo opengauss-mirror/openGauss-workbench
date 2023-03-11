@@ -34,7 +34,8 @@
         <result property="migrationModelId" column="migration_model_id"/>
         <result property="migrationProcess" column="migration_process"/>
         <result property="runHostname" column="run_hostname"/>
-
+        <result property="targetDbVersion" column="target_db_version"/>
+        <result property="statusDesc" column="status_desc"/>
     </resultMap>
 
     <select id="selectTaskPage" resultMap="MigrationTaskResult">

@@ -16,9 +16,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-import static com.nctigba.datastudio.enums.MessageEnum.table;
-import static com.nctigba.datastudio.enums.MessageEnum.text;
-import static com.nctigba.datastudio.enums.MessageEnum.window;
+import static com.nctigba.datastudio.enums.MessageEnum.*;
 
 @Slf4j
 @Service("startRun")
@@ -38,7 +36,7 @@ public class StartSqlImpl implements OperationInterface {
             try {
                 webSocketServer.sendMessage(windowName, text, "Execution start", null);
                 boolean result = stat.execute(paramReq.getSql());
-                webSocketServer.sendMessage(windowName, text, "Button status request", null);
+                webSocketServer.sendMessage(windowName, button, "Button status request", null);
                 OperateStatusDO operateStatus = webSocketServer.getOperateStatus(windowName);
                 operateStatus.enableStopRun();
                 webSocketServer.setOperateStatus(windowName, operateStatus);
@@ -60,7 +58,7 @@ public class StartSqlImpl implements OperationInterface {
                 e.printStackTrace();
                 try {
                     webSocketServer.sendMessage(windowName, window, "500", e.getMessage(), e.getStackTrace());
-                    webSocketServer.sendMessage(windowName, text, "Button status request", null);
+                    webSocketServer.sendMessage(windowName, button, "Button status request", null);
                     OperateStatusDO operateStatus = webSocketServer.getOperateStatus(windowName);
                     operateStatus.enableStopRun();
                     webSocketServer.setOperateStatus(windowName, operateStatus);

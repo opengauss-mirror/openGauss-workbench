@@ -324,19 +324,23 @@ public class DebugUtils {
     }
 
     public static Map<String, Object> addMapParam(Map<String, Object> map, String sql) {
+        log.info("DebugUtils addMapParam map is: " + map);
         List<String> columnList = (List<String>) map.get(COLUMN);
         List<List<Object>> dataList = (List<List<Object>>) map.get(RESULT);
-        columnList.add("paramType");
 
         Map<String, String> paramMap = getParamMap(sql);
-        dataList.forEach(data -> {
-            String value = paramMap.get(data.get(0));
-            if (StringUtils.isEmpty(value)) {
-                data.add("temp");
-            } else {
-                data.add(value);
-            }
-        });
+        if (!CollectionUtils.isEmpty(map)) {
+            columnList.add("paramType");
+            dataList.forEach(data -> {
+                String value = paramMap.get(data.get(0));
+                if (StringUtils.isEmpty(value)) {
+                    data.add("temp");
+                } else {
+                    data.add(value);
+                }
+            });
+        }
+        log.info("DebugUtils addMapParam result is: " + map);
         return map;
     }
 }

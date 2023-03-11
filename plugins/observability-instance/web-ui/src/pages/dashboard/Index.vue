@@ -30,6 +30,9 @@ const clusterList = ref<Array<any>[]>([]);
 const connectStatus = ref<boolean | undefined>(undefined);
 const curServerInfoText = ref("");
 const nodeVersion = ref<string>("");
+const lastNodeId = ref<string>("");
+const wdrComponent = ref(null);
+const paramConfigComponent = ref(null);
 
 const { serverInfoText } = storeToRefs(useWindowStore());
 const { tab, filters, autoRefresh, rangeTime, instanceId } = storeToRefs(useMonitorStore());
@@ -39,10 +42,35 @@ watch(tab, (v) => {
     if (!tabLoaded[v]) {
         tabLoaded[v] = true;
     }
+    if (v === 0 || v === 1) {
+        nextTick(() => {
+            if (nodeIdChangedByOtherTabs.value !== "") {
+                clusterNodeId.value = nodeIdChangedByOtherTabs.value;
+                nodeIdChangedByOtherTabs.value = "";
+            }
+        });
+    }
+    if (v === 2) {
+        nextTick(() => {
+            wdrComponent.value.syncNodeId(lastNodeId.value);
+        });
+    }
+    if (v === 3) {
+        nextTick(() => {
+            paramConfigComponent.value.syncNodeId(lastNodeId.value);
+        });
+    }
 });
-const isCollapse = ref(false);
+const isCollapse = ref(true);
 const toggleCollapse = () => {
     isCollapse.value = !isCollapse.value;
+};
+
+// nodeId sync
+const nodeIdChangedByOtherTabs = ref<string>("");
+const nodeIdChanged = (nodeId: any) => {
+    nodeIdChangedByOtherTabs.value = nodeId;
+    lastNodeId.value = nodeId;
 };
 
 const autoRefreshFn = () => {
@@ -118,6 +146,8 @@ watch(clusterNodeId, (res) => {
     } else if (Array.isArray(res) && res.length > 0) {
         curInstanceId = res[res.length - 1];
     }
+
+    lastNodeId.value = curInstanceId;
     // get connection status
     runConnectStatus(curInstanceId);
     // set instanceId value
@@ -203,10 +233,10 @@ watch(serverInfoText, (val) => {
                         <top-sql v-if="tabLoaded[1] || tab === 1" :instanceId="instanceId" />
                     </el-tab-pane>
                     <el-tab-pane :label="$t('dashboard.wdrReports.tabName')" :name="2">
-                        <wdr v-if="tabLoaded[2] || tab === 2" :instanceId="instanceId" />
+                        <wdr @nodeIdChanged="nodeIdChanged" ref="wdrComponent" v-if="tabLoaded[2] || tab === 2" :instanceId="instanceId" />
                     </el-tab-pane>
                     <el-tab-pane :label="$t('dashboard.systemConfig.tabName')" :name="3">
-                        <system-configuration v-if="tabLoaded[3] || tab === 3" :instanceId="instanceId" />
+                        <system-configuration @nodeIdChanged="nodeIdChanged" ref="paramConfigComponent" v-if="tabLoaded[3] || tab === 3" :instanceId="instanceId" />
                     </el-tab-pane>
                 </el-tabs>
             </el-main>

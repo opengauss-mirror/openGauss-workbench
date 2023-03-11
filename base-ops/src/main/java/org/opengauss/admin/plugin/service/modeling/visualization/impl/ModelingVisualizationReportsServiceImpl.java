@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -55,8 +56,8 @@ public class ModelingVisualizationReportsServiceImpl extends ServiceImpl<Modelin
     }
 
     @Override
-    public int deleteByIds(String[] paramIds) {
-        return 0;
+    public int deleteByIds(String[] reportIds) {
+        return modelingVisualizationReportsMapper.deleteBatchIds(Arrays.asList(reportIds));
     }
 
     @Override
