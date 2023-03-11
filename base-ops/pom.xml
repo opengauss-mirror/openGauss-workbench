@@ -165,7 +165,7 @@
                     <pluginInfo>
                         <id>base-ops</id>
                         <bootstrapClass>org.opengauss.admin.plugin.BaseOpsPluginApplication</bootstrapClass>
-                        <version>1.0.5</version>
+                        <version>1.0.6</version>
                         <provider>lita</provider>
                         <description>基础运维插件</description>
                     </pluginInfo>
