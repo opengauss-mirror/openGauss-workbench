@@ -916,7 +916,7 @@ CREATE TABLE IF NOT EXISTS "public"."ops_jdbcdb_cluster"
 -- Table structure for sys_setting
 -- ----------------------------
 CREATE TABLE IF NOT EXISTS "public"."sys_setting"(
-    "id" int4 NOT NULL DEFAULT nextval('sq_sys_setting_id'::regclass),
+    "id" int4 NOT NULL PRIMARY KEY DEFAULT nextval('sq_sys_setting_id'::regclass),
     "user_id" int8 NOT NULL,
     "upload_path" text COLLATE "pg_catalog"."default" NOT NULL
 );
@@ -930,7 +930,7 @@ ON COLUMN "public"."sys_setting"."upload_path" IS '文件上传目录';
 -- ----------------------------
 -- Records of sys_setting
 -- ----------------------------
-INSERT INTO "public"."sys_setting"VALUES (1, 1, '/ops/files');
+INSERT INTO "public"."sys_setting"VALUES (1, 1, '/ops/files') ON DUPLICATE KEY UPDATE NOTHING;
 
 CREATE OR REPLACE FUNCTION add_user_field_func() RETURNS integer AS 'BEGIN
 IF
