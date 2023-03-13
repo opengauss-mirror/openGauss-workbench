@@ -6,6 +6,7 @@ import com.nctigba.datastudio.dao.ConnectionMapDAO;
 import com.nctigba.datastudio.model.PublicParamReq;
 import com.nctigba.datastudio.model.dto.ConnectionDTO;
 import com.nctigba.datastudio.service.OperationInterface;
+import com.nctigba.datastudio.util.LocaleString;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -35,7 +36,7 @@ public class CloseSqlImpl implements OperationInterface {
                 connection.close();
                 webSocketServer.setStatement(windowName, null);
             }
-            webSocketServer.sendMessage(windowName, text, "Close successfully", null);
+            webSocketServer.sendMessage(windowName, text, LocaleString.transLanguageWs("2004", webSocketServer), null);
         } catch (Exception ex) {
             ex.printStackTrace();
             throw new RuntimeException(ex);

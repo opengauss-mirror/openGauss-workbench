@@ -6,6 +6,7 @@ import com.nctigba.datastudio.model.dto.DatabaseDropSynonymDTO;
 import com.nctigba.datastudio.model.dto.DatabaseSynonymAttributeDTO;
 import com.nctigba.datastudio.service.DatabaseSynonymService;
 import com.nctigba.datastudio.util.DebugUtils;
+import com.nctigba.datastudio.util.LocaleString;
 import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.exception.CustomException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,7 +56,7 @@ public class DatabaseSynonymServiceImpl implements DatabaseSynonymService {
                 count.next();
                 int a = count.getInt("count");
                 if (a == 0) {
-                    throw new CustomException("The synonym does not exist");
+                    throw new CustomException(LocaleString.transLanguage("2011"));
                 }
             }
             Map<String, Object> resultMap;

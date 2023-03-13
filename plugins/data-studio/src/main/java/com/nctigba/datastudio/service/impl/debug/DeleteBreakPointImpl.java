@@ -16,6 +16,7 @@ import java.util.Map;
 
 import static com.nctigba.datastudio.constants.CommonConstants.BREAK_POINT;
 import static com.nctigba.datastudio.constants.CommonConstants.DIFFER;
+import static com.nctigba.datastudio.constants.CommonConstants.OID;
 import static com.nctigba.datastudio.constants.CommonConstants.STATEMENT;
 import static com.nctigba.datastudio.constants.CommonConstants.SUCCESS;
 import static com.nctigba.datastudio.constants.SqlConstants.DELETE_BREAKPOINT_SQL;
@@ -63,7 +64,8 @@ public class DeleteBreakPointImpl implements OperationInterface {
         }
 
         ResultSet bpResult = stat.executeQuery(INFO_BREAKPOINT_PRE + differ + INFO_BREAKPOINT_SQL);
-        webSocketServer.sendMessage(windowName, breakPoint, SUCCESS, DebugUtils.parseResultSet(bpResult));
+        String oid = (String) webSocketServer.getParamMap(windowName).get(OID);
+        webSocketServer.sendMessage(windowName, breakPoint, SUCCESS, DebugUtils.parseBeakPoint(bpResult, oid));
     }
 
     @Override

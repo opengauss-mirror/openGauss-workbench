@@ -14,7 +14,7 @@ public interface DatabaseViewService {
 
     String returnViewDDL(DatabaseViewDdlDTO request) throws Exception;
 
-    ResultSet returnViewDDLData(DatabaseViewDdlDTO request) throws Exception;
+    Map<String, Object> returnViewDDLData(DatabaseViewDdlDTO request) throws Exception;
 
     void createView(DatabaseCreateViewDTO request) throws Exception;
 

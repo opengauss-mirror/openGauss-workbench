@@ -13,6 +13,7 @@ import com.nctigba.datastudio.result.WebDsResult;
 import com.nctigba.datastudio.service.OperationInterface;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.util.Strings;
 import org.opengauss.admin.system.plugin.extract.SocketExtract;
 import org.opengauss.admin.system.plugin.facade.WsFacade;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +29,12 @@ import java.util.Map;
 
 import static com.nctigba.datastudio.constants.CommonConstants.BEGIN;
 import static com.nctigba.datastudio.constants.CommonConstants.END;
+import static com.nctigba.datastudio.constants.CommonConstants.FIVE_HUNDRED;
+import static com.nctigba.datastudio.constants.CommonConstants.START_RUN;
+import static com.nctigba.datastudio.constants.CommonConstants.STOP_DEBUG;
+import static com.nctigba.datastudio.constants.CommonConstants.STOP_RUN;
+import static com.nctigba.datastudio.constants.CommonConstants.TWO_HUNDRED;
+import static com.nctigba.datastudio.constants.CommonConstants.WEBDS_PLUGIN;
 import static com.nctigba.datastudio.enums.MessageEnum.window;
 
 @Slf4j
@@ -45,6 +52,8 @@ public class WebSocketServer implements SocketExtract {
     private final Map<String, Statement> statementMap = new HashMap<>();
 
     private final Map<String, OperateStatusDO> operationStatusMap = new HashMap<>();
+
+    private String language = Strings.EMPTY;
 
     @Override
     public void onOpen(String pluginId, String sessionId, Session session) {
@@ -74,9 +83,9 @@ public class WebSocketServer implements SocketExtract {
             } catch (Exception e) {
                 log.error("method error: ", e);
                 try {
-                    sendMessage(sessionId, window, "500", e.getMessage(), e.getStackTrace());
-                    if (!operation.equals("startRun") && !operation.equals("stopRun")) {
-                        SpringApplicationContext.getApplicationContext().getBean("stopDebug", OperationInterface.class)
+                    sendMessage(sessionId, window, FIVE_HUNDRED, e.getMessage(), e.getStackTrace());
+                    if (!operation.equals(START_RUN) && !operation.equals(STOP_RUN)) {
+                        SpringApplicationContext.getApplicationContext().getBean(STOP_DEBUG, OperationInterface.class)
                                 .operate(this, message);
                     }
                 } catch (Exception ex) {
@@ -113,11 +122,11 @@ public class WebSocketServer implements SocketExtract {
     public synchronized void sendMessage(String sessionId, MessageEnum type, String code, String message, Object obj) throws IOException {
         WebDsResult result = WebDsResult.ok(type.toString(), message).addData(obj);
         result.setCode(code);
-        wsFacade.sendMessage("webds-plugin", sessionId, JSON.toJSONString(result));
+        wsFacade.sendMessage(WEBDS_PLUGIN, sessionId, JSON.toJSONString(result));
     }
 
     public void sendMessage(String sessionId, MessageEnum type, String message, Object obj) throws IOException {
-        sendMessage(sessionId, type, "200", message, obj);
+        sendMessage(sessionId, type, TWO_HUNDRED, message, obj);
     }
 
     public Connection getConnection(String sessionId) {
@@ -165,6 +174,14 @@ public class WebSocketServer implements SocketExtract {
         Map<String, Object> map = getParamMap(sessionId);
         map.put(key, obj);
         this.paramMap.put(sessionId, map);
+    }
+
+    public void setLanguage(String language) {
+        this.language = language;
+    }
+
+    public String getLanguage() {
+        return language;
     }
 
     /**

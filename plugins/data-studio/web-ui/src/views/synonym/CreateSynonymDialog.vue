@@ -6,7 +6,7 @@
       :width="500"
       align-center
       :close-on-click-modal="false"
-      @open="handleOpen"
+      @opened="handleOpen"
       @close="handleClose"
     >
       <div class="dialog_body">
@@ -122,10 +122,18 @@
     uuid: '',
   });
   const rules = reactive<FormRules>({
-    synonymName: [{ required: true, message: t('synonym.rules.name[0]'), trigger: 'blur' }],
-    schema: [{ required: true, message: t('synonym.rules.objectOwner[0]'), trigger: 'change' }],
-    objectType: [{ required: true, message: t('synonym.rules.objectType[0]'), trigger: 'change' }],
-    objectName: [{ required: true, message: t('synonym.rules.objectName[0]'), trigger: 'change' }],
+    synonymName: [
+      { required: true, message: t('rules.empty', [t('synonym.name')]), trigger: 'blur' },
+    ],
+    schema: [
+      { required: true, message: t('rules.empty', [t('synonym.objectOwner')]), trigger: 'change' },
+    ],
+    objectType: [
+      { required: true, message: t('rules.empty', [t('synonym.objectType')]), trigger: 'change' },
+    ],
+    objectName: [
+      { required: true, message: t('rules.empty', [t('synonym.objectName')]), trigger: 'change' },
+    ],
   });
   const objectTypeOptions = [
     { label: 'all', value: 'ALL' },

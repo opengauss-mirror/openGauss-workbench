@@ -30,7 +30,7 @@ public class SqlConstants {
 
     public static final String ADD_BREAKPOINT_SQL = "select * from dbe_pldebugger.add_breakpoint(";
 
-    public static final String INFO_BREAKPOINT_PRE = "select lineno + ";
+    public static final String INFO_BREAKPOINT_PRE = "select funcoid, lineno + ";
 
     public static final String INFO_BREAKPOINT_SQL = " as lineno, query, enable from dbe_pldebugger.info_breakpoints();";
 
@@ -73,9 +73,11 @@ public class SqlConstants {
             "from pg_proc pg\n" +
             "left join pg_language pl on pl.oid = pg.prolang\n" +
             "left join pg_type pt on pt.oid = pg.prorettype\n" +
+            "left join pg_namespace pn on pn.oid = pg.pronamespace\n" +
             "where pg.proname = '";
 
-    public static final String GET_PROC_PARAM_SQL = "' and proargtypes = '";
+    public static final String GET_PROC_TYPE_SQL = "' and pg.proargtypes = '";
+    public static final String GET_PROC_NAME_SQL = "' and pn.nspname = '";
     public static final String GET_URL_JDBC = "jdbc:opengauss://";
     public static final String GET_TYPENAME_SQL = "select a.oid,a.typname from pg_type a where a.oid<9999";
     public static final String GET_DATABASE_SQL = "select datname from pg_database;";
@@ -94,7 +96,7 @@ public class SqlConstants {
             "inner join pg_attribute att on cla.oid = att.attrelid and att.attnum > 0 \n" +
             "inner join (select oid, condeferrable, unnest(conkey) as conkey, conrelid, contype, conname from pg_constraint) con \n" +
             "  on att.attnum = con.conkey and con.conrelid = cla.oid\n" +
-            "inner join pg_namespace ns on cla.relowner = ns.nspowner and ns.nspname = '";
+            "inner join pg_namespace ns on cla.relnamespace = ns.oid and ns.nspname = '";
 
     public static final String RELNAME_CONDITION = "'where cla.relname = '";
 
@@ -106,7 +108,7 @@ public class SqlConstants {
             "inner join PG_CLASS pc on pi.indexrelid = pc.oid and pc.relkind = 'i'\n" +
             "inner join PG_ATTRIBUTE att on pc.oid = att.attrelid\n" +
             "inner join (select pc.oid from PG_CLASS pc\n" +
-            "\t\tinner join pg_namespace pn on pn.nspowner = pc.relowner\n" +
+            "\t\tinner join pg_namespace pn on pn.oid = pc.relnamespace\n" +
             "\t\twhere pc.relname = '";
 
     public static final String NSPNAME_CONDITION = "' and pn.nspname = '";
@@ -114,7 +116,7 @@ public class SqlConstants {
     public static final String INDEX_GROUP_BY_SQL = "') tt\n" + "\t\ton pi.indrelid = tt.oid\n" +
             "group by pc.relname, pi.indisunique";
 
-    public static final String GET_CLASS_OID_SQL = "select cla.oid from PG_CLASS cla left join pg_namespace pn on pn.nspowner = cla.relowner\n" +
+    public static final String GET_CLASS_OID_SQL = "select cla.oid from PG_CLASS cla left join pg_namespace pn on pn.oid = cla.relnamespace\n" +
             "where cla.relname = '";
 
     public static final String GET_COLUMN_SQL = "select pa.attname, pt.typname, pa.attnotnull, pd.description\n" +
@@ -184,6 +186,10 @@ public class SqlConstants {
             "WHERE pronamespace = (SELECT pg_namespace.oid FROM pg_namespace WHERE nspname = '";
     public static final String SYNONYM_ATTRIBUTE_SQL = "select synname,synobjschema,rolname,synobjname from PG_SYNONYM  a inner join pg_authid b on a.synowner = b.oid where synname = '";
     public static final String SYNONYM_COUNT_SQL = "select count(1) count from PG_SYNONYM  where synname = '";
-    public static final String DATABASE_ATTRIBUTE_SQL = "select ds.oid,ds.datname,pg_encoding_to_char(ds.encoding) as encoding,ds.datallowconn,ds.datconnlimit,ts.spcname,ds.datcollate,ds.datctype from pg_database ds left join pg_tablespace ts on ts.oid = ds.dattablespace where ds.datname = '";
+    public static final String DATABASE_ATTRIBUTE_SQL = "select ds.oid,ds.datname,pg_encoding_to_char(ds.encoding) as encoding,ds.datallowconn,\n" +
+            "  case when ds.datconnlimit = -1 \n" +
+            "       then '-1(不限制)'\n" +
+            "       else to_char(ds.datconnlimit)\n" +
+            "  end as datconnlimit,ts.spcname,ds.datcollate,ds.datctype from pg_database ds left join pg_tablespace ts on ts.oid = ds.dattablespace where ds.datname = '";
     public static final String DATABASE_UPDATA_ATTRIBUTE_SQL = "select datname as databaseName,pg_encoding_to_char(encoding) as databaseCode,datcompatibility as compatibleType,datcollate as collation,datctype as characterType,datconnlimit as conRestrictions from pg_database where datname = '";
 }

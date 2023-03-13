@@ -211,5 +211,8 @@
     :deep(.el-select) {
       width: 100%;
     }
+    :deep(.el-input-number .el-input__inner) {
+      text-align: left;
+    }
   }
 </style>

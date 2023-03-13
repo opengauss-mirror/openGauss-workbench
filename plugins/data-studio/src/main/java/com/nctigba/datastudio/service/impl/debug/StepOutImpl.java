@@ -5,12 +5,15 @@ import com.nctigba.datastudio.base.WebSocketServer;
 import com.nctigba.datastudio.model.PublicParamReq;
 import com.nctigba.datastudio.service.OperationInterface;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -49,8 +52,9 @@ public class StepOutImpl implements OperationInterface {
         log.info("stepOut breakPointMap is: " + breakPointMap);
         if (!CollectionUtils.isEmpty(breakPointMap)) {
             Set<Integer> integers = breakPointMap.keySet();
-            for (Integer i : integers) {
-                paramReq.setLine(i);
+            List<Integer> list = new ArrayList<>(integers);
+            for (Integer integer : list) {
+                paramReq.setLine(integer);
                 deleteBreakPoint.operate(webSocketServer, paramReq);
             }
         }
@@ -58,7 +62,7 @@ public class StepOutImpl implements OperationInterface {
         String oid = (String) webSocketServer.getParamMap(windowName).get(OID);
         log.info("stepOut oid is: " + oid);
         ResultSet resultSet = stat.executeQuery(FINISH_SQL);
-        String newOid = "";
+        String newOid = Strings.EMPTY;
         while (resultSet.next()) {
             newOid = resultSet.getString(FUNC_OID);
             log.info("stepOut newOid is: " + newOid);

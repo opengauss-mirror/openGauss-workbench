@@ -20,6 +20,8 @@ export default {
   },
   rules: {
     empty: '{0} is required',
+    charLength: 'The length cannot exceed {count} characters',
+    integer: '{0} must be integer',
   },
   message: {
     deleteFile: 'Successfully deleted, please refresh the connection list!',
@@ -29,6 +31,12 @@ export default {
     editSuccess: 'Edit successfully',
     deleteSuccess: 'Remove successfully!',
     noConnectionAvailable: 'No connection available',
+    disConnect:
+      'Disconnecting the database may cancel all database operations in progress. Are you sure you want to disconnect {name}?',
+    deleteConnect:
+      'All databases will be disconnected before deleting the connection. Are you sure you want to delete the {name} server?',
+    deleteDatabase:
+      'The connection will be disconnected before deleting the database. Are you sure you want to delete the {name} database?',
   },
   week: {
     Sunday: 'Sun',
@@ -46,7 +54,7 @@ export default {
     create: 'create database',
     edit: 'edit database properties',
     remove: 'remove database',
-    property: 'database properties',
+    property: 'show database properties',
     name: 'database name',
     encoder: 'database encoder',
     compatibleType: 'compatible type',
@@ -102,22 +110,8 @@ export default {
       type: 'database Type',
       version: 'version',
     },
-    message: {
-      deleteConnect:
-        'Disconnecting the database may cancel all database operations in progress. Are you sure you want to disconnect {name}?',
-      deleteAllConnect:
-        'All databases will be disconnected before deleting the connection. Are you sure you want to delete the {name} server?',
-      deleteDatabase:
-        'The connection will be disconnected before deleting the database. Are you sure you want to delete the {name} database?',
-    },
     rules: {
-      common: ['The length cannot exceed {count} characters'],
-      name: ['@:connection.name is required'],
-      ip: ['@:connection.host is required'],
-      port: ['@:connection.port is required', 'The value does not conform to the port range'],
-      dataName: ['@:connection.database is required'],
-      username: ['@:connection.username is required'],
-      password: ['@:connection.password is required'],
+      port: ['The value does not conform to the port range'],
     },
     success: {
       create: 'Connection succeeded',
@@ -241,12 +235,6 @@ export default {
     materializedView: 'materialized view',
     objectMode: 'objectMode',
     code: 'code',
-    rules: {
-      name: ['@:view.name is required'],
-      type: ['@:view.type is required'],
-      mode: ['@:view.objectMode is required'],
-      code: ['@:view.code is required'],
-    },
   },
   sequence: {
     base: 'base',
@@ -262,14 +250,6 @@ export default {
     mode: 'mode',
     table: 'table',
     column: 'column',
-    rules: {
-      name: ['@:sequence.name is required'],
-      increment: ['@:sequence.increment must be integer'],
-      startValue: ['@:sequence.startValue must be integer'],
-      minValue: ['@:sequence.minValue must be integer'],
-      maxValue: ['@:sequence.maxValue must be integer'],
-      cacheValue: ['@:sequence.cacheValue must be integer'],
-    },
   },
   synonym: {
     base: 'base',
@@ -279,12 +259,6 @@ export default {
     objectType: 'object type',
     objectName: 'object name',
     rplaceExistingSynonyms: 'replace existing synonyms',
-    rules: {
-      name: ['@:synonym.name is required'],
-      objectOwner: ['@:synonym.objectOwner is required'],
-      objectType: ['@:synonym.objectType is required'],
-      objectName: ['@:synonym.objectName is required'],
-    },
     attribute: {
       serialNo: 'Serial No',
       attr: 'Attribute',

@@ -1,11 +1,10 @@
 package com.nctigba.datastudio.config;
 
 import com.nctigba.datastudio.dao.ConnectionMapDAO;
-import com.nctigba.datastudio.model.DbswitchException;
 import com.nctigba.datastudio.model.dto.ConnectionDTO;
-import com.nctigba.datastudio.model.entity.DatabaseConnectionUrlDO;
 import com.nctigba.datastudio.service.impl.sql.DbConnectionServiceImpl;
 import com.nctigba.datastudio.util.ConnectionUtils;
+import com.nctigba.datastudio.util.LocaleString;
 import org.opengauss.admin.common.exception.CustomException;
 import org.springframework.stereotype.Service;
 
@@ -21,7 +20,7 @@ public class ConnectionConfig {
 
     public Connection connectDatabase(String uuid) throws Exception {
         if(!conMap.containsKey(uuid)){
-            throw new CustomException("The current connection does not exist");
+            throw new CustomException(LocaleString.transLanguage("1004"));
         }
         ConnectionDTO connectionDTO = conMap.get(uuid);
         Connection connection = ConnectionUtils.connectGet(
@@ -35,7 +34,7 @@ public class ConnectionConfig {
 
     public Connection connectDatabaseMap(String uuid, String winName) throws Exception {
         if(!conMap.containsKey(uuid)){
-            throw new CustomException("The current connection does not exist");
+            throw new CustomException(LocaleString.transLanguage("1004"));
         }
         ConnectionDTO connectionDTO = conMap.get(uuid);
         Connection connection = ConnectionUtils.connectGet(

@@ -54,9 +54,9 @@ html.dark {
   --el-bg-color-container: #29292c;
   --el-bg-color-bar: #424242;
   --zb-border-light: 1px solid #4c4d4f;
-  --normal-color: #E41D1D;
-  --hover-color: #E94842;
-  --active-color: #BF1118;
+  --normal-color: #fcef92;
+  --hover-color: #f8efae;
+  --active-color: #f8efae;
   --disable-color: #F49C92;
   --disable-plain-color: #c9cdd4;
   --color-secondary: rgba(223, 223, 223, 0.08);
@@ -65,6 +65,9 @@ html.dark {
   --color-secondary-disabled: rgba(223, 223, 223, 0.08);
   --color-secondary-text: rgb(255 255 255 / 70%);
   --el-color-success: #00b429;
+  --color-fill-2: rgb(255 255 255 / 8%);
+  --color-text-4: rgb(255 255 255 / 30%);
+  --color-bg-2: #232324;
   body {
     background: none;
   }

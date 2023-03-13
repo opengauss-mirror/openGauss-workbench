@@ -5,6 +5,7 @@ import com.nctigba.datastudio.base.WebSocketServer;
 import com.nctigba.datastudio.model.PublicParamReq;
 import com.nctigba.datastudio.model.entity.OperateStatusDO;
 import com.nctigba.datastudio.service.OperationInterface;
+import com.nctigba.datastudio.util.LocaleString;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -28,7 +29,7 @@ public class StopSqlImpl implements OperationInterface {
         OperateStatusDO operateStatus = webSocketServer.getOperateStatus(windowName);
         operateStatus.enableStopRun();
         webSocketServer.setOperateStatus(windowName, operateStatus);
-        webSocketServer.sendMessage(windowName, text, "Close successfully", null);
+        webSocketServer.sendMessage(windowName, text, LocaleString.transLanguageWs("2004", webSocketServer), null);
     }
 
     @Override

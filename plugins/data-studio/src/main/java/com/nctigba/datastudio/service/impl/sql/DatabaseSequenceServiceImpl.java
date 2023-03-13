@@ -5,6 +5,7 @@ import com.nctigba.datastudio.model.dto.DatabaseCreateSequenceDTO;
 import com.nctigba.datastudio.model.dto.DatabaseDropSequenceDTO;
 import com.nctigba.datastudio.model.dto.DatabaseSequenceDdlDTO;
 import com.nctigba.datastudio.service.DatabaseSequenceService;
+import com.nctigba.datastudio.util.LocaleString;
 import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.exception.CustomException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -109,7 +110,7 @@ public class DatabaseSequenceServiceImpl implements DatabaseSequenceService {
                 count.next();
                 int a = count.getInt("count");
                 if(a==0){
-                    throw new CustomException("The sequence does not exist");
+                    throw new CustomException(LocaleString.transLanguage("2012"));
                 }
             }
             String ddl = "";

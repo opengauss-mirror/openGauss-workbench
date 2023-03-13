@@ -5,6 +5,7 @@ import com.nctigba.datastudio.enums.ParamTypeEnum;
 import com.nctigba.datastudio.model.PublicParamReq;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.util.Strings;
 import org.springframework.util.CollectionUtils;
 
 import java.sql.ResultSet;
@@ -19,13 +20,18 @@ import java.util.Map;
 import java.util.Set;
 
 import static com.nctigba.datastudio.constants.CommonConstants.COLUMN;
+import static com.nctigba.datastudio.constants.CommonConstants.FUNCTION;
+import static com.nctigba.datastudio.constants.CommonConstants.FUNC_OID;
+import static com.nctigba.datastudio.constants.CommonConstants.LINE_FEED;
 import static com.nctigba.datastudio.constants.CommonConstants.OID;
+import static com.nctigba.datastudio.constants.CommonConstants.PROCEDURE;
 import static com.nctigba.datastudio.constants.CommonConstants.RESULT;
 import static com.nctigba.datastudio.constants.CommonConstants.SPACE;
 import static com.nctigba.datastudio.constants.CommonConstants.STATEMENT;
 import static com.nctigba.datastudio.constants.SqlConstants.COMMA;
 import static com.nctigba.datastudio.constants.SqlConstants.COMMA_SPACE;
-import static com.nctigba.datastudio.constants.SqlConstants.GET_PROC_PARAM_SQL;
+import static com.nctigba.datastudio.constants.SqlConstants.GET_PROC_NAME_SQL;
+import static com.nctigba.datastudio.constants.SqlConstants.GET_PROC_TYPE_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.GET_PROC_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.GET_TYPE_OID_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.PARENTHESES_LEFT;
@@ -33,6 +39,7 @@ import static com.nctigba.datastudio.constants.SqlConstants.PARENTHESES_RIGHT;
 import static com.nctigba.datastudio.constants.SqlConstants.PARENTHESES_SEMICOLON;
 import static com.nctigba.datastudio.constants.SqlConstants.POINT;
 import static com.nctigba.datastudio.constants.SqlConstants.QUOTES_SEMICOLON;
+import static com.nctigba.datastudio.constants.SqlConstants.TABLE_DATA_SQL;
 
 @Slf4j
 public class DebugUtils {
@@ -45,16 +52,16 @@ public class DebugUtils {
     public static String prepareName(String sql) {
         List<Integer> leftList = getIndexList(sql, PARENTHESES_LEFT);
         List<Integer> rightList = getIndexList(sql, PARENTHESES_RIGHT);
-        sql = sql.replace("\n", " ");
+        sql = sql.replace(LINE_FEED, SPACE);
         int first = sql.indexOf(POINT);
         int start = leftList.get(0);
         int end = rightList.get(rightList.size() - 1);
 
         StringBuilder sb = new StringBuilder();
         if (first == -1) {
-            String str = "";
-            int functionIndex = sql.toLowerCase().indexOf("function");
-            int procedureIndex = sql.toLowerCase().indexOf("procedure");
+            String str = Strings.EMPTY;
+            int functionIndex = sql.toLowerCase().indexOf(FUNCTION);
+            int procedureIndex = sql.toLowerCase().indexOf(PROCEDURE);
             if (functionIndex != -1) {
                 str = sql.substring(functionIndex, start);
             }
@@ -139,7 +146,7 @@ public class DebugUtils {
     public static String prepareSql(PublicParamReq paramReq) {
         String sql = paramReq.getSql();
         StringBuilder sb = new StringBuilder();
-        sb.append("select * from ").append(prepareFuncName(sql)).append(PARENTHESES_LEFT);
+        sb.append(TABLE_DATA_SQL).append(prepareFuncName(sql)).append(PARENTHESES_LEFT);
         List<Map<String, Object>> inputParams = paramReq.getInputParams();
         log.info("DebugUtils prepareSql inputParams is: " + inputParams);
 
@@ -190,7 +197,7 @@ public class DebugUtils {
                 String str = resultSet.getString(column);
 
                 if (StringUtils.isEmpty(str)) {
-                    list.add("");
+                    list.add(Strings.EMPTY);
                     continue;
                 }
                 if (str.equals("t")) {
@@ -212,12 +219,37 @@ public class DebugUtils {
         return map;
     }
 
+    public static Map<String, Object> parseBeakPoint(ResultSet resultSet, String oid) throws SQLException {
+        ResultSetMetaData metaData = resultSet.getMetaData();
+        Map<String, Object> map = new HashMap<>();
+        List<String> columnList = new ArrayList<>();
+        for (int i = 0; i < metaData.getColumnCount(); i++) {
+            columnList.add(metaData.getColumnName(i + 1));
+        }
+        map.put(COLUMN, columnList);
+        log.info("DebugUtils parseBeakPoint columnList is: " + columnList);
+
+        List<List<Object>> dataList = new ArrayList<>();
+        while (resultSet.next()) {
+            List<Object> list = new ArrayList<>();
+            for (int i = 0; i < columnList.size(); i++) {
+                list.add(resultSet.getString(columnList.get(i)));
+            }
+            if (list.contains(oid)) {
+                dataList.add(list);
+            }
+        }
+        map.put(RESULT, dataList);
+        log.info("DebugUtils parseBeakPoint map is: " + map);
+        return map;
+    }
+
     /**
      * function/procedure sql
      *
      * @return
      */
-    public static String getFuncSql(String windowName, String name, WebSocketServer webSocketServer) throws SQLException {
+    public static String getFuncSql(String windowName, String schema, String name, WebSocketServer webSocketServer) throws SQLException {
         List<String> oidList = new ArrayList<>();
         List<String> paramTypeList = getParamTypeList(name);
         for (String s : paramTypeList) {
@@ -233,7 +265,7 @@ public class DebugUtils {
         log.info("DebugUtils getFuncSql oidList is: " + oidList);
 
         StringBuilder sb = new StringBuilder();
-        sb.append(GET_PROC_SQL).append(getFuncName(name).trim()).append(GET_PROC_PARAM_SQL);
+        sb.append(GET_PROC_SQL).append(getFuncName(name).trim()).append(GET_PROC_TYPE_SQL);
 
         if (oidList.size() == 0) {
             sb.append(SPACE);
@@ -245,7 +277,7 @@ public class DebugUtils {
                 }
             }
         }
-
+        sb.append(GET_PROC_NAME_SQL).append(schema);
         sb.append(QUOTES_SEMICOLON);
         log.info("DebugUtils getFuncSql sql is: " + sb);
         return sb.toString();
@@ -294,7 +326,7 @@ public class DebugUtils {
         log.info("DebugUtils getParamMap sql is: " + sql);
         List<Integer> leftList = getIndexList(sql, PARENTHESES_LEFT);
         List<Integer> rightList = getIndexList(sql, PARENTHESES_RIGHT);
-        sql = sql.replace("\n", " ");
+        sql = sql.replace(LINE_FEED, SPACE);
         int start = leftList.get(0);
         int end = rightList.get(rightList.size() - 1);
         String[] splits = sql.substring(start + 1, end).split(COMMA);
@@ -329,16 +361,18 @@ public class DebugUtils {
         List<List<Object>> dataList = (List<List<Object>>) map.get(RESULT);
 
         Map<String, String> paramMap = getParamMap(sql);
+        log.info("DebugUtils paramMap map is: " + paramMap);
         if (!CollectionUtils.isEmpty(map)) {
             columnList.add("paramType");
-            dataList.forEach(data -> {
+            for (int i = 0; i < dataList.size(); i++) {
+                List<Object> data = dataList.get(i);
                 String value = paramMap.get(data.get(0));
-                if (StringUtils.isEmpty(value)) {
-                    data.add("temp");
-                } else {
+                if (i < paramMap.size()) {
                     data.add(value);
+                } else {
+                    data.add("temp");
                 }
-            });
+            }
         }
         log.info("DebugUtils addMapParam result is: " + map);
         return map;

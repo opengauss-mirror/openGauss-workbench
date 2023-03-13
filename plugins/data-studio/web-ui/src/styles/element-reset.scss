@@ -17,6 +17,9 @@
   --el-color-danger-light-3: #E94842;
   --el-color-danger-light-5: #F49C92;
   --el-color-danger-dark-2: #BF1118;
+  --color-fill-2: #f2f3f5;
+  --color-text-4: #c9cdd4;
+  --color-bg-2: #fff;
 }
 .el-tabs {
   --el-tabs-header-height: 28px;
@@ -54,6 +57,9 @@
   --el-button-hover-border-color: var(--hover-color);
   --el-button-active-bg-color: var(--active-color);
   --el-button-active-border-color: var(--active-color);
+  --el-button-text-color: var(--color-bg-2);
+  --el-button-hover-text-color: var(--color-bg-2);
+  --el-button-active-text-color: var(--color-bg-2);
 }
 .el-button.is-plain {
   border-color: var(--normal-color);
@@ -97,4 +103,11 @@ html {
 }
 .el-table--striped .el-table__body tr.el-table__row--striped.current-row td.el-table__cell {
   background-color: var(--el-fill-color-light);
+}
+
+.el-dropdown__popper {
+  --el-dropdown-menuItem-hover-fill: var(--color-fill-2);
+}
+.el-dropdown-menu__item:not(.is-disabled):focus {
+  color: var(--el-text-color-regular);
 }

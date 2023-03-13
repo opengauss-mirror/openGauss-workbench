@@ -1,5 +1,8 @@
 package com.nctigba.datastudio.result;
 
+import static com.nctigba.datastudio.constants.CommonConstants.FIVE_HUNDRED;
+import static com.nctigba.datastudio.constants.CommonConstants.TWO_HUNDRED;
+
 public class WebDsResult {
     private String type;
 
@@ -14,7 +17,7 @@ public class WebDsResult {
     public static WebDsResult ok(String type, String statusMsg) {
         WebDsResult result = new WebDsResult();
         result.setType(type);
-        result.setCode("200");
+        result.setCode(TWO_HUNDRED);
         result.setMsg(statusMsg);
         return result;
     }
@@ -22,7 +25,7 @@ public class WebDsResult {
     public static WebDsResult error(String type, String statusMsg) {
         WebDsResult result = new WebDsResult();
         result.setType(type);
-        result.setCode("500");
+        result.setCode(FIVE_HUNDRED);
         result.setMsg(statusMsg);
         return result;
     }

@@ -6,7 +6,9 @@ import com.nctigba.datastudio.model.PublicParamReq;
 import com.nctigba.datastudio.model.entity.OperateStatusDO;
 import com.nctigba.datastudio.service.OperationInterface;
 import com.nctigba.datastudio.util.DebugUtils;
+import com.nctigba.datastudio.util.LocaleString;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -24,6 +26,7 @@ import static com.nctigba.datastudio.constants.CommonConstants.CONNECTION;
 import static com.nctigba.datastudio.constants.CommonConstants.DIFFER;
 import static com.nctigba.datastudio.constants.CommonConstants.END;
 import static com.nctigba.datastudio.constants.CommonConstants.FUNC_OID;
+import static com.nctigba.datastudio.constants.CommonConstants.LINE_FEED;
 import static com.nctigba.datastudio.constants.CommonConstants.NODE_NAME;
 import static com.nctigba.datastudio.constants.CommonConstants.OID;
 import static com.nctigba.datastudio.constants.CommonConstants.PORT;
@@ -60,6 +63,7 @@ public class InputParamImpl implements OperationInterface {
         log.info("inputParam obj is: " + obj);
         PublicParamReq paramReq = (PublicParamReq) obj;
         String windowName = paramReq.getWindowName();
+        String schema = DebugUtils.prepareFuncName(paramReq.getSql()).split("\\.")[0];
         OperateStatusDO operateStatusDO = webSocketServer.getOperateStatus(windowName);
         if (!operateStatusDO.isDebug()) {
             Statement statement = webSocketServer.getStatement(windowName);
@@ -72,7 +76,7 @@ public class InputParamImpl implements OperationInterface {
                     webSocketServer.sendMessage(windowName, text, SUCCESS, map);
                 } else {
                     Map<String, String> messageMap = new HashMap<>();
-                    messageMap.put(RESULT, "debugging is over. Please check the result set on the right!");
+                    messageMap.put(RESULT, LocaleString.transLanguageWs("1007", webSocketServer));
                     webSocketServer.sendMessage(windowName, text, SUCCESS, messageMap);
                     webSocketServer.sendMessage(windowName, table, SUCCESS, map);
                 }
@@ -82,15 +86,15 @@ public class InputParamImpl implements OperationInterface {
             statement.close();
             webSocketServer.setStatement(windowName, null);
         } else {
-            debugOperate(windowName, webSocketServer, paramReq);
+            debugOperate(windowName, schema, webSocketServer, paramReq);
         }
     }
 
-    private void debugOperate(String windowName, WebSocketServer webSocketServer, PublicParamReq paramReq) throws Exception {
+    private void debugOperate(String windowName, String schema, WebSocketServer webSocketServer, PublicParamReq paramReq) throws Exception {
         Statement statement = webSocketServer.getStatement(windowName);
         String name = DebugUtils.prepareName(paramReq.getSql());
-        ResultSet oidResult = statement.executeQuery(DebugUtils.getFuncSql(windowName, name, webSocketServer));
-        String oid = "";
+        ResultSet oidResult = statement.executeQuery(DebugUtils.getFuncSql(windowName, schema, name, webSocketServer));
+        String oid = Strings.EMPTY;
         while (oidResult.next()) {
             oid = oidResult.getString(OID);
         }
@@ -106,8 +110,8 @@ public class InputParamImpl implements OperationInterface {
             portList.add(resultSet.getString(PORT));
         }
 
-        String nodeName = "";
-        String port = "";
+        String nodeName = Strings.EMPTY;
+        String port = Strings.EMPTY;
         if (oidList.contains(oid)) {
             int index = oidList.indexOf(oid);
             nodeName = nodeNameList.get(index);
@@ -153,7 +157,7 @@ public class InputParamImpl implements OperationInterface {
         int begin = 0;
         int end = 0;
         int differ = 0;
-        String[] split = sql.split("\n");
+        String[] split = sql.split(LINE_FEED);
         for (int i = 0; i < split.length; i++) {
             if (split[i].trim().equalsIgnoreCase("as") || split[i].trim().equalsIgnoreCase("as $$")) {
                 differ = i;
