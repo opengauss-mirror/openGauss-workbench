@@ -94,6 +94,6 @@ defineExpose({
 <style lang="less" scoped>
 .simple-install-c {
   padding: 20px;
-  height: calc(100% - 20px - 42px);
+  height: calc(100% - 36px);
 }
 </style>

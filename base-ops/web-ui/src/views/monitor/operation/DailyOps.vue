@@ -69,7 +69,7 @@
                     <a-popconfirm :content="$t('operation.DailyOps.5mplp1xc0zo0')" type="warning"
                       :ok-text="$t('operation.DailyOps.5mplp1xc1580')"
                       :cancel-text="$t('operation.DailyOps.5mplp1xc1b00')"
-                      @ok="handleUninstall(clusterData, index, false)">
+                      @ok="handleUninstallBefore(clusterData, index, false)">
                       <a-button type="outline" class="mr">{{
                         $t('operation.DailyOps.5mplp1xc1gs0')
                       }}</a-button>
@@ -77,7 +77,7 @@
                     <a-popconfirm :content="$t('operation.DailyOps.5mplp1xc0zo0')" type="warning"
                       :ok-text="$t('operation.DailyOps.5mplp1xc1580')"
                       :cancel-text="$t('operation.DailyOps.5mplp1xc1b00')"
-                      @ok="handleUninstall(clusterData, index, true)">
+                      @ok="handleUninstallBefore(clusterData, index, true)">
                       <a-button type="outline" class="mr">{{
                         $t('operation.DailyOps.5mplp1xc1ms0')
                       }}</a-button>
@@ -369,6 +369,7 @@
     </div>
     <cluster-backup-dlg ref="backupRef" @finish="handleBackup"></cluster-backup-dlg>
     <one-check ref="oneCheckRef"></one-check>
+    <host-pwd-dlg ref="hostPwdRef" @finish="handleAllNodesPwd"></host-pwd-dlg>
   </div>
 </template>
 
@@ -385,6 +386,7 @@ import Socket from '@/utils/websocket'
 import ClusterBackupDlg from '@/views/monitor/operation/ClusterBackupDlg.vue'
 import { ClusterRoleEnum, OpenGaussVersionEnum, CMStateEnum } from '@/types/ops/install'
 import OneCheck from '@/views/ops/home/components/OneCheck.vue'
+import HostPwdDlg from './HostPwdDlg.vue'
 import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
 const data: {
@@ -608,7 +610,45 @@ const setInstanceState = (clusterData: KeyValue, instanceData: KeyValue) => {
   }
 }
 
-const handleUninstall = (clusterData: KeyValue, index: number, force: boolean) => {
+const nodeTemp = reactive<KeyValue>({
+  clusterData: {},
+  index: 0,
+  force: false
+})
+const hostPwdRef = ref<null | InstanceType<typeof HostPwdDlg>>(null)
+const handleUninstallBefore = (clusterData: KeyValue, index: number, force: boolean) => {
+  if (clusterData.version === OpenGaussVersionEnum.ENTERPRISE) {
+    const result: KeyValue[] = []
+    clusterData.clusterNodes.forEach((item: KeyValue) => {
+      if (!item.isRemember) {
+        const temp = {
+          privateIp: item.privateIp,
+          publicIp: item.publicIp,
+          hostId: item.hostId,
+          rootPassword: '',
+          isRemember: item.isRemember
+        }
+        result.push(temp)
+      }
+    })
+    if (result.length) {
+      nodeTemp.clusterData = clusterData
+      nodeTemp.index = index
+      nodeTemp.force = force
+      hostPwdRef.value?.open(result)
+    } else {
+      handleUninstall(clusterData, index, force)
+    }
+  } else {
+    handleUninstall(clusterData, index, force)
+  }
+}
+
+const handleAllNodesPwd = (rootPasswords: KeyValue) => {
+  handleUninstall(nodeTemp.clusterData, nodeTemp.index, nodeTemp.force, rootPasswords)
+}
+
+const handleUninstall = (clusterData: KeyValue, index: number, force: boolean, rootPasswords?: KeyValue) => {
   clusterData.loading = true
   const term = getTermObj()
   const socketKey = new Date().getTime()
@@ -618,7 +658,8 @@ const handleUninstall = (clusterData: KeyValue, index: number, force: boolean) =
       clusterId: clusterData.clusterId,
       wsConnectType: 'COMMAND_EXEC',
       businessId: `uninstall_${clusterData.clusterId}_${socketKey}`,
-      force: force
+      force: force,
+      rootPasswords: rootPasswords
     }
     uninstallOpenGauss(param).then((res: KeyValue) => {
       if (Number(res.code) !== 200) {

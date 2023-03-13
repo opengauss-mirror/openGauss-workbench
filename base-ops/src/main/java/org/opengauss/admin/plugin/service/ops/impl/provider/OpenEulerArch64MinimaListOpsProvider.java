@@ -248,7 +248,15 @@ public class OpenEulerArch64MinimaListOpsProvider extends AbstractOpsProvider {
             return hostUserEntity;
         }
 
-        String rootPassword = installContext.getMinimalistInstallConfig().getNodeConfigList().stream().filter(nodeConfig -> nodeConfig.getHostId().equalsIgnoreCase(hostId)).map(MinimalistInstallNodeConfig::getRootPassword).findFirst().orElseThrow(() -> new OpsException("root password not found"));
+        String rootPassword = null;
+
+        for (HostInfoHolder hostInfoHolder : installContext.getHostInfoHolders()) {
+            final OpsHostEntity currentHost = hostInfoHolder.getHostEntity();
+            if (hostId.equalsIgnoreCase(currentHost.getHostId())){
+                rootPassword = hostInfoHolder.getHostUserEntities().stream().filter(user->"root".equalsIgnoreCase(user.getUsername())).map(OpsHostUserEntity::getPassword).findFirst().orElseThrow(()->new OpsException("root password not found"));
+            }
+        }
+
         Session rootSession = jschUtil.getSession(hostEntity.getPublicIp(), hostEntity.getPort(), "root", encryptionUtils.decrypt(rootPassword)).orElseThrow(() -> new OpsException("with the host[" + hostEntity.getPublicIp() + "]Failed to establish session"));
         try {
 

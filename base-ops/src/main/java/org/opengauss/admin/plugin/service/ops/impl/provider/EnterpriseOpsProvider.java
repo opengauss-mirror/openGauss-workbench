@@ -837,10 +837,10 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
         try {
             Optional<OpsHostUserEntity> rootUserEntity = hostInfoHolder.getHostUserEntities().stream().filter(userEntity -> "root".equalsIgnoreCase(userEntity.getUsername())).findFirst();
             cleanEnv(unInstallContext.getHostInfoHolders(),hostEntity,rootUserEntity,hostUserEntity,retSession,opsClusterEntity.getInstallPackagePath(),opsClusterEntity.getXmlConfigPath());
-            wsUtil.sendText(retSession,"ENV_CLEAN_SUCCESS");
+            wsUtil.sendText(retSession,"\nENV_CLEAN_SUCCESS\n");
         }catch (Exception e){
             log.error("env clean fail:",e);
-            wsUtil.sendText(retSession,"ENV_CLEAN_FAIL");
+            wsUtil.sendText(retSession,"\nENV_CLEAN_FAIL\n");
         }
     }
 

@@ -176,8 +176,10 @@ const installWayStore = computed(() => installStore.getInstallConfig)
   width: 100%;
   position: relative;
   height: calc(100vh - 130px);
+
   &-body {
     // height: calc(100vh - 180px);
+    height: calc(100% - 36px);
   }
 
   &-footer {
