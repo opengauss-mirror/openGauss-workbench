@@ -1,6 +1,7 @@
 package com.nctigba.observability.log.service;
 
 import java.net.http.WebSocket;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
@@ -13,8 +14,10 @@ import org.opengauss.admin.system.plugin.facade.HostUserFacade;
 import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType.Type;
+import com.nctigba.observability.log.env.NctigbaEnv;
 import com.nctigba.observability.log.env.NctigbaEnvMapper;
 import com.nctigba.observability.log.service.AbstractInstaller.Step.status;
 
@@ -22,9 +25,10 @@ import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.experimental.Accessors;
 
 public abstract class AbstractInstaller {
-	protected static final String TAR = ".tar.gz";
+	public static final String TAR = ".tar.gz";
 	@Autowired
 	@AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
 	protected HostFacade hostFacade;
@@ -40,7 +44,7 @@ public abstract class AbstractInstaller {
 	@AutowiredType(Type.PLUGIN_MAIN)
 	protected WsUtil wsUtil;
 
-	protected String arch(String str) {
+	public static String arch(String str) {
 		return "aarch64".equals(str) ? "arm64" : "amd64";
 	}
 
@@ -90,12 +94,24 @@ public abstract class AbstractInstaller {
 		wsUtil.sendText(wsSession, JSONUtil.toJsonStr(steps));
 	}
 
+	protected void addMsg(WsSession wsSession, List<Step> steps, int curr, String msg) {
+		steps.get(curr).getMsg().add(msg);
+		wsUtil.sendText(wsSession, JSONUtil.toJsonStr(steps));
+	}
+
+	public void save(NctigbaEnv env) {
+		if (envMapper.selectOne(Wrappers.<NctigbaEnv>lambdaQuery().eq(NctigbaEnv::getType, env.getType())
+				.eq(NctigbaEnv::getPath, env.getPath())) == null)
+			envMapper.insert(env);
+	}
+
 	@Data
+	@Accessors(chain = true)
 	@NoArgsConstructor
 	public static class Step {
 		String name;
 		status state = status.TODO;
-		Object msg;
+		List<String> msg = new ArrayList<>();
 
 		public Step(String name) {
 			this.name = name;

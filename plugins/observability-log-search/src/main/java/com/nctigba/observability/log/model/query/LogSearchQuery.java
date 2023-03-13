@@ -25,4 +25,5 @@ public class LogSearchQuery {
     private List<String> logType;
     private List<String> logLevel;
     private String scrollId;
+    private List<String> sorts;
 }

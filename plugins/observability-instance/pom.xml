@@ -19,7 +19,6 @@
 		<maven.compiler.target>11</maven.compiler.target>
 
 		<!-- dependency version -->
-		<spring-boot.version>2.5.6</spring-boot.version>
 		<spring-brick.version>3.1.0</spring-brick.version>
 		<junit.version>4.13</junit.version>
 		<mybatis-plus.version>3.5.2</mybatis-plus.version>
@@ -32,7 +31,6 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter</artifactId>
-			<version>${spring-boot.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.opengauss</groupId>
@@ -61,14 +59,12 @@
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
-			<version>${junit.version}</version>
 			<scope>test</scope>
 		</dependency>
 
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
-			<version>${lombok.version}</version>
 			<scope>provided</scope>
 		</dependency>
 		<!-- same as framework -->
@@ -78,12 +74,6 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>io.springfox</groupId>
-			<artifactId>springfox-boot-starter</artifactId>
-			<version>3.0.0</version>
-			<scope>${swagger.scope}</scope>
 		</dependency>
 		<dependency>
 			<groupId>com.alibaba</groupId>
@@ -128,6 +118,18 @@
 			<artifactId>jsch</artifactId>
 			<version>0.1.55</version>
 		</dependency>
+		<!-- https://mvnrepository.com/artifact/org.xerial/sqlite-jdbc -->
+		<dependency>
+			<groupId>org.xerial</groupId>
+			<artifactId>sqlite-jdbc</artifactId>
+			<version>3.39.3.0</version>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/org.apache.sshd/sshd-scp -->
+		<dependency>
+			<groupId>org.apache.sshd</groupId>
+			<artifactId>sshd-sftp</artifactId>
+			<version>2.9.2</version>
+		</dependency>
 	</dependencies>
 
 	<dependencyManagement>
@@ -136,7 +138,7 @@
 			<dependency>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-dependencies</artifactId>
-				<version>${spring-boot.version}</version>
+				<version>2.5.6</version>
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
@@ -160,27 +162,6 @@
 		</pluginRepository>
 	</pluginRepositories>
 
-	<profiles>
-		<profile>
-			<id>dev</id>
-			<properties>
-				<profiles.active>dev</profiles.active>
-				<swagger.scope>compile</swagger.scope>
-			</properties>
-			<activation>
-				<activeByDefault>true</activeByDefault>
-			</activation>
-		</profile>
-		<profile>
-			<id>prod</id>
-			<properties>
-				<profiles.active>prod</profiles.active>
-				<swagger.scope>provided</swagger.scope>
-			</properties>
-		</profile>
-	</profiles>
-
-
 	<build>
 		<pluginManagement>
 			<plugins>
@@ -192,22 +173,6 @@
 			</plugins>
 		</pluginManagement>
 		<plugins>
-			<plugin>
-				<groupId>org.springframework.boot</groupId>
-				<artifactId>spring-boot-maven-plugin</artifactId>
-				<version>2.4.13</version>
-				<configuration>
-					<mainClass>com.nctigba.observability.instance.ObservabilityPluginBootApplication</mainClass>
-				</configuration>
-				<executions>
-					<execution>
-						<goals>
-							<goal>repackage</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-
 			<plugin>
 				<groupId>com.gitee.starblues</groupId>
 				<artifactId>spring-brick-maven-packager</artifactId>
@@ -343,11 +308,5 @@
 				</executions>
 			</plugin>
 		</plugins>
-		<resources>
-			<resource>
-				<directory>src/main/resources</directory>
-				<filtering>true</filtering>
-			</resource>
-		</resources>
 	</build>
 </project>

@@ -15,7 +15,6 @@ import com.nctigba.observability.sql.model.DictionaryConfig;
 import com.nctigba.observability.sql.service.ClusterManager;
 import com.nctigba.observability.sql.service.DictionaryConfigService;
 
-import io.swagger.annotations.ApiOperation;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -34,7 +33,6 @@ public class PublicController {
 	 * database
 	 */
 	@GetMapping("/clusters/{clusterId}/instances")
-	@ApiOperation(value = "DATABASE", notes = "DATABASE")
 	public List<String> datebaseList(@PathVariable String clusterId) {
 		return clusterManager.databaseList(clusterId);
 	}

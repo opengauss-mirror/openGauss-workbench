@@ -180,12 +180,12 @@ watch(serverInfoText, (val) => {
     <div class="tab-wrapper" :key="clusterNodeId">
         <el-container>
             <el-aside :width="isCollapse ? '0px' : '300px'">
-                <div style="height: 23px"></div>
+                <div style="height: 13px"></div>
                 <Install />
             </el-aside>
-            <el-main style="position: relative">
+            <el-main style="position: relative;padding-top: 0px;">
                 <div>
-                    <div style="position: absolute; left: 10px; top: 31px; z-index: 9999" @click="toggleCollapse">
+                    <div style="position: absolute; left: 10px; top: 11px; z-index: 9999" @click="toggleCollapse">
                         <el-icon v-if="!isCollapse" size="20px"><Fold /></el-icon>
                         <el-icon v-if="isCollapse" size="20px"><Expand /></el-icon>
                     </div>

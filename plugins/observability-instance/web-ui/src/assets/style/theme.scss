@@ -29,7 +29,8 @@ html {
     --el-text-color-og: #333;
     --el-button-color-small: #ddd;
     --el-table-cell: #333;
-    --el-color-primary: #409eff;
+    // --el-color-primary: #409eff;
+    --el-color-primary:var(--primary-6);
     --el-button-text-color: #333;
     --el-og-border-color: #ddd;
 

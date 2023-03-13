@@ -1,29 +1,28 @@
 package com.nctigba.observability.instance.util;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.text.MessageFormat;
-import java.util.Map;
+import java.util.EnumSet;
 
-import org.opengauss.admin.common.exception.ops.OpsException;
-
-import com.jcraft.jsch.ChannelExec;
-import com.jcraft.jsch.ChannelSftp;
-import com.jcraft.jsch.JSch;
-import com.jcraft.jsch.JSchException;
-import com.jcraft.jsch.Session;
+import org.apache.sshd.client.SshClient;
+import org.apache.sshd.client.channel.ClientChannelEvent;
+import org.apache.sshd.client.session.ClientSession;
+import org.apache.sshd.sftp.client.SftpClientFactory;
 
 import cn.hutool.core.thread.ThreadUtil;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@Getter
 public class SshSession implements AutoCloseable {
 	private static final int SESSION_TIMEOUT = 10000;
-	private static final int CHANNEL_TIMEOUT = 50000;
+	private static final int CHANNEL_TIMEOUT = 1000 * 60 * 5;
 
 	public enum command {
 		ARCH("arch"),
@@ -37,7 +36,7 @@ public class SshSession implements AutoCloseable {
 		CHECK_USER("cat /etc/passwd | awk -F \":\" \"'{print $1}\"|grep {0} | wc -l"),
 		CREATE_USER("useradd omm && echo ''{0} ALL=(ALL) ALL'' >> /etc/sudoers"),
 		CHANGE_PASSWORD("passwd {1}"),
-		PS("ps -ef|grep {0} |grep -v grep |awk ''{print $2}''"),
+		PS("ps -ef|grep {0} |grep -v grep |awk '''{print $2}''"),
 		KILL("kill -9 {0}");
 
 		private String cmd;
@@ -53,7 +52,7 @@ public class SshSession implements AutoCloseable {
 
 	public boolean test(String command) throws IOException {
 		try {
-			execute(command, null);
+			execute(command);
 			return true;
 		} catch (RuntimeException e) {
 			return false;
@@ -61,111 +60,73 @@ public class SshSession implements AutoCloseable {
 	}
 
 	public String execute(command command) throws IOException {
-		return execute(command.cmd, null, null, true);
-	}
-
-	public String execute(command command, Map<String, String> autoResponse) throws IOException {
-		return execute(command.cmd, autoResponse, null, true);
+		return execute(command.cmd, null);
 	}
 
 	public String execute(String command) throws IOException {
-		return execute(command, null, null, true);
+		return execute(command, null);
 	}
 
-	public String execute(String command, Boolean pty) throws IOException {
-		return execute(command, null, pty, true);
+	public String execute(String command, OutputStream os) throws IOException {
+		log.info("exec:" + command);
+		var ec = session.createExecChannel(command);
+		if (os == null)
+			os = new ByteArrayOutputStream();
+		ec.setOut(os);
+		ec.setErr(os);
+		ec.open();
+		ec.waitFor(EnumSet.of(ClientChannelEvent.CLOSED), CHANNEL_TIMEOUT);
+		for (int i = 0; i < 3 && ec.getExitStatus() == null; i++)
+			ThreadUtil.sleep(100L);
+		if (ec.getExitStatus() != null && ec.getExitStatus() != 0)
+			throw new RuntimeException(os.toString().trim());
+		return os.toString().trim();
 	}
 
-	public String executeNoWait(String command) throws IOException {
-		return execute(command, null, null, false);
+	public void executeNoWait(String command) throws IOException {
+		log.info("execC:" + command);
+		var c = session.createShellChannel();
+		command = command + "\nexit\n";
+		c.setIn(new ByteArrayInputStream(command.getBytes()));
+		var os = new ByteArrayOutputStream();
+		c.setOut(os);
+		c.setErr(os);
+		c.open();
+		c.waitFor(EnumSet.of(ClientChannelEvent.CLOSED), CHANNEL_TIMEOUT);
+		log.info(os.toString());
 	}
 
-	public String execute(String command, Map<String, String> autoResponse, Boolean pty, boolean wait) throws IOException {
-		log.info("Execute an order：{}", command);
-		ChannelExec channelExec;
-		try {
-			channelExec = (ChannelExec) session.openChannel("exec");
-			channelExec.setPtyType("dump");
-			channelExec.setPty(pty == null ? true : pty);
-		} catch (JSchException e) {
-			throw new OpsException("Obtaining the exec channel fails");
+	public synchronized void upload(InputStream in, String target) throws IOException {
+		var sf = SftpClientFactory.instance().createSftpFileSystem(session);
+		var path = sf.getDefaultDir().resolve(target);
+		Files.copy(in, path, StandardCopyOption.REPLACE_EXISTING);
+	}
+
+	public synchronized void upload(String source, String target) throws IOException {
+		var sf = SftpClientFactory.instance().createSftpFileSystem(session);
+		var path = sf.getDefaultDir().resolve(target);
+		Files.copy(Paths.get(source), path, StandardCopyOption.REPLACE_EXISTING);
+	}
+
+	private static SshClient cli;
+	private ClientSession session;
+
+	private static final synchronized SshClient getClient() {
+		if (cli == null) {
+			cli = SshClient.setUpDefaultClient();
+			cli.start();
 		}
-		channelExec.setCommand(command);
-		try {
-			channelExec.connect(CHANNEL_TIMEOUT);
-		} catch (JSchException e) {
-			throw new OpsException("Command execution exception");
-		}
-		StringBuilder resultStrBuilder = new StringBuilder();
-		InputStream in = channelExec.getInputStream();
-		OutputStream out = channelExec.getOutputStream();
-		byte[] tmp = new byte[1024];
-		while (true) {
-			while (in.available() > 0) {
-				int i = in.read(tmp, 0, 1024);
-				if (i < 0) {
-					break;
-				}
-				String msg = new String(tmp, 0, i);
-				resultStrBuilder.append(msg);
-			}
-			if (pty != null && !pty)
-				return resultStrBuilder.toString().trim();
-			if (!wait && autoResponse == null && resultStrBuilder.length() > 0)
-				return resultStrBuilder.toString().trim();
-			if (channelExec.isClosed()) {
-				if (in.available() > 0) {
-					continue;
-				}
-				in.close();
-				out.close();
-				int exitStatus = channelExec.getExitStatus();
-				if (exitStatus != 0)
-					throw new RuntimeException(resultStrBuilder.toString().trim());
-				return resultStrBuilder.toString().trim();
-			}
-			ThreadUtil.sleep(2000);
-			if (autoResponse != null) {
-				autoResponse.forEach((k, v) -> {
-					if (resultStrBuilder.toString().trim().endsWith(k.trim())) {
-						try {
-							out.write((v.trim() + "\r").getBytes(StandardCharsets.UTF_8));
-							out.flush();
-							resultStrBuilder.append(v.trim() + "\r");
-						} catch (IOException e) {
-						}
-					}
-				});
-			}
-		}
+		return cli;
 	}
-
-	public synchronized void upload(String source, String target) {
-		try {
-			ChannelSftp channel = (ChannelSftp) session.openChannel("sftp");
-			channel.connect();
-			channel.put(source, target, ChannelSftp.RESUME);
-		} catch (Exception e) {
-			log.error("upload fail", e);
-			throw new RuntimeException(e);
-		}
-	}
-
-	private Session session;
 
 	private SshSession(String host, Integer port, String username, String password) throws IOException {
-		JSch jSch = new JSch();
+		var cf = getClient().connect(username, host, port);
+		session = cf.verify().getSession();
 		try {
-			session = jSch.getSession(username, host, port);
-		} catch (JSchException e) {
-			throw new OpsException("Connection establishment fail");
-		}
-		session.setPassword(password);
-		session.setConfig("StrictHostKeyChecking", "no");
-		try {
-			session.connect(SESSION_TIMEOUT);
-		} catch (JSchException e) {
-			throw new OpsException(host + "Connection establishment fail");
+			session.addPasswordIdentity(password);
+			session.auth().verify(SESSION_TIMEOUT);
+		} catch (Exception e) {
+			throw new RuntimeException(username + " password error");
 		}
 	}
 
@@ -174,7 +135,7 @@ public class SshSession implements AutoCloseable {
 	}
 
 	@Override
-	public void close() {
-		session.disconnect();
+	public void close() throws IOException {
+		session.close();
 	}
 }

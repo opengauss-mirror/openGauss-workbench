@@ -343,7 +343,7 @@ watch(res, (res: Res) => {
 // Get svg pictures
 watch(ret, (res: any) => {
     if (res && Object.keys(res).length) {
-        svgFile.value = res.replace('opacity:0.1;', 'opacity:0.7;')
+        svgFile.value = res.replace('opacity:0.1;', 'opacity:0.7;').replace('>ic<', '><')
     }
 })
 </script>

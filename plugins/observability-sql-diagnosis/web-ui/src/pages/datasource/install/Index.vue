@@ -1,7 +1,7 @@
 <template>
     <div class="top-sql">
         <div class="tab-wrapper-container">
-            <div class="search-form-multirow">
+            <div class="search-form-multirow" style="margin-bottom: 10px;">
                 <div class="row" style="justify-content: flex-start">
                     <div class="filter">
                         <el-button type="primary" @click="showInstallCollector">{{ $t('install.installAgent') }}</el-button>
@@ -26,7 +26,7 @@
                 </el-tabs>
             </div>
         </div>
-        <InstallAgent v-if="installCollectorShown" :show="installCollectorShown" @changeModal="changeModalInstallCollector" />
+        <InstallAgent v-if="installCollectorShown" :show="installCollectorShown" @changeModal="changeModalInstallCollector" @installed="agentInstalled()" />
         <UninstallAgent :node="uninstallAgentNode" v-if="uninstallAgentShown" :show="uninstallAgentShown" @changeModal="changeModalUninstallAgent" @installed="agentUninstalled()" />
 
         <my-message v-if="errorInfo" type="error" :tip="errorInfo" defaultTip="" />
@@ -57,6 +57,10 @@ const showInstallCollector = () => {
 const changeModalInstallCollector = (val: boolean) => {
     installCollectorShown.value = val
 }
+const agentInstalled = () => {
+    activeName.value = 'collector'
+    refreshCollectors()
+}
 
 // uinstallAgent
 const uninstallAgentShown = ref(false)
@@ -68,8 +72,8 @@ const showUninstallAgent = (node: any) => {
 const changeModalUninstallAgent = (val: boolean) => {
     uninstallAgentShown.value = val
 }
-const agentUninstalled = (code: number) => {
-    activeName.value = 'agent'
+const agentUninstalled = () => {
+    activeName.value = 'collector'
     refreshCollectors()
 }
 

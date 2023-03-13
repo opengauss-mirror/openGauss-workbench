@@ -22,11 +22,11 @@ const props = withDefaults(
         shortcutsConfig?: any[];
     }>(),
     {
-        startPlaceholder: '开始时间',
-        endPlaceholder: '结束时间',
+        startPlaceholder: '',
+        endPlaceholder: '',
         showShortcuts: true,
         valueFormatToISO: false,
-        shortcutsConfig: () => [{ text: '最近一小时', value: 1 }, { text: '最近三小时', value: 3 }, { text: '最近六小时', value: 6 }]
+        shortcutsConfig: () => []
     }
 );
 const myEmit = defineEmits<{

@@ -1,10 +1,17 @@
 <template>
     <div class="dialog">
-        <el-dialog width="400px" :title="t('install.uninstallAgent')" v-model="visible" :close-on-click-modal="false" draggable @close="closeDialog">
+        <el-dialog :width="dialogWith" :title="t('install.uninstallAgent')" v-model="visible" :close-on-click-modal="false" draggable @close="closeDialog">
             <div class="dialog-content" v-show="installData.length != 0">
                 <div>
                     <el-steps direction="vertical" :active="doingIndex">
-                        <el-step v-for="item in installData" :key="item.name" :title="item.name" />
+                        <el-step v-for="item in installData" :key="item.name" :title="item.name">
+                            <template #description>
+                                <div v-for="msg in item.msg">
+                                    <b>{{ msg }}</b>
+                                </div>
+                                <el-input v-if="item.error" v-model="item.error" :rows="5" type="textarea" readonly />
+                            </template>
+                        </el-step>
                     </el-steps>
                 </div>
             </div>
@@ -99,24 +106,38 @@ const sendData = async () => {
     ws.instance.send(sendData)
 }
 const onWebSocketMessage = (data: Array<any>) => {
-    if (Array.isArray(installData.value)) installData.value = JSON.parse(data)
+    // if (Array.isArray(installData.value)) installData.value = JSON.parse(data)
+    if (data) {
+        try {
+            installData.value = JSON.parse(data)
+        } catch (error) {
+            installData.value.forEach((item) => {
+                if (item.state === 'ERROR') {
+                    item['error'] = data
+                    dialogWith.value = '800px'
+                }
+            })
+        }
+    }
 }
 
 // action
 const back = () => {
     started.value = false
+    dialogWith.value = '400px'
     ws.instance.close()
     installData.value = []
 }
 
 // list Data
 const installData = ref<Array<any>>([])
+const dialogWith = ref<string>('400px')
 const doingIndex = computed(() => {
     for (let index = 0; index < installData.value.length; index++) {
         const element = installData.value[index]
         if (element.state === 'DOING' || element.state === 'ERROR') return index
     }
-    if (!installSucceed.value) installSucceed.value = true
+    if (installData.value.length > 0 && !installSucceed.value) installSucceed.value = true
     return installData.value.length
 })
 

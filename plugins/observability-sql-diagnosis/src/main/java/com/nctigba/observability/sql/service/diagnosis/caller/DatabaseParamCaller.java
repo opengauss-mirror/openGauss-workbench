@@ -1,15 +1,5 @@
 package com.nctigba.observability.sql.service.diagnosis.caller;
 
-import java.math.BigInteger;
-import java.util.regex.Pattern;
-
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.nctigba.observability.sql.mapper.NctigbaParamInfoMapper;
-import com.nctigba.observability.sql.model.param.NctigbaParamInfo;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.stereotype.Service;
-
 import com.nctigba.observability.sql.mapper.DiagnosisTaskMapper;
 import com.nctigba.observability.sql.mapper.DiagnosisTaskResultMapper;
 import com.nctigba.observability.sql.model.diagnosis.Task;
@@ -20,9 +10,17 @@ import com.nctigba.observability.sql.model.param.DatabaseParamData;
 import com.nctigba.observability.sql.model.param.ParamDto;
 import com.nctigba.observability.sql.service.ClusterManager;
 import com.nctigba.observability.sql.util.LocaleString;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Service;
+import org.sqlite.JDBC;
+
+import javax.script.ScriptEngineManager;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.Statement;
 
 @Service
 @Slf4j
@@ -33,9 +31,6 @@ public class DatabaseParamCaller implements Caller {
     private final DiagnosisTaskMapper diagnosisTaskMapper;
     private final ClusterManager clusterManager;
 
-    @Autowired
-    private NctigbaParamInfoMapper mapper;
-
 
     @Override
     @Async
@@ -45,65 +40,76 @@ public class DatabaseParamCaller implements Caller {
             return;
         task.addRemarks("start get param info:");
         diagnosisTaskMapper.updateById(task);
-        try (var conn = clusterManager.getConnectionByNodeId(task.getNodeId());) {
-            String sql="select name,setting from pg_settings";
+        try {
+            Connection connect = connect_sqlite();
+            Statement statement = connect.createStatement();
+            var conn = clusterManager.getConnectionByNodeId(task.getNodeId());
+            String sql = "select name,setting from pg_settings";
             var stmt = conn.createStatement();
             var rs = stmt.executeQuery(sql);
             while (rs.next()) {
-                String name=rs.getString(1);
-                String value= rs.getString(2);
-                DatabaseParamData[] fields= DatabaseParamData.values();
+                String name = rs.getString(1);
+                String value = rs.getString(2);
+                DatabaseParamData[] fields = DatabaseParamData.values();
                 String nodeName = null;
-                for(int j=0;j<fields.length;j++) {
+                for (int j = 0; j < fields.length; j++) {
                     if (fields[j].getParamName().equals(name)) {
-                        nodeName=fields[j].toString();
+                        nodeName = fields[j].toString();
                     }
                 }
-                if(nodeName==null)
+                if (nodeName == null)
                     continue;
-                NctigbaParamInfo nctigbaParamInfo=mapper.selectOne(Wrappers.<NctigbaParamInfo>lambdaQuery().eq(NctigbaParamInfo::getParamName,name));
-                Pattern pattern=Pattern.compile("[0-9]*");
-                ParamDto paramDto=new ParamDto();
-                boolean isEmpty=!"".equals(value) && value!=null && nctigbaParamInfo.getSuggestValue()!=null && !"".equals(nctigbaParamInfo.getSuggestValue());
-                boolean isMatch=pattern.matcher(value).matches() && pattern.matcher(nctigbaParamInfo.getSuggestValue()).matches();
-                if(isEmpty && isMatch ){
-                    BigInteger a = new BigInteger(value);
-                    BigInteger b = new BigInteger(nctigbaParamInfo.getSuggestValue());
-                    if(a.compareTo(b)>0){
-                        paramDto.setTitle(LocaleString.format("Param.turnDown")+LocaleString.format(nodeName+".title")+LocaleString.format("Param.define"));
-                    }else if(a.compareTo(b)<0){
-                        paramDto.setTitle(LocaleString.format("Param.turnUp")+LocaleString.format(nodeName+".title")+LocaleString.format("Param.define"));
-                    }else{
-                        paramDto.setTitle(LocaleString.format(nodeName+".title"));
+                String selectSql = "select * from param_info where paramName='" + name + "';";
+                ResultSet result = statement.executeQuery(selectSql);
+                if (result.next()) {
+                    ParamDto paramDto = new ParamDto();
+                    paramDto.setParamName(result.getString("paramName"));
+                    paramDto.setCurrentValue(value);
+                    paramDto.setUnit(result.getString("unit"));
+                    paramDto.setParamDescription(result.getString("paramDetail"));
+                    paramDto.setSuggestValue(result.getString("suggestValue"));
+                    paramDto.setSuggestReason(result.getString("suggestExplain"));
+                    TaskResult taskResult = new TaskResult();
+                    taskResult.setTaskid(task.getId());
+                    taskResult.setResultType(ResultType.valueOf(nodeName));
+                    taskResult.setFrameType(FrameType.Param);
+                    taskResult.setData(paramDto);
+                    if (result.getString("diagnosisRule") != null || !"".equals(result.getString("diagnosisRule"))) {
+                        var manager = new ScriptEngineManager();
+                        var t = manager.getEngineByName("javascript");
+                        var bindings = t.createBindings();
+                        bindings.put("actualValue", value);
+                        Object object = t.eval(result.getString("diagnosisRule"), bindings);
+                        if (object!=null && "true".equals(object.toString())) {
+                            taskResult.setState(TaskResult.ResultState.NoAdvice);
+                        } else {
+                            paramDto.setTitle(LocaleString.format("Param.revise") + LocaleString.format(nodeName + ".title") + LocaleString.format("Param.define"));
+                            taskResult.setState(TaskResult.ResultState.Suggestions);
+                        }
+                    } else {
+                        taskResult.setState(TaskResult.ResultState.NoAdvice);
                     }
-                }else{
-                    paramDto.setTitle(LocaleString.format(nodeName+".title"));
+                    taskResultMapper.insert(taskResult);
                 }
-                paramDto.setParamName(nctigbaParamInfo.getParamName());
-                paramDto.setCurrentValue(value);
-                paramDto.setUnit(nctigbaParamInfo.getUnit());
-                paramDto.setParamDescription(nctigbaParamInfo.getParamDetail());
-                paramDto.setSuggestValue(nctigbaParamInfo.getSuggestValue());
-                paramDto.setSuggestReason(nctigbaParamInfo.getSuggestExplain());
-                setTaskResultSuggestions(task.getId(), ResultType.valueOf(nodeName), paramDto);
             }
             stmt.close();
-        }catch (Exception e) {
+            statement.close();
+        } catch (Exception e) {
             log.info(e.getMessage());
-            task.addRemarks("get param info failed");
+            task.addRemarks("get param info failed", e);
         } finally {
             diagnosisTaskMapper.updateById(task);
         }
     }
 
-    private void setTaskResultSuggestions(Integer taskId, ResultType resultType, ParamDto paramDto) {
-        TaskResult taskResult = new TaskResult();
-        taskResult.setTaskid(taskId);
-        taskResult.setResultType(resultType);
-        taskResult.setState(TaskResult.ResultState.Suggestions);
-        taskResult.setFrameType(FrameType.Param);
-        taskResult.setData(paramDto);
-        taskResultMapper.insert(taskResult);
+    public static synchronized Connection connect_sqlite() {
+        Connection conn;
+        try {
+            conn = DriverManager.getConnection(JDBC.PREFIX + "data/paramInfo.db");
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        return conn;
     }
 
 }

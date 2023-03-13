@@ -4,6 +4,7 @@ import restRequest from "../../../request/restful";
 import { useI18n } from "vue-i18n";
 import { View, Guide } from "@element-plus/icons-vue";
 import Password from "./password.vue";
+import { FormRules, FormInstance, ElMessage } from 'element-plus'
 
 const { t } = useI18n();
 
@@ -71,62 +72,107 @@ const clusterLoaded = (val: any) => {
 };
 
 const handleQuery = () => {
+    if(!nodeId.value) {
+        ElMessage({
+                    showClose: true,
+                    message: t('configParam.queryValidInfo'),
+                    type: 'warning',
+                })
+        return
+    }
     showSnapshotManage();
 };
-const refreshData = (password: string) => {
-    requestDBData(password);
-    requestOSData(password);
+const refreshData = (password: string,isRefresh: string) => {
+    // requestDBData(password);
+    // requestOSData(password);
+    if(!nodeId.value) {
+        ElMessage({
+                    showClose: true,
+                    message: t('configParam.queryValidInfo'),
+                    type: 'warning',
+                })
+        return
+    }
+    requestData(password,isRefresh)
 };
-const {
-    data: res,
-    run: requestDBData,
+const {data: res,
+    run: requestData,
     loading: loadingDBData,
-} = useRequest(
-    (password) => {
-        return restRequest
-            .get("/observability/v1/param/databaseParamInfo", {
+} = useRequest((password,isRefresh = "0") => {
+    return restRequest
+            .get("/observability/v1/param/paramInfo", {
+                paramName: "",
                 nodeId: nodeId.value,
+                dbName: null,
+                password,
+                paramType: "",
+                isRefresh
             })
             .then(function (res) {
                 return res;
             })
             .catch(function (res) {
                 data.dbParamData = [];
+                data.osParamData = [];
             });
-    },
-    { manual: true }
-);
+},{manual: true});
 watch(res, (res) => {
-    data.dbParamData = res;
+    if(res && res.length > 0) {
+        data.dbParamData = res.filter(item => item.paramType === 'DB');
+        data.osParamData = res.filter(item => item.paramType === 'OS');
+    }
+    
 });
+// const {
+//     data: res,
+//     run: requestDBData,
+//     loading: loadingDBData,
+// } = useRequest(
+//     (password) => {
+//         return restRequest
+//             .get("/observability/v1/param/databaseParamInfo", {
+//                 nodeId: nodeId.value,
+//             })
+//             .then(function (res) {
+//                 return res;
+//             })
+//             .catch(function (res) {
+//                 data.dbParamData = [];
+//             });
+//     },
+//     { manual: true }
+// );
+// watch(res, (res) => {
+//     data.dbParamData = res;
+// });
 
-const {
-    data: resOS,
-    run: requestOSData,
-    loading: loadingOSData,
-} = useRequest(
-    (password) => {
-        return restRequest
-            .get("/observability/v1/param/osParamInfo", {
-                paramName: "",
-                nodeId: nodeId.value,
-                dbName: null,
-                password,
-                isRefresh: null,
-                paramType: "",
-            })
-            .then(function (res) {
-                return res;
-            })
-            .catch(function (res) {
-                data.osParamData = null;
-            });
-    },
-    { manual: true }
-);
-watch(resOS, (resOS) => {
-    data.osParamData = resOS;
-});
+// const {
+//     data: resOS,
+//     run: requestOSData,
+//     loading: loadingOSData,
+// } = useRequest(
+//     (password) => {
+//         return restRequest
+//             .get("/observability/v1/param/osParamInfo", {
+//                 paramName: "",
+//                 nodeId: nodeId.value,
+//                 dbName: null,
+//                 password,
+//                 isRefresh: null,
+//                 paramType: "",
+//             })
+//             .then(function (res) {
+//                 return res;
+//             })
+//             .catch(function (res) {
+//                 data.osParamData = null;
+//             });
+//     },
+//     { manual: true }
+// );
+// watch(resOS, (resOS) => {
+//     data.osParamData = resOS;
+// });
 const color = computed(() => {
     if (localStorage.getItem("theme") === "dark") return "#fcef92";
     else return "#E41D1D";
@@ -146,10 +192,10 @@ const color = computed(() => {
                 <el-button type="primary" @click="refreshData('')">{{ $t("app.query") }}</el-button>
             </div>
         </div>
-        <div class="list">
+        <div class="list" v-loading="loadingDBData">
             <div class="list-item">
                 <div class="item-title">{{ $t("configParam.systemConfig") }}</div>
-                <div v-loading="loadingOSData">
+                <div>
                     <div class="item-list" v-for="item in data.osParamData" :key="item.seqNo">
                         <div class="item-list-left">
                             <div class="item-name">{{ item.paramName }}</div>
@@ -187,7 +233,7 @@ const color = computed(() => {
             </div>
             <div class="list-item">
                 <div class="item-title">{{ $t("configParam.databaseConfig") }}</div>
-                <div v-loading="loadingDBData">
+                <div>
                     <div class="item-list" v-for="item in data.dbParamData" :key="item.seqNo">
                         <div class="item-list-left">
                             <div class="item-name">{{ item.paramName }}</div>

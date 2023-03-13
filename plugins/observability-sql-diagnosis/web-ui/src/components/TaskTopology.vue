@@ -4,9 +4,7 @@
 
 <script lang="ts" setup>
 import vis from 'vis'
-import echartsOption from '../components/echarts/echartsOption'
-import iconA from '../assets/svg/bulb.svg'
-import iconB from '../assets/svg/bulb-on.svg'
+import { getDefaultEcharOption } from '../components/echarts/echartsOption'
 
 let options = {}
 let network: any
@@ -47,6 +45,18 @@ watch(
 )
 onMounted(() => {
     createVisTopology()
+
+    // @ts-ignore
+    const wujie = window.$wujie
+    // Judge whether it is a plug-in environment or a local environment through wujie
+    if (wujie) {
+        // Monitoring platform language change
+        wujie?.bus.$on('opengauss-theme-change', (val: string) => {
+            nextTick(() => {
+                createVisTopology()
+            })
+        })
+    }
 })
 
 const updateVisTopology = () => {
@@ -75,7 +85,7 @@ async function createVisTopology() {
         nodes,
         edges,
     }
-    let themeColor = echartsOption
+    let themeColor = getDefaultEcharOption()
     console.log('themeColor', themeColor)
     options = {
         // Node Style
@@ -124,7 +134,7 @@ async function createVisTopology() {
                 enabled: true, // Turn smooth curves on and off
                 type: 'cubicBezier',
                 forceDirection: true,
-                roundness: 0.5
+                roundness: 0.5,
             },
             arrows: {
                 to: {

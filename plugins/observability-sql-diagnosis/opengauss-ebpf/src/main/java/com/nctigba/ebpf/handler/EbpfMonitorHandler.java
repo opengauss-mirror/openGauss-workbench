@@ -35,6 +35,10 @@ public class EbpfMonitorHandler {
         OSUtil toolUtil = new OSUtil();
         String bccUrl = "cd " + urlConfig.getBccUrl() + " &&";
         String outputUrl = urlConfig.getOutputUrl();
+        String isExist=toolUtil.execCmd("cat "+outputUrl);
+        if(isExist.contains("No such file or directory")){
+            toolUtil.exec("mkdir "+outputUrl);
+        }
         String fileUrl = " > " + outputUrl + taskid + monitorType;
         String execcmd = null;
         if (EbpfType.PROFILE.equals(monitorType)) {

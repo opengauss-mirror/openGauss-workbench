@@ -1,7 +1,7 @@
 <template>
     <div class="top-sql">
         <div class="tab-wrapper-container">
-            <div class="search-form-multirow">
+            <div class="search-form-multirow" style="margin-bottom: 10px;">
                 <div class="row" style="justify-content: flex-start">
                     <div class="filter">
                         <el-button type="primary" @click="showInstallCollector">{{ $t("install.installAgent") }}</el-button>

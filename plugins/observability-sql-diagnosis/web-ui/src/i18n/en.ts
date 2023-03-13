@@ -282,6 +282,12 @@ export default {
         failResolveExecutionPlan: 'The execution plan could not be resolved',
     },
     datasource: {
+        paramAnalysis: 'Parameter diagnosis',
+        paramName: 'parameter name',
+        currentValue: 'current value',
+        paramDescription: 'parameter description',
+        suggestValue: 'suggestion value',
+        suggestReason: 'suggestion reason',
         pleaseSelectInstance: 'Please select cluster and instance',
         confirmToDeleteTask: 'Confirm to delete this task?',
         showNum: 'Show numbers',
@@ -459,5 +465,31 @@ export default {
         },
         singleStepOperationCost: '单步运算cost',
         totalCost: '总cost',
+    },
+    install: {
+        uninstall: 'uninstall',
+        uninstallProxy: 'uninstall server',
+        uninstallAgent: 'uninstall proxy',
+        uninstallQuick: 'uninstall quick',
+        install: 'install',
+        installAgent: 'install proxy',
+        installProxy: 'install server',
+        installedAgent: 'installed proxy',
+        installedProxy: 'installed server',
+        machine: 'machine',
+        rootPWD: 'root password',
+        proxyPort: 'proxy port',
+        collectInstance: 'collect instance',
+        collectProxy: 'collect proxy',
+        callbackPath: 'callback path',
+        proxyRules: [
+            'choose the machine please',
+            'input the password of root please',
+            'input the proxy port please'
+        ],
+        collectorRules: [
+            'choose the instance please',
+            'input the password of root please'
+        ],
     },
 }

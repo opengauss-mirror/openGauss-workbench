@@ -8,6 +8,10 @@ import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.elasticsearch.client.RestClient;
 import org.opengauss.admin.system.plugin.facade.HostFacade;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.stereotype.Component;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
@@ -23,6 +27,7 @@ import co.elastic.clients.transport.ElasticsearchTransport;
 import co.elastic.clients.transport.rest_client.RestClientTransport;
 
 @Component
+@EnableCaching
 public class ElasticsearchProvider {
 	@Autowired
 	private NctigbaEnvMapper envMapper;
@@ -30,6 +35,7 @@ public class ElasticsearchProvider {
 	@AutowiredType(Type.PLUGIN_MAIN)
 	private HostFacade hostFacade;
 
+	@Cacheable(cacheNames = "elastic-clients")
 	public ElasticsearchClient client() {
 		var env = envMapper.selectOne(Wrappers.<NctigbaEnv>lambdaQuery().eq(NctigbaEnv::getType, type.ELASTICSEARCH));
 		var host = hostFacade.getById(env.getHostid());
@@ -51,5 +57,9 @@ public class ElasticsearchProvider {
 
 		// And create the API client
 		return new ElasticsearchClient(transport);
+	}
+
+	@CacheEvict(cacheNames = "elastic-clients")
+	public void clear() {
 	}
 }

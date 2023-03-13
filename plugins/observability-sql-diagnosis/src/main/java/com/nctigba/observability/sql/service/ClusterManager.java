@@ -1,34 +1,36 @@
 package com.nctigba.observability.sql.service;
 
-import com.baomidou.dynamic.datasource.DynamicRoutingDataSource;
-import com.baomidou.dynamic.datasource.toolkit.DynamicDataSourceContextHolder;
-import com.gitee.starblues.bootstrap.annotation.AutowiredType;
-import com.gitee.starblues.bootstrap.annotation.AutowiredType.Type;
-import com.nctigba.observability.sql.mapper.DbMapper;
-import com.nctigba.observability.sql.model.diagnosis.Task;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.sql.DataSource;
+
 import org.apache.commons.lang3.StringUtils;
 import org.opengauss.admin.common.core.domain.model.ops.OpsClusterNodeVO;
 import org.opengauss.admin.common.core.domain.model.ops.OpsClusterVO;
 import org.opengauss.admin.system.plugin.facade.OpsFacade;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
-import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import com.baomidou.dynamic.datasource.DynamicRoutingDataSource;
+import com.baomidou.dynamic.datasource.toolkit.DynamicDataSourceContextHolder;
+import com.gitee.starblues.bootstrap.annotation.AutowiredType;
+import com.gitee.starblues.bootstrap.annotation.AutowiredType.Type;
+import com.nctigba.observability.sql.mapper.DbMapper;
+import com.nctigba.observability.sql.model.diagnosis.Task;
+import com.zaxxer.hikari.HikariDataSource;
+
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @Slf4j
@@ -58,7 +60,7 @@ public class ClusterManager {
 	 */
 	public void setCurrentDatasource(String nodeId, String dbname) {
 		if (StringUtils.isBlank(nodeId))
-			return;
+			throw new RuntimeException("node is null");
 		var ds = (DynamicRoutingDataSource) dataSource;
 		if (ds.getDataSources().containsKey(nodeId)) {
 			DynamicDataSourceContextHolder.push(nodeId);
@@ -66,7 +68,7 @@ public class ClusterManager {
 		}
 		var node = getOpsNodeById(nodeId);
 		if (node == null)
-			return;
+			throw new RuntimeException("node info not found");
 		if (StringUtils.isBlank(dbname))
 			dbname = node.getDbName();
 		var dataSourceBuilder = DataSourceBuilder.create();
@@ -74,7 +76,11 @@ public class ClusterManager {
 		dataSourceBuilder.url("jdbc:opengauss://" + node.getPublicIp() + ":" + node.getDbPort() + "/" + dbname);
 		dataSourceBuilder.username(node.getDbUser());
 		dataSourceBuilder.password(node.getDbUserPassword());
-		ds.addDataSource(nodeId, dataSourceBuilder.build());
+		DataSource datasource = dataSourceBuilder.build();
+		var hids = new HikariDataSource();
+		hids.setDataSource(datasource);
+		hids.setMaximumPoolSize(20);
+		ds.addDataSource(nodeId, hids);
 		DynamicDataSourceContextHolder.push(nodeId);
 	}
 
@@ -106,7 +112,7 @@ public class ClusterManager {
 			}))
 				return cluster.getClusterId();
 		}
-		return "unknown";
+		throw new RuntimeException("node info not found");
 	}
 
 	@Data
@@ -158,7 +164,4 @@ public class ClusterManager {
 		}
 		return null;
 	}
-
-	@Value("${spring.profiles.active}")
-	private String env;
 }

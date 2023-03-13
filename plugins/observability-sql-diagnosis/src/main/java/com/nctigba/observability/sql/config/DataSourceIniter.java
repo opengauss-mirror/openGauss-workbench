@@ -13,11 +13,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.context.annotation.Bean;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.stereotype.Component;
 import org.sqlite.JDBC;
 import org.sqlite.SQLiteDataSource;
 
-import com.baomidou.dynamic.datasource.DynamicRoutingDataSource;
 import com.baomidou.dynamic.datasource.provider.DynamicDataSourceProvider;
 import com.gitee.starblues.bootstrap.PluginContextHolder;
 import com.gitee.starblues.spring.environment.EnvironmentProvider;
@@ -27,6 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Component
 @Slf4j
+@EnableScheduling
 public class DataSourceIniter {
 	public static final String diagnosis = "diagnosis";
 	@Value("${sqlitePath:data/diagnosis.db}")
@@ -90,10 +91,7 @@ public class DataSourceIniter {
 				} catch (IOException e) {
 					throw new CustomException(e.getMessage());
 				}
-				var ds = new HikariDataSource();
-				ds.setDataSource(sqLiteDataSource);
-				ds.setMaximumPoolSize(1);
-				return Map.of(diagnosis, ds, primary, dataSource());
+				return Map.of(diagnosis, sqLiteDataSource, primary, dataSource());
 			}
 		};
 	}
@@ -107,11 +105,7 @@ public class DataSourceIniter {
 		String password = environmentProvider.getString("spring.datasource.password");
 		String driverClassName = environmentProvider.getString("spring.datasource.driver-class-name");
 
-		DataSource primary = DataSourceBuilder.create().driverClassName(driverClassName).url(url).username(username)
+		return DataSourceBuilder.create().driverClassName(driverClassName).url(url).username(username)
 				.password(password).build();
-		var d=new DynamicRoutingDataSource();
-		d.addDataSource("primary", primary);
-		d.setPrimary("primary");
-		return d;
 	}
 }

@@ -51,7 +51,8 @@ async function handleconfirmModel() {
     let result = await connectionFormRef.value?.validate();
     if (!result) return;
     const encryptPwd = await encryptPassword(formData.rootPassword);
-    emit("confirm", encryptPwd);
+    const isRefresh = "1";
+    emit("confirm", encryptPwd,isRefresh);
     visible.value = false;
     formData.rootPassword = ''
     emit("changeModal", visible.value);

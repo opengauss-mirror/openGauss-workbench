@@ -26,12 +26,17 @@
                                 <el-checkbox label="explain analyze" name="analyze" />
                             </el-checkbox-group>
                         </div>
+                        <div class="option-wrap">
+                            <el-checkbox-group v-model="formData.paramAnalysis">
+                                <el-checkbox :label="$t('datasource.paramAnalysis')" name="paramAnalysis" />
+                            </el-checkbox-group>
+                        </div>
                     </el-form-item>
                 </el-form>
             </div>
 
             <template #footer>
-                <el-button style="padding: 5px 20px" type="primary" @click="handleconfirmModel">{{ $t('datasource.createTask') }}</el-button>
+                <el-button style="padding: 5px 20px" type="primary" :loading="addTasking" @click="handleconfirmModel">{{ $t('datasource.createTask') }}</el-button>
                 <el-button style="padding: 5px 20px" @click="handleCancelModel">{{ $t('app.cancel') }}</el-button>
             </template>
         </el-dialog>
@@ -74,12 +79,13 @@ const initFormData = {
     onCpu: [],
     offCpu: [],
     analyze: [],
+    paramAnalysis: [],
     cluster: props.clusterId,
     dbName: props.dbName,
 }
 const formData = reactive(cloneDeep(initFormData))
 const queryData = computed(() => {
-    const { name, sql, onCpu, offCpu, analyze, cluster, dbName } = formData
+    const { name, sql, onCpu, offCpu, analyze, paramAnalysis,cluster, dbName } = formData
     let instanceId, clusterId: any
     if (props.type === 2) {
         instanceId = props.clusterId
@@ -99,6 +105,7 @@ const queryData = computed(() => {
         sql: props.sqlText ? props.sqlText : sql,
         onCpu: onCpu.length > 0,
         offCpu: offCpu.length > 0,
+        paramAnalysis: paramAnalysis.length > 0,
         explainAnalysis: analyze.length > 0,
         sqlId: props.type === 2 ? props.sqlId : '',
     }
@@ -157,7 +164,7 @@ watch(
     { immediate: true }
 )
 
-const { data: rez, run: addTasks } = useRequest(
+const { data: rez, run: addTasks,loading: addTasking  } = useRequest(
     () => {
         const msg = t('datasource.diagnosisAddTaskSuccess')
         return diagnosisRequest

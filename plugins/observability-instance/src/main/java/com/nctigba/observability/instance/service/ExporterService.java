@@ -12,7 +12,6 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
-import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
 import org.opengauss.admin.common.core.domain.model.ops.WsSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ResourceLoader;
@@ -22,9 +21,9 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.nctigba.observability.instance.entity.NctigbaEnv;
 import com.nctigba.observability.instance.entity.NctigbaEnv.type;
 import com.nctigba.observability.instance.service.AbstractInstaller.Step.status;
-import com.nctigba.observability.instance.service.ClusterManager.OpsClusterNodeVOSub;
 import com.nctigba.observability.instance.service.PrometheusService.prometheusConfig;
 import com.nctigba.observability.instance.service.PrometheusService.prometheusConfig.job;
+import com.nctigba.observability.instance.util.Download;
 import com.nctigba.observability.instance.util.SshSession;
 import com.nctigba.observability.instance.util.SshSession.command;
 import com.nctigba.observability.instance.util.YamlUtil;
@@ -32,30 +31,28 @@ import com.nctigba.observability.instance.util.YamlUtil;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.io.IoUtil;
 import cn.hutool.core.util.StrUtil;
-import cn.hutool.core.util.URLUtil;
 import cn.hutool.http.HttpUtil;
 import cn.hutool.json.JSONUtil;
 
 @Service
 public class ExporterService extends AbstractInstaller {
 	private static final String EXPORTER_USER = "exporters";
-	private static final String NODE_EXPORTER_PATH = "https://github.com/prometheus/node_exporter/releases/download/v1.3.1/";
-	private static final String NODE_EXPORTER_NAME = "node_exporter-1.3.1.linux-";
-	private static final String OPENGAUSS_EXPORTER_PATH = "https://gitee.com/opengauss/openGauss-prometheus-exporter/releases/download/v1.0.0/";
-	private static final String OPENGAUSS_EXPORTER_NAME = "opengauss_exporter_1.0.0_linux_";
+	public static final String NODE_EXPORTER_PATH = "https://github.com/prometheus/node_exporter/releases/download/v1.3.1/";
+	public static final String NODE_EXPORTER_NAME = "node_exporter-1.3.1.linux-";
+	public static final String OPENGAUSS_EXPORTER_PATH = "https://gitee.com/opengauss/openGauss-prometheus-exporter/releases/download/v1.0.0/";
+	public static final String OPENGAUSS_EXPORTER_NAME = "opengauss_exporter_1.0.0_linux_";
 
 	@Autowired
 	private ClusterManager clusterManager;
 	@Autowired
 	private ResourceLoader loader;
 
-	public void install(WsSession wsSession, String nodeId, String rootPassword) {
+	public void install(WsSession wsSession, String nodeId, String rootPassword, Integer nodeport, Integer openport) {
 		// @formatter:off
 		var steps = Arrays.asList(
 				new Step("初始化"),
-				new Step("检查prometheus环境存在"),
-				new Step("连接主机"),
-				new Step("检查安装用户"),
+				new Step("检查代理环境"),
+				new Step("检查用户信息"),
 				new Step("安装nodeExporter"),
 				new Step("安装opengaussExporter"),
 				new Step("刷新prometheus配置"),
@@ -64,61 +61,158 @@ public class ExporterService extends AbstractInstaller {
 		int curr = 0;
 
 		curr = nextStep(wsSession, steps, curr);
-		var promEnv = envMapper.selectOne(Wrappers.<NctigbaEnv>lambdaQuery().eq(NctigbaEnv::getType, type.PROMETHEUS));
-		if (promEnv == null)
-			throw new RuntimeException("prometheus not exists");
-
-		curr = nextStep(wsSession, steps, curr);
-		var node = clusterManager.getOpsNodeById(nodeId);
-		if (node == null)
-			throw new RuntimeException("node not found");
-		curr = nextStep(wsSession, steps, curr);
-		var hostId = node.getHostId();
-		OpsHostEntity hostEntity = hostFacade.getById(hostId);
-		if (hostEntity == null)
-			throw new RuntimeException("host not found");
-		var user = getUser(hostEntity, EXPORTER_USER, rootPassword);
-		try (var session = SshSession.connect(hostEntity.getPublicIp(), hostEntity.getPort(), EXPORTER_USER,
-				encryptionUtils.decrypt(user.getPassword()));) {
+		try {
+			var promEnv = envMapper
+					.selectOne(Wrappers.<NctigbaEnv>lambdaQuery().eq(NctigbaEnv::getType, type.PROMETHEUS));
+			if (promEnv == null)
+				throw new RuntimeException("prometheus not exists");
 
 			curr = nextStep(wsSession, steps, curr);
-			var nodeEnv = nodeExporter(hostId, user, session);
-
-			curr = nextStep(wsSession, steps, curr);
-			var gaussEnv = opengaussExporter(node, hostId, hostEntity, user, session);
-
-			curr = nextStep(wsSession, steps, curr);
-			// 修改prometheus,重启
-			var promeHost = hostFacade.getById(promEnv.getHostid());
-			var promUser = hostUserFacade.listHostUserByHostId(promEnv.getHostid()).stream()
-					.filter(p -> p.getHostId().equals(hostId) && p.getUsername().equals(promEnv.getUsername()))
-					.findFirst().orElseThrow(
-							() -> new RuntimeException("The node information corresponding to the host is not found"));
-			// reload prometheus
-			try (var promSession = SshSession.connect(promeHost.getPublicIp(), promeHost.getPort(),
-					promEnv.getUsername(), encryptionUtils.decrypt(promUser.getPassword()));) {
-				var promYmlStr = promSession.execute("cat " + promEnv.getPath() + "/prometheus.yml");
-				var conf = YamlUtil.loadAs(promYmlStr, prometheusConfig.class);
-				conf.scrape_configs
-						.add(generateConfig("opengauss", nodeId, node.getPublicIp() + ":" + gaussEnv.getPort()));
-				conf.scrape_configs.add(generateConfig("node", nodeId, node.getPublicIp() + ":" + nodeEnv.getPort()));
-				conf.scrape_configs = new ArrayList<>(new LinkedHashSet<>(conf.scrape_configs));
-				var prometheusConfigFile = File.createTempFile("prom", ".tmp");
-				FileUtil.appendUtf8String(YamlUtil.dump(conf), prometheusConfigFile);
-				promSession.execute("rm " + promEnv.getPath() + "/prometheus.yml");
-				promSession.upload(prometheusConfigFile.getAbsolutePath(), promEnv.getPath() + "/prometheus.yml");
-				prometheusConfigFile.delete();
+			var node = clusterManager.getOpsNodeById(nodeId);
+			if (node == null)
+				throw new RuntimeException("node not found");
+			var hostId = node.getHostId();
+			OpsHostEntity hostEntity = hostFacade.getById(hostId);
+			if (hostEntity == null)
+				throw new RuntimeException("host not found");
+			var user = getUser(hostEntity, EXPORTER_USER, rootPassword, steps, curr);
+			try (var session = SshSession.connect(hostEntity.getPublicIp(), hostEntity.getPort(), "root",
+					encryptionUtils.decrypt(rootPassword));) {
+			} catch (Exception e) {
+				steps.get(curr).setState(status.ERROR).getMsg().add(e.getMessage());
+				wsUtil.sendText(wsSession, JSONUtil.toJsonStr(steps));
+				var sw = new StringWriter();
+				try (var pw = new PrintWriter(sw);) {
+					e.printStackTrace(pw);
+				}
+				wsUtil.sendText(wsSession, sw.toString());
+				return;
 			}
+			try (var session = SshSession.connect(hostEntity.getPublicIp(), hostEntity.getPort(), EXPORTER_USER,
+					encryptionUtils.decrypt(user.getPassword()));) {
 
-			// curl -X POST http://IP/-/reload
-			var res = HttpUtil.post("http://" + promeHost.getPublicIp() + ":9090/-/reload", "");
-			if ("Lifecycle API is not enabled.".equals(res)) {
-				// TODO 未开启在线刷新
+				curr = nextStep(wsSession, steps, curr);
+				var nodeEnv = envMapper.selectOne(Wrappers.<NctigbaEnv>lambdaQuery().eq(NctigbaEnv::getHostid, hostId)
+						.eq(NctigbaEnv::getType, type.NODE_EXPORTER));
+				if (nodeEnv == null) {
+					var arch = session.execute(command.ARCH);
+					String name = NODE_EXPORTER_NAME + arch(arch);
+					String tar = name + TAR;
+					if (!session.test(command.STAT.parse(name))) {
+						if (!session.test(command.STAT.parse(tar))) {
+							// session.execute(command.WGET.parse(NODE_EXPORTER_PATH + tar));
+							var pkg = envMapper
+									.selectOne(Wrappers.<NctigbaEnv>lambdaQuery().like(NctigbaEnv::getPath, tar));
+							if (pkg == null) {
+								var f = Download.download(NODE_EXPORTER_PATH + tar, "pkg/" + tar);
+								pkg = new NctigbaEnv().setPath(f.getCanonicalPath()).setType(type.NODE_EXPORTER_PKG);
+								addMsg(wsSession, steps, curr, "安装包下载成功");
+								save(pkg);
+							}
+							session.upload(pkg.getPath(), tar);
+							addMsg(wsSession, steps, curr, "安装包上传完成");
+						} else
+							addMsg(wsSession, steps, curr, "当前路径下已存在安装包，使用该安装包安装");
+						session.execute(command.TAR.parse(tar));
+					}
+					session.executeNoWait("cd " + name
+							+ " && ./node_exporter --collector.systemd --web.listen-address=:" + nodeport + " &");
+					nodeEnv = new NctigbaEnv().setHostid(hostId).setPort(nodeport).setUsername(user.getUsername())
+							.setType(type.NODE_EXPORTER).setPath(name);
+					envMapper.insert(nodeEnv);
+				} else
+					addMsg(wsSession, steps, curr, "node exporter exists");
+
+				curr = nextStep(wsSession, steps, curr);
+				var gaussEnv = envMapper.selectOne(Wrappers.<NctigbaEnv>lambdaQuery().eq(NctigbaEnv::getHostid, hostId)
+						.eq(NctigbaEnv::getType, type.OPENGAUSS_EXPORTER));
+				if (gaussEnv == null) {
+					var arch = session.execute(command.ARCH);
+					String name = OPENGAUSS_EXPORTER_NAME + arch(arch);
+					String zip = name + ZIP;
+					if (!session.test(command.STAT.parse("opengauss_exporter"))) {
+						if (!session.test(command.STAT.parse(zip))) {
+							// session.execute(command.WGET.parse(OPENGAUSS_EXPORTER_PATH + zip));
+							var pkg = envMapper
+									.selectOne(Wrappers.<NctigbaEnv>lambdaQuery().like(NctigbaEnv::getPath, zip));
+							if (pkg == null) {
+								var f = Download.download(OPENGAUSS_EXPORTER_PATH + zip, "pkg/" + zip);
+								pkg = new NctigbaEnv().setPath(f.getCanonicalPath())
+										.setType(type.OPENGAUSS_EXPORTER_PKG);
+								addMsg(wsSession, steps, curr, "安装包下载成功");
+								save(pkg);
+							}
+							session.upload(pkg.getPath(), zip);
+							addMsg(wsSession, steps, curr, "安装包上传完成");
+						} else
+							addMsg(wsSession, steps, curr, "当前路径下已存在安装包，使用该安装包安装");
+						session.execute(command.UNZIP.parse(zip));
+					}
+
+					File f = File.createTempFile("og_exporter", "yml");
+					var in = loader.getResource("og_exporter.yml").getInputStream();
+					IoUtil.copy(in, new FileOutputStream(f));
+					session.upload(f.getCanonicalPath(), "og_exporter.yml");
+					f.delete();
+
+					// 启动
+					var url = MessageFormat.format(
+							// "postgresql://{0}:{1}@{2}:{3,number,#}/{4}"
+							"host={0} user={1} password={2} port={3,number,#} dbname={4} sslmode=disable",
+							hostEntity.getPublicIp(), node.getDbUser(), node.getDbUserPassword(), node.getDbPort(),
+							node.getDbName());
+					session.executeNoWait("export DATA_SOURCE_NAME='" + url
+							+ "' && ./opengauss_exporter --config=og_exporter.yml --web.listen-address=:" + openport
+							+ " &");
+					gaussEnv = new NctigbaEnv().setHostid(hostId).setPort(openport).setUsername(user.getUsername())
+							.setType(type.OPENGAUSS_EXPORTER).setPath(".");
+					envMapper.insert(gaussEnv);
+				} else
+					addMsg(wsSession, steps, curr, "opengauss exporter exists");
+
+				curr = nextStep(wsSession, steps, curr);
+				// 修改prometheus,重启
+				var promeHost = hostFacade.getById(promEnv.getHostid());
+				var promUser = hostUserFacade.listHostUserByHostId(promEnv.getHostid()).stream()
+						.filter(p -> p.getUsername().equals(promEnv.getUsername())).findFirst()
+						.orElseThrow(() -> new RuntimeException(
+								"The node information corresponding to the host is not found"));
+				// reload prometheus
+				try (var promSession = SshSession.connect(promeHost.getPublicIp(), promeHost.getPort(),
+						promEnv.getUsername(), encryptionUtils.decrypt(promUser.getPassword()));) {
+					var promYmlStr = promSession.execute("cat " + promEnv.getPath() + "/prometheus.yml");
+					var conf = YamlUtil.loadAs(promYmlStr, prometheusConfig.class);
+
+					var congauss = new job.conf();
+					congauss.setLabels(Map.of("instance", nodeId, "type", "opengauss"));
+					congauss.setTargets(Arrays.asList(node.getPublicIp() + ":" + gaussEnv.getPort()));
+					var connode = new job.conf();
+					connode.setLabels(Map.of("instance", nodeId, "type", "node"));
+					connode.setTargets(Arrays.asList(node.getPublicIp() + ":" + nodeEnv.getPort()));
+					var job = new job();
+					job.setStatic_configs(Arrays.asList(connode, congauss));
+					job.setJob_name(nodeId);
+					conf.scrape_configs.add(job);
+					conf.scrape_configs = new ArrayList<>(new LinkedHashSet<>(conf.scrape_configs));
+
+					var prometheusConfigFile = File.createTempFile("prom", ".tmp");
+					FileUtil.appendUtf8String(YamlUtil.dump(conf), prometheusConfigFile);
+					promSession.execute("rm " + promEnv.getPath() + "/prometheus.yml");
+					promSession.upload(prometheusConfigFile.getAbsolutePath(), promEnv.getPath() + "/prometheus.yml");
+					prometheusConfigFile.delete();
+				}
+
+				// curl -X POST http://IP/-/reload
+				var res = HttpUtil.post("http://" + promeHost.getPublicIp() + ":" + promEnv.getPort() + "/-/reload",
+						"");
+				if ("Lifecycle API is not enabled.".equals(res)) {
+					// TODO 未开启在线刷新
+				}
+				curr = nextStep(wsSession, steps, curr);
+				sendMsg(wsSession, steps, curr, status.DONE);
 			}
-			curr = nextStep(wsSession, steps, curr);
-			sendMsg(wsSession, steps, curr, status.DONE);
 		} catch (IOException e) {
-			steps.get(curr).setState(status.ERROR);
+			steps.get(curr).setState(status.ERROR).getMsg().add(e.getMessage());
 			wsUtil.sendText(wsSession, JSONUtil.toJsonStr(steps));
 			var sw = new StringWriter();
 			try (var pw = new PrintWriter(sw);) {
@@ -126,71 +220,6 @@ public class ExporterService extends AbstractInstaller {
 			}
 			wsUtil.sendText(wsSession, sw.toString());
 		}
-	}
-
-	private static job generateConfig(String name, String nodeId, String host) {
-		var con = new job.conf();
-		con.setLabels(Map.of("instance", nodeId));
-		con.setTargets(Arrays.asList(host));
-		var job = new job();
-		job.setStatic_configs(Arrays.asList(con));
-		job.setJob_name(name);
-		return job;
-	}
-
-	private NctigbaEnv nodeExporter(String hostId, OpsHostUserEntity user, SshSession session) throws IOException {
-		var env = envMapper.selectOne(Wrappers.<NctigbaEnv>lambdaQuery().eq(NctigbaEnv::getHostid, hostId)
-				.eq(NctigbaEnv::getType, type.NODE_EXPORTER));
-		if (env != null)
-			return env;
-		var arch = session.execute(command.ARCH);
-		String name = NODE_EXPORTER_NAME + arch(arch);
-		String tar = name + TAR;
-		if (!session.test(command.STAT.parse(name))) {
-			if (!session.test(command.STAT.parse(tar)))
-				session.execute(command.WGET.parse(NODE_EXPORTER_PATH + tar));
-			session.execute(command.TAR.parse(tar));
-		}
-		session.executeNoWait("cd " + name + " && ./node_exporter --collector.systemd");
-		var nodeEnv = new NctigbaEnv().setHostid(hostId).setPort(9100).setUsername(user.getUsername())
-				.setType(type.NODE_EXPORTER).setPath(name);
-		envMapper.insert(nodeEnv);
-		// 验证
-		return nodeEnv;
-	}
-
-	private NctigbaEnv opengaussExporter(OpsClusterNodeVOSub node, String hostId, OpsHostEntity hostEntity,
-			OpsHostUserEntity user, SshSession session) throws IOException {
-		var env = envMapper.selectOne(Wrappers.<NctigbaEnv>lambdaQuery().eq(NctigbaEnv::getHostid, hostId)
-				.eq(NctigbaEnv::getType, type.OPENGAUSS_EXPORTER));
-		if (env != null)
-			return env;
-		var arch = session.execute(command.ARCH);
-		String name = OPENGAUSS_EXPORTER_NAME + arch(arch);
-		String zip = name + ZIP;
-		if (!session.test(command.STAT.parse("opengauss_exporter"))) {
-			if (!session.test(command.STAT.parse(zip)))
-				session.execute(command.WGET.parse(OPENGAUSS_EXPORTER_PATH + zip));
-			session.execute(command.UNZIP.parse(zip));
-		}
-
-		File f = File.createTempFile("og_exporter", "yml");
-		var in = loader.getResource("og_exporter.yml").getInputStream();
-		IoUtil.copy(in, new FileOutputStream(f));
-		session.upload(f.getCanonicalPath(), "og_exporter.yml");
-		f.delete();
-
-		// 启动
-		var url = MessageFormat.format("postgresql://{0}:{1}@{2}:{3,number,#}/{4}", node.getDbUser(),
-				URLUtil.encodeAll(node.getDbUserPassword()), hostEntity.getPublicIp(), node.getDbPort(),
-				node.getDbName());
-		session.executeNoWait("export DATA_SOURCE_NAME='" + url
-				+ "' && ./opengauss_exporter --config=og_exporter.yml");
-		var gaussEnv = new NctigbaEnv().setHostid(hostId).setPort(9187).setUsername(user.getUsername())
-				.setType(type.OPENGAUSS_EXPORTER).setPath(".");
-		envMapper.insert(gaussEnv);
-		// 验证
-		return gaussEnv;
 	}
 
 	public void uninstall(WsSession wsSession, String nodeId) {
@@ -220,8 +249,6 @@ public class ExporterService extends AbstractInstaller {
 			OpsHostEntity hostEntity = hostFacade.getById(node.getHostId());
 			if (hostEntity == null)
 				throw new RuntimeException("host not found");
-			nodeenv.setHost(hostEntity);
-			expenv.setHost(hostEntity);
 
 			var user = hostUserFacade.listHostUserByHostId(hostEntity.getHostId()).stream().filter(e -> {
 				return nodeenv.getUsername().equals(e.getUsername());
@@ -249,7 +276,7 @@ public class ExporterService extends AbstractInstaller {
 				sendMsg(wsSession, steps, curr, status.DONE);
 			}
 		} catch (Exception e) {
-			steps.get(curr).setState(status.ERROR);
+			steps.get(curr).setState(status.ERROR).getMsg().add(e.getMessage());
 			wsUtil.sendText(wsSession, JSONUtil.toJsonStr(steps));
 			var sw = new StringWriter();
 			try (var pw = new PrintWriter(sw);) {

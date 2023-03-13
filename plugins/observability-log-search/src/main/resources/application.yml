@@ -42,3 +42,6 @@ mybatis-plus:
   configuration:
     mapUnderscoreToCamelCase: true
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+taskCron:
+  autoDeleteIndexData: 0/5 * * * * *
+#autoDeleteIndexData: 0 0 0 * * ? #每天24:00定时执行
