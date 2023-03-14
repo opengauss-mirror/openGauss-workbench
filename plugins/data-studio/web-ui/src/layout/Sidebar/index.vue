@@ -195,10 +195,10 @@
             <li @click="hanldeCreate('sql')"> {{ $t('create.sql') }}</li>
           </ul>
           <ul
-            v-if="treeContext.functionSP"
+            v-if="treeContext.functionSPVisible"
             v-click-outside="
               () => {
-                treeContext.functionSP = false;
+                treeContext.functionSPVisible = false;
               }
             "
           >
@@ -1140,7 +1140,7 @@
     databaseVisible: false,
     modeVisible: false,
     terminalCollectVisible: false,
-    functionSP: false,
+    functionSPVisible: false,
     viewCollectVisible: false,
     synonymCollectVisible: false,
     sequenceCollectVisible: false,
@@ -1176,7 +1176,7 @@
       public: 'modeVisible',
       person: 'modeVisible',
       terminalCollect: 'terminalCollectVisible',
-      terminal: 'functionSP',
+      terminal: 'functionSPVisible',
       viewCollect: 'viewCollectVisible',
       view: 'viewVisible',
       sequence: 'sequenceVisible',
@@ -1235,7 +1235,7 @@
     let api;
     switch (type) {
       case 'functionSP':
-        treeContext.functionSP = false;
+        treeContext.functionSPVisible = false;
         api = dropFunctionSP;
         break;
       case 'view':

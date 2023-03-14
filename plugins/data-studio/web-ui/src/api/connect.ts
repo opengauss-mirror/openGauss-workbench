@@ -50,6 +50,14 @@ export const getDataLinkList = async (webUser: string) => {
   });
 };
 
+// delete connection list: ourself
+export const deleteDataLinkList = async (id: string) => {
+  return request({
+    url: `/dataStudio/web/v1/connections/${id}`,
+    method: 'delete',
+  });
+};
+
 export const closeConnections = async (uuid: string) => {
   return request({
     url: `/dataStudio/web/v1/connections/close/${uuid}`,

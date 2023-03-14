@@ -4,6 +4,7 @@ import com.nctigba.datastudio.config.ConnectionConfig;
 import com.nctigba.datastudio.model.dto.DatabaseFunctionSPDTO;
 import com.nctigba.datastudio.service.DatabaseFunctionSPService;
 import com.nctigba.datastudio.util.DebugUtils;
+import com.nctigba.datastudio.util.LocaleString;
 import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.exception.CustomException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,8 +43,10 @@ public class DatabaseFunctionSPServiceImpl implements DatabaseFunctionSPService 
             Statement statement = connection.createStatement()){
             try(ResultSet funcResult = statement.executeQuery(getFuncSql(request.getFunctionSPName(), statement));){
                 String proKind = "";
-                while (funcResult.next()) {
+                if (funcResult.next()) {
                     proKind = funcResult.getString(PRO_KIND);
+                }else{
+                    throw new CustomException(LocaleString.transLanguage("2015"));
                 }
                 String sql = "";
                 if ("f".equals(proKind)) {

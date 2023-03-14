@@ -140,7 +140,7 @@
     instance: null,
     rootWindowName: '',
   });
-  const tagId = TagsViewStore.getViewByRoute(route).id;
+  const tagId = TagsViewStore.getViewByRoute(route)?.id;
   const commonWsParams = computed(() => {
     return {
       webUser: ws.webUser,
@@ -282,8 +282,12 @@
     if (!isGlobalEnable.value) return;
     let res: Message = JSON.parse(data);
     if (res.code == '200') {
-      if (isStepIntoChild.value) return;
-      if (props.editorType == 'debug' && res.type != 'operateStatus' && !isStepIntoChild.value) {
+      if (
+        props.editorType == 'debug' &&
+        res.type != 'operateStatus' &&
+        res.type != 'newWindow' &&
+        !isStepIntoChild.value
+      ) {
         getButtonStatus();
       }
       const result = res.data?.result;
