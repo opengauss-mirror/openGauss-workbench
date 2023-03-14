@@ -13,13 +13,29 @@
       </div>
     </div>
     <div class="flex-col" v-else>
+      <a-steps :current="2" status="wait" class="mb full-w" type="arrow">
+        <a-step description="上传安装包及脚本">
+          上传
+          <template #icon>
+            <icon-loading/>
+          </template>
+        </a-step>
+        <a-step description="安装Zookeeper">安装Zookeeper</a-step>
+        <a-step description="安装ShardingProxy">安装ShardingProxy</a-step>
+        <a-step description="安装OpenLookEng">安装OpenLookEng</a-step>
+        <a-step description="启动所有服务">启动服务</a-step>
+      </a-steps>
       <div class="install-doing mb">
-        <div class="ft-m ft-b mb-lg">{{ $t('simpleInstall.index.5mpn813guxc0') }}</div>
-        <div class="flex-col-start full-w">
-          <div class="progress-c mb">
+        <div class="progress-top full-w">
+          <div class="progress-c mr-s">
             <a-progress :color="data.state === 1 ? 'green' : 'red'" :stroke-width="12" :percent="data.installProgress">
             </a-progress>
           </div>
+          <a-spin class="mr"/>
+          <a-space class="flex-row">
+            <a-button type="primary">下载日志</a-button>
+            <a-button type="primary">自定义控制台</a-button>
+          </a-space>
         </div>
       </div>
       <div id="xterm" class="xterm"></div>
@@ -37,6 +53,7 @@ enum exeResultEnum {
   SUCESS = Number(1),
   FAIL = Number(0)
 }
+
 const exeResult = ref<number>(exeResultEnum.UN_INSTALL)
 
 const loadingFunc = inject<any>('loading')
@@ -47,24 +64,9 @@ const data = reactive<KeyValue>({
 })
 
 onMounted(() => {
-  loadingFunc.setBackBtnShow(false)
-  loadingFunc.setNextBtnShow(false)
   const term = getTermObj()
   initTerm(term)
-  autoProgress()
 })
-
-const progressInterval = ref<any>(null)
-
-const autoProgress = () => {
-  progressInterval.value = setInterval(() => {
-    data.installProgress = (Number(data.installProgress) + 0.1).toFixed(2)
-    if (Number(data.installProgress) === 1) {
-      exeResult.value = exeResultEnum.SUCESS
-      clearInterval(progressInterval.value)
-    }
-  }, 600)
-}
 
 const getTermObj = (): Terminal => {
   return new Terminal({
@@ -116,6 +118,12 @@ const goOps = () => {
     flex-direction: column;
     justify-content: center;
     align-items: center;
+
+    .progress-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
 
     .progress-c {
       width: 100%;

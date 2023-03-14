@@ -3,6 +3,7 @@ package com.nctigba.datastudio.dao;
 
 import com.nctigba.datastudio.base.WebSocketServer;
 import com.nctigba.datastudio.model.dto.ConnectionDTO;
+import com.nctigba.datastudio.util.LocaleString;
 import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.exception.CustomException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,22 +24,23 @@ import static java.util.concurrent.TimeUnit.MINUTES;
 public class ConnectionMapDAO {
     public static Map<String, ConnectionDTO> conMap = new HashMap<>(1);
     public static void setConMap(String uuiD, ConnectionDTO con) throws Exception {
-        if (conMap.size() < 100) {
+        if (conMap.size() <= 100) {
             conMap.put(uuiD, con);
         } else {
-            throw new Exception("The number of connections reached 100, unable to connect");
+            log.info("The number of connections reached 100, conMap is: " + conMap);
+            throw new Exception(LocaleString.transLanguage("2014"));
         }
 
     }
 
-//    @Scheduled(fixedRate=2 ,timeUnit = HOURS)
-    @Scheduled(fixedRate=2 ,timeUnit = MINUTES)
+    @Scheduled(fixedRate=2 ,timeUnit = HOURS)
     public void overtime() {
         Date nowData = new Date();
         for (String key : conMap.keySet()) {
             ConnectionDTO connectionDTO = conMap.get(key);
             Date lastDate = connectionDTO.getLastDate();
             long diff = nowData.getTime() - lastDate.getTime();
+            log.info("diff is: " + diff);
             if (diff > 2 * 60 * 60 * 1000) {
                 try {
                     overtimeCloseSocket(connectionDTO.getSocketSet());
@@ -51,19 +53,18 @@ public class ConnectionMapDAO {
     }
 
     public void deleteConnection(String uuid) {
-        if(!conMap.containsKey(uuid)){
-            throw new CustomException("The current connection does not exist");
-        }
-        try {
-            ConnectionDTO connectionDTO= conMap.get(uuid);
-            log.info("connectionDTO is: " + connectionDTO);
-            overtimeCloseSocket(connectionDTO.getSocketSet());
-            log.info("old conMap is: " + conMap);
-            conMap.remove(uuid);
-            log.info("new conMap is: " + conMap);
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new CustomException(e.getMessage(),e);
+        if(conMap.containsKey(uuid)){
+            try {
+                ConnectionDTO connectionDTO= conMap.get(uuid);
+                log.info("connectionDTO is: " + connectionDTO);
+                overtimeCloseSocket(connectionDTO.getSocketSet());
+                log.info("old conMap is: " + conMap);
+                conMap.remove(uuid);
+                log.info("new conMap is: " + conMap);
+            } catch (Exception e) {
+                e.printStackTrace();
+                throw new CustomException(e.getMessage(),e);
+            }
         }
     }
 

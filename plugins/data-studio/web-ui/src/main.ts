@@ -29,6 +29,14 @@ import UContainerLayout from '@/components/u-container-layout/index.vue';
 
 import { i18n } from '@/i18n/index';
 import { dispatchEventStorage } from '@/utils';
+import { prevTokenPersist } from '@/config';
+
+const prevToken = prevTokenPersist.storage.getItem(prevTokenPersist.key);
+const token = localStorage.getItem('opengauss-token');
+if (prevToken !== token) {
+  sessionStorage.clear();
+  prevTokenPersist.storage.setItem(prevTokenPersist.key, token);
+}
 
 const app = createApp(App);
 

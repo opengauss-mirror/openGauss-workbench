@@ -368,7 +368,7 @@ const exeInstall = async (socket: Socket<any, any>, businessId: string, term: Te
         nodeConfigList: [{
           clusterRole: ClusterRoleEnum.MASTER,
           hostId: data.form.hostId,
-          rootPassword: data.form.rootPasswordEncrypt,
+          rootPassword: data.isNeedPwd ? data.form.rootPasswordEncrypt : '',
           installUserId: data.installUserId,
           installPath: '/opt/openGauss',
           isInstallDemoDatabase: true
@@ -574,8 +574,7 @@ const initData = () => {
     height: 80px;
   }
 
-  .install-content {
-  }
+  .install-content {}
 
   .install-doing {
     width: 100%;

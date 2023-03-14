@@ -108,10 +108,12 @@
     uuid: '',
   });
   const rules = reactive<FormRules>({
-    viewName: [{ required: true, message: t('view.rules.name[0]'), trigger: 'blur' }],
-    viewType: [{ required: true, message: t('view.rules.type[0]'), trigger: 'change' }],
-    schema: [{ required: true, message: t('view.rules.mode[0]'), trigger: 'change' }],
-    sql: [{ required: true, message: t('view.rules.code[0]'), trigger: 'blur' }],
+    viewName: [{ required: true, message: t('rules.empty', [t('view.name')]), trigger: 'blur' }],
+    viewType: [{ required: true, message: t('rules.empty', [t('view.type')]), trigger: 'change' }],
+    schema: [
+      { required: true, message: t('rules.empty', [t('view.objectMode')]), trigger: 'change' },
+    ],
+    sql: [{ required: true, message: t('rules.empty', [t('view.code')]), trigger: 'blur' }],
   });
 
   const handleTabClick = (tab: TabsPaneContext) => {

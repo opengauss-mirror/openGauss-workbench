@@ -1,6 +1,5 @@
 package com.nctigba.observability.instance.dto.topsql;
 
-import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 /**
@@ -13,12 +12,8 @@ import lombok.Data;
  */
 @Data
 public class TopSQLListReq {
-    @ApiModelProperty("instance node info id")
     private String id;
-    @ApiModelProperty("TopSQL startTime")
     private String startTime;
-    @ApiModelProperty("TopSQL finishTime")
     private String finishTime;
-    @ApiModelProperty("the field name for desc sort(db_time|cpu_time|execution_time)")
     private String orderField;
 }

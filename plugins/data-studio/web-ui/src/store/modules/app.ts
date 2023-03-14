@@ -10,7 +10,7 @@ export const useAppStore = defineStore({
       databaseName: '',
       uuid: '',
     },
-    connectListMap: {},
+    connectListMap: [],
     connectListState: [],
     isLoadEditor: false,
     language: 'zh-Cn',
@@ -19,11 +19,11 @@ export const useAppStore = defineStore({
   }),
   getters: {
     //current choose's connectInfo
-    currentConnectInfo(state) {
+    currentConnectInfo(state: any) {
       return state.currentConnectNode.connectInfo;
     },
     connectedDatabase(state) {
-      return Object.values(state.connectListMap).reduce((prev, cur) => {
+      return state.connectListMap.reduce((prev, cur) => {
         return prev.concat(cur.connectedDatabase);
       }, []);
     },

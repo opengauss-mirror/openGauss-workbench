@@ -49,7 +49,7 @@ import {
   mockPortUsed,
   mockUserListAll
 } from '@/api/ops/mock'
-import { TarType } from '@/types/resource/package'
+import { PackageType } from '@/types/resource/package'
 import { FormInstance } from '@arco-design/web-vue/es/form'
 import { useOpsStore } from '@/store'
 import { useI18n } from 'vue-i18n'
@@ -175,8 +175,8 @@ onMounted(() => {
 })
 
 watch(() => props.tarMap, (val) => {
-  if (val[TarType.OPENLOOKENG] && val[TarType.OPENLOOKENG].length > 0) {
-    data.olkTarList = val[TarType.OPENLOOKENG]
+  if (val[PackageType.OPENLOOKENG] && val[PackageType.OPENLOOKENG].length > 0) {
+    data.olkTarList = val[PackageType.OPENLOOKENG]
   }
 }, { deep: true })
 

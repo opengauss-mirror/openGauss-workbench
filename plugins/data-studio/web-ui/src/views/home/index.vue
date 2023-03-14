@@ -19,37 +19,37 @@
   watch(
     route,
     (route, oldRoute) => {
-      setTimeout(() => {
-        if (route.name == 'home' && route?.fullPath != oldRoute?.fullPath) {
-          if (route.fullPath == '/home') {
-            const isDSConnect = JSON.parse(
-              connectListPersist.storage.getItem(connectListPersist.key) || '[]',
-            );
-            showHome.value = false;
-            if (isDSConnect.length) {
-              router.replace({
-                path: '/home',
-                query: {
-                  rootId: AppStore.lastestConnectDatabase.rootId,
-                  connectInfoName: AppStore.currentConnectInfo?.name,
-                  uuid: AppStore.lastestConnectDatabase.uuid,
-                  dbname: AppStore.lastestConnectDatabase.databaseName,
-                  time: Date.now(),
-                },
-              });
-            } else {
-              EventBus.notify(EventTypeName.CLOSE_ALL_TAB);
-              EventBus.notify(EventTypeName.OPEN_CONNECT_DIALOG, 'create');
-            }
+      if (route.name == 'home' && route?.fullPath != oldRoute?.fullPath) {
+        if (route.fullPath == '/home') {
+          const isDSConnect = JSON.parse(
+            connectListPersist.storage.getItem(connectListPersist.key) || '[]',
+          );
+          showHome.value = false;
+          if (isDSConnect.length) {
+            router.replace({
+              path: '/home',
+              query: {
+                rootId: AppStore.lastestConnectDatabase.rootId,
+                connectInfoName: AppStore.currentConnectInfo?.name,
+                uuid: AppStore.lastestConnectDatabase.uuid,
+                dbname: AppStore.lastestConnectDatabase.databaseName,
+                time: Date.now(),
+              },
+            });
           } else {
-            showHome.value = !!(
-              route.query.connectInfoName &&
-              route.query.time &&
-              AppStore.currentConnectInfo?.name
-            );
+            // EventBus.notify(EventTypeName.CLOSE_ALL_TAB);
+            EventBus.notify(EventTypeName.OPEN_CONNECT_DIALOG, 'create');
           }
+        } else {
+          showHome.value = !!(
+            route.query.connectInfoName &&
+            route.query.time &&
+            AppStore.currentConnectInfo?.name
+          );
         }
-      }, 200);
+      } else if (route.fullPath == '/home' && route.fullPath == oldRoute?.fullPath) {
+        EventBus.notify(EventTypeName.OPEN_CONNECT_DIALOG, 'create');
+      }
     },
     {
       immediate: true,

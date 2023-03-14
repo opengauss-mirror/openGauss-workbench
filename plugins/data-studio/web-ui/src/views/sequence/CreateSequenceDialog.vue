@@ -6,7 +6,7 @@
       :width="500"
       align-center
       :close-on-click-modal="false"
-      @open="handleOpen"
+      @opened="handleOpen"
       @close="handleClose"
     >
       <div class="dialog_body">
@@ -136,39 +136,41 @@
     uuid: '',
   });
   const rules = reactive<FormRules>({
-    sequenceName: [{ required: true, message: t('sequence.rules.name[0]'), trigger: 'blur' }],
+    sequenceName: [
+      { required: true, message: t('rules.empty', [t('sequence.name')]), trigger: 'blur' },
+    ],
     increment: [
       {
-        pattern: /^-?[1-9]\d*|0$/,
-        message: t('sequence.rules.increment[0]'),
+        pattern: /^(0|[1-9][0-9]*|-[1-9][0-9]*)$/,
+        message: t('rules.integer', [t('sequence.increment')]),
         trigger: 'blur',
       },
     ],
     start: [
       {
-        pattern: /^-?[1-9]\d*|0$/,
-        message: t('sequence.rules.startValue[0]'),
+        pattern: /^(0|[1-9][0-9]*|-[1-9][0-9]*)$/,
+        message: t('rules.integer', [t('sequence.startValue')]),
         trigger: 'blur',
       },
     ],
     minValue: [
       {
-        pattern: /^-?[1-9]\d*|0$/,
-        message: t('sequence.rules.minValue[0]'),
+        pattern: /^(0|[1-9][0-9]*|-[1-9][0-9]*)$/,
+        message: t('rules.integer', [t('sequence.minValue')]),
         trigger: 'blur',
       },
     ],
     maxValue: [
       {
-        pattern: /^-?[1-9]\d*|0$/,
-        message: t('sequence.rules.maxValue[0]'),
+        pattern: /^(0|[1-9][0-9]*|-[1-9][0-9]*)$/,
+        message: t('rules.integer', [t('sequence.maxValue')]),
         trigger: 'blur',
       },
     ],
     cache: [
       {
-        pattern: /^-?[1-9]\d*|0$/,
-        message: t('sequence.rules.cacheValue[0]'),
+        pattern: /^(0|[1-9][0-9]*|-[1-9][0-9]*)$/,
+        message: t('rules.integer', [t('sequence.cacheValue')]),
         trigger: 'blur',
       },
     ],

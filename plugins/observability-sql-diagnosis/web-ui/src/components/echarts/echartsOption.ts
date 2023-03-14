@@ -1,4 +1,4 @@
-const getDefaultEcharOption = () => {
+export function getDefaultEcharOption() {
     const theme = localStorage.getItem('theme')
     let themeColor = {
         nodes: {
@@ -82,6 +82,3 @@ const deepClone = <T>(origin: T, target?: Record<string, any> | T): T => {
 
     return tar as T
 }
-
-const defaultEcharOption = getDefaultEcharOption()
-export default defaultEcharOption

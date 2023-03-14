@@ -523,3 +523,5 @@ COMMENT ON COLUMN "public"."tb_main_task_env_error_host"."run_user" IS '机器�
 COMMENT ON COLUMN "public"."tb_main_task_env_error_host"."run_pass" IS '机器密码';
 COMMENT ON COLUMN "public"."tb_main_task_env_error_host"."main_task_id" IS '主任务ID';
 
+ALTER TABLE "public"."tb_migration_task" ALTER COLUMN "status_desc" type text;
+

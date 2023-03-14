@@ -29,6 +29,8 @@ public class EsSearchQuery {
     private List<String> logLevel;
     private String scrollId;
     private String order;
+    private List<String> sorts;
+    private long interval;
 
     public void setStartDate(String startDate) {
         this.startDate = DateUtil.parseUTC(startDate);

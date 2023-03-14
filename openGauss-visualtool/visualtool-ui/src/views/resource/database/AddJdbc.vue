@@ -21,9 +21,24 @@
       </div>
     </template>
     <a-form :model="data.form" ref="formRef" auto-label-width :rules="formRules">
-      <a-form-item field="name" :label="$t('database.AddJdbc.5oxhkhimxho0')" validate-trigger="blur">
-        <a-input v-model="data.form.name" :placeholder="$t('database.AddJdbc.5oxhkhimxno0')"></a-input>
-      </a-form-item>
+      <a-row :gutter="16">
+        <a-col :span="19">
+          <a-form-item v-if="!data.form.isCustomName" :label="$t('database.AddJdbc.5oxhkhimxho0')"
+            validate-trigger="blur">
+            <a-input v-model="clusterName" :placeholder="$t('database.AddJdbc.5oxhkhimz480')" disabled></a-input>
+          </a-form-item>
+          <a-form-item v-else field="name" :label="$t('database.AddJdbc.5oxhkhimxho0')" validate-trigger="blur">
+            <a-input v-model="data.form.name" :placeholder="$t('database.AddJdbc.customNamePlaceholder')"></a-input>
+          </a-form-item>
+        </a-col>
+        <a-col :span="5">
+          <a-form-item hide-label>
+            <a-checkbox v-model="data.form.isCustomName" @change="handleCustomChange(data.form.isCustomName)">
+              {{ $t('database.AddJdbc.isCustomName') }}
+            </a-checkbox>
+          </a-form-item>
+        </a-col>
+      </a-row>
       <a-form-item :label="$t('database.AddJdbc.5oxhkhimxto0')" validate-trigger="change">
         <a-select class="select-w" v-model="data.form.dbType" :placeholder="$t('database.AddJdbc.5oxhkhimxzw0')">
           <a-option v-for="item in data.dbTypes" :key="item.value" :value="item.value">{{
@@ -75,6 +90,7 @@ const data = reactive<KeyValue>({
   form: {
     clusterId: '',
     name: '',
+    isCustomName: false,
     dbType: 'mysql',
     nodes: [],
     status: jdbcStatusEnum.unTest
@@ -85,6 +101,38 @@ const data = reactive<KeyValue>({
     { label: 'MYSQL', value: 'mysql' }
   ]
 })
+const formRef = ref<null | FormInstance>(null)
+const handleCustomChange = (val: boolean) => {
+  formRef.value?.clearValidate()
+  if (val) {
+    data.form.name = clusterName.value
+  }
+}
+
+const clusterName = computed(() => {
+  let result = ''
+  if (!data.form.isCustomName) {
+    result = getNameByNode(data.form)
+  } else {
+    result = clusterName.value
+  }
+  return result
+})
+
+const getNameByNode = (data: KeyValue) => {
+  let result = ''
+  if (data.nodes.length) {
+    data.nodes.forEach((item: KeyValue, index: number) => {
+      if (index < 2 && item.ip && item.port) {
+        result += `${item.ip}(${item.port})-`
+      }
+    })
+    if (result) {
+      result += data.nodes.length
+    }
+  }
+  return result
+}
 
 const formRules = computed(() => {
   return {
@@ -147,7 +195,7 @@ const getHostList = () => {
 }
 
 const emits = defineEmits([`finish`])
-const formRef = ref<null | FormInstance>(null)
+
 const submit = () => {
   const methodArr = []
   for (let i = 0; i < refList.value.length; i++) {
@@ -183,6 +231,9 @@ const submit = () => {
       dbType: data.form.dbType,
       deployType: data.form.nodes.length > 1 ? 'CLUSTER' : 'SINGLE_NODE',
       nodes: []
+    }
+    if (!data.form.isCustomName) {
+      param.clusterName = clusterName.value
     }
     data.form.nodes.forEach((item: any) => {
       item.extendProps = JSON.stringify(item.props)
@@ -343,7 +394,6 @@ const open = (type: string, editData?: KeyValue) => {
   getHostList()
   if (type === 'update' && data) {
     data.title = t('database.AddJdbc.5oxhkhimzmw0')
-    console.log('update jdbc', editData)
     if (editData) {
       Object.assign(data.form, {
         clusterId: editData.clusterId,
@@ -363,7 +413,13 @@ const open = (type: string, editData?: KeyValue) => {
         }
         data.form.nodes.push(temp)
       })
-      data.activeTab = data.form.nodes[0].id
+      const nameByNode = getNameByNode(data.form)
+      if (nameByNode === data.form.name) {
+        data.form.isCustomName = false
+      }
+      nextTick(() => {
+        data.activeTab = data.form.nodes[0].id
+      })
     }
   } else {
     data.title = t('database.AddJdbc.5oxhkhimzww0')

@@ -26,6 +26,7 @@ start(){
   if [ $? -eq "0" ]; then
     echo ">>> ${JAR_NAME} is already running PID=${pid} <<<"
   else
+    echo '' > $LOG
     nohup /etc/jdk11/bin/java -Xms2048m -Xmx4096m -jar $JAR_NAME --spring.profiles.active=cus >$LOG 2>&1 &
     echo $! > $PID
     echo ">>> start $JAR_NAME successed PID=$! <<<"

@@ -6,6 +6,7 @@ import com.nctigba.datastudio.model.PublicParamReq;
 import com.nctigba.datastudio.service.OperationInterface;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -28,6 +29,9 @@ public class BreakPointStepImpl implements OperationInterface {
     @Autowired
     private SingleStepImpl singleStep;
 
+    @Autowired
+    private StepOutImpl stepOut;
+
     @Override
     public void operate(WebSocketServer webSocketServer, Object obj) throws Exception {
         log.info("breakPointStep obj is: " + obj);
@@ -46,13 +50,14 @@ public class BreakPointStepImpl implements OperationInterface {
             String oid = (String) webSocketServer.getParamMap(windowName).get(OID);
             log.info("breakPointStep oid is: " + oid);
             ResultSet resultSet = stat.executeQuery(CONTINUE_SQL);
-            String newOid = "";
+            String newOid = Strings.EMPTY;
             while (resultSet.next()) {
                 newOid = resultSet.getString(FUNC_OID);
                 log.info("breakPointStep newOid is: " + newOid);
             }
 
             if (!oid.equals(newOid)) {
+                stepOut.deleteBreakPoint(webSocketServer, paramReq);
                 webSocketServer.sendMessage(windowName, closeWindow, SUCCESS, null);
                 paramReq.setCloseWindow(true);
             }

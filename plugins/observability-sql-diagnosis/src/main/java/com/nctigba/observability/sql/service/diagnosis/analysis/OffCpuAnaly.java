@@ -66,30 +66,38 @@ public class OffCpuAnaly implements ResultAnalysis {
                     table.addData(map);
                 }
             }
-            Collections.sort(table.getData(), (o1, o2) -> {
-                Integer samples1 = Integer.valueOf(o1.get("samples"));
-                Integer samples2 = Integer.valueOf(o2.get("samples"));
-                return samples2.compareTo(samples1);
-            });
-            Iterator it = table.getData().iterator();
-            String comValue = table.getData().get(50).get("samples");
-            while (it.hasNext()) {
-                Map<String, String> map = (Map<String, String>) it.next();
-                if (Integer.valueOf(map.get("samples")) <= Integer.valueOf(comValue)) {
-                    it.remove();
+            if(table.getData().size()>1){
+                Collections.sort(table.getData(), (o1, o2) -> {
+                    Integer samples1 = Integer.valueOf(o1.get("samples"));
+                    Integer samples2 = Integer.valueOf(o2.get("samples"));
+                    return samples2.compareTo(samples1);
+                });
+                var it = table.getData().iterator();
+                //String comValue = table.getData().get(50).get("samples");
+                int count=1;
+                while (it.hasNext()) {
+                    it.next();
+                    if(count>50){
+                        it.remove();
+                    }
+                    count++;
+                    /*Map<String, String> map = (Map<String, String>) it.next();
+                    if (Integer.valueOf(map.get("samples")) <= Integer.valueOf(comValue)) {
+                        it.remove();
+                    }*/
                 }
+                var center = new TaskResult(task, ResultState.NoAdvice, ResultType.ColdFunction, FrameType.Table, bearing.center);
+                center.setData(table);
+                resultMapper.insert(center);
+                TaskResult taskResult = new TaskResult();
+                taskResult.setTaskid(task.getId());
+                taskResult.setResultType(ResultType.ColdFunction);
+                taskResult.setFrameType(FrameType.Suggestion);
+                taskResult.setState(TaskResult.ResultState.Suggestions);
+                taskResult.setBearing(bearing.top);
+                taskResult.setData(Map.of("title", LocaleString.format("ColdFunction.title"), "suggestions", LocaleString.format("ColdFunction.name")));
+                resultMapper.insert(taskResult);
             }
-            var center = new TaskResult(task, ResultState.NoAdvice, ResultType.ColdFunction, FrameType.Table, bearing.center);
-            center.setData(table);
-            resultMapper.insert(center);
-            TaskResult taskResult = new TaskResult();
-            taskResult.setTaskid(task.getId());
-            taskResult.setResultType(ResultType.ColdFunction);
-            taskResult.setFrameType(FrameType.Suggestion);
-            taskResult.setState(TaskResult.ResultState.Suggestions);
-            taskResult.setBearing(bearing.top);
-            taskResult.setData(Map.of("title", LocaleString.format("ColdFunction.title"), "suggestions", LocaleString.format("ColdFunction.name")));
-            resultMapper.insert(taskResult);
         } catch (IOException e) {
             throw new CustomException("offCpu err", e);
         }

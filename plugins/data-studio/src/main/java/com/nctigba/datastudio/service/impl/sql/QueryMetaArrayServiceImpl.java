@@ -79,35 +79,38 @@ public class QueryMetaArrayServiceImpl implements QueryMetaArrayService {
             Statement statement = connection.createStatement();){
             List<String> objectList = new ArrayList<>();
             if (request.getObjectType().equals("ALL")) {
-                try(ResultSet resultSet = statement.executeQuery(SELECT_FUNCTION_SQL + request.getSchema() + QUOTES_PARENTHESES_SEMICOLON);
-                    ResultSet resultSetView = statement.executeQuery(SELECT_OBJECT_SQL + request.getSchema() + SELECT_OBJECT_WHERE_IN_SQL + "v','m" + QUOTES_PARENTHESES_SEMICOLON);
-                    ResultSet resultSetTable = statement.executeQuery(SELECT_OBJECT_SQL + request.getSchema() + SELECT_OBJECT_WHERE_SQL + "r" + QUOTES_SEMICOLON);
-                ){
+                try (ResultSet resultSet = statement.executeQuery(SELECT_FUNCTION_SQL + request.getSchema() + QUOTES_PARENTHESES_SEMICOLON);) {
                     while (resultSet.next()) {
                         objectList.add(resultSet.getString("proname"));
-                    }while (resultSetView.next()) {
+                    }
+                }
+                try (ResultSet resultSetView = statement.executeQuery(SELECT_OBJECT_SQL + request.getSchema() + SELECT_OBJECT_WHERE_IN_SQL + "v','m" + QUOTES_PARENTHESES_SEMICOLON);) {
+                    while (resultSetView.next()) {
                         objectList.add(resultSetView.getString("relname"));
-                    }while (resultSetTable.next()) {
+                    }
+                }
+                try (ResultSet resultSetTable = statement.executeQuery(SELECT_OBJECT_SQL + request.getSchema() + SELECT_OBJECT_WHERE_SQL + "r" + QUOTES_SEMICOLON);) {
+                    while (resultSetTable.next()) {
                         objectList.add(resultSetTable.getString("relname"));
                     }
-                    return objectList;
                 }
+                return objectList;
             } else if (request.getObjectType().equals("FUN_PRO")) {
-                try(ResultSet resultSet = statement.executeQuery(SELECT_FUNCTION_SQL + request.getSchema() + QUOTES_PARENTHESES_SEMICOLON);){
+                try (ResultSet resultSet = statement.executeQuery(SELECT_FUNCTION_SQL + request.getSchema() + QUOTES_PARENTHESES_SEMICOLON);) {
                     while (resultSet.next()) {
                         objectList.add(resultSet.getString("proname"));
                     }
                     return objectList;
                 }
             } else if (request.getObjectType().equals("VIEW")) {
-                try(ResultSet resultSet = statement.executeQuery(SELECT_OBJECT_SQL + request.getSchema() + SELECT_OBJECT_WHERE_IN_SQL + "v','m" + QUOTES_PARENTHESES_SEMICOLON);){
+                try (ResultSet resultSet = statement.executeQuery(SELECT_OBJECT_SQL + request.getSchema() + SELECT_OBJECT_WHERE_IN_SQL + "v','m" + QUOTES_PARENTHESES_SEMICOLON);) {
                     while (resultSet.next()) {
                         objectList.add(resultSet.getString("relname"));
                     }
                     return objectList;
                 }
             } else {
-                try(ResultSet resultSet = statement.executeQuery(SELECT_OBJECT_SQL + request.getSchema() + SELECT_OBJECT_WHERE_SQL + request.getObjectType() + QUOTES_SEMICOLON);){
+                try (ResultSet resultSet = statement.executeQuery(SELECT_OBJECT_SQL + request.getSchema() + SELECT_OBJECT_WHERE_SQL + request.getObjectType() + QUOTES_SEMICOLON);) {
                     while (resultSet.next()) {
                         objectList.add(resultSet.getString("relname"));
                     }

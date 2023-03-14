@@ -16,8 +16,10 @@ router.beforeEach(async (to, from, next) => {
   if (!['debugChild'].includes(to.name as string)) {
     AppStore.updateAppMounted(true);
   }
-  const isDSConnect = connectListPersist.storage.getItem(connectListPersist.key);
-  if (isDSConnect) {
+  const isDSConnect = JSON.parse(
+    connectListPersist.storage.getItem(connectListPersist.key) || '[]',
+  );
+  if (isDSConnect.length) {
     next();
   } else {
     if (to.fullPath == '/home') {

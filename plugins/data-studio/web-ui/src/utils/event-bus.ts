@@ -1,25 +1,30 @@
 class EventBus {
-  static list: { [key: string]: Array<(data) => void> } = {};
+  static list: { [key: string]: any } = {};
 
   // subscribe
-  static listen(name: EventTypeName, fn: (data) => void) {
+  static listen(name: EventTypeName, fn: any) {
     this.list[name] = this.list[name] || [];
     this.list[name].push(fn);
   }
 
   // release
-  static notify(name: EventTypeName, data?: any) {
+  static notify(name: EventTypeName, ...params: any[]) {
     if (this.list[name]) {
-      this.list[name].forEach((fn: (data) => void) => {
-        fn(data);
+      this.list[name].forEach((fn: any) => {
+        fn(...params);
       });
     }
   }
 
   // cancel subscribe
-  static unListen(name: EventTypeName) {
+  static unListen(name: EventTypeName, fn?: any) {
     if (this.list[name]) {
-      Reflect.deleteProperty(this.list, name);
+      if (fn) {
+        const index = this.list[name].indexOf(fn);
+        this.list[name].splice(index, 1);
+      } else {
+        Reflect.deleteProperty(this.list, name);
+      }
     }
   }
 }
@@ -32,5 +37,7 @@ export enum EventTypeName {
   UPDATE_DATABASE_LIST,
   CLOSE_SELECTED_TAB,
   CLOSE_ALL_TAB,
+  CLOSE_ALL_TAB_TO_LAST,
   REFRESH_DATABASE_LIST,
+  UPDATE_DEBUG_BUTTON,
 }

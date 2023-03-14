@@ -663,6 +663,8 @@
             "5oxhkhimx5c0": "测试连通性",
             "5oxhkhimxbg0": "确定",
             "5oxhkhimxho0": "集群名称",
+			"isCustomName": "自定义名称",
+            "customNamePlaceholder": "集群名称将会根据实例信息生成",
             "5oxhkhimxno0": "请输入实例名称",
             "5oxhkhimxto0": "数据库类型",
             "5oxhkhimxzw0": "请选择数据库类型",

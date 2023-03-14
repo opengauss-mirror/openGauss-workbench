@@ -17,4 +17,5 @@ import lombok.Data;
 public class LogInfoDTO {
     private String scrollId;
     private List<LogDetailInfoDTO> logs;
+    private List<String> sorts;
 }

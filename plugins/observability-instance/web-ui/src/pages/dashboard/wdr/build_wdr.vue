@@ -4,7 +4,7 @@
             <div class="dialog-content" v-loading="generating">
                 <el-form :model="formData" :rules="connectionFormRules" ref="connectionFormRef">
                     <el-form-item :label="$t('datasource.cluterTitle')" prop="hostId">
-                        <ClusterCascader width="200" instanceValueKey="hostId" @loaded="requestData" @getCluster="handleClusterValue" autoSelectFirst notClearable />
+                        <ClusterCascader width="200" instanceValueKey="hostId" @getCluster="handleClusterValue" autoSelectFirst notClearable />
                     </el-form-item>
                     <el-form-item :label="$t('dashboard.wdrReports.reportRange')" prop="reportRange">
                         <el-select v-model="formData.scope" style="width: 200px; margin: 0 4px">
@@ -78,6 +78,7 @@ const formData = reactive(cloneDeep(initFormData));
 const handleClusterValue = (val: any) => {
     formData.clusterId = val.length ? val[0] : "";
     formData.hostId = val.length > 1 ? val[1] : "";
+    if (formData.hostId) requestData();
 };
 
 // snapshotList
@@ -105,8 +106,8 @@ watch(res, (res) => {
     if (res && res.records && res.records.length) {
         tableData.value = res.records;
         if (tableData.value.length > 0) {
-            formData.startId = tableData.value[0].snapshotId;
-            formData.endId = tableData.value[tableData.value.length - 1].snapshotId;
+            formData.startId = tableData.value[tableData.value.length - 1].snapshotId;
+            formData.endId = tableData.value[0].snapshotId;
         }
     } else {
         tableData.value = [];
@@ -135,30 +136,29 @@ const {
 } = useRequest(
     () => {
         return restRequest.post("/wdr/generate", formData).then(function (res) {
-            console.log("aaaaaaaa")
             return res;
         });
     },
-    { manual: true,
-      onSuccess: (res) => {
-        if(res && res.code === 200) {
-            const msg = t("dashboard.wdrReports.buildWDRDialog.buildSuccess");
-            ElMessage({
-                showClose: true,
-                message: msg,
-                type: "success",
-            });
-        }else {
-            const msg = t("dashboard.wdrReports.buildWDRDialog.buildFail");
-            ElMessage({
-                showClose: true,
-                message: msg,
-                type: "error",
-            });
-        }
-        
-      }
-     }
+    {
+        manual: true,
+        onSuccess: (res) => {
+            if (res && res.code === 200) {
+                const msg = t("dashboard.wdrReports.buildWDRDialog.buildSuccess");
+                ElMessage({
+                    showClose: true,
+                    message: msg,
+                    type: "success",
+                });
+            } else {
+                const msg = t("dashboard.wdrReports.buildWDRDialog.buildFail");
+                ElMessage({
+                    showClose: true,
+                    message: msg,
+                    type: "error",
+                });
+            }
+        },
+    }
 );
 watch(rez, (rez) => {
     //提示写这里，页面会出现两次提示，原因暂时不明，改写在上面的useRequest的onSuccess方法中

@@ -6,8 +6,10 @@ import com.nctigba.datastudio.model.PublicParamReq;
 import com.nctigba.datastudio.model.entity.OperateStatusDO;
 import com.nctigba.datastudio.service.OperationInterface;
 import com.nctigba.datastudio.util.DebugUtils;
+import com.nctigba.datastudio.util.LocaleString;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -21,7 +23,9 @@ import java.util.List;
 import java.util.Map;
 
 import static com.nctigba.datastudio.constants.CommonConstants.FEN_CED_MODE;
+import static com.nctigba.datastudio.constants.CommonConstants.FIVE_HUNDRED;
 import static com.nctigba.datastudio.constants.CommonConstants.LAN_NAME;
+import static com.nctigba.datastudio.constants.CommonConstants.LINE_FEED;
 import static com.nctigba.datastudio.constants.CommonConstants.PRO_ALL_ARG_TYPES;
 import static com.nctigba.datastudio.constants.CommonConstants.PRO_ARG_MODES;
 import static com.nctigba.datastudio.constants.CommonConstants.PRO_ARG_NAMES;
@@ -84,7 +88,7 @@ public class StartDebugImpl implements OperationInterface {
             statement = connection.createStatement();
             webSocketServer.setStatement(windowName, statement);
         }
-        ResultSet funcResult = statement.executeQuery(DebugUtils.getFuncSql(windowName, name, webSocketServer));
+        ResultSet funcResult = statement.executeQuery(DebugUtils.getFuncSql(windowName, schema, name, webSocketServer));
         Map<String, Object> paramMap = new HashMap<>();
         while (funcResult.next()) {
             paramMap.put(PRO_NAME, funcResult.getString(PRO_NAME));
@@ -109,16 +113,14 @@ public class StartDebugImpl implements OperationInterface {
         log.info("startDebug paramMap is: " + paramMap);
 
         if (CollectionUtils.isEmpty(paramMap)) {
-            webSocketServer.sendMessage(windowName, window, "500",
-                    "function/procedure doesn't exist!", null);
+            webSocketServer.sendMessage(windowName, window, FIVE_HUNDRED, LocaleString.transLanguageWs("1006", webSocketServer), null);
             return;
         } else {
             String currentSql = funcProcedure.parseResult(windowName, paramMap, webSocketServer, schema);
-            String replaceSql = sql.replace("\n", "").replace(" ", "");
-            String replaceCurrentSql = currentSql.replace("\n", "").replace(" ", "");
+            String replaceSql = sql.replace(LINE_FEED, Strings.EMPTY).replace(SPACE, Strings.EMPTY);
+            String replaceCurrentSql = currentSql.replace(LINE_FEED, Strings.EMPTY).replace(SPACE, Strings.EMPTY);
             if (!replaceSql.equals(replaceCurrentSql)) {
-                webSocketServer.sendMessage(windowName, window, "500",
-                        "function/procedure has been changed, please compile first!", null);
+                webSocketServer.sendMessage(windowName, window, FIVE_HUNDRED, LocaleString.transLanguageWs("1005", webSocketServer), null);
                 return;
             }
         }
@@ -144,7 +146,7 @@ public class StartDebugImpl implements OperationInterface {
         List<Integer> rightList = DebugUtils.getIndexList(sql, PARENTHESES_RIGHT);
         int start = leftList.get(0);
         int end = rightList.get(rightList.size() - 1);
-        sql = sql.replace("\n", " ");
+        sql = sql.replace(LINE_FEED, SPACE);
         String substring = sql.substring(start + 1, end);
         log.info("startDebug substring is: " + substring);
 
@@ -156,7 +158,7 @@ public class StartDebugImpl implements OperationInterface {
                     Map<String, String> itemMap = new HashMap<>();
                     String[] split = s.trim().split(SPACE);
                     if (split.length == 1) {
-                        itemMap.put("", split[0]);
+                        itemMap.put(Strings.EMPTY, split[0]);
                     } else if (split.length == 3) {
                         itemMap.put(split[1], split[2]);
                     } else {

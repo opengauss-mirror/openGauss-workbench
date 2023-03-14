@@ -39,7 +39,7 @@
           <el-button plain @click="handleChangeStatus(true)">
             {{ $t('button.enabled') }}
           </el-button>
-          <el-button type="danger" @click="handleChangeStatus(false)">
+          <el-button type="primary" @click="handleChangeStatus(false)">
             {{ $t('button.disabled') }}
           </el-button>
         </div>
@@ -221,6 +221,7 @@
   }
   .border-bottom-input {
     box-shadow: none;
+    height: auto;
     :deep(.el-input__wrapper) {
       box-shadow: none;
       .el-input__inner {

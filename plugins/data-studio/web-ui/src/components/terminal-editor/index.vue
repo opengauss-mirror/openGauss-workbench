@@ -60,7 +60,7 @@
   import ResultTabs from '@/components/ResultTabs.vue';
   import EnterParamsDialog from './EnterParamsDialog.vue';
   import { ElMessageBox } from 'element-plus';
-  import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
+  import { computed, onActivated, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
   import createTemplate from './createTemplate';
   import { useRoute, useRouter } from 'vue-router';
   import WebSocketClass from '@/utils/websocket';
@@ -70,7 +70,6 @@
   import { useTagsViewStore } from '@/store/modules/tagsView';
   import { useI18n } from 'vue-i18n';
   import EventBus, { EventTypeName } from '@/utils/event-bus';
-  import { connectListPersist } from '@/config';
 
   const route = useRoute();
   const router = useRouter();
@@ -100,6 +99,8 @@
       stopDebug: false,
       breakPointStep: false,
       singleStep: false,
+      stepIn: false,
+      stepOut: false,
     },
     debugChild: {
       breakPointStep: true,
@@ -120,7 +121,6 @@
     barType: props.editorType,
   });
 
-  // const isGlobalEnable = ref(true);
   const showResult = ref(false);
   const id = 'terminal_' + uuid();
   const monacoWrapper = ref<HTMLElement>();
@@ -131,6 +131,7 @@
     name: '',
     webUser: '',
     rootId: '',
+    parentId: '',
     connectionName: '',
     uuid: '',
     sessionId: '',
@@ -139,6 +140,7 @@
     instance: null,
     rootWindowName: '',
   });
+  const tagId = TagsViewStore.getViewByRoute(route)?.id;
   const commonWsParams = computed(() => {
     return {
       webUser: ws.webUser,
@@ -149,6 +151,9 @@
   const isGlobalEnable = computed(() => {
     return AppStore.connectedDatabase.findIndex((item) => item.uuid == ws.uuid) > -1;
   });
+  const isStepIntoChild = computed(() => {
+    return TagsViewStore.getViewByRoute(route)?.isStepIntoChild;
+  });
   const loading = ref(null);
   const refreshCounter = reactive({
     counter: null,
@@ -157,11 +162,12 @@
   const isSaving = ref(false);
   const saveFileTitle = ref('');
   const alreadyCloseWindow = ref(false);
+
   // set editor height
   watch(
     showResult,
     (val) => {
-      if (!TagsViewStore.getCurrentView(route)) return;
+      if (!TagsViewStore.getViewByRoute(route)) return;
       editorHeight.value = val ? '380px' : '100%';
       setTimeout(() => {
         let padding =
@@ -173,6 +179,13 @@
     },
     {
       immediate: true,
+    },
+  );
+
+  watch(
+    () => AppStore.language,
+    (value) => {
+      changeServerLanguage(value);
     },
   );
 
@@ -266,9 +279,15 @@
     type: string;
   }
   const onWebSocketMessage = (data: string) => {
+    if (!isGlobalEnable.value) return;
     let res: Message = JSON.parse(data);
     if (res.code == '200') {
-      if (props.editorType == 'debug' && res.type != 'operateStatus') {
+      if (
+        props.editorType == 'debug' &&
+        res.type != 'operateStatus' &&
+        res.type != 'newWindow' &&
+        !isStepIntoChild.value
+      ) {
         getButtonStatus();
       }
       const result = res.data?.result;
@@ -279,20 +298,6 @@
         ) {
           getButtonStatus();
         }
-        // if (
-        //   props.editorType == 'sql' &&
-        //   ['Number of rows affected by successful execution'].includes(res.msg)
-        // ) {
-        //   let list = JSON.parse(connectListPersist.storage.getItem(connectListPersist.key) || '[]');
-        //   EventBus.notify(EventTypeName.REFRESH_DATABASE_LIST, {
-        //     mode: 'connection',
-        //     options: {
-        //       connectInfo: list.find((item) => item.id == ws.rootId),
-        //       uuid: ws.uuid,
-        //       nodeId: ws.rootId,
-        //     },
-        //   });
-        // }
         showResult.value = true;
         const d = new Date();
         (result || res.msg) &&
@@ -319,7 +324,7 @@
         }
         // can use 'startDebug' button = not isDebugging
         if (props.editorType == 'debug') {
-          debug.isDebugging = !result.startDebug;
+          debug.isDebugging = !(result.startDebug || result.execute);
         }
       }
       if (res.type == 'paramWindow') {
@@ -371,6 +376,7 @@
               connectInfoName: route.query.connectInfoName,
               terminalNum: TagsViewStore.maxTerminalNum + 1,
               schema: route.query.schema,
+              uuid: ws.uuid,
               time: Date.now(),
             },
           });
@@ -415,6 +421,7 @@
         debug.variableHighLight = result;
       }
       if (res.type == 'newWindow') {
+        setStepIntoChildStatus(tagId, true);
         router.push({
           path: `/debugChild/${encodeURIComponent(route.query.dbname as string)}_${result}`,
           query: {
@@ -424,10 +431,10 @@
             connectInfoName: ws.connectionName,
             uuid: ws.uuid,
             schema: route.query.schema,
-            parentTagId: TagsViewStore.getCurrentView(route)?.id,
+            parentTagId: TagsViewStore.getViewByRoute(route)?.id,
             rootTagId:
               route.name == 'debug'
-                ? TagsViewStore.getCurrentView(route)?.id
+                ? TagsViewStore.getViewByRoute(route)?.id
                 : route.query.rootTagId,
             rootWindowName: ws.sessionId,
             time: Date.now(),
@@ -457,6 +464,13 @@
     ws.instance.send({
       operation: 'operateStatus',
       ...commonWsParams.value,
+    });
+  };
+
+  const changeServerLanguage = (language) => {
+    ws.instance.send({
+      operation: 'changeLanguage',
+      language,
     });
   };
 
@@ -514,7 +528,7 @@
       operation: 'stopDebug',
       ...commonWsParams.value,
     });
-    TagsViewStore.closeAllChildViews(TagsViewStore.getCurrentView(route)?.id, router);
+    TagsViewStore.closeAllChildViews(TagsViewStore.getViewByRoute(route)?.id, router);
     debug.isDebugging = false;
   };
 
@@ -574,9 +588,34 @@
       });
   };
 
+  const getStepIntoChildStatus = (tag) => {
+    return ['number', 'string'].includes(typeof tag)
+      ? !!TagsViewStore.getViewById(tag)?.isStepIntoChild
+      : !!TagsViewStore.getViewByRoute(tag)?.isStepIntoChild;
+  };
+  const setStepIntoChildStatus = (tag, status) => {
+    ['number', 'string'].includes(typeof tag)
+      ? TagsViewStore.updateStepIntoChildStatusById(tag, status)
+      : TagsViewStore.updateStepIntoChildStatusByRoute(tag, status);
+    if (['debug', 'debugChild'].includes(props.editorType)) {
+      Object.assign(sqlData.barStatus, {
+        breakPointStep: !status,
+        singleStep: !status,
+        stepIn: !status,
+        stepOut: !status,
+      });
+    }
+  };
+  onActivated(() => {
+    if (['debug'].includes(route.name as string)) {
+      const status = getStepIntoChildStatus(tagId);
+      status ? setStepIntoChildStatus(tagId, true) : getButtonStatus();
+    }
+  });
+
   // is create? and return default tempalate
   onMounted(async () => {
-    if (!TagsViewStore.getCurrentView(route)) return;
+    if (!TagsViewStore.getViewByRoute(route)) return;
     if (['createTerminal', 'createDebug'].includes(route.name as string)) {
       const defaultTemplate: string = await createTemplate();
       editorRef.value.setValue(defaultTemplate);
@@ -590,6 +629,7 @@
       name: route.query.connectInfoName,
       webUser: UserStore.userId,
       rootId: route.query.rootId,
+      parentId: route.query.parentTagId,
       connectionName: route.query.connectInfoName,
       uuid: route.query.uuid,
       sessionId: route.query.connectInfoName + '_' + route.query.time,
@@ -601,8 +641,10 @@
 
     ws.instance.send({
       operation: 'connection',
+      language: AppStore.language,
       ...commonWsParams.value,
     });
+
     if (['debug', 'debugChild'].includes(route.name as string)) {
       const { funcname } = route.query;
       loading.value = loadingInstance();
@@ -623,8 +665,9 @@
     if (!ws.instance) return;
     ['debug'].includes(props.editorType) && handleStopDebug();
     ['debugChild'].includes(props.editorType) && !alreadyCloseWindow.value && handleStepOut(true);
-    // close websocket
-    if (!['debugChild'].includes(props.editorType)) {
+    if (['debugChild'].includes(props.editorType)) {
+      TagsViewStore.updateStepIntoChildStatusById(ws.parentId, false);
+    } else {
       ws.instance.send({
         operation: 'close',
         windowName: ws.sessionId,

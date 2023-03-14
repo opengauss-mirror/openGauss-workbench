@@ -1,12 +1,12 @@
 <template>
     <el-container>
         <el-aside :width="isCollapse ? '0px' : '300px'">
-            <div style="height: 23px"></div>
+            <div style="height: 13px"></div>
             <Install />
         </el-aside>
-        <el-main style="position: relative;overflow: visible;">
+        <el-main style="position: relative; overflow: visible; padding-top: 0px">
             <div>
-                <div style="position: absolute; left: 20px; top: 22px; z-index: 9999" @click="toggleCollapse">
+                <div style="position: absolute; left: 20px; top: 3px; z-index: 9999" @click="toggleCollapse">
                     <el-icon v-if="!isCollapse" size="20px"><Fold /></el-icon>
                     <el-icon v-if="isCollapse" size="20px"><Expand /></el-icon>
                 </div>
@@ -28,7 +28,6 @@
                             </span>
                         </div>
                     </div> -->
-                    
                 </div>
                 <div class="filter" v-if="showContextCount">
                     <!-- <span>{{ $t('datasource.logContext') }}&nbsp;</span>
@@ -39,10 +38,16 @@
                     <div class="log-context">
                         <span>{{ $t('datasource.logContext') }}&nbsp;&nbsp;</span>
                         <select v-model="formData.contextCount">
-                            <option v-for="item in logContextCountList" :label="item.label" :value="item.value"></option>
+                            <!-- <option v-for="item in logContextCountList" :value="item.value">{{item.label }}</option> -->
+                            <option  :value="5">{{t('app.logContextCountLabelList[0]') }}</option> 
+                            <option  :value="10">{{t('app.logContextCountLabelList[1]')}}</option> 
+                            <option  :value="20">{{t('app.logContextCountLabelList[2]') }}</option> 
+                            <option  :value="30">{{t('app.logContextCountLabelList[3]') }}</option> 
+                            <option  :value="40">{{t('app.logContextCountLabelList[4]') }}</option> 
+                            <option  :value="50">{{t('app.logContextCountLabelList[5]') }}</option> 
                         </select>
                         <!-- top: -6px; -->
-                        <el-icon class="el-input__icon" @click="hideContextCount" style="position: relative;  left: 0;top:2px;cursor:pointer"><CloseBold /></el-icon>
+                        <el-icon class="el-input__icon" @click="hideContextCount" style="position: relative; left: 0; top: 2px; cursor: pointer"><CloseBold /></el-icon>
                         <!-- <el-button text bg type="" :icon="CloseBold" size="small" style="position: relative;  left: 0" @click="hideContextCount" /> -->
                     </div>
                 </div>
@@ -65,7 +70,7 @@
                     </div>
                 </my-card>
             </div>
-            <div class="content-wrap" v-infinite-scroll="scrollToBottom"  :infinite-scroll-disabled="!canScroll">
+            <div class="content-wrap" v-infinite-scroll="scrollToBottom" :infinite-scroll-disabled="!canScroll">
                 <div class="content-wrap-left">
                     <div class="tree-wrap">
                         <div class="tree-item">
@@ -149,11 +154,13 @@ import { useRequest } from 'vue-request';
 import { Search, Refresh, DCaret, CloseBold } from '@element-plus/icons-vue';
 import { cloneDeep } from 'lodash-es';
 import { LineData } from '../../components/MyBar.vue';
-import { useWindowStore } from "../../store/window";
+import { useWindowStore } from '../../store/window';
 import { storeToRefs } from 'pinia';
 import Install from './install/Index.vue';
+import { useI18n } from "vue-i18n";
+const { t } = useI18n();
 
-const { theme } = storeToRefs(useWindowStore())
+const { theme } = storeToRefs(useWindowStore());
 
 const pageSize = ref(30);
 const loading = ref(false);
@@ -164,32 +171,41 @@ const scrollId = ref();
 const clusterTree = ref<any>();
 const logTypeTree = ref<any>();
 const nodeIds = ref<string[]>([]);
+const sorts = ref<string[]>([]);
 const typeNames = ref<string[]>([]);
 const logLevelSelected = ref<string[]>([]);
-const logContextCountList = ref<any[]>([{
-            label: '5条',
-            value: 5
-        },{
-            label: '10条',
-            value: 10
-        },{
-            label: '20条',
-            value: 20
-        },{
-            label: '30条',
-            value: 30
-        },{
-            label: '40条',
-            value: 40
-        },{
-            label: '50条',
-            value: 50
-        }])
+const logContextCountList = ref<any[]>([
+    {
+        label: t('app.logContextCountLabelList[0]'),
+        value: 5,
+    },
+    {
+        label: t('app.logContextCountLabelList[1]'),
+        value: 10,
+    },
+    {
+        label: t('app.logContextCountLabelList[2]'),
+        value: 20,
+    },
+    {
+        label: t('app.logContextCountLabelList[3]'),
+        value: 30,
+    },
+    {
+        label: t('app.logContextCountLabelList[4]'),
+        value: 40,
+    },
+    {
+        label: t('app.logContextCountLabelList[5]'),
+        value: 50,
+    },
+]);
 
 type LogsRes =
     | {
           scrollId: string;
           logs: string[];
+          sorts: string[];
       }
     | undefined;
 type MapResItem = {
@@ -223,7 +239,7 @@ const treeData1 = ref<Array<Tree>>([]);
 const treeData2 = ref<Array<Tree>>([]);
 const logLevelData = ref<Array<String>>([]);
 const xData = ref<string[]>([]);
-const curLogData = ref<any>({logDate: '',logType: '',logData: '',logLevelSelected: '',typeNames: ''});
+const curLogData = ref<any>({ logDate: '', logType: '', logData: '', logLevelSelected: '', typeNames: '' });
 
 const isCollapse = ref(true);
 const toggleCollapse = () => {
@@ -251,18 +267,19 @@ const selectLevels = (item: Tree) => {
     });
     refreshLog();
 };
-const canScroll = ref<boolean>(true)
+const canScroll = ref<boolean>(true);
 // functions
 const scrollToBottom = () => {
     if (!noMore.value) listLogScrollData();
 };
 const refreshLog = () => {
-    if(formData.searchText || formData.dateValue && formData.dateValue.length > 0) {
-        showContextCount.value = false
+    if (formData.searchText || (formData.dateValue && formData.dateValue.length > 0)) {
+        showContextCount.value = false;
     }
     noMore.value = false;
     loading.value = false;
     scrollId.value = null;
+    sorts.value = [];
     tableData.value = [];
     listLogScrollData();
     refreshMap();
@@ -317,8 +334,8 @@ const searchBthStyle = ref();
 const showSearchBtn = ref<boolean>(false);
 const curRow = ref();
 
-const cellMouseEnter =  (row: any,column: any, cell: any, event: any) => {
-    if(curRow.value == row) {
+const cellMouseEnter = (row: any, column: any, cell: any, event: any) => {
+    if (curRow.value == row) {
         return;
     }
     let cellHeight = 0;
@@ -401,48 +418,53 @@ const gotoNewLogSearch = () => {
         });
     }
     // showContextCount.value = true
-}
+};
 
-const tableRowStyle = ({row, rowIndex}) => {
-    if(showContextCount.value && curLogData.logData && curLogData.logData == row.logData && curLogData.logTime && curLogData.logTime == row.logTime) {
-        return theme.value === 'dark' ? {
-            'background-color': 'rgba(235,223,132,0.2)',
-        } : {
-            'background-color': 'rgba(238,102,102,0.1)',
+const tableRowStyle = ({ row, rowIndex }) => {
+    if (showContextCount.value && curLogData.logData && curLogData.logData == row.logData && curLogData.logTime && curLogData.logTime == row.logTime) {
+        return theme.value === 'dark'
+            ? {
+                  'background-color': 'rgba(235,223,132,0.2)',
+              }
+            : {
+                  'background-color': 'rgba(238,102,102,0.1)',
+              };
+    }
+};
+
+const route = useRoute();
+watch(
+    () => route.query,
+    (res) => {
+        if (res && res.showContextCount && res.showContextCount == 'true') {
+            showContextCount.value = true;
+            formData.contextCount = 20;
+        } else {
+            showContextCount.value = false;
         }
+        if (res && res.nodeIds) {
+            nodeIds.value = (res.nodeIds as string[]) || [];
+        }
+        if (res && res.logData) {
+            curLogData.logData = res.logData;
+        }
+        if (res && res.logTime) {
+            curLogData.logTime = res.logTime;
+        }
+        if (res && res.logType) {
+            curLogData.logType = res.logType;
+        }
+        listLogTypeData();
+        listLogLevelData();
+        refreshLog();
     }
-}
-
-const route = useRoute()
-watch(() => route.query, (res) => {
-    if(res && res.showContextCount && res.showContextCount == 'true') {
-        showContextCount.value = true
-        formData.contextCount = 20
-    }else {
-        showContextCount.value = false
-    }
-    if(res && res.nodeIds) {
-        nodeIds.value = res.nodeIds as string[] || []
-    }
-    if(res && res.logData) {
-        curLogData.logData = res.logData
-    }
-    if(res && res.logTime) {
-        curLogData.logTime = res.logTime
-    }
-    if(res && res.logType) {
-        curLogData.logType = res.logType
-    }
-    listLogTypeData();
-    listLogLevelData();
-    refreshLog();
-})
+);
 
 const hideContextCount = () => {
-    showContextCount.value = false
-    formData.contextCount = 20
+    showContextCount.value = false;
+    formData.contextCount = 20;
     refreshLog();
-}
+};
 
 // type data
 type LogType =
@@ -497,71 +519,74 @@ const {
 } = useRequest(
     () => {
         loading.value = true;
-        if(showContextCount.value){
+        if (showContextCount.value) {
             return ogRequest
-            .get(
-                '/logSearch/api/v1/logContextSearch?' +
-                    qs.stringify(
-                        filterNonNull({
-                            nodeId: nodeIds.value.length > 0 ? nodeIds.value.join(',') : null,
-                            logType: typeNames.value.length > 0 ? typeNames.value.join(',') : curLogData.typeNames ? curLogData.typeNames : null,
-                            logLevel: logLevelSelected.value.length > 0 ? logLevelSelected.value.join(',') : curLogData.value.logLevelSelected ? curLogData.value.logLevelSelected : null,
-                            logDate: dayjs.utc(curLogData.logTime).tz('Europe/London').format("YYYY-MM-DDTHH:mm:ss.SSS") + 'Z',
-                            // searchPhrase: curLogData.logData ? curLogData.logData : "",
-                            // startDate: formData.dateValue.length ? formData.dateValue[0] : null,
-                            // endDate: formData.dateValue.length ? formData.dateValue[1] : null,
-                            scrollId: scrollId.value,
-                            // rowCount: pageSize.value,
-                            rowCount: formData.contextCount * 2 + 1,
-                            aboveCount: formData.contextCount,
-                            belowCount: formData.contextCount
-                        })
-                    )
-            )
-            .finally(function () {
-                loading.value = false;
-            });
-        }else {
-            canScroll.value = false
+                .get(
+                    '/logSearch/api/v1/logContextSearch?' +
+                        qs.stringify(
+                            filterNonNull({
+                                nodeId: nodeIds.value.length > 0 ? nodeIds.value.join(',') : null,
+                                logType: typeNames.value.length > 0 ? typeNames.value.join(',') : curLogData.typeNames ? curLogData.typeNames : null,
+                                logLevel: logLevelSelected.value.length > 0 ? logLevelSelected.value.join(',') : curLogData.value.logLevelSelected ? curLogData.value.logLevelSelected : null,
+                                logDate: dayjs.utc(curLogData.logTime).tz('Europe/London').format('YYYY-MM-DDTHH:mm:ss.SSS') + 'Z',
+                                // searchPhrase: curLogData.logData ? curLogData.logData : "",
+                                // startDate: formData.dateValue.length ? formData.dateValue[0] : null,
+                                // endDate: formData.dateValue.length ? formData.dateValue[1] : null,
+                                scrollId: scrollId.value,
+                                sorts: sorts.value,
+                                // rowCount: pageSize.value,
+                                rowCount: formData.contextCount * 2 + 1,
+                                aboveCount: formData.contextCount,
+                                belowCount: formData.contextCount,
+                            })
+                        )
+                )
+                .finally(function () {
+                    loading.value = false;
+                });
+        } else {
+            canScroll.value = false;
             return ogRequest
-            .get(
-                '/logSearch/api/v1/logs?' +
-                    qs.stringify(
-                        filterNonNull({
-                            nodeId: nodeIds.value.length > 0 ? nodeIds.value.join(',') : null,
-                            logType: typeNames.value.length > 0 ? typeNames.value.join(',') : null,
-                            searchPhrase: formData.searchText.length > 0 ? formData.searchText : null,
-                            logLevel: logLevelSelected.value.length > 0 ? logLevelSelected.value.join(',') : null,
-                            startDate: formData.dateValue.length ? dayjs.utc(formData.dateValue[0]).format("YYYY-MM-DDTHH:mm:ss.SSS") + 'Z' : null,
-                            endDate: formData.dateValue.length ? dayjs.utc(formData.dateValue[1]).format("YYYY-MM-DDTHH:mm:ss.SSS") + 'Z' : null,
-                            scrollId: scrollId.value,
-                            rowCount: pageSize.value,
-                        })
-                    )
-            )
-            .finally(function () {
-                loading.value = false;
-            });
-        }         
+                .get(
+                    '/logSearch/api/v1/logs?' +
+                        qs.stringify(
+                            filterNonNull({
+                                nodeId: nodeIds.value.length > 0 ? nodeIds.value.join(',') : null,
+                                logType: typeNames.value.length > 0 ? typeNames.value.join(',') : null,
+                                searchPhrase: formData.searchText.length > 0 ? formData.searchText : null,
+                                logLevel: logLevelSelected.value.length > 0 ? logLevelSelected.value.join(',') : null,
+                                startDate: formData.dateValue.length ? dayjs.utc(formData.dateValue[0]).format('YYYY-MM-DDTHH:mm:ss.SSS') + 'Z' : null,
+                                endDate: formData.dateValue.length ? dayjs.utc(formData.dateValue[1]).format('YYYY-MM-DDTHH:mm:ss.SSS') + 'Z' : null,
+                                scrollId: scrollId.value,
+                                sorts: sorts.value,
+                                rowCount: pageSize.value,
+                            })
+                        )
+                )
+                .finally(function () {
+                    loading.value = false;
+                });
+        }
     },
     { manual: true }
 );
 function filterNonNull(obj) {
     return Object.fromEntries(Object.entries(obj).filter(([k, v]) => v));
-};
+}
 
 watch(error, () => {
     loading.value = false;
 });
 watch(logsData, (res: LogsRes) => {
     if (res && Object.keys(res).length) {
-        if ( res.logs && res.logs.length < pageSize.value || showContextCount.value) noMore.value = true;
+        if ((res.logs && res.logs.length < pageSize.value) || showContextCount.value) noMore.value = true;
         tableData.value = tableData.value.concat(res.logs);
         scrollId.value = res.scrollId;
+        sorts.value = res.sorts;
     } else {
         tableData.value = [];
     }
-    canScroll.value = true
+    canScroll.value = true;
 });
 
 // map data
@@ -577,8 +602,8 @@ const { data: mapData, run: refreshMap } = useRequest(
                             logType: typeNames.value.length > 0 ? (typeNames.value.join(',') as string) : null,
                             logLevel: logLevelSelected.value.length > 0 ? (logLevelSelected.value.join(',') as string) : null,
                             searchPhrase: formData.searchText.length > 0 ? formData.searchText : null,
-                            startDate: formData.dateValue.length ? dayjs.utc(formData.dateValue[0]).format("YYYY-MM-DDTHH:mm:ss.SSS") + 'Z' : null,
-                            endDate: formData.dateValue.length ? dayjs.utc(formData.dateValue[1]).format("YYYY-MM-DDTHH:mm:ss.SSS") + 'Z' : null,
+                            startDate: formData.dateValue.length ? dayjs.utc(formData.dateValue[0]).format('YYYY-MM-DDTHH:mm:ss.SSS') + 'Z' : null,
+                            endDate: formData.dateValue.length ? dayjs.utc(formData.dateValue[1]).format('YYYY-MM-DDTHH:mm:ss.SSS') + 'Z' : null,
                         })
                     )
             )
@@ -632,7 +657,7 @@ watch(mapData, (res: MapRes) => {
         });
     } else {
         showData.value = [{}];
-        tableData.value = [];
+        // tableData.value = [];
     }
 
     nextTick(() => {
@@ -764,11 +789,27 @@ onMounted(() => {
     margin-top: 10px;
 }
 .log-context {
-    background-color: #f2f3f5;border: solid #dcdfe6;font-size:13px;border-radius:5px;color: #babcc2;padding:1px 7px
+    background-color: #f2f3f5;
+    border: solid #dcdfe6;
+    font-size: 13px;
+    border-radius: 5px;
+    color: #babcc2;
+    padding: 1px 7px;
 }
 .log-context select {
-    border: none;background-color: #f2f3f5;width: 100px;font-size:15px;outline:none;
+    border: none;
+    background-color: #f2f3f5;
+    width: 100px;
+    font-size: 15px;
+    outline: none;
     // appearance:none; //去掉倒三角
+}
+
+html.dark .log-context {
+    background-color: #343435;border: solid #484849;font-size:13px;border-radius:5px;color: #8b8b8e;padding:1px 7px
+}
+html.dark .log-context select {
+    border: none;background-color: #343435;width: 100px;font-size:15px;outline:none;
 }
 // .log-context select:focus-visible{
 //     border: 0;

@@ -2,9 +2,9 @@ server:
   port: 2321
 urlconfig:
   bccUrl: /usr/share/bcc/tools
-  outputUrl: /opt/software/ebpf/output/
+  outputUrl: /root/output/
   fgUrl: /opt/software/FlameGraph
-  httpUrl: http://39.108.219.254:9494/plugins/observability-sql-diagnosis/sqlDiagnosis/api/open/v1/diagnosisTasks/result
+  httpUrl: ${diagnosis_host:http://localhoslt:9494}/plugins/observability-sql-diagnosis/sqlDiagnosis/api/open/v1/diagnosisTasks/result
 
 ebpfconfig:
   profile: ./profile -af -L

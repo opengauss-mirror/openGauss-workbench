@@ -5,7 +5,7 @@
       <div class="flex-row-start mb">
         <div class="label-color mr">{{ $t('components.ChooseVersion.5mpmxod8yh00') }}</div>
         <a-tag class="mr" size="large" color="green">{{ getDescVersion() }}</a-tag>
-        <div class="install-type flex-row">
+        <div v-if="currVersion !== OpenGaussVersionEnum.OPENlOOKENG" class="install-type flex-row">
           <div class="label-color label mr">{{ $t('components.ChooseVersion.5mpmxod8yr40') }}</div>
           <a-select style="width: 200px" v-model="data.installType" @change="installTypeChange">
             <a-option v-for="(item, index) in installTypes" :key="index" :label="item.label" :value="item.value">

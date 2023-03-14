@@ -1,7 +1,13 @@
 package com.nctigba.datastudio.constants;
 
 public class CommonConstants {
+    public static final String WEBDS_PLUGIN = "webds-plugin";
+    public static final String FIVE_HUNDRED = "500";
+    public static final String TWO_HUNDRED = "200";
+
     public static final String SPACE = " ";
+
+    public static final String LINE_FEED = "\n";
 
     public static final String UNDERLINE = "_";
 
@@ -70,5 +76,13 @@ public class CommonConstants {
     public static final String PG_GET_TABLEDEF = "pg_get_tabledef";
 
     public static final String FUNC_OID = "funcoid";
+    public static final String LINE_NO = "lineno";
+
+    public static final String START_RUN = "startRun";
+    public static final String STOP_RUN = "stopRun";
+    public static final String STOP_DEBUG = "stopDebug";
+    public static final String FUNCTION = "function";
+    public static final String PROCEDURE = "procedure";
+    public static final String TYPE = "type";
 
 }

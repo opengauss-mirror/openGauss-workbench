@@ -64,7 +64,7 @@ import {
   mockHostPingById,
   mockEncryptPassword
 } from '@/api/ops/mock'
-import { TarType } from '@/types/resource/package'
+import { PackageType } from '@/types/resource/package'
 import { FormInstance } from '@arco-design/web-vue/es/form'
 import { useI18n } from 'vue-i18n'
 import { OpenLookengInstallConfig } from '@/types/ops/install'
@@ -373,11 +373,11 @@ const validatePath = async (path: string, password: string, hostId: string) => {
 }
 
 watch(() => props.tarMap, (val) => {
-  if (val[TarType.SHARDING_PROXY] && val[TarType.SHARDING_PROXY].length > 0) {
-    data.shardingTarList = val[TarType.SHARDING_PROXY]
+  if (val[PackageType.SHARDING_PROXY] && val[PackageType.SHARDING_PROXY].length > 0) {
+    data.shardingTarList = val[PackageType.SHARDING_PROXY]
   }
-  if (val[TarType.ZOOKEEPER] && val[TarType.ZOOKEEPER].length > 0) {
-    data.zookeeperTarList = val[TarType.ZOOKEEPER]
+  if (val[PackageType.ZOOKEEPER] && val[PackageType.ZOOKEEPER].length > 0) {
+    data.zookeeperTarList = val[PackageType.ZOOKEEPER]
   }
 }, { deep: true })
 

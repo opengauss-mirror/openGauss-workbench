@@ -4,7 +4,6 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 
@@ -18,7 +17,6 @@ import org.opengauss.admin.system.plugin.facade.OpsFacade;
 import org.opengauss.admin.system.service.ops.IOpsClusterService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
@@ -28,6 +26,7 @@ import com.baomidou.dynamic.datasource.spring.boot.autoconfigure.DataSourcePrope
 import com.baomidou.dynamic.datasource.toolkit.DynamicDataSourceContextHolder;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType.Type;
+import com.nctigba.common.web.exception.CustomException;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -139,7 +138,7 @@ public class ClusterManager {
 			}))
 				return cluster.getClusterId();
 		}
-		return "unknown";
+		throw new CustomException("cluster not found");
 	}
 
 	@Data
@@ -147,13 +146,6 @@ public class ClusterManager {
 	@EqualsAndHashCode(callSuper = true)
 	public static class OpsClusterNodeVOSub extends OpsClusterNodeVO {
 		private String version;
-
-		@Override
-		public Integer getDbPort() {
-			if ("1584444406327418882".equals(getNodeId()))
-				return 9190;
-			return super.getDbPort();
-		}
 
 		public OpsClusterNodeVOSub(OpsClusterNodeVO opsClusterNodeVO, String version) {
 			BeanUtils.copyProperties(opsClusterNodeVO, this);
@@ -197,7 +189,7 @@ public class ClusterManager {
 	public OpsClusterNodeVOSub getOpsNodeById(String nodeId) {
 		List<OpsClusterVO> opsClusterVOList = getAllOpsCluster();
 		if (CollectionUtils.isEmpty(opsClusterVOList))
-			return null;
+			throw new CustomException("node not found");
 		for (OpsClusterVO cluster : opsClusterVOList) {
 			List<OpsClusterNodeVO> nodes = cluster.getClusterNodes();
 			if (CollectionUtils.isEmpty(nodes))
@@ -208,10 +200,6 @@ public class ClusterManager {
 				}
 			}
 		}
-		return null;
+		throw new CustomException("node not found");
 	}
-
-	@Value("${spring.profiles.active}")
-	private String env;
-
 }

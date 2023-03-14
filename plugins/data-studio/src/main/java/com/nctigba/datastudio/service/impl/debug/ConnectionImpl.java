@@ -1,9 +1,10 @@
-package com.nctigba.datastudio.service.impl.sql;
+package com.nctigba.datastudio.service.impl.debug;
 
 import com.alibaba.fastjson.JSON;
 import com.nctigba.datastudio.base.WebSocketServer;
 import com.nctigba.datastudio.model.PublicParamReq;
 import com.nctigba.datastudio.service.OperationInterface;
+import com.nctigba.datastudio.util.LocaleString;
 import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.exception.CustomException;
 import org.springframework.stereotype.Service;
@@ -23,11 +24,12 @@ public class ConnectionImpl implements OperationInterface {
         String windowName = paramReq.getWindowName();
         log.info("connection paramReq is: " + paramReq);
         if(!conMap.containsKey(paramReq.getUuid())){
-            throw new CustomException("The current connection does not exist");
+            throw new CustomException(LocaleString.transLanguageWs("1004", webSocketServer));
         }
-        Connection connection = webSocketServer.createConnection(paramReq.getUuid(), paramReq.getWindowName());
+        Connection connection = webSocketServer.createConnection(paramReq.getUuid(), windowName);
         webSocketServer.setConnection(windowName, connection);
-        webSocketServer.sendMessage(windowName, other, "connect connection!", null);
+        webSocketServer.sendMessage(windowName, other, LocaleString.transLanguageWs("1001", webSocketServer), null);
+        webSocketServer.setLanguage(paramReq.getLanguage());
     }
 
     @Override

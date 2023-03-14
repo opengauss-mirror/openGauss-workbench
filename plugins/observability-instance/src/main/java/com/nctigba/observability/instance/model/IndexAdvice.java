@@ -1,7 +1,6 @@
 package com.nctigba.observability.instance.model;
 
 
-import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 /**
@@ -14,12 +13,8 @@ import lombok.Data;
  */
 @Data
 public class IndexAdvice {
-    @ApiModelProperty("Pattern Name")
     String schema;
-    @ApiModelProperty("Table Name")
     String table;
-    @ApiModelProperty("Column name")
     String column;
-    @ApiModelProperty("Index Type")
     String indexType;
 }

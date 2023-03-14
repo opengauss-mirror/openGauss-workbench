@@ -62,3 +62,9 @@ body {
 #nprogress .peg {
   box-shadow: 0 0 10px $primaryColor, 0 0 5px $primaryColor !important;
 }
+
+.active-dropdown {
+  .el-dropdown-menu__item.active {
+    background-color: var(--el-dropdown-menuItem-hover-fill);
+  }
+}

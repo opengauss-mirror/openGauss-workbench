@@ -30,6 +30,7 @@
 <script lang="ts" setup>
 import { useRequest } from "vue-request";
 import restRequest from "../../../request/restful";
+import { FormRules, FormInstance, ElMessage } from 'element-plus'
 
 // const visible = ref(false);
 const props = withDefaults(
@@ -90,23 +91,30 @@ const { data:createRes, run: createSnapshot, loading: creatingSnapshot } = useRe
             .catch(function (res) {});
     },
     { manual: true,
-        // onSuccess:  res => {
-        //     reading.value=true
-        //     setTimeout(() => {
-        //         requestData();
-        //     },800)
-        // },
+        onSuccess:  res => {
+            if(res && res.code === 200) {
+                ElMessage({
+                    showClose: true,
+                    message: "创建成功！快照列表异步写入可能存在滞后，请手动刷新列表!",
+                    type: 'success',
+                })
+            }
+            reading.value=false
+            // setTimeout(() => {
+            //     requestData();
+            // },800)
+        },
     }
 );
 
-watch(createRes,(createRes) => {
-    if(createRes && createRes.code === 200) {
-        reading.value=true
-        setTimeout(() => {
-            requestData();
-        },800)
-    }
-})
+// watch(createRes,(createRes) => {
+//     if(createRes && createRes.code === 200) {
+//         reading.value=true
+//         setTimeout(() => {
+//             requestData();
+//         },800)
+//     }
+// })
 
 // list Data
 const tableData = ref<Array<any>>([]);

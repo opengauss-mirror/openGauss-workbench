@@ -5,6 +5,12 @@ import restRequest from "../../../request/restful";
 import BuildWdr from "./build_wdr.vue";
 import SnapshotManage from "./snapshot_manage.vue";
 import { cloneDeep } from "lodash-es";
+import { useI18n } from "vue-i18n";
+const { t } = useI18n();
+
+const shortcutsConfig = ref<any[]>(
+    [{ text: t('dashboard.last1H'), value: 1 }, { text: t('dashboard.last3H'), value: 3 }, { text: t('dashboard.last6H'), value: 6 }]
+);
 
 const errorInfo = ref<string | Error>();
 
@@ -241,7 +247,7 @@ const { run: hanleDelete, loading: deleting } = useRequest(
 
                     <div class="filter">
                         <span>{{ $t("dashboard.wdrReports.buildTime") }}&nbsp;</span>
-                        <MyDatePicker v-model="formData.dateValue" :teleported="true" type="datetimerange" style="width: 300px" />
+                        <MyDatePicker v-model="formData.dateValue" :teleported="true" :start-placeholder="$t('app.startDate')" :end-placeholder="$t('app.endDate')" :shortcutsConfig="shortcutsConfig" type="datetimerange" style="width: 300px" />
                     </div>
                 </div>
 
@@ -259,11 +265,11 @@ const { run: hanleDelete, loading: deleting } = useRequest(
         <div class="page-container">
             <div class="table-wrapper" v-loading="loading || viewing || downloading || deleting">
                 <el-table class="normal-table" :data="tableData" :header-cell-style="{ 'text-align': 'center' }" style="width: 100%" :default-sort="{ prop: 'date', order: 'descending' }">
-                    <el-table-column prop="scope" :label="$t('dashboard.wdrReports.reportRange')" width="80" align="center" />
-                    <el-table-column prop="reportAt" :label="$t('dashboard.wdrReports.list.buildTime')" width="180" align="center" />
-                    <el-table-column prop="reportType" :label="$t('dashboard.wdrReports.reportType')" width="80" align="center" />
-                    <el-table-column prop="reportName" :label="$t('dashboard.wdrReports.list.reportName')" width="420" align="center" />
-                    <el-table-column :label="$t('app.operate')" align="center" fixed="right" width="130">
+                    <el-table-column prop="scope" :label="$t('dashboard.wdrReports.reportRange')" min-width="10%" align="center" />
+                    <el-table-column prop="reportAt" :label="$t('dashboard.wdrReports.list.buildTime')" min-width="20%" align="center" />
+                    <el-table-column prop="reportType" :label="$t('dashboard.wdrReports.reportType')" min-width="10%" align="center" />
+                    <el-table-column prop="reportName" :label="$t('dashboard.wdrReports.list.reportName')" align="center" min-width="40%"/>
+                    <el-table-column :label="$t('app.operate')" align="center" fixed="right" min-width="20%">
                         <template #default="scope">
                             <div class="operate-btns">
                                 <el-link size="small" type="primary" @click="handleView(scope.row)">{{ $t("app.view") }}</el-link>
