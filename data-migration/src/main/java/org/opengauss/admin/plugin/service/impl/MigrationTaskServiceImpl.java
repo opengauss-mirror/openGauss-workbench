@@ -412,7 +412,7 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
             // These characters are part of the query syntax and must be escaped
             if (c == '\\' || c == '+' || c == '-' || c == '!' || c == '(' || c == ')'
                     || c == ':' || c == '^'	|| c == '[' || c == ']' || c == '\"'
-                    || c == '{' || c == '}' || c == '~' || c == '*' || c == '?'
+                    || c == '{' || c == '}' || c == '~' || c == '*' || c == '?' || c == '>'  || c == '<'
                     || c == '|' || c == '&' || c == ';' || c == '/' || c == '.'
                     || c == '$' || Character.isWhitespace(c)) {
                 sb.append('\\');
