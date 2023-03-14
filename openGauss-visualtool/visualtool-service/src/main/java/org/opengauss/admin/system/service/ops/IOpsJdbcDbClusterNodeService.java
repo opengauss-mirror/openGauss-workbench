@@ -29,5 +29,5 @@ public interface IOpsJdbcDbClusterNodeService extends IService<OpsJdbcDbClusterN
 
     boolean ping(JdbcDbClusterNodeInputDto clusterNodeInput);
 
-    void monitor(String clusterNodeId, String businessId);
+    Map<String,Object> monitor(String clusterNodeId, String businessId);
 }

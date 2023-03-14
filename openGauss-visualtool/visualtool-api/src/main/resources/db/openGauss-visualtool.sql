@@ -361,6 +361,21 @@ COMMENT ON COLUMN "public"."ops_host_user"."create_time" IS '创建时间';
 COMMENT ON COLUMN "public"."ops_host_user"."update_by" IS '更新者';
 COMMENT ON COLUMN "public"."ops_host_user"."update_time" IS '更新时间';
 
+CREATE OR REPLACE FUNCTION add_host_user_field_func() RETURNS integer AS 'BEGIN
+IF
+( SELECT COUNT ( * ) AS ct1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ''ops_host_user'' AND COLUMN_NAME = ''sudo'' ) = 0
+THEN
+ALTER TABLE ops_host_user ADD COLUMN sudo int2 DEFAULT 0;
+COMMENT ON COLUMN "public"."ops_host_user"."sudo" IS ''管理员'';
+END IF;
+RETURN 0;
+END;'
+LANGUAGE plpgsql;
+
+SELECT add_host_user_field_func();
+
+DROP FUNCTION add_host_user_field_func;
+
 -- ----------------------------
 -- Table structure for sys_log_config
 -- ----------------------------
@@ -980,6 +995,12 @@ IF
 THEN
 ALTER TABLE ops_host ADD COLUMN cpu_arch varchar(255);
 COMMENT ON COLUMN "public"."ops_host"."cpu_arch" IS ''CPU架构'';
+END IF;
+IF
+( SELECT COUNT ( * ) AS ct1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ''ops_host'' AND COLUMN_NAME = ''name'' ) = 0
+THEN
+ALTER TABLE ops_host ADD COLUMN name varchar(255);
+COMMENT ON COLUMN "public"."ops_host"."name" IS ''名称'';
 END IF;
 RETURN 0;
 END;'

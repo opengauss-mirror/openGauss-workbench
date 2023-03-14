@@ -224,19 +224,28 @@ public class OpsJdbcDbClusterNodeServiceImpl extends ServiceImpl<OpsJdbcDbCluste
     }
 
     @Override
-    public void monitor(String clusterNodeId, String businessId) {
+    public Map<String,Object> monitor(String clusterNodeId, String businessId) {
+        Map<String,Object> res = new HashMap<>();
+        res.put("res",true);
+
         OpsJdbcDbClusterNodeEntity clusterNodeEntity = getById(clusterNodeId);
         if (Objects.isNull(clusterNodeEntity)){
-            throw new OpsException("Node information not found");
+            res.put("msg","Node information not found");
+            res.put("res",false);
+            return res;
         }
 
         Connection connection = JdbcUtil.getConnection(clusterNodeEntity.getUrl(), clusterNodeEntity.getUsername(), clusterNodeEntity.getPassword());
         try {
             if (Objects.isNull(connection) || connection.isClosed()){
-                throw new OpsException("JDBC connection failed");
+                res.put("msg","JDBC connection failed");
+                res.put("res",false);
+                return res;
             }
         } catch (SQLException e) {
-            throw new OpsException("JDBC connection failed");
+            res.put("msg","JDBC connection failed");
+            res.put("res",false);
+            return res;
         }
 
         WsSession wsSession = wsConnectorManager.getSession(businessId).orElseThrow(() -> new OpsException("response session does not exist"));
@@ -257,6 +266,7 @@ public class OpsJdbcDbClusterNodeServiceImpl extends ServiceImpl<OpsJdbcDbCluste
             }
         });
         TaskManager.registry(businessId, future);
+        return res;
     }
 
     private void doMonitor(WsSession wsSession, Connection connection) {

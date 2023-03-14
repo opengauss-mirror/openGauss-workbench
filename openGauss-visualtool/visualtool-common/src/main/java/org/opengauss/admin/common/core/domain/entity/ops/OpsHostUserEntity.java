@@ -19,4 +19,5 @@ public class OpsHostUserEntity extends BaseEntity {
     private String username;
     private String password;
     private String hostId;
+    private Boolean sudo;
 }

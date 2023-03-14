@@ -2,6 +2,7 @@ package org.opengauss.admin.system.service.ops.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
+import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
@@ -16,6 +17,7 @@ import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
 import org.opengauss.admin.common.core.domain.model.ops.HostBody;
 import org.opengauss.admin.common.core.domain.model.ops.JschResult;
 import org.opengauss.admin.common.core.domain.model.ops.WsSession;
+import org.opengauss.admin.common.core.domain.model.ops.host.HostMonitorVO;
 import org.opengauss.admin.common.core.domain.model.ops.host.OpsHostVO;
 import org.opengauss.admin.common.core.domain.model.ops.host.SSHBody;
 import org.opengauss.admin.common.core.handler.ops.cache.SSHChannelManager;
@@ -23,6 +25,7 @@ import org.opengauss.admin.common.core.handler.ops.cache.TaskManager;
 import org.opengauss.admin.common.core.handler.ops.cache.WsConnectorManager;
 import org.opengauss.admin.common.exception.ops.OpsException;
 import org.opengauss.admin.common.utils.ops.JschUtil;
+import org.opengauss.admin.common.utils.ops.WsUtil;
 import org.opengauss.admin.system.mapper.ops.OpsHostMapper;
 import org.opengauss.admin.system.service.ops.IHostService;
 import org.opengauss.admin.system.service.ops.IHostUserService;
@@ -33,7 +36,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -58,6 +63,8 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
     private IOpsClusterService clusterService;
     @Autowired
     private WsConnectorManager wsConnectorManager;
+    @Autowired
+    private WsUtil wsUtil;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -258,6 +265,201 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
         List<OpsHostEntity> list = list(queryWrapper);
         populateIsRemember(list);
         return list;
+    }
+
+    @Override
+    public Map<String,Object> monitor(String hostId, String businessId, String rootPassword) {
+        Map<String,Object> res = new HashMap<>();
+        res.put("res",true);
+
+        OpsHostEntity hostEntity = getById(hostId);
+        if (Objects.isNull(hostEntity)){
+            res.put("res",false);
+            res.put("msg","host info not found");
+            return res;
+        }
+
+        OpsHostUserEntity rootUserEntity = hostUserService.getRootUserByHostId(hostId);
+        if (Objects.isNull(rootUserEntity)){
+            res.put("res",false);
+            res.put("msg","root user info not found");
+            return res;
+        }
+
+        if (StrUtil.isEmpty(rootUserEntity.getPassword())){
+            if (StrUtil.isNotEmpty(rootPassword)){
+                rootUserEntity.setPassword(rootPassword);
+            }else {
+                res.put("res",false);
+                res.put("msg","root user password not found");
+                return res;
+            }
+        }
+
+        Session rootSession = null;
+        Optional<Session> session = jschUtil.getSession(hostEntity.getPublicIp(), hostEntity.getPort(), rootUserEntity.getUsername(), encryptionUtils.decrypt(rootUserEntity.getPassword()));
+        if (session.isPresent()){
+            rootSession = session.get();
+        }else {
+            res.put("res",false);
+            res.put("msg","The root user failed to establish a connection");
+            return res;
+        }
+
+        WsSession wsSession = wsConnectorManager.getSession(businessId).orElseThrow(() -> new OpsException("response session does not exist"));
+
+        Session finalRootSession = rootSession;
+        Future<?> future = threadPoolTaskExecutor.submit(() -> {
+            try {
+                doMonitor(wsSession, finalRootSession);
+            }finally {
+                if (Objects.nonNull(finalRootSession) && finalRootSession.isConnected()){
+                    try {
+                        finalRootSession.disconnect();
+                    } catch (Exception ignore) {
+
+                    }
+                }
+
+                wsUtil.close(wsSession);
+            }
+        });
+        TaskManager.registry(businessId, future);
+        return res;
+    }
+
+    private void doMonitor(WsSession wsSession, Session rootSession) {
+        while (wsSession.getSession().isOpen()){
+            HostMonitorVO hostMonitorVO = new HostMonitorVO();
+            CountDownLatch countDownLatch = new CountDownLatch(4);
+
+            threadPoolTaskExecutor.submit(()->{
+                try {
+                    String[] net = netMonitor(rootSession);
+                    hostMonitorVO.setUpSpeed(net[0]);
+                    hostMonitorVO.setDownSpeed(net[1]);
+                }finally {
+                    countDownLatch.countDown();
+                }
+            });
+
+            threadPoolTaskExecutor.submit(()->{
+                try {
+                    hostMonitorVO.setCpu(cpuMonitor(rootSession));
+                }finally {
+                    countDownLatch.countDown();
+                }
+            });
+
+            threadPoolTaskExecutor.submit(()->{
+                try {
+                    hostMonitorVO.setMemory(memoryMonitor(rootSession));
+                }finally {
+                    countDownLatch.countDown();
+                }
+            });
+
+            threadPoolTaskExecutor.submit(()->{
+                try {
+                    hostMonitorVO.setDisk(diskMonitor(rootSession));
+                }finally {
+                    countDownLatch.countDown();
+                }
+            });
+
+            try {
+                countDownLatch.await();
+            } catch (InterruptedException e) {
+                log.error("waiting for thread to be interrupted", e);
+                throw new OpsException("monitor error");
+            }
+
+            wsUtil.sendText(wsSession, JSON.toJSONString(hostMonitorVO));
+            try {
+                TimeUnit.SECONDS.sleep(5L);
+            } catch (InterruptedException e) {
+                throw new OpsException("thread is interrupted");
+            }
+        }
+    }
+
+    private String diskMonitor(Session rootSession) {
+        String command = "df -Th | egrep -v \"(tmpfs|sr0)\" | tail -n +2|tr -s \" \" | cut -d \" \" -f6|tr -d \"%\"";
+        try {
+            JschResult jschResult = jschUtil.executeCommand(command, rootSession);
+            if (0==jschResult.getExitCode()){
+                return jschResult.getResult();
+            }else {
+                log.error("disk monitor error,exitCode:{},exitMsg:{}",jschResult.getExitCode(),jschResult.getResult());
+            }
+        }catch (Exception e){
+            log.error("disk monitor error:",e);
+        }
+        throw new OpsException("disk monitor error");
+    }
+
+    private String memoryMonitor(Session rootSession) {
+        String command = "free -m | awk -F '[ :]+' 'NR==2{printf \"%d\", ($2-$7)/$2*100}'";
+        try {
+            JschResult jschResult = jschUtil.executeCommand(command, rootSession);
+            if (0==jschResult.getExitCode()){
+                return jschResult.getResult();
+            }else {
+                log.error("memory monitor error,exitCode:{},exitMsg:{}",jschResult.getExitCode(),jschResult.getResult());
+            }
+        }catch (Exception e){
+            log.error("memory monitor error:",e);
+        }
+        throw new OpsException("memory monitor error");
+    }
+
+    private String cpuMonitor(Session rootSession) {
+        String command = "top -b -n1 | fgrep \"Cpu(s)\" | tail -1 | awk -F'id,' '{split($1, vs, \",\"); v=vs[length(vs)]; sub(/\\s+/, \"\", v);sub(/\\s+/, \"\", v); printf \"%d\", 100-v;}'";
+        try {
+            JschResult jschResult = jschUtil.executeCommand(command, rootSession);
+            if (0==jschResult.getExitCode()){
+                return jschResult.getResult();
+            }else {
+                log.error("cpu monitor error,exitCode:{},exitMsg:{}",jschResult.getExitCode(),jschResult.getResult());
+            }
+        }catch (Exception e){
+            log.error("cpu monitor error:",e);
+        }
+        throw new OpsException("cpu monitor error");
+    }
+
+    private String[] netMonitor(Session rootSession) {
+        String[] res = new String[2];
+
+        String netCardName;
+        String netCardNameCommand = "cat /proc/net/dev | awk '{i++; if(i>2){print $1}}' | sed 's/^[\\t]*//g' | sed 's/[:]*$//g' | head -n 1";
+        try {
+            JschResult jschResult = jschUtil.executeCommand(netCardNameCommand, rootSession);
+            if (0==jschResult.getExitCode()){
+                netCardName = jschResult.getResult().trim();
+            }else {
+                log.error("Failed to get network card name,exitCode:{},exitMsg:{}",jschResult.getExitCode(),jschResult.getResult());
+                throw new OpsException("Failed to get network card name");
+            }
+        }catch (Exception e){
+            throw new OpsException("cpu monitor error");
+        }
+
+        String command = "rx_net1=$(ifconfig "+netCardName+" | awk '/RX packets/{print $5}') && tx_net1=$(ifconfig "+netCardName+" | awk '/TX packets/{print $5}') && sleep 1 && rx_net2=$(ifconfig "+netCardName+" | awk '/RX packets/{print $5}') && tx_net2=$(ifconfig "+netCardName+" | awk '/TX packets/{print $5}') && rx_net=$[($rx_net2-$rx_net1)] && tx_net=$[($tx_net2-$tx_net1)] && echo \"$rx_net|$tx_net\"";
+        try {
+            JschResult jschResult = jschUtil.executeCommand(command, rootSession);
+            if (0==jschResult.getExitCode()){
+                String[] split = jschResult.getResult().split("\\|");
+                res[0]= split[0];
+                res[1] = split[1];
+                return res;
+            }else {
+                log.error("cpu monitor error,exitCode:{},exitMsg:{}",jschResult.getExitCode(),jschResult.getResult());
+            }
+        }catch (Exception e){
+            log.error("cpu monitor error:",e);
+        }
+        throw new OpsException("cpu monitor error");
     }
 
     private void populateIsRememberVO(List<OpsHostVO> list) {

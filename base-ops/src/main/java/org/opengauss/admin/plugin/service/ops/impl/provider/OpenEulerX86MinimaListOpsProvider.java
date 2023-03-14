@@ -291,7 +291,7 @@ public class OpenEulerX86MinimaListOpsProvider extends AbstractOpsProvider {
             try {
                 JschResult jschResult = null;
                 try {
-                    String command = "useradd "+ommUserName+" && echo '"+ommUserName+" ALL=(ALL) ALL' >> /etc/sudoers";
+                    String command = "useradd "+ommUserName;
                     jschResult = jschUtil.executeCommand(command, rootSession, installContext.getRetSession());
                 } catch (InterruptedException e) {
                     throw new OpsException("thread is interrupted");

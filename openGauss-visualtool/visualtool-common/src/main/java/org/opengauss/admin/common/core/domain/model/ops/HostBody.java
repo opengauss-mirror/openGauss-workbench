@@ -26,6 +26,7 @@ public class HostBody {
     private String azId;
     private String remark;
     private Integer port;
+    private String name;
 
     public OpsHostEntity toHostEntity(String hostName,String os,String cpuArch) {
         OpsHostEntity hostEntity = new OpsHostEntity();
@@ -37,6 +38,7 @@ public class HostBody {
         hostEntity.setRemark(remark);
         hostEntity.setOs(os);
         hostEntity.setCpuArch(cpuArch);
+        hostEntity.setName(name);
         return hostEntity;
     }
 

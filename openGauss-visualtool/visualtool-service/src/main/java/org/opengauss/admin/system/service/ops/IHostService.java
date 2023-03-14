@@ -65,4 +65,6 @@ public interface IHostService extends IService<OpsHostEntity> {
     Map<String, String> mapOsByIps(Set<String> ipSet);
 
     List<OpsHostEntity> listAll(String azId);
+
+    Map<String,Object> monitor(String hostId, String businessId, String rootPassword);
 }
