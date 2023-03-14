@@ -663,6 +663,8 @@
             "5oxhkhimx5c0": "Test connectivity",
             "5oxhkhimxbg0": "Confirm",
             "5oxhkhimxho0": "Cluster Name",
+			"isCustomName": "isCustom",
+            "customNamePlaceholder": "The cluster name is generated based on the instance information",
             "5oxhkhimxno0": "Please enter an instance name",
             "5oxhkhimxto0": "Database type",
             "5oxhkhimxzw0": "Select a database type",
