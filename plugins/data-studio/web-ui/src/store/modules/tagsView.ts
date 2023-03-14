@@ -36,7 +36,7 @@ export const useTagsViewStore = defineStore({
       });
       this.maxTagsId = Math.max(...ids) || 0;
     },
-    getCurrentView(route) {
+    getViewByRoute(route) {
       return this.visitedViews.find((item) => item.path === route.path);
     },
     getViewById(id) {
@@ -61,7 +61,6 @@ export const useTagsViewStore = defineStore({
     },
     addVisitedView(view) {
       if (this.visitedViews.some((v) => v.path === view.path)) return;
-
       this.visitedViews.push(
         Object.assign({}, view, {
           id: ++this.maxTagsId,
@@ -71,6 +70,7 @@ export const useTagsViewStore = defineStore({
           terminalNum: view.query?.terminalNum,
           isReload: true,
           loadTime: 1,
+          isStepIntoChild: false,
         }),
       );
       this.setVisitedViewsStorage();
@@ -136,6 +136,12 @@ export const useTagsViewStore = defineStore({
           break;
         }
       }
+    },
+    updateStepIntoChildStatusById(tagId, status) {
+      this.getViewById(tagId)!.isStepIntoChild = status;
+    },
+    updateStepIntoChildStatusByRoute(route, status) {
+      this.getViewByRoute(route)!.isStepIntoChild = status;
     },
     reloadView(fullPath) {
       const view = this.visitedViews.find((item) => item.fullPath == fullPath);

@@ -83,5 +83,6 @@ public class CommonConstants {
     public static final String STOP_DEBUG = "stopDebug";
     public static final String FUNCTION = "function";
     public static final String PROCEDURE = "procedure";
+    public static final String TYPE = "type";
 
 }

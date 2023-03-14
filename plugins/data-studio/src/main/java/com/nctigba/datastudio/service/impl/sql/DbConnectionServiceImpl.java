@@ -181,7 +181,13 @@ public class DbConnectionServiceImpl implements DbConnectionService {
                     connectionDTO.getUrl(),
                     connectionDTO.getDbUser(),
                     connectionDTO.getDbPassword(),
-                    "SELECT tablename FROM pg_tables where schemaname ='" + schema.getSchema() + "' and tableowner ='" + connectionDTO.getDbUser() + "';",
+                    "select relname as tablename\n" +
+                            "  from (select tbl.oid as oid, tbl.relname relname\n" +
+                            "          from pg_class tbl\n" +
+                            "         inner join pg_namespace ns on tbl.relnamespace = ns.oid\n" +
+                            "         where tbl.relkind = 'r'\n" +
+                            "           and ns.nspname = '" + schema.getSchema() + "' ) x\n" +
+                            " where has_table_privilege(x.oid, 'SELECT')",
                     "select c.relname as viewname from pg_class c INNER JOIN pg_namespace n ON n.oid = c.relnamespace and n.nspname = '" + schema.getSchema() + SELECT_OBJECT_WHERE_IN_SQL + "v','m" + QUOTES_PARENTHESES_SEMICOLON,
                     "SELECT proname,proargtypes FROM pg_proc\n" +
                             "WHERE pronamespace = (SELECT pg_namespace.oid FROM pg_namespace WHERE nspname = '" + schema.getSchema() + "')\n",

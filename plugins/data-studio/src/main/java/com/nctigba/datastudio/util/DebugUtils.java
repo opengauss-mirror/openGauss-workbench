@@ -233,7 +233,14 @@ public class DebugUtils {
         while (resultSet.next()) {
             List<Object> list = new ArrayList<>();
             for (int i = 0; i < columnList.size(); i++) {
-                list.add(resultSet.getString(columnList.get(i)));
+                String str = resultSet.getString(columnList.get(i));
+                if (str.equals("t")) {
+                    list.add(true);
+                } else if (str.equals("f")) {
+                    list.add(false);
+                } else {
+                    list.add(str);
+                }
             }
             if (list.contains(oid)) {
                 dataList.add(list);

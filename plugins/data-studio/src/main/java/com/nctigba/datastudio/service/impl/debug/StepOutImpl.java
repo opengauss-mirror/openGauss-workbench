@@ -18,10 +18,15 @@ import java.util.Map;
 import java.util.Set;
 
 import static com.nctigba.datastudio.constants.CommonConstants.BREAK_POINT;
+import static com.nctigba.datastudio.constants.CommonConstants.DIFFER;
 import static com.nctigba.datastudio.constants.CommonConstants.FUNC_OID;
+import static com.nctigba.datastudio.constants.CommonConstants.LINE_NO;
 import static com.nctigba.datastudio.constants.CommonConstants.OID;
 import static com.nctigba.datastudio.constants.CommonConstants.STATEMENT;
 import static com.nctigba.datastudio.constants.CommonConstants.SUCCESS;
+import static com.nctigba.datastudio.constants.SqlConstants.BACKTRACE_SQL;
+import static com.nctigba.datastudio.constants.SqlConstants.BACKTRACE_SQL_PRE;
+import static com.nctigba.datastudio.constants.SqlConstants.CONTINUE_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.FINISH_SQL;
 import static com.nctigba.datastudio.enums.MessageEnum.closeWindow;
 
@@ -48,17 +53,7 @@ public class StepOutImpl implements OperationInterface {
             return;
         }
 
-        Map<Integer, String> breakPointMap = (Map<Integer, String>) webSocketServer.getParamMap(windowName).get(BREAK_POINT);
-        log.info("stepOut breakPointMap is: " + breakPointMap);
-        if (!CollectionUtils.isEmpty(breakPointMap)) {
-            Set<Integer> integers = breakPointMap.keySet();
-            List<Integer> list = new ArrayList<>(integers);
-            for (Integer integer : list) {
-                paramReq.setLine(integer);
-                deleteBreakPoint.operate(webSocketServer, paramReq);
-            }
-        }
-
+        deleteBreakPoint(webSocketServer, paramReq);
         String oid = (String) webSocketServer.getParamMap(windowName).get(OID);
         log.info("stepOut oid is: " + oid);
         ResultSet resultSet = stat.executeQuery(FINISH_SQL);
@@ -72,6 +67,20 @@ public class StepOutImpl implements OperationInterface {
             webSocketServer.sendMessage(windowName, closeWindow, SUCCESS, null);
         }
         singleStep.showDebugInfo(webSocketServer, paramReq);
+    }
+
+    public void deleteBreakPoint(WebSocketServer webSocketServer, PublicParamReq paramReq) throws Exception {
+        Map<Integer, String> breakPointMap = (Map<Integer, String>) webSocketServer
+                .getParamMap(paramReq.getWindowName()).get(BREAK_POINT);
+        log.info("stepOut breakPointMap is: " + breakPointMap);
+        if (!CollectionUtils.isEmpty(breakPointMap)) {
+            Set<Integer> integers = breakPointMap.keySet();
+            List<Integer> list = new ArrayList<>(integers);
+            for (int i = 0; i < list.size(); i++) {
+                paramReq.setLine(list.get(i));
+                deleteBreakPoint.operate(webSocketServer, paramReq);
+            }
+        }
     }
 
     @Override
