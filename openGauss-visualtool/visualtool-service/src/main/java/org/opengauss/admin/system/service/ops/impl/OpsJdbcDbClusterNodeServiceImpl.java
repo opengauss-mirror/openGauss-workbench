@@ -235,8 +235,10 @@ public class OpsJdbcDbClusterNodeServiceImpl extends ServiceImpl<OpsJdbcDbCluste
             return res;
         }
 
-        Connection connection = JdbcUtil.getConnection(clusterNodeEntity.getUrl(), clusterNodeEntity.getUsername(), clusterNodeEntity.getPassword());
+        Connection connection = null;
         try {
+            connection = JdbcUtil.getConnection(clusterNodeEntity.getUrl(), clusterNodeEntity.getUsername(), clusterNodeEntity.getPassword());
+
             if (Objects.isNull(connection) || connection.isClosed()){
                 res.put("msg","JDBC connection failed");
                 res.put("res",false);
@@ -250,13 +252,14 @@ public class OpsJdbcDbClusterNodeServiceImpl extends ServiceImpl<OpsJdbcDbCluste
 
         WsSession wsSession = wsConnectorManager.getSession(businessId).orElseThrow(() -> new OpsException("response session does not exist"));
 
+        Connection finalConnection = connection;
         Future<?> future = threadPoolTaskExecutor.submit(() -> {
             try {
-                doMonitor(wsSession,connection);
+                doMonitor(wsSession, finalConnection);
             }finally {
-                if (Objects.nonNull(connection)){
+                if (Objects.nonNull(finalConnection)){
                     try {
-                        connection.close();
+                        finalConnection.close();
                     } catch (SQLException ignore) {
 
                     }

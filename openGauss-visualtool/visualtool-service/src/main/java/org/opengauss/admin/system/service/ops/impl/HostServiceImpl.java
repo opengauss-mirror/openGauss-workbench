@@ -244,6 +244,44 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
     }
 
     @Override
+    public void ssh(String hostId, SSHBody sshBody) {
+        OpsHostEntity hostEntity = getById(hostId);
+        if (Objects.isNull(hostEntity)){
+            throw new OpsException("host info not found");
+        }
+
+        String password = null;
+
+        OpsHostUserEntity hostUserEntity = hostUserService.getHostUserByUsername(hostId,sshBody.getSshUsername());
+        if (Objects.isNull(hostUserEntity)){
+            throw new OpsException("host user " +sshBody.getSshUsername()+ " info not found");
+        }
+
+        password = hostUserEntity.getPassword();
+        if (StrUtil.isEmpty(password)){
+            password = sshBody.getSshPassword();
+        }
+
+        if (StrUtil.isEmpty(password)){
+            throw new OpsException("user " +sshBody.getSshUsername()+ " password not found");
+        }
+
+
+        WsSession wsSession = wsConnectorManager.getSession(sshBody.getBusinessId()).orElseThrow(()->new OpsException("websocket session not exist"));
+
+        Session session = jschUtil.getSession(sshBody.getIp(), sshBody.getSshPort(), sshBody.getSshUsername(), encryptionUtils.decrypt(password))
+                .orElseThrow(() -> new OpsException("Failed to establish session with host"));
+
+        ChannelShell channelShell = jschUtil.openChannelShell(session);
+
+        SSHChannelManager.registerChannelShell(sshBody.getBusinessId(),channelShell);
+
+        Future<?> future = threadPoolTaskExecutor.submit(() -> jschUtil.channelToWsSession(channelShell, wsSession));
+
+        TaskManager.registry(sshBody.getBusinessId(), future);
+    }
+
+    @Override
     public Map<String, String> mapOsByIps(Set<String> ipSet) {
         if (CollUtil.isEmpty(ipSet)){
             return Collections.emptyMap();

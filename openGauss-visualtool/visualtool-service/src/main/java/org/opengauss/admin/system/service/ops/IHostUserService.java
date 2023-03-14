@@ -28,4 +28,6 @@ public interface IHostUserService extends IService<OpsHostUserEntity> {
     OpsHostUserEntity getRootUserByHostId(String hostId);
 
     void cleanPassword(String hostUserId);
+
+    OpsHostUserEntity getHostUserByUsername(String hostId, String sshUsername);
 }

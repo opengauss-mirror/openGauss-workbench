@@ -62,6 +62,8 @@ public interface IHostService extends IService<OpsHostEntity> {
 
     void ssh(SSHBody sshBody);
 
+    void ssh(String hostId, SSHBody sshBody);
+
     Map<String, String> mapOsByIps(Set<String> ipSet);
 
     List<OpsHostEntity> listAll(String azId);

@@ -75,6 +75,12 @@ public class HostController extends BaseController {
         return AjaxResult.success();
     }
 
+    @PostMapping("/ssh/{hostId}")
+    public AjaxResult ssh(@PathVariable("hostId") String hostId,@RequestBody SSHBody sshBody) {
+        hostService.ssh(hostId,sshBody);
+        return AjaxResult.success();
+    }
+
     @GetMapping("/monitor")
     public AjaxResult monitor(@RequestParam String hostId, @RequestParam String businessId, @RequestParam(value = "rootPassword",required = false) String rootPassword){
         return AjaxResult.success(hostService.monitor(hostId,businessId,rootPassword));

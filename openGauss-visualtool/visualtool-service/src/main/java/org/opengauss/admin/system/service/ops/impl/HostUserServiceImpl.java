@@ -334,4 +334,12 @@ public class HostUserServiceImpl extends ServiceImpl<OpsHostUserMapper, OpsHostU
                 .eq(OpsHostUserEntity::getHostUserId, hostUserId);
         update(updateWrapper);
     }
+
+    @Override
+    public OpsHostUserEntity getHostUserByUsername(String hostId, String username) {
+        LambdaQueryWrapper<OpsHostUserEntity> queryWrapper = Wrappers.lambdaQuery(OpsHostUserEntity.class)
+                .eq(OpsHostUserEntity::getHostId, hostId)
+                .eq(OpsHostUserEntity::getUsername, username);
+        return getOne(queryWrapper,false);
+    }
 }
