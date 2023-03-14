@@ -17,4 +17,7 @@ public class OpsHostVO {
     private String azName;
     private String remark;
     private Boolean isRemember;
+    private String os;
+    private String cpuArch;
+    private String name;
 }
