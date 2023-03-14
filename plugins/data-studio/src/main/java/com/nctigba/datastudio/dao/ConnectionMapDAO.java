@@ -24,7 +24,7 @@ import static java.util.concurrent.TimeUnit.MINUTES;
 public class ConnectionMapDAO {
     public static Map<String, ConnectionDTO> conMap = new HashMap<>(1);
     public static void setConMap(String uuiD, ConnectionDTO con) throws Exception {
-        if (conMap.size() < 100) {
+        if (conMap.size() <= 100) {
             conMap.put(uuiD, con);
         } else {
             log.info("The number of connections reached 100, conMap is: " + conMap);
@@ -53,19 +53,18 @@ public class ConnectionMapDAO {
     }
 
     public void deleteConnection(String uuid) {
-        if(!conMap.containsKey(uuid)){
-            throw new CustomException(LocaleString.transLanguage("1004"));
-        }
-        try {
-            ConnectionDTO connectionDTO= conMap.get(uuid);
-            log.info("connectionDTO is: " + connectionDTO);
-            overtimeCloseSocket(connectionDTO.getSocketSet());
-            log.info("old conMap is: " + conMap);
-            conMap.remove(uuid);
-            log.info("new conMap is: " + conMap);
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new CustomException(e.getMessage(),e);
+        if(conMap.containsKey(uuid)){
+            try {
+                ConnectionDTO connectionDTO= conMap.get(uuid);
+                log.info("connectionDTO is: " + connectionDTO);
+                overtimeCloseSocket(connectionDTO.getSocketSet());
+                log.info("old conMap is: " + conMap);
+                conMap.remove(uuid);
+                log.info("new conMap is: " + conMap);
+            } catch (Exception e) {
+                e.printStackTrace();
+                throw new CustomException(e.getMessage(),e);
+            }
         }
     }
 

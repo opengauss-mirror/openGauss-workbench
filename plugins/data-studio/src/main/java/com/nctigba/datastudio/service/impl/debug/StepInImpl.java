@@ -24,6 +24,7 @@ import static com.nctigba.datastudio.constants.CommonConstants.OID;
 import static com.nctigba.datastudio.constants.CommonConstants.RESULT;
 import static com.nctigba.datastudio.constants.CommonConstants.STATEMENT;
 import static com.nctigba.datastudio.constants.CommonConstants.SUCCESS;
+import static com.nctigba.datastudio.constants.CommonConstants.TYPE;
 import static com.nctigba.datastudio.constants.SqlConstants.INFO_CODE_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.NEXT_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.PARENTHESES_SEMICOLON;
@@ -39,6 +40,9 @@ import static com.nctigba.datastudio.enums.MessageEnum.newWindow;
 public class StepInImpl implements OperationInterface {
     @Autowired
     private SingleStepImpl singleStep;
+
+    @Autowired
+    private StepOutImpl stepOut;
 
     @Override
     public void operate(WebSocketServer webSocketServer, Object obj) throws Exception {
@@ -69,12 +73,24 @@ public class StepInImpl implements OperationInterface {
             newOid = resultSet.getString(FUNC_OID);
             log.info("stepIn newOid is: " + newOid);
         }
-        if (lineNo == 0 && StringUtils.isNotEmpty(oldWindowName)) {
-            stat.execute(NEXT_SQL);
-            webSocketServer.sendMessage(windowName, closeWindow, SUCCESS, null);
-            paramReq.setCloseWindow(true);
-            singleStep.showDebugInfo(webSocketServer, paramReq);
-            return;
+        String type = (String) webSocketServer.getParamMap(windowName).get(TYPE);
+        if ("p".equals(type)) {
+            if (!oid.equals(newOid) && StringUtils.isNotEmpty(oldWindowName)) {
+                stepOut.deleteBreakPoint(webSocketServer, paramReq);
+                webSocketServer.sendMessage(windowName, closeWindow, SUCCESS, null);
+                paramReq.setCloseWindow(true);
+                singleStep.showDebugInfo(webSocketServer, paramReq);
+                return;
+            }
+        } else if ("f".equals(type)) {
+            if (lineNo == 0 && StringUtils.isNotEmpty(oldWindowName)) {
+                stepOut.deleteBreakPoint(webSocketServer, paramReq);
+                stat.execute(NEXT_SQL);
+                webSocketServer.sendMessage(windowName, closeWindow, SUCCESS, null);
+                paramReq.setCloseWindow(true);
+                singleStep.showDebugInfo(webSocketServer, paramReq);
+                return;
+            }
         }
         if (oid.equals(newOid)) {
             singleStep.showDebugInfo(webSocketServer, paramReq);

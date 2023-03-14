@@ -29,18 +29,11 @@ import UContainerLayout from '@/components/u-container-layout/index.vue';
 
 import { i18n } from '@/i18n/index';
 import { dispatchEventStorage } from '@/utils';
-import { loadVersionTimePersist, prevTokenPersist } from '@/config';
-
-const persistTime = Number(loadVersionTimePersist.storage.getItem(loadVersionTimePersist.key) || 0);
-const tagetTime = import.meta.env.VITE_LOAD_VERSION_TIME;
-if (persistTime < Number(tagetTime)) {
-  sessionStorage.clear();
-  loadVersionTimePersist.storage.setItem(loadVersionTimePersist.key, tagetTime);
-}
+import { prevTokenPersist } from '@/config';
 
 const prevToken = prevTokenPersist.storage.getItem(prevTokenPersist.key);
 const token = localStorage.getItem('opengauss-token');
-if (parent !== self && prevToken !== token) {
+if (prevToken !== token) {
   sessionStorage.clear();
   prevTokenPersist.storage.setItem(prevTokenPersist.key, token);
 }

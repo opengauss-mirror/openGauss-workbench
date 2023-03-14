@@ -29,6 +29,9 @@ public class BreakPointStepImpl implements OperationInterface {
     @Autowired
     private SingleStepImpl singleStep;
 
+    @Autowired
+    private StepOutImpl stepOut;
+
     @Override
     public void operate(WebSocketServer webSocketServer, Object obj) throws Exception {
         log.info("breakPointStep obj is: " + obj);
@@ -54,6 +57,7 @@ public class BreakPointStepImpl implements OperationInterface {
             }
 
             if (!oid.equals(newOid)) {
+                stepOut.deleteBreakPoint(webSocketServer, paramReq);
                 webSocketServer.sendMessage(windowName, closeWindow, SUCCESS, null);
                 paramReq.setCloseWindow(true);
             }

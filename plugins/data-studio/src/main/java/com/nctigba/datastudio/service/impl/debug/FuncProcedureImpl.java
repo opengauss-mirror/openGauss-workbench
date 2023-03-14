@@ -43,6 +43,7 @@ import static com.nctigba.datastudio.constants.CommonConstants.PRO_VOLATILE;
 import static com.nctigba.datastudio.constants.CommonConstants.RESULT;
 import static com.nctigba.datastudio.constants.CommonConstants.SPACE;
 import static com.nctigba.datastudio.constants.CommonConstants.SUCCESS;
+import static com.nctigba.datastudio.constants.CommonConstants.TYPE;
 import static com.nctigba.datastudio.constants.CommonConstants.TYP_NAME;
 import static com.nctigba.datastudio.constants.SqlConstants.COMMA;
 import static com.nctigba.datastudio.constants.SqlConstants.COMMA_SPACE;
@@ -106,7 +107,8 @@ public class FuncProcedureImpl implements OperationInterface {
         }
         log.info("funcProcedure paramMap is: " + paramMap);
         if (CollectionUtils.isEmpty(paramMap)) {
-            webSocketServer.sendMessage(windowName, ignoreWindow, FIVE_HUNDRED, LocaleString.transLanguageWs("1006", webSocketServer), null);
+            webSocketServer.sendMessage(windowName, ignoreWindow, FIVE_HUNDRED,
+                    LocaleString.transLanguageWs("1006", webSocketServer), null);
             return;
         }
 
@@ -119,38 +121,65 @@ public class FuncProcedureImpl implements OperationInterface {
 
     public String parseResult(String windowName, Map<String, Object> map, WebSocketServer webSocketServer, String schema) throws SQLException {
         String proKind = (String) map.get(PRO_KIND);
-        String sql = Strings.EMPTY;
-        if ("f".equals(proKind)) {
-            sql = parseFunctionSql(windowName, map, webSocketServer, schema);
-        } else if ("p".equals(proKind)) {
-            sql = parseProcedureSql(map, schema);
-        }
-
-        return sql;
-    }
-
-    public String parseProcedureSql(Map<String, Object> map, String schema) {
-        StringBuilder sb = new StringBuilder();
         String proName = (String) map.get(PRO_NAME);
         String proSrc = (String) map.get(PRO_SRC);
-        String proArgSrc = (String) map.get(PRO_ARG_SRC);
+        StringBuilder sb = new StringBuilder();
+        webSocketServer.setParamMap(windowName, TYPE, proKind);
+        if ("p".equals(proKind)) {
+            sb.append("CREATE OR REPLACE PROCEDURE ").append(schema).append(POINT).append(proName).append(PARENTHESES_LEFT);
+            sb.append(parseSql(windowName, map, webSocketServer));
+            sb.append(")\nAS").append(proSrc).append(";\n/\n/");
+        } else if ("f".equals(proKind)) {
+            sb.append("CREATE OR REPLACE FUNCTION ").append(schema).append(".").append(map.get(PRO_NAME)).append(PARENTHESES_LEFT);
+            sb.append(parseSql(windowName, map, webSocketServer));
+            sb.append(")\n RETURNS ");
+            if ((boolean) map.get(PRO_RET_SET)) {
+                sb.append("SETOF ");
+            }
+            String lanName = (String) map.get(LAN_NAME);
+            sb.append(ParamTypeEnum.parseType((String) map.get(TYP_NAME))).append("\n LANGUAGE ").append(lanName).append("\n ");
+            String proVolatile = (String) map.get(PRO_VOLATILE);
+            if ("i".equals(proVolatile)) {
+                sb.append("IMMUTABLE ");
+            } else if ("s".equals(proVolatile)) {
+                sb.append("STABLE ");
+            }
+            if ((boolean) map.get(PRO_IS_STRICT)) {
+                sb.append("STRICT ");
+            }
+            if (!(boolean) map.get(FEN_CED_MODE)) {
+                sb.append("NOT ");
+            }
+            sb.append("FENCED ");
+            if (!(boolean) map.get(PRO_SHIPPABLE)) {
+                sb.append("NOT ");
+            }
+            sb.append("SHIPPABLE");
 
-        sb.append("CREATE OR REPLACE PROCEDURE ").append(schema).append(POINT).append(proName).append(PARENTHESES_LEFT);
-        if (!StringUtils.isEmpty(proArgSrc)) {
-            sb.append(proArgSrc);
+            int proCost = (int) map.get(PRO_COST);
+            int proRows = (int) map.get(PRO_ROWS);
+            if ("plpgsql".equals(lanName) && proCost != 100) {
+                sb.append(" COST ").append(proCost);
+            }
+            if ("plpgsql".equals(lanName) && proRows != 1000 && proRows != 0) {
+                sb.append(" ROWS ").append(proRows);
+            }
+            sb.append("\nAS ");
+            String proBin = (String) map.get(PRO_BIN);
+            if (!StringUtils.isEmpty(proBin)) {
+                sb.append("'").append(proBin).append("', ");
+            }
+            sb.append("$$").append(map.get(PRO_SRC)).append("$$;\n/");
         }
-        sb.append(")\nAS").append(proSrc).append(";\n/\n/");
 
-        log.info("funcProcedure parseProcedureSql is: " + sb);
+        log.info("funcProcedure parseResult is: " + sb);
         return sb.toString();
     }
 
-    private String parseFunctionSql(String windowName, Map<String, Object> map, WebSocketServer webSocketServer, String schema) throws SQLException {
+    public String parseSql(String windowName, Map<String, Object> map, WebSocketServer webSocketServer) throws SQLException {
         StringBuilder sb = new StringBuilder();
         String proArgModes = (String) map.get(PRO_ARG_MODES);
         String proArgNames = (String) map.get(PRO_ARG_NAMES);
-
-        sb.append("CREATE OR REPLACE FUNCTION ").append(schema).append(".").append(map.get(PRO_NAME)).append(PARENTHESES_LEFT);
         if (!StringUtils.isEmpty(proArgModes)) {
             String proAllArgTypes = (String) map.get(PRO_ALL_ARG_TYPES);
             String[] argModes = proArgModes.substring(1, proArgModes.length() - 1).split(COMMA);
@@ -207,46 +236,7 @@ public class FuncProcedureImpl implements OperationInterface {
             }
         }
 
-        sb.append(")\n RETURNS ");
-        if ((boolean) map.get(PRO_RET_SET)) {
-            sb.append("SETOF ");
-        }
-        String lanName = (String) map.get(LAN_NAME);
-        sb.append(ParamTypeEnum.parseType((String) map.get(TYP_NAME))).append("\n LANGUAGE ").append(lanName).append("\n ");
-        String proVolatile = (String) map.get(PRO_VOLATILE);
-        if ("i".equals(proVolatile)) {
-            sb.append("IMMUTABLE ");
-        } else if ("s".equals(proVolatile)) {
-            sb.append("STABLE ");
-        }
-        if ((boolean) map.get(PRO_IS_STRICT)) {
-            sb.append("STRICT ");
-        }
-        if (!(boolean) map.get(FEN_CED_MODE)) {
-            sb.append("NOT ");
-        }
-        sb.append("FENCED ");
-        if (!(boolean) map.get(PRO_SHIPPABLE)) {
-            sb.append("NOT ");
-        }
-        sb.append("SHIPPABLE");
-
-        int proCost = (int) map.get(PRO_COST);
-        int proRows = (int) map.get(PRO_ROWS);
-        if ("plpgsql".equals(lanName) && proCost != 100) {
-            sb.append(" COST ").append(proCost);
-        }
-        if ("plpgsql".equals(lanName) && proRows != 1000 && proRows != 0) {
-            sb.append(" ROWS ").append(proRows);
-        }
-        sb.append("\nAS ");
-        String proBin = (String) map.get(PRO_BIN);
-        if (!StringUtils.isEmpty(proBin)) {
-            sb.append("'").append(proBin).append("', ");
-        }
-        sb.append("$$").append(map.get(PRO_SRC)).append("$$;\n/");
-
-        log.info("funcProcedure parseFunctionSql is: " + sb);
+        log.info("funcProcedure parseSql is: " + sb);
         return sb.toString();
     }
 

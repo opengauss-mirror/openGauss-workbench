@@ -3,6 +3,7 @@ package com.nctigba.datastudio.dao;
 
 import com.nctigba.datastudio.model.entity.DatabaseConnectionDO;
 import com.nctigba.datastudio.model.entity.DatabaseConnectionUrlDO;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
@@ -47,11 +48,10 @@ public class DatabaseConnectionDAO implements ApplicationRunner {
 
     public DatabaseConnectionUrlDO getByName(String name, String webUser) {
         DatabaseConnectionUrlDO databaseConnectionUrlDO = new DatabaseConnectionUrlDO();
-        int count = getJudgeName(name, webUser);
-        if (count == 0) {
+        Map<String, Object> data = jdbcTemplate.queryForMap(GET_DATA_Connection_SQL + " name = '" + name + "' and webUser = '" + webUser + "';");
+        if (StringUtils.isBlank(String.valueOf(data.get("id")))) {
             return null;
-        } else {
-            Map<String, Object> data = jdbcTemplate.queryForMap(GET_DATA_Connection_SQL + " name = '" + name + "' and webUser = '" + webUser + "';");
+        }  else {
             databaseConnectionUrlDO.setId((Integer) data.get("id"));
             databaseConnectionUrlDO.setType((String) data.get("type"));
             databaseConnectionUrlDO.setName((String) data.get("name"));
@@ -78,11 +78,10 @@ public class DatabaseConnectionDAO implements ApplicationRunner {
 
     public DatabaseConnectionDO getByIdDatabase(Integer id, String webUser) {
         DatabaseConnectionDO databaseConnectionDO = new DatabaseConnectionDO();
-        Map<String, Object> count = jdbcTemplate.queryForMap(GET_DATABASELINK_COUNT_SQL + " id =" + id + "");
-        if ((int) count.get("count") == 0) {
+        Map<String, Object> data = jdbcTemplate.queryForMap(GET_DATA_Connection_SQL + " id =" + id + " and webUser = '" + webUser + "';");
+        if (StringUtils.isBlank(String.valueOf(data.get("id")))) {
             return null;
-        } else {
-            Map<String, Object> data = jdbcTemplate.queryForMap(GET_DATA_Connection_SQL + " id =" + id + " and webUser = '" + webUser + "';");
+        }  else {
             databaseConnectionDO.setId(String.valueOf(data.get("id")));
             databaseConnectionDO.setType((String) data.get("type"));
             databaseConnectionDO.setName((String) data.get("name"));
@@ -99,11 +98,10 @@ public class DatabaseConnectionDAO implements ApplicationRunner {
 
     public DatabaseConnectionDO getAttributeById(String id, String webUser) {
         DatabaseConnectionDO databaseConnectionDO = new DatabaseConnectionDO();
-        Map<String, Object> count = jdbcTemplate.queryForMap(GET_DATABASELINK_COUNT_SQL + " id =" + id + " and webUser = '" + webUser + "';");
-        if ((int) count.get("count") == 0) {
+        Map<String, Object> data = jdbcTemplate.queryForMap(GET_DATA_Connection_SQL + " id =" + id + " and webUser = '" + webUser + "';");
+        if (StringUtils.isBlank(String.valueOf(data.get("id")))) {
             return null;
-        } else {
-            Map<String, Object> data = jdbcTemplate.queryForMap(GET_DATA_Connection_SQL + " id =" + id + " and webUser = '" + webUser + "';");
+        }  else {
             databaseConnectionDO.setId(String.valueOf(data.get("id")));
             databaseConnectionDO.setType((String) data.get("type"));
             databaseConnectionDO.setName((String) data.get("name"));
@@ -120,11 +118,10 @@ public class DatabaseConnectionDAO implements ApplicationRunner {
 
     public DatabaseConnectionDO getAttributeByName(String name, String webUser) {
         DatabaseConnectionDO databaseConnectionDO = new DatabaseConnectionDO();
-        int count = getJudgeName(name, webUser);
-        if (count == 0) {
+        Map<String, Object> data = jdbcTemplate.queryForMap(GET_DATA_Connection_SQL + " name ='" + name + "' and webUser = '" + webUser + "';");
+        if (StringUtils.isBlank(String.valueOf(data.get("id")))) {
             return null;
         } else {
-            Map<String, Object> data = jdbcTemplate.queryForMap(GET_DATA_Connection_SQL + " name ='" + name + "' and webUser = '" + webUser + "';");
             databaseConnectionDO.setId(String.valueOf(data.get("id")));
             databaseConnectionDO.setType((String) data.get("type"));
             databaseConnectionDO.setName((String) data.get("name"));

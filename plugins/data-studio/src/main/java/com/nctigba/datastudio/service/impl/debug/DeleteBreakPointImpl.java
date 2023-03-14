@@ -63,9 +63,11 @@ public class DeleteBreakPointImpl implements OperationInterface {
             webSocketServer.setParamMap(windowName, BREAK_POINT, breakPointMap);
         }
 
-        ResultSet bpResult = stat.executeQuery(INFO_BREAKPOINT_PRE + differ + INFO_BREAKPOINT_SQL);
-        String oid = (String) webSocketServer.getParamMap(windowName).get(OID);
-        webSocketServer.sendMessage(windowName, breakPoint, SUCCESS, DebugUtils.parseBeakPoint(bpResult, oid));
+        if (!paramReq.isCloseWindow()) {
+            ResultSet bpResult = stat.executeQuery(INFO_BREAKPOINT_PRE + differ + INFO_BREAKPOINT_SQL);
+            String oid = (String) webSocketServer.getParamMap(windowName).get(OID);
+            webSocketServer.sendMessage(windowName, breakPoint, SUCCESS, DebugUtils.parseBeakPoint(bpResult, oid));
+        }
     }
 
     @Override

@@ -60,7 +60,7 @@
   import ResultTabs from '@/components/ResultTabs.vue';
   import EnterParamsDialog from './EnterParamsDialog.vue';
   import { ElMessageBox } from 'element-plus';
-  import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
+  import { computed, onActivated, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
   import createTemplate from './createTemplate';
   import { useRoute, useRouter } from 'vue-router';
   import WebSocketClass from '@/utils/websocket';
@@ -140,6 +140,7 @@
     instance: null,
     rootWindowName: '',
   });
+  const tagId = TagsViewStore.getViewByRoute(route).id;
   const commonWsParams = computed(() => {
     return {
       webUser: ws.webUser,
@@ -150,6 +151,9 @@
   const isGlobalEnable = computed(() => {
     return AppStore.connectedDatabase.findIndex((item) => item.uuid == ws.uuid) > -1;
   });
+  const isStepIntoChild = computed(() => {
+    return TagsViewStore.getViewByRoute(route)?.isStepIntoChild;
+  });
   const loading = ref(null);
   const refreshCounter = reactive({
     counter: null,
@@ -158,12 +162,12 @@
   const isSaving = ref(false);
   const saveFileTitle = ref('');
   const alreadyCloseWindow = ref(false);
-  const hasStepIntoChild = ref(false);
+
   // set editor height
   watch(
     showResult,
     (val) => {
-      if (!TagsViewStore.getCurrentView(route)) return;
+      if (!TagsViewStore.getViewByRoute(route)) return;
       editorHeight.value = val ? '380px' : '100%';
       setTimeout(() => {
         let padding =
@@ -268,18 +272,6 @@
     });
   };
 
-  const handleChangeDebugButton = (status: boolean) => {
-    if (['debug', 'debugChild'].includes(props.editorType)) {
-      Object.assign(sqlData.barStatus, {
-        breakPointStep: status,
-        singleStep: status,
-        stepIn: status,
-        stepOut: status,
-      });
-      hasStepIntoChild.value = !status;
-    }
-  };
-
   interface Message {
     code: string;
     data?: any;
@@ -290,8 +282,8 @@
     if (!isGlobalEnable.value) return;
     let res: Message = JSON.parse(data);
     if (res.code == '200') {
-      if (hasStepIntoChild.value) return;
-      if (props.editorType == 'debug' && res.type != 'operateStatus' && !hasStepIntoChild.value) {
+      if (isStepIntoChild.value) return;
+      if (props.editorType == 'debug' && res.type != 'operateStatus' && !isStepIntoChild.value) {
         getButtonStatus();
       }
       const result = res.data?.result;
@@ -425,7 +417,7 @@
         debug.variableHighLight = result;
       }
       if (res.type == 'newWindow') {
-        handleChangeDebugButton(false);
+        setStepIntoChildStatus(tagId, true);
         router.push({
           path: `/debugChild/${encodeURIComponent(route.query.dbname as string)}_${result}`,
           query: {
@@ -435,10 +427,10 @@
             connectInfoName: ws.connectionName,
             uuid: ws.uuid,
             schema: route.query.schema,
-            parentTagId: TagsViewStore.getCurrentView(route)?.id,
+            parentTagId: TagsViewStore.getViewByRoute(route)?.id,
             rootTagId:
               route.name == 'debug'
-                ? TagsViewStore.getCurrentView(route)?.id
+                ? TagsViewStore.getViewByRoute(route)?.id
                 : route.query.rootTagId,
             rootWindowName: ws.sessionId,
             time: Date.now(),
@@ -532,7 +524,7 @@
       operation: 'stopDebug',
       ...commonWsParams.value,
     });
-    TagsViewStore.closeAllChildViews(TagsViewStore.getCurrentView(route)?.id, router);
+    TagsViewStore.closeAllChildViews(TagsViewStore.getViewByRoute(route)?.id, router);
     debug.isDebugging = false;
   };
 
@@ -592,15 +584,34 @@
       });
   };
 
-  const notifyParentWindow = (options: { tagId: ''; buttonStatus: true }) => {
-    if (TagsViewStore.getCurrentView(route)?.id == options.tagId) {
-      handleChangeDebugButton(options.buttonStatus);
+  const getStepIntoChildStatus = (tag) => {
+    return ['number', 'string'].includes(typeof tag)
+      ? !!TagsViewStore.getViewById(tag)?.isStepIntoChild
+      : !!TagsViewStore.getViewByRoute(tag)?.isStepIntoChild;
+  };
+  const setStepIntoChildStatus = (tag, status) => {
+    ['number', 'string'].includes(typeof tag)
+      ? TagsViewStore.updateStepIntoChildStatusById(tag, status)
+      : TagsViewStore.updateStepIntoChildStatusByRoute(tag, status);
+    if (['debug', 'debugChild'].includes(props.editorType)) {
+      Object.assign(sqlData.barStatus, {
+        breakPointStep: !status,
+        singleStep: !status,
+        stepIn: !status,
+        stepOut: !status,
+      });
     }
   };
+  onActivated(() => {
+    if (['debug'].includes(route.name as string)) {
+      const status = getStepIntoChildStatus(tagId);
+      status ? setStepIntoChildStatus(tagId, true) : getButtonStatus();
+    }
+  });
 
   // is create? and return default tempalate
   onMounted(async () => {
-    if (!TagsViewStore.getCurrentView(route)) return;
+    if (!TagsViewStore.getViewByRoute(route)) return;
     if (['createTerminal', 'createDebug'].includes(route.name as string)) {
       const defaultTemplate: string = await createTemplate();
       editorRef.value.setValue(defaultTemplate);
@@ -629,7 +640,7 @@
       language: AppStore.language,
       ...commonWsParams.value,
     });
-    EventBus.listen(EventTypeName.UPDATE_DEBUG_BUTTON, notifyParentWindow);
+
     if (['debug', 'debugChild'].includes(route.name as string)) {
       const { funcname } = route.query;
       loading.value = loadingInstance();
@@ -650,12 +661,8 @@
     if (!ws.instance) return;
     ['debug'].includes(props.editorType) && handleStopDebug();
     ['debugChild'].includes(props.editorType) && !alreadyCloseWindow.value && handleStepOut(true);
-    // close websocket
     if (['debugChild'].includes(props.editorType)) {
-      EventBus.notify(EventTypeName.UPDATE_DEBUG_BUTTON, {
-        tagId: ws.parentId,
-        buttonStatus: true,
-      });
+      TagsViewStore.updateStepIntoChildStatusById(ws.parentId, false);
     } else {
       ws.instance.send({
         operation: 'close',
@@ -667,7 +674,6 @@
       name: '',
       instance: null,
     });
-    EventBus.unListen(EventTypeName.UPDATE_DEBUG_BUTTON, notifyParentWindow);
   });
 </script>
 

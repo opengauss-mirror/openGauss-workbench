@@ -159,7 +159,8 @@ public class InputParamImpl implements OperationInterface {
         int differ = 0;
         String[] split = sql.split(LINE_FEED);
         for (int i = 0; i < split.length; i++) {
-            if (split[i].trim().equalsIgnoreCase("as") || split[i].trim().equalsIgnoreCase("as $$")) {
+            if (split[i].trim().equalsIgnoreCase("as") || split[i].trim().equalsIgnoreCase("as $$")
+                    || split[i].trim().equalsIgnoreCase("as declare")) {
                 differ = i;
             }
 
@@ -180,6 +181,9 @@ public class InputParamImpl implements OperationInterface {
         }
 
         log.info("break point is: " + list);
+        log.info("break point begin is: " + begin);
+        log.info("break point end is: " + end);
+        log.info("break point differ is: " + differ);
         webSocketServer.setParamMap(windowName, BEGIN, begin);
         webSocketServer.setParamMap(windowName, END, end);
         webSocketServer.setParamMap(windowName, DIFFER, differ);
