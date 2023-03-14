@@ -221,6 +221,7 @@
   }
   .border-bottom-input {
     box-shadow: none;
+    height: auto;
     :deep(.el-input__wrapper) {
       box-shadow: none;
       .el-input__inner {

@@ -174,6 +174,7 @@ public class SqlConstants {
     public static final String SELECT_SEQUENCE_DDL_WHERE_SQL = "'and sequence_name ='";
     public static final String SELECT_VIEW_DDL_SQL = " SELECT c.relkind as relkind, n.nspname AS schemaname, c.relname AS matviewname, pg_get_userbyid(c.relowner) AS matviewowner, c.relhasindex AS hasindexes, pg_get_viewdef(c.oid) AS definition FROM pg_class c \n" +
             "LEFT JOIN pg_namespace n ON n.oid = c.relnamespace and n.nspname = '";
+    public static final String SELECT_VIEW_TYPE_SQL = " SELECT c.relkind as relkind FROM pg_class c LEFT JOIN pg_namespace n ON n.oid = c.relnamespace and n.nspname = '";
     public static final String SELECT_VIEWNAME_DDL_WHERE_SQL = "' where c.relname = '";
     public static final String SELECT_VIEW_DDL_WHERE_SQL = "' and c.relkind in ('m','v')";
     public static final String SELECT_OBJECT_SQL = "select c.relname as relname from pg_class c INNER JOIN pg_namespace n ON n.oid = c.relnamespace and n.nspname = '";

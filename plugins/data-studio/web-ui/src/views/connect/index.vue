@@ -11,20 +11,100 @@
     <div class="dialog_body">
       <el-table
         ref="tableRef"
-        :data="connectListInfo.list"
+        :data="tableList"
         border
         :height="360"
         highlight-current-row
         @current-change="handleCurrentChange"
       >
-        <el-table-column align="center" prop="name" :label="$t('connection.name')" width="160" />
-        <el-table-column align="center" prop="connectInfo" :label="$t('connection.info')" />
+        <el-table-column align="center" prop="name" :label="$t('connection.name')" width="140">
+          <template #header>
+            <div v-if="showNameFilter" class="flex-header">
+              <div style="word-break: keep-all; margin-right: 5px">
+                {{ $t('connection.name') }}
+              </div>
+              <div class="flex-header">
+                <el-icon @click="hideNamefilter" class="icon-pointer">
+                  <Search />
+                </el-icon>
+                <el-input class="border-bottom-input" v-model="nameFilterInput" clearable />
+              </div>
+            </div>
+            <div v-else class="flex-header">
+              <div style="width: 12px"></div>
+              <span>{{ $t('connection.name') }}</span>
+              <el-icon @click="showNameFilter = true" class="icon-pointer">
+                <Search />
+              </el-icon>
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column align="center" prop="connectInfo" :label="$t('connection.info')">
+          <template #header>
+            <div v-if="showInfoFilter" class="flex-header">
+              <div style="word-break: keep-all; margin-right: 5px">
+                {{ $t('connection.info') }}
+              </div>
+              <div class="flex-header">
+                <el-icon @click="hideInfofilter" class="icon-pointer">
+                  <Search />
+                </el-icon>
+                <el-input class="border-bottom-input" v-model="infoFilterInput" clearable />
+              </div>
+            </div>
+            <div v-else class="flex-header">
+              <div style="width: 12px"></div>
+              <span>{{ $t('connection.info') }}</span>
+              <el-icon @click="showInfoFilter = true" class="icon-pointer">
+                <Search />
+              </el-icon>
+            </div>
+          </template>
+        </el-table-column>
         <el-table-column
           align="center"
           prop="clusterRole"
           :label="$t('connection.version')"
-          width="140"
+          width="90"
         />
+        <el-table-column align="center" prop="sourceName" width="100" class-name="source-column">
+          <template #header>
+            <el-dropdown trigger="click" popper-class="active-dropdown">
+              <div style="cursor: pointer">
+                {{
+                  sourceFilterInput == 0
+                    ? $t('connection.source')
+                    : sourceFilterInput == 1
+                    ? $t('connection.contentCenter')
+                    : $t('connection.customConnection')
+                }}
+                <el-icon><ArrowDown /></el-icon>
+              </div>
+              <template #dropdown>
+                <el-dropdown-menu>
+                  <el-dropdown-item
+                    :class="{ active: sourceFilterInput == 0 }"
+                    @click="sourceFilterInput = 0"
+                  >
+                    {{ $t('common.all') }}
+                  </el-dropdown-item>
+                  <el-dropdown-item
+                    :class="{ active: sourceFilterInput == 1 }"
+                    @click="sourceFilterInput = 1"
+                  >
+                    {{ $t('connection.contentCenter') }}
+                  </el-dropdown-item>
+                  <el-dropdown-item
+                    :class="{ active: sourceFilterInput == 2 }"
+                    @click="sourceFilterInput = 2"
+                  >
+                    {{ $t('connection.customConnection') }}
+                  </el-dropdown-item>
+                </el-dropdown-menu>
+              </template>
+            </el-dropdown>
+          </template>
+        </el-table-column>
       </el-table>
       <el-form :model="form" ref="ruleFormRef" :rules="rules" label-width="95px">
         <el-form-item prop="type" :label="$t('connection.databaseType')">
@@ -77,20 +157,30 @@
       </el-form>
     </div>
     <template #footer>
-      <span class="dialog-footer">
-        <el-button @click="handleClose">{{ $t('button.cancel') }}</el-button>
-        <el-button type="primary" @click="resetForm(ruleFormRef)">
-          {{ $t('button.clear') }}
+      <div class="dialog-space-footer">
+        <el-button
+          type="danger"
+          @click="handleDelete"
+          :disabled="connectListInfo.listCurrentRow?.sourceType != 2"
+          class="footer-left"
+        >
+          {{ $t('connection.deleteInfo') }}
         </el-button>
-        <el-button type="primary" @click="confirmForm(ruleFormRef)">
-          {{ $t('button.confirm') }}
-        </el-button>
-      </span>
+        <span class="footer-right">
+          <el-button @click="handleClose">{{ $t('button.cancel') }}</el-button>
+          <el-button type="primary" @click="resetForm(ruleFormRef)">
+            {{ $t('button.reset') }}
+          </el-button>
+          <el-button type="primary" @click="confirmForm(ruleFormRef)">
+            {{ $t('button.confirm') }}
+          </el-button>
+        </span>
+      </div>
     </template>
   </el-dialog>
 </template>
 
-<script lang="ts" setup>
+<script lang="ts" setup name="ConnectDialog">
   import { computed, ref, reactive } from 'vue';
   import {
     createConnect,
@@ -98,14 +188,16 @@
     getDatabaseAttr,
     getAllCluster,
     getDataLinkList,
+    deleteDataLinkList,
   } from '@/api/connect';
-  import { ElMessage, ElTable, FormInstance, FormRules } from 'element-plus';
-  import { View, Hide } from '@element-plus/icons-vue';
+  import { ElMessage, ElMessageBox, ElTable, FormInstance, FormRules } from 'element-plus';
+  import { ArrowDown, CaretBottom, View, Hide, Search } from '@element-plus/icons-vue';
   import EventBus, { EventTypeName } from '@/utils/event-bus';
   import { useI18n } from 'vue-i18n';
   import { useAppStore } from '@/store/modules/app';
   import { useUserStore } from '@/store/modules/user';
   import Crypto from '@/utils/crypto';
+  import { connectListPersist } from '@/config';
 
   const { t } = useI18n();
   const AppStore = useAppStore();
@@ -136,6 +228,12 @@
   const ruleFormRef = ref<FormInstance>();
   const tableRef = ref<InstanceType<typeof ElTable>>();
   const isShowPwd = ref(false);
+  const showNameFilter = ref(false);
+  const showInfoFilter = ref(false);
+  // const showSourceFilter = ref(false);
+  const nameFilterInput = ref('');
+  const infoFilterInput = ref('');
+  const sourceFilterInput = ref(0);
 
   const form = reactive({
     type: 'openGauss', // default
@@ -180,7 +278,7 @@
   });
   const connectListInfo = reactive({
     list: [],
-    listCurrentRow: {},
+    listCurrentRow: {} as any,
   });
 
   // type: 1 platform  2 ourself
@@ -197,6 +295,8 @@
             node.userName = node.dbUser;
             node.password = '';
             node.connectInfo = `${node.publicIp}:${node.dbPort}/${node.dbName}`;
+            item.sourceType = type;
+            item.sourceName = t('connection.contentCenter');
           });
           list = list.concat(item.clusterNodes);
         }
@@ -204,10 +304,42 @@
     } else {
       data.forEach((item) => {
         item.connectInfo = `${item.userName}@${item.ip}:${item.port}/${item.dataName}`;
+        item.sourceType = type;
+        item.sourceName = t('connection.customConnection');
       });
       list = data;
     }
     return list;
+  };
+
+  const getTableList = () => {
+    getAllCluster()
+      .then((res) => {
+        connectListInfo.list = connectListInfo.list.concat(doConnectList(res.data || [], 1));
+      })
+      .finally(() => {
+        getDataLinkList(UserStore.userId).then((res) => {
+          connectListInfo.list = connectListInfo.list.concat(doConnectList(res || [], 2));
+        });
+      });
+  };
+
+  const tableList = computed(() => {
+    return connectListInfo.list
+      .filter((item) => item.name.indexOf(nameFilterInput.value) > -1)
+      .filter((item) => item.connectInfo.indexOf(infoFilterInput.value) > -1)
+      .filter((item) =>
+        sourceFilterInput.value == 0 ? true : item.sourceType == sourceFilterInput.value,
+      );
+  });
+
+  const hideNamefilter = () => {
+    showNameFilter.value = false;
+    nameFilterInput.value = '';
+  };
+  const hideInfofilter = () => {
+    showInfoFilter.value = false;
+    infoFilterInput.value = '';
   };
 
   const handleOpen = async () => {
@@ -216,15 +348,7 @@
     connectListInfo.list = [];
     if (props.type === 'create') {
       title.value = t('connection.new');
-      getAllCluster()
-        .then((res) => {
-          connectListInfo.list = connectListInfo.list.concat(doConnectList(res.data || [], 1));
-        })
-        .finally(() => {
-          getDataLinkList(UserStore.userId).then((res) => {
-            connectListInfo.list = connectListInfo.list.concat(doConnectList(res || [], 2));
-          });
-        });
+      getTableList();
     } else {
       title.value = t('connection.edit');
       const infoData = await requestConnectInfo();
@@ -246,6 +370,21 @@
     myEmit('update:modelValue', false);
     resetForm(ruleFormRef.value);
   };
+  const handleDelete = () => {
+    const index = JSON.parse(
+      connectListPersist.storage.getItem(connectListPersist.key) || '[]',
+    ).findIndex((list) => list.id == connectListInfo.listCurrentRow.id);
+    if (index > -1) {
+      ElMessage.warning(t('message.deleteConnectInfo0'));
+    } else {
+      ElMessageBox.confirm(t('message.deleteConnectInfo1')).then(async () => {
+        await deleteDataLinkList(connectListInfo.listCurrentRow.id);
+        ElMessage.success(t('message.deleteSuccess'));
+        getTableList();
+      });
+    }
+  };
+
   const confirmForm = async (formEl: FormInstance | undefined) => {
     if (!formEl) return;
     await formEl.validate(async (valid) => {
@@ -324,8 +463,43 @@
   .dialog_body {
     display: flex;
   }
+  .flex-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .icon-pointer {
+    cursor: pointer;
+    :hover {
+      color: var(--normal-color);
+    }
+  }
+  .border-bottom-input {
+    box-shadow: none;
+    height: auto;
+    :deep(.el-input__wrapper) {
+      box-shadow: none;
+      .el-input__inner {
+        box-shadow: 0 1px 0 0 var(--el-input-border-color);
+      }
+    }
+  }
+  .dialog-space-footer {
+    display: flex;
+    justify-content: space-between;
+    padding-right: 80px;
+  }
   :deep(.el-table) {
-    width: 510px;
+    width: 530px;
+  }
+  :deep(.source-column) {
+    .cell {
+      word-break: break-word;
+      .el-dropdown {
+        display: inline;
+        color: var(--el-table-header-text-color);
+      }
+    }
   }
   :deep(.el-input-number--small) {
     .el-input-number__decrease,

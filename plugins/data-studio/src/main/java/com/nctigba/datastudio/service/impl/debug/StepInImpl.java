@@ -6,6 +6,7 @@ import com.nctigba.datastudio.model.PublicParamReq;
 import com.nctigba.datastudio.model.entity.OperateStatusDO;
 import com.nctigba.datastudio.service.OperationInterface;
 import com.nctigba.datastudio.util.DebugUtils;
+import com.nctigba.datastudio.util.LocaleString;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.util.Strings;
@@ -17,6 +18,7 @@ import java.sql.Statement;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.nctigba.datastudio.constants.CommonConstants.FIVE_HUNDRED;
 import static com.nctigba.datastudio.constants.CommonConstants.FUNC_OID;
 import static com.nctigba.datastudio.constants.CommonConstants.LINE_FEED;
 import static com.nctigba.datastudio.constants.CommonConstants.LINE_NO;
@@ -31,6 +33,7 @@ import static com.nctigba.datastudio.constants.SqlConstants.PARENTHESES_SEMICOLO
 import static com.nctigba.datastudio.constants.SqlConstants.STEP_SQL;
 import static com.nctigba.datastudio.enums.MessageEnum.closeWindow;
 import static com.nctigba.datastudio.enums.MessageEnum.newWindow;
+import static com.nctigba.datastudio.enums.MessageEnum.window;
 
 /**
  * step in
@@ -43,6 +46,9 @@ public class StepInImpl implements OperationInterface {
 
     @Autowired
     private StepOutImpl stepOut;
+
+    @Autowired
+    private StopDebugImpl stopDebug;
 
     @Override
     public void operate(WebSocketServer webSocketServer, Object obj) throws Exception {
@@ -76,11 +82,27 @@ public class StepInImpl implements OperationInterface {
         String type = (String) webSocketServer.getParamMap(windowName).get(TYPE);
         if ("p".equals(type)) {
             if (!oid.equals(newOid) && StringUtils.isNotEmpty(oldWindowName)) {
-                stepOut.deleteBreakPoint(webSocketServer, paramReq);
-                webSocketServer.sendMessage(windowName, closeWindow, SUCCESS, null);
-                paramReq.setCloseWindow(true);
-                singleStep.showDebugInfo(webSocketServer, paramReq);
-                return;
+                String id = (String) webSocketServer.getParamMap(oldWindowName).get(OID);
+                if (id.equals(newOid)) {
+                    stepOut.deleteBreakPoint(webSocketServer, paramReq);
+                    webSocketServer.sendMessage(windowName, closeWindow, SUCCESS, null);
+                    paramReq.setCloseWindow(true);
+                    singleStep.showDebugInfo(webSocketServer, paramReq);
+                    return;
+                } else {
+                    try {
+                        stopDebug.operate(webSocketServer, paramReq);
+                        webSocketServer.sendMessage(windowName, closeWindow, SUCCESS, null);
+                        webSocketServer.sendMessage(oldWindowName, window, FIVE_HUNDRED,
+                                LocaleString.transLanguageWs("1008", webSocketServer), null);
+                        return;
+                    } catch (Exception e) {
+                        webSocketServer.sendMessage(windowName, closeWindow, SUCCESS, null);
+                        webSocketServer.sendMessage(oldWindowName, window, FIVE_HUNDRED,
+                                LocaleString.transLanguageWs("1008", webSocketServer), null);
+                        return;
+                    }
+                }
             }
         } else if ("f".equals(type)) {
             if (lineNo == 0 && StringUtils.isNotEmpty(oldWindowName)) {

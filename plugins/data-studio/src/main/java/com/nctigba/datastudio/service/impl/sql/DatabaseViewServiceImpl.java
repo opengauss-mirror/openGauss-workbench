@@ -106,6 +106,31 @@ public class DatabaseViewServiceImpl implements DatabaseViewService {
 
     }
 
+    public String viewTypeData(DatabaseViewDdlDTO request) throws Exception {
+        log.info("viewAttributeData request is: " + request);
+        try (Connection connection = connectionConfig.connectDatabase(request.getUuid());) {
+            Statement statement = connection.createStatement();
+            String selectsql = SELECT_VIEW_TYPE_SQL + request.getSchema() + SELECT_VIEWNAME_DDL_WHERE_SQL + request.getViewName() + SELECT_VIEW_DDL_WHERE_SQL;
+            try (ResultSet resultSet = statement.executeQuery(selectsql)) {
+                log.info("count sql is: " + resultSet);
+                log.info("viewAttributeData sql is: " + selectsql);
+                Map<String, Object> resultMap = new HashMap<>();
+                ResultSetMetaData metaData = resultSet.getMetaData();
+                String type;
+                if (resultSet.next()) {
+                        type = resultSet.getString("relkind");
+                } else {
+                    throw new CustomException(LocaleString.transLanguage("2010"));
+                }
+                log.info("resultMap response is: " + type);
+                return type;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new CustomException(e.getMessage(),e);
+        }
+
+    }
     @Override
     public void createView(DatabaseCreateViewDTO request) {
         log.info("createView request is: " + request);
@@ -126,8 +151,8 @@ public class DatabaseViewServiceImpl implements DatabaseViewService {
         try(Connection connection = connectionConfig.connectDatabase(request.getUuid());
             Statement statement = connection.createStatement();){
 
-            Map<String, Object> resultMap = returnViewDDLData(request);
-            if (resultMap.get("relkind").equals("m")) {
+            String type = viewTypeData(request);
+            if (type.equals("m")) {
                 String materializedSql = DROP_SQL + MATERIALIZED_VIEW_SQL + VIEW_KEYWORD_SQL + IF_EXISTS_SQL + request.getSchema() + POINT + request.getViewName();
                 statement.execute(materializedSql);
                 log.info("dropView sql is: " + materializedSql);
