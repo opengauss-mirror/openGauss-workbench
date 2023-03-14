@@ -54,23 +54,29 @@ const handleConnect = async () => {
   const encryptPwd = await encryptPassword(props.host.runPass)
   const term = getTerminalInstance()
   const socketKey = new Date().getTime()
-  const terminalSocket = new Wsocket({ url: `custom_terminal_${socketKey}` })
+  const terminalSocket = new Wsocket({ url: `SSH/jdbc_terminal_${socketKey}` })
   terminalWs.value = terminalSocket
   terminalSocket.onopen(() => {
     const param = {
-      hostId: props.host.runHostId,
-      rootPassword: encryptPwd,
-      wsConnectType: 'SSH',
-      businessId: `custom_terminal_${socketKey}`
+      businessId: `jdbc_terminal_${socketKey}`,
+      ip: props.host.runHost,
+      sshPassword: encryptPwd,
+      sshPort: props.host.runPort,
+      sshUsername: props.host.runUser
     }
+    initTerm(term, terminalSocket.ws)
     openSSH(param).then((res) => {
       if (res.code !== 200) {
+        term.writeln(res.msg)
         terminalSocket.destroy()
       }
-    }).catch(() => {
+    }).catch((error) => {
+      term.writeln(error.toString())
       terminalSocket.destroy()
     })
-    initTerm(term, terminalSocket.ws)
+  })
+  terminalSocket.onclose(() => {
+    console.log('jdbc terminal close')
   })
 }
 
@@ -81,7 +87,7 @@ const initTerm = (term, ws) => {
     term.loadAddon(attachAddon)
     term.loadAddon(fitAddon.value)
     term.open(document.getElementById('xterm'))
-    // fitAddon.value.fit()
+    fitAddon.value.fit()
     term.clear()
     term.focus()
     term.write('\r\n\x1b[33m$\x1b[0m ')
