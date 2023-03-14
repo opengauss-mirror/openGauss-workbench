@@ -89,7 +89,18 @@ public class EnvironmentController {
 			map.put("pkg", pkg);
 			map.put("url", ElasticsearchService.PATH + pkg);
 		} else {
-			pkg = FilebeatService.NAME + FilebeatService.arch(host.getCpuArch()) + FilebeatService.TAR;
+			String arch;
+			switch (host.getCpuArch()) {
+			case "aarch64":
+				arch = "arm64";
+				break;
+			case "x86_64":
+				arch = "x86_64";
+				break;
+			default:
+				arch = "x86_64";
+			}
+			pkg = FilebeatService.NAME + arch + FilebeatService.TAR;
 			map.put("pkg", pkg);
 			map.put("url", FilebeatService.PATH + pkg);
 		}

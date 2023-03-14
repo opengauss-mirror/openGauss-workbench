@@ -38,7 +38,13 @@
                     <div class="log-context">
                         <span>{{ $t('datasource.logContext') }}&nbsp;&nbsp;</span>
                         <select v-model="formData.contextCount">
-                            <option v-for="item in logContextCountList" :label="item.label" :value="item.value"></option>
+                            <!-- <option v-for="item in logContextCountList" :value="item.value">{{item.label }}</option> -->
+                            <option  :value="5">{{t('app.logContextCountLabelList[0]') }}</option> 
+                            <option  :value="10">{{t('app.logContextCountLabelList[1]')}}</option> 
+                            <option  :value="20">{{t('app.logContextCountLabelList[2]') }}</option> 
+                            <option  :value="30">{{t('app.logContextCountLabelList[3]') }}</option> 
+                            <option  :value="40">{{t('app.logContextCountLabelList[4]') }}</option> 
+                            <option  :value="50">{{t('app.logContextCountLabelList[5]') }}</option> 
                         </select>
                         <!-- top: -6px; -->
                         <el-icon class="el-input__icon" @click="hideContextCount" style="position: relative; left: 0; top: 2px; cursor: pointer"><CloseBold /></el-icon>
@@ -651,7 +657,7 @@ watch(mapData, (res: MapRes) => {
         });
     } else {
         showData.value = [{}];
-        tableData.value = [];
+        // tableData.value = [];
     }
 
     nextTick(() => {

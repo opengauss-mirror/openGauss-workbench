@@ -80,6 +80,9 @@ const props = withDefaults(
     }>(),
     {}
 )
+onMounted(() => {
+    if (props.clusterId && props.clusterId.length > 0) getClusterValue(props.clusterId)
+})
 const emit = defineEmits(['changeModal', 'conveyFlag'])
 const initFormData = {
     name: '',
@@ -176,7 +179,11 @@ const { data: ret, run: dbData } = useRequest(
     },
     { manual: true }
 )
-const { data: rez, run: addTasks,loading: addTasking } = useRequest(
+const {
+    data: rez,
+    run: addTasks,
+    loading: addTasking,
+} = useRequest(
     () => {
         const msg = t('datasource.diagnosisAddTaskSuccess')
         return ogRequest

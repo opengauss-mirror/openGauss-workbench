@@ -5,6 +5,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.text.MessageFormat;
 import java.util.Arrays;
 
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
@@ -17,6 +18,7 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.nctigba.observability.sql.model.NctigbaEnv;
 import com.nctigba.observability.sql.model.NctigbaEnv.type;
 import com.nctigba.observability.sql.service.AbstractInstaller.Step.status;
+import com.nctigba.observability.sql.util.Download;
 import com.nctigba.observability.sql.util.SshSession;
 import com.nctigba.observability.sql.util.SshSession.command;
 
@@ -28,6 +30,8 @@ import cn.hutool.json.JSONUtil;
 public class AgentService extends AbstractInstaller {
 	private static final String AGENT_USER = "root";
 	private static final String NAME = "opengauss-ebpf-1.0.0-SNAPSHOT.jar";
+	private static final String JDK = "https://mirrors.huaweicloud.com/kunpeng/archive/compiler/bisheng_jdk/";
+	private static final String JDKPKG = "bisheng-jdk-11.0.17-linux-{0}.tar.gz";
 	@Autowired
 	private ResourceLoader loader;
 	@Autowired
@@ -39,6 +43,7 @@ public class AgentService extends AbstractInstaller {
 				new Step("初始化"),
 				new Step("检查本机agent环境存在"),
 				new Step("连接主机"),
+				new Step("检查JAVA环境"),
 				new Step("检查python环境"),
 				new Step("安装bcc-tools"),
 				new Step("安装FlameGraph"),
@@ -65,6 +70,31 @@ public class AgentService extends AbstractInstaller {
 			env = new NctigbaEnv().setHostid(hostId).setPort(2321).setUsername(AGENT_USER).setType(type.AGENT);
 			try (var session = connect(env, rootPassword);) {
 				curr = nextStep(wsSession, steps, curr);
+				var java = "java";
+				try {
+					if (!session.test(java + " --version")) {
+						java = "/etc/jdk11/bin/java";
+						var java_v = session.execute(java + " --version");
+						addMsg(wsSession, steps, curr, java_v);
+					}
+				} catch (Exception e) {
+					addMsg(wsSession, steps, curr, "java not found, downloading");
+					var arch = session.execute(command.ARCH);
+					var v = "aarch64".equals(arch) ? "aarch64" : "x64";
+					var tar = MessageFormat.format(JDKPKG, v);
+					var pkg = envMapper.selectOne(Wrappers.<NctigbaEnv>lambdaQuery().like(NctigbaEnv::getPath, tar));
+					if (pkg == null) {
+						var f = Download.download(JDK + tar, "pkg/" + tar);
+						pkg = new NctigbaEnv().setPath(f.getCanonicalPath()).setType(type.AGENT_PKG);
+						addMsg(wsSession, steps, curr, "安装包下载成功");
+						save(pkg);
+					}
+					session.upload(pkg.getPath(), tar);
+					session.execute("tar zxvf " + tar + " -C /etc/");
+					session.execute("mv /etc/bisheng-jdk-11.0.17 /etc/jdk11");
+					session.execute("rm -rf " + tar);
+				}
+				curr = nextStep(wsSession, steps, curr);
 				var python_v = session.execute("python --version");
 				if (!python_v.toLowerCase().startsWith("python "))
 					throw new RuntimeException("python version err, curr:" + python_v);
@@ -72,7 +102,7 @@ public class AgentService extends AbstractInstaller {
 				curr = nextStep(wsSession, steps, curr);
 				// bcc-tool
 				if (!session.test(command.STAT.parse("/usr/share/bcc/tools")))
-					session.execute("yum install bcc-tools");
+					session.execute("yum -y install bcc-tools");
 				else
 					addMsg(wsSession, steps, curr, "bcc exists");
 				curr = nextStep(wsSession, steps, curr);
@@ -96,7 +126,7 @@ public class AgentService extends AbstractInstaller {
 				f.delete();
 				curr = nextStep(wsSession, steps, curr);
 				// exec
-				session.executeNoWait("java --add-opens java.base/java.lang=ALL-UNNAMED -jar " + NAME
+				session.executeNoWait(java + " --add-opens java.base/java.lang=ALL-UNNAMED -jar " + NAME
 						+ " --diagnosis_host=" + callbackPath + " &");
 				env.setPath(".");
 				curr = nextStep(wsSession, steps, curr);

@@ -27,7 +27,7 @@ public class ParamInfoInitConfig {
             "CREATE TABLE param_value_info (id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, sid INTEGER,\n" +
                     " instance TEXT, actualValue TEXT);",
             "insert into param_info(paramType,paramName,paramDetail,suggestValue,defaultValue,unit,suggestExplain,diagnosisRule) \n" +
-                    " values(\"OS\",\"net.ipv4.tcp_max_tw_buckets\",\"表示同时保持TIME_WAIT状态的TCP/IP连接最大数量。如果超过所配置的取值，TIME_WAIT将立刻被释放并打印警告信息\",\"10000\",\"180000\",\"数目\",\"系统在同时所处理的最大 timewait sockets 数目。如果超过此数的话﹐time-wait socket 会被立即砍除并且显示警告信息。之所以要设定这个限制﹐纯粹为了抵御那些简单的 DoS 攻击﹐不过﹐如果网络条件需要比默认值更多﹐则可以提高它(或许还要增加内存)。(事实上做NAT的时候最好可以适当地增加该值)\",\"actualValue>10000\");",
+                    " values(\"OS\",\"net.ipv4.tcp_max_tw_buckets\",\"表示同时保持TIME_WAIT状态的TCP/IP连接最大数量。如果超过所配置的取值，TIME_WAIT将立刻被释放并打印警告信息\",\"10000\",\"180000\",\"数目\",\"系统在同时所处理的最大 timewait sockets 数目。如果超过此数的话﹐time-wait socket 会被立即砍除并且显示警告信息。之所以要设定这个限制﹐纯粹为了抵御那些简单的 DoS 攻击﹐不过﹐如果网络条件需要比默认值更多﹐则可以提高它(或许还要增加内存)。(事实上做NAT的时候最好可以适当地增加该值)\",\"actualValue>10000000\");",
             "insert into param_info(paramType,paramName,paramDetail,suggestValue,defaultValue,unit,suggestExplain,diagnosisRule) \n" +
                     " values(\"OS\",\"net.ipv4.tcp_tw_reuse\",\"允许将TIME-WAIT状态的sockets重新用于新的TCP连接\",\"1\",\"0\",\"布尔值\",\"表示是否允许重新应用处于TIME-  WAIT状态的socket用于新的TCP连接(这个对快速重启动某些服务,而启动后提示端口已经被使用的情形非常有帮助)\",\"actualValue==1\");",
             "insert into param_info(paramType,paramName,paramDetail,suggestValue,defaultValue,unit,suggestExplain,diagnosisRule) \n" +

@@ -63,6 +63,7 @@ public class FilebeatService extends AbstractInstaller {
 		curr = nextStep(wsSession, steps, curr);
 		try {
 			var node = clusterManager.getOpsNodeById(nodeId);
+			var cluster = clusterManager.getOpsClusterByNodeId(nodeId);
 			if (node == null)
 				throw new RuntimeException("node not found");
 			curr = nextStep(wsSession, steps, curr);
@@ -105,7 +106,18 @@ public class FilebeatService extends AbstractInstaller {
 
 				curr = nextStep(wsSession, steps, curr);
 				var arch = session.execute(command.ARCH);
-				String name = NAME + arch(arch);
+				String ver;
+				switch (arch) {
+				case "aarch64":
+					ver = "arm64";
+					break;
+				case "x86_64":
+					ver = "x86_64";
+					break;
+				default:
+					ver = "x86_64";
+				}
+				String name = NAME + ver;
 				env.setPath(name);
 				String tar = name + TAR;
 				if (!session.test(command.STAT.parse(name))) {
@@ -138,16 +150,17 @@ public class FilebeatService extends AbstractInstaller {
 
 				// @formatter:off
 				session.execute("cd filebeat_conf && sh conf.sh"
-						+ " " + esHost.getPublicIp() + ":" + esEnv.getPort()
-						+ " " + opsClusterNodeEntity.getClusterNodeId()
-						+ " " + logPath
-						+ " " + obj.getStr("slowlogPath")
-						+ " " + obj.getStr("errorlogPath")
-						+ " " + obj.getStr("gsCtlLogPath")
-						+ " " + obj.getStr("gsGucLogPath")
-						+ " " + obj.getStr("gsOmLogPath")
-						+ " " + obj.getStr("gsInstallLogPath")
-						+ " " + obj.getStr("gsLocalLogPath"));
+						+ " --eshost " + esHost.getPublicIp() + ":" + esEnv.getPort()
+						+ " --nodeid " + opsClusterNodeEntity.getClusterNodeId()
+						+ " --clusterid " + cluster.getClusterId()
+						+ " --opengausslog " + logPath
+						+ " --opengaussslowlog " + obj.getStr("slowlogPath")
+						+ " --opengausserrorlog " + obj.getStr("errorlogPath")
+						+ (StrUtil.isNotBlank(obj.getStr("gsCtlLogPath")) ? " --gsCtlLogPath " + obj.getStr("gsCtlLogPath") : "")
+						+ (StrUtil.isNotBlank(obj.getStr("gsGucLogPath")) ? " --gsGucLogPath " + obj.getStr("gsGucLogPath") : "")
+						+ (StrUtil.isNotBlank(obj.getStr("gsOmLogPath")) ? " --gsOmLogPath " + obj.getStr("gsOmLogPath") : "")
+						+ (StrUtil.isNotBlank(obj.getStr("gsInstallLogPath")) ? " --gsInstallLogPath " + obj.getStr("gsInstallLogPath") : "")
+						+ (StrUtil.isNotBlank(obj.getStr("gsLocalLogPath")) ? " --gsLocalLogPath " + obj.getStr("gsLocalLogPath") : ""));
 				// @formatter:on
 
 				session.execute("cp -fr filebeat_conf/* " + name + "/");

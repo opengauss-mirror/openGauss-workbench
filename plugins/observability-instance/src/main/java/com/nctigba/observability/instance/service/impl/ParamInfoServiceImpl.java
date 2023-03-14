@@ -1,5 +1,6 @@
 package com.nctigba.observability.instance.service.impl;
 
+import com.nctigba.common.web.exception.InstanceException;
 import com.nctigba.observability.instance.dto.param.ParamInfoDTO;
 import com.nctigba.observability.instance.model.param.ParamQuery;
 import com.nctigba.observability.instance.pool.SSHPoolManager;
@@ -57,7 +58,8 @@ public class ParamInfoServiceImpl implements ParamInfoService {
             }
             result.close();
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            log.info(e.getMessage());
+            throw new InstanceException("query data fail!");
         }
         return list;
     }
@@ -66,13 +68,13 @@ public class ParamInfoServiceImpl implements ParamInfoService {
         try {
             Connection connect = connect_sqlite();
             Statement statement = connect.createStatement();
-            String delSql = "delete from param_value_info " +
-                    "where sid in (select id from param_info where paramType='DB');";
-            statement.executeUpdate(delSql);
             var conn = opsFacade.getConnectionByNodeId(paramQuery.getNodeId());
             String sql = "select name,setting from pg_settings";
             var stmt = conn.createStatement();
             var rs = stmt.executeQuery(sql);
+            String delSql = "delete from param_value_info " +
+                    "where sid in (select id from param_info where paramType='DB');";
+            statement.executeUpdate(delSql);
             while (rs.next()) {
                 String name = rs.getString(1);
                 String value = rs.getString(2);
@@ -87,7 +89,7 @@ public class ParamInfoServiceImpl implements ParamInfoService {
             stmt.close();
         } catch (Exception e) {
             log.info(e.getMessage());
-            throw new RuntimeException(e);
+            throw new InstanceException("connect database fail!");
         }
 
     }
@@ -96,14 +98,17 @@ public class ParamInfoServiceImpl implements ParamInfoService {
         try {
             Connection connect = connect_sqlite();
             Statement statement = connect.createStatement();
-            String delSql = "delete from param_value_info " +
-                    "where sid in (select id from param_info where paramType='OS');";
-            statement.executeUpdate(delSql);
             var node = opsFacade.getOpsNodeById(paramQuery.getNodeId());
+            if(node==null){
+                throw new InstanceException("node not found!");
+            }
             SSHOperator ssh = SSHPoolManager.getSSHOperator(node.getPublicIp(), node.getHostPort(), "root",
                     paramQuery.getPassword());
             String paramValues = ssh.executeCommandReturnStr("sysctl -a");
             String[] values = paramValues.split("\n");
+            String delSql = "delete from param_value_info " +
+                    "where sid in (select id from param_info where paramType='OS');";
+            statement.executeUpdate(delSql);
             for (int n = 0; n < values.length; n++) {
                 String name = values[n].substring(0, values[n].lastIndexOf("=")).trim();
                 String paramData = values[n].substring(values[n].indexOf("=") + 1).trim();
@@ -116,7 +121,7 @@ public class ParamInfoServiceImpl implements ParamInfoService {
             }
         } catch (Exception e) {
             log.info(e.getMessage());
-            throw new RuntimeException(e);
+            throw new InstanceException("root password error!");
         }
     }
 
@@ -126,7 +131,8 @@ public class ParamInfoServiceImpl implements ParamInfoService {
         try {
             conn = DriverManager.getConnection(JDBC.PREFIX + "data/paramValueInfo.db");
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            log.info(e.getMessage());
+            throw new InstanceException("sqlite connect fail!");
         }
         return conn;
     }

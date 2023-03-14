@@ -13,7 +13,7 @@ import lombok.experimental.Accessors;
  * 系统表-慢日志明细
  */
 @Data
-@TableName("dbe_perf.statement_history")
+@TableName("statement_history")
 @Accessors(chain = true)
 public class StatementHistory {
 	private String dbName;

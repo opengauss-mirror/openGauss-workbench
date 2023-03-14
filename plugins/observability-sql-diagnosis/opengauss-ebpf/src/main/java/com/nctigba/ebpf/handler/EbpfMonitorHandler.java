@@ -12,6 +12,8 @@ import com.nctigba.ebpf.util.OSUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.io.File;
+
 /**
  * ebpf action
  *
@@ -35,9 +37,9 @@ public class EbpfMonitorHandler {
         OSUtil toolUtil = new OSUtil();
         String bccUrl = "cd " + urlConfig.getBccUrl() + " &&";
         String outputUrl = urlConfig.getOutputUrl();
-        String isExist=toolUtil.execCmd("cat "+outputUrl);
-        if(isExist.contains("No such file or directory")){
-            toolUtil.exec("mkdir "+outputUrl);
+        File dir = new File(outputUrl);
+        if (!dir.exists()) {
+            dir.mkdirs();
         }
         String fileUrl = " > " + outputUrl + taskid + monitorType;
         String execcmd = null;

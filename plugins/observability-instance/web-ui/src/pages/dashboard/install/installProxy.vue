@@ -67,6 +67,9 @@
                     <el-icon class="el-icon--upload"><plus /></el-icon>
                     <div class="el-upload__text">{{ t("install.uploadInfo") }}</div>
                 </el-upload>
+                <div>
+                    <el-progress v-if="showProgress" :percentage="progressPercent" :format="progressFormat" />
+                </div>
             </div>
         </el-dialog>
     </div>
@@ -252,6 +255,9 @@ const refreshPkgInfo = () => {
 const showUpload = ref<boolean>(false);
 const fileList = ref<any[]>();
 const pgkName = ref<string>();
+const showProgress = ref<boolean>(false);
+const progressPercent = ref<number>(0);
+const progressFormat = (percentage:number) => percentage + '%';
 const showUploadFile = (_type: string, _pgkName: string) => {
     showUpload.value = true;
     pgkName.value = _pgkName;
@@ -263,14 +269,19 @@ const upload = (action: any) => {
     let formData = new FormData();
     formData.append("name", pgkName.value);
     formData.append("pkg", action.file);
+    showProgress.value = true;
     restRequest
-        .post("/observability/v1/environment/upload", formData, { headers: { contentType: "multipart/form-data" } })
+        .post("/observability/v1/environment/upload", formData, { headers: { contentType: "multipart/form-data" },onUploadProgress: event => {
+            progressPercent.value = parseInt(event.loaded / event.total  * 100);
+        } })
         .then(function (res) {
             ElMessage({
                 message: t("install.uploadSucceed"),
                 type: "success",
             });
             showUpload.value = false;
+            showProgress.value = false;
+            progressPercent.value = 0;
             refreshPkgInfo();
         })
         .catch(function (res) {

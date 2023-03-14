@@ -37,7 +37,7 @@
                 </el-tabs>
             </div>
         </div>
-        <InstallAgent v-if="installCollectorShown" :show="installCollectorShown" @changeModal="changeModalInstallCollector" />
+        <InstallAgent v-if="installCollectorShown" :show="installCollectorShown" @changeModal="changeModalInstallCollector" @installed="agentInstalled()" />
         <InstallProxy v-if="installProxyShown" :show="installProxyShown" @changeModal="changeModalInstallProxy" @installed="proxyInstalled()" />
         <UninstallProxy :node="uninstallProxyNode" v-if="uninstallProxyShown" :show="uninstallProxyShown" @changeModal="changeModalUninstallProxy" @installed="proxyUninstalled()" />
         <UninstallAgent :node="uninstallAgentNode" v-if="uninstallAgentShown" :show="uninstallAgentShown" @changeModal="changeModalUninstallAgent" @installed="agentUninstalled()" />
@@ -72,6 +72,10 @@ const showInstallCollector = () => {
 const changeModalInstallCollector = (val: boolean) => {
     installCollectorShown.value = val;
 };
+const agentInstalled = () => {
+    activeName.value = "collector";
+    refreshCollectors();
+};
 
 // install proxy
 const installProxyShown = ref(false);
@@ -81,7 +85,7 @@ const showInstallProxy = () => {
 const changeModalInstallProxy = (val: boolean) => {
     installProxyShown.value = val;
 };
-const proxyInstalled = (code: number) => {
+const proxyInstalled = () => {
     activeName.value = "proxy";
     refreshProxies();
 };
@@ -96,8 +100,8 @@ const showUninstallAgent = (node: any) => {
 const changeModalUninstallAgent = (val: boolean) => {
     uninstallAgentShown.value = val;
 };
-const agentUninstalled = (code: number) => {
-    activeName.value = "agent";
+const agentUninstalled = () => {
+    activeName.value = "collector";
     refreshCollectors();
 };
 
@@ -111,7 +115,7 @@ const showUninstallProxy = (node: any) => {
 const changeModalUninstallProxy = (val: boolean) => {
     uninstallProxyShown.value = val;
 };
-const proxyUninstalled = (code: number) => {
+const proxyUninstalled = () => {
     activeName.value = "proxy";
     refreshProxies();
 };

@@ -14,9 +14,11 @@ import org.opengauss.admin.system.plugin.facade.HostUserFacade;
 import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType.Type;
 import com.nctigba.observability.sql.mapper.NctigbaEnvMapper;
+import com.nctigba.observability.sql.model.NctigbaEnv;
 import com.nctigba.observability.sql.service.AbstractInstaller.Step.status;
 
 import cn.hutool.core.util.StrUtil;
@@ -74,6 +76,12 @@ public abstract class AbstractInstaller {
 		curr++;
 		sendMsg(wsSession, steps, curr, status.DOING);
 		return curr;
+	}
+
+	public void save(NctigbaEnv env) {
+		if (envMapper.selectOne(Wrappers.<NctigbaEnv>lambdaQuery().eq(NctigbaEnv::getType, env.getType())
+				.eq(NctigbaEnv::getPath, env.getPath())) == null)
+			envMapper.insert(env);
 	}
 
 	/**

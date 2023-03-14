@@ -126,13 +126,20 @@ const renderChart = () => {
         yAxis: yAxisData,
         series: seriesData,
     };
-    console.log('option', JSON.stringify(option));
     myChart.setOption(option);
 };
+const themeChange = ref<any>();
 onMounted(() => {
     renderChart();
+    themeChange.value = window.addEventListener('storage',event => {
+        if(event.key === 'theme') {
+            renderChart()
+        }
+    })
 });
-
+onUnmounted(() => {
+    themeChange.value.removeEventListener('storage')
+});
 watch(
     () => props.data,
     () => {

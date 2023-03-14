@@ -1,143 +1,314 @@
-# SQL诊断插件介绍
+# 1SQL诊断(observability sql diagnosis) 用户手册
 
 
 
-## 版本介绍
+## 1SQL诊断(observability sql diagnosis) 用户手册
 
-observability-sql-diagnosis项目目前版本为1.0.0，主要目的是为openGauss用户提供慢SQL监控、问题SQL诊断分析的功能。
+​		SQL诊断插件主要目的是为openGauss用户提供慢SQL监控、问题SQL诊断分析的功能。它作为一体化平台的可插拔插件开发，本特性依赖于openGauss一体化平台的插件特性。
 
-它作为一体化平台的可插拔插件开发，本特性依赖于openGauss一体化平台的插件特性。
-
-
-
-## 项目背景
-
-在生产环境中，当用户发现慢SQL时，往往需要丰富的运维经验，通过多种命令、工具进行数据采集，然后进行分析，才能发现最终问题根因。SQL诊断插件提供了一个不断完善的知识库，帮助智能分析各种慢SQL产生的根因，从而极大地提高openGauss的可维护性和易用性。
-
-SQL诊断插件支持查询慢SQL，支持对SQL执行诊断任务。SQL诊断过程中会进行相关数据的采集，包括系统数据、SQL执行计划等，然后基于采集的数据进行分析，分析发现问题会以图表、表格等形式展示数据，并提供建议项信息。
+## 2 前言
 
 
 
-## 功能特性介绍
+### 2.1 概述
+
+​	本章介绍手册相关信息。
 
 
 
-<table>
-    <tr>
-        <th>特性名称</th>
-        <th>特性描述</th>
-        <th>备注</th>
-    </tr>
-    <tr>
-        <td>慢SQL查询</td>
-        <td>查询被openGauss记录的慢SQL</td>
-        <td>需track_stmt_stat_level的第2个参数为L0及以上级别；
-            需设置log_min_duration_statement慢SQL判断阈值</td>  
-    </tr>
-    <tr>
-        <td>SQL诊断</td>
-        <td>创建诊断任务，采集相关数据并智能分析问题根因</td>
-        <td>需在数据库所在服务器搭建agent</td>  
-    </tr>
-</table>
+### 2.2 读者对象
+
+​	本手册主要适用于以下人员：
+
+- 数据库开发人员
+- 数据库管理员
 
 
 
+### 2.3 修订记录
 
-## 版本使用注意事项
-
-- observability-sql-diagnosis项目是作为openGauss一体化平台插件进行开发，使用本项目必须依赖一体化平台。
-- observability-sql-diagnosis为一个Java应用，在构建时需确保配置Java 11+的JDK
-
-## 安装说明
-
-- ```
-  #下载源码：
-  git clone git@gitee.com:opengauss/openGauss-workbench.git
-  #进入根目录
-  cd plugins/observability-sql-diagnosis
-  ```
-  
-- ```
-  mvn clean package -P prod
-  ```
-
-- 打包完成后在plugins/observability-sql-diagnosis目录中找到observability-sql-diagnosis-1.0.x-SNAPSHOT-repackage.jar即为插件安装包。
-
-- 打开并登陆openGauss一体化平台，点击插件管理-安装插件，将上述步骤获得的安装包上传并安装。
-
-- 刷新页面可在右侧菜单栏看到”智能运维”一级菜单下的“SQL诊断”二级菜单即为安装成功。
-
-
-## 数据采集部署说明
-
-### 一、部署数据采集器
-
-1. 点击“实例监控”插件首页左上角的折叠按钮，打开“安装部署”侧边栏
-
-   <img src="doc/1.png" alt="image-20221216153920466" style="zoom: 43%;" />
-
-   
-
-2. 点击“安装代理”按钮，弹出安装框
-
-   <img src="doc/2.png" alt="image-20221216153920466" style="zoom: 43%;" />
-
-3. 选择对应数据库实例，输入Root密码，点击“一键部署”即可完成安装
-
-   <img src="doc/3.png" alt="image-20221216153920466" style="zoom: 43%;" />
-
-4. 安装完成后，即可在“已安装采集器”TAB中看到对应采集采集器的信息
-
-   <img src="doc/4.png" alt="image-20221216153920466" style="zoom: 43%;" />
-
-### 二、使用功能
-
-1. 实例对应的采集器安装完成后，即可使用SQL诊断功能，创建对应实例的诊断任务
-
-   <img src="doc/5.png" alt="image-20221216153920466" style="zoom: 43%;" />
-   
-   
-
-### 三、卸载
-
-1. 在“已安装采集器列表中，鼠标悬停后会显示“卸载”按钮，点击卸载按钮，打开卸载窗口
-
-   <img src="doc/6.png" alt="image-20221216153920466" style="zoom: 53%;" />
-
-2. 输入Root密码后，点击“一键卸载”，即可进行卸载操作
-
-   <img src="doc/7.png" alt="image-20221216153920466" style="zoom: 53%;" />
-## 使用说明
-
-- 具体使用方式见使用文档
+| 日期       | 版本   | 变更说明     |
+| ---------- | ------ | ------------ |
+| 2022/12/19 | v1.0.0 | 新增编译初版 |
 
 
 
-# 参与贡献
+### 2.4 文档约定
 
-**参与贡献**
+​	本节描述了本手册的（内容、符号、GUI 和文本）约定。
 
-作为openGauss用户，你可以通过多种方式协助openGauss社区。参与社区贡献的方法请参见[社区贡献](https://opengauss.org/zh/contribution.html)，这里简单列出部分方式供参考。
+**图形化界面格式约定**
 
-**特别兴趣小组**
+​    	本手册中可能出现下列图形化界面格式约定，它们所代表的含义如下。
 
-openGauss将拥有共同兴趣的人们聚在一起，组成了不同的特别兴趣小组（SIG）。当前已有的SIG请参见[SIG列表](https://opengauss.org/zh/contribution.html)。
+| 格式 | 说明                                                         |
+| ---- | ------------------------------------------------------------ |
+| 粗体 | 按钮、菜单、参数、页签、窗口及对话框标题均使用粗体并用引号括起来。例如，单击“**确定**”。 |
 
-我们欢迎并鼓励你加入已有的SIG或创建新的SIG，创建方法请参见[SIG管理指南](https://opengauss.org/zh/contribution.html)。
 
-**邮件列表和任务**
 
-欢迎你积极地帮助用户解决在[邮件列表](https://opengauss.org/zh/community/mails.html)和issue任务（包括[代码仓任务](https://gitee.com/organizations/opengauss/issues)） 中提出的问题。另外，我们也欢迎你提出问题。这些都将帮助openGauss社区更好地发展。
+### 2.5 第三方许可证
 
-**文档**
+​	本节包含适用于该插件的第三方许可证。
 
-你不仅可以通过提交代码参与社区贡献，我们也欢迎你反馈遇到的问题、困难，或者对文档易用性、完整性的改进建议等。例如获取软件或文档过程中的问题，使用系统过程中的难点。欢迎关注并改进openGauss社区的文档模块。
+​	**表2-1 第三方软件列表**
 
-**IRC**
+| 第三方软件     |
+| -------------- |
+| 木兰宽松许可证 |
 
-openGauss也在IRC开辟了频道，作为提供社区支持和交互的额外渠道。详情请参见[openGauss IRC](https://opengauss.org/zh/community/onlineCommunication.html)。
 
-# 开源的资料文档应附有对应的文档许可证
 
-本文档遵循[知识共享许可协议CC 4.0](https://creativecommons.org/licenses/by/4.0/) (http://creativecommons.org/Licenses/by/4.0/)。
+### 2.6 参考文档
+
+
+
+## 3SQL诊断插件简介
+
+
+
+### 3.1 概述
+
+​	在生产环境中，当用户发现慢SQL时，往往需要丰富的运维经验，通过多种命令、工具进行数据采集，然后进行分析，才能发现最终问题根因。SQL诊断插件提供了一个不断完善的知识库，帮助智能分析各种慢SQL产生的根因，从而极大地提高openGauss的可维护性和易用性。
+
+​	SQL诊断插件支持查询慢SQL，支持对SQL执行诊断任务。SQL诊断过程中会进行相关数据的采集，包括系统数据、SQL执行计划等，然后基于采集的数据进行分析，分析发现问题会以图表、表格等形式展示数据，并提供建议项信息。
+
+
+
+### 3.2 支持的功能
+
+​	日志检索插件提供的功能如下：
+
+- 慢sql诊断
+- sql诊断的增删查
+- 代理和服务端安装卸载
+
+
+
+### 3.3 约束和限制
+
+**代理安装**
+
+前置条件：服务端不存在时，先安装服务端
+
+
+
+**服务端安装**
+
+只能安装一个服务端
+
+
+
+**项目运行**
+
+本项目依赖一体化主平台，若需要使用本项目所有功能，只能通过编译成 jar 包的形式作为插件运行在主平台上。
+
+
+
+### 3.4 SQL诊断插件项目结构
+
+下载日志检索插件项目代码
+
+```
+git clone https://gitee.com/opengauss/openGauss-workbench
+```
+
+SQL诊断插件项目结构如下图所示：
+
+![image-20230313210511501](doc/sql_code.png)
+
+SQL诊断插件项目结构说明如下：
+
+| 文件夹/文件 | 说明                   |
+| ----------- | ---------------------- |
+| src         | 保存后端代码及资源文件 |
+| web-ui      | 保存前端代码           |
+| .gitignore  | 提交git忽略的目录      |
+| pom.xml     | 后端依赖项             |
+| LICENSE     | 许可证                 |
+
+### 3.5 系统要求
+
+​	本节介绍使用SQL诊断插件的最低系统要求。
+
+**系统要求**
+
+| 操作系统 | 版本           |
+| -------- | -------------- |
+| windows  | windows7及以上 |
+
+**软件要求**
+
+| 软件 | 规格         |
+| ---- | ------------ |
+| Java | jdk 11及以上 |
+
+**数据库版本要求**
+
+| 数据库    | 版本                         |
+| --------- | ---------------------------- |
+| openGauss | 所有（debug功能需3.0.0以上） |
+
+
+
+## 4 部署SQL诊断插件
+
+​	 本章详细介绍如何部署SQL诊断插件。
+
+​     前端技术栈：Vue3.0 + TS + Element plus
+
+​     后端技术栈：Java + Spring boot
+
+### 4.1 编译项目并部署至一体化平台
+
+**前置条件：** ① 安装 node.js，建议使用 v16 以上版本
+
+​                   ② 安装Java jdk （建议使用v11及以上版本） 和 maven 3.X
+
+**步骤 1：** 检查自动构建前端项目的配置是否为false
+
+```
+在 plugins > observability-instance > pom.xml 下将以下值设为false：
+<web.build.skip>false</web.build.skip>
+<web.clean.skip>false</web.clean.skip>
+```
+
+**步骤 2：** 启动打包命令
+
+```
+mvn clean package -P prod
+```
+
+**步骤 3：** 在target目录下找到生成的jar，安装到一体化平台
+
+![](E:\code\yzh\pr0223\plugins\data-studio\photo\3.png)
+
+### 4.2 启动后端项目
+
+**前置条件**：安装Java jdk （建议使用v11及以上版本） 和 maven 3.X。
+
+**步骤 1：** 使用idea打开项目，并配置好maven
+
+**步骤 2：** 通过启动后端命令与前端命令的方式进入，此方式受限制，详情请参见 3.3 约束和限制
+
+​                **步骤 2-1：** 找到 ObservabilityPluginApplication类，执行 main 函数
+
+![image-20230313210726240](doc/sql_main.png)
+
+​             **步骤2-2：** 启动前端项目，请参见 4.3 启动前端项目。
+
+**注**：项目基于spring-brick-bootstrap插件开发，目前项目只能以jar的形式运行于主平台，无法单独启动。若需要进行本地启动，需要修改ObservabilityPluginApplication类，参考https://www.yuque.com/starblues/spring-brick-3.0.0/xgf98o。
+
+![image-20230313172920008](doc/instance-dev.png)
+
+
+
+### 4.3 启动前端项目
+
+**前置条件：** 安装 node.js，建议使用 v16 以上版本。
+
+**步骤 1：** 下载依赖包
+
+```
+ 任选以下一种命令：
+ npm install
+ yarn install
+```
+
+**步骤 2：** 启动前端项目
+
+```
+ 根据package.json配置任选以下一种命令：
+ npm run dev
+ npm run lint
+ npm run lint:prettier
+```
+
+**步骤 3：** 根据启动提示进入对应的URL地址，如下图所示：
+
+![](doc/instance_web.png)
+
+
+
+## 5 SQL诊断插件
+
+### 5.1 概述
+
+​	本章详细介绍如何使用SQL诊断插件的功能。
+
+### 5.2 部署数据采集代理
+
+1. 点击“**安装代理**”按钮，弹出安装框
+
+   ![image-20230313210957759](doc/sql_proxy_install.png)
+
+2. 选择对应数据库实例，输入Root密码，点击“**一键部署**”即可完成安装
+
+   ![image-20230313211042855](doc/sql_proxy_install_form.png)
+
+3. 安装完成后，即可在“已安装代理”TAB中看到对应代理的信息
+
+   ![image-20230313211135139](doc/sql_proxy_installed)
+
+
+
+### 5.3 卸载
+
+1、在“已安装服务端”和“已安装代理”列表中，鼠标悬停后会显示“卸载”按钮，点击卸载按钮，打开卸载窗口
+
+![image-20230313211246773](doc/sql_proxy_uninstall.png)
+
+2、输入root密码，点击“**一键卸载**”，即可进行卸载操作
+
+![image-20230313211350006](doc/sql_proxy_uninstall_form.png)
+
+### 5.4 慢sql
+
+1、输入相关查询条件，点击【查询】
+
+![image-20230313211630841](doc/sql_slow_search.png)
+
+2、点击某个数据的【诊断】操作按钮,输入相关信息，生成诊断任务，新增的【诊断任务】将在【SQL诊断任务】中显示。
+
+![image-20230313211809035](doc/sql_slow_diagnosis_btn.png)
+
+![image-20230313212039988](doc/sql_slow_diagnosis_save.png)
+
+
+
+### 5.5 sql诊断任务
+
+1、点击【sql诊断任务】tab，进入sql诊断页面
+
+![image-20230313212433973](doc/sql_diagnosis_search.png)
+
+注：可以输入相关查询条件，查询数据
+
+2、点击【新建任务】，输入相关表单，即可创建sql诊断任务
+
+![image-20230313212721364](doc/sql_diagnosis_save.png)
+
+3、点击诊断任务列表中的任务名称，打开【sql诊断详情】页面,显示【分析报告】和【详情诊断】
+
+![image-20230313212941334](doc/sql_diagnosis_one.png)
+
+![image-20230313213044557](doc/sql_diagnosis_detail.png)
+
+点击分析报告中相应的建议项时，【诊断详情】将展示该项的详细
+
+![image-20230313213349863](doc/sql_detail_1.png)
+
+点击放大按钮，将放大诊断详情
+
+![image-20230313213510042](doc/sql_btn1.png)
+
+![image-20230313213543549](doc/sql_btn_2.png)
+
+4、删除诊断任务：在主页面点击某个数据的【删除】按钮，弹出删除提示框，点击【确定】即可删除
+
+![image-20230313213815873](doc/sql_del.png)
+
+
+
+## 6 FAQS
+
