@@ -244,7 +244,7 @@ public class OpsJdbcDbClusterNodeServiceImpl extends ServiceImpl<OpsJdbcDbCluste
                 res.put("res",false);
                 return res;
             }
-        } catch (SQLException e) {
+        } catch (Exception e) {
             res.put("msg","JDBC connection failed");
             res.put("res",false);
             return res;
