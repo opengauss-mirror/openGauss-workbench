@@ -15,7 +15,7 @@
           <el-tab-pane :label="$t('synonym.preview')" name="Sql"></el-tab-pane>
         </el-tabs>
         <div v-show="activeName == 'Base'">
-          <el-form :model="form" ref="ruleFormRef" :rules="rules" label-width="95px">
+          <el-form :model="form" ref="ruleFormRef" :rules="rules" label-width="110px">
             <el-form-item prop="synonymName" :label="$t('synonym.name')">
               <el-input v-model="form.synonymName" />
             </el-form-item>

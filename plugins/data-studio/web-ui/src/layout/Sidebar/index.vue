@@ -1461,6 +1461,10 @@
     display: flex;
     justify-content: space-between;
     border-bottom: border-style();
+    .left {
+      display: flex;
+      align-items: center;
+    }
     .icon {
       font-size: 19px;
     }
@@ -1495,12 +1499,6 @@
       &:hover {
         background: var(--el-bg-color-bar);
       }
-      .icon {
-        font-size: 13px;
-      }
-      .name {
-        font-size: 12px;
-      }
       &.home,
       &.home .icon {
         color: var(--el-color-primary);
@@ -1529,7 +1527,6 @@
     li {
       padding: 2px 12px;
       line-height: 20px;
-      font-size: 12px;
       display: flex;
       align-items: center;
       white-space: nowrap;

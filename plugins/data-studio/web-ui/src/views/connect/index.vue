@@ -501,6 +501,13 @@
       }
     }
   }
+  :deep(.el-input-number) {
+    .el-input-number__increase {
+      height: 13px !important;
+      line-height: 13px !important;
+      top: 3px;
+    }
+  }
   :deep(.el-input-number--small) {
     .el-input-number__decrease,
     .el-input-number__increase {
