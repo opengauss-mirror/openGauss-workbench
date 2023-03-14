@@ -398,11 +398,14 @@ public class OpsWdrService extends ServiceImpl<OpsWdrMapper, OpsWdrEntity> {
 			WdrTypeEnum type, Session session, Integer port) {
 		String clientLoginOpenGauss = MessageFormat.format(SshCommandConstants.LOGIN, String.valueOf(port));
 		try {
+			String nodeName = null;
+			if (scope == WdrScopeEnum.NODE){
+				nodeName = "pgxc_node_str()::cstring";
+			}
 			Map<String, List<String>> response = new HashMap<>();
 			List<String> responseList = new ArrayList<>();
 			String startSql = "\\a \\t \\o " + wdrPath + "/" + wdrName + "\n";
-			String generateSql = "select generate_wdr_report('" + startId + "', '" + endId + "', '"
-					+ type.name().toLowerCase() + "', '" + scope.name().toLowerCase() + "'); \n";
+			String generateSql = "select generate_wdr_report('" + startId + "', '" + endId + "', '" + type.name().toLowerCase() + "', '" + scope.name().toLowerCase() + "'," + nodeName +"); \n";
 			String endSql = "\\o \\a \\t \n \\q";
 
 			responseList.add(startSql);

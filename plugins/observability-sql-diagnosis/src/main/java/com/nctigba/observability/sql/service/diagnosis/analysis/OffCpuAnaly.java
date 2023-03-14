@@ -72,7 +72,7 @@ public class OffCpuAnaly implements ResultAnalysis {
                     Integer samples2 = Integer.valueOf(o2.get("samples"));
                     return samples2.compareTo(samples1);
                 });
-                Iterator it = table.getData().iterator();
+                var it = table.getData().iterator();
                 //String comValue = table.getData().get(50).get("samples");
                 int count=1;
                 while (it.hasNext()) {

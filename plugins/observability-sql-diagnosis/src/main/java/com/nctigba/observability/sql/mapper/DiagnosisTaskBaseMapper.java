@@ -8,6 +8,6 @@ import com.nctigba.observability.sql.config.DataSourceIniter;
 import com.nctigba.observability.sql.model.diagnosis.Task;
 
 @Mapper
-@DS(DataSourceIniter.diagnosis)
+@DS(DataSourceIniter.diagnosisTask)
 public interface DiagnosisTaskBaseMapper extends BaseMapper<Task> {
 }

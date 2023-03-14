@@ -2,6 +2,7 @@ package com.nctigba.observability.instance.controller;
 
 import java.util.List;
 
+import com.nctigba.common.web.exception.InstanceException;
 import com.nctigba.observability.instance.dto.param.ParamInfoDTO;
 import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,12 +36,16 @@ public class ParamInfoController {
     @GetMapping(value = "/paramInfo")
     public List<ParamInfoDTO> paramInfo(ParamQuery paramQuery) {
         if("".equals(paramQuery.getNodeId()) || paramQuery.getNodeId()==null){
-            return null;
+            throw new InstanceException("nodeId is empty!");
         }
         if (paramQuery.getPassword() != null && !"".equals(paramQuery.getPassword())) {
             String password = encryptionUtils.decrypt(paramQuery.getPassword());
             paramQuery.setPassword(password);
         }
-        return paramInfoService.getParamInfo(paramQuery);
+        List<ParamInfoDTO> list=paramInfoService.getParamInfo(paramQuery);
+        if(list==null){
+            throw new InstanceException("password is error!");
+        }
+        return list;
     }
 }

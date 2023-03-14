@@ -11,7 +11,6 @@ import org.opengauss.admin.common.core.domain.model.ops.OpsClusterVO;
 import org.opengauss.admin.system.plugin.facade.OpsFacade;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
@@ -48,14 +47,14 @@ public class ClusterManager {
 
 	public String getOpsClusterIdByNodeId(String nodeId) {
 		if ("0".equals(nodeId))
-			return "0";
+			throw new RuntimeException("node not found");
 		for (OpsClusterVO cluster : getAllOpsCluster()) {
 			if (cluster.getClusterNodes().stream().anyMatch(node -> {
 				return nodeId.equals(node.getNodeId());
 			}))
 				return cluster.getClusterId();
 		}
-		return "unknown";
+		throw new RuntimeException("node not found");
 	}
 
 	@Data
@@ -103,7 +102,7 @@ public class ClusterManager {
 	public OpsClusterNodeVOSub getOpsNodeById(String nodeId) {
 		List<OpsClusterVO> opsClusterVOList = getAllOpsCluster();
 		if (CollectionUtils.isEmpty(opsClusterVOList))
-			return null;
+			throw new RuntimeException("node not found");
 		for (OpsClusterVO cluster : opsClusterVOList) {
 			List<OpsClusterNodeVO> nodes = cluster.getClusterNodes();
 			if (CollectionUtils.isEmpty(nodes))
@@ -114,9 +113,26 @@ public class ClusterManager {
 				}
 			}
 		}
-		return null;
+		throw new RuntimeException("node not found");
 	}
 
-	@Value("${spring.profiles.active}")
-	private String env;
+	/**
+	 * Get the specified node information
+	 */
+	public OpsClusterVO getOpsClusterByNodeId(String nodeId) {
+		List<OpsClusterVO> opsClusterVOList = getAllOpsCluster();
+		if (CollectionUtils.isEmpty(opsClusterVOList))
+			throw new RuntimeException("cluster not found");
+		for (OpsClusterVO cluster : opsClusterVOList) {
+			List<OpsClusterNodeVO> nodes = cluster.getClusterNodes();
+			if (CollectionUtils.isEmpty(nodes))
+				continue;
+			for (OpsClusterNodeVO clusterNode : nodes) {
+				if (nodeId.equals(clusterNode.getNodeId())) {
+					return cluster;
+				}
+			}
+		}
+		throw new RuntimeException("cluster not found");
+	}
 }

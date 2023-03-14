@@ -36,7 +36,7 @@ public class DatabaseParamCaller implements Caller {
     @Async
     public void start(Task task) {
         log.info("paramAnalyze caller start begin");
-        if (!task.getConf().isExplainAnalysis())
+        if (!task.getConf().isParamAnalysis())
             return;
         task.addRemarks("start get param info:");
         diagnosisTaskMapper.updateById(task);
@@ -73,7 +73,6 @@ public class DatabaseParamCaller implements Caller {
                     taskResult.setTaskid(task.getId());
                     taskResult.setResultType(ResultType.valueOf(nodeName));
                     taskResult.setFrameType(FrameType.Param);
-                    taskResult.setData(paramDto);
                     if (result.getString("diagnosisRule") != null || !"".equals(result.getString("diagnosisRule"))) {
                         var manager = new ScriptEngineManager();
                         var t = manager.getEngineByName("javascript");
@@ -89,6 +88,7 @@ public class DatabaseParamCaller implements Caller {
                     } else {
                         taskResult.setState(TaskResult.ResultState.NoAdvice);
                     }
+                    taskResult.setData(paramDto);
                     taskResultMapper.insert(taskResult);
                 }
             }
