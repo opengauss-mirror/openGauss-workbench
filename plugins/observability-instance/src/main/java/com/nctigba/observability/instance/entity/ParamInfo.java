@@ -9,6 +9,7 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
@@ -24,15 +25,12 @@ public class ParamInfo {
 	type paramType;
 	@TableField("paramName")
 	String paramName;
-	@TableField("paramDetail")
 	String paramDetail;
 	@TableField("suggestValue")
 	String suggestValue;
 	@TableField("defaultValue")
 	String defaultValue;
-	@TableField("unit")
 	String unit;
-	@TableField("suggestExplain")
 	String suggestExplain;
 	@TableField("diagnosisRule")
 	String diagnosisRule;
@@ -49,11 +47,8 @@ public class ParamInfo {
 			info.setId(rs.getInt("id"));
 			info.setParamName(rs.getString("paramName"));
 			info.setParamType(type.valueOf(rs.getString("paramType")));
-			info.setParamDetail(rs.getString("paramDetail"));
 			info.setSuggestValue(rs.getString("suggestValue"));
 			info.setDefaultValue(rs.getString("defaultValue"));
-			info.setUnit(rs.getString("unit"));
-			info.setSuggestExplain(rs.getString("suggestExplain"));
 			list.add(info);
 		}
 		return list;

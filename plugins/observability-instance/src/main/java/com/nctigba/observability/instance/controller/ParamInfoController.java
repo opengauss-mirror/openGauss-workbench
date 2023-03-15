@@ -10,6 +10,7 @@ import com.nctigba.common.web.exception.InstanceException;
 import com.nctigba.observability.instance.dto.param.ParamInfoDTO;
 import com.nctigba.observability.instance.model.param.ParamQuery;
 import com.nctigba.observability.instance.service.ParamInfoService;
+import com.nctigba.observability.instance.util.MessageSourceUtil;
 
 import lombok.RequiredArgsConstructor;
 
@@ -28,6 +29,7 @@ public class ParamInfoController {
 
 	@GetMapping(value = "/paramInfo")
 	public List<ParamInfoDTO> paramInfo(ParamQuery paramQuery) {
+		MessageSourceUtil.reset();
 		if ("".equals(paramQuery.getNodeId()) || paramQuery.getNodeId() == null) {
 			throw new InstanceException("nodeId is empty!");
 		}
