@@ -1,5 +1,5 @@
 :root {
-  --el-font-size-base: 12px;
+  --el-font-size-base: 14px;
   --el-font-family: HarmonyOS_Sans_SC,HarmonyOS_Sans,-apple-system,BlinkMacSystemFont,PingFang SC,'Microsoft YaHei',Arial,Helvetica Neue,Helvetica,Roboto,sans-serif;
   --el-overlay-color-lighter: rgb(29 33 41 / 60%);
   --normal-color: #E41D1D;
@@ -36,7 +36,7 @@
   background-color: var(--active-color);
 }
 
-.el-button--small {
+.el-button {
   padding: 5px 7px;
   border-radius: 2px;
 }
@@ -103,6 +103,18 @@ html {
 }
 .el-table--striped .el-table__body tr.el-table__row--striped.current-row td.el-table__cell {
   background-color: var(--el-fill-color-light);
+}
+
+.el-dropdown__popper {
+  --el-dropdown-menuItem-hover-fill: var(--color-fill-2);
+}
+.el-dropdown-menu__item:not(.is-disabled):focus {
+  color: var(--el-text-color-regular);
+}
+.el-input-number {
+  .el-input-number__increase {
+    top: 2px;
+  }
 }
 
 .el-dropdown__popper {

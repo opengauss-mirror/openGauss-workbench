@@ -415,7 +415,6 @@
     position: relative;
     z-index: 2;
     white-space: nowrap;
-    font-size: 12px;
     .tags-inner {
       display: flex;
       align-items: center;
@@ -444,7 +443,6 @@
     li {
       padding: 2px 12px;
       line-height: 20px;
-      font-size: 12px;
       display: flex;
       align-items: center;
       white-space: nowrap;

@@ -1,5 +1,5 @@
 <template>
-  <el-config-provider size="small" :locale="locale">
+  <el-config-provider :locale="locale">
     <router-view></router-view>
   </el-config-provider>
   <ConnectDialog

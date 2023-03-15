@@ -241,10 +241,10 @@
     }
     .cell {
       padding: 0 3px;
-      line-height: 15px;
+      line-height: 20px;
     }
     .el-table-column--selection > .cell {
-      height: 15px;
+      height: 20px;
     }
   }
   .DebugPane {
