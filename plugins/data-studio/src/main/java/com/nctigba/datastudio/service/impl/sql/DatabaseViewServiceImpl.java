@@ -114,8 +114,6 @@ public class DatabaseViewServiceImpl implements DatabaseViewService {
             try (ResultSet resultSet = statement.executeQuery(selectsql)) {
                 log.info("count sql is: " + resultSet);
                 log.info("viewAttributeData sql is: " + selectsql);
-                Map<String, Object> resultMap = new HashMap<>();
-                ResultSetMetaData metaData = resultSet.getMetaData();
                 String type;
                 if (resultSet.next()) {
                         type = resultSet.getString("relkind");
