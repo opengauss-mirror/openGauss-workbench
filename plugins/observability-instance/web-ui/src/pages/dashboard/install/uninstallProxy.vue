@@ -101,12 +101,11 @@ const install = async () => {
     sendData();
 };
 const sendData = async () => {
-    // const encryptPwd = await encryptPassword(formData.rootPassword);
     const sendData = {
         key: "uninstall prometheus",
         id: formData.id,
         hostId: formData.nodeId,
-        // rootPassword: encryptPwd,
+        language: localStorage.getItem('locale') === 'en-US' ? 'en_US' : 'zh_CN'
     };
     ws.instance.send(sendData);
 };

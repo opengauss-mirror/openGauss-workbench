@@ -131,14 +131,6 @@ const renderChart = () => {
 const themeChange = ref<any>();
 onMounted(() => {
     renderChart();
-    themeChange.value = window.addEventListener('storage',event => {
-        if(event.key === 'theme') {
-            renderChart()
-        }
-    })
-});
-onUnmounted(() => {
-    themeChange.value.removeEventListener('storage')
 });
 watch(
     () => props.data,

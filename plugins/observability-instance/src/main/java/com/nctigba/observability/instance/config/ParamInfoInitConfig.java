@@ -1,18 +1,20 @@
 package com.nctigba.observability.instance.config;
 
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
-import org.sqlite.JDBC;
-import org.sqlite.SQLiteDataSource;
-
-import javax.annotation.PostConstruct;
 import java.io.File;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
+
+import javax.annotation.PostConstruct;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+import org.sqlite.JDBC;
+import org.sqlite.SQLiteDataSource;
+
+import lombok.extern.slf4j.Slf4j;
 
 @Component
 @Slf4j

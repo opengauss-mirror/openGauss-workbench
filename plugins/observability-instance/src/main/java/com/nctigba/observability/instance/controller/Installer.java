@@ -20,6 +20,7 @@ import com.gitee.starblues.bootstrap.annotation.AutowiredType.Type;
 import com.nctigba.observability.instance.listener.PluginListener;
 import com.nctigba.observability.instance.service.ExporterService;
 import com.nctigba.observability.instance.service.PrometheusService;
+import com.nctigba.observability.instance.util.MessageSourceUtil;
 
 import cn.hutool.core.thread.ThreadUtil;
 import cn.hutool.json.JSONUtil;
@@ -53,6 +54,7 @@ public class Installer implements SocketExtract {
 				var obj = JSONUtil.parseObj(message);
 				var session = wsConnectorManager.getSession(sessionId)
 						.orElseThrow(() -> new RuntimeException("websocket session not exist"));
+				MessageSourceUtil.set(obj.getStr("language"));
 				switch (obj.getStr("key")) {
 				case "prometheus":
 					prometheusService.install(session, obj.getStr("hostId"), obj.getStr("rootPassword"),

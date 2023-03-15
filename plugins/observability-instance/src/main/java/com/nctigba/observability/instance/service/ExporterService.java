@@ -50,13 +50,13 @@ public class ExporterService extends AbstractInstaller {
 	public void install(WsSession wsSession, String nodeId, String rootPassword, Integer nodeport, Integer openport) {
 		// @formatter:off
 		var steps = Arrays.asList(
-				new Step("初始化"),
-				new Step("检查代理环境"),
-				new Step("检查用户信息"),
-				new Step("安装nodeExporter"),
-				new Step("安装opengaussExporter"),
-				new Step("刷新prometheus配置"),
-				new Step("安装完成"));
+				new Step("exporterinstall.step1"),
+				new Step("exporterinstall.step2"),
+				new Step("exporterinstall.step3"),
+				new Step("exporterinstall.step4"),
+				new Step("exporterinstall.step5"),
+				new Step("exporterinstall.step6"),
+				new Step("exporterinstall.step7"));
 		// @formatter:on
 		int curr = 0;
 
@@ -79,7 +79,7 @@ public class ExporterService extends AbstractInstaller {
 			try (var session = SshSession.connect(hostEntity.getPublicIp(), hostEntity.getPort(), "root",
 					encryptionUtils.decrypt(rootPassword));) {
 			} catch (Exception e) {
-				steps.get(curr).setState(status.ERROR).getMsg().add(e.getMessage());
+				steps.get(curr).setState(status.ERROR).add(e.getMessage());
 				wsUtil.sendText(wsSession, JSONUtil.toJsonStr(steps));
 				var sw = new StringWriter();
 				try (var pw = new PrintWriter(sw);) {
@@ -106,13 +106,13 @@ public class ExporterService extends AbstractInstaller {
 							if (pkg == null) {
 								var f = Download.download(NODE_EXPORTER_PATH + tar, "pkg/" + tar);
 								pkg = new NctigbaEnv().setPath(f.getCanonicalPath()).setType(type.NODE_EXPORTER_PKG);
-								addMsg(wsSession, steps, curr, "安装包下载成功");
+								addMsg(wsSession, steps, curr, "exporterinstall.downloadsuccess");
 								save(pkg);
 							}
 							session.upload(pkg.getPath(), tar);
-							addMsg(wsSession, steps, curr, "安装包上传完成");
+							addMsg(wsSession, steps, curr, "exporterinstall.uploadsuccess");
 						} else
-							addMsg(wsSession, steps, curr, "当前路径下已存在安装包，使用该安装包安装");
+							addMsg(wsSession, steps, curr, "exporterinstall.pkgexists");
 						session.execute(command.TAR.parse(tar));
 					}
 					session.executeNoWait("cd " + name
@@ -139,13 +139,13 @@ public class ExporterService extends AbstractInstaller {
 								var f = Download.download(OPENGAUSS_EXPORTER_PATH + zip, "pkg/" + zip);
 								pkg = new NctigbaEnv().setPath(f.getCanonicalPath())
 										.setType(type.OPENGAUSS_EXPORTER_PKG);
-								addMsg(wsSession, steps, curr, "安装包下载成功");
+								addMsg(wsSession, steps, curr, "exporterinstall.downloadsuccess");
 								save(pkg);
 							}
 							session.upload(pkg.getPath(), zip);
-							addMsg(wsSession, steps, curr, "安装包上传完成");
+							addMsg(wsSession, steps, curr, "exporterinstall.uploadsuccess");
 						} else
-							addMsg(wsSession, steps, curr, "当前路径下已存在安装包，使用该安装包安装");
+							addMsg(wsSession, steps, curr, "exporterinstall.pkgexists");
 						session.execute(command.UNZIP.parse(zip));
 					}
 
@@ -171,13 +171,12 @@ public class ExporterService extends AbstractInstaller {
 					addMsg(wsSession, steps, curr, "opengauss exporter exists");
 
 				curr = nextStep(wsSession, steps, curr);
-				// 修改prometheus,重启
+				// reload prometheus
 				var promeHost = hostFacade.getById(promEnv.getHostid());
 				var promUser = hostUserFacade.listHostUserByHostId(promEnv.getHostid()).stream()
 						.filter(p -> p.getUsername().equals(promEnv.getUsername())).findFirst()
 						.orElseThrow(() -> new RuntimeException(
 								"The node information corresponding to the host is not found"));
-				// reload prometheus
 				try (var promSession = SshSession.connect(promeHost.getPublicIp(), promeHost.getPort(),
 						promEnv.getUsername(), encryptionUtils.decrypt(promUser.getPassword()));) {
 					var promYmlStr = promSession.execute("cat " + promEnv.getPath() + "/prometheus.yml");
@@ -206,13 +205,13 @@ public class ExporterService extends AbstractInstaller {
 				var res = HttpUtil.post("http://" + promeHost.getPublicIp() + ":" + promEnv.getPort() + "/-/reload",
 						"");
 				if ("Lifecycle API is not enabled.".equals(res)) {
-					// TODO 未开启在线刷新
+					// TODO reload fail
 				}
 				curr = nextStep(wsSession, steps, curr);
 				sendMsg(wsSession, steps, curr, status.DONE);
 			}
 		} catch (IOException e) {
-			steps.get(curr).setState(status.ERROR).getMsg().add(e.getMessage());
+			steps.get(curr).setState(status.ERROR).add(e.getMessage());
 			wsUtil.sendText(wsSession, JSONUtil.toJsonStr(steps));
 			var sw = new StringWriter();
 			try (var pw = new PrintWriter(sw);) {
@@ -225,13 +224,13 @@ public class ExporterService extends AbstractInstaller {
 	public void uninstall(WsSession wsSession, String nodeId) {
 		// @formatter:off
 		var steps = Arrays.asList(
-				new Step("初始化"),
-				new Step("连接主机"),
-				new Step("查找nodeExporter进程号"),
-				new Step("停止nodeExporter"),
-				new Step("查找opengaussExporter进程号"),
-				new Step("停止opengaussExporter"),
-				new Step("卸载完成"));
+				new Step("exporteruninstall.step1"),
+				new Step("exporteruninstall.step2"),
+				new Step("exporteruninstall.step3"),
+				new Step("exporteruninstall.step4"),
+				new Step("exporteruninstall.step5"),
+				new Step("exporteruninstall.step6"),
+				new Step("exporteruninstall.step7"));
 		// @formatter:on
 		var curr = 0;
 
@@ -276,7 +275,7 @@ public class ExporterService extends AbstractInstaller {
 				sendMsg(wsSession, steps, curr, status.DONE);
 			}
 		} catch (Exception e) {
-			steps.get(curr).setState(status.ERROR).getMsg().add(e.getMessage());
+			steps.get(curr).setState(status.ERROR).add(e.getMessage());
 			wsUtil.sendText(wsSession, JSONUtil.toJsonStr(steps));
 			var sw = new StringWriter();
 			try (var pw = new PrintWriter(sw);) {

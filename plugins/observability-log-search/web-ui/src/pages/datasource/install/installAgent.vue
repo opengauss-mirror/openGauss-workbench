@@ -219,6 +219,7 @@ const sendData = async () => {
         gsOmLogPath: formData.gsOmLogPath,
         gsInstallLogPath: formData.gsInstallLogPath,
         gsLocalLogPath: formData.gsLocalLogPath,
+        language: localStorage.getItem('locale') === 'en-US' ? 'en_US' : 'zh_CN'
         // gs: formData.gs
     };
 

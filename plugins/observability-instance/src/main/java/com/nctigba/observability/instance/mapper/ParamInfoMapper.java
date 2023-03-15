@@ -7,8 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import javax.annotation.PostConstruct;
-
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Service;
 
 import com.nctigba.observability.instance.config.ParamInfoInitConfig;
@@ -16,14 +15,14 @@ import com.nctigba.observability.instance.entity.ParamInfo;
 import com.nctigba.observability.instance.entity.ParamInfo.type;
 
 @Service
-public class ParamInfoMapper {
+public class ParamInfoMapper implements InitializingBean {
 	private static final String SQL = "select * from param_info";
 	private static final List<ParamInfo> LIST = new ArrayList<>();
 	private static final Map<Integer, ParamInfo> IDS = new HashMap<>();
 	private static final Map<ParamInfo.type, Map<String, ParamInfo>> MAP = new HashMap<>();
 
-	@PostConstruct
-	public void refresh() {
+	@Override
+	public void afterPropertiesSet() throws Exception {
 		var connect = ParamInfoInitConfig.getCon(ParamInfoInitConfig.PARAMINFO);
 		try {
 			try (var stmt = connect.createStatement(); var rs = stmt.executeQuery(SQL);) {
