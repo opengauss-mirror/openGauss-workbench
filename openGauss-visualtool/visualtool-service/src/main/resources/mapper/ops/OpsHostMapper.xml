@@ -5,13 +5,35 @@
 <mapper namespace="org.opengauss.admin.system.mapper.ops.OpsHostMapper">
 
     <select id="pageHost" resultType="org.opengauss.admin.common.core.domain.model.ops.host.OpsHostVO">
-        SELECT h.*, a.name azName
+        SELECT DISTINCT h.*, a.name azName
         FROM ops_host h
         LEFT JOIN ops_az a ON h.az_id = a.az_id
+        LEFT JOIN ops_host_tag_rel tr ON h.host_id = tr.host_id
         WHERE 1=1
         <if test="name!=null and name!=''">
             AND (h.public_ip like #{name} OR h.private_ip like #{name})
         </if>
+        <if test="os!=null and os!=''">
+            AND h.os like #{name}
+        </if>
+
+        <if test="tagIds!=null and tagIds.size()>0">
+
+            AND h.host_id IN
+            (SELECT host_id FROM (SELECT DISTINCT tr.host_id , tr.tag_id FROM ops_host_tag_rel  tr WHERE tag_id IN
+                                                                                                         <foreach
+                                                                                                                 collection="tagIds" item="tagId" open="(" close=")" separator=",">
+                                                                                                             #{tagId}
+                                                                                                         </foreach>
+            ) GROUP BY host_id HAVING COUNT(*)>= #{size} )
+
+        </if>
+<!--        <if test="tagIds!=null and tagIds.size()>0">-->
+<!--            AND tr.tag_id IN-->
+<!--            <foreach collection="tagIds" separator="," open="(" close=")" item="tagId">-->
+<!--                #{tagId}-->
+<!--            </foreach>-->
+<!--        </if>-->
         ORDER BY h.update_time DESC
     </select>
 </mapper>

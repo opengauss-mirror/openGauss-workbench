@@ -16,6 +16,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * Host
@@ -43,8 +44,8 @@ public class HostController extends BaseController {
     }
 
     @GetMapping("/page")
-    public TableDataInfo page(@RequestParam(required = false) String name) {
-        IPage<OpsHostVO> page = hostService.pageHost(startPage(), name);
+    public TableDataInfo page(@RequestParam(required = false) String name, @RequestParam(value = "tagIds",required = false) Set<String> tagIds, @RequestParam(value = "os",required = false) String os) {
+        IPage<OpsHostVO> page = hostService.pageHost(startPage(), name, tagIds, os);
         return getDataTable(page);
     }
 

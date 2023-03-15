@@ -27,9 +27,7 @@ import org.opengauss.admin.common.exception.ops.OpsException;
 import org.opengauss.admin.common.utils.ops.JschUtil;
 import org.opengauss.admin.common.utils.ops.WsUtil;
 import org.opengauss.admin.system.mapper.ops.OpsHostMapper;
-import org.opengauss.admin.system.service.ops.IHostService;
-import org.opengauss.admin.system.service.ops.IHostUserService;
-import org.opengauss.admin.system.service.ops.IOpsClusterService;
+import org.opengauss.admin.system.service.ops.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
@@ -65,6 +63,10 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
     private WsConnectorManager wsConnectorManager;
     @Autowired
     private WsUtil wsUtil;
+    @Autowired
+    private IOpsHostTagRelService opsHostTagRelService;
+    @Autowired
+    private IOpsHostTagService opsHostTagService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -220,10 +222,14 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
     }
 
     @Override
-    public IPage<OpsHostVO> pageHost(Page page, String name) {
-        final IPage<OpsHostVO> opsHostVOIPage = hostMapper.pageHost(page, name);
+    public IPage<OpsHostVO> pageHost(Page page, String name, Set<String> tagIds, String os) {
+        if (Objects.isNull(tagIds)){
+            tagIds = Collections.emptySet();
+        }
+        final IPage<OpsHostVO> opsHostVOIPage = hostMapper.pageHost(page, name, tagIds, os, tagIds.size());
         final List<OpsHostVO> records = opsHostVOIPage.getRecords();
         populateIsRememberVO(records);
+        populateTags(records);
         return opsHostVOIPage;
     }
 
@@ -498,6 +504,16 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
             log.error("cpu monitor error:",e);
         }
         throw new OpsException("cpu monitor error");
+    }
+
+    private void populateTags(List<OpsHostVO> list) {
+        List<String> hostIds = list.stream().map(OpsHostVO::getHostId).collect(Collectors.toList());
+        if (CollUtil.isNotEmpty(hostIds)){
+            Map<String,Set<String>> hostTagNamesMap = opsHostTagRelService.mapByHostIds(hostIds);
+            for (OpsHostVO opsHostVO : list) {
+                opsHostVO.setTags(hostTagNamesMap.get(opsHostVO.getHostId()));
+            }
+        }
     }
 
     private void populateIsRememberVO(List<OpsHostVO> list) {

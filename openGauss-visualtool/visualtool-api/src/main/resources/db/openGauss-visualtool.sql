@@ -361,6 +361,47 @@ COMMENT ON COLUMN "public"."ops_host_user"."create_time" IS '创建时间';
 COMMENT ON COLUMN "public"."ops_host_user"."update_by" IS '更新者';
 COMMENT ON COLUMN "public"."ops_host_user"."update_time" IS '更新时间';
 
+CREATE TABLE IF NOT EXISTS "public"."ops_host_tag" (
+    "host_tag_id" varchar(255) COLLATE "pg_catalog"."default" NOT NULL PRIMARY KEY,
+    "name" varchar(255) COLLATE "pg_catalog"."default",
+    "remark" varchar(255) COLLATE "pg_catalog"."default",
+    "create_by" varchar(64) COLLATE "pg_catalog"."default",
+    "create_time" timestamp(6),
+    "update_by" varchar(64) COLLATE "pg_catalog"."default",
+    "update_time" timestamp(6)
+    )
+;
+ALTER TABLE "public"."ops_host_tag" OWNER TO "jim";
+COMMENT ON COLUMN "public"."ops_host_tag"."name" IS '标签名';
+COMMENT ON COLUMN "public"."ops_host_tag"."remark" IS '备注';
+COMMENT ON COLUMN "public"."ops_host_tag"."create_by" IS '创建者';
+COMMENT ON COLUMN "public"."ops_host_tag"."create_time" IS '创建时间';
+COMMENT ON COLUMN "public"."ops_host_tag"."update_by" IS '更新者';
+COMMENT ON COLUMN "public"."ops_host_tag"."update_time" IS '更新时间';
+
+-- ----------------------------
+-- Table structure for ops_host_tag_rel
+-- ----------------------------
+CREATE TABLE IF NOT EXISTS  "public"."ops_host_tag_rel" (
+    "id" varchar(255) COLLATE "pg_catalog"."default" NOT NULL PRIMARY KEY,
+    "host_id" varchar(255) COLLATE "pg_catalog"."default",
+    "tag_id" varchar(255) COLLATE "pg_catalog"."default",
+    "remark" varchar(255) COLLATE "pg_catalog"."default",
+    "create_by" varchar(64) COLLATE "pg_catalog"."default",
+    "create_time" timestamp(6),
+    "update_by" varchar(64) COLLATE "pg_catalog"."default",
+    "update_time" timestamp(6)
+    )
+;
+ALTER TABLE "public"."ops_host_tag_rel" OWNER TO "jim";
+COMMENT ON COLUMN "public"."ops_host_tag_rel"."host_id" IS '主机ID';
+COMMENT ON COLUMN "public"."ops_host_tag_rel"."tag_id" IS 'tag ID';
+COMMENT ON COLUMN "public"."ops_host_tag_rel"."remark" IS '描述';
+COMMENT ON COLUMN "public"."ops_host_tag_rel"."create_by" IS '创建者';
+COMMENT ON COLUMN "public"."ops_host_tag_rel"."create_time" IS '创建时间';
+COMMENT ON COLUMN "public"."ops_host_tag_rel"."update_by" IS '更新者';
+COMMENT ON COLUMN "public"."ops_host_tag_rel"."update_time" IS '更新时间';
+
 CREATE OR REPLACE FUNCTION add_host_user_field_func() RETURNS integer AS 'BEGIN
 IF
 ( SELECT COUNT ( * ) AS ct1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ''ops_host_user'' AND COLUMN_NAME = ''sudo'' ) = 0

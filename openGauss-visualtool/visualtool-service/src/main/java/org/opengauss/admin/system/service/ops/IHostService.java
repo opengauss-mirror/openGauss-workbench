@@ -58,7 +58,7 @@ public interface IHostService extends IService<OpsHostEntity> {
      */
     boolean edit(String hostId, HostBody hostBody);
 
-    IPage<OpsHostVO> pageHost(Page page, String name);
+    IPage<OpsHostVO> pageHost(Page page, String name, Set<String> tagIds, String os);
 
     void ssh(SSHBody sshBody);
 
