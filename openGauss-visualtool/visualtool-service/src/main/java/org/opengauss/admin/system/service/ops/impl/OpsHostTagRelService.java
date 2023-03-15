@@ -1,6 +1,7 @@
 package org.opengauss.admin.system.service.ops.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -72,5 +73,16 @@ public class OpsHostTagRelService extends ServiceImpl<OpsHostTagRelMapper, OpsHo
         }
 
         return tags;
+    }
+
+    @Override
+    public void cleanHostTag(String hostId) {
+        if (StrUtil.isEmpty(hostId)){
+            return;
+        }
+        LambdaQueryWrapper<OpsHostTagRel> queryWrapper = Wrappers.lambdaQuery(OpsHostTagRel.class)
+                .eq(OpsHostTagRel::getHostId, hostId);
+
+        remove(queryWrapper);
     }
 }

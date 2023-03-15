@@ -20,6 +20,7 @@ import org.opengauss.admin.common.core.domain.model.ops.WsSession;
 import org.opengauss.admin.common.core.domain.model.ops.host.HostMonitorVO;
 import org.opengauss.admin.common.core.domain.model.ops.host.OpsHostVO;
 import org.opengauss.admin.common.core.domain.model.ops.host.SSHBody;
+import org.opengauss.admin.common.core.domain.model.ops.host.tag.HostTagInputDto;
 import org.opengauss.admin.common.core.handler.ops.cache.SSHChannelManager;
 import org.opengauss.admin.common.core.handler.ops.cache.TaskManager;
 import org.opengauss.admin.common.core.handler.ops.cache.WsConnectorManager;
@@ -85,7 +86,8 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
             }
         }
         save(hostEntity);
-
+        opsHostTagRelService.cleanHostTag(hostEntity.getHostId());
+        opsHostTagService.addTag(HostTagInputDto.of(hostBody.getTags(),hostEntity.getHostId()));
         OpsHostUserEntity hostUserEntity = hostBody.toRootUser(hostEntity.getHostId());
         return hostUserService.save(hostUserEntity);
     }
@@ -217,6 +219,9 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
         OpsHostEntity newHostEntity = hostBody.toHostEntity(getHostName(session),getOS(session),getCpuArch(session));
         newHostEntity.setHostId(hostId);
         updateById(newHostEntity);
+
+        opsHostTagRelService.cleanHostTag(hostId);
+        opsHostTagService.addTag(HostTagInputDto.of(hostBody.getTags(),hostId));
 
         return true;
     }

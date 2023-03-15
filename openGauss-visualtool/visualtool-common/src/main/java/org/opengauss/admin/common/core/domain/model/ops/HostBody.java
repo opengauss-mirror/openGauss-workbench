@@ -7,6 +7,7 @@ import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
 import org.opengauss.admin.common.utils.ops.JschUtil;
 
 import javax.validation.constraints.NotEmpty;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -27,6 +28,7 @@ public class HostBody {
     private String remark;
     private Integer port;
     private String name;
+    private List<String> tags;
 
     public OpsHostEntity toHostEntity(String hostName,String os,String cpuArch) {
         OpsHostEntity hostEntity = new OpsHostEntity();
