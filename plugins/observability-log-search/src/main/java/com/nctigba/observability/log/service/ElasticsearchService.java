@@ -42,14 +42,14 @@ public class ElasticsearchService extends AbstractInstaller {
 	public void install(WsSession wsSession, String hostId, String rootPassword, Integer port) {
 		// @formatter:off
 		var steps = Arrays.asList(
-				new Step("初始化"),
-				new Step("检查elasticsearch环境存在"),
-				new Step("连接主机"),
-				new Step("下载elasticsearch安装包,解压缩"),
-				new Step("配置elasticsearch"),
-				new Step("启动elasticsearch"),
-				new Step("验证elasticsearch启动状态"),
-				new Step("安装完成"));
+				new Step("elastic.install.step1"),
+				new Step("elastic.install.step2"),
+				new Step("elastic.install.step3"),
+				new Step("elastic.install.step4"),
+				new Step("elastic.install.step5"),
+				new Step("elastic.install.step6"),
+				new Step("elastic.install.step7"),
+				new Step("elastic.install.step8"));
 		// @formatter:on
 		int curr = 0;
 
@@ -85,7 +85,7 @@ public class ElasticsearchService extends AbstractInstaller {
 					if (pkg == null) {
 						var f = Download.download(PATH + tar, "pkg/" + tar);
 						pkg = new NctigbaEnv().setPath(f.getCanonicalPath()).setType(type.ELASTICSEARCH_PKG);
-						addMsg(wsSession, steps, curr, "安装包下载成功");
+						addMsg(wsSession, steps, curr, "elastic.install.download.success");
 						save(pkg);
 					}
 					session.upload(pkg.getPath(), tar);
@@ -133,7 +133,7 @@ public class ElasticsearchService extends AbstractInstaller {
 					HttpUtil.get("http://" + env.getHost().getPublicIp() + ":" + env.getPort());
 				} catch (Exception e) {
 					if (i == 9)
-						throw new RuntimeException("elasticsearch 启动失败");
+						throw new RuntimeException("elastic.install.start.fail");
 				}
 			}
 
@@ -142,7 +142,7 @@ public class ElasticsearchService extends AbstractInstaller {
 			envMapper.insert(env);
 			sendMsg(wsSession, steps, curr, status.DONE);
 		} catch (Exception e) {
-			steps.get(curr).setState(status.ERROR).getMsg().add(e.getMessage());
+			steps.get(curr).setState(status.ERROR).add(e.getMessage());
 			wsUtil.sendText(wsSession, JSONUtil.toJsonStr(steps));
 			var sw = new StringWriter();
 			try (var pw = new PrintWriter(sw);) {
@@ -155,11 +155,11 @@ public class ElasticsearchService extends AbstractInstaller {
 	public void uninstall(WsSession wsSession, String id) {
 		// @formatter:off
 		var steps = Arrays.asList(
-				new Step("初始化"),
-				new Step("连接主机"),
-				new Step("查找elasticsearch进程号"),
-				new Step("停止elasticsearch"),
-				new Step("卸载完成"));
+				new Step("elastic.uninstall.step1"),
+				new Step("elastic.uninstall.step2"),
+				new Step("elastic.uninstall.step3"),
+				new Step("elastic.uninstall.step4"),
+				new Step("elastic.uninstall.step5"));
 		// @formatter:on
 		var curr = 0;
 
@@ -192,7 +192,7 @@ public class ElasticsearchService extends AbstractInstaller {
 				sendMsg(wsSession, steps, curr, status.DONE);
 			}
 		} catch (Exception e) {
-			steps.get(curr).setState(status.ERROR).getMsg().add(e.getMessage());
+			steps.get(curr).setState(status.ERROR).add(e.getMessage());
 			wsUtil.sendText(wsSession, JSONUtil.toJsonStr(steps));
 			var sw = new StringWriter();
 			try (var pw = new PrintWriter(sw);) {

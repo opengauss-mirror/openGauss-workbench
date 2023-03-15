@@ -120,7 +120,8 @@ public class EsLogSearchUtils {
      *
      * @return logCount long
      */
-    public SearchResponse<HashMap> queryLogCounts(EsSearchQuery queryParam) {
+    @SuppressWarnings("rawtypes")
+	public SearchResponse<HashMap> queryLogCounts(EsSearchQuery queryParam) {
         SearchResponse<HashMap> response;
         try {
             var client = clientProvider.client();

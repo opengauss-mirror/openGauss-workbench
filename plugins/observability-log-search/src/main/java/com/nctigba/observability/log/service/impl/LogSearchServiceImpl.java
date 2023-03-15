@@ -57,7 +57,8 @@ public class LogSearchServiceImpl implements LogSearchService {
     private ElasticsearchProvider client;
 
 
-    @Override
+    @SuppressWarnings("rawtypes")
+	@Override
     public List<LogDistroMapDTO> getLogDistroMap(EsSearchQuery queryParam) {
         try {
             int nodeIdCount = 0;
@@ -156,7 +157,7 @@ public class LogSearchServiceImpl implements LogSearchService {
         }
     }
 
-    @SuppressWarnings({"rawtypes", "unchecked"})
+    @SuppressWarnings({"rawtypes"})
     @Override
     public LogInfoDTO getLogByQuery(EsSearchQuery queryParam) {
         int nodeIdCount = 0;

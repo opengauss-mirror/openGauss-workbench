@@ -1,4 +1,4 @@
-package com.nctigba.observability.instance.util;
+package com.nctigba.observability.sql.util;
 
 import java.util.Locale;
 
