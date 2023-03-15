@@ -1,33 +1,61 @@
 package com.nctigba.observability.instance.entity;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
 @Data
 @Accessors(chain = true)
 @TableName(value = "param_info", autoResultMap = true)
+@NoArgsConstructor
 public class ParamInfo {
-    @TableId(type = IdType.AUTO)
-    Integer id;
-    @TableField("paramType")
-    String paramType;
-    @TableField("paramName")
-    String paramName;
-    @TableField("paramDetail")
-    String paramDetail;
-    @TableField("suggestValue")
-    String suggestValue;
-    @TableField("defaultValue")
-    String defaultValue;
-    @TableField("unit")
-    String unit;
-    @TableField("suggestExplain")
-    String suggestExplain;
-    @TableField("diagnosisRule")
-    String diagnosisRule;
+	@TableId(type = IdType.AUTO)
+	Integer id;
+	@TableField("paramType")
+	type paramType;
+	@TableField("paramName")
+	String paramName;
+	@TableField("paramDetail")
+	String paramDetail;
+	@TableField("suggestValue")
+	String suggestValue;
+	@TableField("defaultValue")
+	String defaultValue;
+	@TableField("unit")
+	String unit;
+	@TableField("suggestExplain")
+	String suggestExplain;
+	@TableField("diagnosisRule")
+	String diagnosisRule;
 
+	public enum type {
+		OS,
+		DB
+	}
+
+	public static List<ParamInfo> parse(ResultSet rs) throws SQLException {
+		var list = new ArrayList<ParamInfo>();
+		while (rs.next()) {
+			var info = new ParamInfo();
+			info.setId(rs.getInt("id"));
+			info.setParamName(rs.getString("paramName"));
+			info.setParamType(type.valueOf(rs.getString("paramType")));
+			info.setParamDetail(rs.getString("paramDetail"));
+			info.setSuggestValue(rs.getString("suggestValue"));
+			info.setDefaultValue(rs.getString("defaultValue"));
+			info.setUnit(rs.getString("unit"));
+			info.setSuggestExplain(rs.getString("suggestExplain"));
+			list.add(info);
+		}
+		return list;
+	}
 }
