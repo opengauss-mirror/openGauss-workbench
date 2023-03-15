@@ -69,7 +69,7 @@
 
 <script setup>
 import { nextTick, reactive, ref, computed } from 'vue'
-import { addJdbc, editJdbc, hostListAll } from '@/api/task'
+import { addJdbc, hostListAll } from '@/api/task'
 import { Message } from '@arco-design/web-vue'
 import JdbcInstance from './JdbcInstance.vue'
 
@@ -228,29 +228,16 @@ const submit = () => {
       param.nodes.push(item)
     })
 
-    if (data.form.clusterId) {
-      editJdbc(data.form.clusterId, param).then((res) => {
-        data.loading = false
-        if (Number(res.code) === 200) {
-          Message.success({ content: `Modified success` })
-          emits(`finish`)
-        }
-        close()
-      }).finally(() => {
-        data.loading = false
-      })
-    } else {
-      addJdbc(param).then((res) => {
-        data.loading = false
-        if (Number(res.code) === 200) {
-          Message.success({ content: `Create success` })
-          emits(`finish`)
-        }
-        close()
-      }).finally(() => {
-        data.loading = false
-      })
-    }
+    addJdbc(param).then((res) => {
+      data.loading = false
+      if (Number(res.code) === 200) {
+        Message.success({ content: `Create success` })
+        emits(`finish`)
+      }
+      close()
+    }).finally(() => {
+      data.loading = false
+    })
   })
 }
 const close = () => {
@@ -340,86 +327,20 @@ const handleDelete = (val) => {
   })
 }
 
-const getProps = (url) => {
-  const result = []
-  if (!url) {
-    result.push({
-      name: '',
-      value: ''
-    })
-    return result
-  }
-  const urlSuffix = url.split('?')[1]
-  if (!urlSuffix) {
-    result.push({
-      name: '',
-      value: ''
-    })
-    return result
-  }
-  const extendPropsArr = urlSuffix.split('&')
-  extendPropsArr.forEach((item) => {
-    const itemArr = item.split('=')
-    const temp = {
-      name: itemArr[0],
-      value: itemArr[1]
-    }
-    result.push(temp)
-  })
-  if (!result.length) {
-    result.push({
-      name: '',
-      value: ''
-    })
-  }
-  return result
-}
-
-const open = (type, editData) => {
+const open = () => {
   data.show = true
   data.loading = false
   data.testLoading = false
   getHostList()
-  if (type === 'update' && data) {
-    data.title = '修改数据源'
-    if (editData) {
-      Object.assign(data.form, {
-        clusterId: editData.clusterId,
-        name: editData.name,
-        nodes: []
-      })
-      editData.nodes.forEach((item) => {
-        const temp = {
-          id: item.clusterNodeId,
-          url: item.url,
-          ip: item.ip,
-          port: Number(item.port),
-          username: item.username,
-          password: item.password,
-          props: getProps(item.url),
-          status: -1
-        }
-        data.form.nodes.push(temp)
-      })
-      const nameByNode = getNameByNode(data.form)
-      if (nameByNode === data.form.name) {
-        data.form.isCustomName = false
-      }
-      nextTick(() => {
-        data.activeTab = data.form.nodes[0].id
-      })
-    }
-  } else {
-    data.title = '新增数据源'
-    Object.assign(data.form, {
-      clusterId: '',
-      name: '',
-      dbType: 'mysql',
-      nodes: [],
-      status: -1
-    })
-    handleAdd()
-  }
+  data.title = '新增数据源'
+  Object.assign(data.form, {
+    clusterId: '',
+    name: '',
+    dbType: 'mysql',
+    nodes: [],
+    status: -1
+  })
+  handleAdd()
 }
 
 const delRefObj = () => {
