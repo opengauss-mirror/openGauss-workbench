@@ -116,10 +116,3 @@ html {
     top: 2px;
   }
 }
-
-.el-dropdown__popper {
-  --el-dropdown-menuItem-hover-fill: var(--color-fill-2);
-}
-.el-dropdown-menu__item:not(.is-disabled):focus {
-  color: var(--el-text-color-regular);
-}

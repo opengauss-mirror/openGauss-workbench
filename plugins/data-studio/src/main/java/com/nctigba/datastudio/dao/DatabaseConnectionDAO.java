@@ -28,11 +28,11 @@ public class DatabaseConnectionDAO implements ApplicationRunner {
     private JdbcTemplate jdbcTemplate;
 
     public void insertTable(DatabaseConnectionDO databaseConnectionDO) {
-        jdbcTemplate.execute("insert into DATABASELINK(type,name,driver,ip,port,dataname,username,userpassword,webuser) values('" + databaseConnectionDO.getType() + "','" + databaseConnectionDO.getName() + "','" + databaseConnectionDO.getDriver() + "','" + databaseConnectionDO.getIp() + "','" + databaseConnectionDO.getPort() + "','" + databaseConnectionDO.getDataName() + "','" + databaseConnectionDO.getUserName() + "','" + databaseConnectionDO.getPassword() + "','" + databaseConnectionDO.getWebUser() + "');");
+        jdbcTemplate.execute("insert into DATABASELINK(type,name,driver,ip,port,dataname,username,userpassword,webuser,edition) values('" + databaseConnectionDO.getType() + "','" + databaseConnectionDO.getName() + "','" + databaseConnectionDO.getDriver() + "','" + databaseConnectionDO.getIp() + "','" + databaseConnectionDO.getPort() + "','" + databaseConnectionDO.getDataName() + "','" + databaseConnectionDO.getUserName() + "','" + databaseConnectionDO.getPassword() + "','" + databaseConnectionDO.getWebUser() +"','" + databaseConnectionDO.getEdition() + "');");
     }
 
     public void updateTable(DatabaseConnectionDO databaseConnectionDO) {
-        jdbcTemplate.execute("UPDATE DATABASELINK SET type= '" + databaseConnectionDO.getType() + "' ,driver = '" + databaseConnectionDO.getDriver() + "',ip= '" + databaseConnectionDO.getIp() + "' ,port = '" + databaseConnectionDO.getPort() + "',dataName = '" + databaseConnectionDO.getDataName() + "',username ='" + databaseConnectionDO.getUserName() + "' ,userpassword ='" + databaseConnectionDO.getPassword() + "'  WHERE name = '" + databaseConnectionDO.getName() + "'  and webuser = '" + databaseConnectionDO.getWebUser() + "';");
+        jdbcTemplate.execute("UPDATE DATABASELINK SET type= '" + databaseConnectionDO.getType() + "' ,driver = '" + databaseConnectionDO.getDriver() + "',ip= '" + databaseConnectionDO.getIp() + "' ,port = '" + databaseConnectionDO.getPort() + "',dataName = '" + databaseConnectionDO.getDataName() + "',username ='" + databaseConnectionDO.getUserName() + "' ,userpassword ='" + databaseConnectionDO.getPassword() + "' ,edition ='" + databaseConnectionDO.getEdition()+ "'  WHERE name = '" + databaseConnectionDO.getName() + "'  and webuser = '" + databaseConnectionDO.getWebUser() + "';");
     }
 
     public List<DatabaseConnectionDO> selectTable(String webUser) {
@@ -91,6 +91,7 @@ public class DatabaseConnectionDAO implements ApplicationRunner {
             databaseConnectionDO.setUserName((String) data.get("username"));
             databaseConnectionDO.setPassword((String) data.get("userpassword"));
             databaseConnectionDO.setWebUser((String) data.get("webuser"));
+            databaseConnectionDO.setEdition((String) data.get("edition"));
             return databaseConnectionDO;
 
         }
@@ -131,6 +132,7 @@ public class DatabaseConnectionDAO implements ApplicationRunner {
             databaseConnectionDO.setDataName((String) data.get("dataname"));
             databaseConnectionDO.setUserName((String) data.get("username"));
             databaseConnectionDO.setPassword((String) data.get("userpassword"));
+            databaseConnectionDO.setEdition((String) data.get("edition"));
             return databaseConnectionDO;
 
         }
@@ -138,6 +140,6 @@ public class DatabaseConnectionDAO implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
-        jdbcTemplate.execute("create table if not exists DATABASELINK(id INTEGER PRIMARY KEY,type varchar(20),name varchar(20),driver varchar(100),ip varchar(50),port varchar(20),dataName varchar(40),username varchar(40),userpassword varchar(40) ,webuser varchar(40), UNIQUE(name));");
+        jdbcTemplate.execute("create table if not exists DATABASELINK(id INTEGER PRIMARY KEY,type varchar(20),name varchar(20),driver varchar(100),ip varchar(50),port varchar(20),dataName varchar(40),username varchar(40),userpassword varchar(40) ,webuser varchar(40),edition  varchar(300), UNIQUE(name));");
     }
 }

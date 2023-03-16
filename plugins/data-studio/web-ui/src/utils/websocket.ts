@@ -1,3 +1,4 @@
+import { wsHeartbeatTime } from '@/config';
 export default class WebSocketClass {
   // ws = null;
   ws: WebSocket;
@@ -76,7 +77,7 @@ export default class WebSocketClass {
     }
   }
 
-  sendPing(time = 1000 * 60 * 15, ping = 'ping') {
+  sendPing(time = wsHeartbeatTime, ping = 'ping') {
     clearInterval(this.setIntervalWesocketPush);
     this.ws.send(ping);
     this.setIntervalWesocketPush = setInterval(() => {

@@ -200,17 +200,7 @@ public class DebugUtils {
                     list.add(Strings.EMPTY);
                     continue;
                 }
-                if (str.equals("t")) {
-                    list.add(true);
-                } else if (str.equals("f")) {
-                    list.add(false);
-                } else {
-                    if ("vartype".equals(column) || "typname".equals(column)) {
-                        list.add(ParamTypeEnum.parseType(str));
-                    } else {
-                        list.add(str);
-                    }
-                }
+                list.add(str);
             }
             dataList.add(list);
         }
