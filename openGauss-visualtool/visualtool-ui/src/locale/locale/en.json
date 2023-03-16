@@ -217,6 +217,10 @@
             "else2": "Remember",
             "currentStatus": "Current status",
             "ipAddress": "Intranet IP",
+            "name": "name",
+            "namePlaceholder": "Please enter the Host Name",
+            "tags": "label",
+            "tagsPlaceholder": "Please enter or select a label",
             "5mphy3snvg80": "available",
             "5mphy3snwq40": "Not available",
             "5mphy3snwxs0": "cancel",
@@ -238,6 +242,8 @@
             "5mphy3snzrk0": "Edit Host"
         },
         "AddHostUser": {
+            "else1": "Confirm",
+            "else2": "The system will save the password of the user. Do you want to save the password?",
             "rootPassword": "RootPassword",
             "5mphzt9pc0g0": "Host",
             "5mphzt9pdak0": "Please enter the root password",
@@ -267,6 +273,9 @@
             "5mpi1bru2yo0": "delete",
             "5mpi1bru3dk0": "User Management",
             "5mpi1bru3vk0": "User name",
+            "isSudo": "Whether you have the root permission",
+            "yes": "Y",
+            "no": "N",
             "5mpi1bru4c00": "operation"
         },
         "AddAz": {
@@ -452,10 +461,10 @@
             "5mpivn7fxrk0": "Number of queries"
         },
         "EditSysSettings": {
-          "5mpivn7fwjc1": "Edit System Setting",
-          "5mpivn7fwjc2": "File Upload Path",
-          "5mpivn7fwjc6": "Please input file upload path",
-          "5mpivn7fwjc9": "File path is not correct"
+            "5mpivn7fwjc1": "Edit System Setting",
+            "5mpivn7fwjc2": "File Upload Path",
+            "5mpivn7fwjc6": "Please input file upload path",
+            "5mpivn7fwjc9": "File path is not correct"
         }
     },
     "user": {
@@ -619,9 +628,26 @@
     "physical": {
         "index": {
             "ipAddress": "IP address",
-            "5mphf11rr080": "Add Host",
+            "ipAddressPlaceholder": "Enter the IP address for query",
+            "batchDel": "delete",
+            "hostLabel": "label",
+            "hostLabelPlaceholder": "Please select the label for query",
+            "os": "system",
+            "osPlaceholder": "Select an operating system",
+            "privateIp": "Intranet IP",
+            "publicIp": "External IP",
+            "cpuArch": "arch",
+            "hostName": "HostName",
+            "net": "network",
+            "cpu": "CPU usage",
+            "memory": "Memory usage",
+            "disk": "Disk usage",
+            "baseInfo": "BaseInfo",
+            "diskInfo": "DiskInfo",
+            "detail": "Detail",
+            "5mphf11rr080": "Add",
             "5mphf11syw80": "test",
-            "5mphf11szdk0": "search...",
+            "5mphf11szdk0": "search",
             "5mphf11szks0": "User Management",
             "5mphf11szqo0": "edit",
             "5mphf11szws0": "Make sure to delete？",
@@ -663,7 +689,7 @@
             "5oxhkhimx5c0": "Test connectivity",
             "5oxhkhimxbg0": "Confirm",
             "5oxhkhimxho0": "Cluster Name",
-			"isCustomName": "isCustom",
+            "isCustomName": "isCustom",
             "customNamePlaceholder": "The cluster name is generated based on the instance information",
             "5oxhkhimxno0": "Please enter an instance name",
             "5oxhkhimxto0": "Database type",
@@ -744,7 +770,8 @@
             "else2": "Port",
             "else3": "Node",
             "else4": "unknown",
-            "5oxhv6qcm6w0": "Detection system",
+            "else5": "system",
+            "5oxhv6qcm6w0": "To detect",
             "5oxhv6qcnak0": "Master",
             "5oxhv6qcnnk0": "Slave",
             "5oxhv6qcnuk0": "Connection number",

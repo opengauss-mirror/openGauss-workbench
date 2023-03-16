@@ -22,6 +22,12 @@
             </a-form-item>
         </a-form>
     </a-modal>
+    <a-modal width="auto" v-model:visible="userData.confirmVisible" @ok="handleConfirm" @cancel="handleCancel">
+        <template #title>
+            {{ $t('components.AddHostUser.else1') }}
+        </template>
+        <div>{{ $t('components.AddHostUser.else2') }}</div>
+    </a-modal>
 </template>
 <script lang="ts" setup>
 import { KeyValue } from '@/types/global'
@@ -44,7 +50,8 @@ const userData = reactive({
         rootPassword: '',
         username: '',
         password: ''
-    }
+    },
+    confirmVisible: false
 })
 
 const emits = defineEmits([`finish`])
@@ -54,42 +61,51 @@ const formRef = ref<null | FormInstance>(null)
 const handleBeforeOk = () => {
     formRef.value?.validate().then(async result => {
         if (!result) {
-            submitLoading.value = true
-            const rootPwd = await encryptPassword(userData.formData.rootPassword)
-            const userPwd = await encryptPassword(userData.formData.password)
-            const param = Object.assign({}, userData.formData)
-            param.rootPassword = rootPwd
-            param.password = userPwd
-            if (userData.formData.id) {
-                // edit
-                editHostUser(userData.formData.id, param).then(() => {
-                    Message.success({ content: `Modified success` })
-                    emits(`finish`)
-                    close()
-                }).finally(() => {
-                    submitLoading.value = false
-                })
-            } else {
-                const param = {
-                    hostId: userData.formData.hostId,
-                    rootPassword: rootPwd,
-                    username: userData.formData.username,
-                    password: userPwd
-                }
-                addHostUser(param).then(() => {
-                    Message.success({ content: `Create success` })
-                    emits(`finish`)
-                    close()
-                }).finally(() => {
-                    submitLoading.value = false
-                })
-            }
+            userData.confirmVisible = true
         }
     })
 }
 
 const close = () => {
     userData.show = false
+    userData.confirmVisible = false
+}
+
+const handleConfirm = async () => {
+    submitLoading.value = true
+    const rootPwd = await encryptPassword(userData.formData.rootPassword)
+    const userPwd = await encryptPassword(userData.formData.password)
+    const param = Object.assign({}, userData.formData)
+    param.rootPassword = rootPwd
+    param.password = userPwd
+    if (userData.formData.id) {
+        // edit
+        editHostUser(userData.formData.id, param).then(() => {
+            Message.success({ content: `Modified success` })
+            emits(`finish`)
+            close()
+        }).finally(() => {
+            submitLoading.value = false
+        })
+    } else {
+        const param = {
+            hostId: userData.formData.hostId,
+            rootPassword: rootPwd,
+            username: userData.formData.username,
+            password: userPwd
+        }
+        addHostUser(param).then(() => {
+            Message.success({ content: `Create success` })
+            emits(`finish`)
+            close()
+        }).finally(() => {
+            submitLoading.value = false
+        })
+    }
+}
+
+const handleCancel = () => {
+    userData.confirmVisible = false
 }
 
 const open = (type: string, hostData: KeyValue, data?: KeyValue) => {

@@ -9,7 +9,7 @@ const installStore = defineStore('install', {
         installType: 'install',
         installOs: 'CENTOS_X86_64',
         openGaussVersion: OpenGaussVersionEnum.LITE,
-        openGaussVersionNum: '3.0.0',
+        openGaussVersionNum: '5.0.0',
         installMode: InstallModeEnum.OFF_LINE,
         packageId: '',
         packagePath: '',

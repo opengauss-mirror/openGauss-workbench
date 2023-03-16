@@ -30,6 +30,9 @@
 
     </template>
     <a-form :model="data.formData" ref="formRef" auto-label-width :rules="formRules">
+      <a-form-item field="name" :label="$t('components.AddHost.name')" validate-trigger="blur">
+        <a-input v-model="data.formData.name" :placeholder="$t('components.AddHost.namePlaceholder')"></a-input>
+      </a-form-item>
       <a-form-item field="privateIp" :label="$t('components.AddHost.ipAddress')" validate-trigger="blur">
         <a-input v-model="data.formData.privateIp" :placeholder="$t('components.AddHost.5mphy3snxdo0')"></a-input>
       </a-form-item>
@@ -44,6 +47,14 @@
           allow-clear />
         <a-checkbox style="width: 150px" v-model="data.formData.isRemember">{{ $t('components.AddHost.else2')
         }}</a-checkbox>
+      </a-form-item>
+      <a-form-item field="tags" :label="$t('components.AddHost.tags')">
+        <a-select :loading="data.tagsLoading" v-model="data.formData.tags"
+          :placeholder="$t('components.AddHost.tagsPlaceholder')" allow-create multiple allow-clear>
+          <a-option v-for="item in data.tagsList" :key="item.value" :value="item.value">{{
+            item.label
+          }}</a-option>
+        </a-select>
       </a-form-item>
       <a-form-item :label="$t('components.AddHost.5mphy3snyg40')">
         <a-select :loading="data.azListLoading" v-model="data.formData.azId"
@@ -64,7 +75,7 @@
 import { KeyValue } from '@/types/global'
 import { FormInstance } from '@arco-design/web-vue/es/form'
 import { nextTick, reactive, ref, toRaw, computed } from 'vue'
-import { addHost, editHost, hostPing, azListAll } from '@/api/ops'
+import { addHost, editHost, hostPing, azListAll, hostTagListAll } from '@/api/ops'
 import { Message } from '@arco-design/web-vue'
 import { useI18n } from 'vue-i18n'
 import { encryptPassword } from '@/utils/jsencrypt'
@@ -83,13 +94,17 @@ const data = reactive<KeyValue>({
   status: hostStatusEnum.unTest,
   azListLoading: false,
   azList: [],
+  tagsLoading: false,
+  tagsList: [],
   formData: {
+    name: '',
     hostId: '',
     privateIp: '',
     publicIp: '',
     port: 22,
     password: '',
     isRemember: false,
+    tags: [],
     azId: '',
     remark: ''
   }
@@ -97,6 +112,21 @@ const data = reactive<KeyValue>({
 
 const formRules = computed(() => {
   return {
+    name: [
+      { required: true, 'validate-trigger': 'blur', message: t('components.AddHost.namePlaceholder') },
+      {
+        validator: (value: any, cb: any) => {
+          return new Promise(resolve => {
+            if (!value.trim()) {
+              cb(t('database.JdbcInstance.5oxhtcbobtc0'))
+              resolve(false)
+            } else {
+              resolve(true)
+            }
+          })
+        }
+      }
+    ],
     privateIp: [{ required: true, 'validate-trigger': 'blur', message: t('components.AddHost.5mphy3snxdo0') }],
     publicIp: [{ required: true, 'validate-trigger': 'blur', message: t('components.AddHost.5mphy3snxmw0') }],
     port: [
@@ -209,9 +239,28 @@ const getAZList = () => new Promise(resolve => {
   })
 })
 
+const getAllTag = () => {
+  data.tagsLoading = true
+  hostTagListAll().then((res: KeyValue) => {
+    if (Number(res.code) === 200) {
+      data.tagsList = []
+      res.data.forEach((item: KeyValue) => {
+        const temp = {
+          label: item.name,
+          value: item.name
+        }
+        data.tagsList.push(temp)
+      })
+    }
+  }).finally(() => {
+    data.tagsLoading = false
+  })
+}
+
 const open = (type: string, editData?: KeyValue) => {
   data.show = true
   getAZList()
+  getAllTag()
   data.status = hostStatusEnum.unTest
   data.loading = false
   if (type === 'update' && data) {

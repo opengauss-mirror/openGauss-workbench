@@ -1,45 +1,63 @@
 <template>
   <div class="jdbc-instance-table">
-    <div v-for="(node, index) in data.nodeList" :key="index">
-      <div class="node-detail-c">
+    <a-table :data="data.nodeList" :columns="columns" :show-header="false" :pagination="false">
+      <template #baseInfo="{ record }">
         <div class="flex-col-start mr">
-          <a-tag class="mb-s" color="green" bordered v-if="node.os">{{ node.os }}</a-tag>
-          <a-tag class="cursor-c mb-s" bordered v-else @click="handleGetOs(node.ip)">{{
+          <!-- <a-tag class="mb-s" color="green" bordered v-if="record.os">{{ record.os }}</a-tag>
+          <a-tag class="cursor-c mb-s" bordered v-else @click="handleGetOs(record.ip)">{{
             $t('database.JdbcNodeTable.5oxhv6qcm6w0')
-          }}</a-tag>
+          }}</a-tag> -->
           <div class="flex-row mb-s">
-            <div class="mr-s" style="width: 160px;">{{ $t('database.JdbcNodeTable.else1') }}: {{ node.ip }}</div>
-            <icon-code-square :size="25" style="cursor: pointer;" @click="showTerminal(node.ip)" />
+            <div class="mr-s">{{ $t('database.JdbcNodeTable.else5') }}:</div>
+            <div v-if="record.os">{{ record.os }}</div>
+            <a-button v-else type="outline" size="mini" @click="handleGetOs(record.ip)">{{
+              $t('database.JdbcNodeTable.5oxhv6qcm6w0') }}
+            </a-button>
           </div>
-          <div>{{ $t('database.JdbcNodeTable.else2') }}: {{ node.port }}</div>
+          <div class="flex-row mb-s">
+            <div class="mr-s" style="max-width: 140px;">{{ $t('database.JdbcNodeTable.else1') }}: {{ record.ip }}</div>
+            <icon-code-square :size="25" style="cursor: pointer;" @click="showTerminal(record.ip)" />
+          </div>
+          <div>{{ $t('database.JdbcNodeTable.else2') }}: {{ record.port }}</div>
         </div>
+      </template>
+      <template #status="{ record }">
         <div class="flex-row mr">
-          <div class="node-role mr">{{ getNodeRole(node.role) }}</div>
-          <div :class="'node-state-c ' + getNodeStateColor(node.state)"></div>
+          <div class="node-role mr-s">{{ getNodeRole(record.role) }}</div>
+          <div :class="'node-state-c ' + getNodeStateColor(record.state)"></div>
         </div>
+      </template>
+      <template #connectNum="{ record }">
         <div class="flex-col mr">
-          <div class="monitor-data">{{ node.connNum ? node.connNum : '--' }}</div>
+          <div class="monitor-data">{{ record.connNum ? record.connNum : '--' }}</div>
           <div>{{ $t('database.JdbcNodeTable.5oxhv6qcnuk0') }}</div>
         </div>
+      </template>
+      <template #qps="{ record }">
         <div class="flex-col mr">
-          <div class="monitor-data">{{ node.qps ? node.qps : '--' }}</div>
+          <div class="monitor-data">{{ record.qps ? record.qps : '--' }}</div>
           <div>qps</div>
         </div>
+      </template>
+      <template #tps="{ record }">
         <div class="flex-col mr">
-          <div class="monitor-data">{{ node.tps ? node.tps : '--' }}</div>
+          <div class="monitor-data">{{ record.tps ? record.tps : '--' }}</div>
           <div>tps</div>
         </div>
+      </template>
+      <template #tableSpaceUsed="{ record }">
         <div class="flex-col mr" style="width: 130px;">
-          <div class="monitor-data">{{ node.tableSpaceUsed ? node.tableSpaceUsed : '--' }}MB</div>
+          <div class="monitor-data">{{ record.tableSpaceUsed ? record.tableSpaceUsed : '--' }}MB</div>
           <div>{{ $t('database.JdbcNodeTable.5oxhv6qco4c0') }}</div>
         </div>
+      </template>
+      <template #memoryUsed="{ record }">
         <div class="flex-col mr" style="width: 120px;">
-          <div class="monitor-data">{{ node.memoryUsed ? node.memoryUsed : '--' }}GB</div>
+          <div class="monitor-data">{{ record.memoryUsed ? record.memoryUsed : '--' }}GB</div>
           <div>{{ $t('database.JdbcNodeTable.5oxhv6qcobk0') }}</div>
         </div>
-      </div>
-      <a-divider v-if="index !== props.nodes.length - 1"></a-divider>
-    </div>
+      </template>
+    </a-table>
     <host-pwd-dlg ref="hostPwdRef" @finish="handleShowTerminal($event)"></host-pwd-dlg>
     <host-terminal ref="hostTerminalRef" @finish="handleFinish()"></host-terminal>
   </div>
@@ -57,6 +75,16 @@ const data = reactive<KeyValue>({
   socketArr: [],
   nodeList: []
 })
+
+const columns = computed(() => [
+  { slotName: 'baseInfo', width: 370 },
+  { slotName: 'status', width: 290 },
+  { slotName: 'connectNum', width: 180 },
+  { slotName: 'qps', width: 180 },
+  { slotName: 'tps', width: 180 },
+  { slotName: 'tableSpaceUsed', width: 180 },
+  { slotName: 'memoryUsed', width: 180 }
+])
 
 const props = defineProps({
   nodes: {
@@ -131,9 +159,14 @@ const openNodeMonitor = (nodeData: KeyValue, index: number) => {
         data.nodeList[index].state = 0
         websocket.destroy()
       } else {
-        data.nodeList[index].state = 1
-        // websocket push socketArr
-        data.socketArr.push(websocket)
+        if (res.data.res) {
+          data.nodeList[index].state = 1
+          // websocket push socketArr
+          data.socketArr.push(websocket)
+        } else {
+          data.nodeList[index].state = 0
+          websocket.destroy()
+        }
       }
     }).catch(() => {
       data.nodeList[index].state = 0
@@ -188,44 +221,39 @@ const handleFinish = () => {
   padding: 10px;
 }
 
-.node-detail-c {
+.cursor-c {
+  cursor: pointer;
+}
+
+.node-role {
+  height: 40px;
+  padding: 10px;
   display: flex;
-  justify-content: space-around;
+  justify-content: center;
+  align-items: center;
+  background-color: var(--color-text-4);
+}
 
-  .cursor-c {
-    cursor: pointer;
-  }
+.node-state-c {
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+}
 
-  .node-role {
-    height: 40px;
-    padding: 10px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background-color: var(--color-text-4);
-  }
+.un-check {
+  background-color: gray;
+}
 
-  .node-state-c {
-    width: 15px;
-    height: 15px;
-    border-radius: 50%;
-  }
+.check-pass {
+  background-color: green;
+}
 
-  .un-check {
-    background-color: gray;
-  }
+.check-error {
+  background-color: red
+}
 
-  .check-pass {
-    background-color: green;
-  }
-
-  .check-error {
-    background-color: red
-  }
-
-  .monitor-data {
-    font-size: 22px;
-    margin-bottom: 10px;
-  }
+.monitor-data {
+  font-size: 22px;
+  margin-bottom: 10px;
 }
 </style>

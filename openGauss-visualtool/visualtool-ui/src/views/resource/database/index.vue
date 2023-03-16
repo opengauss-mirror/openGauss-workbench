@@ -98,11 +98,11 @@ const handleExpand = (rowKey: string | number) => {
 }
 
 const columns = computed(() => [
-  { title: t('database.index.5oxhr0qz48w0'), dataIndex: 'name' },
-  { title: t('database.index.5oxhr0qz4fs0'), dataIndex: 'dbType' },
-  { title: t('database.index.5oxhr0qz4no0'), dataIndex: 'status', slotName: 'status' },
+  { title: t('database.index.5oxhr0qz48w0'), dataIndex: 'name', width: 350, ellipsis: true, tooltip: true },
+  { title: t('database.index.5oxhr0qz4fs0'), dataIndex: 'dbType', width: 355 },
+  { title: t('database.index.5oxhr0qz4no0'), dataIndex: 'status', width: 195, slotName: 'status' },
   { title: t('database.index.5oxhr0qz4zk0'), dataIndex: 'updateTime' },
-  { title: t('database.index.5oxhr0qz58o0'), slotName: 'operation', width: 350 }
+  { title: t('database.index.5oxhr0qz58o0'), slotName: 'operation', width: 370 }
 ])
 
 const filter = reactive({
@@ -276,7 +276,7 @@ const pageSizeChange = (e: number) => {
       padding: 20px;
       box-sizing: border-box;
       padding: 8px;
-      height: calc(100vh - 138px - 40px);
+      height: calc(100vh - 76px - 40px);
 
       .top-label {
         width: 200px

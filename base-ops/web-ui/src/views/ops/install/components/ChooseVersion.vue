@@ -80,7 +80,7 @@ onMounted(() => {
     versionStore.setInstallContext({
       installType: data.installType,
       openGaussVersion: OpenGaussVersionEnum.MINIMAL_LIST,
-      openGaussVersionNum: '3.0.0'
+      openGaussVersionNum: '5.0.0'
     })
   }
 })
@@ -98,7 +98,7 @@ const chooseVer = (ver: OpenGaussVersionEnum) => {
   currVersion.value = ver
   versionStore.setInstallContext({
     openGaussVersion: ver,
-    openGaussVersionNum: '3.0.0',
+    openGaussVersionNum: '5.0.0',
     packagePath: '',
     packageName: '',
     installPackagePath: ''
