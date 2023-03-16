@@ -36,13 +36,13 @@ public class PrometheusService extends AbstractInstaller {
 	public void install(WsSession wsSession, String hostId, String rootPassword, Integer promport) {
 		// @formatter:off
 		var steps = Arrays.asList(
-				new Step("开始安装"),
-				new Step("检查Prometheus安装环境"),
-				new Step("检查用户信息, 连接主机"),
-				new Step("安装Prometheus"),
-				new Step("启动prometheus"),
-				new Step("验证prometheus启动状态"),
-				new Step("安装完成"));
+				new Step("prominstall.step1"),
+				new Step("prominstall.step2"),
+				new Step("prominstall.step3"),
+				new Step("prominstall.step4"),
+				new Step("prominstall.step5"),
+				new Step("prominstall.step6"),
+				new Step("prominstall.step7"));
 		// @formatter:on
 		var curr = 0;
 		var env = new NctigbaEnv().setHostid(hostId).setPort(promport).setUsername(PROMETHEUS_USER)
@@ -53,7 +53,7 @@ public class PrometheusService extends AbstractInstaller {
 
 			if (envMapper
 					.selectOne(Wrappers.<NctigbaEnv>lambdaQuery().eq(NctigbaEnv::getType, type.PROMETHEUS)) != null)
-				throw new RuntimeException("只允许安装1个Prometheus实例");
+				throw new RuntimeException("prominstall.limit");
 
 			curr = nextStep(wsSession, steps, curr);
 			OpsHostEntity hostEntity = hostFacade.getById(env.getHostid());
@@ -78,13 +78,13 @@ public class PrometheusService extends AbstractInstaller {
 						if (pkg == null) {
 							var f = Download.download(PATH + tar, "pkg/" + tar);
 							pkg = new NctigbaEnv().setPath(f.getCanonicalPath()).setType(type.PROMETHEUS_PKG);
-							addMsg(wsSession, steps, curr, "安装包下载成功");
+							addMsg(wsSession, steps, curr, "prominstall.downloadsuccess");
 							save(pkg);
 						}
 						sshsession.upload(pkg.getPath(), tar);
-						addMsg(wsSession, steps, curr, "安装包传输成功");
+						addMsg(wsSession, steps, curr, "prominstall.uploadsuccess");
 					} else
-						addMsg(wsSession, steps, curr, "当前路径下已存在安装包，使用该安装包安装成功");
+						addMsg(wsSession, steps, curr, "prominstall.pkgexists");
 					sshsession.execute(command.TAR.parse(tar));
 				}
 				env.setPath(name);
@@ -105,7 +105,7 @@ public class PrometheusService extends AbstractInstaller {
 							throw new CustomException();
 					} catch (Exception e) {
 						if (i == 9)
-							throw new RuntimeException("prometheus 启动失败");
+							throw new RuntimeException("prominstall.promstartfail");
 					}
 				}
 
@@ -114,7 +114,7 @@ public class PrometheusService extends AbstractInstaller {
 				sendMsg(wsSession, steps, curr, status.DONE);
 			}
 		} catch (Exception e) {
-			steps.get(curr).setState(status.ERROR).getMsg().add(e.getMessage());
+			steps.get(curr).setState(status.ERROR).add(e.getMessage());
 			wsUtil.sendText(wsSession, JSONUtil.toJsonStr(steps));
 			var sw = new StringWriter();
 			try (var pw = new PrintWriter(sw);) {
@@ -215,11 +215,11 @@ scrape_configs:
 	public void uninstall(WsSession wsSession, String id) {
 		// @formatter:off
 		var steps = Arrays.asList(
-				new Step("初始化"),
-				new Step("连接主机"),
-				new Step("查找prometheus进程号"),
-				new Step("停止prometheus"),
-				new Step("卸载完成"));
+				new Step("promuninstall.step1"),
+				new Step("promuninstall.step2"),
+				new Step("promuninstall.step3"),
+				new Step("promuninstall.step4"),
+				new Step("promuninstall.step5"));
 		// @formatter:on
 		var curr = 0;
 
@@ -251,7 +251,7 @@ scrape_configs:
 				sendMsg(wsSession, steps, curr, status.DONE);
 			}
 		} catch (Exception e) {
-			steps.get(curr).setState(status.ERROR).getMsg().add(e.getMessage());
+			steps.get(curr).setState(status.ERROR).add(e.getMessage());
 			wsUtil.sendText(wsSession, JSONUtil.toJsonStr(steps));
 			var sw = new StringWriter();
 			try (var pw = new PrintWriter(sw);) {

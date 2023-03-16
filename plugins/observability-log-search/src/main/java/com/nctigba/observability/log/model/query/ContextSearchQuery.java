@@ -19,7 +19,8 @@ public class ContextSearchQuery {
     private List<String> nodeId;
     private String searchPhrase;
     private int rowCount;
-    private Date LogDate;
+    private Date startDate;
+    private Date endDate;
     private List<String> logType;
     private List<String> logLevel;
     private String scrollId;
@@ -27,4 +28,6 @@ public class ContextSearchQuery {
     private Integer aboveCount;
     @NotNull(message = "belowCount is empty")
     private Integer belowCount;
+    private List<String> sorts;
+    private String id;
 }

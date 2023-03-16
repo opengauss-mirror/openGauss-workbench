@@ -11,7 +11,7 @@
       <el-table :data="props.data" stripe max-height="300">
         <el-table-column
           type="index"
-          width="50"
+          width="60"
           align="center"
           :label="$t('paramsDialog.column.no')"
         />
@@ -29,7 +29,6 @@
         />
         <el-table-column
           prop="value"
-          width="250"
           align="center"
           :label="$t('paramsDialog.column.value')"
         >

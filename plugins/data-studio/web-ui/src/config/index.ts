@@ -25,3 +25,6 @@ export const prevTokenPersist = {
   key: 'DS_prevToken',
   storage: localStorage,
 };
+
+export const wsHeartbeatTime = 1000 * 30;
+export const httpHeartbeatTime = 1000 * 30;

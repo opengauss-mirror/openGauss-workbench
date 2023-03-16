@@ -9,7 +9,7 @@ import java.util.List;
 
 public interface DbConnectionService {
 
-    void test(DbConnectionCreateDTO request) throws Exception;
+    String test(DbConnectionCreateDTO request) throws Exception;
 
     void deleteDatabaseConnectionList(String id) throws Exception;
 

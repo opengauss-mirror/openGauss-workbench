@@ -195,9 +195,6 @@
         font-size: 15px;
         margin-right: 4px;
       }
-      .funcion-name {
-        font-size: 13px;
-      }
       &:hover {
         .funcion-name {
           background: var(--el-fill-color-light);

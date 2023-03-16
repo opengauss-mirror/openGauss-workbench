@@ -30,4 +30,6 @@ public class DatabaseConnectionDO {
     private String password;
 
     private String webUser;
+
+    private String edition;
 }

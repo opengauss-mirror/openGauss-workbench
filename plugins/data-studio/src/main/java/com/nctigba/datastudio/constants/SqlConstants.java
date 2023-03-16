@@ -82,8 +82,8 @@ public class SqlConstants {
     public static final String GET_TYPENAME_SQL = "select a.oid,a.typname from pg_type a where a.oid<9999";
     public static final String GET_DATABASE_SQL = "select datname from pg_database;";
     public static final String GET_SCHEMA_NAME_SQL = "SELECT nspname as schema_name FROM pg_namespace where nspname not in ('blockchain','snapshot','dbe_perf','pkg_service','cstore','pg_toast');";
-    public static final String GET_DATA_Connection_SQL = "select id, type , name , driver , ip, port ,dataname , username, userpassword ,webuser from DATABASELINK WHERE";
-    public static final String GET_DATA_Connection_NOT_PASSWORD_SQL = "select id, type , name , driver , ip, port ,dataname , username, '' as userpassword ,webuser from DATABASELINK WHERE";
+    public static final String GET_DATA_Connection_SQL = "select id, type , name , driver , ip, port ,dataname , username, userpassword ,webuser,edition from DATABASELINK WHERE";
+    public static final String GET_DATA_Connection_NOT_PASSWORD_SQL = "select id, type , name , driver , ip, port ,dataname , username, '' as userpassword ,webuser,edition from DATABASELINK WHERE";
     public static final String GET_DATABASELINK_COUNT_SQL = "select count(1) as count from DATABASELINK where";
 
     public static final String TABLE_DEF_SQL = "select pg_get_tabledef('";

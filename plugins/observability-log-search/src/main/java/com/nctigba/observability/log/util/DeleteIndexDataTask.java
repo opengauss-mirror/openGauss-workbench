@@ -8,18 +8,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
-
 @Component
 public class DeleteIndexDataTask {
+	@Autowired
+	private EsLogSearchUtils esLogSearchUtils;
 
-    @Autowired
-    private EsLogSearchUtils esLogSearchUtils;
-
-    @Scheduled(cron = "${taskCron.autoDeleteIndexData}")
-    public void execute() {
-        esLogSearchUtils.deleteLogInfo();
-    }
-
+	@Scheduled(cron = "${taskCron.autoDeleteIndexData}")
+	public void execute() {
+		esLogSearchUtils.deleteLogInfo();
+	}
 }

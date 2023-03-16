@@ -16,4 +16,5 @@ import java.util.List;
 public class ContextSearchInfoDTO {
     private String scrollId;
     private List<ContextSearchDTO> logs;
+    private List<String> sorts;
 }
