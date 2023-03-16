@@ -58,7 +58,7 @@
 ## 支持的服务器系统
 openEuler 20.3LTS（x86_x64，ARM），centos7.x（x86_x64）
 ## 安装步骤
-
+### 基于源码编译安装
 1、使用root用户，创建新用户og_ops，并授予sudo免密权限
 
 > + 添加用户 **useradd og_ops**
@@ -73,14 +73,38 @@ openEuler 20.3LTS（x86_x64，ARM），centos7.x（x86_x64）
 
 > servier.sh 支持参数（start|stop|restart|status）
 
-4、访问地址http://ip:9494
-## 升级步骤
+4、访问地址https://ip:9494
 
+### jar包安装
+1、创建工作目录
+> mkdir -p /ops/server/openGauss-visualtool/logs /ops/server/openGauss-visualtool/config /ops/ssl /ops/files
+
+2、将jar包传至/ops/server/openGauss-visualtool/下
+
+3、将配置文件application-temp.yml传至/ops/server/openGauss-visualtool/config/下
+
+4、将ssl文件传置/ops/ssl/下
+
+5、修改application-temp.yml文件中的数据链链接ip、port、database、dbuser、dbpassword
+
+6、给ops目录及下面所有文件修改所属用户为执行用户
+
+7、进入/ops/server/openGauss-visualtool目录，执行启动命令
+> nohup java -Xms2048m -Xmx4096m -jar /ops/server/openGauss-visualtool/visualtool-main.jar --spring.profiles.active=temp >/ops/server/openGauss-visualtool/logs/visualtool-main.out 2>&1 &
+
+## 升级步骤
+### 基于源码升级
 1、使用root用户，在项目根目录下执行upgrade.sh脚本
 
 2、使用og_ops用户，在项目根目录下执行server.sh restart启动服务
 
-3、访问地址http://ip:9494
+3、访问地址https://ip:9494
+
+### jar包升级
+1、将jar包传至/ops/server/openGauss-visualtool/下
+
+2、进入/ops/server/openGauss-visualtool目录，关闭原有进程后，再执行启动命令
+> nohup java -Xms2048m -Xmx4096m -jar /ops/server/openGauss-visualtool/visualtool-main.jar --spring.profiles.active=temp >/ops/server/openGauss-visualtool/logs/visualtool-main.out 2>&1 &
 
 ### 注意事项：
 1、平台使用的数据库，当前仅支持openGauss数据库，并且需要提前创建database。

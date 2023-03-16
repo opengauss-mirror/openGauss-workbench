@@ -33,11 +33,30 @@ data-migration项目目前版本为1.0.0。
 - 打开并登陆openGauss一体化平台，点击插件管理-安装插件，将上诉步骤获得的安装包上传并安装。
 
 
-## 使用说明
+## Portal离线安装步骤
+数据迁移插件底层依赖Portal组件，在任务执行时如果执行机器未安装Portal，将会执行Portal的安装，因为安装过程时间较长，因此可选择在执行机器上提前安装Portal，安装步骤如下。
 
-- 具体使用方式见使用文档
+1、在执行机器上创建非root用户，并授予sudo免密权限
+> + 添加用户 **useradd og_ops**
+> + 设置密码 **passwd og_ops**
+> + 增加文件编辑权限 **chmod u+w /etc/sudoers**
+> + 编辑文件 **/etc/sudoers**，在文件底部增加：**og_ops ALL=(ALL) NOPASSWD: ALL**
+> + 回收文件编辑权限 **chmod u-w /etc/sudoers**
+> 
+2、切换非root用户，进入根目录下，cd ~
 
+3、执行wget -P ~ portal下载地址 -O portal.zip。
 
+4、执行unzip -d ~/portal ~/portal.zip
+
+5、sed -i 's#/ops/portal#/home/非root用户名/portal#g' ~/portal/config/toolspath.properties
+
+6、java -Dpath=/home/非root用户名/portal/ -Dorder=install_mysql_all_migration_tools -Dskip=true -jar /home/非root用户名/portal/portalControl-1.0-SNAPSHOT-exec.jar
+
+### 注意 
+1、以上命令中的"portal下载地址"需要更换成实际的下载地址。
+
+2、以上命令中的"非root用户名"需要跟换成实际操作用户名
 
 # 参与贡献
 

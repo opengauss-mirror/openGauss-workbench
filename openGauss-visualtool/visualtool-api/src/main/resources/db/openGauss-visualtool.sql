@@ -110,6 +110,16 @@ START 1000
 CACHE 1;
 END IF;
 
+IF NOT EXISTS(SELECT 1 FROM information_schema.sequences WHERE sequence_schema = ''public'' AND sequence_name = ''sq_sys_plugin_logo_id'')
+THEN
+    CREATE SEQUENCE "public"."sq_sys_plugin_logo_id"
+    INCREMENT 1
+    MINVALUE 1
+    MAXVALUE 9223372036854775807
+    START 1000
+    CACHE 1;
+END IF;
+
 RETURN 0;
 END;'
 LANGUAGE plpgsql;
@@ -1026,3 +1036,30 @@ LANGUAGE plpgsql;
 SELECT add_field_ops_package_manager();
 
 DROP FUNCTION add_field_ops_package_manager;
+
+ALTER TABLE "public"."sys_oper_log" ALTER COLUMN "oper_param" type text;
+
+CREATE TABLE IF NOT EXISTS "public"."sys_setting"(
+    "id" int4 NOT NULL PRIMARY KEY DEFAULT nextval('sq_sys_setting_id'::regclass),
+    "user_id" int8 NOT NULL,
+    "upload_path" text COLLATE "pg_catalog"."default" NOT NULL
+    );
+COMMENT
+ON COLUMN "public"."sys_setting"."id" IS 'ID';
+COMMENT
+ON COLUMN "public"."sys_setting"."user_id" IS '关联的用户ID';
+COMMENT
+ON COLUMN "public"."sys_setting"."upload_path" IS '文件上传目录';
+
+CREATE TABLE IF NOT EXISTS "public"."sys_plugin_logo" (
+    "id" int8 NOT NULL DEFAULT nextval('sq_sys_plugin_logo_id'::regclass),
+    "plugin_id" varchar(100) COLLATE "pg_catalog"."default",
+    "logo_path" varchar(255) COLLATE "pg_catalog"."default",
+    CONSTRAINT "tb_plugin_logo_pkey" PRIMARY KEY ("id")
+);
+
+COMMENT ON COLUMN "public"."sys_plugin_logo"."id" IS '主键ID';
+
+COMMENT ON COLUMN "public"."sys_plugin_logo"."plugin_id" IS '插件ID';
+
+COMMENT ON COLUMN "public"."sys_plugin_logo"."logo_path" IS 'logo路径';
