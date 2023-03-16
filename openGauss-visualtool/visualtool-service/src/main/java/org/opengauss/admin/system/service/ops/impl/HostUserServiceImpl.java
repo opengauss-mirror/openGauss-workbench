@@ -331,6 +331,7 @@ public class HostUserServiceImpl extends ServiceImpl<OpsHostUserMapper, OpsHostU
     public void cleanPassword(String hostUserId) {
         final LambdaUpdateWrapper<OpsHostUserEntity> updateWrapper = Wrappers.lambdaUpdate(OpsHostUserEntity.class)
                 .set(OpsHostUserEntity::getPassword, null)
+                .set(OpsHostUserEntity::getSudo,Boolean.TRUE)
                 .eq(OpsHostUserEntity::getHostUserId, hostUserId);
         update(updateWrapper);
     }

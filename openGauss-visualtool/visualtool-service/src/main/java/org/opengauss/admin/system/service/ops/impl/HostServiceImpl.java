@@ -209,6 +209,7 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
         }else {
             if (Objects.nonNull(hostBody.getIsRemember()) && hostBody.getIsRemember()){
                 root.setPassword(hostBody.getPassword());
+                root.setSudo(Boolean.TRUE);
                 hostUserService.updateById(root);
             }else {
                 hostUserService.cleanPassword(root.getHostUserId());

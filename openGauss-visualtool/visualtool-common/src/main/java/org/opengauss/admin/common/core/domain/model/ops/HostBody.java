@@ -48,6 +48,7 @@ public class HostBody {
         OpsHostUserEntity hostUserEntity = new OpsHostUserEntity();
         hostUserEntity.setUsername("root");
         hostUserEntity.setHostId(hostId);
+        hostUserEntity.setSudo(Boolean.TRUE);
         if (Objects.nonNull(isRemember) && isRemember){
             hostUserEntity.setPassword(password);
         }
