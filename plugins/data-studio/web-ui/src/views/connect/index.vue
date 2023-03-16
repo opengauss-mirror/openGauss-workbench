@@ -63,11 +63,11 @@
         </el-table-column>
         <el-table-column
           align="center"
-          prop="clusterRole"
+          prop="edition"
           :label="$t('connection.version')"
           width="90"
         />
-        <el-table-column align="center" prop="sourceName" width="100" class-name="source-column">
+        <el-table-column align="center" prop="sourceName" width="105" class-name="source-column">
           <template #header>
             <el-dropdown trigger="click" popper-class="active-dropdown">
               <div style="cursor: pointer">
@@ -194,13 +194,11 @@
   import { ArrowDown, View, Hide, Search } from '@element-plus/icons-vue';
   import EventBus, { EventTypeName } from '@/utils/event-bus';
   import { useI18n } from 'vue-i18n';
-  import { useAppStore } from '@/store/modules/app';
   import { useUserStore } from '@/store/modules/user';
   import Crypto from '@/utils/crypto';
   import { connectListPersist } from '@/config';
 
   const { t } = useI18n();
-  const AppStore = useAppStore();
   const UserStore = useUserStore();
   const props = withDefaults(
     defineProps<{
@@ -208,6 +206,7 @@
       type: 'create' | 'edit';
       connectInfo: {
         id: string | number;
+        [props: string]: any;
       };
       uuid?: string;
     }>(),
@@ -312,6 +311,7 @@
   };
 
   const getTableList = () => {
+    connectListInfo.listCurrentRow = {};
     getAllCluster()
       .then((res) => {
         connectListInfo.list = connectListInfo.list.concat(doConnectList(res.data || [], 1));
@@ -344,7 +344,6 @@
   const handleOpen = async () => {
     const formEl = ruleFormRef.value;
     formEl.resetFields();
-    connectListInfo.list = [];
     if (props.type === 'create') {
       title.value = t('connection.new');
       getTableList();
@@ -355,12 +354,15 @@
         if (form[key] !== undefined) form[key] = infoData[key];
         if (key === 'port') form[key] = Number(infoData[key]) || null;
       });
-      const currentConnectInfo = AppStore.currentConnectInfo;
+      const currentConnectInfo = props.connectInfo;
       connectListInfo.list = [
         {
           name: currentConnectInfo.name,
           connectInfo: `${currentConnectInfo.userName}@${currentConnectInfo.ip}:${currentConnectInfo.port}/${currentConnectInfo.dataName}`,
           clusterRole: '',
+          edition: currentConnectInfo.edition,
+          sourceType: 2,
+          sourceName: t('connection.customConnection'),
         },
       ];
     }
@@ -391,6 +393,10 @@
     });
   };
   const resetForm = (formEl: FormInstance | undefined) => {
+    Object.assign(connectListInfo, {
+      list: [],
+      listCurrentRow: {},
+    });
     showNameFilter.value = false;
     showInfoFilter.value = false;
     infoFilterInput.value = '';
@@ -495,6 +501,11 @@
   }
   :deep(.el-table) {
     width: 580px;
+    .el-table__cell {
+      .cell {
+        padding: 0 8px;
+      }
+    }
   }
   :deep(.source-column) {
     .cell {

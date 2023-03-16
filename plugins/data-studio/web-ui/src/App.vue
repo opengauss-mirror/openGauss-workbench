@@ -29,6 +29,7 @@
   import { isDark, toggleDark } from '@/hooks/dark';
   import { useI18n } from 'vue-i18n';
   import { heartbeat } from '@/api/connect';
+  import { httpHeartbeatTime } from '@/config';
 
   const AppStore = useAppStore();
   const UserStore = useUserStore();
@@ -86,7 +87,7 @@
       AppStore.setLanguage(val);
     });
 
-    heartbeatTimer.value = setInterval(heartbeat, 1000 * 60 * 15);
+    heartbeatTimer.value = setInterval(heartbeat, httpHeartbeatTime);
   });
   onUnmounted(() => {
     EventBus.unListen(EventTypeName.OPEN_CONNECT_DIALOG);
