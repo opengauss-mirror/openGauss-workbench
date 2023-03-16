@@ -164,11 +164,11 @@ public class AgentService extends AbstractInstaller {
 	public void uninstall(WsSession wsSession, String nodeId, String rootPassword) {
 		// @formatter:off
 		var steps = Arrays.asList(
-				new Step("初始化"),
-				new Step("连接主机"),
-				new Step("查找agent进程号"),
-				new Step("停止agent"),
-				new Step("卸载完成"));
+				new Step("agent.uninstall.step1"),
+				new Step("agent.uninstall.step2"),
+				new Step("agent.uninstall.step3"),
+				new Step("agent.uninstall.step4"),
+				new Step("agent.uninstall.step5"));
 		// @formatter:on
 		var curr = 0;
 

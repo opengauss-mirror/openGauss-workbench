@@ -1,40 +1,27 @@
 package com.nctigba.observability.log.service.impl;
 
-import java.text.SimpleDateFormat;
-import java.time.Duration;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TimeZone;
-
+import co.elastic.clients.elasticsearch._types.aggregations.Aggregate;
 import co.elastic.clients.elasticsearch._types.aggregations.HistogramBucket;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import com.nctigba.observability.log.config.ElasticsearchProvider;
-import com.nctigba.observability.log.model.dto.ContextSearchDTO;
-import com.nctigba.observability.log.model.dto.ContextSearchInfoDTO;
-import com.nctigba.observability.log.model.dto.LogDetailInfoDTO;
-import com.nctigba.observability.log.model.dto.LogDistroMapDTO;
-import com.nctigba.observability.log.model.dto.LogDistroMapInfoDTO;
-import com.nctigba.observability.log.model.dto.LogInfoDTO;
-import com.nctigba.observability.log.model.dto.LogTypeTreeDTO;
+import co.elastic.clients.elasticsearch._types.aggregations.StringTermsAggregate;
+import co.elastic.clients.elasticsearch._types.aggregations.StringTermsBucket;
+import co.elastic.clients.elasticsearch.core.SearchResponse;
+import co.elastic.clients.elasticsearch.core.search.Hit;
+import com.nctigba.observability.log.model.dto.*;
 import com.nctigba.observability.log.model.query.ContextSearchQuery;
 import com.nctigba.observability.log.model.query.EsSearchQuery;
 import com.nctigba.observability.log.service.LogSearchService;
 import com.nctigba.observability.log.util.EsLogSearchUtils;
-import co.elastic.clients.elasticsearch._types.aggregations.Aggregate;
-import co.elastic.clients.elasticsearch._types.aggregations.StringTermsAggregate;
-import co.elastic.clients.elasticsearch._types.aggregations.StringTermsBucket;
-import co.elastic.clients.elasticsearch.core.ScrollResponse;
-import co.elastic.clients.elasticsearch.core.SearchResponse;
-import co.elastic.clients.elasticsearch.core.search.Hit;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.opengauss.admin.common.utils.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.text.SimpleDateFormat;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.*;
 
 
 /**
@@ -49,24 +36,20 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @Slf4j
 public class LogSearchServiceImpl implements LogSearchService {
-
     @Autowired
     private EsLogSearchUtils esLogSearchUtils;
 
-    @Autowired
-    private ElasticsearchProvider client;
-
-
     @SuppressWarnings("rawtypes")
-	@Override
+    @Override
     public List<LogDistroMapDTO> getLogDistroMap(EsSearchQuery queryParam) {
         try {
             int nodeIdCount = 0;
             if (queryParam.getNodeId() != null) {
                 nodeIdCount = queryParam.getNodeId().size();
                 List<String> list = new ArrayList<>();
+                List<String> nodes = this.getNodeId();
                 for (String nodeId : queryParam.getNodeId()) {
-                    if (this.getNodeId() != null && !this.getNodeId().contains(nodeId)) {
+                    if (nodes != null && !nodes.contains(nodeId)) {
                         list.add(nodeId);
                     }
                 }
@@ -164,8 +147,9 @@ public class LogSearchServiceImpl implements LogSearchService {
         if (queryParam.getNodeId() != null) {
             nodeIdCount = queryParam.getNodeId().size();
             List<String> list = new ArrayList<>();
+            List<String> nodes = this.getNodeId();
             for (String nodeId : queryParam.getNodeId()) {
-                if (this.getNodeId() != null && !this.getNodeId().contains(nodeId)) {
+                if (nodes != null && !nodes.contains(nodeId)) {
                     list.add(nodeId);
                 }
             }
@@ -186,6 +170,7 @@ public class LogSearchServiceImpl implements LogSearchService {
                 List<Hit<HashMap>> hits = searchResponse.hits().hits();
                 List<String> sorts = new ArrayList<>();
                 for (var decodeBeanHit : hits) {
+                    String id = decodeBeanHit.id();
                     var docMap = decodeBeanHit.source();
                     if (docMap != null) {
                         LogDetailInfoDTO logDetailInfoDTO = new LogDetailInfoDTO();
@@ -199,13 +184,12 @@ public class LogSearchServiceImpl implements LogSearchService {
                         logDetailInfoDTO.setLogData(docMap.get("message"));
                         logDetailInfoDTO.setLogClusterId(docMap.get("clusterId"));
                         logDetailInfoDTO.setLogNodeId(docMap.get("nodeId"));
+                        logDetailInfoDTO.setId(id);
                         list.add(logDetailInfoDTO);
                     }
                 }
-                if (!hits.isEmpty())
-                    sorts.addAll(hits.get(hits.size() - 1).sort());
-                else
-                    sorts.addAll(queryParam.getSorts());
+                if (!hits.isEmpty()) sorts.addAll(hits.get(hits.size() - 1).sort());
+                else sorts.addAll(queryParam.getSorts());
                 logInfoDTO.setSorts(sorts);
                 logInfoDTO.setLogs(list);
             } catch (Exception e) {
@@ -252,23 +236,36 @@ public class LogSearchServiceImpl implements LogSearchService {
 
     @Override
     public ContextSearchInfoDTO getContextSearch(ContextSearchQuery queryParam) {
+        ContextSearchDTO contextSearchDTO = new ContextSearchDTO();
+        String id = null;
         try {
-            List<ContextSearchDTO> aboveList = this.getAboveList(queryParam);
-            if (aboveList.size() < 1) {
-                return null;
+            if (StringUtils.isEmpty(queryParam.getSorts()) && !StringUtils.isEmpty(queryParam.getId())) {
+                HashMap<List<String>, ContextSearchDTO> map = this.getSorts(queryParam);
+                List<String> sortList = new ArrayList<>();
+                for (List<String> list : map.keySet()) {
+                    sortList = list;
+                    contextSearchDTO = map.get(list);
+                }
+                queryParam.setSorts(sortList);
+                queryParam.setId(null);
+                HashMap<String, List<String>> sortMap = this.getAboveList(queryParam);
+                List<String> sortsList = new ArrayList<>();
+                for (String key : sortMap.keySet()) {
+                    id = key;
+                    sortsList = sortMap.get(key);
+                }
+                queryParam.setSorts(sortsList);
             }
-            ContextSearchDTO contextSearchDto = aboveList.get(aboveList.size() - 1);
-            String time = (String) contextSearchDto.getLogTime();
-            SimpleDateFormat stringFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-            SimpleDateFormat sFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
-            Date d = stringFormat.parse(time.substring(0, 19).replace("T", " "));
-            long times = d.getTime();
-            Date startDate = new Date();
-            startDate.setTime(times - 1000 * 60 * 60 * Integer.valueOf(time.substring(time.indexOf("+") + 1, time.lastIndexOf(":"))));
-            String s = stringFormat.format(startDate) + time.substring(19, 23);
-            Date sdd = sFormat.parse(s);
-            queryParam.setLogDate(sdd);
             ContextSearchInfoDTO belowList = this.getBelowList(queryParam);
+            List<ContextSearchDTO> list = belowList.getLogs();
+            String contextSourceId = contextSearchDTO.getId();
+            if (list.stream().filter(z -> z.getId().equals(contextSourceId)).count() == 0) {
+                for (int i = 0; i < list.size(); i++) {
+                    if (list.get(i).getId().equals(id)) {
+                        list.add(i + 1, contextSearchDTO);
+                    }
+                }
+            }
             return belowList;
         } catch (Exception e) {
             log.info(e.getMessage());
@@ -323,26 +320,81 @@ public class LogSearchServiceImpl implements LogSearchService {
         return logTypeList;
     }
 
+    private static List<String> nodeList = null;
+    private static long id;
+
     /**
      * Query log node information
      *
      * @return log node information
      */
     private List<String> getNodeId() {
-        Set<String> indexs = esLogSearchUtils.indexList("ob-*");
-        if (indexs == null || indexs.size() < 1) {
+        if (nodeList != null && System.currentTimeMillis() - id < 60000) {
+            return nodeList;
+        }
+        synchronized (this) {
+            if (nodeList != null && System.currentTimeMillis() - id < 60000) {
+                return nodeList;
+            }
+            Set<String> indexs = esLogSearchUtils.indexList("ob-*");
+            if (indexs == null || indexs.size() < 1) {
+                return null;
+            }
+            List<String> nodeIdList = new ArrayList<>();
+            for (String index : indexs) {
+                String prefix = index.substring(index.indexOf("-") + 1);
+                String dataType = prefix.substring(prefix.indexOf("-") + 1);
+                String logType = dataType.substring(dataType.indexOf("-") + 1);
+                String nodeId = logType.substring(logType.indexOf("-") + 1);
+                nodeIdList.add(nodeId);
+            }
+            id = System.currentTimeMillis();
+            nodeList = nodeIdList;
+            return nodeIdList;
+        }
+    }
+
+    /**
+     * Query sorts by id
+     *
+     * @return sorts
+     */
+    @SuppressWarnings("rawtypes")
+    private HashMap<List<String>, ContextSearchDTO> getSorts(ContextSearchQuery param) {
+        EsSearchQuery queryParam = new EsSearchQuery();
+        queryParam.setId(param.getId());
+        HashMap<List<String>, ContextSearchDTO> map = new HashMap<>();
+        try {
+            SearchResponse<HashMap> searchResponse = esLogSearchUtils.queryLogInfoById(queryParam);
+            if (searchResponse == null) {
+                return null;
+            }
+            List<Hit<HashMap>> hits = searchResponse.hits().hits();
+            List<String> sorts = new ArrayList<>();
+            if (!hits.isEmpty()) {
+                sorts.addAll(hits.get(hits.size() - 1).sort());
+                ContextSearchDTO contextSearchDto = new ContextSearchDTO();
+                contextSearchDto.setLogTime(hits.get(0).source().get("@timestamp"));
+                Map logTypeMap = null;
+                if (hits.get(0).source().get("fields") instanceof Map) {
+                    logTypeMap = (Map) hits.get(0).source().get("fields");
+                }
+                contextSearchDto.setLogType(logTypeMap.get("log_type"));
+                contextSearchDto.setLogLevel(hits.get(0).source().get("log_level"));
+                contextSearchDto.setLogData(hits.get(0).source().get("message"));
+                contextSearchDto.setLogClusterId(hits.get(0).source().get("clusterId"));
+                contextSearchDto.setLogNodeId(hits.get(0).source().get("nodeId"));
+                contextSearchDto.setId(param.getId());
+                map.put(sorts, contextSearchDto);
+            }
+            log.info(String.valueOf(sorts));
+            return map;
+        } catch (Exception e) {
+            log.info(e.getMessage());
             return null;
         }
-        List<String> nodeIdList = new ArrayList<>();
-        for (String index : indexs) {
-            String prefix = index.substring(index.indexOf("-") + 1);
-            String dataType = prefix.substring(prefix.indexOf("-") + 1);
-            String logType = dataType.substring(dataType.indexOf("-") + 1);
-            String nodeId = logType.substring(logType.indexOf("-") + 1);
-            nodeIdList.add(nodeId);
-        }
-        return nodeIdList;
     }
+
 
     /**
      * Query log aboveList information
@@ -350,20 +402,25 @@ public class LogSearchServiceImpl implements LogSearchService {
      * @return log aboveList information
      */
     @SuppressWarnings("rawtypes")
-    private List<ContextSearchDTO> getAboveList(ContextSearchQuery param) {
+    private HashMap<String, List<String>> getAboveList(ContextSearchQuery param) {
+        HashMap<String, List<String>> map = new HashMap<>();
         EsSearchQuery queryParam = new EsSearchQuery();
         queryParam.setSearchPhrase(param.getSearchPhrase());
         queryParam.setLogType(param.getLogType());
         queryParam.setLogLevel(param.getLogLevel());
-        queryParam.setRowCount(param.getAboveCount());
-        queryParam.setStartDate(param.getLogDate());
+        queryParam.setRowCount(param.getAboveCount() + 1);
+        queryParam.setStartDate(param.getStartDate());
+        queryParam.setEndDate(param.getEndDate());
+        queryParam.setId(param.getId());
         queryParam.setOrder("ASC");
+        queryParam.setSorts(param.getSorts());
         int nodeIdCount = 0;
         if (queryParam.getNodeId() != null) {
             nodeIdCount = queryParam.getNodeId().size();
             List<String> list = new ArrayList<>();
+            List<String> nodes = this.getNodeId();
             for (String nodeId : queryParam.getNodeId()) {
-                if (this.getNodeId() != null && !this.getNodeId().contains(nodeId)) {
+                if (nodes != null && !nodes.contains(nodeId)) {
                     list.add(nodeId);
                 }
             }
@@ -374,31 +431,18 @@ public class LogSearchServiceImpl implements LogSearchService {
         if (nodeIdCount > 0 && queryParam.getNodeId().size() == 0) {
             return null;
         } else {
-            var list = new ArrayList<ContextSearchDTO>();
             try {
                 SearchResponse<HashMap> searchResponse = esLogSearchUtils.queryLogInfo(queryParam);
                 if (searchResponse == null) {
                     return null;
                 }
                 List<Hit<HashMap>> hits = searchResponse.hits().hits();
-                for (var decodeBeanHit : hits) {
-                    var docMap = decodeBeanHit.source();
-                    if (docMap != null) {
-                        ContextSearchDTO contextSearchDto = new ContextSearchDTO();
-                        contextSearchDto.setLogTime(docMap.get("@timestamp"));
-                        Map logTypeMap = null;
-                        if (docMap.get("fields") instanceof Map) {
-                            logTypeMap = (Map) docMap.get("fields");
-                        }
-                        contextSearchDto.setLogType(logTypeMap.get("log_type"));
-                        contextSearchDto.setLogLevel(docMap.get("log_level"));
-                        contextSearchDto.setLogData(docMap.get("message"));
-                        contextSearchDto.setLogClusterId(docMap.get("clusterId"));
-                        contextSearchDto.setLogNodeId(docMap.get("nodeId"));
-                        list.add(contextSearchDto);
-                    }
+                if (!hits.isEmpty()) {
+                    List<String> sorts = new ArrayList<>();
+                    sorts.addAll(hits.get(hits.size() - 1).sort());
+                    map.put(hits.get(0).id(), sorts);
                 }
-                return list;
+                return map;
             } catch (Exception e) {
                 log.info(e.getMessage());
                 return null;
@@ -418,14 +462,16 @@ public class LogSearchServiceImpl implements LogSearchService {
         queryParam.setLogType(param.getLogType());
         queryParam.setLogLevel(param.getLogLevel());
         queryParam.setRowCount(param.getAboveCount() + param.getBelowCount() + 1);
-        queryParam.setEndDate(param.getLogDate());
-        queryParam.setScrollId(param.getScrollId());
+        queryParam.setStartDate(param.getStartDate());
+        queryParam.setEndDate(param.getEndDate());
+        queryParam.setSorts(param.getSorts());
         int nodeIdCount = 0;
         if (queryParam.getNodeId() != null) {
             nodeIdCount = queryParam.getNodeId().size();
             List<String> list = new ArrayList<>();
+            List<String> nodes = this.getNodeId();
             for (String nodeId : queryParam.getNodeId()) {
-                if (this.getNodeId() != null && !this.getNodeId().contains(nodeId)) {
+                if (nodes != null && !nodes.contains(nodeId)) {
                     list.add(nodeId);
                 }
             }
@@ -439,55 +485,36 @@ public class LogSearchServiceImpl implements LogSearchService {
             var list = new ArrayList<ContextSearchDTO>();
             ContextSearchInfoDTO contextSearchInfoDTO = new ContextSearchInfoDTO();
             try {
-                if (queryParam.getScrollId() == null || "".equals(queryParam.getScrollId())) {
-                    SearchResponse<HashMap> searchResponse = esLogSearchUtils.queryLogInfo(queryParam);
-                    if (searchResponse == null) {
-                        return null;
-                    }
-                    List<Hit<HashMap>> hits = searchResponse.hits().hits();
-                    for (var decodeBeanHit : hits) {
-                        var docMap = decodeBeanHit.source();
-                        if (docMap != null) {
-                            ContextSearchDTO contextSearchDto = new ContextSearchDTO();
-                            contextSearchDto.setLogTime(docMap.get("@timestamp"));
-                            Map logTypeMap = null;
-                            if (docMap.get("fields") instanceof Map) {
-                                logTypeMap = (Map) docMap.get("fields");
-                            }
-                            contextSearchDto.setLogType(logTypeMap.get("log_type"));
-                            contextSearchDto.setLogLevel(docMap.get("log_level"));
-                            contextSearchDto.setLogData(docMap.get("message"));
-                            contextSearchDto.setLogClusterId(docMap.get("clusterId"));
-                            contextSearchDto.setLogNodeId(docMap.get("nodeId"));
-                            list.add(contextSearchDto);
-                        }
-                    }
-                    contextSearchInfoDTO.setScrollId(searchResponse.scrollId());
-                    contextSearchInfoDTO.setLogs(list);
-                } else {
-                    ScrollResponse scrollResponse = client.client().scroll(s -> s.scrollId(queryParam.getScrollId()).scroll(t -> t.time("10s")), HashMap.class);
-                    String scrollId = scrollResponse.scrollId();
-                    List<Hit<HashMap>> hit = scrollResponse.hits().hits();
-                    for (var decodeBeanHit : hit) {
-                        var docMap = decodeBeanHit.source();
-                        if (docMap != null) {
-                            ContextSearchDTO contextSearchDto = new ContextSearchDTO();
-                            contextSearchDto.setLogTime(docMap.get("@timestamp"));
-                            Map logTypeMap = null;
-                            if (docMap.get("fields") instanceof Map) {
-                                logTypeMap = (Map) docMap.get("fields");
-                            }
-                            contextSearchDto.setLogType(logTypeMap.get("log_type"));
-                            contextSearchDto.setLogLevel(docMap.get("log_level"));
-                            contextSearchDto.setLogData(docMap.get("message"));
-                            contextSearchDto.setLogClusterId(docMap.get("clusterId"));
-                            contextSearchDto.setLogNodeId(docMap.get("nodeId"));
-                            list.add(contextSearchDto);
-                        }
-                    }
-                    contextSearchInfoDTO.setScrollId(scrollId);
-                    contextSearchInfoDTO.setLogs(list);
+                SearchResponse<HashMap> searchResponse = esLogSearchUtils.queryLogInfo(queryParam);
+                if (searchResponse == null) {
+                    return null;
                 }
+                List<Hit<HashMap>> hits = searchResponse.hits().hits();
+                List<String> sorts = new ArrayList<>();
+                for (var decodeBeanHit : hits) {
+                    var docMap = decodeBeanHit.source();
+                    String id = decodeBeanHit.id();
+                    if (docMap != null) {
+                        ContextSearchDTO contextSearchDto = new ContextSearchDTO();
+                        contextSearchDto.setLogTime(docMap.get("@timestamp"));
+                        Map logTypeMap = null;
+                        if (docMap.get("fields") instanceof Map) {
+                            logTypeMap = (Map) docMap.get("fields");
+                        }
+                        contextSearchDto.setLogType(logTypeMap.get("log_type"));
+                        contextSearchDto.setLogLevel(docMap.get("log_level"));
+                        contextSearchDto.setLogData(docMap.get("message"));
+                        contextSearchDto.setLogClusterId(docMap.get("clusterId"));
+                        contextSearchDto.setLogNodeId(docMap.get("nodeId"));
+                        contextSearchDto.setId(id);
+                        list.add(contextSearchDto);
+                    }
+                }
+                if (!hits.isEmpty()) {
+                    sorts.addAll(hits.get(hits.size() - 1).sort());
+                } else sorts.addAll(queryParam.getSorts());
+                contextSearchInfoDTO.setSorts(sorts);
+                contextSearchInfoDTO.setLogs(list);
                 return contextSearchInfoDTO;
             } catch (Exception e) {
                 log.info(e.getMessage());
