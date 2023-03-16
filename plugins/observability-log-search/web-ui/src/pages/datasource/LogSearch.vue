@@ -565,7 +565,7 @@ watch(error, () => {
 });
 watch(logsData, (res: LogsRes) => {
     if (res && Object.keys(res).length) {
-        if (res.logs && res.logs.length < pageSize.value) noMore.value = true;
+        if (res.logs && (!showContextCount && res.logs.length < pageSize.value || showContextCount && res.logs.length < formData.contextCount)) noMore.value = true;
         tableData.value = tableData.value.concat(res.logs);
         scrollId.value = res.scrollId;
         sorts.value = res.sorts;
