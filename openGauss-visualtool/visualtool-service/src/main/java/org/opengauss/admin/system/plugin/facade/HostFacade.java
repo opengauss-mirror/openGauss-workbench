@@ -54,7 +54,7 @@ public class HostFacade {
     }
 
     public IPage<OpsHostVO> pageHost(Page page, String name) {
-        return hostService.pageHost(page, name);
+        return hostService.pageHost(page, name, null, null);
     }
 
     public OpsHostEntity getById(String id) {

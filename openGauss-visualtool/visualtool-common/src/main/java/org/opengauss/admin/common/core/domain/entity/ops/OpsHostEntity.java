@@ -26,4 +26,5 @@ public class OpsHostEntity extends BaseEntity {
     private String cpuArch;
     @TableField(exist = false)
     private Boolean isRemember;
+    private String name;
 }

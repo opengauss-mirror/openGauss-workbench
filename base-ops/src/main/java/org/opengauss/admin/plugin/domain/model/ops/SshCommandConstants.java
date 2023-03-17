@@ -57,7 +57,7 @@ public interface SshCommandConstants {
     /**
      * Create OMM user
      */
-    String CREATE_OMM_USER = "useradd omm && echo 'omm ALL=(ALL) ALL' >> /etc/sudoers";
+    String CREATE_OMM_USER = "useradd omm";
 
     String CHANGE_OMM_PASSWORD_TEMPLATE = "passwd {0}";
     /**
@@ -158,10 +158,6 @@ public interface SshCommandConstants {
      * move files
      */
     String MV = "mv -rf {0} ./old/";
-    /**
-     * Add user
-     */
-    String ADD_USER = "useradd {0} & echo '{1} ALL=(ALL) ALL' >> /etc/sudoers ";
     /**
      * grant permission
      */

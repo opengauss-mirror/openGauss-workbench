@@ -98,6 +98,16 @@ export const hostSSH = (data: KeyValue) => {
   return axios.post('host/ssh', data)
 }
 
+export const hostSSHByHostId = (hostId: string, data: KeyValue) => {
+  return axios.post('host/ssh/' + hostId, data)
+}
+
+export const hostMonitor = (data: KeyValue) => {
+  return axios.get('host/monitor', {
+    params: data
+  })
+}
+
 export const hostPingById = (hostId: string, data: KeyValue) => {
   return axios.get(`host/ping/${hostId}`, {
     params: data
@@ -106,6 +116,15 @@ export const hostPingById = (hostId: string, data: KeyValue) => {
 
 export const delHost = (hostId: string) => {
   return axios.delete(`host/${hostId}`)
+}
+
+// host tag
+export const hostBatchAddTag = (data: KeyValue) => {
+  return axios.put('hostTag/addTag', data)
+}
+
+export const hostTagListAll = () => {
+  return axios.get(`hostTag/listAll`)
 }
 
 // host user

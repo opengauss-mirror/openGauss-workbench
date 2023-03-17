@@ -94,10 +94,10 @@
                   </div>
                 </div>
               </div>
-              <div v-else-if="itemEnv.result !== -1 && itemEnv.result !== 200">
+              <div class="label-color" v-else-if="itemEnv.result !== -1 && itemEnv.result !== 200">
                 {{ $t('enterprise.EnvMonitor.5mpm5p9xfrs0') }} {{ itemEnv.errMsg }}
               </div>
-              <div v-else>
+              <div class="label-color" v-else>
                 {{ $t('enterprise.EnvMonitor.5mpm5p9xfv80') }}
               </div>
             </div>

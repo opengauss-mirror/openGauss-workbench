@@ -179,8 +179,8 @@ public class HostTest {
         page.setRecords(opsHostVOList);
         page.setTotal(1L);
 
-        Mockito.doReturn(page).when(hostMapper).pageHost(any(), any());
-        IPage<OpsHostVO> opsHostVOIPage = hostService.pageHost(new Page(1, 10), "192.168.0.31");
+        Mockito.doReturn(page).when(hostMapper).pageHost(any(), any(), null, null,null);
+        IPage<OpsHostVO> opsHostVOIPage = hostService.pageHost(new Page(1, 10), "192.168.0.31", null, null);
         Assertions.assertEquals(opsHostVOIPage.getTotal(), 1);
         Assertions.assertEquals(opsHostVOIPage.getRecords(), opsHostVOList);
     }

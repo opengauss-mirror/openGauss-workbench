@@ -8,11 +8,14 @@ import org.opengauss.admin.common.core.domain.model.ops.host.OpsHostVO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.util.List;
+import java.util.Set;
+
 /**
  * @author lhf
  * @date 2022/8/8 14:09
  **/
 @Mapper
 public interface OpsHostMapper extends BaseMapper<OpsHostEntity> {
-    IPage<OpsHostVO> pageHost(Page page, @Param("name") String name);
+    IPage<OpsHostVO> pageHost(Page page, @Param("name") String name, @Param("tagIds") Set<String> tagIds, @Param("os") String os, @Param("size") Integer size);
 }

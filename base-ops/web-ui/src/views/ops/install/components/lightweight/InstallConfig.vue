@@ -426,7 +426,7 @@ const saveStore = () => {
     param.forEach((item: KeyValue) => {
       item.port = param[0].port
     })
-    installStore.setInstallContext({ clusterId: param[0].clusterId })
+    installStore.setInstallContext({ clusterId: param[0].clusterId, envPath: param[0].envPath })
     const liteConfig = {
       clusterName: '',
       port: param[0].port,

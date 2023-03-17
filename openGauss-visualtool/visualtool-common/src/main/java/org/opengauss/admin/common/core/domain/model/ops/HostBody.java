@@ -7,6 +7,7 @@ import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
 import org.opengauss.admin.common.utils.ops.JschUtil;
 
 import javax.validation.constraints.NotEmpty;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -26,7 +27,8 @@ public class HostBody {
     private String azId;
     private String remark;
     private Integer port;
-    public String username;
+    private String name;
+    private List<String> tags;
 
     public OpsHostEntity toHostEntity(String hostName,String os,String cpuArch) {
         OpsHostEntity hostEntity = new OpsHostEntity();
@@ -38,6 +40,7 @@ public class HostBody {
         hostEntity.setRemark(remark);
         hostEntity.setOs(os);
         hostEntity.setCpuArch(cpuArch);
+        hostEntity.setName(name);
         return hostEntity;
     }
 
@@ -45,6 +48,7 @@ public class HostBody {
         OpsHostUserEntity hostUserEntity = new OpsHostUserEntity();
         hostUserEntity.setUsername("root");
         hostUserEntity.setHostId(hostId);
+        hostUserEntity.setSudo(Boolean.TRUE);
         if (Objects.nonNull(isRemember) && isRemember){
             hostUserEntity.setPassword(password);
         }
