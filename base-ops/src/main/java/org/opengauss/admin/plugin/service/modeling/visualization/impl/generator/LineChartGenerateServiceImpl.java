@@ -79,7 +79,7 @@ public class LineChartGenerateServiceImpl extends BaseGenerateServiceImpl {
 
         if (minValue > 0 && minValue < Float.MAX_VALUE)
         {
-            minValue = minValue * 0.8f;
+            minValue = Math.round(minValue * 0.8f);
         } else {
             minValue = 0;
         }
