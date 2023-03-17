@@ -78,14 +78,16 @@ module.exports = defineConfig({
       // detail: https://cli.vuejs.org/config/#devserver-proxy
       [process.env.VUE_APP_BASE_API]: {
         target: process.env.API_BASE_URL,
-        changeOrigin: true
+        changeOrigin: true,
+        ws: true
       },
       '/base_url': {
         target: process.env.API_BASE_URL,
         changeOrigin: true,
         pathRewrite: {
           '^/base_url': ''
-        }
+        },
+        ws: true
       }
     },
     historyApiFallback: {

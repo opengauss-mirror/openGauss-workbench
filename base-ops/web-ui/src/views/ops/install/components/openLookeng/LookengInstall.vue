@@ -1,9 +1,9 @@
 <template>
   <div class="simple-install-c">
     <a-steps :current="currStep">
-      <a-step>添加配置</a-step>
-      <a-step>配置查看</a-step>
-      <a-step>执行安装</a-step>
+      <a-step>{{ $t('components.openLooKeng.5mpiji1qpcc17') }}</a-step>
+      <a-step>{{ $t('components.openLooKeng.5mpiji1qpcc18') }}</a-step>
+      <a-step>{{ $t('components.openLooKeng.5mpiji1qpcc19') }}</a-step>
     </a-steps>
     <a-divider/>
     <lookeng-config v-if="currStep === STEP_ENUM.CONFIG" ref="configRef"/>

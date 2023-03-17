@@ -1,6 +1,12 @@
 <template>
   <div>
-    <p>您可以在下面的编辑器中编辑分片配置文件</p>
+    <div class="flex-between">
+      <p>{{ $t('components.openLooKeng.5mpiji1qpcc37') }}</p>
+      <a-button type="primary" :loading="loading" @click="generateYaml">{{
+          $t('components.openLooKeng.5mpiji1qpcc51')
+        }}
+      </a-button>
+    </div>
     <Codemirror
       v-model:value="code"
       :options="cmOptions"
@@ -8,63 +14,99 @@
       ref="cmRef"
       height="500px"
       width="100%"
-      @change="onChange"
-      @input="onInput"
       @ready="onReady"
     >
     </Codemirror>
   </div>
 </template>
 <script lang="ts" setup>
-import { mockGenerateYaml } from '@/api/ops/mock'
-import { Message } from '@arco-design/web-vue'
-import { ref, onMounted, onUnmounted } from 'vue'
+import { inject, onMounted, onUnmounted, ref } from 'vue'
 import 'codemirror/mode/yaml/yaml.js'
-import Codemirror from 'codemirror-editor-vue3'
 import type { CmComponentRef } from 'codemirror-editor-vue3'
+import Codemirror from 'codemirror-editor-vue3'
 import type { Editor, EditorConfiguration } from 'codemirror'
 import 'codemirror/theme/monokai.css'
+import { useOpsStore } from '@/store'
+import { dataSourceDbList } from '@/api/modeling'
+import { KeyValue } from '@/types/global'
+import { OpenLookengInstallConfig, ShardingDsConfig } from '@/types/ops/install'
+import { generateRuleYaml } from '@/api/ops'
+import { Message } from '@arco-design/web-vue'
 
 const beforeConfirm = async (): Promise<boolean> => {
+  installStore.setOpenLookengConfig({ ruleYaml: code.value } as OpenLookengInstallConfig)
   return true
 }
 
+const installStore = useOpsStore()
+const loadingFunc = inject<any>('loading')
 const code = ref('')
+const loading = ref(false)
 
-onMounted(() => {
-  generateYaml()
-})
-
-const generateYaml = () => {
-  mockGenerateYaml().then(res => {
-    if (Number(res.code) === 200) {
+const generateYaml = async () => {
+  loadingFunc.toLoading()
+  loading.value = true
+  const reqData = await buildReqData()
+  if (reqData) {
+    generateRuleYaml(reqData).then(res => {
       code.value = res.data
-      console.log(code.value)
-    } else {
-      Message.error('Failed to obtain the tar list data')
+    }).finally(() => {
+      loadingFunc.cancelLoading()
+      loading.value = false
+    })
+  } else {
+    loadingFunc.cancelLoading()
+    loading.value = false
+  }
+}
+
+const buildReqData = async () => {
+  const ds = installStore.openLookengInstallConfig.dsConfig
+  const res = await dataSourceDbList()
+  const dbList: Array<ShardingDsConfig> = []
+  if (ds.length <= 0) {
+    Message.error('No datasource is selected, please select datasource and try again')
+    return
+  }
+  if (res.data.length <= 0) {
+    Message.error('No openGauss cluster is installed, please install a openGauss cluster and try again')
+    return
+  }
+  ds.map((arr: Array<string>) => {
+    const clusterId = arr[0]
+    const nodeId = arr[1]
+    const databaseName = arr[2]
+    const cluster = res.data.find((item: KeyValue) => item.clusterId === clusterId)
+    if (cluster) {
+      const node = cluster.clusterNodes.find((item: KeyValue) => item.nodeId === nodeId)
+      if (node && node.dbName.indexOf(databaseName) >= 0) {
+        dbList.push({
+          dbName: databaseName,
+          port: node.dbPort,
+          host: node.publicIp,
+          username: node.dbUser,
+          password: node.dbUserPassword
+        } as ShardingDsConfig)
+      }
     }
   })
+  return {
+    dsConfig: dbList,
+    tableName: installStore.openLookengInstallConfig.tableName,
+    column: installStore.openLookengInstallConfig.column
+  }
 }
 
 const cmRef = ref<CmComponentRef>()
 const cmOptions: EditorConfiguration = {
   mode: 'text/x-yaml',
-  theme: 'default',
+  theme: 'monokai',
   lineNumbers: true,
   lineWrapping: true
 }
 
-const onChange = (val: string, cm: Editor) => {
-  console.log(val)
-  console.log(cm.getValue())
-}
-
-const onInput = (val: string) => {
-  console.log(val)
-}
-
 const onReady = (cm: Editor) => {
-  console.log(cm.focus())
+  cm.focus()
 }
 
 onMounted(() => {
@@ -74,6 +116,7 @@ onMounted(() => {
   setTimeout(() => {
     cmRef.value?.cminstance.isClean()
   }, 3000)
+  generateYaml()
 })
 
 onUnmounted(() => {

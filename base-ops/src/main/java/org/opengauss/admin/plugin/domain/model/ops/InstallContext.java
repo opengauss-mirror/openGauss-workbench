@@ -2,13 +2,13 @@ package org.opengauss.admin.plugin.domain.model.ops;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
+import lombok.Data;
 import org.opengauss.admin.common.exception.ops.OpsException;
 import org.opengauss.admin.plugin.domain.entity.ops.OpsClusterEntity;
 import org.opengauss.admin.plugin.enums.ops.DeployTypeEnum;
 import org.opengauss.admin.plugin.enums.ops.InstallModeEnum;
 import org.opengauss.admin.plugin.enums.ops.OpenGaussSupportOSEnum;
 import org.opengauss.admin.plugin.enums.ops.OpenGaussVersionEnum;
-import lombok.Data;
 
 import java.util.Date;
 import java.util.List;
@@ -131,7 +131,7 @@ public class InstallContext implements Cloneable {
             opsClusterEntity.setCorePath(enterpriseInstallConfig.getCorePath());
             opsClusterEntity.setPort(enterpriseInstallConfig.getPort());
             opsClusterEntity.setEnableDcf(enterpriseInstallConfig.getEnableDCF());
-            opsClusterEntity.setXmlConfigPath(enterpriseInstallConfig.getInstallPackagePath()+"/cluster_config.xml");
+            opsClusterEntity.setXmlConfigPath(enterpriseInstallConfig.getInstallPackagePath() + "/cluster_config.xml");
         } else if (openGaussVersion == OpenGaussVersionEnum.LITE) {
             opsClusterEntity.setInstallPackagePath(liteInstallConfig.getInstallPackagePath());
             opsClusterEntity.setPort(liteInstallConfig.getPort());

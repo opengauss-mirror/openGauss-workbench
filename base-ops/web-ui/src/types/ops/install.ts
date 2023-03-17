@@ -1,3 +1,5 @@
+import { KeyValue } from '@/api/modeling/request'
+
 export enum OpenGaussVersionEnum {
   ENTERPRISE = 'ENTERPRISE',
   MINIMAL_LIST = 'MINIMAL_LIST',
@@ -135,22 +137,53 @@ export interface EnterpriseInstallConfig { // eslint-disable-line
 }
 
 export interface OpenLookengInstallConfig {
-  shardingInstallHostId: '',
-  shardingInstallUserId: '',
-  shardingInstallPassword: '',
-  shardingInstallPath: '',
-  shardingTarId: '',
-  shardingPort: 0,
+  name: '',
+  dadInstallHostId: '',
+  dadInstallUsername: '',
+  dadTarId: '',
+  dadInstallPath: '/data/install',
+  dadInstallPassword: '',
+  dadPort: 8080,
+  ssInstallHostId: '',
+  ssInstallUsername: '',
+  ssInstallPassword: '',
+  ssInstallPath: '/data/install',
+  ssUploadPath: '/data/tar',
+  ssTarId: '',
+  ssPort: 1234,
   zkTarId: '',
-  zkPort: 0,
+  zkPort: 2181,
+  dsConfig: Array<Array<string>>,
   tableName: '',
   column: '',
   olkInstallHostId: '',
-  olkInstallUserId: '',
+  olkInstallUsername: '',
   olkInstallPassword: '',
-  olkInstallPath: '',
+  olkInstallPath: '/data/install',
+  olkUploadPath: '/data/tar',
   olkTarId: '',
-  olkPort: 0,
+  olkPort: 2345,
+  remark: '',
+  dadNeedEncrypt: false,
+  ssNeedEncrypt: false,
+  olkNeedEncrypt: false,
+  ruleYaml: '',
+  olkParamConfig: OlkParamConfig
+}
+export interface OlkParamConfig {
+  xmx: '16G',
+  maxMemory: '50GB',
+  maxTotalMemory: '50GB',
+  maxMemoryPer: '10GB',
+  maxTotalMemoryPer: '10GB'
+}
+
+export interface ShardingDsConfig {
+  host: '',
+  port: '',
+  dbName: '',
+  username: ''
+  password: ''
 }
 
 export interface downloadPackage {

@@ -65,7 +65,10 @@ public class InstallPackageManagerController extends BaseController {
         LambdaQueryWrapper<OpsPackageManagerEntity> queryWrapper = Wrappers.lambdaQuery(OpsPackageManagerEntity.class).eq(Objects.nonNull(packageVersion), OpsPackageManagerEntity::getPackageVersion, packageVersion);
 
         if (StrUtil.isNotEmpty(name)) {
-            queryWrapper.and(orWrapper -> orWrapper.or().like(OpsPackageManagerEntity::getOs, name).or().like(OpsPackageManagerEntity::getCpuArch, name).or().like(OpsPackageManagerEntity::getPackageVersionNum, name));
+            queryWrapper.and(orWrapper -> orWrapper
+                    .or().like(OpsPackageManagerEntity::getOs, name)
+                    .or().like(OpsPackageManagerEntity::getCpuArch, name)
+                    .or().like(OpsPackageManagerEntity::getPackageVersionNum, name));
         }
 
         IPage<OpsPackageManagerEntity> page = opsPackageManagerService.page(startPage(), queryWrapper);
@@ -73,10 +76,19 @@ public class InstallPackageManagerController extends BaseController {
     }
 
     @GetMapping("/list")
-    public AjaxResult list(@RequestParam(value = "os", required = false) String os, @RequestParam(value = "cpuArch", required = false) String cpuArch, @RequestParam(value = "packageVersion", required = false) OpenGaussVersionEnum packageVersion, @RequestParam(value = "packageVersionNum", required = false) String packageVersionNum) {
+    public AjaxResult list(@RequestParam(value = "os", required = false) String os,
+                           @RequestParam(value = "cpuArch", required = false) String cpuArch,
+                           @RequestParam(value = "packageVersion", required = false) OpenGaussVersionEnum packageVersion,
+                           @RequestParam(value = "packageVersionNum", required = false) String packageVersionNum,
+                           @RequestParam(value = "type", required = false) String type) {
 
-        LambdaQueryWrapper<OpsPackageManagerEntity> queryWrapper = Wrappers.lambdaQuery(OpsPackageManagerEntity.class).eq(StrUtil.isNotEmpty(os), OpsPackageManagerEntity::getOs, os).eq(StrUtil.isNotEmpty(cpuArch), OpsPackageManagerEntity::getCpuArch, cpuArch).eq(Objects.nonNull(packageVersion), OpsPackageManagerEntity::getPackageVersion, Objects.nonNull(packageVersion) ? packageVersion.name() : null).eq(StrUtil.isNotEmpty(packageVersionNum), OpsPackageManagerEntity::getPackageVersionNum, packageVersionNum).orderByDesc(OpsPackageManagerEntity::getCreateTime);
-
+        LambdaQueryWrapper<OpsPackageManagerEntity> queryWrapper = Wrappers.lambdaQuery(OpsPackageManagerEntity.class)
+                .eq(StrUtil.isNotEmpty(os), OpsPackageManagerEntity::getOs, os)
+                .eq(StrUtil.isNotEmpty(cpuArch), OpsPackageManagerEntity::getCpuArch, cpuArch)
+                .eq(Objects.nonNull(packageVersion), OpsPackageManagerEntity::getPackageVersion, Objects.nonNull(packageVersion) ? packageVersion.name() : null)
+                .eq(StrUtil.isNotEmpty(packageVersionNum), OpsPackageManagerEntity::getPackageVersionNum, packageVersionNum)
+                .eq(StrUtil.isNotEmpty(type), OpsPackageManagerEntity::getType, type)
+                .orderByDesc(OpsPackageManagerEntity::getCreateTime);
         List<OpsPackageManagerEntity> list = opsPackageManagerService.list(queryWrapper);
         return AjaxResult.success(list);
     }

@@ -1,6 +1,6 @@
 import axios from 'axios'
 import { KeyValue } from '@/types/global'
-import { downloadPackage, SSHBody } from '@/types/ops/install'
+import { downloadPackage, OpenLookengInstallConfig, SSHBody } from '@/types/ops/install'
 import { UploadInfo } from '@/types/resource/package'
 // import { hostData, hostUserData } from '@/types/resource/host'
 
@@ -347,4 +347,12 @@ export const delPkgTar = (path: string, id?: string) => {
 
 export const getSysUploadPath = () => {
   return axios.get('installPackageManager/sysUploadPath')
+}
+
+export const generateRuleYaml = (data: KeyValue) => {
+  return axios.post('olk/generateRuleYaml', data)
+}
+
+export const installOlk = (data: KeyValue) => {
+  return axios.post('olk/install', data)
 }
