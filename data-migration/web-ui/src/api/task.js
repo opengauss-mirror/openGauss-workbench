@@ -36,10 +36,6 @@ export function addJdbc (data) {
   return axios.post('/jdbcDbCluster/add', data)
 }
 
-export function editJdbc (id, data) {
-  return axios.put(`/jdbcDbCluster/${id}`, data)
-}
-
 export function hostListAll () {
   return axios.get('/host/listAll')
 }

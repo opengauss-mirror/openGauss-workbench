@@ -61,7 +61,7 @@
             </div>
           </template>
           <template #extra>
-            <a-link @click="handleAddSql">+自定义数据库</a-link>
+            <a-link>+自定义数据库</a-link>
           </template>
           <div class="sql-selected-con">
             <a-spin :loading="loading" style="display: block;">
@@ -146,7 +146,7 @@
     <add-sql v-model:open="addSqlVisible" />
 
     <!-- add jdbc -->
-    <add-jdbc ref="addJdbcRef" />
+    <add-jdbc ref="addJdbcRef" @finish="getClustersData" />
   </div>
 </template>
 
@@ -414,8 +414,7 @@ const deleteSubTask = (idx) => {
 const addJdbcRef = ref(null)
 
 const handleAddSql = () => {
-  // addSqlVisible.value = true
-  addJdbcRef.value?.open('create')
+  addJdbcRef.value?.open()
 }
 
 // init
