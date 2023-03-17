@@ -22,8 +22,7 @@
           </a-option>
         </a-select>
       </a-form-item>
-      <a-form-item field="installUsername" :label="$t('components.openLooKeng.5mpiji1qpcc2')"
-                   :extra="$t('components.openLooKeng.5mpiji1qpcc20')">
+      <a-form-item field="installUsername" :label="$t('components.openLooKeng.5mpiji1qpcc2')">
         <a-select :loading="installUserLoading" v-model:model-value="data.installUsername" @change="onUserChange">
           <a-option v-for="item in userListByHost" :key="item.hostUserId" :value="item.username">{{
               item.username

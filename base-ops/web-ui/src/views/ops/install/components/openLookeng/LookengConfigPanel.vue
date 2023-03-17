@@ -40,6 +40,22 @@
     <a-form-item field="olkPort" :label="$t('components.openLooKeng.5mpiji1qpcc10')">
       <a-input-number v-model="data.form.olkPort" :placeholder="$t('components.openLooKeng.5mpiji1qpcc11')"/>
     </a-form-item>
+    <a-divider orientation="left">{{ $t('components.openLooKeng.5mpiji1qpcc52') }}</a-divider>
+    <a-form-item field="xmx" label="xmx">
+      <a-input v-model="data.form.olkParamConfig.xmx" :placeholder="$t('components.openLooKeng.5mpiji1qpcc53')"/>
+    </a-form-item>
+    <a-form-item field="maxMemory" label="MaxMemory">
+      <a-input v-model="data.form.olkParamConfig.maxMemory" :placeholder="$t('components.openLooKeng.5mpiji1qpcc54')"/>
+    </a-form-item>
+    <a-form-item field="maxTotalMemory" label="MaxTotalMemory">
+      <a-input v-model="data.form.olkParamConfig.maxTotalMemory" :placeholder="$t('components.openLooKeng.5mpiji1qpcc55')"/>
+    </a-form-item>
+    <a-form-item field="maxMemoryPer" label="MaxMemoryPer">
+      <a-input v-model="data.form.olkParamConfig.maxMemoryPer" :placeholder="$t('components.openLooKeng.5mpiji1qpcc56')"/>
+    </a-form-item>
+    <a-form-item field="maxTotalMemoryPer" label="MaxTotalMemoryPer">
+      <a-input v-model="data.form.olkParamConfig.maxTotalMemoryPer" :placeholder="$t('components.openLooKeng.5mpiji1qpcc57')"/>
+    </a-form-item>
   </a-form>
   <add-package-dlg ref="addPackageRef" @finish="refreshPackageList" />
 </template>
@@ -51,7 +67,7 @@ import { PackageType } from '@/types/resource/package'
 import { FormInstance } from '@arco-design/web-vue/es/form'
 import { useOpsStore } from '@/store'
 import { useI18n } from 'vue-i18n'
-import { OpenLookengInstallConfig } from '@/types/ops/install'
+import { OlkParamConfig, OpenLookengInstallConfig } from '@/types/ops/install'
 import { hostListAll, hostPing, hostUserListAll, packageListAll, portUsed } from '@/api/ops'
 import AddPackageDlg from '@/views/monitor/packageManage/AddPackageDlg.vue'
 import { encryptPassword } from '@/utils/jsencrypt'
@@ -68,6 +84,13 @@ const data = reactive<KeyValue>({
     uploadPath: '/data/tar',
     olkTarId: '',
     olkPort: 2345,
+    olkParamConfig: {
+      xmx: '16G',
+      maxMemory: '50GB',
+      maxTotalMemory: '50GB',
+      maxMemoryPer: '10GB',
+      maxTotalMemoryPer: '10GB'
+    } as OlkParamConfig,
     needEncrypt: false
   },
   host: {
@@ -103,6 +126,7 @@ const initData = () => {
   data.form.uploadPath = config.olkUploadPath
   data.form.olkTarId = config.olkTarId
   data.form.olkPort = config.olkPort
+  data.form.olkParamConfig = config.olkParamConfig
   data.form.needEncrypt = config.olkNeedEncrypt
 }
 
@@ -115,7 +139,8 @@ const saveStore = () => {
     olkUploadPath: data.form.uploadPath,
     olkTarId: data.form.olkTarId,
     olkPort: data.form.olkPort,
-    olkNeedEncrypt: data.form.needEncrypt
+    olkNeedEncrypt: data.form.needEncrypt,
+    olkParamConfig: data.form.olkParamConfig
   }
   installStore.setOpenLookengConfig(param as OpenLookengInstallConfig)
 }

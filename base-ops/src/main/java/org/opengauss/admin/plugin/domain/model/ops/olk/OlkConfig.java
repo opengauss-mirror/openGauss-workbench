@@ -43,6 +43,6 @@ public class OlkConfig {
 
     public String getDadLogFileName () {
         // return Path.of(dadInstallPath, DadReqPath.LOG_FILE_NAME + id).toString();
-        return Path.of(dadInstallPath, DadReqPath.LOG_FILE_NAME).toString().replace("\\", "/");
+        return Path.of(dadInstallPath, DadReqPath.OUTPUT_LOG).toString().replace("\\", "/");
     }
 }

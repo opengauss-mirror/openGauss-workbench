@@ -341,6 +341,7 @@ public class OpsOlkServiceImpl extends ServiceImpl<OpsOlkMapper, OpsOlkEntity> i
             while (tryCount < maxTryCount) {
                 isRunning = isProcessRunning(config.getDadPort(), OlkProcessFlagStr.DAD_PKG_NAME, serverDto, wsSession);
                 if (isRunning) {
+                    flag = true;
                     break;
                 } else {
                     tryCount++;
@@ -368,7 +369,7 @@ public class OpsOlkServiceImpl extends ServiceImpl<OpsOlkMapper, OpsOlkEntity> i
         serverDto.setIp(host.getPublicIp());
         serverDto.setPort(host.getPort());
         serverDto.setUsername(config.getDadInstallUsername());
-        serverDto.setPassword(config.getDadInstallPassword());
+        serverDto.setPassword(encryptionUtils.decrypt(config.getDadInstallPassword()));
 
         OlkCommandDto olkCommandDto = new OlkCommandDto();
         ShardingsDto ssDto = buildShardDto(config, wsSession);
@@ -388,6 +389,8 @@ public class OpsOlkServiceImpl extends ServiceImpl<OpsOlkMapper, OpsOlkEntity> i
             readLogToWs(serverDto, config.getDadLogFileName(), logPrefix, wsSession);
             wsUtil.sendText(wsSession, OlkProcessFlagStr.RUN_DAD_SERVICE_COMPLETE);
         } else {
+            String logPrefix = (String) result.get(DadResult.DATA_TAG);
+            readLogToWs(serverDto, config.getDadLogFileName(), logPrefix, wsSession);
             processError(wsSession, "Deployment service process failed, error: " + result.get(DadResult.MSG_TAG));
         }
     }
@@ -403,7 +406,7 @@ public class OpsOlkServiceImpl extends ServiceImpl<OpsOlkMapper, OpsOlkEntity> i
         shardingServer.setIp(ssHost.getPublicIp());
         shardingServer.setPort(ssHost.getPort());
         shardingServer.setUsername(config.getSsInstallUsername());
-        shardingServer.setPassword(config.getSsInstallPassword());
+        shardingServer.setPassword(encryptionUtils.decrypt(config.getSsInstallPassword()));
         shardingsDto.setServerDto(shardingServer);
 
         shardingsDto.setPort(Integer.parseInt(config.getSsPort()));
@@ -448,13 +451,13 @@ public class OpsOlkServiceImpl extends ServiceImpl<OpsOlkMapper, OpsOlkEntity> i
         shardingServer.setIp(olkHost.getPublicIp());
         shardingServer.setPort(olkHost.getPort());
         shardingServer.setUsername(config.getSsInstallUsername());
-        shardingServer.setPassword(config.getSsInstallPassword());
+        shardingServer.setPassword(encryptionUtils.decrypt(config.getSsInstallPassword()));
         olkDto.setServerDto(shardingServer);
 
         olkDto.setInstallPath(config.getOlkInstallPath());
         olkDto.setSourcePath(config.getOlkUploadPath());
         olkDto.setPort(Integer.parseInt(config.getOlkPort()));
-        olkDto.setOlkParamDto(config.getOlkParamConfig());
+        olkDto.setOlkConfigDto(config.getOlkParamConfig());
         return olkDto;
     }
 
@@ -514,11 +517,12 @@ public class OpsOlkServiceImpl extends ServiceImpl<OpsOlkMapper, OpsOlkEntity> i
         try {
             // Read the log file line by line
             // must wait to link to log file
-            Session session = jschUtil.getSession(serverDto.getIp(), serverDto.getPort(), serverDto.getUsername(), encryptionUtils.decrypt(serverDto.getPassword())).orElseThrow(() -> new OpsException("Connection establishment failed"));
+            Session session = jschUtil.getSession(serverDto.getIp(), serverDto.getPort(), serverDto.getUsername(), serverDto.getPassword()).orElseThrow(() -> new OpsException("Connection establishment failed"));
             JschResult result = jschUtil.executeCommand(String.format("cat %s | grep %s", logPath, reqId), session);
             if (result.getExitCode() != 0) {
-                wsUtil.sendText(wsSession, result.getResult());
+                processError(wsSession, String.format("Failed to Read process log %s, error: %s", logPath, result.getExitCode()));
             }
+            wsUtil.sendText(wsSession, result.getResult());
             session.disconnect();
         } catch (Exception ex) {
             processError(wsSession, String.format("Failed to Read process log %s, error: %s", logPath, ex.getMessage()));
@@ -532,7 +536,7 @@ public class OpsOlkServiceImpl extends ServiceImpl<OpsOlkMapper, OpsOlkEntity> i
     }
 
     private boolean isProcessRunning(String processPort, String searchKey, ServerDto serverDto, WsSession wsSession) {
-        String cmd = String.format("netstat -anp | grep %s | awk '{print $7}' | sed 's|/.*||'", processPort);
+        String cmd = String.format("netstat -anp | grep -w %s | awk '{print $7}' | sed 's|/.*||'", processPort);
         Session session = jschUtil.getSession(serverDto.getIp(), serverDto.getPort(), serverDto.getUsername(), serverDto.getPassword()).orElseThrow(() -> new OpsException(String.format("Connection to %s establishment failed", serverDto.getIp())));
         try {
             JschResult result = jschUtil.executeCommand(cmd, session, wsSession);
@@ -542,6 +546,9 @@ public class OpsOlkServiceImpl extends ServiceImpl<OpsOlkMapper, OpsOlkEntity> i
             String pid = result.getResult();
             if (StrUtil.isEmpty(pid) || pid.equals("-")) {
                 return false;
+            }
+            if (pid.contains("\r\n")) {
+                pid = pid.split("\r\n")[0];
             }
             result = jschUtil.executeCommand("ps -aux|grep " + pid, session, wsSession);
             if (result.getExitCode() != 0) {

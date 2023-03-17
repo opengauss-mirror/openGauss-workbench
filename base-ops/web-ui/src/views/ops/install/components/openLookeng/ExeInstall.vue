@@ -1,41 +1,48 @@
 <template>
   <div class="exe-install-c">
-    <div class="flex-col full-w full-h" v-if="status === statusEnum.SUCESS">
+    <div class="flex-col full-w full-h" v-if="status === statusEnum.SUCCESS">
       <svg-icon icon-class="ops-install-success" class="icon-size mb"></svg-icon>
-      <div class="mb-lg">安装成功</div>
+      <div class="mb">{{ $t('components.openLooKeng.5mpiji1qpcc58') }}</div>
       <div class="flex-row">
         <a-button type="outline" class="mr" @click="goHome">
-          返回首页
-        </a-button>
-        <a-button type="primary" @click="goOps">
-          集群运维
+          {{ $t('components.openLooKeng.5mpiji1qpcc59') }}
         </a-button>
       </div>
     </div>
     <div class="flex-col" v-else>
-      <a-steps :current="2" status="wait" class="mb full-w" type="arrow">
-        <a-step description="上传安装包">
-          上传
+      <a-steps :current="2" :status="data.uploadStatus" class="mb full-w" type="arrow">
+        <a-step :description="$t('components.openLooKeng.5mpiji1qpcc60')" status="finish">
+          {{ $t('components.openLooKeng.5mpiji1qpcc60') }}
           <template #icon>
             <icon-loading/>
           </template>
         </a-step>
-        <a-step description="安装Zookeeper">安装Zookeeper</a-step>
-        <a-step description="安装ShardingProxy">安装ShardingProxy</a-step>
-        <a-step description="安装OpenLookEng">安装OpenLookEng</a-step>
-        <a-step description="启动所有服务">启动服务</a-step>
+        <a-step :description="$t('components.openLooKeng.5mpiji1qpcc61')" :status="data.zkStatus">
+          {{ $t('components.openLooKeng.5mpiji1qpcc61') }}
+        </a-step>
+        <a-step :description="$t('components.openLooKeng.5mpiji1qpcc62')" :status="data.ssStatus">
+          {{ $t('components.openLooKeng.5mpiji1qpcc62') }}
+        </a-step>
+        <a-step :description="$t('components.openLooKeng.5mpiji1qpcc63')" :status="data.olkStatus">
+          {{ $t('components.openLooKeng.5mpiji1qpcc63') }}
+        </a-step>
+        <a-step :description="$t('components.openLooKeng.5mpiji1qpcc64')" :status="data.serviceStatus">
+          {{ $t('components.openLooKeng.5mpiji1qpcc64') }}
+        </a-step>
       </a-steps>
       <div class="install-doing mb">
         <div class="progress-top full-w">
           <div class="progress-c mr-s">
-            <a-progress :color="status === statusEnum.SUCCESS ? 'green' : 'red'" :stroke-width="12" :percent="data.installProgress">
+            <a-progress color="red" :stroke-width="12" :percent="data.installProgress">
             </a-progress>
           </div>
           <a-spin v-if="status === statusEnum.RUNNING" class="mr"/>
           <a-space class="flex-row">
-            <a-button type="primary" @click="retryInstall">重试</a-button>
-            <a-button type="primary">下载日志</a-button>
-            <a-button type="primary">自定义控制台</a-button>
+            <a-button type="primary" @click="retryInstall" v-if="status === statusEnum.FAIL">
+              {{ $t('components.openLooKeng.5mpiji1qpcc67') }}
+            </a-button>
+            <a-button type="primary" @click="downloadLog">{{ $t('components.openLooKeng.5mpiji1qpcc65') }}</a-button>
+            <a-button type="primary">{{ $t('components.openLooKeng.5mpiji1qpcc66') }}</a-button>
           </a-space>
         </div>
       </div>
@@ -56,6 +63,8 @@ import { dataSourceDbList } from '@/api/modeling'
 import { ShardingDsConfig } from '@/types/ops/install'
 import { Message } from '@arco-design/web-vue'
 import { encryptPassword } from '@/utils/jsencrypt'
+import { ProcessFlag } from './ProcessFlag'
+
 const installStore = useOpsStore()
 
 enum statusEnum {
@@ -65,12 +74,17 @@ enum statusEnum {
 }
 
 const status = ref<number>(statusEnum.RUNNING)
-
 const loadingFunc = inject<any>('loading')
 
 const data = reactive<KeyValue>({
   state: -1, // -1 un install  0 installing  1 success  2 fail
-  installProgress: 0
+  installProgress: 0,
+  logs: '',
+  uploadStatus: 'wait',
+  zkStatus: 'wait',
+  ssStatus: 'wait',
+  olkStatus: 'wait',
+  serviceStatus: 'wait'
 })
 
 const getTermObj = (): Terminal => {
@@ -121,6 +135,7 @@ const openLogSocket = () => {
   const socketKey = new Date().getTime()
   const logSocket = new Socket({ url: `olk_install_log_${socketKey}` })
   terminalLogWs.value = logSocket
+  loadingFunc.toLoading()
   logSocket.onopen(() => {
     localStorage.setItem('Static-pluginBase-opsOpsSimpleInstall', '1')
     initTerm(term, logSocket.ws)
@@ -130,21 +145,44 @@ const openLogSocket = () => {
     localStorage.removeItem('Static-pluginBase-opsOpsSimpleInstall')
   })
   logSocket.onmessage((messageData: any) => {
-    if (/^(\d+|\d*\.\d+)%$/.test(messageData)) {
-      isProgress = true
-    }
+    // if (/^(\d+|\d*\.\d+)%$/.test(messageData)) {
+    //   isProgress = true
+    // }
     term.writeln(messageData)
+    data.logs += messageData + '\r\n'
     if (messageData.indexOf('FINAL_EXECUTE_EXIT_CODE') > -1) {
       data.installProgress = 1
       const flag = Number(messageData.split(':')[1])
       if (flag === 0) {
         status.value = statusEnum.SUCCESS
+        loadingFunc.setBackBtnShow(false)
+        loadingFunc.setNextBtnShow(false)
       } else {
         status.value = statusEnum.FAIL
+        loadingFunc.cancelLoading()
       }
       logSocket.destroy()
     }
   })
+}
+
+const handleStateChange = (msg) => {
+
+}
+
+const downloadLog = () => {
+  const filename = 'install.log'
+
+  const blob = new Blob([data.logs], { type: 'text/plain' })
+  const url = URL.createObjectURL(blob)
+
+  const link = document.createElement('a')
+  link.href = url
+  link.download = filename
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+  URL.revokeObjectURL(url)
 }
 
 onMounted(() => {
@@ -166,18 +204,19 @@ const exeInstall = async (socket: Socket<any, any>, businessId: string, term: Te
     },
     businessId: businessId
   }
+  status.value = statusEnum.RUNNING
   installOlk(param).then((res: KeyValue) => {
     if (Number(res.code) !== 200) {
       socket.destroy()
     }
-    status.value = statusEnum.RUNNING
   }).catch((error) => {
     term.writeln(error.toString())
+    loadingFunc.cancelLoading()
     socket.destroy()
   })
 }
 
-const encryptBodyPassword = async (reqBody:KeyValue) => {
+const encryptBodyPassword = async (reqBody: KeyValue) => {
   if (reqBody.dadNeedEncrypt) {
     reqBody.dadInstallPassword = await encryptPassword(reqBody.dadInstallPassword)
   }

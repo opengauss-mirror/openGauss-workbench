@@ -33,6 +33,6 @@ public class OlkProcessFlagStr {
     public static final String END_OLK_SERVICE = "OpenLooKeng Service On %s Started";
     public static final String END_SERVICE = "Start All Service Complete";
     public static final String DAD_STARTED = "Started DeploymentPluginApplication in";
-    public static final String DAD_PKG_NAME = "Distributed-Automatic-Deployment-1.0-SNAPSHOT.jar";
+    public static final String DAD_PKG_NAME = "Distributed-Automatic-Deployment";
     public static final String END_PROCESS = "OpenLooKeng Deploy Process Complete";
 }

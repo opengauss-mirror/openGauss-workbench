@@ -167,7 +167,15 @@ export interface OpenLookengInstallConfig {
   dadNeedEncrypt: false,
   ssNeedEncrypt: false,
   olkNeedEncrypt: false,
-  ruleYaml: ''
+  ruleYaml: '',
+  olkParamConfig: OlkParamConfig
+}
+export interface OlkParamConfig {
+  xmx: '16G',
+  maxMemory: '50GB',
+  maxTotalMemory: '50GB',
+  maxMemoryPer: '10GB',
+  maxTotalMemoryPer: '10GB'
 }
 
 export interface ShardingDsConfig {

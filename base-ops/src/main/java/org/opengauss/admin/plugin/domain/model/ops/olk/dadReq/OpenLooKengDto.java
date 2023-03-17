@@ -8,5 +8,5 @@ public class OpenLooKengDto {
     private String installPath;
     private String sourcePath;
     private int port;
-    private OlkParamDto olkParamDto;
+    private OlkParamDto olkConfigDto;
 }

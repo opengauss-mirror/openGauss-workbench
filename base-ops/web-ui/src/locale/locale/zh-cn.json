@@ -210,7 +210,6 @@
           "5mpiji1qpcc17": "添加配置",
           "5mpiji1qpcc18": "配置预览",
           "5mpiji1qpcc19": "执行安装",
-          "5mpiji1qpcc20": "输入后按下回车，可以增加新的用户",
           "5mpiji1qpcc21": "安装路径不存时将会自动创建",
           "5mpiji1qpcc22": "Sharding安装包",
           "5mpiji1qpcc23": "请选择ShardingProxy安装包",
@@ -242,7 +241,23 @@
           "5mpiji1qpcc48": "集群/实例/数据库",
           "5mpiji1qpcc49": "安装包上传路径",
           "5mpiji1qpcc50": "请输入安装包上传路径",
-          "5mpiji1qpcc51": "重新生成"
+          "5mpiji1qpcc51": "重新生成",
+          "5mpiji1qpcc52": "高级参数配置",
+          "5mpiji1qpcc53": "请输入xmx",
+          "5mpiji1qpcc54": "请输入maxMemory",
+          "5mpiji1qpcc55": "请输入maxTotalMemory",
+          "5mpiji1qpcc56": "请输入maxMemoryPer",
+          "5mpiji1qpcc57": "请输入maxTotalMemoryPer",
+          "5mpiji1qpcc58": "安装成功",
+          "5mpiji1qpcc59": "返回首页",
+          "5mpiji1qpcc60": "上传安装包",
+          "5mpiji1qpcc61": "安装Zookeeper",
+          "5mpiji1qpcc62": "安装ShardingProxy",
+          "5mpiji1qpcc63": "安装OpenLookEng",
+          "5mpiji1qpcc64": "启动所有服务",
+          "5mpiji1qpcc65": "下载日志",
+          "5mpiji1qpcc66": "自定义控制台",
+          "5mpiji1qpcc67": "重试"
         }
     },
     "logCenter": {

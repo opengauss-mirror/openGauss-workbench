@@ -10,6 +10,7 @@ import org.springframework.http.MediaType;
 import javax.net.ssl.*;
 import java.io.*;
 import java.net.*;
+import java.nio.charset.StandardCharsets;
 import java.security.cert.X509Certificate;
 
 /**
@@ -86,9 +87,8 @@ public class HttpUtils {
         BufferedReader in = null;
         StringBuilder result = new StringBuilder();
         try {
-            String urlNameString = url;
-            log.info("sendPost - {}", urlNameString);
-            URL realUrl = new URL(urlNameString);
+            log.info("sendPost - {}", url);
+            URL realUrl = new URL(url);
             HttpURLConnection conn = (HttpURLConnection) realUrl.openConnection();
             conn.setRequestProperty(HttpHeaders.ACCEPT, "*/*");
             conn.setRequestProperty(HttpHeaders.CONNECTION, "Keep-Alive");
@@ -96,12 +96,14 @@ public class HttpUtils {
             conn.setRequestProperty(HttpHeaders.ACCEPT_CHARSET, "utf-8");
             conn.setRequestProperty(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
             conn.setRequestMethod(HttpMethod.POST.name());
+            conn.setConnectTimeout(0);
+            conn.setReadTimeout(0);
             conn.setDoOutput(true);
             conn.setDoInput(true);
             out = new PrintWriter(conn.getOutputStream());
             out.print(param);
             out.flush();
-            in = new BufferedReader(new InputStreamReader(conn.getInputStream(), "utf-8"));
+            in = new BufferedReader(new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8));
             String line;
             while ((line = in.readLine()) != null) {
                 result.append(line);
