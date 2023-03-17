@@ -31,6 +31,7 @@ public class EsSearchQuery {
     private String order;
     private List<String> sorts;
     private long interval;
+    private String id;
 
     public void setStartDate(String startDate) {
         this.startDate = DateUtil.parseUTC(startDate);

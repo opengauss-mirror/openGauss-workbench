@@ -37,7 +37,7 @@ export function taskEditInfo (id) {
 }
 
 export function openSSH (data) {
-  return axios.post('/plugins/base-ops/opsCluster/ssh', data)
+  return axios.post('/host/ssh', data)
 }
 
 export function getEntryKey () {

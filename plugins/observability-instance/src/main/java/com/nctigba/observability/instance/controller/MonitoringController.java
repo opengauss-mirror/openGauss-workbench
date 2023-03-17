@@ -9,24 +9,17 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.nctigba.common.web.exception.CustomException;
 import com.nctigba.common.web.result.AppResult;
 import com.nctigba.observability.instance.model.monitoring.MonitoringParam;
-import com.nctigba.observability.instance.pool.SSHPoolManager;
 import com.nctigba.observability.instance.service.MonitoringService;
-import com.nctigba.observability.instance.service.TopSQLService;
-import com.nctigba.observability.instance.service.ClusterManager.OpsClusterNodeVOSub;
-import com.nctigba.observability.instance.util.SSHOperator;
 
-import cn.hutool.json.JSONObject;
 import lombok.RequiredArgsConstructor;
 
 /**
@@ -40,7 +33,6 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class MonitoringController {
     private final MonitoringService monitoringService;
-    private final TopSQLService topSQLService;
     private final ThreadPoolExecutor pool = new ThreadPoolExecutor(10, 50, 60, TimeUnit.SECONDS,
             new ArrayBlockingQueue<Runnable>(100));
 
@@ -209,18 +201,5 @@ public class MonitoringController {
             throw new CustomException(e.getMessage());
         }
         return AppResult.ok("").addData(map);
-    }
-
-    @SuppressWarnings("deprecation")
-	@GetMapping(value = "/server")
-    public AppResult process(@RequestParam("id") String id) {
-        OpsClusterNodeVOSub node = topSQLService.clusterNode(id);
-        SSHOperator ssh = SSHPoolManager.getSSHOperator(node.getPrivateIp(), node.getHostPort(), "root",
-                node.getRootPassword());
-        JSONObject o = new JSONObject();
-        o.putOnce("domain", node.getPublicIp() + ":" + node.getDbPort());
-        o.putOnce("process", ssh.executeCommandReturnStr("ps -ef|wc -l"));
-        o.putOnce("minimal", StringUtils.equals(node.getVersion(), "MINIMAL_LIST"));
-        return AppResult.ok("").addData(o);
     }
 }

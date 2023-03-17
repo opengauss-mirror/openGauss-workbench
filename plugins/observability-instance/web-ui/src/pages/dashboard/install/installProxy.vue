@@ -188,7 +188,8 @@ const sendData = async () => {
         hostId: formData.nodeId,
         installMode: formData.installMode,
         rootPassword: encryptPwd,
-        port: formData.port
+        port: formData.port,
+        language: localStorage.getItem('locale') === 'en-US' ? 'en_US' : 'zh_CN'
     };
     ws.instance.send(sendData);
 };

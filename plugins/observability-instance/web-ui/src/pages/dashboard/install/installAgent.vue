@@ -218,6 +218,7 @@ const sendData = async () => {
         rootPassword: encryptPwd,
         serverCollectPort: formData.serverCollectPort,
         datasourceCollectPort: formData.datasourceCollectPort,
+        language: localStorage.getItem('locale') === 'en-US' ? 'en_US' : 'zh_CN'
     };
     ws.instance.send(sendData);
 };

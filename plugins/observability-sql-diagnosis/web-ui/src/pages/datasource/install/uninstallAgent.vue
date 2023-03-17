@@ -101,8 +101,8 @@ const sendData = async () => {
         key: 'uninstall agent',
         nodeId: formData.nodeId,
         rootPassword: encryptPwd,
+        language: localStorage.getItem('locale') === 'en-US' ? 'en_US' : 'zh_CN'
     }
-    console.log('sendData', sendData)
     ws.instance.send(sendData)
 }
 const onWebSocketMessage = (data: Array<any>) => {

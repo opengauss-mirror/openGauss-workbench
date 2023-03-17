@@ -15,7 +15,7 @@
           <el-tab-pane :label="$t('view.preview')" name="Sql"></el-tab-pane>
         </el-tabs>
         <div v-show="activeName == 'Base'">
-          <el-form :model="form" ref="ruleFormRef" :rules="rules" label-width="95px">
+          <el-form :model="form" ref="ruleFormRef" :rules="rules" label-width="120px">
             <el-form-item prop="viewName" :label="$t('view.name')">
               <el-input v-model="form.viewName" />
             </el-form-item>

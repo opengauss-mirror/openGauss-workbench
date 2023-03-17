@@ -18,4 +18,5 @@ public class LogDetailInfoDTO {
     private Object logData;
     private Object logClusterId;
     private Object logNodeId;
+    private String id;
 }

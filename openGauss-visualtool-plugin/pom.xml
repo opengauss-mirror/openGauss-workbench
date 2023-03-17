@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.opengauss</groupId>
     <artifactId>visualtool-plugin</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>5.0.0</version>
     <packaging>jar</packaging>
     <properties>
         <maven.compiler.source>11</maven.compiler.source>
@@ -25,7 +25,7 @@
         <dependency>
             <groupId>org.opengauss</groupId>
             <artifactId>visualtool-framework</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+            <version>5.0.0</version>
             <scope>provided</scope>
             <exclusions>
                 <exclusion>

@@ -14,6 +14,7 @@ import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
 import org.opengauss.admin.common.core.domain.model.ops.HostUserBody;
 import org.opengauss.admin.common.core.domain.model.ops.JschResult;
 import org.opengauss.admin.common.exception.ops.OpsException;
+import org.opengauss.admin.common.exception.ops.UserAlreadyExistsException;
 import org.opengauss.admin.common.utils.ops.JschUtil;
 import org.opengauss.admin.system.mapper.ops.OpsEncryptionMapper;
 import org.opengauss.admin.system.mapper.ops.OpsHostUserMapper;
@@ -95,20 +96,20 @@ public class HostUserServiceImpl extends ServiceImpl<OpsHostUserMapper, OpsHostU
 
         long count = count(queryWrapper);
         if (count > 0) {
-            throw new OpsException("User information already exists");
+            throw new UserAlreadyExistsException("User information already exists");
         }
 
         OpsHostUserEntity rootUser = getRootUserByHostId(hostId);
-        if (Objects.isNull(rootUser)){
+        if (Objects.isNull(rootUser)) {
             rootUser = new OpsHostUserEntity();
             rootUser.setUsername("root");
             rootUser.setPassword(hostUserBody.getPassword());
         }
 
-        if (StrUtil.isEmpty(rootUser.getPassword())){
-            if (StrUtil.isNotEmpty(hostUserBody.getRootPassword())){
+        if (StrUtil.isEmpty(rootUser.getPassword())) {
+            if (StrUtil.isNotEmpty(hostUserBody.getRootPassword())) {
                 rootUser.setPassword(hostUserBody.getRootPassword());
-            }else {
+            } else {
                 throw new OpsException("root password does not exist");
             }
         }
@@ -255,16 +256,16 @@ public class HostUserServiceImpl extends ServiceImpl<OpsHostUserMapper, OpsHostU
         }
 
         OpsHostUserEntity rootUserEntity = getRootUserByHostId(hostId);
-        if (Objects.isNull(rootUserEntity)){
+        if (Objects.isNull(rootUserEntity)) {
             rootUserEntity = new OpsHostUserEntity();
             rootUserEntity.setUsername("root");
             rootUserEntity.setPassword(hostUserBody.getPassword());
         }
 
-        if (StrUtil.isEmpty(rootUserEntity.getPassword())){
-            if (StrUtil.isNotEmpty(hostUserBody.getRootPassword())){
+        if (StrUtil.isEmpty(rootUserEntity.getPassword())) {
+            if (StrUtil.isNotEmpty(hostUserBody.getRootPassword())) {
                 rootUserEntity.setPassword(hostUserBody.getRootPassword());
-            }else {
+            } else {
                 throw new OpsException("root password does not exist");
             }
         }
@@ -329,7 +330,7 @@ public class HostUserServiceImpl extends ServiceImpl<OpsHostUserMapper, OpsHostU
 
     @Override
     public void cleanPassword(String hostUserId) {
-        final LambdaUpdateWrapper<OpsHostUserEntity> updateWrapper = Wrappers.lambdaUpdate(OpsHostUserEntity.class)
+        LambdaUpdateWrapper<OpsHostUserEntity> updateWrapper = Wrappers.lambdaUpdate(OpsHostUserEntity.class)
                 .set(OpsHostUserEntity::getPassword, null)
                 .set(OpsHostUserEntity::getSudo,Boolean.TRUE)
                 .eq(OpsHostUserEntity::getHostUserId, hostUserId);

@@ -41,6 +41,7 @@ public class DbConnectionServiceImpl implements DbConnectionService {
         if (databaseConnectionDAO.getJudgeName(request.getName(), request.getWebUser()) == 0) {
             DatabaseConnectionDO conn = request.toDatabaseConnection();
             try {
+                conn.setEdition(test(request));
                 databaseConnectionDAO.insertTable(conn);
                 DatabaseConnectionDO dataList = databaseConnectionDAO.getAttributeByName(request.getName(), request.getWebUser());
                 String uuid = UUID.randomUUID().toString();
@@ -93,7 +94,7 @@ public class DbConnectionServiceImpl implements DbConnectionService {
     public DatabaseConnectionDO updateDatabaseConnection(DbConnectionCreateDTO request) {
         try {
             DatabaseConnectionDO conn = request.toDatabaseConnection();
-            test(request);
+            conn.setEdition(test(request));
             connectionMapDAO.deleteConnection(request.getConnectionid());
             databaseConnectionDAO.updateTable(conn);
             DatabaseConnectionDO dataList = databaseConnectionDAO.getAttributeByName(request.getName(), request.getWebUser());
@@ -113,7 +114,7 @@ public class DbConnectionServiceImpl implements DbConnectionService {
     public DatabaseConnectionDO loginDatabaseConnection(DbConnectionCreateDTO request) {
         try {
             DatabaseConnectionDO conn = request.toDatabaseConnection();
-            test(request);
+            conn.setEdition(test(request));
             databaseConnectionDAO.updateTable(conn);
             DatabaseConnectionDO dataList = databaseConnectionDAO.getAttributeByName(request.getName(), request.getWebUser());
             String uuid = UUID.randomUUID().toString();
@@ -187,17 +188,21 @@ public class DbConnectionServiceImpl implements DbConnectionService {
                             "         inner join pg_namespace ns on tbl.relnamespace = ns.oid\n" +
                             "         where tbl.relkind = 'r'\n" +
                             "           and ns.nspname = '" + schema.getSchema() + "' ) x\n" +
-                            " where has_table_privilege(x.oid, 'SELECT')",
-                    "select c.relname as viewname from pg_class c INNER JOIN pg_namespace n ON n.oid = c.relnamespace and n.nspname = '" + schema.getSchema() + SELECT_OBJECT_WHERE_IN_SQL + "v','m" + QUOTES_PARENTHESES_SEMICOLON,
+                            " where has_table_privilege(x.oid, 'SELECT')" +
+                            " order by 1",
+                    "select c.relname as viewname from pg_class c INNER JOIN pg_namespace n ON n.oid = c.relnamespace and n.nspname = '" + schema.getSchema() + SELECT_OBJECT_WHERE_IN_SQL + "v','m" + "') order by 1" + SEMICOLON,
                     "SELECT proname,proargtypes FROM pg_proc\n" +
-                            "WHERE pronamespace = (SELECT pg_namespace.oid FROM pg_namespace WHERE nspname = '" + schema.getSchema() + "')\n",
+                            "WHERE pronamespace = (SELECT pg_namespace.oid FROM pg_namespace WHERE nspname = '" + schema.getSchema() + "')\n" +
+                            " order by 1\n",
 
                     "select c.relname as relname from\n" +
                             "pg_class c INNER JOIN pg_namespace n ON n.oid = c.relnamespace \n" +
-                            "and n.nspname = '" + schema.getSchema() + "' where c.relkind = 'S'",
+                            "and n.nspname = '" + schema.getSchema() + "' where c.relkind = 'S'\n" +
+                            " order by 1",
                     "select synname from PG_SYNONYM pgs, pg_namespace pgn\n" +
                             "   where pgn.oid = pgs.synnamespace\n" +
-                            "     and pgn.nspname  ='" + schema.getSchema() + "'",
+                            "     and pgn.nspname  ='" + schema.getSchema() + "'\n" +
+                            " order by 1",
                     schema.getSchema()
             );
             connectionDTO.updataConnectionDTO(connectionDTO);
@@ -211,12 +216,12 @@ public class DbConnectionServiceImpl implements DbConnectionService {
     }
 
     @Override
-    public void test(DbConnectionCreateDTO request) throws Exception {
-        metaDataByJdbcService.testQuerySQL(
+    public String test(DbConnectionCreateDTO request) throws Exception {
+        return metaDataByJdbcService.versionSQL(
                 GET_URL_JDBC + request.getIp() + ":" + request.getPort() + "/" + request.getDataName() + CONFIGURE_TIME,
                 request.getUserName(),
                 request.getPassword(),
-                "SELECT 1"
+                " select version();"
         );
     }
 

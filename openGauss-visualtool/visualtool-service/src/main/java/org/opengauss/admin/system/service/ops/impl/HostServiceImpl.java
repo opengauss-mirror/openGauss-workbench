@@ -79,7 +79,7 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
 
         Session session = jschUtil.getSession(hostBody.getPublicIp(), hostBody.getPort(), "root", encryptionUtils.decrypt(hostBody.getPassword())).orElseThrow(() -> new OpsException("Failed to establish a session with the host"));
         try {
-            hostEntity = hostBody.toHostEntity(getHostName(session),getOS(session),getCpuArch(session));
+            hostEntity = hostBody.toHostEntity(getHostName(session), getOS(session), getCpuArch(session));
         } finally {
             if (Objects.nonNull(session) && session.isConnected()) {
                 session.disconnect();
@@ -96,14 +96,14 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
         String command = "lscpu | grep Architecture: | head -n 1 | awk -F ':' '{print $2}'";
         try {
             JschResult jschResult = jschUtil.executeCommand(command, rootSession);
-            if (jschResult.getExitCode()!=0){
-                log.error("Failed to get cpu architecture information,exitCode:{},res:{}",jschResult.getExitCode(),jschResult.getResult());
+            if (jschResult.getExitCode() != 0) {
+                log.error("Failed to get cpu architecture information,exitCode:{},res:{}", jschResult.getExitCode(), jschResult.getResult());
                 throw new OpsException("Failed to get cpu architecture information");
             }
 
             return jschResult.getResult().trim();
         } catch (Exception e) {
-            log.error("Failed to get cpu architecture information",e);
+            log.error("Failed to get cpu architecture information", e);
             throw new OpsException("Failed to get cpu architecture information");
         }
     }
@@ -112,14 +112,14 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
         String command = "cat /etc/os-release | grep ID= | head -n 1 | awk -F '=' '{print $2}' | sed 's/\\\"//g'";
         try {
             JschResult jschResult = jschUtil.executeCommand(command, rootSession);
-            if (jschResult.getExitCode()!=0){
-                log.error("Failed to get system information,exitCode:{},res:{}",jschResult.getExitCode(),jschResult.getResult());
+            if (jschResult.getExitCode() != 0) {
+                log.error("Failed to get system information,exitCode:{},res:{}", jschResult.getExitCode(), jschResult.getResult());
                 throw new OpsException("Failed to get system information");
             }
 
             return jschResult.getResult().trim();
         } catch (Exception e) {
-            log.error("Failed to get system information",e);
+            log.error("Failed to get system information", e);
             throw new OpsException("Failed to get system information");
         }
     }
@@ -141,7 +141,7 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
 
     @Override
     public boolean ping(HostBody hostBody) {
-        Session session = jschUtil.getSession(hostBody.getPublicIp(), hostBody.getPort(), "root", encryptionUtils.decrypt(hostBody.getPassword())).orElse(null);
+        Session session = jschUtil.getSession(hostBody.getPublicIp(), hostBody.getPort(), hostBody.getUsername(), encryptionUtils.decrypt(hostBody.getPassword())).orElse(null);
         if (session != null) {
             session.disconnect();
             return true;
@@ -173,10 +173,10 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
         }
 
         OpsHostUserEntity root = opsHostUserEntities.stream().filter(opsHostUserEntity -> "root".equals(opsHostUserEntity.getUsername())).findFirst().orElseThrow(() -> new OpsException("root user information not found"));
-        if (StrUtil.isEmpty(root.getPassword())){
-            if (StrUtil.isEmpty(rootPassword)){
+        if (StrUtil.isEmpty(root.getPassword())) {
+            if (StrUtil.isEmpty(rootPassword)) {
                 throw new OpsException("root password does not exist");
-            }else {
+            } else {
                 root.setPassword(rootPassword);
             }
         }
@@ -206,18 +206,18 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
         if (Objects.isNull(root)) {
             root = hostBody.toRootUser(hostId);
             hostUserService.save(root);
-        }else {
-            if (Objects.nonNull(hostBody.getIsRemember()) && hostBody.getIsRemember()){
+        } else {
+            if (Objects.nonNull(hostBody.getIsRemember()) && hostBody.getIsRemember()) {
                 root.setPassword(hostBody.getPassword());
                 root.setSudo(Boolean.TRUE);
                 hostUserService.updateById(root);
-            }else {
+            } else {
                 hostUserService.cleanPassword(root.getHostUserId());
             }
         }
 
         Session session = jschUtil.getSession(hostBody.getPublicIp(), hostBody.getPort(), "root", encryptionUtils.decrypt(hostBody.getPassword())).orElseThrow(() -> new OpsException("Failed to establish a session with the host"));
-        OpsHostEntity newHostEntity = hostBody.toHostEntity(getHostName(session),getOS(session),getCpuArch(session));
+        OpsHostEntity newHostEntity = hostBody.toHostEntity(getHostName(session), getOS(session), getCpuArch(session));
         newHostEntity.setHostId(hostId);
         updateById(newHostEntity);
 
@@ -234,6 +234,7 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
         }
         final IPage<OpsHostVO> opsHostVOIPage = hostMapper.pageHost(page, name, tagIds, os, tagIds.size());
         final List<OpsHostVO> records = opsHostVOIPage.getRecords();
+
         populateIsRememberVO(records);
         populateTags(records);
         return opsHostVOIPage;
@@ -241,14 +242,14 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
 
     @Override
     public void ssh(SSHBody sshBody) {
-        WsSession wsSession = wsConnectorManager.getSession(sshBody.getBusinessId()).orElseThrow(()->new OpsException("websocket session not exist"));
+        WsSession wsSession = wsConnectorManager.getSession(sshBody.getBusinessId()).orElseThrow(() -> new OpsException("websocket session not exist"));
 
         Session session = jschUtil.getSession(sshBody.getIp(), sshBody.getSshPort(), sshBody.getSshUsername(), encryptionUtils.decrypt(sshBody.getSshPassword()))
                 .orElseThrow(() -> new OpsException("Failed to establish session with host"));
 
         ChannelShell channelShell = jschUtil.openChannelShell(session);
 
-        SSHChannelManager.registerChannelShell(sshBody.getBusinessId(),channelShell);
+        SSHChannelManager.registerChannelShell(sshBody.getBusinessId(), channelShell);
 
         Future<?> future = threadPoolTaskExecutor.submit(() -> jschUtil.channelToWsSession(channelShell, wsSession));
 
@@ -295,7 +296,7 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
 
     @Override
     public Map<String, String> mapOsByIps(Set<String> ipSet) {
-        if (CollUtil.isEmpty(ipSet)){
+        if (CollUtil.isEmpty(ipSet)) {
             return Collections.emptyMap();
         }
 
@@ -303,7 +304,7 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
                 .in(OpsHostEntity::getPublicIp, ipSet);
 
         List<OpsHostEntity> hostList = list(queryWrapper);
-        return hostList.stream().collect(Collectors.toMap(OpsHostEntity::getPublicIp,OpsHostEntity::getOs));
+        return hostList.stream().collect(Collectors.toMap(OpsHostEntity::getPublicIp, OpsHostEntity::getOs));
     }
 
     @Override
@@ -523,13 +524,13 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
     }
 
     private void populateIsRememberVO(List<OpsHostVO> list) {
-        final List<String> hostIds = list.stream().map(OpsHostVO::getHostId).collect(Collectors.toList());
-        if (CollUtil.isNotEmpty(hostIds)){
-            final List<OpsHostUserEntity> opsHostUserEntities = hostUserService.listHostUserByHostIdList(hostIds);
+        List<String> hostIds = list.stream().map(OpsHostVO::getHostId).collect(Collectors.toList());
+        if (CollUtil.isNotEmpty(hostIds)) {
+            List<OpsHostUserEntity> opsHostUserEntities = hostUserService.listHostUserByHostIdList(hostIds);
             List<String> isRememberHostIds = new ArrayList<>();
             for (OpsHostUserEntity opsHostUserEntity : opsHostUserEntities) {
-                final String username = opsHostUserEntity.getUsername();
-                if ("root".equalsIgnoreCase(username) && StrUtil.isNotEmpty(opsHostUserEntity.getPassword())){
+                String username = opsHostUserEntity.getUsername();
+                if ("root".equalsIgnoreCase(username) && StrUtil.isNotEmpty(opsHostUserEntity.getPassword())) {
                     isRememberHostIds.add(opsHostUserEntity.getHostId());
                 }
             }
@@ -541,13 +542,13 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
     }
 
     private void populateIsRemember(List<OpsHostEntity> list) {
-        final List<String> hostIds = list.stream().map(OpsHostEntity::getHostId).collect(Collectors.toList());
-        if (CollUtil.isNotEmpty(hostIds)){
-            final List<OpsHostUserEntity> opsHostUserEntities = hostUserService.listHostUserByHostIdList(hostIds);
+        List<String> hostIds = list.stream().map(OpsHostEntity::getHostId).collect(Collectors.toList());
+        if (CollUtil.isNotEmpty(hostIds)) {
+            List<OpsHostUserEntity> opsHostUserEntities = hostUserService.listHostUserByHostIdList(hostIds);
             List<String> isRememberHostIds = new ArrayList<>();
             for (OpsHostUserEntity opsHostUserEntity : opsHostUserEntities) {
-                final String username = opsHostUserEntity.getUsername();
-                if ("root".equalsIgnoreCase(username) && StrUtil.isNotEmpty(opsHostUserEntity.getPassword())){
+                String username = opsHostUserEntity.getUsername();
+                if ("root".equalsIgnoreCase(username) && StrUtil.isNotEmpty(opsHostUserEntity.getPassword())) {
                     isRememberHostIds.add(opsHostUserEntity.getHostId());
                 }
             }

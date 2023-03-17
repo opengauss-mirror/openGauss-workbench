@@ -1,8 +1,6 @@
 package org.opengauss.admin.web.controller.ops;
 
-import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import org.opengauss.admin.common.core.controller.BaseController;
 import org.opengauss.admin.common.core.domain.AjaxResult;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
@@ -55,7 +53,7 @@ public class HostController extends BaseController {
     }
 
     @GetMapping("/ping/{hostId}")
-    public AjaxResult ping(@PathVariable String hostId, @RequestParam(value = "rootPassword",required = false) String rootPassword) {
+    public AjaxResult ping(@PathVariable String hostId, @RequestParam(value = "rootPassword", required = false) String rootPassword) {
         return toAjax(hostService.ping(hostId, rootPassword));
     }
 

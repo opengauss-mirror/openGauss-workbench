@@ -20,6 +20,7 @@ import com.gitee.starblues.bootstrap.annotation.AutowiredType.Type;
 import com.nctigba.observability.sql.mapper.NctigbaEnvMapper;
 import com.nctigba.observability.sql.model.NctigbaEnv;
 import com.nctigba.observability.sql.service.AbstractInstaller.Step.status;
+import com.nctigba.observability.sql.util.MessageSourceUtil;
 
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
@@ -104,7 +105,7 @@ public abstract class AbstractInstaller {
 	}
 
 	protected synchronized void addMsg(WsSession wsSession, List<Step> steps, int curr, String msg) {
-		steps.get(curr).getMsg().add(msg);
+		steps.get(curr).add(msg);
 		wsUtil.sendText(wsSession, JSONUtil.toJsonStr(steps));
 	}
 
@@ -117,7 +118,12 @@ public abstract class AbstractInstaller {
 		List<String> msg = new ArrayList<>();
 
 		public Step(String name) {
-			this.name = name;
+			this.name = MessageSourceUtil.get(name);
+		}
+
+		public void add(String e, Object... objs) {
+			e = MessageSourceUtil.get(e, objs);
+			msg.add(e);
 		}
 
 		public enum status {
