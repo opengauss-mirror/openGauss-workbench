@@ -1,20 +1,22 @@
 package org.opengauss.admin.plugin.utils;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.SecureUtil;
+import com.jcraft.jsch.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.exception.ops.OpsException;
 import org.opengauss.admin.plugin.domain.model.ops.HostFile;
 import org.opengauss.admin.plugin.domain.model.ops.JschResult;
 import org.opengauss.admin.plugin.domain.model.ops.WsSession;
 import org.opengauss.admin.plugin.domain.model.ops.cache.WsConnectorManager;
 import org.opengauss.admin.plugin.enums.ops.HostFileTypeEnum;
-import com.jcraft.jsch.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.expression.ExpressionException;
 import org.springframework.stereotype.Component;
 
 import javax.servlet.http.HttpServletResponse;
@@ -33,11 +35,6 @@ import java.util.concurrent.ConcurrentHashMap;
 @Slf4j
 @Component
 public class JschUtil {
-    @Autowired
-    private WsUtil wsUtil;
-    @Autowired
-    private WsConnectorManager wsConnectorManager;
-
     /**
      * Session timeout duration
      */
@@ -46,13 +43,17 @@ public class JschUtil {
      * Pipe flow timeout (script execution timeout)
      */
     private static final int CHANNEL_TIMEOUT = 50000;
+    private static final ConcurrentHashMap<String, Session> SESSION_CACHE = new ConcurrentHashMap<>();
+    private static ConcurrentHashMap<String, String> autoResponseContext = new ConcurrentHashMap<>();
 
-    private static final ConcurrentHashMap<String,Session> SESSION_CACHE = new ConcurrentHashMap<>();
-
-    private static ConcurrentHashMap<String,String> autoResponseContext = new ConcurrentHashMap<>();
     static {
         autoResponseContext.put("yes/no", "yes");
     }
+
+    @Autowired
+    private WsUtil wsUtil;
+    @Autowired
+    private WsConnectorManager wsConnectorManager;
 
     /**
      * Acquiring a Session
@@ -64,7 +65,7 @@ public class JschUtil {
      * @return ssh session
      */
     public Optional<Session> getSession(String host, Integer port, String username, String password) {
-        log.info("host:{},port:{},username:{}",host,port,username);
+        log.info("host:{},port:{},username:{}", host, port, username);
         return createSession(host, port, username, password);
     }
 
@@ -90,8 +91,8 @@ public class JschUtil {
      * @return SSH Result
      * @throws IOException IO Exception
      */
-    public JschResult executeCommand(String command, Session session,String env) throws IOException, InterruptedException {
-        if (StrUtil.isNotEmpty(env)){
+    public JschResult executeCommand(String command, Session session, String env) throws IOException, InterruptedException {
+        if (StrUtil.isNotEmpty(env)) {
             command = "source " + env + " && " + command;
         }
 
@@ -122,8 +123,8 @@ public class JschUtil {
      * @return SSH Result
      * @throws IOException IO Exception
      */
-    public JschResult executeCommand(String command,String env, Session session, WsSession wsSession) throws IOException, InterruptedException {
-        if (StrUtil.isNotEmpty(env)){
+    public JschResult executeCommand(String command, String env, Session session, WsSession wsSession) throws IOException, InterruptedException {
+        if (StrUtil.isNotEmpty(env)) {
             command = "source " + env + " && " + command;
         }
 
@@ -142,8 +143,8 @@ public class JschUtil {
     }
 
     public JschResult executeCommandWithSerialResponse(String command, Session session, Map<String, List<String>> autoResponse, WsSession retSession) throws Exception {
-        if (Objects.nonNull(retSession)){
-            wsUtil.sendText(retSession,command);
+        if (Objects.nonNull(retSession)) {
+            wsUtil.sendText(retSession, command);
         }
 
         log.info("Execute an order：{}", command);
@@ -186,7 +187,7 @@ public class JschUtil {
      */
     public JschResult executeCommand(String command, Session session, WsSession wsSession, Map<String, String> autoResponse) throws IOException, InterruptedException {
         log.info("Execute an order：{}", command);
-        wsUtil.sendText(wsSession,command);
+        wsUtil.sendText(wsSession, command);
 
         if (Objects.nonNull(autoResponse)) {
             HashMap<String, String> autoClone = new HashMap<>(JschUtil.autoResponseContext);
@@ -200,7 +201,7 @@ public class JschUtil {
         try {
             channel = (ChannelExec) session.openChannel("exec");
             channel.setPtyType("dump");
-            channel.setPty(true);
+            channel.setPty(!command.contains("nohup"));
         } catch (JSchException e) {
             log.error("Obtaining the exec channel fails：", e);
             throw new OpsException("Obtaining the exec channel fails");
@@ -226,7 +227,7 @@ public class JschUtil {
     public ChannelShell openChannelShell(Session session) {
         ChannelShell channel;
         try {
-            channel = (ChannelShell)session.openChannel("shell");
+            channel = (ChannelShell) session.openChannel("shell");
             channel.connect(CHANNEL_TIMEOUT);
         } catch (JSchException e) {
             log.error("Channel establishment Exception", e);
@@ -237,8 +238,9 @@ public class JschUtil {
 
     /**
      * Send instructions to ChannelShell
-     * @param channelShell  channelShell
-     * @param command   command
+     *
+     * @param channelShell channelShell
+     * @param command      command
      */
     public void sendToChannelShell(ChannelShell channelShell, String command) {
         try {
@@ -247,7 +249,7 @@ public class JschUtil {
                 outputStream.write(command.getBytes());
                 outputStream.flush();
             }
-        }catch (Exception e) {
+        } catch (Exception e) {
             log.error("Message Sending Exception", e);
             throw new OpsException("Message Sending Exception");
         }
@@ -256,11 +258,12 @@ public class JschUtil {
 
     /**
      * The SSH Channel message is sent to the Websocket session
+     *
      * @param channel   SSH Channel
      * @param wsSession WebSocket session Object
      */
     public void channelToWsSession(Channel channel, WsSession wsSession) {
-        try (InputStream inputStream = channel.getInputStream()){
+        try (InputStream inputStream = channel.getInputStream()) {
             //Cyclic reading
             byte[] buffer = new byte[1024];
             int i;
@@ -300,7 +303,29 @@ public class JschUtil {
             channel.put(sourceFilePath.trim(), targetPath.trim(), jschProgressMonitor, ChannelSftp.OVERWRITE);
         } catch (Exception e) {
             log.error("sftp upload Failure", e);
-            throw new OpsException("sftp upload Failure");
+            throw new OpsException("sftp upload Failure: " + e.getMessage());
+        }
+        log.info("Upload End");
+    }
+
+    /**
+     * File upload
+     *
+     * @param session        Host SSH Session
+     * @param wsSession      websocket session
+     * @param sourceStream   Source stream
+     * @param targetPath     The target path
+     */
+    public synchronized void upload(Session session, WsSession wsSession, InputStream sourceStream, String targetPath) {
+        log.info("Start uploading stream to {}", targetPath);
+        try {
+            ChannelSftp channel = (ChannelSftp) session.openChannel("sftp");
+            channel.connect();
+            JschProgressMonitor jschProgressMonitor = new JschProgressMonitor(wsSession);
+            channel.put(sourceStream, targetPath.trim(), jschProgressMonitor, ChannelSftp.OVERWRITE);
+        } catch (Exception e) {
+            log.error("sftp upload Failure", e);
+            throw new OpsException("sftp upload Failure: " + e.getMessage());
         }
         log.info("Upload End");
     }
@@ -325,7 +350,7 @@ public class JschUtil {
         }
 
         session.setPassword(password);
-        session.setConfig("StrictHostKeyChecking","no");
+        session.setConfig("StrictHostKeyChecking", "no");
         try {
             session.connect(SESSION_TIMEOUT);
         } catch (JSchException e) {
@@ -393,7 +418,7 @@ public class JschUtil {
                         try {
                             out.write((v.trim() + "\r").getBytes(StandardCharsets.UTF_8));
                             out.flush();
-                            resultStrBuilder.append(v.trim()+"\r");
+                            resultStrBuilder.append(v.trim() + "\r");
                         } catch (IOException e) {
                             log.error("Automatic response exception", e);
                         }
@@ -507,20 +532,20 @@ public class JschUtil {
         HostFile currentDir = null;
         HostFile parentDir = null;
         for (HostFile file : res) {
-            if (".".equalsIgnoreCase(file.getName())){
+            if (".".equalsIgnoreCase(file.getName())) {
                 currentDir = file;
             }
 
-            if ("..".equals(file.getName())){
+            if ("..".equals(file.getName())) {
                 parentDir = file;
             }
         }
 
         res.remove(currentDir);
 
-        if (Objects.nonNull(parentDir)){
+        if (Objects.nonNull(parentDir)) {
             res.remove(parentDir);
-            res.add(0,parentDir);
+            res.add(0, parentDir);
         }
 
         return res;
@@ -553,15 +578,15 @@ public class JschUtil {
                 os.write(buff, 0, i);
             }
 
-            if (empty){
+            if (empty) {
                 os.write(0);
             }
 
             os.flush();
         } catch (Exception e) {
             log.error("{}", e);
-        }finally {
-            if (Objects.nonNull(os)){
+        } finally {
+            if (Objects.nonNull(os)) {
                 try {
                     os.close();
                 } catch (IOException ignore) {
@@ -581,7 +606,7 @@ public class JschUtil {
         private String password;
 
         public String summary() {
-            return SecureUtil.md5(this.host + "_" + this.port + "_" + this.username + "_" + this.password);
+            return SecureUtil.md5(host + "_" + port + "_" + username + "_" + password);
         }
     }
 
@@ -602,8 +627,8 @@ public class JschUtil {
         @Override
         public void init(int op, String src, String dest, long max) {
             this.max = max;
-            this.count = 0;
-            this.percent = -1;
+            count = 0;
+            percent = -1;
         }
 
         @Override

@@ -91,7 +91,7 @@ public class HostServiceImpl implements IHostService {
         }
 
         if (StrUtil.isEmpty(rootPassword)){
-            throw new OpsException("root password does not exist");
+            throw new OpsException("Failed to check port status: root password does not exist");
         }
 
         Session rootSession = jschUtil.getSession(hostEntity.getPublicIp(), hostEntity.getPort(), "root", encryptionUtils.decrypt(rootPassword)).orElseThrow(() -> new OpsException("Failed to establish connection with host"));

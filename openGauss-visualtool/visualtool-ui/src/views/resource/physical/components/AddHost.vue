@@ -179,7 +179,8 @@ const handleTestHost = () => {
         password: encryptPwd,
         isRemember: data.formData.isRemember,
         azId: data.formData.azId,
-        remark: data.formData.remark
+        remark: data.formData.remark,
+        username: 'root'
       })
 
       hostPing(toRaw(param)).then((res: KeyValue) => {

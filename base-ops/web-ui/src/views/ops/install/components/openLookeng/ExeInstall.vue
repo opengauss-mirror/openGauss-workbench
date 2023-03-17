@@ -1,6 +1,6 @@
 <template>
   <div class="exe-install-c">
-    <div class="flex-col full-w full-h" v-if="exeResult === exeResultEnum.SUCESS">
+    <div class="flex-col full-w full-h" v-if="status === statusEnum.SUCESS">
       <svg-icon icon-class="ops-install-success" class="icon-size mb"></svg-icon>
       <div class="mb-lg">安装成功</div>
       <div class="flex-row">
@@ -14,7 +14,7 @@
     </div>
     <div class="flex-col" v-else>
       <a-steps :current="2" status="wait" class="mb full-w" type="arrow">
-        <a-step description="上传安装包及脚本">
+        <a-step description="上传安装包">
           上传
           <template #icon>
             <icon-loading/>
@@ -28,11 +28,12 @@
       <div class="install-doing mb">
         <div class="progress-top full-w">
           <div class="progress-c mr-s">
-            <a-progress :color="data.state === 1 ? 'green' : 'red'" :stroke-width="12" :percent="data.installProgress">
+            <a-progress :color="status === statusEnum.SUCCESS ? 'green' : 'red'" :stroke-width="12" :percent="data.installProgress">
             </a-progress>
           </div>
-          <a-spin class="mr"/>
+          <a-spin v-if="status === statusEnum.RUNNING" class="mr"/>
           <a-space class="flex-row">
+            <a-button type="primary" @click="retryInstall">重试</a-button>
             <a-button type="primary">下载日志</a-button>
             <a-button type="primary">自定义控制台</a-button>
           </a-space>
@@ -44,28 +45,32 @@
 </template>
 <script lang="ts" setup>
 import { KeyValue } from '@/types/global'
-import { ref, reactive, onMounted, inject } from 'vue'
+import { ref, reactive, onMounted, inject, onBeforeUnmount } from 'vue'
 import 'xterm/css/xterm.css'
 import { Terminal } from 'xterm'
+import Socket from '@/utils/websocket'
+import { installOlk } from '@/api/ops'
+import { useOpsStore } from '@/store'
+import { FitAddon } from 'xterm-addon-fit'
+import { dataSourceDbList } from '@/api/modeling'
+import { ShardingDsConfig } from '@/types/ops/install'
+import { Message } from '@arco-design/web-vue'
+import { encryptPassword } from '@/utils/jsencrypt'
+const installStore = useOpsStore()
 
-enum exeResultEnum {
-  UN_INSTALL = Number(-1),
-  SUCESS = Number(1),
-  FAIL = Number(0)
+enum statusEnum {
+  RUNNING = -1,
+  SUCCESS = 1,
+  FAIL = 0
 }
 
-const exeResult = ref<number>(exeResultEnum.UN_INSTALL)
+const status = ref<number>(statusEnum.RUNNING)
 
 const loadingFunc = inject<any>('loading')
 
 const data = reactive<KeyValue>({
   state: -1, // -1 un install  0 installing  1 success  2 fail
   installProgress: 0
-})
-
-onMounted(() => {
-  const term = getTermObj()
-  initTerm(term)
 })
 
 const getTermObj = (): Terminal => {
@@ -83,11 +88,14 @@ const getTermObj = (): Terminal => {
   })
 }
 
-const initTerm = (term: Terminal, ws?: WebSocket | undefined) => {
+const initTerm = (term: Terminal, ws: WebSocket | undefined) => {
+  const fitAddon = new FitAddon()
+  term.loadAddon(fitAddon)
   term.open(document.getElementById('xterm') as HTMLElement)
+  fitAddon.fit()
   term.clear()
   term.focus()
-  term.write('\r\n\x1b[33m$\x1b[0m ')
+  termTerminal.value = term
 }
 
 const goHome = () => {
@@ -102,6 +110,126 @@ const goOps = () => {
     name: 'Static-pluginBase-opsMonitorDailyOps'
   })
   loadingFunc.initData()
+}
+
+const terminalLogWs = ref<Socket<any, any> | undefined>()
+const termTerminal = ref<Terminal>()
+
+const openLogSocket = () => {
+  const term = getTermObj()
+  let isProgress = false
+  const socketKey = new Date().getTime()
+  const logSocket = new Socket({ url: `olk_install_log_${socketKey}` })
+  terminalLogWs.value = logSocket
+  logSocket.onopen(() => {
+    localStorage.setItem('Static-pluginBase-opsOpsSimpleInstall', '1')
+    initTerm(term, logSocket.ws)
+    exeInstall(logSocket, `olk_install_log_${socketKey}`, term)
+  })
+  logSocket.onclose(() => {
+    localStorage.removeItem('Static-pluginBase-opsOpsSimpleInstall')
+  })
+  logSocket.onmessage((messageData: any) => {
+    if (/^(\d+|\d*\.\d+)%$/.test(messageData)) {
+      isProgress = true
+    }
+    term.writeln(messageData)
+    if (messageData.indexOf('FINAL_EXECUTE_EXIT_CODE') > -1) {
+      data.installProgress = 1
+      const flag = Number(messageData.split(':')[1])
+      if (flag === 0) {
+        status.value = statusEnum.SUCCESS
+      } else {
+        status.value = statusEnum.FAIL
+      }
+      logSocket.destroy()
+    }
+  })
+}
+
+onMounted(() => {
+  openLogSocket()
+})
+
+onBeforeUnmount(() => {
+  terminalLogWs.value?.destroy()
+  termTerminal.value?.dispose()
+})
+
+const exeInstall = async (socket: Socket<any, any>, businessId: string, term: Terminal) => {
+  const reqBody = JSON.parse(JSON.stringify(installStore.openLookengInstallConfig)) as KeyValue
+  reqBody.dsConfig = await buildReqData()
+  await encryptBodyPassword(reqBody)
+  const param = {
+    installContext: {
+      olkConfig: reqBody
+    },
+    businessId: businessId
+  }
+  installOlk(param).then((res: KeyValue) => {
+    if (Number(res.code) !== 200) {
+      socket.destroy()
+    }
+    status.value = statusEnum.RUNNING
+  }).catch((error) => {
+    term.writeln(error.toString())
+    socket.destroy()
+  })
+}
+
+const encryptBodyPassword = async (reqBody:KeyValue) => {
+  if (reqBody.dadNeedEncrypt) {
+    reqBody.dadInstallPassword = await encryptPassword(reqBody.dadInstallPassword)
+  }
+  if (reqBody.ssNeedEncrypt) {
+    reqBody.ssInstallPassword = await encryptPassword(reqBody.ssInstallPassword)
+  }
+  if (reqBody.olkNeedEncrypt) {
+    reqBody.olkInstallPassword = await encryptPassword(reqBody.olkInstallPassword)
+  }
+}
+
+const retryInstall = () => {
+  if (terminalLogWs.value) {
+    terminalLogWs.value?.destroy()
+  }
+  if (termTerminal.value) {
+    termTerminal.value.dispose()
+  }
+  openLogSocket()
+}
+
+const buildReqData = async () => {
+  const ds = installStore.openLookengInstallConfig.dsConfig
+  const res = await dataSourceDbList()
+  const dbList: Array<ShardingDsConfig> = []
+  if (ds.length <= 0) {
+    Message.error('No datasource is selected, please select datasource and try again')
+    return
+  }
+  if (res.data.length <= 0) {
+    Message.error('No openGauss cluster is installed, please install a openGauss cluster and try again')
+    return
+  }
+  ds.map((arr: Array<string>) => {
+    const clusterId = arr[0]
+    const nodeId = arr[1]
+    const databaseName = arr[2]
+    const cluster = res.data.find((item: KeyValue) => item.clusterId === clusterId)
+    if (cluster) {
+      const node = cluster.clusterNodes.find((item: KeyValue) => item.nodeId === nodeId)
+      if (node && node.dbName.indexOf(databaseName) >= 0) {
+        dbList.push({
+          dbName: databaseName,
+          port: node.dbPort,
+          host: node.publicIp,
+          username: node.dbUser,
+          password: node.dbUserPassword
+        } as ShardingDsConfig)
+      }
+    }
+  })
+  return dbList
 }
 
 </script>

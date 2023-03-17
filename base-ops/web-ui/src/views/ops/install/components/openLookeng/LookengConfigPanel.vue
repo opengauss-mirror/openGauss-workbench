@@ -1,7 +1,7 @@
 <template>
   <a-form :model="data.form" :rules="rules" auto-label-width :style="{ width: '850px' }" ref="formRef">
-    <a-divider orientation="left">基础信息</a-divider>
-    <a-form-item field="hostId" label="部署主机IP">
+    <a-divider orientation="left">{{$t('components.openLooKeng.5mpiji1qpcc0')}}</a-divider>
+    <a-form-item field="hostId" :label="$t('components.openLooKeng.5mpiji1qpcc1')">
       <a-select :loading="hostListLoading" v-model="data.form.hostId" @change="changeHostId"
                 :placeholder="$t('simple.InstallConfig.5mpmu0laqss0')">
         <a-option v-for="item in hostList" :key="item.hostId" :value="item.hostId">{{
@@ -12,60 +12,52 @@
         </a-option>
       </a-select>
     </a-form-item>
-    <a-form-item field="installUserId" label="用户名">
-      <a-select :loading="installUserLoading" v-model="data.form.installUserId" allow-create>
-        <a-option v-for="item in userListByHost" :key="item.hostUserId" :value="item.hostUserId">{{
+    <a-form-item field="installUsername" :label="$t('components.openLooKeng.5mpiji1qpcc2')">
+      <a-select :loading="installUserLoading" v-model="data.form.installUsername" @change="onUserChange">
+        <a-option v-for="item in userListByHost" :key="item.hostUserId" :value="item.username">{{
             item.username
           }}
         </a-option>
       </a-select>
     </a-form-item>
-    <a-form-item field="password" label="密码">
-      <a-input-password v-model="data.form.password" placeholder="请输入密码" allow-clear/>
+    <a-form-item v-if="!data.host.isHostRemPwd && data.form.installUsername === 'root'" field="password" :label="$t('components.openLooKeng.5mpiji1qpcc3')">
+      <a-input-password v-model.trim="data.form.password" :placeholder="$t('components.openLooKeng.5mpiji1qpcc4')" allow-clear/>
     </a-form-item>
-    <a-form-item field="installPath" label="安装路径">
-      <a-input v-model="data.form.installPath" placeholder="请输入安装路径"/>
+    <a-form-item field="installPath" :label="$t('components.openLooKeng.5mpiji1qpcc5')">
+      <a-input v-model.trim="data.form.installPath" :placeholder="$t('components.openLooKeng.5mpiji1qpcc6')"/>
     </a-form-item>
-    <a-divider orientation="left">安装包信息</a-divider>
-    <a-form-item field="olkTarId" label="OpenLookEng安装包">
-      <a-select v-model="data.form.olkTarId" placeholder="请选择OpenLookEng安装包">
-        <a-option v-for="item in data.olkTarList" :key="item.id" :label="item.name" :value="item.id"/>
+    <a-form-item field="uploadPath" :label="$t('components.openLooKeng.5mpiji1qpcc43')"
+                 :extra="$t('components.openLooKeng.5mpiji1qpcc45')">
+      <a-input v-model.trim="data.form.uploadPath" :placeholder="$t('components.openLooKeng.5mpiji1qpcc50')"/>
+    </a-form-item>
+    <a-divider orientation="left">{{ $t('components.openLooKeng.5mpiji1qpcc7') }}</a-divider>
+    <a-form-item field="olkTarId" :label="$t('components.openLooKeng.5mpiji1qpcc8')">
+      <a-select v-model="data.form.olkTarId" :placeholder="$t('components.openLooKeng.5mpiji1qpcc9')" :loading="packageLoading" class="mr-s">
+        <a-option v-for="item in data.olkTarList" :key="item.packageId" :label="item.packagePath.name" :value="item.packageId"/>
       </a-select>
+      <a-button type="primary" @click="onAddOlkTar">+</a-button>
     </a-form-item>
-    <a-form-item field="olkPort" label="OpenLookEng绑定端口">
-      <a-input v-model="data.form.olkPort" placeholder="请输入OpenLookEng绑定端口"/>
+    <a-form-item field="olkPort" :label="$t('components.openLooKeng.5mpiji1qpcc10')">
+      <a-input-number v-model="data.form.olkPort" :placeholder="$t('components.openLooKeng.5mpiji1qpcc11')"/>
     </a-form-item>
   </a-form>
+  <add-package-dlg ref="addPackageRef" @finish="refreshPackageList" />
 </template>
 <script setup lang="ts">
-import { inject, onMounted, reactive, ref, watch } from 'vue'
+import { inject, onMounted, reactive, ref } from 'vue'
 import { KeyValue } from '@/types/global'
 import { Message } from '@arco-design/web-vue'
-import {
-  mockEncryptPassword,
-  mockHostListAll,
-  mockHostPingById,
-  mockPathEmpty,
-  mockPortUsed,
-  mockUserListAll
-} from '@/api/ops/mock'
 import { PackageType } from '@/types/resource/package'
 import { FormInstance } from '@arco-design/web-vue/es/form'
 import { useOpsStore } from '@/store'
 import { useI18n } from 'vue-i18n'
 import { OpenLookengInstallConfig } from '@/types/ops/install'
+import { hostListAll, hostPing, hostUserListAll, packageListAll, portUsed } from '@/api/ops'
+import AddPackageDlg from '@/views/monitor/packageManage/AddPackageDlg.vue'
+import { encryptPassword } from '@/utils/jsencrypt'
 
 const { t } = useI18n()
 const installStore = useOpsStore()
-
-const props = defineProps({
-  tarMap: {
-    type: Object,
-    default: () => {
-      return {}
-    }
-  }
-})
 
 const data = reactive<KeyValue>({
   form: {
@@ -73,46 +65,64 @@ const data = reactive<KeyValue>({
     installUserId: '',
     password: '',
     installPath: '/data/install',
+    uploadPath: '/data/tar',
     olkTarId: '',
-    olkPort: 1234,
+    olkPort: 2345,
+    needEncrypt: false
+  },
+  host: {
     privateIp: '',
-    publicIp: ''
+    publicIp: '',
+    isHostRemPwd: false,
+    hostPort: 22,
+    cpuArch: '',
+    os: ''
   },
   olkTarList: []
 })
 const hostListLoading = ref<boolean>(false)
 const installUserLoading = ref<boolean>(false)
+const packageLoading = ref<boolean>(false)
 const hostList = ref<KeyValue[]>([])
 const hostObj = ref<KeyValue>({})
 
+const addPackageRef = ref<null | InstanceType<typeof AddPackageDlg>>(null)
+const onAddOlkTar = () => {
+  addPackageRef.value?.open('create', { type: PackageType.OPENLOOKENG })
+}
+
 const initData = () => {
-  if (!installStore.openLookengInstallConfig.olkTarId) {
+  const config = JSON.parse(JSON.stringify(installStore.openLookengInstallConfig))
+  if (Object.keys(config).length <= 0) {
     return
   }
-  const config = JSON.parse(JSON.stringify(installStore.openLookengInstallConfig))
   data.form.hostId = config.olkInstallHostId
-  data.form.installUserId = config.olkInstallUserId
+  data.form.installUsername = config.olkInstallUsername
   data.form.password = config.olkInstallPassword
   data.form.installPath = config.olkInstallPath
+  data.form.uploadPath = config.olkUploadPath
   data.form.olkTarId = config.olkTarId
   data.form.olkPort = config.olkPort
+  data.form.needEncrypt = config.olkNeedEncrypt
 }
 
 const saveStore = () => {
   const param = {
     olkInstallHostId: data.form.hostId,
-    olkInstallUserId: data.form.installUserId,
+    olkInstallUsername: data.form.installUsername,
     olkInstallPassword: data.form.password,
     olkInstallPath: data.form.installPath,
+    olkUploadPath: data.form.uploadPath,
     olkTarId: data.form.olkTarId,
-    olkPort: data.form.olkPort
+    olkPort: data.form.olkPort,
+    olkNeedEncrypt: data.form.needEncrypt
   }
   installStore.setOpenLookengConfig(param as OpenLookengInstallConfig)
 }
 
 const getHostList = () => {
   hostListLoading.value = true
-  mockHostListAll().then((res) => {
+  hostListAll().then((res: KeyValue) => {
     if (Number(res.code) === 200) {
       hostList.value = []
       hostList.value = res.data
@@ -121,19 +131,20 @@ const getHostList = () => {
       })
       if (!data.form.hostId) {
         data.form.hostId = hostList.value[0].hostId
-        data.form.privateIp = hostList.value[0].privateIp
-        data.form.publicIp = hostList.value[0].publicIp
+        data.host.privateIp = hostList.value[0].privateIp
+        data.host.publicIp = hostList.value[0].publicIp
       } else {
         const getOldHost = hostList.value.find((item: KeyValue) => {
           return item.hostId === data.form.hostId
         })
         if (!getOldHost) {
           data.form.hostId = hostList.value[0].hostId
-          data.form.privateIp = hostList.value[0].privateIp
-          data.form.publicIp = hostList.value[0].publicIp
+          data.host.privateIp = hostList.value[0].privateIp
+          data.host.publicIp = hostList.value[0].publicIp
         }
       }
       changeHostId()
+      refreshPackageList()
     } else {
       Message.error('Failed to obtain the host list data')
     }
@@ -145,28 +156,49 @@ const getHostList = () => {
 const userListByHost = ref<KeyValue[]>([])
 
 const changeHostId = () => {
-  if (data.form.hostId) {
-    if (hostObj.value[data.form.hostId]) {
-      data.form.privateIp = hostObj.value[data.form.hostId].privateIp
-      data.form.publicIp = hostObj.value[data.form.hostId].publicIp
-    }
-    installUserLoading.value = true
-    mockUserListAll(data.form.hostId).then((res: KeyValue) => {
-      if (Number(res.code) === 200) {
-        userListByHost.value = []
-        userListByHost.value = res.data
-        if (userListByHost.value.length) {
-          data.form.installUserId = userListByHost.value[0].hostUserId
-        } else {
-          data.form.installUserId = ''
-        }
-      } else {
-        Message.error('Failed to obtain user data from the host')
-      }
-    }).finally(() => {
-      installUserLoading.value = false
-    })
+  if (!data.form.hostId) {
+    return
   }
+  if (hostObj.value[data.form.hostId]) {
+    data.host.privateIp = hostObj.value[data.form.hostId].privateIp
+    data.host.publicIp = hostObj.value[data.form.hostId].publicIp
+    data.host.hostPort = hostObj.value[data.form.hostId].port
+    data.host.isHostRemPwd = hostObj.value[data.form.hostId].isRemember
+    data.host.cpuArch = hostObj.value[data.form.hostId].cpuArch
+    data.host.os = hostObj.value[data.form.hostId].os
+    data.form.needEncrypt = !hostObj.value[data.form.hostId].isRemember
+  }
+  listUserByHost()
+}
+
+const listUserByHost = () => {
+  installUserLoading.value = true
+  hostUserListAll(data.form.hostId).then((res: KeyValue) => {
+    if (Number(res.code) === 200) {
+      userListByHost.value = []
+      userListByHost.value = res.data
+      if (userListByHost.value.length) {
+        data.form.installUsername = userListByHost.value[0].username
+        data.form.password = userListByHost.value[0].password
+      } else {
+        data.form.installUsername = ''
+        data.form.password = ''
+      }
+    } else {
+      Message.error('Failed to obtain user data from the host')
+    }
+  }).finally(() => {
+    installUserLoading.value = false
+  })
+}
+
+const refreshPackageList = () => {
+  packageLoading.value = true
+  packageListAll({ type: PackageType.OPENLOOKENG }).then(res => {
+    data.olkTarList = res.data
+  }).finally(() => {
+    packageLoading.value = false
+  })
 }
 
 onMounted(() => {
@@ -174,32 +206,23 @@ onMounted(() => {
   getHostList()
 })
 
-watch(() => props.tarMap, (val) => {
-  if (val[PackageType.OPENLOOKENG] && val[PackageType.OPENLOOKENG].length > 0) {
-    data.olkTarList = val[PackageType.OPENLOOKENG]
+const validatePort = async (port: number) => {
+  let encryptPwd = ''
+  if (data.form.installUsername === 'root' && !data.host.isHostRemPwd) {
+    encryptPwd = await encryptPassword(data.form.password)
+  } else {
+    const result = userListByHost.value.find((item: KeyValue) => item.username === 'root')
+    if (result) {
+      encryptPwd = result.password
+    }
   }
-}, { deep: true })
-
-const validatePort = async (port: number, password: string, hostId: string) => {
   const portParam = {
     port: port,
-    rootPassword: password
+    rootPassword: encryptPwd
   }
-  const portValid: KeyValue = await mockPortUsed(hostId, portParam)
+  const portValid: KeyValue = await portUsed(data.form.hostId, portParam)
   if (Number(portValid.code) === 200) {
     return portValid.data
-  }
-  return false
-}
-
-const validatePath = async (path: string, password: string, hostId: string) => {
-  const pathParam = {
-    path: path,
-    rootPassword: password
-  }
-  const pathValid: KeyValue = await mockPathEmpty(hostId, pathParam)
-  if (Number(pathValid.code) === 200) {
-    return pathValid.data
   }
   return false
 }
@@ -229,81 +252,67 @@ const beforeConfirm = async (): Promise<boolean> => {
 const validateSpecialFields = async () => {
   let result = true
   formRef.value?.clearValidate()
-  if (data.form.rootPassword) {
-    const validMethodArr = []
-    const encryptPwd = await mockEncryptPassword(data.form.rootPassword)
-    // password validate
-    try {
-      const param = {
-        rootPassword: encryptPwd
-      }
-      const passwordValid: KeyValue = await mockHostPingById(data.form.hostId, param)
-      if (Number(passwordValid.code) !== 200) {
-        formRef.value?.setFields({
-          rootPassword: {
-            status: 'error',
-            message: t('enterprise.NodeConfig.else8')
-          }
-        })
-        result = false
-      }
-    } catch (err: any) {
+  const validMethodArr = []
+  let encryptPwd = ''
+  if (data.form.installUsername === 'root' && !data.host.isHostRemPwd) {
+    encryptPwd = await encryptPassword(data.form.password)
+  } else {
+    const result = userListByHost.value.find((item: KeyValue) => item.username === data.form.installUsername)
+    if (result) {
+      encryptPwd = result.password
+    }
+  }
+  // password validate
+  try {
+    const param = {
+      publicIp: data.host.publicIp,
+      password: encryptPwd,
+      username: data.form.installUsername,
+      port: data.host.hostPort
+    }
+    const passwordValid: KeyValue = await hostPing(param)
+    if (Number(passwordValid.code) !== 200) {
       formRef.value?.setFields({
-        rootPassword: {
+        password: {
           status: 'error',
-          message: t('enterprise.NodeConfig.else9')
+          message: t('components.openLooKeng.5mpiji1qpcc42')
         }
       })
       result = false
     }
-    if (!result) {
-      return result
+  } catch (err: any) {
+    formRef.value?.setFields({
+      password: {
+        status: 'error',
+        message: t('components.openLooKeng.5mpiji1qpcc42')
+      }
+    })
+    result = false
+  }
+  if (!result) {
+    return result
+  }
+  validMethodArr.push(validatePort(data.form.olkPort))
+  if (validMethodArr.length) {
+    let validResult
+    try {
+      validResult = await Promise.all(validMethodArr)
+    } catch (err: any) {
+      return false
     }
-    //  cluster port is used
-    validMethodArr.push(validatePort(data.form.port, encryptPwd, data.form.hostId))
-    validMethodArr.push(validatePath(data.form.installPath, encryptPwd, data.form.hostId))
-    if (validMethodArr.length) {
-      let validResult
-      try {
-        validResult = await Promise.all(validMethodArr)
-      } catch (err: any) {
-        return false
-      }
-      if (!validResult[0]) {
-        // port valid
-        formRef.value?.setFields({
-          port: {
-            status: 'error',
-            message: data.form.port + t('enterprise.NodeConfig.else11')
-          }
-        })
-        result = false
-      }
-      if (!validResult[1]) {
-        // dataPath Valid
-        formRef.value?.setFields({
-          installPath: {
-            status: 'error',
-            message: t('simple.InstallConfig.else4')
-          }
-        })
-        result = false
-      }
+    if (validResult[0]) {
+      // port valid
+      formRef.value?.setFields({
+        port: {
+          status: 'error',
+          message: data.form.port + t('enterprise.NodeConfig.else11')
+        }
+      })
+      result = false
     }
   }
 
   return result
-}
-
-const blankValidator = (value: any, cb: any) => {
-  return new Promise(resolve => {
-    if (!value.trim()) {
-      cb(t('enterprise.ClusterConfig.else2'))
-      resolve(false)
-    } else {
-      resolve(true)
-    }
-  })
 }
 
 const portValidator = (value: any, cb: any) => {
@@ -313,30 +322,39 @@ const portValidator = (value: any, cb: any) => {
     if (re.test(value)) {
       resolve(true)
     } else {
-      cb('请输入正确的端口号')
+      cb(t('simple.InstallConfig.else2'))
       resolve(false)
     }
   })
 }
 
 const rules: KeyValue = {
-  hostId: { required: true, message: '请选择主机' },
-  installUserId: { required: true, message: '请选择用户名' },
+  hostId: { required: true, message: t('simpleInstall.index.5mpn813gukw0') },
+  installUsername: { required: true, message: t('components.openLooKeng.5mpiji1qpcc12') },
   password: [
-    { required: true, message: '请输入密码' },
-    { validator: blankValidator }
+    { required: true, message: t('components.openLooKeng.5mpiji1qpcc13') }
   ],
   installPath: [
-    { required: true, message: '请输入安装路径' },
-    { validator: blankValidator }
+    { required: true, message: t('components.openLooKeng.5mpiji1qpcc14') }
+  ],
+  uploadPath: [
+    { required: true, message: t('components.openLooKeng.5mpiji1qpcc50') }
   ],
   olkPort: [{
-    required: true, message: '请选择OpenLookEng端口'
+    required: true, message: t('components.openLooKeng.5mpiji1qpcc15')
   }, {
     validator: portValidator
   }],
-  olkTarId: { required: true, message: '请选择OpenLookEng安装包' }
+  olkTarId: { required: true, message: t('components.openLooKeng.5mpiji1qpcc16') }
 }
+
+const onUserChange = () => {
+  const user = userListByHost.value.find(item => item.username === data.installUsername)
+  if (user) {
+    data.password = user.password
+  }
+}
+
 defineExpose({
   saveStore,
   beforeConfirm

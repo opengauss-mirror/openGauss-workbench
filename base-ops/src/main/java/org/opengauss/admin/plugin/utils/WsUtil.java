@@ -1,9 +1,9 @@
 package org.opengauss.admin.plugin.utils;
 
 import cn.hutool.core.util.StrUtil;
+import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.plugin.domain.model.ops.WsSession;
 import org.opengauss.admin.plugin.domain.model.ops.cache.WsConnectorManager;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -43,17 +43,25 @@ public class WsUtil {
     }
 
     public void close(WsSession wsSession) {
-        if (Objects.nonNull(wsSession)){
+        if (Objects.nonNull(wsSession)) {
             wsConnectorManager.removeByVal(wsSession);
             Session session = wsSession.getSession();
 
-            if (Objects.nonNull(session)){
+            if (Objects.nonNull(session)) {
                 try {
                     session.close();
                 } catch (IOException e) {
-                    log.error("close websocket session error : " ,e);
+                    log.error("close websocket session error : ", e);
                 }
             }
         }
+    }
+
+    public void setErrorFlag(WsSession wsSession) {
+        sendText(wsSession, "FINAL_EXECUTE_EXIT_CODE:-1");
+    }
+
+    public void setSuccessFlag(WsSession wsSession) {
+        sendText(wsSession, "FINAL_EXECUTE_EXIT_CODE:0");
     }
 }
