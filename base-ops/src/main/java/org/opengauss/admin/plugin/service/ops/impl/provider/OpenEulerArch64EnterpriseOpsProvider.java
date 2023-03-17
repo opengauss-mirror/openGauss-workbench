@@ -845,7 +845,7 @@ public class OpenEulerArch64EnterpriseOpsProvider extends AbstractOpsProvider {
 
         try {
             Optional<OpsHostUserEntity> rootUserEntity = hostInfoHolder.getHostUserEntities().stream().filter(userEntity -> "root".equalsIgnoreCase(userEntity.getUsername())).findFirst();
-            cleanEnv(unInstallContext.getHostInfoHolders(),hostEntity,rootUserEntity,hostUserEntity,retSession,opsClusterEntity.getInstallPackagePath(),opsClusterEntity.getXmlConfigPath());
+            cleanEnv(unInstallContext.getHostInfoHolders(),hostEntity,rootUserEntity,hostUserEntity,retSession,opsClusterEntity.getInstallPackagePath(),opsClusterEntity.getXmlConfigPath(),opsClusterEntity.getEnvPath());
             wsUtil.sendText(retSession,"\nENV_CLEAN_SUCCESS\n");
         }catch (Exception e){
             log.error("env clean fail:",e);
@@ -853,7 +853,7 @@ public class OpenEulerArch64EnterpriseOpsProvider extends AbstractOpsProvider {
         }
     }
 
-    private void cleanEnv(List<HostInfoHolder> hostInfoHolders, OpsHostEntity hostEntity, Optional<OpsHostUserEntity> rootUserEntityOption, OpsHostUserEntity hostUserEntity, WsSession retSession, String installPackagePath, String xmlConfigPath) throws IOException, InterruptedException {
+    private void cleanEnv(List<HostInfoHolder> hostInfoHolders, OpsHostEntity hostEntity, Optional<OpsHostUserEntity> rootUserEntityOption, OpsHostUserEntity hostUserEntity, WsSession retSession, String installPackagePath, String xmlConfigPath, String envPath) throws IOException, InterruptedException {
         final OpsHostUserEntity rootUserEntity = rootUserEntityOption.orElseThrow(() -> new OpsException("root user information not found"));
         final Session rootSession = jschUtil.getSession(hostEntity.getPublicIp(), hostEntity.getPort(), rootUserEntity.getUsername(), encryptionUtils.decrypt(rootUserEntity.getPassword())).orElseThrow(() -> new OpsException("The root user failed to establish a connection"));
 
@@ -864,7 +864,7 @@ public class OpenEulerArch64EnterpriseOpsProvider extends AbstractOpsProvider {
             Map<String,String> authResponse = new HashMap<>();
             authResponse.put("(yes/no)?","yes");
             authResponse.put("Password:",encryptionUtils.decrypt(rootUserEntity.getPassword()));
-            final JschResult jschResult = jschUtil.executeCommand(command, rootSession, retSession, authResponse);
+            final JschResult jschResult = jschUtil.executeCommand(envPath,command, rootSession, retSession, authResponse);
             if (0!=jschResult.getExitCode()){
                 log.error("clean env fail,exitCode:{},exitMsg:{}",jschResult.getExitCode(),jschResult.getExitCode());
                 throw new OpsException("clean env fail");

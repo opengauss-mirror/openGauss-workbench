@@ -176,6 +176,14 @@ public class JschUtil {
         return buildJschResultWithSerialResponse(channel, retSession, autoResponse);
     }
 
+    public JschResult executeCommand(String env,String command, Session session, WsSession wsSession, Map<String, String> autoResponse) throws IOException, InterruptedException {
+        if (StrUtil.isNotEmpty(env)){
+            command = "source " + env + " && " + command;
+        }
+
+        return executeCommand(command, session, wsSession, autoResponse);
+    }
+
     /**
      * ChannelExec
      *
