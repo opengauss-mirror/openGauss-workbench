@@ -29,7 +29,7 @@
                 <a-select v-model="filter.os" allow-clear :placeholder="$t('physical.index.osPlaceholder')"
                   style="width: 150px;">
                   <a-option value="openEuler">openEuler</a-option>
-                  <a-option value="centOS">centOS</a-option>
+                  <a-option value="centOS">centos</a-option>
                 </a-select>
               </a-form-item>
               <a-form-item>
@@ -83,15 +83,15 @@
           </template>
           <template #diskInfo="{ record }">
             <div class="flex-row">
-              <div class="flex-col mr" style="width: 120px;">
+              <div class="flex-col mr" style="width: 160px;">
                 <div class="net flex-row-center">
-                  <div class="flex-col mr" style="width: 60px;">
+                  <div class="flex-col mr" style="width: 80px;">
                     <icon-arrow-fall :size="25" class="mb" />
-                    <div>{{ record.downSpeed }}kb</div>
+                    <div>{{ record.downSpeed ? record.downSpeed : '--' }} byte/s</div>
                   </div>
-                  <div class="flex-col" style="width: 60px;">
+                  <div class="flex-col" style="width: 80px;">
                     <icon-arrow-rise :size="25" class="mb" />
-                    <div>{{ record.upSpeed }}kb</div>
+                    <div>{{ record.upSpeed ? record.upSpeed : '--' }} byte/s</div>
                   </div>
                 </div>
                 <div>{{ $t('physical.index.net') }}</div>
@@ -259,9 +259,14 @@ const openHostMonitor = (hostData: KeyValue, index: number) => {
         list.data[index].state = 0
         websocket.destroy()
       } else {
-        list.data[index].state = 1
-        // websocket push socketArr
-        list.socketArr.push(websocket)
+        if (res.data.res) {
+          list.data[index].state = 1
+          // websocket push socketArr
+          list.socketArr.push(websocket)
+        } else {
+          list.data[index].state = 0
+          websocket.destroy()
+        }
       }
     }).catch(() => {
       console.log('show monitor error')
@@ -280,8 +285,11 @@ const openHostMonitor = (hostData: KeyValue, index: number) => {
     list.data[index].downSpeed = eventData.downSpeed
     list.data[index].upSpeed = eventData.upSpeed
     list.data[index].cpuOption.series[0].data[0] = eventData.cpu / 100
+    list.data[index].cpuOption.series[0].data[1] = 1 - eventData.cpu / 100
     list.data[index].diskOption.series[0].data[0] = eventData.disk / 100
+    list.data[index].diskOption.series[0].data[1] = 1 - eventData.disk / 100
     list.data[index].memoryOption.series[0].data[0] = eventData.memory / 100
+    list.data[index].memoryOption.series[0].data[1] = 1 - eventData.memory / 100
   })
 }
 

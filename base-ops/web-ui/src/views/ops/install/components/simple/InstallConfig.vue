@@ -360,7 +360,7 @@ const saveStore = () => {
   const param = JSON.parse(JSON.stringify(data.form))
   param.clusterRole = ClusterRoleEnum.MASTER
   param.clusterName = ''
-  installStore.setInstallContext({ clusterId: param.clusterId })
+  installStore.setInstallContext({ clusterId: param.clusterId, envPath: param.envPath })
   const miniConfig = {
     clusterName: '',
     port: param.port,
