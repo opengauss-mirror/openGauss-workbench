@@ -19,6 +19,7 @@ import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType.Type;
 import com.nctigba.observability.sql.listener.PluginListener;
 import com.nctigba.observability.sql.service.AgentService;
+import com.nctigba.observability.sql.util.MessageSourceUtil;
 
 import cn.hutool.core.thread.ThreadUtil;
 import cn.hutool.json.JSONUtil;
@@ -48,6 +49,7 @@ public class Installer implements SocketExtract {
 		ThreadUtil.execute(() -> {
 			try {
 				var obj = JSONUtil.parseObj(message);
+				MessageSourceUtil.set(obj.getStr("language"));
 				var session = wsConnectorManager.getSession(sessionId)
 						.orElseThrow(() -> new RuntimeException("websocket session not exist"));
 				switch (obj.getStr("key")) {

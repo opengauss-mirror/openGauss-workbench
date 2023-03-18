@@ -18,7 +18,7 @@ import lombok.NoArgsConstructor;
 /**
  * HistogramToHeatmap
  * 
- * @formatter:off
+ * <pre>
 Sampling run queue length... Hit Ctrl-C to end.
 
 12:16:18
@@ -29,7 +29,7 @@ Sampling run queue length... Hit Ctrl-C to end.
         3          : 137      |***************************             |
         4          : 93       |******************                      |
         5          : 38       |*******                                 |
-@formatter:on
+ * </pre>
  */
 public class HistogramToHeatmap {
 	private static final String timeRegex = "([0-1]?[0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9]):?";

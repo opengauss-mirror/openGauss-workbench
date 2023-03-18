@@ -20,10 +20,7 @@ export const cpuOption = {
       labelLine: {
         show: false
       },
-      data: [
-        { value: 0.9, name: '已占用' },
-        { value: 0.1, name: '空闲' }
-      ]
+      data: []
     }
   ]
 }
@@ -50,10 +47,7 @@ export const memoryOption = {
       labelLine: {
         show: false
       },
-      data: [
-        { value: 0.7, name: '已占用' },
-        { value: 0.3, name: '空闲' }
-      ]
+      data: []
     }
   ]
 }
@@ -80,10 +74,7 @@ export const diskOption = {
       labelLine: {
         show: false
       },
-      data: [
-        { value: 0.3, name: '已占用' },
-        { value: 0.5, name: '空闲' }
-      ]
+      data: []
     }
   ]
 }

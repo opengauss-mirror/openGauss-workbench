@@ -27,3 +27,15 @@ export function migrationUpdate (payload) {
 export function defaultParams () {
   return axios.get('/plugins/data-migration/param/default')
 }
+
+export function jdbcNodePing (data) {
+  return axios.post('/jdbcDbClusterNode/ping', data)
+}
+
+export function addJdbc (data) {
+  return axios.post('/jdbcDbCluster/add', data)
+}
+
+export function hostListAll () {
+  return axios.get('/host/listAll')
+}

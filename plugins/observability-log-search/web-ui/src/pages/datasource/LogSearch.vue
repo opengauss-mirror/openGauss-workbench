@@ -273,9 +273,9 @@ const scrollToBottom = () => {
     if (!noMore.value) listLogScrollData();
 };
 const refreshLog = () => {
-    if (formData.searchText || (formData.dateValue && formData.dateValue.length > 0)) {
-        showContextCount.value = false;
-    }
+    // if (formData.searchText || (formData.dateValue && formData.dateValue.length > 0)) {
+    //     showContextCount.value = false;
+    // }
     noMore.value = false;
     loading.value = false;
     scrollId.value = null;
@@ -386,23 +386,11 @@ const gotoNewLogSearch = () => {
                 logLevelSelected: logLevelSelected.value.length > 0 ? logLevelSelected.value.join(',') : '',
                 logTime: curRow.value.logTime,
                 logType: curRow.value.logType,
-                logData: curRow.value.logData,
+                id: curRow.value.id,
                 date: new Date().getTime(),
             },
         });
     } else {
-        // const page = router.resolve({
-        //     path:`/vem/log`,
-        //     query: {
-        //         showContextCount: 'true',
-        //         nodeIds: nodeIds.value && nodeIds.value.length > 0 ? nodeIds.value : [curRow.value.logNodeId],
-        //         logTime: curRow.value.logTime,
-        //         logType: curRow.value.logType,
-        //         logData: curRow.value.logData,
-        //         date: new Date().getTime()
-        //     }
-        // })
-        // window.open(page.href,"_blank")
         router.push({
             path: `/vem/log`,
             query: {
@@ -412,7 +400,7 @@ const gotoNewLogSearch = () => {
                 logLevelSelected: logLevelSelected.value.length > 0 ? logLevelSelected.value.join(',') : '',
                 logTime: curRow.value.logTime,
                 logType: curRow.value.logType,
-                logData: curRow.value.logData,
+                id: curRow.value.id,
                 date: new Date().getTime(),
             },
         });
@@ -421,7 +409,7 @@ const gotoNewLogSearch = () => {
 };
 
 const tableRowStyle = ({ row, rowIndex }) => {
-    if (showContextCount.value && curLogData.logData && curLogData.logData == row.logData && curLogData.logTime && curLogData.logTime == row.logTime) {
+    if (showContextCount.value && curLogData.id && curLogData.id == row.id) {
         return theme.value === 'dark'
             ? {
                   'background-color': 'rgba(235,223,132,0.2)',
@@ -445,8 +433,8 @@ watch(
         if (res && res.nodeIds) {
             nodeIds.value = (res.nodeIds as string[]) || [];
         }
-        if (res && res.logData) {
-            curLogData.logData = res.logData;
+        if (res && res.id) {
+            curLogData.id = res.id;
         }
         if (res && res.logTime) {
             curLogData.logTime = res.logTime;
@@ -466,7 +454,6 @@ const hideContextCount = () => {
     refreshLog();
 };
 
-// type data
 type LogType =
     | [
           {
@@ -528,16 +515,15 @@ const {
                                 nodeId: nodeIds.value.length > 0 ? nodeIds.value.join(',') : null,
                                 logType: typeNames.value.length > 0 ? typeNames.value.join(',') : curLogData.typeNames ? curLogData.typeNames : null,
                                 logLevel: logLevelSelected.value.length > 0 ? logLevelSelected.value.join(',') : curLogData.value.logLevelSelected ? curLogData.value.logLevelSelected : null,
-                                logDate: dayjs.utc(curLogData.logTime).tz('Europe/London').format('YYYY-MM-DDTHH:mm:ss.SSS') + 'Z',
-                                // searchPhrase: curLogData.logData ? curLogData.logData : "",
-                                // startDate: formData.dateValue.length ? formData.dateValue[0] : null,
-                                // endDate: formData.dateValue.length ? formData.dateValue[1] : null,
+                                // logDate: dayjs.utc(curLogData.logTime).tz('Europe/London').format('YYYY-MM-DDTHH:mm:ss.SSS') + 'Z',
                                 scrollId: scrollId.value,
-                                sorts: sorts.value,
-                                // rowCount: pageSize.value,
-                                rowCount: formData.contextCount * 2 + 1,
                                 aboveCount: formData.contextCount,
                                 belowCount: formData.contextCount,
+                                sorts: sorts.value,
+                                id: curLogData.id,
+                                startDate: formData.dateValue.length ? dayjs.utc(formData.dateValue[0]).format('YYYY-MM-DDTHH:mm:ss.SSS') + 'Z' : null,
+                                endDate: formData.dateValue.length ? dayjs.utc(formData.dateValue[1]).format('YYYY-MM-DDTHH:mm:ss.SSS') + 'Z' : null,
+                                searchPhrase: formData.searchText.length > 0 ? formData.searchText : null,
                             })
                         )
                 )
@@ -579,7 +565,7 @@ watch(error, () => {
 });
 watch(logsData, (res: LogsRes) => {
     if (res && Object.keys(res).length) {
-        if ((res.logs && res.logs.length < pageSize.value) || showContextCount.value) noMore.value = true;
+        if (res.logs && (!showContextCount && res.logs.length < pageSize.value || showContextCount && res.logs.length < formData.contextCount)) noMore.value = true;
         tableData.value = tableData.value.concat(res.logs);
         scrollId.value = res.scrollId;
         sorts.value = res.sorts;
@@ -668,7 +654,7 @@ watch(mapData, (res: MapRes) => {
 onMounted(() => {
     let _showContextCount = window.$wujie?.props.data.showContextCount as string;
     let _nodeIds = window.$wujie?.props.data.nodeIds as string[];
-    let _logData = window.$wujie?.props.data.logData as string;
+    let _id = window.$wujie?.props.data.id as string;
     let _logTime = window.$wujie?.props.data.logTime as string;
     let _logType = window.$wujie?.props.data.logType as string;
     let _typeNames = window.$wujie?.props.data.typeNames as string;
@@ -686,7 +672,7 @@ onMounted(() => {
     } else {
         nodeIds.value = _nodeIds;
     }
-    curLogData.logData = _logData ? _logData : param && param.logData ? param.logData : '';
+    curLogData.id = _id ? _id : param && param.id ? param.id : '';
     curLogData.logTime = _logTime ? _logTime : param && param.logTime ? param.logTime : '';
     curLogData.logType = _logType ? _logType : param && param.logType ? param.logType : '';
     curLogData.typeNames = _typeNames ? _typeNames : param && param.typeNames ? param.typeNames : '';
@@ -703,6 +689,12 @@ onMounted(() => {
         // Monitoring platform language change
         wujie?.bus.$on('opengauss-locale-change', (val: string) => {
             console.log('log-search catch locale change');
+            showBar.value = false;
+            nextTick(() => {
+                showBar.value = true;
+            });
+        });
+        wujie?.bus.$on('opengauss-theme-change', (val: string) => {
             showBar.value = false;
             nextTick(() => {
                 showBar.value = true;

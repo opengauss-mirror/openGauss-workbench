@@ -44,7 +44,13 @@
           </a-table-column>
           <a-table-column title="当前状态">
             <template #cell="{ record }">
-              {{ execSubStatusMap(record.execStatus) }}
+              <span>{{ execSubStatusMap(record.execStatus) }}</span>
+              <a-popover title="迁移失败详情">
+                <icon-close-circle-fill v-if="record.execStatus === 500" size="14" style="color: #FF7D01;margin-left: 3px;cursor: pointer;" />
+                <template #content>
+                  <div class="error-tips">{{ record.statusDesc }}</div>
+                </template>
+              </a-popover>
             </template>
           </a-table-column>
           <a-table-column title="操作" align="center" :width="340" fixed="right">
@@ -414,5 +420,11 @@ onBeforeUnmount(() => {
       }
     }
   }
+}
+
+.error-tips {
+  max-width: 1200px;
+  max-height: 350px;
+  overflow-y: auto;
 }
 </style>

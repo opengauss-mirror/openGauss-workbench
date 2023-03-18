@@ -1,5 +1,5 @@
 <h2 align="center" style="margin: 30px 0 30px; font-weight: bold;">openGauss数据库监控插件生成工具 v1.0.0</h2>
-<h4 align="center">基于 Vue/Element UI 和 Java 前后端不分离的快速开发框架</h4>
+<h4 align="center">基于 Vue/Element UI 和 Java 前后端分离的快速开发框架</h4>
 
 ### openGauss数据库监控插件工具简介
 

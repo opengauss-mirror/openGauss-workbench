@@ -60,7 +60,7 @@
 <dependency>
     <groupId>org.opengauss</groupId>
     <artifactId>visualtool-service</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>5.0.0</version>
     <!--如果不需要操作数据库和redis，则排除以下依赖-->
     <exclusions>
         <exclusion>

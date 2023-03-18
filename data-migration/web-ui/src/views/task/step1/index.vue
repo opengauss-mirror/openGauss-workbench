@@ -48,7 +48,7 @@
         </div>
       </div>
       <div class="form-center">
-        <icon-arrow-right size="40" />
+        <img src="@/assets/images/right-arrow.png" width="50" alt="">
       </div>
       <div class="form-right">
         <a-card bordered style="width: 400px;">
@@ -61,7 +61,7 @@
             </div>
           </template>
           <template #extra>
-            <a-link @click="handleAddSql">+自定义数据库</a-link>
+            <a-link>+自定义数据库</a-link>
           </template>
           <div class="sql-selected-con">
             <a-spin :loading="loading" style="display: block;">
@@ -144,6 +144,9 @@
 
     <!-- add sql -->
     <add-sql v-model:open="addSqlVisible" />
+
+    <!-- add jdbc -->
+    <add-jdbc ref="addJdbcRef" @finish="getClustersData" />
   </div>
 </template>
 
@@ -151,6 +154,7 @@
 import { reactive, ref, computed, watch, onMounted, toRaw, h, compile } from 'vue'
 import { Message } from '@arco-design/web-vue'
 import AddSql from '../components/AddSql.vue'
+import AddJdbc from '../components/AddJdbc.vue'
 import { clustersData, sourceClusterDbsData, targetClusterDbsData } from '@/api/task'
 import useTheme from '@/hooks/theme'
 
@@ -407,8 +411,10 @@ const deleteSubTask = (idx) => {
   tableData.value.splice(idx, 1)
 }
 
+const addJdbcRef = ref(null)
+
 const handleAddSql = () => {
-  addSqlVisible.value = true
+  addJdbcRef.value?.open()
 }
 
 // init
@@ -458,8 +464,11 @@ onMounted(() => {
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      margin-left: 10px;
-      margin-right: 10px;
+      margin-left: 60px;
+      margin-right: 60px;
+      .arrow {
+        color: var(--color-text-3);
+      }
     }
     .card-title-con {
       display: flex;

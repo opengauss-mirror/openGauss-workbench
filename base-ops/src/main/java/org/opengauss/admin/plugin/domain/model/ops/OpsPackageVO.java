@@ -1,7 +1,5 @@
 package org.opengauss.admin.plugin.domain.model.ops;
 
-import cn.hutool.core.util.StrUtil;
-import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.annotation.JSONField;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
@@ -21,7 +19,7 @@ public class OpsPackageVO {
     private String packageVersion;
     private String packageVersionNum;
     private String packageUrl;
-    private String packagePath;
+    private UploadInfo packagePath;
     private String type;
     @JsonIgnore
     @JSONField(serialize = false, deserialize = false)
@@ -36,9 +34,6 @@ public class OpsPackageVO {
         entity.setPackageVersion(packageVersion);
         entity.setPackageVersionNum(packageVersionNum);
         entity.setPackageUrl(packageUrl);
-        if (StrUtil.isNotEmpty(packagePath)) {
-            entity.setUploadInfo(JSON.parseObject(packagePath, UploadInfo.class));
-        }
         entity.setPackagePath(packagePath);
         entity.setType(type);
         entity.setFile(file);

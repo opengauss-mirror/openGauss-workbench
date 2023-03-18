@@ -35,7 +35,7 @@
         <a-input v-model="data.formData.packageVersionNum" @blur="getPackageUrl"
                  :placeholder="$t('packageManage.AddPackageDlg.5myq6nnebew0')"></a-input>
       </a-form-item>
-      <a-form-item field="packageUrl" :label="$t('packageManage.AddPackageDlg.5myq6nnebis0')">
+      <a-form-item v-if="data.formData.type === PackageType.OPENLOOKENG" field="packageUrl" :label="$t('packageManage.AddPackageDlg.5myq6nnebis0')">
         <a-textarea v-model.trim="data.formData.packageUrl" auto-size
                     :placeholder="$t('packageManage.AddPackageDlg.5myq6nnebn40')"/>
       </a-form-item>
@@ -288,10 +288,10 @@ const open = (type: string, packageData?: KeyValue, defaultVersion?: string) => 
       packageId: '',
       os: OS.CENTOS,
       cpuArch: CpuArch.X86_64,
-      packageVersion: OpenGaussVersionEnum.MINIMAL_LIST,
-      packageVersionNum: '3.0.0',
+      packageVersion: packageData?.type === PackageType.OPENGAUSS ? OpenGaussVersionEnum.MINIMAL_LIST : '',
+      packageVersionNum: packageData?.type === PackageType.OPENGAUSS ? '3.0.0' : '',
       packageUrl: '',
-      type: PackageType.OPENGAUSS
+      type: packageData?.type ? packageData?.type : PackageType.OPENGAUSS
     })
     if (defaultVersion) {
       data.isViewVersion = true

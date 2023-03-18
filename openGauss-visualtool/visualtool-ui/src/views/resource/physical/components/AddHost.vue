@@ -1,6 +1,6 @@
 <template>
   <a-modal :mask-closable="false" :esc-to-close="false" :visible="data.show" :title="data.title"
-    :ok-loading="data.loading" :modal-style="{ width: '650px' }" @cancel="close">
+    :ok-loading="data.loading" :modal-style="{ width: '650px' }" @cancel="close" @close="close">
     <template #footer>
       <div class="flex-between">
         <div class="flex-row">
@@ -209,7 +209,8 @@ const handleTestHost = () => {
         password: encryptPwd,
         isRemember: data.formData.isRemember,
         azId: data.formData.azId,
-        remark: data.formData.remark
+        remark: data.formData.remark,
+        username: 'root'
       })
 
       hostPing(toRaw(param)).then((res: KeyValue) => {
@@ -270,6 +271,7 @@ const open = (type: string, editData?: KeyValue) => {
   } else {
     data.title = t('components.AddHost.5mphy3snz5k0')
     Object.assign(data.formData, {
+      hostId: '',
       privateIp: '',
       publicIp: '',
       password: '',

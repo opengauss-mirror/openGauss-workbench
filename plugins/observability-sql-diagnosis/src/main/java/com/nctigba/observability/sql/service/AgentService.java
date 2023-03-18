@@ -40,16 +40,16 @@ public class AgentService extends AbstractInstaller {
 	public void install(WsSession wsSession, String nodeId, String rootPassword, String callbackPath) {
 		// @formatter:off
 		var steps = Arrays.asList(
-				new Step("初始化"),
-				new Step("检查本机agent环境存在"),
-				new Step("连接主机"),
-				new Step("检查JAVA环境"),
-				new Step("检查python环境"),
-				new Step("安装bcc-tools"),
-				new Step("安装FlameGraph"),
-				new Step("传输agent安装包"),
-				new Step("启动agent"),
-				new Step("安装完成"));
+				new Step("agent.install.step1"),
+				new Step("agent.install.step2"),
+				new Step("agent.install.step3"),
+				new Step("agent.install.step4"),
+				new Step("agent.install.step5"),
+				new Step("agent.install.step6"),
+				new Step("agent.install.step7"),
+				new Step("agent.install.step8"),
+				new Step("agent.install.step9"),
+				new Step("agent.install.step10"));
 		// @formatter:on
 		var curr = 0;
 		try {
@@ -86,7 +86,7 @@ public class AgentService extends AbstractInstaller {
 					if (pkg == null) {
 						var f = Download.download(JDK + tar, "pkg/" + tar);
 						pkg = new NctigbaEnv().setPath(f.getCanonicalPath()).setType(type.AGENT_PKG);
-						addMsg(wsSession, steps, curr, "安装包下载成功");
+						addMsg(wsSession, steps, curr, "agent.install.downloadsuccess");
 						save(pkg);
 					}
 					session.upload(pkg.getPath(), tar);
@@ -134,7 +134,7 @@ public class AgentService extends AbstractInstaller {
 				sendMsg(wsSession, steps, curr, status.DONE);
 			}
 		} catch (Exception e) {
-			steps.get(curr).setState(status.ERROR).getMsg().add(e.getMessage());
+			steps.get(curr).setState(status.ERROR).add(e.getMessage());
 			wsUtil.sendText(wsSession, JSONUtil.toJsonStr(steps));
 			var sw = new StringWriter();
 			try (var pw = new PrintWriter(sw);) {
@@ -164,11 +164,11 @@ public class AgentService extends AbstractInstaller {
 	public void uninstall(WsSession wsSession, String nodeId, String rootPassword) {
 		// @formatter:off
 		var steps = Arrays.asList(
-				new Step("初始化"),
-				new Step("连接主机"),
-				new Step("查找agent进程号"),
-				new Step("停止agent"),
-				new Step("卸载完成"));
+				new Step("agent.uninstall.step1"),
+				new Step("agent.uninstall.step2"),
+				new Step("agent.uninstall.step3"),
+				new Step("agent.uninstall.step4"),
+				new Step("agent.uninstall.step5"));
 		// @formatter:on
 		var curr = 0;
 
@@ -198,7 +198,7 @@ public class AgentService extends AbstractInstaller {
 				sendMsg(wsSession, steps, curr, status.DONE);
 			}
 		} catch (Exception e) {
-			steps.get(curr).setState(status.ERROR).getMsg().add(e.getMessage());
+			steps.get(curr).setState(status.ERROR).add(e.getMessage());
 			wsUtil.sendText(wsSession, JSONUtil.toJsonStr(steps));
 			var sw = new StringWriter();
 			try (var pw = new PrintWriter(sw);) {
