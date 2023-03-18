@@ -29,6 +29,7 @@ public class HostBody {
     private Integer port;
     private String name;
     private List<String> tags;
+    private String username;
 
     public OpsHostEntity toHostEntity(String hostName,String os,String cpuArch) {
         OpsHostEntity hostEntity = new OpsHostEntity();
