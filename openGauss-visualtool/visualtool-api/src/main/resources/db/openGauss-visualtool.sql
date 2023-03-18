@@ -381,7 +381,6 @@ CREATE TABLE IF NOT EXISTS "public"."ops_host_tag" (
     "update_time" timestamp(6)
     )
 ;
-ALTER TABLE "public"."ops_host_tag" OWNER TO "jim";
 COMMENT ON COLUMN "public"."ops_host_tag"."name" IS '标签名';
 COMMENT ON COLUMN "public"."ops_host_tag"."remark" IS '备注';
 COMMENT ON COLUMN "public"."ops_host_tag"."create_by" IS '创建者';
@@ -403,7 +402,6 @@ CREATE TABLE IF NOT EXISTS  "public"."ops_host_tag_rel" (
     "update_time" timestamp(6)
     )
 ;
-ALTER TABLE "public"."ops_host_tag_rel" OWNER TO "jim";
 COMMENT ON COLUMN "public"."ops_host_tag_rel"."host_id" IS '主机ID';
 COMMENT ON COLUMN "public"."ops_host_tag_rel"."tag_id" IS 'tag ID';
 COMMENT ON COLUMN "public"."ops_host_tag_rel"."remark" IS '描述';
