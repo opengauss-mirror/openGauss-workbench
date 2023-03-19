@@ -1,6 +1,7 @@
 package org.opengauss.admin.plugin.controller.ops;
 
 import cn.hutool.core.util.StrUtil;
+import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
@@ -16,9 +17,12 @@ import org.opengauss.admin.plugin.enums.ops.OpenGaussVersionEnum;
 import org.opengauss.admin.plugin.service.ops.IOpsPackageManagerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.beans.PropertyEditor;
+import java.beans.PropertyEditorSupport;
 import java.util.List;
 import java.util.Objects;
 
@@ -125,5 +129,16 @@ public class InstallPackageManagerController extends BaseController {
     public AjaxResult getSysUploadPath() {
         String result = opsPackageManagerService.getSysUploadPath(getUserId());
         return AjaxResult.success("ok", result);
+    }
+
+    @InitBinder
+    public void initBinder(WebDataBinder binder) {
+        binder.registerCustomEditor(UploadInfo.class, new PropertyEditorSupport() {
+            @Override
+            public void setAsText(String text) throws IllegalArgumentException {
+                UploadInfo info = JSON.parseObject(text, UploadInfo.class);
+                setValue(info);
+            }
+        });
     }
 }

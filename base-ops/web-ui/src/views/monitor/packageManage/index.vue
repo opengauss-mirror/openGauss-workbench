@@ -141,12 +141,9 @@ const getVersionName = (version: string) => {
   }
 }
 
-const getPackagePath = (value: string) => {
+const getPackagePath = (value: KeyValue) => {
   if (value) {
-    const result = JSON.parse(value)
-    if (result) {
-      return result.name
-    }
+      return value.name
   }
   return ''
 }

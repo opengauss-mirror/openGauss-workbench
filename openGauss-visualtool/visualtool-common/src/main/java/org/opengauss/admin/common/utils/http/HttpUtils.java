@@ -1,5 +1,7 @@
 package org.opengauss.admin.common.utils.http;
 
+import cn.hutool.core.collection.CollUtil;
+import lombok.Data;
 import org.opengauss.admin.common.constant.Constants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,6 +14,8 @@ import java.io.*;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.security.cert.X509Certificate;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Http Tool
@@ -82,10 +86,11 @@ public class HttpUtils {
      * @param url   URL
      * @param param param，like name1=value1&name2=value2.
      */
-    public static String sendPost(String url, String param) {
+    public static PostResponse sendPost(String url, String param) {
         PrintWriter out = null;
         BufferedReader in = null;
         StringBuilder result = new StringBuilder();
+        PostResponse response = new PostResponse();
         try {
             log.info("sendPost - {}", url);
             URL realUrl = new URL(url);
@@ -108,6 +113,8 @@ public class HttpUtils {
             while ((line = in.readLine()) != null) {
                 result.append(line);
             }
+            response.setBody(result.toString());
+            response.setHeaders(conn.getHeaderFields());
             log.info("recv - {}", result);
         } catch (ConnectException e) {
             log.error("sendPost ConnectException, url=" + url + ",param=" + param, e);
@@ -129,7 +136,7 @@ public class HttpUtils {
                 log.error("close Exception, url=" + url + ",param=" + param, ex);
             }
         }
-        return result.toString();
+        return response;
     }
 
     public static String sendSslPost(String url, String param) {
@@ -194,6 +201,23 @@ public class HttpUtils {
         @Override
         public boolean verify(String hostname, SSLSession session) {
             return true;
+        }
+    }
+
+    @Data
+    public static class PostResponse {
+        private String body;
+        private Map<String, List<String>> headers;
+
+        public String getHeader(String key) {
+            if (CollUtil.isEmpty(headers)) {
+                return "";
+            }
+            List<String> value = headers.get(key);
+            if (CollUtil.isEmpty(value)) {
+                return "";
+            }
+            return value.get(0);
         }
     }
 }

@@ -1,21 +1,9 @@
 <template>
   <div class="exe-install-c">
-    <div class="flex-col full-w full-h" v-if="status === statusEnum.SUCCESS">
-      <svg-icon icon-class="ops-install-success" class="icon-size mb"></svg-icon>
-      <div class="mb">{{ $t('components.openLooKeng.5mpiji1qpcc58') }}</div>
-      <div class="flex-row">
-        <a-button type="outline" class="mr" @click="goHome">
-          {{ $t('components.openLooKeng.5mpiji1qpcc59') }}
-        </a-button>
-      </div>
-    </div>
-    <div class="flex-col" v-else>
-      <a-steps :current="2" :status="data.uploadStatus" class="mb full-w" type="arrow">
-        <a-step :description="$t('components.openLooKeng.5mpiji1qpcc60')" status="finish">
+    <div class="flex-col">
+      <a-steps :current="2" class="mb full-w" type="arrow">
+        <a-step :description="$t('components.openLooKeng.5mpiji1qpcc60')" :status="data.uploadStatus">
           {{ $t('components.openLooKeng.5mpiji1qpcc60') }}
-          <template #icon>
-            <icon-loading/>
-          </template>
         </a-step>
         <a-step :description="$t('components.openLooKeng.5mpiji1qpcc61')" :status="data.zkStatus">
           {{ $t('components.openLooKeng.5mpiji1qpcc61') }}
@@ -38,7 +26,7 @@
           </div>
           <a-spin v-if="status === statusEnum.RUNNING" class="mr"/>
           <a-space class="flex-row">
-            <a-button type="primary" @click="retryInstall" v-if="status === statusEnum.FAIL">
+            <a-button type="primary" @click="retryInstall">
               {{ $t('components.openLooKeng.5mpiji1qpcc67') }}
             </a-button>
             <a-button type="primary" @click="downloadLog">{{ $t('components.openLooKeng.5mpiji1qpcc65') }}</a-button>
@@ -131,7 +119,6 @@ const termTerminal = ref<Terminal>()
 
 const openLogSocket = () => {
   const term = getTermObj()
-  let isProgress = false
   const socketKey = new Date().getTime()
   const logSocket = new Socket({ url: `olk_install_log_${socketKey}` })
   terminalLogWs.value = logSocket
@@ -145,11 +132,21 @@ const openLogSocket = () => {
     localStorage.removeItem('Static-pluginBase-opsOpsSimpleInstall')
   })
   logSocket.onmessage((messageData: any) => {
-    // if (/^(\d+|\d*\.\d+)%$/.test(messageData)) {
-    //   isProgress = true
-    // }
-    term.writeln(messageData)
-    data.logs += messageData + '\r\n'
+    let isProgress = /^(\d+|\d*\.\d+)%$/.test(messageData)
+    if (isProgress) {
+      const number = Number(messageData.slice(0, -1))
+      term.write(('\x1b[2K\r'))
+      if (!Number.isNaN(number) && number === 100) {
+        term.writeln(messageData)
+        data.logs += messageData + '\r\n'
+      } else {
+        term.write(messageData)
+      }
+    } else {
+      term.writeln(messageData)
+      data.logs += messageData + '\r\n'
+    }
+    numDynamic(messageData)
     if (messageData.indexOf('FINAL_EXECUTE_EXIT_CODE') > -1) {
       data.installProgress = 1
       const flag = Number(messageData.split(':')[1])
@@ -166,8 +163,25 @@ const openLogSocket = () => {
   })
 }
 
-const handleStateChange = (msg) => {
-
+const numDynamic = (messageData: string) => {
+  if (messageData.indexOf(ProcessFlag.END_UPLOAD) >= 0) {
+    data.installProgress = 0.25
+    data.uploadStatus = 'finish'
+  } else if (new RegExp(ProcessFlag.END_INSTALL_ZOOKEEPER).test(messageData)) {
+    data.installProgress = 0.35
+    data.zkStatus = 'finish'
+  } else if (new RegExp(ProcessFlag.END_INSTALL_SHARDING_PROXY).test(messageData)) {
+    data.installProgress = 0.45
+    data.ssStatus = 'finish'
+  } else if (new RegExp(ProcessFlag.END_INSTALL_OLK).test(messageData)) {
+    data.installProgress = 0.55
+    data.olkStatus = 'finish'
+  } else if (messageData.indexOf(ProcessFlag.END_INSTALL) >= 0) {
+    data.installProgress = 0.75
+  } else if (messageData.indexOf(ProcessFlag.END_SERVICE) >= 0) {
+    data.installProgress = 1
+    data.serviceStatus = 'finish'
+  }
 }
 
 const downloadLog = () => {
@@ -235,6 +249,12 @@ const retryInstall = () => {
   if (termTerminal.value) {
     termTerminal.value.dispose()
   }
+  data.installProgress = 0
+  data.uploadStatus = 'wait'
+  data.zkStatus = 'wait'
+  data.ssStatus = 'wait'
+  data.olkStatus = 'wait'
+  data.serviceStatus = 'wait'
   openLogSocket()
 }
 

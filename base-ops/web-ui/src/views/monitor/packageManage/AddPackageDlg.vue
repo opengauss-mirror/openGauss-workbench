@@ -35,7 +35,8 @@
         <a-input v-model="data.formData.packageVersionNum" @blur="getPackageUrl"
                  :placeholder="$t('packageManage.AddPackageDlg.5myq6nnebew0')"></a-input>
       </a-form-item>
-      <a-form-item v-if="data.formData.type === PackageType.OPENLOOKENG" field="packageUrl" :label="$t('packageManage.AddPackageDlg.5myq6nnebis0')">
+      <a-form-item v-if="data.formData.type === PackageType.OPENLOOKENG" field="packageUrl"
+                   :label="$t('packageManage.AddPackageDlg.5myq6nnebis0')">
         <a-textarea v-model.trim="data.formData.packageUrl" auto-size
                     :placeholder="$t('packageManage.AddPackageDlg.5myq6nnebn40')"/>
       </a-form-item>
@@ -60,8 +61,10 @@
                   <icon-plus :style="{fontSize: '48px', color: '#86909C'}"/>
                 </div>
                 <div class="tips-1">
-                  <span>{{$t('packageManage.AddPackageDlg.5myq6nnecc47')}}</span>
-                  <div v-if="data.systemUploadPath">{{$t('packageManage.AddPackageDlg.5myq6nnecc48') + data.systemUploadPath + $t('packageManage.AddPackageDlg.5myq6nnecc49')}}}</div>
+                  <span>{{ $t('packageManage.AddPackageDlg.5myq6nnecc47') }}</span>
+                  <div v-if="data.systemUploadPath">
+                    {{ $t('packageManage.AddPackageDlg.5myq6nnecc48') + data.systemUploadPath + $t('packageManage.AddPackageDlg.5myq6nnecc49') }}
+                  </div>
                 </div>
               </div>
             </div>
@@ -308,7 +311,7 @@ const open = (type: string, packageData?: KeyValue, defaultVersion?: string) => 
         packageVersion: packageData.packageVersion,
         packageVersionNum: packageData.packageVersionNum,
         packageUrl: packageData.packageUrl,
-        packagePath: JSON.parse(packageData.packagePath) as UploadInfo,
+        packagePath: packageData.packagePath as UploadInfo,
         type: packageData.type,
         remark: packageData.remark
       })

@@ -1,8 +1,8 @@
 <template>
   <a-form :model="data.form" :rules="rules" auto-label-width :style="{ width: '850px' }" ref="formRef">
-    <a-divider orientation="left">{{$t('components.openLooKeng.5mpiji1qpcc0')}}</a-divider>
+    <a-divider orientation="left">{{ $t('components.openLooKeng.5mpiji1qpcc0') }}</a-divider>
     <a-form-item field="hostId" :label="$t('components.openLooKeng.5mpiji1qpcc1')">
-      <a-select :loading="hostListLoading" v-model="data.form.hostId" @change="changeHostId"
+      <a-select :loading="hostListLoading" v-model="data.form.hostId" @change="changeHostId(false)"
                 :placeholder="$t('simple.InstallConfig.5mpmu0laqss0')">
         <a-option v-for="item in hostList" :key="item.hostId" :value="item.hostId">{{
             item.privateIp
@@ -20,8 +20,10 @@
         </a-option>
       </a-select>
     </a-form-item>
-    <a-form-item v-if="!data.host.isHostRemPwd && data.form.installUsername === 'root'" field="password" :label="$t('components.openLooKeng.5mpiji1qpcc3')">
-      <a-input-password v-model.trim="data.form.password" :placeholder="$t('components.openLooKeng.5mpiji1qpcc4')" allow-clear/>
+    <a-form-item v-if="!data.host.isHostRemPwd && data.form.installUsername === 'root'" field="password"
+                 :label="$t('components.openLooKeng.5mpiji1qpcc3')">
+      <a-input-password v-model.trim="data.form.password" :placeholder="$t('components.openLooKeng.5mpiji1qpcc4')"
+                        allow-clear/>
     </a-form-item>
     <a-form-item field="installPath" :label="$t('components.openLooKeng.5mpiji1qpcc5')">
       <a-input v-model.trim="data.form.installPath" :placeholder="$t('components.openLooKeng.5mpiji1qpcc6')"/>
@@ -32,35 +34,43 @@
     </a-form-item>
     <a-divider orientation="left">{{ $t('components.openLooKeng.5mpiji1qpcc7') }}</a-divider>
     <a-form-item field="olkTarId" :label="$t('components.openLooKeng.5mpiji1qpcc8')">
-      <a-select v-model="data.form.olkTarId" :placeholder="$t('components.openLooKeng.5mpiji1qpcc9')" :loading="packageLoading" class="mr-s">
-        <a-option v-for="item in data.olkTarList" :key="item.packageId" :label="item.packagePath.name" :value="item.packageId"/>
+      <a-select v-model="data.form.olkTarId" :placeholder="$t('components.openLooKeng.5mpiji1qpcc9')"
+                :loading="packageLoading" class="mr-s">
+        <a-option v-for="item in data.olkTarList" :key="item.packageId" :label="item.packagePath.name"
+                  :value="item.packageId"/>
       </a-select>
       <a-button type="primary" @click="onAddOlkTar">+</a-button>
     </a-form-item>
     <a-form-item field="olkPort" :label="$t('components.openLooKeng.5mpiji1qpcc10')">
       <a-input-number v-model="data.form.olkPort" :placeholder="$t('components.openLooKeng.5mpiji1qpcc11')"/>
     </a-form-item>
-    <a-divider orientation="left">{{ $t('components.openLooKeng.5mpiji1qpcc52') }}</a-divider>
-    <a-form-item field="xmx" label="xmx">
-      <a-input v-model="data.form.olkParamConfig.xmx" :placeholder="$t('components.openLooKeng.5mpiji1qpcc53')"/>
-    </a-form-item>
-    <a-form-item field="maxMemory" label="MaxMemory">
-      <a-input v-model="data.form.olkParamConfig.maxMemory" :placeholder="$t('components.openLooKeng.5mpiji1qpcc54')"/>
-    </a-form-item>
-    <a-form-item field="maxTotalMemory" label="MaxTotalMemory">
-      <a-input v-model="data.form.olkParamConfig.maxTotalMemory" :placeholder="$t('components.openLooKeng.5mpiji1qpcc55')"/>
-    </a-form-item>
-    <a-form-item field="maxMemoryPer" label="MaxMemoryPer">
-      <a-input v-model="data.form.olkParamConfig.maxMemoryPer" :placeholder="$t('components.openLooKeng.5mpiji1qpcc56')"/>
-    </a-form-item>
-    <a-form-item field="maxTotalMemoryPer" label="MaxTotalMemoryPer">
-      <a-input v-model="data.form.olkParamConfig.maxTotalMemoryPer" :placeholder="$t('components.openLooKeng.5mpiji1qpcc57')"/>
-    </a-form-item>
+    <a-collapse :bordered="false">
+      <a-collapse-item :header="$t('components.openLooKeng.5mpiji1qpcc52')" key="1">
+        <a-form-item field="xmx" label="xmx">
+          <a-input v-model="data.form.olkParamConfig.xmx" :placeholder="$t('components.openLooKeng.5mpiji1qpcc53')"/>
+        </a-form-item>
+        <a-form-item field="maxMemory" label="MaxMemory">
+          <a-input v-model="data.form.olkParamConfig.maxMemory" :placeholder="$t('components.openLooKeng.5mpiji1qpcc54')"/>
+        </a-form-item>
+        <a-form-item field="maxTotalMemory" label="MaxTotalMemory">
+          <a-input v-model="data.form.olkParamConfig.maxTotalMemory"
+                   :placeholder="$t('components.openLooKeng.5mpiji1qpcc55')"/>
+        </a-form-item>
+        <a-form-item field="maxMemoryPer" label="MaxMemoryPer">
+          <a-input v-model="data.form.olkParamConfig.maxMemoryPer"
+                   :placeholder="$t('components.openLooKeng.5mpiji1qpcc56')"/>
+        </a-form-item>
+        <a-form-item field="maxTotalMemoryPer" label="MaxTotalMemoryPer">
+          <a-input v-model="data.form.olkParamConfig.maxTotalMemoryPer"
+                   :placeholder="$t('components.openLooKeng.5mpiji1qpcc57')"/>
+        </a-form-item>
+      </a-collapse-item>
+    </a-collapse>
   </a-form>
-  <add-package-dlg ref="addPackageRef" @finish="refreshPackageList" />
+  <add-package-dlg ref="addPackageRef" @finish="refreshPackageList"/>
 </template>
 <script setup lang="ts">
-import { inject, onMounted, reactive, ref } from 'vue'
+import { computed, inject, onMounted, reactive, ref } from 'vue'
 import { KeyValue } from '@/types/global'
 import { Message } from '@arco-design/web-vue'
 import { PackageType } from '@/types/resource/package'
@@ -145,7 +155,7 @@ const saveStore = () => {
   installStore.setOpenLookengConfig(param as OpenLookengInstallConfig)
 }
 
-const getHostList = () => {
+const getHostList = (isInit: boolean) => {
   hostListLoading.value = true
   hostListAll().then((res: KeyValue) => {
     if (Number(res.code) === 200) {
@@ -168,8 +178,8 @@ const getHostList = () => {
           data.host.publicIp = hostList.value[0].publicIp
         }
       }
-      changeHostId()
-      refreshPackageList()
+      changeHostId(isInit)
+      refreshPackageList(isInit)
     } else {
       Message.error('Failed to obtain the host list data')
     }
@@ -180,7 +190,7 @@ const getHostList = () => {
 
 const userListByHost = ref<KeyValue[]>([])
 
-const changeHostId = () => {
+const changeHostId = (isInit: boolean) => {
   if (!data.form.hostId) {
     return
   }
@@ -193,15 +203,18 @@ const changeHostId = () => {
     data.host.os = hostObj.value[data.form.hostId].os
     data.form.needEncrypt = !hostObj.value[data.form.hostId].isRemember
   }
-  listUserByHost()
+  listUserByHost(isInit)
 }
 
-const listUserByHost = () => {
+const listUserByHost = (isInit: boolean) => {
   installUserLoading.value = true
   hostUserListAll(data.form.hostId).then((res: KeyValue) => {
     if (Number(res.code) === 200) {
       userListByHost.value = []
       userListByHost.value = res.data
+      if (isInit && data.form.installUsername) {
+        return
+      }
       if (userListByHost.value.length) {
         data.form.installUsername = userListByHost.value[0].username
         data.form.password = userListByHost.value[0].password
@@ -217,10 +230,23 @@ const listUserByHost = () => {
   })
 }
 
-const refreshPackageList = () => {
+const refreshPackageList = (isInit: boolean) => {
   packageLoading.value = true
   packageListAll({ type: PackageType.OPENLOOKENG }).then(res => {
     data.olkTarList = res.data
+    if (isInit && data.form.olkTarId) {
+      return
+    }
+    if (data.olkTarList.length > 0) {
+      const item = data.olkTarList.find((item: KeyValue) => !!item.packagePath?.name)
+      if (item) {
+        data.form.olkTarId = item.packageId
+      } else {
+        data.form.olkTarId = ''
+      }
+    } else {
+      data.form.olkTarId = ''
+    }
   }).finally(() => {
     packageLoading.value = false
   })
@@ -228,7 +254,7 @@ const refreshPackageList = () => {
 
 onMounted(() => {
   initData()
-  getHostList()
+  getHostList(true)
 })
 
 const validatePort = async (port: number) => {
@@ -353,25 +379,27 @@ const portValidator = (value: any, cb: any) => {
   })
 }
 
-const rules: KeyValue = {
-  hostId: { required: true, message: t('simpleInstall.index.5mpn813gukw0') },
-  installUsername: { required: true, message: t('components.openLooKeng.5mpiji1qpcc12') },
-  password: [
-    { required: true, message: t('components.openLooKeng.5mpiji1qpcc13') }
-  ],
-  installPath: [
-    { required: true, message: t('components.openLooKeng.5mpiji1qpcc14') }
-  ],
-  uploadPath: [
-    { required: true, message: t('components.openLooKeng.5mpiji1qpcc50') }
-  ],
-  olkPort: [{
-    required: true, message: t('components.openLooKeng.5mpiji1qpcc15')
-  }, {
-    validator: portValidator
-  }],
-  olkTarId: { required: true, message: t('components.openLooKeng.5mpiji1qpcc16') }
-}
+const rules = computed(() => {
+  return {
+    hostId: { required: true, message: t('simpleInstall.index.5mpn813gukw0') },
+    installUsername: { required: true, message: t('components.openLooKeng.5mpiji1qpcc12') },
+    password: [
+      { required: true, message: t('components.openLooKeng.5mpiji1qpcc13') }
+    ],
+    installPath: [
+      { required: true, message: t('components.openLooKeng.5mpiji1qpcc14') }
+    ],
+    uploadPath: [
+      { required: true, message: t('components.openLooKeng.5mpiji1qpcc50') }
+    ],
+    olkPort: [{
+      required: true, message: t('components.openLooKeng.5mpiji1qpcc15')
+    }, {
+      validator: portValidator
+    }],
+    olkTarId: { required: true, message: t('components.openLooKeng.5mpiji1qpcc16') }
+  }
+})
 
 const onUserChange = () => {
   const user = userListByHost.value.find(item => item.username === data.installUsername)
