@@ -1,10 +1,17 @@
 package org.opengauss.admin.plugin.domain.model.ops;
 
 import com.alibaba.fastjson.annotation.JSONField;
+import com.alibaba.fastjson.support.spring.FastJsonHttpMessageConverter;
+import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import lombok.Data;
 import org.opengauss.admin.common.core.domain.UploadInfo;
 import org.opengauss.admin.plugin.domain.entity.ops.OpsPackageManagerEntity;
+import org.springframework.boot.jackson.JsonObjectDeserializer;
+import org.springframework.boot.jackson.JsonObjectSerializer;
 import org.springframework.web.multipart.MultipartFile;
 
 /**
@@ -40,4 +47,5 @@ public class OpsPackageVO {
         entity.setRemark(remark);
         return entity;
     }
+
 }

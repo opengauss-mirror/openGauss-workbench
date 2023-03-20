@@ -2,7 +2,7 @@
   <a-form :model="data.form" :rules="rules" auto-label-width :style="{ width: '850px' }" ref="formRef">
     <a-divider orientation="left">{{ $t('components.openLooKeng.5mpiji1qpcc0') }}</a-divider>
     <a-form-item field="hostId" :label="$t('components.openLooKeng.5mpiji1qpcc1')">
-      <a-select :loading="hostListLoading" v-model="data.form.hostId" @change="changeHostId"
+      <a-select :loading="hostListLoading" v-model="data.form.hostId" @change="changeHostId(false)"
                 :placeholder="$t('simple.InstallConfig.5mpmu0laqss0')">
         <a-option v-for="item in hostList" :key="item.hostId" :value="item.hostId">{{
             item.privateIp
@@ -78,7 +78,7 @@
   <add-package-dlg ref="addPackageRef" @finish="refreshPackageList"/>
 </template>
 <script setup lang="ts">
-import { inject, onMounted, reactive, ref } from 'vue'
+import { computed, inject, onMounted, reactive, ref } from 'vue'
 import { KeyValue } from '@/types/global'
 import { Message } from '@arco-design/web-vue'
 import { hostListAll, hostPing, hostUserListAll, packageListAll, portUsed } from '@/api/ops'
@@ -128,7 +128,7 @@ const installUserLoading = ref<boolean>(false)
 const hostList = ref<KeyValue[]>([])
 const hostObj = ref<KeyValue>({})
 
-const getHostList = () => {
+const getHostList = (isInit: boolean) => {
   hostListLoading.value = true
   hostListAll().then((res: KeyValue) => {
     if (Number(res.code) === 200) {
@@ -151,8 +151,8 @@ const getHostList = () => {
           data.host.publicIp = hostList.value[0].publicIp
         }
       }
-      changeHostId()
-      refreshPackageList()
+      changeHostId(isInit)
+      refreshPackageList(isInit)
     } else {
       Message.error('Failed to obtain the host list data')
     }
@@ -163,7 +163,7 @@ const getHostList = () => {
 
 const userListByHost = ref<KeyValue[]>([])
 
-const changeHostId = () => {
+const changeHostId = (isInit: boolean) => {
   if (data.form.hostId) {
     if (hostObj.value[data.form.hostId]) {
       data.host.privateIp = hostObj.value[data.form.hostId].privateIp
@@ -179,6 +179,9 @@ const changeHostId = () => {
       if (Number(res.code) === 200) {
         userListByHost.value = []
         userListByHost.value = res.data
+        if (isInit && data.form.installUsername) {
+          return
+        }
         if (userListByHost.value.length) {
           data.form.installUsername = userListByHost.value[0].username
           data.form.password = userListByHost.value[0].password
@@ -230,7 +233,7 @@ const getDsListData = () => {
 
 onMounted(() => {
   initData()
-  getHostList()
+  getHostList(true)
   getDsListData()
 })
 
@@ -279,31 +282,36 @@ const validateDs = (value: any, cb: any) => {
   })
 }
 
-const rules: KeyValue = {
-  shardingPort: [{
-    required: true, message: t('components.openLooKeng.5mpiji1qpcc24')
-  }, {
-    validator: portValidator
-  }],
-  zkPort: [{
-    required: true, message: t('components.openLooKeng.5mpiji1qpcc28')
-  }, {
-    validator: portValidator
-  }],
-  hostId: { required: true, message: t('simpleInstall.index.5mpn813gukw0') },
-  installUsername: { required: true, message: t('components.openLooKeng.5mpiji1qpcc12') },
-  password: [
-    { required: true, message: t('components.openLooKeng.5mpiji1qpcc13') }
-  ],
-  installPath: [
-    { required: true, message: t('components.openLooKeng.5mpiji1qpcc14') }
-  ],
-  shardingTarId: { required: true, message: t('components.openLooKeng.5mpiji1qpcc23') },
-  zkTarId: { required: true, message: t('components.openLooKeng.5mpiji1qpcc27') },
-  tableName: [{ required: true, message: t('components.openLooKeng.5mpiji1qpcc32') }],
-  column: [{ required: true, message: t('components.openLooKeng.5mpiji1qpcc34') }],
-  dsConfig: [{ required: true, message: t('components.openLooKeng.5mpiji1qpcc47') }, { validator: validateDs }]
-}
+const rules = computed(() => {
+  return {
+    shardingPort: [{
+      required: true, message: t('components.openLooKeng.5mpiji1qpcc24')
+    }, {
+      validator: portValidator
+    }],
+    zkPort: [{
+      required: true, message: t('components.openLooKeng.5mpiji1qpcc28')
+    }, {
+      validator: portValidator
+    }],
+    hostId: { required: true, message: t('simpleInstall.index.5mpn813gukw0') },
+    installUsername: { required: true, message: t('components.openLooKeng.5mpiji1qpcc12') },
+    password: [
+      { required: true, message: t('components.openLooKeng.5mpiji1qpcc13') }
+    ],
+    installPath: [
+      { required: true, message: t('components.openLooKeng.5mpiji1qpcc14') }
+    ],
+    uploadPath: [
+      { required: true, message: t('components.openLooKeng.5mpiji1qpcc44') }
+    ],
+    shardingTarId: { required: true, message: t('components.openLooKeng.5mpiji1qpcc23') },
+    zkTarId: { required: true, message: t('components.openLooKeng.5mpiji1qpcc27') },
+    tableName: [{ required: true, message: t('components.openLooKeng.5mpiji1qpcc32') }],
+    column: [{ required: true, message: t('components.openLooKeng.5mpiji1qpcc34') }],
+    dsConfig: [{ required: true, message: t('components.openLooKeng.5mpiji1qpcc47') }, { validator: validateDs }]
+  }
+})
 
 const loadingFunc = inject<any>('loading')
 const packageLoading = ref<boolean>(false)
@@ -367,7 +375,7 @@ const beforeConfirm = async (): Promise<boolean> => {
   return false
 }
 
-const refreshPackageList = () => {
+const refreshPackageList = (isInit: boolean) => {
   packageLoading.value = true
   Promise.all([
     packageListAll({ type: PackageType.SHARDING_PROXY }),
@@ -375,6 +383,29 @@ const refreshPackageList = () => {
   ]).then(res => {
     data.shardingTarList = res[0].data
     data.zkTarList = res[1].data
+    if (isInit && data.form.zkTarId && data.form.shardingTarId) {
+      return
+    }
+    if (data.shardingTarList.length > 0) {
+      const item = data.shardingTarList.find((item: KeyValue) => !!item.packagePath?.name)
+      if (item) {
+        data.form.shardingTarId = item.packageId
+      } else {
+        data.form.shardingTarId = ''
+      }
+    } else {
+      data.form.shardingTarId = ''
+    }
+    if (data.zkTarList.length > 0) {
+      const item = data.zkTarList.find((item: KeyValue) => !!item.packagePath?.name)
+      if (item) {
+        data.form.zkTarId = item.packageId
+      } else {
+        data.form.zkTarId = ''
+      }
+    } else {
+      data.form.zkTarId = ''
+    }
   }).finally(() => {
     packageLoading.value = false
   })
