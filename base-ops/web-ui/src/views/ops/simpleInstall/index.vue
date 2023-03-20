@@ -493,7 +493,7 @@ const getInstallPackageList = () => {
           }
         })
         if (res.data.length) {
-          data.form.install = res.data[0]
+          data.form.install = data.installPackageList[0]
         } else {
           data.form.install = null
         }

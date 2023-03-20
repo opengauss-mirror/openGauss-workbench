@@ -57,7 +57,7 @@
           {{ item.ip.trim() ? item.ip : $t('database.AddJdbc.5oxhkhimyio0') + item.tabName }}
         </template>
         <div class="jdbc-instance-c">
-          <jdbc-instance :form-data="item" :host-list="data.hostList"
+          <jdbc-instance :form-data="item" :host-list="data.hostList" :jdbc-type="data.form.dbType"
             :ref="(el: any) => setRefMap(el, item.id)"></jdbc-instance>
         </div>
       </a-tab-pane>
@@ -98,7 +98,8 @@ const data = reactive<KeyValue>({
   hostList: [],
   activeTab: '',
   dbTypes: [
-    { label: 'MYSQL', value: 'mysql' }
+    { label: 'MYSQL', value: 'mysql' },
+    { label: 'OPENGAUSS', value: 'openGauss' }
   ]
 })
 const formRef = ref<null | FormInstance>(null)
