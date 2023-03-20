@@ -5,6 +5,7 @@ import org.opengauss.admin.plugin.enums.ops.HostFileTypeEnum;
 import lombok.Data;
 
 import java.io.File;
+import java.util.UUID;
 
 /**
  * @author lhf
@@ -60,6 +61,9 @@ public class HostFile {
                 }else {
                     return null;
                 }
+            }else {
+                //uuid
+                return parseVersionNum(fileName.substring(fileName.indexOf("openGauss")));
             }
         }
         return null;
