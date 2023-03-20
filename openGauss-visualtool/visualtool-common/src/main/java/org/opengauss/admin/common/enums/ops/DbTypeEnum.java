@@ -11,7 +11,8 @@ import lombok.Getter;
 @AllArgsConstructor
 @Getter
 public enum DbTypeEnum {
-    MYSQL("com.mysql.cj.jdbc.Driver");
+    MYSQL("com.mysql.cj.jdbc.Driver"),
+    OPENGAUSS("org.opengauss.Driver");
 
     private String driverClass;
 
