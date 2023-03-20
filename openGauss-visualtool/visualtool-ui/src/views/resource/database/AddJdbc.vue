@@ -266,12 +266,12 @@ const submit = () => {
   })
 }
 const close = () => {
-  data.show = false
   nextTick(() => {
     formRef.value?.clearValidate()
     formRef.value?.resetFields()
+    delRefObj()
   })
-  delRefObj()
+  data.show = false
 }
 
 const handleTestHost = () => {
@@ -423,6 +423,7 @@ const open = (type: string, editData?: KeyValue) => {
     }
   } else {
     data.title = t('database.AddJdbc.5oxhkhimzww0')
+    delRefObj()
     Object.assign(data.form, {
       clusterId: '',
       name: '',
