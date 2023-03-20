@@ -25,7 +25,7 @@ public class TaskDTO {
 
 	public Task toTask() {
 		if (StringUtils.isAnyEmpty(clusterId, nodeId, dbName, name, sql))
-			throw new CustomException("");
+			throw new CustomException("parameter null");
 		return new Task().setClusterId(clusterId).setNodeId(nodeId).setSqlId(sqlId).setDbName(dbName).setName(name)
 				.setSql(sql).setConf(new config().setOnCpu(onCpu).setOffCpu(offCpu).setExplainAnalysis(explainAnalysis)
 						.setParamAnalysis(paramAnalysis))

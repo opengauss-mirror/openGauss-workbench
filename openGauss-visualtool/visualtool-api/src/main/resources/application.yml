@@ -11,8 +11,8 @@ spring:
     basename: i18n/messages
   servlet:
      multipart:
-       max-file-size:  200MB
-       max-request-size:  200MB
+       max-file-size:  20GB
+       max-request-size:  20GB
   mvc:
     async:
       request-timeout: 60000

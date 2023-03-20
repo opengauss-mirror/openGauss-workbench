@@ -238,6 +238,7 @@ public class LogSearchServiceImpl implements LogSearchService {
     public ContextSearchInfoDTO getContextSearch(ContextSearchQuery queryParam) {
         ContextSearchDTO contextSearchDTO = new ContextSearchDTO();
         String id = null;
+        String addId = null;
         try {
             if (StringUtils.isEmpty(queryParam.getSorts()) && !StringUtils.isEmpty(queryParam.getId())) {
                 HashMap<List<String>, ContextSearchDTO> map = this.getSorts(queryParam);
@@ -251,8 +252,12 @@ public class LogSearchServiceImpl implements LogSearchService {
                 HashMap<String, List<String>> sortMap = this.getAboveList(queryParam);
                 List<String> sortsList = new ArrayList<>();
                 for (String key : sortMap.keySet()) {
-                    id = key;
-                    sortsList = sortMap.get(key);
+                    if (sortMap.get(key) != null) {
+                        id = key;
+                        sortsList = sortMap.get(key);
+                    } else {
+                        addId = key;
+                    }
                 }
                 queryParam.setSorts(sortsList);
             }
@@ -265,6 +270,16 @@ public class LogSearchServiceImpl implements LogSearchService {
                         list.add(i + 1, contextSearchDTO);
                     }
                 }
+            }
+            if (addId != null) {
+                ContextSearchQuery queryById = new ContextSearchQuery();
+                queryById.setId(addId);
+                HashMap<List<String>, ContextSearchDTO> addMap = this.getSorts(queryById);
+                ContextSearchDTO contextDto = new ContextSearchDTO();
+                for (List<String> addList : addMap.keySet()) {
+                    contextDto = addMap.get(addList);
+                }
+                list.add(0, contextDto);
             }
             return belowList;
         } catch (Exception e) {
@@ -387,7 +402,6 @@ public class LogSearchServiceImpl implements LogSearchService {
                 contextSearchDto.setId(param.getId());
                 map.put(sorts, contextSearchDto);
             }
-            log.info(String.valueOf(sorts));
             return map;
         } catch (Exception e) {
             log.info(e.getMessage());
@@ -414,6 +428,7 @@ public class LogSearchServiceImpl implements LogSearchService {
         queryParam.setId(param.getId());
         queryParam.setOrder("ASC");
         queryParam.setSorts(param.getSorts());
+        queryParam.setNodeId(param.getNodeId());
         int nodeIdCount = 0;
         if (queryParam.getNodeId() != null) {
             nodeIdCount = queryParam.getNodeId().size();
@@ -437,6 +452,9 @@ public class LogSearchServiceImpl implements LogSearchService {
                     return null;
                 }
                 List<Hit<HashMap>> hits = searchResponse.hits().hits();
+                if (hits.size() < param.getAboveCount() + 1) {
+                    map.put(hits.get(hits.size() - 1).id(), null);
+                }
                 if (!hits.isEmpty()) {
                     List<String> sorts = new ArrayList<>();
                     sorts.addAll(hits.get(hits.size() - 1).sort());
@@ -465,6 +483,7 @@ public class LogSearchServiceImpl implements LogSearchService {
         queryParam.setStartDate(param.getStartDate());
         queryParam.setEndDate(param.getEndDate());
         queryParam.setSorts(param.getSorts());
+        queryParam.setNodeId(param.getNodeId());
         int nodeIdCount = 0;
         if (queryParam.getNodeId() != null) {
             nodeIdCount = queryParam.getNodeId().size();

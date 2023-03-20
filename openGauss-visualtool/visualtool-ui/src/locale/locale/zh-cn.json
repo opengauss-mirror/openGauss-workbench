@@ -645,6 +645,8 @@
             "baseInfo": "基本信息",
             "diskInfo": "硬件信息",
             "detail": "详情",
+            "labelBatch": "标签设置",
+            "labelManage": "标签管理",
             "5mphf11rr080": "创建",
             "5mphf11syw80": "测试连通性",
             "5mphf11szdk0": "搜索",

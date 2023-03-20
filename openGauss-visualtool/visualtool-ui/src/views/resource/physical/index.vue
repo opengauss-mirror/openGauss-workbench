@@ -10,6 +10,12 @@
               </template>
               {{ $t('physical.index.5mphf11rr080') }}
             </a-button>
+            <a-button type="primary" class="mr" @click="handleAddHost('create')">
+              {{ $t('physical.index.labelBatch') }}
+            </a-button>
+            <a-button type="primary" class="mr" @click="handleLabelManage">
+              {{ $t('physical.index.labelManage') }}
+            </a-button>
           </div>
           <div>
             <a-form :model="filter" layout="inline">
@@ -87,25 +93,34 @@
                 <div class="net flex-row-center">
                   <div class="flex-col mr" style="width: 80px;">
                     <icon-arrow-fall :size="25" class="mb" />
-                    <div>{{ record.downSpeed ? record.downSpeed : '--' }} byte/s</div>
+                    <div style="white-space: nowrap;">{{ record.downSpeed ? record.downSpeed : '--' }} byte/s</div>
                   </div>
                   <div class="flex-col" style="width: 80px;">
                     <icon-arrow-rise :size="25" class="mb" />
-                    <div>{{ record.upSpeed ? record.upSpeed : '--' }} byte/s</div>
+                    <div style="white-space: nowrap;">{{ record.upSpeed ? record.upSpeed : '--' }} byte/s</div>
                   </div>
                 </div>
                 <div>{{ $t('physical.index.net') }}</div>
               </div>
               <div class="flex-col mr">
-                <v-chart class="chart" :option="record.cpuOption" />
+                <div class="chart chart-empty-c" v-if="!record.isCpu">
+                  <icon-empty :size="70" class="bg-color" />
+                </div>
+                <v-chart v-else class="chart" :option="record.cpuOption" />
                 <div>{{ $t('physical.index.cpu') }}</div>
               </div>
               <div class="flex-col mr">
-                <v-chart class="chart" :option="record.memoryOption" />
+                <div class="chart chart-empty-c" v-if="!record.isMemory">
+                  <icon-empty :size="70" class="bg-color" />
+                </div>
+                <v-chart v-else class="chart" :option="record.memoryOption" />
                 <div>{{ $t('physical.index.memory') }}</div>
               </div>
               <div class="flex-col mr">
-                <v-chart class="chart" :option="record.diskOption" />
+                <div class="chart chart-empty-c" v-if="!record.isDisk">
+                  <icon-empty :size="70" class="bg-color" />
+                </div>
+                <v-chart v-else class="chart" :option="record.diskOption" />
                 <div>{{ $t('physical.index.disk') }}</div>
               </div>
             </div>
@@ -130,6 +145,7 @@
         <host-pwd-dlg ref="hostPwdRef" @finish="handleShowTerminal($event)"></host-pwd-dlg>
         <host-user-mng ref="hostUserRef"></host-user-mng>
         <host-terminal ref="hostTerminalRef"></host-terminal>
+        <label-manage-dlg ref="labelManageDlgRef" @finish="getListData"></label-manage-dlg>
       </div>
     </div>
   </div>
@@ -148,6 +164,7 @@ import { cpuOption, memoryOption, diskOption } from './echarts/option'
 import VChart from 'vue-echarts'
 import Socket from '@/utils/websocket'
 import { useI18n } from 'vue-i18n'
+import LabelManageDlg from './label/LabelManageDlg.vue'
 const { t } = useI18n()
 const filter = reactive({
   name: '',
@@ -228,6 +245,9 @@ const getListData = () => new Promise(resolve => {
         item.cpuOption = JSON.parse(JSON.stringify(echartsOption.cpuOption))
         item.memoryOption = JSON.parse(JSON.stringify(echartsOption.memoryOption))
         item.diskOption = JSON.parse(JSON.stringify(echartsOption.diskOption))
+        item.isCpu = false
+        item.isMemory = false
+        item.isDisk = false
         if (item.isRemember) {
           openHostMonitor(item, index)
         }
@@ -254,7 +274,6 @@ const openHostMonitor = (hostData: KeyValue, index: number) => {
       rootPassword: ''
     }
     hostMonitor(monitorParam).then((res: KeyValue) => {
-      console.log('show monitor', res)
       if (Number(res.code) !== 200) {
         list.data[index].state = 0
         websocket.destroy()
@@ -269,7 +288,6 @@ const openHostMonitor = (hostData: KeyValue, index: number) => {
         }
       }
     }).catch(() => {
-      console.log('show monitor error')
       list.data[index].state = 0
       websocket.destroy()
     }).finally(() => {
@@ -284,10 +302,13 @@ const openHostMonitor = (hostData: KeyValue, index: number) => {
     console.log('get host monitor data', eventData)
     list.data[index].downSpeed = eventData.downSpeed
     list.data[index].upSpeed = eventData.upSpeed
+    list.data[index].isCpu = true
     list.data[index].cpuOption.series[0].data[0] = eventData.cpu / 100
     list.data[index].cpuOption.series[0].data[1] = 1 - eventData.cpu / 100
+    list.data[index].isDisk = true
     list.data[index].diskOption.series[0].data[0] = eventData.disk / 100
     list.data[index].diskOption.series[0].data[1] = 1 - eventData.disk / 100
+    list.data[index].isMemory = true
     list.data[index].memoryOption.series[0].data[0] = eventData.memory / 100
     list.data[index].memoryOption.series[0].data[1] = 1 - eventData.memory / 100
   })
@@ -331,6 +352,11 @@ const handleShowDetail = (record: KeyValue) => {
 const addHostRef = ref<null | InstanceType<typeof AddHost>>(null)
 const handleAddHost = (type: string, data?: KeyValue) => {
   addHostRef.value?.open(type, data)
+}
+
+const labelManageDlgRef = ref<null | InstanceType<typeof LabelManageDlg>>(null)
+const handleLabelManage = () => {
+  labelManageDlgRef.value?.open()
 }
 
 // const currRecord = ref<KeyValue>({})
@@ -393,6 +419,17 @@ const showHostUserMng = (record: KeyValue) => {
     .chart {
       width: 120px;
       height: 120px;
+    }
+
+    .chart-empty-c {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+
+      .bg-color {
+        color: rgb(var(--gray-5));
+      }
     }
   }
 }

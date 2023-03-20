@@ -8,13 +8,13 @@
       <div class="label-color mb">
         {{ $t('components.OfflineInstall.5mpn1nwaz280') }} {{
           (data.path && data.fileName) ? data.path + data.fileName :
-            'no choose'
+          'no choose'
         }}
       </div>
       <a-link class="mb-s" @click="showUploadModal">{{ $t('components.OfflineInstall.5mpn1nwaz600') }}</a-link>
     </div>
     <a-spin class="flex-row-center" width="50%" :loading="data.getArchLoading"
-            :tip="$t('components.OfflineInstall.else3')">
+      :tip="$t('components.OfflineInstall.else3')">
       <div class="panel-body">
         <div class="flex-col">
           <div v-for="(item, index) in data.files" :key="index">
@@ -34,7 +34,7 @@
 
 <script lang="ts" setup>
 import { computed, onMounted, reactive, ref, inject } from 'vue'
-import { listInstallPackage, getPackageCpuArch } from '@/api/ops'
+import { listInstallPackage, getPackageCpuArch, getSysUploadPath } from '@/api/ops'
 import { KeyValue } from '@/types/global'
 import { useOpsStore } from '@/store'
 import { FormInstance } from '@arco-design/web-vue/es/form'

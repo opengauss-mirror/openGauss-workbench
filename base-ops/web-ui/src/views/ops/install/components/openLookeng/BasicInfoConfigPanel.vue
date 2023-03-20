@@ -12,7 +12,7 @@
       </a-form-item>
       <a-divider orientation="left">{{ $t('components.openLooKeng.5mpiji1qpbc1') }}</a-divider>
       <a-form-item field="hostId" :label="$t('components.openLooKeng.5mpiji1qpcc1')">
-        <a-select :loading="hostListLoading" v-model="data.hostId" @change="changeHostId"
+        <a-select :loading="hostListLoading" v-model="data.hostId" @change="changeHostId(false)"
                   :placeholder="$t('simple.InstallConfig.5mpmu0laqss0')">
           <a-option v-for="item in hostList" :key="item.hostId" :value="item.hostId">{{
               item.privateIp
@@ -38,7 +38,7 @@
       <a-form-item field="dadTarId" :label="$t('components.openLooKeng.5mpiji1qpcb4')">
         <a-select v-model="data.dadTarId" :placeholder="$t('components.openLooKeng.5mpiji1qpcb5')"
                   :loading="packageLoading" class="mr-s">
-          <a-option v-for="item in data.dadTarList" :key="item.packageId" :label="item.packagePath.name"
+          <a-option v-for="item in data.dadTarList" :key="item.packageId" :label="item.packagePath?.name"
                     :value="item.packageId"/>
         </a-select>
         <a-button type="primary" @click="onAddDadTar">+</a-button>
@@ -57,7 +57,7 @@
 <script lang="ts" setup>
 import { useI18n } from 'vue-i18n'
 import { useOpsStore } from '@/store'
-import { inject, onMounted, reactive, ref } from 'vue'
+import { computed, inject, onMounted, reactive, ref } from 'vue'
 import { KeyValue } from '@/types/global'
 import AddPackageDlg from '@/views/monitor/packageManage/AddPackageDlg.vue'
 import { PackageType } from '@/types/resource/package'
@@ -102,7 +102,7 @@ const onAddDadTar = () => {
 
 onMounted(() => {
   initData()
-  getHostList()
+  getHostList(true)
 })
 
 const initData = () => {
@@ -136,10 +136,23 @@ const saveStore = () => {
   installStore.setOpenLookengConfig(param as OpenLookengInstallConfig)
 }
 
-const refreshPackageList = () => {
+const refreshPackageList = (isInit: boolean) => {
   packageLoading.value = true
   packageListAll({ type: PackageType.DISTRIBUTE_DEPLOY }).then(res => {
     data.dadTarList = res.data
+    if (isInit && data.dadTarId) {
+      return
+    }
+    if (data.dadTarList.length > 0) {
+      const item = data.dadTarList.find((item: KeyValue) => !!item.packagePath?.name)
+      if (item) {
+        data.dadTarId = item.packageId
+      } else {
+        data.dadTarId = ''
+      }
+    } else {
+      data.dadTarId = ''
+    }
   }).finally(() => {
     packageLoading.value = false
   })
@@ -265,7 +278,7 @@ const installUserLoading = ref<boolean>(false)
 const hostList = ref<KeyValue[]>([])
 const hostObj = ref<KeyValue>({})
 
-const getHostList = () => {
+const getHostList = (isInit: boolean) => {
   hostListLoading.value = true
   hostListAll().then((res: KeyValue) => {
     if (Number(res.code) === 200) {
@@ -288,8 +301,8 @@ const getHostList = () => {
           data.host.publicIp = hostList.value[0].publicIp
         }
       }
-      changeHostId()
-      refreshPackageList()
+      changeHostId(isInit)
+      refreshPackageList(isInit)
     } else {
       Message.error('Failed to obtain the host list data')
     }
@@ -300,36 +313,40 @@ const getHostList = () => {
 
 const userListByHost = ref<KeyValue[]>([])
 
-const changeHostId = () => {
-  if (data.hostId) {
-    if (hostObj.value[data.hostId]) {
-      data.host.privateIp = hostObj.value[data.hostId].privateIp
-      data.host.publicIp = hostObj.value[data.hostId].publicIp
-      data.host.hostPort = hostObj.value[data.hostId].port
-      data.host.isHostRemPwd = hostObj.value[data.hostId].isRemember
-      data.host.os = hostObj.value[data.hostId].os
-      data.host.cpuArch = hostObj.value[data.hostId].cpuArch
-      data.needEncrypt = !hostObj.value[data.hostId].isRemember
-    }
-    installUserLoading.value = true
-    hostUserListAll(data.hostId).then((res: KeyValue) => {
-      if (Number(res.code) === 200) {
-        userListByHost.value = []
-        userListByHost.value = res.data
-        if (userListByHost.value.length) {
-          data.installUsername = userListByHost.value[0].username
-          data.password = userListByHost.value[0].password
-        } else {
-          data.installUsername = ''
-          data.password = ''
-        }
-      } else {
-        Message.error('Failed to obtain user data from the host')
-      }
-    }).finally(() => {
-      installUserLoading.value = false
-    })
+const changeHostId = (isInit: boolean) => {
+  if (!data.hostId) {
+    return
   }
+  if (hostObj.value[data.hostId]) {
+    data.host.privateIp = hostObj.value[data.hostId].privateIp
+    data.host.publicIp = hostObj.value[data.hostId].publicIp
+    data.host.hostPort = hostObj.value[data.hostId].port
+    data.host.isHostRemPwd = hostObj.value[data.hostId].isRemember
+    data.host.os = hostObj.value[data.hostId].os
+    data.host.cpuArch = hostObj.value[data.hostId].cpuArch
+    data.needEncrypt = !hostObj.value[data.hostId].isRemember
+  }
+  installUserLoading.value = true
+  hostUserListAll(data.hostId).then((res: KeyValue) => {
+    if (Number(res.code) === 200) {
+      userListByHost.value = []
+      userListByHost.value = res.data
+      if (isInit && data.installUsername) {
+        return
+      }
+      if (userListByHost.value.length) {
+        data.installUsername = userListByHost.value[0].username
+        data.password = userListByHost.value[0].password
+      } else {
+        data.installUsername = ''
+        data.password = ''
+      }
+    } else {
+      Message.error('Failed to obtain user data from the host')
+    }
+  }).finally(() => {
+    installUserLoading.value = false
+  })
 }
 
 const portValidator = (value: any, cb: any) => {
@@ -358,22 +375,24 @@ const pathValidator = (value: any, cb: any) => {
   })
 }
 
-const rules: KeyValue = {
-  name: {
-    required: true, message: t('components.openLooKeng.5mpiji1qpcb1')
-  },
-  port: [{ required: true, message: t('components.openLooKeng.5mpiji1qpcc14') }, { validator: portValidator }],
-  hostId: { required: true, message: t('simpleInstall.index.5mpn813gukw0') },
-  installUsername: { required: true, message: t('components.openLooKeng.5mpiji1qpcc12') },
-  password: { required: true, message: t('components.openLooKeng.5mpiji1qpcc13') },
-  installPath: [
-    { required: true, message: t('components.openLooKeng.5mpiji1qpcc14') },
-    {
-      validator: pathValidator
-    }
-  ],
-  dadTarId: { required: true, message: t('components.openLooKeng.5mpiji1qpcc39') }
-}
+const rules = computed(() => {
+  return {
+    name: {
+      required: true, message: t('components.openLooKeng.5mpiji1qpcb1')
+    },
+    port: [{ required: true, message: t('components.openLooKeng.5mpiji1qpcc14') }, { validator: portValidator }],
+    hostId: { required: true, message: t('simpleInstall.index.5mpn813gukw0') },
+    installUsername: { required: true, message: t('components.openLooKeng.5mpiji1qpcc12') },
+    password: { required: true, message: t('components.openLooKeng.5mpiji1qpcc13') },
+    installPath: [
+      { required: true, message: t('components.openLooKeng.5mpiji1qpcc14') },
+      {
+        validator: pathValidator
+      }
+    ],
+    dadTarId: { required: true, message: t('components.openLooKeng.5mpiji1qpcc39') }
+  }
+})
 
 defineExpose({
   saveStore,

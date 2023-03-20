@@ -127,6 +127,24 @@ export const hostTagListAll = () => {
   return axios.get(`hostTag/listAll`)
 }
 
+export const hostTagPage = (data: KeyValue) => {
+  return axios.get('hostTag/page', {
+    params: data
+  })
+}
+
+export const hostTagAdd = (data: KeyValue) => {
+  return axios.post('hostTag/add', data)
+}
+
+export const hostTagUpdate = (id: string, data: KeyValue) => {
+  return axios.put('hostTag/update/' + id, data)
+}
+
+export const hostTagDel = (id: string) => {
+  return axios.delete('hostTag/del/' + id)
+}
+
 // host user
 export const hostUserPage = (hostId: string) => {
   return axios.get(`hostUser/page/${hostId}`)
