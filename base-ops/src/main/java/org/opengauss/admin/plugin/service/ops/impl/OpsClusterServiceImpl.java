@@ -1380,6 +1380,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         Connection connection = null;
         try {
             String versionNum = getVersionNum(ommSession, importClusterBody.getEnvPath());
+            importClusterBody.setOpenGaussVersionNum(versionNum);
             Integer majorVersion = Integer.valueOf(versionNum.substring(0, 1));
             OpenGaussVersionEnum openGaussVersionEnum = judgeOpenGaussVersion(majorVersion, ommSession, connection, importClusterBody.getEnvPath());
             boolean versionMatch = false;
