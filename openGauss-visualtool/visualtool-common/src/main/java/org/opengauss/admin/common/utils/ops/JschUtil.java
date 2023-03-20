@@ -282,6 +282,7 @@ public class JschUtil {
             session.connect(SESSION_TIMEOUT);
         } catch (JSchException e) {
             log.error("Connection establishment fail：", e);
+            session = null;
         }
 
         return Optional.ofNullable(session);
