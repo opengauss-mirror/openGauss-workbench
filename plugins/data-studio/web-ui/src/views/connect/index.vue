@@ -293,8 +293,9 @@
             node.userName = node.dbUser;
             node.password = '';
             node.connectInfo = `${node.publicIp}:${node.dbPort}/${node.dbName}`;
-            item.sourceType = type;
-            item.sourceName = t('connection.contentCenter');
+            node.sourceType = type;
+            node.sourceName = t('connection.contentCenter');
+            node.edition = `${item.version} ${item.versionNum}`;
           });
           list = list.concat(item.clusterNodes);
         }
@@ -314,7 +315,7 @@
     connectListInfo.listCurrentRow = {};
     getAllCluster()
       .then((res) => {
-        connectListInfo.list = connectListInfo.list.concat(doConnectList(res.data || [], 1));
+        connectListInfo.list = connectListInfo.list.concat(doConnectList(res || [], 1));
       })
       .finally(() => {
         getDataLinkList(UserStore.userId).then((res) => {
