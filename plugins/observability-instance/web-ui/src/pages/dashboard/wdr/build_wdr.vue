@@ -21,12 +21,12 @@
                     </el-form-item>
                     <el-form-item :label="$t('dashboard.wdrReports.buildWDRDialog.startSnapshot')" prop="startId">
                         <el-select v-model="formData.startId" style="width: 200px; margin: 0 4px">
-                            <el-option v-for="item in tableData" :key="item.snapshotId" :label="item.snapshotId" :value="item.snapshotId" />
+                            <el-option v-for="item in tableData" :key="item.snapshotId" :label="item.snapshotId" :value="item.snapshotId" :disabled="parseInt(item.snapshotId) >= parseInt(formData.endId)"/>
                         </el-select>
                     </el-form-item>
                     <el-form-item :label="$t('dashboard.wdrReports.buildWDRDialog.endSnapshot')" prop="endId">
                         <el-select v-model="formData.endId" style="width: 200px; margin: 0 4px">
-                            <el-option v-for="item in tableData" :key="item.snapshotId" :label="item.snapshotId" :value="item.snapshotId" />
+                            <el-option v-for="item in tableData" :key="item.snapshotId" :label="item.snapshotId" :value="item.snapshotId" :disabled="parseInt(item.snapshotId) <= parseInt(formData.startId)"/>
                         </el-select>
                     </el-form-item>
                 </el-form>
@@ -124,10 +124,31 @@ async function handleconfirmModel() {
         }
     } catch (error) {}
 }
+const validateStartId = (rule: any, value: any, callback: any) => {
+  if (!value || !formData.endId) {
+    callback()
+  } else {
+    if(parseInt(value) >= parseInt(formData.endId)) {
+        callback(new Error(t("datasource.trackFormRules[5]")))
+        return
+    }
+    callback()
+  }
+}
+const validateEndId = (rule: any, value: any, callback: any) => {
+  if (!value || !formData.startId) {
+    callback()
+  } else {
+    if(parseInt(value) <= parseInt(formData.startId)) {
+        callback(new Error(t("datasource.trackFormRules[6]")))
+    }
+    callback()
+  }
+}
 const connectionFormRules = reactive<FormRules>({
     hostId: [{ required: true, message: t("datasource.trackFormRules[0]"), trigger: "blur" }],
-    startId: [{ required: true, message: t("datasource.trackFormRules[3]"), trigger: "blur" }],
-    endId: [{ required: true, message: t("datasource.trackFormRules[3]"), trigger: "blur" }],
+    startId: [{ required: true, message: t("datasource.trackFormRules[4]"), trigger: "blur" },{ validator: validateStartId, trigger: 'blur' }],
+    endId: [{ required: true, message: t("datasource.trackFormRules[4]"), trigger: "blur" },{ validator: validateEndId, trigger: 'blur' }],
 });
 const {
     data: rez,
