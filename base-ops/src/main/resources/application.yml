@@ -35,3 +35,12 @@ mybatis-plus:
 
 installPackage:
   urlPrefix: https://opengauss.obs.cn-south-1.myhuaweicloud.com
+
+olk:
+  # read log timeout, seconds
+  readLogTimeout: 30
+  # Loop count to find start flag in log file
+  startLoopCount: 4
+  # wait time before each loop, seconds
+  startLoopWaitTime: 5
+

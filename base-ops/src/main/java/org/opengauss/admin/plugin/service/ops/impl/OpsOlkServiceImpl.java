@@ -1,7 +1,5 @@
 package org.opengauss.admin.plugin.service.ops.impl;
 
-import cn.hutool.core.io.FileUtil;
-import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
@@ -9,17 +7,18 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
-import com.jcraft.jsch.*;
+import com.google.common.util.concurrent.SimpleTimeLimiter;
+import com.google.common.util.concurrent.TimeLimiter;
+import com.jcraft.jsch.ChannelExec;
+import com.jcraft.jsch.Session;
+import lombok.Builder;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.apache.commons.io.file.PathUtils;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
-import org.opengauss.admin.common.core.domain.model.ops.HostUserBody;
 import org.opengauss.admin.common.exception.ops.OpsException;
-import org.opengauss.admin.common.exception.ops.UserAlreadyExistsException;
 import org.opengauss.admin.common.utils.http.HttpUtils;
 import org.opengauss.admin.common.utils.uuid.IdUtils;
-import org.opengauss.admin.common.utils.uuid.UUID;
 import org.opengauss.admin.plugin.domain.entity.ops.OpsOlkEntity;
 import org.opengauss.admin.plugin.domain.entity.ops.OpsPackageManagerEntity;
 import org.opengauss.admin.plugin.domain.model.ops.JschResult;
@@ -37,10 +36,7 @@ import org.opengauss.admin.system.plugin.facade.HostFacade;
 import org.opengauss.admin.system.plugin.facade.HostUserFacade;
 import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -48,15 +44,13 @@ import org.springframework.web.client.RestTemplate;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
 
-import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 
@@ -84,6 +78,12 @@ public class OpsOlkServiceImpl extends ServiceImpl<OpsOlkMapper, OpsOlkEntity> i
     private IOpsPackageManagerService packageManagerService;
     @Autowired
     private RestTemplate restTemplate;
+    @Value("${olk.readLogTimeout}")
+    private int readLogTimeout;
+    @Value("${olk.startLoopCount}")
+    private int startLoopCount;
+    @Value("${olk.startLoopWaitTime}")
+    private int startLoopWaitTime;
 
     @Override
     public void install(InstallOlkBody installBody) {
@@ -204,15 +204,13 @@ public class OpsOlkServiceImpl extends ServiceImpl<OpsOlkMapper, OpsOlkEntity> i
         WsSession session = context.getRetSession();
         try {
             checkInstallConfig(context);
-            wsUtil.sendText(session, OlkProcessFlagStr.START_PROCESS);
+            wsUtil.sendText(session, OlkProcessFlagStr.START_DEPLOY_PROCESS);
             createId(context.getOlkConfig());
             // transfer package to all host
             uploadPackageToHost(context);
             // start distribute deploy jar(install and start)
             startDadService(context.getOlkConfig(), session);
             requestDadInstallService(context.getOlkConfig(), session);
-            wsUtil.sendText(session, OlkProcessFlagStr.END_PROCESS);
-            wsUtil.setSuccessFlag(context.getRetSession());
         } catch (Exception ex) {
             String errMsg = "Install OpenLooKeng failed, error: " + ex.getMessage();
             log.error(errMsg);
@@ -322,6 +320,7 @@ public class OpsOlkServiceImpl extends ServiceImpl<OpsOlkMapper, OpsOlkEntity> i
         serverDto.setPort(host.getPort());
         serverDto.setUsername(config.getDadInstallUsername());
         serverDto.setPassword(encryptionUtils.decrypt(config.getDadInstallPassword()));
+        wsUtil.sendText(wsSession, "Check if deployment service is running");
         boolean isRunning = isProcessRunning(config.getDadPort(), OlkProcessFlagStr.DAD_PKG_NAME, serverDto, wsSession);
         if (isRunning) {
             wsUtil.sendText(wsSession, "Deployment service is alreay running, skip start");
@@ -342,6 +341,7 @@ public class OpsOlkServiceImpl extends ServiceImpl<OpsOlkMapper, OpsOlkEntity> i
                 isRunning = isProcessRunning(config.getDadPort(), OlkProcessFlagStr.DAD_PKG_NAME, serverDto, wsSession);
                 if (isRunning) {
                     flag = true;
+                    wsUtil.sendText(wsSession, "Deployment service start successfully, Now we can send command");
                     break;
                 } else {
                     tryCount++;
@@ -359,7 +359,7 @@ public class OpsOlkServiceImpl extends ServiceImpl<OpsOlkMapper, OpsOlkEntity> i
     }
 
     private void requestDadInstallService(OlkConfig config, WsSession wsSession) {
-        wsUtil.sendText(wsSession, OlkProcessFlagStr.RUN_DAD_SERVICE);
+        wsUtil.sendText(wsSession, OlkProcessFlagStr.SEND_CMD_TO_DAD_SERVICE);
         OpsHostEntity host = hostFacade.getById(config.getDadInstallHostId());
         if (ObjectUtil.isNull(host)) {
             processError(wsSession, "Can't find deployment host info, please try again");
@@ -377,21 +377,23 @@ public class OpsOlkServiceImpl extends ServiceImpl<OpsOlkMapper, OpsOlkEntity> i
         olkCommandDto.setShardingsDto(ssDto);
         olkCommandDto.setOpenLooKengDto(olkDto);
 
-//        HttpHeaders headers = new HttpHeaders();
-//        headers.setContentType(MediaType.APPLICATION_JSON);
-//        HttpEntity<OlkCommandDto> entity = new HttpEntity<>(olkCommandDto, headers);
+        // if code goes here, we have already monitor on log file
         String reqUrl = String.format("http://%s:%s/%s", host.getPublicIp(), config.getDadPort(), DadReqPath.DEPLOY);
-
-        String resultStr = HttpUtils.sendPost(reqUrl, JSON.toJSONString(olkCommandDto));
-        DadResult result = JSON.parseObject(resultStr, DadResult.class);
+        HttpUtils.PostResponse response = HttpUtils.sendPost(reqUrl, JSON.toJSONString(olkCommandDto));
+        DadResult result = JSON.parseObject(response.getBody(), DadResult.class);
+        String reqId = response.getHeader(DadReqPath.REQ_ID_KEY);
+        if (StrUtil.isEmpty(reqId)) {
+            processError(wsSession, "Send command to deployment service failed, Can't find req id");
+        }
         if (result != null && result.isSuccess()) {
-            String logPrefix = (String) result.get(DadResult.MSG_TAG);
-            readLogToWs(serverDto, config.getDadLogFileName(), logPrefix, wsSession);
-            wsUtil.sendText(wsSession, OlkProcessFlagStr.RUN_DAD_SERVICE_COMPLETE);
+            ReadLogParam param = ReadLogParam.builder()
+                    .serverDto(serverDto).logPath(config.getDadLogFileName()).startFlag(OlkProcessFlagStr.START_DEPLOY)
+                    .endFlag(OlkProcessFlagStr.END_DEPLOY).errFlag(OlkProcessFlagStr.END_DEPLOY_IN_ERROR)
+                    .reqId(response.getHeader(DadReqPath.REQ_ID_KEY)).wsSession(wsSession).build();
+            threadReadLogToWs(param);
+            wsUtil.sendText(wsSession, OlkProcessFlagStr.SEND_CMD_TO_SERVICE_COMPLETE);
         } else {
-            String logPrefix = (String) result.get(DadResult.DATA_TAG);
-            readLogToWs(serverDto, config.getDadLogFileName(), logPrefix, wsSession);
-            processError(wsSession, "Deployment service process failed, error: " + result.get(DadResult.MSG_TAG));
+            processError(wsSession, "Send command to deployment service failed, error: " + result.get(DadResult.MSG_TAG));
         }
     }
 
@@ -461,62 +463,80 @@ public class OpsOlkServiceImpl extends ServiceImpl<OpsOlkMapper, OpsOlkEntity> i
         return olkDto;
     }
 
-    /**
-     * read log to ws, you must call this method before execute request
-     *
-     * @param serverDto    host info
-     * @param logPath      log file path
-     * @param startFlagStr read start flag
-     * @param endFlagStr   read end flag
-     * @param wsSession    ws session
-     */
-    private void threadReadLogToWs(ServerDto serverDto, String logPath, String startFlagStr, String endFlagStr, WsSession wsSession, Object lockObject) {
+    private void threadReadLogToWs(ReadLogParam param) {
         new Thread(() -> {
+            BufferedReader reader = null;
+            ChannelExec channel = null;
+            Session session = null;
+            ServerDto serverDto = param.getServerDto();
             try {
                 // Read the log file line by line
-                // must wait to link to log file
-                Session session = jschUtil.getSession(serverDto.getIp(), serverDto.getPort(), serverDto.getUsername(), encryptionUtils.decrypt(serverDto.getPassword())).orElseThrow(() -> new OpsException("Connection establishment failed"));
-                ChannelExec channel = (ChannelExec) session.openChannel("exec");
-                channel.setPtyType("dump");
-                channel.setPty(false);
-                channel.setCommand("tail -f " + logPath);
-                channel.connect(20000);
-                InputStream in = channel.getInputStream();
-                BufferedReader reader = new BufferedReader(new InputStreamReader(in));
-                synchronized (lockObject) {
-                    lockObject.notify();
-                }
-                String line;
-                boolean isStarted = false;
-                while ((line = reader.readLine()) != null) {
-                    // Check for the start and end flags
-                    if (line.contains(startFlagStr)) {
-                        // Start sending log messages to the WebSocket
-                        wsUtil.sendText(wsSession, line);
-                        isStarted = true;
-                    }
-                    if (isStarted) {
-                        wsUtil.sendText(wsSession, line);
-                    }
-                    if (line.contains(endFlagStr)) {
-                        // Start sending log messages to the WebSocket
-                        wsUtil.sendText(wsSession, line);
+                session = jschUtil.getSession(serverDto.getIp(), serverDto.getPort(), serverDto.getUsername(), serverDto.getPassword()).orElseThrow(() -> new OpsException("Connection establishment failed"));
+                int startCount = 0;
+                wsUtil.sendText(param.getWsSession(), String.format("Finding start flag \"%s\" in log file %s", param.getSF(), param.getLogPath()));
+                while (true) {
+                    String cmd = String.format("grep -n \"%s\" %s", param.getSF(), param.getLogPath());
+                    JschResult result = jschUtil.executeCommand(cmd, session);
+                    if (result.getExitCode() != 0 || StrUtil.isEmpty(result.getResult())) {
+                        startCount++;
+                        if (startCount > startLoopCount) {
+                            throw new Exception("Can't find start log after " + startLoopCount * startLoopWaitTime + "s");
+                        }
+                        wsUtil.sendText(param.getWsSession(), String.format("%s st try to find start flag", startCount));
+                        Thread.sleep(startLoopWaitTime * 1000);
+                    } else {
+                        wsUtil.sendText(param.getWsSession(), "Find start flag in log file: " + result.getResult());
                         break;
                     }
                 }
-                channel.disconnect();
-                session.disconnect();
-                reader.close();
+
+                channel = (ChannelExec) session.openChannel("exec");
+                channel.setPtyType("dump");
+                channel.setPty(false);
+                channel.setCommand(String.format("grep -n \"%s\" %s | tail -1 | awk -F \":\" '{print $1}' | xargs -I {} tail -f %s -n +{}", param.getSF(), param.getLogPath(), param.getLogPath()));
+                channel.connect(20000);
+                InputStream in = channel.getInputStream();
+                reader = new BufferedReader(new InputStreamReader(in));
+                String line;
+                TimeLimiter limiter = SimpleTimeLimiter.create(Executors.newSingleThreadExecutor());
+
+                while (true) {
+                    line = limiter.callWithTimeout(reader::readLine, readLogTimeout, TimeUnit.SECONDS);
+                    if (line.contains(param.getEEE())) {
+                        throw new Exception(line);
+                    }
+                    if (line.contains(param.getEF())) {
+                        wsUtil.sendText(param.getWsSession(), line);
+                        wsUtil.sendText(param.getWsSession(), OlkProcessFlagStr.END_DEPLOY_PROCESS);
+                        wsUtil.setSuccessFlag(param.getWsSession());
+                        return;
+                    }
+                    wsUtil.sendText(param.getWsSession(), line);
+                }
             } catch (Exception ex) {
-                processError(wsSession, String.format("Failed to Read process log %s, error: %s", logPath, ex.getMessage()));
+                String errMsg = String.format("Failed to Read process log %s, error: %s", param.getLogPath(), ex.getMessage());
+                wsUtil.sendText(param.getWsSession(), errMsg);
+                wsUtil.setErrorFlag(param.getWsSession());
+            } finally {
+                if (channel != null) {
+                    channel.disconnect();
+                }
+                if (session != null) {
+                    session.disconnect();
+                }
+                try {
+                    if (reader != null) {
+                        reader.close();
+                    }
+                } catch (IOException ioException) {
+                    wsUtil.sendText(param.getWsSession(), "Close log reader error: " + ioException.getMessage());
+                }
             }
         }).start();
     }
 
     private void readLogToWs(ServerDto serverDto, String logPath, String reqId, WsSession wsSession) {
         try {
-            // Read the log file line by line
-            // must wait to link to log file
             Session session = jschUtil.getSession(serverDto.getIp(), serverDto.getPort(), serverDto.getUsername(), serverDto.getPassword()).orElseThrow(() -> new OpsException("Connection establishment failed"));
             JschResult result = jschUtil.executeCommand(String.format("cat %s | grep %s", logPath, reqId), session);
             if (result.getExitCode() != 0) {
@@ -569,5 +589,27 @@ public class OpsOlkServiceImpl extends ServiceImpl<OpsOlkMapper, OpsOlkEntity> i
 
     private String getPath(String path1, String path2) {
         return Path.of(path1, path2).toString().replace("\\", "/");
+    }
+
+    @Data
+    @Builder
+    private static class ReadLogParam {
+        private ServerDto serverDto;
+        private String startFlag;
+        private String endFlag;
+        private String errFlag;
+        private String reqId;
+        private String logPath;
+        private WsSession wsSession;
+
+        public String getSF() {
+            return String.format("(%s) %s", reqId, startFlag);
+        }
+        public String getEF() {
+            return String.format("(%s) %s", reqId, endFlag);
+        }
+        public String getEEE(){
+            return String.format("(%s) %s", reqId, errFlag);
+        }
     }
 }

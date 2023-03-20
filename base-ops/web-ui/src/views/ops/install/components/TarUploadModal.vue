@@ -128,7 +128,6 @@ const handleBeforeOk = () => {
         }
       }
       addPackage(params).then(() => {
-        Message.success({ content: `Create success` })
         emits(`finish`)
         close(false)
       }).finally(() => {
