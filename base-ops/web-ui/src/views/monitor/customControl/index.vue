@@ -1,6 +1,6 @@
 <template>
   <div class="custom-control-container">
-    <div class="flex-row mb">
+    <!-- <div class="flex-row mb">
       <div class="label-color top-label mr-s">{{ $t('customControl.index.else1') }}:</div>
       <a-select class="mr" style="width: 300px;" :loading="data.hostListLoading" v-model="data.hostId"
         :placeholder="$t('customControl.index.5mplgrscm4s0')" @change="hostChange">
@@ -9,16 +9,23 @@
       <a-spin :loading="data.loading">
         <a-tag v-if="(!data.isSuccess && !data.loading)" color="red">Connection establishment failure</a-tag>
       </a-spin>
-    </div>
-    <div id="xterm" class="xterm"></div>
-    <host-pwd-dlg ref="hostPwdRef" @finish="handleConnect($event)"></host-pwd-dlg>
+    </div> -->
+
+    <a-tabs type="card-gutter" :editable="true" @add="handleAdd" @delete="handleDelete" v-model:active-key="data.hostId"
+      show-add-button auto-switch>
+      <a-tab-pane v-for="(item, index) in data.hosts" :key="item.hostId" :title="item.publicIp">
+        <div :id="`xterm_${index}`" class="xterm"></div>
+      </a-tab-pane>
+    </a-tabs>
+
+    <host-pwd-dlg ref="hostPwdRef" @finish="handleAddHost($event)"></host-pwd-dlg>
   </div>
 </template>
 
 <script lang="ts" setup>
 import { KeyValue } from '@/types/global'
 import Socket from '@/utils/websocket'
-import { reactive, ref, onMounted, onBeforeUnmount } from 'vue'
+import { reactive, ref, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { hostListAll, openSSH } from '@/api/ops'
 import { WsConnectType } from '@/types/ops/install'
 import { Terminal } from 'xterm'
@@ -29,6 +36,7 @@ import HostPwdDlg from './HostPwdDlg.vue'
 import { debounce } from '@antv/x6/lib/util/function/function'
 
 const data = reactive<KeyValue>({
+  hosts: [],
   loading: false,
   hostId: '',
   rootPassword: '',
@@ -46,6 +54,26 @@ onMounted(() => {
   getHostList()
   onTerminalResize()
 })
+
+
+const hostPwdRef = ref<null | InstanceType<typeof HostPwdDlg>>(null)
+const openDlgToValid = (hostId: string) => {
+  if (data.hostObj[hostId]) {
+    hostPwdRef.value?.open(data.hostObj[hostId])
+  }
+}
+const handleAdd = () => {
+  hostPwdRef.value?.open()
+}
+
+const handleAddHost = (hostData: KeyValue) => {
+  data.hosts.push(data.hostObj[hostData.hostId])
+  handleConnect(hostData, data.hosts.length - 1)
+}
+
+const handleDelete = () => {
+
+}
 
 const onTerminalResize = () => {
   window.addEventListener('resize', onResize())
@@ -77,13 +105,13 @@ const getHostList = () => {
         })
       })
       data.hostId = data.hostList[0].value
-      console.log('show is need pwd', data.hostId, data.hostObj[data.hostId]);
+      data.hosts.push(data.hostObj[data.hostId])
       if (!data.hostObj[data.hostId].isRemember) {
         openDlgToValid(data.hostId)
       } else {
         handleConnect({
           hostId: data.hostId
-        })
+        }, 0)
       }
     }
   }).finally(() => {
@@ -100,25 +128,19 @@ const hostChange = () => {
     } else {
       handleConnect({
         hostId: data.hostId
-      })
+      }, 0)
     }
   }
 }
 
-const hostPwdRef = ref<null | InstanceType<typeof HostPwdDlg>>(null)
-const openDlgToValid = (hostId: string) => {
-  if (data.hostObj[hostId]) {
-    hostPwdRef.value?.open(data.hostObj[hostId])
-  }
-}
 
-const handleConnect = (hostData: any) => {
+const handleConnect = (hostData: any, index: number) => {
   data.hostId = hostData.hostId
   data.rootPassword = hostData.password
-  openSocket()
+  openSocket(index)
 }
 
-const openSocket = () => {
+const openSocket = (index: number) => {
   const term = getTermObj()
   const socketKey = new Date().getTime()
   const terminalSocket = new Socket({ url: `custom_terminal_${socketKey}` })
@@ -144,19 +166,19 @@ const openSocket = () => {
     }).finally(() => {
       data.loading = false
     })
-    initTerm(term, terminalSocket.ws)
+    initTerm(term, terminalSocket.ws, index)
   })
 }
 
 let fitAddon = ref<FitAddon | undefined>()
 
-const initTerm = (term: Terminal, ws: WebSocket | undefined) => {
+const initTerm = (term: Terminal, ws: WebSocket | undefined, index: number) => {
   if (ws) {
     const attachAddon = new AttachAddon(ws)
     fitAddon.value = new FitAddon()
     term.loadAddon(attachAddon)
     term.loadAddon(fitAddon.value)
-    term.open(document.getElementById('xterm') as HTMLElement)
+    term.open(document.getElementById(`xterm_${index}`) as HTMLElement)
     // fitAddon.value.fit()
     term.clear()
     term.focus()

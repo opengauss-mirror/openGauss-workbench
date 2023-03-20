@@ -15,7 +15,7 @@
             </a-button>
           </div>
           <div class="flex-row mb-s">
-            <div class="mr-s" style="max-width: 140px;">{{ $t('database.JdbcNodeTable.else1') }}: {{ record.ip }}</div>
+            <div class="mr-s" style="max-width: 160px;">{{ $t('database.JdbcNodeTable.else1') }}: {{ record.ip }}</div>
             <icon-code-square :size="25" style="cursor: pointer;" @click="showTerminal(record.ip)" />
           </div>
           <div>{{ $t('database.JdbcNodeTable.else2') }}: {{ record.port }}</div>

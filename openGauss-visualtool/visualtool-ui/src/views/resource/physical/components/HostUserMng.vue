@@ -1,6 +1,6 @@
 <template>
     <a-modal :mask-closable="false" :esc-to-close="false" :visible="data.show" :title="data.title" @cancel="close"
-        :modal-style="{ width: '450px' }" :footer="false">
+        :modal-style="{ width: '650px' }" :footer="false">
         <div class="flex-col-start">
             <a-button class="mb" type="primary" @click="handleAddUser('create')">{{
                 $t('components.HostUserMng.5mpi1bru0w00')
