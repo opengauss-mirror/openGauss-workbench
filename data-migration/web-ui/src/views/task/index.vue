@@ -1,26 +1,28 @@
 <template>
   <div class="home-container">
-    <div class="title-con">
-      <div class="title">创建数据迁移任务</div>
-      <div class="task-name-con">
-        <span class="task-name"><i>*</i>任务名称</span>
-        <a-input v-model.trim="taskName" placeholder="请输入任务名称" style="width: 250px;" />
+    <div class="main-con">
+      <div class="title-con">
+        <div class="title">创建数据迁移任务</div>
+        <div class="task-name-con">
+          <span class="task-name"><i>*</i>任务名称</span>
+          <a-input v-model.trim="taskName" placeholder="请输入任务名称" style="width: 250px;" />
+        </div>
       </div>
+      <a-divider />
+      <div class="task-steps-con">
+        <a-steps :current="currentStep">
+          <a-step description="1个子任务是1个源库到1个目的库的迁移过程">选择迁移源库和目的库</a-step>
+          <a-step description="确定每一个迁移过程的执行参数">配置迁移过程参数</a-step>
+          <a-step description="选择合适的机器执行迁移过程">分配执行机资源</a-step>
+        </a-steps>
+      </div>
+      <!-- step1 -->
+      <step1 v-if="currentStep === 1" ref="stepOneComp" :sub-task-config="subTaskConfig" @syncConfig="syncSubTask" />
+      <!-- step2 -->
+      <step2 v-if="currentStep === 2" :sub-task-config="subTaskConfig" :global-params="globalParamsObject" @syncConfig="syncSubTask" @syncGlobalParams="syncGlobalParams" />
+      <!-- step3 -->
+      <step3 v-if="currentStep === 3" :sub-task-config="subTaskConfig" :host-data="selectedHosts" @syncHost="syncHost" />
     </div>
-    <a-divider />
-    <div class="task-steps-con">
-      <a-steps :current="currentStep">
-        <a-step description="1个子任务是1个源库到1个目的库的迁移过程">选择迁移源库和目的库</a-step>
-        <a-step description="确定每一个迁移过程的执行参数">配置迁移过程参数</a-step>
-        <a-step description="选择合适的机器执行迁移过程">分配执行机资源</a-step>
-      </a-steps>
-    </div>
-    <!-- step1 -->
-    <step1 v-if="currentStep === 1" ref="stepOneComp" :sub-task-config="subTaskConfig" @syncConfig="syncSubTask" />
-    <!-- step2 -->
-    <step2 v-if="currentStep === 2" :sub-task-config="subTaskConfig" :global-params="globalParamsObject" @syncConfig="syncSubTask" @syncGlobalParams="syncGlobalParams" />
-    <!-- step3 -->
-    <step3 v-if="currentStep === 3" :sub-task-config="subTaskConfig" :host-data="selectedHosts" @syncHost="syncHost" />
     <div class="submit-con">
       <a-button v-if="currentStep === 2 || currentStep === 3" type="outline" class="btn-item" @click="onPrev">上一步</a-button>
       <a-button v-if="currentStep === 1 || currentStep === 2" type="primary" class="btn-item" @click="onNext">下一步</a-button>
@@ -194,6 +196,8 @@ onMounted(() => {
   const id = window.$wujie?.props.data.id
   if (id) {
     getTaskDetail(id)
+  } else {
+    taskName.value = `Task_${Math.random().toString(36).substring(2, 10)}`
   }
 })
 </script>
@@ -201,6 +205,13 @@ onMounted(() => {
 <style lang="less" scoped>
 .home-container {
   position: relative;
+  height: calc(100vh - 123px);
+  overflow: hidden;
+  .main-con {
+    height: calc(100vh - 123px);
+    padding-bottom: 40px;
+    overflow-y: auto;
+  }
   .title-con {
     padding: 20px 20px 0;
     display: flex;
@@ -234,10 +245,16 @@ onMounted(() => {
     margin: 30px auto;
   }
   .submit-con {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 10;
+    background: var(--color-bg-2);
     display: flex;
     justify-content: center;
     .btn-item {
-      margin: 0 10px 30px;
+      margin: 10px;
     }
   }
 }

@@ -5,22 +5,22 @@
     </div>
     <div class="search-con">
       <a-form :model="form" layout="inline">
-        <a-form-item field="ip">
+        <a-form-item field="ip" style="margin-left: -17px;">
           <a-input v-model.trim="form.ip" allow-clear placeholder="请输入物理机IP" style="width: 160px;" @change="getFilterData"></a-input>
         </a-form-item>
-        <a-form-item field="hostname">
+        <a-form-item field="hostname" style="margin-left: -17px;">
           <a-input v-model.trim="form.hostname" allow-clear placeholder="请输入物理机名称" style="width: 160px;" @change="getFilterData"></a-input>
         </a-form-item>
-        <a-form-item field="a">
+        <a-form-item field="a" style="margin-left: -17px;">
           <a-input v-model.trim="form.a" allow-clear placeholder="请输入cpu核心数" style="width: 160px;" @change="getFilterData"></a-input>
         </a-form-item>
-        <a-form-item field="b">
+        <a-form-item field="b" style="margin-left: -17px;">
           <a-input v-model.trim="form.b" allow-clear placeholder="请输入内存大小" style="width: 160px;" @change="getFilterData"></a-input>
         </a-form-item>
-        <a-form-item field="c">
+        <a-form-item field="c" style="margin-left: -17px;">
           <a-input v-model.trim="form.c" allow-clear placeholder="请输入硬盘空闲大小" style="width: 160px;" @change="getFilterData"></a-input>
         </a-form-item>
-        <a-form-item>
+        <a-form-item style="margin-left: -17px;">
           <a-button type="outline" @click="getFilterData">
             <template #icon>
               <icon-search />
