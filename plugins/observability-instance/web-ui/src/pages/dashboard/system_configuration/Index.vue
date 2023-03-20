@@ -177,6 +177,23 @@ const color = computed(() => {
     if (localStorage.getItem("theme") === "dark") return "#fcef92";
     else return "#E41D1D";
 });
+onMounted(() => {
+
+    // @ts-ignore
+    const wujie = window.$wujie;
+    // Judge whether it is a plug-in environment or a local environment through wujie
+    if (wujie) {
+        // Monitoring platform language change
+        wujie?.bus.$on('opengauss-locale-change', (val: string) => {
+            console.log('log-search catch locale change');
+            nextTick(() => {
+                if(nodeId.value) {
+                    refreshData("","0");
+                }
+             });
+        });
+    }
+});
 </script>
 
 <template>

@@ -66,6 +66,8 @@ public class ExporterService extends AbstractInstaller {
 					.selectOne(Wrappers.<NctigbaEnv>lambdaQuery().eq(NctigbaEnv::getType, type.PROMETHEUS));
 			if (promEnv == null)
 				throw new RuntimeException("prometheus not exists");
+			if (StrUtil.isBlank(promEnv.getPath()))
+				throw new RuntimeException("prometheus installing");
 
 			curr = nextStep(wsSession, steps, curr);
 			var node = clusterManager.getOpsNodeById(nodeId);
@@ -78,6 +80,7 @@ public class ExporterService extends AbstractInstaller {
 			var user = getUser(hostEntity, EXPORTER_USER, rootPassword, steps, curr);
 			try (var session = SshSession.connect(hostEntity.getPublicIp(), hostEntity.getPort(), "root",
 					encryptionUtils.decrypt(rootPassword));) {
+				session.execute("yum install -y unzip zip");
 			} catch (Exception e) {
 				steps.get(curr).setState(status.ERROR).add(e.getMessage());
 				wsUtil.sendText(wsSession, JSONUtil.toJsonStr(steps));
@@ -97,29 +100,35 @@ public class ExporterService extends AbstractInstaller {
 				if (nodeEnv == null) {
 					var arch = session.execute(command.ARCH);
 					String name = NODE_EXPORTER_NAME + arch(arch);
-					String tar = name + TAR;
-					if (!session.test(command.STAT.parse(name))) {
-						if (!session.test(command.STAT.parse(tar))) {
-							// session.execute(command.WGET.parse(NODE_EXPORTER_PATH + tar));
-							var pkg = envMapper
-									.selectOne(Wrappers.<NctigbaEnv>lambdaQuery().like(NctigbaEnv::getPath, tar));
-							if (pkg == null) {
-								var f = Download.download(NODE_EXPORTER_PATH + tar, "pkg/" + tar);
-								pkg = new NctigbaEnv().setPath(f.getCanonicalPath()).setType(type.NODE_EXPORTER_PKG);
-								addMsg(wsSession, steps, curr, "exporterinstall.downloadsuccess");
-								save(pkg);
-							}
-							session.upload(pkg.getPath(), tar);
-							addMsg(wsSession, steps, curr, "exporterinstall.uploadsuccess");
-						} else
-							addMsg(wsSession, steps, curr, "exporterinstall.pkgexists");
-						session.execute(command.TAR.parse(tar));
-					}
-					session.executeNoWait("cd " + name
-							+ " && ./node_exporter --collector.systemd --web.listen-address=:" + nodeport + " &");
 					nodeEnv = new NctigbaEnv().setHostid(hostId).setPort(nodeport).setUsername(user.getUsername())
 							.setType(type.NODE_EXPORTER).setPath(name);
 					envMapper.insert(nodeEnv);
+					try {
+						String tar = name + TAR;
+						if (!session.test(command.STAT.parse(name))) {
+							if (!session.test(command.STAT.parse(tar))) {
+								// session.execute(command.WGET.parse(NODE_EXPORTER_PATH + tar));
+								var pkg = envMapper
+										.selectOne(Wrappers.<NctigbaEnv>lambdaQuery().like(NctigbaEnv::getPath, tar));
+								if (pkg == null) {
+									var f = Download.download(NODE_EXPORTER_PATH + tar, "pkg/" + tar);
+									pkg = new NctigbaEnv().setPath(f.getCanonicalPath())
+											.setType(type.NODE_EXPORTER_PKG);
+									addMsg(wsSession, steps, curr, "exporterinstall.downloadsuccess");
+									save(pkg);
+								}
+								session.upload(pkg.getPath(), tar);
+								addMsg(wsSession, steps, curr, "exporterinstall.uploadsuccess");
+							} else
+								addMsg(wsSession, steps, curr, "exporterinstall.pkgexists");
+							session.execute(command.TAR.parse(tar));
+						}
+						session.executeNoWait("cd " + name
+								+ " && ./node_exporter --collector.systemd --web.listen-address=:" + nodeport + " &");
+					} catch (Exception e) {
+						envMapper.deleteById(nodeEnv);
+						throw e;
+					}
 				} else
 					addMsg(wsSession, steps, curr, "node exporter exists");
 
@@ -129,44 +138,49 @@ public class ExporterService extends AbstractInstaller {
 				if (gaussEnv == null) {
 					var arch = session.execute(command.ARCH);
 					String name = OPENGAUSS_EXPORTER_NAME + arch(arch);
-					String zip = name + ZIP;
-					if (!session.test(command.STAT.parse("opengauss_exporter"))) {
-						if (!session.test(command.STAT.parse(zip))) {
-							// session.execute(command.WGET.parse(OPENGAUSS_EXPORTER_PATH + zip));
-							var pkg = envMapper
-									.selectOne(Wrappers.<NctigbaEnv>lambdaQuery().like(NctigbaEnv::getPath, zip));
-							if (pkg == null) {
-								var f = Download.download(OPENGAUSS_EXPORTER_PATH + zip, "pkg/" + zip);
-								pkg = new NctigbaEnv().setPath(f.getCanonicalPath())
-										.setType(type.OPENGAUSS_EXPORTER_PKG);
-								addMsg(wsSession, steps, curr, "exporterinstall.downloadsuccess");
-								save(pkg);
-							}
-							session.upload(pkg.getPath(), zip);
-							addMsg(wsSession, steps, curr, "exporterinstall.uploadsuccess");
-						} else
-							addMsg(wsSession, steps, curr, "exporterinstall.pkgexists");
-						session.execute(command.UNZIP.parse(zip));
-					}
-
-					File f = File.createTempFile("og_exporter", "yml");
-					var in = loader.getResource("og_exporter.yml").getInputStream();
-					IoUtil.copy(in, new FileOutputStream(f));
-					session.upload(f.getCanonicalPath(), "og_exporter.yml");
-					f.delete();
-
-					// 启动
-					var url = MessageFormat.format(
-							// "postgresql://{0}:{1}@{2}:{3,number,#}/{4}"
-							"host={0} user={1} password={2} port={3,number,#} dbname={4} sslmode=disable",
-							hostEntity.getPublicIp(), node.getDbUser(), node.getDbUserPassword(), node.getDbPort(),
-							node.getDbName());
-					session.executeNoWait("export DATA_SOURCE_NAME='" + url
-							+ "' && ./opengauss_exporter --config=og_exporter.yml --web.listen-address=:" + openport
-							+ " &");
 					gaussEnv = new NctigbaEnv().setHostid(hostId).setPort(openport).setUsername(user.getUsername())
 							.setType(type.OPENGAUSS_EXPORTER).setPath(".");
 					envMapper.insert(gaussEnv);
+					try {
+						String zip = name + ZIP;
+						if (!session.test(command.STAT.parse("opengauss_exporter"))) {
+							if (!session.test(command.STAT.parse(zip))) {
+								// session.execute(command.WGET.parse(OPENGAUSS_EXPORTER_PATH + zip));
+								var pkg = envMapper
+										.selectOne(Wrappers.<NctigbaEnv>lambdaQuery().like(NctigbaEnv::getPath, zip));
+								if (pkg == null) {
+									var f = Download.download(OPENGAUSS_EXPORTER_PATH + zip, "pkg/" + zip);
+									pkg = new NctigbaEnv().setPath(f.getCanonicalPath())
+											.setType(type.OPENGAUSS_EXPORTER_PKG);
+									addMsg(wsSession, steps, curr, "exporterinstall.downloadsuccess");
+									save(pkg);
+								}
+								session.upload(pkg.getPath(), zip);
+								addMsg(wsSession, steps, curr, "exporterinstall.uploadsuccess");
+							} else
+								addMsg(wsSession, steps, curr, "exporterinstall.pkgexists");
+							session.execute(command.UNZIP.parse(zip));
+						}
+
+						File f = File.createTempFile("og_exporter", "yml");
+						var in = loader.getResource("og_exporter.yml").getInputStream();
+						IoUtil.copy(in, new FileOutputStream(f));
+						session.upload(f.getCanonicalPath(), "og_exporter.yml");
+						f.delete();
+
+						// 启动
+						var url = MessageFormat.format(
+								// "postgresql://{0}:{1}@{2}:{3,number,#}/{4}"
+								"host={0} user={1} password={2} port={3,number,#} dbname={4} sslmode=disable",
+								hostEntity.getPublicIp(), node.getDbUser(), node.getDbUserPassword(), node.getDbPort(),
+								node.getDbName());
+						session.executeNoWait("export DATA_SOURCE_NAME='" + url
+								+ "' && ./opengauss_exporter --config=og_exporter.yml --web.listen-address=:" + openport
+								+ " &");
+					} catch (Exception e) {
+						envMapper.deleteById(gaussEnv);
+						throw e;
+					}
 				} else
 					addMsg(wsSession, steps, curr, "opengauss exporter exists");
 
@@ -236,10 +250,10 @@ public class ExporterService extends AbstractInstaller {
 
 		try {
 			var node = clusterManager.getOpsNodeById(nodeId);
-			var nodeenv = envMapper.selectOne(Wrappers.<NctigbaEnv>lambdaQuery()
-					.eq(NctigbaEnv::getType, type.NODE_EXPORTER).eq(NctigbaEnv::getHostid, node.getHostId()));
-			var expenv = envMapper.selectOne(Wrappers.<NctigbaEnv>lambdaQuery()
-					.eq(NctigbaEnv::getType, type.OPENGAUSS_EXPORTER).eq(NctigbaEnv::getHostid, node.getHostId()));
+			var nodeenv = envMapper.selectList(Wrappers.<NctigbaEnv>lambdaQuery()
+					.eq(NctigbaEnv::getType, type.NODE_EXPORTER).eq(NctigbaEnv::getHostid, node.getHostId())).get(0);
+			var expenv = envMapper.selectList(Wrappers.<NctigbaEnv>lambdaQuery()
+					.eq(NctigbaEnv::getType, type.OPENGAUSS_EXPORTER).eq(NctigbaEnv::getHostid, node.getHostId())).get(0);
 
 			if (nodeenv == null && expenv == null)
 				throw new RuntimeException("exporters not found");

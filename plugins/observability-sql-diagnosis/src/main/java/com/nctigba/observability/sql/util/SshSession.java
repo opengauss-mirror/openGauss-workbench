@@ -73,7 +73,7 @@ public class SshSession implements AutoCloseable {
 		ec.setErr(os);
 		ec.open();
 		ec.waitFor(EnumSet.of(ClientChannelEvent.CLOSED), CHANNEL_TIMEOUT);
-		if (ec.getExitStatus() != 0)
+		if (ec.getExitStatus() != null && ec.getExitStatus() != 0)
 			throw new RuntimeException(os.toString().trim());
 		return os.toString().trim();
 	}
