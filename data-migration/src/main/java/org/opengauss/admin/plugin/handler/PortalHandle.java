@@ -154,7 +154,7 @@ public class PortalHandle {
     public static String getTaskLogs(String host, Integer port, String user, String pass, String logPath) {
         String result = ShellUtil.execCommandGetResult(host, port, user, pass,
                 "cat " + logPath);
-        return result != null ? replaceAllBlank(result.trim()) : "";
+        return result != null ? result : "";
     }
 
     public static String replaceAllBlank(String str) {
