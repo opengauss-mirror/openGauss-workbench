@@ -91,15 +91,15 @@ const data = reactive<KeyValue>({
     clusterId: '',
     name: '',
     isCustomName: false,
-    dbType: 'mysql',
+    dbType: 'MYSQL',
     nodes: [],
     status: jdbcStatusEnum.unTest
   },
   hostList: [],
   activeTab: '',
   dbTypes: [
-    { label: 'MYSQL', value: 'mysql' },
-    { label: 'OPENGAUSS', value: 'openGauss' }
+    { label: 'MYSQL', value: 'MYSQL' },
+    { label: 'OPENGAUSS', value: 'OPENGAUSS' }
   ]
 })
 const formRef = ref<null | FormInstance>(null)
@@ -399,6 +399,7 @@ const open = (type: string, editData?: KeyValue) => {
       Object.assign(data.form, {
         clusterId: editData.clusterId,
         name: editData.name,
+        dbType: editData.dbType,
         nodes: []
       })
       editData.nodes.forEach((item: KeyValue) => {
@@ -428,7 +429,7 @@ const open = (type: string, editData?: KeyValue) => {
     Object.assign(data.form, {
       clusterId: '',
       name: '',
-      dbType: 'mysql',
+      dbType: 'MYSQL',
       nodes: [],
       status: jdbcStatusEnum.unTest
     })

@@ -199,17 +199,17 @@ const jdbcUrl = computed(() => {
     })
   }
   let urlPrefix = ''
-  if (props.jdbcType === 'mysql') {
+  if (props.jdbcType === 'MYSQL') {
     urlPrefix = `jdbc:mysql://${form.value.ip ? form.value.ip : '{IP}'}:${form.value.port ? form.value.port : '{port}'}`
     if (urlSuffix) {
       return urlPrefix + '?' + urlSuffix
     } else {
       return urlPrefix
     }
-  } else if (props.jdbcType === 'openGauss') {
-    urlPrefix = `jdbc:opengauss://${form.value.ip ? form.value.ip : '{IP}'}:${form.value.port ? form.value.port : '{port}'}/postgres?currentSchema=public`
+  } else if (props.jdbcType === 'OPENGAUSS') {
+    urlPrefix = `jdbc:opengauss://${form.value.ip ? form.value.ip : '{IP}'}:${form.value.port ? form.value.port : '{port}'}/postgres`
     if (urlSuffix) {
-      return urlPrefix + '&' + urlSuffix
+      return urlPrefix + '?' + urlSuffix
     } else {
       return urlPrefix
     }
@@ -221,9 +221,9 @@ watch(jdbcUrl, (val) => {
   form.value.url = val
 })
 watch(() => props.jdbcType, (val) => {
-  if (val === 'mysql') {
+  if (val === 'MYSQL') {
     form.value.port = 3306
-  } else if (val === 'openGauss') {
+  } else if (val === 'OPENGAUSS') {
     form.value.port = 5432
   }
 })
