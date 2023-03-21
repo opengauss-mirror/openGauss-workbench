@@ -89,16 +89,10 @@ public class OpsJdbcDbClusterNodeServiceImpl extends ServiceImpl<OpsJdbcDbCluste
     }
 
     @Override
-    public Set<String> fuzzyQueryClusterIds(String name) {
+    public Set<String> fuzzyQueryClusterIdsByIp(String name) {
         Set<String> res = new HashSet<>();
         LambdaQueryWrapper<OpsJdbcDbClusterNodeEntity> queryWrapper = Wrappers.lambdaQuery(OpsJdbcDbClusterNodeEntity.class)
-                .like(OpsJdbcDbClusterNodeEntity::getName, name)
-                .or()
                 .like(OpsJdbcDbClusterNodeEntity::getIp, name)
-                .or()
-                .like(OpsJdbcDbClusterNodeEntity::getPort, name)
-                .or()
-                .like(OpsJdbcDbClusterNodeEntity::getUrl, name)
                 .select(OpsJdbcDbClusterNodeEntity::getClusterId);
 
         List<OpsJdbcDbClusterNodeEntity> list = list(queryWrapper);

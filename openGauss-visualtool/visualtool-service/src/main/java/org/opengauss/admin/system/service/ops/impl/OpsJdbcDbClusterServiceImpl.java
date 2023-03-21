@@ -51,13 +51,11 @@ public class OpsJdbcDbClusterServiceImpl extends ServiceImpl<OpsJdbcDbClusterMap
     }
 
     @Override
-    public Page<JdbcDbClusterVO> page(String name, Page page) {
+    public Page<JdbcDbClusterVO> page(String name, String ip, String type, Page page) {
         Set<String> clusterIdConditions = new HashSet<>();
         if (StrUtil.isNotEmpty(name)) {
             LambdaQueryWrapper<OpsJdbcDbClusterEntity> queryWrapper = Wrappers.lambdaQuery(OpsJdbcDbClusterEntity.class)
                     .like(OpsJdbcDbClusterEntity::getName, name)
-                    .or()
-                    .like(OpsJdbcDbClusterEntity::getRemark, name)
                     .select(OpsJdbcDbClusterEntity::getClusterId);
 
             List<OpsJdbcDbClusterEntity> clusterEntityList = list(queryWrapper);
@@ -65,9 +63,38 @@ public class OpsJdbcDbClusterServiceImpl extends ServiceImpl<OpsJdbcDbClusterMap
                 clusterIdConditions.addAll(clusterEntityList.stream().map(OpsJdbcDbClusterEntity::getClusterId).collect(Collectors.toSet()));
             }
 
-            Set<String> fuzzyQueryClusterIds = opsJdbcDbClusterNodeService.fuzzyQueryClusterIds(name);
-            clusterIdConditions.addAll(fuzzyQueryClusterIds);
+            if (CollUtil.isEmpty(clusterIdConditions)) {
+                return Page.of(0, 0);
+            }
+        }
 
+        if (StrUtil.isNotEmpty(ip)){
+            Set<String> ipFuzzyQueryClusterIds = opsJdbcDbClusterNodeService.fuzzyQueryClusterIdsByIp(ip);
+            if (CollUtil.isEmpty(ipFuzzyQueryClusterIds)) {
+                return Page.of(0, 0);
+            }
+            clusterIdConditions.retainAll(ipFuzzyQueryClusterIds);
+            if (CollUtil.isEmpty(clusterIdConditions)) {
+                return Page.of(0, 0);
+            }
+
+        }
+
+        if (StrUtil.isNotEmpty(type)){
+            LambdaQueryWrapper<OpsJdbcDbClusterEntity> queryWrapper = Wrappers.lambdaQuery(OpsJdbcDbClusterEntity.class)
+                    .like(OpsJdbcDbClusterEntity::getDbType, type.toUpperCase())
+                    .select(OpsJdbcDbClusterEntity::getClusterId);
+
+            Set<String> clusterIds = new HashSet<>();
+            List<OpsJdbcDbClusterEntity> clusterEntityList = list(queryWrapper);
+            if (CollUtil.isNotEmpty(clusterEntityList)) {
+                clusterIds.addAll(clusterEntityList.stream().map(OpsJdbcDbClusterEntity::getClusterId).collect(Collectors.toSet()));
+            }
+            if (CollUtil.isEmpty(clusterIds)) {
+                return Page.of(0, 0);
+            }
+
+            clusterIdConditions.retainAll(clusterIds);
             if (CollUtil.isEmpty(clusterIdConditions)) {
                 return Page.of(0, 0);
             }
