@@ -1,6 +1,6 @@
 <template>
   <div class="jdbc-instance-table">
-    <a-table :data="data.nodeList" :columns="columns" :show-header="false" :pagination="false">
+    <a-table :data="data.nodeList" :columns="columns" :show-header="false" :pagination="false" :bordered="false">
       <template #baseInfo="{ record }">
         <div class="flex-col-start mr">
           <!-- <a-tag class="mb-s" color="green" bordered v-if="record.os">{{ record.os }}</a-tag>
@@ -23,8 +23,12 @@
       </template>
       <template #status="{ record }">
         <div class="flex-row mr">
-          <div class="node-role mr-s">{{ getNodeRole(record.role) }}</div>
-          <div :class="'node-state-c ' + getNodeStateColor(record.state)"></div>
+          <div class="node-role mr-s">
+            <div class="flex-row">
+              <div :class="'node-state-c mr-s ' + getNodeStateColor(record.state)"></div>
+              <div>{{ getNodeRole(record.role) }}</div>
+            </div>
+          </div>
         </div>
       </template>
       <template #connectNum="{ record }">
@@ -180,12 +184,15 @@ const openNodeMonitor = (nodeData: KeyValue, index: number) => {
   })
   websocket.onmessage((messageData: any) => {
     const eventData = JSON.parse(messageData)
-    data.nodeList[index].tableSpaceUsed = Number(eventData.tableSpaceUsed / 1024 / 1024).toFixed(2)
-    data.nodeList[index].memoryUsed = Number(eventData.memoryUsed / 1024 / 1024 / 1024).toFixed(2)
-    data.nodeList[index].connNum = eventData.connNum
-    data.nodeList[index].qps = eventData.qps
-    data.nodeList[index].tps = eventData.tps
-    data.nodeList[index].role = eventData.role
+    console.log('show jdbc ws data', eventData)
+    if (Object.keys(eventData).length) {
+      data.nodeList[index].tableSpaceUsed = Number(eventData.tableSpaceUsed / 1024 / 1024).toFixed(2)
+      data.nodeList[index].memoryUsed = Number(eventData.memoryUsed / 1024 / 1024 / 1024).toFixed(2)
+      data.nodeList[index].connNum = eventData.connNum
+      data.nodeList[index].qps = eventData.qps
+      data.nodeList[index].tps = eventData.tps
+      data.nodeList[index].role = eventData.role
+    }
   })
 }
 

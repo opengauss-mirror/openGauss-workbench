@@ -57,7 +57,7 @@
           {{ item.ip.trim() ? item.ip : $t('database.AddJdbc.5oxhkhimyio0') + item.tabName }}
         </template>
         <div class="jdbc-instance-c">
-          <jdbc-instance :form-data="item" :host-list="data.hostList"
+          <jdbc-instance :form-data="item" :host-list="data.hostList" :jdbc-type="data.form.dbType"
             :ref="(el: any) => setRefMap(el, item.id)"></jdbc-instance>
         </div>
       </a-tab-pane>
@@ -91,14 +91,15 @@ const data = reactive<KeyValue>({
     clusterId: '',
     name: '',
     isCustomName: false,
-    dbType: 'mysql',
+    dbType: 'MYSQL',
     nodes: [],
     status: jdbcStatusEnum.unTest
   },
   hostList: [],
   activeTab: '',
   dbTypes: [
-    { label: 'MYSQL', value: 'mysql' }
+    { label: 'MYSQL', value: 'MYSQL' },
+    { label: 'OPENGAUSS', value: 'OPENGAUSS' }
   ]
 })
 const formRef = ref<null | FormInstance>(null)
@@ -398,6 +399,7 @@ const open = (type: string, editData?: KeyValue) => {
       Object.assign(data.form, {
         clusterId: editData.clusterId,
         name: editData.name,
+        dbType: editData.dbType,
         nodes: []
       })
       editData.nodes.forEach((item: KeyValue) => {
@@ -427,7 +429,7 @@ const open = (type: string, editData?: KeyValue) => {
     Object.assign(data.form, {
       clusterId: '',
       name: '',
-      dbType: 'mysql',
+      dbType: 'MYSQL',
       nodes: [],
       status: jdbcStatusEnum.unTest
     })

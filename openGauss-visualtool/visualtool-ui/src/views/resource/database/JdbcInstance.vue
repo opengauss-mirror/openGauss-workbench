@@ -60,8 +60,13 @@ const props = defineProps({
   hostList: {
     type: Object as PropType<KeyValue>,
     required: true
+  },
+  jdbcType: {
+    type: String,
+    required: true
   }
 })
+
 const emits = defineEmits([`update:formData`])
 const form = computed({
   get: () => props.formData,
@@ -193,16 +198,34 @@ const jdbcUrl = computed(() => {
       }
     })
   }
-  const urlPrefix = `jdbc:mysql://${form.value.ip ? form.value.ip : '{IP}'}:${form.value.port ? form.value.port : '{port}'}`
-  if (urlSuffix) {
-    return urlPrefix + '?' + urlSuffix
-  } else {
-    return urlPrefix
+  let urlPrefix = ''
+  if (props.jdbcType === 'MYSQL') {
+    urlPrefix = `jdbc:mysql://${form.value.ip ? form.value.ip : '{IP}'}:${form.value.port ? form.value.port : '{port}'}`
+    if (urlSuffix) {
+      return urlPrefix + '?' + urlSuffix
+    } else {
+      return urlPrefix
+    }
+  } else if (props.jdbcType === 'OPENGAUSS') {
+    urlPrefix = `jdbc:opengauss://${form.value.ip ? form.value.ip : '{IP}'}:${form.value.port ? form.value.port : '{port}'}/postgres`
+    if (urlSuffix) {
+      return urlPrefix + '?' + urlSuffix
+    } else {
+      return urlPrefix
+    }
   }
+  return urlPrefix
 })
 
 watch(jdbcUrl, (val) => {
   form.value.url = val
+})
+watch(() => props.jdbcType, (val) => {
+  if (val === 'MYSQL') {
+    form.value.port = 3306
+  } else if (val === 'OPENGAUSS') {
+    form.value.port = 5432
+  }
 })
 
 const formRef = ref<null | FormInstance>(null)
