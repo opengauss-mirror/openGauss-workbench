@@ -111,7 +111,7 @@
                     </div>
                 </div>
                 <div class="content-wrap-right">
-                    <el-table :data="tableData" size="small" :row-style="tableRowStyle" style="width: 100%" @cell-mouse-enter="cellMouseEnter" @mouseleave="mouseLeave" ref="logTableData">
+                    <el-table :key="Math.random()" :data="tableData" size="small" :row-style="tableRowStyle" style="width: 100%" @cell-mouse-enter="cellMouseEnter" @mouseleave="mouseLeave" ref="logTableData">
                         <el-table-column :label="$t('datasource.logSearchTable[0]')" width="160" align="center">
                             <template #default="scope">
                                 <span>{{ dayjs.utc(scope.row.logTime).local().format('YYYY-MM-DD HH:mm:ss') }}</span>
