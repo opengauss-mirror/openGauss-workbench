@@ -111,7 +111,7 @@
                     </div>
                 </div>
                 <div class="content-wrap-right">
-                    <el-table :data="tableData" size="small" :row-style="tableRowStyle" style="width: 100%" @cell-mouse-enter="cellMouseEnter" @mouseleave="mouseLeave" ref="logTableData">
+                    <el-table :key="Math.random()" :data="tableData" size="small" :row-style="tableRowStyle" style="width: 100%" @cell-mouse-enter="cellMouseEnter" @mouseleave="mouseLeave" ref="logTableData">
                         <el-table-column :label="$t('datasource.logSearchTable[0]')" width="160" align="center">
                             <template #default="scope">
                                 <span>{{ dayjs.utc(scope.row.logTime).local().format('YYYY-MM-DD HH:mm:ss') }}</span>
@@ -382,10 +382,10 @@ const gotoNewLogSearch = () => {
             query: {
                 showContextCount: 'true',
                 nodeIds: nodeIds.value && nodeIds.value.length > 0 ? nodeIds.value : [curRow.value.logNodeId],
-                typeNames: typeNames.value.length > 0 ? typeNames.value.join(',') : '',
-                logLevelSelected: logLevelSelected.value.length > 0 ? logLevelSelected.value.join(',') : '',
-                logTime: curRow.value.logTime,
-                logType: curRow.value.logType,
+                // typeNames: typeNames.value.length > 0 ? typeNames.value.join(',') : '',
+                // logLevelSelected: logLevelSelected.value.length > 0 ? logLevelSelected.value.join(',') : '',
+                // logTime: curRow.value.logTime,
+                // logType: curRow.value.logType,
                 id: curRow.value.id,
                 date: new Date().getTime(),
             },
@@ -396,10 +396,10 @@ const gotoNewLogSearch = () => {
             query: {
                 showContextCount: 'true',
                 nodeIds: nodeIds.value && nodeIds.value.length > 0 ? nodeIds.value : [curRow.value.logNodeId],
-                typeNames: typeNames.value.length > 0 ? typeNames.value.join(',') : '',
-                logLevelSelected: logLevelSelected.value.length > 0 ? logLevelSelected.value.join(',') : '',
-                logTime: curRow.value.logTime,
-                logType: curRow.value.logType,
+                // typeNames: typeNames.value.length > 0 ? typeNames.value.join(',') : '',
+                // logLevelSelected: logLevelSelected.value.length > 0 ? logLevelSelected.value.join(',') : '',
+                // logTime: curRow.value.logTime,
+                // logType: curRow.value.logType,
                 id: curRow.value.id,
                 date: new Date().getTime(),
             },
@@ -436,12 +436,12 @@ watch(
         if (res && res.id) {
             curLogData.id = res.id;
         }
-        if (res && res.logTime) {
-            curLogData.logTime = res.logTime;
-        }
-        if (res && res.logType) {
-            curLogData.logType = res.logType;
-        }
+        // if (res && res.logTime) {
+        //     curLogData.logTime = res.logTime;
+        // }
+        // if (res && res.logType) {
+        //     curLogData.logType = res.logType;
+        // }
         listLogTypeData();
         listLogLevelData();
         refreshLog();
@@ -655,10 +655,10 @@ onMounted(() => {
     let _showContextCount = window.$wujie?.props.data.showContextCount as string;
     let _nodeIds = window.$wujie?.props.data.nodeIds as string[];
     let _id = window.$wujie?.props.data.id as string;
-    let _logTime = window.$wujie?.props.data.logTime as string;
-    let _logType = window.$wujie?.props.data.logType as string;
-    let _typeNames = window.$wujie?.props.data.typeNames as string;
-    let _logLevelSelected = window.$wujie?.props.data.logLevelSelected as string;
+    // let _logTime = window.$wujie?.props.data.logTime as string;
+    // let _logType = window.$wujie?.props.data.logType as string;
+    // let _typeNames = window.$wujie?.props.data.typeNames as string;
+    // let _logLevelSelected = window.$wujie?.props.data.logLevelSelected as string;
     let param = router.currentRoute.value.query;
     if (_showContextCount && _showContextCount == 'true') {
         showContextCount.value = true;
@@ -673,10 +673,10 @@ onMounted(() => {
         nodeIds.value = _nodeIds;
     }
     curLogData.id = _id ? _id : param && param.id ? param.id : '';
-    curLogData.logTime = _logTime ? _logTime : param && param.logTime ? param.logTime : '';
-    curLogData.logType = _logType ? _logType : param && param.logType ? param.logType : '';
-    curLogData.typeNames = _typeNames ? _typeNames : param && param.typeNames ? param.typeNames : '';
-    curLogData.logLevelSelected = _logLevelSelected ? _logLevelSelected : param && param.logLevelSelected ? param.logLevelSelected : '';
+    // curLogData.logTime = _logTime ? _logTime : param && param.logTime ? param.logTime : '';
+    // curLogData.logType = _logType ? _logType : param && param.logType ? param.logType : '';
+    // curLogData.typeNames = _typeNames ? _typeNames : param && param.typeNames ? param.typeNames : '';
+    // curLogData.logLevelSelected = _logLevelSelected ? _logLevelSelected : param && param.logLevelSelected ? param.logLevelSelected : '';
     listClusterData();
     listLogTypeData();
     listLogLevelData();

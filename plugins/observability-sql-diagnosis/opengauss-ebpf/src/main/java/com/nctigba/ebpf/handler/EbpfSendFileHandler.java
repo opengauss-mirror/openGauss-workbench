@@ -9,9 +9,12 @@ import com.nctigba.ebpf.constants.EbpfType;
 import com.nctigba.ebpf.constants.FileType;
 import com.nctigba.ebpf.util.HTTPUtil;
 import com.nctigba.ebpf.util.OSUtil;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.stereotype.Component;
+
+import java.io.IOException;
 
 /**
  * ebpf/os action
@@ -32,17 +35,23 @@ public class EbpfSendFileHandler {
      * @param taskid monitorType
      */
     public void sendFile(String taskid, String monitorType) {
-        FileSystemResource file;
+        FileSystemResource file = null;
         HTTPUtil httpUtil = new HTTPUtil();
         String outputUrl = urlConfig.getOutputUrl();
         String httpUrl = urlConfig.getHttpUrl();
         String url = httpUrl.substring(0, httpUrl.lastIndexOf("/") + 1) + taskid + httpUrl.substring(httpUrl.lastIndexOf("/"));
-        if (EbpfType.PROFILE.equals(monitorType) || EbpfType.OFFCPUTIME.equals(monitorType) || EbpfType.MEMLEAK.equals(monitorType)) {
-            file = new FileSystemResource(outputUrl + taskid + monitorType + FileType.SVG);
-        } else {
-            file = new FileSystemResource(outputUrl + taskid + monitorType + FileType.DEFAULT);
+        try{
+            if (EbpfType.PROFILE.equals(monitorType) || EbpfType.OFFCPUTIME.equals(monitorType) || EbpfType.MEMLEAK.equals(monitorType)) {
+                if(new FileSystemResource(outputUrl + taskid + monitorType + FileType.DEFAULT).contentLength()>=1){
+                    file = new FileSystemResource(outputUrl + taskid + monitorType + FileType.SVG);
+                }
+            } else {
+                file = new FileSystemResource(outputUrl + taskid + monitorType + FileType.DEFAULT);
+            }
+            httpUtil.httpUrlPost(url, file, monitorType);
+        }catch (Exception e) {
+            throw new RuntimeException("fail to open file!");
         }
-        httpUtil.httpUrlPost(url, file, monitorType);
     }
 
     /**

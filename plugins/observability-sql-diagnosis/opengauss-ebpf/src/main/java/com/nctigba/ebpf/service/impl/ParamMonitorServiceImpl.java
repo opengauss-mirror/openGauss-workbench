@@ -32,7 +32,6 @@ public class ParamMonitorServiceImpl implements ParamMonitorService {
         String fileUrl = " > " + outputUrl + taskid + monitorType;
         String url = httpUrl.substring(0, httpUrl.lastIndexOf("/") + 1) + taskid + httpUrl.substring(httpUrl.lastIndexOf("/"));
         String cmd = "sysctl -a " + fileUrl + FileType.DEFAULT;
-        ;
         osUtil.exec(cmd);
         FileSystemResource file = new FileSystemResource(outputUrl + taskid + monitorType + FileType.DEFAULT);
         httpUtil.httpUrlPost(url, file, monitorType);

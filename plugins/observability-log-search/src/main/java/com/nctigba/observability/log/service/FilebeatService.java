@@ -74,79 +74,83 @@ public class FilebeatService extends AbstractInstaller {
 			if (env != null)
 				throw new RuntimeException("filebeat exists");
 			env = new NctigbaEnv().setHostid(hostId).setType(type.FILEBEAT);
-			var esEnv = envMapper
-					.selectOne(Wrappers.<NctigbaEnv>lambdaQuery().eq(NctigbaEnv::getType, type.ELASTICSEARCH));
-			if (esEnv == null)
-				throw new RuntimeException("elasticsearch not exist");
-
-			curr = nextStep(wsSession, steps, curr);
-			var opsClusterNodeEntity = opsClusterNodeService.getById(nodeId);
-			if (opsClusterNodeEntity == null)
-				throw new RuntimeException("No cluster node information found");
-
-			curr = nextStep(wsSession, steps, curr);
-			String installUserId = opsClusterNodeEntity.getInstallUserId();
-			OpsHostUserEntity user = hostUserFacade.getById(installUserId);
-			env.setUsername(user.getUsername());
-			if (hostEntity == null)
-				throw new RuntimeException("host not found");
-			try (var session = SshSession.connect(hostEntity.getPublicIp(), hostEntity.getPort(), "root",
-					encryptionUtils.decrypt(rootPassword));) {
-			} catch (Exception e) {
-				throw new RuntimeException("root password error");
-			}
-
-			curr = nextStep(wsSession, steps, curr);
-			try (var session = SshSession.connect(hostEntity.getPublicIp(), hostEntity.getPort(), user.getUsername(),
-					encryptionUtils.decrypt(user.getPassword()));) {
-				curr = nextStep(wsSession, steps, curr);
-				String logPath = obj.getStr("logPath");
-				if (!session.test(command.STAT.parse(logPath)))
-					throw new RuntimeException("log path err:" + logPath);
+			envMapper.insert(env);
+			try {
+				var esEnv = envMapper
+						.selectOne(Wrappers.<NctigbaEnv>lambdaQuery().eq(NctigbaEnv::getType, type.ELASTICSEARCH));
+				if (esEnv == null)
+					throw new RuntimeException("elasticsearch not exist");
+				if(StrUtil.isBlank(esEnv.getUsername()))
+					throw new RuntimeException("elasticsearch installing");
 
 				curr = nextStep(wsSession, steps, curr);
-				var arch = session.execute(command.ARCH);
-				String ver;
-				switch (arch) {
-				case "aarch64":
-					ver = "arm64";
-					break;
-				case "x86_64":
-					ver = "x86_64";
-					break;
-				default:
-					ver = "x86_64";
+				var opsClusterNodeEntity = opsClusterNodeService.getById(nodeId);
+				if (opsClusterNodeEntity == null)
+					throw new RuntimeException("No cluster node information found");
+
+				curr = nextStep(wsSession, steps, curr);
+				String installUserId = opsClusterNodeEntity.getInstallUserId();
+				OpsHostUserEntity user = hostUserFacade.getById(installUserId);
+				env.setUsername(user.getUsername());
+				if (hostEntity == null)
+					throw new RuntimeException("host not found");
+				try (var session = SshSession.connect(hostEntity.getPublicIp(), hostEntity.getPort(), "root",
+						encryptionUtils.decrypt(rootPassword));) {
+				} catch (Exception e) {
+					throw new RuntimeException("root password error");
 				}
-				String name = NAME + ver;
-				env.setPath(name);
-				String tar = name + TAR;
-				if (!session.test(command.STAT.parse(name))) {
-					if (!session.test(command.STAT.parse(tar))) {
-						var pkg = envMapper
-								.selectOne(Wrappers.<NctigbaEnv>lambdaQuery().like(NctigbaEnv::getPath, tar));
-						if (pkg == null) {
-							var f = Download.download(PATH + tar, "pkg/" + tar);
-							pkg = new NctigbaEnv().setPath(f.getCanonicalPath()).setType(type.FILEBEAT_PKG);
-							addMsg(wsSession, steps, curr, "filebeat.install.download.success");
-							save(pkg);
-						}
-						session.upload(pkg.getPath(), tar);
+
+				curr = nextStep(wsSession, steps, curr);
+				try (var session = SshSession.connect(hostEntity.getPublicIp(), hostEntity.getPort(),
+						user.getUsername(), encryptionUtils.decrypt(user.getPassword()));) {
+					curr = nextStep(wsSession, steps, curr);
+					String logPath = obj.getStr("logPath");
+					if (!session.test(command.STAT.parse(logPath)))
+						throw new RuntimeException("log path err:" + logPath);
+
+					curr = nextStep(wsSession, steps, curr);
+					var arch = session.execute(command.ARCH);
+					String ver;
+					switch (arch) {
+					case "aarch64":
+						ver = "arm64";
+						break;
+					case "x86_64":
+						ver = "x86_64";
+						break;
+					default:
+						ver = "x86_64";
 					}
-					session.execute(command.TAR.parse(tar));
-				}
-				curr = nextStep(wsSession, steps, curr);
-				String cd = "cd " + name + " && ";
-				// filebeat_conf.zip
-				File f = File.createTempFile("filebeat_conf", ".tar.gz");
-				try (var in = loader.getResource("filebeat_conf.tar.gz").getInputStream();
-						var out = new FileOutputStream(f);) {
-					System.out.println(f.getCanonicalPath());
-					IoUtil.copy(in, out);
-				}
-				session.upload(f.getCanonicalPath(), "./filebeat_conf.tar.gz");
-				f.delete();
-				session.execute("tar -xvf filebeat_conf.tar.gz");
-				var esHost = hostFacade.getById(esEnv.getHostid());
+					String name = NAME + ver;
+					env.setPath(name);
+					String tar = name + TAR;
+					if (!session.test(command.STAT.parse(name))) {
+						if (!session.test(command.STAT.parse(tar))) {
+							var pkg = envMapper
+									.selectOne(Wrappers.<NctigbaEnv>lambdaQuery().like(NctigbaEnv::getPath, tar));
+							if (pkg == null) {
+								var f = Download.download(PATH + tar, "pkg/" + tar);
+								pkg = new NctigbaEnv().setPath(f.getCanonicalPath()).setType(type.FILEBEAT_PKG);
+								addMsg(wsSession, steps, curr, "filebeat.install.download.success");
+								save(pkg);
+							}
+							session.upload(pkg.getPath(), tar);
+						}
+						session.execute(command.TAR.parse(tar));
+					}
+					curr = nextStep(wsSession, steps, curr);
+					String cd = "cd " + name + " && ";
+					// filebeat_conf.zip
+					File f = File.createTempFile("filebeat_conf", ".tar.gz");
+					try (var in = loader.getResource("filebeat_conf.tar.gz").getInputStream();
+							var out = new FileOutputStream(f);) {
+						System.out.println(f.getCanonicalPath());
+						IoUtil.copy(in, out);
+					}
+					session.upload(f.getCanonicalPath(), "./filebeat_conf.tar.gz");
+					f.delete();
+					session.execute("tar -xvf filebeat_conf.tar.gz");
+					var esHost = hostFacade.getById(esEnv.getHostid());
 
 				// @formatter:off
 				session.execute("cd filebeat_conf && sh conf.sh"
@@ -163,18 +167,22 @@ public class FilebeatService extends AbstractInstaller {
 						+ (StrUtil.isNotBlank(obj.getStr("gsLocalLogPath")) ? " --gsLocalLogPath " + obj.getStr("gsLocalLogPath") : ""));
 				// @formatter:on
 
-				session.execute("cp -fr filebeat_conf/* " + name + "/");
-				session.execute("rm -rf filebeat_conf");
-				session.execute("rm -f filebeat_conf.tar.gz");
+					session.execute("cp -fr filebeat_conf/* " + name + "/");
+					session.execute("rm -rf filebeat_conf");
+					session.execute("rm -f filebeat_conf.tar.gz");
 
-				curr = nextStep(wsSession, steps, curr);
-				session.executeNoWait(
-						cd + " ./filebeat modules enable system opengauss && ./filebeat -e -c filebeat.yml &");
-				// call http
+					curr = nextStep(wsSession, steps, curr);
+					session.executeNoWait(
+							cd + " ./filebeat modules enable system opengauss && ./filebeat -e -c filebeat.yml &");
+					// call http
 
-				curr = nextStep(wsSession, steps, curr);
-				envMapper.insert(env);
-				sendMsg(wsSession, steps, curr, status.DONE);
+					curr = nextStep(wsSession, steps, curr);
+					envMapper.updateById(env);
+					sendMsg(wsSession, steps, curr, status.DONE);
+				}
+			} catch (Exception e) {
+				envMapper.deleteById(env);
+				throw e;
 			}
 		} catch (Exception e) {
 			log.error("", e);

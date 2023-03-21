@@ -474,6 +474,9 @@ export default {
             'Please select the database',
             'Please write the sql',
             'Please select the Cluster/Instance',
+            'Please choose a snapshot',
+            'The start of snapshot id must be less than the end of snapshot id',
+            'The end of snapshot id must be greater than the start of snapshot id',
         ],
         trackTable: [
             'Track name',

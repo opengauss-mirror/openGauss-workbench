@@ -54,64 +54,70 @@ public class PrometheusService extends AbstractInstaller {
 			if (envMapper
 					.selectOne(Wrappers.<NctigbaEnv>lambdaQuery().eq(NctigbaEnv::getType, type.PROMETHEUS)) != null)
 				throw new RuntimeException("prominstall.limit");
+			envMapper.insert(env);
 
-			curr = nextStep(wsSession, steps, curr);
-			OpsHostEntity hostEntity = hostFacade.getById(env.getHostid());
-			if (hostEntity == null)
-				throw new RuntimeException("host not found");
-			env.setHost(hostEntity);
-			try (var session = SshSession.connect(hostEntity.getPublicIp(), hostEntity.getPort(), "root",
-					encryptionUtils.decrypt(rootPassword));) {
-			} catch (Exception e) {
-				throw new RuntimeException("root password error");
-			}
-			try (var sshsession = connect(env, rootPassword, steps, curr);) {
+			try {
 				curr = nextStep(wsSession, steps, curr);
-				var arch = sshsession.execute(command.ARCH);
-				String name = NAME + arch(arch);
-				String tar = name + TAR;
-				if (!sshsession.test(command.STAT.parse(name))) {
-					if (!sshsession.test(command.STAT.parse(tar))) {
-						// sshsession.execute(command.WGET.parse(PATH + tar));
-						var pkg = envMapper
-								.selectOne(Wrappers.<NctigbaEnv>lambdaQuery().like(NctigbaEnv::getPath, tar));
-						if (pkg == null) {
-							var f = Download.download(PATH + tar, "pkg/" + tar);
-							pkg = new NctigbaEnv().setPath(f.getCanonicalPath()).setType(type.PROMETHEUS_PKG);
-							addMsg(wsSession, steps, curr, "prominstall.downloadsuccess");
-							save(pkg);
-						}
-						sshsession.upload(pkg.getPath(), tar);
-						addMsg(wsSession, steps, curr, "prominstall.uploadsuccess");
-					} else
-						addMsg(wsSession, steps, curr, "prominstall.pkgexists");
-					sshsession.execute(command.TAR.parse(tar));
+				OpsHostEntity hostEntity = hostFacade.getById(env.getHostid());
+				if (hostEntity == null)
+					throw new RuntimeException("host not found");
+				env.setHost(hostEntity);
+				try (var session = SshSession.connect(hostEntity.getPublicIp(), hostEntity.getPort(), "root",
+						encryptionUtils.decrypt(rootPassword));) {
+				} catch (Exception e) {
+					throw new RuntimeException("root password error");
 				}
-				env.setPath(name);
-
-				curr = nextStep(wsSession, steps, curr);
-				sshsession.executeNoWait(
-						"cd " + env.getPath() + " && ./prometheus --web.enable-lifecycle --web.listen-address=:"
-								+ promport + " --config.file=prometheus.yml &");
-				ThreadUtil.sleep(3000L);
-
-				curr = nextStep(wsSession, steps, curr);
-				for (int i = 0; i < 10; i++) {
-					ThreadUtil.sleep(3000L);
-					try {
-						String str = HttpUtils.sendGet("http://" + env.getHost().getPublicIp() + ":" + env.getPort()
-								+ "/api/v1/status/runtimeinfo", null);
-						if (StringUtils.isBlank(str))
-							throw new CustomException();
-					} catch (Exception e) {
-						if (i == 9)
-							throw new RuntimeException("prominstall.promstartfail");
+				try (var sshsession = connect(env, rootPassword, steps, curr);) {
+					curr = nextStep(wsSession, steps, curr);
+					var arch = sshsession.execute(command.ARCH);
+					String name = NAME + arch(arch);
+					String tar = name + TAR;
+					if (!sshsession.test(command.STAT.parse(name))) {
+						if (!sshsession.test(command.STAT.parse(tar))) {
+							// sshsession.execute(command.WGET.parse(PATH + tar));
+							var pkg = envMapper
+									.selectOne(Wrappers.<NctigbaEnv>lambdaQuery().like(NctigbaEnv::getPath, tar));
+							if (pkg == null) {
+								var f = Download.download(PATH + tar, "pkg/" + tar);
+								pkg = new NctigbaEnv().setPath(f.getCanonicalPath()).setType(type.PROMETHEUS_PKG);
+								addMsg(wsSession, steps, curr, "prominstall.downloadsuccess");
+								save(pkg);
+							}
+							sshsession.upload(pkg.getPath(), tar);
+							addMsg(wsSession, steps, curr, "prominstall.uploadsuccess");
+						} else
+							addMsg(wsSession, steps, curr, "prominstall.pkgexists");
+						sshsession.execute(command.TAR.parse(tar));
 					}
-				}
+					env.setPath(name);
 
-				curr = nextStep(wsSession, steps, curr);
-				envMapper.insert(env);
-				sendMsg(wsSession, steps, curr, status.DONE);
+					curr = nextStep(wsSession, steps, curr);
+					sshsession.executeNoWait(
+							"cd " + env.getPath() + " && ./prometheus --web.enable-lifecycle --web.listen-address=:"
+									+ promport + " --config.file=prometheus.yml &");
+					ThreadUtil.sleep(3000L);
+
+					curr = nextStep(wsSession, steps, curr);
+					for (int i = 0; i < 10; i++) {
+						ThreadUtil.sleep(3000L);
+						try {
+							String str = HttpUtils.sendGet("http://" + env.getHost().getPublicIp() + ":" + env.getPort()
+									+ "/api/v1/status/runtimeinfo", null);
+							if (StringUtils.isBlank(str))
+								throw new CustomException();
+						} catch (Exception e) {
+							if (i == 9)
+								throw new RuntimeException("prominstall.promstartfail");
+						}
+					}
+
+					curr = nextStep(wsSession, steps, curr);
+					envMapper.updateById(env);
+					sendMsg(wsSession, steps, curr, status.DONE);
+				}
+			} catch (Exception e) {
+				envMapper.deleteById(env);
+				throw e;
 			}
 		} catch (Exception e) {
 			steps.get(curr).setState(status.ERROR).add(e.getMessage());

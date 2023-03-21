@@ -10,8 +10,10 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
 import com.gitee.starblues.bootstrap.EmptyMainApplicationContext;
 import com.gitee.starblues.spring.MainApplicationContext;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 @Profile({"dev", "gba"})
+@EnableScheduling
 @SpringBootApplication(exclude = {
         HibernateJpaAutoConfiguration.class,
         RedisAutoConfiguration.class,

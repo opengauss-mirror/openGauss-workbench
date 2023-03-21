@@ -9,6 +9,8 @@ import { uuid } from '../shared';
 import { YAXisOption } from 'echarts/types/dist/shared';
 import { OptionDataValue } from 'echarts/types/src/util/types';
 
+const barWith = ref<string>(window.screen.width * 0.8 + 'px');
+
 export type LineData = {
     name: string;
     nameGap?: number;
@@ -70,7 +72,7 @@ const renderChart = () => {
             emphasis: {
                 focus: 'series',
             },
-            tooltip: {},
+            tooltip: {confine: true},
             ...item,
         };
         seriesData.push(obj);
@@ -146,5 +148,5 @@ useEventListener(window, 'resize', () => {
 </script>
 
 <template>
-    <div :id="domId" ref="loadRef" style="width: 100%; height: 100%"></div>
+    <div :id="domId" ref="loadRef" :style="`width: ${barWith}; height: 250px`"></div>
 </template>

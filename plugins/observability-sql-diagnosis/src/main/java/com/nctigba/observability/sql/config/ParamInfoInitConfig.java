@@ -14,7 +14,7 @@ import java.sql.SQLException;
 @Component
 @Slf4j
 public class ParamInfoInitConfig {
-    @Value("${sqlitePath:data/paramInfo.db}")
+    @Value("${sqlitePath:data/paramDiagnosisInfo.db}")
     private String path;
     @Value("${sqliteinit:false}")
     private boolean refresh;
