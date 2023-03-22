@@ -33,10 +33,28 @@ public class BccCaller implements Caller {
 	@Autowired
 	@AutowiredType(Type.PLUGIN_MAIN)
 	private HostFacade hostFacade;
+	private static final String DB_THREADS_CONF = "select * from  pg_settings  where name like '%enable_thread_pool%";
+
+	@Override
+	public void beforeStart(Task task) {
+		if (task.getConf() == null)
+			return;
+		try (var conn = clusterManager.getConnectionByNodeId(task.getNodeId());) {
+			try (var stmt = conn.createStatement(); var rs = stmt.executeQuery(DB_THREADS_CONF);) {
+				if (rs.next()) {
+					task.getConf().setBcc(!rs.getString(1).equals("on"));
+				}
+			}
+		} catch (Exception e) {
+			task.addRemarks("bcc check threads config failer", e);
+		}
+	}
 
 	@Override
 	@Async
 	public void start(Task task) {
+		if(!task.getConf().isBcc())
+			return;
 		Integer lwpid = null;
 		var node = clusterManager.getOpsNodeById(task.getNodeId());
 		var agent = envMapper.selectOne(Wrappers.<NctigbaEnv>lambdaQuery().eq(NctigbaEnv::getHostid, node.getHostId()).eq(NctigbaEnv::getType, type.AGENT));

@@ -17,7 +17,7 @@ const props = withDefaults(defineProps<{
 }>(), {
     bodyPadding: true,
     maxBodyHeight: 'unset',
-    overflowHidden: false,
+    overflowHidden: true,
     withTable: false,
 })
 const hidden = ref(props.overflowHidden ? 'hidden' : 'unset')
