@@ -15,4 +15,4 @@ elasticsearch:
   password: changeme
 
 taskCron:
-  autoDeleteIndexData: 0 0 0 * * ? #每天24:00定时执行
+  autoDeleteIndexData: 0 0 0 * * ? #Scheduled execution at 24:00 every day

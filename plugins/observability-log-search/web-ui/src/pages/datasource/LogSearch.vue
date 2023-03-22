@@ -63,10 +63,10 @@
             </div>
 
             <div>
-                <my-card :title="$t('datasource.logDistributionMap')" :legend="waitLegends" :bodyPadding="false" ref="cardRef" collapse :overflowHidden="false">
+                <my-card :title="$t('datasource.logDistributionMap')" :legend="waitLegends" :bodyPadding="false" ref="cardRef" collapse :overflowHidden="overflowHidden" @click="toggleCard">
                     <div class="loading-cover" v-if="refreshingBar" v-loading="refreshingBar"></div>
-                    <div class="line-wrap-chart" style="height: 250px">
-                        <my-bar v-if="showBar" :yname="$t('datasource.numberofLogs')" :xData="xData" :data="showData" :unit="$t('datasource.unit')" />
+                    <div class="line-wrap-chart" style="height: 250px" ref="lineChartRef">
+                        <my-bar v-if="showBar" :yname="$t('datasource.numberofLogs')" :xData="xData" :data="showData" :unit="$t('datasource.unit')" :barWidth="barWidth" :barHeight="barHeight"/>
                     </div>
                 </my-card>
             </div>
@@ -273,11 +273,19 @@ const treeData2 = ref<Array<Tree>>([]);
 const logLevelData = ref<Array<String>>([]);
 const xData = ref<string[]>([]);
 const curLogData = ref<any>({ logDate: '', logType: '', logData: '', logLevelSelected: '', typeNames: '' });
+const barWidth = ref<string>('100%');
+const barHeight = ref<string>('100%');
+const lineChartRef = ref();
 
 const isCollapse = ref(true);
 const toggleCollapse = () => {
     isCollapse.value = !isCollapse.value;
 };
+
+const overflowHidden = ref<boolean>(false)
+const toggleCard = () => {
+    overflowHidden.value = !overflowHidden.value
+}
 
 const selectNodes = (item: Tree) => {
     nodeIds.value = [];
@@ -715,6 +723,10 @@ onMounted(() => {
     listLogLevelData();
     refreshLog();
 
+    let _barWidth = window.getComputedStyle(lineChartRef.value).getPropertyValue('width')
+    let _barHeight = window.getComputedStyle(lineChartRef.value).getPropertyValue('height')
+    barWidth.value = _barWidth
+    barHeight.value = _barHeight
     // @ts-ignore
     const wujie = window.$wujie;
     // Judge whether it is a plug-in environment or a local environment through wujie
