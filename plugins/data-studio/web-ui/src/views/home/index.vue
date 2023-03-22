@@ -32,7 +32,7 @@
                 rootId: AppStore.lastestConnectDatabase.rootId,
                 connectInfoName: AppStore.currentConnectInfo?.name,
                 uuid: AppStore.lastestConnectDatabase.uuid,
-                dbname: AppStore.lastestConnectDatabase.databaseName,
+                dbname: AppStore.lastestConnectDatabase.name,
                 time: Date.now(),
               },
             });

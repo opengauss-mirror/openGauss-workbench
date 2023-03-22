@@ -247,7 +247,7 @@
   const rules = reactive<FormRules>({
     name: [
       { required: true, message: t('rules.empty', [t('connection.name')]), trigger: 'blur' },
-      { min: 1, max: 30, message: t('rules.charLength', 30), trigger: 'blur' },
+      { min: 1, max: 60, message: t('rules.charLength', 60), trigger: 'blur' },
     ],
     ip: [
       { required: true, message: t('rules.empty', [t('connection.host')]), trigger: 'blur' },
@@ -312,7 +312,10 @@
   };
 
   const getTableList = () => {
-    connectListInfo.listCurrentRow = {};
+    Object.assign(connectListInfo, {
+      list: [],
+      listCurrentRow: {},
+    });
     getAllCluster()
       .then((res) => {
         connectListInfo.list = connectListInfo.list.concat(doConnectList(res || [], 1));

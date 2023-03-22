@@ -391,6 +391,7 @@
     isLeaf?: boolean;
     type?: string;
     isConnect?: boolean;
+    connectTime: null | number;
     uuid?: string;
     children?: Tree[];
     connectInfo: ConnectInfo;
@@ -555,6 +556,7 @@
             isLeaf: false,
             children: [],
             isConnect,
+            connectTime: hasConnectDb?.connectTime || null,
           };
         }),
       };
@@ -567,14 +569,14 @@
     return true;
   };
 
-  const insertDbItem = (rootId, databaseName, connectInfo, isConnect, uuid = '') => {
+  const insertDbItem = (rootId, databaseName, connectInfo, isConnect) => {
     const databaseId = `${rootId}_${databaseName}`;
     connectionList.value.forEach((list) => {
       if (list.id == rootId) {
         list.children.push({
           id: databaseId,
           parentId: rootId,
-          uuid: isConnect ? uuid : '',
+          uuid: '',
           label: databaseName,
           name: databaseName,
           connectInfo: JSON.parse(JSON.stringify(connectInfo)),
@@ -582,6 +584,7 @@
           isLeaf: false,
           children: [],
           isConnect,
+          connectTime: null,
         });
       }
     });
@@ -811,32 +814,20 @@
   };
   const refreshConnectListMap = () => {
     AppStore.connectListMap = connectionList.value.map((listItem) => {
+      const rootId = listItem.connectInfo.id;
       return {
-        id: listItem.connectInfo.id,
+        id: rootId,
         info: { ...listItem.connectInfo },
         connectedDatabase: listItem.children
           .filter((item) => item.isConnect)
-          .map((item) => ({ name: item.label, uuid: item.uuid })),
+          .map((item) => ({
+            rootId,
+            name: item.label,
+            uuid: item.uuid,
+            connectTime: item.connectTime,
+          })),
       };
     });
-  };
-  const rotateLastestConnectDatabase = () => {
-    let lastestConnectDatabase = {
-      rootId: '',
-      databaseName: '',
-      uuid: '',
-    };
-    const firstAvailableDatabase: any = AppStore.connectListMap.find(
-      (listItem) => listItem.connectedDatabase?.length > 0,
-    );
-    if (firstAvailableDatabase) {
-      lastestConnectDatabase = {
-        rootId: firstAvailableDatabase.info.id,
-        databaseName: firstAvailableDatabase.connectedDatabase[0].name,
-        uuid: firstAvailableDatabase.connectedDatabase[0].uuid,
-      };
-    }
-    AppStore.lastestConnectDatabase = lastestConnectDatabase;
   };
   const handleDeleteConnect = () => {
     treeContext.rootVisible = false;
@@ -852,7 +843,6 @@
       // index > -1 && connectionList.value.splice(index, 1);
       updateConnectListPersist();
       refreshConnectListMap();
-      rotateLastestConnectDatabase();
       if (connectionList.value.length == 0) {
         // EventBus.notify(EventTypeName.CLOSE_ALL_TAB);
         router.push('/home');
@@ -875,8 +865,9 @@
             if (db.isConnect) {
               await closeConnections(db.uuid);
               db.children = [];
-              db.isConnect = false;
               db.uuid = '';
+              db.isConnect = false;
+              db.connectTime = null;
             }
           }
         }
@@ -902,21 +893,16 @@
       };
       const res: any = await openDatabaseConnection(params);
       ElMessage.success(t('message.connectSuccess'));
-      mergeObj = { uuid: res.connectionid };
-      AppStore.lastestConnectDatabase = {
-        rootId,
-        databaseName: dbData.name,
-        uuid: res.connectionid,
-      };
+      mergeObj = { uuid: res.connectionid, connectTime: Date.now() };
     } else {
       await ElMessageBox.confirm(t('message.disConnect', { name: currentContextNodeData.name }));
       await closeConnections(dbData.uuid);
       ElMessage.success(t('message.disconnectSuccess'));
-      mergeObj = { uuid: '' };
+      mergeObj = { uuid: '', connectTime: null };
     }
     Object.assign(dbData, {
       isConnect: willOpen,
-      isLeaf: !willOpen,
+      // isLeaf: !willOpen,
       ...mergeObj,
     });
     treeRef.value.updateKeyChildren(dbData.id, dbData.children);
@@ -928,7 +914,6 @@
     }
     updateConnectListPersist();
     refreshConnectListMap();
-    !willOpen && rotateLastestConnectDatabase();
   };
   const handleOpenNewTerminal = () => {
     treeContext.databaseVisible = false;
@@ -975,6 +960,7 @@
       Object.assign(db as any, {
         id: newId,
         isConnect: false,
+        connectTime: null,
         label: data.name,
         name: data.name,
       });
@@ -1332,19 +1318,16 @@
         info,
         connectedDatabase: [
           {
+            rootId: connectData.id,
             name: connectData.dataName,
             uuid: connectionid,
+            connectTime: Date.now(),
           },
         ],
       };
       isRepeatIndex > -1
         ? AppStore.connectListMap.splice(isRepeatIndex, 1, connectListMapItem)
         : AppStore.connectListMap.unshift(connectListMapItem);
-      AppStore.lastestConnectDatabase = {
-        rootId: connectData.id,
-        databaseName: connectData.dataName,
-        uuid: connectionid,
-      };
       await fetchDBList(info, connectionid);
       parent.location.reload();
     });
@@ -1357,19 +1340,16 @@
         info,
         connectedDatabase: [
           {
+            rootId: connectData.id,
             name: connectData.dataName,
             uuid: connectionid,
+            connectTime: Date.now(),
           },
         ],
       };
       isRepeatIndex > -1
         ? AppStore.connectListMap.splice(isRepeatIndex, 1, connectListMapItem)
         : AppStore.connectListMap.unshift(connectListMapItem);
-      AppStore.lastestConnectDatabase = {
-        rootId: connectData.id,
-        databaseName: connectData.dataName,
-        uuid: connectionid,
-      };
       fetchDBList(info, connectionid);
     });
     connectionList.value = getAllConnectList();
