@@ -9,6 +9,7 @@ import org.opengauss.admin.plugin.service.MigrationTaskExecResultDetailService;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
+import java.util.List;
 
 /**
  * @author xielibo
@@ -42,6 +43,13 @@ public class MigrationTaskExecResultDetailServiceImpl extends ServiceImpl<Migrat
         query.eq(MigrationTaskExecResultDetail::getTaskId, taskId).eq(MigrationTaskExecResultDetail::getProcessType, processType);
         query.last("limit 1");
         return this.getOne(query);
+    }
+
+    @Override
+    public void deleteByTaskIds(List<Integer> taskIds) {
+        LambdaQueryWrapper<MigrationTaskExecResultDetail> query = new LambdaQueryWrapper<>();
+        query.in(MigrationTaskExecResultDetail::getTaskId, taskIds);
+        this.remove(query);
     }
 
 }

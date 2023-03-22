@@ -100,6 +100,19 @@ CREATE SEQUENCE "public"."sq_tb_main_task_env_error_host_id"
     CACHE 1;
 END IF;
 
+IF NOT EXISTS(SELECT 1
+              FROM information_schema.sequences
+              WHERE sequence_schema = ''public''
+                AND sequence_name = ''sq_tb_host_portal_install_id'')
+THEN
+    CREATE SEQUENCE "public"."sq_tb_host_portal_install_id"
+        INCREMENT 1
+        MINVALUE 1
+        MAXVALUE 9223372036854775807
+        START 1
+        CACHE 1;
+END IF;
+
 RETURN 0;
 END;'
 LANGUAGE plpgsql;
@@ -524,4 +537,16 @@ COMMENT ON COLUMN "public"."tb_main_task_env_error_host"."run_pass" IS '机器�
 COMMENT ON COLUMN "public"."tb_main_task_env_error_host"."main_task_id" IS '主任务ID';
 
 ALTER TABLE "public"."tb_migration_task" ALTER COLUMN "status_desc" type text;
+
+CREATE TABLE IF NOT EXISTS "public"."tb_migration_host_portal_install" (
+  "id" int8 NOT NULL DEFAULT nextval('sq_tb_host_portal_install_id'::regclass),
+  "run_host_id" varchar(64) COLLATE "pg_catalog"."default",
+  "install_status" int2,
+  CONSTRAINT "tb_migration_host_portal_install_pkey" PRIMARY KEY ("id")
+);
+
+COMMENT ON COLUMN "public"."tb_migration_host_portal_install"."id" IS '主键ID';
+COMMENT ON COLUMN "public"."tb_migration_host_portal_install"."run_host_id" IS '机器ID';
+COMMENT ON COLUMN "public"."tb_migration_host_portal_install"."install_status" IS 'portal安装状态0 ： 未安装  1：安装中；2：已安装；10：安装失败';
+COMMENT ON TABLE "public"."tb_migration_host_portal_install" IS '机器安装portal记录';
 

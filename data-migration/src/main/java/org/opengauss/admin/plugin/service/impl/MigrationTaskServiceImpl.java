@@ -26,6 +26,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.*;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 /**
@@ -90,7 +91,11 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
     public void deleteByMainTaskId(Integer mainTaskId) {
         LambdaQueryWrapper<MigrationTask> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(MigrationTask::getMainTaskId, mainTaskId);
-        this.remove(queryWrapper);
+        List<Integer> ids = this.list(queryWrapper).stream().map(MigrationTask::getId).collect(Collectors.toList());
+        this.removeBatchByIds(ids);
+        migrationTaskExecResultDetailService.deleteByTaskIds(ids);
+        migrationTaskStatusRecordService.deleteByTaskIds(ids);
+        migrationTaskOperateRecordService.deleteByTaskIds(ids);
     }
 
     @Override
@@ -100,14 +105,28 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
         return this.list(queryWrapper);
     }
 
-    private Map<String,Integer> calculateDatabaseObjectCount(List<Map<String, Object>> objects){
+    private Map<String,Integer> calculateDatabaseObjectCount(List<Map<String, Object>> objects, Integer ojbectType){
         int waitCount = Math.toIntExact(objects.stream().filter(m -> MapUtil.getInt(m, "status").equals(1)).count());
-        int runningCount = Math.toIntExact(objects.stream().filter(m -> {
-            return MapUtil.getInt(m, "status").equals(2) ||
-                    MapUtil.getInt(m, "status").equals(3) ||
-                    MapUtil.getInt(m, "status").equals(4);
-        }).count());
-        int finishCount = Math.toIntExact(objects.stream().filter(m -> MapUtil.getInt(m, "status").equals(5)).count());
+        Predicate<Map<String, Object>> runningFilter = t -> {
+            return MapUtil.getInt(t, "status").equals(2);
+        };
+        if (ojbectType == 2) {
+            runningFilter = t -> {
+                return MapUtil.getInt(t, "status").equals(2);
+            };
+        }
+        Predicate<Map<String, Object>> finishFilter = t -> {
+            return MapUtil.getInt(t, "status").equals(3);
+        };
+        if (ojbectType == 2) {
+            finishFilter = t -> {
+                return MapUtil.getInt(t, "status").equals(3) ||
+                        MapUtil.getInt(t, "status").equals(4) ||
+                        MapUtil.getInt(t, "status").equals(5);
+            };
+        }
+        int runningCount = Math.toIntExact(objects.stream().filter(runningFilter).count());
+        int finishCount = Math.toIntExact(objects.stream().filter(finishFilter).count());
         int errorCount = Math.toIntExact(objects.stream().filter(m -> MapUtil.getInt(m, "status").equals(6)).count());
         Map<String, Integer> resultMap = new HashMap<>();
         resultMap.put("waitCount", waitCount);
@@ -156,11 +175,11 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
             List<Map<String, Object>> funcs = (List<Map<String, Object>>) processMap.get("function");
             List<Map<String, Object>> triggers = (List<Map<String, Object>>) processMap.get("trigger");
             List<Map<String, Object>> produces = (List<Map<String, Object>>) processMap.get("procedure");
-            Map<String, Integer> tableCounts = calculateDatabaseObjectCount(tables);
-            Map<String, Integer> viewCounts = calculateDatabaseObjectCount(views);
-            Map<String, Integer> funcCounts = calculateDatabaseObjectCount(funcs);
-            Map<String, Integer> triggerCounts = calculateDatabaseObjectCount(triggers);
-            Map<String, Integer> produceCounts = calculateDatabaseObjectCount(produces);
+            Map<String, Integer> tableCounts = calculateDatabaseObjectCount(tables, 2);
+            Map<String, Integer> viewCounts = calculateDatabaseObjectCount(views, 1);
+            Map<String, Integer> funcCounts = calculateDatabaseObjectCount(funcs, 1);
+            Map<String, Integer> triggerCounts = calculateDatabaseObjectCount(triggers, 1);
+            Map<String, Integer> produceCounts = calculateDatabaseObjectCount(produces, 1);
             result.put("tableCounts", tableCounts);
             result.put("viewCounts", viewCounts);
             result.put("funcCounts", funcCounts);
@@ -251,6 +270,8 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
             if (TaskStatus.MIGRATION_ERROR.getCode().equals(state)) {
                 String msg = MapUtil.getStr(lastStatus, "msg");
                 update.setStatusDesc(msg);
+            } else {
+                update.setStatusDesc("");
             }
             this.updateById(update);
         }

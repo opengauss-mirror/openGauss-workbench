@@ -302,6 +302,9 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
         Arrays.asList(ids).stream().forEach(i -> {
             this.removeById(i);
             migrationTaskService.deleteByMainTaskId(i);
+            migrationTaskParamService.deleteByMainTaskId(i);
+            migrationTaskGlobalParamService.deleteByMainTaskId(i);
+            migrationTaskHostRefService.deleteByMainTaskId(i);
         });
     }
 
@@ -349,13 +352,6 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
         List<MigrationTaskHostRef> hosts = migrationTaskHostRefService.listByMainTaskId(id);
         List<MigrationTaskGlobalParam> globalParams = migrationTaskGlobalParamService.selectByMainTaskId(id);
 
-        if (!checkInstallPortal(id, hosts)) {
-            updateStatus(id,MainTaskStatus.INSTALL_PORTAL_ERROR);
-            return AjaxResult.error(MigrationErrorCode.PORTAL_INSTALL_ERROR.getCode(), MigrationErrorCode.PORTAL_INSTALL_ERROR.getMsg());
-        } else {
-            mainTaskEnvErrorHostService.deleteByMainTaskId(id);
-        }
-
         Integer totalRunnableCount = hosts.stream().mapToInt(MigrationTaskHostRef::getRunnableCount).sum();
         if (totalRunnableCount > tasks.size()) { //The number of host executable tasks is greater than the total number of tasks
             for (int x = 0; x < tasks.size(); x++) {
@@ -383,29 +379,6 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
         }
         updateStatus(id, MainTaskStatus.RUNNING);
         return AjaxResult.success();
-    }
-
-    private boolean unInstallPortal(List<MigrationTaskHostRef> hosts) {
-        //check install
-        for (MigrationTaskHostRef h : hosts) {
-            boolean flag = PortalHandle.checkInstallPortal(h);
-            if(!flag){
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private boolean checkInstallPortal(Integer mainTaskId, List<MigrationTaskHostRef> hosts) {
-        //check install
-        for (MigrationTaskHostRef h : hosts) {
-            boolean flag = PortalHandle.checkAndInstallPortal(h, portalPkgDownloadUrl);
-            if(!flag){
-                mainTaskEnvErrorHostService.saveRecord(mainTaskId, h);
-                return false;
-            }
-        }
-        return true;
     }
 
     @Override
