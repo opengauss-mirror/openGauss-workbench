@@ -88,6 +88,14 @@ const renderChart = () => {
                     backgroundColor: '#6a7985',
                 },
             },
+            position:  function (pos, params, dom, rect, size) {
+                // 鼠标在左侧时 tooltip 显示到右侧，鼠标在右侧时 tooltip 显示到左侧。
+                var obj = {top: 10};
+                obj[['left', 'right'][+(pos[0] < size.viewSize[0] / 2)]] = 10;
+                return obj;
+            },
+           
+            
         },
         legend: {
             type: 'scroll',

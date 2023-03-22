@@ -8,10 +8,8 @@ import org.opengauss.admin.common.exception.CustomException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.nctigba.observability.sql.mapper.DiagnosisResourceMapper;
 import com.nctigba.observability.sql.mapper.DiagnosisTaskResultMapper;
 import com.nctigba.observability.sql.model.chart.LineChart;
-import com.nctigba.observability.sql.model.diagnosis.Resource;
 import com.nctigba.observability.sql.model.diagnosis.Task;
 import com.nctigba.observability.sql.model.diagnosis.grab.GrabType;
 import com.nctigba.observability.sql.model.diagnosis.result.Frame.bearing;
@@ -46,7 +44,6 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class MpstatP implements ResultAnalysis {
 	private final DiagnosisTaskResultMapper resultMapper;
-	private final DiagnosisResourceMapper resourceMapper;
 	private static final String[] KEYS = { "CPU", "%usr", "%nice", "%sys", "%iowait", "%irq", "%soft", "%steal",
 			"%guest", "%gnice", "%idle" };
 	private static final int[] INDEX = { 1, 3, 4, 5, 6, 10 };
@@ -54,8 +51,6 @@ public class MpstatP implements ResultAnalysis {
 	@Override
 	public void analysis(GrabType grabType, Task task, MultipartFile file) {
 		try {
-			Resource resource = new Resource(task, grabType).setF(file.getInputStream().readAllBytes());
-			resourceMapper.insert(resource);
 			LineChart all = new LineChart().setTitle(LocaleString.format("MpstatP.title"));
 			LineChart idle = new LineChart().setTitle(LocaleString.format("MpstatP.idle"));
 			try (var reader = new BufferedReader(new InputStreamReader(file.getInputStream()));) {
