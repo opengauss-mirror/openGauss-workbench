@@ -275,7 +275,7 @@
   }
 
   const createTerminal = () => {
-    const { databaseName: dbname, rootId, uuid } = AppStore.lastestConnectDatabase;
+    const { name: dbname, rootId, uuid } = AppStore.lastestConnectDatabase;
     const connectInfoName = AppStore.connectListMap.find((item) => item.id == rootId)?.info.name;
     if (!(uuid && connectInfoName)) return ElMessage.warning(t('message.noConnectionAvailable'));
 
