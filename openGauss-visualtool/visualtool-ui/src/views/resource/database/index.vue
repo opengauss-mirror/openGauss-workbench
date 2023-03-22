@@ -93,7 +93,7 @@ const expandable = reactive<KeyValue>({
       return h('div', {}, [
         h(JdbcNodeTable, {
           nodes: record.nodes,
-          onValidRes(val: boolean) {
+          onValidRes (val: boolean) {
             console.log('receive state', val)
             record.state = val
           }

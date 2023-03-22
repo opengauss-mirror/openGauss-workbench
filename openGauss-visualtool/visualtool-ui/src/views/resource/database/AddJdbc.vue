@@ -25,10 +25,10 @@
         <a-col :span="19">
           <a-form-item v-if="!data.form.isCustomName" :label="$t('database.AddJdbc.5oxhkhimxho0')"
             validate-trigger="blur">
-            <a-input v-model="clusterName" :placeholder="$t('database.AddJdbc.5oxhkhimz480')" disabled></a-input>
+            <a-input v-model="clusterName" :placeholder="$t('database.AddJdbc.customNamePlaceholder')" disabled></a-input>
           </a-form-item>
           <a-form-item v-else field="name" :label="$t('database.AddJdbc.5oxhkhimxho0')" validate-trigger="blur">
-            <a-input v-model="data.form.name" :placeholder="$t('database.AddJdbc.customNamePlaceholder')"></a-input>
+            <a-input v-model="data.form.name" :placeholder="$t('database.AddJdbc.5oxhkhimz480')"></a-input>
           </a-form-item>
         </a-col>
         <a-col :span="5">

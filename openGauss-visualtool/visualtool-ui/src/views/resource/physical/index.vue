@@ -35,7 +35,7 @@
                 <a-select v-model="filter.os" allow-clear :placeholder="$t('physical.index.osPlaceholder')"
                   style="width: 150px;">
                   <a-option value="openEuler">openEuler</a-option>
-                  <a-option value="centOS">centos</a-option>
+                  <a-option value="centos">centos</a-option>
                 </a-select>
               </a-form-item>
               <a-form-item>
@@ -176,7 +176,7 @@ const filter = reactive({
 })
 
 const columns = computed(() => [
-  { title: t('physical.index.baseInfo'), slotName: 'baseInfo', width: 350 },
+  { title: t('physical.index.baseInfo'), slotName: 'baseInfo', width: 300 },
   { title: t('physical.index.hostLabel'), slotName: 'hostLabel', width: 200 },
   { title: t('physical.index.diskInfo'), slotName: 'diskInfo' },
   { title: t('physical.index.5mphf11tfjw0'), slotName: 'operation', fixed: 'right', width: 280 }
