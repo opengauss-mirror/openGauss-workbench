@@ -1,10 +1,11 @@
 export const cpuOption = {
   tooltip: {
-    trigger: 'item'
+    trigger: 'item',
+    formatter: '{b}: {d}%'
   },
+  color: ['#868F9C', '#91cc75'],
   series: [
     {
-      name: 'CPU使用率',
       type: 'pie',
       radius: '50%',
       avoidLabelOverlap: false,
@@ -20,18 +21,22 @@ export const cpuOption = {
       labelLine: {
         show: false
       },
-      data: []
+      data: [
+        { value: 0, name: 'used', unit: '%' },
+        { value: 0, name: 'unused', unit: '%' }
+      ]
     }
   ]
 }
 
 export const memoryOption = {
   tooltip: {
-    trigger: 'item'
+    trigger: 'item',
+    formatter: '{b}: {d}%'
   },
+  color: ['#868F9C', '#91cc75'],
   series: [
     {
-      name: '内存使用率',
       type: 'pie',
       radius: '50%',
       avoidLabelOverlap: false,
@@ -47,18 +52,22 @@ export const memoryOption = {
       labelLine: {
         show: false
       },
-      data: []
+      data: [
+        { value: 0, name: 'used', unit: '%' },
+        { value: 0, name: 'unused', unit: '%' }
+      ]
     }
   ]
 }
 
 export const diskOption = {
   tooltip: {
-    trigger: 'item'
+    trigger: 'item',
+    formatter: '{b}: {d}%'
   },
+  color: ['#868F9C', '#91cc75'],
   series: [
     {
-      name: '硬盘使用率',
       type: 'pie',
       radius: '50%',
       avoidLabelOverlap: false,
@@ -74,7 +83,10 @@ export const diskOption = {
       labelLine: {
         show: false
       },
-      data: []
+      data: [
+        { value: 0, name: 'used', unit: '%' },
+        { value: 0, name: 'unused', unit: '%' }
+      ]
     }
   ]
 }

@@ -31,22 +31,21 @@
           </div>
         </div>
       </template>
-      <template #connectNum="{ record }">
-        <div class="flex-col mr">
-          <div class="monitor-data">{{ record.connNum ? record.connNum : '--' }}</div>
-          <div>{{ $t('database.JdbcNodeTable.5oxhv6qcnuk0') }}</div>
-        </div>
-      </template>
-      <template #qps="{ record }">
-        <div class="flex-col mr">
-          <div class="monitor-data">{{ record.qps ? record.qps : '--' }}</div>
-          <div>qps</div>
-        </div>
-      </template>
-      <template #tps="{ record }">
-        <div class="flex-col mr">
-          <div class="monitor-data">{{ record.tps ? record.tps : '--' }}</div>
-          <div>tps</div>
+      <template #connectInfo="{ record }">
+        <div class="flex-col-start">
+          <div class="flex-row">
+            <div class="mr-s" style="width: 50px;text-align: right;">QPS:</div>
+            <div class="monitor-data">{{ record.qps ? record.qps : '--' }}</div>
+          </div>
+          <div class="flex-row">
+            <div class="mr-s" style="width: 50px;text-align: right;">TPS:</div>
+            <div class="monitor-data">{{ record.tps ? record.tps : '--' }}</div>
+          </div>
+          <div class="flex-row">
+            <div class="mr-s" style="width: 50px;text-align: right;">{{ $t('database.JdbcNodeTable.5oxhv6qcnuk0') }}:
+            </div>
+            <div class="monitor-data">{{ record.connNum ? record.connNum : '--' }}</div>
+          </div>
         </div>
       </template>
       <template #tableSpaceUsed="{ record }">
@@ -67,7 +66,7 @@
   </div>
 </template>
 <script setup lang="ts">
-import { defineProps, PropType, onMounted, reactive, ref, computed, watch } from 'vue'
+import { defineProps, PropType, onMounted, onUnmounted, reactive, ref, computed, watch } from 'vue'
 import { KeyValue } from '@/types/global'
 import Socket from '@/utils/websocket'
 import { jdbcNodeMonitor } from '@/api/ops'
@@ -81,13 +80,11 @@ const data = reactive<KeyValue>({
 })
 
 const columns = computed(() => [
-  { slotName: 'baseInfo', width: 370 },
-  { slotName: 'status', width: 290 },
-  { slotName: 'connectNum', width: 180 },
-  { slotName: 'qps', width: 180 },
-  { slotName: 'tps', width: 180 },
-  { slotName: 'tableSpaceUsed', width: 180 },
-  { slotName: 'memoryUsed', width: 180 }
+  { slotName: 'baseInfo', width: 350 },
+  { slotName: 'status', width: 210 },
+  { slotName: 'connectInfo', width: 200 },
+  { slotName: 'tableSpaceUsed', width: 310 },
+  { slotName: 'memoryUsed', width: 320 }
 ])
 
 const props = defineProps({
@@ -100,6 +97,16 @@ const props = defineProps({
 onMounted(() => {
   data.nodeList = JSON.parse(JSON.stringify(props.nodes))
   openMonitor()
+})
+
+onUnmounted(() => {
+  if (data.socketArr.length) {
+    data.socketArr.forEach((item: Socket<any, any>) => {
+      if (item) {
+        item.destroy()
+      }
+    })
+  }
 })
 
 const emits = defineEmits(['validRes'])
@@ -261,6 +268,5 @@ const handleFinish = () => {
 
 .monitor-data {
   font-size: 22px;
-  margin-bottom: 10px;
 }
 </style>

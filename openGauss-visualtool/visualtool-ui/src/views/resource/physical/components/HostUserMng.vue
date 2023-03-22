@@ -7,7 +7,7 @@
             }}</a-button>
             <a-table class="full-w" :data="list.data" :columns="columns" :loading="list.loading" size="mini">
                 <template #sudo="{ record }">
-                    {{ record.isSudo ? $t('components.HostUserMng.yes') : $t('components.HostUserMng.no') }}
+                    {{ record.sudo ? $t('components.HostUserMng.yes') : $t('components.HostUserMng.no') }}
                 </template>
                 <template #operation="{ record }">
                     <div class="flex-row-start" v-if="record.username !== 'root'">

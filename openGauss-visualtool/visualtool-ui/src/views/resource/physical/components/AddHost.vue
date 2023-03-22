@@ -56,14 +56,6 @@
           }}</a-option>
         </a-select>
       </a-form-item>
-      <a-form-item :label="$t('components.AddHost.5mphy3snyg40')">
-        <a-select :loading="data.azListLoading" v-model="data.formData.azId"
-          :placeholder="$t('components.AddHost.5mphy3snyn80')">
-          <a-option v-for="item in data.azList" :key="item.azId" :value="item.azId">{{
-            item.name
-          }}</a-option>
-        </a-select>
-      </a-form-item>
       <a-form-item :label="$t('components.AddHost.5mphy3snysg0')">
         <a-textarea v-model="data.formData.remark" :placeholder="$t('components.AddHost.5mphy3snyxc0')"></a-textarea>
       </a-form-item>

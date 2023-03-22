@@ -321,13 +321,17 @@ const handleTabClick = (val: any) => {
 
 const handleAdd = () => {
   const id = new Date().getTime() + ''
+  let port = 3306
+  if (data.form.dbType === 'OPENGAUSS') {
+    port = 5432
+  }
   data.form.nodes.push({
     id: id,
     tabName: data.form.nodes.length + 1,
     url: '',
     urlSuffix: '',
     ip: '',
-    port: 3306,
+    port: port,
     username: '',
     password: '',
     props: [{

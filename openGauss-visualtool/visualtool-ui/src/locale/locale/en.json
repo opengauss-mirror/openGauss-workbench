@@ -278,6 +278,12 @@
             "no": "N",
             "5mpi1bru4c00": "operation"
         },
+        "BatchLabelDlg": {
+            "5pbjt280spg0": "Selected host",
+            "5pbjt280xuo0": "Count",
+            "5pbjt280yik0": "Tag",
+            "5pbjt280z040": "Tag Batch Setting"
+        },
         "AddAz": {
             "azName": "AZ Name",
             "5mpib0ipo0g0": "cancel",
@@ -645,6 +651,9 @@
             "baseInfo": "BaseInfo",
             "diskInfo": "DiskInfo",
             "detail": "Detail",
+            "labelBatch": "Tag Setting",
+            "labelManage": "Tag Manage",
+            "else1": "Please select at least one host",
             "5mphf11rr080": "Add",
             "5mphf11syw80": "test",
             "5mphf11szdk0": "search",
@@ -662,6 +671,19 @@
             "5mphf11tfr80": "Not detected",
             "5mphf11tfx80": "Not available",
             "5mphf11tg780": "available"
+        }
+    },
+    "label": {
+        "LabelManageDlg": {
+            "5pbjv7b0vrw0": "Createe",
+            "5pbjv7b0wu80": "Tag Name",
+            "5pbjv7b0x3w0": "Please enter a label name",
+            "5pbjv7b0xak0": "Edit",
+            "5pbjv7b0xgo0": "Number of associated hosts",
+            "5pbjv7b0y0w0": "Operation",
+            "5pbjv7b0yd00": "Create Label",
+            "5pbjv7b0yk40": "Edit Label",
+            "5pbjv7b0yso0": "Label Manage"
         }
     },
     "az": {
@@ -727,6 +749,10 @@
         "index": {
             "else1": "ClusterName",
             "else2": "Confirm upload",
+            "elseIp": "IP Address",
+            "elseIpPlaceholder": "Enter the IP address for query",
+            "else3": "Type",
+            "else3Placeholder": "Select a type for query",
             "5oxhr0qz15w0": "Create",
             "5oxhr0qz2bs0": "Download template",
             "5oxhr0qz2s00": "Please enter the cluster name for query",
@@ -770,7 +796,7 @@
             "else2": "Port",
             "else3": "Node",
             "else4": "unknown",
-            "else5": "system",
+            "else5": "Oper System",
             "5oxhv6qcm6w0": "To detect",
             "5oxhv6qcnak0": "Master",
             "5oxhv6qcnnk0": "Slave",

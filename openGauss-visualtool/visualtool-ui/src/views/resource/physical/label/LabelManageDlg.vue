@@ -6,12 +6,13 @@
         <div>
           <a-button class="mb" type="primary" @click="handleAdd()"><template #icon>
               <icon-plus />
-            </template>创建</a-button>
+            </template>{{ $t('label.LabelManageDlg.5pbjv7b0vrw0') }}</a-button>
         </div>
         <div>
           <a-form :model="filter" layout="inline">
-            <a-form-item label="标签名称">
-              <a-input v-model="filter.name" allow-clear placeholder="请输入标签名称" style="width: 180px;"></a-input>
+            <a-form-item :label="$t('label.LabelManageDlg.5pbjv7b0wu80')">
+              <a-input v-model="filter.name" allow-clear :placeholder="$t('label.LabelManageDlg.5pbjv7b0x3w0')"
+                style="width: 180px;"></a-input>
             </a-form-item>
             <a-form-item>
               <a-button type="outline" @click="getHostTagPage()">
@@ -28,7 +29,7 @@
         :row-selection="list.rowSelection" @page-change="currentPage" @page-size-change="pageSizeChange" size="mini">
         <template #operation="{ record }">
           <div class="flex-row-start" v-if="record.username !== 'root'">
-            <a-link class="mr" @click="handleEdit(record)">编辑</a-link>
+            <a-link class="mr" @click="handleEdit(record)">{{ $t('label.LabelManageDlg.5pbjv7b0xak0') }}</a-link>
             <a-popconfirm :content="$t('components.HostUserMng.5mpi1bru2700')" type="warning"
               :ok-text="$t('components.HostUserMng.5mpi1bru2lo0')"
               :cancel-text="$t('components.HostUserMng.5mpi1bru2s00')" @ok="handleDel(record.id)">
@@ -42,8 +43,9 @@
   <a-modal :mask-closable="false" :esc-to-close="false" :ok-loading="formData.loading" :visible="formData.show"
     :title="formData.title" :modal-style="{ width: '550px' }" @ok="handleAddOk" @cancel="handleAddClose">
     <a-form :model="formData.form" ref="formRef" auto-label-width :rules="formRules">
-      <a-form-item field="name" label="标签名称">
-        <a-input v-model="formData.form.name" allow-clear placeholder="请输入标签名称"></a-input>
+      <a-form-item field="name" :label="$t('label.LabelManageDlg.5pbjv7b0wu80')">
+        <a-input v-model="formData.form.name" allow-clear
+          :placeholder="$t('label.LabelManageDlg.5pbjv7b0x3w0')"></a-input>
       </a-form-item>
     </a-form>
   </a-modal>
@@ -80,15 +82,15 @@ const list = reactive<KeyValue>({
   }
 })
 const columns = computed(() => [
-  { title: '标签名称', dataIndex: 'name', ellipsis: true, tooltip: true },
-  { title: '关联主机数', dataIndex: 'relNum' },
-  { title: '操作', slotName: 'operation' }
+  { title: t('label.LabelManageDlg.5pbjv7b0wu80'), dataIndex: 'name', ellipsis: true, tooltip: true },
+  { title: t('label.LabelManageDlg.5pbjv7b0xgo0'), dataIndex: 'relNum' },
+  { title: t('label.LabelManageDlg.5pbjv7b0y0w0'), slotName: 'operation' }
 ])
 
 const formData = reactive({
   loading: false,
   show: false,
-  title: '创建标签',
+  title: t('label.LabelManageDlg.5pbjv7b0yd00'),
   form: {
     id: '',
     name: ''
@@ -98,7 +100,7 @@ const formData = reactive({
 const formRules = computed(() => {
   return {
     name: [
-      { required: true, message: '请输入标签名称' },
+      { required: true, message: t('label.LabelManageDlg.5pbjv7b0x3w0') },
       {
         validator: (value: any, cb: any) => {
           return new Promise(resolve => {
@@ -153,14 +155,14 @@ const handleAddClose = () => {
 
 const handleAdd = () => {
   formData.show = true
-  formData.title = '创建标签'
+  formData.title = t('label.LabelManageDlg.5pbjv7b0yd00')
   formData.form.id = ''
   formData.form.name = ''
 }
 
 const handleEdit = (record: KeyValue) => {
   formData.show = true
-  formData.title = '编辑标签'
+  formData.title = t('label.LabelManageDlg.5pbjv7b0yk40')
   formData.form.id = record.id
   formData.form.name = record.name
 }
@@ -210,7 +212,7 @@ const getHostTagPage = () => {
 
 const open = () => {
   data.show = true
-  data.title = '标签管理'
+  data.title = t('label.LabelManageDlg.5pbjv7b0yso0')
   getHostTagPage()
 }
 defineExpose({

@@ -10,7 +10,7 @@
               </template>
               {{ $t('physical.index.5mphf11rr080') }}
             </a-button>
-            <a-button type="primary" class="mr" @click="handleAddHost('create')">
+            <a-button type="primary" class="mr" @click="handleBatchTag()">
               {{ $t('physical.index.labelBatch') }}
             </a-button>
             <a-button type="primary" class="mr" @click="handleLabelManage">
@@ -49,9 +49,9 @@
             </a-form>
           </div>
         </div>
-        <a-table class="d-a-table-row" row-key="hostId" :data="list.data" :columns="columns" :pagination="list.page"
+        <a-table ref="tableRef" row-key="hostId" :data="list.data" :columns="columns" :pagination="list.page"
           :row-selection="list.rowSelection" @page-change="currentPage" @page-size-change="pageSizeChange"
-          :loading="list.loading">
+          :loading="list.loading" @selection-change="handleSelectedChange">
           <template #baseInfo="{ record }">
             <div class="flex-col-start">
               <div class="host-name">{{ record.name ? record.name : '--' }}</div>
@@ -65,12 +65,8 @@
                 <icon-code-square :size="25" style="cursor: pointer;" @click="showTerminal(record)" />
               </div>
               <div class="flex-row">
-                <div class="mr-s">{{ $t('physical.index.cpuArch') }}:</div>
-                <div>{{ record.cpuArch ? record.cpuArch : '--' }}</div>
-              </div>
-              <div class="flex-row">
                 <div class="mr-s">{{ $t('physical.index.os') }}:</div>
-                <div>{{ record.os ? record.os : '--' }}</div>
+                <div>{{ record.os ? record.os : '--' }} - {{ record.cpuArch ? record.cpuArch : '--' }}</div>
               </div>
               <div class="flex-row">
                 <div class="mr-s">{{ $t('physical.index.hostName') }}:</div>
@@ -79,12 +75,15 @@
             </div>
           </template>
           <template #hostLabel="{ record }">
-            <div class="flex-row" style="flex-wrap: wrap;">
+            <div class="flex-row" style="flex-wrap: wrap;" v-if="record.tags">
               <a-tag v-for="(item, index) in record.tags" :key="index" class="mr-s mb-s">
                 <div :title="item" style="max-width: 125px;overflow: hidden; text-overflow:ellipsis; white-space: nowrap">
                   {{ item
                   }}</div>
               </a-tag>
+            </div>
+            <div v-else>
+              --
             </div>
           </template>
           <template #diskInfo="{ record }">
@@ -92,11 +91,11 @@
               <div class="flex-col mr" style="width: 160px;">
                 <div class="net flex-row-center">
                   <div class="flex-col mr" style="width: 80px;">
-                    <icon-arrow-fall :size="25" class="mb" />
+                    <icon-arrow-fall :size="30" class="mb" />
                     <div style="white-space: nowrap;">{{ record.downSpeed ? record.downSpeed : '--' }} byte/s</div>
                   </div>
                   <div class="flex-col" style="width: 80px;">
-                    <icon-arrow-rise :size="25" class="mb" />
+                    <icon-arrow-rise :size="30" class="mb" />
                     <div style="white-space: nowrap;">{{ record.upSpeed ? record.upSpeed : '--' }} byte/s</div>
                   </div>
                 </div>
@@ -146,6 +145,7 @@
         <host-user-mng ref="hostUserRef"></host-user-mng>
         <host-terminal ref="hostTerminalRef"></host-terminal>
         <label-manage-dlg ref="labelManageDlgRef" @finish="getListData"></label-manage-dlg>
+        <batch-label-dlg ref="batchLabelDlgRef" @finish="batchFinish"></batch-label-dlg>
       </div>
     </div>
   </div>
@@ -153,8 +153,8 @@
 
 <script setup lang="ts">
 import { KeyValue } from '@/types/global'
-import { Message } from '@arco-design/web-vue'
-import { computed, onMounted, reactive, ref } from 'vue'
+import { Message, Table } from '@arco-design/web-vue'
+import { computed, onMounted, reactive, ref, onUnmounted } from 'vue'
 import { hostPage, delHost, hostMonitor, hostTagListAll } from '@/api/ops' // eslint-disable-line
 import AddHost from './components/AddHost.vue'
 import HostPwdDlg from './components/HostPwdDlg.vue'
@@ -165,6 +165,7 @@ import VChart from 'vue-echarts'
 import Socket from '@/utils/websocket'
 import { useI18n } from 'vue-i18n'
 import LabelManageDlg from './label/LabelManageDlg.vue'
+import BatchLabelDlg from './components/BatchLabelDlg.vue'
 const { t } = useI18n()
 const filter = reactive({
   name: '',
@@ -176,9 +177,9 @@ const filter = reactive({
 
 const columns = computed(() => [
   { title: t('physical.index.baseInfo'), slotName: 'baseInfo', width: 350 },
-  { title: t('physical.index.hostLabel'), slotName: 'hostLabel' },
+  { title: t('physical.index.hostLabel'), slotName: 'hostLabel', width: 200 },
   { title: t('physical.index.diskInfo'), slotName: 'diskInfo' },
-  { title: t('physical.index.5mphf11tfjw0'), slotName: 'operation' }
+  { title: t('physical.index.5mphf11tfjw0'), slotName: 'operation', fixed: 'right', width: 280 }
 ])
 
 const echartsOption = reactive<KeyValue>({
@@ -189,6 +190,7 @@ const echartsOption = reactive<KeyValue>({
 
 const list = reactive<KeyValue>({
   data: [],
+  selectedHostIds: [],
   page: {
     total: 0,
     'show-total': true,
@@ -215,6 +217,16 @@ onMounted(() => {
   getAllTag()
 })
 
+onUnmounted(() => {
+  if (list.socketArr.length) {
+    list.socketArr.forEach((item: Socket<any, any>) => {
+      if (item) {
+        item.destroy()
+      }
+    })
+  }
+})
+
 const getAllTag = () => {
   data.tagsLoading = true
   hostTagListAll().then((res: KeyValue) => {
@@ -231,6 +243,13 @@ const getAllTag = () => {
   }).finally(() => {
     data.tagsLoading = false
   })
+}
+
+const tableRef = ref<null | InstanceType<typeof Table>>(null)
+const batchFinish = () => {
+  tableRef.value?.select(list.selectedHostIds, false)
+  list.selectedHostIds = []
+  getListData()
 }
 
 const getListData = () => new Promise(resolve => {
@@ -303,20 +322,24 @@ const openHostMonitor = (hostData: KeyValue, index: number) => {
     list.data[index].downSpeed = eventData.downSpeed
     list.data[index].upSpeed = eventData.upSpeed
     list.data[index].isCpu = true
-    list.data[index].cpuOption.series[0].data[0] = eventData.cpu / 100
-    list.data[index].cpuOption.series[0].data[1] = 1 - eventData.cpu / 100
+    list.data[index].cpuOption.series[0].data[0].value = eventData.cpu
+    list.data[index].cpuOption.series[0].data[1].value = (100 - eventData.cpu)
     list.data[index].isDisk = true
-    list.data[index].diskOption.series[0].data[0] = eventData.disk / 100
-    list.data[index].diskOption.series[0].data[1] = 1 - eventData.disk / 100
+    list.data[index].diskOption.series[0].data[0].value = eventData.disk
+    list.data[index].diskOption.series[0].data[1].value = 100 - eventData.disk
     list.data[index].isMemory = true
-    list.data[index].memoryOption.series[0].data[0] = eventData.memory / 100
-    list.data[index].memoryOption.series[0].data[1] = 1 - eventData.memory / 100
+    list.data[index].memoryOption.series[0].data[0].value = eventData.memory
+    list.data[index].memoryOption.series[0].data[1].value = 100 - eventData.memory
   })
 }
 
 const currentPage = (e: number) => {
   filter.pageNum = e
   getListData()
+}
+
+const handleSelectedChange = (keys: (string | number)[]) => {
+  list.selectedHostIds = keys
 }
 
 const pageSizeChange = (e: number) => {
@@ -352,6 +375,15 @@ const handleShowDetail = (record: KeyValue) => {
 const addHostRef = ref<null | InstanceType<typeof AddHost>>(null)
 const handleAddHost = (type: string, data?: KeyValue) => {
   addHostRef.value?.open(type, data)
+}
+
+const batchLabelDlgRef = ref<null | InstanceType<typeof BatchLabelDlg>>(null)
+const handleBatchTag = () => {
+  if (list.selectedHostIds.length) {
+    batchLabelDlgRef.value?.open(list.selectedHostIds)
+  } else {
+    Message.warning('请至少选一个主机信息')
+  }
 }
 
 const labelManageDlgRef = ref<null | InstanceType<typeof LabelManageDlg>>(null)
@@ -413,12 +445,12 @@ const showHostUserMng = (record: KeyValue) => {
     }
 
     .net {
-      height: 120px;
+      height: 110px;
     }
 
     .chart {
-      width: 120px;
-      height: 120px;
+      width: 110px;
+      height: 110px;
     }
 
     .chart-empty-c {
