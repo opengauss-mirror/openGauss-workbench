@@ -18,4 +18,6 @@ public interface IOpsHostTagRelService extends IService<OpsHostTagRel> {
     Map<String, Set<String>> mapByHostIds(List<String> hostIds);
 
     void cleanHostTag(String hostId);
+
+    void delByTagId(String tagId);
 }

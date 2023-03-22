@@ -8,8 +8,10 @@ import org.opengauss.admin.common.core.domain.model.ops.host.tag.HostTagAddInput
 import org.opengauss.admin.common.core.domain.model.ops.host.tag.HostTagInputDto;
 import org.opengauss.admin.common.core.domain.model.ops.host.tag.HostTagPageVO;
 import org.opengauss.admin.common.core.page.TableDataInfo;
+import org.opengauss.admin.system.service.ops.IOpsHostTagRelService;
 import org.opengauss.admin.system.service.ops.IOpsHostTagService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -23,6 +25,8 @@ import java.util.List;
 public class OpsHostTagController extends BaseController {
     @Autowired
     private IOpsHostTagService opsHostTagService;
+    @Autowired
+    private IOpsHostTagRelService opsHostTagRelService;
 
     @PutMapping("/addTag")
     public AjaxResult addTag(@RequestBody HostTagInputDto hostTagInputDto){
@@ -55,7 +59,9 @@ public class OpsHostTagController extends BaseController {
     }
 
     @DeleteMapping("/del/{tagId}")
+    @Transactional(rollbackFor = Exception.class)
     public AjaxResult del(@PathVariable("tagId") String tagId){
+        opsHostTagRelService.delByTagId(tagId);
         opsHostTagService.removeById(tagId);
         return AjaxResult.success();
     }

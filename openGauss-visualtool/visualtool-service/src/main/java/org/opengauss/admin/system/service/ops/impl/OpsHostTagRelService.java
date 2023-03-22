@@ -85,4 +85,15 @@ public class OpsHostTagRelService extends ServiceImpl<OpsHostTagRelMapper, OpsHo
 
         remove(queryWrapper);
     }
+
+    @Override
+    public void delByTagId(String tagId) {
+        if (StrUtil.isEmpty(tagId)){
+            return;
+        }
+
+        LambdaQueryWrapper<OpsHostTagRel> queryWrapper = Wrappers.lambdaQuery(OpsHostTagRel.class)
+                .eq(OpsHostTagRel::getTagId, tagId);
+        remove(queryWrapper);
+    }
 }
