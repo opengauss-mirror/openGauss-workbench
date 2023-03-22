@@ -109,6 +109,7 @@ public class Task {
 
 	@Data
 	public static class config {
+		boolean isBcc = true;
 		boolean offCpu = false;
 		boolean onCpu = false;
 		boolean explainAnalysis = false;
