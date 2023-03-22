@@ -80,7 +80,8 @@ public class ExporterService extends AbstractInstaller {
 			var user = getUser(hostEntity, EXPORTER_USER, rootPassword, steps, curr);
 			try (var session = SshSession.connect(hostEntity.getPublicIp(), hostEntity.getPort(), "root",
 					encryptionUtils.decrypt(rootPassword));) {
-				session.execute("yum install -y unzip zip");
+				if (!session.test("unzip -v"))
+					session.execute("yum install -y unzip zip");
 			} catch (Exception e) {
 				steps.get(curr).setState(status.ERROR).add(e.getMessage());
 				wsUtil.sendText(wsSession, JSONUtil.toJsonStr(steps));
@@ -253,7 +254,8 @@ public class ExporterService extends AbstractInstaller {
 			var nodeenv = envMapper.selectList(Wrappers.<NctigbaEnv>lambdaQuery()
 					.eq(NctigbaEnv::getType, type.NODE_EXPORTER).eq(NctigbaEnv::getHostid, node.getHostId())).get(0);
 			var expenv = envMapper.selectList(Wrappers.<NctigbaEnv>lambdaQuery()
-					.eq(NctigbaEnv::getType, type.OPENGAUSS_EXPORTER).eq(NctigbaEnv::getHostid, node.getHostId())).get(0);
+					.eq(NctigbaEnv::getType, type.OPENGAUSS_EXPORTER).eq(NctigbaEnv::getHostid, node.getHostId()))
+					.get(0);
 
 			if (nodeenv == null && expenv == null)
 				throw new RuntimeException("exporters not found");

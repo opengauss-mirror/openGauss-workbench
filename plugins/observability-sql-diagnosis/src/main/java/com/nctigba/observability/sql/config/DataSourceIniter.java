@@ -23,6 +23,7 @@ import com.gitee.starblues.bootstrap.PluginContextHolder;
 import com.gitee.starblues.spring.environment.EnvironmentProvider;
 import com.zaxxer.hikari.HikariDataSource;
 
+import cn.hutool.core.io.FileUtil;
 import lombok.extern.slf4j.Slf4j;
 
 @Component
@@ -31,6 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 public class DataSourceIniter {
 	private static final String DIAGNOSIS_TASK_DB = "data/diagnosisTask.db";
 	private static final String DIAGNOSIS_SOURCES_DB = "data/diagnosisSources.db";
+	private static final String OLD = "data/diagnosis.db";
 	public static final String diagnosisTask = "diagnosisTask";
 	public static final String diagnosisSource = "diagnosisSource";
 
@@ -55,7 +57,12 @@ public class DataSourceIniter {
 	}
 
 	private void initSqlite(String path, String[] sqls) throws IOException {
+		File old = new File(OLD);
 		File f = new File(path);
+		if(old.exists() && !f.exists()) {
+			FileUtil.copy(old, f, false);
+			return;
+		}
 		log.info("sqlite:" + f.getCanonicalPath());
 		if (!f.exists()) {
 			var parent = f.getParentFile();
