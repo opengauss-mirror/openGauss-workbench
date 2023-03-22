@@ -37,31 +37,66 @@
       </a-form>
     </div>
     <div class="table-con">
-      <div class="select-tips">
-        <span class="tips-item">迁移子任务：<b>{{ props.subTaskConfig.length }}</b>个</span>
-        <span class="tips-item">已选择机器：<b>{{ selectedKeys.length }}</b>台</span>
+      <div class="select-info-con">
+        <div class="select-tips">
+          <span class="tips-item">迁移子任务：<b>{{ props.subTaskConfig.length }}</b>个</span>
+          <span class="tips-item">已选择机器：<b>{{ selectedKeys.length }}</b>台</span>
+        </div>
+        <div class="refresh-con">
+          <a-link @click="getHostsData">
+            <icon-refresh />
+            <span class="btn-txt">刷新</span>
+          </a-link>
+        </div>
       </div>
-      <a-table :loading="loading" row-key="hostId" :data="tableData" :row-selection="rowSelection" v-model:selectedKeys="selectedKeys" :bordered="false" :stripe="!currentTheme" :hoverable="!currentTheme" :pagination="pagination" @page-change="pageChange" @selection-change="selectionChange">
+      <a-table row-key="hostId" :data="tableData" :row-selection="rowSelection" v-model:selectedKeys="selectedKeys" :bordered="false" :stripe="!currentTheme" :hoverable="!currentTheme" :pagination="pagination" @page-change="pageChange" @selection-change="selectionChange">
         <template #columns>
-          <a-table-column title="物理机IP" data-index="publicIp"></a-table-column>
-          <a-table-column title="物理机名称+OS" data-index="hostname"></a-table-column>
-          <a-table-column title="配置信息">
+          <a-table-column title="物理机IP" data-index="publicIp" fixed="left" :width="150"></a-table-column>
+          <a-table-column title="物理机名称+OS" data-index="hostname" :width="200" ellipsis tooltip></a-table-column>
+          <a-table-column title="配置信息" :width="300" ellipsis tooltip>
             <template #cell="{ record }">
               {{ record.os ? '系统：' + record.os + ',' : '' }}
               {{ record.os ? 'CPU架构：' + record.cpuArch : '' }}
             </template>
           </a-table-column>
-          <a-table-column title="最大子任务数" data-index="d"></a-table-column>
-          <a-table-column title="正在执行子任务数" data-index="tasks" align="center">
+          <a-table-column title="是否已安装portal" data-index="installPortalStatus" align="center" :width="150">
+            <template #cell="{ record }">
+              <span v-if="record.installPortalStatus !== 0">{{ statusMap(record.installPortalStatus) }}</span>
+              <a-button
+                v-if="record.installPortalStatus === 0"
+                size="mini"
+                type="text"
+                @click="handleInstall(record)"
+              >
+                <template #icon>
+                  <icon-play-arrow />
+                </template>
+                <template #default>开始安装</template>
+              </a-button>
+              <a-button
+                v-if="record.installPortalStatus === 10"
+                size="mini"
+                type="text"
+                @click="handleDownloadLog(record)"
+              >
+                <template #icon>
+                  <icon-download />
+                </template>
+                <template #default>日志</template>
+              </a-button>
+            </template>
+          </a-table-column>
+          <a-table-column title="正在执行子任务数" data-index="tasks" align="center" :width="150">
             <template #cell="{ record }">
               {{ record.tasks.length }}
             </template>
           </a-table-column>
-          <a-table-column title="正在执行的子任务" data-index="tasks">
+          <a-table-column title="正在执行的子任务" data-index="tasks" :width="150">
             <template #cell="{ record }">
               {{ record.tasks.map(item => `#${item.id}`).join(', ')}}
             </template>
           </a-table-column>
+          <a-table-column title="最大子任务数" data-index="d" :width="150"></a-table-column>
         </template>
       </a-table>
     </div>
@@ -69,8 +104,8 @@
 </template>
 
 <script setup>
-import { reactive, ref, onMounted, toRaw } from 'vue'
-import { hostsData } from '@/api/task'
+import { reactive, ref, onMounted, toRaw, onBeforeUnmount } from 'vue'
+import { hostsData, downloadEnvLog, installPortal } from '@/api/task'
 import useTheme from '@/hooks/theme'
 
 const { currentTheme } = useTheme()
@@ -112,6 +147,16 @@ const rowSelection = reactive({
   onlyCurrent: false
 })
 
+const statusMap = (status) => {
+  const maps = {
+    0: '未安装',
+    1: '安装中',
+    2: '已安装',
+    10: '安装失败'
+  }
+  return maps[status]
+}
+
 const pageChange = (current) => {
   pagination.current = current
 }
@@ -136,15 +181,50 @@ const selectionChange = (rowKey) => {
   emits('syncHost', rowKey)
 }
 
+let timer = null
+
+// start install
+const handleInstall = row => {
+  installPortal(row.hostId).then(() => {
+    getHostsData()
+  })
+}
+
+// download log
+const handleDownloadLog = row => {
+  downloadEnvLog(row.hostId).then(res => {
+    if (res) {
+      const blob = new Blob([res], {
+        type: 'text/plain'
+      })
+      const a = document.createElement('a')
+      const URL = window.URL || window.webkitURL
+      const herf = URL.createObjectURL(blob)
+      a.href = herf
+      a.download = row.hostname
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      window.URL.revokeObjectURL(herf)
+    }
+  })
+}
+
 const getHostsData = () => {
+  timer && clearTimeout(timer)
   loading.value = true
   hostsData().then(res => {
     loading.value = false
-    tableData.value = res.data
+    tableData.value = res.data.map(item => ({ ...item, disabled: item.installPortalStatus !== 2 }))
     originData.value = JSON.parse(JSON.stringify(res.data))
     pagination.total = res.data.length
+    timer = setTimeout(() => {
+      getHostsData()
+    }, 5000)
   }).catch(() => {
     loading.value = false
+    timer && clearTimeout(timer)
+    timer = null
   })
 }
 
@@ -161,6 +241,10 @@ onMounted(() => {
   getHostsData()
   selectedKeys.value = toRaw(props.hostData)
 })
+
+onBeforeUnmount(() => {
+  timer && clearTimeout(timer)
+})
 </script>
 
 <style lang="less" scoped>
@@ -176,12 +260,23 @@ onMounted(() => {
   .table-con {
     margin-top: 20px;
     padding: 0 20px 30px;
-    .select-tips {
+    .select-info-con {
       display: flex;
-      margin-bottom: 10px;
-      .tips-item {
-        color: var(--color-text-1);
-        margin-right: 10px;
+      justify-content: space-between;
+      margin-bottom: 5px;
+      .select-tips {
+        display: flex;
+        .tips-item {
+          color: var(--color-text-1);
+          margin-right: 10px;
+        }
+      }
+      .refresh-con {
+        display: flex;
+        align-items: center;
+        .btn-txt {
+          margin-left: 3px;
+        }
       }
     }
   }

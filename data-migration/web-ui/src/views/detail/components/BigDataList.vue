@@ -59,15 +59,6 @@
               <a-table-column title="" data-index="name" :width="250" ellipsis tooltip></a-table-column>
               <a-table-column title="" data-index="status" align="center">
                 <template #cell="{ record }">
-                  <a-popover>
-                    <icon-bar-chart v-if="!record.status" class="data-count" size="16" />
-                    <template #content>
-                      <p>等待数：{{ record.counts.waitCount }}</p>
-                      <p>执行数：{{ record.counts.runningCount }}</p>
-                      <p>完成数：{{ record.counts.finishCount }}</p>
-                      <p>失败数：{{ record.counts.errorCount }}</p>
-                    </template>
-                  </a-popover>
                   <span v-if="record.status === 1 || record.status === 2">{{ record.percent ? (record.percent * 100).toFixed(2) : '0' }}%</span>
                   <icon-check-circle-fill v-if="record.status === 3 || record.status === 4 || record.status === 5" size="16" style="color: #00B429;" />
                   <a-popover title="错误详情" position="tr">

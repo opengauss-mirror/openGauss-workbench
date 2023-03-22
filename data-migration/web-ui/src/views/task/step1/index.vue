@@ -9,10 +9,13 @@
               <div class="sql-sel-con">
                 <a-input v-model="searchSourceKey" placeholder="输入名称搜索" allow-clear />
               </div>
+              <div class="refresh-con">
+                <a-link @click="getClustersData"><icon-refresh /></a-link>
+              </div>
             </div>
           </template>
           <template #extra>
-            <a-link @click="handleAddSql">+自定义数据库</a-link>
+            <a-link @click="handleAddSql('MYSQL')">新增数据源</a-link>
           </template>
           <div class="sql-tree-con">
             <a-spin :loading="loading" style="display: block;">
@@ -58,10 +61,13 @@
               <div class="sql-sel-con">
                 <a-input v-model="searchTargetKey" placeholder="输入名称搜索" allow-clear />
               </div>
+              <div class="refresh-con">
+                <a-link @click="getClustersData"><icon-refresh /></a-link>
+              </div>
             </div>
           </template>
           <template #extra>
-            <a-link>+自定义数据库</a-link>
+            <a-link @click="handleAddSql('OPENGAUSS')">新增数据源</a-link>
           </template>
           <div class="sql-selected-con">
             <a-spin :loading="loading" style="display: block;">
@@ -413,8 +419,8 @@ const deleteSubTask = (idx) => {
 
 const addJdbcRef = ref(null)
 
-const handleAddSql = () => {
-  addJdbcRef.value?.open()
+const handleAddSql = (dbType) => {
+  addJdbcRef.value?.open(dbType)
 }
 
 // init
@@ -476,6 +482,11 @@ onMounted(() => {
       .card-title {
         font-size: 16px;
         margin-right: 10px;
+      }
+      .refresh-con {
+        margin-left: 5px;
+        margin-top: 3px;
+        cursor: pointer;
       }
     }
     .sql-tree-con {

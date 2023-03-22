@@ -39,3 +39,11 @@ export function addJdbc (data) {
 export function hostListAll () {
   return axios.get('/host/listAll')
 }
+
+export function downloadEnvLog (hostId) {
+  return axios.get(`/plugins/data-migration/resource/log/downloadEnv/${hostId}`)
+}
+
+export function installPortal (hostId) {
+  return axios.get(`/plugins/data-migration/resource/installPortal/${hostId}`)
+}
