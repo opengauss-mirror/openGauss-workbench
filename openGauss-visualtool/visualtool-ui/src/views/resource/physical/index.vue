@@ -128,7 +128,7 @@
             <div class="flex-row-start">
               <a-link class="mr" @click="showHostUserMng(record)">{{ $t('physical.index.5mphf11szks0') }}</a-link>
               <!-- <a-link class="mr" @click="handleTest(record)">{{ $t('physical.index.5mphf11syw80') }}</a-link> -->
-              <a-link class="mr" @click="handleShowDetail(record)">{{ $t('physical.index.detail') }}</a-link>
+              <!-- <a-link class="mr" @click="handleShowDetail(record)">{{ $t('physical.index.detail') }}</a-link> -->
               <a-link class="mr" @click="handleAddHost('update', record)">{{
                 $t('physical.index.5mphf11szqo0')
               }}</a-link>
