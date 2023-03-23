@@ -15,7 +15,7 @@ export const useAppStore = defineStore({
     connectListMap: [],
     connectListState: [],
     isLoadEditor: false,
-    language: 'zh-Cn',
+    language: 'zh-CN',
     isReloadRouter: true,
     isMainViewMounted: false,
   }),
