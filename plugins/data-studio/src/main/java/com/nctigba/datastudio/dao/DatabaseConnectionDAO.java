@@ -140,6 +140,7 @@ public class DatabaseConnectionDAO implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
-        jdbcTemplate.execute("create table if not exists DATABASELINK(id INTEGER PRIMARY KEY,type varchar(20),name text,driver varchar(100),ip varchar(30),port varchar(10),dataName varchar(40),username varchar(40),userpassword varchar(40) ,webuser varchar(40),edition  varchar(300), UNIQUE(name));");
+        jdbcTemplate.execute("create table if not exists DATABASELINK(id INTEGER PRIMARY KEY,type varchar(20),name text,driver varchar(100),ip varchar(30),port varchar(10),dataName varchar(40),username varchar(40),userpassword varchar(40) ," +
+                "webuser varchar(40),edition  varchar(300), UNIQUE(name));");
     }
 }
