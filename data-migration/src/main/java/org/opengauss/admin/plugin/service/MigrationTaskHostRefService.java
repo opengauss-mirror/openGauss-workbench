@@ -35,4 +35,8 @@ public interface MigrationTaskHostRefService extends IService<MigrationTaskHostR
     List<String> getMysqlClusterDbNames(String url, String username, String password);
 
     List<Map<String, Object>> getOpsClusterDbNames(OpsClusterNodeVO clusterNode);
+
+    void installPortal(String hostId, boolean isNewFileInstall);
+
+    String getPortalInstallLog(String hostId);
 }

@@ -314,18 +314,25 @@
       :uuid="currentContextNodeData.uuid"
       :databaseName="currentContextNodeData.label"
     />
-    <CreateViewDialog type="create" :connectData="currentContextNodeData" v-model="viewDialog" />
+    <CreateViewDialog
+      type="create"
+      :connectData="currentContextNodeData"
+      v-model="viewDialog"
+      @success="refreshModeByContext"
+    />
     <CreateSynonymDialog
       v-if="synonymDialog"
       v-model="synonymDialog"
       type="create"
       :connectData="currentContextNodeData"
+      @success="refreshModeByContext"
     />
     <CreateSequenceDialog
       v-if="sequenceDialog"
       v-model="sequenceDialog"
       type="create"
       :connectData="currentContextNodeData"
+      @success="refreshModeByContext"
     />
   </div>
 </template>
@@ -1014,16 +1021,19 @@
       nodeId: '',
     },
   ) => {
+    let nodeId = '';
     if (mode == 'connection') {
       treeContext.rootVisible = false;
       await fetchDBList(
         options.connectInfo || currentContextNodeData.connectInfo,
         options.uuid || currentContextNodeData.uuid,
       );
+      nodeId = options.connectInfo?.id || currentContextNodeData.connectInfo?.id || options.rootId;
     } else if (mode == 'database') {
       treeContext.databaseVisible = false;
       const dbNode = findNode({ rootId: options.rootId, databaseId: options.databaseId });
       dbNode.children = [];
+      nodeId = options.databaseId;
     } else if (mode == 'mode') {
       treeContext.modeVisible = false;
       const schemaNode = findNode({
@@ -1032,12 +1042,21 @@
         schemaId: options.schemaId,
       });
       schemaNode.children = [];
+      nodeId = options.schemaId;
     }
-    let node = treeRef.value.getNode(options.nodeId || currentContextNodeData.id);
+    let node = treeRef.value.getNode(options.nodeId || nodeId);
     if (node) {
       node.loaded = false;
       node.expand();
     }
+  };
+
+  const refreshModeByContext = () => {
+    refresh('mode', {
+      rootId: currentContextNodeData.connectInfo.id,
+      databaseId: currentContextNodeData.databaseId,
+      schemaId: currentContextNodeData.schemaId,
+    });
   };
 
   const filterNode = (value: string, data: Tree) => {
@@ -1250,7 +1269,8 @@
         uuid: currentContextNodeData.uuid,
       };
       await api(params);
-      ElMessage.success(t('message.deleteFile'));
+      ElMessage.success(t('message.deleteSuccess'));
+      refreshModeByContext();
     });
   };
 

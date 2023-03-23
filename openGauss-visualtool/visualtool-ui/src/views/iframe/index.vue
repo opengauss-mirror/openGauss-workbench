@@ -2,7 +2,7 @@
   <div class="app-container">
     <div class="main-bd">
       <div class="iframe-con">
-        <WujieVue class="iframe" :class="[appStore.menuCollapse && 'iframe-clp']" :name="route.fullPath" :url="pluginUrl" :props="props" :plugins="plugins" :sync="false"></WujieVue>
+        <WujieVue class="iframe" :class="[appStore.menuCollapse && 'iframe-clp', chromeBigVersion > 110 && 'chrome-style']" :name="route.fullPath" :url="pluginUrl" :props="props" :plugins="plugins" :sync="false"></WujieVue>
       </div>
     </div>
   </div>
@@ -14,6 +14,8 @@
   import { useRouter, useRoute } from 'vue-router'
   import { useAppStore } from '@/store'
 
+  const chromeVersion = (navigator as any).userAgent.match(/Chrome\/([\d.]+)/)
+  const chromeBigVersion = ref(chromeVersion ? +chromeVersion[1].split('.')[0] : 0)
   const appStore = useAppStore()
   const router = useRouter()
   const route = useRoute()
@@ -72,6 +74,12 @@
         height: 100%;
         margin-top: -113px;
         margin-left: -228px;
+        &.chrome-style {
+          position: relative;
+          z-index: 101;
+          height: calc(100vh - 10px);
+          overflow-y: auto;
+        }
         &.iframe-clp {
           margin-left: -64px;
         }

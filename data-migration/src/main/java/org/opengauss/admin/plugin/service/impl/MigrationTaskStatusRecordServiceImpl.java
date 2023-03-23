@@ -90,4 +90,11 @@ public class MigrationTaskStatusRecordServiceImpl extends ServiceImpl<MigrationT
         return migrationTaskStatusRecordMapper.selectByTaskId(taskId);
     }
 
+    @Override
+    public void deleteByTaskIds(List<Integer> taskIds) {
+        LambdaQueryWrapper<MigrationTaskStatusRecord> query = new LambdaQueryWrapper<>();
+        query.in(MigrationTaskStatusRecord::getTaskId, taskIds);
+        this.remove(query);
+    }
+
 }
