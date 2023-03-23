@@ -24,7 +24,7 @@ import { nextTick, reactive, ref, computed } from 'vue'
 import { KeyValue } from '@/types/global'
 import { FormInstance } from '@arco-design/web-vue/es/form'
 import { useI18n } from 'vue-i18n'
-import { hostListAll } from '@/api/ops'
+import { hostListAll, hostPingById } from '@/api/ops'
 import { encryptPassword } from '@/utils/jsencrypt'
 const { t } = useI18n()
 const data = reactive<KeyValue>({
@@ -36,6 +36,7 @@ const data = reactive<KeyValue>({
   hostList: [],
   hostObj: {},
   isShowPwd: false,
+  hideCancel: false,
   formData: {
     hostId: '',
     password: ''
@@ -77,11 +78,37 @@ const handleOk = () => {
   formRef.value?.validate().then(async result => {
     if (!result) {
       const encryptPwd = await encryptPassword(data.formData.password)
-      emits(`finish`, {
-        hostId: data.formData.hostId,
-        password: encryptPwd
-      })
-      close()
+      // valid password
+      const param = {
+        rootPassword: encryptPwd
+      }
+      data.loading = true
+      try {
+        const passwordValid: KeyValue = await hostPingById(data.formData.hostId, param)
+        if (Number(passwordValid.code) !== 200) {
+          formRef.value?.setFields({
+            password: {
+              status: 'error',
+              message: t('enterprise.NodeConfig.else8')
+            }
+          })
+        } else {
+          emits(`finish`, {
+            hostId: data.formData.hostId,
+            password: encryptPwd
+          })
+          close()
+        }
+      } catch (err: any) {
+        formRef.value?.setFields({
+          password: {
+            status: 'error',
+            message: t('enterprise.NodeConfig.else8')
+          }
+        })
+      } finally {
+        data.loading = false
+      }
     }
   })
 }
@@ -120,6 +147,9 @@ const open = (hosts: KeyValue[]) => {
   hosts.forEach((item: KeyValue) => {
     data.excludeHosts.push(item.hostId)
   })
+  if (!hosts.length) {
+    data.hideCancel = true
+  }
   getHostList()
 }
 

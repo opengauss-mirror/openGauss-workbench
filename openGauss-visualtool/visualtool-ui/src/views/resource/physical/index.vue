@@ -91,11 +91,11 @@
               <div class="flex-col mr" style="width: 160px;">
                 <div class="net flex-row-center">
                   <div class="flex-col mr" style="width: 80px;">
-                    <icon-arrow-fall :size="30" class="mb" />
+                    <icon-arrow-fall style="color: #a9aeb8" :size="30" class="mb-s" />
                     <div style="white-space: nowrap;">{{ record.downSpeed ? record.downSpeed : '--' }} byte/s</div>
                   </div>
                   <div class="flex-col" style="width: 80px;">
-                    <icon-arrow-rise :size="30" class="mb" />
+                    <icon-arrow-rise style="color: #a9aeb8" :size="30" class="mb-s" />
                     <div style="white-space: nowrap;">{{ record.upSpeed ? record.upSpeed : '--' }} byte/s</div>
                   </div>
                 </div>
@@ -318,7 +318,7 @@ const openHostMonitor = (hostData: KeyValue, index: number) => {
   })
   websocket.onmessage((messageData: any) => {
     const eventData = JSON.parse(messageData)
-    console.log('get host monitor data', eventData)
+    console.log('get host monitor data', hostData.publicIp, eventData)
     list.data[index].downSpeed = eventData.downSpeed
     list.data[index].upSpeed = eventData.upSpeed
     list.data[index].isCpu = true

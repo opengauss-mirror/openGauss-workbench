@@ -18,6 +18,19 @@
         <div :id="`xterm_${index}`" class="xterm"></div>
       </a-tab-pane>
     </a-tabs>
+    <div v-else style="margin-top: 15%;">
+      <div class="flex-col" v-if="data.noHost">
+        <a-empty class="mb">{{ $t('customControl.index.else1') }}</a-empty>
+        <div class="flex-row">
+          <a-button type="primary" class="mr" @click="goHostManage">{{ $t('customControl.index.else2') }}</a-button>
+          <a-button type="outline" @click="getHostList">{{ $t('customControl.index.else3') }}</a-button>
+        </div>
+      </div>
+      <div class="flex-col" v-else>
+        <a-empty class="mb">{{ $t('customControl.index.else4') }}</a-empty>
+        <a-button type="outline" @click="getHostList">{{ $t('customControl.index.else5') }}</a-button>
+      </div>
+    </div>
 
     <host-pwd-dlg ref="hostPwdRef" @finish="handleAddHost($event)"></host-pwd-dlg>
   </div>
@@ -37,6 +50,7 @@ import HostPwdDlg from './HostPwdDlg.vue'
 import { debounce } from '@antv/x6/lib/util/function/function'
 
 const data = reactive<KeyValue>({
+  noHost: false,
   hosts: [],
   loading: false,
   hostId: '',
@@ -55,6 +69,19 @@ onMounted(() => {
   onTerminalResize()
 })
 
+onBeforeUnmount(() => {
+  if (Object.keys(data.socketMap).length) {
+    for (let key of data.socketMap) {
+      data.socketMap[key].destroy()
+    }
+  }
+})
+
+const goHostManage = () => {
+  window.$wujie?.props.methods.jump({
+    name: 'ResourcePhysical'
+  })
+}
 
 const hostPwdRef = ref<null | InstanceType<typeof HostPwdDlg>>(null)
 const openDlgToValid = (hostId: string) => {
@@ -105,13 +132,18 @@ const getHostList = () => {
           value: item.hostId
         })
       })
-      data.hostId = data.hostList[0].value
-      if (!data.hostObj[data.hostId].isRemember) {
-        openDlgToValid(data.hostId)
+      if (data.hostList.length) {
+        data.noHost = false
+        data.hostId = data.hostList[0].value
+        if (!data.hostObj[data.hostId].isRemember) {
+          openDlgToValid(data.hostId)
+        } else {
+          handleConnect({
+            hostId: data.hostId
+          }, 0)
+        }
       } else {
-        handleConnect({
-          hostId: data.hostId
-        }, 0)
+        data.noHost = true
       }
     }
   }).finally(() => {
@@ -145,8 +177,9 @@ const openSocket = (index: number) => {
         data.socketMap[data.hostId] = terminalSocket
         data.isSuccess = true
       }
-    }).catch(() => {
+    }).catch((error: any) => {
       data.isSuccess = false
+      term.writeln(error.toString())
       terminalSocket.destroy()
     }).finally(() => {
       data.loading = false
@@ -190,6 +223,10 @@ const getTermObj = (): Terminal => {
 </script>
 
 <style lang="less" scoped>
+:deep(.arco-tabs-nav-tab) {
+  color: var(--color-text-1);
+}
+
 .custom-control-container {
   padding: 20px;
   border-radius: 8px;
