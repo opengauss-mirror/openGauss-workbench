@@ -14,17 +14,15 @@
           <div class="label-color top-label mr-s">{{ $t('packageManage.index.5myq5c8zns00') }}</div>
           <a-select style="width: 200px;" v-model="filter.packageVersion" :placeholder="$t('packageManage.index.else3')"
             allow-clear>
-            <a-option v-for="(item, index) in packageVersionList" :key="index" :label="item.label"
-              :value="item.value" />
+            <a-option v-for="(item, index) in packageVersionList" :key="index" :label="item.label" :value="item.value" />
           </a-select>
         </div>
         <a-input-search v-model="filter.name" :loading="list.loading" allowClear @search="isFilter"
-          @press-enter="isFilter" @clear="isFilter" :placeholder="$t('packageManage.index.5myq5c8z8540')"
-          search-button />
+          @press-enter="isFilter" @clear="isFilter" :placeholder="$t('packageManage.index.5myq5c8z8540')" search-button />
       </div>
     </div>
-    <a-table class="d-a-table-row" :data="list.data" :columns="columns" :pagination="list.page"
-      @page-change="currentPage" :loading="list.loading">
+    <a-table class="d-a-table-row" :data="list.data" :columns="columns" :pagination="list.page" @page-change="currentPage"
+      :loading="list.loading">
       <template #version="{ record }">
         {{ getVersionName(record.packageVersion) }}
       </template>
@@ -62,7 +60,7 @@ const filter = reactive({
 })
 
 const columns = computed(() => [
-  { title: t('packageManage.index.5myq5c8zpu83'), dataIndex: 'type'},
+  { title: t('packageManage.index.5myq5c8zpu83'), dataIndex: 'type' },
   { title: t('packageManage.index.5myq5c8znkk0'), dataIndex: 'os' },
   { title: t('packageManage.index.else1'), dataIndex: 'cpuArch' },
   { title: t('packageManage.index.5myq5c8zns00'), dataIndex: 'packageVersion', slotName: 'version' },
@@ -143,7 +141,7 @@ const getVersionName = (version: string) => {
 
 const getPackagePath = (value: KeyValue) => {
   if (value) {
-      return value.name
+    return value.name
   }
   return ''
 }

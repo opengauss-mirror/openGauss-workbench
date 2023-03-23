@@ -1,13 +1,13 @@
 <template>
     <a-modal :mask-closable="false" :esc-to-close="false" :visible="data.show" :title="data.title" @cancel="close"
-        :modal-style="{ width: '450px' }" :footer="false">
+        :modal-style="{ width: '650px' }" :footer="false">
         <div class="flex-col-start">
             <a-button class="mb" type="primary" @click="handleAddUser('create')">{{
                 $t('components.HostUserMng.5mpi1bru0w00')
             }}</a-button>
             <a-table class="full-w" :data="list.data" :columns="columns" :loading="list.loading" size="mini">
                 <template #sudo="{ record }">
-                    {{ record.isSudo ? $t('components.HostUserMng.yes') : $t('components.HostUserMng.no') }}
+                    {{ record.sudo ? $t('components.HostUserMng.yes') : $t('components.HostUserMng.no') }}
                 </template>
                 <template #operation="{ record }">
                     <div class="flex-row-start" v-if="record.username !== 'root'">

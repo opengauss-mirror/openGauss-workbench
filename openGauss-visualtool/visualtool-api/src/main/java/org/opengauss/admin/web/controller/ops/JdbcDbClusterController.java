@@ -36,8 +36,8 @@ public class JdbcDbClusterController extends BaseController {
     }
 
     @GetMapping("/page")
-    public TableDataInfo page(@RequestParam(required = false, value = "name") String name) {
-        Page<JdbcDbClusterVO> page = opsJdbcDbClusterService.page(name, startPage());
+    public TableDataInfo page(@RequestParam(required = false, value = "name") String name,@RequestParam(required = false,value = "ip") String ip, @RequestParam(required = false,value = "type") String type) {
+        Page<JdbcDbClusterVO> page = opsJdbcDbClusterService.page(name,ip,type,startPage());
         return getDataTable(page);
     }
 

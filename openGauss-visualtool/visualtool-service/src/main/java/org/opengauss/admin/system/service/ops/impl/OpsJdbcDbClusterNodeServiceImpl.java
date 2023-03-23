@@ -15,6 +15,7 @@ import org.opengauss.admin.common.core.domain.model.ops.jdbc.JdbcMonitorVO;
 import org.opengauss.admin.common.core.handler.ops.cache.TaskManager;
 import org.opengauss.admin.common.core.handler.ops.cache.WsConnectorManager;
 import org.opengauss.admin.common.enums.ops.ClusterRoleEnum;
+import org.opengauss.admin.common.enums.ops.DbTypeEnum;
 import org.opengauss.admin.common.exception.ops.OpsException;
 import org.opengauss.admin.common.utils.ops.JdbcUtil;
 import org.opengauss.admin.common.utils.ops.WsUtil;
@@ -88,16 +89,10 @@ public class OpsJdbcDbClusterNodeServiceImpl extends ServiceImpl<OpsJdbcDbCluste
     }
 
     @Override
-    public Set<String> fuzzyQueryClusterIds(String name) {
+    public Set<String> fuzzyQueryClusterIdsByIp(String name) {
         Set<String> res = new HashSet<>();
         LambdaQueryWrapper<OpsJdbcDbClusterNodeEntity> queryWrapper = Wrappers.lambdaQuery(OpsJdbcDbClusterNodeEntity.class)
-                .like(OpsJdbcDbClusterNodeEntity::getName, name)
-                .or()
                 .like(OpsJdbcDbClusterNodeEntity::getIp, name)
-                .or()
-                .like(OpsJdbcDbClusterNodeEntity::getPort, name)
-                .or()
-                .like(OpsJdbcDbClusterNodeEntity::getUrl, name)
                 .select(OpsJdbcDbClusterNodeEntity::getClusterId);
 
         List<OpsJdbcDbClusterNodeEntity> list = list(queryWrapper);
@@ -235,6 +230,14 @@ public class OpsJdbcDbClusterNodeServiceImpl extends ServiceImpl<OpsJdbcDbCluste
             return res;
         }
 
+        String clusterId = clusterNodeEntity.getClusterId();
+        OpsJdbcDbClusterEntity clusterEntity = opsJdbcDbClusterService.getById(clusterId);
+        if (Objects.isNull(clusterEntity)){
+            res.put("msg","Cluster information not found");
+            res.put("res",false);
+            return res;
+        }
+
         Connection connection = null;
         try {
             connection = JdbcUtil.getConnection(clusterNodeEntity.getUrl(), clusterNodeEntity.getUsername(), clusterNodeEntity.getPassword());
@@ -255,7 +258,7 @@ public class OpsJdbcDbClusterNodeServiceImpl extends ServiceImpl<OpsJdbcDbCluste
         Connection finalConnection = connection;
         Future<?> future = threadPoolTaskExecutor.submit(() -> {
             try {
-                doMonitor(wsSession, finalConnection);
+                doMonitor(wsSession, finalConnection, clusterEntity.getDbType());
             }finally {
                 if (Objects.nonNull(finalConnection)){
                     try {
@@ -272,72 +275,86 @@ public class OpsJdbcDbClusterNodeServiceImpl extends ServiceImpl<OpsJdbcDbCluste
         return res;
     }
 
-    private void doMonitor(WsSession wsSession, Connection connection) {
+    private void doMonitor(WsSession wsSession, Connection connection, DbTypeEnum dbType) {
         while (wsSession.getSession().isOpen()){
             JdbcMonitorVO jdbcMonitorVO = new JdbcMonitorVO();
-            CountDownLatch countDownLatch = new CountDownLatch(6);
 
-            threadPoolTaskExecutor.submit(()->{
-                try {
-                    jdbcMonitorVO.setRole(role(connection));
-                }finally {
-                    countDownLatch.countDown();
-                }
-            });
-
-            threadPoolTaskExecutor.submit(()->{
-                try {
-                    jdbcMonitorVO.setConnNum(connNum(connection));
-                }finally {
-                    countDownLatch.countDown();
-                }
-            });
-
-            threadPoolTaskExecutor.submit(()->{
-                try {
-                    jdbcMonitorVO.setQps(qps(connection));
-                }finally {
-                    countDownLatch.countDown();
-                }
-            });
-
-            threadPoolTaskExecutor.submit(()->{
-                try {
-                    jdbcMonitorVO.setTps(tps(connection));
-                }finally {
-                    countDownLatch.countDown();
-                }
-            });
-
-            threadPoolTaskExecutor.submit(()->{
-                try {
-                    jdbcMonitorVO.setMemoryUsed(memoryUsed(connection));
-                }finally {
-                    countDownLatch.countDown();
-                }
-            });
-
-            threadPoolTaskExecutor.submit(()->{
-                try {
-                    jdbcMonitorVO.setTableSpaceUsed(tableSpaceUsed(connection));
-                }finally {
-                    countDownLatch.countDown();
-                }
-            });
-
-            try {
-                countDownLatch.await();
-            } catch (InterruptedException e) {
-                log.error("waiting for thread to be interrupted", e);
-                throw new OpsException("monitor error");
+            if (dbType == DbTypeEnum.MYSQL){
+                doMonitorMysql(connection,jdbcMonitorVO);
+            }else if (dbType == DbTypeEnum.OPENGAUSS){
+                doMonitorOpenGauss(connection,jdbcMonitorVO);
             }
 
             wsUtil.sendText(wsSession, JSON.toJSONString(jdbcMonitorVO));
+
             try {
                 TimeUnit.SECONDS.sleep(5L);
             } catch (InterruptedException e) {
                 throw new OpsException("thread is interrupted");
             }
+        }
+    }
+
+    private void doMonitorOpenGauss(Connection connection, JdbcMonitorVO jdbcMonitorVO) {
+
+    }
+
+    private void doMonitorMysql(Connection connection, JdbcMonitorVO jdbcMonitorVO) {
+        CountDownLatch countDownLatch = new CountDownLatch(6);
+
+        threadPoolTaskExecutor.submit(()->{
+            try {
+                jdbcMonitorVO.setRole(role(connection));
+            }finally {
+                countDownLatch.countDown();
+            }
+        });
+
+        threadPoolTaskExecutor.submit(()->{
+            try {
+                jdbcMonitorVO.setConnNum(connNum(connection));
+            }finally {
+                countDownLatch.countDown();
+            }
+        });
+
+        threadPoolTaskExecutor.submit(()->{
+            try {
+                jdbcMonitorVO.setQps(qps(connection));
+            }finally {
+                countDownLatch.countDown();
+            }
+        });
+
+        threadPoolTaskExecutor.submit(()->{
+            try {
+                jdbcMonitorVO.setTps(tps(connection));
+            }finally {
+                countDownLatch.countDown();
+            }
+        });
+
+        threadPoolTaskExecutor.submit(()->{
+            try {
+                jdbcMonitorVO.setMemoryUsed(memoryUsed(connection));
+            }finally {
+                countDownLatch.countDown();
+            }
+        });
+
+        threadPoolTaskExecutor.submit(()->{
+            try {
+                jdbcMonitorVO.setTableSpaceUsed(tableSpaceUsed(connection));
+            }finally {
+                countDownLatch.countDown();
+            }
+        });
+
+        try {
+            countDownLatch.await();
+        } catch (InterruptedException e) {
+            log.error("waiting for thread to be interrupted", e);
+            throw new OpsException("monitor error");
         }
     }
 

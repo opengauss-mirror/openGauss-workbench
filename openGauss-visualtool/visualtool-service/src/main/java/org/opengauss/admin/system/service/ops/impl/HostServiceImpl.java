@@ -304,7 +304,7 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
                 .in(OpsHostEntity::getPublicIp, ipSet);
 
         List<OpsHostEntity> hostList = list(queryWrapper);
-        return hostList.stream().collect(Collectors.toMap(OpsHostEntity::getPublicIp, OpsHostEntity::getOs));
+        return hostList.stream().filter(host->StrUtil.isNotEmpty(host.getOs())).collect(Collectors.toMap(OpsHostEntity::getPublicIp, OpsHostEntity::getOs));
     }
 
     @Override

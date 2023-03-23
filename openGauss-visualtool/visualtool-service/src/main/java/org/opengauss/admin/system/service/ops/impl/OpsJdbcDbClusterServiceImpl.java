@@ -51,26 +51,60 @@ public class OpsJdbcDbClusterServiceImpl extends ServiceImpl<OpsJdbcDbClusterMap
     }
 
     @Override
-    public Page<JdbcDbClusterVO> page(String name, Page page) {
+    public Page<JdbcDbClusterVO> page(String name, String ip, String type, Page page) {
         Set<String> clusterIdConditions = new HashSet<>();
+
+        Set<String> nameSet = null;
+        Set<String> ipSet = null;
+        Set<String> typeSet = null;
+        boolean condition = false;
         if (StrUtil.isNotEmpty(name)) {
             LambdaQueryWrapper<OpsJdbcDbClusterEntity> queryWrapper = Wrappers.lambdaQuery(OpsJdbcDbClusterEntity.class)
                     .like(OpsJdbcDbClusterEntity::getName, name)
-                    .or()
-                    .like(OpsJdbcDbClusterEntity::getRemark, name)
                     .select(OpsJdbcDbClusterEntity::getClusterId);
 
             List<OpsJdbcDbClusterEntity> clusterEntityList = list(queryWrapper);
             if (CollUtil.isNotEmpty(clusterEntityList)) {
-                clusterIdConditions.addAll(clusterEntityList.stream().map(OpsJdbcDbClusterEntity::getClusterId).collect(Collectors.toSet()));
+                nameSet = (clusterEntityList.stream().map(OpsJdbcDbClusterEntity::getClusterId).collect(Collectors.toSet()));
             }
 
-            Set<String> fuzzyQueryClusterIds = opsJdbcDbClusterNodeService.fuzzyQueryClusterIds(name);
-            clusterIdConditions.addAll(fuzzyQueryClusterIds);
-
-            if (CollUtil.isEmpty(clusterIdConditions)) {
+            if (CollUtil.isEmpty(nameSet)){
                 return Page.of(0, 0);
             }
+        }
+
+        if (StrUtil.isNotEmpty(ip)){
+            condition = true;
+            Set<String> ipFuzzyQueryClusterIds = opsJdbcDbClusterNodeService.fuzzyQueryClusterIdsByIp(ip);
+
+            ipSet = (ipFuzzyQueryClusterIds);
+
+            if (CollUtil.isEmpty(ipSet)){
+                return Page.of(0, 0);
+            }
+        }
+
+        if (StrUtil.isNotEmpty(type)){
+            condition = true;
+            LambdaQueryWrapper<OpsJdbcDbClusterEntity> queryWrapper = Wrappers.lambdaQuery(OpsJdbcDbClusterEntity.class)
+                    .like(OpsJdbcDbClusterEntity::getDbType, type.toUpperCase())
+                    .select(OpsJdbcDbClusterEntity::getClusterId);
+
+            List<OpsJdbcDbClusterEntity> clusterEntityList = list(queryWrapper);
+            if (CollUtil.isNotEmpty(clusterEntityList)) {
+                typeSet = (clusterEntityList.stream().map(OpsJdbcDbClusterEntity::getClusterId).collect(Collectors.toSet()));
+            }
+
+            if (CollUtil.isEmpty(typeSet)){
+                return Page.of(0, 0);
+            }
+        }
+
+        Set<String> retainAll = retainAll(nameSet,ipSet,typeSet);
+        clusterIdConditions.addAll(retainAll);
+
+        if (condition && CollUtil.isEmpty(clusterIdConditions)){
+            return Page.of(0, 0);
         }
 
         LambdaQueryWrapper<OpsJdbcDbClusterEntity> queryWrapper = Wrappers.lambdaQuery(OpsJdbcDbClusterEntity.class)
@@ -83,6 +117,45 @@ public class OpsJdbcDbClusterServiceImpl extends ServiceImpl<OpsJdbcDbClusterMap
         resPage.setTotal(searchPage.getTotal());
         resPage.setRecords(buildPageRecords(searchPage.getRecords()));
         return resPage;
+    }
+
+    private Set<String> retainAll(Set<String> nameSet, Set<String> ipSet, Set<String> typeSet) {
+        if (nameSet!=null){
+            if (ipSet!=null){
+                nameSet.retainAll(ipSet);
+            }
+
+            if (typeSet!=null){
+                nameSet.retainAll(typeSet);
+            }
+
+            return nameSet;
+        }
+
+        if (ipSet!=null){
+            if (nameSet!=null){
+                ipSet.retainAll(nameSet);
+            }
+            if (typeSet!=null){
+                ipSet.retainAll(typeSet);
+            }
+
+            return ipSet;
+        }
+
+        if (typeSet!=null){
+            if (nameSet!=null){
+                typeSet.retainAll(nameSet);
+            }
+
+            if (ipSet!=null){
+                typeSet.retainAll(ipSet);
+            }
+
+            return typeSet;
+        }
+
+        return Collections.emptySet();
     }
 
     @Override

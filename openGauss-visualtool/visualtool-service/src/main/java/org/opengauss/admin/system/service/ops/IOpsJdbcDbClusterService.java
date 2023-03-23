@@ -17,7 +17,7 @@ import java.util.List;
 public interface IOpsJdbcDbClusterService extends IService<OpsJdbcDbClusterEntity> {
     void add(JdbcDbClusterInputDto clusterInput);
 
-    Page<JdbcDbClusterVO> page(String name, Page page);
+    Page<JdbcDbClusterVO> page(String name, String ip, String type, Page page);
 
     void del(String clusterId);
 

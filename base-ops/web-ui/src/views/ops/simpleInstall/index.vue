@@ -104,7 +104,7 @@
 <script lang="ts" setup>
 import { KeyValue } from '@/types/global'
 import { onBeforeUnmount, onMounted, reactive, ref, computed } from 'vue'
-import { hostListAll, hostUserListWithoutRoot, quickInstall, openSSH, packageListAll, portUsed, pathEmpty, hostPingById } from '@/api/ops'
+import { hostListAll, hostUserListWithoutRoot, quickInstall, openSSH, packageListAll, portUsed, pathEmpty, hostPingById, getSysUploadPath } from '@/api/ops'
 import { Message } from '@arco-design/web-vue'
 import {
   ClusterRoleEnum,
@@ -485,13 +485,15 @@ const getInstallPackageList = () => {
     }
     packageListAll(param).then((res: any) => {
       if (Number(res.code) === 200) {
-        res.data.forEach((item: KeyValue) => {
-          data.installObj[item.packageId] = item
-        })
         data.installPackageList = []
-        data.installPackageList = res.data
+        res.data.forEach((item: KeyValue) => {
+          if (item.packageUrl) {
+            data.installObj[item.packageId] = item
+            data.installPackageList.push(item)
+          }
+        })
         if (res.data.length) {
-          data.form.install = res.data[0]
+          data.form.install = data.installPackageList[0]
         } else {
           data.form.install = null
         }

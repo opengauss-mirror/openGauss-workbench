@@ -1,6 +1,6 @@
 <template>
   <div class="jdbc-instance-table">
-    <a-table :data="data.nodeList" :columns="columns" :show-header="false" :pagination="false">
+    <a-table :data="data.nodeList" :columns="columns" :show-header="false" :pagination="false" :bordered="false">
       <template #baseInfo="{ record }">
         <div class="flex-col-start mr">
           <!-- <a-tag class="mb-s" color="green" bordered v-if="record.os">{{ record.os }}</a-tag>
@@ -15,7 +15,7 @@
             </a-button>
           </div>
           <div class="flex-row mb-s">
-            <div class="mr-s" style="max-width: 140px;">{{ $t('database.JdbcNodeTable.else1') }}: {{ record.ip }}</div>
+            <div class="mr-s" style="max-width: 160px;">{{ $t('database.JdbcNodeTable.else1') }}: {{ record.ip }}</div>
             <icon-code-square :size="25" style="cursor: pointer;" @click="showTerminal(record.ip)" />
           </div>
           <div>{{ $t('database.JdbcNodeTable.else2') }}: {{ record.port }}</div>
@@ -23,26 +23,29 @@
       </template>
       <template #status="{ record }">
         <div class="flex-row mr">
-          <div class="node-role mr-s">{{ getNodeRole(record.role) }}</div>
-          <div :class="'node-state-c ' + getNodeStateColor(record.state)"></div>
+          <div class="node-role mr-s">
+            <div class="flex-row">
+              <div :class="'node-state-c mr-s ' + getNodeStateColor(record.state)"></div>
+              <div>{{ getNodeRole(record.role) }}</div>
+            </div>
+          </div>
         </div>
       </template>
-      <template #connectNum="{ record }">
-        <div class="flex-col mr">
-          <div class="monitor-data">{{ record.connNum ? record.connNum : '--' }}</div>
-          <div>{{ $t('database.JdbcNodeTable.5oxhv6qcnuk0') }}</div>
-        </div>
-      </template>
-      <template #qps="{ record }">
-        <div class="flex-col mr">
-          <div class="monitor-data">{{ record.qps ? record.qps : '--' }}</div>
-          <div>qps</div>
-        </div>
-      </template>
-      <template #tps="{ record }">
-        <div class="flex-col mr">
-          <div class="monitor-data">{{ record.tps ? record.tps : '--' }}</div>
-          <div>tps</div>
+      <template #connectInfo="{ record }">
+        <div class="flex-col-start">
+          <div class="flex-row">
+            <div class="mr-s" style="width: 50px;text-align: right;">QPS:</div>
+            <div class="monitor-data">{{ record.qps ? record.qps : '--' }}</div>
+          </div>
+          <div class="flex-row">
+            <div class="mr-s" style="width: 50px;text-align: right;">TPS:</div>
+            <div class="monitor-data">{{ record.tps ? record.tps : '--' }}</div>
+          </div>
+          <div class="flex-row">
+            <div class="mr-s" style="width: 50px;text-align: right;">{{ $t('database.JdbcNodeTable.5oxhv6qcnuk0') }}:
+            </div>
+            <div class="monitor-data">{{ record.connNum ? record.connNum : '--' }}</div>
+          </div>
         </div>
       </template>
       <template #tableSpaceUsed="{ record }">
@@ -63,7 +66,7 @@
   </div>
 </template>
 <script setup lang="ts">
-import { defineProps, PropType, onMounted, reactive, ref, computed, watch } from 'vue'
+import { defineProps, PropType, onMounted, onUnmounted, reactive, ref, computed, watch } from 'vue'
 import { KeyValue } from '@/types/global'
 import Socket from '@/utils/websocket'
 import { jdbcNodeMonitor } from '@/api/ops'
@@ -77,13 +80,11 @@ const data = reactive<KeyValue>({
 })
 
 const columns = computed(() => [
-  { slotName: 'baseInfo', width: 370 },
-  { slotName: 'status', width: 290 },
-  { slotName: 'connectNum', width: 180 },
-  { slotName: 'qps', width: 180 },
-  { slotName: 'tps', width: 180 },
-  { slotName: 'tableSpaceUsed', width: 180 },
-  { slotName: 'memoryUsed', width: 180 }
+  { slotName: 'baseInfo', width: 350 },
+  { slotName: 'status', width: 210 },
+  { slotName: 'connectInfo', width: 200 },
+  { slotName: 'tableSpaceUsed', width: 310 },
+  { slotName: 'memoryUsed', width: 320 }
 ])
 
 const props = defineProps({
@@ -96,6 +97,16 @@ const props = defineProps({
 onMounted(() => {
   data.nodeList = JSON.parse(JSON.stringify(props.nodes))
   openMonitor()
+})
+
+onUnmounted(() => {
+  if (data.socketArr.length) {
+    data.socketArr.forEach((item: Socket<any, any>) => {
+      if (item) {
+        item.destroy()
+      }
+    })
+  }
 })
 
 const emits = defineEmits(['validRes'])
@@ -180,12 +191,15 @@ const openNodeMonitor = (nodeData: KeyValue, index: number) => {
   })
   websocket.onmessage((messageData: any) => {
     const eventData = JSON.parse(messageData)
-    data.nodeList[index].tableSpaceUsed = Number(eventData.tableSpaceUsed / 1024 / 1024).toFixed(2)
-    data.nodeList[index].memoryUsed = Number(eventData.memoryUsed / 1024 / 1024 / 1024).toFixed(2)
-    data.nodeList[index].connNum = eventData.connNum
-    data.nodeList[index].qps = eventData.qps
-    data.nodeList[index].tps = eventData.tps
-    data.nodeList[index].role = eventData.role
+    console.log('show jdbc ws data', eventData)
+    if (Object.keys(eventData).length) {
+      data.nodeList[index].tableSpaceUsed = Number(eventData.tableSpaceUsed / 1024 / 1024).toFixed(2)
+      data.nodeList[index].memoryUsed = Number(eventData.memoryUsed / 1024 / 1024 / 1024).toFixed(2)
+      data.nodeList[index].connNum = eventData.connNum
+      data.nodeList[index].qps = eventData.qps
+      data.nodeList[index].tps = eventData.tps
+      data.nodeList[index].role = eventData.role
+    }
   })
 }
 
@@ -254,6 +268,5 @@ const handleFinish = () => {
 
 .monitor-data {
   font-size: 22px;
-  margin-bottom: 10px;
 }
 </style>

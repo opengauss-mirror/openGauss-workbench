@@ -23,7 +23,11 @@ public class JdbcDbClusterFacade {
     }
 
     public Page<JdbcDbClusterVO> page(String name, Page page) {
-        return opsJdbcDbClusterService.page(name, page);
+        return opsJdbcDbClusterService.page(name, null, null, page);
+    }
+
+    public Page<JdbcDbClusterVO> page(String name,String ip,String type, Page page) {
+        return opsJdbcDbClusterService.page(name, ip, type, page);
     }
 
     public List<JdbcDbClusterVO> listAll() {

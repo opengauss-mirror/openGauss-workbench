@@ -278,6 +278,12 @@
             "no": "否",
             "5mpi1bru4c00": "操作"
         },
+        "BatchLabelDlg": {
+            "5pbjt280spg0": "已选择主机",
+            "5pbjt280xuo0": "个",
+            "5pbjt280yik0": "标签",
+            "5pbjt280z040": "标签批量设置"
+        },
         "AddAz": {
             "azName": "AZ名称",
             "5mpib0ipo0g0": "取消",
@@ -645,6 +651,9 @@
             "baseInfo": "基本信息",
             "diskInfo": "硬件信息",
             "detail": "详情",
+            "labelBatch": "标签设置",
+            "labelManage": "标签管理",
+            "else1": "请至少选一个主机信息",
             "5mphf11rr080": "创建",
             "5mphf11syw80": "测试连通性",
             "5mphf11szdk0": "搜索",
@@ -662,6 +671,19 @@
             "5mphf11tfr80": "未检测",
             "5mphf11tfx80": "不可用",
             "5mphf11tg780": "可用"
+        }
+    },
+    "label": {
+        "LabelManageDlg": {
+            "5pbjv7b0vrw0": "创建",
+            "5pbjv7b0wu80": "标签名称",
+            "5pbjv7b0x3w0": "请输入标签名称",
+            "5pbjv7b0xak0": "编辑",
+            "5pbjv7b0xgo0": "关联主机数",
+            "5pbjv7b0y0w0": "操作",
+            "5pbjv7b0yd00": "创建标签",
+            "5pbjv7b0yk40": "编辑标签",
+            "5pbjv7b0yso0": "标签管理"
         }
     },
     "az": {
@@ -727,6 +749,10 @@
         "index": {
             "else1": "集群名称",
             "else2": "确认上传",
+            "elseIp": "IP地址",
+            "elseIpPlaceholder": "请输入IP地址进行查询",
+            "else3": "类型",
+            "else3Placeholder": "请选择类型进行查询",
             "5oxhr0qz15w0": "创建",
             "5oxhr0qz2bs0": "下载模板",
             "5oxhr0qz2s00": "请输入集群名称进行查询",
@@ -770,7 +796,7 @@
             "else2": "端口",
             "else3": "节点",
             "else4": "未知",
-            "else5": "系统",
+            "else5": "操作系统",
             "5oxhv6qcm6w0": "去检测",
             "5oxhv6qcnak0": "主",
             "5oxhv6qcnnk0": "备",
