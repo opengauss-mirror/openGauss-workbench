@@ -5,17 +5,22 @@ import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import org.apache.ibatis.annotations.Mapper;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import com.baomidou.dynamic.datasource.annotation.DS;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.nctigba.observability.sql.config.DataSourceIniter;
 import com.nctigba.observability.sql.model.diagnosis.result.TaskResult;
 
+import lombok.RequiredArgsConstructor;
+
 @Service
+@RequiredArgsConstructor
 public class DiagnosisTaskResultMapper {
-	@Autowired
-	private DiagnosisTaskResultBaseMapper baseMapper;
+	private final DiagnosisTaskResultBaseMapper baseMapper;
 	private static final Queue<TaskResult> updates = new LinkedBlockingQueue<TaskResult>();
 
 	@Scheduled(fixedDelay = 5, timeUnit = TimeUnit.SECONDS)
@@ -33,5 +38,10 @@ public class DiagnosisTaskResultMapper {
 
 	public void insert(TaskResult t) {
 		updates.add(t);
+	}
+
+	@Mapper
+	@DS(DataSourceIniter.diagnosisSource)
+	public interface DiagnosisTaskResultBaseMapper extends BaseMapper<TaskResult> {
 	}
 }

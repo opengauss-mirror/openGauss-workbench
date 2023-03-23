@@ -200,6 +200,14 @@ watch(
 onMounted(() => {
     typeId.value = props.nodesType
     requestData()
+    const wujie = window.$wujie;
+    if (wujie) {
+        wujie?.bus.$on('opengauss-locale-change', (val: string) => {
+            nextTick(() => {
+                requestData()
+            });
+        });
+    }
 })
 
 const emit = defineEmits(['gotoLarge'])
