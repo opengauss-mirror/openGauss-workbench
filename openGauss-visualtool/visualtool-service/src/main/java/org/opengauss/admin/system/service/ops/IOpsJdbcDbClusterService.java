@@ -28,4 +28,6 @@ public interface IOpsJdbcDbClusterService extends IService<OpsJdbcDbClusterEntit
     void importCluster(MultipartFile file);
 
     List<JdbcDbClusterVO> listAll();
+
+    List<JdbcDbClusterVO> listByType(String type);
 }

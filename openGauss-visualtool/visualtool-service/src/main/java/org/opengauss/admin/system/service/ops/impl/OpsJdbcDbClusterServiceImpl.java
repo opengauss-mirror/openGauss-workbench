@@ -335,6 +335,19 @@ public class OpsJdbcDbClusterServiceImpl extends ServiceImpl<OpsJdbcDbClusterMap
         return buildPageRecords(dbClusterList);
     }
 
+    @Override
+    public List<JdbcDbClusterVO> listByType(String type) {
+        if (StrUtil.isEmpty(type)){
+            throw new OpsException("type parameter does not exist");
+        }
+
+        LambdaQueryWrapper<OpsJdbcDbClusterEntity> queryWrapper = Wrappers.lambdaQuery(OpsJdbcDbClusterEntity.class)
+                .eq(OpsJdbcDbClusterEntity::getDbType, type.toUpperCase());
+
+        List<OpsJdbcDbClusterEntity> dbClusterList = list(queryWrapper);
+        return buildPageRecords(dbClusterList);
+    }
+
     @Data
     @AllArgsConstructor
     class Cluster {
