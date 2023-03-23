@@ -18,10 +18,6 @@ public class UploadInfo {
     @NotEmpty(message = "file path cannot be empty")
     private String realPath;
     /**
-     * real file name
-     */
-    private String realName;
-    /**
      * file name for UI
      */
     private String name;
@@ -34,7 +30,6 @@ public class UploadInfo {
     public UploadInfoVO toVO() {
         UploadInfoVO vo = new UploadInfoVO();
         vo.setName(name);
-        vo.setRealName(realName);
         vo.setRealPath(realPath);
         return vo;
     }

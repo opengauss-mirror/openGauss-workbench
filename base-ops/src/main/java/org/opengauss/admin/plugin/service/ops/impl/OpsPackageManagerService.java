@@ -176,6 +176,11 @@ public class OpsPackageManagerService extends ServiceImpl<OpsPackageManagerMappe
         return entity.getUploadPath();
     }
 
+    @Override
+    public boolean checkUploadPath(String path) {
+        return !sysSettingFacade.checkUploadPath(path);
+    }
+
     private String getLitePackageCpuArch(String installPackagePath) {
         if (installPackagePath.contains("aarch64")) {
             return "aarch64";
@@ -369,9 +374,7 @@ public class OpsPackageManagerService extends ServiceImpl<OpsPackageManagerMappe
                 throw new OpsException(errMsg);
             }
         }
-
-        String fileRealName = String.join("-", UUID.randomUUID().toString(), file.getOriginalFilename());
-        String fileRealPath = Path.of(entity.getUploadPath(), fileRealName).toString();
+        String fileRealPath = Path.of(entity.getUploadPath(), file.getOriginalFilename()).toString();
         try {
             file.transferTo(new File(fileRealPath));
             UploadInfo info = pkg.getPackagePath();
@@ -379,7 +382,6 @@ public class OpsPackageManagerService extends ServiceImpl<OpsPackageManagerMappe
                 info = new UploadInfo();
             }
             info.setName(file.getOriginalFilename());
-            info.setRealName(fileRealName);
             info.setRealPath(fileRealPath);
             pkg.setPackagePath(info);
         } catch (Exception ex) {

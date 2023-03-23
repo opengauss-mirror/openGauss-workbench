@@ -73,6 +73,16 @@ const OPS: AppRouteRecordRaw = {
         requiresAuth: true,
         roles: ['*']
       }
+    },
+    {
+      path: '/ops/olk',
+      name: 'Olk',
+      component: () => import('@/views/ops/resource/openLooKeng/index.vue'),
+      meta: {
+        title: 'OpenLooKeng管理',
+        requiresAuth: true,
+        roles: ['*']
+      }
     }
   ]
 }

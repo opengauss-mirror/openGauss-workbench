@@ -34,25 +34,25 @@ public class WsUtil {
                     try {
                         session.getBasicRemote().sendText(message);
                     } catch (IOException e) {
-                        log.error("Failed to send a message：", e);
+                        log.error("Failed to send a message to {}, error: {}", wsSession.getBusinessId(), e);
                     }
                 } else {
-                    log.error("Connection closed");
+                    log.error("Connection {} closed", wsSession.getBusinessId());
                 }
             });
         }
     }
 
     public void close(WsSession wsSession) {
-        if (Objects.nonNull(wsSession)){
+        if (Objects.nonNull(wsSession)) {
             wsConnectorManager.removeByVal(wsSession);
             Session session = wsSession.getSession();
 
-            if (Objects.nonNull(session)){
+            if (Objects.nonNull(session)) {
                 try {
                     session.close();
                 } catch (IOException e) {
-                    log.error("close websocket session error : " ,e);
+                    log.error("close websocket session {} error : {}", e, wsSession.getBusinessId());
                 }
             }
         }

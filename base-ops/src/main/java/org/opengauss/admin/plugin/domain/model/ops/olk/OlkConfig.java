@@ -1,8 +1,11 @@
 package org.opengauss.admin.plugin.domain.model.ops.olk;
 
 import lombok.Data;
+import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
+import org.opengauss.admin.plugin.domain.entity.ops.OpsOlkEntity;
 import org.opengauss.admin.plugin.domain.model.ops.olk.dadReq.DadReqPath;
 import org.opengauss.admin.plugin.domain.model.ops.olk.dadReq.OlkParamDto;
+import org.springframework.beans.BeanUtils;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -38,11 +41,17 @@ public class OlkConfig {
     // sharding datasource config
     private List<ShardingDatasourceConfig> dsConfig;
     private String tableName;
-    private String column;
+    private String columns;
     private String ruleYaml;
 
     public String getDadLogFileName () {
         // return Path.of(dadInstallPath, DadReqPath.LOG_FILE_NAME + id).toString();
         return Path.of(dadInstallPath, DadReqPath.OUTPUT_LOG).toString().replace("\\", "/");
+    }
+
+    public OpsOlkEntity toEntity () {
+        OpsOlkEntity entity = new OpsOlkEntity();
+        BeanUtils.copyProperties(this, entity);
+        return entity;
     }
 }

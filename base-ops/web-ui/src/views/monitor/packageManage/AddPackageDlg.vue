@@ -128,7 +128,11 @@ const handleBeforeOk = () => {
         if (key === 'packagePath') {
           params.append(key, JSON.stringify(data.formData[key]))
         } else {
-          params.append(key, data.formData[key])
+          if (data.formData[key]) {
+            params.append(key, data.formData[key])
+          } else {
+            params.append(key, '')
+          }
         }
       })
       if (data.fileList.length > 0) {
