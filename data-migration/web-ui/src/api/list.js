@@ -19,7 +19,3 @@ export function deleteTask (ids) {
 export function userList () {
   return axios.get('/plugins/data-migration/migration/list/createUsers')
 }
-
-export function downloadEnvLog (id) {
-  return axios.get(`/plugins/data-migration/migration/log/downloadEnv/${id}`)
-}

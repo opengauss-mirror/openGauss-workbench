@@ -43,7 +43,7 @@
         </a-col>
       </a-row>
       <a-form-item label="数据库类型" validate-trigger="change">
-        <a-select class="select-w" v-model="data.form.dbType" placeholder="请选择数据库类型">
+        <a-select class="select-w" v-model="data.form.dbType" disabled placeholder="请选择数据库类型">
           <a-option v-for="item in data.dbTypes" :key="item.value" :value="item.value">{{
             item.label
           }}</a-option>
@@ -60,7 +60,7 @@
           {{ item.ip.trim() ? item.ip : '实例' + item.tabName }}
         </template>
         <div class="jdbc-instance-c">
-          <jdbc-instance :form-data="item" :host-list="data.hostList" :ref="(el) => setRefMap(el, item.id)"></jdbc-instance>
+          <jdbc-instance :form-data="item" :host-list="data.hostList" :jdbc-type="data.form.dbType" :ref="(el) => setRefMap(el, item.id)"></jdbc-instance>
         </div>
       </a-tab-pane>
     </a-tabs>
@@ -83,14 +83,15 @@ const data = reactive({
     clusterId: '',
     name: '',
     isCustomName: false,
-    dbType: 'mysql',
+    dbType: 'MYSQL',
     nodes: [],
     status: -1
   },
   hostList: [],
   activeTab: '',
   dbTypes: [
-    { label: 'MYSQL', value: 'mysql' }
+    { label: 'mySql', value: 'MYSQL' },
+    { label: 'openGauss', value: 'OPENGAUSS' }
   ]
 })
 
@@ -241,12 +242,12 @@ const submit = () => {
   })
 }
 const close = () => {
-  data.show = false
   nextTick(() => {
     formRef.value?.clearValidate()
     formRef.value?.resetFields()
+    delRefObj()
   })
-  delRefObj()
+  data.show = false
 }
 
 const handleTestHost = () => {
@@ -301,7 +302,7 @@ const handleAdd = () => {
     url: '',
     urlSuffix: '',
     ip: '',
-    port: 3306,
+    port: data.form.dbType === 'MYSQL' ? 3306 : 5432,
     username: '',
     password: '',
     props: [{
@@ -327,7 +328,7 @@ const handleDelete = (val) => {
   })
 }
 
-const open = () => {
+const open = (dbType) => {
   data.show = true
   data.loading = false
   data.testLoading = false
@@ -336,7 +337,7 @@ const open = () => {
   Object.assign(data.form, {
     clusterId: '',
     name: '',
-    dbType: 'mysql',
+    dbType,
     nodes: [],
     status: -1
   })

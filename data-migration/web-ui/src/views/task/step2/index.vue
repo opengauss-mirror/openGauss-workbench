@@ -2,34 +2,33 @@
   <div class="step2-container">
     <div class="warn-con">
       <a-alert>
-        提示：每个迁移过程都需要有参数配置，DataKit已经为每一个迁移过程（即子任务）配置了默认参数。
+        提示：每个迁移过程都需要有参数配置，DataKit已经为每一个迁移过程（即子任务）配置了默认参数。您也可以在下表中修改某个迁移过程（即子任务）的参数配置，来确保迁移过程顺利执行。
         <template #action>
           <a-button size="small" type="primary" @click="handleParamsConfig(1)">默认参数配置(全局配置)</a-button>
         </template>
       </a-alert>
-      <a-alert style="margin-top: 10px;">提示：您也可以在下表中修改某个迁移过程（即子任务）的参数配置，来确保迁移过程顺利执行。</a-alert>
     </div>
     <div class="search-con">
       <a-form :model="form" layout="inline">
-        <a-form-item field="sourcedbKey">
+        <a-form-item field="sourcedbKey" style="margin-left: -17px;">
           <a-input v-model.trim="form.sourcedbKey" allow-clear placeholder="请输入源实例名/库名" style="width: 180px;" @change="getFilterData"></a-input>
         </a-form-item>
-        <a-form-item field="targetdbKey">
+        <a-form-item field="targetdbKey" style="margin-left: -17px;">
           <a-input v-model.trim="form.targetdbKey" allow-clear placeholder="请输入目的实例名/库名" style="width: 180px;" @change="getFilterData"></a-input>
         </a-form-item>
-        <a-form-item field="mode">
+        <a-form-item field="mode" style="margin-left: -17px;">
           <a-select v-model="form.mode" placeholder="请选择迁移模式" allow-clear style="width: 160px;" @change="getFilterData">
             <a-option :value="1">离线模式</a-option>
             <a-option :value="2">在线模式</a-option>
           </a-select>
         </a-form-item>
-        <a-form-item field="configType">
+        <a-form-item field="configType" style="margin-left: -17px;">
           <a-select v-model="form.configType" placeholder="请选择配置类型" allow-clear style="width: 160px;" @change="getFilterData">
             <a-option :value="1">默认配置</a-option>
             <a-option :value="2">个性化配置</a-option>
           </a-select>
         </a-form-item>
-        <a-form-item>
+        <a-form-item style="margin-left: -17px;">
           <a-button type="outline" @click="getFilterData">
             <template #icon>
               <icon-search />

@@ -52,7 +52,7 @@
                       <span class="time">{{ item.createTime }}</span>
                     </div>
                     <div v-if="item.statusId === 2 && globalVisible" class="table-con">
-                      <big-data-list :full-data="fullData" :sub-task-info="subTaskInfo" />
+                      <big-data-list :full-data="fullData" :sub-task-info="subTaskInfo" :record-counts="recordCounts" />
                     </div>
                     <div v-if="item.statusId === 8 && increaseVisible" class="list-con">
                       <div class="list-item-con">
