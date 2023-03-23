@@ -1,7 +1,7 @@
 package org.opengauss.admin.plugin.controller;
 
+import cn.hutool.core.date.DateUtil;
 import org.opengauss.admin.common.core.domain.AjaxResult;
-import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.core.domain.model.ops.OpsClusterNodeVO;
 import org.opengauss.admin.common.core.domain.model.ops.OpsClusterVO;
 import org.opengauss.admin.common.core.domain.model.ops.jdbc.JdbcDbClusterVO;
@@ -11,6 +11,10 @@ import org.opengauss.admin.plugin.service.MigrationTaskHostRefService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletResponse;
+import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -58,5 +62,30 @@ public class MigrationTaskResourceController extends BaseController {
         return AjaxResult.success();
     }
 
+    @GetMapping("/installPortal/{hostId}")
+    public AjaxResult installPortal(@PathVariable String hostId) {
+        migrationTaskHostRefService.installPortal(hostId, false);
+        return AjaxResult.success();
+    }
+
+    /**
+     * Download taskEnv log file
+     */
+    @GetMapping("/log/downloadEnv/{hostId}")
+    public void downloadEnvLog(@PathVariable String hostId, HttpServletResponse response) throws Exception {
+        String logContent = migrationTaskHostRefService.getPortalInstallLog(hostId);
+        byte[] bytes = logContent.getBytes(StandardCharsets.UTF_8);
+        String logName = "installError.log";
+        String date = DateUtil.format(new Date(), "yyyyMMdd");
+        String filename = "log_" + hostId + "_" + date + "_" + logName;
+        response.reset();
+        response.setContentType("application/octet-stream");
+        response.setCharacterEncoding("utf-8");
+        response.setContentLength(bytes.length);
+        response.setHeader("Content-Disposition", "attachment;filename=" + filename);
+        OutputStream os = response.getOutputStream();
+        os.write(bytes);
+        os.flush();
+    }
 
 }

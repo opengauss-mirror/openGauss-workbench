@@ -22,8 +22,8 @@ public class SysPluginLogoServiceImpl extends ServiceImpl<SysPluginLogoMapper, S
         if (one == null) {
             one = new SysPluginLogo();
             one.setPluginId(pluginId);
-            one.setLogoPath(logoPath);
         }
+        one.setLogoPath(logoPath);
         this.saveOrUpdate(one);
     }
 

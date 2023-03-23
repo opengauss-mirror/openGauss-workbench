@@ -6,6 +6,7 @@ import org.opengauss.admin.common.annotation.Log;
 import org.opengauss.admin.common.core.domain.AjaxResult;
 import org.opengauss.admin.common.core.page.TableDataInfo;
 import org.opengauss.admin.common.enums.BusinessType;
+import org.opengauss.admin.common.utils.StringUtils;
 import org.opengauss.admin.plugin.base.BaseController;
 import org.opengauss.admin.plugin.domain.MainTaskEnvErrorHost;
 import org.opengauss.admin.plugin.domain.MigrationMainTask;
@@ -192,7 +193,11 @@ public class MigrationTaskController extends BaseController {
     @GetMapping("/subTask/log/download/{id}")
     public void logDownload(@PathVariable Integer id, String filePath, HttpServletResponse response) throws Exception {
         MigrationTask task = migrationTaskService.getById(id);
-        byte[] bytes = PortalHandle.getTaskLogs(task.getRunHost(), task.getRunPort(), task.getRunUser(), task.getRunPass(), filePath).getBytes(StandardCharsets.UTF_8);
+        String logContent = PortalHandle.getTaskLogs(task.getRunHost(), task.getRunPort(), task.getRunUser(), task.getRunPass(), filePath);
+        if (StringUtils.isBlank(logContent)) {
+            logContent = " ";
+        }
+        byte[] bytes = logContent.getBytes(StandardCharsets.UTF_8);
         String logName = filePath.substring(filePath.lastIndexOf("/") + 1);
         String date = DateUtil.format(new Date(), "yyyyMMdd");
         String filename = "log_" + id + "_" + date + "_" + logName;
@@ -203,27 +208,6 @@ public class MigrationTaskController extends BaseController {
         response.setContentLength(bytes.length);
         response.setHeader("Content-Disposition", "attachment;filename=" + filename);
 
-        OutputStream os = response.getOutputStream();
-        os.write(bytes);
-        os.flush();
-    }
-
-    /**
-     * Download taskEnv log file
-     */
-    @GetMapping("/log/downloadEnv/{id}")
-    public void downloadEnvLog(@PathVariable Integer id, HttpServletResponse response) throws Exception {
-        MainTaskEnvErrorHost errorHost = mainTaskEnvErrorHostService.getOneByMainTaskId(id);
-        String logPath = "~/portal/logs/portal_.log";
-        byte[] bytes = PortalHandle.getTaskLogs(errorHost.getRunHost(), errorHost.getRunPort(), errorHost.getRunUser(), errorHost.getRunPass(), logPath).getBytes(StandardCharsets.UTF_8);
-        String logName = "installError.log";
-        String date = DateUtil.format(new Date(), "yyyyMMdd");
-        String filename = "log_" + id + "_" + date + "_" + logName;
-        response.reset();
-        response.setContentType("application/octet-stream");
-        response.setCharacterEncoding("utf-8");
-        response.setContentLength(bytes.length);
-        response.setHeader("Content-Disposition", "attachment;filename=" + filename);
         OutputStream os = response.getOutputStream();
         os.write(bytes);
         os.flush();

@@ -10,6 +10,7 @@ import org.opengauss.admin.plugin.service.MigrationTaskOperateRecordService;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
+import java.util.List;
 
 /**
  * @author xielibo
@@ -46,6 +47,13 @@ public class MigrationTaskOperateRecordServiceImpl extends ServiceImpl<Migration
         query.eq(MigrationTaskOperateRecord::getTaskId, taskId).eq(MigrationTaskOperateRecord::getOperType, oerType);
         query.last(" limit 1");
         return getOne(query);
+    }
+
+    @Override
+    public void deleteByTaskIds(List<Integer> taskIds) {
+        LambdaQueryWrapper<MigrationTaskOperateRecord> query = new LambdaQueryWrapper<>();
+        query.in(MigrationTaskOperateRecord::getTaskId, taskIds);
+        this.remove(query);
     }
 
 }

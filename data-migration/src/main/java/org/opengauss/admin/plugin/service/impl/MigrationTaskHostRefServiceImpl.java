@@ -12,10 +12,14 @@ import org.opengauss.admin.common.core.domain.model.ops.OpsClusterVO;
 import org.opengauss.admin.common.core.domain.model.ops.jdbc.JdbcDbClusterInputDto;
 import org.opengauss.admin.common.core.domain.model.ops.jdbc.JdbcDbClusterNodeInputDto;
 import org.opengauss.admin.common.core.domain.model.ops.jdbc.JdbcDbClusterVO;
+import org.opengauss.admin.common.utils.StringUtils;
+import org.opengauss.admin.plugin.domain.MigrationHostPortalInstall;
 import org.opengauss.admin.plugin.domain.MigrationTask;
 import org.opengauss.admin.plugin.domain.MigrationTaskHostRef;
 import org.opengauss.admin.plugin.dto.CustomDbResource;
+import org.opengauss.admin.plugin.handler.PortalHandle;
 import org.opengauss.admin.plugin.mapper.MigrationTaskHostRefMapper;
+import org.opengauss.admin.plugin.service.MigrationHostPortalInstallHostService;
 import org.opengauss.admin.plugin.service.MigrationTaskHostRefService;
 import org.opengauss.admin.plugin.service.MigrationTaskService;
 import org.opengauss.admin.system.plugin.facade.HostFacade;
@@ -24,6 +28,8 @@ import org.opengauss.admin.system.plugin.facade.JdbcDbClusterFacade;
 import org.opengauss.admin.system.plugin.facade.OpsFacade;
 import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 
 import java.sql.*;
@@ -65,6 +71,12 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
     private MigrationTaskHostRefMapper migrationTaskHostRefMapper;
     @Autowired
     private MigrationTaskService migrationTaskService;
+    @Value("${migration.portalPkgDownloadUrl}")
+    private String portalPkgDownloadUrl;
+    @Autowired
+    private MigrationHostPortalInstallHostService migrationHostPortalInstallHostService;
+    @Autowired
+    private ThreadPoolTaskExecutor threadPoolTaskExecutor;
 
     @Override
     public void deleteByMainTaskId(Integer mainTaskId) {
@@ -101,6 +113,24 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
             Map<String, Object> itemMap = BeanUtil.beanToMap(host);
             List<MigrationTask> tasks = migrationTaskService.listRunningTaskByHostId(host.getHostId());
             itemMap.put("tasks", tasks);
+            OpsHostEntity opsHost = hostFacade.getById(host.getHostId());
+            List<OpsHostUserEntity> opsHostUserEntities = hostUserFacade.listHostUserByHostId(opsHost.getHostId());
+            if (opsHostUserEntities.size() > 0) {
+                OpsHostUserEntity notRoot = opsHostUserEntities.stream().filter(x -> !x.getUsername().equals("root")).findFirst().orElse(null);
+                if (notRoot != null) {
+                    boolean isInstallPortal = PortalHandle.checkInstallPortal(opsHost.getPublicIp(), opsHost.getPort(), notRoot.getUsername(), encryptionUtils.decrypt(notRoot.getPassword()));
+                    if (isInstallPortal) {
+                        itemMap.put("installPortalStatus", 2);
+                    } else {
+                        MigrationHostPortalInstall portalInstall = migrationHostPortalInstallHostService.getOneByHostId(opsHost.getHostId());
+                        if(portalInstall != null) {
+                            itemMap.put("installPortalStatus", portalInstall.getInstallStatus());
+                        } else {
+                            itemMap.put("installPortalStatus", 0);
+                        }
+                    }
+                }
+            }
             return itemMap;
         }).collect(Collectors.toList());
         return hosts;
@@ -236,5 +266,47 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
         return result;
     }
 
+    @Override
+    public void installPortal(String hostId, boolean isNewFileInstall) {
+        threadPoolTaskExecutor.submit(() -> {
+            try {
+                installPortalHandler(hostId, isNewFileInstall);
+            } catch (Exception e) {
+                e.printStackTrace();
+                log.error("sync install portal error", e);
+            }
+        });
+        migrationHostPortalInstallHostService.saveRecord(hostId, 1);
+    }
+
+    private void installPortalHandler(String hostId, boolean isNewFileInstall) {
+        OpsHostEntity opsHost = hostFacade.getById(hostId);
+        List<OpsHostUserEntity> opsHostUserEntities = hostUserFacade.listHostUserByHostId(hostId);
+        if (opsHostUserEntities.size() > 0) {
+            OpsHostUserEntity notRoot = opsHostUserEntities.stream().filter(x -> !x.getUsername().equals("root")).findFirst().orElse(null);
+            if (notRoot != null) {
+                boolean flag = PortalHandle.installPortal(opsHost.getPublicIp(), opsHost.getPort(), notRoot.getUsername(), encryptionUtils.decrypt(notRoot.getPassword()), portalPkgDownloadUrl, isNewFileInstall);
+                migrationHostPortalInstallHostService.saveRecord(hostId, flag ? 2 : 10);
+            }
+        }
+    }
+
+    @Override
+    public String getPortalInstallLog(String hostId) {
+        OpsHostEntity opsHost = hostFacade.getById(hostId);
+        String logContent = " ";
+        List<OpsHostUserEntity> opsHostUserEntities = hostUserFacade.listHostUserByHostId(hostId);
+        if (opsHostUserEntities.size() > 0) {
+            OpsHostUserEntity notRoot = opsHostUserEntities.stream().filter(x -> !x.getUsername().equals("root")).findFirst().orElse(null);
+            if (notRoot != null) {
+                String logPath = "~/portal/logs/portal_.log";
+                String content = PortalHandle.getTaskLogs(opsHost.getPublicIp(), opsHost.getPort(), notRoot.getUsername(), encryptionUtils.decrypt(notRoot.getPassword()), logPath);
+                if (StringUtils.isNotBlank(content)) {
+                    logContent = content;
+                }
+            }
+        }
+        return logContent;
+    }
 
 }
