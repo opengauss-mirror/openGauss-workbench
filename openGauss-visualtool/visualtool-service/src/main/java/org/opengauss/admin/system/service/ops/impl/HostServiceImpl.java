@@ -435,7 +435,7 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
     }
 
     private String diskMonitor(Session rootSession) {
-        String command = "df -Th | egrep -v \"(tmpfs|sr0)\" | tail -n +2|tr -s \" \" | cut -d \" \" -f6|tr -d \"%\"";
+        String command = "df -Th | egrep -v \"(tmpfs|sr0)\" | tail -n +2|tr -s \" \" | cut -d \" \" -f6|tr -d \"%\"|head -n 1";
         try {
             JschResult jschResult = jschUtil.executeCommand(command, rootSession);
             if (0==jschResult.getExitCode()){
