@@ -13,7 +13,6 @@ import com.nctigba.observability.log.service.LogSearchService;
 import com.nctigba.observability.log.util.EsLogSearchUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.opengauss.admin.common.utils.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -239,27 +238,35 @@ public class LogSearchServiceImpl implements LogSearchService {
         ContextSearchDTO contextSearchDTO = new ContextSearchDTO();
         String id = null;
         String addId = null;
+        List<String> sortList = new ArrayList<>();
+        HashMap<String, List<String>> sortMap = new HashMap<>();
         try {
-            if (StringUtils.isEmpty(queryParam.getSorts()) && !StringUtils.isEmpty(queryParam.getId())) {
+            Boolean sortIsEmpty = queryParam.getSorts() == null || "".equals(queryParam.getSorts());
+            Boolean idIsEmpty = queryParam.getId() == null || "".equals(queryParam.getId());
+            if (sortIsEmpty && !idIsEmpty) {
                 HashMap<List<String>, ContextSearchDTO> map = this.getSorts(queryParam);
-                List<String> sortList = new ArrayList<>();
                 for (List<String> list : map.keySet()) {
                     sortList = list;
                     contextSearchDTO = map.get(list);
                 }
                 queryParam.setSorts(sortList);
                 queryParam.setId(null);
-                HashMap<String, List<String>> sortMap = this.getAboveList(queryParam);
+                sortMap = this.getAboveList(queryParam);
                 List<String> sortsList = new ArrayList<>();
-                for (String key : sortMap.keySet()) {
-                    if (sortMap.get(key) != null) {
-                        id = key;
-                        sortsList = sortMap.get(key);
-                    } else {
-                        addId = key;
+                if (sortMap != null) {
+                    for (String key : sortMap.keySet()) {
+                        if (sortMap.get(key) != null) {
+                            id = key;
+                            sortsList = sortMap.get(key);
+                        } else {
+                            addId = key;
+                        }
                     }
+                    queryParam.setSorts(sortsList);
+                } else {
+                    queryParam.setSorts(sortList);
                 }
-                queryParam.setSorts(sortsList);
+
             }
             ContextSearchInfoDTO belowList = this.getBelowList(queryParam);
             List<ContextSearchDTO> list = belowList.getLogs();
@@ -280,6 +287,9 @@ public class LogSearchServiceImpl implements LogSearchService {
                     contextDto = addMap.get(addList);
                 }
                 list.add(0, contextDto);
+            }
+            if (sortMap == null) {
+                list.add(0, contextSearchDTO);
             }
             return belowList;
         } catch (Exception e) {

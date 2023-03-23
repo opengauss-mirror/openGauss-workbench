@@ -34,6 +34,14 @@ public class TcpTop implements ResultAnalysis {
 		var top = new TaskResult(task, ResultState.NoAdvice, ResultType.TcpTop, FrameType.Table, bearing.center);
 		var table = TableFormatter.format(file, "PID");
 		top.setData(table);
+		var it = table.getData().iterator();
+		while(it.hasNext()) {
+			var map = it.next();
+			if(map.get("PID").equals("PID")) {
+				it.remove();
+				break;
+			}
+		}
 		resultMapper.insert(top);
 
 		var counter = new HashMap<String, Set<String>>();

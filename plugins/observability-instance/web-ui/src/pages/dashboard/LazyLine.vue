@@ -80,7 +80,7 @@ const getXDataRange = (curData: Array<string>, t: Array<string>) => {
     return [newXLabel, newData];
 }
 
-const handleData = () => {
+const handleData = () => {  
     data.value = [];
     scatterData.value = undefined
     const baseData = tab.value === 0 ? databaseData : serverData

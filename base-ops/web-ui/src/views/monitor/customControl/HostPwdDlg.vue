@@ -32,6 +32,7 @@ const data = reactive<KeyValue>({
   title: t('customControl.HostPwdDlg.5mplfut5lgo0'),
   loading: false,
   hostListLoading: false,
+  excludeHosts: [],
   hostList: [],
   hostObj: {},
   isShowPwd: false,
@@ -91,11 +92,13 @@ const getHostList = () => {
     if (Number(res.code) === 200) {
       data.hostList = []
       res.data.forEach((item: KeyValue) => {
-        data.hostObj[item.hostId] = item
-        data.hostList.push({
-          label: `${item.privateIp}(${item.publicIp})`,
-          value: item.hostId
-        })
+        if (!data.excludeHosts.includes(item.hostId)) {
+          data.hostObj[item.hostId] = item
+          data.hostList.push({
+            label: `${item.privateIp}(${item.publicIp})`,
+            value: item.hostId
+          })
+        }
       })
       data.formData.hostId = data.hostList[0].value
       data.isShowPwd = !data.hostObj[data.formData.hostId].isRemember
@@ -109,10 +112,14 @@ const hostChange = () => {
   data.isShowPwd = !data.hostObj[data.formData.hostId].isRemember
 }
 
-const open = () => {
+const open = (hosts: KeyValue[]) => {
   data.show = true
   data.title = t('customControl.HostPwdDlg.5mplfut5lgo0')
   data.isShowPwd = false
+  data.excludeHosts = []
+  hosts.forEach((item: KeyValue) => {
+    data.excludeHosts.push(item.hostId)
+  })
   getHostList()
 }
 

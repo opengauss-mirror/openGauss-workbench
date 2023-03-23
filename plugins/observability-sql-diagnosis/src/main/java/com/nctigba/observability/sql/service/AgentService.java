@@ -70,6 +70,8 @@ public class AgentService extends AbstractInstaller {
 			env = new NctigbaEnv().setHostid(hostId).setPort(2321).setUsername(AGENT_USER).setType(type.AGENT);
 			try (var session = connect(env, rootPassword);) {
 				curr = nextStep(wsSession, steps, curr);
+				if (!session.test("unzip -v"))
+					session.execute("yum install -y unzip zip");
 				var java = "java";
 				try {
 					if (!session.test(java + " --version")) {

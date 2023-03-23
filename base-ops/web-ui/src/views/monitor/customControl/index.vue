@@ -11,9 +11,10 @@
       </a-spin>
     </div> -->
 
-    <a-tabs type="card-gutter" :editable="true" @add="handleAdd" @delete="handleDelete" v-model:active-key="data.hostId"
-      show-add-button auto-switch>
-      <a-tab-pane v-for="(item, index) in data.hosts" :key="item.hostId" :title="item.publicIp">
+    <a-tabs v-if="data.hosts.length" type="card-gutter" :editable="true" @add="handleAdd" @delete="handleDelete"
+      v-model:active-key="data.hostId" show-add-button auto-switch>
+      <a-tab-pane v-for="(item, index) in data.hosts" :key="item.hostId" :title="item.publicIp"
+        :closable="data.hosts.length > 1">
         <div :id="`xterm_${index}`" class="xterm"></div>
       </a-tab-pane>
     </a-tabs>
@@ -43,10 +44,9 @@ const data = reactive<KeyValue>({
   hostListLoading: false,
   hostList: [],
   hostObj: {},
-  isSuccess: true
+  isSuccess: true,
+  socketMap: {}
 })
-
-const terminalWs = ref<Socket<any, any> | undefined>()
 
 const termTerminal = ref<Terminal>()
 
@@ -59,11 +59,11 @@ onMounted(() => {
 const hostPwdRef = ref<null | InstanceType<typeof HostPwdDlg>>(null)
 const openDlgToValid = (hostId: string) => {
   if (data.hostObj[hostId]) {
-    hostPwdRef.value?.open(data.hostObj[hostId])
+    hostPwdRef.value?.open([])
   }
 }
 const handleAdd = () => {
-  hostPwdRef.value?.open()
+  hostPwdRef.value?.open(data.hosts)
 }
 
 const handleAddHost = (hostData: KeyValue) => {
@@ -71,8 +71,16 @@ const handleAddHost = (hostData: KeyValue) => {
   handleConnect(hostData, data.hosts.length - 1)
 }
 
-const handleDelete = () => {
-
+const handleDelete = (val: any) => {
+  data.hosts = data.hosts.filter((item: KeyValue) => {
+    return item.hostId !== val
+  })
+  nextTick(() => {
+    data.hostId = data.hosts[0].hostId
+  })
+  if (data.socketMap[val]) {
+    data.socketMap[val].destroy()
+  }
 }
 
 const onTerminalResize = () => {
@@ -83,13 +91,6 @@ const onResize = debounce(function () {
   setTimeout(() => {
     fitAddon.value?.fit()
   }, 500)
-})
-
-onBeforeUnmount(() => {
-  terminalWs.value?.destroy()
-  if (termTerminal.value) {
-    termTerminal.value.dispose()
-  }
 })
 
 const getHostList = () => {
@@ -105,7 +106,6 @@ const getHostList = () => {
         })
       })
       data.hostId = data.hostList[0].value
-      data.hosts.push(data.hostObj[data.hostId])
       if (!data.hostObj[data.hostId].isRemember) {
         openDlgToValid(data.hostId)
       } else {
@@ -119,21 +119,6 @@ const getHostList = () => {
   })
 }
 
-const hostChange = () => {
-  if (data.hostId) {
-    terminalWs.value?.destroy()
-    termTerminal.value?.dispose()
-    if (!data.hostObj[data.hostId].isRemember) {
-      openDlgToValid(data.hostId)
-    } else {
-      handleConnect({
-        hostId: data.hostId
-      }, 0)
-    }
-  }
-}
-
-
 const handleConnect = (hostData: any, index: number) => {
   data.hostId = hostData.hostId
   data.rootPassword = hostData.password
@@ -144,7 +129,6 @@ const openSocket = (index: number) => {
   const term = getTermObj()
   const socketKey = new Date().getTime()
   const terminalSocket = new Socket({ url: `custom_terminal_${socketKey}` })
-  terminalWs.value = terminalSocket
   terminalSocket.onopen(() => {
     const param = {
       hostId: data.hostId,
@@ -158,6 +142,7 @@ const openSocket = (index: number) => {
         data.isSuccess = false
         terminalSocket.destroy()
       } else {
+        data.socketMap[data.hostId] = terminalSocket
         data.isSuccess = true
       }
     }).catch(() => {

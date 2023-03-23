@@ -63,10 +63,10 @@
             </div>
 
             <div>
-                <my-card :title="$t('datasource.logDistributionMap')" :legend="waitLegends" :bodyPadding="false" ref="cardRef" collapse>
+                <my-card :title="$t('datasource.logDistributionMap')" :legend="waitLegends" :bodyPadding="false" ref="cardRef" collapse :overflowHidden="overflowHidden" @click="toggleCard">
                     <div class="loading-cover" v-if="refreshingBar" v-loading="refreshingBar"></div>
-                    <div class="line-wrap-chart" style="height: 250px">
-                        <my-bar v-if="showBar" :yname="$t('datasource.numberofLogs')" :xData="xData" :data="showData" :unit="$t('datasource.unit')" />
+                    <div class="line-wrap-chart" style="height: 250px" ref="lineChartRef">
+                        <my-bar v-if="showBar" :yname="$t('datasource.numberofLogs')" :xData="xData" :data="showData" :unit="$t('datasource.unit')" :barWidth="barWidth" :barHeight="barHeight"/>
                     </div>
                 </my-card>
             </div>
@@ -111,14 +111,30 @@
                     </div>
                 </div>
                 <div class="content-wrap-right">
-                    <el-table :key="Math.random()" :data="tableData" size="small" :row-style="tableRowStyle" style="width: 100%" @cell-mouse-enter="cellMouseEnter" @mouseleave="mouseLeave" ref="logTableData">
+                    <el-table :data="tableData" size="small" :row-style="tableRowStyle" style="width: 100%" @cell-mouse-enter="cellMouseEnter" @mouseleave="mouseLeave" ref="logTableData">
                         <el-table-column :label="$t('datasource.logSearchTable[0]')" width="160" align="center">
                             <template #default="scope">
                                 <span>{{ dayjs.utc(scope.row.logTime).local().format('YYYY-MM-DD HH:mm:ss') }}</span>
                             </template>
                         </el-table-column>
-                        <el-table-column :label="$t('datasource.logSearchTable[1]')" prop="logType" show-overflow-tooltip width="120" align="center" />
-                        <el-table-column :label="$t('datasource.logSearchTable[2]')" prop="logLevel" show-overflow-tooltip width="100" align="center" />
+                        <el-table-column :label="$t('datasource.logSearchTable[1]')" prop="logType" width="120" align="center" >
+                            <template #default="scope">
+                                <el-popover trigger="hover" :content="scope.row.logType" popper-class="sql-popover-tip">
+                                            <template #reference>
+                                                <div style="height: 23px;overflow: hidden;text-overflow: ellipsis;white-space: nowrap;">{{ scope.row.logType }}</div>
+                                            </template>
+                                </el-popover>
+                            </template>
+                        </el-table-column>
+                        <el-table-column :label="$t('datasource.logSearchTable[2]')" prop="logLevel" width="100" align="center" >
+                            <template #default="scope">
+                                <el-popover trigger="hover" :content="scope.row.logLevel" popper-class="sql-popover-tip">
+                                            <template #reference>
+                                                <div style="height: 23px;overflow: hidden;text-overflow: ellipsis;white-space: nowrap;">{{ scope.row.logLevel }}</div>
+                                            </template>
+                                </el-popover>
+                            </template>
+                        </el-table-column>
                         <el-table-column :label="$t('datasource.logSearchTable[3]')" header-align="center">
                             <template #default="scope">
                                 <span v-if="scope.row.logData && scope.row.logData.length > 300">
@@ -131,8 +147,25 @@
                                 <span v-else v-html="showHighLightWord(scope.row.logData)"></span>
                             </template>
                         </el-table-column>
-                        <el-table-column :label="$t('datasource.logSearchTable[4]')" header-align="center" show-overflow-tooltip prop="logClusterId" width="100" />
-                        <el-table-column :label="$t('datasource.logSearchTable[5]')" header-align="center" show-overflow-tooltip prop="logNodeId" width="100" />
+                        <el-table-column :label="$t('datasource.logSearchTable[4]')" header-align="center" prop="logClusterId" width="100" >
+                            <template #default="scope">
+                                <el-popover trigger="hover" :content="scope.row.logClusterId" popper-class="sql-popover-tip">
+                                        <template #reference>
+                                            <div style="height: 23px;overflow: hidden;text-overflow: ellipsis;white-space: nowrap;">{{ scope.row.logClusterId }}</div>
+                                        </template>
+                                </el-popover>
+                            </template>
+                        </el-table-column>
+                        <!-- <el-table-column :label="$t('datasource.logSearchTable[5]')" header-align="center" show-overflow-tooltip prop="logNodeId" width="100" /> -->
+                        <el-table-column :label="$t('datasource.logSearchTable[5]')" header-align="center" prop="logNodeId" width="100" >
+                            <template #default="scope">
+                                <el-popover trigger="hover" :content="scope.row.logNodeId" popper-class="sql-popover-tip">
+                                        <template #reference>
+                                            <div style="height: 23px;overflow: hidden;text-overflow: ellipsis;white-space: nowrap;">{{ scope.row.logNodeId }}</div>
+                                        </template>
+                                </el-popover>
+                            </template>
+                        </el-table-column>
                     </el-table>
                     <p v-if="loading">Loading...</p>
                     <p v-if="noMore">No more</p>
@@ -240,11 +273,19 @@ const treeData2 = ref<Array<Tree>>([]);
 const logLevelData = ref<Array<String>>([]);
 const xData = ref<string[]>([]);
 const curLogData = ref<any>({ logDate: '', logType: '', logData: '', logLevelSelected: '', typeNames: '' });
+const barWidth = ref<string>('100%');
+const barHeight = ref<string>('100%');
+const lineChartRef = ref();
 
 const isCollapse = ref(true);
 const toggleCollapse = () => {
     isCollapse.value = !isCollapse.value;
 };
+
+const overflowHidden = ref<boolean>(false)
+const toggleCard = () => {
+    overflowHidden.value = !overflowHidden.value
+}
 
 const selectNodes = (item: Tree) => {
     nodeIds.value = [];
@@ -682,6 +723,10 @@ onMounted(() => {
     listLogLevelData();
     refreshLog();
 
+    let _barWidth = window.getComputedStyle(lineChartRef.value).getPropertyValue('width')
+    let _barHeight = window.getComputedStyle(lineChartRef.value).getPropertyValue('height')
+    barWidth.value = _barWidth
+    barHeight.value = _barHeight
     // @ts-ignore
     const wujie = window.$wujie;
     // Judge whether it is a plug-in environment or a local environment through wujie

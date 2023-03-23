@@ -104,7 +104,7 @@ onMounted(() => {
                             :color="['#00C7F9', '#37D4D1']"
                             :names="['read', 'write']"
                             :name-indexs="[0, 1]"
-                            name-fix="2"
+                            name-fix="1"
                             :formatter="(d: string) => toFixed((Number.parseFloat(d) / 1024))"
                             unit="KB/s"
                             :defaultBrushArea="props.fixedRangeTime"

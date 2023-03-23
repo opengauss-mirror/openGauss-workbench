@@ -9,7 +9,6 @@ import { uuid } from '../shared';
 import { YAXisOption } from 'echarts/types/dist/shared';
 import { OptionDataValue } from 'echarts/types/src/util/types';
 
-const barWith = ref<string>(window.screen.width * 0.8 + 'px');
 
 export type LineData = {
     name: string;
@@ -44,6 +43,8 @@ const props = withDefaults(
         // chart colors
         color?: string[];
         theme?: 'dark' | 'light';
+        barWidth: string,
+        barHeight: string
     }>(),
     {
         xData: () => [],
@@ -56,6 +57,8 @@ const props = withDefaults(
         areaStyle: false,
         color: () => ['#37D4D1', '#00C7F9', '#0D86E2', '#425ADD', '#E64A19', '#9CCC65', '#A97526', '#2830FF', '#8B00E1', '#0F866A'],
         theme: 'dark',
+        barWidth: '100%',
+        barHeight: '100%'
     }
 );
 const renderChart = () => {
@@ -148,5 +151,5 @@ useEventListener(window, 'resize', () => {
 </script>
 
 <template>
-    <div :id="domId" ref="loadRef" :style="`width: ${barWith}; height: 250px`"></div>
+    <div :id="domId" ref="loadRef" :style="`width: ${barWidth}; height: ${barHeight}`"></div>
 </template>
