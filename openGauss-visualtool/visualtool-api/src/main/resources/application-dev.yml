@@ -8,14 +8,14 @@ server:
     context-path: /
 logging:
   file:
-    path: /Users/xielibo/visualtool-api/logs/
+    path: /visualtool-api/logs/
 spring:
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
     driver-class-name: org.opengauss.Driver
-    url: jdbc:opengauss://127.0.0.1:5432/databasename?currentSchema=public
-    username: username
-    password: password
+    url: jdbc:opengauss://120.48.145.206:5432/lhf?currentSchema=public
+    username: jim0847
+    password: umqb63LkGTPDDfXv
     druid:
       test-while-idle: false
       test-on-borrow: true
