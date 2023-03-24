@@ -18,7 +18,7 @@
               <a-input v-model="formItem.clusterId" :placeholder="$t('lightweight.InstallConfig.5mpmkfqy8r00')" />
             </a-form-item>
             <a-form-item field="hostId" :label="$t('lightweight.InstallConfig.5mpmkfqy8vk0')">
-              <a-select :loading="hostListLoading" v-model="formItem.hostId" @change="changeHostId(index)"
+              <a-select :loading="hostListLoading" v-model="formItem.hostId" @change="changeHostId(index)" class="mr-s"
                 :placeholder="$t('lightweight.InstallConfig.5mpmkfqy91w0')"
                 @popup-visible-change="hostPopupChange($event, index)">
                 <a-option v-for="item in hostList" :key="item.hostId" :value="item.hostId">{{
@@ -27,6 +27,7 @@
                   (item.publicIp ? item.publicIp : '--') + ')'
                 }}</a-option>
               </a-select>
+              <icon-code-square :size="25" style="cursor: pointer;" @click="showTerminal(formItem, index)"/>
             </a-form-item>
             <a-form-item v-if="formItem.isNeedPwd" field="rootPassword" :label="$t('lightweight.InstallConfig.else1')"
               validate-trigger="blur">
@@ -80,6 +81,7 @@
         </div>
       </div>
     </div>
+    <host-terminal ref="hostTerminalRef"></host-terminal>
   </div>
 </template>
 
@@ -97,6 +99,7 @@ import { hasName, hostListAll, hostUserListWithoutRoot, portUsed, pathEmpty, fil
 import { encryptPassword } from '@/utils/jsencrypt'
 import { Message } from '@arco-design/web-vue'
 import { useI18n } from 'vue-i18n'
+import HostTerminal from "@/views/ops/install/components/hostTerminal/HostTerminal.vue";
 const { t } = useI18n()
 const installStore = useOpsStore()
 const data: {
@@ -606,6 +609,42 @@ defineExpose({
 
 const installType = computed(() => installStore.getInstallConfig.installType)
 const getDeployType: ComputedRef<DeployTypeEnum> = computed(() => installStore.getInstallConfig.deployType)
+
+const hostTerminalRef = ref<null | InstanceType<typeof HostTerminal>>(null)
+const showTerminal = (item: KeyValue, index: number) => {
+  // isRemember password
+  if (item.isNeedPwd) {
+    if (!item.rootPassword) {
+      refList.value[index]?.setFields({
+        rootPassword: {
+          status: 'error',
+          message: t('simple.InstallConfig.5mpmu0laqwo0')
+        }
+      })
+      return
+    }
+  }
+  if (!item.hostId) {
+    refList.value[index]?.setFields({
+      hostId: {
+        status: 'error',
+        message: t('lightweight.InstallConfig.5mpmkfqybw00')
+      }
+    })
+    return
+  }
+  // showTerminal
+  handleShowTerminal({
+    hostId: item.hostId,
+    port: item.port,
+    ip: item.publicIp,
+    password: item.rootPassword
+  })
+}
+
+const handleShowTerminal = (data: KeyValue) => {
+  hostTerminalRef.value?.open(data)
+}
 
 </script>
 
