@@ -1386,6 +1386,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         Session ommSession = jschUtil.getSession(hostEntity.getPublicIp(), hostEntity.getPort(), masterHostUsername, encryptionUtils.decrypt(masterHostPassword)).orElseThrow(() -> new OpsException("Failed to establish connection with host " + hostEntity.getPublicIp()));
         Connection connection = null;
         try {
+            connection = DBUtil.getSession(hostEntity.getPublicIp(), port, databaseUsername, databasePassword).orElseThrow(() -> new OpsException("Connection failed"));
             String versionNum = getVersionNum(ommSession, importClusterBody.getEnvPath());
             importClusterBody.setOpenGaussVersionNum(versionNum);
             Integer majorVersion = Integer.valueOf(versionNum.substring(0, 1));
@@ -1411,8 +1412,6 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                 log.error("The selected version does not match the actual version,select version:{},actual version:{}", importClusterBody.getOpenGaussVersion(), openGaussVersionEnum);
                 throw new OpsException("The selected version does not match the actual version");
             }
-
-            connection = DBUtil.getSession(hostEntity.getPublicIp(), port, databaseUsername, databasePassword).orElseThrow(() -> new OpsException("Connection failed"));
         } catch (OpsException e) {
             log.error("ops exception ", e);
             throw e;
