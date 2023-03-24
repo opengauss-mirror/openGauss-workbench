@@ -93,7 +93,7 @@ const buildReqData = async () => {
   return {
     dsConfig: dbList,
     tableName: installStore.openLookengInstallConfig.tableName,
-    column: installStore.openLookengInstallConfig.column
+    columns: installStore.openLookengInstallConfig.columns
   }
 }
 

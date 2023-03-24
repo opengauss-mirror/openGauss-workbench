@@ -155,7 +155,7 @@ export interface OpenLookengInstallConfig {
   zkPort: 2181,
   dsConfig: Array<Array<string>>,
   tableName: '',
-  column: '',
+  columns: '',
   olkInstallHostId: '',
   olkInstallUsername: '',
   olkInstallPassword: '',

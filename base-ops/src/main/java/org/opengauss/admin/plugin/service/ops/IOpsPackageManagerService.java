@@ -28,4 +28,6 @@ public interface IOpsPackageManagerService extends IService<OpsPackageManagerEnt
     boolean deletePkgTar(String path, String id);
 
     String getSysUploadPath(Integer userId);
+
+    boolean checkUploadPath(String path);
 }

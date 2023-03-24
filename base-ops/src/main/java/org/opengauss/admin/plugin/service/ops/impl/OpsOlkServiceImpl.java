@@ -1,10 +1,15 @@
 package org.opengauss.admin.plugin.service.ops.impl;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 import com.google.common.util.concurrent.SimpleTimeLimiter;
@@ -34,7 +39,9 @@ import org.opengauss.admin.plugin.utils.JschUtil;
 import org.opengauss.admin.plugin.utils.WsUtil;
 import org.opengauss.admin.system.plugin.facade.HostFacade;
 import org.opengauss.admin.system.plugin.facade.HostUserFacade;
+import org.opengauss.admin.system.plugin.facade.TaskFacade;
 import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
@@ -46,8 +53,10 @@ import org.yaml.snakeyaml.Yaml;
 
 import java.io.*;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -109,8 +118,42 @@ public class OpsOlkServiceImpl extends ServiceImpl<OpsOlkMapper, OpsOlkEntity> i
     }
 
     @Override
-    public void destroy(String id) {
+    @Transactional(rollbackFor = Exception.class)
+    public void destroy(String id, String bid) {
+        requestNormalService(id, bid, DadReqPath.DESTROY, OlkProcessFlagStr.START_DESTROY, OlkProcessFlagStr.END_DESTROY, OlkProcessFlagStr.END_DESTROY_IN_ERROR);
+        removeById(id);
+    }
 
+    private void requestNormalService(String id, String bid, String path, String startFlag, String endFlag, String endErrFlag) {
+        OpsOlkEntity olkEntity = getById(id);
+        if (olkEntity == null) {
+            throw new OpsException("OpenLooKeng deployment info not exists, please refresh and try again");
+        }
+        WsSession wsSession = wsConnectorManager.getSession(bid).orElseThrow(() -> new OpsException("websocket session not exist"));
+        ServerDto serverDto = new ServerDto();
+        OpsHostEntity hostEntity = hostFacade.getById(olkEntity.getDadInstallHostId());
+        if (hostEntity == null) {
+            throw new OpsException("OpenLooKeng distribute deploy host not exists, please refresh and try again");
+        }
+        serverDto.setIp(hostEntity.getPublicIp());
+        serverDto.setPort(hostEntity.getPort());
+        serverDto.setUsername(olkEntity.getDadInstallUsername());
+        serverDto.setPassword(encryptionUtils.decrypt(olkEntity.getDadInstallPassword()));
+
+        String reqUrl = String.format("http://%s:%s/%s", hostEntity.getPublicIp(), olkEntity.getDadPort(), path);
+        HttpUtils.PostResponse response = HttpUtils.sendPost(reqUrl, JSON.toJSONString(serverDto));
+        DadResult result = JSON.parseObject(response.getBody(), DadResult.class);
+        String reqId = response.getHeader(DadReqPath.REQ_ID_KEY);
+        if (StrUtil.isEmpty(reqId)) {
+            processError(wsSession, "Send command to deployment service failed, Can't find req id");
+        }
+        if (result != null && result.isSuccess()) {
+            ReadLogParam param = ReadLogParam.builder().serverDto(serverDto).logPath(getDadLogFileName(olkEntity.getDadInstallPath())).startFlag(startFlag).endFlag(endFlag).errFlag(endErrFlag).reqId(response.getHeader(DadReqPath.REQ_ID_KEY)).wsSession(wsSession).build();
+            threadReadLogToWs(param);
+            wsUtil.sendText(wsSession, OlkProcessFlagStr.SEND_CMD_TO_SERVICE_COMPLETE);
+        } else {
+            processError(wsSession, "Send command to deployment service failed, error: " + result.get(DadResult.MSG_TAG));
+        }
     }
 
     @Override
@@ -121,65 +164,26 @@ public class OpsOlkServiceImpl extends ServiceImpl<OpsOlkMapper, OpsOlkEntity> i
         ShardingDataSourceDto sourceDto = ruleDto.getDataSourceDto();
         String[] users = sourceDto.getUsername().split(",");
         String[] passwords = sourceDto.getPassword().split(",");
-        Arrays.stream(sourceDto.getUrl().split(","))
-                .map(String::trim)
-                .forEach(e -> {
-                    databases.fluentPut("ds_" + i.get(), new JSONObject()
-                            .fluentPut("url", e)
-                            .fluentPut("username", users[i.get()].trim())
-                            .fluentPut("password", passwords[i.get()].trim())
-                            .fluentPut("connectionTimeoutMilliseconds", 30000)
-                            .fluentPut("idleTimeoutMilliseconds", 60000)
-                            .fluentPut("maxLifetimeMilliseconds", 1800000)
-                            .fluentPut("maxPoolSize", 50)
-                            .fluentPut("minPoolSize", 1));
-                    i.getAndIncrement();
-                });
+        Arrays.stream(sourceDto.getUrl().split(",")).map(String::trim).forEach(e -> {
+            databases.fluentPut("ds_" + i.get(), new JSONObject().fluentPut("url", e).fluentPut("username", users[i.get()].trim()).fluentPut("password", passwords[i.get()].trim()).fluentPut("connectionTimeoutMilliseconds", 30000).fluentPut("idleTimeoutMilliseconds", 60000).fluentPut("maxLifetimeMilliseconds", 1800000).fluentPut("maxPoolSize", 50).fluentPut("minPoolSize", 1));
+            i.getAndIncrement();
+        });
         JSONObject table = new JSONObject();
         JSONObject sharding = new JSONObject();
         String[] tables = ruleDto.getTableName().split(",");
         String[] columns = ruleDto.getColumn().split(",");
         AtomicInteger k = new AtomicInteger();
-        Arrays.stream(tables)
-                .map(String::trim)
-                .forEach(e -> {
-                    String ds = "ds_" + e + "_alg";
-                    String ts = "ts_" + e + "_alg";
-                    String exp = "ds_${0.." + i.get() + "}." + e + "_${0..2}";
-                    String dsExp = "ds_${" + columns[k.get()].trim() + " % " + i.get() + "}";
-                    String tsExp = e + "_${" + columns[k.get()].trim() + " % 2}";
-                    sharding.fluentPut(ds, new JSONObject()
-                                    .fluentPut("type", "INLINE")
-                                    .fluentPut("props", new JSONObject()
-                                            .fluentPut("algorithm-expression", dsExp)))
-                            .fluentPut(ts, new JSONObject()
-                                    .fluentPut("type", "INLINE")
-                                    .fluentPut("props", new JSONObject()
-                                            .fluentPut("algorithm-expression", tsExp)));
-                    table.fluentPut(e, new JSONObject()
-                            .fluentPut("actualDataNodes", exp)
-                            .fluentPut("tableStrategy", new JSONObject()
-                                    .fluentPut("standard", new JSONObject()
-                                            .fluentPut("shardingColumn", columns[k.get()].trim())
-                                            .fluentPut("shardingAlgorithmName", ts)))
-                            .fluentPut("databaseStrategy", new JSONObject()
-                                    .fluentPut("standard", new JSONObject()
-                                            .fluentPut("shardingColumn", columns[k.get()].trim())
-                                            .fluentPut("shardingAlgorithmName", ds))));
-                    k.getAndIncrement();
-                });
-        val ret = new JSONObject()
-                .fluentPut("databaseName", "sharding_db")
-                .fluentPut("dataSources", new JSONObject(new LinkedHashMap<>()).fluentPutAll(databases))
-                .fluentPut("rules", new JSONArray()
-                        .fluentAdd(new JSONObject()
-                                .fluentPut("\\!SHARDING", new JSONObject()
-                                        .fluentPut("shardingAlgorithms", new JSONObject().fluentPutAll(sharding))
-                                        .fluentPut("tables", new JSONObject().fluentPutAll(table))
-                                        .fluentPut("defaultTableStrategy", new JSONObject()
-                                                .fluentPut("none", null))
-                                        .fluentPut("defaultDatabaseStrategy", new JSONObject()
-                                                .fluentPut("none", null)))));
+        Arrays.stream(tables).map(String::trim).forEach(e -> {
+            String ds = "ds_" + e + "_alg";
+            String ts = "ts_" + e + "_alg";
+            String exp = "ds_${0.." + i.get() + "}." + e + "_${0..2}";
+            String dsExp = "ds_${" + columns[k.get()].trim() + " % " + i.get() + "}";
+            String tsExp = e + "_${" + columns[k.get()].trim() + " % 2}";
+            sharding.fluentPut(ds, new JSONObject().fluentPut("type", "INLINE").fluentPut("props", new JSONObject().fluentPut("algorithm-expression", dsExp))).fluentPut(ts, new JSONObject().fluentPut("type", "INLINE").fluentPut("props", new JSONObject().fluentPut("algorithm-expression", tsExp)));
+            table.fluentPut(e, new JSONObject().fluentPut("actualDataNodes", exp).fluentPut("tableStrategy", new JSONObject().fluentPut("standard", new JSONObject().fluentPut("shardingColumn", columns[k.get()].trim()).fluentPut("shardingAlgorithmName", ts))).fluentPut("databaseStrategy", new JSONObject().fluentPut("standard", new JSONObject().fluentPut("shardingColumn", columns[k.get()].trim()).fluentPut("shardingAlgorithmName", ds))));
+            k.getAndIncrement();
+        });
+        val ret = new JSONObject().fluentPut("databaseName", "sharding_db").fluentPut("dataSources", new JSONObject(new LinkedHashMap<>()).fluentPutAll(databases)).fluentPut("rules", new JSONArray().fluentAdd(new JSONObject().fluentPut("\\!SHARDING", new JSONObject().fluentPut("shardingAlgorithms", new JSONObject().fluentPutAll(sharding)).fluentPut("tables", new JSONObject().fluentPutAll(table)).fluentPut("defaultTableStrategy", new JSONObject().fluentPut("none", null)).fluentPut("defaultDatabaseStrategy", new JSONObject().fluentPut("none", null)))));
         DumperOptions options = new DumperOptions();
         options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
         Yaml yaml = new Yaml(options);
@@ -187,20 +191,67 @@ public class OpsOlkServiceImpl extends ServiceImpl<OpsOlkMapper, OpsOlkEntity> i
     }
 
     @Override
-    public void start(String id) {
-
+    public void start(String id, String bid) {
+        requestNormalService(id, bid, DadReqPath.START, OlkProcessFlagStr.START_SERVICE, OlkProcessFlagStr.END_START_SERVICE, OlkProcessFlagStr.END_START_SERVICE_IN_ERROR);
     }
 
     @Override
-    public void stop(String id) {
+    public void stop(String id, String bid) {
+        requestNormalService(id, bid, DadReqPath.STOP, OlkProcessFlagStr.START_STOP_SERVICE, OlkProcessFlagStr.END_STOP_SERVICE, OlkProcessFlagStr.END_STOP_SERVICE_IN_ERROR);
+    }
 
+    @Override
+    public IPage<OlkPageVO> pageOlk(Page pageReq, String name) {
+        LambdaQueryWrapper<OpsOlkEntity> queryWrapper = Wrappers.lambdaQuery(OpsOlkEntity.class).like(StrUtil.isNotEmpty(name), OpsOlkEntity::getName, name);
+        IPage<OpsOlkEntity> entityPage = page(pageReq, queryWrapper);
+        List<OpsHostEntity> hostEntityList = hostFacade.listAll();
+        List<OpsPackageManagerEntity> managerEntities = packageManagerService.list();
+        List<OlkPageVO> voList = new ArrayList<>();
+        for (OpsOlkEntity item : entityPage.getRecords()) {
+            OlkPageVO vo = new OlkPageVO();
+            BeanUtils.copyProperties(item, vo);
+            for (OpsHostEntity hostEntity : hostEntityList) {
+                if (hostEntity.getHostId().equals(item.getDadInstallHostId())) {
+                    vo.setDadInstallIp(hostEntity.getPublicIp());
+                }
+                if (hostEntity.getHostId().equals(item.getSsInstallHostId())) {
+                    vo.setSsInstallIp(hostEntity.getPublicIp());
+                }
+                if (hostEntity.getHostId().equals(item.getOlkInstallHostId())) {
+                    vo.setOlkInstallIp(hostEntity.getPublicIp());
+                }
+            }
+            for (OpsPackageManagerEntity pkgEntity : managerEntities) {
+                if (pkgEntity.getPackageId().equals(item.getDadTarId())) {
+                    vo.setDadPkgName(pkgEntity.getFileName());
+                }
+                if (pkgEntity.getPackageId().equals(item.getSsTarId())) {
+                    vo.setSsPkgName(pkgEntity.getFileName());
+                }
+                if (pkgEntity.getPackageId().equals(item.getZkTarId())) {
+                    vo.setZkPkgName(pkgEntity.getFileName());
+                }
+                if (pkgEntity.getPackageId().equals(item.getOlkTarId())) {
+                    vo.setOlkPkgName(pkgEntity.getFileName());
+                }
+            }
+            voList.add(vo);
+        }
+        IPage<OlkPageVO> voPage = new Page<>();
+        voPage.setRecords(voList);
+        voPage.setPages(entityPage.getPages());
+        voPage.setCurrent(entityPage.getCurrent());
+        voPage.setTotal(entityPage.getTotal());
+        voPage.setSize(entityPage.getSize());
+        return voPage;
     }
 
     private void checkInstallConfig(InstallOlkContext installContext) {
         installContext.checkConfig();
     }
 
-    private void doInstall(InstallOlkContext context) {
+    @Transactional(rollbackFor = Exception.class)
+    public void doInstall(InstallOlkContext context) {
         WsSession session = context.getRetSession();
         try {
             checkInstallConfig(context);
@@ -227,7 +278,7 @@ public class OpsOlkServiceImpl extends ServiceImpl<OpsOlkMapper, OpsOlkEntity> i
         // upload sharding and zk
         uploadShardAndZk(olkConfig, context.getRetSession());
         // upload olk
-        // uploadOlk(olkConfig, context.getRetSession());
+        uploadOlk(olkConfig, context.getRetSession());
         wsUtil.sendText(context.getRetSession(), OlkProcessFlagStr.END_UPLOAD);
     }
 
@@ -247,7 +298,10 @@ public class OpsOlkServiceImpl extends ServiceImpl<OpsOlkMapper, OpsOlkEntity> i
         }
         wsUtil.sendText(wsSession, String.format(OlkProcessFlagStr.START_UPLOAD_SHARDING_PROXY, opsHostEntity.getPublicIp(), olkConfig.getSsInstallUsername()));
         try {
-            jschUtil.executeCommand("mkdir -p " + olkConfig.getSsUploadPath(), session);
+            JschResult result = jschUtil.executeCommand("mkdir -p " + olkConfig.getSsUploadPath(), session);
+            if (result.getExitCode() != 0) {
+                throw new OpsException(result.getResult());
+            }
         } catch (Exception ex) {
             processError(wsSession, String.format("Can't create upload path %s, error: %s", olkConfig.getSsUploadPath(), ex.getMessage()));
         }
@@ -274,7 +328,10 @@ public class OpsOlkServiceImpl extends ServiceImpl<OpsOlkMapper, OpsOlkEntity> i
         }
         wsUtil.sendText(wsSession, String.format(OlkProcessFlagStr.START_UPLOAD_OLK, opsHostEntity.getPublicIp(), olkConfig.getOlkInstallUsername()));
         try {
-            jschUtil.executeCommand("mkdir -p " + olkConfig.getOlkUploadPath(), session);
+            JschResult result = jschUtil.executeCommand("mkdir -p " + olkConfig.getOlkUploadPath(), session);
+            if (result.getExitCode() != 0) {
+                throw new OpsException(result.getResult());
+            }
         } catch (Exception ex) {
             processError(wsSession, String.format("Can't create upload path %s, error: %s", olkConfig.getOlkUploadPath(), ex.getMessage()));
         }
@@ -295,7 +352,10 @@ public class OpsOlkServiceImpl extends ServiceImpl<OpsOlkMapper, OpsOlkEntity> i
         }
         wsUtil.sendText(wsSession, String.format(OlkProcessFlagStr.START_UPLOAD_DAD, opsHostEntity.getPublicIp(), olkConfig.getDadInstallUsername()));
         try {
-            jschUtil.executeCommand("mkdir -p " + olkConfig.getDadInstallPath(), session);
+            JschResult result = jschUtil.executeCommand("mkdir -p " + olkConfig.getDadInstallPath(), session);
+            if (result.getExitCode() != 0) {
+                throw new OpsException(result.getResult());
+            }
         } catch (Exception ex) {
             processError(wsSession, String.format("Can't create upload path %s, error: %s", olkConfig.getDadInstallPath(), ex.getMessage()));
         }
@@ -386,10 +446,13 @@ public class OpsOlkServiceImpl extends ServiceImpl<OpsOlkMapper, OpsOlkEntity> i
             processError(wsSession, "Send command to deployment service failed, Can't find req id");
         }
         if (result != null && result.isSuccess()) {
-            ReadLogParam param = ReadLogParam.builder()
-                    .serverDto(serverDto).logPath(config.getDadLogFileName()).startFlag(OlkProcessFlagStr.START_DEPLOY)
-                    .endFlag(OlkProcessFlagStr.END_DEPLOY).errFlag(OlkProcessFlagStr.END_DEPLOY_IN_ERROR)
-                    .reqId(response.getHeader(DadReqPath.REQ_ID_KEY)).wsSession(wsSession).build();
+            ReadLogParam param = ReadLogParam.builder().serverDto(serverDto)
+                    .logPath(config.getDadLogFileName()).olkEntity(config.toEntity())
+                    .startFlag(OlkProcessFlagStr.START_DEPLOY)
+                    .endFlag(OlkProcessFlagStr.END_DEPLOY)
+                    .errFlag(OlkProcessFlagStr.END_DEPLOY_IN_ERROR)
+                    .reqId(response.getHeader(DadReqPath.REQ_ID_KEY))
+                    .wsSession(wsSession).build();
             threadReadLogToWs(param);
             wsUtil.sendText(wsSession, OlkProcessFlagStr.SEND_CMD_TO_SERVICE_COMPLETE);
         } else {
@@ -437,8 +500,8 @@ public class OpsOlkServiceImpl extends ServiceImpl<OpsOlkMapper, OpsOlkEntity> i
         dataSourceDto.setUsername(usernameBuilder.substring(0, usernameBuilder.length() - 1));
         dataSourceDto.setPassword(pwdBuilder.substring(0, pwdBuilder.length() - 1));
         ruleDto.setDataSourceDto(dataSourceDto);
-        ruleDto.setColumn(config.getTableName());
-        ruleDto.setTableName(config.getColumn());
+        ruleDto.setColumn(config.getColumns());
+        ruleDto.setTableName(config.getTableName());
         return ruleDto;
     }
 
@@ -463,8 +526,13 @@ public class OpsOlkServiceImpl extends ServiceImpl<OpsOlkMapper, OpsOlkEntity> i
         return olkDto;
     }
 
-    private void threadReadLogToWs(ReadLogParam param) {
-        new Thread(() -> {
+    @Transactional
+    public void saveToDb (OpsOlkEntity entity) {
+        save(entity);
+    }
+
+    public void threadReadLogToWs(ReadLogParam param) {
+        Future<?> future = threadPoolTaskExecutor.submit(() -> {
             BufferedReader reader = null;
             ChannelExec channel = null;
             Session session = null;
@@ -509,6 +577,9 @@ public class OpsOlkServiceImpl extends ServiceImpl<OpsOlkMapper, OpsOlkEntity> i
                         wsUtil.sendText(param.getWsSession(), line);
                         wsUtil.sendText(param.getWsSession(), OlkProcessFlagStr.END_DEPLOY_PROCESS);
                         wsUtil.setSuccessFlag(param.getWsSession());
+                        if (param.getOlkEntity() != null) {
+                            saveToDb(param.getOlkEntity());
+                        }
                         return;
                     }
                     wsUtil.sendText(param.getWsSession(), line);
@@ -532,7 +603,9 @@ public class OpsOlkServiceImpl extends ServiceImpl<OpsOlkMapper, OpsOlkEntity> i
                     wsUtil.sendText(param.getWsSession(), "Close log reader error: " + ioException.getMessage());
                 }
             }
-        }).start();
+        });
+
+        TaskManager.registry(param.getWsSession().getSessionId(), future);
     }
 
     private void readLogToWs(ServerDto serverDto, String logPath, String reqId, WsSession wsSession) {
@@ -591,6 +664,11 @@ public class OpsOlkServiceImpl extends ServiceImpl<OpsOlkMapper, OpsOlkEntity> i
         return Path.of(path1, path2).toString().replace("\\", "/");
     }
 
+    public String getDadLogFileName(String dadInstallPath) {
+        // return Path.of(dadInstallPath, DadReqPath.LOG_FILE_NAME + id).toString();
+        return Path.of(dadInstallPath, DadReqPath.OUTPUT_LOG).toString().replace("\\", "/");
+    }
+
     @Data
     @Builder
     private static class ReadLogParam {
@@ -601,14 +679,17 @@ public class OpsOlkServiceImpl extends ServiceImpl<OpsOlkMapper, OpsOlkEntity> i
         private String reqId;
         private String logPath;
         private WsSession wsSession;
+        private OpsOlkEntity olkEntity;
 
         public String getSF() {
             return String.format("(%s) %s", reqId, startFlag);
         }
+
         public String getEF() {
             return String.format("(%s) %s", reqId, endFlag);
         }
-        public String getEEE(){
+
+        public String getEEE() {
             return String.format("(%s) %s", reqId, errFlag);
         }
     }

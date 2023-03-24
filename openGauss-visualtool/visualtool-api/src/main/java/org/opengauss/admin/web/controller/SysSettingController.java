@@ -48,4 +48,12 @@ public class SysSettingController extends BaseController {
         SysSettingEntity setting = sysSettingService.getSetting(getUserId());
         return AjaxResult.success(setting);
     }
+
+    @GetMapping("/checkUploadPath")
+    public AjaxResult checkSysUploadPath(@RequestParam String path) {
+        boolean result = sysSettingService.hasUploadPath(path);
+        // return false is not ok
+        return AjaxResult.success("ok", !result);
+    }
+
 }

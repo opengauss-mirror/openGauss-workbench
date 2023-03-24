@@ -30,6 +30,10 @@ public class JdbcDbClusterFacade {
         return opsJdbcDbClusterService.page(name, ip, type, page);
     }
 
+    public List<JdbcDbClusterVO> listAll(String type) {
+        return opsJdbcDbClusterService.listByType(type);
+    }
+
     public List<JdbcDbClusterVO> listAll() {
         return opsJdbcDbClusterService.listAll();
     }

@@ -470,7 +470,8 @@
             "5mpivn7fwjc1": "Edit System Setting",
             "5mpivn7fwjc2": "File Upload Path",
             "5mpivn7fwjc6": "Please input file upload path",
-            "5mpivn7fwjc9": "File path is not correct"
+            "5mpivn7fwjc9": "File path is not correct",
+            "5mpivn7fwj10": "The directory is already occupied by another user. Please enter a different path"
         }
     },
     "user": {

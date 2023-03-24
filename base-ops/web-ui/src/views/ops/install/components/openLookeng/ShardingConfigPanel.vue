@@ -71,8 +71,8 @@
     <a-form-item field="tableName" :label="$t('components.openLooKeng.5mpiji1qpcc31')">
       <a-input v-model="data.form.tableName" :placeholder="$t('components.openLooKeng.5mpiji1qpcc32')"/>
     </a-form-item>
-    <a-form-item field="column" :label="$t('components.openLooKeng.5mpiji1qpcc33')">
-      <a-input v-model="data.form.column" :placeholder="$t('components.openLooKeng.5mpiji1qpcc34')"/>
+    <a-form-item field="columns" :label="$t('components.openLooKeng.5mpiji1qpcc33')">
+      <a-input v-model="data.form.columns" :placeholder="$t('components.openLooKeng.5mpiji1qpcc34')"/>
     </a-form-item>
   </a-form>
   <add-package-dlg ref="addPackageRef" @finish="refreshPackageList"/>
@@ -90,8 +90,10 @@ import { useOpsStore } from '@/store'
 import AddPackageDlg from '@/views/monitor/packageManage/AddPackageDlg.vue'
 import { encryptPassword } from '@/utils/jsencrypt'
 import { dataSourceDbList } from '@/api/modeling'
+import {useRouter} from "vue-router";
 
 const { t } = useI18n()
+const router = useRouter()
 const installStore = useOpsStore()
 
 const data = reactive<KeyValue>({
@@ -107,7 +109,7 @@ const data = reactive<KeyValue>({
     zkPort: 2181,
     dsConfig: [],
     tableName: '',
-    column: '',
+    columns: '',
     needEncrypt: false
   },
   host: {
@@ -308,7 +310,7 @@ const rules = computed(() => {
     shardingTarId: { required: true, message: t('components.openLooKeng.5mpiji1qpcc23') },
     zkTarId: { required: true, message: t('components.openLooKeng.5mpiji1qpcc27') },
     tableName: [{ required: true, message: t('components.openLooKeng.5mpiji1qpcc32') }],
-    column: [{ required: true, message: t('components.openLooKeng.5mpiji1qpcc34') }],
+    columns: [{ required: true, message: t('components.openLooKeng.5mpiji1qpcc34') }],
     dsConfig: [{ required: true, message: t('components.openLooKeng.5mpiji1qpcc47') }, { validator: validateDs }]
   }
 })
@@ -331,7 +333,7 @@ const initData = () => {
   data.form.zkTarId = config.zkTarId
   data.form.zkPort = config.zkPort
   data.form.tableName = config.tableName
-  data.form.column = config.column
+  data.form.columns = config.columns
   data.form.uploadPath = config.ssUploadPath
   data.form.dsConfig = config.dsConfig
   data.form.needEncrypt = config.ssNeedEncrypt
@@ -348,7 +350,7 @@ const saveStore = () => {
     zkTarId: data.form.zkTarId,
     zkPort: data.form.zkPort,
     tableName: data.form.tableName,
-    column: data.form.column,
+    columns: data.form.columns,
     ssUploadPath: data.form.uploadPath,
     dsConfig: data.form.dsConfig,
     ssNeedEncrypt: data.form.needEncrypt

@@ -26,7 +26,7 @@
           </div>
           <a-spin v-if="status === statusEnum.RUNNING" class="mr"/>
           <a-space class="flex-row">
-            <a-button type="primary" @click="retryInstall">
+            <a-button type="primary" v-if="status === statusEnum.FAIL" @click="retryInstall">
               {{ $t('components.openLooKeng.5mpiji1qpcc67') }}
             </a-button>
             <a-button type="primary" @click="downloadLog">{{ $t('components.openLooKeng.5mpiji1qpcc65') }}</a-button>
@@ -34,7 +34,22 @@
           </a-space>
         </div>
       </div>
-      <div id="xterm" class="xterm"></div>
+      <div v-if="status !== statusEnum.SUCCESS" id="xterm" class="xterm"></div>
+      <div class="flex-col full-w full-h" v-else>
+        <svg-icon class="succ-icon-size mb" icon-class="ops-install-success"></svg-icon>
+        <div class="mb-lg ft-b">{{ $t('simpleInstall.index.5mpn813gvqo0') }}</div>
+        <div class="install-connect-c flex-col mb-xlg">
+          <div class="mb">{{ $t('components.openLooKeng.5mpiji1qpcc68') }}</div>
+        </div>
+        <div class="flex-row">
+          <a-button type="outline" class="mr" @click="goHome">{{
+              $t('simpleInstall.index.5mpn813gw4c0')
+            }}</a-button>
+          <a-button type="primary" @click="goManage">{{
+              $t('components.openLooKeng.5mpiji1qpcc69')
+            }}</a-button>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -52,6 +67,7 @@ import { ShardingDsConfig } from '@/types/ops/install'
 import { Message } from '@arco-design/web-vue'
 import { encryptPassword } from '@/utils/jsencrypt'
 import { ProcessFlag } from './ProcessFlag'
+import router from "@/router";
 
 const installStore = useOpsStore()
 
@@ -208,6 +224,10 @@ onBeforeUnmount(() => {
   termTerminal.value?.dispose()
 })
 
+const goManage = () => {
+  router.push('/ops/olk')
+}
+
 const exeInstall = async (socket: Socket<any, any>, businessId: string, term: Terminal) => {
   const reqBody = JSON.parse(JSON.stringify(installStore.openLookengInstallConfig)) as KeyValue
   reqBody.dsConfig = await buildReqData()
@@ -329,6 +349,11 @@ const buildReqData = async () => {
   .icon-size {
     width: 100px;
     height: 100px;
+  }
+
+  .succ-icon-size {
+    width: 120px;
+    height: 120px;
   }
 }
 </style>

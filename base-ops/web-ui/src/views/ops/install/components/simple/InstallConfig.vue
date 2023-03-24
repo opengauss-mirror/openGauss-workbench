@@ -49,14 +49,14 @@
             <a-input-password v-model="data.form.databasePassword" :placeholder="$t('simple.InstallConfig.5mpmu0las0k0')"
               allow-clear />
           </a-form-item>
-          <a-form-item v-if="installType === 'import'" field="isEnvSeparate" :label="$t('simple.InstallConfig.else11')"
+          <!-- <a-form-item v-if="installType === 'import'" field="isEnvSeparate" :label="$t('simple.InstallConfig.else11')"
             validate-trigger="blur">
             <a-switch v-model="data.form.isEnvSeparate" />
           </a-form-item>
           <a-form-item v-if="data.form.isEnvSeparate" field="envPath" :label="$t('simple.InstallConfig.else9')"
             validate-trigger="blur">
             <a-input v-model="data.form.envPath" :placeholder="$t('simple.InstallConfig.else10')" />
-          </a-form-item>
+          </a-form-item> -->
         </a-form>
       </div>
     </div>
@@ -418,17 +418,17 @@ const validatePath = async (path: string, password: string, hostId: string) => {
   return false
 }
 
-const validateFile = async (file: string, password: string, hostId: string) => {
-  const pathParam = {
-    file: file,
-    rootPassword: password
-  }
-  const pathValid: KeyValue = await fileExist(hostId, pathParam)
-  if (Number(pathValid.code) === 200) {
-    return pathValid.data
-  }
-  return false
-}
+// const validateFile = async (file: string, password: string, hostId: string) => {
+//   const pathParam = {
+//     file: file,
+//     rootPassword: password
+//   }
+//   const pathValid: KeyValue = await fileExist(hostId, pathParam)
+//   if (Number(pathValid.code) === 200) {
+//     return pathValid.data
+//   }
+//   return false
+// }
 
 
 const validateSpecialFields = async () => {
@@ -472,9 +472,9 @@ const validateSpecialFields = async () => {
   if (installType.value !== 'import') {
     validMethodArr.push(validatePath(data.form.installPackagePath, encryptPwd, data.form.hostId))
   }
-  if (data.form.isEnvSeparate) {
-    validMethodArr.push(validateFile(data.form.envPath, encryptPwd, data.form.hostId))
-  }
+  // if (data.form.isEnvSeparate) {
+  //   validMethodArr.push(validateFile(data.form.envPath, encryptPwd, data.form.hostId))
+  // }
   if (validMethodArr.length) {
     let validResult
     try {
@@ -512,16 +512,16 @@ const validateSpecialFields = async () => {
       })
       result = false
     }
-    if (data.form.isEnvSeparate && !validResult[2]) {
-      // installPackagePath Valid
-      formRef.value?.setFields({
-        envPath: {
-          status: 'error',
-          message: t('enterprise.NodeConfig.else17')
-        }
-      })
-      result = false
-    }
+    // if (data.form.isEnvSeparate && !validResult[2]) {
+    //   // installPackagePath Valid
+    //   formRef.value?.setFields({
+    //     envPath: {
+    //       status: 'error',
+    //       message: t('enterprise.NodeConfig.else17')
+    //     }
+    //   })
+    //   result = false
+    // }
   }
 
   return result
