@@ -18,7 +18,7 @@ public class SysSettingFacade {
         return sysSettingService.getSetting(userId);
     }
 
-    public boolean checkUploadPath(String path) {
-        return sysSettingService.hasUploadPath(path);
+    public boolean checkUploadPath(String path, Integer userId) {
+        return sysSettingService.hasUploadPath(path, userId);
     }
 }

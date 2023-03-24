@@ -55,10 +55,17 @@ public class SysSettingServiceImpl extends ServiceImpl<SysSettingMapper, SysSett
     }
 
     @Override
-    public boolean hasUploadPath(String path) {
+    public boolean hasUploadPath(String path, Integer userId) {
         LambdaQueryWrapper<SysSettingEntity> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(SysSettingEntity::getUploadPath, path);
         List<SysSettingEntity> result = list(queryWrapper);
-        return CollUtil.isNotEmpty(result);
+        if (CollUtil.isNotEmpty(result)) {
+            for (SysSettingEntity entity: result) {
+                if (!entity.getUserId().equals(userId)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 }
