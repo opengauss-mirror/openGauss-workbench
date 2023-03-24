@@ -33,7 +33,7 @@
               <div class="tags-view-item">{{ tag.title }}</div>
               <el-icon
                 v-if="!isAffix(tag)"
-                @click.prevent.stop="closeSelectedTag(tag)"
+                @click.prevent.stop="closeSelectedTagToLastView(tag)"
                 class="tag-icon"
               >
                 <circle-close-filled />
@@ -160,12 +160,12 @@
     return false;
   };
 
-  function toLastView(visitedViews, view) {
+  function toLastView(visitedViews, view?) {
     const latestView = visitedViews.slice(-1)[0];
     if (latestView) {
       router.push(latestView.fullPath);
     } else {
-      if (view.name === 'home') {
+      if (view && view.name === 'home') {
         router.replace({ path: '/redirect' + view.fullPath });
       } else {
         router.push('/');
@@ -173,27 +173,62 @@
     }
   }
 
+  function toLastFilterView(visitedViews, excludeOptions: { path?: string; name?: string }) {
+    const latestView = visitedViews
+      .filter((item) => item.path !== excludeOptions.path)
+      .filter((item) => item.name !== excludeOptions.name)
+      .slice(-1)[0];
+    if (latestView) {
+      router.push(latestView.fullPath);
+    } else {
+      router.push('/');
+    }
+  }
+
   const closeSelectedTag = async (view) => {
-    if (tags.value.get(view.path)) {
-      tags.value.delete(view.path);
+    const viewId = view.id;
+    const childViews = TagsViewStore.getDebugChildViews(view.id);
+    const needToClose = [view].concat(childViews);
+    // Judge whether the label (parent function, child function) that needs to be closed is in the current route. If so, select the last unrelated route and close all parent and child windows
+    if (needToClose.findIndex((item) => item.id == TagsViewStore.getViewByRoute(route)?.id) > -1) {
+      const myVisitedViews = visitedViews.value.map((item) => {
+        const { matched, ...others } = item;
+        return others;
+      });
+      const vice = JSON.parse(JSON.stringify(myVisitedViews));
+      const lastOtherView = vice.reverse().find((item) => {
+        return needToClose.findIndex((n) => n.id == item.id) == -1;
+      });
+      lastOtherView && routerGo(lastOtherView);
     }
-    let { visitedViews }: any = await TagsViewStore.delView(view);
-    if (isActive(view)) {
-      toLastView(visitedViews, view);
-    }
+    childViews.forEach((item) => {
+      TagsViewStore.delView(item);
+    });
+    TagsViewStore.delViewById(viewId);
+  };
+
+  const closeSelectedTagToLastView = (view) => {
     contextMenu.visible = false;
+    closeSelectedTag(view);
+    if (isActive(view)) {
+      toLastView(visitedViews.value, view);
+    }
   };
 
   const closeCurrentTab = () => {
-    closeSelectedTag(contextTag.value);
+    closeSelectedTagToLastView(contextTag.value);
   };
 
   const closeOtherTab = async () => {
-    const { path } = contextTag.value;
+    contextMenu.visible = false;
+    const { path, name } = contextTag.value;
     for (let item of visitedViews.value) {
       if (item.path !== path) {
-        await closeSelectedTag(item);
+        TagsViewStore.delView(item);
       }
+    }
+    if (path !== route.path || name == 'debugChild') {
+      toLastFilterView(visitedViews.value, { name: 'debugChild' });
     }
   };
 
@@ -322,7 +357,7 @@
       next();
     });
     EventBus.listen(EventTypeName.CLOSE_SELECTED_TAB, (view) => {
-      closeSelectedTag(view);
+      closeSelectedTagToLastView(view);
     });
     EventBus.listen(EventTypeName.CLOSE_ALL_TAB_TO_LAST, () => {
       closeAllTabToLast();

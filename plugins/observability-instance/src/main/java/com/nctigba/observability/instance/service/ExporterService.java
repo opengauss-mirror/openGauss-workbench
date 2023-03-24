@@ -251,11 +251,12 @@ public class ExporterService extends AbstractInstaller {
 
 		try {
 			var node = clusterManager.getOpsNodeById(nodeId);
-			var nodeenv = envMapper.selectList(Wrappers.<NctigbaEnv>lambdaQuery()
-					.eq(NctigbaEnv::getType, type.NODE_EXPORTER).eq(NctigbaEnv::getHostid, node.getHostId())).get(0);
-			var expenv = envMapper.selectList(Wrappers.<NctigbaEnv>lambdaQuery()
-					.eq(NctigbaEnv::getType, type.OPENGAUSS_EXPORTER).eq(NctigbaEnv::getHostid, node.getHostId()))
-					.get(0);
+			var nodeenvList = envMapper.selectList(Wrappers.<NctigbaEnv>lambdaQuery()
+					.eq(NctigbaEnv::getType, type.NODE_EXPORTER).eq(NctigbaEnv::getHostid, node.getHostId()));
+			var nodeenv = nodeenvList.isEmpty() ? null : nodeenvList.get(0);
+			var expenvList = envMapper.selectList(Wrappers.<NctigbaEnv>lambdaQuery()
+					.eq(NctigbaEnv::getType, type.OPENGAUSS_EXPORTER).eq(NctigbaEnv::getHostid, node.getHostId()));
+			var expenv = expenvList.isEmpty() ? null : expenvList.get(0);
 
 			if (nodeenv == null && expenv == null)
 				throw new RuntimeException("exporters not found");
@@ -266,7 +267,10 @@ public class ExporterService extends AbstractInstaller {
 				throw new RuntimeException("host not found");
 
 			var user = hostUserFacade.listHostUserByHostId(hostEntity.getHostId()).stream().filter(e -> {
-				return nodeenv.getUsername().equals(e.getUsername());
+				if (nodeenv != null)
+					return nodeenv.getUsername().equals(e.getUsername());
+				else
+					return expenv.getUsername().equals(e.getUsername());
 			}).findFirst().orElse(null);
 			try (var sshsession = SshSession.connect(hostEntity.getPublicIp(), hostEntity.getPort(), user.getUsername(),
 					encryptionUtils.decrypt(user.getPassword()));) {

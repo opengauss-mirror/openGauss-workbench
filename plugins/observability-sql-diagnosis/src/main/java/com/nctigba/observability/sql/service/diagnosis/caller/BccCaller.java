@@ -33,7 +33,7 @@ public class BccCaller implements Caller {
 	@Autowired
 	@AutowiredType(Type.PLUGIN_MAIN)
 	private HostFacade hostFacade;
-	private static final String DB_THREADS_CONF = "select * from  pg_settings  where name like '%enable_thread_pool%";
+	private static final String DB_THREADS_CONF = "select * from  pg_settings  where name like '%enable_thread_pool%'";
 
 	@Override
 	public void beforeStart(Task task) {

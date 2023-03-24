@@ -221,7 +221,7 @@
     getButtonStatus();
   };
   const paramsCancel = () => {
-    handleStopDebug();
+    handleStopDebug(true);
   };
 
   const debug = reactive({
@@ -524,13 +524,17 @@
     });
   };
 
-  const handleStopDebug = () => {
+  const handleStopDebug = (isToParent) => {
     ws.instance.send({
       operation: 'stopDebug',
       ...commonWsParams.value,
     });
     debug.isDebugging = false;
-    TagsViewStore.closeAllChildViews(tagId, router);
+    TagsViewStore.closeAllChildViews(tagId);
+    const rootDebugView = TagsViewStore.getViewById(tagId);
+    if (rootDebugView && isToParent) {
+      router.push(rootDebugView.fullPath);
+    }
   };
 
   const handleBreakPointStep = () => {
@@ -664,7 +668,7 @@
   onBeforeUnmount(() => {
     refreshCounter.counter = null;
     if (!ws.instance) return;
-    ['debug'].includes(props.editorType) && handleStopDebug();
+    ['debug'].includes(props.editorType) && handleStopDebug(false);
     ['debugChild'].includes(props.editorType) && !alreadyCloseWindow.value && handleStepOut(true);
     if (['debugChild'].includes(props.editorType)) {
       TagsViewStore.updateStepIntoChildStatusById(ws.parentId, false);
