@@ -67,6 +67,8 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -1519,14 +1521,25 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
             }
 
             String result = jschResult.getResult();
-            String majorVersion = result.substring(16, 21);
+            String majorVersion = null;
+            String patternString = "([0-9]+\\.){1,2}[0-9]+";
+            Pattern pattern = Pattern.compile(patternString);
+            Matcher matcher = pattern.matcher(result);
+            if (matcher.find()) {
+                majorVersion = matcher.group();
+            }
+
             log.info("openGauss version:{}", majorVersion);
+            if (StrUtil.isEmpty(majorVersion)){
+                throw new OpsException("Failed to get openGauss version");
+            }
             return majorVersion;
         } catch (Exception e) {
             log.error("Failed to get openGauss version", e);
             throw new OpsException("Failed to get openGauss version");
         }
     }
+
 
     @Override
     public void monitor(String clusterId, String hostId, String businessId) {
