@@ -469,9 +469,14 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
 
         if (CollUtil.isNotEmpty(hostIdList)) {
             List<OpsHostEntity> opsHostEntities = hostFacade.listByIds(hostIdList);
-            if (CollUtil.isEmpty(opsHostEntities) || opsHostEntities.size() != hostLen) {
+            if (CollUtil.isEmpty(opsHostEntities)) {
                 log.info("Host information not found,hostIds{}", hostIdList);
                 throw new OpsException("Host information not found");
+            }
+            if (opsHostEntities.size() != hostLen) {
+                String errMsg = "Cannot select the same host as the installation target";
+                log.info(errMsg);
+                throw new OpsException(errMsg);
             }
 
             List<OpsHostUserEntity> hostUserEntities = hostUserFacade.listHostUserByHostIdList(hostIdList);
