@@ -253,9 +253,9 @@ public class ExporterService extends AbstractInstaller {
 			var node = clusterManager.getOpsNodeById(nodeId);
 			var nodeenv = envMapper.selectList(Wrappers.<NctigbaEnv>lambdaQuery()
 					.eq(NctigbaEnv::getType, type.NODE_EXPORTER).eq(NctigbaEnv::getHostid, node.getHostId())).get(0);
-			var expenv = envMapper.selectList(Wrappers.<NctigbaEnv>lambdaQuery()
-					.eq(NctigbaEnv::getType, type.OPENGAUSS_EXPORTER).eq(NctigbaEnv::getHostid, node.getHostId()))
-					.get(0);
+			var expenvList = envMapper.selectList(Wrappers.<NctigbaEnv>lambdaQuery()
+					.eq(NctigbaEnv::getType, type.OPENGAUSS_EXPORTER).eq(NctigbaEnv::getHostid, node.getHostId()));
+			var expenv = expenvList.isEmpty() ? null : expenvList.get(0);
 
 			if (nodeenv == null && expenv == null)
 				throw new RuntimeException("exporters not found");
