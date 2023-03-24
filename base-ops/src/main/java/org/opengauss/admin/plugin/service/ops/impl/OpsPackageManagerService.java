@@ -177,8 +177,8 @@ public class OpsPackageManagerService extends ServiceImpl<OpsPackageManagerMappe
     }
 
     @Override
-    public boolean checkUploadPath(String path) {
-        return !sysSettingFacade.checkUploadPath(path);
+    public boolean checkUploadPath(String path, Integer userId) {
+        return !sysSettingFacade.checkUploadPath(path, userId);
     }
 
     private String getLitePackageCpuArch(String installPackagePath) {
