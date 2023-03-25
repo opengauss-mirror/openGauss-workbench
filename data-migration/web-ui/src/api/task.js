@@ -44,6 +44,14 @@ export function downloadEnvLog (hostId) {
   return axios.get(`/plugins/data-migration/resource/log/downloadEnv/${hostId}`)
 }
 
-export function installPortal (hostId) {
-  return axios.get(`/plugins/data-migration/resource/installPortal/${hostId}`)
+export function hostUsers (hostId) {
+  return axios.get(`/plugins/data-migration/resource/hostUsers/${hostId}`)
+}
+
+export function installPortal (hostId, query) {
+  return axios.get(`/plugins/data-migration/resource/installPortal/${hostId}`, { params: query })
+}
+
+export function reInstallPortal (hostId) {
+  return axios.get(`/plugins/data-migration/resource/retryInstallPortal/${hostId}`)
 }

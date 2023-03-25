@@ -39,6 +39,7 @@ import Step2 from './step2'
 import Step3 from './step3'
 import { migrationSave, migrationUpdate } from '@/api/task'
 import { taskEditInfo } from '@/api/detail'
+import dayjs from 'dayjs'
 
 const currentStep = ref(1)
 const taskId = ref()
@@ -197,7 +198,7 @@ onMounted(() => {
   if (id) {
     getTaskDetail(id)
   } else {
-    taskName.value = `Task_${Math.random().toString(36).substring(2, 10)}`
+    taskName.value = `Task_${dayjs().format('YYYYMMDDHHmm')}_${Math.random().toString(36).substring(2, 8)}`
   }
 })
 </script>
