@@ -64,7 +64,7 @@
     <div class="table-con">
       <a-table :loading="loading" row-key="id" :data="tableData" :row-selection="rowSelection" v-model:selectedKeys="selectedKeys" :bordered="false" :stripe="!currentTheme" :hoverable="!currentTheme" :pagination="pagination" @page-change="pageChange">
         <template #columns>
-          <a-table-column title="任务名称" data-index="taskName" :width="150" fixed="left" ellipsis tooltip></a-table-column>
+          <a-table-column title="任务名称" data-index="taskName" :width="220" fixed="left" ellipsis tooltip></a-table-column>
           <a-table-column title="创建人" data-index="createUser" :width="100"></a-table-column>
           <a-table-column title="执行状态" data-index="execStatus" :width="120">
             <template #cell="{ record }">
@@ -200,7 +200,7 @@ const getList = () => {
     ...queryParams
   }).then(res => {
     loading.value = false
-    tableData.value = res.rows.map(item => ({ ...item, disabled: item.execStatus !== 0 }))
+    tableData.value = res.rows.map(item => ({ ...item, disabled: item.execStatus === 1 }))
     pagination.total = res.total
   }).catch(() => {
     loading.value = false

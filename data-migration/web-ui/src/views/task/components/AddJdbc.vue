@@ -90,7 +90,7 @@ const data = reactive({
   hostList: [],
   activeTab: '',
   dbTypes: [
-    { label: 'mySql', value: 'MYSQL' },
+    { label: 'MySQL', value: 'MYSQL' },
     { label: 'openGauss', value: 'OPENGAUSS' }
   ]
 })

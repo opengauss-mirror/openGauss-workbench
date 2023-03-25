@@ -149,9 +149,6 @@
     </div>
 
     <!-- add sql -->
-    <add-sql v-model:open="addSqlVisible" />
-
-    <!-- add jdbc -->
     <add-jdbc ref="addJdbcRef" @finish="getClustersData" />
   </div>
 </template>
@@ -159,7 +156,6 @@
 <script setup>
 import { reactive, ref, computed, watch, onMounted, toRaw, h, compile } from 'vue'
 import { Message } from '@arco-design/web-vue'
-import AddSql from '../components/AddSql.vue'
 import AddJdbc from '../components/AddJdbc.vue'
 import { clustersData, sourceClusterDbsData, targetClusterDbsData } from '@/api/task'
 import useTheme from '@/hooks/theme'
@@ -189,8 +185,6 @@ const selectSourceDB = reactive({
 })
 
 const tableData = ref([])
-
-const addSqlVisible = ref(false)
 
 const treeSourceData = computed(() => {
   if (!searchSourceKey.value) return sourceTreeData.value
@@ -284,7 +278,7 @@ const deepTargetTreeData = (data) => {
       }
     } else {
       return {
-        title: item.publicIp + ':' + item.hostPort,
+        title: item.publicIp + ':' + item.dbPort,
         key: item.clusterId || item.nodeId,
         icon: () => h(compile(`<svg-icon icon-class="${item.clusterId ? 'cluster' : 'opengaussdb'}" />`)),
         level: item.clusterId ? 0 : 1,

@@ -86,7 +86,10 @@
       <div v-if="tabActive === 2 && !loading" class="log-con">
         <a-list>
           <a-list-item v-for="item in logData" :key="item.url">
-            <div class="log-detail-info">{{ item.name }}</div>
+            <div class="log-detail-info">
+              <span>{{ item.name }}</span>
+              <span class="desc">{{ logsMap(item.name) }}</span>
+            </div>
             <template #actions>
               <a-button type="text" size="mini" @click="handleDownloadLog(item.url)">
                 <template #icon>
@@ -160,6 +163,26 @@ const recordsMap = (key) => {
   return maps[key]
 }
 
+// log map
+const logsMap = (key) => {
+  const maps = {
+    'sink.log': '数据校验sink端日志',
+    'source.log': '数据校验source端日志',
+    'check.log': '数据校验check端日志',
+    'full_migration.log': '全量迁移日志',
+    'server.log': 'zookeeper+kafka日志',
+    'schema-registry.log': 'schema-registry日志',
+    'connect.log': '增量迁移日志',
+    'connect_source.log': '增量迁移source端日志',
+    'connect_sink.log': '增量迁移sink端日志',
+    'reverse_connect.log': '反向迁移日志',
+    'reverse_connect_source.log': '反向迁移source端日志',
+    'reverse_connect_sink.log': '反向迁移sink端日志',
+    'error.log': '执行时错误日志'
+  }
+  return `(${maps[key]})` || ''
+}
+
 watch(visible, (v) => {
   emits('update:open', v)
 })
@@ -203,7 +226,7 @@ const handleDownloadLog = (url) => {
       const URL = window.URL || window.webkitURL
       const herf = URL.createObjectURL(blob)
       a.href = herf
-      a.download = url.substring(url.lastIndexOf('/') + 1)
+      a.download = `#${subTaskInfo.value.id}_${url.substring(url.lastIndexOf('/') + 1, url.lastIndexOf('.'))}_${dayjs().format('YYYYMMDDHHmmss')}.log`
       document.body.appendChild(a)
       a.click()
       document.body.removeChild(a)
@@ -500,6 +523,10 @@ onMounted(() => {
     margin-top: 10px;
     .log-detail-info {
       white-space: pre-wrap;
+      .desc {
+        margin-left: 5px;
+        color: var(--color-text-2);
+      }
     }
   }
 }
