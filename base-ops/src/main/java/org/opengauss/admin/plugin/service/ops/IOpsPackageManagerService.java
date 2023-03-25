@@ -29,5 +29,5 @@ public interface IOpsPackageManagerService extends IService<OpsPackageManagerEnt
 
     String getSysUploadPath(Integer userId);
 
-    boolean checkUploadPath(String path);
+    boolean checkUploadPath(String path, Integer userId);
 }

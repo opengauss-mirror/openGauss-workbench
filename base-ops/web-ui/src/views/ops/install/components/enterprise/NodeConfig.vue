@@ -36,13 +36,14 @@
             <a-form-item field="hostId" :label="$t('enterprise.NodeConfig.5mpme7w6azo0')">
               <a-select :loading="data.hostListLoading" v-model="formItem.hostId" @change="changeHostId(index)"
                 :placeholder="$t('enterprise.NodeConfig.5mpme7w6b3k0')"
-                @popup-visible-change="hostPopupChange($event, index)">
+                @popup-visible-change="hostPopupChange($event, index)" class="mr-s">
                 <a-option v-for="item in data.hostList" :key="item.hostId" :value="item.hostId">{{
                   item.privateIp
                   + '(' +
                   (item.publicIp ? item.publicIp : '--') + ')'
                 }}</a-option>
               </a-select>
+              <icon-code-square :size="25" style="cursor: pointer;" @click="showTerminal(formItem, index)"/>
             </a-form-item>
             <a-form-item v-if="formItem.isNeedPwd" field="rootPassword" :label="$t('enterprise.NodeConfig.else2')"
               validate-trigger="blur">
@@ -88,6 +89,7 @@
         </div>
       </div>
     </div>
+    <host-terminal ref="hostTerminalRef"></host-terminal>
   </div>
 </template>
 
@@ -102,6 +104,7 @@ import { useOpsStore } from '@/store'
 import { useI18n } from 'vue-i18n'
 import { encryptPassword } from '@/utils/jsencrypt'
 import { FormInstance } from '@arco-design/web-vue/es/form'
+import HostTerminal from "@/views/ops/install/components/hostTerminal/HostTerminal.vue";
 const { t } = useI18n()
 const installStore = useOpsStore()
 
@@ -628,6 +631,43 @@ const validateSpecialFields = async () => {
     }
   }
   return result
+}
+
+
+const hostTerminalRef = ref<null | InstanceType<typeof HostTerminal>>(null)
+const showTerminal = (item: KeyValue, index: number) => {
+  // isRemember password
+  if (item.isNeedPwd) {
+    if (!item.rootPassword) {
+      refList.value[index]?.setFields({
+        rootPassword: {
+          status: 'error',
+          message: t('simple.InstallConfig.5mpmu0laqwo0')
+        }
+      })
+      return
+    }
+  }
+  if (!item.hostId) {
+    refList.value[index]?.setFields({
+      hostId: {
+        status: 'error',
+        message: t('lightweight.InstallConfig.5mpmkfqybw00')
+      }
+    })
+    return
+  }
+  // showTerminal
+  handleShowTerminal({
+    hostId: item.hostId,
+    port: item.port,
+    ip: item.publicIp,
+    password: item.rootPassword
+  })
+}
+
+const handleShowTerminal = (data: KeyValue) => {
+  hostTerminalRef.value?.open(data)
 }
 
 defineExpose({

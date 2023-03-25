@@ -51,7 +51,7 @@ public class SysSettingController extends BaseController {
 
     @GetMapping("/checkUploadPath")
     public AjaxResult checkSysUploadPath(@RequestParam String path) {
-        boolean result = sysSettingService.hasUploadPath(path);
+        boolean result = sysSettingService.hasUploadPath(path, getUserId());
         // return false is not ok
         return AjaxResult.success("ok", !result);
     }

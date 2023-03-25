@@ -10,31 +10,40 @@
       </div>
       <div class="flex-row">
         <a-button type="outline" class="mr" @click="goHome">{{
-          $t('simple.ExeInstall.5mpmsp16pp80')
-        }}</a-button>
+            $t('simple.ExeInstall.5mpmsp16pp80')
+          }}
+        </a-button>
         <a-button type="primary" @click="goOps">{{
-          $t('simple.ExeInstall.5mpmsp16pxs0')
-        }}</a-button>
+            $t('simple.ExeInstall.5mpmsp16pxs0')
+          }}
+        </a-button>
       </div>
     </div>
     <div class="flex-row full-w teminal-h" v-else>
-      <div class="panel-w flex-col-start mr">
+      <div :class="`flex-col-start mr panel-w`" :style="exeResult === exeResultEnum.FAIL ? '':'width: 100%'">
         <a-alert class="mb" style="padding: 14px 12px;width: fit-content;" type="error"
-          v-if="exeResult === exeResultEnum.FAIL">
+                 v-if="exeResult === exeResultEnum.FAIL">
           {{ $t('simple.ExeInstall.5mpmsp16q5o0') }}
         </a-alert>
         <a-alert type="warning" class="mb" style="padding: 14px 12px;width: fit-content;"
-          v-if="exeResult === exeResultEnum.UN_INSTALL">{{ $t('simple.ExeInstall.5mpmsp16qhc0') }}
-          {{ $t('simple.ExeInstall.5mpmsp16qr80') }}</a-alert>
+                 v-if="exeResult === exeResultEnum.UN_INSTALL">{{ $t('simple.ExeInstall.5mpmsp16qhc0') }}
+          {{ $t('simple.ExeInstall.5mpmsp16qr80') }}
+        </a-alert>
         <div id="xtermLog" class="xterm"></div>
       </div>
-      <div class="panel-w flex-col-start" v-if="exeResult === exeResultEnum.FAIL">
+      <div :class="`flex-col-start panel-w`" v-if="exeResult === exeResultEnum.FAIL">
         <div class="full-w flex-between mb">
           <a-select style="width: 300px" v-model="hostId">
             <a-option v-for="(item, index) in hosts" :key="index" :value="item.hostId" :label="item.privateIp">
             </a-option>
           </a-select>
-          <a-button type="primary" @click="retryInstall">{{ $t('simple.ExeInstall.5mpmsp16qzc0') }}</a-button>
+          <div>
+            <a-button type="primary" @click="retryInstall" class="mr-s">{{ $t('simple.ExeInstall.5mpmsp16qzc0') }}</a-button>
+            <a-button type="primary" @click="handleDownloadLog">{{
+                $t('components.openLooKeng.5mpiji1qpcc65')
+              }}
+            </a-button>
+          </div>
         </div>
         <div id="xterm" class="xterm"></div>
       </div>
@@ -43,17 +52,19 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, inject, onBeforeUnmount, onMounted, ref } from 'vue'
+import {computed, inject, nextTick, onBeforeUnmount, onMounted, ref} from 'vue'
 import 'xterm/css/xterm.css'
-import { Terminal } from 'xterm'
-import { FitAddon } from 'xterm-addon-fit'
-import { AttachAddon } from 'xterm-addon-attach'
-import { openSSH, installOpenGauss } from '@/api/ops'
-import { WsConnectType } from '@/types/ops/install'
-import { useOpsStore } from '@/store'
-import { KeyValue } from '@/types/global'
+import {Terminal} from 'xterm'
+import {FitAddon} from 'xterm-addon-fit'
+import {AttachAddon} from 'xterm-addon-attach'
+import {openSSH, installOpenGauss} from '@/api/ops'
+import {WsConnectType} from '@/types/ops/install'
+import {useOpsStore} from '@/store'
+import {KeyValue} from '@/types/global'
 import Socket from '@/utils/websocket'
-import { encryptPassword } from '@/utils/jsencrypt'
+import {encryptPassword} from '@/utils/jsencrypt'
+import dayjs from "dayjs";
+
 const installStore = useOpsStore()
 const hostId = ref('')
 const hosts = ref<any[]>([])
@@ -65,6 +76,7 @@ enum exeResultEnum {
   SUCESS = Number(1),
   FAIL = Number(0)
 }
+
 const exeResult = ref<number>(exeResultEnum.UN_INSTALL)
 
 // websocket
@@ -75,6 +87,7 @@ const termLog = ref<Terminal>()
 const termTerminal = ref<Terminal>()
 
 const loadingFunc = inject<any>('loading')
+const logs = ref<string>('')
 
 onMounted(() => {
   loadingFunc.setNextBtnShow(false)
@@ -129,7 +142,7 @@ const getTermObj = (): Terminal => {
 const openSocket = () => {
   const term = getTermObj()
   const socketKey = new Date().getTime()
-  const terminalSocket = new Socket({ url: `terminal_${socketKey}` })
+  const terminalSocket = new Socket({url: `terminal_${socketKey}`})
   terminalWs.value = terminalSocket
   terminalSocket.onopen(() => {
     const param = {
@@ -153,7 +166,7 @@ const openSocket = () => {
 const openLogSocket = () => {
   const term = getTermObj()
   const socketKey = new Date().getTime()
-  const logSocket = new Socket({ url: `installLog_${socketKey}` })
+  const logSocket = new Socket({url: `installLog_${socketKey}`})
   terminalLogWs.value = logSocket
   logSocket.onopen(async () => {
     loadingFunc.toLoading()
@@ -178,12 +191,14 @@ const openLogSocket = () => {
     })
     initTermLog(term, logSocket.ws)
     localStorage.setItem('Static-pluginBase-opsOpsInstall', '1')
+    logs.value = ''
   })
   logSocket.onclose(() => {
     localStorage.removeItem('Static-pluginBase-opsOpsInstall')
   })
   logSocket.onmessage((messageData: any) => {
     term.writeln(messageData)
+    logs.value += messageData + '\r\n'
     if (messageData.indexOf('FINAL_EXECUTE_EXIT_CODE') > -1) {
       const flag = Number(messageData.split(':')[1])
       if (flag === 0) {
@@ -196,9 +211,15 @@ const openLogSocket = () => {
       } else {
         loadingFunc.cancelLoading()
         exeResult.value = exeResultEnum.FAIL
+
         if (termTerminal.value) {
           termTerminal.value.dispose()
         }
+        nextTick(() => {
+          let fitAddon = new FitAddon()
+          term.loadAddon(fitAddon)
+          fitAddon.fit()
+        })
         openSocket()
       }
       logSocket.destroy()
@@ -254,6 +275,22 @@ const installParam = computed(() => installStore.getInstallParam)
 defineExpose({
   beforeConfirm
 })
+
+const handleDownloadLog = () => {
+  const time = dayjs().format('YYYY-MM-DD_HH:mm:ss')
+  const filename = `ops_${time}.log`
+
+  const blob = new Blob([logs.value], {type: 'text/plain'})
+  const url = URL.createObjectURL(blob)
+
+  const link = document.createElement('a')
+  link.href = url
+  link.download = filename
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+  URL.revokeObjectURL(url)
+}
 
 </script>
 

@@ -290,6 +290,10 @@
           "5mpiji1qpcc93": "Zookeeper安装信息",
           "5mpiji1qpcc94": "ShardingProxy安装信息",
           "5mpiji1qpcc95": "openLooKeng安装信息"
+        },
+        "HostTerminal": {
+          "else1": "IP地址",
+          "5oxhoh5r6ls0": "终端"
         }
     },
     "logCenter": {
