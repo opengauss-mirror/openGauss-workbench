@@ -25,11 +25,15 @@ public class OpsClusterNodeVO {
     //private String rootPassword;
     private Boolean isRemember;
     private String installUserName;
+    private String installPath;
+    private String dataPath;
 
     public static OpsClusterNodeVO of(OpsClusterNodeEntity opsClusterNodeEntity) {
         OpsClusterNodeVO opsClusterNodeVO = new OpsClusterNodeVO();
         opsClusterNodeVO.setNodeId(opsClusterNodeEntity.getClusterNodeId());
         opsClusterNodeVO.setClusterRole(opsClusterNodeEntity.getClusterRole().name());
+        opsClusterNodeVO.setInstallPath(opsClusterNodeEntity.getInstallPath());
+        opsClusterNodeVO.setDataPath(opsClusterNodeEntity.getDataPath());
         return opsClusterNodeVO;
     }
 }

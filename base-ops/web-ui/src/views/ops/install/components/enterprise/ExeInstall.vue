@@ -150,7 +150,7 @@ const hostChange = () => {
 const getTermObj = (): Terminal => {
   return new Terminal({
     fontSize: 14,
-    rows: 40,
+    rows: 30,
     cols: 100,
     cursorBlink: true,
     convertEol: true,

@@ -1,5 +1,5 @@
 <template>
-  <div class="panel-c">
+  <div class="panel-c panel-overflow">
     <div class="panel-header">
       <div class="label-color mb ft-xlg">
         {{ $t('components.OfflineInstall.5mpn1nway8c0') }} {{ currentVersion }}
@@ -196,6 +196,10 @@ const storeData = computed(() => installStore.getInstallConfig)
 
 <style lang="less" scoped>
 @import url('~@/assets/style/ops/ops.less');
+
+.panel-overflow {
+  overflow: auto;
+}
 
 .install-package-card {
   width: 250px;

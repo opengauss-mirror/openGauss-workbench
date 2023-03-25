@@ -3,14 +3,19 @@
     <div class="panel-header">
       <div class="label-color mb ft-xlg">{{ $t('components.ChooseVersion.5mpmxod8xno0') }}</div>
       <div class="flex-row-start mb">
-        <div class="label-color mr">{{ $t('components.ChooseVersion.5mpmxod8yh00') }}</div>
+        <div class="label-color mr">{{ $t('components.ChooseVersion.5mpmxod8yh00') }}:</div>
         <a-tag class="mr" size="large" color="green">{{ getDescVersion() }}</a-tag>
         <div v-if="currVersion !== OpenGaussVersionEnum.OPENlOOKENG" class="install-type flex-row">
-          <div class="label-color label mr">{{ $t('components.ChooseVersion.5mpmxod8yr40') }}</div>
-          <a-select style="width: 200px" v-model="data.installType" @change="installTypeChange">
+          <div class="label-color label mr">{{ $t('components.ChooseVersion.5mpmxod8yr40') }}:</div>
+          <!-- <a-select style="width: 200px" v-model="data.installType" @change="installTypeChange">
             <a-option v-for="(item, index) in installTypes" :key="index" :label="item.label" :value="item.value">
             </a-option>
-          </a-select>
+          </a-select> -->
+          <a-radio-group v-model="data.installType" :options="installTypes" @change="installTypeChange">
+            <template #label="{ data }">
+              {{ data.label }}
+            </template>
+          </a-radio-group>
         </div>
       </div>
       <div v-if="data.installType === 'import'" style="color: red; font-weight: bold; font-size: large;">请注意:

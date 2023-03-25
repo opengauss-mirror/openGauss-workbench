@@ -5,7 +5,7 @@
         <div class="label-color ft-b mb">{{ $t('simple.InstallConfig.5mpmu0lapic0') }}</div>
         <a-form :model="data.form" :rules="data.rules" :style="{ width: '800px' }" ref="formRef">
           <a-form-item field="clusterId" :label="$t('simple.InstallConfig.5mpmu0laqc80')" validate-trigger="blur">
-            <a-input v-model="data.form.clusterId" :placeholder="$t('simple.InstallConfig.5mpmu0laqiw0')" />
+            <a-input v-model.trim="data.form.clusterId" :placeholder="$t('simple.InstallConfig.5mpmu0laqiw0')" />
           </a-form-item>
           <a-form-item field="hostId" :label="$t('simple.InstallConfig.5mpmu0laqow0')">
             <a-select :loading="hostListLoading" v-model="data.form.hostId" @change="changeHostId" class="mr-s"
@@ -34,18 +34,18 @@
             </a-select>
           </a-form-item>
           <a-form-item field="installPath" :label="$t('simple.InstallConfig.5mpmu0lar480')" validate-trigger="blur">
-            <a-input v-model="data.form.installPath" :placeholder="$t('simple.InstallConfig.5mpmu0lar800')" />
+            <a-input v-model.trim="data.form.installPath" :placeholder="$t('simple.InstallConfig.5mpmu0lar800')" />
           </a-form-item>
           <a-form-item v-if="installType !== 'import'" field="installPackagePath"
             :label="$t('simple.InstallConfig.else6')" validate-trigger="blur">
-            <a-input v-model="data.form.installPackagePath" :placeholder="$t('simple.InstallConfig.else7')" />
+            <a-input v-model.trim="data.form.installPackagePath" :placeholder="$t('simple.InstallConfig.else7')" />
           </a-form-item>
           <a-form-item field="port" :label="$t('simple.InstallConfig.5mpmu0larj40')" validate-trigger="blur">
             <a-input-number v-model="data.form.port" :placeholder="$t('simple.InstallConfig.5mpmu0larmo0')" />
           </a-form-item>
           <a-form-item field="databaseUsername" :label="$t('simple.InstallConfig.5mpmu0larq40')" validate-trigger="blur"
             v-if="installType === 'import'">
-            <a-input v-model="data.form.databaseUsername" :placeholder="$t('simple.InstallConfig.5mpmu0larto0')"
+            <a-input v-model.trim="data.form.databaseUsername" :placeholder="$t('simple.InstallConfig.5mpmu0larto0')"
               allow-clear />
           </a-form-item>
           <a-form-item field="databasePassword" :label="$t('simple.InstallConfig.5mpmu0larx00')" validate-trigger="blur">

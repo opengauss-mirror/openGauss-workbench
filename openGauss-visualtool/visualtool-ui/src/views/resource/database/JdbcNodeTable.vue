@@ -29,35 +29,50 @@
               <div>{{ getNodeRole(record.role) }}</div>
             </div>
           </div>
+          <a-tag color="green">{{ $t('database.JdbcNodeTable.else6') }}</a-tag>
         </div>
       </template>
       <template #connectInfo="{ record }">
-        <div class="flex-col-start">
+        <div class="flex-col-start" v-if="jdbcData.dbType === 'MYSQL'">
           <div class="flex-row">
-            <div class="mr-s" style="width: 50px;text-align: right;">QPS:</div>
+            <div class="mr-s" style="width: 50px;">QPS:</div>
             <div class="monitor-data">{{ record.qps ? record.qps : '--' }}</div>
           </div>
           <div class="flex-row">
-            <div class="mr-s" style="width: 50px;text-align: right;">TPS:</div>
+            <div class="mr-s" style="width: 50px;">TPS:</div>
             <div class="monitor-data">{{ record.tps ? record.tps : '--' }}</div>
           </div>
           <div class="flex-row">
-            <div class="mr-s" style="width: 50px;text-align: right;">{{ $t('database.JdbcNodeTable.5oxhv6qcnuk0') }}:
+            <div class="mr-s" style="width: 50px;">{{ $t('database.JdbcNodeTable.5oxhv6qcnuk0') }}:
             </div>
             <div class="monitor-data">{{ record.connNum ? record.connNum : '--' }}</div>
           </div>
         </div>
+        <div class="flex-col-start" v-if="jdbcData.dbType === 'OPENGAUSS'">
+          <div class="flex-col">
+            <div class="monitor-data">{{ record.connNum ? record.connNum : '--' }}</div>
+            <div>{{ $t('database.JdbcNodeTable.5oxhv6qcnuk0') }}</div>
+          </div>
+        </div>
       </template>
       <template #tableSpaceUsed="{ record }">
-        <div class="flex-col mr" style="width: 130px;">
+        <div class="flex-col mr" style="width: 130px;" v-if="jdbcData.dbType === 'MYSQL'">
           <div class="monitor-data">{{ record.tableSpaceUsed ? record.tableSpaceUsed : '--' }}MB</div>
           <div>{{ $t('database.JdbcNodeTable.5oxhv6qco4c0') }}</div>
         </div>
+        <div class="flex-col mr" style="width: 130px;" v-if="jdbcData.dbType === 'OPENGAUSS'">
+          <div class="monitor-data">{{ record.sessionNum ? record.sessionNum : '--' }}</div>
+          <div>{{ $t('database.JdbcNodeTable.else7') }}</div>
+        </div>
       </template>
       <template #memoryUsed="{ record }">
-        <div class="flex-col mr" style="width: 120px;">
+        <div class="flex-col mr" style="width: 120px;" v-if="jdbcData.dbType === 'MYSQL'">
           <div class="monitor-data">{{ record.memoryUsed ? record.memoryUsed : '--' }}GB</div>
           <div>{{ $t('database.JdbcNodeTable.5oxhv6qcobk0') }}</div>
+        </div>
+        <div class="flex-col mr" style="width: 130px;" v-if="jdbcData.dbType === 'OPENGAUSS'">
+          <div class="monitor-data">{{ record.lockNum ? record.lockNum : '--' }}</div>
+          <div>{{ $t('database.JdbcNodeTable.else8') }}</div>
         </div>
       </template>
     </a-table>
@@ -81,21 +96,21 @@ const data = reactive<KeyValue>({
 
 const columns = computed(() => [
   { slotName: 'baseInfo', width: 350 },
-  { slotName: 'status', width: 210 },
+  { slotName: 'status', width: 230 },
   { slotName: 'connectInfo', width: 200 },
   { slotName: 'tableSpaceUsed', width: 310 },
   { slotName: 'memoryUsed', width: 320 }
 ])
 
 const props = defineProps({
-  nodes: {
-    type: Array as PropType<KeyValue[]>,
+  jdbcData: {
+    type: Array as PropType<KeyValue>,
     required: true
   }
 })
 
 onMounted(() => {
-  data.nodeList = JSON.parse(JSON.stringify(props.nodes))
+  data.nodeList = JSON.parse(JSON.stringify(props.jdbcData.nodes))
   openMonitor()
 })
 
@@ -191,14 +206,20 @@ const openNodeMonitor = (nodeData: KeyValue, index: number) => {
   })
   websocket.onmessage((messageData: any) => {
     const eventData = JSON.parse(messageData)
-    console.log('show jdbc ws data', eventData)
+    console.log('show jdbc ws data', props.jdbcData.dbType, data.nodeList, eventData)
     if (Object.keys(eventData).length) {
-      data.nodeList[index].tableSpaceUsed = Number(eventData.tableSpaceUsed / 1024 / 1024).toFixed(2)
-      data.nodeList[index].memoryUsed = Number(eventData.memoryUsed / 1024 / 1024 / 1024).toFixed(2)
-      data.nodeList[index].connNum = eventData.connNum
-      data.nodeList[index].qps = eventData.qps
-      data.nodeList[index].tps = eventData.tps
-      data.nodeList[index].role = eventData.role
+      if (props.jdbcData.dbType === 'OPENGAUSS') {
+        data.nodeList[index].connNum = eventData.connNum
+        data.nodeList[index].lockNum = eventData.lockNum
+        data.nodeList[index].sessionNum = eventData.sessionNum
+      } else if (props.jdbcData.dbType === 'MYSQL') {
+        data.nodeList[index].tableSpaceUsed = Number(eventData.tableSpaceUsed / 1024 / 1024).toFixed(2)
+        data.nodeList[index].memoryUsed = Number(eventData.memoryUsed / 1024 / 1024 / 1024).toFixed(2)
+        data.nodeList[index].connNum = eventData.connNum
+        data.nodeList[index].qps = eventData.qps
+        data.nodeList[index].tps = eventData.tps
+        data.nodeList[index].role = eventData.role
+      }
     }
   })
 }

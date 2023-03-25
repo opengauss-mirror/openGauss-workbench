@@ -2,7 +2,7 @@
   <div class="app-container">
     <div class="main-bd">
       <div class="az-list">
-        <div class="flex-between mb">
+        <div class="flex-between mb-s">
           <div>
             <a-button type="primary" class="mr" @click="handleAddAz('create')">
               <template #icon>
@@ -12,9 +12,20 @@
             </a-button>
           </div>
           <div>
-            <a-input-search v-model="filter.name" :loading="list.loading" allowClear @search="getListData"
-              @press-enter="getListData" @clear="getListData" :placeholder="$t('az.index.5mpi9hkpgdw0')"
-              search-button />
+            <a-form :model="filter" layout="inline">
+              <a-form-item field="name" :label="$t('az.index.azName')">
+                <a-input v-model.trim="filter.name" allow-clear :placeholder="$t('az.index.5mpi9hkpgdw0')"
+                  style="width: 180px;"></a-input>
+              </a-form-item>
+              <a-form-item>
+                <a-button type="outline" @click="getListData()">
+                  <template #icon>
+                    <icon-search />
+                  </template>
+                  <template #default>{{ $t('database.index.5oxhr0qz30g0') }}</template>
+                </a-button>
+              </a-form-item>
+            </a-form>
           </div>
         </div>
         <a-table class="d-a-table-row" :data="list.data" :columns="columns" :pagination="list.page"

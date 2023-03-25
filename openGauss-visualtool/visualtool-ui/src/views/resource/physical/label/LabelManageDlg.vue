@@ -11,7 +11,7 @@
         <div>
           <a-form :model="filter" layout="inline">
             <a-form-item :label="$t('label.LabelManageDlg.5pbjv7b0wu80')">
-              <a-input v-model="filter.name" allow-clear :placeholder="$t('label.LabelManageDlg.5pbjv7b0x3w0')"
+              <a-input v-model.trim="filter.name" allow-clear :placeholder="$t('label.LabelManageDlg.5pbjv7b0x3w0')"
                 style="width: 180px;"></a-input>
             </a-form-item>
             <a-form-item>
@@ -44,7 +44,7 @@
     :title="formData.title" :modal-style="{ width: '550px' }" @ok="handleAddOk" @cancel="handleAddClose">
     <a-form :model="formData.form" ref="formRef" auto-label-width :rules="formRules">
       <a-form-item field="name" :label="$t('label.LabelManageDlg.5pbjv7b0wu80')">
-        <a-input v-model="formData.form.name" allow-clear
+        <a-input v-model.trim="formData.form.name" allow-clear
           :placeholder="$t('label.LabelManageDlg.5pbjv7b0x3w0')"></a-input>
       </a-form-item>
     </a-form>

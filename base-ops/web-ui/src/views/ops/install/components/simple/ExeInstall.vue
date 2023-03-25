@@ -216,6 +216,7 @@ const openLogSocket = () => {
   })
   logSocket.onmessage((messageData: any) => {
     console.log('show term message', messageData)
+
     if (temp) {
       term.write('\x1b[2K\r')
       if (messageData === '100%') {

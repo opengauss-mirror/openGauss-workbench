@@ -60,7 +60,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   if (Object.keys(data.socketMap).length) {
-    for (let key of data.socketMap) {
+    for (let key in data.socketMap) {
       data.socketMap[key].destroy()
     }
   }

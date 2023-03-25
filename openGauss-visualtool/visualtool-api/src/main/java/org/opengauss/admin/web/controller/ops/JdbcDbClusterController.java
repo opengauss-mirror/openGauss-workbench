@@ -78,6 +78,8 @@ public class JdbcDbClusterController extends BaseController {
         headers.add("Access-Control-Expose-Headers", "Content-Disposition");
         headers.add("Content-Disposition", "attachment;filename=" + fileName);
 
-        return ResponseEntity.ok().headers(headers).body("\"集群名称\",\"连接URL\",\"用户名\",\"密码\"".getBytes(StandardCharsets.UTF_8));
+        String content = "\"集群名称（自定义一个集群名，集群名相同则认为是同一个集群）\",\"连接URL（JDBC的URL信息，例如 jdbc:opengauss://IP:PORT/databasename）\",\"用户名（数据库连接用户名）\",\"密码（数据库用户名对应的密码）\"\n" +
+                "\"\",\"\",\"\",\"\"";
+        return ResponseEntity.ok().headers(headers).body(content.getBytes(StandardCharsets.UTF_8));
     }
 }

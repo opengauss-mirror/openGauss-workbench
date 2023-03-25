@@ -20,9 +20,9 @@
         </a-option>
       </a-select>
     </a-form-item>
-    <a-form-item v-if="!data.host.isHostRemPwd && data.form.installUsername === 'root'" field="password"
+    <a-form-item v-if="!data.host.isHostRemPwd" field="rootPassword"
                  :label="$t('components.openLooKeng.5mpiji1qpcc3')">
-      <a-input-password v-model.trim="data.form.password" :placeholder="$t('components.openLooKeng.5mpiji1qpcc4')"
+      <a-input-password v-model.trim="data.form.rootPassword" :placeholder="$t('components.openLooKeng.5mpiji1qpcc4')"
                         allow-clear/>
     </a-form-item>
     <a-form-item field="installPath" :label="$t('components.openLooKeng.5mpiji1qpcc5')">
@@ -90,6 +90,7 @@ const data = reactive<KeyValue>({
     hostId: '',
     installUserId: '',
     password: '',
+    rootPassword: '',
     installPath: '/data/install',
     uploadPath: '/data/tar',
     olkTarId: '',
@@ -132,6 +133,7 @@ const initData = () => {
   data.form.hostId = config.olkInstallHostId
   data.form.installUsername = config.olkInstallUsername
   data.form.password = config.olkInstallPassword
+  data.form.rootPassword = config.olkRootPassword
   data.form.installPath = config.olkInstallPath
   data.form.uploadPath = config.olkUploadPath
   data.form.olkTarId = config.olkTarId
@@ -145,6 +147,7 @@ const saveStore = () => {
     olkInstallHostId: data.form.hostId,
     olkInstallUsername: data.form.installUsername,
     olkInstallPassword: data.form.password,
+    olkRootPassword: data.form.rootPassword,
     olkInstallPath: data.form.installPath,
     olkUploadPath: data.form.uploadPath,
     olkTarId: data.form.olkTarId,
@@ -259,8 +262,8 @@ onMounted(() => {
 
 const validatePort = async (port: number) => {
   let encryptPwd = ''
-  if (data.form.installUsername === 'root' && !data.host.isHostRemPwd) {
-    encryptPwd = await encryptPassword(data.form.password)
+  if (!data.host.isHostRemPwd) {
+    encryptPwd = await encryptPassword(data.form.rootPassword)
   } else {
     const result = userListByHost.value.find((item: KeyValue) => item.username === 'root')
     if (result) {
@@ -305,10 +308,10 @@ const validateSpecialFields = async () => {
   formRef.value?.clearValidate()
   const validMethodArr = []
   let encryptPwd = ''
-  if (data.form.installUsername === 'root' && !data.host.isHostRemPwd) {
-    encryptPwd = await encryptPassword(data.form.password)
+  if (!data.host.isHostRemPwd) {
+    encryptPwd = await encryptPassword(data.form.rootPassword)
   } else {
-    const result = userListByHost.value.find((item: KeyValue) => item.username === data.form.installUsername)
+    const result = userListByHost.value.find((item: KeyValue) => item.username === 'root')
     if (result) {
       encryptPwd = result.password
     }
@@ -318,13 +321,13 @@ const validateSpecialFields = async () => {
     const param = {
       publicIp: data.host.publicIp,
       password: encryptPwd,
-      username: data.form.installUsername,
+      username: 'root',
       port: data.host.hostPort
     }
     const passwordValid: KeyValue = await hostPing(param)
     if (Number(passwordValid.code) !== 200) {
       formRef.value?.setFields({
-        password: {
+        rootPassword: {
           status: 'error',
           message: t('components.openLooKeng.5mpiji1qpcc42')
         }
@@ -333,7 +336,7 @@ const validateSpecialFields = async () => {
     }
   } catch (err: any) {
     formRef.value?.setFields({
-      password: {
+      rootPassword: {
         status: 'error',
         message: t('components.openLooKeng.5mpiji1qpcc42')
       }
@@ -383,7 +386,7 @@ const rules = computed(() => {
   return {
     hostId: { required: true, message: t('simpleInstall.index.5mpn813gukw0') },
     installUsername: { required: true, message: t('components.openLooKeng.5mpiji1qpcc12') },
-    password: [
+    rootPassword: [
       { required: true, message: t('components.openLooKeng.5mpiji1qpcc13') }
     ],
     installPath: [

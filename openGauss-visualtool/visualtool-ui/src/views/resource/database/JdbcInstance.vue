@@ -1,7 +1,7 @@
 <template>
   <a-form :model="form" ref="formRef" auto-label-width :rules="formRules">
     <a-form-item field="ip" :label="$t('database.JdbcInstance.5oxhtcbo8ac0')" validate-trigger="change">
-      <a-select v-model="form.ip" :placeholder="$t('database.JdbcInstance.5oxhtcbo9fg0')" allow-create>
+      <a-select v-model.trim="form.ip" :placeholder="$t('database.JdbcInstance.5oxhtcbo9fg0')" allow-create>
         <a-option v-for="item in props.hostList" :key="item.value" :label="item.label" :value="item.value"></a-option>
       </a-select>
     </a-form-item>
@@ -9,18 +9,19 @@
       <a-input-number v-model="form.port" :placeholder="$t('database.JdbcInstance.5oxhtcbo9xc0')" />
     </a-form-item>
     <a-form-item field="username" :label="$t('database.JdbcInstance.5oxhtcboa240')" validate-trigger="blur">
-      <a-input v-model="form.username" :placeholder="$t('database.JdbcInstance.5oxhtcboa7c0')" />
+      <a-input v-model.trim="form.username" :placeholder="$t('database.JdbcInstance.5oxhtcboa7c0')" />
     </a-form-item>
     <a-form-item field="password" :label="$t('database.JdbcInstance.5oxhtcboac00')" validate-trigger="blur">
-      <a-input-password v-model="form.password" :placeholder="$t('database.JdbcInstance.5oxhtcboags0')" allow-clear />
+      <a-input-password v-model.trim="form.password" :placeholder="$t('database.JdbcInstance.5oxhtcboags0')"
+        allow-clear />
     </a-form-item>
     <a-form-item :label="$t('database.JdbcInstance.5oxhtcboap00')">
       <a-table class="full-w" :data="form.props" :columns="columns" size="mini" :pagination="false">
         <template #name="{ rowIndex }">
-          <a-input size="mini" v-model="form.props[rowIndex].name" />
+          <a-input size="mini" v-model.trim="form.props[rowIndex].name" />
         </template>
         <template #value="{ rowIndex }">
-          <a-input size="mini" v-model="form.props[rowIndex].value" />
+          <a-input size="mini" v-model.trim="form.props[rowIndex].value" />
         </template>
         <template #operation="{ rowIndex }">
           <div class="flex-row-start">

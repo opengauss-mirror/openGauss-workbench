@@ -470,7 +470,7 @@
             "5mpivn7fwjc1": "修改系统设置",
             "5mpivn7fwjc2": "文件上传路径",
             "5mpivn7fwjc6": "请输入文件上传路径",
-            "5mpivn7fwjc9": "文件路径不正确",
+            "5mpivn7fwjc9": "上传路径不正确，必须以/结尾",
             "5mpivn7fwj10": "目录已被其它用户占用，请输入别的路径"
         }
     },
@@ -651,6 +651,8 @@
             "disk": "磁盘使用率",
             "baseInfo": "基本信息",
             "diskInfo": "硬件信息",
+            "tipInfo": "前提：保存主机时需记住密码，才能实时获取数据。否则不能获取",
+            "realTime": "实时",
             "detail": "详情",
             "labelBatch": "标签设置",
             "labelManage": "标签管理",
@@ -798,6 +800,9 @@
             "else3": "节点",
             "else4": "未知",
             "else5": "操作系统",
+            "else6": "实时",
+            "else7": "会话数",
+            "else8": "锁数量",
             "5oxhv6qcm6w0": "去检测",
             "5oxhv6qcnak0": "主",
             "5oxhv6qcnnk0": "备",

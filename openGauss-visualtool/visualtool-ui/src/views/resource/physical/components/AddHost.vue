@@ -31,13 +31,14 @@
     </template>
     <a-form :model="data.formData" ref="formRef" auto-label-width :rules="formRules">
       <a-form-item field="name" :label="$t('components.AddHost.name')" validate-trigger="blur">
-        <a-input v-model="data.formData.name" :placeholder="$t('components.AddHost.namePlaceholder')"></a-input>
+        <a-input v-model.trim="data.formData.name" :placeholder="$t('components.AddHost.namePlaceholder')"></a-input>
       </a-form-item>
       <a-form-item field="privateIp" :label="$t('components.AddHost.ipAddress')" validate-trigger="blur">
-        <a-input v-model="data.formData.privateIp" :placeholder="$t('components.AddHost.5mphy3snxdo0')"></a-input>
+        <a-input v-model.trim="data.formData.privateIp" :placeholder="$t('components.AddHost.5mphy3snxdo0')"></a-input>
       </a-form-item>
       <a-form-item field="publicIp" :label="$t('components.AddHost.5mphy3snxis0')" validate-trigger="blur">
-        <a-input v-model="data.formData.publicIp" :placeholder="$t('components.AddHost.5mphy3snxmw0')"></a-input>
+        <a-input v-model.trim="data.formData.publicIp" :placeholder="$t('components.AddHost.5mphy3snxmw0')"
+          @blur="handleBlur"></a-input>
       </a-form-item>
       <a-form-item field="port" :label="$t('components.AddHost.5mphy3snxtc0')" validate-trigger="blur">
         <a-input-number v-model="data.formData.port" :placeholder="$t('components.AddHost.5mphy3snxzk0')" />
@@ -49,7 +50,7 @@
         }}</a-checkbox>
       </a-form-item>
       <a-form-item field="tags" :label="$t('components.AddHost.tags')">
-        <a-select :loading="data.tagsLoading" v-model="data.formData.tags"
+        <a-select :loading="data.tagsLoading" v-model.trim="data.formData.tags"
           :placeholder="$t('components.AddHost.tagsPlaceholder')" allow-create multiple allow-clear>
           <a-option v-for="item in data.tagsList" :key="item.value" :value="item.value">{{
             item.label
@@ -57,7 +58,7 @@
         </a-select>
       </a-form-item>
       <a-form-item :label="$t('components.AddHost.5mphy3snysg0')">
-        <a-textarea v-model="data.formData.remark" :placeholder="$t('components.AddHost.5mphy3snyxc0')"></a-textarea>
+        <a-textarea v-model.trim="data.formData.remark" :placeholder="$t('components.AddHost.5mphy3snyxc0')"></a-textarea>
       </a-form-item>
     </a-form>
   </a-modal>
@@ -119,8 +120,40 @@ const formRules = computed(() => {
         }
       }
     ],
-    privateIp: [{ required: true, 'validate-trigger': 'blur', message: t('components.AddHost.5mphy3snxdo0') }],
-    publicIp: [{ required: true, 'validate-trigger': 'blur', message: t('components.AddHost.5mphy3snxmw0') }],
+    privateIp: [
+      { required: true, 'validate-trigger': 'blur', message: t('components.AddHost.5mphy3snxdo0') },
+      {
+        validator: (value: any, cb: any) => {
+          return new Promise(resolve => {
+            const reg = /^(1\d{2}|2[0-4]\d|25[0-5]|[1-9]\d|[0-9])\.((1\d{2}|2[0-4]\d|25[0-5]|[1-9]\d|\d)\.){2}(1\d{2}|2[0-4]\d|25[0-5]|[1-9]\d|\d)$/
+            const re = new RegExp(reg)
+            if (re.test(value)) {
+              resolve(true)
+            } else {
+              cb(t('database.JdbcInstance.5oxhtcboblw0'))
+              resolve(false)
+            }
+          })
+        }
+      }
+    ],
+    publicIp: [
+      { required: true, 'validate-trigger': 'blur', message: t('components.AddHost.5mphy3snxmw0') },
+      {
+        validator: (value: any, cb: any) => {
+          return new Promise(resolve => {
+            const reg = /^(1\d{2}|2[0-4]\d|25[0-5]|[1-9]\d|[0-9])\.((1\d{2}|2[0-4]\d|25[0-5]|[1-9]\d|\d)\.){2}(1\d{2}|2[0-4]\d|25[0-5]|[1-9]\d|\d)$/
+            const re = new RegExp(reg)
+            if (re.test(value)) {
+              resolve(true)
+            } else {
+              cb(t('database.JdbcInstance.5oxhtcboblw0'))
+              resolve(false)
+            }
+          })
+        }
+      }
+    ],
     port: [
       { required: true, 'validate-trigger': 'blur', message: t('components.AddHost.5mphy3snxzk0') },
       {
@@ -272,6 +305,12 @@ const open = (type: string, editData?: KeyValue) => {
       azId: '',
       remark: ''
     })
+  }
+}
+
+const handleBlur = () => {
+  if (!data.formData.name) {
+    data.formData.name = data.formData.publicIp
   }
 }
 

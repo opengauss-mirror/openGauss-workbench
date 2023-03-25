@@ -140,6 +140,10 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                     opsClusterNodeVO.setDbUser(opsClusterEntity.getDatabaseUsername());
                     opsClusterNodeVO.setDbUserPassword(opsClusterEntity.getDatabasePassword());
 
+                    if (OpenGaussVersionEnum.ENTERPRISE == opsClusterEntity.getVersion()){
+                        opsClusterNodeVO.setInstallPath(opsClusterEntity.getInstallPath());
+                    }
+
                     if (Objects.nonNull(installUser)) {
                         opsClusterNodeVO.setInstallUserName(installUser.getUsername());
                     }
@@ -560,7 +564,8 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         return res;
     }
 
-    private String connectNum(Connection connection) {
+    @Override
+    public String connectNum(Connection connection) {
         String sql = "SELECT count(*) FROM (SELECT pg_stat_get_backend_idset() AS backendid) AS s";
         String res = null;
         try (Statement statement = connection.createStatement();
@@ -576,7 +581,8 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         return res;
     }
 
-    private String session(Connection connection) {
+    @Override
+    public String session(Connection connection) {
         String sql = "SELECT count(*) FROM pg_stat_activity";
         String res = null;
         try (Statement statement = connection.createStatement();
@@ -592,7 +598,8 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         return res;
     }
 
-    private String lock(Connection connection) {
+    @Override
+    public String lock(Connection connection) {
         String sql = "SELECT count(*) FROM pg_locks";
         String res = null;
         try (Statement statement = connection.createStatement();

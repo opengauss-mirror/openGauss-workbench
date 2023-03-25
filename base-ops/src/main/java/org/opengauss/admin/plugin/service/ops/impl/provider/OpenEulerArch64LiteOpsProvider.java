@@ -1,3 +1,26 @@
+/*
+ * Copyright (c) 2022 Huawei Technologies Co.,Ltd.
+ *
+ * openGauss is licensed under Mulan PSL v2.
+ * You can use this software according to the terms and conditions of the Mulan PSL v2.
+ * You may obtain a copy of Mulan PSL v2 at:
+ *
+ * http://license.coscl.org.cn/MulanPSL2
+ *
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ * EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ * MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ * See the Mulan PSL v2 for more details.
+ * -------------------------------------------------------------------------
+ *
+ * OpenEulerArch64LiteOpsProvider.java
+ *
+ * IDENTIFICATION
+ * base-ops/src/main/java/org/opengauss/admin/plugin/service/ops/impl/provider/OpenEulerArch64LiteOpsProvider.java
+ *
+ * -------------------------------------------------------------------------
+ */
+
 package org.opengauss.admin.plugin.service.ops.impl.provider;
 
 import cn.hutool.core.collection.CollUtil;
@@ -110,7 +133,7 @@ public class OpenEulerArch64LiteOpsProvider extends AbstractOpsProvider {
             Session session = loginWithUser(jschUtil,encryptionUtils,installContext.getHostInfoHolders(), false, hostId, installUserId);
             String listenerAddress = MessageFormat.format(SshCommandConstants.LISTENER, dataPath);
             try {
-                JschResult jschResult = jschUtil.executeCommand(listenerAddress, session, retSession);
+                JschResult jschResult = jschUtil.executeCommand(listenerAddress, installContext.getEnvPath(), session, retSession);
                 if (0 != jschResult.getExitCode()) {
                     log.error("Failed to modify listening address, exit code: {}, log: {}", jschResult.getExitCode(), jschResult.getResult());
                     throw new OpsException("Failed to modify listening address");
@@ -123,7 +146,7 @@ public class OpenEulerArch64LiteOpsProvider extends AbstractOpsProvider {
 
             String hba = MessageFormat.format(SshCommandConstants.HBA, dataPath);
             try {
-                JschResult jschResult = jschUtil.executeCommand(hba, session, retSession);
+                JschResult jschResult = jschUtil.executeCommand(hba, installContext.getEnvPath(), session, retSession);
                 if (0 != jschResult.getExitCode()) {
                     log.error("Failed to modify host, exit code: {}, log: {}", jschResult.getExitCode(), jschResult.getResult());
                     throw new OpsException("Failed to modify host");
@@ -139,7 +162,7 @@ public class OpenEulerArch64LiteOpsProvider extends AbstractOpsProvider {
                 Map<String, String> response = new HashMap<>();
                 String createUser = MessageFormat.format("CREATE USER gaussdb WITH MONADMIN PASSWORD \"{0}\";\\q", databasePassword);
                 response.put("openGauss=#", createUser);
-                JschResult jschResult = jschUtil.executeCommand(clientLoginOpenGauss, session, retSession, response);
+                JschResult jschResult = jschUtil.executeCommand(installContext.getEnvPath(), clientLoginOpenGauss, session, retSession, response);
                 if (0 != jschResult.getExitCode()) {
                     log.error("Failed to create user, exit code: {}, log: {}", jschResult.getExitCode(), jschResult.getResult());
                     throw new OpsException("Failed to create user");
@@ -200,7 +223,7 @@ public class OpenEulerArch64LiteOpsProvider extends AbstractOpsProvider {
             log.info("perform installation");
             // install
             String command = MessageFormat.format(SshCommandConstants.LITE_SINGLE_INSTALL, databasePassword, pkgPath, dataPath, installPath,String.valueOf(port));
-
+            command = wrapperLiteEnvSep(command,installContext.getEnvPath());
             wsUtil.sendText(installContext.getRetSession(),"START_EXE_INSTALL_COMMAND");
             try {
                 JschResult jschResult = jschUtil.executeCommand(command, installUserSession, retSession);
@@ -222,8 +245,6 @@ public class OpenEulerArch64LiteOpsProvider extends AbstractOpsProvider {
         }
 
     }
-
-
     private OpsHostUserEntity createInstallUser(InstallContext installContext, String hostId) {
         OpsHostEntity hostEntity = hostFacade.getById(hostId);
         OpsHostUserEntity hostUserEntity = hostUserFacade.getOmmUserByHostId(hostId);
@@ -374,6 +395,7 @@ public class OpenEulerArch64LiteOpsProvider extends AbstractOpsProvider {
             log.info("perform installation");
             // install
             String command = MessageFormat.format(SshCommandConstants.LITE_SLAVE_INSTALL, databasePassword, pkgPath, dataPath, installPath, slaveHostInfo.getHostEntity().getPrivateIp(), String.valueOf(installContext.getLiteInstallConfig().getPort()+1), masterHostInfo.getHostEntity().getPrivateIp(), String.valueOf(installContext.getLiteInstallConfig().getPort()+1));
+            command = wrapperEnvSep(command, installContext.getEnvPath());
             wsUtil.sendText(installContext.getRetSession(),"START_EXE_INSTALL_COMMAND");
             try {
                 JschResult jschResult = jschUtil.executeCommand(command, installUserSession, installContext.getRetSession());
@@ -441,7 +463,7 @@ public class OpenEulerArch64LiteOpsProvider extends AbstractOpsProvider {
             log.info("perform installation");
             // install
             String command = MessageFormat.format(SshCommandConstants.LITE_MASTER_INSTALL, databasePassword, pkgPath, dataPath, installPath, masterHostInfo.getHostEntity().getPrivateIp(), String.valueOf(installContext.getLiteInstallConfig().getPort()+1), slaveHostInfo.getHostEntity().getPrivateIp(), String.valueOf(installContext.getLiteInstallConfig().getPort()+1));
-
+            command = wrapperEnvSep(command,installContext.getEnvPath());
             wsUtil.sendText(installContext.getRetSession(),"START_EXE_INSTALL_COMMAND");
             try {
                 JschResult jschResult = jschUtil.executeCommand(command, installUserSession, installContext.getRetSession());

@@ -20,9 +20,9 @@
         </a-option>
       </a-select>
     </a-form-item>
-    <a-form-item v-if="!data.host.isHostRemPwd && data.form.installUsername === 'root'" field="password"
+    <a-form-item v-if="!data.host.isHostRemPwd" field="rootPassword"
                  :label="$t('components.openLooKeng.5mpiji1qpcc3')">
-      <a-input-password v-model="data.form.password" :placeholder="$t('components.openLooKeng.5mpiji1qpcc4')"
+      <a-input-password v-model="data.form.rootPassword" :placeholder="$t('components.openLooKeng.5mpiji1qpcc4')"
                         allow-clear/>
     </a-form-item>
     <a-form-item field="installPath" :label="$t('components.openLooKeng.5mpiji1qpcc5')"
@@ -101,6 +101,7 @@ const data = reactive<KeyValue>({
     hostId: '',
     installUsername: '',
     password: '',
+    rootPassword: '',
     installPath: '/data/install',
     uploadPath: '/data/tar',
     shardingTarId: '',
@@ -241,8 +242,8 @@ onMounted(() => {
 
 const validatePort = async (port: number) => {
   let encryptPwd = ''
-  if (data.form.installUsername === 'root' && !data.host.isHostRemPwd) {
-    encryptPwd = await encryptPassword(data.form.password)
+  if (!data.host.isHostRemPwd) {
+    encryptPwd = await encryptPassword(data.form.rootPassword)
   } else {
     const result = userListByHost.value.find((item: KeyValue) => item.username === 'root')
     if (result) {
@@ -298,7 +299,7 @@ const rules = computed(() => {
     }],
     hostId: { required: true, message: t('simpleInstall.index.5mpn813gukw0') },
     installUsername: { required: true, message: t('components.openLooKeng.5mpiji1qpcc12') },
-    password: [
+    rootPassword: [
       { required: true, message: t('components.openLooKeng.5mpiji1qpcc13') }
     ],
     installPath: [
@@ -327,6 +328,7 @@ const initData = () => {
   data.form.hostId = config.ssInstallHostId
   data.form.installUsername = config.ssInstallUsername
   data.form.password = config.ssInstallPassword
+  data.form.rootPassword = config.ssRootPassword
   data.form.installPath = config.ssInstallPath
   data.form.shardingTarId = config.ssTarId
   data.form.shardingPort = config.ssPort
@@ -344,6 +346,7 @@ const saveStore = () => {
     ssInstallHostId: data.form.hostId,
     ssInstallUsername: data.form.installUsername,
     ssInstallPassword: data.form.password,
+    ssRootPassword: data.form.rootPassword,
     ssInstallPath: data.form.installPath,
     ssTarId: data.form.shardingTarId,
     ssPort: data.form.shardingPort,
@@ -418,10 +421,10 @@ const validateSpecialFields = async () => {
   formRef.value?.clearValidate()
   const validMethodArr = []
   let encryptPwd = ''
-  if (data.form.installUsername === 'root' && !data.host.isHostRemPwd) {
-    encryptPwd = await encryptPassword(data.form.password)
+  if (!data.host.isHostRemPwd) {
+    encryptPwd = await encryptPassword(data.form.rootPassword)
   } else {
-    const result = userListByHost.value.find((item: KeyValue) => item.username === data.form.installUsername)
+    const result = userListByHost.value.find((item: KeyValue) => item.username === 'root')
     if (result) {
       encryptPwd = result.password
     }
@@ -431,13 +434,13 @@ const validateSpecialFields = async () => {
     const param = {
       publicIp: data.host.publicIp,
       password: encryptPwd,
-      username: data.form.installUsername,
+      username: 'root',
       port: data.host.hostPort
     }
     const passwordValid: KeyValue = await hostPing(param)
     if (Number(passwordValid.code) !== 200) {
       formRef.value?.setFields({
-        password: {
+        rootPassword: {
           status: 'error',
           message: t('components.openLooKeng.5mpiji1qpcc42')
         }
@@ -446,7 +449,7 @@ const validateSpecialFields = async () => {
     }
   } catch (err: any) {
     formRef.value?.setFields({
-      password: {
+      rootPassword: {
         status: 'error',
         message: t('components.openLooKeng.5mpiji1qpcc42')
       }

@@ -30,7 +30,7 @@
               {{ $t('components.openLooKeng.5mpiji1qpcc67') }}
             </a-button>
             <a-button type="primary" @click="downloadLog">{{ $t('components.openLooKeng.5mpiji1qpcc65') }}</a-button>
-            <a-button type="primary">{{ $t('components.openLooKeng.5mpiji1qpcc66') }}</a-button>
+            <a-button type="primary" @click="showCustomShell">{{ $t('components.openLooKeng.5mpiji1qpcc66') }}</a-button>
           </a-space>
         </div>
       </div>
@@ -51,6 +51,7 @@
         </div>
       </div>
     </div>
+    <custom-shell ref="shell"></custom-shell>
   </div>
 </template>
 <script lang="ts" setup>
@@ -67,7 +68,8 @@ import { ShardingDsConfig } from '@/types/ops/install'
 import { Message } from '@arco-design/web-vue'
 import { encryptPassword } from '@/utils/jsencrypt'
 import { ProcessFlag } from './ProcessFlag'
-import router from "@/router";
+import router from '@/router'
+import CustomShell from '@/views/ops/install/components/openLookeng/CustomShell.vue'
 
 const installStore = useOpsStore()
 
@@ -79,6 +81,7 @@ enum statusEnum {
 
 const status = ref<number>(statusEnum.RUNNING)
 const loadingFunc = inject<any>('loading')
+const shell = ref<null | InstanceType<typeof CustomShell>>(null)
 
 const data = reactive<KeyValue>({
   state: -1, // -1 un install  0 installing  1 success  2 fail
@@ -216,6 +219,7 @@ const downloadLog = () => {
 }
 
 onMounted(() => {
+  loadingFunc.setNextBtnShow(false)
   openLogSocket()
 })
 
@@ -251,14 +255,14 @@ const exeInstall = async (socket: Socket<any, any>, businessId: string, term: Te
 }
 
 const encryptBodyPassword = async (reqBody: KeyValue) => {
-  if (reqBody.dadNeedEncrypt) {
-    reqBody.dadInstallPassword = await encryptPassword(reqBody.dadInstallPassword)
+  if (reqBody.dadNeedEncrypt && reqBody.dadInstallUsername === 'root') {
+    reqBody.dadInstallPassword = await encryptPassword(reqBody.dadRootPassword)
   }
-  if (reqBody.ssNeedEncrypt) {
-    reqBody.ssInstallPassword = await encryptPassword(reqBody.ssInstallPassword)
+  if (reqBody.ssNeedEncrypt && reqBody.ssInstallUsername === 'root') {
+    reqBody.ssInstallPassword = await encryptPassword(reqBody.ssRootPassword)
   }
-  if (reqBody.olkNeedEncrypt) {
-    reqBody.olkInstallPassword = await encryptPassword(reqBody.olkInstallPassword)
+  if (reqBody.olkNeedEncrypt && reqBody.olkInstallUsername === 'root') {
+    reqBody.olkInstallPassword = await encryptPassword(reqBody.olkRootPassword)
   }
 }
 
@@ -309,6 +313,14 @@ const buildReqData = async () => {
     }
   })
   return dbList
+}
+
+const showCustomShell = () => {
+  const allHostId = new Set()
+  allHostId.add(installStore.openLookengInstallConfig.dadInstallHostId)
+  allHostId.add(installStore.openLookengInstallConfig.ssInstallHostId)
+  allHostId.add(installStore.openLookengInstallConfig.olkInstallHostId)
+  shell.value?.open([...allHostId])
 }
 
 </script>

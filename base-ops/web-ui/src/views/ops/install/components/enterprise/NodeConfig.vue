@@ -102,10 +102,10 @@ import { ClusterRoleEnum, EnterpriseInstallConfig } from '@/types/ops/install' /
 import { hostListAll, hostUserListWithoutRoot, azListAll, portUsed, pathEmpty, fileExist, hostPingById } from '@/api/ops'
 import { Message } from '@arco-design/web-vue'
 import { useOpsStore } from '@/store'
-import { useI18n } from 'vue-i18n'
 import { encryptPassword } from '@/utils/jsencrypt'
 import { FormInstance } from '@arco-design/web-vue/es/form'
 import HostTerminal from "@/views/ops/install/components/hostTerminal/HostTerminal.vue";
+import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
 const installStore = useOpsStore()
 
@@ -558,7 +558,7 @@ const validateSpecialFields = async () => {
       if (isInstallCM.value) {
         validMethodArr.push(validatePort(data.nodeList[i].cmPort, encryptPwd, data.nodeList[i].hostId))
       }
-      if (installStore.getInstallConfig.envPath) {
+      if (installStore.getInstallConfig.envPath && installType.value === 'import') {
         validMethodArr.push(validateFile(installStore.getInstallConfig.envPath, encryptPwd, data.nodeList[i].hostId))
       }
       if (validMethodArr.length) {
@@ -605,7 +605,7 @@ const validateSpecialFields = async () => {
             })
             result = false
           }
-          if (installStore.getInstallConfig.envPath && !validResult[4]) {
+          if (installType.value === 'import' && installStore.getInstallConfig.envPath && !validResult[4]) {
             // envPath valid
             refList.value[i].setFields({
               hostId: {
@@ -616,7 +616,7 @@ const validateSpecialFields = async () => {
             result = false
           }
         } else {
-          if (installStore.getInstallConfig.envPath && !validResult[3]) {
+          if (installType.value === 'import' && installStore.getInstallConfig.envPath && !validResult[3]) {
             // envPath valid
             refList.value[i].setFields({
               hostId: {

@@ -1,3 +1,26 @@
+/*
+ * Copyright (c) 2022 Huawei Technologies Co.,Ltd.
+ *
+ * openGauss is licensed under Mulan PSL v2.
+ * You can use this software according to the terms and conditions of the Mulan PSL v2.
+ * You may obtain a copy of Mulan PSL v2 at:
+ *
+ * http://license.coscl.org.cn/MulanPSL2
+ *
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ * EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ * MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ * See the Mulan PSL v2 for more details.
+ * -------------------------------------------------------------------------
+ *
+ * AbstractOpsProvider.java
+ *
+ * IDENTIFICATION
+ * base-ops/src/main/java/org/opengauss/admin/plugin/service/ops/impl/provider/AbstractOpsProvider.java
+ *
+ * -------------------------------------------------------------------------
+ */
+
 package org.opengauss.admin.plugin.service.ops.impl.provider;
 
 import cn.hutool.core.util.StrUtil;
@@ -5,6 +28,8 @@ import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
 import org.opengauss.admin.common.exception.ops.OpsException;
 import org.opengauss.admin.plugin.domain.model.ops.*;
+import org.opengauss.admin.plugin.domain.model.ops.node.EnterpriseInstallNodeConfig;
+import org.opengauss.admin.plugin.enums.ops.HostEnvStatusEnum;
 import org.opengauss.admin.plugin.service.ops.ClusterOpsProvider;
 import org.opengauss.admin.plugin.service.ops.impl.ClusterOpsProviderManager;
 import org.opengauss.admin.plugin.utils.JschUtil;
@@ -83,6 +108,7 @@ public abstract class AbstractOpsProvider implements ClusterOpsProvider, Initial
             ensureStrictPermission(jschUtil,rootSession, installUserName, pkgPath, retSession);
             ensureStrictPermission(jschUtil,rootSession, installUserName, installPath, retSession);
             ensureDataPathPermission(jschUtil,rootSession, installUserName, dataPath, retSession);
+            ensureEnvPathPermission(jschUtil,rootSession,installContext.getEnvPath(),retSession);
             log.info("Login and install user");
         }finally {
             if (Objects.nonNull(rootSession) && rootSession.isConnected()){
@@ -93,7 +119,69 @@ public abstract class AbstractOpsProvider implements ClusterOpsProvider, Initial
         return loginWithUser(jschUtil,encryptionUtils,installContext.getHostInfoHolders(), false, hostId, installUserId);
     }
 
+    protected String wrapperEnvSep(String command, String envPath) {
+        if (StrUtil.isNotEmpty(envPath)){
+            command = command + " --sep-env-file=" + envPath;
+        }
+        return command;
+    }
+
+    protected String wrapperLiteEnvSep(String command, String envPath) {
+        if (StrUtil.isNotEmpty(envPath)){
+            command = command + " --env-sep-file " + envPath;
+        }
+        return command;
+    }
+
+    protected void ensureEnvPathPermission(JschUtil jschUtil, Session rootSession, String envPath, WsSession retSession){
+        if (StrUtil.isEmpty(envPath)){
+            return;
+        }
+
+        String touchEnvSep = "touch \"" + envPath + "\"";
+
+        try {
+            jschUtil.executeCommand(touchEnvSep, rootSession, retSession);
+        } catch (Exception e) {
+            log.error("touch envFile fail", e);
+            throw new OpsException("touch envFile fail");
+        }
+
+        String permissionEnv = "chmod 755 -R " + envPath;
+        try {
+            jschUtil.executeCommand(permissionEnv, rootSession, retSession);
+        } catch (Exception e) {
+            log.error("chmod envFile fail", e);
+            throw new OpsException("chmod envFile fail");
+        }
+    }
+
     protected void installDependency(JschUtil jschUtil, Session rootSession, WsSession retSession){
+        boolean dependencyCorrect = false;
+
+        try {
+            String dependency =  jschUtil.executeCommand(SshCommandConstants.DEPENDENCY, rootSession).getResult();
+            try {
+
+                int dependencyNum = Integer.parseInt(dependency);
+
+                int suggestedNum = 8;
+                if (dependencyNum>= suggestedNum){
+                    dependencyCorrect = true;
+                }
+
+            } catch (Exception e) {
+                log.error("Parse command response error", e);
+            }
+        } catch (Exception e) {
+            log.error("Execute command exception：", e);
+        }
+
+        if (dependencyCorrect){
+            log.info("dependencyCorrect，skip install dependency");
+            return;
+        }
+
         try {
             retSession.getSession().getBasicRemote().sendText("START_INSTALL_DEPENDENCY");
         } catch (IOException e) {
@@ -146,17 +234,8 @@ public abstract class AbstractOpsProvider implements ClusterOpsProvider, Initial
 
         String limits = SshCommandConstants.LIMITS;
         try {
-            JschResult jschResult = null;
-            try {
-                jschResult = jschUtil.executeCommand(limits, rootSession, retSession);
-            } catch (InterruptedException e) {
-                throw new OpsException("thread is interrupted");
-            }
-            if (0 != jschResult.getExitCode()) {
-                log.error("set ulimit exception, exit code: {}, error message: {}", jschResult.getExitCode(), jschResult.getResult());
-                throw new OpsException("set ulimit exception");
-            }
-        } catch (IOException e) {
+            jschUtil.executeCommand(limits, rootSession, retSession);
+        } catch (IOException | InterruptedException e) {
             log.error("set ulimit exception", e);
             throw new OpsException("set ulimit exception");
         }
@@ -172,17 +251,8 @@ public abstract class AbstractOpsProvider implements ClusterOpsProvider, Initial
     protected void sem(JschUtil jschUtil,Session rootSession, WsSession retSession) {
         String command = SshCommandConstants.SEM;
         try {
-            JschResult jschResult = null;
-            try {
-                jschResult = jschUtil.executeCommand(command, rootSession, retSession);
-            } catch (InterruptedException e) {
-                throw new OpsException("thread is interrupted");
-            }
-            if (0 != jschResult.getExitCode()) {
-                log.error("set kernel.sem exception, exit code: {}, error message: {}", jschResult.getExitCode(), jschResult.getResult());
-                throw new OpsException("set kernel.sem exception");
-            }
-        } catch (IOException e) {
+            jschUtil.executeCommand(command, rootSession, retSession);
+        } catch (IOException | InterruptedException | OpsException e) {
             log.error("set kernel.sem exception", e);
         }
     }
@@ -190,11 +260,7 @@ public abstract class AbstractOpsProvider implements ClusterOpsProvider, Initial
     protected void decompress(JschUtil jschUtil,Session rootSession, String targetPath, String installPackageFullPath, WsSession retSession, String decompressArgs) {
         String command = MessageFormat.format(SshCommandConstants.DECOMPRESS, decompressArgs, installPackageFullPath, targetPath);
         try {
-            JschResult jschResult = jschUtil.executeCommand(command, rootSession, retSession);
-            if (0 != jschResult.getExitCode()) {
-                log.error("Failed to decompress installation package, exit code: {}, error message: {}", jschResult.getExitCode(), jschResult.getResult());
-                throw new OpsException("Unzip the installation package failed");
-            }
+            jschUtil.executeCommand(command, rootSession, retSession);
         } catch (Exception e) {
             log.error("Unzip the installation package failed：", e);
             throw new OpsException("Unzip the installation package failed");
@@ -284,17 +350,8 @@ public abstract class AbstractOpsProvider implements ClusterOpsProvider, Initial
         String chown = MessageFormat.format(SshCommandConstants.CHOWN, installUserName, targetPath);
 
         try {
-            JschResult jschResult = null;
-            try {
-                jschResult = jschUtil.executeCommand(chown, rootSession, wsSession);
-            } catch (InterruptedException e) {
-                throw new OpsException("thread is interrupted");
-            }
-            if (0 != jschResult.getExitCode()) {
-                log.error("Failed to grant permission, exit code: {}, error message: {}", jschResult.getExitCode(), jschResult.getResult());
-                throw new OpsException("Failed to grant permission");
-            }
-        } catch (IOException e) {
+            jschUtil.executeCommand(chown, rootSession, wsSession);
+        } catch (IOException | InterruptedException | OpsException e) {
             log.error("Failed to grant permission", e);
             throw new OpsException("Failed to grant permission");
         }
@@ -306,17 +363,8 @@ public abstract class AbstractOpsProvider implements ClusterOpsProvider, Initial
         String chown = MessageFormat.format(SshCommandConstants.CHOWN, installUserName, targetPath);
 
         try {
-            JschResult jschResult = null;
-            try {
-                jschResult = jschUtil.executeCommand(chown, rootSession, wsSession);
-            } catch (InterruptedException e) {
-                throw new OpsException("thread is interrupted");
-            }
-            if (0 != jschResult.getExitCode()) {
-                log.error("Failed to grant permission, exit code: {}, error message: {}", jschResult.getExitCode(), jschResult.getResult());
-                throw new OpsException("Failed to grant permission");
-            }
-        } catch (IOException e) {
+            jschUtil.executeCommand(chown, rootSession, wsSession);
+        } catch (IOException | InterruptedException | OpsException e) {
             log.error("Failed to grant permission", e);
             throw new OpsException("Failed to grant permission");
         }
@@ -328,17 +376,8 @@ public abstract class AbstractOpsProvider implements ClusterOpsProvider, Initial
         String chown = MessageFormat.format(SshCommandConstants.CHOWN, installUserName, targetPath);
 
         try {
-            JschResult jschResult = null;
-            try {
-                jschResult = jschUtil.executeCommand(chown, rootSession, wsSession);
-            } catch (InterruptedException e) {
-                throw new OpsException("thread is interrupted");
-            }
-            if (0 != jschResult.getExitCode()) {
-                log.error("Failed to grant permission, exit code: {}, error message: {}", jschResult.getExitCode(), jschResult.getResult());
-                throw new OpsException("Failed to grant permission");
-            }
-        } catch (IOException e) {
+            jschUtil.executeCommand(chown, rootSession, wsSession);
+        } catch (IOException | InterruptedException | OpsException e) {
             log.error("Failed to grant permission", e);
             throw new OpsException("Failed to grant permission");
         }
@@ -347,17 +386,8 @@ public abstract class AbstractOpsProvider implements ClusterOpsProvider, Initial
     protected void ensureDirExist(JschUtil jschUtil,Session rootSession, String targetPath, WsSession retSession) {
         String command = MessageFormat.format(SshCommandConstants.MK_DIR, targetPath);
         try {
-            JschResult jschResult = null;
-            try {
-                jschResult = jschUtil.executeCommand(command, rootSession, retSession);
-            } catch (InterruptedException e) {
-                throw new OpsException("thread is interrupted");
-            }
-            if (0 != jschResult.getExitCode()) {
-                log.error("Failed to create directory, exit code: {}, error message: {}", jschResult.getExitCode(), jschResult.getResult());
-                throw new OpsException("Failed to create installation directory");
-            }
-        } catch (IOException e) {
+            jschUtil.executeCommand(command, rootSession, retSession);
+        } catch (IOException | InterruptedException | OpsException e) {
             log.error("Failed to create installation directory:", e);
             throw new OpsException("Failed to create installation directory");
         }
@@ -379,7 +409,6 @@ public abstract class AbstractOpsProvider implements ClusterOpsProvider, Initial
             if (0 != jschResult.getExitCode()) {
                 throw new OpsException("startup error,gs_om status fail,exit code " + jschResult.getExitCode());
             }
-
 
             String result = jschResult.getResult();
             Map<String,String> nodeIdMapHostname = new HashMap<>();
@@ -414,6 +443,57 @@ public abstract class AbstractOpsProvider implements ClusterOpsProvider, Initial
         }
 
         return omStatusModel;
+    }
+
+    protected void createEnterpriseRemoteUser(InstallContext installContext, OpsClusterContext opsClusterContext,JschUtil jschUtil, EncryptionUtils encryptionUtils) {
+        WsSession retSession = installContext.getRetSession();
+        opsClusterContext.setRetSession(retSession);
+        opsClusterContext.setHostInfoHolders(installContext.getHostInfoHolders());
+
+        EnterpriseInstallConfig enterpriseInstallConfig = installContext.getEnterpriseInstallConfig();
+        List<EnterpriseInstallNodeConfig> nodeConfigList = enterpriseInstallConfig.getNodeConfigList();
+        String databasePassword = enterpriseInstallConfig.getDatabasePassword();
+        Integer port = enterpriseInstallConfig.getPort();
+
+        for (EnterpriseInstallNodeConfig enterpriseInstallNodeConfig : nodeConfigList) {
+            String hostId = enterpriseInstallNodeConfig.getHostId();
+            String installUserId = enterpriseInstallNodeConfig.getInstallUserId();
+            String dataPath = enterpriseInstallNodeConfig.getDataPath();
+
+
+            Session session = loginWithUser(jschUtil,encryptionUtils,installContext.getHostInfoHolders(), false, hostId, installUserId);
+            String listenerAddress = MessageFormat.format(SshCommandConstants.LISTENER, dataPath);
+            try {
+                jschUtil.executeCommand(listenerAddress, installContext.getEnvPath(), session, retSession);
+            } catch (Exception e) {
+                log.error("Failed to modify listening address", e);
+                throw new OpsException("Failed to modify listening address");
+            }
+
+            String hba = MessageFormat.format(SshCommandConstants.HBA, dataPath);
+            try {
+                jschUtil.executeCommand(hba, installContext.getEnvPath(), session, retSession);
+
+            } catch (Exception e) {
+                log.error("Failed to modify host", e);
+                throw new OpsException("Failed to modify host");
+            }
+
+            String clientLoginOpenGauss = MessageFormat.format(SshCommandConstants.LOGIN, String.valueOf(port));
+            try {
+                Map<String, String> response = new HashMap<>();
+                String createUser = MessageFormat.format("CREATE USER gaussdb WITH MONADMIN PASSWORD \"{0}\";\\q", databasePassword);
+                response.put("openGauss=#", createUser);
+                jschUtil.executeCommand(installContext.getEnvPath(), clientLoginOpenGauss, session, retSession, response);
+
+            } catch (Exception e) {
+                log.error("Failed to create user", e);
+                throw new OpsException("Failed to create user");
+            }
+        }
+
+        opsClusterContext.setHostInfoHolders(installContext.getHostInfoHolders());
+        restart(opsClusterContext);
     }
 
     @Override

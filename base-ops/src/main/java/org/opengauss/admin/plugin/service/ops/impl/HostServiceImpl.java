@@ -1,3 +1,26 @@
+/*
+ * Copyright (c) 2022 Huawei Technologies Co.,Ltd.
+ *
+ * openGauss is licensed under Mulan PSL v2.
+ * You can use this software according to the terms and conditions of the Mulan PSL v2.
+ * You may obtain a copy of Mulan PSL v2 at:
+ *
+ * http://license.coscl.org.cn/MulanPSL2
+ *
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ * EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ * MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ * See the Mulan PSL v2 for more details.
+ * -------------------------------------------------------------------------
+ *
+ * HostServiceImpl.java
+ *
+ * IDENTIFICATION
+ * base-ops/src/main/java/org/opengauss/admin/plugin/service/ops/impl/HostServiceImpl.java
+ *
+ * -------------------------------------------------------------------------
+ */
+
 package org.opengauss.admin.plugin.service.ops.impl;
 
 import cn.hutool.core.util.StrUtil;
@@ -66,10 +89,6 @@ public class HostServiceImpl implements IHostService {
         String command = "ls " + path + " | wc -l";
         try {
             JschResult jschResult = jschUtil.executeCommand(command, rootSession);
-            if (jschResult.getExitCode()!=0){
-                log.error("Failed to probe data directory,exitCode:{},res:{}",jschResult.getExitCode(),jschResult.getResult());
-                throw new OpsException("Failed to probe data directory");
-            }
 
             return StrUtil.equalsIgnoreCase("0",StrUtil.trim(jschResult.getResult())) || jschResult.getResult().contains("No such file or directory");
         } catch (Exception e) {
@@ -133,10 +152,7 @@ public class HostServiceImpl implements IHostService {
     private boolean fileExist(Session rootSession, String file) {
         String command = "[ -f '"+ file +"' ]";
         try {
-            JschResult jschResult = jschUtil.executeCommand(command, rootSession);
-            if (jschResult.getExitCode()!=0){
-                return false;
-            }
+            jschUtil.executeCommand(command, rootSession);
 
             return true;
         } catch (Exception e) {
@@ -148,15 +164,12 @@ public class HostServiceImpl implements IHostService {
     private boolean portUsed(Session rootSession, Integer port) {
         String command = "lsof -i:"+port;
         try {
-            JschResult jschResult = jschUtil.executeCommand(command, rootSession);
-            if (jschResult.getExitCode()!=0){
-                return false;
-            }
+            jschUtil.executeCommand(command, rootSession);
 
             return true;
         } catch (Exception e) {
             log.error("Failed to probe port",e);
-            throw new OpsException("Failed to probe port");
+            return false;
         }
     }
 }

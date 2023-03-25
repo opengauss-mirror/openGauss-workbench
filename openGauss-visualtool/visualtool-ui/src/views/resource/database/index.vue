@@ -3,30 +3,31 @@
     <div class="main-bd">
       <div class="upgrade-container">
         <div class="flex-between mb-s">
-          <div class="flex-row cond-btns">
-            <a-button type="primary" @click="handleAdd('create')">
-              <template #icon>
-                <icon-plus />
-              </template>
-              {{ $t('database.index.5oxhr0qz15w0') }}</a-button>
-            <a-space direction="vertical" :style="{ width: '100%' }" class="mr-s">
-              <a-upload action="/" @before-upload="beforeUpload" accept=".csv" />
-            </a-space>
-            <a-button :loading="list.downloadLoading" type="outline" @click="downloadTemp">
-              <template #icon>
-                <icon-download />
-              </template>
-              {{ $t('database.index.5oxhr0qz2bs0') }}</a-button>
+          <div>
+            <div class="flex-row cond-btns">
+              <a-button type="primary" @click="handleAdd('create')">
+                <template #icon>
+                  <icon-plus />
+                </template>
+                {{ $t('database.index.5oxhr0qz15w0') }}</a-button>
+              <a-space direction="vertical" :style="{ width: '100%' }" class="mr-s">
+                <a-upload action="/" @before-upload="beforeUpload" accept=".csv" />
+              </a-space>
+              <a-button :loading="list.downloadLoading" type="outline" @click="downloadTemp">
+                <template #icon>
+                  <icon-download />
+                </template>
+                {{ $t('database.index.5oxhr0qz2bs0') }}</a-button>
+            </div>
           </div>
-          <div class="flex-row">
-
+          <div>
             <a-form :model="filter" layout="inline">
               <a-form-item field="name" :label="$t('database.index.else1')">
-                <a-input v-model="filter.name" allow-clear :placeholder="$t('database.index.5oxhr0qz2s00')"
+                <a-input v-model.trim="filter.name" allow-clear :placeholder="$t('database.index.5oxhr0qz2s00')"
                   style="width: 180px;"></a-input>
               </a-form-item>
               <a-form-item field="ip" :label="$t('database.index.elseIp')">
-                <a-input v-model="filter.ip" allow-clear :placeholder="$t('database.index.elseIpPlaceholder')"
+                <a-input v-model.trim="filter.ip" allow-clear :placeholder="$t('database.index.elseIpPlaceholder')"
                   style="width: 170px;"></a-input>
               </a-form-item>
               <a-form-item field="type" :label="$t('database.index.else3')">
@@ -92,8 +93,8 @@ const expandable = reactive<KeyValue>({
     if (record.nodes && record.nodes.length > 0) {
       return h('div', {}, [
         h(JdbcNodeTable, {
-          nodes: record.nodes,
-          onValidRes (val: boolean) {
+          jdbcData: record,
+          onValidRes(val: boolean) {
             console.log('receive state', val)
             record.state = val
           }
@@ -298,7 +299,6 @@ const pageSizeChange = (e: number) => {
     .upgrade-container {
       padding: 20px;
       box-sizing: border-box;
-      padding: 8px;
       height: calc(100vh - 76px - 40px);
 
       .top-label {

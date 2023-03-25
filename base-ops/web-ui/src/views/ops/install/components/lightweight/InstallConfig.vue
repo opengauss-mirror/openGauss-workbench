@@ -15,7 +15,7 @@
             :ref="(el: any) => setRefMap(el)">
             <a-form-item v-if="index === 0" field="clusterId" :label="$t('lightweight.InstallConfig.5mpmkfqy8nc0')"
               validate-trigger="blur">
-              <a-input v-model="formItem.clusterId" :placeholder="$t('lightweight.InstallConfig.5mpmkfqy8r00')" />
+              <a-input v-model.trim="formItem.clusterId" :placeholder="$t('lightweight.InstallConfig.5mpmkfqy8r00')" />
             </a-form-item>
             <a-form-item field="hostId" :label="$t('lightweight.InstallConfig.5mpmkfqy8vk0')">
               <a-select :loading="hostListLoading" v-model="formItem.hostId" @change="changeHostId(index)" class="mr-s"
@@ -47,14 +47,14 @@
             </a-form-item>
             <a-form-item field="installPath" :label="$t('lightweight.InstallConfig.5mpmkfqya4o0')"
               validate-trigger="blur">
-              <a-input v-model="formItem.installPath" :placeholder="$t('lightweight.InstallConfig.5mpmkfqyaas0')" />
+              <a-input v-model.trim="formItem.installPath" :placeholder="$t('lightweight.InstallConfig.5mpmkfqyaas0')" />
             </a-form-item>
             <a-form-item field="installPackagePath" :label="$t('simple.InstallConfig.else6')" validate-trigger="blur">
-              <a-input v-model="formItem.installPackagePath" :placeholder="$t('simple.InstallConfig.else7')"
+              <a-input v-model.trim="formItem.installPackagePath" :placeholder="$t('simple.InstallConfig.else7')"
                 @blur="handleInstallPackageBlur(index)" />
             </a-form-item>
             <a-form-item field="dataPath" :label="$t('lightweight.InstallConfig.5mpmkfqyah00')" validate-trigger="blur">
-              <a-input v-model="formItem.dataPath" :placeholder="$t('lightweight.InstallConfig.5mpmkfqyan00')" />
+              <a-input v-model.trim="formItem.dataPath" :placeholder="$t('lightweight.InstallConfig.5mpmkfqyan00')" />
             </a-form-item>
             <a-form-item v-if="index === 0" field="port" :label="$t('lightweight.InstallConfig.5mpmkfqyasw0')"
               validate-trigger="blur">
@@ -62,21 +62,21 @@
             </a-form-item>
             <a-form-item field="databaseUsername" :label="$t('lightweight.InstallConfig.5mpmkfqyb4c0')"
               validate-trigger="blur" v-if="installType === 'import' && index === 0">
-              <a-input v-model="formItem.databaseUsername" :placeholder="$t('lightweight.InstallConfig.5mpmkfqyb9w0')"
-                allow-clear />
+              <a-input v-model.trim="formItem.databaseUsername"
+                :placeholder="$t('lightweight.InstallConfig.5mpmkfqyb9w0')" allow-clear />
             </a-form-item>
             <a-form-item v-if="index === 0" field="databasePassword" :label="$t('lightweight.InstallConfig.5mpmkfqybf80')"
               validate-trigger="blur">
               <a-input-password v-model="formItem.databasePassword"
                 :placeholder="$t('lightweight.InstallConfig.5mpmkfqybo00')" allow-clear />
             </a-form-item>
-            <a-form-item v-if="installType === 'import' && index === 0" field="isEnvSeparate"
-              :label="$t('simple.InstallConfig.else11')" validate-trigger="blur">
+            <a-form-item v-if="index === 0" field="isEnvSeparate" :label="$t('simple.InstallConfig.else11')"
+              validate-trigger="blur">
               <a-switch v-model="formItem.isEnvSeparate" />
             </a-form-item>
             <a-form-item v-if="formItem.isEnvSeparate" field="envPath" :label="$t('simple.InstallConfig.else9')"
               validate-trigger="blur">
-              <a-input v-model="formItem.envPath" :placeholder="$t('simple.InstallConfig.else10')" />
+              <a-input v-model.trim="formItem.envPath" :placeholder="$t('simple.InstallConfig.else10')" />
             </a-form-item>
           </a-form>
         </div>
@@ -550,7 +550,7 @@ const validateSpecialFields = async () => {
       validMethodArr.push(validatePort(data.nodeData[i].port, encryptPwd, data.nodeData[i].hostId))
       validMethodArr.push(validatePath(data.nodeData[i].dataPath, encryptPwd, data.nodeData[i].hostId))
       validMethodArr.push(validatePath(data.nodeData[i].installPackagePath, encryptPwd, data.nodeData[i].hostId))
-      if (data.nodeData[i].isEnvSeparate) {
+      if (data.nodeData[i].isEnvSeparate && installType.value === 'import') {
         validMethodArr.push(validateFile(data.nodeData[i].envPath, encryptPwd, data.nodeData[i].hostId))
       }
       if (validMethodArr.length) {
@@ -587,7 +587,7 @@ const validateSpecialFields = async () => {
           })
           result = false
         }
-        if (data.nodeData[i].isEnvSeparate && !validResult[3]) {
+        if (installType.value == 'import' && data.nodeData[i].isEnvSeparate && !validResult[3]) {
           // dataPath Valid
           refList.value[i].setFields({
             envPath: {

@@ -54,8 +54,7 @@
               </a-form-item>
             </a-col>
           </a-row>
-          <a-form-item v-if="installType === 'import'" field="isEnvSeparate" :label="$t('simple.InstallConfig.else11')"
-            validate-trigger="blur">
+          <a-form-item field="isEnvSeparate" :label="$t('simple.InstallConfig.else11')" validate-trigger="blur">
             <a-switch v-model="data.form.isEnvSeparate" />
           </a-form-item>
           <a-form-item v-if="data.form.isEnvSeparate" field="envPath" :label="$t('simple.InstallConfig.else9')"

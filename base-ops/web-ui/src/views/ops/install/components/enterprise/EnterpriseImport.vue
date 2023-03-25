@@ -13,9 +13,11 @@
     </a-steps>
     <a-divider />
     <!-- one -->
-    <cluster-config v-if="currStep === STEP_ENUM.CLUSTER" ref="clusterConfigRef"></cluster-config>
+    <!-- <cluster-config v-if="currStep === STEP_ENUM.CLUSTER" ref="clusterConfigRef"></cluster-config> -->
     <!-- two -->
-    <node-config v-if="currStep === STEP_ENUM.NODE" ref="nodeConfigRef"></node-config>
+    <!-- <node-config v-if="currStep === STEP_ENUM.NODE" ref="nodeConfigRef"></node-config> -->
+    <!-- one -->
+    <cluster-config-all v-if="currStep === STEP_ENUM.CLUSTER" ref="clusterConfigAllRef"></cluster-config-all>
     <!-- four -->
     <install-prompt v-if="currStep === STEP_ENUM.PROMPT" ref="promptRef" />
     <!-- five -->
@@ -24,10 +26,10 @@
 </template>
 
 <script setup lang="ts">
-import ClusterConfig from '@/views/ops/install/components/enterprise/ClusterConfig.vue'
-import NodeConfig from '@/views/ops/install/components/enterprise/NodeConfig.vue'
+// import ClusterConfig from '@/views/ops/install/components/enterprise/ClusterConfig.vue'
+// import NodeConfig from '@/views/ops/install/components/enterprise/NodeConfig.vue'
+import ClusterConfigAll from './ClusterConfigAll.vue'
 import { computed, ref, inject, onMounted } from 'vue'
-import EnvMonitor from './EnvMonitor.vue'
 import InstallPrompt from './InstallPrompt.vue'
 import ExeImport from '../ExeImport.vue'
 import { useOpsStore } from '@/store'
@@ -36,7 +38,6 @@ const installStore = useOpsStore()
 
 enum STEP_ENUM {
   CLUSTER = 1,
-  NODE,
   PROMPT,
   EXE
 }
@@ -51,27 +52,14 @@ onMounted(() => {
   loadingFunc.setBackBtnShow(true)
 })
 
-const clusterConfigRef = ref<InstanceType<typeof ClusterConfig> | null>(null)
-const nodeConfigRef = ref<InstanceType<typeof NodeConfig> | null>(null)
-const envRef = ref<InstanceType<typeof EnvMonitor> | null>(null)
+const clusterConfigAllRef = ref<InstanceType<typeof ClusterConfigAll> | null>(null)
 
 const saveStore = () => {
-  if (installProps.currStep === STEP_ENUM.CLUSTER) {
-    clusterConfigRef.value?.saveStore()
-  }
-  if (installProps.currStep === STEP_ENUM.NODE) {
-    nodeConfigRef.value?.saveStore()
-  }
 }
 
 const beforeConfirm = async (): Promise<boolean> => {
   if (installProps.currStep === STEP_ENUM.CLUSTER) {
-    const res = await clusterConfigRef.value?.beforeConfirm()
-    if (!res) return false
-    return res
-  }
-  if (installProps.currStep === STEP_ENUM.NODE) {
-    const res = await nodeConfigRef.value?.beforeConfirm()
+    const res = await clusterConfigAllRef.value?.beforeConfirm()
     if (!res) return false
     return res
   }

@@ -2,7 +2,7 @@
   <div class="app-container">
     <div class="main-bd">
       <div class="physical-list">
-        <div class="flex-between mb">
+        <div class="flex-between mb-s">
           <div>
             <a-button type="primary" class="mr" @click="handleAddHost('create')">
               <template #icon>
@@ -20,7 +20,7 @@
           <div>
             <a-form :model="filter" layout="inline">
               <a-form-item field="publicIp" :label="$t('physical.index.ipAddress')">
-                <a-input v-model="filter.name" allow-clear :placeholder="$t('physical.index.ipAddressPlaceholder')"
+                <a-input v-model.trim="filter.name" allow-clear :placeholder="$t('physical.index.ipAddressPlaceholder')"
                   style="width: 180px;"></a-input>
               </a-form-item>
               <a-form-item field="hostLabel" :label="$t('physical.index.hostLabel')">
@@ -49,95 +49,115 @@
             </a-form>
           </div>
         </div>
-        <a-table ref="tableRef" row-key="hostId" :data="list.data" :columns="columns" :pagination="list.page"
+        <a-table ref="tableRef" row-key="hostId" :data="list.data" :pagination="list.page"
           :row-selection="list.rowSelection" @page-change="currentPage" @page-size-change="pageSizeChange"
           :loading="list.loading" @selection-change="handleSelectedChange">
-          <template #baseInfo="{ record }">
-            <div class="flex-col-start">
-              <div class="host-name">{{ record.name ? record.name : '--' }}</div>
-              <div class="flex-row">
-                <div class="mr-s">{{ $t('physical.index.privateIp') }}:</div>
-                <div>{{ record.privateIp }}</div>
-              </div>
-              <div class="flex-row">
-                <div class="mr-s">{{ $t('physical.index.publicIp') }}:</div>
-                <div style="max-width: 140px;" class="mr-s">{{ record.publicIp }}</div>
-                <icon-code-square :size="25" style="cursor: pointer;" @click="showTerminal(record)" />
-              </div>
-              <div class="flex-row">
-                <div class="mr-s">{{ $t('physical.index.os') }}:</div>
-                <div>{{ record.os ? record.os : '--' }} - {{ record.cpuArch ? record.cpuArch : '--' }}</div>
-              </div>
-              <div class="flex-row">
-                <div class="mr-s">{{ $t('physical.index.hostName') }}:</div>
-                <div>{{ record.hostname ? record.hostname : '--' }}</div>
-              </div>
-            </div>
-          </template>
-          <template #hostLabel="{ record }">
-            <div class="flex-row" style="flex-wrap: wrap;" v-if="record.tags">
-              <a-tag v-for="(item, index) in record.tags" :key="index" class="mr-s mb-s">
-                <div :title="item" style="max-width: 125px;overflow: hidden; text-overflow:ellipsis; white-space: nowrap">
-                  {{ item
-                  }}</div>
-              </a-tag>
-            </div>
-            <div v-else>
-              --
-            </div>
-          </template>
-          <template #diskInfo="{ record }">
-            <div class="flex-row">
-              <div class="flex-col mr" style="width: 160px;">
-                <div class="net flex-row-center">
-                  <div class="flex-col mr" style="width: 80px;">
-                    <icon-arrow-fall style="color: #a9aeb8" :size="30" class="mb-s" />
-                    <div style="white-space: nowrap;">{{ record.downSpeed ? record.downSpeed : '--' }} byte/s</div>
+          <template #columns>
+            <a-table-column :title="$t('physical.index.baseInfo')" data-index="baseInfo" :width="300">
+              <template #cell="{ record }">
+                <div class="flex-col-start">
+                  <div class="host-name">{{ record.name ? record.name : '--' }}</div>
+                  <div class="flex-row">
+                    <div class="mr-s">{{ $t('physical.index.privateIp') }}:</div>
+                    <div>{{ record.privateIp }}</div>
                   </div>
-                  <div class="flex-col" style="width: 80px;">
-                    <icon-arrow-rise style="color: #a9aeb8" :size="30" class="mb-s" />
-                    <div style="white-space: nowrap;">{{ record.upSpeed ? record.upSpeed : '--' }} byte/s</div>
+                  <div class="flex-row">
+                    <div class="mr-s">{{ $t('physical.index.publicIp') }}:</div>
+                    <div style="max-width: 140px;" class="mr-s">{{ record.publicIp }}</div>
+                    <icon-code-square :size="25" style="cursor: pointer;" @click="showTerminal(record)" />
+                  </div>
+                  <div class="flex-row">
+                    <div class="mr-s">{{ $t('physical.index.os') }}:</div>
+                    <div>{{ record.os ? record.os : '--' }} - {{ record.cpuArch ? record.cpuArch : '--' }}</div>
+                  </div>
+                  <div class="flex-row">
+                    <div class="mr-s">{{ $t('physical.index.hostName') }}:</div>
+                    <div>{{ record.hostname ? record.hostname : '--' }}</div>
                   </div>
                 </div>
-                <div>{{ $t('physical.index.net') }}</div>
-              </div>
-              <div class="flex-col mr">
-                <div class="chart chart-empty-c" v-if="!record.isCpu">
-                  <icon-empty :size="70" class="bg-color" />
+              </template>
+            </a-table-column>
+            <a-table-column :title="$t('physical.index.hostLabel')" data-index="hostLabel" :width="200">
+              <template #cell="{ record }">
+                <div class="flex-row" style="flex-wrap: wrap;" v-if="record.tags">
+                  <a-tag v-for="(item, index) in record.tags" :key="index" class="mr-s mb-s">
+                    <div :title="item"
+                      style="max-width: 125px;overflow: hidden; text-overflow:ellipsis; white-space: nowrap">
+                      {{ item
+                      }}</div>
+                  </a-tag>
                 </div>
-                <v-chart v-else class="chart" :option="record.cpuOption" />
-                <div>{{ $t('physical.index.cpu') }}</div>
-              </div>
-              <div class="flex-col mr">
-                <div class="chart chart-empty-c" v-if="!record.isMemory">
-                  <icon-empty :size="70" class="bg-color" />
+                <div v-else>
+                  --
                 </div>
-                <v-chart v-else class="chart" :option="record.memoryOption" />
-                <div>{{ $t('physical.index.memory') }}</div>
-              </div>
-              <div class="flex-col mr">
-                <div class="chart chart-empty-c" v-if="!record.isDisk">
-                  <icon-empty :size="70" class="bg-color" />
+              </template>
+            </a-table-column>
+            <a-table-column data-index="diskInfo">
+              <template #title>
+                <div class="flex-row">
+                  <div class="mr">{{ $t('physical.index.diskInfo') }}</div>
+                  <a-tag color="green" class="mr-s">{{ $t('physical.index.realTime') }}</a-tag>
+                  <a-tooltip :content="$t('physical.index.tipInfo')" position="rt">
+                    <icon-question-circle-fill :size="18" />
+                  </a-tooltip>
                 </div>
-                <v-chart v-else class="chart" :option="record.diskOption" />
-                <div>{{ $t('physical.index.disk') }}</div>
-              </div>
-            </div>
-          </template>
-          <template #operation="{ record }">
-            <div class="flex-row-start">
-              <a-link class="mr" @click="showHostUserMng(record)">{{ $t('physical.index.5mphf11szks0') }}</a-link>
-              <!-- <a-link class="mr" @click="handleTest(record)">{{ $t('physical.index.5mphf11syw80') }}</a-link> -->
-              <!-- <a-link class="mr" @click="handleShowDetail(record)">{{ $t('physical.index.detail') }}</a-link> -->
-              <a-link class="mr" @click="handleAddHost('update', record)">{{
-                $t('physical.index.5mphf11szqo0')
-              }}</a-link>
-              <a-popconfirm :content="$t('physical.index.5mphf11szws0')" type="warning"
-                :ok-text="$t('physical.index.5mphf11t05c0')" :cancel-text="$t('physical.index.5mphf11t0bc0')"
-                @ok="deleteRows(record)">
-                <a-link status="danger">{{ $t('physical.index.5mphf11t0hc0') }}</a-link>
-              </a-popconfirm>
-            </div>
+              </template>
+              <template #cell="{ record }">
+                <div class="flex-row">
+                  <div class="flex-col mr" style="width: 160px;">
+                    <div class="net flex-row-center">
+                      <div class="flex-col mr" style="width: 80px;">
+                        <icon-arrow-fall style="color: #a9aeb8" :size="30" class="mb-s" />
+                        <div style="white-space: nowrap;">{{ record.downSpeed ? record.downSpeed : '--' }} byte/s</div>
+                      </div>
+                      <div class="flex-col" style="width: 80px;">
+                        <icon-arrow-rise style="color: #a9aeb8" :size="30" class="mb-s" />
+                        <div style="white-space: nowrap;">{{ record.upSpeed ? record.upSpeed : '--' }} byte/s</div>
+                      </div>
+                    </div>
+                    <div>{{ $t('physical.index.net') }}</div>
+                  </div>
+                  <div class="flex-col mr">
+                    <div class="chart chart-empty-c" v-if="!record.isCpu">
+                      <icon-empty :size="70" class="bg-color" />
+                    </div>
+                    <v-chart v-else class="chart" :option="record.cpuOption" />
+                    <div>{{ $t('physical.index.cpu') }}</div>
+                  </div>
+                  <div class="flex-col mr">
+                    <div class="chart chart-empty-c" v-if="!record.isMemory">
+                      <icon-empty :size="70" class="bg-color" />
+                    </div>
+                    <v-chart v-else class="chart" :option="record.memoryOption" />
+                    <div>{{ $t('physical.index.memory') }}</div>
+                  </div>
+                  <div class="flex-col mr">
+                    <div class="chart chart-empty-c" v-if="!record.isDisk">
+                      <icon-empty :size="70" class="bg-color" />
+                    </div>
+                    <v-chart v-else class="chart" :option="record.diskOption" />
+                    <div>{{ $t('physical.index.disk') }}</div>
+                  </div>
+                </div>
+              </template>
+            </a-table-column>
+            <a-table-column :title="$t('physical.index.5mphf11tfjw0')" data-index="operation" :width="280">
+              <template #cell="{ record }">
+                <div class="flex-row-start">
+                  <a-link class="mr" @click="showHostUserMng(record)">{{ $t('physical.index.5mphf11szks0') }}</a-link>
+                  <!-- <a-link class="mr" @click="handleTest(record)">{{ $t('physical.index.5mphf11syw80') }}</a-link> -->
+                  <!-- <a-link class="mr" @click="handleShowDetail(record)">{{ $t('physical.index.detail') }}</a-link> -->
+                  <a-link class="mr" @click="handleAddHost('update', record)">{{
+                    $t('physical.index.5mphf11szqo0')
+                  }}</a-link>
+                  <a-popconfirm :content="$t('physical.index.5mphf11szws0')" type="warning"
+                    :ok-text="$t('physical.index.5mphf11t05c0')" :cancel-text="$t('physical.index.5mphf11t0bc0')"
+                    @ok="deleteRows(record)">
+                    <a-link status="danger">{{ $t('physical.index.5mphf11t0hc0') }}</a-link>
+                  </a-popconfirm>
+                </div>
+              </template>
+            </a-table-column>
           </template>
         </a-table>
         <add-host ref="addHostRef" @finish="getListData"></add-host>
@@ -174,13 +194,6 @@ const filter = reactive({
   pageNum: 1,
   pageSize: 10
 })
-
-const columns = computed(() => [
-  { title: t('physical.index.baseInfo'), slotName: 'baseInfo', width: 300 },
-  { title: t('physical.index.hostLabel'), slotName: 'hostLabel', width: 200 },
-  { title: t('physical.index.diskInfo'), slotName: 'diskInfo' },
-  { title: t('physical.index.5mphf11tfjw0'), slotName: 'operation', fixed: 'right', width: 280 }
-])
 
 const echartsOption = reactive<KeyValue>({
   cpuOption: cpuOption,
