@@ -550,3 +550,73 @@ COMMENT ON COLUMN "public"."tb_migration_host_portal_install"."run_host_id" IS '
 COMMENT ON COLUMN "public"."tb_migration_host_portal_install"."install_status" IS 'portal安装状态0 ： 未安装  1：安装中；2：已安装；10：安装失败';
 COMMENT ON TABLE "public"."tb_migration_host_portal_install" IS '机器安装portal记录';
 
+CREATE OR REPLACE FUNCTION add_host_portal_install_field_func() RETURNS integer AS 'BEGIN
+    IF
+            (SELECT COUNT(*) AS ct1
+             FROM INFORMATION_SCHEMA.COLUMNS
+             WHERE TABLE_NAME = ''tb_migration_host_portal_install''
+               AND COLUMN_NAME = ''install_path'') = 0
+    THEN
+        ALTER TABLE tb_migration_host_portal_install
+            ADD COLUMN install_path varchar(512) COLLATE "pg_catalog"."default";
+        COMMENT ON COLUMN "public"."tb_migration_host_portal_install"."install_path" IS ''安装路径'';
+    END IF;
+    IF
+            (SELECT COUNT(*) AS ct1
+             FROM INFORMATION_SCHEMA.COLUMNS
+             WHERE TABLE_NAME = ''tb_migration_host_portal_install''
+               AND COLUMN_NAME = ''host'') = 0
+    THEN
+        ALTER TABLE tb_migration_host_portal_install
+            ADD COLUMN host varchar(64) COLLATE "pg_catalog"."default";
+        COMMENT ON COLUMN "public"."tb_migration_host_portal_install"."host" IS ''机器IP'';
+    END IF;
+    IF
+            (SELECT COUNT(*) AS ct1
+             FROM INFORMATION_SCHEMA.COLUMNS
+             WHERE TABLE_NAME = ''tb_migration_host_portal_install''
+               AND COLUMN_NAME = ''port'') = 0
+    THEN
+        ALTER TABLE tb_migration_host_portal_install
+            ADD COLUMN port int8;
+        COMMENT ON COLUMN "public"."tb_migration_host_portal_install"."port" IS ''机器端口'';
+    END IF;
+    IF
+            (SELECT COUNT(*) AS ct1
+             FROM INFORMATION_SCHEMA.COLUMNS
+             WHERE TABLE_NAME = ''tb_migration_host_portal_install''
+               AND COLUMN_NAME = ''run_user'') = 0
+    THEN
+        ALTER TABLE tb_migration_host_portal_install
+            ADD COLUMN run_user varchar(64) COLLATE "pg_catalog"."default";
+        COMMENT ON COLUMN "public"."tb_migration_host_portal_install"."run_user" IS ''安装用户'';
+    END IF;
+    IF
+            (SELECT COUNT(*) AS ct1
+             FROM INFORMATION_SCHEMA.COLUMNS
+             WHERE TABLE_NAME = ''tb_migration_host_portal_install''
+               AND COLUMN_NAME = ''run_password'') = 0
+    THEN
+        ALTER TABLE tb_migration_host_portal_install
+            ADD COLUMN run_password varchar(512) COLLATE "pg_catalog"."default";
+        COMMENT ON COLUMN "public"."tb_migration_host_portal_install"."run_password" IS ''用户密码'';
+    END IF;
+    IF
+            (SELECT COUNT(*) AS ct1
+             FROM INFORMATION_SCHEMA.COLUMNS
+             WHERE TABLE_NAME = ''tb_migration_host_portal_install''
+               AND COLUMN_NAME = ''host_user_id'') = 0
+    THEN
+        ALTER TABLE tb_migration_host_portal_install
+            ADD COLUMN host_user_id varchar(64) COLLATE "pg_catalog"."default";
+        COMMENT ON COLUMN "public"."tb_migration_host_portal_install"."host_user_id" IS ''用户ID'';
+    END IF;
+    RETURN 0;
+END;'
+    LANGUAGE plpgsql;
+
+SELECT add_host_portal_install_field_func();
+
+DROP FUNCTION add_host_portal_install_field_func;
+
+delete from "public"."tb_migration_host_portal_install" where host_user_id is null;
