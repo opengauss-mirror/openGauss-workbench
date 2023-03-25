@@ -30,7 +30,7 @@ data-migration项目目前版本为1.0.0。
   
 - 打包完成后在data-migration/target目录中找到data-migration-1.0.x-repackage.jar即为插件安装包。
 
-- 打开并登陆openGauss一体化平台，点击插件管理-安装插件，将上诉步骤获得的安装包上传并安装。
+- 打开并登录openGauss Datakit，点击插件管理-安装插件，将上诉步骤获得的安装包上传并安装。
 
 
 ## Portal离线安装步骤
