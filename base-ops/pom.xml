@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.opengauss</groupId>
     <artifactId>base-ops</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>5.0.0</version>
     <packaging>jar</packaging>
     <properties>
         <java.version>11</java.version>
@@ -27,7 +27,7 @@
         <dependency>
             <groupId>org.opengauss</groupId>
             <artifactId>visualtool-framework</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+            <version>5.0.0</version>
             <scope>provided</scope>
             <exclusions>
                 <exclusion>
@@ -54,6 +54,11 @@
             <groupId>com.gitee.starblues</groupId>
             <artifactId>spring-brick-maven-packager</artifactId>
             <version>${spring-brick.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>23.0</version>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
@@ -165,7 +170,7 @@
                     <pluginInfo>
                         <id>base-ops</id>
                         <bootstrapClass>org.opengauss.admin.plugin.BaseOpsPluginApplication</bootstrapClass>
-                        <version>1.0.6</version>
+                        <version>5.0.0</version>
                         <provider>lita</provider>
                         <description>基础运维插件</description>
                     </pluginInfo>

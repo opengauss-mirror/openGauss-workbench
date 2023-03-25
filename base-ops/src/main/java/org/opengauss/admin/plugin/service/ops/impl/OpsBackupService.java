@@ -110,7 +110,7 @@ public class OpsBackupService extends ServiceImpl<OpsBackupMapper, OpsBackupEnti
 
             try {
                 String name = StrUtil.uuid() + ".sql";
-                doBackUp(clusterEntity, hostEntity, installUserEntity, backup, retWsSession, name);
+                doBackUp(clusterEntity, hostEntity, installUserEntity, backup, retWsSession, name,clusterEntity.getEnvPath());
                 wsUtil.sendText(retWsSession, "FINAL_EXECUTE_EXIT_CODE:0");
 
                 OpsBackupEntity opsBackupEntity = new OpsBackupEntity();
@@ -269,7 +269,7 @@ public class OpsBackupService extends ServiceImpl<OpsBackupMapper, OpsBackupEnti
         clusterService.restart(opsClusterBody);
     }
 
-    private void doBackUp(OpsClusterEntity clusterEntity, OpsHostEntity hostEntity, OpsHostUserEntity installUserEntity, BackupInputDto backup, WsSession retWsSession, String name) {
+    private void doBackUp(OpsClusterEntity clusterEntity, OpsHostEntity hostEntity, OpsHostUserEntity installUserEntity, BackupInputDto backup, WsSession retWsSession, String name, String envPath) {
         Session rootSession = jschUtil.getSession(hostEntity.getPublicIp(), hostEntity.getPort(), installUserEntity.getUsername(), encryptionUtils.decrypt(installUserEntity.getPassword())).orElseThrow(() -> new OpsException("Failed to establish connection with host"));
 
         try {
@@ -291,7 +291,7 @@ public class OpsBackupService extends ServiceImpl<OpsBackupMapper, OpsBackupEnti
         Session installSession = jschUtil.getSession(hostEntity.getPublicIp(), hostEntity.getPort(), installUserEntity.getUsername(), encryptionUtils.decrypt(installUserEntity.getPassword())).orElseThrow(() -> new OpsException("Failed to connect to master node host"));
         try {
             String backupCommand = "gs_dumpall -p " + clusterEntity.getPort() + " -f " + backup.getBackupPath() + "/" + name;
-            JschResult jschResult = jschUtil.executeCommand(backupCommand, installSession, retWsSession);
+            JschResult jschResult = jschUtil.executeCommand(backupCommand, envPath,installSession, retWsSession);
             if (jschResult.getExitCode() != 0) {
                 log.error("Backup failed，exitCode:{},msg:{}", jschResult.getExitCode(), jschResult.getResult());
                 throw new OpsException("Backup failed");

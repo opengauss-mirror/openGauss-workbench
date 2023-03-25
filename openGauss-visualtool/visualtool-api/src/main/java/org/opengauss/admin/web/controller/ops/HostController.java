@@ -1,8 +1,6 @@
 package org.opengauss.admin.web.controller.ops;
 
-import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import org.opengauss.admin.common.core.controller.BaseController;
 import org.opengauss.admin.common.core.domain.AjaxResult;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
@@ -16,6 +14,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * Host
@@ -43,8 +42,8 @@ public class HostController extends BaseController {
     }
 
     @GetMapping("/page")
-    public TableDataInfo page(@RequestParam(required = false) String name) {
-        IPage<OpsHostVO> page = hostService.pageHost(startPage(), name);
+    public TableDataInfo page(@RequestParam(required = false) String name, @RequestParam(value = "tagIds",required = false) Set<String> tagIds, @RequestParam(value = "os",required = false) String os) {
+        IPage<OpsHostVO> page = hostService.pageHost(startPage(), name, tagIds, os);
         return getDataTable(page);
     }
 
@@ -54,7 +53,7 @@ public class HostController extends BaseController {
     }
 
     @GetMapping("/ping/{hostId}")
-    public AjaxResult ping(@PathVariable String hostId, @RequestParam(value = "rootPassword",required = false) String rootPassword) {
+    public AjaxResult ping(@PathVariable String hostId, @RequestParam(value = "rootPassword", required = false) String rootPassword) {
         return toAjax(hostService.ping(hostId, rootPassword));
     }
 
@@ -73,5 +72,16 @@ public class HostController extends BaseController {
     public AjaxResult ssh(@RequestBody SSHBody sshBody) {
         hostService.ssh(sshBody);
         return AjaxResult.success();
+    }
+
+    @PostMapping("/ssh/{hostId}")
+    public AjaxResult ssh(@PathVariable("hostId") String hostId,@RequestBody SSHBody sshBody) {
+        hostService.ssh(hostId,sshBody);
+        return AjaxResult.success();
+    }
+
+    @GetMapping("/monitor")
+    public AjaxResult monitor(@RequestParam String hostId, @RequestParam String businessId, @RequestParam(value = "rootPassword",required = false) String rootPassword){
+        return AjaxResult.success(hostService.monitor(hostId,businessId,rootPassword));
     }
 }

@@ -107,6 +107,7 @@
   );
   const myEmit = defineEmits<{
     (event: 'update:modelValue', text: boolean): void;
+    (event: 'success'): void;
   }>();
   const visible = computed({
     get: () => props.modelValue,
@@ -231,6 +232,7 @@
         api[type](form).then((res) => {
           if (type === 'Base') {
             ElMessage.success(`${t('create.sequence')}${t('success')}`);
+            myEmit('success');
             handleClose();
           } else if (type === 'Sql') {
             editorPreRef.value.setValue(res);

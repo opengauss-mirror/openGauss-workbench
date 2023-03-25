@@ -8,7 +8,7 @@ const installStore = defineStore('install', {
       installContext: {
         installType: 'install',
         openGaussVersion: OpenGaussVersionEnum.LITE,
-        openGaussVersionNum: '3.0.0',
+        openGaussVersionNum: '5.0.0',
         installMode: InstallModeEnum.OFF_LINE,
         packagePath: '',
         packageName: '',

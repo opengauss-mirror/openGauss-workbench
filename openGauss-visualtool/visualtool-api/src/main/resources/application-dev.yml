@@ -8,7 +8,7 @@ server:
     context-path: /
 logging:
   file:
-    path: /Users/xielibo/visualtool-api/logs/
+    path: /visualtool-api/logs/
 spring:
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource

@@ -16,6 +16,7 @@ public enum MigrationErrorCode {
     SUB_TASK_NOT_IN_INCREMENTAL_STOP_ERROR(50153, "task status is not incremental stop"),
 
     PORTAL_INSTALL_ERROR(50120, "portal install error"),
+    PORTAL_INSTALL_PATH_NOT_HAS_WRITE_PERMISSION_ERROR(50121, "portal installPath not has write permission error"),
     ;
 
     private final Integer code;

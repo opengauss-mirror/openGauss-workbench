@@ -25,10 +25,10 @@
         <a-col :span="19">
           <a-form-item v-if="!data.form.isCustomName" :label="$t('database.AddJdbc.5oxhkhimxho0')"
             validate-trigger="blur">
-            <a-input v-model="clusterName" :placeholder="$t('database.AddJdbc.5oxhkhimz480')" disabled></a-input>
+            <a-input v-model="clusterName" :placeholder="$t('database.AddJdbc.customNamePlaceholder')" disabled></a-input>
           </a-form-item>
           <a-form-item v-else field="name" :label="$t('database.AddJdbc.5oxhkhimxho0')" validate-trigger="blur">
-            <a-input v-model="data.form.name" :placeholder="$t('database.AddJdbc.customNamePlaceholder')"></a-input>
+            <a-input v-model="data.form.name" :placeholder="$t('database.AddJdbc.5oxhkhimz480')"></a-input>
           </a-form-item>
         </a-col>
         <a-col :span="5">
@@ -57,7 +57,7 @@
           {{ item.ip.trim() ? item.ip : $t('database.AddJdbc.5oxhkhimyio0') + item.tabName }}
         </template>
         <div class="jdbc-instance-c">
-          <jdbc-instance :form-data="item" :host-list="data.hostList"
+          <jdbc-instance :form-data="item" :host-list="data.hostList" :jdbc-type="data.form.dbType"
             :ref="(el: any) => setRefMap(el, item.id)"></jdbc-instance>
         </div>
       </a-tab-pane>
@@ -91,14 +91,15 @@ const data = reactive<KeyValue>({
     clusterId: '',
     name: '',
     isCustomName: false,
-    dbType: 'mysql',
+    dbType: 'MYSQL',
     nodes: [],
     status: jdbcStatusEnum.unTest
   },
   hostList: [],
   activeTab: '',
   dbTypes: [
-    { label: 'MYSQL', value: 'mysql' }
+    { label: 'MYSQL', value: 'MYSQL' },
+    { label: 'OPENGAUSS', value: 'OPENGAUSS' }
   ]
 })
 const formRef = ref<null | FormInstance>(null)
@@ -266,12 +267,12 @@ const submit = () => {
   })
 }
 const close = () => {
-  data.show = false
   nextTick(() => {
     formRef.value?.clearValidate()
     formRef.value?.resetFields()
+    delRefObj()
   })
-  delRefObj()
+  data.show = false
 }
 
 const handleTestHost = () => {
@@ -320,13 +321,17 @@ const handleTabClick = (val: any) => {
 
 const handleAdd = () => {
   const id = new Date().getTime() + ''
+  let port = 3306
+  if (data.form.dbType === 'OPENGAUSS') {
+    port = 5432
+  }
   data.form.nodes.push({
     id: id,
     tabName: data.form.nodes.length + 1,
     url: '',
     urlSuffix: '',
     ip: '',
-    port: 3306,
+    port: port,
     username: '',
     password: '',
     props: [{
@@ -398,6 +403,7 @@ const open = (type: string, editData?: KeyValue) => {
       Object.assign(data.form, {
         clusterId: editData.clusterId,
         name: editData.name,
+        dbType: editData.dbType,
         nodes: []
       })
       editData.nodes.forEach((item: KeyValue) => {
@@ -423,10 +429,11 @@ const open = (type: string, editData?: KeyValue) => {
     }
   } else {
     data.title = t('database.AddJdbc.5oxhkhimzww0')
+    delRefObj()
     Object.assign(data.form, {
       clusterId: '',
       name: '',
-      dbType: 'mysql',
+      dbType: 'MYSQL',
       nodes: [],
       status: jdbcStatusEnum.unTest
     })

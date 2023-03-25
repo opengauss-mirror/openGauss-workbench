@@ -6,6 +6,7 @@ import org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoCo
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
 import com.gitee.starblues.bootstrap.SpringPluginBootstrap;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication(exclude = {
         DataSourceAutoConfiguration.class,
@@ -13,6 +14,7 @@ import com.gitee.starblues.bootstrap.SpringPluginBootstrap;
         RedisAutoConfiguration.class,
         RedisRepositoriesAutoConfiguration.class
 })
+@EnableScheduling
 public class ObservabilityPluginApplication extends SpringPluginBootstrap {
 
     public static void main(String[] args) {

@@ -5,7 +5,9 @@
         {{ $t('components.OnlineInstall.else1') }}: {{ data.selectedPackageName ? data.selectedPackageName : '--' }}
       </div>
       <div class="label-color mb">
-        {{ $t('components.OnlineInstall.5mpn3mp10hw0') }}: {{ data.targetPath }}
+        <a-spin :loading="data.uploadPathLoading">
+          {{ $t('components.OnlineInstall.5mpn3mp10hw0') }}: {{ data.targetPath }}
+        </a-spin>
       </div>
 
       <a-spin class="full-w" :loading="data.loading" :tip="$t('components.OnlineInstall.else2')">
@@ -69,16 +71,17 @@ import { download } from '@/api/ops'
 import Socket from '@/utils/websocket'
 import { KeyValue } from '@/types/global'
 import { useOpsStore } from '@/store'
-import { packageListAll } from '@/api/ops'
+import { packageListAll, getSysUploadPath } from '@/api/ops'
 
 const installStore = useOpsStore()
 
 const data = reactive<KeyValue>({
   loading: false,
-  targetPath: '/ops/files/',
+  targetPath: '',
   packageList: [],
   selectedPackageId: '',
-  selectedPackageName: ''
+  selectedPackageName: '',
+  uploadPathLoading: false
 })
 
 const processVisible = ref<boolean>(false)
@@ -89,8 +92,21 @@ const percentLoading = ref(false)
 const downloadWs = ref<Socket<any, any> | undefined>()
 
 onMounted(() => {
+  getUploadPath()
   getPackageList()
 })
+
+const getUploadPath = () => {
+  data.uploadPathLoading = true
+  getSysUploadPath().then((res: KeyValue) => {
+    console.log('show system upload path', res);
+    if (Number(res.code) === 200) {
+      data.targetPath = res.data
+    }
+  }).finally(() => {
+    data.uploadPathLoading = false
+  })
+}
 
 onBeforeUnmount(() => {
   downloadWs.value?.destroy()
@@ -106,7 +122,12 @@ const getPackageList = () => {
     packageListAll(param).then((res: KeyValue) => {
       if (Number(res.code) === 200) {
         console.log('get package list', res)
-        data.packageList = res.data
+        data.packageList = []
+        res.data.forEach((item: KeyValue) => {
+          if (item.packageUrl) {
+            data.packageList.push(item)
+          }
+        })
         if (installStore.getInstallConfig.packagePath) {
           // find one
           const hasDownloadPackage = res.data.find((item: any) => {

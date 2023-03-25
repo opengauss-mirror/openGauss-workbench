@@ -17,7 +17,7 @@ public interface IOpsJdbcDbClusterNodeService extends IService<OpsJdbcDbClusterN
 
     OpsJdbcDbClusterNodeEntity getClusterNodeByIpAndPort(String ip, String port);
 
-    Set<String> fuzzyQueryClusterIds(String name);
+    Set<String> fuzzyQueryClusterIdsByIp(String ip);
 
     Map<String, List<OpsJdbcDbClusterNodeEntity>> mapClusterNodesByClusterId(Set<String> clusterIds);
 
@@ -29,5 +29,5 @@ public interface IOpsJdbcDbClusterNodeService extends IService<OpsJdbcDbClusterN
 
     boolean ping(JdbcDbClusterNodeInputDto clusterNodeInput);
 
-    void monitor(String clusterNodeId, String businessId);
+    Map<String,Object> monitor(String clusterNodeId, String businessId);
 }

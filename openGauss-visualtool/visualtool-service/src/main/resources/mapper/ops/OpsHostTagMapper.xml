@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.opengauss.admin.system.mapper.ops.OpsHostTagMapper">
+
+    <select id="page" resultType="org.opengauss.admin.common.core.domain.model.ops.host.tag.HostTagPageVO">
+        SELECT
+            tag.host_tag_id id,
+            tag."name",
+            COALESCE(r.COUNT,0) relNum
+        FROM
+            ops_host_tag tag
+                LEFT JOIN ( SELECT tag_id, COUNT ( host_id ) FROM ( SELECT DISTINCT rel.host_id, rel.tag_id FROM ops_host_tag_rel rel ) GROUP BY tag_id ) r ON tag.host_tag_id = r.tag_id
+
+        WHERE 1=1
+        <if test="name!=null and name!=''">
+            AND tag.name like '%${name}%'
+        </if>
+    </select>
+</mapper>

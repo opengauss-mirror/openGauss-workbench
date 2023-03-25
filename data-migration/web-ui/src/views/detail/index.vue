@@ -29,20 +29,30 @@
     <div class="table-con">
       <a-table :data="tableData" :bordered="false" :stripe="!currentTheme" :hoverable="!currentTheme" :pagination="pagination" @page-change="pageChange">
         <template #columns>
-          <a-table-column title="子任务ID" data-index="id"></a-table-column>
-          <a-table-column title="源库名" data-index="sourceDb"></a-table-column>
-          <a-table-column title="目的库名" data-index="targetDb"></a-table-column>
-          <a-table-column title="迁移过程模式">
+          <a-table-column title="子任务ID" data-index="id" :width="90"></a-table-column>
+          <a-table-column title="源实例名" :width="180" ellipsis tooltip>
+            <template #cell="{ record }">
+              {{ record.sourceDbHost + ':' + record.sourceDbPort }}
+            </template>
+          </a-table-column>
+          <a-table-column title="源库名" data-index="sourceDb" :width="100" ellipsis tooltip></a-table-column>
+          <a-table-column title="目的实例名" :width="180" ellipsis tooltip>
+            <template #cell="{ record }">
+              {{ record.targetDbHost + ':' + record.targetDbPort }}
+            </template>
+          </a-table-column>
+          <a-table-column title="目的库名" data-index="targetDb" :width="100" ellipsis tooltip></a-table-column>
+          <a-table-column title="迁移过程模式" :width="120" ellipsis tooltip>
             <template #cell="{ record }">
               {{ record.migrationModelId === 1 ? '离线模式' : '在线模式' }}
             </template>
           </a-table-column>
-          <a-table-column title="执行机器">
+          <a-table-column title="执行机器" :width="300" ellipsis tooltip>
             <template #cell="{ record }">
-              <span class="mac-txt" @click="handleTerminal(record)">{{ record.runHost }}（{{ record.runHostname }}）</span>
+              <span class="mac-txt" @click="handleTerminal(record)"><icon-code-square /> {{ record.runHost }}（{{ record.runHostname }}）</span>
             </template>
           </a-table-column>
-          <a-table-column title="当前状态">
+          <a-table-column title="当前状态" :width="150" ellipsis tooltip>
             <template #cell="{ record }">
               <span>{{ execSubStatusMap(record.execStatus) }}</span>
               <a-popover title="迁移失败详情">
@@ -415,9 +425,7 @@ onBeforeUnmount(() => {
     padding: 0 20px 30px;
     .mac-txt {
       cursor: pointer;
-      &:hover {
-        color: rgb(var(--primary-6));
-      }
+      color: rgb(var(--primary-6));
     }
   }
 }

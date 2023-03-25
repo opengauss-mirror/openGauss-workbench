@@ -110,6 +110,16 @@ START 1000
 CACHE 1;
 END IF;
 
+IF NOT EXISTS(SELECT 1 FROM information_schema.sequences WHERE sequence_schema = ''public'' AND sequence_name = ''sq_sys_plugin_logo_id'')
+THEN
+    CREATE SEQUENCE "public"."sq_sys_plugin_logo_id"
+    INCREMENT 1
+    MINVALUE 1
+    MAXVALUE 9223372036854775807
+    START 1000
+    CACHE 1;
+END IF;
+
 RETURN 0;
 END;'
 LANGUAGE plpgsql;
@@ -360,6 +370,60 @@ COMMENT ON COLUMN "public"."ops_host_user"."create_by" IS '创建者';
 COMMENT ON COLUMN "public"."ops_host_user"."create_time" IS '创建时间';
 COMMENT ON COLUMN "public"."ops_host_user"."update_by" IS '更新者';
 COMMENT ON COLUMN "public"."ops_host_user"."update_time" IS '更新时间';
+
+CREATE TABLE IF NOT EXISTS "public"."ops_host_tag" (
+    "host_tag_id" varchar(255) COLLATE "pg_catalog"."default" NOT NULL PRIMARY KEY,
+    "name" varchar(255) COLLATE "pg_catalog"."default",
+    "remark" varchar(255) COLLATE "pg_catalog"."default",
+    "create_by" varchar(64) COLLATE "pg_catalog"."default",
+    "create_time" timestamp(6),
+    "update_by" varchar(64) COLLATE "pg_catalog"."default",
+    "update_time" timestamp(6)
+    )
+;
+COMMENT ON COLUMN "public"."ops_host_tag"."name" IS '标签名';
+COMMENT ON COLUMN "public"."ops_host_tag"."remark" IS '备注';
+COMMENT ON COLUMN "public"."ops_host_tag"."create_by" IS '创建者';
+COMMENT ON COLUMN "public"."ops_host_tag"."create_time" IS '创建时间';
+COMMENT ON COLUMN "public"."ops_host_tag"."update_by" IS '更新者';
+COMMENT ON COLUMN "public"."ops_host_tag"."update_time" IS '更新时间';
+
+-- ----------------------------
+-- Table structure for ops_host_tag_rel
+-- ----------------------------
+CREATE TABLE IF NOT EXISTS  "public"."ops_host_tag_rel" (
+    "id" varchar(255) COLLATE "pg_catalog"."default" NOT NULL PRIMARY KEY,
+    "host_id" varchar(255) COLLATE "pg_catalog"."default",
+    "tag_id" varchar(255) COLLATE "pg_catalog"."default",
+    "remark" varchar(255) COLLATE "pg_catalog"."default",
+    "create_by" varchar(64) COLLATE "pg_catalog"."default",
+    "create_time" timestamp(6),
+    "update_by" varchar(64) COLLATE "pg_catalog"."default",
+    "update_time" timestamp(6)
+    )
+;
+COMMENT ON COLUMN "public"."ops_host_tag_rel"."host_id" IS '主机ID';
+COMMENT ON COLUMN "public"."ops_host_tag_rel"."tag_id" IS 'tag ID';
+COMMENT ON COLUMN "public"."ops_host_tag_rel"."remark" IS '描述';
+COMMENT ON COLUMN "public"."ops_host_tag_rel"."create_by" IS '创建者';
+COMMENT ON COLUMN "public"."ops_host_tag_rel"."create_time" IS '创建时间';
+COMMENT ON COLUMN "public"."ops_host_tag_rel"."update_by" IS '更新者';
+COMMENT ON COLUMN "public"."ops_host_tag_rel"."update_time" IS '更新时间';
+
+CREATE OR REPLACE FUNCTION add_host_user_field_func() RETURNS integer AS 'BEGIN
+IF
+( SELECT COUNT ( * ) AS ct1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ''ops_host_user'' AND COLUMN_NAME = ''sudo'' ) = 0
+THEN
+ALTER TABLE ops_host_user ADD COLUMN sudo int2 DEFAULT 0;
+COMMENT ON COLUMN "public"."ops_host_user"."sudo" IS ''管理员'';
+END IF;
+RETURN 0;
+END;'
+LANGUAGE plpgsql;
+
+SELECT add_host_user_field_func();
+
+DROP FUNCTION add_host_user_field_func;
 
 -- ----------------------------
 -- Table structure for sys_log_config
@@ -981,6 +1045,12 @@ THEN
 ALTER TABLE ops_host ADD COLUMN cpu_arch varchar(255);
 COMMENT ON COLUMN "public"."ops_host"."cpu_arch" IS ''CPU架构'';
 END IF;
+IF
+( SELECT COUNT ( * ) AS ct1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ''ops_host'' AND COLUMN_NAME = ''name'' ) = 0
+THEN
+ALTER TABLE ops_host ADD COLUMN name varchar(255);
+COMMENT ON COLUMN "public"."ops_host"."name" IS ''名称'';
+END IF;
 RETURN 0;
 END;'
 LANGUAGE plpgsql;
@@ -1026,3 +1096,30 @@ LANGUAGE plpgsql;
 SELECT add_field_ops_package_manager();
 
 DROP FUNCTION add_field_ops_package_manager;
+
+ALTER TABLE "public"."sys_oper_log" ALTER COLUMN "oper_param" type text;
+
+CREATE TABLE IF NOT EXISTS "public"."sys_setting"(
+    "id" int4 NOT NULL PRIMARY KEY DEFAULT nextval('sq_sys_setting_id'::regclass),
+    "user_id" int8 NOT NULL,
+    "upload_path" text COLLATE "pg_catalog"."default" NOT NULL
+    );
+COMMENT
+ON COLUMN "public"."sys_setting"."id" IS 'ID';
+COMMENT
+ON COLUMN "public"."sys_setting"."user_id" IS '关联的用户ID';
+COMMENT
+ON COLUMN "public"."sys_setting"."upload_path" IS '文件上传目录';
+
+CREATE TABLE IF NOT EXISTS "public"."sys_plugin_logo" (
+    "id" int8 NOT NULL DEFAULT nextval('sq_sys_plugin_logo_id'::regclass),
+    "plugin_id" varchar(100) COLLATE "pg_catalog"."default",
+    "logo_path" varchar(255) COLLATE "pg_catalog"."default",
+    CONSTRAINT "tb_plugin_logo_pkey" PRIMARY KEY ("id")
+);
+
+COMMENT ON COLUMN "public"."sys_plugin_logo"."id" IS '主键ID';
+
+COMMENT ON COLUMN "public"."sys_plugin_logo"."plugin_id" IS '插件ID';
+
+COMMENT ON COLUMN "public"."sys_plugin_logo"."logo_path" IS 'logo路径';

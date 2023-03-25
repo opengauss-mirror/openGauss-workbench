@@ -29,7 +29,7 @@
 import { watch, ref, reactive, onMounted } from 'vue'
 import { Message } from '@arco-design/web-vue'
 import { FormInstance } from '@arco-design/web-vue/es/form'
-import { listSysSetting, updateSysSetting } from '@/api/sysSetting'
+import { checkUploadPath, listSysSetting, updateSysSetting } from '@/api/sysSetting'
 import { SysSetting } from '@/types/sysSetting'
 import { useI18n } from 'vue-i18n'
 
@@ -67,10 +67,17 @@ watch(() => props.open, (v) => {
 
 const pathValidator = (value: any, cb: any) => {
   return new Promise(resolve => {
-    const reg = /^\/([^/\0?]+(\/[^/\0?]+)*(\/[^/\0?]+\?)?)?$/
+    const reg = /^(\/[\u4e00-\u9fa5\w-]+)*(\/[\u4e00-\u9fa5\w-]+(\.\d+)?)*\/$/
     const re = new RegExp(reg)
     if (re.test(value)) {
-      resolve(true)
+      checkUploadPath(value).then(res => {
+        if (res.data) {
+          resolve(true)
+        } else {
+          cb(t('components.EditSysSettings.5mpivn7fwj10'))
+          resolve(false)
+        }
+      })
     } else {
       cb(t('components.EditSysSettings.5mpivn7fwjc9'))
       resolve(false)
@@ -79,9 +86,9 @@ const pathValidator = (value: any, cb: any) => {
 }
 
 const confirmSubmit = async () => {
-  loading.value = true
   formRef.value?.validate(valid => {
     if (!valid) {
+      loading.value = true
       updateSysSetting(form).then(() => {
         Message.success('system setting update success')
         visible.value = false

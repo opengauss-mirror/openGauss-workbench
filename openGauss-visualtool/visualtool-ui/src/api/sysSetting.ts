@@ -8,3 +8,11 @@ export function updateSysSetting (params: SysSetting) {
 export function listSysSetting () {
   return axios.get('/system/setting')
 }
+
+export const checkUploadPath = (path: string) => {
+  return axios.get('/system/setting/checkUploadPath', {
+    params: {
+      path: path
+    }
+  })
+}

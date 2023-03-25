@@ -717,7 +717,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
             JschResult jschResult = null;
             try {
                 try {
-                    jschResult = jschUtil.executeCommand(command, ommSession);
+                    jschResult = jschUtil.executeCommand(command, ommSession,envPath);
                 } catch (InterruptedException e) {
                     throw new OpsException("thread is interrupted");
                 }

@@ -58,11 +58,15 @@ public interface IHostService extends IService<OpsHostEntity> {
      */
     boolean edit(String hostId, HostBody hostBody);
 
-    IPage<OpsHostVO> pageHost(Page page, String name);
+    IPage<OpsHostVO> pageHost(Page page, String name, Set<String> tagIds, String os);
 
     void ssh(SSHBody sshBody);
+
+    void ssh(String hostId, SSHBody sshBody);
 
     Map<String, String> mapOsByIps(Set<String> ipSet);
 
     List<OpsHostEntity> listAll(String azId);
+
+    Map<String,Object> monitor(String hostId, String businessId, String rootPassword);
 }

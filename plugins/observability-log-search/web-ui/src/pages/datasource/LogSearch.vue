@@ -63,10 +63,10 @@
             </div>
 
             <div>
-                <my-card :title="$t('datasource.logDistributionMap')" :legend="waitLegends" :bodyPadding="false" ref="cardRef" collapse>
+                <my-card :title="$t('datasource.logDistributionMap')" :legend="waitLegends" :bodyPadding="false" ref="cardRef" collapse :overflowHidden="overflowHidden" @click="toggleCard">
                     <div class="loading-cover" v-if="refreshingBar" v-loading="refreshingBar"></div>
-                    <div class="line-wrap-chart" style="height: 250px">
-                        <my-bar v-if="showBar" :yname="$t('datasource.numberofLogs')" :xData="xData" :data="showData" :unit="$t('datasource.unit')" />
+                    <div class="line-wrap-chart" style="height: 250px" ref="lineChartRef">
+                        <my-bar v-if="showBar" :yname="$t('datasource.numberofLogs')" :xData="xData" :data="showData" :unit="$t('datasource.unit')" :barWidth="barWidth" :barHeight="barHeight"/>
                     </div>
                 </my-card>
             </div>
@@ -117,8 +117,24 @@
                                 <span>{{ dayjs.utc(scope.row.logTime).local().format('YYYY-MM-DD HH:mm:ss') }}</span>
                             </template>
                         </el-table-column>
-                        <el-table-column :label="$t('datasource.logSearchTable[1]')" prop="logType" show-overflow-tooltip width="120" align="center" />
-                        <el-table-column :label="$t('datasource.logSearchTable[2]')" prop="logLevel" show-overflow-tooltip width="100" align="center" />
+                        <el-table-column :label="$t('datasource.logSearchTable[1]')" prop="logType" width="120" align="center" >
+                            <template #default="scope">
+                                <el-popover trigger="hover" :content="scope.row.logType" popper-class="sql-popover-tip">
+                                            <template #reference>
+                                                <div style="height: 23px;overflow: hidden;text-overflow: ellipsis;white-space: nowrap;">{{ scope.row.logType }}</div>
+                                            </template>
+                                </el-popover>
+                            </template>
+                        </el-table-column>
+                        <el-table-column :label="$t('datasource.logSearchTable[2]')" prop="logLevel" width="100" align="center" >
+                            <template #default="scope">
+                                <el-popover trigger="hover" :content="scope.row.logLevel" popper-class="sql-popover-tip">
+                                            <template #reference>
+                                                <div style="height: 23px;overflow: hidden;text-overflow: ellipsis;white-space: nowrap;">{{ scope.row.logLevel }}</div>
+                                            </template>
+                                </el-popover>
+                            </template>
+                        </el-table-column>
                         <el-table-column :label="$t('datasource.logSearchTable[3]')" header-align="center">
                             <template #default="scope">
                                 <span v-if="scope.row.logData && scope.row.logData.length > 300">
@@ -131,8 +147,25 @@
                                 <span v-else v-html="showHighLightWord(scope.row.logData)"></span>
                             </template>
                         </el-table-column>
-                        <el-table-column :label="$t('datasource.logSearchTable[4]')" header-align="center" show-overflow-tooltip prop="logClusterId" width="100" />
-                        <el-table-column :label="$t('datasource.logSearchTable[5]')" header-align="center" show-overflow-tooltip prop="logNodeId" width="100" />
+                        <el-table-column :label="$t('datasource.logSearchTable[4]')" header-align="center" prop="logClusterId" width="100" >
+                            <template #default="scope">
+                                <el-popover trigger="hover" :content="scope.row.logClusterId" popper-class="sql-popover-tip">
+                                        <template #reference>
+                                            <div style="height: 23px;overflow: hidden;text-overflow: ellipsis;white-space: nowrap;">{{ scope.row.logClusterId }}</div>
+                                        </template>
+                                </el-popover>
+                            </template>
+                        </el-table-column>
+                        <!-- <el-table-column :label="$t('datasource.logSearchTable[5]')" header-align="center" show-overflow-tooltip prop="logNodeId" width="100" /> -->
+                        <el-table-column :label="$t('datasource.logSearchTable[5]')" header-align="center" prop="logNodeId" width="100" >
+                            <template #default="scope">
+                                <el-popover trigger="hover" :content="scope.row.logNodeId" popper-class="sql-popover-tip">
+                                        <template #reference>
+                                            <div style="height: 23px;overflow: hidden;text-overflow: ellipsis;white-space: nowrap;">{{ scope.row.logNodeId }}</div>
+                                        </template>
+                                </el-popover>
+                            </template>
+                        </el-table-column>
                     </el-table>
                     <p v-if="loading">Loading...</p>
                     <p v-if="noMore">No more</p>
@@ -240,11 +273,19 @@ const treeData2 = ref<Array<Tree>>([]);
 const logLevelData = ref<Array<String>>([]);
 const xData = ref<string[]>([]);
 const curLogData = ref<any>({ logDate: '', logType: '', logData: '', logLevelSelected: '', typeNames: '' });
+const barWidth = ref<string>('100%');
+const barHeight = ref<string>('100%');
+const lineChartRef = ref();
 
 const isCollapse = ref(true);
 const toggleCollapse = () => {
     isCollapse.value = !isCollapse.value;
 };
+
+const overflowHidden = ref<boolean>(false)
+const toggleCard = () => {
+    overflowHidden.value = !overflowHidden.value
+}
 
 const selectNodes = (item: Tree) => {
     nodeIds.value = [];
@@ -382,10 +423,10 @@ const gotoNewLogSearch = () => {
             query: {
                 showContextCount: 'true',
                 nodeIds: nodeIds.value && nodeIds.value.length > 0 ? nodeIds.value : [curRow.value.logNodeId],
-                typeNames: typeNames.value.length > 0 ? typeNames.value.join(',') : '',
-                logLevelSelected: logLevelSelected.value.length > 0 ? logLevelSelected.value.join(',') : '',
-                logTime: curRow.value.logTime,
-                logType: curRow.value.logType,
+                // typeNames: typeNames.value.length > 0 ? typeNames.value.join(',') : '',
+                // logLevelSelected: logLevelSelected.value.length > 0 ? logLevelSelected.value.join(',') : '',
+                // logTime: curRow.value.logTime,
+                // logType: curRow.value.logType,
                 id: curRow.value.id,
                 date: new Date().getTime(),
             },
@@ -396,10 +437,10 @@ const gotoNewLogSearch = () => {
             query: {
                 showContextCount: 'true',
                 nodeIds: nodeIds.value && nodeIds.value.length > 0 ? nodeIds.value : [curRow.value.logNodeId],
-                typeNames: typeNames.value.length > 0 ? typeNames.value.join(',') : '',
-                logLevelSelected: logLevelSelected.value.length > 0 ? logLevelSelected.value.join(',') : '',
-                logTime: curRow.value.logTime,
-                logType: curRow.value.logType,
+                // typeNames: typeNames.value.length > 0 ? typeNames.value.join(',') : '',
+                // logLevelSelected: logLevelSelected.value.length > 0 ? logLevelSelected.value.join(',') : '',
+                // logTime: curRow.value.logTime,
+                // logType: curRow.value.logType,
                 id: curRow.value.id,
                 date: new Date().getTime(),
             },
@@ -436,12 +477,12 @@ watch(
         if (res && res.id) {
             curLogData.id = res.id;
         }
-        if (res && res.logTime) {
-            curLogData.logTime = res.logTime;
-        }
-        if (res && res.logType) {
-            curLogData.logType = res.logType;
-        }
+        // if (res && res.logTime) {
+        //     curLogData.logTime = res.logTime;
+        // }
+        // if (res && res.logType) {
+        //     curLogData.logType = res.logType;
+        // }
         listLogTypeData();
         listLogLevelData();
         refreshLog();
@@ -655,10 +696,10 @@ onMounted(() => {
     let _showContextCount = window.$wujie?.props.data.showContextCount as string;
     let _nodeIds = window.$wujie?.props.data.nodeIds as string[];
     let _id = window.$wujie?.props.data.id as string;
-    let _logTime = window.$wujie?.props.data.logTime as string;
-    let _logType = window.$wujie?.props.data.logType as string;
-    let _typeNames = window.$wujie?.props.data.typeNames as string;
-    let _logLevelSelected = window.$wujie?.props.data.logLevelSelected as string;
+    // let _logTime = window.$wujie?.props.data.logTime as string;
+    // let _logType = window.$wujie?.props.data.logType as string;
+    // let _typeNames = window.$wujie?.props.data.typeNames as string;
+    // let _logLevelSelected = window.$wujie?.props.data.logLevelSelected as string;
     let param = router.currentRoute.value.query;
     if (_showContextCount && _showContextCount == 'true') {
         showContextCount.value = true;
@@ -673,15 +714,19 @@ onMounted(() => {
         nodeIds.value = _nodeIds;
     }
     curLogData.id = _id ? _id : param && param.id ? param.id : '';
-    curLogData.logTime = _logTime ? _logTime : param && param.logTime ? param.logTime : '';
-    curLogData.logType = _logType ? _logType : param && param.logType ? param.logType : '';
-    curLogData.typeNames = _typeNames ? _typeNames : param && param.typeNames ? param.typeNames : '';
-    curLogData.logLevelSelected = _logLevelSelected ? _logLevelSelected : param && param.logLevelSelected ? param.logLevelSelected : '';
+    // curLogData.logTime = _logTime ? _logTime : param && param.logTime ? param.logTime : '';
+    // curLogData.logType = _logType ? _logType : param && param.logType ? param.logType : '';
+    // curLogData.typeNames = _typeNames ? _typeNames : param && param.typeNames ? param.typeNames : '';
+    // curLogData.logLevelSelected = _logLevelSelected ? _logLevelSelected : param && param.logLevelSelected ? param.logLevelSelected : '';
     listClusterData();
     listLogTypeData();
     listLogLevelData();
     refreshLog();
 
+    let _barWidth = window.getComputedStyle(lineChartRef.value).getPropertyValue('width')
+    let _barHeight = window.getComputedStyle(lineChartRef.value).getPropertyValue('height')
+    barWidth.value = _barWidth
+    barHeight.value = _barHeight
     // @ts-ignore
     const wujie = window.$wujie;
     // Judge whether it is a plug-in environment or a local environment through wujie

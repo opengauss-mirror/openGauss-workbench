@@ -109,8 +109,13 @@ public class EbpfMonitorHandler {
     public boolean monitor(String tid) {
         OSUtil toolUtil = new OSUtil();
         String monitorCmd = "ps -eLf |grep gaussdb|grep -v grep|awk '{print $4}'";
+        long startTime = System.currentTimeMillis();
         while (true) {
             String monitorpid = toolUtil.exec(monitorCmd).toString();
+            long endTime = System.currentTimeMillis();
+            if((endTime-startTime)/1000/60>60){
+                break;
+            }
             if (!monitorpid.contains(System.lineSeparator() + tid + System.lineSeparator())) {
                 break;
             }

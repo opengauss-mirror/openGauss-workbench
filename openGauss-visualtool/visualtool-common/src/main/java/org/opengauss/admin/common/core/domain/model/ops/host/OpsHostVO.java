@@ -2,6 +2,8 @@ package org.opengauss.admin.common.core.domain.model.ops.host;
 
 import lombok.Data;
 
+import java.util.Set;
+
 /**
  * @author lhf
  * @date 2022/10/23 08:22
@@ -17,4 +19,8 @@ public class OpsHostVO {
     private String azName;
     private String remark;
     private Boolean isRemember;
+    private String os;
+    private String cpuArch;
+    private String name;
+    private Set<String> tags;
 }

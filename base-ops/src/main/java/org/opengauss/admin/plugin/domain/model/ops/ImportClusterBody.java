@@ -47,10 +47,6 @@ public class ImportClusterBody {
             throw new OpsException("The OpenGauss version is incorrect");
         }
 
-        if (StrUtil.isEmpty(openGaussVersionNum)) {
-            throw new OpsException("The OpenGauss version number is incorrect");
-        }
-
         if (Objects.isNull(installMode)) {
             throw new OpsException("Incorrect installation mode");
         }

@@ -14,6 +14,7 @@ import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
 import org.opengauss.admin.common.core.domain.model.ops.HostUserBody;
 import org.opengauss.admin.common.core.domain.model.ops.JschResult;
 import org.opengauss.admin.common.exception.ops.OpsException;
+import org.opengauss.admin.common.exception.ops.UserAlreadyExistsException;
 import org.opengauss.admin.common.utils.ops.JschUtil;
 import org.opengauss.admin.system.mapper.ops.OpsEncryptionMapper;
 import org.opengauss.admin.system.mapper.ops.OpsHostUserMapper;
@@ -95,24 +96,25 @@ public class HostUserServiceImpl extends ServiceImpl<OpsHostUserMapper, OpsHostU
 
         long count = count(queryWrapper);
         if (count > 0) {
-            throw new OpsException("User information already exists");
+            throw new UserAlreadyExistsException("User information already exists");
         }
 
         OpsHostUserEntity rootUser = getRootUserByHostId(hostId);
-        if (Objects.isNull(rootUser)){
+        if (Objects.isNull(rootUser)) {
             rootUser = new OpsHostUserEntity();
             rootUser.setUsername("root");
             rootUser.setPassword(hostUserBody.getPassword());
         }
 
-        if (StrUtil.isEmpty(rootUser.getPassword())){
-            if (StrUtil.isNotEmpty(hostUserBody.getRootPassword())){
+        if (StrUtil.isEmpty(rootUser.getPassword())) {
+            if (StrUtil.isNotEmpty(hostUserBody.getRootPassword())) {
                 rootUser.setPassword(hostUserBody.getRootPassword());
-            }else {
+            } else {
                 throw new OpsException("root password does not exist");
             }
         }
 
+        Boolean sudo = false;
         if (physicalExist(hostEntity.getPublicIp(), hostEntity.getPort(), rootUser, username)) {
             try {
                 Session session = jschUtil.getSession(hostEntity.getPublicIp(), hostEntity.getPort(), username, encryptionUtils.decrypt(hostUserBody.getPassword())).orElseThrow(() -> new OpsException("Incorrect password, please enter correct password"));
@@ -126,12 +128,34 @@ public class HostUserServiceImpl extends ServiceImpl<OpsHostUserMapper, OpsHostU
                 throw new OpsException("Incorrect password, please enter correct password");
             }
 
+            sudo = getSudo(hostEntity.getPublicIp(), hostEntity.getPort(),rootUser,username);
         } else {
             createPhysicalUser(hostEntity.getPublicIp(), hostEntity.getPort(), rootUser, hostUserBody.getUsername(), hostUserBody.getPassword());
         }
 
-        OpsHostUserEntity opsHostUserEntity = hostUserBody.toEntity();
+        OpsHostUserEntity opsHostUserEntity = hostUserBody.toEntity(sudo);
         return save(opsHostUserEntity);
+    }
+
+    private Boolean getSudo(String publicIp, Integer port, OpsHostUserEntity rootUser, String username) {
+        if (Objects.isNull(rootUser)) {
+            throw new OpsException("The root user information was not obtained");
+        }
+
+        Session session = jschUtil.getSession(publicIp, port, "root", encryptionUtils.decrypt(rootUser.getPassword())).orElseThrow(() -> new OpsException("root user login failed"));
+        try {
+            String command = "sudo -l -U " + username;
+            JschResult jschResult = jschUtil.executeCommand(command, session);
+
+            return Objects.nonNull(jschResult) && StrUtil.isNotEmpty(jschResult.getResult()) && !jschResult.getResult().contains("not allowed to run");
+        }catch (Exception e){
+            log.error("get sudo fail：",e);
+        }finally {
+            if (Objects.nonNull(session) && session.isConnected()){
+                session.disconnect();
+            }
+        }
+        return false;
     }
 
     private void createPhysicalUser(String publicIp, Integer port, OpsHostUserEntity rootUser, String username, String password) {
@@ -145,7 +169,7 @@ public class HostUserServiceImpl extends ServiceImpl<OpsHostUserMapper, OpsHostU
             JschResult jschResult = null;
             try {
 
-                String command = "useradd " + username + " && echo '" + username + " ALL=(ALL) ALL' >> /etc/sudoers";
+                String command = "useradd " + username;
                 jschResult = jschUtil.executeCommand(command, session);
             } catch (InterruptedException e) {
                 throw new OpsException("thread is interrupted");
@@ -231,24 +255,25 @@ public class HostUserServiceImpl extends ServiceImpl<OpsHostUserMapper, OpsHostU
             throw new OpsException("host information does not exist");
         }
 
-        OpsHostUserEntity newEntity = hostUserBody.toEntity();
-        newEntity.setHostId(hostUserEntity.getHostId());
-        newEntity.setHostUserId(hostUserEntity.getHostUserId());
-
         OpsHostUserEntity rootUserEntity = getRootUserByHostId(hostId);
-        if (Objects.isNull(rootUserEntity)){
+        if (Objects.isNull(rootUserEntity)) {
             rootUserEntity = new OpsHostUserEntity();
             rootUserEntity.setUsername("root");
             rootUserEntity.setPassword(hostUserBody.getPassword());
         }
 
-        if (StrUtil.isEmpty(rootUserEntity.getPassword())){
-            if (StrUtil.isNotEmpty(hostUserBody.getRootPassword())){
+        if (StrUtil.isEmpty(rootUserEntity.getPassword())) {
+            if (StrUtil.isNotEmpty(hostUserBody.getRootPassword())) {
                 rootUserEntity.setPassword(hostUserBody.getRootPassword());
-            }else {
+            } else {
                 throw new OpsException("root password does not exist");
             }
         }
+
+        Boolean sudo = getSudo(hostEntity.getPublicIp(),hostEntity.getPort(),rootUserEntity,hostUserEntity.getUsername());
+        OpsHostUserEntity newEntity = hostUserBody.toEntity(sudo);
+        newEntity.setHostId(hostUserEntity.getHostId());
+        newEntity.setHostUserId(hostUserEntity.getHostUserId());
 
         if (physicalExist(hostEntity.getPublicIp(), hostEntity.getPort(), rootUserEntity, newEntity.getUsername())) {
             try {
@@ -305,9 +330,18 @@ public class HostUserServiceImpl extends ServiceImpl<OpsHostUserMapper, OpsHostU
 
     @Override
     public void cleanPassword(String hostUserId) {
-        final LambdaUpdateWrapper<OpsHostUserEntity> updateWrapper = Wrappers.lambdaUpdate(OpsHostUserEntity.class)
+        LambdaUpdateWrapper<OpsHostUserEntity> updateWrapper = Wrappers.lambdaUpdate(OpsHostUserEntity.class)
                 .set(OpsHostUserEntity::getPassword, null)
+                .set(OpsHostUserEntity::getSudo,Boolean.TRUE)
                 .eq(OpsHostUserEntity::getHostUserId, hostUserId);
         update(updateWrapper);
+    }
+
+    @Override
+    public OpsHostUserEntity getHostUserByUsername(String hostId, String username) {
+        LambdaQueryWrapper<OpsHostUserEntity> queryWrapper = Wrappers.lambdaQuery(OpsHostUserEntity.class)
+                .eq(OpsHostUserEntity::getHostId, hostId)
+                .eq(OpsHostUserEntity::getUsername, username);
+        return getOne(queryWrapper,false);
     }
 }

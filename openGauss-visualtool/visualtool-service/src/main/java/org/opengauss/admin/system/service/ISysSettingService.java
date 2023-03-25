@@ -13,4 +13,6 @@ public interface ISysSettingService extends IService<SysSettingEntity> {
     boolean updateSetting(SysSettingEntity setting);
 
     SysSettingEntity getSetting(Integer userId);
+
+    boolean hasUploadPath(String path, Integer userId);
 }

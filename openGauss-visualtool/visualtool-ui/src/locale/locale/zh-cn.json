@@ -217,6 +217,10 @@
             "else2": "记住密码",
             "currentStatus": "当前状态",
             "ipAddress": "内网IP",
+            "name": "名称",
+            "namePlaceholder": "请输入物理机名称",
+            "tags": "标签",
+            "tagsPlaceholder": "请输入或者选择标签",
             "5mphy3snvg80": "可用",
             "5mphy3snwq40": "不可用",
             "5mphy3snwxs0": "取消",
@@ -238,6 +242,8 @@
             "5mphy3snzrk0": "编辑物理机"
         },
         "AddHostUser": {
+            "else1": "确认",
+            "else2": "系统将会保存该用户的密码，是否继续保存？",
             "rootPassword": "root密码",
             "5mphzt9pc0g0": "主机信息",
             "5mphzt9pdak0": "请输入root密码",
@@ -267,7 +273,16 @@
             "5mpi1bru2yo0": "删除",
             "5mpi1bru3dk0": "用户管理",
             "5mpi1bru3vk0": "用户名",
+            "isSudo": "是否拥有root权限",
+            "yes": "是",
+            "no": "否",
             "5mpi1bru4c00": "操作"
+        },
+        "BatchLabelDlg": {
+            "5pbjt280spg0": "已选择主机",
+            "5pbjt280xuo0": "个",
+            "5pbjt280yik0": "标签",
+            "5pbjt280z040": "标签批量设置"
         },
         "AddAz": {
             "azName": "AZ名称",
@@ -452,10 +467,11 @@
             "5mpivn7fxrk0": "查询数量"
         },
         "EditSysSettings": {
-          "5mpivn7fwjc1": "修改系统设置",
-          "5mpivn7fwjc2": "文件上传路径",
-          "5mpivn7fwjc6": "请输入文件上传路径",
-          "5mpivn7fwjc9": "文件路径不正确"
+            "5mpivn7fwjc1": "修改系统设置",
+            "5mpivn7fwjc2": "文件上传路径",
+            "5mpivn7fwjc6": "请输入文件上传路径",
+            "5mpivn7fwjc9": "文件路径不正确",
+            "5mpivn7fwj10": "目录已被其它用户占用，请输入别的路径"
         }
     },
     "user": {
@@ -619,9 +635,29 @@
     "physical": {
         "index": {
             "ipAddress": "IP地址",
-            "5mphf11rr080": "新增物理机",
+            "ipAddressPlaceholder": "请输入IP地址查询",
+            "batchDel": "删除",
+            "hostLabel": "标签",
+            "hostLabelPlaceholder": "请输入标签进行查询",
+            "os": "操作系统",
+            "osPlaceholder": "请选择操作系统进行查询",
+            "privateIp": "内网IP",
+            "publicIp": "外网IP",
+            "cpuArch": "架构",
+            "hostName": "主机名称",
+            "net": "网络",
+            "cpu": "CPU使用率",
+            "memory": "内存使用率",
+            "disk": "磁盘使用率",
+            "baseInfo": "基本信息",
+            "diskInfo": "硬件信息",
+            "detail": "详情",
+            "labelBatch": "标签设置",
+            "labelManage": "标签管理",
+            "else1": "请至少选一个主机信息",
+            "5mphf11rr080": "创建",
             "5mphf11syw80": "测试连通性",
-            "5mphf11szdk0": "搜索...",
+            "5mphf11szdk0": "搜索",
             "5mphf11szks0": "用户管理",
             "5mphf11szqo0": "编辑",
             "5mphf11szws0": "确定要删除？",
@@ -636,6 +672,19 @@
             "5mphf11tfr80": "未检测",
             "5mphf11tfx80": "不可用",
             "5mphf11tg780": "可用"
+        }
+    },
+    "label": {
+        "LabelManageDlg": {
+            "5pbjv7b0vrw0": "创建",
+            "5pbjv7b0wu80": "标签名称",
+            "5pbjv7b0x3w0": "请输入标签名称",
+            "5pbjv7b0xak0": "编辑",
+            "5pbjv7b0xgo0": "关联主机数",
+            "5pbjv7b0y0w0": "操作",
+            "5pbjv7b0yd00": "创建标签",
+            "5pbjv7b0yk40": "编辑标签",
+            "5pbjv7b0yso0": "标签管理"
         }
     },
     "az": {
@@ -663,7 +712,7 @@
             "5oxhkhimx5c0": "测试连通性",
             "5oxhkhimxbg0": "确定",
             "5oxhkhimxho0": "集群名称",
-			"isCustomName": "自定义名称",
+            "isCustomName": "自定义名称",
             "customNamePlaceholder": "集群名称将会根据实例信息生成",
             "5oxhkhimxno0": "请输入实例名称",
             "5oxhkhimxto0": "数据库类型",
@@ -701,6 +750,10 @@
         "index": {
             "else1": "集群名称",
             "else2": "确认上传",
+            "elseIp": "IP地址",
+            "elseIpPlaceholder": "请输入IP地址进行查询",
+            "else3": "类型",
+            "else3Placeholder": "请选择类型进行查询",
             "5oxhr0qz15w0": "创建",
             "5oxhr0qz2bs0": "下载模板",
             "5oxhr0qz2s00": "请输入集群名称进行查询",
@@ -744,7 +797,8 @@
             "else2": "端口",
             "else3": "节点",
             "else4": "未知",
-            "5oxhv6qcm6w0": "检测系统",
+            "else5": "操作系统",
+            "5oxhv6qcm6w0": "去检测",
             "5oxhv6qcnak0": "主",
             "5oxhv6qcnnk0": "备",
             "5oxhv6qcnuk0": "连接数",

@@ -1,12 +1,17 @@
 package org.opengauss.admin.plugin.domain.model.ops;
 
-import cn.hutool.core.util.StrUtil;
-import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.annotation.JSONField;
+import com.alibaba.fastjson.support.spring.FastJsonHttpMessageConverter;
+import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import lombok.Data;
 import org.opengauss.admin.common.core.domain.UploadInfo;
 import org.opengauss.admin.plugin.domain.entity.ops.OpsPackageManagerEntity;
+import org.springframework.boot.jackson.JsonObjectDeserializer;
+import org.springframework.boot.jackson.JsonObjectSerializer;
 import org.springframework.web.multipart.MultipartFile;
 
 /**
@@ -21,7 +26,7 @@ public class OpsPackageVO {
     private String packageVersion;
     private String packageVersionNum;
     private String packageUrl;
-    private String packagePath;
+    private UploadInfo packagePath;
     private String type;
     @JsonIgnore
     @JSONField(serialize = false, deserialize = false)
@@ -36,13 +41,11 @@ public class OpsPackageVO {
         entity.setPackageVersion(packageVersion);
         entity.setPackageVersionNum(packageVersionNum);
         entity.setPackageUrl(packageUrl);
-        if (StrUtil.isNotEmpty(packagePath)) {
-            entity.setUploadInfo(JSON.parseObject(packagePath, UploadInfo.class));
-        }
         entity.setPackagePath(packagePath);
         entity.setType(type);
         entity.setFile(file);
         entity.setRemark(remark);
         return entity;
     }
+
 }

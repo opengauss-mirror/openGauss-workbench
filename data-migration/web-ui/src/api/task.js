@@ -36,10 +36,22 @@ export function addJdbc (data) {
   return axios.post('/jdbcDbCluster/add', data)
 }
 
-export function editJdbc (id, data) {
-  return axios.put(`/jdbcDbCluster/${id}`, data)
-}
-
 export function hostListAll () {
   return axios.get('/host/listAll')
+}
+
+export function downloadEnvLog (hostId) {
+  return axios.get(`/plugins/data-migration/resource/log/downloadEnv/${hostId}`)
+}
+
+export function hostUsers (hostId) {
+  return axios.get(`/plugins/data-migration/resource/hostUsers/${hostId}`)
+}
+
+export function installPortal (hostId, query) {
+  return axios.get(`/plugins/data-migration/resource/installPortal/${hostId}`, { params: query })
+}
+
+export function reInstallPortal (hostId) {
+  return axios.get(`/plugins/data-migration/resource/retryInstallPortal/${hostId}`)
 }

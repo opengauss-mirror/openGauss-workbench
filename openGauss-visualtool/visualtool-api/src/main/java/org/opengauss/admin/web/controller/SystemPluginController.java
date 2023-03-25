@@ -23,6 +23,7 @@ import org.opengauss.admin.common.enums.SysPluginTheme;
 import org.opengauss.admin.common.utils.StringUtils;
 import org.opengauss.admin.common.utils.file.FileUploadUtils;
 import org.opengauss.admin.system.domain.SysPlugin;
+import org.opengauss.admin.system.domain.SysPluginLogo;
 import org.opengauss.admin.system.service.*;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -52,6 +53,8 @@ public class SystemPluginController extends BaseController {
     private ISysPluginConfigDataService sysPluginConfigDataService;
     @Autowired
     private ISysMenuService sysMenuService;
+    @Autowired
+    private ISysPluginLogoService iSysPluginLogoService;
 
 
     /**
@@ -67,6 +70,10 @@ public class SystemPluginController extends BaseController {
                 d.setPluginStatus(SysPluginStatus.START.getCode());
             } else {
                 d.setPluginStatus(SysPluginStatus.DISABLE.getCode());
+            }
+            SysPluginLogo plugin = iSysPluginLogoService.getByPluginId(d.getPluginId());
+            if (plugin != null) {
+                d.setLogoPath(plugin.getLogoPath());
             }
         });
         return getDataTable(list);
@@ -187,7 +194,7 @@ public class SystemPluginController extends BaseController {
                         .pluginDesc(pluginInfo.getPluginDescriptor().getDescription()).pluginDescEn(descriptionEn)
                         .bootstrapClass(pluginInfo.getPluginDescriptor().getPluginBootstrapClass())
                         .pluginProvider(pluginInfo.getPluginDescriptor().getProvider()).isNeedConfigured(isNeedConfigured)
-                        .pluginType(pluginType).logoPath(logo).pluginVersion(pluginInfo.getPluginDescriptor().getPluginVersion())
+                        .pluginType(pluginType).pluginVersion(pluginInfo.getPluginDescriptor().getPluginVersion())
                         .theme(theme).build();
                 sysPluginService.save(plugin);
                 Map<String, Object> result = Maps.newHashMap();
@@ -206,6 +213,7 @@ public class SystemPluginController extends BaseController {
                 }
                 if (StringUtils.isNotBlank(logo)) {
                     sysMenuService.updatePluginMenuIcon(pluginInfo.getPluginId(), logo);
+                    iSysPluginLogoService.savePluginConfig(pluginInfo.getPluginId(), logo);
                 }
                 return AjaxResult.success(result);
             } else {

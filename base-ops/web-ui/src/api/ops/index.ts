@@ -1,6 +1,6 @@
 import axios from 'axios'
 import { KeyValue } from '@/types/global'
-import { downloadPackage, SSHBody } from '@/types/ops/install'
+import { downloadPackage, OpenLookengInstallConfig, SSHBody } from '@/types/ops/install'
 import { UploadInfo } from '@/types/resource/package'
 // import { hostData, hostUserData } from '@/types/resource/host'
 
@@ -347,4 +347,46 @@ export const delPkgTar = (path: string, id?: string) => {
 
 export const getSysUploadPath = () => {
   return axios.get('installPackageManager/sysUploadPath')
+}
+
+export const generateRuleYaml = (data: KeyValue) => {
+  return axios.post('olk/generateRuleYaml', data)
+}
+
+export const installOlk = (data: KeyValue) => {
+  return axios.post('olk/install', data)
+}
+
+export const removeOlk = (id: string) => {
+  return axios.delete('olk/remove/' + id)
+}
+
+export const startOlk = (id: string, bid: string) => {
+  return axios.get('olk/start/' + id, {
+    params: {
+      bid: bid
+    }
+  })
+}
+
+export const stopOlk = (id: string, bid: string) => {
+  return axios.get('olk/stop/' + id, {
+    params: {
+      bid: bid
+    }
+  })
+}
+
+export const destroyOlk = (id: string, bid: string) => {
+  return axios.delete('olk/destroy/' + id, {
+    params: {
+      bid: bid
+    }
+  })
+}
+
+export const pageOlk = (query: any) => {
+  return axios.get('olk/page', {
+    params: query
+  })
 }

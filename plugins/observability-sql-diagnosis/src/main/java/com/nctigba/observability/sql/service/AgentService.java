@@ -70,6 +70,8 @@ public class AgentService extends AbstractInstaller {
 			env = new NctigbaEnv().setHostid(hostId).setPort(2321).setUsername(AGENT_USER).setType(type.AGENT);
 			try (var session = connect(env, rootPassword);) {
 				curr = nextStep(wsSession, steps, curr);
+				if (!session.test("unzip -v"))
+					session.execute("yum install -y unzip zip");
 				var java = "java";
 				try {
 					if (!session.test(java + " --version")) {
@@ -102,7 +104,15 @@ public class AgentService extends AbstractInstaller {
 				curr = nextStep(wsSession, steps, curr);
 				// bcc-tool
 				if (!session.test(command.STAT.parse("/usr/share/bcc/tools")))
-					session.execute("yum -y install bcc-tools");
+					for (int i = 0; i < 3; i++)
+						try {
+							session.execute("yum -y install bcc-tools");
+							break;
+						} catch (Exception e) {
+							if(i == 2)
+								throw new RuntimeException("bcc install fail");
+							addMsg(wsSession, steps, curr, "bcc install fail " + i + ", retrying");
+						}
 				else
 					addMsg(wsSession, steps, curr, "bcc exists");
 				curr = nextStep(wsSession, steps, curr);

@@ -31,7 +31,7 @@
       plugins.value = [
         {
           cssBeforeLoaders: [
-            { content: 'html{padding-top: 113px !important;padding-left: 64px !important;height: 100%}' }
+            { content: 'html{padding-top: 113px !important;padding-left: 64px !important;height: 100%;view-transition-name: none;}' }
           ]
         }
       ]
@@ -39,7 +39,7 @@
       plugins.value = [
         {
           cssBeforeLoaders: [
-            { content: 'html{padding-top: 113px !important;padding-left: 228px !important;height: 100%}' }
+            { content: 'html{padding-top: 113px !important;padding-left: 228px !important;height: 100%;view-transition-name: none;}' }
           ]
         }
       ]

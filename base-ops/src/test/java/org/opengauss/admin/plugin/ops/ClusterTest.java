@@ -1,8 +1,6 @@
 package org.opengauss.admin.plugin.ops;
 
-import com.jcraft.jsch.JSch;
-import com.jcraft.jsch.JSchException;
-import com.jcraft.jsch.Session;
+import com.jcraft.jsch.*;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
 import org.opengauss.admin.plugin.domain.entity.ops.OpsClusterEntity;
@@ -68,7 +66,7 @@ public class ClusterTest {
     @Mock
     private EncryptionUtils encryptionUtils;
     @InjectMocks
-    private IOpsClusterService opsClusterService = new OpsClusterServiceImpl(){
+    private IOpsClusterService opsClusterService = new OpsClusterServiceImpl() {
         @Override
         public OpsClusterEntity getById(Serializable id) {
             return null;
@@ -76,18 +74,19 @@ public class ClusterTest {
     };
 
     @BeforeClass
-    public static void before(){
+    public static void before() {
         MockitoAnnotations.initMocks(WdrTest.class);
         System.out.println("start Cluster test........");
     }
+
     @AfterClass
-    public static void after(){
+    public static void after() {
         System.out.println("end Cluster test........");
     }
 
 
     @Test
-    public void testDownload(){
+    public void testDownload() {
         ThreadPoolTaskExecutor commonExecutor = new ThreadPoolTaskExecutor();
         commonExecutor.setCorePoolSize(5);
         commonExecutor.setMaxPoolSize(10);
@@ -113,18 +112,18 @@ public class ClusterTest {
         ReflectionTestUtils.setField(opsClusterService, "threadPoolTaskExecutor", commonExecutor);
 
         Mockito.doReturn("root").when(encryptionUtils).decrypt(any());
-        Mockito.doReturn(mockJschResult()).when(jschUtil).executeCommand(any(),any());
-        Mockito.doReturn(Optional.ofNullable(mockJschSession())).when(jschUtil).getSession(any(),any(),any(),any());
+        Mockito.doReturn(mockJschResult()).when(jschUtil).executeCommand(any(), any());
+        Mockito.doReturn(Optional.ofNullable(mockJschSession())).when(jschUtil).getSession(any(), any(), any(), any());
         Mockito.doReturn(Optional.of(mockWsSession())).when(wsConnectorManager).getSession(any());
         Mockito.doReturn(Arrays.asList(mockHostEntity())).when(hostFacade).listByIds(any());
-        Mockito.doReturn(Arrays.asList(mockHostRootUserEntity(),mockHostOmmUserEntity())).when(hostUserFacade).listHostUserByHostIdList(any());
+        Mockito.doReturn(Arrays.asList(mockHostRootUserEntity(), mockHostOmmUserEntity())).when(hostUserFacade).listHostUserByHostIdList(any());
 
         MockHttpServletRequest request = new MockHttpServletRequest();
         RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
 
         ClusterOpsProvider clusterOpsProvider = new MinimaListOpsProvider();
-        Mockito.doReturn(Optional.ofNullable(clusterOpsProvider)).when(clusterOpsProviderManager).provider(any(),any());
-        Mockito.doNothing().when(wsUtil).sendText(any(),any());
+        Mockito.doReturn(Optional.ofNullable(clusterOpsProvider)).when(clusterOpsProviderManager).provider(any(), any());
+        Mockito.doNothing().when(wsUtil).sendText(any(), any());
 
         InstallBody installBody = mockSimpleInstallBody();
         opsClusterService.install(installBody);
@@ -215,5 +214,61 @@ public class ClusterTest {
         opsClusterEntity.setDatabaseUsername("gaussdb");
         opsClusterEntity.setDatabasePassword("1qaz2wsx#EDC");
         return opsClusterEntity;
+    }
+
+    @Test
+    public void testDirPermission() {
+        String host = "192.168.1.8";
+        String username = "wang";
+        String password = "1qaz2wsx#EDC";
+        String directoryPath = "/root/data";
+        Session session = null;
+        ChannelSftp channelSftp = null;
+        try {
+            JSch jsch = new JSch();
+            session = jsch.getSession(username, host, 22);
+            session.setConfig("StrictHostKeyChecking", "no");
+            session.setPassword(password);
+            session.connect();
+            channelSftp = (ChannelSftp) session.openChannel("sftp");
+            channelSftp.connect();
+
+            SftpATTRS attrs;
+            try {
+                attrs = channelSftp.stat(directoryPath);
+            } catch (SftpException e) {
+                if (e.id == ChannelSftp.SSH_FX_NO_SUCH_FILE) {
+                    // directory does not exist, check if user has create permission
+                    try {
+                        channelSftp.mkdir(directoryPath);
+                        attrs = channelSftp.stat(directoryPath);
+                        channelSftp.rmdir(directoryPath);
+                    } catch (SftpException ex) {
+                        System.out.println(">>>>>>>>>>>>>>>>>>>>> User does not have create permission for directory " + directoryPath);
+                        throw e;
+                    }
+                } else {
+                    System.out.println(">>>>>>>>>>>>>>>>>>>>> User does not have create permission for directory " + directoryPath);
+                    throw e;
+                }
+            }
+
+            // check if user has read and write permission for directory
+            if (attrs.getPermissionsString().charAt(1) == 'r' && attrs.getPermissionsString().charAt(2) == 'w') {
+                System.out.println("User has read and write permission for directory " + directoryPath);
+            } else {
+                System.out.println("User does not have read and write permission for directory " + directoryPath);
+            }
+
+        } catch (JSchException | SftpException e) {
+            e.printStackTrace();
+        } finally {
+            if (channelSftp != null && channelSftp.isConnected()) {
+                channelSftp.disconnect();
+            }
+            if (session != null && session.isConnected()) {
+                session.disconnect();
+            }
+        }
     }
 }

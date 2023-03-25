@@ -1,19 +1,21 @@
 import { defineStore } from 'pinia';
 import { storePersist } from '@/config';
 
+interface LastestConnectDatabase {
+  rootId: string;
+  name: string;
+  uuid: string;
+  connectTime: null | number;
+}
+
 export const useAppStore = defineStore({
   id: 'appState',
   state: () => ({
     currentConnectNode: {}, //current choose's node
-    lastestConnectDatabase: {
-      rootId: '',
-      databaseName: '',
-      uuid: '',
-    },
     connectListMap: [],
     connectListState: [],
     isLoadEditor: false,
-    language: 'zh-Cn',
+    language: 'zh-CN',
     isReloadRouter: true,
     isMainViewMounted: false,
   }),
@@ -26,6 +28,16 @@ export const useAppStore = defineStore({
       return state.connectListMap.reduce((prev, cur) => {
         return prev.concat(cur.connectedDatabase);
       }, []);
+    },
+    lastestConnectDatabase(): LastestConnectDatabase {
+      return (
+        this.connectedDatabase.sort((a, b) => b.connectTime - a.connectTime)[0] || {
+          rootId: '',
+          name: '',
+          uuid: '',
+          connectTime: null,
+        }
+      );
     },
   },
   actions: {
@@ -49,6 +61,6 @@ export const useAppStore = defineStore({
   persist: {
     key: storePersist.appState.key,
     storage: storePersist.appState.storage,
-    paths: ['currentConnectNode', 'lastestConnectDatabase', 'connectListMap', 'language'],
+    paths: ['currentConnectNode', 'connectListMap', 'language'],
   },
 });

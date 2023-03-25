@@ -49,6 +49,7 @@ public class ElasticsearchProvider {
 		RestClient restClient = RestClient.builder(httpHosts)
 				.setHttpClientConfigCallback(
 						httpClientBuilder -> httpClientBuilder.setDefaultCredentialsProvider(credentialsProvider))
+				.setRequestConfigCallback(requestConfigBuilder -> requestConfigBuilder.setConnectTimeout(100000).setSocketTimeout(100000))
 				.build();
 
 		// Create the transport with a Jackson mapper

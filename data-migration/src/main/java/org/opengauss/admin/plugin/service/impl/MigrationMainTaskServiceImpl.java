@@ -62,6 +62,8 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
     private MigrationTaskExecResultDetailService migrationTaskExecResultDetailService;
     @Autowired
     private MainTaskEnvErrorHostService mainTaskEnvErrorHostService;
+    @Autowired
+    private MigrationHostPortalInstallHostService migrationHostPortalInstallHostService;
 
     @Value("${migration.taskRefreshIntervalsMillisecond}")
     private Long taskRefreshIntervalsMillisecond;
@@ -302,6 +304,9 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
         Arrays.asList(ids).stream().forEach(i -> {
             this.removeById(i);
             migrationTaskService.deleteByMainTaskId(i);
+            migrationTaskParamService.deleteByMainTaskId(i);
+            migrationTaskGlobalParamService.deleteByMainTaskId(i);
+            migrationTaskHostRefService.deleteByMainTaskId(i);
         });
     }
 
@@ -349,13 +354,6 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
         List<MigrationTaskHostRef> hosts = migrationTaskHostRefService.listByMainTaskId(id);
         List<MigrationTaskGlobalParam> globalParams = migrationTaskGlobalParamService.selectByMainTaskId(id);
 
-        if (!checkInstallPortal(id, hosts)) {
-            updateStatus(id,MainTaskStatus.INSTALL_PORTAL_ERROR);
-            return AjaxResult.error(MigrationErrorCode.PORTAL_INSTALL_ERROR.getCode(), MigrationErrorCode.PORTAL_INSTALL_ERROR.getMsg());
-        } else {
-            mainTaskEnvErrorHostService.deleteByMainTaskId(id);
-        }
-
         Integer totalRunnableCount = hosts.stream().mapToInt(MigrationTaskHostRef::getRunnableCount).sum();
         if (totalRunnableCount > tasks.size()) { //The number of host executable tasks is greater than the total number of tasks
             for (int x = 0; x < tasks.size(); x++) {
@@ -385,35 +383,13 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
         return AjaxResult.success();
     }
 
-    private boolean unInstallPortal(List<MigrationTaskHostRef> hosts) {
-        //check install
-        for (MigrationTaskHostRef h : hosts) {
-            boolean flag = PortalHandle.checkInstallPortal(h);
-            if(!flag){
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private boolean checkInstallPortal(Integer mainTaskId, List<MigrationTaskHostRef> hosts) {
-        //check install
-        for (MigrationTaskHostRef h : hosts) {
-            boolean flag = PortalHandle.checkAndInstallPortal(h, portalPkgDownloadUrl);
-            if(!flag){
-                mainTaskEnvErrorHostService.saveRecord(mainTaskId, h);
-                return false;
-            }
-        }
-        return true;
-    }
-
     @Override
     public void finishTask(Integer id){
         List<MigrationTask> tasks = migrationTaskService.listByMainTaskId(id);
         LoginUser loginUser = SecurityUtils.getLoginUser();
         tasks.stream().forEach(t -> {
-            PortalHandle.finishPortal(t.getRunHost(),t.getRunPort(),t.getRunUser(),t.getRunPass(), t);
+            MigrationHostPortalInstall installHost = migrationHostPortalInstallHostService.getOneByHostId(t.getRunHostId());
+            PortalHandle.finishPortal(t.getRunHost(),t.getRunPort(),t.getRunUser(),t.getRunPass(), installHost.getInstallPath(), t);
             MigrationTask update = MigrationTask.builder().id(t.getId()).execStatus(TaskStatus.MIGRATION_FINISH.getCode()).finishTime(new Date()).build();
             migrationTaskOperateRecordService.saveRecord(t.getId(), TaskOperate.FINISH_MIGRATION, loginUser.getUsername());
             migrationTaskService.updateById(update);
@@ -427,8 +403,9 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
         if (subTask == null) {
             return AjaxResult.error(MigrationErrorCode.SUB_TASK_NOT_EXISTS_ERROR.getCode(), MigrationErrorCode.SUB_TASK_NOT_EXISTS_ERROR.getMsg());
         }
-        PortalHandle.finishPortal(subTask.getRunHost(),subTask.getRunPort(),
-                subTask.getRunUser(),subTask.getRunPass(), subTask);
+        MigrationHostPortalInstall installHost = migrationHostPortalInstallHostService.getOneByHostId(subTask.getRunHostId());
+        PortalHandle.finishPortal(subTask.getRunHost(), subTask.getRunPort(),
+                subTask.getRunUser(), subTask.getRunPass(), installHost.getInstallPath(), subTask);
         MigrationTask update = MigrationTask.builder().id(subTask.getId()).execStatus(TaskStatus.MIGRATION_FINISH.getCode()).finishTime(new Date()).build();
         migrationTaskService.updateById(update);
         LoginUser loginUser = SecurityUtils.getLoginUser();
@@ -446,8 +423,9 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
             && subTask.getExecStatus() != TaskStatus.INCREMENTAL_RUNNING.getCode()) {
             return AjaxResult.error(MigrationErrorCode.SUB_TASK_NOT_IN_INCREMENTAL_ERROR.getCode(), MigrationErrorCode.SUB_TASK_NOT_IN_INCREMENTAL_ERROR.getMsg());
         }
+        MigrationHostPortalInstall installHost = migrationHostPortalInstallHostService.getOneByHostId(subTask.getRunHostId());
         PortalHandle.stopIncrementalPortal(subTask.getRunHost(), subTask.getRunPort(),
-                subTask.getRunUser(), subTask.getRunPass(), subTask);
+                subTask.getRunUser(), subTask.getRunPass(), installHost.getInstallPath(), subTask);
         MigrationTask update = MigrationTask.builder().id(subTask.getId()).execStatus(TaskStatus.INCREMENTAL_STOP.getCode()).execTime(new Date()).build();
         migrationTaskService.updateById(update);
         LoginUser loginUser = SecurityUtils.getLoginUser();
@@ -464,8 +442,9 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
         if (subTask.getExecStatus() != TaskStatus.INCREMENTAL_STOP.getCode()) {
             return AjaxResult.error(MigrationErrorCode.SUB_TASK_NOT_IN_INCREMENTAL_STOP_ERROR.getCode(), MigrationErrorCode.SUB_TASK_NOT_IN_INCREMENTAL_STOP_ERROR.getMsg());
         }
+        MigrationHostPortalInstall installHost = migrationHostPortalInstallHostService.getOneByHostId(subTask.getRunHostId());
         PortalHandle.startReversePortal(subTask.getRunHost(), subTask.getRunPort(),
-                subTask.getRunUser(), subTask.getRunPass(), subTask);
+                subTask.getRunUser(), subTask.getRunPass(), installHost.getInstallPath(), subTask);
         MigrationTask update = MigrationTask.builder().id(subTask.getId()).execStatus(TaskStatus.REVERSE_START.getCode()).execTime(new Date()).build();
         migrationTaskService.updateById(update);
         LoginUser loginUser = SecurityUtils.getLoginUser();

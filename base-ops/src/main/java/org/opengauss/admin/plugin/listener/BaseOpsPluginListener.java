@@ -36,7 +36,7 @@ public class BaseOpsPluginListener implements ApplicationListener<ApplicationEve
 
                 MenuVo resourceParent = menuFacade.savePluginMenu(pluginId, "资源中心", "Resources",1, "resource");
                 menuFacade.savePluginMenu(pluginId, "集群管理", "cluster ops", 3,"monitor/dailyOps", resourceParent.getMenuId());
-
+                menuFacade.savePluginMenu(pluginId, "OpenLooKeng管理", "openLooKeng manage", 4,"ops/olk", resourceParent.getMenuId());
                 MenuVo monitorParent = menuFacade.savePluginMenu(pluginId, "基础运维", "monitor", 3,"monitor");
                 menuFacade.savePluginMenu(pluginId, "集群监控", "cluster moniter",1, "monitor/basic", monitorParent.getMenuId());
                 menuFacade.savePluginMenu(pluginId, "日志分析", "log analysis",2, "monitor/logCenter", monitorParent.getMenuId());

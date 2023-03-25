@@ -114,6 +114,23 @@ onMounted(() => {
     else urlParam.dbId = paramsId
     requestData()
     requestResult()
+    const wujie = window.$wujie;
+    // Judge whether it is a plug-in environment or a local environment through wujie
+    if (wujie) {
+        // Monitoring platform language change
+        wujie?.bus.$on('opengauss-locale-change', (val: string) => {
+            console.log("task_detail opengauss-locale-change")
+            nodes.value = []
+            nextTick(() => {
+                pologyList.value = [
+                    { label: t('datasource.reportResultSelect[0]'), value: 'false' },
+                    { label: t('datasource.reportResultSelect[1]'), value: 'true' },
+                ]
+                requestData()
+                requestResult()
+            });
+        });
+    }
 })
 const showLargeWindow = () => {
     showLarge.value = true

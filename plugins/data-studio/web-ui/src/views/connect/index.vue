@@ -247,7 +247,7 @@
   const rules = reactive<FormRules>({
     name: [
       { required: true, message: t('rules.empty', [t('connection.name')]), trigger: 'blur' },
-      { min: 1, max: 30, message: t('rules.charLength', 30), trigger: 'blur' },
+      { min: 1, max: 60, message: t('rules.charLength', 60), trigger: 'blur' },
     ],
     ip: [
       { required: true, message: t('rules.empty', [t('connection.host')]), trigger: 'blur' },
@@ -293,8 +293,9 @@
             node.userName = node.dbUser;
             node.password = '';
             node.connectInfo = `${node.publicIp}:${node.dbPort}/${node.dbName}`;
-            item.sourceType = type;
-            item.sourceName = t('connection.contentCenter');
+            node.sourceType = type;
+            node.sourceName = t('connection.contentCenter');
+            node.edition = `${item.version} ${item.versionNum}`;
           });
           list = list.concat(item.clusterNodes);
         }
@@ -311,10 +312,13 @@
   };
 
   const getTableList = () => {
-    connectListInfo.listCurrentRow = {};
+    Object.assign(connectListInfo, {
+      list: [],
+      listCurrentRow: {},
+    });
     getAllCluster()
       .then((res) => {
-        connectListInfo.list = connectListInfo.list.concat(doConnectList(res.data || [], 1));
+        connectListInfo.list = connectListInfo.list.concat(doConnectList(res || [], 1));
       })
       .finally(() => {
         getDataLinkList(UserStore.userId).then((res) => {

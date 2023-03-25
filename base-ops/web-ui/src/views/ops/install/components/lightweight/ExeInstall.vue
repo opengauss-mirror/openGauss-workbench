@@ -18,7 +18,7 @@
       </div>
     </div>
     <div class="flex-row full-w teminal-h" v-else>
-      <div class="panel-w flex-col-start mr">
+      <div class="panel-w flex-col-start mr" :style="exeResult === exeResultEnum.FAIL ? '':'width: 100%'">
         <a-alert class="mb" style="padding: 14px 12px;width: fit-content;" type="error"
           v-if="exeResult === exeResultEnum.FAIL">
           {{ $t('lightweight.ExeInstall.5mpmjd1mcm40') }}
@@ -34,7 +34,13 @@
             <a-option v-for="(item, index) in hosts" :key="index" :value="item.hostId" :label="item.privateIp">
             </a-option>
           </a-select>
-          <a-button type="primary" @click="retryInstall">{{ $t('lightweight.ExeInstall.5mpmjd1mdf40') }}</a-button>
+          <div>
+            <a-button type="primary" class="mr-s" @click="retryInstall">{{ $t('lightweight.ExeInstall.5mpmjd1mdf40') }}</a-button>
+            <a-button type="primary" @click="handleDownloadLog">{{
+                $t('components.openLooKeng.5mpiji1qpcc65')
+              }}
+            </a-button>
+          </div>
         </div>
         <div id="xterm" class="xterm"></div>
       </div>
@@ -43,7 +49,7 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, inject, onBeforeUnmount, onMounted, ref } from 'vue'
+import {computed, inject, nextTick, onBeforeUnmount, onMounted, ref} from 'vue'
 import 'xterm/css/xterm.css'
 import { Terminal } from 'xterm'
 import { FitAddon } from 'xterm-addon-fit'
@@ -54,12 +60,14 @@ import { useOpsStore } from '@/store'
 import { KeyValue } from '@/types/global'
 import Socket from '@/utils/websocket'
 import { encryptPassword } from '@/utils/jsencrypt'
+import dayjs from "dayjs";
 const installStore = useOpsStore()
 
 const hostId = ref('')
 const hosts = ref<any[]>([])
 const hostObj = ref<KeyValue>({})
 const dataPassword = ref('')
+const logs = ref<string>('')
 
 enum exeResultEnum {
   UN_INSTALL = Number(-1),
@@ -148,8 +156,6 @@ const openSocket = () => {
       wsConnectType: WsConnectType.SSH,
       businessId: `terminal_${socketKey}`
     }
-    console.log('show password', hostId.value, hostObj)
-
     if (hostObj.value[hostId.value]) {
       const encryptPwd = await encryptPassword(hostObj.value[hostId.value].rootPassword)
       param.rootPassword = encryptPwd
@@ -187,12 +193,14 @@ const openLogSocket = () => {
     })
     initTermLog(term, logSocket.ws)
     localStorage.setItem('Static-pluginBase-opsOpsInstall', '1')
+    logs.value = ''
   })
   logSocket.onclose(() => {
     localStorage.removeItem('Static-pluginBase-opsOpsInstall')
   })
   logSocket.onmessage((messageData: any) => {
     term.writeln(messageData)
+    logs.value += messageData + '\r\n'
     if (messageData.indexOf('FINAL_EXECUTE_EXIT_CODE') > -1) {
       const flag = Number(messageData.split(':')[1])
       if (flag === 0) {
@@ -207,6 +215,11 @@ const openLogSocket = () => {
         if (termTerminal.value) {
           termTerminal.value.dispose()
         }
+        nextTick(() => {
+          let fitAddon = new FitAddon()
+          term.loadAddon(fitAddon)
+          fitAddon.fit()
+        })
         openSocket()
       }
       logSocket.destroy()
@@ -263,6 +276,22 @@ const installParam = computed(() => installStore.getInstallParam)
 defineExpose({
   beforeConfirm
 })
+
+const handleDownloadLog = () => {
+  const time = dayjs().format('YYYY-MM-DD_HH:mm:ss')
+  const filename = `lite_ops_${time}.log`
+
+  const blob = new Blob([logs.value], {type: 'text/plain'})
+  const url = URL.createObjectURL(blob)
+
+  const link = document.createElement('a')
+  link.href = url
+  link.download = filename
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+  URL.revokeObjectURL(url)
+}
 
 </script>
 

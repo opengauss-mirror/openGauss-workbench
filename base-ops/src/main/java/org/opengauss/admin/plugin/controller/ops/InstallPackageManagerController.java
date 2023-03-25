@@ -1,6 +1,7 @@
 package org.opengauss.admin.plugin.controller.ops;
 
 import cn.hutool.core.util.StrUtil;
+import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
@@ -16,9 +17,12 @@ import org.opengauss.admin.plugin.enums.ops.OpenGaussVersionEnum;
 import org.opengauss.admin.plugin.service.ops.IOpsPackageManagerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.beans.PropertyEditor;
+import java.beans.PropertyEditorSupport;
 import java.util.List;
 import java.util.Objects;
 
@@ -65,7 +69,10 @@ public class InstallPackageManagerController extends BaseController {
         LambdaQueryWrapper<OpsPackageManagerEntity> queryWrapper = Wrappers.lambdaQuery(OpsPackageManagerEntity.class).eq(Objects.nonNull(packageVersion), OpsPackageManagerEntity::getPackageVersion, packageVersion);
 
         if (StrUtil.isNotEmpty(name)) {
-            queryWrapper.and(orWrapper -> orWrapper.or().like(OpsPackageManagerEntity::getOs, name).or().like(OpsPackageManagerEntity::getCpuArch, name).or().like(OpsPackageManagerEntity::getPackageVersionNum, name));
+            queryWrapper.and(orWrapper -> orWrapper
+                    .or().like(OpsPackageManagerEntity::getOs, name)
+                    .or().like(OpsPackageManagerEntity::getCpuArch, name)
+                    .or().like(OpsPackageManagerEntity::getPackageVersionNum, name));
         }
 
         IPage<OpsPackageManagerEntity> page = opsPackageManagerService.page(startPage(), queryWrapper);
@@ -73,10 +80,19 @@ public class InstallPackageManagerController extends BaseController {
     }
 
     @GetMapping("/list")
-    public AjaxResult list(@RequestParam(value = "os", required = false) String os, @RequestParam(value = "cpuArch", required = false) String cpuArch, @RequestParam(value = "packageVersion", required = false) OpenGaussVersionEnum packageVersion, @RequestParam(value = "packageVersionNum", required = false) String packageVersionNum) {
+    public AjaxResult list(@RequestParam(value = "os", required = false) String os,
+                           @RequestParam(value = "cpuArch", required = false) String cpuArch,
+                           @RequestParam(value = "packageVersion", required = false) OpenGaussVersionEnum packageVersion,
+                           @RequestParam(value = "packageVersionNum", required = false) String packageVersionNum,
+                           @RequestParam(value = "type", required = false) String type) {
 
-        LambdaQueryWrapper<OpsPackageManagerEntity> queryWrapper = Wrappers.lambdaQuery(OpsPackageManagerEntity.class).eq(StrUtil.isNotEmpty(os), OpsPackageManagerEntity::getOs, os).eq(StrUtil.isNotEmpty(cpuArch), OpsPackageManagerEntity::getCpuArch, cpuArch).eq(Objects.nonNull(packageVersion), OpsPackageManagerEntity::getPackageVersion, Objects.nonNull(packageVersion) ? packageVersion.name() : null).eq(StrUtil.isNotEmpty(packageVersionNum), OpsPackageManagerEntity::getPackageVersionNum, packageVersionNum).orderByDesc(OpsPackageManagerEntity::getCreateTime);
-
+        LambdaQueryWrapper<OpsPackageManagerEntity> queryWrapper = Wrappers.lambdaQuery(OpsPackageManagerEntity.class)
+                .eq(StrUtil.isNotEmpty(os), OpsPackageManagerEntity::getOs, os)
+                .eq(StrUtil.isNotEmpty(cpuArch), OpsPackageManagerEntity::getCpuArch, cpuArch)
+                .eq(Objects.nonNull(packageVersion), OpsPackageManagerEntity::getPackageVersion, Objects.nonNull(packageVersion) ? packageVersion.name() : null)
+                .eq(StrUtil.isNotEmpty(packageVersionNum), OpsPackageManagerEntity::getPackageVersionNum, packageVersionNum)
+                .eq(StrUtil.isNotEmpty(type), OpsPackageManagerEntity::getType, type)
+                .orderByDesc(OpsPackageManagerEntity::getCreateTime);
         List<OpsPackageManagerEntity> list = opsPackageManagerService.list(queryWrapper);
         return AjaxResult.success(list);
     }
@@ -113,5 +129,16 @@ public class InstallPackageManagerController extends BaseController {
     public AjaxResult getSysUploadPath() {
         String result = opsPackageManagerService.getSysUploadPath(getUserId());
         return AjaxResult.success("ok", result);
+    }
+
+    @InitBinder
+    public void initBinder(WebDataBinder binder) {
+        binder.registerCustomEditor(UploadInfo.class, new PropertyEditorSupport() {
+            @Override
+            public void setAsText(String text) throws IllegalArgumentException {
+                UploadInfo info = JSON.parseObject(text, UploadInfo.class);
+                setValue(info);
+            }
+        });
     }
 }

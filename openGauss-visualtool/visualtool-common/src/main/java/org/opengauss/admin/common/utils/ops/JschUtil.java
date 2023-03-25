@@ -274,23 +274,18 @@ public class JschUtil {
      */
     private Optional<Session> createSession(String host, Integer port, String username, String password) {
         JSch jSch = new JSch();
-        Session session;
+        Session session = null;
         try {
             session = jSch.getSession(username, host, port);
-        } catch (JSchException e) {
-            log.error("Connection establishment fail：", e);
-            throw new OpsException("Connection establishment fail");
-        }
-
-        session.setPassword(password);
-        session.setConfig("StrictHostKeyChecking", "no");
-        try {
+            session.setPassword(password);
+            session.setConfig("StrictHostKeyChecking", "no");
             session.connect(SESSION_TIMEOUT);
         } catch (JSchException e) {
-            log.error(host + "Connection establishment fail", e);
-            throw new OpsException(host + "Connection establishment fail");
+            log.error("Connection establishment fail：", e);
+            session = null;
         }
-        return Optional.of(session);
+
+        return Optional.ofNullable(session);
     }
 
     private JschResult buildJschResult(ChannelExec channelExec, WsSession wsSession, Map<String, String> autoResponse) throws IOException, InterruptedException {

@@ -105,7 +105,7 @@ public class DatabaseParamCaller implements Caller {
     public static synchronized Connection connect_sqlite() {
         Connection conn;
         try {
-            conn = DriverManager.getConnection(JDBC.PREFIX + "data/paramInfo.db");
+            conn = DriverManager.getConnection(JDBC.PREFIX + "data/paramDiagnosisInfo.db");
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

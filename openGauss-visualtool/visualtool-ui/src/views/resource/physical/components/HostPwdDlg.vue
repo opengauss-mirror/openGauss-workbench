@@ -29,6 +29,7 @@ const data = reactive<KeyValue>({
   loading: false,
   formData: {
     hostId: '',
+    port: '',
     privateIp: '',
     publicIp: '',
     password: ''
@@ -57,6 +58,8 @@ const handleOk = () => {
         console.log('encryptPassword...', res)
         emits(`finish`, {
           hostId: data.formData.hostId,
+          ip: data.formData.publicIp,
+          port: data.formData.port,
           password: res
         })
         close()
@@ -75,6 +78,7 @@ const open = (hostData: KeyValue) => {
   data.formData.hostId = hostData.hostId
   data.formData.privateIp = hostData.privateIp
   data.formData.publicIp = hostData.publicIp
+  data.formData.port = hostData.port
   data.formData.password = ''
 }
 
@@ -84,6 +88,4 @@ defineExpose({
 
 </script>
 
-<style lang="scss" scoped>
-
-</style>
+<style lang="scss" scoped></style>

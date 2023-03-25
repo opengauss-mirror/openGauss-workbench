@@ -18,9 +18,11 @@ public class HostUserBody {
     @NotBlank(message = "The password cannot be empty")
     private String password;
     private String rootPassword;
+    private Boolean sudo;
 
-    public OpsHostUserEntity toEntity() {
+    public OpsHostUserEntity toEntity(Boolean sudo) {
         OpsHostUserEntity hostUserEntity = new OpsHostUserEntity();
+        hostUserEntity.setSudo(sudo);
         hostUserEntity.setHostId(hostId);
         hostUserEntity.setUsername(username);
         hostUserEntity.setPassword(password);

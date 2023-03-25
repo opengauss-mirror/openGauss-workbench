@@ -433,6 +433,41 @@ CREATE TABLE IF NOT EXISTS "public"."ops_package_manager" (
     )
 ;
 
+CREATE TABLE IF NOT EXISTS "public"."ops_olk" (
+    "id" VARCHAR(64) NOT NULL PRIMARY KEY,
+    "name" VARCHAR(255) NOT NULL,
+    "olk_tar_id" VARCHAR(255) NOT NULL,
+    "ss_tar_id" VARCHAR(255) NOT NULL,
+    "dad_tar_id" VARCHAR(255) NOT NULL,
+    "dad_port" VARCHAR(10) NOT NULL,
+    "dad_install_path" TEXT NOT NULL,
+    "dad_install_host_id" VARCHAR(255) NOT NULL,
+    "dad_install_username" VARCHAR(255) NOT NULL,
+    "zk_tar_id" VARCHAR(255) NOT NULL,
+    "ss_port" VARCHAR(10) NOT NULL,
+    "olk_port" VARCHAR(10) NOT NULL,
+    "zk_port" VARCHAR(10) NOT NULL,
+    "ss_install_path" TEXT NOT NULL,
+    "ss_upload_path" TEXT NOT NULL,
+    "olk_install_path" TEXT NOT NULL,
+    "olk_upload_path" TEXT NOT NULL,
+    "ss_install_host_id" VARCHAR(255) NOT NULL,
+    "olk_install_host_id" VARCHAR(255) NOT NULL,
+    "ss_install_username" VARCHAR(255) NOT NULL,
+    "olk_install_username" VARCHAR(255) NOT NULL,
+    "remark" TEXT NULL DEFAULT NULL,
+    "rule_yaml" TEXT NOT NULL,
+    "table_name" TEXT NULL DEFAULT NULL,
+    "columns" TEXT NULL DEFAULT NULL,
+    "create_by" VARCHAR(64) NULL DEFAULT NULL,
+    "update_by" VARCHAR(64) NULL DEFAULT NULL,
+    "update_time" TIMESTAMP NULL DEFAULT NULL,
+    "create_time" TIMESTAMP NULL DEFAULT NULL,
+    "dad_install_password" TEXT NULL DEFAULT NULL
+);
+
+
+
 CREATE OR REPLACE FUNCTION add_field_db_name() RETURNS integer AS '
         BEGIN
 IF

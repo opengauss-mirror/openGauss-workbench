@@ -10,7 +10,7 @@
               </template>
               {{ $t('database.index.5oxhr0qz15w0') }}</a-button>
             <a-space direction="vertical" :style="{ width: '100%' }" class="mr-s">
-              <a-upload action="/" @before-upload="beforeUpload" />
+              <a-upload action="/" @before-upload="beforeUpload" accept=".csv" />
             </a-space>
             <a-button :loading="list.downloadLoading" type="outline" @click="downloadTemp">
               <template #icon>
@@ -19,11 +19,32 @@
               {{ $t('database.index.5oxhr0qz2bs0') }}</a-button>
           </div>
           <div class="flex-row">
-            <div class="flex-row mr">
-              <div class="label-color top-label mr-s">{{ $t('database.index.else1') }}:</div>
-              <a-input v-model="filter.name" :placeholder="$t('database.index.5oxhr0qz2s00')"></a-input>
-            </div>
-            <a-button type="primary" @click="getListData">{{ $t('database.index.5oxhr0qz30g0') }}</a-button>
+
+            <a-form :model="filter" layout="inline">
+              <a-form-item field="name" :label="$t('database.index.else1')">
+                <a-input v-model="filter.name" allow-clear :placeholder="$t('database.index.5oxhr0qz2s00')"
+                  style="width: 180px;"></a-input>
+              </a-form-item>
+              <a-form-item field="ip" :label="$t('database.index.elseIp')">
+                <a-input v-model="filter.ip" allow-clear :placeholder="$t('database.index.elseIpPlaceholder')"
+                  style="width: 170px;"></a-input>
+              </a-form-item>
+              <a-form-item field="type" :label="$t('database.index.else3')">
+                <a-select v-model="filter.type" allow-clear :placeholder="$t('database.index.else3Placeholder')"
+                  style="width: 150px;">
+                  <a-option value="OPENGAUSS">OPENGAUSS</a-option>
+                  <a-option value="MYSQL">MYSQL</a-option>
+                </a-select>
+              </a-form-item>
+              <a-form-item>
+                <a-button type="outline" @click="getListData()">
+                  <template #icon>
+                    <icon-search />
+                  </template>
+                  <template #default>{{ $t('database.index.5oxhr0qz30g0') }}</template>
+                </a-button>
+              </a-form-item>
+            </a-form>
           </div>
         </div>
         <a-table style="height: 95%" :data="list.data" :columns="columns" :pagination="list.page" :loading="list.loading"
@@ -98,15 +119,17 @@ const handleExpand = (rowKey: string | number) => {
 }
 
 const columns = computed(() => [
-  { title: t('database.index.5oxhr0qz48w0'), dataIndex: 'name' },
-  { title: t('database.index.5oxhr0qz4fs0'), dataIndex: 'dbType' },
-  { title: t('database.index.5oxhr0qz4no0'), dataIndex: 'status', slotName: 'status' },
-  { title: t('database.index.5oxhr0qz4zk0'), dataIndex: 'updateTime' },
-  { title: t('database.index.5oxhr0qz58o0'), slotName: 'operation', width: 350 }
+  { title: t('database.index.5oxhr0qz48w0'), dataIndex: 'name', width: 300, ellipsis: true, tooltip: true },
+  { title: t('database.index.5oxhr0qz4fs0'), dataIndex: 'dbType', width: 220 },
+  { title: t('database.index.5oxhr0qz4no0'), dataIndex: 'status', width: 200, slotName: 'status' },
+  { title: t('database.index.5oxhr0qz4zk0'), dataIndex: 'updateTime', width: 300 },
+  { title: t('database.index.5oxhr0qz58o0'), slotName: 'operation', width: 300, fixed: 'right' }
 ])
 
 const filter = reactive({
   name: '',
+  ip: '',
+  type: '',
   pageNum: 1,
   pageSize: 10
 })
@@ -276,10 +299,11 @@ const pageSizeChange = (e: number) => {
       padding: 20px;
       box-sizing: border-box;
       padding: 8px;
-      height: calc(100vh - 138px - 40px);
+      height: calc(100vh - 76px - 40px);
 
       .top-label {
-        width: 200px
+        width: 200px;
+        text-align: right;
       }
 
       .cond-btns {

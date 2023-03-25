@@ -5,7 +5,6 @@ import cn.hutool.core.io.IoUtil;
 import cn.hutool.core.lang.UUID;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
-import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
@@ -89,7 +88,7 @@ public class OpsPackageManagerService extends ServiceImpl<OpsPackageManagerMappe
             log.warn(String.format("Can't find package record [%s] to delete. Skip", entity.getPackageId()));
             return;
         }
-        String realPath = entity.getFileRealPath();
+        String realPath = entity.getRealPath();
         if (StrUtil.isNotEmpty(realPath)) {
             File file = new File(realPath);
             if (!file.exists()) {
@@ -146,7 +145,7 @@ public class OpsPackageManagerService extends ServiceImpl<OpsPackageManagerMappe
     public UploadInfo upload(MultipartFile file, Integer userId) throws OpsException {
         OpsPackageManagerEntity entity = new OpsPackageManagerEntity();
         UploadInfo info = new UploadInfo();
-        entity.setUploadInfo(info);
+        entity.setPackagePath(info);
         entity.setFile(file);
         savePackageTarFile(entity, userId);
         return info;
@@ -175,6 +174,11 @@ public class OpsPackageManagerService extends ServiceImpl<OpsPackageManagerMappe
             return "";
         }
         return entity.getUploadPath();
+    }
+
+    @Override
+    public boolean checkUploadPath(String path, Integer userId) {
+        return !sysSettingFacade.checkUploadPath(path, userId);
     }
 
     private String getLitePackageCpuArch(String installPackagePath) {
@@ -352,7 +356,7 @@ public class OpsPackageManagerService extends ServiceImpl<OpsPackageManagerMappe
      */
     private void savePackageTarFile(OpsPackageManagerEntity pkg, Integer userId) throws OpsException {
         MultipartFile file = pkg.getFile();
-        if (ObjectUtil.isNull(file) || (ObjectUtil.isNotNull(pkg.getUploadInfo()) && StrUtil.isNotEmpty(pkg.getUploadInfo().getRealPath()))) {
+        if (ObjectUtil.isNull(file) || StrUtil.isNotEmpty(pkg.getRealPath())) {
             return;
         }
         SysSettingEntity entity = sysSettingFacade.getSysSetting(userId);
@@ -370,19 +374,16 @@ public class OpsPackageManagerService extends ServiceImpl<OpsPackageManagerMappe
                 throw new OpsException(errMsg);
             }
         }
-
-        String fileRealName = String.join("-", UUID.randomUUID().toString(), file.getOriginalFilename());
-        String fileRealPath = Path.of(entity.getUploadPath(), fileRealName).toString();
+        String fileRealPath = Path.of(entity.getUploadPath(), file.getOriginalFilename()).toString();
         try {
             file.transferTo(new File(fileRealPath));
-            UploadInfo info = pkg.getUploadInfo();
+            UploadInfo info = pkg.getPackagePath();
             if (ObjectUtil.isNull(info)) {
                 info = new UploadInfo();
             }
             info.setName(file.getOriginalFilename());
-            info.setRealName(fileRealName);
             info.setRealPath(fileRealPath);
-            pkg.setPackagePath(JSON.toJSONString(info));
+            pkg.setPackagePath(info);
         } catch (Exception ex) {
             String errMsg = String.format("Upload tar file to %s failed: %s", fileRealPath, ex.getMessage());
             log.error(errMsg);

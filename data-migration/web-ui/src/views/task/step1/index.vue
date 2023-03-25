@@ -9,10 +9,13 @@
               <div class="sql-sel-con">
                 <a-input v-model="searchSourceKey" placeholder="输入名称搜索" allow-clear />
               </div>
+              <div class="refresh-con">
+                <a-link @click="getClustersData"><icon-refresh /></a-link>
+              </div>
             </div>
           </template>
           <template #extra>
-            <a-link @click="handleAddSql">+自定义数据库</a-link>
+            <a-link @click="handleAddSql('MYSQL')">新增数据源</a-link>
           </template>
           <div class="sql-tree-con">
             <a-spin :loading="loading" style="display: block;">
@@ -58,10 +61,13 @@
               <div class="sql-sel-con">
                 <a-input v-model="searchTargetKey" placeholder="输入名称搜索" allow-clear />
               </div>
+              <div class="refresh-con">
+                <a-link @click="getClustersData"><icon-refresh /></a-link>
+              </div>
             </div>
           </template>
           <template #extra>
-            <a-link @click="handleAddSql">+自定义数据库</a-link>
+            <a-link @click="handleAddSql('OPENGAUSS')">新增数据源</a-link>
           </template>
           <div class="sql-selected-con">
             <a-spin :loading="loading" style="display: block;">
@@ -143,17 +149,13 @@
     </div>
 
     <!-- add sql -->
-    <add-sql v-model:open="addSqlVisible" />
-
-    <!-- add jdbc -->
-    <add-jdbc ref="addJdbcRef" />
+    <add-jdbc ref="addJdbcRef" @finish="getClustersData" />
   </div>
 </template>
 
 <script setup>
 import { reactive, ref, computed, watch, onMounted, toRaw, h, compile } from 'vue'
 import { Message } from '@arco-design/web-vue'
-import AddSql from '../components/AddSql.vue'
 import AddJdbc from '../components/AddJdbc.vue'
 import { clustersData, sourceClusterDbsData, targetClusterDbsData } from '@/api/task'
 import useTheme from '@/hooks/theme'
@@ -183,8 +185,6 @@ const selectSourceDB = reactive({
 })
 
 const tableData = ref([])
-
-const addSqlVisible = ref(false)
 
 const treeSourceData = computed(() => {
   if (!searchSourceKey.value) return sourceTreeData.value
@@ -278,7 +278,7 @@ const deepTargetTreeData = (data) => {
       }
     } else {
       return {
-        title: item.publicIp + ':' + item.hostPort,
+        title: item.publicIp + ':' + item.dbPort,
         key: item.clusterId || item.nodeId,
         icon: () => h(compile(`<svg-icon icon-class="${item.clusterId ? 'cluster' : 'opengaussdb'}" />`)),
         level: item.clusterId ? 0 : 1,
@@ -413,9 +413,8 @@ const deleteSubTask = (idx) => {
 
 const addJdbcRef = ref(null)
 
-const handleAddSql = () => {
-  // addSqlVisible.value = true
-  addJdbcRef.value?.open('create')
+const handleAddSql = (dbType) => {
+  addJdbcRef.value?.open(dbType)
 }
 
 // init
@@ -477,6 +476,11 @@ onMounted(() => {
       .card-title {
         font-size: 16px;
         margin-right: 10px;
+      }
+      .refresh-con {
+        margin-left: 5px;
+        margin-top: 3px;
+        cursor: pointer;
       }
     }
     .sql-tree-con {

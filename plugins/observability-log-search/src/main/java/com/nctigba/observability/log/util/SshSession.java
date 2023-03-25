@@ -78,7 +78,7 @@ public class SshSession implements AutoCloseable {
 		for (int i = 0; i < 3 && ec.getExitStatus() == null; i++)
 			ThreadUtil.sleep(100L);
 		if (ec.getExitStatus() != null && ec.getExitStatus() != 0)
-			throw new RuntimeException(os.toString().trim());
+			throw new RuntimeException(command + " \n " + os.toString().trim());
 		return os.toString().trim();
 	}
 

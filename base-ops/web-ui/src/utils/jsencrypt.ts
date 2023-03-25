@@ -4,6 +4,9 @@ import { KeyValue } from '@/types/global'
 
 // host password encryption
 export async function encryptPassword (pwd: string) {
+  if (!pwd) {
+    return
+  }
   let publicKey = ''
   const getPublicKey: KeyValue = await getEntryKey()
   if (Number(getPublicKey.code) === 200 && getPublicKey.key) {

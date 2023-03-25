@@ -1,11 +1,14 @@
 <template>
     <a-modal :mask-closable="false" :esc-to-close="false" :visible="data.show" :title="data.title" @cancel="close"
-        :modal-style="{ width: '450px' }" :footer="false">
+        :modal-style="{ width: '650px' }" :footer="false">
         <div class="flex-col-start">
             <a-button class="mb" type="primary" @click="handleAddUser('create')">{{
                 $t('components.HostUserMng.5mpi1bru0w00')
             }}</a-button>
             <a-table class="full-w" :data="list.data" :columns="columns" :loading="list.loading" size="mini">
+                <template #sudo="{ record }">
+                    {{ record.sudo ? $t('components.HostUserMng.yes') : $t('components.HostUserMng.no') }}
+                </template>
                 <template #operation="{ record }">
                     <div class="flex-row-start" v-if="record.username !== 'root'">
                         <a-link class="mr" @click="handleEditUser('update', record)">{{
@@ -13,8 +16,7 @@
                         }}</a-link>
                         <a-popconfirm :content="$t('components.HostUserMng.5mpi1bru2700')" type="warning"
                             :ok-text="$t('components.HostUserMng.5mpi1bru2lo0')"
-                            :cancel-text="$t('components.HostUserMng.5mpi1bru2s00')"
-                            @ok="handleDelUser(record.hostUserId)">
+                            :cancel-text="$t('components.HostUserMng.5mpi1bru2s00')" @ok="handleDelUser(record.hostUserId)">
                             <a-link status="danger">{{ $t('components.HostUserMng.5mpi1bru2yo0') }}</a-link>
                         </a-popconfirm>
                     </div>
@@ -49,6 +51,7 @@ const list: {
 })
 const columns = computed(() => [
     { title: t('components.HostUserMng.5mpi1bru3vk0'), dataIndex: 'username' },
+    { title: t('components.HostUserMng.isSudo'), slotName: 'sudo' },
     { title: t('components.HostUserMng.5mpi1bru4c00'), slotName: 'operation', width: 200 }
 ])
 const addUserRef = ref<null | InstanceType<typeof AddHostUser>>(null)
@@ -100,6 +103,4 @@ defineExpose({
 })
 </script>
 
-<style lang="less" scoped>
-
-</style>
+<style lang="less" scoped></style>

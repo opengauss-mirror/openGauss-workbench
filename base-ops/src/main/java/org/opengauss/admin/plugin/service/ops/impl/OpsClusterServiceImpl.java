@@ -67,6 +67,8 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -469,9 +471,14 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
 
         if (CollUtil.isNotEmpty(hostIdList)) {
             List<OpsHostEntity> opsHostEntities = hostFacade.listByIds(hostIdList);
-            if (CollUtil.isEmpty(opsHostEntities) || opsHostEntities.size() != hostLen) {
+            if (CollUtil.isEmpty(opsHostEntities)) {
                 log.info("Host information not found,hostIds{}", hostIdList);
                 throw new OpsException("Host information not found");
+            }
+            if (opsHostEntities.size() != hostLen) {
+                String errMsg = "Cannot select the same host as the installation target";
+                log.info(errMsg);
+                throw new OpsException(errMsg);
             }
 
             List<OpsHostUserEntity> hostUserEntities = hostUserFacade.listHostUserByHostIdList(hostIdList);
@@ -1379,7 +1386,9 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         Session ommSession = jschUtil.getSession(hostEntity.getPublicIp(), hostEntity.getPort(), masterHostUsername, encryptionUtils.decrypt(masterHostPassword)).orElseThrow(() -> new OpsException("Failed to establish connection with host " + hostEntity.getPublicIp()));
         Connection connection = null;
         try {
+            connection = DBUtil.getSession(hostEntity.getPublicIp(), port, databaseUsername, databasePassword).orElseThrow(() -> new OpsException("Connection failed"));
             String versionNum = getVersionNum(ommSession, importClusterBody.getEnvPath());
+            importClusterBody.setOpenGaussVersionNum(versionNum);
             Integer majorVersion = Integer.valueOf(versionNum.substring(0, 1));
             OpenGaussVersionEnum openGaussVersionEnum = judgeOpenGaussVersion(majorVersion, ommSession, connection, importClusterBody.getEnvPath());
             boolean versionMatch = false;
@@ -1403,8 +1412,6 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                 log.error("The selected version does not match the actual version,select version:{},actual version:{}", importClusterBody.getOpenGaussVersion(), openGaussVersionEnum);
                 throw new OpsException("The selected version does not match the actual version");
             }
-
-            connection = DBUtil.getSession(hostEntity.getPublicIp(), port, databaseUsername, databasePassword).orElseThrow(() -> new OpsException("Connection failed"));
         } catch (OpsException e) {
             log.error("ops exception ", e);
             throw e;
@@ -1513,14 +1520,25 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
             }
 
             String result = jschResult.getResult();
-            String majorVersion = result.substring(16, 21);
+            String majorVersion = null;
+            String patternString = "([0-9]+\\.){1,2}[0-9]+";
+            Pattern pattern = Pattern.compile(patternString);
+            Matcher matcher = pattern.matcher(result);
+            if (matcher.find()) {
+                majorVersion = matcher.group();
+            }
+
             log.info("openGauss version:{}", majorVersion);
+            if (StrUtil.isEmpty(majorVersion)){
+                throw new OpsException("Failed to get openGauss version");
+            }
             return majorVersion;
         } catch (Exception e) {
             log.error("Failed to get openGauss version", e);
             throw new OpsException("Failed to get openGauss version");
         }
     }
+
 
     @Override
     public void monitor(String clusterId, String hostId, String businessId) {
@@ -2517,7 +2535,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
             JschResult jschResult = null;
             try {
                 try {
-                    jschResult = jschUtil.executeCommand(command, ommSession);
+                    jschResult = jschUtil.executeCommand(command, ommSession,envPath);
                 } catch (InterruptedException e) {
                     throw new OpsException("thread is interrupted");
                 }

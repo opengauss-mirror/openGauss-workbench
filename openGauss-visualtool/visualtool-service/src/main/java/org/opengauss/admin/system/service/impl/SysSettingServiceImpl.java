@@ -1,5 +1,6 @@
 package org.opengauss.admin.system.service.impl;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.File;
+import java.util.List;
 
 /**
  * System Setting Service
@@ -50,5 +52,20 @@ public class SysSettingServiceImpl extends ServiceImpl<SysSettingMapper, SysSett
             return adminResult;
         }
         return userResult;
+    }
+
+    @Override
+    public boolean hasUploadPath(String path, Integer userId) {
+        LambdaQueryWrapper<SysSettingEntity> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(SysSettingEntity::getUploadPath, path);
+        List<SysSettingEntity> result = list(queryWrapper);
+        if (CollUtil.isNotEmpty(result)) {
+            for (SysSettingEntity entity: result) {
+                if (!entity.getUserId().equals(userId)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 }

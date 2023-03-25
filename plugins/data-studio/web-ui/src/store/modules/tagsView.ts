@@ -32,9 +32,9 @@ export const useTagsViewStore = defineStore({
       );
       this.visitedViews = visitedViews.filter((item) => item.name != 'debugChild');
       const ids = this.visitedViews.map((item) => {
-        return item.id || 0;
+        return Number(item.id || 0);
       });
-      this.maxTagsId = Math.max(...ids) || 0;
+      this.maxTagsId = Math.max(...ids, 0);
     },
     getViewByRoute(route) {
       return this.visitedViews.find((item) => item.path === route.path);
@@ -76,12 +76,8 @@ export const useTagsViewStore = defineStore({
       this.setVisitedViewsStorage();
     },
     delView(view) {
-      return new Promise((resolve) => {
-        this.delVisitedView(view);
-        resolve({
-          visitedViews: [...this.visitedViews],
-        });
-      });
+      this.delVisitedView(view);
+      return { visitedViews: [...this.visitedViews] };
     },
     delCurrentView(route) {
       const currentView = this.visitedViews.find((item) => item.path === route.path);
@@ -90,10 +86,12 @@ export const useTagsViewStore = defineStore({
     },
     delVisitedView(view) {
       return new Promise((resolve) => {
-        this.visitedViews = this.visitedViews.filter((v) => {
-          return v.path !== view.path || v.meta.affix;
-        });
-        this.setVisitedViewsStorage();
+        if (view.path) {
+          this.visitedViews = this.visitedViews.filter((v) => {
+            return v.path !== view.path || v.meta.affix;
+          });
+          this.setVisitedViewsStorage();
+        }
         resolve([...this.visitedViews]);
       });
     },
@@ -138,7 +136,8 @@ export const useTagsViewStore = defineStore({
       }
     },
     updateStepIntoChildStatusById(tagId, status) {
-      this.getViewById(tagId)!.isStepIntoChild = status;
+      const view = this.getViewById(tagId);
+      if (view) view.isStepIntoChild = status;
     },
     updateStepIntoChildStatusByRoute(route, status) {
       this.getViewByRoute(route)!.isStepIntoChild = status;
@@ -154,18 +153,33 @@ export const useTagsViewStore = defineStore({
         }, 300);
       }
     },
-    closeAllChildViews(rootTagId, router) {
-      const rootDebugView = this.getViewById(rootTagId);
-      if (rootDebugView?.fullPath) {
-        loading = loadingInstance();
-        router.push(rootDebugView.fullPath);
-        const allChildDebugViewIds = this.visitedViews
-          .filter((item) => item.query?.rootTagId == rootTagId)
-          .map((item) => item.id);
-        this.delViewByIds(allChildDebugViewIds);
-        loading.close();
-        loading = null;
+    getDebugChildViews(parentTagId) {
+      const availableViews = this.visitedViews.filter((item) => item.name == 'debugChild');
+      function findChildViews(availableViews, parentTagId) {
+        const already = [];
+        const surplus = [];
+        availableViews.forEach((item) => {
+          item.query.parentTagId == parentTagId ? already.push(item) : surplus.push(item);
+        });
+        let result = already;
+        if (already.length > 0) {
+          already.forEach((item) => {
+            result = result.concat(findChildViews(surplus, item.id));
+          });
+        }
+        return result;
       }
+      return findChildViews(availableViews, parentTagId);
+    },
+    closeAllChildViews(rootTagId) {
+      if (!rootTagId) return;
+      loading = loadingInstance();
+      const allChildDebugViewIds = this.visitedViews
+        .filter((item) => item.query?.rootTagId == rootTagId)
+        .map((item) => item.id);
+      this.delViewByIds(allChildDebugViewIds);
+      loading.close();
+      loading = null;
     },
   },
 });

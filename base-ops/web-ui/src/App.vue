@@ -59,6 +59,15 @@ onMounted(() => {
       changeLocale(val)
     }
   })
+
+  const htmlstyle = document.getElementsByTagName('html')[0].style
+  window.$wujie?.bus.$on('opengauss-menu-collapse', (val: string) => {
+    if (val === '1') {
+      htmlstyle.setProperty('padding-left', '64px', 'important')
+    } else {
+      htmlstyle.setProperty('padding-left', '236px', 'important')
+    }
+  })
 })
 </script>
 <style lang="less" scoped>

@@ -86,6 +86,9 @@ defineExpose({
 watch(overflow, o => {
     console.log(props.title + ':', o)
 })
+watch(() => props.overflowHidden, o => {
+    hidden.value = o ? 'hidden' : 'unset'
+})
 </script>
 
 <template>

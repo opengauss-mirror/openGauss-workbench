@@ -221,7 +221,7 @@
     getButtonStatus();
   };
   const paramsCancel = () => {
-    handleStopDebug();
+    handleStopDebug(true);
   };
 
   const debug = reactive({
@@ -422,8 +422,9 @@
       }
       if (res.type == 'newWindow') {
         setStepIntoChildStatus(tagId, true);
+        const path = encodeURIComponent(route.query.dbname + '_' + result);
         router.push({
-          path: `/debugChild/${encodeURIComponent(route.query.dbname as string)}_${result}`,
+          path: `/debugChild/${path}`,
           query: {
             title: `${result}@${ws.connectionName}`,
             funcname: result,
@@ -523,13 +524,17 @@
     });
   };
 
-  const handleStopDebug = () => {
+  const handleStopDebug = (isToParent) => {
     ws.instance.send({
       operation: 'stopDebug',
       ...commonWsParams.value,
     });
-    TagsViewStore.closeAllChildViews(TagsViewStore.getViewByRoute(route)?.id, router);
     debug.isDebugging = false;
+    TagsViewStore.closeAllChildViews(tagId);
+    const rootDebugView = TagsViewStore.getViewById(tagId);
+    if (rootDebugView && isToParent) {
+      router.push(rootDebugView.fullPath);
+    }
   };
 
   const handleBreakPointStep = () => {
@@ -663,7 +668,7 @@
   onBeforeUnmount(() => {
     refreshCounter.counter = null;
     if (!ws.instance) return;
-    ['debug'].includes(props.editorType) && handleStopDebug();
+    ['debug'].includes(props.editorType) && handleStopDebug(false);
     ['debugChild'].includes(props.editorType) && !alreadyCloseWindow.value && handleStepOut(true);
     if (['debugChild'].includes(props.editorType)) {
       TagsViewStore.updateStepIntoChildStatusById(ws.parentId, false);
