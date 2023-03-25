@@ -17,14 +17,29 @@ import org.springframework.stereotype.Service;
 public class MigrationHostPortalInstallServiceImpl extends ServiceImpl<MigrationHostPortalInstallMapper, MigrationHostPortalInstall> implements MigrationHostPortalInstallHostService {
 
     @Override
-    public void saveRecord(String hostId,Integer status) {
+    public void saveRecord(String hostId, String hostUserId, String host, Integer port, String user, String password, String installPath, Integer status) {
+
         MigrationHostPortalInstall pi = getOneByHostId(hostId);
         if (pi == null) {
             pi = new MigrationHostPortalInstall();
         }
         pi.setRunHostId(hostId);
+        pi.setHost(host);
+        pi.setPort(port);
+        pi.setRunUser(user);
+        pi.setRunPassword(password);
+        pi.setInstallPath(installPath);
         pi.setInstallStatus(status);
+        pi.setHostUserId(hostUserId);
         this.saveOrUpdate(pi);
+    }
+
+    @Override
+    public void updateStatus(String hostId, Integer status) {
+        MigrationHostPortalInstall pi = getOneByHostId(hostId);
+        pi.setRunHostId(hostId);
+        pi.setInstallStatus(status);
+        this.updateById(pi);
     }
 
     @Override

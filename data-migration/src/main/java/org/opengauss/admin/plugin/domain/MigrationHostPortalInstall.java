@@ -22,5 +22,15 @@ public class MigrationHostPortalInstall {
 
     private String runHostId;
 
+    // 0 ：not install  1：installing；2：Installed；10：install error
     private Integer installStatus;
+
+    private String installPath;
+
+    private String hostUserId;
+
+    private String host;
+    private Integer port;
+    private String runUser;
+    private String runPassword;
 }

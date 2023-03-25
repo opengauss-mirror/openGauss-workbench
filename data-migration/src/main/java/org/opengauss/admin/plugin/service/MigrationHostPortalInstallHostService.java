@@ -10,7 +10,9 @@ import org.opengauss.admin.plugin.domain.MigrationHostPortalInstall;
 public interface MigrationHostPortalInstallHostService extends IService<MigrationHostPortalInstall> {
 
 
-    void saveRecord(String hostId, Integer status);
+    void saveRecord(String hostId,String hostUserId,  String host, Integer port, String user, String password, String installPath, Integer status);
+
+    void updateStatus(String hostId, Integer status);
 
     MigrationHostPortalInstall getOneByHostId(String hostId);
 }

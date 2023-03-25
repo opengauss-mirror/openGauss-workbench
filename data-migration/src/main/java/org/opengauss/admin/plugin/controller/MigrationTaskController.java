@@ -2,13 +2,13 @@ package org.opengauss.admin.plugin.controller;
 
 import cn.hutool.core.date.DateUtil;
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.annotation.Log;
 import org.opengauss.admin.common.core.domain.AjaxResult;
 import org.opengauss.admin.common.core.page.TableDataInfo;
 import org.opengauss.admin.common.enums.BusinessType;
 import org.opengauss.admin.common.utils.StringUtils;
 import org.opengauss.admin.plugin.base.BaseController;
-import org.opengauss.admin.plugin.domain.MainTaskEnvErrorHost;
 import org.opengauss.admin.plugin.domain.MigrationMainTask;
 import org.opengauss.admin.plugin.domain.MigrationTask;
 import org.opengauss.admin.plugin.dto.MigrationMainTaskDto;
@@ -17,17 +17,13 @@ import org.opengauss.admin.plugin.handler.PortalHandle;
 import org.opengauss.admin.plugin.service.MainTaskEnvErrorHostService;
 import org.opengauss.admin.plugin.service.MigrationMainTaskService;
 import org.opengauss.admin.plugin.service.MigrationTaskService;
+import org.opengauss.admin.plugin.utils.FileUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletResponse;
-import java.io.BufferedInputStream;
-import java.io.FileInputStream;
-import java.io.IOException;
+import java.io.BufferedOutputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
@@ -38,6 +34,7 @@ import java.util.Date;
  **/
 @RestController
 @RequestMapping("/migration")
+@Slf4j
 public class MigrationTaskController extends BaseController {
 
     @Autowired
@@ -199,18 +196,14 @@ public class MigrationTaskController extends BaseController {
         }
         byte[] bytes = logContent.getBytes(StandardCharsets.UTF_8);
         String logName = filePath.substring(filePath.lastIndexOf("/") + 1);
-        String date = DateUtil.format(new Date(), "yyyyMMdd");
+        String date = DateUtil.format(new Date(), "yyyyMMddhhmmss");
         String filename = "log_" + id + "_" + date + "_" + logName;
-
-        response.reset();
-        response.setContentType("application/octet-stream");
-        response.setCharacterEncoding("utf-8");
-        response.setContentLength(bytes.length);
-        response.setHeader("Content-Disposition", "attachment;filename=" + filename);
-
-        OutputStream os = response.getOutputStream();
-        os.write(bytes);
-        os.flush();
+        response.setContentType(MediaType.APPLICATION_OCTET_STREAM_VALUE);
+        FileUtils.setAttachmentResponseHeader(response, filename);
+        OutputStream output = new BufferedOutputStream(response.getOutputStream());
+        output.write(bytes);
+        output.flush();
+        output.close();
     }
 
 }

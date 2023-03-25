@@ -7,11 +7,12 @@
     <resultMap id="MigrationTaskResult" type="org.opengauss.admin.plugin.domain.MigrationHostPortalInstall">
         <id property="id" column="id"/>
         <result property="runHostId" column="run_host_id"/>
-        <result property="runHost" column="run_host"/>
-        <result property="runPort" column="run_port"/>
-        <result property="runUser" column="run_user"/>
-        <result property="runPass" column="run_port"/>
+        <result property="host" column="host"/>
+        <result property="port" column="port"/>
+        <result property="user" column="user"/>
+        <result property="password" column="password"/>
         <result property="installStatus" column="install_status"/>
+        <result property="installPath" column="install_path"/>
     </resultMap>
 
 </mapper>
