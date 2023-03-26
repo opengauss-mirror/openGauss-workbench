@@ -43,7 +43,8 @@
                   (item.publicIp ? item.publicIp : '--') + ')'
                 }}</a-option>
               </a-select>
-              <icon-code-square :size="25" style="cursor: pointer;" @click="showTerminal(formItem, index)"/>
+              <icon-code-square :size="25" class="label-color" style="cursor: pointer;"
+                @click="showTerminal(formItem, index)" />
             </a-form-item>
             <a-form-item v-if="formItem.isNeedPwd" field="rootPassword" :label="$t('enterprise.NodeConfig.else2')"
               validate-trigger="blur">
