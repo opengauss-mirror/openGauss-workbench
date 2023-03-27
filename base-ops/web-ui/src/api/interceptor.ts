@@ -17,7 +17,7 @@ export interface HttpResponse<T = unknown> {
 
 // axios.defaults.baseURL = 'http://47.95.39.132:9494/'
 axios.defaults.baseURL = process.env.VUE_APP_BASE_API || ''
-axios.defaults.timeout = 120000
+axios.defaults.timeout = 1200000
 
 let isTimeout = false
 

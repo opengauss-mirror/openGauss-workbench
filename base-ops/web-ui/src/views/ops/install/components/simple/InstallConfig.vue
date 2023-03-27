@@ -5,54 +5,52 @@
         <div class="label-color ft-b mb">{{ $t('simple.InstallConfig.5mpmu0lapic0') }}</div>
         <a-form :model="data.form" :rules="data.rules" :style="{ width: '800px' }" ref="formRef">
           <a-form-item field="clusterId" :label="$t('simple.InstallConfig.5mpmu0laqc80')" validate-trigger="blur">
-            <a-input v-model="data.form.clusterId" :placeholder="$t('simple.InstallConfig.5mpmu0laqiw0')"/>
+            <a-input v-model="data.form.clusterId" :placeholder="$t('simple.InstallConfig.5mpmu0laqiw0')" />
           </a-form-item>
           <a-form-item field="hostId" :label="$t('simple.InstallConfig.5mpmu0laqow0')">
-            <a-select :loading="hostListLoading" v-model="data.form.hostId" @change="changeHostId" class="mr-s" allow-clear
-                      :placeholder="$t('simple.InstallConfig.5mpmu0laqss0')" @popup-visible-change="hostPopupChange">
+            <a-select :loading="hostListLoading" v-model="data.form.hostId" @change="changeHostId" class="mr-s"
+              allow-clear :placeholder="$t('simple.InstallConfig.5mpmu0laqss0')" @popup-visible-change="hostPopupChange">
               <a-option v-for="item in hostList" :key="item.hostId" :value="item.hostId">{{
-                  item.privateIp
-                  + '(' +
-                  (item.publicIp ? item.publicIp : '--') + ')'
-                }}
+                item.privateIp
+                + '(' +
+                (item.publicIp ? item.publicIp : '--') + ')'
+              }}
               </a-option>
             </a-select>
-            <icon-code-square :size="25" style="cursor: pointer;" @click="showTerminal"/>
+            <icon-code-square :size="25" class="label-color" style="cursor: pointer;" @click="showTerminal" />
           </a-form-item>
           <a-form-item v-if="data.isNeedPwd" field="rootPassword" :label="$t('simple.InstallConfig.else1')"
-                       validate-trigger="blur">
+            validate-trigger="blur">
             <a-input-password v-model="data.form.rootPassword" :placeholder="$t('simple.InstallConfig.5mpmu0laqwo0')"
-                              allow-clear/>
+              allow-clear />
           </a-form-item>
           <a-form-item field="installUserId" :label="$t('simple.InstallConfig.5mpmu0lar0c0')">
             <a-select :loading="installUserLoading" v-model="data.form.installUserId"
-                      @popup-visible-change="hostUserPopupChange">
+              @popup-visible-change="hostUserPopupChange">
               <a-option v-for="item in userListByHost" :key="item.hostUserId" :value="item.hostUserId">{{
-                  item.username
-                }}
+                item.username
+              }}
               </a-option>
             </a-select>
           </a-form-item>
           <a-form-item field="installPath" :label="$t('simple.InstallConfig.5mpmu0lar480')" validate-trigger="blur">
-            <a-input v-model="data.form.installPath" :placeholder="$t('simple.InstallConfig.5mpmu0lar800')"/>
+            <a-input v-model="data.form.installPath" :placeholder="$t('simple.InstallConfig.5mpmu0lar800')" />
           </a-form-item>
           <a-form-item v-if="installType !== 'import'" field="installPackagePath"
-                       :label="$t('simple.InstallConfig.else6')" validate-trigger="blur">
-            <a-input v-model="data.form.installPackagePath" :placeholder="$t('simple.InstallConfig.else7')"/>
+            :label="$t('simple.InstallConfig.else6')" validate-trigger="blur">
+            <a-input v-model="data.form.installPackagePath" :placeholder="$t('simple.InstallConfig.else7')" />
           </a-form-item>
           <a-form-item field="port" :label="$t('simple.InstallConfig.5mpmu0larj40')" validate-trigger="blur">
-            <a-input-number v-model="data.form.port" :placeholder="$t('simple.InstallConfig.5mpmu0larmo0')"/>
+            <a-input-number v-model="data.form.port" :placeholder="$t('simple.InstallConfig.5mpmu0larmo0')" />
           </a-form-item>
           <a-form-item field="databaseUsername" :label="$t('simple.InstallConfig.5mpmu0larq40')" validate-trigger="blur"
-                       v-if="installType === 'import'">
+            v-if="installType === 'import'">
             <a-input v-model="data.form.databaseUsername" :placeholder="$t('simple.InstallConfig.5mpmu0larto0')"
-                     allow-clear/>
+              allow-clear />
           </a-form-item>
-          <a-form-item field="databasePassword" :label="$t('simple.InstallConfig.5mpmu0larx00')"
-                       validate-trigger="blur">
-            <a-input-password v-model="data.form.databasePassword"
-                              :placeholder="$t('simple.InstallConfig.5mpmu0las0k0')"
-                              allow-clear/>
+          <a-form-item field="databasePassword" :label="$t('simple.InstallConfig.5mpmu0larx00')" validate-trigger="blur">
+            <a-input-password v-model="data.form.databasePassword" :placeholder="$t('simple.InstallConfig.5mpmu0las0k0')"
+              allow-clear />
           </a-form-item>
           <!-- <a-form-item v-if="installType === 'import'" field="isEnvSeparate" :label="$t('simple.InstallConfig.else11')"
             validate-trigger="blur">
@@ -70,19 +68,19 @@
 </template>
 
 <script lang="ts" setup>
-import {computed, onMounted, reactive, ref, inject} from 'vue'
-import {MiniNodeConfig, MinimalistInstallConfig, ClusterRoleEnum} from '@/types/ops/install'
-import {KeyValue} from '@/types/global'
+import { computed, onMounted, reactive, ref, inject } from 'vue'
+import { MiniNodeConfig, MinimalistInstallConfig, ClusterRoleEnum } from '@/types/ops/install'
+import { KeyValue } from '@/types/global'
 
-import {useOpsStore} from '@/store'
-import {FormInstance} from '@arco-design/web-vue/es/form'
-import {hostListAll, hostUserListWithoutRoot, hasName, portUsed, pathEmpty, fileExist, hostPingById} from '@/api/ops'
-import {encryptPassword} from '@/utils/jsencrypt'
-import {Message} from '@arco-design/web-vue'
-import {useI18n} from 'vue-i18n'
+import { useOpsStore } from '@/store'
+import { FormInstance } from '@arco-design/web-vue/es/form'
+import { hostListAll, hostUserListWithoutRoot, hasName, portUsed, pathEmpty, fileExist, hostPingById } from '@/api/ops'
+import { encryptPassword } from '@/utils/jsencrypt'
+import { Message } from '@arco-design/web-vue'
+import { useI18n } from 'vue-i18n'
 import HostTerminal from '@/views/ops/install/components/hostTerminal/HostTerminal.vue'
 
-const {t} = useI18n()
+const { t } = useI18n()
 const installStore = useOpsStore()
 const data = reactive({
   isNeedPwd: false,
@@ -137,7 +135,7 @@ const initData = () => {
     hostId: [{ required: true, 'validate-trigger': 'change', message: t('simple.InstallConfig.5mpmu0laqss0') }],
     installUserId: [{ required: true, 'validate-trigger': 'change', message: t('lightweight.InstallConfig.5mpmkfqy9yo0') }],
     clusterId: [
-      {required: true, 'validate-trigger': 'blur', message: t('simple.InstallConfig.5mpmu0laqiw0')},
+      { required: true, 'validate-trigger': 'blur', message: t('simple.InstallConfig.5mpmu0laqiw0') },
       {
         validator: (value: any, cb: any) => {
           return new Promise(resolve => {
@@ -166,7 +164,7 @@ const initData = () => {
       }
     ],
     port: [
-      {required: true, 'validate-trigger': 'blur', message: t('simple.InstallConfig.5mpmu0larmo0')},
+      { required: true, 'validate-trigger': 'blur', message: t('simple.InstallConfig.5mpmu0larmo0') },
       {
         validator: (value: any, cb: any) => {
           return new Promise(resolve => {
@@ -183,7 +181,7 @@ const initData = () => {
       }
     ],
     rootPassword: [
-      {required: true, 'validate-trigger': 'blur', message: t('simple.InstallConfig.5mpmu0laqwo0')},
+      { required: true, 'validate-trigger': 'blur', message: t('simple.InstallConfig.5mpmu0laqwo0') },
       {
         validator: (value: any, cb: any) => {
           return new Promise(resolve => {
@@ -198,7 +196,7 @@ const initData = () => {
       }
     ],
     installPath: [
-      {required: true, 'validate-trigger': 'blur', message: t('simple.InstallConfig.5mpmu0lar800')},
+      { required: true, 'validate-trigger': 'blur', message: t('simple.InstallConfig.5mpmu0lar800') },
       {
         validator: (value: any, cb: any) => {
           return new Promise(resolve => {
@@ -213,7 +211,7 @@ const initData = () => {
       }
     ],
     envPath: [
-      {required: true, 'validate-trigger': 'blur', message: t('simple.InstallConfig.else10')},
+      { required: true, 'validate-trigger': 'blur', message: t('simple.InstallConfig.else10') },
       {
         validator: (value: any, cb: any) => {
           return new Promise(resolve => {
@@ -228,7 +226,7 @@ const initData = () => {
       }
     ],
     installPackagePath: [
-      {required: true, 'validate-trigger': 'blur', message: t('simple.InstallConfig.else7')},
+      { required: true, 'validate-trigger': 'blur', message: t('simple.InstallConfig.else7') },
       {
         validator: (value: any, cb: any) => {
           return new Promise(resolve => {
@@ -243,7 +241,7 @@ const initData = () => {
       }
     ],
     dataPath: [
-      {required: true, 'validate-trigger': 'blur', message: t('simple.InstallConfig.5mpmu0larew0')},
+      { required: true, 'validate-trigger': 'blur', message: t('simple.InstallConfig.5mpmu0larew0') },
       {
         validator: (value: any, cb: any) => {
           return new Promise(resolve => {
@@ -258,7 +256,7 @@ const initData = () => {
       }
     ],
     databaseUsername: [
-      {required: true, 'validate-trigger': 'blur', message: t('simple.InstallConfig.5mpmu0larto0')},
+      { required: true, 'validate-trigger': 'blur', message: t('simple.InstallConfig.5mpmu0larto0') },
       {
         validator: (value: any, cb: any) => {
           return new Promise(resolve => {
@@ -273,7 +271,7 @@ const initData = () => {
       }
     ],
     databasePassword: [
-      {required: true, 'validate-trigger': 'blur', message: t('simple.InstallConfig.5mpmu0las0k0')},
+      { required: true, 'validate-trigger': 'blur', message: t('simple.InstallConfig.5mpmu0las0k0') },
       {
         validator: (value: any, cb: any) => {
           return new Promise(resolve => {
@@ -370,7 +368,7 @@ const saveStore = () => {
   const param = JSON.parse(JSON.stringify(data.form))
   param.clusterRole = ClusterRoleEnum.MASTER
   param.clusterName = ''
-  installStore.setInstallContext({clusterId: param.clusterId, envPath: param.envPath})
+  installStore.setInstallContext({ clusterId: param.clusterId, envPath: param.envPath })
   const miniConfig = {
     clusterName: '',
     port: param.port,

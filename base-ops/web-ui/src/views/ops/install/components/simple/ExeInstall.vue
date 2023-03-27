@@ -10,59 +10,69 @@
       </div>
       <div class="flex-row">
         <a-button type="outline" class="mr" @click="goHome">{{
-            $t('simple.ExeInstall.5mpmsp16pp80')
-          }}
+          $t('simple.ExeInstall.5mpmsp16pp80')
+        }}
         </a-button>
         <a-button type="primary" @click="goOps">{{
-            $t('simple.ExeInstall.5mpmsp16pxs0')
-          }}
+          $t('simple.ExeInstall.5mpmsp16pxs0')
+        }}
         </a-button>
       </div>
     </div>
-    <div class="flex-row full-w teminal-h" v-else>
-      <div :class="`flex-col-start mr panel-w`" :style="exeResult === exeResultEnum.FAIL ? '':'width: 100%'">
-        <a-alert class="mb" style="padding: 14px 12px;width: fit-content;" type="error"
-                 v-if="exeResult === exeResultEnum.FAIL">
-          {{ $t('simple.ExeInstall.5mpmsp16q5o0') }}
-        </a-alert>
-        <a-alert type="warning" class="mb" style="padding: 14px 12px;width: fit-content;"
-                 v-if="exeResult === exeResultEnum.UN_INSTALL">{{ $t('simple.ExeInstall.5mpmsp16qhc0') }}
-          {{ $t('simple.ExeInstall.5mpmsp16qr80') }}
-        </a-alert>
-        <div id="xtermLog" class="xterm"></div>
-      </div>
-      <div :class="`flex-col-start panel-w`" v-if="exeResult === exeResultEnum.FAIL">
-        <div class="full-w flex-between mb">
-          <a-select style="width: 300px" v-model="hostId">
-            <a-option v-for="(item, index) in hosts" :key="index" :value="item.hostId" :label="item.privateIp">
-            </a-option>
-          </a-select>
-          <div>
-            <a-button type="primary" @click="retryInstall" class="mr-s">{{ $t('simple.ExeInstall.5mpmsp16qzc0') }}</a-button>
-            <a-button type="primary" @click="handleDownloadLog">{{
+    <div class="flex-col-start full-h full-w" v-else>
+      <a-steps small type="arrow" style="width: 100%;" class="mb" :current="data.installStepNum"
+        :status="data.currentStatus">
+        <a-step>{{ $t('simple.ExeInstall.else1') }}</a-step>
+        <a-step>{{ $t('simple.ExeInstall.else2') }}</a-step>
+        <a-step>{{ $t('simple.ExeInstall.else3') }}</a-step>
+        <a-step>{{ $t('simple.ExeInstall.else4') }}</a-step>
+      </a-steps>
+      <div class="flex-row full-w teminal-h">
+        <div :class="`flex-col-start mr panel-w`" :style="exeResult === exeResultEnum.FAIL ? '' : 'width: 100%'">
+          <a-alert class="mb" style="padding: 15px 12px;width: fit-content;" type="error"
+            v-if="exeResult === exeResultEnum.FAIL">
+            {{ $t('simple.ExeInstall.5mpmsp16q5o0') }}
+          </a-alert>
+          <a-alert type="warning" class="mb" style="padding: 15px 12px;width: fit-content;"
+            v-if="exeResult === exeResultEnum.UN_INSTALL">{{ $t('simple.ExeInstall.5mpmsp16qhc0') }}
+            {{ $t('simple.ExeInstall.5mpmsp16qr80') }}
+          </a-alert>
+          <div id="xtermLog" class="xterm"></div>
+        </div>
+        <div :class="`flex-col-start panel-w`" v-if="exeResult === exeResultEnum.FAIL">
+          <div class="full-w flex-between mb">
+            <a-select style="width: 300px" v-model="hostId">
+              <a-option v-for="(item, index) in hosts" :key="index" :value="item.hostId" :label="item.privateIp">
+              </a-option>
+            </a-select>
+            <div>
+              <a-button type="primary" @click="retryInstall" class="mr-s">{{ $t('simple.ExeInstall.5mpmsp16qzc0')
+              }}</a-button>
+              <a-button type="primary" @click="handleDownloadLog">{{
                 $t('components.openLooKeng.5mpiji1qpcc65')
               }}
-            </a-button>
+              </a-button>
+            </div>
           </div>
+          <div id="xterm" class="xterm"></div>
         </div>
-        <div id="xterm" class="xterm"></div>
       </div>
     </div>
   </div>
 </template>
 
 <script lang="ts" setup>
-import {computed, inject, nextTick, onBeforeUnmount, onMounted, ref} from 'vue'
+import { reactive, computed, inject, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import 'xterm/css/xterm.css'
-import {Terminal} from 'xterm'
-import {FitAddon} from 'xterm-addon-fit'
-import {AttachAddon} from 'xterm-addon-attach'
-import {openSSH, installOpenGauss} from '@/api/ops'
-import {WsConnectType} from '@/types/ops/install'
-import {useOpsStore} from '@/store'
-import {KeyValue} from '@/types/global'
+import { Terminal } from 'xterm'
+import { FitAddon } from 'xterm-addon-fit'
+import { AttachAddon } from 'xterm-addon-attach'
+import { openSSH, installOpenGauss } from '@/api/ops'
+import { WsConnectType } from '@/types/ops/install'
+import { useOpsStore } from '@/store'
+import { KeyValue } from '@/types/global'
 import Socket from '@/utils/websocket'
-import {encryptPassword} from '@/utils/jsencrypt'
+import { encryptPassword } from '@/utils/jsencrypt'
 import dayjs from "dayjs";
 
 const installStore = useOpsStore()
@@ -70,6 +80,11 @@ const hostId = ref('')
 const hosts = ref<any[]>([])
 const hostObj = ref<KeyValue>({})
 const dataPassword = ref('')
+
+const data = reactive<KeyValue>({
+  installStepNum: 1,
+  currentStatus: 'process'
+})
 
 enum exeResultEnum {
   UN_INSTALL = Number(-1),
@@ -120,6 +135,8 @@ const retryInstall = () => {
   if (termLog.value) {
     termLog.value.dispose()
   }
+  data.installStepNum = 1
+  data.currentStatus = 'process'
   // exeResult.value = exeResultEnum.UN_INSTALL
   openLogSocket()
 }
@@ -142,7 +159,7 @@ const getTermObj = (): Terminal => {
 const openSocket = () => {
   const term = getTermObj()
   const socketKey = new Date().getTime()
-  const terminalSocket = new Socket({url: `terminal_${socketKey}`})
+  const terminalSocket = new Socket({ url: `terminal_${socketKey}` })
   terminalWs.value = terminalSocket
   terminalSocket.onopen(() => {
     const param = {
@@ -164,9 +181,10 @@ const openSocket = () => {
 }
 
 const openLogSocket = () => {
+  let temp = false
   const term = getTermObj()
   const socketKey = new Date().getTime()
-  const logSocket = new Socket({url: `installLog_${socketKey}`})
+  const logSocket = new Socket({ url: `installLog_${socketKey}` })
   terminalLogWs.value = logSocket
   logSocket.onopen(async () => {
     loadingFunc.toLoading()
@@ -197,11 +215,29 @@ const openLogSocket = () => {
     localStorage.removeItem('Static-pluginBase-opsOpsInstall')
   })
   logSocket.onmessage((messageData: any) => {
-    term.writeln(messageData)
+    console.log('show term message', messageData)
+    if (temp) {
+      term.write('\x1b[2K\r')
+      if (messageData === '100%') {
+        term.writeln(messageData)
+      } else {
+        term.write(messageData)
+      }
+    } else {
+      term.writeln(messageData)
+    }
+    if (messageData === 'START_SCP_INSTALL_PACKAGE') {
+      temp = true
+    }
+    if (messageData === 'END_SCP_INSTALL_PACKAGE') {
+      temp = false
+    }
     logs.value += messageData + '\r\n'
+    syncStepNumber(messageData)
     if (messageData.indexOf('FINAL_EXECUTE_EXIT_CODE') > -1) {
       const flag = Number(messageData.split(':')[1])
       if (flag === 0) {
+        data.installStepNum = 8
         loadingFunc.setBackBtnShow(false)
         loadingFunc.setNextBtnShow(false)
         exeResult.value = exeResultEnum.SUCESS
@@ -209,6 +245,7 @@ const openLogSocket = () => {
           termLog.value?.dispose()
         }
       } else {
+        data.currentStatus = 'error'
         loadingFunc.cancelLoading()
         exeResult.value = exeResultEnum.FAIL
 
@@ -225,6 +262,23 @@ const openLogSocket = () => {
       logSocket.destroy()
     }
   })
+}
+
+const syncStepNumber = (messageData: string) => {
+  switch (messageData) {
+    case 'CREATE_INSTALL_USER':
+      data.installStepNum = 1
+      break
+    case 'START_SCP_INSTALL_PACKAGE':
+      data.installStepNum = 2
+      break
+    case 'START_EXE_INSTALL_COMMAND':
+      data.installStepNum = 3
+      break
+    case 'SAVE_INSTALL_CONTEXT':
+      data.installStepNum = 4
+      break
+  }
 }
 
 const initTermLog = (term: Terminal, ws: WebSocket | undefined) => {
@@ -280,7 +334,7 @@ const handleDownloadLog = () => {
   const time = dayjs().format('YYYY-MM-DD_HH:mm:ss')
   const filename = `ops_${time}.log`
 
-  const blob = new Blob([logs.value], {type: 'text/plain'})
+  const blob = new Blob([logs.value], { type: 'text/plain' })
   const url = URL.createObjectURL(blob)
 
   const link = document.createElement('a')
@@ -316,7 +370,7 @@ const handleDownloadLog = () => {
   }
 
   .teminal-h {
-    height: calc(100% - 60px);
+    height: calc(100% - 60px - 60px);
   }
 
   .xterm {

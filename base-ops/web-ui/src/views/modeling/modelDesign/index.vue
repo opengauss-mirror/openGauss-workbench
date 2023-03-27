@@ -1,7 +1,7 @@
 <template>
   <div class="app-container">
     <div class="main-bd">
-      <div class="upgrade-container">
+      <div class="model-container">
         <svg-icon icon-class="developing" class="icon-size mb"></svg-icon>
         <div class="content ft-lg">{{ $t('upgrade.index.5mpn9zse2vc0') }}</div>
       </div>
@@ -17,7 +17,7 @@
   .main-bd {
     position: relative;
 
-    .upgrade-container {
+    .model-container {
       width: 100%;
       height: 100%;
       display: flex;

@@ -37,8 +37,8 @@
       <div v-if="status !== statusEnum.SUCCESS" id="xterm" class="xterm"></div>
       <div class="flex-col full-w full-h" v-else>
         <svg-icon class="succ-icon-size mb" icon-class="ops-install-success"></svg-icon>
-        <div class="mb-lg ft-b">{{ $t('simpleInstall.index.5mpn813gvqo0') }}</div>
-        <div class="install-connect-c flex-col mb-xlg">
+        <div class="mb-lg ft-b label-color">{{ $t('simpleInstall.index.5mpn813gvqo0') }}</div>
+        <div class="install-connect-c flex-col mb-xlg label-color">
           <div class="mb">{{ $t('components.openLooKeng.5mpiji1qpcc68') }}</div>
         </div>
         <div class="flex-row">
