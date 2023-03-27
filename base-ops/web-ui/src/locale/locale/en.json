@@ -657,6 +657,16 @@
             "5mpmgwswkwg0": "Cascading"
         },
         "ExeInstall": {
+            "else1": "Environmental preparation",
+            "else2": "Installation package preparation",
+            "else3": "Perform the installation",
+            "else4": "Post-installation processing",
+            "else5": "Master Environmental preparation",
+            "else6": "Master Installation package preparation",
+            "else7": "Master Perform the installation",
+            "else8": "Slave Environmental preparation",
+            "else9": "Slave Installation package preparation",
+            "else10": "Slave Perform the installation",
             "5mpmjd1mam40": "Congratulations on successful installation",
             "5mpmjd1mbdc0": "Please keep the user name and password properly",
             "5mpmjd1mbo00": "Database user",
@@ -738,6 +748,10 @@
             "5mpmqpcxn5o0": "Cascading"
         },
         "ExeInstall": {
+            "else1": "Environmental preparation",
+            "else2": "Installation package preparation",
+            "else3": "Perform the installation",
+            "else4": "Post-installation processing",
             "5mpmsp16nuo0": "Congratulations on your successful installation",
             "5mpmsp16oy40": "Please keep the user name and password properly",
             "5mpmsp16pb40": "Database user",

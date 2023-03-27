@@ -20,18 +20,18 @@
     <div class="flex-col-start full-h full-w" v-else>
       <a-steps small type="arrow" style="width: 100%;" class="mb" :current="data.installStepNum"
         :status="data.currentStatus">
-        <a-step>环境准备</a-step>
-        <a-step>安装包准备</a-step>
-        <a-step>执行安装</a-step>
-        <a-step>安装后处理</a-step>
+        <a-step>{{ $t('simple.ExeInstall.else1') }}</a-step>
+        <a-step>{{ $t('simple.ExeInstall.else2') }}</a-step>
+        <a-step>{{ $t('simple.ExeInstall.else3') }}</a-step>
+        <a-step>{{ $t('simple.ExeInstall.else4') }}</a-step>
       </a-steps>
       <div class="flex-row full-w teminal-h">
         <div class="panel-w flex-col-start mr" :style="exeResult === exeResultEnum.FAIL ? '' : 'width: 100%'">
-          <a-alert class="mb" style="padding: 14px 12px;width: fit-content;" type="error"
+          <a-alert class="mb" style="padding: 15px 12px;width: fit-content;" type="error"
             v-if="exeResult === exeResultEnum.FAIL">
             {{ $t('enterprise.ExeInstall.5mpm9j35ahw0') }}
           </a-alert>
-          <a-alert class="mb" type="warning" style="padding: 14px 12px;width: fit-content;"
+          <a-alert class="mb" type="warning" style="padding: 15px 12px;width: fit-content;"
             v-if="exeResult === exeResultEnum.UN_INSTALL">{{ $t('enterprise.ExeInstall.5mpm9j35alg0') }}
             {{ $t('enterprise.ExeInstall.5mpm9j35ap00') }}</a-alert>
           <div id="xtermLog" class="xterm"></div>
@@ -51,7 +51,7 @@
               </a-button>
             </div>
           </div>
-          <div id="xterm" class="xterm"></div>
+          <div id="xterm" class="xterm1"></div>
         </div>
       </div>
     </div>
@@ -185,6 +185,7 @@ const openSocket = () => {
 }
 
 const openLogSocket = () => {
+  let temp = false
   const term = getTermObj()
   const socketKey = new Date().getTime()
   const logSocket = new Socket({ url: `installLog_${socketKey}` })
@@ -218,7 +219,22 @@ const openLogSocket = () => {
     localStorage.removeItem('Static-pluginBase-opsOpsInstall')
   })
   logSocket.onmessage((messageData: any) => {
-    term.writeln(messageData)
+    if (temp) {
+      term.write('\x1b[2K\r')
+      if (messageData === '100%') {
+        term.writeln(messageData)
+      } else {
+        term.write(messageData)
+      }
+    } else {
+      term.writeln(messageData)
+    }
+    if (messageData === 'START_SCP_INSTALL_PACKAGE') {
+      temp = true
+    }
+    if (messageData === 'END_SCP_INSTALL_PACKAGE') {
+      temp = false
+    }
     logs.value += messageData + '\r\n'
     syncStepNumber(messageData)
     if (messageData.indexOf('FINAL_EXECUTE_EXIT_CODE') > -1) {
@@ -336,7 +352,7 @@ const handleDownloadLog = () => {
 <style lang="less" scoped>
 .exe-install-c {
   width: 100%;
-  height: calc(100% - 28px - 42px);
+  height: calc(100% - 50px);
   overflow-y: auto;
 
   .install-connect-c {
@@ -357,6 +373,11 @@ const handleDownloadLog = () => {
   .xterm {
     width: 100%;
     height: 100%;
+  }
+
+  .xterm1 {
+    width: 100%;
+    height: 105%;
   }
 
   .icon-size {

@@ -2,7 +2,7 @@
   <div class="exe-install-c">
     <div class="flex-col full-w full-h" v-if="exeResult === exeResultEnum.SUCESS">
       <svg-icon icon-class="ops-install-success" class="icon-size mb"></svg-icon>
-      <div class="mb-lg">{{ $t('lightweight.ExeInstall.5mpmjd1mam40') }}</div>
+      <div class="label-color mb-lg">{{ $t('lightweight.ExeInstall.5mpmjd1mam40') }}</div>
       <div class="install-connect-c flex-col mb-xlg">
         <div class="ft-b mb">{{ $t('lightweight.ExeInstall.5mpmjd1mbdc0') }}</div>
         <div class="mb">{{ $t('lightweight.ExeInstall.5mpmjd1mbo00') }}: <span class="content">gaussdb</span></div>
@@ -20,28 +20,28 @@
     <div class="flex-col-start full-h full-w" v-else>
       <a-steps v-if="installStore.getInstallConfig.deployType === DeployTypeEnum.CLUSTER" small type="arrow"
         style="width: 100%;" class="mb" :current="data.installStepNum" :status="data.currentStatus">
-        <a-step>主节点环境准备</a-step>
-        <a-step>主节点安装包准备</a-step>
-        <a-step>主节点执行安装</a-step>
-        <a-step>备节点环境准备</a-step>
-        <a-step>备节点安装包准备</a-step>
-        <a-step>备节点执行安装</a-step>
-        <a-step>安装后处理</a-step>
+        <a-step>{{ $t('lightweight.ExeInstall.else5') }}</a-step>
+        <a-step>{{ $t('lightweight.ExeInstall.else6') }}</a-step>
+        <a-step>{{ $t('lightweight.ExeInstall.else7') }}</a-step>
+        <a-step>{{ $t('lightweight.ExeInstall.else8') }}</a-step>
+        <a-step>{{ $t('lightweight.ExeInstall.else9') }}</a-step>
+        <a-step>{{ $t('lightweight.ExeInstall.else10') }}</a-step>
+        <a-step>{{ $t('lightweight.ExeInstall.else4') }}</a-step>
       </a-steps>
       <a-steps v-else small type="arrow" style="width: 100%;" class="mb" :current="data.installStepNum"
         :status="data.currentStatus">
-        <a-step>环境准备</a-step>
-        <a-step>安装包准备</a-step>
-        <a-step>执行安装</a-step>
-        <a-step>安装后处理</a-step>
+        <a-step>{{ $t('lightweight.ExeInstall.else1') }}</a-step>
+        <a-step>{{ $t('lightweight.ExeInstall.else2') }}</a-step>
+        <a-step>{{ $t('lightweight.ExeInstall.else3') }}</a-step>
+        <a-step>{{ $t('lightweight.ExeInstall.else4') }}</a-step>
       </a-steps>
       <div class="flex-row full-w teminal-h">
         <div class="panel-w flex-col-start mr" :style="exeResult === exeResultEnum.FAIL ? '' : 'width: 100%'">
-          <a-alert class="mb" style="padding: 14px 12px;width: fit-content;" type="error"
+          <a-alert class="mb" style="padding: 15px 12px;width: fit-content;" type="error"
             v-if="exeResult === exeResultEnum.FAIL">
             {{ $t('lightweight.ExeInstall.5mpmjd1mcm40') }}
           </a-alert>
-          <a-alert class="mb" type="warning" style="padding: 14px 12px;width: fit-content;"
+          <a-alert class="mb" type="warning" style="padding: 15px 12px;width: fit-content;"
             v-if="exeResult === exeResultEnum.UN_INSTALL">{{ $t('lightweight.ExeInstall.5mpmjd1mcu40') }}
             {{ $t('lightweight.ExeInstall.5mpmjd1md2o0') }}</a-alert>
           <div id="xtermLog" class="xterm"></div>
@@ -61,7 +61,7 @@
               </a-button>
             </div>
           </div>
-          <div id="xterm" class="xterm"></div>
+          <div id="xterm" class="xterm1"></div>
         </div>
       </div>
     </div>
@@ -194,6 +194,7 @@ const openSocket = () => {
 }
 
 const openLogSocket = () => {
+  let temp = false
   const term = getTermObj()
   const socketKey = new Date().getTime()
   const logSocket = new Socket({ url: `installLog_${socketKey}` })
@@ -227,7 +228,22 @@ const openLogSocket = () => {
     localStorage.removeItem('Static-pluginBase-opsOpsInstall')
   })
   logSocket.onmessage((messageData: any) => {
-    term.writeln(messageData)
+    if (temp) {
+      term.write('\x1b[2K\r')
+      if (messageData === '100%') {
+        term.writeln(messageData)
+      } else {
+        term.write(messageData)
+      }
+    } else {
+      term.writeln(messageData)
+    }
+    if (messageData === 'START_SCP_INSTALL_PACKAGE') {
+      temp = true
+    }
+    if (messageData === 'END_SCP_INSTALL_PACKAGE') {
+      temp = false
+    }
     logs.value += messageData + '\r\n'
     if (installStore.getInstallConfig.deployType === DeployTypeEnum.SINGLE_NODE) {
       syncStepNumberSingle(messageData)
@@ -412,6 +428,11 @@ const handleDownloadLog = () => {
   .xterm {
     width: 100%;
     height: 100%;
+  }
+
+  .xterm1 {
+    width: 100%;
+    height: 105%;
   }
 
   .icon-size {
