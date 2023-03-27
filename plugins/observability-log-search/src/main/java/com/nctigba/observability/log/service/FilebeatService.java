@@ -96,6 +96,7 @@ public class FilebeatService extends AbstractInstaller {
 					throw new RuntimeException("host not found");
 				try (var session = SshSession.connect(hostEntity.getPublicIp(), hostEntity.getPort(), "root",
 						encryptionUtils.decrypt(rootPassword));) {
+					session.execute("chmod o+r /var/log/messages*");
 				} catch (Exception e) {
 					throw new RuntimeException("root password error");
 				}
