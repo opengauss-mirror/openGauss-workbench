@@ -132,7 +132,7 @@ const getListData = () => {
       item.value = item.clusterId
       item.label = item.clusterId
       item.clusterNodes && item.clusterNodes.forEach((item2: KeyValue) => {
-        item2.label = item2.azName + '_' + item2.publicIp
+        item2.label = item2.azName !== null ? `${item2.azName}_${item2.publicIp}` : item2.publicIp;
         item2.value = item2.nodeId
         let children = [] as KeyValue[]
         item2.dbName = JSON.parse(item2.dbName)
