@@ -184,7 +184,7 @@ mvn clean package -P prod
 
 **步骤 3：** 在target目录下找到生成的jar，安装到一体化平台。
 
-![](E:\code\yzh\pr0223\plugins\data-studio\photo\3.png)
+![](doc/3.png)
 
 ### 4.2 启动后端项目
 
