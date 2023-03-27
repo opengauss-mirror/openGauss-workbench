@@ -299,11 +299,17 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
 
         Integer total = tables.size() * 10 + views.size() + funcs.size() + triggers.size() + produces.size();
 
-        int tableFinishCount = Math.toIntExact(tables.stream().filter(m -> MapUtil.getInt(m, "status").equals(5)).count());
-        int viewFinishCount = Math.toIntExact(views.stream().filter(m -> MapUtil.getInt(m, "status").equals(5)).count());
-        int funcsFinishCount = Math.toIntExact(funcs.stream().filter(m -> MapUtil.getInt(m, "status").equals(5)).count());
-        int triggersFinishCount = Math.toIntExact(triggers.stream().filter(m -> MapUtil.getInt(m, "status").equals(5)).count());
-        int producesFinishCount = Math.toIntExact(produces.stream().filter(m -> MapUtil.getInt(m, "status").equals(5)).count());
+        Map<String, Integer> tableCounts = calculateDatabaseObjectCount(tables, 2);
+        Map<String, Integer> viewCounts = calculateDatabaseObjectCount(views, 1);
+        Map<String, Integer> funcCounts = calculateDatabaseObjectCount(funcs, 1);
+        Map<String, Integer> triggerCounts = calculateDatabaseObjectCount(triggers, 1);
+        Map<String, Integer> produceCounts = calculateDatabaseObjectCount(produces, 1);
+
+        int tableFinishCount = MapUtil.getInt(tableCounts, "runningCount");
+        int viewFinishCount = MapUtil.getInt(viewCounts, "runningCount");
+        int funcsFinishCount = MapUtil.getInt(funcCounts, "runningCount");
+        int triggersFinishCount = MapUtil.getInt(triggerCounts, "runningCount");
+        int producesFinishCount = MapUtil.getInt(produceCounts, "runningCount");
 
         Integer totalFinishCount = tableFinishCount * 10 + viewFinishCount + funcsFinishCount + triggersFinishCount + producesFinishCount;
         BigDecimal result = new BigDecimal(0);
