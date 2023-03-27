@@ -83,7 +83,11 @@
                   <div class="label-color mr-s">{{ $t('simpleInstall.index.5mpn813gvjk0') }}</div>
                   <div class="label-color">{{ data.privateIp }}</div>
                 </div>
-                <a-button type="primary" @click="retryInstall">{{ $t('simpleInstall.index.5mpn813gvmw0') }}</a-button>
+                <a-button type="primary" @click="retryInstall" class="mr-s">{{ $t('simpleInstall.index.5mpn813gvmw0') }}</a-button>
+                <a-button type="primary" @click="handleDownloadLog">{{
+                    $t('components.openLooKeng.5mpiji1qpcc65')
+                  }}
+                </a-button>
               </div>
               <div id="xterm" class="xterm"></div>
             </div>
@@ -130,6 +134,7 @@ import { FitAddon } from 'xterm-addon-fit'
 import { FormInstance } from '@arco-design/web-vue/es/form'
 import { encryptPassword } from '@/utils/jsencrypt'
 import { useI18n } from 'vue-i18n'
+import dayjs from "dayjs";
 const { t } = useI18n()
 const data = reactive<KeyValue>({
   state: -1, // -1 un install  0 installing  1 success  2 fail
@@ -168,6 +173,7 @@ const terminalWs = ref<Socket<any, any> | undefined>()
 
 const termLog = ref<Terminal>()
 const termTerminal = ref<Terminal>()
+const logs = ref<string>('')
 
 const formRules = computed(() => {
   return {
@@ -299,11 +305,13 @@ const openLogSocket = () => {
     localStorage.setItem('Static-pluginBase-opsOpsSimpleInstall', '1')
     initTermLog(term, logSocket.ws)
     exeInstall(logSocket, `simple_installLog_${socketKey}`, term)
+    logs.value = ''
   })
   logSocket.onclose(() => {
     localStorage.removeItem('Static-pluginBase-opsOpsSimpleInstall')
   })
   logSocket.onmessage((messageData: any) => {
+    logs.value += messageData
     syncStepNumber(messageData)
     if (messageData === 'START') {
       isProgress = true
@@ -598,6 +606,22 @@ const goOps = () => {
 const initData = () => {
   data.state = -1
   getHostList()
+}
+
+const handleDownloadLog = () => {
+  const time = dayjs().format('YYYY-MM-DD_HH:mm:ss')
+  const filename = `ops_${time}.log`
+
+  const blob = new Blob([logs.value], { type: 'text/plain' })
+  const url = URL.createObjectURL(blob)
+
+  const link = document.createElement('a')
+  link.href = url
+  link.download = filename
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+  URL.revokeObjectURL(url)
 }
 
 </script>
