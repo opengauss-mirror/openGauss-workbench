@@ -61,7 +61,6 @@ const open = (type: string, data?: KeyValue) => {
     name: [{ required: true, 'validate-trigger': 'blur', message: t('modeling.components.CU.5m6g1w13h7c0') }],
     id: [{ required: true, 'validate-trigger': 'blur', message: t('modeling.components.CU.5m6g1w13id80') }],
     dataBase: [{ required: true, 'validate-trigger': 'blur', message: t('modeling.components.CU.5m6g1w13hdo0') }],
-    tags: [{ required: true, 'validate-trigger': 'blur', message: t('modeling.components.CU.5m6g1w13hiw0') }],
     type: [{ required: true, 'validate-trigger': 'blur', message: t('modeling.components.CU.5m6g1w13ihs0') }],
     user: [{ required: true, 'validate-trigger': 'blur', message: t('modeling.components.CU.5m6g1w13ik00') }]
   }
@@ -149,7 +148,7 @@ const getSourceList = () => {
       item.value = item.clusterId
       item.label = item.clusterId
       item.clusterNodes && item.clusterNodes.forEach((item2: KeyValue) => {
-        item2.label = item2.azName + '_' + item2.publicIp
+        item2.label = item2.azName !== null ? `${item2.azName}_${item2.publicIp}` : item2.publicIp;
         item2.value = item2.nodeId
         let children = [] as KeyValue[]
         item2.dbName = JSON.parse(item2.dbName)
@@ -164,7 +163,6 @@ const getSourceList = () => {
       })
       item.children = item.clusterNodes
     })
-    console.log(res.data)
     sourceList.value = res.data
   })
 }
