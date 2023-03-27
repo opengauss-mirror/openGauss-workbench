@@ -83,11 +83,13 @@
                   <div class="label-color mr-s">{{ $t('simpleInstall.index.5mpn813gvjk0') }}</div>
                   <div class="label-color">{{ data.privateIp }}</div>
                 </div>
-                <a-button type="primary" @click="retryInstall" class="mr-s">{{ $t('simpleInstall.index.5mpn813gvmw0') }}</a-button>
-                <a-button type="primary" @click="handleDownloadLog">{{
-                    $t('components.openLooKeng.5mpiji1qpcc65')
-                  }}
-                </a-button>
+                <div>
+                  <a-button type="primary" @click="retryInstall" class="mr-s">{{ $t('simpleInstall.index.5mpn813gvmw0') }}</a-button>
+                  <a-button type="primary" @click="handleDownloadLog">{{
+                      $t('components.openLooKeng.5mpiji1qpcc65')
+                    }}
+                  </a-button>
+                </div>
               </div>
               <div id="xterm" class="xterm"></div>
             </div>
