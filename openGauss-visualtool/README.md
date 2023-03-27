@@ -119,7 +119,7 @@ openEuler 20.3LTS（x86_x64，ARM），centos7.x（x86_x64）
 2、手动清理数据库中所有的表和序列。
 ## 后端说明
 > 1、后端返回给前端的响应编码，统一在org.opengauss.admin.common.enums.ResponseCode中定义，按照规则划分模块，规则如下：
-+ 501xx 一体化模块；比如50101、50102
++ 501xx 平台模块；比如50101、50102
 
 ## 前端说明
 

@@ -317,7 +317,6 @@ const getSourceClusterDbsData = (nodeData) => {
 
 // get target db data
 const getTargetClusterDbsData = (nodeData) => {
-  console.log(nodeData)
   return targetClusterDbsData({
     azAddress: nodeData.azAddress,
     azName: nodeData.azName,
@@ -335,7 +334,7 @@ const getTargetClusterDbsData = (nodeData) => {
     publicIp: nodeData.publicIp,
     rootPassword: nodeData.rootPassword
   }).then(res => {
-    const data = res.data || []
+    const data = res.data.filter(item => item.dbName !== 'template0' && item.dbName !== 'template1')
     nodeData.children = data.map(item => {
       return {
         title: item.dbName,

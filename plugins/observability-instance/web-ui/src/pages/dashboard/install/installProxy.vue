@@ -243,13 +243,8 @@ const closeDialog = () => {
 
 // package info
 const refreshPkgInfo = () => {
-    let nodeInfoList = clusterList.value
-        ?.map((itme) => itme.clusterNodes)
-        .flat()
-        .filter((item) => item.nodeId === formData.nodeId);
-    if (nodeInfoList && nodeInfoList.length > 0) {
-        let hostId = nodeInfoList[0].hostId;
-        getPkgInfo(hostId);
+    if(formData.nodeId) {
+        getPkgInfo(formData.nodeId);
     }
 };
 
@@ -283,6 +278,9 @@ const upload = (action: any) => {
             showUpload.value = false;
             showProgress.value = false;
             progressPercent.value = 0;
+            if(!fileList.value || fileList.value.length === 0) {
+                fileList.value = [{name:pgkName.value,raw: action.file}]
+            }
             refreshPkgInfo();
         })
         .catch(function (res) {
