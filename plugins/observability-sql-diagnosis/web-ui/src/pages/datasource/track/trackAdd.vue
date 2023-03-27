@@ -187,11 +187,7 @@ const {
     () => {
         const msg = t('datasource.diagnosisAddTaskSuccess')
         return ogRequest
-            .post('/sqlDiagnosis/api/v1/diagnosisTasks', queryData.value, {
-                headers: {
-                    'content-type': 'multipart/form-data',
-                },
-            })
+            .post('/sqlDiagnosis/api/v1/diagnosisTasks', queryData.value)
             .then(function (res) {
                 ElMessage({
                     showClose: true,

@@ -4,13 +4,7 @@ import java.io.IOException;
 
 import javax.servlet.http.HttpServletResponse;
 
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.nctigba.common.web.config.ControllerConfig;
@@ -35,7 +29,7 @@ public class SQLDiagnosisController extends ControllerConfig {
 	private final LocaleString localeToString;
 
 	@PostMapping("")
-	public Task start(TaskDTO task) {
+	public Task start(@RequestBody TaskDTO task) {
 		return diagnosisService.start(task.toTask());
 	}
 

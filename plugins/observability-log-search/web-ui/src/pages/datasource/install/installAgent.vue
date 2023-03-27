@@ -317,6 +317,9 @@ const upload = (action: any) => {
             showProgress.value = false;
             showUpload.value = false;
             progressPercent.value = 0;
+            if(!fileList.value || fileList.value.length === 0) {
+                fileList.value = [{name:pgkName.value,raw: action.file}]
+            }
             refreshPkgInfo();
         })
         .catch(function (res) {
