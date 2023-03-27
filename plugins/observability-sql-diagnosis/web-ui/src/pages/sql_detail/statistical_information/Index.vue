@@ -64,8 +64,8 @@ watch(
         // eslint-disable-next-line camelcase
         const { cpu_time, wait_time, db_time } = res
         try {
-            const cpuTimeDb = (Number.parseInt(cpu_time) / Number.parseInt(db_time)) * 100
-            const waitTimeDb = (Number.parseInt(wait_time) / Number.parseInt(db_time)) * 100
+            const cpuTimeDb = db_time && db_time !== '0' && cpu_time && cpu_time !== '0' ? (Number.parseInt(cpu_time) / Number.parseInt(db_time)) * 100 : 0
+            const waitTimeDb = db_time && db_time !== '0' && wait_time && wait_time !== '0' ? (Number.parseInt(wait_time) / Number.parseInt(db_time)) * 100 : 0
             data.useTimeStatistical = [
                 {
                     name: 'waitTimeLabel',
