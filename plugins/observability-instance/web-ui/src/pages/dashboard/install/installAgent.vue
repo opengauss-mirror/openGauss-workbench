@@ -99,6 +99,7 @@ import moment from "moment";
 import { Plus, Warning } from "@element-plus/icons-vue";
 import type { UploadProps } from "element-plus";
 import restRequest from "../../../request/restful";
+import { el } from "element-plus/es/locale";
 const { t } = useI18n();
 
 const visible = ref(false);
@@ -285,6 +286,8 @@ const refreshPkgInfo = () => {
 };
 
 const showUpload = ref<boolean>(false);
+const nodeFileList = ref<any[]>();
+const ogFileList = ref<any[]>();
 const fileList = ref<any[]>();
 const pgkName = ref<string>();
 const pgkType = ref<string>();
@@ -295,6 +298,11 @@ const showUploadFile = (_type: string, _pgkName: string) => {
     showUpload.value = true;
     pgkName.value = _pgkName;
     pgkType.value = _type;
+    if(pgkType.value === 'node') {
+        fileList.value = nodeFileList.value
+    }else {
+        fileList.value = ogFileList.value
+    }
 };
 const upload = (action: any) => {
     if (!action) {
@@ -316,6 +324,13 @@ const upload = (action: any) => {
             showUpload.value = false;
             showProgress.value = false;
             progressPercent.value = 0;
+            if(pgkType.value === 'node') {
+                nodeFileList.value = [{name:pgkName.value,raw: action.file}]
+            }else {
+                ogFileList.value = [{name:pgkName.value,raw: action.file}]
+            }
+            console.log(action)
+            console.log(fileList.value)
             refreshPkgInfo();
         })
         .catch(function (res) {
@@ -324,6 +339,11 @@ const upload = (action: any) => {
 };
 const handleExceed: UploadProps["onExceed"] = (files, uploadFiles) => {
     fileList.value = files;
+    if(pgkType.value === 'node') {
+        nodeFileList.value = files
+    }else {
+        ogFileList.value = files
+    }
 };
 const uploadBefore = () => {
     fileList.value = [];
