@@ -238,6 +238,37 @@ window.$wujie?.bus.$on('opengauss-locale-change', val => {
 })
 ```
 
+### 前端其他公共事件
+
+- opengauss-menu-collapse，平台emit事件。当左侧导航收缩或展开时，插件页面需要监听此切换事件，做相应的样式处理，一般在入口文件监听即可，示例如下：
+
+```JavaScript
+const htmlStyle = document.getElementsByTagName('html')[0].style
+window.$wujie?.bus.$on('opengauss-menu-collapse', val => {
+  if (val === '1') {
+    htmlStyle.setProperty('padding-left', '64px', 'important')
+  } else {
+    htmlStyle.setProperty('padding-left', '236px', 'important')
+  }
+})
+```
+
+- opengauss-login-expired，平台on事件。当平台接收到插件页面的接口过期时，通知平台接口过期，需重新登录时使用，示例如下：
+
+```JavaScript
+// 一般在前端接口拦截器中使用
+window.$wujie?.bus.$emit('opengauss-login-expired')
+```
+
+- opengauss-close-tab，平台on事件。当插件需要关闭平台上的某个tab页时使用，示例如下：
+
+```JavaScript
+window.$wujie?.bus.$emit('opengauss-close-tab', {
+  name: '此处是route的name',
+  fullPath: '此处是route的fullPath'
+})
+```
+
 ### 插件间页面跳转示例
 
 在插件里面获取主应用的jump方法进行跳转
@@ -505,7 +536,7 @@ public AjaxResult test() {
 
 调用效果：
 
-![img](https://fullstack-dao.feishu.cn/space/api/box/stream/download/asynccode/?code=YTQyMDhkZDM3NzkwZjFlZjQ3YTdkOGJhNjgwZTM5NmVfd3pXZjZESWZWczQ3Z2JzMVRDbWdyTVNPbDlpd2tXMUNfVG9rZW46Ym94Y25USno1cGRFVk52ZTNDTkZxU0sxcTZnXzE2NzM4NzY5NzY6MTY3Mzg4MDU3Nl9WNA)
+![plugin-develop-1](./_resources/plugin-develop-1.png)
 
 ## 插件扩展参数配置
 在插件中可以配置自定义的参数，以提供给平台获取使用，比如插件的Logo、插件的主题等。

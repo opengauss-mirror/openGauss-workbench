@@ -302,16 +302,18 @@ public class JschUtil {
      * @param sourceFilePath Source path
      * @param targetPath     The target path
      */
-    public synchronized void upload(Session session, WsSession wsSession, String sourceFilePath, String targetPath) {
+    public void upload(Session session, WsSession wsSession, String sourceFilePath, String targetPath) {
         log.info("Start uploading {} to {}", sourceFilePath, targetPath);
-        try {
-            ChannelSftp channel = (ChannelSftp) session.openChannel("sftp");
-            channel.connect();
-            JschProgressMonitor jschProgressMonitor = new JschProgressMonitor(wsSession);
-            channel.put(sourceFilePath.trim(), targetPath.trim(), jschProgressMonitor, ChannelSftp.OVERWRITE);
-        } catch (Exception e) {
-            log.error("sftp upload Failure", e);
-            throw new OpsException("sftp upload Failure: " + e.getMessage());
+        synchronized (session){
+            try {
+                ChannelSftp channel = (ChannelSftp) session.openChannel("sftp");
+                channel.connect();
+                JschProgressMonitor jschProgressMonitor = new JschProgressMonitor(wsSession);
+                channel.put(sourceFilePath.trim(), targetPath.trim(), jschProgressMonitor, ChannelSftp.OVERWRITE);
+            } catch (Exception e) {
+                log.error("sftp upload Failure", e);
+                throw new OpsException("sftp upload Failure: " + e.getMessage());
+            }
         }
         log.info("Upload End");
     }
@@ -326,14 +328,16 @@ public class JschUtil {
      */
     public synchronized void upload(Session session, WsSession wsSession, InputStream sourceStream, String targetPath) {
         log.info("Start uploading stream to {}", targetPath);
-        try {
-            ChannelSftp channel = (ChannelSftp) session.openChannel("sftp");
-            channel.connect();
-            JschProgressMonitor jschProgressMonitor = new JschProgressMonitor(wsSession);
-            channel.put(sourceStream, targetPath.trim(), jschProgressMonitor, ChannelSftp.OVERWRITE);
-        } catch (Exception e) {
-            log.error("sftp upload Failure", e);
-            throw new OpsException("sftp upload Failure: " + e.getMessage());
+        synchronized (session){
+            try {
+                ChannelSftp channel = (ChannelSftp) session.openChannel("sftp");
+                channel.connect();
+                JschProgressMonitor jschProgressMonitor = new JschProgressMonitor(wsSession);
+                channel.put(sourceStream, targetPath.trim(), jschProgressMonitor, ChannelSftp.OVERWRITE);
+            } catch (Exception e) {
+                log.error("sftp upload Failure", e);
+                throw new OpsException("sftp upload Failure: " + e.getMessage());
+            }
         }
         log.info("Upload End");
     }
