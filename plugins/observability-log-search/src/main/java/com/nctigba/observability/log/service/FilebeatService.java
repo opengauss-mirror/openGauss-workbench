@@ -157,14 +157,14 @@ public class FilebeatService extends AbstractInstaller {
 						+ " --eshost " + esHost.getPublicIp() + ":" + esEnv.getPort()
 						+ " --nodeid " + opsClusterNodeEntity.getClusterNodeId()
 						+ " --clusterid " + cluster.getClusterId()
-						+ " --opengausslog " + logPath
-						+ " --opengaussslowlog " + obj.getStr("slowlogPath")
-						+ " --opengausserrorlog " + obj.getStr("errorlogPath")
-						+ (StrUtil.isNotBlank(obj.getStr("gsCtlLogPath")) ? " --gsCtlLogPath " + obj.getStr("gsCtlLogPath") : "")
-						+ (StrUtil.isNotBlank(obj.getStr("gsGucLogPath")) ? " --gsGucLogPath " + obj.getStr("gsGucLogPath") : "")
-						+ (StrUtil.isNotBlank(obj.getStr("gsOmLogPath")) ? " --gsOmLogPath " + obj.getStr("gsOmLogPath") : "")
-						+ (StrUtil.isNotBlank(obj.getStr("gsInstallLogPath")) ? " --gsInstallLogPath " + obj.getStr("gsInstallLogPath") : "")
-						+ (StrUtil.isNotBlank(obj.getStr("gsLocalLogPath")) ? " --gsLocalLogPath " + obj.getStr("gsLocalLogPath") : ""));
+						+ " --opengausslog " + StrUtil.removeSuffix(logPath, "/")
+						+ " --opengaussslowlog " + StrUtil.removeSuffix(obj.getStr("slowlogPath"), "/")
+						+ " --opengausserrorlog " + StrUtil.removeSuffix(obj.getStr("errorlogPath"), "/")
+						+ (StrUtil.isNotBlank(obj.getStr("gsCtlLogPath")) ? " --gsCtlLogPath " + StrUtil.removeSuffix(obj.getStr("gsCtlLogPath"), "/") : "")
+						+ (StrUtil.isNotBlank(obj.getStr("gsGucLogPath")) ? " --gsGucLogPath " + StrUtil.removeSuffix(obj.getStr("gsGucLogPath"), "/") : "")
+						+ (StrUtil.isNotBlank(obj.getStr("gsOmLogPath")) ? " --gsOmLogPath " + StrUtil.removeSuffix(obj.getStr("gsOmLogPath"), "/") : "")
+						+ (StrUtil.isNotBlank(obj.getStr("gsInstallLogPath")) ? " --gsInstallLogPath " + StrUtil.removeSuffix(obj.getStr("gsInstallLogPath"), "/") : "")
+						+ (StrUtil.isNotBlank(obj.getStr("gsLocalLogPath")) ? " --gsLocalLogPath " + StrUtil.removeSuffix(obj.getStr("gsLocalLogPath"), "/") : ""));
 				// @formatter:on
 
 					session.execute("cp -fr filebeat_conf/* " + name + "/");

@@ -1,6 +1,6 @@
 <template>
   <div class="app-container">
-    <div class="main-bd">
+    <div class="main-bd" style="height: calc(100vh - 114px);">
       <div class="process data-flow">
         <a-spin style="width: 100%; height: 100%;" :loading="loading" :tip="$t('modeling.detail.index.5m7apwiz75o0')" >
           <div class="antv-panel d-antv-component-panel" v-if="isReady">

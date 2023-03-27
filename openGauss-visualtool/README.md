@@ -77,19 +77,31 @@ openEuler 20.3LTS（x86_x64，ARM），centos7.x（x86_x64）
 
 ### jar包安装
 1、创建工作目录
+
 > mkdir -p /ops/server/openGauss-visualtool/logs /ops/server/openGauss-visualtool/config /ops/ssl /ops/files
 
-2、将jar包传至/ops/server/openGauss-visualtool/下
+2、将visualtool-main.jar包上传至/ops/server/openGauss-visualtool/下
 
-3、将配置文件application-temp.yml传至/ops/server/openGauss-visualtool/config/下
+3、修改application-temp.yml文件中的数据链链接ip、port、database、dbuser、dbpassword。将修改后的配置文件application-temp.yml传至/ops/server/openGauss-visualtool/config/下
 
-4、将ssl文件传置/ops/ssl/下
+4、运行以下命令创建ssl文件
 
-5、修改application-temp.yml文件中的数据链链接ip、port、database、dbuser、dbpassword
+```
+keytool -genkey -noprompt \
+    -dname "CN=opengauss, OU=opengauss, O=opengauss, L=Beijing, S=Beijing, C=CN"\
+    -alias opengauss\
+    -storetype PKCS12 \
+    -keyalg RSA \
+    -keysize 2048 \
+    -keystore /ops/ssl/keystore.p12 \
+    -validity 3650 \
+    -storepass password
+```
 
-6、给ops目录及下面所有文件修改所属用户为执行用户
+5、在root下给ops目录及下面所有文件修改所属用户为执行用户
 
-7、进入/ops/server/openGauss-visualtool目录，执行启动命令
+6、进入/ops/server/openGauss-visualtool目录，执行启动命令。日志输出位于/ops/server/openGauss-visualtool/logs/visualtool-main.out
+
 > nohup java -Xms2048m -Xmx4096m -jar /ops/server/openGauss-visualtool/visualtool-main.jar --spring.profiles.active=temp >/ops/server/openGauss-visualtool/logs/visualtool-main.out 2>&1 &
 
 ## 升级步骤
@@ -101,9 +113,10 @@ openEuler 20.3LTS（x86_x64，ARM），centos7.x（x86_x64）
 3、访问地址https://ip:9494
 
 ### jar包升级
-1、将jar包传至/ops/server/openGauss-visualtool/下
+1、将新的jar包传至/ops/server/openGauss-visualtool/下
 
-2、进入/ops/server/openGauss-visualtool目录，关闭原有进程后，再执行启动命令
+2、关闭原有进程后，再执行启动命令
+
 > nohup java -Xms2048m -Xmx4096m -jar /ops/server/openGauss-visualtool/visualtool-main.jar --spring.profiles.active=temp >/ops/server/openGauss-visualtool/logs/visualtool-main.out 2>&1 &
 
 ### 注意事项：
@@ -117,6 +130,7 @@ openEuler 20.3LTS（x86_x64，ARM），centos7.x（x86_x64）
 1、在项目根目录下执行uninstall.sh脚本，卸载系统以及清理文件数据。
 
 2、手动清理数据库中所有的表和序列。
+
 ## 后端说明
 > 1、后端返回给前端的响应编码，统一在org.opengauss.admin.common.enums.ResponseCode中定义，按照规则划分模块，规则如下：
 + 501xx 一体化模块；比如50101、50102
@@ -144,4 +158,3 @@ openEuler 20.3LTS（x86_x64，ARM），centos7.x（x86_x64）
 ## 常见问题
 1、插件框架依赖包无法拉取到。
 > 本地maven settings中的mirror配置的mirrorOf参数如果配置的通配符*，则在后面追加上 ,!maven-public 即可。
-> 
