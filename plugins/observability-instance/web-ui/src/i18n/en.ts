@@ -29,6 +29,7 @@ export default {
         gausssrc: 'Uploaded Package',
         uploadPkg: 'Upload Package',
         uploadSucceed: 'Upload Succeed',
+        uploadFail: 'Upload Fail',
         pleaseUpload: 'Please upload',
         uploadInfo: 'Drag the file here, or click to upload the file',
         downloadSuggest: 'Recommended download address',

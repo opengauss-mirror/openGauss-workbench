@@ -317,22 +317,36 @@ const upload = (action: any) => {
             progressPercent.value = parseInt(event.loaded / event.total  * 100);
         } })
         .then(function (res) {
-            ElMessage({
-                message: t("install.uploadSucceed"),
-                type: "success",
-            });
-            showUpload.value = false;
+            if(!res) {
+                ElMessage({
+                    message: t("install.uploadSucceed"),
+                    type: "success",
+                });
+                showUpload.value = false;
+                if(pgkType.value === 'node') {
+                    nodeFileList.value = [{name:action.file.name,raw: action.file}]
+                }else {
+                    ogFileList.value = [{name:action.file.name,raw: action.file}]
+                }
+                refreshPkgInfo();
+            }else {
+                fileList.value = [];
+                ElMessage({
+                    message: t('install.uploadFail'),
+                    type: 'error',
+                }); 
+            }
             showProgress.value = false;
             progressPercent.value = 0;
-            if(pgkType.value === 'node') {
-                nodeFileList.value = [{name:action.file.name,raw: action.file}]
-            }else {
-                ogFileList.value = [{name:action.file.name,raw: action.file}]
-            }
-            refreshPkgInfo();
         })
         .catch(function (res) {
             fileList.value = [];
+            showProgress.value = false;
+            progressPercent.value = 0;
+            ElMessage({
+                    message: t('install.uploadFail'),
+                    type: 'error',
+            }); 
         });
 };
 const handleExceed: UploadProps["onExceed"] = (files, uploadFiles) => {
