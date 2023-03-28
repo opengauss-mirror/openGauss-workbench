@@ -105,9 +105,9 @@
     <div class="table-con">
       <a-table :data="tableData" :bordered="false" :stripe="!currentTheme" :hoverable="!currentTheme" :pagination="false">
         <template #columns>
-          <a-table-column title="源实例名" data-index="sourceNodeName" :width="200" ellipsis tooltip></a-table-column>
+          <a-table-column title="源IP和端口" data-index="sourceNodeName" :width="200" ellipsis tooltip></a-table-column>
           <a-table-column title="源库名" data-index="sourceDBName" :width="200" ellipsis tooltip></a-table-column>
-          <a-table-column title="目的实例名" data-index="targetNodeName" :width="200" ellipsis tooltip></a-table-column>
+          <a-table-column title="目的IP和端口" data-index="targetNodeName" :width="200" ellipsis tooltip></a-table-column>
           <a-table-column title="目的库名" data-index="targetDBName" :width="200" ellipsis tooltip></a-table-column>
           <a-table-column data-index="mode" :width="130">
             <template #title>
@@ -299,7 +299,7 @@ const getSourceClusterDbsData = (nodeData) => {
     nodeData.children = data.map(item => {
       return {
         title: item,
-        key: item,
+        key: nodeData.ip + item + '',
         icon: () => h(compile('<svg-icon icon-class="database" style="font-size: 16px;" />')),
         parentName: nodeData.title,
         parentInfo: {
@@ -338,7 +338,7 @@ const getTargetClusterDbsData = (nodeData) => {
     nodeData.children = data.map(item => {
       return {
         title: item.dbName,
-        key: item.dbName,
+        key: nodeData.publicIp + item.dbName + '',
         icon: () => h(compile('<svg-icon icon-class="database" style="font-size: 16px;" />')),
         parentName: nodeData.title,
         parentInfo: {
@@ -381,7 +381,7 @@ const addSubTask = (targetDB) => {
     Message.error('The source database cannot be empty')
     return
   }
-  if (tableData.value.some(item => item.targetDBName === targetDB.title)) {
+  if (tableData.value.some(item => (item.targetDBName === targetDB.title && item.targetNodeName === targetDB.parentName))) {
     Message.error('The destination database is selected')
     return
   }

@@ -66,7 +66,7 @@
         </a-dropdown>
       </li>
       <li>
-        <a-tooltip :content="theme === 'light' ? $t('navbar.index.5nu3bvtnu5o0') : $t('navbar.index.5nu3bvtnuyk0')">
+        <a-tooltip :content="theme === 'light' ? $t('navbar.index.5nu3bvtnu5o0') : $t('navbar.index.5nu3bvtnuyk0')" position="br">
           <div class="nav-btn" @click="handleToggleTheme">
             <icon-moon-fill v-if="theme === 'dark'"/>
             <icon-sun-fill v-else/>
