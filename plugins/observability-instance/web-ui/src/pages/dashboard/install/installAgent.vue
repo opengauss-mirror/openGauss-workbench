@@ -332,7 +332,7 @@ const upload = (action: any) => {
             }else {
                 fileList.value = [];
                 ElMessage({
-                    message: t('install.uploadFail'),
+                    message: res && res.msg ? res.msg : t('install.uploadFail'),
                     type: 'error',
                 }); 
             }
@@ -344,7 +344,7 @@ const upload = (action: any) => {
             showProgress.value = false;
             progressPercent.value = 0;
             ElMessage({
-                    message: t('install.uploadFail'),
+                    message: res && res.msg ? res.msg : t('install.uploadFail'),
                     type: 'error',
             }); 
         });

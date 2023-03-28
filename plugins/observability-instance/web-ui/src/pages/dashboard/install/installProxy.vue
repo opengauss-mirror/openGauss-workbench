@@ -283,7 +283,7 @@ const upload = (action: any) => {
                 refreshPkgInfo();
             }else {
                 ElMessage({
-                    message: t('install.uploadFail'),
+                    message: res && res.msg ? res.msg : t('install.uploadFail'),
                     type: 'error',
                 }); 
                 fileList.value = [];
@@ -296,7 +296,7 @@ const upload = (action: any) => {
             showProgress.value = false;
             progressPercent.value = 0;
             ElMessage({
-                    message: t('install.uploadFail'),
+                    message: res && res.msg ? res.msg : t('install.uploadFail'),
                     type: 'error',
                 }); 
         });
