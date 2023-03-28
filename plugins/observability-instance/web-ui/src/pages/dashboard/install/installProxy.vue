@@ -279,7 +279,7 @@ const upload = (action: any) => {
             showProgress.value = false;
             progressPercent.value = 0;
             if(!fileList.value || fileList.value.length === 0) {
-                fileList.value = [{name:pgkName.value,raw: action.file}]
+                fileList.value = [{name:action.file.name,raw: action.file}]
             }
             refreshPkgInfo();
         })

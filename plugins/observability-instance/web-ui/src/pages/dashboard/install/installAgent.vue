@@ -325,12 +325,10 @@ const upload = (action: any) => {
             showProgress.value = false;
             progressPercent.value = 0;
             if(pgkType.value === 'node') {
-                nodeFileList.value = [{name:pgkName.value,raw: action.file}]
+                nodeFileList.value = [{name:action.file.name,raw: action.file}]
             }else {
-                ogFileList.value = [{name:pgkName.value,raw: action.file}]
+                ogFileList.value = [{name:action.file.name,raw: action.file}]
             }
-            console.log(action)
-            console.log(fileList.value)
             refreshPkgInfo();
         })
         .catch(function (res) {
