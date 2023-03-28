@@ -23,7 +23,7 @@ ebpfconfig:
   biosnoop: ./biosnoop -Q
   filetop: ./filetop -Cr 10 -a
   tcplife: ./tcplife -Tt
-  tcptop: ./tcptop -C 1
+  tcptop: ./tcptop -C 3600
 
 osconfig:
   mpstatP: mpstat -P ALL 1
