@@ -42,7 +42,7 @@ public class EbpfSendFileHandler {
         String url = httpUrl.substring(0, httpUrl.lastIndexOf("/") + 1) + taskid + httpUrl.substring(httpUrl.lastIndexOf("/"));
         try{
             if (EbpfType.PROFILE.equals(monitorType) || EbpfType.OFFCPUTIME.equals(monitorType) || EbpfType.MEMLEAK.equals(monitorType)) {
-                if(new FileSystemResource(outputUrl + taskid + monitorType + FileType.DEFAULT).contentLength()>=1){
+                if(new FileSystemResource(outputUrl + taskid + monitorType + FileType.STACKS).contentLength()>=1){
                     file = new FileSystemResource(outputUrl + taskid + monitorType + FileType.SVG);
                 }
             } else {

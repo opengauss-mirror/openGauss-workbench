@@ -74,7 +74,7 @@ public class EbpfMonitorHandler {
         } else if (EbpfType.XFSSLOWER.equals(monitorType)) {
             execcmd = bccUrl + ebpfConfig.getXfsslower() + fileUrl + FileType.DEFAULT;
         } else if (EbpfType.MEMLEAK.equals(monitorType)) {
-            execcmd = bccUrl + ebpfConfig.getMemleak() + " " + " $(pidof allocs)" + fileUrl + FileType.DEFAULT;
+            execcmd = bccUrl + ebpfConfig.getMemleak() + " " + " $(pidof allocs)" + fileUrl + FileType.STACKS;
         }
         return toolUtil.execCmd(execcmd);
     }
