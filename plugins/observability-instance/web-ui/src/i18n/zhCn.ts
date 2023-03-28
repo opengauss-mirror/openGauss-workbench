@@ -29,6 +29,7 @@ export default {
         gausssrc: '已上传安装包',
         uploadPkg: '上传安装包',
         uploadSucceed: '上传成功',
+        uploadFail: '上传失败',
         pleaseUpload: '请上传',
         uploadInfo: '将文件拖拽到这里，或者点击上传文件',
         downloadSuggest: '推荐下载地址',
