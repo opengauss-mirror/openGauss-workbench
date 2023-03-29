@@ -7,6 +7,7 @@ import { isLogin } from '@/utils/auth'
 const whiteList = ['login']
 
 export default function setupUserLoginInfoGuard (router: Router) {
+  let isExpired = false
   router.beforeEach(async (to, from, next) => {
     NProgress.start()
     const userStore = useUserStore()
@@ -14,17 +15,21 @@ export default function setupUserLoginInfoGuard (router: Router) {
       if (userStore.userId) {
         next()
       } else {
-        try {
-          await userStore.info()
-          next()
-        } catch (error) {
-          next({
-            name: 'login',
-            query: {
-              redirect: to.name,
-              ...to.query
-            } as LocationQueryRaw
-          })
+        if (!isExpired) {
+          try {
+            await userStore.info()
+            isExpired = false
+            next()
+          } catch (error) {
+            isExpired = true
+            next({
+              name: 'login',
+              query: {
+                redirect: to.name,
+                ...to.query
+              } as LocationQueryRaw
+            })
+          }
         }
       }
     } else {
