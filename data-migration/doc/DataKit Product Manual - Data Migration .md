@@ -77,9 +77,28 @@
 普通用户
 
 ## **注意事项**
-1、迁移过程中，请勿关闭源数据库或目标数据库；
+1、源数据库mysql需要开启复制功能，在配置中增加以下配置参数，并重启：
+> binlog_format= ROW
+> 
+> binlog_row_image=FULL
+> 
+> enforce_gtid_consistency=ON
+> 
+> gtid_mode=ON
 
-2、执行迁移任务的服务器应具备一定的性能和配置，以保证迁移过程的顺利执行；
+2、反向迁移功能需要在openGauss数据库增加如下配置，并重启：
+> 调整pg_hba.conf以允许复制（这里的值取决于实际的网络配置以及用于连接的用户）
+> 
+> host     all     repuser     0.0.0.0/0     sha256
+> 
+> 调整guc参数：
+> + alter system set ssl to on;
+> + alter system set wal_level to logical;
+> + alter system set enable_thread_pool to off;
+
+3、迁移过程中，请勿关闭源数据库或目标数据库；
+
+4、执行迁移任务的服务器应具备一定的性能和配置，以保证迁移过程的顺利执行；
 
 ## 功能说明
 

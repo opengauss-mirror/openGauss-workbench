@@ -15,7 +15,7 @@ server:
     context-path: /
 logging:
   file:
-    path: /ops/server/openGauss-visualtool/logs/
+    path: /ops/logs/
 spring:
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
