@@ -560,6 +560,9 @@ mvn clean package -P prod
 
 解决方案：修改平台配置文件/ops/server/openGauss-visualtool/config/application-cus.yml中对上传文件的大小限制大于安装包大小，然后重启平台。
 
+```
 spring.servlet.multipart:
   max-file-size: 1000MB
   max-request-size: 1000MB
+```
+
