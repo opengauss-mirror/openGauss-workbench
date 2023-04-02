@@ -14,7 +14,7 @@
           >
             <template #label="{ data }"><overflow-tooltip :text="data?.label" :content="data?.label" :other-width="0">{{ data?.label }}</overflow-tooltip></template>
             <overflow-tooltip :text="item.tablename" v-for="(item, key) in tableList" :key="key" :content="item.tablename">
-              <a-option :value="item.tablename" :disabled="checkDisabled(useTable, item.tablename)">{{ item.tablename }}</a-option>
+              <a-option  class="dianayako_select-option-disabled"   :value="item.tablename" :disabled="checkDisabled(useTable, item.tablename)">{{ item.tablename }}</a-option>
             </overflow-tooltip>
           </a-select>
         </a-form-item>
@@ -25,7 +25,7 @@
             <a-optgroup v-for="(group, groupKey) in fieldsList" :key="`fieldsGroup${groupKey}`"  :label="group.group">
               <template #label><overflow-tooltip :text="group.group" :content="group.group">{{ group.group }}</overflow-tooltip></template>
               <overflow-tooltip :text="item.name" v-for="(item, key) in group.fields" :key="`field${key}`" :content="`${group.group} . ${item.name}`">
-                <a-option :value="`${group.group}.${item.name}`" :disabled="checkDisabled([config.field], `${group.group}.${item.name}`)" :label="item.name"></a-option>
+                <a-option  class="dianayako_select-option-disabled"   :value="`${group.group}.${item.name}`" :disabled="checkDisabled([config.field], `${group.group}.${item.name}`)" :label="item.name"></a-option>
               </overflow-tooltip>
             </a-optgroup>
           </a-select>
@@ -35,7 +35,7 @@
             allowSearch style="width: 100%" @change="save('matchField', config.matchField)">
             <template #label="{ data }"><overflow-tooltip :text="data?.label" :content="data?.label" :other-width="0">{{ data?.label }}</overflow-tooltip></template>
             <overflow-tooltip :text="field.name" v-for="(field, key) in tableFields(config.table)" :key="`field${key}`" :content="`${field.name}`">
-              <a-option :value="`${config.table}.${field.name}`" :disabled="checkDisabled([config.matchField], `${config.table}.${field.name}`)" :label="field.name"></a-option>
+              <a-option  class="dianayako_select-option-disabled"   :value="`${config.table}.${field.name}`" :disabled="checkDisabled([config.matchField], `${config.table}.${field.name}`)" :label="field.name"></a-option>
             </overflow-tooltip>
           </a-select>
         </a-form-item>
@@ -44,7 +44,7 @@
             allowSearch style="width: 100%" @change="save('rigidField', config.rigidField)">
             <template #label="{ data }"><overflow-tooltip :text="data?.label" :content="data?.label" :other-width="0">{{ data?.label }}</overflow-tooltip></template>
             <overflow-tooltip :text="field.name" v-for="(field, key) in tableFields(config.table)" :key="`field${key}`" :content="`${field.name}`">
-              <a-option :value="`${config.table}.${field.name}`" :disabled="checkDisabled([config.rigidField], `${config.table}.${field.name}`)" :label="field.name"></a-option>
+              <a-option  class="dianayako_select-option-disabled"   :value="`${config.table}.${field.name}`" :disabled="checkDisabled([config.rigidField], `${config.table}.${field.name}`)" :label="field.name"></a-option>
             </overflow-tooltip>
           </a-select>
         </a-form-item>

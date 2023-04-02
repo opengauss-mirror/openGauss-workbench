@@ -30,6 +30,9 @@
                 </a-dropdown>
                 <a-button type="primary" @click="operateMenu('add')"><template #icon><icon-plus /></template>{{$t('modeling.visual-edit.index.5m7ihlv0ms00')}}</a-button>
               </div>
+              <div class="vm-footer">
+                <a-button type="primary" @click="openSnapList">{{$t('modeling.dy_common.visualEdit.snapshotBtnText')}}</a-button>
+              </div>
             </div>
             <div class="chart-container" :style="{ marginLeft: !menu.visible ? '45px' : '0' }">
               <div id="chartDiv" ref="chartRef" />
@@ -53,6 +56,12 @@
                     <a-select v-model="config.chartType" :placeholder="$t('modeling.visual-edit.index.5m7ihlv0n5c0')" @change="(e: any) => isSelectChartType(e)">
                       <a-option v-for="(item, key) in chartTypes" :key="`chartType${key}`" :label="item.label" :value="item.value" />
                     </a-select>
+                  </a-form-item>
+                  <a-form-item required :label="$t('modeling.dy_common.visualEdit.showNum')" :rules="[]">
+                    <a-radio-group v-model="config.showNumber">
+                      <a-radio :value="1">{{$t('modeling.dy_common.visualEdit.showNumYes')}}</a-radio>
+                      <a-radio :value="2">{{$t('modeling.dy_common.visualEdit.showNumNo')}}</a-radio>
+                    </a-radio-group>
                   </a-form-item>
                 </div>
                 <div class="config-content" v-if="config.chartType">
@@ -100,12 +109,12 @@
   </a-modal>
 </template>
 <script setup lang="ts">
-import { reactive, ref, nextTick, defineAsyncComponent, computed } from 'vue'
+import { reactive, ref, nextTick, defineAsyncComponent, computed, onMounted, h } from 'vue'
 import { IconArrowLeft } from '@arco-design/web-vue/es/icon'
 import Common from './components/Common.vue'
 import BarConfig from './components/BarConfig.vue'
 import { initChart, renderChart, clearChart, showLoading, hideLoading, getBase64 } from './hooks/chart'
-import { Message } from '@arco-design/web-vue'
+import { Message, Notification } from '@arco-design/web-vue'
 import { KeyValue } from '@antv/x6/lib/types'
 import { Cell, Graph } from '@antv/x6'
 import { jsonFormat } from '../../../utils/operateJson'
@@ -115,6 +124,7 @@ import { useRoute } from 'vue-router'
 import { EChartsOption } from 'echarts'
 import CustomDimensionDialog from './components/CustomDimensionDialog.vue'
 import { useI18n } from 'vue-i18n'
+const emits = defineEmits(['operate'])
 const { t } = useI18n()
 let graph: Graph
 let cell: Cell
@@ -135,6 +145,13 @@ const coms: { [key: string]: any } = {
 const isComponent = computed(() => {
   return coms[config.chartType]
 })
+const chartEvent = (type: string, data: KeyValue) => {
+  if (type === 'georoam' && config.chartType === 'scatter') {
+    if (configRef.value && configRef.value.setCenterZoom) {
+      configRef.value?.setCenterZoom(data)
+    }
+  }
+}
 const open = (pGraph: Graph, data?: any) => {
   visible.value = true
   graph = pGraph
@@ -145,7 +162,7 @@ const open = (pGraph: Graph, data?: any) => {
   nextTick(() => {
     let f = () => {
       let dom = document.getElementById(`chartDiv`)
-        if (dom && dom.offsetWidth > 0) initChart(dom)
+        if (dom && dom.offsetWidth > 0) initChart(dom, chartEvent)
         else setTimeout(f, 100)
       }
     f()
@@ -207,7 +224,7 @@ const setCustomList = (list: KeyValue[], data: KeyValue[]) => {
 }
 let configKey = ref<number | string>('')
 const config = reactive({
-  title: '', chartType: '', loading: false
+  title: '', chartType: '', showNumber: 2, loading: false
 })
 let timer: any = null
 const useConfigComponentInit = (callback: any) => {
@@ -228,6 +245,7 @@ const useConfigComponentInit = (callback: any) => {
 }
 const clearConfig = (chartType: string, isNew?: boolean) => {
   config.chartType = ''
+  config.showNumber = 2
   if (chartType) config.chartType = chartType
   if (isNew) config.title = ''
   nextTick(() => {
@@ -245,6 +263,7 @@ const configChange = (data: KeyValue, key: number) => {
 const initConfig = (data: KeyValue, key: number) => {
   config.loading = true
   config.title = data.config.title ? data.config.title : ''
+  config.title = data.config.showNumber ? data.config.showNumber : ''
   config.chartType = data.config.chartType ? data.config.chartType : ''
   configKey.value = key
   nextTick(() => {
@@ -266,6 +285,7 @@ const saveConfig = () => {
   let sendData: KeyValue = {
     name: configData.title,
     type: configData.chartType,
+    showNumber: configData.showNumber,
     dataFlowId: window.$wujie?.props.data.id,
     operatorId: cell.id,
     paramsJson: JSON.stringify(configData)
@@ -310,7 +330,12 @@ const saveSnapshot = () => {
   }
   modelingVSAdd(sendData).then((res: KeyValue) => {
     if (Number(res.code) === 200) {
-      Message.success({ content: t('modeling.visual-edit.index.5m7ihlv0nnw0') })
+      Notification.success({
+        title: t('modeling.visual-edit.index.5m7ihlv0nnw0'),
+        content: t('modeling.dy_common.visualEdit.snapshotSuccessNotice'),
+        duration: 5 * 1000,
+        closable: true
+      })
     }
   })
 }
@@ -374,7 +399,7 @@ const custormDimensionDialogRef = ref<InstanceType<typeof CustomDimensionDialog>
 const openCDD = () => {
   custormDimensionDialogRef.value?.open(cell.id)
 }
-const configRef = ref<InstanceType<typeof BarConfig>>()
+const configRef = ref<any>()
 const previewChart = () => {
   if (configRef.value && configRef.value.validate()) {
     let configData: KeyValue = {
@@ -398,6 +423,16 @@ const previewChart = () => {
     modelingVPGenerateChart(configData).then((res: KeyValue) => {
       if (Number(res.code) === 200) {
         snapshot.option = res.chartData
+
+        if (res.chartData && res.chartData.geo && res.chartData.geo[0] && res.chartData.geo[0].center && res.chartData.geo[0].center[0] && res.chartData.geo[0].center[1] && res.chartData.geo[0].zoom) {
+        const center = res.chartData.geo[0].center
+        center[0] = center[0].toFixed(5)
+        center[1] = center[1].toFixed(5)
+        const zoom = res.chartData.geo[0].zoom.toFixed(5)
+        configRef.value?.setCenterZoom({ center, zoom })
+      }
+
+        console.log(res)
         renderChart(res.chartData, (config.chartType === 'scatter' && res.mapData && res.mapData.name && res.mapData.data) ? res.mapData : null)
       }
       hideLoading()
@@ -405,6 +440,10 @@ const previewChart = () => {
       hideLoading()
     })
   }
+}
+
+const openSnapList = () => {
+  emits('operate', 'visual')
 }
 defineExpose({ open })
 </script>
@@ -450,6 +489,7 @@ defineExpose({ open })
           flex: 1;
           display: flex;
           position: relative;
+          height: 100%;
           .vm-toggle {
             z-index: 1;
             position: absolute;
@@ -469,10 +509,13 @@ defineExpose({ open })
           }
           .visual-menu {
             width: 160px;
+            height: 100%;
             text-align: center;
             transition: all .3s;
             overflow: hidden;
             border: 1px solid var(--color-border-3);
+            display: flex;
+            flex-direction: column;
             &:hover {
               .vm-toggle {
                 opacity: 1;
@@ -490,6 +533,8 @@ defineExpose({ open })
               width: 100%;
               box-sizing: border-box;
               padding: 10px;
+              flex: 1;
+              overflow: auto;
               .visual-menu-item {
                 font-size: 14px;
               }
@@ -499,6 +544,11 @@ defineExpose({ open })
             }
             > * {
               width: 160px;
+            }
+            .vm-footer {
+              border-top: 1px solid var(--color-border-3);
+              padding: 10px 0;
+              margin-top: auto;
             }
           }
           .hide-visual-menu {

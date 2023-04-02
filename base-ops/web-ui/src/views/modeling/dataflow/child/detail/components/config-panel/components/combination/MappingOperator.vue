@@ -15,7 +15,7 @@
               <a-optgroup v-for="(group, groupKey) in fieldsList" :key="`fieldsGroup${groupKey}`"  :label="group.group">
                 <template #label><overflow-tooltip :text="group.group" :content="group.group">{{ group.group }}</overflow-tooltip></template>
                 <overflow-tooltip :text="item.name" v-for="(item, key) in group.fields" :key="`field${key}`" :content="`${group.group} . ${item.name}`">
-                  <a-option :value="`${group.group}.${item.name}`" :label="item.name"></a-option>
+                  <a-option class="dianayako_select-option-disabled" :value="`${group.group}.${item.name}`" :disabled="checkDisabled(iData.polymerization, `${group.group}.${item.name}`, 'field')">{{ item.name }}</a-option>
                 </overflow-tooltip>
               </a-optgroup>
             </a-select>
@@ -27,7 +27,7 @@
             />
           </a-col>
           <a-col :span="7" class="mr-xs">
-            <a-input :max-length="140" show-word-limit  v-model="item.value" :placeholder="$t('modeling.combination.MappingOperator.5me6giyzqq80')" @blur="save" />
+            <a-input :max-length="140" show-word-limit  v-model="item.value" :placeholder="$t('modeling.combination.PolymerizationOperator.5m82b2nqt9s0')" @blur="save('pd1', key)" />
           </a-col>
           <a-col :span="1">
             <div class="d-control-remove" @click="operateMapping('delete', key)">-</div>
@@ -42,7 +42,7 @@ import { reactive, computed } from 'vue'
 import {
   Tabs as ATabs, TabPane as ATabPane, Select as ASelect, Row as ARow, Col as ACol, Input as AInput
   } from '@arco-design/web-vue'
-import { saveData } from '../../utils/tool'
+import { checkDisabled, saveData } from '../../utils/tool'
 import { Cell } from '@antv/x6'
 import OverflowTooltip from '../../../../../../../components/OverflowTooltip.vue'
 import { useDataFlowStore } from '@/store/modules/modeling/data-flow'
@@ -56,7 +56,13 @@ const select: KeyValue = {
   ]
 }
 const fieldsList = computed(() => dFStore.getFieldsSelectList)
-const save = () => {
+const save: any = (type?: string, key?: number) => {
+  if (type && type === 'pd1' && key !== undefined) {
+    let item = iData.mappings[key]
+    if (iData.mappings.findIndex((item2: any, key2: any) => (key !== key2 && item.value === item2.value)) !== -1) {
+      item.value = `${item.value}${key}`
+    }
+  }
   saveData('mappings', iData.mappings, iData.cell)
 }
 const iData: KeyValue = reactive({

@@ -30,15 +30,17 @@
             </div>
           </div>
           <div class="nodes" :style="group.name ? { height: group.childHeight } : { height: 'auto', paddingTop: 0 }">
-            <div class="node" v-for="(node, nodeKey) in group.child" :key="`nodeKey${nodeKey}`">
-              <div class="node-title" @mousedown="(e: MouseEvent) => onMousedown(e, node)" @mouseup="(e: MouseEvent) => onMouseup(e, node)">
-                <div class="node-title-icon">
-                  <svg-icon v-if="node.data.icon" class="bs-i" :icon-class="node.data.icon"></svg-icon>
-                  <div class="active-bg"></div>
+            <a-tooltip v-for="(node, nodeKey) in group.child" :key="`nodeKey${nodeKey}`" :content-style="{ whiteSpace: 'pre-wrap', maxWidth: '680px' }" :content="$t('modeling.dy_common.detail.'+node.data.cells_type+'Desc')">
+              <div class="node">
+                <div class="node-title" @mousedown="(e: MouseEvent) => onMousedown(e, node)" @mouseup="(e: MouseEvent) => onMouseup(e, node)">
+                  <div class="node-title-icon">
+                    <svg-icon v-if="node.data.icon" class="bs-i" :icon-class="node.data.icon"></svg-icon>
+                    <div class="active-bg"></div>
+                  </div>
+                  <div class="title-text">{{ node.data.text }}</div>
                 </div>
-                <div class="title-text">{{ node.data.text }}</div>
               </div>
-            </div>
+            </a-tooltip>
           </div>
         </div>
       </div>

@@ -15,7 +15,7 @@
             >
               <template #label="{ data }"><overflow-tooltip :text="data?.label" :content="data?.label" :other-width="0">{{ data?.label }}</overflow-tooltip></template>
               <overflow-tooltip :text="item.tablename" v-for="(item, key) in tableList" :key="key" :content="item.tablename">
-                <a-option :value="item.tablename" :disabled="checkDisabled(useTable, item.tablename)">{{ item.tablename }}</a-option>
+                <a-option  class="dianayako_select-option-disabled"   :value="item.tablename" :disabled="checkDisabled(useTable, item.tablename)">{{ item.tablename }}</a-option>
               </overflow-tooltip>
             </a-select>
           </a-form-item>
@@ -49,7 +49,7 @@
                     <a-optgroup v-for="(group, groupKey) in mainTableFieldsList" :key="`fieldsGroup${groupKey}`"  :label="group.group">
                       <template #label><overflow-tooltip :text="group.group" :content="group.group">{{ group.group }}</overflow-tooltip></template>
                       <overflow-tooltip :text="item.name" v-for="(item, key) in group.fields" :key="`field${key}`" :content="`${group.group} . ${item.name}`">
-                        <a-option :value="`${group.group}.${item.name}`" :label="item.name"></a-option>
+                        <a-option  class="dianayako_select-option-disabled"   :value="`${group.group}.${item.name}`" :label="item.name"></a-option>
                       </overflow-tooltip>
                     </a-optgroup>
                   </a-select>
@@ -73,7 +73,7 @@
                   >
                     <template #label="{ data }"><overflow-tooltip :text="data?.label" :content="data?.label" :other-width="0">{{ data?.label }}</overflow-tooltip></template>
                     <overflow-tooltip :text="item.name" v-for="(item, key) in joinTableFieldsList" :key="`field${key}`" :content="`${item.name}`">
-                      <a-option :value="`${iData.table}.${item.name}`" :label="item.name"></a-option>
+                      <a-option  class="dianayako_select-option-disabled"   :value="`${iData.table}.${item.name}`" :label="item.name"></a-option>
                     </overflow-tooltip>
                   </a-select>
                 </a-col>

@@ -7,42 +7,54 @@
     <a-tab-pane key="1" :title="$t('modeling.base.InsertOperator.5m7hqzngdeg0')">
       <div class="tab-content d-a-form">
         <a-form-item :label="$t('modeling.base.InsertOperator.5m7hqzngebw0')" :labelCol="{ span: 6, offset: 0 }" labelAlign="left" :colon="false">
-          <div class="select-comp-container">
+          <div class="select-comp-container dy-select-container">
           <a-select popup-container=".select-comp-container"
             v-model="config.table" :placeholder="$t('modeling.base.InsertOperator.5m7hqzngeho0')" allowSearch
             @change="(value: any) => selectChange(value, 'table')"
           >
             <template #label="{ data }"><overflow-tooltip :text="data?.label" :content="data?.label" :other-width="0">{{ data?.label }}</overflow-tooltip></template>
             <overflow-tooltip :text="item.tablename" v-for="(item, key) in tableList" :key="key" :content="item.tablename">
-              <a-option :value="item.tablename" :disabled="checkDisabled(useTable, item.tablename)">{{ item.tablename }}</a-option>
+              <a-option  class="dianayako_select-option-disabled"   :value="item.tablename" :disabled="checkDisabled(useTable, item.tablename)">{{ item.tablename }}</a-option>
             </overflow-tooltip>
           </a-select>
           </div>
         </a-form-item>
         <div class="list-type-1">
-          <div class="list-frame mb-s" v-for="(list1Item, key) in config.list1" :key="`list1${key}`">
+          <div class="list-frame mb-s" :class="{'list-frame-close':list1Item.toggleClose?true:false}" v-for="(list1Item, key) in config.list1" :key="`list1${key}`">
             <div class="d-form-item-label mb-s">
+              <div class="toggle" @click="toggleList(list1Item)"><icon-down class="group-arrow" /></div>
               <div class="label-text label-color">{{$t('modeling.base.InsertOperator.5m7hqzngewg0')}}</div>
               <div class="d-control-add" @click="operateConfigList1('add-list1-row', key)">+</div>
+              <a-button class="copy-btn" size="mini" type="primary" @click="copyRow(list1Item)">{{ $t('modeling.dy_common.detail.copy') }}</a-button>
               <div class="d-control-remove" @click="operateConfigList1('delete-list1', key)">-</div>
             </div>
             <a-row class="mb-s" v-for="(row, rowKey) in list1Item" :key="`list1Row${rowKey}`" align="center">
               <a-col :span="11" class="mr-xs">
-                <div class="select-field-container">
+                <div class="select-field-container dy-select-container">
                   <a-select popup-container=".select-field-container" v-model="row.field" :placeholder="$t('modeling.base.InsertOperator.5m7hqzngez40')" :trigger-props="{ contentClass: 'd-a-select-dropdown' }"
-                  allowSearch style="width: 100%" @change="save('list1', config.list1)">
+                  allowSearch style="width: 100%" @change="e => listRowChange(e, row)">
                   <template #label="{ data }"><overflow-tooltip :text="data?.label" :content="data?.label" :other-width="0">{{ data?.label }}</overflow-tooltip></template>
                   <a-optgroup v-for="(group, groupKey) in fieldsList" :key="`fieldsGroup${groupKey}`"  :label="group.group">
                       <template #label><overflow-tooltip :text="group.group" :content="group.group">{{ group.group }}</overflow-tooltip></template>
                     <overflow-tooltip :text="item.name" v-for="(item, key) in group.fields" :key="`field${key}`" :content="`${group.group} . ${item.name}`">
-                      <a-option :value="`${group.group}.${item.name}`" :disabled="checkDisabled(list1Item, `${group.group}.${item.name}`, 'field')">{{ item.name }}</a-option>
+                      <a-option  class="dianayako_select-option-disabled"   :value="`${group.group}.${item.name}`" :disabled="checkDisabled(list1Item, `${group.group}.${item.name}`, 'field')">{{ item.name }}</a-option>
                     </overflow-tooltip>
                   </a-optgroup>
                 </a-select>
                 </div>
               </a-col>
               <a-col :span="11" class="mr-xs">
-                <a-input v-model="row.value" :placeholder="$t('modeling.base.InsertOperator.5m7hqzngf200')" @blur="save('list1', config.list1)"></a-input>
+                <a-date-picker
+                  v-if="isDatePicker(row)"
+                  :placeholder="$t('modeling.dy_common.panel.datePlaceholder')"
+                  v-model="row.value"
+                  style="width: 220px;"
+                  allow-clear
+                  show-time
+                  format="YYYY-MM-DD HH:mm:ss"
+                  @change="save('list1', config.list1)"
+                />
+                <a-input v-else v-model="row.value" :placeholder="$t('modeling.base.InsertOperator.5m7hqzngf200')" @blur="save('list1', config.list1)"></a-input>
               </a-col>
               <a-col :span="1">
                 <div class="d-control-remove" @click="operateConfigList1('delete-list1-row', key, rowKey)">-</div>
@@ -87,8 +99,8 @@ const dData = reactive({
 })
 const config = reactive({
   table: '',
-  list1: [] as { field: string, value: string }[][],
-  modal1: { field: '', value: '' }
+  list1: [] as { field: string, value: string, type: string, toggleClose?: any }[][],
+  modal1: { field: '', value: '', toggleClose: false, type: '' }
 })
 const tableList = computed<KeyValue[]>(() => dFStore.getTableSelectList)
 const fieldsList = computed(() => dFStore.getFieldsSelectList)
@@ -142,6 +154,31 @@ const warningOk = () => {
     save('table', config.table)
   })
 }
+const toggleList = (row: any) => {
+  row.toggleClose = row.toggleClose ? false : true
+}
+const copyRow = (row: any) => {
+  config.list1.push(JSON.parse(JSON.stringify(row)))
+}
+const isDatePicker = (row: any) => {
+  if (row.type && typeof row.type === 'string' && (row.type.includes('time') || row.type.includes('date'))) {
+    return true
+  } else {
+    return false
+  }
+}
+const listRowChange: any = (e: any, row: any) => {
+  fieldsList.value.forEach((group: any) => {
+    if (group && group.fields) {
+      group.fields.forEach((item: any) => {
+        if (`${group.group}.${item.name}` === e) {
+          if (item.type) row.type = item.type
+        }
+      })
+    }
+  })
+  save('list1', config.list1)
+}
 defineExpose({ init })
 </script>
 <style scoped lang="less">
@@ -163,8 +200,24 @@ defineExpose({ init })
     padding: 5px;
     border-radius: 4px;
   }
-  .d-control-remove {
+  .list-frame-close {
+    .toggle {
+      transform: rotate(-90deg);
+    }
+    height: 35px !important;
+    overflow: hidden;
+  }
+  .toggle {
+    margin-right: 10px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: all .3s;
+  }
+  .copy-btn {
     margin-left: auto;
+    margin-right: 10px;
+  }
+  .d-control-remove {
   }
   .warning {
     .title {

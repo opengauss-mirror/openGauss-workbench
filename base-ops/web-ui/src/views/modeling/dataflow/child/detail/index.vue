@@ -1,7 +1,7 @@
 <template>
   <div class="app-container">
     <div class="main-bd" style="height: calc(100vh - 114px);">
-      <div class="process data-flow">
+      <div class="process data-flow data-flow-scroller">
         <a-spin style="width: 100%; height: 100%;" :loading="loading" :tip="$t('modeling.detail.index.5m7apwiz75o0')" >
           <div class="antv-panel d-antv-component-panel" v-if="isReady">
             <div class="antv-header">
@@ -10,9 +10,17 @@
             </div>
             <div class="antv-main">
               <left-sidebar ref="leftSidebarRef" />
-              <div class="antv-main-center" ref="antvMainCenterRef">
-                <div :id="optionR ? optionR.containerId : 'database_container_id'" class="antv-container" />
-              </div>
+              <a-dropdown :popup-visible="rightMenu.visible" trigger="contextMenu" alignPoint :style="{display:'block'}" @popup-visible-change="rightMenuVisibleChange">
+                <div class="antv-main-center" ref="antvMainCenterRef">
+                  <div :id="optionR ? optionR.containerId : 'database_container_id'" class="antv-container" />
+                </div>
+                <template #content>
+                  <a-doption key="1" @click="operateNode('cut')">{{$t('modeling.nodes.BaseNode.5m78v3ubttc0')}}</a-doption>
+                  <a-doption key="2" @click="operateNode('copy')">{{$t('modeling.nodes.BaseNode.5m78v3ubuac0')}}</a-doption>
+                  <a-doption key="3" @click="operateNode('delete')">{{$t('modeling.nodes.BaseNode.5m78v3ubuek0')}}</a-doption>
+                  <a-doption key="4" @click="operateNode('paste')">{{$t('modeling.dy_common.paste')}}</a-doption>
+                </template>
+              </a-dropdown>
               <ConfigPanel ref="configPanelRef" @config-open="configPancelOpen" />
             </div>
             <Run ref="runRef" />
@@ -45,8 +53,11 @@ import { dataFlowGetById, saveJsonData } from '@/api/modeling'
 import { useI18n } from 'vue-i18n'
 import { PropsOptions } from './types'
 import { KeyValue } from '@/types/global'
+import { getCheckedNodes } from './utils/tools'
+
 const { t } = useI18n()
 const route = useRoute()
+
 const dFStore = useDataFlowStore()
 const mCStore = useModelCommonStore()
 mCStore.setI18n(t)
@@ -105,6 +116,9 @@ const initAntv = async () => {
               },
               deleteCell: () => {
                 closeConfigPancel()
+              },
+              blankContextmenu: () => {
+                openRightMenu()
               }
             })
             dFStore.setGraph(graph)
@@ -149,6 +163,7 @@ mCStore.$onAction(({ name, args }) => {
     if (args[0].type) operate(args[0].type, args[0].data ? args[0].data : null)
   }
 })
+
 const operate = (type: string, data?: any) => {
   if (type === 'run') {
     graph && runRef.value?.open(graph, data, type)
@@ -168,6 +183,10 @@ const operate = (type: string, data?: any) => {
         visualEditRef.value?.open(graph, data)
       }
     }
+  } else if (type === `toggleGridType`) {
+    if (graph) {
+      FlowGraph.toggleGridType()
+    }
   }
 }
 onUnmounted(() => {
@@ -180,6 +199,45 @@ const configPancelOpen = () => {
 const closeConfigPancel = () => {
   configPanelRef.value?.closeConfigPanel()
 }
+
+const rightMenu = reactive({
+  visible: false
+})
+let rightMenuShow = false
+const openRightMenu = () => {
+  rightMenu.visible = true
+}
+const closeRightMenu = () => {
+  rightMenuShow = false
+  rightMenu.visible = false
+}
+const rightMenuVisibleChange = () => {
+  if (rightMenuShow && rightMenu.visible) {
+    closeRightMenu()
+  } else {
+    if (rightMenu.visible) {
+      rightMenuShow = true
+    }
+  }
+}
+const operateNode = (type: string) => {
+  if (graph) {
+    if (type === 'delete') {
+      const cells = graph.getSelectedCells()
+      if (cells.length) {
+        const deleteArr = cells.filter((item: any) => (!item.data.operate || item.data.operate.includes('delete')))
+        graph.removeCells(deleteArr)
+      }
+    } else if (type === 'copy') {
+      graph.copy(getCheckedNodes(graph), { useLocalStorage: true })
+    } else if (type === 'cut') {
+      graph.cut(getCheckedNodes(graph), { useLocalStorage: true })
+    } else if (type === 'paste') {
+      graph.paste({ useLocalStorage: true })
+    }
+  }
+}
+
 </script>
 <style scoped lang="less">
 .app-container {
@@ -295,5 +353,39 @@ const closeConfigPancel = () => {
       background-color: #c3c4c5;
     }
   }
+}
+.data-flow-scroller {
+  * {
+    &::-webkit-scrollbar {
+      width: 10px;
+      height: 10px;
+      position: absolute;
+    }
+    &::-webkit-scrollbar-track {
+      border-radius: 5px;
+      background-color: transparent;
+    }
+    &::-webkit-scrollbar-thumb {
+      border-radius: 10px;
+      background-color: #c3c4c5;
+    }
+  }
+  &::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+    position: absolute;
+  }
+  &::-webkit-scrollbar-track {
+    border-radius: 5px;
+    background-color: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    border-radius: 10px;
+    background-color: #c3c4c5;
+  }
+}
+.dianayako_select-option-disabled.arco-select-option-disabled {
+  color: var(--color-text-1) !important;
+  opacity: .65;
 }
 </style>

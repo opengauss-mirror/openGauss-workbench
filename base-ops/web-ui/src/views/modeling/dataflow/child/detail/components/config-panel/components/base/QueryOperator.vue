@@ -9,33 +9,42 @@
     <a-tab-pane key="1" :title="$t('modeling.base.QueryOperator.5m7hhed6am80')">
       <div class="tab-content d-a-form">
         <a-form-item :label="$t('modeling.base.QueryOperator.5m7hhed94ik0')" :labelCol="{ span: 6, offset: 0 }" labelAlign="left" :colon="false">
-          <div class="select-comp-container">
+          <div class="select-comp-container dy-select-container">
           <a-select popup-container=".select-comp-container"
             v-model="config.table" :placeholder="$t('modeling.base.QueryOperator.5m7hhed94qc0')" allowSearch :trigger-props="{ contentClass: 'd-a-select-dropdown' }"
             @change="(value) => selectChange(value, 'table')"
           >
             <template #label="{ data }"><overflow-tooltip :text="data?.label" :content="data?.label" :other-width="0">{{ data?.label }}</overflow-tooltip></template>
             <overflow-tooltip :text="item.tablename" v-for="(item, key) in tableList" :key="key" :content="item.tablename">
-              <a-option :value="item.tablename" :disabled="checkDisabled(useTable, item.tablename)">{{ item.tablename }}</a-option>
+              <a-option  class="dianayako_select-option-disabled"   :value="item.tablename" :disabled="checkDisabled(useTable, item.tablename)">{{ item.tablename }}</a-option>
             </overflow-tooltip>
           </a-select>
           </div>
         </a-form-item>
+        <a-row>
+          <a-col :span="2"></a-col>
+          <a-col :span="22">
+            <div class="d-tips">
+              <icon-exclamation-circle-fill />
+              {{$t('modeling.dy_common.panel.queryTip1')}}
+            </div>
+          </a-col>
+        </a-row>
           <div class="d-form-item-label mb-s">
             <div class="label-text label-color">{{$t('modeling.base.QueryOperator.5m7hhed94tg0')}}</div>
             <div class="d-control-add" @click="configOperateFields('add')">+</div>
           </div>
           <a-row align="center" v-for="(field, fieldKey) in config.fields" :key="`configFields${fieldKey}`" class="mb-s">
             <a-col :span="21" class="mr-s">
-            <div class="select-field-container">
+            <div class="select-field-container dy-select-container">
               <a-select popup-container=".select-field-container" v-model="field.value" :placeholder="$t('modeling.base.QueryOperator.5m7hhed94w80')" :trigger-props="{ contentClass: 'd-a-select-dropdown' }"
                 allowSearch style="width: 100%;"
                 @change="saveData('fields', config.fields)">
-              <template #label="{ data }"><overflow-tooltip :text="data?.label" :content="data?.label" :other-width="0">{{ data?.label }}</overflow-tooltip></template>
+                <template #label="{ data }"><overflow-tooltip :text="data?.label" :content="data?.label" :other-width="0">{{ data?.label }}</overflow-tooltip></template>
                 <a-optgroup v-for="(group, groupKey) in fieldsList" :key="`fieldsGroup${groupKey}`"  :label="group.group">
                   <template #label><overflow-tooltip :text="group.group" :content="group.group">{{ group.group }}</overflow-tooltip></template>
                   <overflow-tooltip :text="item.name" v-for="(item, key) in group.fields" :key="`field${key}`" :content="`${group.group} . ${item.name}`">
-                    <a-option :value="`${group.group}.${item.name}`" :disabled="checkDisabled(config.fields, `${group.group}.${item.name}`, 'value')">{{ item.name }}</a-option>
+                    <a-option  class="dianayako_select-option-disabled" :value="`${group.group}.${item.name}`" :disabled="checkDisabled(config.fields, `${group.group}.${item.name}`, 'value')">{{ item.name }}</a-option>
                   </overflow-tooltip>
                 </a-optgroup>
               </a-select>
@@ -190,6 +199,7 @@ defineExpose({ init })
   }
   .d-tips {
     color: var(--color-neutral-6);
+    margin-bottom: 20px;
   }
   .select-comp-container {
     position: relative;

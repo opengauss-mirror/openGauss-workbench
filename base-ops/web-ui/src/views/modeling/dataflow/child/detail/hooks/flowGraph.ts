@@ -21,18 +21,24 @@ const edgeConfig = {
   connector: { name: 'rounded' },
   router: { name: 'manhattan' }
 }
+
+let gridType = 1
+const gridModal = {
+  size: 10, visible: true, type: 'doubleMesh',
+  args: [
+    { color: 'rgba(136, 136, 136, .2)', thickness: 1 },
+    { color: 'rgba(136, 136, 136, .2)', thickness: 1, factor: 4 }
+  ]
+}
+const t = localStorage.getItem('dianayako_antvx6_grid_type')
+if (t) gridType = t ? Number(t) : 1
+
 export default class FlowGraph {
   public static graph: Graph
   private static option: Partial<Options.Manual> ={
     width: 1920, height: 1080, autoResize: true,
     background: { color: 'var(--color-bg-1)' },
-    grid: {
-      size: 10, visible: true, type: 'doubleMesh',
-      args: [
-        { color: 'rgba(136, 136, 136, .2)', thickness: 1 },
-        { color: 'rgba(136, 136, 136, .2)', thickness: 1, factor: 4 }
-      ]
-    },
+    grid: gridType === 1 ? gridModal : undefined,
 		interacting: function (cellView) {
       const data = cellView.cell.getData()
       if (data && data.disableMove) return false
@@ -153,7 +159,10 @@ export default class FlowGraph {
     graph.on(`cell:unselected`, ({ cell }: { cell: Cell }) => {
       cell.setData({ antvSelected: false })
     })
-    graph.on('blank:click', () => {
+    graph.on('blank:contextmenu', () => {
+      if (callbacks && callbacks.blankContextmenu) callbacks.blankContextmenu()
+    })
+    graph.on('blank:right', () => {
       mCStore.setSelectNode(null, false)
       graph.unselect(getCheckedNodes(graph))
     })
@@ -252,6 +261,16 @@ export default class FlowGraph {
       })
       tNode && this.graph.addNode(tNode)
       return tNode
+    }
+  }
+
+  public static toggleGridType = () => {
+    gridType = gridType === 1 ? 2 : 1
+    localStorage.setItem('dianayako_antvx6_grid_type', String(gridType))
+    if (gridType === 1) {
+      this.graph.drawGrid(gridModal)
+    } else {
+      this.graph.drawGrid(undefined)
     }
   }
 }

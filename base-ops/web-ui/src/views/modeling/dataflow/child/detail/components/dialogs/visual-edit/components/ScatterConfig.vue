@@ -45,21 +45,6 @@
           </a-select>
         </a-col>
       </a-row>
-      <a-row align="center" class="mb-s">
-        <a-col :span="5">{{$t('modeling.components.ScatterConfig.5m7iiczn9dw0')}}</a-col>
-        <a-col :span="8" class="mr-xs">
-          <a-input-number v-model="config.center[0]" :placeholder="$t('modeling.components.ScatterConfig.5m7iiczn9gk0')" ></a-input-number>
-        </a-col>
-        <a-col :span="8">
-          <a-input-number v-model="config.center[1]" :placeholder="$t('modeling.components.ScatterConfig.5m7iiczn9j80')" ></a-input-number>
-        </a-col>
-      </a-row>
-      <a-row align="center" class="mb-s">
-        <a-col :span="5">{{$t('modeling.components.ScatterConfig.5m7iiczn9m40')}}</a-col>
-        <a-col :span="8" class="mr-xs">
-          <a-input-number v-model="config.zoom" ></a-input-number>
-        </a-col>
-      </a-row>
     </div>
     <div>
       <div class="mb-s flex-row">
@@ -108,6 +93,24 @@
         <a-col :span="5">{{$t('modeling.dy_common.geoMapLabelColor3')}}</a-col>
         <a-col :span="17">
           <input v-model="config.colorConfig[2]" type="color" style="width: 100%" />
+        </a-col>
+      </a-row>
+      <div class="mb-s flex-row">
+        <div class="ch-title">{{$t('modeling.dy_common.visualEdit.mapTitle1')}}</div>
+      </div>
+      <a-row align="center" class="mb-s">
+        <a-col :span="5">{{$t('modeling.components.ScatterConfig.5m7iiczn9dw0')}}</a-col>
+        <a-col :span="8" class="mr-xs">
+          <a-input-number read-only :model-value="config.center[0]"></a-input-number>
+        </a-col>
+        <a-col :span="8">
+          <a-input-number read-only :model-value="config.center[1]"></a-input-number>
+        </a-col>
+      </a-row>
+      <a-row align="center" class="mb-s">
+        <a-col :span="5">{{$t('modeling.components.ScatterConfig.5m7iiczn9m40')}}</a-col>
+        <a-col :span="8" class="mr-xs">
+          <a-input-number read-only :model-value="config.zoom" ></a-input-number>
         </a-col>
       </a-row>
     </div>
@@ -295,7 +298,12 @@ const isUpload = () => {
     }
   })
 }
-defineExpose({ config, validate, init })
+const setCenterZoom = (data: { zoom: number, center: number[] }) => {
+  if (data.center && data.center[0]) config.center[0] = Number(data.center[0])
+  if (data.center && data.center[1]) config.center[1] = Number(data.center[1])
+  if (data.zoom) config.zoom = Number(data.zoom)
+}
+defineExpose({ config, validate, init, setCenterZoom })
 </script>
 <style scoped lang="less">
   .scatter-config-container {

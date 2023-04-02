@@ -8,6 +8,9 @@
       :style="configPancelStyle"
       @moving-end="movingEnd"
     >
+      <div class="config-panel-button">
+        <a-button type="primary" @click="saveAndClose">{{ $t('modeling.dy_common.saveAndClose') }}</a-button>
+      </div>
       <div class="config-panel-content" :class="rightSidebarClass">
         <div v-if="iData.configComponent && iData.cellData">
           <component ref="comRef" :is="iData.configComponent" />
@@ -15,9 +18,6 @@
         <div v-else>
           {{$t('modeling.config-panel.index.5m7adga7to40')}}
         </div>
-      </div>
-      <div class="config-panel-bottom">
-        <a-button type="primary" @click="saveAndClose">{{ $t('modeling.dy_common.saveAndClose') }}</a-button>
       </div>
     </a-resize-box>
   </transition>
@@ -121,16 +121,8 @@ defineExpose({ init, closeConfigPanel })
     right: 0;
     top: 0;
     transition: opacity .3s, transform .3s;
-    .config-panel-content {
-      height: calc(100% - 50px);
-      width: 100%;
-      min-width: 300px;
-      background-color: var(--color-bg-2);
-      color: #000;
-      overflow: auto;
-    }
-    .config-panel-bottom {
-      height: 50px;
+    .config-panel-button {
+      height: 60px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -138,9 +130,18 @@ defineExpose({ init, closeConfigPanel })
       width: 100%;
       padding: 0 30px;
       background-color: var(--color-bg-2);
+      border-bottom: 1px solid var(--color-border-3);
       > * {
         width: 100%;
       }
+    }
+    .config-panel-content {
+      height: calc(100% - 60px);
+      width: 100%;
+      min-width: 300px;
+      background-color: var(--color-bg-2);
+      color: #000;
+      overflow: auto;
     }
   }
   .d-config-pancel-animation-enter-active {
