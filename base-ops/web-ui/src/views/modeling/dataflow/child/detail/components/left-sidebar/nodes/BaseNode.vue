@@ -70,13 +70,13 @@ onMounted(() => {
   } else {
     dAntvNodeDarkTheme.value = false
   }
-  // window.$wujie?.bus.$on('opengauss-theme-change', (val: string) => {
-  //   if (val === 'dark') {
-  //     dAntvNodeDarkTheme.value = true
-  //   } else {
-  //     dAntvNodeDarkTheme.value = false
-  //   }
-  // })
+  window.$wujie?.bus.$on('opengauss-theme-change', (val: string) => {
+    if (val === 'dark') {
+      dAntvNodeDarkTheme.value = true
+    } else {
+      dAntvNodeDarkTheme.value = false
+    }
+  })
 })
 const getName = () => getNode ? nodeConfig = getNode().getData() : setTimeout(() => { getName() }, 100)
 getName()

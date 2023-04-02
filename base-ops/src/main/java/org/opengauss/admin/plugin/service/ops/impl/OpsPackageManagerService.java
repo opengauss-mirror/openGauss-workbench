@@ -93,11 +93,11 @@ public class OpsPackageManagerService extends ServiceImpl<OpsPackageManagerMappe
             File file = new File(realPath);
             if (!file.exists()) {
                 log.warn(String.format("Can't find package tar file [%s] to delete. Skip", entity.getPackagePath().toString()));
-                return;
-            }
-            boolean result = file.delete();
-            if (!result) {
-                log.warn(String.format("Can't delete file [%s]. Skip", entity.getPackagePath().toString()));
+            } else {
+                boolean result = file.delete();
+                if (!result) {
+                    log.warn(String.format("Can't delete file [%s]. Skip", entity.getPackagePath().toString()));
+                }
             }
         }
         removeById(id);

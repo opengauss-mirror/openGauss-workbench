@@ -1,16 +1,5 @@
 <template>
   <div class="custom-control-container">
-    <!-- <div class="flex-row mb">
-      <div class="label-color top-label mr-s">{{ $t('customControl.index.else1') }}:</div>
-      <a-select class="mr" style="width: 300px;" :loading="data.hostListLoading" v-model="data.hostId"
-        :placeholder="$t('customControl.index.5mplgrscm4s0')" @change="hostChange">
-        <a-option v-for="(item, index) in data.hostList" :key="index" :label="item.label" :value="item.value" />
-      </a-select>
-      <a-spin :loading="data.loading">
-        <a-tag v-if="(!data.isSuccess && !data.loading)" color="red">Connection establishment failure</a-tag>
-      </a-spin>
-    </div> -->
-
     <a-tabs v-if="data.hosts.length" type="card-gutter" :editable="true" @add="handleAdd" @delete="handleDelete"
       v-model:active-key="data.hostId" show-add-button auto-switch>
       <a-tab-pane v-for="(item, index) in data.hosts" :key="item.hostId" :title="item.publicIp"
@@ -94,8 +83,10 @@ const handleAdd = () => {
 }
 
 const handleAddHost = (hostData: KeyValue) => {
-  data.hosts.push(data.hostObj[hostData.hostId])
-  handleConnect(hostData, data.hosts.length - 1)
+  if (hostData.hostId) {
+    data.hosts.push(data.hostObj[hostData.hostId])
+    handleConnect(hostData, data.hosts.length - 1)
+  }
 }
 
 const handleDelete = (val: any) => {
@@ -138,9 +129,7 @@ const getHostList = () => {
         if (!data.hostObj[data.hostId].isRemember) {
           openDlgToValid(data.hostId)
         } else {
-          handleConnect({
-            hostId: data.hostId
-          }, 0)
+          handleAddHost(data.hostObj[data.hostId])
         }
       } else {
         data.noHost = true
@@ -169,6 +158,7 @@ const openSocket = (index: number) => {
       businessId: `custom_terminal_${socketKey}`
     }
     data.loading = true
+    initTerm(term, terminalSocket.ws, index)
     openSSH(param).then((res: KeyValue) => {
       if (Number(res.code) !== 200) {
         data.isSuccess = false
@@ -184,7 +174,6 @@ const openSocket = (index: number) => {
     }).finally(() => {
       data.loading = false
     })
-    initTerm(term, terminalSocket.ws, index)
   })
 }
 

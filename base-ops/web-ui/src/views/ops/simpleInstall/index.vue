@@ -62,22 +62,37 @@
             }} {{ data.privateIp }}</div>
           </div>
         </div>
-        <div class="flex-row full-w full-h">
-          <div class="flex-col-start mr" style="width: 50%;">
-            <a-alert class="mb-s" style="padding: 10px 12px;width: fit-content;" type="error" v-if="data.state === 2">
-              {{ $t('simpleInstall.index.5mpn813gvfw0') }}
-            </a-alert>
-            <div id="xtermLog" class="xterm"></div>
-          </div>
-          <div class="flex-col-start" style="width: 50%;" v-if="data.state === 2">
-            <div class="flex-between full-w mb">
-              <div class="flex-row">
-                <div class="label-color mr-s">{{ $t('simpleInstall.index.5mpn813gvjk0') }}</div>
-                <div class="label-color">{{ data.privateIp }}</div>
-              </div>
-              <a-button type="primary" @click="retryInstall">{{ $t('simpleInstall.index.5mpn813gvmw0') }}</a-button>
+        <div class="flex-col-start full-h full-w">
+          <a-steps small type="arrow" style="width: 100%;" class="mb" :current="data.installStepNum"
+            :status="data.currentStatus">
+            <a-step>环境准备</a-step>
+            <a-step>安装包准备</a-step>
+            <a-step>执行安装</a-step>
+            <a-step>安装后处理</a-step>
+          </a-steps>
+          <div class="flex-row full-w full-h">
+            <div class="flex-col-start panel-w mr" :style="data.state === 2 ? '' : 'width: 100%'">
+              <a-alert class="mb-s" style="padding: 10px 12px;width: fit-content;" type="error" v-if="data.state === 2">
+                {{ $t('simpleInstall.index.5mpn813gvfw0') }}
+              </a-alert>
+              <div id="xtermLog" class="xterm"></div>
             </div>
-            <div id="xterm" class="xterm"></div>
+            <div class="flex-col-start panel-w" v-if="data.state === 2">
+              <div class="flex-between full-w mb">
+                <div class="flex-row">
+                  <div class="label-color mr-s">{{ $t('simpleInstall.index.5mpn813gvjk0') }}</div>
+                  <div class="label-color">{{ data.privateIp }}</div>
+                </div>
+                <div>
+                  <a-button type="primary" @click="retryInstall" class="mr-s">{{ $t('simpleInstall.index.5mpn813gvmw0') }}</a-button>
+                  <a-button type="primary" @click="handleDownloadLog">{{
+                      $t('components.openLooKeng.5mpiji1qpcc65')
+                    }}
+                  </a-button>
+                </div>
+              </div>
+              <div id="xterm" class="xterm"></div>
+            </div>
           </div>
         </div>
       </div>
@@ -103,7 +118,7 @@
 
 <script lang="ts" setup>
 import { KeyValue } from '@/types/global'
-import { onBeforeUnmount, onMounted, reactive, ref, computed } from 'vue'
+import { onBeforeUnmount, onMounted, reactive, ref, computed, nextTick } from 'vue'
 import { hostListAll, hostUserListWithoutRoot, quickInstall, openSSH, packageListAll, portUsed, pathEmpty, hostPingById, getSysUploadPath } from '@/api/ops'
 import { Message } from '@arco-design/web-vue'
 import {
@@ -121,6 +136,7 @@ import { FitAddon } from 'xterm-addon-fit'
 import { FormInstance } from '@arco-design/web-vue/es/form'
 import { encryptPassword } from '@/utils/jsencrypt'
 import { useI18n } from 'vue-i18n'
+import dayjs from "dayjs";
 const { t } = useI18n()
 const data = reactive<KeyValue>({
   state: -1, // -1 un install  0 installing  1 success  2 fail
@@ -147,7 +163,10 @@ const data = reactive<KeyValue>({
   installLoading: false,
   installObj: {},
   installPackageList: [],
-  validVisible: false
+  validVisible: false,
+
+  installStepNum: 1,
+  currentStatus: 'process'
 })
 
 // websocket
@@ -156,6 +175,7 @@ const terminalWs = ref<Socket<any, any> | undefined>()
 
 const termLog = ref<Terminal>()
 const termTerminal = ref<Terminal>()
+const logs = ref<string>('')
 
 const formRules = computed(() => {
   return {
@@ -272,6 +292,8 @@ const retryInstall = () => {
   if (termLog.value) {
     termLog.value.dispose()
   }
+  data.installStepNum = 1
+  data.currentStatus = 'process'
   openLogSocket()
 }
 
@@ -285,11 +307,14 @@ const openLogSocket = () => {
     localStorage.setItem('Static-pluginBase-opsOpsSimpleInstall', '1')
     initTermLog(term, logSocket.ws)
     exeInstall(logSocket, `simple_installLog_${socketKey}`, term)
+    logs.value = ''
   })
   logSocket.onclose(() => {
     localStorage.removeItem('Static-pluginBase-opsOpsSimpleInstall')
   })
   logSocket.onmessage((messageData: any) => {
+    logs.value += messageData
+    syncStepNumber(messageData)
     if (messageData === 'START') {
       isProgress = true
     }
@@ -319,16 +344,39 @@ const openLogSocket = () => {
         term.writeln('install success')
         data.state = 1
       } else {
+        data.currentStatus = 'error'
         term.writeln('install fail')
         data.state = 2
         if (termTerminal.value) {
           termTerminal.value.dispose()
         }
+        nextTick(() => {
+          let fitAddon = new FitAddon()
+          term.loadAddon(fitAddon)
+          fitAddon.fit()
+        })
         openSocket()
       }
       logSocket.destroy()
     }
   })
+}
+
+const syncStepNumber = (messageData: string) => {
+  switch (messageData) {
+    case 'CREATE_INSTALL_USER':
+      data.installStepNum = 1
+      break
+    case 'START_SCP_INSTALL_PACKAGE':
+      data.installStepNum = 2
+      break
+    case 'START_EXE_INSTALL_COMMAND':
+      data.installStepNum = 3
+      break
+    case 'SAVE_INSTALL_CONTEXT':
+      data.installStepNum = 4
+      break
+  }
 }
 
 const openSocket = () => {
@@ -562,6 +610,22 @@ const initData = () => {
   getHostList()
 }
 
+const handleDownloadLog = () => {
+  const time = dayjs().format('YYYY-MM-DD_HH:mm:ss')
+  const filename = `ops_${time}.log`
+
+  const blob = new Blob([logs.value], { type: 'text/plain' })
+  const url = URL.createObjectURL(blob)
+
+  const link = document.createElement('a')
+  link.href = url
+  link.download = filename
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+  URL.revokeObjectURL(url)
+}
+
 </script>
 
 <style lang="less" scoped>
@@ -613,6 +677,11 @@ const initData = () => {
 .xterm {
   width: 100%;
   height: 470px;
+}
+
+.panel-w {
+  width: 50%;
+  height: 100%;
 }
 
 .succ-icon-size {

@@ -3,11 +3,9 @@
     <simple-install
       v-if="installStore.openGaussVersion === OpenGaussVersionEnum.MINIMAL_LIST && installType === 'install'"
       :curr-step="currStep" :custom-func="customFunction" ref="simpleInstallRef" />
-    <simple-import
-      v-if="installStore.openGaussVersion === OpenGaussVersionEnum.MINIMAL_LIST && installType === 'import'"
+    <simple-import v-if="installStore.openGaussVersion === OpenGaussVersionEnum.MINIMAL_LIST && installType === 'import'"
       :curr-step="currStep" :custom-func="customFunction" ref="simpleImportRef" />
-    <light-weight-install
-      v-if="installStore.openGaussVersion === OpenGaussVersionEnum.LITE && installType === 'install'"
+    <light-weight-install v-if="installStore.openGaussVersion === OpenGaussVersionEnum.LITE && installType === 'install'"
       :curr-step="currStep" ref="liteInstallRef"></light-weight-install>
     <light-weight-import v-if="installStore.openGaussVersion === OpenGaussVersionEnum.LITE && installType === 'import'"
       :curr-step="currStep" ref="liteImportRef"></light-weight-import>

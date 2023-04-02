@@ -1,11 +1,11 @@
 <template>
   <a-modal :mask-closable="false" :esc-to-close="false" :visible="data.show" :title="data.title"
     :ok-loading="data.loading" :modal-style="{ width: '450px' }" @ok="handleOk" @cancel="close">
-    <a-form :model="data.formData" ref="formRef" :label-col="{ style: { width: '100px' } }" :rules="formRules"
-      auto-label-width>
+    <a-form v-if="data.hostList.length" :model="data.formData" ref="formRef" :label-col="{ style: { width: '100px' } }"
+      :rules="formRules" auto-label-width>
       <a-form-item :label="$t('customControl.HostPwdDlg.5mplfut5bj80')">
         <a-select :loading="data.hostListLoading" v-model="data.formData.hostId"
-          :placeholder="$t('customControl.index.5mplgrscm4s0')" @change="hostChange">
+          :placeholder="$t('customControl.HostPwdDlg.else2')" @change="hostChange">
           <a-option v-for="(item, index) in data.hostList" :key="index" :label="item.label" :value="item.value" />
         </a-select>
       </a-form-item>
@@ -15,6 +15,7 @@
           allow-clear />
       </a-form-item>
     </a-form>
+    <label v-else>暂无设备信息</label>
   </a-modal>
 </template>
 
@@ -66,6 +67,10 @@ const formRules = computed(() => {
 const formRef = ref<null | FormInstance>(null)
 const close = () => {
   data.show = false
+  data.hostList = []
+  data.excludeHosts = []
+  data.formData.hostId = ''
+  data.formData.password = ''
   nextTick(() => {
     formRef.value?.clearValidate()
     formRef.value?.resetFields()
@@ -75,42 +80,51 @@ const close = () => {
 const emits = defineEmits([`finish`])
 
 const handleOk = () => {
-  formRef.value?.validate().then(async result => {
-    if (!result) {
-      const encryptPwd = await encryptPassword(data.formData.password)
-      // valid password
-      const param = {
-        rootPassword: encryptPwd
-      }
-      data.loading = true
-      try {
-        const passwordValid: KeyValue = await hostPingById(data.formData.hostId, param)
-        if (Number(passwordValid.code) !== 200) {
+  console.log('show formData', data.formData)
+  if (data.formData.hostId) {
+    formRef.value?.validate().then(async result => {
+      if (!result) {
+        const encryptPwd = await encryptPassword(data.formData.password)
+        // valid password
+        const param = {
+          rootPassword: encryptPwd
+        }
+        data.loading = true
+        try {
+          const passwordValid: KeyValue = await hostPingById(data.formData.hostId, param)
+          if (Number(passwordValid.code) !== 200) {
+            formRef.value?.setFields({
+              password: {
+                status: 'error',
+                message: t('enterprise.NodeConfig.else8')
+              }
+            })
+          } else {
+            emits(`finish`, {
+              hostId: data.formData.hostId,
+              password: encryptPwd
+            })
+            close()
+          }
+        } catch (err: any) {
           formRef.value?.setFields({
             password: {
               status: 'error',
               message: t('enterprise.NodeConfig.else8')
             }
           })
-        } else {
-          emits(`finish`, {
-            hostId: data.formData.hostId,
-            password: encryptPwd
-          })
-          close()
+        } finally {
+          data.loading = false
         }
-      } catch (err: any) {
-        formRef.value?.setFields({
-          password: {
-            status: 'error',
-            message: t('enterprise.NodeConfig.else8')
-          }
-        })
-      } finally {
-        data.loading = false
       }
-    }
-  })
+    })
+  } else {
+    emits(`finish`, {
+      hostId: '',
+      password: ''
+    })
+    close()
+  }
 }
 
 const getHostList = () => {
@@ -127,8 +141,10 @@ const getHostList = () => {
           })
         }
       })
-      data.formData.hostId = data.hostList[0].value
-      data.isShowPwd = !data.hostObj[data.formData.hostId].isRemember
+      if (data.hostList.length) {
+        data.formData.hostId = data.hostList[0].value
+        data.isShowPwd = !data.hostObj[data.formData.hostId].isRemember
+      }
     }
   }).finally(() => {
     data.hostListLoading = false

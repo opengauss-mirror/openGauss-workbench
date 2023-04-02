@@ -12,8 +12,7 @@
         </div>
         <div class="label-color ft-main">{{ $t('simple.DeployWay.5mpmphlozp00') }}</div>
       </div>
-      <div
-        :class="'deploy-cluster-size card-item-c ' + (deployType === 'CLUSTER' ? 'center-item-active' : 'center-item')"
+      <div :class="'deploy-cluster-size card-item-c ' + (deployType === 'CLUSTER' ? 'center-item-active' : 'center-item')"
         @click="chooseType(DeployTypeEnum.CLUSTER)">
         <div class="flex-row mb">
           <svg-icon icon-class="ops-host" class="icon-size-s mr"></svg-icon>
@@ -56,6 +55,7 @@ onBeforeUnmount(() => {
   if (deployStore.getInstallConfig.deployType !== deployType.value) {
     const liteConfig = {
       clusterName: '',
+      installPackagePath: '',
       port: Number(5432),
       databaseUsername: '',
       databasePassword: '',

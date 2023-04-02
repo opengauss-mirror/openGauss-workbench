@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="flex-between">
-      <p>{{ $t('components.openLooKeng.5mpiji1qpcc37') }}</p>
+      <p class="label-color">{{ $t('components.openLooKeng.5mpiji1qpcc37') }}</p>
       <a-button type="primary" :loading="loading" @click="generateYaml">{{
           $t('components.openLooKeng.5mpiji1qpcc51')
         }}

@@ -53,6 +53,17 @@ const MODELING: AppRouteRecordRaw = {
         requiresAuth: false,
         roles: ['*']
       }
+    },
+    {
+      path: '/modeling/modelDesign',
+      name: 'ModelDesign',
+      component: () => import('@/views/modeling/modelDesign/index.vue'),
+      meta: {
+        title: '模型设计',
+        hideInMenu: true,
+        requiresAuth: false,
+        roles: ['*']
+      }
     }
   ]
 }

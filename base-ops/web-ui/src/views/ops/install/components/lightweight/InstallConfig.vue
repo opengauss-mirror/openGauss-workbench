@@ -27,7 +27,8 @@
                   (item.publicIp ? item.publicIp : '--') + ')'
                 }}</a-option>
               </a-select>
-              <icon-code-square :size="25" style="cursor: pointer;" @click="showTerminal(formItem, index)"/>
+              <icon-code-square :size="25" class="label-color" style="cursor: pointer;"
+                @click="showTerminal(formItem, index)" />
             </a-form-item>
             <a-form-item v-if="formItem.isNeedPwd" field="rootPassword" :label="$t('lightweight.InstallConfig.else1')"
               validate-trigger="blur">
@@ -423,23 +424,7 @@ const setRefMap = (el: any) => {
 }
 
 const saveStore = () => {
-  const param = JSON.parse(JSON.stringify(data.nodeData))
-  if (param.length) {
-    // node use first node port
-    param.forEach((item: KeyValue) => {
-      item.port = param[0].port
-    })
-    installStore.setInstallContext({ clusterId: param[0].clusterId, envPath: param[0].envPath })
-    const liteConfig = {
-      clusterName: '',
-      port: param[0].port,
-      databaseUsername: param[0].databaseUsername,
-      databasePassword: param[0].databasePassword,
-      installPackagePath: param[0].installPackagePath,
-      nodeConfigList: param as LiteNodeConfig[]
-    }
-    installStore.setLiteConfig(liteConfig as LiteInstallConfig)
-  }
+  // doNothing
 }
 
 const loadingFunc = inject<any>('loading')
@@ -459,7 +444,23 @@ const beforeConfirm = async (): Promise<boolean> => {
     validRes = await validateSpecialFields()
   }
   if (validRes) {
-    saveStore()
+    const param = JSON.parse(JSON.stringify(data.nodeData))
+    if (param.length) {
+      // node use first node port
+      param.forEach((item: KeyValue) => {
+        item.port = param[0].port
+      })
+      installStore.setInstallContext({ clusterId: param[0].clusterId, envPath: param[0].envPath })
+      const liteConfig = {
+        clusterName: '',
+        port: param[0].port,
+        databaseUsername: param[0].databaseUsername,
+        databasePassword: param[0].databasePassword,
+        installPackagePath: param[0].installPackagePath,
+        nodeConfigList: param as LiteNodeConfig[]
+      }
+      installStore.setLiteConfig(liteConfig as LiteInstallConfig)
+    }
     loadingFunc.cancelLoading()
     return true
   }
