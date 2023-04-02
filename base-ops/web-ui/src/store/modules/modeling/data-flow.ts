@@ -10,7 +10,8 @@ interface stateType {
   rawData: KeyValue,
   useData: KeyValue,
   useDatabase: string,
-  useTable: string[]
+  useTable: string[],
+  fieldsAlias: { database: string, table: string, name: string }[]
 }
 const defineState: stateType = {
   graph: null,
@@ -18,7 +19,8 @@ const defineState: stateType = {
   rawData: {},
   useData: {},
   useDatabase: ``,
-  useTable: []
+  useTable: [],
+  fieldsAlias: []
 }
 
 export const useDataFlowStore = defineStore(`dataFlow`, {
@@ -36,13 +38,24 @@ export const useDataFlowStore = defineStore(`dataFlow`, {
         const database = state.useData[state.useDatabase]
         const tableList: { group: string, fields: KeyValue[] }[] = []
         state.useTable.forEach((item: string) => {
-          const arr = { group: item, fields: [] }
+          const arr = { group: item, fields: [] } as any
           const index = database.findIndex((item2: KeyValue) => item2.tablename === item)
           if (index !== -1) {
             arr.fields = database[index].fields
           }
+          if (arr.fields && Array.isArray(arr.fields)) {
+            state.fieldsAlias.forEach(item => {
+              if (item.table === arr.group) {
+                arr.fields.push({
+                  name: item.name
+                })
+              }
+            })
+          }
           tableList.push(arr)
         })
+        console.log(tableList)
+        console.log(state.fieldsAlias)
         return tableList
       } else return []
     },
@@ -65,6 +78,23 @@ export const useDataFlowStore = defineStore(`dataFlow`, {
     getUseDatabase: (state: stateType) => state.useDatabase
   },
   actions: {
+    clearFieldsAlias () {
+      this.$patch((state: stateType) => {
+        state.fieldsAlias = []
+      })
+    },
+    setFieldsAlias (field: { database: string, table: string, name: string, value: string }) {
+      this.$patch((state: stateType) => {
+        const i = state.fieldsAlias.findIndex(item => (item.database === field.database && item.table === field.table && item.name === field.value))
+        if (i === -1) {
+          state.fieldsAlias.push({
+            database: field.database,
+            table: field.table,
+            name: field.value
+          })
+        }
+      })
+    },
     setGraph (graph: Graph) {
       this.$patch((state: stateType) => {
         state.graph = graph
