@@ -90,7 +90,7 @@ export const useDataFlowStore = defineStore(`dataFlow`, {
           state.fieldsAlias.push({
             database: field.database,
             table: field.table,
-            name: field.value
+            name: field.value + '[as]'
           })
         }
       })
