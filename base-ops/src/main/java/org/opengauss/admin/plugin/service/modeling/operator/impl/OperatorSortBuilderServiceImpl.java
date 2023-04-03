@@ -27,6 +27,10 @@ public class OperatorSortBuilderServiceImpl extends BaseBuilderServiceImpl {
             for (int i = 0; i < sorts.size(); i++) {
                 JSONObject sortItem = sorts.getJSONObject(i);
                 String sortField = sortItem.getString("field");
+                //if is an alias name
+                if (sortField.contains("[as]")) {
+                    sortField = pureAliasField(sortField);
+                }
                 String sortValue = sortItem.getString("value");
                 if (sortField != null && sortValue !=null) {
                     sqlSorts.add(sortConvert(sortField,sortValue));

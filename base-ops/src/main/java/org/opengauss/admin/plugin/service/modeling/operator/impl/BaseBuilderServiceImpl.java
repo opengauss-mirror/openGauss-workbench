@@ -29,4 +29,8 @@ public class BaseBuilderServiceImpl implements IModelingDataFlowOperatorBuilderS
         }
         return field;
     }
+
+    public String pureAliasField(String field) {
+        return pureField(field).replace("[as]","");
+    }
 }
