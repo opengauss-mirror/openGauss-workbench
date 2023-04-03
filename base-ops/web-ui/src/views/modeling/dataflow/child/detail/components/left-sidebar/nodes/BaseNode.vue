@@ -122,40 +122,42 @@ const openConfig = () => {
       if (n.shape === 'BaseNode' && n.data && n.data.cells_type === 'join') dFStore.setDatabaseTableInfo(n.data.table)
 
       // Existing mapping operator and aggregation operator
+      // Must be a sequence operator
       dFStore.clearFieldsAlias && dFStore.clearFieldsAlias()
-
-      nodes.forEach(item1 => {
-        if (item1.data.cells_type === 'mapping') {
-          item1.data.mappings.forEach((item: any) => {
-            if (item && item.field && item.field.split) {
-              let tablename = item.field.split('.')[0]
-              if (tablename && item.value && useDatabase.value) {
-                dFStore.setFieldsAlias({
-                  database: useDatabase.value,
-                  table: tablename,
-                  value: item.value,
-                  name: item.field
-                })
+      if (n.data.cells_type === 'sort') {
+        nodes.forEach(item1 => {
+          if (item1.data.cells_type === 'mapping') {
+            item1.data.mappings.forEach((item: any) => {
+              if (item && item.field && item.field.split) {
+                let tablename = item.field.split('.')[0]
+                if (tablename && item.value && useDatabase.value) {
+                  dFStore.setFieldsAlias({
+                    database: useDatabase.value,
+                    table: tablename,
+                    value: item.value,
+                    name: item.field
+                  })
+                }
               }
-            }
-          })
-        } else if (item1.data.cells_type === 'polymerization') {
-          item1.data.polymerization.forEach((item: any) => {
-            console.log(item)
-            if (item && item.field && item.field.split) {
-              let tablename = item.field.split('.')[0]
-              if (tablename && item.alias && useDatabase.value) {
-                dFStore.setFieldsAlias({
-                  database: useDatabase.value,
-                  table: tablename,
-                  value: item.alias,
-                  name: item.field
-                })
+            })
+          } else if (item1.data.cells_type === 'polymerization') {
+            item1.data.polymerization.forEach((item: any) => {
+              console.log(item)
+              if (item && item.field && item.field.split) {
+                let tablename = item.field.split('.')[0]
+                if (tablename && item.alias && useDatabase.value) {
+                  dFStore.setFieldsAlias({
+                    database: useDatabase.value,
+                    table: tablename,
+                    value: item.alias,
+                    name: item.field
+                  })
+                }
               }
-            }
-          })
-        }
-      })
+            })
+          }
+        })
+      }
 
       getNode && mCStore.setSelectNode(n, true)
     })

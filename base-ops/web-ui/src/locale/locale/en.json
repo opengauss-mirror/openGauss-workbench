@@ -964,7 +964,8 @@
             "panel": {
               "datePlaceholder": "Please select a date",
               "queryTip1": "If you don't choose to extract any fields, all fields will be extracted, which is equivalent to SELECT * FROM.",
-              "updateTip": "If the condition operator is not connected, the entire table data will be updated."
+              "updateTip": "If the condition operator is not connected, the entire table data will be updated.",
+              "sortTip1": "Sorting operator field selection supports alias, and the alias field will be marked with [as]"
             },
             "header": {
               "gridText": "Toggle grid background"
