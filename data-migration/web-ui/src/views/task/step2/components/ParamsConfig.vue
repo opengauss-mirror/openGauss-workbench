@@ -25,7 +25,7 @@
                   <a-input v-model="record.paramValue" />
                 </template>
               </a-table-column>
-              <a-table-column title="备注说明" data-index="paramDesc" :width="200" ellipsis tooltip></a-table-column>
+              <a-table-column title="参数说明" data-index="paramDesc" :width="200" ellipsis tooltip></a-table-column>
             </template>
           </a-table>
         </div>
@@ -42,7 +42,7 @@
                       <a-input v-model="record.paramValue" />
                     </template>
                   </a-table-column>
-                  <a-table-column title="备注说明" data-index="paramDesc" :width="200" ellipsis tooltip></a-table-column>
+                  <a-table-column title="参数说明" data-index="paramDesc" :width="200" ellipsis tooltip></a-table-column>
                 </template>
               </a-table>
             </div>
