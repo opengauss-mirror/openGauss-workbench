@@ -129,22 +129,18 @@ export default class FlowGraph {
       else this.togglePorts(ports, true)
     }
     graph.on('node:mouseenter', FunctionExt.debounce(({ node }: { node: Node }) => {
-      if (!node.data.portsDisabled) {
-        node.setData({ showDisabledCheckbox: true })
-        const ports = container.querySelectorAll('.x6-port-body') as NodeListOf<SVGAElement>
-        if (!node.data.disabled) this.togglePorts(ports, true)
-        node.on(`change:data`, checkDisabled)
-      }
+      node.setData({ showDisabledCheckbox: true })
+      const ports = container.querySelectorAll('.x6-port-body') as NodeListOf<SVGAElement>
+      if (!node.data.disabled) this.togglePorts(ports, true)
+      node.on(`change:data`, checkDisabled)
     }), 500)
     graph.on('node:mouseleave', ({ node }: { node: Node }) => {
-      if (!node.data.portsDisabled) {
-        node.setData({ showDisabledCheckbox: false })
-        const ports = container.querySelectorAll(
-          '.x6-port-body'
-        ) as NodeListOf<SVGAElement>
-        this.togglePorts(ports, false)
-        node.off(`change:data`, checkDisabled)
-      }
+      node.setData({ showDisabledCheckbox: false })
+      const ports = container.querySelectorAll(
+        '.x6-port-body'
+      ) as NodeListOf<SVGAElement>
+      this.togglePorts(ports, false)
+      node.off(`change:data`, checkDisabled)
     })
     graph.on('node:collapse', ({ node, e }: any) => {
       e.stopPropagation()
@@ -162,7 +158,13 @@ export default class FlowGraph {
     graph.on('blank:contextmenu', () => {
       if (callbacks && callbacks.blankContextmenu) callbacks.blankContextmenu()
     })
-    graph.on('blank:right', () => {
+    graph.on('blank:click', () => {
+      const nodes = graph.getNodes()
+      nodes.forEach(item => {
+        if (item.data.antvSelected) {
+          item.setData({ antvSelected: false })
+        }
+      })
       mCStore.setSelectNode(null, false)
       graph.unselect(getCheckedNodes(graph))
     })
