@@ -7,6 +7,14 @@
   >
     <a-tab-pane key="1" :title="$t('modeling.combination.SortOperator.5m82bdo2r0w0')">
       <div class="tab-content d-a-form">
+        <a-row>
+          <a-col :span="24">
+            <div class="d-tips">
+              <icon-exclamation-circle-fill />
+              {{$t('modeling.dy_common.panel.sortTip1')}}
+            </div>
+          </a-col>
+        </a-row>
         <div class="d-form-item-label mb-s">
           <div class="label-text label-color">{{$t('modeling.combination.SortOperator.5m82bdo2rns0')}}</div>
           <div class="d-control-add" @click="operateSorts('add')">+</div>
@@ -97,5 +105,9 @@ defineExpose({ init })
         transform: translateY(-50%);
       }
     }
+  }
+  .d-tips {
+    color: var(--color-neutral-6);
+    margin-bottom: 10px;
   }
 </style>

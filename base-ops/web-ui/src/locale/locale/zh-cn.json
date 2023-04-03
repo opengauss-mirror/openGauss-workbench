@@ -980,7 +980,8 @@
             "panel": {
               "datePlaceholder": "请选择日期",
               "queryTip1": "如果不选择提取任何字段，则会提取所有字段，等效于 SELECT * FROM。",
-              "updateTip": "如果不连接条件算子，则会更新整表数据。"
+              "updateTip": "如果不连接条件算子，则会更新整表数据。",
+              "sortTip1": "排序算子字段选择支持别名，别名字段将带有【as】标识"
             },
             "header": {
               "gridText": "切换网格背景"
