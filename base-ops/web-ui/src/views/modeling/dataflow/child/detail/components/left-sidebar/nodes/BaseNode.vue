@@ -58,6 +58,8 @@ onMounted(() => {
     let n: Cell = getNode()
     if (n && n.data && n.data.cells_type && n.data.cells_type === 'dataSource') showPlay.value = false
     if (n && n.data && n.data.cells_type && n.data.cells_type === 'dataSource') showDisabled.value = false
+    if (n && n.data && n.data.disabled) disabled.value = true
+    else disabled.value = false
     n.on(`change:data`, ({ current }) => {
       antvSelected.value = current.antvSelected ? current.antvSelected : false
       nodeDisabledShow.value = current.showDisabledCheckbox ? current.showDisabledCheckbox : false
@@ -123,7 +125,6 @@ const openConfig = () => {
       dFStore.clearFieldsAlias && dFStore.clearFieldsAlias()
 
       nodes.forEach(item1 => {
-        console.log(item1)
         if (item1.data.cells_type === 'mapping') {
           item1.data.mappings.forEach((item: any) => {
             if (item && item.field && item.field.split) {
