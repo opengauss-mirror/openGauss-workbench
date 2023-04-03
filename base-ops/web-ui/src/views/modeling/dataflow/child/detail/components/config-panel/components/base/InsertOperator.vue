@@ -159,6 +159,7 @@ const toggleList = (row: any) => {
 }
 const copyRow = (row: any) => {
   config.list1.push(JSON.parse(JSON.stringify(row)))
+  save('list1', config.list1)
 }
 const isDatePicker = (row: any) => {
   if (row.type && typeof row.type === 'string' && (row.type.includes('time') || row.type.includes('date'))) {
