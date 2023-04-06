@@ -1,6 +1,7 @@
 package org.opengauss.admin.common.utils.file;
 
 import cn.hutool.core.io.FileUtil;
+import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.config.SystemConfig;
 import org.opengauss.admin.common.constant.Constants;
 import org.opengauss.admin.common.exception.file.FileNameLengthLimitExceededException;
@@ -21,6 +22,7 @@ import java.nio.charset.StandardCharsets;
  *
  * @author xielibo
  */
+@Slf4j
 public class FileUploadUtils {
     /**
      * default size 50M
@@ -257,7 +259,7 @@ public class FileUploadUtils {
             FileUtil.writeBytes(svgContent.getBytes(StandardCharsets.UTF_8), file.getPath());
             return Constants.RESOURCE_PREFIX + "/icons" + File.separator + DateUtils.datePath() + File.separator + fileName;
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error("write menu svg error, message: {}", e.getMessage());
         }
         return "";
     }

@@ -47,8 +47,7 @@ public class WebSocketEndpoint {
     public void onError(@PathParam("pluginId") String pluginId,
                         @PathParam("sessionId") String sessionId,
                         Throwable error) {
-        error.printStackTrace();
-        log.error("onError，pluginId:{},sessionId:{}",pluginId,sessionId);
+        log.error("onError，pluginId:{},sessionId:{},errorMessage:{}",pluginId,sessionId,error.getMessage());
     }
 
     @OnMessage

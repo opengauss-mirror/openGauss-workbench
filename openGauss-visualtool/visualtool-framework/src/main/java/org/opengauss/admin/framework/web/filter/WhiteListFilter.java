@@ -34,7 +34,7 @@ public class WhiteListFilter implements Filter {
             try {
                 returnContent(servletResponse,"Sorry,The current IP is not in the white list, please contact the administrator to add it before accessing.");
             } catch (Exception e) {
-                e.printStackTrace();
+                log.error("error, message: {}", e.getMessage());
             }
         }
     }

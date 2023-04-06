@@ -32,8 +32,7 @@ public class DataMigrationApplicationRunner implements ApplicationRunner {
             try {
                 migrationTaskService.doOfflineTaskRunScheduler();
             } catch (Exception e) {
-                e.printStackTrace();
-                log.error("OffLineTaskRunScheduler error", e);
+                log.error("OffLineTaskRunScheduler error", e.getMessage());
             }
         });
 
@@ -41,8 +40,7 @@ public class DataMigrationApplicationRunner implements ApplicationRunner {
             try {
                 migrationMainTaskService.doRefreshMainTaskStatus();
             } catch (Exception e) {
-                e.printStackTrace();
-                log.error("RefreshMainTaskStatus error", e);
+                log.error("RefreshMainTaskStatus error", e.getMessage());
             }
         });
     }

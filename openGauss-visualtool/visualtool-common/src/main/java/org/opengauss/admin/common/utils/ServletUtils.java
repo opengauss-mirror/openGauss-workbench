@@ -15,6 +15,7 @@
  */
 package org.opengauss.admin.common.utils;
 
+import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.core.text.Convert;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -31,6 +32,7 @@ import java.io.IOException;
  *
  * @author xielibo
  */
+@Slf4j
 public class ServletUtils {
 
     /**
@@ -103,7 +105,7 @@ public class ServletUtils {
             response.setCharacterEncoding("utf-8");
             response.getWriter().print(string);
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error("error, message: {}", e.getMessage());
         }
         return null;
     }

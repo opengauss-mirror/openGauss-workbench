@@ -273,14 +273,14 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
                 list.add(rowData);
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            log.error("convert error, message: {}", e.getMessage());
         } finally {
             try {
                 if (rs != null) {
                     rs.close();
                 }
             } catch (SQLException e) {
-                e.printStackTrace();
+                log.error("convert error, message: {}", e.getMessage());
             }
         }
         return list;
@@ -367,8 +367,7 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
                 boolean flag = PortalHandle.installPortal(host, port, user, pass, installPath, portalPkgDownloadUrl, isNewFileInstall);
                 migrationHostPortalInstallHostService.updateStatus(hostId, flag ? PortalInstallStatus.INSTALLED.getCode() : PortalInstallStatus.INSTALL_ERROR.getCode());
             } catch (Exception e) {
-                e.printStackTrace();
-                log.error("sync install portal error", e);
+                log.error("sync install portal error, message: {}", e.getMessage());
             }
         });
     }

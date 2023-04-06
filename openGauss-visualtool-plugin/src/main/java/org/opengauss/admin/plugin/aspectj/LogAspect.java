@@ -82,7 +82,6 @@ public class LogAspect {
             AsyncManager.me().execute(AsyncFactory.recordOper(operLog));
         } catch (Exception exp) {
             log.error("error:{}", exp.getMessage());
-            exp.printStackTrace();
         }
     }
 
