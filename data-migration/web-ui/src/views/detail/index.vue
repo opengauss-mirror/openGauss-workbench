@@ -30,18 +30,18 @@
       <a-table :data="tableData" :bordered="false" :stripe="!currentTheme" :hoverable="!currentTheme" :pagination="pagination" @page-change="pageChange">
         <template #columns>
           <a-table-column title="子任务ID" data-index="id" :width="90"></a-table-column>
-          <a-table-column title="源实例名" :width="180" ellipsis tooltip>
+          <a-table-column title="源IP和端口" :width="160" ellipsis tooltip>
             <template #cell="{ record }">
               {{ record.sourceDbHost + ':' + record.sourceDbPort }}
             </template>
           </a-table-column>
-          <a-table-column title="源库名" data-index="sourceDb" :width="100" ellipsis tooltip></a-table-column>
-          <a-table-column title="目的实例名" :width="180" ellipsis tooltip>
+          <a-table-column title="源库名" data-index="sourceDb" :width="120" ellipsis tooltip></a-table-column>
+          <a-table-column title="目的IP和端口" :width="160" ellipsis tooltip>
             <template #cell="{ record }">
               {{ record.targetDbHost + ':' + record.targetDbPort }}
             </template>
           </a-table-column>
-          <a-table-column title="目的库名" data-index="targetDb" :width="100" ellipsis tooltip></a-table-column>
+          <a-table-column title="目的库名" data-index="targetDb" :width="120" ellipsis tooltip></a-table-column>
           <a-table-column title="迁移过程模式" :width="120" ellipsis tooltip>
             <template #cell="{ record }">
               {{ record.migrationModelId === 1 ? '离线模式' : '在线模式' }}

@@ -275,6 +275,7 @@ const deleteMore = async () => {
   }
   await deleteTask(selectedKeys.value.join(','))
   Message.success('Delete success')
+  getList()
 }
 
 // get user data

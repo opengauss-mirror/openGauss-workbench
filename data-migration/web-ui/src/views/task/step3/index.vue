@@ -6,19 +6,19 @@
     <div class="search-con">
       <a-form :model="form" layout="inline">
         <a-form-item field="ip" style="margin-left: -17px;">
-          <a-input v-model.trim="form.ip" allow-clear placeholder="请输入物理机IP" style="width: 160px;" @change="getFilterData"></a-input>
+          <a-input v-model.trim="form.ip" allow-clear placeholder="请输入物理机IP" style="width: 160px;"></a-input>
         </a-form-item>
         <a-form-item field="hostname" style="margin-left: -17px;">
-          <a-input v-model.trim="form.hostname" allow-clear placeholder="请输入物理机名称" style="width: 160px;" @change="getFilterData"></a-input>
+          <a-input v-model.trim="form.hostname" allow-clear placeholder="请输入物理机名称" style="width: 160px;"></a-input>
         </a-form-item>
         <a-form-item field="cpu" style="margin-left: -17px;">
-          <a-input v-model.number="form.cpu" max-length="5" allow-clear placeholder="请输入CPU核数" style="width: 160px;" @change="getFilterData"></a-input>
+          <a-input v-model.number="form.cpu" max-length="5" allow-clear placeholder="请输入CPU核数" style="width: 160px;"></a-input>
         </a-form-item>
         <a-form-item field="memory" style="margin-left: -17px;">
-          <a-input v-model.number="form.memory" max-length="10" allow-clear placeholder="剩余内存大于多少M" style="width: 160px;" @change="getFilterData"></a-input>
+          <a-input v-model.number="form.memory" max-length="10" allow-clear placeholder="剩余内存大于多少M" style="width: 160px;"></a-input>
         </a-form-item>
         <a-form-item field="disk" style="margin-left: -17px;">
-          <a-input v-model.number="form.disk" max-length="10" allow-clear placeholder="剩余硬盘大于多少G" style="width: 160px;" @change="getFilterData"></a-input>
+          <a-input v-model.number="form.disk" max-length="10" allow-clear placeholder="剩余硬盘大于多少G" style="width: 160px;"></a-input>
         </a-form-item>
         <a-form-item style="margin-left: -17px;">
           <a-button type="outline" @click="getFilterData">

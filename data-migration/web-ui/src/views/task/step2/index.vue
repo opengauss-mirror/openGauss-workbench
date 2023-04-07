@@ -11,19 +11,19 @@
     <div class="search-con">
       <a-form :model="form" layout="inline">
         <a-form-item field="sourcedbKey" style="margin-left: -17px;">
-          <a-input v-model.trim="form.sourcedbKey" allow-clear placeholder="请输入源实例名/库名" style="width: 180px;" @change="getFilterData"></a-input>
+          <a-input v-model.trim="form.sourcedbKey" allow-clear placeholder="请输入源IP/端口/库名" style="width: 180px;"></a-input>
         </a-form-item>
         <a-form-item field="targetdbKey" style="margin-left: -17px;">
-          <a-input v-model.trim="form.targetdbKey" allow-clear placeholder="请输入目的实例名/库名" style="width: 180px;" @change="getFilterData"></a-input>
+          <a-input v-model.trim="form.targetdbKey" allow-clear placeholder="请输入目的IP/端口/库名" style="width: 180px;"></a-input>
         </a-form-item>
         <a-form-item field="mode" style="margin-left: -17px;">
-          <a-select v-model="form.mode" placeholder="请选择迁移模式" allow-clear style="width: 160px;" @change="getFilterData">
+          <a-select v-model="form.mode" placeholder="请选择迁移模式" allow-clear style="width: 160px;">
             <a-option :value="1">离线模式</a-option>
             <a-option :value="2">在线模式</a-option>
           </a-select>
         </a-form-item>
         <a-form-item field="configType" style="margin-left: -17px;">
-          <a-select v-model="form.configType" placeholder="请选择配置类型" allow-clear style="width: 160px;" @change="getFilterData">
+          <a-select v-model="form.configType" placeholder="请选择配置类型" allow-clear style="width: 160px;">
             <a-option :value="1">默认配置</a-option>
             <a-option :value="2">个性化配置</a-option>
           </a-select>
@@ -47,19 +47,9 @@
     <div class="table-con">
       <a-table :data="tableData" :bordered="false" :stripe="!currentTheme" :hoverable="!currentTheme" :pagination="pagination" @page-change="pageChange">
         <template #columns>
-          <a-table-column title="源实例名" data-index="sourceNodeName"></a-table-column>
-          <a-table-column title="源IP和端口">
-            <template #cell="{ record }">
-              {{ record.sourceNodeInfo.host + ':' + record.sourceNodeInfo.port }}
-            </template>
-          </a-table-column>
+          <a-table-column title="源IP和端口" data-index="sourceNodeName"></a-table-column>
           <a-table-column title="源库名" data-index="sourceDBName"></a-table-column>
-          <a-table-column title="目的实例名" data-index="targetNodeName"></a-table-column>
-          <a-table-column title="目的IP和端口">
-            <template #cell="{ record }">
-              {{ record.targetNodeInfo.host + ':' + record.targetNodeInfo.port }}
-            </template>
-          </a-table-column>
+          <a-table-column title="目的IP和端口" data-index="targetNodeName"></a-table-column>
           <a-table-column title="目的库名" data-index="targetDBName"></a-table-column>
           <a-table-column title="迁移过程模式" data-index="mode">
             <template #cell="{ record }">
