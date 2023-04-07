@@ -304,5 +304,9 @@ mvn clean package -P prod
 
 原因：服务器下载速度过慢或下载异常会发生此情况，可尝试使用离线安装的方式进行安装。
 
-2、创建SQL诊断任务时，如果勾选了explain analyze可选项，执行计划节点将会没有数据。
+2、安装过程中错误信息提示yum install -y unzip zip 。
+
+原因：需在服务器提前配置yum可用或者安装unzip和zip命令。
+
+3、创建SQL诊断任务时，如果勾选了explain analyze可选项，执行计划节点将会没有数据。
 原因：当以explain analyze方式执行SQL时，即使该语句满足statement_history表的写入条件，目前版本的数据库（openGauss3.1.0）也不会将该语句记录进statement_history。

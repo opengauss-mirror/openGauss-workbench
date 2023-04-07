@@ -549,3 +549,20 @@ mvn clean package -P prod
 1、使用在线安装代理或服务端时，安装界面卡住不动。
 
 原因：服务器下载速度过慢或下载异常会发生此情况，可尝试使用离线安装的方式进行安装。
+
+2、安装过程中错误信息提示yum install -y unzip zip 。
+
+原因：需在服务器提前配置yum可用或者安装unzip和zip命令。
+
+3、由于平台限制了上传文件大小，可能导致安装包上传失败，需要修改平台配置。
+
+![image-20230331163722608](doc/image-20230331163722608.png)
+
+解决方案：修改平台配置文件/ops/server/openGauss-visualtool/config/application-cus.yml中对上传文件的大小限制大于安装包大小，然后重启平台。
+
+```
+spring.servlet.multipart:
+  max-file-size: 1000MB
+  max-request-size: 1000MB
+```
+
