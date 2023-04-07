@@ -52,7 +52,8 @@
     </div>
     <template #footer>
       <div class="footer-con">
-        <a-button v-if="basicEditData.length || moreEditData.length" type="outline" style="margin-right: 10px;" @click="resetDefault">恢复默认值</a-button>
+        <a-button v-if="props.mode === 1 && (basicEditData.length || moreEditData.length)" type="outline" style="margin-right: 10px;" @click="resetDefault">恢复默认值</a-button>
+        <a-button v-if="props.mode === 2 && (basicEditData.length || moreEditData.length)" type="outline" style="margin-right: 10px;" @click="resetDefault">使用全局配置</a-button>
         <a-button type="primary" @click="saveParams()">保存</a-button>
       </div>
     </template>
@@ -62,6 +63,7 @@
 <script setup>
 import { ref, reactive, watch, onMounted } from 'vue'
 import { defaultParams } from '@/api/task'
+import { mergeObjectArray } from '@/utils'
 
 const props = defineProps({
   open: Boolean,
@@ -192,8 +194,8 @@ const getDefaultParams = () => {
         })
       }
     } else {
-      taskParams.basic = props.taskInfo.taskParamsObject.basic
-      taskParams.more = props.taskInfo.taskParamsObject.more
+      taskParams.basic = mergeObjectArray(props.globalParams.basic, props.taskInfo.taskParamsObject.basic, 'paramKey')
+      taskParams.more = mergeObjectArray(props.globalParams.more, props.taskInfo.taskParamsObject.more, 'paramKey')
       if (taskParams.basic.length) {
         basicEditData.value = taskParams.basic
         basicData.value = basicData.value.map(item => {
@@ -213,10 +215,17 @@ const getDefaultParams = () => {
 }
 
 const resetDefault = () => {
-  basicData.value = JSON.parse(JSON.stringify(defaultData.basic))
-  moreData.value = JSON.parse(JSON.stringify(defaultData.more))
-  basicEditData.value = []
-  moreEditData.value = []
+  if (props.mode === 1) {
+    basicEditData.value = []
+    moreEditData.value = []
+    basicData.value = JSON.parse(JSON.stringify(defaultData.basic))
+    moreData.value = JSON.parse(JSON.stringify(defaultData.more))
+  } else {
+    basicEditData.value = mergeObjectArray([], props.globalParams.basic, 'paramKey')
+    moreEditData.value = mergeObjectArray([], props.globalParams.more, 'paramKey')
+    basicData.value = mergeObjectArray(defaultData.basic, props.globalParams.basic, 'paramKey')
+    moreData.value = mergeObjectArray(defaultData.more, props.globalParams.more, 'paramKey')
+  }
 }
 
 const saveParams = () => {
