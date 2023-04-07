@@ -4,17 +4,17 @@
       <div class="delete" @click="operateList('delete', kKey)">-</div>
       <a-form-item :label="$t('modeling.components.VisualConfig.5mpu5vnytdc0')">
         <a-select v-model="k.x" :placeholder="$t('modeling.components.VisualConfig.5mpu5vnytu40')" @change="save">
-          <a-option v-for="(item, key) in selectData.x" :key="`x${key}`" :value="item">{{ item }}</a-option>
+          <a-option  class="dianayako_select-option-disabled"   v-for="(item, key) in selectData.x" :key="`x${key}`" :value="item">{{ item }}</a-option>
         </a-select>
       </a-form-item>
       <a-form-item :label="$t('modeling.components.VisualConfig.5mpu5vnytxk0')">
         <a-select v-model="k.y" :placeholder="$t('modeling.components.VisualConfig.5mpu5vnytzw0')" @change="save">
-          <a-option v-for="(item, key) in selectData.y" :key="`y${key}`" :value="item">{{ item }}</a-option>
+          <a-option  class="dianayako_select-option-disabled"   v-for="(item, key) in selectData.y" :key="`y${key}`" :value="item">{{ item }}</a-option>
         </a-select>
       </a-form-item>
       <a-form-item :label="$t('modeling.components.VisualConfig.5mpu5vnyu200')">
         <a-select v-model="k.type" :placeholder="$t('modeling.components.VisualConfig.5mpu5vnyu4g0')" @change="save">
-          <a-option v-for="(item, key) in selectData.type" :key="`type${key}`" :value="item">{{ item }}</a-option>
+          <a-option  class="dianayako_select-option-disabled"   v-for="(item, key) in selectData.type" :key="`type${key}`" :value="item">{{ item }}</a-option>
         </a-select>
       </a-form-item>
     </div>

@@ -70,12 +70,19 @@ public class MixChartGenerateServiceImpl extends BaseGenerateServiceImpl {
                 List<Float> value = seriesData.get(key);
                 //get index of Y Axis
                 int yIndex = yUnitsList.indexOf(barSeriesConstructor.getYUnit());
+                Series s = new Series();
                 if (Objects.equals(key, "Total")) {
                     chartColorIndex.addAndGet(1);
-                    series.add(new Series().setName(key + "-" + chartColorIndex).setType("bar").setData(value).setYAxisIndex(yIndex));
+                    s.setName(key + "-" + chartColorIndex).setType("bar").setData(value).setYAxisIndex(yIndex);
                 } else {
-                    series.add(new Series().setName(key).setType("bar").setData(value).setYAxisIndex(yIndex));
+                    s.setName(key).setType("bar").setData(value).setYAxisIndex(yIndex);
                 }
+
+                if (fullParams.getJSONObject("paramsData").getInteger("showNumber") == 1) {
+                    s.setLabel(new Label().setShow(true));
+                }
+
+                series.add(s);
                 //merge categories
                 seriesKeys.addAll(barSeriesConstructor.getSeriesKey());
             }
@@ -88,12 +95,19 @@ public class MixChartGenerateServiceImpl extends BaseGenerateServiceImpl {
                 List<Float> value = seriesData.get(key);
                 //get index of Y Axis
                 int yIndex = yUnitsList.indexOf(lineSeriesConstructor.getYUnit());
+                Series s = new Series();
                 if (Objects.equals(key, "Total")) {
                     chartColorIndex.addAndGet(1);
-                    series.add(new Series().setName(key + "-" + chartColorIndex).setType("line").setData(value).setYAxisIndex(yIndex));
+                    s.setName(key + "-" + chartColorIndex).setType("line").setData(value).setYAxisIndex(yIndex);
                 } else {
-                    series.add(new Series().setName(key).setType("line").setData(value).setYAxisIndex(yIndex));
+                    s.setName(key).setType("line").setData(value).setYAxisIndex(yIndex);
                 }
+
+                if (fullParams.getJSONObject("paramsData").getInteger("showNumber") == 1) {
+                    s.setLabel(new Label().setShow(true));
+                }
+
+                series.add(s);
                 //merge categories
                 seriesKeys.addAll(lineSeriesConstructor.getSeriesKey());
             }

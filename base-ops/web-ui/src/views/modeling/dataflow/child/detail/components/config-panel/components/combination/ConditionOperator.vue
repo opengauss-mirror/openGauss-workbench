@@ -24,7 +24,7 @@
                     <a-optgroup v-for="(group, groupKey) in fieldsList" :key="`fieldsGroup${groupKey}`"  :label="group.group">
                       <template #label><overflow-tooltip :text="group.group" :content="group.group">{{ group.group }}</overflow-tooltip></template>
                       <overflow-tooltip :text="item.name" v-for="(item, key) in group.fields" :key="`field${key}`" :content="`${group.group} . ${item.name}`">
-                        <a-option :value="`${group.group}.${item.name}`" :label="item.name"></a-option>
+                        <a-option  class="dianayako_select-option-disabled"   :value="`${group.group}.${item.name}`" :label="item.name"></a-option>
                       </overflow-tooltip>
                     </a-optgroup>
                   </a-select>
@@ -91,6 +91,8 @@ const select: KeyValue = computed(() => ({
   ]
 }))
 const fieldsList = computed(() => dFStore.getFieldsSelectList)
+
+
 const iData: KeyValue = reactive({
   activeKey: `1`, cell: null,
   or: []

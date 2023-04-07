@@ -18,7 +18,7 @@
               <a-optgroup v-for="(group, groupKey) in fieldsList" :key="`fieldsGroup${groupKey}`"  :label="group.group">
                 <template #label><overflow-tooltip :text="group.group" :content="group.group">{{ group.group }}</overflow-tooltip></template>
                 <overflow-tooltip :text="item.name" v-for="(item, key) in group.fields" :key="`field${key}`" :content="`${group.group} . ${item.name}`">
-                  <a-option :value="`${group.group}.${item.name}`" :label="item.name"></a-option>
+                  <a-option class="dianayako_select-option-disabled" :value="`${group.group}.${item.name}`" :disabled="checkDisabled(iData.polymerization, `${group.group}.${item.name}`, 'field')">{{ item.name }}</a-option>
                 </overflow-tooltip>
               </a-optgroup>
             </a-select>
@@ -30,7 +30,7 @@
             />
           </a-col>
           <a-col :span="7" class="mr-xs">
-            <a-input :max-length="140" show-word-limit  v-model="item.alias" :placeholder="$t('modeling.combination.PolymerizationOperator.5m82b2nqt9s0')" @blur="save" />
+            <a-input :max-length="140" show-word-limit  v-model="item.alias" :placeholder="$t('modeling.combination.PolymerizationOperator.5m82b2nqt9s0')" @blur="save('pd1', key)" />
           </a-col>
           <a-col :span="1">
             <div class="d-control-remove" @click="operatePolymerization('delete', key)">-</div>
@@ -45,7 +45,7 @@ import { reactive, computed } from 'vue'
 import {
   Tabs as ATabs, TabPane as ATabPane, Select as ASelect, Row as ARow, Col as ACol, Input as AInput
   } from '@arco-design/web-vue'
-import { saveData } from '../../utils/tool'
+import { checkDisabled, saveData } from '../../utils/tool'
 import { Cell } from '@antv/x6'
 import { useDataFlowStore } from '@/store/modules/modeling/data-flow'
 import OverflowTooltip from '../../../../../../../components/OverflowTooltip.vue'
@@ -55,6 +55,7 @@ const { t } = useI18n()
 const AOption = ASelect.Option
 const AOptgroup = ASelect.OptGroup
 const dFStore = useDataFlowStore()
+const useTable = computed(() => dFStore.getUseTable)
 const select: KeyValue = computed(() => ({
   type: [
     { value: 'max', label: t('modeling.combination.PolymerizationOperator.5m82b2nqtck0') },
@@ -63,7 +64,15 @@ const select: KeyValue = computed(() => ({
   ]
 }))
 const fieldsList = computed(() => dFStore.getFieldsSelectList)
-const save = () => saveData('polymerization', iData.polymerization, iData.cell)
+const save: any = (type?: string, key?: number) => {
+  if (type && type === 'pd1' && key !== undefined) {
+    let item = iData.polymerization[key]
+    if (iData.polymerization.findIndex((item2: any, key2: any) => (key !== key2 && item.alias === item2.alias)) !== -1) {
+      item.alias = `${item.alias}${key}`
+    }
+  }
+  saveData('polymerization', iData.polymerization, iData.cell)
+}
 const iData: KeyValue = reactive({
   activeKey: `1`, cell: null,
   polymerization: []

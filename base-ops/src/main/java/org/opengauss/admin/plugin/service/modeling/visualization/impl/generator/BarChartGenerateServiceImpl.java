@@ -69,6 +69,9 @@ public class BarChartGenerateServiceImpl extends BaseGenerateServiceImpl {
             if (barChartParamsBody.getDimension().size() > 0) {
                 s.setName(key);
             }
+            if (fullParams.getJSONObject("paramsData").getInteger("showNumber") == 1) {
+                s.setLabel(new Label().setShow(true));
+            }
             series.add(s);
         }
 

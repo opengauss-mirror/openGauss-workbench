@@ -15,6 +15,11 @@
         <icon-delete />
       </div>
     </a-tooltip>
+    <a-tooltip :content="$t('modeling.dy_common.header.gridText')">
+      <div class="d-button" @click="clickBtn('toggleGridType')">
+        <icon-mosaic />
+      </div>
+    </a-tooltip>
     <a-tooltip :content="$t('modeling.components.Header.5m78qbczsto0')">
       <div class="d-button" @click="clickBtn('revoke')">
         <icon-undo />
@@ -202,6 +207,8 @@ const clickBtn = (type: string, other?: any) => {
     }
   } else if (type === 'visual') {
     emits(`operate`, type)
+  } else if (type === 'toggleGridType') {
+    emits(`operate`, type)
   }
 }
 const refFile: any = ref(null)
@@ -221,6 +228,7 @@ const fileLoad = () => {
   }
   reader.readAsText(selectedFile)
 }
+
 defineExpose({ init })
 </script>
 <style scoped lang="less">

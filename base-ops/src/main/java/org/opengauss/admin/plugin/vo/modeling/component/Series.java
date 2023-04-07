@@ -28,6 +28,7 @@ public class Series {
     private String stack;
     private List<Float> data;
     private int yAxisIndex;
+    private Label label;
 
     public Series setName(String name) {
         this.name = name;
@@ -67,6 +68,14 @@ public class Series {
     }
     public int getYAxisIndex() {
         return yAxisIndex;
+    }
+
+    public Series setLabel(Label label) {
+        this.label = label;
+        return this;
+    }
+    public Label getLabel() {
+        return label;
     }
 
 }

@@ -37,6 +37,11 @@
                   <div class="active-bg"></div>
                 </div>
                 <div class="title-text">{{ node.data.text }}</div>
+                <a-tooltip :content-style="{ whiteSpace: 'pre-wrap', maxWidth: '680px' }" :content="$t('modeling.dy_common.detail.'+node.data.cells_type+'Desc')">
+                  <div class="help">
+                    <IconQuestionCircleFill />
+                  </div>
+                </a-tooltip>
               </div>
             </div>
           </div>
@@ -51,6 +56,7 @@ import { Dnd } from '@antv/x6/lib/addon'
 import { Graph, Addon, Node } from '@antv/x6'
 import '@antv/x6-vue-shape'
 import { Spin as ASpin } from '@arco-design/web-vue'
+import { IconQuestionCircleFill } from '@arco-design/web-vue/es/icon'
 import Nodes from './nodes/index.vue'
 import { useModelCommonStore } from '@/store/modules/modeling/common'
 import { PropsOptions } from '../../types'
@@ -264,6 +270,11 @@ defineExpose({ init, toggleMenu })
                     transition: all .5s;
                     border-radius: 3px;
                   }
+                }
+                .help {
+                  margin-left: auto;
+                  margin-right: 10px;
+                  font-size: 20px;
                 }
               }
               &:hover {

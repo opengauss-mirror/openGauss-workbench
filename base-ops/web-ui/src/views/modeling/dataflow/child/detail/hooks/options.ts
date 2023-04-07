@@ -129,7 +129,11 @@ export const options = () => ({
               type: 'BaseNode', cells_type: 'polymerization', text: i18n.global.t('modeling.hooks.index.5m83asjg8ak0'), icon: 'modeling-juhe',
               configName: 'PolymerizationOperator',
               polymerization: [{ field: null, way: null, alias: '' }],
-              rule: (data: KeyValue) => data.polymerization.filter((item: KeyValue) => (!item.field || !item.way || !item.alias)).length === 0
+              rule: (data: KeyValue) =>
+              data.polymerization.filter((item: KeyValue, key: number) => (
+                !item.field || !item.way || !item.alias
+                || data.polymerization.findIndex((item2: KeyValue, key2: number) => (key !== key2 && item.value === item2.value)) !== -1
+              )).length === 0
             },
             ports: edge1.ports
           }, {
@@ -137,7 +141,11 @@ export const options = () => ({
             data: {
               type: 'BaseNode', cells_type: 'mapping', text: i18n.global.t('modeling.hooks.index.5m83asjg8f40'), configName: 'MapOperator', icon: 'modeling-yingshe',
               mappings: [{ field: null, condition: null, value: '' }],
-              rule: (data: KeyValue) => data.mappings.filter((item: KeyValue) => (!item.field || !item.condition || !item.value)).length === 0
+              rule: (data: KeyValue) =>
+                data.mappings.filter((item: KeyValue, key: number) => (
+                  !item.field || !item.condition || !item.value
+                  || data.mappings.findIndex((item2: KeyValue, key2: number) => (key !== key2 && item.value === item2.value)) !== -1
+                )).length === 0
             },
             ports: edge1.ports
           }, {

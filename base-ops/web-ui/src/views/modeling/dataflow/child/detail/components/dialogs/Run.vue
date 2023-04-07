@@ -131,6 +131,17 @@ const open = (graph: Graph, data: any, type: string) => {
               let arr: KeyValue[] = []
               for (let i in res.data) {
                 arr.push({ name: i, runData: res.data[i] })
+
+                if (Array.isArray(res.data[i])) {
+                  res.data[i].forEach((item: any) => {
+                    for (let i in item) {
+                      if (item[i] && typeof item[i] === 'string') {
+                        item[i] = item[i].trim()
+                      }
+                    }
+                  })
+                }
+
               }
               dData.data = arr
             }

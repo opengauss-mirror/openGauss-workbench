@@ -7,14 +7,14 @@
     <a-tab-pane key="1" :title="$t('modeling.base.DeleteOperator.5m7hqy836z40')">
       <div class="tab-content d-a-form">
         <a-form-item :label="$t('modeling.base.DeleteOperator.5m7hqy838600')" :labelCol="{ span: 6, offset: 0 }" labelAlign="left" :colon="false">
-          <div class="select-comp-container">
+          <div class="select-comp-container dy-select-container">
           <a-select popup-container=".select-comp-container"
             v-model="config.table" :placeholder="$t('modeling.base.DeleteOperator.5m7hqy838bg0')" allowSearch
             @change="(value: any) => selectChange(value, 'table')"
           >
             <template #label="{ data }"><overflow-tooltip :text="data?.label" :content="data?.label" :other-width="0">{{ data?.label }}</overflow-tooltip></template>
             <overflow-tooltip :text="item.tablename" v-for="(item, key) in tableList" :key="key" :content="item.tablename">
-              <a-option :value="item.tablename" :disabled="checkDisabled(useTable, item.tablename)">{{ item.tablename }}</a-option>
+              <a-option  class="dianayako_select-option-disabled"   :value="item.tablename" :disabled="checkDisabled(useTable, item.tablename)">{{ item.tablename }}</a-option>
             </overflow-tooltip>
           </a-select>
           </div>
@@ -30,17 +30,20 @@
         </a-row>
         <a-row class="mb-s" v-for="(row, rowKey) in config.fields" :key="`list2Row${rowKey}`" align="center">
           <a-col :span="22" class="mr-xs">
-            <a-select v-model="config.fields[rowKey]" :placeholder="$t('modeling.base.DeleteOperator.5m7hqy838hc0')" :trigger-props="{ contentClass: 'd-a-select-dropdown' }"
-              allowSearch style="width: 100%;"
-              @change="save('fields', config.fields)">
-              <template #label="{ data }"><overflow-tooltip :text="data?.label" :content="data?.label" :other-width="0">{{ data?.label }}</overflow-tooltip></template>
-              <a-optgroup v-for="(group, groupKey) in fieldsList" :key="`fieldsGroup${groupKey}`"  :label="group.group">
-                <template #label><overflow-tooltip :text="group.group" :content="group.group">{{ group.group }}</overflow-tooltip></template>
-                <overflow-tooltip :text="item.name" v-for="(item, key) in group.fields" :key="`field${key}`" :content="`${group.group} . ${item.name}`">
-                  <a-option :value="`${group.group}.${item.name}`" :disabled="checkDisabled(config.fields, `${group.group}.${item.name}`, 'value')">{{ item.name }}</a-option>
-                </overflow-tooltip>
-              </a-optgroup>
-            </a-select>
+            <div class="select-comp-container dy-select-container">
+              <a-select popup-container=".select-comp-container"
+                v-model="config.fields[rowKey]" :placeholder="$t('modeling.base.DeleteOperator.5m7hqy838hc0')" :trigger-props="{ contentClass: 'd-a-select-dropdown' }"
+                allowSearch style="width: 100%;"
+                @change="save('fields', config.fields)">
+                <template #label="{ data }"><overflow-tooltip :text="data?.label" :content="data?.label" :other-width="0">{{ data?.label }}</overflow-tooltip></template>
+                <a-optgroup v-for="(group, groupKey) in fieldsList" :key="`fieldsGroup${groupKey}`"  :label="group.group">
+                  <template #label><overflow-tooltip :text="group.group" :content="group.group">{{ group.group }}</overflow-tooltip></template>
+                  <overflow-tooltip :text="item.name" v-for="(item, key) in group.fields" :key="`field${key}`" :content="`${group.group} . ${item.name}`">
+                    <a-option  class="dianayako_select-option-disabled"   :value="`${group.group}.${item.name}`" :disabled="checkDisabled(config.fields, `${group.group}.${item.name}`, 'value')">{{ item.name }}</a-option>
+                  </overflow-tooltip>
+                </a-optgroup>
+              </a-select>
+            </div>
           </a-col>
           <a-col :span="1">
             <div class="d-control-remove" @click="operateList('delete-list', rowKey)">-</div>

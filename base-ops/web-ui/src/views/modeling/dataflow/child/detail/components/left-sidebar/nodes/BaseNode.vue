@@ -10,13 +10,11 @@
         'd-antv-node-dark-selected': dAntvNodeDarkTheme && antvSelected
       }"
     >
-      <div class="base-node-disabled" :class="{ 'open-base-node-disabled': nodeDisabledShow }">
-        <div class="disabled-frame" @click="toggleDisbled"><icon-check v-show="disabled" /></div>
-      </div>
       <div class="base-node-icon" v-if="nodeConfig.icon">
         <svg-icon v-if="nodeConfig.icon" class="bs-i" :icon-class="nodeConfig.icon"></svg-icon>
       </div>
       <div class="name">{{ nodeConfig.text }}</div>
+      <icon-stop class="disabled-frame-dy-c" v-show="showDisabled" :class="{ 'open-base-node-disabled': disabled }" @click="toggleDisbled" />
       <icon-bar-chart class="base-node-play" v-show="showPlay" @click.stop="openVisual" />
       <icon-settings class="base-node-settings" @click.stop="openConfig" />
     </div>
@@ -29,8 +27,8 @@
   </a-dropdown>
 </template>
 <script setup lang="ts">
-import { inject, onMounted, ref } from 'vue'
-import { IconSettings } from '@arco-design/web-vue/es/icon'
+import { computed, inject, onMounted, ref } from 'vue'
+import { IconSettings, IconStop } from '@arco-design/web-vue/es/icon'
 import { Dropdown as ADropdown, Doption as ADoption } from '@arco-design/web-vue'
 import { IconCheck, IconBarChart } from '@arco-design/web-vue/es/icon'
 import { Cell, Graph } from '@antv/x6'
@@ -50,13 +48,18 @@ const antvSelected = ref<boolean>(false)
 const disabled = ref<boolean>(false)
 const nodeDisabledShow = ref<boolean>(false)
 const showPlay = ref<boolean>(true)
+const showDisabled = ref<boolean>(true)
+const useTable = computed(() => dFStore.getUseTable)
+const useDatabase = computed(() => dFStore.getUseDatabase)
 
 const dAntvNodeDarkTheme = ref<boolean>(false)
 onMounted(() => {
   if (getNode) {
     let n: Cell = getNode()
-    console.log(n)
     if (n && n.data && n.data.cells_type && n.data.cells_type === 'dataSource') showPlay.value = false
+    if (n && n.data && n.data.cells_type && n.data.cells_type === 'dataSource') showDisabled.value = false
+    if (n && n.data && n.data.disabled) disabled.value = true
+    else disabled.value = false
     n.on(`change:data`, ({ current }) => {
       antvSelected.value = current.antvSelected ? current.antvSelected : false
       nodeDisabledShow.value = current.showDisabledCheckbox ? current.showDisabledCheckbox : false
@@ -103,16 +106,59 @@ const openConfig = () => {
     }
 
     dFStore.setDatabaseInfo(source3, source1, source2).then(() => {
+
       let index2 = nodes.findIndex((item: any) => {
         return item.shape === 'BaseNode' && item.data && ['query', 'insert', 'delete', 'update'].includes(item.data.cells_type)
       })
+
       if (index2 !== -1 && nodes[index2].data.table) dFStore.setDatabaseTableInfo(nodes[index2].data.table)
+
       if (n.shape === 'BaseNode' && n.data && ['query', 'insert', 'delete', 'update'].includes(n.data.cells_type)) dFStore.setDatabaseTableInfo(n.data.table)
       let index3 = nodes.findIndex((item: any) => {
         return item.shape === 'BaseNode' && item.data && item.data.cells_type === 'join'
       })
+
       if (index3 !== -1 && nodes[index3].data.table) dFStore.setDatabaseTableInfo(nodes[index3].data.table)
       if (n.shape === 'BaseNode' && n.data && n.data.cells_type === 'join') dFStore.setDatabaseTableInfo(n.data.table)
+
+      // Existing mapping operator and aggregation operator
+      // Must be a sequence operator
+      dFStore.clearFieldsAlias && dFStore.clearFieldsAlias()
+      if (n.data.cells_type === 'sort') {
+        nodes.forEach(item1 => {
+          if (item1.data.cells_type === 'mapping') {
+            item1.data.mappings.forEach((item: any) => {
+              if (item && item.field && item.field.split) {
+                let tablename = item.field.split('.')[0]
+                if (tablename && item.value && useDatabase.value) {
+                  dFStore.setFieldsAlias({
+                    database: useDatabase.value,
+                    table: tablename,
+                    value: item.value,
+                    name: item.field
+                  })
+                }
+              }
+            })
+          } else if (item1.data.cells_type === 'polymerization') {
+            item1.data.polymerization.forEach((item: any) => {
+              console.log(item)
+              if (item && item.field && item.field.split) {
+                let tablename = item.field.split('.')[0]
+                if (tablename && item.alias && useDatabase.value) {
+                  dFStore.setFieldsAlias({
+                    database: useDatabase.value,
+                    table: tablename,
+                    value: item.alias,
+                    name: item.field
+                  })
+                }
+              }
+            })
+          }
+        })
+      }
+
       getNode && mCStore.setSelectNode(n, true)
     })
   }
@@ -127,12 +173,28 @@ const operateNode = (type: string) => {
   if (getGraph && getNode) {
     let g: Graph = getGraph()
     let n: Cell = getNode()
-    if (type === 'delete') g.removeNode(n.id)
-    else if (type === 'copy') {
-      g.copy([n], { useLocalStorage: true })
-      g?.copy(getCheckedNodes(g), { useLocalStorage: true })
+    if (type === 'delete') {
+      let cells = getCheckedNodes(g)
+      if (cells && cells.length > 0) {
+        const deleteArr = cells.filter((item: Cell) => (!item.data.operate || item.data.operate.includes('delete')))
+        g.removeCells(deleteArr)
+      } else {
+        g.removeNode(n.id)
+      }
+    } else if (type === 'copy') {
+      let cells = getCheckedNodes(g)
+      if (cells && cells.length > 0) {
+        g?.copy(cells, { useLocalStorage: true })
+      } else {
+        g.copy([n], { useLocalStorage: true })
+      }
     } else if (type === 'cut') {
-      g?.cut(getCheckedNodes(g), { useLocalStorage: true })
+      let cells = getCheckedNodes(g)
+      if (cells && cells.length > 0) {
+        g?.cut(getCheckedNodes(g), { useLocalStorage: true })
+      } else {
+        g?.cut([n], { useLocalStorage: true })
+      }
     } else if (type === 'paste') {
       g?.paste({ useLocalStorage: true })
     }
@@ -159,39 +221,6 @@ const toggleDisbled = () => {
     box-sizing: border-box;
     padding: 0 10px;
     position: relative;
-    .base-node-disabled {
-      position: absolute;
-      left: 0;
-      top: 50%;
-      transform: translate(-100%, -50%);
-      width: 26px;
-      height: 100%;
-      display: none;
-      .disabled-frame {
-        position: absolute;
-        left: 0;
-        top: 50%;
-        transform: translate(0, -50%);
-        width: 16px;
-        height: 16px;
-        border: 1px solid rgb(227, 29, 28);
-        cursor: pointer;
-        color: rgb(227, 29, 28);
-        &::before {
-          content: "";
-          position: absolute;
-          top: 50%;
-          right: 0;
-          width: 10px;
-          height: 1px;
-          transform: translate(100%, -50%);
-          background-color: rgb(227, 29, 28);
-        }
-      }
-    }
-    .open-base-node-disabled {
-      display: block;
-    }
     .name {
       color: rgb(36, 36, 36);
       font-size: 14px;
@@ -215,6 +244,16 @@ const toggleDisbled = () => {
         fill: rgb(227, 29, 28);
       }
     }
+    .disabled-frame-dy-c {
+      position: absolute;
+      font-size: 14px;
+      right: 47px;
+      top: 5px;
+      cursor: pointer;
+    }
+    .open-base-node-disabled {
+      color: #FF0000;
+    }
     .base-node-settings {
       position: absolute;
       font-size: 14px;
@@ -236,7 +275,7 @@ const toggleDisbled = () => {
     }
   }
   .d-antv-node-disabled {
-    opacity: 0.2;
+    opacity: 0.4;
     .base-node-settings {
       cursor: default !important;
     }

@@ -7,6 +7,14 @@
   >
     <a-tab-pane key="1" :title="$t('modeling.combination.SortOperator.5m82bdo2r0w0')">
       <div class="tab-content d-a-form">
+        <a-row>
+          <a-col :span="24">
+            <div class="d-tips">
+              <icon-exclamation-circle-fill />
+              {{$t('modeling.dy_common.panel.sortTip1')}}
+            </div>
+          </a-col>
+        </a-row>
         <div class="d-form-item-label mb-s">
           <div class="label-text label-color">{{$t('modeling.combination.SortOperator.5m82bdo2rns0')}}</div>
           <div class="d-control-add" @click="operateSorts('add')">+</div>
@@ -19,7 +27,7 @@
               <a-optgroup v-for="(group, groupKey) in fieldsList" :key="`fieldsGroup${groupKey}`"  :label="group.group">
                 <template #label><overflow-tooltip :text="group.group" :content="group.group">{{ group.group }}</overflow-tooltip></template>
                 <overflow-tooltip :text="item.name" v-for="(item, key) in group.fields" :key="`field${key}`" :content="`${group.group} . ${item.name}`">
-                  <a-option :value="`${group.group}.${item.name}`" :label="item.name"></a-option>
+                  <a-option  class="dianayako_select-option-disabled"   :value="`${group.group}.${item.name}`" :label="item.name"></a-option>
                 </overflow-tooltip>
               </a-optgroup>
             </a-select>
@@ -97,5 +105,9 @@ defineExpose({ init })
         transform: translateY(-50%);
       }
     }
+  }
+  .d-tips {
+    color: var(--color-neutral-6);
+    margin-bottom: 10px;
   }
 </style>

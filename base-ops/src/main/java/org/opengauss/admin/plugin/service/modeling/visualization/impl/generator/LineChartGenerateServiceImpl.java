@@ -70,6 +70,10 @@ public class LineChartGenerateServiceImpl extends BaseGenerateServiceImpl {
             }
             series.add(s);
 
+            if (fullParams.getJSONObject("paramsData").getInteger("showNumber") == 1) {
+                s.setLabel(new Label().setShow(true));
+            }
+
             //get min value for y axis
             float currentMinValue = Collections.min(value);
             if (currentMinValue < minValue) {
