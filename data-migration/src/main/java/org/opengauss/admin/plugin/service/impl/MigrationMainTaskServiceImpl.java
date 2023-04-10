@@ -466,8 +466,7 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
                     log.info("Sync refresh task status,taskId:{}", taskId);
                     syncRefreshTaskStatusByPortal(taskId);
                 } catch (Exception e) {
-                    e.printStackTrace();
-                    log.error("Sync refresh task status error", e);
+                    log.error("Sync refresh task status error. message: {}", e.getMessage());
                 }
             });
         }
@@ -521,7 +520,7 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
             try {
                 Thread.sleep(mainTaskRefreshIntervalsMillisecond);
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                log.error("refresh main task status error, message: {}", e.getMessage());
             }
         }
     }

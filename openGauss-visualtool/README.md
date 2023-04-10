@@ -57,77 +57,100 @@
 
 ## 支持的服务器系统
 openEuler 20.3LTS（x86_x64，ARM），centos7.x（x86_x64）
-## 安装步骤
-### 基于源码编译安装
-1、使用root用户，创建新用户og_ops，并授予sudo免密权限
-
-> + 添加用户 **useradd og_ops**
-> + 设置密码 **passwd og_ops**
-> + 增加文件编辑权限 **chmod u+w /etc/sudoers**
-> + 编辑文件 **/etc/sudoers**，在文件底部增加：**og_ops ALL=(ALL) NOPASSWD: ALL**
-> + 回收文件编辑权限 **chmod u-w /etc/sudoers**
-
-2、使用root用户，在项目根目录下执行install.sh脚本
-
-3、使用og_ops用户，在项目根目录下执行server.sh start启动服务
-
-> servier.sh 支持参数（start|stop|restart|status）
-
-4、访问地址https://ip:9494
+## 安装部署
 
 ### jar包安装
-1、创建工作目录
-
-> mkdir -p /ops/server/openGauss-visualtool/logs /ops/server/openGauss-visualtool/config /ops/ssl /ops/files
-
-2、将visualtool-main.jar包上传至/ops/server/openGauss-visualtool/下
-
-3、修改application-temp.yml文件中的数据链链接ip、port、database、dbuser、dbpassword。将修改后的配置文件application-temp.yml传至/ops/server/openGauss-visualtool/config/下
-
-4、运行以下命令创建ssl文件
-
-```
+```shell
+#1、创建datakit工作目录，并在工作目录中创建存放系统运行数据的子目录
+mkdir -p 自定义工作目录
+cd 自定义工作目录
+mkdir -p logs config ssl files
+#2、将visualtool-main.jar包上传至 $自定义工作目录 下
+#3、修改application-temp.yml文件中的数据链链接ip、port、database、dbuser、dbpassword。将修改后的配置文件application-temp.yml传至 $自定义工作目录/config/下
+#4、修改配置文件中平台工作目录
+sed -i s#/ops#$(pwd)#g config/application-temp.yml
+#4、创建ssl文件
 keytool -genkey -noprompt \
     -dname "CN=opengauss, OU=opengauss, O=opengauss, L=Beijing, S=Beijing, C=CN"\
     -alias opengauss\
     -storetype PKCS12 \
     -keyalg RSA \
     -keysize 2048 \
-    -keystore /ops/ssl/keystore.p12 \
+    -keystore $(pwd)/ssl/keystore.p12 \
     -validity 3650 \
-    -storepass password
+    -storepass 123456
+#5、执行启动命令
+nohup java -Xms2048m -Xmx4096m -jar $(pwd)/visualtool-main.jar \
+    --spring.profiles.active=temp >$(pwd)/logs/visualtool-main.out 2>&1 &
 ```
 
-5、在root下给ops目录及下面所有文件修改所属用户为执行用户
-
-6、进入/ops/server/openGauss-visualtool目录，执行启动命令。日志输出位于/ops/server/openGauss-visualtool/logs/visualtool-main.out
-
-> nohup java -Xms2048m -Xmx4096m -jar /ops/server/openGauss-visualtool/visualtool-main.jar --spring.profiles.active=temp >/ops/server/openGauss-visualtool/logs/visualtool-main.out 2>&1 &
+### docker安装
+```shell
+#1、创建datakit工作目录，并在工作目录中创建存放系统运行数据的子目录
+mkdir -p 自定义工作目录
+cd 自定义工作目录
+mkdir -p logs config ssl files
+#2、将visualtool-main.jar包上传至 $自定义工作目录 下
+#3、修改application-temp.yml文件中的数据链链接ip、port、database、dbuser、dbpassword。将修改后的配置文件application-temp.yml传至 $自定义工作目录/config/下
+#4、创建ssl文件
+keytool -genkey -noprompt \
+    -dname "CN=opengauss, OU=opengauss, O=opengauss, L=Beijing, S=Beijing, C=CN"\
+    -alias opengauss\
+    -storetype PKCS12 \
+    -keyalg RSA \
+    -keysize 2048 \
+    -keystore $(pwd)/ssl/keystore.p12 \
+    -validity 3650 \
+    -storepass 123456
+#5、编辑Dockerfile
+vi Dockerfile
+#复制以下内容进行粘贴
+FROM openjdk:11
+ENV TZ=Asia/Shanghai
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+EXPOSE 9494 5432
+WORKDIR /ops/
+ENTRYPOINT ["java","-Xms2048m","-Xmx4096m", "-jar", "visualtool-main.jar"]
+#6、构建镜像
+docker build -f Dockerfile -t datakit:5.0.0 .
+#7、启动容器
+docker run -idt -p 9494:9494 \
+    -v /etc/localtime:/etc/localtime:ro \
+    -v $(pwd):/ops \
+    --name datakit datakit:5.0.0 \
+    --spring.profiles.active=temp
+```
 
 ## 升级步骤
-### 基于源码升级
-1、使用root用户，在项目根目录下执行upgrade.sh脚本
-
-2、使用og_ops用户，在项目根目录下执行server.sh restart启动服务
-
-3、访问地址https://ip:9494
-
 ### jar包升级
-1、将新的jar包传至/ops/server/openGauss-visualtool/下
-
-2、关闭原有进程后，再执行启动命令
-
-> nohup java -Xms2048m -Xmx4096m -jar /ops/server/openGauss-visualtool/visualtool-main.jar --spring.profiles.active=temp >/ops/server/openGauss-visualtool/logs/visualtool-main.out 2>&1 &
+```shell
+#1、将新的jar包传至 自定义工作目录 下，替换原有visualtool-main.jar
+cd 自定义工作目录
+#2、关闭原有进程后，再执行启动命令
+nohup java -Xms2048m -Xmx4096m -jar $(pwd)/visualtool-main.jar \
+    --spring.profiles.active=temp >$(pwd)/logs/visualtool-main.out 2>&1 &
+```
+### docker安装升级
+```shell
+#1、将新的jar包传至 自定义工作目录 下，替换原有visualtool-main.jar
+#2、重启容器
+docker restart datakit
+```
+### 平台配置修改
+#### 端口修改
+在工作目录的config目录中，修改配置文件，将默认9494端口修改为自定义端口，之后重启服务
 
 ### 注意事项：
-1、平台使用的数据库，当前仅支持openGauss数据库，并且需要提前创建database。
+1、当前平台运行依赖于openJdk11。
 
-2、需要将部署服务器IP配置在平台使用的数据库（openGauss）的白名单列表中。
+2、平台使用的数据库，当前仅支持openGauss数据库，并且需要提前创建database。
 
-3、平台默认的登录账号密码：admin/admin123，请在首次登录后及时修改密码。
+3、需要将部署服务器IP配置在平台使用的数据库（openGauss）的白名单列表中。
+
+4、平台默认的登录账号密码：admin/admin123，请在首次登录后及时修改密码。
 
 ## 卸载步骤
-1、在项目根目录下执行uninstall.sh脚本，卸载系统以及清理文件数据。
+1、停止java进程或者docker容器，删除工作目录。
 
 2、手动清理数据库中所有的表和序列。
 
@@ -155,6 +178,3 @@ keytool -genkey -noprompt \
 
 [主程序扩展手册]( https://fullstack-dao.feishu.cn/docx/doxcnV63pz1w4bn4Zn1y2lxwJnf )
 
-## 常见问题
-1、插件框架依赖包无法拉取到。
-> 本地maven settings中的mirror配置的mirrorOf参数如果配置的通配符*，则在后面追加上 ,!maven-public 即可。

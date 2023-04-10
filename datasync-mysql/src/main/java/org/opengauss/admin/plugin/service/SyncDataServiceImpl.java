@@ -89,7 +89,6 @@ public class SyncDataServiceImpl {
                 return true;
             }
         } catch (SQLException | ClassNotFoundException e) {
-            e.printStackTrace();
         } finally {
             if (resultSet != null) {
                 try {

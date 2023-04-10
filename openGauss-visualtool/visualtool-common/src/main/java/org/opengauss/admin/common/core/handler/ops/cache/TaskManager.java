@@ -1,5 +1,7 @@
 package org.opengauss.admin.common.core.handler.ops.cache;
 
+import lombok.extern.slf4j.Slf4j;
+
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -10,6 +12,7 @@ import java.util.concurrent.TimeUnit;
  * @author lhf
  * @date 2022/8/11 20:37
  **/
+@Slf4j
 public class TaskManager {
     private static final ConcurrentHashMap<String, Future<?>> TASK_CONTEXT = new ConcurrentHashMap<>();
 
@@ -24,7 +27,7 @@ public class TaskManager {
             try {
                 TimeUnit.SECONDS.sleep(2);
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                log.error("remove task error, message: {}", e.getMessage());
             }
         }
 

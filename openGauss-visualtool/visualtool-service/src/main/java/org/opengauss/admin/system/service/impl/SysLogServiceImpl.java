@@ -193,7 +193,7 @@ public class SysLogServiceImpl implements ISysLogService {
                       file.put("createdAt", attrs.creationTime().toMillis());
                       file.put("updatedAt", attrs.lastModifiedTime().toMillis());
                     } catch (IOException e) {
-                        e.printStackTrace();
+                        log.error("list all log error, message: {}", e.getMessage());
                     }
                     files.add(file);
                 }

@@ -477,7 +477,7 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
             try {
                 Thread.sleep(taskOfflineSchedulerIntervalsMillisecond);
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                log.error("offline task scheduler error, message: {}", e.getMessage());
             }
         }
     }
