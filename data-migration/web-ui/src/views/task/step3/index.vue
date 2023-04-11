@@ -60,7 +60,7 @@
               {{ record.baseInfos ? `,CPU核数：${record.baseInfos[0]}，剩余内存：${record.baseInfos[1]}M，剩余硬盘容量：${record.baseInfos[2]}G` : ''}}
             </template>
           </a-table-column>
-          <a-table-column title="是否已安装portal" data-index="installPortalStatus" align="center" :width="200">
+          <a-table-column title="是否安装迁移套件" data-index="installPortalStatus" align="center" :width="200">
             <template #cell="{ record }">
               <span v-if="record.installPortalStatus !== 0">{{ statusMap(record.installPortalStatus) }}</span>
               <a-popover v-if="record.installPortalStatus === 2">
