@@ -98,7 +98,7 @@
             _route.forEach((element) => {
               // This is demo, modify nodes as needed
               const icon = element?.meta?.icon
-                ? () => h(compile(element?.meta?.icon?.indexOf('.svg') === -1 ? `<${element?.meta?.icon?.indexOf('icon') !== -1 ? element?.meta?.icon : 'svg-icon icon-class=' + element?.meta?.icon + ''} />` : `<img src="${element?.meta?.icon}" width="18" height="18" class="img-svg" />`))
+              ? () => h(compile(element?.meta?.icon?.indexOf('.svg') === -1 ? `<${element?.meta?.icon?.indexOf('icon') !== -1 ? element?.meta?.icon : 'svg-icon icon-class=' + element?.meta?.icon + ''} />` : `<img src="${element?.meta?.icon}" width="18" height="18" class="img-svg ${/Apple/.test(navigator.vendor) ? 'safari-img-svg' : ''}" />`))
                 : null
               const node =
                 element?.children && element?.children.length !== 0 ? (
@@ -136,7 +136,7 @@
             _route.forEach((element) => {
               // This is demo, modify nodes as needed
               const icon = element?.meta?.icon
-                ? () => h(compile(element?.meta?.icon?.indexOf('.svg') === -1 ? `<${element?.meta?.icon?.indexOf('icon') !== -1 ? element?.meta?.icon : 'svg-icon icon-class=' + element?.meta?.icon + ''} />` : `<img src="${element?.meta?.icon}" width="18" height="18" class="img-svg" />`))
+              ? () => h(compile(element?.meta?.icon?.indexOf('.svg') === -1 ? `<${element?.meta?.icon?.indexOf('icon') !== -1 ? element?.meta?.icon : 'svg-icon icon-class=' + element?.meta?.icon + ''} />` : `<img src="${element?.meta?.icon}" width="18" height="18" class="img-svg ${/Apple/.test(navigator.vendor) ? 'safari-img-svg' : ''}" />`))
                 : null
               const node =
                 element?.children && element?.children.length !== 0 ? (
@@ -216,12 +216,18 @@
     }
     .img-svg {
       filter: drop-shadow(37px 0 0 var(--color-text-3));
-      transform: translate3d(-37px, 0, 0);
+      transform: translate(-37px, 0);
+      &.safari-img-svg {
+        transform: translate3d(-37px, 0, 0);
+      }
     }
     .arco-menu-item.arco-menu-selected .arco-menu-icon {
       .img-svg {
         filter: drop-shadow(37px 0 0 rgb(var(--primary-6)));
-        transform: translate3d(-37px, 0, 0);
+        transform: translate(-37px, 0);
+        &.safari-img-svg {
+          transform: translate3d(-37px, 0, 0);
+        }
       }
     }
   }
