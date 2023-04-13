@@ -12,8 +12,8 @@
       </div>
       <a-form class="mb" :model="data.form" :rules="formRules" :style="{ width: '400px' }" ref="formRef" auto-label-width>
         <a-form-item field="hostId" :label="$t('simpleInstall.index.5mpn813guf00')">
-          <div class="flex-row">
-            <a-select style="width: 313px;" class="mr" :loading="data.hostLoading" v-model="data.form.hostId"
+          <div class="flex-row mr-s">
+            <a-select style="width: 313px;" class="mr-s" :loading="data.hostLoading" v-model="data.form.hostId"
               :placeholder="$t('simpleInstall.index.5mpn813gukw0')" @change="hostChange"
               @popup-visible-change="hostVisibleChange">
               <a-option v-for="item in data.hostList" :key="item.hostId" :value="item.hostId">{{
@@ -22,8 +22,11 @@
                 (item.publicIp ? item.publicIp : '--') + ')'
               }}</a-option>
             </a-select>
-            <label class="label-color">{{ data.form.sysArch }}</label>
+            <icon-code-square :size="25" class="label-color" style="cursor: pointer;" @click="showTerminal" />
           </div>
+          <template #extra>
+            <label class="label-color">{{ data.form.sysArch }}</label>
+          </template>
         </a-form-item>
         <a-form-item v-if="data.isNeedPwd" field="rootPassword" :label="$t('simpleInstall.index.else2')"
           validate-trigger="blur">
@@ -65,10 +68,10 @@
         <div class="flex-col-start full-h full-w">
           <a-steps small type="arrow" style="width: 100%;" class="mb" :current="data.installStepNum"
             :status="data.currentStatus">
-            <a-step>环境准备</a-step>
-            <a-step>安装包准备</a-step>
-            <a-step>执行安装</a-step>
-            <a-step>安装后处理</a-step>
+            <a-step>{{ $t('simple.ExeInstall.else1') }}</a-step>
+            <a-step>{{ $t('simple.ExeInstall.else2') }}</a-step>
+            <a-step>{{ $t('simple.ExeInstall.else3') }}</a-step>
+            <a-step>{{ $t('simple.ExeInstall.else4') }}</a-step>
           </a-steps>
           <div class="flex-row full-w full-h">
             <div class="flex-col-start panel-w mr" :style="data.state === 2 ? '' : 'width: 100%'">
@@ -113,6 +116,7 @@
         </div>
       </div>
     </div>
+    <host-terminal ref="hostTerminalRef"></host-terminal>
   </div>
 </template>
 
@@ -137,6 +141,8 @@ import { FormInstance } from '@arco-design/web-vue/es/form'
 import { encryptPassword } from '@/utils/jsencrypt'
 import { useI18n } from 'vue-i18n'
 import dayjs from "dayjs";
+import HostTerminal from "@/views/ops/install/components/hostTerminal/HostTerminal.vue";
+
 const { t } = useI18n()
 const data = reactive<KeyValue>({
   state: -1, // -1 un install  0 installing  1 success  2 fail
@@ -300,6 +306,7 @@ const retryInstall = () => {
 const openLogSocket = () => {
   const term = getTermObj()
   let isProgress = false
+  let temp = false
   const socketKey = new Date().getTime()
   const logSocket = new Socket({ url: `simple_installLog_${socketKey}` })
   terminalLogWs.value = logSocket
@@ -329,12 +336,28 @@ const openLogSocket = () => {
         term.write('\x1b[2K\r')
         if (progress === 1) {
           term.writeln((progress * 100).toFixed(0) + '%')
+          isProgress = false
         } else {
           term.write((progress * 100).toFixed(0) + '%')
         }
       }
     } else {
-      term.writeln(messageData)
+      if (temp) {
+        term.write('\x1b[2K\r')
+        if (messageData === '100%') {
+          term.writeln(messageData)
+        } else {
+          term.write(messageData)
+        }
+      } else {
+        term.writeln(messageData)
+      }
+      if (messageData === 'START_SCP_INSTALL_PACKAGE') {
+        temp = true
+      }
+      if (messageData === 'END_SCP_INSTALL_PACKAGE') {
+        temp = false
+      }
     }
     numDynamic(messageData)
     if (messageData.indexOf('FINAL_EXECUTE_EXIT_CODE') > -1) {
@@ -624,6 +647,42 @@ const handleDownloadLog = () => {
   link.click()
   document.body.removeChild(link)
   URL.revokeObjectURL(url)
+}
+
+const hostTerminalRef = ref<null | InstanceType<typeof HostTerminal>>(null)
+const showTerminal = () => {
+  // isRemember password
+  if (data.isNeedPwd) {
+    if (!data.form.rootPassword) {
+      formRef.value?.setFields({
+        rootPassword: {
+          status: 'error',
+          message: t('simple.InstallConfig.5mpmu0laqwo0')
+        }
+      })
+      return
+    }
+  }
+  if (!data.form.hostId) {
+    formRef.value?.setFields({
+      hostId: {
+        status: 'error',
+        message: t('simple.InstallConfig.5mpmu0laqss0')
+      }
+    })
+    return
+  }
+  // showTerminal
+  handleShowTerminal({
+    hostId: data.form.hostId,
+    port: data.form.port,
+    ip: data.form.publicIp,
+    password: data.form.rootPassword
+  })
+}
+
+const handleShowTerminal = (data: KeyValue) => {
+  hostTerminalRef.value?.open(data)
 }
 
 </script>

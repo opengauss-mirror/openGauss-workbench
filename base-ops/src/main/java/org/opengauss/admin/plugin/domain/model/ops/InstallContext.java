@@ -1,3 +1,26 @@
+/*
+ * Copyright (c) 2022 Huawei Technologies Co.,Ltd.
+ *
+ * openGauss is licensed under Mulan PSL v2.
+ * You can use this software according to the terms and conditions of the Mulan PSL v2.
+ * You may obtain a copy of Mulan PSL v2 at:
+ *
+ * http://license.coscl.org.cn/MulanPSL2
+ *
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ * EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ * MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ * See the Mulan PSL v2 for more details.
+ * -------------------------------------------------------------------------
+ *
+ * InstallContext.java
+ *
+ * IDENTIFICATION
+ * base-ops/src/main/java/org/opengauss/admin/plugin/domain/model/ops/InstallContext.java
+ *
+ * -------------------------------------------------------------------------
+ */
+
 package org.opengauss.admin.plugin.domain.model.ops;
 
 import cn.hutool.core.collection.CollUtil;
@@ -42,6 +65,8 @@ public class InstallContext implements Cloneable {
     private String clusterId;
 
     private WsSession retSession;
+
+    private String envPath;
 
     private List<HostInfoHolder> hostInfoHolders;
 
@@ -121,6 +146,7 @@ public class InstallContext implements Cloneable {
         opsClusterEntity.setInstallMode(installMode);
         opsClusterEntity.setDeployType(deployType);
         opsClusterEntity.setDatabaseUsername("gaussdb");
+        opsClusterEntity.setEnvPath(envPath);
         if (openGaussVersion == OpenGaussVersionEnum.ENTERPRISE) {
             opsClusterEntity.setInstallPackagePath(enterpriseInstallConfig.getInstallPackagePath());
             opsClusterEntity.setDatabasePassword(enterpriseInstallConfig.getDatabasePassword());

@@ -18,13 +18,13 @@
     <a-form :model="data.formData" ref="formRef" :label-col="{ style: { width: '90px' } }" :rules="formRules"
       :disabled="data.disabled">
       <a-form-item field="name" :label="$t('components.AddAz.azName')" validate-trigger="blur">
-        <a-input v-model="data.formData.name" :placeholder="$t('components.AddAz.5mpib0ipov80')"></a-input>
+        <a-input v-model.trim="data.formData.name" :placeholder="$t('components.AddAz.5mpib0ipov80')"></a-input>
       </a-form-item>
       <a-form-item :label="$t('components.AddAz.5mpib0ipozw0')" field="address" validate-trigger="blur">
-        <a-input v-model="data.formData.address" :placeholder="$t('components.AddAz.5mpib0ipp3k0')"></a-input>
+        <a-input v-model.trim="data.formData.address" :placeholder="$t('components.AddAz.5mpib0ipp3k0')"></a-input>
       </a-form-item>
       <a-form-item :label="$t('components.AddAz.5mpib0ippfc0')">
-        <a-textarea v-model="data.formData.remark" :placeholder="$t('components.AddAz.5mpib0ippjg0')"></a-textarea>
+        <a-textarea v-model.trim="data.formData.remark" :placeholder="$t('components.AddAz.5mpib0ippjg0')"></a-textarea>
       </a-form-item>
     </a-form>
   </a-modal>

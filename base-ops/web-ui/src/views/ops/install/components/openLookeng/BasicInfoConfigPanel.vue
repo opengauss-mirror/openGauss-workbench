@@ -30,9 +30,9 @@
           </a-option>
         </a-select>
       </a-form-item>
-      <a-form-item v-if="!data.host.isHostRemPwd && data.installUsername === 'root'"
-                   field="password" :label="$t('components.openLooKeng.5mpiji1qpcc3')">
-        <a-input-password v-model.trim="data.password" :placeholder="$t('components.openLooKeng.5mpiji1qpcc4')"
+      <a-form-item v-if="!data.host.isHostRemPwd"
+                   field="rootPassword" :label="$t('components.openLooKeng.5mpiji1qpcc3')">
+        <a-input-password v-model.trim="data.rootPassword" :placeholder="$t('components.openLooKeng.5mpiji1qpcc4')"
                           allow-clear/>
       </a-form-item>
       <a-form-item field="dadTarId" :label="$t('components.openLooKeng.5mpiji1qpcb4')">
@@ -77,6 +77,7 @@ const data = reactive<KeyValue>({
   hostId: '',
   installUsername: '',
   password: '',
+  rootPassword: '',
   installPath: '/data/install',
   port: 8080,
   needEncrypt: false,
@@ -116,6 +117,7 @@ const initData = () => {
   data.hostId = config.dadInstallHostId
   data.installUsername = config.dadInstallUsername
   data.password = config.dadInstallPassword
+  data.rootPassword = config.dadRootPassword
   data.installPath = config.dadInstallPath
   data.port = config.dadPort
   data.needEncrypt = config.dadNeedEncrypt
@@ -129,6 +131,7 @@ const saveStore = () => {
     dadInstallHostId: data.hostId,
     dadInstallUsername: data.installUsername,
     dadInstallPassword: data.password,
+    dadRootPassword: data.rootPassword,
     dadInstallPath: data.installPath,
     dadPort: data.port,
     dadNeedEncrypt: data.needEncrypt
@@ -160,8 +163,8 @@ const refreshPackageList = (isInit: boolean) => {
 
 const validatePort = async () => {
   let encryptPwd = ''
-  if (data.installUsername === 'root' && !data.host.isHostRemPwd) {
-    encryptPwd = await encryptPassword(data.password)
+  if (!data.host.isHostRemPwd) {
+    encryptPwd = await encryptPassword(data.rootPassword)
   } else {
     const result = userListByHost.value.find((item: KeyValue) => item.username === 'root')
     if (result) {
@@ -183,6 +186,7 @@ const onUserChange = () => {
   const user = userListByHost.value.find(item => item.username === data.installUsername)
   if (user) {
     data.password = user.password
+    return
   }
 }
 
@@ -192,10 +196,10 @@ const validateSpecialFields = async () => {
   // create user mode we don't need to check
   const validMethodArr = []
   let encryptPwd = ''
-  if (data.installUsername === 'root' && !data.host.isHostRemPwd) {
-    encryptPwd = await encryptPassword(data.password)
+  if (!data.host.isHostRemPwd) {
+    encryptPwd = await encryptPassword(data.rootPassword)
   } else {
-    const result = userListByHost.value.find((item: KeyValue) => item.username === data.installUsername)
+    const result = userListByHost.value.find((item: KeyValue) => item.username === 'root')
     if (result) {
       encryptPwd = result.password
     }
@@ -205,13 +209,13 @@ const validateSpecialFields = async () => {
     const param = {
       publicIp: data.host.publicIp,
       password: encryptPwd,
-      username: data.installUsername,
+      username: 'root',
       port: data.host.hostPort
     }
     const passwordValid: KeyValue = await hostPing(param)
     if (Number(passwordValid.code) !== 200) {
       formRef.value?.setFields({
-        password: {
+        rootPassword: {
           status: 'error',
           message: t('components.openLooKeng.5mpiji1qpcc42')
         }
@@ -220,7 +224,7 @@ const validateSpecialFields = async () => {
     }
   } catch (err: any) {
     formRef.value?.setFields({
-      password: {
+      rootPassword: {
         status: 'error',
         message: t('components.openLooKeng.5mpiji1qpcc42')
       }
@@ -383,7 +387,7 @@ const rules = computed(() => {
     port: [{ required: true, message: t('components.openLooKeng.5mpiji1qpcc14') }, { validator: portValidator }],
     hostId: { required: true, message: t('simpleInstall.index.5mpn813gukw0') },
     installUsername: { required: true, message: t('components.openLooKeng.5mpiji1qpcc12') },
-    password: { required: true, message: t('components.openLooKeng.5mpiji1qpcc13') },
+    rootPassword: { required: true, message: t('components.openLooKeng.5mpiji1qpcc13') },
     installPath: [
       { required: true, message: t('components.openLooKeng.5mpiji1qpcc14') },
       {

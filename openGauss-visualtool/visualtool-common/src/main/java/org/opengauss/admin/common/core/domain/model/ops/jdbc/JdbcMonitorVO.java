@@ -15,4 +15,6 @@ public class JdbcMonitorVO {
     private String tps;
     private String memoryUsed;
     private String tableSpaceUsed;
+    private String lockNum;
+    private String sessionNum;
 }

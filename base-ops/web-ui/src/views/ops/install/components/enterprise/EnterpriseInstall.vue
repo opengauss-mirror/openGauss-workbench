@@ -14,9 +14,11 @@
     </a-steps>
     <a-divider />
     <!-- one -->
-    <cluster-config v-if="currStep === STEP_ENUM.CLUSTER" ref="clusterConfigRef"></cluster-config>
+    <!-- <cluster-config v-if="currStep === STEP_ENUM.CLUSTER" ref="clusterConfigRef"></cluster-config> -->
     <!-- two -->
-    <node-config v-if="currStep === STEP_ENUM.NODE" ref="nodeConfigRef"></node-config>
+    <!-- <node-config v-if="currStep === STEP_ENUM.NODE" ref="nodeConfigRef"></node-config> -->
+    <!-- one -->
+    <cluster-config-all v-if="currStep === STEP_ENUM.CLUSTER" ref="clusterConfigAllRef"></cluster-config-all>
     <!-- three -->
     <env-monitor v-if="currStep === STEP_ENUM.ENV" ref="envRef" />
     <!-- four -->
@@ -28,8 +30,7 @@
 </template>
 
 <script setup lang="ts">
-import ClusterConfig from '@/views/ops/install/components/enterprise/ClusterConfig.vue'
-import NodeConfig from '@/views/ops/install/components/enterprise/NodeConfig.vue'
+import ClusterConfigAll from './ClusterConfigAll.vue'
 import { computed, ref } from 'vue'
 import EnvMonitor from './EnvMonitor.vue'
 import InstallPrompt from './InstallPrompt.vue'
@@ -41,7 +42,6 @@ const installStore = useOpsStore()
 
 enum STEP_ENUM {
   CLUSTER = 1,
-  NODE,
   ENV,
   PROMPT,
   EXE
@@ -51,27 +51,19 @@ const installProps = defineProps({
   currStep: Number
 })
 
-const clusterConfigRef = ref<InstanceType<typeof ClusterConfig> | null>(null)
-const nodeConfigRef = ref<InstanceType<typeof NodeConfig> | null>(null)
+const clusterConfigAllRef = ref<InstanceType<typeof ClusterConfigAll> | null>(null)
+
 const envRef = ref<InstanceType<typeof EnvMonitor> | null>(null)
 
 const saveStore = () => {
   if (installProps.currStep === STEP_ENUM.CLUSTER) {
-    clusterConfigRef.value?.saveStore()
-  }
-  if (installProps.currStep === STEP_ENUM.NODE) {
-    nodeConfigRef.value?.saveStore()
+    clusterConfigAllRef.value?.saveStore()
   }
 }
 
 const beforeConfirm = async (): Promise<boolean> => {
   if (installProps.currStep === STEP_ENUM.CLUSTER) {
-    const res = await clusterConfigRef.value?.beforeConfirm()
-    if (!res) return false
-    return res
-  }
-  if (installProps.currStep === STEP_ENUM.NODE) {
-    const res = await nodeConfigRef.value?.beforeConfirm()
+    const res = await clusterConfigAllRef.value?.beforeConfirm()
     if (!res) return false
     return res
   }
@@ -94,6 +86,6 @@ defineExpose({
 <style lang="less" scoped>
 .simple-install-c {
   padding: 20px;
-  height: 100%;
+  height: calc(100% - 36px);
 }
 </style>

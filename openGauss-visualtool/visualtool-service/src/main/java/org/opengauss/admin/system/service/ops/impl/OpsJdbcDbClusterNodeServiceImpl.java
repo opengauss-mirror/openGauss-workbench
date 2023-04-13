@@ -20,6 +20,7 @@ import org.opengauss.admin.common.exception.ops.OpsException;
 import org.opengauss.admin.common.utils.ops.JdbcUtil;
 import org.opengauss.admin.common.utils.ops.WsUtil;
 import org.opengauss.admin.system.mapper.ops.OpsJdbcDbClusterNodeMapper;
+import org.opengauss.admin.system.service.ops.IOpsClusterService;
 import org.opengauss.admin.system.service.ops.IOpsJdbcDbClusterNodeService;
 import org.opengauss.admin.system.service.ops.IOpsJdbcDbClusterService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,6 +53,8 @@ public class OpsJdbcDbClusterNodeServiceImpl extends ServiceImpl<OpsJdbcDbCluste
     private WsConnectorManager wsConnectorManager;
     @Autowired
     private WsUtil wsUtil;
+    @Autowired
+    private IOpsClusterService opsClusterService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -296,7 +299,37 @@ public class OpsJdbcDbClusterNodeServiceImpl extends ServiceImpl<OpsJdbcDbCluste
     }
 
     private void doMonitorOpenGauss(Connection connection, JdbcMonitorVO jdbcMonitorVO) {
+        CountDownLatch countDownLatch = new CountDownLatch(3);
+        threadPoolTaskExecutor.submit(()->{
+            try {
+                jdbcMonitorVO.setLockNum(opsClusterService.lock(connection));
+            }finally {
+                countDownLatch.countDown();
+            }
+        });
 
+        threadPoolTaskExecutor.submit(()->{
+            try {
+                jdbcMonitorVO.setSessionNum(opsClusterService.session(connection));
+            }finally {
+                countDownLatch.countDown();
+            }
+        });
+
+        threadPoolTaskExecutor.submit(()->{
+            try {
+                jdbcMonitorVO.setConnNum(opsClusterService.connectNum(connection));
+            }finally {
+                countDownLatch.countDown();
+            }
+        });
+
+        try {
+            countDownLatch.await();
+        } catch (InterruptedException e) {
+            log.error("waiting for thread to be interrupted", e);
+            throw new OpsException("monitor error");
+        }
     }
 
     private void doMonitorMysql(Connection connection, JdbcMonitorVO jdbcMonitorVO) {

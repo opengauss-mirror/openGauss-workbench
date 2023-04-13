@@ -150,6 +150,9 @@ COMMENT ON COLUMN "public"."ops_az"."create_time" IS '创建时间';
 COMMENT ON COLUMN "public"."ops_az"."update_by" IS '更新者';
 COMMENT ON COLUMN "public"."ops_az"."update_time" IS '更新时间';
 
+INSERT INTO "public"."ops_az"("az_id", "name", "priority", "address", "remark", "create_by", "create_time", "update_by", "update_time") VALUES (1639451067550920705, 'az1', NULL, '中国', NULL, 'admin', '2023-03-25 10:16:08.69', 'admin', '2023-03-25 10:16:08.69')  ON DUPLICATE KEY
+UPDATE NOTHING;;
+
 -- ----------------------------
 -- Table structure for ops_check
 -- ----------------------------
@@ -994,7 +997,7 @@ ON COLUMN "public"."sys_setting"."upload_path" IS '文件上传目录';
 -- ----------------------------
 -- Records of sys_setting
 -- ----------------------------
-INSERT INTO "public"."sys_setting"VALUES (1, 1, '/ops/files') ON DUPLICATE KEY UPDATE NOTHING;
+INSERT INTO "public"."sys_setting"VALUES (1, 1, '/ops/files/') ON DUPLICATE KEY UPDATE NOTHING;
 
 CREATE OR REPLACE FUNCTION add_user_field_func() RETURNS integer AS 'BEGIN
 IF

@@ -1,3 +1,26 @@
+/*
+ * Copyright (c) 2022 Huawei Technologies Co.,Ltd.
+ *
+ * openGauss is licensed under Mulan PSL v2.
+ * You can use this software according to the terms and conditions of the Mulan PSL v2.
+ * You may obtain a copy of Mulan PSL v2 at:
+ *
+ * http://license.coscl.org.cn/MulanPSL2
+ *
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ * EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ * MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ * See the Mulan PSL v2 for more details.
+ * -------------------------------------------------------------------------
+ *
+ * OpsClusterServiceImpl.java
+ *
+ * IDENTIFICATION
+ * base-ops/src/main/java/org/opengauss/admin/plugin/service/ops/impl/OpsClusterServiceImpl.java
+ *
+ * -------------------------------------------------------------------------
+ */
+
 package org.opengauss.admin.plugin.service.ops.impl;
 
 import cn.hutool.core.collection.CollUtil;
@@ -21,7 +44,28 @@ import org.opengauss.admin.common.exception.ops.OpsException;
 import org.opengauss.admin.plugin.domain.entity.ops.OpsCheckEntity;
 import org.opengauss.admin.plugin.domain.entity.ops.OpsClusterEntity;
 import org.opengauss.admin.plugin.domain.entity.ops.OpsClusterNodeEntity;
-import org.opengauss.admin.plugin.domain.model.ops.*;
+import org.opengauss.admin.plugin.domain.model.ops.ClusterSummaryVO;
+import org.opengauss.admin.plugin.domain.model.ops.DownloadBody;
+import org.opengauss.admin.plugin.domain.model.ops.HostFile;
+import org.opengauss.admin.plugin.domain.model.ops.HostInfoHolder;
+import org.opengauss.admin.plugin.domain.model.ops.ImportClusterBody;
+import org.opengauss.admin.plugin.domain.model.ops.InstallBody;
+import org.opengauss.admin.plugin.domain.model.ops.InstallContext;
+import org.opengauss.admin.plugin.domain.model.ops.JschResult;
+import org.opengauss.admin.plugin.domain.model.ops.ListDir;
+import org.opengauss.admin.plugin.domain.model.ops.NodeMonitorVO;
+import org.opengauss.admin.plugin.domain.model.ops.NodeNetMonitor;
+import org.opengauss.admin.plugin.domain.model.ops.OpsClusterBody;
+import org.opengauss.admin.plugin.domain.model.ops.OpsClusterContext;
+import org.opengauss.admin.plugin.domain.model.ops.OpsClusterNodeVO;
+import org.opengauss.admin.plugin.domain.model.ops.OpsClusterVO;
+import org.opengauss.admin.plugin.domain.model.ops.SSHBody;
+import org.opengauss.admin.plugin.domain.model.ops.SshCommandConstants;
+import org.opengauss.admin.plugin.domain.model.ops.UnInstallBody;
+import org.opengauss.admin.plugin.domain.model.ops.UnInstallContext;
+import org.opengauss.admin.plugin.domain.model.ops.UpgradeBody;
+import org.opengauss.admin.plugin.domain.model.ops.UpgradeContext;
+import org.opengauss.admin.plugin.domain.model.ops.WsSession;
 import org.opengauss.admin.plugin.domain.model.ops.cache.SSHChannelManager;
 import org.opengauss.admin.plugin.domain.model.ops.cache.TaskManager;
 import org.opengauss.admin.plugin.domain.model.ops.cache.WsConnectorManager;
@@ -32,7 +76,11 @@ import org.opengauss.admin.plugin.domain.model.ops.env.SoftwareEnv;
 import org.opengauss.admin.plugin.domain.model.ops.node.EnterpriseInstallNodeConfig;
 import org.opengauss.admin.plugin.domain.model.ops.node.LiteInstallNodeConfig;
 import org.opengauss.admin.plugin.domain.model.ops.node.MinimalistInstallNodeConfig;
-import org.opengauss.admin.plugin.enums.ops.*;
+import org.opengauss.admin.plugin.enums.ops.ClusterRoleEnum;
+import org.opengauss.admin.plugin.enums.ops.DeployTypeEnum;
+import org.opengauss.admin.plugin.enums.ops.HostEnvStatusEnum;
+import org.opengauss.admin.plugin.enums.ops.OpenGaussSupportOSEnum;
+import org.opengauss.admin.plugin.enums.ops.OpenGaussVersionEnum;
 import org.opengauss.admin.plugin.mapper.ops.OpsClusterMapper;
 import org.opengauss.admin.plugin.service.ops.IOpsCheckService;
 import org.opengauss.admin.plugin.service.ops.IOpsClusterNodeService;
@@ -42,9 +90,18 @@ import org.opengauss.admin.plugin.utils.DBUtil;
 import org.opengauss.admin.plugin.utils.DownloadUtil;
 import org.opengauss.admin.plugin.utils.JschUtil;
 import org.opengauss.admin.plugin.utils.WsUtil;
+import org.opengauss.admin.plugin.vo.ops.AuditLogVO;
+import org.opengauss.admin.plugin.vo.ops.CheckClusterVO;
+import org.opengauss.admin.plugin.vo.ops.CheckDbVO;
+import org.opengauss.admin.plugin.vo.ops.CheckDeviceVO;
+import org.opengauss.admin.plugin.vo.ops.CheckItemVO;
+import org.opengauss.admin.plugin.vo.ops.CheckNetworkVO;
+import org.opengauss.admin.plugin.vo.ops.CheckOSVO;
+import org.opengauss.admin.plugin.vo.ops.CheckSummaryVO;
+import org.opengauss.admin.plugin.vo.ops.CheckVO;
+import org.opengauss.admin.plugin.vo.ops.OpsNodeLogVO;
 import org.opengauss.admin.plugin.vo.ops.SessionVO;
 import org.opengauss.admin.plugin.vo.ops.SlowSqlVO;
-import org.opengauss.admin.plugin.vo.ops.*;
 import org.opengauss.admin.system.plugin.facade.AzFacade;
 import org.opengauss.admin.system.plugin.facade.HostFacade;
 import org.opengauss.admin.system.plugin.facade.HostUserFacade;
@@ -60,8 +117,20 @@ import org.springframework.web.context.request.RequestContextHolder;
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.IOException;
-import java.sql.*;
-import java.util.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Future;
@@ -1296,13 +1365,6 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
 
                     if (Objects.nonNull(installUser)) {
                         opsClusterNodeVO.setInstallUserName(installUser.getUsername());
-                    }
-
-                    String azId = hostEntity.getAzId();
-                    OpsAzEntity azEntity = azFacade.getById(azId);
-                    if (Objects.nonNull(azEntity)) {
-                        opsClusterNodeVO.setAzName(azEntity.getName());
-                        opsClusterNodeVO.setAzAddress(azEntity.getAddress());
                     }
                 }
 

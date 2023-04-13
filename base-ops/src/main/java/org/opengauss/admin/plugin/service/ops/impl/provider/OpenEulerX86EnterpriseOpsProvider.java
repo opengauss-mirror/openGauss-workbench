@@ -1,3 +1,26 @@
+/*
+ * Copyright (c) 2022 Huawei Technologies Co.,Ltd.
+ *
+ * openGauss is licensed under Mulan PSL v2.
+ * You can use this software according to the terms and conditions of the Mulan PSL v2.
+ * You may obtain a copy of Mulan PSL v2 at:
+ *
+ * http://license.coscl.org.cn/MulanPSL2
+ *
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ * EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ * MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ * See the Mulan PSL v2 for more details.
+ * -------------------------------------------------------------------------
+ *
+ * OpenEulerX86EnterpriseOpsProvider.java
+ *
+ * IDENTIFICATION
+ * base-ops/src/main/java/org/opengauss/admin/plugin/service/ops/impl/provider/OpenEulerX86EnterpriseOpsProvider.java
+ *
+ * -------------------------------------------------------------------------
+ */
+
 package org.opengauss.admin.plugin.service.ops.impl.provider;
 
 import cn.hutool.core.collection.CollUtil;
@@ -94,7 +117,7 @@ public class OpenEulerX86EnterpriseOpsProvider extends AbstractOpsProvider {
         opsClusterContext.setOpsClusterNodeEntityList(opsClusterNodeEntities);
 
         wsUtil.sendText(installContext.getRetSession(),"CREATE_REMOTE_USER");
-        createRemoteUser(installContext, opsClusterContext);
+        createEnterpriseRemoteUser(installContext, opsClusterContext, jschUtil, encryptionUtils);
 
         wsUtil.sendText(installContext.getRetSession(),"SAVE_INSTALL_CONTEXT");
         saveContext(installContext);
@@ -120,7 +143,7 @@ public class OpenEulerX86EnterpriseOpsProvider extends AbstractOpsProvider {
         String pkgPath = preparePath(installContext.getEnterpriseInstallConfig().getInstallPackagePath());
         ensureDirExist(jschUtil,rootSession, pkgPath, retSession);
         chmodFullPath(jschUtil,rootSession, "/opt/software", retSession);
-        //chmodFullPath(jschUtil,rootSession, pkgPath, retSession);
+        ensureEnvPathPermission(jschUtil,rootSession,installContext.getEnvPath(),retSession);
 
         List<HostInfoHolder> hostInfoHolders = installContext.getHostInfoHolders();
         for (HostInfoHolder hostInfoHolder : hostInfoHolders) {
@@ -186,7 +209,7 @@ public class OpenEulerX86EnterpriseOpsProvider extends AbstractOpsProvider {
         OpsHostUserEntity installUserInfo = masterHostHolder.getHostUserEntities().stream().filter(hostUser -> hostUser.getHostUserId().equals(masterNodeConfig.getInstallUserId())).findFirst().orElseThrow(() -> new OpsException("No installation user information found"));
 
         wsUtil.sendText(installContext.getRetSession(),"START_EXE_PREINSTALL_COMMAND");
-        preInstall(group, pkgPath, masterNodeConfig, xmlConfigFullPath, rootSession, retSession,encryptionUtils.decrypt(masterRootUserInfo.getPassword()),encryptionUtils.decrypt(installUserInfo.getPassword()));
+        preInstall(group, pkgPath, masterNodeConfig, xmlConfigFullPath, rootSession, retSession,encryptionUtils.decrypt(masterRootUserInfo.getPassword()),encryptionUtils.decrypt(installUserInfo.getPassword()),installContext.getEnvPath());
         wsUtil.sendText(installContext.getRetSession(),"END_EXE_PREINSTALL_COMMAND");
 
         Session ommSession = loginWithUser(jschUtil,encryptionUtils,installContext.getHostInfoHolders(), false, masterHostId, masterNodeConfig.getInstallUserId());
@@ -200,7 +223,7 @@ public class OpenEulerX86EnterpriseOpsProvider extends AbstractOpsProvider {
             autoResponse.put("Please enter password for database:", installContext.getEnterpriseInstallConfig().getDatabasePassword());
             autoResponse.put("Please repeat for database:", installContext.getEnterpriseInstallConfig().getDatabasePassword());
 
-            JschResult jschResult = jschUtil.executeCommand(installCommand, ommSession, retSession, autoResponse);
+            JschResult jschResult = jschUtil.executeCommand(installContext.getEnvPath(), installCommand, ommSession, retSession, autoResponse);
             if (0 != jschResult.getExitCode()) {
                 log.error("install failed, exit code: {}, error message: {}", jschResult.getExitCode(), jschResult.getResult());
                 throw new OpsException("install failed");
@@ -480,8 +503,9 @@ public class OpenEulerX86EnterpriseOpsProvider extends AbstractOpsProvider {
         }
     }
 
-    private void preInstall(String group, String pkgPath, EnterpriseInstallNodeConfig masterNodeConfig, String xmlConfigFullPath, Session rootSession, WsSession retSession, String rootPassword, String installUserPassword) {
+    private void preInstall(String group, String pkgPath, EnterpriseInstallNodeConfig masterNodeConfig, String xmlConfigFullPath, Session rootSession, WsSession retSession, String rootPassword, String installUserPassword,String envPath) {
         String gsPreInstall = MessageFormat.format(SshCommandConstants.GS_PREINSTALL_INTERACTIVE, pkgPath + "/script/", masterNodeConfig.getInstallUsername(), group, xmlConfigFullPath);
+        gsPreInstall = wrapperEnvSep(gsPreInstall, envPath);
         try {
             Map<String,String> autoResponse = new HashMap<>();
             autoResponse.put("(yes/no)?","yes");
@@ -496,70 +520,6 @@ public class OpenEulerX86EnterpriseOpsProvider extends AbstractOpsProvider {
             log.error("gs_preinstall failed：", e);
             throw new OpsException("gs_preinstall failed");
         }
-    }
-
-    private void createRemoteUser(InstallContext installContext, OpsClusterContext opsClusterContext) {
-        WsSession retSession = installContext.getRetSession();
-        opsClusterContext.setRetSession(retSession);
-        opsClusterContext.setHostInfoHolders(installContext.getHostInfoHolders());
-
-        EnterpriseInstallConfig enterpriseInstallConfig = installContext.getEnterpriseInstallConfig();
-        List<EnterpriseInstallNodeConfig> nodeConfigList = enterpriseInstallConfig.getNodeConfigList();
-        String databasePassword = enterpriseInstallConfig.getDatabasePassword();
-        Integer port = enterpriseInstallConfig.getPort();
-
-        for (EnterpriseInstallNodeConfig enterpriseInstallNodeConfig : nodeConfigList) {
-            String hostId = enterpriseInstallNodeConfig.getHostId();
-            String installUserId = enterpriseInstallNodeConfig.getInstallUserId();
-            String dataPath = enterpriseInstallNodeConfig.getDataPath();
-
-
-            Session session = loginWithUser(jschUtil,encryptionUtils,installContext.getHostInfoHolders(), false, hostId, installUserId);
-            String listenerAddress = MessageFormat.format(SshCommandConstants.LISTENER, dataPath);
-            try {
-                JschResult jschResult = jschUtil.executeCommand(listenerAddress, session, retSession);
-                if (0 != jschResult.getExitCode()) {
-                    log.error("Failed to modify listening address, exit code: {}, log: {}", jschResult.getExitCode(), jschResult.getResult());
-                    throw new OpsException("Failed to modify listening address");
-                }
-
-            } catch (Exception e) {
-                log.error("Failed to modify listening address", e);
-                throw new OpsException("Failed to modify listening address");
-            }
-
-            String hba = MessageFormat.format(SshCommandConstants.HBA, dataPath);
-            try {
-                JschResult jschResult = jschUtil.executeCommand(hba, session, retSession);
-                if (0 != jschResult.getExitCode()) {
-                    log.error("Failed to modify host, exit code: {}, log: {}", jschResult.getExitCode(), jschResult.getResult());
-                    throw new OpsException("Failed to modify host");
-                }
-
-            } catch (Exception e) {
-                log.error("Failed to modify host", e);
-                throw new OpsException("Failed to modify host");
-            }
-
-            String clientLoginOpenGauss = MessageFormat.format(SshCommandConstants.LOGIN, String.valueOf(port));
-            try {
-                Map<String, String> response = new HashMap<>();
-                String createUser = MessageFormat.format("CREATE USER gaussdb WITH MONADMIN PASSWORD \"{0}\";\\q", databasePassword);
-                response.put("openGauss=#", createUser);
-                JschResult jschResult = jschUtil.executeCommand(clientLoginOpenGauss, session, retSession, response);
-                if (0 != jschResult.getExitCode()) {
-                    log.error("Failed to create user, exit code: {}, log: {}", jschResult.getExitCode(), jschResult.getResult());
-                    throw new OpsException("Failed to create user");
-                }
-
-            } catch (Exception e) {
-                log.error("Failed to create user", e);
-                throw new OpsException("Failed to create user");
-            }
-        }
-
-        opsClusterContext.setHostInfoHolders(installContext.getHostInfoHolders());
-        restart(opsClusterContext);
     }
 
     private void saveContext(InstallContext installContext) {

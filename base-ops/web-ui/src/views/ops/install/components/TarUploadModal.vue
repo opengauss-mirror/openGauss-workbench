@@ -1,53 +1,44 @@
 <template>
   <a-modal :mask-closable="false" :esc-to-close="false" :ok-loading="submitLoading" :visible="data.show"
-           :title="data.title" :modal-style="{ width: '50vw' }" @ok="handleBeforeOk" @on-cancel="close(false, $event)" @cancel="close(true, $event)">
+    :title="data.title" :modal-style="{ width: '50vw' }" @ok="handleBeforeOk" @on-cancel="close(false, $event)"
+    @cancel="close(true, $event)">
     <a-form :model="data.formData" :rules="data.rules" ref="formRef" auto-label-width>
       <a-form-item field="os" :label="$t('packageManage.AddPackageDlg.5myq6nnea2w0')">
         <a-select v-model="data.formData.os" :placeholder="$t('packageManage.AddPackageDlg.5myq6nneap40')"
-                  @change="osChange">
-          <a-option v-for="(item, index) of data.osList" :key="index" :value="item.value" :label="item.label"/>
+          @change="osChange">
+          <a-option v-for="(item, index) of data.osList" :key="index" :value="item.value" :label="item.label" />
         </a-select>
       </a-form-item>
       <a-form-item :label="$t('packageManage.AddPackageDlg.else1')">
         <a-select v-model="data.formData.cpuArch" :placeholder="$t('packageManage.AddPackageDlg.5myq6nneaw40')">
-          <a-option v-for="(item, index) of data.cpuArchList" :key="index" :value="item.value" :label="item.label"/>
+          <a-option v-for="(item, index) of data.cpuArchList" :key="index" :value="item.value" :label="item.label" />
         </a-select>
       </a-form-item>
       <a-form-item :label="$t('packageManage.AddPackageDlg.5myq6nneb180')">
-        <a-select v-model="data.formData.packageVersion"
-                  :placeholder="$t('packageManage.AddPackageDlg.5myq6nneb5w0')"
-                  :disabled="data.isViewVersion">
+        <a-select v-model="data.formData.packageVersion" :placeholder="$t('packageManage.AddPackageDlg.5myq6nneb5w0')"
+          :disabled="data.isViewVersion">
           <a-option v-for="(item, index) of data.packageVersionList" :key="index" :value="item.value"
-                    :label="item.label"/>
+            :label="item.label" />
         </a-select>
       </a-form-item>
       <a-form-item field="packageVersionNum" :label="$t('packageManage.AddPackageDlg.5myq6nnebag0')">
-        <a-input v-model="data.formData.packageVersionNum"
-                 :placeholder="$t('packageManage.AddPackageDlg.5myq6nnebew0')"></a-input>
+        <a-input v-model.trim="data.formData.packageVersionNum"
+          :placeholder="$t('packageManage.AddPackageDlg.5myq6nnebew0')"></a-input>
       </a-form-item>
       <a-form-item field="packagePath" :label="$t('packageManage.AddPackageDlg.5myq6nnebn41')">
-        <a-upload
-          ref="uploadRef"
-          v-model:file-list="data.fileList"
-          :action="upload.url"
-          :limit="1"
-          :show-file-list="true"
-          :auto-upload="false"
-          draggable
-          :headers="upload.headers"
-          @change="handleFileChange"
-          @before-remove="handleBeforeRemove"
-          @success="handleUploadSuccess"
-        >
+        <a-upload ref="uploadRef" v-model:file-list="data.fileList" :action="upload.url" :limit="1" :show-file-list="true"
+          :auto-upload="false" draggable :headers="upload.headers" @change="handleFileChange"
+          @before-remove="handleBeforeRemove" @success="handleUploadSuccess">
           <template #upload-button>
             <div class="upload-info flex-col">
               <div class="flex-col">
                 <div class="upload-icon">
-                  <icon-plus :style="{fontSize: '48px', color: '#86909C'}"/>
+                  <icon-plus :style="{ fontSize: '48px', color: '#86909C' }" />
                 </div>
                 <div class="tips-1">
                   <span>{{ $t('packageManage.AddPackageDlg.5myq6nnecc47') }}</span>
-                  <div v-if="data.systemUploadPath">{{$t('packageManage.AddPackageDlg.5myq6nnecc48') + data.systemUploadPath + $t('packageManage.AddPackageDlg.5myq6nnecc49')}}</div>
+                  <div v-if="data.systemUploadPath">{{ $t('packageManage.AddPackageDlg.5myq6nnecc48') +
+                    data.systemUploadPath + $t('packageManage.AddPackageDlg.5myq6nnecc49') }}</div>
                 </div>
               </div>
             </div>
@@ -55,8 +46,8 @@
         </a-upload>
       </a-form-item>
       <a-form-item field="remark" :label="$t('packageManage.AddPackageDlg.5myq6nnebn44')">
-        <a-textarea v-model="data.formData.remark" :auto-size="{minRows:2, maxRows:2}"
-                    :placeholder="$t('packageManage.AddPackageDlg.5myq6nnebn43')"/>
+        <a-textarea v-model="data.formData.remark" :auto-size="{ minRows: 2, maxRows: 2 }"
+          :placeholder="$t('packageManage.AddPackageDlg.5myq6nnebn43')" />
       </a-form-item>
     </a-form>
   </a-modal>

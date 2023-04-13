@@ -29,6 +29,7 @@ public class OpsClusterVO {
     private Map<String, Integer> checkSummary;
 
     private List<OpsClusterNodeVO> clusterNodes;
+    private String envPath;
 
     public static OpsClusterVO of(OpsClusterEntity opsClusterEntity) {
         OpsClusterVO opsClusterVO = new OpsClusterVO();
@@ -38,6 +39,7 @@ public class OpsClusterVO {
         opsClusterVO.setVersionNum(opsClusterEntity.getVersionNum());
         opsClusterVO.setDatabasePassword(opsClusterEntity.getDatabasePassword());
         opsClusterVO.setDeployType(opsClusterEntity.getDeployType());
+        opsClusterVO.setEnvPath(opsClusterEntity.getEnvPath());
         return opsClusterVO;
     }
 }

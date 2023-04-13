@@ -5,6 +5,7 @@ import org.opengauss.admin.common.core.domain.entity.ops.OpsClusterEntity;
 import org.opengauss.admin.common.core.domain.model.ops.ClusterSummaryVO;
 import org.opengauss.admin.common.core.domain.model.ops.OpsClusterVO;
 
+import java.sql.Connection;
 import java.util.List;
 import java.util.Map;
 
@@ -24,4 +25,10 @@ public interface IOpsClusterService extends IService<OpsClusterEntity> {
     Map<String, Integer> threadPoolMonitor();
 
     long countByHostId(String hostId);
+
+    String connectNum(Connection connection);
+
+    String session(Connection connection);
+
+    String lock(Connection connection);
 }
