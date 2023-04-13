@@ -10,7 +10,9 @@ import org.opengauss.admin.common.enums.SysMenuRouteOpenPosition;
 import org.opengauss.admin.common.enums.SysMenuVisible;
 import org.opengauss.admin.common.utils.StringUtils;
 import org.opengauss.admin.system.domain.SysPlugin;
+import org.opengauss.admin.system.domain.SysPluginLogo;
 import org.opengauss.admin.system.service.ISysMenuService;
+import org.opengauss.admin.system.service.ISysPluginLogoService;
 import org.opengauss.admin.system.service.ISysPluginService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +34,8 @@ public class MenuFacade {
     private ISysMenuService sysMenuService;
     @Autowired
     private ISysPluginService sysPluginService;
+    @Autowired
+    private ISysPluginLogoService sysPluginLogoService;
 
     private MenuVo saveMenu(String pluginId, String menuName,String menuEnName, Integer order, String path, Integer parentId, Integer openWay, String visible, Integer openPosition, String queryTemplate) {
         if (path == null) {
@@ -68,8 +72,9 @@ public class MenuFacade {
                 if (StringUtils.isNotBlank(plugin.getTheme())) {
                     menu.setPluginTheme(plugin.getTheme());
                 }
-                if (StringUtils.isNotBlank(plugin.getLogoPath())) {
-                    menu.setIcon(plugin.getLogoPath());
+                SysPluginLogo logo = sysPluginLogoService.getByPluginId(pluginId);
+                if (logo != null && StringUtils.isNotBlank(logo.getLogoPath())) {
+                    menu.setIcon(logo.getLogoPath());
                 }
             }
             sysMenuService.save(menu);
