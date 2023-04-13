@@ -6,7 +6,7 @@
           <a-input v-model="form.taskName" allow-clear placeholder="请输入任务名称" style="width: 200px;" @change="getList"></a-input>
         </a-form-item>
         <a-form-item field="createUser" style="margin-left: -17px;">
-          <a-select v-model="form.createUser" placeholder="请选择用户" allow-clear style="width: 150px;" @change="getList">
+          <a-select v-model="form.createUser" placeholder="请选择创建人" allow-clear style="width: 150px;" @change="getList">
             <a-option v-for="item in userData" :key="item" :value="item">{{ item }}</a-option>
           </a-select>
         </a-form-item>
@@ -17,11 +17,11 @@
             <a-option :value="2">已完成</a-option>
           </a-select>
         </a-form-item>
-        <a-form-item field="execStartTime" style="margin-left: -17px;">
-          <a-date-picker v-model="form.execStartTime" placeholder="请选择执行时间" style="width: 150px;" @change="getList" />
+        <a-form-item field="execTime" style="margin-left: -17px;">
+          <a-range-picker v-model="form.execTime" :placeholder="['执行开始时间', '执行结束时间']" style="width: 250px;" @change="getList" />
         </a-form-item>
-        <a-form-item field="finishEndTime" style="margin-left: -17px;">
-          <a-date-picker v-model="form.finishEndTime" placeholder="请选择完成时间" style="width: 150px;" @change="getList" />
+        <a-form-item field="finishTime" style="margin-left: -17px;">
+          <a-range-picker v-model="form.finishTime" :placeholder="['完成开始时间', '完成结束时间']" style="width: 250px;" @change="getList" />
         </a-form-item>
         <a-form-item>
           <a-button type="outline" @click="getList">
@@ -153,8 +153,8 @@ const form = reactive({
   taskName: undefined,
   createUser: undefined,
   execStatus: undefined,
-  execStartTime: undefined,
-  finishEndTime: undefined
+  execTime: undefined,
+  finishTime: undefined
 })
 
 const userData = ref([])
@@ -195,8 +195,10 @@ const getList = () => {
     taskName: form.taskName,
     createUser: form.createUser,
     execStatus: form.execStatus,
-    execStartTime: form.execStartTime,
-    finishEndTime: form.finishEndTime,
+    execStartTime: form.execTime ? form.execTime[0] + ' 00:00:00' : undefined,
+    execEndTime: form.execTime ? form.execTime[1] + ' 23:59:59' : undefined,
+    finishStartTime: form.finishTime ? form.finishTime[0] + ' 00:00:00' : undefined,
+    finishEndTime: form.finishTime ? form.finishTime[1] + ' 23:59:59' : undefined,
     ...queryParams
   }).then(res => {
     loading.value = false
@@ -211,8 +213,8 @@ const resetQuery = () => {
   form.taskName = undefined
   form.createUser = undefined
   form.execStatus = undefined
-  form.execStartTime = undefined
-  form.finishEndTime = undefined
+  form.execTime = undefined
+  form.finishTime = undefined
   getList()
 }
 
@@ -316,6 +318,7 @@ onMounted(() => {
 <style lang="less" scoped>
 .list-container {
   position: relative;
+  min-height: calc(100vh - 114px);
   .search-con {
     padding: 16px 20px 10px;
     display: flex;

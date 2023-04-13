@@ -55,12 +55,12 @@
           <a-table-column title="物理机名称+OS" data-index="hostname" :width="200" ellipsis tooltip></a-table-column>
           <a-table-column title="配置信息" :width="300" ellipsis tooltip>
             <template #cell="{ record }">
-              {{ record.os ? '系统：' + record.os + ',' : '' }}
-              {{ record.os ? 'CPU架构：' + record.cpuArch + ',' : '' }}
-              {{ `CPU核数：${record.baseInfos[0]}，剩余内存：${record.baseInfos[1]}M，剩余硬盘容量：${record.baseInfos[2]}G`}}
+              {{ record.os ? '系统：' + record.os : '' }}
+              {{ record.os ? ',CPU架构：' + record.cpuArch : '' }}
+              {{ record.baseInfos ? `,CPU核数：${record.baseInfos[0]}，剩余内存：${record.baseInfos[1]}M，剩余硬盘容量：${record.baseInfos[2]}G` : ''}}
             </template>
           </a-table-column>
-          <a-table-column title="是否已安装portal" data-index="installPortalStatus" align="center" :width="200">
+          <a-table-column title="是否安装迁移套件" data-index="installPortalStatus" align="center" :width="200">
             <template #cell="{ record }">
               <span v-if="record.installPortalStatus !== 0">{{ statusMap(record.installPortalStatus) }}</span>
               <a-popover v-if="record.installPortalStatus === 2">
@@ -125,7 +125,7 @@
 </template>
 
 <script setup>
-import { reactive, ref, onMounted, toRaw, onBeforeUnmount, watch } from 'vue'
+import { reactive, ref, onMounted, toRaw, onBeforeUnmount } from 'vue'
 import { hostsData, downloadEnvLog, reInstallPortal } from '@/api/task'
 import useTheme from '@/hooks/theme'
 import dayjs from 'dayjs'
@@ -187,15 +187,6 @@ const pageChange = (current) => {
   pagination.current = current
 }
 
-watch(form, (val) => {
-  if (val.ip || val.hostname || val.cpu || val.memory || val.disk) {
-    timer && clearTimeout(timer)
-    timer = null
-  } else {
-    getHostsData()
-  }
-})
-
 // data filter
 const getFilterData = () => {
   pagination.current = 1
@@ -207,18 +198,22 @@ const getFilterData = () => {
     if (form.hostname && !~item.hostname.indexOf(form.hostname)) {
       flag = false
     }
-    if (form.cpu && item.baseInfos[0] !== form.cpu) {
+    if (form.cpu && item.baseInfos && item.baseInfos[0] !== form.cpu) {
       flag = false
     }
-    if (form.memory && item.baseInfos[1] < form.memory) {
+    if (form.memory && item.baseInfos && item.baseInfos[1] < form.memory) {
       flag = false
     }
-    if (form.disk && item.baseInfos[2] < form.disk) {
+    if (form.disk && item.baseInfos && item.baseInfos[2] < form.disk) {
       flag = false
     }
     return flag
   })
   pagination.total = tableData.value.length
+
+  if (!form.ip && !form.hostname && !form.cpu && !form.memory && !form.disk) {
+    getHostsData()
+  }
 }
 
 const selectionChange = (rowKey) => {
@@ -269,12 +264,17 @@ const getHostsData = () => {
   timer && clearTimeout(timer)
   hostsData().then(res => {
     loading.value = false
-    tableData.value = res.data.map(item => ({ ...item, disabled: item.installPortalStatus !== 2 }))
-    originData.value = JSON.parse(JSON.stringify(res.data))
-    pagination.total = res.data.length
-    timer = setTimeout(() => {
-      getHostsData()
-    }, 5000)
+    if (form.ip || form.hostname || form.cpu || form.memory || form.disk) {
+      timer && clearTimeout(timer)
+      timer = null
+    } else {
+      tableData.value = res.data.map(item => ({ ...item, disabled: item.installPortalStatus !== 2 }))
+      originData.value = JSON.parse(JSON.stringify(res.data))
+      pagination.total = res.data.length
+      timer = setTimeout(() => {
+        getHostsData()
+      }, 5000)
+    }
   }).catch(() => {
     loading.value = false
     timer && clearTimeout(timer)

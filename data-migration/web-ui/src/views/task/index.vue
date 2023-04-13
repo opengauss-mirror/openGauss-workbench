@@ -37,9 +37,10 @@ import { Message } from '@arco-design/web-vue'
 import Step1 from './step1'
 import Step2 from './step2'
 import Step3 from './step3'
-import { migrationSave, migrationUpdate } from '@/api/task'
+import { migrationSave, migrationUpdate, defaultParams } from '@/api/task'
 import { taskEditInfo } from '@/api/detail'
 import dayjs from 'dayjs'
+import { mergeObjectArray } from '@/utils'
 
 const currentStep = ref(1)
 const taskId = ref()
@@ -49,6 +50,7 @@ const globalParamsObject = reactive({
   basic: [],
   more: []
 })
+const defaultBasicData = ref([])
 const selectedHosts = ref([])
 const stepOneComp = ref(null)
 
@@ -103,6 +105,10 @@ const saveConfig = () => {
     globalParams: [...globalParamsObject.basic.map(item => ({ paramKey: item.paramKey, paramValue: item.paramValue, paramDesc: item.paramDesc })), ...globalParamsObject.more.map(item => ({ paramKey: item.paramKey, paramValue: item.paramValue, paramDesc: item.paramDesc }))],
     hostIds: selectedHosts.value,
     tasks: subTaskConfig.value.map(item => {
+      const taskParamsObject = {
+        basic: mergeObjectArray(globalParamsObject.basic, item.taskParamsObject.basic, 'paramKey'),
+        more: mergeObjectArray(globalParamsObject.more, item.taskParamsObject.more, 'paramKey')
+      }
       return {
         migrationModelId: item.mode,
         sourceDb: item.sourceDBName,
@@ -118,7 +124,7 @@ const saveConfig = () => {
         targetDbUser: item.targetNodeInfo.username,
         targetDbVersion: item.targetNodeInfo.versionNum,
         targetNodeId: item.targetNodeInfo.nodeId,
-        taskParams: [...item.taskParamsObject.basic.map(item => ({ paramKey: item.paramKey, paramValue: item.paramValue, paramDesc: item.paramDesc })), ...item.taskParamsObject.more.map(item => ({ paramKey: item.paramKey, paramValue: item.paramValue, paramDesc: item.paramDesc }))]
+        taskParams: [...taskParamsObject.basic.map(item => ({ paramKey: item.paramKey, paramValue: item.paramValue, paramDesc: item.paramDesc })), ...taskParamsObject.more.map(item => ({ paramKey: item.paramKey, paramValue: item.paramValue, paramDesc: item.paramDesc }))]
       }
     })
   }
@@ -158,14 +164,14 @@ const getTaskDetail = id => {
     taskId.value = data.taskId
     taskName.value = data.taskName
     selectedHosts.value = data.hostIds
-    globalParamsObject.basic = data.globalParams
-    globalParamsObject.more = []
+    globalParamsObject.basic = data.globalParams.filter(child => ~defaultBasicData.value.indexOf(child.paramKey))
+    globalParamsObject.more = data.globalParams.filter(child => !~defaultBasicData.value.indexOf(child.paramKey))
     subTaskConfig.value = data.tasks.map(item => {
       return {
         mode: item.migrationModelId,
         configType: !item.taskParams.length ? 1 : 2,
         sourceDBName: item.sourceDb,
-        sourceNodeName: item.sourceDbHost,
+        sourceNodeName: item.sourceDbHost + ':' + item.sourceDbPort,
         sourceNodeInfo: {
           host: item.sourceDbHost,
           password: item.sourceDbPass,
@@ -174,7 +180,7 @@ const getTaskDetail = id => {
           nodeId: item.sourceNodeId
         },
         targetDBName: item.targetDb,
-        targetNodeName: item.targetDbHost,
+        targetNodeName: item.targetDbHost + ':' + item.targetDbPort,
         targetNodeInfo: {
           host: item.targetDbHost,
           password: item.targetDbPass,
@@ -184,8 +190,8 @@ const getTaskDetail = id => {
           nodeId: item.targetNodeId
         },
         taskParamsObject: {
-          basic: item.taskParams,
-          more: []
+          basic: item.taskParams.filter(child => ~defaultBasicData.value.indexOf(child.paramKey)),
+          more: item.taskParams.filter(child => !~defaultBasicData.value.indexOf(child.paramKey))
         }
       }
     })
@@ -196,6 +202,9 @@ const getTaskDetail = id => {
 onMounted(() => {
   const id = window.$wujie?.props.data.id
   if (id) {
+    defaultParams().then(res => {
+      defaultBasicData.value = res.data.slice(0, 10).map(item => item.paramKey)
+    })
     getTaskDetail(id)
   } else {
     taskName.value = `Task_${dayjs().format('YYYYMMDDHHmm')}_${Math.random().toString(36).substring(2, 8)}`

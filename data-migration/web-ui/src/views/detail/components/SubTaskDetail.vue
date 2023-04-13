@@ -26,7 +26,7 @@
       </div>
       <div v-if="tabActive === 1 && subTaskInfo.migrationModelId === 1" class="progress-con">
         <span class="progress-info">进度</span>
-        <a-progress size="large" :percent="subTaskInfo.execStatus === 100 ? 1 : (subTaskInfo.migrationProcess || 0)" />
+        <a-progress :status="subTaskInfo.execStatus === 500 ? 'danger' : 'success'" size="large" :percent="subTaskInfo.execStatus === 100 ? 1 : (subTaskInfo.migrationProcess || 0)" />
       </div>
       <div v-if="tabActive === 1 && subTaskInfo.migrationModelId === 1" class="table-con">
         <big-data-list :full-data="fullData" :sub-task-info="subTaskInfo" :record-counts="recordCounts" />
