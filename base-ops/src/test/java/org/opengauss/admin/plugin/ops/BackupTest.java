@@ -25,6 +25,14 @@ package org.opengauss.admin.plugin.ops;
 
 import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.runner.RunWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
 import org.opengauss.admin.plugin.domain.entity.ops.OpsBackupEntity;
@@ -47,15 +55,6 @@ import org.opengauss.admin.plugin.vo.ops.RecoverInputDto;
 import org.opengauss.admin.system.plugin.facade.HostFacade;
 import org.opengauss.admin.system.plugin.facade.HostUserFacade;
 import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.junit.jupiter.api.Assertions;
-import org.junit.runner.RunWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -92,7 +91,7 @@ public class BackupTest {
     @Mock
     private EncryptionUtils encryptionUtils;
     @InjectMocks
-    private IOpsBackupService opsBackupService = new OpsBackupService(){
+    private IOpsBackupService opsBackupService = new OpsBackupService() {
         @Override
         public OpsBackupEntity getById(Serializable id) {
             return mockBackupEntity();
@@ -105,17 +104,12 @@ public class BackupTest {
     };
 
     @BeforeClass
-    public static void before(){
+    public static void before() {
         MockitoAnnotations.initMocks(BackupTest.class);
-        System.out.println("start Backup test........");
-    }
-    @AfterClass
-    public static void after(){
-        System.out.println("end Backup test........");
     }
 
     @Test
-    public void testBackup(){
+    public void testBackup() {
         ThreadPoolTaskExecutor commonExecutor = new ThreadPoolTaskExecutor();
         commonExecutor.setCorePoolSize(5);
         commonExecutor.setMaxPoolSize(10);
@@ -140,7 +134,7 @@ public class BackupTest {
     }
 
     @Test
-    public void testRecover(){
+    public void testRecover() {
         ThreadPoolTaskExecutor commonExecutor = new ThreadPoolTaskExecutor();
         commonExecutor.setCorePoolSize(5);
         commonExecutor.setMaxPoolSize(10);
@@ -160,11 +154,11 @@ public class BackupTest {
         RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
         RecoverInputDto recoverInputDto = new RecoverInputDto();
         recoverInputDto.setBusinessId("1");
-        opsBackupService.recover("1",recoverInputDto);
+        opsBackupService.recover("1", recoverInputDto);
     }
 
     @Test
-    public void testDel(){
+    public void testDel() {
         ThreadPoolTaskExecutor commonExecutor = new ThreadPoolTaskExecutor();
         commonExecutor.setCorePoolSize(5);
         commonExecutor.setMaxPoolSize(10);
@@ -181,22 +175,22 @@ public class BackupTest {
     }
 
     @Test
-    public void testPageBackup(){
+    public void testPageBackup() {
         Page page = new Page();
         page.setCurrent(1);
         page.setSize(10);
         page.setTotal(1);
 
         List<BackupVO> records = new ArrayList();
-        records.add(BeanUtil.copyProperties(mockBackupEntity(),BackupVO.class));
+        records.add(BeanUtil.copyProperties(mockBackupEntity(), BackupVO.class));
         page.setRecords(records);
-        Mockito.doReturn(page).when(backupMapper).pageBackup(any(),any());
+        Mockito.doReturn(page).when(backupMapper).pageBackup(any(), any());
         Page<BackupVO> backupVOPage = opsBackupService.pageBackup(page, "1");
         Assertions.assertNotNull(backupVOPage);
-        Assertions.assertEquals(backupVOPage,page);
+        Assertions.assertEquals(backupVOPage, page);
     }
 
-    private OpsBackupEntity mockBackupEntity(){
+    private OpsBackupEntity mockBackupEntity() {
         OpsBackupEntity opsBackupEntity = new OpsBackupEntity();
         opsBackupEntity.setBackupId("1");
         opsBackupEntity.setBackupPath("/etc/backup/1.sql");

@@ -1,3 +1,27 @@
+/*
+ * Copyright (c) 2022 Huawei Technologies Co.,Ltd.
+ *
+ * openGauss is licensed under Mulan PSL v2.
+ * You can use this software according to the terms and conditions of the Mulan PSL v2.
+ * You may obtain a copy of Mulan PSL v2 at:
+ *
+ * http://license.coscl.org.cn/MulanPSL2
+ *
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ * EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ * MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ * See the Mulan PSL v2 for more details.
+ * -------------------------------------------------------------------------
+ *
+ * OpsHostTagRelService.java
+ *
+ * IDENTIFICATION
+ * openGauss-visualtool/visualtool-service/src/main/java/org/opengauss/admin/system/service/ops/impl/OpsHostTagRelService.java
+ *
+ * -------------------------------------------------------------------------
+ */
+
+
 package org.opengauss.admin.system.service.ops.impl;
 
 import cn.hutool.core.collection.CollUtil;
@@ -44,17 +68,17 @@ public class OpsHostTagRelService extends ServiceImpl<OpsHostTagRelMapper, OpsHo
 
     @Override
     public Map<String, Set<String>> mapByHostIds(List<String> hostIds) {
-        if (CollUtil.isEmpty(hostIds)){
+        if (CollUtil.isEmpty(hostIds)) {
             return Collections.emptyMap();
         }
 
-        Map<String,Set<String>> tags = new HashMap<>();
+        Map<String, Set<String>> tags = new HashMap<>();
 
         LambdaQueryWrapper<OpsHostTagRel> queryWrapper = Wrappers.lambdaQuery(OpsHostTagRel.class)
                 .in(OpsHostTagRel::getHostId, hostIds);
 
         List<OpsHostTagRel> list = list(queryWrapper);
-        if (CollUtil.isNotEmpty(list)){
+        if (CollUtil.isNotEmpty(list)) {
             List<String> tagIds = list.stream().map(OpsHostTagRel::getTagId).collect(Collectors.toList());
             List<OpsHostTagEntity> tagEntityList = opsHostTagService.listByIds(tagIds);
             Map<String, String> tagMap = tagEntityList.stream().collect(Collectors.toMap(OpsHostTagEntity::getHostTagId, OpsHostTagEntity::getName));
@@ -64,9 +88,9 @@ public class OpsHostTagRelService extends ServiceImpl<OpsHostTagRelMapper, OpsHo
                 String tagId = opsHostTagRel.getTagId();
 
                 Set<String> tagNames = tags.get(hostId);
-                if (Objects.isNull(tagNames)){
+                if (Objects.isNull(tagNames)) {
                     tagNames = new HashSet<>();
-                    tags.put(hostId,tagNames);
+                    tags.put(hostId, tagNames);
                 }
                 tagNames.add(tagMap.get(tagId));
             }
@@ -77,7 +101,7 @@ public class OpsHostTagRelService extends ServiceImpl<OpsHostTagRelMapper, OpsHo
 
     @Override
     public void cleanHostTag(String hostId) {
-        if (StrUtil.isEmpty(hostId)){
+        if (StrUtil.isEmpty(hostId)) {
             return;
         }
         LambdaQueryWrapper<OpsHostTagRel> queryWrapper = Wrappers.lambdaQuery(OpsHostTagRel.class)
@@ -88,7 +112,7 @@ public class OpsHostTagRelService extends ServiceImpl<OpsHostTagRelMapper, OpsHo
 
     @Override
     public void delByTagId(String tagId) {
-        if (StrUtil.isEmpty(tagId)){
+        if (StrUtil.isEmpty(tagId)) {
             return;
         }
 

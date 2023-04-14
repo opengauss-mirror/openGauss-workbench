@@ -1,21 +1,45 @@
+/*
+ * Copyright (c) 2022 Huawei Technologies Co.,Ltd.
+ *
+ * openGauss is licensed under Mulan PSL v2.
+ * You can use this software according to the terms and conditions of the Mulan PSL v2.
+ * You may obtain a copy of Mulan PSL v2 at:
+ *
+ * http://license.coscl.org.cn/MulanPSL2
+ *
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ * EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ * MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ * See the Mulan PSL v2 for more details.
+ * -------------------------------------------------------------------------
+ *
+ * SysUserTest.java
+ *
+ * IDENTIFICATION
+ * openGauss-visualtool/visualtool-api/src/test/java/org/opengauss/admin/service/SysUserTest.java
+ *
+ * -------------------------------------------------------------------------
+ */
+
+
 package org.opengauss.admin.service;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import org.opengauss.admin.common.core.domain.entity.SysRole;
-import org.opengauss.admin.common.core.domain.entity.SysUser;
-import org.opengauss.admin.system.domain.SysWhiteList;
-import org.opengauss.admin.system.mapper.SysRoleMapper;
-import org.opengauss.admin.system.mapper.SysUserMapper;
-import org.opengauss.admin.system.mapper.SysUserRoleMapper;
-import org.opengauss.admin.system.service.ISysUserService;
-import org.opengauss.admin.system.service.impl.SysUserServiceImpl;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.jupiter.api.Assertions;
 import org.junit.runner.RunWith;
 import org.mockito.*;
+import org.opengauss.admin.common.core.domain.entity.SysRole;
+import org.opengauss.admin.common.core.domain.entity.SysUser;
+import org.opengauss.admin.system.mapper.SysRoleMapper;
+import org.opengauss.admin.system.mapper.SysUserMapper;
+import org.opengauss.admin.system.mapper.SysUserRoleMapper;
+import org.opengauss.admin.system.service.ISysUserService;
+import org.opengauss.admin.system.service.impl.SysUserServiceImpl;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.List;
@@ -27,6 +51,7 @@ import java.util.List;
  * @date: 2022-10-16 13:24
  **/
 @RunWith(SpringRunner.class)
+@Slf4j
 public class SysUserTest {
 
     @InjectMocks
@@ -39,10 +64,11 @@ public class SysUserTest {
     @Mock
     private SysUserRoleMapper userRoleMapper;
 
-    private List<SysUser> mockSysUsers(){
+    private List<SysUser> mockSysUsers() {
         return List.of(mockSysUser());
     }
-    private SysUser mockSysUser(){
+
+    private SysUser mockSysUser() {
         SysUser user = new SysUser();
         user.setUserId(100);
         user.setUserName("xielibo");
@@ -53,7 +79,8 @@ public class SysUserTest {
         user.setStatus("1");
         return user;
     }
-    private List<SysRole> mockSysRoles(){
+
+    private List<SysRole> mockSysRoles() {
         SysRole role = new SysRole();
         role.setRoleId(1);
         role.setRoleName("admin");
@@ -61,24 +88,25 @@ public class SysUserTest {
     }
 
     @BeforeClass
-    public static void before(){
+    public static void before() {
         MockitoAnnotations.initMocks(SysUserTest.class);
-        System.out.println("start system user test........");
+        log.info("start system user test........");
     }
+
     @AfterClass
-    public static void after(){
-        System.out.println("end system user test........");
+    public static void after() {
+        log.info("end system user test........");
     }
 
     @Test
-    public void testPageSysUser(){
+    public void testPageSysUser() {
         IPage<SysUser> page = new Page<>();
         page.setRecords(mockSysUsers());
         page.setPages(1);
         page.setCurrent(1);
         page.setTotal(1);
         Mockito.doReturn(page).when(sysUserMapper).selectUserList(ArgumentMatchers.any(Page.class), ArgumentMatchers.any(SysUser.class));
-        IPage pageResult = sysUserService.selectUserList(new SysUser(),new Page<>());
+        IPage pageResult = sysUserService.selectUserList(new SysUser(), new Page<>());
         Assertions.assertNotNull(pageResult.getRecords());
         Assertions.assertSame(page, pageResult);
     }
@@ -93,7 +121,7 @@ public class SysUserTest {
     }
 
     @Test
-    public void testListSysUser(){
+    public void testListSysUser() {
         SysUser checkUser = mockSysUser();
         Mockito.doReturn(mockSysUser()).when(sysUserMapper).selectUserVo(ArgumentMatchers.any());
         SysUser user = sysUserService.selectUserById(100);
@@ -102,7 +130,7 @@ public class SysUserTest {
     }
 
     @Test
-    public void testSelectUserRoleGroup(){
+    public void testSelectUserRoleGroup() {
         String group = "admin";
         Mockito.doReturn(mockSysRoles()).when(roleMapper).selectRoles(ArgumentMatchers.any());
         String userRoleGroup = sysUserService.selectUserRoleGroup(ArgumentMatchers.anyString());
@@ -110,7 +138,7 @@ public class SysUserTest {
     }
 
     @Test
-    public void testCheckUserNameUnique(){
+    public void testCheckUserNameUnique() {
         String validUnique = "0";
         Mockito.doReturn(0L).when(sysUserMapper).selectCount(ArgumentMatchers.any());
         String isUnique = sysUserService.checkUserNameUnique("xielibo001");
@@ -123,7 +151,7 @@ public class SysUserTest {
     }
 
     @Test
-    public void testCheckPhoneUnique(){
+    public void testCheckPhoneUnique() {
         SysUser user = new SysUser();
         user.setPhonenumber("13866886688");
 
@@ -140,7 +168,7 @@ public class SysUserTest {
     }
 
     @Test
-    public void testCheckEmailUnique(){
+    public void testCheckEmailUnique() {
         SysUser user = new SysUser();
         user.setEmail("xielibo22@163.com");
 
@@ -157,7 +185,7 @@ public class SysUserTest {
     }
 
     @Test
-    public void testInsertUser(){
+    public void testInsertUser() {
         int validRow = 1;
         Mockito.doReturn(validRow).when(sysUserMapper).insert(ArgumentMatchers.any());
         Mockito.doReturn(1).when(userRoleMapper).insert(ArgumentMatchers.any());
@@ -167,7 +195,7 @@ public class SysUserTest {
 
 
     @Test
-    public void testUpdateUserStatus(){
+    public void testUpdateUserStatus() {
         int validRow = 1;
         Mockito.doReturn(validRow).when(sysUserMapper).updateById(ArgumentMatchers.any());
         int row = sysUserService.updateUser(mockSysUser());
@@ -175,7 +203,7 @@ public class SysUserTest {
     }
 
     @Test
-    public void testUpdateUserProfile(){
+    public void testUpdateUserProfile() {
         int validRow = 1;
         Mockito.doReturn(validRow).when(sysUserMapper).updateById(ArgumentMatchers.any());
         int row = sysUserService.updateUserProfile(mockSysUser());
@@ -183,7 +211,7 @@ public class SysUserTest {
     }
 
     @Test
-    public void testDeleteUserById(){
+    public void testDeleteUserById() {
         int expected = 0;
         Mockito.doReturn(expected).when(sysUserMapper).deleteById(ArgumentMatchers.any());
         Mockito.doReturn(1).when(userRoleMapper).delete(ArgumentMatchers.any());

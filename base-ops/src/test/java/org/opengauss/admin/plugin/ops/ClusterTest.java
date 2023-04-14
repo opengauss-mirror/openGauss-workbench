@@ -24,10 +24,17 @@
 package org.opengauss.admin.plugin.ops;
 
 import com.jcraft.jsch.*;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
 import org.opengauss.admin.plugin.domain.entity.ops.OpsClusterEntity;
-import org.opengauss.admin.plugin.domain.model.ops.*;
 import org.opengauss.admin.plugin.domain.model.ops.*;
 import org.opengauss.admin.plugin.domain.model.ops.cache.WsConnectorManager;
 import org.opengauss.admin.plugin.domain.model.ops.node.MinimalistInstallNodeConfig;
@@ -44,14 +51,6 @@ import org.opengauss.admin.plugin.utils.JschUtil;
 import org.opengauss.admin.plugin.utils.WsUtil;
 import org.opengauss.admin.system.plugin.facade.HostFacade;
 import org.opengauss.admin.system.plugin.facade.HostUserFacade;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
 import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
@@ -73,6 +72,7 @@ import static org.mockito.ArgumentMatchers.any;
  * @date 2022/11/30 18:09
  **/
 @RunWith(SpringRunner.class)
+@Slf4j
 public class ClusterTest {
     @Mock
     private WsConnectorManager wsConnectorManager;
@@ -99,14 +99,7 @@ public class ClusterTest {
     @BeforeClass
     public static void before() {
         MockitoAnnotations.initMocks(WdrTest.class);
-        System.out.println("start Cluster test........");
     }
-
-    @AfterClass
-    public static void after() {
-        System.out.println("end Cluster test........");
-    }
-
 
     @Test
     public void testDownload() {
@@ -267,20 +260,20 @@ public class ClusterTest {
                         attrs = channelSftp.stat(directoryPath);
                         channelSftp.rmdir(directoryPath);
                     } catch (SftpException ex) {
-                        System.out.println(">>>>>>>>>>>>>>>>>>>>> User does not have create permission for directory " + directoryPath);
+                        log.error(">>>>>>>>>>>>>>>>>>>>> User does not have create permission for directory " + directoryPath);
                         throw e;
                     }
                 } else {
-                    System.out.println(">>>>>>>>>>>>>>>>>>>>> User does not have create permission for directory " + directoryPath);
+                    log.error(">>>>>>>>>>>>>>>>>>>>> User does not have create permission for directory " + directoryPath);
                     throw e;
                 }
             }
 
             // check if user has read and write permission for directory
             if (attrs.getPermissionsString().charAt(1) == 'r' && attrs.getPermissionsString().charAt(2) == 'w') {
-                System.out.println("User has read and write permission for directory " + directoryPath);
+                log.error("User has read and write permission for directory " + directoryPath);
             } else {
-                System.out.println("User does not have read and write permission for directory " + directoryPath);
+                log.error("User does not have read and write permission for directory " + directoryPath);
             }
 
         } catch (JSchException | SftpException e) {

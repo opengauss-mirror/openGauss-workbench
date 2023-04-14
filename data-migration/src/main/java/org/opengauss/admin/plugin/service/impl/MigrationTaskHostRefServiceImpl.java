@@ -1,3 +1,27 @@
+/*
+ * Copyright (c) 2022 Huawei Technologies Co.,Ltd.
+ *
+ * openGauss is licensed under Mulan PSL v2.
+ * You can use this software according to the terms and conditions of the Mulan PSL v2.
+ * You may obtain a copy of Mulan PSL v2 at:
+ *
+ * http://license.coscl.org.cn/MulanPSL2
+ *
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ * EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ * MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ * See the Mulan PSL v2 for more details.
+ * -------------------------------------------------------------------------
+ *
+ * MigrationTaskHostRefServiceImpl.java
+ *
+ * IDENTIFICATION
+ * data-migration/src/main/java/org/opengauss/admin/plugin/service/impl/MigrationTaskHostRefServiceImpl.java
+ *
+ * -------------------------------------------------------------------------
+ */
+
+
 package org.opengauss.admin.plugin.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
@@ -148,15 +172,16 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
     }
 
     @Override
-    public List<JdbcDbClusterVO> getSourceClusters(){
+    public List<JdbcDbClusterVO> getSourceClusters() {
         List<JdbcDbClusterVO> jdbcTargetCluster = jdbcDbClusterFacade.listAll("MYSQL");
         return jdbcTargetCluster;
     }
 
     @Override
-    public void saveDbResource(CustomDbResource dbResource){
+    public void saveDbResource(CustomDbResource dbResource) {
         saveSource(dbResource.getClusterName(), dbResource.getDbUrl(), dbResource.getUserName(), dbResource.getPassword());
     }
+
     @Override
     public void saveSource(String clusterName, String dbUrl, String username, String password) {
         JdbcDbClusterInputDto clusterInput = new JdbcDbClusterInputDto();
@@ -172,7 +197,7 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
     }
 
     @Override
-    public List<TargetClusterVO> getTargetClusters(){
+    public List<TargetClusterVO> getTargetClusters() {
         List<OpsClusterVO> opsClusterVOS = opsFacade.listCluster();
         List<TargetClusterVO> targetClusters = opsClusterVOS.stream().map(o -> {
             TargetClusterVO clusterVO = new TargetClusterVO();
@@ -224,12 +249,12 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
     }
 
     @Override
-    public List<String> getMysqlClusterDbNames(String url, String username, String password){
+    public List<String> getMysqlClusterDbNames(String url, String username, String password) {
         String sql = "SELECT `SCHEMA_NAME` FROM `information_schema`.`SCHEMATA`;";
         List<String> dbList = new ArrayList<>();
         try {
             List<Map<String, Object>> resultSet = this.querySource(url, username, password, sql);
-            resultSet.forEach(ret->{
+            resultSet.forEach(ret -> {
                 String schemaName = ret.get("SCHEMA_NAME").toString();
                 dbList.add(schemaName);
             });
@@ -308,7 +333,7 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
         ResultSet resultSet;
 
         Class.forName("org.opengauss.Driver");
-        String openGaussUrl = "jdbc:opengauss://"+clusterNode.getPublicIp()+":"+clusterNode.getDbPort()+"/"+clusterNode.getDbName()+"?currentSchema="+schema;
+        String openGaussUrl = "jdbc:opengauss://" + clusterNode.getPublicIp() + ":" + clusterNode.getDbPort() + "/" + clusterNode.getDbName() + "?currentSchema=" + schema;
         Connection conn = DriverManager.getConnection(openGaussUrl, clusterNode.getDbUser(), clusterNode.getDbUserPassword());
 
         if (sql == null || conn == null) {
@@ -340,15 +365,15 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
             installPath = "/home/" + hostUser.getUsername() + "/";
         }
         boolean isExistsAndHasPermission = PortalHandle.directoryExists(opsHost.getPublicIp(), opsHost.getPort(), hostUser.getUsername(), password, installPath);
-        if(isExistsAndHasPermission) {
+        if (isExistsAndHasPermission) {
             isExistsAndHasPermission = PortalHandle.checkWritePermission(opsHost.getPublicIp(), opsHost.getPort(), hostUser.getUsername(), password, installPath);
         } else {
             isExistsAndHasPermission = PortalHandle.mkdirDirectory(opsHost.getPublicIp(), opsHost.getPort(), hostUser.getUsername(), password, installPath);
         }
-        if(!isExistsAndHasPermission) {
+        if (!isExistsAndHasPermission) {
             return AjaxResult.error(MigrationErrorCode.PORTAL_INSTALL_PATH_NOT_HAS_WRITE_PERMISSION_ERROR.getCode(), MigrationErrorCode.PORTAL_INSTALL_PATH_NOT_HAS_WRITE_PERMISSION_ERROR.getMsg());
         }
-        syncInstallPortalHandler(hostId, opsHost.getPublicIp(), opsHost.getPort(), hostUser.getUsername(), password, installPath,true);
+        syncInstallPortalHandler(hostId, opsHost.getPublicIp(), opsHost.getPort(), hostUser.getUsername(), password, installPath, true);
         migrationHostPortalInstallHostService.saveRecord(hostId, hostUserId, opsHost.getPublicIp(), opsHost.getPort(), hostUser.getUsername(), password, installPath, PortalInstallStatus.INSTALLING.getCode());
         return AjaxResult.success();
     }

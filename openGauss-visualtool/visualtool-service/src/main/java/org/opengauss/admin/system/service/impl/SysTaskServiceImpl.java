@@ -1,3 +1,27 @@
+/*
+ * Copyright (c) 2022 Huawei Technologies Co.,Ltd.
+ *
+ * openGauss is licensed under Mulan PSL v2.
+ * You can use this software according to the terms and conditions of the Mulan PSL v2.
+ * You may obtain a copy of Mulan PSL v2 at:
+ *
+ * http://license.coscl.org.cn/MulanPSL2
+ *
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ * EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ * MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ * See the Mulan PSL v2 for more details.
+ * -------------------------------------------------------------------------
+ *
+ * SysTaskServiceImpl.java
+ *
+ * IDENTIFICATION
+ * openGauss-visualtool/visualtool-service/src/main/java/org/opengauss/admin/system/service/impl/SysTaskServiceImpl.java
+ *
+ * -------------------------------------------------------------------------
+ */
+
+
 package org.opengauss.admin.system.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -74,7 +98,7 @@ public class SysTaskServiceImpl extends ServiceImpl<SysTaskMapper, SysTask> impl
         SysTask task = this.getById(taskId);
         List<TaskExtract> extractByInterClass = extractFactory.getExtractByInterClass(task.getPluginId(), TaskExtract.class);
         if (extractByInterClass.size() > 0) {
-            log.info("Get the TaskExtract implementation class. {}" , extractByInterClass.get(0).getClass().getPackage());
+            log.info("Get the TaskExtract implementation class. {}", extractByInterClass.get(0).getClass().getPackage());
             List<MigrationTaskDetail> pluginTask = extractByInterClass.get(0).getPluginTask(taskId);
             result.put("subTask", pluginTask);
         } else {
@@ -86,12 +110,12 @@ public class SysTaskServiceImpl extends ServiceImpl<SysTaskMapper, SysTask> impl
 
 
     @Override
-    public void deleteTask(Integer[] ids){
+    public void deleteTask(Integer[] ids) {
         Arrays.asList(ids).stream().forEach(i -> {
             SysTask task = this.getById(i);
             List<TaskExtract> extractByInterClass = extractFactory.getExtractByInterClass(task.getPluginId(), TaskExtract.class);
             if (extractByInterClass.size() > 0) {
-                log.info("Get the TaskExtract implementation class. {}" , extractByInterClass.get(0).getClass().getPackage());
+                log.info("Get the TaskExtract implementation class. {}", extractByInterClass.get(0).getClass().getPackage());
                 extractByInterClass.get(0).deleteTask(i);
                 this.removeById(i);
             } else {
@@ -110,11 +134,11 @@ public class SysTaskServiceImpl extends ServiceImpl<SysTaskMapper, SysTask> impl
     }
 
     @Override
-    public void startTask(Integer id){
+    public void startTask(Integer id) {
         SysTask task = this.getById(id);
         List<TaskExtract> extractByInterClass = extractFactory.getExtractByInterClass(task.getPluginId(), TaskExtract.class);
         if (extractByInterClass.size() > 0) {
-            log.info("Get the TaskExtract implementation class. {}" , extractByInterClass.get(0).getClass().getPackage());
+            log.info("Get the TaskExtract implementation class. {}", extractByInterClass.get(0).getClass().getPackage());
             extractByInterClass.get(0).startTask(id);
         } else {
             log.error("No implementation found");
@@ -127,11 +151,11 @@ public class SysTaskServiceImpl extends ServiceImpl<SysTaskMapper, SysTask> impl
     }
 
     @Override
-    public void stopTask(Integer id){
+    public void stopTask(Integer id) {
         SysTask task = this.getById(id);
         List<TaskExtract> extractByInterClass = extractFactory.getExtractByInterClass(task.getPluginId(), TaskExtract.class);
         if (extractByInterClass.size() > 0) {
-            log.info("Get the TaskExtract implementation class. {}" , extractByInterClass.get(0).getClass().getPackage());
+            log.info("Get the TaskExtract implementation class. {}", extractByInterClass.get(0).getClass().getPackage());
             extractByInterClass.get(0).stopTask(id);
         } else {
             log.error("No implementation found");
@@ -148,7 +172,7 @@ public class SysTaskServiceImpl extends ServiceImpl<SysTaskMapper, SysTask> impl
             migrationTasks.stream().forEach((x -> {
                 List<TaskExtract> extractByInterClass = extractFactory.getExtractByInterClass(x.getPluginId(), TaskExtract.class);
                 if (extractByInterClass.size() > 0) {
-                    log.info("Get the TaskExtract implementation class. {}" , extractByInterClass.get(0).getClass().getPackage());
+                    log.info("Get the TaskExtract implementation class. {}", extractByInterClass.get(0).getClass().getPackage());
                     TaskExecProgressDto taskStatus = extractByInterClass.get(0).getTaskStatus(x.getId());
                     SysTask task = new SysTask();
                     task.setId(x.getId());
