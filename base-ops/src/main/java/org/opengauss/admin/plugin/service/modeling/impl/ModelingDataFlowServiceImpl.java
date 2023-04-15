@@ -24,8 +24,10 @@
 package org.opengauss.admin.plugin.service.modeling.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.opengauss.admin.plugin.mapper.modeling.ModelingDataFlowMapper;
 import org.opengauss.admin.plugin.service.modeling.IModelingDataFlowService;
@@ -33,14 +35,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.opengauss.admin.plugin.domain.entity.modeling.ModelingDataFlowEntity;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 /**
-* @author LZW
-* @description modeling_data_flow
-* @createDate 2022-08-10 11:41:13
-*/
+ * @author LZW
+ * @date 2022/8/19 22:38
+ */
 @Service
 public class ModelingDataFlowServiceImpl extends ServiceImpl<ModelingDataFlowMapper, ModelingDataFlowEntity>
     implements IModelingDataFlowService {
@@ -103,6 +106,32 @@ public class ModelingDataFlowServiceImpl extends ServiceImpl<ModelingDataFlowMap
     @Override
     public List<ModelingDataFlowEntity> findByName(String name) {
         return modelingDataFlowMapper.findByName(name);
+    }
+
+    @Override
+    public List<Map<String,Integer>> queryGroupByType() {
+        Page<ModelingDataFlowEntity> result = modelingDataFlowMapper
+                .selectPage(new Page<>(1, 5),
+                        new QueryWrapper<ModelingDataFlowEntity>()
+                                .select(" COUNT(*) AS count, type")
+                                .lambda().groupBy(ModelingDataFlowEntity::getType)
+                );
+
+        List<Map<String,Integer>> resultList = new ArrayList<>();
+
+        result.getRecords().forEach( item-> resultList.add(Map.of(item.getType(), item.getCount())));
+
+        return resultList;
+    }
+
+    @Override
+    public List<ModelingDataFlowEntity> queryProcessInfo() {
+        return modelingDataFlowMapper
+                .selectList(
+                        new QueryWrapper<ModelingDataFlowEntity>()
+                                .lambda()
+                                .isNotNull(ModelingDataFlowEntity::getOperatorContent)
+                );
     }
 }
 

@@ -51,7 +51,6 @@ public class ModelingVisualizationReportController extends BaseController {
      */
     @RequestMapping("/add")
     public AjaxResult add(@RequestBody ModelingVisualizationReportsEntity modelingVisualizationReports) {
-        System.out.println(modelingVisualizationReports);
         return toAjax(modelingVisualizationReportsService.add(modelingVisualizationReports));
     }
 

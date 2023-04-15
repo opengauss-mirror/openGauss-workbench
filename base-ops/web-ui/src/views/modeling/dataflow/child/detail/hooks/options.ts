@@ -132,7 +132,7 @@ export const options = () => ({
               rule: (data: KeyValue) =>
               data.polymerization.filter((item: KeyValue, key: number) => (
                 !item.field || !item.way || !item.alias
-                || data.polymerization.findIndex((item2: KeyValue, key2: number) => (key !== key2 && item.value === item2.value)) !== -1
+                || data.polymerization.findIndex((item2: KeyValue, key2: number) => (key !== key2 && item.alias === item2.alias)) !== -1
               )).length === 0
             },
             ports: edge1.ports

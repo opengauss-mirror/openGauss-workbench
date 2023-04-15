@@ -66,6 +66,12 @@ public class BarChartGenerateServiceImpl extends BaseGenerateServiceImpl {
         barChartBody.setTooltip(new Tooltip().setTrigger("axis"));
         barChartBody.setGrid(new Grid().setBottom("40").setRight("3%").setLeft("3%").setContainLabel(true));
 
+        //set dataZoom
+        ArrayList<DataZoomItem> dataZoom = new ArrayList<>();
+        dataZoom.add(new DataZoomItem().setStart(0).setEnd(10).setType("inside"));
+        dataZoom.add(new DataZoomItem().setStart(0).setEnd(10));
+        barChartBody.setDataZoom(dataZoom);
+
         List<String> allKeys = new ArrayList<>(queryResult.get(0).keySet());
         if (!allKeys.contains(barChartParamsBody.getShowType().getDimension())) {
             throw new RuntimeException("The field in the parameter is not found in the query result, please check whether the query table or condition has been replaced.");
@@ -100,7 +106,7 @@ public class BarChartGenerateServiceImpl extends BaseGenerateServiceImpl {
 
         barChartBody.setSeries(series);
 
-        barChartBody.setLegend(new Legend("scroll").setData(barSeriesConstructor.getSeriesKey()).setBottom(10));
+        barChartBody.setLegend(new Legend("scroll").setData(barSeriesConstructor.getSeriesKey()).setTop(10).setWidth("70%"));
 
         //set y unit
         barChartBody.setYAxis(new YAxis().setType("value").setAxisLabel(new AxisLabel(barSeriesConstructor.getYUnit())));

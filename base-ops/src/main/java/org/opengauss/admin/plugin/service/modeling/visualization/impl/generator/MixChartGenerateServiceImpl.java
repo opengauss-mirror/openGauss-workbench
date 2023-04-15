@@ -63,6 +63,12 @@ public class MixChartGenerateServiceImpl extends BaseGenerateServiceImpl {
         mixChartBody.setTooltip(new Tooltip().setTrigger("axis"));
         mixChartBody.setGrid(new Grid().setBottom("40").setRight("3%").setLeft("3%").setContainLabel(true));
 
+        //set dataZoom
+        ArrayList<DataZoomItem> dataZoom = new ArrayList<>();
+        dataZoom.add(new DataZoomItem().setStart(0).setEnd(10).setType("inside"));
+        dataZoom.add(new DataZoomItem().setStart(0).setEnd(10));
+        mixChartBody.setDataZoom(dataZoom);
+
         List<String> allKeys = new ArrayList<>(queryResult.get(0).keySet());
         if (!allKeys.contains(mixChartParamsBody.getShowType().getDimension())) {
             throw new RuntimeException("The field in the parameter is not found in the query result, please check whether the query table or condition has been replaced.");
@@ -98,7 +104,8 @@ public class MixChartGenerateServiceImpl extends BaseGenerateServiceImpl {
                     chartColorIndex.addAndGet(1);
                     s.setName(key + "-" + chartColorIndex).setType("bar").setData(value).setYAxisIndex(yIndex);
                 } else {
-                    s.setName(key).setType("bar").setData(value).setYAxisIndex(yIndex);
+                    chartColorIndex.addAndGet(1);
+                    s.setName(key + "-" + barSeriesConstructor.getIndicators().get(0).getField()).setType("bar").setData(value).setYAxisIndex(yIndex);
                 }
 
                 if (fullParams.getJSONObject("paramsData").getInteger("showNumber") == 1) {
@@ -123,7 +130,8 @@ public class MixChartGenerateServiceImpl extends BaseGenerateServiceImpl {
                     chartColorIndex.addAndGet(1);
                     s.setName(key + "-" + chartColorIndex).setType("line").setData(value).setYAxisIndex(yIndex);
                 } else {
-                    s.setName(key).setType("line").setData(value).setYAxisIndex(yIndex);
+                    chartColorIndex.addAndGet(1);
+                    s.setName(key + "-" + lineSeriesConstructor.getIndicators().get(0).getField()).setType("line").setData(value).setYAxisIndex(yIndex);
                 }
 
                 if (fullParams.getJSONObject("paramsData").getInteger("showNumber") == 1) {
@@ -139,7 +147,7 @@ public class MixChartGenerateServiceImpl extends BaseGenerateServiceImpl {
 
         mixChartBody.setSeries(series);
 
-        mixChartBody.setLegend(new Legend("scroll").setData(seriesKeys).setBottom(10));
+        mixChartBody.setLegend(new Legend("scroll").setData(seriesKeys).setTop(10).setWidth("70%"));
 
         //add Y Axis index , first y Axis at left and others place at right
         List<YAxis> yAxes = new ArrayList<>();

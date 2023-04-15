@@ -16,61 +16,37 @@
  */
 package org.opengauss.admin.plugin.vo.modeling.component;
 
-import java.util.List;
 /**
  * @author LZW
  * @date 2022/10/29 22:38
  **/
-public class Legend {
+public class DataZoomItem {
 
-    private List<String> data;
     private String type;
-    private String width;
+    private Integer start;
+    private Integer end;
 
-    private int bottom;
-    private int top;
-
-    public Legend(String type) {
+    public DataZoomItem setType(String type) {
         this.type = type;
-    }
-
-    public Legend setData(List<String> data) {
-        this.data = data;
         return this;
     }
-    public List<String> getData() {
-        return data;
-    }
-
     public String getType() {
-        return this.type;
+        return type;
     }
 
-    public Legend setBottom(int bottom) {
-        this.bottom = bottom;
+    public DataZoomItem setStart(Integer start) {
+        this.start = start;
         return this;
     }
-
-    public int getBottom() {
-        return this.bottom;
+    public Integer getStart() {
+        return start;
     }
 
-    public Legend setTop(int top) {
-        this.top = top;
+    public DataZoomItem setEnd(Integer end) {
+        this.end = end;
         return this;
     }
-
-    public int getTop() {
-        return this.top;
+    public Integer getEnd() {
+        return end;
     }
-
-    public Legend setWidth(String width) {
-        this.width = width;
-        return this;
-    }
-
-    public String getWidth() {
-        return this.width;
-    }
-
 }

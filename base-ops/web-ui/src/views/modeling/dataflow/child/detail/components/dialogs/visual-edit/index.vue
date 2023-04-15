@@ -263,7 +263,7 @@ const configChange = (data: KeyValue, key: number) => {
 const initConfig = (data: KeyValue, key: number) => {
   config.loading = true
   config.title = data.config.title ? data.config.title : ''
-  config.title = data.config.showNumber ? data.config.showNumber : ''
+  config.showNumber = data.config.showNumber ? data.config.showNumber : ''
   config.chartType = data.config.chartType ? data.config.chartType : ''
   configKey.value = key
   nextTick(() => {

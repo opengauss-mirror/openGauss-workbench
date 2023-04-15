@@ -1525,7 +1525,11 @@
                 "5m82aq4s9ao0": "包含",
                 "5m82aq4s9cw0": "不包含",
                 "5m82aq4s9fk0": "为空",
-                "5m82aq4s9i00": "非空"
+                "5m82aq4s9i00": "非空",
+                "5m82aq4s9fa1": "在列表内",
+                "5m82aq4s9fa2": "不在列表内",
+                "5m82aq4s9fk1": "长度小于",
+                "5m82aq4s9fk2": "长度大于"
             },
             "PolymerizationOperator": {
                 "5m82b2nqsa00": "属性配置",
@@ -1533,9 +1537,15 @@
                 "5m82b2nqt4k0": "请选择字段",
                 "5m82b2nqt780": "聚合方式",
                 "5m82b2nqt9s0": "别名",
+                "5m82b2nqtcl0": "无",
                 "5m82b2nqtck0": "取最大值",
+                "5m82b2nqtck1": "取最小值",
                 "5m82b2nqtf40": "求和",
-                "5m82b2nqths0": "取平均值"
+                "5m82b2nqths0": "取平均值",
+                "5m82b2nqths1": "条数求和",
+                "5m82b2nqths2": "截取年份",
+                "5m82b2nqths3": "截取月份"
+
             },
             "SortOperator": {
                 "5m82bdo2r0w0": "属性配置",

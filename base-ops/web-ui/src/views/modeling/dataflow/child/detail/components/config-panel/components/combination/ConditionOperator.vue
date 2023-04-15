@@ -87,7 +87,11 @@ const select: KeyValue = computed(() => ({
     { value: 'include', label: t('modeling.combination.ConditionOperator.5m82aq4s9ao0') },
     { value: 'notInclude', label: t('modeling.combination.ConditionOperator.5m82aq4s9cw0') },
     { value: 'isNull', label: t('modeling.combination.ConditionOperator.5m82aq4s9fk0') },
-    { value: 'notNull', label: t('modeling.combination.ConditionOperator.5m82aq4s9i00') }
+    { value: 'notNull', label: t('modeling.combination.ConditionOperator.5m82aq4s9i00') },
+    { value: 'in', label: t('modeling.combination.ConditionOperator.5m82aq4s9fa1') },
+    { value: 'notIn', label: t('modeling.combination.ConditionOperator.5m82aq4s9fa2') },
+    { value: 'lengthLessThan', label: t('modeling.combination.ConditionOperator.5m82aq4s9fk1') },
+    { value: 'lengthLongerThan', label: t('modeling.combination.ConditionOperator.5m82aq4s9fk2') }
   ]
 }))
 const fieldsList = computed(() => dFStore.getFieldsSelectList)

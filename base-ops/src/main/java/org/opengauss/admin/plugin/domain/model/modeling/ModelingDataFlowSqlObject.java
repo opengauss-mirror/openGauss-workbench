@@ -54,6 +54,15 @@ public class ModelingDataFlowSqlObject implements Serializable {
         return "#" + index + "#";
     }
 
+    public String addParamList(List<String> paramList) {
+        StringBuilder sb = new StringBuilder();
+        for (String param : paramList) {
+            sb.append(addParam(param)).append(",");
+        }
+        sb.deleteCharAt(sb.length() - 1);
+        return sb.toString();
+    }
+
     private String finalSql;
 
     private String selectRegion = "select ";
@@ -180,15 +189,15 @@ public class ModelingDataFlowSqlObject implements Serializable {
      * if exist join region then modify select [If there are fields with the same name +(1/2/3...)]
      */
     private void joinRegionHandle() {
-
-        if (this.getJoinRegion().length()>0) {
+        if (this.getJoinRegion().length() > 0) {
             String fieldsOldString = this.getSelectRegion().substring(7).trim();
-            String[] fieldsOldArr = fieldsOldString.split(",");
-            if (fieldsOldArr.length<2) {
+
+            String[] fieldsOldArr = fieldsOldString.split(",(?![^()]*\\))");
+            if (fieldsOldArr.length < 2) {
                 return;
             }
             List<String> fieldsNewList = new ArrayList<>();
-            Map<String,Integer> fieldsOldAllList = new HashMap<>();
+            Map<String, Integer> fieldsOldAllList = new HashMap<>();
             int fieldRepeat = 0;
             for (String fieldOld : fieldsOldArr) {
                 String[] tableField = fieldOld.split("\\.");
@@ -196,23 +205,24 @@ public class ModelingDataFlowSqlObject implements Serializable {
                     String tableName = tableField[0];
                     String field = tableField[1];
                     if (fieldsOldAllList.get(field) == null) {
-                        fieldsOldAllList.put(field,0);
+                        fieldsOldAllList.put(field, 0);
                         fieldsNewList.add(fieldOld);
                     } else {
                         fieldRepeat = 1;
-                        int repeatTimes = fieldsOldAllList.get(field)+1;
-                        fieldsOldAllList.put(field,repeatTimes);
-                        fieldsNewList.add(tableName+"."+field+" as "+field+"_"+repeatTimes);
+                        int repeatTimes = fieldsOldAllList.get(field) + 1;
+                        fieldsOldAllList.put(field, repeatTimes);
+                        fieldsNewList.add(tableName + "." + field + " as " + field + "_" + repeatTimes);
                     }
                 }
             }
             if (fieldRepeat == 1) {
                 // if repeat
-                String newFieldSql = String.join(",",fieldsNewList);
-                this.setSelectRegion("select "+newFieldSql+" ");
+                String newFieldSql = String.join(",", fieldsNewList);
+                this.setSelectRegion("select " + newFieldSql + " ");
             }
         }
     }
+
 
     /**
      * default limit 1000

@@ -31,6 +31,7 @@ public class BarChartBody {
     private Tooltip tooltip;
     private Legend legend;
     private Grid grid;
+    private List<DataZoomItem> dataZoom;
     private XAxis xAxis;
     private YAxis yAxis;
     private List<Series> series;
@@ -81,6 +82,14 @@ public class BarChartBody {
     }
     public List<Series> getSeries() {
         return series;
+    }
+
+    public List<DataZoomItem> getDataZoom() {
+        return dataZoom;
+    }
+
+    public void setDataZoom(List<DataZoomItem> dataZoom) {
+        this.dataZoom = dataZoom;
     }
 
 }

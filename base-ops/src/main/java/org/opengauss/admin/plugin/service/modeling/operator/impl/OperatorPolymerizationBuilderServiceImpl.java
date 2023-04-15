@@ -53,9 +53,20 @@ public class OperatorPolymerizationBuilderServiceImpl extends BaseBuilderService
                 String field = polymerizationItem.getString("field");
                 String alias = polymerizationItem.getString("alias");
                 if (way != null && field !=null) {
-                    sqlPolymerization.add(polymerizationConvert(way,field,alias));
+                    String polymerField = polymerizationConvert(way, field);
+                    sqlPolymerization.add(polymerField + " as " + alias);
+                    //add field to group by region
+                    if ("year".equals(way) || "month".equals(way) || "day".equals(way)) {
+                        String oldGroupBy = sqlObject.getGroupRegion();
+                        if (oldGroupBy == null || oldGroupBy.isEmpty()) {
+                            sqlObject.setGroupRegion("group by " + polymerField + " ");
+                        } else {
+                            sqlObject.setGroupRegion(oldGroupBy + "," + polymerField + " ");
+                        }
+                    }
                 }
             }
+
             if (sqlPolymerization.size()>0) {
                 oriSql += String.join(",",sqlPolymerization) + " ";
             }
@@ -66,28 +77,33 @@ public class OperatorPolymerizationBuilderServiceImpl extends BaseBuilderService
         return sqlObject;
     }
 
-    private String polymerizationConvert(String way,String field,String alias) {
+    private String polymerizationConvert(String way,String field) {
         String sql;
         switch (way) {
             case "max":
-                sql = "max("+field+")";
+                sql = "COALESCE( max("+field+") , 0)";
                 break;
             case "min":
-                sql = "min("+field+")";
+                sql = "COALESCE( min("+field+") , 0)";
                 break;
             case "avg":
-                sql = "avg("+field+")";
+                sql = "COALESCE( avg("+field+") , 0)";
                 break;
             case "sum":
-                sql = "sum("+field+")";
+                sql = "COALESCE( sum("+field+") , 0)";
+                break;
+            case "count":
+                sql = "count("+field+")";
+                break;
+            case "year":
+                sql = "TO_CHAR( "+field+",'YYYY')";
+                break;
+            case "month":
+                sql = "TO_CHAR( "+field+",'YYYY-MM')";
                 break;
             default:
-                sql = "";
+                sql = field;
                 break;
-        }
-
-        if (alias!=null) {
-            sql += " as "+alias;
         }
 
         return sql;
