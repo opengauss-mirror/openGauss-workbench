@@ -10,8 +10,12 @@ import org.opengauss.admin.system.mapper.ops.OpsCheckMapper;
 import org.opengauss.admin.system.service.ops.IOpsCheckService;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -39,6 +43,25 @@ public class OpsCheckService extends ServiceImpl<OpsCheckMapper, OpsCheckEntity>
         LambdaQueryWrapper<OpsCheckEntity> queryWrapper = Wrappers.lambdaQuery(OpsCheckEntity.class)
                 .in(OpsCheckEntity::getClusterId, clusterIds);
 
-        return list(queryWrapper).stream().collect(Collectors.toMap(OpsCheckEntity::getClusterId, Function.identity()));
+        List<OpsCheckEntity> list = list(queryWrapper);
+
+        Map<String, OpsCheckEntity> res = new HashMap<>();
+        Map<String, List<OpsCheckEntity>> map = new HashMap<>();
+        for (OpsCheckEntity opsCheckEntity : list) {
+            String clusterId = opsCheckEntity.getClusterId();
+            List<OpsCheckEntity> opsCheckEntities = map.get(clusterId);
+            if (Objects.isNull(opsCheckEntities)){
+                opsCheckEntities = new ArrayList<>();
+                map.put(clusterId, opsCheckEntities);
+            }
+
+            opsCheckEntities.add(opsCheckEntity);
+        }
+
+        map.forEach((k,v)->{
+            v.sort(Comparator.comparing(OpsCheckEntity::getCreateTime).reversed());
+            res.put(k, v.get(0));
+        });
+        return res;
     }
 }

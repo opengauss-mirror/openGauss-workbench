@@ -6,7 +6,7 @@ import errorCode from '@/utils/errorCode'
 
 // need to update url path
 const whiteNameList = ['host/listAll', 'host/ping', 'hostUser/listAll/', 'hostUser/listAllWithoutRoot/',
-  'az/listAll', 'encryption/getKey']
+  'az/listAll', 'encryption/getKey', 'opsCluster/check']
 
 export interface HttpResponse<T = unknown> {
   status: number;

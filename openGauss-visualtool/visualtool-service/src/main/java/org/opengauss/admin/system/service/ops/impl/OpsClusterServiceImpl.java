@@ -24,6 +24,7 @@ import org.opengauss.admin.system.service.ops.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.sql.*;
@@ -73,18 +74,12 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         Map<String, List<OpsClusterNodeEntity>> clusterNodeMap = opsClusterNodeService.listClusterNodeByClusterIds(clusterIds);
         Map<String, OpsHostEntity> hostEntityMap = new HashMap<>();
         List<String> hostIds = clusterNodeMap.values().stream().flatMap(nodeList -> nodeList.stream()).map(OpsClusterNodeEntity::getHostId).collect(Collectors.toList());
-        Map<String, OpsAzEntity> azEntityMap = new HashMap<>();
         Map<String, OpsHostUserEntity> hostUserEntityMap = new HashMap<>();
         Map<String, OpsHostUserEntity> rootUserMap = new HashMap<>();
         if (CollUtil.isNotEmpty(hostIds)) {
             List<OpsHostEntity> opsHostEntities = hostService.listByIds(hostIds);
             if (CollUtil.isNotEmpty(opsHostEntities)) {
                 hostEntityMap.putAll(opsHostEntities.stream().collect(Collectors.toMap(OpsHostEntity::getHostId, Function.identity())));
-                List<String> azIds = opsHostEntities.stream().map(OpsHostEntity::getAzId).collect(Collectors.toList());
-                if (CollUtil.isNotEmpty(azIds)) {
-                    List<OpsAzEntity> opsAzEntities = opsAzService.listByIds(azIds);
-                    azEntityMap.putAll(opsAzEntities.stream().collect(Collectors.toMap(OpsAzEntity::getAzId, Function.identity())));
-                }
 
                 List<OpsHostUserEntity> opsHostUserEntities = hostUserService.listHostUserByHostIdList(opsHostEntities.stream().map(OpsHostEntity::getHostId).collect(Collectors.toList()));
                 hostUserEntityMap.putAll(opsHostUserEntities.stream().collect(Collectors.toMap(OpsHostUserEntity::getHostUserId, Function.identity())));
@@ -146,13 +141,6 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
 
                     if (Objects.nonNull(installUser)) {
                         opsClusterNodeVO.setInstallUserName(installUser.getUsername());
-                    }
-
-                    String azId = hostEntity.getAzId();
-                    OpsAzEntity azEntity = azEntityMap.get(azId);
-                    if (Objects.nonNull(azEntity)) {
-                        opsClusterNodeVO.setAzName(azEntity.getName());
-                        opsClusterNodeVO.setAzAddress(azEntity.getAddress());
                     }
                 }
 
@@ -613,6 +601,97 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         }
 
         return res;
+    }
+
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public CheckSummaryVO check(String clusterId,String rootPassword) {
+        OpsClusterEntity clusterEntity = getById(clusterId);
+        if (Objects.isNull(clusterEntity)) {
+            throw new OpsException("Cluster information cannot be empty");
+        }
+
+        if (OpenGaussVersionEnum.ENTERPRISE != clusterEntity.getVersion()) {
+            throw new OpsException("Only Enterprise edition is supported");
+        }
+
+        List<OpsClusterNodeEntity> opsClusterNodeEntities = opsClusterNodeService.listClusterNodeByClusterId(clusterId);
+        if (CollUtil.isEmpty(opsClusterNodeEntities)) {
+            throw new OpsException("Cluster node information cannot be empty");
+        }
+
+        OpsClusterNodeEntity nodeEntity = opsClusterNodeEntities.stream().filter(node -> node.getClusterRole() == ClusterRoleEnum.MASTER).findFirst().orElseThrow(() -> new OpsException("Masternode information not found"));
+
+        String hostId = nodeEntity.getHostId();
+        String installUserId = nodeEntity.getInstallUserId();
+
+        OpsHostEntity hostEntity = hostService.getById(hostId);
+        if (Objects.isNull(hostEntity)) {
+            throw new OpsException("host information does not exist");
+        }
+
+        OpsHostUserEntity rootUserEntity = hostUserService.getRootUserByHostId(hostId);
+        if (Objects.isNull(rootUserEntity)) {
+            throw new OpsException("User root was not found");
+        }
+
+        if (StrUtil.isEmpty(rootUserEntity.getPassword()) && StrUtil.isEmpty(rootPassword)){
+            throw new OpsException("root password cannot be empty");
+        }
+
+        if (StrUtil.isEmpty(rootUserEntity.getPassword())){
+            rootUserEntity.setPassword(rootPassword);
+        }
+
+        OpsHostUserEntity hostUserEntity = hostUserService.getById(installUserId);
+        if (Objects.isNull(hostUserEntity)) {
+            throw new OpsException("Installation user information does not exist");
+        }
+
+        Session session = jschUtil.getSession(hostEntity.getPublicIp(), hostEntity.getPort(), hostUserEntity.getUsername(), encryptionUtils.decrypt(hostUserEntity.getPassword())).orElseThrow(() -> new OpsException("Connection failed"));
+        String res = doCheck(rootUserEntity, session, clusterEntity.getEnvPath());
+        if (Objects.nonNull(session) && session.isConnected()) {
+            session.disconnect();
+        }
+
+        OpsCheckEntity opsCheckEntity = new OpsCheckEntity();
+        opsCheckEntity.setCheckRes(res);
+        opsCheckEntity.setClusterId(clusterId);
+        opsCheckService.save(opsCheckEntity);
+
+        CheckVO checkVO = parseCheckResToCheckVO(res);
+
+        return CheckSummaryVO.of(checkVO);
+    }
+
+
+    private String doCheck(OpsHostUserEntity rootUserEntity, Session session, String envPath) {
+        log.info("One-click self-test start");
+        String command = "gs_check -e inspect";
+
+        try {
+            Map<String, String> autoResponse = new HashMap<>();
+            autoResponse.put("Please enter root privileges user[root]:", "root");
+            autoResponse.put("Please enter password for user[root]:", encryptionUtils.decrypt(rootUserEntity.getPassword()));
+            JschResult jschResult = jschUtil.executeCommand(envPath, command, session, autoResponse);
+            if (0 != jschResult.getExitCode()) {
+                log.error("A self-test error occurred, exit code {}, exit result {}", jschResult.getExitCode(), jschResult.getResult());
+                throw new OpsException("One key self-test error");
+            } else {
+                String result = jschResult.getResult();
+                return result;
+
+            }
+        } catch (Exception e) {
+            log.error("One-click self-test results", e);
+            if (Objects.nonNull(session) && session.isConnected()) {
+                session.disconnect();
+            }
+            throw new OpsException("One key self-test error");
+        } finally {
+            log.info("One-click self-test end");
+        }
     }
 
     private String memorySize(Session rootSession) {

@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsClusterEntity;
 import org.opengauss.admin.common.core.domain.model.ops.ClusterSummaryVO;
 import org.opengauss.admin.common.core.domain.model.ops.OpsClusterVO;
+import org.opengauss.admin.common.core.domain.model.ops.check.CheckSummaryVO;
 
 import java.sql.Connection;
 import java.util.List;
@@ -31,4 +32,6 @@ public interface IOpsClusterService extends IService<OpsClusterEntity> {
     String session(Connection connection);
 
     String lock(Connection connection);
+
+    CheckSummaryVO check(String clusterId, String rootPassword);
 }

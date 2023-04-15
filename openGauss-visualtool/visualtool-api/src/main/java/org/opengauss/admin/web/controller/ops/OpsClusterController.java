@@ -5,6 +5,7 @@ import org.opengauss.admin.common.core.controller.BaseController;
 import org.opengauss.admin.common.core.domain.AjaxResult;
 import org.opengauss.admin.common.core.domain.model.ops.ClusterSummaryVO;
 import org.opengauss.admin.common.core.domain.model.ops.OpsClusterVO;
+import org.opengauss.admin.common.core.domain.model.ops.check.CheckSummaryVO;
 import org.opengauss.admin.system.service.ops.IOpsClusterService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -45,6 +47,12 @@ public class OpsClusterController extends BaseController {
     public AjaxResult monitor(@RequestParam String clusterId, @RequestParam String hostId, @RequestParam String businessId) {
         opsClusterService.monitor(clusterId, hostId, businessId);
         return AjaxResult.success();
+    }
+
+    @GetMapping("/check")
+    public AjaxResult check(@RequestParam String clusterId,@RequestParam(value = "rootPassword",required = false) String rootPassword) {
+        CheckSummaryVO checkSummaryVO = opsClusterService.check(clusterId,rootPassword);
+        return AjaxResult.success(checkSummaryVO);
     }
 
     @GetMapping

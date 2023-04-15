@@ -49,23 +49,27 @@ public class HostController extends BaseController {
 
     @PostMapping("/ping")
     public AjaxResult ping(@RequestBody @Validated HostBody hostBody) {
-        return toAjax(hostService.ping(hostBody));
+        boolean ping = hostService.ping(hostBody);
+        return ping ? AjaxResult.success(): AjaxResult.error("Connectivity test failed");
     }
 
     @GetMapping("/ping/{hostId}")
     public AjaxResult ping(@PathVariable String hostId, @RequestParam(value = "rootPassword", required = false) String rootPassword) {
-        return toAjax(hostService.ping(hostId, rootPassword));
+        boolean ping = hostService.ping(hostId, rootPassword);
+        return ping ? AjaxResult.success(): AjaxResult.error("Connectivity test failed");
     }
 
     @DeleteMapping("/{hostId}")
     public AjaxResult del(@PathVariable String hostId) {
-        return toAjax(hostService.del(hostId));
+        boolean del = hostService.del(hostId);
+        return del? AjaxResult.success() : AjaxResult.error("Failed to delete host");
     }
 
     @PutMapping("/{hostId}")
     public AjaxResult edit(@PathVariable String hostId,
                            @RequestBody @Validated HostBody hostBody) {
-        return toAjax(hostService.edit(hostId, hostBody));
+        boolean edit = hostService.edit(hostId, hostBody);
+        return edit ? AjaxResult.success() : AjaxResult.error("Failed to edit host");
     }
 
     @PostMapping("/ssh")

@@ -249,7 +249,7 @@ public class OpenEulerX86MinimaListOpsProvider extends AbstractOpsProvider {
         String clientLoginOpenGauss = MessageFormat.format(SshCommandConstants.LOGIN, String.valueOf(installContext.getMinimalistInstallConfig().getPort()));
         try {
             Map<String, String> response = new HashMap<>();
-            String createUser = MessageFormat.format("CREATE USER gaussdb WITH MONADMIN PASSWORD \"{0}\";\\q", installContext.getMinimalistInstallConfig().getDatabasePassword());
+            String createUser = MessageFormat.format("CREATE USER gaussdb WITH MONADMIN AUDITADMIN SYSADMIN PASSWORD \"{0}\";\\q", installContext.getMinimalistInstallConfig().getDatabasePassword());
             response.put("openGauss=#", createUser);
             JschResult jschResult = jschUtil.executeCommand(clientLoginOpenGauss, installUserSession, retSession, response);
             if (0 != jschResult.getExitCode()) {
@@ -521,6 +521,21 @@ public class OpenEulerX86MinimaListOpsProvider extends AbstractOpsProvider {
             } else {
                 dataPath = dataPath + "/single_node";
             }
+        }
+
+        String checkCommand = "gs_guc check -D " + dataPath + " -c \"enable_wdr_snapshot\"";
+        try {
+            JschResult jschResult = jschUtil.executeCommand(checkCommand, session, clusterEntity.getEnvPath());
+            if (jschResult.getResult().contains("enable_wdr_snapshot=on")){
+                return;
+            }
+        } catch (Exception e) {
+            String msg = "Failed to set the enable_wdr_snapshot parameter";
+            if (e instanceof OpsException) {
+                msg = e.getMessage();
+            }
+            log.error(msg, e);
+            throw new OpsException(msg);
         }
 
         String command = "gs_guc reload -D " + dataPath + " -c \"enable_wdr_snapshot=on\"";

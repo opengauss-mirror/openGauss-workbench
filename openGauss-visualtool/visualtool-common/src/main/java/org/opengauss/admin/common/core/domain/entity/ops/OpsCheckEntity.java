@@ -1,5 +1,6 @@
 package org.opengauss.admin.common.core.domain.entity.ops;
 
+import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import org.opengauss.admin.common.core.domain.BaseEntity;
 import lombok.Data;
@@ -13,6 +14,7 @@ import lombok.EqualsAndHashCode;
 @TableName("ops_check")
 @EqualsAndHashCode(callSuper = true)
 public class OpsCheckEntity extends BaseEntity {
+    @TableId
     private String checkId;
     private String clusterId;
     private String checkRes;

@@ -1,21 +1,46 @@
 <template>
   <div class="cluster-config-c">
     <div class="flex-col">
-      <div class="flex-col-start" :style="{ width: '80%' }">
-        <a-tabs size="medium" type="card-gutter" :editable="true" :show-add-button="data.form.nodes.length <= 8"
-          style="width: 100%;" @add="handleAdd" @delete="handleDelete" v-model:active-key="data.activeTab" show-add-button
-          auto-switch>
-          <a-tab-pane :title="$t('enterprise.ClusterConfig.5mpm3ku3go40')" key="clusterPane" :closable="false">
-            <cluster-form :form-data="data.form.cluster" ref="clusterFormRef"></cluster-form>
+      <div
+        class="flex-col-start"
+        :style="{ width: '80%' }"
+      >
+        <a-tabs
+          size="medium"
+          type="card-gutter"
+          :editable="true"
+          :show-add-button="data.form.nodes.length <= 8"
+          style="width: 100%;"
+          @add="handleAdd"
+          @delete="handleDelete"
+          v-model:active-key="data.activeTab"
+          show-add-button
+          auto-switch
+        >
+          <a-tab-pane
+            :title="$t('enterprise.ClusterConfig.5mpm3ku3go40')"
+            key="clusterPane"
+            :closable="false"
+          >
+            <cluster-form
+              :form-data="data.form.cluster"
+              ref="clusterFormRef"
+            ></cluster-form>
           </a-tab-pane>
-          <a-tab-pane v-for="(item, index) in data.form.nodes" :key="item.id"
-            :closable="data.form.nodes.length > (data.form.cluster.isInstallCM ? 3 : 1) && item.clusterRole !== ClusterRoleEnum.MASTER">
+          <a-tab-pane
+            v-for="(item, index) in data.form.nodes"
+            :key="item.id"
+            :closable="data.form.nodes.length > (data.form.cluster.isInstallCM ? 3 : 1) && item.clusterRole !== ClusterRoleEnum.MASTER"
+          >
             <template #title>
               {{ item.clusterRole === ClusterRoleEnum.MASTER ? $t('enterprise.ClusterConfig.else3') :
                 ($t('enterprise.ClusterConfig.else4') + index) }}
             </template>
-            <node-info :form-data="item" :cluster-data="data.form.cluster"
-              :ref="(el: any) => setRefMap(el, item.id)"></node-info>
+            <node-info
+              :form-data="item"
+              :cluster-data="data.form.cluster"
+              :ref="(el: any) => setRefMap(el, item.id)"
+            ></node-info>
           </a-tab-pane>
         </a-tabs>
       </div>
@@ -223,24 +248,24 @@ const beforeConfirm = async (): Promise<boolean> => {
       validRes = false
     }
   }
-  // if (validRes) {
-  //   loadingFunc.toLoading()
-  //   const methodArr = []
-  //   for (let i = 0; i < refList.value.length; i++) {
-  //     if (refList.value[i]) {
-  //       methodArr.push(refList.value[i].dataValidate())
-  //     }
-  //   }
-  //   const nodeFormValid = await Promise.all(methodArr)
+  if (validRes) {
+    loadingFunc.toLoading()
+    const methodArr = []
+    for (let i = 0; i < refList.value.length; i++) {
+      if (refList.value[i]) {
+        methodArr.push(refList.value[i].dataValidate())
+      }
+    }
+    const nodeFormValid = await Promise.all(methodArr)
 
-  //   const nodeValidRes = nodeFormValid.filter((item: KeyValue) => {
-  //     return item.res === false
-  //   })
-  //   if (nodeValidRes.length) {
-  //     data.activeTab = nodeValidRes[0].id
-  //     validRes = false
-  //   }
-  // }
+    const nodeValidRes = nodeFormValid.filter((item: KeyValue) => {
+      return item.res === false
+    })
+    if (nodeValidRes.length) {
+      data.activeTab = nodeValidRes[0].id
+      validRes = false
+    }
+  }
   if (validRes) {
     saveClusterData()
     saveNodesData()

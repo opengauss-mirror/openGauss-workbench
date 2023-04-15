@@ -37,7 +37,6 @@ import com.jcraft.jsch.ChannelShell;
 import com.jcraft.jsch.Session;
 import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.core.domain.entity.SysSettingEntity;
-import org.opengauss.admin.common.core.domain.entity.ops.OpsAzEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
 import org.opengauss.admin.common.exception.ops.OpsException;
@@ -97,7 +96,6 @@ import org.opengauss.admin.plugin.vo.ops.CheckDeviceVO;
 import org.opengauss.admin.plugin.vo.ops.CheckItemVO;
 import org.opengauss.admin.plugin.vo.ops.CheckNetworkVO;
 import org.opengauss.admin.plugin.vo.ops.CheckOSVO;
-import org.opengauss.admin.plugin.vo.ops.CheckSummaryVO;
 import org.opengauss.admin.plugin.vo.ops.CheckVO;
 import org.opengauss.admin.plugin.vo.ops.OpsNodeLogVO;
 import org.opengauss.admin.plugin.vo.ops.SessionVO;
@@ -950,14 +948,10 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
 
     private List<AuditLogVO> querySession(Connection connection, String start, String end) {
         List<AuditLogVO> res = new ArrayList<>();
-        String sql = "select * from pg_query_audit(?,?)";
+        String sql = "select * from pg_query_audit('"+start+"','"+end+"')";
 
-        try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-
-            preparedStatement.setString(1, start);
-            preparedStatement.setString(2, end);
-
-            ResultSet resultSet = preparedStatement.executeQuery();
+        try (Statement statement = connection.createStatement();
+             ResultSet resultSet = statement.executeQuery(sql);) {
             while (resultSet.next()) {
                 AuditLogVO auditLogVO = new AuditLogVO();
                 auditLogVO.setTime(resultSet.getString("time"));
@@ -1691,58 +1685,6 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
 
         Set<String> hostIds = opsClusterNodeEntities.stream().map(OpsClusterNodeEntity::getHostId).collect(Collectors.toSet());
         return hostFacade.listByIds(hostIds);
-    }
-
-    @Override
-    public CheckSummaryVO check(String clusterId) {
-        OpsClusterEntity clusterEntity = getById(clusterId);
-        if (Objects.isNull(clusterEntity)) {
-            throw new OpsException("Cluster information cannot be empty");
-        }
-
-        if (OpenGaussVersionEnum.ENTERPRISE != clusterEntity.getVersion()) {
-            throw new OpsException("Only Enterprise edition is supported");
-        }
-
-        List<OpsClusterNodeEntity> opsClusterNodeEntities = opsClusterNodeService.listClusterNodeByClusterId(clusterId);
-        if (CollUtil.isEmpty(opsClusterNodeEntities)) {
-            throw new OpsException("Cluster node information cannot be empty");
-        }
-
-        OpsClusterNodeEntity nodeEntity = opsClusterNodeEntities.stream().filter(node -> node.getClusterRole() == ClusterRoleEnum.MASTER).findFirst().orElseThrow(() -> new OpsException("Masternode information not found"));
-
-        String hostId = nodeEntity.getHostId();
-        String installUserId = nodeEntity.getInstallUserId();
-
-        OpsHostEntity hostEntity = hostFacade.getById(hostId);
-        if (Objects.isNull(hostEntity)) {
-            throw new OpsException("host information does not exist");
-        }
-
-        OpsHostUserEntity rootUserEntity = hostUserFacade.getRootUserByHostId(hostId);
-        if (Objects.isNull(rootUserEntity)) {
-            throw new OpsException("User root was not found");
-        }
-
-        OpsHostUserEntity hostUserEntity = hostUserFacade.getById(installUserId);
-        if (Objects.isNull(hostUserEntity)) {
-            throw new OpsException("Installation user information does not exist");
-        }
-
-        Session session = jschUtil.getSession(hostEntity.getPublicIp(), hostEntity.getPort(), hostUserEntity.getUsername(), encryptionUtils.decrypt(hostUserEntity.getPassword())).orElseThrow(() -> new OpsException("Connection failed"));
-        String res = doCheck(rootUserEntity, session);
-        if (Objects.nonNull(session) && session.isConnected()) {
-            session.disconnect();
-        }
-
-        OpsCheckEntity opsCheckEntity = new OpsCheckEntity();
-        opsCheckEntity.setCheckRes(res);
-        opsCheckEntity.setClusterId(clusterId);
-        opsCheckService.save(opsCheckEntity);
-
-        CheckVO checkVO = parseCheckResToCheckVO(res);
-
-        return CheckSummaryVO.of(checkVO);
     }
 
     @Override

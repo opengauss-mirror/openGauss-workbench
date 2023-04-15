@@ -1,30 +1,80 @@
 <template>
-  <a-drawer :width="800" :mask-closable="false" :footer="false" :visible="checkData.checkVisible"
-    @cancel="handleCheckCancel" unmountOnClose>
+  <a-drawer
+    :width="800"
+    :mask-closable="false"
+    :footer="false"
+    :visible="checkData.checkVisible"
+    @cancel="handleCheckCancel"
+    unmountOnClose
+  >
     <template #title>
       {{ $t('components.OneCheck.5mpiji1q2ng0') }}
     </template>
     <div class="one-check-c">
       <div class="flex-between mb">
-        <div class="flex-row">
-          <div class="mr" style="white-space: nowrap;">{{ $t('components.OneCheck.clusterName') }}:</div>
-          <a-select v-if="checkData.isChoose" style="width: 200px;" :loading="checkData.clusterListLoading"
-            v-model="checkData.clusterId" :placeholder="$t('components.OneCheck.5mpiji1q3wo0')">
-            <a-option v-for="(item, index) in checkData.clusterList" :key="index" :label="item.label"
-              :value="item.value" />
-          </a-select>
-          <div v-else>{{ checkData.clusterId }}</div>
-        </div>
-        <a-button type="primary" :loading="checkData.checkLoading" :disabled="checkData.clusterListLoading"
-          @click="handleCheck">{{ checkData.checkResult ?
-              $t('components.OneCheck.5mpiji1q4a00') : $t('components.OneCheck.5mpiji1q4k40')
-          }}</a-button>
+        <a-form
+          :model="checkData"
+          layout="inline"
+          :rules="formRules"
+          ref="checkFormRef"
+        >
+          <a-form-item
+            field="clusterId"
+            :label="$t('components.OneCheck.clusterName')"
+          >
+            <a-select
+              v-if="checkData.isChoose"
+              style="width: 170px;"
+              :loading="checkData.clusterListLoading"
+              v-model="checkData.clusterId"
+              :placeholder="$t('components.OneCheck.5mpiji1q3wo0')"
+            >
+              <a-option
+                v-for="(item, index) in checkData.clusterList"
+                :key="index"
+                :label="item.label"
+                :value="item.value"
+              />
+            </a-select>
+            <div v-else>{{ checkData.clusterId }}</div>
+          </a-form-item>
+          <a-form-item
+            field="rootPassword"
+            :label="$t('components.OneCheck.else6')"
+            v-if="checkData.isShowPassword"
+          >
+            <a-input-password
+              v-model.trim="checkData.rootPassword"
+              :placeholder="$t('components.OneCheck.else7')"
+              allow-clear
+              style="width: 170px;"
+            />
+          </a-form-item>
+        </a-form>
+        <a-button
+          type="primary"
+          :loading="checkData.checkLoading"
+          :disabled="checkData.clusterListLoading"
+          @click="handleCheck"
+        >{{ checkData.checkResult ?
+          $t('components.OneCheck.5mpiji1q4a00') : $t('components.OneCheck.5mpiji1q4k40')
+        }}</a-button>
       </div>
-      <a-spin class="full-w" :loading="checkData.loading" :tip="$t('components.OneCheck.5mpiji1q4tg0')">
+      <a-spin
+        class="full-w"
+        :loading="checkData.loading"
+        :tip="$t('components.OneCheck.5mpiji1q4tg0')"
+      >
         <div v-show="!checkData.checkResult">
-          <a-row :gutter="24" class="mb">
+          <a-row
+            :gutter="24"
+            class="mb"
+          >
             <a-col :span="12">
-              <div class="check-item-c" style="height: 365px;">
+              <div
+                class="check-item-c"
+                style="height: 365px;"
+              >
                 <div class="ft-lg ft-b mb">
                   {{ $t('components.OneCheck.5mpiji1q57w0') }}
                 </div>
@@ -51,7 +101,10 @@
               </div>
             </a-col>
             <a-col :span="12">
-              <div class="check-item-c" style="height: 365px;">
+              <div
+                class="check-item-c"
+                style="height: 365px;"
+              >
                 <div class="ft-lg ft-b mb">
                   {{ $t('components.OneCheck.5mpiji1qas40') }}
                 </div>
@@ -78,9 +131,15 @@
               </div>
             </a-col>
           </a-row>
-          <a-row :gutter="24" class="mb">
+          <a-row
+            :gutter="24"
+            class="mb"
+          >
             <a-col :span="12">
-              <div class="check-item-c" style="height: 680px;">
+              <div
+                class="check-item-c"
+                style="height: 680px;"
+              >
                 <div class="ft-lg ft-b mb">
                   {{ $t('components.OneCheck.5mpiji1qds80') }}
                 </div>
@@ -133,7 +192,10 @@
               </div>
             </a-col>
             <a-col :span="12">
-              <div class="check-item-c" style="height: 350px; margin-bottom: 20px;">
+              <div
+                class="check-item-c"
+                style="height: 350px; margin-bottom: 20px;"
+              >
                 <div class="ft-lg ft-b mb">
                   {{ $t('components.OneCheck.5mpiji1qjag0') }}
                 </div>
@@ -158,7 +220,10 @@
                   <!-- <li>CheckIOConfigure</li> -->
                 </ul>
               </div>
-              <div class="check-item-c" style="height: 310px">
+              <div
+                class="check-item-c"
+                style="height: 310px"
+              >
                 <div class="ft-lg ft-b mb">
                   {{ $t('components.OneCheck.5mpiji1qmj40') }}
                 </div>
@@ -185,24 +250,34 @@
         <div v-show="checkData.checkResult">
           <div class="flex-row mb">
             <div class="mr"><span class="mr-s">{{ $t('components.OneCheck.else4') }}:</span> <span>{{
-                checkData.finishTime ?
-                  checkData.finishTime : '--'
+              checkData.finishTime ?
+              checkData.finishTime : '--'
             }}</span>
             </div>
             <div class="flex-row"><span class="mr-s">{{ $t('components.OneCheck.else5') }}:</span> <span
-                class="ft-lg mr-s">{{ checkData.checkNum
-                }}</span>{{ $t('components.OneCheck.5mpiji1qo440') }}</div>
+                class="ft-lg mr-s"
+              >{{ checkData.checkNum
+              }}</span>{{ $t('components.OneCheck.5mpiji1qo440') }}</div>
           </div>
           <a-tabs>
             <a-tab-pane key="ng">
               <template #title>
                 <div class="flex-row">
-                  <svg-icon icon-class="ops-error" class="icon-s mr-s"></svg-icon>
+                  <svg-icon
+                    icon-class="ops-error"
+                    class="icon-s mr-s"
+                  ></svg-icon>
                   <div class="mr-s">{{ $t('components.OneCheck.5mpiji1qoe00') }}</div>
-                  <div class="ft-lg" style="color:red">{{ checkData.ngData.length }}</div>
+                  <div
+                    class="ft-lg"
+                    style="color:red"
+                  >{{ checkData.ngData.length }}</div>
                 </div>
               </template>
-              <a-table :data="checkData.ngData" :columns="columns">
+              <a-table
+                :data="checkData.ngData"
+                :columns="columns"
+              >
                 <template #type="{ record }">
                   {{ getTypeName(record.name) }}
                 </template>
@@ -211,12 +286,21 @@
             <a-tab-pane key="error">
               <template #title>
                 <div class="flex-row">
-                  <svg-icon icon-class="ops-error" class="icon-s mr-s"></svg-icon>
+                  <svg-icon
+                    icon-class="ops-error"
+                    class="icon-s mr-s"
+                  ></svg-icon>
                   <div class="mr-s">{{ $t('components.OneCheck.5mpiji1qom40') }}</div>
-                  <div class="ft-lg" style="color:red">{{ checkData.errorData.length }}</div>
+                  <div
+                    class="ft-lg"
+                    style="color:red"
+                  >{{ checkData.errorData.length }}</div>
                 </div>
               </template>
-              <a-table :data="checkData.errorData" :columns="columns">
+              <a-table
+                :data="checkData.errorData"
+                :columns="columns"
+              >
                 <template #type="{ record }">
                   {{ getTypeName(record.name) }}
                 </template>
@@ -225,12 +309,21 @@
             <a-tab-pane key="warning">
               <template #title>
                 <div class="flex-row">
-                  <svg-icon icon-class="ops-warning" class="icon-s mr-s"></svg-icon>
+                  <svg-icon
+                    icon-class="ops-warning"
+                    class="icon-s mr-s"
+                  ></svg-icon>
                   <div class="mr-s">{{ $t('components.OneCheck.5mpiji1qosc0') }}</div>
-                  <div class="ft-lg" style="color: orange">{{ checkData.warningData.length }}</div>
+                  <div
+                    class="ft-lg"
+                    style="color: orange"
+                  >{{ checkData.warningData.length }}</div>
                 </div>
               </template>
-              <a-table :data="checkData.warningData" :columns="columns">
+              <a-table
+                :data="checkData.warningData"
+                :columns="columns"
+              >
                 <template #type="{ record }">
                   {{ getTypeName(record.name) }}
                 </template>
@@ -239,12 +332,21 @@
             <a-tab-pane key="pass">
               <template #title>
                 <div class="flex-row">
-                  <svg-icon icon-class="ops-pass" class="icon-s mr-s"></svg-icon>
+                  <svg-icon
+                    icon-class="ops-pass"
+                    class="icon-s mr-s"
+                  ></svg-icon>
                   <div class="mr-s">{{ $t('components.OneCheck.5mpiji1qoyw0') }}</div>
-                  <div class="ft-lg" style="color: green">{{ checkData.passData.length }}</div>
+                  <div
+                    class="ft-lg"
+                    style="color: green"
+                  >{{ checkData.passData.length }}</div>
                 </div>
               </template>
-              <a-table :data="checkData.passData" :columns="columns">
+              <a-table
+                :data="checkData.passData"
+                :columns="columns"
+              >
                 <template #type="{ record }">
                   {{ getTypeName(record.name) }}
                 </template>
@@ -258,12 +360,15 @@
 </template>
 <script setup lang="ts">
 import { KeyValue } from '@/types/global'
-import { reactive, computed } from 'vue'
+import { FormInstance } from '@arco-design/web-vue/es/form'
+import { reactive, ref } from 'vue'
 import { clusterList, clusterCheck } from '@/api/ops'
 import { oneCheck } from './oneCheck'
 import { Message, TableColumnData } from '@arco-design/web-vue'
 import { OpenGaussVersionEnum } from '@/types/ops/install'
+import { encryptPassword } from '@/utils/jsencrypt'
 import { useI18n } from 'vue-i18n'
+import { computed } from 'vue'
 const { t } = useI18n()
 const checkData = reactive<KeyValue>({
   loading: false,
@@ -271,8 +376,11 @@ const checkData = reactive<KeyValue>({
   checkLoading: false,
   checkResult: false,
   clusterId: '',
+  rootPassword: '',
+  isShowPassword: false,
   isChoose: true,
   clusterList: [],
+  clusterObj: {},
   clusterListLoading: false,
   finishTime: '',
   checkNum: 0,
@@ -282,11 +390,18 @@ const checkData = reactive<KeyValue>({
   ngData: []
 })
 
-const columns = computed(() => [
+const columns: TableColumnData[] = [
   { title: t('components.OneCheck.5mpiji1qpcc0'), dataIndex: 'type', slotName: 'type', width: 100 },
-  { title: t('components.OneCheck.5mpiji1qpns0'), dataIndex: 'name', tooltip: true, width: 150 },
+  { title: t('components.OneCheck.5mpiji1qpns0'), dataIndex: 'name', tooltip: true, width: 180 },
   { title: t('components.OneCheck.5mpiji1qpvg0'), dataIndex: 'msg', ellipsis: true, tooltip: true }
-])
+]
+
+const formRules = computed(() => {
+  return {
+    clusterId: [{ required: true, 'validate-trigger': 'change', message: t('components.OneCheck.5mpiji1q3wo0') }],
+    rootPassword: [{ required: true, 'validate-trigger': 'blur', message: t('components.OneCheck.else7') }]
+  }
+})
 
 const getClusterList = () => new Promise(resolve => {
   checkData.clusterListLoading = true
@@ -299,10 +414,17 @@ const getClusterList = () => new Promise(resolve => {
             label: item.clusterId,
             value: item.clusterId
           })
+          checkData.clusterObj[item.clusterId] = item
         }
       })
       if (checkData.clusterList.length) {
         checkData.clusterId = checkData.clusterList[0].value
+        // Check whether hosts in the cluster remember the password
+        const currentClusterObj = checkData.clusterObj[checkData.clusterId]
+        const hasPwd = currentClusterObj.clusterNodes.some((node: KeyValue) => {
+          return node.isRemember === true
+        })
+        checkData.isShowPassword = !hasPwd
       }
     } else resolve(false)
   }).finally(() => {
@@ -310,31 +432,40 @@ const getClusterList = () => new Promise(resolve => {
   })
 })
 
+const checkFormRef = ref<null | FormInstance>(null)
 const handleCheck = () => {
-  // call interface
-  if (!checkData.clusterList.length && checkData.isChoose) {
-    Message.warning('please choose cluster')
-    return
-  }
-  if (checkData.clusterId) {
-    checkData.loading = true
-    const param = {
-      clusterId: checkData.clusterId
-    }
-    clusterCheck(param).then((res: KeyValue) => {
-      if (Number(res.code) === 200) {
-        checkData.warningData = res.data.result.WARNING
-        checkData.passData = res.data.result.OK
-        checkData.errorData = res.data.result.ERROR
-        checkData.ngData = res.data.result.NG
-        checkData.finishTime = getCurrentTime()
-        checkData.checkNum = res.data.result.WARNING.length + res.data.result.OK.length + res.data.result.ERROR.length + res.data.result.NG.length
-        checkData.checkResult = true
+  checkFormRef.value?.validate().then(result => {
+    if (!result) {
+      console.log('form validate', result)
+      // call interface
+      if (!checkData.clusterList.length && checkData.isChoose) {
+        Message.warning('please choose cluster')
+        return
       }
-    }).finally(() => {
-      checkData.loading = false
-    })
-  }
+      if (checkData.clusterId) {
+        checkData.loading = true
+        encryptPassword(checkData.rootPassword).then((encryptPwd) => {
+          const param = {
+            clusterId: checkData.clusterId,
+            rootPassword: encryptPwd
+          }
+          clusterCheck(param).then((res: KeyValue) => {
+            if (Number(res.code) === 200) {
+              checkData.warningData = res.data.summary.WARNING
+              checkData.passData = res.data.summary.OK
+              checkData.errorData = res.data.summary.ERROR
+              checkData.ngData = res.data.summary.NG
+              checkData.finishTime = getCurrentTime()
+              checkData.checkNum = res.data.summary.WARNING.length + res.data.summary.OK.length + res.data.summary.ERROR.length + res.data.summary.NG.length
+              checkData.checkResult = true
+            }
+          }).finally(() => {
+            checkData.loading = false
+          })
+        })
+      }
+    }
+  })
 }
 
 const getCurrentTime = () => {
@@ -372,9 +503,9 @@ const open = (clusterId?: string) => {
     checkData.isChoose = false
   } else {
     checkData.isChoose = true
-    getClusterList()
+    checkData.clusterList = []
   }
-
+  getClusterList()
   checkData.checkVisible = true
 }
 

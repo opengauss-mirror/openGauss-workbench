@@ -67,7 +67,6 @@ public class HostTest {
             hostEntity.setHostname("node1");
             hostEntity.setPublicIp("192.168.0.31");
             hostEntity.setPrivateIp("192.168.0.31");
-            hostEntity.setAzId("1");
             hostEntity.setRemark("test");
             hostEntity.setPort(22);
             return hostEntity;
