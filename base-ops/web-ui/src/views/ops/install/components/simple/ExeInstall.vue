@@ -213,7 +213,7 @@ const retryInstall = () => {
   }
   data.installStepNum = 1
   data.currentStatus = 'process'
-  // exeResult.value = exeResultEnum.UN_INSTALL
+  exeResult.value = exeResultEnum.UN_INSTALL
   openLogSocket()
 }
 

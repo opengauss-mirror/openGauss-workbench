@@ -335,7 +335,7 @@ public class JschUtil {
 
         if (jschResult.getExitCode() != 0) {
             log.error("execute command fail, command:{}, result:{}", command, jschResult);
-            throw new OpsException("execute command fail with exit code:" + jschResult.getExitCode());
+            throw new OpsException("execute command fail with exit code:" + jschResult.getExitCode() + ",msg:"+ jschResult.getResult());
         }
 
         return jschResult;

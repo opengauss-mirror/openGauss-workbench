@@ -42,7 +42,24 @@
             "5n6f62aajx80": "Disable",
             "else1": "Type: ",
             "else2": "No",
-            "else3": "Are you sure to uninstall the plugin with id {id}?"
+            "else3": "Are you sure to uninstall the plugin with id {id}?",
+            "OPEN_SOURCE": "Open source",
+            "FREE": "Free",
+            "TRIAL": "Trial",
+            "PAID": "Official",
+            "update_authorization": "Update authorization",
+            "authorization_detail": "Authorization detail",
+            "plugin_name": "Plugin name",
+            "authorization": "Authorization",
+            "plugin_description": "Description",
+            "activation_time": "Activation time",
+            "expires": "Expires",
+            "company": "Company",
+            "phone": "Phone",
+            "email": "Email",
+            "address": "Address",
+            "manual": "Manual",
+            "demo": "DEMO"
         }
     },
     "components": {
@@ -479,7 +496,13 @@
             "5mpivn7fwjc2": "File Upload Path",
             "5mpivn7fwjc6": "Please input file upload path",
             "5mpivn7fwjc9": "File path is not correct, must end with /",
-            "5mpivn7fwj10": "The directory is already occupied by another user. Please enter a different path"
+            "5mpivn7fwj10": "The directory is already occupied by another user. Please enter a different path",
+            "5mpivn7fwj11": "MigrationKit download url",
+            "5mpivn7fwj12": "please input migration kit download url",
+            "5mpivn7fwj13": "MigrationKit Package Name",
+            "5mpivn7fwj14": "please input migration kit package name",
+            "5mpivn7fwj15": "MigrationKit Jar Name",
+            "5mpivn7fwj16": "please input migration kit jar name"
         }
     },
     "user": {
@@ -755,6 +778,7 @@
         },
         "HostTerminal": {
             "else1": "IP",
+            "else2": "If the font is blurred under special screen resolution, please scale the page",
             "5oxhoh5r6ls0": "Terminal"
         },
         "index": {

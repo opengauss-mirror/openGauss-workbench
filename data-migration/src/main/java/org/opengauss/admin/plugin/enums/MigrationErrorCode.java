@@ -38,10 +38,14 @@ public enum MigrationErrorCode {
     SUB_TASK_NOT_EXISTS_ERROR(50151, "task not exists error"),
     SUB_TASK_NOT_IN_INCREMENTAL_ERROR(50152, "task status is not incremental"),
     SUB_TASK_NOT_IN_INCREMENTAL_STOP_ERROR(50153, "task status is not incremental stop"),
+    SUB_TASK_NOT_CONDITIONS_REVERSE_ERROR(50154, "target database does not meet the conditions for reverse migration"),
+    SUB_TASK_NOT_SUPPORT_REVERSE_ERROR(50155, "target database not support reverse migration"),
 
     PORTAL_INSTALL_ERROR(50120, "portal install error"),
     PORTAL_INSTALL_PATH_NOT_HAS_WRITE_PERMISSION_ERROR(50121, "portal installPath not has write permission error"),
-    ;
+
+    PORTAL_DELETE_ERROR(50122, "cannot delete portal while task is running on it"),
+    PORTAL_CREATE_INSTALL_PATH_FAILED(50123, "create portal installPath failed: permission denied");
 
     private final Integer code;
     private final String msg;

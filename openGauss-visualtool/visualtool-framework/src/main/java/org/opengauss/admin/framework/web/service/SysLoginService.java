@@ -62,13 +62,17 @@ public class SysLoginService {
      *
      * @param username username
      * @param password password
-     * @param code     code
+     * @param code code
      * @return result
+     * @throws UserPasswordNotMatchException UserPasswordNotMatchException
+     * @throws ServiceException ServiceException
      */
-    public String login(String username, String password, String code) {
+    public String login(String username, String password, String code) throws UserPasswordNotMatchException,
+            ServiceException {
         Authentication authentication = null;
         try {
-            authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(username, RsaUtils.decryptByPrivateKey(password)));
+            authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(username,
+                    RsaUtils.decryptByPrivateKey(password)));
         } catch (Exception e) {
             if (e instanceof BadCredentialsException) {
                 throw new UserPasswordNotMatchException();

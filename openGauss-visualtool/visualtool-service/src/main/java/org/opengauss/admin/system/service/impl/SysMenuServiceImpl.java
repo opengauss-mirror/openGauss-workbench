@@ -35,6 +35,7 @@ import org.opengauss.admin.common.core.domain.entity.SysRole;
 import org.opengauss.admin.common.core.domain.entity.SysUser;
 import org.opengauss.admin.common.enums.SysLanguage;
 import org.opengauss.admin.common.enums.SysMenuPluginComponent;
+import org.opengauss.admin.common.enums.SysMenuStatus;
 import org.opengauss.admin.common.enums.SysMenuVisible;
 import org.opengauss.admin.system.domain.SysRoleMenu;
 import org.opengauss.admin.common.core.vo.MetaVo;
@@ -344,6 +345,8 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
     /**
      * delete by pluginId
      *
+     * @param pluginId pluginId
+     * @return result
      */
     @Override
     public int deleteByPluginId(String pluginId) {
@@ -352,7 +355,21 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
         return menuMapper.delete(query);
     }
 
-
+    /**
+     * update menu disable by pluginId
+     *
+     * @param pluginId pluginId
+     * @return result
+     */
+    @Override
+    public int updateDisableByPluginId(String pluginId) {
+        System.out.println("pluginId==" + pluginId);
+        LambdaQueryWrapper<SysMenu> query = new LambdaQueryWrapper<>();
+        query.eq(StringUtils.isNotBlank(pluginId), SysMenu::getPluginId, pluginId);
+        SysMenu update = new SysMenu();
+        update.setStatus(SysMenuStatus.DISABLE.getCode());
+        return menuMapper.update(update, query);
+    }
 
     /**
      * Check if the menu is unique

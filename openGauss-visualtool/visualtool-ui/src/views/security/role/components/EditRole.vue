@@ -113,7 +113,7 @@
         getRoleMenuTree(props.options.roleId)
       } else {
         form['roleName'] = undefined
-        form['status'] = undefined
+        form['status'] = '0'
         form['remark'] = undefined
         treeData.value = []
         checkedKeys.value = []

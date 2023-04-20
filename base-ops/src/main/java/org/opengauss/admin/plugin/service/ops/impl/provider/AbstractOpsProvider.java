@@ -191,7 +191,7 @@ public abstract class AbstractOpsProvider implements ClusterOpsProvider, Initial
         try {
             JschResult jschResult = null;
             try {
-                jschResult = jschUtil.executeCommand(command, rootSession, retSession);
+                jschResult = jschUtil.executeCommand(command, rootSession);
             } catch (InterruptedException e) {
                 throw new OpsException("thread is interrupted");
             }
@@ -215,12 +215,8 @@ public abstract class AbstractOpsProvider implements ClusterOpsProvider, Initial
     protected void ensureLimits(JschUtil jschUtil,Session rootSession, WsSession retSession) {
         String limitsCheck = SshCommandConstants.LIMITS_CHECK;
         try {
-            JschResult jschResult = null;
-            try {
-                jschResult = jschUtil.executeCommand(limitsCheck, rootSession, retSession);
-            } catch (InterruptedException e) {
-                throw new OpsException("thread is interrupted");
-            }
+            JschResult jschResult = jschUtil.executeCommand(limitsCheck, rootSession, retSession);;
+
             if (0 != jschResult.getExitCode()) {
                 log.error("Detect ulimit exception, exit code: {}, error message: {}", jschResult.getExitCode(), jschResult.getResult());
             }
@@ -228,7 +224,7 @@ public abstract class AbstractOpsProvider implements ClusterOpsProvider, Initial
             if (StrUtil.isNotEmpty(jschResult.getResult())) {
                 return;
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             log.error("Detect ulimit error", e);
         }
 

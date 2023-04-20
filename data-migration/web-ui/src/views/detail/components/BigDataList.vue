@@ -53,14 +53,14 @@
               </template>
             </a-popover>
           </template>
-          <a-table :data="tableListData[item.key]" :bordered="false" :pagination="false" :scroll="{ y: 285 }" :scrollbar="false" :virtual-list-props="tableListData[item.key].length > 50 ? { height: 300, threshold: 7 } : false">
+          <a-table :data="tableListData[item.key]" :bordered="false" :pagination="false" :scroll="{ y: 285 }" :scrollbar="false" :virtual-list-props="tableListData[item.key].length > 50 ? { height: 300, threshold: 50 } : false">
             <template #columns>
               <a-table-column title="" data-index="name" :width="250" ellipsis tooltip></a-table-column>
               <a-table-column title="" data-index="name" :width="250" ellipsis tooltip></a-table-column>
               <a-table-column title="" data-index="status" align="center">
                 <template #cell="{ record }">
                   <span v-if="record.status === 1 || record.status === 2">{{ record.percent ? (record.percent * 100).toFixed(2) : '0' }}%</span>
-                  <icon-check-circle-fill v-if="record.status === 3 || record.status === 4 || record.status === 5" size="16" style="color: #00B429;" />
+                  <icon-check-circle-fill v-if="record.status === 3 || record.status === 4 || record.status === 5 || record.status === 7" size="16" style="color: #00B429;" />
                   <a-popover :title="$t('components.BigDataList.5q09jzwfqa80')" position="tr">
                     <icon-close-circle-fill v-if="record.status === 6" size="16" style="color: #FF7D01;" />
                     <template #content>
@@ -74,7 +74,7 @@
                   <span v-if="record.status === 4">{{ record.percent ? (record.percent * 100).toFixed(2) : '0' }}%</span>
                   <icon-check-circle-fill v-if="record.status === 5" size="16" style="color: #00B429;" />
                   <a-popover :title="$t('components.BigDataList.5q09jzwfqa80')" position="tr">
-                    <icon-close-circle-fill v-if="record.status === 6" size="16" style="color: #FF7D01;" />
+                    <icon-close-circle-fill v-if="record.status === 6 || record.status === 7" size="16" style="color: #FF7D01;" />
                     <template #content>
                       <p>{{ record.msg }}</p>
                     </template>

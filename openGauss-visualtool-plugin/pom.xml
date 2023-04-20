@@ -8,12 +8,16 @@
     <version>5.0.0</version>
     <packaging>jar</packaging>
     <properties>
+        <java.version>11</java.version>
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
         <lombok.version>1.18.24</lombok.version>
         <junit.version>4.13</junit.version>
         <spring-brick.version>3.1.0</spring-brick.version>
         <spring-boot.version>2.5.6</spring-boot.version>
+        <java.version>11</java.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <build.frontend.skip>false</build.frontend.skip>
     </properties>
 
     <dependencies>
@@ -31,6 +35,14 @@
                 <exclusion>
                     <groupId>com.alibaba</groupId>
                     <artifactId>druid-spring-boot-starter</artifactId>
+                </exclusion>
+<!--                <exclusion>-->
+<!--                    <groupId>com.baomidou</groupId>-->
+<!--                    <artifactId>mybatis-plus-boot-starter</artifactId>-->
+<!--                </exclusion>-->
+                <exclusion>
+                    <groupId>com.github.pagehelper</groupId>
+                    <artifactId>pagehelper-spring-boot-starter</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -58,6 +70,26 @@
             <version>${lombok.version}</version>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>cn.hutool</groupId>
+            <artifactId>hutool-all</artifactId>
+            <version>5.8.11</version>
+        </dependency>
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>druid</artifactId>
+            <version>1.2.16</version>
+        </dependency>
+        <dependency>
+            <groupId>org.opengauss</groupId>
+            <artifactId>opengauss-jdbc</artifactId>
+            <version>3.0.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>fastjson</artifactId>
+            <version>1.2.83</version>
+        </dependency>
     </dependencies>
 
     <build>
@@ -78,10 +110,10 @@
                 <configuration>
                     <mode>prod</mode>
                     <pluginInfo>
-                        <id>test-plugin</id>
+                        <id>visualtool-plugin</id>
                         <bootstrapClass>org.opengauss.admin.plugin.PluginApplication</bootstrapClass>
-                        <version>1.0.0</version>
-                        <provider>xielibo</provider>
+                        <version>5.0.0</version>
+                        <provider>opengauss</provider>
                         <description>example</description>
                     </pluginInfo>
                 </configuration>
@@ -142,7 +174,7 @@
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>1.6.0</version>
                 <configuration>
-                    <skip>false</skip>
+                    <skip>${build.frontend.skip}</skip>
                 </configuration>
                 <executions>
                     <execution>

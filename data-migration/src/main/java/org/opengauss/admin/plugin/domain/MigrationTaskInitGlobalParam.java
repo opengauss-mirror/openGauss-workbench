@@ -30,6 +30,8 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
 /**
+ * MigrationTaskInitGlobalParam Object
+ *
  * @author xielibo
  * @date 2023/01/14 09:01
  **/
@@ -38,15 +40,34 @@ import lombok.Data;
 public class MigrationTaskInitGlobalParam {
 
     /**
-     * id
+     * primary key
      */
     @TableId(value = "id", type = IdType.AUTO)
     private Integer id;
 
+    /**
+     * field paramKey
+     */
     private String paramKey;
 
+    /**
+     * field paramValue
+     */
     private String paramValue;
 
+    /**
+     * field paramDesc
+     */
     private String paramDesc;
+
+    /**
+     * field paramType
+     */
+    private Integer paramType;
+
+    /**
+     * field paramExtends
+     */
+    private String paramExtends;
 
 }

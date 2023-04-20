@@ -24,17 +24,23 @@
 
 package org.opengauss.admin.plugin.domain;
 
+import com.alibaba.fastjson.annotation.JSONField;
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.extension.handlers.FastjsonTypeHandler;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
+import org.opengauss.admin.common.core.domain.UploadInfo;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * Host portal install model
  *
  * @author xielibo
  */
-@TableName(value ="tb_migration_host_portal_install")
+@TableName(value = "tb_migration_host_portal_install", autoResultMap = true)
 @Data
 public class MigrationHostPortalInstall {
 
@@ -52,9 +58,28 @@ public class MigrationHostPortalInstall {
     private String installPath;
 
     private String hostUserId;
-
+    // ip
     private String host;
     private Integer port;
     private String runUser;
     private String runPassword;
+    // 0: online 1: offline
+    private Integer installType;
+    private String pkgDownloadUrl;
+    private String pkgName;
+    private String jarName;
+    @TableField(typeHandler = FastjsonTypeHandler.class)
+    private UploadInfo pkgUploadPath;
+    @TableField(exist = false)
+    @JsonIgnore
+    @JSONField(serialize = false, deserialize = false)
+    private MultipartFile file;
+
+    public String getPortalLogPath() {
+        return installPath + "portal/logs/portal_.log";
+    }
+
+    public String getDatakitLogPath() {
+        return installPath + "datakit_install_portal.log";
+    }
 }

@@ -43,7 +43,7 @@
 <script setup lang="ts">
 import { KeyValue } from '@/types/global'
 import { FormInstance } from '@arco-design/web-vue/es/form'
-import { PropType, ref, computed, defineProps, watch } from 'vue'
+import { PropType, ref, computed, watch } from 'vue'
 import { jdbcNodePing } from '@/api/ops'
 import { useI18n } from 'vue-i18n'
 const { t } = useI18n()

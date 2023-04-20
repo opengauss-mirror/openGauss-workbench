@@ -27,6 +27,8 @@ package org.opengauss.admin.plugin.listener;
 import com.gitee.starblues.spring.MainApplicationContext;
 import com.gitee.starblues.spring.SpringBeanFactory;
 import lombok.extern.slf4j.Slf4j;
+import org.opengauss.admin.common.core.vo.MenuVo;
+import org.opengauss.admin.plugin.config.PluginExtensionInfoConfig;
 import org.opengauss.admin.system.plugin.facade.MenuFacade;
 import org.springframework.boot.context.event.ApplicationEnvironmentPreparedEvent;
 import org.springframework.boot.context.event.ApplicationPreparedEvent;
@@ -47,6 +49,7 @@ public class PluginListener implements ApplicationListener<ApplicationEvent> {
 
     @Override
     public void onApplicationEvent(ApplicationEvent event) {
+        String pluginId = PluginExtensionInfoConfig.PLUGIN_ID;
         if (event instanceof ApplicationEnvironmentPreparedEvent) {
             log.info("plugin init env");
         } else if (event instanceof ApplicationPreparedEvent) {
@@ -58,7 +61,9 @@ public class PluginListener implements ApplicationListener<ApplicationEvent> {
             SpringBeanFactory factory = context.getSpringBeanFactory();
             MenuFacade menuFacade = factory.getBean(MenuFacade.class);
             if (menuFacade != null) {
-                menuFacade.savePluginMenu("test-plugin","测试插件菜单","test menu",100,"index");
+                MenuVo parentMenu = menuFacade.savePluginMenu(pluginId,"测试插件菜单","test menu",50,"");
+                menuFacade.savePluginMenu(pluginId,"测试页","HelloWorld",2,"index", parentMenu.getMenuId());
+                menuFacade.savePluginRoute(pluginId, "注册license", "license", parentMenu.getMenuId());
             }
             log.info("plugin start complete");
         } else if (event instanceof ContextClosedEvent) {
@@ -66,7 +71,7 @@ public class PluginListener implements ApplicationListener<ApplicationEvent> {
             SpringBeanFactory factory = context.getSpringBeanFactory();
             MenuFacade menuFacade = factory.getBean(MenuFacade.class);
             if (menuFacade != null) {
-                menuFacade.deletePluginMenu("test-plugin");
+                menuFacade.deletePluginMenu(pluginId);
             }
             log.info("plugin is stopped");
         }

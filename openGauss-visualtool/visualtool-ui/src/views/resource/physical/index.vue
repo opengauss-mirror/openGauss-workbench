@@ -302,7 +302,7 @@
         </a-table>
         <add-host
           ref="addHostRef"
-          @finish="getListData"
+          @finish="labelClose"
         ></add-host>
         <host-pwd-dlg
           ref="hostPwdRef"
@@ -326,7 +326,7 @@
 <script setup lang="ts">
 import { KeyValue } from '@/types/global'
 import { Message, Table } from '@arco-design/web-vue'
-import { onMounted, reactive, ref, onUnmounted, computed } from 'vue'
+import { onMounted, reactive, ref, onUnmounted } from 'vue'
 import { hostPage, delHost, hostMonitor, hostTagListAll } from '@/api/ops' // eslint-disable-line
 import AddHost from './components/AddHost.vue'
 import HostPwdDlg from './components/HostPwdDlg.vue'
@@ -504,6 +504,7 @@ const openHostMonitor = (hostData: KeyValue, index: number) => {
     list.data[index].downSpeed = eventData.downSpeed
     list.data[index].upSpeed = eventData.upSpeed
     list.data[index].isCpu = true
+    console.log('get theme', localStorage.getItem('opengauss-theme'))
 
     if (localStorage.getItem('opengauss-theme') === 'dark') {
       list.data[index].cpuOption.color[1] = data.colorYellow

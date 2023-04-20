@@ -3084,6 +3084,10 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                 osProperty.setStatusMessage("The operating system does not match the installation package information");
             }
 
+            if( !"centos".equalsIgnoreCase( os.trim() ) ) {
+                osProperty.setStatus(HostEnvStatusEnum.WARMING);
+                osProperty.setStatusMessage("Please check if the umask value is 0022");
+            }
         } catch (Exception e) {
             log.error("Parse command response error：", e);
 

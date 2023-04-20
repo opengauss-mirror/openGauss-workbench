@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://maven.apache.org/POM/4.0.0"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.opengauss</groupId>
@@ -15,6 +15,7 @@
         <junit.version>4.13</junit.version>
         <spring-brick.version>3.1.0</spring-brick.version>
         <spring-boot.version>2.5.6</spring-boot.version>
+        <build.frontend.skip>false</build.frontend.skip>
     </properties>
 
     <dependencies>
@@ -34,14 +35,14 @@
                     <groupId>com.alibaba</groupId>
                     <artifactId>druid-spring-boot-starter</artifactId>
                 </exclusion>
-<!--                <exclusion>-->
-<!--                    <groupId>com.baomidou</groupId>-->
-<!--                    <artifactId>mybatis-plus-boot-starter</artifactId>-->
-<!--                </exclusion>-->
-<!--                <exclusion>-->
-<!--                    <groupId>com.github.pagehelper</groupId>-->
-<!--                    <artifactId>pagehelper-spring-boot-starter</artifactId>-->
-<!--                </exclusion>-->
+                <!--                <exclusion>-->
+                <!--                    <groupId>com.baomidou</groupId>-->
+                <!--                    <artifactId>mybatis-plus-boot-starter</artifactId>-->
+                <!--                </exclusion>-->
+                <!--                <exclusion>-->
+                <!--                    <groupId>com.github.pagehelper</groupId>-->
+                <!--                    <artifactId>pagehelper-spring-boot-starter</artifactId>-->
+                <!--                </exclusion>-->
             </exclusions>
         </dependency>
         <dependency>
@@ -129,7 +130,7 @@
         <dependency>
             <groupId>com.alibaba</groupId>
             <artifactId>fastjson</artifactId>
-            <version>1.2.78</version>
+            <version>1.2.83</version>
         </dependency>
         <dependency>
             <groupId>com.jcraft</groupId>
@@ -232,7 +233,7 @@
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>1.6.0</version>
                 <configuration>
-                    <skip>false</skip>
+                    <skip>${build.frontend.skip}</skip>
                 </configuration>
                 <executions>
                     <execution>

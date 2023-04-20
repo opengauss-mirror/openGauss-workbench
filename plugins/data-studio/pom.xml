@@ -30,6 +30,7 @@
 		<es-java-client-jackson-databind.version>2.12.3</es-java-client-jackson-databind.version>
 		<es-java-client-jakarta.version>2.0.1</es-java-client-jakarta.version>
 		<jcraft-jsch.version>0.1.54</jcraft-jsch.version>
+		<build.frontend.skip>false</build.frontend.skip>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -47,7 +48,7 @@
 		<dependency>
 			<groupId>org.opengauss</groupId>
 			<artifactId>visualtool-framework</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
+			<version>5.0.0</version>
 <!--			<scope>provided</scope>-->
 			<exclusions>
 				<!--druid-spring-boot-starter removed-->
@@ -271,7 +272,7 @@
 				<artifactId>exec-maven-plugin</artifactId>
 				<version>1.6.0</version>
 				<configuration>
-					<skip>false</skip>
+					<skip>${build.frontend.skip}</skip>
 				</configuration>
 				<executions>
 					<execution>

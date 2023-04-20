@@ -43,6 +43,12 @@ public class SysSettingEntity {
     private Integer id;
     @NotBlank(message = "uploadPath cannot be empty")
     private String uploadPath;
-    @NotBlank(message = "uploadPath cannot be empty")
+    @NotBlank(message = "userId cannot be empty")
     private Integer userId;
+    @NotBlank(message = "portalPkgDownloadUrl cannot be empty")
+    private String portalPkgDownloadUrl;
+    @NotBlank(message = "portalPkgName cannot be empty")
+    private String portalPkgName;
+    @NotBlank(message = "portalJarName cannot be empty")
+    private String portalJarName;
 }

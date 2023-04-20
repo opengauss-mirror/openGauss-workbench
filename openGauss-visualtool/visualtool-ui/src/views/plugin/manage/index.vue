@@ -62,6 +62,39 @@
                     <template #default>{{$t('manage.index.5m5v55wxkrw0')}}</template>
                   </a-button>
                 </a-popconfirm>
+
+                <a-button
+                  v-if="item.extendInfo && item.extendInfo.pluginLicenseType"
+                  type="dashed"
+                  shape="round"
+                  size="mini"
+                  status="success"
+                  @click="handleAuthDetail(item, item.extendInfo)"
+                >
+                  <template #icon>
+                    <icon-info-circle />
+                  </template>
+                  <template #default>
+                    {{ $t(`manage.index.${item.extendInfo.pluginLicenseType}`) }}
+                  </template>
+                </a-button>
+
+                <template v-if="item.extendInfo && item.extendInfo.authAddress">
+                  <a-link
+                    v-if="isAbsolutePath(item.extendInfo.authAddress)"
+                    :href="item.extendInfo.authAddress"
+                    target="_blank"
+                    class="update-auth-link"
+                  >
+                    <template #icon>
+                      <icon-link />
+                    </template>
+                    {{ $t('manage.index.update_authorization') }}
+                  </a-link>
+                  <router-link v-else class="update-auth-link" :to="`/static-plugin/${item.pluginId}${item.extendInfo.authAddress}`">
+                    {{$t('manage.index.update_authorization')}}
+                  </router-link>
+                </template>
               </div>
               <div class="btn-right">
                 <a-switch type="line" v-model="item.pluginStatus" :checked-value="1" :unchecked-value="2" @change="switchChange(item)"></a-switch>
@@ -76,6 +109,90 @@
         </div>
       </a-spin>
     </div>
+
+    <!-- plugin auth detail -->
+    <a-modal
+      :title="$t('manage.index.authorization_detail')"
+      v-model:visible="authDetail.open"
+      :footer="false"
+      @cancel="handleAuthDetail(null)"
+      width="600px"
+      title-align="start"
+    >
+      <div v-if="authDetail.info && authDetail.extendInfo" class="auth-detail">
+        <div class="auth-detail__item">
+          <label class="auth-detail__label">{{ $t('manage.index.plugin_name') }}：</label>
+          <div class="auth-detail__value">
+            <a-space size="mini">
+              <img :src="authDetail.info.logoPath" :alt="authDetail.info.pluginId" class="auth-detail__logo">
+              <span>{{ authDetail.info.pluginId }}</span>
+            </a-space>
+          </div>
+        </div>
+        <div class="auth-detail__item">
+          <label class="auth-detail__label">{{ $t('manage.index.authorization') }}：</label>
+          <div class="auth-detail__value">
+            <a-button
+              type="dashed"
+              shape="round"
+              size="mini"
+              status="success"
+              class="auth-detail__auth-type"
+            >
+              {{ $t(`manage.index.${authDetail.extendInfo.pluginLicenseType}`) }}
+            </a-button>
+          </div>
+        </div>
+        <div class="auth-detail__item" v-if="authDetail.extendInfo.pluginActivationTime">
+          <label class="auth-detail__label">{{ $t('manage.index.activation_time') }}：</label>
+          <div class="auth-detail__value">
+            {{ dayjs(authDetail.extendInfo.pluginActivationTime).format('YYYY-MM-DD HH:mm:ss') }}
+          </div>
+        </div>
+        <div class="auth-detail__item" v-if="authDetail.extendInfo.pluginExpirationTime">
+          <label class="auth-detail__label">{{ $t('manage.index.expires') }}：</label>
+          <div class="auth-detail__value">
+            {{ dayjs(authDetail.extendInfo.pluginExpirationTime).format('YYYY-MM-DD HH:mm:ss') }}
+          </div>
+        </div>
+        <div class="auth-detail__item full">
+          <label class="auth-detail__label">{{ $t('manage.index.plugin_description') }}：</label>
+          <div class="auth-detail__value">{{ authDetail.info.pluginDesc }}</div>
+        </div>
+        <div class="auth-detail__item full" v-if="authDetail.extendInfo.pluginDevelopmentCompany">
+          <label class="auth-detail__label">{{ $t('manage.index.company') }}：</label>
+          <div class="auth-detail__value">{{ authDetail.extendInfo.pluginDevelopmentCompany }}</div>
+        </div>
+        <div class="auth-detail__item" v-if="authDetail.extendInfo.phoneNumber">
+          <label class="auth-detail__label">{{ $t('manage.index.phone') }}：</label>
+          <div class="auth-detail__value">{{ authDetail.extendInfo.phoneNumber }}</div>
+        </div>
+        <div class="auth-detail__item" v-if="authDetail.extendInfo.email">
+          <label class="auth-detail__label">{{ $t('manage.index.email') }}：</label>
+          <div class="auth-detail__value">{{ authDetail.extendInfo.email }}</div>
+        </div>
+        <div class="auth-detail__item full" v-if="authDetail.extendInfo.companyAddress">
+          <label class="auth-detail__label">{{ $t('manage.index.address') }}：</label>
+          <div class="auth-detail__value">{{ authDetail.extendInfo.companyAddress }}</div>
+        </div>
+        <div class="auth-detail__item" v-if="authDetail.extendInfo.userGuide">
+          <label class="auth-detail__label">{{ $t('manage.index.manual') }}：</label>
+          <div class="auth-detail__value">
+            <a-link :href="authDetail.extendInfo.userGuide" target="_blank">
+              {{ authDetail.extendInfo.userGuide }}
+            </a-link>
+          </div>
+        </div>
+        <div class="auth-detail__item" v-if="authDetail.extendInfo.demoAddress">
+          <label class="auth-detail__label">{{ $t('manage.index.demo') }}：</label>
+          <div class="auth-detail__value">
+            <a-link :href="authDetail.extendInfo.demoAddress" target="_blank">
+              {{ authDetail.extendInfo.demoAddress }}
+            </a-link>
+          </div>
+        </div>
+      </div>
+    </a-modal>
 
     <!-- add plugin -->
     <a-modal
@@ -95,6 +212,7 @@
         draggable
         @progress="handleFileUploadProgress"
         @success="handleFileSuccess"
+        @before-upload="handleBeforeUpload"
       >
         <template #upload-button>
           <div class="upload-info">
@@ -128,10 +246,12 @@
   import { useAppStore, useTabBarStore } from '@/store'
   import { Message } from '@arco-design/web-vue'
   import { getToken } from '@/utils/auth'
-  import { list, start, stop, uninstall } from '@/api/plugin'
+  import { list, start, stop, uninstall, extendInfoList } from '@/api/plugin'
+  import { getUserInfo } from '@/api/user'
   import PluginConfig from './components/PluginConfig.vue'
   import { destroyPluginApp } from '@/utils/pluginApp'
   import useLocale from '@/hooks/locale'
+  import dayjs from 'dayjs'
 
   const appStore = useAppStore()
   const tabBarStore = useTabBarStore()
@@ -151,6 +271,12 @@
     url: '/system/plugins/install'
   })
 
+  const authDetail = reactive<any>({
+    open: false,
+    info: null,
+    extendInfo: null
+  })
+
   const uploadDom = ref<any>(null)
   const fileList = ref<any>([])
   const pluginList = ref<any[]>([])
@@ -160,14 +286,24 @@
   const configData = ref<any>({})
 
   const getList = () => {
-    loading.value = true
-    list({
+    const params = {
       pluginId: form.keyWords,
       pluginStatus: form.status
-    }).then((res: any) => {
-      loading.value = false
-      pluginList.value = res.rows
+    }
+
+    loading.value = true
+    Promise.all([
+      list(params),
+      extendInfoList(params)
+    ])
+      .then(([listRes, extendInfoRes]: any[]) => {
+      const nextPluginList = (listRes.rows ?? []).map((item: any) => Object.assign(item, {
+        extendInfo: extendInfoRes.rows.find((info: any) => info.pluginId === item.pluginId) ?? null
+      }))
+
+      pluginList.value = nextPluginList
     })
+      .finally(() => loading.value = false)
   }
 
   const resetQuery = () => {
@@ -202,6 +338,16 @@
     } else {
       Message.error(fileItem.response.msg)
     }
+  }
+
+  const handleBeforeUpload = () => {
+    return new Promise((resolve, reject) => {
+      getUserInfo().then(() => {
+        resolve(true)
+      }).catch(() => {
+        reject('cancel')
+      })
+    })
   }
 
   const closeInstall = () => {
@@ -261,6 +407,14 @@
     }
     appStore.fetchServerMenuConfig()
     getList()
+  }
+
+  const isAbsolutePath = (url: string): boolean => url.startsWith('http')
+
+  const handleAuthDetail = (info: any, extendInfo: any = null): void => {
+    authDetail.info = info
+    authDetail.extendInfo = extendInfo
+    authDetail.open = Boolean(info)
   }
 
   onMounted(() => {
@@ -379,6 +533,21 @@
           align-items: center;
           width: 100%;
           padding: 0 20px;
+          .btn-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+
+            :deep(.arco-btn.arco-btn-size-mini) {
+              display: inline-flex;
+              align-items: center;
+              line-height: 24px;
+            }
+
+            :deep(.update-auth-link) {
+              font-size: 12px;
+            }
+          }
           .btn-right {
             display: flex;
             align-items: center;
@@ -420,5 +589,49 @@
 }
 .modal-footer {
   text-align: center;
+}
+
+.auth-detail {
+  display: flex;
+  flex-wrap: wrap;
+  flex-direction: row;
+  align-content: start;
+  gap: 8px 20px;
+  min-height: 200px;
+  font-size: 12px;
+  line-height: 22px;
+
+  &__item {
+    display: flex;
+    min-width: calc(50% - 10px);
+    width: calc(50% - 10px);
+  }
+  &__item.full {
+    min-width: 100%;
+    width: 100%;
+  }
+
+  &__label {
+    width: 80px;
+    font-weight: 500;
+    text-align: right;
+  }
+
+  &__value {
+    display: flex;
+    align-items: center;
+    flex: 1;
+  }
+
+  &__logo {
+    width: 20px;
+    height: 20px;
+  }
+
+  &__auth-type {
+    padding-top: 2px;
+    height: 22px;
+    cursor: default;
+  }
 }
 </style>

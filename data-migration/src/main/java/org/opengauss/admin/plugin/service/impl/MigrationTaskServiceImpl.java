@@ -35,6 +35,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.opengauss.admin.common.core.domain.model.LoginUser;
 import org.opengauss.admin.common.utils.SecurityUtils;
 import org.opengauss.admin.plugin.domain.*;
+import org.opengauss.admin.plugin.enums.MigrationMode;
+import org.opengauss.admin.plugin.enums.ProcessType;
 import org.opengauss.admin.plugin.enums.TaskOperate;
 import org.opengauss.admin.plugin.enums.TaskStatus;
 import org.opengauss.admin.plugin.handler.PortalHandle;
@@ -60,6 +62,12 @@ import java.util.stream.Collectors;
 @Service
 @Slf4j
 public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, MigrationTask> implements MigrationTaskService {
+
+    /**
+     * special chars
+     */
+    private static final char[] SPECIAL_CHARS = {'\\', '+', '-', '!', '(', ')', ':', '^', '[', ']', '\"', '{', '}',
+            '~', '*', '?', '>', '<', '|', '&', ';', '/', '.', '$'};
 
     @Autowired
     @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
@@ -94,12 +102,6 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
     @Value("${migration.taskOfflineSchedulerIntervalsMillisecond}")
     private Long taskOfflineSchedulerIntervalsMillisecond;
 
-    @Value("${migration.portalPkgDownloadUrl}")
-    private String portalPkgDownloadUrl;
-
-    @Value("${migration.portalJarName}")
-    private String portalJarName;
-
     @Autowired
     private ThreadPoolTaskExecutor threadPoolTaskExecutor;
     @Autowired
@@ -120,8 +122,8 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
     public void deleteByMainTaskId(Integer mainTaskId) {
         LambdaQueryWrapper<MigrationTask> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(MigrationTask::getMainTaskId, mainTaskId);
-        List<Integer> ids = this.list(queryWrapper).stream().map(MigrationTask::getId).collect(Collectors.toList());
-        this.removeBatchByIds(ids);
+        List<Integer> ids = list(queryWrapper).stream().map(MigrationTask::getId).collect(Collectors.toList());
+        removeBatchByIds(ids);
         migrationTaskExecResultDetailService.deleteByTaskIds(ids);
         migrationTaskStatusRecordService.deleteByTaskIds(ids);
         migrationTaskOperateRecordService.deleteByTaskIds(ids);
@@ -131,10 +133,10 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
     public List<MigrationTask> listByMainTaskId(Integer mainTaskId) {
         LambdaQueryWrapper<MigrationTask> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(MigrationTask::getMainTaskId, mainTaskId);
-        return this.list(queryWrapper);
+        return list(queryWrapper);
     }
 
-    private Map<String,Integer> calculateDatabaseObjectCount(List<Map<String, Object>> objects, Integer ojbectType){
+    private Map<String, Integer> calculateDatabaseObjectCount(List<Map<String, Object>> objects, Integer ojbectType) {
         int waitCount = Math.toIntExact(objects.stream().filter(m -> MapUtil.getInt(m, "status").equals(1)).count());
         Predicate<Map<String, Object>> runningFilter = t -> {
             return MapUtil.getInt(t, "status").equals(2);
@@ -156,7 +158,8 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
         }
         int runningCount = Math.toIntExact(objects.stream().filter(runningFilter).count());
         int finishCount = Math.toIntExact(objects.stream().filter(finishFilter).count());
-        int errorCount = Math.toIntExact(objects.stream().filter(m -> MapUtil.getInt(m, "status").equals(6)).count());
+        int errorCount = Math.toIntExact(objects.stream().filter(m -> MapUtil.getInt(m, "status").equals(6) ||
+                MapUtil.getInt(m, "status").equals(7)).count());
         Map<String, Integer> resultMap = new HashMap<>();
         resultMap.put("waitCount", waitCount);
         resultMap.put("runningCount", runningCount);
@@ -167,30 +170,33 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
 
     @Override
     public Map<String, Object> getTaskDetailById(Integer taskId) {
-        MigrationTask task = this.getById(taskId);
+        MigrationTask task = getById(taskId);
         Map<String, Object> result = new HashMap<>();
         result.put("task", task);
         MigrationTaskExecResultDetail fullProcess = null;
         MigrationTaskExecResultDetail incrementalProcess = null;
         MigrationTaskExecResultDetail reverseProcess = null;
+        MigrationTaskExecResultDetail dataCheckProcess = null;
 
         if (!task.getExecStatus().equals(TaskStatus.MIGRATION_FINISH.getCode())
                 && !task.getExecStatus().equals(TaskStatus.FULL_CHECK_FINISH.getCode())) {
             Map<String, Object> getResult = getSingleTaskStatusAndProcessByProtal(task);
             fullProcess = MigrationTaskExecResultDetail.builder().execResultDetail(MapUtil.getStr(getResult, "fullProcess")).build();
-            if (task.getMigrationModelId().equals(2)) {
+            if (task.getMigrationModelId().equals(MigrationMode.ONLINE.getCode())) {
                 incrementalProcess = MigrationTaskExecResultDetail.builder().execResultDetail(MapUtil.getStr(getResult, "incrementalProcess")).build();
                 reverseProcess = MigrationTaskExecResultDetail.builder().execResultDetail(MapUtil.getStr(getResult, "reverseProcess")).build();
             }
+            dataCheckProcess = MigrationTaskExecResultDetail.builder().execResultDetail(MapUtil.getStr(getResult, "dataCheckProcess")).build();
         } else {
-            fullProcess = migrationTaskExecResultDetailService.getByTaskIdAndProcessType(taskId, 1);
-            if (task.getMigrationModelId().equals(2)) {
-                incrementalProcess = migrationTaskExecResultDetailService.getByTaskIdAndProcessType(taskId, 2);
-                reverseProcess = migrationTaskExecResultDetailService.getByTaskIdAndProcessType(taskId, 3);
+            fullProcess = migrationTaskExecResultDetailService.getByTaskIdAndProcessType(taskId, ProcessType.FULL.getCode());
+            if (task.getMigrationModelId().equals(MigrationMode.ONLINE.getCode())) {
+                incrementalProcess = migrationTaskExecResultDetailService.getByTaskIdAndProcessType(taskId, ProcessType.INCREMENTAL.getCode());
+                reverseProcess = migrationTaskExecResultDetailService.getByTaskIdAndProcessType(taskId, ProcessType.REVERSE.getCode());
             }
+            dataCheckProcess = migrationTaskExecResultDetailService.getByTaskIdAndProcessType(taskId, ProcessType.DATA_CHECK.getCode());
         }
         result.put("fullProcess", fullProcess);
-        if (task.getMigrationModelId().equals(2)) {
+        if (task.getMigrationModelId().equals(MigrationMode.ONLINE.getCode())) {
             result.put("incrementalProcess", incrementalProcess);
             result.put("reverseProcess", reverseProcess);
             List<MigrationTaskStatusRecord> migrationTaskStatusRecords = migrationTaskStatusRecordService.selectByTaskId(taskId);
@@ -214,19 +220,22 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
             result.put("funcCounts", funcCounts);
             result.put("triggerCounts", triggerCounts);
             result.put("produceCounts", produceCounts);
-            Integer totalRunningCount = MapUtil.getInt(tableCounts,"runningCount") + MapUtil.getInt(viewCounts,"runningCount") +MapUtil.getInt(funcCounts,"runningCount") +
-                MapUtil.getInt(triggerCounts, "runningCount") + MapUtil.getInt(produceCounts, "runningCount");
-            Integer totalFinishCount = MapUtil.getInt(tableCounts,"finishCount") + MapUtil.getInt(viewCounts,"finishCount") +MapUtil.getInt(funcCounts,"finishCount") +
+            Integer totalRunningCount = MapUtil.getInt(tableCounts, "runningCount") + MapUtil.getInt(viewCounts, "runningCount") + MapUtil.getInt(funcCounts, "runningCount") +
+                    MapUtil.getInt(triggerCounts, "runningCount") + MapUtil.getInt(produceCounts, "runningCount");
+            Integer totalFinishCount = MapUtil.getInt(tableCounts, "finishCount") + MapUtil.getInt(viewCounts, "finishCount") + MapUtil.getInt(funcCounts, "finishCount") +
                     MapUtil.getInt(triggerCounts, "finishCount") + MapUtil.getInt(produceCounts, "finishCount");
-            Integer totalErrorCount = MapUtil.getInt(tableCounts,"errorCount") + MapUtil.getInt(viewCounts,"errorCount") +MapUtil.getInt(funcCounts,"errorCount") +
+            Integer totalErrorCount = MapUtil.getInt(tableCounts, "errorCount") + MapUtil.getInt(viewCounts, "errorCount") + MapUtil.getInt(funcCounts, "errorCount") +
                     MapUtil.getInt(triggerCounts, "errorCount") + MapUtil.getInt(produceCounts, "errorCount");
-            Integer totalWaitCount = MapUtil.getInt(tableCounts,"waitCount") + MapUtil.getInt(viewCounts,"waitCount") +MapUtil.getInt(funcCounts,"waitCount") +
+            Integer totalWaitCount = MapUtil.getInt(tableCounts, "waitCount") + MapUtil.getInt(viewCounts, "waitCount") + MapUtil.getInt(funcCounts, "waitCount") +
                     MapUtil.getInt(triggerCounts, "waitCount") + MapUtil.getInt(produceCounts, "waitCount");
 
             result.put("totalWaitCount", totalWaitCount);
             result.put("totalRunningCount", totalRunningCount);
             result.put("totalFinishCount", totalFinishCount);
             result.put("totalErrorCount", totalErrorCount);
+        }
+        if (dataCheckProcess != null && StringUtils.isNotBlank(dataCheckProcess.getExecResultDetail())) {
+            result.put("dataCheckProcess", dataCheckProcess);
         }
         List<String> logPaths = new ArrayList<>();
         if (!task.getExecStatus().equals(TaskStatus.NOT_RUN.getCode())) {
@@ -239,14 +248,14 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
 
 
     @Override
-    public Map<String, Object> getSingleTaskStatusAndProcessByProtal(MigrationTask t){
+    public Map<String, Object> getSingleTaskStatusAndProcessByProtal(MigrationTask t) {
         Map<String, Object> result = new HashMap<>();
         MigrationHostPortalInstall installHost = migrationHostPortalInstallHostService.getOneByHostId(t.getRunHostId());
         String portalStatus = PortalHandle.getPortalStatus(installHost.getHost(), installHost.getPort(), installHost.getRunUser(), installHost.getRunPassword(), installHost.getInstallPath(), t);
         log.info("get portal stauts content: {}, subTaskId: {}", portalStatus, t.getId());
         if (org.opengauss.admin.common.utils.StringUtils.isNotEmpty(portalStatus)) {
-            List<Map<String,Object>> statusList = (List<Map<String, Object>>) JSON.parse(portalStatus);
-            List<Map<String, Object>> statusResultList = statusList.stream().sorted(Comparator.comparing(m -> MapUtil.getLong(m,"timestamp"))).collect(Collectors.toList());
+            List<Map<String, Object>> statusList = (List<Map<String, Object>>) JSON.parse(portalStatus);
+            List<Map<String, Object>> statusResultList = statusList.stream().sorted(Comparator.comparing(m -> MapUtil.getLong(m, "timestamp"))).collect(Collectors.toList());
             Map<String, Object> lastStatus = statusResultList.get(statusResultList.size() - 1);
             Integer state = MapUtil.getInt(lastStatus, "status");
             MigrationTask update = MigrationTask.builder().id(t.getId()).build();
@@ -255,17 +264,23 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
             String portalFullProcess = PortalHandle.getPortalFullProcess(installHost.getHost(), installHost.getPort(), installHost.getRunUser(), installHost.getRunPassword(), installHost.getInstallPath(), t);
             log.info("get portal full process content: {}, subTaskId: {}", portalFullProcess, t.getId());
             if (StringUtils.isNotBlank(portalFullProcess)) {
-                migrationTaskExecResultDetailService.saveOrUpdateByTaskId(t.getId(), portalFullProcess.trim(), 1);
+                migrationTaskExecResultDetailService.saveOrUpdateByTaskId(t.getId(), portalFullProcess.trim(), ProcessType.FULL.getCode());
                 migrationProcess = calculateFullMigrationProgress(portalFullProcess);
             }
             result.put("fullProcess", portalFullProcess);
+            String portalDataCheckProcess = PortalHandle.getPortalDataCheckProcess(installHost.getHost(), installHost.getPort(), installHost.getRunUser(), installHost.getRunPassword(), installHost.getInstallPath(), t);
+            log.info("get portal data check process content: {}, subTaskId: {}", portalDataCheckProcess, t.getId());
+            if (StringUtils.isNotBlank(portalDataCheckProcess)) {
+                migrationTaskExecResultDetailService.saveOrUpdateByTaskId(t.getId(), portalDataCheckProcess.trim(), ProcessType.DATA_CHECK.getCode());
+                result.put("dataCheckProcess", portalDataCheckProcess);
+            }
             if (TaskStatus.INCREMENTAL_START.getCode().equals(state) || TaskStatus.INCREMENTAL_RUNNING.getCode().equals(state)) {
                 String portalIncrementalProcess = PortalHandle.getPortalIncrementalProcess(installHost.getHost(), installHost.getPort(), installHost.getRunUser(), installHost.getRunPassword(), installHost.getInstallPath(), t);
                 log.info("get portal incremental process content: {}, subTaskId: {}", portalIncrementalProcess, t.getId());
                 if (StringUtils.isNotBlank(portalIncrementalProcess)) {
-                    migrationTaskExecResultDetailService.saveOrUpdateByTaskId(t.getId(), portalIncrementalProcess.trim(), 2);
+                    migrationTaskExecResultDetailService.saveOrUpdateByTaskId(t.getId(), portalIncrementalProcess.trim(), ProcessType.INCREMENTAL.getCode());
                 }
-                if(t.getMigrationProcess() == null) {
+                if (t.getMigrationProcess() == null) {
                     if (migrationProcess.intValue() > 0) {
                         migrationProcess = new BigDecimal(0.85f).divide(migrationProcess, 4, BigDecimal.ROUND_HALF_UP);
                     }
@@ -275,13 +290,16 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
                     }
                 }
                 result.put("incrementalProcess", portalIncrementalProcess);
+            } else if (TaskStatus.INCREMENTAL_STOP.getCode().equals(state)) {
+                String portalIncrementalProcess = PortalHandle.getPortalIncrementalProcess(installHost.getHost(), installHost.getPort(), installHost.getRunUser(), installHost.getRunPassword(), installHost.getInstallPath(), t);
+                result.put("incrementalProcess", portalIncrementalProcess);
             } else if (TaskStatus.REVERSE_START.getCode().equals(state) || TaskStatus.REVERSE_RUNNING.getCode().equals(state)) {
                 String portaReverselProcess = PortalHandle.getPortalReverseProcess(installHost.getHost(), installHost.getPort(), installHost.getRunUser(), installHost.getRunPassword(), installHost.getInstallPath(), t);
                 log.info("get portal reverse process content: {}, subTaskId: {}", portaReverselProcess, t.getId());
                 if (StringUtils.isNotBlank(portaReverselProcess)) {
-                    migrationTaskExecResultDetailService.saveOrUpdateByTaskId(t.getId(), portaReverselProcess.trim(), 3);
+                    migrationTaskExecResultDetailService.saveOrUpdateByTaskId(t.getId(), portaReverselProcess.trim(), ProcessType.REVERSE.getCode());
                 }
-                if(t.getMigrationProcess() == null) {
+                if (t.getMigrationProcess() == null) {
                     if (migrationProcess.intValue() > 0) {
                         migrationProcess = new BigDecimal(0.95f).divide(migrationProcess, 4, BigDecimal.ROUND_HALF_UP);
                     }
@@ -291,8 +309,10 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
                     }
                 }
                 result.put("reverseProcess", portaReverselProcess);
+                String portalIncrementalProcess = PortalHandle.getPortalIncrementalProcess(installHost.getHost(), installHost.getPort(), installHost.getRunUser(), installHost.getRunPassword(), installHost.getInstallPath(), t);
+                result.put("incrementalProcess", portalIncrementalProcess);
             }
-            if(state > t.getExecStatus()) {
+            if (state > t.getExecStatus()) {
                 update.setExecStatus(state);
             }
             update.setMigrationProcess(migrationProcess.setScale(2, RoundingMode.UP).toPlainString());
@@ -306,13 +326,14 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
             } else {
                 update.setStatusDesc("");
             }
-            this.updateById(update);
+            updateById(update);
         }
         return result;
     }
 
     /**
      * Calculate the progress bar of the full migration subtask
+     *
      * @param portalProcess
      * @return
      */
@@ -346,12 +367,19 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
         return result;
     }
 
+    /**
+     * Query the number of tasks not finish by target
+     *
+     * @param targetNodeId targetNodeId of the OpsHost object
+     * @param targetDb     targetDb of the OpsHost object
+     * @return number of tasks
+     */
     @Override
-    public Integer countNotFinishByTargetDb(String targetDb) {
+    public Integer countNotFinishByTargetDb(String targetNodeId, String targetDb) {
         LambdaQueryWrapper<MigrationTask> query = new LambdaQueryWrapper<>();
-        query.eq(MigrationTask::getTargetDb, targetDb);
+        query.eq(MigrationTask::getTargetDb, targetDb).eq(MigrationTask::getTargetNodeId, targetNodeId);
         query.notIn(MigrationTask::getExecStatus, TaskStatus.MIGRATION_FINISH.getCode());
-        return Math.toIntExact(this.count(query));
+        return Math.toIntExact(count(query));
     }
 
     @Override
@@ -365,13 +393,14 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
                 TaskStatus.INCREMENTAL_RUNNING.getCode(), TaskStatus.REVERSE_START.getCode(),
                 TaskStatus.REVERSE_RUNNING.getCode()
         );
-        return Math.toIntExact(this.count(query));
+        return Math.toIntExact(count(query));
     }
 
     /**
-     *  Query the number of tasks running on the machine
-     * @param hostId
-     * @return
+     * Query the number of tasks running on the machine
+     *
+     * @param hostId Id of the OpsHost object
+     * @return number of tasks
      */
     @Override
     public Integer countRunningByHostId(String hostId) {
@@ -384,7 +413,7 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
                 TaskStatus.INCREMENTAL_RUNNING.getCode(), TaskStatus.REVERSE_START.getCode(),
                 TaskStatus.REVERSE_RUNNING.getCode()
         );
-        return Math.toIntExact(this.count(query));
+        return Math.toIntExact(count(query));
     }
 
     @Override
@@ -398,21 +427,21 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
                 TaskStatus.INCREMENTAL_RUNNING.getCode(), TaskStatus.REVERSE_START.getCode(),
                 TaskStatus.REVERSE_RUNNING.getCode()
         );
-        return this.list(query);
+        return list(query);
     }
 
     @Override
     public List<MigrationTask> listTaskByStatus(TaskStatus taskStatus) {
         LambdaQueryWrapper<MigrationTask> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(MigrationTask::getExecStatus, taskStatus.getCode());
-        return this.list(queryWrapper);
+        return list(queryWrapper);
     }
 
     @Override
     public Integer countTaskByStatus(TaskStatus taskStatus) {
         LambdaQueryWrapper<MigrationTask> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(MigrationTask::getExecStatus, taskStatus.getCode());
-        return Math.toIntExact(this.count(queryWrapper));
+        return Math.toIntExact(count(queryWrapper));
     }
 
     @Override
@@ -420,7 +449,7 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
         MigrationTask migrationTask = new MigrationTask();
         migrationTask.setExecStatus(taskStatus.getCode());
         migrationTask.setId(id);
-        this.updateById(migrationTask);
+        updateById(migrationTask);
     }
 
     @Override
@@ -432,42 +461,69 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
     public void runTask(MigrationTaskHostRef h, MigrationTask t, List<MigrationTaskGlobalParam> globalParams) {
         LoginUser loginUser = SecurityUtils.getLoginUser();
         MigrationHostPortalInstall installHost = migrationHostPortalInstallHostService.getOneByHostId(h.getRunHostId());
-        PortalHandle.startPortal(installHost, t, portalJarName, getTaskParam(globalParams, t));
+        PortalHandle.startPortal(installHost, t, installHost.getJarName(), getTaskParam(globalParams, t));
         MigrationTask update = MigrationTask.builder().id(t.getId()).runHostId(h.getRunHostId()).runHost(h.getHost()).runHostname(h.getHostName())
                 .runPort(h.getPort()).runUser(h.getUser()).runPass(h.getPassword()).execStatus(TaskStatus.FULL_START.getCode()).execTime(new Date()).build();
         migrationTaskOperateRecordService.saveRecord(t.getId(), TaskOperate.RUN, loginUser.getUsername());
-        this.updateById(update);
+        updateById(update);
     }
 
-
-    public static String escapeChars(String s) {
-        if (StringUtils.isBlank(s)) {
-            return s;
+    /**
+     * special character handling
+     *
+     * @param str String that needs to be processed.
+     * @return processed string
+     */
+    public String escapeChars(String str) {
+        if (StringUtils.isBlank(str)) {
+            return str;
         }
         StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < s.length(); i++) {
-            char c = s.charAt(i);
+        for (int index = 0; index < str.length(); index++) {
+            char con = str.charAt(index);
             // These characters are part of the query syntax and must be escaped
-            if (c == '\\' || c == '+' || c == '-' || c == '!' || c == '(' || c == ')'
-                    || c == ':' || c == '^'	|| c == '[' || c == ']' || c == '\"'
-                    || c == '{' || c == '}' || c == '~' || c == '*' || c == '?' || c == '>'  || c == '<'
-                    || c == '|' || c == '&' || c == ';' || c == '/' || c == '.'
-                    || c == '$' || Character.isWhitespace(c)) {
+            if (shouldEscape(con) || Character.isWhitespace(con)) {
                 sb.append('\\');
             }
-            sb.append(c);
+            sb.append(con);
         }
         return sb.toString();
     }
 
+    /**
+     * determine if a given character needs to be escaped
+     *
+     * @param con char content
+     * @return result
+     */
+    private boolean shouldEscape(char con) {
+        for (char ch : SPECIAL_CHARS) {
+            if (ch == con || Character.isWhitespace(con)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * get migration task params
+     *
+     * @param globalParams globalParams
+     * @param task migration task
+     * @return param map
+     */
     private Map<String,String> getTaskParam(List<MigrationTaskGlobalParam> globalParams, MigrationTask task) {
         if (globalParams == null) {
             globalParams = migrationTaskGlobalParamService.selectByMainTaskId(task.getMainTaskId());
         }
-        Map<String, String> globalParamMap = globalParams.stream().collect(Collectors.toMap(g -> g.getParamKey(), g -> g.getParamValue()));
+        Map<String, String> globalParamMap = globalParams.stream().collect(Collectors.toMap(g -> g.getParamKey(),
+                g -> g.getParamKey().startsWith("override_tables") ? g.getParamValue()
+                        : escapeChars(g.getParamValue())));
         List<MigrationTaskParam> migrationTaskParams = migrationTaskParamService.selectByTaskId(task.getId());
         if (migrationTaskParams.size() > 0) {
-            Map<String, String> taskParamMap = migrationTaskParams.stream().collect(Collectors.toMap(p -> p.getParamKey(), p -> p.getParamValue()));
+            Map<String, String> taskParamMap = migrationTaskParams.stream()
+                    .collect(Collectors.toMap(p -> p.getParamKey(), p -> p.getParamKey()
+                    .startsWith("override_tables") ? p.getParamValue() : escapeChars(p.getParamValue())));
             globalParamMap.putAll(taskParamMap);
         }
         Map<String, String> resultMap = new HashMap<>();
@@ -476,7 +532,6 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
         resultMap.put("mysql.database.host", task.getSourceDbHost());
         resultMap.put("mysql.database.port", task.getSourceDbPort());
         resultMap.put("mysql.database.name", task.getSourceDb());
-
         resultMap.put("opengauss.user.name", task.getTargetDbUser());
         resultMap.put("opengauss.user.password", escapeChars(task.getTargetDbPass()));
         resultMap.put("opengauss.database.host", task.getTargetDbHost());
@@ -493,18 +548,18 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
      * Subtask Execution Offline Scheduler
      */
     @Override
-    public void doOfflineTaskRunScheduler(){
-        while(true) {
-            Integer waitRunCount = this.countTaskByStatus(TaskStatus.WAIT_RESOURCE);
+    public void doOfflineTaskRunScheduler() {
+        while (true) {
+            Integer waitRunCount = countTaskByStatus(TaskStatus.WAIT_RESOURCE);
             if (waitRunCount > 0) {
                 log.info("waiting for the resource to execute，task count : {}", waitRunCount);
-                List<MigrationTask> migrationTasks = this.listTaskByStatus(TaskStatus.WAIT_RESOURCE);
+                List<MigrationTask> migrationTasks = listTaskByStatus(TaskStatus.WAIT_RESOURCE);
                 migrationTasks.stream().forEach((t -> {
                     List<MigrationTaskHostRef> hosts = migrationTaskHostRefService.listByMainTaskId(t.getMainTaskId());
                     MigrationTaskHostRef selectHost = hosts.stream().filter(h -> h.getRunnableCount() > 0).findFirst().orElse(null);
                     if (selectHost != null) {
                         log.info("Offline scheduling successfully assigns tasks to host for execution. taskId : {}, HostId : {}, HostIP : {}",
-                                t.getId(), selectHost.getRunHostId(),selectHost.getHost());
+                                t.getId(), selectHost.getRunHostId(), selectHost.getHost());
                         runTask(selectHost, t, null);
                     }
                 }));

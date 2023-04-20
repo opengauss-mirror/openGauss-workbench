@@ -30,9 +30,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.core.domain.model.ops.HostBody;
 import org.opengauss.admin.common.core.domain.model.ops.host.OpsHostVO;
+import org.opengauss.admin.common.core.dto.ops.ClusterNodeDto;
 import org.opengauss.admin.system.mapper.ops.OpsHostMapper;
 import org.opengauss.admin.system.service.ops.IHostService;
 import org.opengauss.admin.system.service.ops.IHostUserService;
+import org.opengauss.admin.system.service.ops.IOpsClusterNodeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
@@ -56,6 +58,8 @@ public class HostFacade {
     private OpsHostMapper hostMapper;
     @Autowired
     private IHostService hostService;
+    @Autowired
+    private IOpsClusterNodeService opsClusterNodeService;
 
     public void add(HostBody hostBody) {
         hostService.add(hostBody);
@@ -95,5 +99,15 @@ public class HostFacade {
 
     public List<OpsHostEntity> listAll() {
         return hostService.listAll(null);
+    }
+
+    /**
+     * get ClusterNodeDto info by clusterNodeId
+     *
+     * @param clusterNodeId clusterNodeId
+     * @return ClusterNodeDto
+     */
+    public ClusterNodeDto getClusterNodeByNodeId(String clusterNodeId) {
+        return opsClusterNodeService.getClusterNodeDtoByNodeId(clusterNodeId);
     }
 }

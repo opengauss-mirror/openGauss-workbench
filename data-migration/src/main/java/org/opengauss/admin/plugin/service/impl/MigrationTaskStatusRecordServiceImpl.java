@@ -37,6 +37,7 @@ import org.opengauss.admin.plugin.service.MigrationTaskOperateRecordService;
 import org.opengauss.admin.plugin.service.MigrationTaskStatusRecordService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -58,6 +59,7 @@ public class MigrationTaskStatusRecordServiceImpl extends ServiceImpl<MigrationT
 
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void saveTaskRecord(Integer taskId, List<Map<String, Object>> statusRecord) {
         LambdaQueryWrapper<MigrationTaskStatusRecord> query = new LambdaQueryWrapper<>();
         query.eq(MigrationTaskStatusRecord::getTaskId, taskId);

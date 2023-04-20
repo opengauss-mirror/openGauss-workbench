@@ -26,13 +26,13 @@ package org.opengauss.admin.plugin.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import org.opengauss.admin.common.core.domain.AjaxResult;
-import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
 import org.opengauss.admin.common.core.domain.model.ops.OpsClusterNodeVO;
-import org.opengauss.admin.common.core.domain.model.ops.OpsClusterVO;
 import org.opengauss.admin.common.core.domain.model.ops.jdbc.JdbcDbClusterVO;
+import org.opengauss.admin.plugin.domain.MigrationHostPortalInstall;
 import org.opengauss.admin.plugin.domain.MigrationTaskHostRef;
 import org.opengauss.admin.plugin.dto.CustomDbResource;
+import org.opengauss.admin.plugin.dto.MigrationHostDto;
 import org.opengauss.admin.plugin.vo.TargetClusterVO;
 
 import java.util.List;
@@ -49,7 +49,7 @@ public interface MigrationTaskHostRefService extends IService<MigrationTaskHostR
 
     List<MigrationTaskHostRef> listByMainTaskId(Integer mainTaskId);
 
-    List<Map<String, Object>> getHosts();
+    List<MigrationHostDto> getHosts();
 
     List<JdbcDbClusterVO> getSourceClusters();
 
@@ -63,12 +63,28 @@ public interface MigrationTaskHostRefService extends IService<MigrationTaskHostR
 
     List<Map<String, Object>> getOpsClusterDbNames(OpsClusterNodeVO clusterNode);
 
+    /**
+     * SQL querying based on OpenGauss.
+     *
+     * @param host     host of db
+     * @param port     host of db
+     * @param database database of db
+     * @param dbUser   user of db
+     * @param dbPass   password of db
+     * @param schema   schema of db
+     * @param sql      sql
+     * @return result list
+     */
+    List<Map<String, Object>> queryBySqlOnOpengauss(String host, String port, String database, String dbUser,
+                                                    String dbPass, String schema, String sql);
+
     List<OpsHostUserEntity> getHostUsers(String hostId);
 
-    AjaxResult installPortal(String hostId, String hostUserId, String installPath);
+    AjaxResult installPortal(String hostId, MigrationHostPortalInstall install);
 
+    AjaxResult deletePortal(String hostId, Boolean onlyPkg);
 
-    AjaxResult retryInstallPortal(String hostId);
+    AjaxResult retryInstallPortal(String hostId, MigrationHostPortalInstall install);
 
     String getPortalInstallLog(String hostId);
 }

@@ -19,6 +19,7 @@
 - 如果插件的`spring-boot`版本与主程序**一致**，则引入如下依赖
 
 ```XML
+
 <dependency>
   <groupId>org.springframework.boot</groupId>
   <artifactId>spring-boot-starter</artifactId>
@@ -29,6 +30,7 @@
 - 如果插件的`spring-boot`版本与主程序**不一致**，则引入如下依赖
 
 ```XML
+
 <dependency>
   <groupId>org.springframework.boot</groupId>
   <artifactId>spring-boot-starter</artifactId>
@@ -47,6 +49,7 @@
 #### 引入插件依赖
 
 ```XML
+
 <dependency>
   <groupId>com.gitee.starblues</groupId>
   <artifactId>spring-brick-bootstrap</artifactId>
@@ -57,6 +60,7 @@
 #### 引入主程序依赖
 
 ```XML
+
 <dependency>
     <groupId>org.opengauss</groupId>
     <artifactId>visualtool-service</artifactId>
@@ -87,7 +91,7 @@
 
 > 注意：插件引导类包必须在主程序的包名之下，主程序的包名是org.opengauss.admin，因此插件的引导类必须在org.opengauss.admin.xxx之下。
 
-定义插件`main`入口类,  继承`SpringPluginBootstrap`类,  然后在`main`函数中实例化当前引导类，并执行`run`方法即可。实现如下:
+定义插件`main`入口类, 继承`SpringPluginBootstrap`类, 然后在`main`函数中实例化当前引导类，并执行`run`方法即可。实现如下:
 
 ```Java
 //如果不需要操作数据库和redis，则关闭掉相关的自动装配
@@ -121,6 +125,7 @@ public class EmailNoticeApplication extends SpringPluginBootstrap {
 案例：
 
 ```Java
+
 @Extract(bus = "notice", scene = "emailNotice")
 public class EmailNoticeServiceImpl implements NoticeExtract {
 
@@ -273,7 +278,7 @@ window.$wujie?.props.data.xxx
 ```YAML
 spring:
   resources:
-    static-locations: classpath:static,file:D://static
+    static-locations: classpath:static
 ```
 
 ### 前端访问路径
@@ -328,7 +333,7 @@ public class MyListener implements ApplicationListener<ApplicationEvent> {
             MainApplicationContext context = ((ApplicationReadyEvent) event).getApplicationContext().getBean(MainApplicationContext.class);
             SpringBeanFactory factory = context.getSpringBeanFactory();
             MenuFacade menuFacade = factory.getBean(MenuFacade.class);
-            menuFacade.savePluginMenu("plugin-book","图书管理插件","books manager","index");
+            menuFacade.savePluginMenu("plugin-book", "图书管理插件", "books manager", "index");
             System.out.println("扩展实现插件已经启动完成");
         } else if (event instanceof ContextClosedEvent) {
             MainApplicationContext context = ((ContextClosedEvent) event).getApplicationContext().getBean(MainApplicationContext.class);
@@ -353,13 +358,13 @@ context:
 
 平台提供了操作日志异步打印的工具。在插件脚手架的**LogAspect类**中已经集成，在需要打印的controller的方法上使用自定义注解@Log即可。该注解有以下参数：
 
-| **参数名**         | **类型**     | **说明**                                                     |
-| ------------------ | ------------ | ------------------------------------------------------------ |
-| title              | string       | 所属模块，建议格式：“插件ID”-模块。                          |
+| **参数名**            | **类型**       | **说明**                                          |
+|--------------------|--------------|-------------------------------------------------|
+| title              | string       | 所属模块，建议格式：“插件ID”-模块。                            |
 | businessType       | BusinessType | 操作类型，包括（*OTHER、INSERT、UPDATE、DELETE等*）默认为OTHER。 |
-| operatorType       | OperatorType | 操作来源，传入枚举类OperatorType.*PLUGIN*。                  |
-| isSaveRequestData  | boolean      | 是否保存请求参数。默认为true                                 |
-| isSaveResponseData | boolean      | 是否保存响应参数。默认为true                                 |
+| operatorType       | OperatorType | 操作来源，传入枚举类OperatorType.*PLUGIN*。                |
+| isSaveRequestData  | boolean      | 是否保存请求参数。默认为true                                |
+| isSaveResponseData | boolean      | 是否保存响应参数。默认为true                                |
 
 示例：
 
@@ -387,22 +392,85 @@ public AjaxResult add(@RequestBody ModelingDataFlowEntity dataFlowData) {
 
 ```JavaScript
 axios.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('opengauss-token')
-    if (token) {
-      if (!config.headers) {
-        config.headers = {}
+    (config) => {
+      const token = localStorage.getItem('opengauss-token')
+      if (token) {
+        if (!config.headers) {
+          config.headers = {}
+        }
+        config.headers.Authorization = `Bearer ${token}`
       }
-      config.headers.Authorization = `Bearer ${token}`
+      return config
+    },
+    (error) => {
+      // do something
+      return Promise.reject(error)
     }
-    return config
-  },
-  (error) => {
-    // do something
-    return Promise.reject(error)
-  }
 )
 ```
+
+## 插件授权扩展信息
+
+平台支持插件自定义上报插件扩展信息及插件升级授权，主程序中定义了插件扩展信息的接口，插件只需实现扩展信息接口，即可上报插件信息到主程序中。
+
+### PluginExtensionInfoExtract接口
+
+该接口用于扩展插件信息，插件需要实现该扩展接口，实现`getPluginExtensionInfo`方法，并且在实现类上面添加Extract注解。
+
+#### Extract注解
+
+用于标识该实现扩展的唯一性，方便在主程序中调用时能定位到具体的实现。 其中有三个值:
+
+* `bus`: 业务标识，必须使用 **插件id**。【必选】
+* `scene`: 场景标识。【可选】
+* `useCase`: 用例标识。 【可选】
+
+#### 示例
+
+```java
+
+@Extract(bus = "visualtool-plugin")
+public class ExtensionInfoServiceImpl implements PluginExtensionInfoExtract {
+
+    @Override
+    public PluginExtensionInfoDto getPluginExtensionInfo() {
+        PluginExtensionInfoDto dto = new PluginExtensionInfoDto();
+        dto.setPluginId("visualtool-plugin");
+        dto.setPluginName("visualtool plugin");
+        dto.setPluginHome("https://opengauss.org/zh/");
+        dto.setPluginDevelopmentCompany("openGauss");
+        dto.setPhoneNumber("400-400-4000");
+        dto.setEmail("contact@opengauss.org");
+        dto.setCompanyAddress("xx路xx号");
+        dto.setAuthAddress("/test-plugin/license");
+        dto.setPluginLicenseType(PluginLicenseType.FREE);
+        dto.setPluginExpirationTime(new Date());
+        return dto;
+    }
+}
+```
+
+#### 参数说明
+
+在 PluginExtensionInfoDto 中有以下参数，插件可以在接口实现中自定义对应的参数值，来完善插件扩展信息：
+
+| 参数                       | 类型                | 是否必填 | 可选值                          | 说明                               |
+|--------------------------|-------------------|------|------------------------------|----------------------------------|
+| pluginId                 | String            | 是    | -                            | 插件id                             |
+| pluginLicenseType        | PluginLicenseType | 是    | OPEN_SOURCE｜FREE ｜TRIAL｜PAID | 插件类型（开源｜免费｜试用｜正式）                |
+| pluginName               | String            | 否    | -                            | 插件名称                             |
+| pluginIntroduction       | String            | 否    | -                            | 插件简介                             |
+| pluginHome               | String            | 否    | -                            | 插件主页                             |
+| pluginActivationTime     | Date              | 否    | -                            | 插件激活时间                           |
+| PluginExpirationTime     | Date              | 否    | -                            | 插件有效期                            |
+| pluginDevelopmentCompany | String            | 否    | -                            | 开发公司                             |
+| phoneNumber              | String            | 否    | -                            | 联系电话                             |
+| email                    | String            | 否    | -                            | 联系邮箱                             |
+| companyAddress           | String            | 否    | -                            | 公司地址                             |
+| userGuide                | String            | 否    | -                            | 使用指导                             |
+| demoAddress              | String            | 否    | -                            | demo地址                           |
+| authAddress              | String            | 否    | -                            | 授权地址（可以是插件内部的一个路由跳转地址或外部的一个跳转链接） |
+| customize                | String            | 否    | -                            | 自定义信息（暂不使用）                      |
 
 ## Websocket使用
 
@@ -423,19 +491,20 @@ axios.interceptors.request.use(
 示例：
 
 ```Java
+
 @Extract(bus = "plugin1-handler")
 public class SocketMessageHandler implements SocketExtract {
-    
+
     @Override
     public void onOpen(String pluginId, String sessionId, Session session) {
         System.out.println("连接成功。。。。。。。。");
     }
-    
+
     @Override
     public void processMessage(String sessionId, String message) {
         System.out.println("接收到消息并处理。。。。。。。。" + message);
     }
-    
+
     @Override
     public void onClose(String pluginId, String sessionId) {
         System.out.println("连接关闭。。。。。。。。");
@@ -508,10 +577,15 @@ public AjaxResult test() {
 ![img](https://fullstack-dao.feishu.cn/space/api/box/stream/download/asynccode/?code=YTQyMDhkZDM3NzkwZjFlZjQ3YTdkOGJhNjgwZTM5NmVfd3pXZjZESWZWczQ3Z2JzMVRDbWdyTVNPbDlpd2tXMUNfVG9rZW46Ym94Y25USno1cGRFVk52ZTNDTkZxU0sxcTZnXzE2NzM4NzY5NzY6MTY3Mzg4MDU3Nl9WNA)
 
 ## 插件扩展参数配置
+
 在插件中可以配置自定义的参数，以提供给平台获取使用，比如插件的Logo、插件的主题等。
+
 ### 使用方式
+
 在插件中实现com.gitee.starblues.core.PluginExtensionInfo接口接口。例如：
+
 ```Java
+
 @Component
 public class PluginExtensionInfoConfig implements PluginExtensionInfo {
 
@@ -527,22 +601,24 @@ public class PluginExtensionInfoConfig implements PluginExtensionInfo {
     }
 }
 ```
+
 ### 当前平台支持的扩展参数
 
-| 参数名称 | 类型   | 是否必填 | 描述                             |
-| -------- | ------ |------| -------------------------------- |
-| logo     | String | 是    | 必须是svg格式，传值内容必须是svg代码的Base64编码 |
-| pluginType     | Integer | 否    | 插件类型 |
-| isNeedConfigured     | Integer | 否    | 是否需要在主程序填写配置信息，默认0，1为需要 |
-| configAttrs     | List | 否    | 配置属性集合，json字符串。具体内容见下 |
-| theme     | String | 否    | 插件主题；可选项：dark（深色）light（浅色），默认light |
+| 参数名称             | 类型      | 是否必填 | 描述                                 |
+|------------------|---------|------|------------------------------------|
+| logo             | String  | 是    | 必须是svg格式，传值内容必须是svg代码的Base64编码     |
+| pluginType       | Integer | 否    | 插件类型                               |
+| isNeedConfigured | Integer | 否    | 是否需要在主程序填写配置信息，默认0，1为需要            |
+| configAttrs      | List    | 否    | 配置属性集合，json字符串。具体内容见下              |
+| theme            | String  | 否    | 插件主题；可选项：dark（深色）light（浅色），默认light |
 
 **configAttrs单个元素**
 
-| 参数名称 | 类型   | 是否必填 | 描述                             |
-| -------- | ------ |-----| -------------------------------- |
-| attrLabel     | String | 是   | 属性标签 |
-| attrCode     | String | 是    | 属性Code |
+| 参数名称      | 类型     | 是否必填 | 描述     |
+|-----------|--------|------|--------|
+| attrLabel | String | 是    | 属性标签   |
+| attrCode  | String | 是    | 属性Code |
+
 ## Maven打包配置
 
 ### 插件信息配置
@@ -557,15 +633,16 @@ public class PluginExtensionInfoConfig implements PluginExtensionInfo {
 <mode>prod</mode>
 ```
 
-| 参数名称 | 类型   | 是否必填 | 描述                              |
-| -------- | ------ | -------- | --------------------------------- |
-| mode     | String | 是       | 打包模式。可选参数：`dev`、`prod` |
+| 参数名称 | 类型     | 是否必填 | 描述                     |
+|------|--------|------|------------------------|
+| mode | String | 是    | 打包模式。可选参数：`dev`、`prod` |
 
 #### pluginInfo【必配】
 
 当前节点主要是定义插件信息.
 
 ```XML
+
 <pluginInfo>
     <id>email-notice</id>
     <bootstrapClass>org.opengauss.admin.plugin.EmailNoticeApplication</bootstrapClass>
@@ -575,19 +652,20 @@ public class PluginExtensionInfoConfig implements PluginExtensionInfo {
 </pluginInfo>
 ```
 
- **注意：插件id和版本号中不能出现** **`@`****、** **`,`****特殊符号**
+**注意：插件id和版本号中不能出现** **`@`****、** **`,`****特殊符号**
 
-| 参数名称       | 类型   | 是否必填 | 描述                                                     |
-| -------------- | ------ | -------- | -------------------------------------------------------- |
-| id             | String | 是       | 定义插件全局唯一id                                       |
-| bootstrapClass | String | 是       | 插件引导类包名                                           |
-| version        | String | 是       | 插件版本号。版本号要求见如下`版本号规则`                 |
-| provider       | String | 是       | 插件提供开发者名称                                       |
-| description    | String | 是       | 插件描述信息                                             |
+| 参数名称           | 类型     | 是否必填 | 描述                    |
+|----------------|--------|------|-----------------------|
+| id             | String | 是    | 定义插件全局唯一id            |
+| bootstrapClass | String | 是    | 插件引导类包名               |
+| version        | String | 是    | 插件版本号。版本号要求见如下`版本号规则` |
+| provider       | String | 是    | 插件提供开发者名称             |
+| description    | String | 是    | 插件描述信息                |
 
 #### 完整样例
 
 ```XML
+
 <build>
     <pluginManagement>
         <plugins>
@@ -693,6 +771,7 @@ public class PluginExtensionInfoConfig implements PluginExtensionInfo {
 **注入案例**
 
 ```Java
+
 @Service
 public class BasicService {
 
@@ -712,6 +791,7 @@ public class BasicService {
 
 ```Java
 public class AutowiredTypeDefinerImpl implements AutowiredTypeDefiner {
+
     @Override
     public void config(AutowiredTypeDefinerConfig config) {
         config
@@ -724,6 +804,7 @@ public class AutowiredTypeDefinerImpl implements AutowiredTypeDefiner {
 1. 在插件引导类重写`autowiredTypeDefiner`方法，返回`AutowiredTypeDefiner`实现对象。
 
 ```Java
+
 @SpringBootApplication
 public class Basic1Plugin extends SpringPluginBootstrap {
 
@@ -741,13 +822,14 @@ public class Basic1Plugin extends SpringPluginBootstrap {
 直接注入`MainApplicationContext`，调用其`getSpringBeanFactory()`方法获取`SpringBeanFactory`，然后获取主程序中`Bean`
 
 ```Java
+
 @Service
 public class BasicService {
 
     @Autowired
     private MainApplicationContext context;
 
-    public void getName(){
+    public void getName() {
         SpringBeanFactory factory = context.getSpringBeanFactory();
         MenuFacade menuFacade = factory.getBean(MenuFacade.class);
     }
