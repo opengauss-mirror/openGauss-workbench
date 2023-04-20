@@ -7,7 +7,7 @@
   >
     <template #title>
       <div class="title-con">
-        <span>执行机器：{{ props.host.runHost }}</span>
+        <span>{{$t('components.MacTerminal.5q08wsv861k0')}}: {{ props.host.runHost }}</span>
       </div>
     </template>
     <div class="term-con">

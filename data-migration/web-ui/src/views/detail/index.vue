@@ -2,14 +2,14 @@
   <div class="detail-container">
     <div class="title-con">
       <div class="title-left">
-        <div class="title">数据迁移任务详情（{{ task.taskName }}）</div>
+        <div class="title">{{$t('detail.index.5q09cuenq100', { name: task.taskName })}}</div>
         <div class="task-status-con">
-          <span class="task-status-title">任务状态：</span>
+          <span class="task-status-title">{{$t('detail.index.5q09asiwekc0')}}</span>
           <span class="task-status">{{ execStatusMap(task.execStatus) }}</span>
         </div>
       </div>
       <div class="title-right">
-        <a-button v-if="task.execStatus === 1" type="primary" @click="stopTask">停止</a-button>
+        <a-button v-if="task.execStatus === 1" type="primary" @click="stopTask">{{$t('detail.index.5q09asiwffw0')}}</a-button>
       </div>
     </div>
     <a-divider />
@@ -17,45 +17,45 @@
       <a-descriptions :data="descData" layout="inline-horizontal" table-layout="fixed" bordered />
     </div>
     <div class="progress-con">
-      <span class="progress-info">总进度</span>
+      <span class="progress-info">{{$t('detail.index.5q09asiwg0g0')}}</span>
       <a-progress size="large" :percent="task.execStatus === 2 ? 1: (task.execProgress || 0)" />
       <a-button type="text" @click="loopSubTaskStatus">
         <template #icon>
           <icon-refresh />
         </template>
-        <template #default>刷新</template>
+        <template #default>{{$t('detail.index.5q09asiwg4g0')}}</template>
       </a-button>
     </div>
     <div class="table-con">
       <a-table :data="tableData" :bordered="false" :stripe="!currentTheme" :hoverable="!currentTheme" :pagination="pagination" @page-change="pageChange">
         <template #columns>
-          <a-table-column title="子任务ID" data-index="id" :width="90"></a-table-column>
-          <a-table-column title="源IP和端口" :width="160" ellipsis tooltip>
+          <a-table-column :title="$t('detail.index.5q09asiwg7s0')" data-index="id" :width="90"></a-table-column>
+          <a-table-column :title="$t('detail.index.5q09asiwgb40')" :width="160" ellipsis tooltip>
             <template #cell="{ record }">
               {{ record.sourceDbHost + ':' + record.sourceDbPort }}
             </template>
           </a-table-column>
-          <a-table-column title="源库名" data-index="sourceDb" :width="120" ellipsis tooltip></a-table-column>
-          <a-table-column title="目的IP和端口" :width="160" ellipsis tooltip>
+          <a-table-column :title="$t('detail.index.5q09asiwifk0')" data-index="sourceDb" :width="120" ellipsis tooltip></a-table-column>
+          <a-table-column :title="$t('detail.index.5q09asiwijw0')" :width="160" ellipsis tooltip>
             <template #cell="{ record }">
               {{ record.targetDbHost + ':' + record.targetDbPort }}
             </template>
           </a-table-column>
-          <a-table-column title="目的库名" data-index="targetDb" :width="120" ellipsis tooltip></a-table-column>
-          <a-table-column title="迁移过程模式" :width="120" ellipsis tooltip>
+          <a-table-column :title="$t('detail.index.5q09asiwing0')" data-index="targetDb" :width="120" ellipsis tooltip></a-table-column>
+          <a-table-column :title="$t('detail.index.5q09asiwiqk0')" :width="120" ellipsis tooltip>
             <template #cell="{ record }">
-              {{ record.migrationModelId === 1 ? '离线模式' : '在线模式' }}
+              {{ record.migrationModelId === 1 ? $t('detail.index.5q09asiwiyc0') : $t('detail.index.5q09asiwj1o0') }}
             </template>
           </a-table-column>
-          <a-table-column title="执行机器" :width="300" ellipsis tooltip>
+          <a-table-column :title="$t('detail.index.5q09asiwj4g0')" :width="300" ellipsis tooltip>
             <template #cell="{ record }">
               <span class="mac-txt" @click="handleTerminal(record)"><icon-code-square /> {{ record.runHost }}（{{ record.runHostname }}）</span>
             </template>
           </a-table-column>
-          <a-table-column title="当前状态" :width="150" ellipsis tooltip>
+          <a-table-column :title="$t('detail.index.5q09asiwjvg0')" :width="150" ellipsis tooltip>
             <template #cell="{ record }">
               <span>{{ execSubStatusMap(record.execStatus) }}</span>
-              <a-popover title="迁移失败详情">
+              <a-popover :title="$t('detail.index.5q09asiwk6k0')">
                 <icon-close-circle-fill v-if="record.execStatus === 500" size="14" style="color: #FF7D01;margin-left: 3px;cursor: pointer;" />
                 <template #content>
                   <div class="error-tips">{{ record.statusDesc }}</div>
@@ -63,7 +63,7 @@
               </a-popover>
             </template>
           </a-table-column>
-          <a-table-column title="操作" align="center" :width="340" fixed="right">
+          <a-table-column :title="$t('detail.index.5q09asiwka80')" align="center" :width="340" fixed="right">
             <template #cell="{ record }">
               <a-button
                 size="mini"
@@ -73,7 +73,7 @@
                 <template #icon>
                   <icon-eye />
                 </template>
-                <template #default>详情</template>
+                <template #default>{{$t('detail.index.5q09asiwkds0')}}</template>
               </a-button>
               <!-- <a-button
                 v-if="(record.migrationModelId === 1 && record.execStatus === 2) || (record.migrationModelId === 2 && record.execStatus === 2)"
@@ -84,7 +84,7 @@
                 <template #icon>
                   <icon-pause />
                 </template>
-                <template #default>停止全量</template>
+                <template #default>{{$t('detail.index.5q09asiwkhg0')}}</template>
               </a-button> -->
               <a-button
                 v-if="record.migrationModelId === 2 && record.execStatus === 8"
@@ -95,7 +95,7 @@
                 <template #icon>
                   <icon-pause />
                 </template>
-                <template #default>停止增量</template>
+                <template #default>{{$t('detail.index.5q09asiwkkw0')}}</template>
               </a-button>
               <a-button
                 v-if="record.migrationModelId === 2 && (record.execStatus === 3 || record.execStatus === 9)"
@@ -106,7 +106,7 @@
                 <template #icon>
                   <icon-play-arrow />
                 </template>
-                <template #default>启动反向</template>
+                <template #default>{{$t('detail.index.5q09asiwkq40')}}</template>
               </a-button>
               <!-- <a-button
                 v-if="record.migrationModelId === 2 && record.execStatus === 11"
@@ -116,7 +116,7 @@
                 <template #icon>
                   <icon-pause />
                 </template>
-                <template #default>停止反向</template>
+                <template #default>{{$t('detail.index.5q09asiwkuk0')}}</template>
               </a-button> -->
               <a-button
                 v-if="record.execStatus !== 100"
@@ -127,7 +127,7 @@
                 <template #icon>
                   <icon-stop />
                 </template>
-                <template #default>结束迁移</template>
+                <template #default>{{$t('detail.index.5q09asiwl5g0')}}</template>
               </a-button>
               <a-button
                 size="mini"
@@ -137,7 +137,7 @@
                 <template #icon>
                   <icon-file />
                 </template>
-                <template #default>日志</template>
+                <template #default>{{$t('detail.index.5q09asiwlac0')}}</template>
               </a-button>
             </template>
           </a-table-column>
@@ -161,6 +161,9 @@ import MacTerminal from './components/MacTerminal.vue'
 import { stop } from '@/api/list'
 import { taskDetail, refreshStatus, subTaskList, subTaskFinish, subTaskStartReverse, subTaskStopIncremental } from '@/api/detail'
 import useTheme from '@/hooks/theme'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const { currentTheme } = useTheme()
 
@@ -183,9 +186,9 @@ const tableData = ref([])
 // status map
 const execStatusMap = (status) => {
   const maps = {
-    0: '未启动',
-    1: '迁移中',
-    2: '已完成'
+    0: t('detail.index.5q09asiwlcg0'),
+    1: t('detail.index.5q09asiwlew0'),
+    2: t('detail.index.5q09asiwltg0')
   }
   return maps[status]
 }
@@ -193,22 +196,22 @@ const execStatusMap = (status) => {
 // sub task status map
 const execSubStatusMap = (status) => {
   const maps = {
-    0: '未启动',
-    1: '全量迁移开始',
-    2: '全量迁移进行中',
-    3: '全量迁移完成',
-    4: '全量校验开始',
-    5: '全量校验中',
-    6: '全量检验完成',
-    7: '增量迁移开始',
-    8: '增量迁移进行中',
-    9: '增量迁移已停止',
-    10: '反向迁移开始',
-    11: '反向迁移进行中',
-    12: '反向迁移已停止',
-    100: '迁移完成',
-    500: '迁移失败',
-    1000: '等待资源中'
+    0: t('detail.index.5q09asiwlcg0'),
+    1: t('detail.index.5q09asiwlwc0'),
+    2: t('detail.index.5q09asiwmi00'),
+    3: t('detail.index.5q09asiwmow0'),
+    4: t('detail.index.5q09asiwmr40'),
+    5: t('detail.index.5q09asiwmt80'),
+    6: t('detail.index.5q09asiwmvg0'),
+    7: t('detail.index.5q09asiwmxg0'),
+    8: t('detail.index.5q09asiwmzw0'),
+    9: t('detail.index.5q09asiwn200'),
+    10: t('detail.index.5q09asiwn4k0'),
+    11: t('detail.index.5q09asiwna40'),
+    12: t('detail.index.5q09asiwncc0'),
+    100: t('detail.index.5q09asiwne80'),
+    500: t('detail.index.5q09asiwngg0'),
+    1000: t('detail.index.5q09asiwnik0')
   }
   return maps[status]
 }
@@ -319,33 +322,33 @@ const getTaskDetail = () => {
     const hosts = res.data.hosts
     descData.value = [
       {
-        label: '创建人：',
+        label: () => t('detail.index.5q09asiwnks0'),
         value: taskInfo.createUser
       },
       {
-        label: '子任务数量：',
+        label: () => t('detail.index.5q09asiwnmw0'),
         value: offlineCounts['total'] + onlineCounts['total']
       },
       {
-        label: '分配执行机器：',
-        value: `${hosts.length}台（${hosts.map(item => item.hostName)}）`
+        label: () => t('detail.index.5q09asiwnow0'),
+        value: () => `${t('detail.index.5q09efwo3nc0', { num: hosts.length })}（${hosts.map(item => item.hostName)}）`
       },
       {
-        label: '创建时间：',
+        label: () => t('detail.index.5q09asiwnrs0'),
         value: taskInfo.createTime
       },
       {
-        label: '子任务数量（离线模式）：',
-        value: `总数：${offlineCounts['total']}，未启动：${offlineCounts['notRunCount']}，执行中：${offlineCounts['runningCount']}，迁移完成：${offlineCounts['finishCount']}，迁移失败：${offlineCounts['errorCount']}`,
+        label: () => t('detail.index.5q09asiwnu40'),
+        value: () => t('detail.index.5q09frs8fh00', { total: offlineCounts['total'], notRunCount: offlineCounts['notRunCount'], runningCount: offlineCounts['runningCount'], finishCount: offlineCounts['finishCount'], errorCount: offlineCounts['errorCount'] }),
         span: 2
       },
       {
-        label: '执行时间：',
+        label: () => t('detail.index.5q09asiwnw00'),
         value: taskInfo.execTime
       },
       {
-        label: '子任务数量（在线模式）：',
-        value: `总数：${onlineCounts['total']}，未启动：${onlineCounts['notRunCount']}，执行中：${onlineCounts['runningCount']}，迁移完成：${onlineCounts['finishCount']}，迁移失败：${onlineCounts['errorCount']}`,
+        label: () => t('detail.index.5q09asiwny00'),
+        value: () => t('detail.index.5q09frs8fh00', { total: onlineCounts['total'], notRunCount: onlineCounts['notRunCount'], runningCount: onlineCounts['runningCount'], finishCount: onlineCounts['finishCount'], errorCount: onlineCounts['errorCount'] }),
         span: 2
       }
     ]

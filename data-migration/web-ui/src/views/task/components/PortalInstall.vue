@@ -1,30 +1,30 @@
 <template>
   <a-modal
-    title="Portal安装"
+    :title="$t('components.PortalInstall.5q0aajl75f00')"
     v-model:visible="visible"
     width="500px"
     modal-class="add-portal-modal"
   >
     <a-form ref="formRef" :model="form" auto-label-width>
-      <a-form-item field="hostUserId" label="安装用户" :rules="[{
+      <a-form-item field="hostUserId" :label="$t('components.PortalInstall.5q0aajl76580')" :rules="[{
         required: true,
-        message: '安装用户不能为空'
+        message: $t('components.PortalInstall.5q0aajl76io0')
       }]">
-        <a-select v-model="form.hostUserId" placeholder="请选择安装用户">
+        <a-select v-model="form.hostUserId" :placeholder="$t('components.PortalInstall.5q0aajl76ug0')">
           <a-option v-for="item in hostUserData" :key="item.hostUserId" :value="item.hostUserId">{{ item.username }}</a-option>
         </a-select>
       </a-form-item>
-      <a-form-item field="installPath" label="安装目录" :rules="[{
+      <a-form-item field="installPath" :label="$t('components.PortalInstall.5q0aajl76xw0')" :rules="[{
         required: true,
-        message: '安装目录不能为空'
+        message: $t('components.PortalInstall.5q0aajl776k0')
       }]">
-        <a-input v-model="form.installPath" placeholder="请输入安装目录" />
+        <a-input v-model="form.installPath" :placeholder="$t('components.PortalInstall.5q0aajl77f40')" />
       </a-form-item>
     </a-form>
     <template #footer>
       <div class="modal-footer">
-        <a-button @click="cancel">取消</a-button>
-        <a-button type="primary" :disabled="loading" style="margin-left: 16px;" @click="confirmSubmit">确定</a-button>
+        <a-button @click="cancel">{{$t('components.PortalInstall.5q0aajl77ik0')}}</a-button>
+        <a-button type="primary" :disabled="loading" style="margin-left: 16px;" @click="confirmSubmit">{{$t('components.PortalInstall.5q0aajl77lg0')}}</a-button>
       </div>
     </template>
   </a-modal>

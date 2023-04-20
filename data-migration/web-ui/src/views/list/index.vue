@@ -3,38 +3,38 @@
     <div class="search-con">
       <a-form :model="form" layout="inline">
         <a-form-item field="taskName" style="margin-left: -17px;">
-          <a-input v-model="form.taskName" allow-clear placeholder="请输入任务名称" style="width: 200px;" @change="getList"></a-input>
+          <a-input v-model="form.taskName" allow-clear :placeholder="$t('list.index.5q08sf2dez80')" style="width: 200px;" @change="getList"></a-input>
         </a-form-item>
         <a-form-item field="createUser" style="margin-left: -17px;">
-          <a-select v-model="form.createUser" placeholder="请选择创建人" allow-clear style="width: 150px;" @change="getList">
+          <a-select v-model="form.createUser" :placeholder="$t('list.index.5q08sf2dgxo0')" allow-clear style="width: 150px;" @change="getList">
             <a-option v-for="item in userData" :key="item" :value="item">{{ item }}</a-option>
           </a-select>
         </a-form-item>
         <a-form-item field="execStatus" style="margin-left: -17px;">
-          <a-select v-model="form.execStatus" placeholder="请选择状态" allow-clear style="width: 150px;" @change="getList">
-            <a-option :value="0">未启动</a-option>
-            <a-option :value="1">迁移中</a-option>
-            <a-option :value="2">已完成</a-option>
+          <a-select v-model="form.execStatus" :placeholder="$t('list.index.5q08sf2dh5g0')" allow-clear style="width: 150px;" @change="getList">
+            <a-option :value="0">{{$t('list.index.5q08sf2dha80')}}</a-option>
+            <a-option :value="1">{{$t('list.index.5q08sf2dhek0')}}</a-option>
+            <a-option :value="2">{{$t('list.index.5q08sf2dhj00')}}</a-option>
           </a-select>
         </a-form-item>
         <a-form-item field="execTime" style="margin-left: -17px;">
-          <a-range-picker v-model="form.execTime" :placeholder="['执行开始时间', '执行结束时间']" style="width: 250px;" @change="getList" />
+          <a-range-picker v-model="form.execTime" :placeholder="[$t('list.index.5q08sf2dhng0'), $t('list.index.5q08sf2dhrk0')]" style="width: 250px;" @change="getList" />
         </a-form-item>
         <a-form-item field="finishTime" style="margin-left: -17px;">
-          <a-range-picker v-model="form.finishTime" :placeholder="['完成开始时间', '完成结束时间']" style="width: 250px;" @change="getList" />
+          <a-range-picker v-model="form.finishTime" :placeholder="[$t('list.index.5q08sf2dhvs0'), $t('list.index.5q08sf2di4w0')]" style="width: 250px;" @change="getList" />
         </a-form-item>
         <a-form-item>
           <a-button type="outline" @click="getList">
             <template #icon>
               <icon-search />
             </template>
-            <template #default>查询</template>
+            <template #default>{{$t('list.index.5q08sf2dikw0')}}</template>
           </a-button>
           <a-button style="margin-left: 10px;" @click="resetQuery">
             <template #icon>
               <icon-sync />
             </template>
-            <template #default>重置</template>
+            <template #default>{{$t('list.index.5q08sf2diqs0')}}</template>
           </a-button>
         </a-form-item>
       </a-form>
@@ -45,46 +45,46 @@
           <template #icon>
             <icon-plus />
           </template>
-          <template #default>创建数据迁移任务</template>
+          <template #default>{{$t('list.index.5q08sf2diwc0')}}</template>
         </a-button>
         <a-button status="success" @click="getList">
           <template #icon>
             <icon-sync />
           </template>
-          <template #default>刷新</template>
+          <template #default>{{$t('list.index.5q08sf2dj240')}}</template>
         </a-button>
         <a-button status="warning" @click="deleteMore">
           <template #icon>
             <icon-delete />
           </template>
-          <template #default>批量删除</template>
+          <template #default>{{$t('list.index.5q08sf2dj5g0')}}</template>
         </a-button>
       </a-space>
     </div>
     <div class="table-con">
       <a-table :loading="loading" row-key="id" :data="tableData" :row-selection="rowSelection" v-model:selectedKeys="selectedKeys" :bordered="false" :stripe="!currentTheme" :hoverable="!currentTheme" :pagination="pagination" @page-change="pageChange">
         <template #columns>
-          <a-table-column title="任务名称" data-index="taskName" :width="220" fixed="left" ellipsis tooltip></a-table-column>
-          <a-table-column title="创建人" data-index="createUser" :width="100"></a-table-column>
-          <a-table-column title="执行状态" data-index="execStatus" :width="120">
+          <a-table-column :title="$t('list.index.5q08sf2dj8k0')" data-index="taskName" :width="220" fixed="left" ellipsis tooltip></a-table-column>
+          <a-table-column :title="$t('list.index.5q08sf2djbk0')" data-index="createUser" :width="100"></a-table-column>
+          <a-table-column :title="$t('list.index.5q08sf2djew0')" data-index="execStatus" :width="120">
             <template #cell="{ record }">
               {{ execStatusMap(record.execStatus) }}
             </template>
           </a-table-column>
-          <a-table-column title="进度" data-index="execProgress" :width="150">
+          <a-table-column :title="$t('list.index.5q08sf2djks0')" data-index="execProgress" :width="150">
             <template #cell="{ record }">
               <a-progress :percent="record.execStatus === 2 ? 1 : (+record.execProgress || 0)" />
             </template>
           </a-table-column>
-          <a-table-column title="已执行时长" :width="150">
+          <a-table-column :title="$t('list.index.5q08sf2djoo0')" :width="150">
             <template #cell="{ record }">
               {{ calcTime(record) }}
             </template>
           </a-table-column>
-          <a-table-column title="任务创建时间" data-index="createTime" :width="200"></a-table-column>
-          <a-table-column title="执行开始时间" data-index="execTime" :width="200"></a-table-column>
-          <a-table-column title="任务完成时间" data-index="finishTime" :width="200"></a-table-column>
-          <a-table-column title="操作" align="center" :width="300" fixed="right">
+          <a-table-column :title="$t('list.index.5q08sf2djt00')" data-index="createTime" :width="200"></a-table-column>
+          <a-table-column :title="$t('list.index.5q08sf2dhng0')" data-index="execTime" :width="200"></a-table-column>
+          <a-table-column :title="$t('list.index.5q08sf2djvk0')" data-index="finishTime" :width="200"></a-table-column>
+          <a-table-column :title="$t('list.index.5q08sf2djyc0')" align="center" :width="300" fixed="right">
             <template #cell="{ record }">
               <a-button
                 size="mini"
@@ -94,7 +94,7 @@
                 <template #icon>
                   <icon-edit />
                 </template>
-                <template #default>详情</template>
+                <template #default>{{$t('list.index.5q08sf2dk0o0')}}</template>
               </a-button>
               <a-button
                 v-if="record.execStatus === 1"
@@ -105,7 +105,7 @@
                 <template #icon>
                   <icon-pause />
                 </template>
-                <template #default>结束迁移</template>
+                <template #default>{{$t('list.index.5q08sf2dk3c0')}}</template>
               </a-button>
               <a-button
                 v-if="record.execStatus === 0"
@@ -117,9 +117,9 @@
                 <template #icon>
                   <icon-play-arrow />
                 </template>
-                <template #default>启动</template>
+                <template #default>{{$t('list.index.5q08sf2dk5s0')}}</template>
               </a-button>
-              <a-popconfirm v-if="record.execStatus === 0 || record.execStatus === 2" content="你确认删除此任务吗？" @ok="deleteTheTask(record)">
+              <a-popconfirm v-if="record.execStatus === 0 || record.execStatus === 2" :content="$t('list.index.5q08sf2dk800')" @ok="deleteTheTask(record)">
                 <a-button
                   size="mini"
                   type="text"
@@ -127,7 +127,7 @@
                   <template #icon>
                     <icon-delete />
                   </template>
-                  <template #default>删除</template>
+                  <template #default>{{$t('list.index.5q08sf2dka40')}}</template>
                 </a-button>
               </a-popconfirm>
             </template>
@@ -144,6 +144,9 @@ import { Message } from '@arco-design/web-vue'
 import { list, start, stop, deleteTask, userList } from '@/api/list'
 import dayjs from 'dayjs'
 import useTheme from '@/hooks/theme'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const { currentTheme } = useTheme()
 
@@ -181,9 +184,9 @@ const rowSelection = reactive({
 // status map
 const execStatusMap = (status) => {
   const maps = {
-    0: '未启动',
-    1: '迁移中',
-    2: '已完成'
+    0: t('list.index.5q08sf2dha80'),
+    1: t('list.index.5q08sf2dhek0'),
+    2: t('list.index.5q08sf2dhj00')
   }
   return maps[status]
 }
@@ -229,7 +232,7 @@ const calcTime = row => {
     const seconds = row.finishTime ? dayjs(row.finishTime).diff(dayjs(row.execTime), 'seconds') : dayjs().diff(dayjs(row.execTime), 'seconds')
     const hour = parseInt(seconds / 3600)
     const minute = parseInt((seconds - hour * 3600) / 60)
-    return `${hour ? hour + '小时' : ''} ${minute ? minute + '分钟' : ''}`
+    return `${hour ? hour + t('list.index.5q08sf2dkc80') : ''} ${minute ? minute + t('list.index.5q08sf2dkek0') : ''}`
   } else {
     return ''
   }

@@ -1,37 +1,37 @@
 <template>
   <div class="step3-container">
     <div class="warn-con">
-      <a-alert>提示：DataKit本着资源利用最大化原则尽量让子任务并行执行，为每个子任务创建一个数据迁移代理（一台机器可以创建多个迁移代理），在资源不足时则等待资源顺序执行。</a-alert>
+      <a-alert>{{$t('step3.index.5q093f8y7g00')}}</a-alert>
     </div>
     <div class="search-con">
       <a-form :model="form" layout="inline">
         <a-form-item field="ip" style="margin-left: -17px;">
-          <a-input v-model.trim="form.ip" allow-clear placeholder="请输入物理机IP" style="width: 160px;"></a-input>
+          <a-input v-model.trim="form.ip" allow-clear :placeholder="$t('step3.index.5q093f8y8b40')" style="width: 160px;"></a-input>
         </a-form-item>
         <a-form-item field="hostname" style="margin-left: -17px;">
-          <a-input v-model.trim="form.hostname" allow-clear placeholder="请输入物理机名称" style="width: 160px;"></a-input>
+          <a-input v-model.trim="form.hostname" allow-clear :placeholder="$t('step3.index.5q093f8y8fs0')" style="width: 160px;"></a-input>
         </a-form-item>
         <a-form-item field="cpu" style="margin-left: -17px;">
-          <a-input v-model.number="form.cpu" max-length="5" allow-clear placeholder="请输入CPU核数" style="width: 160px;"></a-input>
+          <a-input v-model.number="form.cpu" max-length="5" allow-clear :placeholder="$t('step3.index.5q093f8y8j40')" style="width: 160px;"></a-input>
         </a-form-item>
         <a-form-item field="memory" style="margin-left: -17px;">
-          <a-input v-model.number="form.memory" max-length="10" allow-clear placeholder="剩余内存大于多少M" style="width: 160px;"></a-input>
+          <a-input v-model.number="form.memory" max-length="10" allow-clear :placeholder="$t('step3.index.5q093f8y8lw0')" style="width: 160px;"></a-input>
         </a-form-item>
         <a-form-item field="disk" style="margin-left: -17px;">
-          <a-input v-model.number="form.disk" max-length="10" allow-clear placeholder="剩余硬盘大于多少G" style="width: 160px;"></a-input>
+          <a-input v-model.number="form.disk" max-length="10" allow-clear :placeholder="$t('step3.index.5q093f8y8p40')" style="width: 160px;"></a-input>
         </a-form-item>
         <a-form-item style="margin-left: -17px;">
           <a-button type="outline" @click="getFilterData">
             <template #icon>
               <icon-search />
             </template>
-            <template #default>查询</template>
+            <template #default>{{$t('step3.index.5q093f8y8ss0')}}</template>
           </a-button>
           <a-button style="margin-left: 10px;" @click="resetQuery">
             <template #icon>
               <icon-sync />
             </template>
-            <template #default>重置</template>
+            <template #default>{{$t('step3.index.5q093f8y8vk0')}}</template>
           </a-button>
         </a-form-item>
       </a-form>
@@ -39,35 +39,35 @@
     <div class="table-con">
       <div class="select-info-con">
         <div class="select-tips">
-          <span class="tips-item">迁移子任务：<b>{{ props.subTaskConfig.length }}</b>个</span>
-          <span class="tips-item">已选择机器：<b>{{ selectedKeys.length }}</b>台</span>
+          <span class="tips-item">{{$t('step3.index.5q093f8y8y80')}}<b>{{ props.subTaskConfig.length }}</b>{{$t('step3.index.5q093f8y91s0')}}</span>
+          <span class="tips-item">{{$t('step3.index.5q093f8y94c0')}}<b>{{ selectedKeys.length }}</b>{{$t('step3.index.5q093f8y9740')}}</span>
         </div>
         <div class="refresh-con">
           <a-link @click="refreshData">
             <icon-refresh />
-            <span class="btn-txt">刷新</span>
+            <span class="btn-txt">{{$t('step3.index.5q093f8y99s0')}}</span>
           </a-link>
         </div>
       </div>
       <a-table :loading="loading" row-key="hostId" :data="tableData" :row-selection="rowSelection" v-model:selectedKeys="selectedKeys" :bordered="false" :stripe="!currentTheme" :hoverable="!currentTheme" :pagination="pagination" @page-change="pageChange" @selection-change="selectionChange">
         <template #columns>
-          <a-table-column title="物理机IP" data-index="publicIp" fixed="left" :width="150"></a-table-column>
-          <a-table-column title="物理机名称+OS" data-index="hostname" :width="200" ellipsis tooltip></a-table-column>
-          <a-table-column title="配置信息" :width="300" ellipsis tooltip>
+          <a-table-column :title="$t('step3.index.5q093f8y9ck0')" data-index="publicIp" fixed="left" :width="150"></a-table-column>
+          <a-table-column :title="$t('step3.index.5q093f8y9fg0')" data-index="hostname" :width="200" ellipsis tooltip></a-table-column>
+          <a-table-column :title="$t('step3.index.5q093f8y9i40')" :width="300" ellipsis tooltip>
             <template #cell="{ record }">
-              {{ record.os ? '系统：' + record.os : '' }}
-              {{ record.os ? ',CPU架构：' + record.cpuArch : '' }}
-              {{ record.baseInfos ? `,CPU核数：${record.baseInfos[0]}，剩余内存：${record.baseInfos[1]}M，剩余硬盘容量：${record.baseInfos[2]}G` : ''}}
+              {{ record.os ? $t('step3.index.5q093f8y9m80') + record.os : '' }}
+              {{ record.os ? $t('step3.index.5q096184bp80') + record.cpuArch : '' }}
+              {{ record.baseInfos ? $t('step3.index.5q097pi0m540', { a: record.baseInfos[0], b: record.baseInfos[1], c: record.baseInfos[2] }) : ''}}
             </template>
           </a-table-column>
-          <a-table-column title="是否安装迁移套件" data-index="installPortalStatus" align="center" :width="200">
+          <a-table-column :title="$t('step3.index.5q093f8y9p40')" data-index="installPortalStatus" align="center" :width="200">
             <template #cell="{ record }">
               <span v-if="record.installPortalStatus !== 0">{{ statusMap(record.installPortalStatus) }}</span>
               <a-popover v-if="record.installPortalStatus === 2">
                 <span class="tips"><icon-info-circle size="15" /></span>
                 <template #content>
-                  <p>安装用户: {{ record.installUser || '-' }}</p>
-                  <p>安装目录: {{ record.installPath || '-' }}</p>
+                  <p>{{$t('step3.index.5q094h74md80')}}: {{ record.installUser || '-' }}</p>
+                  <p>{{$t('step3.index.5q094raosqg0')}}: {{ record.installPath || '-' }}</p>
                 </template>
               </a-popover>
               <a-button
@@ -79,7 +79,7 @@
                 <template #icon>
                   <icon-play-arrow />
                 </template>
-                <template #default>开始安装</template>
+                <template #default>{{$t('step3.index.5q093f8y9rs0')}}</template>
               </a-button>
               <a-button
                 v-if="record.installPortalStatus === 10"
@@ -90,7 +90,7 @@
                 <template #icon>
                   <icon-download />
                 </template>
-                <template #default>日志</template>
+                <template #default>{{$t('step3.index.5q093f8y9us0')}}</template>
               </a-button>
               <a-button
                 v-if="record.installPortalStatus === 10"
@@ -101,21 +101,21 @@
                 <template #icon>
                   <icon-play-arrow />
                 </template>
-                <template #default>重新安装</template>
+                <template #default>{{$t('step3.index.5q093f8y9zg0')}}</template>
               </a-button>
             </template>
           </a-table-column>
-          <a-table-column title="正在执行子任务数" data-index="tasks" align="center" :width="150">
+          <a-table-column :title="$t('step3.index.5q093f8ya2c0')" data-index="tasks" align="center" :width="150">
             <template #cell="{ record }">
               {{ record.tasks.length }}
             </template>
           </a-table-column>
-          <a-table-column title="正在执行的子任务" data-index="tasks" :width="150">
+          <a-table-column :title="$t('step3.index.5q093f8ya4w0')" data-index="tasks" :width="150">
             <template #cell="{ record }">
               {{ record.tasks.map(item => `#${item.id}`).join(', ')}}
             </template>
           </a-table-column>
-          <a-table-column title="最大子任务数" data-index="d" :width="150"></a-table-column>
+          <a-table-column :title="$t('step3.index.5q093f8yabs0')" data-index="d" :width="150"></a-table-column>
         </template>
       </a-table>
     </div>
@@ -130,6 +130,9 @@ import { hostsData, downloadEnvLog, reInstallPortal } from '@/api/task'
 import useTheme from '@/hooks/theme'
 import dayjs from 'dayjs'
 import PortalInstall from '../components/PortalInstall.vue'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const { currentTheme } = useTheme()
 
@@ -175,10 +178,10 @@ const curHostId = ref()
 
 const statusMap = (status) => {
   const maps = {
-    0: '未安装',
-    1: '安装中',
-    2: '已安装',
-    10: '安装失败'
+    0: t('step3.index.5q093f8yae80'),
+    1: t('step3.index.5q093f8yagw0'),
+    2: t('step3.index.5q093f8yajg0'),
+    10: t('step3.index.5q093f8yals0')
   }
   return maps[status]
 }

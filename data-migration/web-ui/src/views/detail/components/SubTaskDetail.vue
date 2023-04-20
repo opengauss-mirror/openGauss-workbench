@@ -7,32 +7,32 @@
   >
     <template #title>
       <div class="title-con">
-        <div class="tab-con">
-          <span class="tab-item" :class="tabActive === 1 && 'tab-item-active'" @click="tabChange(1)">子任务详情（ID：{{ props.subTaskId }}，{{ subTaskInfo.migrationModelId === 1 ? '离线模式' : '在线模式' }}）</span>
-          <span class="tab-item" :class="tabActive === 2 && 'tab-item-active'" @click="tabChange(2)">日志</span>
+        <div class="tab-con"><div></div>
+          <span class="tab-item" :class="tabActive === 1 && 'tab-item-active'" @click="tabChange(1)">{{$t('components.SubTaskDetail.5q09ruxan0s0', { subTaskId: props.subTaskId })}}{{ subTaskInfo.migrationModelId === 1 ? $t('components.SubTaskDetail.5q09t2cud100') : $t('components.SubTaskDetail.5q09t2cudw80') }}）</span>
+          <span class="tab-item" :class="tabActive === 2 && 'tab-item-active'" @click="tabChange(2)">{{$t('components.SubTaskDetail.5q09prnzmfw0')}}</span>
         </div>
         <span class="task-status">
-          状态：
+          {{$t('components.SubTaskDetail.5q09prnzn6c0')}}
           <b>{{ execSubStatusMap(subTaskInfo.execStatus) }}</b>
         </span>
       </div>
     </template>
     <div class="task-detail-con">
-      <a-spin v-if="loading" :loading="loading" tip="数据加载中">
+      <a-spin v-if="loading" :loading="loading" :tip="$t('components.SubTaskDetail.5q09prnznas0')">
         <div class="loading-con"></div>
       </a-spin>
       <div v-if="descData.length" class="task-desc-con">
         <a-descriptions :data="descData" layout="inline-horizontal" :column="5" bordered />
       </div>
       <div v-if="tabActive === 1 && subTaskInfo.migrationModelId === 1" class="progress-con">
-        <span class="progress-info">进度</span>
+        <span class="progress-info">{{$t('components.SubTaskDetail.5q09prnzne80')}}</span>
         <a-progress :status="subTaskInfo.execStatus === 500 ? 'danger' : 'success'" size="large" :percent="subTaskInfo.execStatus === 100 ? 1 : (subTaskInfo.migrationProcess || 0)" />
       </div>
       <div v-if="tabActive === 1 && subTaskInfo.migrationModelId === 1" class="table-con">
         <big-data-list :full-data="fullData" :sub-task-info="subTaskInfo" :record-counts="recordCounts" />
       </div>
       <div v-if="tabActive === 1 && subTaskInfo.migrationModelId === 2" class="record-con">
-        <div class="record-title">在线迁移过程记录</div>
+        <div class="record-title">{{$t('components.SubTaskDetail.5q09prnzngw0')}}</div>
         <div class="record-list">
           <a-steps :default-current="Object.keys(statusRecords).length + 1" type="dot" direction="vertical">
             <a-step v-for="(value, key) in statusRecords" :key="key">
@@ -46,8 +46,8 @@
                     <div class="record-item-info">
                       <span class="info">
                         {{ execSubStatusMap(item.statusId) }}
-                        <i v-if="item.statusId === 2" @click="globalVisible = !globalVisible">{{ globalVisible ? '收起' : '查看' }}</i>
-                        <i v-if="item.statusId === 8" @click="increaseVisible = !increaseVisible">{{ increaseVisible ? '收起' : '查看' }}</i>
+                        <i v-if="item.statusId === 2" @click="globalVisible = !globalVisible">{{ globalVisible ? $t('components.SubTaskDetail.5q09prnznk00') : $t('components.SubTaskDetail.5q09prnznms0') }}</i>
+                        <i v-if="item.statusId === 8" @click="increaseVisible = !increaseVisible">{{ increaseVisible ? $t('components.SubTaskDetail.5q09prnznk00') : $t('components.SubTaskDetail.5q09prnznms0') }}</i>
                       </span>
                       <span class="time">{{ item.createTime }}</span>
                     </div>
@@ -59,20 +59,20 @@
                         <div class="list-title">
                           <div class="list-title-l">
                             <icon-info-circle size="15" />
-                            <span>累计增量迁移对象数：{{ increaseData.count }} 条</span>
+                            <span>{{$t('components.SubTaskDetail.5q09tn4uzy40')}}{{ increaseData.count }} {{$t('components.SubTaskDetail.5q09prnznpk0')}}</span>
                           </div>
                           <div class="list-title-r">
                             <span>{{ increaseData.createTime }}</span>
                           </div>
                         </div>
                         <div class="list-info-em">
-                          <span>增量抽取速度：{{ increaseData.sourceSpeed || 0 }} 条/s</span>
+                          <span>{{$t('components.SubTaskDetail.5q09urmrt580')}}{{ increaseData.sourceSpeed || 0 }} {{$t('components.SubTaskDetail.5q09prnzns40')}}</span>
                         </div>
                         <div class="list-info-em">
-                          <span>增量写入速度：{{ increaseData.sinkspeed || 0 }} 条/s</span>
+                          <span>{{$t('components.SubTaskDetail.5q09urmruc00')}}{{ increaseData.sinkspeed || 0 }} {{$t('components.SubTaskDetail.5q09prnzns40')}}</span>
                         </div>
                         <div class="list-info">
-                          <span>剩余待写入数据：{{ increaseData.rest }} 条</span>
+                          <span>{{$t('components.SubTaskDetail.5q09urmruhc0')}}{{ increaseData.rest }} {{$t('components.SubTaskDetail.5q09prnznpk0')}}</span>
                         </div>
                       </div>
                     </div>
@@ -95,7 +95,7 @@
                 <template #icon>
                   <icon-download />
                 </template>
-                下载日志
+                {{$t('components.SubTaskDetail.5q09prnznvg0')}}
               </a-button>
             </template>
           </a-list-item>
@@ -110,6 +110,9 @@ import { ref, watch, onMounted } from 'vue'
 import { subTaskDetail, downloadLog } from '@/api/detail'
 import BigDataList from './BigDataList.vue'
 import dayjs from 'dayjs'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const props = defineProps({
   open: Boolean,
@@ -132,22 +135,22 @@ const increaseData = ref({})
 // sub task status map
 const execSubStatusMap = (status) => {
   const maps = {
-    0: '未启动',
-    1: '全量迁移开始',
-    2: '全量迁移进行中',
-    3: '全量迁移完成',
-    4: '全量校验开始',
-    5: '全量校验中',
-    6: '全量检验完成',
-    7: '增量迁移开始',
-    8: '增量迁移进行中',
-    9: '增量迁移已停止',
-    10: '反向迁移开始',
-    11: '反向迁移进行中',
-    12: '反向迁移已停止',
-    100: '迁移完成',
-    500: '迁移失败',
-    1000: '等待资源中'
+    0: t('components.SubTaskDetail.5q09prnznzg0'),
+    1: t('components.SubTaskDetail.5q09prnzo3s0'),
+    2: t('components.SubTaskDetail.5q09prnzo6g0'),
+    3: t('components.SubTaskDetail.5q09prnzoa00'),
+    4: t('components.SubTaskDetail.5q09prnzodo0'),
+    5: t('components.SubTaskDetail.5q09prnzohc0'),
+    6: t('components.SubTaskDetail.5q09prnzok00'),
+    7: t('components.SubTaskDetail.5q09prnzong0'),
+    8: t('components.SubTaskDetail.5q09prnzoq80'),
+    9: t('components.SubTaskDetail.5q09prnzotc0'),
+    10: t('components.SubTaskDetail.5q09prnzoxc0'),
+    11: t('components.SubTaskDetail.5q09prnzp000'),
+    12: t('components.SubTaskDetail.5q09prnzp2k0'),
+    100: t('components.SubTaskDetail.5q09prnzp540'),
+    500: t('components.SubTaskDetail.5q09prnzp740'),
+    1000: t('components.SubTaskDetail.5q09prnzp980')
   }
   return maps[status]
 }
@@ -155,10 +158,10 @@ const execSubStatusMap = (status) => {
 // record map
 const recordsMap = (key) => {
   const maps = {
-    1: '启动迁移',
-    2: '停止增量',
-    3: '启动反向',
-    100: '结束迁移'
+    1: t('components.SubTaskDetail.5q09prnzpb80'),
+    2: t('components.SubTaskDetail.5q09prnzpd40'),
+    3: t('components.SubTaskDetail.5q09prnzpfk0'),
+    100: t('components.SubTaskDetail.5q09prnzphk0')
   }
   return maps[key]
 }
@@ -166,19 +169,19 @@ const recordsMap = (key) => {
 // log map
 const logsMap = (key) => {
   const maps = {
-    'sink.log': '数据校验sink端日志',
-    'source.log': '数据校验source端日志',
-    'check.log': '数据校验check端日志',
-    'full_migration.log': '全量迁移日志',
-    'server.log': 'zookeeper+kafka日志',
-    'schema-registry.log': 'schema-registry日志',
-    'connect.log': '增量迁移日志',
-    'connect_source.log': '增量迁移source端日志',
-    'connect_sink.log': '增量迁移sink端日志',
-    'reverse_connect.log': '反向迁移日志',
-    'reverse_connect_source.log': '反向迁移source端日志',
-    'reverse_connect_sink.log': '反向迁移sink端日志',
-    'error.log': '执行时错误日志'
+    'sink.log': t('components.SubTaskDetail.5q09prnzpkg0'),
+    'source.log': t('components.SubTaskDetail.5q09prnzpmk0'),
+    'check.log': t('components.SubTaskDetail.5q09prnzpps0'),
+    'full_migration.log': t('components.SubTaskDetail.5q09prnzprs0'),
+    'server.log': t('components.SubTaskDetail.5q09vm8iktw0'),
+    'schema-registry.log': t('components.SubTaskDetail.5q09wjm47ow0'),
+    'connect.log': t('components.SubTaskDetail.5q09prnzpug0'),
+    'connect_source.log': t('components.SubTaskDetail.5q09prnzpxc0'),
+    'connect_sink.log': t('components.SubTaskDetail.5q09prnzq080'),
+    'reverse_connect.log': t('components.SubTaskDetail.5q09prnzq2o0'),
+    'reverse_connect_source.log': t('components.SubTaskDetail.5q09prnzq680'),
+    'reverse_connect_sink.log': t('components.SubTaskDetail.5q09prnzq880'),
+    'error.log': t('components.SubTaskDetail.5q09prnzqac0')
   }
   return `(${maps[key]})` || ''
 }
@@ -246,81 +249,81 @@ const getSubTaskDetail = () => {
 
     const offlineDesc = [
       {
-        label: '属于任务：',
+        label: t('components.SubTaskDetail.5q09prnzqck0'),
         value: props.taskInfo.taskName,
         span: 3
       },
       {
-        label: '创建时间：',
+        label: t('components.SubTaskDetail.5q09prnzqew0'),
         value: subTaskInfo.value.createTime,
         span: 2
       },
       {
-        label: '源库名：',
+        label: t('components.SubTaskDetail.5q09prnzqgw0'),
         value: subTaskInfo.value.sourceDb,
         span: 3
       },
       {
-        label: '目的库名：',
+        label: t('components.SubTaskDetail.5q09prnzqk00'),
         value: subTaskInfo.value.targetDb,
         span: 2
       },
       {
-        label: '执行开始时间：',
+        label: t('components.SubTaskDetail.5q09prnzqlw0'),
         value: subTaskInfo.value.execTime,
         span: 3
       },
       {
-        label: '已执行：',
-        value: `${hour ? hour + '小时' : ''} ${minute ? minute + '分钟' : ''}`,
+        label: t('components.SubTaskDetail.5q09prnzqnw0'),
+        value: `${hour ? hour + t('components.SubTaskDetail.5q09prnzqpw0') : ''} ${minute ? minute + t('components.SubTaskDetail.5q09prnzqs00') : ''}`,
         span: 2
       },
       {
-        label: '迁移情况：',
-        value: `总迁移对象数量：${(res.data.totalWaitCount || 0) + (res.data.totalRunningCount || 0) + (res.data.totalFinishCount || 0) + (res.data.totalErrorCount || 0)}，未开始：${res.data.totalWaitCount || 0}，迁移中：${res.data.totalRunningCount || 0}，成功：${res.data.totalFinishCount || 0}，失败：${res.data.totalErrorCount || 0}`,
+        label: t('components.SubTaskDetail.5q09prnzqvk0'),
+        value: t('components.SubTaskDetail.5q09xhsvcq40', { total: (res.data.totalWaitCount || 0) + (res.data.totalRunningCount || 0) + (res.data.totalFinishCount || 0) + (res.data.totalErrorCount || 0), totalWaitCount: res.data.totalWaitCount || 0, totalRunningCount: res.data.totalRunningCount || 0, totalFinishCount: res.data.totalFinishCount || 0, totalErrorCount: res.data.totalErrorCount || 0 }),
         span: 5
       }
     ]
 
     const onlineDesc = [
       {
-        label: '属于任务：',
+        label: t('components.SubTaskDetail.5q09prnzqck0'),
         value: props.taskInfo.taskName,
         span: 3
       },
       {
-        label: '创建时间：',
+        label: t('components.SubTaskDetail.5q09prnzqew0'),
         value: subTaskInfo.value.createTime,
         span: 2
       },
       {
-        label: '全量迁移：',
-        value: res.data.fullProcess ? `总迁移对象：${(res.data.totalWaitCount || 0) + (res.data.totalRunningCount || 0) + (res.data.totalFinishCount || 0) + (res.data.totalErrorCount || 0)}，未开始：${res.data.totalWaitCount || 0}，迁移中：${res.data.totalRunningCount || 0}，成功：${res.data.totalFinishCount || 0}，失败：${res.data.totalErrorCount || 0}` : '未启动',
+        label: t('components.SubTaskDetail.5q09prnzqxs0'),
+        value: res.data.fullProcess ? t('components.SubTaskDetail.5q0a1jl7o9s0', { total: (res.data.totalWaitCount || 0) + (res.data.totalRunningCount || 0) + (res.data.totalFinishCount || 0) + (res.data.totalErrorCount || 0), totalWaitCount: res.data.totalWaitCount || 0, totalRunningCount: res.data.totalRunningCount || 0, totalFinishCount: res.data.totalFinishCount || 0, totalErrorCount: res.data.totalErrorCount || 0 }) : t('components.SubTaskDetail.5q09prnznzg0'),
         span: 3
       },
       {
-        label: '执行时间：',
+        label: t('components.SubTaskDetail.5q09prnzqzs0'),
         value: subTaskInfo.value.execTime,
         span: 2
       },
       {
-        label: '增量迁移：',
-        value: res.data.incrementalProcess ? `总迁移对象：${0}，未开始：${0}，迁移中：${0}，成功：${0}，失败：${0}` : '未启动',
+        label: t('components.SubTaskDetail.5q09prnzr2o0'),
+        value: res.data.incrementalProcess ? t('components.SubTaskDetail.5q0a1jl7o9s0', { total: 0, totalWaitCount: 0, totalRunningCount: 0, totalFinishCount: 0, totalErrorCount: 0 }) : t('components.SubTaskDetail.5q09prnznzg0'),
         span: 3
       },
       {
-        label: '源库至目的库：',
-        value: `${subTaskInfo.value.sourceDb} 至 ${subTaskInfo.value.targetDb}`,
+        label: t('components.SubTaskDetail.5q09prnzr4s0'),
+        value: `${subTaskInfo.value.sourceDb} ${t('components.SubTaskDetail.5q0a5opxm3c0')} ${subTaskInfo.value.targetDb}`,
         span: 2
       },
       {
-        label: '反向迁移：',
-        value: res.data.reverseProcess ? `总迁移对象：${0}，未开始：${0}，迁移中：${0}，成功：${0}，失败：${0}` : '未启动',
+        label: t('components.SubTaskDetail.5q09prnzux40'),
+        value: res.data.reverseProcess ? t('components.SubTaskDetail.5q0a1jl7o9s0', { total: 0, totalWaitCount: 0, totalRunningCount: 0, totalFinishCount: 0, totalErrorCount: 0 }) : t('components.SubTaskDetail.5q09prnznzg0'),
         span: 3
       },
       {
-        label: '已执行：',
-        value: `${hour ? hour + '小时' : ''} ${minute ? minute + '分钟' : ''}`,
+        label: t('components.SubTaskDetail.5q09prnzqnw0'),
+        value: `${hour ? hour + t('components.SubTaskDetail.5q09prnzqpw0') : ''} ${minute ? minute + t('components.SubTaskDetail.5q09prnzqs00') : ''}`,
         span: 2
       }
     ]
@@ -335,16 +338,16 @@ const getSubTaskDetail = () => {
       procedure: res.data.produceCounts
     }
 
-    // 全量表格数据
+    // fullProcess data
     const fullProcessDetail = res.data.fullProcess?.execResultDetail ? JSON.parse(res.data.fullProcess?.execResultDetail) : null
     fullData.value = fullProcessDetail || null
 
-    // 过程记录
+    // process record
     if (subTaskInfo.value.migrationModelId === 2) {
       statusRecords.value = res.data.statusRecords
     }
 
-    // 增量迁移详情
+    // increase process detail
     const increaseProcessDetail = res.data.incrementalProcess?.execResultDetail ? JSON.parse(res.data.incrementalProcess?.execResultDetail) : null
     if (increaseProcessDetail) {
       increaseData.value = {
