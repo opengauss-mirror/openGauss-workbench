@@ -1,3 +1,27 @@
+/*
+ * Copyright (c) 2022 Huawei Technologies Co.,Ltd.
+ *
+ * openGauss is licensed under Mulan PSL v2.
+ * You can use this software according to the terms and conditions of the Mulan PSL v2.
+ * You may obtain a copy of Mulan PSL v2 at:
+ *
+ * http://license.coscl.org.cn/MulanPSL2
+ *
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ * EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ * MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ * See the Mulan PSL v2 for more details.
+ * -------------------------------------------------------------------------
+ *
+ * OpsJdbcDbClusterNodeServiceImpl.java
+ *
+ * IDENTIFICATION
+ * openGauss-visualtool/visualtool-service/src/main/java/org/opengauss/admin/system/service/ops/impl/OpsJdbcDbClusterNodeServiceImpl.java
+ *
+ * -------------------------------------------------------------------------
+ */
+
+
 package org.opengauss.admin.system.service.ops.impl;
 
 import cn.hutool.core.collection.CollUtil;
@@ -222,22 +246,22 @@ public class OpsJdbcDbClusterNodeServiceImpl extends ServiceImpl<OpsJdbcDbCluste
     }
 
     @Override
-    public Map<String,Object> monitor(String clusterNodeId, String businessId) {
-        Map<String,Object> res = new HashMap<>();
-        res.put("res",true);
+    public Map<String, Object> monitor(String clusterNodeId, String businessId) {
+        Map<String, Object> res = new HashMap<>();
+        res.put("res", true);
 
         OpsJdbcDbClusterNodeEntity clusterNodeEntity = getById(clusterNodeId);
-        if (Objects.isNull(clusterNodeEntity)){
-            res.put("msg","Node information not found");
-            res.put("res",false);
+        if (Objects.isNull(clusterNodeEntity)) {
+            res.put("msg", "Node information not found");
+            res.put("res", false);
             return res;
         }
 
         String clusterId = clusterNodeEntity.getClusterId();
         OpsJdbcDbClusterEntity clusterEntity = opsJdbcDbClusterService.getById(clusterId);
-        if (Objects.isNull(clusterEntity)){
-            res.put("msg","Cluster information not found");
-            res.put("res",false);
+        if (Objects.isNull(clusterEntity)) {
+            res.put("msg", "Cluster information not found");
+            res.put("res", false);
             return res;
         }
 
@@ -245,14 +269,14 @@ public class OpsJdbcDbClusterNodeServiceImpl extends ServiceImpl<OpsJdbcDbCluste
         try {
             connection = JdbcUtil.getConnection(clusterNodeEntity.getUrl(), clusterNodeEntity.getUsername(), clusterNodeEntity.getPassword());
 
-            if (Objects.isNull(connection) || connection.isClosed()){
-                res.put("msg","JDBC connection failed");
-                res.put("res",false);
+            if (Objects.isNull(connection) || connection.isClosed()) {
+                res.put("msg", "JDBC connection failed");
+                res.put("res", false);
                 return res;
             }
         } catch (Exception e) {
-            res.put("msg","JDBC connection failed");
-            res.put("res",false);
+            res.put("msg", "JDBC connection failed");
+            res.put("res", false);
             return res;
         }
 
@@ -262,8 +286,8 @@ public class OpsJdbcDbClusterNodeServiceImpl extends ServiceImpl<OpsJdbcDbCluste
         Future<?> future = threadPoolTaskExecutor.submit(() -> {
             try {
                 doMonitor(wsSession, finalConnection, clusterEntity.getDbType());
-            }finally {
-                if (Objects.nonNull(finalConnection)){
+            } finally {
+                if (Objects.nonNull(finalConnection)) {
                     try {
                         finalConnection.close();
                     } catch (SQLException ignore) {
@@ -279,13 +303,13 @@ public class OpsJdbcDbClusterNodeServiceImpl extends ServiceImpl<OpsJdbcDbCluste
     }
 
     private void doMonitor(WsSession wsSession, Connection connection, DbTypeEnum dbType) {
-        while (wsSession.getSession().isOpen()){
+        while (wsSession.getSession().isOpen()) {
             JdbcMonitorVO jdbcMonitorVO = new JdbcMonitorVO();
 
-            if (dbType == DbTypeEnum.MYSQL){
-                doMonitorMysql(connection,jdbcMonitorVO);
-            }else if (dbType == DbTypeEnum.OPENGAUSS){
-                doMonitorOpenGauss(connection,jdbcMonitorVO);
+            if (dbType == DbTypeEnum.MYSQL) {
+                doMonitorMysql(connection, jdbcMonitorVO);
+            } else if (dbType == DbTypeEnum.OPENGAUSS) {
+                doMonitorOpenGauss(connection, jdbcMonitorVO);
             }
 
             wsUtil.sendText(wsSession, JSON.toJSONString(jdbcMonitorVO));
@@ -300,26 +324,26 @@ public class OpsJdbcDbClusterNodeServiceImpl extends ServiceImpl<OpsJdbcDbCluste
 
     private void doMonitorOpenGauss(Connection connection, JdbcMonitorVO jdbcMonitorVO) {
         CountDownLatch countDownLatch = new CountDownLatch(3);
-        threadPoolTaskExecutor.submit(()->{
+        threadPoolTaskExecutor.submit(() -> {
             try {
                 jdbcMonitorVO.setLockNum(opsClusterService.lock(connection));
-            }finally {
+            } finally {
                 countDownLatch.countDown();
             }
         });
 
-        threadPoolTaskExecutor.submit(()->{
+        threadPoolTaskExecutor.submit(() -> {
             try {
                 jdbcMonitorVO.setSessionNum(opsClusterService.session(connection));
-            }finally {
+            } finally {
                 countDownLatch.countDown();
             }
         });
 
-        threadPoolTaskExecutor.submit(()->{
+        threadPoolTaskExecutor.submit(() -> {
             try {
                 jdbcMonitorVO.setConnNum(opsClusterService.connectNum(connection));
-            }finally {
+            } finally {
                 countDownLatch.countDown();
             }
         });
@@ -335,50 +359,50 @@ public class OpsJdbcDbClusterNodeServiceImpl extends ServiceImpl<OpsJdbcDbCluste
     private void doMonitorMysql(Connection connection, JdbcMonitorVO jdbcMonitorVO) {
         CountDownLatch countDownLatch = new CountDownLatch(6);
 
-        threadPoolTaskExecutor.submit(()->{
+        threadPoolTaskExecutor.submit(() -> {
             try {
                 jdbcMonitorVO.setRole(role(connection));
-            }finally {
+            } finally {
                 countDownLatch.countDown();
             }
         });
 
-        threadPoolTaskExecutor.submit(()->{
+        threadPoolTaskExecutor.submit(() -> {
             try {
                 jdbcMonitorVO.setConnNum(connNum(connection));
-            }finally {
+            } finally {
                 countDownLatch.countDown();
             }
         });
 
-        threadPoolTaskExecutor.submit(()->{
+        threadPoolTaskExecutor.submit(() -> {
             try {
                 jdbcMonitorVO.setQps(qps(connection));
-            }finally {
+            } finally {
                 countDownLatch.countDown();
             }
         });
 
-        threadPoolTaskExecutor.submit(()->{
+        threadPoolTaskExecutor.submit(() -> {
             try {
                 jdbcMonitorVO.setTps(tps(connection));
-            }finally {
+            } finally {
                 countDownLatch.countDown();
             }
         });
 
-        threadPoolTaskExecutor.submit(()->{
+        threadPoolTaskExecutor.submit(() -> {
             try {
                 jdbcMonitorVO.setMemoryUsed(memoryUsed(connection));
-            }finally {
+            } finally {
                 countDownLatch.countDown();
             }
         });
 
-        threadPoolTaskExecutor.submit(()->{
+        threadPoolTaskExecutor.submit(() -> {
             try {
                 jdbcMonitorVO.setTableSpaceUsed(tableSpaceUsed(connection));
-            }finally {
+            } finally {
                 countDownLatch.countDown();
             }
         });
@@ -393,14 +417,14 @@ public class OpsJdbcDbClusterNodeServiceImpl extends ServiceImpl<OpsJdbcDbCluste
 
     private String tableSpaceUsed(Connection connection) {
         String sql = "SELECT SUM( table_schema_size.table_schema_size ) AS 'tableSpaceUsed' FROM ( SELECT table_schema, SUM( data_length + index_length ) AS table_schema_size FROM information_schema.TABLES GROUP BY table_schema ) table_schema_size";
-        try(PreparedStatement preparedStatement = connection.prepareStatement(sql);
-            ResultSet resultSet = preparedStatement.executeQuery()){
+        try (PreparedStatement preparedStatement = connection.prepareStatement(sql);
+             ResultSet resultSet = preparedStatement.executeQuery()) {
 
-            if (resultSet.next()){
+            if (resultSet.next()) {
                 return resultSet.getString("tableSpaceUsed");
             }
-        }catch (Exception e){
-            log.error("Failed to get tablespace",e);
+        } catch (Exception e) {
+            log.error("Failed to get tablespace", e);
         }
 
         throw new OpsException("Failed to get tablespace");
@@ -409,14 +433,14 @@ public class OpsJdbcDbClusterNodeServiceImpl extends ServiceImpl<OpsJdbcDbCluste
     private String memoryUsed(Connection connection) {
         String sql = "SELECT (@@key_buffer_size + @@innodb_buffer_pool_size + @@innodb_log_buffer_size + @@max_connections * ( @@read_buffer_size + @@read_rnd_buffer_size + @@sort_buffer_size + @@join_buffer_size + @@binlog_cache_size + @@thread_stack + @@tmp_table_size )) AS 'memoryUsed'";
 
-        try(PreparedStatement preparedStatement = connection.prepareStatement(sql);
-            ResultSet resultSet = preparedStatement.executeQuery()){
+        try (PreparedStatement preparedStatement = connection.prepareStatement(sql);
+             ResultSet resultSet = preparedStatement.executeQuery()) {
 
-            if (resultSet.next()){
+            if (resultSet.next()) {
                 return resultSet.getString("memoryUsed");
             }
-        }catch (Exception e){
-            log.error("Failed to get memoryUsed",e);
+        } catch (Exception e) {
+            log.error("Failed to get memoryUsed", e);
         }
 
         throw new OpsException("Failed to get memoryUsed");
@@ -424,6 +448,7 @@ public class OpsJdbcDbClusterNodeServiceImpl extends ServiceImpl<OpsJdbcDbCluste
 
     /**
      * TPS = (Com_commit+Com_rollback)/Uptime
+     *
      * @param connection
      * @return
      */
@@ -437,23 +462,24 @@ public class OpsJdbcDbClusterNodeServiceImpl extends ServiceImpl<OpsJdbcDbCluste
              PreparedStatement uptimePreparedStatement = connection.prepareStatement(uptimeSql);
              ResultSet commitResultSet = commitPreparedStatement.executeQuery();
              ResultSet rollbackResultSet = rollbackPreparedStatement.executeQuery();
-             ResultSet uptimeResultSet = uptimePreparedStatement.executeQuery()){
+             ResultSet uptimeResultSet = uptimePreparedStatement.executeQuery()) {
 
-            if (commitResultSet.next() && rollbackResultSet.next() && uptimeResultSet.next()){
+            if (commitResultSet.next() && rollbackResultSet.next() && uptimeResultSet.next()) {
                 long commit = commitResultSet.getLong("Value");
                 long rollback = rollbackResultSet.getLong("Value");
                 long uptime = uptimeResultSet.getLong("Value");
 
-                return Long.valueOf((commit+rollback)/uptime).toString();
+                return Long.valueOf((commit + rollback) / uptime).toString();
             }
-        }catch (Exception e){
-            log.error("Failed to get tps",e);
+        } catch (Exception e) {
+            log.error("Failed to get tps", e);
         }
         throw new OpsException("Failed to get tps");
     }
 
     /**
-     *  QPS = Questions/Uptime
+     * QPS = Questions/Uptime
+     *
      * @param connection
      * @return
      */
@@ -464,30 +490,30 @@ public class OpsJdbcDbClusterNodeServiceImpl extends ServiceImpl<OpsJdbcDbCluste
         try (PreparedStatement questionsPreparedStatement = connection.prepareStatement(questionsSql);
              PreparedStatement uptimePreparedStatement = connection.prepareStatement(uptimeSql);
              ResultSet questionsResultSet = questionsPreparedStatement.executeQuery();
-             ResultSet uptimeResultSet = uptimePreparedStatement.executeQuery()){
+             ResultSet uptimeResultSet = uptimePreparedStatement.executeQuery()) {
 
-            if (questionsResultSet.next() && uptimeResultSet.next()){
+            if (questionsResultSet.next() && uptimeResultSet.next()) {
                 long questions = questionsResultSet.getLong("Value");
                 long uptime = uptimeResultSet.getLong("Value");
 
-                return Long.valueOf(questions/uptime).toString();
+                return Long.valueOf(questions / uptime).toString();
             }
-        }catch (Exception e){
-            log.error("Failed to get qps",e);
+        } catch (Exception e) {
+            log.error("Failed to get qps", e);
         }
         throw new OpsException("Failed to get qps");
     }
 
     private String connNum(Connection connection) {
         String sql = "SHOW STATUS LIKE 'Threads_connected'";
-        try(PreparedStatement preparedStatement = connection.prepareStatement(sql);
-            ResultSet resultSet = preparedStatement.executeQuery()){
+        try (PreparedStatement preparedStatement = connection.prepareStatement(sql);
+             ResultSet resultSet = preparedStatement.executeQuery()) {
 
-            if (resultSet.next()){
+            if (resultSet.next()) {
                 return resultSet.getString("Value");
             }
-        }catch (Exception e){
-            log.error("Failed to get connection number",e);
+        } catch (Exception e) {
+            log.error("Failed to get connection number", e);
         }
 
         throw new OpsException("Failed to get connection number");
@@ -495,16 +521,16 @@ public class OpsJdbcDbClusterNodeServiceImpl extends ServiceImpl<OpsJdbcDbCluste
 
     private ClusterRoleEnum role(Connection connection) {
         String sql = "SHOW SLAVE STATUS";
-        try(PreparedStatement preparedStatement = connection.prepareStatement(sql);
-            ResultSet resultSet = preparedStatement.executeQuery()){
+        try (PreparedStatement preparedStatement = connection.prepareStatement(sql);
+             ResultSet resultSet = preparedStatement.executeQuery()) {
 
-            if (resultSet.next()){
+            if (resultSet.next()) {
                 return ClusterRoleEnum.SLAVE;
-            }else {
+            } else {
                 return ClusterRoleEnum.MASTER;
             }
-        }catch (Exception e){
-            log.error("Failed to get role",e);
+        } catch (Exception e) {
+            log.error("Failed to get role", e);
         }
 
         throw new OpsException("Failed to get role");

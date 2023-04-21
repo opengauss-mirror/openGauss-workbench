@@ -1,5 +1,30 @@
+/*
+ * Copyright (c) 2022 Huawei Technologies Co.,Ltd.
+ *
+ * openGauss is licensed under Mulan PSL v2.
+ * You can use this software according to the terms and conditions of the Mulan PSL v2.
+ * You may obtain a copy of Mulan PSL v2 at:
+ *
+ * http://license.coscl.org.cn/MulanPSL2
+ *
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ * EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ * MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ * See the Mulan PSL v2 for more details.
+ * -------------------------------------------------------------------------
+ *
+ * SysMenuTest.java
+ *
+ * IDENTIFICATION
+ * openGauss-visualtool/visualtool-api/src/test/java/org/opengauss/admin/service/SysMenuTest.java
+ *
+ * -------------------------------------------------------------------------
+ */
+
+
 package org.opengauss.admin.service;
 
+import lombok.extern.slf4j.Slf4j;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -30,6 +55,7 @@ import java.util.stream.Collectors;
  * @date: 2022-10-16 13:24
  **/
 @RunWith(SpringRunner.class)
+@Slf4j
 public class SysMenuTest {
 
     @InjectMocks
@@ -41,7 +67,7 @@ public class SysMenuTest {
     @Mock
     private SysRoleMapper roleMapper;
 
-    private List<SysMenu> mockSysMenus(){
+    private List<SysMenu> mockSysMenus() {
         List<SysMenu> menus = new ArrayList<>();
         menus.add(mockSysMenu());
         SysMenu menu = new SysMenu();
@@ -52,7 +78,8 @@ public class SysMenuTest {
         menus.add(menu);
         return menus;
     }
-    private SysMenu mockSysMenu(){
+
+    private SysMenu mockSysMenu() {
         SysMenu menu = new SysMenu();
         menu.setMenuId(1);
         menu.setMenuName("monitor");
@@ -62,17 +89,18 @@ public class SysMenuTest {
     }
 
     @BeforeClass
-    public static void before(){
+    public static void before() {
         MockitoAnnotations.initMocks(SysMenuTest.class);
-        System.out.println("start system user test........");
+        log.info("start system user test........");
     }
+
     @AfterClass
-    public static void after(){
-        System.out.println("end system user test........");
+    public static void after() {
+        log.info("end system user test........");
     }
 
     @Test
-    public void testSelectMenuList(){
+    public void testSelectMenuList() {
         List<SysMenu> menus = mockSysMenus();
         Mockito.doReturn(menus).when(menuMapper).selectList(ArgumentMatchers.any());
         List<SysMenu> sysMenus = sysMenuService.selectMenuList(new SysMenu(), 1);
@@ -84,7 +112,7 @@ public class SysMenuTest {
     }
 
     @Test
-    public void testSelectSpecialRouteList(){
+    public void testSelectSpecialRouteList() {
         List<SysMenu> menus = mockSysMenus();
         Mockito.doReturn(menus).when(menuMapper).selectList(ArgumentMatchers.any());
         List<SysMenu> sysMenus = sysMenuService.selectSpecialRouteList(SysMenuRouteOpenPosition.INDEX_INSTANCE_DATA.getCode());
@@ -95,18 +123,18 @@ public class SysMenuTest {
     public void testExistsMenu() {
         List<SysMenu> menus = mockSysMenus();
         Mockito.doReturn(menus).when(menuMapper).selectList(ArgumentMatchers.any());
-        SysMenu menu = sysMenuService.existsMenu(0,"test","index","tool");
+        SysMenu menu = sysMenuService.existsMenu(0, "test", "index", "tool");
         Assertions.assertNotNull(menu);
 
         menus = new ArrayList<>();
         Mockito.doReturn(menus).when(menuMapper).selectList(ArgumentMatchers.any());
-        menu = sysMenuService.existsMenu(0,"test","index","tool");
+        menu = sysMenuService.existsMenu(0, "test", "index", "tool");
         Assertions.assertNull(menu);
     }
 
     @Test
-    public void testSelectMenuPermsByUserId(){
-        String[] permArr = new String[]{"plugins","users"};
+    public void testSelectMenuPermsByUserId() {
+        String[] permArr = new String[]{"plugins", "users"};
         List<String> perms = Arrays.stream(permArr).collect(Collectors.toList());
         Mockito.doReturn(perms).when(menuMapper).selectMenuPermsByUserId(ArgumentMatchers.any());
         Set<String> strings = sysMenuService.selectMenuPermsByUserId(1);
@@ -114,7 +142,7 @@ public class SysMenuTest {
     }
 
     @Test
-    public void testSelectMenuTreeByUserId(){
+    public void testSelectMenuTreeByUserId() {
         List<SysMenu> menus = mockSysMenus();
         Mockito.doReturn(menus).when(menuMapper).selectList(ArgumentMatchers.any());
         List<SysMenu> sysMenus = sysMenuService.selectMenuTreeByUserId(1);
@@ -127,28 +155,28 @@ public class SysMenuTest {
     }
 
     @Test
-    public void testSelectMenuListByRoleId(){
+    public void testSelectMenuListByRoleId() {
         List<Integer> menuIds = new ArrayList<>();
         menuIds.add(1);
         menuIds.add(1001);
         SysRole role = new SysRole();
         role.setMenuCheckStrictly(true);
         Mockito.doReturn(role).when(roleMapper).selectRole(ArgumentMatchers.any());
-        Mockito.doReturn(menuIds).when(menuMapper).selectMenuListByRoleId(1,role.isMenuCheckStrictly());
+        Mockito.doReturn(menuIds).when(menuMapper).selectMenuListByRoleId(1, role.isMenuCheckStrictly());
 
         List<Integer> integers = sysMenuService.selectMenuListByRoleId(1);
-        Assertions.assertSame(menuIds,integers);
+        Assertions.assertSame(menuIds, integers);
     }
 
     @Test
-    public void testBuildMenus(){
+    public void testBuildMenus() {
         List<RouterVo> routerVos = sysMenuService.buildMenus(mockSysMenus(), SysLanguage.ZH.getCode());
         Assertions.assertTrue(routerVos.size() > 0);
 
     }
 
     @Test
-    public void testBuildMenuTree(){
+    public void testBuildMenuTree() {
         List<SysMenu> sysMenus = sysMenuService.buildMenuTree(mockSysMenus());
         Assertions.assertTrue(sysMenus.size() > 0);
     }

@@ -1,7 +1,32 @@
+/*
+ * Copyright (c) 2022 Huawei Technologies Co.,Ltd.
+ *
+ * openGauss is licensed under Mulan PSL v2.
+ * You can use this software according to the terms and conditions of the Mulan PSL v2.
+ * You may obtain a copy of Mulan PSL v2 at:
+ *
+ * http://license.coscl.org.cn/MulanPSL2
+ *
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ * EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ * MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ * See the Mulan PSL v2 for more details.
+ * -------------------------------------------------------------------------
+ *
+ * SysRoleTest.java
+ *
+ * IDENTIFICATION
+ * openGauss-visualtool/visualtool-api/src/test/java/org/opengauss/admin/service/SysRoleTest.java
+ *
+ * -------------------------------------------------------------------------
+ */
+
+
 package org.opengauss.admin.service;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -9,15 +34,11 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.runner.RunWith;
 import org.mockito.*;
 import org.opengauss.admin.common.core.domain.entity.SysRole;
-import org.opengauss.admin.common.core.domain.entity.SysUser;
 import org.opengauss.admin.system.mapper.SysRoleMapper;
 import org.opengauss.admin.system.mapper.SysRoleMenuMapper;
-import org.opengauss.admin.system.mapper.SysUserMapper;
 import org.opengauss.admin.system.mapper.SysUserRoleMapper;
 import org.opengauss.admin.system.service.ISysRoleService;
-import org.opengauss.admin.system.service.ISysUserService;
 import org.opengauss.admin.system.service.impl.SysRoleServiceImpl;
-import org.opengauss.admin.system.service.impl.SysUserServiceImpl;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.List;
@@ -30,6 +51,7 @@ import java.util.Set;
  * @date: 2022-10-16 13:24
  **/
 @RunWith(SpringRunner.class)
+@Slf4j
 public class SysRoleTest {
 
     @InjectMocks
@@ -42,10 +64,11 @@ public class SysRoleTest {
     @Mock
     private SysRoleMenuMapper roleMenuMapper;
 
-    private List<SysRole> mockSysRoles(){
+    private List<SysRole> mockSysRoles() {
         return List.of(mockSysRole());
     }
-    private SysRole mockSysRole(){
+
+    private SysRole mockSysRole() {
         SysRole role = new SysRole();
         role.setRoleName("test");
         role.setRoleId(100);
@@ -55,17 +78,18 @@ public class SysRoleTest {
     }
 
     @BeforeClass
-    public static void before(){
+    public static void before() {
         MockitoAnnotations.initMocks(SysRoleTest.class);
-        System.out.println("start system role test........");
+        log.info("start system role test........");
     }
+
     @AfterClass
-    public static void after(){
-        System.out.println("end system role test........");
+    public static void after() {
+        log.info("end system role test........");
     }
 
     @Test
-    public void testSelectRoleList(){
+    public void testSelectRoleList() {
         IPage<SysRole> page = new Page<>();
         page.setRecords(mockSysRoles());
         page.setPages(1);
@@ -73,14 +97,14 @@ public class SysRoleTest {
         page.setTotal(1);
         Mockito.doReturn(page).when(roleMapper).selectRoleList(ArgumentMatchers.any(Page.class), ArgumentMatchers.any(SysRole.class));
 
-        IPage pageResult = sysRoleService.selectRoleList(new SysRole(),new Page<>());
+        IPage pageResult = sysRoleService.selectRoleList(new SysRole(), new Page<>());
         Assertions.assertNotNull(pageResult.getRecords());
         Assertions.assertSame(page, pageResult);
     }
 
     @Test
     public void testSelectRolesByUserId() {
-        Mockito.doReturn(mockSysRoles()).when(roleMapper).selectRoleList( ArgumentMatchers.any(SysRole.class));
+        Mockito.doReturn(mockSysRoles()).when(roleMapper).selectRoleList(ArgumentMatchers.any(SysRole.class));
         Mockito.doReturn(mockSysRoles()).when(roleMapper).selectRolePermissionByUserId(ArgumentMatchers.any());
         List<SysRole> roles = sysRoleService.selectRolesByUserId(100);
         roles.forEach(e -> {
@@ -89,7 +113,7 @@ public class SysRoleTest {
     }
 
     @Test
-    public void testSelectRolePermissionByUserId(){
+    public void testSelectRolePermissionByUserId() {
         Mockito.doReturn(mockSysRoles()).when(roleMapper).selectRoles(ArgumentMatchers.any());
         Set<String> pres = sysRoleService.selectRolePermissionByUserId(100);
         Assertions.assertTrue(pres.contains("test"));
@@ -97,7 +121,7 @@ public class SysRoleTest {
 
 
     @Test
-    public void testCheckRoleNameUnique(){
+    public void testCheckRoleNameUnique() {
         SysRole role = new SysRole();
         role.setRoleName("test");
         role.setRoleId(100);
@@ -115,9 +139,9 @@ public class SysRoleTest {
     }
 
     @Test
-    public void testInsertRole(){
+    public void testInsertRole() {
         SysRole role = mockSysRole();
-        role.setMenuIds(new Integer[]{1,4,3});
+        role.setMenuIds(new Integer[]{1, 4, 3});
         int validRow = 1;
         Mockito.doReturn(validRow).when(roleMapper).insert(ArgumentMatchers.any());
         Mockito.doReturn(1).when(roleMenuMapper).batchRoleMenu(ArgumentMatchers.any());
@@ -127,9 +151,9 @@ public class SysRoleTest {
 
 
     @Test
-    public void testUpdateRole(){
+    public void testUpdateRole() {
         SysRole role = mockSysRole();
-        role.setMenuIds(new Integer[]{1,4,3});
+        role.setMenuIds(new Integer[]{1, 4, 3});
         int validRow = 1;
         Mockito.doReturn(validRow).when(roleMapper).updateById(ArgumentMatchers.any());
         Mockito.doReturn(1).when(roleMenuMapper).delete(ArgumentMatchers.any());
@@ -139,11 +163,11 @@ public class SysRoleTest {
     }
 
     @Test
-    public void testDeleteRoleByIds(){
+    public void testDeleteRoleByIds() {
         int validRow = 1;
         Mockito.doReturn(1).when(roleMenuMapper).delete(ArgumentMatchers.any());
         Mockito.doReturn(1).when(roleMapper).deleteBatchIds(ArgumentMatchers.any());
-        int row = sysRoleService.deleteRoleByIds(new Integer[]{2,3});
+        int row = sysRoleService.deleteRoleByIds(new Integer[]{2, 3});
         Assertions.assertEquals(validRow, row);
     }
 

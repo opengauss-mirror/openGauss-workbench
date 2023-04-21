@@ -57,7 +57,6 @@ public class GraphChartGenerateServiceImpl extends BaseGenerateServiceImpl {
         graphChartBody.setTooltip(new Tooltip().setTrigger("axis"));
         List<GraphSeries> series = genSeries();
         graphChartBody.setSeries(series);
-        System.out.println(JSONObject.toJSONString(graphChartBody));
         return JSONObject.toJSONString(graphChartBody);
     }
 

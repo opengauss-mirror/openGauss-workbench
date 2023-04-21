@@ -31,6 +31,5 @@ public class BaseOpsPluginApplication extends SpringPluginBootstrap {
 
     public static void main(String[] args) {
         new BaseOpsPluginApplication().run(args);
-        System.out.printf("Base Ops Plugin Start Success.");
     }
 }

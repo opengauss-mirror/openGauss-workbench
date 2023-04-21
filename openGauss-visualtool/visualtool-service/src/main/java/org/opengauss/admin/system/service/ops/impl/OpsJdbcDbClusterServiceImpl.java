@@ -1,3 +1,27 @@
+/*
+ * Copyright (c) 2022 Huawei Technologies Co.,Ltd.
+ *
+ * openGauss is licensed under Mulan PSL v2.
+ * You can use this software according to the terms and conditions of the Mulan PSL v2.
+ * You may obtain a copy of Mulan PSL v2 at:
+ *
+ * http://license.coscl.org.cn/MulanPSL2
+ *
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ * EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ * MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ * See the Mulan PSL v2 for more details.
+ * -------------------------------------------------------------------------
+ *
+ * OpsJdbcDbClusterServiceImpl.java
+ *
+ * IDENTIFICATION
+ * openGauss-visualtool/visualtool-service/src/main/java/org/opengauss/admin/system/service/ops/impl/OpsJdbcDbClusterServiceImpl.java
+ *
+ * -------------------------------------------------------------------------
+ */
+
+
 package org.opengauss.admin.system.service.ops.impl;
 
 import cn.hutool.core.collection.CollUtil;
@@ -68,23 +92,23 @@ public class OpsJdbcDbClusterServiceImpl extends ServiceImpl<OpsJdbcDbClusterMap
                 nameSet = (clusterEntityList.stream().map(OpsJdbcDbClusterEntity::getClusterId).collect(Collectors.toSet()));
             }
 
-            if (CollUtil.isEmpty(nameSet)){
+            if (CollUtil.isEmpty(nameSet)) {
                 return Page.of(0, 0);
             }
         }
 
-        if (StrUtil.isNotEmpty(ip)){
+        if (StrUtil.isNotEmpty(ip)) {
             condition = true;
             Set<String> ipFuzzyQueryClusterIds = opsJdbcDbClusterNodeService.fuzzyQueryClusterIdsByIp(ip);
 
             ipSet = (ipFuzzyQueryClusterIds);
 
-            if (CollUtil.isEmpty(ipSet)){
+            if (CollUtil.isEmpty(ipSet)) {
                 return Page.of(0, 0);
             }
         }
 
-        if (StrUtil.isNotEmpty(type)){
+        if (StrUtil.isNotEmpty(type)) {
             condition = true;
             LambdaQueryWrapper<OpsJdbcDbClusterEntity> queryWrapper = Wrappers.lambdaQuery(OpsJdbcDbClusterEntity.class)
                     .like(OpsJdbcDbClusterEntity::getDbType, type.toUpperCase())
@@ -95,15 +119,15 @@ public class OpsJdbcDbClusterServiceImpl extends ServiceImpl<OpsJdbcDbClusterMap
                 typeSet = (clusterEntityList.stream().map(OpsJdbcDbClusterEntity::getClusterId).collect(Collectors.toSet()));
             }
 
-            if (CollUtil.isEmpty(typeSet)){
+            if (CollUtil.isEmpty(typeSet)) {
                 return Page.of(0, 0);
             }
         }
 
-        Set<String> retainAll = retainAll(nameSet,ipSet,typeSet);
+        Set<String> retainAll = retainAll(nameSet, ipSet, typeSet);
         clusterIdConditions.addAll(retainAll);
 
-        if (condition && CollUtil.isEmpty(clusterIdConditions)){
+        if (condition && CollUtil.isEmpty(clusterIdConditions)) {
             return Page.of(0, 0);
         }
 
@@ -120,35 +144,35 @@ public class OpsJdbcDbClusterServiceImpl extends ServiceImpl<OpsJdbcDbClusterMap
     }
 
     private Set<String> retainAll(Set<String> nameSet, Set<String> ipSet, Set<String> typeSet) {
-        if (nameSet!=null){
-            if (ipSet!=null){
+        if (nameSet != null) {
+            if (ipSet != null) {
                 nameSet.retainAll(ipSet);
             }
 
-            if (typeSet!=null){
+            if (typeSet != null) {
                 nameSet.retainAll(typeSet);
             }
 
             return nameSet;
         }
 
-        if (ipSet!=null){
-            if (nameSet!=null){
+        if (ipSet != null) {
+            if (nameSet != null) {
                 ipSet.retainAll(nameSet);
             }
-            if (typeSet!=null){
+            if (typeSet != null) {
                 ipSet.retainAll(typeSet);
             }
 
             return ipSet;
         }
 
-        if (typeSet!=null){
-            if (nameSet!=null){
+        if (typeSet != null) {
+            if (nameSet != null) {
                 typeSet.retainAll(nameSet);
             }
 
-            if (ipSet!=null){
+            if (ipSet != null) {
                 typeSet.retainAll(ipSet);
             }
 
@@ -198,7 +222,7 @@ public class OpsJdbcDbClusterServiceImpl extends ServiceImpl<OpsJdbcDbClusterMap
         }
 
         List<JdbcDbClusterInputDto> jdbcDbClusterInputDtos = analysisWrongNodes(jdbcDbClusterInputDto);
-        return JdbcDbClusterImportAnalysisVO.of(jdbcDbClusterInputDto,jdbcDbClusterInputDtos);
+        return JdbcDbClusterImportAnalysisVO.of(jdbcDbClusterInputDto, jdbcDbClusterInputDtos);
     }
 
     private List<JdbcDbClusterInputDto> analysisWrongNodes(List<JdbcDbClusterInputDto> jdbcDbClusterInputDto) {
@@ -337,7 +361,7 @@ public class OpsJdbcDbClusterServiceImpl extends ServiceImpl<OpsJdbcDbClusterMap
 
     @Override
     public List<JdbcDbClusterVO> listByType(String type) {
-        if (StrUtil.isEmpty(type)){
+        if (StrUtil.isEmpty(type)) {
             throw new OpsException("type parameter does not exist");
         }
 
@@ -409,7 +433,7 @@ public class OpsJdbcDbClusterServiceImpl extends ServiceImpl<OpsJdbcDbClusterMap
                 if (col.length != 4) {
                     throw new OpsException("The data in row " + lineNum + " is wrong");
                 } else {
-                    if (StrUtil.isEmpty(col[0].trim()) && StrUtil.isEmpty(col[1].trim())&& StrUtil.isEmpty(col[2].trim())&& StrUtil.isEmpty(col[3].trim())){
+                    if (StrUtil.isEmpty(col[0].trim()) && StrUtil.isEmpty(col[1].trim()) && StrUtil.isEmpty(col[2].trim()) && StrUtil.isEmpty(col[3].trim())) {
                         continue;
                     }
 
@@ -448,11 +472,11 @@ public class OpsJdbcDbClusterServiceImpl extends ServiceImpl<OpsJdbcDbClusterMap
 
         for (JdbcDbClusterInputDto inputDto : clusterList) {
             DeployTypeEnum deployType = inputDto.getDeployType();
-            if (Objects.isNull(deployType)){
+            if (Objects.isNull(deployType)) {
                 List<JdbcDbClusterNodeInputDto> nodes = inputDto.getNodes();
-                if (CollUtil.isEmpty(nodes) || nodes.size()<2){
+                if (CollUtil.isEmpty(nodes) || nodes.size() < 2) {
                     inputDto.setDeployType(DeployTypeEnum.SINGLE_NODE);
-                }else {
+                } else {
                     inputDto.setDeployType(DeployTypeEnum.CLUSTER);
                 }
             }
@@ -470,7 +494,7 @@ public class OpsJdbcDbClusterServiceImpl extends ServiceImpl<OpsJdbcDbClusterMap
         Set<String> clusterIds = records.stream().map(OpsJdbcDbClusterEntity::getClusterId).collect(Collectors.toSet());
         Map<String, List<OpsJdbcDbClusterNodeEntity>> clusterNodeMap = opsJdbcDbClusterNodeService.mapClusterNodesByClusterId(clusterIds);
         final Set<String> ipSet = clusterNodeMap.values().stream().flatMap(val -> val.stream()).map(OpsJdbcDbClusterNodeEntity::getIp).collect(Collectors.toSet());
-        Map<String,String> ipOsMap = hostService.mapOsByIps(ipSet);
+        Map<String, String> ipOsMap = hostService.mapOsByIps(ipSet);
 
         for (OpsJdbcDbClusterEntity record : records) {
             List<JdbcDbClusterNodeVO> nodes = new ArrayList<>();
@@ -480,7 +504,7 @@ public class OpsJdbcDbClusterServiceImpl extends ServiceImpl<OpsJdbcDbClusterMap
             List<OpsJdbcDbClusterNodeEntity> clusterNodeEntityList = clusterNodeMap.get(clusterId);
             if (CollUtil.isNotEmpty(clusterNodeEntityList)) {
                 for (OpsJdbcDbClusterNodeEntity clusterNodeEntity : clusterNodeEntityList) {
-                    nodes.add(JdbcDbClusterNodeVO.of(clusterNodeEntity,ipOsMap.get(clusterNodeEntity.getIp())));
+                    nodes.add(JdbcDbClusterNodeVO.of(clusterNodeEntity, ipOsMap.get(clusterNodeEntity.getIp())));
                 }
             }
 

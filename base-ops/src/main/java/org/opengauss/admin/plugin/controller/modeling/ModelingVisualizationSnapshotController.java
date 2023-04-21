@@ -45,7 +45,6 @@ public class ModelingVisualizationSnapshotController extends BaseController {
      */
     @RequestMapping("/add")
     public AjaxResult add(@RequestBody ModelingVisualizationSnapshotsEntity modelingVisualizationSnapshotsEntity) {
-        System.out.println(modelingVisualizationSnapshotsEntity);
         return toAjax(modelingVisualizationSnapshotsService.insertDataFlow(modelingVisualizationSnapshotsEntity));
     }
 

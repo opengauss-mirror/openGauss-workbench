@@ -69,7 +69,6 @@ public class PieChartGenerateServiceImpl extends BaseGenerateServiceImpl {
 
         pieChartBody.setLegend(new Legend("scroll").setData(pieSeriesConstructor.getSeriesKey()).setBottom(10));
 
-        System.out.println(JSONObject.toJSONString(pieChartBody));
         return JSONObject.toJSONString(pieChartBody);
     }
 

@@ -1,6 +1,35 @@
+/*
+ * Copyright (c) 2022 Huawei Technologies Co.,Ltd.
+ *
+ * openGauss is licensed under Mulan PSL v2.
+ * You can use this software according to the terms and conditions of the Mulan PSL v2.
+ * You may obtain a copy of Mulan PSL v2 at:
+ *
+ * http://license.coscl.org.cn/MulanPSL2
+ *
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ * EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ * MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ * See the Mulan PSL v2 for more details.
+ * -------------------------------------------------------------------------
+ *
+ * LogAspect.java
+ *
+ * IDENTIFICATION
+ * datasync-mysql/src/main/java/org/opengauss/admin/plugin/aspectj/LogAspect.java
+ *
+ * -------------------------------------------------------------------------
+ */
+
+
 package org.opengauss.admin.plugin.aspectj;
 
 import com.alibaba.fastjson.JSON;
+import lombok.extern.slf4j.Slf4j;
+import org.aspectj.lang.JoinPoint;
+import org.aspectj.lang.annotation.AfterReturning;
+import org.aspectj.lang.annotation.AfterThrowing;
+import org.aspectj.lang.annotation.Aspect;
 import org.opengauss.admin.common.annotation.Log;
 import org.opengauss.admin.common.core.domain.model.LoginUser;
 import org.opengauss.admin.common.enums.BusinessStatus;
@@ -12,11 +41,6 @@ import org.opengauss.admin.common.utils.ip.IpUtils;
 import org.opengauss.admin.framework.manager.AsyncManager;
 import org.opengauss.admin.framework.manager.factory.AsyncFactory;
 import org.opengauss.admin.system.domain.SysOperLog;
-import lombok.extern.slf4j.Slf4j;
-import org.aspectj.lang.JoinPoint;
-import org.aspectj.lang.annotation.AfterReturning;
-import org.aspectj.lang.annotation.AfterThrowing;
-import org.aspectj.lang.annotation.Aspect;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.context.request.RequestAttributes;

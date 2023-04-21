@@ -1,3 +1,27 @@
+/*
+ * Copyright (c) 2022 Huawei Technologies Co.,Ltd.
+ *
+ * openGauss is licensed under Mulan PSL v2.
+ * You can use this software according to the terms and conditions of the Mulan PSL v2.
+ * You may obtain a copy of Mulan PSL v2 at:
+ *
+ * http://license.coscl.org.cn/MulanPSL2
+ *
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ * EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ * MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ * See the Mulan PSL v2 for more details.
+ * -------------------------------------------------------------------------
+ *
+ * OpsClusterServiceImpl.java
+ *
+ * IDENTIFICATION
+ * openGauss-visualtool/visualtool-service/src/main/java/org/opengauss/admin/system/service/ops/impl/OpsClusterServiceImpl.java
+ *
+ * -------------------------------------------------------------------------
+ */
+
+
 package org.opengauss.admin.system.service.ops.impl;
 
 import cn.hutool.core.collection.CollUtil;
@@ -140,7 +164,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                     opsClusterNodeVO.setDbUser(opsClusterEntity.getDatabaseUsername());
                     opsClusterNodeVO.setDbUserPassword(opsClusterEntity.getDatabasePassword());
 
-                    if (OpenGaussVersionEnum.ENTERPRISE == opsClusterEntity.getVersion()){
+                    if (OpenGaussVersionEnum.ENTERPRISE == opsClusterEntity.getVersion()) {
                         opsClusterNodeVO.setInstallPath(opsClusterEntity.getInstallPath());
                     }
 
@@ -410,10 +434,10 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
             threadPoolTaskExecutor.submit(() -> {
                 try {
                     nodeMonitorVO.setTime(System.currentTimeMillis());
-                }catch (Exception e){
-                    log.error("time error : ",e);
+                } catch (Exception e) {
+                    log.error("time error : ", e);
                     hasError.set(true);
-                }finally {
+                } finally {
                     countDownLatch.countDown();
                 }
 
@@ -422,10 +446,10 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
             threadPoolTaskExecutor.submit(() -> {
                 try {
                     nodeMonitorVO.setCpu(cpu(ommSession));
-                }catch (Exception e){
-                    log.error("cpu monitor error : ",e);
+                } catch (Exception e) {
+                    log.error("cpu monitor error : ", e);
                     hasError.set(true);
-                }finally {
+                } finally {
                     countDownLatch.countDown();
                 }
             });
@@ -433,10 +457,10 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
             threadPoolTaskExecutor.submit(() -> {
                 try {
                     nodeMonitorVO.setMemory(memory(ommSession));
-                }catch (Exception e){
-                    log.error("memory monitor error : ",e);
+                } catch (Exception e) {
+                    log.error("memory monitor error : ", e);
                     hasError.set(true);
-                }finally {
+                } finally {
                     countDownLatch.countDown();
                 }
             });
@@ -444,10 +468,10 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
             threadPoolTaskExecutor.submit(() -> {
                 try {
                     nodeMonitorVO.setNet(net(ommSession));
-                }catch (Exception e){
-                    log.error("net monitor error : ",e);
+                } catch (Exception e) {
+                    log.error("net monitor error : ", e);
                     hasError.set(true);
-                }finally {
+                } finally {
                     countDownLatch.countDown();
                 }
             });
@@ -455,10 +479,10 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
             threadPoolTaskExecutor.submit(() -> {
                 try {
                     nodeMonitorVO.setState(state(ommSession, version, dataPath, envPath));
-                }catch (Exception e){
-                    log.error("state monitor error : ",e);
+                } catch (Exception e) {
+                    log.error("state monitor error : ", e);
                     hasError.set(true);
-                }finally {
+                } finally {
                     countDownLatch.countDown();
                 }
             });
@@ -466,10 +490,10 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
             threadPoolTaskExecutor.submit(() -> {
                 try {
                     nodeMonitorVO.setLock(lock(connection));
-                }catch (Exception e){
-                    log.error("lock monitor error : ",e);
+                } catch (Exception e) {
+                    log.error("lock monitor error : ", e);
                     hasError.set(true);
-                }finally {
+                } finally {
                     countDownLatch.countDown();
                 }
             });
@@ -477,10 +501,10 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
             threadPoolTaskExecutor.submit(() -> {
                 try {
                     nodeMonitorVO.setSession(session(connection));
-                }catch (Exception e){
-                    log.error("session monitor error : ",e);
+                } catch (Exception e) {
+                    log.error("session monitor error : ", e);
                     hasError.set(true);
-                }finally {
+                } finally {
                     countDownLatch.countDown();
                 }
             });
@@ -488,10 +512,10 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
             threadPoolTaskExecutor.submit(() -> {
                 try {
                     nodeMonitorVO.setConnectNum(connectNum(connection));
-                }catch (Exception e){
-                    log.error("connectNum monitor error : ",e);
+                } catch (Exception e) {
+                    log.error("connectNum monitor error : ", e);
                     hasError.set(true);
-                }finally {
+                } finally {
                     countDownLatch.countDown();
                 }
             });
@@ -499,10 +523,10 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
             threadPoolTaskExecutor.submit(() -> {
                 try {
                     nodeMonitorVO.setSessionMemoryTop10(sessionMemoryTop10(connection));
-                }catch (Exception e){
-                    log.error("sessionMemoryTop10 monitor error : ",e);
+                } catch (Exception e) {
+                    log.error("sessionMemoryTop10 monitor error : ", e);
                     hasError.set(true);
-                }finally {
+                } finally {
                     countDownLatch.countDown();
                 }
             });
@@ -510,10 +534,10 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
             threadPoolTaskExecutor.submit(() -> {
                 try {
                     nodeMonitorVO.setKernel(kernel(ommSession));
-                }catch (Exception e){
-                    log.error("kernel monitor error : ",e);
+                } catch (Exception e) {
+                    log.error("kernel monitor error : ", e);
                     hasError.set(true);
-                }finally {
+                } finally {
                     countDownLatch.countDown();
                 }
             });
@@ -521,10 +545,10 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
             threadPoolTaskExecutor.submit(() -> {
                 try {
                     nodeMonitorVO.setMemorySize(memorySize(ommSession));
-                }catch (Exception e){
-                    log.error("memorySize monitor error : ",e);
+                } catch (Exception e) {
+                    log.error("memorySize monitor error : ", e);
                     hasError.set(true);
-                }finally {
+                } finally {
                     countDownLatch.countDown();
                 }
             });
@@ -673,10 +697,10 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                     res.put("cluster_state", clusterState);
                 }
 
-                Map<String,String> nodeState = new HashMap<>(1);
-                Map<String,String> nodeRole = new HashMap<>(1);
-                res.put("nodeState",nodeState);
-                res.put("nodeRole",nodeRole);
+                Map<String, String> nodeState = new HashMap<>(1);
+                Map<String, String> nodeRole = new HashMap<>(1);
+                res.put("nodeState", nodeState);
+                res.put("nodeRole", nodeRole);
 
 
                 int datanodeStateIndex = result.indexOf("Datanode State");
@@ -692,13 +716,13 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
 
                         String state = "";
 
-                        if (s1.length>=9){
+                        if (s1.length >= 9) {
                             for (int i = 8; i < s1.length; i++) {
                                 state += (s1[i] + " ");
                             }
                             nodeState.put(s1[1], state.trim());
                             nodeRole.put(s1[1], s1[7]);
-                        }else if (s1.length>=8){
+                        } else if (s1.length >= 8) {
                             for (int i = 7; i < s1.length; i++) {
                                 state += (s1[i] + " ");
                             }
@@ -724,7 +748,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
             JschResult jschResult = null;
             try {
                 try {
-                    jschResult = jschUtil.executeCommand(command, ommSession,envPath);
+                    jschResult = jschUtil.executeCommand(command, ommSession, envPath);
                 } catch (InterruptedException e) {
                     throw new OpsException("thread is interrupted");
                 }

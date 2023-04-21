@@ -1,9 +1,34 @@
+/*
+ * Copyright (c) 2022 Huawei Technologies Co.,Ltd.
+ *
+ * openGauss is licensed under Mulan PSL v2.
+ * You can use this software according to the terms and conditions of the Mulan PSL v2.
+ * You may obtain a copy of Mulan PSL v2 at:
+ *
+ * http://license.coscl.org.cn/MulanPSL2
+ *
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ * EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ * MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ * See the Mulan PSL v2 for more details.
+ * -------------------------------------------------------------------------
+ *
+ * HostUserTest.java
+ *
+ * IDENTIFICATION
+ * openGauss-visualtool/visualtool-api/src/test/java/org/opengauss/admin/service/ops/HostUserTest.java
+ *
+ * -------------------------------------------------------------------------
+ */
+
+
 package org.opengauss.admin.service.ops;
 
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -39,6 +64,7 @@ import static org.mockito.ArgumentMatchers.any;
  * @date 2022/11/26 16:34
  **/
 @RunWith(SpringRunner.class)
+@Slf4j
 public class HostUserTest {
     @InjectMocks
     private IHostUserService hostUserService = new HostUserServiceImpl() {
@@ -103,12 +129,12 @@ public class HostUserTest {
     @BeforeClass
     public static void before() {
         MockitoAnnotations.initMocks(HostTest.class);
-        System.out.println("start host user test........");
+        log.info("start host user test........");
     }
 
     @AfterClass
     public static void after() {
-        System.out.println("end host user test........");
+        log.info("end host user test........");
     }
 
     @Test

@@ -1,9 +1,32 @@
+/*
+ * Copyright (c) 2022 Huawei Technologies Co.,Ltd.
+ *
+ * openGauss is licensed under Mulan PSL v2.
+ * You can use this software according to the terms and conditions of the Mulan PSL v2.
+ * You may obtain a copy of Mulan PSL v2 at:
+ *
+ * http://license.coscl.org.cn/MulanPSL2
+ *
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ * EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ * MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ * See the Mulan PSL v2 for more details.
+ * -------------------------------------------------------------------------
+ *
+ * WsConnectorManager.java
+ *
+ * IDENTIFICATION
+ * openGauss-visualtool/visualtool-common/src/main/java/org/opengauss/admin/common/core/ws/WsConnectorManager.java
+ *
+ * -------------------------------------------------------------------------
+ */
+
+
 package org.opengauss.admin.common.core.ws;
 
 import lombok.extern.slf4j.Slf4j;
 
 import javax.websocket.Session;
-import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -19,6 +42,7 @@ public class WsConnectorManager {
 
     /**
      * register session
+     *
      * @param pluginId
      * @param sessionId
      * @param session
@@ -39,9 +63,6 @@ public class WsConnectorManager {
      */
     public static Session getSession(String pluginId, String sessionId) {
         log.info("cache sessions list.");
-        CONNECTOR_CONTEXT.entrySet().stream().forEach(x -> {
-            System.out.println(x.getKey());
-        });
         return CONNECTOR_CONTEXT.get(prepareKey(pluginId, sessionId));
     }
 

@@ -1,3 +1,27 @@
+/*
+ * Copyright (c) 2022 Huawei Technologies Co.,Ltd.
+ *
+ * openGauss is licensed under Mulan PSL v2.
+ * You can use this software according to the terms and conditions of the Mulan PSL v2.
+ * You may obtain a copy of Mulan PSL v2 at:
+ *
+ * http://license.coscl.org.cn/MulanPSL2
+ *
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ * EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ * MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ * See the Mulan PSL v2 for more details.
+ * -------------------------------------------------------------------------
+ *
+ * MigrationMainTaskServiceImpl.java
+ *
+ * IDENTIFICATION
+ * data-migration/src/main/java/org/opengauss/admin/plugin/service/impl/MigrationMainTaskServiceImpl.java
+ *
+ * -------------------------------------------------------------------------
+ */
+
+
 package org.opengauss.admin.plugin.service.impl;
 
 import cn.hutool.core.date.DateUtil;
@@ -74,6 +98,7 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
     private String portalPkgDownloadUrl;
 
     private static Map<Integer, Long> taskRefreshRecord = new ConcurrentHashMap<>();
+
     /**
      * Query the task list by page
      *
@@ -117,7 +142,7 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
         }).count();
 
         Predicate<MigrationTask> runningFilter = t -> {
-         return t.getExecStatus().equals(TaskStatus.FULL_START.getCode()) ||
+            return t.getExecStatus().equals(TaskStatus.FULL_START.getCode()) ||
                     t.getExecStatus().equals(TaskStatus.FULL_RUNNING.getCode()) ||
                     t.getExecStatus().equals(TaskStatus.FULL_FINISH.getCode()) ||
                     t.getExecStatus().equals(TaskStatus.FULL_CHECK_START.getCode()) ||
@@ -159,6 +184,7 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
 
     /**
      * Get task detail
+     *
      * @param taskId
      * @return
      */
@@ -182,6 +208,7 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
 
     /**
      * Get task detail
+     *
      * @param taskId
      * @return
      */
@@ -300,7 +327,7 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
     }
 
     @Override
-    public void deleteTask(Integer[] ids){
+    public void deleteTask(Integer[] ids) {
         Arrays.asList(ids).stream().forEach(i -> {
             this.removeById(i);
             migrationTaskService.deleteByMainTaskId(i);
@@ -327,22 +354,23 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
 
     /**
      * Start the task process:
-     *  1. Query subtask list; query running configuration machine list; query global configuration and subtask configuration data;
-     *  2. Loop through each machine, use the maximum number of executable tasks - the number of running tasks to get the number of tasks that can be executed by each machine, assign tasks according to the number of executable tasks, and judge whether the machine is installed with portal, if not Install, then install the portal. The following situations may be encountered when assigning tasks:
-     *    a. If the total number of executable tasks of all machines > the number of subtasks,
-     *       it is allocated according to the number of executable tasks of each machine, and then the configuration parameters are processed, the portal process is invoked, and task instructions are issued.
-     *    b. The total number of executable tasks of all machines < the number of subtasks,
-     *       For example, there are 3 machines, A machine can run 3, B machine can run 6, C machine can run 5,
-     *       the overall number of tasks can be 14, and the number of subtasks is 20.
-     *       At this time, the 14 tasks are first allocated according to the executable quantity of each machine,
-     *       and then the configuration parameters are processed, the portal process is invoked, and task instructions are issued. The status of the remaining 6 tasks is changed to waiting for resources, which are called by the asynchronous scheduler.
-     *       The asynchronous scheduler will regularly monitor whether the three machines have resources released, and if there are resources released, tasks will be assigned according to the carrying capacity.
-     *  3. For the task assigned to the machine, log in to the remote server, process configuration parameters, start the portal process, and pass in the subtask ID to start the process. Then write the instructions of the task to the input file of Portal.
-     *  4. Modify the subtask status, and modify the task to the running state.
+     * 1. Query subtask list; query running configuration machine list; query global configuration and subtask configuration data;
+     * 2. Loop through each machine, use the maximum number of executable tasks - the number of running tasks to get the number of tasks that can be executed by each machine, assign tasks according to the number of executable tasks, and judge whether the machine is installed with portal, if not Install, then install the portal. The following situations may be encountered when assigning tasks:
+     * a. If the total number of executable tasks of all machines > the number of subtasks,
+     * it is allocated according to the number of executable tasks of each machine, and then the configuration parameters are processed, the portal process is invoked, and task instructions are issued.
+     * b. The total number of executable tasks of all machines < the number of subtasks,
+     * For example, there are 3 machines, A machine can run 3, B machine can run 6, C machine can run 5,
+     * the overall number of tasks can be 14, and the number of subtasks is 20.
+     * At this time, the 14 tasks are first allocated according to the executable quantity of each machine,
+     * and then the configuration parameters are processed, the portal process is invoked, and task instructions are issued. The status of the remaining 6 tasks is changed to waiting for resources, which are called by the asynchronous scheduler.
+     * The asynchronous scheduler will regularly monitor whether the three machines have resources released, and if there are resources released, tasks will be assigned according to the carrying capacity.
+     * 3. For the task assigned to the machine, log in to the remote server, process configuration parameters, start the portal process, and pass in the subtask ID to start the process. Then write the instructions of the task to the input file of Portal.
+     * 4. Modify the subtask status, and modify the task to the running state.
+     *
      * @param id
      */
     @Override
-    public AjaxResult startTask(Integer id){
+    public AjaxResult startTask(Integer id) {
         MigrationMainTask mainTask = this.getById(id);
         if (mainTask == null) {
             return AjaxResult.error(MigrationErrorCode.MAIN_TASK_NOT_EXISTS_ERROR.getCode(), MigrationErrorCode.MAIN_TASK_NOT_EXISTS_ERROR.getMsg());
@@ -384,21 +412,21 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
     }
 
     @Override
-    public void finishTask(Integer id){
+    public void finishTask(Integer id) {
         List<MigrationTask> tasks = migrationTaskService.listByMainTaskId(id);
         LoginUser loginUser = SecurityUtils.getLoginUser();
         tasks.stream().forEach(t -> {
             MigrationHostPortalInstall installHost = migrationHostPortalInstallHostService.getOneByHostId(t.getRunHostId());
-            PortalHandle.finishPortal(t.getRunHost(),t.getRunPort(),t.getRunUser(),t.getRunPass(), installHost.getInstallPath(), t);
+            PortalHandle.finishPortal(t.getRunHost(), t.getRunPort(), t.getRunUser(), t.getRunPass(), installHost.getInstallPath(), t);
             MigrationTask update = MigrationTask.builder().id(t.getId()).execStatus(TaskStatus.MIGRATION_FINISH.getCode()).finishTime(new Date()).build();
             migrationTaskOperateRecordService.saveRecord(t.getId(), TaskOperate.FINISH_MIGRATION, loginUser.getUsername());
             migrationTaskService.updateById(update);
         });
-       updateStatus(id, MainTaskStatus.FINISH);
+        updateStatus(id, MainTaskStatus.FINISH);
     }
 
     @Override
-    public AjaxResult finishSubTask(Integer id){
+    public AjaxResult finishSubTask(Integer id) {
         MigrationTask subTask = migrationTaskService.getById(id);
         if (subTask == null) {
             return AjaxResult.error(MigrationErrorCode.SUB_TASK_NOT_EXISTS_ERROR.getCode(), MigrationErrorCode.SUB_TASK_NOT_EXISTS_ERROR.getMsg());
@@ -414,13 +442,13 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
     }
 
     @Override
-    public AjaxResult stopSubTaskIncremental(Integer id){
+    public AjaxResult stopSubTaskIncremental(Integer id) {
         MigrationTask subTask = migrationTaskService.getById(id);
         if (subTask == null) {
             return AjaxResult.error(MigrationErrorCode.SUB_TASK_NOT_EXISTS_ERROR.getCode(), MigrationErrorCode.SUB_TASK_NOT_EXISTS_ERROR.getMsg());
         }
         if (subTask.getExecStatus() != TaskStatus.INCREMENTAL_START.getCode()
-            && subTask.getExecStatus() != TaskStatus.INCREMENTAL_RUNNING.getCode()) {
+                && subTask.getExecStatus() != TaskStatus.INCREMENTAL_RUNNING.getCode()) {
             return AjaxResult.error(MigrationErrorCode.SUB_TASK_NOT_IN_INCREMENTAL_ERROR.getCode(), MigrationErrorCode.SUB_TASK_NOT_IN_INCREMENTAL_ERROR.getMsg());
         }
         MigrationHostPortalInstall installHost = migrationHostPortalInstallHostService.getOneByHostId(subTask.getRunHostId());
@@ -434,7 +462,7 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
     }
 
     @Override
-    public AjaxResult startSubTaskReverse(Integer id){
+    public AjaxResult startSubTaskReverse(Integer id) {
         MigrationTask subTask = migrationTaskService.getById(id);
         if (subTask == null) {
             return AjaxResult.error(MigrationErrorCode.SUB_TASK_NOT_EXISTS_ERROR.getCode(), MigrationErrorCode.SUB_TASK_NOT_EXISTS_ERROR.getMsg());
@@ -454,13 +482,14 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
 
     /**
      * Update subtask status and progress bar data
+     *
      * @param taskId
      */
     @Override
     public void refreshTaskStatusByPortal(Integer taskId) {
         Long time = taskRefreshRecord.get(taskId);
         Long curTime = DateUtil.date().getTime();
-        if(time == null || curTime > (time + taskRefreshIntervalsMillisecond)) {
+        if (time == null || curTime > (time + taskRefreshIntervalsMillisecond)) {
             threadPoolTaskExecutor.submit(() -> {
                 try {
                     log.info("Sync refresh task status,taskId:{}", taskId);
@@ -475,6 +504,7 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
     /**
      * Obtain data from portal status and progress files,
      * asynchronously update subtask status and progress bar data
+     *
      * @param mainTaskId
      */
     private void syncRefreshTaskStatusByPortal(Integer mainTaskId) {
@@ -492,7 +522,7 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
                     t.getExecStatus().equals(TaskStatus.REVERSE_START.getCode()) ||
                     t.getExecStatus().equals(TaskStatus.REVERSE_RUNNING.getCode());
         }).collect(Collectors.toList());
-        if(runningTasks.size() > 0) {
+        if (runningTasks.size() > 0) {
             taskRefreshRecord.put(mainTaskId, DateUtil.date().getTime());
             runningTasks.forEach(t -> {
                 migrationTaskService.getSingleTaskStatusAndProcessByProtal(t);
@@ -504,13 +534,12 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
     }
 
 
-
     /**
      * Update main task status and progress bar based on subtask status
      */
     @Override
     public void doRefreshMainTaskStatus() {
-        while(true) {
+        while (true) {
             if (countByProcessing() > 0) {
                 List<MigrationMainTask> migrationMainTasks = listByProcessing();
                 migrationMainTasks.stream().forEach(mt -> {
@@ -525,7 +554,7 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
         }
     }
 
-    private void doRefreshSingleMainTask(MigrationMainTask mt){
+    private void doRefreshSingleMainTask(MigrationMainTask mt) {
         List<MigrationTask> tasks = migrationTaskService.listByMainTaskId(mt.getId());
         if (tasks.size() > 0) {
             Integer totalProcess = tasks.size() * 4;
@@ -534,20 +563,20 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
             Integer incrementalAndReverseRunningCount3 = 0;
             Integer finishCount4 = 0;
             for (MigrationTask t : tasks) {
-                if(t.getExecStatus().equals(TaskStatus.FULL_START.getCode()) || t.getExecStatus().equals(TaskStatus.FULL_RUNNING.getCode()) ||
+                if (t.getExecStatus().equals(TaskStatus.FULL_START.getCode()) || t.getExecStatus().equals(TaskStatus.FULL_RUNNING.getCode()) ||
                         t.getExecStatus().equals(TaskStatus.FULL_FINISH.getCode())
                 ) {
                     fullRunningCount1 += 1;
                 }
-                if(t.getExecStatus().equals(TaskStatus.FULL_CHECK_START.getCode()) ||
+                if (t.getExecStatus().equals(TaskStatus.FULL_CHECK_START.getCode()) ||
                         t.getExecStatus().equals(TaskStatus.FULL_CHECKING.getCode()) || t.getExecStatus().equals(TaskStatus.FULL_CHECK_FINISH.getCode())
-                ){
+                ) {
                     fullFinishCount2 += 1;
                 }
-                if(t.getExecStatus().equals(TaskStatus.INCREMENTAL_START.getCode()) || t.getExecStatus().equals(TaskStatus.INCREMENTAL_RUNNING.getCode()) ||
-                        t.getExecStatus().equals(TaskStatus.INCREMENTAL_STOP.getCode()) ||  t.getExecStatus().equals(TaskStatus.REVERSE_START.getCode()) ||
+                if (t.getExecStatus().equals(TaskStatus.INCREMENTAL_START.getCode()) || t.getExecStatus().equals(TaskStatus.INCREMENTAL_RUNNING.getCode()) ||
+                        t.getExecStatus().equals(TaskStatus.INCREMENTAL_STOP.getCode()) || t.getExecStatus().equals(TaskStatus.REVERSE_START.getCode()) ||
                         t.getExecStatus().equals(TaskStatus.REVERSE_RUNNING.getCode()) || t.getExecStatus().equals(TaskStatus.REVERSE_STOP.getCode())
-                ){
+                ) {
                     incrementalAndReverseRunningCount3 += 1;
                 }
                 if (t.getExecStatus().equals(TaskStatus.MIGRATION_FINISH.getCode()) || t.getExecStatus().equals(TaskStatus.MIGRATION_ERROR.getCode())) {

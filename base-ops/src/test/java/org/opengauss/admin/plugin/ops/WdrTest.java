@@ -118,11 +118,6 @@ public class WdrTest {
     @BeforeClass
     public static void before(){
         MockitoAnnotations.initMocks(WdrTest.class);
-        System.out.println("start Wdr test........");
-    }
-    @AfterClass
-    public static void after(){
-        System.out.println("end Wdr test........");
     }
 
     @Test

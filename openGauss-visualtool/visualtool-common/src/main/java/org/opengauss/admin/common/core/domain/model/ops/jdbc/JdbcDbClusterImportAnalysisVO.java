@@ -1,3 +1,27 @@
+/*
+ * Copyright (c) 2022 Huawei Technologies Co.,Ltd.
+ *
+ * openGauss is licensed under Mulan PSL v2.
+ * You can use this software according to the terms and conditions of the Mulan PSL v2.
+ * You may obtain a copy of Mulan PSL v2 at:
+ *
+ * http://license.coscl.org.cn/MulanPSL2
+ *
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ * EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ * MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ * See the Mulan PSL v2 for more details.
+ * -------------------------------------------------------------------------
+ *
+ * JdbcDbClusterImportAnalysisVO.java
+ *
+ * IDENTIFICATION
+ * openGauss-visualtool/visualtool-common/src/main/java/org/opengauss/admin/common/core/domain/model/ops/jdbc/JdbcDbClusterImportAnalysisVO.java
+ *
+ * -------------------------------------------------------------------------
+ */
+
+
 package org.opengauss.admin.common.core.domain.model.ops.jdbc;
 
 import cn.hutool.core.collection.CollUtil;
@@ -23,8 +47,8 @@ public class JdbcDbClusterImportAnalysisVO {
         JdbcDbClusterImportAnalysisVO jdbcDbClusterImportAnalysisVO = new JdbcDbClusterImportAnalysisVO();
         List<JdbcErrorVO> failDetailList = new ArrayList<>();
         jdbcDbClusterImportAnalysisVO.setTotal(count(clusterInputDtoList));
-        jdbcDbClusterImportAnalysisVO.setFailNum(count(errorCluster,failDetailList));
-        jdbcDbClusterImportAnalysisVO.setSuccNum(jdbcDbClusterImportAnalysisVO.getTotal()-jdbcDbClusterImportAnalysisVO.getFailNum());
+        jdbcDbClusterImportAnalysisVO.setFailNum(count(errorCluster, failDetailList));
+        jdbcDbClusterImportAnalysisVO.setSuccNum(jdbcDbClusterImportAnalysisVO.getTotal() - jdbcDbClusterImportAnalysisVO.getFailNum());
         jdbcDbClusterImportAnalysisVO.setFailDetail(failDetailList);
         return jdbcDbClusterImportAnalysisVO;
     }
@@ -33,16 +57,16 @@ public class JdbcDbClusterImportAnalysisVO {
         Integer errNum = 0;
         for (JdbcDbClusterInputDto inputDto : errorCluster) {
             List<JdbcDbClusterNodeInputDto> nodes = inputDto.getNodes();
-            if (CollUtil.isEmpty(nodes) && StrUtil.isNotEmpty(inputDto.getRemark())){
+            if (CollUtil.isEmpty(nodes) && StrUtil.isNotEmpty(inputDto.getRemark())) {
                 errNum++;
-                failDetailList.add(JdbcErrorVO.of(inputDto.getClusterName(),null,inputDto.getRemark()));
+                failDetailList.add(JdbcErrorVO.of(inputDto.getClusterName(), null, inputDto.getRemark()));
             }
 
-            if (CollUtil.isNotEmpty(nodes)){
+            if (CollUtil.isNotEmpty(nodes)) {
                 for (JdbcDbClusterNodeInputDto node : nodes) {
-                    if (StrUtil.isNotEmpty(node.getRemark())){
+                    if (StrUtil.isNotEmpty(node.getRemark())) {
                         errNum++;
-                        failDetailList.add(JdbcErrorVO.of(inputDto.getClusterName(),node.getUrl(),node.getRemark()));
+                        failDetailList.add(JdbcErrorVO.of(inputDto.getClusterName(), node.getUrl(), node.getRemark()));
                     }
                 }
             }
@@ -52,12 +76,12 @@ public class JdbcDbClusterImportAnalysisVO {
     }
 
     private static Integer count(List<JdbcDbClusterInputDto> clusterInputDtoList) {
-        final Long count = clusterInputDtoList.stream().map(JdbcDbClusterInputDto::getNodes).flatMap(nodeList->nodeList.stream()).collect(Collectors.counting());
+        final Long count = clusterInputDtoList.stream().map(JdbcDbClusterInputDto::getNodes).flatMap(nodeList -> nodeList.stream()).collect(Collectors.counting());
         return count.intValue();
     }
 
     @Data
-    static class JdbcErrorVO{
+    static class JdbcErrorVO {
         private String clusterName;
         private String url;
         private String errMsg;
