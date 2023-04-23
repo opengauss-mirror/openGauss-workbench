@@ -12,38 +12,38 @@
     <template #footer>
       <div class="flex-between">
         <div class="flex-row">
-          <div class="label-color mr" v-if="data.form.status === -1">待检测</div>
-          <a-tag v-if="data.form.status === 1" color="green">可用</a-tag>
-          <a-tag v-if="data.form.status === 0" color="red">不可用</a-tag>
+          <div class="label-color mr" v-if="data.form.status === -1">{{$t('components.AddJdbc.5q0a7i439cg0')}}</div>
+          <a-tag v-if="data.form.status === 1" color="green">{{$t('components.AddJdbc.5q0a7i43aeg0')}}</a-tag>
+          <a-tag v-if="data.form.status === 0" color="red">{{$t('components.AddJdbc.5q0a7i43ajk0')}}</a-tag>
         </div>
         <div>
-          <a-button class="mr" @click="close">取消</a-button>
-          <a-button :loading="data.testLoading" class="mr" @click="handleTestHost()">测试连通性</a-button>
-          <a-button :loading="data.loading" type="primary" @click="submit">确定</a-button>
+          <a-button class="mr" @click="close">{{$t('components.AddJdbc.5q0a7i43amo0')}}</a-button>
+          <a-button :loading="data.testLoading" class="mr" @click="handleTestHost()">{{$t('components.AddJdbc.5q0a7i43ap40')}}</a-button>
+          <a-button :loading="data.loading" type="primary" @click="submit">{{$t('components.AddJdbc.5q0a7i43as00')}}</a-button>
         </div>
       </div>
     </template>
     <a-form :model="data.form" ref="formRef" auto-label-width :rules="formRules">
       <a-row :gutter="16">
         <a-col :span="19">
-          <a-form-item v-if="!data.form.isCustomName" label="集群名称"
+          <a-form-item v-if="!data.form.isCustomName" :label="$t('components.AddJdbc.5q0a7i43aw00')"
             validate-trigger="blur">
-            <a-input v-model="clusterName" placeholder="请输入实例名称" disabled></a-input>
+            <a-input v-model="clusterName" :placeholder="$t('components.AddJdbc.5q0a7i43bkk0')" disabled></a-input>
           </a-form-item>
-          <a-form-item v-else field="name" label="集群名称" validate-trigger="blur">
-            <a-input v-model="data.form.name" placeholder="集群名称将会根据实例信息生成"></a-input>
+          <a-form-item v-else field="name" :label="$t('components.AddJdbc.5q0a7i43aw00')" validate-trigger="blur">
+            <a-input v-model="data.form.name" :placeholder="$t('components.AddJdbc.5q0a7i43boo0')"></a-input>
           </a-form-item>
         </a-col>
         <a-col :span="5">
           <a-form-item hide-label>
             <a-checkbox v-model="data.form.isCustomName" @change="handleCustomChange(data.form.isCustomName)">
-              自定义名称
+              {{$t('components.AddJdbc.5q0a7i43br80')}}
             </a-checkbox>
           </a-form-item>
         </a-col>
       </a-row>
-      <a-form-item label="数据库类型" validate-trigger="change">
-        <a-select class="select-w" v-model="data.form.dbType" disabled placeholder="请选择数据库类型">
+      <a-form-item :label="$t('components.AddJdbc.5q0a7i43bto0')" validate-trigger="change">
+        <a-select class="select-w" v-model="data.form.dbType" disabled :placeholder="$t('components.AddJdbc.5q0a7i43bwk0')">
           <a-option v-for="item in data.dbTypes" :key="item.value" :value="item.value">{{
             item.label
           }}</a-option>
@@ -54,10 +54,10 @@
       v-model:active-key="data.activeTab" show-add-button auto-switch>
       <a-tab-pane v-for="item of data.form.nodes" :key="item.id" :closable="data.form.nodes.length > 1">
         <template #title>
-          <a-tooltip content="不可用" v-if="item.status === 0">
+          <a-tooltip :content="$t('components.AddJdbc.5q0a7i43ajk0')" v-if="item.status === 0">
             <icon-exclamation-circle-fill />
           </a-tooltip>
-          {{ item.ip.trim() ? item.ip : '实例' + item.tabName }}
+          {{ item.ip.trim() ? item.ip : $t('components.AddJdbc.5q0a7i43bzk0') + item.tabName }}
         </template>
         <div class="jdbc-instance-c">
           <jdbc-instance :form-data="item" :host-list="data.hostList" :jdbc-type="data.form.dbType" :ref="(el) => setRefMap(el, item.id)"></jdbc-instance>
@@ -72,6 +72,9 @@ import { nextTick, reactive, ref, computed } from 'vue'
 import { addJdbc, hostListAll } from '@/api/task'
 import { Message } from '@arco-design/web-vue'
 import JdbcInstance from './JdbcInstance.vue'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const data = reactive({
   show: false,
@@ -131,12 +134,12 @@ const getNameByNode = (data) => {
 const formRules = computed(() => {
   return {
     name: [
-      { required: true, 'validate-trigger': 'blur', message: '请输入集群名称' },
+      { required: true, 'validate-trigger': 'blur', message: t('components.AddJdbc.5q0a7i43c280') },
       {
         validator: (value, cb) => {
           return new Promise(resolve => {
             if (!value.trim()) {
-              cb('不能为纯空格')
+              cb(t('components.AddJdbc.5q0a7i43c4s0'))
               resolve(false)
             } else {
               resolve(true)
@@ -333,7 +336,7 @@ const open = (dbType) => {
   data.loading = false
   data.testLoading = false
   getHostList()
-  data.title = '新增数据源'
+  data.title = t('components.AddJdbc.5q0a7i43f3c0')
   Object.assign(data.form, {
     clusterId: '',
     name: '',

@@ -6,8 +6,8 @@
   >
     <template #title>
       <div class="title-con">
-        <span class="params-title">{{ props.mode === 1 ? '默认参数配置（全局配置）' : '子任务参数配置'}}</span>
-        <span v-if="props.mode === 1" class="params-info"><b>{{ props.countUseDefault }}</b>个子任务使用了此配置</span>
+        <span class="params-title">{{ props.mode === 1 ? $t('components.ParamsConfig.5q0aazspots0') : $t('components.ParamsConfig.5q0aazsppew0')}}</span>
+        <span v-if="props.mode === 1" class="params-info">{{$t('components.ParamsConfig.5q0aazsppjc0', { num: props.countUseDefault })}}</span>
       </div>
     </template>
     <div class="config-con">
@@ -15,34 +15,34 @@
         <a-descriptions :data="descData" layout="inline-horizontal" :column="2" table-layout="fixed" bordered />
       </div>
       <div class="basic-config-con">
-        <div class="basic-title">基础参数</div>
+        <div class="basic-title">{{$t('components.ParamsConfig.5q0aazsppm00')}}</div>
         <div class="basic-params-table">
           <a-table :data="basicData" :hoverable="false" :bordered="true" :pagination="false" :row-class="basicRowClass">
             <template #columns>
-              <a-table-column title="参数名称" data-index="paramKey" :width="180" ellipsis tooltip></a-table-column>
-              <a-table-column title="值" data-index="paramValue">
+              <a-table-column :title="$t('components.ParamsConfig.5q0aazsppog0')" data-index="paramKey" :width="180" ellipsis tooltip></a-table-column>
+              <a-table-column :title="$t('components.ParamsConfig.5q0aazsppr80')" data-index="paramValue">
                 <template #cell="{ record }">
                   <a-input v-model="record.paramValue" />
                 </template>
               </a-table-column>
-              <a-table-column title="参数说明" data-index="paramDesc" :width="200" ellipsis tooltip></a-table-column>
+              <a-table-column :title="$t('components.ParamsConfig.5q0aazspptw0')" data-index="paramDesc" :width="200" ellipsis tooltip></a-table-column>
             </template>
           </a-table>
         </div>
       </div>
       <div class="super-config-con">
         <a-collapse :default-active-key="[1]" accordion :bordered="false" expand-icon-position="right" :show-expand-icon="true">
-          <a-collapse-item header="高级参数" key="1" :style="customStyle">
+          <a-collapse-item :header="$t('components.ParamsConfig.5q0aazsppwg0')" key="1" :style="customStyle">
             <div class="super-params-table">
               <a-table :data="moreData" :hoverable="false" :bordered="true" :pagination="false" :row-class="moreRowClass">
                 <template #columns>
-                  <a-table-column title="参数名称" data-index="paramKey" :width="180" ellipsis tooltip></a-table-column>
-                  <a-table-column title="值" data-index="paramValue">
+                  <a-table-column :title="$t('components.ParamsConfig.5q0aazsppog0')" data-index="paramKey" :width="180" ellipsis tooltip></a-table-column>
+                  <a-table-column :title="$t('components.ParamsConfig.5q0aazsppr80')" data-index="paramValue">
                     <template #cell="{ record }">
                       <a-input v-model="record.paramValue" />
                     </template>
                   </a-table-column>
-                  <a-table-column title="参数说明" data-index="paramDesc" :width="200" ellipsis tooltip></a-table-column>
+                  <a-table-column :title="$t('components.ParamsConfig.5q0aazspptw0')" data-index="paramDesc" :width="200" ellipsis tooltip></a-table-column>
                 </template>
               </a-table>
             </div>
@@ -52,9 +52,9 @@
     </div>
     <template #footer>
       <div class="footer-con">
-        <a-button v-if="props.mode === 1 && (basicEditData.length || moreEditData.length)" type="outline" style="margin-right: 10px;" @click="resetDefault">恢复默认值</a-button>
-        <a-button v-if="props.mode === 2 && (basicEditData.length || moreEditData.length)" type="outline" style="margin-right: 10px;" @click="resetDefault">使用全局配置</a-button>
-        <a-button type="primary" @click="saveParams()">保存</a-button>
+        <a-button v-if="props.mode === 1 && (basicEditData.length || moreEditData.length)" type="outline" style="margin-right: 10px;" @click="resetDefault">{{$t('components.ParamsConfig.5q0aazsppz40')}}</a-button>
+        <a-button v-if="props.mode === 2 && (basicEditData.length || moreEditData.length)" type="outline" style="margin-right: 10px;" @click="resetDefault">{{$t('components.ParamsConfig.5q0aazspq200')}}</a-button>
+        <a-button type="primary" @click="saveParams()">{{$t('components.ParamsConfig.5q0aazspq4g0')}}</a-button>
       </div>
     </template>
   </a-drawer>
@@ -64,6 +64,9 @@
 import { ref, reactive, watch, onMounted } from 'vue'
 import { defaultParams } from '@/api/task'
 import { mergeObjectArray } from '@/utils'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const props = defineProps({
   open: Boolean,
@@ -126,19 +129,19 @@ watch(() => props.open, (v) => {
     if (props.mode === 2) {
       descData.value = [
         {
-          label: '源实例名：',
+          label: t('components.ParamsConfig.5q0aazspq7k0'),
           value: props.taskInfo.sourceNodeName
         },
         {
-          label: '目的实例名：',
+          label: t('components.ParamsConfig.5q0aazspqac0'),
           value: props.taskInfo.targetNodeName
         },
         {
-          label: '源库名：',
+          label: t('components.ParamsConfig.5q0aazspqd00'),
           value: props.taskInfo.sourceDBName
         },
         {
-          label: '目的库名：',
+          label: t('components.ParamsConfig.5q0aazspqfs0'),
           value: props.taskInfo.targetDBName
         }
       ]

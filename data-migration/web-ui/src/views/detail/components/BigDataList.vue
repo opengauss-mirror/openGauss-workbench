@@ -3,16 +3,16 @@
     <div class="table-header-con">
       <a-table :bordered="false" :pagination="false">
         <template #columns>
-          <a-table-column :title="`源库：${props.subTaskInfo.sourceDb}`" data-index="name" :width="250"></a-table-column>
-          <a-table-column :title="`目的库：${props.subTaskInfo.targetDb}`" data-index="name" :width="250"></a-table-column>
+          <a-table-column :title="$t('components.BigDataList.5q09l2jkfp80', { sourceDb: props.subTaskInfo.sourceDb })" data-index="name" :width="250"></a-table-column>
+          <a-table-column :title="$t('components.BigDataList.5q09m4g78no0', { targetDb: props.subTaskInfo.targetDb })" data-index="name" :width="250"></a-table-column>
           <a-table-column data-index="status" align="center">
             <template #title>
-              <span>迁移状态</span>
+              <span>{{$t('components.BigDataList.5q09jzwfo340')}}</span>
               <a-popover content-class="pop-con">
                 <span style="margin-left: 5px;cursor: pointer;"><icon-filter /></span>
                 <template #content>
                   <div class="filter-con">
-                    <span>仅显示错误数据：</span>
+                    <span>{{$t('components.BigDataList.5q09jzwfppw0')}}</span>
                     <a-switch v-model="onlyError" size="small" @change="filterTableData(1)" />
                   </div>
                 </template>
@@ -21,12 +21,12 @@
           </a-table-column>
           <a-table-column data-index="status" align="center">
             <template #title>
-              <span>迁移校验</span>
+              <span>{{$t('components.BigDataList.5q09jzwfq5g0')}}</span>
               <a-popover content-class="pop-con">
                 <span style="margin-left: 5px;cursor: pointer;"><icon-filter /></span>
                 <template #content>
                   <div class="filter-con">
-                    <span>仅显示错误数据：</span>
+                    <span>{{$t('components.BigDataList.5q09jzwfppw0')}}</span>
                     <a-switch v-model="onlyCheckError" size="small" @change="filterTableData(2)" />
                   </div>
                 </template>
@@ -40,16 +40,16 @@
       <a-collapse :default-active-key="['table']" :bordered="true">
         <a-collapse-item v-for="item in table_list" :key="item.key">
           <template #header>
-            <span>{{ item.name }}</span>
+            <span>{{ listNampMap(item.key) }}</span>
           </template>
           <template #extra>
             <a-popover>
               <icon-bar-chart class="data-count" size="16" />
               <template #content>
-                <p>等待数：{{ props.recordCounts[item.key].waitCount }}</p>
-                <p>执行数：{{ props.recordCounts[item.key].runningCount }}</p>
-                <p>完成数：{{ props.recordCounts[item.key].finishCount }}</p>
-                <p>失败数：{{ props.recordCounts[item.key].errorCount }}</p>
+                <p>{{$t('components.BigDataList.5q09nizckiw0')}}{{ props.recordCounts[item.key].waitCount }}</p>
+                <p>{{$t('components.BigDataList.5q09o79wsew0')}}{{ props.recordCounts[item.key].runningCount }}</p>
+                <p>{{$t('components.BigDataList.5q09o79wvtw0')}}{{ props.recordCounts[item.key].finishCount }}</p>
+                <p>{{$t('components.BigDataList.5q09o79ww2g0')}}{{ props.recordCounts[item.key].errorCount }}</p>
               </template>
             </a-popover>
           </template>
@@ -61,7 +61,7 @@
                 <template #cell="{ record }">
                   <span v-if="record.status === 1 || record.status === 2">{{ record.percent ? (record.percent * 100).toFixed(2) : '0' }}%</span>
                   <icon-check-circle-fill v-if="record.status === 3 || record.status === 4 || record.status === 5" size="16" style="color: #00B429;" />
-                  <a-popover title="错误详情" position="tr">
+                  <a-popover :title="$t('components.BigDataList.5q09jzwfqa80')" position="tr">
                     <icon-close-circle-fill v-if="record.status === 6" size="16" style="color: #FF7D01;" />
                     <template #content>
                       <p>{{ record.msg }}</p>
@@ -73,7 +73,7 @@
                 <template #cell="{ record }">
                   <span v-if="record.status === 4">{{ record.percent ? (record.percent * 100).toFixed(2) : '0' }}%</span>
                   <icon-check-circle-fill v-if="record.status === 5" size="16" style="color: #00B429;" />
-                  <a-popover title="错误详情" position="tr">
+                  <a-popover :title="$t('components.BigDataList.5q09jzwfqa80')" position="tr">
                     <icon-close-circle-fill v-if="record.status === 6" size="16" style="color: #FF7D01;" />
                     <template #content>
                       <p>{{ record.msg }}</p>
@@ -91,6 +91,9 @@
 
 <script setup>
 import { ref, reactive, watchEffect } from 'vue'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const props = defineProps({
   fullData: Object,
@@ -112,26 +115,33 @@ const onlyCheckError = ref(false)
 
 const table_list = ref([
   {
-    key: 'table',
-    name: '表'
+    key: 'table'
   },
   {
-    key: 'view',
-    name: '视图'
+    key: 'view'
   },
   {
-    key: 'function',
-    name: '函数'
+    key: 'function'
   },
   {
-    key: 'trigger',
-    name: '触发器'
+    key: 'trigger'
   },
   {
-    key: 'procedure',
-    name: '存储过程'
+    key: 'procedure'
   }
 ])
+
+// list name
+const listNampMap = (key) => {
+  const maps = {
+    'table': t('components.BigDataList.5q09jzwfqf40'),
+    'view': t('components.BigDataList.5q09jzwfqiw0'),
+    'function': t('components.BigDataList.5q09jzwfqm80'),
+    'trigger': t('components.BigDataList.5q09jzwfqp80'),
+    'procedure': t('components.BigDataList.5q09jzwfqs40')
+  }
+  return maps[key]
+}
 
 const tableListData = reactive({
   table: ref([]),

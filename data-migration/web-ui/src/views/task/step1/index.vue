@@ -5,9 +5,9 @@
         <a-card bordered style="width: 400px;">
           <template #title>
             <div class="card-title-con">
-              <div class="card-title">源端</div>
+              <div class="card-title">{{$t('step1.index.5q091ixiemk0')}}</div>
               <div class="sql-sel-con">
-                <a-input v-model="searchSourceKey" placeholder="输入名称搜索" allow-clear />
+                <a-input v-model="searchSourceKey" :placeholder="$t('step1.index.5q091ixig500')" allow-clear />
               </div>
               <div class="refresh-con">
                 <a-link @click="getClustersData"><icon-refresh /></a-link>
@@ -15,7 +15,7 @@
             </div>
           </template>
           <template #extra>
-            <a-link @click="handleAddSql('MYSQL')">新增数据源</a-link>
+            <a-link @click="handleAddSql('MYSQL')">{{$t('step1.index.5q091ixigdc0')}}</a-link>
           </template>
           <div class="sql-tree-con">
             <a-spin :loading="loading" style="display: block;">
@@ -46,7 +46,7 @@
           </div>
         </a-card>
         <div v-if="selectSourceDB.sourceDBName" class="selected-db-con">
-          <span class="selected-info">已选源端数据库：</span>
+          <span class="selected-info">{{$t('step1.index.5q091ixiggs0')}}</span>
           <span class="selected-db">{{ selectSourceDB.sourceDBName }}</span>
         </div>
       </div>
@@ -57,9 +57,9 @@
         <a-card bordered style="width: 400px;">
           <template #title>
             <div class="card-title-con">
-              <div class="card-title">目的端</div>
+              <div class="card-title">{{$t('step1.index.5q091ixigjo0')}}</div>
               <div class="sql-sel-con">
-                <a-input v-model="searchTargetKey" placeholder="输入名称搜索" allow-clear />
+                <a-input v-model="searchTargetKey" :placeholder="$t('step1.index.5q091ixig500')" allow-clear />
               </div>
               <div class="refresh-con">
                 <a-link @click="getClustersData"><icon-refresh /></a-link>
@@ -67,7 +67,7 @@
             </div>
           </template>
           <template #extra>
-            <a-link @click="handleAddSql('OPENGAUSS')">新增数据源</a-link>
+            <a-link @click="handleAddSql('OPENGAUSS')">{{$t('step1.index.5q091ixigdc0')}}</a-link>
           </template>
           <div class="sql-selected-con">
             <a-spin :loading="loading" style="display: block;">
@@ -85,7 +85,7 @@
                     </a-popover>
                     <div v-else class="add-sub-task">
                       <span>{{ nodeData?.title }}</span>
-                      <a-button v-if="nodeData?.isLeaf && nodeData?.isSelect" class="add-sub-btn" type="primary" size="mini" @click="addSubTask(nodeData)">添加子任务</a-button>
+                      <a-button v-if="nodeData?.isLeaf && nodeData?.isSelect" class="add-sub-btn" type="primary" size="mini" @click="addSubTask(nodeData)">{{$t('step1.index.5q091ixigog0')}}</a-button>
                     </div>
                   </template>
                   <span v-else>
@@ -105,33 +105,33 @@
     <div class="table-con">
       <a-table :data="tableData" :bordered="false" :stripe="!currentTheme" :hoverable="!currentTheme" :pagination="false">
         <template #columns>
-          <a-table-column title="源IP和端口" data-index="sourceNodeName" :width="200" ellipsis tooltip></a-table-column>
-          <a-table-column title="源库名" data-index="sourceDBName" :width="200" ellipsis tooltip></a-table-column>
-          <a-table-column title="目的IP和端口" data-index="targetNodeName" :width="200" ellipsis tooltip></a-table-column>
-          <a-table-column title="目的库名" data-index="targetDBName" :width="200" ellipsis tooltip></a-table-column>
+          <a-table-column :title="$t('step1.index.5q091ixigro0')" data-index="sourceNodeName" :width="200" ellipsis tooltip></a-table-column>
+          <a-table-column :title="$t('step1.index.5q091ixigug0')" data-index="sourceDBName" :width="200" ellipsis tooltip></a-table-column>
+          <a-table-column :title="$t('step1.index.5q091ixigy80')" data-index="targetNodeName" :width="200" ellipsis tooltip></a-table-column>
+          <a-table-column :title="$t('step1.index.5q091ixih280')" data-index="targetDBName" :width="200" ellipsis tooltip></a-table-column>
           <a-table-column data-index="mode" :width="130">
             <template #title>
               <div>
-                <span>迁移过程模式</span>
+                <span>{{$t('step1.index.5q091ixih580')}}</span>
                 <a-popover position="top">
                   <icon-question-circle style="cursor: pointer;margin-left: 3px;" size="15" />
                   <template #content>
-                    <p>离线模式：自动执行全量迁移，完成后自动结束，释放资源。</p>
-                    <p>在线模式：自动执行全量迁移+增量迁移，用户手动启动反向迁移，需要用户操作结束迁移，释放资源。</p>
+                    <p>{{$t('step1.index.5q091ixih8g0')}}</p>
+                    <p>{{$t('step1.index.5q091ixihtg0')}}</p>
                   </template>
                 </a-popover>
               </div>
             </template>
             <template #cell="{ record }">
-              <a-select v-model="record.mode" placeholder="请选择">
-                <a-option :value="1">离线模式</a-option>
-                <a-option :value="2">在线模式</a-option>
+              <a-select v-model="record.mode" :placeholder="$t('step1.index.5q091ixii200')">
+                <a-option :value="1">{{$t('step1.index.5q091ixii5w0')}}</a-option>
+                <a-option :value="2">{{$t('step1.index.5q091ixii8o0')}}</a-option>
               </a-select>
             </template>
           </a-table-column>
-          <a-table-column title="操作" align="center" :width="100" fixed="right">
+          <a-table-column :title="$t('step1.index.5q091ixiibk0')" align="center" :width="100" fixed="right">
             <template #cell="{ rowIndex }">
-              <a-popconfirm content="你确认删除此任务吗？" @ok="deleteSubTask(rowIndex)">
+              <a-popconfirm :content="$t('step1.index.5q091ixiieo0')" @ok="deleteSubTask(rowIndex)">
                 <a-button
                   size="mini"
                   type="text"
@@ -139,7 +139,7 @@
                   <template #icon>
                     <icon-delete />
                   </template>
-                  <template #default>删除</template>
+                  <template #default>{{$t('step1.index.5q091ixiihc0')}}</template>
                 </a-button>
               </a-popconfirm>
             </template>
@@ -159,6 +159,9 @@ import { Message } from '@arco-design/web-vue'
 import AddJdbc from '../components/AddJdbc.vue'
 import { clustersData, sourceClusterDbsData, targetClusterDbsData } from '@/api/task'
 import useTheme from '@/hooks/theme'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const { currentTheme } = useTheme()
 
@@ -246,7 +249,7 @@ const deepSourceTreeData = (data) => {
   return data.map((item) => {
     if (item?.nodes?.length > 0) {
       return {
-        title: item.name || '默认',
+        title: item.name || t('step1.index.5q091ixiikk0'),
         key: item.clusterId || item.clusterNodeId,
         icon: () => h(compile('<svg-icon icon-class="cluster" style="font-size: 16px;" />')),
         level: item.clusterId ? 0 : 1,
@@ -269,7 +272,7 @@ const deepTargetTreeData = (data) => {
   return data.map((item) => {
     if (item?.clusterNodes?.length > 0) {
       return {
-        title: item.clusterId || '默认',
+        title: item.clusterId || t('step1.index.5q091ixiikk0'),
         key: item.clusterId || item.nodeId,
         icon: () => h(compile('<svg-icon icon-class="cluster" style="font-size: 16px;" />')),
         level: item.clusterId ? 0 : 1,

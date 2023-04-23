@@ -2,18 +2,18 @@
   <div class="home-container">
     <div class="main-con">
       <div class="title-con">
-        <div class="title">创建数据迁移任务</div>
+        <div class="title">{{$t('task.index.5q08xss4gss0')}}</div>
         <div class="task-name-con">
-          <span class="task-name"><i>*</i>任务名称</span>
-          <a-input v-model.trim="taskName" placeholder="请输入任务名称" style="width: 250px;" />
+          <span class="task-name"><i>*</i>{{$t('task.index.5q08xss4j7o0')}}</span>
+          <a-input v-model.trim="taskName" :placeholder="$t('task.index.5q08xss4jkc0')" style="width: 250px;" />
         </div>
       </div>
       <a-divider />
       <div class="task-steps-con">
         <a-steps :current="currentStep">
-          <a-step description="1个子任务是1个源库到1个目的库的迁移过程">选择迁移源库和目的库</a-step>
-          <a-step description="确定每一个迁移过程的执行参数">配置迁移过程参数</a-step>
-          <a-step description="选择合适的机器执行迁移过程">分配执行机资源</a-step>
+          <a-step :description="$t('task.index.5q08zucvfwc0')">{{$t('task.index.5q08xss4k9w0')}}</a-step>
+          <a-step :description="$t('task.index.5q090g6io340')">{{$t('task.index.5q08xss4khc0')}}</a-step>
+          <a-step :description="$t('task.index.5q090g6iouw0')">{{$t('task.index.5q08xss4kkw0')}}</a-step>
         </a-steps>
       </div>
       <!-- step1 -->
@@ -24,9 +24,9 @@
       <step3 v-if="currentStep === 3" :sub-task-config="subTaskConfig" :host-data="selectedHosts" @syncHost="syncHost" />
     </div>
     <div class="submit-con">
-      <a-button v-if="currentStep === 2 || currentStep === 3" type="outline" class="btn-item" @click="onPrev">上一步</a-button>
-      <a-button v-if="currentStep === 1 || currentStep === 2" type="primary" class="btn-item" @click="onNext">下一步</a-button>
-      <a-button v-if="currentStep === 3" type="primary" class="btn-item" @click="saveConfig">完成</a-button>
+      <a-button v-if="currentStep === 2 || currentStep === 3" type="outline" class="btn-item" @click="onPrev">{{$t('task.index.5q08xss4kr40')}}</a-button>
+      <a-button v-if="currentStep === 1 || currentStep === 2" type="primary" class="btn-item" @click="onNext">{{$t('task.index.5q08xss4kww0')}}</a-button>
+      <a-button v-if="currentStep === 3" type="primary" class="btn-item" @click="saveConfig">{{$t('task.index.5q08xss4l2w0')}}</a-button>
     </div>
   </div>
 </template>

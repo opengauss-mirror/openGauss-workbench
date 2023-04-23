@@ -2,30 +2,30 @@
   <div class="step2-container">
     <div class="warn-con">
       <a-alert>
-        提示：每个迁移过程都需要有参数配置，DataKit已经为每一个迁移过程（即子任务）配置了默认参数。您也可以在下表中修改某个迁移过程（即子任务）的参数配置，来确保迁移过程顺利执行。
+        {{$t('step2.index.5q092waasqk0')}}
         <template #action>
-          <a-button size="small" type="primary" @click="handleParamsConfig(1)">默认参数配置(全局配置)</a-button>
+          <a-button size="small" type="primary" @click="handleParamsConfig(1)">{{$t('step2.index.5q092waatio0')}}</a-button>
         </template>
       </a-alert>
     </div>
     <div class="search-con">
       <a-form :model="form" layout="inline">
         <a-form-item field="sourcedbKey" style="margin-left: -17px;">
-          <a-input v-model.trim="form.sourcedbKey" allow-clear placeholder="请输入源IP/端口/库名" style="width: 180px;"></a-input>
+          <a-input v-model.trim="form.sourcedbKey" allow-clear :placeholder="$t('step2.index.5q092waatnk0')" style="width: 180px;"></a-input>
         </a-form-item>
         <a-form-item field="targetdbKey" style="margin-left: -17px;">
-          <a-input v-model.trim="form.targetdbKey" allow-clear placeholder="请输入目的IP/端口/库名" style="width: 180px;"></a-input>
+          <a-input v-model.trim="form.targetdbKey" allow-clear :placeholder="$t('step2.index.5q092waatqo0')" style="width: 180px;"></a-input>
         </a-form-item>
         <a-form-item field="mode" style="margin-left: -17px;">
-          <a-select v-model="form.mode" placeholder="请选择迁移模式" allow-clear style="width: 160px;">
-            <a-option :value="1">离线模式</a-option>
-            <a-option :value="2">在线模式</a-option>
+          <a-select v-model="form.mode" :placeholder="$t('step2.index.5q092waau3o0')" allow-clear style="width: 160px;">
+            <a-option :value="1">{{$t('step2.index.5q092waau8c0')}}</a-option>
+            <a-option :value="2">{{$t('step2.index.5q092waaubo0')}}</a-option>
           </a-select>
         </a-form-item>
         <a-form-item field="configType" style="margin-left: -17px;">
-          <a-select v-model="form.configType" placeholder="请选择配置类型" allow-clear style="width: 160px;">
-            <a-option :value="1">默认配置</a-option>
-            <a-option :value="2">个性化配置</a-option>
+          <a-select v-model="form.configType" :placeholder="$t('step2.index.5q092waaueg0')" allow-clear style="width: 160px;">
+            <a-option :value="1">{{$t('step2.index.5q092waauhk0')}}</a-option>
+            <a-option :value="2">{{$t('step2.index.5q092waaukc0')}}</a-option>
           </a-select>
         </a-form-item>
         <a-form-item style="margin-left: -17px;">
@@ -33,13 +33,13 @@
             <template #icon>
               <icon-search />
             </template>
-            <template #default>查询</template>
+            <template #default>{{$t('step2.index.5q092waaun40')}}</template>
           </a-button>
           <a-button style="margin-left: 10px;" @click="resetQuery">
             <template #icon>
               <icon-sync />
             </template>
-            <template #default>重置</template>
+            <template #default>{{$t('step2.index.5q092waaw3w0')}}</template>
           </a-button>
         </a-form-item>
       </a-form>
@@ -47,16 +47,16 @@
     <div class="table-con">
       <a-table :data="tableData" :bordered="false" :stripe="!currentTheme" :hoverable="!currentTheme" :pagination="pagination" @page-change="pageChange">
         <template #columns>
-          <a-table-column title="源IP和端口" data-index="sourceNodeName"></a-table-column>
-          <a-table-column title="源库名" data-index="sourceDBName"></a-table-column>
-          <a-table-column title="目的IP和端口" data-index="targetNodeName"></a-table-column>
-          <a-table-column title="目的库名" data-index="targetDBName"></a-table-column>
-          <a-table-column title="迁移过程模式" data-index="mode">
+          <a-table-column :title="$t('step2.index.5q092waawag0')" data-index="sourceNodeName"></a-table-column>
+          <a-table-column :title="$t('step2.index.5q092waawdo0')" data-index="sourceDBName"></a-table-column>
+          <a-table-column :title="$t('step2.index.5q092waawh80')" data-index="targetNodeName"></a-table-column>
+          <a-table-column :title="$t('step2.index.5q092waawk00')" data-index="targetDBName"></a-table-column>
+          <a-table-column :title="$t('step2.index.5q092wab7280')" data-index="mode">
             <template #cell="{ record }">
-              {{ record.mode === 1 ? "离线模式" : "在线模式" }}
+              {{ record.mode === 1 ? $t('step2.index.5q092waau8c0') : $t('step2.index.5q092waaubo0') }}
             </template>
           </a-table-column>
-          <a-table-column title="操作" align="center" :width="160" fixed="right">
+          <a-table-column :title="$t('step2.index.5q092wab7fo0')" align="center" :width="160" fixed="right">
             <template #cell="{ record }">
               <a-button
                 size="mini"
@@ -66,7 +66,7 @@
                 <template #icon>
                   <icon-edit />
                 </template>
-                <template #default>编辑配置参数</template>
+                <template #default>{{$t('step2.index.5q092wab7k80')}}</template>
               </a-button>
             </template>
           </a-table-column>
