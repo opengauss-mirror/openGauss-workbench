@@ -23,6 +23,7 @@
 
 package org.opengauss.admin.plugin.controller.ops;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.opengauss.admin.plugin.base.BaseController;
 import org.opengauss.admin.common.core.domain.AjaxResult;
 import org.opengauss.admin.plugin.domain.entity.ops.OpsWdrEntity;
@@ -53,7 +54,7 @@ public class WdrController extends BaseController {
 
     @GetMapping("/listSnapshot")
     public AjaxResult listSnapshot(@RequestParam String clusterId, @RequestParam String hostId) {
-        List<DwrSnapshotVO> dwrSnapshotVOS = wdrService.listSnapshot(startPage(), clusterId, hostId);
+        Page<DwrSnapshotVO> dwrSnapshotVOS = wdrService.listSnapshot(startPage(), clusterId, hostId);
         return AjaxResult.success(dwrSnapshotVOS);
     }
 

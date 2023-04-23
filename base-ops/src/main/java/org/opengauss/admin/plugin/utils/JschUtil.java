@@ -165,6 +165,14 @@ public class JschUtil {
         return executeCommand(command, session, null, autoResponse);
     }
 
+
+    public JschResult executeCommandWithSerialResponse(String env, String command, Session session, Map<String, List<String>> autoResponse, WsSession retSession) throws Exception {
+        if (StrUtil.isNotEmpty(env)) {
+            command = "source " + env + " && " + command;
+        }
+        return executeCommandWithSerialResponse(command,session,autoResponse,retSession);
+    }
+
     public JschResult executeCommandWithSerialResponse(String command, Session session, Map<String, List<String>> autoResponse, WsSession retSession) throws Exception {
         if (Objects.nonNull(retSession)) {
             wsUtil.sendText(retSession, command);

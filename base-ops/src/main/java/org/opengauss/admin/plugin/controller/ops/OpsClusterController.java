@@ -26,6 +26,7 @@ package org.opengauss.admin.plugin.controller.ops;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 import org.opengauss.admin.common.core.domain.AjaxResult;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
+import org.opengauss.admin.common.core.domain.model.ops.check.CheckSummaryVO;
 import org.opengauss.admin.plugin.base.BaseController;
 import org.opengauss.admin.plugin.domain.model.ops.*;
 import org.opengauss.admin.plugin.domain.model.ops.env.HostEnv;
@@ -199,9 +200,8 @@ public class OpsClusterController extends BaseController {
     }
 
     @GetMapping("/check")
-    public AjaxResult check(@RequestParam String clusterId) {
-        Map<String, Object> res = new HashMap<>();
-        CheckSummaryVO checkSummaryVO = opsClusterService.check(clusterId);
+    public AjaxResult check(@RequestParam String clusterId,@RequestParam(value = "rootPassword",required = false) String rootPassword) {
+        CheckSummaryVO checkSummaryVO = opsFacade.check(clusterId,rootPassword);
         return AjaxResult.success(checkSummaryVO);
     }
 

@@ -142,7 +142,7 @@ public class OpenEulerArch64EnterpriseOpsProvider extends AbstractOpsProvider {
 
         String pkgPath = preparePath(installContext.getEnterpriseInstallConfig().getInstallPackagePath());
         ensureDirExist(jschUtil,rootSession, pkgPath, retSession);
-        chmodFullPath(jschUtil,rootSession,"/opt/software",retSession);
+        chmodFullPath(jschUtil,rootSession,pkgPath,retSession);
         ensureEnvPathPermission(jschUtil,rootSession,installContext.getEnvPath(),retSession);
 
         List<HostInfoHolder> hostInfoHolders = installContext.getHostInfoHolders();
@@ -1054,6 +1054,23 @@ public class OpenEulerArch64EnterpriseOpsProvider extends AbstractOpsProvider {
 
     @Override
     public void enableWdrSnapshot(Session session, OpsClusterEntity clusterEntity, List<OpsClusterNodeEntity> opsClusterNodeEntities, WdrScopeEnum scope, String dataPath) {
+        String checkCommand;
+        if (StrUtil.isEmpty(dataPath)) {
+            checkCommand = "gs_guc check -I all -c \"enable_wdr_snapshot\"";
+        } else {
+            checkCommand = "gs_guc check -D " + dataPath + " -c \"enable_wdr_snapshot\"";
+        }
+        try {
+            JschResult jschResult = jschUtil.executeCommand(checkCommand, session, clusterEntity.getEnvPath());
+
+            if (jschResult.getResult().contains("enable_wdr_snapshot=on")){
+                return;
+            }
+        } catch (Exception e) {
+            log.error("Failed to set the enable_wdr_snapshot parameter", e);
+            throw new OpsException("Failed to set the enable_wdr_snapshot parameter");
+        }
+
         String command;
         if (StrUtil.isEmpty(dataPath)) {
             command = "gs_guc reload -I all -c \"enable_wdr_snapshot=on\"";

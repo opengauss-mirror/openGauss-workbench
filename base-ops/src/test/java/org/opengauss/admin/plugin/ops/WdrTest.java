@@ -156,7 +156,7 @@ public class WdrTest {
         Mockito.doReturn(Optional.of(mockConnection())).when(DBUtil).getSession(any(),any(),any(),any());
 
         Page page = new Page();
-        List<DwrSnapshotVO> dwrSnapshotVOS = wdrService.listSnapshot(page, "1", "1");
+        Page<DwrSnapshotVO> dwrSnapshotVOS = wdrService.listSnapshot(page, "1", "1");
         Assertions.assertNotNull(dwrSnapshotVOS);
     }
 

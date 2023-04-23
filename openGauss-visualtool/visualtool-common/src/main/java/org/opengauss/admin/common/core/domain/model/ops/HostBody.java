@@ -60,7 +60,6 @@ public class HostBody {
         hostEntity.setPublicIp(publicIp);
         hostEntity.setPrivateIp(privateIp);
         hostEntity.setPort(port);
-        hostEntity.setAzId(azId);
         hostEntity.setHostname(hostName);
         hostEntity.setRemark(remark);
         hostEntity.setOs(os);

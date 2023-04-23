@@ -160,7 +160,7 @@ public class OpenEulerX86LiteOpsProvider extends AbstractOpsProvider {
             String clientLoginOpenGauss = MessageFormat.format(SshCommandConstants.LOGIN, String.valueOf(port));
             try {
                 Map<String, String> response = new HashMap<>();
-                String createUser = MessageFormat.format("CREATE USER gaussdb WITH MONADMIN PASSWORD \"{0}\";\\q", databasePassword);
+                String createUser = MessageFormat.format("CREATE USER gaussdb WITH MONADMIN AUDITADMIN SYSADMIN PASSWORD \"{0}\";\\q", databasePassword);
                 response.put("openGauss=#", createUser);
                 JschResult jschResult = jschUtil.executeCommand(installContext.getEnvPath(), clientLoginOpenGauss, session, retSession, response);
                 if (0 != jschResult.getExitCode()) {
@@ -577,6 +577,17 @@ public class OpenEulerX86LiteOpsProvider extends AbstractOpsProvider {
     public void enableWdrSnapshot(Session session, OpsClusterEntity clusterEntity, List<OpsClusterNodeEntity> opsClusterNodeEntities, WdrScopeEnum scope, String dataPath) {
         if (StrUtil.isEmpty(dataPath)) {
             dataPath = opsClusterNodeEntities.stream().filter(node -> node.getClusterRole() == ClusterRoleEnum.MASTER).findFirst().orElseThrow(() -> new OpsException("Master node configuration not found")).getDataPath();
+        }
+
+        String checkCommand = "gs_guc check -D " + dataPath + " -c \"enable_wdr_snapshot\"";
+        try {
+            JschResult jschResult = jschUtil.executeCommand(checkCommand, session, clusterEntity.getEnvPath());
+            if (jschResult.getResult().contains("enable_wdr_snapshot=on")){
+                return;
+            }
+        } catch (Exception e) {
+            log.error("Failed to set the enable_wdr_snapshot parameter", e);
+            throw new OpsException("Failed to set the enable_wdr_snapshot parameter");
         }
 
         String command = "gs_guc reload -D " + dataPath + " -c \"enable_wdr_snapshot=on\"";

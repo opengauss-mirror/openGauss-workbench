@@ -133,7 +133,7 @@ public class OpsWdrServiceImpl extends ServiceImpl<OpsWdrMapper, OpsWdrEntity> i
     }
 
     @Override
-    public List<DwrSnapshotVO> listSnapshot(Page page, String clusterId, String hostId) {
+    public Page<DwrSnapshotVO> listSnapshot(Page page, String clusterId, String hostId) {
         OpsClusterEntity clusterEntity = opsClusterService.getById(clusterId);
         if (Objects.isNull(clusterEntity)) {
             throw new OpsException("Cluster information does not exist");
@@ -160,7 +160,7 @@ public class OpsWdrServiceImpl extends ServiceImpl<OpsWdrMapper, OpsWdrEntity> i
             }
         }
 
-        return Collections.emptyList();
+        return new Page<>();
     }
 
     @Override
@@ -200,7 +200,7 @@ public class OpsWdrServiceImpl extends ServiceImpl<OpsWdrMapper, OpsWdrEntity> i
             responseList.add(sql);
 
             response.put("openGauss=#", responseList);
-            JschResult jschResult = jschUtil.executeCommandWithSerialResponse(clientLoginOpenGauss, session, response, null);
+            JschResult jschResult = jschUtil.executeCommandWithSerialResponse(clusterEntity.getEnvPath(), clientLoginOpenGauss, session, response, null);
             if (0 != jschResult.getExitCode()) {
                 log.error("Generate wdr snapshot exception, exit code: {}, log: {}", jschResult.getExitCode(), jschResult.getResult());
                 throw new OpsException("Generate wdr snapshot exception");
@@ -310,7 +310,7 @@ public class OpsWdrServiceImpl extends ServiceImpl<OpsWdrMapper, OpsWdrEntity> i
 
             String wdrPath = "/home/" + userEntity.getUsername();
             String wdrName = "WDR-" + StrUtil.uuid() + ".html";
-            doGenerate(wdrPath, wdrName, startId, endId, WdrScopeEnum.NODE, type, session, clusterEntity.getPort());
+            doGenerate(wdrPath, wdrName, startId, endId, WdrScopeEnum.NODE, type, session, clusterEntity.getPort(),clusterEntity.getEnvPath());
             OpsWdrEntity opsWdrEntity = new OpsWdrEntity();
             opsWdrEntity.setScope(WdrScopeEnum.NODE);
             opsWdrEntity.setReportAt(new Date());
@@ -352,7 +352,7 @@ public class OpsWdrServiceImpl extends ServiceImpl<OpsWdrMapper, OpsWdrEntity> i
 
             String wdrPath = "/home/" + userEntity.getUsername();
             String wdrName = "WDR-" + StrUtil.uuid() + ".html";
-            doGenerate(wdrPath, wdrName, startId, endId, WdrScopeEnum.CLUSTER, type, session, clusterEntity.getPort());
+            doGenerate(wdrPath, wdrName, startId, endId, WdrScopeEnum.CLUSTER, type, session, clusterEntity.getPort(), clusterEntity.getEnvPath());
 
             OpsWdrEntity opsWdrEntity = new OpsWdrEntity();
             opsWdrEntity.setScope(WdrScopeEnum.CLUSTER);
@@ -374,10 +374,22 @@ public class OpsWdrServiceImpl extends ServiceImpl<OpsWdrMapper, OpsWdrEntity> i
         }
     }
 
-    private List<DwrSnapshotVO> listSnapshot(Long pageNo, Long pageSize, Connection connection) {
+    private Page<DwrSnapshotVO> listSnapshot(Long pageNo, Long pageSize, Connection connection) {
+        Page<DwrSnapshotVO> page = new Page<>();
         List<DwrSnapshotVO> res = new ArrayList<>();
         String sql = "select * from snapshot.snapshot";
         if (Objects.nonNull(pageNo) && Objects.nonNull(pageSize) && pageNo > 0 & pageSize > 0) {
+            String countSql = "select count(*) from snapshot.snapshot";
+            try (Statement statement = connection.createStatement();
+                 ResultSet resultSet = statement.executeQuery(countSql)){
+
+                resultSet.next();
+                int count = resultSet.getInt("count");
+                page.setTotal(count);
+            }catch (Exception e){
+                log.error("Query snapshot record exception", e);
+            }
+
             sql = "select * from snapshot.snapshot LIMIT " + pageSize + "OFFSET " + (pageNo - 1) * pageSize;
         }
 
@@ -393,10 +405,12 @@ public class OpsWdrServiceImpl extends ServiceImpl<OpsWdrMapper, OpsWdrEntity> i
         } catch (Exception e) {
             log.error("Query snapshot record exception", e);
         }
-        return res;
+
+        page.setRecords(res);
+        return page;
     }
 
-    private void doGenerate(String wdrPath, String wdrName, String startId, String endId, WdrScopeEnum scope, WdrTypeEnum type, Session session, Integer port) {
+    private void doGenerate(String wdrPath, String wdrName, String startId, String endId, WdrScopeEnum scope, WdrTypeEnum type, Session session, Integer port, String envPath) {
         String clientLoginOpenGauss = MessageFormat.format(SshCommandConstants.LOGIN, String.valueOf(port));
         try {
             String nodeName = null;
@@ -414,7 +428,7 @@ public class OpsWdrServiceImpl extends ServiceImpl<OpsWdrMapper, OpsWdrEntity> i
             responseList.add(endSql);
 
             response.put("openGauss=#", responseList);
-            JschResult jschResult = jschUtil.executeCommandWithSerialResponse(clientLoginOpenGauss, session, response, null);
+            JschResult jschResult = jschUtil.executeCommandWithSerialResponse(envPath, clientLoginOpenGauss, session, response, null);
             if (0 != jschResult.getExitCode()) {
                 log.error("Generated wdr exception, exit code: {}, log: {}", jschResult.getExitCode(), jschResult.getResult());
                 throw new OpsException("generate wdr exception");

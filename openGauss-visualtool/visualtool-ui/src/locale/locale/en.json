@@ -317,6 +317,8 @@
             "else3": "CheckTDDate",
             "else4": "Detection completion time",
             "else5": "Check Item",
+            "else6": "rootPassword",
+            "else7": "Please enter the root password",
             "5mpiji1q2ng0": "One Check",
             "5mpiji1q3wo0": "Select a cluster name",
             "5mpiji1q4a00": "retest",

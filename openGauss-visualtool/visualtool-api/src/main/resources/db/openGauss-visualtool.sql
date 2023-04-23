@@ -158,7 +158,7 @@ UPDATE NOTHING;;
 -- ----------------------------
 
 CREATE TABLE IF NOT EXISTS "public"."ops_check" (
-    "check_id" varchar(255) COLLATE "pg_catalog"."default",
+    "check_id" varchar(255) COLLATE "pg_catalog"."default" NOT NULL PRIMARY KEY,
     "cluster_id" varchar(255) COLLATE "pg_catalog"."default",
     "check_res" text COLLATE "pg_catalog"."default",
     "remark" varchar(255) COLLATE "pg_catalog"."default",

@@ -1,8 +1,15 @@
 <template>
   <div class="daily-ops-c">
     <div v-if="showClusterInfo">
-      <div v-for="(clusterData, index) in data.clusterList" :key="index">
-        <a-spin class="full-w" :loading="clusterData.loading" v-if="!clusterData.isHidden">
+      <div
+        v-for="(clusterData, index) in data.clusterList"
+        :key="index"
+      >
+        <a-spin
+          class="full-w"
+          :loading="clusterData.loading"
+          v-if="!clusterData.isHidden"
+        >
           <div class="item-c mb">
             <div class="flex-between mb">
               <div class="flex-row ft-lg ft-b">
@@ -13,25 +20,49 @@
                 <div class="main-color">{{ clusterData.versionNum ? clusterData.versionNum : '--' }}</div>
               </div>
               <div class="flex-row">
-                <div class="flex-row ft-b mr" v-if="clusterData.version === OpenGaussVersionEnum.ENTERPRISE">
-                  <icon-exclamation-circle class="label-color" />
+                <div
+                  class="flex-row ft-b mr"
+                  v-if="clusterData.version === OpenGaussVersionEnum.ENTERPRISE"
+                >
+                  <icon-exclamation-circle class="label-color mr-s" />
                   <div class="label-color mr-s">{{ $t('operation.DailyOps.5mplp1xbyi40') }}</div>
-                  <div class="label-color mr">{{ clusterData.warningNum ? clusterData.warningNum : 0 }}</div>
+                  <div class="label-color mr-s">{{ getWarningNum(clusterData) }}</div>
+                  <div
+                    class="flex-row"
+                    v-if="clusterData.lastCheckAt"
+                  >
+                    <icon-clock-circle class="label-color mr-s" />
+                    <div class="label-color mr-s">{{ $t('operation.DailyOps.lastCheckAt') }}</div>
+                    <div class="label-color mr">{{ clusterData.lastCheckAt }}</div>
+                  </div>
 
-                  <a-button type="text" @click="showOneCheck(clusterData)">{{
+                  <a-button
+                    type="text"
+                    @click="showOneCheck(clusterData)"
+                  >{{
                     $t('operation.DailyOps.5mplp1xbyqc0')
                   }}</a-button>
                 </div>
-                <icon-down class="label-color open-close-c" v-if="!clusterData.isShow"
-                  @click="clusterData.isShow = true" />
-                <icon-up class="label-color open-close-c" v-else @click="clusterData.isShow = false" />
+                <icon-down
+                  class="label-color open-close-c"
+                  v-if="!clusterData.isShow"
+                  @click="clusterData.isShow = true"
+                />
+                <icon-up
+                  class="label-color open-close-c"
+                  v-else
+                  @click="clusterData.isShow = false"
+                />
               </div>
             </div>
             <div v-if="clusterData.isShow">
               <!-- cluster info -->
               <div class="item-cluster-info">
                 <div class="flex-row">
-                  <svg-icon icon-class="ops-cluster" class="cluster-icon-size mr"></svg-icon>
+                  <svg-icon
+                    icon-class="ops-cluster"
+                    class="cluster-icon-size mr"
+                  ></svg-icon>
                   <div class="flex-col-start">
                     <div class="cluster-info-screen">
                       <div class="flex-row mr mb-screen">
@@ -42,13 +73,18 @@
                       </div>
                       <div class="flex-row mr mb-screen">
                         <div class="label-color mr-s">{{ $t('operation.DailyOps.5mplp1xbzew0') }}:</div>
-                        <div class="flex-row"
-                          v-if="clusterData.deployType === 'CLUSTER' && clusterData.clusterNodes.length > 1">
+                        <div
+                          class="flex-row"
+                          v-if="clusterData.deployType === 'CLUSTER' && clusterData.clusterNodes.length > 1"
+                        >
                           <div class="label-color mr-s">{{ $t('operation.DailyOps.5mplp1xbzmw0') }}</div>
                           <div class="value-color ft-lg ft-b mr-s">{{ clusterData.clusterNodes.length - 1 }}</div>
                           <div class="label-color">{{ $t('operation.DailyOps.5mplp1xbztc0') }}</div>
                         </div>
-                        <div class="value-color ft-b" v-else>{{ $t('operation.DailyOps.5mplp1xc0000') }}</div>
+                        <div
+                          class="value-color ft-b"
+                          v-else
+                        >{{ $t('operation.DailyOps.5mplp1xc0000') }}</div>
                       </div>
                     </div>
                     <div class="cluster-info-screen">
@@ -61,7 +97,10 @@
                         <div class="label-color">{{ clusterData.clusterNodes[0].dbPort }}</div>
                       </div>
                     </div>
-                    <div class="flex-row mb-screen" v-if="clusterData.envPath">
+                    <div
+                      class="flex-row mb-screen"
+                      v-if="clusterData.envPath"
+                    >
                       <div class="label-color mr-s">{{ $t('operation.DailyOps.else17') }}:</div>
                       <div class="label-color">{{ clusterData.envPath }}</div>
                     </div>
@@ -70,39 +109,73 @@
                 <div class="flex-col-start">
                   <div class="label-color mb">{{ $t('operation.DailyOps.5mplp1xc0640') }}</div>
                   <div class="flex-row">
-                    <a-button type="outline" class="mr" @click="handleEnable(clusterData, index)">{{
+                    <a-button
+                      type="outline"
+                      class="mr"
+                      @click="handleEnable(clusterData, index)"
+                    >{{
                       $t('operation.DailyOps.5mplp1xc0c00')
                     }}</a-button>
-                    <a-button type="outline" class="mr" @click="handleStop(clusterData)">{{
+                    <a-button
+                      type="outline"
+                      class="mr"
+                      @click="handleStop(clusterData)"
+                    >{{
                       $t('operation.DailyOps.5mplp1xc0i80')
                     }}</a-button>
-                    <a-button type="outline" class="mr" @click="handleReset(clusterData, index)">{{
+                    <a-button
+                      type="outline"
+                      class="mr"
+                      @click="handleReset(clusterData, index)"
+                    >{{
                       $t('operation.DailyOps.5mplp1xc0o40')
                     }}</a-button>
-                    <a-button type="outline" class="mr" @click="handleBackupDlg(index)">{{
+                    <a-button
+                      type="outline"
+                      class="mr"
+                      @click="handleBackupDlg(index)"
+                    >{{
                       $t('operation.DailyOps.5mplp1xc0u40')
                     }}</a-button>
-                    <a-popconfirm :content="$t('operation.DailyOps.5mplp1xc0zo0')" type="warning"
+                    <a-popconfirm
+                      :content="$t('operation.DailyOps.5mplp1xc0zo0')"
+                      type="warning"
                       :ok-text="$t('operation.DailyOps.5mplp1xc1580')"
                       :cancel-text="$t('operation.DailyOps.5mplp1xc1b00')"
-                      @ok="handleUninstallBefore(clusterData, index, false)">
-                      <a-button type="outline" class="mr">{{
+                      @ok="handleUninstallBefore(clusterData, index, false)"
+                    >
+                      <a-button
+                        type="outline"
+                        class="mr"
+                      >{{
                         $t('operation.DailyOps.5mplp1xc1gs0')
                       }}</a-button>
                     </a-popconfirm>
-                    <a-popconfirm :content="$t('operation.DailyOps.5mplp1xc0zo0')" type="warning"
+                    <a-popconfirm
+                      :content="$t('operation.DailyOps.5mplp1xc0zo0')"
+                      type="warning"
                       :ok-text="$t('operation.DailyOps.5mplp1xc1580')"
                       :cancel-text="$t('operation.DailyOps.5mplp1xc1b00')"
-                      @ok="handleUninstallBefore(clusterData, index, true)">
-                      <a-button type="outline" class="mr">{{
+                      @ok="handleUninstallBefore(clusterData, index, true)"
+                    >
+                      <a-button
+                        type="outline"
+                        class="mr"
+                      >{{
                         $t('operation.DailyOps.5mplp1xc1ms0')
                       }}</a-button>
                     </a-popconfirm>
-                    <a-popconfirm :content="$t('operation.DailyOps.else5')" type="warning"
+                    <a-popconfirm
+                      :content="$t('operation.DailyOps.else5')"
+                      type="warning"
                       :ok-text="$t('operation.DailyOps.5mplp1xc1580')"
                       :cancel-text="$t('operation.DailyOps.5mplp1xc1b00')"
-                      @ok="handleDelCluster(clusterData, index, true)">
-                      <a-button type="outline" class="mr">{{
+                      @ok="handleDelCluster(clusterData, index, true)"
+                    >
+                      <a-button
+                        type="outline"
+                        class="mr"
+                      >{{
                         $t('operation.DailyOps.else4')
                       }}</a-button>
                     </a-popconfirm>
@@ -110,7 +183,11 @@
                 </div>
               </div>
               <!-- host info -->
-              <div class="item-node-info" v-for="(instance, nodeIndex) in clusterData.clusterNodes" :key="nodeIndex">
+              <div
+                class="item-node-info"
+                v-for="(instance, nodeIndex) in clusterData.clusterNodes"
+                :key="nodeIndex"
+              >
                 <div class="host-c node-w">
                   <div class="flex-between mb">
                     <div class="flex-row">
@@ -126,16 +203,25 @@
                     </a-dropdown>
                   </div>
                   <div class="flex-row-center">
-                    <svg-icon icon-class="ops-host" class="host-icon-size mr-lg"></svg-icon>
+                    <svg-icon
+                      icon-class="ops-host"
+                      class="host-icon-size mr-lg"
+                    ></svg-icon>
                     <div class="host-info-screen">
                       <div class="flex-col-start mr">
                         <div class="flex-row host-mb-screen">
                           <div class="label-color mr-s">{{ $t('operation.DailyOps.else14') }}</div>
-                          <div :title="instance.installPath" class="path-c value-color">{{ instance.installPath }}</div>
+                          <div
+                            :title="instance.installPath"
+                            class="path-c value-color"
+                          >{{ instance.installPath }}</div>
                         </div>
                         <div class="flex-row host-mb-screen">
                           <div class="label-color mr-s">{{ $t('operation.DailyOps.else15') }}</div>
-                          <div :title="instance.dataPath" class="path-c value-color">{{ instance.dataPath }}</div>
+                          <div
+                            :title="instance.dataPath"
+                            class="path-c value-color"
+                          >{{ instance.dataPath }}</div>
                         </div>
                       </div>
 
@@ -185,7 +271,10 @@
                   </div>
                   <div class="flex-between mb">
                     <div class="flex-row">
-                      <div class="flex-row mr" style="margin-left: 20px">
+                      <div
+                        class="flex-row mr"
+                        style="margin-left: 20px"
+                      >
                         <div class="label-color mr-s">{{ $t('operation.DailyOps.else2') }}{{ nodeIndex + 1 }}</div>
                         <a-tag :color="getInstanceStateColor(clusterData, instance)">{{
                           getInstanceState(clusterData, instance)
@@ -197,9 +286,17 @@
                       </div>
                     </div>
 
-                    <div class="flex-row" v-if="instance.cmState !== CMStateEnum.Down">
-                      <a-switch class="mr" v-model="instance.state" checked-value="true" unchecked-value="false"
-                        @change="handleInstanceSwitchChange($event, index, nodeIndex)">
+                    <div
+                      class="flex-row"
+                      v-if="instance.cmState !== CMStateEnum.Down"
+                    >
+                      <a-switch
+                        class="mr"
+                        v-model="instance.state"
+                        checked-value="true"
+                        unchecked-value="false"
+                        @change="handleInstanceSwitchChange($event, index, nodeIndex)"
+                      >
                         <template #checked>
                           ON
                         </template>
@@ -210,14 +307,20 @@
                       <a-dropdown @select="handleInstanceOper($event, index, nodeIndex)">
                         <a-button>{{ $t('operation.DailyOps.5mplp1xc20k0') }}</a-button>
                         <template #content>
-                          <a-doption v-for="(itemOption, index) in getDropdownList(clusterData, instance)"
-                            :value="itemOption.value" :key="index">{{ itemOption.label }}</a-doption>
+                          <a-doption
+                            v-for="(itemOption, index) in getDropdownList(clusterData, instance)"
+                            :value="itemOption.value"
+                            :key="index"
+                          >{{ itemOption.label }}</a-doption>
                         </template>
                       </a-dropdown>
                     </div>
                   </div>
                   <div class="flex-row-center">
-                    <svg-icon icon-class="ops-instance" class="host-icon-size mr-lg"></svg-icon>
+                    <svg-icon
+                      icon-class="ops-instance"
+                      class="host-icon-size mr-lg"
+                    ></svg-icon>
                     <div class="instance-info-screen">
                       <div class="flex-row mb mr">
                         <div class="label-color mr-s">{{ $t('operation.DailyOps.5mplp1xc3740') }}</div>
@@ -234,7 +337,10 @@
                         <div class="value-color mr-s">{{ instance.lock ? instance.lock : '--' }}</div>
                         <div class="label-color">{{ $t('operation.DailyOps.else3') }}</div>
                       </div>
-                      <div class="flex-row mb" v-if="clusterData.version === 'ENTERPRISE'">
+                      <div
+                        class="flex-row mb"
+                        v-if="clusterData.version === 'ENTERPRISE'"
+                      >
                         <div class="label-color mr-s">{{ $t('operation.DailyOps.5mplp1xc3no0') }}</div>
                         <div class="value-color">{{ instance.azName ? instance.azName : '--' }}</div>
                       </div>
@@ -247,24 +353,48 @@
         </a-spin>
       </div>
     </div>
-    <div class="full-w full-h flex-col" v-if="showInit">
-      <svg-icon icon-class="ops-empty" class="empty-icon-size mb"></svg-icon>
+    <div
+      class="full-w full-h flex-col"
+      v-if="showInit"
+    >
+      <svg-icon
+        icon-class="ops-empty"
+        class="empty-icon-size mb"
+      ></svg-icon>
       <div class="empty-content mb">{{ $t('operation.DailyOps.5mplp1xc3ss0') }}</div>
       <div class="flex-row">
-        <a-button class="mr" type="outline" size="large" @click="goInstall">{{
+        <a-button
+          class="mr"
+          type="outline"
+          size="large"
+          @click="goInstall"
+        >{{
           $t('operation.DailyOps.5mplp1xc3xg0')
         }}</a-button>
-        <a-button type="outline" size="large" @click="getList">{{
+        <a-button
+          type="outline"
+          size="large"
+          @click="getList"
+        >{{
           $t('operation.DailyOps.else6')
         }}</a-button>
       </div>
     </div>
-    <div class="full-h flex-col" v-if="data.loading">
+    <div
+      class="full-h flex-col"
+      v-if="data.loading"
+    >
       <a-spin :tip="$t('operation.DailyOps.5mplp1xc4200')" />
     </div>
-    <cluster-backup-dlg ref="backupRef" @finish="handleBackup"></cluster-backup-dlg>
+    <cluster-backup-dlg
+      ref="backupRef"
+      @finish="handleBackup"
+    ></cluster-backup-dlg>
     <one-check ref="oneCheckRef"></one-check>
-    <host-pwd-dlg ref="hostPwdRef" @finish="handleAllNodesPwd"></host-pwd-dlg>
+    <host-pwd-dlg
+      ref="hostPwdRef"
+      @finish="handleAllNodesPwd"
+    ></host-pwd-dlg>
   </div>
 </template>
 
@@ -352,6 +482,15 @@ const getList = () => new Promise(resolve => {
     data.loading = false
   })
 })
+
+const getWarningNum = (clusterData: KeyValue) => {
+  if (clusterData.checkSummary && Object.keys(clusterData.checkSummary).length) {
+    const checkResult = clusterData.checkSummary
+    return checkResult.ERROR + checkResult.NG + checkResult.WARNING
+  } else {
+    return 0
+  }
+}
 
 const oneCheckRef = ref<null | InstanceType<typeof OneCheck>>(null)
 const showOneCheck = (clusterData: KeyValue) => {
@@ -1320,5 +1459,4 @@ const getDropdownList = (clusterData: KeyValue, nodeData: KeyValue) => {
 .xterm {
   width: 100%;
   height: 80%;
-}
-</style>
+}</style>

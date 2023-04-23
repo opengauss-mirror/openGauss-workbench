@@ -334,8 +334,7 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
     @Override
     public List<OpsHostEntity> listAll(String azId) {
         LambdaQueryWrapper<OpsHostEntity> queryWrapper =
-                Wrappers.lambdaQuery(OpsHostEntity.class)
-                        .eq(StrUtil.isNotEmpty(azId), OpsHostEntity::getAzId, azId);
+                Wrappers.lambdaQuery(OpsHostEntity.class);
 
         List<OpsHostEntity> list = list(queryWrapper);
         populateIsRemember(list);

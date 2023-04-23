@@ -25,6 +25,7 @@
 package org.opengauss.admin.system.plugin.facade;
 
 import org.opengauss.admin.common.core.domain.model.ops.OpsClusterVO;
+import org.opengauss.admin.common.core.domain.model.ops.check.CheckSummaryVO;
 import org.opengauss.admin.system.service.ops.IOpsClusterService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -45,5 +46,7 @@ public class OpsFacade {
         return opsClusterService.listCluster();
     }
 
-
+    public CheckSummaryVO check(String clusterId, String rootPassword){
+        return opsClusterService.check(clusterId, rootPassword);
+    }
 }

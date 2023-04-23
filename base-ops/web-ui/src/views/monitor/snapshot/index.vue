@@ -1,10 +1,24 @@
 <template>
-  <a-modal :mask-closable="false" :esc-to-close="false" :visible="data.show" :title="data.title" @cancel="close"
-    :modal-style="{ width: '900px' }" :footer="false">
+  <a-modal
+    :mask-closable="false"
+    :esc-to-close="false"
+    :visible="data.show"
+    :title="data.title"
+    @cancel="close"
+    :modal-style="{ width: '900px' }"
+    :footer="false"
+  >
     <div class="snapshot-c">
-      <a-spin class="full-w" :loading="data.createLoading" :tip="$t('snapshot.index.5mplywcvqh80')">
+      <a-spin
+        class="full-w"
+        :loading="data.createLoading"
+        :tip="$t('snapshot.index.5mplywcvqh80')"
+      >
         <div class="flex-between mb">
-          <a-button type="primary" @click="handleCreate">
+          <a-button
+            type="primary"
+            @click="handleCreate"
+          >
             <template #icon>
               <icon-plus />
             </template>
@@ -13,24 +27,52 @@
           <div class="flex-row">
             <div class="flex-row mr">
               <div class="top-label mr-s">{{ $t('snapshot.index.5mplywcvr7c0') }}</div>
-              <a-select class="select-w" :loading="data.clusterListLoading" v-model="data.clusterId"
-                :placeholder="$t('snapshot.index.5mplywcvrb80')" @change="getHostList">
-                <a-option v-for="(item, index) in data.clusterList" :key="index" :label="item.label"
-                  :value="item.value" />
+              <a-select
+                class="select-w"
+                :loading="data.clusterListLoading"
+                v-model="data.clusterId"
+                :placeholder="$t('snapshot.index.5mplywcvrb80')"
+                @change="getHostList"
+              >
+                <a-option
+                  v-for="(item, index) in data.clusterList"
+                  :key="index"
+                  :label="item.label"
+                  :value="item.value"
+                />
               </a-select>
             </div>
             <div class="flex-row mr">
               <div class="top-label mr-s">{{ $t('snapshot.index.5mplywcvres0') }}</div>
-              <a-select class="select-w" :loading="data.hostListLoading" v-model="data.hostId"
-                :placeholder="$t('snapshot.index.5mplywcvrio0')">
-                <a-option v-for="(item, index) in data.hostList" :key="index" :label="item.label" :value="item.value" />
+              <a-select
+                class="select-w"
+                :loading="data.hostListLoading"
+                v-model="data.hostId"
+                :placeholder="$t('snapshot.index.5mplywcvrio0')"
+              >
+                <a-option
+                  v-for="(item, index) in data.hostList"
+                  :key="index"
+                  :label="item.label"
+                  :value="item.value"
+                />
               </a-select>
             </div>
-            <a-button type="primary" @click="query">{{ $t('snapshot.index.5mplywcvrmg0') }}</a-button>
+            <a-button
+              type="primary"
+              @click="query"
+            >{{ $t('snapshot.index.5mplywcvrmg0') }}</a-button>
           </div>
         </div>
-        <a-table class="d-a-table-row full-h" :data="list.data" :columns="columns" :pagination="list.page"
-          :loading="list.loading">
+        <a-table
+          class="d-a-table-row full-h"
+          :data="list.data"
+          :columns="columns"
+          :pagination="list.page"
+          :loading="list.loading"
+          @page-change="currentPage"
+          @page-size-change="pageSizeChange"
+        >
         </a-table>
       </a-spin>
     </div>
@@ -61,14 +103,20 @@ const columns = computed(() => [
   { title: t('snapshot.index.5mplywcvru80'), dataIndex: 'end_ts' }
 ])
 
-const list: {
-  data: Array<KeyValue>,
-  page: { page: number, pageSize: number },
-  loading: boolean
-} = reactive({
+const list = reactive<KeyValue>({
   data: [],
-  page: { page: 1, pageSize: 10 },
+  page: {
+    total: 0,
+    'show-total': true,
+    'show-jumper': true,
+    'show-page-size': true
+  },
   loading: false
+})
+
+const filter = reactive({
+  pageNum: 1,
+  pageSize: 10
 })
 
 onMounted(() => {
@@ -147,13 +195,14 @@ const handleCreate = () => {
 
 const query = () => {
   list.loading = true
-  const param = {
+  const param = Object.assign({
     clusterId: data.clusterId,
     hostId: data.hostId
-  }
+  }, filter)
   listSnapshot(param).then((res: KeyValue) => {
     if (Number(res.code) === 200) {
-      list.data = res.data
+      list.data = res.data.records
+      list.page.total = res.data.total
     } else {
       Message.error('Failed to obtain the snapshot query list')
     }
@@ -162,6 +211,16 @@ const query = () => {
   }).finally(() => {
     list.loading = false
   })
+}
+
+const currentPage = (e: number) => {
+  filter.pageNum = e
+  query()
+}
+
+const pageSizeChange = (e: number) => {
+  filter.pageSize = e
+  query()
 }
 
 const open = () => new Promise(resolve => { // eslint-disable-line

@@ -86,8 +86,6 @@ public interface IOpsClusterService extends IService<OpsClusterEntity> {
 
     List<OpsHostEntity> listClusterHost(String clusterId);
 
-    CheckSummaryVO check(String clusterId);
-
     boolean hasName(String name);
 
     void generateconf(String clusterId, String hostId, String businessId);

@@ -317,6 +317,8 @@
             "else3": "TD数据库中orc表date类型列检查",
             "else4": "检测完成时间",
             "else5": "检查项",
+            "else6": "root密码",
+            "else7": "请输入root密码",
             "5mpiji1q2ng0": "一键自检",
             "5mpiji1q3wo0": "请选择集群名称",
             "5mpiji1q4a00": "重新检测",

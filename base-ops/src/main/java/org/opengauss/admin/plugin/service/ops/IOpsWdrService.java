@@ -44,7 +44,7 @@ public interface IOpsWdrService extends IService<OpsWdrEntity> {
 
     void generate(WdrGeneratorBody wdrGeneratorBody);
 
-    List<DwrSnapshotVO> listSnapshot(Page page, String clusterId, String hostId);
+    Page<DwrSnapshotVO> listSnapshot(Page page, String clusterId, String hostId);
 
     void createSnapshot(String clusterId, String hostId);
 

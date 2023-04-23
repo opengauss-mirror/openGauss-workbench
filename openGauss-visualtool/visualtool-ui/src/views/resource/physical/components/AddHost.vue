@@ -1,64 +1,152 @@
 <template>
-  <a-modal :mask-closable="false" :esc-to-close="false" :visible="data.show" :title="data.title"
-    :ok-loading="data.loading" :modal-style="{ width: '650px' }" @cancel="close" @close="close">
+  <a-modal
+    :mask-closable="false"
+    :esc-to-close="false"
+    :visible="data.show"
+    :title="data.title"
+    :ok-loading="data.loading"
+    :modal-style="{ width: '650px' }"
+    @cancel="close"
+    @close="close"
+  >
     <template #footer>
       <div class="flex-between">
         <div class="flex-row">
-          <div class="label-color mr" v-if="data.status !== hostStatusEnum.unTest">{{
+          <div
+            class="label-color mr"
+            v-if="data.status !== hostStatusEnum.unTest"
+          >{{
             $t('components.AddHost.currentStatus')
           }}
           </div>
-          <a-tag v-if="data.status === hostStatusEnum.success" color="green">{{
+          <a-tag
+            v-if="data.status === hostStatusEnum.success"
+            color="green"
+          >{{
             $t('components.AddHost.5mphy3snvg80')
           }}</a-tag>
-          <a-tag v-if="data.status === hostStatusEnum.fail" color="red">{{
+          <a-tag
+            v-if="data.status === hostStatusEnum.fail"
+            color="red"
+          >{{
             $t('components.AddHost.5mphy3snwq40')
           }}</a-tag>
         </div>
         <div>
-          <a-button class="mr" @click="close">{{
+          <a-button
+            class="mr"
+            @click="close"
+          >{{
             $t('components.AddHost.5mphy3snwxs0')
           }}</a-button>
-          <a-button :loading="data.testLoading" class="mr" @click="handleTestHost">{{
+          <a-button
+            :loading="data.testLoading"
+            class="mr"
+            @click="handleTestHost"
+          >{{
             $t('components.AddHost.5mphy3snx3o0')
           }}</a-button>
-          <a-button :loading="data.loading" type="primary" @click="submit">{{
+          <a-button
+            :loading="data.loading"
+            type="primary"
+            @click="submit"
+          >{{
             $t('components.AddHost.5mphy3snx7c0')
           }}</a-button>
         </div>
       </div>
 
     </template>
-    <a-form :model="data.formData" ref="formRef" auto-label-width :rules="formRules">
-      <a-form-item field="name" :label="$t('components.AddHost.name')" validate-trigger="blur">
-        <a-input v-model.trim="data.formData.name" :placeholder="$t('components.AddHost.namePlaceholder')"></a-input>
+    <a-form
+      :model="data.formData"
+      ref="formRef"
+      auto-label-width
+      :rules="formRules"
+    >
+      <a-form-item
+        field="name"
+        :label="$t('components.AddHost.name')"
+        validate-trigger="blur"
+      >
+        <a-input
+          v-model.trim="data.formData.name"
+          :placeholder="$t('components.AddHost.namePlaceholder')"
+        ></a-input>
       </a-form-item>
-      <a-form-item field="privateIp" :label="$t('components.AddHost.ipAddress')" validate-trigger="blur">
-        <a-input v-model.trim="data.formData.privateIp" :placeholder="$t('components.AddHost.5mphy3snxdo0')"></a-input>
+      <a-form-item
+        field="privateIp"
+        :label="$t('components.AddHost.ipAddress')"
+        validate-trigger="blur"
+      >
+        <a-input
+          v-model.trim="data.formData.privateIp"
+          :placeholder="$t('components.AddHost.5mphy3snxdo0')"
+        ></a-input>
       </a-form-item>
-      <a-form-item field="publicIp" :label="$t('components.AddHost.5mphy3snxis0')" validate-trigger="blur">
-        <a-input v-model.trim="data.formData.publicIp" :placeholder="$t('components.AddHost.5mphy3snxmw0')"
-          @blur="handleBlur"></a-input>
+      <a-form-item
+        field="publicIp"
+        :label="$t('components.AddHost.5mphy3snxis0')"
+        validate-trigger="blur"
+      >
+        <a-input
+          v-model.trim="data.formData.publicIp"
+          :placeholder="$t('components.AddHost.5mphy3snxmw0')"
+          @blur="handleBlur"
+        ></a-input>
       </a-form-item>
-      <a-form-item field="port" :label="$t('components.AddHost.5mphy3snxtc0')" validate-trigger="blur">
-        <a-input-number v-model="data.formData.port" :placeholder="$t('components.AddHost.5mphy3snxzk0')" />
+      <a-form-item
+        field="port"
+        :label="$t('components.AddHost.5mphy3snxtc0')"
+        validate-trigger="blur"
+      >
+        <a-input-number
+          v-model="data.formData.port"
+          :placeholder="$t('components.AddHost.5mphy3snxzk0')"
+        />
       </a-form-item>
-      <a-form-item field="password" :label="$t('components.AddHost.5mphy3sny4w0')" validate-trigger="blur">
-        <a-input-password v-model="data.formData.password" :placeholder="$t('components.AddHost.5mphy3snyao0')"
-          allow-clear />
-        <a-checkbox style="width: 150px" v-model="data.formData.isRemember">{{ $t('components.AddHost.else2')
+      <a-form-item
+        field="password"
+        :label="$t('components.AddHost.5mphy3sny4w0')"
+        validate-trigger="blur"
+      >
+        <a-input-password
+          v-model="data.formData.password"
+          :placeholder="$t('components.AddHost.5mphy3snyao0')"
+          allow-clear
+        />
+        <a-checkbox
+          style="width: 150px"
+          v-model="data.formData.isRemember"
+        >{{ $t('components.AddHost.else2')
         }}</a-checkbox>
       </a-form-item>
-      <a-form-item field="tags" :label="$t('components.AddHost.tags')">
-        <a-select :loading="data.tagsLoading" v-model.trim="data.formData.tags"
-          :placeholder="$t('components.AddHost.tagsPlaceholder')" allow-create multiple allow-clear>
-          <a-option v-for="item in data.tagsList" :key="item.value" :value="item.value">{{
+      <a-form-item
+        field="tags"
+        :label="$t('components.AddHost.tags')"
+      >
+        <a-select
+          :loading="data.tagsLoading"
+          v-model="data.formData.tags"
+          :placeholder="$t('components.AddHost.tagsPlaceholder')"
+          allow-create
+          multiple
+          allow-clear
+          @change="tagsChange"
+        >
+          <a-option
+            v-for="item in data.tagsList"
+            :key="item.value"
+            :value="item.value"
+          >{{
             item.label
           }}</a-option>
         </a-select>
       </a-form-item>
       <a-form-item :label="$t('components.AddHost.5mphy3snysg0')">
-        <a-textarea v-model.trim="data.formData.remark" :placeholder="$t('components.AddHost.5mphy3snyxc0')"></a-textarea>
+        <a-textarea
+          v-model.trim="data.formData.remark"
+          :placeholder="$t('components.AddHost.5mphy3snyxc0')"
+        ></a-textarea>
       </a-form-item>
     </a-form>
   </a-modal>
@@ -218,6 +306,13 @@ const close = () => {
   nextTick(() => {
     formRef.value?.clearValidate()
     formRef.value?.resetFields()
+  })
+}
+
+const tagsChange = (val: any) => {
+  console.log('show tags', val);
+  data.formData.tags = val.filter((item: string) => {
+    return item.trim() !== ''
   })
 }
 
