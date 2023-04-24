@@ -57,12 +57,7 @@ public class PortalHandle {
     }
 
     public static boolean installPortal(String host, Integer port, String user, String pass, String installPath, String portalDownUrl, String portalPkgName, String portalJarName, boolean newInstallFile) {
-        if (newInstallFile) {
-            ShellUtil.execCommandGetResult(host, port, user, pass,"rm -rf  " + installPath + "portal");
-//            ShellUtil.execCommandGetResult(host, port, user, pass, "rm -rf  " + installPath + "portal*");
-        } else {
-            ShellUtil.execCommandGetResult(host, port, user, pass,"rm -rf  " + installPath + "portal");
-        }
+        ShellUtil.rmDir(host, port, user, pass,installPath + "portal");
         String existsPortalInstallFile = ShellUtil.execCommandGetResult(host, port, user, pass,
                 "[ -f " + installPath + portalPkgName + " ] && echo 1 || echo 0");
         if (Integer.parseInt(existsPortalInstallFile.trim()) == 0) {
