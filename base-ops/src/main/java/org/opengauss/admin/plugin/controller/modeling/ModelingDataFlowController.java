@@ -87,11 +87,42 @@ public class ModelingDataFlowController extends BaseController {
         if (dataFlowData.getOperatorContent() != null) {
             if (dataFlowData.getOperatorContent().equals(modelingDataFlowService.getById(dataFlowData.getId()).getOperatorContent())) {
                 return AjaxResult.success("nothing changed");
+            } else {
+                dataFlowData.setType("query");
             }
         }
 
         return toAjax(modelingDataFlowService.updateDataFlow(dataFlowData));
     }
 
+    /**
+     * distribution info for home page
+     */
+    @GetMapping("/distribution")
+    public AjaxResult distribution() {
+        AjaxResult ajax = AjaxResult.success();
+        ajax.put("distribution", modelingDataFlowService.queryGroupByType());
+        return ajax;
+    }
+
+    /**
+     * processInfo for home page
+     */
+    @GetMapping("/processInfo")
+    public AjaxResult processInfo() {
+        AjaxResult ajax = AjaxResult.success();
+        ajax.put("distribution", modelingDataFlowService.queryProcessInfo());
+        return ajax;
+    }
+
+    /**
+     * count for home page
+     */
+    @GetMapping("/count")
+    public AjaxResult count() {
+        AjaxResult ajax = AjaxResult.success();
+        ajax.put("count", modelingDataFlowService.count());
+        return ajax;
+    }
 }
 

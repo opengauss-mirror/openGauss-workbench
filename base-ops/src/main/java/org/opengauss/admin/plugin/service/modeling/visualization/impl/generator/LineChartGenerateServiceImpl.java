@@ -62,6 +62,12 @@ public class LineChartGenerateServiceImpl extends BaseGenerateServiceImpl {
         lineChartBody.setTooltip(new Tooltip().setTrigger("axis"));
         lineChartBody.setGrid(new Grid().setBottom("40").setRight("3%").setLeft("3%").setContainLabel(true));
 
+        //set dataZoom
+        ArrayList<DataZoomItem> dataZoom = new ArrayList<>();
+        dataZoom.add(new DataZoomItem().setStart(0).setEnd(10).setType("inside"));
+        dataZoom.add(new DataZoomItem().setStart(0).setEnd(10));
+        lineChartBody.setDataZoom(dataZoom);
+
         List<String> allKeys = new ArrayList<>(queryResult.get(0).keySet());
         if (!allKeys.contains(lineChartParamsBody.getShowType().getDimension())) {
             throw new RuntimeException("The field in the parameter is not found in the query result, please check whether the query table or condition has been replaced.");
@@ -113,7 +119,7 @@ public class LineChartGenerateServiceImpl extends BaseGenerateServiceImpl {
 
         lineChartBody.setSeries(series);
 
-        lineChartBody.setLegend(new Legend("scroll").setData(lineSeriesConstructor.getSeriesKey()).setBottom(10));
+        lineChartBody.setLegend(new Legend("scroll").setData(lineSeriesConstructor.getSeriesKey()).setTop(10).setWidth("70%"));
 
         lineChartBody.setYAxis(new YAxis().setMin(minValue).setType("value").setAxisLabel(new AxisLabel(lineSeriesConstructor.getYUnit())));
 

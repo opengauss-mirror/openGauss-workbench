@@ -28,6 +28,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import org.opengauss.admin.plugin.domain.entity.modeling.ModelingDataFlowEntity;
 
 import java.util.List;
+import java.util.Map;
 
 /**
 * @author LZW
@@ -46,4 +47,7 @@ public interface IModelingDataFlowService extends IService<ModelingDataFlowEntit
 
     List<ModelingDataFlowEntity> findByName(String name);
 
+    List<ModelingDataFlowEntity> queryProcessInfo();
+
+    List<Map<String, Integer>> queryGroupByType();
 }

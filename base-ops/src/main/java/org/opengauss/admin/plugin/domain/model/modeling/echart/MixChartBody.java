@@ -50,6 +50,8 @@ public class MixChartBody {
     private XAxis xAxis;
     private List<YAxis> yAxis;
     private List<Series> series;
+    private List<DataZoomItem> dataZoom;
+
     public void setTitle(Title title) {
          this.title = title;
      }
@@ -100,4 +102,11 @@ public class MixChartBody {
          return series;
      }
 
+    public List<DataZoomItem> getDataZoom() {
+        return dataZoom;
+    }
+
+    public void setDataZoom(List<DataZoomItem> dataZoom) {
+        this.dataZoom = dataZoom;
+    }
 }

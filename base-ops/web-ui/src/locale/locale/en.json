@@ -1527,7 +1527,11 @@
                 "5m82aq4s9ao0": "contains",
                 "5m82aq4s9cw0": "Does not contain",
                 "5m82aq4s9fk0": "is empty",
-                "5m82aq4s9i00": "not empty"
+                "5m82aq4s9fa1": "In List",
+                "5m82aq4s9fa2": "Not In List",
+                "5m82aq4s9i00": "not empty",
+                "5m82aq4s9fk1": "Length Less Than",
+                "5m82aq4s9fk2": "Length Longer Than"
             },
             "PolymerizationOperator": {
                 "5m82b2nqsa00": "Attribute Configuration",
@@ -1535,9 +1539,14 @@
                 "5m82b2nqt4k0": "Please select a field",
                 "5m82b2nqt780": "Aggregation method",
                 "5m82b2nqt9s0": "alias",
-                "5m82b2nqtck0": "Take the maximum value",
+                "5m82b2nqtcl0": "Default",
+                "5m82b2nqtck0": "Max value",
+                "5m82b2nqtck1": "Min value",
                 "5m82b2nqtf40": "Summation",
-                "5m82b2nqths0": "Average"
+                "5m82b2nqths0": "Average",
+                "5m82b2nqths1": "Count",
+                "5m82b2nqths2": "Extra Year",
+                "5m82b2nqths3": "Extra Month"
             },
             "SortOperator": {
                 "5m82bdo2r0w0": "Attribute Configuration",

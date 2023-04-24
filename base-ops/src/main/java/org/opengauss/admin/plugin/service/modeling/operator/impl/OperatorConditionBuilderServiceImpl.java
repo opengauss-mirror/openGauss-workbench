@@ -64,6 +64,9 @@ public class OperatorConditionBuilderServiceImpl extends BaseBuilderServiceImpl 
 
                     if (Objects.equals(condition, "include") || Objects.equals(condition, "notInclude")) {
                         preparedParam = sqlObject.addParam("%" + andItem.getString("value") + "%");
+                    } else if (Objects.equals(condition, "in") || Objects.equals(condition, "notIn")) {
+                        List<String> values = List.of(andItem.getString("value").split(","));
+                        preparedParam = sqlObject.addParamList(values);
                     } else {
                         preparedParam = sqlObject.addParam(andItem.getString("value"));
                     }
@@ -126,12 +129,22 @@ public class OperatorConditionBuilderServiceImpl extends BaseBuilderServiceImpl 
             case "notNull":
                 return field+" is NOT NULL";
 
+            case "lengthLessThan":
+                return "length("+field+") < " + value;
+
+            case "lengthLongerThan":
+                return "length("+field+") > " + value;
+
+            case "in":
+                return field + " IN (" + value + ")";
+
+            case "notIn":
+                return field + " NOT IN " + value + ")";
+
             default:
                 return field + " " + condition + value ;
         }
-
     }
-
 }
 
 

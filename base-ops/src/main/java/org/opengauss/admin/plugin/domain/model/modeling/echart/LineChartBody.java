@@ -51,6 +51,8 @@ public class LineChartBody {
     private XAxis xAxis;
     private YAxis yAxis;
     private List<Series> series;
+    private List<DataZoomItem> dataZoom;
+
     public void setTitle(Title title) {
          this.title = title;
      }
@@ -101,4 +103,11 @@ public class LineChartBody {
          return series;
      }
 
+    public List<DataZoomItem> getDataZoom() {
+        return dataZoom;
+    }
+
+    public void setDataZoom(List<DataZoomItem> dataZoom) {
+        this.dataZoom = dataZoom;
+    }
 }
