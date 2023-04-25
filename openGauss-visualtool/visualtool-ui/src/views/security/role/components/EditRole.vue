@@ -64,7 +64,19 @@
   import { FormInstance } from '@arco-design/web-vue/es/form'
   import { createRole, updateRole, roleMenuTree } from '@/api/role'
 
-  const deepFlatten: any = (arr: any[]) => [].concat(...arr.map(v => (Array.isArray(v.children) ? deepFlatten(v.children) : v)))
+  const deepFlatten: any = (arr: any[]) => {
+    if (Array.isArray(arr)) {
+      return arr.reduce((flatArr, el) => {
+        if (el.children) {
+          return [...flatArr, el, ...deepFlatten(el.children)]
+        } else {
+          return [...flatArr, el]
+        }
+      }, [])
+    } else {
+      return [arr]
+    }
+  }
 
   const props = withDefaults(defineProps<{
     open: boolean,

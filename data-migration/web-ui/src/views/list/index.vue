@@ -268,6 +268,7 @@ const stopTask = async row => {
 // remove a task
 const deleteTheTask = async row => {
   await deleteTask(row.id)
+  selectedKeys.value = []
   Message.success('Delete success')
   getList()
 }
@@ -279,6 +280,7 @@ const deleteMore = async () => {
     return
   }
   await deleteTask(selectedKeys.value.join(','))
+  selectedKeys.value = []
   Message.success('Delete success')
   getList()
 }
