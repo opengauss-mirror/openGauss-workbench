@@ -22,7 +22,6 @@ public class ObservabilityPluginBootApplication {
 
     public static void main(String[] args) {
         SpringApplication.run(ObservabilityPluginBootApplication.class, args);
-        System.out.printf("Email notification plug-in started successfully");
     }
 
     @Bean

@@ -69,7 +69,7 @@ public class NormalInstanceHandler implements InstanceHandler {
     }
 
     private static void closeStatement(Statement stmt) {
-        if (ObjectUtils.isNotEmpty(stmt)) {
+        if (stmt!=null&&ObjectUtils.isNotEmpty(stmt)) {
             try {
                 stmt.close();
             } catch (SQLException e) {
@@ -79,7 +79,7 @@ public class NormalInstanceHandler implements InstanceHandler {
     }
 
     private static void closeConnection(Connection conn) {
-        if (ObjectUtils.isNotEmpty(conn)) {
+        if (conn!=null&&ObjectUtils.isNotEmpty(conn)) {
             try {
                 conn.close();
             } catch (SQLException e) {

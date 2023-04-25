@@ -87,6 +87,7 @@ public enum ResponseCode {
 	 */
 	private static Map<Integer, ResponseCode> getCodeMap() {
 		if (codeMap == null || codeMap.size() == 0) {
+			codeMap=new HashMap<>();
 			ResponseCode[] codeList = ResponseCode.values();
 			for (ResponseCode c : codeList) {
 				codeMap.put(c.code(), c);

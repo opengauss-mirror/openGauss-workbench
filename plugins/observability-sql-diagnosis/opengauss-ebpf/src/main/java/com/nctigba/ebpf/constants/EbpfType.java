@@ -13,6 +13,9 @@ package com.nctigba.ebpf.constants;
  * @since 2022/10/17 09:00
  */
 public class EbpfType {
+    private EbpfType() {
+        throw new IllegalStateException("Utility class");
+    }
     public static final String DEFAULT = "stackcount";
     public static final String PROFILE = "profile";
     public static final String OFFCPUTIME = "offcputime";

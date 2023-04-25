@@ -63,6 +63,8 @@ export default {
         installedAgent: 'installed proxy',
         installedProxy: 'installed server',
         machine: 'machine',
+        installPath: 'Installation path',
+        installUser: 'Installation User',
         rootPWD: 'root password',
         proxyPort: 'server port',
         collectInstance: 'collect instance',
@@ -73,12 +75,14 @@ export default {
         gsOmLogPath: 'gs_om log path',
         gsInstallLogPath: 'gs_install log path',
         gsLocalLogPath: 'gs_local log path',
+        continueUpload: 'continue to upload',
         installServerAlert:'please install the server first!',
         installedServerAlert: 'it is only allow to install one server!',
         proxyRules: [
             'choose the machine please',
             'input the password of root please',
-            'input the proxy port please'
+            'input the proxy port please',
+            'choose an installer please'
         ],
         collectorRules: [
             'choose the instance please',

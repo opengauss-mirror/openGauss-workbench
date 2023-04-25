@@ -3,6 +3,7 @@ package com.nctigba.observability.instance.service;
 import cn.hutool.core.util.StrUtil;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 import com.nctigba.common.web.exception.InstanceException;
+import com.nctigba.observability.instance.constants.CommonConstants;
 import com.nctigba.observability.instance.dto.param.ParamInfoDTO;
 import com.nctigba.observability.instance.entity.ParamInfo.type;
 import com.nctigba.observability.instance.entity.ParamValueInfo;
@@ -76,8 +77,8 @@ public class ParamInfoService {
             String[] values = ssh.execute("sysctl -a").split("\n");
             var list = new ArrayList<ParamValueInfo>();
             for (int n = 0; n < values.length; n++) {
-                String name = values[n].substring(0, values[n].lastIndexOf("=")).trim();
-                String paramData = values[n].substring(values[n].indexOf("=") + 1).trim();
+                String name = values[n].substring(0, values[n].lastIndexOf(CommonConstants.EQUAL_SYMBOL)).trim();
+                String paramData = values[n].substring(values[n].indexOf(CommonConstants.EQUAL_SYMBOL) + 1).trim();
                 var paramInfo = ParamInfoMapper.getParamInfo(type.OS, name);
                 if (paramInfo == null)
                     continue;

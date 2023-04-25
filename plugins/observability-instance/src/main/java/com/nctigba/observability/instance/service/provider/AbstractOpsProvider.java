@@ -5,6 +5,7 @@ import java.text.MessageFormat;
 import java.util.List;
 import java.util.Objects;
 
+import com.nctigba.observability.instance.constants.CommonConstants;
 import org.opengauss.admin.common.constant.ops.SshCommandConstants;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
@@ -37,7 +38,8 @@ public abstract class AbstractOpsProvider implements ClusterOpsProvider, Initial
 			try {
 				jschResult = jschUtil.executeCommand(limitsCheck, rootSession, retSession, null);
 			} catch (InterruptedException e) {
-				throw new OpsException("thread is interrupted");
+				Thread.currentThread().interrupt();
+				throw new OpsException(CommonConstants.THREAD_IS_INTERRUPTED);
 			}
 			if (0 != jschResult.getExitCode()) {
 				log.error("Detect ulimit exception, exit code: {}, error message: {}", jschResult.getExitCode(),
@@ -57,23 +59,24 @@ public abstract class AbstractOpsProvider implements ClusterOpsProvider, Initial
 			try {
 				jschResult = jschUtil.executeCommand(limits, rootSession, retSession, null);
 			} catch (InterruptedException e) {
-				throw new OpsException("thread is interrupted");
+				Thread.currentThread().interrupt();
+				throw new OpsException(CommonConstants.THREAD_IS_INTERRUPTED);
 			}
 			if (0 != jschResult.getExitCode()) {
 				log.error("set ulimit exception, exit code: {}, error message: {}", jschResult.getExitCode(),
 						jschResult.getResult());
-				throw new OpsException("set ulimit exception");
+				throw new OpsException(CommonConstants.SET_LIMIT_EXCEPTION);
 			}
 		} catch (IOException e) {
-			log.error("set ulimit exception", e);
-			throw new OpsException("set ulimit exception");
+			log.error(CommonConstants.SET_LIMIT_EXCEPTION, e);
+			throw new OpsException(CommonConstants.SET_LIMIT_EXCEPTION);
 		}
 	}
 
 	protected String scpInstallPackageToMasterNode(JschUtil jschUtil, Session rootSession, String sourcePath,
 			String targetPath, WsSession retSession) {
-		String installPackageFileName = sourcePath.substring(sourcePath.lastIndexOf("/") + 1);
-		String installPackageFullPath = targetPath + "/" + installPackageFileName;
+		String installPackageFileName = sourcePath.substring(sourcePath.lastIndexOf(CommonConstants.SLASH) + 1);
+		String installPackageFullPath = targetPath + CommonConstants.SLASH + installPackageFileName;
 		jschUtil.upload(rootSession, retSession, sourcePath, installPackageFullPath);
 		return installPackageFullPath;
 	}
@@ -85,7 +88,8 @@ public abstract class AbstractOpsProvider implements ClusterOpsProvider, Initial
 			try {
 				jschResult = jschUtil.executeCommand(command, rootSession, retSession, null);
 			} catch (InterruptedException e) {
-				throw new OpsException("thread is interrupted");
+				Thread.currentThread().interrupt();
+				throw new OpsException(CommonConstants.THREAD_IS_INTERRUPTED);
 			}
 			if (0 != jschResult.getExitCode()) {
 				log.error("set kernel.sem exception, exit code: {}, error message: {}", jschResult.getExitCode(),
@@ -158,16 +162,17 @@ public abstract class AbstractOpsProvider implements ClusterOpsProvider, Initial
 			try {
 				jschUtil.executeCommand(chmod, rootSession, wsSession, null);
 			} catch (InterruptedException e) {
-				throw new OpsException("thread is interrupted");
+				Thread.currentThread().interrupt();
+				throw new OpsException(CommonConstants.THREAD_IS_INTERRUPTED);
 			}
 		} catch (IOException e) {
-			log.error("Failed to grant permission", e);
+			log.error(CommonConstants.FAILED_TO_GRANT_PERMISSION, e);
 		}
 	}
 
 	protected void chmod(JschUtil jschUtil, Session rootSession, String path, WsSession wsSession) {
-		if (StrUtil.isNotEmpty(path) && path.indexOf("/", 1) > 0) {
-			path = path.substring(0, path.indexOf("/", 1));
+		if (StrUtil.isNotEmpty(path) && path.indexOf(CommonConstants.SLASH, 1) > 0) {
+			path = path.substring(0, path.indexOf(CommonConstants.SLASH, 1));
 		}
 		String chmod = MessageFormat.format(SshCommandConstants.CHMOD, path);
 
@@ -175,10 +180,11 @@ public abstract class AbstractOpsProvider implements ClusterOpsProvider, Initial
 			try {
 				jschUtil.executeCommand(chmod, rootSession, wsSession, null);
 			} catch (InterruptedException e) {
-				throw new OpsException("thread is interrupted");
+				Thread.currentThread().interrupt();
+				throw new OpsException(CommonConstants.THREAD_IS_INTERRUPTED);
 			}
 		} catch (IOException e) {
-			log.error("Failed to grant permission", e);
+			log.error(CommonConstants.FAILED_TO_GRANT_PERMISSION, e);
 		}
 	}
 
@@ -189,10 +195,11 @@ public abstract class AbstractOpsProvider implements ClusterOpsProvider, Initial
 			try {
 				jschUtil.executeCommand(chmod, rootSession, wsSession, null);
 			} catch (InterruptedException e) {
-				throw new OpsException("thread is interrupted");
+				Thread.currentThread().interrupt();
+				throw new OpsException(CommonConstants.THREAD_IS_INTERRUPTED);
 			}
 		} catch (IOException e) {
-			log.error("Failed to grant permission", e);
+			log.error(CommonConstants.FAILED_TO_GRANT_PERMISSION, e);
 		}
 	}
 
@@ -207,16 +214,17 @@ public abstract class AbstractOpsProvider implements ClusterOpsProvider, Initial
 			try {
 				jschResult = jschUtil.executeCommand(chown, rootSession, wsSession, null);
 			} catch (InterruptedException e) {
-				throw new OpsException("thread is interrupted");
+				Thread.currentThread().interrupt();
+				throw new OpsException(CommonConstants.THREAD_IS_INTERRUPTED);
 			}
 			if (0 != jschResult.getExitCode()) {
 				log.error("Failed to grant permission, exit code: {}, error message: {}", jschResult.getExitCode(),
 						jschResult.getResult());
-				throw new OpsException("Failed to grant permission");
+				throw new OpsException(CommonConstants.FAILED_TO_GRANT_PERMISSION);
 			}
 		} catch (IOException e) {
-			log.error("Failed to grant permission", e);
-			throw new OpsException("Failed to grant permission");
+			log.error(CommonConstants.FAILED_TO_GRANT_PERMISSION, e);
+			throw new OpsException(CommonConstants.FAILED_TO_GRANT_PERMISSION);
 		}
 	}
 
@@ -231,16 +239,17 @@ public abstract class AbstractOpsProvider implements ClusterOpsProvider, Initial
 			try {
 				jschResult = jschUtil.executeCommand(chown, rootSession, wsSession, null);
 			} catch (InterruptedException e) {
-				throw new OpsException("thread is interrupted");
+				Thread.currentThread().interrupt();
+				throw new OpsException(CommonConstants.THREAD_IS_INTERRUPTED);
 			}
 			if (0 != jschResult.getExitCode()) {
 				log.error("Failed to grant permission, exit code: {}, error message: {}", jschResult.getExitCode(),
 						jschResult.getResult());
-				throw new OpsException("Failed to grant permission");
+				throw new OpsException(CommonConstants.FAILED_TO_GRANT_PERMISSION);
 			}
 		} catch (IOException e) {
-			log.error("Failed to grant permission", e);
-			throw new OpsException("Failed to grant permission");
+			log.error(CommonConstants.FAILED_TO_GRANT_PERMISSION, e);
+			throw new OpsException(CommonConstants.FAILED_TO_GRANT_PERMISSION);
 		}
 	}
 
@@ -251,7 +260,8 @@ public abstract class AbstractOpsProvider implements ClusterOpsProvider, Initial
 			try {
 				jschResult = jschUtil.executeCommand(command, rootSession, retSession, null);
 			} catch (InterruptedException e) {
-				throw new OpsException("thread is interrupted");
+				Thread.currentThread().interrupt();
+				throw new OpsException(CommonConstants.THREAD_IS_INTERRUPTED);
 			}
 			if (0 != jschResult.getExitCode()) {
 				log.error("Failed to create directory, exit code: {}, error message: {}", jschResult.getExitCode(),
@@ -265,11 +275,11 @@ public abstract class AbstractOpsProvider implements ClusterOpsProvider, Initial
 	}
 
 	protected String preparePath(String path) {
-		if (StrUtil.isEmpty(path) || path.endsWith("/")) {
+		if (StrUtil.isEmpty(path) || path.endsWith(CommonConstants.SLASH)) {
 			return path;
 		}
 
-		return path + "/";
+		return path + CommonConstants.SLASH;
 	}
 
 	@Override

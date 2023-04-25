@@ -27,7 +27,7 @@ public class TaskCreator {
 	private final SqlExecuter nextStep;
 	private final List<Caller> callers;
 	private final static Queue<Task> queue = new ConcurrentLinkedQueue<Task>();
-	private static Task task;
+	private  Task task;
 
 	public void createTask(Task task) {
 		queue.add(task);
@@ -48,8 +48,9 @@ public class TaskCreator {
 				task = queue.poll();
 				if(task != null)
 					break;
-			} else
+			} else {
 				ThreadUtil.sleep(1000);
+			}
 		task.addRemarks("before execute");
 		mapper.updateById(task);
 		for (Caller caller : callers)
@@ -69,6 +70,7 @@ public class TaskCreator {
 		try {
 			SEMAPHORE.acquire();
 		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
 			throw new CustomException("", e);
 		}
 		task.setStarttime(new Date());

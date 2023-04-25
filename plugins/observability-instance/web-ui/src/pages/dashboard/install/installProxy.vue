@@ -23,11 +23,19 @@
                     <el-form-item :label="t('install.machine')" prop="nodeId">
                         <Machines width="200" @change="changeMachine" autoSelectFirst notClearable style="width: 200px; margin: 0 4px" />
                     </el-form-item>
-                    <el-form-item :label="t('install.rootPWD')" prop="rootPassword">
+                    <el-form-item :label="t('install.installUser')" prop="username">
+                        <el-select v-model="formData.username" style="width: 200px; margin: 0 4px">
+                            <el-option v-for="item in hostUserList" :key="item.hostUserId" :label="item.username" :value="item.username" />
+                        </el-select>
+                    </el-form-item>
+                    <el-form-item :label="t('install.rootPWD')" prop="rootPassword" v-if="formData.username === ROOT_USER">
                         <el-input v-model="formData.rootPassword" show-password style="width: 200px; margin: 0 4px" />
                     </el-form-item>
                     <el-form-item :label="t('install.proxyPort')" prop="port">
                         <el-input v-model="formData.port" style="width: 200px; margin: 0 4px" />
+                    </el-form-item>
+                    <el-form-item :label="t('install.installPath')" prop="path">
+                        <el-input v-model="formData.path" style="width: 200px; margin: 0 4px" readonly/>
                     </el-form-item>
                     <el-form-item :label="t('install.installMode')" prop="installMode">
                         <el-radio-group v-model="formData.installMode">
@@ -69,6 +77,9 @@
                 </el-upload>
                 <div>
                     <el-progress v-if="showProgress" :percentage="progressPercent" :format="progressFormat" />
+                    <el-button type="primary"  :icon="RefreshRight" @click="retryUpload" v-if="retry">
+                        {{ t("install.continueUpload") }}
+                    </el-button>
                 </div>
             </div>
         </el-dialog>
@@ -82,7 +93,7 @@ import { useI18n } from "vue-i18n";
 import WebSocketClass from "../../../utils/websocket";
 import { encryptPassword } from "../../../utils/jsencrypt";
 import moment from "moment";
-import { Plus, Warning } from "@element-plus/icons-vue";
+import { Plus, Warning,RefreshRight } from "@element-plus/icons-vue";
 import type { UploadProps } from "element-plus";
 import restRequest from "../../../request/restful";
 const { t } = useI18n();
@@ -105,8 +116,10 @@ watch(
 // form data
 const initFormData = {
     nodeId: "",
+    username: "",
     rootPassword: "",
     port: "9090",
+    path: "",
     installMode: "online",
     pkg: "",
     src: "",
@@ -114,19 +127,31 @@ const initFormData = {
     fileList: [],
     uploadPath: "",
 };
+const ROOT_USER = "root";
+const hostUserList = ref<any[]>()
 const formData = reactive(cloneDeep(initFormData));
 const changeMachine = (val: any) => {
     formData.nodeId = val;
     if (formData.nodeId) {
         getPkgInfo(formData.nodeId);
+        getHostUserList(formData.nodeId);
     }
 };
 const connectionFormRef = ref<FormInstance>();
 const connectionFormRules = reactive<FormRules>({
     nodeId: [{ required: true, message: t("install.proxyRules[0]"), trigger: "blur" }],
-    rootPassword: [{ required: true, message: t("install.proxyRules[1]"), trigger: "blur" }],
+    username: [{ required: true, message: t("install.proxyRules[3]"), trigger: "blur" }],
+    rootPassword: [{ required: false, message: t("install.proxyRules[1]"), trigger: "blur" }],
     port: [{ required: true, message: t("install.proxyRules[2]"), trigger: "blur" }],
 });
+
+watch(() => formData.username,(newValue) => {
+        if(newValue === ROOT_USER) {
+            connectionFormRules.rootPassword = [{ required: true, message: t("install.collectorRules[1]"), trigger: "blur" }]
+        }else {
+            connectionFormRules.rootPassword = [{ required: false, message: t("install.collectorRules[1]"), trigger: "blur" }]
+        }
+    });
 
 const getPkgInfo = (hostId: string) => {
     const key = "prometheus";
@@ -145,6 +170,21 @@ const getPkgInfo = (hostId: string) => {
         })
         .catch(function (res) {});
 };
+
+const getHostUserList = (hostId: string) => {
+    restRequest.get(`/observability/v1/environment/hostUser/${hostId}`).then(res => {
+        if(Array.isArray(res)) {
+            hostUserList.value = res
+        }
+    })
+}
+const getInstallPath = () => {
+    restRequest.get(`/observability/v1/environment/basePath`).then(res => {
+        if(res) {
+            formData.path = res + (res.endsWith('/') ? 'data' : '/data') + '/prometheus';
+        }
+    })
+}
 
 const started = ref(false);
 const installSucceed = ref(false);
@@ -182,15 +222,20 @@ const install = async () => {
     // sendData();
 };
 const sendData = async () => {
-    const encryptPwd = await encryptPassword(formData.rootPassword);
-    const sendData = {
+    let sendData = {
         key: "prometheus",
         hostId: formData.nodeId,
+        username: formData.username,
         installMode: formData.installMode,
-        rootPassword: encryptPwd,
+        // rootPassword: encryptPwd,
+        path: formData.path,
         port: formData.port,
         language: localStorage.getItem('locale') === 'en-US' ? 'en_US' : 'zh_CN'
     };
+    if(formData.rootPassword) {
+        const encryptPwd = await encryptPassword(formData.rootPassword)
+        sendData = Object.assign(sendData,{rootPassword: encryptPwd})
+    }
     ws.instance.send(sendData);
 };
 const onWebSocketMessage = (data: Array<any>) => {
@@ -252,55 +297,155 @@ const showUpload = ref<boolean>(false);
 const fileList = ref<any[]>();
 const pgkName = ref<string>();
 const showProgress = ref<boolean>(false);
-const progressPercent = ref<number>(0);
+const progressPercentList = ref<number[]>([]);
+const progressPercent = computed({
+    get() {
+		return fileChunkList.value.length > 0 ? parseInt(progressPercentList.value?.reduce((acc, cur) => { return acc + cur },0) / fileChunkList.value.length) : 0;
+	},
+	set(value) {
+		return value
+	}
+});
 const progressFormat = (percentage:number) => percentage + '%';
 const showUploadFile = (_type: string, _pgkName: string) => {
     showUpload.value = true;
     pgkName.value = _pgkName;
 };
-const upload = (action: any) => {
+const DEFAULT_SIZE = 15 * 1024 * 2024;
+const fileTotalSize = ref<number>(0);
+const chunkCurNum = ref<number>(0);
+const errChunkNum = ref<number>(0);
+const fileChunkList = ref<any[]>([]);
+const retry = ref<boolean>(false);
+const createFileChunk = (file: any, size = DEFAULT_SIZE) => {
+    fileChunkList.value = [];
+    progressPercentList.value = [];
+    let cur = 0;
+    while (cur < file.size) {
+        fileChunkList.value?.push(file.slice(cur, cur + size));
+        progressPercentList.value?.push(0);
+        cur += size;
+    }
+}
+const uploadChunk = (fileChunk: any,name: string,index: number) =>{
+    let formData = new FormData();
+    formData.append("name", name + "-" + index);
+    formData.append("pkg", fileChunk);
+    return new Promise((resolve,reject) => {
+        restRequest
+        .post("/observability/v1/environment/upload", formData, { headers: { contentType: "multipart/form-data" },onUploadProgress: event => {
+            progressPercentList.value[index] = parseInt(event.loaded / event.total  * 100);
+        } })
+        .then(function (res) {
+            if(res && res === 'success') {
+                chunkCurNum.value ++;
+                resolve(name + "-" + index)
+            } else {
+                progressPercentList.value[index] = 0;
+                errChunkNum.value ++;
+                reject(name + "-" + index)
+            }
+        })
+        .catch(function (res) {
+            progressPercentList.value[index] = 0;
+            errChunkNum.value ++;
+            reject(name + "-" + index)
+        });
+    })
+    
+    
+}
+const uploadMerge = (name: string,total: number) => {
+    restRequest.post(`/observability/v1/environment/merge?name=${name}&total=${total}`).then(res => {
+        if(!res) {
+            ElMessage({
+                message: t("install.uploadSucceed"),
+                type: "success",
+            });
+            refreshPkgInfo();
+            fileChunkList.value = []
+            showProgress.value = false;
+            showUpload.value = false;
+            progressPercent.value = 0;
+        }else {
+            retry.value = true;
+            ElMessage({
+                    message: t('install.uploadFail'),
+                    type: 'error',
+            }); 
+        }
+    }).catch(err => {
+        retry.value = true;
+        ElMessage({
+                    message: t('install.uploadFail'),
+                    type: 'error',
+            }); 
+    })
+}
+const upload = async (action: any) => {
     if (!action) {
         return;
     }
-    let formData = new FormData();
-    formData.append("name", pgkName.value);
-    formData.append("pkg", action.file);
-    showProgress.value = true;
-    restRequest
-        .post("/observability/v1/environment/upload", formData, { headers: { contentType: "multipart/form-data" },onUploadProgress: event => {
-            progressPercent.value = parseInt(event.loaded / event.total  * 100);
-        } })
-        .then(function (res) {
-            if(!res) {
-                ElMessage({
-                    message: t("install.uploadSucceed"),
-                    type: "success",
-                });
-                showUpload.value = false;
-                if(!fileList.value || fileList.value.length === 0) {
-                    fileList.value = [{name:action.file.name,raw: action.file}]
-                }
-                refreshPkgInfo();
-            }else {
-                ElMessage({
-                    message: res && res.msg ? res.msg : t('install.uploadFail'),
-                    type: 'error',
-                }); 
-                fileList.value = [];
-            }
-            progressPercent.value = 0;
-            showProgress.value = false;
-        })
-        .catch(function (res) {
-            fileList.value = [];
-            showProgress.value = false;
-            progressPercent.value = 0;
+    chunkCurNum.value = 0;
+    errChunkNum.value = 0;
+    fileTotalSize.value = action.file.size;
+    createFileChunk(action.file);
+    showProgress.value = true
+    const requestList = fileChunkList.value.map(async (item,index) => {
+        return uploadChunk(item,pgkName.value,index);
+    });
+    Promise.all(requestList).then(res => {
+        fileList.value = [{name:action.file.name,raw: action.file}]
+        if(errChunkNum.value === 0) {
+            uploadMerge(pgkName.value,fileChunkList.value.length)
+        }else {
+            retry.value = true;
             ElMessage({
-                    message: res && res.msg ? res.msg : t('install.uploadFail'),
-                    type: 'error',
+                        message: t('install.uploadFail'),
+                        type: 'error',
                 }); 
-        });
+        }
+    }).catch(res => {
+        retry.value = true;
+        ElMessage({
+                    message: t('install.uploadFail'),
+                    type: 'error',
+            }); 
+    
+    })
+    
+    
 };
+const retryUpload = async() => {
+    retry.value = false;
+    if(chunkCurNum.value === fileChunkList.value.length) {
+        uploadMerge(pgkName.value,fileChunkList.value.length)
+        return;
+    }
+    errChunkNum.value = 0;
+    const requestList = fileChunkList.value.map((item,index) => {
+        if(progressPercentList.value[index] === 0) {
+            return uploadChunk(item,pgkName.value,index);
+        }else {
+            return new Promise((resolve,reject) => {
+                resolve("");
+            })
+        }
+    })
+    Promise.all(requestList).then(res => {
+        if(errChunkNum.value === 0) {
+            uploadMerge(pgkName.value,fileChunkList.value.length)
+        }else {
+            ElMessage({
+                        message: t('install.uploadFail'),
+                        type: 'error',
+                }); 
+        }
+    })
+    
+
+}
+
 const handleExceed: UploadProps["onExceed"] = (files, uploadFiles) => {
     fileList.value = files;
 };
@@ -308,7 +453,9 @@ const uploadBefore = () => {
     fileList.value = [];
     return true;
 };
-
+onMounted(() => {
+    getInstallPath();
+});
 onBeforeUnmount(() => {
     if (ws.instance) ws.instance.close();
 });

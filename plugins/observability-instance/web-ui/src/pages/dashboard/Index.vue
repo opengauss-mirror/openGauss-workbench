@@ -90,7 +90,7 @@ const treeTransform = (arr: any) => {
                 clusterNodeId.value = instanceId.value;
             }
             obj.push({
-                label: item.clusterId ? item.clusterId : item.azName + "_" + item.publicIp + "(" + item.nodeId + ")",
+                label: item.clusterId ? item.clusterId : (item.azName ? item.azName + "_" : "") + item.publicIp + ":" + item.dbPort + (item.clusterRole ? "(" + item.clusterRole + ")" : ""),
                 value: item.clusterId ? item.clusterId : item.nodeId,
                 children: treeTransform(item.clusterNodes),
             });

@@ -4,11 +4,13 @@ import cn.hutool.core.date.DateUtil;
 import com.baomidou.mybatisplus.annotation.*;
 import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.nctigba.observability.sql.constants.CommonConstants;
 import com.nctigba.observability.sql.model.diagnosis.result.Frame;
 import com.nctigba.observability.sql.model.diagnosis.result.FrameType;
 import com.nctigba.observability.sql.util.LocaleString;
 import lombok.Data;
 import lombok.experimental.Accessors;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.opengauss.admin.common.exception.CustomException;
 
@@ -23,6 +25,7 @@ import java.util.Map;
 @Data
 @TableName(value = "diagnosis_task", autoResultMap = true)
 @Accessors(chain = true)
+@Slf4j
 public class Task {
 	@TableId(type = IdType.AUTO)
 	Integer id;
@@ -96,7 +99,9 @@ public class Task {
 		while (counter++ < 10000 && getData().getSessionId() == null)
 			try {
 				Thread.sleep(10L);
-			} catch (InterruptedException e1) {
+			}catch (InterruptedException e) {
+				log.info(e.getMessage());
+				Thread.currentThread().interrupt();
 			}
 		if (getData().getSessionId() == 0L)
 			throw new CustomException("sessionid catch fail");
@@ -120,10 +125,11 @@ public class Task {
 		if (this.cost != null)
 			return this.cost;
 		Long costSec;
-		if (endtime != null)
+		if (endtime != null) {
 			costSec = endtime.getTime() - starttime.getTime();
-		else
+		}else {
 			costSec = 0L;
+		}
 		return this.cost = DateUtil.secondToTime(costSec.intValue() / 1000) + String.format(".%03d", costSec % 1000);
 	}
 
@@ -166,7 +172,7 @@ public class Task {
 		map.put(LocaleString.trapLanguage("Task.cost"), getCost());
 		list.add(map);
 		map = new HashMap<String, Object>();
-		map.put("sql", StringUtils.defaultIfEmpty(sql, "").replaceAll(System.lineSeparator(), "<br/>"));
+		map.put("sql", StringUtils.defaultIfEmpty(sql, "").replaceAll(System.lineSeparator(), CommonConstants.BR));
 		list.add(map);
 		map = new HashMap<String, Object>();
 		map.put(LocaleString.trapLanguage("Task.remarks"), StringUtils.defaultIfEmpty(remarks, ""));
@@ -176,7 +182,7 @@ public class Task {
 	}
 
 	public synchronized Task addRemarks(String remark) {
-		this.remarks += "<br/>" + LocalTime.now() + " " + remark;
+		this.remarks += CommonConstants.BR + LocalTime.now() + " " + remark;
 		return this;
 	}
 
@@ -185,8 +191,8 @@ public class Task {
 		try (PrintWriter pw = new PrintWriter(sw);) {
 			e.printStackTrace(pw);
 		}
-		String msg = sw.toString().replaceAll(System.lineSeparator(), "<br/>");
-		return addRemarks(taskState + "<br/>" + msg);
+		String msg = sw.toString().replaceAll(System.lineSeparator(), CommonConstants.BR);
+		return addRemarks(taskState + CommonConstants.BR + msg);
 	}
 
 	public Task addRemarks(TaskState taskState) {

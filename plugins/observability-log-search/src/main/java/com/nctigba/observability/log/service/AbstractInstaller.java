@@ -31,13 +31,13 @@ import lombok.experimental.Accessors;
 public abstract class AbstractInstaller {
 	public static final String TAR = ".tar.gz";
 	@Autowired
-	@AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
+	@AutowiredType(Type.PLUGIN_MAIN)
 	protected HostFacade hostFacade;
 	@Autowired
-	@AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
+	@AutowiredType(Type.PLUGIN_MAIN)
 	protected HostUserFacade hostUserFacade;
 	@Autowired
-	@AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
+	@AutowiredType(Type.PLUGIN_MAIN)
 	protected EncryptionUtils encryptionUtils;
 	@Autowired
 	protected NctigbaEnvMapper envMapper;

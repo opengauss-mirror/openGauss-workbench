@@ -198,6 +198,7 @@ public class MonitoringController {
         try {
             countDownLatch.await();
         } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
             throw new CustomException(e.getMessage());
         }
         return AppResult.ok("").addData(map);

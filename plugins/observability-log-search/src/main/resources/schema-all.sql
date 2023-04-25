@@ -6,3 +6,4 @@ CREATE TABLE public.nctigba_env (
 	"path" varchar NULL,
 	port int8 NULL
 );
+ALTER TABLE public.nctigba_env ADD nodeid varchar NULL;

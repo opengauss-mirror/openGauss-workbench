@@ -1,5 +1,6 @@
 package com.nctigba.observability.sql.controller;
 
+import java.io.File;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -30,14 +31,37 @@ public class EnvironmentController {
 	@Autowired
 	private ClusterManager clusterManager;
 
+	@GetMapping("/basePath")
+	public String basePath() {
+		String path = System.getProperty("java.class.path");
+		int firstIndex = path.lastIndexOf(System.getProperty("path.separator")) + 1;
+		int lastIndex = path.lastIndexOf(File.separator) + 1;
+		return path.substring(firstIndex, lastIndex);
+	}
+
 	@GetMapping("/agent")
 	public List<OpsClusterVO> listAgent() {
 		var env = envMapper.selectList(Wrappers.<NctigbaEnv>lambdaQuery().in(NctigbaEnv::getType, List.of(type.AGENT)));
-		var hosts = env.stream().map(NctigbaEnv::getHostid).collect(Collectors.toSet());
 		var clusters = clusterManager.getAllOpsCluster();
+		env.forEach(e->{
+			if(e.getNodeid() == null) {
+				clusters.forEach(c -> {
+					for (var node : c.getClusterNodes()) {
+						if(node.getHostId().equals(e.getHostid())) {
+							e.setNodeid(node.getNodeId());
+							return;
+						}
+					}
+				});
+				if(e.getNodeid()!=null) {
+					envMapper.updateById(e);
+				}
+			}
+		});
+		var hosts = env.stream().map(NctigbaEnv::getNodeid).collect(Collectors.toSet());
 		return clusters.stream().filter(c -> {
 			var nodes = c.getClusterNodes().stream().filter(n -> {
-				return hosts.contains(n.getHostId());
+				return hosts.contains(n.getNodeId());
 			}).collect(Collectors.toList());
 			c.setClusterNodes(nodes);
 			return nodes.size() > 0;

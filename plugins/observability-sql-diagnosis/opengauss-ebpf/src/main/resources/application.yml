@@ -1,5 +1,5 @@
 server:
-  port: 2321
+  port: ${agent_port:2321}
 urlconfig:
   bccUrl: /usr/share/bcc/tools
   outputUrl: /root/output/

@@ -45,7 +45,11 @@ public class EbpfMonitorServiceImpl implements EbpfMonitorService {
                 sendFileHandler.createSvg(taskid, monitorType);
             }
             sendFileHandler.sendFile(taskid, monitorType);
-        } catch (IllegalArgumentException | InterruptedException e) {
+        }  catch (InterruptedException e) {
+            log.info(e.getMessage());
+            log.error("Interrupted!", e);
+            Thread.currentThread().interrupt();
+        }catch (IllegalArgumentException e) {
             log.info(e.getMessage());
         }
     }

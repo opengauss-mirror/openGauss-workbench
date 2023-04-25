@@ -6,6 +6,7 @@ package com.nctigba.ebpf.handler;
 
 import com.nctigba.ebpf.config.EbpfConfig;
 import com.nctigba.ebpf.config.UrlConfig;
+import com.nctigba.ebpf.constants.CommonConstants;
 import com.nctigba.ebpf.constants.EbpfType;
 import com.nctigba.ebpf.constants.FileType;
 import com.nctigba.ebpf.util.OSUtil;
@@ -36,7 +37,7 @@ public class EbpfMonitorHandler {
     public String startMonitor(String tid, String taskid, String monitorType) {
         OSUtil toolUtil = new OSUtil();
         String bccUrl = "cd " + urlConfig.getBccUrl() + " &&";
-        String outputUrl = urlConfig.getOutputUrl();
+        String outputUrl = System.getProperty("user.dir") + "/output/";
         File dir = new File(outputUrl);
         if (!dir.exists()) {
             dir.mkdirs();
@@ -44,15 +45,15 @@ public class EbpfMonitorHandler {
         String fileUrl = " > " + outputUrl + taskid + monitorType;
         String execcmd = null;
         if (EbpfType.PROFILE.equals(monitorType)) {
-            execcmd = bccUrl + ebpfConfig.getProfile() + " " + tid + fileUrl + FileType.STACKS;
+            execcmd = bccUrl + ebpfConfig.getProfile() + CommonConstants.BLANK + tid + fileUrl + FileType.STACKS;
         } else if (EbpfType.OFFCPUTIME.equals(monitorType)) {
-            execcmd = bccUrl + ebpfConfig.getOffcputime() + " " + tid + fileUrl + FileType.STACKS;
+            execcmd = bccUrl + ebpfConfig.getOffcputime() + CommonConstants.BLANK + tid + fileUrl + FileType.STACKS;
         } else if (EbpfType.RUNQLEN.equals(monitorType)) {
             execcmd = bccUrl + ebpfConfig.getRunqlen() + fileUrl + FileType.DEFAULT;
         } else if (EbpfType.RUNQLAT.equals(monitorType)) {
             execcmd = bccUrl + ebpfConfig.getRunqlat() + fileUrl + FileType.DEFAULT;
         } else if (EbpfType.DEFAULT.equals(monitorType)) {
-            execcmd = bccUrl + ebpfConfig.getStackcount() + " " + tid + " c:malloc" + fileUrl + FileType.STACKS;
+            execcmd = bccUrl + ebpfConfig.getStackcount() + CommonConstants.BLANK + tid + " c:malloc" + fileUrl + FileType.STACKS;
         } else if (EbpfType.CACHESTAT.equals(monitorType)) {
             execcmd = bccUrl + ebpfConfig.getCachestat() + fileUrl + FileType.DEFAULT;
         } else if (EbpfType.EXT4SLOWER.equals(monitorType)) {
@@ -74,7 +75,7 @@ public class EbpfMonitorHandler {
         } else if (EbpfType.XFSSLOWER.equals(monitorType)) {
             execcmd = bccUrl + ebpfConfig.getXfsslower() + fileUrl + FileType.DEFAULT;
         } else if (EbpfType.MEMLEAK.equals(monitorType)) {
-            execcmd = bccUrl + ebpfConfig.getMemleak() + " " + " $(pidof allocs)" + fileUrl + FileType.STACKS;
+            execcmd = bccUrl + ebpfConfig.getMemleak() + CommonConstants.BLANK + " $(pidof allocs)" + fileUrl + FileType.STACKS;
         }
         return toolUtil.execCmd(execcmd);
     }
@@ -93,7 +94,7 @@ public class EbpfMonitorHandler {
         String tid = null;
         for (int i = 0; i < pidss.length; i++) {
             if (pidss[i].contains(pid)) {
-                tid = pidss[i].substring(0, pidss[i].indexOf(" "));
+                tid = pidss[i].substring(0, pidss[i].indexOf(CommonConstants.BLANK));
             }
         }
         String killcmd = "kill -2 " + tid;

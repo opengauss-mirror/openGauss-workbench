@@ -21,6 +21,5 @@ public class ObservabilityPluginApplication extends SpringPluginBootstrap {
 
     public static void main(String[] args) {
         new ObservabilityPluginApplication().run(args);
-        System.out.printf("Email notification plug-in started successfully");
     }
 }
