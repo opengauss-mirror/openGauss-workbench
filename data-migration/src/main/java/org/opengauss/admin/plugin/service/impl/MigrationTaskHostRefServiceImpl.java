@@ -102,6 +102,10 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
     private MigrationTaskService migrationTaskService;
     @Value("${migration.portalPkgDownloadUrl}")
     private String portalPkgDownloadUrl;
+    @Value("${migration.portalPkgName}")
+    private String portalPkgName;
+    @Value("${migration.portalJarName}")
+    private String portalJarName;
     @Autowired
     private MigrationHostPortalInstallHostService migrationHostPortalInstallHostService;
     @Autowired
@@ -389,7 +393,7 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
     private void syncInstallPortalHandler(String hostId, String host, Integer port, String user, String pass, String installPath, boolean isNewFileInstall) {
         threadPoolTaskExecutor.submit(() -> {
             try {
-                boolean flag = PortalHandle.installPortal(host, port, user, pass, installPath, portalPkgDownloadUrl, isNewFileInstall);
+                boolean flag = PortalHandle.installPortal(host, port, user, pass, installPath, portalPkgDownloadUrl,portalPkgName, portalJarName, isNewFileInstall);
                 migrationHostPortalInstallHostService.updateStatus(hostId, flag ? PortalInstallStatus.INSTALLED.getCode() : PortalInstallStatus.INSTALL_ERROR.getCode());
             } catch (Exception e) {
                 log.error("sync install portal error, message: {}", e.getMessage());
