@@ -5,7 +5,11 @@ import com.nctigba.common.web.result.AppResult;
 import com.nctigba.observability.instance.model.monitoring.MonitoringParam;
 import com.nctigba.observability.instance.service.MonitoringService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -192,6 +196,7 @@ public class MonitoringController {
         try {
             countDownLatch.await(10, TimeUnit.SECONDS);
         } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
             throw new CustomException(e.getMessage());
         }
         return AppResult.ok("").addData(map);
