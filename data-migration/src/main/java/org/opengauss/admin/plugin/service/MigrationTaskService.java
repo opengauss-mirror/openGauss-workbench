@@ -50,21 +50,72 @@ public interface MigrationTaskService extends IService<MigrationTask> {
 
     Map<String, Object> getSingleTaskStatusAndProcessByProtal(MigrationTask t);
 
+    /**
+     * count the number of unfinished tasks by target DB
+     * @param targetDb
+     * @return count the number
+     */
+    Integer countNotFinishByTargetDb(String targetDb);
+
+    /**
+     * count the number of running tasks by target DB
+     * @param targetDb
+     * @return count the number
+     */
     Integer countRunningByTargetDb(String targetDb);
 
+    /**
+     * count the number of running tasks by hostID
+     * @param hostId
+     * @return count the number
+     */
     Integer countRunningByHostId(String hostId);
 
+    /**
+     * list data running tasks by hostID
+     * @param hostId
+     * @return tasks
+     */
     List<MigrationTask> listRunningTaskByHostId(String hostId);
 
+    /**
+     * list data tasks by status
+     * @param taskStatus
+     * @return tasks
+     */
     List<MigrationTask> listTaskByStatus(TaskStatus taskStatus);
 
+    /**
+     * count the number by status
+     * @param taskStatus
+     * @return count the number
+     */
     Integer countTaskByStatus(TaskStatus taskStatus);
 
+    /**
+     * update the task by id
+     * @param id
+     * @param taskStatus
+     */
     void updateStatus(Integer id, TaskStatus taskStatus);
 
+    /**
+     * count the number on the model grouping by mainTaskId
+     * @param mainTaskId
+     * @return count the number for each model
+     */
     List<Map<String, Object>> countByMainTaskIdGroupByModel(Integer mainTaskId);
 
+    /**
+     * run task
+     * @param h
+     * @param t
+     * @param globalParams
+     */
     void runTask(MigrationTaskHostRef h, MigrationTask t, List<MigrationTaskGlobalParam> globalParams);
 
+    /**
+     * subtask Execution Offline Scheduler
+     */
     void doOfflineTaskRunScheduler();
 }

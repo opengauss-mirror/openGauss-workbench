@@ -347,6 +347,14 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
     }
 
     @Override
+    public Integer countNotFinishByTargetDb(String targetDb) {
+        LambdaQueryWrapper<MigrationTask> query = new LambdaQueryWrapper<>();
+        query.eq(MigrationTask::getTargetDb, targetDb);
+        query.notIn(MigrationTask::getExecStatus, TaskStatus.MIGRATION_FINISH.getCode());
+        return Math.toIntExact(this.count(query));
+    }
+
+    @Override
     public Integer countRunningByTargetDb(String targetDb) {
         LambdaQueryWrapper<MigrationTask> query = new LambdaQueryWrapper<>();
         query.eq(MigrationTask::getTargetDb, targetDb);

@@ -274,10 +274,6 @@ const stopSubIncrease = row => {
 
 // start sub task reverse
 const startSubReverse = row => {
-  if (row.targetDbVersion.substring(0, 3) === '3.0') {
-    Message.error(`${row.targetDbVersion} version of openGauss does not support reverse migration`)
-    return
-  }
   subTaskStartReverse(row.id).then(() => {
     Message.success('Start success')
     loopSubTaskStatus()
