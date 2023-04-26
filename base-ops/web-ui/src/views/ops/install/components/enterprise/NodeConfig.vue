@@ -1,89 +1,198 @@
 <template>
   <div class="node-config-c">
     <div class="flex-col">
-      <div class="flex-between " :style="{ width: '800px' }">
+      <div
+        class="flex-between "
+        :style="{ width: '800px' }"
+      >
         <div class="label-color ft-b ft-m mb">
           <span class="mr">{{ $t('enterprise.NodeConfig.5mpme7w69yc0') }}</span> <span class="ft-lg">{{
             data.nodeList.length
           }}</span>
         </div>
-        <a-form v-if="installType !== 'import'" :model="data.azForm" :rules="data.azRules" :style="{ width: '300px' }"
-          auto-label-width ref="azFormRef">
-          <a-form-item field="azId" :label="$t('enterprise.NodeConfig.5mpme7w6aj40')" validate-trigger="change">
-            <a-select :loading="data.azListLoading" v-model="data.azForm.azId"
-              :placeholder="$t('enterprise.NodeConfig.5mpme7w6ap00')" @change="azChange">
-              <a-option v-for="item in data.azList" :key="item.azId" :value="item.azId">{{
+        <a-form
+          v-if="installType !== 'import'"
+          :model="data.azForm"
+          :rules="data.azRules"
+          :style="{ width: '300px' }"
+          auto-label-width
+          ref="azFormRef"
+        >
+          <a-form-item
+            field="azId"
+            :label="$t('enterprise.NodeConfig.5mpme7w6aj40')"
+            validate-trigger="change"
+          >
+            <a-select
+              :loading="data.azListLoading"
+              v-model="data.azForm.azId"
+              :placeholder="$t('enterprise.NodeConfig.5mpme7w6ap00')"
+              @change="azChange"
+            >
+              <a-option
+                v-for="item in data.azList"
+                :key="item.azId"
+                :value="item.azId"
+              >{{
                 item.name
               }}</a-option>
             </a-select>
           </a-form-item>
         </a-form>
       </div>
-      <div v-for="(formItem, index) in data.nodeList" :key="index">
+      <div
+        v-for="(formItem, index) in data.nodeList"
+        :key="index"
+      >
         <div class="flex-col-start">
           <div class="node-top full-w mb">
             <div class="flex-row">
-              <a-tag color="#86909C" class="mr-s">{{ getRoleName(formItem.clusterRole) }}</a-tag>
+              <a-tag
+                color="#86909C"
+                class="mr-s"
+              >{{ getRoleName(formItem.clusterRole) }}</a-tag>
               {{ $t('enterprise.NodeConfig.5mpme7w6aw80') }}
             </div>
             <div class="flex-row">
-              <icon-plus-circle class="add-icon-size mr" style="color: green" @click="addNode(index)" />
-              <icon-minus-circle class="remove-icon add-icon-size"
-                v-if="(!isInstallCM && index > 0) || (isInstallCM && index > 2)" @click="removeNode(index)" />
+              <icon-plus-circle
+                class="add-icon-size mr"
+                style="color: green"
+                @click="addNode(index)"
+              />
+              <icon-minus-circle
+                class="remove-icon add-icon-size"
+                v-if="(!isInstallCM && index > 0) || (isInstallCM && index > 2)"
+                @click="removeNode(index)"
+              />
             </div>
           </div>
-          <a-form :model="formItem" :rules="data.rules" :style="{ width: '800px' }" auto-label-width :ref="setRefMap">
-            <a-form-item field="hostId" :label="$t('enterprise.NodeConfig.5mpme7w6azo0')">
-              <a-select :loading="data.hostListLoading" v-model="formItem.hostId" @change="changeHostId(index)"
+          <a-form
+            :model="formItem"
+            :rules="data.rules"
+            :style="{ width: '800px' }"
+            auto-label-width
+            :ref="setRefMap"
+          >
+            <a-form-item
+              field="hostId"
+              :label="$t('enterprise.NodeConfig.5mpme7w6azo0')"
+            >
+              <a-select
+                :loading="data.hostListLoading"
+                v-model="formItem.hostId"
+                @change="changeHostId(index)"
                 :placeholder="$t('enterprise.NodeConfig.5mpme7w6b3k0')"
-                @popup-visible-change="hostPopupChange($event, index)" class="mr-s">
-                <a-option v-for="item in data.hostList" :key="item.hostId" :value="item.hostId">{{
+                @popup-visible-change="hostPopupChange($event, index)"
+                class="mr-s"
+              >
+                <a-option
+                  v-for="item in data.hostList"
+                  :key="item.hostId"
+                  :value="item.hostId"
+                >{{
                   item.privateIp
                   + '(' +
                   (item.publicIp ? item.publicIp : '--') + ')'
                 }}</a-option>
               </a-select>
-              <icon-code-square :size="25" class="label-color" style="cursor: pointer;"
-                @click="showTerminal(formItem, index)" />
+              <icon-code-square
+                :size="25"
+                class="label-color"
+                style="cursor: pointer;"
+                @click="showTerminal(formItem, index)"
+              />
             </a-form-item>
-            <a-form-item v-if="formItem.isNeedPwd" field="rootPassword" :label="$t('enterprise.NodeConfig.else2')"
-              validate-trigger="blur">
-              <a-input-password v-model="formItem.rootPassword" :placeholder="$t('enterprise.NodeConfig.5mpme7w6b700')"
-                allow-clear />
+            <a-form-item
+              v-if="formItem.isNeedPwd"
+              field="rootPassword"
+              :label="$t('enterprise.NodeConfig.else2')"
+              validate-trigger="blur"
+            >
+              <a-input-password
+                v-model="formItem.rootPassword"
+                :placeholder="$t('enterprise.NodeConfig.5mpme7w6b700')"
+                allow-clear
+              />
             </a-form-item>
-            <a-form-item field="installUserId" :label="$t('enterprise.NodeConfig.5mpme7w6bak0')">
-              <a-select :loading="installUserLoading" v-model="formItem.installUserId"
-                @change="changeInstallUserId($event, index)" @popup-visible-change="hostUserPopupChange($event, index)">
-                <a-option v-for="item in data.userListByHost[formItem.hostId]" :key="item.hostUserId"
-                  :value="item.hostUserId">{{
-                    item.username
-                  }}</a-option>
+            <a-form-item
+              field="installUserId"
+              :label="$t('enterprise.NodeConfig.5mpme7w6bak0')"
+            >
+              <a-select
+                :loading="installUserLoading"
+                v-model="formItem.installUserId"
+                @change="changeInstallUserId($event, index)"
+                @popup-visible-change="hostUserPopupChange($event, index)"
+              >
+                <a-option
+                  v-for="item in data.userListByHost[formItem.hostId]"
+                  :key="item.hostUserId"
+                  :value="item.hostUserId"
+                >{{
+                  item.username
+                }}</a-option>
               </a-select>
             </a-form-item>
             <a-row :gutter="24">
               <a-col :span="12">
-                <a-form-item v-if="isInstallCM" field="isCMMaster" :label="$t('enterprise.NodeConfig.5mpme7w6be40')">
-                  <a-switch v-model="formItem.isCMMaster" @change="handleNodeCMChange($event, index)" />
+                <a-form-item
+                  v-if="isInstallCM"
+                  field="isCMMaster"
+                  :label="$t('enterprise.NodeConfig.5mpme7w6be40')"
+                >
+                  <a-switch
+                    v-model="formItem.isCMMaster"
+                    @change="handleNodeCMChange($event, index)"
+                  />
                 </a-form-item>
               </a-col>
             </a-row>
-            <a-form-item v-if="isInstallCM" field="cmDataPath" :label="$t('enterprise.NodeConfig.else4')"
-              validate-trigger="blur">
-              <a-input v-model="formItem.cmDataPath" :placeholder="$t('enterprise.NodeConfig.5mpme7w6bhg0')" />
+            <a-form-item
+              v-if="isInstallCM"
+              field="cmDataPath"
+              :label="$t('enterprise.NodeConfig.else4')"
+              validate-trigger="blur"
+            >
+              <a-input
+                v-model="formItem.cmDataPath"
+                :placeholder="$t('enterprise.NodeConfig.5mpme7w6bhg0')"
+              />
             </a-form-item>
-            <a-form-item v-if="isInstallCM" field="cmPort" :label="$t('enterprise.NodeConfig.else5')"
-              validate-trigger="blur">
-              <a-input v-model="formItem.cmPort" :placeholder="$t('enterprise.NodeConfig.5mpme7w6bko0')" />
+            <a-form-item
+              v-if="isInstallCM"
+              field="cmPort"
+              :label="$t('enterprise.NodeConfig.else5')"
+              validate-trigger="blur"
+            >
+              <a-input
+                v-model="formItem.cmPort"
+                :placeholder="$t('enterprise.NodeConfig.5mpme7w6bko0')"
+              />
             </a-form-item>
             <div class="label-color ft-m ft-b mb">
               {{ $t('enterprise.NodeConfig.5mpme7w6boc0') }}
             </div>
-            <a-form-item field="dataPath" :label="$t('enterprise.NodeConfig.5mpme7w6brs0')" validate-trigger="blur">
-              <a-input v-model="formItem.dataPath" :placeholder="$t('enterprise.NodeConfig.5mpme7w6bv40')" />
+            <a-form-item
+              field="dataPath"
+              :label="$t('enterprise.NodeConfig.5mpme7w6brs0')"
+              validate-trigger="blur"
+            >
+              <a-input
+                v-model="formItem.dataPath"
+                :placeholder="$t('enterprise.NodeConfig.5mpme7w6bv40')"
+              />
             </a-form-item>
-            <a-form-item field="azPriority" :label="$t('enterprise.NodeConfig.else7')" v-if="installType !== 'import'">
-              <a-input-number :min="1" :max="10" v-model="formItem.azPriority"
-                :placeholder="$t('enterprise.NodeConfig.else6')" />
+            <a-form-item
+              field="azPriority"
+              :label="$t('enterprise.NodeConfig.else7')"
+              v-if="installType !== 'import'"
+            >
+              <a-input-number
+                :min="1"
+                :max="10"
+                v-model="formItem.azPriority"
+                :placeholder="$t('enterprise.NodeConfig.else6')"
+              />
             </a-form-item>
           </a-form>
           <a-divider v-if="index < (data.nodeList.length - 1)" />
@@ -678,8 +787,7 @@ defineExpose({
 
 </script>
 
-<style lang="less" scoped>
-.node-config-c {
+<style lang="less" scoped>.node-config-c {
   height: 100%;
   overflow-y: auto;
 
@@ -705,5 +813,4 @@ defineExpose({
       cursor: pointer;
     }
   }
-}
-</style>
+}</style>

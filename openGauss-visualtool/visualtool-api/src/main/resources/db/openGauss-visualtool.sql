@@ -1126,3 +1126,5 @@ COMMENT ON COLUMN "public"."sys_plugin_logo"."id" IS '主键ID';
 COMMENT ON COLUMN "public"."sys_plugin_logo"."plugin_id" IS '插件ID';
 
 COMMENT ON COLUMN "public"."sys_plugin_logo"."logo_path" IS 'logo路径';
+
+update "public"."sys_menu" set menu_name = '服务器管理', menu_en_name = 'server', order_num = 2 where menu_id = 203;

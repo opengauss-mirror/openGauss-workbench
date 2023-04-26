@@ -35,27 +35,27 @@ export const clusterMonitor = (data: KeyValue) => {
 // Home Statistics Interface
 // Get the number of streams
 export const getDataFlowCount = () => {
-  return axios.get('modeling/dataflow/count')
+  return axios.get('plugins/base-ops/modeling/dataflow/count')
 }
 
 // Get the number of business flows
 export const getBusiFlowCount = () => {
-  return axios.get('modeling/workflow/count')
+  return axios.get('plugins/base-ops/modeling/workflow/count')
 }
 
 // Get the number of data models
 export const getDataModelCount = () => {
-  return axios.get('modeling/databaseDesign/count')
+  return axios.get('plugins/base-ops/modeling/databaseDesign/count')
 }
 
 // Get business flow type distribution data
 export const getBusiFlowType = () => {
-  return axios.get('modeling/dataflow/distribution')
+  return axios.get('plugins/base-ops/modeling/dataflow/distribution')
 }
 
 // Get the list of business flow running instances
 export const getBusiFlowList = () => {
-  return axios.get('modeling/dataflow/processInfo')
+  return axios.get('plugins/base-ops/modeling/dataflow/processInfo')
 }
 
 // Get the number of plugins

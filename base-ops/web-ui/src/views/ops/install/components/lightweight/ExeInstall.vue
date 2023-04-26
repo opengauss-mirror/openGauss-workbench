@@ -1,25 +1,67 @@
 <template>
   <div class="exe-install-c">
-    <div class="flex-col full-w full-h" v-if="exeResult === exeResultEnum.SUCESS">
-      <svg-icon icon-class="ops-install-success" class="icon-size mb"></svg-icon>
+    <div
+      class="flex-col full-w full-h"
+      v-if="exeResult === exeResultEnum.SUCESS"
+    >
+      <svg-icon
+        icon-class="ops-install-success"
+        class="icon-size mb"
+      ></svg-icon>
       <div class="label-color mb-lg">{{ $t('lightweight.ExeInstall.5mpmjd1mam40') }}</div>
       <div class="install-connect-c flex-col mb-xlg">
         <div class="ft-b mb">{{ $t('lightweight.ExeInstall.5mpmjd1mbdc0') }}</div>
-        <div class="mb">{{ $t('lightweight.ExeInstall.5mpmjd1mbo00') }}: <span class="content">gaussdb</span></div>
-        <!-- <div>{{ $t('lightweight.ExeInstall.5mpmjd1mbxg0') }}: <span class="content">{{ dataPassword }}</span></div> -->
+        <div class="flex-row mb-s">
+          <div class="label-w">{{ $t('lightweight.InstallConfig.5mpmkfqy8nc0') }}</div>
+          <div class="label-value">{{ installStore.getInstallConfig.clusterId }}</div>
+        </div>
+        <div class="flex-row mb-s">
+          <div class="label-w">{{ $t('lightweight.InstallConfig.5mpmkfqyasw0') }}</div>
+          <div class="label-value">{{ installStore.getLiteConfig.port }}</div>
+        </div>
+        <div class="flex-row mb-s">
+          <div class="label-w">{{ $t('lightweight.ExeInstall.5mpmjd1mbo00') }}</div>
+          <div class="label-value">gaussdb</div>
+        </div>
+        <div
+          class="flex-row mb-s"
+          v-for="(nodeData, index) in installStore.getLiteConfig.nodeConfigList"
+          :key="index"
+        >
+          <div class="label-w">{{ nodeData.clusterRole === ClusterRoleEnum.MASTER ? $t('enterprise.ClusterConfig.else3') :
+            ($t('enterprise.ClusterConfig.else4') + index) }}</div>
+          <div class="label-value">{{ nodeData.publicIp }}</div>
+        </div>
       </div>
       <div class="flex-row">
-        <a-button type="outline" class="mr" @click="goHome">{{
+        <a-button
+          type="outline"
+          class="mr"
+          @click="goHome"
+        >{{
           $t('lightweight.ExeInstall.5mpmjd1mc580')
         }}</a-button>
-        <a-button type="primary" @click="goOps">{{
+        <a-button
+          type="primary"
+          @click="goOps"
+        >{{
           $t('lightweight.ExeInstall.5mpmjd1mce00')
         }}</a-button>
       </div>
     </div>
-    <div class="flex-col-start full-h full-w" v-else>
-      <a-steps v-if="installStore.getInstallConfig.deployType === DeployTypeEnum.CLUSTER" small type="arrow"
-        style="width: 100%;" class="mb" :current="data.installStepNum" :status="data.currentStatus">
+    <div
+      class="flex-col-start full-h full-w"
+      v-else
+    >
+      <a-steps
+        v-if="installStore.getInstallConfig.deployType === DeployTypeEnum.CLUSTER"
+        small
+        type="arrow"
+        style="width: 100%;"
+        class="mb"
+        :current="data.installStepNum"
+        :status="data.currentStatus"
+      >
         <a-step>{{ $t('lightweight.ExeInstall.else5') }}</a-step>
         <a-step>{{ $t('lightweight.ExeInstall.else6') }}</a-step>
         <a-step>{{ $t('lightweight.ExeInstall.else7') }}</a-step>
@@ -28,40 +70,83 @@
         <a-step>{{ $t('lightweight.ExeInstall.else10') }}</a-step>
         <a-step>{{ $t('lightweight.ExeInstall.else4') }}</a-step>
       </a-steps>
-      <a-steps v-else small type="arrow" style="width: 100%;" class="mb" :current="data.installStepNum"
-        :status="data.currentStatus">
+      <a-steps
+        v-else
+        small
+        type="arrow"
+        style="width: 100%;"
+        class="mb"
+        :current="data.installStepNum"
+        :status="data.currentStatus"
+      >
         <a-step>{{ $t('lightweight.ExeInstall.else1') }}</a-step>
         <a-step>{{ $t('lightweight.ExeInstall.else2') }}</a-step>
         <a-step>{{ $t('lightweight.ExeInstall.else3') }}</a-step>
         <a-step>{{ $t('lightweight.ExeInstall.else4') }}</a-step>
       </a-steps>
       <div class="flex-row full-w teminal-h">
-        <div class="panel-w flex-col-start mr" :style="exeResult === exeResultEnum.FAIL ? '' : 'width: 100%'">
-          <a-alert class="mb" style="padding: 15px 12px;width: fit-content;" type="error"
-            v-if="exeResult === exeResultEnum.FAIL">
+        <div
+          class="panel-w flex-col-start mr"
+          :style="exeResult === exeResultEnum.FAIL ? '' : 'width: 100%'"
+        >
+          <a-alert
+            class="mb"
+            style="padding: 15px 12px;width: fit-content;"
+            type="error"
+            v-if="exeResult === exeResultEnum.FAIL"
+          >
             {{ $t('lightweight.ExeInstall.5mpmjd1mcm40') }}
           </a-alert>
-          <a-alert class="mb" type="warning" style="padding: 15px 12px;width: fit-content;"
-            v-if="exeResult === exeResultEnum.UN_INSTALL">{{ $t('lightweight.ExeInstall.5mpmjd1mcu40') }}
+          <a-alert
+            class="mb"
+            type="warning"
+            style="padding: 15px 12px;width: fit-content;"
+            v-if="exeResult === exeResultEnum.UN_INSTALL"
+          >{{ $t('lightweight.ExeInstall.5mpmjd1mcu40') }}
             {{ $t('lightweight.ExeInstall.5mpmjd1md2o0') }}</a-alert>
-          <div id="xtermLog" class="xterm"></div>
+          <div
+            id="xtermLog"
+            class="xterm"
+          ></div>
         </div>
-        <div class="panel-w flex-col-start" v-if="exeResult === exeResultEnum.FAIL">
+        <div
+          class="panel-w flex-col-start"
+          v-if="exeResult === exeResultEnum.FAIL"
+        >
           <div class="full-w flex-between mb">
-            <a-select style="width: 300px" v-model="hostId" @change="hostChange">
-              <a-option v-for="(item, index) in hosts" :key="index" :value="item.hostId" :label="item.privateIp">
+            <a-select
+              style="width: 300px"
+              v-model="hostId"
+              @change="hostChange"
+            >
+              <a-option
+                v-for="(item, index) in hosts"
+                :key="index"
+                :value="item.hostId"
+                :label="item.privateIp"
+              >
               </a-option>
             </a-select>
             <div>
-              <a-button type="primary" class="mr-s" @click="retryInstall">{{ $t('lightweight.ExeInstall.5mpmjd1mdf40')
+              <a-button
+                type="primary"
+                class="mr-s"
+                @click="retryInstall"
+              >{{ $t('lightweight.ExeInstall.5mpmjd1mdf40')
               }}</a-button>
-              <a-button type="primary" @click="handleDownloadLog">{{
+              <a-button
+                type="primary"
+                @click="handleDownloadLog"
+              >{{
                 $t('components.openLooKeng.5mpiji1qpcc65')
               }}
               </a-button>
             </div>
           </div>
-          <div id="xterm" class="xterm1"></div>
+          <div
+            id="xterm"
+            class="xterm1"
+          ></div>
         </div>
       </div>
     </div>
@@ -75,7 +160,7 @@ import { Terminal } from 'xterm'
 import { FitAddon } from 'xterm-addon-fit'
 import { AttachAddon } from 'xterm-addon-attach'
 import { openSSH, installOpenGauss } from '@/api/ops'
-import { DeployTypeEnum, WsConnectType } from '@/types/ops/install'
+import { ClusterRoleEnum, DeployTypeEnum, WsConnectType } from '@/types/ops/install'
 import { useOpsStore } from '@/store'
 import { KeyValue } from '@/types/global'
 import Socket from '@/utils/websocket'
@@ -413,6 +498,17 @@ const handleDownloadLog = () => {
 
     .content {
       color: rgb(var(--arcoblue-6));
+    }
+
+    .label-w {
+      width: 80px;
+      text-align: left;
+      margin-right: 15px;
+    }
+
+    .label-value {
+      width: 100px;
+      text-align: left;
     }
   }
 

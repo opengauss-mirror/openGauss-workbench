@@ -948,7 +948,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
 
     private List<AuditLogVO> querySession(Connection connection, String start, String end) {
         List<AuditLogVO> res = new ArrayList<>();
-        String sql = "select * from pg_query_audit('"+start+"','"+end+"')";
+        String sql = "select * from pg_query_audit('" + start + "','" + end + "')";
 
         try (Statement statement = connection.createStatement();
              ResultSet resultSet = statement.executeQuery(sql);) {
@@ -1035,7 +1035,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                     List<OpsHostUserEntity> userEntities = hostInfoHolder.getHostUserEntities();
                     OpsHostUserEntity rootUserEntity = userEntities.stream().filter(userEntity -> "root".equals(userEntity.getUsername())).findFirst().orElseThrow(() -> new OpsException("[" + hostInfoHolder.getHostEntity().getPublicIp() + "]root user information not found"));
 
-                    if (clusterEntity.getVersion()==OpenGaussVersionEnum.ENTERPRISE){
+                    if (clusterEntity.getVersion() == OpenGaussVersionEnum.ENTERPRISE) {
                         if (StrUtil.isEmpty(rootUserEntity.getPassword())) {
                             if (StrUtil.isNotEmpty(unInstallBody.getRootPasswords().get(rootUserEntity.getHostId()))) {
                                 rootUserEntity.setPassword(unInstallBody.getRootPasswords().get(rootUserEntity.getHostId()));
@@ -1559,8 +1559,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
 
             return true;
         } catch (Exception e) {
-            log.error("Failed to get openGauss major version", e);
-            throw new OpsException("Failed to get openGauss major version");
+            return false;
         }
     }
 
@@ -1585,7 +1584,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
             }
 
             log.info("openGauss version:{}", majorVersion);
-            if (StrUtil.isEmpty(majorVersion)){
+            if (StrUtil.isEmpty(majorVersion)) {
                 throw new OpsException("Failed to get openGauss version");
             }
             return majorVersion;
@@ -2539,7 +2538,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
             JschResult jschResult = null;
             try {
                 try {
-                    jschResult = jschUtil.executeCommand(command, ommSession,envPath);
+                    jschResult = jschUtil.executeCommand(command, ommSession, envPath);
                 } catch (InterruptedException e) {
                     throw new OpsException("thread is interrupted");
                 }

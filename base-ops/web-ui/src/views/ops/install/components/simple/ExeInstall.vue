@@ -1,60 +1,136 @@
 <template>
   <div class="exe-install-c">
-    <div class="flex-col full-w full-h" v-if="exeResult === exeResultEnum.SUCESS">
-      <svg-icon icon-class="ops-install-success" class="icon-size mb"></svg-icon>
+    <div
+      class="flex-col full-w full-h"
+      v-if="exeResult === exeResultEnum.SUCESS"
+    >
+      <svg-icon
+        icon-class="ops-install-success"
+        class="icon-size mb"
+      ></svg-icon>
       <div class="label-color mb-lg">{{ $t('simple.ExeInstall.5mpmsp16nuo0') }}</div>
       <div class="install-connect-c flex-col mb-xlg">
         <div class="ft-b mb">{{ $t('simple.ExeInstall.5mpmsp16oy40') }}</div>
-        <div class="mb">{{ $t('simple.ExeInstall.5mpmsp16pb40') }}: <span class="content">gaussdb</span></div>
-        <!-- <div>{{ $t('simple.ExeInstall.5mpmsp16pig0') }}: <span class="content">{{ dataPassword }}</span></div> -->
+        <div class="flex-row mb-s">
+          <div class="label-w">{{ $t('simple.InstallConfig.5mpmu0laqc80') }}</div>
+          <div class="label-value">{{ installStore.getInstallConfig.clusterId }}</div>
+        </div>
+        <div class="flex-row mb-s">
+          <div class="label-w">{{ $t('simple.InstallConfig.5mpmu0larj40') }}</div>
+          <div class="label-value">{{ installStore.getMiniConfig.port }}</div>
+        </div>
+        <div class="flex-row mb-s">
+          <div class="label-w">{{ $t('simple.ExeInstall.5mpmsp16pb40') }}</div>
+          <div class="label-value">gaussdb</div>
+        </div>
+        <div
+          class="flex-row mb-s"
+          v-for="(nodeData, index) in installStore.getMiniConfig.nodeConfigList"
+          :key="index"
+        >
+          <div class="label-w">{{ nodeData.clusterRole === ClusterRoleEnum.MASTER ? $t('enterprise.ClusterConfig.else3') :
+            ($t('enterprise.ClusterConfig.else4') + index) }}</div>
+          <div class="label-value">{{ nodeData.publicIp }}</div>
+        </div>
       </div>
       <div class="flex-row">
-        <a-button type="outline" class="mr" @click="goHome">{{
+        <a-button
+          type="outline"
+          class="mr"
+          @click="goHome"
+        >{{
           $t('simple.ExeInstall.5mpmsp16pp80')
         }}
         </a-button>
-        <a-button type="primary" @click="goOps">{{
+        <a-button
+          type="primary"
+          @click="goOps"
+        >{{
           $t('simple.ExeInstall.5mpmsp16pxs0')
         }}
         </a-button>
       </div>
     </div>
-    <div class="flex-col-start full-h full-w" v-else>
-      <a-steps small type="arrow" style="width: 100%;" class="mb" :current="data.installStepNum"
-        :status="data.currentStatus">
+    <div
+      class="flex-col-start full-h full-w"
+      v-else
+    >
+      <a-steps
+        small
+        type="arrow"
+        style="width: 100%;"
+        class="mb"
+        :current="data.installStepNum"
+        :status="data.currentStatus"
+      >
         <a-step>{{ $t('simple.ExeInstall.else1') }}</a-step>
         <a-step>{{ $t('simple.ExeInstall.else2') }}</a-step>
         <a-step>{{ $t('simple.ExeInstall.else3') }}</a-step>
         <a-step>{{ $t('simple.ExeInstall.else4') }}</a-step>
       </a-steps>
       <div class="flex-row full-w teminal-h">
-        <div :class="`flex-col-start mr panel-w`" :style="exeResult === exeResultEnum.FAIL ? '' : 'width: 100%'">
-          <a-alert class="mb" style="padding: 15px 12px;width: fit-content;" type="error"
-            v-if="exeResult === exeResultEnum.FAIL">
+        <div
+          :class="`flex-col-start mr panel-w`"
+          :style="exeResult === exeResultEnum.FAIL ? '' : 'width: 100%'"
+        >
+          <a-alert
+            class="mb"
+            style="padding: 15px 12px;width: fit-content;"
+            type="error"
+            v-if="exeResult === exeResultEnum.FAIL"
+          >
             {{ $t('simple.ExeInstall.5mpmsp16q5o0') }}
           </a-alert>
-          <a-alert type="warning" class="mb" style="padding: 15px 12px;width: fit-content;"
-            v-if="exeResult === exeResultEnum.UN_INSTALL">{{ $t('simple.ExeInstall.5mpmsp16qhc0') }}
+          <a-alert
+            type="warning"
+            class="mb"
+            style="padding: 15px 12px;width: fit-content;"
+            v-if="exeResult === exeResultEnum.UN_INSTALL"
+          >{{ $t('simple.ExeInstall.5mpmsp16qhc0') }}
             {{ $t('simple.ExeInstall.5mpmsp16qr80') }}
           </a-alert>
-          <div id="xtermLog" class="xterm"></div>
+          <div
+            id="xtermLog"
+            class="xterm"
+          ></div>
         </div>
-        <div :class="`flex-col-start panel-w`" v-if="exeResult === exeResultEnum.FAIL">
+        <div
+          :class="`flex-col-start panel-w`"
+          v-if="exeResult === exeResultEnum.FAIL"
+        >
           <div class="full-w flex-between mb">
-            <a-select style="width: 300px" v-model="hostId">
-              <a-option v-for="(item, index) in hosts" :key="index" :value="item.hostId" :label="item.privateIp">
+            <a-select
+              style="width: 300px"
+              v-model="hostId"
+            >
+              <a-option
+                v-for="(item, index) in hosts"
+                :key="index"
+                :value="item.hostId"
+                :label="item.privateIp"
+              >
               </a-option>
             </a-select>
             <div>
-              <a-button type="primary" @click="retryInstall" class="mr-s">{{ $t('simple.ExeInstall.5mpmsp16qzc0')
+              <a-button
+                type="primary"
+                @click="retryInstall"
+                class="mr-s"
+              >{{ $t('simple.ExeInstall.5mpmsp16qzc0')
               }}</a-button>
-              <a-button type="primary" @click="handleDownloadLog">{{
+              <a-button
+                type="primary"
+                @click="handleDownloadLog"
+              >{{
                 $t('components.openLooKeng.5mpiji1qpcc65')
               }}
               </a-button>
             </div>
           </div>
-          <div id="xterm" class="xterm"></div>
+          <div
+            id="xterm"
+            class="xterm"
+          ></div>
         </div>
       </div>
     </div>
@@ -68,7 +144,7 @@ import { Terminal } from 'xterm'
 import { FitAddon } from 'xterm-addon-fit'
 import { AttachAddon } from 'xterm-addon-attach'
 import { openSSH, installOpenGauss } from '@/api/ops'
-import { WsConnectType } from '@/types/ops/install'
+import { ClusterRoleEnum, WsConnectType } from '@/types/ops/install'
 import { useOpsStore } from '@/store'
 import { KeyValue } from '@/types/global'
 import Socket from '@/utils/websocket'
@@ -362,6 +438,17 @@ const handleDownloadLog = () => {
 
     .content {
       color: rgb(var(--arcoblue-6));
+    }
+
+    .label-w {
+      width: 80px;
+      text-align: left;
+      margin-right: 15px;
+    }
+
+    .label-value {
+      width: 100px;
+      text-align: left;
     }
   }
 

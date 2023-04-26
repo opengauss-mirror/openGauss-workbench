@@ -15,15 +15,17 @@
     </a-steps>
     <a-divider />
     <deploy-way v-if="currStep === MINI_ENUM.DEPLOY" />
-    <install-config v-if="currStep === MINI_ENUM.INSTALL" ref="installConfigRef" />
+    <install-config
+      v-if="currStep === MINI_ENUM.INSTALL"
+      ref="installConfigRef"
+    />
     <install-prompt v-if="currStep === MINI_ENUM.PROMPT" />
     <exe-import v-if="currStep === MINI_ENUM.EXE"></exe-import>
   </div>
 </template>
 
 <script setup lang="ts">
-import DeployWay from '../simple/DeployWay.vue'
-import EnvMonitor from './EnvMonitor.vue'
+import DeployWay from './DeployWay.vue'
 import InstallConfig from './InstallConfig.vue'
 import { computed, ref, inject, onMounted } from 'vue'
 import InstallPrompt from './InstallPrompt.vue'
@@ -49,7 +51,6 @@ onMounted(() => {
 })
 
 const installConfigRef = ref<InstanceType<typeof InstallConfig> | null>(null)
-const envRef = ref<InstanceType<typeof EnvMonitor> | null>(null)
 
 const saveStore = () => {
   if (installProps.currStep === MINI_ENUM.INSTALL) {

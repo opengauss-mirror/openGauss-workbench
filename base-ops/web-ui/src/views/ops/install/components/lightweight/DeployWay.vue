@@ -3,26 +3,44 @@
     <div class="flex-row-center panel-body">
       <div
         :class="'deploy-size card-item-c mr-xlg ' + (deployType === 'SINGLE_NODE' ? 'center-item-active' : 'center-item')"
-        @click="chooseType(DeployTypeEnum.SINGLE_NODE)">
+        @click="chooseType(DeployTypeEnum.SINGLE_NODE)"
+      >
         <div class="flex-row mb">
-          <svg-icon icon-class="ops-host" class="icon-size-s mr"></svg-icon>
+          <svg-icon
+            icon-class="ops-host"
+            class="icon-size-s mr"
+          ></svg-icon>
           <div class="instance-c">
-            <svg-icon icon-class="ops-instance" class="icon-size-s"></svg-icon>
+            <svg-icon
+              icon-class="ops-instance"
+              class="icon-size-s"
+            ></svg-icon>
           </div>
         </div>
         <div class="label-color ft-main">{{ $t('simple.DeployWay.5mpmphlozp00') }}</div>
       </div>
-      <div :class="'deploy-cluster-size card-item-c ' + (deployType === 'CLUSTER' ? 'center-item-active' : 'center-item')"
-        @click="chooseType(DeployTypeEnum.CLUSTER)">
+      <div
+        :class="'deploy-cluster-size card-item-c ' + (deployType === 'CLUSTER' ? 'center-item-active' : 'center-item')"
+        @click="chooseType(DeployTypeEnum.CLUSTER)"
+      >
         <div class="flex-row mb">
-          <svg-icon icon-class="ops-host" class="icon-size-s mr"></svg-icon>
+          <svg-icon
+            icon-class="ops-host"
+            class="icon-size-s mr"
+          ></svg-icon>
           <div class="instance-type-c mr">
             <a-tag class="type">{{ $t('simple.DeployWay.5mpmphlp0eo0') }}</a-tag>
-            <svg-icon icon-class="ops-instance" class="icon-size-s"></svg-icon>
+            <svg-icon
+              icon-class="ops-instance"
+              class="icon-size-s"
+            ></svg-icon>
           </div>
           <div class="instance-type-c">
             <a-tag class="type">{{ $t('simple.DeployWay.5mpmphlp0k00') }}</a-tag>
-            <svg-icon icon-class="ops-instance" class="icon-size-s"></svg-icon>
+            <svg-icon
+              icon-class="ops-instance"
+              class="icon-size-s"
+            ></svg-icon>
           </div>
         </div>
         <div class="label-color  ft-main">{{ $t('simple.DeployWay.5mpmphlp0nw0') }}</div>
