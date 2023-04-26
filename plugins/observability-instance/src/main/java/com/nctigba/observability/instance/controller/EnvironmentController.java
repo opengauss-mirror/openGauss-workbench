@@ -188,18 +188,17 @@ public class EnvironmentController {
 			Files.delete(file.toPath());
 		}
 		try {
-			FileOutputStream outputStream = new FileOutputStream(file, true);
 			byte[] byt = new byte[10 * 1024 * 1024];
 			int len;
-			FileInputStream temp = null;
 			for (int i = 0; i < total; i++) {
-				temp = new FileInputStream("pkg/" + name + "-" + i);
-				while ((len = temp.read(byt)) != -1) {
-					outputStream.write(byt, 0, len);
+				try (FileInputStream temp = new FileInputStream("pkg/" + name + "-" + i)) {
+					while ((len = temp.read(byt)) != -1) {
+						try (FileOutputStream outputStream = new FileOutputStream(file, true)) {
+							outputStream.write(byt, 0, len);
+						}
+					}
 				}
 			}
-			temp.close();
-			outputStream.close();
 			for (int i = 0; i < total; i++) {
 				File clearFile = new File("pkg/" + name + "-" + i);
 				clearFile.delete();
