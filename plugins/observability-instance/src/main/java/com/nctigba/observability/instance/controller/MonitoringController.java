@@ -1,5 +1,12 @@
 package com.nctigba.observability.instance.controller;
 
+import com.nctigba.common.web.exception.CustomException;
+import com.nctigba.common.web.result.AppResult;
+import com.nctigba.observability.instance.model.monitoring.MonitoringParam;
+import com.nctigba.observability.instance.service.MonitoringService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.*;
+
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -8,19 +15,6 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
-import com.nctigba.common.web.exception.CustomException;
-import com.nctigba.common.web.result.AppResult;
-import com.nctigba.observability.instance.model.monitoring.MonitoringParam;
-import com.nctigba.observability.instance.service.MonitoringService;
-
-import lombok.RequiredArgsConstructor;
 
 /**
  * Monitoring data
@@ -196,9 +190,8 @@ public class MonitoringController {
             }.setName(databaseNames.get(i++)));
         }
         try {
-            countDownLatch.await();
+            countDownLatch.await(10, TimeUnit.SECONDS);
         } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
             throw new CustomException(e.getMessage());
         }
         return AppResult.ok("").addData(map);
