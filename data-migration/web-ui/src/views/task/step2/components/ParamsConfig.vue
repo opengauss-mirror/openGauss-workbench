@@ -22,7 +22,7 @@
               <a-table-column :title="$t('components.ParamsConfig.5q0aazsppog0')" data-index="paramKey" :width="180" ellipsis tooltip></a-table-column>
               <a-table-column :title="$t('components.ParamsConfig.5q0aazsppr80')" data-index="paramValue">
                 <template #cell="{ record }">
-                  <a-input v-model="record.paramValue" />
+                  <a-input v-model.trim="record.paramValue" />
                 </template>
               </a-table-column>
               <a-table-column :title="$t('components.ParamsConfig.5q0aazspptw0')" data-index="paramDesc" :width="200" ellipsis tooltip></a-table-column>
@@ -39,7 +39,7 @@
                   <a-table-column :title="$t('components.ParamsConfig.5q0aazsppog0')" data-index="paramKey" :width="180" ellipsis tooltip></a-table-column>
                   <a-table-column :title="$t('components.ParamsConfig.5q0aazsppr80')" data-index="paramValue">
                     <template #cell="{ record }">
-                      <a-input v-model="record.paramValue" />
+                      <a-input v-model.trim="record.paramValue" />
                     </template>
                   </a-table-column>
                   <a-table-column :title="$t('components.ParamsConfig.5q0aazspptw0')" data-index="paramDesc" :width="200" ellipsis tooltip></a-table-column>

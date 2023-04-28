@@ -171,6 +171,7 @@ const task = ref({})
 const descData = ref([])
 let timerTop = null
 let timerDown = null
+let timerStatus = null
 
 const queryParams = reactive({
   pageNum: 1,
@@ -286,9 +287,17 @@ const startSubReverse = row => {
 }
 
 const loopSubTaskStatus = () => {
+  timerStatus && clearTimeout(timerStatus)
   const id = window.$wujie?.props.data.id
   refreshStatus(id).then(res => {
-    console.log(res)
+    if (task.value.execStatus !== 2) {
+      timerStatus = setTimeout(() => {
+        loopSubTaskStatus()
+      }, 10000)
+    }
+  }).catch(() => {
+    timerStatus && clearTimeout(timerStatus)
+    timerStatus = null
   })
 }
 
@@ -374,6 +383,7 @@ onMounted(() => {
 onBeforeUnmount(() => {
   timerTop && clearTimeout(timerTop)
   timerDown && clearTimeout(timerDown)
+  timerStatus && clearTimeout(timerStatus)
 })
 </script>
 
