@@ -120,8 +120,9 @@ public class LocaleString {
 			objectMapper.activateDefaultTyping(LaissezFaireSubTypeValidator.instance,
 					ObjectMapper.DefaultTyping.NON_FINAL, As.PROPERTY);
 			OBJECTMAPPERS.put(locale, objectMapper);
-		} else
+		} else {
 			OBJECTMAPPERSWITHOUTTYPE.put(locale, objectMapper);
+		}
 		return objectMapper;
 	}
 

@@ -1,10 +1,11 @@
 package com.nctigba.observability.log.util;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.PipedInputStream;
+import java.io.PipedOutputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
@@ -85,12 +86,15 @@ public class SshSession implements AutoCloseable {
 	public void executeNoWait(String command) throws IOException {
 		log.info("execC:" + command);
 		var c = session.createShellChannel();
-		command = command + "\nexit\n";
-		c.setIn(new ByteArrayInputStream(command.getBytes()));
+		var out = new PipedOutputStream();
+		c.setIn(new PipedInputStream(out));
 		var os = new ByteArrayOutputStream();
 		c.setOut(os);
 		c.setErr(os);
 		c.open();
+		out.write((command+"\n").getBytes());
+		ThreadUtil.sleep(2000);
+		out.write("exit\n".getBytes());
 		c.waitFor(EnumSet.of(ClientChannelEvent.CLOSED), CHANNEL_TIMEOUT);
 		log.info(os.toString());
 	}

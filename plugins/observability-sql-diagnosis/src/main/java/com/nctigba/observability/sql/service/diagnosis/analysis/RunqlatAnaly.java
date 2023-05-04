@@ -50,7 +50,11 @@ public class RunqlatAnaly extends AbstractHeatMap {
 				r10 += sum.get(i);
 			ra += sum.get(i);
 		}
-		var rate = (float) r10 / ra * 100;
+		float rate = 0;
+		if(ra!=0){
+			rate=(float) r10 / ra * 100;
+		}
+
 		if (rate > 5) {
 			var top = new TaskResult(task, ResultState.Suggestions, resultType, FrameType.Suggestion, bearing.top);
 			top.setData(Map.of("title", LocaleString.format("RunqlatAnaly.title"), "suggestions", Arrays.asList(LocaleString.format(TIP, rate, 5))));

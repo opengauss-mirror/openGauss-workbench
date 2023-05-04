@@ -1,5 +1,6 @@
 package com.nctigba.observability.sql.service.diagnosis.param;
 
+import com.nctigba.observability.sql.constants.CommonConstants;
 import com.nctigba.observability.sql.mapper.DiagnosisTaskResultMapper;
 import com.nctigba.observability.sql.model.diagnosis.Task;
 import com.nctigba.observability.sql.model.diagnosis.grab.GrabType;
@@ -20,9 +21,10 @@ import org.sqlite.JDBC;
 
 import javax.script.ScriptEngineManager;
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.sql.*;
-
+@Slf4j
 @Service
 public class OsParamAnalysis implements ResultAnalysis {
     @Autowired
@@ -31,15 +33,19 @@ public class OsParamAnalysis implements ResultAnalysis {
     @Override
     public void analysis(GrabType grabType, Task task, MultipartFile file) {
         task.addRemarks("start get osParam info:");
-        try {
-            Connection connect = connect_sqlite();
-            Statement statement = connect.createStatement();
-            var reader = new BufferedReader(new InputStreamReader(file.getInputStream()));
+
+
+
+        Connection connect = connect_sqlite();
+        try( Statement statement = connect.createStatement();
+             BufferedReader reader = new BufferedReader(new InputStreamReader(file.getInputStream()));) {
+
+
             while (reader.ready()) {
                 var line = reader.readLine();
                 if (StringUtils.isBlank(line))
                     continue;
-                String name = line.substring(0, line.indexOf("=")).trim();
+                String name = line.substring(0, line.indexOf(CommonConstants.EQUAL)).trim();
                 OsParamData[] fields = OsParamData.values();
                 String nodeName = null;
                 for (int j = 0; j < fields.length; j++) {
@@ -49,45 +55,48 @@ public class OsParamAnalysis implements ResultAnalysis {
                 }
                 if (nodeName == null)
                     continue;
-                String paramData = line.substring(line.indexOf("=") + 1).replace("\t", "");
+                String paramData = line.substring(line.indexOf(CommonConstants.EQUAL) + 1).replace("\t", "");
                 String selectSql = "select * from param_info where paramName='" + name + "';";
-                ResultSet result = statement.executeQuery(selectSql);
-                if (result.next()) {
-                    ParamDto paramDto = new ParamDto();
-                    paramDto.setParamName(result.getString("paramName"));
-                    paramDto.setCurrentValue(paramData);
-                    paramDto.setUnit(result.getString("unit"));
-                    paramDto.setParamDescription(result.getString("paramDetail"));
-                    paramDto.setSuggestValue(result.getString("suggestValue"));
-                    paramDto.setSuggestReason(result.getString("suggestExplain"));
-                    TaskResult taskResult = new TaskResult();
-                    if (result.getString("diagnosisRule") != null || !"".equals(result.getString("diagnosisRule"))) {
-                        var manager = new ScriptEngineManager();
-                        var t = manager.getEngineByName("javascript");
-                        var bindings = t.createBindings();
-                        bindings.put("actualValue", paramData.trim());
-                        Object object = t.eval(result.getString("diagnosisRule"), bindings);
-                        if (object!=null && "true".equals(object.toString())) {
-                            taskResult.setState(TaskResult.ResultState.NoAdvice);
+                try(ResultSet result = statement.executeQuery(selectSql);){
+                    if (result.next()) {
+                        ParamDto paramDto = new ParamDto();
+                        paramDto.setParamName(result.getString("paramName"));
+                        paramDto.setCurrentValue(paramData);
+                        paramDto.setUnit(result.getString("unit"));
+                        paramDto.setParamDescription(result.getString("paramDetail"));
+                        paramDto.setSuggestValue(result.getString("suggestValue"));
+                        paramDto.setSuggestReason(result.getString("suggestExplain"));
+                        TaskResult taskResult = new TaskResult();
+                        if (result.getString(CommonConstants.DIAGNOSIS_RULE) != null || !"".equals(result.getString(CommonConstants.DIAGNOSIS_RULE))) {
+                            var manager = new ScriptEngineManager();
+                            var t = manager.getEngineByName("javascript");
+                            var bindings = t.createBindings();
+                            bindings.put("actualValue", paramData.trim());
+                            Object object = t.eval(result.getString(CommonConstants.DIAGNOSIS_RULE), bindings);
+                            if (object!=null && "true".equals(object.toString())) {
+                                taskResult.setState(TaskResult.ResultState.NoAdvice);
+                            } else {
+                                paramDto.setTitle(LocaleString.format("Param.revise") + LocaleString.format(nodeName + ".title") + LocaleString.format("Param.define"));
+                                taskResult.setState(TaskResult.ResultState.Suggestions);
+                            }
                         } else {
-                            paramDto.setTitle(LocaleString.format("Param.revise") + LocaleString.format(nodeName + ".title") + LocaleString.format("Param.define"));
-                            taskResult.setState(TaskResult.ResultState.Suggestions);
+                            taskResult.setState(TaskResult.ResultState.NoAdvice);
                         }
-                    } else {
-                        taskResult.setState(TaskResult.ResultState.NoAdvice);
+                        taskResult.setTaskid(task.getId());
+                        taskResult.setResultType(ResultType.valueOf(nodeName));
+                        taskResult.setFrameType(FrameType.Param);
+                        taskResult.setData(paramDto);
+                        resultMapper.insert(taskResult);
                     }
-                    taskResult.setTaskid(task.getId());
-                    taskResult.setResultType(ResultType.valueOf(nodeName));
-                    taskResult.setFrameType(FrameType.Param);
-                    taskResult.setData(paramDto);
-                    resultMapper.insert(taskResult);
+                }catch (Exception e) {
+                    throw new CustomException("osParam err", e);
                 }
-
             }
-            statement.close();
+
         } catch (Exception e) {
             throw new CustomException("osParam err", e);
         }
+
     }
 
     public static synchronized Connection connect_sqlite() {

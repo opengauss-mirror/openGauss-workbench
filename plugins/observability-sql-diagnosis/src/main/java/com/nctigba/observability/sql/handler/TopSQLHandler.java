@@ -10,6 +10,7 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
+import com.nctigba.observability.sql.constants.CommonConstants;
 import org.apache.commons.lang3.StringUtils;
 import org.opengauss.admin.common.exception.CustomException;
 import org.springframework.stereotype.Component;
@@ -54,7 +55,7 @@ public class TopSQLHandler {
 			LinkedList<String> modifySplitLines = new LinkedList<>(rsList);
 			// remove non-operation or non-condition lines
 			for (String line : rsList) {
-				if ((line.contains("cost=") && !line.contains("Result")) || line.contains("Hash Cond")) {
+				if ((line.contains("cost=") && !line.contains("Result")) || line.contains(CommonConstants.HASH_COND)) {
 					continue;
 				}
 				modifySplitLines.remove(line);
@@ -117,7 +118,7 @@ public class TopSQLHandler {
 		LinkedList<String> modifyLines = new LinkedList<>(planStrList);
 		try {
 			for (String item : planStrList) {
-				if ((item.contains("cost=") && !item.contains("Result")) || item.contains("Hash Cond")
+				if ((item.contains("cost=") && !item.contains("Result")) || item.contains(CommonConstants.HASH_COND)
 						|| item.contains("->")) {
 					continue;
 				}
@@ -131,17 +132,17 @@ public class TopSQLHandler {
 				// there are two rows
 				JSONObject jsonObject = new JSONObject();
 				String firstStr = mItemArr[0];
-				if (!firstStr.contains("(cost=")) {
+				if (!firstStr.contains(CommonConstants.COST)) {
 					continue;
 				}
 				if (firstStr.contains("->")) {
 					jsonObject.put("stepName",
-							firstStr.substring(firstStr.indexOf("->") + 2, firstStr.indexOf("(cost=")).trim());
+							firstStr.substring(firstStr.indexOf("->") + 2, firstStr.indexOf(CommonConstants.COST)).trim());
 				} else {
-					jsonObject.put("stepName", firstStr.substring(0, firstStr.indexOf("(cost=")).trim());
+					jsonObject.put("stepName", firstStr.substring(0, firstStr.indexOf(CommonConstants.COST)).trim());
 				}
-				jsonObject.put("estimateRows", mItemArr[1].substring(0, mItemArr[1].indexOf(" ")));
-				jsonObject.put("actualRows", mItemArr[2].substring(0, mItemArr[2].indexOf(" ")));
+				jsonObject.put("estimateRows", mItemArr[1].substring(0, mItemArr[1].indexOf(CommonConstants.BLANK)));
+				jsonObject.put("actualRows", mItemArr[2].substring(0, mItemArr[2].indexOf(CommonConstants.BLANK)));
 				result.add(jsonObject);
 			}
 			return result;
@@ -242,7 +243,7 @@ public class TopSQLHandler {
 		for (int i = 0; i < lines.size(); i++) {
 			String line = lines.get(i);
 			// process condition
-			if (line.contains("Hash Cond")) {
+			if (line.contains(CommonConstants.HASH_COND)) {
 				String[] split = line.split(": ");
 				plan.setJoinType(split[1]);
 				continue;
@@ -276,7 +277,7 @@ public class TopSQLHandler {
 	 * @return execution plan line object
 	 */
 	private ExecutionPlan processExecutionPlanString(String line) {
-		if (line.contains("Hash Cond")) {
+		if (line.contains(CommonConstants.HASH_COND)) {
 			return null;
 		}
 		ExecutionPlan plan = new ExecutionPlan();
@@ -297,8 +298,8 @@ public class TopSQLHandler {
 			// only show object name, remove alias name
 			String objectName = split[1];
 			String alias;
-			if (objectName.contains(" ")) {
-				String[] aliasSplit = objectName.split(" ");
+			if (objectName.contains(CommonConstants.BLANK)) {
+				String[] aliasSplit = objectName.split(CommonConstants.BLANK);
 				alias = aliasSplit[0];
 			} else {
 				alias = objectName;
@@ -312,7 +313,7 @@ public class TopSQLHandler {
 		}
 		// set parameters
 		String parameters = operationParameterSplit[1].replace(")", "");
-		String[] parametersSplit = parameters.split(" ");
+		String[] parametersSplit = parameters.split(CommonConstants.BLANK);
 		for (String parameterSplit : parametersSplit) {
 			if (StringUtils.startsWith(parameterSplit, "cost")) {
 				// set start cost and total cost

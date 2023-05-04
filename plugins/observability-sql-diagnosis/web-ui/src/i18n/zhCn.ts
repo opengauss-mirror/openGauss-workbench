@@ -41,6 +41,7 @@ export default {
         machine: '物理机',
         rootPWD: 'Root用户密码',
         proxyPort: '代理端口',
+        installPath: '安装目录',
         collectInstance: '采集实例',
         collectProxy: '采集代理',
         callbackPath: '回调路径',

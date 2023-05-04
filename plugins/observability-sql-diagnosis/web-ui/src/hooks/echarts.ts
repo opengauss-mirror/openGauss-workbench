@@ -89,11 +89,7 @@ const toggleDataZoomBrush = (myChart: ECharts, a: boolean) => {
 }
 
 const toggleDataZoomSelect = (myChart: ECharts, a: boolean) => {
-    myChart.dispatchAction({
-        type: 'takeGlobalCursor',
-        key: 'dataZoomSelect',
-        dataZoomSelectActive: a
-    })
+    toggleDataZoomBrush(myChart, a);
 }
 
 const watchBrush = (myChart: ECharts) => {

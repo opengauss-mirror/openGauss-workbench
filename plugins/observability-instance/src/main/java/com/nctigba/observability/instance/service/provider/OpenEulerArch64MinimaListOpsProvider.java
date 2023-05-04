@@ -64,6 +64,7 @@ public class OpenEulerArch64MinimaListOpsProvider extends AbstractOpsProvider {
 			if (0 != jschResult.getExitCode()) {
 				log.error("set enable_wdr_snapshot parameter failed, exit code: {}, error message: {}",
 						jschResult.getExitCode(), jschResult.getResult());
+				Thread.currentThread().interrupt();
 				throw new OpsException("Failed to query the enable_wdr_snapshot parameter");
 			}
 		} catch (Exception e) {
@@ -72,6 +73,7 @@ public class OpenEulerArch64MinimaListOpsProvider extends AbstractOpsProvider {
 				msg = e.getMessage();
 			}
 			log.error(msg, e);
+			Thread.currentThread().interrupt();
 			throw new OpsException(msg);
 		}
 	}

@@ -6,7 +6,6 @@ import java.util.List;
 
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
-import org.opengauss.admin.common.core.domain.model.ops.HostUserBody;
 import org.opengauss.admin.common.core.domain.model.ops.WsSession;
 import org.opengauss.admin.common.utils.ops.WsUtil;
 import org.opengauss.admin.system.plugin.facade.HostFacade;
@@ -22,7 +21,6 @@ import com.nctigba.observability.instance.mapper.NctigbaEnvMapper;
 import com.nctigba.observability.instance.service.AbstractInstaller.Step.status;
 import com.nctigba.observability.instance.util.MessageSourceUtil;
 
-import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -32,13 +30,13 @@ public abstract class AbstractInstaller {
 	public static final String TAR = ".tar.gz";
 	public static final String ZIP = ".zip";
 	@Autowired
-	@AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
+	@AutowiredType(Type.PLUGIN_MAIN)
 	protected HostFacade hostFacade;
 	@Autowired
-	@AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
+	@AutowiredType(Type.PLUGIN_MAIN)
 	protected EncryptionUtils encryptionUtils;
 	@Autowired
-	@AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
+	@AutowiredType(Type.PLUGIN_MAIN)
 	protected HostUserFacade hostUserFacade;
 	@Autowired
 	protected NctigbaEnvMapper envMapper;
@@ -57,18 +55,6 @@ public abstract class AbstractInstaller {
 		}).findFirst().orElse(null);
 		if (user != null && steps != null) {
 			steps.get(curr).add("install.use", username);
-		}
-		if (user == null && rootPassword != null) {
-			steps.get(curr).add("install.tryAdd", username);
-			var body = new HostUserBody();
-			body.setHostId(hostEntity.getHostId());
-			body.setPassword(encryptionUtils.encrypt(StrUtil.uuid()));
-			body.setRootPassword(rootPassword);
-			body.setUsername(username);
-			hostUserFacade.add(body);
-			user = hostUserFacade.listHostUserByHostId(hostEntity.getHostId()).stream().filter(e -> {
-				return username.equals(e.getUsername());
-			}).findFirst().orElseThrow(() -> new RuntimeException("user not found"));
 		}
 		return user;
 	}

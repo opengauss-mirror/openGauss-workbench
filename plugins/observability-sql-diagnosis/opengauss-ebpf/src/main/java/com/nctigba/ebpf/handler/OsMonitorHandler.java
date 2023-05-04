@@ -6,6 +6,7 @@ package com.nctigba.ebpf.handler;
 
 import com.nctigba.ebpf.config.CpuConfig;
 import com.nctigba.ebpf.config.UrlConfig;
+import com.nctigba.ebpf.constants.CommonConstants;
 import com.nctigba.ebpf.constants.CpuType;
 import com.nctigba.ebpf.constants.FileType;
 import com.nctigba.ebpf.util.OSUtil;
@@ -35,9 +36,9 @@ public class OsMonitorHandler {
      */
     public String startMonitor(String taskid, String monitorType) {
         OSUtil toolUtil = new OSUtil();
-        String outputUrl = urlConfig.getOutputUrl();
+        String outputUrl = System.getProperty("user.dir") + "/output/";
         File dir = new File(outputUrl);
-        if(!dir.exists()){
+        if (!dir.exists()) {
             dir.mkdirs();
         }
         String fileUrl = " > " + outputUrl + taskid + monitorType;
@@ -67,8 +68,8 @@ public class OsMonitorHandler {
         String[] pidss = pids.split(System.lineSeparator());
         String tid = null;
         for (int i = 0; i < pidss.length; i++) {
-            if (pidss[i].contains(pid) && pid != pidss[i].substring(0, pidss[i].indexOf(" "))) {
-                tid = pidss[i].substring(0, pidss[i].indexOf(" "));
+            if (pidss[i].contains(pid) && pid != null && !pid.equals(pidss[i].substring(0, pidss[i].indexOf(CommonConstants.BLANK)))) {
+                tid = pidss[i].substring(0, pidss[i].indexOf(CommonConstants.BLANK));
             }
         }
         String killcmd = "kill -2 " + tid;
@@ -87,7 +88,7 @@ public class OsMonitorHandler {
         while (true) {
             String monitorpid = toolUtil.exec(monitorCmd).toString();
             long endTime = System.currentTimeMillis();
-            if((endTime-startTime)/1000/60>60){
+            if ((endTime - startTime) / 1000 / 60 > 60) {
                 break;
             }
             if (!monitorpid.contains(System.lineSeparator() + tid + System.lineSeparator())) {

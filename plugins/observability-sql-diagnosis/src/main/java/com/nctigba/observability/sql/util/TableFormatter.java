@@ -40,8 +40,11 @@ public class TableFormatter {
 				if (datas.length < table.getColumns().size())
 					break;
 				var map = new HashMap<String, String>();
-				for (int i = 0; i < table.getColumns().size(); i++)
-					map.put(keys[i], datas[i]);
+				if(keys!=null){
+					for (int i = 0; i < table.getColumns().size(); i++){
+						map.put(keys[i], datas[i]);
+					}
+				}
 				table.addData(map);
 			}
 		} catch (IOException e) {

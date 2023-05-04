@@ -1,6 +1,7 @@
 package com.nctigba.ebpf.service.impl;
 
 import com.nctigba.ebpf.config.UrlConfig;
+import com.nctigba.ebpf.constants.CommonConstants;
 import com.nctigba.ebpf.constants.FileType;
 import com.nctigba.ebpf.service.ParamMonitorService;
 import com.nctigba.ebpf.util.HTTPUtil;
@@ -24,13 +25,13 @@ public class ParamMonitorServiceImpl implements ParamMonitorService {
         OSUtil osUtil = new OSUtil();
         HTTPUtil httpUtil = new HTTPUtil();
         String httpUrl = urlConfig.getHttpUrl();
-        String outputUrl = urlConfig.getOutputUrl();
+        String outputUrl = System.getProperty("user.dir") + "/output/";
         File dir = new File(outputUrl);
         if (!dir.exists()) {
             dir.mkdirs();
         }
         String fileUrl = " > " + outputUrl + taskid + monitorType;
-        String url = httpUrl.substring(0, httpUrl.lastIndexOf("/") + 1) + taskid + httpUrl.substring(httpUrl.lastIndexOf("/"));
+        String url = httpUrl.substring(0, httpUrl.lastIndexOf(CommonConstants.SLASH) + 1) + taskid + httpUrl.substring(httpUrl.lastIndexOf(CommonConstants.SLASH));
         String cmd = "sysctl -a " + fileUrl + FileType.DEFAULT;
         osUtil.exec(cmd);
         FileSystemResource file = new FileSystemResource(outputUrl + taskid + monitorType + FileType.DEFAULT);

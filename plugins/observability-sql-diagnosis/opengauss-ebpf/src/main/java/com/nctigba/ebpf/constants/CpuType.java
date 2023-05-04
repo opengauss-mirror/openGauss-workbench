@@ -13,6 +13,9 @@ package com.nctigba.ebpf.constants;
  * @since 2022/10/17 09:00
  */
 public class CpuType {
+    private CpuType() {
+        throw new IllegalStateException("Utility class");
+    }
     public static final String DEFAULT = "top";
     public static final String MPSTAT = "mpstatP";
     public static final String SAR = "sarq";

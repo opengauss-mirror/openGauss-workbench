@@ -81,10 +81,11 @@ public class DiagnosisService {
 							.select(TaskResult::getTaskid, TaskResult::getState, TaskResult::getResultType));
 			for (TaskResult result : list)
 				m.get(result.getResultType()).setState(result.getState());
-		} else
+		} else {
 			m.forEach((key, value) -> {
 				value.setHidden(false);
 			});
+		}
 		return base;
 	}
 

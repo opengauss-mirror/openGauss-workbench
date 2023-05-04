@@ -119,7 +119,7 @@ const handleModal = (row: any) => {
 const changeModalCurrent = (val: boolean) => {
     addModel.value = val
 }
-const bandleCovey = (code: number) => {}
+const bandleCovey = (code: number) => {console.log("bandleCovey...")}
 const initFormData = {
     dbName: '',
     dateValue: [],

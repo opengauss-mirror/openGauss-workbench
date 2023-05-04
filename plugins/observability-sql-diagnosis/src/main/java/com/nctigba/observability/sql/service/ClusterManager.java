@@ -55,8 +55,8 @@ public class ClusterManager {
 	/**
 	 * set datasource ,need poll after use
 	 * 
-	 * @see com.baomidou.dynamic.datasource.toolkit.DynamicDataSourceContextHolder#push(String)
-	 * @see com.nctigba.observability.sql.service.ClusterManager#pool()
+	 * @see DynamicDataSourceContextHolder#push(String)
+	 * @see ClusterManager#pool()
 	 */
 	public void setCurrentDatasource(String nodeId, String dbname) {
 		if (StringUtils.isBlank(nodeId))
@@ -127,8 +127,12 @@ public class ClusterManager {
 		}
 
 		public Connection connection() throws SQLException {
+			return connection(getDbName());
+		}
+	
+		public Connection connection(String dbname) throws SQLException {
 			var conn = DriverManager.getConnection(
-					"jdbc:opengauss://" + getPublicIp() + ":" + getDbPort() + "/" + getDbName() + "?TimeZone=UTC",
+					"jdbc:opengauss://" + getPublicIp() + ":" + getDbPort() + "/" + dbname + "?TimeZone=UTC",
 					getDbUser(), getDbUserPassword());
 			try (var preparedStatement = conn.prepareStatement("select 1");
 					var rs = preparedStatement.executeQuery();) {
@@ -143,6 +147,10 @@ public class ClusterManager {
 	 */
 	public Connection getConnectionByNodeId(String nodeId) throws SQLException {
 		return getOpsNodeById(nodeId).connection();
+	}
+
+	public Connection getConnectionByNodeId(String nodeId,String dbname) throws SQLException {
+		return getOpsNodeById(nodeId).connection(dbname);
 	}
 
 	/**

@@ -7,7 +7,6 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 public enum ParamType {
-
     tcpMaxTwBuckets("net.ipv4.tcp_max_tw_buckets"),
     mtu("MTU"),
     tcpTwReuse("net.ipv4.tcp_tw_reuse"),

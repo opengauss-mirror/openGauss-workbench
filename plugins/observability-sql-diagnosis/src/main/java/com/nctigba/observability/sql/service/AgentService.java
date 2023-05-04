@@ -5,6 +5,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.nio.file.Files;
 import java.text.MessageFormat;
 import java.util.Arrays;
 
@@ -37,7 +38,8 @@ public class AgentService extends AbstractInstaller {
 	@Autowired
 	private ClusterManager clusterManager;
 
-	public void install(WsSession wsSession, String nodeId, String rootPassword, String callbackPath) {
+	public void install(WsSession wsSession, String nodeId, int port, String rootPassword, String path,
+			String callbackPath) {
 		// @formatter:off
 		var steps = Arrays.asList(
 				new Step("agent.install.step1"),
@@ -59,17 +61,20 @@ public class AgentService extends AbstractInstaller {
 			curr = nextStep(wsSession, steps, curr);
 			var node = clusterManager.getOpsNodeById(nodeId);
 			var hostId = node.getHostId();
-			check(hostId);
 
 			curr = nextStep(wsSession, steps, curr);
 			var env = envMapper.selectOne(Wrappers.<NctigbaEnv>lambdaQuery().eq(NctigbaEnv::getType, type.AGENT)
-					.eq(NctigbaEnv::getHostid, hostId));
+					.eq(NctigbaEnv::getNodeid, nodeId));
 			if (env != null)
 				throw new RuntimeException("agent exists");
-
-			env = new NctigbaEnv().setHostid(hostId).setPort(2321).setUsername(AGENT_USER).setType(type.AGENT);
+			if (!path.endsWith(File.separator)) {
+				path += File.separator;
+			}
+			env = new NctigbaEnv().setHostid(hostId).setNodeid(nodeId).setPort(port).setUsername(AGENT_USER)
+					.setType(type.AGENT);
 			try (var session = connect(env, rootPassword);) {
 				curr = nextStep(wsSession, steps, curr);
+				session.execute("mkdir -p " + path);
 				if (!session.test("unzip -v"))
 					session.execute("yum install -y unzip zip");
 				var java = "java";
@@ -109,7 +114,7 @@ public class AgentService extends AbstractInstaller {
 							session.execute("yum -y install bcc-tools");
 							break;
 						} catch (Exception e) {
-							if(i == 2)
+							if (i == 2)
 								throw new RuntimeException("bcc install fail");
 							addMsg(wsSession, steps, curr, "bcc install fail " + i + ", retrying");
 						}
@@ -132,13 +137,14 @@ public class AgentService extends AbstractInstaller {
 				try (var in = loader.getResource(NAME).getInputStream(); var out = new FileOutputStream(f);) {
 					IoUtil.copy(in, out);
 				}
-				session.upload(f.getCanonicalPath(), "./" + NAME);
-				f.delete();
+				session.upload(f.getCanonicalPath(), path + NAME);
+				Files.delete(f.toPath());
 				curr = nextStep(wsSession, steps, curr);
 				// exec
-				session.executeNoWait(java + " --add-opens java.base/java.lang=ALL-UNNAMED -jar " + NAME
-						+ " --diagnosis_host=" + callbackPath + " &");
-				env.setPath(".");
+				session.executeNoWait(
+						"cd " + path + " && " + java + " --add-opens java.base/java.lang=ALL-UNNAMED -jar " + NAME
+								+ " --diagnosis_host=" + callbackPath + " --agent_port=" + env.getPort() + " &");
+				env.setPath(path);
 				curr = nextStep(wsSession, steps, curr);
 				envMapper.insert(env);
 				sendMsg(wsSession, steps, curr, status.DONE);
@@ -152,13 +158,6 @@ public class AgentService extends AbstractInstaller {
 			}
 			wsUtil.sendText(wsSession, sw.toString());
 		}
-	}
-
-	private void check(String hostId) {
-		var env = envMapper.selectOne(Wrappers.<NctigbaEnv>lambdaQuery().eq(NctigbaEnv::getHostid, hostId)
-				.eq(NctigbaEnv::getType, type.AGENT));
-		if (env != null)
-			throw new RuntimeException("agent exists");
 	}
 
 	private SshSession connect(NctigbaEnv env, String rootPassword) throws IOException {
@@ -186,7 +185,7 @@ public class AgentService extends AbstractInstaller {
 			curr = nextStep(wsSession, steps, curr);
 			var node = clusterManager.getOpsNodeById(nodeId);
 			var env = envMapper.selectOne(Wrappers.<NctigbaEnv>lambdaQuery().eq(NctigbaEnv::getType, type.AGENT)
-					.eq(NctigbaEnv::getHostid, node.getHostId()));
+					.eq(NctigbaEnv::getNodeid, nodeId));
 			if (env == null)
 				throw new RuntimeException("agent not found");
 			OpsHostEntity hostEntity = hostFacade.getById(node.getHostId());
@@ -196,12 +195,13 @@ public class AgentService extends AbstractInstaller {
 			try (var sshsession = SshSession.connect(hostEntity.getPublicIp(), hostEntity.getPort(), "root",
 					encryptionUtils.decrypt(rootPassword));) {
 				curr = nextStep(wsSession, steps, curr);
-				var nodePid = sshsession.execute(command.PS.parse(NAME));
+				var nodePid = sshsession.execute(command.PS.parse(NAME, env.getPort()));
 				if (StrUtil.isNotBlank(nodePid)) {
 					curr = nextStep(wsSession, steps, curr);
 					sshsession.execute(command.KILL.parse(nodePid));
-				} else
+				} else {
 					curr = skipStep(wsSession, steps, curr);
+				}
 				curr = nextStep(wsSession, steps, curr);
 				envMapper.deleteById(env);
 

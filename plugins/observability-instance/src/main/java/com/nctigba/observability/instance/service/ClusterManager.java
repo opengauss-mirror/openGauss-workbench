@@ -3,7 +3,7 @@ package com.nctigba.observability.instance.service;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 
@@ -27,6 +27,7 @@ import com.baomidou.dynamic.datasource.toolkit.DynamicDataSourceContextHolder;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType.Type;
 import com.nctigba.common.web.exception.CustomException;
+import com.nctigba.observability.instance.constants.CommonConstants;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -63,7 +64,7 @@ public class ClusterManager {
 		var hostEntity = hostFacade.getById(hostId);
 		ds.addDataSource(hostId, dataSourceCreator.createDataSource(new DataSourceProperty()
 				.setDriverClassName("org.opengauss.Driver")
-				.setUrl("jdbc:opengauss://" + hostEntity.getPublicIp() + ":" + clusterEntity.getPort() + "/postgres")
+				.setUrl(CommonConstants.JDBC_OPENGAUSS + hostEntity.getPublicIp() + ":" + clusterEntity.getPort() + "/postgres")
 				.setUsername(clusterEntity.getDatabaseUsername()).setPassword(clusterEntity.getDatabasePassword())));
 		DynamicDataSourceContextHolder.push(hostId);
 	}
@@ -71,7 +72,7 @@ public class ClusterManager {
 	public Connection getConnectionByClusterHost(String clusterId, String hostId) {
 		var clusterEntity = opsClusterService.getById(clusterId);
 		var hostEntity = hostFacade.getById(hostId);
-		String sourceURL = "jdbc:opengauss://" + hostEntity.getPublicIp() + ":" + clusterEntity.getPort() + "/postgres";
+		String sourceURL = CommonConstants.JDBC_OPENGAUSS + hostEntity.getPublicIp() + ":" + clusterEntity.getPort() + "/postgres";
 		Properties info = new Properties();
 		info.setProperty("user", clusterEntity.getDatabaseUsername());
 		info.setProperty("password", clusterEntity.getDatabasePassword());
@@ -86,8 +87,8 @@ public class ClusterManager {
 	/**
 	 * Set the current data source and manually clear it
 	 * 
-	 * @see com.baomidou.dynamic.datasource.toolkit.DynamicDataSourceContextHolder#push(String)
-	 * @see com.nctigba.observability.instance.service.ClusterManager#pool()
+	 * @see DynamicDataSourceContextHolder#push(String)
+	 * @see ClusterManager#pool()
 	 */
 	public void setCurrentDatasource(String nodeId, String dbname) {
 		if (StringUtils.isBlank(nodeId))
@@ -101,12 +102,12 @@ public class ClusterManager {
 		// Add if it does not exist
 		var node = getOpsNodeById(nodeId);
 		if (node == null)
-			throw new RuntimeException("node not found");
+			throw new RuntimeException(CommonConstants.NODE_NOT_FOUND);
 		if (StringUtils.isBlank(dbname))
 			dbname = node.getDbName();
 		ds.addDataSource(nodeId,
 				dataSourceCreator.createDataSource(new DataSourceProperty().setDriverClassName("org.opengauss.Driver")
-						.setUrl("jdbc:opengauss://" + node.getPublicIp() + ":" + node.getDbPort() + "/" + dbname)
+						.setUrl(CommonConstants.JDBC_OPENGAUSS + node.getPublicIp() + ":" + node.getDbPort() + "/" + dbname)
 						.setUsername(node.getDbUser()).setPassword(node.getDbUserPassword())));
 		DynamicDataSourceContextHolder.push(nodeId);
 	}
@@ -119,14 +120,13 @@ public class ClusterManager {
 	 * Get all cluster information
 	 */
 	public List<OpsClusterVO> getAllOpsCluster() {
-		List<OpsClusterVO> opsClusterVOList = new ArrayList<>();
 		try {
 			if (opsFacade != null)
-				opsClusterVOList = opsFacade.listCluster();
+				return opsFacade.listCluster();
 		} catch (Exception e) {
 			log.info("get all ops cluster fail:{}", e.getMessage());
 		}
-		return opsClusterVOList;
+		return Collections.emptyList();
 	}
 
 	public String getOpsClusterIdByNodeId(String nodeId) {
@@ -154,7 +154,7 @@ public class ClusterManager {
 
 		public Connection connection() throws SQLException {
 			var conn = DriverManager.getConnection(
-					"jdbc:opengauss://" + getPublicIp() + ":" + getDbPort() + "/" + getDbName(), getDbUser(),
+					CommonConstants.JDBC_OPENGAUSS + getPublicIp() + ":" + getDbPort() + "/" + getDbName(), getDbUser(),
 					getDbUserPassword());
 			try (var preparedStatement = conn.prepareStatement("select 1");
 					var rs = preparedStatement.executeQuery();) {
@@ -189,7 +189,7 @@ public class ClusterManager {
 	public OpsClusterNodeVOSub getOpsNodeById(String nodeId) {
 		List<OpsClusterVO> opsClusterVOList = getAllOpsCluster();
 		if (CollectionUtils.isEmpty(opsClusterVOList))
-			throw new CustomException("node not found");
+			throw new CustomException(CommonConstants.NODE_NOT_FOUND);
 		for (OpsClusterVO cluster : opsClusterVOList) {
 			List<OpsClusterNodeVO> nodes = cluster.getClusterNodes();
 			if (CollectionUtils.isEmpty(nodes))
@@ -200,6 +200,6 @@ public class ClusterManager {
 				}
 			}
 		}
-		throw new CustomException("node not found");
+		throw new CustomException(CommonConstants.NODE_NOT_FOUND);
 	}
 }

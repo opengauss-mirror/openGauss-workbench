@@ -21,6 +21,7 @@ public class NctigbaEnv {
 	String username;
 	String path;
 	Integer port;
+	String nodeid;
 	@TableField(exist = false)
 	OpsHostEntity host;
 

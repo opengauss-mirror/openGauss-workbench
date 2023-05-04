@@ -32,13 +32,13 @@ public abstract class AbstractInstaller {
 	protected static final String TAR = ".tar.gz";
 	protected static final String ZIP = ".zip";
 	@Autowired
-	@AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
+	@AutowiredType(Type.PLUGIN_MAIN)
 	protected HostFacade hostFacade;
 	@Autowired
-	@AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
+	@AutowiredType(Type.PLUGIN_MAIN)
 	protected EncryptionUtils encryptionUtils;
 	@Autowired
-	@AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
+	@AutowiredType(Type.PLUGIN_MAIN)
 	protected HostUserFacade hostUserFacade;
 	@Autowired
 	protected NctigbaEnvMapper envMapper;

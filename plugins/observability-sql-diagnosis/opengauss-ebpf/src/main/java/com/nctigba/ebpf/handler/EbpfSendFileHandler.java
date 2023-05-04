@@ -5,6 +5,7 @@
 package com.nctigba.ebpf.handler;
 
 import com.nctigba.ebpf.config.UrlConfig;
+import com.nctigba.ebpf.constants.CommonConstants;
 import com.nctigba.ebpf.constants.EbpfType;
 import com.nctigba.ebpf.constants.FileType;
 import com.nctigba.ebpf.util.HTTPUtil;
@@ -37,9 +38,9 @@ public class EbpfSendFileHandler {
     public void sendFile(String taskid, String monitorType) {
         FileSystemResource file = null;
         HTTPUtil httpUtil = new HTTPUtil();
-        String outputUrl = urlConfig.getOutputUrl();
+        String outputUrl = System.getProperty("user.dir") + "/output/";
         String httpUrl = urlConfig.getHttpUrl();
-        String url = httpUrl.substring(0, httpUrl.lastIndexOf("/") + 1) + taskid + httpUrl.substring(httpUrl.lastIndexOf("/"));
+        String url = httpUrl.substring(0, httpUrl.lastIndexOf(CommonConstants.SLASH) + 1) + taskid + httpUrl.substring(httpUrl.lastIndexOf(CommonConstants.SLASH));
         try{
             if (EbpfType.PROFILE.equals(monitorType) || EbpfType.OFFCPUTIME.equals(monitorType) || EbpfType.MEMLEAK.equals(monitorType)) {
                 if(new FileSystemResource(outputUrl + taskid + monitorType + FileType.STACKS).contentLength()>=1){
@@ -62,7 +63,7 @@ public class EbpfSendFileHandler {
     public void createSvg(String taskid, String monitorType) {
         String svgcmd = null;
         OSUtil osUtil = new OSUtil();
-        String ebpfUrl = urlConfig.getOutputUrl();
+        String ebpfUrl = System.getProperty("user.dir") + "/output/";
         String fgUrl = urlConfig.getFgUrl();
         if (EbpfType.PROFILE.equals(monitorType)) {
             svgcmd = "cd " + fgUrl + " &&./flamegraph.pl --title='On-CPU Time' "

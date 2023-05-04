@@ -25,19 +25,11 @@ public class SshSession implements AutoCloseable {
 	private static final int CHANNEL_TIMEOUT = 1000 * 60 * 5;
 
 	public enum command {
-		ARCH("arch"),
-		CD("cd {0}"),
-		LS("ls {0}"),
-		STAT("stat {0}"),
-		WGET("wget {0}"),
-		TAR("tar zxf {0}"),
-		UNZIP("unzip {0}"),
-		APPEND_FILE(""),
+		ARCH("arch"), CD("cd {0}"), LS("ls {0}"), STAT("stat {0}"), WGET("wget {0}"), TAR("tar zxf {0}"),
+		UNZIP("unzip {0}"), APPEND_FILE(""),
 		CHECK_USER("cat /etc/passwd | awk -F \":\" \"'{print $1}\"|grep {0} | wc -l"),
-		CREATE_USER("useradd omm && echo ''{0} ALL=(ALL) ALL'' >> /etc/sudoers"),
-		CHANGE_PASSWORD("passwd {1}"),
-		PS("ps -ef|grep {0} |grep -v grep |awk '''{print $2}''"),
-		KILL("kill -9 {0}");
+		CREATE_USER("useradd omm && echo ''{0} ALL=(ALL) ALL'' >> /etc/sudoers"), CHANGE_PASSWORD("passwd {1}"),
+		PS("ps -ef|grep {0} |grep -v grep |grep {1,number,#}|awk '''{print $2}''"), KILL("kill -9 {0}");
 
 		private String cmd;
 
@@ -76,7 +68,7 @@ public class SshSession implements AutoCloseable {
 		ec.setErr(os);
 		ec.open();
 		ec.waitFor(EnumSet.of(ClientChannelEvent.CLOSED), CHANNEL_TIMEOUT);
-		for (int i = 0; i < 3 && ec.getExitStatus() == null; i++)
+		for (int i = 0; i < 100 && ec.getExitStatus() == null; i++)
 			ThreadUtil.sleep(100L);
 		if (ec.getExitStatus() != null && ec.getExitStatus() != 0)
 			throw new RuntimeException(command + " \n " + os.toString().trim());
@@ -103,6 +95,7 @@ public class SshSession implements AutoCloseable {
 	}
 
 	public synchronized void upload(String source, String target) throws IOException {
+		log.info("from:{},to:{}", source, target);
 		var sf = SftpClientFactory.instance().createSftpFileSystem(session);
 		var path = sf.getDefaultDir().resolve(target);
 		Files.copy(Paths.get(source), path, StandardCopyOption.REPLACE_EXISTING);

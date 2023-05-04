@@ -57,6 +57,8 @@ public class OSUtil {
             Process process = Runtime.getRuntime().exec(cmdA);
             Field pid = process.getClass().getDeclaredField("pid");
             pid.setAccessible(true);
+
+
             return String.valueOf(pid.getInt(process));
         } catch (IOException | SecurityException | NullPointerException | IndexOutOfBoundsException | NoSuchFieldException | IllegalAccessException e) {
             log.info(e.getMessage());

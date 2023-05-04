@@ -478,6 +478,7 @@ export default {
         installedProxy: 'installed server',
         machine: 'machine',
         rootPWD: 'root password',
+        installPath: 'Installation path',
         proxyPort: 'proxy port',
         collectInstance: 'collect instance',
         collectProxy: 'collect proxy',
