@@ -63,6 +63,7 @@ export interface MiniNodeConfig {
   privateIp: string;
   publicIp: string;
   installUserId: string;
+  installUserName: string;
   installPath: string;
   dataPath: string;
   isInstallDemoDatabase: boolean;
@@ -85,10 +86,13 @@ export interface LiteNodeConfig {
   privateIp: string;
   publicIp: string;
   installUserId: string;
+  installUserName: string;
   installPath: string;
   dataPath: string;
   port: number;
   databasePassword: string;
+  isEnvSeparate: boolean,
+  envPath: string;
 }
 
 export interface LiteInstallConfig {

@@ -1,54 +1,131 @@
 <template>
   <div class="node-form-c">
-    <a-form :model="form" :rules="formRules" auto-label-width ref="formRef">
-      <a-form-item field="hostId" :label="$t('enterprise.NodeConfig.5mpme7w6azo0')">
-        <a-select :loading="data.hostListLoading" v-model="form.hostId" @change="changeHostId"
-          :placeholder="$t('enterprise.NodeConfig.5mpme7w6b3k0')" @popup-visible-change="hostPopupChange" class="mr-s">
-          <a-option v-for="item in data.hostList" :key="item.hostId" :value="item.hostId">{{
+    <a-form
+      :model="form"
+      :rules="formRules"
+      auto-label-width
+      ref="formRef"
+    >
+      <a-form-item
+        field="hostId"
+        :label="$t('enterprise.NodeConfig.5mpme7w6azo0')"
+      >
+        <a-select
+          :loading="data.hostListLoading"
+          v-model="form.hostId"
+          @change="changeHostId"
+          :placeholder="$t('enterprise.NodeConfig.5mpme7w6b3k0')"
+          @popup-visible-change="hostPopupChange"
+          class="mr-s"
+        >
+          <a-option
+            v-for="item in data.hostList"
+            :key="item.hostId"
+            :value="item.hostId"
+          >{{
             item.privateIp
             + '(' +
             (item.publicIp ? item.publicIp : '--') + ')'
           }}</a-option>
         </a-select>
-        <icon-code-square :size="25" class="label-color" style="cursor: pointer;" @click="showTerminal" />
+        <icon-code-square
+          :size="25"
+          class="label-color"
+          style="cursor: pointer;"
+          @click="showTerminal"
+        />
       </a-form-item>
-      <a-form-item v-if="form.isNeedPwd" field="rootPassword" :label="$t('enterprise.NodeConfig.else2')"
-        validate-trigger="blur">
-        <a-input-password v-model="form.rootPassword" :placeholder="$t('enterprise.NodeConfig.5mpme7w6b700')"
-          allow-clear />
+      <a-form-item
+        v-if="form.isNeedPwd"
+        field="rootPassword"
+        :label="$t('enterprise.NodeConfig.else2')"
+        validate-trigger="blur"
+      >
+        <a-input-password
+          v-model="form.rootPassword"
+          :placeholder="$t('enterprise.NodeConfig.5mpme7w6b700')"
+          allow-clear
+        />
       </a-form-item>
-      <a-form-item field="installUserId" :label="$t('enterprise.NodeConfig.5mpme7w6bak0')">
-        <a-select :loading="data.installUserLoading" v-model="form.installUserId" @change="changeInstallUserId"
-          @popup-visible-change="hostUserPopupChange">
-          <a-option v-for="item in data.userListByHost[form.hostId]" :key="item.hostUserId" :value="item.hostUserId">{{
+      <a-form-item
+        field="installUserId"
+        :label="$t('enterprise.NodeConfig.5mpme7w6bak0')"
+      >
+        <a-select
+          :loading="data.installUserLoading"
+          v-model="form.installUserId"
+          @change="changeInstallUserId"
+          @popup-visible-change="hostUserPopupChange"
+        >
+          <a-option
+            v-for="item in data.userListByHost[form.hostId]"
+            :key="item.hostUserId"
+            :value="item.hostUserId"
+          >{{
             item.username
           }}</a-option>
         </a-select>
       </a-form-item>
       <a-row :gutter="24">
         <a-col :span="12">
-          <a-form-item v-if="clusterData.isInstallCM" field="isCMMaster"
-            :label="$t('enterprise.NodeConfig.5mpme7w6be40')">
-            <a-switch v-model="form.isCMMaster" @change="handleNodeCMChange" />
+          <a-form-item
+            v-if="clusterData.isInstallCM"
+            field="isCMMaster"
+            :label="$t('enterprise.NodeConfig.5mpme7w6be40')"
+          >
+            <a-switch
+              v-model="form.isCMMaster"
+              @change="handleNodeCMChange"
+            />
           </a-form-item>
         </a-col>
       </a-row>
-      <a-form-item v-if="clusterData.isInstallCM" field="cmDataPath" :label="$t('enterprise.NodeConfig.else4')"
-        validate-trigger="blur">
-        <a-input v-model.trim="form.cmDataPath" :placeholder="$t('enterprise.NodeConfig.5mpme7w6bhg0')" />
+      <a-form-item
+        v-if="clusterData.isInstallCM"
+        field="cmDataPath"
+        :label="$t('enterprise.NodeConfig.else4')"
+        validate-trigger="blur"
+      >
+        <a-input
+          v-model.trim="form.cmDataPath"
+          :placeholder="$t('enterprise.NodeConfig.5mpme7w6bhg0')"
+        />
       </a-form-item>
-      <a-form-item v-if="clusterData.isInstallCM" field="cmPort" :label="$t('enterprise.NodeConfig.else5')"
-        validate-trigger="blur">
-        <a-input v-model.trim="form.cmPort" :placeholder="$t('enterprise.NodeConfig.5mpme7w6bko0')" />
+      <a-form-item
+        v-if="clusterData.isInstallCM"
+        field="cmPort"
+        :label="$t('enterprise.NodeConfig.else5')"
+        validate-trigger="blur"
+      >
+        <a-input
+          v-model.trim="form.cmPort"
+          :placeholder="$t('enterprise.NodeConfig.5mpme7w6bko0')"
+        />
       </a-form-item>
       <div class="label-color ft-m ft-b mb">
         {{ $t('enterprise.NodeConfig.5mpme7w6boc0') }}
       </div>
-      <a-form-item field="dataPath" :label="$t('enterprise.NodeConfig.5mpme7w6brs0')" validate-trigger="blur">
-        <a-input v-model.trim="form.dataPath" :placeholder="$t('enterprise.NodeConfig.5mpme7w6bv40')" />
+      <a-form-item
+        field="dataPath"
+        :label="$t('enterprise.NodeConfig.5mpme7w6brs0')"
+        validate-trigger="blur"
+      >
+        <a-input
+          v-model.trim="form.dataPath"
+          :placeholder="$t('enterprise.NodeConfig.5mpme7w6bv40')"
+        />
       </a-form-item>
-      <a-form-item field="azPriority" :label="$t('enterprise.NodeConfig.else7')" v-if="installType !== 'import'">
-        <a-input-number :min="1" :max="10" v-model="form.azPriority" :placeholder="$t('enterprise.NodeConfig.else6')" />
+      <a-form-item
+        field="azPriority"
+        :label="$t('enterprise.NodeConfig.else7')"
+        v-if="installType !== 'import'"
+      >
+        <a-input-number
+          :min="1"
+          :max="10"
+          v-model="form.azPriority"
+          :placeholder="$t('enterprise.NodeConfig.else6')"
+        />
       </a-form-item>
     </a-form>
     <host-terminal ref="hostTerminalRef"></host-terminal>
@@ -65,6 +142,7 @@ import { hostListAll, hostUserListWithoutRoot, portUsed, pathEmpty, fileExist, h
 import HostTerminal from "@/views/ops/install/components/hostTerminal/HostTerminal.vue";
 import { encryptPassword } from '@/utils/jsencrypt'
 import { useI18n } from 'vue-i18n'
+import { ClusterRoleEnum } from '@/types/ops/install'
 const { t } = useI18n()
 
 const installStore = useOpsStore()
@@ -87,7 +165,7 @@ onMounted(() => {
   getHostList()
 })
 
-const emits = defineEmits([`update:formData`])
+const emits = defineEmits([`update:formData`, 'installUser'])
 const form = computed({
   get: () => props.formData,
   set: (val) => {
@@ -188,6 +266,9 @@ const getHostList = () => {
       res.data.forEach((item: KeyValue) => {
         data.hostObj[item.hostId] = item
       })
+      if (form.value.clusterRole === ClusterRoleEnum.MASTER) {
+        form.value.hostId = res.data[0].hostId
+      }
       changeHostId()
     } else {
       Message.error('Failed to obtain the host list data')
@@ -231,6 +312,7 @@ const changeHostId = () => {
               form.value.installUserId = data.userListByHost[hostId][0].hostUserId
               form.value.installUsername = data.userListByHost[hostId][0].username
             }
+            emits('installUser', form.value.installUsername)
           } else {
             form.value.installUserId = ''
             form.value.installUsername = ''
@@ -262,6 +344,9 @@ const changeInstallUserId = (installUserId: any) => {
   const getInstallUser = data.installUserObj[installUserId]
   if (getInstallUser) {
     form.value.installUsername = getInstallUser.username
+  }
+  if (form.value.clusterRole === ClusterRoleEnum.MASTER) {
+    emits('installUser', form.value.installUsername)
   }
 }
 

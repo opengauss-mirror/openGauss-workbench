@@ -2,7 +2,6 @@
   <div class="simple-install-c">
     <a-steps :current="currStep">
       <a-step>{{ $t('enterprise.EnterpriseInstall.5mpm4jewxn00') }}</a-step>
-      <a-step>{{ $t('enterprise.EnterpriseInstall.5mpm4jewye00') }}</a-step>
       <a-step>{{ $t('enterprise.EnterpriseInstall.5mpm4jewykk0') }}</a-step>
       <a-step>{{ installType === 'install' ? $t('enterprise.EnterpriseInstall.5mpm4jewyp40') :
         $t('enterprise.EnterpriseInstall.5mpm4jewysw0')
@@ -18,13 +17,25 @@
     <!-- two -->
     <!-- <node-config v-if="currStep === STEP_ENUM.NODE" ref="nodeConfigRef"></node-config> -->
     <!-- one -->
-    <cluster-config-all v-if="currStep === STEP_ENUM.CLUSTER" ref="clusterConfigAllRef"></cluster-config-all>
+    <cluster-config-all
+      v-if="currStep === STEP_ENUM.CLUSTER"
+      ref="clusterConfigAllRef"
+    ></cluster-config-all>
     <!-- three -->
-    <env-monitor v-if="currStep === STEP_ENUM.ENV" ref="envRef" />
+    <env-monitor
+      v-if="currStep === STEP_ENUM.ENV"
+      ref="envRef"
+    />
     <!-- four -->
-    <install-prompt v-if="currStep === STEP_ENUM.PROMPT" ref="promptRef" />
+    <install-prompt
+      v-if="currStep === STEP_ENUM.PROMPT"
+      ref="promptRef"
+    />
     <!-- five -->
-    <exe-install v-if="installType === 'install' && currStep === STEP_ENUM.EXE" ref="exeRef" />
+    <exe-install
+      v-if="installType === 'install' && currStep === STEP_ENUM.EXE"
+      ref="exeRef"
+    />
     <exe-import v-if="installType === 'import' && currStep === STEP_ENUM.EXE"></exe-import>
   </div>
 </template>
@@ -83,9 +94,7 @@ defineExpose({
 
 </script>
 
-<style lang="less" scoped>
-.simple-install-c {
+<style lang="less" scoped>.simple-install-c {
   padding: 20px;
   height: calc(100% - 36px);
-}
-</style>
+}</style>

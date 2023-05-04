@@ -3,54 +3,138 @@
     <div class="flex-row-center">
       <div class="flex-col-start">
         <div class="label-color ft-b mb">{{ $t('simple.InstallConfig.5mpmu0lapic0') }}</div>
-        <a-form :model="data.form" :rules="data.rules" :style="{ width: '800px' }" ref="formRef">
-          <a-form-item field="clusterId" :label="$t('simple.InstallConfig.5mpmu0laqc80')" validate-trigger="blur">
-            <a-input v-model.trim="data.form.clusterId" :placeholder="$t('simple.InstallConfig.5mpmu0laqiw0')" />
+        <a-form
+          :model="data.form"
+          :rules="data.rules"
+          :style="{ width: '800px' }"
+          ref="formRef"
+        >
+          <a-form-item
+            field="clusterId"
+            :label="$t('simple.InstallConfig.5mpmu0laqc80')"
+            validate-trigger="blur"
+          >
+            <a-input
+              v-model.trim="data.form.clusterId"
+              :placeholder="$t('simple.InstallConfig.5mpmu0laqiw0')"
+            />
           </a-form-item>
-          <a-form-item field="hostId" :label="$t('simple.InstallConfig.5mpmu0laqow0')">
-            <a-select :loading="hostListLoading" v-model="data.form.hostId" @change="changeHostId" class="mr-s"
-              allow-clear :placeholder="$t('simple.InstallConfig.5mpmu0laqss0')" @popup-visible-change="hostPopupChange">
-              <a-option v-for="item in hostList" :key="item.hostId" :value="item.hostId">{{
+          <a-form-item
+            field="hostId"
+            :label="$t('simple.InstallConfig.5mpmu0laqow0')"
+          >
+            <a-select
+              :loading="hostListLoading"
+              v-model="data.form.hostId"
+              @change="changeHostId"
+              class="mr-s"
+              allow-clear
+              :placeholder="$t('simple.InstallConfig.5mpmu0laqss0')"
+              @popup-visible-change="hostPopupChange"
+            >
+              <a-option
+                v-for="item in hostList"
+                :key="item.hostId"
+                :value="item.hostId"
+              >{{
                 item.privateIp
                 + '(' +
                 (item.publicIp ? item.publicIp : '--') + ')'
               }}
               </a-option>
             </a-select>
-            <icon-code-square :size="25" class="label-color" style="cursor: pointer;" @click="showTerminal" />
+            <icon-code-square
+              :size="25"
+              class="label-color"
+              style="cursor: pointer;"
+              @click="showTerminal"
+            />
           </a-form-item>
-          <a-form-item v-if="data.isNeedPwd" field="rootPassword" :label="$t('simple.InstallConfig.else1')"
-            validate-trigger="blur">
-            <a-input-password v-model="data.form.rootPassword" :placeholder="$t('simple.InstallConfig.5mpmu0laqwo0')"
-              allow-clear />
+          <a-form-item
+            v-if="data.isNeedPwd"
+            field="rootPassword"
+            :label="$t('simple.InstallConfig.else1')"
+            validate-trigger="blur"
+          >
+            <a-input-password
+              v-model="data.form.rootPassword"
+              :placeholder="$t('simple.InstallConfig.5mpmu0laqwo0')"
+              allow-clear
+            />
           </a-form-item>
-          <a-form-item field="installUserId" :label="$t('simple.InstallConfig.5mpmu0lar0c0')">
-            <a-select :loading="installUserLoading" v-model="data.form.installUserId"
-              @popup-visible-change="hostUserPopupChange">
-              <a-option v-for="item in userListByHost" :key="item.hostUserId" :value="item.hostUserId">{{
+          <a-form-item
+            field="installUserId"
+            :label="$t('simple.InstallConfig.5mpmu0lar0c0')"
+          >
+            <a-select
+              :loading="installUserLoading"
+              v-model="data.form.installUserId"
+              @change="hostUserChange"
+              @popup-visible-change="hostUserPopupChange"
+            >
+              <a-option
+                v-for="item in userListByHost"
+                :key="item.hostUserId"
+                :value="item.hostUserId"
+              >{{
                 item.username
               }}
               </a-option>
             </a-select>
           </a-form-item>
-          <a-form-item field="installPath" :label="$t('simple.InstallConfig.5mpmu0lar480')" validate-trigger="blur">
-            <a-input v-model.trim="data.form.installPath" :placeholder="$t('simple.InstallConfig.5mpmu0lar800')" />
+          <a-form-item
+            field="installPath"
+            :label="$t('simple.InstallConfig.5mpmu0lar480')"
+            validate-trigger="blur"
+          >
+            <a-input
+              v-model.trim="data.form.installPath"
+              :placeholder="$t('simple.InstallConfig.5mpmu0lar800')"
+            />
           </a-form-item>
-          <a-form-item v-if="installType !== 'import'" field="installPackagePath"
-            :label="$t('simple.InstallConfig.else6')" validate-trigger="blur">
-            <a-input v-model.trim="data.form.installPackagePath" :placeholder="$t('simple.InstallConfig.else7')" />
+          <a-form-item
+            v-if="installType !== 'import'"
+            field="installPackagePath"
+            :label="$t('simple.InstallConfig.else6')"
+            validate-trigger="blur"
+          >
+            <a-input
+              v-model.trim="data.form.installPackagePath"
+              :placeholder="$t('simple.InstallConfig.else7')"
+            />
           </a-form-item>
-          <a-form-item field="port" :label="$t('simple.InstallConfig.5mpmu0larj40')" validate-trigger="blur">
-            <a-input-number v-model="data.form.port" :placeholder="$t('simple.InstallConfig.5mpmu0larmo0')" />
+          <a-form-item
+            field="port"
+            :label="$t('simple.InstallConfig.5mpmu0larj40')"
+            validate-trigger="blur"
+          >
+            <a-input-number
+              v-model="data.form.port"
+              :placeholder="$t('simple.InstallConfig.5mpmu0larmo0')"
+            />
           </a-form-item>
-          <a-form-item field="databaseUsername" :label="$t('simple.InstallConfig.5mpmu0larq40')" validate-trigger="blur"
-            v-if="installType === 'import'">
-            <a-input v-model.trim="data.form.databaseUsername" :placeholder="$t('simple.InstallConfig.5mpmu0larto0')"
-              allow-clear />
+          <a-form-item
+            field="databaseUsername"
+            :label="$t('simple.InstallConfig.5mpmu0larq40')"
+            validate-trigger="blur"
+            v-if="installType === 'import'"
+          >
+            <a-input
+              v-model.trim="data.form.databaseUsername"
+              :placeholder="$t('simple.InstallConfig.5mpmu0larto0')"
+              allow-clear
+            />
           </a-form-item>
-          <a-form-item field="databasePassword" :label="$t('simple.InstallConfig.5mpmu0larx00')" validate-trigger="blur">
-            <a-input-password v-model="data.form.databasePassword" :placeholder="$t('simple.InstallConfig.5mpmu0las0k0')"
-              allow-clear />
+          <a-form-item
+            field="databasePassword"
+            :label="$t('simple.InstallConfig.5mpmu0larx00')"
+            validate-trigger="blur"
+          >
+            <a-input-password
+              v-model="data.form.databasePassword"
+              :placeholder="$t('simple.InstallConfig.5mpmu0las0k0')"
+              allow-clear
+            />
           </a-form-item>
           <!-- <a-form-item v-if="installType === 'import'" field="isEnvSeparate" :label="$t('simple.InstallConfig.else11')"
             validate-trigger="blur">
@@ -91,6 +175,7 @@ const data = reactive({
     privateIp: '',
     publicIp: '',
     installUserId: '',
+    installUserName: '',
     installPath: '/opt/openGauss',
     installPackagePath: '/opt/software/openGauss',
     dataPath: '/opt/openGauss/data',
@@ -118,6 +203,7 @@ onMounted(() => {
       privateIp: miniConfig.nodeConfigList[0].privateIp,
       publicIp: miniConfig.nodeConfigList[0].publicIp,
       installUserId: miniConfig.nodeConfigList[0].installUserId,
+      installUserName: miniConfig.nodeConfigList[0].installUserName,
       installPath: miniConfig.nodeConfigList[0].installPath,
       installPackagePath: miniConfig.nodeConfigList[0].installPackagePath,
       dataPath: miniConfig.nodeConfigList[0].dataPath,
@@ -324,6 +410,7 @@ const getHostList = () => {
 }
 const installUserLoading = ref<boolean>(false)
 const userListByHost = ref<KeyValue[]>([])
+const hostUserObj = ref<KeyValue>({})
 const changeHostId = () => {
   if (data.form.hostId) {
     if (hostObj.value[data.form.hostId]) {
@@ -336,10 +423,15 @@ const changeHostId = () => {
       if (Number(res.code) === 200) {
         userListByHost.value = []
         userListByHost.value = res.data
+        res.data.forEach((item: KeyValue) => {
+          hostUserObj.value[item.hostUserId] = item
+        })
         if (userListByHost.value.length) {
           data.form.installUserId = userListByHost.value[0].hostUserId
+          data.form.installUserName = userListByHost.value[0].username
         } else {
           data.form.installUserId = ''
+          data.form.installUserName = ''
         }
       } else {
         Message.error('Failed to obtain user data from the host')
@@ -356,6 +448,12 @@ const hostPopupChange = (val: boolean) => {
   }
 }
 
+const hostUserChange = (val: string) => {
+  if (val && hostUserObj.value[val]) {
+    data.form.installUserName = hostUserObj.value[val].username
+  }
+}
+
 const hostUserPopupChange = (val: boolean) => {
   if (val) {
     changeHostId()
@@ -366,6 +464,7 @@ const formRef = ref<FormInstance>()
 
 const saveStore = () => {
   const param = JSON.parse(JSON.stringify(data.form))
+  console.log('show installStore mini111', param)
   param.clusterRole = ClusterRoleEnum.MASTER
   param.clusterName = ''
   installStore.setInstallContext({ clusterId: param.clusterId, envPath: param.envPath })

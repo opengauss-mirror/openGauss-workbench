@@ -1,82 +1,185 @@
 <template>
   <div class="install-config-c">
     <div class="flex-col">
-      <div v-for="(formItem, index) in data.nodeData" :key="index">
+      <div
+        v-for="(formItem, index) in data.nodeData"
+        :key="index"
+      >
         <div class="flex-col-start">
           <div class="node-top full-w mb">
             <div class="flex-row">
-              <a-tag class="mr-s" color="#86909C">{{ index === 0 ? $t('lightweight.InstallConfig.5mpmkfqy71w0') :
+              <a-tag
+                class="mr-s"
+                color="#86909C"
+              >{{ index === 0 ? $t('lightweight.InstallConfig.5mpmkfqy71w0') :
                 $t('lightweight.InstallConfig.5mpmkfqy8400')
               }}</a-tag>
               {{ $t('lightweight.InstallConfig.5mpmkfqy8es0') }}
             </div>
           </div>
-          <a-form :id="`formRef${index}`" :model="formItem" :rules="data.rules" :style="{ width: '800px' }"
-            :ref="(el: any) => setRefMap(el)">
-            <a-form-item v-if="index === 0" field="clusterId" :label="$t('lightweight.InstallConfig.5mpmkfqy8nc0')"
-              validate-trigger="blur">
-              <a-input v-model.trim="formItem.clusterId" :placeholder="$t('lightweight.InstallConfig.5mpmkfqy8r00')" />
+          <a-form
+            :id="`formRef${index}`"
+            :model="formItem"
+            :rules="data.rules"
+            :style="{ width: '800px' }"
+            :ref="(el: any) => setRefMap(el)"
+          >
+            <a-form-item
+              v-if="index === 0"
+              field="clusterId"
+              :label="$t('lightweight.InstallConfig.5mpmkfqy8nc0')"
+              validate-trigger="blur"
+            >
+              <a-input
+                v-model.trim="formItem.clusterId"
+                :placeholder="$t('lightweight.InstallConfig.5mpmkfqy8r00')"
+              />
             </a-form-item>
-            <a-form-item field="hostId" :label="$t('lightweight.InstallConfig.5mpmkfqy8vk0')">
-              <a-select :loading="hostListLoading" v-model="formItem.hostId" @change="changeHostId(index)" class="mr-s"
+            <a-form-item
+              field="hostId"
+              :label="$t('lightweight.InstallConfig.5mpmkfqy8vk0')"
+            >
+              <a-select
+                :loading="hostListLoading"
+                v-model="formItem.hostId"
+                @change="changeHostId(index)"
+                class="mr-s"
                 :placeholder="$t('lightweight.InstallConfig.5mpmkfqy91w0')"
-                @popup-visible-change="hostPopupChange($event, index)">
-                <a-option v-for="item in hostList" :key="item.hostId" :value="item.hostId">{{
+                @popup-visible-change="hostPopupChange($event, index)"
+              >
+                <a-option
+                  v-for="item in hostList"
+                  :key="item.hostId"
+                  :value="item.hostId"
+                >{{
                   item.privateIp
                   + '(' +
                   (item.publicIp ? item.publicIp : '--') + ')'
                 }}</a-option>
               </a-select>
-              <icon-code-square :size="25" class="label-color" style="cursor: pointer;"
-                @click="showTerminal(formItem, index)" />
+              <icon-code-square
+                :size="25"
+                class="label-color"
+                style="cursor: pointer;"
+                @click="showTerminal(formItem, index)"
+              />
             </a-form-item>
-            <a-form-item v-if="formItem.isNeedPwd" field="rootPassword" :label="$t('lightweight.InstallConfig.else1')"
-              validate-trigger="blur">
-              <a-input-password v-model="formItem.rootPassword"
-                :placeholder="$t('lightweight.InstallConfig.5mpmkfqy9h80')" allow-clear />
+            <a-form-item
+              v-if="formItem.isNeedPwd"
+              field="rootPassword"
+              :label="$t('lightweight.InstallConfig.else1')"
+              validate-trigger="blur"
+            >
+              <a-input-password
+                v-model="formItem.rootPassword"
+                :placeholder="$t('lightweight.InstallConfig.5mpmkfqy9h80')"
+                allow-clear
+              />
             </a-form-item>
-            <a-form-item field="installUserId" :label="$t('lightweight.InstallConfig.5mpmkfqy9rw0')">
-              <a-select :loading="installUserLoading" v-model="formItem.installUserId"
+            <a-form-item
+              field="installUserId"
+              :label="$t('lightweight.InstallConfig.5mpmkfqy9rw0')"
+            >
+              <a-select
+                :loading="installUserLoading"
+                v-model="formItem.installUserId"
                 :placeholder="$t('lightweight.InstallConfig.5mpmkfqy9yo0')"
-                @popup-visible-change="hostUserPopupChange($event, index)">
-                <a-option v-for="item in userListByHost[formItem.hostId]" :key="item.hostUserId"
-                  :value="item.hostUserId">{{
-                    item.username
-                  }}</a-option>
+                @change="hostUserChange($event, index)"
+                @popup-visible-change="hostUserPopupChange($event, index)"
+              >
+                <a-option
+                  v-for="item in userListByHost[formItem.hostId]"
+                  :key="item.hostUserId"
+                  :value="item.hostUserId"
+                >{{
+                  item.username
+                }}</a-option>
               </a-select>
             </a-form-item>
-            <a-form-item field="installPath" :label="$t('lightweight.InstallConfig.5mpmkfqya4o0')"
-              validate-trigger="blur">
-              <a-input v-model.trim="formItem.installPath" :placeholder="$t('lightweight.InstallConfig.5mpmkfqyaas0')" />
+            <a-form-item
+              field="installPath"
+              :label="$t('lightweight.InstallConfig.5mpmkfqya4o0')"
+              validate-trigger="blur"
+            >
+              <a-input
+                v-model.trim="formItem.installPath"
+                :placeholder="$t('lightweight.InstallConfig.5mpmkfqyaas0')"
+              />
             </a-form-item>
-            <a-form-item field="installPackagePath" :label="$t('simple.InstallConfig.else6')" validate-trigger="blur">
-              <a-input v-model.trim="formItem.installPackagePath" :placeholder="$t('simple.InstallConfig.else7')"
-                @blur="handleInstallPackageBlur(index)" />
+            <a-form-item
+              field="installPackagePath"
+              :label="$t('simple.InstallConfig.else6')"
+              validate-trigger="blur"
+            >
+              <a-input
+                v-model.trim="formItem.installPackagePath"
+                :placeholder="$t('simple.InstallConfig.else7')"
+                @blur="handleInstallPackageBlur(index)"
+              />
             </a-form-item>
-            <a-form-item field="dataPath" :label="$t('lightweight.InstallConfig.5mpmkfqyah00')" validate-trigger="blur">
-              <a-input v-model.trim="formItem.dataPath" :placeholder="$t('lightweight.InstallConfig.5mpmkfqyan00')" />
+            <a-form-item
+              field="dataPath"
+              :label="$t('lightweight.InstallConfig.5mpmkfqyah00')"
+              validate-trigger="blur"
+            >
+              <a-input
+                v-model.trim="formItem.dataPath"
+                :placeholder="$t('lightweight.InstallConfig.5mpmkfqyan00')"
+              />
             </a-form-item>
-            <a-form-item v-if="index === 0" field="port" :label="$t('lightweight.InstallConfig.5mpmkfqyasw0')"
-              validate-trigger="blur">
-              <a-input-number v-model="formItem.port" :placeholder="$t('lightweight.InstallConfig.5mpmkfqyay80')" />
+            <a-form-item
+              v-if="index === 0"
+              field="port"
+              :label="$t('lightweight.InstallConfig.5mpmkfqyasw0')"
+              validate-trigger="blur"
+            >
+              <a-input-number
+                v-model="formItem.port"
+                :placeholder="$t('lightweight.InstallConfig.5mpmkfqyay80')"
+              />
             </a-form-item>
-            <a-form-item field="databaseUsername" :label="$t('lightweight.InstallConfig.5mpmkfqyb4c0')"
-              validate-trigger="blur" v-if="installType === 'import' && index === 0">
-              <a-input v-model.trim="formItem.databaseUsername"
-                :placeholder="$t('lightweight.InstallConfig.5mpmkfqyb9w0')" allow-clear />
+            <a-form-item
+              field="databaseUsername"
+              :label="$t('lightweight.InstallConfig.5mpmkfqyb4c0')"
+              validate-trigger="blur"
+              v-if="installType === 'import' && index === 0"
+            >
+              <a-input
+                v-model.trim="formItem.databaseUsername"
+                :placeholder="$t('lightweight.InstallConfig.5mpmkfqyb9w0')"
+                allow-clear
+              />
             </a-form-item>
-            <a-form-item v-if="index === 0" field="databasePassword" :label="$t('lightweight.InstallConfig.5mpmkfqybf80')"
-              validate-trigger="blur">
-              <a-input-password v-model="formItem.databasePassword"
-                :placeholder="$t('lightweight.InstallConfig.5mpmkfqybo00')" allow-clear />
+            <a-form-item
+              v-if="index === 0"
+              field="databasePassword"
+              :label="$t('lightweight.InstallConfig.5mpmkfqybf80')"
+              validate-trigger="blur"
+            >
+              <a-input-password
+                v-model="formItem.databasePassword"
+                :placeholder="$t('lightweight.InstallConfig.5mpmkfqybo00')"
+                allow-clear
+              />
             </a-form-item>
-            <a-form-item v-if="index === 0" field="isEnvSeparate" :label="$t('simple.InstallConfig.else11')"
-              validate-trigger="blur">
+            <a-form-item
+              v-if="index === 0"
+              field="isEnvSeparate"
+              :label="$t('simple.InstallConfig.else11')"
+              validate-trigger="blur"
+            >
               <a-switch v-model="formItem.isEnvSeparate" />
             </a-form-item>
-            <a-form-item v-if="formItem.isEnvSeparate" field="envPath" :label="$t('simple.InstallConfig.else9')"
-              validate-trigger="blur">
-              <a-input v-model.trim="formItem.envPath" :placeholder="$t('simple.InstallConfig.else10')" />
+            <a-form-item
+              v-if="formItem.isEnvSeparate && index === 0"
+              field="envPath"
+              :label="$t('simple.InstallConfig.else9')"
+              validate-trigger="blur"
+            >
+              <a-input
+                v-model.trim="formItem.envPath"
+                :placeholder="$t('simple.InstallConfig.else10')"
+              />
             </a-form-item>
           </a-form>
         </div>
@@ -100,15 +203,15 @@ import { hasName, hostListAll, hostUserListWithoutRoot, portUsed, pathEmpty, fil
 import { encryptPassword } from '@/utils/jsencrypt'
 import { Message } from '@arco-design/web-vue'
 import { useI18n } from 'vue-i18n'
+import dayjs from 'dayjs'
 import HostTerminal from "@/views/ops/install/components/hostTerminal/HostTerminal.vue";
 const { t } = useI18n()
 const installStore = useOpsStore()
-const data: {
-  nodeData: Array<KeyValue>,
-  rules: KeyValue
-} = reactive({
+const data = reactive<KeyValue>({
   nodeData: [],
-  rules: {}
+  rules: {},
+  envPrefix: '/home/',
+  envSuffix: '/cluster_' + dayjs().format('YYYYMMDD') + '_' + dayjs().format('HHMMSSS') + '.bashrc'
 })
 
 const hostListLoading = ref<boolean>(false)
@@ -301,6 +404,7 @@ const initData = () => {
 }
 
 const getFormData = (): KeyValue => {
+  //  auto generate envPath
   return {
     clusterId: '',
     hostId: '',
@@ -309,13 +413,14 @@ const getFormData = (): KeyValue => {
     privateIp: '',
     publicIp: '',
     installUserId: '',
+    installUserName: '',
     installPath: '/opt/software/openGauss/install',
     installPackagePath: '/opt/software/openGauss',
     dataPath: '/opt/software/openGauss/data',
     port: Number(5432),
     databaseUsername: '',
     databasePassword: '',
-    isEnvSeparate: false,
+    isEnvSeparate: true,
     envPath: ''
   }
 }
@@ -357,6 +462,7 @@ const getHostList = (index = 0) => {
 
 const installUserLoading = ref<boolean>(false)
 const userListByHost = ref<KeyValue>({})
+const hostUserObj = ref<KeyValue>({})
 const changeHostId = (index: number) => {
   const hostId = data.nodeData[index].hostId
   if (hostId) {
@@ -373,6 +479,9 @@ const changeHostId = (index: number) => {
         if (Number(res.code) === 200) {
           if (res.data.length) {
             userListByHost.value[hostId] = res.data
+            res.data.forEach((installUser: KeyValue) => {
+              hostUserObj.value[installUser.hostUserId] = installUser
+            })
             const hostUserId = data.nodeData[index].installUserId
             if (hostUserId) {
               const hasExist = res.data.find((item: KeyValue) => {
@@ -380,12 +489,18 @@ const changeHostId = (index: number) => {
               })
               if (!hasExist) {
                 data.nodeData[index].installUserId = userListByHost.value[hostId][0].hostUserId
+                data.nodeData[index].installUserName = userListByHost.value[hostId][0].username
+                calEnvPath(index)
               }
             } else {
               data.nodeData[index].installUserId = userListByHost.value[hostId][0].hostUserId
+              data.nodeData[index].installUserName = userListByHost.value[hostId][0].username
+              calEnvPath(index)
             }
           } else {
             data.nodeData[index].installUserId = ''
+            data.nodeData[index].installUserName = ''
+            calEnvPath(index)
           }
         } else {
           Message.error('Description Failed to obtain user data from the host')
@@ -403,6 +518,21 @@ const hostPopupChange = (val: boolean, index: number) => {
   }
 }
 
+const hostUserChange = (val: string, index: number) => {
+  if (val && hostUserObj.value[val]) {
+    data.nodeData[index].installUserName = hostUserObj.value[val].username
+    calEnvPath(index)
+  }
+}
+
+const calEnvPath = (index: number) => {
+  if (installType.value !== 'import') {
+    if (data.nodeData[index].clusterRole === ClusterRoleEnum.MASTER && data.nodeData[index].installUserName) {
+      data.nodeData[index].envPath = data.envPrefix + data.nodeData[index].installUserName + data.envSuffix
+    }
+  }
+}
+
 const hostUserPopupChange = (val: boolean, index: number) => {
   if (val) {
     changeHostId(index)
@@ -410,7 +540,6 @@ const hostUserPopupChange = (val: boolean, index: number) => {
 }
 
 const handleInstallPackageBlur = (index: number) => {
-  console.log('installPackagePath blur', index)
   const path = data.nodeData[index].installPackagePath
   data.nodeData.forEach((item: KeyValue) => {
     item.installPackagePath = path
@@ -460,6 +589,7 @@ const beforeConfirm = async (): Promise<boolean> => {
         nodeConfigList: param as LiteNodeConfig[]
       }
       installStore.setLiteConfig(liteConfig as LiteInstallConfig)
+      console.log('lite config', installStore.getLiteConfig);
     }
     loadingFunc.cancelLoading()
     return true

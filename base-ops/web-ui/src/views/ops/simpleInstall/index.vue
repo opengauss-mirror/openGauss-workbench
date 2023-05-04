@@ -2,62 +2,138 @@
   <div class="simple-install-c">
     <div class="label-color">{{ $t('simpleInstall.index.5mpn813gtvs0') }}</div>
     <a-divider class="mb-lg" />
-    <div class="install-content flex-col" v-if="data.state === -1">
-      <svg-icon icon-class="ops-mini-version" class="icon-size mb"></svg-icon>
+    <div
+      class="install-content flex-col"
+      v-if="data.state === -1"
+    >
+      <svg-icon
+        icon-class="ops-mini-version"
+        class="icon-size mb"
+      ></svg-icon>
       <div class="label-color ft-b ft-m mb">openGauss {{ $t('simpleInstall.index.else1') }}</div>
-      <div class="mb" v-if="data.validVisible">
+      <div
+        class="mb"
+        v-if="data.validVisible"
+      >
         <a-link @click="goInstall">{{ $t('simpleInstall.index.else3') }}，<span style="text-decoration:underline">{{
           $t('simpleInstall.index.else4')
         }}</span></a-link>
       </div>
-      <a-form class="mb" :model="data.form" :rules="formRules" :style="{ width: '400px' }" ref="formRef" auto-label-width>
-        <a-form-item field="hostId" :label="$t('simpleInstall.index.5mpn813guf00')">
+      <a-form
+        class="mb"
+        :model="data.form"
+        :rules="formRules"
+        :style="{ width: '400px' }"
+        ref="formRef"
+        auto-label-width
+      >
+        <a-form-item
+          field="hostId"
+          :label="$t('simpleInstall.index.5mpn813guf00')"
+        >
           <div class="flex-row mr-s">
-            <a-select style="width: 313px;" class="mr-s" :loading="data.hostLoading" v-model="data.form.hostId"
-              :placeholder="$t('simpleInstall.index.5mpn813gukw0')" @change="hostChange"
-              @popup-visible-change="hostVisibleChange">
-              <a-option v-for="item in data.hostList" :key="item.hostId" :value="item.hostId">{{
+            <a-select
+              style="width: 313px;"
+              class="mr-s"
+              :loading="data.hostLoading"
+              v-model="data.form.hostId"
+              :placeholder="$t('simpleInstall.index.5mpn813gukw0')"
+              @change="hostChange"
+              @popup-visible-change="hostVisibleChange"
+            >
+              <a-option
+                v-for="item in data.hostList"
+                :key="item.hostId"
+                :value="item.hostId"
+              >{{
                 item.privateIp
                 + '(' +
                 (item.publicIp ? item.publicIp : '--') + ')'
               }}</a-option>
             </a-select>
-            <icon-code-square :size="25" class="label-color" style="cursor: pointer;" @click="showTerminal" />
+            <icon-code-square
+              :size="25"
+              class="label-color"
+              style="cursor: pointer;"
+              @click="showTerminal"
+            />
           </div>
           <template #extra>
             <label class="label-color">{{ data.form.sysArch }}</label>
           </template>
         </a-form-item>
-        <a-form-item v-if="data.isNeedPwd" field="rootPassword" :label="$t('simpleInstall.index.else2')"
-          validate-trigger="blur">
-          <a-input-password v-model="data.form.rootPassword" :placeholder="$t('simpleInstall.index.5mpn813gupc0')"
-            allow-clear />
+        <a-form-item
+          v-if="data.isNeedPwd"
+          field="rootPassword"
+          :label="$t('simpleInstall.index.else2')"
+          validate-trigger="blur"
+        >
+          <a-input-password
+            v-model="data.form.rootPassword"
+            :placeholder="$t('simpleInstall.index.5mpn813gupc0')"
+            allow-clear
+          />
         </a-form-item>
-        <a-form-item field="install" :label="$t('simpleInstall.index.else5')" validate-trigger="change">
-          <a-select :loading="data.installLoading" v-model="data.form.install"
-            :placeholder="$t('simpleInstall.index.else6')" value-key="packageId">
-            <a-option v-for="item in data.installPackageList" :key="item.packageId" :value="item"
-              :label="item.packageVersionNum"></a-option>
+        <a-form-item
+          field="install"
+          :label="$t('simpleInstall.index.else5')"
+          validate-trigger="change"
+        >
+          <a-select
+            :loading="data.installLoading"
+            v-model="data.form.install"
+            :placeholder="$t('simpleInstall.index.else6')"
+            value-key="packageId"
+          >
+            <a-option
+              v-for="item in data.installPackageList"
+              :key="item.packageId"
+              :value="item"
+              :label="item.packageVersionNum"
+            ></a-option>
           </a-select>
         </a-form-item>
-        <a-form-item field="installPath" :label="$t('simple.InstallConfig.5mpmu0lar480')" validate-trigger="blur">
+        <a-form-item
+          field="installPath"
+          :label="$t('simple.InstallConfig.5mpmu0lar480')"
+          validate-trigger="blur"
+        >
           <label class="label-color">{{ data.form.installPath }}</label>
         </a-form-item>
-        <a-form-item field="port" :label="$t('simple.InstallConfig.5mpmu0larj40')" validate-trigger="blur">
+        <a-form-item
+          field="port"
+          :label="$t('simple.InstallConfig.5mpmu0larj40')"
+          validate-trigger="blur"
+        >
           <label class="label-color">{{ data.form.port }}</label>
         </a-form-item>
       </a-form>
-      <a-button type="primary" size="large" :loading="data.loading" @click="handleInstall">{{
+      <a-button
+        type="primary"
+        size="large"
+        :loading="data.loading"
+        @click="handleInstall"
+      >{{
         $t('simpleInstall.index.5mpn813gut00')
       }}</a-button>
     </div>
-    <div class="install-panel" v-if="data.state !== -1">
-      <div class="flex-col full-h" v-if="data.state !== 1">
+    <div
+      class="install-panel"
+      v-if="data.state !== -1"
+    >
+      <div
+        class="flex-col full-h"
+        v-if="data.state !== 1"
+      >
         <div class="install-doing mb">
           <div class="label-color ft-m ft-b mb-lg">{{ $t('simpleInstall.index.5mpn813guxc0') }}</div>
           <div class="flex-col-start full-w">
             <div class="progress-c mb">
-              <a-progress :color="data.state === 1 ? 'green' : 'red'" :stroke-width="12" :percent="data.installProgress">
+              <a-progress
+                :color="data.state === 1 ? 'green' : 'red'"
+                :stroke-width="12"
+                :percent="data.installProgress"
+              >
               </a-progress>
             </div>
             <div class="label-color">{{ $t('simpleInstall.index.5mpn813gv880') }} {{
@@ -66,51 +142,105 @@
           </div>
         </div>
         <div class="flex-col-start full-h full-w">
-          <a-steps small type="arrow" style="width: 100%;" class="mb" :current="data.installStepNum"
-            :status="data.currentStatus">
+          <a-steps
+            small
+            type="arrow"
+            style="width: 100%;"
+            class="mb"
+            :current="data.installStepNum"
+            :status="data.currentStatus"
+          >
             <a-step>{{ $t('simple.ExeInstall.else1') }}</a-step>
             <a-step>{{ $t('simple.ExeInstall.else2') }}</a-step>
             <a-step>{{ $t('simple.ExeInstall.else3') }}</a-step>
             <a-step>{{ $t('simple.ExeInstall.else4') }}</a-step>
           </a-steps>
           <div class="flex-row full-w full-h">
-            <div class="flex-col-start panel-w mr" :style="data.state === 2 ? '' : 'width: 100%'">
-              <a-alert class="mb-s" style="padding: 10px 12px;width: fit-content;" type="error" v-if="data.state === 2">
+            <div
+              class="flex-col-start panel-w mr"
+              :style="data.state === 2 ? '' : 'width: 100%'"
+            >
+              <a-alert
+                class="mb-s"
+                style="padding: 10px 12px;width: fit-content;"
+                type="error"
+                v-if="data.state === 2"
+              >
                 {{ $t('simpleInstall.index.5mpn813gvfw0') }}
               </a-alert>
-              <div id="xtermLog" class="xterm"></div>
+              <div
+                id="xtermLog"
+                class="xterm"
+              ></div>
             </div>
-            <div class="flex-col-start panel-w" v-if="data.state === 2">
+            <div
+              class="flex-col-start panel-w"
+              v-if="data.state === 2"
+            >
               <div class="flex-between full-w mb">
                 <div class="flex-row">
                   <div class="label-color mr-s">{{ $t('simpleInstall.index.5mpn813gvjk0') }}</div>
                   <div class="label-color">{{ data.privateIp }}</div>
                 </div>
                 <div>
-                  <a-button type="primary" @click="retryInstall" class="mr-s">{{ $t('simpleInstall.index.5mpn813gvmw0') }}</a-button>
-                  <a-button type="primary" @click="handleDownloadLog">{{
-                      $t('components.openLooKeng.5mpiji1qpcc65')
-                    }}
+                  <a-button
+                    type="primary"
+                    @click="retryInstall"
+                    class="mr-s"
+                  >{{ $t('simpleInstall.index.5mpn813gvmw0') }}</a-button>
+                  <a-button
+                    type="primary"
+                    @click="handleDownloadLog"
+                  >{{
+                    $t('components.openLooKeng.5mpiji1qpcc65')
+                  }}
                   </a-button>
                 </div>
               </div>
-              <div id="xterm" class="xterm"></div>
+              <div
+                id="xterm"
+                class="xterm"
+              ></div>
             </div>
           </div>
         </div>
       </div>
-      <div class="flex-col full-w full-h" v-else>
-        <svg-icon class="succ-icon-size mb" icon-class="ops-install-success"></svg-icon>
+      <div
+        class="flex-col full-w full-h"
+        v-else
+      >
+        <svg-icon
+          class="succ-icon-size mb"
+          icon-class="ops-install-success"
+        ></svg-icon>
         <div class="mb-lg">{{ $t('simpleInstall.index.5mpn813gvqo0') }}</div>
         <div class="install-connect-c flex-col mb-xlg">
           <div class="ft-b mb">{{ $t('simpleInstall.index.5mpn813gvu40') }}</div>
-          <div class="mb">{{ $t('simpleInstall.index.5mpn813gvxg0') }} <span class="content">gaussdb</span></div>
+          <div class="flex-row mb-s">
+            <div class="label-w">{{ $t('simple.InstallConfig.5mpmu0larj40') }}</div>
+            <div class="label-value">{{ data.form.port }}</div>
+          </div>
+          <div class="flex-row mb-s">
+            <div class="label-w">{{ $t('simpleInstall.index.5mpn813gvxg0') }}</div>
+            <div class="label-value">gaussdb</div>
+          </div>
+          <div class="flex-row mb-s">
+            <div class="label-w">{{ $t('simpleInstall.index.5mpn813guf00') }}</div>
+            <div class="label-value">{{ data.publicIp }}</div>
+          </div>
         </div>
         <div class="flex-row">
-          <a-button type="outline" class="mr" @click="goHome">{{
+          <a-button
+            type="outline"
+            class="mr"
+            @click="goHome"
+          >{{
             $t('simpleInstall.index.5mpn813gw4c0')
           }}</a-button>
-          <a-button type="primary" @click="goOps">{{
+          <a-button
+            type="primary"
+            @click="goOps"
+          >{{
             $t('simpleInstall.index.5mpn813gw7w0')
           }}</a-button>
         </div>
@@ -160,6 +290,7 @@ const data = reactive<KeyValue>({
   },
   installProgress: 0,
   privateIp: '',
+  publicIp: '',
   installUserId: '',
   installUsername: '',
   hostLoading: false,
@@ -527,6 +658,7 @@ const getHostList = () => {
       })
       data.form.hostId = data.hostList[0].hostId
       data.privateIp = data.hostList[0].privateIp
+      data.publicIp = data.hostList[0].publicIp
       data.form.os = data.hostList[0].os
       data.form.cpuArch = data.hostList[0].cpuArch
       data.form.sysArch = data.hostList[0].os + '_' + data.hostList[0].cpuArch
@@ -590,6 +722,7 @@ const getHostUser = () => {
   if (data.form.hostId) {
     if (data.hostObj[data.form.hostId]) {
       data.privateIp = data.hostObj[data.form.hostId].privateIp
+      data.publicIp = data.hostObj[data.form.hostId].publicIp
     }
     hostUserListWithoutRoot(data.form.hostId).then((res: KeyValue) => {
       if (Number(res.code) === 200) {
@@ -730,6 +863,17 @@ const handleShowTerminal = (data: KeyValue) => {
 
   .content {
     color: rgb(var(--arcoblue-6));
+  }
+
+  .label-w {
+    width: 80px;
+    text-align: left;
+    margin-right: 15px;
+  }
+
+  .label-value {
+    width: 100px;
+    text-align: left;
   }
 }
 
