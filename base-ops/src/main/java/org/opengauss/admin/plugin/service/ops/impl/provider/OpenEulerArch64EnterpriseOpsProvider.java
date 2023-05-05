@@ -851,7 +851,7 @@ public class OpenEulerArch64EnterpriseOpsProvider extends AbstractOpsProvider {
 
     @Data
     @Builder
-    class CleanEnvClass {
+    static class CleanEnvClass {
         private List<HostInfoHolder> hostInfoHolders;
         private OpsHostEntity hostEntity;
         private Optional<OpsHostUserEntity> rootUserEntity;

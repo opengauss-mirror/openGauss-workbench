@@ -538,9 +538,9 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
     private void preInstall(String group, String pkgPath, EnterpriseInstallNodeConfig masterNodeConfig, String xmlConfigFullPath, Session rootSession, WsSession retSession, String rootPassword, String installUserPassword, String envPath) {
         String gsPreInstall = MessageFormat.format(SshCommandConstants.GS_PREINSTALL_INTERACTIVE,
                 pkgPath
-                        + System.getProperty("line.separator")
+                        + System.getProperty("file.separator")
                         + "script"
-                        + System.getProperty("line.separator"),
+                        + System.getProperty("file.separator"),
                 masterNodeConfig.getInstallUsername(),
                 group, xmlConfigFullPath);
         gsPreInstall = wrapperEnvSep(gsPreInstall, envPath);
@@ -887,7 +887,7 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
 
     @Data
     @Builder
-    class CleanEnvClass {
+    static class CleanEnvClass {
         private List<HostInfoHolder> hostInfoHolders;
         private OpsHostEntity hostEntity;
         private Optional<OpsHostUserEntity> rootUserEntity;
