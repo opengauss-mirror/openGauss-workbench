@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 import org.sqlite.JDBC;
 import org.sqlite.SQLiteDataSource;
 
+import com.nctigba.common.web.exception.CustomException;
 import com.nctigba.observability.instance.constants.CommonConstants;
 
 import lombok.extern.slf4j.Slf4j;
@@ -31,7 +32,7 @@ public class ParamInfoInitConfig {
 					try {
 						init();
 					} catch (IOException e) {
-						throw new RuntimeException("sqlite error");
+						throw new CustomException("sqlite error", e);
 					}
 				}
 			}
