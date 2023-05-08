@@ -7,13 +7,11 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.annotation.PostConstruct;
-
-import com.nctigba.observability.instance.constants.CommonConstants;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.sqlite.JDBC;
 import org.sqlite.SQLiteDataSource;
+
+import com.nctigba.observability.instance.constants.CommonConstants;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -23,12 +21,21 @@ public class ParamInfoInitConfig {
 	public static final String PARAMINFO = "paramInfo";
 	public static final String PARAMVALUEINFO = "paramValueInfo";
 	private static final Map<String, Connection> map = new HashMap<>();
-	@Value("${sqlitePath:data/paramInfo.db}")
-	private String paramInfoPath;
-	@Value("${sqlitePath:data/paramValueInfo.db}")
-	private String paramValueInfoPath;
+	private static String paramInfoPath = "data/paramInfo.db";
+	private static String paramValueInfoPath = "data/paramValueInfo.db";
 
 	public static Connection getCon(String key) {
+		if(!map.containsKey(key)) {
+			synchronized (map) {
+				if(!map.containsKey(key)) {
+					try {
+						init();
+					} catch (IOException e) {
+						throw new RuntimeException("sqlite error");
+					}
+				}
+			}
+		}
 		return map.get(key);
 	}
 
@@ -149,13 +156,12 @@ public class ParamInfoInitConfig {
 			"CREATE TABLE param_value_info (id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, sid INTEGER,\n"
 					+ " instance TEXT, actualValue TEXT);" };
 
-	@PostConstruct
-	public void init() throws IOException {
+	public static void init() throws IOException {
 		map.put(PARAMINFO, initSqlite(paramInfoPath, paramInfos));
 		map.put(PARAMVALUEINFO, initSqlite(paramValueInfoPath, paramValueVnfo));
 	}
 
-	private Connection initSqlite(String path, String[] sqls) throws IOException {
+	private static Connection initSqlite(String path, String[] sqls) throws IOException {
 		File f = new File(path);
 		log.info("sqlite:" + f.getCanonicalPath());
 		if (!f.exists()) {
