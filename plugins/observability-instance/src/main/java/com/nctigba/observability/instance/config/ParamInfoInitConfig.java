@@ -21,13 +21,13 @@ public class ParamInfoInitConfig {
 	public static final String PARAMINFO = "paramInfo";
 	public static final String PARAMVALUEINFO = "paramValueInfo";
 	private static final Map<String, Connection> map = new HashMap<>();
-	private static String paramInfoPath = "data/paramInfo.db";
-	private static String paramValueInfoPath = "data/paramValueInfo.db";
+	private static String paramInfoPath = "data" + File.separatorChar + "paramInfo.db";
+	private static String paramValueInfoPath = "data" + File.separatorChar + "paramValueInfo.db";
 
 	public static Connection getCon(String key) {
-		if(!map.containsKey(key)) {
+		if (!map.containsKey(key)) {
 			synchronized (map) {
-				if(!map.containsKey(key)) {
+				if (!map.containsKey(key)) {
 					try {
 						init();
 					} catch (IOException e) {
@@ -40,8 +40,8 @@ public class ParamInfoInitConfig {
 	}
 
 	private static final String[] paramInfos = {
-			"CREATE TABLE param_info (id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, paramType TEXT,\n"
-					+ " paramName TEXT, paramDetail TEXT, suggestValue TEXT, defaultValue TEXT,\n"
+			"CREATE TABLE param_info (id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, paramType TEXT,"
+					+ " paramName TEXT, paramDetail TEXT, suggestValue TEXT, defaultValue TEXT,"
 					+ " unit TEXT, suggestExplain TEXT, diagnosisRule TEXT);",
 			CommonConstants.INSERT_INTO_PARAM_INFO_SQL
 					+ " values(\"OS\",\"net.ipv4.tcp_max_tw_buckets\",\"表示同时保持TIME_WAIT状态的TCP/IP连接最大数量。如果超过所配置的取值，TIME_WAIT将立刻被释放并打印警告信息\",\"10000\",\"180000\",\"数目\",\"系统在同时所处理的最大 timewait sockets 数目。如果超过此数的话﹐time-wait socket 会被立即砍除并且显示警告信息。之所以要设定这个限制﹐纯粹为了抵御那些简单的 DoS 攻击﹐不过﹐如果网络条件需要比默认值更多﹐则可以提高它(或许还要增加内存)。(事实上做NAT的时候最好可以适当地增加该值)\",\"actualValue<10000\");",
@@ -72,9 +72,9 @@ public class ParamInfoInitConfig {
 			CommonConstants.INSERT_INTO_PARAM_INFO_SQL
 					+ " values(\"OS\",\"net.ipv4.tcp_retries2\",\"控制内核向已经建立连接的远程主机重新发送数据的次数\",\"12\",\"15\",\"次数\",\"在丢弃激活(已建立通讯状况)的TCP连接之前﹐需要进行多少次重试。默认值为15，根据RTO的值来决定，相当于13-30分钟(RFC1122规定，必须大于100秒).(这个值根据目前的网络设置,可以适当地改小,我的网络内修改为了5)\",\"\");",
 			CommonConstants.INSERT_INTO_PARAM_INFO_SQL
-					+ " values(\"OS\",\"vm.overcommit_memory\",\"控制在做内存分配的时候，内核的检查方式\",\"0\",\"0\",\"方式\",\"vm.overcommit_memory文件指定了内核针对内存分配的策略，其值可以是0、1、2\n"
-					+ "0： (默认)表示内核将检查是否有足够的可用内存供应用进程使用；如果有足够的可用内存，内存申请允许；否则，内存申请失败，并把错误返回给应用进程。0 即是启发式的overcommitting handle,会尽量减少swap的使用,root可以分配比一般用户略多的内存\n"
-					+ "1： 表示内核允许分配所有的物理内存，而不管当前的内存状态如何，允许超过CommitLimit，直至内存用完为止。在数据库服务器上不建议设置为1，从而尽量避免使用swap.\n"
+					+ " values(\"OS\",\"vm.overcommit_memory\",\"控制在做内存分配的时候，内核的检查方式\",\"0\",\"0\",\"方式\",\"vm.overcommit_memory文件指定了内核针对内存分配的策略，其值可以是0、1、2"
+					+ "0： (默认)表示内核将检查是否有足够的可用内存供应用进程使用；如果有足够的可用内存，内存申请允许；否则，内存申请失败，并把错误返回给应用进程。0 即是启发式的overcommitting handle,会尽量减少swap的使用,root可以分配比一般用户略多的内存"
+					+ "1： 表示内核允许分配所有的物理内存，而不管当前的内存状态如何，允许超过CommitLimit，直至内存用完为止。在数据库服务器上不建议设置为1，从而尽量避免使用swap."
 					+ "2： 表示不允许超过CommitLimit值\",\"\");",
 			CommonConstants.INSERT_INTO_PARAM_INFO_SQL
 					+ " values(\"OS\",\"net.ipv4.tcp_rmem\",\"TCP协议接收端缓冲区的可用内存大小\",\"8192 250000 16777216\",\"4096 87380 174760（4k）\",\"字节\",\"接收缓存设置同tcp_wmem\",\"\");",
@@ -124,36 +124,36 @@ public class ParamInfoInitConfig {
 			CommonConstants.INSERT_INTO_PARAM_INFO_SQL
 					+ " values(\"DB\",\"max_io_capacity\",\"设置后端写进程批量刷页每秒的IO上限，需要根据具体业务场景和机器磁盘IO能力进行设置\",\"30720~10485760\",\"512000\",\"KB\",\"\",\"\");",
 			CommonConstants.INSERT_INTO_PARAM_INFO_SQL
-					+ " values(\"DB\",\"log_min_duration_statement\",\"当某条语句的持续时间大于或者等于特定的毫秒数时，log_min_duration_statement参数用于控制记录每条完成语句的持续时间\",\"-1 ~ INT_MAX\",\"1800000\",\"毫秒\",\"设置为250，所有运行时间不短于250ms的SQL语句都会被记录。\n"
-					+ "设置为0，输出所有语句的持续时间。\n" + "设置为-1，关闭此功能\",\"\");",
+					+ " values(\"DB\",\"log_min_duration_statement\",\"当某条语句的持续时间大于或者等于特定的毫秒数时，log_min_duration_statement参数用于控制记录每条完成语句的持续时间\",\"-1 ~ INT_MAX\",\"1800000\",\"毫秒\",\"设置为250，所有运行时间不短于250ms的SQL语句都会被记录。"
+					+ "设置为0，输出所有语句的持续时间。" + "设置为-1，关闭此功能\",\"\");",
 			CommonConstants.INSERT_INTO_PARAM_INFO_SQL
-					+ " values(\"DB\",\"log_duration\",\"控制记录每个已完成SQL语句的执行时间。对使用扩展查询协议的客户端、会记录语法分析、绑定和执行每一步所花费的时间\",\"off\",\"on\",\"布尔值\",\"设置为off，该选项与log_min_duration_statement的不同之处在于log_min_duration_statement强制记录查询文本。\n"
+					+ " values(\"DB\",\"log_duration\",\"控制记录每个已完成SQL语句的执行时间。对使用扩展查询协议的客户端、会记录语法分析、绑定和执行每一步所花费的时间\",\"off\",\"on\",\"布尔值\",\"设置为off，该选项与log_min_duration_statement的不同之处在于log_min_duration_statement强制记录查询文本。"
 					+ "设置为on并且log_min_duration_statement大于零，记录所有持续时间，但是仅记录超过阈值的语句。这可用于在高负载情况下搜集统计信息\",\"\");",
 			CommonConstants.INSERT_INTO_PARAM_INFO_SQL
 					+ " values(\"DB\",\"track_stmt_stat_level\",\"控制语句执行跟踪的级别,参数第一部分为非OFF情况下，会记录所有SQL，第一部分为OFF，第二部分为非OFF情况下，仅记录慢SQL\",\"OFF,L0\",\"OFF,L0\",\"字符型\",\"\",\"\");",
 			CommonConstants.INSERT_INTO_PARAM_INFO_SQL
 					+ " values(\"DB\",\"track_stmt_retention_time\",\"组合参数，控制全量/慢SQL记录的保留时间。以60秒为周期读取该参数，并执行清理超过保留时间的记录，仅sysadmin用户可以访问\",\"3600,604800\",\"3600,604800\",\"字符型\",\"\",\"\");",
 			CommonConstants.INSERT_INTO_PARAM_INFO_SQL
-					+ " values(\"DB\",\"enable_thread_pool\",\"控制是否使用线程池功能\",\"off\",\"off\",\"布尔值\",\"on表示开启线程池功能。\n"
+					+ " values(\"DB\",\"enable_thread_pool\",\"控制是否使用线程池功能\",\"off\",\"off\",\"布尔值\",\"on表示开启线程池功能。"
 					+ "off表示不开启线程池功能\",\"\");",
 			CommonConstants.INSERT_INTO_PARAM_INFO_SQL
 					+ " values(\"DB\",\"thread_pool_attr\",\"用于控制线程池功能的详细属性，该参数仅在enable_thread_pool打开后生效。\",\"长度大于0\",\"16, 2, (nobind)\",\"字符型\",\"\",\"\");",
 			CommonConstants.INSERT_INTO_PARAM_INFO_SQL
-					+ " values(\"DB\",\"log_statement\",\"控制记录SQL语句。对于使用扩展查询协议的客户端，记录接收到执行消息的事件和绑定参数的值\",\"none\",\"none\",\"枚举型\",\"none表示不记录语句。\n"
-					+ "ddl表示记录所有的数据定义语句，比如CREATE、ALTER和DROP语句。\n"
-					+ "mod表示记录所有DDL语句，还包括数据修改语句INSERT、UPDATE、DELETE、TRUNCATE和COPY FROM 。\n"
+					+ " values(\"DB\",\"log_statement\",\"控制记录SQL语句。对于使用扩展查询协议的客户端，记录接收到执行消息的事件和绑定参数的值\",\"none\",\"none\",\"枚举型\",\"none表示不记录语句。"
+					+ "ddl表示记录所有的数据定义语句，比如CREATE、ALTER和DROP语句。"
+					+ "mod表示记录所有DDL语句，还包括数据修改语句INSERT、UPDATE、DELETE、TRUNCATE和COPY FROM 。"
 					+ "all表示记录所有语句，PREPARE、EXECUTE和EXPLAIN ANALYZE语句也同样被记录\",\"\");",
 			CommonConstants.INSERT_INTO_PARAM_INFO_SQL
-					+ " values(\"DB\",\"log_error_verbosity\",\"控制服务器日志中每条记录的消息写入的详细度\",\"default\",\"default\",\"枚举型\",\"terse代表输出不包括DETAIL、HINT、QUERY及CONTEXT错误信息的记录。\n"
-					+ "verbose代表输出包括SQLSTATE错误代码、源代码文件名、函数名及产生错误所在的行号。\n"
+					+ " values(\"DB\",\"log_error_verbosity\",\"控制服务器日志中每条记录的消息写入的详细度\",\"default\",\"default\",\"枚举型\",\"terse代表输出不包括DETAIL、HINT、QUERY及CONTEXT错误信息的记录。"
+					+ "verbose代表输出包括SQLSTATE错误代码、源代码文件名、函数名及产生错误所在的行号。"
 					+ "default代表输出包括DETAIL、HINT、QUERY及CONTEXT错误信息的记录，不包括SQLSTATE错误代码 、源代码文件名、函数名及产生错误所在的行号\",\"\");",
 			CommonConstants.INSERT_INTO_PARAM_INFO_SQL
 					+ " values(\"DB\",\"log_min_messages\",\"控制写到服务器日志文件中的消息级别。每个级别都包含排在它后面的所有级别中的信息。级别越低，服务器运行日志中记录的消息就越少\",\"warning\",\"warning\",\"枚举型\",\"有效值有debug、debug5、debug4、debug3、debug2、debug1、info、log、notice、warning、error、fatal、panic。\",\"\");",
 			CommonConstants.INSERT_INTO_PARAM_INFO_SQL
-					+ " values(\"DB\",\"log_min_error_statement\",\"控制在服务器日志中记录错误的SQL语句。\",\"error\",\"error\",\"枚举型\",\"有效值有debug、debug5、debug4、debug3、debug2、debug1、info、log、notice、warning、error、fatal、panic。\",\"\");\n" };
+					+ " values(\"DB\",\"log_min_error_statement\",\"控制在服务器日志中记录错误的SQL语句。\",\"error\",\"error\",\"枚举型\",\"有效值有debug、debug5、debug4、debug3、debug2、debug1、info、log、notice、warning、error、fatal、panic。\",\"\");" };
 
 	private static final String[] paramValueVnfo = {
-			"CREATE TABLE param_value_info (id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, sid INTEGER,\n"
+			"CREATE TABLE param_value_info (id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, sid INTEGER,"
 					+ " instance TEXT, actualValue TEXT);" };
 
 	public static void init() throws IOException {
@@ -168,8 +168,8 @@ public class ParamInfoInitConfig {
 			var parent = f.getParentFile();
 			if (!parent.exists())
 				parent.mkdirs();
-			boolean b=f.createNewFile();
-			if(!b){
+			boolean b = f.createNewFile();
+			if (!b) {
 				log.info("createNewFile fail:" + path);
 			}
 			var sqLiteDataSource = new SQLiteDataSource();
