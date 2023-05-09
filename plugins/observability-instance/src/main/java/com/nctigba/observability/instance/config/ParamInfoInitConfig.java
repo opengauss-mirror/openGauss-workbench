@@ -152,8 +152,9 @@ public class ParamInfoInitConfig {
 			CommonConstants.INSERT_INTO_PARAM_INFO_SQL
 					+ " values(\"DB\",\"log_min_messages\",\"控制写到服务器日志文件中的消息级别。每个级别都包含排在它后面的所有级别中的信息。级别越低，服务器运行日志中记录的消息就越少\",\"warning\",\"warning\",\"枚举型\",\"有效值有debug、debug5、debug4、debug3、debug2、debug1、info、log、notice、warning、error、fatal、panic。\",\"\");",
 			CommonConstants.INSERT_INTO_PARAM_INFO_SQL
-					+ " values(\"DB\",\"log_min_error_statement\",\"控制在服务器日志中记录错误的SQL语句。\",\"error\",\"error\",\"枚举型\","
-					+ "\"有效值有debug、debug5、debug4、debug3、debug2、debug1、info、log、notice、warning、error、fatal、panic。\",\"\");" };
+					+ " values(\"DB\",\"log_min_error_statement\",\"控制在服务器日志中记录错误的SQL语句。\","
+					+ "\"error\",\"error\",\"枚举型\"," + "\"有效值有debug、debug5、debug4、debug3、debug2、debug1、info、log、"
+					+ "notice、warning、error、fatal、panic。\",\"\");" };
 
 	private static final String[] paramValueVnfo = {
 			"CREATE TABLE param_value_info (id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, sid INTEGER,"
