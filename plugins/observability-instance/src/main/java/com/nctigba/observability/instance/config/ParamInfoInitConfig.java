@@ -154,7 +154,7 @@ public class ParamInfoInitConfig {
 			CommonConstants.INSERT_INTO_PARAM_INFO_SQL
 					+ " values(\"DB\",\"log_min_error_statement\",\"控制在服务器日志中记录错误的SQL语句。\","
 					+ "\"error\",\"error\",\"枚举型\"," + "\"有效值有debug、debug5、debug4、debug3、debug2、debug1、info、log、"
-				    + "notice、warning、error、fatal、panic。\",\"\");"};
+                    + "notice、warning、error、fatal、panic。\",\"\");"};
 
 	private static final String[] paramValueVnfo = {
 			"CREATE TABLE param_value_info (id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, sid INTEGER,"
