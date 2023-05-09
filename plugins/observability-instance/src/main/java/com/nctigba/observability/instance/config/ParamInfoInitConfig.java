@@ -145,19 +145,21 @@ public class ParamInfoInitConfig {
 					+ "mod表示记录所有DDL语句，还包括数据修改语句INSERT、UPDATE、DELETE、TRUNCATE和COPY FROM 。"
 					+ "all表示记录所有语句，PREPARE、EXECUTE和EXPLAIN ANALYZE语句也同样被记录\",\"\");",
 			CommonConstants.INSERT_INTO_PARAM_INFO_SQL
-					+ " values(\"DB\",\"log_error_verbosity\",\"控制服务器日志中每条记录的消息写入的详细度\",\"default\",\"default\",\"枚举型\",\"terse代表输出不包括DETAIL、HINT、QUERY及CONTEXT错误信息的记录。"
+					+ " values(\"DB\",\"log_error_verbosity\",\"控制服务器日志中每条记录的消息写入的详细度\",\"default\",\"default\","
+					+ "\"枚举型\",\"terse代表输出不包括DETAIL、HINT、QUERY及CONTEXT错误信息的记录。"
 					+ "verbose代表输出包括SQLSTATE错误代码、源代码文件名、函数名及产生错误所在的行号。"
 					+ "default代表输出包括DETAIL、HINT、QUERY及CONTEXT错误信息的记录，不包括SQLSTATE错误代码 、源代码文件名、函数名及产生错误所在的行号\",\"\");",
 			CommonConstants.INSERT_INTO_PARAM_INFO_SQL
 					+ " values(\"DB\",\"log_min_messages\",\"控制写到服务器日志文件中的消息级别。每个级别都包含排在它后面的所有级别中的信息。级别越低，服务器运行日志中记录的消息就越少\",\"warning\",\"warning\",\"枚举型\",\"有效值有debug、debug5、debug4、debug3、debug2、debug1、info、log、notice、warning、error、fatal、panic。\",\"\");",
 			CommonConstants.INSERT_INTO_PARAM_INFO_SQL
-					+ " values(\"DB\",\"log_min_error_statement\",\"控制在服务器日志中记录错误的SQL语句。\",\"error\",\"error\",\"枚举型\",\"有效值有debug、debug5、debug4、debug3、debug2、debug1、info、log、notice、warning、error、fatal、panic。\",\"\");" };
+					+ " values(\"DB\",\"log_min_error_statement\",\"控制在服务器日志中记录错误的SQL语句。\",\"error\",\"error\",\"枚举型\","
+					+ "\"有效值有debug、debug5、debug4、debug3、debug2、debug1、info、log、notice、warning、error、fatal、panic。\",\"\");" };
 
 	private static final String[] paramValueVnfo = {
 			"CREATE TABLE param_value_info (id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, sid INTEGER,"
 					+ " instance TEXT, actualValue TEXT);" };
 
-	public static void init() throws IOException {
+	private static void init() throws IOException {
 		map.put(PARAMINFO, initSqlite(paramInfoPath, paramInfos));
 		map.put(PARAMVALUEINFO, initSqlite(paramValueInfoPath, paramValueVnfo));
 	}
