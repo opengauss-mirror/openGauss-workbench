@@ -26,14 +26,16 @@ package org.opengauss.admin.web.controller;
 
 import cn.hutool.core.codec.Base64;
 import cn.hutool.core.map.MapUtil;
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.gitee.starblues.core.PluginInfo;
 import com.gitee.starblues.core.PluginState;
 import com.gitee.starblues.integration.operator.PluginOperator;
 import com.gitee.starblues.integration.operator.upload.UploadParam;
+import com.gitee.starblues.spring.extract.ExtractCoordinate;
+import com.gitee.starblues.spring.extract.ExtractFactory;
 import com.google.common.collect.Maps;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.annotation.Log;
 import org.opengauss.admin.common.core.controller.BaseController;
@@ -41,6 +43,7 @@ import org.opengauss.admin.common.core.domain.AjaxResult;
 import org.opengauss.admin.common.core.dto.PluginConfigDataDto;
 import org.opengauss.admin.common.core.page.TableDataInfo;
 import org.opengauss.admin.common.enums.BusinessType;
+import org.opengauss.admin.common.enums.PluginLicenseType;
 import org.opengauss.admin.common.enums.ResponseCode;
 import org.opengauss.admin.common.enums.SysPluginStatus;
 import org.opengauss.admin.common.enums.SysPluginTheme;
@@ -48,15 +51,21 @@ import org.opengauss.admin.common.utils.StringUtils;
 import org.opengauss.admin.common.utils.file.FileUploadUtils;
 import org.opengauss.admin.system.domain.SysPlugin;
 import org.opengauss.admin.system.domain.SysPluginLogo;
-import org.opengauss.admin.system.service.*;
+import org.opengauss.admin.system.plugin.beans.PluginExtensionInfoDto;
+import org.opengauss.admin.system.plugin.extract.PluginExtensionInfoExtract;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiOperation;
+import org.opengauss.admin.system.service.ISysMenuService;
+import org.opengauss.admin.system.service.ISysPluginConfigDataService;
+import org.opengauss.admin.system.service.ISysPluginConfigService;
+import org.opengauss.admin.system.service.ISysPluginLogoService;
+import org.opengauss.admin.system.service.ISysPluginService;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Map;
@@ -79,6 +88,8 @@ public class SystemPluginController extends BaseController {
     private ISysMenuService sysMenuService;
     @Autowired
     private ISysPluginLogoService iSysPluginLogoService;
+    @Autowired
+    private ExtractFactory extractFactory;
 
 
     /**
@@ -101,6 +112,37 @@ public class SystemPluginController extends BaseController {
             }
         });
         return getDataTable(list);
+    }
+
+    /**
+     * get plugin extension list
+     */
+    @GetMapping("/extensions/list")
+    @ApiOperation(value = "plugin extension info list", notes = "plugin extension info list")
+    public TableDataInfo listExtensionInfo(SysPlugin sysPlugin) {
+        IPage<SysPlugin> page = sysPluginService.selectList(startPage(), sysPlugin);
+        List<PluginExtensionInfoDto> list = new ArrayList<>();
+        page.getRecords().forEach(d -> {
+            PluginExtensionInfoDto dto = new PluginExtensionInfoDto();
+            dto.setPluginId(d.getPluginId());
+            dto.setPluginLicenseType(PluginLicenseType.FREE);
+            dto.setPluginName(d.getPluginId());
+            try {
+                ExtractCoordinate coordinate = ExtractCoordinate.build(d.getPluginId());
+                PluginExtensionInfoExtract noticeExtract = extractFactory.getExtractByCoordinate(coordinate);
+                PluginExtensionInfoDto extensionInfo = noticeExtract.getPluginExtensionInfo();
+                BeanUtils.copyProperties(extensionInfo, dto);
+            } catch (RuntimeException exception) {
+                log.warn("Query plugin:" + d.getPluginId() + " extension info error");
+            }
+            list.add(dto);
+        });
+        TableDataInfo rspData = new TableDataInfo();
+        rspData.setCode(ResponseCode.SUCCESS.code());
+        rspData.setMsg(ResponseCode.SUCCESS.msg());
+        rspData.setRows(list);
+        rspData.setTotal(page.getTotal());
+        return rspData;
     }
 
     /**
@@ -138,7 +180,7 @@ public class SystemPluginController extends BaseController {
             StringWriter errorsWriter = new StringWriter();
             e.printStackTrace(new PrintWriter(errorsWriter));
             log.error(errorsWriter.toString());
-            return AjaxResult.error(ResponseCode.INTEGRATION_PLUGIN_START_ERROR.code(),e.getMessage());
+            return AjaxResult.error(ResponseCode.INTEGRATION_PLUGIN_START_ERROR.code(), e.getMessage());
         }
 
 
@@ -173,12 +215,13 @@ public class SystemPluginController extends BaseController {
             StringWriter errorsWriter = new StringWriter();
             e.printStackTrace(new PrintWriter(errorsWriter));
             log.error(errorsWriter.toString());
-            return AjaxResult.error(ResponseCode.INTEGRATION_PLUGIN_STOP_ERROR.code(),e.getMessage());
+            return AjaxResult.error(ResponseCode.INTEGRATION_PLUGIN_STOP_ERROR.code(), e.getMessage());
         }
     }
 
     /**
      * upload and instal plugin
+     *
      * @param jarFile jarFile
      */
     @Log(title = "plugins", businessType = BusinessType.INSTALL)
@@ -187,9 +230,9 @@ public class SystemPluginController extends BaseController {
     public AjaxResult install(@RequestParam("file") MultipartFile jarFile) {
         try {
             UploadParam uploadParam = UploadParam.byMultipartFile(jarFile)
-                    .setBackOldPlugin(true)
-                    .setStartPlugin(true)
-                    .setUnpackPlugin(false);
+                .setBackOldPlugin(true)
+                .setStartPlugin(true)
+                .setUnpackPlugin(false);
             PluginInfo pluginInfo = pluginOperator.uploadPlugin(uploadParam);
             if (pluginInfo != null) {
                 String logo = null;
@@ -215,11 +258,11 @@ public class SystemPluginController extends BaseController {
                     }
                 }
                 SysPlugin plugin = SysPlugin.builder().pluginId(pluginInfo.getPluginId())
-                        .pluginDesc(pluginInfo.getPluginDescriptor().getDescription()).pluginDescEn(descriptionEn)
-                        .bootstrapClass(pluginInfo.getPluginDescriptor().getPluginBootstrapClass())
-                        .pluginProvider(pluginInfo.getPluginDescriptor().getProvider()).isNeedConfigured(isNeedConfigured)
-                        .pluginType(pluginType).pluginVersion(pluginInfo.getPluginDescriptor().getPluginVersion())
-                        .theme(theme).build();
+                    .pluginDesc(pluginInfo.getPluginDescriptor().getDescription()).pluginDescEn(descriptionEn)
+                    .bootstrapClass(pluginInfo.getPluginDescriptor().getPluginBootstrapClass())
+                    .pluginProvider(pluginInfo.getPluginDescriptor().getProvider()).isNeedConfigured(isNeedConfigured)
+                    .pluginType(pluginType).pluginVersion(pluginInfo.getPluginDescriptor().getPluginVersion())
+                    .theme(theme).build();
                 sysPluginService.save(plugin);
                 Map<String, Object> result = Maps.newHashMap();
                 result.put("isNeedConfigured", isNeedConfigured);
@@ -252,8 +295,8 @@ public class SystemPluginController extends BaseController {
     }
 
     /**
-     * uninstall plugin
-     * If there are submenus added by other plugins under your own menu, you cannot uninstall them
+     * uninstall plugin If there are submenus added by other plugins under your own menu, you cannot uninstall them
+     *
      * @param id plugin id
      */
     @Log(title = "plugins", businessType = BusinessType.UNINSTALL)
@@ -272,7 +315,7 @@ public class SystemPluginController extends BaseController {
             StringWriter errorsWriter = new StringWriter();
             e.printStackTrace(new PrintWriter(errorsWriter));
             log.error(errorsWriter.toString());
-            return AjaxResult.error(ResponseCode.INTEGRATION_PLUGIN_UNINSTALL_ERROR.code(),e.getMessage());
+            return AjaxResult.error(ResponseCode.INTEGRATION_PLUGIN_UNINSTALL_ERROR.code(), e.getMessage());
         }
     }
 

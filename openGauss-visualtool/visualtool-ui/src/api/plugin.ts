@@ -19,3 +19,8 @@ export function uninstall (id: string | number) {
 export function pluginConfigData (payload: any) {
   return axios.post('/system/plugins/pluginConfigData', payload)
 }
+
+// 获取插件列表扩展信息
+export function extendInfoList (query?: any) {
+  return axios.get('/system/plugins/extensions/list', { params: query })
+}
