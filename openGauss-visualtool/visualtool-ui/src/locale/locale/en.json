@@ -42,7 +42,24 @@
             "5n6f62aajx80": "Disable",
             "else1": "Type: ",
             "else2": "No",
-            "else3": "Are you sure to uninstall the plugin with id {id}?"
+            "else3": "Are you sure to uninstall the plugin with id {id}?",
+            "OPEN_SOURCE": "Open source",
+            "FREE": "Free",
+            "TRIAL": "Trial",
+            "PAID": "Official",
+            "update_authorization": "Update authorization",
+            "authorization_detail": "Authorization detail",
+            "plugin_name": "Plugin name",
+            "authorization": "Authorization",
+            "plugin_description": "Description",
+            "activation_time": "Activation time",
+            "expires": "Expires",
+            "company": "Company",
+            "phone": "Phone",
+            "email": "Email",
+            "address": "Address",
+            "manual": "Manual",
+            "demo": "DEMO"
         }
     },
     "components": {
