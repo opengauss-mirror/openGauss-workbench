@@ -26,6 +26,7 @@ const data = reactive<KeyValue>({
 })
 
 const handleIsInstallPlugin = (val: boolean) => {
+    console.log(val)
     data.isInstallPlugin = false
 }
 

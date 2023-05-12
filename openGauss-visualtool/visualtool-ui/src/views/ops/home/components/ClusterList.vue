@@ -346,7 +346,7 @@
     </a-spin>
     <div
       class="create-new"
-      v-if="hasPlugin"
+      v-if="props.hasPlugin"
     >
       <div class="flex-col">
         <svg-icon
@@ -829,4 +829,5 @@ const getInstanceStateColor = (clusterData: KeyValue, instanceData: KeyValue) =>
 
 .text-nowrap {
   white-space: nowrap;
-}</style>
+}
+</style>
