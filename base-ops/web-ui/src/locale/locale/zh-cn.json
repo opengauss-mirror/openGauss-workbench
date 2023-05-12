@@ -415,6 +415,13 @@
             "nodeState8": "追赶主节点",
             "nodeState9": "崩溃",
             "nodeState10": "未知"
+        },
+        "HostPwdDlg": {
+            "pwdValid": "密码校验",
+            "IpAddress": "IP地址",
+            "rootPwd": "root密码",
+            "rootPwdPlaceholder": "请输入root密码",
+            "else1": "不能为纯空格"
         }
     },
     "slowSql": {
@@ -1548,7 +1555,6 @@
                 "5m82b2nqths1": "条数求和",
                 "5m82b2nqths2": "截取年份",
                 "5m82b2nqths3": "截取月份"
-
             },
             "SortOperator": {
                 "5m82bdo2r0w0": "属性配置",

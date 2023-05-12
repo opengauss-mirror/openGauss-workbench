@@ -1459,4 +1459,5 @@ const getDropdownList = (clusterData: KeyValue, nodeData: KeyValue) => {
 .xterm {
   width: 100%;
   height: 80%;
-}</style>
+}
+</style>

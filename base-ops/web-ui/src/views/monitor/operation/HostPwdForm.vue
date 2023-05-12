@@ -1,10 +1,23 @@
 <template>
-  <a-form :model="form" ref="formRef" auto-label-width :rules="formRules">
-    <a-form-item label="IP地址">
+  <a-form
+    :model="form"
+    ref="formRef"
+    auto-label-width
+    :rules="formRules"
+  >
+    <a-form-item :label="$t('operation.HostPwdDlg.IpAddress')">
       <label>{{ form.publicIp }}({{ form.privateIp }})</label>
     </a-form-item>
-    <a-form-item field="rootPassword" label="root密码" validate-trigger="blur">
-      <a-input-password v-model="form.rootPassword" placeholder="请输入root密码" allow-clear />
+    <a-form-item
+      :label="$t('operation.HostPwdDlg.rootPwd')"
+      field="rootPassword"
+      validate-trigger="blur"
+    >
+      <a-input-password
+        v-model="form.rootPassword"
+        :placeholder="$t('operation.HostPwdDlg.rootPwdPlaceholder')"
+        allow-clear
+      />
     </a-form-item>
   </a-form>
 </template>
@@ -33,12 +46,12 @@ const form = computed({
 const formRules = computed(() => {
   return {
     rootPassword: [
-      { required: true, message: '请输入root密码' },
+      { required: true, message: t('operation.HostPwdDlg.rootPwdPlaceholder') },
       {
         validator: (value: any, cb: any) => {
           return new Promise(resolve => {
             if (!value.trim()) {
-              cb('不能为纯空格')
+              cb(t('operation.HostPwdDlg.else1'))
               resolve(false)
             } else {
               resolve(true)

@@ -1,8 +1,22 @@
 <template>
-  <a-modal :mask-closable="false" :esc-to-close="false" :visible="data.show" :title="data.title"
-    :ok-loading="data.loading" :modal-style="{ width: '450px' }" @ok="handleOk" @cancel="close">
-    <div v-for="host in data.form" :key="host.hostId">
-      <host-pwd-form :form-data="host" :ref="(el: any) => setRefMap(el, host.hostId)"></host-pwd-form>
+  <a-modal
+    :mask-closable="false"
+    :esc-to-close="false"
+    :visible="data.show"
+    :title="data.title"
+    :ok-loading="data.loading"
+    :modal-style="{ width: '450px' }"
+    @ok="handleOk"
+    @cancel="close"
+  >
+    <div
+      v-for="host in data.form"
+      :key="host.hostId"
+    >
+      <host-pwd-form
+        :form-data="host"
+        :ref="(el: any) => setRefMap(el, host.hostId)"
+      ></host-pwd-form>
     </div>
   </a-modal>
 </template>
@@ -82,7 +96,7 @@ const handleOk = () => {
 
 const open = (nodes: KeyValue[]) => {
   data.show = true
-  data.title = '密码校验'
+  data.title = t('operation.HostPwdDlg.pwdValid')
   data.form = nodes
 }
 
