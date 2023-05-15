@@ -273,7 +273,7 @@ window.$wujie?.props.data.xxx
 ```YAML
 spring:
   resources:
-    static-locations: classpath:static,file:D://static
+    static-locations: classpath:static
 ```
 
 ### 前端访问路径

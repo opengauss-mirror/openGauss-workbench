@@ -48,6 +48,11 @@ import java.nio.charset.StandardCharsets;
 @Slf4j
 public class ShellUtil {
 
+    /**
+     * Connect Timeout
+     */
+    private static final Integer CONNECT_TIMEOUT = 5000;
+
     public static void execCommand(String host, Integer port, String user, String password, String... commands) {
         Session session = JschUtil.openSession(host, port, user, password);
         ChannelExec channelExec = null;
@@ -65,12 +70,23 @@ public class ShellUtil {
         }
     }
 
+    /**
+     * exec command and get result
+     *
+     * @param host connection host of the executing machine
+     * @param port connection port of the executing machine
+     * @param user connection username of the executing machine
+     * @param password connection password of the executing machine
+     * @param commands execute command
+     * @return exec result
+     */
     public static String execCommandGetResult(String host, Integer port, String user, String password, String... commands) {
         StringBuilder sb = new StringBuilder(16);
-        Session session = JschUtil.openSession(host, port, user, password);
+        Session session = null;
         ChannelExec channelExec = null;
         InputStream in = null;
         try {
+            session = JschUtil.openSession(host, port, user, password, CONNECT_TIMEOUT);
             channelExec = (ChannelExec) session.openChannel("exec");
             for (String command : commands) {
                 channelExec.setCommand(command);

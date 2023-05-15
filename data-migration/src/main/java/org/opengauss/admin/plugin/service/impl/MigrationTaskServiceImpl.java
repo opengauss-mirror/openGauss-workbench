@@ -34,12 +34,25 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.opengauss.admin.common.core.domain.model.LoginUser;
 import org.opengauss.admin.common.utils.SecurityUtils;
-import org.opengauss.admin.plugin.domain.*;
+import org.opengauss.admin.plugin.domain.MigrationHostPortalInstall;
+import org.opengauss.admin.plugin.domain.MigrationTask;
+import org.opengauss.admin.plugin.domain.MigrationTaskExecResultDetail;
+import org.opengauss.admin.plugin.domain.MigrationTaskGlobalParam;
+import org.opengauss.admin.plugin.domain.MigrationTaskHostRef;
+import org.opengauss.admin.plugin.domain.MigrationTaskParam;
+import org.opengauss.admin.plugin.domain.MigrationTaskStatusRecord;
 import org.opengauss.admin.plugin.enums.TaskOperate;
 import org.opengauss.admin.plugin.enums.TaskStatus;
 import org.opengauss.admin.plugin.handler.PortalHandle;
 import org.opengauss.admin.plugin.mapper.MigrationTaskMapper;
-import org.opengauss.admin.plugin.service.*;
+import org.opengauss.admin.plugin.service.MigrationHostPortalInstallHostService;
+import org.opengauss.admin.plugin.service.MigrationTaskExecResultDetailService;
+import org.opengauss.admin.plugin.service.MigrationTaskGlobalParamService;
+import org.opengauss.admin.plugin.service.MigrationTaskHostRefService;
+import org.opengauss.admin.plugin.service.MigrationTaskOperateRecordService;
+import org.opengauss.admin.plugin.service.MigrationTaskParamService;
+import org.opengauss.admin.plugin.service.MigrationTaskService;
+import org.opengauss.admin.plugin.service.MigrationTaskStatusRecordService;
 import org.opengauss.admin.system.plugin.facade.HostUserFacade;
 import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,7 +62,12 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -60,6 +78,12 @@ import java.util.stream.Collectors;
 @Service
 @Slf4j
 public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, MigrationTask> implements MigrationTaskService {
+
+    /**
+     * special chars
+     */
+    private static final char[] SPECIAL_CHARS = {'\\', '+', '-', '!', '(', ')', ':', '^', '[', ']', '\"', '{', '}',
+            '~', '*', '?', '>', '<', '|', '&', ';', '/', '.', '$'};
 
     @Autowired
     @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
@@ -346,10 +370,17 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
         return result;
     }
 
+    /**
+     * Query the number of tasks not finish by target
+     *
+     * @param targetNodeId targetNodeId of the OpsHost object
+     * @param targetDb targetDb of the OpsHost object
+     * @return number of tasks
+     */
     @Override
-    public Integer countNotFinishByTargetDb(String targetDb) {
+    public Integer countNotFinishByTargetDb(String targetNodeId, String targetDb) {
         LambdaQueryWrapper<MigrationTask> query = new LambdaQueryWrapper<>();
-        query.eq(MigrationTask::getTargetDb, targetDb);
+        query.eq(MigrationTask::getTargetDb, targetDb).eq(MigrationTask::getTargetNodeId, targetNodeId);
         query.notIn(MigrationTask::getExecStatus, TaskStatus.MIGRATION_FINISH.getCode());
         return Math.toIntExact(this.count(query));
     }
@@ -369,9 +400,10 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
     }
 
     /**
-     *  Query the number of tasks running on the machine
-     * @param hostId
-     * @return
+     * Query the number of tasks running on the machine
+     *
+     * @param hostId Id of the OpsHost object
+     * @return number of tasks
      */
     @Override
     public Integer countRunningByHostId(String hostId) {
@@ -439,25 +471,41 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
         this.updateById(update);
     }
 
-
-    public static String escapeChars(String s) {
-        if (StringUtils.isBlank(s)) {
-            return s;
+    /**
+     * special character handling
+     *
+     * @param str String that needs to be processed.
+     * @return processed string
+     */
+    public String escapeChars(String str) {
+        if (StringUtils.isBlank(str)) {
+            return str;
         }
         StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < s.length(); i++) {
-            char c = s.charAt(i);
+        for (int index = 0; index < str.length(); index++) {
+            char con = str.charAt(index);
             // These characters are part of the query syntax and must be escaped
-            if (c == '\\' || c == '+' || c == '-' || c == '!' || c == '(' || c == ')'
-                    || c == ':' || c == '^'	|| c == '[' || c == ']' || c == '\"'
-                    || c == '{' || c == '}' || c == '~' || c == '*' || c == '?' || c == '>'  || c == '<'
-                    || c == '|' || c == '&' || c == ';' || c == '/' || c == '.'
-                    || c == '$' || Character.isWhitespace(c)) {
+            if (shouldEscape(con) || Character.isWhitespace(con)) {
                 sb.append('\\');
             }
-            sb.append(c);
+            sb.append(con);
         }
         return sb.toString();
+    }
+
+    /**
+     * determine if a given character needs to be escaped
+     *
+     * @param con char content
+     * @return result
+     */
+    private boolean shouldEscape(char con) {
+        for (char ch : SPECIAL_CHARS) {
+            if (ch == con || Character.isWhitespace(con)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private Map<String,String> getTaskParam(List<MigrationTaskGlobalParam> globalParams, MigrationTask task) {
