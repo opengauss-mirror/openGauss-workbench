@@ -1,5 +1,10 @@
 package com.nctigba.observability.instance.service.impl;
 
+import java.util.List;
+
+import org.opengauss.admin.common.core.domain.model.ops.OpsClusterNodeVO;
+import org.springframework.stereotype.Service;
+
 import com.alibaba.fastjson.JSONObject;
 import com.nctigba.observability.instance.constants.DatabaseType;
 import com.nctigba.observability.instance.dto.topsql.TopSQLInfoReq;
@@ -8,16 +13,10 @@ import com.nctigba.observability.instance.factory.TopSQLHandlerFactory;
 import com.nctigba.observability.instance.handler.topsql.TopSQLHandler;
 import com.nctigba.observability.instance.model.InstanceNodeInfo;
 import com.nctigba.observability.instance.service.ClusterManager;
-import com.nctigba.observability.instance.service.ClusterManager.OpsClusterNodeVOSub;
 import com.nctigba.observability.instance.service.TopSQLService;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.opengauss.admin.common.core.domain.model.ops.OpsClusterNodeVO;
-import org.opengauss.admin.common.core.domain.model.ops.OpsClusterVO;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 /**
  * <p>
@@ -32,9 +31,7 @@ import java.util.List;
 @Slf4j
 public class TopSQLServiceImpl implements TopSQLService {
     private final TopSQLHandlerFactory topSQLHandlerFactory;
-
-    @Autowired
-    private ClusterManager opsFacade;
+    private final ClusterManager opsFacade;
 
     @Override
     public boolean testConnection(String nodeId) {
@@ -106,16 +103,6 @@ public class TopSQLServiceImpl implements TopSQLService {
         InstanceNodeInfo instanceNodeInfo = queryNodeInfo(topSQLObjectReq.getId());
         // query TopSQL statistical information
         return handler.getObjectInfo(instanceNodeInfo, topSQLObjectReq.getSqlId());
-    }
-
-    @Override
-    public List<OpsClusterVO> cluster() {
-        return opsFacade.getAllOpsCluster();
-    }
-
-    @Override
-    public OpsClusterNodeVOSub clusterNode(String nodeId) {
-        return opsFacade.getOpsNodeById(nodeId);
     }
 
     /**

@@ -12,6 +12,7 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
+import com.nctigba.observability.instance.constants.CommonConstants;
 import org.opengauss.admin.common.exception.CustomException;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -130,7 +131,7 @@ public class OpenGaussTopSQLHandler implements TopSQLHandler {
         List<JSONObject> list = new ArrayList<>();
         try(Connection conn = getConnection(nodeInfo)) {
             if (conn == null) {
-                throw new CustomException("get database connection fail");
+                throw new CustomException(CommonConstants.CONNECTION_FAIL);
             }
             // param pre check
             if (topSqlListPreCheck(conn)) {
@@ -201,7 +202,7 @@ public class OpenGaussTopSQLHandler implements TopSQLHandler {
         // get connection then execute query
         try (Connection connection = getConnection(nodeInfo)) {
             if (connection == null) {
-                throw new CustomException("get database connection fail");
+                throw new CustomException(CommonConstants.CONNECTION_FAIL);
             }
             // get prepared statement then put parameters in
             try (PreparedStatement preparedStatement = connection.prepareStatement(STATISTICAL_INFO_SQL)) {
@@ -252,7 +253,7 @@ public class OpenGaussTopSQLHandler implements TopSQLHandler {
         LinkedList<String> modifyLines = new LinkedList<>(planStrList);
         try {
             for (String item : planStrList) {
-                if ((item.contains("cost=") && !item.contains("Result")) || item.contains("Hash Cond") || item.contains("->")) {
+                if ((item.contains("cost=") && !item.contains("Result")) || item.contains(CommonConstants.HASH_COND) || item.contains("->")) {
                     continue;
                 }
                 modifyLines.remove(item);
@@ -265,16 +266,16 @@ public class OpenGaussTopSQLHandler implements TopSQLHandler {
                 // there are two rows
                 JSONObject jsonObject = new JSONObject();
                 String firstStr = mItemArr[0];
-                if (!firstStr.contains("(cost=")) {
+                if (!firstStr.contains(CommonConstants.COST)) {
                     continue;
                 }
                 if (firstStr.contains("->")) {
-                    jsonObject.put("stepName", firstStr.substring(firstStr.indexOf("->") + 2, firstStr.indexOf("(cost=")).trim());
+                    jsonObject.put("stepName", firstStr.substring(firstStr.indexOf("->") + 2, firstStr.indexOf(CommonConstants.COST)).trim());
                 } else {
-                    jsonObject.put("stepName", firstStr.substring(0, firstStr.indexOf("(cost=")).trim());
+                    jsonObject.put("stepName", firstStr.substring(0, firstStr.indexOf(CommonConstants.COST)).trim());
                 }
-                jsonObject.put("estimateRows", mItemArr[1].substring(0, mItemArr[1].indexOf(" ")));
-                jsonObject.put("actualRows", mItemArr[2].substring(0, mItemArr[2].indexOf(" ")));
+                jsonObject.put("estimateRows", mItemArr[1].substring(0, mItemArr[1].indexOf(CommonConstants.BLANK)));
+                jsonObject.put("actualRows", mItemArr[2].substring(0, mItemArr[2].indexOf(CommonConstants.BLANK)));
                 result.add(jsonObject);
             }
             return result;
@@ -292,7 +293,7 @@ public class OpenGaussTopSQLHandler implements TopSQLHandler {
         // get connection then execute query
         try (Connection connection = getConnection(nodeInfo)) {
             if (connection == null) {
-                throw new CustomException("get database connection fail");
+                throw new CustomException(CommonConstants.CONNECTION_FAIL);
             }
             // pre-check track_stmt_stat_leve full sql level at least L1
             if (executionPlanPreCheck(connection)) {
@@ -332,7 +333,7 @@ public class OpenGaussTopSQLHandler implements TopSQLHandler {
                         LinkedList<String> modifySplitLines = new LinkedList<>(splitLines);
                         // remove non-operation or non-condition lines
                         for (String line : splitLines) {
-                            if ((line.contains("cost=") && !line.contains("Result"))|| line.contains("Hash Cond")) {
+                            if ((line.contains("cost=") && !line.contains("Result"))|| line.contains(CommonConstants.HASH_COND)) {
                                 continue;
                             }
                             modifySplitLines.remove(line);
@@ -403,7 +404,7 @@ public class OpenGaussTopSQLHandler implements TopSQLHandler {
         for (int i = 0; i < lines.size(); i++) {
             String line = lines.get(i);
             // process condition
-            if (line.contains("Hash Cond")) {
+            if (line.contains(CommonConstants.HASH_COND)) {
                 String[] split = line.split(": ");
                 plan.setJoinType(split[1]);
                 continue;
@@ -436,7 +437,7 @@ public class OpenGaussTopSQLHandler implements TopSQLHandler {
      * @return execution plan line object
      */
     public ExecutionPlan processExecutionPlanString(String line) {
-        if (line.contains("Hash Cond")) {
+        if (line.contains(CommonConstants.HASH_COND)) {
             return null;
         }
         ExecutionPlan plan = new ExecutionPlan();
@@ -457,8 +458,8 @@ public class OpenGaussTopSQLHandler implements TopSQLHandler {
             // only show object name, remove alias name
             String objectName = split[1];
             String alias;
-            if (objectName.contains(" ")) {
-                String[] aliasSplit = objectName.split(" ");
+            if (objectName.contains(CommonConstants.BLANK)) {
+                String[] aliasSplit = objectName.split(CommonConstants.BLANK);
                 alias = aliasSplit[0];
             } else {
                 alias = objectName;
@@ -472,7 +473,7 @@ public class OpenGaussTopSQLHandler implements TopSQLHandler {
         }
         // set parameters
         String parameters = operationParameterSplit[1].replace(")", "");
-        String[] parametersSplit = parameters.split(" ");
+        String[] parametersSplit = parameters.split(CommonConstants.BLANK);
         for (String parameterSplit:parametersSplit) {
             if (StringUtils.startsWith(parameterSplit, "cost")) {
                 // set start cost and total cost
@@ -503,7 +504,7 @@ public class OpenGaussTopSQLHandler implements TopSQLHandler {
         List<JSONObject> results = new ArrayList<>();
         try (Connection connection = getConnection(nodeInfo)) {
             if (connection == null) {
-                throw new CustomException("get database connection fail");
+                throw new CustomException(CommonConstants.CONNECTION_FAIL);
             }
             // get prepared statement then put parameters in
             try (PreparedStatement preparedStatement = connection.prepareStatement(PARTITION_LIST_SQL)) {
@@ -536,7 +537,7 @@ public class OpenGaussTopSQLHandler implements TopSQLHandler {
         // get connection then execute query
         try (Connection connection = getConnection(nodeInfo)) {
             if (connection == null) {
-                throw new CustomException("get database connection fail");
+                throw new CustomException(CommonConstants.CONNECTION_FAIL);
             }
             // get prepared statement then put parameters in
             try (PreparedStatement preparedStatement = connection.prepareStatement(SELECT_QUERY_SQL)) {
@@ -554,7 +555,7 @@ public class OpenGaussTopSQLHandler implements TopSQLHandler {
             if (queryText.isEmpty()) {
                 throw new CustomException("get query text fail");
             }
-            String completeQueryText = "select * from gs_index_advise('" + queryText.replace("\n", " ").replace("'", "''") + "')";
+            String completeQueryText = "select * from gs_index_advise('" + queryText.replace("\n", CommonConstants.BLANK).replace("'", "''") + "')";
             log.info("get complete query text: {}", completeQueryText);
             // get prepared statement
             try (PreparedStatement preparedStatement = connection.prepareStatement(completeQueryText)) {
@@ -621,7 +622,7 @@ public class OpenGaussTopSQLHandler implements TopSQLHandler {
         JSONObject tableIndex = new JSONObject();
         try (Connection connection = getConnection(nodeInfo)) {
             if (connection == null) {
-                throw new CustomException("get database connection fail");
+                throw new CustomException(CommonConstants.CONNECTION_FAIL);
             }
             // query table metadata
             try (PreparedStatement preparedStatement = connection.prepareStatement(TABLE_METADATA_SQL)) {

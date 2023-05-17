@@ -30,15 +30,30 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 import com.jcraft.jsch.Session;
+import lombok.Builder;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
 import org.opengauss.admin.common.exception.ops.OpsException;
 import org.opengauss.admin.plugin.domain.entity.ops.OpsClusterEntity;
 import org.opengauss.admin.plugin.domain.entity.ops.OpsClusterNodeEntity;
-import org.opengauss.admin.plugin.domain.model.ops.*;
+import org.opengauss.admin.plugin.domain.model.ops.EnterpriseInstallConfig;
+import org.opengauss.admin.plugin.domain.model.ops.HostInfoHolder;
+import org.opengauss.admin.plugin.domain.model.ops.InstallContext;
+import org.opengauss.admin.plugin.domain.model.ops.JschResult;
+import org.opengauss.admin.plugin.domain.model.ops.OmStatusModel;
+import org.opengauss.admin.plugin.domain.model.ops.OpsClusterContext;
+import org.opengauss.admin.plugin.domain.model.ops.SshCommandConstants;
+import org.opengauss.admin.plugin.domain.model.ops.UnInstallContext;
+import org.opengauss.admin.plugin.domain.model.ops.UpgradeContext;
+import org.opengauss.admin.plugin.domain.model.ops.WsSession;
 import org.opengauss.admin.plugin.domain.model.ops.node.EnterpriseInstallNodeConfig;
-import org.opengauss.admin.plugin.enums.ops.*;
+import org.opengauss.admin.plugin.enums.ops.ClusterRoleEnum;
+import org.opengauss.admin.plugin.enums.ops.OpenGaussSupportOSEnum;
+import org.opengauss.admin.plugin.enums.ops.OpenGaussVersionEnum;
+import org.opengauss.admin.plugin.enums.ops.UpgradeTypeEnum;
+import org.opengauss.admin.plugin.enums.ops.WdrScopeEnum;
 import org.opengauss.admin.plugin.service.ops.IOpsClusterNodeService;
 import org.opengauss.admin.plugin.service.ops.IOpsClusterService;
 import org.opengauss.admin.plugin.utils.JschUtil;
@@ -62,7 +77,12 @@ import javax.xml.transform.stream.StreamResult;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.text.MessageFormat;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -116,20 +136,20 @@ public class OpenEulerArch64EnterpriseOpsProvider extends AbstractOpsProvider {
         opsClusterContext.setOpsClusterEntity(opsClusterEntity);
         opsClusterContext.setOpsClusterNodeEntityList(opsClusterNodeEntities);
 
-        wsUtil.sendText(installContext.getRetSession(),"CREATE_REMOTE_USER");
+        wsUtil.sendText(installContext.getRetSession(), "CREATE_REMOTE_USER");
         createEnterpriseRemoteUser(installContext, opsClusterContext, jschUtil, encryptionUtils);
 
-        wsUtil.sendText(installContext.getRetSession(),"SAVE_INSTALL_CONTEXT");
+        wsUtil.sendText(installContext.getRetSession(), "SAVE_INSTALL_CONTEXT");
         saveContext(installContext);
-        wsUtil.sendText(installContext.getRetSession(),"FINISH");
+        wsUtil.sendText(installContext.getRetSession(), "FINISH");
         log.info("The installation is complete");
     }
 
     private void doInstall(InstallContext installContext) {
-        wsUtil.sendText(installContext.getRetSession(),"START_GEN_XML_CONFIG");
+        wsUtil.sendText(installContext.getRetSession(), "START_GEN_XML_CONFIG");
         String xml = generateClusterConfigXml(installContext);
         log.info("Generated xml information：{}", xml);
-        wsUtil.sendText(installContext.getRetSession(),"END_GEN_XML_CONFIG");
+        wsUtil.sendText(installContext.getRetSession(), "END_GEN_XML_CONFIG");
 
         WsSession retSession = installContext.getRetSession();
 
@@ -138,42 +158,24 @@ public class OpenEulerArch64EnterpriseOpsProvider extends AbstractOpsProvider {
         String masterHostId = masterNodeConfig.getHostId();
 
         // root
-        Session rootSession = loginWithUser(jschUtil,encryptionUtils, installContext.getHostInfoHolders(), true, masterHostId, null);
+        Session rootSession = loginWithUser(jschUtil, encryptionUtils, installContext.getHostInfoHolders(), true, masterHostId, null);
 
         String pkgPath = preparePath(installContext.getEnterpriseInstallConfig().getInstallPackagePath());
-        ensureDirExist(jschUtil,rootSession, pkgPath, retSession);
-        chmodFullPath(jschUtil,rootSession,pkgPath,retSession);
-        ensureEnvPathPermission(jschUtil,rootSession,installContext.getEnvPath(),retSession);
-
-        List<HostInfoHolder> hostInfoHolders = installContext.getHostInfoHolders();
-        for (HostInfoHolder hostInfoHolder : hostInfoHolders) {
-            OpsHostEntity hostEntity = hostInfoHolder.getHostEntity();
-            OpsHostUserEntity rootUser = hostInfoHolder.getHostUserEntities().stream().filter(hostUser -> "root".equals(hostUser.getUsername())).findFirst().orElseThrow(() -> new OpsException("root user information not found"));
-            wsUtil.sendText(retSession,"host " + hostEntity.getPublicIp());
-            Session session = jschUtil.getSession(hostEntity.getPublicIp(), hostEntity.getPort(), "root", encryptionUtils.decrypt(rootUser.getPassword())).orElseThrow(() -> new OpsException("Failed to establish connection"));
-
-            try {
-                ensureDirExist(jschUtil,session,"/opt/openGauss",retSession);
-                chown(session,masterNodeConfig.getInstallUsername(),"/opt/openGauss",retSession);
-                installDependency(jschUtil,session,retSession);
-            }finally {
-                if (Objects.nonNull(session) && session.isConnected()){
-                    session.disconnect();
-                }
-            }
-        }
+        ensureDirExist(jschUtil, rootSession, pkgPath, retSession);
+        chmodFullPath(jschUtil, rootSession, pkgPath, retSession);
+        ensureEnvPathPermission(jschUtil, rootSession, installContext.getEnvPath(), retSession);
 
         // scp
-        wsUtil.sendText(installContext.getRetSession(),"START_SCP_INSTALL_PACKAGE");
-        String installPackageFullPath = scpInstallPackageToMasterNode(jschUtil,rootSession, installContext.getInstallPackagePath(), pkgPath, retSession);
-        wsUtil.sendText(installContext.getRetSession(),"END_SCP_INSTALL_PACKAGE");
+        wsUtil.sendText(installContext.getRetSession(), "START_SCP_INSTALL_PACKAGE");
+        String installPackageFullPath = scpInstallPackageToMasterNode(jschUtil, rootSession, installContext.getInstallPackagePath(), pkgPath, retSession);
+        wsUtil.sendText(installContext.getRetSession(), "END_SCP_INSTALL_PACKAGE");
 
         // unzip install pack
-        wsUtil.sendText(installContext.getRetSession(),"START_UNZIP_INSTALL_PACKAGE");
-        decompress(jschUtil,rootSession, pkgPath, installPackageFullPath, retSession, "-xvf");
+        wsUtil.sendText(installContext.getRetSession(), "START_UNZIP_INSTALL_PACKAGE");
+        decompress(jschUtil, rootSession, pkgPath, installPackageFullPath, retSession, "-xvf");
         // unzip CM
-        decompress(jschUtil,rootSession, pkgPath, pkgPath + "/openGauss-"+installContext.getOpenGaussVersionNum()+"-openEuler-64bit-om.tar.gz", retSession, "-zxvf");
-        wsUtil.sendText(installContext.getRetSession(),"END_UNZIP_INSTALL_PACKAGE");
+        decompress(jschUtil, rootSession, pkgPath, pkgPath + "/openGauss-" + installContext.getOpenGaussVersionNum() + "-openEuler-64bit-om.tar.gz", retSession, "-zxvf");
+        wsUtil.sendText(installContext.getRetSession(), "END_UNZIP_INSTALL_PACKAGE");
 
         // write xml
         String xmlConfigFullPath = pkgPath + "/cluster_config.xml";
@@ -204,23 +206,36 @@ public class OpenEulerArch64EnterpriseOpsProvider extends AbstractOpsProvider {
             throw new OpsException("Failed to query user group");
         }
 
-        HostInfoHolder masterHostHolder = hostInfoHolders.stream().filter(holder -> holder.getHostEntity().getHostId().equals(masterHostId)).findFirst().orElseThrow(() -> new OpsException("Master node host information not found"));
-        OpsHostUserEntity masterRootUserInfo = masterHostHolder.getHostUserEntities().stream().filter(hostUser -> hostUser.getUsername().equals("root")).findFirst().orElseThrow(() -> new OpsException("The root user information of the primary node cannot be found"));
+        List<HostInfoHolder> hostInfoHolders = installContext.getHostInfoHolders();
+        HostInfoHolder masterHostHolder = hostInfoHolders
+                .stream()
+                .filter(holder -> holder.getHostEntity().getHostId().equals(masterHostId))
+                .findFirst()
+                .orElseThrow(() -> new OpsException("Master node host information not found"));
+        OpsHostUserEntity masterRootUserInfo = masterHostHolder
+                .getHostUserEntities()
+                .stream()
+                .filter(hostUser -> hostUser.getUsername().equals("root"))
+                .findFirst()
+                .orElseThrow(
+                        () -> new OpsException("The root user information of the primary node cannot be found"));
         OpsHostUserEntity installUserInfo = masterHostHolder.getHostUserEntities().stream().filter(hostUser -> hostUser.getHostUserId().equals(masterNodeConfig.getInstallUserId())).findFirst().orElseThrow(() -> new OpsException("No installation user information found"));
 
-        wsUtil.sendText(installContext.getRetSession(),"START_EXE_PREINSTALL_COMMAND");
-        preInstall(group, pkgPath, masterNodeConfig, xmlConfigFullPath, rootSession, retSession,encryptionUtils.decrypt(masterRootUserInfo.getPassword()),encryptionUtils.decrypt(installUserInfo.getPassword()), installContext.getEnvPath());
-        wsUtil.sendText(installContext.getRetSession(),"END_EXE_PREINSTALL_COMMAND");
+        wsUtil.sendText(installContext.getRetSession(), "START_EXE_PREINSTALL_COMMAND");
+        preInstall(group, pkgPath, masterNodeConfig, xmlConfigFullPath, rootSession, retSession, encryptionUtils.decrypt(masterRootUserInfo.getPassword()), encryptionUtils.decrypt(installUserInfo.getPassword()), installContext.getEnvPath());
+        wsUtil.sendText(installContext.getRetSession(), "END_EXE_PREINSTALL_COMMAND");
 
-        Session ommSession = loginWithUser(jschUtil,encryptionUtils,installContext.getHostInfoHolders(), false, masterHostId, masterNodeConfig.getInstallUserId());
+        Session ommSession = loginWithUser(jschUtil, encryptionUtils, installContext.getHostInfoHolders(), false, masterHostId, masterNodeConfig.getInstallUserId());
 
         // install
-        wsUtil.sendText(installContext.getRetSession(),"START_EXE_INSTALL_COMMAND");
+        wsUtil.sendText(installContext.getRetSession(), "START_EXE_INSTALL_COMMAND");
         String installCommand = MessageFormat.format(SshCommandConstants.ENTERPRISE_INSTALL, xmlConfigFullPath);
         try {
             Map<String, String> autoResponse = new HashMap<>();
             autoResponse.put("(yes/no)?", "yes");
-            autoResponse.put("Please enter password for database:", installContext.getEnterpriseInstallConfig().getDatabasePassword());
+            autoResponse.put("Please enter password for database:", installContext
+                    .getEnterpriseInstallConfig()
+                    .getDatabasePassword());
             autoResponse.put("Please repeat for database:", installContext.getEnterpriseInstallConfig().getDatabasePassword());
 
             JschResult jschResult = jschUtil.executeCommand(installContext.getEnvPath(), installCommand, ommSession, retSession, autoResponse);
@@ -232,10 +247,10 @@ public class OpenEulerArch64EnterpriseOpsProvider extends AbstractOpsProvider {
             log.error("install failed：", e);
             throw new OpsException("install failed");
         }
-        wsUtil.sendText(installContext.getRetSession(),"END_EXE_INSTALL_COMMAND");
+        wsUtil.sendText(installContext.getRetSession(), "END_EXE_INSTALL_COMMAND");
     }
 
-    private void chown(Session rootSession, String installUserName,String targetPath, WsSession wsSession) {
+    private void chown(Session rootSession, String installUserName, String targetPath, WsSession wsSession) {
         String chown = MessageFormat.format(SshCommandConstants.CHOWN, installUserName, targetPath);
 
         try {
@@ -246,7 +261,8 @@ public class OpenEulerArch64EnterpriseOpsProvider extends AbstractOpsProvider {
                 throw new OpsException("thread is interrupted");
             }
             if (0 != jschResult.getExitCode()) {
-                log.error("Failed to grant permission, exit code: {}, error message: {}", jschResult.getExitCode(), jschResult.getResult());
+                log.error("Failed to grant permission, exit code: {}, error message: {}",
+                        jschResult.getExitCode(), jschResult.getResult());
                 throw new OpsException("Failed to grant permission");
             }
         } catch (IOException e) {
@@ -255,25 +271,30 @@ public class OpenEulerArch64EnterpriseOpsProvider extends AbstractOpsProvider {
         }
     }
 
-    public void upgrade(UpgradeContext upgradeContext){
+    public void upgrade(UpgradeContext upgradeContext) {
         Session rootSession = null;
         Session ommSession = null;
         try {
-            rootSession = jschUtil.getSession(upgradeContext.getHostPublicIp(), upgradeContext.getHostPort(), "root", encryptionUtils.decrypt(upgradeContext.getRootPassword())).orElseThrow(() -> new OpsException("The root user failed to establish a connection"));
+            rootSession = jschUtil.getSession(upgradeContext.getHostPublicIp(),
+                    upgradeContext.getHostPort(),
+                    "root",
+                    encryptionUtils.decrypt(upgradeContext.getRootPassword()))
+                    .orElseThrow(
+                            () -> new OpsException("The root user failed to establish a connection"));
             ommSession = jschUtil.getSession(upgradeContext.getHostPublicIp(), upgradeContext.getHostPort(), upgradeContext.getInstallUsername(), encryptionUtils.decrypt(upgradeContext.getInstallUserPassword())).orElseThrow(() -> new OpsException("Install user connection connection failed"));
-            enableStreamReplication(rootSession,upgradeContext);
-            checkClusterStatus(ommSession,upgradeContext);
-            upgradePreinstall(rootSession,upgradeContext);
-            doUpgrade(ommSession,upgradeContext);
-            upgradeCheck(ommSession,upgradeContext);
-            upgradeCommit(ommSession,upgradeContext);
+            enableStreamReplication(rootSession, upgradeContext);
+            checkClusterStatus(ommSession, upgradeContext);
+            upgradePreinstall(rootSession, upgradeContext);
+            doUpgrade(ommSession, upgradeContext);
+            upgradeCheck(ommSession, upgradeContext);
+            upgradeCommit(ommSession, upgradeContext);
             updateClusterVersion(upgradeContext);
-        }finally {
-            if (Objects.nonNull(rootSession) && rootSession.isConnected()){
+        } finally {
+            if (Objects.nonNull(rootSession) && rootSession.isConnected()) {
                 rootSession.disconnect();
             }
 
-            if (Objects.nonNull(ommSession) && ommSession.isConnected()){
+            if (Objects.nonNull(ommSession) && ommSession.isConnected()) {
                 ommSession.disconnect();
             }
         }
@@ -290,13 +311,13 @@ public class OpenEulerArch64EnterpriseOpsProvider extends AbstractOpsProvider {
     private void upgradeCommit(Session ommSession, UpgradeContext upgradeContext) {
         wsUtil.sendText(upgradeContext.getRetSession(), "COMMIT_UPGRADE");
         try {
-            String command = "gs_upgradectl -t commit-upgrade  -X "+upgradeContext.getClusterConfigXmlPath();
+            String command = "gs_upgradectl -t commit-upgrade  -X " + upgradeContext.getClusterConfigXmlPath();
             JschResult jschResult = jschUtil.executeCommand(command, ommSession, upgradeContext.getRetSession());
             if (0 != jschResult.getExitCode()) {
                 log.error("upgradeCommit failed, exit code: {}, error message: {}", jschResult.getExitCode(), jschResult.getResult());
                 throw new OpsException("upgradeCommit failed");
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             log.error("upgradeCommit failed", e);
             throw new OpsException("upgradeCommit failed");
         }
@@ -313,11 +334,11 @@ public class OpenEulerArch64EnterpriseOpsProvider extends AbstractOpsProvider {
             }
 
             String result = jschResult.getResult();
-            if (!result.contains("cluster_state") || !result.substring(result.indexOf("cluster_state"),result.indexOf("\n")).contains("Normal")){
-                log.error("cluster status:{}",result);
+            if (!result.contains("cluster_state") || !result.substring(result.indexOf("cluster_state"), result.indexOf("\n")).contains("Normal")) {
+                log.error("cluster status:{}", result);
                 throw new OpsException("cluster status check fail");
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             log.error("upgradeCheck failed", e);
             throw new OpsException("upgradeCheck failed");
         }
@@ -325,29 +346,32 @@ public class OpenEulerArch64EnterpriseOpsProvider extends AbstractOpsProvider {
 
     private void doUpgrade(Session ommSession, UpgradeContext upgradeContext) {
         try {
-            String command = "gs_upgradectl -t auto-upgrade -X "+upgradeContext.getClusterConfigXmlPath();
-            if (upgradeContext.getUpgradeType() == UpgradeTypeEnum.GRAY_UPGRADE){
+            String command = "gs_upgradectl -t auto-upgrade -X " + upgradeContext.getClusterConfigXmlPath();
+            if (upgradeContext.getUpgradeType() == UpgradeTypeEnum.GRAY_UPGRADE) {
                 command = command + " --grey";
             }
 
             JschResult jschResult = jschUtil.executeCommand(command, ommSession, upgradeContext.getRetSession());
             if (0 != jschResult.getExitCode()) {
-                log.error("gs_upgradectl failed, exit code: {}, error message: {}", jschResult.getExitCode(), jschResult.getResult());
+                log.error("gs_upgradectl failed, exit code: {}, error message: {}",
+                        jschResult.getExitCode(), jschResult.getResult());
                 throw new OpsException("gs_upgradectl failed");
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             log.error("gs_upgradectl failed", e);
             throw new OpsException("gs_upgradectl failed");
         }
     }
 
     private void upgradePreinstall(Session rootSession, UpgradeContext upgradeContext) {
-        wsUtil.sendText(upgradeContext.getRetSession(),"PREINSTALL");
+        wsUtil.sendText(upgradeContext.getRetSession(), "PREINSTALL");
 
         String targetPath = "/opt/software/gaussdb_upgrade";
 
         String group = null;
-        String userGroupCommand = "groups " + upgradeContext.getInstallUsername() + " | awk -F ':' '{print $2}' | sed 's/\\\"//g'";
+        String userGroupCommand = "groups "
+                + upgradeContext.getInstallUsername()
+                + " | awk -F ':' '{print $2}' | sed 's/\\\"//g'";
         try {
             JschResult jschResult = jschUtil.executeCommand(userGroupCommand, rootSession, upgradeContext.getRetSession());
             if (0 != jschResult.getExitCode()) {
@@ -362,43 +386,50 @@ public class OpenEulerArch64EnterpriseOpsProvider extends AbstractOpsProvider {
         }
 
         try {
-            String command = "mkdir -p "+targetPath;
+            String command = "mkdir -p " + targetPath;
             JschResult jschResult = jschUtil.executeCommand(command, rootSession, upgradeContext.getRetSession());
             if (0 != jschResult.getExitCode()) {
                 log.error("mkdir failed, exit code: {}, error message: {}", jschResult.getExitCode(), jschResult.getResult());
                 throw new OpsException("mkdir failed");
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             log.error("mkdir failed", e);
             throw new OpsException("mkdir failed");
         }
 
         try {
-            jschUtil.upload(rootSession,upgradeContext.getRetSession(),upgradeContext.getUpgradePackagePath(),targetPath+"/"+ FileUtil.getName(upgradeContext.getUpgradePackagePath()));
-        }catch (Exception e){
+            jschUtil.upload(rootSession, upgradeContext.getRetSession(),
+                    upgradeContext.getUpgradePackagePath(),
+                    targetPath
+                            + System.getProperty("file.separator")
+                            + FileUtil.getName(upgradeContext.getUpgradePackagePath()));
+        } catch (Exception e) {
             log.error("upload failed", e);
             throw new OpsException("upload failed");
         }
 
         try {
-            String command = "chown -R " + upgradeContext.getInstallUsername() + " " +targetPath;
+            String command = "chown -R " + upgradeContext.getInstallUsername() + " " + targetPath;
             JschResult jschResult = jschUtil.executeCommand(command, rootSession, upgradeContext.getRetSession());
             if (0 != jschResult.getExitCode()) {
                 log.error("chown failed, exit code: {}, error message: {}", jschResult.getExitCode(), jschResult.getResult());
                 throw new OpsException("chown failed");
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             log.error("chown failed", e);
             throw new OpsException("chown failed");
         }
 
-        decompress(jschUtil, rootSession, targetPath, targetPath+"/"+FileUtil.getName(upgradeContext.getUpgradePackagePath()), upgradeContext.getRetSession(), "-xvf");
-        decompress(jschUtil,rootSession, targetPath, targetPath + "/openGauss-3.0.0-openEuler-64bit-om.tar.gz", upgradeContext.getRetSession(), "-zxvf");
+        decompress(jschUtil, rootSession, targetPath,
+                targetPath + System.getProperty("file.separator")
+                        + FileUtil.getName(upgradeContext.getUpgradePackagePath()),
+                upgradeContext.getRetSession(), "-xvf");
+        decompress(jschUtil, rootSession, targetPath, targetPath + "/openGauss-3.0.0-openEuler-64bit-om.tar.gz", upgradeContext.getRetSession(), "-zxvf");
 
         try {
-            String command = "cd "+ targetPath + "/script && ./gs_preinstall -U "+upgradeContext.getInstallUsername()+" -G "+group+"  -X "+ upgradeContext.getClusterConfigXmlPath() +" --non-interactive";
-            if (StrUtil.isNotEmpty(upgradeContext.getSepEnvFile())){
-                command = command + " --sep-env-file="+upgradeContext.getSepEnvFile();
+            String command = "cd " + targetPath + "/script && ./gs_preinstall -U " + upgradeContext.getInstallUsername() + " -G " + group + "  -X " + upgradeContext.getClusterConfigXmlPath() + " --non-interactive";
+            if (StrUtil.isNotEmpty(upgradeContext.getSepEnvFile())) {
+                command = command + " --sep-env-file=" + upgradeContext.getSepEnvFile();
             }
 
             JschResult jschResult = jschUtil.executeCommand(command, rootSession, upgradeContext.getRetSession());
@@ -406,7 +437,7 @@ public class OpenEulerArch64EnterpriseOpsProvider extends AbstractOpsProvider {
                 log.error("gs_preinstall failed, exit code: {}, error message: {}", jschResult.getExitCode(), jschResult.getResult());
                 throw new OpsException("gs_preinstall failed");
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             log.error("gs_preinstall failed", e);
             throw new OpsException("gs_preinstall failed");
         }
@@ -423,39 +454,41 @@ public class OpenEulerArch64EnterpriseOpsProvider extends AbstractOpsProvider {
             }
 
             String result = jschResult.getResult();
-            if (!result.contains("cluster_state") || !result.substring(result.indexOf("cluster_state"),result.indexOf("\n")).contains("Normal")){
-                log.error("cluster status:{}",result);
+            if (!result.contains("cluster_state") || !result.substring(result.indexOf("cluster_state"), result.indexOf("\n")).contains("Normal")) {
+                log.error("cluster status:{}", result);
                 throw new OpsException("cluster status check fail");
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             log.error("checkClusterStatus failed", e);
             throw new OpsException("checkClusterStatus failed");
         }
     }
 
     private void enableStreamReplication(Session rootSession, UpgradeContext upgradeContext) {
-        wsUtil.sendText(upgradeContext.getRetSession(),"ENABLE_STREAM_REPLICATION");
+        wsUtil.sendText(upgradeContext.getRetSession(), "ENABLE_STREAM_REPLICATION");
         OpsClusterNodeEntity opsClusterNodeEntity = upgradeContext.getOpsClusterNodeEntity();
         try {
-            String command = "gs_guc reload -D "+opsClusterNodeEntity.getDataPath()+" -c \"enable_stream_replication=on\"";
+            String command = "gs_guc reload -D " + opsClusterNodeEntity.getDataPath() + " -c \"enable_stream_replication=on\"";
             JschResult jschResult = jschUtil.executeCommand(command, rootSession, upgradeContext.getRetSession());
             if (0 != jschResult.getExitCode()) {
                 log.error("enableStreamReplication failed, exit code: {}, error message: {}", jschResult.getExitCode(), jschResult.getResult());
                 throw new OpsException("enableStreamReplication failed");
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             log.error("enableStreamReplication failed", e);
             throw new OpsException("enableStreamReplication failed");
         }
 
         try {
-            String command = "gs_guc check -D "+opsClusterNodeEntity.getDataPath()+" -c \"enable_stream_replication\"";
+            String command = "gs_guc check -D "
+                    + opsClusterNodeEntity.getDataPath()
+                    + " -c \"enable_stream_replication\"";
             JschResult jschResult = jschUtil.executeCommand(command, rootSession, upgradeContext.getRetSession());
             if (0 != jschResult.getExitCode()) {
                 log.error("enableStreamReplication failed, exit code: {}, error message: {}", jschResult.getExitCode(), jschResult.getResult());
                 throw new OpsException("enableStreamReplication failed");
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             log.error("enableStreamReplication failed", e);
             throw new OpsException("enableStreamReplication failed");
         }
@@ -467,7 +500,7 @@ public class OpenEulerArch64EnterpriseOpsProvider extends AbstractOpsProvider {
                 log.error("enableStreamReplication failed, exit code: {}, error message: {}", jschResult.getExitCode(), jschResult.getResult());
                 throw new OpsException("enableStreamReplication failed");
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             log.error("enableStreamReplication failed", e);
             throw new OpsException("enableStreamReplication failed");
         }
@@ -479,40 +512,26 @@ public class OpenEulerArch64EnterpriseOpsProvider extends AbstractOpsProvider {
                 log.error("enableStreamReplication failed, exit code: {}, error message: {}", jschResult.getExitCode(), jschResult.getResult());
                 throw new OpsException("enableStreamReplication failed");
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             log.error("enableStreamReplication failed", e);
             throw new OpsException("enableStreamReplication failed");
         }
     }
 
-    private void preInstall1(String group, String pkgPath, EnterpriseInstallNodeConfig masterNodeConfig, String xmlConfigFullPath, Session rootSession, WsSession retSession, String rootPassword, String installUserPassword) {
-        // gs_preinstall
-        String gsPreInstall = MessageFormat.format(SshCommandConstants.GS_PREINSTALL, pkgPath + "/script/", masterNodeConfig.getInstallUsername(), group, xmlConfigFullPath);
-        try {
-            Map<String, String> autoResponse = new HashMap<>();
-            autoResponse.put("(yes/no)?", "yes");
-            autoResponse.put("Please enter password for root\r\nPassword:", rootPassword);
-            autoResponse.put("Please enter password for current user[omm].\r\nPassword:", installUserPassword);
-            JschResult jschResult = jschUtil.executeCommand(gsPreInstall, rootSession, retSession, autoResponse);
-            if (0 != jschResult.getExitCode()) {
-                log.error("gs_preinstall failed, exit code: {}, error message: {}", jschResult.getExitCode(), jschResult.getResult());
-                throw new OpsException("gs_preinstall failed");
-            }
-        } catch (Exception e) {
-            log.error("gs_preinstall failed：", e);
-            throw new OpsException("gs_preinstall failed");
-        }
-    }
-
-    private void preInstall(String group, String pkgPath, EnterpriseInstallNodeConfig masterNodeConfig, String xmlConfigFullPath, Session rootSession, WsSession retSession, String rootPassword, String installUserPassword,String envPath) {
+    private void preInstall(String group, String pkgPath, EnterpriseInstallNodeConfig masterNodeConfig, String xmlConfigFullPath, Session rootSession, WsSession retSession, String rootPassword, String installUserPassword, String envPath) {
         String gsPreInstall = MessageFormat.format(SshCommandConstants.GS_PREINSTALL_INTERACTIVE, pkgPath + "/script/", masterNodeConfig.getInstallUsername(), group, xmlConfigFullPath);
         gsPreInstall = wrapperEnvSep(gsPreInstall, envPath);
         try {
-            Map<String,String> autoResponse = new HashMap<>();
-            autoResponse.put("(yes/no)?","yes");
-            autoResponse.put("Please enter password for root\r\nPassword:",rootPassword);
-            autoResponse.put("Please enter password for current user["+masterNodeConfig.getInstallUsername()+"].\r\nPassword:",installUserPassword);
-            JschResult jschResult = jschUtil.executeCommand(gsPreInstall, rootSession, retSession,autoResponse);
+            Map<String, String> autoResponse = new HashMap<>();
+            autoResponse.put("(yes/no)?", "yes");
+            autoResponse.put("Please enter password for root"
+                    + System.getProperty("line.separator")
+                    + "Password:", rootPassword);
+            autoResponse.put("Please enter password for current user["
+                    + masterNodeConfig.getInstallUsername() + "]."
+                    + System.getProperty("line.separator")
+                    + "Password:", installUserPassword);
+            JschResult jschResult = jschUtil.executeCommand(gsPreInstall, rootSession, retSession, autoResponse);
             if (0 != jschResult.getExitCode()) {
                 log.error("gs_preinstall failed, exit code: {}, error message: {}", jschResult.getExitCode(), jschResult.getResult());
                 throw new OpsException("gs_preinstall failed");
@@ -584,7 +603,8 @@ public class OpenEulerArch64EnterpriseOpsProvider extends AbstractOpsProvider {
     }
 
     private void appendDeviceList(Document document, Element deviceList, InstallContext installContext) {
-        List<EnterpriseInstallNodeConfig> nodeConfigList = installContext.getEnterpriseInstallConfig().getNodeConfigList();
+        List<EnterpriseInstallNodeConfig> nodeConfigList = installContext
+                .getEnterpriseInstallConfig().getNodeConfigList();
         for (EnterpriseInstallNodeConfig enterpriseInstallNodeConfig : nodeConfigList) {
             Element device = document.createElement("DEVICE");
             device.setAttribute("sn", enterpriseInstallNodeConfig.getHostname());
@@ -629,13 +649,14 @@ public class OpenEulerArch64EnterpriseOpsProvider extends AbstractOpsProvider {
 
                 Element cmServerListenIp1 = document.createElement("PARAM");
                 cmServerListenIp1.setAttribute("name", "cmServerListenIp1");
-                Object[] ips = nodeConfigList.stream().map(EnterpriseInstallNodeConfig::getPrivateIp).toArray();
-                cmServerListenIp1.setAttribute("value", StringUtils.arrayToCommaDelimitedString(ips));
+                Set<String> ips = nodeConfigList.stream()
+                        .map(EnterpriseInstallNodeConfig::getPrivateIp).collect(Collectors.toSet());
+                cmServerListenIp1.setAttribute("value", StringUtils.collectionToCommaDelimitedString(ips));
                 device.appendChild(cmServerListenIp1);
 
                 Element cmServerHaIp1 = document.createElement("PARAM");
                 cmServerHaIp1.setAttribute("name", "cmServerHaIp1");
-                cmServerHaIp1.setAttribute("value", StringUtils.arrayToCommaDelimitedString(ips));
+                cmServerHaIp1.setAttribute("value", StringUtils.collectionToCommaDelimitedString(ips));
                 device.appendChild(cmServerHaIp1);
 
                 Element cmServerlevel = document.createElement("PARAM");
@@ -682,7 +703,7 @@ public class OpenEulerArch64EnterpriseOpsProvider extends AbstractOpsProvider {
             Element dataNode1 = document.createElement("PARAM");
             dataNode1.setAttribute("name", "dataNode1");
             List<EnterpriseInstallNodeConfig> nodeConfigs = nodeConfigList.stream().collect(Collectors.toList());
-            EnterpriseInstallNodeConfig master = nodeConfigs.stream().filter(node->node.getClusterRole()==ClusterRoleEnum.MASTER).findFirst().orElseThrow(() -> new OpsException("master node information not found"));
+            EnterpriseInstallNodeConfig master = nodeConfigs.stream().filter(node -> node.getClusterRole() == ClusterRoleEnum.MASTER).findFirst().orElseThrow(() -> new OpsException("master node information not found"));
             StringBuilder dataNodeValue = new StringBuilder(master.getDataPath());
             for (EnterpriseInstallNodeConfig nodeConfig : nodeConfigs) {
                 if (!master.equals(nodeConfig)) {
@@ -742,8 +763,11 @@ public class OpenEulerArch64EnterpriseOpsProvider extends AbstractOpsProvider {
 
         Element backIp1s = document.createElement("PARAM");
         backIp1s.setAttribute("name", "backIp1s");
-        Object[] privateIps = installContext.getEnterpriseInstallConfig().getNodeConfigList().stream().map(EnterpriseInstallNodeConfig::getPrivateIp).toArray();
-        backIp1s.setAttribute("value", StringUtils.arrayToCommaDelimitedString(privateIps));
+        Set<String> privateIps = installContext.getEnterpriseInstallConfig()
+                .getNodeConfigList()
+                .stream()
+                .map(EnterpriseInstallNodeConfig::getPrivateIp).collect(Collectors.toSet());
+        backIp1s.setAttribute("value", StringUtils.collectionToCommaDelimitedString(privateIps));
         cluster.appendChild(backIp1s);
 
         if (installContext.getEnterpriseInstallConfig().getEnableDCF()) {
@@ -782,16 +806,17 @@ public class OpenEulerArch64EnterpriseOpsProvider extends AbstractOpsProvider {
 
         WsSession retSession = unInstallContext.getRetSession();
 
-        OpsClusterNodeEntity opsClusterNodeEntity = unInstallContext.getOpsClusterNodeEntityList().stream().filter(opsClusterNodeEntity1 -> ClusterRoleEnum.MASTER==opsClusterNodeEntity1.getClusterRole()).findFirst().orElseThrow(()->new OpsException("master node not found"));
+        OpsClusterNodeEntity opsClusterNodeEntity = unInstallContext.getOpsClusterNodeEntityList().stream().filter(opsClusterNodeEntity1 -> ClusterRoleEnum.MASTER == opsClusterNodeEntity1.getClusterRole()).findFirst().orElseThrow(() -> new OpsException("master node not found"));
 
-        HostInfoHolder hostInfoHolder = unInstallContext.getHostInfoHolders().stream().filter(hostInfoHolder1 -> hostInfoHolder1.getHostEntity().getHostId().equalsIgnoreCase(opsClusterNodeEntity.getHostId())).findFirst().orElseThrow(()->new OpsException("host information not found"));
+        HostInfoHolder hostInfoHolder = unInstallContext.getHostInfoHolders().stream().filter(hostInfoHolder1 -> hostInfoHolder1.getHostEntity().getHostId().equalsIgnoreCase(opsClusterNodeEntity.getHostId())).findFirst().orElseThrow(() -> new OpsException("host information not found"));
         OpsHostEntity hostEntity = hostInfoHolder.getHostEntity();
         OpsHostUserEntity hostUserEntity = hostInfoHolder.getHostUserEntities().stream().filter(userInfo -> opsClusterNodeEntity.getInstallUserId().equals(userInfo.getHostUserId())).findFirst().orElseThrow(() -> new OpsException("No install user info user found"));
-        Session session = sshLogin(jschUtil,encryptionUtils,hostEntity, hostUserEntity);
+        Session session = sshLogin(jschUtil, encryptionUtils, hostEntity, hostUserEntity);
 
         String uninstallCommand = "gs_uninstall --delete-data";
         try {
-            JschResult jschResult = jschUtil.executeCommand(uninstallCommand,opsClusterEntity.getEnvPath(), session, retSession);
+            JschResult jschResult = jschUtil.executeCommand(uninstallCommand,
+                    opsClusterEntity.getEnvPath(), session, retSession);
             if (0 != jschResult.getExitCode()) {
                 throw new OpsException("Uninstall error，exit code " + jschResult.getExitCode());
             }
@@ -802,37 +827,76 @@ public class OpenEulerArch64EnterpriseOpsProvider extends AbstractOpsProvider {
 
         removeContext(unInstallContext);
 
-
         try {
             Optional<OpsHostUserEntity> rootUserEntity = hostInfoHolder.getHostUserEntities().stream().filter(userEntity -> "root".equalsIgnoreCase(userEntity.getUsername())).findFirst();
-            cleanEnv(unInstallContext.getHostInfoHolders(),hostEntity,rootUserEntity,hostUserEntity,retSession,opsClusterEntity.getInstallPackagePath(),opsClusterEntity.getXmlConfigPath(),opsClusterEntity.getEnvPath());
-            wsUtil.sendText(retSession,"\nENV_CLEAN_SUCCESS\n");
-        }catch (Exception e){
-            log.error("env clean fail:",e);
-            wsUtil.sendText(retSession,"\nENV_CLEAN_FAIL\n");
+
+            EnterpriseOpsProvider.CleanEnvClass cleanEnvParam = EnterpriseOpsProvider.CleanEnvClass.builder()
+                    .hostInfoHolders(unInstallContext.getHostInfoHolders())
+                    .hostEntity(hostEntity)
+                    .rootUserEntity(rootUserEntity)
+                    .hostUserEntity(hostUserEntity)
+                    .retSession(retSession)
+                    .installPackagePath(opsClusterEntity.getInstallPackagePath())
+                    .xmlConfigPath(opsClusterEntity.getXmlConfigPath())
+                    .envPath(opsClusterEntity.getEnvPath())
+                    .build();
+
+            cleanEnv(cleanEnvParam);
+            wsUtil.sendText(retSession, "\nENV_CLEAN_SUCCESS\n");
+        } catch (Exception e) {
+            log.error("env clean fail:", e);
+            wsUtil.sendText(retSession, "\nENV_CLEAN_FAIL\n");
         }
     }
 
-    private void cleanEnv(List<HostInfoHolder> hostInfoHolders, OpsHostEntity hostEntity, Optional<OpsHostUserEntity> rootUserEntityOption, OpsHostUserEntity hostUserEntity, WsSession retSession, String installPackagePath, String xmlConfigPath, String envPath) throws IOException, InterruptedException {
-        final OpsHostUserEntity rootUserEntity = rootUserEntityOption.orElseThrow(() -> new OpsException("root user information not found"));
+    @Data
+    @Builder
+    static class CleanEnvClass {
+        private List<HostInfoHolder> hostInfoHolders;
+        private OpsHostEntity hostEntity;
+        private Optional<OpsHostUserEntity> rootUserEntity;
+        private OpsHostUserEntity hostUserEntity;
+        private WsSession retSession;
+        private String installPackagePath;
+        private String xmlConfigPath;
+        private String envPath;
+    }
+
+    private void cleanEnv(EnterpriseOpsProvider.CleanEnvClass param) throws IOException, InterruptedException {
+        OpsHostEntity hostEntity = param.getHostEntity();
+        Optional<OpsHostUserEntity> rootUserEntityOption = param.getRootUserEntity();
+        OpsHostUserEntity hostUserEntity = param.getHostUserEntity();
+        WsSession retSession = param.getRetSession();
+        String installPackagePath = param.getInstallPackagePath();
+        String xmlConfigPath = param.getXmlConfigPath();
+        String envPath = param.getEnvPath();
+
+        OpsHostUserEntity rootUserEntity = rootUserEntityOption
+                .orElseThrow(() -> new OpsException("root user information not found"));
         final Session rootSession = jschUtil.getSession(hostEntity.getPublicIp(), hostEntity.getPort(), rootUserEntity.getUsername(), encryptionUtils.decrypt(rootUserEntity.getPassword())).orElseThrow(() -> new OpsException("The root user failed to establish a connection"));
 
         try {
-            String commandTemplate = "cd {0} && ./gs_postuninstall -U {1} -X {2} --delete-user --delete-group";
+            String commandTemplate = "cd {0} && ./gs_postuninstall -U {1} -X {2}";
 
-            String command = MessageFormat.format(commandTemplate,installPackagePath+"/script",hostUserEntity.getUsername(),xmlConfigPath);
-            Map<String,String> authResponse = new HashMap<>();
-            authResponse.put("(yes/no)?","yes");
-            authResponse.put("Password:",encryptionUtils.decrypt(rootUserEntity.getPassword()));
-            final JschResult jschResult = jschUtil.executeCommand(envPath,command, rootSession, retSession, authResponse);
-            if (0!=jschResult.getExitCode()){
-                log.error("clean env fail,exitCode:{},exitMsg:{}",jschResult.getExitCode(),jschResult.getExitCode());
+            String command = MessageFormat.format(commandTemplate, installPackagePath + "/script", hostUserEntity.getUsername(), xmlConfigPath);
+            Map<String, String> authResponse = new HashMap<>();
+            authResponse.put("(yes/no)?", "yes");
+            authResponse.put("Password:", encryptionUtils.decrypt(rootUserEntity.getPassword()));
+            final JschResult jschResult = jschUtil.executeCommand(envPath, command, rootSession, retSession, authResponse);
+            if (0 != jschResult.getExitCode()) {
+                log.error("clean env fail,exitCode:{},exitMsg:{}", jschResult.getExitCode(), jschResult.getExitCode());
                 throw new OpsException("clean env fail");
             }
-        }finally {
+        } finally {
             rootSession.disconnect();
         }
 
+        List<HostInfoHolder> hostInfoHolders = param.getHostInfoHolders();
+        rmSsh(hostInfoHolders, retSession);
+    }
+
+    private void rmSsh(List<HostInfoHolder> hostInfoHolders,
+        WsSession retSession) throws IOException, InterruptedException {
         String delMutualTrustCommand = "rm -rf ~/.ssh";
         for (HostInfoHolder hostInfoHolder : hostInfoHolders) {
             OpsHostEntity currentHost = hostInfoHolder.getHostEntity();
@@ -842,24 +906,22 @@ public class OpenEulerArch64EnterpriseOpsProvider extends AbstractOpsProvider {
             final Session session = jschUtil.getSession(currentHost.getPublicIp(), currentHost.getPort(), rootUser.getUsername(), encryptionUtils.decrypt(rootUser.getPassword())).orElseThrow(() -> new OpsException("The root user failed to establish a connection"));
             try {
                 final JschResult jschResult = jschUtil.executeCommand(delMutualTrustCommand, session, retSession);
-                if (0!=jschResult.getExitCode()){
-                    log.error("del MutualTrust fail,exitCode:{},exitMsg:{}",jschResult.getExitCode(),jschResult.getResult());
+                if (0 != jschResult.getExitCode()) {
+                    log.error("del MutualTrust fail,exitCode:{},exitMsg:{}", jschResult.getExitCode(), jschResult.getResult());
                     throw new OpsException("del MutualTrust fail");
                 }
-            }finally {
+            } finally {
                 session.disconnect();
             }
         }
     }
+
     private void removeContext(UnInstallContext unInstallContext) {
         OpsClusterEntity opsClusterEntity = unInstallContext.getOpsClusterEntity();
         opsClusterService.removeById(opsClusterEntity.getClusterId());
 
         List<OpsClusterNodeEntity> opsClusterNodeEntityList = unInstallContext.getOpsClusterNodeEntityList();
         opsClusterNodeService.removeBatchByIds(opsClusterNodeEntityList.stream().map(OpsClusterNodeEntity::getClusterNodeId).collect(Collectors.toList()));
-
-        List<String> installUserId = opsClusterNodeEntityList.stream().map(OpsClusterNodeEntity::getInstallUserId).collect(Collectors.toList());
-        hostUserFacade.removeByIds(installUserId);
     }
 
     @Override
@@ -874,9 +936,9 @@ public class OpenEulerArch64EnterpriseOpsProvider extends AbstractOpsProvider {
             log.error("No nodes to restart");
         }
 
-        if (opsClusterContext.getOpsClusterNodeEntityList().size() == restartNodeIds.size()){
+        if (opsClusterContext.getOpsClusterNodeEntityList().size() == restartNodeIds.size()) {
             doRestartCluster(opsClusterContext);
-        }else{
+        } else {
             for (String restartNodeId : restartNodeIds) {
                 doRestartNode(restartNodeId, opsClusterContext);
             }
@@ -886,16 +948,16 @@ public class OpenEulerArch64EnterpriseOpsProvider extends AbstractOpsProvider {
     private void doRestartCluster(OpsClusterContext opsClusterContext) {
         OpsClusterNodeEntity startNodeEntity = opsClusterContext.getOpsClusterNodeEntityList().get(0);
         WsSession retSession = opsClusterContext.getRetSession();
-        Session ommUserSession = loginWithUser(jschUtil,encryptionUtils,opsClusterContext.getHostInfoHolders(), false, startNodeEntity.getHostId(), startNodeEntity.getInstallUserId());
-        OmStatusModel omStatusModel = omStatus(jschUtil,ommUserSession,retSession, opsClusterContext.getOpsClusterEntity().getEnvPath());
-        if (Objects.isNull(omStatusModel)){
+        Session ommUserSession = loginWithUser(jschUtil, encryptionUtils, opsClusterContext.getHostInfoHolders(), false, startNodeEntity.getHostId(), startNodeEntity.getInstallUserId());
+        OmStatusModel omStatusModel = omStatus(jschUtil, ommUserSession, retSession, opsClusterContext.getOpsClusterEntity().getEnvPath());
+        if (Objects.isNull(omStatusModel)) {
             throw new OpsException("gs_om status fail");
         }
 
         String command = null;
-        if (omStatusModel.isInstallCm()){
+        if (omStatusModel.isInstallCm()) {
             command = "cm_ctl stop && cm_ctl start";
-        }else {
+        } else {
             command = "gs_om -t restart";
         }
 
@@ -911,8 +973,8 @@ public class OpenEulerArch64EnterpriseOpsProvider extends AbstractOpsProvider {
     }
 
     private void doRestartNode(String restartNodeId, OpsClusterContext opsClusterContext) {
-        doStopNode(restartNodeId,opsClusterContext);
-        doStartNode(restartNodeId,opsClusterContext);
+        doStopNode(restartNodeId, opsClusterContext);
+        doStartNode(restartNodeId, opsClusterContext);
     }
 
     @Override
@@ -927,9 +989,9 @@ public class OpenEulerArch64EnterpriseOpsProvider extends AbstractOpsProvider {
             log.error("No node to start");
         }
 
-        if (opsClusterContext.getOpsClusterNodeEntityList().size() == startNodeIds.size()){
+        if (opsClusterContext.getOpsClusterNodeEntityList().size() == startNodeIds.size()) {
             doStartCluster(opsClusterContext);
-        }else{
+        } else {
             for (String startNodeId : startNodeIds) {
                 doStartNode(startNodeId, opsClusterContext);
             }
@@ -939,16 +1001,16 @@ public class OpenEulerArch64EnterpriseOpsProvider extends AbstractOpsProvider {
     private void doStartCluster(OpsClusterContext opsClusterContext) {
         OpsClusterNodeEntity startNodeEntity = opsClusterContext.getOpsClusterNodeEntityList().get(0);
         WsSession retSession = opsClusterContext.getRetSession();
-        Session ommUserSession = loginWithUser(jschUtil,encryptionUtils,opsClusterContext.getHostInfoHolders(), false, startNodeEntity.getHostId(), startNodeEntity.getInstallUserId());
-        OmStatusModel omStatusModel = omStatus(jschUtil,ommUserSession,retSession, opsClusterContext.getOpsClusterEntity().getEnvPath());
-        if (Objects.isNull(omStatusModel)){
+        Session ommUserSession = loginWithUser(jschUtil, encryptionUtils, opsClusterContext.getHostInfoHolders(), false, startNodeEntity.getHostId(), startNodeEntity.getInstallUserId());
+        OmStatusModel omStatusModel = omStatus(jschUtil, ommUserSession, retSession, opsClusterContext.getOpsClusterEntity().getEnvPath());
+        if (Objects.isNull(omStatusModel)) {
             throw new OpsException("gs_om status fail");
         }
 
         String command = null;
-        if (omStatusModel.isInstallCm()){
+        if (omStatusModel.isInstallCm()) {
             command = "cm_ctl start";
-        }else {
+        } else {
             command = "gs_om -t start";
         }
 
@@ -972,24 +1034,24 @@ public class OpenEulerArch64EnterpriseOpsProvider extends AbstractOpsProvider {
         WsSession retSession = opsClusterContext.getRetSession();
         String dataPath = startNodeEntity.getDataPath();
         log.info("Login to start user");
-        Session ommUserSession = loginWithUser(jschUtil,encryptionUtils,opsClusterContext.getHostInfoHolders(), false, startNodeEntity.getHostId(), startNodeEntity.getInstallUserId());
+        Session ommUserSession = loginWithUser(jschUtil, encryptionUtils, opsClusterContext.getHostInfoHolders(), false, startNodeEntity.getHostId(), startNodeEntity.getInstallUserId());
 
-        OmStatusModel omStatusModel = omStatus(jschUtil,ommUserSession,retSession, opsClusterContext.getOpsClusterEntity().getEnvPath());
-        if (Objects.isNull(omStatusModel)){
+        OmStatusModel omStatusModel = omStatus(jschUtil, ommUserSession, retSession, opsClusterContext.getOpsClusterEntity().getEnvPath());
+        if (Objects.isNull(omStatusModel)) {
             throw new OpsException("gs_om status fail");
         }
 
         String command = null;
-        if (omStatusModel.isInstallCm()){
+        if (omStatusModel.isInstallCm()) {
             String hostId = startNodeEntity.getHostId();
             OpsHostEntity opsHostEntity = opsClusterContext.getHostInfoHolders().stream().map(HostInfoHolder::getHostEntity).filter(host -> host.getHostId().equalsIgnoreCase(hostId)).findFirst().orElseThrow(() -> new OpsException("no host found"));
             String hostname = opsHostEntity.getHostname();
             String nodeId = omStatusModel.getHostnameMapNodeId().get(hostname);
 
-            if (StrUtil.isNotEmpty(nodeId)){
-                command = "cm_ctl start -n " + nodeId + " -D "+dataPath;
+            if (StrUtil.isNotEmpty(nodeId)) {
+                command = "cm_ctl start -n " + nodeId + " -D " + dataPath;
             }
-        }else {
+        } else {
             command = MessageFormat.format(SshCommandConstants.LITE_START, dataPath);
         }
 
@@ -1016,9 +1078,9 @@ public class OpenEulerArch64EnterpriseOpsProvider extends AbstractOpsProvider {
             log.error("no node to stop");
         }
 
-        if (opsClusterContext.getOpsClusterNodeEntityList().size() == stopNodeIds.size()){
+        if (opsClusterContext.getOpsClusterNodeEntityList().size() == stopNodeIds.size()) {
             doStopCluster(opsClusterContext);
-        }else{
+        } else {
             for (String stopNodeId : stopNodeIds) {
                 doStopNode(stopNodeId, opsClusterContext);
             }
@@ -1028,16 +1090,16 @@ public class OpenEulerArch64EnterpriseOpsProvider extends AbstractOpsProvider {
     private void doStopCluster(OpsClusterContext opsClusterContext) {
         OpsClusterNodeEntity startNodeEntity = opsClusterContext.getOpsClusterNodeEntityList().get(0);
         WsSession retSession = opsClusterContext.getRetSession();
-        Session ommUserSession = loginWithUser(jschUtil,encryptionUtils,opsClusterContext.getHostInfoHolders(), false, startNodeEntity.getHostId(), startNodeEntity.getInstallUserId());
-        OmStatusModel omStatusModel = omStatus(jschUtil,ommUserSession,retSession, opsClusterContext.getOpsClusterEntity().getEnvPath());
-        if (Objects.isNull(omStatusModel)){
+        Session ommUserSession = loginWithUser(jschUtil, encryptionUtils, opsClusterContext.getHostInfoHolders(), false, startNodeEntity.getHostId(), startNodeEntity.getInstallUserId());
+        OmStatusModel omStatusModel = omStatus(jschUtil, ommUserSession, retSession, opsClusterContext.getOpsClusterEntity().getEnvPath());
+        if (Objects.isNull(omStatusModel)) {
             throw new OpsException("gs_om status fail");
         }
 
         String command = null;
-        if (omStatusModel.isInstallCm()){
+        if (omStatusModel.isInstallCm()) {
             command = "cm_ctl stop";
-        }else {
+        } else {
             command = "gs_om -t stop";
         }
 
@@ -1063,7 +1125,7 @@ public class OpenEulerArch64EnterpriseOpsProvider extends AbstractOpsProvider {
         try {
             JschResult jschResult = jschUtil.executeCommand(checkCommand, session, clusterEntity.getEnvPath());
 
-            if (jschResult.getResult().contains("enable_wdr_snapshot=on")){
+            if (jschResult.getResult().contains("enable_wdr_snapshot=on")) {
                 return;
             }
         } catch (Exception e) {
@@ -1100,24 +1162,24 @@ public class OpenEulerArch64EnterpriseOpsProvider extends AbstractOpsProvider {
         WsSession retSession = opsClusterContext.getRetSession();
         String dataPath = stopNodeEntity.getDataPath();
         log.info("login stop user");
-        Session ommUserSession = loginWithUser(jschUtil,encryptionUtils,opsClusterContext.getHostInfoHolders(), false, stopNodeEntity.getHostId(), stopNodeEntity.getInstallUserId());
+        Session ommUserSession = loginWithUser(jschUtil, encryptionUtils, opsClusterContext.getHostInfoHolders(), false, stopNodeEntity.getHostId(), stopNodeEntity.getInstallUserId());
 
-        OmStatusModel omStatusModel = omStatus(jschUtil,ommUserSession,retSession, opsClusterContext.getOpsClusterEntity().getEnvPath());
-        if (Objects.isNull(omStatusModel)){
+        OmStatusModel omStatusModel = omStatus(jschUtil, ommUserSession, retSession, opsClusterContext.getOpsClusterEntity().getEnvPath());
+        if (Objects.isNull(omStatusModel)) {
             throw new OpsException("gs_om status fail");
         }
 
         String command = null;
-        if (omStatusModel.isInstallCm()){
+        if (omStatusModel.isInstallCm()) {
             String hostId = stopNodeEntity.getHostId();
             OpsHostEntity opsHostEntity = opsClusterContext.getHostInfoHolders().stream().map(HostInfoHolder::getHostEntity).filter(host -> host.getHostId().equalsIgnoreCase(hostId)).findFirst().orElseThrow(() -> new OpsException("no host found"));
             String hostname = opsHostEntity.getHostname();
             String nodeId = omStatusModel.getHostnameMapNodeId().get(hostname);
 
-            if (StrUtil.isNotEmpty(nodeId)){
+            if (StrUtil.isNotEmpty(nodeId)) {
                 command = "cm_ctl stop -n " + nodeId + " -D " + dataPath;
             }
-        }else {
+        } else {
             command = MessageFormat.format(SshCommandConstants.LITE_START, dataPath);
         }
 

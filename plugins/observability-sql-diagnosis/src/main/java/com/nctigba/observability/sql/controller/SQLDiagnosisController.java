@@ -4,6 +4,7 @@ import java.io.IOException;
 
 import javax.servlet.http.HttpServletResponse;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -20,7 +21,7 @@ import com.nctigba.observability.sql.service.DiagnosisService;
 import com.nctigba.observability.sql.util.LocaleString;
 
 import lombok.RequiredArgsConstructor;
-
+@Slf4j
 @RestController
 @RequestMapping("/sqlDiagnosis/api/v1/diagnosisTasks")
 @RequiredArgsConstructor
@@ -68,6 +69,9 @@ public class SQLDiagnosisController extends ControllerConfig {
 			break;
 		case "png":
 			resp.setContentType("image/png");
+			break;
+		default:
+            log.error("fail data:{}",type);
 			break;
 		}
 		resourceMapper.selectById(id).to(resp.getOutputStream());

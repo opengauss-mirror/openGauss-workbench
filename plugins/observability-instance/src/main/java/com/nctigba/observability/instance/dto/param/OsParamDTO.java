@@ -12,6 +12,7 @@ public class OsParamDTO {
     private String suggestExplain;
 
     public OsParamDTO() {
+        // Do nothing because of X and Y.
     }
 
     public String getSeqNo() {

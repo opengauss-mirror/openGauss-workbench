@@ -2,21 +2,41 @@
   <div class="panel-c">
     <simple-install
       v-if="installStore.openGaussVersion === OpenGaussVersionEnum.MINIMAL_LIST && installType === 'install'"
-      :curr-step="currStep" :custom-func="customFunction" ref="simpleInstallRef" />
-    <simple-import v-if="installStore.openGaussVersion === OpenGaussVersionEnum.MINIMAL_LIST && installType === 'import'"
-      :curr-step="currStep" :custom-func="customFunction" ref="simpleImportRef" />
-    <light-weight-install v-if="installStore.openGaussVersion === OpenGaussVersionEnum.LITE && installType === 'install'"
-      :curr-step="currStep" ref="liteInstallRef"></light-weight-install>
-    <light-weight-import v-if="installStore.openGaussVersion === OpenGaussVersionEnum.LITE && installType === 'import'"
-      :curr-step="currStep" ref="liteImportRef"></light-weight-import>
+      :curr-step="currStep"
+      :custom-func="customFunction"
+      ref="simpleInstallRef"
+    />
+    <simple-import
+      v-if="installStore.openGaussVersion === OpenGaussVersionEnum.MINIMAL_LIST && installType === 'import'"
+      :curr-step="currStep"
+      :custom-func="customFunction"
+      ref="simpleImportRef"
+    />
+    <light-weight-install
+      v-if="installStore.openGaussVersion === OpenGaussVersionEnum.LITE && installType === 'install'"
+      :curr-step="currStep"
+      ref="liteInstallRef"
+    ></light-weight-install>
+    <light-weight-import
+      v-if="installStore.openGaussVersion === OpenGaussVersionEnum.LITE && installType === 'import'"
+      :curr-step="currStep"
+      ref="liteImportRef"
+    ></light-weight-import>
     <enterprise-install
       v-if="installStore.openGaussVersion === OpenGaussVersionEnum.ENTERPRISE && installType === 'install'"
-      :curr-step="currStep" ref="enterpriseInstallRef"></enterprise-install>
+      :curr-step="currStep"
+      ref="enterpriseInstallRef"
+    ></enterprise-install>
     <enterprise-import
       v-if="installStore.openGaussVersion === OpenGaussVersionEnum.ENTERPRISE && installType === 'import'"
-      :curr-step="currStep" ref="enterpriseImportRef"></enterprise-import>
-    <lookeng-install v-if="installStore.openGaussVersion === OpenGaussVersionEnum.OPENlOOKENG" :curr-step="currStep"
-      ref="lookengInstallRef"></lookeng-install>
+      :curr-step="currStep"
+      ref="enterpriseImportRef"
+    ></enterprise-import>
+    <lookeng-install
+      v-if="installStore.openGaussVersion === OpenGaussVersionEnum.OPENlOOKENG"
+      :curr-step="currStep"
+      ref="lookengInstallRef"
+    ></lookeng-install>
   </div>
 </template>
 <script lang="ts" setup>
@@ -125,6 +145,4 @@ defineExpose({
 })
 
 </script>
-<style lang="less" scoped>
-@import url('~@/assets/style/ops/ops.less');
-</style>
+<style lang="less" scoped>@import url('~@/assets/style/ops/ops.less');</style>

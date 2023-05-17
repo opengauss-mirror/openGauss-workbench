@@ -42,7 +42,24 @@
             "5n6f62aajx80": "停用",
             "else1": "类别：",
             "else2": "暂无",
-            "else3": "是否确认卸载ID为{id}的插件？"
+            "else3": "是否确认卸载ID为{id}的插件？",
+            "OPEN_SOURCE": "开源版",
+            "FREE": "免费版",
+            "TRIAL": "试用版",
+            "PAID": "正式版",
+            "update_authorization": "更新授权",
+            "authorization_detail": "授权详情",
+            "plugin_name": "插件名称",
+            "authorization": "授权类型",
+            "plugin_description": "插件介绍",
+            "activation_time": "激活时间",
+            "expires": "有效期",
+            "company": "开发公司",
+            "phone": "联系电话",
+            "email": "邮箱地址",
+            "address": "联系地址",
+            "manual": "用户手册",
+            "demo": "演示地址"
         }
     },
     "components": {

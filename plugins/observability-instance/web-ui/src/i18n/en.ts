@@ -34,6 +34,7 @@ export default {
         uploadInfo: 'Drag the file here, or click to upload the file',
         downloadSuggest: 'Recommended download address',
         installMode: 'Installation method',
+        installPath: 'Installation path',
         online: 'Online',
         offline: 'Offline',
         install: 'Install',
@@ -46,6 +47,7 @@ export default {
         uninstallAgent: 'uninstall proxy',
         uninstallQuick: 'uninstall quick',
         machine: 'machine',
+        installUser: 'Installation User',
         rootPWD: 'root password',
         proxyPort: 'server port',
         serverCollectPort: 'server collection port',
@@ -53,18 +55,20 @@ export default {
         collectInstance: 'collect instance',
         collectProxy: 'collect proxy',
         uploadPath: 'Upload path',
+        continueUpload: 'continue to upload',
         installServerAlert:'please install the server first!',
         installedServerAlert: 'it is only allow to install one server!',
         proxyRules: [
             'choose the machine please',
             'input the password of root please',
-            'input the proxy port please'
+            'input the proxy port please',
+            'choose an installer please'
         ],
         collectorRules: [
             'choose the instance please',
             'input the password of root please',
             'input the server collection port please',
-            'input the datasource collection port please'
+            'input the datasource collection port please',
         ],
 
     },

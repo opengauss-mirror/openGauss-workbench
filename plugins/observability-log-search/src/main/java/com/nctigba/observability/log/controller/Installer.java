@@ -55,14 +55,14 @@ public class Installer implements SocketExtract {
 						.orElseThrow(() -> new RuntimeException("websocket session not exist"));
 				switch (obj.getStr("key")) {
 				case "elasticsearch":
-					elasticsearchService.install(session, obj.getStr("hostId"), obj.getStr("rootPassword"),
+					elasticsearchService.install(session, obj.getStr("hostId"), obj.getStr("path"), obj.getStr("username"), obj.getStr("rootPassword", null),
 							obj.getInt("port"));
 					break;
 				case "uninstall elasticsearch":
 					elasticsearchService.uninstall(session, obj.getStr("id"));
 					break;
 				case "filebeat":
-					filebeatService.install(session, obj.getStr("rootPassword"), obj.getStr("nodeId"), obj);
+					filebeatService.install(session, obj.getStr("path"), obj.getStr("nodeId"), obj);
 					break;
 				case "uninstall filebeat":
 					filebeatService.uninstall(session, obj.getStr("nodeId"));

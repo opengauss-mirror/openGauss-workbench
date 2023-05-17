@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.nctigba.observability.instance.constants.CommonConstants;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Service;
 
@@ -19,7 +20,7 @@ public class ParamInfoMapper implements InitializingBean {
 	private static final String SQL = "select * from param_info";
 	private static final List<ParamInfo> LIST = new ArrayList<>();
 	private static final Map<Integer, ParamInfo> IDS = new HashMap<>();
-	private static final Map<ParamInfo.type, Map<String, ParamInfo>> MAP = new HashMap<>();
+	private static final Map<type, Map<String, ParamInfo>> MAP = new HashMap<>();
 
 	@Override
 	public void afterPropertiesSet() throws Exception {
@@ -37,14 +38,14 @@ public class ParamInfoMapper implements InitializingBean {
 						IDS.put(paramInfo.getId(), paramInfo);
 				}
 				synchronized (MAP) {
-					for (type v : ParamInfo.type.values())
+					for (type v : type.values())
 						MAP.put(v, new HashMap<>());
 					for (ParamInfo paramInfo : list)
 						MAP.get(paramInfo.getParamType()).put(paramInfo.getParamName(), paramInfo);
 				}
 			}
 		} catch (SQLException e) {
-			throw new RuntimeException("sqlite error", e);
+			throw new RuntimeException(CommonConstants.SQLITE_ERROR, e);
 		}
 	}
 
@@ -56,7 +57,7 @@ public class ParamInfoMapper implements InitializingBean {
 		return LIST;
 	}
 
-	public static ParamInfo getParamInfo(ParamInfo.type type, String name) {
+	public static ParamInfo getParamInfo(type type, String name) {
 		
 		return MAP.get(type).get(name);
 	}

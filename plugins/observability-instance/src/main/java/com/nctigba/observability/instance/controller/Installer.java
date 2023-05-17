@@ -57,14 +57,14 @@ public class Installer implements SocketExtract {
 				MessageSourceUtil.set(obj.getStr("language"));
 				switch (obj.getStr("key")) {
 				case "prometheus":
-					prometheusService.install(session, obj.getStr("hostId"), obj.getStr("rootPassword"),
+					prometheusService.install(session, obj.getStr("hostId"), obj.getStr("path"), obj.getStr("username"), obj.getStr("rootPassword", null),
 							obj.getInt("port"));
 					break;
 				case "uninstall prometheus":
 					prometheusService.uninstall(session, obj.getStr("id"));
 					break;
 				case "exporter":
-					exporterService.install(session, obj.getStr("nodeId"), obj.getStr("rootPassword"),
+					exporterService.install(session, obj.getStr("nodeId"), obj.getStr("path"), obj.getStr("rootPassword", null),
 							obj.getInt("serverCollectPort"), obj.getInt("datasourceCollectPort"));
 					break;
 				case "uninstall exporter":

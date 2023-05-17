@@ -97,6 +97,9 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
     @Value("${migration.portalPkgDownloadUrl}")
     private String portalPkgDownloadUrl;
 
+    @Value("${migration.portalJarName}")
+    private String portalJarName;
+
     @Autowired
     private ThreadPoolTaskExecutor threadPoolTaskExecutor;
     @Autowired
@@ -344,6 +347,14 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
     }
 
     @Override
+    public Integer countNotFinishByTargetDb(String targetDb) {
+        LambdaQueryWrapper<MigrationTask> query = new LambdaQueryWrapper<>();
+        query.eq(MigrationTask::getTargetDb, targetDb);
+        query.notIn(MigrationTask::getExecStatus, TaskStatus.MIGRATION_FINISH.getCode());
+        return Math.toIntExact(this.count(query));
+    }
+
+    @Override
     public Integer countRunningByTargetDb(String targetDb) {
         LambdaQueryWrapper<MigrationTask> query = new LambdaQueryWrapper<>();
         query.eq(MigrationTask::getTargetDb, targetDb);
@@ -421,7 +432,7 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
     public void runTask(MigrationTaskHostRef h, MigrationTask t, List<MigrationTaskGlobalParam> globalParams) {
         LoginUser loginUser = SecurityUtils.getLoginUser();
         MigrationHostPortalInstall installHost = migrationHostPortalInstallHostService.getOneByHostId(h.getRunHostId());
-        PortalHandle.startPortal(installHost, t, getTaskParam(globalParams, t));
+        PortalHandle.startPortal(installHost, t, portalJarName, getTaskParam(globalParams, t));
         MigrationTask update = MigrationTask.builder().id(t.getId()).runHostId(h.getRunHostId()).runHost(h.getHost()).runHostname(h.getHostName())
                 .runPort(h.getPort()).runUser(h.getUser()).runPass(h.getPassword()).execStatus(TaskStatus.FULL_START.getCode()).execTime(new Date()).build();
         migrationTaskOperateRecordService.saveRecord(t.getId(), TaskOperate.RUN, loginUser.getUsername());

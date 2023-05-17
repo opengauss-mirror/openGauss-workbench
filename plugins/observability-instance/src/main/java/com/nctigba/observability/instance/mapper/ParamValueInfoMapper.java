@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import com.nctigba.observability.instance.constants.CommonConstants;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
@@ -30,7 +31,7 @@ public class ParamValueInfoMapper {
 				return ParamValueInfo.parse(rs);
 			}
 		} catch (SQLException e) {
-			throw new RuntimeException("sqlite error", e);
+			throw new RuntimeException(CommonConstants.SQLITE_ERROR, e);
 		}
 	}
 
@@ -41,7 +42,7 @@ public class ParamValueInfoMapper {
 			pstmt.setString(3, paramValueInfo.getActualValue());
 			pstmt.execute();
 		} catch (SQLException e) {
-			throw new RuntimeException("sqlite error", e);
+			throw new RuntimeException(CommonConstants.SQLITE_ERROR, e);
 		}
 	}
 
@@ -55,7 +56,7 @@ public class ParamValueInfoMapper {
 			}
 			pstmt.executeBatch();
 		} catch (SQLException e) {
-			throw new RuntimeException("sqlite error", e);
+			throw new RuntimeException(CommonConstants.SQLITE_ERROR, e);
 		}
 	}
 
@@ -66,7 +67,7 @@ public class ParamValueInfoMapper {
 		try (var stmt = conn().createStatement();) {
 			stmt.executeUpdate(DELETE.replace("?", idstr));
 		} catch (SQLException e) {
-			throw new RuntimeException("sqlite error", e);
+			throw new RuntimeException(CommonConstants.SQLITE_ERROR, e);
 		}
 	}
 
@@ -90,6 +91,7 @@ public class ParamValueInfoMapper {
 
 	@CacheEvict(cacheNames = "paraminfo", key = "#nodeId")
 	public void refresh(String nodeId) {
+		// Do nothing because of X and Y.
 	}
 
 	private static final Connection conn() {

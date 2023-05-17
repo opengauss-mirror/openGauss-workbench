@@ -16,6 +16,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import javax.servlet.http.HttpServletResponse;
 
+import com.nctigba.observability.instance.constants.CommonConstants;
 import org.opengauss.admin.common.core.domain.model.ops.HostFile;
 import org.opengauss.admin.common.core.domain.model.ops.JschResult;
 import org.opengauss.admin.common.core.domain.model.ops.WsSession;
@@ -278,7 +279,7 @@ public class JschUtil {
 			session = jSch.getSession(username, host, port);
 		} catch (JSchException e) {
 			log.error("Connection establishment fail：", e);
-			throw new OpsException("Connection establishment fail");
+			throw new OpsException(CommonConstants.CONNECTION_ESTABLISHMENT_FAIL);
 		}
 
 		session.setPassword(password);
@@ -286,8 +287,8 @@ public class JschUtil {
 		try {
 			session.connect(SESSION_TIMEOUT);
 		} catch (JSchException e) {
-			log.error(host + "Connection establishment fail", e);
-			throw new OpsException(host + "Connection establishment fail");
+			log.error(host + CommonConstants.CONNECTION_ESTABLISHMENT_FAIL, e);
+			throw new OpsException(host + CommonConstants.CONNECTION_ESTABLISHMENT_FAIL);
 		}
 		return Optional.of(session);
 	}
@@ -333,6 +334,7 @@ public class JschUtil {
 			try {
 				Thread.sleep(2000);
 			} catch (InterruptedException e) {
+				Thread.currentThread().interrupt();
 				throw new InterruptedException();
 			} catch (Exception e) {
 				log.error("The parsing command execution result is abnormal：", e);
@@ -401,6 +403,7 @@ public class JschUtil {
 			try {
 				Thread.sleep(500);
 			} catch (InterruptedException e) {
+				Thread.currentThread().interrupt();
 				throw new InterruptedException();
 			} catch (Exception e) {
 				log.error("The parsing command execution result is abnormal：", e);
@@ -503,20 +506,7 @@ public class JschUtil {
 		}
 	}
 
-	@Data
-	@NoArgsConstructor
-	@AllArgsConstructor
-	private static class HostSummary {
-		private String host;
-		private Integer port;
-		private String username;
-		private String password;
 
-		@SuppressWarnings("unused")
-		public String summary() {
-			return SecureUtil.md5(this.host + "_" + this.port + "_" + this.username + "_" + this.password);
-		}
-	}
 
 	private class JschProgressMonitor implements SftpProgressMonitor {
 		// The total number of bytes currently received
@@ -541,9 +531,13 @@ public class JschUtil {
 
 		@Override
 		public boolean count(long count) {
+			boolean b=true;
 			this.count += count;
+			if(max==0){
+				return false;
+			}
 			if (percent >= this.count * 100 / max) {
-				return true;
+				return b;
 			}
 			percent = this.count * 100 / max;
 
@@ -551,12 +545,12 @@ public class JschUtil {
 
 			wsUtil.sendText(wsSession, percent + "%");
 
-			return true;
+			return b;
 		}
 
 		@Override
 		public void end() {
-
+             // Do nothing because of X and Y.
 		}
 	}
 }

@@ -1,5 +1,6 @@
 package com.nctigba.observability.sql.service.diagnosis.caller;
 
+import com.nctigba.observability.sql.constants.CommonConstants;
 import com.nctigba.observability.sql.mapper.DiagnosisTaskMapper;
 import com.nctigba.observability.sql.mapper.DiagnosisTaskResultMapper;
 import com.nctigba.observability.sql.model.diagnosis.Task;
@@ -40,13 +41,17 @@ public class DatabaseParamCaller implements Caller {
             return;
         task.addRemarks("start get param info:");
         diagnosisTaskMapper.updateById(task);
+        Statement statement=null;
+        Statement stmt=null;
+        ResultSet rs=null;
+        ResultSet result=null;
         try {
             Connection connect = connect_sqlite();
-            Statement statement = connect.createStatement();
+             statement = connect.createStatement();
             var conn = clusterManager.getConnectionByNodeId(task.getNodeId());
             String sql = "select name,setting from pg_settings";
-            var stmt = conn.createStatement();
-            var rs = stmt.executeQuery(sql);
+             stmt = conn.createStatement();
+             rs = stmt.executeQuery(sql);
             while (rs.next()) {
                 String name = rs.getString(1);
                 String value = rs.getString(2);
@@ -60,7 +65,7 @@ public class DatabaseParamCaller implements Caller {
                 if (nodeName == null)
                     continue;
                 String selectSql = "select * from param_info where paramName='" + name + "';";
-                ResultSet result = statement.executeQuery(selectSql);
+                 result = statement.executeQuery(selectSql);
                 if (result.next()) {
                     ParamDto paramDto = new ParamDto();
                     paramDto.setParamName(result.getString("paramName"));
@@ -73,12 +78,12 @@ public class DatabaseParamCaller implements Caller {
                     taskResult.setTaskid(task.getId());
                     taskResult.setResultType(ResultType.valueOf(nodeName));
                     taskResult.setFrameType(FrameType.Param);
-                    if (result.getString("diagnosisRule") != null || !"".equals(result.getString("diagnosisRule"))) {
+                    if (result.getString(CommonConstants.DIAGNOSIS_RULE) != null || !"".equals(result.getString(CommonConstants.DIAGNOSIS_RULE))) {
                         var manager = new ScriptEngineManager();
                         var t = manager.getEngineByName("javascript");
                         var bindings = t.createBindings();
                         bindings.put("actualValue", value);
-                        Object object = t.eval(result.getString("diagnosisRule"), bindings);
+                        Object object = t.eval(result.getString(CommonConstants.DIAGNOSIS_RULE), bindings);
                         if (object!=null && "true".equals(object.toString())) {
                             taskResult.setState(TaskResult.ResultState.NoAdvice);
                         } else {
@@ -92,14 +97,44 @@ public class DatabaseParamCaller implements Caller {
                     taskResultMapper.insert(taskResult);
                 }
             }
-            stmt.close();
-            statement.close();
         } catch (Exception e) {
             log.info(e.getMessage());
             task.addRemarks("get param info failed", e);
         } finally {
             diagnosisTaskMapper.updateById(task);
+
+            try{
+                if(stmt!=null){
+                    stmt.close();
+                }
+            }catch (Exception e){
+                log.error(CommonConstants.DATA_FAIL ,e.getMessage());
+            }
+            try{
+                if(statement!=null){
+                    statement.close();
+                }
+            }catch (Exception e){
+                log.error(CommonConstants.DATA_FAIL, e.getMessage());
+            }
+            try{
+                if(rs!=null){
+                    rs.close();
+                }
+            }catch (Exception e){
+                log.error(CommonConstants.DATA_FAIL, e.getMessage());
+            }
+            try{
+                if(result!=null){
+                    result.close();
+                }
+            }catch (Exception e){
+                log.error(CommonConstants.DATA_FAIL, e.getMessage());
+            }
+
         }
+
+
     }
 
     public static synchronized Connection connect_sqlite() {

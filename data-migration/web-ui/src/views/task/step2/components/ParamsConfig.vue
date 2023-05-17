@@ -175,11 +175,11 @@ watch(moreData, (v) => {
 
 const getDefaultParams = () => {
   defaultParams().then(res => {
-    defaultData.basic = res.data.slice(0, 10)
-    defaultData.more = res.data.slice(10)
+    defaultData.basic = res.data.slice(0, 12)
+    defaultData.more = res.data.slice(12)
     const data = JSON.parse(JSON.stringify(res.data))
-    basicData.value = data.slice(0, 10)
-    moreData.value = data.slice(10)
+    basicData.value = data.slice(0, 12)
+    moreData.value = data.slice(12)
 
     if (props.mode === 1) {
       if (props.globalParams.basic.length) {

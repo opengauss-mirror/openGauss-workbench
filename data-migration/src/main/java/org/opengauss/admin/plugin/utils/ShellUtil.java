@@ -25,10 +25,19 @@
 package org.opengauss.admin.plugin.utils;
 
 import cn.hutool.extra.ssh.JschUtil;
-import com.jcraft.jsch.*;
+import com.jcraft.jsch.Channel;
+import com.jcraft.jsch.ChannelExec;
+import com.jcraft.jsch.ChannelSftp;
+import com.jcraft.jsch.JSchException;
+import com.jcraft.jsch.Session;
+import com.jcraft.jsch.SftpATTRS;
+import com.jcraft.jsch.SftpException;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 
 /**
@@ -93,4 +102,65 @@ public class ShellUtil {
         }
         return sb.toString();
     }
+
+    public static void rmDir(String host, Integer port, String user, String password, String path) {
+        StringBuilder sb = new StringBuilder(16);
+        Session session = JschUtil.openSession(host, port, user, password);
+        Channel channel = null;
+        ChannelSftp sftp = null;
+        InputStream in = null;
+        try {
+            channel = session.openChannel("sftp");
+            channel.connect();
+            sftp = (ChannelSftp) channel;
+            deleteFolder(sftp, path);
+        } catch (JSchException | SftpException e) {
+            e.printStackTrace();
+            log.error("exec rm dir error, message: {}", e.getMessage());
+        } finally {
+            JschUtil.close(sftp);
+            JschUtil.close(channel);
+            JschUtil.close(session);
+        }
+    }
+
+    private static void deleteFolder(ChannelSftp channelSftp, String path) throws SftpException {
+        SftpATTRS attrs = channelSftp.lstat(path);
+        if (attrs.isDir()) {
+            channelSftp.cd(path);
+            for (Object fileObj : channelSftp.ls(".")) {
+                if (fileObj instanceof ChannelSftp.LsEntry) {
+                    ChannelSftp.LsEntry file = (ChannelSftp.LsEntry) fileObj;
+                    String fileName = file.getFilename();
+                    if (!fileName.equals(".") && !fileName.equals("..")) {
+                        deleteFolder(channelSftp, path + "/" + fileName);
+                    }
+                }
+            }
+            channelSftp.cd("..");
+            channelSftp.rmdir(path);
+        } else {
+            channelSftp.rm(path);
+        }
+    }
+
+    public static void rmFile(String host, Integer port, String user, String password, String filepath) {
+        Session session = JschUtil.openSession(host, port, user, password);
+        Channel channel = null;
+        ChannelSftp sftp = null;
+        try {
+            channel = session.openChannel("sftp");
+            channel.connect();
+            sftp = (ChannelSftp) channel;
+            sftp.rm(filepath);
+        } catch (JSchException | SftpException e) {
+            e.printStackTrace();
+            log.error("exec rm file error, message: {}", e.getMessage());
+        } finally {
+            JschUtil.close(sftp);
+            JschUtil.close(channel);
+            JschUtil.close(session);
+        }
+    }
+
 }

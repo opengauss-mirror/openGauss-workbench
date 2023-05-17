@@ -3,6 +3,7 @@ package com.nctigba.observability.instance.service;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.nctigba.observability.instance.constants.CommonConstants;
 import org.opengauss.admin.common.enums.ops.OpenGaussVersionEnum;
 import org.springframework.stereotype.Component;
 
@@ -34,9 +35,9 @@ public class ClusterOpsProviderManager {
 	public enum OpenGaussSupportOSEnum {
 		CENTOS_X86_64("centos", "openGauss-3.0.0-CentOS-64bit.tar.bz2",
 				"https://opengauss.obs.cn-south-1.myhuaweicloud.com/3.0.0/x86/openGauss-3.0.0-CentOS-64bit.tar.bz2"),
-		OPENEULER_ARCH64("openEuler", "openGauss-3.0.0-openEuler-64bit.tar.bz2",
+		OPENEULER_ARCH64(CommonConstants.OPEN_EULER, "openGauss-3.0.0-openEuler-64bit.tar.bz2",
 				"https://opengauss.obs.cn-south-1.myhuaweicloud.com/3.0.0/arm/openGauss-3.0.0-openEuler-64bit.tar.bz2"),
-		OPENEULER_X86_64("openEuler", "openGauss-3.0.0-openEuler-64bit.tar.bz2",
+		OPENEULER_X86_64(CommonConstants.OPEN_EULER, "openGauss-3.0.0-openEuler-64bit.tar.bz2",
 				"https://opengauss.obs.cn-south-1.myhuaweicloud.com/3.0.0/x86_openEuler/openGauss-3.0.0-openEuler-64bit.tar.bz2");
 
 		private String osId;
@@ -48,11 +49,11 @@ public class ClusterOpsProviderManager {
 				return CENTOS_X86_64;
 			}
 
-			if ("openEuler".equalsIgnoreCase(osInfo) && "aarch64".equalsIgnoreCase(cpuArchInfo)) {
+			if (CommonConstants.OPEN_EULER.equalsIgnoreCase(osInfo) && "aarch64".equalsIgnoreCase(cpuArchInfo)) {
 				return OPENEULER_ARCH64;
 			}
 
-			if ("openEuler".equalsIgnoreCase(osInfo) && "x86_64".equalsIgnoreCase(cpuArchInfo)) {
+			if (CommonConstants.OPEN_EULER.equalsIgnoreCase(osInfo) && "x86_64".equalsIgnoreCase(cpuArchInfo)) {
 				return OPENEULER_X86_64;
 			}
 			return CENTOS_X86_64;

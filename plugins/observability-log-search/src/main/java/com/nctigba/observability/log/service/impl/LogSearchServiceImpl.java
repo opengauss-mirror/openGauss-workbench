@@ -6,6 +6,7 @@ import co.elastic.clients.elasticsearch._types.aggregations.StringTermsAggregate
 import co.elastic.clients.elasticsearch._types.aggregations.StringTermsBucket;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
 import co.elastic.clients.elasticsearch.core.search.Hit;
+import com.nctigba.observability.log.constants.CommonConstants;
 import com.nctigba.observability.log.model.dto.*;
 import com.nctigba.observability.log.model.query.ContextSearchQuery;
 import com.nctigba.observability.log.model.query.EsSearchQuery;
@@ -173,16 +174,18 @@ public class LogSearchServiceImpl implements LogSearchService {
                     var docMap = decodeBeanHit.source();
                     if (docMap != null) {
                         LogDetailInfoDTO logDetailInfoDTO = new LogDetailInfoDTO();
-                        logDetailInfoDTO.setLogTime(docMap.get("@timestamp"));
+                        logDetailInfoDTO.setLogTime(docMap.get(CommonConstants.TIMESTAMP));
                         Map logTypeMap = null;
-                        if (docMap.get("fields") instanceof Map) {
-                            logTypeMap = (Map) docMap.get("fields");
+                        if (docMap.get(CommonConstants.FIELDS) instanceof Map) {
+                            logTypeMap = (Map) docMap.get(CommonConstants.FIELDS);
                         }
-                        logDetailInfoDTO.setLogType(logTypeMap.get("log_type"));
-                        logDetailInfoDTO.setLogLevel(docMap.get("log_level"));
-                        logDetailInfoDTO.setLogData(docMap.get("message"));
-                        logDetailInfoDTO.setLogClusterId(docMap.get("clusterId"));
-                        logDetailInfoDTO.setLogNodeId(docMap.get("nodeId"));
+                        if(logTypeMap!=null){
+                            logDetailInfoDTO.setLogType(logTypeMap.get(CommonConstants.LOG_TYPE));
+                        }
+                        logDetailInfoDTO.setLogLevel(docMap.get(CommonConstants.LOG_LEVEL));
+                        logDetailInfoDTO.setLogData(docMap.get(CommonConstants.MESSAGE));
+                        logDetailInfoDTO.setLogClusterId(docMap.get(CommonConstants.CLUSTER_ID));
+                        logDetailInfoDTO.setLogNodeId(docMap.get(CommonConstants.NODE_ID));
                         logDetailInfoDTO.setId(id);
                         list.add(logDetailInfoDTO);
                     }
@@ -283,9 +286,12 @@ public class LogSearchServiceImpl implements LogSearchService {
                 queryById.setId(addId);
                 HashMap<List<String>, ContextSearchDTO> addMap = this.getSorts(queryById);
                 ContextSearchDTO contextDto = new ContextSearchDTO();
-                for (List<String> addList : addMap.keySet()) {
-                    contextDto = addMap.get(addList);
+                if(addMap!=null){
+                    for (List<String> addList : addMap.keySet()) {
+                        contextDto = addMap.get(addList);
+                    }
                 }
+
                 list.add(0, contextDto);
             }
             if (sortMap == null) {
@@ -312,8 +318,8 @@ public class LogSearchServiceImpl implements LogSearchService {
         StringBuilder sb = new StringBuilder(" ");
         for (String logType1 : logTypes) {
             final LogTypeTreeDTO tree = new LogTypeTreeDTO();
-            start = logType1.indexOf("-") + 1;
-            end = logType1.indexOf("-", start + 1);
+            start = logType1.indexOf(CommonConstants.HYPHEN) + 1;
+            end = logType1.indexOf(CommonConstants.HYPHEN, start + 1);
             if (sb.indexOf(logType1.substring(start, end)) > 0) {
                 continue;
             }
@@ -322,14 +328,14 @@ public class LogSearchServiceImpl implements LogSearchService {
             List<LogTypeTreeDTO> list = new ArrayList<>();
             StringBuilder ss = new StringBuilder(" ");
             for (String logType2 : logTypes) {
-                start = logType2.indexOf("-") + 1;
-                end = logType2.indexOf("-", start + 1);
+                start = logType2.indexOf(CommonConstants.HYPHEN) + 1;
+                end = logType2.indexOf(CommonConstants.HYPHEN, start + 1);
                 if (logType2.substring(start, end).equals(tree.getTypeName())) {
                     start = end + 1;
-                    end = logType2.indexOf("-", logType2.indexOf("-", start) + 1);
+                    end = logType2.indexOf(CommonConstants.HYPHEN, logType2.indexOf(CommonConstants.HYPHEN, start) + 1);
                     LogTypeTreeDTO logTypeTreeDTO = new LogTypeTreeDTO();
                     if (end <= 0) {
-                        end = logType2.indexOf("-", logType2.indexOf("-", start));
+                        end = logType2.indexOf(CommonConstants.HYPHEN, logType2.indexOf(CommonConstants.HYPHEN, start));
                     }
                     if (ss.indexOf(logType2.substring(start, end)) > 0) {
                         continue;
@@ -367,10 +373,10 @@ public class LogSearchServiceImpl implements LogSearchService {
             }
             List<String> nodeIdList = new ArrayList<>();
             for (String index : indexs) {
-                String prefix = index.substring(index.indexOf("-") + 1);
-                String dataType = prefix.substring(prefix.indexOf("-") + 1);
-                String logType = dataType.substring(dataType.indexOf("-") + 1);
-                String nodeId = logType.substring(logType.indexOf("-") + 1);
+                String prefix = index.substring(index.indexOf(CommonConstants.HYPHEN) + 1);
+                String dataType = prefix.substring(prefix.indexOf(CommonConstants.HYPHEN) + 1);
+                String logType = dataType.substring(dataType.indexOf(CommonConstants.HYPHEN) + 1);
+                String nodeId = logType.substring(logType.indexOf(CommonConstants.HYPHEN) + 1);
                 nodeIdList.add(nodeId);
             }
             id = System.currentTimeMillis();
@@ -399,16 +405,18 @@ public class LogSearchServiceImpl implements LogSearchService {
             if (!hits.isEmpty()) {
                 sorts.addAll(hits.get(hits.size() - 1).sort());
                 ContextSearchDTO contextSearchDto = new ContextSearchDTO();
-                contextSearchDto.setLogTime(hits.get(0).source().get("@timestamp"));
+                contextSearchDto.setLogTime(hits.get(0).source().get(CommonConstants.TIMESTAMP));
                 Map logTypeMap = null;
-                if (hits.get(0).source().get("fields") instanceof Map) {
-                    logTypeMap = (Map) hits.get(0).source().get("fields");
+                if (hits.get(0).source().get(CommonConstants.FIELDS) instanceof Map) {
+                    logTypeMap = (Map) hits.get(0).source().get(CommonConstants.FIELDS);
                 }
-                contextSearchDto.setLogType(logTypeMap.get("log_type"));
-                contextSearchDto.setLogLevel(hits.get(0).source().get("log_level"));
-                contextSearchDto.setLogData(hits.get(0).source().get("message"));
-                contextSearchDto.setLogClusterId(hits.get(0).source().get("clusterId"));
-                contextSearchDto.setLogNodeId(hits.get(0).source().get("nodeId"));
+                if(logTypeMap!=null){
+                    contextSearchDto.setLogType(logTypeMap.get(CommonConstants.LOG_TYPE));
+                }
+                contextSearchDto.setLogLevel(hits.get(0).source().get(CommonConstants.LOG_LEVEL));
+                contextSearchDto.setLogData(hits.get(0).source().get(CommonConstants.MESSAGE));
+                contextSearchDto.setLogClusterId(hits.get(0).source().get(CommonConstants.CLUSTER_ID));
+                contextSearchDto.setLogNodeId(hits.get(0).source().get(CommonConstants.NODE_ID));
                 contextSearchDto.setId(param.getId());
                 map.put(sorts, contextSearchDto);
             }
@@ -525,16 +533,18 @@ public class LogSearchServiceImpl implements LogSearchService {
                     String id = decodeBeanHit.id();
                     if (docMap != null) {
                         ContextSearchDTO contextSearchDto = new ContextSearchDTO();
-                        contextSearchDto.setLogTime(docMap.get("@timestamp"));
+                        contextSearchDto.setLogTime(docMap.get(CommonConstants.TIMESTAMP));
                         Map logTypeMap = null;
-                        if (docMap.get("fields") instanceof Map) {
-                            logTypeMap = (Map) docMap.get("fields");
+                        if (docMap.get(CommonConstants.FIELDS) instanceof Map) {
+                            logTypeMap = (Map) docMap.get(CommonConstants.FIELDS);
                         }
-                        contextSearchDto.setLogType(logTypeMap.get("log_type"));
-                        contextSearchDto.setLogLevel(docMap.get("log_level"));
-                        contextSearchDto.setLogData(docMap.get("message"));
-                        contextSearchDto.setLogClusterId(docMap.get("clusterId"));
-                        contextSearchDto.setLogNodeId(docMap.get("nodeId"));
+                        if(logTypeMap!=null){
+                            contextSearchDto.setLogType(logTypeMap.get(CommonConstants.LOG_TYPE));
+                        }
+                        contextSearchDto.setLogLevel(docMap.get(CommonConstants.LOG_LEVEL));
+                        contextSearchDto.setLogData(docMap.get(CommonConstants.MESSAGE));
+                        contextSearchDto.setLogClusterId(docMap.get(CommonConstants.CLUSTER_ID));
+                        contextSearchDto.setLogNodeId(docMap.get(CommonConstants.NODE_ID));
                         contextSearchDto.setId(id);
                         list.add(contextSearchDto);
                     }

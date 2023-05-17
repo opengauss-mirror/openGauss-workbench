@@ -33,9 +33,20 @@ import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
 import org.opengauss.admin.common.exception.ops.OpsException;
 import org.opengauss.admin.plugin.domain.entity.ops.OpsClusterEntity;
 import org.opengauss.admin.plugin.domain.entity.ops.OpsClusterNodeEntity;
-import org.opengauss.admin.plugin.domain.model.ops.*;
+import org.opengauss.admin.plugin.domain.model.ops.HostInfoHolder;
+import org.opengauss.admin.plugin.domain.model.ops.InstallContext;
+import org.opengauss.admin.plugin.domain.model.ops.JschResult;
+import org.opengauss.admin.plugin.domain.model.ops.LiteInstallConfig;
+import org.opengauss.admin.plugin.domain.model.ops.OpsClusterContext;
+import org.opengauss.admin.plugin.domain.model.ops.SshCommandConstants;
+import org.opengauss.admin.plugin.domain.model.ops.UnInstallContext;
+import org.opengauss.admin.plugin.domain.model.ops.WsSession;
 import org.opengauss.admin.plugin.domain.model.ops.node.LiteInstallNodeConfig;
-import org.opengauss.admin.plugin.enums.ops.*;
+import org.opengauss.admin.plugin.enums.ops.ClusterRoleEnum;
+import org.opengauss.admin.plugin.enums.ops.DeployTypeEnum;
+import org.opengauss.admin.plugin.enums.ops.OpenGaussSupportOSEnum;
+import org.opengauss.admin.plugin.enums.ops.OpenGaussVersionEnum;
+import org.opengauss.admin.plugin.enums.ops.WdrScopeEnum;
 import org.opengauss.admin.plugin.service.ops.IOpsClusterNodeService;
 import org.opengauss.admin.plugin.service.ops.IOpsClusterService;
 import org.opengauss.admin.plugin.utils.JschUtil;
@@ -48,7 +59,11 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.text.MessageFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -107,12 +122,12 @@ public class OpenEulerArch64LiteOpsProvider extends AbstractOpsProvider {
         opsClusterContext.setOpsClusterEntity(opsClusterEntity);
         opsClusterContext.setOpsClusterNodeEntityList(opsClusterNodeEntities);
 
-        wsUtil.sendText(installContext.getRetSession(),"CREATE_REMOTE_USER");
+        wsUtil.sendText(installContext.getRetSession(), "CREATE_REMOTE_USER");
         createRemoteUser(installContext, opsClusterContext);
 
-        wsUtil.sendText(installContext.getRetSession(),"SAVE_INSTALL_CONTEXT");
+        wsUtil.sendText(installContext.getRetSession(), "SAVE_INSTALL_CONTEXT");
         saveContext(installContext);
-        wsUtil.sendText(installContext.getRetSession(),"FINISH");
+        wsUtil.sendText(installContext.getRetSession(), "FINISH");
     }
 
     private void createRemoteUser(InstallContext installContext, OpsClusterContext opsClusterContext) {
@@ -130,7 +145,7 @@ public class OpenEulerArch64LiteOpsProvider extends AbstractOpsProvider {
             String dataPath = liteInstallNodeConfig.getDataPath();
 
 
-            Session session = loginWithUser(jschUtil,encryptionUtils,installContext.getHostInfoHolders(), false, hostId, installUserId);
+            Session session = loginWithUser(jschUtil, encryptionUtils, installContext.getHostInfoHolders(), false, hostId, installUserId);
             String listenerAddress = MessageFormat.format(SshCommandConstants.LISTENER, dataPath);
             try {
                 JschResult jschResult = jschUtil.executeCommand(listenerAddress, installContext.getEnvPath(), session, retSession);
@@ -179,7 +194,7 @@ public class OpenEulerArch64LiteOpsProvider extends AbstractOpsProvider {
     }
 
     private void installSingleNode(InstallContext installContext) {
-        wsUtil.sendText(installContext.getRetSession(),"START_SINGLE");
+        wsUtil.sendText(installContext.getRetSession(), "START_SINGLE");
         log.info("Start installing Single Node Lite");
         WsSession retSession = installContext.getRetSession();
 
@@ -214,17 +229,17 @@ public class OpenEulerArch64LiteOpsProvider extends AbstractOpsProvider {
             installUserName = installUser.getUsername();
         }
 
-        if (StrUtil.isEmpty(installUserId)){
+        if (StrUtil.isEmpty(installUserId)) {
             throw new OpsException("Installation user ID does not exist");
         }
 
-        Session installUserSession = beforeInstall(jschUtil,encryptionUtils,installContext, pkgPath, dataPath, pkgPath, hostId, installUserId, installUserName, "-xvf");
+        Session installUserSession = beforeInstall(jschUtil, encryptionUtils, installContext, pkgPath, dataPath, pkgPath, hostId, installUserId, installUserName, "-xvf");
         try {
             log.info("perform installation");
             // install
-            String command = MessageFormat.format(SshCommandConstants.LITE_SINGLE_INSTALL, databasePassword, pkgPath, dataPath, installPath,String.valueOf(port));
-            command = wrapperLiteEnvSep(command,installContext.getEnvPath());
-            wsUtil.sendText(installContext.getRetSession(),"START_EXE_INSTALL_COMMAND");
+            String command = MessageFormat.format(SshCommandConstants.LITE_SINGLE_INSTALL, databasePassword, pkgPath, dataPath, installPath, String.valueOf(port));
+            command = wrapperLiteEnvSep(command, installContext.getEnvPath());
+            wsUtil.sendText(installContext.getRetSession(), "START_EXE_INSTALL_COMMAND");
             try {
                 JschResult jschResult = jschUtil.executeCommand(command, installUserSession, retSession);
                 if (0 != jschResult.getExitCode()) {
@@ -235,16 +250,17 @@ public class OpenEulerArch64LiteOpsProvider extends AbstractOpsProvider {
                 log.error("Lite single node installation fails", e);
                 throw new OpsException("Lite single node installation fails");
             }
-            wsUtil.sendText(installContext.getRetSession(),"END_EXE_INSTALL_COMMAND");
+            wsUtil.sendText(installContext.getRetSession(), "END_EXE_INSTALL_COMMAND");
 
             log.info("The installation is complete");
-        }finally {
-            if (Objects.nonNull(installUserSession) && installUserSession.isConnected()){
+        } finally {
+            if (Objects.nonNull(installUserSession) && installUserSession.isConnected()) {
                 installUserSession.disconnect();
             }
         }
 
     }
+
     private OpsHostUserEntity createInstallUser(InstallContext installContext, String hostId) {
         OpsHostEntity hostEntity = hostFacade.getById(hostId);
         OpsHostUserEntity hostUserEntity = hostUserFacade.getOmmUserByHostId(hostId);
@@ -322,22 +338,22 @@ public class OpenEulerArch64LiteOpsProvider extends AbstractOpsProvider {
 
             HostInfoHolder hostHolder = hostInfoHolders.stream().filter(holder -> holder.getHostEntity().getHostId().equals(hostId)).findFirst().orElseThrow(() -> new OpsException("host information not found"));
             List<OpsHostUserEntity> hostUserEntities = hostHolder.getHostUserEntities();
-            if (Objects.isNull(hostUserEntities)){
+            if (Objects.isNull(hostUserEntities)) {
                 hostUserEntities = new ArrayList<>();
                 hostHolder.setHostUserEntities(hostUserEntities);
             }
 
             hostUserEntities.add(hostUserEntity);
             return hostUserEntity;
-        }finally {
-            if (Objects.nonNull(rootSession) && rootSession.isConnected()){
+        } finally {
+            if (Objects.nonNull(rootSession) && rootSession.isConnected()) {
                 rootSession.disconnect();
             }
         }
     }
 
     private void installCluster(InstallContext installContext) {
-        wsUtil.sendText(installContext.getRetSession(),"START_CLUSTER");
+        wsUtil.sendText(installContext.getRetSession(), "START_CLUSTER");
         log.info("Start installing the Lite cluster");
         List<LiteInstallNodeConfig> installNodeConfigList = installContext.getLiteInstallConfig().getNodeConfigList();
 
@@ -351,7 +367,7 @@ public class OpenEulerArch64LiteOpsProvider extends AbstractOpsProvider {
     }
 
     private void installSlave(LiteInstallNodeConfig masterNodeConfig, LiteInstallNodeConfig slaveNodeConfig, InstallContext installContext) {
-        wsUtil.sendText(installContext.getRetSession(),"START_SLAVE");
+        wsUtil.sendText(installContext.getRetSession(), "START_SLAVE");
         log.info("Start installing the standby node");
         String installPath = preparePath(slaveNodeConfig.getInstallPath());
         String pkgPath = preparePath(installContext.getLiteInstallConfig().getInstallPackagePath());
@@ -385,7 +401,7 @@ public class OpenEulerArch64LiteOpsProvider extends AbstractOpsProvider {
             installUserName = installUser.getUsername();
         }
 
-        if (StrUtil.isEmpty(installUserId)){
+        if (StrUtil.isEmpty(installUserId)) {
             throw new OpsException("Installation user ID does not exist");
         }
 
@@ -394,23 +410,25 @@ public class OpenEulerArch64LiteOpsProvider extends AbstractOpsProvider {
         try {
             log.info("perform installation");
             // install
-            String command = MessageFormat.format(SshCommandConstants.LITE_SLAVE_INSTALL, databasePassword, pkgPath, dataPath, installPath, slaveHostInfo.getHostEntity().getPrivateIp(), String.valueOf(installContext.getLiteInstallConfig().getPort()+1), masterHostInfo.getHostEntity().getPrivateIp(), String.valueOf(installContext.getLiteInstallConfig().getPort()+1));
-            command = wrapperEnvSep(command, installContext.getEnvPath());
-            wsUtil.sendText(installContext.getRetSession(),"START_EXE_INSTALL_COMMAND");
+            String command = MessageFormat.format(SshCommandConstants.LITE_SLAVE_INSTALL, databasePassword, pkgPath, dataPath, installPath, slaveHostInfo.getHostEntity().getPrivateIp(), String.valueOf(installContext.getLiteInstallConfig().getPort() + 1), masterHostInfo.getHostEntity().getPrivateIp(), String.valueOf(installContext.getLiteInstallConfig().getPort() + 1));
+            command = wrapperLiteEnvSep(command, installContext.getEnvPath());
+            wsUtil.sendText(installContext.getRetSession(), "START_EXE_INSTALL_COMMAND");
             try {
                 JschResult jschResult = jschUtil.executeCommand(command, installUserSession, installContext.getRetSession());
                 if (0 != jschResult.getExitCode()) {
                     log.error("Lite{}node installation log:{}", ClusterRoleEnum.SLAVE, jschResult.getResult());
-                    throw new OpsException("light version" + ClusterRoleEnum.SLAVE + "Node installation failed with exit code：" + jschResult.getExitCode());
+                    throw new OpsException("light version" + ClusterRoleEnum.SLAVE
+                            + "Node installation failed with exit code："
+                            + jschResult.getExitCode());
                 }
             } catch (Exception e) {
                 log.error("light version" + ClusterRoleEnum.SLAVE + "Node installation failed", e);
                 throw new OpsException("light version" + ClusterRoleEnum.SLAVE + "Node installation failed");
             }
-            wsUtil.sendText(installContext.getRetSession(),"END_EXE_INSTALL_COMMAND");
+            wsUtil.sendText(installContext.getRetSession(), "END_EXE_INSTALL_COMMAND");
             log.info("Standby node installation is complete");
-        }finally {
-            if (Objects.nonNull(installUserSession) && installUserSession.isConnected()){
+        } finally {
+            if (Objects.nonNull(installUserSession) && installUserSession.isConnected()) {
                 installUserSession.disconnect();
             }
         }
@@ -418,7 +436,7 @@ public class OpenEulerArch64LiteOpsProvider extends AbstractOpsProvider {
     }
 
     private void installMaster(LiteInstallNodeConfig masterNodeConfig, LiteInstallNodeConfig slaveNodeConfig, InstallContext installContext) {
-        wsUtil.sendText(installContext.getRetSession(),"START_MASTER");
+        wsUtil.sendText(installContext.getRetSession(), "START_MASTER");
         log.info("Start installing the master node");
         String installPath = preparePath(masterNodeConfig.getInstallPath());
         String pkgPath = preparePath(installContext.getLiteInstallConfig().getInstallPackagePath());
@@ -452,7 +470,7 @@ public class OpenEulerArch64LiteOpsProvider extends AbstractOpsProvider {
             installUserName = installUser.getUsername();
         }
 
-        if (StrUtil.isEmpty(installUserId)){
+        if (StrUtil.isEmpty(installUserId)) {
             throw new OpsException("Installation user ID does not exist");
         }
 
@@ -462,9 +480,9 @@ public class OpenEulerArch64LiteOpsProvider extends AbstractOpsProvider {
         try {
             log.info("perform installation");
             // install
-            String command = MessageFormat.format(SshCommandConstants.LITE_MASTER_INSTALL, databasePassword, pkgPath, dataPath, installPath, masterHostInfo.getHostEntity().getPrivateIp(), String.valueOf(installContext.getLiteInstallConfig().getPort()+1), slaveHostInfo.getHostEntity().getPrivateIp(), String.valueOf(installContext.getLiteInstallConfig().getPort()+1));
-            command = wrapperEnvSep(command,installContext.getEnvPath());
-            wsUtil.sendText(installContext.getRetSession(),"START_EXE_INSTALL_COMMAND");
+            String command = MessageFormat.format(SshCommandConstants.LITE_MASTER_INSTALL, databasePassword, pkgPath, dataPath, installPath, masterHostInfo.getHostEntity().getPrivateIp(), String.valueOf(installContext.getLiteInstallConfig().getPort() + 1), slaveHostInfo.getHostEntity().getPrivateIp(), String.valueOf(installContext.getLiteInstallConfig().getPort() + 1));
+            command = wrapperLiteEnvSep(command, installContext.getEnvPath());
+            wsUtil.sendText(installContext.getRetSession(), "START_EXE_INSTALL_COMMAND");
             try {
                 JschResult jschResult = jschUtil.executeCommand(command, installUserSession, installContext.getRetSession());
                 if (0 != jschResult.getExitCode()) {
@@ -475,10 +493,10 @@ public class OpenEulerArch64LiteOpsProvider extends AbstractOpsProvider {
                 log.error("light version" + ClusterRoleEnum.MASTER + "Node installation failed", e);
                 throw new OpsException("light version" + ClusterRoleEnum.MASTER + "Node installation failed");
             }
-            wsUtil.sendText(installContext.getRetSession(),"END_EXE_INSTALL_COMMAND");
+            wsUtil.sendText(installContext.getRetSession(), "END_EXE_INSTALL_COMMAND");
             log.info("Master node installation is complete");
-        }finally {
-            if (Objects.nonNull(installUserSession) && installUserSession.isConnected()){
+        } finally {
+            if (Objects.nonNull(installUserSession) && installUserSession.isConnected()) {
                 installUserSession.disconnect();
             }
         }
@@ -578,7 +596,7 @@ public class OpenEulerArch64LiteOpsProvider extends AbstractOpsProvider {
         String checkCommand = "gs_guc check -D " + dataPath + " -c \"enable_wdr_snapshot\"";
         try {
             JschResult jschResult = jschUtil.executeCommand(checkCommand, session, clusterEntity.getEnvPath());
-            if (jschResult.getResult().contains("enable_wdr_snapshot=on")){
+            if (jschResult.getResult().contains("enable_wdr_snapshot=on")) {
                 return;
             }
         } catch (Exception e) {
@@ -609,11 +627,11 @@ public class OpenEulerArch64LiteOpsProvider extends AbstractOpsProvider {
         WsSession retSession = opsClusterContext.getRetSession();
         String dataPath = stopNodeEntity.getDataPath();
         log.info("login stop user");
-        Session restartUserSession = loginWithUser(jschUtil,encryptionUtils,opsClusterContext.getHostInfoHolders(), false, stopNodeEntity.getHostId(), stopNodeEntity.getInstallUserId());
+        Session restartUserSession = loginWithUser(jschUtil, encryptionUtils, opsClusterContext.getHostInfoHolders(), false, stopNodeEntity.getHostId(), stopNodeEntity.getInstallUserId());
 
         String restartCommand = MessageFormat.format(SshCommandConstants.LITE_STOP, dataPath);
         try {
-            JschResult jschResult = jschUtil.executeCommand(restartCommand, opsClusterContext.getOpsClusterEntity().getEnvPath(),restartUserSession, retSession);
+            JschResult jschResult = jschUtil.executeCommand(restartCommand, opsClusterContext.getOpsClusterEntity().getEnvPath(), restartUserSession, retSession);
             if (0 != jschResult.getExitCode()) {
                 throw new OpsException("stop error, exit code" + jschResult.getExitCode());
             }
@@ -632,11 +650,11 @@ public class OpenEulerArch64LiteOpsProvider extends AbstractOpsProvider {
         WsSession retSession = opsClusterContext.getRetSession();
         String dataPath = startNodeEntity.getDataPath();
         log.info("Login to start user");
-        Session restartUserSession = loginWithUser(jschUtil,encryptionUtils,opsClusterContext.getHostInfoHolders(), false, startNodeEntity.getHostId(), startNodeEntity.getInstallUserId());
+        Session restartUserSession = loginWithUser(jschUtil, encryptionUtils, opsClusterContext.getHostInfoHolders(), false, startNodeEntity.getHostId(), startNodeEntity.getInstallUserId());
 
         String restartCommand = MessageFormat.format(SshCommandConstants.LITE_START, dataPath);
         try {
-            JschResult jschResult = jschUtil.executeCommand(restartCommand,opsClusterContext.getOpsClusterEntity().getEnvPath(), restartUserSession, retSession);
+            JschResult jschResult = jschUtil.executeCommand(restartCommand, opsClusterContext.getOpsClusterEntity().getEnvPath(), restartUserSession, retSession);
             if (0 != jschResult.getExitCode()) {
                 throw new OpsException("startup error，exit code " + jschResult.getExitCode());
             }
@@ -655,7 +673,7 @@ public class OpenEulerArch64LiteOpsProvider extends AbstractOpsProvider {
         WsSession retSession = opsClusterContext.getRetSession();
         String dataPath = restartNodeEntity.getDataPath();
         log.info("login restart user");
-        Session restartUserSession = loginWithUser(jschUtil,encryptionUtils,opsClusterContext.getHostInfoHolders(), false, restartNodeEntity.getHostId(), restartNodeEntity.getInstallUserId());
+        Session restartUserSession = loginWithUser(jschUtil, encryptionUtils, opsClusterContext.getHostInfoHolders(), false, restartNodeEntity.getHostId(), restartNodeEntity.getInstallUserId());
 
         String restartCommand = MessageFormat.format(SshCommandConstants.LITE_RESTART, dataPath);
         try {
@@ -677,7 +695,7 @@ public class OpenEulerArch64LiteOpsProvider extends AbstractOpsProvider {
         HostInfoHolder hostInfoHolder = unInstallContext.getHostInfoHolders().get(0);
         OpsHostEntity hostEntity = hostInfoHolder.getHostEntity();
         OpsHostUserEntity hostUserEntity = hostInfoHolder.getHostUserEntities().stream().filter(userInfo -> opsClusterNodeEntity.getInstallUserId().equals(userInfo.getHostUserId())).findFirst().orElseThrow(() -> new OpsException("Installation user info user not found"));
-        Session session = sshLogin(jschUtil,encryptionUtils,hostEntity, hostUserEntity);
+        Session session = sshLogin(jschUtil, encryptionUtils, hostEntity, hostUserEntity);
 
         doUnInstall(retSession, session, unInstallContext.getOpsClusterEntity().getInstallPackagePath(), unInstallContext.getOpsClusterEntity().getEnvPath());
         removeContext(unInstallContext);
@@ -702,7 +720,8 @@ public class OpenEulerArch64LiteOpsProvider extends AbstractOpsProvider {
                 throw new OpsException("thread is interrupted");
             }
             if (0 != result.getExitCode()) {
-                log.error("Lite version uninstall failed, exit code {}, log content: {}", result.getExitCode(), result.getResult());
+                log.error("Lite version uninstall failed, exit code {}, log content: {}",
+                        result.getExitCode(), result.getResult());
                 throw new OpsException("Uninstallation of Lite version failed");
             }
         } catch (IOException e) {
@@ -718,7 +737,7 @@ public class OpenEulerArch64LiteOpsProvider extends AbstractOpsProvider {
             HostInfoHolder hostInfoHolder = unInstallContext.getHostInfoHolders().stream().filter(hostHolder -> hostHolder.getHostEntity().getHostId().equals(opsClusterNodeEntity.getHostId())).findFirst().orElseThrow(() -> new OpsException("Host information not found"));
             OpsHostEntity hostEntity = hostInfoHolder.getHostEntity();
             OpsHostUserEntity hostUserEntity = hostInfoHolder.getHostUserEntities().stream().filter(userInfo -> opsClusterNodeEntity.getInstallUserId().equals(userInfo.getHostUserId())).findFirst().orElseThrow(() -> new OpsException("Installation user info user not found"));
-            Session session = sshLogin(jschUtil,encryptionUtils,hostEntity, hostUserEntity);
+            Session session = sshLogin(jschUtil, encryptionUtils, hostEntity, hostUserEntity);
 
             doUnInstall(retSession, session, unInstallContext.getOpsClusterEntity().getInstallPackagePath(), unInstallContext.getOpsClusterEntity().getEnvPath());
         }

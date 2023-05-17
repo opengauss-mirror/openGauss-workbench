@@ -37,7 +37,11 @@ public class SlowLogService extends ServiceImpl<SlowLogMapper, StatementHistory>
 				else
 					try {
 						return cacheAble.getObj().get();
-					} catch (InterruptedException | ExecutionException e) {
+					} catch (InterruptedException e) {
+						log.error("Interrupted!", e);
+						Thread.currentThread().interrupt();
+					} catch (ExecutionException e) {
+						log.error("ExecutionException!", e);
 					}
 			}
 		}
@@ -71,7 +75,12 @@ public class SlowLogService extends ServiceImpl<SlowLogMapper, StatementHistory>
 			BasePageDTO<StatementHistory> page = future.get();
 			c.setCurr(System.currentTimeMillis());
 			return page;
-		} catch (InterruptedException | ExecutionException e) {
+		} catch (InterruptedException e) {
+			log.error("Interrupted!", e);
+			Thread.currentThread().interrupt();
+			throw new RuntimeException(e);
+		}catch (ExecutionException e) {
+			log.error("ExecutionException!", e);
 			throw new RuntimeException(e);
 		}
 	}

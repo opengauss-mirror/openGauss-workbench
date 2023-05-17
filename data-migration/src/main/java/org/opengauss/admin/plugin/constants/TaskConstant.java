@@ -40,6 +40,11 @@ public class TaskConstant {
 
     public static Map<Integer, Integer> TASK_STATUS_OPERATE_MAPPING = new HashMap<>();
 
+    /**
+     * default openGauss db version
+     **/
+    public static final String DEFAULT_OPENGAUSS_VERSION = "3.0.0";
+
     static {
         TASK_STATUS_OPERATE_MAPPING.put(TaskStatus.FULL_START.getCode(), TaskOperate.RUN.getCode());
         TASK_STATUS_OPERATE_MAPPING.put(TaskStatus.FULL_RUNNING.getCode(), TaskOperate.RUN.getCode());

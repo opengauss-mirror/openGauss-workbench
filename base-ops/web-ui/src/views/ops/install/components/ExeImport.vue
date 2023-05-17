@@ -1,31 +1,135 @@
 <template>
   <div class="exe-install-c">
-    <div class="flex-col full-w full-h" v-if="exeResult === exeResultEnum.SUCESS">
-      <svg-icon icon-class="ops-install-success" class="icon-size mb"></svg-icon>
+    <div
+      class="flex-col full-w full-h"
+      v-if="exeResult === exeResultEnum.SUCESS"
+    >
+      <svg-icon
+        icon-class="ops-install-success"
+        class="icon-size mb"
+      ></svg-icon>
       <div class="label-color mb-xlg">{{ $t('components.ExeImport.5mpmzg3zqu80') }}</div>
-      <div class="install-connect-c flex-col mb-lg">
-        <div class="ft-b mb">{{ $t('components.ExeImport.5mpmzg3zrrw0') }}</div>
-        <div class="mb">{{ $t('components.ExeImport.5mpmzg3zs0o0') }}: <span class="content">{{
-          databaseUsername? databaseUsername: '--'
-        }}</span></div>
+      <div
+        class="install-connect-c flex-col mb-xlg"
+        v-if="installStore.getInstallConfig.openGaussVersion === OpenGaussVersionEnum.ENTERPRISE"
+      >
+        <div class="ft-b mb">{{ $t('enterprise.ExeInstall.5mpm9j35a4o0') }}</div>
+        <div class="flex-row mb-s">
+          <div class="label-w">{{ $t('enterprise.ClusterConfig.5mpm3ku3hcg0') }}</div>
+          <div class="label-value">{{ installStore.getInstallConfig.clusterId }}</div>
+        </div>
+        <div class="flex-row mb-s">
+          <div class="label-w">{{ $t('enterprise.ClusterConfig.5mpm3ku3iz80') }}</div>
+          <div class="label-value">{{ installStore.getEnterpriseConfig.port }}</div>
+        </div>
+        <div class="flex-row mb-s">
+          <div class="label-w">{{ $t('enterprise.ExeInstall.else1') }}</div>
+          <div class="label-value">{{
+            databaseUsername ? databaseUsername : '--'
+          }}</div>
+        </div>
+        <div
+          class="flex-row mb-s"
+          v-for="(nodeData, index) in installStore.getEnterpriseConfig.nodeConfigList"
+          :key="index"
+        >
+          <div class="label-w">{{ nodeData.clusterRole === ClusterRoleEnum.MASTER ? $t('enterprise.ClusterConfig.else3') :
+            ($t('enterprise.ClusterConfig.else4') + index) }}</div>
+          <div class="label-value">{{ nodeData.publicIp }}</div>
+        </div>
+      </div>
+      <div
+        class="install-connect-c flex-col mb-xlg"
+        v-if="installStore.getInstallConfig.openGaussVersion === OpenGaussVersionEnum.LITE"
+      >
+        <div class="ft-b mb">{{ $t('lightweight.ExeInstall.5mpmjd1mbdc0') }}</div>
+        <div class="flex-row mb-s">
+          <div class="label-w">{{ $t('lightweight.InstallConfig.5mpmkfqy8nc0') }}</div>
+          <div class="label-value">{{ installStore.getInstallConfig.clusterId }}</div>
+        </div>
+        <div class="flex-row mb-s">
+          <div class="label-w">{{ $t('lightweight.InstallConfig.5mpmkfqyasw0') }}</div>
+          <div class="label-value">{{ installStore.getLiteConfig.port }}</div>
+        </div>
+        <div class="flex-row mb-s">
+          <div class="label-w">{{ $t('lightweight.ExeInstall.5mpmjd1mbo00') }}</div>
+          <div class="label-value">{{
+            databaseUsername ? databaseUsername : '--'
+          }}</div>
+        </div>
+        <div
+          class="flex-row mb-s"
+          v-for="(nodeData, index) in installStore.getLiteConfig.nodeConfigList"
+          :key="index"
+        >
+          <div class="label-w">{{ nodeData.clusterRole === ClusterRoleEnum.MASTER ? $t('enterprise.ClusterConfig.else3') :
+            ($t('enterprise.ClusterConfig.else4') + index) }}</div>
+          <div class="label-value">{{ nodeData.publicIp }}</div>
+        </div>
+      </div>
+      <div
+        class="install-connect-c flex-col mb-xlg"
+        v-if="installStore.getInstallConfig.openGaussVersion === OpenGaussVersionEnum.MINIMAL_LIST"
+      >
+        <div class="ft-b mb">{{ $t('simple.ExeInstall.5mpmsp16oy40') }}</div>
+        <div class="flex-row mb-s">
+          <div class="label-w">{{ $t('simple.InstallConfig.5mpmu0laqc80') }}</div>
+          <div class="label-value">{{ installStore.getInstallConfig.clusterId }}</div>
+        </div>
+        <div class="flex-row mb-s">
+          <div class="label-w">{{ $t('simple.InstallConfig.5mpmu0larj40') }}</div>
+          <div class="label-value">{{ installStore.getMiniConfig.port }}</div>
+        </div>
+        <div class="flex-row mb-s">
+          <div class="label-w">{{ $t('simple.ExeInstall.5mpmsp16pb40') }}</div>
+          <div class="label-value">{{
+            databaseUsername ? databaseUsername : '--'
+          }}</div>
+        </div>
+        <div
+          class="flex-row mb-s"
+          v-for="(nodeData, index) in installStore.getMiniConfig.nodeConfigList"
+          :key="index"
+        >
+          <div class="label-w">{{ nodeData.clusterRole === ClusterRoleEnum.MASTER ? $t('enterprise.ClusterConfig.else3') :
+            ($t('enterprise.ClusterConfig.else4') + index) }}</div>
+          <div class="label-value">{{ nodeData.publicIp }}</div>
+        </div>
       </div>
       <div class="flex-row">
-        <a-button type="outline" class="mr" @click="goHome">{{
+        <a-button
+          type="outline"
+          class="mr"
+          @click="goHome"
+        >{{
           $t('components.ExeImport.5mpmzg3zseo0')
         }}</a-button>
-        <a-button type="primary" @click="goOps">{{
+        <a-button
+          type="primary"
+          @click="goOps"
+        >{{
           $t('components.ExeImport.5mpmzg3zskw0')
         }}</a-button>
       </div>
     </div>
-    <div class="flex-col full-w full-h ft-lg" v-if="exeResult === exeResultEnum.FAIL">
+    <div
+      class="flex-col full-w full-h ft-lg"
+      v-if="exeResult === exeResultEnum.FAIL"
+    >
       <div class="label-color flex-row">
-        <icon-close-circle-fill class="mr" style="color: red; width: 24px; height: 24px" />
+        <icon-close-circle-fill
+          class="mr"
+          style="color: red; width: 24px; height: 24px"
+        />
         {{ $t('components.ExeImport.5mpmzg3zsu80') }} {{ failMsg }}
       </div>
     </div>
-    <a-spin v-if="loading" class="flex-col full-w full-h" :loading="loading"
-      :tip="$t('components.ExeImport.5mpmzg3zt0g0')">
+    <a-spin
+      v-if="loading"
+      class="flex-col full-w full-h"
+      :loading="loading"
+      :tip="$t('components.ExeImport.5mpmzg3zt0g0')"
+    >
     </a-spin>
   </div>
 </template>
@@ -37,7 +141,7 @@ import { importOpenGauss } from '@/api/ops'
 import { useOpsStore } from '@/store'
 import { KeyValue } from '@/types/global'
 import { useI18n } from 'vue-i18n'
-import { OpenGaussVersionEnum } from '@/types/ops/install'
+import { ClusterRoleEnum, OpenGaussVersionEnum } from '@/types/ops/install'
 const { t } = useI18n()
 const installStore = useOpsStore()
 
@@ -138,6 +242,17 @@ defineExpose({
 
     .content {
       color: rgb(var(--arcoblue-6));
+    }
+
+    .label-w {
+      width: 80px;
+      text-align: left;
+      margin-right: 15px;
+    }
+
+    .label-value {
+      width: 100px;
+      text-align: left;
     }
   }
 

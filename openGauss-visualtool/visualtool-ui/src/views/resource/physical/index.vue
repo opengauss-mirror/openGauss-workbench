@@ -4,42 +4,87 @@
       <div class="physical-list">
         <div class="flex-between mb-s">
           <div>
-            <a-button type="primary" class="mr" @click="handleAddHost('create')">
+            <a-button
+              type="primary"
+              class="mr"
+              @click="handleAddHost('create')"
+            >
               <template #icon>
                 <icon-plus />
               </template>
               {{ $t('physical.index.5mphf11rr080') }}
             </a-button>
-            <a-button type="primary" class="mr" @click="handleBatchTag()">
+            <a-button
+              type="primary"
+              class="mr"
+              @click="handleBatchTag()"
+            >
               {{ $t('physical.index.labelBatch') }}
             </a-button>
-            <a-button type="primary" class="mr" @click="handleLabelManage">
+            <a-button
+              type="primary"
+              class="mr"
+              @click="handleLabelManage"
+            >
               {{ $t('physical.index.labelManage') }}
             </a-button>
           </div>
           <div>
-            <a-form :model="filter" layout="inline">
-              <a-form-item field="publicIp" :label="$t('physical.index.ipAddress')">
-                <a-input v-model.trim="filter.name" allow-clear :placeholder="$t('physical.index.ipAddressPlaceholder')"
-                  style="width: 180px;"></a-input>
+            <a-form
+              :model="filter"
+              layout="inline"
+            >
+              <a-form-item
+                field="publicIp"
+                :label="$t('physical.index.ipAddress')"
+              >
+                <a-input
+                  v-model.trim="filter.name"
+                  allow-clear
+                  :placeholder="$t('physical.index.ipAddressPlaceholder')"
+                  style="width: 180px;"
+                ></a-input>
               </a-form-item>
-              <a-form-item field="hostLabel" :label="$t('physical.index.hostLabel')">
-                <a-select style="width: 180px;" :loading="data.tagsLoading" v-model="filter.tagIds"
-                  :placeholder="$t('physical.index.hostLabelPlaceholder')" multiple allow-clear>
-                  <a-option v-for="item in data.tagsList" :key="item.value" :value="item.value">{{
+              <a-form-item
+                field="hostLabel"
+                :label="$t('physical.index.hostLabel')"
+              >
+                <a-select
+                  style="width: 180px;"
+                  :loading="data.tagsLoading"
+                  v-model="filter.tagIds"
+                  :placeholder="$t('physical.index.hostLabelPlaceholder')"
+                  multiple
+                  allow-clear
+                >
+                  <a-option
+                    v-for="item in data.tagsList"
+                    :key="item.value"
+                    :value="item.value"
+                  >{{
                     item.label
                   }}</a-option>
                 </a-select>
               </a-form-item>
-              <a-form-item field="os" :label="$t('physical.index.os')">
-                <a-select v-model="filter.os" allow-clear :placeholder="$t('physical.index.osPlaceholder')"
-                  style="width: 150px;">
+              <a-form-item
+                field="os"
+                :label="$t('physical.index.os')"
+              >
+                <a-select
+                  v-model="filter.os"
+                  allow-clear
+                  :placeholder="$t('physical.index.osPlaceholder')"
+                  style="width: 150px;"
+                >
                   <a-option value="openEuler">openEuler</a-option>
                   <a-option value="centos">centos</a-option>
                 </a-select>
               </a-form-item>
               <a-form-item>
-                <a-button type="outline" @click="getListData()">
+                <a-button
+                  type="outline"
+                  @click="getListData()"
+                >
                   <template #icon>
                     <icon-search />
                   </template>
@@ -49,11 +94,23 @@
             </a-form>
           </div>
         </div>
-        <a-table ref="tableRef" row-key="hostId" :data="list.data" :pagination="list.page"
-          :row-selection="list.rowSelection" @page-change="currentPage" @page-size-change="pageSizeChange"
-          :loading="list.loading" @selection-change="handleSelectedChange">
+        <a-table
+          ref="tableRef"
+          row-key="hostId"
+          :data="list.data"
+          :pagination="list.page"
+          :row-selection="list.rowSelection"
+          @page-change="currentPage"
+          @page-size-change="pageSizeChange"
+          :loading="list.loading"
+          @selection-change="handleSelectedChange"
+        >
           <template #columns>
-            <a-table-column :title="$t('physical.index.baseInfo')" data-index="baseInfo" :width="300">
+            <a-table-column
+              :title="$t('physical.index.baseInfo')"
+              data-index="baseInfo"
+              :width="300"
+            >
               <template #cell="{ record }">
                 <div class="flex-col-start">
                   <div class="host-name">{{ record.name ? record.name : '--' }}</div>
@@ -63,8 +120,15 @@
                   </div>
                   <div class="flex-row">
                     <div class="mr-s">{{ $t('physical.index.publicIp') }}:</div>
-                    <div style="max-width: 140px;" class="mr-s">{{ record.publicIp }}</div>
-                    <icon-code-square :size="25" style="cursor: pointer;" @click="showTerminal(record)" />
+                    <div
+                      style="max-width: 140px;"
+                      class="mr-s"
+                    >{{ record.publicIp }}</div>
+                    <icon-code-square
+                      :size="25"
+                      style="cursor: pointer;"
+                      @click="showTerminal(record)"
+                    />
                   </div>
                   <div class="flex-row">
                     <div class="mr-s">{{ $t('physical.index.os') }}:</div>
@@ -77,12 +141,26 @@
                 </div>
               </template>
             </a-table-column>
-            <a-table-column :title="$t('physical.index.hostLabel')" data-index="hostLabel" :width="200">
+            <a-table-column
+              :title="$t('physical.index.hostLabel')"
+              data-index="hostLabel"
+              :width="200"
+            >
               <template #cell="{ record }">
-                <div class="flex-row" style="flex-wrap: wrap;" v-if="record.tags">
-                  <a-tag v-for="(item, index) in record.tags" :key="index" class="mr-s mb-s">
-                    <div :title="item"
-                      style="max-width: 125px;overflow: hidden; text-overflow:ellipsis; white-space: nowrap">
+                <div
+                  class="flex-row"
+                  style="flex-wrap: wrap;"
+                  v-if="record.tags"
+                >
+                  <a-tag
+                    v-for="(item, index) in record.tags"
+                    :key="index"
+                    class="mr-s mb-s"
+                  >
+                    <div
+                      :title="item"
+                      style="max-width: 125px;overflow: hidden; text-overflow:ellipsis; white-space: nowrap"
+                    >
                       {{ item
                       }}</div>
                   </a-tag>
@@ -96,63 +174,128 @@
               <template #title>
                 <div class="flex-row">
                   <div class="mr">{{ $t('physical.index.diskInfo') }}</div>
-                  <a-tag color="green" class="mr-s">{{ $t('physical.index.realTime') }}</a-tag>
-                  <a-tooltip :content="$t('physical.index.tipInfo')" position="rt">
+                  <a-tag
+                    color="green"
+                    class="mr-s"
+                  >{{ $t('physical.index.realTime') }}</a-tag>
+                  <a-tooltip
+                    :content="$t('physical.index.tipInfo')"
+                    position="rt"
+                  >
                     <icon-question-circle-fill :size="18" />
                   </a-tooltip>
                 </div>
               </template>
               <template #cell="{ record }">
                 <div class="flex-row">
-                  <div class="flex-col mr" style="width: 160px;">
+                  <div
+                    class="flex-col mr"
+                    style="width: 160px;"
+                  >
                     <div class="net flex-row-center">
-                      <div class="flex-col mr" style="width: 80px;">
-                        <icon-arrow-fall style="color: #a9aeb8" :size="30" class="mb-s" />
+                      <div
+                        class="flex-col mr"
+                        style="width: 80px;"
+                      >
+                        <icon-arrow-fall
+                          style="color: #a9aeb8"
+                          :size="30"
+                          class="mb-s"
+                        />
                         <div style="white-space: nowrap;">{{ record.downSpeed ? record.downSpeed : '--' }} byte/s</div>
                       </div>
-                      <div class="flex-col" style="width: 80px;">
-                        <icon-arrow-rise style="color: #a9aeb8" :size="30" class="mb-s" />
+                      <div
+                        class="flex-col"
+                        style="width: 80px;"
+                      >
+                        <icon-arrow-rise
+                          style="color: #a9aeb8"
+                          :size="30"
+                          class="mb-s"
+                        />
                         <div style="white-space: nowrap;">{{ record.upSpeed ? record.upSpeed : '--' }} byte/s</div>
                       </div>
                     </div>
                     <div>{{ $t('physical.index.net') }}</div>
                   </div>
                   <div class="flex-col mr">
-                    <div class="chart chart-empty-c" v-if="!record.isCpu">
-                      <icon-empty :size="70" class="bg-color" />
+                    <div
+                      class="chart chart-empty-c"
+                      v-if="!record.isCpu"
+                    >
+                      <icon-empty
+                        :size="70"
+                        class="bg-color"
+                      />
                     </div>
-                    <v-chart v-else class="chart" :option="record.cpuOption" />
+                    <v-chart
+                      v-else
+                      class="chart"
+                      :option="record.cpuOption"
+                    />
                     <div>{{ $t('physical.index.cpu') }}</div>
                   </div>
                   <div class="flex-col mr">
-                    <div class="chart chart-empty-c" v-if="!record.isMemory">
-                      <icon-empty :size="70" class="bg-color" />
+                    <div
+                      class="chart chart-empty-c"
+                      v-if="!record.isMemory"
+                    >
+                      <icon-empty
+                        :size="70"
+                        class="bg-color"
+                      />
                     </div>
-                    <v-chart v-else class="chart" :option="record.memoryOption" />
+                    <v-chart
+                      v-else
+                      class="chart"
+                      :option="record.memoryOption"
+                    />
                     <div>{{ $t('physical.index.memory') }}</div>
                   </div>
                   <div class="flex-col mr">
-                    <div class="chart chart-empty-c" v-if="!record.isDisk">
-                      <icon-empty :size="70" class="bg-color" />
+                    <div
+                      class="chart chart-empty-c"
+                      v-if="!record.isDisk"
+                    >
+                      <icon-empty
+                        :size="70"
+                        class="bg-color"
+                      />
                     </div>
-                    <v-chart v-else class="chart" :option="record.diskOption" />
+                    <v-chart
+                      v-else
+                      class="chart"
+                      :option="record.diskOption"
+                    />
                     <div>{{ $t('physical.index.disk') }}</div>
                   </div>
                 </div>
               </template>
             </a-table-column>
-            <a-table-column :title="$t('physical.index.5mphf11tfjw0')" data-index="operation" :width="280">
+            <a-table-column
+              :title="$t('physical.index.5mphf11tfjw0')"
+              data-index="operation"
+              :width="280"
+            >
               <template #cell="{ record }">
                 <div class="flex-row-start">
-                  <a-link class="mr" @click="showHostUserMng(record)">{{ $t('physical.index.5mphf11szks0') }}</a-link>
-                  <!-- <a-link class="mr" @click="handleTest(record)">{{ $t('physical.index.5mphf11syw80') }}</a-link> -->
-                  <!-- <a-link class="mr" @click="handleShowDetail(record)">{{ $t('physical.index.detail') }}</a-link> -->
-                  <a-link class="mr" @click="handleAddHost('update', record)">{{
+                  <a-link
+                    class="mr"
+                    @click="showHostUserMng(record)"
+                  >{{ $t('physical.index.5mphf11szks0') }}</a-link>
+                  <a-link
+                    class="mr"
+                    @click="handleAddHost('update', record)"
+                  >{{
                     $t('physical.index.5mphf11szqo0')
                   }}</a-link>
-                  <a-popconfirm :content="$t('physical.index.5mphf11szws0')" type="warning"
-                    :ok-text="$t('physical.index.5mphf11t05c0')" :cancel-text="$t('physical.index.5mphf11t0bc0')"
-                    @ok="deleteRows(record)">
+                  <a-popconfirm
+                    :content="$t('physical.index.5mphf11szws0')"
+                    type="warning"
+                    :ok-text="$t('physical.index.5mphf11t05c0')"
+                    :cancel-text="$t('physical.index.5mphf11t0bc0')"
+                    @ok="deleteRows(record)"
+                  >
                     <a-link status="danger">{{ $t('physical.index.5mphf11t0hc0') }}</a-link>
                   </a-popconfirm>
                 </div>
@@ -160,12 +303,24 @@
             </a-table-column>
           </template>
         </a-table>
-        <add-host ref="addHostRef" @finish="getListData"></add-host>
-        <host-pwd-dlg ref="hostPwdRef" @finish="handleShowTerminal($event)"></host-pwd-dlg>
+        <add-host
+          ref="addHostRef"
+          @finish="getListData"
+        ></add-host>
+        <host-pwd-dlg
+          ref="hostPwdRef"
+          @finish="handleShowTerminal($event)"
+        ></host-pwd-dlg>
         <host-user-mng ref="hostUserRef"></host-user-mng>
         <host-terminal ref="hostTerminalRef"></host-terminal>
-        <label-manage-dlg ref="labelManageDlgRef" @finish="getListData"></label-manage-dlg>
-        <batch-label-dlg ref="batchLabelDlgRef" @finish="batchFinish"></batch-label-dlg>
+        <label-manage-dlg
+          ref="labelManageDlgRef"
+          @finish="labelClose"
+        ></label-manage-dlg>
+        <batch-label-dlg
+          ref="batchLabelDlgRef"
+          @finish="batchFinish"
+        ></batch-label-dlg>
       </div>
     </div>
   </div>
@@ -174,7 +329,7 @@
 <script setup lang="ts">
 import { KeyValue } from '@/types/global'
 import { Message, Table } from '@arco-design/web-vue'
-import { computed, onMounted, reactive, ref, onUnmounted } from 'vue'
+import { onMounted, reactive, ref, onUnmounted } from 'vue'
 import { hostPage, delHost, hostMonitor, hostTagListAll } from '@/api/ops' // eslint-disable-line
 import AddHost from './components/AddHost.vue'
 import HostPwdDlg from './components/HostPwdDlg.vue'
@@ -183,10 +338,8 @@ import HostUserMng from './components/HostUserMng.vue'
 import { cpuOption, memoryOption, diskOption } from './echarts/option'
 import VChart from 'vue-echarts'
 import Socket from '@/utils/websocket'
-import { useI18n } from 'vue-i18n'
 import LabelManageDlg from './label/LabelManageDlg.vue'
 import BatchLabelDlg from './components/BatchLabelDlg.vue'
-const { t } = useI18n()
 const filter = reactive({
   name: '',
   tagIds: [],
@@ -258,11 +411,17 @@ const getAllTag = () => {
   })
 }
 
+const labelClose = () => {
+  getAllTag()
+  getListData()
+}
+
 const tableRef = ref<null | InstanceType<typeof Table>>(null)
 const batchFinish = () => {
   tableRef.value?.select(list.selectedHostIds, false)
   list.selectedHostIds = []
   getListData()
+  getAllTag()
 }
 
 const getListData = () => new Promise(resolve => {
@@ -331,7 +490,6 @@ const openHostMonitor = (hostData: KeyValue, index: number) => {
   })
   websocket.onmessage((messageData: any) => {
     const eventData = JSON.parse(messageData)
-    console.log('get host monitor data', hostData.publicIp, eventData)
     list.data[index].downSpeed = eventData.downSpeed
     list.data[index].upSpeed = eventData.upSpeed
     list.data[index].isCpu = true
@@ -378,11 +536,7 @@ const showTerminal = (hostData: KeyValue) => {
 
 const hostTerminalRef = ref<null | InstanceType<typeof HostTerminal>>(null)
 const handleShowTerminal = (hostData: KeyValue) => {
-  console.log('show password', hostData)
   hostTerminalRef.value?.open(hostData)
-}
-const handleShowDetail = (record: KeyValue) => {
-  console.log('show detail', record)
 }
 
 const addHostRef = ref<null | InstanceType<typeof AddHost>>(null)

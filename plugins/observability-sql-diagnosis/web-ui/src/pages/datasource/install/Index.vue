@@ -106,7 +106,7 @@ watch(resCollectors, (res: any) => {
             element.label = element.clusterId
             for (let index2 = 0; index2 < element.clusterNodes.length; index2++) {
                 const node = element.clusterNodes[index2]
-                node.label = node.privateIp + '(' + node.publicIp + ')'
+                node.label = (node.azName ? node.azName + '_' : '') + node.publicIp + ':' + node.dbPort + (node.clusterRole ?  '(' + node.clusterRole + ')' : '');
             }
         }
     } else collectorList.value = []

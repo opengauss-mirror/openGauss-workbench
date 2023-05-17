@@ -40,6 +40,7 @@
               :form-data="item"
               :cluster-data="data.form.cluster"
               :ref="(el: any) => setRefMap(el, item.id)"
+              @install-user="installUserChange"
             ></node-info>
           </a-tab-pane>
         </a-tabs>
@@ -58,7 +59,7 @@ import { Message } from '@arco-design/web-vue'
 import { FormInstance } from '@arco-design/web-vue/es/form'
 import { useOpsStore } from '@/store'
 import { useI18n } from 'vue-i18n'
-import { install } from 'vue-demi';
+import dayjs from 'dayjs'
 const { t } = useI18n()
 const installStore = useOpsStore()
 
@@ -79,13 +80,15 @@ const data = reactive<KeyValue>({
       databaseUsername: '',
       databasePassword: '',
       isInstallCM: false,
-      isEnvSeparate: false,
+      isEnvSeparate: true,
       envPath: '',
       azId: '',
       azName: ''
     },
     nodes: []
-  }
+  },
+  envPrefix: '/home/',
+  envSuffix: '/cluster_' + dayjs().format('YYYYMMDD') + '_' + dayjs().format('HHMMSSS') + '.bashrc'
 })
 
 const loadingFunc = inject<any>('loading')
@@ -182,6 +185,12 @@ const isHasCMMaster = (id: string, isMaster: boolean) => {
       currentNode.isCMMaster = true
       Message.warning('One node must be the primary node')
     }
+  }
+}
+
+const installUserChange = (val: string) => {
+  if (val && installType.value !== 'import') {
+    data.form.cluster.envPath = data.envPrefix + val + data.envSuffix
   }
 }
 
@@ -282,6 +291,7 @@ const saveClusterData = () => {
     clusterId: param.clusterId,
     clusterName: param.clusterName,
     deployType: DeployTypeEnum.CLUSTER,
+    isEnvSeparate: param.isEnvSeparate,
     envPath: param.envPath
   })
   installStore.setEnterpriseConfig(param as EnterpriseInstallConfig)

@@ -1,8 +1,16 @@
 <template>
   <div class="cluster-list-c">
-    <a-spin class="full-w" :loading="data.loading" :tip="$t('components.ClusterList.5mpinxl8f0w0')">
+    <a-spin
+      class="full-w"
+      :loading="data.loading"
+      :tip="$t('components.ClusterList.5mpinxl8f0w0')"
+    >
       <div v-if="data.clusterList.length">
-        <div class="mb" v-for="(clusterData, index) in data.clusterList" :key="index">
+        <div
+          class="mb"
+          v-for="(clusterData, index) in data.clusterList"
+          :key="index"
+        >
           <div class="cluster-item flex-col-start">
             <div class="flex-between flex-row full-w">
               <div class="flex-row">
@@ -11,32 +19,60 @@
                 <div class="cluster-item-title">{{ clusterData.clusterId ? clusterData.clusterId : '--' }}</div>
               </div>
               <icon-loading v-if="clusterData.isConnected === -1" />
-              <a-tag color="green" v-else-if="clusterData.isConnected === 1">{{
+              <a-tag
+                color="green"
+                v-else-if="clusterData.isConnected === 1"
+              >{{
                 $t('components.ClusterList.else14')
               }}</a-tag>
-              <a-link v-else @click="retryOpenWebSocket(clusterData, index)">{{
+              <a-link
+                v-else
+                @click="retryOpenWebSocket(clusterData, index)"
+              >{{
                 $t('components.ClusterList.else15')
               }}</a-link>
               <!-- <a-tag v-else color="red">{{ $t('components.ClusterList.5mpinxl8frs0') }}</a-tag> -->
             </div>
             <a-divider />
-            <div v-if="clusterData.version === 'MINIMAL_LIST' && clusterData.deployType === 'CLUSTER'"
-              class="flex-row full-w">
+            <div
+              v-if="clusterData.version === 'MINIMAL_LIST' && clusterData.deployType === 'CLUSTER'"
+              class="flex-row full-w"
+            >
               <!-- There is only a minimal version and it is one master and one backup -->
-              <div class="flex-col-start" style="width: 50%">
-                <div class="full-w mb-lg" style="display: flex;">
-                  <div class="mr-lg" style="width: 50%" v-for="(instance, index) in clusterData.clusterNodes"
-                    :key="index">
-                    <div class="instance-c" @click="goPlugin(instance)">
+              <div
+                class="flex-col-start"
+                style="width: 50%"
+              >
+                <div
+                  class="full-w mb-lg"
+                  style="display: flex;"
+                >
+                  <div
+                    class="mr-lg"
+                    style="width: 50%"
+                    v-for="(instance, index) in clusterData.clusterNodes"
+                    :key="index"
+                  >
+                    <div
+                      class="instance-c"
+                      @click="goPlugin(instance)"
+                    >
                       <div class="flex-row mb">
-                        <a-tag class="mr-s" color="#E41D1D">{{ getRoleName(instance.clusterRole) }}</a-tag>
+                        <a-tag
+                          class="mr-s"
+                          color="#E41D1D"
+                        >{{ getRoleName(instance.clusterRole) }}</a-tag>
                         <div class="mr-s instance-c-title">{{ $t('components.ClusterList.else1') }}{{ index + 1 }}</div>
                         <a-tag :color="getInstanceStateColor(clusterData, clusterData.clusterNodes[0])">{{
                           getInstanceState(clusterData, clusterData.clusterNodes[0])
                         }}</a-tag>
                       </div>
                       <div class="flex-row-center">
-                        <svg-icon icon-class="ops-instance" class="mr" style="width: 50px; height: 50px;"></svg-icon>
+                        <svg-icon
+                          icon-class="ops-instance"
+                          class="mr"
+                          style="width: 50px; height: 50px;"
+                        ></svg-icon>
                         <div class="flex-col-start">
                           <div class="mb-s txt">{{ $t('components.ClusterList.else2') }}: {{
                             clusterData.clusterNodes[0].session ?
@@ -60,8 +96,14 @@
                     </div>
                   </div>
                 </div>
-                <div class="full-w" style="display: flex; justify-content: center">
-                  <svg-icon icon-class="ops-host" class="host-icon-size mr"></svg-icon>
+                <div
+                  class="full-w"
+                  style="display: flex; justify-content: center"
+                >
+                  <svg-icon
+                    icon-class="ops-host"
+                    class="host-icon-size mr"
+                  ></svg-icon>
                   <div class="flex-row">
                     <div class="flex-col-start mr">
                       <div class="mb-s">{{ $t('components.ClusterList.else7') }}:</div>
@@ -94,7 +136,10 @@
                   </div>
                 </div>
               </div>
-              <div class="flex-col-start chart-con" style="width: 50%; padding: 12px 17px;">
+              <div
+                class="flex-col-start chart-con"
+                style="width: 50%; padding: 12px 17px;"
+              >
                 <div class="flex-between full-w mb-s">
                   <div class="flex-row chart-con-title">{{ $t('components.ClusterList.else9') }}: {{
                     clusterData.clusterNodes[0].hostname
@@ -106,33 +151,60 @@
                 </div>
                 <div class="flex-between full-w">
                   <div class="host-info-c mr">
-                    <v-chart class="echart" :option="clusterData.clusterNodes[0].cpuOption" />
+                    <v-chart
+                      class="echart"
+                      :option="clusterData.clusterNodes[0].cpuOption"
+                    />
                     <div class="txt">{{ $t('components.ClusterList.else13') }}</div>
                   </div>
                   <div class="host-info-c">
-                    <v-chart class="echart" :option="clusterData.clusterNodes[0].memoryOption" />
+                    <v-chart
+                      class="echart"
+                      :option="clusterData.clusterNodes[0].memoryOption"
+                    />
                     <div class="txt">{{ $t('components.ClusterList.5mpinxl8g2c0') }}</div>
                   </div>
                 </div>
                 <div class="flex-between full-w">
                   <div class="host-info-c mr">
-                    <v-chart class="echart" :option="clusterData.clusterNodes[0].netOption" />
+                    <v-chart
+                      class="echart"
+                      :option="clusterData.clusterNodes[0].netOption"
+                    />
                     <div class="txt">{{ $t('components.ClusterList.5mpinxl8gaw0') }}</div>
                   </div>
                   <div class="host-info-c">
-                    <v-chart class="echart" :option="clusterData.clusterNodes[0].connectOption" />
+                    <v-chart
+                      class="echart"
+                      :option="clusterData.clusterNodes[0].connectOption"
+                    />
                     <div class="txt">{{ $t('components.ClusterList.5mpinxl8gi40') }}</div>
                   </div>
                 </div>
               </div>
             </div>
-            <div v-else class="flex-col-start full-w">
-              <div class="flex-col-start full-w" v-for="(instance, index) in clusterData.clusterNodes" :key="index">
+            <div
+              v-else
+              class="flex-col-start full-w"
+            >
+              <div
+                class="flex-col-start full-w"
+                v-for="(instance, index) in clusterData.clusterNodes"
+                :key="index"
+              >
                 <div class="flex-between full-w">
-                  <div class="host-instance-c mr" style="width: 50%;">
-                    <div class=" mb-s"
-                      style="height: 50%;display: flex; justify-content: space-around; align-items: center;">
-                      <svg-icon icon-class="ops-host" class="host-icon-size mr"></svg-icon>
+                  <div
+                    class="host-instance-c mr"
+                    style="width: 50%;"
+                  >
+                    <div
+                      class=" mb-s"
+                      style="height: 50%;display: flex; justify-content: space-around; align-items: center;"
+                    >
+                      <svg-icon
+                        icon-class="ops-host"
+                        class="host-icon-size mr"
+                      ></svg-icon>
                       <div class="flex-row">
                         <div class="flex-col-start mr">
                           <div class="flex-row mb-s">
@@ -156,16 +228,29 @@
                         </div>
                       </div>
                     </div>
-                    <div class="instance-c full-w" style="height: 50%;" @click="goPlugin(instance)">
+                    <div
+                      class="instance-c full-w"
+                      style="height: 50%;"
+                      @click="goPlugin(instance)"
+                    >
                       <div class="flex-row mb-s">
-                        <a-tag class="mr-s" color="#E41D1D">{{ getRoleName(instance.clusterRole) }}</a-tag>
+                        <a-tag
+                          class="mr-s"
+                          color="#E41D1D"
+                        >{{ getRoleName(instance.clusterRole) }}</a-tag>
                         <div class="mr-s instance-c-title">{{ $t('components.ClusterList.else1') }}{{ index + 1 }}</div>
                         <a-tag :color="getInstanceStateColor(clusterData, instance)">{{
                           getInstanceState(clusterData, instance)
                         }}</a-tag>
                       </div>
-                      <div class="" style="display: flex; justify-content: space-around; align-items: center;">
-                        <svg-icon icon-class="ops-instance" class="instance-icon-size mr"></svg-icon>
+                      <div
+                        class=""
+                        style="display: flex; justify-content: space-around; align-items: center;"
+                      >
+                        <svg-icon
+                          icon-class="ops-instance"
+                          class="instance-icon-size mr"
+                        ></svg-icon>
                         <div class="flex-row">
                           <div class="flex-col-start mr">
                             <div class="flex-row mb-s">
@@ -195,7 +280,10 @@
                       </div>
                     </div>
                   </div>
-                  <div class="flex-col-start chart-con" style="width: 45%; padding: 12px 17px;">
+                  <div
+                    class="flex-col-start chart-con"
+                    style="width: 45%; padding: 12px 17px;"
+                  >
                     <div class="flex-between full-w mb-s">
                       <div class="flex-row chart-con-title">
                         <div class="mr-s">{{ $t('components.ClusterList.else9') }}: {{ instance.hostname }}</div>
@@ -207,21 +295,33 @@
                     </div>
                     <div class="flex-between full-w">
                       <div class="host-info-c mr">
-                        <v-chart class="echart" :option="instance.cpuOption" />
+                        <v-chart
+                          class="echart"
+                          :option="instance.cpuOption"
+                        />
                         <div class="txt">{{ $t('components.ClusterList.else13') }}</div>
                       </div>
                       <div class="host-info-c">
-                        <v-chart class="echart" :option="instance.memoryOption" />
+                        <v-chart
+                          class="echart"
+                          :option="instance.memoryOption"
+                        />
                         <div class="txt">{{ $t('components.ClusterList.5mpinxl8g2c0') }}</div>
                       </div>
                     </div>
                     <div class="flex-between full-w">
                       <div class="host-info-c mr">
-                        <v-chart class="echart" :option="instance.netOption" />
+                        <v-chart
+                          class="echart"
+                          :option="instance.netOption"
+                        />
                         <div class="txt">{{ $t('components.ClusterList.5mpinxl8gaw0') }}</div>
                       </div>
                       <div class="host-info-c">
-                        <v-chart class="echart" :option="instance.connectOption" />
+                        <v-chart
+                          class="echart"
+                          :option="instance.connectOption"
+                        />
                         <div class="txt">{{ $t('components.ClusterList.5mpinxl8gi40') }}</div>
                       </div>
                     </div>
@@ -233,24 +333,40 @@
           </div>
         </div>
       </div>
-      <div class="empty-c mb" v-else>
-        <svg-icon icon-class="ops-empty" class="host-icon-size"></svg-icon>
+      <div
+        class="empty-c mb"
+        v-else
+      >
+        <svg-icon
+          icon-class="ops-empty"
+          class="host-icon-size"
+        ></svg-icon>
         <div class="content">{{ $t('components.ClusterList.5mpinxl8gpc0') }}</div>
       </div>
     </a-spin>
-    <div class="create-new">
+    <div
+      class="create-new"
+      v-if="props.hasPlugin"
+    >
       <div class="flex-col">
-        <svg-icon icon-class="ops-cluster" class="host-icon-size mb"></svg-icon>
-        <a-button type="outline" size="large" @click="$router.push({ name: 'Static-pluginBase-opsOpsInstall' })">{{
+        <svg-icon
+          icon-class="ops-cluster"
+          class="host-icon-size mb"
+        ></svg-icon>
+        <a-button
+          type="outline"
+          size="large"
+          @click="$router.push({ name: 'Static-pluginBase-opsOpsInstall' })"
+        >{{
           $t('components.ClusterList.5mpinxl8gwg0')
         }}</a-button>
       </div>
     </div>
-</div>
+  </div>
 </template>
 
 <script lang="ts" setup>
-import { onBeforeUnmount, onMounted, reactive, ref } from 'vue'
+import { onBeforeUnmount, onMounted, reactive, ref, defineProps } from 'vue'
 import { KeyValue } from '@/types/global'
 import { ClusterRoleEnum, OpenGaussVersionEnum, DeployTypeEnum } from '@/types/ops/install' // eslint-disable-line
 import { clusterList, clusterMonitor } from '@/api/ops'
@@ -289,6 +405,13 @@ const data: {
   loading: false,
   socketArr: []
 })
+
+const props = withDefaults(defineProps<{
+  hasPlugin: boolean
+}>(), {
+  hasPlugin: true
+})
+
 onMounted(() => {
   getList()
   getInstanceRoute()
@@ -315,7 +438,6 @@ const getInstanceRoute = () => {
 const getList = () => new Promise(resolve => {
   data.loading = true
   clusterList().then((res: KeyValue) => {
-    console.log(t('components.ClusterList.5mpinxl8h380'), res.data)
     if (Number(res.code) === 200) {
       resolve(true)
       data.clusterList = []

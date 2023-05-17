@@ -8,7 +8,10 @@
             <span class="number-size">{{ data.busiFlow.count }}</span>
             <span class="number-unit">{{ $t('components.ModuleSummary.else1') }}</span>
           </a-spin>
-          <svg-icon icon-class="ops-busi-flow" class="icon-size"></svg-icon>
+          <svg-icon
+            icon-class="ops-busi-flow"
+            class="icon-size"
+          ></svg-icon>
         </div>
       </div>
       <div class="module-item">
@@ -18,7 +21,10 @@
             <span class="number-size">{{ data.dataFlow.count }}</span>
             <span class="number-unit">{{ $t('components.ModuleSummary.else1') }}</span>
           </a-spin>
-          <svg-icon icon-class="ops-data-flow" class="icon-size"></svg-icon>
+          <svg-icon
+            icon-class="ops-data-flow"
+            class="icon-size"
+          ></svg-icon>
         </div>
       </div>
     </div>
@@ -30,17 +36,26 @@
             <span class="number-size">{{ data.dataModel.count }}</span>
             <span class="number-unit">{{ $t('components.ModuleSummary.else1') }}</span>
           </a-spin>
-          <svg-icon icon-class="ops-data-model" class="icon-size"></svg-icon>
+          <svg-icon
+            icon-class="ops-data-model"
+            class="icon-size"
+          ></svg-icon>
         </div>
       </div>
       <div class="module-item">
         <div class="module-title">{{ $t('components.ModuleSummary.5mpim9s7i7o0') }}</div>
         <div class="content">
-          <a-spin n :loading="data.installedPlugin.loading">
+          <a-spin
+            n
+            :loading="data.installedPlugin.loading"
+          >
             <span class="number-size">{{ data.installedPlugin.count }}</span>
             <span class="number-unit">{{ $t('components.ModuleSummary.else1') }}</span>
           </a-spin>
-          <svg-icon icon-class="ops-has-install-plugin" class="icon-size"></svg-icon>
+          <svg-icon
+            icon-class="ops-has-install-plugin"
+            class="icon-size"
+          ></svg-icon>
         </div>
       </div>
     </div>
@@ -53,6 +68,9 @@ import dataModelingImg from '@/assets/images/ops/data-modeling.png'
 import pluginImg from '@/assets/images/ops/plugin.png'
 import busiFlowImg from '@/assets/images/ops/busi-flow.png'
 import { onMounted, reactive } from 'vue'
+import { getDataFlowCount, getBusiFlowCount, getDataModelCount, getPluginCount } from '@/api/ops'
+import { KeyValue } from '@/types/global'
+import { Message } from '@arco-design/web-vue'
 
 reactive([dataFlowImg, dataModelingImg, pluginImg, busiFlowImg])
 
@@ -83,19 +101,55 @@ onMounted(() => {
 })
 
 const getBusiFlow = () => {
-  // getBusiFlow
+  data.busiFlow.loading = true
+  getBusiFlowCount().then((res: KeyValue) => {
+    if (Number(res.code) === 200) {
+      data.dataFlow.count = res.count
+    } else {
+      Message.error('Failed to obtain the number of business flows')
+    }
+  }).finally(() => {
+    data.busiFlow.loading = false
+  })
 }
 
 const getDataFlow = () => {
-  // getDataFlow
+  data.dataFlow.loading = true
+  getDataFlowCount().then((res: KeyValue) => {
+    if (Number(res.code) === 200) {
+      data.dataFlow.count = res.count
+    } else {
+      Message.error('Failed to get the number of data streams')
+    }
+  }).finally(() => {
+    data.dataFlow.loading = false
+  })
 }
 
 const getDataModel = () => {
-  // getDataModel
+  data.dataModel.loading = true
+  getDataModelCount().then((res: KeyValue) => {
+    if (Number(res.code) === 200) {
+      data.dataModel.count = res.count
+    } else {
+      Message.error('Failed to get the number of data models')
+    }
+  }).finally(() => {
+    data.dataModel.loading = false
+  })
 }
 
 const getInstallPluginCount = () => {
-  // getInstallPluginCount
+  data.installedPlugin.loading = true
+  getPluginCount().then((res: KeyValue) => {
+    if (Number(res.code) === 200) {
+      data.installedPlugin.count = res.data
+    } else {
+      Message.error('Failed to get the number of plugins')
+    }
+  }).finally(() => {
+    data.installedPlugin.loading = false
+  })
 }
 
 </script>

@@ -49,7 +49,7 @@ axios.interceptors.response.use(
           okText: i18n.global.t('components.login-form.5o61dvpc5o80'),
           width: 'auto',
           maskClosable: false,
-          async onOk () {
+          async onOk() {
             isTimeout = false
             const userStore = useUserStore()
 
@@ -76,11 +76,20 @@ axios.interceptors.response.use(
     }
   },
   (error) => {
-    const { message } = error
-    Message.error({
-      content: message || 'Error',
-      duration: 3 * 1000
-    })
+    const { request, message, response } = error
+    if (request.responseURL.includes('plugins/base-ops')) {
+      if (response.status !== 404) {
+        Message.error({
+          content: message || 'Error',
+          duration: 3 * 1000
+        })
+      }
+    } else {
+      Message.error({
+        content: message || 'Error',
+        duration: 3 * 1000
+      })
+    }
     return Promise.reject(error)
   }
 )

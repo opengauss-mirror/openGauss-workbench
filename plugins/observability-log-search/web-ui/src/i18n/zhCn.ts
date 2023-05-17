@@ -51,6 +51,8 @@ export default {
         installedProxy: '已安装服务端',
         machine: '物理机',
         rootPWD: 'Root用户密码',
+        installUser: '安装用户',
+        installPath: '安装目录',
         proxyPort: '服务端端口',
         collectInstance: '采集实例',
         collectProxy: '采集代理',
@@ -62,10 +64,12 @@ export default {
         gsLocalLogPath: 'gs_local日志路径',
         installServerAlert:'请先安装服务端！',
         installedServerAlert: '只能安装一个服务端',
+        continueUpload: '继续上传',
         proxyRules: [
             '请选择物理机',
             '请输入Root用户密码',
-            '请输入代理端口号'
+            '请输入代理端口号',
+            '请选择安装用户'
         ],
         collectorRules: [
             '请选择实例',

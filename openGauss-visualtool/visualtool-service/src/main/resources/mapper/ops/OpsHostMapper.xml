@@ -14,26 +14,20 @@
             AND (h.public_ip like #{name} OR h.private_ip like #{name})
         </if>
         <if test="os!=null and os!=''">
-            AND h.os like #{name}
+            AND h.os like #{os}
         </if>
 
         <if test="tagIds!=null and tagIds.size()>0">
 
             AND h.host_id IN
             (SELECT host_id FROM (SELECT DISTINCT tr.host_id , tr.tag_id FROM ops_host_tag_rel  tr WHERE tag_id IN
-                                                                                                         <foreach
-                                                                                                                 collection="tagIds" item="tagId" open="(" close=")" separator=",">
-                                                                                                             #{tagId}
-                                                                                                         </foreach>
+                 <foreach
+                         collection="tagIds" item="tagId" open="(" close=")" separator=",">
+                     #{tagId}
+                 </foreach>
             ) GROUP BY host_id HAVING COUNT(*)>= #{size} )
 
         </if>
-<!--        <if test="tagIds!=null and tagIds.size()>0">-->
-<!--            AND tr.tag_id IN-->
-<!--            <foreach collection="tagIds" separator="," open="(" close=")" item="tagId">-->
-<!--                #{tagId}-->
-<!--            </foreach>-->
-<!--        </if>-->
         ORDER BY h.update_time DESC
     </select>
 </mapper>

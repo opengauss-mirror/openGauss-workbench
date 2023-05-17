@@ -1,35 +1,66 @@
 <template>
-  <div class="upgrade-container" id="backup">
+  <div
+    class="upgrade-container"
+    id="backup"
+  >
     <div class="flex-row-end mb">
       <div class="flex-row mr">
         <div class="label-color top-label mr-s">{{ $t('backup.index.else1') }}:</div>
-        <a-select style="width: 200px;" :loading="data.clusterListLoading" v-model="filter.clusterId" allow-clear
-          :placeholder="$t('backup.index.5mpm2oya7bg0')">
-          <a-option v-for="(item, index) in data.clusterList" :key="index" :label="item.label" :value="item.value" />
+        <a-select
+          style="width: 200px;"
+          :loading="data.clusterListLoading"
+          v-model="filter.clusterId"
+          allow-clear
+          :placeholder="$t('backup.index.5mpm2oya7bg0')"
+        >
+          <a-option
+            v-for="(item, index) in data.clusterList"
+            :key="index"
+            :label="item.label"
+            :value="item.value"
+          />
         </a-select>
       </div>
-      <a-button type="primary" @click="getListData">{{ $t('backup.index.5mpm2oya7y80') }}</a-button>
+      <a-button
+        type="primary"
+        @click="getListData"
+      >{{ $t('backup.index.5mpm2oya7y80') }}</a-button>
     </div>
-    <a-table class="d-a-table-row full-h" :data="list.data" :columns="columns" :pagination="list.page"
-      :loading="list.loading" @page-change="currentPage" @page-size-change="pageSizeChange">
+    <a-table
+      class="d-a-table-row full-h"
+      :data="list.data"
+      :columns="columns"
+      :pagination="list.page"
+      :loading="list.loading"
+      @page-change="currentPage"
+      @page-size-change="pageSizeChange"
+    >
       <template #host="{ record }">
         {{ record.privateIp }}({{ record.publicIp }})
       </template>
       <template #operation="{ record }">
         <div class="flex-row-start">
-          <a-popconfirm :content="$t('backup.index.else2')" type="warning" :ok-text="$t('backup.index.5mpm2oya8b00')"
-            :cancel-text="$t('backup.index.5mpm2oya8ek0')" @ok="handleRecover(record)">
+          <a-popconfirm
+            :content="$t('backup.index.else2')"
+            type="warning"
+            :ok-text="$t('backup.index.5mpm2oya8b00')"
+            :cancel-text="$t('backup.index.5mpm2oya8ek0')"
+            @ok="handleRecover(record)"
+          >
             <a-link class="mr">{{ $t('backup.index.5mpm2oya83s0') }}</a-link>
           </a-popconfirm>
-          <a-popconfirm :content="$t('backup.index.5mpm2oya87g0')" type="warning"
-            :ok-text="$t('backup.index.5mpm2oya8b00')" :cancel-text="$t('backup.index.5mpm2oya8ek0')"
-            @ok="handleDel(record)">
+          <a-popconfirm
+            :content="$t('backup.index.5mpm2oya87g0')"
+            type="warning"
+            :ok-text="$t('backup.index.5mpm2oya8b00')"
+            :cancel-text="$t('backup.index.5mpm2oya8ek0')"
+            @ok="handleDel(record)"
+          >
             <a-link status="danger">{{ $t('backup.index.5mpm2oya8i80') }}</a-link>
           </a-popconfirm>
         </div>
       </template>
     </a-table>
-    <!-- <div id="xterm"></div> -->
   </div>
 </template>
 
@@ -257,6 +288,7 @@ const createWinbox = (row: KeyValue) => {
 .upgrade-container {
   padding: 16px;
   box-sizing: border-box;
+  height: calc(100vh - 130px);
 
   .top-label {
     white-space: nowrap;
@@ -274,7 +306,7 @@ const createWinbox = (row: KeyValue) => {
 
   .xterm {
     width: 100%;
-    height: 100px;
+    height: 80%;
   }
 }
 </style>

@@ -12,6 +12,7 @@ public class DatabaseParamDTO {
     private String suggestExplain;
 
     public DatabaseParamDTO() {
+        // Do nothing because of X and Y.
     }
 
     public String getSeqNo() {

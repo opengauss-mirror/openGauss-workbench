@@ -106,7 +106,6 @@ public class SSHOperator {
     private void createSession() throws JSchException {
         if (this.session == null) {
             synchronized (this) {
-                if (this.session == null) {
                     JSch jsch = new JSch();
                     if (this.isUsedPrivateKey) {
                         jsch.addIdentity("jsch", (this.privateKeyFileContent != null) ? this.privateKeyFileContent : getDefaultPrivateKeyFileContent(), null,
@@ -125,7 +124,6 @@ public class SSHOperator {
                     config.put("StrictHostKeyChecking", "no");
                     this.session.setConfig(config);
                     this.session.setTimeout(this.soTimeout);
-                }
             }
         }
     }
@@ -218,6 +216,7 @@ public class SSHOperator {
                 try {
                     Thread.sleep(waitResultInterval);
                 } catch (Exception ee) {
+                    Thread.currentThread().interrupt();
                     ee.printStackTrace();
                 }
             }
@@ -232,6 +231,7 @@ public class SSHOperator {
         } catch (Exception e2) {
             log.error(e2.getMessage());
             closeSession = true;
+            Thread.currentThread().interrupt();
         } finally {
             if (channel != null) {
                 channel.disconnect();

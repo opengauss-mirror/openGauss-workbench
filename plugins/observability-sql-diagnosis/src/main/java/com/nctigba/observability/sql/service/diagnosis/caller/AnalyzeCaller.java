@@ -1,10 +1,13 @@
 package com.nctigba.observability.sql.service.diagnosis.caller;
 
 import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
+import com.nctigba.observability.sql.constants.CommonConstants;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -94,9 +97,14 @@ public class AnalyzeCaller implements Caller {
 				}
 			task.getData().setDebugQueryId(debugQueryId);
 			task.addRemarks("DEBUG_QUERY_ID:" + debugQueryId);
+		}catch (InterruptedException e) {
+			log.info("InterruptedException : {}", e.getMessage());
+			task.addRemarks("DEBUG_QUERY_ID catch failer");
+			Thread.currentThread().interrupt();
 		} catch (Exception e) {
 			log.info("DEBUG_QUERY_ID catch exception: {}", e.getMessage());
 			task.addRemarks("DEBUG_QUERY_ID catch failer");
+
 		} finally {
 			diagnosisTaskMapper.updateById(task);
 		}
@@ -180,10 +188,10 @@ public class AnalyzeCaller implements Caller {
 						e.getMessage());
 			}
 			JSONObject partitionData = getPartitionData(task, rsList, maxCostTableName, conn);
-			jsonResult.put("partitionData", JSON.parse(partitionData.getString("partitionResultArray")));
-			boolean isHasPartKey = Boolean.parseBoolean(partitionData.getString("isHasPartKey"));
+			jsonResult.put("partitionData", JSON.parse(partitionData.getString(CommonConstants.PARTITION_RESULT_ARRAY)));
+			boolean isHasPartKey = Boolean.parseBoolean(partitionData.getString(CommonConstants.IS_HAS_PART_KEY));
 			boolean isByPartition = Boolean.parseBoolean(partitionData.getString("isByPartition"));
-			jsonResult.put("isHasPartKey", isHasPartKey);
+			jsonResult.put(CommonConstants.IS_HAS_PART_KEY, isHasPartKey);
 
 			// suggest: PlanRecommendedToQueryBasedOnPartition
 			if (StringUtils.isNotEmpty(maxCostStepName) && maxCostStepName.contains("Partitioned Seq Scan") && !isByPartition && !isHasPartKey) {
@@ -224,7 +232,7 @@ public class AnalyzeCaller implements Caller {
 
 			// get index advice
 			String completeQueryText = "select * from gs_index_advise('"
-					+ task.getSql().replace("\n", " ").replace("'", "''") + "')";
+					+ task.getSql().replace("\n", CommonConstants.BLANK).replace("'", "''") + "')";
 			JSONObject indexAdviceJsonResult = getIndexAdvice(conn, completeQueryText);
 			JSONArray indexAdvicesData = indexAdviceJsonResult.getJSONArray("indexList");
 			JSONArray indexAdvicesTableNameList = indexAdviceJsonResult.getJSONArray("tableNameList");
@@ -246,7 +254,7 @@ public class AnalyzeCaller implements Caller {
 					JSONObject structureData = getTableData(nameStr, conn, TABLE_STRUCTURE_SQL, true);
 					JSONObject indexData = getTableData(nameStr, conn, INDEX_SQL, true);
 					JSONObject item = new JSONObject();
-					item.put("tableName", nameStr);
+					item.put(CommonConstants.TABLENAME, nameStr);
 					item.put("structureData", structureData.getJSONArray(nameStr));
 					item.put("indexData", indexData.getJSONArray(nameStr));
 					otherStructureAndIndexList.add(item);
@@ -266,9 +274,11 @@ public class AnalyzeCaller implements Caller {
 		String indexTemplate = "It is recommended to create an index for column %c of table %t";
 		String multiColumnIndexTemplate = "It is recommended to create a composite index for column %c of table %t";
 		log.info("get index advice: {}", sql);
+		Statement stmt =null;
+		ResultSet rs=null;
 		try {
-			var stmt = conn.createStatement();
-			try (var rs = stmt.executeQuery(sql)) {
+			 stmt = conn.createStatement();
+			 rs = stmt.executeQuery(sql);
 				while (rs.next()) {
 					// 1: Schema ; 2: Table ; 3: Column; 4: IndexType
 					String tableName = rs.getString(2);
@@ -285,10 +295,27 @@ public class AnalyzeCaller implements Caller {
 				jsonResult.put("indexList", indexList);
 				jsonResult.put("tableNameList", tableNameList);
 				return jsonResult;
-			}
+
 		} catch (Exception e) {
-			log.error("get index advice fail:{}", e.getMessage());
+			log.error(CommonConstants.GET_INDEX_ADVICE_FAIL, e.getMessage());
 			return jsonResult;
+		}finally {
+			try{
+				if(stmt!=null){
+					stmt.close();
+				}
+			}catch (Exception e){
+				log.error(CommonConstants.DATA_FAIL, e.getMessage());
+			}
+
+			try{
+				if(rs!=null){
+					rs.close();
+				}
+			}catch (Exception e){
+				log.error(CommonConstants.DATA_FAIL, e.getMessage());
+			}
+
 		}
 	}
 
@@ -298,9 +325,11 @@ public class AnalyzeCaller implements Caller {
 			return null;
 		}
 		log.info("get table information tableName: {}, sql: {}", tableName, sql);
+		Statement stmt =null;
+		ResultSet rs=null;
 		try {
-			var stmt = conn.createStatement();
-			var rs = stmt.executeQuery(sql.replace("TABLENAME", tableName));
+			 stmt = conn.createStatement();
+			 rs = stmt.executeQuery(sql.replace(CommonConstants.TABLENAME, tableName));
 			if (isList) {
 				JSONArray resultArray = new JSONArray();
 				while (rs.next()) {
@@ -312,11 +341,26 @@ public class AnalyzeCaller implements Caller {
 					result.put(tableName, JSONObject.parseObject(rs.getString(1)));
 				}
 			}
-			stmt.close();
+
 			return result;
 		} catch (Exception e) {
 			log.error("get {} data fail:{}", sql, e.getMessage());
 			return null;
+		}finally {
+			try{
+				if (stmt!=null){
+					stmt.close();
+				}
+			}catch (Exception e){
+				log.error(CommonConstants.DATA_FAIL, e.getMessage());
+			}
+			try{
+				if (rs!=null){
+					rs.close();
+				}
+			}catch (Exception e){
+				log.error(CommonConstants.DATA_FAIL, e.getMessage());
+			}
 		}
 	}
 
@@ -356,14 +400,14 @@ public class AnalyzeCaller implements Caller {
 						// get mostCostTableName
 						String[] mItemArr = mItem.split(" on ");
 						String text = mItemArr[1].trim();
-						mostCostTableName = text.substring(0, text.indexOf(" "));
+						mostCostTableName = text.substring(0, text.indexOf(CommonConstants.BLANK));
 						// get mostCostStepNmae
 						String[] stepArr = mItem.split(mostCostTableName);
 						String step = stepArr[0].trim();
 						if (step.contains("->")) {
-							mostCostStepName = step.substring(step.indexOf("->") + 2) + " " + mostCostTableName;
+							mostCostStepName = step.substring(step.indexOf("->") + 2) + CommonConstants.BLANK + mostCostTableName;
 						} else {
-							mostCostStepName = step + " " + mostCostTableName;
+							mostCostStepName = step + CommonConstants.BLANK + mostCostTableName;
 						}
 						cost = tempCost;
 					}
@@ -381,15 +425,32 @@ public class AnalyzeCaller implements Caller {
 
 	public String getWorkMem(Connection conn) {
 		String workMemValue = "";
+		Statement stmt =null;
+		ResultSet rs=null;
 		try {
-			var stmt = conn.createStatement();
-			var rs = stmt.executeQuery(WORK_MEM_SQL);
+			 stmt = conn.createStatement();
+			 rs = stmt.executeQuery(WORK_MEM_SQL);
 			while (rs.next()) {
 				workMemValue = rs.getString(1);
 			}
-			stmt.close();
+
 		} catch (Exception e) {
 			log.error("get work memory fail:{}", e.getMessage());
+		}finally {
+			try{
+				if (stmt!=null){
+					stmt.close();
+				}
+			}catch (Exception e){
+				log.error(CommonConstants.DATA_FAIL, e.getMessage());
+			}
+			try{
+				if (rs!=null){
+					rs.close();
+				}
+			}catch (Exception e){
+				log.error(CommonConstants.DATA_FAIL, e.getMessage());
+			}
 		}
 		return workMemValue;
 	}
@@ -402,7 +463,7 @@ public class AnalyzeCaller implements Caller {
 		try {
 			for (String rs : rsList) {
 				if (rs.contains("Memory") || rs.contains("Disk")) {
-					int lastSignPosi = rs.lastIndexOf(":");
+					int lastSignPosi = rs.lastIndexOf(CommonConstants.COLON);
 					int lastUnitPosi = rs.lastIndexOf("kB");
 					if (lastSignPosi > -1 && lastUnitPosi > -1 && (lastUnitPosi > lastSignPosi)) {
 						int curPeakMemory = Integer.parseInt(rs.substring(lastSignPosi + 1, lastUnitPosi).trim());
@@ -424,16 +485,33 @@ public class AnalyzeCaller implements Caller {
 		List<JSONObject> result = new ArrayList<>();
 		int allRowsNum = -1;
 		// get all rows
+		Statement stmt =null;
+		ResultSet rst=null;
 		try {
-			var stmt = conn.createStatement();
-			var rs = stmt.executeQuery(QUERY_TABLE_ALL_ROWS.replace("TABLENAME", tableName));
-			while (rs.next()) {
-				allRowsNum = rs.getInt(1);
+			 stmt = conn.createStatement();
+			 rst = stmt.executeQuery(QUERY_TABLE_ALL_ROWS.replace(CommonConstants.TABLENAME, tableName));
+			while (rst.next()) {
+				allRowsNum = rst.getInt(1);
 			}
-			stmt.close();
+
 		} catch (Exception e) {
 			log.error("get work memory fail:{}", e.getMessage());
 			return result;
+		}finally {
+			try{
+				if (stmt!=null){
+					stmt.close();
+				}
+			}catch (Exception e){
+				log.error(CommonConstants.DATA_FAIL, e.getMessage());
+			}
+			try{
+				if (rst!=null){
+					rst.close();
+				}
+			}catch (Exception e){
+				log.error(CommonConstants.DATA_FAIL, e.getMessage());
+			}
 		}
 		if (allRowsNum < 0) {
 			return result;
@@ -457,21 +535,21 @@ public class AnalyzeCaller implements Caller {
 				// there are two rows
 				JSONObject jsonObject = new JSONObject();
 				String firstStr = mItemArr[0];
-				if (!firstStr.contains("(cost=")) {
+				if (!firstStr.contains(CommonConstants.COST)) {
 					continue;
 				}
 				if (firstStr.contains("->")) {
 					jsonObject.put("stepName",
-							firstStr.substring(firstStr.indexOf("->") + 2, firstStr.indexOf("(cost=")).trim());
+							firstStr.substring(firstStr.indexOf("->") + 2, firstStr.indexOf(CommonConstants.COST)).trim());
 				} else {
-					jsonObject.put("stepName", firstStr.substring(0, firstStr.indexOf("(cost=")).trim());
+					jsonObject.put("stepName", firstStr.substring(0, firstStr.indexOf(CommonConstants.COST)).trim());
 				}
-				String estimateRows = mItemArr[1].substring(0, mItemArr[1].indexOf(" "));
-				String actualRows = mItemArr[2].substring(0, mItemArr[2].indexOf(" "));
+				String estimateRows = mItemArr[1].substring(0, mItemArr[1].indexOf(CommonConstants.BLANK));
+				String actualRows = mItemArr[2].substring(0, mItemArr[2].indexOf(CommonConstants.BLANK));
 				if (StringUtils.isNotEmpty(estimateRows) && StringUtils.isNotEmpty(actualRows)
 						&& ((Integer.parseInt(estimateRows) - Integer.parseInt(actualRows)) >= diff)) {
-					jsonObject.put("estimateRows", mItemArr[1].substring(0, mItemArr[1].indexOf(" ")));
-					jsonObject.put("actualRows", mItemArr[2].substring(0, mItemArr[2].indexOf(" ")));
+					jsonObject.put("estimateRows", mItemArr[1].substring(0, mItemArr[1].indexOf(CommonConstants.BLANK)));
+					jsonObject.put("actualRows", mItemArr[2].substring(0, mItemArr[2].indexOf(CommonConstants.BLANK)));
 					result.add(jsonObject);
 				}
 			}
@@ -487,17 +565,19 @@ public class AnalyzeCaller implements Caller {
 		JSONArray resultArray = new JSONArray();
 		boolean isHasPartKey = false;
 		if (task.getSql().contains(" partition")) {
-			result.put("partitionResultArray", resultArray);
-			result.put("isHasPartKey", false);
+			result.put(CommonConstants.PARTITION_RESULT_ARRAY, resultArray);
+			result.put(CommonConstants.IS_HAS_PART_KEY, false);
 			result.put("isByPartition", true);
 			return result;
 		}
 		List<String> columnNameList = getAllColumnNameList(tableName, conn);
 		List<String> partitionFilterList = getPartitionFilterList(rsList);
 		log.info("get partition data begin, tableName: {}", tableName);
+		Statement stmt =null;
+		ResultSet rs=null;
 		try {
-			var stmt = conn.createStatement();
-			var rs = stmt.executeQuery(PARTITION_LIST_SQL.replace("TABLENAME", tableName));
+			 stmt = conn.createStatement();
+			 rs = stmt.executeQuery(PARTITION_LIST_SQL.replace(CommonConstants.TABLENAME, tableName));
 			while (rs.next()) {
 				JSONObject item = JSONObject.parseObject(rs.getString(1));
 				// PartitionData
@@ -519,13 +599,27 @@ public class AnalyzeCaller implements Caller {
 					resultArray.add(partitionDataResp);
 				}
 			}
-			result.put("partitionResultArray", JSON.toJSONString(resultArray));
-			result.put("isHasPartKey", isHasPartKey);
+			result.put(CommonConstants.PARTITION_RESULT_ARRAY, JSON.toJSONString(resultArray));
+			result.put(CommonConstants.IS_HAS_PART_KEY, isHasPartKey);
 			log.info("get partition data result : {}", result);
-			stmt.close();
 			return result;
 		} catch (Exception e) {
 			log.error("get partition data fail:{}", e.getMessage());
+		}finally {
+			try{
+				if (stmt!=null){
+					stmt.close();
+				}
+			}catch (Exception e){
+				log.error(CommonConstants.DATA_FAIL, e.getMessage());
+			}
+			try{
+				if (rs!=null){
+					rs.close();
+				}
+			}catch (Exception e){
+				log.error(CommonConstants.DATA_FAIL, e.getMessage());
+			}
 		}
 		return result;
 	}
@@ -543,16 +637,16 @@ public class AnalyzeCaller implements Caller {
 					String[] filterArr = query.split("AND");
 					for (String filter : filterArr) {
 						if (filter.contains("::")) {
-							list.add(filter.substring(filter.indexOf("((") + 2, filter.indexOf(")")).trim());
+							list.add(filter.substring(filter.indexOf("((") + 2, filter.indexOf(CommonConstants.RIGHT_BRACKET)).trim());
 						} else {
-							list.add(filter.substring(filter.indexOf("((") + 2, filter.indexOf("=")).trim());
+							list.add(filter.substring(filter.indexOf("((") + 2, filter.indexOf(CommonConstants.EQUAL)).trim());
 						}
 					}
 				} else {
 					if (query.contains("((")) {
-						list.add(query.substring(query.indexOf("((") + 2, query.indexOf(")")).trim());
+						list.add(query.substring(query.indexOf("((") + 2, query.indexOf(CommonConstants.RIGHT_BRACKET)).trim());
 					} else {
-						list.add(query.substring(query.indexOf("(") + 1, query.indexOf("=")).trim());
+						list.add(query.substring(query.indexOf(CommonConstants.LEFT_BRACKET) + 1, query.indexOf(CommonConstants.EQUAL)).trim());
 					}
 				}
 			}
@@ -569,15 +663,32 @@ public class AnalyzeCaller implements Caller {
 		if (StringUtils.isEmpty(tableName)) {
 			return columnList;
 		}
+		Statement stmt =null;
+		ResultSet rs=null;
 		try {
-			var stmt = conn.createStatement();
-			var rs = stmt.executeQuery(QUERY_ALL_COLUMN_NAME.replace("TABLENAME", tableName));
+			 stmt = conn.createStatement();
+			 rs = stmt.executeQuery(QUERY_ALL_COLUMN_NAME.replace(CommonConstants.TABLENAME, tableName));
 			while (rs.next()) {
 				columnList.add(rs.getString(1));
 			}
 			stmt.close();
 		} catch (Exception e) {
 			log.error("get all column name fail:{}", e.getMessage());
+		}finally {
+			try{
+				if (stmt!=null){
+					stmt.close();
+				}
+			}catch (Exception e){
+				log.error(CommonConstants.DATA_FAIL, e.getMessage());
+			}
+			try{
+				if (rs!=null){
+					rs.close();
+				}
+			}catch (Exception e){
+				log.error(CommonConstants.DATA_FAIL, e.getMessage());
+			}
 		}
 		return columnList;
 	}

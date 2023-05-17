@@ -39,8 +39,6 @@ public class TopSQLServiceTest {
         Mockito.doReturn(mockTopSQLList()).when(topSQLService).getPartitionList(any());
         Mockito.doReturn(mockStringList()).when(topSQLService).getIndexAdvice(any());
         Mockito.doReturn(mockJsonObject()).when(topSQLService).getObjectInfo(any());
-        Mockito.doReturn(mockClusterList()).when(topSQLService).cluster();
-        Mockito.doReturn(mockClusterNode()).when(topSQLService).clusterNode(any());
     }
 
     private ClusterManager.OpsClusterNodeVOSub mockClusterNode() {

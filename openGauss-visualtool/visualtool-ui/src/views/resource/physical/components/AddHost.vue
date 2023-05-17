@@ -112,6 +112,9 @@
         <a-input-password
           v-model="data.formData.password"
           :placeholder="$t('components.AddHost.5mphy3snyao0')"
+          @focus="passwordFocus"
+          @blur="passwordBlur"
+          :invisible-button="data.formData.password !== data.emptyPwd"
           allow-clear
         />
         <a-checkbox
@@ -156,7 +159,7 @@
 import { KeyValue } from '@/types/global'
 import { FormInstance } from '@arco-design/web-vue/es/form'
 import { nextTick, reactive, ref, toRaw, computed } from 'vue'
-import { addHost, editHost, hostPing, azListAll, hostTagListAll } from '@/api/ops'
+import { addHost, editHost, hostPing, azListAll, hostTagListAll, hostUserListAll } from '@/api/ops'
 import { Message } from '@arco-design/web-vue'
 import { useI18n } from 'vue-i18n'
 import { encryptPassword } from '@/utils/jsencrypt'
@@ -177,6 +180,8 @@ const data = reactive<KeyValue>({
   azList: [],
   tagsLoading: false,
   tagsList: [],
+  oldPwd: '',
+  emptyPwd: 'emptyPassword',
   formData: {
     name: '',
     hostId: '',
@@ -269,11 +274,24 @@ const submit = () => {
   formRef.value?.validate().then(result => {
     if (!result) {
       data.loading = true
-      encryptPassword(data.formData.password).then((res) => {
+      if (data.formData.hostId && data.formData.password === data.emptyPwd) {
         const param = Object.assign({}, data.formData)
-        param.password = res
-        if (data.formData.hostId) {
-          if (data.formData.password) {
+        param.password = data.oldPwd
+        editHost(data.formData.hostId, param).then((res: KeyValue) => {
+          data.loading = false
+          if (Number(res.code) === 200) {
+            Message.success({ content: `Modified success` })
+            emits(`finish`)
+          }
+          close()
+        }).finally(() => {
+          data.loading = false
+        })
+      } else {
+        encryptPassword(data.formData.password).then((res) => {
+          const param = Object.assign({}, data.formData)
+          param.password = res
+          if (data.formData.hostId) {
             editHost(data.formData.hostId, param).then((res: KeyValue) => {
               data.loading = false
               if (Number(res.code) === 200) {
@@ -284,25 +302,26 @@ const submit = () => {
             }).finally(() => {
               data.loading = false
             })
+          } else {
+            addHost(param).then((res: KeyValue) => {
+              data.loading = false
+              if (Number(res.code) === 200) {
+                Message.success({ content: `Create success` })
+                emits(`finish`)
+              }
+              close()
+            }).finally(() => {
+              data.loading = false
+            })
           }
-        } else {
-          addHost(param).then((res: KeyValue) => {
-            data.loading = false
-            if (Number(res.code) === 200) {
-              Message.success({ content: `Create success` })
-              emits(`finish`)
-            }
-            close()
-          }).finally(() => {
-            data.loading = false
-          })
-        }
-      })
+        })
+      }
     }
   }).catch()
 }
 const close = () => {
   data.show = false
+  data.oldPwd = ''
   nextTick(() => {
     formRef.value?.clearValidate()
     formRef.value?.resetFields()
@@ -310,17 +329,33 @@ const close = () => {
 }
 
 const tagsChange = (val: any) => {
-  console.log('show tags', val);
   data.formData.tags = val.filter((item: string) => {
     return item.trim() !== ''
   })
+}
+
+const passwordFocus = () => {
+  if (data.formData.password === data.emptyPwd) {
+    data.formData.password = ''
+  }
+}
+
+const passwordBlur = () => {
+  if (!data.formData.password && data.oldPwd) {
+    data.formData.password = data.emptyPwd
+  }
 }
 
 const handleTestHost = () => {
   formRef.value?.validate().then(async result => {
     if (!result) {
       data.testLoading = true
-      const encryptPwd = await encryptPassword(data.formData.password)
+      let encryptPwd
+      if (data.formData.hostId && data.formData.password === data.emptyPwd) {
+        encryptPwd = data.oldPwd
+      } else {
+        encryptPwd = await encryptPassword(data.formData.password)
+      }
       const param = {}
       Object.assign(param, {
         privateIp: data.formData.privateIp,
@@ -378,6 +413,19 @@ const getAllTag = () => {
   })
 }
 
+const getHostPassword = (hostId: string) => {
+  hostUserListAll(hostId).then((res: KeyValue) => {
+    if (Number(res.code) === 200) {
+      const rootObj = res.data.find((item: KeyValue) => {
+        return item.username === 'root'
+      })
+      if (rootObj) {
+        data.oldPwd = rootObj.password
+      }
+    }
+  })
+}
+
 const open = (type: string, editData?: KeyValue) => {
   data.show = true
   getAZList()
@@ -387,7 +435,11 @@ const open = (type: string, editData?: KeyValue) => {
   if (type === 'update' && data) {
     data.title = t('components.AddHost.5mphy3snzrk0')
     Object.assign(data.formData, editData)
-    data.formData.isRemember = false
+    if (data.formData.isRemember) {
+      data.formData.password = data.emptyPwd
+      // get password
+      getHostPassword(data.formData.hostId)
+    }
   } else {
     data.title = t('components.AddHost.5mphy3snz5k0')
     Object.assign(data.formData, {

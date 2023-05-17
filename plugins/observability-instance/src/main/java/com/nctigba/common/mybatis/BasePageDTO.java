@@ -55,7 +55,7 @@ public class BasePageDTO<T> implements MyPage<T> {
         return current;
     }
     public long getPageNum() {
-        return current;
+        return this.getCurrent();
     }
     private long current = 1;
 

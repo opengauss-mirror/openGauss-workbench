@@ -23,14 +23,17 @@
                     <el-form-item :label="t('install.collectInstance')" prop="nodeId">
                         <ClusterCascader width="200" instanceValueKey="nodeId" @getCluster="handleClusterValue" autoSelectFirst notClearable @loaded="getClusterList" />
                     </el-form-item>
-                    <el-form-item :label="t('install.rootPWD')" prop="rootPassword">
+                    <!-- <el-form-item :label="t('install.rootPWD')" prop="rootPassword" >
                         <el-input v-model="formData.rootPassword" show-password style="width: 200px; margin: 0 4px" />
-                    </el-form-item>
+                    </el-form-item> -->
                     <el-form-item :label="t('install.serverCollectPort')" prop="serverCollectPort">
                         <el-input v-model="formData.serverCollectPort" style="width: 200px; margin: 0 4px" />
                     </el-form-item>
                     <el-form-item :label="t('install.datasourceCollectPort')" prop="datasourceCollectPort">
                         <el-input v-model="formData.datasourceCollectPort" style="width: 200px; margin: 0 4px" />
+                    </el-form-item>
+                    <el-form-item :label="t('install.installPath')" prop="path">
+                        <el-input v-model="formData.path" style="width: 200px; margin: 0 4px" readonly/>
                     </el-form-item>
                     <el-form-item :label="t('install.installMode')" prop="installMode">
                         <el-radio-group v-model="formData.installMode">
@@ -83,6 +86,9 @@
                 </el-upload>
                 <div>
                     <el-progress v-if="showProgress" :percentage="progressPercent" :format="progressFormat" />
+                    <el-button type="primary"  :icon="RefreshRight" @click="retryUpload" v-if="retry">
+                        {{ t("install.continueUpload") }}
+                    </el-button>
                 </div>
             </div>
         </el-dialog>
@@ -96,7 +102,7 @@ import { useI18n } from "vue-i18n";
 import WebSocketClass from "../../../utils/websocket";
 import { encryptPassword } from "../../../utils/jsencrypt";
 import moment from "moment";
-import { Plus, Warning } from "@element-plus/icons-vue";
+import { Plus, Warning,RefreshRight } from "@element-plus/icons-vue";
 import type { UploadProps } from "element-plus";
 import restRequest from "../../../request/restful";
 import { el } from "element-plus/es/locale";
@@ -121,11 +127,12 @@ watch(
 const initFormData = {
     nodeId: "",
     hostId: "",
-    rootPassword: "",
+    // rootPassword: "",
     port: "9090",
     serverCollectPort: "9100",
     datasourceCollectPort: "9187",
     installMode: "online",
+    path: "",
     nodepkg: "",
     nodesrc: "",
     nodeurl: "",
@@ -139,10 +146,10 @@ const formData = reactive(cloneDeep(initFormData));
 const connectionFormRef = ref<FormInstance>();
 const connectionFormRules = reactive<FormRules>({
     nodeId: [{ required: true, message: t("install.collectorRules[0]"), trigger: "blur" }],
-    rootPassword: [{ required: true, message: t("install.collectorRules[1]"), trigger: "blur" }],
     serverCollectPort: [{ required: true, message: t("install.collectorRules[2]"), trigger: "blur" }],
     datasourceCollectPort: [{ required: true, message: t("install.collectorRules[3]"), trigger: "blur" }],
 });
+
 // cluster component
 const handleClusterValue = (val: any) => {
     formData.nodeId = val.length > 1 ? val[1] : "";
@@ -150,6 +157,7 @@ const handleClusterValue = (val: any) => {
         nextTick(() => {
             refreshPkgInfo();
         });
+        formData.path =  `${basePath.value}/${formData.nodeId}/exports`
     }
 };
 const clusterList = ref<any[]>();
@@ -190,7 +198,7 @@ const install = async () => {
     let result = await connectionFormRef.value?.validate();
     if (!result) return;
     started.value = true;
-    //判断是否安装了服务端
+    //Determine whether the server is installed
     restRequest.get("/observability/v1/environment/prometheus", "").then(res => {
         if(!res || res.length === 0) {
             ElMessage({
@@ -211,12 +219,11 @@ const install = async () => {
     
 };
 const sendData = async () => {
-    const encryptPwd = await encryptPassword(formData.rootPassword);
     const sendData = {
         key: "exporter",
         nodeId: formData.nodeId,
         installMode: formData.installMode,
-        rootPassword: encryptPwd,
+        path: formData.path,
         serverCollectPort: formData.serverCollectPort,
         datasourceCollectPort: formData.datasourceCollectPort,
         language: localStorage.getItem('locale') === 'en-US' ? 'en_US' : 'zh_CN'
@@ -284,6 +291,14 @@ const refreshPkgInfo = () => {
         getPkgInfo(hostId);
     }
 };
+const basePath = ref<string>('');
+const getInstallPath = () => {
+    restRequest.get(`/observability/v1/environment/basePath`).then(res => {
+        if(res) {
+            basePath.value = res + (res.endsWith('/') ? 'data' : '/data');
+        }
+    })
+}
 
 const showUpload = ref<boolean>(false);
 const nodeFileList = ref<any[]>();
@@ -292,7 +307,16 @@ const fileList = ref<any[]>();
 const pgkName = ref<string>();
 const pgkType = ref<string>();
 const showProgress = ref<boolean>(false);
-const progressPercent = ref<number>(0);
+// const progressPercent = ref<number>(0);
+const progressPercentList = ref<number[]>([]);
+const progressPercent = computed({
+    get() {
+		return fileChunkList.value.length > 0 ? parseInt(progressPercentList.value?.reduce((acc, cur) => { return acc + cur },0) / fileChunkList.value.length) : 0;
+	},
+	set(value) {
+		return value
+	}
+});
 const progressFormat = (percentage:number) => percentage + '%';
 const showUploadFile = (_type: string, _pgkName: string) => {
     showUpload.value = true;
@@ -304,51 +328,194 @@ const showUploadFile = (_type: string, _pgkName: string) => {
         fileList.value = ogFileList.value
     }
 };
-const upload = (action: any) => {
+
+const DEFAULT_SIZE = 15 * 1024 * 2024;
+const fileTotalSize = ref<number>(0);
+const chunkCurNum = ref<number>(0);
+const errChunkNum = ref<number>(0);
+const fileChunkList = ref<any[]>([]);
+const retry = ref<boolean>(false);
+const createFileChunk = (file: any, size = DEFAULT_SIZE) => {
+    fileChunkList.value = [];
+    progressPercentList.value = [];
+    let cur = 0;
+    while (cur < file.size) {
+        fileChunkList.value?.push(file.slice(cur, cur + size));
+        progressPercentList.value?.push(0);
+        cur += size;
+    }
+}
+const uploadChunk = (fileChunk: any,name: string,index: number) =>{
+    let formData = new FormData();
+    formData.append("name", name + "-" + index);
+    formData.append("pkg", fileChunk);
+    return new Promise((resolve,reject) => {
+        restRequest
+        .post("/observability/v1/environment/upload", formData, { headers: { contentType: "multipart/form-data" },onUploadProgress: event => {
+            progressPercentList.value[index] = parseInt(event.loaded / event.total  * 100);
+        } })
+        .then(function (res) {
+            if(res && res === 'success') {
+                chunkCurNum.value ++;
+                resolve(name + "-" + index)
+            } else {
+                progressPercentList.value[index] = 0;
+                errChunkNum.value ++;
+                reject(name + "-" + index)
+            }
+        })
+        .catch(function (res) {
+            progressPercentList.value[index] = 0;
+            errChunkNum.value ++;
+            reject(name + "-" + index)
+        });
+    })
+    
+    
+}
+const uploadMerge = (name: string,total: number) => {
+    restRequest.post(`/observability/v1/environment/merge?name=${name}&total=${total}`).then(res => {
+        if(!res) {
+            ElMessage({
+                message: t("install.uploadSucceed"),
+                type: "success",
+            });
+            refreshPkgInfo();
+            fileChunkList.value = []
+            showProgress.value = false;
+            showUpload.value = false;
+            progressPercent.value = 0;
+        }else {
+            retry.value = true;
+            ElMessage({
+                    message: t('install.uploadFail'),
+                    type: 'error',
+            }); 
+        }
+    }).catch(err => {
+        retry.value = true;
+        ElMessage({
+                    message: t('install.uploadFail'),
+                    type: 'error',
+            }); 
+    })
+}
+const upload = async (action: any) => {
     if (!action) {
         return;
     }
-    let formData = new FormData();
-    formData.append("name", pgkName.value);
-    formData.append("pkg", action.file);
+    chunkCurNum.value = 0;
+    errChunkNum.value = 0;
+    fileTotalSize.value = action.file.size;
+    createFileChunk(action.file);
     showProgress.value = true
-    restRequest
-        .post("/observability/v1/environment/upload", formData, { headers: { contentType: "multipart/form-data" },onUploadProgress: event => {
-            progressPercent.value = parseInt(event.loaded / event.total  * 100);
-        } })
-        .then(function (res) {
-            if(!res) {
-                ElMessage({
-                    message: t("install.uploadSucceed"),
-                    type: "success",
-                });
-                showUpload.value = false;
-                if(pgkType.value === 'node') {
-                    nodeFileList.value = [{name:action.file.name,raw: action.file}]
-                }else {
-                    ogFileList.value = [{name:action.file.name,raw: action.file}]
-                }
-                refreshPkgInfo();
-            }else {
-                fileList.value = [];
-                ElMessage({
-                    message: res && res.msg ? res.msg : t('install.uploadFail'),
-                    type: 'error',
-                }); 
-            }
-            showProgress.value = false;
-            progressPercent.value = 0;
-        })
-        .catch(function (res) {
-            fileList.value = [];
-            showProgress.value = false;
-            progressPercent.value = 0;
+    const requestList = fileChunkList.value.map(async (item,index) => {
+        return uploadChunk(item,pgkName.value,index);
+    });
+    Promise.all(requestList).then(res => {
+        if(pgkType.value === 'node') {
+            nodeFileList.value = [{name:action.file.name,raw: action.file}]
+        }else {
+            ogFileList.value = [{name:action.file.name,raw: action.file}]
+        }
+        if(errChunkNum.value === 0) {
+            uploadMerge(pgkName.value,fileChunkList.value.length)
+        }else {
+            retry.value = true;
             ElMessage({
-                    message: res && res.msg ? res.msg : t('install.uploadFail'),
-                    type: 'error',
-            }); 
-        });
+                        message: t('install.uploadFail'),
+                        type: 'error',
+                }); 
+        }
+    }).catch(res => {
+        retry.value = true;
+            ElMessage({
+                        message: t('install.uploadFail'),
+                        type: 'error',
+                }); 
+    })
 };
+const retryUpload = async() => {
+    retry.value = false;
+    if(chunkCurNum.value === fileChunkList.value.length) {
+        uploadMerge(pgkName.value,fileChunkList.value.length)
+        return;
+    }
+    errChunkNum.value = 0;
+    const requestList = fileChunkList.value.map((item,index) => {
+        if(progressPercentList.value[index] === 0) {
+            return uploadChunk(item,pgkName.value,index);
+        }else {
+            return new Promise((resolve,reject) => {
+                resolve("");
+            })
+        }
+    })
+    Promise.all(requestList).then(res => {
+        if(errChunkNum.value === 0) {
+            uploadMerge(pgkName.value,fileChunkList.value.length)
+        }else {
+            ElMessage({
+                        message: t('install.uploadFail'),
+                        type: 'error',
+                }); 
+        }
+    }).catch(res => {
+        retry.value = true;
+            ElMessage({
+                        message: t('install.uploadFail'),
+                        type: 'error',
+                }); 
+    })
+    
+
+}
+
+// const upload = (action: any) => {
+//     if (!action) {
+//         return;
+//     }
+//     let formData = new FormData();
+//     formData.append("name", pgkName.value);
+//     formData.append("pkg", action.file);
+//     showProgress.value = true
+//     restRequest
+//         .post("/observability/v1/environment/upload", formData, { headers: { contentType: "multipart/form-data" },onUploadProgress: event => {
+//             progressPercent.value = parseInt(event.loaded / event.total  * 100);
+//         } })
+//         .then(function (res) {
+//             if(!res) {
+//                 ElMessage({
+//                     message: t("install.uploadSucceed"),
+//                     type: "success",
+//                 });
+//                 showUpload.value = false;
+//                 if(pgkType.value === 'node') {
+//                     nodeFileList.value = [{name:action.file.name,raw: action.file}]
+//                 }else {
+//                     ogFileList.value = [{name:action.file.name,raw: action.file}]
+//                 }
+//                 refreshPkgInfo();
+//             }else {
+//                 fileList.value = [];
+//                 ElMessage({
+//                     message: res && res.msg ? res.msg : t('install.uploadFail'),
+//                     type: 'error',
+//                 }); 
+//             }
+//             showProgress.value = false;
+//             progressPercent.value = 0;
+//         })
+//         .catch(function (res) {
+//             fileList.value = [];
+//             showProgress.value = false;
+//             progressPercent.value = 0;
+//             ElMessage({
+//                     message: res && res.msg ? res.msg : t('install.uploadFail'),
+//                     type: 'error',
+//             }); 
+//         });
+// };
 const handleExceed: UploadProps["onExceed"] = (files, uploadFiles) => {
     fileList.value = files;
     if(pgkType.value === 'node') {
@@ -362,6 +529,9 @@ const uploadBefore = () => {
     return true;
 };
 
+onMounted(() => {
+    getInstallPath();
+});
 onBeforeUnmount(() => {
     if (ws.instance) ws.instance.close();
 });

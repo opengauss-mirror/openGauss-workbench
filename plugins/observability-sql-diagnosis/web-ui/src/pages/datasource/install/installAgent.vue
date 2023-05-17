@@ -32,6 +32,9 @@
                     <el-form-item :label="t('install.callbackPath')" prop="callbackPath">
                         <el-input v-model="formData.callbackPath" style="width: 200px; margin: 0 4px" />
                     </el-form-item>
+                    <el-form-item :label="t('install.installPath')" prop="path">
+                        <el-input v-model="formData.path" style="width: 200px; margin: 0 4px" readonly/>
+                    </el-form-item>
                 </el-form>
             </div>
 
@@ -74,7 +77,8 @@ const initFormData = {
     nodeId: "",
     rootPassword: "",
     port: "2321",
-    callbackPath: location.protocol + "//" + window.location.host
+    callbackPath: location.protocol + "//" + window.location.host,
+    path: ""
 };
 const formData = reactive(cloneDeep(initFormData));
 const connectionFormRef = ref<FormInstance>();
@@ -86,6 +90,7 @@ const connectionFormRules = reactive<FormRules>({
 // cluster component
 const handleClusterValue = (val: any) => {
     formData.nodeId = val.length > 1 ? val[1] : ''
+    formData.path = `${basePath.value}/${formData.nodeId}/agent`
 }
 
 const started = ref(false)
@@ -113,6 +118,7 @@ const sendData = async () => {
         nodeId: formData.nodeId,
         rootPassword: encryptPwd,
         port: formData.port,
+        path: formData.path,
         callbackPath: formData.callbackPath,
         language: localStorage.getItem('locale') === 'en-US' ? 'en_US' : 'zh_CN'
     }
@@ -166,7 +172,17 @@ const closeDialog = () => {
     if (installSucceed.value) emit('installed')
     emit('changeModal', visible.value)
 }
-
+const basePath = ref<string>('')
+const getInstallPath = () => {
+    ogRequest.get(`/observability/v1/environment/basePath`).then(res => {
+        if(res) {
+            basePath.value = res + (res.endsWith('/') ? 'data' : '/data');
+        }
+    })
+}
+onMounted(() => {
+    getInstallPath();
+});
 onBeforeUnmount(() => {
     if (ws.instance) ws.instance.close()
 })

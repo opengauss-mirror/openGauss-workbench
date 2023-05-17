@@ -54,8 +54,8 @@ public class Installer implements SocketExtract {
 						.orElseThrow(() -> new RuntimeException("websocket session not exist"));
 				switch (obj.getStr("key")) {
 				case "agent":
-					agentService.install(session, obj.getStr("nodeId"), obj.getStr("rootPassword"),
-							obj.getStr("callbackPath"));
+					agentService.install(session, obj.getStr("nodeId"), obj.getInt("port"), obj.getStr("rootPassword"),
+							obj.getStr("path"), obj.getStr("callbackPath"));
 					break;
 				case "uninstall agent":
 					agentService.uninstall(session, obj.getStr("nodeId"), obj.getStr("rootPassword"));
