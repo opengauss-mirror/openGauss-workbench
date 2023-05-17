@@ -1,7 +1,11 @@
 import axios from 'axios'
 
-export function clustersData (payload) {
-  return axios.get('/plugins/data-migration/resource/getClusters', payload)
+export function sourceClusters (payload) {
+  return axios.get('/plugins/data-migration/resource/sourceClusters', payload)
+}
+
+export function targetClusters (payload) {
+  return axios.get('/plugins/data-migration/resource/targetClusters', payload)
 }
 
 export function hostsData () {

@@ -285,7 +285,7 @@ const startSubReverse = row => {
 const loopSubTaskStatus = () => {
   timerStatus && clearTimeout(timerStatus)
   const id = window.$wujie?.props.data.id
-  refreshStatus(id).then(res => {
+  refreshStatus(id).then(() => {
     if (task.value.execStatus !== 2) {
       timerStatus = setTimeout(() => {
         loopSubTaskStatus()

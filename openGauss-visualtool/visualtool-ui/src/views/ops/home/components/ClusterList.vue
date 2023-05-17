@@ -366,7 +366,7 @@
 </template>
 
 <script lang="ts" setup>
-import { onBeforeUnmount, onMounted, reactive, ref, defineProps } from 'vue'
+import { onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import { KeyValue } from '@/types/global'
 import { ClusterRoleEnum, OpenGaussVersionEnum, DeployTypeEnum } from '@/types/ops/install' // eslint-disable-line
 import { clusterList, clusterMonitor } from '@/api/ops'

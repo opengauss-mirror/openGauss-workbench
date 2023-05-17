@@ -236,7 +236,7 @@ const submit = () => {
       data.loading = false
       if (Number(res.code) === 200) {
         Message.success({ content: `Create success` })
-        emits(`finish`)
+        emits(`finish`, data.form.dbType)
       }
       close()
     }).finally(() => {
