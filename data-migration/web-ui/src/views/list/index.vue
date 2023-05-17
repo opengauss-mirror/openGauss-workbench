@@ -270,6 +270,9 @@ const deleteTheTask = async row => {
   await deleteTask(row.id)
   selectedKeys.value = []
   Message.success('Delete success')
+  if (tableData.value.length === 1 && queryParams.pageNum !== 1) {
+    queryParams.pageNum--
+  }
   getList()
 }
 
@@ -280,6 +283,9 @@ const deleteMore = async () => {
     return
   }
   await deleteTask(selectedKeys.value.join(','))
+  if (tableData.value.length === selectedKeys.value.length && queryParams.pageNum !== 1) {
+    queryParams.pageNum--
+  }
   selectedKeys.value = []
   Message.success('Delete success')
   getList()

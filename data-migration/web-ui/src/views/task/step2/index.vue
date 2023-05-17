@@ -129,6 +129,7 @@ const syncTaskParams = params => {
   const idx = originData.findIndex(item => item.sourceDBName === subTaskInfo.value.sourceDBName && item.targetDBName === subTaskInfo.value.targetDBName)
   originData.splice(idx, 1, toRaw(subTaskInfo.value))
   emits('syncConfig', toRaw(originData))
+  getFilterData()
 }
 
 const handleParamsConfig = (mode, row) => {
