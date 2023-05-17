@@ -82,7 +82,7 @@ const getListData = () => {
       Message.error('Failed to get the list of business flow running instances')
     }
   }).catch((error) => {
-    console.log('show getBusiFlowList error', error);
+    console.log('show getBusiFlowList error', error)
     const { response } = error
     if (response.status === 404) {
       emits('is-install-plugin', false)

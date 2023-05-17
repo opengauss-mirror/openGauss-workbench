@@ -49,7 +49,7 @@ axios.interceptors.response.use(
           okText: i18n.global.t('components.login-form.5o61dvpc5o80'),
           width: 'auto',
           maskClosable: false,
-          async onOk() {
+          async onOk () {
             isTimeout = false
             const userStore = useUserStore()
 
