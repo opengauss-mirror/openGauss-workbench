@@ -10,7 +10,7 @@ context:
     classes: org.opengauss.admin.plugin.listener.DataMigrationPluginListener
 spring:
   resources:
-    static-locations: classpath:resources,file:D://resources
+    static-locations: classpath:resources
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
     druid:

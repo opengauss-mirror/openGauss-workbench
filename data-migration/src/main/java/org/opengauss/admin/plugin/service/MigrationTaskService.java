@@ -51,65 +51,75 @@ public interface MigrationTaskService extends IService<MigrationTask> {
     Map<String, Object> getSingleTaskStatusAndProcessByProtal(MigrationTask t);
 
     /**
-     * count the number of unfinished tasks by target DB
-     * @param targetDb
-     * @return count the number
+     * Query the number of tasks not finish by target
+     *
+     * @param targetNodeId targetNodeId of the OpsHost object
+     * @param targetDb targetDb of the OpsHost object
+     * @return number of tasks
      */
-    Integer countNotFinishByTargetDb(String targetDb);
+    Integer countNotFinishByTargetDb(String targetNodeId, String targetDb);
 
     /**
      * count the number of running tasks by target DB
-     * @param targetDb
+     *
+     * @param targetDb targetDb of the OpsHost object
      * @return count the number
      */
     Integer countRunningByTargetDb(String targetDb);
 
     /**
      * count the number of running tasks by hostID
-     * @param hostId
+     *
+     * @param hostId hostId of the OpsHost object
      * @return count the number
      */
     Integer countRunningByHostId(String hostId);
 
     /**
      * list data running tasks by hostID
-     * @param hostId
+     *
+     * @param hostId hostId of the OpsHost object
      * @return tasks
      */
     List<MigrationTask> listRunningTaskByHostId(String hostId);
 
     /**
      * list data tasks by status
-     * @param taskStatus
+     *
+     * @param taskStatus TaskStatus Object
      * @return tasks
      */
     List<MigrationTask> listTaskByStatus(TaskStatus taskStatus);
 
     /**
      * count the number by status
-     * @param taskStatus
+     *
+     * @param taskStatus TaskStatus Object
      * @return count the number
      */
     Integer countTaskByStatus(TaskStatus taskStatus);
 
     /**
      * update the task by id
-     * @param id
-     * @param taskStatus
+     *
+     * @param id id of TaskStatus object
+     * @param taskStatus TaskStatus Object
      */
     void updateStatus(Integer id, TaskStatus taskStatus);
 
     /**
      * count the number on the model grouping by mainTaskId
-     * @param mainTaskId
+     *
+     * @param mainTaskId mainTaskId of MigrationTask Object
      * @return count the number for each model
      */
     List<Map<String, Object>> countByMainTaskIdGroupByModel(Integer mainTaskId);
 
     /**
      * run task
-     * @param h
-     * @param t
+     *
+     * @param h MigrationTaskHostRef Object
+     * @param t  MigrationTask Object
      * @param globalParams
      */
     void runTask(MigrationTaskHostRef h, MigrationTask t, List<MigrationTaskGlobalParam> globalParams);

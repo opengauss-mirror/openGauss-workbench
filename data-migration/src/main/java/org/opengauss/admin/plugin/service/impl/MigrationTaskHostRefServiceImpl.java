@@ -62,7 +62,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -139,28 +144,34 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
         return hosts;
     }
 
-
+    /**
+     * get migration exec host list
+     *
+     * @return host info list
+     */
     @Override
     public List<Map<String, Object>> getHosts() {
         List<OpsHostEntity> opsHostEntities = hostFacade.listAll();
-        List<Map<String, Object>> hosts = opsHostEntities.stream().map(host -> {
+        List<Map<String, Object>> hosts = new ArrayList<>();
+        for (OpsHostEntity host : opsHostEntities) {
             Map<String, Object> itemMap = BeanUtil.beanToMap(host);
             List<MigrationTask> tasks = migrationTaskService.listRunningTaskByHostId(host.getHostId());
             itemMap.put("tasks", tasks);
             MigrationHostPortalInstall installHost = migrationHostPortalInstallHostService.getOneByHostId(host.getHostId());
             if (installHost == null) {
                 OpsHostEntity opsHost = hostFacade.getById(host.getHostId());
-                List<OpsHostUserEntity> opsHostUserEntities = hostUserFacade.listHostUserByHostId(opsHost.getHostId());
-                if (opsHostUserEntities.size() > 0) {
-                    OpsHostUserEntity hostUser = opsHostUserEntities.get(0);
-                    if (StringUtils.isNotBlank(hostUser.getPassword())) {
-                        String[] hostInfo = PortalHandle.getHostBaseInfo(opsHost.getPublicIp(), opsHost.getPort(), hostUser.getUsername(), encryptionUtils.decrypt(hostUser.getPassword()));
-                        itemMap.put("baseInfos", hostInfo);
-                    }
+                String[] opsHosInfo = getOpsHosInfo(host.getHostId(), opsHost.getPublicIp(), opsHost.getPort());
+                if (opsHosInfo.length == 0) {
+                    continue;
                 }
+                itemMap.put("baseInfos", opsHosInfo);
                 itemMap.put("installPortalStatus", PortalInstallStatus.NOT_INSTALL.getCode());
             } else {
-                String[] hostInfo = PortalHandle.getHostBaseInfo(installHost.getHost(), installHost.getPort(), installHost.getRunUser(), installHost.getRunPassword());
+                String[] hostInfo = PortalHandle.getHostBaseInfo(installHost.getHost(), installHost.getPort(),
+                        installHost.getRunUser(), installHost.getRunPassword());
+                if (hostInfo.length == 0) {
+                    continue;
+                }
                 itemMap.put("baseInfos", hostInfo);
                 itemMap.put("installUser", installHost.getRunUser());
                 itemMap.put("installPath", installHost.getInstallPath());
@@ -174,8 +185,8 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
                     itemMap.put("installPortalStatus", installHost.getInstallStatus());
                 }
             }
-            return itemMap;
-        }).collect(Collectors.toList());
+            hosts.add(itemMap);
+        }
         return hosts;
     }
 
@@ -261,35 +272,34 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
     public List<String> getMysqlClusterDbNames(String url, String username, String password) {
         String sql = "SELECT `SCHEMA_NAME` FROM `information_schema`.`SCHEMATA`;";
         List<String> dbList = new ArrayList<>();
-        try {
-            List<Map<String, Object>> resultSet = this.querySource(url, username, password, sql);
-            resultSet.forEach(ret -> {
-                String schemaName = ret.get("SCHEMA_NAME").toString();
-                dbList.add(schemaName);
-            });
-        } catch (SQLException | ClassNotFoundException e) {
-        }
+        List<Map<String, Object>> resultSet = this.querySource(url, username, password, sql);
+        resultSet.forEach(ret -> {
+            String schemaName = ret.get("SCHEMA_NAME").toString();
+            dbList.add(schemaName);
+        });
         return dbList;
     }
 
+    /**
+     * get the list of database names on a node.
+     *
+     * @param clusterNode cluster node object
+     * @return database name list
+     */
     @Override
     public List<Map<String, Object>> getOpsClusterDbNames(OpsClusterNodeVO clusterNode) {
         List<Map<String, Object>> dbList = new ArrayList<>();
         if (clusterNode.getHostPort() == 22) {
-            //get database name list
             String sql = "select datname from pg_database;";
-            try {
-                List<Map<String, Object>> resultSet = this.queryTarget(clusterNode, "", sql);
-                resultSet.forEach(ret -> {
-                    Map<String, Object> itemMap = new HashMap<>();
-                    String datname = ret.get("datname").toString();
-                    itemMap.put("dbName", datname);
-                    Integer count = migrationTaskService.countNotFinishByTargetDb(datname);
-                    itemMap.put("isSelect", count == 0);
-                    dbList.add(itemMap);
-                });
-            } catch (SQLException | ClassNotFoundException e) {
-            }
+            List<Map<String, Object>> resultSet = this.queryTarget(clusterNode, "", sql);
+            resultSet.forEach(ret -> {
+                Map<String, Object> itemMap = new HashMap<>();
+                String datname = ret.get("datname").toString();
+                itemMap.put("dbName", datname);
+                Integer count = migrationTaskService.countNotFinishByTargetDb(clusterNode.getNodeId(), datname);
+                itemMap.put("isSelect", count == 0);
+                dbList.add(itemMap);
+            });
         }
         return dbList;
     }
@@ -320,40 +330,66 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
         return list;
     }
 
-    private List<Map<String, Object>> querySource(String url, String username, String password, String sql) throws ClassNotFoundException, SQLException {
-        ResultSet resultSet;
-        Class.forName("com.mysql.cj.jdbc.Driver");
-        Connection conn = DriverManager.getConnection(url, username, password);
-
-        if (sql == null || conn == null) {
-            throw new RuntimeException("sql is empty");
+    private List<Map<String, Object>> querySource(String url, String username, String password, String sql) {
+        ResultSet resultSet = null;
+        Connection conn = null;
+        PreparedStatement preparedStatement = null;
+        List<Map<String, Object>> result = new ArrayList<>();
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver");
+            conn = DriverManager.getConnection(url, username, password);
+            preparedStatement = conn.prepareStatement(sql);
+            resultSet = preparedStatement.executeQuery();
+            result = convertList(resultSet);
+        } catch (SQLException | ClassNotFoundException e) {
+            log.error("querySource soruce database error, {}", e.getMessage());
+        } finally {
+            try {
+                if (resultSet != null) {
+                    resultSet.close();
+                }
+                if (preparedStatement != null) {
+                    preparedStatement.close();
+                }
+                if (conn != null) {
+                    conn.close();
+                }
+            } catch (SQLException e) {
+                log.error("querySource soruce database error, {}", e.getMessage());
+            }
         }
-        PreparedStatement preparedStatement = conn.prepareStatement(sql);
-        resultSet = preparedStatement.executeQuery();
-        List<Map<String, Object>> result = convertList(resultSet);
-        resultSet.close();
-        preparedStatement.close();
-        conn.close();
         return result;
     }
 
 
-    private List<Map<String, Object>> queryTarget(OpsClusterNodeVO clusterNode, String schema, String sql) throws ClassNotFoundException, SQLException {
-        ResultSet resultSet;
-
-        Class.forName("org.opengauss.Driver");
-        String openGaussUrl = "jdbc:opengauss://" + clusterNode.getPublicIp() + ":" + clusterNode.getDbPort() + "/" + clusterNode.getDbName() + "?currentSchema=" + schema;
-        Connection conn = DriverManager.getConnection(openGaussUrl, clusterNode.getDbUser(), clusterNode.getDbUserPassword());
-
-        if (sql == null || conn == null) {
-            throw new RuntimeException("sql is empty");
+    private List<Map<String, Object>> queryTarget(OpsClusterNodeVO clusterNode, String schema, String sql) {
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append("jdbc:opengauss://");
+        stringBuilder.append(clusterNode.getPublicIp()).append(":");
+        stringBuilder.append(clusterNode.getDbPort()).append("/");
+        stringBuilder.append(clusterNode.getDbName()).append("?currentSchema=").append(schema);
+        Connection conn = null;
+        PreparedStatement preparedStatement = null;
+        ResultSet resultSet = null;
+        List<Map<String, Object>> result = new ArrayList<>();
+        try {
+            Class.forName("org.opengauss.Driver");
+            conn = DriverManager.getConnection(stringBuilder.toString(), clusterNode.getDbUser(),
+                    clusterNode.getDbUserPassword());
+            preparedStatement = conn.prepareStatement(sql);
+            resultSet = preparedStatement.executeQuery();
+            result = convertList(resultSet);
+        } catch (ClassNotFoundException | SQLException e) {
+            log.error("query target database error, {}", e.getMessage());
+        } finally {
+            try {
+                resultSet.close();
+                preparedStatement.close();
+                conn.close();
+            } catch (SQLException e) {
+                log.error("query target database error, {}", e.getMessage());
+            }
         }
-        PreparedStatement preparedStatement = conn.prepareStatement(sql);
-        resultSet = preparedStatement.executeQuery();
-        List<Map<String, Object>> result = convertList(resultSet);
-        resultSet.close();
-        preparedStatement.close();
-        conn.close();
         return result;
     }
 
@@ -419,5 +455,26 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
         }
         return logContent;
     }
+
+    /**
+     * get host base information
+     *
+     * @param hostId Id of the OpsHost object
+     * @param publicIp field 'publicIp' of the OpsHost object
+     * @param port field 'port' of the OpsHost object
+     * @return host info array
+     */
+    public String[] getOpsHosInfo(String hostId, String publicIp, Integer port) {
+        List<OpsHostUserEntity> opsHostUserEntities = hostUserFacade.listHostUserByHostId(hostId);
+        if (opsHostUserEntities.size() > 0) {
+            OpsHostUserEntity hostUser = opsHostUserEntities.get(0);
+            if (StringUtils.isNotBlank(hostUser.getPassword())) {
+                return PortalHandle.getHostBaseInfo(publicIp, port, hostUser.getUsername(),
+                        encryptionUtils.decrypt(hostUser.getPassword()));
+            }
+        }
+        return new String[0];
+    }
+
 
 }

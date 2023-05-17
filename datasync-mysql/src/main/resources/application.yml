@@ -3,4 +3,4 @@ context:
     classes: org.opengauss.admin.plugin.listener.PluginListener
 spring:
   resources:
-    static-locations: classpath:resources,file:D://resources
+    static-locations: classpath:resources

@@ -24,17 +24,17 @@
 
 package org.opengauss.admin.plugin.handler;
 
-import cn.hutool.core.map.MapUtil;
 import com.alibaba.fastjson.JSON;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.opengauss.admin.plugin.domain.MigrationHostPortalInstall;
 import org.opengauss.admin.plugin.domain.MigrationTask;
-import org.opengauss.admin.plugin.domain.MigrationTaskHostRef;
 import org.opengauss.admin.plugin.utils.ShellUtil;
 
-import java.util.*;
-import java.util.function.Predicate;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -180,9 +180,24 @@ public class PortalHandle {
         return dest;
     }
 
+    /**
+     * get basic information of a machine
+     *
+     * @param host connection host of the executing machine
+     * @param port connection port of the executing machine
+     * @param user connection username of the executing machine
+     * @param pass connection password of the executing machine
+     * @return info array
+     */
     public static String[] getHostBaseInfo(String host, Integer port, String user, String pass){
-        String result = ShellUtil.execCommandGetResult(host, port, user, pass,
-                "cat /proc/cpuinfo |grep \"processor\"|wc -l && grep MemFree /proc/meminfo |awk '{val=$2/1024}END{print val}' && df -Th | egrep -v \"(tmpfs|sr0)\" | tail -n +2|tr -s \" \" | cut -d \" \" -f5 | tr -d \"G\" | awk '{sum+=$1}END{print sum}'");
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append("cat /proc/cpuinfo |grep \"processor\"|wc -l && grep MemFree /proc/meminfo ");
+        stringBuilder.append("| awk '{val=$2/1024}END{print val}' && df -Th | egrep -v \"(tmpfs|sr0)\" | tail -n +2|");
+        stringBuilder.append("tr -s \" \" | cut -d \" \" -f5 | tr -d \"G\" | awk '{sum+=$1}END{print sum}'");
+        String result = ShellUtil.execCommandGetResult(host, port, user, pass, stringBuilder.toString());
+        if (StringUtils.isBlank(result)) {
+            return new String[0];
+        }
         String[] infos = result.trim().split("\n");
         return infos;
     }
