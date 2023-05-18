@@ -1,11 +1,20 @@
 <template>
-  <a-modal :mask-closable="false" :visible="data.show" :title="data.title" :render-to-body="false" width="50vw"
-    :unmount-on-close="true" :modal-style="{ width: '850px', height: '700px' }" :footer="false" @cancel="close">
+  <a-modal
+    :mask-closable="false"
+    :visible="data.show"
+    :title="data.title"
+    :render-to-body="false"
+    :unmount-on-close="true"
+    :modal-style="{ width: '70%' }"
+    :footer="false"
+    @cancel="close"
+  >
     <div class="flex-col-start">
       <label class="mb-s">{{ $t('components.HostTerminal.else1') }} - {{ data.formData.ip }}</label>
-      <div class="xterm-c">
-        <div id="xterm" class="xterm"></div>
-      </div>
+      <div
+        id="xterm"
+        class="xterm"
+      ></div>
     </div>
   </a-modal>
 </template>
@@ -15,14 +24,14 @@
 import { KeyValue } from '@/types/global'
 import Socket from '@/utils/websocket'
 import { reactive, ref, nextTick } from 'vue'
-import {openSSH} from '@/api/ops'
+import { openSSH } from '@/api/ops'
 import { WsConnectType } from '@/types/ops/install'
 import { Terminal } from 'xterm'
 import { FitAddon } from 'xterm-addon-fit'
 import { AttachAddon } from 'xterm-addon-attach'
 import 'xterm/css/xterm.css'
 import { useI18n } from 'vue-i18n'
-import {encryptPassword} from "@/utils/jsencrypt";
+import { encryptPassword } from "@/utils/jsencrypt";
 const { t } = useI18n()
 const data = reactive<KeyValue>({
   show: false,
@@ -95,11 +104,11 @@ const initTerm = (term: Terminal, ws: WebSocket | undefined) => {
 }
 
 const getTermObj = (): Terminal => {
-  return new Terminal({
+  const termConfig: any = {
     // rendererType: 'dom',
     fontSize: 14,
     rows: 40,
-    cols: 90,
+    cols: 120,
     cursorBlink: true,
     convertEol: true,
     disableStdin: false,
@@ -109,7 +118,17 @@ const getTermObj = (): Terminal => {
     theme: {
       background: 'black'
     }
-  })
+  }
+  if (window.screen.width >= 2560 && window.screen.width < 3840) {
+    termConfig.rows = 60
+    termConfig.lineHeight = 1
+    termConfig.letterSpacing = 4
+  } else if (window.screen.width >= 3840) {
+    termConfig.rows = 80
+    termConfig.lineHeight = 2
+    termConfig.letterSpacing = 8
+  }
+  return new Terminal(termConfig)
 }
 
 const open = async (hostData: KeyValue) => {
@@ -134,11 +153,6 @@ defineExpose({
 </script>
 
 <style lang="less" scoped>
-.xterm-c {
-  width: 100%;
-  height: 580px;
-}
-
 .xterm {
   width: 100%;
   height: 100%;

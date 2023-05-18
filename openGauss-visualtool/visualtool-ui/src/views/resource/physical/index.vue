@@ -3,7 +3,7 @@
     <div class="main-bd">
       <div class="physical-list">
         <div class="flex-between mb-s">
-          <div>
+          <div style="display:flex; flex-wrap: nowrap;">
             <a-button
               type="primary"
               class="mr"
@@ -42,7 +42,6 @@
                   v-model.trim="filter.name"
                   allow-clear
                   :placeholder="$t('physical.index.ipAddressPlaceholder')"
-                  style="width: 180px;"
                 ></a-input>
               </a-form-item>
               <a-form-item
@@ -50,7 +49,6 @@
                 :label="$t('physical.index.hostLabel')"
               >
                 <a-select
-                  style="width: 180px;"
                   :loading="data.tagsLoading"
                   v-model="filter.tagIds"
                   :placeholder="$t('physical.index.hostLabelPlaceholder')"
@@ -74,7 +72,6 @@
                   v-model="filter.os"
                   allow-clear
                   :placeholder="$t('physical.index.osPlaceholder')"
-                  style="width: 150px;"
                 >
                   <a-option value="openEuler">openEuler</a-option>
                   <a-option value="centos">centos</a-option>
@@ -600,6 +597,10 @@ const showHostUserMng = (record: KeyValue) => {
 </script>
 
 <style lang="less" scoped>
+:deep(.arco-form-layout-inline) {
+  flex-wrap: nowrap;
+}
+
 .app-container {
   .main-bd {
     .physical-list {

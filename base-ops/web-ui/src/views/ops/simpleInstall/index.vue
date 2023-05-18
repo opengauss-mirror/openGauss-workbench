@@ -809,7 +809,7 @@ const showTerminal = () => {
   handleShowTerminal({
     hostId: data.form.hostId,
     port: data.form.port,
-    ip: data.form.publicIp,
+    ip: data.publicIp,
     password: data.form.rootPassword
   })
 }

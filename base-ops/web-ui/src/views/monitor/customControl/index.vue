@@ -1,27 +1,64 @@
 <template>
   <div class="custom-control-container">
-    <a-tabs v-if="data.hosts.length" type="card-gutter" :editable="true" @add="handleAdd" @delete="handleDelete"
-      v-model:active-key="data.hostId" show-add-button auto-switch>
-      <a-tab-pane v-for="(item, index) in data.hosts" :key="item.hostId" :title="item.publicIp"
-        :closable="data.hosts.length > 1">
-        <div :id="`xterm_${index}`" class="xterm"></div>
+    <a-tabs
+      v-if="data.hosts.length"
+      type="card-gutter"
+      :editable="true"
+      @add="handleAdd"
+      @delete="handleDelete"
+      v-model:active-key="data.hostId"
+      show-add-button
+      auto-switch
+    >
+      <a-tab-pane
+        v-for="(item, index) in data.hosts"
+        :key="item.hostId"
+        :title="item.publicIp"
+        :closable="data.hosts.length > 1"
+      >
+        <div
+          :id="`xterm_${index}`"
+          class="xterm"
+        ></div>
       </a-tab-pane>
     </a-tabs>
-    <div v-else style="margin-top: 15%;">
-      <div class="flex-col" v-if="data.noHost">
+    <div
+      v-else
+      style="margin-top: 15%;"
+    >
+      <div
+        class="flex-col"
+        v-if="data.noHost"
+      >
         <a-empty class="mb">{{ $t('customControl.index.else1') }}</a-empty>
         <div class="flex-row">
-          <a-button type="primary" class="mr" @click="goHostManage">{{ $t('customControl.index.else2') }}</a-button>
-          <a-button type="outline" @click="getHostList">{{ $t('customControl.index.else3') }}</a-button>
+          <a-button
+            type="primary"
+            class="mr"
+            @click="goHostManage"
+          >{{ $t('customControl.index.else2') }}</a-button>
+          <a-button
+            type="outline"
+            @click="getHostList"
+          >{{ $t('customControl.index.else3') }}</a-button>
         </div>
       </div>
-      <div class="flex-col" v-else>
+      <div
+        class="flex-col"
+        v-else
+      >
         <a-empty class="mb">{{ $t('customControl.index.else4') }}</a-empty>
-        <a-button type="outline" @click="getHostList">{{ $t('customControl.index.else5') }}</a-button>
+        <a-button
+          type="outline"
+          @click="getHostList"
+        >{{ $t('customControl.index.else5') }}</a-button>
       </div>
     </div>
 
-    <host-pwd-dlg ref="hostPwdRef" @finish="handleAddHost($event)"></host-pwd-dlg>
+    <host-pwd-dlg
+      ref="hostPwdRef"
+      @finish="handleAddHost($event)"
+    ></host-pwd-dlg>
   </div>
 </template>
 
@@ -195,18 +232,31 @@ const initTerm = (term: Terminal, ws: WebSocket | undefined, index: number) => {
 }
 
 const getTermObj = (): Terminal => {
-  return new Terminal({
+  const termConfig: any = {
+    // rendererType: 'dom',
     fontSize: 14,
-    rows: 40,
-    cols: 100,
+    rows: 45,
+    cols: 200,
     cursorBlink: true,
     convertEol: true,
     disableStdin: false,
+    // lineHeight: 2,
+    // letterSpacing: 5,
     cursorStyle: 'underline',
     theme: {
       background: 'black'
     }
-  })
+  }
+  if (window.screen.width >= 2560 && window.screen.width < 3840) {
+    termConfig.rows = 70
+    termConfig.lineHeight = 1
+    termConfig.letterSpacing = 4
+  } else if (window.screen.width >= 3840) {
+    termConfig.rows = 90
+    termConfig.lineHeight = 2
+    termConfig.letterSpacing = 8
+  }
+  return new Terminal(termConfig)
 }
 
 </script>

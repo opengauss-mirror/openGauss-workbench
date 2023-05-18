@@ -1,11 +1,19 @@
 <template>
-  <a-modal :mask-closable="false" :visible="data.show" :title="data.title" :render-to-body="false"
-    :unmount-on-close="true" :modal-style="{ width: '850px', height: '700px' }" :footer="false" @cancel="close">
+  <a-modal
+    :mask-closable="false"
+    :visible="data.show"
+    :title="data.title"
+    :unmount-on-close="true"
+    :modal-style="{ width: '70%' }"
+    :footer="false"
+    @cancel="close"
+  >
     <div class="flex-col-start">
       <label class="mb-s">{{ $t('database.HostTerminal.else1') }} - {{ data.formData.ip }}</label>
-      <div class="xterm-c">
-        <div id="xterm" class="xterm"></div>
-      </div>
+      <div
+        id="xterm"
+        class="xterm"
+      ></div>
     </div>
   </a-modal>
 </template>
@@ -97,7 +105,7 @@ const initTerm = (term: Terminal, ws: WebSocket | undefined) => {
 }
 
 const getTermObj = (): Terminal => {
-  return new Terminal({
+  const termConfig: any = {
     // rendererType: 'dom',
     fontSize: 14,
     rows: 40,
@@ -111,7 +119,17 @@ const getTermObj = (): Terminal => {
     theme: {
       background: 'black'
     }
-  })
+  }
+  if (window.screen.width >= 2560 && window.screen.width < 3840) {
+    termConfig.rows = 60
+    termConfig.lineHeight = 1
+    termConfig.letterSpacing = 4
+  } else if (window.screen.width >= 3840) {
+    termConfig.rows = 80
+    termConfig.lineHeight = 2
+    termConfig.letterSpacing = 8
+  }
+  return new Terminal(termConfig)
 }
 
 const open = (hostData: KeyValue) => {
@@ -136,9 +154,13 @@ defineExpose({
 </script>
 
 <style lang="less" scoped>
+.body-c {
+  box-sizing: border-box;
+}
+
 .xterm-c {
-  width: 810px;
-  height: 580px;
+  width: 100%;
+  height: 100%;
 }
 
 .xterm {

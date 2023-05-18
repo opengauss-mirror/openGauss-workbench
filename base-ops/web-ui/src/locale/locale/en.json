@@ -414,6 +414,13 @@
             "nodeState8": "Catch-up master",
             "nodeState9": "collapse",
             "nodeState10": "unknown"
+        },
+        "HostPwdDlg": {
+            "pwdValid": "Password check",
+            "IpAddress": "IP address",
+            "rootPwd": "rootPassword",
+            "rootPwdPlaceholder": "Please enter the root password",
+            "else1": "The value cannot be pure space"
         }
     },
     "slowSql": {
