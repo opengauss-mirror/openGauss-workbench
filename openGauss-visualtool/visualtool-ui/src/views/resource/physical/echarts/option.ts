@@ -3,7 +3,7 @@ export const cpuOption = {
     trigger: 'item',
     formatter: '{b}: {d}%'
   },
-  color: ['#868F9C', '#91cc75'],
+  color: ['#868F9C', '#E41D1D'],
   series: [
     {
       type: 'pie',

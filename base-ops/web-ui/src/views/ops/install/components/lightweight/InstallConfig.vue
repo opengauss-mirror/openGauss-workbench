@@ -101,21 +101,31 @@
               :label="$t('lightweight.InstallConfig.5mpmkfqya4o0')"
               validate-trigger="blur"
             >
-              <a-input
-                v-model.trim="formItem.installPath"
-                :placeholder="$t('lightweight.InstallConfig.5mpmkfqyaas0')"
-              />
+              <div class="flex-col-start full-w">
+                <div class="mb-s full-w">
+                  <a-input
+                    v-model.trim="formItem.installPath"
+                    :placeholder="$t('lightweight.InstallConfig.5mpmkfqyaas0')"
+                  />
+                </div>
+                <div class="label-color">{{ $t('simple.InstallConfig.else12') }}</div>
+              </div>
             </a-form-item>
             <a-form-item
               field="installPackagePath"
               :label="$t('simple.InstallConfig.else6')"
               validate-trigger="blur"
             >
-              <a-input
-                v-model.trim="formItem.installPackagePath"
-                :placeholder="$t('simple.InstallConfig.else7')"
-                @blur="handleInstallPackageBlur(index)"
-              />
+              <div class="flex-col-start full-w">
+                <div class="mb-s full-w">
+                  <a-input
+                    v-model.trim="formItem.installPackagePath"
+                    :placeholder="$t('simple.InstallConfig.else7')"
+                    @blur="handleInstallPackageBlur(index)"
+                  />
+                </div>
+                <div class="label-color">{{ $t('lightweight.InstallConfig.else2') }}</div>
+              </div>
             </a-form-item>
             <a-form-item
               field="dataPath"
