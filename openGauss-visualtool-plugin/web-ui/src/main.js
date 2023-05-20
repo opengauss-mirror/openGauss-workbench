@@ -1,12 +1,23 @@
-import Vue from 'vue'
+import { createApp } from 'vue'
+import ArcoVue from '@arco-design/web-vue'
+import ArcoVueIcon from '@arco-design/web-vue/es/icon'
+import globalComponents from '@/components'
 import App from './App.vue'
-import Element from 'element-ui'
-import 'element-ui/lib/theme-chalk/index.css'
+import router from './router'
+import '@/api/interceptor'
+import '@/assets/icons'
+import i18n from './locale/index'
 
-Vue.config.productionTip = false
+import '@arco-design/web-vue/dist/arco.less'
+import '@/assets/style/global.less'
 
-Vue.use(Element)
+const app = createApp(App)
 
-new Vue({
-  render: h => h(App),
-}).$mount('#app')
+app.use(ArcoVue, {})
+app.use(ArcoVueIcon)
+
+app.use(router)
+app.use(globalComponents)
+app.use(i18n)
+
+app.mount('#app')
