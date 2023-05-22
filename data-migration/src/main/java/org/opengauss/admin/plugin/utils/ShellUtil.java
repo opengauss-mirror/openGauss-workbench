@@ -24,6 +24,7 @@
 
 package org.opengauss.admin.plugin.utils;
 
+import cn.hutool.extra.ssh.JschRuntimeException;
 import cn.hutool.extra.ssh.JschUtil;
 import com.jcraft.jsch.Channel;
 import com.jcraft.jsch.ChannelExec;
@@ -38,6 +39,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.SocketException;
 import java.nio.charset.StandardCharsets;
 
 /**
@@ -101,9 +103,7 @@ public class ShellUtil {
             while ((buffer = reader.readLine()) != null) {
                 sb.append("\n").append(buffer);
             }
-        } catch (JSchException e) {
-            log.error("exec command error, message: {}", e.getMessage());
-        } catch (IOException e) {
+        } catch (JSchException | JschRuntimeException | IOException e ) {
             log.error("exec command error, message: {}", e.getMessage());
         } finally {
             JschUtil.close(channelExec);

@@ -26,6 +26,7 @@ package org.opengauss.admin.system.service.ops;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsClusterNodeEntity;
+import org.opengauss.admin.common.core.dto.ops.ClusterNodeDto;
 
 import java.util.List;
 import java.util.Map;
@@ -42,4 +43,12 @@ public interface IOpsClusterNodeService extends IService<OpsClusterNodeEntity> {
     long countByHostUserId(String hostUserId);
 
     Map<String, List<OpsClusterNodeEntity>> listClusterNodeByClusterIds(List<String> clusterIds);
+
+    /**
+     * get ClusterNodeDto info by clusterNodeId
+     *
+     * @param clusterNodeId clusterNodeId
+     * @return ClusterNodeDto
+     */
+    ClusterNodeDto getClusterNodeDtoByNodeId(String clusterNodeId);
 }

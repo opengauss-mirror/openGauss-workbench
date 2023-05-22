@@ -33,6 +33,7 @@ import org.opengauss.admin.plugin.utils.ShellUtil;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -220,5 +221,74 @@ public class PortalHandle {
         return Integer.parseInt(result.trim()) == 1;
     }
 
+    /**
+     * Check if the replication permissions for the target database are configured correctly.
+     *
+     * @param host connection host of the executing machine
+     * @param port connection port of the executing machine
+     * @param user connection user of the executing machine
+     * @param pass connection password of the executing machine
+     * @param dataPath datapath of target database
+     * @param dbUser dbuser of target database
+     * @return check result
+     */
+    public static boolean checkTargetNodeReplicationPermise(String host, Integer port, String user, String pass,
+                                                            String dataPath, String dbUser) {
+        String fixContent = "host replication " + dbUser + " 0.0.0.0/0 sha256";
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append("grep -q ").append("'").append(fixContent).append("' ");
+        stringBuilder.append(dataPath).append("/pg_hba.conf").append(" && ").append("echo 1 || echo 0");
+        String result = ShellUtil.execCommandGetResult(host, port, user, pass, stringBuilder.toString());
+        return Integer.parseInt(result.trim()) == 1;
+    }
+
+    /**
+     * Check the configuration correctness of the target database.
+     *
+     * @param host     connection host of the executing machine
+     * @param port     connection port of the executing machine
+     * @param user     connection user of the executing machine
+     * @param pass     connection password of the executing machine
+     * @param dataPath datapath of target database
+     * @return check result map
+     */
+    public static Map<String, Object> checkTargetNodeConfigCorrectness(String host, Integer port, String user,
+                                                                       String pass, String dataPath) {
+        StringBuilder sslBuilder = new StringBuilder();
+        sslBuilder.append("gs_guc check -D ").append(dataPath).append(" -c 'ssl'");
+        String sslResult = ShellUtil.execCommandGetResult(host, port, user, pass, sslBuilder.toString());
+        StringBuilder walLevelBuilder = new StringBuilder();
+        walLevelBuilder.append("gs_guc check -D ").append(dataPath).append(" -c 'wal_level'");
+        String walLevelResult = ShellUtil.execCommandGetResult(host, port, user, pass, walLevelBuilder.toString());
+        Map<String, Object> result = new HashMap<>();
+        result.put("checkResult", sslResult.contains("ssl=on") && walLevelResult.contains("wal_level=logical"));
+        result.put("sslValue", matchValueByKeyOnContent(sslResult, "ssl"));
+        result.put("walLevelValue", matchValueByKeyOnContent(walLevelResult, "wal_level"));
+        return result;
+    }
+
+    /**
+     * match value by key on content
+     *
+     * @param content content
+     * @param key key
+     * @return value
+     */
+    private static String matchValueByKeyOnContent(String content, String key) {
+        String patternText = ".*" + key + "=([^\\s]*)";
+        Pattern pattern = Pattern.compile(patternText, Pattern.DOTALL);
+        Matcher matcher = pattern.matcher(content);
+        List<String> allSslValues = new ArrayList<>();
+        while (matcher.find()) {
+            String sslValue = matcher.group(1);
+            allSslValues.add(sslValue);
+        }
+        if (allSslValues.isEmpty()) {
+            return "";
+        } else {
+            String lastSslValue = allSslValues.get(allSslValues.size() - 1);
+            return lastSslValue;
+        }
+    }
 
 }

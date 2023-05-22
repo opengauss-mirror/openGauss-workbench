@@ -361,21 +361,46 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
         return result;
     }
 
-
+    /**
+     * SQL querying based on OpenGauss.
+     *
+     * @param clusterNode ClusterNode Object
+     * @param schema schema
+     * @param sql sql
+     * @return result list
+     */
     private List<Map<String, Object>> queryTarget(OpsClusterNodeVO clusterNode, String schema, String sql) {
+        return queryBySqlOnOpengauss(clusterNode.getPublicIp(), clusterNode.getDbPort().toString(),
+                clusterNode.getDbName(), clusterNode.getDbUser(), clusterNode.getDbUserPassword(), schema, sql);
+    }
+
+    /**
+     * SQL querying based on OpenGauss.
+     *
+     * @param host host of db
+     * @param port host of db
+     * @param database database of db
+     * @param dbUser user of db
+     * @param dbPass password of db
+     * @param schema schema of db
+     * @param sql sql
+     * @return result list
+     */
+    @Override
+    public List<Map<String, Object>> queryBySqlOnOpengauss(String host, String port, String database, String dbUser,
+                                                           String dbPass, String schema, String sql) {
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("jdbc:opengauss://");
-        stringBuilder.append(clusterNode.getPublicIp()).append(":");
-        stringBuilder.append(clusterNode.getDbPort()).append("/");
-        stringBuilder.append(clusterNode.getDbName()).append("?currentSchema=").append(schema);
+        stringBuilder.append(host).append(":");
+        stringBuilder.append(port).append("/");
+        stringBuilder.append(database).append("?currentSchema=").append(schema);
         Connection conn = null;
         PreparedStatement preparedStatement = null;
         ResultSet resultSet = null;
         List<Map<String, Object>> result = new ArrayList<>();
         try {
             Class.forName("org.opengauss.Driver");
-            conn = DriverManager.getConnection(stringBuilder.toString(), clusterNode.getDbUser(),
-                    clusterNode.getDbUserPassword());
+            conn = DriverManager.getConnection(stringBuilder.toString(), dbUser,dbPass);
             preparedStatement = conn.prepareStatement(sql);
             resultSet = preparedStatement.executeQuery();
             result = convertList(resultSet);
@@ -383,9 +408,15 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
             log.error("query target database error, {}", e.getMessage());
         } finally {
             try {
-                resultSet.close();
-                preparedStatement.close();
-                conn.close();
+                if (resultSet != null) {
+                    resultSet.close();
+                }
+                if (preparedStatement != null) {
+                    preparedStatement.close();
+                }
+                if (conn != null) {
+                    conn.close();
+                }
             } catch (SQLException e) {
                 log.error("query target database error, {}", e.getMessage());
             }

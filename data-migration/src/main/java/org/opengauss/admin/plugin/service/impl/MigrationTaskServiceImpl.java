@@ -180,7 +180,8 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
         }
         int runningCount = Math.toIntExact(objects.stream().filter(runningFilter).count());
         int finishCount = Math.toIntExact(objects.stream().filter(finishFilter).count());
-        int errorCount = Math.toIntExact(objects.stream().filter(m -> MapUtil.getInt(m, "status").equals(6)).count());
+        int errorCount = Math.toIntExact(objects.stream().filter(m -> MapUtil.getInt(m, "status").equals(6) ||
+                MapUtil.getInt(m, "status").equals(7)).count());
         Map<String, Integer> resultMap = new HashMap<>();
         resultMap.put("waitCount", waitCount);
         resultMap.put("runningCount", runningCount);

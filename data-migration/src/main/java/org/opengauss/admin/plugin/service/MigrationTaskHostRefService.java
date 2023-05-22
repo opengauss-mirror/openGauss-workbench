@@ -63,6 +63,21 @@ public interface MigrationTaskHostRefService extends IService<MigrationTaskHostR
 
     List<Map<String, Object>> getOpsClusterDbNames(OpsClusterNodeVO clusterNode);
 
+    /**
+     * SQL querying based on OpenGauss.
+     *
+     * @param host host of db
+     * @param port host of db
+     * @param database database of db
+     * @param dbUser user of db
+     * @param dbPass password of db
+     * @param schema schema of db
+     * @param sql sql
+     * @return result list
+     */
+    List<Map<String, Object>> queryBySqlOnOpengauss(String host, String port, String database, String dbUser,
+                                                    String dbPass, String schema, String sql);
+
     List<OpsHostUserEntity> getHostUsers(String hostId);
 
     AjaxResult installPortal(String hostId, String hostUserId, String installPath);
