@@ -1,9 +1,10 @@
 const { defineConfig } = require('@vue/cli-service')
 const path = require('path')
-const PLUGIN_ID = 'test-plugin'
+const { PLUGIN_ID } = require('./src/utils/const')
 
 const resolve = dir => path.join(__dirname, './', dir)
 const port = process.env.port || process.env.npm_config_port || 80
+const from = `/\/static-plugin\/${PLUGIN_ID}/`
 
 module.exports = defineConfig({
   productionSourceMap: false,
@@ -74,7 +75,7 @@ module.exports = defineConfig({
     },
     historyApiFallback: {
       rewrites: [
-        { from: /\/static-plugin\/test-plugin/, to: '/static-plugin/' + PLUGIN_ID +'/index.html' }
+        { from: from, to: '/static-plugin/' + PLUGIN_ID +'/index.html' }
       ]
     },
     allowedHosts: 'all'

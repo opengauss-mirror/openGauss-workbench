@@ -1,2 +1,3 @@
-const PLUGIN_ID = 'test-plugin'
-export { PLUGIN_ID }
+module.exports = {
+    PLUGIN_ID: 'visualtool-plugin'
+}

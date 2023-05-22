@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { PLUGIN_ID } from '@/utils/const'
+const { PLUGIN_ID } = require('@/utils/const')
 /* you can call restful api here!
 export const clusterList = () => {
   return axios.get('/opsCluster/listCluster')

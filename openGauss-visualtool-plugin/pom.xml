@@ -109,7 +109,7 @@
                 <configuration>
                     <mode>prod</mode>
                     <pluginInfo>
-                        <id>test-plugin</id>
+                        <id>visualtool-plugin</id>
                         <bootstrapClass>org.opengauss.admin.plugin.PluginApplication</bootstrapClass>
                         <version>5.0.0</version>
                         <provider>opengauss</provider>
