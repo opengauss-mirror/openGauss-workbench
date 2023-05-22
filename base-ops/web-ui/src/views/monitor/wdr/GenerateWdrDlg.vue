@@ -1,45 +1,130 @@
 <template>
-  <a-modal :mask-closable="false" :esc-to-close="false" :visible="data.show" :title="data.title"
-    :ok-loading="data.loading" :modal-style="{ width: '650px' }" @ok="handleOk" @cancel="close"
-    :okText="$t('wdr.GenerateWdrDlg.5mpm0eufx3g0')">
-    <a-form :model="data.formData" ref="formRef" :label-col="{ style: { width: '100px' } }" :rules="data.rules"
-      auto-label-width>
-      <a-form-item field="clusterId" :label="$t('wdr.GenerateWdrDlg.5mpm0eufxww0')" validate-trigger="change"
-        :rules="[{ required: true, message: t('wdr.GenerateWdrDlg.5mpm0eufy340') }]">
-        <a-select v-model="data.formData.clusterId" :placeholder="$t('wdr.GenerateWdrDlg.5mpm0eufy340')"
-          @change="getHostList">
-          <a-option v-for="(item, index) of data.clusterList" :key="index" :value="item.value" :label="item.label" />
+  <a-modal
+    :mask-closable="false"
+    :esc-to-close="false"
+    :visible="data.show"
+    :title="data.title"
+    :ok-loading="data.loading"
+    :modal-style="{ width: '650px' }"
+    @ok="handleOk"
+    @cancel="close"
+    :okText="$t('wdr.GenerateWdrDlg.5mpm0eufx3g0')"
+  >
+    <a-form
+      :model="data.formData"
+      ref="formRef"
+      :label-col="{ style: { width: '100px' } }"
+      :rules="data.rules"
+      auto-label-width
+    >
+      <a-form-item
+        field="clusterId"
+        :label="$t('wdr.GenerateWdrDlg.5mpm0eufxww0')"
+        validate-trigger="change"
+        :rules="[{ required: true, message: t('wdr.GenerateWdrDlg.5mpm0eufy340') }]"
+      >
+        <a-select
+          v-model="data.formData.clusterId"
+          :placeholder="$t('wdr.GenerateWdrDlg.5mpm0eufy340')"
+          @change="getHostList"
+        >
+          <a-option
+            v-for="(item, index) of data.clusterList"
+            :key="index"
+            :value="item.value"
+            :label="item.label"
+          />
         </a-select>
       </a-form-item>
-      <a-form-item field="hostId" :label="$t('wdr.GenerateWdrDlg.5mpm0eufy7k0')" validate-trigger="change"
-        :rules="[{ required: true, message: t('wdr.GenerateWdrDlg.5mpm0eufyb40') }]">
-        <a-select v-model="data.formData.hostId" :placeholder="$t('wdr.GenerateWdrDlg.5mpm0eufyb40')"
-          @change="getSnapshotList">
-          <a-option v-for="(item, index) of data.hostList" :key="index" :value="item.value" :label="item.label" />
+      <a-form-item
+        field="hostId"
+        :label="$t('wdr.GenerateWdrDlg.5mpm0eufy7k0')"
+        validate-trigger="change"
+        :rules="[{ required: true, message: t('wdr.GenerateWdrDlg.5mpm0eufyb40') }]"
+      >
+        <a-select
+          v-model="data.formData.hostId"
+          :placeholder="$t('wdr.GenerateWdrDlg.5mpm0eufyb40')"
+          @change="getSnapshotList"
+        >
+          <a-option
+            v-for="(item, index) of data.hostList"
+            :key="index"
+            :value="item.value"
+            :label="item.label"
+          />
         </a-select>
       </a-form-item>
-      <a-form-item field="scope" :label="$t('wdr.GenerateWdrDlg.5mpm0eufyew0')" validate-trigger="change">
-        <a-select v-model="data.formData.scope" :placeholder="$t('wdr.GenerateWdrDlg.5mpm0eufyig0')">
-          <a-option v-for="(item, index) of data.wdrScopeList" :key="index" :value="item.value" :label="item.label" />
+      <a-form-item
+        field="scope"
+        :label="$t('wdr.GenerateWdrDlg.5mpm0eufyew0')"
+        validate-trigger="change"
+      >
+        <a-select
+          v-model="data.formData.scope"
+          :placeholder="$t('wdr.GenerateWdrDlg.5mpm0eufyig0')"
+        >
+          <a-option
+            v-for="(item, index) of data.wdrScopeList"
+            :key="index"
+            :value="item.value"
+            :label="item.label"
+          />
         </a-select>
       </a-form-item>
-      <a-form-item field="type" :label="$t('wdr.GenerateWdrDlg.5mpm0eufyo80')" validate-trigger="change">
-        <a-select v-model="data.formData.type" :placeholder="$t('wdr.GenerateWdrDlg.5mpm0eufyz00')">
-          <a-option v-for="(item, index) of data.wdrTypeList" :key="index" :value="item.value" :label="item.label" />
+      <a-form-item
+        field="type"
+        :label="$t('wdr.GenerateWdrDlg.5mpm0eufyo80')"
+        validate-trigger="change"
+      >
+        <a-select
+          v-model="data.formData.type"
+          :placeholder="$t('wdr.GenerateWdrDlg.5mpm0eufyz00')"
+        >
+          <a-option
+            v-for="(item, index) of data.wdrTypeList"
+            :key="index"
+            :value="item.value"
+            :label="item.label"
+          />
         </a-select>
       </a-form-item>
-      <a-form-item field="startId" :label="$t('wdr.GenerateWdrDlg.5mpm0eufzbk0')" validate-trigger="change"
-        :rules="[{ required: true, message: t('wdr.GenerateWdrDlg.5mpm0eufzg00') }]">
-        <a-select :loading="data.getSnapshotLoading" v-model="data.formData.startId"
-          :placeholder="$t('wdr.GenerateWdrDlg.5mpm0eufzg00')">
-          <a-option v-for="(item, index) of data.snapshotList" :key="index" :value="item.value" :label="item.label" />
+      <a-form-item
+        field="startId"
+        :label="$t('wdr.GenerateWdrDlg.5mpm0eufzbk0')"
+        validate-trigger="change"
+        :rules="[{ required: true, message: t('wdr.GenerateWdrDlg.5mpm0eufzg00') }]"
+      >
+        <a-select
+          :loading="data.getSnapshotLoading"
+          v-model="data.formData.startId"
+          :placeholder="$t('wdr.GenerateWdrDlg.5mpm0eufzg00')"
+        >
+          <a-option
+            v-for="(item, index) of data.snapshotList"
+            :key="index"
+            :value="item.value"
+            :label="item.label"
+          />
         </a-select>
       </a-form-item>
-      <a-form-item field="endId" :label="$t('wdr.GenerateWdrDlg.5mpm0eufzk80')" validate-trigger="change"
-        :rules="[{ required: true, message: t('wdr.GenerateWdrDlg.5mpm0eufzo40') }]">
-        <a-select :loading="data.getSnapshotLoading" v-model="data.formData.endId"
-          :placeholder="$t('wdr.GenerateWdrDlg.5mpm0eufzo40')">
-          <a-option v-for="(item, index) of data.snapshotList" :key="index" :value="item.value" :label="item.label" />
+      <a-form-item
+        field="endId"
+        :label="$t('wdr.GenerateWdrDlg.5mpm0eufzk80')"
+        validate-trigger="change"
+        :rules="[{ required: true, message: t('wdr.GenerateWdrDlg.5mpm0eufzo40') }]"
+      >
+        <a-select
+          :loading="data.getSnapshotLoading"
+          v-model="data.formData.endId"
+          :placeholder="$t('wdr.GenerateWdrDlg.5mpm0eufzo40')"
+        >
+          <a-option
+            v-for="(item, index) of data.snapshotList"
+            :key="index"
+            :value="item.value"
+            :label="item.label"
+          />
         </a-select>
       </a-form-item>
     </a-form>
@@ -182,7 +267,7 @@ const getSnapshotList = () => {
     listSnapshot(param).then((res: KeyValue) => {
       if (Number(res.code) === 200) {
         data.snapshotList = []
-        res.data.forEach((item: KeyValue) => {
+        res.data.records.forEach((item: KeyValue) => {
           data.snapshotList.push({
             label: item.snapshot_id,
             value: item.snapshot_id

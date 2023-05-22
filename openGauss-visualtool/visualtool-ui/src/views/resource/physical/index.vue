@@ -326,7 +326,7 @@
 <script setup lang="ts">
 import { KeyValue } from '@/types/global'
 import { Message, Table } from '@arco-design/web-vue'
-import { onMounted, reactive, ref, onUnmounted } from 'vue'
+import { onMounted, reactive, ref, onUnmounted, computed } from 'vue'
 import { hostPage, delHost, hostMonitor, hostTagListAll } from '@/api/ops' // eslint-disable-line
 import AddHost from './components/AddHost.vue'
 import HostPwdDlg from './components/HostPwdDlg.vue'
@@ -337,6 +337,8 @@ import VChart from 'vue-echarts'
 import Socket from '@/utils/websocket'
 import LabelManageDlg from './label/LabelManageDlg.vue'
 import BatchLabelDlg from './components/BatchLabelDlg.vue'
+import WujieVue from 'wujie-vue3'
+const { bus } = WujieVue
 const filter = reactive({
   name: '',
   tagIds: [],
@@ -371,13 +373,22 @@ const list = reactive<KeyValue>({
 })
 
 const data = reactive<KeyValue>({
-  hasTestObj: {}
+  hasTestObj: {},
+  colorYellow: '#FCEF92',
+  colorRed: '#E41D1D'
 })
 
 onMounted(() => {
   data.hasTestObj = {}
   getListData()
   getAllTag()
+  bus.$on('opengauss-theme-change', (val: string) => {
+    if (val === 'dark') {
+      changeEchartsColor('dark')
+    } else {
+      changeEchartsColor('light')
+    }
+  })
 })
 
 onUnmounted(() => {
@@ -490,6 +501,17 @@ const openHostMonitor = (hostData: KeyValue, index: number) => {
     list.data[index].downSpeed = eventData.downSpeed
     list.data[index].upSpeed = eventData.upSpeed
     list.data[index].isCpu = true
+    console.log('get theme', localStorage.getItem('opengauss-theme'));
+
+    if (localStorage.getItem('opengauss-theme') === 'dark') {
+      list.data[index].cpuOption.color[1] = data.colorYellow
+      list.data[index].diskOption.color[1] = data.colorYellow
+      list.data[index].memoryOption.color[1] = data.colorYellow
+    } else {
+      list.data[index].cpuOption.color[1] = data.colorRed
+      list.data[index].diskOption.color[1] = data.colorRed
+      list.data[index].memoryOption.color[1] = data.colorRed
+    }
     list.data[index].cpuOption.series[0].data[0].value = eventData.cpu
     list.data[index].cpuOption.series[0].data[1].value = (100 - eventData.cpu)
     list.data[index].isDisk = true
@@ -500,6 +522,21 @@ const openHostMonitor = (hostData: KeyValue, index: number) => {
     list.data[index].memoryOption.series[0].data[1].value = 100 - eventData.memory
   })
 }
+
+const changeEchartsColor = (type: string) => {
+  list.data.forEach((item: KeyValue) => {
+    if (type === 'dark') {
+      item.cpuOption.color[1] = data.colorYellow
+      item.diskOption.color[1] = data.colorYellow
+      item.memoryOption.color[1] = data.colorYellow
+    } else {
+      item.cpuOption.color[1] = data.colorRed
+      item.diskOption.color[1] = data.colorRed
+      item.memoryOption.color[1] = data.colorRed
+    }
+  })
+}
+
 
 const currentPage = (e: number) => {
   filter.pageNum = e
