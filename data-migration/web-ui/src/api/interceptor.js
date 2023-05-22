@@ -45,11 +45,15 @@ axios.interceptors.response.use(
       })
       return Promise.reject(new Error(msg))
     } else if (code !== 200) {
-      Message.error({
-        content: msg,
-        duration: 5 * 1000
-      })
-      return Promise.reject('error')
+      if (code === 50154 || code === 50155) {
+        return Promise.reject(res.data)
+      } else {
+        Message.error({
+          content: msg,
+          duration: 5 * 1000
+        })
+        return Promise.reject('error')
+      }
     } else {
       return res.data
     }

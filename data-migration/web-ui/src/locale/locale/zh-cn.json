@@ -343,7 +343,17 @@
           "5q09asiwny00": "子任务数量（在线模式）：",
           "5q09cuenq100": "数据迁移任务详情（{name}）",
           "5q09efwo3nc0": "{num}台",
-          "5q09frs8fh00": "总数：{total}，未启动：{notRunCount}，执行中：{runningCount}，迁移完成：{finishCount}，迁移失败：{errorCount}"
+          "5q09frs8fh00": "总数：{total}，未启动：{notRunCount}，执行中：{runningCount}，迁移完成：{finishCount}，迁移失败：{errorCount}",
+          "5qofnua1tf40": "反向迁移配置参数不满足",
+          "5qofnua40ig0": "当前配置",
+          "5qofnua4a4g0": "用户复制权限-pg_hba.conf",
+          "5qofnua4abs0": "正确",
+          "5qofnua4ag40": "未找到相关内容",
+          "5qofnua4akg0": "正确配置",
+          "5qofom5ifnk0": "guc参数",
+          "5qofpdnmtkk0": "REPLICATION权限",
+          "5qofqisf3jc0": "ssl未找到",
+          "5qofqisf68w0": "wal_level未找到"
       }
   }
 }

@@ -10,7 +10,7 @@
                 <a-input v-model="searchSourceKey" :placeholder="$t('step1.index.5q091ixig500')" allow-clear />
               </div>
               <div class="refresh-con">
-                <a-link @click="getClustersData"><icon-refresh /></a-link>
+                <a-link @click="getSourceClustersData"><icon-refresh /></a-link>
               </div>
             </div>
           </template>
@@ -18,7 +18,7 @@
             <a-link @click="handleAddSql('MYSQL')">{{$t('step1.index.5q091ixigdc0')}}</a-link>
           </template>
           <div class="sql-tree-con">
-            <a-spin :loading="loading" style="display: block;">
+            <a-spin :loading="loadingSource" style="display: block;">
               <a-tree :data="treeSourceData" v-model:selected-keys="selectedSourceKey" blockNode :check-strictly="true" :load-more="getSourceClusterDbsData" :default-expand-all="false" @select="sourceNodeSelect">
                 <template #title="nodeData">
                   <!-- eslint-disable -->
@@ -62,7 +62,7 @@
                 <a-input v-model="searchTargetKey" :placeholder="$t('step1.index.5q091ixig500')" allow-clear />
               </div>
               <div class="refresh-con">
-                <a-link @click="getClustersData"><icon-refresh /></a-link>
+                <a-link @click="getTargetClustersData"><icon-refresh /></a-link>
               </div>
             </div>
           </template>
@@ -70,7 +70,7 @@
             <a-link @click="handleAddSql('OPENGAUSS')">{{$t('step1.index.5q091ixigdc0')}}</a-link>
           </template>
           <div class="sql-selected-con">
-            <a-spin :loading="loading" style="display: block;">
+            <a-spin :loading="loadingTarget" style="display: block;">
               <a-tree :data="treeTargetData" v-model:selected-keys="selectedTargetKey" blockNode :check-strictly="true" :load-more="getTargetClusterDbsData" :default-expand-all="false">
                 <template #title="nodeData">
                   <!-- eslint-disable -->
@@ -149,7 +149,7 @@
     </div>
 
     <!-- add sql -->
-    <add-jdbc ref="addJdbcRef" @finish="getClustersData" />
+    <add-jdbc ref="addJdbcRef" @finish="finishAddJdbc" />
   </div>
 </template>
 
@@ -157,7 +157,7 @@
 import { reactive, ref, computed, watch, onMounted, toRaw, h, compile } from 'vue'
 import { Message } from '@arco-design/web-vue'
 import AddJdbc from '../components/AddJdbc.vue'
-import { clustersData, sourceClusterDbsData, targetClusterDbsData } from '@/api/task'
+import { sourceClusters, targetClusters, sourceClusterDbsData, targetClusterDbsData } from '@/api/task'
 import useTheme from '@/hooks/theme'
 import { useI18n } from 'vue-i18n'
 
@@ -174,7 +174,8 @@ const props = defineProps({
 
 const emits = defineEmits(['syncConfig'])
 
-const loading = ref(true)
+const loadingSource = ref(true)
+const loadingTarget = ref(true)
 const sourceTreeData = ref([])
 const targetTreeData = ref([])
 const searchSourceKey = ref('')
@@ -359,19 +360,38 @@ const getTargetClusterDbsData = (nodeData) => {
   })
 }
 
-// get cluster data
-const getClustersData = () => {
-  loading.value = true
-  clustersData().then(res => {
-    loading.value = false
+// get source clusters
+const getSourceClustersData = () => {
+  loadingSource.value = true
+  sourceClusters().then(res => {
+    loadingSource.value = false
     const data = res.data
     const sourceClusters = deepSourceTreeData(data.sourceClusters)
     sourceTreeData.value = sourceClusters
+  }).catch(() => {
+    loadingSource.value = false
+  })
+}
+
+// get target clusters
+const getTargetClustersData = () => {
+  loadingTarget.value = true
+  targetClusters().then(res => {
+    loadingTarget.value = false
+    const data = res.data
     const targetClusters = deepTargetTreeData(data.targetClusters)
     targetTreeData.value = targetClusters
   }).catch(() => {
-    loading.value = false
+    loadingTarget.value = false
   })
+}
+
+const finishAddJdbc = (type) => {
+  if (type === 'MYSQL') {
+    getSourceClustersData()
+  } else {
+    getTargetClustersData()
+  }
 }
 
 watch(tableData, (val) => {
@@ -429,7 +449,8 @@ defineExpose({
 })
 
 onMounted(() => {
-  getClustersData()
+  getSourceClustersData()
+  getTargetClustersData()
   init()
 })
 </script>

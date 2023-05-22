@@ -343,7 +343,17 @@
           "5q09asiwny00": "Number of subtasks (online mode): ",
           "5q09cuenq100": "Data migration task details ({name})",
           "5q09efwo3nc0": "{num} units",
-          "5q09frs8fh00": "Total: {total}, Not started: {notRunCount}, Running: {runningCount}, Migration completed: {finishCount}, Migration failed: {errorCount}"
+          "5q09frs8fh00": "Total: {total}, Not started: {notRunCount}, Running: {runningCount}, Migration completed: {finishCount}, Migration failed: {errorCount}",
+          "5qofnua1tf40": "Reverse Migration Configuration Parameters Not Satisfied",
+          "5qofnua40ig0": "Current configuration",
+          "5qofnua4a4g0": "User Copy Permissions - pg_hba.conf",
+          "5qofnua4abs0": "Correct",
+          "5qofnua4ag40": "No related content found",
+          "5qofnua4akg0": "Correct configuration",
+          "5qofom5ifnk0": "guc parameter",
+          "5qofpdnmtkk0": "REPLICATION permission",
+          "5qofqisf3jc0": "ssl not found",
+          "5qofqisf68w0": "wal_level not found"
       }
   }
 }
