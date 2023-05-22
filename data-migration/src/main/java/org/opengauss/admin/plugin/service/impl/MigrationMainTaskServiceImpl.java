@@ -25,14 +25,24 @@
 package org.opengauss.admin.plugin.service.impl;
 
 import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.map.MapUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.opengauss.admin.common.core.domain.AjaxResult;
 import org.opengauss.admin.common.core.domain.model.LoginUser;
+import org.opengauss.admin.common.core.dto.ops.ClusterNodeDto;
 import org.opengauss.admin.common.utils.SecurityUtils;
-import org.opengauss.admin.plugin.domain.*;
+import org.opengauss.admin.plugin.domain.MigrationHostPortalInstall;
+import org.opengauss.admin.plugin.domain.MigrationMainTask;
+import org.opengauss.admin.plugin.domain.MigrationTask;
+import org.opengauss.admin.plugin.domain.MigrationTaskGlobalParam;
+import org.opengauss.admin.plugin.domain.MigrationTaskHostRef;
+import org.opengauss.admin.plugin.domain.MigrationTaskModel;
+import org.opengauss.admin.plugin.domain.MigrationTaskParam;
 import org.opengauss.admin.plugin.dto.MigrationMainTaskDto;
 import org.opengauss.admin.plugin.dto.MigrationTaskDto;
 import org.opengauss.admin.plugin.enums.MainTaskStatus;
@@ -41,7 +51,19 @@ import org.opengauss.admin.plugin.enums.TaskOperate;
 import org.opengauss.admin.plugin.enums.TaskStatus;
 import org.opengauss.admin.plugin.handler.PortalHandle;
 import org.opengauss.admin.plugin.mapper.MigrationMainTaskMapper;
-import org.opengauss.admin.plugin.service.*;
+import org.opengauss.admin.plugin.service.MainTaskEnvErrorHostService;
+import org.opengauss.admin.plugin.service.MigrationHostPortalInstallHostService;
+import org.opengauss.admin.plugin.service.MigrationMainTaskService;
+import org.opengauss.admin.plugin.service.MigrationTaskExecResultDetailService;
+import org.opengauss.admin.plugin.service.MigrationTaskGlobalParamService;
+import org.opengauss.admin.plugin.service.MigrationTaskHostRefService;
+import org.opengauss.admin.plugin.service.MigrationTaskModelService;
+import org.opengauss.admin.plugin.service.MigrationTaskOperateRecordService;
+import org.opengauss.admin.plugin.service.MigrationTaskParamService;
+import org.opengauss.admin.plugin.service.MigrationTaskService;
+import org.opengauss.admin.plugin.service.MigrationTaskStatusRecordService;
+import org.opengauss.admin.system.plugin.facade.HostFacade;
+import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
@@ -50,7 +72,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -98,6 +126,14 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
     private String portalPkgDownloadUrl;
     @Value("${migration.portalJarName}")
     private String portalJarName;
+
+    @Autowired
+    @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
+    private HostFacade hostFacade;
+
+    @Autowired
+    @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
+    private EncryptionUtils encryptionUtils;
 
     private static Map<Integer, Long> taskRefreshRecord = new ConcurrentHashMap<>();
 
@@ -306,7 +342,7 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
                     param.setTaskId(t.getId());
                     param.setMainTaskId(mainTask.getId());
                 });
-                batchTaskParams.addAll(batchTaskParams);
+                batchTaskParams.addAll(t.getTaskParams());
             }
         });
         batchTaskParams.stream().forEach(tp -> {
@@ -463,22 +499,87 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
         return AjaxResult.success();
     }
 
+
+    /**
+     * Check if the conditions for reverse migration are met.
+     *
+     * @param subTask MigrationTask Object
+     * @return check result
+     */
+    private Optional<AjaxResult> checkReverseCondition(MigrationTask subTask) {
+        ClusterNodeDto clusterNode = hostFacade.getClusterNodeByNodeId(subTask.getTargetNodeId());
+        if(StringUtils.isBlank(clusterNode.getPublicIp())) {
+            return Optional.of(AjaxResult.error(MigrationErrorCode.SUB_TASK_NOT_SUPPORT_REVERSE_ERROR.getCode(),
+                    MigrationErrorCode.SUB_TASK_NOT_SUPPORT_REVERSE_ERROR.getMsg()));
+        } else {
+            Map<String, Object> result = new HashMap<>();
+            result.put("dbUser", subTask.getTargetDbUser());
+            String password = encryptionUtils.decrypt(clusterNode.getInstallPassword());
+            boolean permiseIsOk = PortalHandle.checkTargetNodeReplicationPermise(clusterNode.getPublicIp(),
+                    clusterNode.getPort(), clusterNode.getInstallUserName(), password, clusterNode.getDataPath(),
+                    subTask.getTargetDbUser());
+            result.put("replacationPermise", permiseIsOk);
+            Map<String, Object> configCheckResult = PortalHandle.checkTargetNodeConfigCorrectness(clusterNode
+                    .getPublicIp(), clusterNode.getPort(), clusterNode.getInstallUserName(), password,
+                    clusterNode.getDataPath());
+            boolean configIsOk = MapUtil.getBool(configCheckResult, "checkResult");
+            result.putAll(configCheckResult);
+            StringBuilder stringBuilder = new StringBuilder();
+            stringBuilder.append("SELECT r.rolcanlogin AS rolcanlogin, r.rolreplication AS rolreplication ");
+            stringBuilder.append("FROM pg_roles r WHERE r.rolname = current_user");
+            List<Map<String, Object>> userPermiseResults = migrationTaskHostRefService.queryBySqlOnOpengauss(
+                    subTask.getTargetDbHost(), subTask.getTargetDbPort(), "postgres",
+                    subTask.getTargetDbUser(), subTask.getTargetDbPass(), "public", stringBuilder.toString());
+            boolean checkUserPermiseIsOk = false;
+            if (userPermiseResults.size() > 0) {
+                Map<String, Object> singleMap = userPermiseResults.get(0);
+                String rolcanlogin = MapUtil.getStr(singleMap, "rolcanlogin");
+                String rolreplication = MapUtil.getStr(singleMap, "rolreplication");
+                result.put("rolcanlogin", rolcanlogin);
+                result.put("rolreplication", rolreplication);
+                checkUserPermiseIsOk = "true".equals(rolcanlogin) && "true".equals(rolreplication);
+            }
+            if(!(permiseIsOk && configIsOk && checkUserPermiseIsOk)) {
+                result.put("checkResult", permiseIsOk && configIsOk && checkUserPermiseIsOk);
+                return Optional.of(AjaxResult.errorAttachedData(MigrationErrorCode
+                                .SUB_TASK_NOT_CONDITIONS_REVERSE_ERROR.getCode(),
+                        MigrationErrorCode.SUB_TASK_NOT_CONDITIONS_REVERSE_ERROR.getMsg(), result));
+            }
+            return Optional.empty();
+        }
+    }
+
+    /**
+     * start reverse migration
+     *
+     * @param id id of Migration Task
+     * @return AjaxResult
+     */
     @Override
     public AjaxResult startSubTaskReverse(Integer id) {
         MigrationTask subTask = migrationTaskService.getById(id);
         if (subTask == null) {
-            return AjaxResult.error(MigrationErrorCode.SUB_TASK_NOT_EXISTS_ERROR.getCode(), MigrationErrorCode.SUB_TASK_NOT_EXISTS_ERROR.getMsg());
+            return AjaxResult.error(MigrationErrorCode.SUB_TASK_NOT_EXISTS_ERROR.getCode(),
+                    MigrationErrorCode.SUB_TASK_NOT_EXISTS_ERROR.getMsg());
         }
         if (subTask.getExecStatus() != TaskStatus.INCREMENTAL_STOP.getCode()) {
-            return AjaxResult.error(MigrationErrorCode.SUB_TASK_NOT_IN_INCREMENTAL_STOP_ERROR.getCode(), MigrationErrorCode.SUB_TASK_NOT_IN_INCREMENTAL_STOP_ERROR.getMsg());
+            return AjaxResult.error(MigrationErrorCode.SUB_TASK_NOT_IN_INCREMENTAL_STOP_ERROR.getCode(),
+                    MigrationErrorCode.SUB_TASK_NOT_IN_INCREMENTAL_STOP_ERROR.getMsg());
         }
-        MigrationHostPortalInstall installHost = migrationHostPortalInstallHostService.getOneByHostId(subTask.getRunHostId());
+        Optional<AjaxResult> ajaxResult = checkReverseCondition(subTask);
+        if (!ajaxResult.isEmpty()) {
+            return ajaxResult.get();
+        }
+        MigrationHostPortalInstall installHost = migrationHostPortalInstallHostService
+                .getOneByHostId(subTask.getRunHostId());
         PortalHandle.startReversePortal(subTask.getRunHost(), subTask.getRunPort(),
                 subTask.getRunUser(), subTask.getRunPass(), installHost.getInstallPath(), portalJarName, subTask);
-        MigrationTask update = MigrationTask.builder().id(subTask.getId()).execStatus(TaskStatus.REVERSE_START.getCode()).execTime(new Date()).build();
+        MigrationTask update = MigrationTask.builder().id(subTask.getId())
+                .execStatus(TaskStatus.REVERSE_START.getCode()).execTime(new Date()).build();
         migrationTaskService.updateById(update);
         LoginUser loginUser = SecurityUtils.getLoginUser();
-        migrationTaskOperateRecordService.saveRecord(subTask.getId(), TaskOperate.START_REVERSE, loginUser.getUsername());
+        migrationTaskOperateRecordService.saveRecord(subTask.getId(), TaskOperate.START_REVERSE,
+                loginUser.getUsername());
         return AjaxResult.success();
     }
 

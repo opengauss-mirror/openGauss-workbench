@@ -94,6 +94,18 @@ public class AjaxResult extends HashMap<String, Object> {
         return AjaxResult.error(code, ResponseCode.getInstance(code).msg());
     }
 
+    /**
+     * error response encapsulation
+     *
+     * @param code error code
+     * @param msg error message
+     * @param data data
+     * @return Response Result
+     */
+    public static AjaxResult errorAttachedData(Integer code, String msg, Object data) {
+        return new AjaxResult(code, msg, data);
+    }
+
     public static AjaxResult error(String msg, Object data) {
         return new AjaxResult(ResponseCode.ERROR.code(), msg, data);
     }
