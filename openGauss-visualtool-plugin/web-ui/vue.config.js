@@ -4,7 +4,7 @@ const { PLUGIN_ID } = require('./src/utils/const')
 
 const resolve = dir => path.join(__dirname, './', dir)
 const port = process.env.port || process.env.npm_config_port || 80
-const from = `/\/static-plugin\/${PLUGIN_ID}/`
+const from = new RegExp(`/static-plugin/${PLUGIN_ID}/`, 'i')
 
 module.exports = defineConfig({
   productionSourceMap: false,
