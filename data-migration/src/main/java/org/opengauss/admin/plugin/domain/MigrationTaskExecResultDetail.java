@@ -56,7 +56,7 @@ public class MigrationTaskExecResultDetail {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date createTime;
 
-    //1: full 2: incremental 3: reverse
+    //1: full 2: incremental 3: reverse 4: data check
     private Integer processType;
 
     @Tolerate

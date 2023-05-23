@@ -56,6 +56,11 @@ export function installPortal (hostId, query) {
   return axios.get(`/plugins/data-migration/resource/installPortal/${hostId}`, { params: query })
 }
 
-export function reInstallPortal (hostId) {
-  return axios.get(`/plugins/data-migration/resource/retryInstallPortal/${hostId}`)
+export function reInstallPortal (hostId, query) {
+  return axios.get(`/plugins/data-migration/resource/retryInstallPortal/${hostId}`, { params: query })
 }
+
+export function deletePortal (hostId) {
+  return axios.get(`/plugins/data-migration/resource/deletePortal/${hostId}`)
+}
+
