@@ -9,7 +9,7 @@
         </div>
       </div>
       <div class="title-right">
-        <a-button v-if="task.execStatus === 1" type="primary" @click="stopTask">{{$t('detail.index.5q09asiwffw0')}}</a-button>
+        <a-button v-if="task.execStatus === TaskStatus.Progress" type="primary" @click="stopTask">{{$t('detail.index.5q09asiwffw0')}}</a-button>
       </div>
     </div>
     <a-divider />
@@ -18,7 +18,7 @@
     </div>
     <div class="progress-con">
       <span class="progress-info">{{$t('detail.index.5q09asiwg0g0')}}</span>
-      <a-progress size="large" :percent="task.execStatus === 2 ? 1: (Number(task.execProgress) || 0)" />
+      <a-progress size="large" :percent="task.execStatus === TaskStatus.Completed ? 1: (Number(task.execProgress) || 0)" />
       <a-button type="text" @click="loopSubTaskStatus">
         <template #icon>
           <icon-refresh />
@@ -44,7 +44,7 @@
           <a-table-column :title="$t('detail.index.5q09asiwing0')" data-index="targetDb" :width="120" ellipsis tooltip></a-table-column>
           <a-table-column :title="$t('detail.index.5q09asiwiqk0')" :width="120" ellipsis tooltip>
             <template #cell="{ record }">
-              {{ record.migrationModelId === 1 ? $t('detail.index.5q09asiwiyc0') : $t('detail.index.5q09asiwj1o0') }}
+              {{ record.migrationModelId === TaskMode.Offline ? $t('detail.index.5q09asiwiyc0') : $t('detail.index.5q09asiwj1o0') }}
             </template>
           </a-table-column>
           <a-table-column :title="$t('detail.index.5q09asiwj4g0')" :width="300" ellipsis tooltip>
@@ -56,7 +56,7 @@
             <template #cell="{ record }">
               <span>{{ execSubStatusMap(record.execStatus) }}</span>
               <a-popover :title="$t('detail.index.5q09asiwk6k0')">
-                <icon-close-circle-fill v-if="record.execStatus === 500" size="14" style="color: #FF7D01;margin-left: 3px;cursor: pointer;" />
+                <icon-close-circle-fill v-if="record.execStatus === SubTaskStatus.MigrationFailed" size="14" style="color: #FF7D01;margin-left: 3px;cursor: pointer;" />
                 <template #content>
                   <div class="error-tips">{{ record.statusDesc }}</div>
                 </template>
@@ -75,19 +75,8 @@
                 </template>
                 <template #default>{{$t('detail.index.5q09asiwkds0')}}</template>
               </a-button>
-              <!-- <a-button
-                v-if="(record.migrationModelId === 1 && record.execStatus === 2) || (record.migrationModelId === 2 && record.execStatus === 2)"
-                size="mini"
-                type="text"
-                @click="stopSubTask(record)"
-              >
-                <template #icon>
-                  <icon-pause />
-                </template>
-                <template #default>{{$t('detail.index.5q09asiwkhg0')}}</template>
-              </a-button> -->
               <a-button
-                v-if="record.migrationModelId === 2 && record.execStatus === 8"
+                v-if="record.migrationModelId === TaskMode.Online && record.execStatus === SubTaskStatus.IncrementalProgress"
                 size="mini"
                 type="text"
                 @click="stopSubIncrease(record)"
@@ -98,7 +87,7 @@
                 <template #default>{{$t('detail.index.5q09asiwkkw0')}}</template>
               </a-button>
               <a-button
-                v-if="record.migrationModelId === 2 && (record.execStatus === 3 || record.execStatus === 9)"
+                v-if="record.migrationModelId === TaskMode.Online && record.execStatus === SubTaskStatus.IncrementalCompleted"
                 size="mini"
                 type="text"
                 @click="startSubReverse(record)"
@@ -108,18 +97,8 @@
                 </template>
                 <template #default>{{$t('detail.index.5q09asiwkq40')}}</template>
               </a-button>
-              <!-- <a-button
-                v-if="record.migrationModelId === 2 && record.execStatus === 11"
-                size="mini"
-                type="text"
-              >
-                <template #icon>
-                  <icon-pause />
-                </template>
-                <template #default>{{$t('detail.index.5q09asiwkuk0')}}</template>
-              </a-button> -->
               <a-button
-                v-if="record.execStatus !== 100"
+                v-if="record.execStatus !== SubTaskStatus.MigrationCompleted"
                 size="mini"
                 type="text"
                 @click="stopSubTask(record)"
@@ -262,6 +241,36 @@ const execStatusMap = (status) => {
   }
   return maps[status]
 }
+
+const TaskMode = reactive({
+    Offline: 1,
+    Online: 2
+})
+
+const TaskStatus = reactive({
+    Unstart: 0,
+    Progress: 1,
+    Completed: 2
+})
+
+const SubTaskStatus = reactive({
+    Unstart: 0,
+    FullStart: 1,
+    FullProgress: 2,
+    FullCompleted: 3,
+    FullVerificationStart: 4,
+    FullVerificationProgress: 5,
+    FullVerificationCompleted: 6,
+    IncrementalStart: 7,
+    IncrementalProgress: 8,
+    IncrementalCompleted: 9,
+    ReverseStart: 10,
+    ReverseProgress: 11,
+    ReverseCompleted: 12,
+    MigrationCompleted: 100,
+    MigrationFailed: 500,
+    WaitingResource: 1000
+})
 
 // sub task status map
 const execSubStatusMap = (status) => {
