@@ -134,18 +134,14 @@ public class MigrationTaskResourceController extends BaseController {
 
     @GetMapping("/installPortal/{hostId}")
     public AjaxResult installPortal(@PathVariable String hostId, String hostUserId, String installPath) {
-        if(!installPath.equals("~")) {
-            String lastStr = installPath.substring(installPath.length() - 1);
-            if (!lastStr.equals("/")) {
-                installPath += "/";
-            }
-        }
-        return migrationTaskHostRefService.installPortal(hostId, hostUserId, installPath);
+        String realInstallPath = addSplashToPath(installPath);
+        return migrationTaskHostRefService.installPortal(hostId, hostUserId, realInstallPath);
     }
 
     @GetMapping("/retryInstallPortal/{hostId}")
-    public AjaxResult retryInstallPortal(@PathVariable String hostId) {
-        return migrationTaskHostRefService.retryInstallPortal(hostId);
+    public AjaxResult retryInstallPortal(@PathVariable String hostId, String hostUserId, String installPath) {
+        String realInstallPath = addSplashToPath(installPath);
+        return migrationTaskHostRefService.retryInstallPortal(hostId, hostUserId, realInstallPath);
     }
 
     /**
@@ -166,4 +162,18 @@ public class MigrationTaskResourceController extends BaseController {
         output.close();
     }
 
+    @GetMapping("/deletePortal/{hostId}")
+    public AjaxResult deletePortal(@PathVariable String hostId) {
+        return migrationTaskHostRefService.deletePortal(hostId);
+    }
+
+    private String addSplashToPath(String installPath) {
+        if (!installPath.equals("~")) {
+            String lastStr = installPath.substring(installPath.length() - 1);
+            if (!lastStr.equals("/")) {
+                installPath += "/";
+            }
+        }
+        return installPath;
+    }
 }

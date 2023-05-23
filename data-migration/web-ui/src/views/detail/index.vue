@@ -18,7 +18,7 @@
     </div>
     <div class="progress-con">
       <span class="progress-info">{{$t('detail.index.5q09asiwg0g0')}}</span>
-      <a-progress size="large" :percent="task.execStatus === 2 ? 1: (task.execProgress || 0)" />
+      <a-progress size="large" :percent="task.execStatus === 2 ? 1: (Number(task.execProgress) || 0)" />
       <a-button type="text" @click="loopSubTaskStatus">
         <template #icon>
           <icon-refresh />

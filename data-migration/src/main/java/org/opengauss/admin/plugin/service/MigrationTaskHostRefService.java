@@ -83,7 +83,9 @@ public interface MigrationTaskHostRefService extends IService<MigrationTaskHostR
     AjaxResult installPortal(String hostId, String hostUserId, String installPath);
 
 
-    AjaxResult retryInstallPortal(String hostId);
+    AjaxResult deletePortal(String hostId);
+
+    AjaxResult retryInstallPortal(String hostId, String hostUserId, String installPath);
 
     String getPortalInstallLog(String hostId);
 }

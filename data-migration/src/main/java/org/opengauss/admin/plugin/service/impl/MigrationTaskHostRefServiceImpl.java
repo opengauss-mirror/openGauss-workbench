@@ -25,6 +25,7 @@
 package org.opengauss.admin.plugin.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
@@ -50,6 +51,7 @@ import org.opengauss.admin.plugin.mapper.MigrationTaskHostRefMapper;
 import org.opengauss.admin.plugin.service.MigrationHostPortalInstallHostService;
 import org.opengauss.admin.plugin.service.MigrationTaskHostRefService;
 import org.opengauss.admin.plugin.service.MigrationTaskService;
+import org.opengauss.admin.plugin.utils.ShellUtil;
 import org.opengauss.admin.plugin.vo.TargetClusterNodeVO;
 import org.opengauss.admin.plugin.vo.TargetClusterVO;
 import org.opengauss.admin.system.plugin.facade.HostFacade;
@@ -61,6 +63,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -174,6 +177,7 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
                 }
                 itemMap.put("baseInfos", hostInfo);
                 itemMap.put("installUser", installHost.getRunUser());
+                itemMap.put("installUserId", installHost.getHostUserId());
                 itemMap.put("installPath", installHost.getInstallPath());
                 if (installHost.getInstallStatus().equals(PortalInstallStatus.INSTALLED.getCode())) {
                     boolean isInstallPortal = PortalHandle.checkInstallPortal(installHost.getHost(),
@@ -437,29 +441,28 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
         OpsHostEntity opsHost = hostFacade.getById(hostId);
         OpsHostUserEntity hostUser = hostUserFacade.getById(hostUserId);
         String password = encryptionUtils.decrypt(hostUser.getPassword());
-        if (installPath.equals("~/") || installPath.equals("~")) {
-            installPath = "/home/" + hostUser.getUsername() + "/";
-        }
-        boolean isExistsAndHasPermission = PortalHandle.directoryExists(opsHost.getPublicIp(), opsHost.getPort(), hostUser.getUsername(), password, installPath);
-        if (isExistsAndHasPermission) {
-            isExistsAndHasPermission = PortalHandle.checkWritePermission(opsHost.getPublicIp(), opsHost.getPort(), hostUser.getUsername(), password, installPath);
-        } else {
-            isExistsAndHasPermission = PortalHandle.mkdirDirectory(opsHost.getPublicIp(), opsHost.getPort(), hostUser.getUsername(), password, installPath);
-        }
+        String realInstallPath = getInstallPath(installPath, hostUser.getUsername());
+        boolean isExistsAndHasPermission = checkPermission(opsHost, hostUser, realInstallPath);
         if (!isExistsAndHasPermission) {
             return AjaxResult.error(MigrationErrorCode.PORTAL_INSTALL_PATH_NOT_HAS_WRITE_PERMISSION_ERROR.getCode(),
                     MigrationErrorCode.PORTAL_INSTALL_PATH_NOT_HAS_WRITE_PERMISSION_ERROR.getMsg());
         }
-        syncInstallPortalHandler(hostId, opsHost.getPublicIp(), opsHost.getPort(), hostUser.getUsername(), password, installPath, true);
-        migrationHostPortalInstallHostService.saveRecord(hostId, hostUserId, opsHost.getPublicIp(), opsHost.getPort(), hostUser.getUsername(), password, installPath, PortalInstallStatus.INSTALLING.getCode());
+        syncInstallPortalHandler(hostId, opsHost.getPublicIp(), opsHost.getPort(), hostUser.getUsername(), password, realInstallPath, true);
+        migrationHostPortalInstallHostService.saveRecord(hostId, hostUserId, opsHost.getPublicIp(), opsHost.getPort(), hostUser.getUsername(), password, realInstallPath, PortalInstallStatus.INSTALLING.getCode());
         return AjaxResult.success();
     }
 
     @Override
-    public AjaxResult retryInstallPortal(String hostId) {
+    @Transactional(rollbackFor = Exception.class)
+    public AjaxResult retryInstallPortal(String hostId, String hostUserId, String installPath) {
         MigrationHostPortalInstall installHost = migrationHostPortalInstallHostService.getOneByHostId(hostId);
-        syncInstallPortalHandler(hostId, installHost.getHost(), installHost.getPort(), installHost.getRunUser(), installHost.getRunPassword(), installHost.getInstallPath(), false);
-        migrationHostPortalInstallHostService.saveRecord(hostId, installHost.getHostUserId(), installHost.getHost(), installHost.getPort(), installHost.getRunUser(), installHost.getRunPassword(), installHost.getInstallPath(), PortalInstallStatus.INSTALLING.getCode());
+        String realInstallPath = getInstallPath(installPath, installHost.getRunUser());
+        // if install path changed, clear old package
+        if (!realInstallPath.equals(installHost.getInstallPath())) {
+            deletePortal(hostId);
+        }
+        syncInstallPortalHandler(hostId, installHost.getHost(), installHost.getPort(), installHost.getRunUser(), installHost.getRunPassword(), realInstallPath, true);
+        migrationHostPortalInstallHostService.saveRecord(hostId, hostUserId, installHost.getHost(), installHost.getPort(), installHost.getRunUser(), installHost.getRunPassword(), realInstallPath, PortalInstallStatus.INSTALLING.getCode());
         return AjaxResult.success();
     }
 
@@ -507,5 +510,54 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
         return new String[0];
     }
 
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public AjaxResult deletePortal(String hostId) {
+        MigrationHostPortalInstall install = migrationHostPortalInstallHostService.getOneByHostId(hostId);
+        OpsHostEntity opsHost = hostFacade.getById(hostId);
+        OpsHostUserEntity hostUser = hostUserFacade.getById(install.getHostUserId());
+        String password = encryptionUtils.decrypt(hostUser.getPassword());
+        List<MigrationTask> tasks = migrationTaskService.listRunningTaskByHostId(hostId);
+        if (CollUtil.isNotEmpty(tasks)) {
+            return AjaxResult.error(MigrationErrorCode.PORTAL_DELETE_ERROR.getCode(),
+                    MigrationErrorCode.PORTAL_DELETE_ERROR.getMsg());
+        }
+        String realInstallPath = getInstallPath(install.getInstallPath(), hostUser.getUsername());
+        boolean isExistsAndHasPermission = checkPermission(opsHost, hostUser, realInstallPath);
+        if (!isExistsAndHasPermission) {
+            return AjaxResult.error(MigrationErrorCode.PORTAL_INSTALL_PATH_NOT_HAS_WRITE_PERMISSION_ERROR.getCode(),
+                    MigrationErrorCode.PORTAL_INSTALL_PATH_NOT_HAS_WRITE_PERMISSION_ERROR.getMsg());
+        }
+        ShellUtil.execCommandGetResult(opsHost.getPublicIp(), opsHost.getPort(), hostUser.getUsername(), password,"rm -rf  " + realInstallPath + "portal");
+        ShellUtil.rmFile(opsHost.getPublicIp(), opsHost.getPort(), hostUser.getUsername(), password, realInstallPath + portalPkgName);
+        migrationHostPortalInstallHostService.updateStatus(hostId, PortalInstallStatus.NOT_INSTALL.getCode());
+        return AjaxResult.success();
+    }
 
+    /**
+     * check is install path has Permission
+     * @param opsHost host to install portal
+     * @param hostUser user to install portal
+     * @param installPath portal install path
+     * @return true for has permission
+     */
+    private boolean checkPermission(OpsHostEntity opsHost, OpsHostUserEntity hostUser, String installPath) {
+        String realInstallPath = getInstallPath(installPath, hostUser.getUsername());
+        String password = encryptionUtils.decrypt(hostUser.getPassword());
+        boolean isExistsAndHasPermission = PortalHandle.directoryExists(opsHost.getPublicIp(), opsHost.getPort(), hostUser.getUsername(), password, realInstallPath);
+        if (isExistsAndHasPermission) {
+            isExistsAndHasPermission = PortalHandle.checkWritePermission(opsHost.getPublicIp(), opsHost.getPort(), hostUser.getUsername(), password, realInstallPath);
+        } else {
+            isExistsAndHasPermission = PortalHandle.mkdirDirectory(opsHost.getPublicIp(), opsHost.getPort(), hostUser.getUsername(), password, realInstallPath);
+        }
+        return isExistsAndHasPermission;
+    }
+
+    private String getInstallPath (String installPath, String userName) {
+        String result = installPath;
+        if (installPath.equals("~/") || installPath.equals("~")) {
+            result = "/home/" + userName + "/";
+        }
+        return result;
+    }
 }
