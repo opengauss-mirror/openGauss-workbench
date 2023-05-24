@@ -373,7 +373,7 @@ const startSubReverse = row => {
       reverseVisible.value = true
     }
     if (e.code === 50155) {
-      Message.error(e.msg)
+      Message.error(t('detail.index.5qtkk99a2eo0'))
     }
   })
 }

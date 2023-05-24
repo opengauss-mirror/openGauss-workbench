@@ -366,7 +366,8 @@
           "5qofom5ifnk0": "guc参数",
           "5qofpdnmtkk0": "REPLICATION权限",
           "5qofqisf3jc0": "ssl未找到",
-          "5qofqisf68w0": "wal_level未找到"
+          "5qofqisf68w0": "wal_level未找到",
+          "5qtkk99a2eo0": "该目标数据源不支持反向迁移，请选择导入或者在平台上安装的数据源"
       }
   }
 }
