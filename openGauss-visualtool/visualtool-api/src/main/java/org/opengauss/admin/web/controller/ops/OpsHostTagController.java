@@ -66,7 +66,7 @@ public class OpsHostTagController extends BaseController {
         return AjaxResult.success();
     }
 
-    @DeleteMapping("/delTag")
+    @PutMapping("/delTag")
     public AjaxResult delTagRelation(@RequestBody HostTagInputDto hostTagInputDto) {
         opsHostTagRelService.delTagRelation(hostTagInputDto);
         return AjaxResult.success();
