@@ -27,6 +27,7 @@ package org.opengauss.admin.system.service.ops;
 import com.baomidou.mybatisplus.extension.service.IService;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostTagEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostTagRel;
+import org.opengauss.admin.common.core.domain.model.ops.host.tag.HostTagInputDto;
 
 import java.util.List;
 import java.util.Map;
@@ -44,4 +45,6 @@ public interface IOpsHostTagRelService extends IService<OpsHostTagRel> {
     void cleanHostTag(String hostId);
 
     void delByTagId(String tagId);
+
+    void delTagRelation(HostTagInputDto hostTagInputDto);
 }
