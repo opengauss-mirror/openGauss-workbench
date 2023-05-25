@@ -89,7 +89,7 @@
 2、反向迁移功能需要在openGauss数据库增加如下配置，并重启：
 > 调整pg_hba.conf以允许复制（这里的值取决于实际的网络配置以及用于连接的用户）
 > 
-> host     all     repuser     0.0.0.0/0     sha256
+> host replication repuser 0.0.0.0/0 sha256
 > 
 > 调整guc参数：
 > + alter system set ssl to on;

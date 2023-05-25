@@ -309,6 +309,7 @@ public class SystemPluginController extends BaseController {
             if (count > 0) {
                 return AjaxResult.error(ResponseCode.PLUGIN_MENU_HAS_OTHER_PLUGIN_SUBMENU_UNINSTALL_ERROR.code());
             }
+            sysMenuService.deleteByPluginId(id);
             pluginOperator.uninstall(id, true, true);
             return AjaxResult.success();
         } catch (Exception e) {
