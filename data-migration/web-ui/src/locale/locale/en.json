@@ -366,7 +366,8 @@
           "5qofom5ifnk0": "guc parameter",
           "5qofpdnmtkk0": "REPLICATION permission",
           "5qofqisf3jc0": "ssl not found",
-          "5qofqisf68w0": "wal_level not found"
+          "5qofqisf68w0": "wal_level not found",
+          "5qtkk99a2eo0": "The target data source does not support reverse migration, please select a data source imported or installed on the platform"
       }
   }
 }
