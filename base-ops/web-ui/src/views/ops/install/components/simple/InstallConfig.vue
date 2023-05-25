@@ -87,10 +87,15 @@
             :label="$t('simple.InstallConfig.5mpmu0lar480')"
             validate-trigger="blur"
           >
-            <a-input
-              v-model.trim="data.form.installPath"
-              :placeholder="$t('simple.InstallConfig.5mpmu0lar800')"
-            />
+            <div class="flex-col-start full-w">
+              <div class="mb-s full-w">
+                <a-input
+                  v-model.trim="data.form.installPath"
+                  :placeholder="$t('simple.InstallConfig.5mpmu0lar800')"
+                />
+              </div>
+              <div class="label-color">{{ $t('simple.InstallConfig.else12') }}</div>
+            </div>
           </a-form-item>
           <a-form-item
             v-if="installType !== 'import'"

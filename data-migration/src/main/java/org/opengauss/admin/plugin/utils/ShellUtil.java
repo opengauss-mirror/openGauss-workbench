@@ -119,6 +119,7 @@ public class ShellUtil {
         return sb.toString();
     }
 
+    @Deprecated
     public static void rmDir(String host, Integer port, String user, String password, String path) {
         StringBuilder sb = new StringBuilder(16);
         Session session = JschUtil.openSession(host, port, user, password);

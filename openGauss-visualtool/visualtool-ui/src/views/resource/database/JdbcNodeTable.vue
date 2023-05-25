@@ -81,7 +81,7 @@
   </div>
 </template>
 <script setup lang="ts">
-import { defineProps, PropType, onMounted, onUnmounted, reactive, ref, computed, watch } from 'vue'
+import { PropType, onMounted, onUnmounted, reactive, ref, computed, watch } from 'vue'
 import { KeyValue } from '@/types/global'
 import Socket from '@/utils/websocket'
 import { jdbcNodeMonitor } from '@/api/ops'

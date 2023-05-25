@@ -41,6 +41,8 @@ import org.opengauss.admin.plugin.domain.MigrationTaskGlobalParam;
 import org.opengauss.admin.plugin.domain.MigrationTaskHostRef;
 import org.opengauss.admin.plugin.domain.MigrationTaskParam;
 import org.opengauss.admin.plugin.domain.MigrationTaskStatusRecord;
+import org.opengauss.admin.plugin.enums.MigrationMode;
+import org.opengauss.admin.plugin.enums.ProcessType;
 import org.opengauss.admin.plugin.enums.TaskOperate;
 import org.opengauss.admin.plugin.enums.TaskStatus;
 import org.opengauss.admin.plugin.handler.PortalHandle;
@@ -198,24 +200,27 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
         MigrationTaskExecResultDetail fullProcess = null;
         MigrationTaskExecResultDetail incrementalProcess = null;
         MigrationTaskExecResultDetail reverseProcess = null;
+        MigrationTaskExecResultDetail dataCheckProcess = null;
 
         if (!task.getExecStatus().equals(TaskStatus.MIGRATION_FINISH.getCode())
                 && !task.getExecStatus().equals(TaskStatus.FULL_CHECK_FINISH.getCode())) {
             Map<String, Object> getResult = getSingleTaskStatusAndProcessByProtal(task);
             fullProcess = MigrationTaskExecResultDetail.builder().execResultDetail(MapUtil.getStr(getResult, "fullProcess")).build();
-            if (task.getMigrationModelId().equals(2)) {
+            if (task.getMigrationModelId().equals(MigrationMode.ONLINE.getCode())) {
                 incrementalProcess = MigrationTaskExecResultDetail.builder().execResultDetail(MapUtil.getStr(getResult, "incrementalProcess")).build();
                 reverseProcess = MigrationTaskExecResultDetail.builder().execResultDetail(MapUtil.getStr(getResult, "reverseProcess")).build();
             }
+            dataCheckProcess = MigrationTaskExecResultDetail.builder().execResultDetail(MapUtil.getStr(getResult, "dataCheckProcess")).build();
         } else {
-            fullProcess = migrationTaskExecResultDetailService.getByTaskIdAndProcessType(taskId, 1);
-            if (task.getMigrationModelId().equals(2)) {
-                incrementalProcess = migrationTaskExecResultDetailService.getByTaskIdAndProcessType(taskId, 2);
-                reverseProcess = migrationTaskExecResultDetailService.getByTaskIdAndProcessType(taskId, 3);
+            fullProcess = migrationTaskExecResultDetailService.getByTaskIdAndProcessType(taskId, ProcessType.FULL.getCode());
+            if (task.getMigrationModelId().equals(MigrationMode.ONLINE.getCode())) {
+                incrementalProcess = migrationTaskExecResultDetailService.getByTaskIdAndProcessType(taskId, ProcessType.INCREMENTAL.getCode());
+                reverseProcess = migrationTaskExecResultDetailService.getByTaskIdAndProcessType(taskId, ProcessType.REVERSE.getCode());
             }
+            dataCheckProcess =  migrationTaskExecResultDetailService.getByTaskIdAndProcessType(taskId, ProcessType.DATA_CHECK.getCode());
         }
         result.put("fullProcess", fullProcess);
-        if (task.getMigrationModelId().equals(2)) {
+        if (task.getMigrationModelId().equals(MigrationMode.ONLINE.getCode())) {
             result.put("incrementalProcess", incrementalProcess);
             result.put("reverseProcess", reverseProcess);
             List<MigrationTaskStatusRecord> migrationTaskStatusRecords = migrationTaskStatusRecordService.selectByTaskId(taskId);
@@ -253,6 +258,9 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
             result.put("totalFinishCount", totalFinishCount);
             result.put("totalErrorCount", totalErrorCount);
         }
+        if (dataCheckProcess != null && StringUtils.isNotBlank(dataCheckProcess.getExecResultDetail())) {
+            result.put("dataCheckProcess", dataCheckProcess);
+        }
         List<String> logPaths = new ArrayList<>();
         if (!task.getExecStatus().equals(TaskStatus.NOT_RUN.getCode())) {
             MigrationHostPortalInstall installHost = migrationHostPortalInstallHostService.getOneByHostId(task.getRunHostId());
@@ -280,15 +288,21 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
             String portalFullProcess = PortalHandle.getPortalFullProcess(installHost.getHost(), installHost.getPort(), installHost.getRunUser(), installHost.getRunPassword(), installHost.getInstallPath(), t);
             log.info("get portal full process content: {}, subTaskId: {}", portalFullProcess, t.getId());
             if (StringUtils.isNotBlank(portalFullProcess)) {
-                migrationTaskExecResultDetailService.saveOrUpdateByTaskId(t.getId(), portalFullProcess.trim(), 1);
+                migrationTaskExecResultDetailService.saveOrUpdateByTaskId(t.getId(), portalFullProcess.trim(), ProcessType.FULL.getCode());
                 migrationProcess = calculateFullMigrationProgress(portalFullProcess);
             }
             result.put("fullProcess", portalFullProcess);
+            String portalDataCheckProcess = PortalHandle.getPortalDataCheckProcess(installHost.getHost(), installHost.getPort(), installHost.getRunUser(), installHost.getRunPassword(), installHost.getInstallPath(), t);
+            log.info("get portal data check process content: {}, subTaskId: {}", portalDataCheckProcess, t.getId());
+            if (StringUtils.isNotBlank(portalDataCheckProcess)) {
+                migrationTaskExecResultDetailService.saveOrUpdateByTaskId(t.getId(), portalDataCheckProcess.trim(), ProcessType.DATA_CHECK.getCode());
+                result.put("dataCheckProcess", portalDataCheckProcess);
+            }
             if (TaskStatus.INCREMENTAL_START.getCode().equals(state) || TaskStatus.INCREMENTAL_RUNNING.getCode().equals(state)) {
                 String portalIncrementalProcess = PortalHandle.getPortalIncrementalProcess(installHost.getHost(), installHost.getPort(), installHost.getRunUser(), installHost.getRunPassword(), installHost.getInstallPath(), t);
                 log.info("get portal incremental process content: {}, subTaskId: {}", portalIncrementalProcess, t.getId());
                 if (StringUtils.isNotBlank(portalIncrementalProcess)) {
-                    migrationTaskExecResultDetailService.saveOrUpdateByTaskId(t.getId(), portalIncrementalProcess.trim(), 2);
+                    migrationTaskExecResultDetailService.saveOrUpdateByTaskId(t.getId(), portalIncrementalProcess.trim(), ProcessType.INCREMENTAL.getCode());
                 }
                 if(t.getMigrationProcess() == null) {
                     if (migrationProcess.intValue() > 0) {
@@ -300,11 +314,14 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
                     }
                 }
                 result.put("incrementalProcess", portalIncrementalProcess);
+            } else if (TaskStatus.INCREMENTAL_STOP.getCode().equals(state)) {
+                String portalIncrementalProcess = PortalHandle.getPortalIncrementalProcess(installHost.getHost(), installHost.getPort(), installHost.getRunUser(), installHost.getRunPassword(), installHost.getInstallPath(), t);
+                result.put("incrementalProcess", portalIncrementalProcess);
             } else if (TaskStatus.REVERSE_START.getCode().equals(state) || TaskStatus.REVERSE_RUNNING.getCode().equals(state)) {
                 String portaReverselProcess = PortalHandle.getPortalReverseProcess(installHost.getHost(), installHost.getPort(), installHost.getRunUser(), installHost.getRunPassword(), installHost.getInstallPath(), t);
                 log.info("get portal reverse process content: {}, subTaskId: {}", portaReverselProcess, t.getId());
                 if (StringUtils.isNotBlank(portaReverselProcess)) {
-                    migrationTaskExecResultDetailService.saveOrUpdateByTaskId(t.getId(), portaReverselProcess.trim(), 3);
+                    migrationTaskExecResultDetailService.saveOrUpdateByTaskId(t.getId(), portaReverselProcess.trim(), ProcessType.REVERSE.getCode());
                 }
                 if(t.getMigrationProcess() == null) {
                     if (migrationProcess.intValue() > 0) {
@@ -316,6 +333,8 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
                     }
                 }
                 result.put("reverseProcess", portaReverselProcess);
+                String portalIncrementalProcess = PortalHandle.getPortalIncrementalProcess(installHost.getHost(), installHost.getPort(), installHost.getRunUser(), installHost.getRunPassword(), installHost.getInstallPath(), t);
+                result.put("incrementalProcess", portalIncrementalProcess);
             }
             if(state > t.getExecStatus()) {
                 update.setExecStatus(state);

@@ -414,6 +414,13 @@
             "nodeState8": "Catch-up master",
             "nodeState9": "collapse",
             "nodeState10": "unknown"
+        },
+        "HostPwdDlg": {
+            "pwdValid": "Password check",
+            "IpAddress": "IP address",
+            "rootPwd": "rootPassword",
+            "rootPwdPlaceholder": "Please enter the root password",
+            "else1": "The value cannot be pure space"
         }
     },
     "slowSql": {
@@ -691,6 +698,7 @@
         },
         "InstallConfig": {
             "else1": "root password",
+            "else2": "The software package path indicates the directory where the compressed openGauss official installation package is stored",
             "5mpmkfqy71w0": "master",
             "5mpmkfqy8400": "slave",
             "5mpmkfqy8es0": "Node configuration",
@@ -786,6 +794,7 @@
             "else9": "Environment separation file path",
             "else10": "Please enter the environment separation file path",
             "else11": "Environmental separation or not",
+            "else12": "Installation directory refers to the root directory for installing openGauss, such as /opt/openGauss",
             "5mpmu0lapic0": "Node configuration",
             "5mpmu0laqc80": "Cluster ID",
             "5mpmu0laqiw0": "Please enter the cluster ID",

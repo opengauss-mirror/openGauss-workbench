@@ -43,7 +43,7 @@ public enum MigrationErrorCode {
 
     PORTAL_INSTALL_ERROR(50120, "portal install error"),
     PORTAL_INSTALL_PATH_NOT_HAS_WRITE_PERMISSION_ERROR(50121, "portal installPath not has write permission error"),
-    ;
+    PORTAL_DELETE_ERROR(50122, "cannot delete portal while task is running on it");
 
     private final Integer code;
     private final String msg;

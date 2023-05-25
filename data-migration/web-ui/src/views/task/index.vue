@@ -203,7 +203,7 @@ onMounted(() => {
   const id = window.$wujie?.props.data.id
   if (id) {
     defaultParams().then(res => {
-      defaultBasicData.value = res.data.slice(0, 10).map(item => item.paramKey)
+      defaultBasicData.value = res.data.slice(0, 12).map(item => item.paramKey)
     })
     getTaskDetail(id)
   } else {

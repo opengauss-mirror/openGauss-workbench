@@ -566,10 +566,10 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
             return AjaxResult.error(MigrationErrorCode.SUB_TASK_NOT_IN_INCREMENTAL_STOP_ERROR.getCode(),
                     MigrationErrorCode.SUB_TASK_NOT_IN_INCREMENTAL_STOP_ERROR.getMsg());
         }
-        Optional<AjaxResult> ajaxResult = checkReverseCondition(subTask);
-        if (!ajaxResult.isEmpty()) {
-            return ajaxResult.get();
-        }
+//        Optional<AjaxResult> ajaxResult = checkReverseCondition(subTask);
+//        if (!ajaxResult.isEmpty()) {
+//            return ajaxResult.get();
+//        }
         MigrationHostPortalInstall installHost = migrationHostPortalInstallHostService
                 .getOneByHostId(subTask.getRunHostId());
         PortalHandle.startReversePortal(subTask.getRunHost(), subTask.getRunPort(),

@@ -58,7 +58,7 @@ public class PortalHandle {
     }
 
     public static boolean installPortal(String host, Integer port, String user, String pass, String installPath, String portalDownUrl, String portalPkgName, String portalJarName, boolean newInstallFile) {
-        ShellUtil.rmDir(host, port, user, pass,installPath + "portal");
+        ShellUtil.execCommandGetResult(host, port, user, pass,"rm -rf  " + installPath + "portal");
         String existsPortalInstallFile = ShellUtil.execCommandGetResult(host, port, user, pass,
                 "[ -f " + installPath + portalPkgName + " ] && echo 1 || echo 0");
         if (Integer.parseInt(existsPortalInstallFile.trim()) == 0) {
@@ -151,6 +151,12 @@ public class PortalHandle {
     public static String getPortalReverseProcess(String host, Integer port, String user, String pass, String installPath, MigrationTask task) {
         String result = ShellUtil.execCommandGetResult(host, port, user, pass,
                 "cat " + installPath + "portal/workspace/" + task.getId() + "/status/reverse_migration.txt");
+        return result != null ? replaceAllBlank(result.trim()) : "";
+    }
+
+    public static String getPortalDataCheckProcess(String host, Integer port, String user, String pass, String installPath, MigrationTask task) {
+        String result = ShellUtil.execCommandGetResult(host, port, user, pass,
+                "grep '{.*}' " + installPath + "portal/workspace/" + task.getId() + "/status/full_migration_datacheck.txt | tail -n 1");
         return result != null ? replaceAllBlank(result.trim()) : "";
     }
 

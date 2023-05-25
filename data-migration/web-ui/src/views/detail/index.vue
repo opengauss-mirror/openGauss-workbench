@@ -18,7 +18,7 @@
     </div>
     <div class="progress-con">
       <span class="progress-info">{{$t('detail.index.5q09asiwg0g0')}}</span>
-      <a-progress size="large" :percent="task.execStatus === 2 ? 1: (task.execProgress || 0)" />
+      <a-progress size="large" :percent="task.execStatus === 2 ? 1: (Number(task.execProgress) || 0)" />
       <a-button type="text" @click="loopSubTaskStatus">
         <template #icon>
           <icon-refresh />
@@ -150,6 +150,71 @@
 
     <!-- machine terminal -->
     <mac-terminal v-model:open="terminalVisible" :host="macHost" />
+
+    <!-- reverse error dialog -->
+    <a-modal v-model:visible="reverseVisible" width="800px" :title="$t('detail.index.5qofnua1tf40')" title-align="start" :footer="false">
+      <div class="config-con">
+        <a-row gutter="20">
+          <a-col :span="12">
+            <div class="cur-config">
+              <div class="config-title">{{$t('detail.index.5qofnua40ig0')}}</div>
+              <a-alert class="config-item" :type="reverseConfig.replacationPermise ? 'success' : 'error'">
+                <template #title>
+                  {{$t('detail.index.5qofnua4a4g0')}}
+                </template>
+                {{ reverseConfig.replacationPermise ? $t('detail.index.5qofnua4abs0') : $t('detail.index.5qofnua4ag40') }}
+              </a-alert>
+              <a-alert class="config-item" :type="reverseConfig.sslValue === 'NULL' || reverseConfig.walLevelValue === 'NULL' ? 'error' : 'success'">
+                <template #title>
+                  {{$t('detail.index.5qofom5ifnk0')}}
+                </template>
+                <p>{{ reverseConfig.sslValue === 'NULL' ? $t('detail.index.5qofqisf3jc0') : `ssl=${reverseConfig.sslValue};` }}</p>
+                <p>{{ reverseConfig.walLevelValue === 'NULL' ? $t('detail.index.5qofqisf68w0') : `wal_level=${reverseConfig.walLevelValue};` }}</p>
+              </a-alert>
+              <a-alert class="config-item" :type="reverseConfig.rolcanlogin === 'false' || reverseConfig.rolreplication === 'false' ? 'error' : 'success'">
+                <template #title>
+                  {{$t('detail.index.5qofpdnmtkk0')}}
+                </template>
+                <a-descriptions :data="replicationData" size="medium" layout="vertical" bordered />
+              </a-alert>
+            </div>
+          </a-col>
+          <a-col :span="12">
+            <div class="correct-config">
+              <div class="config-title">{{$t('detail.index.5qofnua4akg0')}}</div>
+              <a-alert class="config-item" type="success">
+                <template #title>
+                  {{$t('detail.index.5qofnua4a4g0')}}
+                </template>
+                host replication {{ reverseConfig.dbUser }} 0.0.0.0/0 sha256
+              </a-alert>
+              <a-alert class="config-item" type="success">
+                <template #title>
+                  {{$t('detail.index.5qofom5ifnk0')}}
+                </template>
+                <p>ssl=on;</p>
+                <p>wal_level=logical;</p>
+              </a-alert>
+              <a-alert class="config-item" type="success">
+                <template #title>
+                  {{$t('detail.index.5qofpdnmtkk0')}}
+                </template>
+                <a-descriptions :data="[
+                  {
+                    label: 'rolcanlogin',
+                    value: 't',
+                  },
+                  {
+                    label: 'rolreplication',
+                    value: 't',
+                  }
+                ]" size="medium" layout="vertical" bordered />
+              </a-alert>
+            </div>
+          </a-col>
+        </a-row>
+      </div>
+    </a-modal>
   </div>
 </template>
 
@@ -183,6 +248,10 @@ const pagination = reactive({
   pageSize: 10
 })
 const tableData = ref([])
+
+const reverseVisible = ref(false)
+const reverseConfig = ref({})
+const replicationData = ref([])
 
 // status map
 const execStatusMap = (status) => {
@@ -279,13 +348,31 @@ const startSubReverse = row => {
     Message.success('Start success')
     loopSubTaskStatus()
     getSubTaskList()
+  }).catch(e => {
+    if (e.code === 50154) {
+      reverseConfig.value = e.data
+      replicationData.value = [
+        {
+          label: 'rolcanlogin',
+          value: e.data.rolcanlogin === 'true' ? 't' : 'f'
+        },
+        {
+          label: 'rolreplication',
+          value: e.data.rolreplication === 'true' ? 't' : 'f'
+        }
+      ]
+      reverseVisible.value = true
+    }
+    if (e.code === 50155) {
+      Message.error(e.msg)
+    }
   })
 }
 
 const loopSubTaskStatus = () => {
   timerStatus && clearTimeout(timerStatus)
   const id = window.$wujie?.props.data.id
-  refreshStatus(id).then(res => {
+  refreshStatus(id).then(() => {
     if (task.value.execStatus !== 2) {
       timerStatus = setTimeout(() => {
         loopSubTaskStatus()
@@ -443,5 +530,14 @@ onBeforeUnmount(() => {
   max-width: 1200px;
   max-height: 350px;
   overflow-y: auto;
+}
+
+.config-con {
+  .config-title {
+    font-size: 14px;
+  }
+  .config-item {
+    margin-top: 10px;
+  }
 }
 </style>

@@ -116,6 +116,7 @@
           @blur="passwordBlur"
           :invisible-button="data.formData.password !== data.emptyPwd"
           allow-clear
+          ref="formPwdRef"
         />
         <a-checkbox
           style="width: 150px"
@@ -339,9 +340,10 @@ const passwordFocus = () => {
     data.formData.password = ''
   }
 }
-
+const formPwdRef = ref()
 const passwordBlur = () => {
   if (!data.formData.password && data.oldPwd) {
+    formPwdRef.value.invisible = true
     data.formData.password = data.emptyPwd
   }
 }

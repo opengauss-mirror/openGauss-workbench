@@ -38,8 +38,8 @@
                 <template #columns>
                   <a-table-column :title="$t('components.ParamsConfig.5q0aazsppog0')" data-index="paramKey" :width="180" ellipsis tooltip></a-table-column>
                   <a-table-column :title="$t('components.ParamsConfig.5q0aazsppr80')" data-index="paramValue">
-                    <template #cell="{ record }">
-                      <a-input v-model.trim="record.paramValue" />
+                    <template #cell="{ record, rowIndex }">
+                      <a-input v-model.trim="record.paramValue" @change="moreValueChange(record, rowIndex)" />
                     </template>
                   </a-table-column>
                   <a-table-column :title="$t('components.ParamsConfig.5q0aazspptw0')" data-index="paramDesc" :width="200" ellipsis tooltip></a-table-column>
@@ -166,12 +166,40 @@ watch(moreData, (v) => {
   moreEditData.value = v.filter(item => {
     let flag = false
     const fItem = defaultData.more.find(vItem => vItem.paramKey === item.paramKey)
-    if (fItem.paramValue !== item.paramValue) {
+    if (!fItem || fItem.paramValue !== item.paramValue) {
       flag = true
     }
     return flag
   })
 }, { deep: true })
+
+const moreValueChange = (row, rowIndex) => {
+  if (row.paramType === 9) {
+    const subData = JSON.parse(row.paramExtends)
+    if (row.paramValue && row.paramValue !== '0') {
+      // delete
+      const subKeyPrefixs = subData.map(sub => sub.subKeyPrefix)
+      moreData.value = moreData.value.filter(item => item.paramType === 9 || !subKeyPrefixs.some(prefix => item.paramKey.includes(prefix)))
+      // add
+      const addNum = +row.paramValue
+      const arr = []
+      for (let i = 0; i < addNum; i++) {
+        for (let j = 0; j < subData.length; j++) {
+          arr.push({
+            paramKey: subData[j]['subKeyPrefix'] + `${i + 1}`,
+            paramValue: subData[j]['defaultValue'],
+            paramDesc: subData[j]['desc'],
+            paramType: subData[j]['dataType']
+          })
+        }
+      }
+      moreData.value.splice(rowIndex + 1, 0, ...arr)
+    } else {
+      const subKeyPrefixs = subData.map(sub => sub.subKeyPrefix)
+      moreData.value = moreData.value.filter(item => item.paramType === 9 || !subKeyPrefixs.some(prefix => item.paramKey.includes(prefix)))
+    }
+  }
+}
 
 const getDefaultParams = () => {
   defaultParams().then(res => {
@@ -208,9 +236,22 @@ const getDefaultParams = () => {
       }
       if (taskParams.more.length) {
         moreEditData.value = taskParams.more
-        moreData.value = moreData.value.map(item => {
+        const moreDataTmp = []
+        moreData.value.forEach(item => {
+          moreDataTmp.push(item)
+          if (item.paramType === 9) {
+            const parentKey = item.paramKey
+            taskParams.more.forEach(param => {
+              const childPrefix = param.paramKey.replace(/\.[^/.]+$/, '')
+              if (parentKey === childPrefix) {
+                moreDataTmp.push(param)
+              }
+            })
+          }
+        })
+        moreData.value = moreDataTmp.map(item => {
           const findItem = moreEditData.value.find(fItem => fItem.paramKey === item.paramKey)
-          return findItem || item
+          return findItem ? ({ ...item, ...findItem }) : item
         })
       }
     }
@@ -276,7 +317,7 @@ onMounted(() => {
     }
     :deep(.row-changed) {
       .arco-table-td {
-        background: var(--color-primary-light-1);
+        background: var(--color-neutral-3);
       }
     }
   }
@@ -292,7 +333,7 @@ onMounted(() => {
     }
     :deep(.row-changed) {
       .arco-table-td {
-        background: var(--color-primary-light-1);
+        background: var(--color-neutral-3);
       }
     }
   }

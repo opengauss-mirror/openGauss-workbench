@@ -43,7 +43,7 @@ module.exports = defineConfig({
     proxy: {
       // detail: https://cli.vuejs.org/config/#devserver-proxy
       [process.env.VUE_APP_BASE_API]: {
-        target: 'http://39.108.219.254:9494',
+        target: 'http://localhost:9494',
         changeOrigin: true
       }
     },

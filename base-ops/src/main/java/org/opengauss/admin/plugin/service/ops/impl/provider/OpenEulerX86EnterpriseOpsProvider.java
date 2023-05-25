@@ -523,13 +523,9 @@ public class OpenEulerX86EnterpriseOpsProvider extends AbstractOpsProvider {
         try {
             Map<String, String> autoResponse = new HashMap<>();
             autoResponse.put("(yes/no)?", "yes");
-            autoResponse.put("Please enter password for root"
-                    + System.getProperty("line.separator")
-                    + "Password:", rootPassword);
+            autoResponse.put("Please enter password for root\r\nPassword:", rootPassword);
             autoResponse.put("Please enter password for current user["
-                    + masterNodeConfig.getInstallUsername() + "]."
-                    + System.getProperty("line.separator")
-                    + "Password:", installUserPassword);
+                    + masterNodeConfig.getInstallUsername() + "].\r\nPassword:", installUserPassword);
             JschResult jschResult = jschUtil.executeCommand(gsPreInstall, rootSession, retSession, autoResponse);
             if (0 != jschResult.getExitCode()) {
                 log.error("gs_preinstall failed, exit code: {}, error message: {}", jschResult.getExitCode(), jschResult.getResult());

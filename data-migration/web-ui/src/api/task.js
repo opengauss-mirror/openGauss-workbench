@@ -1,7 +1,11 @@
 import axios from 'axios'
 
-export function clustersData (payload) {
-  return axios.get('/plugins/data-migration/resource/getClusters', payload)
+export function sourceClusters (payload) {
+  return axios.get('/plugins/data-migration/resource/sourceClusters', payload)
+}
+
+export function targetClusters (payload) {
+  return axios.get('/plugins/data-migration/resource/targetClusters', payload)
 }
 
 export function hostsData () {
@@ -52,6 +56,11 @@ export function installPortal (hostId, query) {
   return axios.get(`/plugins/data-migration/resource/installPortal/${hostId}`, { params: query })
 }
 
-export function reInstallPortal (hostId) {
-  return axios.get(`/plugins/data-migration/resource/retryInstallPortal/${hostId}`)
+export function reInstallPortal (hostId, query) {
+  return axios.get(`/plugins/data-migration/resource/retryInstallPortal/${hostId}`, { params: query })
 }
+
+export function deletePortal (hostId) {
+  return axios.get(`/plugins/data-migration/resource/deletePortal/${hostId}`)
+}
+

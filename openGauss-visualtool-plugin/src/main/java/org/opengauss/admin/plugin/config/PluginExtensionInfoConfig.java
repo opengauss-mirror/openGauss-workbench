@@ -37,7 +37,8 @@ import java.util.Map;
  **/
 @Component
 public class PluginExtensionInfoConfig implements PluginExtensionInfo {
-
+    public static final String PLUGIN_ID = "visualtool-plugin";
+    
     @Override
     public Map<String, Object> extensionInfo() {
         Map<String, Object> map = new HashMap<>();
