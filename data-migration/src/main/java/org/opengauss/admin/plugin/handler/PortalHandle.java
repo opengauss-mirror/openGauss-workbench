@@ -240,9 +240,12 @@ public class PortalHandle {
      */
     public static boolean checkTargetNodeReplicationPermise(String host, Integer port, String user, String pass,
                                                             String dataPath, String dbUser) {
-        String fixContent = "host replication " + dbUser + " 0.0.0.0/0 sha256";
         StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append("grep -q ").append("'").append(fixContent).append("' ");
+        stringBuilder.append("grep -qEi ").append("'");
+        stringBuilder.append("replication[[:space:]]+");
+        stringBuilder.append("(").append(dbUser).append("|all)");
+        stringBuilder.append("[[:space:]]+0\\.0\\.0\\.0/0");
+        stringBuilder.append("' ");
         stringBuilder.append(dataPath).append("/pg_hba.conf").append(" && ").append("echo 1 || echo 0");
         String result = ShellUtil.execCommandGetResult(host, port, user, pass, stringBuilder.toString());
         return Integer.parseInt(result.trim()) == 1;
@@ -296,5 +299,4 @@ public class PortalHandle {
             return lastSslValue;
         }
     }
-
 }

@@ -562,7 +562,7 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
             return AjaxResult.error(MigrationErrorCode.SUB_TASK_NOT_EXISTS_ERROR.getCode(),
                     MigrationErrorCode.SUB_TASK_NOT_EXISTS_ERROR.getMsg());
         }
-        if (subTask.getExecStatus() != TaskStatus.INCREMENTAL_STOP.getCode()) {
+        if (subTask.getExecStatus().equals(TaskStatus.INCREMENTAL_STOP.getCode())) {
             return AjaxResult.error(MigrationErrorCode.SUB_TASK_NOT_IN_INCREMENTAL_STOP_ERROR.getCode(),
                     MigrationErrorCode.SUB_TASK_NOT_IN_INCREMENTAL_STOP_ERROR.getMsg());
         }
