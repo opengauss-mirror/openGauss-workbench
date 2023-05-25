@@ -24,6 +24,7 @@
 
 package org.opengauss.admin.system.plugin.facade;
 
+import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.constant.Constants;
 import org.opengauss.admin.common.constant.UserConstants;
 import org.opengauss.admin.common.core.domain.entity.SysMenu;
@@ -31,6 +32,7 @@ import org.opengauss.admin.common.core.vo.MenuVo;
 import org.opengauss.admin.common.enums.SysMenuPluginComponent;
 import org.opengauss.admin.common.enums.SysMenuPluginOpenWay;
 import org.opengauss.admin.common.enums.SysMenuRouteOpenPosition;
+import org.opengauss.admin.common.enums.SysMenuStatus;
 import org.opengauss.admin.common.enums.SysMenuVisible;
 import org.opengauss.admin.common.utils.StringUtils;
 import org.opengauss.admin.system.domain.SysPlugin;
@@ -38,7 +40,6 @@ import org.opengauss.admin.system.domain.SysPluginLogo;
 import org.opengauss.admin.system.service.ISysMenuService;
 import org.opengauss.admin.system.service.ISysPluginLogoService;
 import org.opengauss.admin.system.service.ISysPluginService;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -108,6 +109,19 @@ public class MenuFacade {
                 sysMenu.setMenuType(UserConstants.TYPE_DIR);
                 sysMenuService.updateMenu(sysMenu);
             }
+        } else {
+            menu.setStatus(SysMenuStatus.ENABLE.getCode());
+            SysPlugin plugin = sysPluginService.getByPluginId(pluginId);
+            if (plugin != null) {
+                if (StringUtils.isNotBlank(plugin.getTheme())) {
+                    menu.setPluginTheme(plugin.getTheme());
+                }
+                SysPluginLogo logo = sysPluginLogoService.getByPluginId(pluginId);
+                if (logo != null && StringUtils.isNotBlank(logo.getLogoPath())) {
+                    menu.setIcon(logo.getLogoPath());
+                }
+            }
+            sysMenuService.updateMenu(menu);
         }
         return menu.toMenuVo();
     }
@@ -195,9 +209,10 @@ public class MenuFacade {
 
     /**
      * delete menu
-     * @param pluginId
+     *
+     * @param pluginId pluginId
      */
     public void deletePluginMenu(String pluginId) {
-        sysMenuService.deleteByPluginId(pluginId);
+        sysMenuService.updateDisableByPluginId(pluginId);
     }
 }

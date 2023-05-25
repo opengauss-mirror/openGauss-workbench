@@ -156,4 +156,12 @@ public interface ISysMenuService extends IService<SysMenu> {
     void updatePluginMenuTheme(String pluginId, String theme);
 
     void updatePluginMenuIcon(String pluginId, String icon);
+
+    /**
+     * update menu disable by pluginId
+     *
+     * @param pluginId pluginId
+     * @return result
+     */
+    public int updateDisableByPluginId(String pluginId);
 }
