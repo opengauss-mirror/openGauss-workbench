@@ -338,6 +338,8 @@ import Socket from '@/utils/websocket'
 import LabelManageDlg from './label/LabelManageDlg.vue'
 import BatchLabelDlg from './components/BatchLabelDlg.vue'
 import WujieVue from 'wujie-vue3'
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
 const { bus } = WujieVue
 const filter = reactive({
   name: '',
@@ -373,6 +375,7 @@ const list = reactive<KeyValue>({
 })
 
 const data = reactive<KeyValue>({
+  selectedData: {},
   hasTestObj: {},
   colorYellow: '#FCEF92',
   colorRed: '#E41D1D'
@@ -501,7 +504,6 @@ const openHostMonitor = (hostData: KeyValue, index: number) => {
     list.data[index].downSpeed = eventData.downSpeed
     list.data[index].upSpeed = eventData.upSpeed
     list.data[index].isCpu = true
-    console.log('get theme', localStorage.getItem('opengauss-theme'));
 
     if (localStorage.getItem('opengauss-theme') === 'dark') {
       list.data[index].cpuOption.color[1] = data.colorYellow
@@ -537,7 +539,6 @@ const changeEchartsColor = (type: string) => {
   })
 }
 
-
 const currentPage = (e: number) => {
   filter.pageNum = e
   getListData()
@@ -545,6 +546,14 @@ const currentPage = (e: number) => {
 
 const handleSelectedChange = (keys: (string | number)[]) => {
   list.selectedHostIds = keys
+  list.selectedHostIds.forEach((hostId: string | number) => {
+    const findOne = list.data.find((item: KeyValue) => {
+      return item.hostId === hostId
+    })
+    if (findOne) {
+      data.selectedData[hostId] = findOne
+    }
+  })
 }
 
 const pageSizeChange = (e: number) => {
@@ -581,10 +590,55 @@ const handleAddHost = (type: string, data?: KeyValue) => {
 const batchLabelDlgRef = ref<null | InstanceType<typeof BatchLabelDlg>>(null)
 const handleBatchTag = () => {
   if (list.selectedHostIds.length) {
-    batchLabelDlgRef.value?.open(list.selectedHostIds)
+    // get common labels
+    const commonLabels = getCommonLabels()
+    batchLabelDlgRef.value?.open(list.selectedHostIds, commonLabels)
   } else {
-    Message.warning('请至少选一个主机信息')
+    Message.warning(t('physical.index.else1'))
   }
+}
+
+const getCommonLabels = () => {
+  const result: string[] = []
+  const selectedArr: any[] = []
+  list.selectedHostIds.forEach((hostId: string | number) => {
+    selectedArr.push(data.selectedData[hostId])
+  })
+  console.log('show selectedData', list.selectedHostIds, data.selectedData, selectedArr);
+
+  // get length max
+  let maxObj: any = null
+  selectedArr.forEach((item: KeyValue) => {
+    if (maxObj) {
+      if (maxObj.tags && item.tags) {
+        if (maxObj.tags.length < item.tags.length) {
+          maxObj = item
+        }
+      }
+    } else {
+      maxObj = item
+    }
+  })
+
+  // get common label
+  if (maxObj.tags && maxObj.tags.length) {
+    for (let i = 0; i < maxObj.tags.length; i++) {
+      const tag = maxObj.tags[i]
+      let allhas = true
+      for (let j = 0; j < selectedArr.length; j++) {
+        const tempData = selectedArr[j]
+        if (tempData.tags.indexOf(tag) < 0) {
+          allhas = false
+          break
+        }
+      }
+      if (allhas) {
+        result.push(tag)
+      }
+    }
+  }
+
+  return result
 }
 
 const labelManageDlgRef = ref<null | InstanceType<typeof LabelManageDlg>>(null)

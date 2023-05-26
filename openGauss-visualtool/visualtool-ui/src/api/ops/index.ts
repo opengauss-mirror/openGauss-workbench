@@ -123,6 +123,10 @@ export const hostBatchAddTag = (data: KeyValue) => {
   return axios.put('hostTag/addTag', data)
 }
 
+export const hostBatchDelTag = (data: KeyValue) => {
+  return axios.put('hostTag/delTag', data)
+}
+
 export const hostTagListAll = () => {
   return axios.get(`hostTag/listAll`)
 }

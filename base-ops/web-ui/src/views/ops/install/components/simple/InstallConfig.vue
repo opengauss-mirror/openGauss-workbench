@@ -431,12 +431,25 @@ const changeHostId = () => {
         res.data.forEach((item: KeyValue) => {
           hostUserObj.value[item.hostUserId] = item
         })
-        if (userListByHost.value.length) {
-          data.form.installUserId = userListByHost.value[0].hostUserId
-          data.form.installUserName = userListByHost.value[0].username
+        if (data.form.installUserId) {
+          const findOne = userListByHost.value.find((item: KeyValue) => {
+            return item.hostUserId === data.form.installUserId
+          })
+          if (findOne) {
+            data.form.installUserId = findOne.hostUserId
+            data.form.installUserName = findOne.username
+          } else {
+            data.form.installUserId = ''
+            data.form.installUserName = ''
+          }
         } else {
-          data.form.installUserId = ''
-          data.form.installUserName = ''
+          if (userListByHost.value.length) {
+            data.form.installUserId = userListByHost.value[0].hostUserId
+            data.form.installUserName = userListByHost.value[0].username
+          } else {
+            data.form.installUserId = ''
+            data.form.installUserName = ''
+          }
         }
       } else {
         Message.error('Failed to obtain user data from the host')
