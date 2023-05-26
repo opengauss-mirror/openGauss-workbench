@@ -757,8 +757,8 @@ SET "param_key"     = 'rules.column', "param_value"   = '0',
 WHERE "id" = 24;
 
 UPDATE "public"."tb_migration_task_init_global_param"
-SET "param_key"     = 'type.override', "param_value"   = '0',
+SET "param_key"     = 'type_override', "param_value"   = '0',
     "param_desc"    = '全量迁移类型转换数量，值为类型转换规则的数量',
     "param_type"    = 9,
-    "param_extends" = '[{"subKeyPrefix": "override.type","dataType": 1,"defaultValue":"","desc": "全量迁移类型转换mysql数据类型"}, {"subKeyPrefix":"override.to","dataType": 1,"defaultValue":"","desc": "全量迁移类型转换opengauss数据种类"},{"subKeyPrefix":"override.tables","dataType": 1,"defaultValue":"''*''","desc": "全量迁移类型转换适用的表"}]'
+    "param_extends" = '[{"subKeyPrefix": "override_type","dataType": 1,"defaultValue":"","desc": "全量迁移类型转换mysql数据类型"}, {"subKeyPrefix":"override_to","dataType": 1,"defaultValue":"","desc": "全量迁移类型转换opengauss数据种类"},{"subKeyPrefix":"override_tables","dataType": 1,"defaultValue":"''*''","desc": "全量迁移类型转换适用的表"}]'
 WHERE "id" = 31;
