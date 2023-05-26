@@ -21,6 +21,7 @@ const installStore = defineStore('install', {
         clusterId: '',
         clusterName: ''
       },
+      installPackageHasDownload: [] as any[],
       minimalistInstallConfig: {} as MinimalistInstallConfig,
       liteInstallConfig: {} as LiteInstallConfig,
       enterpriseInstallConfig: {} as EnterpriseInstallConfig,
@@ -34,6 +35,7 @@ const installStore = defineStore('install', {
     getLiteConfig: state => state.liteInstallConfig,
     getEnterpriseConfig: state => state.enterpriseInstallConfig,
     getOpenLookengInstallConfig: state => state.openLookengInstallConfig,
+    getHasDownload: state => state.installPackageHasDownload,
     getInstallParam: (state): KeyValue => {
       const param = {
         installContext: {
@@ -60,6 +62,11 @@ const installStore = defineStore('install', {
     setInstallContext(installInfo: KeyValue) {
       this.$patch(state => {
         Object.assign(state.installContext, installInfo)
+      })
+    },
+    addDownloadInstallPackage(installPackageUrl: string) {
+      this.$patch(state => {
+        state.installPackageHasDownload.push(installPackageUrl)
       })
     },
     setMiniConfig(config: MinimalistInstallConfig) {

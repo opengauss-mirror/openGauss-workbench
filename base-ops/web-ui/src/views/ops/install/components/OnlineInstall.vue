@@ -1,6 +1,9 @@
 <template>
   <div class="panel-c panel-overflow">
-    <a-space direction="vertical" fill>
+    <a-space
+      direction="vertical"
+      fill
+    >
       <div class="label-color mb ft-xlg">
         {{ $t('components.OnlineInstall.else1') }}: {{ data.selectedPackageName ? data.selectedPackageName : '--' }}
       </div>
@@ -10,16 +13,31 @@
         </a-spin>
       </div>
 
-      <a-spin class="full-w" :loading="data.loading" :tip="$t('components.OnlineInstall.else2')">
+      <a-spin
+        class="full-w"
+        :loading="data.loading"
+        :tip="$t('components.OnlineInstall.else2')"
+      >
         <div class="flex-col panel-body">
           <div v-if="data.packageList.length">
-            <div v-for="item in data.packageList" :key="item.packageId">
-              <div v-if="item.hasDownload"
+            <div
+              v-for="item in data.packageList"
+              :key="item.packageId"
+            >
+              <div
+                v-if="item.hasDownload"
                 :class="'label-color install-package-card mb ' + (data.selectedPackageId === item.packageId ? 'center-item-active' : '')"
-                @click="setPackageName(item)">
+                @click="setPackageName(item)"
+              >
                 <div class="center-item flex-between flex-row mb">
-                  <svg-icon icon-class="ops-online-install" class="icon-size mr-lg"></svg-icon>
-                  <div class="label-color ft-main mr-xlg" style="width: 160px;">{{ item.os }}-{{ item.cpuArch }}-{{
+                  <svg-icon
+                    icon-class="ops-online-install"
+                    class="icon-size mr-lg"
+                  ></svg-icon>
+                  <div
+                    class="label-color ft-main mr-xlg"
+                    style="width: 160px;"
+                  >{{ item.os }}-{{ item.cpuArch }}-{{
                     item.packageVersion
                   }}-{{
   item.packageVersionNum
@@ -30,8 +48,14 @@
               </div>
               <div v-else>
                 <div class="center-item flex-between flex-row mb">
-                  <svg-icon icon-class="ops-online-install" class="icon-size mr-lg"></svg-icon>
-                  <div class="label-color ft-main mr-xlg" style="width: 200px;">{{ item.os }}-{{ item.cpuArch }}-{{
+                  <svg-icon
+                    icon-class="ops-online-install"
+                    class="icon-size mr-lg"
+                  ></svg-icon>
+                  <div
+                    class="label-color ft-main mr-xlg"
+                    style="width: 200px;"
+                  >{{ item.os }}-{{ item.cpuArch }}-{{
                     item.packageVersion
                   }}-{{
   item.packageVersionNum
@@ -44,23 +68,44 @@
               </div>
             </div>
           </div>
-          <div class="flex-col" v-if="data.packageList.length === 0 && !data.loading">
-            <svg-icon icon-class="ops-empty" class="icon-size mb-lg"></svg-icon>
+          <div
+            class="flex-col"
+            v-if="data.packageList.length === 0 && !data.loading"
+          >
+            <svg-icon
+              icon-class="ops-empty"
+              class="icon-size mb-lg"
+            ></svg-icon>
             <div class="empty-content mb">{{ $t('components.OnlineInstall.else3') }}</div>
-            <a-button type="outline" size="large" @click="handleAddPackage">{{ $t('components.OnlineInstall.else4')
+            <a-button
+              type="outline"
+              size="large"
+              @click="handleAddPackage"
+            >{{ $t('components.OnlineInstall.else4')
             }}</a-button>
           </div>
         </div>
       </a-spin>
     </a-space>
-    <a-modal :mask-closable="false" :esc-to-close="false" v-model:visible="processVisible"
-      :ok-text="$t('components.OnlineInstall.5mpn3mp11cg0')" @ok="handleOk">
+    <a-modal
+      :mask-closable="false"
+      :esc-to-close="false"
+      v-model:visible="processVisible"
+      :ok-text="$t('components.OnlineInstall.5mpn3mp11cg0')"
+      @ok="handleOk"
+    >
       <template #title>
         {{ $t('components.OnlineInstall.5mpn3mp11g00') }}
       </template>
-      <a-progress size="large" :percent="currPercent" />
+      <a-progress
+        size="large"
+        :percent="currPercent"
+      />
     </a-modal>
-    <add-package-dlg ref="addPackageRef" @finish="getPackageList"></add-package-dlg>
+    <add-package-dlg
+      ref="addPackageRef"
+      @finish="getPackageList"
+    ></add-package-dlg>
   </div>
 </template>
 
@@ -125,6 +170,10 @@ const getPackageList = () => {
         data.packageList = []
         res.data.forEach((item: KeyValue) => {
           if (item.packageUrl) {
+            // if has download set true
+            if (installStore.getHasDownload.indexOf(item.packageUrl) > -1) {
+              item.hasDownload = true
+            }
             data.packageList.push(item)
           }
         })
@@ -185,6 +234,7 @@ const downloadPackage = (packageData: KeyValue) => {
       if (Number(messageData) === 1) {
         percentLoading.value = false
         packageData.hasDownload = true
+        installStore.addDownloadInstallPackage(packageData.packageUrl)
         setPackageName(packageData)
         websocket.destroy()
       }
@@ -218,7 +268,6 @@ const storeData = computed(() => installStore.getInstallConfig)
 }
 
 .install-package-card {
-  width: 480px;
   height: 100px;
   padding: 24px;
   border-radius: 8px;

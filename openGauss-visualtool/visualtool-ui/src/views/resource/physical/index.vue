@@ -604,7 +604,7 @@ const getCommonLabels = () => {
   list.selectedHostIds.forEach((hostId: string | number) => {
     selectedArr.push(data.selectedData[hostId])
   })
-  console.log('show selectedData', list.selectedHostIds, data.selectedData, selectedArr);
+  console.log('show selectedData', list.selectedHostIds, data.selectedData, selectedArr)
 
   // get length max
   let maxObj: any = null

@@ -51,7 +51,6 @@
       <div v-else>
         <div v-if="data.commonLabels.length">
 
-
           <a-form-item :label="$t('components.BatchLabelDlg.5quz8t9a6zk0')">
             <a-tag
               class="mr-s"
@@ -181,7 +180,7 @@ const getAllTag = (commonLabelNames: string[]) => {
 }
 
 const open = (hostIds: (string | number)[], commonLabelNames: string[]) => {
-  console.log('show hostIds', hostIds, commonLabelNames);
+  console.log('show hostIds', hostIds, commonLabelNames)
   data.show = true
   data.title = t('components.BatchLabelDlg.5pbjt280z040')
   data.formData.hostIds = hostIds
