@@ -9,7 +9,15 @@
     @cancel="close"
   >
     <div class="flex-col-start">
-      <label class="mb-s">{{ $t('database.HostTerminal.else1') }} - {{ data.formData.ip }}</label>
+      <div class="flex-between mb-s full-w">
+        <label class="mb-s">{{ $t('database.HostTerminal.else1') }} - {{ data.formData.ip }}</label>
+        <div
+          class="mb-s"
+          style="color: red; font-weight: bold;"
+        >
+          {{ $t('database.HostTerminal.else2') }}
+        </div>
+      </div>
       <div
         id="xterm"
         class="xterm"
@@ -121,11 +129,13 @@ const getTermObj = (): Terminal => {
     }
   }
   if (window.screen.width >= 2560 && window.screen.width < 3840) {
-    termConfig.rows = 60
+    termConfig.rows = 80
+    termConfig.cols = 120
     termConfig.lineHeight = 1
     termConfig.letterSpacing = 4
   } else if (window.screen.width >= 3840) {
-    termConfig.rows = 80
+    termConfig.rows = 100
+    termConfig.cols = 150
     termConfig.lineHeight = 2
     termConfig.letterSpacing = 8
   }

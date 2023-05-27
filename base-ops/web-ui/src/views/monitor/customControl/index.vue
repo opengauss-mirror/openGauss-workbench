@@ -1,27 +1,38 @@
 <template>
   <div class="custom-control-container">
-    <a-tabs
+    <div
+      class="flex-col-start"
       v-if="data.hosts.length"
-      type="card-gutter"
-      :editable="true"
-      @add="handleAdd"
-      @delete="handleDelete"
-      v-model:active-key="data.hostId"
-      show-add-button
-      auto-switch
     >
-      <a-tab-pane
-        v-for="(item, index) in data.hosts"
-        :key="item.hostId"
-        :title="item.publicIp"
-        :closable="data.hosts.length > 1"
+      <a-tabs
+        class="mb-s"
+        type="card-gutter"
+        :editable="true"
+        @add="handleAdd"
+        @delete="handleDelete"
+        v-model:active-key="data.hostId"
+        show-add-button
+        auto-switch
       >
-        <div
-          :id="`xterm_${index}`"
-          class="xterm"
-        ></div>
-      </a-tab-pane>
-    </a-tabs>
+        <a-tab-pane
+          v-for="(item, index) in data.hosts"
+          :key="item.hostId"
+          :title="item.publicIp"
+          :closable="data.hosts.length > 1"
+        >
+          <div
+            :id="`xterm_${index}`"
+            class="xterm"
+          ></div>
+        </a-tab-pane>
+      </a-tabs>
+      <div
+        class="mb-s"
+        style="color: red; font-weight: bold;"
+      >
+        {{ $t('components.HostTerminal.else2') }}
+      </div>
+    </div>
     <div
       v-else
       style="margin-top: 15%;"
@@ -235,7 +246,7 @@ const getTermObj = (): Terminal => {
   const termConfig: any = {
     // rendererType: 'dom',
     fontSize: 14,
-    rows: 45,
+    rows: 43,
     cols: 200,
     cursorBlink: true,
     convertEol: true,
@@ -248,11 +259,11 @@ const getTermObj = (): Terminal => {
     }
   }
   if (window.screen.width >= 2560 && window.screen.width < 3840) {
-    termConfig.rows = 70
+    termConfig.rows = 60
     termConfig.lineHeight = 1
     termConfig.letterSpacing = 4
   } else if (window.screen.width >= 3840) {
-    termConfig.rows = 90
+    termConfig.rows = 80
     termConfig.lineHeight = 2
     termConfig.letterSpacing = 8
   }

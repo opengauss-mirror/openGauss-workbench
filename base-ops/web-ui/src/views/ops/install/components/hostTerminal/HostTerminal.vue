@@ -10,7 +10,15 @@
     @cancel="close"
   >
     <div class="flex-col-start">
-      <label class="mb-s">{{ $t('components.HostTerminal.else1') }} - {{ data.formData.ip }}</label>
+      <div class="flex-between mb-s full-w">
+        <label class="mb-s">{{ $t('components.HostTerminal.else1') }} - {{ data.formData.ip }}</label>
+        <div
+          class="mb-s"
+          style="color: red; font-weight: bold;"
+        >
+          {{ $t('components.HostTerminal.else2') }}
+        </div>
+      </div>
       <div
         id="xterm"
         class="xterm"
