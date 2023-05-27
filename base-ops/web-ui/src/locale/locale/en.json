@@ -65,7 +65,8 @@
             "5mpmxod907k0": "Selected version",
             "else1": "openGauss lightweight edition is installed on each machine separately, because the lightweight version does not have OM, CM and other components, so the installation, uninstall, upgrade and other OM functions need to be manually operated on each node。",
             "openLooKeng": "sharding+openLookeng",
-            "openLooKengRemark": "openLooKeng is an \"out of the box\" engine that supports in situ analysis of any data from any location, including geographically remote data sources. It provides a global view of all the data through the SQL 2003 interface."
+            "openLooKengRemark": "openLooKeng is an \"out of the box\" engine that supports in situ analysis of any data from any location, including geographically remote data sources. It provides a global view of all the data through the SQL 2003 interface.",
+            "else3": "Please note: Versions 5.0.0 and later differentiate between minimalist, lightweight, and Enterprise editions, while previous versions only differentiate between enterprise and non-enterprise editions. Verify that the version you select corresponds to the version to be imported"
         },
         "ExeImport": {
             "5mpmzg3zqu80": "Congratulations on the successful import",

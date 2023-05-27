@@ -5,16 +5,36 @@
       <div class="flex-row">
         <div class="flex-row mr">
           <div class="label-color top-label mr-s">{{ $t('monitor.index.5mplmn5z19w0') }}</div>
-          <a-select class="select-w" :loading="data.clusterListLoading" v-model="data.clusterId"
-            :placeholder="$t('monitor.index.5mplmn5z1lo0')" @change="getHostList">
-            <a-option v-for="(item, index) in data.clusterList" :key="index" :label="item.label" :value="item.value" />
+          <a-select
+            class="select-w"
+            :loading="data.clusterListLoading"
+            v-model="data.clusterId"
+            :placeholder="$t('monitor.index.5mplmn5z1lo0')"
+            @change="getHostList"
+          >
+            <a-option
+              v-for="(item, index) in data.clusterList"
+              :key="index"
+              :label="item.label"
+              :value="item.value"
+            />
           </a-select>
         </div>
         <div class="flex-row">
           <div class="label-color top-label mr-s">{{ $t('monitor.index.5mplmn5z1qs0') }}</div>
-          <a-select class="select-w" :loading="data.hostListLoading" v-model="data.hostId"
-            :placeholder="$t('monitor.index.5mplmn5z1uc0')" @change="hostChange">
-            <a-option v-for="(item, index) in data.hostList" :key="index" :label="item.label" :value="item.value" />
+          <a-select
+            class="select-w"
+            :loading="data.hostListLoading"
+            v-model="data.hostId"
+            :placeholder="$t('monitor.index.5mplmn5z1uc0')"
+            @change="hostChange"
+          >
+            <a-option
+              v-for="(item, index) in data.hostList"
+              :key="index"
+              :label="item.label"
+              :value="item.value"
+            />
           </a-select>
         </div>
       </div>
@@ -22,34 +42,55 @@
     <div class="flex-row mb">
       <div class="echart-container cpu-bg mr">
         <div class="label-color ft-b ft-lg mb">{{ $t('monitor.index.else1') }}</div>
-        <v-chart class="echart" :option="data.cpu" />
+        <v-chart
+          class="echart"
+          :option="data.cpu"
+        />
       </div>
       <div class="echart-container memory-bg mr">
         <div class="label-color ft-b ft-lg mb">{{ $t('monitor.index.5mplmn5z1y80') }}</div>
-        <v-chart class="echart" :option="data.memory" />
+        <v-chart
+          class="echart"
+          :option="data.memory"
+        />
       </div>
       <div class="echart-container net-bg">
         <div class="label-color ft-b ft-lg mb">{{ $t('monitor.index.5mplmn5z2300') }}</div>
-        <v-chart class="echart" :option="data.net" />
+        <v-chart
+          class="echart"
+          :option="data.net"
+        />
       </div>
     </div>
     <div class="flex-row mb">
       <div class="echart-container lock-bg mr">
         <div class="label-color ft-b ft-lg mb">{{ $t('monitor.index.5mplmn5z2a00') }}</div>
-        <v-chart class="echart" :option="data.lock" />
+        <v-chart
+          class="echart"
+          :option="data.lock"
+        />
       </div>
       <div class="echart-container session-bg mr">
         <div class="label-color ft-b ft-lg mb">{{ $t('monitor.index.5mplmn5z2ms0') }}</div>
-        <v-chart class="echart" :option="data.session" />
+        <v-chart
+          class="echart"
+          :option="data.session"
+        />
       </div>
       <div class="echart-container connect-bg">
         <div class="label-color ft-b ft-lg mb">{{ $t('monitor.index.5mplmn5z30k0') }}</div>
-        <v-chart class="echart" :option="data.connect" />
+        <v-chart
+          class="echart"
+          :option="data.connect"
+        />
       </div>
     </div>
     <div class="session-top-ten-c">
       <div class="label-color ft-lg ft-b mb">{{ $t('monitor.index.5mplmn5z37w0') }}</div>
-      <v-chart class="echart-sesion" :option="data.sessionTop"></v-chart>
+      <v-chart
+        class="echart-sesion"
+        :option="data.sessionTop"
+      ></v-chart>
     </div>
   </div>
 </template>
@@ -174,6 +215,7 @@ const openWebSocket = () => {
   })
   instanceWebSocket.value.onmessage((messageData: any) => {
     const eventData = JSON.parse(messageData)
+    console.log('monitor websocket data', eventData)
     if (data.cpu.xAxis.data.length > 10) {
       data.cpu.xAxis.data.splice(0, 1)
       data.cpu.series[0].data.splice(0, 1)

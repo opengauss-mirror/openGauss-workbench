@@ -31,13 +31,22 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostTagEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostTagRel;
+import org.opengauss.admin.common.core.domain.model.ops.host.tag.HostTagInputDto;
 import org.opengauss.admin.system.mapper.ops.OpsHostTagRelMapper;
 import org.opengauss.admin.system.service.ops.IOpsHostTagRelService;
 import org.opengauss.admin.system.service.ops.IOpsHostTagService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -119,5 +128,17 @@ public class OpsHostTagRelService extends ServiceImpl<OpsHostTagRelMapper, OpsHo
         LambdaQueryWrapper<OpsHostTagRel> queryWrapper = Wrappers.lambdaQuery(OpsHostTagRel.class)
                 .eq(OpsHostTagRel::getTagId, tagId);
         remove(queryWrapper);
+    }
+
+    @Override
+    public void delTagRelation(HostTagInputDto hostTagInputDto) {
+        if (CollUtil.isNotEmpty(hostTagInputDto.getNames())
+                && CollUtil.isNotEmpty(hostTagInputDto.getHostIds())) {
+            LambdaQueryWrapper<OpsHostTagRel> queryWrapper = Wrappers.lambdaQuery(OpsHostTagRel.class)
+                    .in(OpsHostTagRel::getHostId, hostTagInputDto.getHostIds())
+                    .in(OpsHostTagRel::getTagId, hostTagInputDto.getNames());
+
+            remove(queryWrapper);
+        }
     }
 }

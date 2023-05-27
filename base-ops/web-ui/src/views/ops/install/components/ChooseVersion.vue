@@ -4,50 +4,79 @@
       <div class="label-color mb ft-xlg">{{ $t('components.ChooseVersion.5mpmxod8xno0') }}</div>
       <div class="flex-row-start mb">
         <div class="label-color mr">{{ $t('components.ChooseVersion.5mpmxod8yh00') }}:</div>
-        <a-tag class="mr" size="large" color="green">{{ getDescVersion() }}</a-tag>
-        <div v-if="currVersion !== OpenGaussVersionEnum.OPENlOOKENG" class="install-type flex-row">
+        <a-tag
+          class="mr"
+          size="large"
+          color="green"
+        >{{ getDescVersion() }}</a-tag>
+        <div
+          v-if="currVersion !== OpenGaussVersionEnum.OPENlOOKENG"
+          class="install-type flex-row"
+        >
           <div class="label-color label mr">{{ $t('components.ChooseVersion.5mpmxod8yr40') }}:</div>
           <!-- <a-select style="width: 200px" v-model="data.installType" @change="installTypeChange">
             <a-option v-for="(item, index) in installTypes" :key="index" :label="item.label" :value="item.value">
             </a-option>
           </a-select> -->
-          <a-radio-group v-model="data.installType" :options="installTypes" @change="installTypeChange">
+          <a-radio-group
+            v-model="data.installType"
+            :options="installTypes"
+            @change="installTypeChange"
+          >
             <template #label="{ data }">
               {{ data.label }}
             </template>
           </a-radio-group>
         </div>
       </div>
-      <div v-if="data.installType === 'import'" style="color: red; font-weight: bold; font-size: large;">请注意:
-        5.0.0及以后的版本系统可以区分极简版、轻量版和企业版,之前的版本只能区分企业版和非企业版。请核实您选择的版本和即将导入的版本是否对应</div>
+      <div
+        v-if="data.installType === 'import'"
+        style="color: red; font-weight: bold; font-size: large;"
+      >{{ $t('components.ChooseVersion.else3') }}</div>
     </div>
     <a-divider></a-divider>
     <div class="flex-row-center panel-body">
       <div
         :class="'version-c card-item-c mr-xlg ' + (currVersion === OpenGaussVersionEnum.MINIMAL_LIST ? 'center-item-active' : '')"
-        @click="chooseVer(OpenGaussVersionEnum.MINIMAL_LIST)">
-        <svg-icon icon-class="ops-mini-version" class="icon-size image mb"></svg-icon>
+        @click="chooseVer(OpenGaussVersionEnum.MINIMAL_LIST)"
+      >
+        <svg-icon
+          icon-class="ops-mini-version"
+          class="icon-size image mb"
+        ></svg-icon>
         <div class="label-color ft-lg mb">{{ $t('components.ChooseVersion.5mpmxod8yxs0') }}</div>
         <div class="label-color remark">{{ $t('components.ChooseVersion.5mpmxod8z3w0') }}</div>
       </div>
       <div
         :class="'version-c card-item-c mr-xlg ' + (currVersion === OpenGaussVersionEnum.LITE ? 'center-item-active' : '')"
-        @click="chooseVer(OpenGaussVersionEnum.LITE)">
-        <svg-icon icon-class="ops-cluster" class="icon-size image mb"></svg-icon>
+        @click="chooseVer(OpenGaussVersionEnum.LITE)"
+      >
+        <svg-icon
+          icon-class="ops-cluster"
+          class="icon-size image mb"
+        ></svg-icon>
         <div class="label-color ft-lg mb">{{ $t('components.ChooseVersion.5mpmxod8za00') }}</div>
         <div class="label-color remark">{{ $t('components.ChooseVersion.else1') }}</div>
       </div>
       <div
         :class="'version-c card-item-c mr-xlg ' + (currVersion === OpenGaussVersionEnum.ENTERPRISE ? 'center-item-active' : '')"
-        @click="chooseVer(OpenGaussVersionEnum.ENTERPRISE)">
-        <svg-icon icon-class="ops-cluster" class="icon-size image mb"></svg-icon>
+        @click="chooseVer(OpenGaussVersionEnum.ENTERPRISE)"
+      >
+        <svg-icon
+          icon-class="ops-cluster"
+          class="icon-size image mb"
+        ></svg-icon>
         <div class="label-color ft-lg mb">{{ $t('components.ChooseVersion.5mpmxod8zg00') }}</div>
         <div class="label-color remark">{{ $t('components.ChooseVersion.5mpmxod8zlw0') }}</div>
       </div>
       <div
         :class="'version-c card-item-c ' + (currVersion === OpenGaussVersionEnum.OPENlOOKENG ? 'center-item-active' : '')"
-        @click="chooseVer(OpenGaussVersionEnum.OPENlOOKENG)">
-        <svg-icon icon-class="ops-cluster" class="icon-size image mb"></svg-icon>
+        @click="chooseVer(OpenGaussVersionEnum.OPENlOOKENG)"
+      >
+        <svg-icon
+          icon-class="ops-cluster"
+          class="icon-size image mb"
+        ></svg-icon>
         <div class="label-color ft-lg mb">{{ $t('components.ChooseVersion.openLooKeng') }}</div>
         <div class="label-color remark">{{ $t('components.ChooseVersion.openLooKengRemark') }}</div>
       </div>

@@ -299,7 +299,13 @@
             "5pbjt280spg0": "Selected host",
             "5pbjt280xuo0": "Count",
             "5pbjt280yik0": "Tag",
-            "5pbjt280z040": "Tag Batch Setting"
+            "5pbjt280z040": "Tag Batch Setting",
+            "5quz8t9a2xg0": "Operation Type",
+            "5quz8t9a5x00": "Batch Add",
+            "5quz8t9a6ik0": "Batch Del",
+            "5quz8t9a6zk0": "Common labels",
+            "5quz8t9a7fs0": "remove labels",
+            "5quz8t9a7w00": "No labels are shared and cannot be deleted in batches"
         },
         "AddAz": {
             "azName": "AZ Name",
