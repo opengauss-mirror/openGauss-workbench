@@ -22,7 +22,7 @@
               <a-table-column :title="$t('components.ParamsConfig.5q0aazsppog0')" data-index="paramKey" :width="180" ellipsis tooltip></a-table-column>
               <a-table-column :title="$t('components.ParamsConfig.5q0aazsppr80')" data-index="paramValue">
                 <template #cell="{ record }">
-                  <a-input v-model="record.paramValue" />
+                  <a-input v-model.trim="record.paramValue" />
                 </template>
               </a-table-column>
               <a-table-column :title="$t('components.ParamsConfig.5q0aazspptw0')" data-index="paramDesc" :width="200" ellipsis tooltip></a-table-column>
@@ -39,7 +39,7 @@
                   <a-table-column :title="$t('components.ParamsConfig.5q0aazsppog0')" data-index="paramKey" :width="180" ellipsis tooltip></a-table-column>
                   <a-table-column :title="$t('components.ParamsConfig.5q0aazsppr80')" data-index="paramValue">
                     <template #cell="{ record }">
-                      <a-input v-model="record.paramValue" />
+                      <a-input v-model.trim="record.paramValue" />
                     </template>
                   </a-table-column>
                   <a-table-column :title="$t('components.ParamsConfig.5q0aazspptw0')" data-index="paramDesc" :width="200" ellipsis tooltip></a-table-column>
@@ -175,11 +175,11 @@ watch(moreData, (v) => {
 
 const getDefaultParams = () => {
   defaultParams().then(res => {
-    defaultData.basic = res.data.slice(0, 10)
-    defaultData.more = res.data.slice(10)
+    defaultData.basic = res.data.slice(0, 12)
+    defaultData.more = res.data.slice(12)
     const data = JSON.parse(JSON.stringify(res.data))
-    basicData.value = data.slice(0, 10)
-    moreData.value = data.slice(10)
+    basicData.value = data.slice(0, 12)
+    moreData.value = data.slice(12)
 
     if (props.mode === 1) {
       if (props.globalParams.basic.length) {

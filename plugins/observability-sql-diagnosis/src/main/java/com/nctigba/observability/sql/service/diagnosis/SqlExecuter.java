@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -18,6 +19,7 @@ import com.nctigba.observability.sql.service.diagnosis.caller.Caller;
 import cn.hutool.core.util.RandomUtil;
 
 @Service
+@Slf4j
 public class SqlExecuter {
 	@Autowired
 	private DiagnosisTaskMapper mapper;
@@ -32,10 +34,10 @@ public class SqlExecuter {
 	public void executeSql(Task task) {
 		try {
 			var rsList = new ArrayList<String>();
-			try (var conn = clusterManager.getConnectionByNodeId(task.getNodeId());) {
+			try (var conn = clusterManager.getConnectionByNodeId(task.getNodeId(), task.getDbName());) {
 				Long sessionid = null;
 				int count = 0;
-				while (sessionid == null && count++ < 100) {
+				while (count++ < 100) {
 					int rand = RandomUtil.randomInt();
 					var sessionidSql = String.format(SESSIONID_SQL, rand, rand, rand, rand);
 					try (var st = conn.createStatement(); var rs = st.executeQuery(sessionidSql)) {
@@ -67,6 +69,8 @@ public class SqlExecuter {
 				mapper.updateById(task);
 				return;
 			} catch (InterruptedException e) {
+				log.error("Interrupted!", e);
+				Thread.currentThread().interrupt();
 			}
 			if (TaskState.receiving.compareTo(task.getState()) > 0) {
 				task.addRemarks(TaskState.receiving);

@@ -76,8 +76,10 @@ public class HistogramToHeatmap {
 					flags.add("default");
 					flag = "default";
 					datas.add(new ArrayList<>());
-				} else if (datas.size() <= flags.indexOf(flag))
+				} else if (datas.size() <= flags.indexOf(flag)){
 					datas.add(new ArrayList<>());
+				}
+
 				var m1 = datas.get(flags.indexOf(flag));
 				if (m1.size() == 0)
 					m1.add(new ArrayList<>());

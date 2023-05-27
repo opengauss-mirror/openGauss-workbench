@@ -155,7 +155,8 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
     @Override
     public String checkRoleNameUnique(SysRole role) {
         Integer roleId = role.getRoleId() == null ? 1 : role.getRoleId();
-        SysRole info = roleMapper.selectRole(new QueryWrapper<SysRole>().eq("r.role_name", role.getRoleName()));
+        SysRole info = roleMapper.selectRole(new QueryWrapper<SysRole>()
+                .eq("r.role_name", role.getRoleName()).eq("r.del_flag", 0));
         if (info != null && !info.getRoleId().equals(roleId)) {
             return UserConstants.NOT_UNIQUE;
         }

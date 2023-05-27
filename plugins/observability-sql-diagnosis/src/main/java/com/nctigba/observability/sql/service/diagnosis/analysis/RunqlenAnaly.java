@@ -42,7 +42,12 @@ public class RunqlenAnaly extends AbstractHeatMap {
 				r3 += sum.get(i);
 			ra += sum.get(i);
 		}
-		var rate = (float) r3 / ra * 100;
+		float rate = 0;
+		if(ra!=0){
+			rate=(float) r3 / ra * 100;
+		}
+
+
 		if (rate > 5) {
 			var top = new TaskResult(task, ResultState.Suggestions, resultType, FrameType.Suggestion, bearing.top);
 			top.setData(Map.of("title", LocaleString.format("RunqlenAnaly.title"), "suggestions",

@@ -310,3 +310,7 @@ mvn clean package -P prod
 
 3、创建SQL诊断任务时，如果勾选了explain analyze可选项，执行计划节点将会没有数据。
 原因：当以explain analyze方式执行SQL时，即使该语句满足statement_history表的写入条件，目前版本的数据库（openGauss3.1.0）也不会将该语句记录进statement_history。
+
+4、如遇到下图问题，请尝试先更新实例监控或者日志检索插件
+
+![image-20230425163703893](doc/image-20230425163703893.png)

@@ -22,7 +22,6 @@ const handleData = <T>(res: AxiosResponse<ApiResponse<T>, any>) => {
 export class Request {
     constructor(config?: AxiosRequestConfig) {
         if (config) {
-            // axios.defaults.baseURL = 'http://39.108.219.254:9494'
             for (const key in config) {
                 if (key in axios.defaults) {
                     // @ts-ignore
@@ -94,7 +93,6 @@ export class Request {
 }
 
 const ogRequest = new Request({
-    // baseURL: "http://39.108.219.254:9494",
     baseURL: import.meta.env.VITE_BASE_URL
 })
 

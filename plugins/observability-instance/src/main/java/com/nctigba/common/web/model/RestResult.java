@@ -16,7 +16,7 @@ public class RestResult<T> implements Serializable {
 	private static final String SUCCESS_CODE = "200";
 	private String code;
 	private String msg;
-	private T data;
+	private  transient  T data;
 
 	public static <T> RestResult<T> success() {
 		return RestResult.<T>builder().code(SUCCESS_CODE).build();

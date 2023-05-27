@@ -10,6 +10,7 @@ import java.util.Objects;
 
 import javax.servlet.http.HttpServletResponse;
 
+import com.nctigba.observability.instance.constants.CommonConstants;
 import org.apache.commons.lang3.StringUtils;
 import org.opengauss.admin.common.constant.ops.SshCommandConstants;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsClusterEntity;
@@ -55,16 +56,16 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 public class OpsWdrService extends ServiceImpl<OpsWdrMapper, OpsWdrEntity> {
 	@Autowired
-	@AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
+	@AutowiredType(Type.PLUGIN_MAIN)
 	private IOpsClusterService opsClusterService;
 	@Autowired
-	@AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
+	@AutowiredType(Type.PLUGIN_MAIN)
 	private IOpsClusterNodeService opsClusterNodeService;
 	@Autowired
-	@AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
+	@AutowiredType(Type.PLUGIN_MAIN)
 	private HostFacade hostFacade;
 	@Autowired
-	@AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
+	@AutowiredType(Type.PLUGIN_MAIN)
 	private HostUserFacade hostUserFacade;
 	@Autowired
 	private JschUtil jschUtil;
@@ -156,7 +157,7 @@ public class OpsWdrService extends ServiceImpl<OpsWdrMapper, OpsWdrEntity> {
 
 		OpsHostEntity hostEntity = hostFacade.getById(hostId);
 		if (Objects.isNull(hostEntity)) {
-			throw new OpsException("host information does not exist");
+			throw new OpsException(CommonConstants.HOST_NOT_EXIST);
 		}
 
 		List<OpsClusterNodeEntity> opsClusterNodeEntities = opsClusterNodeService.listClusterNodeByClusterId(clusterId);
@@ -171,17 +172,17 @@ public class OpsWdrService extends ServiceImpl<OpsWdrMapper, OpsWdrEntity> {
 		String installUserId = nodeEntity.getInstallUserId();
 		OpsHostUserEntity userEntity = hostUserFacade.getById(installUserId);
 		if (Objects.isNull(userEntity)) {
-			throw new OpsException("Installation user information does not exist");
+			throw new OpsException(CommonConstants.INSTALLATION_USER_NOT_EXIST);
 		}
 
 		var session = jschUtil
 				.getSession(hostEntity.getPublicIp(), hostEntity.getPort(), userEntity.getUsername(),
 						decrypt(userEntity.getPassword()))
-				.orElseThrow(() -> new OpsException("Failed to establish session with host"));
+				.orElseThrow(() -> new OpsException(CommonConstants.FAILED_TO_ESTABLISH_HOST));
 
 		try {
 			clusterOpsProviderManager.provider(clusterEntity.getVersion(), null)
-					.orElseThrow(() -> new OpsException("The current version does not support"))
+					.orElseThrow(() -> new OpsException(CommonConstants.CURRENT_VERSION_NOT_SUPPORT))
 					.enableWdrSnapshot(session, clusterEntity, opsClusterNodeEntities, WdrScopeEnum.CLUSTER, null);
 			String clientLoginOpenGauss = MessageFormat.format(SshCommandConstants.LOGIN,
 					String.valueOf(clusterEntity.getPort()));
@@ -197,12 +198,12 @@ public class OpsWdrService extends ServiceImpl<OpsWdrMapper, OpsWdrEntity> {
 			if (0 != jschResult.getExitCode()) {
 				log.error("Generate wdr snapshot exception, exit code: {}, log: {}", jschResult.getExitCode(),
 						jschResult.getResult());
-				throw new OpsException("Generate wdr snapshot exception");
+				throw new OpsException(CommonConstants.GENERATE_WDR_SNAPSHOT_EXCEPTION);
 			}
 
 		} catch (Exception e) {
-			log.error("Generate wdr snapshot exception", e);
-			throw new OpsException("Generate wdr snapshot exception");
+			log.error(CommonConstants.GENERATE_WDR_SNAPSHOT_EXCEPTION, e);
+			throw new OpsException(CommonConstants.GENERATE_WDR_SNAPSHOT_EXCEPTION);
 		} finally {
 			if (Objects.nonNull(session) && session.isConnected()) {
 				session.disconnect();
@@ -224,7 +225,7 @@ public class OpsWdrService extends ServiceImpl<OpsWdrMapper, OpsWdrEntity> {
 		String hostId = wdrEntity.getHostId();
 		OpsHostEntity hostEntity = hostFacade.getById(hostId);
 		if (Objects.isNull(hostEntity)) {
-			throw new OpsException("host information does not exist");
+			throw new OpsException(CommonConstants.HOST_NOT_EXIST);
 		}
 
 		List<OpsHostUserEntity> hostUserList = hostUserFacade.listHostUserByHostId(hostId);
@@ -302,22 +303,22 @@ public class OpsWdrService extends ServiceImpl<OpsWdrMapper, OpsWdrEntity> {
 				.orElseThrow(() -> new OpsException("Cluster node configuration not found"));
 		OpsHostEntity hostEntity = hostFacade.getById(hostId);
 		if (Objects.isNull(hostEntity)) {
-			throw new OpsException("host information does not exist");
+			throw new OpsException(CommonConstants.HOST_NOT_EXIST);
 		}
 
 		String installUserId = nodeEntity.getInstallUserId();
 		OpsHostUserEntity userEntity = hostUserFacade.getById(installUserId);
 		if (Objects.isNull(userEntity)) {
-			throw new OpsException("Installation user information does not exist");
+			throw new OpsException(CommonConstants.INSTALLATION_USER_NOT_EXIST);
 		}
 
 		Session session = jschUtil
 				.getSession(hostEntity.getPublicIp(), hostEntity.getPort(), userEntity.getUsername(),
 						decrypt(userEntity.getPassword()))
-				.orElseThrow(() -> new OpsException("Failed to establish session with host"));
+				.orElseThrow(() -> new OpsException(CommonConstants.FAILED_TO_ESTABLISH_HOST));
 		try {
 			clusterOpsProviderManager.provider(clusterEntity.getVersion(), null)
-					.orElseThrow(() -> new OpsException("The current version does not support"))
+					.orElseThrow(() -> new OpsException(CommonConstants.CURRENT_VERSION_NOT_SUPPORT))
 					.enableWdrSnapshot(session, clusterEntity, opsClusterNodeEntities, WdrScopeEnum.CLUSTER, null);
 
 			String wdrPath = "/home/" + userEntity.getUsername();
@@ -351,23 +352,23 @@ public class OpsWdrService extends ServiceImpl<OpsWdrMapper, OpsWdrEntity> {
 		String hostId = masterNodeEntity.getHostId();
 		OpsHostEntity hostEntity = hostFacade.getById(hostId);
 		if (Objects.isNull(hostEntity)) {
-			throw new OpsException("host information does not exist");
+			throw new OpsException(CommonConstants.HOST_NOT_EXIST);
 		}
 
 		String installUserId = masterNodeEntity.getInstallUserId();
 		OpsHostUserEntity userEntity = hostUserFacade.getById(installUserId);
 		if (Objects.isNull(userEntity)) {
-			throw new OpsException("Installation user information does not exist");
+			throw new OpsException(CommonConstants.INSTALLATION_USER_NOT_EXIST);
 		}
 
 		Session session = jschUtil
 				.getSession(hostEntity.getPublicIp(), hostEntity.getPort(), userEntity.getUsername(),
 						decrypt(userEntity.getPassword()))
-				.orElseThrow(() -> new OpsException("Failed to establish session with host"));
+				.orElseThrow(() -> new OpsException(CommonConstants.FAILED_TO_ESTABLISH_HOST));
 
 		try {
 			clusterOpsProviderManager.provider(clusterEntity.getVersion(), null)
-					.orElseThrow(() -> new OpsException("The current version does not support"))
+					.orElseThrow(() -> new OpsException(CommonConstants.CURRENT_VERSION_NOT_SUPPORT))
 					.enableWdrSnapshot(session, clusterEntity, opsClusterNodeEntities, WdrScopeEnum.CLUSTER, null);
 
 			String wdrPath = "/home/" + userEntity.getUsername();
@@ -418,11 +419,11 @@ public class OpsWdrService extends ServiceImpl<OpsWdrMapper, OpsWdrEntity> {
 			if (0 != jschResult.getExitCode()) {
 				log.error("Generated wdr exception, exit code: {}, log: {}", jschResult.getExitCode(),
 						jschResult.getResult());
-				throw new OpsException("generate wdr exception");
+				throw new OpsException(CommonConstants.GENERATE_WDR__EXCEPTION);
 			}
 		} catch (Exception e) {
-			log.error("generate wdr exception", e);
-			throw new OpsException("generate wdr exception");
+			log.error(CommonConstants.GENERATE_WDR__EXCEPTION, e);
+			throw new OpsException(CommonConstants.GENERATE_WDR__EXCEPTION);
 		}
 	}
 }

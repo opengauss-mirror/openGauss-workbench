@@ -24,8 +24,10 @@
 
 package org.opengauss.admin.plugin.controller;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import org.opengauss.admin.common.core.domain.AjaxResult;
 import org.opengauss.admin.plugin.base.BaseController;
+import org.opengauss.admin.plugin.domain.MigrationTaskInitGlobalParam;
 import org.opengauss.admin.plugin.service.MigrationTaskInitGlobalParamService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -48,7 +50,9 @@ public class TaskParamController extends BaseController {
      */
     @GetMapping(value = "/default")
     public AjaxResult getDefaultGlobalParam() {
-        return AjaxResult.success(taskInitGlobalParamService.list());
+        LambdaQueryWrapper<MigrationTaskInitGlobalParam> wrapper = new LambdaQueryWrapper();
+        wrapper.orderByAsc(MigrationTaskInitGlobalParam::getId);
+        return AjaxResult.success(taskInitGlobalParamService.list(wrapper));
     }
 
 

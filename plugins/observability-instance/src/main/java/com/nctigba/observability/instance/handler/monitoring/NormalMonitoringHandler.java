@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.nctigba.observability.instance.constants.CommonConstants;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.opengauss.admin.system.plugin.facade.HostFacade;
@@ -202,7 +203,7 @@ public class NormalMonitoringHandler implements MonitoringHandler {
 		// 1. Processing of original data and extracting duplicates__ name__ Value Data
 		Map<String, List<MonitoringMetric>> metricMap = new HashMap<>();
 		for (MonitoringMetric metric : metricList) {
-			String metricName = metric.getMetric().getString("__name__");
+			String metricName = metric.getMetric().getString(CommonConstants.NAME);
 			List<MonitoringMetric> list;
 			if (metricMap.containsKey(metricName)) {
 				list = metricMap.get(metricName);
@@ -223,7 +224,7 @@ public class NormalMonitoringHandler implements MonitoringHandler {
 		for (List<MonitoringMetric> metrics : metricMap.values()) {
 			for (MonitoringMetric metric : metrics) {
 				// Get the corresponding field
-				String metricName = metric.getMetric().getString("__name__");
+				String metricName = metric.getMetric().getString(CommonConstants.NAME);
 				String warningMsg = metric.getMetric().getString("warning_msg");
 				Object metricData = JSON.parse(metric.getMetric().getString("table"));
 				JSONArray values = metric.getValues();
@@ -262,7 +263,7 @@ public class NormalMonitoringHandler implements MonitoringHandler {
 		SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 		for (MonitoringMetric metric : metricList) {
 			// Index name
-			String metricName = metric.getMetric().getString("__name__");
+			String metricName = metric.getMetric().getString(CommonConstants.NAME);
 			if (StringUtils.isNotBlank(param.getLegendName())) {
 				metricName = metric.getMetric().getString(param.getLegendName());
 			}

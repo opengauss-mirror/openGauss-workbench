@@ -66,9 +66,13 @@ public class DataSourceIniter {
 		log.info("sqlite:" + f.getCanonicalPath());
 		if (!f.exists()) {
 			var parent = f.getParentFile();
-			if (!parent.exists())
+			if (!parent.exists()) {
 				parent.mkdirs();
-			f.createNewFile();
+			}
+			boolean b=f.createNewFile();
+			if(!b){
+				log.error("DataSourceIniter initSqlite createNewFile fail");
+			}
 		}
 		var sqLiteDataSource = new SQLiteDataSource();
 		sqLiteDataSource.setUrl(JDBC.PREFIX + f.getCanonicalPath());

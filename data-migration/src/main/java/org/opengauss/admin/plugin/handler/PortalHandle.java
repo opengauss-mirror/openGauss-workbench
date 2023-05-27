@@ -56,27 +56,23 @@ public class PortalHandle {
         return StringUtils.isNotBlank(checkInstallPortalResult.trim());
     }
 
-    public static boolean installPortal(String host, Integer port, String user, String pass, String installPath, String portalDownUrl, boolean newInstallFile) {
-        if (newInstallFile) {
-            ShellUtil.execCommandGetResult(host, port, user, pass, "rm -rf  " + installPath + "portal*");
-        } else {
-            ShellUtil.execCommandGetResult(host, port, user, pass,"rm -rf  " + installPath + "portal");
-        }
+    public static boolean installPortal(String host, Integer port, String user, String pass, String installPath, String portalDownUrl, String portalPkgName, String portalJarName, boolean newInstallFile) {
+        ShellUtil.rmDir(host, port, user, pass,installPath + "portal");
         String existsPortalInstallFile = ShellUtil.execCommandGetResult(host, port, user, pass,
-                "[ -f " + installPath + "portal.zip ] && echo 1 || echo 0");
+                "[ -f " + installPath + portalPkgName + " ] && echo 1 || echo 0");
         if (Integer.parseInt(existsPortalInstallFile.trim()) == 0) {
             //download portal
-            String downloadCommand = "wget -P " + installPath + " " + portalDownUrl;
+            String downloadCommand = "wget -P " + installPath + " " + portalDownUrl + portalPkgName;
             log.info("wget download portal,command: {}", downloadCommand);
             String wgetResult = ShellUtil.execCommandGetResult(host, port, user, pass,downloadCommand);
         }
 
-        String unzipShell = "unzip -d " + installPath + "portal " + installPath + "portal.zip";
+        String unzipShell = "tar -zxvf " + installPath + portalPkgName + " -C "+ installPath;
         log.info("unzip portal, {}", unzipShell);
         ShellUtil.execCommandGetResult(host, port, user, pass,unzipShell);
 
         String portalHome = installPath + "portal/";
-        String installCommand = "java -Dpath=" + portalHome + " -Dorder=install_mysql_all_migration_tools -Dskip=true -jar " + portalHome + "portalControl-1.0-SNAPSHOT-exec.jar";
+        String installCommand = "java -Dpath=" + portalHome + " -Dorder=install_mysql_all_migration_tools -Dskip=true -jar " + portalHome + portalJarName;
         initPortalConfig(host, port, user, pass, portalHome);
         log.info("portal install, command: {}", installCommand);
         String installToolResult = ShellUtil.execCommandGetResult(host, port, user, pass,installCommand);
@@ -99,7 +95,7 @@ public class PortalHandle {
      * Start the portal; pass in the task ID and task parameters
      * @param host
      */
-    public static void startPortal(MigrationHostPortalInstall host, MigrationTask task, Map<String,String> paramMap) {
+    public static void startPortal(MigrationHostPortalInstall host, MigrationTask task, String portalJarName, Map<String,String> paramMap) {
         log.info("run host info: {}", JSON.toJSONString(host));
         String portalHome = host.getInstallPath() + "portal/";
         String params = paramMap.entrySet().stream().map(p -> {
@@ -110,27 +106,27 @@ public class PortalHandle {
         commandSb.append(" -Dworkspace.id=").append(task.getId());
         commandSb.append(params);
         commandSb.append(" -Dorder=").append(task.getMigrationOperations());
-        commandSb.append(" -Dskip=true -jar ").append(portalHome).append("portalControl-1.0-SNAPSHOT-exec.jar");
+        commandSb.append(" -Dskip=true -jar ").append(portalHome).append(portalJarName);
         log.info("start portal,host: {}, command: {}", host.getHost(), commandSb.toString());
         ShellUtil.execCommand(host.getHost(), host.getPort(), host.getRunUser(), host.getRunPassword(),commandSb.toString());
     }
 
-    public static void finishPortal(String host, Integer port, String user, String pass, String installPath, MigrationTask task) {
+    public static void finishPortal(String host, Integer port, String user, String pass, String installPath, String portalJarName, MigrationTask task) {
         String portalHome = installPath + "portal/";
         ShellUtil.execCommand(host, port, user, pass,
-                "java -Dpath=" + portalHome + " -Dworkspace.id=" + task.getId() + " -Dorder=stop_plan -Dskip=true -jar " + portalHome + "portalControl-1.0-SNAPSHOT-exec.jar");
+                "java -Dpath=" + portalHome + " -Dworkspace.id=" + task.getId() + " -Dorder=stop_plan -Dskip=true -jar " + portalHome + portalJarName);
     }
 
-    public static void stopIncrementalPortal(String host, Integer port, String user, String pass, String installPath, MigrationTask task) {
+    public static void stopIncrementalPortal(String host, Integer port, String user, String pass, String installPath, String portalJarName, MigrationTask task) {
         String portalHome = installPath + "portal/";
         ShellUtil.execCommand(host, port, user, pass,
-                "java -Dpath=" + portalHome + " -Dworkspace.id=" + task.getId() + " -Dorder=stop_incremental_migration -Dskip=true -jar " + portalHome + "portalControl-1.0-SNAPSHOT-exec.jar");
+                "java -Dpath=" + portalHome + " -Dworkspace.id=" + task.getId() + " -Dorder=stop_incremental_migration -Dskip=true -jar " + portalHome + portalJarName);
     }
 
-    public static void startReversePortal(String host, Integer port, String user, String pass, String installPath, MigrationTask task) {
+    public static void startReversePortal(String host, Integer port, String user, String pass, String installPath, String portalJarName, MigrationTask task) {
         String portalHome = installPath + "portal/";
         ShellUtil.execCommand(host, port, user, pass,
-                "java -Dpath=" + portalHome + " -Dworkspace.id=" + task.getId() + " -Dorder=run_reverse_migration -Dskip=true -jar " + portalHome + "portalControl-1.0-SNAPSHOT-exec.jar");
+                "java -Dpath=" + portalHome + " -Dworkspace.id=" + task.getId() + " -Dorder=run_reverse_migration -Dskip=true -jar " + portalHome + portalJarName);
     }
 
     public static String getPortalStatus(String host, Integer port, String user, String pass, String installPath, MigrationTask task) {

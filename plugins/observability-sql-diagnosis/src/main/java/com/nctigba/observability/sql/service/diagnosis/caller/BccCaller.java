@@ -3,6 +3,7 @@ package com.nctigba.observability.sql.service.diagnosis.caller;
 import java.sql.SQLException;
 import java.util.Map;
 
+import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.system.plugin.facade.HostFacade;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
@@ -25,6 +26,7 @@ import cn.hutool.http.HttpUtil;
 import lombok.RequiredArgsConstructor;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class BccCaller implements Caller {
 	private final ClusterManager clusterManager;
@@ -57,7 +59,7 @@ public class BccCaller implements Caller {
 			return;
 		Integer lwpid = null;
 		var node = clusterManager.getOpsNodeById(task.getNodeId());
-		var agent = envMapper.selectOne(Wrappers.<NctigbaEnv>lambdaQuery().eq(NctigbaEnv::getHostid, node.getHostId())
+		var agent = envMapper.selectOne(Wrappers.<NctigbaEnv>lambdaQuery().eq(NctigbaEnv::getNodeid, node.getNodeId())
 				.eq(NctigbaEnv::getType, type.AGENT));
 		var host = hostFacade.getById(agent.getHostid());
 		try (var conn = node.connection()) {
@@ -76,10 +78,8 @@ public class BccCaller implements Caller {
 				watch.start();
 				if (watch.getTaskCount() > 10000)
 					break;
-				if (lwpid == null)
-					try {
+				if (lwpid == null){
 						Thread.sleep(10L);
-					} catch (InterruptedException e) {
 					}
 			}
 			task.addRemarks("pid catch times：" + watch.getTaskCount());
@@ -95,6 +95,10 @@ public class BccCaller implements Caller {
 			task.addRemarks("db permission fail");
 			mapper.updateById(task);
 			return;
+		} catch (InterruptedException e) {
+			log.info(e.getMessage());
+			task.addRemarks(TaskState.err, e);
+			Thread.currentThread().interrupt();
 		} catch (Exception e) {
 			task.addRemarks(TaskState.err, e);
 			mapper.updateById(task);

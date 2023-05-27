@@ -1,5 +1,6 @@
 package com.nctigba.observability.instance.model.param;
 
+import com.nctigba.observability.instance.constants.CommonConstants;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -36,13 +37,13 @@ public enum OsParamData {
     tcpWmem("操作系统","net.ipv4.tcp_wmem","TCP协议发送端缓冲区的可用内存大小。分无压力、有压力、和压力大三个区间，单位为页面。",
             "8192 250000 16777216","409616384131072（4k）","字节","发送缓存设置min：为TCP socket预留用于发送缓冲的内存最小值。"),
     wmemMax("操作系统","net.core.wmem_max","socket发送端缓冲区大小的最大值。",
-            "21299200","129024","字节","最大的TCP数据发送缓冲"),
+            CommonConstants.NUM_21299200,CommonConstants.NUM_129024,"字节","最大的TCP数据发送缓冲"),
     rmemMax("操作系统","net.core.rmem_max","socket接收端缓冲区大小的最大值。",
-            "21299200","129024","字节","最大的TCP数据接收缓冲"),
+            CommonConstants.NUM_21299200,CommonConstants.NUM_129024,"字节","最大的TCP数据接收缓冲"),
     wmemDefault("操作系统","net.core.wmem_default","socket发送端缓冲区大小的默认值。",
-            "21299200","129024","字节","默认的发送窗口大小"),
+            CommonConstants.NUM_21299200,CommonConstants.NUM_129024,"字节","默认的发送窗口大小"),
     rmemDefault("操作系统","net.core.rmem_default","socket接收端缓冲区大小的默认值。",
-            "21299200","129024","字节","默认的接收窗口大小"),
+            CommonConstants.NUM_21299200,CommonConstants.NUM_129024,"字节","默认的接收窗口大小"),
     ipLocalPortRange("操作系统","net.ipv4.ip_local_port_range","物理机可用临时端口范围。",
             "26000-65535","3276861000","字节","表示用于向外连接的端口范围，默认比较小，这个范围同样会间接用于NAT表规模"),
     sem("操作系统","kernel.sem","内核信号量参数设置大小。",
@@ -50,13 +51,13 @@ public enum OsParamData {
     minFreeKbytes("操作系统","vm.min_free_kbytes","保证物理内存有足够空闲空间，防止突发性换页。",
             "系统总内存的5%","724","字节",""),
     somaxconn("操作系统","net.core.somaxconn","定义了系统中每一个端口最大的监听队列的长度，这是个全局的参数。",
-            "65535","128","数目","用来限制监听(LISTEN)队列最大数据包的数量，超过这个数量就会导致链接超时或者触发重传机制。web应用中listen函数的backlog默认会给我们内核参数的net.core.somaxconn限制到128，而nginx定义的NGX_LISTEN_BACKLOG默认为511，所以有必要调整这个值。对繁忙的服务器,增加该值有助于网络性能"),
+            CommonConstants.NUM_65535,"128","数目","用来限制监听(LISTEN)队列最大数据包的数量，超过这个数量就会导致链接超时或者触发重传机制。web应用中listen函数的backlog默认会给我们内核参数的net.core.somaxconn限制到128，而nginx定义的NGX_LISTEN_BACKLOG默认为511，所以有必要调整这个值。对繁忙的服务器,增加该值有助于网络性能"),
     tcpSyncookies("操作系统","net.ipv4.tcp_syncookies","当出现SYN等待队列溢出时，启用cookies来处理，可防范少量SYN攻击。",
             "1","0","布尔值","只有在内核编译时选择了CONFIG_SYNCOOKIES时才会发生作用。当出现syn等候队列出现溢出时象对方发送syncookies。目的是为了防止syn flood攻击"),
     netdevMaxBacklog("操作系统","net.core.netdev_max_backlog","在每个网络接口接收数据包的速率比内核处理这些包的速率快时，允许送到队列的数据包的最大数目。",
-            "65535","1000","数目","队列长度"),
+            CommonConstants.NUM_65535,"1000","数目","队列长度"),
     tcpMaxSynBacklog("操作系统","net.ipv4.tcp_max_syn_backlog","记录的那些尚未收到客户端确认信息的连接请求的最大值。",
-            "65535","1024","数目","对于那些依然还未获得客户端确认的连接请求﹐需要保存在队列中最大数目。对于超过 128Mb 内存的系统﹐默认值是 1024 ﹐低于 128Mb 的则为 128。如果服务器经常出现过载﹐可以尝试增加这个数字。警告﹗假如您将此值设为大于 1024﹐最好修改include/net/tcp.h里面的TCP_SYNQ_HSIZE﹐以保持TCP_SYNQ_HSIZE*16(SYN Flood攻击利用TCP协议散布握手的缺陷，伪造虚假源IP地址发送大量TCP-SYN半打开连接到目标系统，最终导致目标系统Socket队列资源耗尽而无法接受新的连接。为了应付这种攻击，现代Unix系统中普遍采用多连接队列处理的方式来缓冲(而不是解决)这种攻击，是用一个基本队列处理正常的完全连接应用(Connect()和Accept() )，是用另一个队列单独存放半打开连接。这种双队列处理方式和其他一些系统内核措施(例如Syn-Cookies/Caches)联合应用时，能够比较有效的缓解小规模的SYN Flood攻击(事实证明)"),
+            CommonConstants.NUM_65535,"1024","数目","对于那些依然还未获得客户端确认的连接请求﹐需要保存在队列中最大数目。对于超过 128Mb 内存的系统﹐默认值是 1024 ﹐低于 128Mb 的则为 128。如果服务器经常出现过载﹐可以尝试增加这个数字。警告﹗假如您将此值设为大于 1024﹐最好修改include/net/tcp.h里面的TCP_SYNQ_HSIZE﹐以保持TCP_SYNQ_HSIZE*16(SYN Flood攻击利用TCP协议散布握手的缺陷，伪造虚假源IP地址发送大量TCP-SYN半打开连接到目标系统，最终导致目标系统Socket队列资源耗尽而无法接受新的连接。为了应付这种攻击，现代Unix系统中普遍采用多连接队列处理的方式来缓冲(而不是解决)这种攻击，是用一个基本队列处理正常的完全连接应用(Connect()和Accept() )，是用另一个队列单独存放半打开连接。这种双队列处理方式和其他一些系统内核措施(例如Syn-Cookies/Caches)联合应用时，能够比较有效的缓解小规模的SYN Flood攻击(事实证明)"),
     tcpFinTimeout("操作系统","net.ipv4.tcp_fin_timeout","系统默认的超时时间。",
             "60","60","秒","对于本端断开的socket连接，TCP保持在FIN-WAIT-2状态的时间。对方可能会断开连接或一直不结束连接或不可预料的进程死亡"),
     shmall("操作系统","kernel.shmall","内核可用的共享内存总量。",

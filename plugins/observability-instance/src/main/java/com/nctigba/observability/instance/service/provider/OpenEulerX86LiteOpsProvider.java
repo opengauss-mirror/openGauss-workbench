@@ -2,6 +2,7 @@ package com.nctigba.observability.instance.service.provider;
 
 import java.util.List;
 
+import com.nctigba.observability.instance.constants.CommonConstants;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsClusterEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsClusterNodeEntity;
 import org.opengauss.admin.common.core.domain.model.ops.JschResult;
@@ -57,11 +58,13 @@ public class OpenEulerX86LiteOpsProvider extends AbstractOpsProvider {
 			if (0 != jschResult.getExitCode()) {
 				log.error("set enable_wdr_snapshot parameter failed, exit code: {}, error message: {}",
 						jschResult.getExitCode(), jschResult.getResult());
-				throw new OpsException("Failed to set the enable_wdr_snapshot parameter");
+				Thread.currentThread().interrupt();
+				throw new OpsException(CommonConstants.FAILED_SET_ENABLE_WDR_SNAPSHOT_PARAMETER);
 			}
 		} catch (Exception e) {
-			log.error("Failed to set the enable_wdr_snapshot parameter", e);
-			throw new OpsException("Failed to set the enable_wdr_snapshot parameter");
+			log.error(CommonConstants.FAILED_SET_ENABLE_WDR_SNAPSHOT_PARAMETER, e);
+			Thread.currentThread().interrupt();
+			throw new OpsException(CommonConstants.FAILED_SET_ENABLE_WDR_SNAPSHOT_PARAMETER);
 		}
 	}
 }

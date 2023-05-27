@@ -1,12 +1,10 @@
 package com.nctigba.observability.instance.service;
 
+import java.util.List;
+
 import com.alibaba.fastjson.JSONObject;
 import com.nctigba.observability.instance.dto.topsql.TopSQLInfoReq;
 import com.nctigba.observability.instance.dto.topsql.TopSQLListReq;
-import com.nctigba.observability.instance.service.ClusterManager.OpsClusterNodeVOSub;
-import org.opengauss.admin.common.core.domain.model.ops.OpsClusterVO;
-
-import java.util.List;
 
 public interface TopSQLService {
 
@@ -58,17 +56,4 @@ public interface TopSQLService {
      * @return object information
      */
     JSONObject getObjectInfo(TopSQLInfoReq topSQLObjectReq);
-
-    /**
-     * Get cluster list
-     * @return OpsClusterVO List
-     */
-    List<OpsClusterVO> cluster();
-
-    /**
-     * Get cluster node
-     * @param nodeId
-     * @return OpsClusterNodeVO
-     */
-    OpsClusterNodeVOSub clusterNode(String nodeId);
 }

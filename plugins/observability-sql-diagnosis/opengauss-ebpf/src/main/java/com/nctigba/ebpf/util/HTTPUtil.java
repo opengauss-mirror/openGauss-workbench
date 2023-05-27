@@ -42,7 +42,7 @@ public class HTTPUtil {
         HttpEntity<MultiValueMap<String, Object>> request = new HttpEntity<>(map, headers);
         ResponseEntity<String> response = restTemplate.postForEntity(url, request, String.class);
         try {
-            log.info(response.getStatusCode() + ":" + response.getBody() + ":" + file.contentLength());
+            log.info(type + ":" + response.getStatusCode() + ":" + response.getBody() + ":" + file.contentLength());
         } catch (IOException e) {
             log.info(e.getMessage());
         }

@@ -125,9 +125,11 @@ const syncTaskParams = params => {
     configType: params.basic.length || params.more.length ? 2 : 1,
     taskParamsObject: params
   }
-  const idx = tableData.value.findIndex(item => item.sourceDBName === subTaskInfo.value.sourceDBName && item.targetDBName === subTaskInfo.value.targetDBName)
-  tableData.value.splice(idx, 1, toRaw(subTaskInfo.value))
-  emits('syncConfig', toRaw(tableData.value))
+  const originData = toRaw(props.subTaskConfig)
+  const idx = originData.findIndex(item => item.sourceDBName === subTaskInfo.value.sourceDBName && item.targetDBName === subTaskInfo.value.targetDBName)
+  originData.splice(idx, 1, toRaw(subTaskInfo.value))
+  emits('syncConfig', toRaw(originData))
+  getFilterData()
 }
 
 const handleParamsConfig = (mode, row) => {

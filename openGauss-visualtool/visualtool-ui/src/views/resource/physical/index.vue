@@ -627,7 +627,7 @@ const getCommonLabels = () => {
       let allhas = true
       for (let j = 0; j < selectedArr.length; j++) {
         const tempData = selectedArr[j]
-        if (tempData.tags.indexOf(tag) < 0) {
+        if (!tempData.tags || tempData.tags?.indexOf(tag) < 0) {
           allhas = false
           break
         }
