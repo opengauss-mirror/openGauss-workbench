@@ -528,14 +528,25 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
         return false;
     }
 
+    /**
+     * get migration task params
+     *
+     * @param globalParams globalParams
+     * @param task migration task
+     * @return param map
+     */
     private Map<String,String> getTaskParam(List<MigrationTaskGlobalParam> globalParams, MigrationTask task) {
         if (globalParams == null) {
             globalParams = migrationTaskGlobalParamService.selectByMainTaskId(task.getMainTaskId());
         }
-        Map<String, String> globalParamMap = globalParams.stream().collect(Collectors.toMap(g -> g.getParamKey(), g -> g.getParamValue()));
+        Map<String, String> globalParamMap = globalParams.stream().collect(Collectors.toMap(g -> g.getParamKey(),
+                g -> g.getParamKey().startsWith("override_tables") ? g.getParamValue()
+                        : escapeChars(g.getParamValue())));
         List<MigrationTaskParam> migrationTaskParams = migrationTaskParamService.selectByTaskId(task.getId());
         if (migrationTaskParams.size() > 0) {
-            Map<String, String> taskParamMap = migrationTaskParams.stream().collect(Collectors.toMap(p -> p.getParamKey(), p -> p.getParamValue()));
+            Map<String, String> taskParamMap = migrationTaskParams.stream()
+                    .collect(Collectors.toMap(p -> p.getParamKey(), p -> p.getParamKey()
+                    .startsWith("override_tables") ? p.getParamValue() : escapeChars(p.getParamValue())));
             globalParamMap.putAll(taskParamMap);
         }
         Map<String, String> resultMap = new HashMap<>();
@@ -544,7 +555,6 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
         resultMap.put("mysql.database.host", task.getSourceDbHost());
         resultMap.put("mysql.database.port", task.getSourceDbPort());
         resultMap.put("mysql.database.name", task.getSourceDb());
-
         resultMap.put("opengauss.user.name", task.getTargetDbUser());
         resultMap.put("opengauss.user.password", escapeChars(task.getTargetDbPass()));
         resultMap.put("opengauss.database.host", task.getTargetDbHost());
@@ -562,7 +572,7 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
      */
     @Override
     public void doOfflineTaskRunScheduler(){
-        while(true) {
+        while (true) {
             Integer waitRunCount = this.countTaskByStatus(TaskStatus.WAIT_RESOURCE);
             if (waitRunCount > 0) {
                 log.info("waiting for the resource to execute，task count : {}", waitRunCount);
