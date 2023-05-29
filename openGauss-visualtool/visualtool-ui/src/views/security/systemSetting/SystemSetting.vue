@@ -3,7 +3,7 @@
     v-if="visible"
     :title="$t('components.EditSysSettings.5mpivn7fwjc1')"
     v-model:visible="visible"
-    width="500px"
+    width="50vw"
     title-align="start"
     modal-class="user-modal"
   >
@@ -12,6 +12,21 @@
                    :label="$t('components.EditSysSettings.5mpivn7fwjc2')"
                    :rules="[{required: true, message: $t('components.EditSysSettings.5mpivn7fwjc6')}, { validator: pathValidator }]">
         <a-input v-model.trim="form.uploadPath" :placeholder="$t('components.EditSysSettings.5mpivn7fwjc6')"/>
+      </a-form-item>
+      <a-form-item field="portalPkgDownloadUrl"
+                   :label="$t('components.EditSysSettings.5mpivn7fwj11')"
+                   :rules="[{required: true, message: $t('components.EditSysSettings.5mpivn7fwj12')}]">
+        <a-input v-model.trim="form.portalPkgDownloadUrl" :placeholder="$t('components.EditSysSettings.5mpivn7fwj12')"/>
+      </a-form-item>
+      <a-form-item field="portalPkgName"
+                   :label="$t('components.EditSysSettings.5mpivn7fwj13')"
+                   :rules="[{required: true, message: $t('components.EditSysSettings.5mpivn7fwj14')}]">
+        <a-input v-model.trim="form.portalPkgName" :placeholder="$t('components.EditSysSettings.5mpivn7fwj14')"/>
+      </a-form-item>
+      <a-form-item field="portalJarName"
+                   :label="$t('components.EditSysSettings.5mpivn7fwj15')"
+                   :rules="[{required: true, message: $t('components.EditSysSettings.5mpivn7fwj16')}]">
+        <a-input v-model.trim="form.portalJarName" :placeholder="$t('components.EditSysSettings.5mpivn7fwj16')"/>
       </a-form-item>
     </a-form>
     <template #footer>
@@ -48,7 +63,10 @@ const emits = defineEmits(['update:open'])
 const formRef = ref<FormInstance>()
 let form = reactive<SysSetting>({
   id: '',
-  uploadPath: ''
+  uploadPath: '',
+  portalPkgDownloadUrl: '',
+  portalPkgName: '',
+  portalJarName: ''
 })
 const visible = ref<boolean>(false)
 const loading = ref<boolean>(false)
@@ -103,6 +121,9 @@ const querySystemSetting = () => {
   listSysSetting().then(res => {
     form.id = res.data?.id
     form.uploadPath = res.data?.uploadPath
+    form.portalPkgDownloadUrl = res.data?.portalPkgDownloadUrl
+    form.portalPkgName = res.data?.portalPkgName
+    form.portalJarName = res.data?.portalJarName
   })
 }
 

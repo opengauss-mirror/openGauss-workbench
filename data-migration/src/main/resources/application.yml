@@ -2,9 +2,6 @@ migration:
   taskRefreshIntervalsMillisecond: 15000
   taskOfflineSchedulerIntervalsMillisecond: 10000
   mainTaskRefreshIntervalsMillisecond: 60000
-  portalPkgDownloadUrl: https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/
-  portalPkgName: PortalControl-5.0.0.tar.gz
-  portalJarName: portalControl-1.0-SNAPSHOT-exec.jar
 context:
   listener:
     classes: org.opengauss.admin.plugin.listener.DataMigrationPluginListener
@@ -36,4 +33,4 @@ mybatis-plus:
   # Load the global configuration file
   configuration:
     mapUnderscoreToCamelCase: true
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    log-impl: org.apache.ibatis.logging.nologging.NoLoggingImpl

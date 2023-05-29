@@ -24,13 +24,16 @@
 
 package org.opengauss.admin.plugin.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
+import org.opengauss.admin.common.core.domain.UploadInfo;
 import org.opengauss.admin.plugin.domain.MigrationHostPortalInstall;
 import org.opengauss.admin.plugin.mapper.MigrationHostPortalInstallMapper;
 import org.opengauss.admin.plugin.service.MigrationHostPortalInstallHostService;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * @author xielibo
@@ -39,23 +42,16 @@ import org.springframework.stereotype.Service;
 @Service
 @Slf4j
 public class MigrationHostPortalInstallServiceImpl extends ServiceImpl<MigrationHostPortalInstallMapper, MigrationHostPortalInstall> implements MigrationHostPortalInstallHostService {
-
     @Override
-    public void saveRecord(String hostId, String hostUserId, String host, Integer port, String user, String password, String installPath, Integer status) {
-
-        MigrationHostPortalInstall pi = getOneByHostId(hostId);
-        if (pi == null) {
-            pi = new MigrationHostPortalInstall();
+    @Transactional(rollbackFor = Exception.class)
+    public void saveRecord(MigrationHostPortalInstall install) {
+        MigrationHostPortalInstall newInstall = new MigrationHostPortalInstall();
+        BeanUtil.copyProperties(install, newInstall);
+        MigrationHostPortalInstall pi = getOneByHostId(install.getRunHostId());
+        if (pi != null) {
+            newInstall.setId(pi.getId());
         }
-        pi.setRunHostId(hostId);
-        pi.setHost(host);
-        pi.setPort(port);
-        pi.setRunUser(user);
-        pi.setRunPassword(password);
-        pi.setInstallPath(installPath);
-        pi.setInstallStatus(status);
-        pi.setHostUserId(hostUserId);
-        this.saveOrUpdate(pi);
+        saveOrUpdate(newInstall);
     }
 
     @Override
@@ -63,13 +59,24 @@ public class MigrationHostPortalInstallServiceImpl extends ServiceImpl<Migration
         MigrationHostPortalInstall pi = getOneByHostId(hostId);
         pi.setRunHostId(hostId);
         pi.setInstallStatus(status);
-        this.updateById(pi);
+        updateById(pi);
     }
 
     @Override
     public MigrationHostPortalInstall getOneByHostId(String hostId) {
         LambdaQueryWrapper<MigrationHostPortalInstall> query = new LambdaQueryWrapper<>();
         query.eq(MigrationHostPortalInstall::getRunHostId, hostId).last("limit 1");
-        return this.getOne(query);
+        return getOne(query);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void clearPkgUploadPath(String hostId) {
+        MigrationHostPortalInstall pi = getOneByHostId(hostId);
+        if (pi != null) {
+            pi.setRunHostId(hostId);
+            pi.setPkgUploadPath(new UploadInfo());
+            updateById(pi);
+        }
     }
 }

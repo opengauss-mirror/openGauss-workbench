@@ -47,17 +47,17 @@
                         <div v-if="item.statusId === 2" class="info-row">
                           <i @click="globalVisible = !globalVisible">{{ globalVisible ? $t('components.SubTaskDetail.5q09prnznk00') : $t('components.SubTaskDetail.5q09prnznms0') }}</i>
                           <div v-if="item.statusId === 2" class="status-text">
-                            <span>数据总量：<strong>{{ fullData.total.data || 0 }}MB</strong></span>
-                            <span>速率：<strong>{{ fullData.total.speed || 0 }}MB/s</strong></span>
-                            <span>耗时：<strong>{{ fullData.total.time || 0 }}s</strong></span>
+                            <span>{{ $t('components.SubTaskDetail.5q0a5opxm3c1') }}<strong>{{ fullData.total.data || 0 }}MB</strong></span>
+                            <span>{{ $t('components.SubTaskDetail.5q0a5opxm3c2') }}<strong>{{ fullData.total.speed || 0 }}MB/s</strong></span>
+                            <span>{{ $t('components.SubTaskDetail.5q0a5opxm3c3') }}<strong>{{ fullData.total.time || 0 }}s</strong></span>
                           </div>
                         </div>
                         <div v-if="item.statusId === 5" class="info-row">
                           <div class="status-text">
-                            <span>数据总量：<strong>{{ dataCheckData.total || 0 }}MB</strong></span>
-                            <span>平均校验速率：<strong>{{ dataCheckData.avgSpeed || 0 }}MB/s</strong></span>
-                            <span>数据总表数：<strong>{{ dataCheckData.tableCount || 0 }}张</strong></span>
-                            <span>已完成表数：<strong>{{ dataCheckData.completeCount || 0 }}张</strong></span>
+                            <span>{{ $t('components.SubTaskDetail.5q0a5opxm3c4') }}<strong>{{ dataCheckData.total || 0 }}MB</strong></span>
+                            <span>{{ $t('components.SubTaskDetail.5q0a5opxm3c5') }}<strong>{{ dataCheckData.avgSpeed || 0 }}MB/s</strong></span>
+                            <span>{{ $t('components.SubTaskDetail.5q0a5opxm3c6') }}<strong>{{ dataCheckData.tableCount || 0 }} {{ $t('components.SubTaskDetail.5q0a5opxm3c8') }}</strong></span>
+                            <span>{{ $t('components.SubTaskDetail.5q0a5opxm3c7') }}<strong>{{ dataCheckData.completeCount || 0 }} {{ $t('components.SubTaskDetail.5q0a5opxm3c8') }}</strong></span>
                           </div>
                         </div>
                       </span>
