@@ -987,6 +987,38 @@ CREATE TABLE IF NOT EXISTS "public"."sys_setting"(
     "user_id" int8 NOT NULL,
     "upload_path" text COLLATE "pg_catalog"."default" NOT NULL
 );
+
+CREATE OR REPLACE FUNCTION add_sys_setting_field_func() RETURNS integer AS 'BEGIN
+IF
+( SELECT COUNT ( * ) AS ct1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ''sys_setting'' AND COLUMN_NAME = ''portal_pkg_download_url'' ) = 0
+THEN
+ALTER TABLE sys_setting ADD COLUMN portal_pkg_download_url text COLLATE "pg_catalog"."default";
+COMMENT ON COLUMN "public"."sys_setting"."portal_pkg_download_url" IS ''portal的在线下载地址'';
+END IF;
+IF
+( SELECT COUNT ( * ) AS ct1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ''sys_setting'' AND COLUMN_NAME = ''portal_pkg_name'' ) = 0
+THEN
+ALTER TABLE sys_setting ADD COLUMN portal_pkg_name text COLLATE "pg_catalog"."default";
+COMMENT ON COLUMN "public"."sys_setting"."portal_pkg_name" IS ''portal的安装包名称'';
+END IF;
+IF
+( SELECT COUNT ( * ) AS ct1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ''sys_setting'' AND COLUMN_NAME = ''portal_jar_name'' ) = 0
+THEN
+ALTER TABLE sys_setting ADD COLUMN portal_jar_name text COLLATE "pg_catalog"."default";
+COMMENT ON COLUMN "public"."sys_setting"."portal_jar_name" IS ''portal的jar名称'';
+UPDATE "public"."sys_setting" SET portal_pkg_download_url = ''https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/'';
+UPDATE "public"."sys_setting" SET portal_pkg_name = ''PortalControl-5.0.0.tar.gz'';
+UPDATE "public"."sys_setting" SET portal_jar_name = ''portalControl-1.0-SNAPSHOT-exec.jar'';
+END IF;
+RETURN 0;
+END;'
+LANGUAGE plpgsql;
+
+SELECT add_sys_setting_field_func();
+
+DROP FUNCTION add_sys_setting_field_func;
+
+
 COMMENT
 ON COLUMN "public"."sys_setting"."id" IS 'ID';
 COMMENT
@@ -997,7 +1029,7 @@ ON COLUMN "public"."sys_setting"."upload_path" IS '文件上传目录';
 -- ----------------------------
 -- Records of sys_setting
 -- ----------------------------
-INSERT INTO "public"."sys_setting"VALUES (1, 1, '/ops/files/') ON DUPLICATE KEY UPDATE NOTHING;
+INSERT INTO "public"."sys_setting" VALUES (1, 1, '/ops/files/', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/', 'PortalControl-5.0.0.tar.gz', 'portalControl-1.0-SNAPSHOT-exec.jar') ON DUPLICATE KEY UPDATE NOTHING;
 
 CREATE OR REPLACE FUNCTION add_user_field_func() RETURNS integer AS 'BEGIN
 IF

@@ -25,24 +25,25 @@
 package org.opengauss.admin.plugin.controller;
 
 import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.util.StrUtil;
+import com.alibaba.fastjson.JSON;
 import org.opengauss.admin.common.core.domain.AjaxResult;
+import org.opengauss.admin.common.core.domain.UploadInfo;
 import org.opengauss.admin.common.core.domain.model.ops.OpsClusterNodeVO;
 import org.opengauss.admin.common.core.domain.model.ops.jdbc.JdbcDbClusterVO;
 import org.opengauss.admin.plugin.base.BaseController;
+import org.opengauss.admin.plugin.domain.MigrationHostPortalInstall;
 import org.opengauss.admin.plugin.dto.CustomDbResource;
 import org.opengauss.admin.plugin.service.MigrationTaskHostRefService;
 import org.opengauss.admin.plugin.utils.FileUtils;
 import org.opengauss.admin.plugin.vo.TargetClusterVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.WebDataBinder;
+import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletResponse;
+import java.beans.PropertyEditorSupport;
 import java.io.BufferedOutputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
@@ -132,16 +133,16 @@ public class MigrationTaskResourceController extends BaseController {
         return AjaxResult.success(migrationTaskHostRefService.getHostUsers(hostId));
     }
 
-    @GetMapping("/installPortal/{hostId}")
-    public AjaxResult installPortal(@PathVariable String hostId, String hostUserId, String installPath) {
-        String realInstallPath = addSplashToPath(installPath);
-        return migrationTaskHostRefService.installPortal(hostId, hostUserId, realInstallPath);
+    @PostMapping("/installPortal/{hostId}")
+    public AjaxResult installPortal(@PathVariable String hostId, @ModelAttribute MigrationHostPortalInstall install) {
+        addSplashToPath(install);
+        return migrationTaskHostRefService.installPortal(hostId, install);
     }
 
-    @GetMapping("/retryInstallPortal/{hostId}")
-    public AjaxResult retryInstallPortal(@PathVariable String hostId, String hostUserId, String installPath) {
-        String realInstallPath = addSplashToPath(installPath);
-        return migrationTaskHostRefService.retryInstallPortal(hostId, hostUserId, realInstallPath);
+    @PostMapping("/retryInstallPortal/{hostId}")
+    public AjaxResult retryInstallPortal(@PathVariable String hostId, @ModelAttribute MigrationHostPortalInstall install) {
+        addSplashToPath(install);
+        return migrationTaskHostRefService.retryInstallPortal(hostId, install);
     }
 
     /**
@@ -162,18 +163,31 @@ public class MigrationTaskResourceController extends BaseController {
         output.close();
     }
 
-    @GetMapping("/deletePortal/{hostId}")
-    public AjaxResult deletePortal(@PathVariable String hostId) {
-        return migrationTaskHostRefService.deletePortal(hostId);
+    @DeleteMapping("/deletePortal/{hostId}")
+    public AjaxResult deletePortal(@PathVariable String hostId, @RequestParam(required = false) Boolean onlyPkg) {
+        return migrationTaskHostRefService.deletePortal(hostId, onlyPkg);
     }
 
-    private String addSplashToPath(String installPath) {
-        if (!installPath.equals("~")) {
+    private void addSplashToPath(MigrationHostPortalInstall install) {
+        String installPath = install.getInstallPath();
+        if (StrUtil.isNotEmpty(installPath) && !installPath.equals("~")) {
             String lastStr = installPath.substring(installPath.length() - 1);
             if (!lastStr.equals("/")) {
                 installPath += "/";
             }
         }
-        return installPath;
+        install.setInstallPath(installPath);
+    }
+
+    @Override
+    @InitBinder
+    public void initBinder(WebDataBinder binder) {
+        binder.registerCustomEditor(UploadInfo.class, new PropertyEditorSupport() {
+            @Override
+            public void setAsText(String text) throws IllegalArgumentException {
+                UploadInfo info = JSON.parseObject(text, UploadInfo.class);
+                setValue(info);
+            }
+        });
     }
 }

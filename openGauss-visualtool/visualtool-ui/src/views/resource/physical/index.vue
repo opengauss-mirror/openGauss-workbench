@@ -504,6 +504,7 @@ const openHostMonitor = (hostData: KeyValue, index: number) => {
     list.data[index].downSpeed = eventData.downSpeed
     list.data[index].upSpeed = eventData.upSpeed
     list.data[index].isCpu = true
+    console.log('get theme', localStorage.getItem('opengauss-theme'))
 
     if (localStorage.getItem('opengauss-theme') === 'dark') {
       list.data[index].cpuOption.color[1] = data.colorYellow

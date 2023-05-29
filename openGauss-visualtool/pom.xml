@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://maven.apache.org/POM/4.0.0"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.opengauss</groupId>
@@ -33,12 +33,10 @@
         <jsch.version>0.1.55</jsch.version>
         <prometheus.version>1.8.1</prometheus.version>
 
-
-        <web.build.skip>true</web.build.skip>
-        <web.clean.skip>true</web.clean.skip>
         <web.path/>
         <web.build.path/>
         <web.resources.path/>
+        <build.frontend.skip>false</build.frontend.skip>
     </properties>
 
     <dependencyManagement>
@@ -263,7 +261,7 @@
                     <artifactId>exec-maven-plugin</artifactId>
                     <version>1.6.0</version>
                     <configuration>
-                        <skip>${web.build.skip}</skip>
+                        <skip>${build.frontend.skip}</skip>
                     </configuration>
                     <executions>
                         <execution>

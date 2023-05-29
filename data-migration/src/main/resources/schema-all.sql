@@ -545,6 +545,45 @@ CREATE TABLE IF NOT EXISTS "public"."tb_migration_host_portal_install" (
   CONSTRAINT "tb_migration_host_portal_install_pkey" PRIMARY KEY ("id")
 );
 
+CREATE OR REPLACE FUNCTION add_migration_host_portal_install_field_func() RETURNS integer AS 'BEGIN
+IF
+( SELECT COUNT ( * ) AS ct1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ''tb_migration_host_portal_install'' AND COLUMN_NAME = ''install_type'' ) = 0
+THEN
+ALTER TABLE tb_migration_host_portal_install ADD COLUMN install_type int2;
+COMMENT ON COLUMN "public"."tb_migration_host_portal_install"."install_type" IS ''安装类型，0：在线安装1：离线安装'';
+END IF;
+IF
+( SELECT COUNT ( * ) AS ct1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ''tb_migration_host_portal_install'' AND COLUMN_NAME = ''pkg_download_url'' ) = 0
+THEN
+ALTER TABLE tb_migration_host_portal_install ADD COLUMN pkg_download_url text COLLATE "pg_catalog"."default";
+COMMENT ON COLUMN "public"."tb_migration_host_portal_install"."pkg_download_url" IS ''在线下载地址'';
+END IF;
+IF
+( SELECT COUNT ( * ) AS ct1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ''tb_migration_host_portal_install'' AND COLUMN_NAME = ''pkg_name'' ) = 0
+THEN
+ALTER TABLE tb_migration_host_portal_install ADD COLUMN pkg_name text COLLATE "pg_catalog"."default";
+COMMENT ON COLUMN "public"."tb_migration_host_portal_install"."pkg_name" IS ''安装包名称'';
+END IF;
+IF
+( SELECT COUNT ( * ) AS ct1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ''tb_migration_host_portal_install'' AND COLUMN_NAME = ''jar_name'' ) = 0
+THEN
+ALTER TABLE tb_migration_host_portal_install ADD COLUMN jar_name text COLLATE "pg_catalog"."default";
+COMMENT ON COLUMN "public"."tb_migration_host_portal_install"."jar_name" IS ''portal的jar名称'';
+END IF;
+IF
+( SELECT COUNT ( * ) AS ct1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ''tb_migration_host_portal_install'' AND COLUMN_NAME = ''pkg_upload_path'' ) = 0
+THEN
+ALTER TABLE tb_migration_host_portal_install ADD COLUMN pkg_upload_path text COLLATE "pg_catalog"."default";
+COMMENT ON COLUMN "public"."tb_migration_host_portal_install"."pkg_upload_path" IS ''离线包上传路径，JSON字符串，key为name-文件名字，realPath-上传文件夹路径'';
+END IF;
+RETURN 0;
+END;'
+LANGUAGE plpgsql;
+
+SELECT add_migration_host_portal_install_field_func();
+
+DROP FUNCTION add_migration_host_portal_install_field_func;
+
 COMMENT ON COLUMN "public"."tb_migration_host_portal_install"."id" IS '主键ID';
 COMMENT ON COLUMN "public"."tb_migration_host_portal_install"."run_host_id" IS '机器ID';
 COMMENT ON COLUMN "public"."tb_migration_host_portal_install"."install_status" IS 'portal安装状态0 ： 未安装  1：安装中；2：已安装；10：安装失败';

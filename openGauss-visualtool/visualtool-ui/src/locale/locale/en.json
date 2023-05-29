@@ -496,7 +496,13 @@
             "5mpivn7fwjc2": "File Upload Path",
             "5mpivn7fwjc6": "Please input file upload path",
             "5mpivn7fwjc9": "File path is not correct, must end with /",
-            "5mpivn7fwj10": "The directory is already occupied by another user. Please enter a different path"
+            "5mpivn7fwj10": "The directory is already occupied by another user. Please enter a different path",
+            "5mpivn7fwj11": "MigrationKit download url",
+            "5mpivn7fwj12": "please input migration kit download url",
+            "5mpivn7fwj13": "MigrationKit Package Name",
+            "5mpivn7fwj14": "please input migration kit package name",
+            "5mpivn7fwj15": "MigrationKit Jar Name",
+            "5mpivn7fwj16": "please input migration kit jar name"
         }
     },
     "user": {
