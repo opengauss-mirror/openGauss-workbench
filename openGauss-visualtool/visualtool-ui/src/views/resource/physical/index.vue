@@ -326,7 +326,7 @@
 <script setup lang="ts">
 import { KeyValue } from '@/types/global'
 import { Message, Table } from '@arco-design/web-vue'
-import { onMounted, reactive, ref, onUnmounted, computed } from 'vue'
+import { onMounted, reactive, ref, onUnmounted } from 'vue'
 import { hostPage, delHost, hostMonitor, hostTagListAll } from '@/api/ops' // eslint-disable-line
 import AddHost from './components/AddHost.vue'
 import HostPwdDlg from './components/HostPwdDlg.vue'

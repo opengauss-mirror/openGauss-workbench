@@ -212,6 +212,7 @@
         draggable
         @progress="handleFileUploadProgress"
         @success="handleFileSuccess"
+        @before-upload="handleBeforeUpload"
       >
         <template #upload-button>
           <div class="upload-info">
@@ -246,6 +247,7 @@
   import { Message } from '@arco-design/web-vue'
   import { getToken } from '@/utils/auth'
   import { list, start, stop, uninstall, extendInfoList } from '@/api/plugin'
+  import { getUserInfo } from '@/api/user'
   import PluginConfig from './components/PluginConfig.vue'
   import { destroyPluginApp } from '@/utils/pluginApp'
   import useLocale from '@/hooks/locale'
@@ -336,6 +338,16 @@
     } else {
       Message.error(fileItem.response.msg)
     }
+  }
+
+  const handleBeforeUpload = () => {
+    return new Promise((resolve, reject) => {
+      getUserInfo().then(() => {
+        resolve(true)
+      }).catch(() => {
+        reject('cancel')
+      })
+    })
   }
 
   const closeInstall = () => {

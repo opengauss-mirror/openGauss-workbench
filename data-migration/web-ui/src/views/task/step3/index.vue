@@ -309,12 +309,12 @@ const { currentTheme } = useTheme()
 const props = defineProps({
   subTaskConfig: {
     type: Array,
-    default: () => [],
+    default: () => []
   },
   hostData: {
     type: Array,
-    default: () => [],
-  },
+    default: () => []
+  }
 })
 
 const emits = defineEmits(['syncHost'])
@@ -326,13 +326,13 @@ const form = reactive({
   hostname: undefined,
   cpu: undefined,
   memory: undefined,
-  disk: undefined,
+  disk: undefined
 })
 
 const pagination = reactive({
   total: 0,
   current: 1,
-  pageSize: 10,
+  pageSize: 10
 })
 const tableData = ref([])
 const originData = ref([])
@@ -341,14 +341,14 @@ const selectedKeys = ref([])
 const rowSelection = reactive({
   type: 'checkbox',
   showCheckedAll: true,
-  onlyCurrent: false,
+  onlyCurrent: false
 })
 
 const portalDlg = reactive({
   visible: false,
   curHostId: '',
   installMode: 'install',
-  installInfo: {},
+  installInfo: {}
 })
 
 const statusMap = (status) => {
@@ -356,7 +356,7 @@ const statusMap = (status) => {
     0: t('step3.index.5q093f8yae80'),
     1: t('step3.index.5q093f8yagw0'),
     2: t('step3.index.5q093f8yajg0'),
-    10: t('step3.index.5q093f8yals0'),
+    10: t('step3.index.5q093f8yals0')
   }
   return maps[status]
 }
@@ -421,7 +421,7 @@ const handleDownloadLog = (row) => {
   downloadEnvLog(row.hostInfo.hostId).then((res) => {
     if (res) {
       const blob = new Blob([res], {
-        type: 'text/plain',
+        type: 'text/plain'
       })
       const a = document.createElement('a')
       const URL = window.URL || window.webkitURL
@@ -454,10 +454,11 @@ const getHostsData = () => {
       } else {
         tableData.value = res.data.map((item) => ({
           ...item,
+          hostId: item.hostInfo.hostId,
           disabled:
-            item.installPortalStatus !== PORTAL_INSTALL_STATUS.INSTALLED,
+            item.installPortalStatus !== PORTAL_INSTALL_STATUS.INSTALLED
         }))
-        originData.value = JSON.parse(JSON.stringify(res.data))
+        originData.value = JSON.parse(JSON.stringify(tableData.value))
         pagination.total = res.data.length
         timer = setTimeout(() => {
           getHostsData()
@@ -487,7 +488,7 @@ const handlePkgDelete = () => {
 const handleDelete = (record) => {
   tableLoading.value = true
   deletePortal(record.hostInfo.hostId)
-    .then((res) => {
+    .then(() => {
       getHostsData()
       tableLoading.value = false
     })

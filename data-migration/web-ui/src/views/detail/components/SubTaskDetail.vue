@@ -415,7 +415,7 @@ const getSubTaskDetail = () => {
           totalWaitCount: (increaseData.value?.rest || 0), 
           totalRunningCount: (increaseData.value?.count || 0) - (increaseData.value?.rest || 0) - (increaseData.value?.successCount || 0) - (increaseData.value?.failCount || 0),
           totalFinishCount: (increaseData.value?.successCount || 0),
-          totalErrorCount: (increaseData.value?.failCount || 0)}) : t('components.SubTaskDetail.5q09prnznzg0'),
+          totalErrorCount: (increaseData.value?.failCount || 0) }) : t('components.SubTaskDetail.5q09prnznzg0'),
         span: 3
       },
       {

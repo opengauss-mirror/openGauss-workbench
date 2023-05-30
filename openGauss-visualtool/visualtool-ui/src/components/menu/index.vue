@@ -1,5 +1,5 @@
 <script lang="tsx">
-  import { defineComponent, ref, h, compile, computed } from 'vue'
+  import { defineComponent, ref, h, compile, computed, watch } from 'vue'
   import { useRoute, useRouter, RouteRecordRaw } from 'vue-router'
   import type { RouteMeta } from 'vue-router'
   import { useAppStore } from '@/store'
@@ -22,6 +22,10 @@
         set (value: boolean) {
           appStore.updateSettings({ menuCollapse: value })
         }
+      })
+
+      watch(menuTree, () => {
+        appStore.appAsyncMenus.forEach(route => router.addRoute(route))
       })
 
       const openKeys = ref<string[]>([])
