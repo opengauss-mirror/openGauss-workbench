@@ -30,8 +30,9 @@
         <boot.version>2.6.3</boot.version>
         <spring-boot.version>2.5.6</spring-boot.version>
         <spring-brick.version>3.1.0</spring-brick.version>
-        <main.version>0.0.1-SNAPSHOT</main.version>
+        <main.version>5.0.0</main.version>
         <plugin.build.mode>prod</plugin.build.mode>
+        <build.frontend.skip>false</build.frontend.skip>
     </properties>
 
     <dependencies>
