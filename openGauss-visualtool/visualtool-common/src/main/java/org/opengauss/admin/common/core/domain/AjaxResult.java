@@ -114,4 +114,8 @@ public class AjaxResult extends HashMap<String, Object> {
         return new AjaxResult(code, msg, null);
     }
 
+    public boolean isOk() {
+        Object code = get(CODE_TAG);
+        return code != null && code.equals(ResponseCode.SUCCESS.code());
+    }
 }

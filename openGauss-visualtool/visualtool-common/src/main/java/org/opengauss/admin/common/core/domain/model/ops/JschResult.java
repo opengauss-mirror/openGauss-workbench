@@ -34,4 +34,8 @@ import lombok.Data;
 public class JschResult {
     private Integer exitCode;
     private String result;
+
+    public boolean isOk() {
+        return exitCode != null && exitCode == 0;
+    }
 }

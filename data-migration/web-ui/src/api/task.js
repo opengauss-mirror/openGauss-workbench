@@ -52,15 +52,15 @@ export function hostUsers (hostId) {
   return axios.get(`/plugins/data-migration/resource/hostUsers/${hostId}`)
 }
 
-export function installPortal (hostId, query) {
-  return axios.get(`/plugins/data-migration/resource/installPortal/${hostId}`, { params: query })
+export function installPortal (hostId, params) {
+  return axios.post(`/plugins/data-migration/resource/installPortal/${hostId}`, params)
 }
 
-export function reInstallPortal (hostId, query) {
-  return axios.get(`/plugins/data-migration/resource/retryInstallPortal/${hostId}`, { params: query })
+export function reInstallPortal (hostId, params) {
+  return axios.post(`/plugins/data-migration/resource/retryInstallPortal/${hostId}`, params)
 }
 
-export function deletePortal (hostId) {
-  return axios.get(`/plugins/data-migration/resource/deletePortal/${hostId}`)
+export function deletePortal (hostId, onlyPkg = false) {
+  return axios.delete(`/plugins/data-migration/resource/deletePortal/${hostId}`, { params: { onlyPkg: onlyPkg }})
 }
 

@@ -26,15 +26,7 @@ package org.opengauss.admin.common.utils.ops;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
-import com.jcraft.jsch.Channel;
-import com.jcraft.jsch.ChannelExec;
-import com.jcraft.jsch.ChannelSftp;
-import com.jcraft.jsch.ChannelShell;
-import com.jcraft.jsch.JSch;
-import com.jcraft.jsch.JSchException;
-import com.jcraft.jsch.Session;
-import com.jcraft.jsch.SftpException;
-import com.jcraft.jsch.SftpProgressMonitor;
+import com.jcraft.jsch.*;
 import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.core.domain.model.ops.HostFile;
 import org.opengauss.admin.common.core.domain.model.ops.JschResult;
@@ -49,21 +41,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Vector;
+import java.util.*;
 
 /**
  * Jsch Tools
  *
  * @author lhf
- * @since 1.0
  * @date 2022/6/13 15:18
+ * @since 1.0
  **/
 @Slf4j
 @Component
@@ -96,7 +81,7 @@ public class JschUtil {
      * @param command Instructions to execute
      * @param session session
      * @return SSH Result
-     * @throws IOException IO Exception
+     * @throws IOException          IO Exception
      * @throws InterruptedException Interrupted Exception
      */
     public JschResult executeCommand(String command, Session session) throws IOException, InterruptedException {
@@ -110,11 +95,11 @@ public class JschUtil {
      * @param session session
      * @param env     env path
      * @return SSH Result
-     * @throws IOException IO Exception
+     * @throws IOException          IO Exception
      * @throws InterruptedException Interrupted Exception
      */
     public JschResult executeCommand(String command, Session session,
-        String env) throws IOException, InterruptedException {
+                                     String env) throws IOException, InterruptedException {
         String comm = command;
         if (StrUtil.isNotEmpty(env)) {
             comm = "source " + env + " && " + command;
@@ -126,16 +111,16 @@ public class JschUtil {
     /**
      * ChannelExec
      *
-     * @param env env
-     * @param command Instructions to execute
-     * @param session session
+     * @param env          env
+     * @param command      Instructions to execute
+     * @param session      session
      * @param autoResponse autoResponse
      * @return SSH Result
-     * @throws IOException IO Exception
+     * @throws IOException          IO Exception
      * @throws InterruptedException Interrupted Exception
      */
     public JschResult executeCommand(String env, String command, Session session,
-        Map<String, String> autoResponse) throws IOException, InterruptedException {
+                                     Map<String, String> autoResponse) throws IOException, InterruptedException {
         String comm = command;
         if (StrUtil.isNotEmpty(env)) {
             comm = "source " + env + " && " + command;
@@ -146,31 +131,31 @@ public class JschUtil {
     /**
      * ChannelExec
      *
-     * @param command Instructions to execute
-     * @param session session
-     * @param autoResponse  autoResponse
+     * @param command      Instructions to execute
+     * @param session      session
+     * @param autoResponse autoResponse
      * @return SSH Result
-     * @throws IOException IO Exception
+     * @throws IOException          IO Exception
      * @throws InterruptedException Interrupted Exception
      */
     public JschResult executeCommand(String command, Session session,
-        Map<String, String> autoResponse) throws IOException, InterruptedException {
+                                     Map<String, String> autoResponse) throws IOException, InterruptedException {
         return executeCommand(command, session, null, autoResponse);
     }
 
     /**
      * ChannelExec
      *
-     * @param command   Instructions to execute
-     * @param session   session
-     * @param wsSession websocket session
+     * @param command      Instructions to execute
+     * @param session      session
+     * @param wsSession    websocket session
      * @param autoResponse autoResponse
      * @return SSH Result
-     * @throws IOException IO Exception
+     * @throws IOException          IO Exception
      * @throws InterruptedException Interrupted Exception
      */
     public JschResult executeCommand(String command, Session session, WsSession wsSession,
-        Map<String, String> autoResponse) throws IOException, InterruptedException {
+                                     Map<String, String> autoResponse) throws IOException, InterruptedException {
         log.info("Execute an order{}", command);
 
         ChannelExec channel = null;
@@ -295,6 +280,7 @@ public class JschUtil {
         log.info("Upload End");
     }
 
+
     /**
      * ChannelShell Creates a session
      *
@@ -321,7 +307,7 @@ public class JschUtil {
     }
 
     private JschResult buildJschResult(ChannelExec channelExec, WsSession wsSession,
-        Map<String, String> autoResponse) throws IOException, InterruptedException {
+                                       Map<String, String> autoResponse) throws IOException, InterruptedException {
         JschResult jschResult = new JschResult();
         StringBuilder resultStrBuilder = new StringBuilder();
         // The output of the script execution is an input stream to the program
@@ -385,7 +371,7 @@ public class JschUtil {
     }
 
     private void autoResponse(Map<String, String> autoResponse,
-        StringBuilder resultStrBuilder, OutputStream out) {
+                              StringBuilder resultStrBuilder, OutputStream out) {
         if (CollUtil.isNotEmpty(autoResponse)) {
             autoResponse.forEach((k, v) -> {
                 if (resultStrBuilder.toString().trim().endsWith(k.trim())) {
@@ -412,7 +398,7 @@ public class JschUtil {
     /**
      * ls
      *
-     * @param session session
+     * @param session   session
      * @param remoteDir remoteDir
      * @return hostFiles
      */
@@ -459,8 +445,8 @@ public class JschUtil {
         @Override
         public void init(int op, String src, String dest, long max) {
             this.max = max;
-            this.count = 0;
-            this.percent = -1;
+            count = 0;
+            percent = -1;
         }
 
         @Override

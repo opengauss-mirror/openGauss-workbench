@@ -180,7 +180,21 @@
           "5q0aajl776k0": "The installation directory cannot be empty",
           "5q0aajl77f40": "Please enter the installation directory",
           "5q0aajl77ik0": "Cancel",
-          "5q0aajl77lg0": "Confirm"
+          "5q0aajl77lg0": "Confirm",
+          "5q0aajl77lg1": "OnlineInstall",
+          "5q0aajl77lg2": "OfflineInstall",
+          "5q0aajl77lg3": "OnlineAddress",
+          "5q0aajl77lg4": "please input online address",
+          "5q0aajl77lg5": "PackageName",
+          "5q0aajl77lg6": "please input package name",
+          "5q0aajl77lg7": "jar name",
+          "5q0aajl77lg8": "please input jar name",
+          "5q0aajl77lg9": "upload package",
+          "5q0aajl77lg10": "Drop or select package",
+          "5q0aajl77lg11": "Delete confirm",
+          "5q0aajl77lg12": "Are you sure to delete this file? Once deleted, it cannot be restored",
+          "5q0aajl77lg13": "Please upload the migration kit installation package",
+          "5q0aajl77lg14": "Installation type"
       },
       "ParamsConfig": {
           "5q0aazspots0": "Default parameter configuration",

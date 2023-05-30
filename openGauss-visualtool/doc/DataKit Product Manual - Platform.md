@@ -51,7 +51,7 @@ openGauss的安装、运维场景对于初级用户或单纯想要测试openGaus
 |            |                            |                                                    |
 |            |                            |                                                    |
 
-## 
+##                  
 
 ## **版本及功能列表**
 
@@ -74,8 +74,6 @@ openGauss的安装、运维场景对于初级用户或单纯想要测试openGaus
 1、登录平台
 
 ![platform-login](./_resources/platform-login.png)
-
-
 
 2、退出登录
 
@@ -108,8 +106,6 @@ openGauss的安装、运维场景对于初级用户或单纯想要测试openGaus
 - 手机号码（系统会检查唯一性）
 - 邮箱（optional）
 
-
-
 ![platform-edit-user-info](./_resources/platform-edit-user-info.png)
 
 点击更换头像，弹窗选择图片上传，Upload success后显示出头像
@@ -117,8 +113,6 @@ openGauss的安装、运维场景对于初级用户或单纯想要测试openGaus
 ![platform-upload-avatar](./_resources/platform-upload-avatar.png)
 
 ![platform-new-avatar](./_resources/platform-new-avatar.png)
-
-
 
 ## **国际化和黑白主题**
 
@@ -132,7 +126,7 @@ openGauss的安装、运维场景对于初级用户或单纯想要测试openGaus
 
 ### **界面**
 
-1.  切换语言
+1. 切换语言
 
 ![platform-change-language](./_resources/platform-change-language.png)
 
@@ -140,7 +134,7 @@ openGauss的安装、运维场景对于初级用户或单纯想要测试openGaus
 
 ![platform-English](./_resources/platform-English.png)
 
-1.  切换主题
+1. 切换主题
 
 **点击右上角的太阳/月亮图标即可切换主题：**
 
@@ -199,8 +193,6 @@ openGauss的安装、运维场景对于初级用户或单纯想要测试openGaus
 
 插件被卸载后，该插件下的所有Tab标签页都会被自动关闭。
 
-
-
 ## **安全中心**
 
 ### **概述**
@@ -251,8 +243,6 @@ openGauss的安装、运维场景对于初级用户或单纯想要测试openGaus
 
 3、账号与权限
 
-
-
 ![platform-security-account-list](./_resources/platform-security-account-list.png)
 
 <img src="./_resources/platform-security-add-user.png" alt="platform-security-add-user" style="zoom:67%;" />
@@ -290,8 +280,6 @@ openGauss的安装、运维场景对于初级用户或单纯想要测试openGaus
 
 1、系统日志
 
-
-
 ![platform-logs-system-list](./_resources/platform-logs-system-list.png)
 
 
@@ -311,9 +299,7 @@ openGauss的安装、运维场景对于初级用户或单纯想要测试openGaus
     - 单个日志文件大小：单个日志文件达到这个限制会自动创建新的日志文件
     - 最大占用空间：所有日志文件被允许占用的最大存储空间
 
-2.  操作日志
-
-
+2. 操作日志
 
 ![platform-logs-operation-list](./_resources/platform-logs-operation-list.png)
 
@@ -328,8 +314,6 @@ openGauss的安装、运维场景对于初级用户或单纯想要测试openGaus
 2可以通过搜索找到对应的日志文件
 
 3点击“详情”查看该操作的详细参数
-
-
 
 ## 设备管理
 
@@ -368,7 +352,30 @@ openGauss的安装、运维场景对于初级用户或单纯想要测试openGaus
 ![](./_resources/jdbc-manage-create.png)
 
 在需要大批量导入的场景中，用户可以先点击【下载模板】下载导入模板
-
-TODO: 模板的写法
-
 然后点击【点击上传】进行导入，导入中出现的问题将提示用户进行修改。
+
+## **系统设置**
+
+### **概述**
+
+系统设置可以让用户设置整个Datakit平台上的全局配置。
+
+### **角色**
+
+拥有系统设置权限的账号均可以访问该功能。
+
+### **界面**
+
+用户通过点击右上角【系统设置】菜单进入该功能。
+![](./_resources/sys-setting-enter.jpg)
+在这个画面上包含文件上传路径、迁移套件在线下载地址、迁移套件安装包名称、迁移套件jar包名称四个设置项。
+![](./_resources/sys-setting.png)
+其中文件上传路径指的是所有通过Datakit页面上传文件的存放路径，该路径必须以/结尾，并且不能与其它用户使用同一个文件夹以防止文件互相覆盖。
+
+文件上传路径的初始默认值位于基座工程的sql文件中，路径为visualtool-api/src/main/resources/db/openGauss-visualtool.sql。
+如需更改文件上传路径的默认值/ops/files，可以修改sys_setting表中的初始数据为其它路径。
+![](./_resources/sys-setting-file-path-sql.jpg)
+
+迁移相关的三个设置：迁移套件在线下载地址、迁移套件安装包名称、迁移套件jar包名称用于数据迁移在线安装迁移套件时作为默认值。
+其中在线下载地址指的是下载迁移套件的路径，迁移套件jar名称指的解压缩安装包后启动目标文件的名称。
+

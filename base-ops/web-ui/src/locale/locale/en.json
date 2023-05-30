@@ -297,6 +297,7 @@
         },
         "HostTerminal": {
             "else1": "IP",
+            "else2": "If the font is blurred under special screen resolution, please scale the page",
             "5oxhoh5r6ls0": "Terminal"
         }
     },
