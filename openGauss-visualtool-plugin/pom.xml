@@ -17,6 +17,7 @@
         <spring-boot.version>2.5.6</spring-boot.version>
         <java.version>11</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <build.frontend.skip>false</build.frontend.skip>
     </properties>
 
     <dependencies>
@@ -173,7 +174,7 @@
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>1.6.0</version>
                 <configuration>
-                    <skip>false</skip>
+                    <skip>${build.frontend.skip}</skip>
                 </configuration>
                 <executions>
                     <execution>
