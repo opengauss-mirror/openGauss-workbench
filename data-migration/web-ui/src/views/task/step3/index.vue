@@ -295,7 +295,7 @@ const getHostsData = () => {
       timer = null
     } else {
       tableData.value = res.data.map(item => ({ ...item, disabled: item.installPortalStatus !== 2 }))
-      originData.value = JSON.parse(JSON.stringify(res.data))
+      originData.value = JSON.parse(JSON.stringify(tableData.value))
       pagination.total = res.data.length
       timer = setTimeout(() => {
         getHostsData()
@@ -319,7 +319,7 @@ const resetQuery = () => {
 
 const handleDelete = (record) => {
   loading.value = true
-  deletePortal(record.hostId).then(res => {
+  deletePortal(record.hostId).then(() => {
     loading.value = false
     getHostsData()
   }).catch(() => {
