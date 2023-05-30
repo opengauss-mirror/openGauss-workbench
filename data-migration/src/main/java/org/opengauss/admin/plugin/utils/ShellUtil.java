@@ -100,6 +100,20 @@ public class ShellUtil {
             reader.close();
 
             int exitCode = channelExec.getExitStatus();
+            // see http://epaul.github.io/jsch-documentation/simple.javadoc/com/jcraft/jsch/Channel.html#getExitStatus--
+            // the exit status returned by the remote command, or -1,
+            // if the command not yet terminated (or this channel type has no command)
+            while (exitCode < 0) {
+                exitCode = channelExec.getExitStatus();
+                if (exitCode >= 0) {
+                    break;
+                }
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    log.warn("wait shell result exception: " + e.getMessage());
+                }
+            }
             jschResult.setExitCode(exitCode);
             jschResult.setResult(sb.toString());
         } catch (JSchException | JschRuntimeException | IOException e) {
