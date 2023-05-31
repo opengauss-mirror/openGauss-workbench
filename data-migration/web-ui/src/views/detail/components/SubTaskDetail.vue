@@ -47,9 +47,9 @@
                         <div v-if="item.statusId === 2" class="info-row">
                           <i @click="globalVisible = !globalVisible">{{ globalVisible ? $t('components.SubTaskDetail.5q09prnznk00') : $t('components.SubTaskDetail.5q09prnznms0') }}</i>
                           <div v-if="item.statusId === 2" class="status-text">
-                            <span>{{ $t('components.SubTaskDetail.5q0a5opxm3c1') }}<strong>{{ fullData.total.data || 0 }}MB</strong></span>
-                            <span>{{ $t('components.SubTaskDetail.5q0a5opxm3c2') }}<strong>{{ fullData.total.speed || 0 }}MB/s</strong></span>
-                            <span>{{ $t('components.SubTaskDetail.5q0a5opxm3c3') }}<strong>{{ fullData.total.time || 0 }}s</strong></span>
+                            <span>{{ $t('components.SubTaskDetail.5q0a5opxm3c1') }}<strong>{{ fullData?.total.data || 0 }}MB</strong></span>
+                            <span>{{ $t('components.SubTaskDetail.5q0a5opxm3c2') }}<strong>{{ fullData?.total.speed || 0 }}MB/s</strong></span>
+                            <span>{{ $t('components.SubTaskDetail.5q0a5opxm3c3') }}<strong>{{ fullData?.total.time || 0 }}s</strong></span>
                           </div>
                         </div>
                         <div v-if="item.statusId === 5" class="info-row">
@@ -365,9 +365,9 @@ const getSubTaskDetail = () => {
         value: fullProcessDetail ? h('div', null,
           h('div', { class: 'desc-value-row' }, [
             h('div', null, t('components.SubTaskDetail.5q09xhsvcq40', { total: (res.data.totalWaitCount || 0) + (res.data.totalRunningCount || 0) + (res.data.totalFinishCount || 0) + (res.data.totalErrorCount || 0), totalWaitCount: res.data.totalWaitCount || 0, totalRunningCount: res.data.totalRunningCount || 0, totalFinishCount: res.data.totalFinishCount || 0, totalErrorCount: res.data.totalErrorCount || 0 })),
-            h('div', { class: 'arco-tag arco-tag-checked speed-tag' }, t('components.SubTaskDetail.5q09xhsvcq42', { speed: fullData.value.total?.speed || 0 }))
+            h('div', { class: 'arco-tag arco-tag-checked speed-tag' }, t('components.SubTaskDetail.5q09xhsvcq42', { speed: fullData.value?.total?.speed || 0 }))
           ]),
-          h('div', null, t('components.SubTaskDetail.5q09xhsvcq41', { totalDataSize: (fullData.value.total?.data || 0), totalRowCount: (fullData.value.total?.record || 0), cost: (fullData.value.total?.time || 0) }))
+          h('div', null, t('components.SubTaskDetail.5q09xhsvcq41', { totalDataSize: (fullData.value?.total?.data || 0), totalRowCount: (fullData.value?.total?.record || 0), cost: (fullData.value?.total?.time || 0) }))
         ) : t('components.SubTaskDetail.5q09prnznzg0'),
         span: 5
       },
@@ -399,7 +399,7 @@ const getSubTaskDetail = () => {
         label: t('components.SubTaskDetail.5q09prnzqxs0'),
         value: fullProcessDetail ? h('div', null, [
             h('div', null, t('components.SubTaskDetail.5q09xhsvcq40', { total: (res.data.totalWaitCount || 0) + (res.data.totalRunningCount || 0) + (res.data.totalFinishCount || 0) + (res.data.totalErrorCount || 0), totalWaitCount: res.data.totalWaitCount || 0, totalRunningCount: res.data.totalRunningCount || 0, totalFinishCount: res.data.totalFinishCount || 0, totalErrorCount: res.data.totalErrorCount || 0 })),
-            h('div', null, t('components.SubTaskDetail.5q09xhsvcq41', { totalDataSize: (fullData.value.total?.data || 0), totalRowCount: (fullData.value.total?.record || 0), cost: (fullData.value.total?.time || 0) }))
+            h('div', null, t('components.SubTaskDetail.5q09xhsvcq41', { totalDataSize: (fullData.value?.total?.data || 0), totalRowCount: (fullData.value?.total?.record || 0), cost: (fullData.value?.total?.time || 0) }))
           ]) : t('components.SubTaskDetail.5q09prnznzg0'),
         span: 3
       },
