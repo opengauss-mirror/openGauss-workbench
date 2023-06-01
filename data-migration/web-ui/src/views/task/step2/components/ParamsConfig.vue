@@ -219,9 +219,22 @@ const getDefaultParams = () => {
       }
       if (props.globalParams.more.length) {
         moreEditData.value = props.globalParams.more
-        moreData.value = moreData.value.map(item => {
+        const moreDataTmp = []
+        moreData.value.forEach(item => {
+          moreDataTmp.push(item)
+          if (item.paramType === 9) {
+            const parentKey = item.paramKey
+            props.globalParams.more.forEach(param => {
+              const childPrefix = param.paramKey.replace(/\.[^/.]+$/, '')
+              if (parentKey === childPrefix) {
+                moreDataTmp.push(param)
+              }
+            })
+          }
+        })
+        moreData.value = moreDataTmp.map(item => {
           const findItem = moreEditData.value.find(fItem => fItem.paramKey === item.paramKey)
-          return findItem || item
+          return findItem ? ({ ...item, ...findItem }) : item
         })
       }
     } else {
@@ -268,7 +281,28 @@ const resetDefault = () => {
     basicEditData.value = mergeObjectArray([], props.globalParams.basic, 'paramKey')
     moreEditData.value = mergeObjectArray([], props.globalParams.more, 'paramKey')
     basicData.value = mergeObjectArray(defaultData.basic, props.globalParams.basic, 'paramKey')
-    moreData.value = mergeObjectArray(defaultData.more, props.globalParams.more, 'paramKey')
+    if (props.globalParams.more.length) {
+      moreData.value = mergeObjectArray(defaultData.more, [], 'paramKey')
+      const moreDataTmp = []
+      moreData.value.forEach(item => {
+        moreDataTmp.push(item)
+        if (item.paramType === 9) {
+          const parentKey = item.paramKey
+          props.globalParams.more.forEach(param => {
+            const childPrefix = param.paramKey.replace(/\.[^/.]+$/, '')
+            if (parentKey === childPrefix) {
+              moreDataTmp.push(param)
+            }
+          })
+        }
+      })
+      moreData.value = moreDataTmp.map(item => {
+        const findItem = moreEditData.value.find(fItem => fItem.paramKey === item.paramKey)
+        return findItem ? ({ ...item, ...findItem }) : item
+      })
+    } else {
+      moreData.value = mergeObjectArray(defaultData.more, props.globalParams.more, 'paramKey')
+    }
   }
 }
 
