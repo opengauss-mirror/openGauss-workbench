@@ -222,10 +222,10 @@ const getHostUsers = () => {
   hostUsers(props.hostId).then((res) => {
     hostUserData.value = res.data.length > 0 ? res.data : []
     if (props.mode === 'reinstall') {
-      form.hostUserId = props.installInfo.hostUserId
-      form.installType = props.installInfo.installType
-      form.installPath = props.installInfo.installPath
-      form.pkgUploadPath = props.installInfo.pkgUploadPath
+      form.hostUserId = props.installInfo?.hostUserId
+      form.installType = props.installInfo?.installType
+      form.installPath = props.installInfo?.installPath
+      form.pkgUploadPath = props.installInfo?.pkgUploadPath
       if (form.pkgUploadPath?.realPath) {
         upload.fileList = [
           {
@@ -239,14 +239,14 @@ const getHostUsers = () => {
       form.hostUserId = ''
       form.installPath = '~'
     }
-    form.pkgDownloadUrl = props.installInfo.pkgDownloadUrl
-      ? props.installInfo.pkgDownloadUrl
+    form.pkgDownloadUrl = props.installInfo?.pkgDownloadUrl
+      ? props.installInfo?.pkgDownloadUrl
       : sysSetting.value.portalPkgDownloadUrl
-    form.pkgName = props.installInfo.pkgName
-      ? props.installInfo.pkgName
+    form.pkgName = props.installInfo?.pkgName
+      ? props.installInfo?.pkgName
       : sysSetting.value.portalPkgName
-    form.jarName = props.installInfo.jarName
-      ? props.installInfo.jarName
+    form.jarName = props.installInfo?.jarName
+      ? props.installInfo?.jarName
       : sysSetting.value.portalJarName
   })
 }
