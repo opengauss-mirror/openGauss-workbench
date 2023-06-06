@@ -70,4 +70,8 @@ public class MigrationTaskInitGlobalParam {
      */
     private String paramExtends;
 
+    /**
+     * field paramRules
+     */
+    private String paramRules;
 }

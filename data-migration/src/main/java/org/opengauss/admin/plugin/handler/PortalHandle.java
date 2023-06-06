@@ -86,7 +86,7 @@ public class PortalHandle {
         }
         log.info("portal exec install command result {}", installToolResult.getResult());
 
-        if (installToolResult.getResult().contains("Install all migration tools success.")) {
+        if (installToolResult.getResult().contains("Install all migration tools success.") && installToolResult.getResult().contains("Start kafka success")) {
             return true;
         } else if (installToolResult.getResult().contains("Error message: ")) {
             return false;

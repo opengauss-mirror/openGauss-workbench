@@ -572,6 +572,17 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
                     MigrationErrorCode.PORTAL_DELETE_ERROR.getMsg());
         }
         String realInstallPath = getInstallPath(install.getInstallPath(), hostUser.getUsername());
+        String portalHome = realInstallPath + "portal/";
+        // stop kafka
+        JschResult result = ShellUtil.execCommandGetResult(opsHost.getPublicIp(),
+                opsHost.getPort(),
+                hostUser.getUsername(), password,
+                "java -Dpath=" + portalHome +
+                        " -Dorder=stop_kafka -Dskip=true -jar " + portalHome +
+                        install.getJarName());
+        if (!result.isOk()) {
+            log.warn("stop kafka failed: " + result.getResult());
+        }
         // if delete file failed, do nothing
         if (onlyPkg != null && !onlyPkg) {
             ShellUtil.execCommandGetResult(opsHost.getPublicIp(), opsHost.getPort(), hostUser.getUsername(), password, "rm -rf  " + realInstallPath + "portal");

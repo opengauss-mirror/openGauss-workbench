@@ -9,3 +9,12 @@ export const PORTAL_INSTALL_STATUS = {
   INSTALLED: 2,
   FAILED: 10
 }
+
+export const PORTAL_PARAM_TYPE = {
+  STRING: 1,
+  NUMBER: 2,
+  BOOLEAN: 3,
+  SELECT: 4,
+  REGEX: 5,
+  OBJECT_ARRAY: 9
+}
