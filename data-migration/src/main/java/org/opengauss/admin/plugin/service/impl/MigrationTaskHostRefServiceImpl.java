@@ -574,14 +574,10 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
         String realInstallPath = getInstallPath(install.getInstallPath(), hostUser.getUsername());
         String portalHome = realInstallPath + "portal/";
         // stop kafka
-        JschResult result = ShellUtil.execCommandGetResult(opsHost.getPublicIp(),
-                opsHost.getPort(),
-                hostUser.getUsername(), password,
-                "java -Dpath=" + portalHome +
-                        " -Dorder=stop_kafka -Dskip=true -jar " + portalHome +
-                        install.getJarName());
-        if (!result.isOk()) {
-            log.warn("stop kafka failed: " + result.getResult());
+        try {
+            stopKafka(opsHost, hostUser, password, portalHome, install.getJarName(), 0);
+        } catch (PortalInstallException ex) {
+            return AjaxResult.error(MigrationErrorCode.STOP_KAFKA_ERROR.getCode(), MigrationErrorCode.STOP_KAFKA_ERROR.getMsg());
         }
         // if delete file failed, do nothing
         if (onlyPkg != null && !onlyPkg) {
@@ -643,5 +639,25 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
             log.error("Upload file error: " + e.getMessage());
         }
         return result;
+    }
+
+    /**
+     * stop kafka before uninstall portal
+     * @param opsHost portal install host
+     * @param hostUser portal install user
+     * @param password portal install password
+     * @param portalHome portal install path
+     * @param jarName portal jar name
+     * @param retryCount failed retry count
+     */
+    private void stopKafka(OpsHostEntity opsHost, OpsHostUserEntity hostUser, String password, String portalHome, String jarName, int retryCount) throws PortalInstallException {
+        JschResult result = ShellUtil.execCommandGetResult(opsHost.getPublicIp(), opsHost.getPort(), hostUser.getUsername(), password, "java -Dpath=" + portalHome + " -Dorder=stop_kafka -Dskip=true -jar " + portalHome + jarName);
+        if (!result.isOk()) {
+            if (retryCount > 3) {
+                throw new PortalInstallException("Stop kafka failed after 3 retries: " + result.getResult());
+            }
+            log.error("stop kafka failed {} times, try again", retryCount);
+            stopKafka(opsHost, hostUser, password, portalHome, jarName, ++retryCount);
+        }
     }
 }

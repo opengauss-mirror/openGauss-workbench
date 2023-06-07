@@ -523,7 +523,7 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
         if (migrationTaskParams.size() > 0) {
             Map<String, String> taskParamMap = migrationTaskParams.stream()
                     .collect(Collectors.toMap(p -> p.getParamKey(), p -> p.getParamKey()
-                            .startsWith("override_tables") ? p.getParamValue() : escapeChars(p.getParamValue())));
+                    .startsWith("override_tables") ? p.getParamValue() : escapeChars(p.getParamValue())));
             globalParamMap.putAll(taskParamMap);
         }
         Map<String, String> resultMap = new HashMap<>();
