@@ -28,16 +28,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.reflection.MetaObject;
 import org.opengauss.admin.common.core.domain.model.LoginUser;
 import org.opengauss.admin.common.utils.SecurityUtils;
-import org.opengauss.admin.common.utils.ServletUtils;
-import org.opengauss.admin.framework.web.service.TokenService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.Date;
 
 /**
+ * Autofill public attribute data
+ *
  * @className: AutoFillMetaObjectHandler
- * @description: Autofill public attribute data
  * @author: xielibo
  * @date: 2022-08-06 10:36 PM
  **/
@@ -51,9 +49,8 @@ public class AutoFillMetaObjectHandler implements MetaObjectHandler {
         try {
             loginUser = SecurityUtils.getLoginUser();
         } catch (Exception e) {
-            log.error("user information not obtained");
+            log.warn("No user information found, this is a new installation.");
         }
-
         if (loginUser != null) {
             this.setFieldValByName("createBy", loginUser.getUser().getUserName(), metaObject);
             this.setFieldValByName("updateBy", loginUser.getUser().getUserName(), metaObject);
