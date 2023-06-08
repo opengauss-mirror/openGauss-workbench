@@ -682,6 +682,16 @@ CREATE OR REPLACE FUNCTION add_migration_task_init_global_param_field_func() RET
             ADD COLUMN param_extends varchar(800) COLLATE "pg_catalog"."default";
         COMMENT ON COLUMN "public"."tb_migration_task_init_global_param"."param_extends" IS ''参数扩展信息'';
     END IF;
+    IF
+            (SELECT COUNT(*) AS ct1
+             FROM INFORMATION_SCHEMA.COLUMNS
+             WHERE TABLE_NAME = ''tb_migration_task_init_global_param''
+               AND COLUMN_NAME = ''param_rules'') = 0
+    THEN
+        ALTER TABLE tb_migration_task_init_global_param
+            ADD COLUMN param_rules TEXT COLLATE "pg_catalog"."default";
+        COMMENT ON COLUMN "public"."tb_migration_task_init_global_param"."param_rules" IS ''参数校验信息'';
+    END IF;
     RETURN 0;
 END;'
     LANGUAGE plpgsql;
@@ -708,64 +718,64 @@ DELETE FROM "public"."tb_migration_task_init_global_param" WHERE "id" = 34;
 
 UPDATE "public"."tb_migration_task_init_global_param"
 SET "param_key" = 'sink.query-dop', "param_value" = '8', "param_desc" = 'sink端数据库并行查询会话配置',
-    "param_type" = 2, "param_extends" = NULL
+    "param_type" = 2, "param_extends" = NULL, "param_rules" = '[1,64]'
 WHERE "id" = 1;
 
 UPDATE "public"."tb_migration_task_init_global_param"
 SET "param_key" = 'sink.minIdle', "param_value" = '10', "param_desc" = '默认最小连接数量',
-    "param_type" = 2, "param_extends" = NULL
+    "param_type" = 2, "param_extends" = NULL, "param_rules" = '[5,10]'
 WHERE "id" = 2;
 
 UPDATE "public"."tb_migration_task_init_global_param"
 SET "param_key" = 'sink.maxActive', "param_value" = '20', "param_desc" = '默认激活数据库连接数量',
-    "param_type" = 2, "param_extends" = NULL
+    "param_type" = 2, "param_extends" = NULL, "param_rules" = '[10,300]'
 WHERE "id" = 3;
 
 UPDATE "public"."tb_migration_task_init_global_param"
 SET "param_key"     = 'sink.initialSize', "param_value"   = '5', "param_desc"    = '初始化连接池大小',
-    "param_type"    = 2, "param_extends" = NULL
+    "param_type"    = 2, "param_extends" = NULL, "param_rules" = '[5,10]'
 WHERE "id" = 4;
 
 UPDATE "public"."tb_migration_task_init_global_param"
 SET "param_key"     = 'sink.debezium-time-period', "param_value"   = '1', "param_desc"    = 'Debezium增量校验时间段：24*60单位：分钟，即每隔1小时增量校验一次。',
-    "param_type"    = 2, "param_extends" = NULL
+    "param_type"    = 2, "param_extends" = NULL, "param_rules" = '[1,99999]'
 WHERE "id" = 5;
 
 UPDATE "public"."tb_migration_task_init_global_param"
 SET "param_key"     = 'sink.debezium-num-period', "param_value"   = '1000', "param_desc"    = 'Debezium增量校验数量的阈值，默认值为1000，应大于100',
-    "param_type"    = 2, "param_extends" = NULL
+    "param_type"    = 2, "param_extends" = NULL, "param_rules" = '[100,10000]'
 WHERE "id" = 6;
 
 UPDATE "public"."tb_migration_task_init_global_param"
 SET "param_key"     = 'source.query-dop', "param_value"   = '8', "param_desc"    = 'source端数据库并行查询会话配置',
-    "param_type"    = 2, "param_extends" = NULL
+    "param_type"    = 2, "param_extends" = NULL, "param_rules" = '[1,64]'
 WHERE "id" = 7;
 
 UPDATE "public"."tb_migration_task_init_global_param"
 SET "param_key"     = 'source.minIdle', "param_value"   = '10', "param_desc"    = '默认最小连接数量',
-    "param_type"    = 2, "param_extends" = NULL
+    "param_type"    = 2, "param_extends" = NULL, "param_rules" = '[5,10]'
 WHERE "id" = 8;
 
 UPDATE "public"."tb_migration_task_init_global_param"
 SET "param_key"     = 'source.maxActive', "param_value"   = '20', "param_desc"    = '默认激活数据库连接数量',
-    "param_type"    = 2, "param_extends" = NULL
+    "param_type"    = 2, "param_extends" = NULL, "param_rules" = '[10,300]'
 WHERE "id" = 9;
 
 UPDATE "public"."tb_migration_task_init_global_param"
 SET "param_key"     = 'source.initialSize', "param_value"   = '5', "param_desc"    = '默认初始连接池大小',
-    "param_type"    = 2, "param_extends" = NULL
+    "param_type"    = 2, "param_extends" = NULL, "param_rules" = '[5,10]'
 WHERE "id" = 10;
 
 UPDATE "public"."tb_migration_task_init_global_param"
 SET "param_key"     = 'source.debezium-time-period', "param_value"   = '1',
     "param_desc"    = 'Debezium增量校验时间段：24*60单位：分钟，即每隔1小时增量校验一次',
-    "param_type"    = 2, "param_extends" = NULL
+    "param_type"    = 2, "param_extends" = NULL, "param_rules" = '[1,99999]'
 WHERE "id" = 11;
 
 UPDATE "public"."tb_migration_task_init_global_param"
 SET "param_key"     = 'source.debezium-num-period', "param_value"   = '1000',
     "param_desc"    = 'Debezium增量校验数量的阈值，默认值为1000，应大于100',
-    "param_type"    = 2, "param_extends" = NULL
+    "param_type"    = 2, "param_extends" = NULL, "param_rules" = '[10,10000]'
 WHERE "id" = 12;
 
 UPDATE "public"."tb_migration_task_init_global_param"
@@ -778,26 +788,30 @@ UPDATE "public"."tb_migration_task_init_global_param"
 SET "param_key"     = 'rules.table', "param_value"   = '0',
     "param_desc"    = '配置表过滤规则，可通过添加黑白名单，对当前数据库中待校验表进行过滤，黑白名单为互斥规则，配置有白名单时，会忽略配置的黑名单规则。可同时配置多组白名单或者黑名单。如果配置多组白名单或黑名单，那么会依次按照白名单去筛选表。值为table规则的数量',
     "param_type"    = 9,
-    "param_extends" = '[{"subKeyPrefix": "rules.table.name","dataType": 1,"defaultValue":"white","desc": "配置规则名称，黑名单或者白名单，white|black"},{"subKeyPrefix":"rules.table.text","dataType": 1,"defaultValue":"","desc": "配置规则内容，为正则表达式"}]'
+    "param_extends" = '[{"subKeyPrefix": "rules.table.name", "paramType": 4,"paramValue":"white","desc": "配置规则名称，黑名单或者白名单，white|black", "paramRules": "[\"white\", \"black\"]"},{"subKeyPrefix":"rules.table.text","paramType": 5, "paramValue":"","desc": "配置规则内容，为正则表达式"}]',
+    "param_rules" = '[0,9]'
 WHERE "id" = 14;
 
 UPDATE "public"."tb_migration_task_init_global_param"
 SET "param_key"     = 'rules.row', "param_value"   = '0',
     "param_desc"    = '配置行级过滤规则，规则继承table规则类；允许配置多组行过滤规则；行级规则等效于select * from table order by primaryKey asc limit offset,count; 如果多组规则配置的正则表达式过滤出的表产生交集，那么行过滤条件只生效最先匹配到的规则条件。值为row规则的数量',
     "param_type"    = 9,
-    "param_extends" = '[{"subKeyPrefix": "rules.row.name","dataType": 1,"defaultValue":"","desc": "配置规则表名过滤正则表达式，用于匹配表名称；name规则不可为空，不可重复"},{"subKeyPrefix":"rules.row.text","dataType": 1,"defaultValue":"0,0","desc": "配置行过滤规则的具体条件，配置格式为[offset,count]，必须为数字，否则该规则无效"}]'
+    "param_extends" = '[{"subKeyPrefix": "rules.row.name","paramType": 5,"paramValue":"","desc": "配置规则表名过滤正则表达式，用于匹配表名称；name规则不可为空，不可重复"},{"subKeyPrefix":"rules.row.text","paramType": 1,"paramValue":"0,0","desc": "配置行过滤规则的具体条件，配置格式为[offset,count]，必须为数字，否则该规则无效", "paramRules": "[[0, 5000000], [0, 10000]]"}]',
+    "param_rules" = '[0,9]'
 WHERE "id" = 19;
 
 UPDATE "public"."tb_migration_task_init_global_param"
 SET "param_key"     = 'rules.column', "param_value"   = '0',
     "param_desc"    = '列过滤规则，用于对表字段列进行过滤校验。可配置多组规则，name不可重复，重复会进行规则去重。值为column规则的数量。',
     "param_type"    = 9,
-    "param_extends" = '[{"subKeyPrefix": "rules.column.name","dataType": 1,"defaultValue":"","desc": "待过滤字段的表名称"},{"subKeyPrefix":"rules.column.text","dataType": 1,"defaultValue":"","desc": "配置当前表待过滤的字段名称列表，如果某字段名称不属于当前表，则该字段不生效"},{"subKeyPrefix":"rules.column.attribute","dataType": 1,"defaultValue":"exclude","desc": "当前表过滤字段模式，include包含text配置的字段，exclude排除text配置的字段；如果为include模式，text默认添加主键字段，不论text是否配置；如果为exclude模式，text默认不添加主键字段，不论是否配置"}]'
+    "param_extends" = '[{"subKeyPrefix": "rules.column.name","paramType": 1,"paramValue":"","desc": "待过滤字段的表名称", "paramRules": "[0, 512]"},{"subKeyPrefix":"rules.column.text","paramType": 1,"paramValue":"","desc": "配置当前表待过滤的字段名称列表，如果某字段名称不属于当前表，则该字段不生效", "paramRules": "[0, 512]"},{"subKeyPrefix":"rules.column.attribute","paramType": 4,"paramValue":"exclude","desc": "当前表过滤字段模式，include包含text配置的字段，exclude排除text配置的字段；如果为include模式，text默认添加主键字段，不论text是否配置；如果为exclude模式，text默认不添加主键字段，不论是否配置", "paramRules": "[\"include\", \"exclude\"]"}]',
+    "param_rules" = '[0,9]'
 WHERE "id" = 24;
 
 UPDATE "public"."tb_migration_task_init_global_param"
 SET "param_key"     = 'type_override', "param_value"   = '0',
     "param_desc"    = '全量迁移类型转换数量，值为类型转换规则的数量',
     "param_type"    = 9,
-    "param_extends" = '[{"subKeyPrefix": "override_type","dataType": 1,"defaultValue":"","desc": "全量迁移类型转换mysql数据类型"}, {"subKeyPrefix":"override_to","dataType": 1,"defaultValue":"","desc": "全量迁移类型转换opengauss数据种类"},{"subKeyPrefix":"override_tables","dataType": 1,"defaultValue":"''*''","desc": "全量迁移类型转换适用的表"}]'
+    "param_extends" = '[{"subKeyPrefix": "override_type","paramType": 1,"paramValue":"","desc": "全量迁移类型转换mysql数据类型", "paramRules": "[0, 20]"}, {"subKeyPrefix":"override_to","paramType": 1,"paramValue":"","desc": "全量迁移类型转换opengauss数据种类", "paramRules": "[0, 20]"},{"subKeyPrefix":"override_tables","paramType": 1,"paramValue":"''*''","desc": "全量迁移类型转换适用的表", "paramRules": "[0, 512]"}]',
+    "param_rules" = '[0,9]'
 WHERE "id" = 31;
