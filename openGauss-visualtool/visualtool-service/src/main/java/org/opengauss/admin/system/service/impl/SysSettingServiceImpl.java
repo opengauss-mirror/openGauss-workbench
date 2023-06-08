@@ -67,11 +67,12 @@ public class SysSettingServiceImpl extends ServiceImpl<SysSettingMapper, SysSett
             return adminResult;
         }
         LambdaQueryWrapper<SysSettingEntity> userQueryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(SysSettingEntity::getUserId, userId);
+        userQueryWrapper.eq(SysSettingEntity::getUserId, userId);
         SysSettingEntity userResult = getOne(userQueryWrapper);
         // if current user is not admin and there is no setting data
         // return admin setting to user for save
         if (ObjectUtil.isNull(userResult)) {
+            adminResult.setId(null);
             adminResult.setUserId(userId);
             return adminResult;
         }

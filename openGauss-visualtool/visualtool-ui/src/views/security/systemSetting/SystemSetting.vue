@@ -63,6 +63,7 @@ const emits = defineEmits(['update:open'])
 const formRef = ref<FormInstance>()
 let form = reactive<SysSetting>({
   id: '',
+  userId: '',
   uploadPath: '',
   portalPkgDownloadUrl: '',
   portalPkgName: '',
@@ -121,6 +122,7 @@ const querySystemSetting = () => {
   listSysSetting().then(res => {
     form.id = res.data?.id
     form.uploadPath = res.data?.uploadPath
+    form.userId = res.data?.userId
     form.portalPkgDownloadUrl = res.data?.portalPkgDownloadUrl
     form.portalPkgName = res.data?.portalPkgName
     form.portalJarName = res.data?.portalJarName

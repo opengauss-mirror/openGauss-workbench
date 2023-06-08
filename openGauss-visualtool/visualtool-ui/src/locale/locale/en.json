@@ -2,7 +2,7 @@
     "errorCode": {
         "400": "Request params is bad",
         "401": "Unauthorized",
-        "403": "Authorization expired",
+        "403": "Permission denied",
         "50101": "Plugin stop error",
         "50102": "Plugin start error",
         "50103": "Plugin uninstall error",

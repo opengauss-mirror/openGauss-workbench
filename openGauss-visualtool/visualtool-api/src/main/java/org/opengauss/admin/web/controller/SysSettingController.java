@@ -56,7 +56,6 @@ public class SysSettingController extends BaseController {
      */
     @Log(title = "setting", businessType = BusinessType.UPDATE)
     @ApiOperation(value = "update", notes = "update")
-    @PreAuthorize("@ss.hasPermi('system:setting:update')")
     @PutMapping
     public AjaxResult update(@RequestBody @Validated SysSettingEntity setting) {
         boolean res = sysSettingService.updateSetting(setting);
