@@ -219,7 +219,14 @@
             "5q0aazspq7k0": "源实例名：",
             "5q0aazspqac0": "目的实例名：",
             "5q0aazspqd00": "源库名：",
-            "5q0aazspqfs0": "目的库名："
+            "5q0aazspqfs0": "目的库名：",
+            "5q0aazspqfs1": "请输入",
+            "5q0aazspqfs2": "不是一个有效的Java正则表达式",
+            "5q0aazspqfs3": "必须大于{count}个字符",
+            "5q0aazspqfs4": "必须小于{count}个字符",
+            "5q0aazspqfs5": "必须输入两个数字，并且以,分割",
+            "5q0aazspqfs6": "offset(前一个数字)必须大于{min}小于{max}",
+            "5q0aazspqfs7": "count(后一个数字)必须大于{min}小于{max}"
         }
     },
     "task": {

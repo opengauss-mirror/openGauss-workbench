@@ -167,7 +167,7 @@ const props = defineProps({
   open: Boolean,
   hostId: String,
   mode: String,
-  installInfo: Object,
+  installInfo: Object
 })
 
 const emits = defineEmits(['update:open', 'startInstall'])
@@ -180,11 +180,11 @@ const form = reactive({
   pkgDownloadUrl: '',
   pkgName: '',
   jarName: '',
-  pkgUploadPath: {},
+  pkgUploadPath: {}
 })
 
 const upload = reactive({
-  fileList: [],
+  fileList: []
 })
 
 const visible = ref(false)
@@ -231,8 +231,8 @@ const getHostUsers = () => {
           {
             uid: '-1',
             name: form.pkgUploadPath.name,
-            url: form.pkgUploadPath.realPath,
-          },
+            url: form.pkgUploadPath.realPath
+          }
         ]
       }
     } else {
@@ -308,13 +308,13 @@ const handleBeforeRemove = (file) => {
         title: t('components.PortalInstall.5q0aajl77lg11'),
         content: t('components.PortalInstall.5q0aajl77lg12'),
         onOk: () => {
-          deletePortal(props.hostId, true).then((res) => {
+          deletePortal(props.hostId, true).then(() => {
             form.pkgUploadPath = {}
             emits(`pkgDeleted`)
             resolve(true)
           })
         },
-        onCancel: () => reject('cancel'),
+        onCancel: () => reject('cancel')
       })
     } else {
       resolve(true)

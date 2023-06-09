@@ -129,7 +129,15 @@
           "5q09xhsvcq45": "Average speed: {avgSpeed}MB/s",
           "5q0a1jl7o9s0": "Total migration objects：{total}， not started：{totalWaitCount}，migrating：{totalRunningCount}，successful：{totalFinishCount}，failed：{totalErrorCount}",
           "5q0a1jl7o9s1": "Total migration objects：{total}， not started：{totalWaitCount}，migrating：{totalRunningCount}，successful：{totalFinishCount}，failed：{totalErrorCount}",
-          "5q0a5opxm3c0": "to"
+          "5q0a5opxm3c0": "to",
+          "5q0a5opxm3c1": "Data Total：",
+          "5q0a5opxm3c2": "Speed：",
+          "5q0a5opxm3c3": "Cost：",
+          "5q0a5opxm3c4": "Data Total：",
+          "5q0a5opxm3c5": "Avg DataCheck Speed：",
+          "5q0a5opxm3c6": "TableCount：",
+          "5q0a5opxm3c7": "TableFinishCount：",
+          "5q0a5opxm3c8": ""
       },
       "AddJdbc": {
           "5q0a7i439cg0": "To be detected",
@@ -211,7 +219,14 @@
           "5q0aazspq7k0": "Source instance name: ",
           "5q0aazspqac0": "Destination instance name: ",
           "5q0aazspqd00": "Source library name: ",
-          "5q0aazspqfs0": "Destination library name: "
+          "5q0aazspqfs0": "Destination library name: ",
+          "5q0aazspqfs1": "Please input",
+          "5q0aazspqfs2": "Not a valid Java regex",
+          "5q0aazspqfs3": "Must more than {count} characters",
+          "5q0aazspqfs4": "Must less than {count} characters",
+          "5q0aazspqfs5": "Must input two number，split with ,",
+          "5q0aazspqfs6": "offset(the first number) must greater than {min} lower than {max}",
+          "5q0aazspqfs7": "count(the last number) must greater than {min} lower than {max}"
       }
   },
   "task": {
