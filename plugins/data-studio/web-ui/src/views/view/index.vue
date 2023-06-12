@@ -18,7 +18,6 @@
 </template>
 
 <script lang="ts" setup>
-  import { markRaw, onMounted, reactive, ref } from 'vue';
   import type { TabsPaneContext } from 'element-plus';
   import { useRoute } from 'vue-router';
   import { useUserStore } from '@/store/modules/user';

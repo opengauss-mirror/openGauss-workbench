@@ -34,3 +34,19 @@ export function getSchemaObjectList(data) {
     params: data,
   });
 }
+
+// get tablespace list
+export function getTablespaceList(uuid) {
+  return request({
+    url: `/dataStudio/web/v1/metaData/tablespace/${uuid}`,
+    method: 'get',
+  });
+}
+
+// get dataType list
+export function getDataTypeList(uuid) {
+  return request({
+    url: `/dataStudio/web/v1/metaData/typeList/${uuid}`,
+    method: 'get',
+  });
+}

@@ -8,7 +8,6 @@
 </template>
 
 <script lang="ts" setup>
-  import { onMounted, reactive, ref } from 'vue';
   import { useRoute } from 'vue-router';
   import { useUserStore } from '@/store/modules/user';
   import { getSynonyms } from '@/api/synonym';

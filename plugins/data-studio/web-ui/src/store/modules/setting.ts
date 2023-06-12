@@ -22,11 +22,9 @@ export const useSettingStore = defineStore({
   }),
   getters: {},
   actions: {
-    // set theme
     setThemeConfig({ key, val }) {
       this.themeConfig[key] = val;
     },
-    // toggle Collapse
     setCollapse(value) {
       this.isCollapse = value;
       this.withoutAnimation = false;

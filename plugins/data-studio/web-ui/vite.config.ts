@@ -6,7 +6,8 @@ import { defineConfig, ConfigEnv, UserConfig, loadEnv } from 'vite';
 import path from 'path';
 
 import vue from '@vitejs/plugin-vue';
-
+import AutoImport from 'unplugin-auto-import/vite';
+// import { ElementPlusResolver } from 'unplugin-vue-components/resolvers';
 import { createSvgIconsPlugin } from 'vite-plugin-svg-icons';
 
 import vueSetupExtend from 'vite-plugin-vue-setup-extend';
@@ -15,7 +16,6 @@ function resolve(dir) {
   return path.join(__dirname, '.', dir);
 }
 
-// https://vitejs.dev/config/
 export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
   const env = loadEnv(mode, process.cwd(), '');
   return {
@@ -23,6 +23,16 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
     plugins: [
       vue(),
       vueSetupExtend(),
+      AutoImport({
+        // resolvers: [ElementPlusResolver()],
+        imports: ['vue'],
+        dts: 'src/auto-imports.d.ts',
+        eslintrc: {
+          enabled: false,
+          filepath: './.eslintrc-auto-import.json',
+          globalsPropValue: true,
+        },
+      }),
       createSvgIconsPlugin({
         iconDirs: [path.resolve(process.cwd(), 'src/icons/svg')],
         symbolId: 'icon-[dir]-[name]',

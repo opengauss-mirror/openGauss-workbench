@@ -64,7 +64,6 @@
   </el-tabs>
 </template>
 <script lang="ts" setup>
-  import { computed, ref } from 'vue';
   interface messageType {
     id: number | string;
     label: string;

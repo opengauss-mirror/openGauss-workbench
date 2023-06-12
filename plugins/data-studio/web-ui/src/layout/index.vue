@@ -12,7 +12,6 @@
 </template>
 
 <script lang="ts" setup name="layout">
-  import { computed } from 'vue';
   import { useSettingStore } from '@/store/modules/setting';
   import Sidebar from './Sidebar/index.vue';
   import UMain from './Main/index.vue';
@@ -33,10 +32,6 @@
     display: flex;
     flex: 1;
     box-sizing: border-box;
-    flex-direction: column;
-  }
-  .sidebar-container {
-    display: flex;
     flex-direction: column;
   }
   .drawer-bg {

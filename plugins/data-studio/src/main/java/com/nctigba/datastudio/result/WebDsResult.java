@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ */
+
 package com.nctigba.datastudio.result;
 
 import static com.nctigba.datastudio.constants.CommonConstants.FIVE_HUNDRED;

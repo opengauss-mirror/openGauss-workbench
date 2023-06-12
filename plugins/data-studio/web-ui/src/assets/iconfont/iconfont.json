@@ -6,6 +6,160 @@
   "description": "",
   "glyphs": [
     {
+      "icon_id": "35321985",
+      "name": "文件管理-copy",
+      "font_class": "report-disabled",
+      "unicode": "ec6a",
+      "unicode_decimal": 60522
+    },
+    {
+      "icon_id": "2199033",
+      "name": "文件管理",
+      "font_class": "report",
+      "unicode": "e615",
+      "unicode_decimal": 58901
+    },
+    {
+      "icon_id": "7770141",
+      "name": "jia",
+      "font_class": "jia1",
+      "unicode": "e7e8",
+      "unicode_decimal": 59368
+    },
+    {
+      "icon_id": "7770142",
+      "name": "jian",
+      "font_class": "jian1",
+      "unicode": "e7e9",
+      "unicode_decimal": 59369
+    },
+    {
+      "icon_id": "162780",
+      "name": "加",
+      "font_class": "jia",
+      "unicode": "e600",
+      "unicode_decimal": 58880
+    },
+    {
+      "icon_id": "162781",
+      "name": "减",
+      "font_class": "jian",
+      "unicode": "e601",
+      "unicode_decimal": 58881
+    },
+    {
+      "icon_id": "742038",
+      "name": "gou",
+      "font_class": "gou",
+      "unicode": "e662",
+      "unicode_decimal": 58978
+    },
+    {
+      "icon_id": "6056155",
+      "name": "加",
+      "font_class": "copy-add",
+      "unicode": "e66f",
+      "unicode_decimal": 58991
+    },
+    {
+      "icon_id": "11391490",
+      "name": "错",
+      "font_class": "cuo",
+      "unicode": "e635",
+      "unicode_decimal": 58933
+    },
+    {
+      "icon_id": "18309139",
+      "name": "page-last",
+      "font_class": "page-last",
+      "unicode": "e607",
+      "unicode_decimal": 58887
+    },
+    {
+      "icon_id": "18309143",
+      "name": "page-first",
+      "font_class": "page-first",
+      "unicode": "e608",
+      "unicode_decimal": 58888
+    },
+    {
+      "icon_id": "18309144",
+      "name": "page-previous",
+      "font_class": "page-previous",
+      "unicode": "e60a",
+      "unicode_decimal": 58890
+    },
+    {
+      "icon_id": "18365403",
+      "name": "page-next",
+      "font_class": "page-next",
+      "unicode": "e66c",
+      "unicode_decimal": 58988
+    },
+    {
+      "icon_id": "23656305",
+      "name": "page-last-line",
+      "font_class": "page-last-line",
+      "unicode": "e622",
+      "unicode_decimal": 58914
+    },
+    {
+      "icon_id": "27533500",
+      "name": "page-first-line",
+      "font_class": "page-first-line",
+      "unicode": "e683",
+      "unicode_decimal": 59011
+    },
+    {
+      "icon_id": "22787828",
+      "name": "编译",
+      "font_class": "compile",
+      "unicode": "e634",
+      "unicode_decimal": 58932
+    },
+    {
+      "icon_id": "34712334",
+      "name": "编译-copy",
+      "font_class": "compile-disabled",
+      "unicode": "ec69",
+      "unicode_decimal": 60521
+    },
+    {
+      "icon_id": "16364316",
+      "name": "编辑",
+      "font_class": "bianji",
+      "unicode": "e631",
+      "unicode_decimal": 58929
+    },
+    {
+      "icon_id": "17581737",
+      "name": "删除行",
+      "font_class": "shanchuhang",
+      "unicode": "ec67",
+      "unicode_decimal": 60519
+    },
+    {
+      "icon_id": "17581740",
+      "name": "添加行",
+      "font_class": "tianjiahang",
+      "unicode": "ec68",
+      "unicode_decimal": 60520
+    },
+    {
+      "icon_id": "8094805",
+      "name": "clear",
+      "font_class": "clear",
+      "unicode": "e900",
+      "unicode_decimal": 59648
+    },
+    {
+      "icon_id": "4736293",
+      "name": "导出",
+      "font_class": "daochu",
+      "unicode": "e611",
+      "unicode_decimal": 58897
+    },
+    {
       "icon_id": "33979523",
       "name": "debugsinglestep-disabled",
       "font_class": "debugsinglestep-disabled",
@@ -18,6 +172,20 @@
       "font_class": "debugsinglestep",
       "unicode": "e606",
       "unicode_decimal": 58886
+    },
+    {
+      "icon_id": "34125424",
+      "name": "database-connected-copy",
+      "font_class": "database-connected-copy",
+      "unicode": "e884",
+      "unicode_decimal": 59524
+    },
+    {
+      "icon_id": "34125437",
+      "name": "database-disconnect-copy",
+      "font_class": "database-disconnect-copy",
+      "unicode": "e885",
+      "unicode_decimal": 59525
     },
     {
       "icon_id": "33846229",

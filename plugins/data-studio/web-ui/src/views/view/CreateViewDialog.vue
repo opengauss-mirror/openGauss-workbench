@@ -6,7 +6,7 @@
       :width="500"
       align-center
       :close-on-click-modal="false"
-      @open="handleOpen"
+      @opened="handleOpen"
       @close="handleClose"
     >
       <div class="dialog_body">
@@ -64,7 +64,6 @@
   </div>
 </template>
 <script lang="ts" setup>
-  import { computed, ref, reactive, Ref } from 'vue';
   import { ElMessage, FormInstance, FormRules } from 'element-plus';
   import type { TabsPaneContext } from 'element-plus';
   import AceEditor from '@/components/AceEditor.vue';
@@ -123,9 +122,11 @@
   };
 
   const handleOpen = async () => {
-    form.schema = connectData.value.schemaName;
-    form.connectionName = connectData.value.connectInfo.name;
-    form.uuid = connectData.value.uuid;
+    nextTick(() => {
+      form.schema = connectData.value.schemaName;
+      form.connectionName = connectData.value.connectInfo.name;
+      form.uuid = connectData.value.uuid;
+    });
   };
   const handleClose = () => {
     myEmit('update:modelValue', false);

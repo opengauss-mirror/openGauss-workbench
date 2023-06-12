@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ */
+
 package com.nctigba.datastudio.controller;
 
 import com.nctigba.datastudio.model.dto.DataListDTO;
@@ -17,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
 import java.util.List;
+import java.util.Map;
 
 @Api(tags = {"Metadata query interface"})
 @RestController
@@ -27,13 +32,6 @@ public class MetaDataController {
     private DbConnectionService dbConnectionService;
     @Resource
     private QueryMetaArrayService queryMetaArrayService;
-
-
-    @ApiOperation(value = "Database List")
-    @GetMapping(value = "/{id}/dataList", produces = MediaType.APPLICATION_JSON_VALUE)
-    public List<DataListDTO> dataList(@PathVariable("id") String id) throws Exception {
-        return dbConnectionService.dataList(id);
-    }
 
     @ApiOperation(value = "Database List")
     @GetMapping(value = "/databaseList/{uuid}", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -49,7 +47,7 @@ public class MetaDataController {
 
     @ApiOperation(value = "Schema List")
     @GetMapping(value = "/schemaList", produces = MediaType.APPLICATION_JSON_VALUE)
-    public List<String> schemaList(DatabaseMetaarraySchemaQuery request) throws Exception {
+    public List<Map<String, String>> schemaList(DatabaseMetaarraySchemaQuery request) throws Exception {
         return queryMetaArrayService.schemaList(request);
     }
 
@@ -65,5 +63,18 @@ public class MetaDataController {
     @GetMapping(value = "/columnList", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<String> tableColumnList(DatabaseMetaarrayColumnQuery request) throws Exception {
         return queryMetaArrayService.tableColumnList(request);
+    }
+
+
+    @ApiOperation(value = "Column List")
+    @GetMapping(value = "/typeList/{uuid}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public List<String> typeList(@PathVariable("uuid") String uuid) throws Exception {
+        return queryMetaArrayService.baseTypeList(uuid);
+    }
+
+    @ApiOperation(value = "Column List")
+    @GetMapping(value = "/tablespace/{uuid}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public List<String> tablespaceList(@PathVariable("uuid") String uuid) throws Exception {
+        return queryMetaArrayService.tablespaceList(uuid);
     }
 }

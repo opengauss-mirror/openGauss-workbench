@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ */
+
 package com.nctigba.datastudio;
 
 import com.alibaba.druid.spring.boot.autoconfigure.DruidDataSourceAutoConfigure;
@@ -16,7 +20,6 @@ import org.springframework.scheduling.annotation.EnableAsync;
         RedisRepositoriesAutoConfiguration.class
 })
 public class DataStudioPluginApplication extends SpringPluginBootstrap {
-
     public static void main(String[] args) {
         new DataStudioPluginApplication().run(args);
     }

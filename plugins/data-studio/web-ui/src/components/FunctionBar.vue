@@ -15,7 +15,6 @@
 </template>
 
 <script lang="ts" setup>
-  import { computed } from 'vue';
   import { useI18n } from 'vue-i18n';
 
   const { t } = useI18n();
@@ -35,21 +34,27 @@
     stop: false,
     startDebug: false,
     stopDebug: false,
-    breakPointStep: false,
+    continueStep: false,
     singleStep: false,
   */
   const emit = defineEmits<{
+    (e: 'compile'): void;
     (e: 'execute'): void;
     (e: 'stopRun'): void;
     (e: 'clear'): void;
     (e: 'startDebug'): void;
     (e: 'stopDebug'): void;
-    (e: 'breakPointStep'): void;
+    (e: 'continueStep'): void;
     (e: 'singleStep'): void;
     (e: 'stepIn'): void;
     (e: 'stepOut'): void;
     (e: 'format'): void;
+    (e: 'coverageRate'): void;
   }>();
+
+  const handleCompile = () => {
+    emit('compile');
+  };
 
   const handleExecute = () => {
     emit('execute');
@@ -71,8 +76,8 @@
     emit('stopDebug');
   };
 
-  const handleBreakPointStep = () => {
-    emit('breakPointStep');
+  const handleContinueStep = () => {
+    emit('continueStep');
   };
 
   const handleSingleStep = () => {
@@ -88,9 +93,20 @@
   const handleFormat = () => {
     emit('format');
   };
+  const handleCoverageRate = () => {
+    emit('coverageRate');
+  };
 
   const displayButton = computed(() => {
     return {
+      compile: {
+        name: t('functionBar.compile'),
+        show: ['debug'].includes(props.type),
+        enabled: props.isGlobalEnable && props.status.compile,
+        on: handleCompile,
+        icon: 'compile',
+        disabledIcon: 'compile-disabled',
+      },
       execute: {
         name: t('functionBar.execute'),
         show: ['sql', 'debug'].includes(props.type),
@@ -131,11 +147,11 @@
         icon: 'debugclose',
         disabledIcon: 'debugclose-disabled',
       },
-      breakPointStep: {
-        name: t('functionBar.breakPointStep'),
+      continueStep: {
+        name: t('functionBar.continueStep'),
         show: ['debug', 'debugChild'].includes(props.type),
-        enabled: props.isGlobalEnable && props.status.breakPointStep,
-        on: handleBreakPointStep,
+        enabled: props.isGlobalEnable && props.status.continueStep,
+        on: handleContinueStep,
         icon: 'debugstep',
         disabledIcon: 'debugstep-disabled',
       },
@@ -170,6 +186,14 @@
         on: handleFormat,
         icon: 'formatter',
         disabledIcon: 'formatter-disabled',
+      },
+      coverageRate: {
+        name: t('functionBar.coverageRate'),
+        show: ['debug'].includes(props.type),
+        enabled: props.isGlobalEnable && props.status.coverageRate,
+        on: handleCoverageRate,
+        icon: 'report',
+        disabledIcon: 'report-disabled',
       },
     };
   });

@@ -6,6 +6,7 @@ declare module 'axios' {
   interface AxiosResponse {
     message: string;
     code: number;
+    [key: string]: any;
   }
 }
 

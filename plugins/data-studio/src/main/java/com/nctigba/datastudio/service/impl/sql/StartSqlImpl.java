@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ */
+
 package com.nctigba.datastudio.service.impl.sql;
 
 import cn.hutool.core.thread.ThreadUtil;
@@ -18,7 +22,10 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 import static com.nctigba.datastudio.constants.CommonConstants.FIVE_HUNDRED;
-import static com.nctigba.datastudio.enums.MessageEnum.*;
+import static com.nctigba.datastudio.enums.MessageEnum.button;
+import static com.nctigba.datastudio.enums.MessageEnum.table;
+import static com.nctigba.datastudio.enums.MessageEnum.text;
+import static com.nctigba.datastudio.enums.MessageEnum.window;
 
 @Slf4j
 @Service("startRun")
@@ -36,31 +43,40 @@ public class StartSqlImpl implements OperationInterface {
         log.info("tableColumnList request is: " + paramReq);
         ThreadUtil.execAsync(() -> {
             try {
-                webSocketServer.sendMessage(windowName, text, LocaleString.transLanguageWs("2001", webSocketServer), null);
+                webSocketServer.sendMessage(windowName, text, LocaleString.transLanguageWs("2001", webSocketServer),
+                        null);
                 boolean result = stat.execute(paramReq.getSql());
-                webSocketServer.sendMessage(windowName, button, LocaleString.transLanguageWs("2006", webSocketServer), null);
+                webSocketServer.sendMessage(windowName, button, LocaleString.transLanguageWs("2006", webSocketServer),
+                        null);
                 OperateStatusDO operateStatus = webSocketServer.getOperateStatus(windowName);
                 operateStatus.enableStopRun();
                 webSocketServer.setOperateStatus(windowName, operateStatus);
                 while (true) {
                     if (result) {
-                        webSocketServer.sendMessage(windowName, table, LocaleString.transLanguageWs("2002", webSocketServer), DebugUtils.parseResultSet(stat.getResultSet()));
-                        webSocketServer.sendMessage(windowName, text, LocaleString.transLanguageWs("2002", webSocketServer), null);
+                        webSocketServer.sendMessage(windowName, table,
+                                LocaleString.transLanguageWs("2002", webSocketServer),
+                                DebugUtils.parseResultSet(stat.getResultSet()));
+                        webSocketServer.sendMessage(windowName, text,
+                                LocaleString.transLanguageWs("2002", webSocketServer), null);
                     } else {
                         if (stat.getUpdateCount() != -1) {
-                            webSocketServer.sendMessage(windowName, text, LocaleString.transLanguageWs("2005", webSocketServer) + stat.getUpdateCount(), null);
+                            webSocketServer.sendMessage(windowName, text,
+                                    LocaleString.transLanguageWs("2005", webSocketServer) + stat.getUpdateCount(),
+                                    null);
                         } else {
                             break;
                         }
                     }
                     result = stat.getMoreResults();
                 }
-                webSocketServer.sendMessage(windowName, text, LocaleString.transLanguageWs("2003", webSocketServer), null);
+                webSocketServer.sendMessage(windowName, text, LocaleString.transLanguageWs("2003", webSocketServer),
+                        null);
             } catch (IOException | SQLException e) {
-                e.printStackTrace();
+                log.info(e.toString());
                 try {
                     webSocketServer.sendMessage(windowName, window, FIVE_HUNDRED, e.getMessage(), e.getStackTrace());
-                    webSocketServer.sendMessage(windowName, button, LocaleString.transLanguageWs("2006", webSocketServer), null);
+                    webSocketServer.sendMessage(windowName, button,
+                            LocaleString.transLanguageWs("2006", webSocketServer), null);
                     OperateStatusDO operateStatus = webSocketServer.getOperateStatus(windowName);
                     operateStatus.enableStopRun();
                     webSocketServer.setOperateStatus(windowName, operateStatus);
@@ -73,7 +89,8 @@ public class StartSqlImpl implements OperationInterface {
                     stat.cancel();
                     webSocketServer.setStatement(windowName, null);
                 } catch (SQLException e) {
-                    throw new RuntimeException(e);
+                    log.info(e.toString());
+                    log.error("tableColumnList SQLException is: " + e.getMessage());
                 }
             }
         });

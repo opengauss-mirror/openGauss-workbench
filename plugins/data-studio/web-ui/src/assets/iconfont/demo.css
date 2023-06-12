@@ -1,3 +1,4 @@
+
 @font-face {
   font-family: "iconfont logo";
   src: url('https://at.alicdn.com/t/font_985780_km7mi63cihi.eot?t=1545807318834');
@@ -8,7 +9,7 @@
 }
 
 .logo {
-  font-family: "iconfont logo";
+  font-family: "iconfont logo", sans-serif;
   font-size: 160px;
   font-style: normal;
   -webkit-font-smoothing: antialiased;
@@ -57,7 +58,6 @@
   display: none;
 }
 
-
 .main {
   padding: 30px 100px;
   width: 960px;
@@ -72,7 +72,7 @@
   height: 110px;
   margin-top: -50px;
   overflow: hidden;
-  *zoom: 1;
+  zoom: 1;
 }
 
 .main .logo a {
@@ -95,7 +95,7 @@
 .icon_lists {
   width: 100% !important;
   overflow: hidden;
-  *zoom: 1;
+  zoom: 1;
 }
 
 .icon_lists li {
@@ -396,7 +396,7 @@ pre[class*="language-"] {
   color: black;
   background: none;
   text-shadow: 0 1px white;
-  font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+  font-family: 'Consolas', 'Monaco', 'Andale Mono', 'Ubuntu Mono', monospace;
   text-align: left;
   white-space: pre;
   word-spacing: normal;
@@ -412,14 +412,6 @@ pre[class*="language-"] {
   -moz-hyphens: none;
   -ms-hyphens: none;
   hyphens: none;
-}
-
-pre[class*="language-"]::-moz-selection,
-pre[class*="language-"] ::-moz-selection,
-code[class*="language-"]::-moz-selection,
-code[class*="language-"] ::-moz-selection {
-  text-shadow: none;
-  background: #b3d4fc;
 }
 
 pre[class*="language-"]::selection,

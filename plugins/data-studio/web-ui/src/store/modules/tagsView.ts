@@ -42,6 +42,9 @@ export const useTagsViewStore = defineStore({
     getViewById(id) {
       return this.visitedViews.find((item) => item.id == id);
     },
+    getViewByOid(oid) {
+      return this.visitedViews.find((item) => item.query?.oid == oid);
+    },
     setVisitedViewsStorage() {
       const visitedViews = this.visitedViews.map((item) => {
         const { matched, ...others } = item;
@@ -70,7 +73,7 @@ export const useTagsViewStore = defineStore({
           terminalNum: view.query?.terminalNum,
           isReload: true,
           loadTime: 1,
-          isStepIntoChild: false,
+          isEdit: false,
         }),
       );
       this.setVisitedViewsStorage();
@@ -85,15 +88,12 @@ export const useTagsViewStore = defineStore({
       this.delVisitedView(currentView);
     },
     delVisitedView(view) {
-      return new Promise((resolve) => {
-        if (view.path) {
-          this.visitedViews = this.visitedViews.filter((v) => {
-            return v.path !== view.path || v.meta.affix;
-          });
-          this.setVisitedViewsStorage();
-        }
-        resolve([...this.visitedViews]);
-      });
+      if (view.path) {
+        this.visitedViews = this.visitedViews.filter((v) => {
+          return v.path !== view.path || v.meta.affix;
+        });
+        this.setVisitedViewsStorage();
+      }
     },
     delViewById(id) {
       this.visitedViews = this.visitedViews.filter((v) => {
@@ -130,17 +130,16 @@ export const useTagsViewStore = defineStore({
     updateVisitedView(view) {
       for (let v of this.visitedViews) {
         if (v.path === view.path) {
-          v = Object.assign(v, view);
+          Object.assign(v, view);
           break;
         }
       }
     },
-    updateStepIntoChildStatusById(tagId, status) {
-      const view = this.getViewById(tagId);
-      if (view) view.isStepIntoChild = status;
+    updateEditStatusById(tagId, status) {
+      this.getViewById(tagId)!.isEdit = status;
     },
-    updateStepIntoChildStatusByRoute(route, status) {
-      this.getViewByRoute(route)!.isStepIntoChild = status;
+    updateEditStatusByRoute(route, status) {
+      this.getViewByRoute(route)!.isEdit = status;
     },
     reloadView(fullPath) {
       const view = this.visitedViews.find((item) => item.fullPath == fullPath);

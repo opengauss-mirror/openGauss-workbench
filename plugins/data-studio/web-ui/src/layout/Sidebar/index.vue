@@ -151,6 +151,12 @@
             </li>
             <li
               :class="{ disabled: !treeContextDbStatus }"
+              @click="treeContextDbStatus && handleSchema('create')"
+            >
+              {{ $t('create.mode') }}
+            </li>
+            <li
+              :class="{ disabled: !treeContextDbStatus }"
               @click="
                 treeContextDbStatus &&
                   refresh('database', {
@@ -181,6 +187,20 @@
             >
               {{ $t('connection.refresh') }}
             </li>
+            <li
+              @click="!systemSchema.includes(currentContextNodeData.name) && handleSchema('edit')"
+              :class="{ disabled: systemSchema.includes(currentContextNodeData.name) }"
+            >
+              {{ $t('edit.mode') }}
+            </li>
+            <li
+              @click="!systemSchema.includes(currentContextNodeData.name) && handleSchema('delete')"
+              :class="{ disabled: systemSchema.includes(currentContextNodeData.name) }"
+            >
+              {{ $t('delete.mode') }}
+            </li>
+            <li @click="handleExport('modeDDL')"> {{ $t('export.ddl') }}</li>
+            <li @click="handleExport('modeDDLData')"> {{ $t('export.ddlData') }}</li>
           </ul>
           <ul
             v-if="treeContext.terminalCollectVisible"
@@ -195,14 +215,14 @@
             <li @click="hanldeCreate('sql')"> {{ $t('create.sql') }}</li>
           </ul>
           <ul
-            v-if="treeContext.functionSPVisible"
+            v-if="treeContext.tableCollectVisible"
             v-click-outside="
               () => {
-                treeContext.functionSPVisible = false;
+                treeContext.tableCollectVisible = false;
               }
             "
           >
-            <li @click="deleteConfirm('functionSP')"> {{ $t('delete.functionSP') }}</li>
+            <li @click="hanldeCreateTable"> {{ $t('create.table') }}</li>
           </ul>
           <ul
             v-if="treeContext.viewCollectVisible"
@@ -235,6 +255,40 @@
             <li @click="showCreatDialog('synonym')"> {{ $t('create.synonym') }}</li>
           </ul>
           <ul
+            v-if="treeContext.functionSPVisible"
+            v-click-outside="
+              () => {
+                treeContext.functionSPVisible = false;
+              }
+            "
+          >
+            <li @click="deleteConfirm('functionSP')"> {{ $t('delete.functionSP') }}</li>
+            <li @click="handleExport('functionDDL')"> {{ $t('export.ddl') }}</li>
+          </ul>
+          <ul
+            v-if="treeContext.tableVisible"
+            v-click-outside="
+              () => {
+                treeContext.tableVisible = false;
+              }
+            "
+          >
+            <li @click="handleRelatedSequence"> {{ $t('siderbar.table.showRelatedSequence') }}</li>
+            <li @click="handleReindex"> {{ $t('siderbar.table.reindex') }}</li>
+            <li @click="handleVacuum"> {{ $t('siderbar.table.vacuum') }}</li>
+            <li @click="handleTruncate"> {{ $t('siderbar.table.truncate') }}</li>
+            <li @click="handleSetTableSchema"> {{ $t('siderbar.table.setSchema') }}</li>
+            <li @click="handleSetTablespace"> {{ $t('siderbar.table.setTablespace') }}</li>
+            <li @click="handleUpdateTableDescription">
+              {{ $t('siderbar.table.setDescription') }}
+            </li>
+            <li @click="handleExport('tableDDL')"> {{ $t('export.ddl') }}</li>
+            <li @click="handleExport('tableData')"> {{ $t('export.tableData') }}</li>
+            <li @click="handleExport('tableDDLData')"> {{ $t('export.ddlData') }}</li>
+            <li @click="handleTableRename"> {{ $t('rename.table') }}</li>
+            <li @click="handleDropTable"> {{ $t('delete.table') }}</li>
+          </ul>
+          <ul
             v-if="treeContext.viewVisible"
             v-click-outside="
               () => {
@@ -243,6 +297,7 @@
             "
           >
             <li @click="deleteConfirm('view')"> {{ $t('delete.view') }}</li>
+            <li @click="handleExport('viewDDL')"> {{ $t('export.ddl') }}</li>
           </ul>
           <ul
             v-if="treeContext.sequenceVisible"
@@ -253,6 +308,8 @@
             "
           >
             <li @click="deleteConfirm('sequence')"> {{ $t('delete.sequence') }}</li>
+            <li @click="handleExport('sequenceDDL')"> {{ $t('export.ddl') }}</li>
+            <li @click="handleExport('sequenceDDLData')"> {{ $t('export.ddlData') }}</li>
           </ul>
           <ul
             v-if="treeContext.synonymVisible"
@@ -294,7 +351,7 @@
             </div>
             <div v-else class="windows-item" :class="isActive(tag) ? 'active' : ''">
               <svg-icon :icon-class="tag.meta.icon" class-name="icon" />
-              <span class="name">{{ tag.title }}</span>
+              <span class="name" :title="tag.title">{{ tag.query.fileName }}</span>
             </div>
           </div>
         </div>
@@ -314,10 +371,21 @@
       :uuid="currentContextNodeData.uuid"
       :databaseName="currentContextNodeData.label"
     />
+    <CreateSchemaDialog
+      v-if="showCreateSchemaDialog"
+      v-model="showCreateSchemaDialog"
+      :uuid="currentContextNodeData.uuid"
+      :databaseName="createSchemaData.databaseName"
+      :oid="createSchemaData.oid"
+      :owner="createSchemaData.owner"
+      :type="createSchemaType"
+      @success="createSchemaSuccess"
+    />
     <CreateViewDialog
+      v-if="viewDialog"
+      v-model="viewDialog"
       type="create"
       :connectData="currentContextNodeData"
-      v-model="viewDialog"
       @success="refreshModeByContext"
     />
     <CreateSynonymDialog
@@ -334,34 +402,68 @@
       :connectData="currentContextNodeData"
       @success="refreshModeByContext"
     />
+    <ExportTableDataDialog
+      v-if="exportTableDialog"
+      v-model="exportTableDialog"
+      :nodeData="currentContextNodeData"
+    />
+    <RenameTable
+      v-if="renameTableDialog"
+      v-model="renameTableDialog"
+      :nodeData="currentContextNodeData"
+    />
+    <UpdateTableDescription
+      v-if="updateTableDescriptionDialog"
+      v-model="updateTableDescriptionDialog"
+      :nodeData="currentContextNodeData"
+    />
+    <SetTablespace
+      v-if="setTablespaceDialog"
+      v-model="setTablespaceDialog"
+      :nodeData="currentContextNodeData"
+    />
+    <SetTableSchema
+      v-if="setTableSchemaDialog"
+      v-model="setTableSchemaDialog"
+      :nodeData="currentContextNodeData"
+    />
   </div>
 </template>
 
 <script lang="ts" setup name="Siderbar">
   import { Search } from '@element-plus/icons-vue';
   import { ElMessage, ElMessageBox, ElTree } from 'element-plus';
-  import CreateDbDialog from './CreateDbDialog.vue';
-  import DbInfoDialog from './DbInfoDialog.vue';
+  import CreateDbDialog from './components/CreateDbDialog.vue';
+  import DbInfoDialog from './components/DbInfoDialog.vue';
+  import CreateSchemaDialog from './components/CreateSchemaDialog.vue';
   import CreateViewDialog from '@/views/view/CreateViewDialog.vue';
   import CreateSynonymDialog from '@/views/synonym/CreateSynonymDialog.vue';
   import CreateSequenceDialog from '@/views/sequence/CreateSequenceDialog.vue';
-  import { computed, nextTick, onMounted, reactive, ref, onUnmounted, watch } from 'vue';
+  import ExportTableDataDialog from './components/ExportTableDataDialog.vue';
+  import RenameTable from './components/RenameTable.vue';
+  import UpdateTableDescription from './components/UpdateTableDescription.vue';
+  import SetTablespace from './components/SetTablespace.vue';
+  import SetTableSchema from './components/SetTableSchema.vue';
   import { useRoute, useRouter } from 'vue-router';
   import { useAppStore } from '@/store/modules/app';
   import { useTagsViewStore } from '@/store/modules/tagsView';
   import vClickOutside from '@/directives/clickOutside';
   import EventBus, { EventTypeName } from '@/utils/event-bus';
   import { getSchemaList, getSchemaObjectList } from '@/api/metaData';
-  import { loadingInstance } from '@/utils';
+  import { loadingInstance, downLoadMyBlobType } from '@/utils';
   import { useI18n } from 'vue-i18n';
   import { closeConnections } from '@/api/connect';
-  import { dropFunctionSP } from '@/api/functionSP';
-  import { dropView } from '@/api/view';
-  import { dropSequence } from '@/api/sequence';
-  import { dropSynonym } from '@/api/synonym';
   import { getDatabaseList, openDatabaseConnection, deleteDatabase } from '@/api/database';
+  import { deleteSchema, exportSchemaDdl } from '@/api/schema';
+  import { exportTableDdl } from '@/api/table';
+  import { dropFunctionSP, exportFunctionDdl } from '@/api/functionSP';
+  import { dropView, exportViewDdl } from '@/api/view';
+  import { dropSequence, exportSequenceDdl } from '@/api/sequence';
+  import { dropSynonym } from '@/api/synonym';
   import { useUserStore } from '@/store/modules/user';
   import { connectListPersist } from '@/config';
+  import { useSidebarContext } from '../hooks/useSidebarContext';
+  import type { Tree, FetchNode, ConnectInfo, RefreshOptions, NodeData } from './types';
 
   const AppStore = useAppStore();
   const TagsViewStore = useTagsViewStore();
@@ -380,7 +482,7 @@
     person = 'person', // schema
     tableCollect = 'tableCollect',
     table = 'table',
-    terminalCollect = 'codeCollect',
+    terminalCollect = 'terminalCollect',
     terminal = 'terminal',
     viewCollect = 'viewCollect',
     view = 'view',
@@ -390,38 +492,18 @@
     sequence = 'sequence',
   } */
 
-  interface Tree {
-    id: string;
-    parentId: string;
-    label: string;
-    name: string;
-    isLeaf?: boolean;
-    type?: string;
-    isConnect?: boolean;
-    connectTime: null | number;
-    uuid?: string;
-    children?: Tree[];
-    connectInfo: ConnectInfo;
-  }
-  interface ConnectInfo {
-    name: string;
-    id: string;
-    ip: string;
-    port: string;
-    userName: string;
-    uuid?: string;
-    type?: string;
-    driver?: '';
-    password?: string;
-    webUser: string;
-  }
-
   const treeClass = ref('no-tree');
   const showCreateDbDialog = ref(false);
   const showDbInfoDialog = ref(false);
+  const showCreateSchemaDialog = ref(false);
   const viewDialog = ref(false);
   const synonymDialog = ref(false);
   const sequenceDialog = ref(false);
+  const exportTableDialog = ref(false);
+  const renameTableDialog = ref(false);
+  const updateTableDescriptionDialog = ref(false);
+  const setTablespaceDialog = ref(false);
+  const setTableSchemaDialog = ref(false);
   const UserStore = useUserStore();
   const connectInfo: ConnectInfo = reactive({
     name: '',
@@ -440,20 +522,46 @@
     isLeaf: 'isLeaf',
   };
   const connectionList = ref<Array<Tree>>([]);
-  const currentContextNodeData = reactive({
+  const currentContextNodeData = reactive<NodeData>({
     id: '',
+    type: '',
     uuid: '',
     connectInfo: { id: '', name: '' } as ConnectInfo,
+    rootId: '',
+    parentId: '',
     databaseId: '',
     databaseName: '',
     schemaId: '',
     schemaName: '',
+    oid: '',
     label: '',
     name: '',
     children: [],
   });
   let loading = ref(null);
   const createDbType = ref<'create' | 'edit'>('create');
+  const createSchemaType = ref<'create' | 'edit'>('create');
+  const createSchemaData = reactive({
+    databaseName: '',
+    databaseId: '',
+    oid: '',
+    owner: '',
+  });
+
+  const systemSchema = ref([
+    'blockchain',
+    'snapshot',
+    'dbe_perf',
+    'pkg_service',
+    'cstore',
+    'pg_toast',
+    'pg_catalog',
+    'sqladvisor',
+    'dbe_pldebugger',
+    'dbe_pldeveloper',
+    'information_schema',
+    'db4ai',
+  ]);
 
   const isActive = (rou) => {
     return rou.path === route.path;
@@ -490,12 +598,18 @@
       }
     }
   };
+
+  const getConnectInfoByRootId = (rootId) => {
+    return connectionList.value.find((item) => item.id == rootId);
+  };
+
   const loadNode = async (node, resolve) => {
     if (node.data.children && node.data.children.length) {
       return resolve(node.data.children);
     } else if (node.data?.type == 'database' && node.data?.isConnect) {
       try {
         const data = await fetchSchemaList(
+          node.data.rootId,
           node.data.id,
           node.data.id,
           node.data.label,
@@ -509,6 +623,7 @@
     } else if (['public', 'person'].includes(node.data?.type)) {
       try {
         const data = await fetchSchemaContentList(
+          node.data.rootId,
           node.data.id,
           node.data.uuid,
           node.data.databaseId,
@@ -554,6 +669,7 @@
           const isConnect = !!hasConnectDb;
           return {
             id: `${id}_${dbName}`,
+            rootId: id,
             parentId: id,
             uuid: hasConnectDb?.uuid || '',
             label: dbName,
@@ -582,6 +698,7 @@
       if (list.id == rootId) {
         list.children.push({
           id: databaseId,
+          rootId,
           parentId: rootId,
           uuid: '',
           label: databaseName,
@@ -620,28 +737,30 @@
     refreshConnectListMap();
   };
 
-  const fetchSchemaList = async (parentId, databaseId, databaseName, uuid, connectInfo) => {
+  const fetchSchemaList = async (rootId, parentId, databaseId, databaseName, uuid, connectInfo) => {
     const data = (await getSchemaList({
       uuid,
       connectionName: connectInfo.name,
       webUser: UserStore.userId,
-    })) as unknown as string[];
+    })) as unknown as FetchNode[];
     const schemaList = [];
-    data.forEach((schemaName) => {
+    data.forEach((item) => {
       const obj = {
-        id: `${parentId}_${schemaName}`,
+        id: `${parentId}_${item.oid}`,
+        oid: item.oid,
+        rootId,
         parentId,
-        label: schemaName,
-        name: schemaName,
+        label: item.name,
+        name: item.name,
         connectInfo,
         databaseName,
         databaseId,
         uuid,
-        type: schemaName === 'public' ? 'public' : 'person',
+        type: item.name === 'public' ? 'public' : 'person',
         isLeaf: false,
         children: [],
       };
-      schemaName === 'public' ? schemaList.unshift(obj) : schemaList.push(obj);
+      item.name === 'public' ? schemaList.unshift(obj) : schemaList.push(obj);
     });
     const dbNode = findNode({ rootId: connectInfo.id, databaseId });
     dbNode.children = schemaList;
@@ -650,6 +769,7 @@
   };
 
   const fetchSchemaContentList = async (
+    rootId,
     parentId,
     uuid,
     databaseId,
@@ -668,6 +788,7 @@
     if (data.length) {
       arr = handleSchemaList(
         data[0],
+        rootId,
         parentId,
         uuid,
         databaseId,
@@ -682,6 +803,7 @@
   // User Mode - public/no public
   const handleSchemaList = (
     obj,
+    rootId,
     parentId,
     uuid,
     databaseId,
@@ -702,6 +824,7 @@
       const keyId = `${parentId}_${key}`;
       array.push({
         id: keyId,
+        rootId,
         parentId,
         uuid,
         label: `${label} (${obj[key].length})`,
@@ -716,6 +839,7 @@
         children: handleTypeList(
           obj[key],
           childType,
+          rootId,
           keyId,
           uuid,
           databaseId,
@@ -765,6 +889,7 @@
   const handleTypeList = (
     array,
     childType,
+    rootId,
     parentId,
     uuid,
     databaseId,
@@ -773,12 +898,15 @@
     schemaName,
     connectInfo,
   ) => {
-    return array.map((item) => ({
-      id: `${parentId}_${item}`,
+    return array.map((item: FetchNode) => ({
+      id: `${parentId}_${item.oid}`,
+      oid: item.oid,
+      parttype: item.parttype,
+      rootId,
       parentId,
       uuid,
-      label: item,
-      name: item,
+      label: item.name,
+      name: item.name,
       type: childType,
       databaseId,
       databaseName,
@@ -845,13 +973,10 @@
         const db = currentContextNodeData.children[i];
         db.isConnect && (await closeConnections(db.uuid));
       }
-      // const index = connectionList.value.findIndex((item) => item.id == currentContextNodeData.id);
       treeRef.value.remove(treeRef.value.getNode(currentContextNodeData.id));
-      // index > -1 && connectionList.value.splice(index, 1);
       updateConnectListPersist();
       refreshConnectListMap();
       if (connectionList.value.length == 0) {
-        // EventBus.notify(EventTypeName.CLOSE_ALL_TAB);
         router.push('/home');
       }
       AppStore.currentConnectNode =
@@ -933,6 +1058,7 @@
       path: '/createTerminal/' + time,
       query: {
         title,
+        fileName: title,
         rootId,
         connectInfoName,
         uuid: currentContextNodeData.uuid,
@@ -1002,14 +1128,42 @@
     treeContext.databaseVisible = false;
     showDbInfoDialog.value = true;
   };
-  interface RefreshOptions {
-    connectInfo: ConnectInfo | undefined;
-    rootId: string;
-    uuid: string;
-    databaseId: string;
-    schemaId: string;
-    nodeId: string;
-  }
+  const handleSchema = (type: 'create' | 'edit' | 'delete') => {
+    treeContext.databaseVisible = false;
+    treeContext.modeVisible = false;
+    if (type == 'create') {
+      createSchemaType.value = 'create';
+      Object.assign(createSchemaData, {
+        databaseName: currentContextNodeData.label,
+        databaseId: currentContextNodeData.id,
+        oid: '',
+        owner: currentContextNodeData.connectInfo.userName,
+      });
+      showCreateSchemaDialog.value = true;
+    } else if (type == 'edit') {
+      createSchemaType.value = 'edit';
+      Object.assign(createSchemaData, {
+        databaseName: currentContextNodeData.databaseName,
+        databaseId: currentContextNodeData.databaseId,
+        oid: currentContextNodeData.oid,
+        owner: currentContextNodeData.connectInfo.userName,
+      });
+      showCreateSchemaDialog.value = true;
+    } else {
+      ElMessageBox.confirm(t('message.deleteMode', { name: currentContextNodeData.label })).then(
+        async () => {
+          await deleteSchema({
+            uuid: currentContextNodeData.uuid,
+            schemaName: currentContextNodeData.name,
+          });
+          ElMessage.success(t('message.deleteSuccess'));
+          const rootId = currentContextNodeData.connectInfo.id;
+          refresh('database', { rootId, databaseId: currentContextNodeData.databaseId });
+        },
+      );
+    }
+  };
+
   const refresh = async (
     mode: 'connection' | 'database' | 'mode',
     options: Partial<RefreshOptions> = {
@@ -1059,6 +1213,12 @@
     });
   };
 
+  const createSchemaSuccess = () => {
+    showCreateSchemaDialog.value = false;
+    const rootId = currentContextNodeData.connectInfo.id;
+    refresh('database', { rootId, databaseId: createSchemaData.databaseId });
+  };
+
   const filterNode = (value: string, data: Tree) => {
     if (!value) return true;
     if (!data.label) return false;
@@ -1079,23 +1239,28 @@
         uuid,
         dbname: databaseName,
         schema: schemaName,
+        fileName: target.label.slice(
+          0,
+          target.label.indexOf('(') > -1 ? target.label.indexOf('(') : target.label.length,
+        ),
+        oid: target.oid,
       };
       if (target.type == 'table') {
         router.push({
           path: `/table/${target.id}`,
           query: {
-            tableName: target.label,
             ...commonParams,
+            parttype: target.parttype,
+            time: String(Date.now()),
           },
         });
       } else if (target.type == 'terminal') {
         setTimeout(() => {
           const terminalNum = TagsViewStore.maxTerminalNum + 1;
-          const time = Date.now();
+          const time = String(Date.now());
           router.push({
             path: `/debug/${encodeURIComponent(target.id)}`,
             query: {
-              funcname: target.label,
               terminalNum,
               ...commonParams,
               time,
@@ -1144,11 +1309,13 @@
     rootVisible: false,
     databaseVisible: false,
     modeVisible: false,
+    tableCollectVisible: false,
     terminalCollectVisible: false,
     functionSPVisible: false,
     viewCollectVisible: false,
     synonymCollectVisible: false,
     sequenceCollectVisible: false,
+    tableVisible: false,
     viewVisible: false,
     sequenceVisible: false,
     synonymVisible: false,
@@ -1165,6 +1332,11 @@
       (listItem) => listItem.id === currentContextNodeData.connectInfo.id,
     )?.connectedDatabase[0]?.uuid;
   });
+  const hideTreeContext = () => {
+    Object.keys(treeContext).forEach((key) => {
+      if (key.indexOf('Visible') !== -1 && treeContext[key] === true) treeContext[key] = false;
+    });
+  };
   const handleContextmenu = (event, data) => {
     const type = data.type;
     Object.assign(currentContextNodeData, data);
@@ -1172,14 +1344,14 @@
       top: event.y + 2 + 'px',
       left: event.x + 2 + 'px',
     };
-    Object.keys(treeContext).forEach((item) => {
-      if (item.indexOf('Visible') !== -1) treeContext[item] = false;
-    });
+    hideTreeContext();
     const typeMap = {
       root: 'rootVisible',
       database: 'databaseVisible',
       public: 'modeVisible',
       person: 'modeVisible',
+      tableCollect: 'tableCollectVisible',
+      table: 'tableVisible',
       terminalCollect: 'terminalCollectVisible',
       terminal: 'functionSPVisible',
       viewCollect: 'viewCollectVisible',
@@ -1192,6 +1364,27 @@
     if (Object.prototype.hasOwnProperty.call(typeMap, type)) {
       treeContext[typeMap[type]] = true;
     }
+  };
+  const hanldeCreateTable = () => {
+    const time = Date.now();
+    const connectInfo: any = currentContextNodeData.connectInfo;
+    router.push({
+      path: '/createTable/' + time,
+      query: {
+        title: 'create_table',
+        fileName: 'create_table',
+        rootId: connectInfo.id,
+        connectInfoName: connectInfo.name,
+        connectInfoId: connectInfo.id,
+        uuid: currentContextNodeData.uuid,
+        databaseName: currentContextNodeData.databaseName,
+        databaseId: currentContextNodeData.databaseId,
+        schema: currentContextNodeData.schemaName,
+        schemaId: currentContextNodeData.schemaId,
+        time,
+      },
+    });
+    treeContext.tableCollectVisible = false;
   };
   const hanldeCreate = (type: 'function' | 'procedure' | 'sql') => {
     enum titleMap {
@@ -1206,6 +1399,7 @@
       query: {
         type,
         title: titleMap[type],
+        fileName: titleMap[type],
         dbname: connectInfo.dataName,
         connectInfoName: connectInfo.name,
         connectInfoId: connectInfo.id,
@@ -1267,12 +1461,146 @@
         [type + 'Name']: currentContextNodeData.label,
         webUser: UserStore.userId,
         uuid: currentContextNodeData.uuid,
+        oid: currentContextNodeData.oid,
       };
       await api(params);
       ElMessage.success(t('message.deleteSuccess'));
       refreshModeByContext();
     });
   };
+
+  const handleExport = async (
+    type:
+      | 'modeDDL'
+      | 'modeDDLData'
+      | 'tableDDL'
+      | 'tableData'
+      | 'tableDDLData'
+      | 'functionDDL'
+      | 'viewDDL'
+      | 'sequenceDDL'
+      | 'sequenceDDLData',
+  ) => {
+    const visibleString = {
+      modeDDL: 'modeVisible',
+      modeDDLData: 'modeVisible',
+      tableDDL: 'tableVisible',
+      tableData: 'tableVisible',
+      tableDDLData: 'tableVisible',
+      functionDDL: 'functionSPVisible',
+      viewDDL: 'viewVisible',
+      sequenceDDL: 'sequenceVisible',
+      sequenceDDLData: 'sequenceVisible',
+    };
+    treeContext[visibleString[type]] = false;
+    const { uuid, schemaName: schema, oid, name } = currentContextNodeData;
+    if (type == 'tableData') {
+      exportTableDialog.value = true;
+    } else {
+      const obj = {
+        modeDDL: {
+          api: exportSchemaDdl,
+          params: {
+            uuid,
+            schema: name,
+            schemaList: [name],
+          },
+        },
+        modeDDLData: {
+          api: exportSchemaDdl,
+          params: {
+            uuid,
+            schema: name,
+            dataFlag: true,
+            schemaList: [name],
+          },
+        },
+        tableDDL: {
+          api: exportTableDdl,
+          params: {
+            uuid,
+            schema,
+            dataFlag: false,
+            tableList: [name],
+          },
+        },
+        tableDDLData: {
+          api: exportTableDdl,
+          params: {
+            uuid,
+            schema,
+            dataFlag: true,
+            tableList: [name],
+          },
+        },
+        functionDDL: {
+          api: exportFunctionDdl,
+          params: {
+            uuid,
+            schema,
+            functionMap: [oid],
+          },
+        },
+        viewDDL: {
+          api: exportViewDdl,
+          params: {
+            uuid,
+            schema,
+            viewList: [name],
+          },
+        },
+        sequenceDDL: {
+          api: exportSequenceDdl,
+          params: {
+            uuid,
+            schema,
+            sequenceList: [name],
+          },
+        },
+        sequenceDDLData: {
+          api: exportSequenceDdl,
+          params: {
+            uuid,
+            schema,
+            dataFlag: true,
+            sequenceList: [name],
+          },
+        },
+      };
+      const { api, params } = obj[type];
+      loading.value = loadingInstance();
+      try {
+        const res = await api(params);
+        downLoadMyBlobType(res.name, res.data);
+      } finally {
+        loading.value.close();
+      }
+    }
+  };
+
+  const handleTableRename = () => {
+    treeContext.tableVisible = false;
+    renameTableDialog.value = true;
+  };
+  const handleUpdateTableDescription = () => {
+    treeContext.tableVisible = false;
+    updateTableDescriptionDialog.value = true;
+  };
+  const handleSetTablespace = () => {
+    treeContext.tableVisible = false;
+    setTablespaceDialog.value = true;
+  };
+  const handleSetTableSchema = () => {
+    treeContext.tableVisible = false;
+    setTableSchemaDialog.value = true;
+  };
+
+  const { handleReindex, handleTruncate, handleVacuum, handleDropTable, handleRelatedSequence } =
+    useSidebarContext({
+      // treeContext,
+      currentContextNodeData,
+      hideTreeContext,
+    });
 
   const resetExpandNodes = () => {
     connectionList.value.forEach((level1) => {
@@ -1329,7 +1657,6 @@
   onMounted(async () => {
     // maybe update database list, and schema, databaseName... so must close all tabs.
     EventBus.listen(EventTypeName.GET_DATABASE_LIST, async (connectData) => {
-      EventBus.notify(EventTypeName.CLOSE_ALL_TAB_TO_LAST);
       connectData && Object.assign(connectInfo, connectData);
       const { connectionid, ...info } = connectData;
       const isRepeatIndex = AppStore.connectListMap.findIndex((item) => item.id == connectData.id);
@@ -1349,7 +1676,21 @@
         ? AppStore.connectListMap.splice(isRepeatIndex, 1, connectListMapItem)
         : AppStore.connectListMap.unshift(connectListMapItem);
       await fetchDBList(info, connectionid);
-      parent.location.reload();
+      if (!TagsViewStore.visitedViews.find((item) => item.name == 'home' && item.query?.rootId)) {
+        const connectInfoName = AppStore.connectListMap[0].info.name;
+        const uuid = AppStore.connectListMap[0].connectedDatabase[0]?.uuid;
+        const dbname = AppStore.connectListMap[0].connectedDatabase[0]?.name;
+        router.replace({
+          path: '/home',
+          query: {
+            rootId: AppStore.connectListMap[0].id,
+            connectInfoName,
+            uuid,
+            dbname,
+            time: Date.now(),
+          },
+        });
+      }
     });
     EventBus.listen(EventTypeName.UPDATE_DATABASE_LIST, (connectData) => {
       connectData && Object.assign(connectInfo, connectData);
@@ -1372,11 +1713,15 @@
         : AppStore.connectListMap.unshift(connectListMapItem);
       fetchDBList(info, connectionid);
     });
+    EventBus.listen(EventTypeName.REFRESH_ASIDER, async (mode, options) => {
+      refresh(mode, options);
+    });
     connectionList.value = getAllConnectList();
   });
   onUnmounted(() => {
     EventBus.unListen(EventTypeName.GET_DATABASE_LIST);
     EventBus.unListen(EventTypeName.UPDATE_DATABASE_LIST);
+    EventBus.unListen(EventTypeName.REFRESH_ASIDER);
   });
 </script>
 
@@ -1423,124 +1768,5 @@
   }
 </style>
 <style lang="scss" scoped>
-  @function border-style() {
-    @return 1px solid #d8d8d8;
-  }
-  .siderbar {
-    display: flex;
-    flex-direction: column;
-    padding: 8px;
-    user-select: none;
-  }
-  .tree {
-    width: fit-content;
-  }
-  .no-tree {
-    width: auto;
-  }
-  .database-wrapper {
-    height: 66%;
-    flex-grow: 0;
-  }
-
-  .windows-wrapper {
-    height: calc(34% - 15px);
-    margin-top: 15px;
-  }
-  .group-wrapper {
-    border: border-style();
-    display: flex;
-    flex-direction: column;
-  }
-  .icon {
-    margin-right: 6px;
-    color: #75757e;
-  }
-  .group-title-contain {
-    padding: 3px 5px;
-    display: flex;
-    justify-content: space-between;
-    border-bottom: border-style();
-    .left {
-      display: flex;
-      align-items: center;
-    }
-    .icon {
-      font-size: 19px;
-    }
-    .el-icon {
-      font-size: 18px;
-      color: #75757e;
-      cursor: pointer;
-      :hover {
-        color: var(--el-color-primary);
-      }
-    }
-  }
-  .group-search-contain {
-    margin: 5px;
-  }
-  .group-main-contain {
-    flex: 1;
-    overflow: auto;
-    margin: 5px;
-    margin-top: 0;
-    border: border-style();
-    border-radius: 4px;
-    position: relative;
-  }
-  .windows-list {
-    width: fit-content;
-    .windows-item {
-      white-space: nowrap;
-      cursor: pointer;
-      margin: 3px;
-      padding: 5px;
-      &:hover {
-        background: var(--el-bg-color-bar);
-      }
-      &.home,
-      &.home .icon {
-        color: var(--el-color-primary);
-      }
-      &.active {
-        background-color: var(--normal-color);
-      }
-      &.active,
-      &.active .icon {
-        color: var(--color-bg-2);
-      }
-    }
-  }
-
-  .context-menu {
-    position: fixed;
-    z-index: 100;
-    box-shadow: 0px 0px 12px rgba(0, 0, 0, 0.12);
-    ul {
-      padding: 3px 0;
-      margin: 0;
-      list-style-type: none;
-      border-radius: 4px;
-      background-color: var(--el-bg-color-overlay);
-    }
-    li {
-      padding: 2px 12px;
-      line-height: 20px;
-      display: flex;
-      align-items: center;
-      white-space: nowrap;
-      list-style: none;
-      margin: 0;
-      cursor: pointer;
-      outline: 0;
-      &.disabled {
-        color: var(--color-text-4);
-        cursor: not-allowed;
-      }
-      &:not(.disabled):hover {
-        background-color: var(--color-fill-2);
-      }
-    }
-  }
+  @import './sidebar.scss';
 </style>

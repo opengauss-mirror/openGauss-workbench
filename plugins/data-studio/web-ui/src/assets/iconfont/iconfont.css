@@ -1,16 +1,104 @@
 @font-face {
   font-family: "iconfont"; /* Project id 3692346 */
-  src: url('iconfont.woff2?t=1675671470686') format('woff2'),
-       url('iconfont.woff?t=1675671470686') format('woff'),
-       url('iconfont.ttf?t=1675671470686') format('truetype');
+  src: url('iconfont.woff2?t=1683169505473') format('woff2'),
+       url('iconfont.woff?t=1683169505473') format('woff'),
+       url('iconfont.ttf?t=1683169505473') format('truetype');
 }
 
 .iconfont {
-  font-family: "iconfont" !important;
+  font-family: "iconfont", sans-serif !important;
   font-size: 16px;
   font-style: normal;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+.icon-report-disabled:before {
+  content: "\ec6a";
+}
+
+.icon-report:before {
+  content: "\e615";
+}
+
+.icon-jia1:before {
+  content: "\e7e8";
+}
+
+.icon-jian1:before {
+  content: "\e7e9";
+}
+
+.icon-jia:before {
+  content: "\e600";
+}
+
+.icon-jian:before {
+  content: "\e601";
+}
+
+.icon-gou:before {
+  content: "\e662";
+}
+
+.icon-copy-add:before {
+  content: "\e66f";
+}
+
+.icon-cuo:before {
+  content: "\e635";
+}
+
+.icon-page-last:before {
+  content: "\e607";
+}
+
+.icon-page-first:before {
+  content: "\e608";
+}
+
+.icon-page-previous:before {
+  content: "\e60a";
+}
+
+.icon-page-next:before {
+  content: "\e66c";
+}
+
+.icon-page-last-line:before {
+  content: "\e622";
+}
+
+.icon-page-first-line:before {
+  content: "\e683";
+}
+
+.icon-compile:before {
+  content: "\e634";
+}
+
+.icon-compile-disabled:before {
+  content: "\ec69";
+}
+
+.icon-bianji:before {
+  content: "\e631";
+}
+
+.icon-shanchuhang:before {
+  content: "\ec67";
+}
+
+.icon-tianjiahang:before {
+  content: "\ec68";
+}
+
+.icon-clear:before {
+  content: "\e900";
+}
+
+.icon-daochu:before {
+  content: "\e611";
 }
 
 .icon-debugsinglestep-disabled:before {
@@ -19,6 +107,14 @@
 
 .icon-debugsinglestep:before {
   content: "\e606";
+}
+
+.icon-database-connected-copy:before {
+  content: "\e884";
+}
+
+.icon-database-disconnect-copy:before {
+  content: "\e885";
 }
 
 .icon-database-connected:before {

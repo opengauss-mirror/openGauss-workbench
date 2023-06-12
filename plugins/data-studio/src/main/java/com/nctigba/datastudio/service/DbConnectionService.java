@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ */
+
 package com.nctigba.datastudio.service;
 
 import com.nctigba.datastudio.model.dto.DataListDTO;
@@ -19,7 +23,7 @@ public interface DbConnectionService {
 
     DatabaseConnectionDO updateDatabaseConnection(DbConnectionCreateDTO request) throws Exception;
 
-    List<DataListDTO> dataList(String id);
+//    List<DataListDTO> dataList(String id);
 
     List<DataListDTO> schemaObjectList(DatabaseMetaarrayIdSchemaQuery schema);
 

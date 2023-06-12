@@ -1,4 +1,5 @@
 import request from './request';
+import requestBlob from './requestBlob';
 
 // createView
 export function createView(data) {
@@ -42,5 +43,14 @@ export function getViewDatas(data) {
     url: '/dataStudio/web/v1/viewDatas',
     method: 'get',
     params: data,
+  });
+}
+
+// export ddl of view
+export function exportViewDdl(data) {
+  return requestBlob({
+    url: '/dataStudio/web/v1/export/view/ddl',
+    method: 'post',
+    data,
   });
 }

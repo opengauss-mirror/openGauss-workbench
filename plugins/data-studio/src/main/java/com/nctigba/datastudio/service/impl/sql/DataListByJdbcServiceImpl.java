@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ */
+
 package com.nctigba.datastudio.service.impl.sql;
 
 import com.nctigba.datastudio.enums.ParamTypeEnum;
@@ -16,6 +20,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.nctigba.datastudio.constants.CommonConstants.NAME;
+import static com.nctigba.datastudio.constants.CommonConstants.OID;
+import static com.nctigba.datastudio.constants.CommonConstants.PARTTYPE;
 import static com.nctigba.datastudio.constants.CommonConstants.SPACE;
 import static com.nctigba.datastudio.constants.SqlConstants.GET_TYPENAME_SQL;
 
@@ -24,53 +31,66 @@ public class DataListByJdbcServiceImpl implements DataListByJdbcService {
     @Override
     public List<String> schemaListQuerySQL(String jdbcUrl, String username, String password, String sql) {
         List<String> list = new ArrayList<>();
-        try (Connection connection = ConnectionUtils.connectGet(jdbcUrl, username, password);
-             PreparedStatement ps = connection.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
+        try (
+                Connection connection = ConnectionUtils.connectGet(jdbcUrl, username, password);
+                PreparedStatement ps = connection.prepareStatement(sql);
+                ResultSet rs = ps.executeQuery()
+        ) {
             while (rs.next()) {
                 list.add(rs.getString("schema_name"));
             }
 
         } catch (Exception e) {
-            throw new CustomException(e.getMessage(),e);
+            throw new RuntimeException(e);
         }
         return list;
     }
 
     @Override
-    public DataListDTO dataListQuerySQL(String jdbcUrl, String username, String password, String tableSql, String viewSql, String fun_prosSql, String sequenceSql, String synonymSql, String schema_name) {
+    public DataListDTO dataListQuerySQL(String jdbcUrl, String username, String password, String tableSql,
+                                        String viewSql, String fun_prosSql, String sequenceSql, String synonymSql,
+                                        String schema_name) {
         DataListDTO dataList = new DataListDTO();
-        List<String> table = new ArrayList<>();
-        List<String> view = new ArrayList<>();
-        List<String> sequence = new ArrayList<>();
-        List<String> synonym = new ArrayList<>();
-        List<String> fun_pro = new ArrayList<>();
+        List<Map<String, String>> table = new ArrayList<>();
+        List<Map<String, String>> view = new ArrayList<>();
+        List<Map<String, String>> sequence = new ArrayList<>();
+        List<Map<String, String>> synonym = new ArrayList<>();
+        List<Map<String, String>> fun_pro = new ArrayList<>();
         Map funTypeMap = new HashMap<>();
-        try (Connection connection = ConnectionUtils.connectGet(jdbcUrl, username, password);
-             PreparedStatement tableValue = connection.prepareStatement(tableSql);
-             PreparedStatement viewValue = connection.prepareStatement(viewSql);
-             PreparedStatement fun_proValue = connection.prepareStatement(fun_prosSql);
-             PreparedStatement sequenceValue = connection.prepareStatement(sequenceSql);
-             PreparedStatement synonymValue = connection.prepareStatement(synonymSql);
-             PreparedStatement fun_type = connection.prepareStatement(GET_TYPENAME_SQL);
-             ResultSet rs1 = tableValue.executeQuery();
-             ResultSet rs2 = viewValue.executeQuery();
-             ResultSet rs3 = fun_proValue.executeQuery();
-             ResultSet rs4 = fun_type.executeQuery();
-             ResultSet rs5 = sequenceValue.executeQuery();
-             ResultSet rs6 = synonymValue.executeQuery();) {
+        try (
+                Connection connection = ConnectionUtils.connectGet(jdbcUrl, username, password);
+                PreparedStatement tableValue = connection.prepareStatement(tableSql);
+                PreparedStatement viewValue = connection.prepareStatement(viewSql);
+                PreparedStatement fun_proValue = connection.prepareStatement(fun_prosSql);
+                PreparedStatement sequenceValue = connection.prepareStatement(sequenceSql);
+                PreparedStatement synonymValue = connection.prepareStatement(synonymSql);
+                PreparedStatement fun_type = connection.prepareStatement(GET_TYPENAME_SQL);
+                ResultSet rs1 = tableValue.executeQuery();
+                ResultSet rs2 = viewValue.executeQuery();
+                ResultSet rs3 = fun_proValue.executeQuery();
+                ResultSet rs4 = fun_type.executeQuery();
+                ResultSet rs5 = sequenceValue.executeQuery();
+                ResultSet rs6 = synonymValue.executeQuery()
+        ) {
             while (rs1.next()) {
-                table.add(rs1.getString("tablename"));
+                Map<String, String> map = new HashMap();
+                map.put(OID, rs1.getString(OID));
+                map.put(NAME, rs1.getString("tablename"));
+                map.put(PARTTYPE, rs1.getString("parttype"));
+                table.add(map);
             }
             while (rs2.next()) {
-                view.add(rs2.getString("viewname"));
+                Map<String, String> map = new HashMap();
+                map.put(OID, rs2.getString(OID));
+                map.put(NAME, rs2.getString("viewname"));
+                view.add(map);
             }
             while (rs4.next()) {
-                funTypeMap.put(rs4.getString("oid"), rs4.getString("typname"));
+                funTypeMap.put(rs4.getString(OID), rs4.getString("typname"));
             }
             while (rs3.next()) {
                 String proArgTypes = rs3.getString("proargtypes");
-                var splited = proArgTypes.split(SPACE);
+                String[] splited = proArgTypes.split(SPACE);
                 String asd = "";
                 for (int i = 0; i < splited.length; i++) {
                     if (!StringUtils.isEmpty(splited[i])) {
@@ -84,13 +104,22 @@ public class DataListByJdbcServiceImpl implements DataListByJdbcService {
                         }
                     }
                 }
-                fun_pro.add(rs3.getString("proname") + "(" + asd + ")");
+                Map<String, String> map = new HashMap();
+                map.put(OID, rs3.getString(OID));
+                map.put(NAME, rs3.getString("proname") + "(" + asd + ")");
+                fun_pro.add(map);
             }
             while (rs5.next()) {
-                sequence.add(rs5.getString("relname"));
+                Map<String, String> map = new HashMap();
+                map.put(OID, rs5.getString(OID));
+                map.put(NAME, rs5.getString("relname"));
+                sequence.add(map);
             }
             while (rs6.next()) {
-                synonym.add(rs6.getString("synname"));
+                Map<String, String> map = new HashMap();
+                map.put(OID, rs6.getString(OID));
+                map.put(NAME, rs6.getString("synname"));
+                synonym.add(map);
             }
             dataList.setSchema_name(schema_name);
             dataList.setTable(table);
@@ -99,7 +128,7 @@ public class DataListByJdbcServiceImpl implements DataListByJdbcService {
             dataList.setSynonym(synonym);
             dataList.setFun_pro(fun_pro);
         } catch (Exception e) {
-            throw new CustomException(e.getMessage(),e);
+            throw new RuntimeException(e);
         }
         return dataList;
     }
@@ -107,15 +136,17 @@ public class DataListByJdbcServiceImpl implements DataListByJdbcService {
     @Override
     public List<String> databaseListQuerySQL(String jdbcUrl, String username, String password, String sql) {
         List<String> list = new ArrayList<>();
-        try (Connection connection = ConnectionUtils.connectGet(jdbcUrl, username, password);
-             PreparedStatement ps = connection.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
+        try (
+                Connection connection = ConnectionUtils.connectGet(jdbcUrl, username, password);
+                PreparedStatement ps = connection.prepareStatement(sql);
+                ResultSet rs = ps.executeQuery()
+        ) {
             while (rs.next()) {
                 list.add(rs.getString("dataname"));
             }
 
         } catch (Exception e) {
-            throw new CustomException(e.getMessage(),e);
+            throw new RuntimeException(e);
         }
         return list;
     }

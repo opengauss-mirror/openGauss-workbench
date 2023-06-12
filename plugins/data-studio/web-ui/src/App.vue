@@ -22,7 +22,6 @@
   import ConnectDialog from '@/views/connect/index.vue';
   import ConnectInfoDialog from '@/views/connect/Info.vue';
   import EventBus, { EventTypeName } from '@/utils/event-bus';
-  import { computed, onMounted, onUnmounted, reactive, ref } from 'vue';
   import { useAppStore } from '@/store/modules/app';
   import { useUserStore } from '@/store/modules/user';
   import { useTagsViewStore } from '@/store/modules/tagsView';

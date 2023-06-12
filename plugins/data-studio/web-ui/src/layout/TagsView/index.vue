@@ -30,7 +30,7 @@
               @contextmenu.prevent="handleContextmenu($event, tag)"
             >
               <svg-icon :icon-class="tag.meta.icon" class-name="pre-icon" />
-              <div class="tags-view-item">{{ tag.title }}</div>
+              <div class="tags-view-item" :title="tag.title">{{ tag.query.fileName }}</div>
               <el-icon
                 v-if="!isAffix(tag)"
                 @click.prevent.stop="closeSelectedTagToLastView(tag)"
@@ -63,7 +63,6 @@
 </template>
 
 <script lang="ts" setup name="TagsView">
-  import { computed, nextTick, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
   import { ElMessage } from 'element-plus';
   import betterScroll from './betterScroll.vue';
   import LangButton from '@/components/LangButton.vue';
@@ -76,8 +75,10 @@
   import { useI18n } from 'vue-i18n';
   import vClickOutside from '@/directives/clickOutside';
   import EventBus, { EventTypeName } from '@/utils/event-bus';
-
   import path from 'path-browserify';
+  import { handleEventQueueProcedure, updateEventQueue } from '@/hooks/saveData';
+  import { refreshRunningTags, deleteRunningTag } from '@/hooks/tagRunning';
+
   const route = useRoute();
   const router = useRouter();
   const TagsViewStore = useTagsViewStore();
@@ -207,39 +208,59 @@
     TagsViewStore.delViewById(viewId);
   };
 
-  const closeSelectedTagToLastView = (view) => {
+  const closeSelectedTagToLastView = async (view) => {
     contextMenu.visible = false;
-    closeSelectedTag(view);
-    if (isActive(view)) {
-      toLastView(visitedViews.value, view);
+    if (view.name == 'debugChild') {
+      return ElMessage.error(t('message.debugCannotFinish'));
+    }
+    if (deleteRunningTag(view.id)) {
+      await handleEventQueueProcedure(view);
+      closeSelectedTag(view);
+      updateEventQueue();
+      if (isActive(view)) {
+        toLastView(visitedViews.value, view);
+      }
     }
   };
 
   const closeCurrentTab = () => {
-    closeSelectedTagToLastView(contextTag.value);
+    contextMenu.visible = false;
+    if (contextTag.value.name == 'debugChild') {
+      return ElMessage.error(t('message.debugCannotFinish'));
+    }
+    if (deleteRunningTag(contextTag.value.id)) {
+      closeSelectedTagToLastView(contextTag.value);
+    }
   };
 
   const closeOtherTab = async () => {
     contextMenu.visible = false;
     const { path, name } = contextTag.value;
     for (let item of visitedViews.value) {
-      if (item.path !== path) {
+      if (item.path !== path && deleteRunningTag(item.id) && item.name !== 'debugChild') {
+        await handleEventQueueProcedure(item);
         TagsViewStore.delView(item);
       }
     }
+    updateEventQueue();
     if (path !== route.path || name == 'debugChild') {
       toLastFilterView(visitedViews.value, { name: 'debugChild' });
     }
   };
 
   const closeAllTab = async () => {
-    TagsViewStore.delAllViews();
     contextMenu.visible = false;
+    for (let item of visitedViews.value) {
+      if (item.name !== 'debugChild' && deleteRunningTag(item.id)) {
+        await handleEventQueueProcedure(item);
+        TagsViewStore.delView(item);
+      }
+    }
+    updateEventQueue();
   };
   const closeAllTabToLast = async () => {
-    let visitedViews = await TagsViewStore.delAllViews();
-    toLastView(visitedViews, route);
-    contextMenu.visible = false;
+    await closeAllTab();
+    toLastView(TagsViewStore.visitedViews, route);
   };
 
   const routerGo = (tag) => {
@@ -321,6 +342,7 @@
       path: '/createTerminal/' + time,
       query: {
         title,
+        fileName: title,
         rootId,
         connectInfoName,
         uuid,
@@ -345,6 +367,7 @@
       nextTick(() => {
         setTimeout(() => {
           moveToCurrentTag();
+          refreshRunningTags();
         }, 100);
       });
     });
@@ -356,14 +379,14 @@
       }
       next();
     });
-    EventBus.listen(EventTypeName.CLOSE_SELECTED_TAB, (view) => {
-      closeSelectedTagToLastView(view);
+    EventBus.listen(EventTypeName.CLOSE_SELECTED_TAB, async (view) => {
+      await closeSelectedTagToLastView(view);
     });
-    EventBus.listen(EventTypeName.CLOSE_ALL_TAB_TO_LAST, () => {
-      closeAllTabToLast();
+    EventBus.listen(EventTypeName.CLOSE_ALL_TAB_TO_LAST, async () => {
+      await closeAllTabToLast();
     });
-    EventBus.listen(EventTypeName.CLOSE_ALL_TAB, () => {
-      closeAllTab();
+    EventBus.listen(EventTypeName.CLOSE_ALL_TAB, async () => {
+      await closeAllTab();
     });
   });
   onUnmounted(() => {

@@ -118,7 +118,7 @@
           </el-select>
         </el-form-item>
         <el-form-item prop="name" :label="$t('connection.name')">
-          <el-input v-model="form.name" :disabled="props.type == 'edit'" />
+          <el-input v-model="form.name" :disabled="props.type == 'edit'" maxlength="60" />
         </el-form-item>
         <el-form-item prop="ip" :label="$t('connection.host')">
           <el-input v-model="form.ip" />
@@ -181,7 +181,6 @@
 </template>
 
 <script lang="ts" setup name="ConnectDialog">
-  import { computed, ref, reactive } from 'vue';
   import {
     createConnect,
     updateConnect,

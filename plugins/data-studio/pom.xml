@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-		<groupId>org.opengauss</groupId>
+	<groupId>org.opengauss</groupId>
 	<version>5.0.0</version>
 	<artifactId>webds-plugin</artifactId>
 	<packaging>jar</packaging>
@@ -21,16 +21,9 @@
 		<!-- dependency version -->
 		<spring-boot.version>2.5.6</spring-boot.version>
 		<spring-brick.version>3.1.0</spring-brick.version>
-		<junit.version>4.13</junit.version>
 		<fastjson.version>1.2.78</fastjson.version>
 		<lombok.version>1.18.24</lombok.version>
 		<hutool.version>5.0.3</hutool.version>
-
-		<es-java-client.version>8.3.3</es-java-client.version>
-		<es-java-client-jackson-databind.version>2.12.3</es-java-client-jackson-databind.version>
-		<es-java-client-jakarta.version>2.0.1</es-java-client-jakarta.version>
-		<jcraft-jsch.version>0.1.54</jcraft-jsch.version>
-		<build.frontend.skip>false</build.frontend.skip>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -39,19 +32,15 @@
 			<version>3.39.3.0</version>
 		</dependency>
 		<dependency>
-			<groupId>com.opengaussjdbc</groupId>
-			<artifactId>opengaussjdbc</artifactId>
-			<version>1.0</version>
-			<scope>system</scope>
-			<systemPath>${project.basedir}/src/main/resources/lib/opengaussjdbc.jar</systemPath>
+			<groupId>org.opengauss</groupId>
+			<artifactId>opengauss-jdbc</artifactId>
+			<version>3.0.0</version>
 		</dependency>
 		<dependency>
 			<groupId>org.opengauss</groupId>
 			<artifactId>visualtool-framework</artifactId>
 			<version>5.0.0</version>
-<!--			<scope>provided</scope>-->
 			<exclusions>
-				<!--druid-spring-boot-starter removed-->
 				<exclusion>
 					<groupId>org.springframework.boot</groupId>
 					<artifactId>spring-boot-starter-data-redis</artifactId>
@@ -73,8 +62,6 @@
 			<version>${lombok.version}</version>
 			<scope>provided</scope>
 		</dependency>
-
-		<!-- common -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
@@ -96,9 +83,6 @@
 			<artifactId>hutool-all</artifactId>
 			<version>${hutool.version}</version>
 		</dependency>
-		<!-- common -->
-
-		<!-- data -->
 		<dependency>
 			<groupId>com.alibaba</groupId>
 			<artifactId>druid-spring-boot-starter</artifactId>
@@ -110,19 +94,9 @@
 			<version>42.2.24</version>
 		</dependency>
 		<dependency>
-			<groupId>com.fasterxml.jackson.core</groupId>
-			<artifactId>jackson-databind</artifactId>
-			<version>${es-java-client-jackson-databind.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>jakarta.json</groupId>
-			<artifactId>jakarta.json-api</artifactId>
-			<version>${es-java-client-jakarta.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>com.jcraft</groupId>
-			<artifactId>jsch</artifactId>
-			<version>${jcraft-jsch.version}</version>
+			<groupId>org.jsoup</groupId>
+			<artifactId>jsoup</artifactId>
+			<version>1.15.1</version>
 		</dependency>
 	</dependencies>
 	<dependencyManagement>
@@ -272,7 +246,7 @@
 				<artifactId>exec-maven-plugin</artifactId>
 				<version>1.6.0</version>
 				<configuration>
-					<skip>${build.frontend.skip}</skip>
+					<skip>false</skip>
 				</configuration>
 				<executions>
 					<execution>
@@ -337,11 +311,5 @@
 				</executions>
 			</plugin>
 		</plugins>
-		<resources>
-			<resource>
-				<directory>src/main/resources</directory>
-				<filtering>true</filtering>
-			</resource>
-		</resources>
 	</build>
 </project>

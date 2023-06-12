@@ -19,14 +19,10 @@ router.beforeEach(async (to, from, next) => {
   const isDSConnect = JSON.parse(
     connectListPersist.storage.getItem(connectListPersist.key) || '[]',
   );
-  if (isDSConnect.length) {
-    next();
+  if (isDSConnect.length == 0 && to.name == 'home' && to.fullPath != '/home') {
+    next({ path: '/home' });
   } else {
-    if (to.fullPath == '/home') {
-      next();
-    } else {
-      next({ path: '/home' });
-    }
+    next();
   }
 });
 

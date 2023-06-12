@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ */
+
 package com.nctigba.datastudio.service.impl.debug;
 
 import com.alibaba.fastjson.JSON;
@@ -17,13 +21,12 @@ import static com.nctigba.datastudio.enums.MessageEnum.other;
 @Slf4j
 @Service("connection")
 public class ConnectionImpl implements OperationInterface {
-
     @Override
     public void operate(WebSocketServer webSocketServer, Object obj) throws Exception {
         PublicParamReq paramReq = (PublicParamReq) obj;
         String windowName = paramReq.getWindowName();
         log.info("connection paramReq is: " + paramReq);
-        if(!conMap.containsKey(paramReq.getUuid())){
+        if (!conMap.containsKey(paramReq.getUuid())) {
             throw new CustomException(LocaleString.transLanguageWs("1004", webSocketServer));
         }
         Connection connection = webSocketServer.createConnection(paramReq.getUuid(), windowName);

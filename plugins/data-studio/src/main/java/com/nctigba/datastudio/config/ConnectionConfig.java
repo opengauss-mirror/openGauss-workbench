@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ */
+
 package com.nctigba.datastudio.config;
 
 import com.nctigba.datastudio.dao.ConnectionMapDAO;
@@ -19,7 +23,7 @@ public class ConnectionConfig {
     private DbConnectionServiceImpl dbConnectionServiceImpl;
 
     public Connection connectDatabase(String uuid) throws Exception {
-        if(!conMap.containsKey(uuid)){
+        if (!conMap.containsKey(uuid)) {
             throw new CustomException(LocaleString.transLanguage("1004"));
         }
         ConnectionDTO connectionDTO = conMap.get(uuid);
@@ -33,7 +37,7 @@ public class ConnectionConfig {
     }
 
     public Connection connectDatabaseMap(String uuid, String winName) throws Exception {
-        if(!conMap.containsKey(uuid)){
+        if (!conMap.containsKey(uuid)) {
             throw new CustomException(LocaleString.transLanguage("1004"));
         }
         ConnectionDTO connectionDTO = conMap.get(uuid);

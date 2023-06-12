@@ -27,11 +27,7 @@
           align="center"
           :label="$t('paramsDialog.column.dataType')"
         />
-        <el-table-column
-          prop="value"
-          align="center"
-          :label="$t('paramsDialog.column.value')"
-        >
+        <el-table-column prop="value" align="center" :label="$t('paramsDialog.column.value')">
           <template #default="scope">
             <el-input v-model="scope.row.value" />
           </template>
@@ -47,10 +43,8 @@
 </template>
 
 <script lang="ts" setup>
-  import { computed, ref, watch } from 'vue';
-
   interface Data {
-    name: string;
+    name: string | null;
     type: string;
     value: string;
   }
@@ -93,9 +87,7 @@
   const cancel = () => {
     if (timer.value) return;
     visible.value = false;
-    if (isStop.value) {
-      myEmit('cancel');
-    }
+    if (isStop.value) myEmit('cancel');
     timer.value = setTimeout(() => {
       timer.value = null;
     }, 400);

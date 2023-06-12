@@ -26,5 +26,5 @@ export const prevTokenPersist = {
   storage: localStorage,
 };
 
-export const wsHeartbeatTime = 1000 * 30;
-export const httpHeartbeatTime = 1000 * 30;
+export const wsHeartbeatTime = 1000 * 60 * 5;
+export const httpHeartbeatTime = 1000 * 60 * 5;

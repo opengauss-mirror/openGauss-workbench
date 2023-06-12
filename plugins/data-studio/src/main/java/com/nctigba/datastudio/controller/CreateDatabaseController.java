@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ */
+
 package com.nctigba.datastudio.controller;
 
 import com.nctigba.datastudio.model.dto.CreateDatabaseDTO;
@@ -7,7 +11,12 @@ import com.nctigba.datastudio.model.entity.DatabaseConnectionDO;
 import com.nctigba.datastudio.service.CreateDatabaseService;
 import io.swagger.annotations.Api;
 import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
 import java.util.Map;
@@ -45,6 +54,7 @@ public class CreateDatabaseController {
     public Map<String, Object> databaseAttribute(DatabaseNameDTO request) throws Exception {
         return creaeteDatabaseService.databaseAttribute(request);
     }
+
     @GetMapping(value = "/database/attribute/update", produces = MediaType.APPLICATION_JSON_VALUE)
     public Map<String, Object> databaseAttributeUpdate(DatabaseNameDTO request) throws Exception {
         return creaeteDatabaseService.databaseAttributeUpdate(request);

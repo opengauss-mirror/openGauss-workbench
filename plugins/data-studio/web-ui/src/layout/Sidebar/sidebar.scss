@@ -1,0 +1,120 @@
+@function border-style() {
+  @return 1px solid #d8d8d8;
+}
+.siderbar {
+  display: flex;
+  flex-direction: column;
+  padding: 8px;
+  user-select: none;
+}
+.tree {
+  width: fit-content;
+}
+.no-tree {
+  width: auto;
+}
+.database-wrapper {
+  height: 66%;
+  flex-grow: 0;
+}
+
+.windows-wrapper {
+  height: calc(34% - 15px);
+  margin-top: 15px;
+}
+.group-wrapper {
+  border: border-style();
+  display: flex;
+  flex-direction: column;
+}
+.icon {
+  margin-right: 6px;
+  color: #75757e;
+}
+.group-title-contain {
+  padding: 3px 5px;
+  display: flex;
+  justify-content: space-between;
+  border-bottom: border-style();
+  .left {
+    display: flex;
+    align-items: center;
+  }
+  .icon {
+    font-size: 19px;
+  }
+  .el-icon {
+    font-size: 18px;
+    color: #75757e;
+    cursor: pointer;
+    :hover {
+      color: var(--el-color-primary);
+    }
+  }
+}
+.group-search-contain {
+  margin: 5px;
+}
+.group-main-contain {
+  flex: 1;
+  overflow: auto;
+  margin: 5px;
+  margin-top: 0;
+  border: border-style();
+  border-radius: 4px;
+  position: relative;
+}
+.windows-list {
+  width: fit-content;
+  .windows-item {
+    white-space: nowrap;
+    cursor: pointer;
+    margin: 3px;
+    padding: 5px;
+    &:hover {
+      background: var(--el-bg-color-bar);
+    }
+    &.home,
+    &.home .icon {
+      color: var(--el-color-primary);
+    }
+    &.active {
+      background-color: var(--normal-color);
+    }
+    &.active,
+    &.active .icon {
+      color: var(--color-bg-2);
+    }
+  }
+}
+
+.context-menu {
+  position: fixed;
+  z-index: 100;
+  box-shadow: 0px 0px 12px rgba(0, 0, 0, 0.12);
+  ul {
+    padding: 3px 0;
+    margin: 0;
+    list-style-type: none;
+    border-radius: 4px;
+    background-color: var(--el-bg-color-overlay);
+  }
+  li {
+    padding: 2px 12px;
+    line-height: 20px;
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+    list-style: none;
+    margin: 0;
+    cursor: pointer;
+    outline: 0;
+    &.disabled {
+      color: var(--color-text-4);
+      cursor: not-allowed;
+    }
+    &:not(.disabled):hover {
+      background-color: var(--color-fill-2);
+    }
+  }
+}
