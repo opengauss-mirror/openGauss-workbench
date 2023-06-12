@@ -302,7 +302,7 @@
         </a-table>
         <add-host
           ref="addHostRef"
-          @finish="getListData"
+          @finish="labelClose"
         ></add-host>
         <host-pwd-dlg
           ref="hostPwdRef"

@@ -266,8 +266,18 @@ const getHostList = () => {
       res.data.forEach((item: KeyValue) => {
         data.hostObj[item.hostId] = item
       })
-      if (form.value.clusterRole === ClusterRoleEnum.MASTER) {
+      // if (form.value.clusterRole === ClusterRoleEnum.MASTER) {
+      //   form.value.hostId = res.data[0].hostId
+      // }
+      if (!form.value.hostId) {
         form.value.hostId = res.data[0].hostId
+      } else {
+        const getOldHost = data.hostList.find((item: KeyValue) => {
+          return item.hostId === form.value.hostId
+        })
+        if (!getOldHost) {
+          form.value.hostId = ''
+        }
       }
       changeHostId()
     } else {

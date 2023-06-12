@@ -151,6 +151,14 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
         EnterpriseInstallNodeConfig masterNodeConfig = installContext.getEnterpriseInstallConfig().getNodeConfigList().stream().filter(nodeConfig -> nodeConfig.getClusterRole() == ClusterRoleEnum.MASTER).findFirst().orElseThrow(() -> new OpsException("Master node information not found"));
         String masterHostId = masterNodeConfig.getHostId();
 
+        for (HostInfoHolder hostInfoHolder : installContext.getHostInfoHolders()) {
+            OpsHostEntity hostEntity = hostInfoHolder.getHostEntity();
+            Session currentRoot = loginWithUser(jschUtil, encryptionUtils,
+                    installContext.getHostInfoHolders(), true, hostEntity.getHostId(), null);
+            installDependency( jschUtil, currentRoot, retSession );
+            currentRoot.disconnect();
+        }
+
         // root
         Session rootSession = loginWithUser(jschUtil, encryptionUtils, installContext.getHostInfoHolders(), true, masterHostId, null);
 

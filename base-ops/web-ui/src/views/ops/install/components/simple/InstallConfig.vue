@@ -439,8 +439,8 @@ const changeHostId = () => {
             data.form.installUserId = findOne.hostUserId
             data.form.installUserName = findOne.username
           } else {
-            data.form.installUserId = ''
-            data.form.installUserName = ''
+            data.form.installUserId = userListByHost.value[0].hostUserId
+            data.form.installUserName = userListByHost.value[0].username
           }
         } else {
           if (userListByHost.value.length) {
