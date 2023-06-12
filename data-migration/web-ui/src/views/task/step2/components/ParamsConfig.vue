@@ -395,34 +395,6 @@ const moreValueChange = (row, rowIndex) => {
   }
 }
 
-const moreValueChange = (row, rowIndex) => {
-  if (row.paramType === 9) {
-    const subData = JSON.parse(row.paramExtends)
-    if (row.paramValue && row.paramValue !== '0') {
-      // delete
-      const subKeyPrefixs = subData.map(sub => sub.subKeyPrefix)
-      moreData.value = moreData.value.filter(item => item.paramType === 9 || !subKeyPrefixs.some(prefix => item.paramKey.includes(prefix)))
-      // add
-      const addNum = +row.paramValue
-      const arr = []
-      for (let i = 0; i < addNum; i++) {
-        for (let j = 0; j < subData.length; j++) {
-          arr.push({
-            paramKey: subData[j]['subKeyPrefix'] + `${i + 1}`,
-            paramValue: subData[j]['defaultValue'],
-            paramDesc: subData[j]['desc'],
-            paramType: subData[j]['dataType']
-          })
-        }
-      }
-      moreData.value.splice(rowIndex + 1, 0, ...arr)
-    } else {
-      const subKeyPrefixs = subData.map(sub => sub.subKeyPrefix)
-      moreData.value = moreData.value.filter(item => item.paramType === 9 || !subKeyPrefixs.some(prefix => item.paramKey.includes(prefix)))
-    }
-  }
-}
-
 const getDefaultParams = () => {
   defaultParams().then((res) => {
     defaultData.basic = res.data.slice(0, 12)
