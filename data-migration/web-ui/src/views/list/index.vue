@@ -130,6 +130,18 @@
                   <template #default>{{$t('list.index.5q08sf2dka40')}}</template>
                 </a-button>
               </a-popconfirm>
+              <a-button
+                v-if="record.execStatus === 2"
+                :loading="record.startLoading"
+                size="mini"
+                type="text"
+                @click="resetTask(record)"
+              >
+                <template #icon>
+                  <icon-refresh />
+                </template>
+                <template #default>{{$t('list.index.5q08sf2diqs0')}}</template>
+              </a-button>
             </template>
           </a-table-column>
         </template>
@@ -141,7 +153,7 @@
 <script setup>
 import { reactive, ref, onMounted } from 'vue'
 import { Message } from '@arco-design/web-vue'
-import { list, start, stop, deleteTask, userList } from '@/api/list'
+import { list, start, stop, reset, deleteTask, userList } from '@/api/list'
 import dayjs from 'dayjs'
 import useTheme from '@/hooks/theme'
 import { useI18n } from 'vue-i18n'
@@ -262,6 +274,12 @@ const startTask = async row => {
 const stopTask = async row => {
   await stop(row.id)
   Message.success('Stop success')
+  getList()
+}
+// reset task
+const resetTask = async row => {
+  await reset(row.id)
+  Message.success('Reset success')
   getList()
 }
 

@@ -59,7 +59,7 @@ public enum BusinessType {
      * start
      */
     START,
-
+    
     /**
      * stop
      */
@@ -74,4 +74,9 @@ public enum BusinessType {
      * uninstall
      */
     UNINSTALL,
+    
+    /**
+     * reset
+     */
+    RESET
 }

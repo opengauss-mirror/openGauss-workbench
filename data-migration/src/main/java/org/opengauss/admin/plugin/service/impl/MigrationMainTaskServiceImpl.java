@@ -416,6 +416,23 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
         updateStatus(id, MainTaskStatus.RUNNING);
         return AjaxResult.success();
     }
+    
+    @Override
+    public AjaxResult resetTask(Integer id) {
+        MigrationMainTask mainTask = getById(id);
+        if (mainTask == null || mainTask.getId() == null) {
+            return AjaxResult.error(MigrationErrorCode.MAIN_TASK_NOT_EXISTS_ERROR.getCode(), MigrationErrorCode.MAIN_TASK_NOT_EXISTS_ERROR.getMsg());
+        }
+        if (!mainTask.getExecStatus().equals(MainTaskStatus.FINISH.getCode())) {
+            return AjaxResult.error(MigrationErrorCode.MAIN_TASK_IS_RUNNING_ERROR.getCode(), MigrationErrorCode.MAIN_TASK_IS_RUNNING_ERROR.getMsg());
+        }
+        mainTask.setExecStatus(MainTaskStatus.NOT_RUN.getCode());
+        mainTask.setFinishTime(null);
+        mainTask.setExecTime(null);
+        mainTask.setExecProgress("0.0");
+        migrationMainTaskMapper.updateById(mainTask);
+        return AjaxResult.success();
+    }
 
     @Override
     public void finishTask(Integer id) {
