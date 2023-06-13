@@ -12,6 +12,10 @@ export function stop (id) {
   return axios.post(`/plugins/data-migration/migration/finish/${id}`)
 }
 
+export function reset (id) {
+  return axios.post(`/plugins/data-migration/migration/reset/${id}`)
+}
+
 export function deleteTask (ids) {
   return axios.delete(`/plugins/data-migration/migration/${ids}`)
 }

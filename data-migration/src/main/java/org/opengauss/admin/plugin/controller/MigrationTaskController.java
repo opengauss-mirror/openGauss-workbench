@@ -79,8 +79,6 @@ public class MigrationTaskController extends BaseController {
         return getDataTable(list);
     }
 
-
-
     /**
      * page subtask list
      */
@@ -140,6 +138,15 @@ public class MigrationTaskController extends BaseController {
     @PostMapping("/start/{id}")
     public AjaxResult start(@PathVariable Integer id ) {
         return migrationMainTaskService.startTask(id);
+    }
+    
+    /**
+     * reset task
+     */
+    @Log(title = "task", businessType = BusinessType.RESET)
+    @PostMapping("/reset/{id}")
+    public AjaxResult reset(@PathVariable Integer id ) {
+        return migrationMainTaskService.resetTask(id);
     }
 
     /**

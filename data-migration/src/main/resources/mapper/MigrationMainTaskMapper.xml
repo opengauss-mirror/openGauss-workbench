@@ -67,6 +67,4 @@
             DISTINCT create_user
         FROM tb_migration_main_task
     </select>
-
-
 </mapper>
