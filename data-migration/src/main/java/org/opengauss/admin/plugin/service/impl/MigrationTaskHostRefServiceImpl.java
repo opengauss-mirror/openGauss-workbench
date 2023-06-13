@@ -26,6 +26,7 @@ package org.opengauss.admin.plugin.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.ListUtil;
+import cn.hutool.core.thread.ThreadUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -78,6 +79,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.stream.Collectors;
 
 /**
@@ -151,41 +156,56 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
      */
     @Override
     public List<MigrationHostDto> getHosts() {
+        ThreadPoolExecutor taskExecutor = ThreadUtil.newExecutor(15, 30);
         List<OpsHostEntity> opsHostEntities = hostFacade.listAll();
-        List<MigrationHostDto> result = new ArrayList<>();
+        List<Future<MigrationHostDto>> futureList = new ArrayList<>();
         for (OpsHostEntity host : opsHostEntities) {
-            MigrationHostDto eachOne = new MigrationHostDto();
-            eachOne.setHostInfo(host);
-            List<MigrationTask> tasks = migrationTaskService.listRunningTaskByHostId(host.getHostId());
-            eachOne.setTasks(tasks);
-            MigrationHostPortalInstall installHost = migrationHostPortalInstallHostService.getOneByHostId(host.getHostId());
-            if (installHost == null) {
-                OpsHostEntity opsHost = hostFacade.getById(host.getHostId());
-                String[] opsHosInfo = getOpsHosInfo(host.getHostId(), opsHost.getPublicIp(), opsHost.getPort());
-                if (opsHosInfo.length == 0) {
-                    continue;
-                }
-                eachOne.setBaseInfos(ListUtil.toList(opsHosInfo));
-                eachOne.setInstallPortalStatus(PortalInstallStatus.NOT_INSTALL.getCode());
-            } else {
-                String[] hostInfo = PortalHandle.getHostBaseInfo(installHost.getHost(), installHost.getPort(),
-                        installHost.getRunUser(), installHost.getRunPassword());
-                if (hostInfo.length == 0) {
-                    continue;
-                }
-                eachOne.setBaseInfos(ListUtil.toList(hostInfo));
-                eachOne.setInstallInfo(installHost);
-                if (installHost.getInstallStatus().equals(PortalInstallStatus.INSTALLED.getCode())) {
-                    boolean isInstallPortal = PortalHandle.checkInstallPortal(installHost.getHost(),
-                            installHost.getPort(), installHost.getRunUser(), installHost.getRunPassword(),
-                            installHost.getInstallPath());
-                    eachOne.setInstallPortalStatus(isInstallPortal ? PortalInstallStatus.INSTALLED.getCode()
-                            : PortalInstallStatus.NOT_INSTALL.getCode());
+            Future<MigrationHostDto> future = taskExecutor.submit(() -> {
+                MigrationHostDto eachOne = new MigrationHostDto();
+                eachOne.setHostInfo(host);
+                List<MigrationTask> tasks = migrationTaskService.listRunningTaskByHostId(host.getHostId());
+                eachOne.setTasks(tasks);
+                MigrationHostPortalInstall installHost = migrationHostPortalInstallHostService.getOneByHostId(host.getHostId());
+                if (installHost == null) {
+                    OpsHostEntity opsHost = hostFacade.getById(host.getHostId());
+                    String[] opsHosInfo = getOpsHosInfo(host.getHostId(), opsHost.getPublicIp(), opsHost.getPort());
+                    if (opsHosInfo.length == 0) {
+                        return null;
+                    }
+                    eachOne.setBaseInfos(ListUtil.toList(opsHosInfo));
+                    eachOne.setInstallPortalStatus(PortalInstallStatus.NOT_INSTALL.getCode());
                 } else {
-                    eachOne.setInstallPortalStatus(installHost.getInstallStatus());
+                    String[] hostInfo = PortalHandle.getHostBaseInfo(installHost.getHost(), installHost.getPort(),
+                            installHost.getRunUser(), installHost.getRunPassword());
+                    if (hostInfo.length == 0) {
+                        return null;
+                    }
+                    eachOne.setBaseInfos(ListUtil.toList(hostInfo));
+                    eachOne.setInstallInfo(installHost);
+                    if (installHost.getInstallStatus().equals(PortalInstallStatus.INSTALLED.getCode())) {
+                        boolean isInstallPortal = PortalHandle.checkInstallPortal(installHost.getHost(),
+                                installHost.getPort(), installHost.getRunUser(), installHost.getRunPassword(),
+                                installHost.getInstallPath());
+                        eachOne.setInstallPortalStatus(isInstallPortal ? PortalInstallStatus.INSTALLED.getCode()
+                                : PortalInstallStatus.NOT_INSTALL.getCode());
+                    } else {
+                        eachOne.setInstallPortalStatus(installHost.getInstallStatus());
+                    }
                 }
+                return eachOne;
+            });
+            futureList.add(future);
+        }
+        List<MigrationHostDto> result = new ArrayList<>();
+        for (Future<MigrationHostDto> item: futureList) {
+            try {
+                MigrationHostDto futureResult = item.get();
+                if (futureResult != null) {
+                    result.add(futureResult);
+                }
+            } catch (ExecutionException | InterruptedException e) {
+                log.error("get host future result failed: " + e.getMessage());
             }
-            result.add(eachOne);
         }
         return result;
     }

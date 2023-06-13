@@ -236,6 +236,8 @@ const props = defineProps({
   taskInfo: Object,
 })
 
+const basicRowCount = 13
+
 const emits = defineEmits(['update:open', 'syncGlobalParams', 'syncTaskParams'])
 
 const visible = ref(false)
@@ -397,11 +399,12 @@ const moreValueChange = (row, rowIndex) => {
 
 const getDefaultParams = () => {
   defaultParams().then((res) => {
-    defaultData.basic = res.data.slice(0, 12)
-    defaultData.more = res.data.slice(12)
+    fillDefaultData(res.data)
+    defaultData.basic = res.data.slice(0, basicRowCount)
+    defaultData.more = res.data.slice(basicRowCount)
     const data = JSON.parse(JSON.stringify(res.data))
-    form.basicData = data.slice(0, 12)
-    form.moreData = data.slice(12)
+    form.basicData = data.slice(0, basicRowCount)
+    form.moreData = data.slice(basicRowCount)
 
     if (props.mode === 1) {
       if (props.globalParams.basic.length) {
@@ -489,6 +492,14 @@ const getDefaultParams = () => {
           return findItem ? { ...item, ...findItem } : item
         })
       }
+    }
+  })
+}
+
+const fillDefaultData = (data) => {
+  data.forEach((item) => {
+    if (item.paramType === PORTAL_PARAM_TYPE.VAR && item.paramKey === 'opengauss.database.schema') {
+      item.paramValue = props.taskInfo.sourceDBName
     }
   })
 }
