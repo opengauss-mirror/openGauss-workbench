@@ -286,6 +286,12 @@ const resetTask = async row => {
 // remove a task
 const deleteTheTask = async row => {
   await deleteTask(row.id)
+  window.$wujie?.bus.$emit('opengauss-close-special-tab', {
+    fullPath: `/static-plugin/data-migration/taskDetail?id=${row.id}`
+  })
+  window.$wujie?.bus.$emit('opengauss-close-special-tab', {
+    fullPath: `/static-plugin/data-migration/taskConfig?id=${row.id}`
+  })
   selectedKeys.value = []
   Message.success('Delete success')
   if (tableData.value.length === 1 && queryParams.pageNum !== 1) {
@@ -301,6 +307,14 @@ const deleteMore = async () => {
     return
   }
   await deleteTask(selectedKeys.value.join(','))
+  selectedKeys.value.forEach(item => {
+    window.$wujie?.bus.$emit('opengauss-close-special-tab', {
+      fullPath: `/static-plugin/data-migration/taskDetail?id=${item}`
+    })
+    window.$wujie?.bus.$emit('opengauss-close-special-tab', {
+      fullPath: `/static-plugin/data-migration/taskConfig?id=${item}`
+    })
+  })
   if (tableData.value.length === selectedKeys.value.length && queryParams.pageNum !== 1) {
     queryParams.pageNum--
   }
