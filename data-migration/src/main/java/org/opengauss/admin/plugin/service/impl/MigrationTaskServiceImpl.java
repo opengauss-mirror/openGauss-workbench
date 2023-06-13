@@ -353,13 +353,14 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
         Map<String, Integer> triggerCounts = calculateDatabaseObjectCount(triggers, 1);
         Map<String, Integer> produceCounts = calculateDatabaseObjectCount(produces, 1);
 
-        int tableFinishCount = MapUtil.getInt(tableCounts, "runningCount");
-        int viewFinishCount = MapUtil.getInt(viewCounts, "runningCount");
-        int funcsFinishCount = MapUtil.getInt(funcCounts, "runningCount");
-        int triggersFinishCount = MapUtil.getInt(triggerCounts, "runningCount");
-        int producesFinishCount = MapUtil.getInt(produceCounts, "runningCount");
+        int tableFinishCount = MapUtil.getInt(tableCounts, "finishCount");
+        int viewFinishCount = MapUtil.getInt(viewCounts, "finishCount");
+        int funcsFinishCount = MapUtil.getInt(funcCounts, "finishCount");
+        int triggersFinishCount = MapUtil.getInt(triggerCounts, "finishCount");
+        int producesFinishCount = MapUtil.getInt(produceCounts, "finishCount");
 
-        Integer totalFinishCount = tableFinishCount * 10 + viewFinishCount + funcsFinishCount + triggersFinishCount + producesFinishCount;
+        Integer totalFinishCount = tableFinishCount * 10 + viewFinishCount + funcsFinishCount + triggersFinishCount
+                + producesFinishCount;
         BigDecimal result = new BigDecimal(0);
         if (totalFinishCount > 0 && total > 0) {
             result = new BigDecimal((float) totalFinishCount / total);
