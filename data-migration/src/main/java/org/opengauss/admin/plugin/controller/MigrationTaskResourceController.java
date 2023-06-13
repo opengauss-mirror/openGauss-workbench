@@ -27,20 +27,25 @@ package org.opengauss.admin.plugin.controller;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
+import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 import org.opengauss.admin.common.core.domain.AjaxResult;
 import org.opengauss.admin.common.core.domain.UploadInfo;
 import org.opengauss.admin.common.core.domain.model.ops.OpsClusterNodeVO;
 import org.opengauss.admin.common.core.domain.model.ops.jdbc.JdbcDbClusterVO;
+import org.opengauss.admin.common.exception.ops.OpsException;
 import org.opengauss.admin.plugin.base.BaseController;
 import org.opengauss.admin.plugin.domain.MigrationHostPortalInstall;
 import org.opengauss.admin.plugin.dto.CustomDbResource;
+import org.opengauss.admin.plugin.exception.PortalInstallException;
 import org.opengauss.admin.plugin.service.MigrationTaskHostRefService;
 import org.opengauss.admin.plugin.utils.FileUtils;
 import org.opengauss.admin.plugin.vo.TargetClusterVO;
+import org.opengauss.admin.system.plugin.facade.HostUserFacade;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
 import java.beans.PropertyEditorSupport;
@@ -65,6 +70,9 @@ public class MigrationTaskResourceController extends BaseController {
     @Autowired
     private MigrationTaskHostRefService migrationTaskHostRefService;
 
+    @Autowired
+    @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
+    private HostUserFacade hostUserFacade;
 
     /**
      * retrieve the source and target cluster
@@ -122,6 +130,11 @@ public class MigrationTaskResourceController extends BaseController {
         return AjaxResult.success(migrationTaskHostRefService.getHosts());
     }
 
+    @GetMapping("/listAllHostUser")
+    public AjaxResult listAllHostUser(@RequestParam("hostIds") List<String> hostIds) {
+        return AjaxResult.success(hostUserFacade.listHostUserByHostIdList(hostIds));
+    }
+
     @PostMapping("/saveCustomMysql")
     public AjaxResult saveCustomMysql(@RequestBody CustomDbResource dbResource) {
         migrationTaskHostRefService.saveDbResource(dbResource);
@@ -137,6 +150,12 @@ public class MigrationTaskResourceController extends BaseController {
     public AjaxResult installPortal(@PathVariable String hostId, @ModelAttribute MigrationHostPortalInstall install) {
         addSplashToPath(install);
         return migrationTaskHostRefService.installPortal(hostId, install);
+    }
+
+    @PostMapping("/installPortalFromDatakit/{hostId}")
+    public AjaxResult installPortalFromDatakit(@PathVariable String hostId, @ModelAttribute MigrationHostPortalInstall install) {
+        addSplashToPath(install);
+        return migrationTaskHostRefService.installPortalFromDatakit(hostId, install, getUserId());
     }
 
     @PostMapping("/retryInstallPortal/{hostId}")
@@ -166,6 +185,16 @@ public class MigrationTaskResourceController extends BaseController {
     @DeleteMapping("/deletePortal/{hostId}")
     public AjaxResult deletePortal(@PathVariable String hostId, @RequestParam(required = false) Boolean onlyPkg) {
         return migrationTaskHostRefService.deletePortal(hostId, onlyPkg);
+    }
+
+    @PostMapping("/uploadPortal")
+    public AjaxResult upload(@RequestParam MultipartFile file) {
+        try {
+            UploadInfo info = migrationTaskHostRefService.upload(file, getUserId());
+            return AjaxResult.success(info.toVO());
+        } catch (PortalInstallException ex) {
+            return AjaxResult.error(ex.getMessage());
+        }
     }
 
     private void addSplashToPath(MigrationHostPortalInstall install) {

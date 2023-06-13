@@ -26,14 +26,18 @@ package org.opengauss.admin.plugin.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import org.opengauss.admin.common.core.domain.AjaxResult;
+import org.opengauss.admin.common.core.domain.UploadInfo;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
 import org.opengauss.admin.common.core.domain.model.ops.OpsClusterNodeVO;
 import org.opengauss.admin.common.core.domain.model.ops.jdbc.JdbcDbClusterVO;
+import org.opengauss.admin.common.exception.ops.OpsException;
 import org.opengauss.admin.plugin.domain.MigrationHostPortalInstall;
 import org.opengauss.admin.plugin.domain.MigrationTaskHostRef;
 import org.opengauss.admin.plugin.dto.CustomDbResource;
 import org.opengauss.admin.plugin.dto.MigrationHostDto;
+import org.opengauss.admin.plugin.exception.PortalInstallException;
 import org.opengauss.admin.plugin.vo.TargetClusterVO;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Map;
@@ -82,9 +86,13 @@ public interface MigrationTaskHostRefService extends IService<MigrationTaskHostR
 
     AjaxResult installPortal(String hostId, MigrationHostPortalInstall install);
 
+    AjaxResult installPortalFromDatakit(String hostId, MigrationHostPortalInstall install, Integer userId) throws PortalInstallException;
+
     AjaxResult deletePortal(String hostId, Boolean onlyPkg);
 
     AjaxResult retryInstallPortal(String hostId, MigrationHostPortalInstall install);
 
     String getPortalInstallLog(String hostId);
+
+    UploadInfo upload(MultipartFile file, Integer userId) throws PortalInstallException;
 }

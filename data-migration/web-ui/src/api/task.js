@@ -56,11 +56,19 @@ export function installPortal (hostId, params) {
   return axios.post(`/plugins/data-migration/resource/installPortal/${hostId}`, params)
 }
 
+export function installPortalFromDatakit (hostId, params) {
+  return axios.post(`/plugins/data-migration/resource/installPortalFromDatakit/${hostId}`, params)
+}
+
 export function reInstallPortal (hostId, params) {
   return axios.post(`/plugins/data-migration/resource/retryInstallPortal/${hostId}`, params)
 }
 
 export function deletePortal (hostId, onlyPkg = false) {
   return axios.delete(`/plugins/data-migration/resource/deletePortal/${hostId}`, { params: { onlyPkg: onlyPkg }})
+}
+
+export function listHostUserByHostIds (hostIds) {
+  return axios.get('/plugins/data-migration/resource/listAllHostUser', { params: { hostIds: hostIds }})
 }
 

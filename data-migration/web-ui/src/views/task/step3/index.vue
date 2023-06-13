@@ -76,6 +76,9 @@
             >{{ $t('step3.index.5q093f8y94c0') }}<b>{{ selectedKeys.length }}</b
             >{{ $t('step3.index.5q093f8y9740') }}</span
           >
+          <a-button type="outline" @click="handleBatchInstall" class="mr-s">批量安装</a-button>
+          <a-button type="outline" @click="handleBatchRemove" class="mr-s">批量卸载</a-button>
+          <a-button type="outline" @click="handleUploadPkg" class="mr-s">上传安装包</a-button>
           <a-spin v-if="loading"></a-spin>
         </div>
         <div class="refresh-con">
@@ -290,6 +293,8 @@
       @startInstall="refreshData"
       @pkgDeleted="handlePkgDelete"
     />
+    <upload-portal-dlg v-model:open="uploadDlg.visible"/>
+    <batch-install-dlg v-model:open="installBatchDlg.visible" :host-list="installBatchDlg.hostList"/>
   </div>
 </template>
 
@@ -299,8 +304,11 @@ import { hostsData, downloadEnvLog, deletePortal } from '@/api/task'
 import useTheme from '@/hooks/theme'
 import dayjs from 'dayjs'
 import PortalInstall from '../components/PortalInstall.vue'
+import uploadPortalDlg from './uploadPortalDlg.vue'
+import batchInstallDlg from './batchAddPortal.vue'
 import { useI18n } from 'vue-i18n'
 import { INSTALL_TYPE, PORTAL_INSTALL_STATUS } from '@/utils/constants'
+import { Message } from '@arco-design/web-vue'
 
 const { t } = useI18n()
 
@@ -351,6 +359,15 @@ const portalDlg = reactive({
   installInfo: {}
 })
 
+const uploadDlg = reactive({
+  visible: false
+})
+
+const installBatchDlg = reactive({
+  visible: false,
+  hostList: []
+})
+
 const statusMap = (status) => {
   const maps = {
     0: t('step3.index.5q093f8yae80'),
@@ -395,7 +412,22 @@ const getFilterData = () => {
 }
 
 const selectionChange = (rowKey) => {
-  emits('syncHost', rowKey)
+  const installedHosts = findHostsFromTableByStatus(rowKey, PORTAL_INSTALL_STATUS.INSTALLED)
+  const rows = []
+  installedHosts.map(item => rows.push(item.hostId))
+  emits('syncHost', rows)
+}
+
+const findHostsFromTableByStatus = (keys, status) => {
+  if (keys.length > 0) {
+    const selectData = tableData.value.filter(item => keys.indexOf(item.hostId) > -1)
+    if (selectData.length > 0) {
+      const hostList = selectData.filter(item => item.installPortalStatus === status)
+      return hostList
+    }
+  } else {
+    return []
+  }
 }
 
 let timer = null
@@ -454,9 +486,7 @@ const getHostsData = () => {
       } else {
         tableData.value = res.data.map((item) => ({
           ...item,
-          hostId: item.hostInfo.hostId,
-          disabled:
-            item.installPortalStatus !== PORTAL_INSTALL_STATUS.INSTALLED
+          hostId: item.hostInfo.hostId
         }))
         originData.value = JSON.parse(JSON.stringify(tableData.value))
         pagination.total = res.data.length
@@ -497,6 +527,27 @@ const handleDelete = (record) => {
     })
 }
 
+const handleUploadPkg = () => {
+  uploadDlg.visible = true
+}
+
+const handleBatchInstall = () => {
+  const notInstallHosts = findHostsFromTableByStatus(selectedKeys.value, PORTAL_INSTALL_STATUS.NOT_INSTALL)
+  if (notInstallHosts.length <= 0) {
+    Message.info('请选择未安装portal的服务器')
+    return
+  }
+  const notInstallHostInfo = []
+  notInstallHosts.map(item => notInstallHostInfo.push(item.hostInfo))
+  installBatchDlg.hostList = notInstallHostInfo
+  installBatchDlg.visible = true
+}
+
+const handleBatchRemove = () => {
+  // 这里直接调批量卸载，而且上面不能带子任务
+  // 这个已经在子级有支持
+}
+
 onMounted(() => {
   getHostsData()
   selectedKeys.value = toRaw(props.hostData)
@@ -530,7 +581,7 @@ onBeforeUnmount(() => {
 
       .select-tips {
         display: flex;
-
+        align-items: center;
         .tips-item {
           color: var(--color-text-1);
           margin-right: 10px;

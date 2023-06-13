@@ -26,7 +26,9 @@ package org.opengauss.admin.plugin.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.ListUtil;
+import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.thread.ThreadUtil;
+import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -34,6 +36,7 @@ import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.core.domain.AjaxResult;
 import org.opengauss.admin.common.core.domain.UploadInfo;
+import org.opengauss.admin.common.core.domain.entity.SysSettingEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
 import org.opengauss.admin.common.core.domain.model.ops.JschResult;
@@ -42,7 +45,9 @@ import org.opengauss.admin.common.core.domain.model.ops.OpsClusterVO;
 import org.opengauss.admin.common.core.domain.model.ops.jdbc.JdbcDbClusterInputDto;
 import org.opengauss.admin.common.core.domain.model.ops.jdbc.JdbcDbClusterNodeInputDto;
 import org.opengauss.admin.common.core.domain.model.ops.jdbc.JdbcDbClusterVO;
+import org.opengauss.admin.common.exception.ops.OpsException;
 import org.opengauss.admin.common.utils.StringUtils;
+import org.opengauss.admin.common.utils.file.FileUploadUtils;
 import org.opengauss.admin.plugin.constants.TaskConstant;
 import org.opengauss.admin.plugin.domain.MigrationHostPortalInstall;
 import org.opengauss.admin.plugin.domain.MigrationTask;
@@ -53,6 +58,7 @@ import org.opengauss.admin.plugin.enums.MigrationErrorCode;
 import org.opengauss.admin.plugin.enums.PortalInstallStatus;
 import org.opengauss.admin.plugin.enums.PortalInstallType;
 import org.opengauss.admin.plugin.exception.PortalInstallException;
+import org.opengauss.admin.plugin.exception.ShellException;
 import org.opengauss.admin.plugin.handler.PortalHandle;
 import org.opengauss.admin.plugin.mapper.MigrationTaskHostRefMapper;
 import org.opengauss.admin.plugin.service.MigrationHostPortalInstallHostService;
@@ -61,19 +67,18 @@ import org.opengauss.admin.plugin.service.MigrationTaskService;
 import org.opengauss.admin.plugin.utils.ShellUtil;
 import org.opengauss.admin.plugin.vo.TargetClusterNodeVO;
 import org.opengauss.admin.plugin.vo.TargetClusterVO;
-import org.opengauss.admin.system.plugin.facade.HostFacade;
-import org.opengauss.admin.system.plugin.facade.HostUserFacade;
-import org.opengauss.admin.system.plugin.facade.JdbcDbClusterFacade;
-import org.opengauss.admin.system.plugin.facade.OpsFacade;
+import org.opengauss.admin.system.plugin.facade.*;
 import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.multipart.commons.CommonsMultipartFile;
 
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
+import java.nio.file.Path;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -112,6 +117,11 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
     @Autowired
     @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
     private JdbcDbClusterFacade jdbcDbClusterFacade;
+
+    @Autowired
+    @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
+    private SysSettingFacade sysSettingFacade;
+
 
     @Autowired
     private MigrationTaskHostRefMapper migrationTaskHostRefMapper;
@@ -175,19 +185,15 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
                     eachOne.setBaseInfos(ListUtil.toList(opsHosInfo));
                     eachOne.setInstallPortalStatus(PortalInstallStatus.NOT_INSTALL.getCode());
                 } else {
-                    String[] hostInfo = PortalHandle.getHostBaseInfo(installHost.getHost(), installHost.getPort(),
-                            installHost.getRunUser(), installHost.getRunPassword());
+                    String[] hostInfo = PortalHandle.getHostBaseInfo(installHost.getHost(), installHost.getPort(), installHost.getRunUser(), installHost.getRunPassword());
                     if (hostInfo.length == 0) {
                         return null;
                     }
                     eachOne.setBaseInfos(ListUtil.toList(hostInfo));
                     eachOne.setInstallInfo(installHost);
                     if (installHost.getInstallStatus().equals(PortalInstallStatus.INSTALLED.getCode())) {
-                        boolean isInstallPortal = PortalHandle.checkInstallPortal(installHost.getHost(),
-                                installHost.getPort(), installHost.getRunUser(), installHost.getRunPassword(),
-                                installHost.getInstallPath());
-                        eachOne.setInstallPortalStatus(isInstallPortal ? PortalInstallStatus.INSTALLED.getCode()
-                                : PortalInstallStatus.NOT_INSTALL.getCode());
+                        boolean isInstallPortal = PortalHandle.checkInstallPortal(installHost.getHost(), installHost.getPort(), installHost.getRunUser(), installHost.getRunPassword(), installHost.getInstallPath());
+                        eachOne.setInstallPortalStatus(isInstallPortal ? PortalInstallStatus.INSTALLED.getCode() : PortalInstallStatus.NOT_INSTALL.getCode());
                     } else {
                         eachOne.setInstallPortalStatus(installHost.getInstallStatus());
                     }
@@ -197,7 +203,7 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
             futureList.add(future);
         }
         List<MigrationHostDto> result = new ArrayList<>();
-        for (Future<MigrationHostDto> item: futureList) {
+        for (Future<MigrationHostDto> item : futureList) {
             try {
                 MigrationHostDto futureResult = item.get();
                 if (futureResult != null) {
@@ -243,8 +249,7 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
             clusterVO.setClusterId(o.getClusterId());
             clusterVO.setClusterName(o.getClusterName());
             clusterVO.setVersion(o.getVersion());
-            clusterVO.setVersionNum(StringUtils.isNotBlank(o.getVersionNum())
-                    ? o.getVersionNum() : TaskConstant.DEFAULT_OPENGAUSS_VERSION);
+            clusterVO.setVersionNum(StringUtils.isNotBlank(o.getVersionNum()) ? o.getVersionNum() : TaskConstant.DEFAULT_OPENGAUSS_VERSION);
             List<TargetClusterNodeVO> nodes = o.getClusterNodes().stream().map(on -> {
                 TargetClusterNodeVO clusterNodeVO = new TargetClusterNodeVO();
                 clusterNodeVO.setNodeId(on.getNodeId());
@@ -390,8 +395,7 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
      * @return result list
      */
     private List<Map<String, Object>> queryTarget(OpsClusterNodeVO clusterNode, String schema, String sql) {
-        return queryBySqlOnOpengauss(clusterNode.getPublicIp(), clusterNode.getDbPort().toString(),
-                clusterNode.getDbName(), clusterNode.getDbUser(), clusterNode.getDbUserPassword(), schema, sql);
+        return queryBySqlOnOpengauss(clusterNode.getPublicIp(), clusterNode.getDbPort().toString(), clusterNode.getDbName(), clusterNode.getDbUser(), clusterNode.getDbUserPassword(), schema, sql);
     }
 
     /**
@@ -407,8 +411,7 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
      * @return result list
      */
     @Override
-    public List<Map<String, Object>> queryBySqlOnOpengauss(String host, String port, String database, String dbUser,
-                                                           String dbPass, String schema, String sql) {
+    public List<Map<String, Object>> queryBySqlOnOpengauss(String host, String port, String database, String dbUser, String dbPass, String schema, String sql) {
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("jdbc:opengauss://");
         stringBuilder.append(host).append(":");
@@ -464,6 +467,30 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
         return installPortalProc(hostId, install, true);
     }
 
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public AjaxResult installPortalFromDatakit(String hostId, MigrationHostPortalInstall install, Integer userId) throws PortalInstallException {
+        SysSettingEntity sysSettingEntity = sysSettingFacade.getSysSetting(userId);
+        if (sysSettingEntity == null) {
+            throw new PortalInstallException("not found system setting, please try again");
+        }
+        String pkgPath = sysSettingEntity.getUploadPath() + "/" + install.getPkgName();
+        if (!FileUtil.exist(pkgPath)) {
+            String errMsg = String.format("not found portal package %s, please try again", pkgPath);
+            throw new PortalInstallException(errMsg);
+        }
+        // covert datakit local disk file to multipartfile
+        try (InputStream in = new FileInputStream(pkgPath)) {
+            MultipartFile file = FileUploadUtils.inputStreamToMultipartFile(in, "file", install.getPkgName());
+            install.setFile(file);
+        } catch (Exception ex) {
+            String errMsg = String.format("transfer portal package %s to multipart file failed: %s", pkgPath, ex.getMessage());
+            throw new PortalInstallException(errMsg);
+        }
+
+        return installPortalProc(hostId, install, false);
+    }
+
     @Transactional(rollbackFor = Exception.class)
     public AjaxResult installPortalProc(String hostId, MigrationHostPortalInstall install, boolean isReInstall) {
         MigrationHostPortalInstall oldInstall = migrationHostPortalInstallHostService.getOneByHostId(install.getRunHostId());
@@ -477,19 +504,10 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
 
         String password = encryptionUtils.decrypt(hostUser.getPassword());
 
-        install.setInstallPath(realInstallPath);
-        install.setRunUser(hostUser.getUsername());
-        install.setRunHostId(hostId);
-        install.setRunPassword(password);
-        install.setHost(opsHost.getPublicIp());
-        install.setPort(opsHost.getPort());
-        install.setInstallStatus(PortalInstallStatus.INSTALLING.getCode());
-        UploadInfo uploadResult = uploadPortal(install.getFile(), install);
-
         MigrationHostPortalInstall physicalInstallParams = new MigrationHostPortalInstall();
         physicalInstallParams.setRunHostId(hostId);
-        physicalInstallParams.setHost(install.getHost());
-        physicalInstallParams.setPort(install.getPort());
+        physicalInstallParams.setHost(opsHost.getPublicIp());
+        physicalInstallParams.setPort(opsHost.getPort());
         physicalInstallParams.setRunUser(hostUser.getUsername());
         physicalInstallParams.setHostUserId(hostUser.getHostUserId());
         physicalInstallParams.setRunPassword(password);
@@ -498,13 +516,12 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
         physicalInstallParams.setPkgName(install.getPkgName());
         physicalInstallParams.setInstallStatus(PortalInstallStatus.INSTALLING.getCode());
         physicalInstallParams.setInstallType(install.getInstallType());
-        if (install.getInstallType().equals(PortalInstallType.ONLINE_INSTALL.getCode())) {
+        physicalInstallParams.setFile(install.getFile());
+        if (physicalInstallParams.getInstallType().equals(PortalInstallType.ONLINE_INSTALL.getCode())) {
             physicalInstallParams.setPkgDownloadUrl(install.getPkgDownloadUrl());
             physicalInstallParams.setPkgUploadPath(null);
-        } else {
-            physicalInstallParams.setPkgDownloadUrl("");
-            physicalInstallParams.setPkgUploadPath(uploadResult);
         }
+
         syncInstallPortalHandler(physicalInstallParams);
         migrationHostPortalInstallHostService.saveRecord(physicalInstallParams);
 
@@ -519,16 +536,18 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
         threadPoolTaskExecutor.submit(() -> {
             boolean isInstallSuccess;
             try {
+                // upload portal
+                UploadInfo uploadResult = uploadPortal(installParams.getFile(), installParams);
+                if (installParams.getInstallType().equals(PortalInstallType.OFFLINE_INSTALL.getCode())) {
+                    installParams.setPkgDownloadUrl("");
+                    installParams.setPkgUploadPath(uploadResult);
+                }
+                migrationHostPortalInstallHostService.saveRecord(installParams);
+                // install portal
                 isInstallSuccess = PortalHandle.installPortal(installParams);
             } catch (PortalInstallException e) {
-                String cmd = String.format("mkdir -p %s && echo '%s' >> %s",
-                        installParams.getInstallPath(),
-                        e.getMessage(),
-                        installParams.getDatakitLogPath());
-                JschResult result = ShellUtil.execCommandGetResult(installParams.getHost(),
-                        installParams.getPort(),
-                        installParams.getRunUser(),
-                        installParams.getRunPassword(), cmd);
+                String cmd = String.format("mkdir -p %s && echo '%s' >> %s", installParams.getInstallPath(), e.getMessage(), installParams.getDatakitLogPath());
+                JschResult result = ShellUtil.execCommandGetResult(installParams.getHost(), installParams.getPort(), installParams.getRunUser(), installParams.getRunPassword(), cmd);
                 if (!result.isOk()) {
                     log.error("write install error message failed: " + result.getResult());
                 }
@@ -559,6 +578,40 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
         return logContent;
     }
 
+    @Override
+    public UploadInfo upload(MultipartFile file, Integer userId) throws PortalInstallException {
+        UploadInfo uploadInfo = new UploadInfo();
+        if (ObjectUtil.isNull(file)) {
+            return uploadInfo;
+        }
+        SysSettingEntity entity = sysSettingFacade.getSysSetting(userId);
+        if (ObjectUtil.isNull(entity)) {
+            log.error("Cannot find system setting of user id: " + userId);
+            throw new PortalInstallException("Cannot find system setting of your account, please try again");
+        }
+        // create folder
+        File folder = new File(entity.getUploadPath());
+        if (!folder.exists()) {
+            boolean res = folder.mkdirs();
+            if (!res) {
+                String errMsg = String.format("Can't create folder: %s, please try again", entity.getUploadPath());
+                log.error(errMsg);
+                throw new PortalInstallException(errMsg);
+            }
+        }
+        String fileRealPath = Path.of(entity.getUploadPath(), file.getOriginalFilename()).toString();
+        try {
+            file.transferTo(new File(fileRealPath));
+            uploadInfo.setName(file.getOriginalFilename());
+            uploadInfo.setRealPath(fileRealPath);
+        } catch (Exception ex) {
+            String errMsg = String.format("Upload tar file to %s failed: %s", fileRealPath, ex.getMessage());
+            log.error(errMsg);
+            throw new PortalInstallException(errMsg);
+        }
+        return uploadInfo;
+    }
+
     /**
      * get host base information
      *
@@ -572,8 +625,7 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
         if (opsHostUserEntities.size() > 0) {
             OpsHostUserEntity hostUser = opsHostUserEntities.get(0);
             if (StringUtils.isNotBlank(hostUser.getPassword())) {
-                return PortalHandle.getHostBaseInfo(publicIp, port, hostUser.getUsername(),
-                        encryptionUtils.decrypt(hostUser.getPassword()));
+                return PortalHandle.getHostBaseInfo(publicIp, port, hostUser.getUsername(), encryptionUtils.decrypt(hostUser.getPassword()));
             }
         }
         return new String[0];
@@ -588,8 +640,7 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
         String password = encryptionUtils.decrypt(hostUser.getPassword());
         List<MigrationTask> tasks = migrationTaskService.listRunningTaskByHostId(hostId);
         if (CollUtil.isNotEmpty(tasks)) {
-            return AjaxResult.error(MigrationErrorCode.PORTAL_DELETE_ERROR.getCode(),
-                    MigrationErrorCode.PORTAL_DELETE_ERROR.getMsg());
+            return AjaxResult.error(MigrationErrorCode.PORTAL_DELETE_ERROR.getCode(), MigrationErrorCode.PORTAL_DELETE_ERROR.getMsg());
         }
         String realInstallPath = getInstallPath(install.getInstallPath(), hostUser.getUsername());
         String portalHome = realInstallPath + "portal/";
@@ -645,7 +696,7 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
      * @param install       upload params
      * @return upload result
      */
-    private UploadInfo uploadPortal(MultipartFile multipartFile, MigrationHostPortalInstall install) {
+    private UploadInfo uploadPortal(MultipartFile multipartFile, MigrationHostPortalInstall install) throws PortalInstallException {
         UploadInfo result = new UploadInfo();
         if (multipartFile == null || StrUtil.isEmpty(multipartFile.getOriginalFilename())) {
             log.warn("Upload file is empty, please check");
@@ -655,19 +706,22 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
             ShellUtil.uploadFile(install.getHost(), install.getPort(), install.getRunUser(), install.getRunPassword(), install.getInstallPath() + multipartFile.getOriginalFilename(), in);
             result.setName(multipartFile.getOriginalFilename());
             result.setRealPath(install.getInstallPath());
-        } catch (IOException e) {
-            log.error("Upload file error: " + e.getMessage());
+        } catch (Exception e) {
+            String errMsg = "Upload portal error: " + e.getMessage();
+            log.error(errMsg);
+            throw new PortalInstallException(errMsg);
         }
         return result;
     }
 
     /**
      * stop kafka before uninstall portal
-     * @param opsHost portal install host
-     * @param hostUser portal install user
-     * @param password portal install password
+     *
+     * @param opsHost    portal install host
+     * @param hostUser   portal install user
+     * @param password   portal install password
      * @param portalHome portal install path
-     * @param jarName portal jar name
+     * @param jarName    portal jar name
      * @param retryCount failed retry count
      */
     private void stopKafka(OpsHostEntity opsHost, OpsHostUserEntity hostUser, String password, String portalHome, String jarName, int retryCount) throws PortalInstallException {
