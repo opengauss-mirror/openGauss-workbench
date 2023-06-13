@@ -417,6 +417,7 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
         return AjaxResult.success();
     }
     
+    @Transactional
     @Override
     public AjaxResult resetTask(Integer id) {
         MigrationMainTask mainTask = getById(id);
@@ -431,6 +432,18 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
         mainTask.setExecTime(null);
         mainTask.setExecProgress("0.0");
         migrationMainTaskMapper.updateById(mainTask);
+        
+        List<MigrationTask> tasks = migrationTaskService.listByMainTaskId(id);
+        migrationTaskService.deleteByMainTaskId(id);
+        tasks.forEach(task -> {
+            task.setId(null);
+            task.setExecTime(null);
+            task.setFinishTime(null);
+            task.setExecStatus(TaskStatus.NOT_RUN.getCode());
+            task.setTaskLog("");
+            task.setStatusDesc("");
+            migrationTaskService.save(task);
+        });
         return AjaxResult.success();
     }
 
