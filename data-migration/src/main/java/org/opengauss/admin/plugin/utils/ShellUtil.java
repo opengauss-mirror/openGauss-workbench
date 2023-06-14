@@ -29,6 +29,7 @@ import cn.hutool.extra.ssh.JschUtil;
 import com.jcraft.jsch.*;
 import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.core.domain.model.ops.JschResult;
+import org.opengauss.admin.plugin.exception.ShellException;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -196,7 +197,7 @@ public class ShellUtil {
         }
     }
 
-    public synchronized static void uploadFile(String host, Integer port, String username, String password, String filepath, InputStream in) {
+    public static void uploadFile(String host, Integer port, String username, String password, String filepath, InputStream in) throws ShellException {
         ChannelSftp sftp = null;
         Session session = null;
         try {
@@ -210,7 +211,9 @@ public class ShellUtil {
 
             sftp.put(in, filepath);
         } catch (JSchException | SftpException e) {
-            log.error("Upload file to {} failed, error: {}", filepath, e.getMessage());
+            String errMsg = String.format("Upload file to %s failed, error: %s", filepath, e.getMessage());
+            log.error(errMsg);
+            throw new ShellException(errMsg);
         } finally {
             JschUtil.close(sftp);
             JschUtil.close(session);

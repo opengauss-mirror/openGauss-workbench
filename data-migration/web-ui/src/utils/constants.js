@@ -16,5 +16,6 @@ export const PORTAL_PARAM_TYPE = {
   BOOLEAN: 3,
   SELECT: 4,
   REGEX: 5,
+  VAR: 6,
   OBJECT_ARRAY: 9
 }

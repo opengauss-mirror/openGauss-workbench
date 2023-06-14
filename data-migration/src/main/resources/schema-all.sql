@@ -670,7 +670,7 @@ CREATE OR REPLACE FUNCTION add_migration_task_init_global_param_field_func() RET
     THEN
         ALTER TABLE tb_migration_task_init_global_param
             ADD COLUMN param_type int2;
-        COMMENT ON COLUMN "public"."tb_migration_task_init_global_param"."param_type" IS ''参数类型；1：字符；2：数值；3：布尔；9：对象数组'';
+        COMMENT ON COLUMN "public"."tb_migration_task_init_global_param"."param_type" IS ''参数类型；1：字符；2：数值；3：布尔；4: 选择；5: 正则表达式；6: 变量；9：对象数组'';
     END IF;
     IF
             (SELECT COUNT(*) AS ct1
@@ -715,6 +715,9 @@ DELETE FROM "public"."tb_migration_task_init_global_param" WHERE "id" = 30;
 DELETE FROM "public"."tb_migration_task_init_global_param" WHERE "id" = 32;
 DELETE FROM "public"."tb_migration_task_init_global_param" WHERE "id" = 33;
 DELETE FROM "public"."tb_migration_task_init_global_param" WHERE "id" = 34;
+
+INSERT INTO "public"."tb_migration_task_init_global_param" ("id", "param_key", "param_value", "param_desc", "param_type", "param_extends", "param_rules") 
+VALUES(0, 'opengauss.database.schema', '', '源端数据库的schema', 6, '', '[1,64]') ON DUPLICATE KEY UPDATE NOTHING;
 
 UPDATE "public"."tb_migration_task_init_global_param"
 SET "param_key" = 'sink.query-dop', "param_value" = '8', "param_desc" = 'sink端数据库并行查询会话配置',

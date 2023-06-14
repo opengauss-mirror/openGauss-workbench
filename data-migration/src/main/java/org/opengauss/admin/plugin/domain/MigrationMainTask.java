@@ -24,10 +24,7 @@
 
 package org.opengauss.admin.plugin.domain;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.*;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 
@@ -75,11 +72,13 @@ public class MigrationMainTask {
      * finish time
      */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @TableField(updateStrategy = FieldStrategy.IGNORED)
     private Date finishTime;
 
     /**
      * execTime time
      */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @TableField(updateStrategy = FieldStrategy.IGNORED)
     private Date execTime;
 }

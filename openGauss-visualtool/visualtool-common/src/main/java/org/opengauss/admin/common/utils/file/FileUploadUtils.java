@@ -26,6 +26,9 @@ package org.opengauss.admin.common.utils.file;
 
 import cn.hutool.core.io.FileUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.fileupload.FileItem;
+import org.apache.commons.fileupload.disk.DiskFileItemFactory;
+import org.apache.commons.io.IOUtils;
 import org.opengauss.admin.common.config.SystemConfig;
 import org.opengauss.admin.common.constant.Constants;
 import org.opengauss.admin.common.exception.file.FileNameLengthLimitExceededException;
@@ -35,10 +38,14 @@ import org.opengauss.admin.common.utils.DateUtils;
 import org.opengauss.admin.common.utils.StringUtils;
 import org.opengauss.admin.common.utils.uuid.IdUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.springframework.http.MediaType;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.multipart.commons.CommonsMultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 
 /**
@@ -286,5 +293,27 @@ public class FileUploadUtils {
             log.error("write menu svg error, message: {}", e.getMessage());
         }
         return "";
+    }
+
+    public static MultipartFile inputStreamToMultipartFile(InputStream is, String fieldName, String fileName) throws IOException {
+        final DiskFileItemFactory fac = new DiskFileItemFactory();
+        FileItem fileItem = fac.createItem(fieldName, MediaType.MULTIPART_FORM_DATA_VALUE, true, fileName);
+        final OutputStream fileItemOutStream;
+        try {
+            fileItemOutStream = fileItem.getOutputStream();
+        } catch (IOException e) {
+            String errMsg = "get FileItem output stream failed: {}" + e.getMessage();
+            log.error(errMsg);
+            throw new IOException(errMsg);
+        }
+
+        try {
+            IOUtils.copy(is, fileItemOutStream, 20480);
+        } catch (IOException e) {
+            String errMsg = "write FileItem failed: {}" + e.getMessage();
+            log.error(errMsg);
+            throw new IOException(errMsg);
+        }
+        return new CommonsMultipartFile(fileItem);
     }
 }
