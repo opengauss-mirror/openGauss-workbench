@@ -76,9 +76,22 @@
             >{{ $t('step3.index.5q093f8y94c0') }}<b>{{ selectedKeys.length }}</b
             >{{ $t('step3.index.5q093f8y9740') }}</span
           >
-          <a-button type="outline" @click="handleBatchInstall" class="mr-s">批量安装</a-button>
-          <a-button type="outline" @click="handleBatchRemove" class="mr-s">批量卸载</a-button>
-          <a-button type="outline" @click="handleUploadPkg" class="mr-s">上传安装包</a-button>
+          <a-button type="outline" @click="handleBatchInstall" class="mr-s"
+            >批量安装</a-button
+          >
+          <a-popconfirm
+            content="确认删除选中的迁移套件？"
+            type="warning"
+            ok-text="确认"
+            cancel-text="取消"
+            @ok="handleBatchRemove"
+            :ok-loading="removeLoading"
+          >
+            <a-button type="outline" class="mr-s">批量卸载</a-button>
+          </a-popconfirm>
+          <a-button type="outline" @click="handleUploadPkg" class="mr-s"
+            >上传安装包</a-button
+          >
           <a-spin v-if="loading"></a-spin>
         </div>
         <div class="refresh-con">
@@ -293,8 +306,11 @@
       @startInstall="refreshData"
       @pkgDeleted="handlePkgDelete"
     />
-    <upload-portal-dlg v-model:open="uploadDlg.visible"/>
-    <batch-install-dlg v-model:open="installBatchDlg.visible" :host-list="installBatchDlg.hostList"/>
+    <upload-portal-dlg v-model:open="uploadDlg.visible" />
+    <batch-install-dlg
+      v-model:open="installBatchDlg.visible"
+      :host-list="installBatchDlg.hostList"
+    />
   </div>
 </template>
 
@@ -317,30 +333,32 @@ const { currentTheme } = useTheme()
 const props = defineProps({
   subTaskConfig: {
     type: Array,
-    default: () => []
+    default: () => [],
   },
   hostData: {
     type: Array,
-    default: () => []
-  }
+    default: () => [],
+  },
 })
 
 const emits = defineEmits(['syncHost'])
 
 const loading = ref(true)
 const tableLoading = ref(false)
+const removeLoading = ref(false)
 const form = reactive({
   ip: undefined,
   hostname: undefined,
   cpu: undefined,
   memory: undefined,
-  disk: undefined
+  disk: undefined,
 })
 
 const pagination = reactive({
   total: 0,
   current: 1,
-  pageSize: 10
+  pageSize: 20,
+  showPageSize: true
 })
 const tableData = ref([])
 const originData = ref([])
@@ -349,23 +367,23 @@ const selectedKeys = ref([])
 const rowSelection = reactive({
   type: 'checkbox',
   showCheckedAll: true,
-  onlyCurrent: false
+  onlyCurrent: false,
 })
 
 const portalDlg = reactive({
   visible: false,
   curHostId: '',
   installMode: 'install',
-  installInfo: {}
+  installInfo: {},
 })
 
 const uploadDlg = reactive({
-  visible: false
+  visible: false,
 })
 
 const installBatchDlg = reactive({
   visible: false,
-  hostList: []
+  hostList: [],
 })
 
 const statusMap = (status) => {
@@ -373,7 +391,7 @@ const statusMap = (status) => {
     0: t('step3.index.5q093f8yae80'),
     1: t('step3.index.5q093f8yagw0'),
     2: t('step3.index.5q093f8yajg0'),
-    10: t('step3.index.5q093f8yals0')
+    10: t('step3.index.5q093f8yals0'),
   }
   return maps[status]
 }
@@ -412,17 +430,24 @@ const getFilterData = () => {
 }
 
 const selectionChange = (rowKey) => {
-  const installedHosts = findHostsFromTableByStatus(rowKey, PORTAL_INSTALL_STATUS.INSTALLED)
+  const installedHosts = findHostsFromTableByStatus(
+    rowKey,
+    PORTAL_INSTALL_STATUS.INSTALLED
+  )
   const rows = []
-  installedHosts.map(item => rows.push(item.hostId))
+  installedHosts.map((item) => rows.push(item.hostId))
   emits('syncHost', rows)
 }
 
 const findHostsFromTableByStatus = (keys, status) => {
   if (keys.length > 0) {
-    const selectData = tableData.value.filter(item => keys.indexOf(item.hostId) > -1)
+    const selectData = tableData.value.filter(
+      (item) => keys.indexOf(item.hostId) > -1
+    )
     if (selectData.length > 0) {
-      const hostList = selectData.filter(item => item.installPortalStatus === status)
+      const hostList = selectData.filter(
+        (item) => item.installPortalStatus === status
+      )
       return hostList
     }
   } else {
@@ -453,7 +478,7 @@ const handleDownloadLog = (row) => {
   downloadEnvLog(row.hostInfo.hostId).then((res) => {
     if (res) {
       const blob = new Blob([res], {
-        type: 'text/plain'
+        type: 'text/plain',
       })
       const a = document.createElement('a')
       const URL = window.URL || window.webkitURL
@@ -486,7 +511,7 @@ const getHostsData = () => {
       } else {
         tableData.value = res.data.map((item) => ({
           ...item,
-          hostId: item.hostInfo.hostId
+          hostId: item.hostInfo.hostId,
         }))
         originData.value = JSON.parse(JSON.stringify(tableData.value))
         pagination.total = res.data.length
@@ -532,20 +557,42 @@ const handleUploadPkg = () => {
 }
 
 const handleBatchInstall = () => {
-  const notInstallHosts = findHostsFromTableByStatus(selectedKeys.value, PORTAL_INSTALL_STATUS.NOT_INSTALL)
+  const notInstallHosts = findHostsFromTableByStatus(
+    selectedKeys.value,
+    PORTAL_INSTALL_STATUS.NOT_INSTALL
+  )
   if (notInstallHosts.length <= 0) {
     Message.info('请选择未安装portal的服务器')
     return
   }
   const notInstallHostInfo = []
-  notInstallHosts.map(item => notInstallHostInfo.push(item.hostInfo))
+  notInstallHosts.map((item) => notInstallHostInfo.push(item.hostInfo))
   installBatchDlg.hostList = notInstallHostInfo
   installBatchDlg.visible = true
 }
 
 const handleBatchRemove = () => {
-  // 这里直接调批量卸载，而且上面不能带子任务
-  // 这个已经在子级有支持
+  const failedPortal = findHostsFromTableByStatus(
+    selectedKeys.value,
+    PORTAL_INSTALL_STATUS.FAILED
+  )
+  const installedPortal = findHostsFromTableByStatus(
+    selectedKeys.value,
+    PORTAL_INSTALL_STATUS.INSTALLED
+  )
+  const targetPortalList = [...failedPortal, ...installedPortal]
+  if (targetPortalList.length > 0) {
+    const removeReqList = []
+    targetPortalList.map((item) => {
+      removeReqList.push(deletePortal(item.hostId))
+    })
+    removeLoading.value = true
+    tableLoading.value = true
+    Promise.all(removeReqList).then(res => {
+      removeLoading.value = false
+      tableLoading.value = false
+    })
+  }
 }
 
 onMounted(() => {
