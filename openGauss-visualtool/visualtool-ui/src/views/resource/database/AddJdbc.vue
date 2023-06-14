@@ -325,6 +325,14 @@ const handleAdd = () => {
   if (data.form.dbType === 'OPENGAUSS') {
     port = 5432
   }
+  let username = ''
+  let password = ''
+  const firstNode = data.form.nodes[0]
+  if (firstNode) {
+    port = firstNode.port
+    username = firstNode.username
+    password = firstNode.password
+  }
   data.form.nodes.push({
     id: id,
     tabName: data.form.nodes.length + 1,
@@ -332,8 +340,8 @@ const handleAdd = () => {
     urlSuffix: '',
     ip: '',
     port: port,
-    username: '',
-    password: '',
+    username: username,
+    password: password,
     props: [{
       name: '',
       value: ''

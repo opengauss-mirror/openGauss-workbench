@@ -3,14 +3,14 @@
     :unmount-on-close="true"
     title="批量安装portal"
     v-model:visible="visible"
-    width="80vw"
+    width="90vw"
     modal-class="add-portal-modal"
     :mask-closable="false"
     :esc-to-close="false"
   >
     <a-form :model="globalData" auto-label-width>
-      <a-row :gutter="10">
-        <a-col :span="5">
+      <a-row :gutter="5">
+        <a-col :span="6">
           <a-form-item label="用户名">
             <a-select v-model="globalData.hostUserName">
               <a-option
@@ -32,40 +32,51 @@
             <a-input v-model="globalData.jarName" />
           </a-form-item>
         </a-col>
-        <a-col :span="5">
+        <a-col :span="4">
           <a-form-item label="包名称">
             <a-input v-model="globalData.pkgName" />
           </a-form-item>
         </a-col>
-        <a-col :span="3">
+        <a-col :span="1">
           <a-form-item>
             <a-button type="primary" @click="handleBatchSet">统一设置</a-button>
           </a-form-item>
         </a-col>
       </a-row>
     </a-form>
-    <a-table :columns="columns" :data="tableData">
-      <template #hostUser="{ rowIndex }">
-        <a-select v-model="tableData[rowIndex].hostUserId">
-          <a-option
-            v-for="item in tableData[rowIndex].hostUserList"
-            :label="item.username"
-            :value="item.hostUserId"
-            :key="item.hostUserId"
+    <a-form :model="form" ref="formRef">
+      <a-table :columns="columns" :data="form.tableData" :pagination="{pageSize: 1000}">
+        <template #hostUser="{ rowIndex }">
+          <a-form-item
+            hide-asterisk
+            :field="`tableData.${rowIndex}.hostUserId`"
+            :rules="{ required: true, message: '请选择安装用户' }"
           >
-          </a-option>
-        </a-select>
-      </template>
-      <template #installPath="{ rowIndex }">
-        <a-input v-model="tableData[rowIndex].installPath"></a-input>
-      </template>
-      <template #jarName="{ rowIndex }">
-        <a-input v-model="tableData[rowIndex].jarName"></a-input>
-      </template>
-      <template #pkgName="{ rowIndex }">
-        <a-input v-model="tableData[rowIndex].pkgName"></a-input>
-      </template>
-    </a-table>
+            <a-select v-model="form.tableData[rowIndex].hostUserId">
+              <a-option
+                v-for="item in form.tableData[rowIndex].hostUserList"
+                :label="item.username"
+                :value="item.hostUserId"
+                :key="item.hostUserId"
+              >
+              </a-option>
+            </a-select>
+          </a-form-item>
+        </template>
+        <template #installPath="{ rowIndex }">
+          <a-input v-model="form.tableData[rowIndex].installPath"></a-input>
+        </template>
+        <template #jarName="{ rowIndex }">
+          <a-input v-model="form.tableData[rowIndex].jarName"></a-input>
+        </template>
+        <template #pkgName="{ rowIndex }">
+          <a-input v-model="form.tableData[rowIndex].pkgName"></a-input>
+        </template>
+        <template #op="{ rowIndex }">
+          <icon-delete class="del-icon" @click="handleDeleteRow(rowIndex)"/>
+        </template>
+      </a-table>
+    </a-form>
     <template #footer>
       <div class="modal-footer">
         <a-button @click="cancel" v-if="!loading">{{
@@ -95,7 +106,11 @@ import {
   installPortalFromDatakit,
 } from '@/api/task'
 import { getSysSetting } from '@/api/common'
-import { INSTALL_TYPE, PORTAL_INSTALL_STATUS, PORTAL_PARAM_TYPE } from '@/utils/constants'
+import {
+  INSTALL_TYPE,
+  PORTAL_INSTALL_STATUS,
+  PORTAL_PARAM_TYPE,
+} from '@/utils/constants'
 import { useI18n } from 'vue-i18n'
 import { Message } from '@arco-design/web-vue'
 import { getToken } from '@/utils/auth'
@@ -111,13 +126,16 @@ const emits = defineEmits(['update:open', 'startInstall'])
 
 const visible = ref(false)
 const loading = ref(false)
-const tableData = ref([])
+const form = reactive({
+  tableData: [],
+})
+const formRef = ref()
 const globalData = reactive({
   hostUserName: '',
   interHostUserList: [],
   jarName: '',
   pkgName: '',
-  installPath: '~'
+  installPath: '~',
 })
 const columns = [
   {
@@ -144,6 +162,10 @@ const columns = [
     dataIndex: 'pkgName',
     slotName: 'pkgName',
   },
+  {
+    title: '操作',
+    slotName: 'op'
+  }
 ]
 
 watch(visible, (v) => {
@@ -156,7 +178,7 @@ watch(
     if (v) {
       const data = [...props.hostList]
       await buildTableData(data)
-      tableData.value = data
+      form.tableData = data
     }
     visible.value = v
   }
@@ -196,20 +218,25 @@ const buildTableData = async (data) => {
 
 const confirmSubmit = (e) => {
   e.stopPropagation()
-  const requestList = []
-  tableData.value.map(item => {
-    const reqParams = buildReqData(item)
-    requestList.push(installPortalFromDatakit(item.hostId, reqParams))
-  })
-  loading.value = true
-  Promise.all(requestList).then(res => {
-    loading.value = false
-    visible.value = false
+  formRef.value.validate((validResult) => {
+    if (validResult) {
+      return
+    }
+    const requestList = []
+    form.tableData.map((item) => {
+      const reqParams = buildReqData(item)
+      requestList.push(installPortalFromDatakit(item.hostId, reqParams))
+    })
+    loading.value = true
+    Promise.all(requestList).then((res) => {
+      loading.value = false
+      visible.value = false
+    })
   })
 }
 
 const handleBatchSet = () => {
-  tableData.value.map((item) => {
+  form.tableData.map((item) => {
     item.jarName = globalData.jarName
     item.pkgName = globalData.pkgName
     const result = item.hostUserList.find(
@@ -217,6 +244,8 @@ const handleBatchSet = () => {
     )
     if (result) {
       item.hostUserId = result.hostUserId
+    } else {
+      item.hostUserId = ''
     }
   })
 }
@@ -246,20 +275,22 @@ const buildInterUserList = (data) => {
       allUserDoubleArray.push(usernameList)
     }
   })
-  const result = interFunc(allUserDoubleArray)
-  if (result.length > 0) {
-    globalData.interHostUserList = result
+  const result = unionFunc(allUserDoubleArray)
+  if (result.size > 0) {
+    globalData.interHostUserList = [...result]
   }
 }
 
-const interFunc = (arr) => {
-  return arr.reduce((data, item) => {
-    return data.filter((i) => {
-      return item.some((j) => {
-        return i === j
-      })
-    })
+const handleDeleteRow = (rowIndex) => {
+  form.tableData.splice(rowIndex, 1)
+}
+
+const unionFunc = (arr) => {
+  let result = new Set()
+  arr.map((item) => {
+    result = new Set([...result, ...new Set(item)])
   })
+  return result
 }
 onMounted(() => {
   visible.value = props.open
@@ -271,6 +302,17 @@ onMounted(() => {
   .modal-footer {
     text-align: center;
   }
+}
+:deep(.arco-table-td .arco-form-item) {
+  margin-bottom: 0;
+}
+:deep(.arco-table-td .arco-form-item-label-col) {
+  display: none;
+}
+
+.del-icon {
+  color: rgb(var(--primary-6));
+  cursor: pointer;
 }
 </style>
   

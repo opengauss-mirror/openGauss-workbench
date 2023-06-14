@@ -77,13 +77,7 @@
 
 <script setup>
 import { reactive, ref, watch, onMounted } from 'vue'
-// import { Message } from '@arco-design/web-vue'
-import { hostUsers, installPortal, reInstallPortal } from '@/api/task'
-import { getSysSetting } from '@/api/common'
-import { INSTALL_TYPE } from '@/utils/constants'
-import { deletePortal } from '@/api/task'
 import { useI18n } from 'vue-i18n'
-import { Message } from '@arco-design/web-vue'
 import { getToken } from '@/utils/auth'
 
 const { t } = useI18n()
