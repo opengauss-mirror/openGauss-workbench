@@ -3,49 +3,41 @@
     :unmount-on-close="true"
     title="批量安装portal"
     v-model:visible="visible"
-    width="90vw"
-    modal-class="add-portal-modal"
+    width="95vw"
     :mask-closable="false"
     :esc-to-close="false"
   >
-    <a-form :model="globalData" auto-label-width>
-      <a-row :gutter="5">
-        <a-col :span="6">
-          <a-form-item label="用户名">
-            <a-select v-model="globalData.hostUserName">
-              <a-option
-                v-for="item in globalData.interHostUserList"
-                :key="item"
-                :label="item"
-                :value="item"
-              />
-            </a-select>
-          </a-form-item>
-        </a-col>
-        <a-col :span="5">
-          <a-form-item label="安装路径">
-            <a-input v-model="globalData.installPath" />
-          </a-form-item>
-        </a-col>
-        <a-col :span="5">
-          <a-form-item label="jar名称">
-            <a-input v-model="globalData.jarName" />
-          </a-form-item>
-        </a-col>
-        <a-col :span="4">
-          <a-form-item label="包名称">
-            <a-input v-model="globalData.pkgName" />
-          </a-form-item>
-        </a-col>
-        <a-col :span="1">
-          <a-form-item>
-            <a-button type="primary" @click="handleBatchSet">统一设置</a-button>
-          </a-form-item>
-        </a-col>
-      </a-row>
+    <a-form :model="globalData" layout="inline" auto-label-width="">
+      <a-form-item label="用户名">
+        <a-select v-model="globalData.hostUserName">
+          <a-option
+            v-for="item in globalData.interHostUserList"
+            :key="item"
+            :label="item"
+            :value="item"
+          />
+        </a-select>
+      </a-form-item>
+      <a-form-item label="安装路径">
+        <a-input v-model="globalData.installPath" />
+      </a-form-item>
+      <a-form-item label="jar名称">
+        <a-input v-model="globalData.jarName" />
+      </a-form-item>
+      <a-form-item label="包名称">
+        <a-input v-model="globalData.pkgName" />
+      </a-form-item>
+      <a-form-item>
+        <a-button type="primary" @click="handleBatchSet">统一设置</a-button>
+      </a-form-item>
     </a-form>
-    <a-form :model="form" ref="formRef">
-      <a-table :columns="columns" :data="form.tableData" :pagination="{pageSize: 1000}">
+    <a-form :model="form" ref="formRef" class="portal-table">
+      <a-table
+        :columns="columns"
+        :data="form.tableData"
+        :pagination="{ pageSize: 1000 }"
+        class="portal-table"
+      >
         <template #hostUser="{ rowIndex }">
           <a-form-item
             hide-asterisk
@@ -64,16 +56,34 @@
           </a-form-item>
         </template>
         <template #installPath="{ rowIndex }">
-          <a-input v-model="form.tableData[rowIndex].installPath"></a-input>
+          <a-form-item
+            hide-asterisk
+            :field="`tableData.${rowIndex}.installPath`"
+            :rules="{ required: true, message: '请输入安装路径' }"
+          >
+            <a-input v-model="form.tableData[rowIndex].installPath"></a-input>
+          </a-form-item>
         </template>
         <template #jarName="{ rowIndex }">
-          <a-input v-model="form.tableData[rowIndex].jarName"></a-input>
+          <a-form-item
+            hide-asterisk
+            :field="`tableData.${rowIndex}.jarName`"
+            :rules="{ required: true, message: '请输入jar名称' }"
+          >
+            <a-input v-model="form.tableData[rowIndex].jarName"></a-input>
+          </a-form-item>
         </template>
         <template #pkgName="{ rowIndex }">
-          <a-input v-model="form.tableData[rowIndex].pkgName"></a-input>
+          <a-form-item
+            hide-asterisk
+            :field="`tableData.${rowIndex}.pkgName`"
+            :rules="{ required: true, message: '请输入安装包名称' }"
+          >
+            <a-input v-model="form.tableData[rowIndex].pkgName"></a-input>
+          </a-form-item>
         </template>
         <template #op="{ rowIndex }">
-          <icon-delete class="del-icon" @click="handleDeleteRow(rowIndex)"/>
+          <icon-delete class="del-icon" @click="handleDeleteRow(rowIndex)" />
         </template>
       </a-table>
     </a-form>
@@ -164,8 +174,8 @@ const columns = [
   },
   {
     title: '操作',
-    slotName: 'op'
-  }
+    slotName: 'op',
+  },
 ]
 
 watch(visible, (v) => {
@@ -228,10 +238,13 @@ const confirmSubmit = (e) => {
       requestList.push(installPortalFromDatakit(item.hostId, reqParams))
     })
     loading.value = true
-    Promise.all(requestList).then((res) => {
-      loading.value = false
-      visible.value = false
-    })
+    Promise.all(requestList)
+      .then((res) => {
+        visible.value = false
+      })
+      .finally(() => {
+        loading.value = false
+      })
   })
 }
 
@@ -239,6 +252,7 @@ const handleBatchSet = () => {
   form.tableData.map((item) => {
     item.jarName = globalData.jarName
     item.pkgName = globalData.pkgName
+    item.installPath = globalData.installPath
     const result = item.hostUserList.find(
       (each) => each.username === globalData.hostUserName
     )
@@ -313,6 +327,9 @@ onMounted(() => {
 .del-icon {
   color: rgb(var(--primary-6));
   cursor: pointer;
+}
+.portal-table {
+  min-height: 400px;
 }
 </style>
   
