@@ -316,7 +316,15 @@
 </template>
 
 <script setup>
-import { reactive, ref, onMounted, toRaw, onBeforeUnmount, inject, nextTick } from 'vue'
+import {
+  reactive,
+  ref,
+  onMounted,
+  toRaw,
+  onBeforeUnmount,
+  inject,
+  nextTick,
+} from 'vue'
 import { hostsData, downloadEnvLog, deletePortal } from '@/api/task'
 import useTheme from '@/hooks/theme'
 import dayjs from 'dayjs'
@@ -433,13 +441,15 @@ const getFilterData = () => {
 }
 
 const selectionChange = () => {
-  const installedHosts = findHostsFromTableByStatus(
-    selectedKeys.value,
-    PORTAL_INSTALL_STATUS.INSTALLED
-  )
-  const rows = []
-  installedHosts.map((item) => rows.push(item.hostId))
-  emits('syncHost', rows)
+  nextTick(() => {
+    const installedHosts = findHostsFromTableByStatus(
+      selectedKeys.value,
+      PORTAL_INSTALL_STATUS.INSTALLED
+    )
+    const rows = []
+    installedHosts.map((item) => rows.push(item.hostId))
+    emits('syncHost', rows)
+  })
 }
 
 const findHostsFromTableByStatus = (keys, status) => {
