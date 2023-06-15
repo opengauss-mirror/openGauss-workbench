@@ -181,6 +181,10 @@ onMounted(() => {
     tabBarStore.deleteTags(route)
     destroyPluginApp(route.fullPath)
   })
+  bus.$on('opengauss-close-special-tab', (route: any) => {
+    tabBarStore.deleteTagByFullPath(route)
+    destroyPluginApp(route.fullPath)
+  })
 })
 </script>
 
