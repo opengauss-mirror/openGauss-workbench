@@ -303,11 +303,12 @@
       :mode="portalDlg.installMode"
       :host-id="portalDlg.curHostId"
       :install-info="portalDlg.installInfo"
-      @startInstall="refreshData"
+      @startInstall="refreshInstallStatus"
       @pkgDeleted="handlePkgDelete"
     />
     <upload-portal-dlg v-model:open="uploadDlg.visible" />
     <batch-install-dlg
+      @startInstall="refreshInstallStatus"
       v-model:open="installBatchDlg.visible"
       :host-list="installBatchDlg.hostList"
     />
@@ -315,7 +316,7 @@
 </template>
 
 <script setup>
-import { reactive, ref, onMounted, toRaw, onBeforeUnmount } from 'vue'
+import { reactive, ref, onMounted, toRaw, onBeforeUnmount, inject, nextTick } from 'vue'
 import { hostsData, downloadEnvLog, deletePortal } from '@/api/task'
 import useTheme from '@/hooks/theme'
 import dayjs from 'dayjs'
@@ -329,6 +330,8 @@ import { Message } from '@arco-design/web-vue'
 const { t } = useI18n()
 
 const { currentTheme } = useTheme()
+
+const changeSubmitLoading = inject('changeSubmitLoading')
 
 const props = defineProps({
   subTaskConfig: {
@@ -358,7 +361,7 @@ const pagination = reactive({
   total: 0,
   current: 1,
   pageSize: 20,
-  showPageSize: true
+  showPageSize: true,
 })
 const tableData = ref([])
 const originData = ref([])
@@ -429,9 +432,9 @@ const getFilterData = () => {
   }
 }
 
-const selectionChange = (rowKey) => {
+const selectionChange = () => {
   const installedHosts = findHostsFromTableByStatus(
-    rowKey,
+    selectedKeys.value,
     PORTAL_INSTALL_STATUS.INSTALLED
   )
   const rows = []
@@ -495,7 +498,7 @@ const handleDownloadLog = (row) => {
   })
 }
 
-const refreshData = () => {
+const refreshData = (hostIdList) => {
   getHostsData()
 }
 
@@ -515,9 +518,10 @@ const getHostsData = () => {
         }))
         originData.value = JSON.parse(JSON.stringify(tableData.value))
         pagination.total = res.data.length
+        selectionChange()
         timer = setTimeout(() => {
           getHostsData()
-        }, 5000)
+        }, 6000)
       }
     })
     .catch(() => {
@@ -542,13 +546,22 @@ const handlePkgDelete = () => {
 
 const handleDelete = (record) => {
   tableLoading.value = true
-  deletePortal(record.hostInfo.hostId)
+  changeSubmitLoading(true)
+  deletePortal(record.hostId)
     .then(() => {
-      getHostsData()
-      tableLoading.value = false
+      const deletedRow = tableData.value.find(
+        (item) => item.hostId === record.hostId
+      )
+      deletedRow.installPortalStatus = PORTAL_INSTALL_STATUS.NOT_INSTALL
+      nextTick(() => {
+        selectionChange()
+        tableLoading.value = false
+        changeSubmitLoading(false)
+      })
     })
     .catch(() => {
       tableLoading.value = false
+      changeSubmitLoading(false)
     })
 }
 
@@ -581,18 +594,49 @@ const handleBatchRemove = () => {
     PORTAL_INSTALL_STATUS.INSTALLED
   )
   const targetPortalList = [...failedPortal, ...installedPortal]
-  if (targetPortalList.length > 0) {
-    const removeReqList = []
-    targetPortalList.map((item) => {
-      removeReqList.push(deletePortal(item.hostId))
+  if (targetPortalList.length <= 0) {
+    Message.info('请选择已安装或者安装迁移套件错误的机器')
+    return
+  }
+  const removeReqList = []
+  const removeHostIdList = []
+  targetPortalList.map((item) => {
+    removeHostIdList.push(item.hostId)
+    removeReqList.push(deletePortal(item.hostId))
+  })
+  removeLoading.value = true
+  tableLoading.value = true
+  changeSubmitLoading(true)
+  Promise.all(removeReqList)
+    .then((res) => {
+      const deletedRows = tableData.value.filter(
+        (item) => removeHostIdList.indexOf(item.hostId) > -1
+      )
+      deletedRows.forEach(
+        (item) => (item.installPortalStatus = PORTAL_INSTALL_STATUS.NOT_INSTALL)
+      )
+      nextTick(() => {
+        selectionChange()
+        removeLoading.value = false
+        tableLoading.value = false
+        changeSubmitLoading(false)
+      })
     })
-    removeLoading.value = true
-    tableLoading.value = true
-    Promise.all(removeReqList).then(res => {
+    .catch(() => {
       removeLoading.value = false
       tableLoading.value = false
+      changeSubmitLoading(false)
     })
-  }
+}
+
+const refreshInstallStatus = (hostIdList) => {
+  const installRows = tableData.value.filter(
+    (item) => hostIdList.indexOf(item.hostId) > -1
+  )
+  installRows.forEach(
+    (item) => (item.installPortalStatus = PORTAL_INSTALL_STATUS.INSTALLING)
+  )
+  selectionChange()
 }
 
 onMounted(() => {

@@ -263,7 +263,7 @@ const confirmSubmit = () => {
       let method = props.mode === 'install' ? installPortal : reInstallPortal
       method(props.hostId, params)
         .then(() => {
-          emits('startInstall')
+          emits('startInstall', [props.hostId])
           visible.value = false
           loading.value = false
         })

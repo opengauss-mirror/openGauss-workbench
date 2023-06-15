@@ -24,15 +24,15 @@
       <step3 v-if="currentStep === 3" :sub-task-config="subTaskConfig" :host-data="selectedHosts" @syncHost="syncHost" />
     </div>
     <div class="submit-con">
-      <a-button v-if="currentStep === 2 || currentStep === 3" type="outline" class="btn-item" @click="onPrev">{{$t('task.index.5q08xss4kr40')}}</a-button>
+      <a-button v-if="currentStep === 2 || currentStep === 3" type="outline" class="btn-item" @click="onPrev" :loading="submitLoading">{{$t('task.index.5q08xss4kr40')}}</a-button>
       <a-button v-if="currentStep === 1 || currentStep === 2" type="primary" class="btn-item" @click="onNext">{{$t('task.index.5q08xss4kww0')}}</a-button>
-      <a-button v-if="currentStep === 3" type="primary" class="btn-item" @click="saveConfig">{{$t('task.index.5q08xss4l2w0')}}</a-button>
+      <a-button v-if="currentStep === 3" type="primary" class="btn-item" @click="saveConfig" :loading="submitLoading">{{$t('task.index.5q08xss4l2w0')}}</a-button>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, provide } from 'vue'
 import { Message } from '@arco-design/web-vue'
 import Step1 from './step1'
 import Step2 from './step2'
@@ -53,7 +53,10 @@ const globalParamsObject = reactive({
 const defaultBasicData = ref([])
 const selectedHosts = ref([])
 const stepOneComp = ref(null)
-
+const submitLoading = ref(false)
+provide('changeSubmitLoading', (val) => {
+  submitLoading.value = val
+})
 // prev step
 const onPrev = () => {
   currentStep.value = Math.max(1, currentStep.value - 1)
@@ -74,7 +77,6 @@ const onNext = () => {
 
 // sync task config
 const syncSubTask = configData => {
-  console.log(configData)
   subTaskConfig.value = configData
 }
 
@@ -96,7 +98,7 @@ const saveConfig = () => {
     return
   }
   if (!selectedHosts.value.length) {
-    Message.error('Please select a migration machine')
+    Message.error('Please select a machine with migration kit installed')
     return
   }
 
