@@ -160,7 +160,7 @@
 import { KeyValue } from '@/types/global'
 import { FormInstance } from '@arco-design/web-vue/es/form'
 import { nextTick, reactive, ref, toRaw, computed } from 'vue'
-import { addHost, editHost, hostPing, azListAll, hostTagListAll, hostUserListAll } from '@/api/ops'
+import { addHost, editHost, hostPing, hostTagListAll, hostUserListAll } from '@/api/ops'
 import { Message } from '@arco-design/web-vue'
 import { useI18n } from 'vue-i18n'
 import { encryptPassword } from '@/utils/jsencrypt'
@@ -177,8 +177,6 @@ const data = reactive<KeyValue>({
   loading: false,
   testLoading: false,
   status: hostStatusEnum.unTest,
-  azListLoading: false,
-  azList: [],
   tagsLoading: false,
   tagsList: [],
   oldPwd: '',
@@ -192,7 +190,6 @@ const data = reactive<KeyValue>({
     password: '',
     isRemember: false,
     tags: [],
-    azId: '',
     remark: ''
   }
 })
@@ -365,7 +362,6 @@ const handleTestHost = () => {
         port: data.formData.port,
         password: encryptPwd,
         isRemember: data.formData.isRemember,
-        azId: data.formData.azId,
         remark: data.formData.remark,
         username: 'root'
       })
@@ -384,18 +380,6 @@ const handleTestHost = () => {
     }
   })
 }
-
-const getAZList = () => new Promise(resolve => {
-  data.azListLoading = true
-  azListAll().then((res: KeyValue) => {
-    if (Number(res.code) === 200) {
-      resolve(true)
-      data.azList = res.data
-    } else resolve(false)
-  }).finally(() => {
-    data.azListLoading = false
-  })
-})
 
 const getAllTag = () => {
   data.tagsLoading = true
@@ -430,7 +414,6 @@ const getHostPassword = (hostId: string) => {
 
 const open = (type: string, editData?: KeyValue) => {
   data.show = true
-  getAZList()
   getAllTag()
   data.status = hostStatusEnum.unTest
   data.loading = false
@@ -451,7 +434,6 @@ const open = (type: string, editData?: KeyValue) => {
       password: '',
       isRemember: false,
       port: 22,
-      azId: '',
       remark: ''
     })
   }
