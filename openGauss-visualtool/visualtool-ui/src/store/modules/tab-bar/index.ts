@@ -45,6 +45,13 @@ const useAppStore = defineStore('tabBar', {
       this.tagList.splice(idx, 1)
       this.cacheTabList.delete(tag.name)
     },
+    deleteTagByFullPath (tag: TagProps) {
+      const idx = this.tagList.findIndex(item => item.fullPath === tag.fullPath)
+      if (idx !== -1) {
+        this.tagList.splice(idx, 1)
+        this.cacheTabList.delete(tag.name)
+      }
+    },
     freshTabList (tags: TagProps[]) {
       this.tagList = tags
       this.cacheTabList.clear()
