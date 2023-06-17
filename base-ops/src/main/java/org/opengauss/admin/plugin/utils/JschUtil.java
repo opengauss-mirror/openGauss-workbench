@@ -464,6 +464,12 @@ public class JschUtil {
             } catch (JSchException | SftpException e) {
                 log.error("sftp upload Failure", e);
                 throw new OpsException("sftp upload Failure: " + e.getMessage());
+            } finally {
+                try {
+                    sourceStream.close();
+                } catch (IOException e) {
+                    log.error("close input stream failed: " + e.getMessage());
+                }
             }
         }
         log.info("Upload End");

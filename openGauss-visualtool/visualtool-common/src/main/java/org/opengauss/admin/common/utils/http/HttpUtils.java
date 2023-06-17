@@ -69,6 +69,7 @@ public class HttpUtils {
     public static String sendGet(String url, String param, String contentType) {
         StringBuilder result = new StringBuilder();
         BufferedReader in = null;
+        InputStreamReader isr = null;
         try {
             String urlNameString = url + "?" + param;
             log.info("sendGet - {}", urlNameString);
@@ -78,7 +79,8 @@ public class HttpUtils {
             connection.setRequestProperty("connection", "Keep-Alive");
             connection.setRequestProperty("user-agent", "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1;SV1)");
             connection.connect();
-            in = new BufferedReader(new InputStreamReader(connection.getInputStream(), contentType));
+            isr = new InputStreamReader(connection.getInputStream(), contentType);
+            in = new BufferedReader(isr);
             String line;
             while ((line = in.readLine()) != null) {
                 result.append(line);
@@ -100,6 +102,13 @@ public class HttpUtils {
             } catch (Exception ex) {
                 log.error("close Exception, url=" + url + ",param=" + param, ex);
             }
+            if (isr != null) {
+                try {
+                    isr.close();
+                } catch (IOException e) {
+                    log.error("close input stream reader failed: " + e.getMessage());
+                }
+            }
         }
         return result.toString();
     }
@@ -115,6 +124,7 @@ public class HttpUtils {
         BufferedReader in = null;
         StringBuilder result = new StringBuilder();
         PostResponse response = new PostResponse();
+        InputStreamReader isr = null;
         try {
             log.info("sendPost - {}", url);
             URL realUrl = new URL(url);
@@ -132,7 +142,8 @@ public class HttpUtils {
             out = new PrintWriter(conn.getOutputStream());
             out.print(param);
             out.flush();
-            in = new BufferedReader(new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8));
+            isr = new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8);
+            in = new BufferedReader(isr);
             String line;
             while ((line = in.readLine()) != null) {
                 result.append(line);
@@ -156,6 +167,9 @@ public class HttpUtils {
                 if (in != null) {
                     in.close();
                 }
+                if (isr != null) {
+                    isr.close();
+                }
             } catch (IOException ex) {
                 log.error("close Exception, url=" + url + ",param=" + param, ex);
             }
@@ -166,6 +180,7 @@ public class HttpUtils {
     public static String sendSslPost(String url, String param) {
         StringBuilder result = new StringBuilder();
         String urlNameString = url + "?" + param;
+        InputStreamReader isr = null;
         try {
             log.info("sendSSLPost - {}", urlNameString);
             SSLContext sc = SSLContext.getInstance("SSL");
@@ -184,7 +199,8 @@ public class HttpUtils {
             conn.setHostnameVerifier(new TrustAnyHostnameVerifier());
             conn.connect();
             InputStream is = conn.getInputStream();
-            BufferedReader br = new BufferedReader(new InputStreamReader(is));
+            isr = new InputStreamReader(is);
+            BufferedReader br = new BufferedReader(isr);
             String ret = "";
             while ((ret = br.readLine()) != null) {
                 if (ret != null && !"".equals(ret.trim())) {
@@ -202,6 +218,14 @@ public class HttpUtils {
             log.error("sendSSLPost IOException, url=" + url + ",param=" + param, e);
         } catch (Exception e) {
             log.error("sendSSLPost Exception, url=" + url + ",param=" + param, e);
+        } finally {
+            if (isr != null) {
+                try {
+                    isr.close();
+                } catch (IOException e) {
+                    log.error("close input stream reader failed: " + e.getMessage());
+                }
+            }
         }
         return result.toString();
     }

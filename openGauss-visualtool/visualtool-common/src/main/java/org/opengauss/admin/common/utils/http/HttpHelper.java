@@ -24,6 +24,7 @@
 
 package org.opengauss.admin.common.utils.http;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,14 +41,17 @@ import java.nio.charset.Charset;
  *
  * @author xielibo
  */
+@Slf4j
 public class HttpHelper {
     private static final Logger LOGGER = LoggerFactory.getLogger(HttpHelper.class);
 
     public static String getBodyString(ServletRequest request) {
         StringBuilder sb = new StringBuilder();
         BufferedReader reader = null;
+        InputStreamReader isr = null;
         try (InputStream inputStream = request.getInputStream()) {
-            reader = new BufferedReader(new InputStreamReader(inputStream, Charset.forName("UTF-8")));
+            isr = new InputStreamReader(inputStream, Charset.forName("UTF-8"));
+            reader = new BufferedReader(isr);
             String line = "";
             while ((line = reader.readLine()) != null) {
                 sb.append(line);
@@ -55,6 +59,13 @@ public class HttpHelper {
         } catch (IOException e) {
             LOGGER.warn("getBodyString Error");
         } finally {
+            if (isr != null) {
+                try {
+                    isr.close();
+                } catch (IOException e) {
+                    log.error("close input stream failed: " + e.getMessage());
+                }
+            }
             if (reader != null) {
                 try {
                     reader.close();
