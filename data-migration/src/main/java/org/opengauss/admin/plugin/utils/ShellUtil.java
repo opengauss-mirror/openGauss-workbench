@@ -83,6 +83,7 @@ public class ShellUtil {
         ChannelExec channelExec = null;
         JschResult jschResult = new JschResult();
         InputStream in = null;
+        InputStreamReader isr = null;
         try {
             StringBuilder sb = new StringBuilder(16);
             session = JschUtil.openSession(host, port, user, password, CONNECT_TIMEOUT);
@@ -92,7 +93,7 @@ public class ShellUtil {
             }
             channelExec.connect();
             in = channelExec.getInputStream();
-            InputStreamReader isr = new InputStreamReader(in, StandardCharsets.UTF_8);
+            isr = new InputStreamReader(in, StandardCharsets.UTF_8);
             BufferedReader reader = new BufferedReader(isr);
             String buffer;
             while ((buffer = reader.readLine()) != null) {
@@ -128,7 +129,14 @@ public class ShellUtil {
                 try {
                     in.close();
                 } catch (IOException e) {
-                    log.error("exec command error, message: {}", e.getMessage());
+                    log.error("close input stream error, message: {}", e.getMessage());
+                }
+            }
+            if (isr != null) {
+                try {
+                    isr.close();
+                } catch (IOException e) {
+                    log.error("close input stream reader error, message: {}", e.getMessage());
                 }
             }
         }
@@ -142,7 +150,6 @@ public class ShellUtil {
         Session session = JschUtil.openSession(host, port, user, password);
         Channel channel = null;
         ChannelSftp sftp = null;
-        InputStream in = null;
         try {
             channel = session.openChannel("sftp");
             channel.connect();
@@ -217,6 +224,13 @@ public class ShellUtil {
         } finally {
             JschUtil.close(sftp);
             JschUtil.close(session);
+            if (in != null) {
+                try {
+                    in.close();
+                } catch (IOException e) {
+                    log.error("close input stream failed: " + e.getMessage());
+                }
+            }
         }
     }
 }

@@ -52,6 +52,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.regex.Matcher;
@@ -232,14 +233,15 @@ public class OpsPackageManagerService extends ServiceImpl<OpsPackageManagerMappe
                 log.error("Failed to decompress the installation package", e);
                 throw new OpsException("Failed to decompress the installation package");
             }
-
+            InputStream in = null;
             try {
                 Process file = Runtime.getRuntime().exec("file " + tempAbsoluteFolder + File.separator + "bin" + File.separator + "gs_ctl");
                 int exitCode = file.waitFor();
                 if (0 != exitCode) {
                     throw new OpsException("Failed to get cpu arch with exitCode " + exitCode);
                 }
-                String res = IoUtil.read(file.getInputStream(), StandardCharsets.UTF_8);
+                in = file.getInputStream();
+                String res = IoUtil.read(in, StandardCharsets.UTF_8);
                 if (StrUtil.isEmpty(res)) {
                     log.error("Failed to get cpu arch:{}");
                     throw new OpsException("Failed to get cpu arch");
@@ -263,6 +265,14 @@ public class OpsPackageManagerService extends ServiceImpl<OpsPackageManagerMappe
             } catch (IOException | InterruptedException e) {
                 log.error("Failed to get cpu arch", e);
                 throw new OpsException("Failed to get cpu arch");
+            } finally {
+                if (in != null) {
+                    try {
+                        in.close();
+                    } catch (IOException e) {
+                        log.error("close input stream failed: " + e.getMessage());
+                    }
+                }
             }
             return null;
         } finally {
@@ -312,7 +322,7 @@ public class OpsPackageManagerService extends ServiceImpl<OpsPackageManagerMappe
                 log.error("Failed to decompress the installation package", e);
                 throw new OpsException("Failed to decompress the installation package");
             }
-
+            InputStream in = null;
             try {
                 String command = "file " + tempAbsoluteFolder + File.separator + "bin" + File.separator + "cm_ctl";
                 Process file = Runtime.getRuntime().exec(command);
@@ -321,7 +331,8 @@ public class OpsPackageManagerService extends ServiceImpl<OpsPackageManagerMappe
                     log.error("command:{}", command);
                     throw new OpsException("Failed to get cpu arch with exitCode " + exitCode);
                 }
-                String res = IoUtil.read(file.getInputStream(), StandardCharsets.UTF_8);
+                in = file.getInputStream();
+                String res = IoUtil.read(in, StandardCharsets.UTF_8);
                 if (StrUtil.isEmpty(res)) {
                     log.error("Failed to get cpu arch:{}");
                     throw new OpsException("Failed to get cpu arch");
@@ -345,6 +356,14 @@ public class OpsPackageManagerService extends ServiceImpl<OpsPackageManagerMappe
             } catch (IOException | InterruptedException e) {
                 log.error("Failed to get cpu arch", e);
                 throw new OpsException("Failed to get cpu arch");
+            } finally {
+                if (in != null) {
+                    try {
+                        in.close();
+                    } catch (IOException e) {
+                        log.error("close input stream failed: " + e.getMessage());
+                    }
+                }
             }
 
             return null;

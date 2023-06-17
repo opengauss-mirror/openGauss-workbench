@@ -557,6 +557,8 @@ public class OpsOlkServiceImpl extends ServiceImpl<OpsOlkMapper, OpsOlkEntity> i
     public void threadReadLogToWs(ReadLogParam param) {
         Future<?> future = threadPoolTaskExecutor.submit(() -> {
             BufferedReader reader = null;
+            InputStream in = null;
+            InputStreamReader isr = null;
             ChannelExec channel = null;
             Session session = null;
             ServerDto serverDto = param.getServerDto();
@@ -586,8 +588,9 @@ public class OpsOlkServiceImpl extends ServiceImpl<OpsOlkMapper, OpsOlkEntity> i
                 channel.setPty(false);
                 channel.setCommand(String.format("grep -n \"%s\" %s | tail -1 | awk -F \":\" '{print $1}' | xargs -I {} tail -f %s -n +{}", param.getSF(), param.getLogPath(), param.getLogPath()));
                 channel.connect(20000);
-                InputStream in = channel.getInputStream();
-                reader = new BufferedReader(new InputStreamReader(in));
+                in = channel.getInputStream();
+                isr = new InputStreamReader(in);
+                reader = new BufferedReader(isr);
                 String line;
                 TimeLimiter limiter = SimpleTimeLimiter.create(Executors.newSingleThreadExecutor());
 
@@ -612,6 +615,20 @@ public class OpsOlkServiceImpl extends ServiceImpl<OpsOlkMapper, OpsOlkEntity> i
                 wsUtil.sendText(param.getWsSession(), errMsg);
                 wsUtil.setErrorFlag(param.getWsSession());
             } finally {
+                if (in != null) {
+                    try {
+                        in.close();
+                    } catch (IOException e) {
+                        log.error("close input stream failed: " + e.getMessage());
+                    }
+                }
+                if (isr != null) {
+                    try {
+                        isr.close();
+                    } catch (IOException e) {
+                        log.error("close input stream reader failed: " + e.getMessage());
+                    }
+                }
                 if (channel != null) {
                     channel.disconnect();
                 }

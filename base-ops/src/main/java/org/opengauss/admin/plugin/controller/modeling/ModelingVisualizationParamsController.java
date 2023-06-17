@@ -17,6 +17,7 @@
 package org.opengauss.admin.plugin.controller.modeling;
 
 import com.alibaba.fastjson.JSONObject;
+import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.constant.Constants;
 import org.opengauss.admin.plugin.base.BaseController;
 import org.opengauss.admin.common.core.domain.AjaxResult;
@@ -29,10 +30,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
@@ -41,6 +39,7 @@ import java.util.Objects;
  * @author LZW
  * @date 2022/10/29 22:38
  */
+@Slf4j
 @RestController
 @RequestMapping("/modeling/dataflow/visualization/params")
 public class ModelingVisualizationParamsController extends BaseController {
@@ -118,11 +117,13 @@ public class ModelingVisualizationParamsController extends BaseController {
         newFile.setDataFlowId(id);
         newFile.setName(file.getOriginalFilename());
         newFile.setRegisterName(name);
-
+        InputStreamReader isr = null;
+        InputStream in = null;
         StringBuilder str = new StringBuilder();
         try {
-            InputStreamReader inputStreamReader = new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8);
-            BufferedReader br = new BufferedReader(inputStreamReader);
+            in = file.getInputStream();
+            isr = new InputStreamReader(in, StandardCharsets.UTF_8);
+            BufferedReader br = new BufferedReader(isr);
             String s;
             while ((s = br.readLine()) != null) {
                 str.append(s);
@@ -130,6 +131,21 @@ public class ModelingVisualizationParamsController extends BaseController {
             br.close();
         } catch (IOException e1) {
             e1.printStackTrace();
+        } finally {
+            if (in != null) {
+                try {
+                    in.close();
+                } catch (IOException e) {
+                    log.error("close input stream failed: " + e.getMessage());
+                }
+            }
+            if (isr != null) {
+                try {
+                    isr.close();
+                } catch (IOException e) {
+                    log.error("close input stream reader failed: " + e.getMessage());
+                }
+            }
         }
 
         newFile.setGeoJson(str.toString());

@@ -309,6 +309,7 @@ public class FileUploadUtils {
 
         try {
             IOUtils.copy(is, fileItemOutStream, 20480);
+            is.close();
         } catch (IOException e) {
             String errMsg = "write FileItem failed: {}" + e.getMessage();
             log.error(errMsg);
