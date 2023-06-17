@@ -233,13 +233,16 @@ const confirmSubmit = (e) => {
       return
     }
     const requestList = []
+    const reqHostIdList = []
     form.tableData.map((item) => {
       const reqParams = buildReqData(item)
       requestList.push(installPortalFromDatakit(item.hostId, reqParams))
+      reqHostIdList.push(item.hostId)
     })
     loading.value = true
     Promise.all(requestList)
       .then((res) => {
+        emits('startInstall', reqHostIdList)
         visible.value = false
       })
       .finally(() => {
