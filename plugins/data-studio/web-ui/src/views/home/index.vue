@@ -7,7 +7,6 @@
 <script lang="ts" setup>
   import { useRoute, useRouter } from 'vue-router';
   import TerminalEditor from '@/components/terminal-editor/index.vue';
-  import { ref, watch } from 'vue';
   import { useAppStore } from '@/store/modules/app';
   import EventBus, { EventTypeName } from '@/utils/event-bus';
   import { connectListPersist } from '@/config';
@@ -26,16 +25,26 @@
           );
           showHome.value = false;
           if (isDSConnect.length) {
+            const connectInfoName = AppStore.connectListMap[0].info.name;
+            const uuid = AppStore.connectListMap[0].connectedDatabase[0]?.uuid;
+            const dbname = AppStore.connectListMap[0].connectedDatabase[0]?.name;
             router.replace({
               path: '/home',
               query: {
-                rootId: AppStore.lastestConnectDatabase.rootId,
-                connectInfoName: AppStore.currentConnectInfo?.name,
-                uuid: AppStore.lastestConnectDatabase.uuid,
-                dbname: AppStore.lastestConnectDatabase.name,
+                rootId: AppStore.connectListMap[0].id,
+                connectInfoName,
+                uuid,
+                dbname,
                 time: Date.now(),
               },
             });
+            // query: {
+            //   rootId: AppStore.lastestConnectDatabase.rootId,
+            //   connectInfoName: AppStore.currentConnectInfo?.name,
+            //   uuid: AppStore.lastestConnectDatabase.uuid,
+            //   dbname: AppStore.lastestConnectDatabase.name,
+            //   time: Date.now(),
+            // },
           } else {
             // EventBus.notify(EventTypeName.CLOSE_ALL_TAB);
             EventBus.notify(EventTypeName.OPEN_CONNECT_DIALOG, 'create');

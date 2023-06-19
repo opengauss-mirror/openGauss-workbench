@@ -1,4 +1,5 @@
 import request from './request';
+import requestBlob from './requestBlob';
 
 // getColumnList
 export function getColumnList(data) {
@@ -40,6 +41,15 @@ export function dropSequence(data) {
 export function getSequenceDdls(data) {
   return request({
     url: '/dataStudio/web/v1/sequenceDdls',
+    method: 'post',
+    data,
+  });
+}
+
+// export ddl of sequence
+export function exportSequenceDdl(data) {
+  return requestBlob({
+    url: '/dataStudio/web/v1/export/sequence/ddl',
     method: 'post',
     data,
   });

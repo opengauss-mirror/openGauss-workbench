@@ -1,9 +1,13 @@
+/*
+ * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ */
+
 package com.nctigba.datastudio.base;
 
 import cn.hutool.core.thread.ThreadUtil;
 import cn.hutool.json.JSONUtil;
-import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gitee.starblues.annotation.Extract;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 import com.nctigba.datastudio.config.ConnectionConfig;
@@ -14,6 +18,7 @@ import com.nctigba.datastudio.service.OperationInterface;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.util.Strings;
+import org.apache.poi.ss.formula.functions.T;
 import org.opengauss.admin.system.plugin.extract.SocketExtract;
 import org.opengauss.admin.system.plugin.facade.WsFacade;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,8 +32,8 @@ import java.sql.Statement;
 import java.util.HashMap;
 import java.util.Map;
 
-import static com.nctigba.datastudio.constants.CommonConstants.BEGIN;
-import static com.nctigba.datastudio.constants.CommonConstants.END;
+import static com.nctigba.datastudio.constants.CommonConstants.COMPILE;
+import static com.nctigba.datastudio.constants.CommonConstants.EXECUTE;
 import static com.nctigba.datastudio.constants.CommonConstants.FIVE_HUNDRED;
 import static com.nctigba.datastudio.constants.CommonConstants.START_RUN;
 import static com.nctigba.datastudio.constants.CommonConstants.STOP_DEBUG;
@@ -41,18 +46,15 @@ import static com.nctigba.datastudio.enums.MessageEnum.window;
 @Service
 @Extract(bus = "webds-plugin")
 public class WebSocketServer implements SocketExtract {
+    private final Map<String, Map<String, Object>> paramMap = new HashMap<>();
+    private final Map<String, Connection> connectionMap = new HashMap<>();
+    private final Map<String, Statement> statementMap = new HashMap<>();
+    private final Map<String, OperateStatusDO> operationStatusMap = new HashMap<>();
+    @Autowired
+    ObjectMapper objectMapper;
     @Autowired
     @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
     private WsFacade wsFacade;
-
-    private final Map<String, Map<String, Object>> paramMap = new HashMap<>();
-
-    private final Map<String, Connection> connectionMap = new HashMap<>();
-
-    private final Map<String, Statement> statementMap = new HashMap<>();
-
-    private final Map<String, OperateStatusDO> operationStatusMap = new HashMap<>();
-
     private String language = Strings.EMPTY;
 
     @Override
@@ -76,7 +78,8 @@ public class WebSocketServer implements SocketExtract {
         if (StringUtils.isEmpty(operation)) {
             return;
         }
-        var aa = SpringApplicationContext.getApplicationContext().getBean(operation, OperationInterface.class);
+        OperationInterface<T> aa = SpringApplicationContext.getApplicationContext().getBean(operation,
+                OperationInterface.class);
         ThreadUtil.execAsync(() -> {
             try {
                 aa.operate(this, message);
@@ -84,7 +87,8 @@ public class WebSocketServer implements SocketExtract {
                 log.error("method error: ", e);
                 try {
                     sendMessage(sessionId, window, FIVE_HUNDRED, e.getMessage(), e.getStackTrace());
-                    if (!operation.equals(START_RUN) && !operation.equals(STOP_RUN)) {
+                    if (!operation.equals(START_RUN) && !operation.equals(STOP_RUN)
+                        && !operation.equals(COMPILE) && !operation.equals(EXECUTE)) {
                         SpringApplicationContext.getApplicationContext().getBean(STOP_DEBUG, OperationInterface.class)
                                 .operate(this, message);
                     }
@@ -119,10 +123,11 @@ public class WebSocketServer implements SocketExtract {
      * @param obj
      * @throws IOException
      */
-    public synchronized void sendMessage(String sessionId, MessageEnum type, String code, String message, Object obj) throws IOException {
+    public synchronized void sendMessage(String sessionId, MessageEnum type, String code, String message,
+        Object obj) throws IOException {
         WebDsResult result = WebDsResult.ok(type.toString(), message).addData(obj);
         result.setCode(code);
-        wsFacade.sendMessage(WEBDS_PLUGIN, sessionId, JSON.toJSONString(result));
+        wsFacade.sendMessage(WEBDS_PLUGIN, sessionId, objectMapper.writeValueAsString(result));
     }
 
     public void sendMessage(String sessionId, MessageEnum type, String message, Object obj) throws IOException {
@@ -151,11 +156,11 @@ public class WebSocketServer implements SocketExtract {
     }
 
     public OperateStatusDO getOperateStatus(String sessionId) {
-        OperateStatusDO operateStatusDO = this.operationStatusMap.get(sessionId);
-        if (operateStatusDO == null) {
+        OperateStatusDO operateStatus = this.operationStatusMap.get(sessionId);
+        if (operateStatus == null) {
             return new OperateStatusDO();
         }
-        return operateStatusDO;
+        return operateStatus;
     }
 
     public void setOperateStatus(String sessionId, OperateStatusDO operateStatus) {
@@ -176,23 +181,11 @@ public class WebSocketServer implements SocketExtract {
         this.paramMap.put(sessionId, map);
     }
 
-    public void setLanguage(String language) {
-        this.language = language;
-    }
-
     public String getLanguage() {
         return language;
     }
 
-    /**
-     * check line is in range
-     *
-     * @param line
-     * @return
-     */
-    public boolean checkLine(String sessionId, int line) {
-        int begin = (int) getParamMap(sessionId).get(BEGIN);
-        int end = (int) getParamMap(sessionId).get(END);
-        return line > begin && line < end;
+    public void setLanguage(String language) {
+        this.language = language;
     }
 }

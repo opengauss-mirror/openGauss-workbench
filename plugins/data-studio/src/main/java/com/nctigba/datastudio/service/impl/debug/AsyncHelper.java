@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ */
+
 package com.nctigba.datastudio.service.impl.debug;
 
 import com.nctigba.datastudio.base.WebSocketServer;
@@ -24,8 +28,8 @@ import static com.nctigba.datastudio.constants.CommonConstants.OID;
 import static com.nctigba.datastudio.constants.CommonConstants.RESULT;
 import static com.nctigba.datastudio.constants.CommonConstants.STATEMENT;
 import static com.nctigba.datastudio.constants.CommonConstants.SUCCESS;
-import static com.nctigba.datastudio.constants.SqlConstants.PARENTHESES_SEMICOLON;
 import static com.nctigba.datastudio.constants.SqlConstants.TURN_OFF_SQL;
+import static com.nctigba.datastudio.enums.MessageEnum.createCoverageRate;
 import static com.nctigba.datastudio.enums.MessageEnum.operateStatus;
 import static com.nctigba.datastudio.enums.MessageEnum.table;
 import static com.nctigba.datastudio.enums.MessageEnum.text;
@@ -36,20 +40,42 @@ import static com.nctigba.datastudio.enums.MessageEnum.window;
 public class AsyncHelper {
     @Async
     public void task(WebSocketServer webSocketServer, PublicParamReq paramReq) throws SQLException, IOException {
-        log.info("AsyncHelper paramReq is: " + paramReq);
+        log.info("AsyncHelper paramReq: " + paramReq);
         String windowName = paramReq.getWindowName();
         Statement statement = webSocketServer.getStatement(windowName);
-        try {
-            ResultSet resultSet = statement.executeQuery(DebugUtils.prepareSql(paramReq));
+        try (
+                ResultSet resultSet = statement.executeQuery(DebugUtils.prepareSql(paramReq))
+        ) {
+            if (!paramReq.isCoverage()) {
+                Connection conn = (Connection) webSocketServer.getParamMap(windowName).get(CONNECTION);
+                Statement stat = (Statement) webSocketServer.getParamMap(windowName).get(STATEMENT);
+                if (stat != null) {
+                    stat.close();
+                    stat.cancel();
+                    webSocketServer.setParamMap(windowName, STATEMENT, null);
+                }
+                if (conn != null) {
+                    conn.close();
+                    webSocketServer.setParamMap(windowName, CONNECTION, null);
+                }
+                statement.close();
+                webSocketServer.setStatement(windowName, null);
+
+                Map<String, String> map = new HashMap<>();
+                map.put(RESULT, LocaleString.transLanguageWs("1010", webSocketServer));
+                webSocketServer.sendMessage(windowName, createCoverageRate, SUCCESS, map);
+                return;
+            }
+
             Map<String, Object> map = DebugUtils.parseResultSet(resultSet);
-            log.info("AsyncHelper map is: " + map);
+            log.info("AsyncHelper result map: " + map);
             List<List<Object>> list = (List<List<Object>>) map.get(RESULT);
             if (list.size() == 1) {
                 if (list.get(0).size() == 1) {
                     webSocketServer.sendMessage(windowName, text, SUCCESS, map);
                 } else {
                     Map<String, String> messageMap = new HashMap<>();
-                    messageMap.put(RESULT, LocaleString.transLanguageWs("1007", webSocketServer));
+                    messageMap.put(RESULT, LocaleString.transLanguageWs("1008", webSocketServer));
                     webSocketServer.sendMessage(windowName, text, SUCCESS, messageMap);
                     webSocketServer.sendMessage(windowName, table, SUCCESS, map);
                 }
@@ -63,14 +89,13 @@ public class AsyncHelper {
         OperateStatusDO operateStatusDO = webSocketServer.getOperateStatus(windowName);
         operateStatusDO.enableStartDebug();
         webSocketServer.setOperateStatus(windowName, operateStatusDO);
-
         Map<String, Object> operateStatusMap = new HashMap<>();
         operateStatusMap.put(RESULT, operateStatusDO);
         webSocketServer.sendMessage(windowName, operateStatus, SUCCESS, operateStatusMap);
 
         String oid = (String) webSocketServer.getParamMap(windowName).get(OID);
-        statement.execute(TURN_OFF_SQL + oid + PARENTHESES_SEMICOLON);
-        log.info("AsyncHelper oid is: " + oid);
+        statement.execute(String.format(TURN_OFF_SQL, oid));
+        log.info("AsyncHelper oid: " + oid);
 
         Connection conn = (Connection) webSocketServer.getParamMap(windowName).get(CONNECTION);
         Statement stat = (Statement) webSocketServer.getParamMap(windowName).get(STATEMENT);
@@ -85,8 +110,5 @@ public class AsyncHelper {
         }
         statement.close();
         webSocketServer.setStatement(windowName, null);
-        Connection connection = webSocketServer.getConnection(windowName);
-        connection.close();
-        webSocketServer.setConnection(windowName, null);
     }
 }

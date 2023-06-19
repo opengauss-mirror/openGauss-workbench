@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ */
+
 package com.nctigba.datastudio.util;
 
 import com.nctigba.datastudio.base.WebSocketServer;
@@ -17,15 +21,15 @@ import java.util.Locale;
 public class LocaleString {
     private static MessageSource messageSource;
 
-	@Autowired
-	public void setMessageSource(MessageSource messageSource) {
-		LocaleString.messageSource = messageSource;
-	}
+    @Autowired
+    public void setMessageSource(MessageSource messageSource) {
+        LocaleString.messageSource = messageSource;
+    }
 
     public static String transLanguage(String str) {
         ServletRequestAttributes requestAttributes = (ServletRequestAttributes) RequestContextHolder.currentRequestAttributes();
         String language = requestAttributes.getRequest().getHeader(HttpHeaders.ACCEPT_LANGUAGE);
-		return translate(str, language);
+        return translate(str, language);
     }
 
     public static String transLanguageWs(String str, WebSocketServer webSocketServer) {
@@ -34,8 +38,8 @@ public class LocaleString {
     }
 
     private static String translate(String str, String language) {
-		log.info("LocaleString language is: " + language);
-		Locale locale;
+        log.info("LocaleString language is: " + language);
+        Locale locale;
         if (StringUtils.isEmpty(language)) {
             locale = Locale.CHINA;
         } else {

@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ */
+
 package com.nctigba.datastudio;
 
 import com.gitee.starblues.bootstrap.EmptyMainApplicationContext;
@@ -19,7 +23,6 @@ import org.springframework.scheduling.annotation.EnableAsync;
         RedisRepositoriesAutoConfiguration.class})
 @EnableAsync
 public class DataStudioPluginBootApplication {
-
     public static void main(String[] args) {
         SpringApplication.run(DataStudioPluginBootApplication.class, args);
     }
@@ -29,4 +32,5 @@ public class DataStudioPluginBootApplication {
     public MainApplicationContext test() {
         return new EmptyMainApplicationContext();
     }
+
 }

@@ -21,9 +21,21 @@ export const constantRoutes: Array<RouteRecordRaw & extendRoute> = [
         meta: { title: '', icon: 'home2', affix: true, role: ['other'], keepAlive: true },
       },
       {
+        path: '/createTable/:id(\\d+)?',
+        component: () => import('@/views/createTable/index.vue'),
+        name: 'createTable',
+        meta: { title: '', icon: 'table', keepAlive: true },
+      },
+      {
         path: '/table/:id',
         component: () => import('@/views/table/index.vue'),
         name: 'table',
+        meta: { title: '', icon: 'table', keepAlive: true },
+      },
+      {
+        path: '/tableRelatedSequence/:id',
+        component: () => import('@/views/table/tableRelatedSequence.vue'),
+        name: 'tableRelatedSequence',
         meta: { title: '', icon: 'table', keepAlive: true },
       },
       {

@@ -8,7 +8,6 @@
   import { useAppStore } from '@/store/modules/app';
   import { useTagsViewStore } from '@/store/modules/tagsView';
   import { loadingInstance } from '@/utils';
-  import { onMounted, ref } from 'vue';
 
   const route = useRoute();
   const router = useRouter();

@@ -4,7 +4,6 @@
 </template>
 
 <script lang="ts" setup>
-  import { reactive, ref, onMounted, nextTick, watch, markRaw, onUnmounted } from 'vue';
   import ace from 'ace-builds';
   import 'ace-builds/src-noconflict/theme-chrome';
   import 'ace-builds/src-noconflict/theme-monokai';
@@ -183,7 +182,7 @@
       if (target.className.indexOf('ace_gutter-cell') == -1) {
         return;
       }
-      if (e.clientX > 20 + target.getBoundingClientRect().left) {
+      if (e.clientX > 32 + target.getBoundingClientRect().left) {
         return;
       }
       const line = e.getDocumentPosition().row;

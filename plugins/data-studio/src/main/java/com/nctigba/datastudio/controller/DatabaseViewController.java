@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ */
+
 package com.nctigba.datastudio.controller;
 
 import com.nctigba.datastudio.model.dto.DatabaseCreateViewDTO;

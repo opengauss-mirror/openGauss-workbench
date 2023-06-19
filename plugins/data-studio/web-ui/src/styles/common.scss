@@ -19,7 +19,7 @@ body {
 }
 
 .clearfix {
-  *zoom: 1
+  zoom: 1
 }
 
 .flex-center {
@@ -35,6 +35,10 @@ body {
 .flex-align-center {
   display: flex;
   align-items: center;
+}
+.word-wrap {
+  word-wrap: break-word;
+  word-break: break-all;
 }
 
 ::-webkit-scrollbar {
@@ -67,4 +71,18 @@ body {
   .el-dropdown-menu__item.active {
     background-color: var(--el-dropdown-menuItem-hover-fill);
   }
+}
+
+.el-table .el-table__cell.add {
+  background-color: #e4ffb5 !important;
+  color: #606266;
+  .el-input__inner {
+    color: #606266 !important;
+  }
+}
+.el-table .el-table__cell.delete {
+  background-color: #ff6347 !important;
+}
+.el-table .el-table__cell.edited {
+  background-color: #f1d4d8 !important;
 }

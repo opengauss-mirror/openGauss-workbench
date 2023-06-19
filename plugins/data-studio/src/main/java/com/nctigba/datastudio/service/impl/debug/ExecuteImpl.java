@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ */
+
 package com.nctigba.datastudio.service.impl.debug;
 
 import com.alibaba.fastjson.JSON;
@@ -8,19 +12,25 @@ import com.nctigba.datastudio.service.OperationInterface;
 import com.nctigba.datastudio.util.DebugUtils;
 import com.nctigba.datastudio.util.LocaleString;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.util.Strings;
+import org.opengauss.admin.common.exception.CustomException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
-import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+import static com.nctigba.datastudio.constants.CommonConstants.DEFINITION;
 import static com.nctigba.datastudio.constants.CommonConstants.RESULT;
 import static com.nctigba.datastudio.constants.CommonConstants.SUCCESS;
-import static com.nctigba.datastudio.enums.MessageEnum.refresh;
-import static com.nctigba.datastudio.enums.MessageEnum.text;
+import static com.nctigba.datastudio.constants.SqlConstants.QUERY_DEF_SQL;
+import static com.nctigba.datastudio.enums.MessageEnum.confirm;
+import static com.nctigba.datastudio.enums.MessageEnum.paramWindow;
 
 /**
  * execute
@@ -29,54 +39,58 @@ import static com.nctigba.datastudio.enums.MessageEnum.text;
 @Service("execute")
 public class ExecuteImpl implements OperationInterface {
     @Autowired
-    private StartDebugImpl startDebug;
-
-    @Autowired
-    private StopDebugImpl stopDebug;
+    private InputParamImpl inputParam;
 
     @Override
     public void operate(WebSocketServer webSocketServer, Object obj) throws Exception {
-        log.info("execute obj is: " + obj);
         PublicParamReq paramReq = (PublicParamReq) obj;
-        String sql = paramReq.getSql();
-        String windowName = paramReq.getWindowName();
-        String schema = DebugUtils.prepareFuncName(sql).split("\\.")[0];
-        Statement statement = webSocketServer.getStatement(windowName);
-        if (statement == null) {
-            Connection connection = webSocketServer.getConnection(windowName);
-            if (connection == null) {
-                connection = webSocketServer.createConnection(paramReq.getUuid(), windowName);
-                webSocketServer.setConnection(windowName, connection);
-            }
-            statement = connection.createStatement();
-            webSocketServer.setStatement(windowName, statement);
-        }
-        String name = DebugUtils.prepareName(sql);
-        log.info("execute name is: " + name);
-        ResultSet result = statement.executeQuery(DebugUtils.getFuncSql(windowName, schema, name, webSocketServer));
-        if (!result.next()) {
-            statement.execute(sql);
-            OperateStatusDO operateStatus = webSocketServer.getOperateStatus(windowName);
-            operateStatus.enableStartDebug();
-            webSocketServer.setOperateStatus(windowName, operateStatus);
+        log.info("execute paramReq: " + paramReq);
 
-            Map<String, String> resultMap = new HashMap<>();
-            resultMap.put(RESULT, name);
-            webSocketServer.sendMessage(windowName, refresh, SUCCESS, resultMap);
+        String rootWindowName = paramReq.getRootWindowName();
+        String windowName = paramReq.getWindowName();
+        OperateStatusDO operateStatus = webSocketServer.getOperateStatus(windowName);
+        operateStatus.setDebug(false);
+        webSocketServer.setOperateStatus(windowName, operateStatus);
+
+        Statement statement = webSocketServer.getStatement(rootWindowName);
+        if (statement == null) {
+            statement = webSocketServer.getConnection(rootWindowName).createStatement();
+            webSocketServer.setStatement(rootWindowName, statement);
+        }
+
+        String oid = paramReq.getOid();
+        String definition = Strings.EMPTY;
+        try (
+                ResultSet defResultSet = statement.executeQuery(String.format(QUERY_DEF_SQL, oid))
+        ) {
+            while (defResultSet.next()) {
+                definition = DebugUtils.sqlHandleAfter(defResultSet.getString(DEFINITION));
+                if (StringUtils.isEmpty(definition)) {
+                    throw new CustomException(LocaleString.transLanguageWs("2015", webSocketServer));
+                }
+            }
+            log.info("execute definition: " + definition);
+        } catch (Exception e) {
+            log.info(e.toString());
+            throw new RuntimeException(e);
+        }
+
+        if (!paramReq.getSql().equals(definition) && !paramReq.isContinue()) {
+            Map<String, String> map = new HashMap<>();
+            map.put(RESULT, LocaleString.transLanguageWs("1006", webSocketServer));
+            webSocketServer.sendMessage(windowName, confirm, SUCCESS, map);
             return;
         }
 
-        statement.execute(sql);
-
-        OperateStatusDO operateStatus = webSocketServer.getOperateStatus(windowName);
-        operateStatus.enableStartDebug();
-        operateStatus.setDebug(paramReq.isDebug());
-        webSocketServer.setOperateStatus(windowName, operateStatus);
-
-        Map<String, String> map = new HashMap<>();
-        map.put(RESULT, LocaleString.transLanguageWs("1002", webSocketServer));
-        webSocketServer.sendMessage(windowName, text, SUCCESS, map);
-        startDebug.operate(webSocketServer, paramReq);
+        Map<String, List<Map<String, Object>>> map = new HashMap<>();
+        List<Map<String, Object>> paramList = DebugUtils.getParamMap(webSocketServer, windowName, oid);
+        log.info("execute paramList: " + paramList);
+        map.put(RESULT, paramList);
+        if (CollectionUtils.isEmpty(paramList)) {
+            inputParam.operate(webSocketServer, paramReq);
+        } else {
+            webSocketServer.sendMessage(windowName, paramWindow, SUCCESS, map);
+        }
     }
 
     @Override

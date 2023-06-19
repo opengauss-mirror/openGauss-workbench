@@ -5,7 +5,6 @@
 </template>
 
 <script lang="ts" setup>
-  import { ref, watch } from 'vue';
   import AceEditor from '@/components/AceEditor.vue';
 
   const props = withDefaults(

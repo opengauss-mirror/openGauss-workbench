@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ */
+
 package com.nctigba.datastudio.model.dto;
 
 import com.nctigba.datastudio.model.entity.DatabaseConnectionDO;
@@ -19,6 +23,7 @@ public class ConnectionDTO {
     private String url;
     private String dbUser;
     private String dbPassword;
+    private String type;
 
 
     public void setConnectionDTO(DatabaseConnectionUrlDO databaseConnectionUrlDO) {
@@ -27,6 +32,7 @@ public class ConnectionDTO {
         this.url = databaseConnectionUrlDO.getUrl();
         this.dbUser = databaseConnectionUrlDO.getUserName();
         this.dbPassword = databaseConnectionUrlDO.getPassword();
+        this.type = databaseConnectionUrlDO.getType();
     }
 
     public void setIpConnectionDTO(DatabaseConnectionDO databaseConnectionDO) {
@@ -35,6 +41,7 @@ public class ConnectionDTO {
         this.url = GET_URL_JDBC + databaseConnectionDO.getIp() + ":" + databaseConnectionDO.getPort() + "/" + databaseConnectionDO.getDataName() + CONFIGURE_TIME;
         this.dbUser = databaseConnectionDO.getUserName();
         this.dbPassword = databaseConnectionDO.getPassword();
+        this.type = databaseConnectionDO.getType();
     }
 
     public void updataConnectionDTO(ConnectionDTO aon, String socketSet) {
@@ -44,6 +51,7 @@ public class ConnectionDTO {
         this.url = aon.getUrl();
         this.dbUser = aon.getDbUser();
         this.dbPassword = aon.getDbPassword();
+        this.type = aon.getType();
     }
 
     public void updataConnectionDTO(ConnectionDTO aon) {
@@ -52,6 +60,7 @@ public class ConnectionDTO {
         this.url = aon.getUrl();
         this.dbUser = aon.getDbUser();
         this.dbPassword = aon.getDbPassword();
+        this.type = aon.getType();
     }
 
     public void reduceConnectionDTO(ConnectionDTO aon, String socketSet) {
@@ -61,5 +70,6 @@ public class ConnectionDTO {
         this.url = aon.getUrl();
         this.dbUser = aon.getDbUser();
         this.dbPassword = aon.getDbPassword();
+        this.type = aon.getType();
     }
 }

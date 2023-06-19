@@ -1,4 +1,4 @@
-import { ElLoading } from 'element-plus';
+import { ElLoading, ElMessage } from 'element-plus';
 import type { Column } from 'element-plus';
 import { i18n } from '@/i18n/index';
 
@@ -245,7 +245,7 @@ export function debounce(func, wait, immediate) {
     if (!timeout) timeout = setTimeout(later, wait);
     if (callNow) {
       result = func.apply(that, args);
-      that = args = null;
+      that  = null;
     }
 
     return result;
@@ -396,7 +396,6 @@ export const deepObjClone = function (obj) {
   }
   return clone(obj);
 };
-import { ElMessage } from 'element-plus';
 
 /**
  * color: hexToRgb
@@ -584,6 +583,91 @@ export const formatTableData = (columns: string[], data: (string | number)[][]) 
   });
 };
 
+export const formatEditTableData = (config: {
+  columns: any[];
+  data: (string | number)[][];
+  idKey?: string;
+  rowStatusKey?: string;
+  editingSuffix?: string;
+  editedSuffix?: string;
+}) => {
+  const options = {
+    editingSuffix: '_isEditing',
+    editedSuffix: '_edited',
+    ...config,
+  };
+  return options.data.map((rowData, rowIndex) => {
+    const obj = {};
+    options.columns.forEach((col, colIndex) => {
+      obj[col.name] = rowData[colIndex];
+      obj[col.name + options.editingSuffix] = false;
+      obj[col.name + options.editedSuffix] = false;
+      if (options.idKey) obj[options.idKey] = rowIndex;
+      if (options.rowStatusKey) obj[options.rowStatusKey] = '';
+    });
+    return obj;
+  });
+};
+
+export const getFlexColumnWidth = (
+  data: Record<string, any>[],
+  key: string,
+  isCalculateCharWidth?: boolean,
+) => {
+  const minWidth = 90;
+  const maxWidth = 400;
+  const maxCharLength = 50 * 3;
+  key = key + '';
+  if (!data || !data.length || data.length === 0 || data === undefined) {
+    return minWidth;
+  }
+  if (!key || !key.length || key.length === 0 || key === undefined || typeof key == 'object') {
+    return minWidth;
+  }
+  let index = 0;
+  for (let i = 0; i < data.length; i++) {
+    if ([null, undefined, ''].includes(data[i][key])) {
+      continue;
+    }
+    const now_temp = data[i][key] + '';
+    const max_temp = data[index][key] + '';
+    if (now_temp.length > max_temp.length) {
+      index = i;
+    }
+    if ((data[index][key] + '').length >= maxCharLength) {
+      return maxWidth;
+    }
+  }
+  let maxColumnContent = data[index][key] ?? '';
+  maxColumnContent += '';
+  let flexWidth = 0;
+  if (isCalculateCharWidth) {
+    for (const char of maxColumnContent) {
+      if ((char >= 'A' && char <= 'Z') || (char >= 'a' && char <= 'z')) {
+        flexWidth += 8;
+      } else if (char >= '\u4e00' && char <= '\u9fa5') {
+        flexWidth += 15;
+      } else {
+        flexWidth += 8;
+      }
+    }
+  } else {
+    flexWidth = maxColumnContent.length * 8;
+  }
+  if (flexWidth <= minWidth) {
+    flexWidth = minWidth;
+  } else if (flexWidth <= 200) {
+    flexWidth = 100;
+  } else if (flexWidth <= 300) {
+    flexWidth = 200;
+  } else if (flexWidth <= 400) {
+    flexWidth = 300;
+  } else {
+    flexWidth = maxWidth;
+  }
+  return flexWidth;
+};
+
 export const dispatchEventStorage = () => {
   const setItemSign = localStorage.setItem;
   localStorage.setItem = function (...arg: string[]) {
@@ -609,4 +693,99 @@ export const manualStringify = (value) => {
   });
   cache = null;
   return str;
+};
+
+export const upperSentenceFirstLetter = (str: string) => {
+  return str.slice(0, 1).toUpperCase() + str.slice(1).toLowerCase();
+};
+
+export const upperWordFirstLetter = (str: string) => {
+  const strArr = str.split(' ');
+  for (let i = 0; i < strArr.length; i++) {
+    strArr[i] = strArr[i].substring(0, 1).toUpperCase() + strArr[i].toLowerCase().substring(1);
+  }
+  return strArr.join(' ');
+};
+
+export const isBodyElement = (node: Element) => {
+  return node && node.nodeType == 1 && node.tagName.toLowerCase() == 'body';
+};
+
+export const findParentElement = (el: Element, parentClassName: string) => {
+  if (!el) return;
+  if (isBodyElement(el)) return;
+  if (el.classList.contains(parentClassName)) return el;
+  return findParentElement(el.parentElement, parentClassName);
+};
+
+/**
+ * such as 'abcDef' to 'Abc Def'
+ * such as ' abc Def' to 'Abc Def'
+ * @param str string
+ * @returns string
+ */
+export const toSpacePascalCase = (str: string): string => {
+  const toUppercase = (str) => str.toUpperCase();
+  return str
+    .replace(/\B[A-Z]/g, ' $&')
+    .trim()
+    .replace(/^./, toUppercase)
+    .replace(/\b\w/g, toUppercase);
+};
+
+export const downloadHtml = (htmlContent, fileName) => {
+  const blob = new Blob([htmlContent], { type: 'text/html' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = fileName || 'download.html';
+  link.click();
+  URL.revokeObjectURL(url);
+};
+
+export const simpleDownloadUrl = async (url, fileName) => {
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = fileName || '';
+  link.click();
+};
+
+export const downLoadURL = (href, fileName) => {
+  const elink = document.createElement('a');
+  elink.download = fileName;
+  elink.style.display = 'none';
+  if (href instanceof Blob) {
+    elink.href = URL.createObjectURL(href);
+  } else {
+    elink.href = href;
+  }
+  document.body.appendChild(elink);
+  elink.click();
+  URL.revokeObjectURL(elink.href);
+  document.body.removeChild(elink);
+};
+
+export const downLoadURLBlob = async (url: string, fileName?: string) => {
+  if (!fileName) {
+    const arr = url.split('?')[0].split('/');
+    fileName = arr[arr.length - 1];
+  }
+  const resp = await fetch(url);
+  if (!resp) return;
+  const eleA = document.createElement('a');
+  const blob = await resp.blob();
+  if (!blob) return;
+  eleA.href = URL.createObjectURL(blob);
+  eleA.download = fileName;
+  eleA.click();
+  URL.revokeObjectURL(eleA.href);
+};
+
+export const downLoadMyBlobType = async (fileName: string, data: any) => {
+  const blob = new Blob([data]);
+  const tag = document.createElement('a');
+  tag.href = window.URL.createObjectURL(blob);
+  tag.download = fileName;
+  tag.click();
+  URL.revokeObjectURL(tag.href);
 };

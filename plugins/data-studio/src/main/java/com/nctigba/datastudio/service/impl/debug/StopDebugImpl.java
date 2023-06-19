@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ */
+
 package com.nctigba.datastudio.service.impl.debug;
 
 import com.alibaba.fastjson.JSON;
@@ -29,8 +33,8 @@ import static com.nctigba.datastudio.enums.MessageEnum.text;
 public class StopDebugImpl implements OperationInterface {
     @Override
     public void operate(WebSocketServer webSocketServer, Object obj) throws Exception {
-        log.info("stopDebug obj is: " + obj);
         PublicParamReq paramReq = (PublicParamReq) obj;
+        log.info("stopDebug paramReq: " + paramReq);
         String windowName = paramReq.getWindowName();
         Connection conn = (Connection) webSocketServer.getParamMap(windowName).get(CONNECTION);
         Statement statNew = (Statement) webSocketServer.getParamMap(windowName).get(STATEMENT);
@@ -39,7 +43,7 @@ public class StopDebugImpl implements OperationInterface {
                 statNew.execute(ABORT_SQL);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            log.info(e.toString());
         } finally {
             if (statNew != null) {
                 statNew.close();
@@ -55,21 +59,15 @@ public class StopDebugImpl implements OperationInterface {
         OperateStatusDO operateStatus = webSocketServer.getOperateStatus(windowName);
         operateStatus.enableStartDebug();
         webSocketServer.setOperateStatus(windowName, operateStatus);
-
         Map<String, String> map = new HashMap<>();
         map.put(RESULT, LocaleString.transLanguageWs("1003", webSocketServer));
         webSocketServer.sendMessage(windowName, text, SUCCESS, map);
 
-        Connection connection = webSocketServer.getConnection(windowName);
         Statement statement = webSocketServer.getStatement(windowName);
         if (statement != null) {
             statement.close();
             statement.cancel();
             webSocketServer.setStatement(windowName, null);
-        }
-        if (connection != null) {
-            connection.close();
-            webSocketServer.setConnection(windowName, null);
         }
     }
 

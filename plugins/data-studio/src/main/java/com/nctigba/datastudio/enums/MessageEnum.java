@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ */
+
 package com.nctigba.datastudio.enums;
 
 public enum MessageEnum {
@@ -5,6 +9,7 @@ public enum MessageEnum {
     button,
     table,
     window,
+    confirm,
     ignoreWindow,
     stack,
     breakPoint,
@@ -12,8 +17,11 @@ public enum MessageEnum {
     operateStatus,
     paramWindow,
     view,
-    refresh,
+    newFile,
     newWindow,
     closeWindow,
+    switchWindow,
+    message,
+    createCoverageRate,
     other
 }

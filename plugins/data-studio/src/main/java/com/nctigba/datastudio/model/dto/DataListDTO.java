@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ */
+
 package com.nctigba.datastudio.model.dto;
 
 import io.swagger.annotations.ApiModel;
@@ -6,6 +10,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.List;
+import java.util.Map;
 
 @NoArgsConstructor
 @Data
@@ -15,18 +20,18 @@ public class DataListDTO {
     private String schema_name;
 
     @ApiModelProperty("table")
-    private List<String> table;
+    private List<Map<String, String>> table;
 
     @ApiModelProperty("view")
-    private List<String> view;
+    private List<Map<String, String>> view;
 
     @ApiModelProperty("FUNCTION/PROCEDURE")
-    private List<String> fun_pro;
+    private List<Map<String, String>> fun_pro;
 
     @ApiModelProperty("synonym")
-    private List<String> synonym;
+    private List<Map<String, String>> synonym;
 
     @ApiModelProperty("sequence")
-    private List<String> sequence;
+    private List<Map<String, String>> sequence;
 
 }

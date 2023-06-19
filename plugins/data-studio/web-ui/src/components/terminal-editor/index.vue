@@ -7,16 +7,18 @@
         :status="sqlData.barStatus"
         :editorReadOnly="sqlData.readOnly"
         :isGlobalEnable="isGlobalEnable"
-        @execute="handleExecute"
+        @compile="handleCompile"
+        @execute="handleExecute(false)"
         @stopRun="handleStop"
         @clear="handleClear"
         @startDebug="handleStartDebug"
         @stopDebug="handleStopDebug"
-        @breakPointStep="handleBreakPointStep"
+        @continueStep="handleContinueStep"
         @singleStep="handleSingleStep"
         @stepIn="handleStepIn"
         @stepOut="handleStepOut(false)"
         @format="handleFormat"
+        @coverageRate="showCoverageRateDialog = true"
       />
       <div class="monaco-wrapper" ref="monacoWrapper">
         <AceEditor
@@ -50,6 +52,13 @@
       @confirm="paramsConfirm"
       @cancel="paramsCancel"
     />
+    <CoverageRateDialog
+      v-model="showCoverageRateDialog"
+      :connectionName="ws.connectionName"
+      :uuid="ws.uuid"
+      :oid="ws.oid"
+      :fileName="ws.fileName"
+    />
   </div>
 </template>
 
@@ -59,8 +68,8 @@
   import DebugPane from './DebugPane.vue';
   import ResultTabs from '@/components/ResultTabs.vue';
   import EnterParamsDialog from './EnterParamsDialog.vue';
-  import { ElMessageBox } from 'element-plus';
-  import { computed, onActivated, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
+  import CoverageRateDialog from './CoverageRateDialog.vue';
+  import { ElMessage, ElMessageBox } from 'element-plus';
   import createTemplate from './createTemplate';
   import { useRoute, useRouter } from 'vue-router';
   import WebSocketClass from '@/utils/websocket';
@@ -69,7 +78,7 @@
   import { useUserStore } from '@/store/modules/user';
   import { useTagsViewStore } from '@/store/modules/tagsView';
   import { useI18n } from 'vue-i18n';
-  import EventBus, { EventTypeName } from '@/utils/event-bus';
+  import { changeRunningTagStatus } from '@/hooks/tagRunning';
 
   const route = useRoute();
   const router = useRouter();
@@ -94,16 +103,18 @@
       clear: true,
     },
     debug: {
-      execute: true,
+      compile: true,
+      execute: false,
       startDebug: false,
       stopDebug: false,
-      breakPointStep: false,
+      continueStep: false,
       singleStep: false,
       stepIn: false,
       stepOut: false,
+      coverageRate: false,
     },
     debugChild: {
-      breakPointStep: true,
+      continueStep: true,
       singleStep: true,
       stepIn: true,
       stepOut: true,
@@ -131,28 +142,29 @@
     name: '',
     webUser: '',
     rootId: '',
-    parentId: '',
+    parentTagId: '',
     connectionName: '',
     uuid: '',
     sessionId: '',
     dbname: '',
     schema: '',
+    fileName: '',
+    oid: '',
     instance: null,
+    parentWindowName: '',
     rootWindowName: '',
   });
   const tagId = TagsViewStore.getViewByRoute(route)?.id;
   const commonWsParams = computed(() => {
     return {
-      webUser: ws.webUser,
-      uuid: ws.uuid,
+      rootWindowName: ws.rootWindowName,
       windowName: ws.sessionId,
+      uuid: ws.uuid,
+      oid: ws.oid,
     };
   });
   const isGlobalEnable = computed(() => {
     return AppStore.connectedDatabase.findIndex((item) => item.uuid == ws.uuid) > -1;
-  });
-  const isStepIntoChild = computed(() => {
-    return TagsViewStore.getViewByRoute(route)?.isStepIntoChild;
   });
   const loading = ref(null);
   const refreshCounter = reactive({
@@ -160,8 +172,13 @@
     times: 0,
   });
   const isSaving = ref(false);
-  const saveFileTitle = ref('');
+  const saveFile = reactive({
+    name: '',
+    oid: '',
+  });
   const alreadyCloseWindow = ref(false);
+  const showCoverageRateDialog = ref(false);
+  const preInputParams = ref([]);
 
   // set editor height
   watch(
@@ -211,11 +228,12 @@
     data: [],
   });
   const paramsConfirm = () => {
+    preInputParams.value = enterParams.data.map((item) => ({ [item.type]: item.value }));
     ws.instance.send({
       operation: 'inputParam',
       ...commonWsParams.value,
       sql: editorRef.value.getValue(),
-      inputParams: enterParams.data.map((item) => ({ [item.type]: item.value })),
+      inputParams: preInputParams.value,
       breakPoints: editorRef.value.getAllLineDecorations(),
     });
     getButtonStatus();
@@ -279,15 +297,10 @@
     type: string;
   }
   const onWebSocketMessage = (data: string) => {
-    if (!isGlobalEnable.value) return;
+    if (!isGlobalEnable.value) return loading.value?.close();
     let res: Message = JSON.parse(data);
     if (res.code == '200') {
-      if (
-        props.editorType == 'debug' &&
-        res.type != 'operateStatus' &&
-        res.type != 'newWindow' &&
-        !isStepIntoChild.value
-      ) {
+      if (['debug', 'debugChild'].includes(props.editorType) && res.type != 'operateStatus') {
         getButtonStatus();
       }
       const result = res.data?.result;
@@ -321,17 +334,35 @@
         } else {
           sqlData.barStatus = result;
           sqlData.readOnly = !result?.execute;
+          changeRunningTagStatus(tagId, !result?.execute);
         }
         // can use 'startDebug' button = not isDebugging
         if (props.editorType == 'debug') {
           debug.isDebugging = !(result.startDebug || result.execute);
         }
       }
+      if (res.type == 'message') {
+        res.msg == 'success' && ElMessage.success(result);
+      }
+      if (res.type == 'confirm') {
+        ElMessageBox.confirm(result).then(() => {
+          handleExecute(true);
+        });
+      }
+      if (res.type == 'createCoverageRate') {
+        ElMessageBox.confirm(result)
+          .then(() => {
+            handleCreateCoverageRate(true);
+          })
+          .catch(() => {
+            handleCreateCoverageRate(false);
+          });
+      }
       if (res.type == 'paramWindow') {
-        const arr = result.map((item) => {
+        const arr = result.map((item: { key: string | null; type: string }) => {
           return {
-            name: Object.keys(item)[0],
-            type: Object.values(item)[0],
+            name: item.key,
+            type: item.type,
             value: null,
           };
         });
@@ -365,18 +396,19 @@
           clearInterval(refreshCounter.counter);
           loading.value.close();
           TagsViewStore.delCurrentView(route);
-          const title = saveFileTitle.value;
+          const title = saveFile.name;
           router.push({
             // eslint-disable-next-line prettier/prettier
             path: `/debug/${encodeURIComponent(route.query.connectInfoId as string)}_${route.query.schema}_fun_pro_${title}`,
             query: {
               title: `${title}@${route.query.connectInfoName}`,
-              funcname: title,
+              fileName: title,
               dbname: route.query.dbname,
               connectInfoName: route.query.connectInfoName,
               terminalNum: TagsViewStore.maxTerminalNum + 1,
               schema: route.query.schema,
               uuid: ws.uuid,
+              oid: saveFile.oid,
               time: Date.now(),
             },
           });
@@ -393,57 +425,68 @@
           });
         }
       }
-      if (res.type == 'refresh') {
-        if (['createTerminal', 'createDebug'].includes(route.name as string)) {
-          saveFileTitle.value = res.data.result;
-          if (isSaving.value) {
-            loading.value = loadingInstance();
-            refreshCounter.counter = setInterval(() => {
-              refreshCounter.times++;
-              if (refreshCounter.times > 6) {
-                clearInterval(refreshCounter.counter);
-                loading.value.close();
-                isSaving.value = false;
-                EventBus.notify(EventTypeName.CLOSE_SELECTED_TAB, route);
-              } else {
-                ws.instance.send({
-                  operation: 'funcProcedure',
-                  fullName: saveFileTitle.value,
-                  schema: route.query.schema,
-                  ...commonWsParams.value,
-                });
-              }
-            }, 6000);
-          }
-        }
+      if (res.type == 'newFile') {
+        saveFile.name = result.name;
+        saveFile.oid = result.oid;
+        const title = result.name;
+        const oid = result.oid;
+        TagsViewStore.delViewById(tagId);
+        router.push({
+          // eslint-disable-next-line prettier/prettier
+          path: `/debug/${encodeURIComponent(route.query.connectInfoId as string)}_${route.query.schema}_fun_pro_${oid}`,
+          query: {
+            title: `${title}@${route.query.connectInfoName}`,
+            fileName: title,
+            dbname: route.query.dbname,
+            connectInfoName: route.query.connectInfoName,
+            terminalNum: TagsViewStore.maxTerminalNum + 1,
+            schema: route.query.schema,
+            uuid: ws.uuid,
+            oid,
+            time: Date.now(),
+          },
+        });
       }
       if (res.type == 'variableHighLight') {
         debug.variableHighLight = result;
       }
       if (res.type == 'newWindow') {
-        setStepIntoChildStatus(tagId, true);
-        const path = encodeURIComponent(route.query.dbname + '_' + result);
-        router.push({
-          path: `/debugChild/${path}`,
-          query: {
-            title: `${result}@${ws.connectionName}`,
-            funcname: result,
-            dbname: route.query.dbname,
-            connectInfoName: ws.connectionName,
-            uuid: ws.uuid,
-            schema: route.query.schema,
-            parentTagId: TagsViewStore.getViewByRoute(route)?.id,
-            rootTagId:
-              route.name == 'debug'
-                ? TagsViewStore.getViewByRoute(route)?.id
-                : route.query.rootTagId,
-            rootWindowName: ws.sessionId,
-            time: Date.now(),
-          },
-        });
+        const { name, oid } = result;
+        const path = `/debugChild/${encodeURIComponent(route.query.dbname + '_' + oid)}`;
+        const visitedViews = TagsViewStore.visitedViews;
+        const eventView = visitedViews.find((item) => item.path == path);
+        if (eventView) {
+          router.push(eventView.fullPath);
+        } else {
+          router.push({
+            path,
+            query: {
+              title: `${name}@${ws.connectionName}`,
+              fileName: name,
+              dbname: route.query.dbname,
+              connectInfoName: ws.connectionName,
+              uuid: ws.uuid,
+              schema: route.query.schema,
+              parentTagId: tagId,
+              rootTagId: route.name == 'debug' ? tagId : route.query.rootTagId,
+              parentWindowName: ws.sessionId,
+              rootWindowName: ws.rootWindowName,
+              oid,
+              time: Date.now(),
+            },
+          });
+        }
+      }
+      if (res.type == 'switchWindow') {
+        const targetView = TagsViewStore.getViewByOid(result);
+        if (targetView?.fullPath) {
+          loading.value = loadingInstance();
+          router.push(targetView.fullPath);
+          loading.value.close();
+        }
       }
       if (res.type == 'closeWindow') {
-        const parentView = TagsViewStore.getViewById(route.query.parentTagId);
+        const parentView = TagsViewStore.getViewById(ws.parentTagId);
         if (parentView?.fullPath) {
           alreadyCloseWindow.value = true;
           loading.value = loadingInstance();
@@ -462,10 +505,12 @@
   };
 
   const getButtonStatus = () => {
-    ws.instance.send({
-      operation: 'operateStatus',
-      ...commonWsParams.value,
-    });
+    if (route.name != 'createDebug') {
+      ws.instance.send({
+        operation: 'operateStatus',
+        ...commonWsParams.value,
+      });
+    }
   };
 
   const changeServerLanguage = (language) => {
@@ -475,7 +520,19 @@
     });
   };
 
-  const handleExecute = () => {
+  const handleCompile = () => {
+    tabList.value = [];
+    tabValue.value = 'home';
+    ws.instance.send({
+      operation: 'compile',
+      ...commonWsParams.value,
+      sql: editorRef.value.getValue(),
+      schema: ws.schema,
+    });
+    getButtonStatus();
+  };
+
+  const handleExecute = (isContinue) => {
     tabList.value = [];
     tabValue.value = 'home';
     if (props.editorType == 'sql') {
@@ -487,12 +544,11 @@
       });
     }
     if (props.editorType == 'debug') {
-      isSaving.value = true;
       ws.instance.send({
         operation: 'execute',
         ...commonWsParams.value,
         sql: editorRef.value.getValue(),
-        isDebug: false,
+        isContinue,
       });
       getButtonStatus();
     }
@@ -519,8 +575,6 @@
       operation: 'startDebug',
       ...commonWsParams.value,
       sql: editorRef.value.getValue(),
-      breakPoints: editorRef.value.getAllLineDecorations(),
-      isDebug: true,
     });
   };
 
@@ -537,11 +591,11 @@
     }
   };
 
-  const handleBreakPointStep = () => {
+  const handleContinueStep = () => {
     ws.instance.send({
-      operation: 'breakPointStep',
+      operation: 'continueStep',
       ...commonWsParams.value,
-      oldWindowName: ws.rootWindowName,
+      oldWindowName: ws.parentWindowName,
       sql: editorRef.value.getValue(),
     });
   };
@@ -550,7 +604,7 @@
     ws.instance.send({
       operation: 'singleStep',
       ...commonWsParams.value,
-      oldWindowName: ws.rootWindowName,
+      oldWindowName: ws.parentWindowName,
       sql: editorRef.value.getValue(),
     });
   };
@@ -559,7 +613,7 @@
     ws.instance.send({
       operation: 'stepIn',
       ...commonWsParams.value,
-      oldWindowName: ws.rootWindowName,
+      oldWindowName: ws.parentWindowName,
       sql: editorRef.value.getValue(),
     });
   };
@@ -568,7 +622,7 @@
     ws.instance.send({
       operation: 'stepOut',
       ...commonWsParams.value,
-      oldWindowName: ws.rootWindowName,
+      oldWindowName: ws.parentWindowName,
       isCloseWindow: isUnMount,
       sql: editorRef.value.getValue(),
     });
@@ -589,34 +643,19 @@
         operation: operation,
         ...commonWsParams.value,
         line: line + 1,
-        oldWindowName: ws.rootWindowName,
+        oldWindowName: ws.parentWindowName,
       });
   };
 
-  const getStepIntoChildStatus = (tag) => {
-    return ['number', 'string'].includes(typeof tag)
-      ? !!TagsViewStore.getViewById(tag)?.isStepIntoChild
-      : !!TagsViewStore.getViewByRoute(tag)?.isStepIntoChild;
+  const handleCreateCoverageRate = (status) => {
+    ws.instance.send({
+      operation: 'createCoverageRate',
+      ...commonWsParams.value,
+      sql: editorRef.value.getValue(),
+      inputParams: preInputParams.value,
+      isCoverage: status,
+    });
   };
-  const setStepIntoChildStatus = (tag, status) => {
-    ['number', 'string'].includes(typeof tag)
-      ? TagsViewStore.updateStepIntoChildStatusById(tag, status)
-      : TagsViewStore.updateStepIntoChildStatusByRoute(tag, status);
-    if (['debug', 'debugChild'].includes(props.editorType)) {
-      Object.assign(sqlData.barStatus, {
-        breakPointStep: !status,
-        singleStep: !status,
-        stepIn: !status,
-        stepOut: !status,
-      });
-    }
-  };
-  onActivated(() => {
-    if (['debug'].includes(route.name as string)) {
-      const status = getStepIntoChildStatus(tagId);
-      status ? setStepIntoChildStatus(tagId, true) : getButtonStatus();
-    }
-  });
 
   // is create? and return default tempalate
   onMounted(async () => {
@@ -629,18 +668,21 @@
       debug.isDebugging = true;
       sqlData.readOnly = true;
     }
-
+    const sessionId = route.query.connectInfoName + '_' + route.query.time;
     Object.assign(ws, {
       name: route.query.connectInfoName,
       webUser: UserStore.userId,
       rootId: route.query.rootId,
-      parentId: route.query.parentTagId,
+      parentTagId: route.query.parentTagId,
       connectionName: route.query.connectInfoName,
       uuid: route.query.uuid,
-      sessionId: route.query.connectInfoName + '_' + route.query.time,
+      sessionId,
       dbname: route.query.dbname,
       schema: route.query.schema,
-      rootWindowName: route.query.rootWindowName,
+      fileName: route.query.fileName,
+      oid: route.query.oid,
+      parentWindowName: route.query.parentWindowName,
+      rootWindowName: route.query.rootWindowName || sessionId,
     });
     ws.instance = new WebSocketClass(ws.name, ws.sessionId, onWebSocketMessage);
 
@@ -651,13 +693,11 @@
     });
 
     if (['debug', 'debugChild'].includes(route.name as string)) {
-      const { funcname } = route.query;
       loading.value = loadingInstance();
       try {
         ws.instance.send({
           operation: 'funcProcedure',
-          fullName: funcname,
-          schema: ws.schema,
+          oldWindowName: route.name == 'debugChild' ? ws.parentWindowName : undefined,
           ...commonWsParams.value,
         });
       } catch (error) {
@@ -670,14 +710,10 @@
     if (!ws.instance) return;
     ['debug'].includes(props.editorType) && handleStopDebug(false);
     ['debugChild'].includes(props.editorType) && !alreadyCloseWindow.value && handleStepOut(true);
-    if (['debugChild'].includes(props.editorType)) {
-      TagsViewStore.updateStepIntoChildStatusById(ws.parentId, false);
-    } else {
-      ws.instance.send({
-        operation: 'close',
-        windowName: ws.sessionId,
-      });
-    }
+    ws.instance.send({
+      operation: 'close',
+      windowName: ws.sessionId,
+    });
     ws.instance.close();
     Object.assign(ws, {
       name: '',

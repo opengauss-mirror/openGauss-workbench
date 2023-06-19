@@ -23,9 +23,9 @@
               <el-select v-model="form.schema" teleported @change="fetchObjectNameList">
                 <el-option
                   v-for="item in list.schemaList"
-                  :key="item"
-                  :label="item"
-                  :value="item"
+                  :key="item.oid"
+                  :label="item.name"
+                  :value="item.oid"
                 />
               </el-select>
             </el-form-item>
@@ -77,7 +77,6 @@
   </div>
 </template>
 <script lang="ts" setup>
-  import { computed, ref, reactive, Ref } from 'vue';
   import { ElMessage, FormInstance, FormRules } from 'element-plus';
   import type { TabsPaneContext } from 'element-plus';
   import AceEditor from '@/components/AceEditor.vue';

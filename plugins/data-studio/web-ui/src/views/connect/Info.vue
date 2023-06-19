@@ -16,7 +16,6 @@
 </template>
 
 <script lang="ts" setup>
-  import { computed, ref } from 'vue';
   import { getDatabaseAttr } from '@/api/connect';
   import { useI18n } from 'vue-i18n';
 

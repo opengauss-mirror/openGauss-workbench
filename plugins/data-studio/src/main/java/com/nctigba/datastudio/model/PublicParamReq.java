@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ */
+
 package com.nctigba.datastudio.model;
 
 import lombok.Data;
@@ -36,14 +40,14 @@ public class PublicParamReq {
     // function/procedure schema
     private String schema;
 
-    // is debug
-    private boolean isDebug;
-
     // window name
     private String windowName;
 
     // old window name
     private String oldWindowName;
+
+    // root window name
+    private String rootWindowName;
 
     // is close window
     private boolean isCloseWindow;
@@ -53,6 +57,13 @@ public class PublicParamReq {
 
     // language
     private String language;
+
+    // oid
+    private String oid;
+
+    private boolean isContinue;
+
+    private boolean isCoverage;
 
     @Override
     public String toString() {
@@ -65,12 +76,15 @@ public class PublicParamReq {
                 ", line=" + line +
                 ", fullName='" + fullName + '\'' +
                 ", schema='" + schema + '\'' +
-                ", isDebug=" + isDebug +
                 ", windowName='" + windowName + '\'' +
                 ", oldWindowName='" + oldWindowName + '\'' +
+                ", rootWindowName='" + rootWindowName + '\'' +
                 ", isCloseWindow='" + isCloseWindow + '\'' +
                 ", uuid='" + uuid + '\'' +
                 ", language='" + language + '\'' +
+                ", oid='" + oid + '\'' +
+                ", isContinue='" + isContinue + '\'' +
+                ", isCoverage='" + isCoverage + '\'' +
                 '}';
     }
 }

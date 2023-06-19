@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ */
+
 package com.nctigba.datastudio.dao;
 
 
@@ -13,16 +17,20 @@ import org.springframework.stereotype.Repository;
 
 import java.sql.Connection;
 import java.sql.Statement;
-import java.util.*;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map;
 
 import static java.util.concurrent.TimeUnit.HOURS;
-import static java.util.concurrent.TimeUnit.MINUTES;
 
 @Slf4j
 @Repository
 @EnableScheduling
 public class ConnectionMapDAO {
     public static Map<String, ConnectionDTO> conMap = new HashMap<>(1);
+
     public static void setConMap(String uuiD, ConnectionDTO con) throws Exception {
         if (conMap.size() <= 100) {
             conMap.put(uuiD, con);
@@ -33,37 +41,43 @@ public class ConnectionMapDAO {
 
     }
 
-    @Scheduled(fixedRate=2 ,timeUnit = HOURS)
+    @Scheduled(fixedRate = 2, timeUnit = HOURS)
     public void overtime() {
+        log.info("Start scheduled cleanup of connections. Connection number is: " + conMap.size());
         Date nowData = new Date();
+        log.info("conMap is: {}", conMap);
         for (String key : conMap.keySet()) {
             ConnectionDTO connectionDTO = conMap.get(key);
+            log.info("connectionDTO is: " + connectionDTO);
             Date lastDate = connectionDTO.getLastDate();
             long diff = nowData.getTime() - lastDate.getTime();
             log.info("diff is: " + diff);
             if (diff > 2 * 60 * 60 * 1000) {
+
                 try {
+                    log.info("connectionDTO.getSocketSet() is: " + connectionDTO.getSocketSet());
                     overtimeCloseSocket(connectionDTO.getSocketSet());
                     conMap.remove(key);
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
             }
+            log.info("End scheduled cleanup of connections. Connection number is: " + conMap.size());
         }
     }
 
     public void deleteConnection(String uuid) {
-        if(conMap.containsKey(uuid)){
+        if (conMap.containsKey(uuid)) {
             try {
-                ConnectionDTO connectionDTO= conMap.get(uuid);
+                ConnectionDTO connectionDTO = conMap.get(uuid);
                 log.info("connectionDTO is: " + connectionDTO);
                 overtimeCloseSocket(connectionDTO.getSocketSet());
                 log.info("old conMap is: " + conMap);
                 conMap.remove(uuid);
                 log.info("new conMap is: " + conMap);
             } catch (Exception e) {
-                e.printStackTrace();
-                throw new CustomException(e.getMessage(),e);
+                log.info(e.toString());
+                throw new RuntimeException(e);
             }
         }
     }
@@ -76,12 +90,12 @@ public class ConnectionMapDAO {
         Iterator<String> iterator = socketSet.iterator();
         log.info("iterator is: " + iterator);
         while (iterator.hasNext()) {
-            String winNmae = iterator.next();
-            Statement statement = webSocketServer.getStatement(winNmae);
-            Connection connection = webSocketServer.getConnection(winNmae);
+            String winName = iterator.next();
+            Statement statement = webSocketServer.getStatement(winName);
+            Connection connection = webSocketServer.getConnection(winName);
             if (statement != null) {
-                statement.close();
                 statement.cancel();
+                statement.close();
             }
             if (connection != null) {
                 connection.close();

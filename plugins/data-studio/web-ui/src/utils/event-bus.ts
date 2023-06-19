@@ -1,22 +1,19 @@
 class EventBus {
   static list: { [key: string]: any } = {};
 
-  // subscribe
   static listen(name: EventTypeName, fn: any) {
     this.list[name] = this.list[name] || [];
     this.list[name].push(fn);
   }
 
-  // release
-  static notify(name: EventTypeName, ...params: any[]) {
+  static async notify(name: EventTypeName, ...params: any[]) {
     if (this.list[name]) {
-      this.list[name].forEach((fn: any) => {
-        fn(...params);
-      });
+      for (let i = 0; i < this.list[name].length; i++) {
+        await this.list[name][i](...params);
+      }
     }
   }
 
-  // cancel subscribe
   static unListen(name: EventTypeName, fn?: any) {
     if (this.list[name]) {
       if (fn) {
@@ -40,4 +37,5 @@ export enum EventTypeName {
   CLOSE_ALL_TAB_TO_LAST,
   REFRESH_DATABASE_LIST,
   UPDATE_DEBUG_BUTTON,
+  REFRESH_ASIDER,
 }

@@ -16,7 +16,6 @@
 </template>
 
 <script lang="ts" setup name="mainVue">
-  import { computed, h } from 'vue';
   import { useSettingStore } from '@/store/modules/setting';
   import { useTagsViewStore } from '@/store/modules/tagsView';
   const SettingStore = useSettingStore();
