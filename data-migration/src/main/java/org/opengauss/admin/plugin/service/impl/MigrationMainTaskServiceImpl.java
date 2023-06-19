@@ -164,7 +164,8 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
                         t.getExecStatus().equals(TaskStatus.FULL_CHECK_FINISH.getCode()) ||
                         t.getExecStatus().equals(TaskStatus.INCREMENTAL_START.getCode()) ||
                         t.getExecStatus().equals(TaskStatus.INCREMENTAL_RUNNING.getCode()) ||
-                        t.getExecStatus().equals(TaskStatus.INCREMENTAL_STOP.getCode()) ||
+                        t.getExecStatus().equals(TaskStatus.INCREMENTAL_FINISHED.getCode()) ||
+                        t.getExecStatus().equals(TaskStatus.INCREMENTAL_STOPPED.getCode()) ||
                         t.getExecStatus().equals(TaskStatus.REVERSE_START.getCode()) ||
                         t.getExecStatus().equals(TaskStatus.REVERSE_RUNNING.getCode());
             };
@@ -490,7 +491,7 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
         MigrationHostPortalInstall installHost = migrationHostPortalInstallHostService.getOneByHostId(subTask.getRunHostId());
         PortalHandle.stopIncrementalPortal(subTask.getRunHost(), subTask.getRunPort(),
                 subTask.getRunUser(), subTask.getRunPass(), installHost.getInstallPath(), installHost.getJarName(), subTask);
-        MigrationTask update = MigrationTask.builder().id(subTask.getId()).execStatus(TaskStatus.INCREMENTAL_STOP.getCode()).execTime(new Date()).build();
+        MigrationTask update = MigrationTask.builder().id(subTask.getId()).execStatus(TaskStatus.INCREMENTAL_FINISHED.getCode()).execTime(new Date()).build();
         migrationTaskService.updateById(update);
         LoginUser loginUser = SecurityUtils.getLoginUser();
         migrationTaskOperateRecordService.saveRecord(subTask.getId(), TaskOperate.STOP_INCREMENTAL, loginUser.getUsername());
@@ -560,7 +561,7 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
             return AjaxResult.error(MigrationErrorCode.SUB_TASK_NOT_EXISTS_ERROR.getCode(),
                     MigrationErrorCode.SUB_TASK_NOT_EXISTS_ERROR.getMsg());
         }
-        if (!subTask.getExecStatus().equals(TaskStatus.INCREMENTAL_STOP.getCode())) {
+        if (!subTask.getExecStatus().equals(TaskStatus.INCREMENTAL_STOPPED.getCode())) {
             return AjaxResult.error(MigrationErrorCode.SUB_TASK_NOT_IN_INCREMENTAL_STOP_ERROR.getCode(),
                     MigrationErrorCode.SUB_TASK_NOT_IN_INCREMENTAL_STOP_ERROR.getMsg());
         }
@@ -619,7 +620,8 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
                     t.getExecStatus().equals(TaskStatus.FULL_CHECK_FINISH.getCode()) ||
                     t.getExecStatus().equals(TaskStatus.INCREMENTAL_START.getCode()) ||
                     t.getExecStatus().equals(TaskStatus.INCREMENTAL_RUNNING.getCode()) ||
-                    t.getExecStatus().equals(TaskStatus.INCREMENTAL_STOP.getCode()) ||
+                    t.getExecStatus().equals(TaskStatus.INCREMENTAL_FINISHED.getCode()) ||
+                    t.getExecStatus().equals(TaskStatus.INCREMENTAL_STOPPED.getCode()) ||
                     t.getExecStatus().equals(TaskStatus.REVERSE_START.getCode()) ||
                     t.getExecStatus().equals(TaskStatus.REVERSE_RUNNING.getCode());
         }).collect(Collectors.toList());
@@ -675,7 +677,8 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
                     fullFinishCount2 += 1;
                 }
                 if (t.getExecStatus().equals(TaskStatus.INCREMENTAL_START.getCode()) || t.getExecStatus().equals(TaskStatus.INCREMENTAL_RUNNING.getCode()) ||
-                        t.getExecStatus().equals(TaskStatus.INCREMENTAL_STOP.getCode()) || t.getExecStatus().equals(TaskStatus.REVERSE_START.getCode()) ||
+                        t.getExecStatus().equals(TaskStatus.INCREMENTAL_FINISHED.getCode()) || t.getExecStatus().equals(TaskStatus.INCREMENTAL_STOPPED.getCode()) ||
+                        t.getExecStatus().equals(TaskStatus.REVERSE_START.getCode()) ||
                         t.getExecStatus().equals(TaskStatus.REVERSE_RUNNING.getCode()) || t.getExecStatus().equals(TaskStatus.REVERSE_STOP.getCode())
                 ) {
                     incrementalAndReverseRunningCount3 += 1;

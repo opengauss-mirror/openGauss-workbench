@@ -213,6 +213,7 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
                 log.error("get host future result failed: " + e.getMessage());
             }
         }
+        taskExecutor.shutdown();
         return result;
     }
 

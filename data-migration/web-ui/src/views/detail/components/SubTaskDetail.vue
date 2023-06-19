@@ -302,7 +302,7 @@ const getSubTaskDetail = () => {
     fullData.value = fullProcessDetail || null
     // process record
     if (subTaskInfo.value.migrationModelId === 2) {
-      statusRecords.value = res.data.statusRecords
+      setStatusRecord(res.data.statusRecords)
     }
 
     // increase process detail
@@ -459,6 +459,27 @@ const getSubTaskDetail = () => {
     })
   }).catch(() => {
     loading.value = false
+  })
+}
+
+const setStatusRecord = (resData) => {
+  Object.keys(resData).map((newKey) => {
+    // not have this key
+    const notHaveThisKey = Object.keys(statusRecords.value).indexOf(newKey) < 0
+    if (notHaveThisKey) {
+      statusRecords.value[newKey] = resData[newKey]
+    } else {
+      // alreay have this key
+      const newInnerArray = resData[newKey]
+      const oldInnerArray = statusRecords.value[newKey]
+      const subArray = newInnerArray.filter(item => {
+        const result = oldInnerArray.find(one => item.statusId === one.statusId)
+        return !result
+      })
+      if (subArray.length > 0) {
+        oldInnerArray.push(...subArray)
+      }
+    }
   })
 }
 
