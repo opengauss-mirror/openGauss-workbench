@@ -290,7 +290,7 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
                     }
                 }
                 result.put("incrementalProcess", portalIncrementalProcess);
-            } else if (TaskStatus.INCREMENTAL_STOP.getCode().equals(state)) {
+            } else if (TaskStatus.INCREMENTAL_STOPPED.getCode().equals(state) || TaskStatus.INCREMENTAL_FINISHED.getCode().equals(state)) {
                 String portalIncrementalProcess = PortalHandle.getPortalIncrementalProcess(installHost.getHost(), installHost.getPort(), installHost.getRunUser(), installHost.getRunPassword(), installHost.getInstallPath(), t);
                 result.put("incrementalProcess", portalIncrementalProcess);
             } else if (TaskStatus.REVERSE_START.getCode().equals(state) || TaskStatus.REVERSE_RUNNING.getCode().equals(state)) {

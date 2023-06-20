@@ -24,6 +24,7 @@
 
 package org.opengauss.admin.plugin.service.impl;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.map.MapUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -65,6 +66,7 @@ public class MigrationTaskStatusRecordServiceImpl extends ServiceImpl<MigrationT
         query.eq(MigrationTaskStatusRecord::getTaskId, taskId);
         this.remove(query);
         Map<Integer, List<Map<String, Object>>> status = statusRecord.stream().collect(Collectors.groupingBy(r -> MapUtil.getInt(r, "status")));
+        List<MigrationTaskStatusRecord> recordList = new ArrayList<>();
         status.entrySet().stream().forEach(m -> {
             Integer operateType = TaskConstant.TASK_STATUS_OPERATE_MAPPING.get(m.getKey());
             if (operateType != null) {
@@ -79,10 +81,15 @@ public class MigrationTaskStatusRecordServiceImpl extends ServiceImpl<MigrationT
                     Long timestamp = MapUtil.getLong(m.getValue().get(0), "timestamp");
                     record.setCreateTime(DateUtil.date(timestamp));
                 }
-                this.save(record);
+                MigrationTaskStatusRecord sameStatusRecord = CollUtil.findOne(recordList, item -> item.getStatusId().equals(record.getStatusId()));
+                if (sameStatusRecord == null) {
+                    recordList.add(record);
+                }
             }
         });
-
+        if (recordList.size() > 0) {
+            this.saveBatch(recordList);
+        }
     }
 
     @Override

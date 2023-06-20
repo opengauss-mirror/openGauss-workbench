@@ -54,7 +54,8 @@ public class TaskConstant {
         TASK_STATUS_OPERATE_MAPPING.put(TaskStatus.FULL_CHECK_FINISH.getCode(), TaskOperate.RUN.getCode());
         TASK_STATUS_OPERATE_MAPPING.put(TaskStatus.INCREMENTAL_START.getCode(), TaskOperate.RUN.getCode());
         TASK_STATUS_OPERATE_MAPPING.put(TaskStatus.INCREMENTAL_RUNNING.getCode(), TaskOperate.RUN.getCode());
-        TASK_STATUS_OPERATE_MAPPING.put(TaskStatus.INCREMENTAL_STOP.getCode(), TaskOperate.STOP_INCREMENTAL.getCode());
+        TASK_STATUS_OPERATE_MAPPING.put(TaskStatus.INCREMENTAL_FINISHED.getCode(), TaskOperate.STOP_INCREMENTAL.getCode());
+        TASK_STATUS_OPERATE_MAPPING.put(TaskStatus.INCREMENTAL_STOPPED.getCode(), TaskOperate.STOP_INCREMENTAL.getCode());
         TASK_STATUS_OPERATE_MAPPING.put(TaskStatus.REVERSE_START.getCode(), TaskOperate.START_REVERSE.getCode());
         TASK_STATUS_OPERATE_MAPPING.put(TaskStatus.REVERSE_RUNNING.getCode(), TaskOperate.START_REVERSE.getCode());
     }

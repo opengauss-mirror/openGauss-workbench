@@ -43,10 +43,13 @@ public enum TaskStatus {
     FULL_CHECK_FINISH(6, "full_check_finish"),
     INCREMENTAL_START(7, "incremental_start"),
     INCREMENTAL_RUNNING(8, "incremental_run"),
-    INCREMENTAL_STOP(9, "incremental_stop"),
-    REVERSE_START(10, "reverse_start"),
-    REVERSE_RUNNING(11, "reverse_run"),
-    REVERSE_STOP(12, "reverse_stop"),
+    // when click stop incremental
+    INCREMENTAL_FINISHED(9, "incremental_finished"),
+    // stop incremental complete
+    INCREMENTAL_STOPPED(10, "incremental_stopped"),
+    REVERSE_START(11, "reverse_start"),
+    REVERSE_RUNNING(12, "reverse_run"),
+    REVERSE_STOP(13, "reverse_stop"),
     MIGRATION_FINISH(100, "migration_finish"),
     MIGRATION_ERROR(500, "error"),
     WAIT_RESOURCE(1000, "wait_resource"),
