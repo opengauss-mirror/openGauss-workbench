@@ -76,22 +76,24 @@
             >{{ $t('step3.index.5q093f8y94c0') }}<b>{{ selectedKeys.length }}</b
             >{{ $t('step3.index.5q093f8y9740') }}</span
           >
-          <a-button type="outline" @click="handleBatchInstall" class="mr-s"
-            >批量安装</a-button
-          >
+          <a-button type="outline" @click="handleBatchInstall" class="mr-s">{{
+            $t('step3.index.5q096184bp83')
+          }}</a-button>
           <a-popconfirm
-            content="确认删除选中的迁移套件？"
+            :content="$t('step3.index.5q096184bp84')"
             type="warning"
-            ok-text="确认"
-            cancel-text="取消"
+            :ok-text="$t('step3.index.5q096184bp85')"
+            :cancel-text="$t('step3.index.5q096184bp86')"
             @ok="handleBatchRemove"
             :ok-loading="removeLoading"
           >
-            <a-button type="outline" class="mr-s">批量卸载</a-button>
+            <a-button type="outline" class="mr-s">{{
+              $t('step3.index.5q096184bp87')
+            }}</a-button>
           </a-popconfirm>
-          <a-button type="outline" @click="handleUploadPkg" class="mr-s"
-            >上传安装包</a-button
-          >
+          <a-button type="outline" @click="handleUploadPkg" class="mr-s">{{
+            $t('step3.index.5q096184bp88')
+          }}</a-button>
           <a-spin v-if="loading"></a-spin>
         </div>
         <div class="refresh-con">
@@ -150,7 +152,7 @@
                   ? $t('step3.index.5q097pi0m540', {
                       a: record.baseInfos[0],
                       b: record.baseInfos[1],
-                      c: record.baseInfos[2],
+                      c: record.baseInfos[2]
                     })
                   : ''
               }}
@@ -323,7 +325,7 @@ import {
   toRaw,
   onBeforeUnmount,
   inject,
-  nextTick,
+  nextTick
 } from 'vue'
 import { hostsData, downloadEnvLog, deletePortal } from '@/api/task'
 import useTheme from '@/hooks/theme'
@@ -344,12 +346,12 @@ const changeSubmitLoading = inject('changeSubmitLoading')
 const props = defineProps({
   subTaskConfig: {
     type: Array,
-    default: () => [],
+    default: () => []
   },
   hostData: {
     type: Array,
-    default: () => [],
-  },
+    default: () => []
+  }
 })
 
 const emits = defineEmits(['syncHost'])
@@ -362,14 +364,14 @@ const form = reactive({
   hostname: undefined,
   cpu: undefined,
   memory: undefined,
-  disk: undefined,
+  disk: undefined
 })
 
 const pagination = reactive({
   total: 0,
   current: 1,
   pageSize: 20,
-  showPageSize: true,
+  showPageSize: true
 })
 const tableData = ref([])
 const originData = ref([])
@@ -378,23 +380,23 @@ const selectedKeys = ref([])
 const rowSelection = reactive({
   type: 'checkbox',
   showCheckedAll: true,
-  onlyCurrent: false,
+  onlyCurrent: false
 })
 
 const portalDlg = reactive({
   visible: false,
   curHostId: '',
   installMode: 'install',
-  installInfo: {},
+  installInfo: {}
 })
 
 const uploadDlg = reactive({
-  visible: false,
+  visible: false
 })
 
 const installBatchDlg = reactive({
   visible: false,
-  hostList: [],
+  hostList: []
 })
 
 const statusMap = (status) => {
@@ -402,7 +404,7 @@ const statusMap = (status) => {
     0: t('step3.index.5q093f8yae80'),
     1: t('step3.index.5q093f8yagw0'),
     2: t('step3.index.5q093f8yajg0'),
-    10: t('step3.index.5q093f8yals0'),
+    10: t('step3.index.5q093f8yals0')
   }
   return maps[status]
 }
@@ -491,7 +493,7 @@ const handleDownloadLog = (row) => {
   downloadEnvLog(row.hostInfo.hostId).then((res) => {
     if (res) {
       const blob = new Blob([res], {
-        type: 'text/plain',
+        type: 'text/plain'
       })
       const a = document.createElement('a')
       const URL = window.URL || window.webkitURL
@@ -524,7 +526,7 @@ const getHostsData = () => {
       } else {
         tableData.value = res.data.map((item) => ({
           ...item,
-          hostId: item.hostInfo.hostId,
+          hostId: item.hostInfo.hostId
         }))
         originData.value = JSON.parse(JSON.stringify(tableData.value))
         pagination.total = res.data.length
@@ -585,7 +587,7 @@ const handleBatchInstall = () => {
     PORTAL_INSTALL_STATUS.NOT_INSTALL
   )
   if (notInstallHosts.length <= 0) {
-    Message.info('请选择未安装portal的服务器')
+    Message.info(t('step3.index.5q096184bp81'))
     return
   }
   const notInstallHostInfo = []
@@ -605,7 +607,7 @@ const handleBatchRemove = () => {
   )
   const targetPortalList = [...failedPortal, ...installedPortal]
   if (targetPortalList.length <= 0) {
-    Message.info('请选择已安装或者安装迁移套件错误的机器')
+    Message.info(t('step3.index.5q096184bp82'))
     return
   }
   const removeReqList = []

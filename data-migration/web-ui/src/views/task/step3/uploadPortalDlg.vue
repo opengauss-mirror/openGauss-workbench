@@ -1,7 +1,7 @@
 <template>
   <a-modal
     :unmount-on-close="true"
-    title="上传portal安装包"
+    :title="$t('step3.uploadPortalDlg.5q097pi0r552')"
     v-model:visible="visible"
     width="40vw"
     modal-class="add-portal-modal"
@@ -11,50 +11,48 @@
     <a-spin :loading="loading" style="display: block">
       <a-form ref="formRef" :model="form" auto-label-width>
         <a-form-item
-            field="packagePath"
-            :label="$t('components.PortalInstall.5q0aajl77lg9')"
-            :rules="[
-              {
-                required: true,
-                validator: validUpload,
-              },
-            ]"
+          field="packagePath"
+          :label="$t('components.PortalInstall.5q0aajl77lg9')"
+          :rules="[
+            {
+              required: true,
+              validator: validUpload
+            }
+          ]"
+        >
+          <a-upload
+            ref="uploadRef"
+            :action="upload.url"
+            v-model:file-list="upload.fileList"
+            :limit="1"
+            :show-file-list="true"
+            :auto-upload="false"
+            draggable
+            accept=".tar.gz"
+            @success="handleUploadSuccess"
+            @error="handleUploadError"
+            @before-remove="handleBeforeRemove"
+            :show-retry-button="false"
+            :show-cancel-button="false"
+            :headers="upload.headers"
           >
-            <a-upload
-              ref="uploadRef"
-              :action="upload.url"
-              v-model:file-list="upload.fileList"
-              :limit="1"
-              :show-file-list="true"
-              :auto-upload="false"
-              draggable
-              accept=".tar.gz"
-              @success="handleUploadSuccess"
-              @error="handleUploadError"
-              @before-remove="handleBeforeRemove"
-              :show-retry-button="false"
-              :show-cancel-button="false"
-              :headers="upload.headers"
-            >
-              <template #upload-button>
-                <div class="upload-info">
-                  <div class="upload-icon">
-                    <icon-plus
-                      :style="{ fontSize: '48px', color: '#86909C' }"
-                    />
-                  </div>
-                  <div class="tips-1">
-                    <span>{{
-                      $t('components.PortalInstall.5q0aajl77lg10')
-                    }}</span>
-                  </div>
-                  <div class="tips-1">
-                    <span>安装包将会上传到系统设置的上传路径下</span>
-                  </div>
+            <template #upload-button>
+              <div class="upload-info">
+                <div class="upload-icon">
+                  <icon-plus :style="{ fontSize: '48px', color: '#86909C' }" />
                 </div>
-              </template>
-            </a-upload>
-          </a-form-item>
+                <div class="tips-1">
+                  <span>{{
+                    $t('components.PortalInstall.5q0aajl77lg10')
+                  }}</span>
+                </div>
+                <div class="tips-1">
+                  <span>{{ $t('step3.uploadPortalDlg.5q097pi0r553') }}</span>
+                </div>
+              </div>
+            </template>
+          </a-upload>
+        </a-form-item>
       </a-form>
     </a-spin>
     <template #footer>
@@ -100,7 +98,9 @@ const form = reactive({
 const upload = reactive({
   fileList: [],
   headers: { Authorization: 'Bearer ' + getToken() },
-  url: process.env.VUE_APP_BASE_API + '/plugins/data-migration/resource/uploadPortal'
+  url:
+    process.env.VUE_APP_BASE_API +
+    '/plugins/data-migration/resource/uploadPortal'
 })
 
 const visible = ref(false)

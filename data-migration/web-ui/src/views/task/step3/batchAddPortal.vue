@@ -1,14 +1,14 @@
 <template>
   <a-modal
     :unmount-on-close="true"
-    title="批量安装portal"
+    :title="$t('step3.batchAddPortal.5q097pi0r541')"
     v-model:visible="visible"
     width="95vw"
     :mask-closable="false"
     :esc-to-close="false"
   >
     <a-form :model="globalData" layout="inline" auto-label-width="">
-      <a-form-item label="用户名">
+      <a-form-item :label="$t('step3.batchAddPortal.5q097pi0r542')">
         <a-select v-model="globalData.hostUserName">
           <a-option
             v-for="item in globalData.interHostUserList"
@@ -18,17 +18,19 @@
           />
         </a-select>
       </a-form-item>
-      <a-form-item label="安装路径">
+      <a-form-item :label="$t('step3.batchAddPortal.5q097pi0r543')">
         <a-input v-model="globalData.installPath" />
       </a-form-item>
-      <a-form-item label="jar名称">
+      <a-form-item :label="$t('step3.batchAddPortal.5q097pi0r544')">
         <a-input v-model="globalData.jarName" />
       </a-form-item>
-      <a-form-item label="包名称">
+      <a-form-item :label="$t('step3.batchAddPortal.5q097pi0r545')">
         <a-input v-model="globalData.pkgName" />
       </a-form-item>
       <a-form-item>
-        <a-button type="primary" @click="handleBatchSet">统一设置</a-button>
+        <a-button type="primary" @click="handleBatchSet">{{
+          $t('step3.batchAddPortal.5q097pi0r546')
+        }}</a-button>
       </a-form-item>
     </a-form>
     <a-form :model="form" ref="formRef" class="portal-table">
@@ -42,7 +44,10 @@
           <a-form-item
             hide-asterisk
             :field="`tableData.${rowIndex}.hostUserId`"
-            :rules="{ required: true, message: '请选择安装用户' }"
+            :rules="{
+              required: true,
+              message: $t('step3.batchAddPortal.5q097pi0r547')
+            }"
           >
             <a-select v-model="form.tableData[rowIndex].hostUserId">
               <a-option
@@ -59,7 +64,10 @@
           <a-form-item
             hide-asterisk
             :field="`tableData.${rowIndex}.installPath`"
-            :rules="{ required: true, message: '请输入安装路径' }"
+            :rules="{
+              required: true,
+              message: $t('step3.batchAddPortal.5q097pi0r548')
+            }"
           >
             <a-input v-model="form.tableData[rowIndex].installPath"></a-input>
           </a-form-item>
@@ -68,7 +76,10 @@
           <a-form-item
             hide-asterisk
             :field="`tableData.${rowIndex}.jarName`"
-            :rules="{ required: true, message: '请输入jar名称' }"
+            :rules="{
+              required: true,
+              message: $t('step3.batchAddPortal.5q097pi0r549')
+            }"
           >
             <a-input v-model="form.tableData[rowIndex].jarName"></a-input>
           </a-form-item>
@@ -77,7 +88,10 @@
           <a-form-item
             hide-asterisk
             :field="`tableData.${rowIndex}.pkgName`"
-            :rules="{ required: true, message: '请输入安装包名称' }"
+            :rules="{
+              required: true,
+              message: $t('step3.batchAddPortal.5q097pi0r550')
+            }"
           >
             <a-input v-model="form.tableData[rowIndex].pkgName"></a-input>
           </a-form-item>
@@ -108,28 +122,16 @@
   <script setup>
 import { reactive, ref, watch, onMounted } from 'vue'
 // import { Message } from '@arco-design/web-vue'
-import {
-  hostUsers,
-  installPortal,
-  deletePortal,
-  listHostUserByHostIds,
-  installPortalFromDatakit,
-} from '@/api/task'
+import { listHostUserByHostIds, installPortalFromDatakit } from '@/api/task'
 import { getSysSetting } from '@/api/common'
-import {
-  INSTALL_TYPE,
-  PORTAL_INSTALL_STATUS,
-  PORTAL_PARAM_TYPE,
-} from '@/utils/constants'
+import { INSTALL_TYPE } from '@/utils/constants'
 import { useI18n } from 'vue-i18n'
-import { Message } from '@arco-design/web-vue'
-import { getToken } from '@/utils/auth'
 
 const { t } = useI18n()
 
 const props = defineProps({
   open: Boolean,
-  hostList: Array,
+  hostList: Array
 })
 
 const emits = defineEmits(['update:open', 'startInstall'])
@@ -137,7 +139,7 @@ const emits = defineEmits(['update:open', 'startInstall'])
 const visible = ref(false)
 const loading = ref(false)
 const form = reactive({
-  tableData: [],
+  tableData: []
 })
 const formRef = ref()
 const globalData = reactive({
@@ -145,37 +147,37 @@ const globalData = reactive({
   interHostUserList: [],
   jarName: '',
   pkgName: '',
-  installPath: '~',
+  installPath: '~'
 })
 const columns = [
   {
     title: 'IP',
-    dataIndex: 'publicIp',
+    dataIndex: 'publicIp'
   },
   {
-    title: '用户名',
+    title: t('step3.batchAddPortal.5q097pi0r542'),
     dataIndex: 'hostUser',
-    slotName: 'hostUser',
+    slotName: 'hostUser'
   },
   {
-    title: '安装路径',
+    title: t('step3.batchAddPortal.5q097pi0r543'),
     dataIndex: 'installPath',
-    slotName: 'installPath',
+    slotName: 'installPath'
   },
   {
-    title: 'jar名称',
+    title: t('step3.batchAddPortal.5q097pi0r544'),
     dataIndex: 'jarName',
-    slotName: 'jarName',
+    slotName: 'jarName'
   },
   {
-    title: '包名称',
+    title: t('step3.batchAddPortal.5q097pi0r545'),
     dataIndex: 'pkgName',
-    slotName: 'pkgName',
+    slotName: 'pkgName'
   },
   {
-    title: '操作',
-    slotName: 'op',
-  },
+    title: t('step3.batchAddPortal.5q097pi0r551'),
+    slotName: 'op'
+  }
 ]
 
 watch(visible, (v) => {
