@@ -9,7 +9,7 @@
         }}</span>
         <span v-if="props.mode === 1" class="params-info">{{
           $t('components.ParamsConfig.5q0aazsppjc0', {
-            num: props.countUseDefault,
+            num: props.countUseDefault
           })
         }}</span>
       </div>
@@ -233,7 +233,7 @@ const props = defineProps({
   mode: [String, Number],
   globalParams: Object,
   countUseDefault: [String, Number],
-  taskInfo: Object,
+  taskInfo: Object
 })
 
 const basicRowCount = 13
@@ -247,24 +247,24 @@ const customStyle = ref({
   borderRadius: '6px',
   marginBottom: '18px',
   border: 'none',
-  overflow: 'hidden',
+  overflow: 'hidden'
 })
 
 const descData = ref([])
 
 const defaultData = reactive({
   basic: [],
-  more: [],
+  more: []
 })
 const form = reactive({
   basicData: [],
-  moreData: [],
+  moreData: []
 })
 const basicEditData = ref([])
 const moreEditData = ref([])
 const taskParams = reactive({
   basic: [],
-  more: [],
+  more: []
 })
 
 const basicRowClass = (row) => {
@@ -297,20 +297,20 @@ watch(
         descData.value = [
           {
             label: t('components.ParamsConfig.5q0aazspq7k0'),
-            value: props.taskInfo.sourceNodeName,
+            value: props.taskInfo.sourceNodeName
           },
           {
             label: t('components.ParamsConfig.5q0aazspqac0'),
-            value: props.taskInfo.targetNodeName,
+            value: props.taskInfo.targetNodeName
           },
           {
             label: t('components.ParamsConfig.5q0aazspqd00'),
-            value: props.taskInfo.sourceDBName,
+            value: props.taskInfo.sourceDBName
           },
           {
             label: t('components.ParamsConfig.5q0aazspqfs0'),
-            value: props.taskInfo.targetDBName,
-          },
+            value: props.taskInfo.targetDBName
+          }
         ]
       }
       getDefaultParams()
@@ -381,7 +381,7 @@ const moreValueChange = (row, rowIndex) => {
             paramValue: subData[j]['paramValue'],
             paramDesc: subData[j]['desc'],
             paramType: subData[j]['paramType'],
-            paramRules: subData[j]['paramRules'],
+            paramRules: subData[j]['paramRules']
           })
         }
       }
@@ -498,8 +498,11 @@ const getDefaultParams = () => {
 
 const fillDefaultData = (data) => {
   data.forEach((item) => {
-    if (item.paramType === PORTAL_PARAM_TYPE.VAR && item.paramKey === 'opengauss.database.schema') {
-      item.paramValue = props.taskInfo.sourceDBName
+    if (
+      item.paramType === PORTAL_PARAM_TYPE.VAR &&
+      item.paramKey === 'opengauss.database.schema'
+    ) {
+      item.paramValue = props.taskInfo?.sourceDBName
     }
   })
 }
@@ -575,12 +578,12 @@ const saveParams = () => {
       if (props.mode === 1) {
         emits('syncGlobalParams', {
           basic: basicEditData.value,
-          more: moreEditData.value,
+          more: moreEditData.value
         })
       } else {
         emits('syncTaskParams', {
           basic: basicEditData.value,
-          more: moreEditData.value,
+          more: moreEditData.value
         })
       }
       visible.value = false
