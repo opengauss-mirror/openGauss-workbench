@@ -101,7 +101,6 @@
     removeLine: true,
   });
 
-  const dataTypeList = ref([]);
   const data = computed({
     get: () => props.data,
     set: (val) => emit('update:data', val),

@@ -599,10 +599,6 @@
     }
   };
 
-  const getConnectInfoByRootId = (rootId) => {
-    return connectionList.value.find((item) => item.id == rootId);
-  };
-
   const loadNode = async (node, resolve) => {
     if (node.data.children && node.data.children.length) {
       return resolve(node.data.children);
@@ -1034,7 +1030,6 @@
     }
     Object.assign(dbData, {
       isConnect: willOpen,
-      // isLeaf: !willOpen,
       ...mergeObj,
     });
     treeRef.value.updateKeyChildren(dbData.id, dbData.children);
@@ -1597,7 +1592,6 @@
 
   const { handleReindex, handleTruncate, handleVacuum, handleDropTable, handleRelatedSequence } =
     useSidebarContext({
-      // treeContext,
       currentContextNodeData,
       hideTreeContext,
     });

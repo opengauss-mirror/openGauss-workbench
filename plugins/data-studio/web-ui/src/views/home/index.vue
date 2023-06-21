@@ -38,15 +38,7 @@
                 time: Date.now(),
               },
             });
-            // query: {
-            //   rootId: AppStore.lastestConnectDatabase.rootId,
-            //   connectInfoName: AppStore.currentConnectInfo?.name,
-            //   uuid: AppStore.lastestConnectDatabase.uuid,
-            //   dbname: AppStore.lastestConnectDatabase.name,
-            //   time: Date.now(),
-            // },
           } else {
-            // EventBus.notify(EventTypeName.CLOSE_ALL_TAB);
             EventBus.notify(EventTypeName.OPEN_CONNECT_DIALOG, 'create');
           }
         } else {
