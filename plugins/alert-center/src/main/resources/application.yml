@@ -1,0 +1,94 @@
+## Spring配置
+context:
+  listener:
+    classes: org.opengauss.plugin.alertcenter.listener.PluginListener
+#server:
+#  servlet:
+#    context-path: /alertCenter/api/v1
+spring:
+  servlet:
+    multipart:
+      max-file-size: 20MB #单个文件最大为20M
+      max-request-size: 20MB #单次请求文件总数大小为20M
+  sql:
+    init:
+      mode: always
+      data-locations: classpath:db/observability-alert.sql
+      continue-on-error: true
+  profiles:
+    active: '@profiles.active@'
+  resources:
+    static-locations: classpath:resources,file:D://static
+  datasource:
+    dynamic:
+      strict: false #严格匹配数据源,默认false. true未匹配到指定数据源时抛异常,false使用默认数据源
+  jackson:
+    time-zone: GMT+8
+    date-format: yyyy-MM-dd HH:mm:ss
+    serialization:
+      indent_output: true
+      fail_on_empty_beans: false
+    deserialization:
+      fail_on_unknown_properties: true
+    parser:
+      allow_unquoted_control_chars: true
+      allow_single_quotes: true
+server.compression:
+  enabled: true
+  mime-types: application/javascript,text/css,application/json,application/xml,text/html,text/xml,text/plain
+mybatis-plus:
+  # 搜索指定包别名
+  typeAliasesPackage: org.opengauss.plugin.alertcenter.entity
+  # 配置mapper的扫描，找到所有的mapper.xml映射文件
+  mapperLocations: classpath*:mapper/*.xml
+  # 加载全局的配置文件
+  configuration:
+    mapUnderscoreToCamelCase: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+alert:
+  rule-file-prefix: rules/
+  rule-file-suffix: .yml
+  alertmanager:  #prometheus推送的完整路径是 /plugins/alert-center/alertCenter/api/v1/alerts
+    path-prefix: /plugins/alert-center/alertCenter
+    api-version: v1
+  ruleItems:
+    - name: cpuUsage
+      unit: "%"
+      ruleExps:
+      - type: normal
+        exp: (1- avg(rate(node_cpu_seconds_total{mode=\"idle\",instance=~\"${instances}\"}[5m])) by(instance))  * 100
+      - type: trend
+        exp: avg by(instance) (rate(node_cpu_seconds_total{mode=\"idle\",instance=~\"${instances}\"}[5m] offset 15s)) - avg by(instance) (rate(node_cpu_seconds_total{mode=\"idle\",instance=~\"${instances}\"}[5m]))
+    - name: memoryUsage
+      unit: "%"
+      ruleExps:
+        - type: normal
+          exp: 100 * (1 - (node_memory_MemFree_bytes + node_memory_Cached_bytes + node_memory_Buffers_bytes) / node_memory_MemTotal_bytes{instance=~\"${instances}\"})
+        - type: trend
+          exp: (node_memory_MemFree_bytes offset 15s + node_memory_Cached_bytes offset 15s + node_memory_Buffers_bytes offset 15s) / node_memory_MemTotal_bytes{instance=~\"${instances}\"} - (node_memory_MemFree_bytes + node_memory_Cached_bytes + node_memory_Buffers_bytes) / node_memory_MemTotal_bytes{instance=~\"${instances}\"}
+    - name: diskUsage
+      unit: MB
+      ruleExps:
+        - type: normal
+          exp: (node_filesystem_size_bytes{device=~\"${filesystemPath}\",instance=~\"${instances}\"} - node_filesystem_free_bytes) /1024/1024
+        - type: trend
+          exp: node_filesystem_free_bytes{device=~\"${filesystemPath}\",instance=~\"${instances}\"} offset 15s - node_filesystem_free_bytes{device=~\"${filesystemPath}\",instance=~\"${instances}\"}
+      params:
+        paramName: filesystemPath
+        paramValue:
+        paramOrder: 1
+    - name: diskWriteRate
+      unit: MB/s
+      ruleExps:
+        - type: normal
+          exp: sum(rate(node_disk_written_bytes_total{instance=~\"${instances}\"}[2m])) by (instance) /1024/1024
+        - type: trend
+          exp: sum(rate(node_disk_written_bytes_total{instance=~\"${instances}\"}[2m])) by (instance) - sum(rate(node_disk_written_bytes_total{instance=~\"${instances}\"}[5m] offset 15s)) by (instance)
+    - name: diskReadRate
+      unit: MB/s
+      ruleExps:
+        - type: normal
+          exp: sum(rate(node_disk_read_bytes_total{instance=~\"${instances}\"}[2m])) by (instance) /1024/1024
+        - type: trend
+          exp: sum(rate(node_disk_read_bytes_total{instance=~\"${instances}\"}[2m])) by (instance) - sum(rate(node_disk_read_bytes_total{instance=~\"${instances}\"}[5m] offset 15s)) by (instance)

@@ -1,3 +1,7 @@
+///
+/// Copyright (c) 2023 Huawei Technologies Co.,Ltd.
+///
+
 export const uuid = () => Math.random().toString(36).slice(2);
 
 export const toFixed = (n: number | string, r: number = 2) => (Number.parseInt(`${Number.parseFloat(`${n}`) * (10 ** r)}`) / (10 ** r)).toFixed(r);

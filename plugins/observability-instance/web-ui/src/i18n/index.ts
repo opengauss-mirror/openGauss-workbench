@@ -1,3 +1,7 @@
+///
+/// Copyright (c) 2023 Huawei Technologies Co.,Ltd.
+///
+
 import { createI18n } from 'vue-i18n';
 import zhCn from './zhCn';
 import en from './en';

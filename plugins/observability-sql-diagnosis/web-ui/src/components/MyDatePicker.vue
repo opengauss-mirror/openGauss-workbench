@@ -78,29 +78,31 @@ const dateValue = computed({
     set: (val) => {
         let value
         if (val && props.valueFormatToISO) {
-            value = Array.isArray(val) ? val.map((item) => dayjs(item).tz(dayjs.tz.guess()).format()) : dayjs(val).tz(dayjs.tz.guess()).format()
+            value = Array.isArray(val)
+                ? val.map((item) => dayjs(item).tz(dayjs.tz.guess()).format())
+                : dayjs(val).tz(dayjs.tz.guess()).format()
         } else if (val && props.valueFormatToUTC) {
             value = Array.isArray(val) ? val.map((item) => dayjs(item).utc().format()) : dayjs(val).utc().format()
         } else if (val && !props.valueFormatToISO && !props.valueFormatToUTC) {
             let fmt: string
             switch (props.type) {
-            case 'date':
-            case 'daterange':
-                fmt = 'YYYY-MM-DD'
-                break
-            case 'datetime':
-            case 'datetimerange':
-                fmt = 'YYYY-MM-DD HH:mm:ss'
-                break
-            case 'year':
-                fmt = 'YYYY'
-                break
-            case 'month':
-                fmt = 'YYYY-MM'
-                break
-            default:
-                fmt = 'YYYY-MM-DD'
-                break
+                case 'date':
+                case 'daterange':
+                    fmt = 'YYYY-MM-DD'
+                    break
+                case 'datetime':
+                case 'datetimerange':
+                    fmt = 'YYYY-MM-DD HH:mm:ss'
+                    break
+                case 'year':
+                    fmt = 'YYYY'
+                    break
+                case 'month':
+                    fmt = 'YYYY-MM'
+                    break
+                default:
+                    fmt = 'YYYY-MM-DD'
+                    break
             }
             value = Array.isArray(val) ? val.map((item) => dayjs(item).format(fmt)) : dayjs(val).format(fmt)
         } else {
@@ -113,5 +115,16 @@ const dateValue = computed({
 </script>
 
 <template>
-    <el-date-picker ref="datePickerRef" @visible-change="onDatePackerVisible" popper-class="myDatePicker" unlink-panels v-bind="$attrs" v-model="dateValue" :type="type" :shortcuts="shortcuts" :start-placeholder="$t('app.startTime')" :end-placeholder="$t('app.endTime')" />
+    <el-date-picker
+        ref="datePickerRef"
+        @visible-change="onDatePackerVisible"
+        popper-class="myDatePicker"
+        unlink-panels
+        v-bind="$attrs"
+        v-model="dateValue"
+        :type="type"
+        :shortcuts="shortcuts"
+        :start-placeholder="$t('app.startTime')"
+        :end-placeholder="$t('app.endTime')"
+    />
 </template>

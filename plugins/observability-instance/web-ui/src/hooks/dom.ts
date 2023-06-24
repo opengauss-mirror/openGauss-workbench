@@ -1,3 +1,7 @@
+///
+/// Copyright (c) 2023 Huawei Technologies Co.,Ltd.
+///
+
 import { useEventListener } from "@vueuse/core";
 import { Ref } from "vue";
 

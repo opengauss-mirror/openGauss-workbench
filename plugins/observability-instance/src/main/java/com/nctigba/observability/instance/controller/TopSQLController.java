@@ -1,8 +1,11 @@
+/*
+ * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ */
 package com.nctigba.observability.instance.controller;
 
 import java.util.List;
 
-import org.opengauss.admin.common.core.domain.model.ops.OpsClusterVO;
+import org.opengauss.admin.common.core.domain.AjaxResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -10,8 +13,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.alibaba.fastjson.JSONObject;
 import com.nctigba.common.web.exception.CustomExceptionEnum;
-import com.nctigba.common.web.result.AppResult;
-import com.nctigba.observability.instance.constants.CommonConstants;
 import com.nctigba.observability.instance.dto.topsql.TopSQLInfoReq;
 import com.nctigba.observability.instance.dto.topsql.TopSQLListReq;
 import com.nctigba.observability.instance.service.ClusterManager;
@@ -32,61 +33,64 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class TopSQLController {
     private final TopSQLService topSQLService;
-    private final ClusterManager opsFacade;
+    private final ClusterManager clusterManager;
 
     @GetMapping(value = "/connect/{nodeId}")
-    public AppResult testConnection(@PathVariable("nodeId") String nodeId) {
-        return AppResult.ok(CommonConstants.SUCCESS).addData(topSQLService.testConnection(nodeId));
+    public AjaxResult testConnection(@PathVariable("nodeId") String nodeId) {
+        return AjaxResult.success(topSQLService.testConnection(nodeId));
     }
 
     @GetMapping(value = "/list")
-    public AppResult top10(TopSQLListReq topSQLListReq) {
+    public AjaxResult top10(TopSQLListReq topSQLListReq) {
         List<JSONObject> list = topSQLService.getTopSQLList(topSQLListReq);
-        System.out.println(list);
         if (list == null) {
-            return AppResult.error(CustomExceptionEnum.TOLSQL_IS_RIGHT_PARAM.getMsg(), "top sql pre check fail");
+            return AjaxResult.error(CustomExceptionEnum.TOLSQL_IS_RIGHT_PARAM.getMsg(), "top sql pre check fail");
         }
-        return AppResult.ok(CommonConstants.SUCCESS).addData(list);
+        return AjaxResult.success(list);
     }
 
     @GetMapping(value = "/detail")
-    public AppResult detail(TopSQLInfoReq topSQLDetailReq) {
-        return AppResult.ok(CommonConstants.SUCCESS).addData(topSQLService.getStatisticalInfo(topSQLDetailReq));
+    public AjaxResult detail(TopSQLInfoReq topSQLDetailReq) {
+        return AjaxResult.success(topSQLService.getStatisticalInfo(topSQLDetailReq));
     }
 
     @GetMapping(value = "/plan")
-    public AppResult plan(TopSQLInfoReq topSQLPlanReq) {
+    public AjaxResult plan(TopSQLInfoReq topSQLPlanReq) {
         JSONObject res = topSQLService.getExecutionPlan(topSQLPlanReq, "");
         if (res == null) {
-            return AppResult.error(CustomExceptionEnum.TOLSQL_IS_RIGHT_PARAM.getMsg(), "execution plan pre check fail");
+            return AjaxResult.error(CustomExceptionEnum.TOLSQL_IS_RIGHT_PARAM.getMsg(),
+                    "execution plan pre check fail");
         }
-        return AppResult.ok(CommonConstants.SUCCESS).addData(res);
+        return AjaxResult.success(res);
     }
 
     @GetMapping(value = "/partition")
-    public AppResult partition(TopSQLInfoReq topSQLPartitionReq) {
-        return AppResult.ok(CommonConstants.SUCCESS).addData(topSQLService.getPartitionList(topSQLPartitionReq));
+    public AjaxResult partition(TopSQLInfoReq topSQLPartitionReq) {
+        return AjaxResult.success(topSQLService.getPartitionList(topSQLPartitionReq));
     }
 
     @GetMapping(value = "/index")
-    public AppResult index(TopSQLInfoReq topSQLIndexReq) {
-        return AppResult.ok(CommonConstants.SUCCESS).addData(topSQLService.getIndexAdvice(topSQLIndexReq));
+    public AjaxResult index(TopSQLInfoReq topSQLIndexReq) {
+        return AjaxResult.success(topSQLService.getIndexAdvice(topSQLIndexReq));
     }
 
     @GetMapping(value = "/object")
-    public AppResult object(TopSQLInfoReq topSQLObjectReq) {
-        return AppResult.ok(CommonConstants.SUCCESS).addData(topSQLService.getObjectInfo(topSQLObjectReq));
+    public AjaxResult object(TopSQLInfoReq topSQLObjectReq) {
+        return AjaxResult.success(topSQLService.getObjectInfo(topSQLObjectReq));
     }
 
     @GetMapping(value = "/cluster")
-    public AppResult cluster() {
-        List<OpsClusterVO> c = opsFacade.getAllOpsCluster();
-        System.out.println(c.size());
-		return AppResult.ok(CommonConstants.SUCCESS).addData(c);
+    public AjaxResult cluster() {
+        return AjaxResult.success(clusterManager.getAllOpsCluster());
     }
 
     @GetMapping(value = "/cluster/{id}")
-    public AppResult clusterNode(@PathVariable("id") String id) {
-        return AppResult.ok(CommonConstants.SUCCESS).addData(opsFacade.getOpsNodeById(id));
+    public AjaxResult clusterNode(@PathVariable("id") String id) {
+        return AjaxResult.success(clusterManager.getOpsNodeById(id));
+    }
+
+    @GetMapping(value = "/waitevent")
+    public AjaxResult waitevent(String id, String sqlId) {
+        return AjaxResult.success(topSQLService.waitEvent(id, sqlId));
     }
 }

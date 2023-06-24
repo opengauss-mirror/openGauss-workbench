@@ -1,3 +1,6 @@
+/*
+ * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ */
 package com.nctigba.observability.instance.entity;
 
 import java.sql.ResultSet;
@@ -19,38 +22,38 @@ import lombok.experimental.Accessors;
 @TableName(value = "param_info", autoResultMap = true)
 @NoArgsConstructor
 public class ParamInfo {
-	@TableId(type = IdType.AUTO)
-	Integer id;
-	@TableField("paramType")
-	type paramType;
-	@TableField("paramName")
-	String paramName;
-	String paramDetail;
-	@TableField("suggestValue")
-	String suggestValue;
-	@TableField("defaultValue")
-	String defaultValue;
-	String unit;
-	String suggestExplain;
-	@TableField("diagnosisRule")
-	String diagnosisRule;
+    @TableId(type = IdType.AUTO)
+    Integer id;
+    @TableField("paramType")
+    type paramType;
+    @TableField("paramName")
+    String paramName;
+    String paramDetail;
+    @TableField("suggestValue")
+    String suggestValue;
+    @TableField("defaultValue")
+    String defaultValue;
+    String unit;
+    String suggestExplain;
+    @TableField("diagnosisRule")
+    String diagnosisRule;
 
-	public enum type {
-		OS,
-		DB
-	}
+    public enum type {
+        OS,
+        DB
+    }
 
-	public static List<ParamInfo> parse(ResultSet rs) throws SQLException {
-		var list = new ArrayList<ParamInfo>();
-		while (rs.next()) {
-			var info = new ParamInfo();
-			info.setId(rs.getInt("id"));
-			info.setParamName(rs.getString("paramName"));
-			info.setParamType(type.valueOf(rs.getString("paramType")));
-			info.setSuggestValue(rs.getString("suggestValue"));
-			info.setDefaultValue(rs.getString("defaultValue"));
-			list.add(info);
-		}
-		return list;
-	}
+    public static List<ParamInfo> parse(ResultSet rs) throws SQLException {
+        var list = new ArrayList<ParamInfo>();
+        while (rs.next()) {
+            var info = new ParamInfo();
+            info.setId(rs.getInt("id"));
+            info.setParamName(rs.getString("paramName"));
+            info.setParamType(type.valueOf(rs.getString("paramType")));
+            info.setSuggestValue(rs.getString("suggestValue"));
+            info.setDefaultValue(rs.getString("defaultValue"));
+            list.add(info);
+        }
+        return list;
+    }
 }

@@ -1,3 +1,7 @@
+///
+/// Copyright (c) 2023 Huawei Technologies Co.,Ltd.
+///
+
 import JsEncrypt from "jsencrypt";
 import platformRequest from "../request/platform";
 

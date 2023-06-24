@@ -1,3 +1,6 @@
+/*
+ * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ */
 package com.nctigba.observability.instance.config;
 
 import com.baomidou.dynamic.datasource.DynamicRoutingDataSource;
@@ -16,21 +19,21 @@ import javax.sql.DataSource;
  */
 @Configuration
 public class DataSourceConfig {
-	@Bean
-	@ConfigurationProperties(prefix = "spring.datasource")
-	public DataSource dataSource() {
-		EnvironmentProvider environmentProvider = PluginContextHolder.getEnvironmentProvider();
-		// read config from dataKit platform
-		String url = environmentProvider.getString("spring.datasource.url");
-		String username = environmentProvider.getString("spring.datasource.username");
-		String password = environmentProvider.getString("spring.datasource.password");
-		String driverClassName = environmentProvider.getString("spring.datasource.driver-class-name");
+    @Bean
+    @ConfigurationProperties(prefix = "spring.datasource")
+    public DataSource dataSource() {
+        EnvironmentProvider environmentProvider = PluginContextHolder.getEnvironmentProvider();
+        // read config from dataKit platform
+        String url = environmentProvider.getString("spring.datasource.url");
+        String username = environmentProvider.getString("spring.datasource.username");
+        String password = environmentProvider.getString("spring.datasource.password");
+        String driverClassName = environmentProvider.getString("spring.datasource.driver-class-name");
 
-		DataSource primary = DataSourceBuilder.create().driverClassName(driverClassName).url(url).username(username)
-				.password(password).build();
-		var d=new DynamicRoutingDataSource();
-		d.addDataSource("primary", primary);
-		d.setPrimary("primary");
-		return d;
-	}
+        DataSource primary = DataSourceBuilder.create().driverClassName(driverClassName).url(url).username(username)
+                .password(password).build();
+        var d = new DynamicRoutingDataSource();
+        d.addDataSource("primary", primary);
+        d.setPrimary("primary");
+        return d;
+    }
 }

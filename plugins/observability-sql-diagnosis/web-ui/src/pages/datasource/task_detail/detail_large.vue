@@ -1,90 +1,187 @@
 <template>
     <div class="s-i-base">
-        <my-card :title="$t('datasource.detailTitle')" :bodyPadding="false" style="position: relative" v-if="!reportNodeList.includes(urlParam.nodesType)">
-            <img src="@/assets/img/small.png" class="shrink-img" @click="goToTask" />
-            <!-- Suggestions -->
-            <div class="suggsiton-wrap" v-if="requestType === 'Suggestion' || (taskData.taskInfo && taskData.taskInfo.top.type === 'Suggestion') || (taskData.taskInfo && taskData.taskInfo.center.type === 'Suggestion')">
-                <div class="report-header">{{ taskData.dataSuggestion.title }}</div>
-                <div class="report-main-header">
-                    <div class="report-main-suggestion">
-                        <el-icon color="#0093FF" size="18px">
-                            <WarningFilled />
-                        </el-icon>
-                        <div class="suggsiton-info">
-                            <template v-for="item in taskData.dataSuggestion.suggestions" :key="item">
-                                <span class="report-main-suggestion-text">{{ item }}</span>
-                            </template>
+        <my-card
+            :title="$t('datasource.detailTitle')"
+            :bodyPadding="false"
+            style="position: relative"
+            v-if="!reportNodeList.includes(urlParam.nodesType)"
+        >
+            <template #headerExtend>
+                <svg-icon name="expand" class="shrink-img" @click="goToTask" />
+            </template>
+            <el-tabs class="tast-detail-tabs">
+                <el-tab-pane label="诊断结果">
+                    
+                    <!-- Suggestions -->
+                    <div
+                        class="suggsiton-wrap"
+                        v-if="
+                            requestType === 'Suggestion' ||
+                            (taskData.taskInfo && taskData.taskInfo.top.type === 'Suggestion') ||
+                            (taskData.taskInfo && taskData.taskInfo.center.type === 'Suggestion')
+                        "
+                    >
+                        <div class="report-header">{{ taskData.dataSuggestion.title }}</div>
+                        <div class="report-main-header">
+                            <div class="report-main-suggestion">
+                                <el-icon color="#0093FF" size="18px">
+                                    <WarningFilled />
+                                </el-icon>
+                                <div class="suggsiton-info">
+                                    <template v-for="item in taskData.dataSuggestion.suggestions" :key="item">
+                                        <span class="report-main-suggestion-text">{{ item }}</span>
+                                    </template>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </div>
-            </div>
 
-            <!-- Essential information -->
-            <template v-if="taskData.baseInfoData.length > 0 && requestType === 'UL'">
-                <div class="report-header">{{ $t('datasource.taskInfo') }}</div>
-                <p class="s-i-base-item" v-for="item in taskData.baseInfoData" :key="item.value">{{ item.label }}：<span v-html="item.value || '-'"></span></p>
-            </template>
-
-            <!-- Parameter Diagnosis -->
-            <template v-if="requestType === 'Param'">
-                <div class="report-header">{{ taskData.dataParameterConfig.title }}</div>
-                <p class="s-i-base-item title">{{ $t('datasource.paramName') }}</p>
-                <p class="s-i-base-item content">{{ taskData.dataParameterConfig.paramName }}</p>
-                <p class="s-i-base-item title">{{ $t('datasource.currentValue') }}</p>
-                <p class="s-i-base-item content">{{ taskData.dataParameterConfig.currentValue }}{{ taskData.dataParameterConfig.unit === null ? '' : '(' + taskData.dataParameterConfig.unit + ')' }}</p>
-                <p class="s-i-base-item title">{{ $t('datasource.paramDescription') }}</p>
-                <p class="s-i-base-item content">{{ taskData.dataParameterConfig.paramDescription }}</p>
-                <p class="s-i-base-item title">{{ $t('datasource.suggestValue') }}</p>
-                <p class="s-i-base-item content">{{ taskData.dataParameterConfig.suggestValue }}</p>
-                <p class="s-i-base-item title">{{ $t('datasource.suggestReason') }}</p>
-                <p class="s-i-base-item content">{{ taskData.dataParameterConfig.suggestReason }}</p>
-            </template>
-
-            <!-- Flame diagram -->
-            <div class="s-l-base" v-if="requestType === 'Frame'">
-                <div class="svg-top" v-if="taskData.taskInfo.top.type === 'Flamefigure'">
-                    <iframe class="svg-img-wrap" :srcdoc="svgFile" frameBorder="0" border="0"></iframe>
-                    <p class="svg-title">{{ taskData.taskInfo.top.data.title }}</p>
-                </div>
-                <div class="svg-center" v-if="taskData.taskInfo.center.type === 'Paragraph'">
-                    <div class="info-item" v-for="item in taskData.taskInfo.center.data" :key="item.title">
-                        <p class="item-title">{{ item.title }}</p>
-                        <p class="item-content">{{ item.paragraph }}</p>
-                    </div>
-                </div>
-            </div>
-            <!-- Tree Table -->
-            <div class="table-wrap" v-if="requestType === 'Table' || (taskData.taskInfo && taskData.taskInfo.top.type === 'Table') || (taskData.taskInfo && taskData.taskInfo.center.type === 'Table')">
-                <el-table ref="singleTableRef" :data="taskData.dataTableInfo.data" :style="{ width: '100%', marginBottom: '20px' }" border max-height="500">
-                    <el-table-column type="index" />
-                    <template v-for="item in taskData.dataTableInfo.columns" :key="item.id">
-                        <el-table-column :prop="item.key" :label="item.title" />
+                    <!-- Parameter Diagnosis -->
+                    <template v-if="requestType === 'Param'">
+                        <div class="report-header">{{ taskData.dataParameterConfig.title }}</div>
+                        <p class="s-i-base-item title">{{ $t('datasource.paramName') }}</p>
+                        <p class="s-i-base-item content">{{ taskData.dataParameterConfig.paramName }}</p>
+                        <p class="s-i-base-item title">{{ $t('datasource.currentValue') }}</p>
+                        <p class="s-i-base-item content">
+                            {{ taskData.dataParameterConfig.currentValue
+                            }}{{
+                                taskData.dataParameterConfig.unit === null
+                                    ? ''
+                                    : '(' + taskData.dataParameterConfig.unit + ')'
+                            }}
+                        </p>
+                        <p class="s-i-base-item title">{{ $t('datasource.paramDescription') }}</p>
+                        <p class="s-i-base-item content">{{ taskData.dataParameterConfig.paramDescription }}</p>
+                        <p class="s-i-base-item title">{{ $t('datasource.suggestValue') }}</p>
+                        <p class="s-i-base-item content">{{ taskData.dataParameterConfig.suggestValue }}</p>
+                        <p class="s-i-base-item title">{{ $t('datasource.suggestReason') }}</p>
+                        <p class="s-i-base-item content">{{ taskData.dataParameterConfig.suggestReason }}</p>
                     </template>
-                </el-table>
-            </div>
-            <!-- Thermodynamic diagram -->
-            <div class="chart-wrap" v-if="requestType === 'HeatMap' || (taskData.taskInfo && taskData.taskInfo.top.type === 'HeatMap') || (taskData.taskInfo && taskData.taskInfo.center.type === 'HeatMap')">
-                <div class="chart-btn-wrap">
-                    <span>{{ $t('datasource.showNum') }}</span>
-                    <el-switch v-model="showNumFlag" @change="handleShowNum" style="--el-switch-on-color: #409eff; --el-switch-off-color: #dcdfe6" />
-                </div>
-                <template v-for="(item, index) in chartData" :key="index + '-'">
-                    <heat-map :data="item.data" :xData="item.x" :yData="item.y" :title="item.name" :maxData="heatMapMax" :showNum="showNumFlag" :unit="item.unit" v-bind="$attrs"> </heat-map>
-                </template>
-            </div>
-            <!-- No result -->
-            <div class="noresult-wrap" v-if="requestType === 'NONE'">
-                <img src="@/assets/img/noresult.png" class="noresult-img" />
-                <p class="noresult-text">{{ $t('datasource.noResult') }}</p>
-            </div>
-            <!-- Thermodynamic diagram -->
-            <div class="chart-wrap" v-if="requestType === 'LineChart' || (taskData.taskInfo && taskData.taskInfo.top.type === 'LineChart') || (taskData.taskInfo && taskData.taskInfo.center.type === 'LineChart')">
-                <template v-for="(item, index) in chartData" :key="index + '-'">
-                    <line-chart :data="item.data" :xData="item.xAxis.data" :series="item.series" :title="item.title"> </line-chart>
-                </template>
-            </div>
+
+                    <!-- Flame diagram -->
+                    <div class="s-l-base" v-if="requestType === 'Frame'">
+                        <div class="svg-top" v-if="taskData.taskInfo.top.type === 'Flamefigure'">
+                            <iframe class="svg-img-wrap" :srcdoc="svgFile" frameBorder="0" border="0"></iframe>
+                            <p class="svg-title">{{ taskData.taskInfo.top.data.title }}</p>
+                        </div>
+                        <div class="svg-center" v-if="taskData.taskInfo.center.type === 'Paragraph'">
+                            <div class="info-item" v-for="item in taskData.taskInfo.center.data" :key="item.title">
+                                <p class="item-title">{{ item.title }}</p>
+                                <p class="item-content">{{ item.paragraph }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Tree Table -->
+                    <div
+                        class="table-wrap"
+                        v-if="
+                            requestType === 'Table' ||
+                            (taskData.taskInfo && taskData.taskInfo.top.type === 'Table') ||
+                            (taskData.taskInfo && taskData.taskInfo.center.type === 'Table')
+                        "
+                    >
+                        <el-table
+                            ref="singleTableRef"
+                            :data="taskData.dataTableInfo.data"
+                            :style="{ width: '100%', marginBottom: '20px' }"
+                            border
+                            max-height="500"
+                        >
+                            <el-table-column type="index" />
+                            <template v-for="item in taskData.dataTableInfo.columns" :key="item.id">
+                                <el-table-column :prop="item.key" :label="item.title" />
+                            </template>
+                        </el-table>
+                    </div>
+                    <!-- Thermodynamic diagram -->
+                    <div
+                        class="chart-wrap"
+                        v-if="
+                            requestType === 'HeatMap' ||
+                            (taskData.taskInfo && taskData.taskInfo.top.type === 'HeatMap') ||
+                            (taskData.taskInfo && taskData.taskInfo.center.type === 'HeatMap')
+                        "
+                    >
+                        <div class="chart-btn-wrap">
+                            <span>{{ $t('datasource.showNum') }}</span>
+                            <el-switch
+                                v-model="showNumFlag"
+                                @change="handleShowNum"
+                                style="--el-switch-on-color: #409eff; --el-switch-off-color: #dcdfe6"
+                            />
+                        </div>
+                        <template v-for="(item, index) in chartData" :key="index + '-'">
+                            <heat-map
+                                :data="item.data"
+                                :xData="item.x"
+                                :yData="item.y"
+                                :title="item.name"
+                                :maxData="heatMapMax"
+                                :showNum="showNumFlag"
+                                :unit="item.unit"
+                                v-bind="$attrs"
+                            >
+                            </heat-map>
+                        </template>
+                    </div>
+                    <!-- No result -->
+                    <div class="noresult-wrap" v-if="requestType === 'NONE'">
+                        <img src="@/assets/img/noresult.png" class="noresult-img" />
+                        <p class="noresult-text">{{ $t('datasource.noResult') }}</p>
+                    </div>
+                    <!-- Thermodynamic diagram -->
+                    <div
+                        class="chart-wrap"
+                        v-if="
+                            requestType === 'LineChart' ||
+                            (taskData.taskInfo && taskData.taskInfo.top.type === 'LineChart') ||
+                            (taskData.taskInfo && taskData.taskInfo.center.type === 'LineChart')
+                        "
+                    >
+                        <template v-for="(item, index) in chartData" :key="index + '-'">
+                            <line-chart
+                                :data="item.data"
+                                :xData="item.xAxis.data"
+                                :series="item.series"
+                                :title="item.title"
+                            >
+                            </line-chart>
+                        </template>
+                    </div>
+
+                    <!-- Task info for root-->
+                    <div v-if="taskData.baseInfoData.length > 0 && requestType === 'UL'">
+                        <div>
+                            <div class="info-title">
+                                <svg-icon name="note" class="detail-icon" />
+                                <div class="title">{{ $t('datasource.taskInfo') }}</div>
+                            </div>
+                            <p class="s-i-base-item" v-for="item in taskData.baseInfoData" :key="item.value">
+                                {{ item.label }}：<span v-html="item.value || '-'"></span>
+                            </p>
+
+                            <div class="info-title" style="margin-top: 16px; margin-bottom: 8px">
+                                <svg-icon name="cmd" class="detail-icon" />
+                                <div class="title">SQL</div>
+                            </div>
+                            <el-input v-model="taskData.sql" :rows="4" type="textarea" :input-style="'fontSize:14px'" />
+
+                            <div class="info-title" style="margin-top: 16px; margin-bottom: 8px">
+                                <svg-icon name="cmd" class="detail-icon" />
+                                <div class="title">{{ $t('datasource.taskInfoRemarkKey') }}</div>
+                            </div>
+                            <el-input v-model="taskData.log" :rows="8" type="textarea" :input-style="'fontSize:14px'" />
+                        </div>
+                    </div>
+                </el-tab-pane>
+            </el-tabs>
         </my-card>
-        <my-card :title="$t('datasource.reportDetail')" :bodyPadding="false" style="position: relative" v-if="reportNodeList.includes(urlParam.nodesType)">
+        <my-card
+            :title="$t('datasource.reportDetail')"
+            :bodyPadding="false"
+            style="position: relative"
+            v-if="reportNodeList.includes(urlParam.nodesType)"
+        >
             <ReportDetail :large="true" :id="urlParam.dbId" :reportId="urlParam.nodesType" />
             <img src="@/assets/img/small.png" class="shrink-img" @click="goToTask" />
         </my-card>
@@ -99,6 +196,8 @@ import { useRequest } from 'vue-request'
 import { ElTable } from 'element-plus'
 import ReportDetail from '../../../components/reportDetail/Index.vue'
 import { WarningFilled } from '@element-plus/icons-vue'
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
 
 interface Res {
     type: string
@@ -149,6 +248,8 @@ const chartData = ref<any>([])
 const heatMapMax = ref(10)
 const showNumFlag = ref(true)
 const taskData = reactive<{
+    sql: string
+    log: string
     baseInfoData: Array<optionType>
     dataTreeInfo: any
     dataTableInfo: any
@@ -178,6 +279,8 @@ const taskData = reactive<{
         }
     }
 }>({
+    sql: '',
+    log: '',
     baseInfoData: [],
     dataTreeInfo: [],
     dataTableInfo: {},
@@ -231,7 +334,9 @@ onMounted(() => {
 
 const { data: res, run: requestData } = useRequest(
     () => {
-        return ogRequest.get('/sqlDiagnosis/api/v1/diagnosisTasks/' + queryData.value.id + '/suggestions/' + queryData.value.type)
+        return ogRequest.get(
+            '/sqlDiagnosis/api/v1/diagnosisTasks/' + queryData.value.id + '/suggestions/' + queryData.value.type
+        )
     },
     { manual: true }
 )
@@ -290,12 +395,18 @@ watch(res, (res: Res) => {
         requestType.value = res.type
         taskData.taskInfo = res.child
         if (res.type === 'UL') {
+            taskData.sql = ''
+            taskData.log = ''
             taskData.baseInfoData = []
             for (let item of res.data) {
-                taskData.baseInfoData.push({
-                    label: Object.keys(item)[0],
-                    value: String(Object.values(item)[0]),
-                })
+                let label = Object.keys(item)[0]
+                let value = String(Object.values(item)[0])
+                if (label === 'sql') taskData.sql = value
+                else if (label === t('datasource.taskInfoRemarkKey')) {
+                    taskData.log = value.replace('<br/>', '').replace(/<br\/>/g, '\n')
+                } else {
+                    taskData.baseInfoData.push({ label, value })
+                }
             }
         } else if (res.type === 'Param') {
             taskData.dataParameterConfig = res.data
@@ -349,6 +460,7 @@ watch(ret, (res: any) => {
 </script>
 
 <style lang="scss" scoped>
+@use '@/assets/style/task.scss' as *;
 :deep(.og-card-body) {
     overflow: scroll !important;
 }
@@ -391,11 +503,8 @@ watch(ret, (res: any) => {
         border-right: 1px solid $og-border-color;
     }
     .shrink-img {
-        width: 22px;
-        height: 22px;
-        position: absolute;
-        right: 10px;
-        top: 7px;
+        width: 20px;
+        height: 20px;
     }
 }
 .s-l-base {

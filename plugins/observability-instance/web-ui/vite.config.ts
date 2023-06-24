@@ -1,3 +1,7 @@
+///
+/// Copyright (c) 2023 Huawei Technologies Co.,Ltd.
+///
+
 import { defineConfig, loadEnv } from "vite";
 import vue from "@vitejs/plugin-vue";
 import AutoImport from "unplugin-auto-import/vite";
@@ -57,11 +61,12 @@ export default defineConfig(({ command, mode }) => {
         },
         server: {
             proxy: {
-                '^/observability': 'http://localhost:8080/',
-                '^/sqlDiagnosis': 'http://localhost:8080/',
-                '^/wdr': 'http://localhost:8080/',
-                '^/encryption': 'http://localhost:8080/',
-                '^/host': 'http://localhost:8080/'
+                '^/observability': 'http://192.168.110.31:9494/plugins/observability-instance',
+                '^/sqlDiagnosis': 'http://192.168.110.31:9494/plugins/observability-instance',
+                '^/wdr': 'http://192.168.110.31:9494/plugins/observability-instance',
+                '^/encryption': 'http://192.168.110.31:9494/plugins/observability-instance',
+                '^/host': 'http://192.168.110.31:9494/',
+                '^/hostUser': 'http://192.168.110.31:9494/'
             },
         },
     };

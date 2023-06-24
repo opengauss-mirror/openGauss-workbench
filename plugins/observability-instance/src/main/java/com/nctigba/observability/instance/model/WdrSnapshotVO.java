@@ -1,3 +1,6 @@
+/*
+ * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ */
 package com.nctigba.observability.instance.model;
 
 import java.util.Date;
@@ -11,10 +14,10 @@ import lombok.Data;
 @Data
 @TableName(value = "snapshot.snapshot", autoResultMap = true)
 public class WdrSnapshotVO {
-	@TableId("snapshot_id")
-	private Integer snapshotId;
-	@TableField("start_ts")
-	private Date startTs;
-	@TableField("end_ts")
-	private Date endTs;
+    @TableId("snapshot_id")
+    private Integer snapshotId;
+    @TableField("start_ts")
+    private Date startTs;
+    @TableField("end_ts")
+    private Date endTs;
 }

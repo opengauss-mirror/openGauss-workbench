@@ -1,29 +1,36 @@
 <template>
     <div class="filter">
         <span>{{ props.title }}&nbsp;</span>
-        <el-cascader v-model="cluster" :options="clusterList" @change="getClusterValue" style="max-width: 200px" :style="{ width: width ? width + 'px' : 'auto' }" :clearable="!notClearable" />
+        <el-cascader
+            v-model="cluster"
+            :options="clusterList"
+            @change="getClusterValue"
+            style="max-width: 200px"
+            :style="{ width: width ? width + 'px' : 'auto' }"
+            :clearable="!notClearable"
+        />
     </div>
 </template>
 
 <script lang="ts" setup>
-import ogRequest from '../request';
-import { useRequest } from 'vue-request';
+import ogRequest from '../request'
+import { useRequest } from 'vue-request'
 
 type Rer =
     | [
           {
-              [propName: string]: string | number;
+              [propName: string]: string | number
           }
       ]
-    | undefined;
+    | undefined
 const props = withDefaults(
     defineProps<{
-        title?: string;
-        width?: string;
-        instanceValueKey?: string;
-        notClearable?: boolean;
-        clusterOnly?: boolean;
-        autoSelectFirst?: boolean; // now only support one level
+        title?: string
+        width?: string
+        instanceValueKey?: string
+        notClearable?: boolean
+        clusterOnly?: boolean
+        autoSelectFirst?: boolean // now only support one level
     }>(),
     {
         title: '',
@@ -33,70 +40,78 @@ const props = withDefaults(
         clusterOnly: false,
         autoSelectFirst: false,
     }
-);
-const emit = defineEmits(['getCluster', 'loaded']);
+)
+const emit = defineEmits(['getCluster', 'loaded'])
 
-const cluster = ref<Array<any>>([]);
-const clusterList = ref<Array<any>>([]);
+const cluster = ref<Array<any>>([])
+const clusterList = ref<Array<any>>([])
 
 const treeTransform = (arr: any) => {
-    let obj: any = [];
+    let obj: any = []
     if (arr instanceof Array) {
         arr.forEach((item) => {
             obj.push({
-                label: item.clusterId ? item.clusterId : (item.azName ? item.azName + "_" : "") + item.publicIp + ":" + item.dbPort + (item.clusterRole ? "(" + item.clusterRole + ")" : ""),
+                label: item.clusterId
+                    ? item.clusterId
+                    : (item.azName ? item.azName + '_' : '') +
+                      item.publicIp +
+                      ':' +
+                      item.dbPort +
+                      (item.clusterRole ? '(' + item.clusterRole + ')' : ''),
                 value: item.clusterId ? item.clusterId : item[props.instanceValueKey],
                 children: props.clusterOnly ? null : treeTransform(item.clusterNodes),
                 nodeId: item.nodeId ? item.nodeId : null,
-            });
-        });
+            })
+        })
         if (props.autoSelectFirst && obj.length > 0) {
-            if (props.clusterOnly) cluster.value = [obj[0].value];
-            else if (obj[0].children.length > 0) cluster.value = [obj[0].value, obj[0].children[0].value];
-            emit('getCluster', cluster.value);
+            if (props.clusterOnly) cluster.value = [obj[0].value]
+            else if (obj[0].children.length > 0) cluster.value = [obj[0].value, obj[0].children[0].value]
+            emit('getCluster', cluster.value)
         }
     }
-    return obj;
-};
+    return obj
+}
 const getClusterValue = (val: string[]) => {
-    if (val == null) emit('getCluster', []);
-    else emit('getCluster', val);
-};
+    if (val == null) emit('getCluster', [])
+    else emit('getCluster', val)
+}
 const setNodeId = (val: string) => {
-    if (val === '' || val === null || val === undefined) return;
+    if (val === '' || val === null || val === undefined) return
     nextTick(() => {
-        if (clusterList.value.length <= 0) return;
+        console.log('DEBUG: clusterList.value.length', clusterList.value.length)
+        if (clusterList.value.length <= 0) return
         for (let p1 = 0; p1 < clusterList.value.length; p1++) {
-            const clusterTemp = clusterList.value[p1];
+            const clusterTemp = clusterList.value[p1]
             for (let p2 = 0; p2 < clusterTemp.children.length; p2++) {
-                const node = clusterTemp.children[p2];
+                const node = clusterTemp.children[p2]
+                console.log('DEBUG: node.nodeId', node.nodeId)
                 if (node.nodeId === val) {
-                    cluster.value = [clusterTemp.value, node.value];
-                    emit('getCluster', cluster.value);
-                    return;
+                    cluster.value = [clusterTemp.value, node.value]
+                    emit('getCluster', cluster.value)
+                    return
                 }
             }
         }
-    });
-};
-defineExpose({ setNodeId });
+    })
+}
+defineExpose({ setNodeId })
 
 onMounted(() => {
-    clusterData();
-});
+    clusterData()
+})
 const { data: rer, run: clusterData } = useRequest(
     () => {
         return ogRequest.get('/sqlDiagnosis/api/v1/clusters', '')
     },
     { manual: true }
-);
+)
 
 watch(rer, (rer: Rer) => {
     if (rer && Object.keys(rer).length) {
-        clusterList.value = treeTransform(rer);
-        emit("loaded", rer);
+        clusterList.value = treeTransform(rer)
+        emit('loaded', rer)
     }
-});
+})
 </script>
 
 <style lang="scss" scoped>

@@ -1,3 +1,6 @@
+/*
+ * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ */
 package com.nctigba.observability.instance.handler.topsql;
 
 import java.sql.Connection;
@@ -13,6 +16,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import com.nctigba.observability.instance.constants.CommonConstants;
+import com.nctigba.observability.instance.dto.topsql.TopSQLNowReq;
 import org.opengauss.admin.common.exception.CustomException;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -44,53 +48,51 @@ import lombok.extern.slf4j.Slf4j;
 public class OpenGaussTopSQLHandler implements TopSQLHandler {
     private static final String TEST_SQL = "select 1";
     private static final String TOP_SQL_LIST_SQL = "select unique_query_id,debug_query_id,db_name,schema_name,user_name,application_name,start_time,finish_time,db_time,cpu_time,execution_time from dbe_perf.statement_history where debug_query_id != 0 and finish_time >= ? and finish_time <= ? order by %s desc,execution_time desc,cpu_time desc,db_time desc limit 10";
-    // private static final String TOP_SQL_LIST_SQL = "select unique_query_id,debug_query_id,db_name,schema_name,user_name,application_name,start_time,finish_time,db_time,cpu_time,execution_time from dbe_perf.statement_history where debug_query_id != 0 and finish_time >= ? and finish_time <= ? order by %s desc,execution_time desc,cpu_time desc,db_time desc";
+    private static final String TOP_SQL_Now_SQL = "select round(extract(epoch FROM (now() - query_start)),1) as duration,query_start,unique_sql_id,datname ,usename,application_name ,datid,pid,sessionid,usesysid,usename,client_addr ,client_hostname,client_port,backend_start ,xact_start ,state_change ,waiting,enqueue,state ,resource_pool,query_id ,query ,connection_info,trace_id\n"
+            + "from pg_stat_activity where query_start is not null and unique_sql_id != 0 order by (now() - query_start) desc limit 10";
+    // private static final String TOP_SQL_LIST_SQL = "select
+    // unique_query_id,debug_query_id,db_name,schema_name,user_name,application_name,start_time,finish_time,db_time,cpu_time,execution_time
+    // from dbe_perf.statement_history where debug_query_id != 0 and finish_time >=
+    // ? and finish_time <= ? order by %s desc,execution_time desc,cpu_time
+    // desc,db_time desc";
     private static final String PRE_CHECK_SET_SQL = "select name,setting from pg_settings where name in('enable_stmt_track','enable_resource_track','track_stmt_stat_level')";
-    private static final String STATISTICAL_INFO_SQL =
-            "select query,debug_query_id,unique_query_id,db_name,schema_name,\n" +
-                    "substring(start_time,0,20) start_time,substring(finish_time,0,20) finish_time,\n" +
-                    "user_name,application_name,client_addr||':'||client_port socket,\n" +
-                    "n_returned_rows,n_tuples_fetched,n_tuples_returned,n_tuples_inserted,n_tuples_updated,n_tuples_deleted,lock_count,lock_wait_count,lock_max_count,\n" +
-                    "(case when n_blocks_fetched=0 then '-' else substring((n_blocks_hit/n_blocks_fetched)*100,0,6)||'%' end) as blocks_hit_rate,\n" +
-                    "net_send_info::json->'size' net_send_info_size,net_recv_info::json->'size' net_recv_info_size,\n" +
-                    "net_stream_send_info::json->'size' net_stream_send_info_size,net_stream_recv_info::json->'size' net_stream_recv_info_size,\n" +
-                    "net_send_info::json->'n_calls' net_send_info_calls,net_recv_info::json->'n_calls' net_recv_info_calls,\n" +
-                    "net_stream_send_info::json->'n_calls' net_stream_send_info_calls,net_stream_recv_info::json->'n_calls' net_stream_recv_info_calls,\n" +
-                    "net_send_info::json->'time' net_send_info_time,net_recv_info::json->'time' net_recv_info_time,\n" +
-                    "net_stream_send_info::json->'time' net_stream_send_info_time,net_stream_recv_info::json->'time' net_stream_recv_info_time,\n" +
-                    "n_soft_parse,n_hard_parse,db_time,cpu_time,(db_time-cpu_time) wait_time,lock_time,lock_wait_time,\n" +
-                    "execution_time,parse_time,plan_time,rewrite_time,pl_execution_time,pl_compilation_time,data_io_time\n" +
-                    "from dbe_perf.statement_history\n" +
-                    "where debug_query_id=?";
+    private static final String STATISTICAL_INFO_SQL = "select query,debug_query_id,unique_query_id,db_name,schema_name,\n"
+            + "substring(start_time,0,20) start_time,substring(finish_time,0,20) finish_time,\n"
+            + "user_name,application_name,client_addr||':'||client_port socket,\n"
+            + "n_returned_rows,n_tuples_fetched,n_tuples_returned,n_tuples_inserted,n_tuples_updated,n_tuples_deleted,lock_count,lock_wait_count,lock_max_count,\n"
+            + "(case when n_blocks_fetched=0 then '-' else substring((n_blocks_hit/n_blocks_fetched)*100,0,6)||'%' end) as blocks_hit_rate,\n"
+            + "net_send_info::json->'size' net_send_info_size,net_recv_info::json->'size' net_recv_info_size,\n"
+            + "net_stream_send_info::json->'size' net_stream_send_info_size,net_stream_recv_info::json->'size' net_stream_recv_info_size,\n"
+            + "net_send_info::json->'n_calls' net_send_info_calls,net_recv_info::json->'n_calls' net_recv_info_calls,\n"
+            + "net_stream_send_info::json->'n_calls' net_stream_send_info_calls,net_stream_recv_info::json->'n_calls' net_stream_recv_info_calls,\n"
+            + "net_send_info::json->'time' net_send_info_time,net_recv_info::json->'time' net_recv_info_time,\n"
+            + "net_stream_send_info::json->'time' net_stream_send_info_time,net_stream_recv_info::json->'time' net_stream_recv_info_time,\n"
+            + "n_soft_parse,n_hard_parse,db_time,cpu_time,(db_time-cpu_time) wait_time,lock_time,lock_wait_time,\n"
+            + "execution_time,parse_time,plan_time,rewrite_time,pl_execution_time,pl_compilation_time,data_io_time\n"
+            + "from dbe_perf.statement_history\n" + "where debug_query_id=?";
     private static final String EXECUTION_PLAN_SQL = "select query_plan,query from dbe_perf.statement_history where debug_query_id=?;";
     private static final String SELECT_QUERY_SQL = "select query from dbe_perf.statement_history where debug_query_id=?";
-    private static final String TABLE_METADATA_SQL =
-            "select row_to_json(t) from (select schemaname,t1.relname,pg_relation_size(relid) object_size, relkind object_type,n_live_tup,n_dead_tup,\n" +
-                    "case when n_live_tup+n_dead_tup=0 then '0.00%' else round(n_dead_tup*100/(n_dead_tup+n_live_tup),2)||'%' end dead_tup_ratio,\n" +
-                    "last_vacuum,last_autovacuum,last_analyze,last_autoanalyze\n" +
-                    "from pg_catalog.pg_stat_all_tables t1\n" +
-                    "left join pg_catalog.pg_class t2 on t1.relid = t2.oid\n" +
-                    "where t1.relname=?)t";
-    private static final String INDEX_SQL =
-            "select row_to_json(t) from (select c2.relname,i.indisprimary,i.indisunique,i.indisclustered,i.indisvalid,\n" +
-                    "i.indisreplident,pg_catalog.pg_get_indexdef(i.indexrelid,0,true) as def\n" +
-                    "from pg_catalog.pg_class c, pg_catalog.pg_class c2,pg_catalog.pg_index i\n" +
-                    "where c.relname=? and c.oid=i.indrelid and c2.oid=i.indexrelid) t";
-    private static final String TABLE_STRUCTURE_SQL =
-            "select row_to_json(t) from (select a.attnum,a.attname,t.typname,a.attlen,a.attnotnull,b.description\n" +
-                    "from pg_catalog.pg_class c,pg_catalog.pg_attribute a\n" +
-                    "left outer join pg_catalog.pg_description b on a.attrelid=b.objoid and a.attnum=b.objsubid,pg_catalog.pg_type t\n" +
-                    "where c.relname=? and a.attnum>0 and a.attrelid=c.oid and a.atttypid=t.oid\n" +
-                    "order by a.attnum) t";
+    private static final String TABLE_METADATA_SQL = "select row_to_json(t) from (select schemaname,t1.relname,pg_relation_size(relid) object_size, relkind object_type,n_live_tup,n_dead_tup,\n"
+            + "case when n_live_tup+n_dead_tup=0 then '0.00%' else round(n_dead_tup*100/(n_dead_tup+n_live_tup),2)||'%' end dead_tup_ratio,\n"
+            + "last_vacuum,last_autovacuum,last_analyze,last_autoanalyze\n" + "from pg_catalog.pg_stat_all_tables t1\n"
+            + "left join pg_catalog.pg_class t2 on t1.relid = t2.oid\n" + "where t1.relname=?)t";
+    private static final String INDEX_SQL = "select row_to_json(t) from (select c2.relname,i.indisprimary,i.indisunique,i.indisclustered,i.indisvalid,\n"
+            + "i.indisreplident,pg_catalog.pg_get_indexdef(i.indexrelid,0,true) as def\n"
+            + "from pg_catalog.pg_class c, pg_catalog.pg_class c2,pg_catalog.pg_index i\n"
+            + "where c.relname=? and c.oid=i.indrelid and c2.oid=i.indexrelid) t";
+    private static final String TABLE_STRUCTURE_SQL = "select row_to_json(t) from (select a.attnum,a.attname,t.typname,a.attlen,a.attnotnull,b.description\n"
+            + "from pg_catalog.pg_class c,pg_catalog.pg_attribute a\n"
+            + "left outer join pg_catalog.pg_description b on a.attrelid=b.objoid and a.attnum=b.objsubid,pg_catalog.pg_type t\n"
+            + "where c.relname=? and a.attnum>0 and a.attrelid=c.oid and a.atttypid=t.oid\n" + "order by a.attnum) t";
     private static final String WORK_MEM_SQL = "select setting from pg_settings WHERE name = 'work_mem'";
     private static final String PARTITION_LIST_SQL = "select partstrategy, partkey, relpages, reltuples, relallvisible, interval from pg_partition WHERE parttype = 'r'";
     private int totalPlanRows = 0;
     private int totalPlanWidth = 0;
     private List<String> objectNameList = new ArrayList<>();
 
-    private boolean testConnection (Connection conn) {
+    private boolean testConnection(Connection conn) {
         if (ObjectUtils.isNotEmpty(conn)) {
-            try(PreparedStatement preparedStatement = conn.prepareStatement(TEST_SQL)) {
+            try (PreparedStatement preparedStatement = conn.prepareStatement(TEST_SQL)) {
                 try (ResultSet rs = preparedStatement.executeQuery()) {
                     return true;
                 }
@@ -103,10 +105,11 @@ public class OpenGaussTopSQLHandler implements TopSQLHandler {
     }
 
     @Override
-    public Connection getConnection (InstanceNodeInfo nodeInfo) {
+    public Connection getConnection(InstanceNodeInfo nodeInfo) {
         String driver = "org.opengauss.Driver";
-        String jdbcUrl = "jdbc:opengauss://" + nodeInfo.getIp() + ":" + nodeInfo.getPort() + "/"+ nodeInfo.getDbName();
-        //String key = nodeInfo.getIp() + "_" + nodeInfo.getPort() + "_" + nodeInfo.getDbName() + "_" + nodeInfo.getDbUser();
+        String jdbcUrl = "jdbc:opengauss://" + nodeInfo.getIp() + ":" + nodeInfo.getPort() + "/" + nodeInfo.getDbName();
+        // String key = nodeInfo.getIp() + "_" + nodeInfo.getPort() + "_" +
+        // nodeInfo.getDbName() + "_" + nodeInfo.getDbUser();
         try {
             Class.forName(driver);
             Connection conn = DriverManager.getConnection(jdbcUrl, nodeInfo.getDbUser(), nodeInfo.getDbUserPassword());
@@ -129,7 +132,7 @@ public class OpenGaussTopSQLHandler implements TopSQLHandler {
     public List<JSONObject> getTopSQLList(InstanceNodeInfo nodeInfo, TopSQLListReq topSQLListReq) {
         // nodeInfo.setDbUserPassword(RSAUtil.decrypt(nodeInfo.getDbUserPassword()));
         List<JSONObject> list = new ArrayList<>();
-        try(Connection conn = getConnection(nodeInfo)) {
+        try (Connection conn = getConnection(nodeInfo)) {
             if (conn == null) {
                 throw new CustomException(CommonConstants.CONNECTION_FAIL);
             }
@@ -137,7 +140,9 @@ public class OpenGaussTopSQLHandler implements TopSQLHandler {
             if (topSqlListPreCheck(conn)) {
                 return null;
             }
-            try (PreparedStatement preparedStatement = conn.prepareStatement(String.format(TOP_SQL_LIST_SQL, StringUtils.isBlank(topSQLListReq.getOrderField()) ? "execution_time" : topSQLListReq.getOrderField()))) {
+            try (PreparedStatement preparedStatement = conn.prepareStatement(String.format(TOP_SQL_LIST_SQL,
+                    StringUtils.isBlank(topSQLListReq.getOrderField()) ? "execution_time"
+                            : topSQLListReq.getOrderField()))) {
                 preparedStatement.setTimestamp(1, Timestamp.valueOf(topSQLListReq.getStartTime()));
                 preparedStatement.setTimestamp(2, Timestamp.valueOf(topSQLListReq.getFinishTime()));
                 try (ResultSet rs = preparedStatement.executeQuery()) {
@@ -157,8 +162,38 @@ public class OpenGaussTopSQLHandler implements TopSQLHandler {
         return list;
     }
 
+    @Override
+    public List<JSONObject> getTopSQLNow(InstanceNodeInfo nodeInfo, TopSQLNowReq topSQLNowReq) {
+        List<JSONObject> list = new ArrayList<>();
+        try (Connection conn = getConnection(nodeInfo)) {
+            if (conn == null) {
+                throw new CustomException(CommonConstants.CONNECTION_FAIL);
+            }
+            // param pre check
+            if (topSqlListPreCheck(conn)) {
+                return null;
+            }
+            try (PreparedStatement preparedStatement = conn.prepareStatement(TOP_SQL_Now_SQL)) {
+                try (ResultSet rs = preparedStatement.executeQuery()) {
+                    while (rs.next()) {
+                        JSONObject object = new JSONObject();
+                        for (int i = 1; i <= rs.getMetaData().getColumnCount(); i++) {
+                            object.put(rs.getMetaData().getColumnLabel(i), rs.getString(i));
+                        }
+                        list.add(object);
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            log.error("get TopSQL list fail:{}", e.getMessage());
+            throw new CustomException(e.getMessage());
+        }
+        return list;
+    }
+
     /**
      * pre-check top sql list job
+     * 
      * @param connection connection info
      */
     private boolean topSqlListPreCheck(Connection connection) {
@@ -167,12 +202,11 @@ public class OpenGaussTopSQLHandler implements TopSQLHandler {
                 while (rs.next()) {
                     String name = rs.getString(1);
                     String setting = rs.getString(2);
-                    // "track_stmt_stat_level".equalsIgnoreCase(name) && StringUtils.startsWith(setting, "OFF") || "off".equalsIgnoreCase(setting)
-                    if (
-                            ("enable_resource_track".equalsIgnoreCase(name) && "off".equalsIgnoreCase(setting)) ||
-                                    ("enable_stmt_track".equalsIgnoreCase(name) && "off".equalsIgnoreCase(setting)) ||
-                                    ("track_stmt_stat_level".equalsIgnoreCase(name) && dealTrackStmtStatLevel(setting))
-                    ) {
+                    // "track_stmt_stat_level".equalsIgnoreCase(name) &&
+                    // StringUtils.startsWith(setting, "OFF") || "off".equalsIgnoreCase(setting)
+                    if (("enable_resource_track".equalsIgnoreCase(name) && "off".equalsIgnoreCase(setting))
+                            || ("enable_stmt_track".equalsIgnoreCase(name) && "off".equalsIgnoreCase(setting))
+                            || ("track_stmt_stat_level".equalsIgnoreCase(name) && dealTrackStmtStatLevel(setting))) {
                         return true;
                     }
                 }
@@ -184,7 +218,7 @@ public class OpenGaussTopSQLHandler implements TopSQLHandler {
         return false;
     }
 
-    private boolean dealTrackStmtStatLevel (String setting) {
+    private boolean dealTrackStmtStatLevel(String setting) {
         if (StringUtils.isEmpty(setting) || !setting.contains(",")) {
             return true;
         }
@@ -247,13 +281,14 @@ public class OpenGaussTopSQLHandler implements TopSQLHandler {
         return "";
     }
 
-    public List<JSONObject> getRowsDiff (String planStr) {
+    public List<JSONObject> getRowsDiff(String planStr) {
         List<JSONObject> result = new ArrayList<>();
         List<String> planStrList = Arrays.asList(planStr.split("\n"));
         LinkedList<String> modifyLines = new LinkedList<>(planStrList);
         try {
             for (String item : planStrList) {
-                if ((item.contains("cost=") && !item.contains("Result")) || item.contains(CommonConstants.HASH_COND) || item.contains("->")) {
+                if ((item.contains("cost=") && !item.contains("Result")) || item.contains(CommonConstants.HASH_COND)
+                        || item.contains("->")) {
                     continue;
                 }
                 modifyLines.remove(item);
@@ -270,7 +305,8 @@ public class OpenGaussTopSQLHandler implements TopSQLHandler {
                     continue;
                 }
                 if (firstStr.contains("->")) {
-                    jsonObject.put("stepName", firstStr.substring(firstStr.indexOf("->") + 2, firstStr.indexOf(CommonConstants.COST)).trim());
+                    jsonObject.put("stepName", firstStr
+                            .substring(firstStr.indexOf("->") + 2, firstStr.indexOf(CommonConstants.COST)).trim());
                 } else {
                     jsonObject.put("stepName", firstStr.substring(0, firstStr.indexOf(CommonConstants.COST)).trim());
                 }
@@ -333,7 +369,8 @@ public class OpenGaussTopSQLHandler implements TopSQLHandler {
                         LinkedList<String> modifySplitLines = new LinkedList<>(splitLines);
                         // remove non-operation or non-condition lines
                         for (String line : splitLines) {
-                            if ((line.contains("cost=") && !line.contains("Result"))|| line.contains(CommonConstants.HASH_COND)) {
+                            if ((line.contains("cost=") && !line.contains("Result"))
+                                    || line.contains(CommonConstants.HASH_COND)) {
                                 continue;
                             }
                             modifySplitLines.remove(line);
@@ -347,7 +384,8 @@ public class OpenGaussTopSQLHandler implements TopSQLHandler {
                         ExecutionPlan plan = processExecutionPlanString(modifySplitLines.get(0));
                         // get tree shape execution plan object
                         assert plan != null;
-                        processExecutionPlan(modifySplitLines.subList(1, modifySplitLines.size()), 0, plan, plan.getChildren());
+                        processExecutionPlan(modifySplitLines.subList(1, modifySplitLines.size()), 0, plan,
+                                plan.getChildren());
                         // put plan node
                         JSONObject result = JSONObject.parseObject(JSON.toJSONString(plan));
                         JSONArray data = new JSONArray();
@@ -370,6 +408,7 @@ public class OpenGaussTopSQLHandler implements TopSQLHandler {
 
     /**
      * pre-check execution plan job
+     * 
      * @param connection connection info
      */
     private boolean executionPlanPreCheck(Connection connection) {
@@ -398,9 +437,10 @@ public class OpenGaussTopSQLHandler implements TopSQLHandler {
      * @param lines          lines of execution plan and condition
      * @param previousIndent last level indent length
      * @param plan           last level plan
-     * @param children      last level plan children
+     * @param children       last level plan children
      */
-    public void processExecutionPlan(List<String> lines, int previousIndent, ExecutionPlan plan, List<ExecutionPlan> children) {
+    public void processExecutionPlan(List<String> lines, int previousIndent, ExecutionPlan plan,
+            List<ExecutionPlan> children) {
         for (int i = 0; i < lines.size(); i++) {
             String line = lines.get(i);
             // process condition
@@ -415,7 +455,8 @@ public class OpenGaussTopSQLHandler implements TopSQLHandler {
             }
             String[] indentPlanSplit = line.split("->");
             int currentIndent = indentPlanSplit[0].length();
-            // when current indent greater than previous indent, add new children node and go into next tree level
+            // when current indent greater than previous indent, add new children node and
+            // go into next tree level
             if (currentIndent > previousIndent) {
                 lines.set(i, "");
                 ExecutionPlan subPlan = processExecutionPlanString(line);
@@ -474,7 +515,7 @@ public class OpenGaussTopSQLHandler implements TopSQLHandler {
         // set parameters
         String parameters = operationParameterSplit[1].replace(")", "");
         String[] parametersSplit = parameters.split(CommonConstants.BLANK);
-        for (String parameterSplit:parametersSplit) {
+        for (String parameterSplit : parametersSplit) {
             if (StringUtils.startsWith(parameterSplit, "cost")) {
                 // set start cost and total cost
                 String[] costSplit = parameterSplit.split("=");
@@ -555,7 +596,8 @@ public class OpenGaussTopSQLHandler implements TopSQLHandler {
             if (queryText.isEmpty()) {
                 throw new CustomException("get query text fail");
             }
-            String completeQueryText = "select * from gs_index_advise('" + queryText.replace("\n", CommonConstants.BLANK).replace("'", "''") + "')";
+            String completeQueryText = "select * from gs_index_advise('"
+                    + queryText.replace("\n", CommonConstants.BLANK).replace("'", "''") + "')";
             log.info("get complete query text: {}", completeQueryText);
             // get prepared statement
             try (PreparedStatement preparedStatement = connection.prepareStatement(completeQueryText)) {
@@ -582,6 +624,7 @@ public class OpenGaussTopSQLHandler implements TopSQLHandler {
 
     /**
      * generate readable index advice
+     * 
      * @param results return result
      * @param advices list of index advice
      */

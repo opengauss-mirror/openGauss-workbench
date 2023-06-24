@@ -1,3 +1,7 @@
+///
+/// Copyright (c) 2023 Huawei Technologies Co.,Ltd.
+///
+
 import axios, { AxiosError, AxiosRequestConfig } from "axios";
 import { ElMessage } from "element-plus";
 

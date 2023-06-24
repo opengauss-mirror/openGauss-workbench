@@ -1,3 +1,7 @@
+///
+/// Copyright (c) 2023 Huawei Technologies Co.,Ltd.
+///
+
 import { defineStore } from 'pinia';
 
 export const useWindowStore = defineStore('window', {

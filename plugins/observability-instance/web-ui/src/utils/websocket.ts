@@ -1,3 +1,7 @@
+///
+/// Copyright (c) 2023 Huawei Technologies Co.,Ltd.
+///
+
 export default class WebSocketClass {
     // ws = null;
     ws: WebSocket;
@@ -28,7 +32,8 @@ export default class WebSocketClass {
             return console.log("Your browser does not support WebSocket");
         }
         const baseURL = import.meta.env.DEV ? `${import.meta.env.VITE_WS_BASE_URL}` : `${location.protocol == "http:" ? "ws:" : "wss:"}//${location.host}`;
-        const url = `${baseURL}/ws/observability-instance/${sessionId}`;
+        // const url = `${baseURL}/ws/observability-instance/${sessionId}`;
+        const url = `ws://192.168.110.31:9494/ws/observability-instance/${sessionId}`;
         this.ws = new WebSocket(url);
 
         this.ws.onopen = () => {

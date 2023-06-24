@@ -1,3 +1,7 @@
+///
+/// Copyright (c) 2023 Huawei Technologies Co.,Ltd.
+///
+
 export default {
     app: {
         name: '一体化平台',
@@ -20,7 +24,221 @@ export default {
         view: '查看',
         download: '下载',
         reset: '重置',
-        back: '返回'
+        back: '返回',
+        startTime: '开始时间',
+        endTime: '结束时间',
+        lastOneHour: '最近一小时',
+        lastThreeHour: '最近三小时',
+        lastSixHour: '最近六小时',
+        refreshOn: '页面刷新于：',
+        autoRefreshFor: '自动刷新：',
+        needSQLDiagnosis: '请先安装智能诊断插件',
+        diagnosis: '智能诊断',
+    },
+    instanceMonitor: {
+        instanceMonitor: '实例监控',
+        clusterTitle: '集群/实例：',
+        index: '首页',
+        resourceMonitor: '资源监控',
+        instance: {
+            connectionQty: '连接数',
+            slowSQL3s: '慢SQL数（大于3秒）',
+            rollbackQty: '事务回滚数',
+            commitQty: '事务提交数',
+            transTotalQty: '事务提交和回滚总数',
+            queryQty: '查询事务数',
+            idleConnectionQty: '当前空闲连接数',
+            activeConnectionQty: '当前活跃连接数',
+            connectionQtyNow: '当前连接数',
+            maxConnectionQty: '总连接数',
+            slowSQLQty: '慢SQL数',
+        },
+    },
+    resourceMonitor: {
+        memoryTab: '内存',
+        ioTab: '磁盘IO',
+        networkTab: '网络',
+        cpu: {
+            cpuUse: 'CPU使用率',
+            cpuLoad: 'CPU平均负载',
+            topProcess: 'TOP操作系统进程',
+            topThread: 'TOP数据库线程',
+            total5mLoad: '5m负载',
+            coreNum: '总核数',
+            dbThread: '数据库进程',
+        },
+        memory: {
+            memoryUse: '内存使用率',
+            memoryDBUse: '数据库进程内存使用率',
+            physicalmemory: '物理内存总量',
+            usedMemory: '已用内存',
+            freeMemory: '空闲内存',
+            cachedMemory: '缓存的内存',
+            interactiveAreaUsage: '交互区使用情况',
+            totalExchangeArea: '交换区总量',
+            ysedSwapArea: '已用交换区',
+            topProcess: 'TOP操作系统进程',
+            topThread: 'TOP数据库线程',
+            instanceMemoryUsage: '实例内存使用情况',
+            memoryName: '内存名称',
+            description: '说明',
+            sizeOfMemoryUsed: '内存使用的大小(MB)',
+            parameterConfiguration: '实例内存参数配置',
+            parameterName: '参数名称',
+            settings: '设置值',
+        },
+        io: {
+            deviceIO: '磁盘分区IO统计',
+            rwSecond: '每秒读/写字节数',
+            queueLength: 'I/O队列长度',
+            ioUsage: 'I/O使用率',
+            ioTime: '平均IO响应时间',
+        },
+        network: {
+            in: '网络流量(流入)',
+            out: '网络流量(流出)',
+            lost: '网卡丢包数量',
+            connection: '网络socket连接信息',
+            tcpQty: 'TCP socket数量统计',
+            UDPQty: 'UDP socket数量统计',
+            card: '网卡传输统计',
+        },
+    },
+    instanceIndex: {
+        memory: '内存',
+        networkInOut: '网络（In/Out）',
+        threadPoolUsed: '线程池使用率',
+        activeSessionQty: '活跃会话数量',
+        activeSessionQtyTips: '可以在图中选取区间下钻分析',
+        nowTOPSQL: '实时TOPSQL',
+        dbName: '数据库名称',
+        userName: '用户名称',
+        appName: '应用名称',
+        startTime: '开始时间',
+        costTime: '耗时(s)',
+        sessionId: '会话ID',
+        detail: '详情',
+    },
+    trans: {
+        longTransaction: '长事务',
+        sessionId: '会话ID',
+        username: '用户名',
+        databaseName: '数据库名',
+        applicationName: '应用名称',
+        clientAddress: '客户端地址',
+        transactionStartTime: '事务开启时间',
+        transactionDuration: '事务持续时间',
+        sessionStatus: '会话状态',
+    },
+    session: {
+        tabTitle: '会话详情',
+        maxSessionCount: '允许最大会话总数：',
+        activeSessionCount: '活跃会话数：',
+        blockedSessionCount: '阻塞会话数：',
+        longestSessionRuntime: '最长会话运行时间：',
+        sessionCount: '会话数',
+        waitEvents: '等待事件',
+        blockSessions: {
+            tabTitle: '阻塞会话',
+            collapseAll: '收起所有',
+            sessionID: '会话ID',
+            blockedSessionID: '阻塞会话ID',
+            sessionStartTime: '会话启动时间',
+            waitState: '等待状态',
+            waitEvent: '等待事件',
+            waitLockMode: '等待获取锁模式',
+            dbName: '数据库名称',
+            userName: '用户名称',
+            clientIP: '客户端IP',
+            appName: '应用名称',
+        },
+        trans: {
+            longTransaction: '长事务',
+            sessionID: '会话ID',
+            userName: '用户名',
+            dbName: '数据库名',
+            appName: '应用名称',
+            clientAddr: '客户端IP',
+            txStart: '事务开启时间',
+            txDuration: '事务持续时间',
+            sessionState: '会话状态',
+        },
+        sessionActive: {
+            activeSessionCount: '活跃会话数',
+            idleConnectionCount: '空闲连接数',
+            maxConnectionCount: '最大连接数',
+            waitingConnectionCount: '等待连接数',
+        },
+        detail: {
+            tabTitle: '会话详情',
+            sessionID: '会话ID：',
+            info: {
+                tabTitle: '一般信息',
+                server: '服务器',
+                sessionStatus: '会话当前状态：',
+                sessionID: '会话ID：',
+                osThreadID: '操作系统线程ID：',
+                dbUserName: '数据库用户名：',
+                loginTime: '登录时间：',
+                loginDuration: '登录持续时间：',
+                resourcePool: '资源池：',
+            },
+            client: {
+                tabTitle: '客户机',
+                clientIP: '客户端IP地址：',
+                clientHostName: '客户端主机名：',
+                clientTCPPort: '客户端TCP端口：',
+                appName: '应用名称：',
+                connectDBName: '连接数据库名称：',
+                txStartTime: '事务启动时间：',
+                queryStartTime: '查询启动时间：',
+                queryID: '查询ID：',
+            },
+            block: {
+                tabTitle: '争用',
+                blockedSessionID: '阻塞会话ID：',
+                file: '文件：',
+                pageNumber: '页面编号：',
+                lineNumber: '行编号：',
+                bucketNumber: 'bucket编号：',
+            },
+            wait: {
+                tabTitle: '等待',
+                waitState: '等待状态：',
+                waitEventType: '等待事件类型：',
+                waitLockMode: '等待获取的锁模式：',
+                waitObject: '等待对象：',
+            },
+            currentQuerySQL: '当前查询SQL',
+            statistic: {
+                tabTitle: '统计信息',
+                sessionStatusStatistics: '会话状态统计信息',
+                sessionRuntimeInformation: '会话运行时间信息',
+                name: '名称',
+                value: '值',
+            },
+            blockTree: {
+                tabTitle: '阻塞树',
+                sessionID: '会话ID',
+                blockedSessionID: '阻塞会话ID',
+                sessionStartTime: '会话启动时间',
+                waitState: '等待状态',
+                waitEvent: '等待事件',
+                waitLockMode: '等待获取锁模式',
+                dbName: '数据库名称',
+                userName: '用户名称',
+                clientIP: '客户端IP',
+                appName: '应用名称',
+            },
+            waitRecord: {
+                tabTitle: '等待事件记录',
+                sampleTime: '采样时间',
+                waitState: '等待状态',
+                waitEvent: '等待事件',
+                waitLockMode: '等待获取锁模式',
+                lockInfo: '锁信息',
+            },
+        },
     },
     install: {
         nodepkg: 'node exporter',
@@ -57,20 +275,10 @@ export default {
         continueUpload: '继续上传',
         // upload: '上传',
         uploadPath: '上传路径',
-        installServerAlert:'请先安装服务端！',
+        installServerAlert: '请先安装服务端！',
         installedServerAlert: '只能安装一个服务端',
-        proxyRules: [
-            '请选择物理机',
-            '请输入Root用户密码',
-            '请输入代理端口号',
-            '请选择安装用户'
-        ],
-        collectorRules: [
-            '请选择实例',
-            '请输入Root用户密码',
-            '请输入服务器指标采集端口',
-            '请输入数据库指标采集端口'
-        ],
+        proxyRules: ['请选择物理机', '请输入Root用户密码', '请输入代理端口号', '请选择安装用户'],
+        collectorRules: ['请选择实例', '请输入Root用户密码', '请输入服务器指标采集端口', '请输入数据库指标采集端口'],
     },
     configParam: {
         tabTitle: '系统与数据库配置',
@@ -82,7 +290,7 @@ export default {
         suggestReason: '推荐原因：',
         rootPWDTitle: '请输入Root用户密码',
         rootPWD: 'Root用户密码',
-        queryValidInfo: '请选择【集群/实例】'
+        queryValidInfo: '请选择【集群/实例】',
     },
     dashboard: {
         name: '实例概览',
@@ -119,13 +327,14 @@ export default {
             buildWDR: '生成WDR',
             list: {
                 buildTime: '报告生成时间',
-                reportName: '报告名称'
+                reportName: '报告名称',
             },
             snapshotManageDialog: {
                 dialogName: '快照管理',
                 createSnapshot: '创建快照',
                 snapshotID: '快照ID',
-                captureTime: '捕获时间'
+                captureTime: '捕获时间',
+                buildSuccess: '创建成功！快照列表异步写入可能存在滞后，请手动刷新列表!',
             },
             buildWDRDialog: {
                 startSnapshot: '开始快照',
@@ -133,7 +342,7 @@ export default {
                 build: '生成',
                 buildSuccess: 'WDR生成成功',
                 buildFail: 'WDR生成失败',
-            }
+            },
         },
         session: '会话管理',
         slow: '慢SQL',
@@ -221,8 +430,9 @@ export default {
             success: '正常',
             error: '异常',
         },
-        topsqlListTip: "进行 TOPSQL 监控需要将数据库中的 enable_stmt_track、enable_resource_track 参数设置为 on，track_stmt_stat_level 参数 Full SQL 级别设置大于等于 L0",
-        pleaseChooseinstanceId: "请选择实例",
+        topsqlListTip:
+            '进行 TOPSQL 监控需要将数据库中的 enable_stmt_track、enable_resource_track 参数设置为 on，track_stmt_stat_level 参数 Full SQL 级别设置大于等于 L0',
+        pleaseChooseinstanceId: '请选择实例',
     },
     metric: {
         totalCoreNum: '总核数',
@@ -278,6 +488,7 @@ export default {
         systemSource: '系统资源',
         objectInformation: '对象信息',
         indexSuggestions: '索引建议',
+        waitEvent: '等待事件统计',
         objectStructure: '对象结构',
         indexInformation: '索引信息',
         reportDetail: '报告详情',
@@ -298,7 +509,7 @@ export default {
             finish_time: '结束时间',
             user_name: '用户名称',
             application_name: '应用名称',
-            socket: '客户端连接信息'
+            socket: '客户端连接信息',
         },
         executeOption: {
             n_returned_rows: '返回行数',
@@ -374,7 +585,8 @@ export default {
             def: '索引定义',
         },
         noOjcInfoTip: '暂无对象信息',
-        placeholderTip: 'SQL 语句有占位符，无法获取索引建议，建议将数据库中的 track_stmt_parameter 参数设置为 on，以获取新的无占位符的 SQL',
+        placeholderTip:
+            'SQL 语句有占位符，无法获取索引建议，建议将数据库中的 track_stmt_parameter 参数设置为 on，以获取新的无占位符的 SQL',
         objStructureOther: {
             commonTable: '普通表',
             indexes: '索引',
@@ -389,12 +601,17 @@ export default {
             none: '无',
             isUsed: '被使用',
         },
+        waitEventTable: {
+            startTime: '开始时间',
+            waitEventName: '等待事件名称',
+            waitLockTime: '等待锁时间(us)',
+        },
         yes: '是',
         no: '否',
         isHasData: '暂无数据',
         failGetExecutionPlan: '获取不到执行计划',
         failResolveExecutionPlan: '无法解析该执行计划',
-        executionParamTip: "获取TOPSQL执行计划需要将数据库中的 track_stmt_stat_level 参数 Full SQL 级别设置大于等于 L1"
+        executionParamTip: '获取TOPSQL执行计划需要将数据库中的 track_stmt_stat_level 参数 Full SQL 级别设置大于等于 L1',
     },
     datasource: {
         diagnosisAddTaskSuccess: '诊断任务创建成功',
@@ -409,8 +626,8 @@ export default {
         statisInfo: '统计信息',
         sqlText: 'SQL语句',
         track: 'SQL诊断',
-        addTrBtn: "新建任务",
-        searchPlaceholder: "任务名称或SQL",
+        addTrBtn: '新建任务',
+        searchPlaceholder: '任务名称或SQL',
         addTaTitle: '新建跟踪任务',
         trackDetail: '任务详情',
         goBack: '返回上一级',
@@ -457,7 +674,7 @@ export default {
             '存储过程执行时间',
             '加锁等待时间',
             '顺序扫描行数',
-            'SELECT返回的结果集行数'
+            'SELECT返回的结果集行数',
         ],
         slowStaticTable: [
             'Sql模板',
@@ -472,10 +689,7 @@ export default {
             '平均返回行',
             '最大返回行',
         ],
-        ebpfFormRules: [
-            '请选择实例',
-            '请选择数据库'
-        ],
+        ebpfFormRules: ['请选择实例', '请选择数据库'],
         trackFormRules: [
             '请填写任务名称',
             '请选择数据库',
@@ -497,19 +711,12 @@ export default {
             '实例ID',
             '操作',
         ],
-        logSearchTable: [
-            '时间',
-            '类型',
-            '级别',
-            '日志',
-            '集群ID',
-            '实例ID',
-        ]
+        logSearchTable: ['时间', '类型', '级别', '日志', '集群ID', '实例ID'],
     },
     instance: {
         instanceManagement: '实例管理',
         addInstance: '添加实例',
-        editInstance: '编辑实例'
+        editInstance: '编辑实例',
     },
     report: {
         rowsDiffTitle: '估算rows和实际rows差异',
@@ -558,63 +765,63 @@ export default {
         suggestion: {
             ObjectInfoCheck: {
                 id: 'ObjectInfoCheck',
-                name: "分析思路",
-                title: "对象统计信息检查",
+                name: '分析思路',
+                title: '对象统计信息检查',
                 advise: '执行计划运算存在估算rows和实际rows差距较大，建议执行analyze更新相关对象统计信息，以生成最优的执行计划，提高执行效率',
                 analysisIdea: `分析explain analyze生成的执行计划中，实际rows和估算rows差距较大的对象。请查看分析结果的报告详情，建议针对分析结果中的实际rows和估算rows存在差距的对象，进行统计信息更新操作，以生成最优的执行计划，提高执行效率。<br />
-                可通过analyze tablename 命令更新对象统计信息。`
+                可通过analyze tablename 命令更新对象统计信息。`,
             },
             ObjectRecommendedToUpdateStatistics: {
-                id: "ObjectRecommendedToUpdateStatistics",
-                name: "诊断结果",
-                title: "建议执行analyze更新对象统计信息",
+                id: 'ObjectRecommendedToUpdateStatistics',
+                name: '诊断结果',
+                title: '建议执行analyze更新对象统计信息',
                 advise: '执行计划运算存在估算rows和实际rows差距较大，建议执行analyze更新相关对象统计信息，以生成最优的执行计划，提高执行效率',
             },
             ExecPlan: {
-                id: "ExecPlan",
-                name: "分析思路",
-                title: "执行计划",
+                id: 'ExecPlan',
+                name: '分析思路',
+                title: '执行计划',
                 advise: '执行计划运算存在估算rows和实际rows差距较大，建议执行analyze更新相关对象统计信息，以生成最优的执行计划，提高执行效率',
                 analysisIdea: `分析SQL原始执行计划，定位执行计划中消耗最大的运算步骤，根据分析路径生成对应的分析结果，分析路径包括 <br />
                     1、索引建议分析 <br />
                     2、对象结构分析 <br />
                     3、对象数据分析 <br />
                     4、占用内存消耗分析 <br />
-                建议根据生成的分析结果，对SQL或相关相关对象进行优化和处理，以提高SQL执行效率。`        
+                建议根据生成的分析结果，对SQL或相关相关对象进行优化和处理，以提高SQL执行效率。`,
             },
             PlanRecommendedToCreateIndex: {
-                id: "PlanRecommendedToCreateIndex",
-                name: "诊断结果",
-                title: "",
+                id: 'PlanRecommendedToCreateIndex',
+                name: '诊断结果',
+                title: '',
                 advise: '',
             },
 
             PlanChangedToPartitionTable: {
-                id: "PlanChangedToPartitionTable",
-                name: "诊断结果",
-                title: "建议将 TABLE 表改成分区表",
+                id: 'PlanChangedToPartitionTable',
+                name: '诊断结果',
+                title: '建议将 TABLE 表改成分区表',
                 advise: 'TABLE 表活元组数超过两千万，建议改为分区表，尽可能针对单一分区查询，提高查询效率',
             },
             PlanRecommendedToQueryBasedOnPartition: {
-                id: "PlanRecommendedToQueryBasedOnPartition",
-                name: "诊断结果",
-                title: "建议基于分区查询，避免扫描所有分区",
+                id: 'PlanRecommendedToQueryBasedOnPartition',
+                name: '诊断结果',
+                title: '建议基于分区查询，避免扫描所有分区',
                 advise: 'TABLE 表为分区表，但没有基于分区查询，建议查询分区表尽量要加上分区列的条件或基于分区键查询，避免扫描所有分区',
             },
             PlanRecommendedToDoVacuumCleaning: {
-                id: "PlanRecommendedToDoVacuumCleaning",
-                name: "诊断结果",
-                title: "建议对 TABLE 表做vacuum清理",
+                id: 'PlanRecommendedToDoVacuumCleaning',
+                name: '诊断结果',
+                title: '建议对 TABLE 表做vacuum清理',
                 advise: 'TABLE 表被删除或更新的记录数超过表总行数*0.2+50，建议对表做vacuum清理，避免消耗大量IO，影响查询效率',
             },
             PlanRecommendedToOptimizeStatementsOrAddWorkMemSize: {
-                id: "PlanRecommendedToOptimizeStatementsOrAddWorkMemSize",
-                name: "诊断结果",
-                title: "建议优化语句或增加work_mem大小",
+                id: 'PlanRecommendedToOptimizeStatementsOrAddWorkMemSize',
+                name: '诊断结果',
+                title: '建议优化语句或增加work_mem大小',
                 advise: '排序所需的内存超过work_mem参数的大小，建议优化语句或增加work_mem大小，以避免使用磁盘空间，影响查询效率',
-            }
+            },
         },
         singleStepOperationCost: '单步运算cost',
-        totalCost: '总cost'
-    }
+        totalCost: '总cost',
+    },
 }

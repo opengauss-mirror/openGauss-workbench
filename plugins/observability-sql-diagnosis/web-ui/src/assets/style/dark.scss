@@ -3,16 +3,27 @@
 @use 'sass:map';
 
 html.dark {
-    --color-text-1: #ffffff;
-    --color-text-2: rgb(79, 91, 107);
-    --color-text-3: rgb(134, 143, 156);
+    --hw-primary-1: #424242;
+    --el-color-tabbar-active: #d4d4d4;
+    --el-color-button-small-bg: #232324;
+    --el-color-button-small-border: #5c5c5c;
+    --el-color-card-header-color: #424242;
+    --el-color--col-border-color: #4a4a4a;
+    --el-color-line-text-color: #d4d4d4;
+    --el-color-icon-refresh-color: #fff;
+    --el-color-table-row-bg-color: #4e575a;
+    --el-color-divider-border-color: #807f80;
+
+    --el-color-primary: #409eff;
     --el-color-success: #67c23a;
-    --el-bg-color: rgb(35, 35, 36);
+    --el-bg-color: #232324;
     --el-bg-color-og: #212121;
-    --el-bg-color-og-hover: #323e43;
+    --el-bg-color-og-hover: #ffffff;
     --el-bg-color-sub: #424242;
+    --el-bg-color-sub-white: #232324;
     --el-bg-color-page: #303030;
-    --el-bg-color-overlay: #232324;
+    --el-bg-color-overlay: #303030;
+    --el-color-primary: #909399;
     --el-color-success: #67c23a;
     --el-color-warning: #e6a23c;
     --el-color-danger: #f56c6c;
@@ -30,7 +41,7 @@ html.dark {
     --el-text-color-disabled: #6c6e72;
     --el-border-color-darker: #636466;
     --el-border-color-dark: #58585b;
-    --el-border-color: rgb(72, 72, 73);
+    --el-border-color: #4c4d4f;
     --el-border-color-light: #414243;
     --el-border-color-lighter: #363637;
     --el-border-color-extra-light: #2b2b2c;
@@ -44,19 +55,22 @@ html.dark {
     --el-mask-color: rgba(0, 0, 0, 0.8);
     --el-mask-color-extra-light: rgba(0, 0, 0, 0.3);
     --el-button-color-small: #5c5c5c;
-    --el-table-cell: rgb(246, 246, 246);
+    --el-table-cell: #909399;
     --el-button-text-color: #ffffff;
+    --el-og-border-color: #4a4a4a;
 
-    
-    --el-dialog-background-color:rgb(42,42,43);
-    --primary-6: rgb(252,239,146);
-    --main-background-color:rgb(35,35,36);
+    --color-text-1: #ffffff;
+    --color-text-2: rgb(79, 91, 107);
+    --color-text-3: rgb(134, 143, 156);
+    --el-dialog-background-color: rgb(42, 42, 43);
+    --primary-6: rgb(252, 239, 146);
+    --main-background-color: rgb(35, 35, 36);
     --color-neutral-2: rgb(52, 52, 53);
     --color-fill-2: var(--color-neutral-2);
-    --color-text-2: hsla(0,0%,100%,.7);
+    --color-text-2: hsla(0, 0%, 100%, 0.7);
     --gray-9: rgb(223, 223, 223);
     --color-secondary: rgba(223, 223, 223, 0.08);
-    --color-primary-light-1: rgba(252, 239, 146,0.2);
+    --color-primary-light-1: rgba(252, 239, 146, 0.2);
     --el-color-primary: var(--primary-6);
     --el-color-primary-light-3: var(--primary-6);
     --el-menu-text-color: #cfcfcf;
@@ -65,28 +79,52 @@ html.dark {
     --el-menu-hover-bg-color: #323e43;
     --el-table-cell-center-background: #424242;
     --el-color-primary-light-3: var(--primary-6);
-    --el-checkbox-checked-icon-color: var(-color-bg-2) !important;
     --color-bg-2: #232324;
+
+    // dashboardv2
+    --color-1: #FFFFFF;
+    --border-1: #484849;
+    --border-2: #2ba1fa;
+    --background-color-1: #484949;
+    --background-color-2: #2e2d2f;
+    --background-color-3: #484949;
+    --text-1: #f5f6f6;
+    --button-1-color: #ffffff;
+    --button-1-background: #232324;
+    --button-1-border: #484949;
 }
 
 :root.dark {
-    --el-dialog-background-color:rgb(42,42,43);
-    --primary-6: rgb(252,239,146);
-    --main-background-color:rgb(35,35,36);
-    --color-neutral-2: rgb(52, 52, 53);
-    --color-fill-2: var(--color-neutral-2);
-    --color-text-2: hsla(0,0%,100%,.7);
-    --gray-9: rgb(223, 223, 223);
-    --color-secondary: rgba(223, 223, 223, 0.08);
-    --color-primary-light-1: rgba(252, 239, 146,0.2);
-    --el-color-primary: var(--primary-6);
-    --el-color-primary-light-3: var(--primary-6);
+    --el-menu-active-color: #cfcfcf;
     --el-menu-text-color: #cfcfcf;
     --el-menu-hover-text-color: #cfcfcf;
     --el-menu-bg-color: #212121;
     --el-menu-hover-bg-color: #323e43;
+
+    --el-dialog-background-color: rgb(42, 42, 43);
+    --primary-6: rgb(252, 239, 146);
+    --main-background-color: rgb(35, 35, 36);
+    --color-neutral-2: rgb(52, 52, 53);
+    --color-fill-2: var(--color-neutral-2);
+    --color-text-2: hsla(0, 0%, 100%, 0.7);
+    --gray-9: rgb(223, 223, 223);
+    --color-secondary: rgba(223, 223, 223, 0.08);
+    --color-primary-light-1: rgba(252, 239, 146, 0.2);
+    --el-color-primary: var(--primary-6);
+    --el-color-primary-light-3: var(--primary-6);
     --el-table-cell-center-background: #424242;
     --el-color-primary-light-3: var(--primary-6);
     --color-bg-2: #232324;
-    --el-checkbox-checked-icon-color: var(-color-bg-2) !important;
+
+    // dashboardv2
+    --color-1: #FFFFFF;
+    --border-1: #484849;
+    --border-2: #2ba1fa;
+    --background-color-1: #484949;
+    --background-color-2: #2e2d2f;
+    --background-color-3: #484949;
+    --text-1: #f5f6f6;
+    --button-1-color: #ffffff;
+    --button-1-background: #232324;
+    --button-1-border: #484949;
 }

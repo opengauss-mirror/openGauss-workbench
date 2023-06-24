@@ -1,3 +1,7 @@
+#
+# Copyright (c) 2023 Huawei Technologies Co.,Ltd.
+#
+
 spring:
   autoconfigure:
     exclude: org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration

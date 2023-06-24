@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import * as echarts from 'echarts/core';
+import * as echarts from 'echarts/core'
 import {
     TooltipComponent,
     TooltipComponentOption,
@@ -7,64 +7,47 @@ import {
     LegendComponentOption,
     GridComponentOption,
     TitleComponent,
-    TitleComponentOption
-} from 'echarts/components';
-import { PieChart, PieSeriesOption } from 'echarts/charts';
-import { LabelLayout } from 'echarts/features';
-import { CanvasRenderer } from 'echarts/renderers';
-import { uuid } from '../shared';
-import { useDebounceFn, useEventListener, useIntersectionObserver } from '@vueuse/core';
+    TitleComponentOption,
+} from 'echarts/components'
+import { PieChart, PieSeriesOption } from 'echarts/charts'
+import { LabelLayout } from 'echarts/features'
+import { CanvasRenderer } from 'echarts/renderers'
+import { uuid } from '@/shared'
+import { useDebounceFn, useEventListener, useIntersectionObserver } from '@vueuse/core'
+import chartColors from '@/assets/style/color.module.scss'
 
-echarts.use([
-    TooltipComponent,
-    LegendComponent,
-    PieChart,
-    CanvasRenderer,
-    LabelLayout,
-    TitleComponent
-]);
+echarts.use([TooltipComponent, LegendComponent, PieChart, CanvasRenderer, LabelLayout, TitleComponent])
 
-const colorArray: Array<string> = [
-    '#37D4D1',
-    '#00C7F9',
-    '#0D86E2',
-    '#425ADD',
-    '#8B00E1',
-    '#9CCC65',
-    '#A97526',
-    '#2830FF',
-    '#E64A19',
-    '#0F866A',
-    '#5CDF73',
-    '#FEEC21'
-]
+const colorArray: Array<string> = chartColors.chartColors.split(',')
 
 type EChartsOption = echarts.ComposeOption<
-  TooltipComponentOption | LegendComponentOption | PieSeriesOption | GridComponentOption | TitleComponentOption
->;
+    TooltipComponentOption | LegendComponentOption | PieSeriesOption | GridComponentOption | TitleComponentOption
+>
 
 const props = withDefaults(
     defineProps<{
         smooth?: boolean
-        areaColor?: echarts.graphic.LinearGradient,
+        areaColor?: echarts.graphic.LinearGradient
         radius?: [string, string]
         center?: [string, string]
-        data: {value: number, name: string}[],
-        text?: string,
-        height?: string,
-        showLegend?: boolean,
+        data: { value: number; name: string }[]
+        text?: string
+        height?: string
+        showLegend?: boolean
         color?: Array<string>
+        theme?: string
     }>(),
     {
         smooth: true,
         radius: () => ['50%', '70%'],
         center: () => ['30%', '50%'],
         data: () => [],
-        text: '总数',
+        text: 'Total',
         height: '100px',
-        showLegend: true
+        showLegend: true,
+        theme: 'dark',
     }
-);
+)
 
 const domId = uuid()
 const percent2num = (percent: string) => Number.parseFloat(percent) / 100
@@ -80,23 +63,49 @@ const calcPosition = (chartDom: HTMLElement) => {
     position.lineLength = radius * 2 + 'px'
 }
 const renderChart = () => {
-    const chartDom = document.getElementById(domId);
+    const chartDom = document.getElementById(domId)
     if (chartDom) {
         const instance = echarts.getInstanceByDom(chartDom)
         instance && instance.dispose()
     }
-    const myChart = echarts.init(chartDom!);
+    const myChart = echarts.init(chartDom!)
     const option: EChartsOption = {
+        tooltip: {
+            trigger: 'item',
+            position: function (point, params, dom, rect, size) {
+                let x = 0
+                let y = 0
+
+                let pointX = point[0]
+                let pointY = point[1]
+
+                let boxWidth = size.contentSize[0]
+                let boxHeight = size.contentSize[1]
+
+                if (boxWidth > pointX) {
+                    x = 5
+                } else {
+                    x = pointX - boxWidth
+                }
+
+                if (boxHeight > pointY) {
+                    y = 5
+                } else {
+                    y = pointY - boxHeight
+                }
+                return [x, y]
+            },
+        },
         legend: {
             show: props.showLegend,
-            icon: "rect",
-            type: "scroll",
+            icon: 'rect',
+            type: 'scroll',
             pageIconSize: 10,
             pageTextStyle: {
                 fontSize: 10,
             },
             textStyle: {
-                color: '#D4D4D4'
+                color: '#D4D4D4',
             },
             itemHeight: 10,
             itemGap: 10,
@@ -114,50 +123,55 @@ const renderChart = () => {
                 center: props.center,
                 avoidLabelOverlap: true,
                 label: {
-                    show: false
+                    show: false,
                 },
                 itemStyle: {
-                    borderColor: '#4A4A4A',
-                    borderWidth: 1
+                    borderColor: props.theme === 'dark' ? '#4A4A4A' : '#fff',
+                    borderWidth: 1,
+                },
+                labelLine: {
+                    show: false,
                 },
                 minAngle: 10,
-                data: props.data
-            }
-        ]
-    };
-    myChart.setOption(option);
+                data: props.data,
+                clockwise: false,
+            },
+        ],
+    }
+    myChart.setOption(option)
 }
 // lazy load
 const loadRef = ref<HTMLDivElement>()
-const { stop } = useIntersectionObserver(
-    loadRef,
-    ([{ isIntersecting }]) => {
-        if (isIntersecting) {
-            nextTick(renderChart)
-            stop()
-        }
+const { stop } = useIntersectionObserver(loadRef, ([{ isIntersecting }]) => {
+    if (isIntersecting) {
+        nextTick(renderChart)
+        stop()
     }
+})
+watch(
+    () => props.data,
+    () => {
+        nextTick(renderChart)
+    },
+    { deep: true }
 )
-watch(() => props.data, () => {
-    nextTick(renderChart)
-}, { deep: true })
 
-useEventListener(window, 'resize', useDebounceFn(() => {
-    const chartDom = document.getElementById(domId);
-    if (chartDom) {
-        const instance = echarts.getInstanceByDom(chartDom)
-        instance && instance.resize()
-        calcPosition(chartDom)
-    }
-}, 500))
+useEventListener(
+    window,
+    'resize',
+    useDebounceFn(() => {
+        const chartDom = document.getElementById(domId)
+        if (chartDom) {
+            const instance = echarts.getInstanceByDom(chartDom)
+            instance && instance.resize()
+            calcPosition(chartDom)
+        }
+    }, 500)
+)
 </script>
 
 <template>
-<div ref="loadRef" :id="domId" style="width: 100%; height: 100%;position: relative;"></div>
-<!-- <div class="text">
-    <div style="font-size: 20px;">{{ props.data.reduce((acc, cur) => acc + cur.value, 0) }}</div>
-    <div style="font-size: 12px;">{{ props.text }}</div>
-</div> -->
+    <div ref="loadRef" :id="domId" style="width: 100%; height: 100%; position: relative"></div>
 </template>
 
 <style scoped>

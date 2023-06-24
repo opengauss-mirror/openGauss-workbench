@@ -85,17 +85,23 @@
 
 ​	实例监控插件(observability instance)提供的功能如下：
 
-​    **系统负载**
+​    **首页**
 
-- Sql执行消耗时间监控
-- 数据库负载监控
-- 服务器资源监控
+​    **资源监控**
 
-​	**TOPSQL**
+- CPU
+- 内存
+- IO
+- 网络
 
-- DB_TIME
-- CPU_TIME
-- EXEC_TIME
+​	**实例监控**
+
+- 实例指标
+- 会话监控
+- **TOPSQL**
+  - DB_TIME
+  - CPU_TIME
+  - EXEC_TIME
 
 ​	**WDR报告**
 
@@ -115,7 +121,7 @@
 
 ​	**代理和服务端安装卸载**
 
-- 代理安装和卸载（exporter）
+- 代理安装和卸载（agent）
 - 服务端安装和卸载（prometheus）
 
 
@@ -216,13 +222,19 @@ git clone https://gitee.com/opengauss/openGauss-workbench
 <web.clean.skip>false</web.clean.skip>
 ```
 
-**步骤 2：**  启动打包命令；
+**步骤 2**：进入plugins\observability-instance\InstanceExporter下，打包agent命令；
+
+```
+mvn clean package
+```
+
+**步骤 3：**  启动打包命令；
 
 ```
 mvn clean package -P prod
 ```
 
-**步骤 3：** 在target目录下找到生成的jar，安装到一体化平台。
+**步骤 4：** 在target目录下找到生成的jar，安装到一体化平台。
 
 ![](doc/3.png)
 
@@ -359,23 +371,33 @@ mvn clean package -P prod
 
 
 
+### 5.3 首页
 
+进入插件后，默认选择【首页】 tab
 
-### 5.3 系统负载
+![image-20230613113127939](doc/image-20230613113127939.png)
 
-​	进入插件后，默认选择【系统负载】 tab ，包括【筛选条件区域】，【时间消耗】，【等待事件】，【数据库负载】及【服务器资源】部分。
+### 5.4 系统负载
 
-![image-20221219112024150](doc/image-20221220110750.png)
+​	选择【资源监控】 tab ，包括【CPU】，【内存】，【IO】，【网络】部分。
 
+![image-20230613113228968](doc/image-20230613113228968.png)
 
+![image-20230613113238400](doc/image-20230613113238400.png)
 
-![image-20221219112414524](doc/image-20221220110928.png)
+![image-20230613113252448](doc/image-20230613113252448.png)
 
+![image-20230613113301228](doc/image-20230613113301228.png)
 
+### 5.5 实例监控
 
+选择【实例监控】 tab ，包括【实例指标】，【会话监控】，【TOPSQL】部分。
 
+![image-20230613113414520](doc/image-20230613113414520.png)
 
-### 5.4 TOPSQL
+![image-20230613113423830](doc/image-20230613113423830.png)
+
+### 5.6 TOPSQL
 
 ​	选择 TOPSQL 标签可查看按不同维度排列前十的 sql 语句 。
 
@@ -425,9 +447,11 @@ mvn clean package -P prod
 
 ![image-20221219112620776](doc/image-20221220113633.png)
 
+（6）等待事件统计
 
+![image-20230613113511602](doc/image-20230613113511602.png)
 
-（6）sql 诊断
+（7）sql 诊断
 
 在这里可以对当前的sql进行诊断分析，通过点击可跳转至【诊断详情】。
 

@@ -1,3 +1,6 @@
+/*
+ * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ */
 package com.nctigba.observability.instance;
 
 import com.alibaba.fastjson.JSONObject;
@@ -27,12 +30,12 @@ public class TopSQLServiceTest {
     private TopSQLService topSQLService;
 
     @Test
-    public void testGetCluster () {
+    public void testGetCluster() {
         Mockito.doReturn(mockClusterList()).when(clusterManager).getAllOpsCluster();
     }
 
     @Test
-    public void testGetTopSQLAction () {
+    public void testGetTopSQLAction() {
         Mockito.doReturn(mockTopSQLList()).when(topSQLService).getTopSQLList(any());
         Mockito.doReturn(mockJsonObject()).when(topSQLService).getStatisticalInfo(any());
         Mockito.doReturn(mockJsonObject()).when(topSQLService).getExecutionPlan(any(), any());
@@ -80,19 +83,19 @@ public class TopSQLServiceTest {
         return opsClusterVOList;
     }
 
-    private List<String> mockStringList () {
+    private List<String> mockStringList() {
         List<String> stringList = new ArrayList<>();
         stringList.add("no data");
         return stringList;
     }
 
-    private JSONObject mockJsonObject () {
+    private JSONObject mockJsonObject() {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("data", new ArrayList<>());
         return jsonObject;
     }
 
-    private List<JSONObject> mockTopSQLList () {
+    private List<JSONObject> mockTopSQLList() {
         List<JSONObject> jsonObjectList = new ArrayList<>();
         jsonObjectList.add(new JSONObject());
         jsonObjectList.add(new JSONObject());

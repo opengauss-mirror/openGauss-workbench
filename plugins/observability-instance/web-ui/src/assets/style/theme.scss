@@ -1,38 +1,40 @@
+/**
+ * Copyright (c) 2023 Huawei Technologies Co.,Ltd.
+ */
 @use 'sass:math';
-@use "./color.scss" as *;
+@use './color.scss' as *;
 @use 'sass:map';
 
-@forward "element-plus/theme-chalk/src/common/var.scss" with (
+@forward 'element-plus/theme-chalk/src/common/var.scss' with (
     $bg-color: (
-        '': #FEFEFE,
-        'page': #FEFEFE,
-        'overlay': #FEFEFE,
-    ),
+        '': #fefefe,
+        'page': #fefefe,
+        'overlay': #fefefe,
+    )
 );
 
 html {
-    --hw-primary-1: #E41D1D;
-    --el-color-tabbar-active: #E41D1D;
-    --el-color-button-small-bg: #fff; 
-    --el-color-button-small-border: #E41D1D;
-    --el-color-card-header-color: #F7F8FA;
+    --hw-primary-1: #e41d1d;
+    --el-color-tabbar-active: #e41d1d;
+    --el-color-button-small-bg: #fff;
+    --el-color-button-small-border: #e41d1d;
+    --el-color-card-header-color: #f7f8fa;
     --el-color--col-border-color: #ddd;
-    --el-color-line-text-color: #868F9C;
-    --el-color-icon-refresh-color: #868F9C;
-    --el-color-table-row-bg-color: #F7F8FA;
+    --el-color-line-text-color: #868f9c;
+    --el-color-icon-refresh-color: #868f9c;
+    --el-color-table-row-bg-color: #f7f8fa;
     --el-color-divider-border-color: #ddd;
 
-    --el-bg-color-sub: #ddd;
+    --el-bg-color-sub: var(--button-1-background);
     --el-bg-color-sub-white: #fff;
     --el-bg-color-og: #fefefe;
     --el-bg-color-og-hover: #ccc;
     --el-text-color-og: #333;
     --el-button-color-small: #ddd;
     --el-table-cell: #333;
-    // --el-color-primary: #409eff;
-    --el-color-primary:var(--primary-6);
+    --el-color-primary: var(--primary-6);
     --el-button-text-color: #333;
-    --el-og-border-color: #ddd;
+    --el-og-border-color: #d9d9d9;
 
     --primary-5: #e94842;
     --primary-7: #be1118;
@@ -53,8 +55,20 @@ html {
     --color-text-3: rgb(134, 143, 156);
     --dark-primary-6: #e41d1d;
     --dark-link-6: #e41d1d;
-    --el-bg-color-sub: rgb(247, 248, 250);
+    --el-bg-color-sub: var(--button-1-background);
     --el-bg-color-og: rgb(254, 254, 254);
+
+    // dashboardv2
+    --color-1: #4E5969;
+    --border-1: #eaebee;
+    --border-2: #165dff;
+    --background-color-1: #ffffff;
+    --background-color-2: #F7F7F7;
+    --background-color-3: #f4faff;
+    --text-1: #1d2129;
+    --button-1-color: #4e5969;
+    --button-1-background: #ffffff;
+    --button-1-border: #d9d9d9;
 }
 
 :root {
@@ -72,8 +86,8 @@ html {
     --el-menu-icon-width: 24px;
 
     --primary-6: #e41d1d;
-    --el-dialog-background-color:rgb(255,255,255);
-    --main-background-color:#ffffff;
+    --el-dialog-background-color: rgb(255, 255, 255);
+    --main-background-color: #ffffff;
     --color-neutral-2: rgb(242, 243, 245);
     --color-fill-2: var(--color-neutral-2);
     --color-text-2: rgb(79, 91, 107);
@@ -83,4 +97,16 @@ html {
     --el-color-primary-light-3: var(--primary-6);
     --el-table-cell-center-background: #ffffff;
     --color-bg-2: #fff;
+
+    // dashboardv2
+    --color-1: #4E5969;
+    --border-1: #eaebee;
+    --border-2: #165dff;
+    --background-color-1: #ffffff;
+    --background-color-2: #F7F7F7;
+    --background-color-3: #f4faff;
+    --text-1: #1d2129;
+    --button-1-color: #4e5969;
+    --button-1-background: #ffffff;
+    --button-1-border: #d9d9d9;
 }

@@ -1,3 +1,6 @@
+/*
+ * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ */
 package com.nctigba.observability.instance;
 
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -14,8 +17,7 @@ import com.gitee.starblues.bootstrap.SpringPluginBootstrap;
         HibernateJpaAutoConfiguration.class,
         RedisAutoConfiguration.class,
         RedisRepositoriesAutoConfiguration.class,
-        org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration.class
-})
+        org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration.class })
 @EnableCaching
 public class ObservabilityPluginApplication extends SpringPluginBootstrap {
 
