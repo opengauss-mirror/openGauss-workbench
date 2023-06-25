@@ -5,6 +5,7 @@
 package org.opengauss.plugin.alertcenter.service;
 
 import cn.hutool.core.collection.CollectionUtil;
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import jakarta.mail.Authenticator;
 import jakarta.mail.Message;
@@ -65,7 +66,7 @@ public class EmailService {
             return;
         }
         List<NotifyConfig> emailConfigList = notifyConfigMapper.selectList(
-                Wrappers.<NotifyConfig>lambdaQuery().eq(NotifyConfig::getEnable, 1).eq(NotifyConfig::getType, "email"));
+            Wrappers.<NotifyConfig>lambdaQuery().eq(NotifyConfig::getEnable, 1).eq(NotifyConfig::getType, "email"));
         if (CollectionUtil.isEmpty(emailConfigList)) {
             return;
         }
@@ -88,12 +89,10 @@ public class EmailService {
                 }
             }).toArray(InternetAddress[]::new);
             mimeMessage.setFrom(new InternetAddress(
-                    MimeUtility.encodeWord(notifyConfig.getSender()) + " <" + notifyConfig.getAccount() + ">"));
+                MimeUtility.encodeWord(notifyConfig.getSender()) + " <" + notifyConfig.getAccount() + ">"));
             mimeMessage.setRecipients(Message.RecipientType.TO, addresses);
             mimeMessage.setSubject(notifyMessage.getTitle());
-            mimeMessage.setContent(
-                    "<div style='white-space: pre-line;'> " + notifyMessage.getContent().replaceAll(
-                            CommonConstants.LINE_FEED, "<br/>") + "</div>", "text/html;charset=UTF-8");
+            mimeMessage.setContent(parseContent(notifyMessage.getContent()), "text/html;charset=UTF-8");
             Transport.send(mimeMessage);
             notifyMessage.setStatus(1);
             notifyMessageMapper.updateById(notifyMessage);
@@ -109,7 +108,7 @@ public class EmailService {
             return;
         }
         List<NotifyConfig> emailConfigList = notifyConfigMapper.selectList(
-                Wrappers.<NotifyConfig>lambdaQuery().eq(NotifyConfig::getEnable, 1).eq(NotifyConfig::getType, "email"));
+            Wrappers.<NotifyConfig>lambdaQuery().eq(NotifyConfig::getEnable, 1).eq(NotifyConfig::getType, "email"));
         if (CollectionUtil.isEmpty(emailConfigList)) {
             return;
         }
@@ -133,12 +132,10 @@ public class EmailService {
                     }
                 }).toArray(InternetAddress[]::new);
                 mimeMessage.setFrom(new InternetAddress(
-                        MimeUtility.encodeWord(notifyConfig.getSender()) + " <" + notifyConfig.getAccount() + ">"));
+                    MimeUtility.encodeWord(notifyConfig.getSender()) + " <" + notifyConfig.getAccount() + ">"));
                 mimeMessage.setRecipients(Message.RecipientType.TO, addresses);
                 mimeMessage.setSubject(notifyMessage.getTitle());
-                mimeMessage.setContent(
-                        "<div style='white-space: pre-line;'> " + notifyMessage.getContent().replaceAll(
-                                CommonConstants.LINE_FEED, "<br/>") + "</div>", "text/html;charset=UTF-8");
+                mimeMessage.setContent(parseContent(notifyMessage.getContent()), "text/html;charset=UTF-8");
                 Transport.send(mimeMessage);
                 notifyMessage.setStatus(1);
                 notifyMessageMapper.updateById(notifyMessage);
@@ -169,15 +166,21 @@ public class EmailService {
                 }
             }).toArray(InternetAddress[]::new);
             mimeMessage.setFrom(new InternetAddress(
-                    MimeUtility.encodeWord(notifyConfig.getSender()) + " <" + notifyConfig.getAccount() + ">"));
+                MimeUtility.encodeWord(notifyConfig.getSender()) + " <" + notifyConfig.getAccount() + ">"));
             mimeMessage.setRecipients(Message.RecipientType.TO, addresses);
             mimeMessage.setSubject(title);
-            mimeMessage.setContent(
-                    "<div style='white-space: pre-line;'> " + content.replaceAll(CommonConstants.LINE_FEED, "<br/>")
-                            + "</div>", "text/html;charset=UTF-8");
+            mimeMessage.setContent(parseContent(content), "text/html;charset=UTF-8");
             Transport.send(mimeMessage);
         } catch (MessagingException | UnsupportedEncodingException | ServiceException e) {
             throw new ServiceException("test sentTest exception:" + e.getMessage());
         }
+    }
+
+    private String parseContent(String content) {
+        if (StrUtil.isBlank(content)) {
+            return "";
+        }
+        return "<div style='white-space: pre-line;'> " + content.replaceAll(CommonConstants.LINE_SEPARATOR, "<br/>")
+            + "</div>";
     }
 }

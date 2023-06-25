@@ -8,6 +8,7 @@ package org.opengauss.plugin.alertcenter.service;
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.crypto.CryptoException;
 import cn.hutool.http.HttpUtil;
 import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
@@ -226,13 +227,14 @@ public class PrometheusService {
         return false;
     }
 
-    private void uploadFileConfig(SshSession session, Object config) throws IOException {
+    private void uploadFileConfig(SshSession session, PrometheusConfigDto config) throws IOException {
         HashMap configMap = objectMapper.convertValue(config, HashMap.class);
         File prometheusConfigFile = File.createTempFile("prom", ".tmp");
         FileUtil.appendUtf8String(YamlUtil.dump(configMap), prometheusConfigFile);
-        session.execute("rm " + prometheusEnvDto.getPath() + CommonConstants.PROMETHEUS_YML);
-        session.upload(prometheusConfigFile.getAbsolutePath(),
-            prometheusEnvDto.getPath() + CommonConstants.PROMETHEUS_YML);
+        String path = prometheusEnvDto.getPath() + (prometheusEnvDto.getPath().endsWith(CommonConstants.SLASH) ? "" :
+            CommonConstants.SLASH) + CommonConstants.PROMETHEUS_YML;
+        session.execute("rm " + path);
+        session.upload(prometheusConfigFile.getCanonicalPath(), path);
         Files.delete(prometheusConfigFile.toPath());
         String res = HttpUtil.post(
             "http://" + prometheusEnvDto.getPromIp() + ":" + +prometheusEnvDto.getPromPort() + "/-/reload", "");
@@ -251,7 +253,7 @@ public class PrometheusService {
             PrometheusConfigDto config = getPromConfig();
             updatePromConfig(session, config);
             session.close();
-        } catch (IOException e) {
+        } catch (IOException | CryptoException e) {
             log.error("init prometheus configuration fail: ", e);
         }
     }
@@ -324,7 +326,7 @@ public class PrometheusService {
         return dataResult;
     }
 
-    public void updateRuleConfig(Collection<Long> templateIdList) {
+    public void updateRuleConfig(Collection<Long> templateIdList, Collection<String> delNodeConfIds) {
         if (CollectionUtil.isEmpty(templateIdList)) {
             return;
         }
@@ -333,7 +335,7 @@ public class PrometheusService {
             SshSession session = SshSession.connect(prometheusEnvDto.getPromIp(), prometheusEnvDto.getHostPort(),
                 prometheusEnvDto.getPromUsername(), prometheusEnvDto.getPromPasswd());
             for (Long templateId : templateIdList) {
-                updateRuleConfig(session, templateId);
+                updateRuleConfig(session, templateId, delNodeConfIds);
             }
             session.close();
         } catch (IOException e) {
@@ -343,7 +345,7 @@ public class PrometheusService {
     }
 
 
-    public void updateRuleConfig(Long templateId) {
+    public void updateRuleConfig(Long templateId, Collection<String> delNodeConfIds) {
         if (templateId == null) {
             return;
         }
@@ -352,7 +354,7 @@ public class PrometheusService {
             initPrometheusEnvDto();
             SshSession session = SshSession.connect(prometheusEnvDto.getPromIp(), prometheusEnvDto.getHostPort(),
                 prometheusEnvDto.getPromUsername(), prometheusEnvDto.getPromPasswd());
-            updateRuleConfig(session, templateId);
+            updateRuleConfig(session, templateId, delNodeConfIds);
             session.close();
         } catch (IOException e) {
             log.error(e.getMessage(), e);
@@ -360,19 +362,41 @@ public class PrometheusService {
         }
     }
 
-    private void updateRuleConfig(SshSession session, Long templateId) throws IOException {
+    private void updateRuleConfig(
+        SshSession session, Long templateId, Collection<String> delNodeConfIds) throws IOException {
         List<AlertClusterNodeConf> alertClusterNodeConfs = clusterNodeConfMapper.selectList(
             Wrappers.<AlertClusterNodeConf>lambdaQuery().eq(AlertClusterNodeConf::getTemplateId, templateId).eq(
-                AlertClusterNodeConf::getIsDeleted, CommonConstants.IS_NOT_DELETE));
+                    AlertClusterNodeConf::getIsDeleted, CommonConstants.IS_NOT_DELETE)
+                .notIn(CollectionUtil.isNotEmpty(delNodeConfIds),
+                    AlertClusterNodeConf::getClusterNodeId, delNodeConfIds));
 
         AlertRuleConfigDto config = getAlertRuleConfigDto(session, templateId, alertClusterNodeConfs);
+        if (config == null || config.getGroups() == null) {
+            return;
+        }
         String instances = alertClusterNodeConfs.stream().map(item -> item.getClusterNodeId()).collect(
             Collectors.joining("|"));
         List<AlertTemplateRule> alertTemplateRules = alertTemplateRuleMapper.selectList(
             Wrappers.<AlertTemplateRule>lambdaQuery().eq(AlertTemplateRule::getTemplateId, templateId));
         if (checkAndUpdateRuleConfig(instances, config, alertTemplateRules)) {
-            uploadFileConfig(session, config);
+            uploadRuleFileConfig(session, config, templateId);
         }
+    }
+
+    private void uploadRuleFileConfig(
+        SshSession session, AlertRuleConfigDto config, Long templateId) throws IOException {
+        HashMap configMap = objectMapper.convertValue(config, HashMap.class);
+        File ruleConfigFile = File.createTempFile("rule", ".tmp");
+        FileUtil.appendUtf8String(YamlUtil.dump(configMap), ruleConfigFile);
+        String dir = prometheusEnvDto.getPath() + CommonConstants.SLASH + alertProperty.getRuleFilePrefix();
+        String fileName = "rule_template_" + templateId + alertProperty.getRuleFileSuffix();
+        String path = dir + fileName;
+        session.execute("rm " + path);
+        session.upload(ruleConfigFile.getCanonicalPath(), path);
+        Files.delete(ruleConfigFile.toPath());
+        String res = HttpUtil.post(
+            "http://" + prometheusEnvDto.getPromIp() + ":" + +prometheusEnvDto.getPromPort() + "/-/reload", "");
+        log.info(res);
     }
 
     private AlertRuleConfigDto getAlertRuleConfigDto(
@@ -381,9 +405,8 @@ public class PrometheusService {
         String ruleDir = alertProperty.getRuleFilePrefix().endsWith(CommonConstants.SLASH)
             ? alertProperty.getRuleFilePrefix().substring(0,
             alertProperty.getRuleFilePrefix().length() - 1) : alertProperty.getRuleFilePrefix();
-
         String dirFileStr = session.execute("ls " + prometheusEnvDto.getPath());
-        String[] dirFileArr = dirFileStr.split(CommonConstants.LINE_FEED);
+        String[] dirFileArr = dirFileStr.split(CommonConstants.LINE_SEPARATOR);
         String dir = prometheusEnvDto.getPath() + CommonConstants.SLASH + alertProperty.getRuleFilePrefix();
         AlertRuleConfigDto config = new AlertRuleConfigDto();
         if (!Arrays.asList(dirFileArr).contains(ruleDir)) {
@@ -401,12 +424,12 @@ public class PrometheusService {
             }
             session.execute("touch " + path);
         } else {
-            String[] ruleFileArr = ruleFileStr.split(CommonConstants.LINE_FEED);
+            String[] ruleFileArr = ruleFileStr.split(CommonConstants.LINE_SEPARATOR);
             if (Arrays.asList(ruleFileArr).contains(fileName)) {
                 if (CollectionUtil.isEmpty(alertClusterNodeConfs)) {
                     // delete rule_template_xxx.yml
                     session.execute("rm -f " + path);
-                    HttpUtil.post("http://" + prometheusEnvDto.getPromIp() + ":" + +prometheusEnvDto.getPromPort()
+                    HttpUtil.post("http://" + prometheusEnvDto.getPromIp() + ":" + prometheusEnvDto.getPromPort()
                         + "/-/reload", "");
                     return config;
                 }
@@ -419,6 +442,8 @@ public class PrometheusService {
         Map map = YamlUtil.loadAs(ruleYmlStr, HashMap.class);
         if (map != null) {
             config = objectMapper.convertValue(map, AlertRuleConfigDto.class);
+        } else {
+            config.setGroups(new ArrayList<>());
         }
         return config;
     }

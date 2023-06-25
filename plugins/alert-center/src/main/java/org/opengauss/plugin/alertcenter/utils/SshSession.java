@@ -16,13 +16,13 @@ import org.apache.sshd.sftp.client.SftpClientFactory;
 import org.apache.sshd.sftp.client.fs.SftpFileSystem;
 import org.apache.sshd.sftp.client.fs.SftpPath;
 import org.opengauss.admin.common.exception.base.BaseException;
-import org.opengauss.plugin.alertcenter.constant.CommonConstants;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
@@ -38,6 +38,18 @@ public class SshSession implements AutoCloseable {
     private static SshClient cli;
 
     private ClientSession session;
+
+    private SshSession(String host, Integer port, String username, String password) throws IOException {
+        ConnectFuture cf = getClient().connect(username, host, port);
+        session = cf.verify().getSession();
+
+        try {
+            session.addPasswordIdentity(password);
+            session.auth().verify(SESSION_TIMEOUT);
+        } catch (IOException e) {
+            throw new BaseException(username + " password error");
+        }
+    }
 
     public enum Command {
         ARCH("arch"), CD("cd {0}"), LS("ls {0}"), STAT("stat {0}"), WGET("wget {0}"), TAR("tar zxf {0}"),
@@ -57,19 +69,6 @@ public class SshSession implements AutoCloseable {
         }
     }
 
-    private SshSession(String host, Integer port, String username, String password) throws IOException {
-        ConnectFuture cf = getClient().connect(username, host, port);
-        session = cf.verify().getSession();
-
-        try {
-            session.addPasswordIdentity(password);
-            session.auth().verify(SESSION_TIMEOUT);
-        } catch (IOException e) {
-            throw new BaseException(username + " password error");
-        }
-    }
-
-
     public String execute(Command command) throws IOException {
         return execute(command.cmd, null);
     }
@@ -81,27 +80,35 @@ public class SshSession implements AutoCloseable {
     public String execute(String command, OutputStream os) throws IOException {
         log.info("exec:" + command);
         ChannelExec ec = session.createExecChannel(command);
+        OutputStream os0 = os;
         if (os == null) {
-            os = new ByteArrayOutputStream();
+            os0 = new ByteArrayOutputStream();
         }
-        ec.setOut(os);
-        ec.setErr(os);
+        ec.setOut(os0);
+        ec.setErr(os0);
         ec.open();
         ec.waitFor(EnumSet.of(ClientChannelEvent.CLOSED), CHANNEL_TIMEOUT);
         for (int i = 0; i < 100 && ec.getExitStatus() == null; i++) {
             ThreadUtil.sleep(100L);
         }
         if (ec.getExitStatus() != null && ec.getExitStatus() != 0) {
-            throw new BaseException(command + " " + CommonConstants.LINE_FEED + " " + os.toString().trim());
+            throw new BaseException(command + " " + System.getProperty("line.separator") + " " + os0.toString().trim());
         }
-        return os.toString().trim();
+        try {
+            return os0.toString().trim();
+        } finally {
+            if (os0 != null) {
+                os0.close();
+            }
+        }
     }
 
     public void executeNoWait(String command) throws IOException {
         log.info("execC:" + command);
         ChannelShell channelShell = session.createShellChannel();
-        String command0 = command + CommonConstants.LINE_FEED + "exit" + CommonConstants.LINE_FEED;
-        channelShell.setIn(new ByteArrayInputStream(command0.getBytes()));
+        String command0 = command + System.getProperty("line.separator") + "exit"
+            + System.getProperty("line.separator");
+        channelShell.setIn(new ByteArrayInputStream(command0.getBytes(Charset.defaultCharset())));
         ByteArrayOutputStream os = new ByteArrayOutputStream();
         channelShell.setOut(os);
         channelShell.setErr(os);
