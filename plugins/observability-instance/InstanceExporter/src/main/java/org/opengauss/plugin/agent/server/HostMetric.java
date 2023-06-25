@@ -29,9 +29,8 @@ import io.prometheus.client.Collector.MetricFamilySamples;
 import io.prometheus.client.Collector.MetricFamilySamples.Sample;
 import io.prometheus.client.CollectorRegistry;
 import io.prometheus.client.exporter.HTTPServer;
-import lombok.Getter;
+import lombok.Data;
 import lombok.RequiredArgsConstructor;
-import lombok.Setter;
 import lombok.experimental.Accessors;
 import lombok.extern.log4j.Log4j2;
 
@@ -39,8 +38,7 @@ import lombok.extern.log4j.Log4j2;
 @Order(Integer.MAX_VALUE)
 @RequiredArgsConstructor
 @Log4j2
-@Setter
-@Getter
+@Data
 @Accessors(chain = true)
 public class HostMetric implements ApplicationRunner {
     private final Map<String, Ametric> collectors;
@@ -56,6 +54,10 @@ public class HostMetric implements ApplicationRunner {
     private String nodeId;
     @Value("${conf.node.dbport:#{null}}")
     private Integer dbport;
+    @Value("${conf.node.dbUsername:#{null}}")
+    private String dbUsername;
+    @Value("${conf.node.dbPassword:#{null}}")
+    private String dbPassword;
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
@@ -91,49 +93,54 @@ public class HostMetric implements ApplicationRunner {
         return StringUtil.replaceParenthesis((collector instanceof DBmetric) ? k : "agent_" + collectorName + k);
     }
 
-    @Scheduled(fixedRate = 15000)
+    @Scheduled(fixedRate = 1000)
     public void cache() {
-        collectors.forEach((collectorName, collector) -> {
-            if (StrUtil.isBlank(hostId))
-                return;
-            if (collector instanceof DBmetric && (StrUtil.isBlank(nodeId) || dbport == null))
-                return;
-            var list = new ArrayList<MetricFamilySamples>();
-            try {
-                collector.getMetric(dbport).forEach((k, v) -> {
-                    if (k == null)
-                        return;
-                    final String key = formatKey(collectorName, collector, k);
-                    var samples = new ArrayList<Sample>();
-                    List<String> labelNames = new ArrayList<String>();
-                    labelNames.addAll(v.getLabelNames());
-                    // global label
-                    labelNames.addAll(OS_LABEL_NAMES);
-                    if (collector instanceof DBmetric)
-                        labelNames.addAll(DB_LABEL_NAMES);
-                    v.getValues().forEach(value -> {
-                        List<String> labelValues = new ArrayList<String>();
-                        labelValues.addAll(value.getLabelValues());
-                        // global value
-                        labelValues.addAll(Arrays.asList(hostId));
-                        if (collector instanceof DBmetric)
-                            labelValues.addAll(Arrays.asList(nodeId));
-                        if (labelNames.size() != labelValues.size()) {
-                            log.error("collector {} metric {} error:{}{}", collectorName, key, labelNames, labelValues);
+        try {
+            collectors.forEach((collectorName, collector) -> {
+                if (StrUtil.isBlank(hostId))
+                    return;
+                if (collector instanceof DBmetric && (StrUtil.isBlank(nodeId) || dbport == null))
+                    return;
+                var list = new ArrayList<MetricFamilySamples>();
+                try {
+                    collector.getMetric(dbport).forEach((k, v) -> {
+                        if (k == null)
                             return;
+                        final String key = formatKey(collectorName, collector, k);
+                        var samples = new ArrayList<Sample>();
+                        List<String> labelNames = new ArrayList<String>();
+                        labelNames.addAll(v.getLabelNames());
+                        // global label
+                        labelNames.addAll(OS_LABEL_NAMES);
+                        if (collector instanceof DBmetric)
+                            labelNames.addAll(DB_LABEL_NAMES);
+                        v.getValues().forEach(value -> {
+                            List<String> labelValues = new ArrayList<String>();
+                            labelValues.addAll(value.getLabelValues());
+                            // global value
+                            labelValues.addAll(Arrays.asList(hostId));
+                            if (collector instanceof DBmetric)
+                                labelValues.addAll(Arrays.asList(nodeId));
+                            if (labelNames.size() != labelValues.size()) {
+                                log.error("collector {} metric {} error:{}{}", collectorName, key, labelNames,
+                                        labelValues);
+                                return;
+                            }
+                            samples.add(new Sample(key, labelNames, labelValues, value.getValue()));
+                        });
+                        String help = v.getHelp();
+                        if (StrUtil.isBlank(help)) {
+                            help = StrUtil.upperFirst(collectorName) + " information field " + k;
                         }
-                        samples.add(new Sample(key, labelNames, labelValues, value.getValue()));
+                        list.add(new MetricFamilySamples(key, v.getType(), help, samples));
                     });
-                    String help = v.getHelp();
-                    if (StrUtil.isBlank(help)) {
-                        help = StrUtil.upperFirst(collectorName) + " information field " + k;
-                    }
-                    list.add(new MetricFamilySamples(key, v.getType(), help, samples));
-                });
-            } catch (IOException e) {
-                log.error("collect fail:{}", collectorName);
-            }
-            CACHE.put(collectorName, list);
-        });
+                } catch (IOException e) {
+                    log.error("collect fail:{}", collectorName);
+                }
+                CACHE.put(collectorName, list);
+            });
+        } catch (Exception e) {
+            log.error("metric cache err", e);
+        }
     }
 }

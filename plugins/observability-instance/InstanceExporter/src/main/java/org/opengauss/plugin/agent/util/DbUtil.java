@@ -1,6 +1,7 @@
 /*
  * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
  */
+
 package org.opengauss.plugin.agent.util;
 
 import java.sql.Connection;
@@ -12,23 +13,29 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.opengauss.plugin.agent.server.HostMetric;
+import org.springframework.stereotype.Component;
+
+import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 
+@Component
 @Log4j2
+@AllArgsConstructor
 public class DbUtil {
     private static Connection conn;
-    static {
-        try {
-            conn = DriverManager.getConnection(
-                    "jdbc:opengauss://" + "192.168.110.31" + ":" + 5532 + "/" + "postgres" + "?TimeZone=UTC", "gaussdb",
-                    "Test@1234");
-        } catch (SQLException e) {
-            e.printStackTrace();
-            conn = null;
-        }
-    }
 
-    public static final List<Map<String, Object>> query(String sql) {
+    private final HostMetric hostMetric;
+
+    public final List<Map<String, Object>> query(String sql) {
+        synchronized (conn) {
+            try {
+                conn = DriverManager.getConnection("jdbc:opengauss://" + "localhost" + ":" + hostMetric.getDbport()
+                        + "/" + "postgres" + "?TimeZone=UTC", hostMetric.getDbUsername(), hostMetric.getDbPassword());
+            } catch (SQLException e) {
+                conn = null;
+            }
+        }
         try {
             var stmt = conn.createStatement();
             var rs = stmt.executeQuery(sql);
@@ -38,8 +45,9 @@ public class DbUtil {
                 Map<String, Object> map = new HashMap<>();
                 for (int i = 0; i < rsmeta.getColumnCount(); i++) {
                     var obj = rs.getObject(i + 1);
-                    if (obj == null)
+                    if (obj == null) {
                         obj = "";
+                    }
                     map.put(rsmeta.getColumnName(i + 1), obj);
                 }
                 list.add(map);

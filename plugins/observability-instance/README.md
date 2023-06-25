@@ -168,13 +168,14 @@ git clone https://gitee.com/opengauss/openGauss-workbench
 
 实例监控插件项目结构说明如下：
 
-| 文件夹/文件 | 说明                   |
-| ----------- | ---------------------- |
-| src         | 保存后端代码及资源文件 |
-| web-ui      | 保存前端代码           |
-| .gitignore  | 提交git忽略的目录      |
-| pom.xml     | 后端依赖项             |
-| LICENSE     | 许可证                 |
+| 文件夹/文件      | 说明                   |
+| ---------------- | ---------------------- |
+| src              | 保存后端代码及资源文件 |
+| web-ui           | 保存前端代码           |
+| InstanceExporter | 保存采集器源码         |
+| .gitignore       | 提交git忽略的目录      |
+| pom.xml          | 后端依赖项             |
+| LICENSE          | 许可证                 |
 
 ### 3.5 系统要求
 
@@ -222,19 +223,13 @@ git clone https://gitee.com/opengauss/openGauss-workbench
 <web.clean.skip>false</web.clean.skip>
 ```
 
-**步骤 2**：进入plugins\observability-instance\InstanceExporter下，打包agent命令；
-
-```
-mvn clean package
-```
-
-**步骤 3：**  启动打包命令；
+**步骤 2：**  启动打包命令；
 
 ```
 mvn clean package -P prod
 ```
 
-**步骤 4：** 在target目录下找到生成的jar，安装到一体化平台。
+**步骤 3：** 在target目录下找到生成的jar，安装到一体化平台。
 
 ![](doc/3.png)
 
@@ -313,15 +308,12 @@ mvn clean package -P prod
 
 【代理安装】配置项
 
-| 配置项             | 必填 | **组件形式** | 配置说明                                                     |
-| ------------------ | ---- | ------------ | ------------------------------------------------------------ |
-| 采集实例           | 是   | 下拉框       | 平台已安装的实例，默认选第一个                               |
-| root用户密码       | 是   | 输入框       | 采集实例对应的服务器的root用户密码                           |
-| 服务器指标采集端口 | 是   | 输入框       | 默认9100                                                     |
-| 数据库指标采集端口 | 是   | 输入框       | 默认9187                                                     |
-| 安装方式           | 是   | 输入框       | 分【在线】和【离线】，默认选在线                             |
-| node exporter      | 否   | 文件上传框   | 安装方式为【离线】时，必填。根据提示，上传node_exporter安装包，上传完成后，显示安装路径 |
-| openGauss exporter | 否   | 文件上传框   | 安装方式为【离线】时，必填。根据提示，上传openGauss_exporter安装包，上传完成后，显示安装路径 |
+| 配置项              | 必填 | **组件形式** | 配置说明                                                     |
+| ------------------- | ---- | ------------ | ------------------------------------------------------------ |
+| 采集实例            | 是   | 下拉框       | 平台已安装的实例，默认选第一个                               |
+| 监控指标采集端口    | 是   | 输入框       | 默认9595，供prometheus拉取数据使用                           |
+| 代理web服务采集端口 | 是   | 输入框       | 默认9596，供插件读取指标数据使用                             |
+| openGauss exporter  | 否   | 文件上传框   | 默认/ops/server/openGauss-visualtool/data/｛nodeId｝/exports，用于安装agent程序 |
 
 ![image-20230313184137232](doc/instance_install_proxy.png)
 
@@ -545,18 +537,6 @@ mvn clean package -P prod
 ​	           点击【系统配置】tab,选择【集群/实例】，点击【查询】。
 
 ![image-20230313200118244](doc/sysconfig.png)
-
-
-
-
-
-
-
-
-
-
-
-
 
 #### 5.6.2 系统配置刷新
 

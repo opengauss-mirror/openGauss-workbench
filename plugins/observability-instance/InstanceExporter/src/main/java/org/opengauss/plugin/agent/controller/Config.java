@@ -26,7 +26,7 @@ public class Config {
     private final HostMetric hostMetric;
 
     @GetMapping("/set")
-    public void set(String hostId, String nodeId, Integer dbport) throws IOException {
+    public void set(String hostId, String nodeId, Integer dbport, String username, String password) throws IOException {
         File application = new File(".", "application.yml");
         if (!application.exists())
             application.createNewFile();
@@ -35,9 +35,11 @@ public class Config {
             Map<String, Object> map = yaml.load(is);
             if (map == null)
                 map = new HashMap<>();
-            map.put("conf", Map.of("hostId", hostId, "node", Map.of("nodeId", nodeId, "dbport", dbport)));
+            map.put("conf", Map.of("hostId", hostId, "node",
+                    Map.of("nodeId", nodeId, "dbport", dbport, "username", username, "password", password)));
             // refresh curr config
-            hostMetric.setHostId(hostId).setNodeId(nodeId).setDbport(dbport);
+            hostMetric.setHostId(hostId).setNodeId(nodeId).setDbport(dbport).setDbUsername(username)
+                    .setDbPassword(password);
             try (var writer = new FileWriter(application)) {
                 writer.write(yaml.dumpAsMap(map));
             }

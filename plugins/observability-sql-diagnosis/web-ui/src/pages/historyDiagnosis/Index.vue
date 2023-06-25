@@ -266,7 +266,7 @@ const diagnosis = async () => {
     ruleForm.optionSelected.forEach((element) => {
         configs.push({
             option: element,
-            value: true,
+            isCheck: true,
         })
     })
     diagnosisParam.value.configs = configs

@@ -141,7 +141,8 @@ public class ExporterInstallService extends AbstractInstaller {
                         ThreadUtil.sleep(5000L);
                         try {
                             HttpUtil.get("http://" + hostEntity.getPublicIp() + ":" + expEnv.getPort() + "/config/set",
-                                    Map.of("hostId", hostId, "nodeId", nodeId, "dbport", node.getDbPort()));
+                                    Map.of("hostId", hostId, "nodeId", nodeId, "dbport", node.getDbPort(), "username",
+                                            node.getDbUser(), "password", node.getDbUserPassword()));
                         } catch (IORuntimeException e) {
                             if (i == 9)
                                 throw e;

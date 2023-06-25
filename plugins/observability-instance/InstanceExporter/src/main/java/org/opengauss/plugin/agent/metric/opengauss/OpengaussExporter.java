@@ -31,6 +31,7 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.thread.ThreadUtil;
 import cn.hutool.core.util.NumberUtil;
 import io.prometheus.client.Collector.Type;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.Getter;
 import lombok.extern.log4j.Log4j2;
@@ -40,9 +41,12 @@ import lombok.extern.log4j.Log4j2;
  */
 @Service
 @Log4j2
+@AllArgsConstructor
 public class OpengaussExporter implements DBmetric, InitializingBean {
     private static final Map<String, queryInstance> CONFIG = new HashMap<>();
     private static Map<String, Metric> metricData = new HashMap<>();
+    
+    private final DbUtil dbUtil;
 
     /**
      * load open Gauss exporter config file
@@ -106,7 +110,7 @@ public class OpengaussExporter implements DBmetric, InitializingBean {
         // generate metric family
         Map<String, Metric> result = conf.getValue().generateMetricFamily(conf.getKey(), labelNames);
         // add data
-        List<Map<String, Object>> r = DbUtil.query(sql);
+        List<Map<String, Object>> r = dbUtil.query(sql);
         for (Map<String, Object> row : r) {
             // label values
             List<String> labelValues = new ArrayList<>();

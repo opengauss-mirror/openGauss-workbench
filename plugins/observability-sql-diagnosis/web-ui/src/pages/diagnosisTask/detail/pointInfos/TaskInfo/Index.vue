@@ -50,7 +50,7 @@
                             v-for="item in taskData.pointData.configs"
                             :key="item.option"
                             :label="item.name"
-                            :checked="item.value"
+                            :checked="item.isCheck"
                         />
                     </el-checkbox-group>
                 </div>

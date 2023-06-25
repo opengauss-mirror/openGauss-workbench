@@ -36,7 +36,7 @@ public enum MetricsLine {
 
     // memory
     MEMORY_USED(Type.OS,
-            "(agent_free_Mem_total_bytes{host='ogbrench'}" + "-agent_free_Mem_available_bytes{host='ogbrench'})*100"
+            "(agent_free_Mem_total_bytes{host='ogbrench'}-agent_free_Mem_available_bytes{host='ogbrench'})*100"
                     + "/agent_free_Mem_total_bytes{host='ogbrench'}"),
     MEMORY_DB_USED(Type.DB, "top_db_mem{instanceId='ogbrench'}"),
     MEMORY_SWAP(Type.OS,

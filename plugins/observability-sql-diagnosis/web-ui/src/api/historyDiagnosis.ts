@@ -21,7 +21,7 @@ export async function getThresholds(): Promise<Threshold[]> {
 
 export interface DiagnosisParamConfig {
     option: string
-    value: boolean
+    isCheck: boolean
 }
 export interface DiagnosisParamThreshold {
     threshold: string
