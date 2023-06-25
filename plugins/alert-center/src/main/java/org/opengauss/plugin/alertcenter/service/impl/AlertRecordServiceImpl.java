@@ -100,7 +100,7 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
             recordDtoPage.setRecords(new ArrayList<>());
             return recordDtoPage;
         }
-        List<String> clusterNodeIdList = records.stream().map(item -> clusterNodeId).collect(Collectors.toList());
+        List<String> clusterNodeIdList = records.stream().map(item -> item.getClusterNodeId()).collect(Collectors.toList());
         List<OpsClusterNodeEntity> opsClusterNodeEntities = clusterNodeService.listByIds(clusterNodeIdList);
         List<String> hostIds = opsClusterNodeEntities.stream().map(item -> item.getHostId()).collect(
                 Collectors.toList());
