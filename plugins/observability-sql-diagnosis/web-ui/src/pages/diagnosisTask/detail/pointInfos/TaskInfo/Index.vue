@@ -111,7 +111,7 @@ const props = withDefaults(
 )
 
 const tab = ref(1)
-const typeId = ref('TaskInfo')
+const typeId = ref('TASKINFO')
 const taskData = ref<{
     pointData: {
         configs: Array<any>
@@ -205,6 +205,7 @@ const { data: res, run: requestData } = useRequest(
 )
 
 watch(res, (res: any) => {
+    console.log('DEBUG: RES', res)
     taskData.value = res
     taskData.value.pointData.remarks = taskData.value.pointData.remarks.replaceAll('<br/>', '\r\n')
 })

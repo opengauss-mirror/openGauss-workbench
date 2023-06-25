@@ -53,7 +53,7 @@ type Res =
           pointName: any
           title: string
           nodeName: string
-          hidden: boolean
+          isHidden: boolean
           child: Res[]
       }
     | undefined
@@ -63,7 +63,7 @@ type NodesTypes = {
     label: string
     type: string
     originalHidden: boolean
-    hidden: boolean
+    isHidden: boolean
     none?: boolean
     image: {
         unselected: string
@@ -150,9 +150,9 @@ watch(res, (res: any) => {
             label: res.title,
             pointName: res.pointName,
             type: res.nodeName,
-            originalHidden: res.hidden,
-            hidden: isAll ? false : res.hidden,
-            none: res.hidden,
+            originalHidden: res.isHidden,
+            isHidden: isAll ? false : res.isHidden,
+            none: res.isHidden,
             image: { unselected: iconA, selected: iconB },
         }
         nodes.value.push(node)
@@ -163,9 +163,9 @@ watch(res, (res: any) => {
                 label: res.title,
                 pointName: res.pointName,
                 type: res.nodeName,
-                originalHidden: res.hidden,
-                hidden: isAll ? false : res.hidden,
-                none: res.hidden,
+                originalHidden: res.isHidden,
+                isHidden: isAll ? false : res.isHidden,
+                none: res.isHidden,
                 image: { unselected: iconA, selected: iconB },
                 child: res.child,
             },
@@ -177,16 +177,16 @@ watch(res, (res: any) => {
                     continue
                 }
                 for (let [i, r] of node0.child.entries()) {
-                    if (r && (r.hidden === false || isAll)) {
+                    if (r && (r.isHidden === false || isAll)) {
                         node = {
                             id: node0.id + '-' + i,
                             pid: node0.id,
                             label: r.title,
                             pointName: r.pointName,
                             type: r.nodeName,
-                            originalHidden: r.hidden,
-                            hidden: isAll ? false : r.hidden,
-                            none: r.hidden,
+                            originalHidden: r.isHidden,
+                            isHidden: isAll ? false : r.isHidden,
+                            none: r.isHidden,
                             image: { unselected: iconA, selected: iconB },
                         }
                         nodes.value.push(node)
@@ -230,7 +230,7 @@ watch(res, (res: any) => {
 
     .detail-left {
         flex: 1;
-        overflow: hidden;
+        overflow: isHidden;
         height: 100%;
 
         .filter {

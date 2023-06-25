@@ -6,6 +6,14 @@
                     <svg-icon name="suggest" class="icon" />
                     <div>{{ pointData.suggest }}</div>
                 </div>
+            </div>
+        </el-tab-pane>
+        <el-tab-pane :label="$t('historyDiagnosis.result')" :name="1">
+            <div>
+                <div class="suggest-content">
+                    <svg-icon name="suggest" class="icon" />
+                    <div>{{ pointData.suggest }}</div>
+                </div>
 
                 <my-card :title="pointData.session.title" height="300" :bodyPadding="false">
                     <LazyLine
