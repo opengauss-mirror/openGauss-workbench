@@ -397,7 +397,6 @@
   };
   const resetForm = (formEl: FormInstance | undefined) => {
     Object.assign(connectListInfo, {
-      list: [],
       listCurrentRow: {},
     });
     showNameFilter.value = false;
