@@ -84,7 +84,7 @@ public class AlertClusterNodeConfServiceImpl
         String[] clusterNodeIdArr = clusterNodeIds.split(CommonConstants.DELIMITER);
         List<String> notNeedToUpdatedNodeIdList = new ArrayList<>();
         Set<Long> needUpdatedTemplateIdSet = new HashSet<>();
-        // 检查是否已经配置模板
+        Set<String> delNodeConfIds = new HashSet<>();
         List<AlertClusterNodeConf> oldAlertClusterNodeConfList = this.baseMapper.selectList(
                 Wrappers.<AlertClusterNodeConf>lambdaQuery().in(AlertClusterNodeConf::getClusterNodeId,
                         clusterNodeIdArr).eq(AlertClusterNodeConf::getIsDeleted, CommonConstants.IS_NOT_DELETE));
@@ -98,6 +98,9 @@ public class AlertClusterNodeConfServiceImpl
             if (CollectionUtil.isNotEmpty(delConfList)) {
                 Set<Long> set = delConfList.stream().map(item -> item.getTemplateId()).collect(Collectors.toSet());
                 needUpdatedTemplateIdSet.addAll(set);
+                Set<String> confIdSet =
+                    delConfList.stream().map(item -> item.getClusterNodeId()).collect(Collectors.toSet());
+                delNodeConfIds.addAll(confIdSet);
                 this.saveOrUpdateBatch(delConfList);
             }
             // get the cluster node which is not need to update
@@ -120,7 +123,7 @@ public class AlertClusterNodeConfServiceImpl
         // 保存数据库
         this.saveBatch(alertClusterNodeConfList);
         // 更新prometheus规则配置文件
-        prometheusService.updateRuleConfig(needUpdatedTemplateIdSet);
+        prometheusService.updateRuleConfig(needUpdatedTemplateIdSet, delNodeConfIds);
     }
 
     @Override

@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
 import java.util.List;
 import java.util.Map;
 
@@ -38,8 +39,11 @@ public class EnvironmentController {
     }
 
     /**
-     * @param type 分 alert和 notify,alert表示查询告警内容常驻参数，notify表示通知内容的常驻参数
-     * @return 返回常驻参数
+     * get the constant parameters
+     *
+     * @param type: alert and notify,alert: the constant parameters for querying alert content,  notify: the constant
+     *            parameters for notify content
+     * @return return the constant parameters
      */
     @GetMapping("/alertContentParam")
     public AjaxResult getAlertContentParam(@RequestParam String type) {
