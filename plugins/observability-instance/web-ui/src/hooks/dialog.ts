@@ -1,3 +1,7 @@
+///
+/// Copyright (c) 2023 Huawei Technologies Co.,Ltd.
+///
+
 import { uuid } from "../shared";
 import DelModalVue from "./DelModal.vue";
 

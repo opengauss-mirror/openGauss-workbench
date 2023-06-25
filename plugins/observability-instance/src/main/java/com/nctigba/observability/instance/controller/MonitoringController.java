@@ -1,15 +1,7 @@
+/*
+ * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ */
 package com.nctigba.observability.instance.controller;
-
-import com.nctigba.common.web.exception.CustomException;
-import com.nctigba.common.web.result.AppResult;
-import com.nctigba.observability.instance.model.monitoring.MonitoringParam;
-import com.nctigba.observability.instance.service.MonitoringService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -19,6 +11,19 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.nctigba.common.web.exception.CustomException;
+import com.nctigba.common.web.result.AppResult;
+import com.nctigba.observability.instance.model.monitoring.MonitoringParam;
+import com.nctigba.observability.instance.service.MonitoringService;
+
+import lombok.RequiredArgsConstructor;
 
 /**
  * Monitoring data
@@ -50,13 +55,17 @@ public class MonitoringController {
             "node_uname_info{instance=\"ogbrench\"}", "node_os_info{instance=\"ogbrench\"}",
             "sum(avg(node_filesystem_size_bytes{fstype=~\"xfs|ext.*\",instance=\"ogbrench\"})by(device,instance))");
     private static final List<String> databaseNames = Arrays.asList("CPU_TIME", "NET_SEND_TIME", "DATA_IO_TIME",
-            "gauss_wait_events_value", "totalCoreNum", "total5mLoad", "totalAverageUtilization1", "diskIOUsage", "systemUsage", "userUsage", "totalUsage", "totalMemory", "usedMemory",
-            "totalAverageUtilization2", "totalDisks", "totalNumber", "totalAverageUtilization3", "read1", "write1", "read2", "write2", "upload", "download", "TCP_alloc", "CurrEstab",
-            "Tcp_OutSegs", "Tcp_InSegs", "UDP_inuse", "TCP_tw", "Tcp_RetransSegs", "Sockets_used", "transactionRollbackNum", "transactionCommitments",
-            "transactionAndRollbackTotal", "queryTransactions", "currentIdleConnections", "currentActiveConnections", "currentConnections", "totalConnections", "slowSqlNum", "longTransactions", "sqlResponseTime80", "sqlResponseTime95",
+            "gauss_wait_events_value", "totalCoreNum", "total5mLoad", "totalAverageUtilization1", "diskIOUsage",
+            "systemUsage", "userUsage", "totalUsage", "totalMemory", "usedMemory", "totalAverageUtilization2",
+            "totalDisks", "totalNumber", "totalAverageUtilization3", "read1", "write1", "read2", "write2", "upload",
+            "download", "TCP_alloc", "CurrEstab", "Tcp_OutSegs", "Tcp_InSegs", "UDP_inuse", "TCP_tw", "Tcp_RetransSegs",
+            "Sockets_used", "transactionRollbackNum", "transactionCommitments", "transactionAndRollbackTotal",
+            "queryTransactions", "currentIdleConnections", "currentActiveConnections", "currentConnections",
+            "totalConnections", "slowSqlNum", "longTransactions", "sqlResponseTime80", "sqlResponseTime95",
             "accessExclusiveLock", "accessShareLock", "ExclusiveLock", "ShareUpdateExclusiveLock",
-            "ShareRowExclusiveLock", "RowShareLock", "RowExclusiveLock", "ShareLock", "queryCacheHitRate", "databaseCacheHitRate", "readPhysicalFileBlockNum",
-            "writePhysicalFileBlockNum", "lastBatchDirtyPageNum", "currentRemainingDirtyPages");
+            "ShareRowExclusiveLock", "RowShareLock", "RowExclusiveLock", "ShareLock", "queryCacheHitRate",
+            "databaseCacheHitRate", "readPhysicalFileBlockNum", "writePhysicalFileBlockNum", "lastBatchDirtyPageNum",
+            "currentRemainingDirtyPages");
     private static final List<String> databaseMetrics = Arrays.asList(
             "increase(gauss_instance_time_value{instance='ogbrench',stat_name='CPU_TIME'}[5m])",
             "increase(gauss_instance_time_value{instance='ogbrench',stat_name='NET_SEND_TIME'}[5m])",
@@ -196,7 +205,6 @@ public class MonitoringController {
         try {
             countDownLatch.await(10, TimeUnit.SECONDS);
         } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
             throw new CustomException(e.getMessage());
         }
         return AppResult.ok("").addData(map);

@@ -1,9 +1,13 @@
-import { ComputedGetter, Ref } from "vue"
+///
+/// Copyright (c) 2023 Huawei Technologies Co.,Ltd.
+///
+
+import { ComputedGetter, Ref } from 'vue'
 
 export const useIntervalTime = (cb: Function, timeFn: ComputedGetter<number> | Ref<number>) => {
     const timer = ref<number>()
     timer.value = setInterval(cb, typeof timeFn === 'function' ? timeFn() : timeFn.value)
-    watch(timeFn, t => {
+    watch(timeFn, (t) => {
         if (timer.value) {
             clearInterval(timer.value)
             timer.value = setInterval(cb, t)
@@ -14,4 +18,5 @@ export const useIntervalTime = (cb: Function, timeFn: ComputedGetter<number> | R
             clearInterval(timer.value)
         }
     })
+    return timer.value
 }

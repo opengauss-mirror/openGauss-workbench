@@ -4,7 +4,12 @@
             <my-card :title="$t('datasource.analysisReport')" :bodyPadding="false">
                 <div class="filter">
                     <el-select v-model="pologyType" @change="getChangeSelect">
-                        <el-option v-for="item in pologyList" :key="item.value" :value="item.value" :label="item.label" />
+                        <el-option
+                            v-for="item in pologyList"
+                            :key="item.value"
+                            :value="item.value"
+                            :label="item.label"
+                        />
                     </el-select>
                 </div>
                 <keep-alive>
@@ -16,7 +21,9 @@
             <div class="detail-info">
                 <template v-if="requestType === 'NONE' || originalHiddenFlag">
                     <my-card :title="$t('datasource.detailTitle')" :bodyPadding="false" style="position: relative">
-                        <img src="@/assets/img/large.png" class="shrink-img" @click="goToTask" />
+                        <template #headerExtend>
+                            <svg-icon name="expand" class="shrink-img" @click="goToTask" />
+                        </template>
                         <div class="detail-wrap">
                             <div class="main-suggestion">
                                 <el-icon color="#0093FF" size="18px">
@@ -32,12 +39,31 @@
                     </my-card>
                 </template>
                 <template v-else>
-                    <my-card :title="$t('datasource.detailTitle')" :bodyPadding="false" style="position: relative" v-if="!reportNodeList.includes(nodesType)">
-                        <img src="@/assets/img/large.png" class="shrink-img" @click="goToTask" />
-                        <TaskInfo @goto-large="showLarge = true" :nodesType="nodesType" />
+                    <my-card
+                        :title="$t('datasource.detailTitle')"
+                        :bodyPadding="false"
+                        style="position: relative"
+                        v-if="!reportNodeList.includes(nodesType)"
+                    >
+                        <template #headerExtend>
+                            <svg-icon name="expand" class="shrink-img" @click="goToTask" />
+                        </template>
+
+                        <el-tabs class="tast-detail-tabs">
+                            <el-tab-pane label="诊断结果">
+                                <TaskInfo @goto-large="showLarge = true" :nodesType="nodesType" />
+                            </el-tab-pane>
+                        </el-tabs>
                     </my-card>
-                    <my-card :title="$t('datasource.reportDetail')" :bodyPadding="false" style="position: relative" v-if="reportNodeList.includes(nodesType)">
-                        <img src="@/assets/img/large.png" class="shrink-img" @click="goToTask" />
+                    <my-card
+                        :title="$t('datasource.reportDetail')"
+                        :bodyPadding="false"
+                        style="position: relative"
+                        v-if="reportNodeList.includes(nodesType)"
+                    >
+                        <template #headerExtend>
+                            <svg-icon name="expand" class="shrink-img" @click="goToTask" />
+                        </template>
                         <ReportDetail :id="urlParam.dbId" :reportId="nodesType" :requestType="requestType" />
                     </my-card>
                 </template>
@@ -114,12 +140,12 @@ onMounted(() => {
     else urlParam.dbId = paramsId
     requestData()
     requestResult()
-    const wujie = window.$wujie;
+    const wujie = window.$wujie
     // Judge whether it is a plug-in environment or a local environment through wujie
     if (wujie) {
         // Monitoring platform language change
         wujie?.bus.$on('opengauss-locale-change', (val: string) => {
-            console.log("task_detail opengauss-locale-change")
+            console.log('task_detail opengauss-locale-change')
             nodes.value = []
             nextTick(() => {
                 pologyList.value = [
@@ -128,8 +154,8 @@ onMounted(() => {
                 ]
                 requestData()
                 requestResult()
-            });
-        });
+            })
+        })
     }
 })
 const showLargeWindow = () => {
@@ -186,9 +212,30 @@ watch(ret, (ret: Ret) => {
 watch(res, (res: Res) => {
     const isAll = queryData.value.all === 'true'
     if (res && Object.keys(res).length) {
-        let node = { id: '1', pid: '0', label: res.title, type: res.type, originalHidden: res.hidden, hidden: isAll ? false : res.hidden, none: res.hidden, image: { unselected: iconA, selected: iconB } }
+        let node = {
+            id: '1',
+            pid: '0',
+            label: res.title,
+            type: res.type,
+            originalHidden: res.hidden,
+            hidden: isAll ? false : res.hidden,
+            none: res.hidden,
+            image: { unselected: iconA, selected: iconB },
+        }
         nodes.value.push(node)
-        let curNodes = [{ id: '1', pid: '0', label: res.title, type: res.type, originalHidden: res.hidden, hidden: isAll ? false : res.hidden, none: res.hidden, image: { unselected: iconA, selected: iconB }, child: res.child }]
+        let curNodes = [
+            {
+                id: '1',
+                pid: '0',
+                label: res.title,
+                type: res.type,
+                originalHidden: res.hidden,
+                hidden: isAll ? false : res.hidden,
+                none: res.hidden,
+                image: { unselected: iconA, selected: iconB },
+                child: res.child,
+            },
+        ]
         let nextNodes = []
         while (curNodes.length > 0) {
             for (let node0 of curNodes) {
@@ -197,7 +244,16 @@ watch(res, (res: Res) => {
                 }
                 for (let [i, r] of node0.child.entries()) {
                     if (r && (r.hidden === false || isAll)) {
-                        node = { id: node0.id + '-' + i, pid: node0.id, label: r.title, type: r.type, originalHidden: r.hidden, hidden: isAll ? false : r.hidden, none: r.hidden, image: { unselected: iconA, selected: iconB } }
+                        node = {
+                            id: node0.id + '-' + i,
+                            pid: node0.id,
+                            label: r.title,
+                            type: r.type,
+                            originalHidden: r.hidden,
+                            hidden: isAll ? false : r.hidden,
+                            none: r.hidden,
+                            image: { unselected: iconA, selected: iconB },
+                        }
                         nodes.value.push(node)
                         nextNodes.push(Object.assign(node, { child: r.child }))
                     }
@@ -257,8 +313,10 @@ watch(res, (res: Res) => {
 </script>
 
 <style lang="scss" scoped>
+@use '@/assets/style/task.scss' as *;
 .page-container {
     width: 100%;
+    height: 100%;
     display: flex;
     justify-content: space-around;
     align-items: center;
@@ -278,6 +336,7 @@ watch(res, (res: Res) => {
     .detail-left {
         flex: 1;
         overflow: hidden;
+        height: 100%;
 
         .filter {
             width: 120px;
@@ -287,8 +346,12 @@ watch(res, (res: Res) => {
     }
 
     .detail-right {
+        height: 100%;
         width: 450px;
         margin-left: 10px;
+        .detail-info {
+            height: 100%;
+        }
     }
 
     #TaskTopology {
@@ -297,11 +360,8 @@ watch(res, (res: Res) => {
     }
 
     .shrink-img {
-        width: 25px;
-        height: 25px;
-        position: absolute;
-        right: 10px;
-        top: 7px;
+        width: 20px;
+        height: 20px;
     }
 
     .detail-wrap {

@@ -1,3 +1,6 @@
+/*
+ * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ */
 package com.nctigba.observability.instance.service.impl;
 
 import java.util.HashMap;
@@ -28,7 +31,7 @@ public class MonitoringServiceImpl implements MonitoringService {
         MonitoringHandler monitoringHandler = monitoringHandlerFactory.getInstance(param.getMonitoringType());
         List<MonitoringMetric> monitoringMetricList = monitoringHandler.pointQuery(param.getQuery(), param.getTime());
         Map<String, Object> map = new HashMap<>();
-        for (MonitoringMetric monitoringMetric:monitoringMetricList) {
+        for (MonitoringMetric monitoringMetric : monitoringMetricList) {
             JSONObject metric = monitoringMetric.getMetric();
             JSONArray value = monitoringMetric.getValue();
             if (metric.containsKey("__name__")) {
@@ -50,13 +53,15 @@ public class MonitoringServiceImpl implements MonitoringService {
     @Override
     public List<Object> getRangeMonitoringData(MonitoringParam param) {
         MonitoringHandler monitoringHandler = monitoringHandlerFactory.getInstance(param.getMonitoringType());
-        List<MonitoringMetric> monitoringMetricList = monitoringHandler.rangeQuery(param.getQuery(), param.getStart(), param.getEnd(), param.getStep());
+        List<MonitoringMetric> monitoringMetricList = monitoringHandler.rangeQuery(param.getQuery(), param.getStart(),
+                param.getEnd(), param.getStep());
         if (MonitoringResultType.TABLE.name().equalsIgnoreCase(param.getType())) {
             return monitoringHandler.metricToTable(monitoringMetricList, param);
         } else if (MonitoringResultType.LINE.name().equalsIgnoreCase(param.getType())) {
             return monitoringHandler.metricToLine(monitoringMetricList, param);
         } else {
-            throw new CustomException(CustomExceptionEnum.PARAM_INVALID_ERROR,"Unsupported data format:" + param.getType());
+            throw new CustomException(CustomExceptionEnum.PARAM_INVALID_ERROR,
+                    "Unsupported data format:" + param.getType());
         }
     }
 }

@@ -1,3 +1,6 @@
+/*
+ * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ */
 package com.nctigba.observability.instance.service;
 
 import java.sql.Connection;
@@ -39,167 +42,170 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @RequiredArgsConstructor
 public class ClusterManager {
-	private final DataSource dataSource;
-	private final DefaultDataSourceCreator dataSourceCreator;
+    private final DataSource dataSource;
+    private final DefaultDataSourceCreator dataSourceCreator;
 
-	@Autowired(required = false)
-	@AutowiredType(Type.MAIN_PLUGIN)
-	private OpsFacade opsFacade;
-	@Autowired(required = false)
-	@AutowiredType(Type.MAIN_PLUGIN)
-	private HostFacade hostFacade;
-	@Autowired(required = false)
-	@AutowiredType(Type.MAIN_PLUGIN)
-	private IOpsClusterService opsClusterService;
+    @Autowired(required = false)
+    @AutowiredType(Type.MAIN_PLUGIN)
+    private OpsFacade opsFacade;
+    @Autowired(required = false)
+    @AutowiredType(Type.MAIN_PLUGIN)
+    private HostFacade hostFacade;
+    @Autowired(required = false)
+    @AutowiredType(Type.MAIN_PLUGIN)
+    private IOpsClusterService opsClusterService;
 
-	public void setCurrentDatasourceByClusterHost(String clusterId, String hostId) {
-		var ds = (DynamicRoutingDataSource) dataSource;
-		// Switch if data source exists
-		if (ds.getDataSources().containsKey(hostId)) {
-			DynamicDataSourceContextHolder.push(hostId);
-			return;
-		}
-		// Add if it does not exist
-		var clusterEntity = opsClusterService.getById(clusterId);
-		var hostEntity = hostFacade.getById(hostId);
-		ds.addDataSource(hostId, dataSourceCreator.createDataSource(new DataSourceProperty()
-				.setDriverClassName("org.opengauss.Driver")
-				.setUrl(CommonConstants.JDBC_OPENGAUSS + hostEntity.getPublicIp() + ":" + clusterEntity.getPort() + "/postgres")
-				.setUsername(clusterEntity.getDatabaseUsername()).setPassword(clusterEntity.getDatabasePassword())));
-		DynamicDataSourceContextHolder.push(hostId);
-	}
+    public void setCurrentDatasourceByClusterHost(String clusterId, String hostId) {
+        var ds = (DynamicRoutingDataSource) dataSource;
+        // Switch if data source exists
+        if (ds.getDataSources().containsKey(hostId)) {
+            DynamicDataSourceContextHolder.push(hostId);
+            return;
+        }
+        // Add if it does not exist
+        var clusterEntity = opsClusterService.getById(clusterId);
+        var hostEntity = hostFacade.getById(hostId);
+        ds.addDataSource(hostId,
+                dataSourceCreator.createDataSource(new DataSourceProperty().setDriverClassName("org.opengauss.Driver")
+                        .setUrl(CommonConstants.JDBC_OPENGAUSS + hostEntity.getPublicIp() + ":"
+                                + clusterEntity.getPort() + "/postgres")
+                        .setUsername(clusterEntity.getDatabaseUsername())
+                        .setPassword(clusterEntity.getDatabasePassword())));
+        DynamicDataSourceContextHolder.push(hostId);
+    }
 
-	public Connection getConnectionByClusterHost(String clusterId, String hostId) {
-		var clusterEntity = opsClusterService.getById(clusterId);
-		var hostEntity = hostFacade.getById(hostId);
-		String sourceURL = CommonConstants.JDBC_OPENGAUSS + hostEntity.getPublicIp() + ":" + clusterEntity.getPort() + "/postgres";
-		Properties info = new Properties();
-		info.setProperty("user", clusterEntity.getDatabaseUsername());
-		info.setProperty("password", clusterEntity.getDatabasePassword());
-		try {
-			return DriverManager.getConnection(sourceURL, info);
-		} catch (SQLException e) {
-			e.printStackTrace();
-			throw new RuntimeException("connection fail");
-		}
-	}
+    public Connection getConnectionByClusterHost(String clusterId, String hostId) {
+        var clusterEntity = opsClusterService.getById(clusterId);
+        var hostEntity = hostFacade.getById(hostId);
+        String sourceURL = CommonConstants.JDBC_OPENGAUSS + hostEntity.getPublicIp() + ":" + clusterEntity.getPort()
+                + "/postgres";
+        Properties info = new Properties();
+        info.setProperty("user", clusterEntity.getDatabaseUsername());
+        info.setProperty("password", clusterEntity.getDatabasePassword());
+        try {
+            return DriverManager.getConnection(sourceURL, info);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw new RuntimeException("connection fail");
+        }
+    }
 
-	/**
-	 * Set the current data source and manually clear it
-	 * 
-	 * @see DynamicDataSourceContextHolder#push(String)
-	 * @see ClusterManager#pool()
-	 */
-	public void setCurrentDatasource(String nodeId, String dbname) {
-		if (StringUtils.isBlank(nodeId))
-			return;
-		var ds = (DynamicRoutingDataSource) dataSource;
-		// Switch if data source exists
-		if (ds.getDataSources().containsKey(nodeId)) {
-			DynamicDataSourceContextHolder.push(nodeId);
-			return;
-		}
-		// Add if it does not exist
-		var node = getOpsNodeById(nodeId);
-		if (node == null)
-			throw new RuntimeException(CommonConstants.NODE_NOT_FOUND);
-		if (StringUtils.isBlank(dbname))
-			dbname = node.getDbName();
-		ds.addDataSource(nodeId,
-				dataSourceCreator.createDataSource(new DataSourceProperty().setDriverClassName("org.opengauss.Driver")
-						.setUrl(CommonConstants.JDBC_OPENGAUSS + node.getPublicIp() + ":" + node.getDbPort() + "/" + dbname)
-						.setUsername(node.getDbUser()).setPassword(node.getDbUserPassword())));
-		DynamicDataSourceContextHolder.push(nodeId);
-	}
+    /**
+     * Set the current data source and manually clear it
+     * 
+     * @see com.baomidou.dynamic.datasource.toolkit.DynamicDataSourceContextHolder#push(String)
+     * @see com.nctigba.observability.instance.service.ClusterManager#pool()
+     */
+    public void setCurrentDatasource(String nodeId, String dbname) {
+        if (StringUtils.isBlank(nodeId))
+            return;
+        var ds = (DynamicRoutingDataSource) dataSource;
+        // Switch if data source exists
+        if (ds.getDataSources().containsKey(nodeId)) {
+            DynamicDataSourceContextHolder.push(nodeId);
+            return;
+        }
+        // Add if it does not exist
+        var node = getOpsNodeById(nodeId);
+        if (node == null)
+            throw new RuntimeException(CommonConstants.NODE_NOT_FOUND);
+        if (StringUtils.isBlank(dbname))
+            dbname = node.getDbName();
+        ds.addDataSource(nodeId, dataSourceCreator.createDataSource(new DataSourceProperty()
+                .setDriverClassName("org.opengauss.Driver")
+                .setUrl(CommonConstants.JDBC_OPENGAUSS + node.getPublicIp() + ":" + node.getDbPort() + "/" + dbname)
+                .setUsername(node.getDbUser()).setPassword(node.getDbUserPassword())));
+        DynamicDataSourceContextHolder.push(nodeId);
+    }
 
-	public void pool() {
-		DynamicDataSourceContextHolder.poll();
-	}
+    public void pool() {
+        DynamicDataSourceContextHolder.poll();
+    }
 
-	/**
-	 * Get all cluster information
-	 */
-	public List<OpsClusterVO> getAllOpsCluster() {
-		try {
-			if (opsFacade != null)
-				return opsFacade.listCluster();
-		} catch (Exception e) {
-			log.info("get all ops cluster fail:{}", e.getMessage());
-		}
-		return Collections.emptyList();
-	}
+    /**
+     * Get all cluster information
+     */
+    public List<OpsClusterVO> getAllOpsCluster() {
+        try {
+            if (opsFacade != null)
+                return opsFacade.listCluster();
+        } catch (Exception e) {
+            log.info("get all ops cluster fail:{}", e.getMessage());
+        }
+        return Collections.emptyList();
+    }
 
-	public String getOpsClusterIdByNodeId(String nodeId) {
-		if ("0".equals(nodeId))
-			return "0";
-		for (OpsClusterVO cluster : getAllOpsCluster()) {
-			if (cluster.getClusterNodes().stream().anyMatch(node -> {
-				return nodeId.equals(node.getNodeId());
-			}))
-				return cluster.getClusterId();
-		}
-		throw new CustomException("cluster not found");
-	}
+    public String getOpsClusterIdByNodeId(String nodeId) {
+        if ("0".equals(nodeId))
+            return "0";
+        for (OpsClusterVO cluster : getAllOpsCluster()) {
+            if (cluster.getClusterNodes().stream().anyMatch(node -> {
+                return nodeId.equals(node.getNodeId());
+            }))
+                return cluster.getClusterId();
+        }
+        throw new CustomException("cluster not found");
+    }
 
-	@Data
-	@NoArgsConstructor
-	@EqualsAndHashCode(callSuper = true)
-	public static class OpsClusterNodeVOSub extends OpsClusterNodeVO {
-		private String version;
+    @Data
+    @NoArgsConstructor
+    @EqualsAndHashCode(callSuper = true)
+    public static class OpsClusterNodeVOSub extends OpsClusterNodeVO {
+        private String version;
 
-		public OpsClusterNodeVOSub(OpsClusterNodeVO opsClusterNodeVO, String version) {
-			BeanUtils.copyProperties(opsClusterNodeVO, this);
-			this.version = version;
-		}
+        public OpsClusterNodeVOSub(OpsClusterNodeVO opsClusterNodeVO, String version) {
+            BeanUtils.copyProperties(opsClusterNodeVO, this);
+            this.version = version;
+        }
 
-		public Connection connection() throws SQLException {
-			var conn = DriverManager.getConnection(
-					CommonConstants.JDBC_OPENGAUSS + getPublicIp() + ":" + getDbPort() + "/" + getDbName(), getDbUser(),
-					getDbUserPassword());
-			try (var preparedStatement = conn.prepareStatement("select 1");
-					var rs = preparedStatement.executeQuery();) {
-				return conn;
-			} catch (Exception e) {
-				log.error("test connection fail:{}", e.getMessage());
-				throw e;
-			}
-		}
-	}
+        public Connection connection() throws SQLException {
+            var conn = DriverManager.getConnection(
+                    CommonConstants.JDBC_OPENGAUSS + getPublicIp() + ":" + getDbPort() + "/" + getDbName(), getDbUser(),
+                    getDbUserPassword());
+            try (var preparedStatement = conn.prepareStatement("select 1");
+                    var rs = preparedStatement.executeQuery();) {
+                return conn;
+            } catch (Exception e) {
+                log.error("test connection fail:{}", e.getMessage());
+                throw e;
+            }
+        }
+    }
 
-	/**
-	 * Directly obtain the connection of the specified node
-	 */
-	public Connection getConnectionByNodeId(String nodeId) throws SQLException {
-		return getOpsNodeById(nodeId).connection();
-	}
+    /**
+     * Directly obtain the connection of the specified node
+     */
+    public Connection getConnectionByNodeId(String nodeId) throws SQLException {
+        return getOpsNodeById(nodeId).connection();
+    }
 
-	public OpsClusterVO getOpsClusterById(String clusterId) {
-		List<OpsClusterVO> opsClusterVOList = getAllOpsCluster();
-		if (CollectionUtils.isEmpty(opsClusterVOList))
-			return null;
-		for (OpsClusterVO cluster : opsClusterVOList)
-			if (cluster.getClusterId().equals(clusterId))
-				return cluster;
-		return null;
-	}
+    public OpsClusterVO getOpsClusterById(String clusterId) {
+        List<OpsClusterVO> opsClusterVOList = getAllOpsCluster();
+        if (CollectionUtils.isEmpty(opsClusterVOList))
+            return null;
+        for (OpsClusterVO cluster : opsClusterVOList)
+            if (cluster.getClusterId().equals(clusterId))
+                return cluster;
+        return null;
+    }
 
-	/**
-	 * Get the specified node information
-	 */
-	public OpsClusterNodeVOSub getOpsNodeById(String nodeId) {
-		List<OpsClusterVO> opsClusterVOList = getAllOpsCluster();
-		if (CollectionUtils.isEmpty(opsClusterVOList))
-			throw new CustomException(CommonConstants.NODE_NOT_FOUND);
-		for (OpsClusterVO cluster : opsClusterVOList) {
-			List<OpsClusterNodeVO> nodes = cluster.getClusterNodes();
-			if (CollectionUtils.isEmpty(nodes))
-				continue;
-			for (OpsClusterNodeVO clusterNode : nodes) {
-				if (nodeId.equals(clusterNode.getNodeId())) {
-					return new OpsClusterNodeVOSub(clusterNode, cluster.getVersion());
-				}
-			}
-		}
-		throw new CustomException(CommonConstants.NODE_NOT_FOUND);
-	}
+    /**
+     * Get the specified node information
+     */
+    public OpsClusterNodeVOSub getOpsNodeById(String nodeId) {
+        List<OpsClusterVO> opsClusterVOList = getAllOpsCluster();
+        if (CollectionUtils.isEmpty(opsClusterVOList))
+            throw new CustomException(CommonConstants.NODE_NOT_FOUND);
+        for (OpsClusterVO cluster : opsClusterVOList) {
+            List<OpsClusterNodeVO> nodes = cluster.getClusterNodes();
+            if (CollectionUtils.isEmpty(nodes))
+                continue;
+            for (OpsClusterNodeVO clusterNode : nodes) {
+                if (nodeId.equals(clusterNode.getNodeId())) {
+                    return new OpsClusterNodeVOSub(clusterNode, cluster.getVersion());
+                }
+            }
+        }
+        throw new CustomException(CommonConstants.NODE_NOT_FOUND);
+    }
 }

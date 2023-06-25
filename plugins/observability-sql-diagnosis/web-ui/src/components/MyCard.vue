@@ -1,26 +1,55 @@
-<script setup lang="ts">
-import { useDebounceFn } from '@vueuse/core';
-import { useWidthOverflow } from '../hooks/dom';
+<template>
+    <div class="card">
+        <div class="card-header">
+            <div class="icon"></div>
+            <div class="title">{{ props.title }}</div>
+            <div class="buttons">
+                <slot name="headerExtend"></slot>
+            </div>
+        </div>
+        <div
+            class="card-body"
+            :class="{ 'is-collapse': isCollapse }"
+            ref="bodyRef"
+            :style="{
+                resize: props.resize ? 'vertical' : 'none',
+            }"
+        >
+            <div style="position: relative; height: 100%">
+                <slot />
+            </div>
+        </div>
+    </div>
+</template>
 
-const props = withDefaults(defineProps<{
-    title: string,
-    legend?: { color: string, name: string }[],
-    bodyPadding?: boolean,
-    height?: string | number,
-    collapse?: boolean,
-    collapsed?: boolean,
-    skipBodyHeight?: boolean, // do not set body height
-    // enable resize bodyHeight
-    resize?: boolean,
-    maxBodyHeight?: string,
-    overflowHidden?: boolean,
-}>(), {
-    bodyPadding: true,
-    maxBodyHeight: 'unset',
-    overflowHidden: true,
-})
+<script setup lang="ts">
+import { useDebounceFn } from '@vueuse/core'
+import { useWidthOverflow } from '@/hooks/dom'
+
+const props = withDefaults(
+    defineProps<{
+        title: string
+        legend?: { color: string; name: string }[]
+        bodyPadding?: boolean
+        height?: string | number
+        collapse?: boolean
+        skipBodyHeight?: boolean // do not set body height
+        // enable resize bodyHeight
+        resize?: boolean
+        maxBodyHeight?: string
+        overflowHidden?: boolean
+        withTable?: boolean
+    }>(),
+    {
+        bodyPadding: true,
+        maxBodyHeight: 'unset',
+        overflowHidden: true,
+        withTable: false,
+    }
+)
 const hidden = ref(props.overflowHidden ? 'hidden' : 'unset')
-const padding = ref(props.bodyPadding ? "24px 16px" : "0px");
+const padding = ref(props.bodyPadding ? '24px 16px' : '0px')
+const withTableBorderRadius = ref(props.withTable ? '2px 2px 0 0' : '2px')
 const bodyRef = ref<HTMLDivElement>()
 const bodyHeight = ref(`calc(100% - ${props.bodyPadding ? 90 : 42}px)`)
 const minBodyHeight = ref(bodyHeight.value)
@@ -30,9 +59,8 @@ onMounted(() => {
         if (!props.skipBodyHeight && bodyRef && bodyRef.value) {
             bodyHeight.value = `${bodyRef.value.offsetHeight + (props.bodyPadding && !props.collapse ? 48 : 0)}px`
         }
-        if (props.collapsed) isCollapse.value = true
         if (bodyRef && bodyRef.value && props.resize && window && 'ResizeObserver' in window) {
-            const resizeObserver = new ResizeObserver(entries => {
+            const resizeObserver = new ResizeObserver((entries) => {
                 for (const entry of entries) {
                     if (!collapsing.value) {
                         bodyHeight.value = `${entry.contentRect.height}px`
@@ -55,8 +83,8 @@ const height = computed(() => {
     if (!props.height) {
         return '100%'
     }
-    return (["%", "px"].includes(`${props.height}`)) ? props.height : `${props.height}px`
-});
+    return ['%', 'px'].includes(`${props.height}`) ? props.height : `${props.height}px`
+})
 // ctl collapse
 const isCollapse = ref(false)
 // skip ResizeObserver event when collapsing
@@ -81,87 +109,38 @@ const extraRef = ref()
 const dropdownRef = ref()
 const { overflow, isFinish, trigger } = useWidthOverflow(extraRef, dropdownRef)
 defineExpose({
-    trigger
-})
-watch(overflow, o => {
-    console.log(props.title + ':', o)
+    trigger,
 })
 </script>
 
-<template>
-<div class="og-card">
-    <div class="og-card-header">
-        <span class="og-card-header--title">
-            <svg-icon
-                v-if="props.collapse"
-                name="arrow"
-                :class="{'is-collapse': isCollapse}"
-                @click="toggleCollapse"
-            />
-            {{ props.title }}
-        </span>
-        <slot name="extra">
-            <div
-                ref="extraRef"
-                class="og-card-header--extra"
-                :style="{justifyContent: overflow || !isFinish ? 'flex-start' : 'flex-end'}"
-            >
-                <el-dropdown ref="dropdownRef" :hide-on-click="false" :max-height="200" style="position: absolute;">
-                    <div></div>
-                    <template #dropdown>
-                        <el-dropdown-menu>
-                            <el-dropdown-item v-for="l in props.legend" :key="l.name">
-                                <div class="hover">
-                                    <div :style="{ background: l.color }" class="rect"></div>
-                                    <span :title="l.name">{{ l.name }}</span>
-                                </div>
-                            </el-dropdown-item>
-                        </el-dropdown-menu>
-                    </template>
-                </el-dropdown>
-                <div v-for="l in props.legend" :key="l.name">
-                    <div :style="{ background: l.color }" class="rect"></div>
-                    <span :title="l.name">{{ l.name }}</span>
-                </div>
-            </div>
-            <span v-show="overflow">...</span>
-        </slot>
-    </div>
-    <div
-        class="og-card-body"
-        :class="{'is-collapse': isCollapse}"
-        ref="bodyRef"
-        :style="{
-            resize: props.resize ? 'vertical' : 'none',
-        }"
-    >
-        <div>
-            <slot />
-        </div>
-    </div>
-</div>
-</template>   
-
 <style scoped lang="scss">
-.og-card {
+.card {
     box-sizing: border-box;
     height: v-bind(height);
-    border: 1px solid var(--el-border-color);
-    border-radius: 8px;
+    border: 1px solid var(--el-og-border-color);
+    border-radius: v-bind(withTableBorderRadius);
     overflow: v-bind(hidden);
-    &-header {
+    .card-header {
         display: flex;
         overflow: hidden;
-        background-color: var(--color-neutral-2);
         justify-content: space-between;
-        padding: 0 16px;
+        padding: 0 15px;
         align-items: center;
         min-width: 0;
-        height: 39px;
-        border-bottom: 1px solid var(--el-border-color);
-        &--title {
-            font-weight: 700;
-            font-size: 16px;
+        height: 40px;
+        border-bottom: 1px solid var(--el-og-border-color);
+        background-color: var(--background-color-1);
+        .icon {
+            width: 4px;
+            height: 14px;
+            background: var(--primary-6);
+            border-radius: 1px;
+            margin-right: 4px;
+        }
+        .title {
+            font-weight: 500;
+            font-size: 14px;
+            line-height: 30px;
             flex-shrink: 0;
             > svg {
                 position: relative;
@@ -170,6 +149,34 @@ watch(overflow, o => {
                 transition: transform var(--el-transition-duration);
                 &.is-collapse {
                     transform: rotate(-90deg);
+                }
+            }
+        }
+        .tips {
+            margin-left: 6px;
+            padding-top: 2px;
+        }
+        .buttons {
+            position: relative;
+            display: flex;
+            justify-content: flex-end;
+            margin-left: 16px;
+            overflow: hidden;
+            flex: 1;
+            min-width: 0;
+            align-items: center;
+            font-size: 12px;
+            height: 40px;
+            > div {
+                display: flex;
+                flex-shrink: 0;
+                margin-right: 8px;
+                min-width: 0;
+                > span {
+                    margin-left: 4px;
+                }
+                &:last-of-type {
+                    margin-right: 0;
                 }
             }
         }
@@ -198,12 +205,13 @@ watch(overflow, o => {
         }
     }
     &-body {
+        position: relative;
         box-sizing: border-box;
         height: v-bind(bodyHeight);
         min-height: v-bind(minBodyHeight);
         max-height: v-bind(maxBodyHeight);
         overflow: v-bind(hidden);
-        background-color: var(--el-bg-color-overlay);
+        background-color: var(--el-bg-color-og);
         border-radius: 0 0 8px 8px;
         will-change: height;
         > div {
@@ -212,7 +220,7 @@ watch(overflow, o => {
             height: v-bind(bodyHeight);
         }
         &.is-collapse {
-            height: 0!important;
+            height: 0 !important;
         }
     }
 }

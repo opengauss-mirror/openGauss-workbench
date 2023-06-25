@@ -102,7 +102,7 @@ public class OffCpuAnaly implements ResultAnalysis {
                 taskResult.setTaskid(task.getId());
                 taskResult.setResultType(ResultType.ColdFunction);
                 taskResult.setFrameType(FrameType.Suggestion);
-                taskResult.setState(ResultState.Suggestions);
+                taskResult.setState(TaskResult.ResultState.Suggestions);
                 taskResult.setBearing(bearing.top);
                 taskResult.setData(Map.of(CommonConstants.TITLE, LocaleString.format("ColdFunction.title"), "suggestions", LocaleString.format("ColdFunction.name")));
                 resultMapper.insert(taskResult);

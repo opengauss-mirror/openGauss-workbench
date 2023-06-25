@@ -3,25 +3,18 @@
         "browser": true,
         "es2021": true
     },
-    "extends": [
-        "plugin:vue/vue3-essential",
-        "standard",
-        "./.eslintrc-auto-import.json"
-    ],
+    "extends": ["plugin:vue/vue3-essential", "standard", "./.eslintrc-auto-import.json"],
     "parserOptions": {
         "ecmaVersion": "latest",
         "parser": "@typescript-eslint/parser",
         "sourceType": "module"
     },
-    "plugins": [
-        "vue",
-        "@typescript-eslint"
-    ],
+    "plugins": ["vue", "@typescript-eslint"],
     "rules": {
         "prefer-regex-literals": 0,
         "vue/multi-word-component-names": 0,
         "no-control-regex": 0,
-        "indent": ["error", 4],
+        "indent": ["error", 4, { "SwitchCase": 1 }],
         "quotes": 0,
         "comma-dangle": 0,
         "semi": 0,
@@ -29,7 +22,13 @@
         "space-before-function-paren": 0,
         "prefer-const": 0,
         "no-trailing-spaces": 0,
-        "func-call-spacing": 0
+        "func-call-spacing": 0,
+        "no-restricted-imports": [
+            "error",
+            {
+                "patterns": [".*"]
+            }
+        ]
     },
     "ignorePatterns": ["src/**/*.d.ts"]
 }

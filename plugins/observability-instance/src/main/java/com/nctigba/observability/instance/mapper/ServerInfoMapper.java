@@ -1,3 +1,6 @@
+/*
+ * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ */
 package com.nctigba.observability.instance.mapper;
 
 import org.apache.ibatis.annotations.Mapper;
@@ -6,7 +9,7 @@ import com.nctigba.observability.instance.entity.ServerInfoEntity;
 
 /**
  * <p>
- *  Mapper interface
+ * Mapper interface
  * </p>
  *
  * @author auto

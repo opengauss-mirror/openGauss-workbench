@@ -1,3 +1,7 @@
+///
+/// Copyright (c) 2023 Huawei Technologies Co.,Ltd.
+///
+
 import axios, { AxiosError, AxiosRequestConfig, AxiosResponse } from "axios";
 
 const observabilityBaseURL = process.env.mode === "production" ? "/plugins/observability-sql-diagnosis" : "";

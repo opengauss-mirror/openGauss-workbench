@@ -23,9 +23,6 @@
                     <el-form-item :label="t('install.machine')" prop="nodeId">
                         <el-input readonly v-model="formData.label" style="width: 200px; margin: 0 4px" />
                     </el-form-item>
-                    <!-- <el-form-item :label="t('install.rootPWD')" prop="rootPassword">
-                        <el-input v-model="formData.rootPassword" show-password style="width: 200px; margin: 0 4px" />
-                    </el-form-item> -->
                 </el-form>
             </div>
 

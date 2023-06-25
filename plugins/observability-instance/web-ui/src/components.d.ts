@@ -8,6 +8,7 @@ export {}
 declare module '@vue/runtime-core' {
   export interface GlobalComponents {
     ClusterCascader: typeof import('./components/ClusterCascader.vue')['default']
+    copy: typeof import('./components/IndexBar copy.vue')['default']
     ElAside: typeof import('element-plus/es')['ElAside']
     ElButton: typeof import('element-plus/es')['ElButton']
     ElCascader: typeof import('element-plus/es')['ElCascader']
@@ -18,9 +19,6 @@ declare module '@vue/runtime-core' {
     ElContainer: typeof import('element-plus/es')['ElContainer']
     ElDatePicker: typeof import('element-plus/es')['ElDatePicker']
     ElDialog: typeof import('element-plus/es')['ElDialog']
-    ElDropdown: typeof import('element-plus/es')['ElDropdown']
-    ElDropdownItem: typeof import('element-plus/es')['ElDropdownItem']
-    ElDropdownMenu: typeof import('element-plus/es')['ElDropdownMenu']
     ElForm: typeof import('element-plus/es')['ElForm']
     ElFormItem: typeof import('element-plus/es')['ElFormItem']
     ElIcon: typeof import('element-plus/es')['ElIcon']
@@ -48,12 +46,16 @@ declare module '@vue/runtime-core' {
     ElTooltip: typeof import('element-plus/es')['ElTooltip']
     ElTree: typeof import('element-plus/es')['ElTree']
     ElUpload: typeof import('element-plus/es')['ElUpload']
+    IndexBar: typeof import('./components/IndexBar.vue')['default']
+    IndexLine: typeof import('./components/echarts/IndexLine.vue')['default']
+    LazyLine: typeof import('./components/echarts/LazyLine.vue')['default']
     Machines: typeof import('./components/Machines.vue')['default']
     MonacoEditor: typeof import('./components/MonacoEditor.vue')['default']
     MyBar: typeof import('./components/MyBar.vue')['default']
     MyBarLine: typeof import('./components/MyBarLine.vue')['default']
     MyBreadcrumb: typeof import('./layout/MyBreadcrumb.vue')['default']
     MyCard: typeof import('./components/MyCard.vue')['default']
+    MyCard2: typeof import('./components/MyCard2.vue')['default']
     MyDatePicker: typeof import('./components/MyDatePicker.vue')['default']
     MyHeader: typeof import('./layout/MyHeader.vue')['default']
     MyLine: typeof import('./components/MyLine.vue')['default']
@@ -67,5 +69,6 @@ declare module '@vue/runtime-core' {
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     SvgIcon: typeof import('./components/SvgIcon.vue')['default']
+    WDRBar: typeof import('./components/WDRBar.vue')['default']
   }
 }

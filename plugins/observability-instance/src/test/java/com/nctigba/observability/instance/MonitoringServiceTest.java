@@ -1,3 +1,6 @@
+/*
+ * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ */
 package com.nctigba.observability.instance;
 
 import com.alibaba.fastjson.JSONArray;
@@ -24,13 +27,13 @@ public class MonitoringServiceTest {
     private MonitoringService monitoringService;
 
     @Test
-    public void testGetPointMonitoringAction () {
+    public void testGetPointMonitoringAction() {
         Mockito.doReturn(mockPointMonitoringData()).when(monitoringService).getPointMonitoringData(any());
         Mockito.doReturn(mockMonitoringMetricData()).when(monitoringService).getCurrentMonitoringData(any());
         Mockito.doReturn(mockRangeMonitoringData()).when(monitoringService).getRangeMonitoringData(any());
     }
 
-    private List<MonitoringMetric> mockMonitoringMetricData () {
+    private List<MonitoringMetric> mockMonitoringMetricData() {
         List<MonitoringMetric> monitoringMetricList = new ArrayList<>();
         MonitoringMetric monitoringMetric1 = new MonitoringMetric();
         monitoringMetric1.setValue(new JSONArray());
@@ -43,14 +46,14 @@ public class MonitoringServiceTest {
         return monitoringMetricList;
     }
 
-    private List<Object> mockRangeMonitoringData () {
+    private List<Object> mockRangeMonitoringData() {
         List<Object> objectList = new ArrayList<>();
         objectList.add(new Object());
         objectList.add(new Object());
         return objectList;
     }
 
-    private Map<String, Object> mockPointMonitoringData () {
+    private Map<String, Object> mockPointMonitoringData() {
         Map<String, Object> map = new HashMap<>();
         JSONObject metric = new JSONObject();
         map.put(metric.getString("__name__"), metric);

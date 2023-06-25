@@ -6,7 +6,7 @@ import { useI18n } from "vue-i18n";
 import { useMonitorStore } from "../../store/monitor";
 import { useWindowStore } from "../../store/window";
 import PerformanceLoad from "./performance_load/Index.vue";
-import TopSql from "./top_sql/Index.vue";
+import TopSql from "./topSQL/Index.vue";
 import Wdr from "./wdr/Index.vue";
 import { i18n } from "../../i18n";
 import ogRequest from "../../request";

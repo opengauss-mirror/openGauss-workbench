@@ -1,3 +1,6 @@
+/*
+ * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ */
 package com.nctigba.observability.instance.service.provider;
 
 import java.util.List;
@@ -18,7 +21,7 @@ import org.springframework.stereotype.Service;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 import com.jcraft.jsch.Session;
 import com.nctigba.observability.instance.entity.OpsWdrEntity.WdrScopeEnum;
-import com.nctigba.observability.instance.service.ClusterOpsProviderManager.OpenGaussSupportOSEnum;
+import com.nctigba.observability.instance.service.provider.ClusterOpsProviderManager.OpenGaussSupportOSEnum;
 
 import cn.hutool.core.util.StrUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -30,49 +33,49 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Service
 public class LiteOpsProvider extends AbstractOpsProvider {
-	@Autowired(required = false)
-	@AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
-	private HostUserFacade hostUserFacade;
-	@Autowired(required = false)
-	@AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
-	private HostFacade hostFacade;
-	@Autowired
-	@AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
-	private JschUtil jschUtil;
+    @Autowired(required = false)
+    @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
+    private HostUserFacade hostUserFacade;
+    @Autowired(required = false)
+    @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
+    private HostFacade hostFacade;
+    @Autowired
+    @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
+    private JschUtil jschUtil;
 
-	@Override
-	public OpenGaussVersionEnum version() {
-		return OpenGaussVersionEnum.LITE;
-	}
+    @Override
+    public OpenGaussVersionEnum version() {
+        return OpenGaussVersionEnum.LITE;
+    }
 
-	@Override
-	public OpenGaussSupportOSEnum os() {
-		return OpenGaussSupportOSEnum.CENTOS_X86_64;
-	}
+    @Override
+    public OpenGaussSupportOSEnum os() {
+        return OpenGaussSupportOSEnum.CENTOS_X86_64;
+    }
 
-	@Override
-	public void enableWdrSnapshot(Session session, OpsClusterEntity clusterEntity,
-			List<OpsClusterNodeEntity> opsClusterNodeEntities, WdrScopeEnum scope, String dataPath) {
-		if (StrUtil.isEmpty(dataPath)) {
-			dataPath = opsClusterNodeEntities.stream().filter(node -> node.getClusterRole() == ClusterRoleEnum.MASTER)
-					.findFirst().orElseThrow(() -> new OpsException("Master node configuration not found"))
-					.getDataPath();
-		}
+    @Override
+    public void enableWdrSnapshot(Session session, OpsClusterEntity clusterEntity,
+            List<OpsClusterNodeEntity> opsClusterNodeEntities, WdrScopeEnum scope, String dataPath) {
+        if (StrUtil.isEmpty(dataPath)) {
+            dataPath = opsClusterNodeEntities.stream().filter(node -> node.getClusterRole() == ClusterRoleEnum.MASTER)
+                    .findFirst().orElseThrow(() -> new OpsException("Master node configuration not found"))
+                    .getDataPath();
+        }
 
-		String command = "gs_guc reload -D " + dataPath + " -c \"enable_wdr_snapshot=on\"";
+        String command = "gs_guc reload -D " + dataPath + " -c \"enable_wdr_snapshot=on\"";
 
-		try {
-			JschResult jschResult = jschUtil.executeCommand(command, session);
-			if (0 != jschResult.getExitCode()) {
-				log.error("set enable_wdr_snapshot parameter failed, exit code: {}, error message: {}",
-						jschResult.getExitCode(), jschResult.getResult());
-				Thread.currentThread().interrupt();
-				throw new OpsException(CommonConstants.FAILED_SET_ENABLE_WDR_SNAPSHOT_PARAMETER);
-			}
-		} catch (Exception e) {
-			log.error(CommonConstants.FAILED_SET_ENABLE_WDR_SNAPSHOT_PARAMETER, e);
-			Thread.currentThread().interrupt();
-			throw new OpsException(CommonConstants.FAILED_SET_ENABLE_WDR_SNAPSHOT_PARAMETER);
-		}
-	}
+        try {
+            JschResult jschResult = jschUtil.executeCommand(command, session);
+            if (0 != jschResult.getExitCode()) {
+                log.error("set enable_wdr_snapshot parameter failed, exit code: {}, error message: {}",
+                        jschResult.getExitCode(), jschResult.getResult());
+                Thread.currentThread().interrupt();
+                throw new OpsException(CommonConstants.FAILED_SET_ENABLE_WDR_SNAPSHOT_PARAMETER);
+            }
+        } catch (Exception e) {
+            log.error(CommonConstants.FAILED_SET_ENABLE_WDR_SNAPSHOT_PARAMETER, e);
+            Thread.currentThread().interrupt();
+            throw new OpsException(CommonConstants.FAILED_SET_ENABLE_WDR_SNAPSHOT_PARAMETER);
+        }
+    }
 }

@@ -1,3 +1,6 @@
+/*
+ * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ */
 package com.nctigba.observability.instance.entity;
 
 import java.time.LocalDateTime;
@@ -11,7 +14,7 @@ import lombok.EqualsAndHashCode;
 
 /**
  * <p>
- *    ServerInfo
+ * ServerInfo
  * </p>
  *
  * @author liudm@vastdata.com.cn
@@ -42,6 +45,5 @@ public class ServerInfoEntity implements Serializable {
     private LocalDateTime createTime;
 
     private LocalDateTime updateTime;
-
 
 }

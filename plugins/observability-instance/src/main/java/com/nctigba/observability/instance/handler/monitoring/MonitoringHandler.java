@@ -1,3 +1,6 @@
+/*
+ * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ */
 package com.nctigba.observability.instance.handler.monitoring;
 
 import java.util.List;
@@ -47,7 +50,7 @@ public interface MonitoringHandler {
      * Convert indicator data format to line chart
      *
      * @param rangeMetricList Range Indicator List
-     * @param param query parameters
+     * @param param           query parameters
      * @return Indicator set in polyline format
      */
     List<Object> metricToLine(List<MonitoringMetric> rangeMetricList, MonitoringParam param);

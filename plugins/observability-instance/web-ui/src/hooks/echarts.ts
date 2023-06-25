@@ -1,11 +1,15 @@
-import { EChartsOption } from "echarts";
-import { ECharts } from "echarts/core";
-import { Ref } from "vue";
-import { useMonitorStore } from "../store/monitor";
+///
+/// Copyright (c) 2023 Huawei Technologies Co.,Ltd.
+///
+
+import { EChartsOption } from 'echarts'
+import { ECharts } from 'echarts/core'
+import { Ref } from 'vue'
+import { useMonitorStore } from '@/store/monitor'
 
 type XAxisType = EChartsOption['XAXisOption'] & { data: string[] }
 
-const monitorStore = useMonitorStore()
+let monitorStore: any
 
 export const brushMap = reactive<Record<string, any>>({})
 const toggleBrush = (brushType: string | boolean, uuid: string) => {
@@ -14,7 +18,7 @@ const toggleBrush = (brushType: string | boolean, uuid: string) => {
         key: 'brush',
         brushOption: {
             brushType,
-        }
+        },
     })
     brushMap[uuid]['range'].start = ''
     brushMap[uuid]['range'].end = ''
@@ -33,18 +37,21 @@ export const useClearBrushSelect = (uuid: string) => {
     brushMap[uuid]['chart']?.dispatchAction({
         type: 'brush',
         command: 'clear',
-        areas: []
+        areas: [],
     })
     // toggleBrush(false, uuid)
     addBrushEvent(uuid)
 }
 export const useRange = (uuid: string) => {
     const range = ref({ start: '', end: '' })
-    watch(() => brushMap[uuid], m => {
-        if (m) {
-            range.value = m['range']
+    watch(
+        () => brushMap[uuid],
+        (m) => {
+            if (m) {
+                range.value = m['range']
+            }
         }
-    })
+    )
     return range
 }
 
@@ -55,25 +62,25 @@ export const useRange = (uuid: string) => {
  * @returns range
  */
 export const useRangeXAixsByBrush = (myChart: ECharts, uuid: string) => {
+    monitorStore = useMonitorStore(uuid)
     brushMap[uuid] = Object.create(null)
     brushMap[uuid]['range'] = shallowReactive({
         start: '',
-        end: ''
+        end: '',
     })
     brushMap[uuid]['chart'] = myChart
     addBrushEvent(uuid)
+
     const brushEnd = (params: any) => {
         const option = myChart.getOption() as EChartsOption
         const xAxis = option.xAxis as XAxisType | XAxisType[]
         const xData = Array.isArray(xAxis) ? xAxis[0].data : xAxis.data
-        if (params.areas[0]) {
-            brushMap[uuid]['range'].start = xData[myChart.convertFromPixel({ xAxisIndex: 0 }, params.areas[0].range[0])]
-            brushMap[uuid]['range'].end = xData[myChart.convertFromPixel({ xAxisIndex: 0 }, params.areas[0].range[1])]
-            if (monitorStore.tab === 0) {
-                monitorStore.filters[0].rangeTime = -1
-                monitorStore.filters[0].time = [new Date(brushMap[uuid]['range'].start), new Date(brushMap[uuid]['range'].end)]
-            }
-        }
+
+        monitorStore.timeType = 'CUSTOM'
+        monitorStore.timeRange = [
+            xData[myChart.convertFromPixel({ xAxisIndex: 0 }, params.areas[0].range[0])],
+            xData[myChart.convertFromPixel({ xAxisIndex: 0 }, params.areas[0].range[1])],
+        ]
     }
     myChart.off('brushEnd', brushEnd)
     myChart.on('brushEnd', brushEnd)
@@ -84,16 +91,16 @@ const toggleDataZoomBrush = (myChart: ECharts, a: boolean) => {
     myChart.dispatchAction({
         type: 'takeGlobalCursor',
         key: 'dataZoomSelect',
-        dataZoomSelectActive: a
+        dataZoomSelectActive: a,
     })
 }
 
 const toggleDataZoomSelect = (myChart: ECharts, a: boolean) => {
-    toggleDataZoomBrush(myChart, a);
+    toggleDataZoomBrush(myChart, a)
 }
 
 const watchBrush = (myChart: ECharts) => {
-    const startBrush = (params: { offsetX: number, offsetY: number }) => {
+    const startBrush = (params: { offsetX: number; offsetY: number }) => {
         if (myChart.containPixel('grid', [params.offsetX, params.offsetY])) {
             toggleDataZoomSelect(myChart, true)
             myChart.getZr().off('mousedown', startBrush)
@@ -119,12 +126,12 @@ const addZoomEvent = (myChart: ECharts, inZoom: Ref<boolean>) => {
         const start = params.batch[0].startValue
         const end = params.batch[0].endValue
         const option = myChart.getOption() as any
-        monitorStore.timeRange = [option.xAxis[0].data[start], option.xAxis[0].data[end]]
-        monitorStore.brushRange = [start, end]
+        monitorStore.manualRangeSelection([option.xAxis[0].data[start], option.xAxis[0].data[end]])
     })
 }
-export const useDataZoom = (myChart: ECharts) => {
+export const useDataZoom = (myChart: ECharts, tabId: string) => {
     const inZoom = ref(false)
+    monitorStore = useMonitorStore(tabId)
     watchBrush(myChart)
     addZoomEvent(myChart, inZoom)
     return {

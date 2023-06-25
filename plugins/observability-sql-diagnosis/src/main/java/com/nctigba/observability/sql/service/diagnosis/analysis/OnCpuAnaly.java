@@ -102,7 +102,7 @@ public class OnCpuAnaly implements ResultAnalysis {
                 taskResult.setTaskid(task.getId());
                 taskResult.setResultType(ResultType.HotFunction);
                 taskResult.setFrameType(FrameType.Suggestion);
-                taskResult.setState(ResultState.Suggestions);
+                taskResult.setState(TaskResult.ResultState.Suggestions);
                 taskResult.setBearing(bearing.top);
                 taskResult.setData(Map.of(CommonConstants.TITLE, LocaleString.format("HotFunction.title"), "suggestions", LocaleString.format("HotFunction.name")));
                 resultMapper.insert(taskResult);

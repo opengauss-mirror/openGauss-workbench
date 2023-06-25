@@ -5,7 +5,7 @@ import { useMonitorStore } from '../../../store/monitor'
 import TrackSlowLog from './TrackSlowLog.vue'
 import TrackTasks from './TrackTasks.vue'
 import { i18n } from '../../../i18n'
-import Install from '../../datasource/install/Index.vue';
+import Install from '../../datasource/install/Index.vue'
 
 const clusterNodeId = ref()
 
@@ -47,7 +47,7 @@ const toggleCollapse = () => {
             <div style="height: 8px"></div>
             <Install />
         </el-aside>
-        <el-main style="position: relative;padding-top: 0px;">
+        <el-main style="position: relative; padding-top: 0px">
             <div>
                 <div style="position: absolute; left: 22px; top: 12px; z-index: 9999" @click="toggleCollapse">
                     <el-icon v-if="!isCollapse" size="20px"><Fold /></el-icon>
@@ -126,14 +126,6 @@ const toggleCollapse = () => {
         > button {
             margin-right: 4px;
         }
-    }
-
-    :deep(.el-range-input) {
-        background-color: $og-background-color;
-    }
-
-    :deep(.el-date-editor--datetimerange) {
-        background-color: $og-background-color;
     }
 }
 .divider {

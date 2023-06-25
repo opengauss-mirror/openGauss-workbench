@@ -1,3 +1,6 @@
+/*
+ * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ */
 package com.nctigba.observability.instance.util;
 
 import org.apache.commons.lang3.StringUtils;
@@ -20,7 +23,8 @@ public class HttpUtils {
      * Send a request for the GET method to the specified URL
      *
      * @param url   URL
-     * @param param Request parameters, which should be in the form of name1=value1&name2=value2.
+     * @param param Request parameters, which should be in the form of
+     *              name1=value1&name2=value2.
      * @return Response result of the remote resource represented
      */
     public static String sendGet(String url, String param) {
@@ -30,8 +34,9 @@ public class HttpUtils {
     /**
      * Send a request for the GET method to the specified URL
      *
-     * @param url     URL
-     * @param param   Request parameters, which should be in the form of name1=value1&name2=value2.
+     * @param url         URL
+     * @param param       Request parameters, which should be in the form of
+     *                    name1=value1&name2=value2.
      * @param contentType Encoding type
      * @return Response result of the remote resource represented
      */
@@ -52,7 +57,6 @@ public class HttpUtils {
             while ((line = in.readLine()) != null) {
                 result.append(line);
             }
-            log.info("recv - {}", result);
         } catch (Exception e) {
             log.error("use HttpsUtil.sendGet Exception, url=" + url + ",param=" + param, e);
         } finally {

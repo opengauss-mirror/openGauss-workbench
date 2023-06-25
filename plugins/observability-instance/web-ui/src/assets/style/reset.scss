@@ -1,5 +1,8 @@
+/**
+ * Copyright (c) 2023 Huawei Technologies Co.,Ltd.
+ */
 @use 'sass:math';
-@use "./color.scss" as *;
+@use './color.scss' as *;
 @use 'sass:map';
 
 html,
@@ -14,58 +17,62 @@ body {
     width: 0;
     height: 20px;
 }
+
 .el-pagination.is-background {
     .el-pager li:not(.is-disabled) {
-        border: 1px solid $og-sub-border-color!important;
+        border: 1px solid $og-sub-border-color !important;
         &.is-active {
-            color: $og-sub-primary-color!important;
-            border-color: $og-sub-primary-color!important;
+            color: $og-sub-primary-color !important;
+            border-color: $og-sub-primary-color !important;
         }
         &:hover {
-            border-color: $og-sub-primary-color!important;
+            border-color: $og-sub-primary-color !important;
         }
     }
     &.el-pagination--small .el-pager li {
-        min-width: 32px!important;
+        min-width: 32px !important;
     }
 }
-.el-overlay, .el-message, .el-popper {
-    z-index: 10000000!important;
+.el-overlay,
+.el-message,
+.el-popper {
+    z-index: 10000000 !important;
 }
 .el-dialog {
     .el-dialog__header {
-        border-bottom: 1px solid $og-sub-border-color!important;
-        margin-right: 0px!important;
-        padding-top: 10px!important;
-        font-size: 14px!important;
+        border-bottom: 1px solid $og-sub-border-color !important;
+        margin-right: 0px !important;
+        padding-top: 10px !important;
+        font-size: 14px !important;
     }
     .el-dialog__title {
-        font-size: 14px!important;
+        font-size: 14px !important;
     }
     .el-dialog__headerbtn {
-        top: -2px!important;
+        top: -2px !important;
     }
     .el-dialog__footer {
-        border-top: 1px solid $og-sub-border-color!important;
-        padding-bottom: 10px!important;
+        border-top: 1px solid $og-sub-border-color !important;
+        padding-bottom: 10px !important;
     }
 }
 .el-menu-item.is-active {
     background-color: var(--el-bg-color-og-hover) !important;
-    border-right: 2px solid $og-primary-color!important;
+    border-right: 2px solid $og-primary-color !important;
     color: var(--el-text-og-regular);
 }
 .el-menu--collapse .el-sub-menu__title {
-    span, .el-sub-menu__icon-arrow {
-        display: none!important;
+    span,
+    .el-sub-menu__icon-arrow {
+        display: none !important;
     }
 }
 .el-popper:focus {
-    outline: none!important;
+    outline: none !important;
 }
 #app {
     height: 100%;
-    --vem-header-height: 40px;
+    --vem-header-height: 30px;
     --og-sub-text-color: #{$og-sub-text-color};
     color: var(--el-text-color-regular);
 }
@@ -74,84 +81,75 @@ body {
     --el-color-primary: $og-primary-color;
     --el-text-color-primary: var(--el-text-color-og);
     @for $i from 1 through 9 {
-        --el-color-primary-light-#{$i}: #{mix(
-            #FFF,
-            #732FCB,
-            math.percentage(math.div($i, 10))
-        )};
+        --el-color-primary-light-#{$i}: #{mix(#fff, #732fcb, math.percentage(math.div($i, 10)))};
     }
 }
 .el-picker-panel .el-button {
-    // color: var(--el-text-color-og)!important;
-    background-color:var(--el-bg-color-sub)!important;
-    border-color: $og-button-active-color!important;
-    color: var(--el-table-cell)!important;
-    // &:hover {
-    //     background-color: $og-button-active-color!important;
-    // }
+    background-color: var(--el-bg-color-sub) !important;
+    border-color: var(--el-border-color) !important;
+    color: var(--button-1-color) !important;
 }
 .el-button {
-    height: auto!important;
+    height: auto !important;
     &:active {
-        background-color: $og-button-active-color!important;
-        border-color: $og-button-active-color!important;
+        background-color: $og-button-active-color !important;
+        border-color: $og-button-active-color !important;
     }
     &.is-text:not(.is-disabled).is-has-bg {
-        background-color: transparent!important;
-        // color: $og-sub-primary-color!important;
-        padding: 0!important;
+        background-color: transparent !important;
+        padding: 0 !important;
     }
 }
 .el-picker-panel__link-btn {
-    color: var(--el-button-text-color)!important;
+    color: var(--el-button-text-color) !important;
 }
 .el-button.is-text {
-    color: var(--el-button-text-color)!important;
+    color: var(--el-button-text-color) !important;
 }
 .el-tabs__header {
     background-color: var(--el-bg-color-sub-white) !important;
 }
 .el-tabs__item {
-    font-size: 16px !important;
+    padding: 0 16px !important;
+    font-size: 14px !important;
     color: var(--el-text-color-og) !important;
 }
 .el-tabs__active-bar {
-    background-color: var(--el-color-tabbar-active)!important;
-    height: 3px!important;
+    background-color: var(--primary-6) !important;
+    height: 3px !important;
 }
 .is-active {
-    color: var(--el-color-tabbar-active) !important;
+    color: var(--primary-6) !important;
 }
 .el-input__inner {
-    color: var(--el-text-color-og)!important;
+    color: var(--el-text-color-og) !important;
 }
 .el-progress {
     &-bar__inner {
-        background-color: $og-sub-primary-color!important;
+        background-color: $og-sub-primary-color !important;
     }
 }
 .el-range-editor.is-disabled {
-    border-color: $og-border-color!important;
+    border-color: $og-border-color !important;
 }
 // 弹窗loading
-.el-loading-spinner .el-loading-text{
-    color:$og-sub-primary-color!important;
+.el-loading-spinner .el-loading-text {
+    color: $og-sub-primary-color !important;
 }
-.el-loading-spinner .path{
-    stroke:$og-sub-primary-color!important;
+.el-loading-spinner .path {
+    stroke: $og-sub-primary-color !important;
 }
-.el-button--small{
+.el-button--small {
     background-color: var(--el-button-color-small) !important;
     border: none !important;
     color: var(--el-text-color-og);
 }
-.sql-popover-tip{
+.sql-popover-tip {
     max-width: 300px !important;
-    color:var(--el-text-color-og) !important;
-    // background-color: rgb(48, 65, 86) !important;
+    color: var(--el-text-color-og) !important;
 }
-.el-picker-panel__icon-btn .el-icon{
-    color:var(--el-text-color-og);
+.el-picker-panel__icon-btn .el-icon {
+    color: var(--el-text-color-og);
 }
 .in-active-path .el-cascader-node__label {
     color: var(--el-color-tabbar-active) !important;
@@ -171,7 +169,6 @@ body {
     color: var(--hw-primary-1);
 }
 
-
 // textarea
 .el-textarea__inner {
     background-color: var(--color-fill-2) !important;
@@ -181,7 +178,7 @@ body {
 }
 
 .el-table .cell {
-    color: var(--el-table-cell) !important;
+    color: var(--color-1) !important;
 }
 .el-input__wrapper.is-active {
     background-color: var(--main-background-color) !important;
@@ -189,6 +186,7 @@ body {
 .el-input__wrapper.is-active .el-range-input {
     background-color: var(--main-background-color) !important;
 }
+
 // pagination
 .el-pagination {
     display: flex;
@@ -230,6 +228,26 @@ body {
     background-color: var(--primary-6) !important;
 }
 .el-message-box__btns .el-button.el-button--primary.search-button {
+    color: var(--primary-6) !important;
+    background-color: rgb(255, 255, 255, 0) !important;
+    border: 1px solid var(--primary-6) !important;
+}
+
+// Element Button Reset
+.el-button {
+    font-size: 14px !important;
+    padding: 8px 16px !important;
+    border: 1px solid var(--button-1-border) !important;
+    border-radius: 2px;
+    font-weight: 400 !important;
+    color: var(--button-1-color) !important;
+    background-color: var(--button-1-background) !important;
+}
+.el-button.el-button--primary {
+    color: var(--color-bg-2) !important;
+    background-color: var(--primary-6) !important;
+}
+.el-button.el-button--primary.search-button {
     color: var(--primary-6) !important;
     background-color: rgb(255, 255, 255, 0) !important;
     border: 1px solid var(--primary-6) !important;

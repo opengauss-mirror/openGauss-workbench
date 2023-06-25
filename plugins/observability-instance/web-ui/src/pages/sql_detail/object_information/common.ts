@@ -1,3 +1,7 @@
+///
+/// Copyright (c) 2023 Huawei Technologies Co.,Ltd.
+///
+
 export type OptionType = {
     label: string;
     value: string

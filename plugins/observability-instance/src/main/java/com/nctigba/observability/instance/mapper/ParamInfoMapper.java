@@ -1,3 +1,6 @@
+/*
+ * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ */
 package com.nctigba.observability.instance.mapper;
 
 import java.sql.SQLException;
@@ -17,52 +20,52 @@ import com.nctigba.observability.instance.entity.ParamInfo.type;
 
 @Service
 public class ParamInfoMapper implements InitializingBean {
-	private static final String SQL = "select * from param_info";
-	private static final List<ParamInfo> LIST = new ArrayList<>();
-	private static final Map<Integer, ParamInfo> IDS = new HashMap<>();
-	private static final Map<type, Map<String, ParamInfo>> MAP = new HashMap<>();
+    private static final String SQL = "select * from param_info";
+    private static final List<ParamInfo> LIST = new ArrayList<>();
+    private static final Map<Integer, ParamInfo> IDS = new HashMap<>();
+    private static final Map<ParamInfo.type, Map<String, ParamInfo>> MAP = new HashMap<>();
 
-	@Override
-	public void afterPropertiesSet() throws Exception {
-		var connect = ParamInfoInitConfig.getCon(ParamInfoInitConfig.PARAMINFO);
-		try {
-			try (var stmt = connect.createStatement(); var rs = stmt.executeQuery(SQL);) {
-				var list = ParamInfo.parse(rs);
-				synchronized (LIST) {
-					LIST.clear();
-					LIST.addAll(list);
-				}
-				synchronized (IDS) {
-					IDS.clear();
-					for (ParamInfo paramInfo : list)
-						IDS.put(paramInfo.getId(), paramInfo);
-				}
-				synchronized (MAP) {
-					for (type v : type.values())
-						MAP.put(v, new HashMap<>());
-					for (ParamInfo paramInfo : list)
-						MAP.get(paramInfo.getParamType()).put(paramInfo.getParamName(), paramInfo);
-				}
-			}
-		} catch (SQLException e) {
-			throw new RuntimeException(CommonConstants.SQLITE_ERROR, e);
-		}
-	}
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        var connect = ParamInfoInitConfig.getCon(ParamInfoInitConfig.PARAMINFO);
+        try {
+            try (var stmt = connect.createStatement(); var rs = stmt.executeQuery(SQL);) {
+                var list = ParamInfo.parse(rs);
+                synchronized (LIST) {
+                    LIST.clear();
+                    LIST.addAll(list);
+                }
+                synchronized (IDS) {
+                    IDS.clear();
+                    for (ParamInfo paramInfo : list)
+                        IDS.put(paramInfo.getId(), paramInfo);
+                }
+                synchronized (MAP) {
+                    for (type v : ParamInfo.type.values())
+                        MAP.put(v, new HashMap<>());
+                    for (ParamInfo paramInfo : list)
+                        MAP.get(paramInfo.getParamType()).put(paramInfo.getParamName(), paramInfo);
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(CommonConstants.SQLITE_ERROR, e);
+        }
+    }
 
-	public static ParamInfo getById(Integer id) {
-		return IDS.get(id);
-	}
+    public static ParamInfo getById(Integer id) {
+        return IDS.get(id);
+    }
 
-	public static List<ParamInfo> getAll() {
-		return LIST;
-	}
+    public static List<ParamInfo> getAll() {
+        return LIST;
+    }
 
-	public static ParamInfo getParamInfo(type type, String name) {
-		
-		return MAP.get(type).get(name);
-	}
+    public static ParamInfo getParamInfo(ParamInfo.type type, String name) {
 
-	public static List<Integer> getIds(type t) {
-		return MAP.get(t).values().stream().map(ParamInfo::getId).collect(Collectors.toList());
-	}
+        return MAP.get(type).get(name);
+    }
+
+    public static List<Integer> getIds(type t) {
+        return MAP.get(t).values().stream().map(ParamInfo::getId).collect(Collectors.toList());
+    }
 }

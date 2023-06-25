@@ -1,7 +1,14 @@
 <template>
     <div class="s-i-base">
         <!-- Suggestions -->
-        <div class="suggsiton-wrap" v-if="requestType === 'Suggestion' || (taskData.taskInfo && taskData.taskInfo.top.type === 'Suggestion') || (taskData.taskInfo && taskData.taskInfo.center.type === 'Suggestion')">
+        <div
+            class="suggsiton-wrap"
+            v-if="
+                requestType === 'Suggestion' ||
+                (taskData.taskInfo && taskData.taskInfo.top.type === 'Suggestion') ||
+                (taskData.taskInfo && taskData.taskInfo.center.type === 'Suggestion')
+            "
+        >
             <div class="report-header">{{ taskData.dataSuggestion.title }}</div>
             <div class="report-main-header">
                 <div class="report-main-suggestion">
@@ -16,11 +23,6 @@
                 </div>
             </div>
         </div>
-        <!-- Essential information for Root-->
-        <template v-if="taskData.baseInfoData.length > 0 && requestType === 'UL'">
-            <div class="report-header">{{ $t('datasource.taskInfo') }}</div>
-            <p class="s-i-base-item" v-for="item in taskData.baseInfoData" :key="item.value">{{ item.label }}：<span v-html="item.value || '-'"></span></p>
-        </template>
 
         <!-- Parameter Diagnosis -->
         <template v-if="requestType === 'Param'">
@@ -28,7 +30,10 @@
             <p class="s-i-base-item title">{{ $t('datasource.paramName') }}</p>
             <p class="s-i-base-item content">{{ taskData.dataParameterConfig.paramName }}</p>
             <p class="s-i-base-item title">{{ $t('datasource.currentValue') }}</p>
-            <p class="s-i-base-item content">{{ taskData.dataParameterConfig.currentValue }}{{ taskData.dataParameterConfig.unit === null ? '' : '(' + taskData.dataParameterConfig.unit + ')' }}</p>
+            <p class="s-i-base-item content">
+                {{ taskData.dataParameterConfig.currentValue
+                }}{{ taskData.dataParameterConfig.unit === null ? '' : '(' + taskData.dataParameterConfig.unit + ')' }}
+            </p>
             <p class="s-i-base-item title">{{ $t('datasource.paramDescription') }}</p>
             <p class="s-i-base-item content">{{ taskData.dataParameterConfig.paramDescription }}</p>
             <p class="s-i-base-item title">{{ $t('datasource.suggestValue') }}</p>
@@ -51,8 +56,21 @@
             </div>
         </div>
         <!-- Tree Table -->
-        <div class="table-wrap" v-if="requestType === 'Table' || (taskData.taskInfo && taskData.taskInfo.top.type === 'Table') || (taskData.taskInfo && taskData.taskInfo.center.type === 'Table')">
-            <el-table ref="singleTableRef" :data="taskData.dataTableInfo.data" :style="{ width: '100%', marginBottom: '20px' }" border max-height="500">
+        <div
+            class="table-wrap"
+            v-if="
+                requestType === 'Table' ||
+                (taskData.taskInfo && taskData.taskInfo.top.type === 'Table') ||
+                (taskData.taskInfo && taskData.taskInfo.center.type === 'Table')
+            "
+        >
+            <el-table
+                ref="singleTableRef"
+                :data="taskData.dataTableInfo.data"
+                :style="{ width: '100%', marginBottom: '20px' }"
+                border
+                max-height="500"
+            >
                 <el-table-column type="index" />
                 <template v-for="item in taskData.dataTableInfo.columns" :key="item.id">
                     <el-table-column :prop="item.key" :label="item.title" />
@@ -60,9 +78,26 @@
             </el-table>
         </div>
         <!-- Thermodynamic diagram -->
-        <div class="chart-wrap" v-if="requestType === 'HeatMap' || (taskData.taskInfo && taskData.taskInfo.top.type === 'HeatMap') || (taskData.taskInfo && taskData.taskInfo.center.type === 'HeatMap')">
+        <div
+            class="chart-wrap"
+            v-if="
+                requestType === 'HeatMap' ||
+                (taskData.taskInfo && taskData.taskInfo.top.type === 'HeatMap') ||
+                (taskData.taskInfo && taskData.taskInfo.center.type === 'HeatMap')
+            "
+        >
             <template v-for="(item, index) in chartData" :key="index + '-'">
-                <heat-map :data="item.data" :xData="item.x" :yData="item.y" :title="item.name" :maxData="heatMapMax" :showNum="false" :unit="item.unit" v-bind="$attrs"> </heat-map>
+                <heat-map
+                    :data="item.data"
+                    :xData="item.x"
+                    :yData="item.y"
+                    :title="item.name"
+                    :maxData="heatMapMax"
+                    :showNum="false"
+                    :unit="item.unit"
+                    v-bind="$attrs"
+                >
+                </heat-map>
             </template>
         </div>
         <!-- No result -->
@@ -71,10 +106,43 @@
             <p class="noresult-text">{{ $t('datasource.noResult') }}</p>
         </div>
         <!-- Thermodynamic diagram -->
-        <div class="chart-wrap" v-if="requestType === 'LineChart' || (taskData.taskInfo && taskData.taskInfo.top.type === 'LineChart') || (taskData.taskInfo && taskData.taskInfo.center.type === 'LineChart')">
+        <div
+            class="chart-wrap"
+            v-if="
+                requestType === 'LineChart' ||
+                (taskData.taskInfo && taskData.taskInfo.top.type === 'LineChart') ||
+                (taskData.taskInfo && taskData.taskInfo.center.type === 'LineChart')
+            "
+        >
             <template v-for="(item, index) in chartData" :key="index + '-'">
-                <line-chart :data="item.data" :xData="item.xAxis.data" :series="item.series" :title="item.title"> </line-chart>
+                <line-chart :data="item.data" :xData="item.xAxis.data" :series="item.series" :title="item.title">
+                </line-chart>
             </template>
+        </div>
+
+        <!-- Task info for root-->
+        <div v-if="taskData.baseInfoData.length > 0 && requestType === 'UL'">
+            <div>
+                <div class="info-title">
+                    <svg-icon name="note" class="detail-icon" />
+                    <div class="title">{{ $t('datasource.taskInfo') }}</div>
+                </div>
+                <p class="s-i-base-item" v-for="item in taskData.baseInfoData" :key="item.value">
+                    {{ item.label }}：<span v-html="item.value || '-'"></span>
+                </p>
+
+                <div class="info-title" style="margin-top: 16px; margin-bottom: 8px">
+                    <svg-icon name="cmd" class="detail-icon" />
+                    <div class="title">SQL</div>
+                </div>
+                <el-input v-model="taskData.sql" :rows="4" type="textarea" :input-style="'fontSize:14px'" />
+
+                <div class="info-title" style="margin-top: 16px; margin-bottom: 8px">
+                    <svg-icon name="cmd" class="detail-icon" />
+                    <div class="title">{{ $t('datasource.taskInfoRemarkKey') }}</div>
+                </div>
+                <el-input v-model="taskData.log" :rows="8" type="textarea" :input-style="'fontSize:14px'" />
+            </div>
         </div>
     </div>
 </template>
@@ -85,6 +153,8 @@ import ogRequest from '../../../request'
 import ogRequestSvg from '../../../request/axios'
 import { useRequest } from 'vue-request'
 import { WarningFilled } from '@element-plus/icons-vue'
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
 
 interface Res {
     type: string
@@ -119,9 +189,15 @@ const svgFile = ref('')
 const requestType = ref('')
 const chartData = ref<any>([])
 const heatMapMax = ref(10)
-const dbId = ref((window.$wujie?.props.data.id as string) ? (window.$wujie?.props.data.id as string) : router.currentRoute.value.params.id)
+const dbId = ref(
+    (window.$wujie?.props.data.id as string)
+        ? (window.$wujie?.props.data.id as string)
+        : router.currentRoute.value.params.id
+)
 const typeId = ref('TaskInfo')
 const taskData = reactive<{
+    sql: string
+    log: string
     baseInfoData: Array<optionType>
     dataTreeInfo: any
     dataTableInfo: any
@@ -151,6 +227,8 @@ const taskData = reactive<{
         }
     }
 }>({
+    sql: '',
+    log: '',
     baseInfoData: [],
     dataTreeInfo: [],
     dataTableInfo: {},
@@ -200,13 +278,13 @@ watch(
 onMounted(() => {
     typeId.value = props.nodesType
     requestData()
-    const wujie = window.$wujie;
+    const wujie = window.$wujie
     if (wujie) {
         wujie?.bus.$on('opengauss-locale-change', (val: string) => {
             nextTick(() => {
                 requestData()
-            });
-        });
+            })
+        })
     }
 })
 
@@ -217,7 +295,9 @@ const gotoLarge = () => {
 
 const { data: res, run: requestData } = useRequest(
     () => {
-        return ogRequest.get('/sqlDiagnosis/api/v1/diagnosisTasks/' + queryData.value.id + '/suggestions/' + queryData.value.type)
+        return ogRequest.get(
+            '/sqlDiagnosis/api/v1/diagnosisTasks/' + queryData.value.id + '/suggestions/' + queryData.value.type
+        )
     },
     { manual: true }
 )
@@ -276,12 +356,18 @@ watch(res, (res: Res) => {
         requestType.value = res.type
         taskData.taskInfo = res.child
         if (res.type === 'UL') {
+            taskData.sql = ''
+            taskData.log = ''
             taskData.baseInfoData = []
             for (let item of res.data) {
-                taskData.baseInfoData.push({
-                    label: Object.keys(item)[0],
-                    value: String(Object.values(item)[0]),
-                })
+                let label = Object.keys(item)[0]
+                let value = String(Object.values(item)[0])
+                if (label === 'sql') taskData.sql = value
+                else if (label === t('datasource.taskInfoRemarkKey')) {
+                    taskData.log = value.replace('<br/>', '').replace(/<br\/>/g, '\n')
+                } else {
+                    taskData.baseInfoData.push({ label, value })
+                }
             }
         } else if (res.type === 'Param') {
             taskData.dataParameterConfig = res.data
@@ -335,6 +421,8 @@ watch(ret, (res: any) => {
 </script>
 
 <style lang="scss" scoped>
+@use '@/assets/style/task.scss' as *;
+
 text {
     fill: blue;
 }
@@ -357,7 +445,7 @@ text {
         border-right: 1px solid $og-border-color;
     }
     .s-i-base-item {
-        padding: 0 15px;
+        line-height: 14px;
         margin-top: 12px;
         &.title {
             font-weight: bold;
