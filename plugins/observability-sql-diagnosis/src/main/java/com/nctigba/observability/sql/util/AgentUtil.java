@@ -43,7 +43,8 @@ public class AgentUtil {
 
     private String getAgentUrl(String id) {
         var env = envMapper.selectOne(
-                Wrappers.<NctigbaEnv>lambdaQuery().eq(NctigbaEnv::getNodeid, id).eq(NctigbaEnv::getType,
+                Wrappers.<NctigbaEnv>lambdaQuery().eq(NctigbaEnv::getNodeid, id).eq(
+                        NctigbaEnv::getType,
                         NctigbaEnv.envType.EXPORTER));
         if (env == null) {
             throw new HisDiagnosisException("Agent not found");
@@ -62,6 +63,9 @@ public class AgentUtil {
             dataList = objectMapper.readValue(responseData, new TypeReference<>() {
             });
         } catch (JsonProcessingException e) {
+            log.info(e.getMessage());
+            return "error:" + e.getMessage();
+        } catch (HisDiagnosisException e) {
             log.info(e.getMessage());
             return "error:" + e.getMessage();
         }

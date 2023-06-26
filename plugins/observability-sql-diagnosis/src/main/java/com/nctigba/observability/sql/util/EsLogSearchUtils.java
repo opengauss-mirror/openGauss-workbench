@@ -12,6 +12,7 @@ import co.elastic.clients.elasticsearch.core.SearchResponse;
 import co.elastic.clients.elasticsearch.indices.GetIndexResponse;
 import co.elastic.clients.json.JsonData;
 import co.elastic.clients.util.ObjectBuilder;
+import com.nctigba.common.web.exception.HisDiagnosisException;
 import com.nctigba.observability.sql.config.ElasticsearchProvider;
 import com.nctigba.observability.sql.model.history.query.EsSearchQuery;
 import lombok.extern.slf4j.Slf4j;
@@ -66,7 +67,7 @@ public class EsLogSearchUtils {
                 return s;
             }, HashMap.class);
             return Optional.of(response);
-        } catch (IOException e) {
+        } catch (IOException | HisDiagnosisException e) {
             log.info(e.getMessage());
             return Optional.empty();
         }
@@ -84,7 +85,7 @@ public class EsLogSearchUtils {
             var client = clientProvider.client();
             GetIndexResponse getIndexResponse = client.indices().get(builder -> builder.index(indexName));
             indexs = getIndexResponse.result().keySet();
-        } catch (IOException e) {
+        } catch (IOException | HisDiagnosisException e) {
             log.info(e.getMessage());
             return Optional.empty();
         }
