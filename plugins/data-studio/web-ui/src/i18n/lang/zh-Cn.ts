@@ -165,6 +165,7 @@ export default {
       version: '版本信息',
     },
     rules: {
+      host: ['填写内容不符合主机范围，请确认是否填写有误'],
       port: ['填写内容不符合端口范围，请确认是否填写有误'],
     },
     success: {

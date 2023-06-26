@@ -171,6 +171,7 @@ export default {
       version: 'version',
     },
     rules: {
+      host: ['The value does not conform to the host range'],
       port: ['The value does not conform to the port range'],
     },
     success: {
