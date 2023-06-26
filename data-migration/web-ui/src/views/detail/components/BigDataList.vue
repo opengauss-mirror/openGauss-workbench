@@ -6,7 +6,7 @@
           <a-table-column
             :title="
               $t('components.BigDataList.5q09l2jkfp80', {
-                sourceDb: props.subTaskInfo.sourceDb,
+                sourceDb: props.subTaskInfo.sourceDb
               })
             "
             data-index="name"
@@ -15,7 +15,7 @@
           <a-table-column
             :title="
               $t('components.BigDataList.5q09m4g78no0', {
-                targetDb: props.subTaskInfo.targetDb,
+                targetDb: props.subTaskInfo.targetDb
               })
             "
             data-index="name"
@@ -100,7 +100,7 @@
             :scroll="{ y: 285 }"
             :scrollbar="false"
             :virtual-list-props="
-              (tableListData[item.key] && tableListData[item.key].length > 50)
+              tableListData[item.key] && tableListData[item.key].length > 50
                 ? { height: 300, threshold: 50 }
                 : false
             "
@@ -124,8 +124,8 @@
                 <template #cell="{ record }">
                   <span
                     v-if="
-                      record.status === TASK_STATUS.FULL_START ||
-                      record.status === TASK_STATUS.FULL_RUNNING
+                      record.status === SUB_TASK_STATUS.FULL_START ||
+                      record.status === SUB_TASK_STATUS.FULL_RUNNING
                     "
                     >{{
                       record.percent ? (record.percent * 100).toFixed(2) : '0'
@@ -133,10 +133,10 @@
                   >
                   <icon-check-circle-fill
                     v-if="
-                      record.status === TASK_STATUS.FULL_FINISH ||
-                      record.status === TASK_STATUS.FULL_CHECK_START ||
-                      record.status === TASK_STATUS.FULL_CHECKING ||
-                      record.status === TASK_STATUS.INCREMENTAL_START
+                      record.status === SUB_TASK_STATUS.FULL_FINISH ||
+                      record.status === SUB_TASK_STATUS.FULL_CHECK_START ||
+                      record.status === SUB_TASK_STATUS.FULL_CHECKING ||
+                      record.status === SUB_TASK_STATUS.INCREMENTAL_START
                     "
                     size="16"
                     style="color: #00b429"
@@ -146,7 +146,7 @@
                     position="tr"
                   >
                     <icon-close-circle-fill
-                      v-if="record.status === TASK_STATUS.FULL_CHECK_FINISH"
+                      v-if="record.status === SUB_TASK_STATUS.FULL_CHECK_FINISH"
                       size="16"
                       style="color: #ff7d01"
                     />
@@ -158,13 +158,14 @@
               </a-table-column>
               <a-table-column title="" data-index="status" align="center">
                 <template #cell="{ record }">
-                  <span v-if="record.status === TASK_STATUS.FULL_CHECK_START"
+                  <span
+                    v-if="record.status === SUB_TASK_STATUS.FULL_CHECK_START"
                     >{{
                       record.percent ? (record.percent * 100).toFixed(2) : '0'
                     }}%</span
                   >
                   <icon-check-circle-fill
-                    v-if="record.status === TASK_STATUS.FULL_CHECKING"
+                    v-if="record.status === SUB_TASK_STATUS.FULL_CHECKING"
                     size="16"
                     style="color: #00b429"
                   />
@@ -173,9 +174,7 @@
                     position="tr"
                   >
                     <icon-close-circle-fill
-                      v-if="
-                        record.status === TASK_STATUS.INCREMENTAL_START
-                      "
+                      v-if="record.status === SUB_TASK_STATUS.INCREMENTAL_START"
                       size="16"
                       style="color: #ff7d01"
                     />
@@ -196,7 +195,7 @@
 <script setup>
 import { ref, reactive, watchEffect } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { TASK_STATUS } from '@/utils/constants'
+import { SUB_TASK_STATUS } from '@/utils/constants'
 
 const { t } = useI18n()
 
@@ -212,17 +211,17 @@ const props = defineProps({
         waitCount: 0,
         runningCount: 0,
         finishCount: 0,
-        errorCount: 0,
+        errorCount: 0
       },
       trigger: { waitCount: 0, runningCount: 0, finishCount: 0, errorCount: 0 },
       procedure: {
         waitCount: 0,
         runningCount: 0,
         finishCount: 0,
-        errorCount: 0,
-      },
-    }),
-  },
+        errorCount: 0
+      }
+    })
+  }
 })
 
 const onlyError = ref(false)
@@ -230,20 +229,20 @@ const onlyCheckError = ref(false)
 
 const table_list = ref([
   {
-    key: 'table',
+    key: 'table'
   },
   {
-    key: 'view',
+    key: 'view'
   },
   {
-    key: 'function',
+    key: 'function'
   },
   {
-    key: 'trigger',
+    key: 'trigger'
   },
   {
-    key: 'procedure',
-  },
+    key: 'procedure'
+  }
 ])
 
 // list name
@@ -253,7 +252,7 @@ const listNampMap = (key) => {
     view: t('components.BigDataList.5q09jzwfqiw0'),
     function: t('components.BigDataList.5q09jzwfqm80'),
     trigger: t('components.BigDataList.5q09jzwfqp80'),
-    procedure: t('components.BigDataList.5q09jzwfqs40'),
+    procedure: t('components.BigDataList.5q09jzwfqs40')
   }
   return maps[key]
 }
@@ -263,41 +262,44 @@ const tableListData = reactive({
   view: ref([]),
   function: ref([]),
   trigger: ref([]),
-  procedure: ref([]),
+  procedure: ref([])
 })
 
-watchEffect(() => {
-  if (props.fullData) {
-    tableListData.table = props.fullData['table']
-    tableListData.view = props.fullData['view']
-    tableListData.function = props.fullData['function']
-    tableListData.trigger = props.fullData['trigger']
-    tableListData.procedure = props.fullData['procedure']
-  } else {
-    tableListData.table = []
-    tableListData.view = []
-    tableListData.function = []
-    tableListData.trigger = []
-    tableListData.procedure = []
-  }
-}, { deep: true })
+watchEffect(
+  () => {
+    if (props.fullData) {
+      tableListData.table = props.fullData['table']
+      tableListData.view = props.fullData['view']
+      tableListData.function = props.fullData['function']
+      tableListData.trigger = props.fullData['trigger']
+      tableListData.procedure = props.fullData['procedure']
+    } else {
+      tableListData.table = []
+      tableListData.view = []
+      tableListData.function = []
+      tableListData.trigger = []
+      tableListData.procedure = []
+    }
+  },
+  { deep: true }
+)
 
 const filterTableData = (type) => {
   if ((type === 1 && onlyError.value) || (type === 2 && onlyCheckError.value)) {
     tableListData.table = props.fullData['table'].filter(
-      (item) => item.status === TASK_STATUS.FULL_CHECK_FINISH
+      (item) => item.status === SUB_TASK_STATUS.FULL_CHECK_FINISH
     )
     tableListData.view = props.fullData['view'].filter(
-      (item) => item.status === TASK_STATUS.FULL_CHECK_FINISH
+      (item) => item.status === SUB_TASK_STATUS.FULL_CHECK_FINISH
     )
     tableListData.function = props.fullData['function'].filter(
-      (item) => item.status === TASK_STATUS.FULL_CHECK_FINISH
+      (item) => item.status === SUB_TASK_STATUS.FULL_CHECK_FINISH
     )
     tableListData.trigger = props.fullData['trigger'].filter(
-      (item) => item.status === TASK_STATUS.FULL_CHECK_FINISH
+      (item) => item.status === SUB_TASK_STATUS.FULL_CHECK_FINISH
     )
     tableListData.procedure = props.fullData['procedure'].filter(
-      (item) => item.status === TASK_STATUS.FULL_CHECK_FINISH
+      (item) => item.status === SUB_TASK_STATUS.FULL_CHECK_FINISH
     )
   } else {
     onlyError.value = false

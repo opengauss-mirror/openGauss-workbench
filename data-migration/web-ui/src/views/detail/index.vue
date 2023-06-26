@@ -134,7 +134,7 @@
               <span>{{ execSubStatusMap(record.execStatus) }}</span>
               <a-popover :title="$t('detail.index.5q09asiwk6k0')">
                 <icon-close-circle-fill
-                  v-if="record.execStatus === SubTaskStatus.MigrationFailed"
+                  v-if="record.execStatus === SUB_TASK_STATUS.MIGRATION_ERROR"
                   size="14"
                   style="color: #ff7d01; margin-left: 3px; cursor: pointer"
                 />
@@ -162,13 +162,14 @@
               <a-button
                 v-if="
                   (record.migrationModelId === TaskMode.Online &&
-                    record.execStatus === SubTaskStatus.IncrementalProgress) ||
-                  record.execStatus === SubTaskStatus.IncrementalFinished
+                    record.execStatus ===
+                      SUB_TASK_STATUS.INCREMENTAL_RUNNING) ||
+                  record.execStatus === SUB_TASK_STATUS.INCREMENTAL_FINISHED
                 "
                 size="mini"
                 type="text"
                 :loading="
-                  record.execStatus === SubTaskStatus.IncrementalFinished
+                  record.execStatus === SUB_TASK_STATUS.INCREMENTAL_FINISHED
                 "
                 @click="stopSubIncrease(record)"
               >
@@ -182,7 +183,7 @@
               <a-button
                 v-if="
                   record.migrationModelId === TaskMode.Online &&
-                  record.execStatus === SubTaskStatus.IncrementalStopped
+                  record.execStatus === SUB_TASK_STATUS.INCREMENTAL_STOPPED
                 "
                 size="mini"
                 type="text"
@@ -196,7 +197,7 @@
                 }}</template>
               </a-button>
               <a-button
-                v-if="record.execStatus !== SubTaskStatus.MigrationCompleted"
+                v-if="record.execStatus !== SUB_TASK_STATUS.MIGRATION_FINISH"
                 size="mini"
                 type="text"
                 @click="stopSubTask(record)"
@@ -335,12 +336,12 @@
                   :data="[
                     {
                       label: 'rolcanlogin',
-                      value: 't',
+                      value: 't'
                     },
                     {
                       label: 'rolreplication',
-                      value: 't',
-                    },
+                      value: 't'
+                    }
                   ]"
                   size="medium"
                   layout="vertical"
@@ -367,10 +368,11 @@ import {
   subTaskList,
   subTaskFinish,
   subTaskStartReverse,
-  subTaskStopIncremental,
+  subTaskStopIncremental
 } from '@/api/detail'
 import useTheme from '@/hooks/theme'
 import { useI18n } from 'vue-i18n'
+import { SUB_TASK_STATUS } from '@/utils/constants'
 
 const { t } = useI18n()
 
@@ -384,12 +386,12 @@ let timerStatus = null
 
 const queryParams = reactive({
   pageNum: 1,
-  pageSize: 10,
+  pageSize: 10
 })
 const pagination = reactive({
   total: 0,
   current: 1,
-  pageSize: 10,
+  pageSize: 10
 })
 const tableData = ref([])
 
@@ -402,40 +404,20 @@ const execStatusMap = (status) => {
   const maps = {
     0: t('detail.index.5q09asiwlcg0'),
     1: t('detail.index.5q09asiwlew0'),
-    2: t('detail.index.5q09asiwltg0'),
+    2: t('detail.index.5q09asiwltg0')
   }
   return maps[status]
 }
 
 const TaskMode = reactive({
   Offline: 1,
-  Online: 2,
+  Online: 2
 })
 
 const TaskStatus = reactive({
   Unstart: 0,
   Progress: 1,
-  Completed: 2,
-})
-
-const SubTaskStatus = reactive({
-  Unstart: 0,
-  FullStart: 1,
-  FullProgress: 2,
-  FullCompleted: 3,
-  FullVerificationStart: 4,
-  FullVerificationProgress: 5,
-  FullVerificationCompleted: 6,
-  IncrementalStart: 7,
-  IncrementalProgress: 8,
-  IncrementalFinished: 9,
-  IncrementalStopped: 10,
-  ReverseStart: 11,
-  ReverseProgress: 12,
-  ReverseCompleted: 13,
-  MigrationCompleted: 100,
-  MigrationFailed: 500,
-  WaitingResource: 1000,
+  Completed: 2
 })
 
 // sub task status map
@@ -451,12 +433,13 @@ const execSubStatusMap = (status) => {
     7: t('detail.index.5q09asiwmxg0'),
     8: t('detail.index.5q09asiwmzw0'),
     9: t('detail.index.5q09asiwn200'),
-    10: t('detail.index.5q09asiwn4k0'),
-    11: t('detail.index.5q09asiwna40'),
-    12: t('detail.index.5q09asiwncc0'),
+    10: t('detail.index.5q09asiwn201'),
+    11: t('detail.index.5q09asiwn4k0'),
+    12: t('detail.index.5q09asiwna40'),
+    13: t('detail.index.5q09asiwncc0'),
     100: t('detail.index.5q09asiwne80'),
     500: t('detail.index.5q09asiwngg0'),
-    1000: t('detail.index.5q09asiwnik0'),
+    1000: t('detail.index.5q09asiwnik0')
   }
   return maps[status]
 }
@@ -531,12 +514,12 @@ const startSubReverse = (row) => {
         replicationData.value = [
           {
             label: 'rolcanlogin',
-            value: e.data.rolcanlogin === 'true' ? 't' : 'f',
+            value: e.data.rolcanlogin === 'true' ? 't' : 'f'
           },
           {
             label: 'rolreplication',
-            value: e.data.rolreplication === 'true' ? 't' : 'f',
-          },
+            value: e.data.rolreplication === 'true' ? 't' : 'f'
+          }
         ]
         reverseVisible.value = true
       }
@@ -567,7 +550,7 @@ const getSubTaskList = () => {
   timerDown && clearTimeout(timerDown)
   const id = window.$wujie?.props.data.id
   subTaskList(id, {
-    ...queryParams,
+    ...queryParams
   })
     .then((res) => {
       tableData.value = res.rows
@@ -597,22 +580,22 @@ const getTaskDetail = () => {
       descData.value = [
         {
           label: () => t('detail.index.5q09asiwnks0'),
-          value: taskInfo.createUser,
+          value: taskInfo.createUser
         },
         {
           label: () => t('detail.index.5q09asiwnmw0'),
-          value: offlineCounts['total'] + onlineCounts['total'],
+          value: offlineCounts['total'] + onlineCounts['total']
         },
         {
           label: () => t('detail.index.5q09asiwnow0'),
           value: () =>
             `${t('detail.index.5q09efwo3nc0', {
-              num: hosts.length,
-            })}（${hosts.map((item) => item.hostName)}）`,
+              num: hosts.length
+            })}（${hosts.map((item) => item.hostName)}）`
         },
         {
           label: () => t('detail.index.5q09asiwnrs0'),
-          value: taskInfo.createTime,
+          value: taskInfo.createTime
         },
         {
           label: () => t('detail.index.5q09asiwnu40'),
@@ -622,13 +605,13 @@ const getTaskDetail = () => {
               notRunCount: offlineCounts['notRunCount'],
               runningCount: offlineCounts['runningCount'],
               finishCount: offlineCounts['finishCount'],
-              errorCount: offlineCounts['errorCount'],
+              errorCount: offlineCounts['errorCount']
             }),
-          span: 2,
+          span: 2
         },
         {
           label: () => t('detail.index.5q09asiwnw00'),
-          value: taskInfo.execTime,
+          value: taskInfo.execTime
         },
         {
           label: () => t('detail.index.5q09asiwny00'),
@@ -638,10 +621,10 @@ const getTaskDetail = () => {
               notRunCount: onlineCounts['notRunCount'],
               runningCount: onlineCounts['runningCount'],
               finishCount: onlineCounts['finishCount'],
-              errorCount: onlineCounts['errorCount'],
+              errorCount: onlineCounts['errorCount']
             }),
-          span: 2,
-        },
+          span: 2
+        }
       ]
       if (task.value.execStatus !== 2) {
         timerTop = setTimeout(() => {
@@ -673,22 +656,27 @@ onBeforeUnmount(() => {
 <style lang="less" scoped>
 .detail-container {
   position: relative;
+
   .title-con {
     padding: 20px 20px 0;
     display: flex;
     justify-content: space-between;
     align-items: center;
+
     .title-left {
       display: flex;
       align-items: center;
+
       .title {
         font-size: 20px;
         color: var(--color-text-1);
       }
+
       .task-status-con {
         margin-left: 40px;
         display: flex;
         align-items: center;
+
         .task-status-title {
           color: var(--color-text-1);
           white-space: nowrap;
@@ -696,29 +684,35 @@ onBeforeUnmount(() => {
           display: flex;
           align-items: center;
         }
+
         .task-status {
           color: rgb(var(--primary-6));
         }
       }
     }
   }
+
   .desc-con {
     padding: 0 20px;
   }
+
   .progress-con {
     margin-top: 20px;
     padding: 0 20px;
     display: flex;
     align-items: center;
+
     .progress-info {
       white-space: nowrap;
       margin-right: 10px;
       color: var(--color-text-1);
     }
   }
+
   .table-con {
     margin-top: 20px;
     padding: 0 20px 30px;
+
     .mac-txt {
       cursor: pointer;
       color: rgb(var(--primary-6));
@@ -736,6 +730,7 @@ onBeforeUnmount(() => {
   .config-title {
     font-size: 14px;
   }
+
   .config-item {
     margin-top: 10px;
   }

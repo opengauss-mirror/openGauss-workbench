@@ -20,7 +20,7 @@ export const PORTAL_PARAM_TYPE = {
   OBJECT_ARRAY: 9
 }
 
-export const TASK_STATUS = {
+export const SUB_TASK_STATUS = {
   NOT_RUN: 0,
   FULL_START: 1,
   FULL_RUNNING: 2,
@@ -41,4 +41,9 @@ export const TASK_STATUS = {
   MIGRATION_ERROR: 500,
   WAIT_RESOURCE: 1000,
   INSTALL_PORTAL: 2000
+}
+
+export const MIGRATION_MODE = {
+  ONLINE: 2,
+  OFFLINE: 1
 }
