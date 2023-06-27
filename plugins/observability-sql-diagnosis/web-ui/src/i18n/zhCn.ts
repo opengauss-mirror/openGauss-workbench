@@ -59,6 +59,7 @@ export default {
         pleaseSelectThreshold: '请输入阈值',
         result: '诊断结果',
         explanation: '诊断说明',
+        notAnalyze: '未满足诊断条件，所以此诊断点未执行诊断操作。',
         taskInfo: {
             result: '诊断结果',
             diagnosisRange: '诊断区间：',
