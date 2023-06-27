@@ -17,7 +17,9 @@ package org.opengauss.admin.web.listener;
 
 import com.gitee.starblues.core.PluginInfo;
 import com.gitee.starblues.integration.listener.PluginListener;
+import com.gitee.starblues.integration.operator.PluginOperator;
 import org.opengauss.admin.system.service.ISysPluginService;
+import org.opengauss.admin.web.controller.SystemPluginController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +29,7 @@ import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.nio.file.Path;
+import java.util.Map;
 
 
 /**
@@ -34,12 +37,16 @@ import java.nio.file.Path;
  */
 @Component
 public class MypluginListener implements PluginListener {
-
     private static final Logger log = LoggerFactory.getLogger(MypluginListener.class);
-
 
     @Autowired
     private ISysPluginService sysPluginService;
+    
+    @Autowired
+    private SystemPluginController systemPluginController;
+    
+    @Autowired
+    private PluginOperator pluginOperator;
 
     @Override
     public void loadSuccess(PluginInfo pluginInfo) {
@@ -69,6 +76,11 @@ public class MypluginListener implements PluginListener {
     @Override
     public void startSuccess(PluginInfo pluginInfo) {
         log.info("plugin[{}] start success", pluginInfo.getPluginId());
+        if (pluginInfo.getExtensionInfo() == null || pluginInfo.getExtensionInfo().isEmpty()) {
+            pluginInfo = pluginOperator.getPluginInfo(pluginInfo.getPluginId());
+        }
+        Map<String, Object> result = systemPluginController.updateSystemByPluginInfo(pluginInfo);
+        log.info("plugin[{}] update logo {}.", pluginInfo.getPluginId(), result == null ? "failed" : "success");
     }
 
     @Override

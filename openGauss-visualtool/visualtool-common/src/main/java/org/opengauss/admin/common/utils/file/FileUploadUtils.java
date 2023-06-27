@@ -276,19 +276,20 @@ public class FileUploadUtils {
      * @param svgContent
      */
     public static final String writeMenuSvgIcon(String svgContent) {
-        String baseDir = SystemConfig.getIconsPath() + File.separator + DateUtils.datePath();
+        final String pathCombainOpt = "/";
+        String baseDir = SystemConfig.getIconsPath() + pathCombainOpt + DateUtils.datePath();
         File dir = new File(baseDir);
         if (!dir.exists()) {
             dir.mkdirs();
         }
         String fileName =  IdUtils.fastUuid() + ".svg";
-        File file = new File(baseDir + File.separator + fileName);
+        File file = new File(baseDir + pathCombainOpt + fileName);
         try {
             if (!file.exists()) {
                 file.createNewFile();
             }
             FileUtil.writeBytes(svgContent.getBytes(StandardCharsets.UTF_8), file.getPath());
-            return Constants.RESOURCE_PREFIX + "/icons" + File.separator + DateUtils.datePath() + File.separator + fileName;
+            return Constants.RESOURCE_PREFIX + "/icons" + pathCombainOpt + DateUtils.datePath() + pathCombainOpt + fileName;
         } catch (IOException e) {
             log.error("write menu svg error, message: {}", e.getMessage());
         }
