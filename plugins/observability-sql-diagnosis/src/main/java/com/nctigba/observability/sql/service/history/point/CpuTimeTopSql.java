@@ -75,17 +75,24 @@ public class CpuTimeTopSql implements HisDiagnosisPointService<Object> {
         }
         List<DatabaseData> dataList = new ArrayList<>();
         for (CollectionItem<?> item : getSourceDataKeys()) {
-            List<?> list = (List<?>) item.queryData(task);
-            List<DatabaseData> databaseDataList = new ArrayList<>();
-            list.forEach(data -> {
-                if (data instanceof DatabaseData) {
-                    databaseDataList.add((DatabaseData) data);
+            Object object = item.queryData(task);
+            if (object instanceof String) {
+                List<String> message = new ArrayList<>();
+                message.add(String.valueOf(object));
+                return message;
+            } else {
+                List<?> list = (List<?>) item.queryData(task);
+                List<DatabaseData> databaseDataList = new ArrayList<>();
+                list.forEach(data -> {
+                    if (data instanceof DatabaseData) {
+                        databaseDataList.add((DatabaseData) data);
+                    }
+                });
+                if (CollectionUtils.isEmpty(databaseDataList)) {
+                    continue;
                 }
-            });
-            if (CollectionUtils.isEmpty(databaseDataList)) {
-                continue;
+                dataList.addAll(databaseDataList);
             }
-            dataList.addAll(databaseDataList);
         }
         for (DatabaseData dto : dataList) {
             if (dto.getSqlName() != null && dto.getSqlName().getString("__name__").equals(SqlCommon.CPU_TIME_TOP_SQL)) {

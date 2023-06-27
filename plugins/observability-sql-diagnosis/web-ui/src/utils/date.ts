@@ -49,6 +49,7 @@ export function formatDateStartAndEnd(dateStart: any, dateEnd: any) {
         (yearEnd ? '-' : '') +
         monthEnd +
         (monthEnd ? '-' : '') +
+        dayEnd +
         (dayEnd ? ' ' : '') +
         endMoment.format('HH:mm:ss')
     )

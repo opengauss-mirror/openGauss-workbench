@@ -64,6 +64,11 @@ public class WdrAnalysis implements HisDiagnosisPointService<List<PrometheusData
     public AnalysisDTO analysis(HisDiagnosisTask task, DataStoreService dataStoreService) {
         AnalysisDTO analysisDTO = new AnalysisDTO();
         List<?> list = (List<?>) dataStoreService.getData(dbAvgCpuItem).getCollectionData();
+        if (CollectionUtils.isEmpty(list)) {
+            analysisDTO.setIsHint(HisDiagnosisResult.ResultState.NO_ADVICE);
+            analysisDTO.setPointType(HisDiagnosisResult.PointType.CENTER);
+            return analysisDTO;
+        }
         List<PrometheusData> prometheusDataList = new ArrayList<>();
         for (Object object : list) {
             if (object instanceof PrometheusData) {

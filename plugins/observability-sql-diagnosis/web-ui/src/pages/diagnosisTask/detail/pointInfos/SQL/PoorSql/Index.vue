@@ -9,7 +9,6 @@
 <script lang="ts" setup>
 import { getPointData } from '@/api/historyDiagnosis'
 import { useRequest } from 'vue-request'
-import { toFixed } from '@/shared'
 
 const props = withDefaults(
     defineProps<{

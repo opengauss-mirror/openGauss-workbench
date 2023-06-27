@@ -34,6 +34,15 @@
         border: 1px solid #94bfff;
         border-radius: 2px;
         margin-bottom: 10px;
+
+        &.abnormal{
+            background: #FFF2F0;
+            border: 1px solid #FFCCC7;
+        }
+        &.suggestions{
+            background: #FFF7E8;
+            border: 1px solid #FFBB94;
+        }
     }
 }
 

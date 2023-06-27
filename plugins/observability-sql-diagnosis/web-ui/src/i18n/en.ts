@@ -58,6 +58,8 @@ export default {
         pleaseSelectThreshold: 'Please enter a threshold',
         result: 'Diagnosis Result',
         explanation: 'Diagnosis Explanation',
+        notAnalyze:
+            'No diagnostic action was taken for this diagnostic point because the diagnostic criteria were not met.',
         taskInfo: {
             result: 'Diagnostic Result',
             diagnosisRange: 'Diagnostic Interval:',

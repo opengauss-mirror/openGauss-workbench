@@ -19,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,6 +39,10 @@ public abstract class ElasticSearchCollectionItem implements CollectionItem<LogI
 
     @Override
     public LogInfoDTO collectData(HisDiagnosisTask task) {
+        if (task.getHisDataEndTime() == null) {
+            Date endDate = new Date();
+            task.setHisDataEndTime(endDate);
+        }
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
         SimpleDateFormat stringFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
         dateFormat.setTimeZone(TimeZone.getTimeZone("GMT+00:00"));
@@ -57,6 +62,10 @@ public abstract class ElasticSearchCollectionItem implements CollectionItem<LogI
 
     @Override
     public LogInfoDTO queryData(HisDiagnosisTask task) {
+        if (task.getHisDataEndTime() == null) {
+            Date endDate = new Date();
+            task.setHisDataEndTime(endDate);
+        }
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
         SimpleDateFormat stringFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
         dateFormat.setTimeZone(TimeZone.getTimeZone("GMT+00:00"));
