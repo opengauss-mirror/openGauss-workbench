@@ -1,18 +1,21 @@
 <template>
     <div>
-        <el-breadcrumb separator="/">
-            <el-breadcrumb-item>{{ t('alertRecord.title') }}</el-breadcrumb-item>
-        </el-breadcrumb>
-        <el-divider />
+        <div class="page-header">
+            <div class="icon"></div>
+            <div class="title">{{ t('alertRecord.title') }}</div>
+            <div class="seperator"></div>
+            <div class="alert-title">{{ t('alertRecord.title') }} </div>
+            <div class="alert-seperator">&nbsp;/</div>
+        </div>
         <div class="search-form">
             <div class="filter">
                 <el-icon color="#F56C6C">
                     <Bell />
                 </el-icon>
-                <span>{{ $t(`alertRecord.alertTotal`) }}：</span><span>{{ statisticsData.totalNum }}</span>
-                <span style="margin-left: 20px;">{{ $t(`alertRecord.unread`) }}：</span><span>{{ statisticsData.unReadNum
+                <span>{{ $t(`alertRecord.alertTotal`) }}：</span><span class="statistics">{{ statisticsData.totalNum }}</span>
+                <span style="margin-left: 20px;">{{ $t(`alertRecord.unread`) }}：</span><span class="statistics">{{ statisticsData.unReadNum
                 }}</span>
-                <span style="margin-left: 20px;">{{ $t(`alertRecord.read`) }}：</span><span>{{ statisticsData.readNum
+                <span style="margin-left: 20px;">{{ $t(`alertRecord.read`) }}：</span><span class="statistics">{{ statisticsData.readNum
                 }}</span>
             </div>
             <div class="seperator"></div>
@@ -39,8 +42,12 @@
                 <RecordPid :datas="levelData" :title="$t('alertRecord.levelTip')"></RecordPid>
             </el-col>
         </el-row>
-        <div class="record-table">
-            <div class="search-form" style="margin-bottom: 5px !important;">
+        <div class="alert-table">
+            <div class="page-header" style="padding: 7px;">
+                <div class="icon"></div>
+                <div class="title" style="font-size: 14px;font-weight: 500;">{{ t('alertRecord.detailTitle') }}</div>
+            </div>
+            <div class="search-form" style="margin: 0 8px !important;">
                 <div class="filter">
                     <el-button  @click="markAsUnread">{{ t('alertRecord.markAsUnread') }}</el-button>
                     <el-button  @click="markAsRead">{{ t('alertRecord.markAsRead') }}</el-button>
@@ -48,7 +55,7 @@
                 <div class="seperator"></div>
                 <div class="filter">
                     <span>{{ $t('alertRecord.recordStatus') }}:&nbsp;</span>
-                    <el-checkbox-group v-model="formData.recordStatus" @change="changeRecordStatus">
+                    <el-checkbox-group v-model="formData.recordStatus" @change="changeRecordStatus" size="large">
                         <el-checkbox label="0">{{ $t(`alertRecord.unread`) }}</el-checkbox>
                         <el-checkbox label="1">{{ $t(`alertRecord.read`) }}</el-checkbox>
                     </el-checkbox-group>
@@ -56,7 +63,7 @@
                 </div>
                 <div class="filter">
                     <span>{{ $t('alertRecord.alertStatus') }}:&nbsp;</span>
-                    <el-checkbox-group v-model="formData.alertStatus" @change="changeAlertStatus">
+                    <el-checkbox-group v-model="formData.alertStatus" @change="changeAlertStatus" size="large">
                         <el-checkbox label="0">{{ $t(`alertRecord.alerting`) }}</el-checkbox>
                         <el-checkbox label="1">{{ $t(`alertRecord.alerted`) }}</el-checkbox>
                     </el-checkbox-group>
@@ -64,16 +71,16 @@
                 </div>
                 <div class="filter">
                     <span>{{ $t('alertRecord.level') }}:&nbsp;</span>
-                    <el-checkbox-group v-model="formData.alertLevel" @change="changeLevel">
+                    <el-checkbox-group v-model="formData.alertLevel" @change="changeLevel" size="large">
                         <el-checkbox label="serious">{{ $t(`alertRule.serious`) }}</el-checkbox>
                         <el-checkbox label="warn">{{ $t(`alertRule.warn`) }}</el-checkbox>
                         <el-checkbox label="info">{{ $t(`alertRule.info`) }}</el-checkbox>
                     </el-checkbox-group>
                 </div>
             </div>
-            <el-table size="small" :data="tableDatas" style="width: 100%" ref="recordTable"
+            <el-table size="small" :data="tableDatas" style="width: 100%;" ref="recordTable"
                 header-cell-class-name="grid-header" border>
-                <el-table-column type="selection" width="55" />
+                <el-table-column type="selection" width="40" align="center" header-align="center"/>
                 <el-table-column prop="clusterNodeName" min-width="150" :label="$t('alertRecord.table[0]')" />
                 <!-- <el-table-column prop="hostIp" :label="$t('alertRecord.table[1]')" />
                 <el-table-column prop="dbType" :label="$t('alertRecord.table[2]')" /> -->
@@ -406,28 +413,7 @@ onMounted(() => {
 })
 </script>
 <style scoped lang='scss'>
-@use 'sass:math';
-@use '@/assets/style/color.scss' as *;
-@use 'sass:map';
-
-.record-table {
-    margin-top: 17px;
-
-    // border: 1px solid #D9D9D9
-    .pagination {
-        margin-top: 5px;
-    }
-
-    .search-form {
-        .el-button {
-            font-size: 14px !important;
-            padding: 8px 16px !important;
-            border: 1px solid var(--button-1-border) !important;
-            border-radius: 2px;
-            font-weight: 400 !important;
-            color: var(--button-1-color) !important;
-            background-color: var(--button-1-background) !important;
-        }
-    }
+.el-table {
+    height: calc(100vh - 170px - 62px - 250px - 34px);
 }
 </style>

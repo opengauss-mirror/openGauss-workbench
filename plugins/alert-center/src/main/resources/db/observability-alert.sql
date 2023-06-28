@@ -190,7 +190,7 @@ COMMENT ON COLUMN "public"."alert_rule"."is_silence" IS '是否静默，0为否�
 COMMENT ON COLUMN "public"."alert_rule"."silence_start_time" IS '静默开始时间';
 COMMENT ON COLUMN "public"."alert_rule"."silence_end_time" IS '静默结束时间';
 COMMENT ON COLUMN "public"."alert_rule"."alert_notify" IS '告警通知，firing为告警，recover为告警恢复，两个可以同时存在，用逗号分隔';
-COMMENT ON COLUMN "public"."alert_rule"."notify_way" IS '通知方式，message、email、WeCom、DingTalk';
+COMMENT ON COLUMN "public"."alert_rule"."notify_way_ids" IS '通知方式ID集合';
 COMMENT ON COLUMN "public"."alert_rule"."alert_desc" IS '告警描述';
 COMMENT ON COLUMN "public"."alert_rule"."is_deleted" IS '是否删除，0未删除，1删除';
 COMMENT ON COLUMN "public"."alert_rule"."create_time" IS '创建时间';
@@ -320,7 +320,7 @@ COMMENT ON COLUMN "public"."alert_template_rule"."is_silence" IS '是否静默�
 COMMENT ON COLUMN "public"."alert_template_rule"."silence_start_time" IS '静默开始时间';
 COMMENT ON COLUMN "public"."alert_template_rule"."silence_end_time" IS '静默结束时间';
 COMMENT ON COLUMN "public"."alert_template_rule"."alert_notify" IS '告警通知，firing为告警，recover为告警恢复，两个可以同时存在，用逗号分隔';
-COMMENT ON COLUMN "public"."alert_template_rule"."notify_way" IS '通知方式，message、email、WeCom、DingTalk';
+COMMENT ON COLUMN "public"."alert_template_rule"."notify_way_ids" IS '通知方式ID集合';
 COMMENT ON COLUMN "public"."alert_template_rule"."alert_desc" IS '告警描述';
 COMMENT ON COLUMN "public"."alert_template_rule"."is_deleted" IS '是否删除，0未删除，1删除';
 COMMENT ON COLUMN "public"."alert_template_rule"."create_time" IS '创建时间';
@@ -543,5 +543,5 @@ INSERT INTO public.alert_rule_item (id,rule_id,rule_mark,rule_exp_name,operate,l
 
 INSERT INTO public.notify_template (id,notify_template_name,notify_template_desc,notify_title,notify_content,notify_template_type,is_deleted,create_time,update_time)
 VALUES (1,'通用告警模板',null,'告警信息','告警时间：$'||'{alertTime}'||chr(10)||'告警等级：$'||'{level}'||chr(10)||'告警实例：$'||'{nodeName}'||chr(10)||'主机IP：$'||'{hostIp}'||chr(10)||'告警内容：$'||'{content}'||chr(10),'email',0,'2023-04-26 08:30:22.02',null) ON DUPLICATE KEY UPDATE NOTHING;
-INSERT INTO public.notify_way (id,name,notify_type,phone,email,person_id,dept_id,message_template_id,is_deleted,create_time,update_time)
+INSERT INTO public.notify_way (id,name,notify_type,phone,email,person_id,dept_id,notify_template_id,is_deleted,create_time,update_time)
 VALUES (1,'通用告警方式','email',null,'xxxx@xxx.com',null,null,1,0,'2023-05-24 11:25:38.073319',null) ON DUPLICATE KEY UPDATE NOTHING;

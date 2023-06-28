@@ -1,9 +1,12 @@
 <template>
     <div v-if="showMain">
-        <el-breadcrumb separator="/">
-            <el-breadcrumb-item >{{ t('alertRule.title') }}</el-breadcrumb-item>
-        </el-breadcrumb>
-        <el-divider />
+        <div class="page-header">
+            <div class="icon"></div>
+            <div class="title">{{ t('alertRule.title') }}</div>
+            <div class="seperator"></div>
+            <div class="alert-title">{{ t('alertRule.title') }} </div>
+            <div class="alert-seperator">&nbsp;/</div>
+        </div>
         <div class="search-form">
             <div class="filter">
                 <span>{{ $t('alertRule.ruleType') }}&nbsp;</span>
@@ -30,7 +33,7 @@
         </div>
         <div class="alert-rule">
             <div class="alert-record-table">
-                <el-table size="small" :data="tableDatas" style="width: 100%" header-cell-class-name="grid-header" border>
+                <el-table size="small" :data="tableDatas" style="width: 100%;" header-cell-class-name="grid-header" border>
                     <el-table-column :label="$t('alertRule.table[0]')" prop="ruleName" width="140">
                         <!-- <template #default="scope">
                             <el-link :underline="false" type="primary" @click="showDetail(scope.row.ruleId)">{{
@@ -100,10 +103,6 @@ import { ElMessageBox, ElMessage } from "element-plus";
 import { useI18n } from "vue-i18n";
 import RuleDetail from "@/views/alert/AlertRule/RuleDetail.vue";
 const { t } = useI18n();
-
-const theme = localStorage.getItem('theme');
-const color = ref<string>(theme === 'dark' ? '#d4d4d4' : '#1d212a')
-const background = ref<string>(theme === 'dark' ? '#303030' : '#F5F7FB')
 
 const showMain = ref<boolean>(true)
 const curId = ref<number>()
@@ -189,74 +188,11 @@ const cancelRule = () => {
 }
 onMounted(() => {
     requestData()
-
-    const wujie = window.$wujie;
-    if (wujie) {
-        wujie?.bus.$on('opengauss-theme-change', (val: string) => {
-            nextTick(() => {
-                color.value = theme === 'dark' ? '#d4d4d4' : '#1d212a'
-                background.value = theme === 'dark' ? '#303030' : '#F5F7FB'
-            });
-        });
-    }
 })
 
 </script>
 <style lang='scss' scoped>
-.search-form {
-    .filter {
-        :deep(.el-button--small) {
-            background-color: v-bind(background) !important;
-            color: v-bind(color) !important;
-        }
-    }
-}
-
-.alert-rule {
-    &-chart {
-        height: 380px;
-        display: flex;
-        flex-direction: column;
-        align-items: flex-end;
-
-        .chart-wrap {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            text-align: center;
-
-            .chart-content {
-                width: 100%;
-                height: 100%;
-            }
-        }
-
-        .noresult-wrap {
-            width: 100%;
-            height: 500px;
-
-            .noresult-img {
-                width: 200px;
-                display: block;
-                margin: 20px auto;
-            }
-
-            .noresult-text {
-                text-align: center;
-                color: #707070;
-            }
-        }
-
-        .noResult .barLine-chart {
-            display: none;
-        }
-    }
-
-    :deep(.el-link) {
-        color: #409EFF !important;
-    }
-
+.el-table {
+    height: calc(100vh - 170px - 62px - 42px - 34px);
 }
 </style>

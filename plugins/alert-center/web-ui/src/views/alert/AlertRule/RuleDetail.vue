@@ -1,14 +1,22 @@
 <template>
     <div>
-        <el-breadcrumb separator="/">
-            <el-breadcrumb-item>{{ t('alertRule.title') }}</el-breadcrumb-item>
-            <el-breadcrumb-item v-if="state === 'add'">{{ t('alertRule.addTitle') }}</el-breadcrumb-item>
-            <el-breadcrumb-item v-if="state === 'edit'">{{ t('alertRule.editTitle') }}</el-breadcrumb-item>
-            <el-breadcrumb-item v-if="state === 'detail'">{{ t('alertRule.detailTitle') }}</el-breadcrumb-item>
-        </el-breadcrumb>
-        <el-divider />
-        <el-descriptions :title="$t('alertRule.alertTitle')"></el-descriptions>
-        <el-form :model="formData" :rules="formRules" ref="formRef" label-position="right" label-width="100px">
+        <div class="page-header">
+            <div class="icon"></div>
+            <div class="title" v-if="state === 'add'">{{ t('alertRule.addTitle') }}</div>
+            <div class="title" v-if="state === 'edit'">{{ t('alertRule.editTitle') }}</div>
+            <div class="title" v-if="state === 'detail'">{{ t('alertRule.detailTitle') }}</div>
+            <div class="seperator"></div>
+            <div class="alert-title">{{ t('alertRule.title') }} </div>
+            <div class="alert-seperator">&nbsp;/&nbsp;</div>
+            <div class="alert-title" v-if="state === 'add'">{{ t('alertRule.addTitle') }} </div>
+            <div class="alert-title" v-if="state === 'edit'">{{ t('alertRule.editTitle') }} </div>
+            <div class="alert-title" v-if="state === 'detail'">{{ t('alertRule.detailTitle') }} </div>
+        </div>
+        <div class="form-header">
+            <el-descriptions :title="$t('alertRule.alertTitle')"></el-descriptions>
+        </div>
+        <el-form :model="formData" :rules="formRules" ref="formRef" label-position="right" label-width="100px"
+            size="default">
             <el-form-item :label="$t('alertRule.ruleName')" prop="ruleName">
                 <el-input v-model="formData.ruleName" :placeholder="$t('alertRule.ruleNamePlaceholder')"
                     :disabled="disabled"></el-input>
@@ -25,10 +33,9 @@
                 </el-radio-group>
             </el-form-item>
             <el-form-item :label="$t('alertRule.ruleItem')" prop="">
-                <el-card class="box-card" v-for="item in formData.alertRuleItemList" :key="item.id"
-                    body-style="padding: 5px">
-                    <span style="margin: 5px 0;">{{ $t('alertRule.ruleItemNum') }}:</span><el-input v-model="item.ruleMark"
-                        :disabled="disabled" style="width: 30px;margin: 5px;"></el-input>
+                <span v-for="item in formData.alertRuleItemList" :key="item.id" class="rule">
+                    <span style="margin: 5px;">{{ $t('alertRule.ruleItemNum') }}:</span><el-input v-model="item.ruleMark"
+                        :disabled="disabled" style="width: 40px;margin: 5px;"></el-input>
                     <span style="margin: 5px 0 10px 5px;">{{ $t('alertRule.ruleItemExp') }}:</span>
                     <el-select v-model="item.ruleExpName" :disabled="disabled" style="width: 100px;margin: 5px 0 5px 5px;">
                         <el-option v-for="item0 in ruleItemExpList" :key="item0.name" :value="item0.name"
@@ -45,7 +52,7 @@
                     <el-input v-model="item.operate" style="width: 50px;margin: 5px;" :disabled="disabled"></el-input>
                     <el-input v-model="item.limitValue" style="width: 100px;margin: 5px;" :disabled="disabled"></el-input>
                     <span style="width: 50px;margin: 5px;">{{ item.unit }}</span>
-                </el-card>
+                </span>
             </el-form-item>
             <el-form-item :label="$t('alertRule.ruleExpComb')" prop="ruleExpComb">
                 <span v-for="item in ruleExpComb" :key="item">
@@ -53,7 +60,7 @@
                         <el-option v-for="item in logicSymbolList" :key="item" :value="item"
                             :label="$t(`alertRule.${item}`)" />
                     </el-select>
-                    <el-input :value="item" style="width: 50px;" v-else :disabled="disabled"></el-input>
+                    <el-input :value="item" style="width: 40px;" v-else :disabled="disabled"></el-input>
                 </span>
             </el-form-item>
             <el-form-item :label="$t('alertRule.ruleContent')" prop="ruleContent">
@@ -71,8 +78,11 @@
                 <el-input v-model="formData.alertDesc" :disabled="disabled"></el-input>
             </el-form-item>
         </el-form>
-        <el-descriptions :title="$t('alertRule.notifyTitle')"></el-descriptions>
-        <el-form :model="formData" :rules="formRules" ref="formRef" label-position="right" label-width="100px">
+        <div class="form-header">
+            <el-descriptions :title="$t('alertRule.notifyTitle')"></el-descriptions>
+        </div>
+        <el-form :model="formData" :rules="formRules" ref="formRef" label-position="right" label-width="100px"
+            size="default">
             <el-form-item :label="$t('alertRule.alertNotify')" prop="notifyDuration">
                 <el-checkbox-group v-model="alertNotifyList" :disabled="disabled">
                     <el-checkbox label="firing">{{ $t('alertRule.firing') }}</el-checkbox>
@@ -107,7 +117,7 @@
         </el-form>
         <el-row style="margin-top: 10px;">
             <!-- <el-button type="primary" @click="confirm">{{ t('app.confirm') }}</el-button> -->
-            <el-button type="primary" @click="cancel">{{ t('app.cancel') }}</el-button>
+            <el-button @click="cancel">{{ t('app.cancel') }}</el-button>
         </el-row>
     </div>
 </template>
@@ -245,7 +255,7 @@ onMounted(() => {
     } else {
         disabled.value = true
     }
-    
+
     const wujie = window.$wujie;
     // Judge whether it is a plug-in environment or a local environment through wujie
     if (wujie) {
@@ -270,4 +280,5 @@ onMounted(() => {
     }
 })
 </script>
-<style scoped lang='scss'></style>
+<style scoped lang='scss'>
+</style>

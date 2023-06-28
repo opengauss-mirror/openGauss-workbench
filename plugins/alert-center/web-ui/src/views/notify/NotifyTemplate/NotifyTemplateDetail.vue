@@ -1,13 +1,18 @@
 <template>
     <div>
-        <el-breadcrumb separator="/">
-            <el-breadcrumb-item>{{ t('notifyTemplate.title') }}</el-breadcrumb-item>
-            <el-breadcrumb-item v-if="state === 'add'">{{ t('notifyTemplate.addTitle') }}</el-breadcrumb-item>
-            <el-breadcrumb-item v-if="state === 'edit'">{{ t('notifyTemplate.editTitle') }}</el-breadcrumb-item>
-            <el-breadcrumb-item v-if="state === 'detail'">{{ t('notifyTemplate.detailTitle') }}</el-breadcrumb-item>
-        </el-breadcrumb>
-        <el-divider />
-        <el-form :model="formData" :rules="formRules" ref="formRef" label-position="right" label-width="100px">
+        <div class="page-header">
+            <div class="icon"></div>
+            <div class="title" v-if="state === 'add'">{{ t('notifyTemplate.addTitle') }}</div>
+            <div class="title" v-if="state === 'edit'">{{ t('notifyTemplate.editTitle') }}</div>
+            <div class="title" v-if="state === 'detail'">{{ t('notifyTemplate.detailTitle') }}</div>
+            <div class="seperator"></div>
+            <div class="alert-title">{{ t('notifyTemplate.title') }} </div>
+            <div class="alert-seperator">&nbsp;/&nbsp;</div>
+            <div class="alert-title" v-if="state === 'add'">{{ t('notifyTemplate.addTitle') }}</div>
+            <div class="alert-title" v-if="state === 'edit'">{{ t('notifyTemplate.editTitle') }}</div>
+            <div class="alert-title" v-if="state === 'detail'">{{ t('notifyTemplate.detailTitle') }}</div>
+        </div>
+        <el-form style="margin-top: 8px;" :model="formData" :rules="formRules" ref="formRef" label-position="left" label-width="100px">
             <el-form-item :label="$t('notifyTemplate.templateName')" prop="notifyTemplateName">
                 <el-input v-model="formData.notifyTemplateName" :placeholder="$t('notifyTemplate.templateNamePlaceholder')"
                     :disabled="disabled"></el-input>
@@ -30,17 +35,17 @@
                     :placeholder="$t('notifyTemplate.notifyContentPlaceholder')" :disabled="disabled"></el-input>
             </el-form-item> -->
             <el-row>
-                <el-col :span="15">
+                <el-col :span="14">
                     <el-form-item :label="$t('notifyTemplate.notifyContent')" prop="notifyContent">
                         <el-input v-model="formData.notifyContent" type="textarea" :rows="10"
                         :placeholder="$t('notifyTemplate.notifyContentPlaceholder')" :disabled="disabled"></el-input>
                     </el-form-item>
                 </el-col>
-                <el-col :span="1">
-                    <div style="margin: 5px 0;">
+                <el-col :span="2">
+                    <div style="margin: 5px">
                         <el-button @click="reset">{{ t('app.reset') }}</el-button>
                     </div>
-                    <div style="margin: 5px 0;">
+                    <div style="margin: 5px">
                         <el-button @click="preview">{{ t('app.preview') }}</el-button>
                     </div>
                 </el-col>
@@ -58,10 +63,9 @@
                 </el-col>
             </el-row>
             <el-row>
-                <el-col :span="15">
+                <el-col :span="14">
                     <el-form-item :label="$t('notifyTemplate.previewContent')">
-                        <el-input v-model="previewContent" type="textarea" :rows="10"
-                        :placeholder="$t('notifyTemplate.notifyContentPlaceholder')" disabled></el-input>
+                        <el-input v-model="previewContent" type="textarea" :rows="10" disabled></el-input>
                     </el-form-item>
                 </el-col>
             </el-row>

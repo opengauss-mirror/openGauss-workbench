@@ -1,9 +1,12 @@
 <template>
     <div v-if="showMain">
-        <el-breadcrumb separator="/">
-            <el-breadcrumb-item>{{ t('notifyTemplate.title') }}</el-breadcrumb-item>
-        </el-breadcrumb>
-        <el-divider />
+        <div class="page-header">
+            <div class="icon"></div>
+            <div class="title">{{ t('notifyTemplate.title') }}</div>
+            <div class="seperator"></div>
+            <div class="alert-title">{{ t('notifyTemplate.title') }} </div>
+            <div class="alert-seperator">&nbsp;/</div>
+        </div>
         <div class="search-form">
             <div class="filter">
                 <el-button type="primary" @click="addTemplate">{{ $t('app.add') }}</el-button>
@@ -15,7 +18,7 @@
                     <el-option v-for="item in templateTypeList" :key="item.value" :value="item.value" :label="item.name" />
                 </el-select>
             </div>
-            <div class="filter search">
+            <div class="filter">
                 <el-input v-model="formData.notifyTemplateName" style="width: 200px"
                     :placeholder="$t('notifyTemplate.templateNamePlaceholder')">
                     <template #suffix>
@@ -85,10 +88,6 @@ import { ElMessageBox, ElMessage } from "element-plus";
 import { useI18n } from "vue-i18n";
 import { cloneDeep } from 'lodash-es';
 import NotifyTemplateDetail from "@/views/notify/NotifyTemplate/NotifyTemplateDetail.vue";
-
-const theme = localStorage.getItem('theme');
-const color = ref<string>(theme === 'dark' ? '#d4d4d4' : '#1d212a')
-const background = ref<string>(theme === 'dark' ? '#303030' : '#F5F7FB')
 
 const { t } = useI18n();
 const initFormData = {
@@ -226,26 +225,11 @@ const showSubWord = (content: string) => {
 
 onMounted(() => {
     requestData()
-
-    const wujie = window.$wujie;
-    if (wujie) {
-        wujie?.bus.$on('opengauss-theme-change', (val: string) => {
-            nextTick(() => {
-                color.value = theme === 'dark' ? '#d4d4d4' : '#1d212a'
-                background.value = theme === 'dark' ? '#303030' : '#F5F7FB'
-            });
-        });
-    }
 })
 
 </script>
 <style scoped lang='scss'>
-.search-form {
-    .search {
-        :deep(.el-button--small) {
-            background-color: v-bind(background) !important;
-            color: v-bind(color) !important;
-        }
-    }
+.el-table {
+    height: calc(100vh - 170px - 62px - 42px - 34px);
 }
 </style>

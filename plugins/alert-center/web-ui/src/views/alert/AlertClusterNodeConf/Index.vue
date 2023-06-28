@@ -1,29 +1,31 @@
 <template>
     <div v-if="showMain">
-        <el-breadcrumb separator="/">
-            <el-breadcrumb-item>{{ t('AlertClusterNodeConf.title') }}</el-breadcrumb-item>
-        </el-breadcrumb>
-        <el-divider />
+        <div class="page-header">
+            <div class="icon"></div>
+            <div class="title">{{ t('AlertClusterNodeConf.title') }}</div>
+            <div class="seperator"></div>
+            <div class="alert-title">{{ t('AlertClusterNodeConf.title') }} </div>
+            <div class="alert-seperator">&nbsp;/</div>
+        </div>
         <div class="search-form">
             <div class="filter">
                 <el-button type="primary" @click="addClusterNodeConf">{{ $t('AlertClusterNodeConf.confBtn') }}</el-button>
                 <!-- <el-button type="primary" @click="setAlertConfig">{{ $t('AlertClusterNodeConf.setInterface') }}</el-button> -->
             </div>
             <div class="seperator"></div>
-            <div class="search-form">
-                <div class="filter">
-                    <el-input v-model="formData.nodeName" style="width: 200px"
-                        :placeholder="$t('AlertClusterNodeConf.nodeNamePlaceholder')">
-                        <template #suffix>
-                            <el-button :icon="Search" @click="search" />
-                        </template>
-                    </el-input>
-                </div>
+            <div class="filter">
+                <el-input v-model="formData.nodeName" style="width: 200px"
+                    :placeholder="$t('AlertClusterNodeConf.nodeNamePlaceholder')">
+                    <template #suffix>
+                        <el-button :icon="Search" @click="search" />
+                    </template>
+                </el-input>
             </div>
         </div>
         <div>
-            <el-table size="small" :data="tableDatas" ref="table" style="width: 100%" header-cell-class-name="grid-header" border>
-                <el-table-column type="selection" width="55" />
+            <el-table size="small" :data="tableDatas" ref="table" style="width: 100%" header-cell-class-name="grid-header"
+                border>
+                <el-table-column type="selection" width="40" />
                 <el-table-column prop="nodeName" :label="$t('AlertClusterNodeConf.table[0]')" />
                 <!-- <el-table-column prop="dbType" :label="$t('AlertClusterNodeConf.table[1]')" />
                 <el-table-column prop="hostIp" :label="$t('AlertClusterNodeConf.table[2]')" /> -->
@@ -146,5 +148,4 @@ onMounted(() => {
     requestData()
 })
 </script>
-<style scoped lang='scss'>
-</style>
+<style scoped lang='scss'></style>

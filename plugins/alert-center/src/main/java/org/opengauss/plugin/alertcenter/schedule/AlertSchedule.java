@@ -34,7 +34,7 @@ public class AlertSchedule {
     @Scheduled(cron = "0 0/1 * * * ?")
     public void alertNotifySchedule() {
         List<NotifyMessage> notifyMessages = notifyMessageMapper.selectList(
-                Wrappers.<NotifyMessage>lambdaQuery().eq(NotifyMessage::getStatus, 0).in(NotifyMessage::getIsDeleted,
+                Wrappers.<NotifyMessage>lambdaQuery().eq(NotifyMessage::getStatus, 0).eq(NotifyMessage::getIsDeleted,
                         0));
         if (CollectionUtil.isEmpty(notifyMessages)) {
             return;

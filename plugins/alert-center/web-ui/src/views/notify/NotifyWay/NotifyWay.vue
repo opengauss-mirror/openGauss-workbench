@@ -63,7 +63,7 @@
         </div>
     </div>
     <div v-else>
-        <NotifyWayDetail :id="curId" :state="state" @updateNotifyWay="updateNotifyWay"
+        <NotifyWayDetail :id="curId" :state="state" @updateNotifyWay="updateNotifyWay" style="margin-top: 8px;"
             @cancelNotifyWay="cancelNotifyWay" />
     </div>
 </template>
@@ -226,12 +226,7 @@ onMounted(() => {
 
 </script>
 <style scoped lang='scss'>
-.search-form {
-    .search {
-        :deep(.el-button--small) {
-            background-color: v-bind(background) !important;
-            color: v-bind(color) !important;
-        }
-    }
+.el-table {
+    height: calc(100vh - 170px - 62px - 82px - 34px);
 }
 </style>

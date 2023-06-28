@@ -1,18 +1,22 @@
 <template>
-    <el-breadcrumb separator="/">
-        <el-breadcrumb-item v-if="activeName === 'notifyWay'">{{ $t('notifyWay.title') }}</el-breadcrumb-item>
-        <el-breadcrumb-item v-if="activeName === 'notifyConfig'">{{ $t('notifyConfig.title') }}</el-breadcrumb-item>
-        <el-breadcrumb-item v-if="state === 'addNotifyWay'">{{ $t('notifyWay.addTitle') }}</el-breadcrumb-item>
-        <el-breadcrumb-item v-if="state === 'editNotifyWay'">{{ $t('notifyWay.editTitle') }}</el-breadcrumb-item>
-        <el-breadcrumb-item v-if="state === 'detailNotifyWay'">{{ $t('notifyWay.detailTitle') }}</el-breadcrumb-item>
-    </el-breadcrumb>
-    <el-divider />
-    <el-tabs v-model="activeName" @tab-click="handleClick">
+    <div class="page-header">
+        <div class="icon"></div>
+        <div class="title" v-if="activeName === 'notifyWay'">{{ t('notifyWay.title') }}</div>
+        <div class="title" v-if="activeName === 'notifyConfig'">{{ t('notifyConfig.title') }}</div>
+        <div class="seperator"></div>
+        <div class="alert-title" v-if="activeName === 'notifyWay'">{{ t('notifyWay.title') }} </div>
+        <div class="alert-title" v-if="activeName === 'notifyConfig'">{{ t('notifyConfig.title') }} </div>
+        <div class="alert-seperator">&nbsp;/&nbsp;</div>
+        <div class="alert-title" v-if="state === 'addNotifyWay'">{{ t('notifyWay.addTitle') }} </div>
+        <div class="alert-title" v-if="state === 'editNotifyWay'">{{ t('notifyWay.editTitle') }} </div>
+        <div class="alert-title" v-if="state === 'detailNotifyWay'">{{ t('notifyWay.detailTitle') }} </div>
+    </div>
+    <el-tabs v-model="activeName" @tab-click="handleClick" style="margin: 0;">
         <el-tab-pane :label="$t('notifyWay.title')" name="notifyWay">
-            <NotifyWay @updateState="updateState"/>
+            <NotifyWay @updateState="updateState" />
         </el-tab-pane>
         <el-tab-pane :label="$t('notifyConfig.title')" name="notifyConfig">
-            <NotifyConfig />
+            <NotifyConfig style="margin-top: 10px;"/>
         </el-tab-pane>
     </el-tabs>
 </template>
@@ -42,4 +46,5 @@ onMounted(() => {
 })
 
 </script>
-<style scoped lang='scss'></style>
+<style scoped lang='scss'>
+</style>

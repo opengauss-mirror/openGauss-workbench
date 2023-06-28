@@ -1,6 +1,6 @@
 <template>
     <div>
-        <el-form :model="formData" :rules="formRules" ref="formRef" label-position="right" label-width="100px">
+        <el-form :model="formData" :rules="formRules" ref="formRef" label-position="left" label-width="100px">
             <el-form-item :label="$t('notifyWay.name')" prop="name">
                 <el-input v-model="formData.name" :placeholder="$t('notifyWay.namePlaceholder')"
                     :disabled="disabled"></el-input>
@@ -151,7 +151,7 @@ watch(templateRes, (templateRes: any) => {
 });
 
 const notifyTypeChange = () => {
-    formData.notifyTemplateId = null
+    formData.value.notifyTemplateId = null
     if (!formData.value.notifyType) {
         templateList.value = []
         return
