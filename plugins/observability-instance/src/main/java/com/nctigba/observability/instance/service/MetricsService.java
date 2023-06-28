@@ -103,14 +103,16 @@ public class MetricsService {
                 try {
                     if (metric instanceof MetricsLine) {
                         MetricsLine m = (MetricsLine) metric;
-                        var metrics = list(m.promQl(hostId, nodeId), start, end, step);
-                        result.put(m.name(), parseLine(metrics, timeline, m.getTemplate()));
+                        String promQl = m.promQl(hostId, nodeId);
+                        var metrics = list(promQl, start, end, step);
+                        result.put(m.name(), parseLine(promQl, metrics, timeline, m.getTemplate()));
                         return;
                     }
                     if (metric instanceof MetricsValue) {
                         MetricsValue m = (MetricsValue) metric;
+                        String promQl = m.promQl(hostId, nodeId);
                         var metrics = value(m.promQl(hostId, nodeId), System.currentTimeMillis() / 1000);
-                        result.put(m.name(), parseValue(metrics, m.getTemplate()));
+                        result.put(m.name(), parseValue(promQl, metrics, m.getTemplate()));
                     }
                 } finally {
                     countDown.countDown();
@@ -125,7 +127,7 @@ public class MetricsService {
         return result;
     }
 
-    private Object parseValue(List<monitoringMetric> metric, String template) {
+    private Object parseValue(String promQl, List<monitoringMetric> metric, String template) {
         if (metric.size() == 0) {
             return null;
         } else if (metric.size() == 1) {
@@ -134,7 +136,7 @@ public class MetricsService {
             var map = new HashMap<String, Object>();
             for (monitoringMetric monitoringMetric : metric) {
                 if (template == null)
-                    throw new NullPointerException();
+                    throw new NullPointerException(promQl);
                 String key = StrUtil.format(template, monitoringMetric.getMetric());
                 map.put(key, monitoringMetric.getValue().get(1));
             }
@@ -142,7 +144,7 @@ public class MetricsService {
         }
     }
 
-    private Object parseLine(List<monitoringMetric> metric, List<Long> timeline, String template) {
+    private Object parseLine(String promQl, List<monitoringMetric> metric, List<Long> timeline, String template) {
         if (metric.size() == 0) {
             return null;
         } else if (metric.size() == 1) {
@@ -151,7 +153,7 @@ public class MetricsService {
             var map = new HashMap<String, Object>();
             for (monitoringMetric monitoringMetric : metric) {
                 if (template == null)
-                    throw new NullPointerException();
+                    throw new NullPointerException(promQl);
                 String key = StrUtil.format(template, monitoringMetric.getMetric());
                 var lineNumber = ListUtil.collect(monitoringMetric.getValues(), timeline);
                 map.put(key, lineNumber);

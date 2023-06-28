@@ -13,7 +13,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.opengauss.plugin.agent.server.HostMetric;
+import org.opengauss.plugin.agent.config.DbConfig;
 import org.springframework.stereotype.Component;
 
 import lombok.AllArgsConstructor;
@@ -25,15 +25,22 @@ import lombok.extern.log4j.Log4j2;
 public class DbUtil {
     private static Connection conn;
 
-    private final HostMetric hostMetric;
+    private final DbConfig dbConfig;
 
     public final List<Map<String, Object>> query(String sql) {
-        synchronized (conn) {
-            try {
-                conn = DriverManager.getConnection("jdbc:opengauss://" + "localhost" + ":" + hostMetric.getDbport()
-                        + "/" + "postgres" + "?TimeZone=UTC", hostMetric.getDbUsername(), hostMetric.getDbPassword());
-            } catch (SQLException e) {
-                conn = null;
+        if (conn == null) {
+            synchronized (this) {
+                try {
+                    if (conn == null) {
+                        conn = DriverManager
+                                .getConnection(
+                                        "jdbc:opengauss://" + "localhost" + ":" + dbConfig.getDbport() + "/"
+                                                + "postgres" + "?TimeZone=UTC",
+                                        dbConfig.getDbUsername(), dbConfig.getDbPassword());
+                    }
+                } catch (SQLException e) {
+                    conn = null;
+                }
             }
         }
         try {

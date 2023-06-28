@@ -12,11 +12,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.opengauss.plugin.agent.config.DbConfig;
 import org.opengauss.plugin.agent.metric.Ametric;
 import org.opengauss.plugin.agent.metric.DBmetric;
 import org.opengauss.plugin.agent.metric.Metric;
 import org.opengauss.plugin.agent.util.StringUtil;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.core.annotation.Order;
@@ -46,22 +46,11 @@ public class HostMetric implements ApplicationRunner {
     private static final List<String> DB_LABEL_NAMES = Arrays.asList("instanceId");
     private static final Map<String, List<MetricFamilySamples>> CACHE = new HashMap<>();
 
-    @Value("${exporter.port}")
-    private Integer exporterPort;
-    @Value("${conf.hostId:#{null}}")
-    private String hostId;
-    @Value("${conf.node.nodeId:#{null}}")
-    private String nodeId;
-    @Value("${conf.node.dbport:#{null}}")
-    private Integer dbport;
-    @Value("${conf.node.dbUsername:#{null}}")
-    private String dbUsername;
-    @Value("${conf.node.dbPassword:#{null}}")
-    private String dbPassword;
+    private final DbConfig config;
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
-        if (exporterPort == null)
+        if (config.getExporterPort() == null)
             return;
         collectors.forEach((collectorName, collector) -> {
             Map<String, Metric> metric;
@@ -86,7 +75,7 @@ public class HostMetric implements ApplicationRunner {
             });
         });
         // c.unregister(cpuCollector);
-        new HTTPServer.Builder().withPort(exporterPort).build();
+        new HTTPServer.Builder().withPort(config.getExporterPort()).build();
     }
 
     private static String formatKey(String collectorName, Ametric collector, String k) {
@@ -97,30 +86,29 @@ public class HostMetric implements ApplicationRunner {
     public void cache() {
         try {
             collectors.forEach((collectorName, collector) -> {
-                if (StrUtil.isBlank(hostId))
-                    return;
-                if (collector instanceof DBmetric && (StrUtil.isBlank(nodeId) || dbport == null))
+                if (StrUtil.isBlank(config.getHostId()) || (collector instanceof DBmetric
+                        && (StrUtil.isBlank(config.getNodeId()) || config.getDbport() == null)))
                     return;
                 var list = new ArrayList<MetricFamilySamples>();
                 try {
-                    collector.getMetric(dbport).forEach((k, v) -> {
+                    collector.getMetric(config.getDbport()).forEach((k, v) -> {
                         if (k == null)
                             return;
                         final String key = formatKey(collectorName, collector, k);
                         var samples = new ArrayList<Sample>();
-                        List<String> labelNames = new ArrayList<String>();
+                        List<String> labelNames = new ArrayList<>();
                         labelNames.addAll(v.getLabelNames());
                         // global label
                         labelNames.addAll(OS_LABEL_NAMES);
                         if (collector instanceof DBmetric)
                             labelNames.addAll(DB_LABEL_NAMES);
                         v.getValues().forEach(value -> {
-                            List<String> labelValues = new ArrayList<String>();
+                            List<String> labelValues = new ArrayList<>();
                             labelValues.addAll(value.getLabelValues());
                             // global value
-                            labelValues.addAll(Arrays.asList(hostId));
+                            labelValues.addAll(Arrays.asList(config.getHostId()));
                             if (collector instanceof DBmetric)
-                                labelValues.addAll(Arrays.asList(nodeId));
+                                labelValues.addAll(Arrays.asList(config.getNodeId()));
                             if (labelNames.size() != labelValues.size()) {
                                 log.error("collector {} metric {} error:{}{}", collectorName, key, labelNames,
                                         labelValues);
