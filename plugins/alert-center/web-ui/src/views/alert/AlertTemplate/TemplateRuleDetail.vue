@@ -1,11 +1,16 @@
 <template>
     <div>
-        <el-breadcrumb separator="/">
-            <el-breadcrumb-item v-for="item in titleList" :key="item">{{ item }}</el-breadcrumb-item>
-        </el-breadcrumb>
-        <el-divider />
+        <div class="page-header" v-if="titleList.length > 0">
+            <div class="icon"></div>
+            <div class="title">{{ titleList[0] }}</div>
+            <div class="seperator"></div>
+            <span v-for="(item, index) in titleList" :key="item">
+                <span class="alert-title">{{ item }} </span>
+                <span class="alert-seperator" v-if="index === 0 || index !== titleList.length - 1">&nbsp;/&nbsp;</span>
+            </span>
+        </div>
         <el-descriptions :title="$t('alertRule.alertTitle')"></el-descriptions>
-        <el-form :model="formData" :rules="formRules" ref="formRef" label-position="right" label-width="100px">
+        <el-form :model="formData" :rules="formRules" ref="formRef" label-position="left" label-width="100px">
             <el-form-item :label="$t('alertRule.ruleName')" prop="ruleName">
                 <el-input v-model="formData.ruleName" disabled
                     :placeholder="$t('alertRule.ruleNamePlaceholder')"></el-input>
@@ -54,12 +59,12 @@
                 </span>
             </el-form-item>
             <el-row>
-                <el-col :span="15">
+                <el-col :span="14">
                     <el-form-item :label="$t('alertRule.ruleContent')" prop="ruleContent" style="margin-bottom: 0px;">
                         <el-input v-model="formData.ruleContent" @blur="preview"></el-input>
                     </el-form-item>
                 </el-col>
-                <el-col :span="1" style="margin-bottom: 0px;">
+                <el-col :span="2" style="padding-left: 5px;">
                     <el-button @click="reset" style="display: flex;">{{ t('app.reset') }}</el-button>
                 </el-col>
                 <el-col :span="8" style="margin-bottom: 0px;">
@@ -74,7 +79,7 @@
                         </div>
                     </div>
                 </el-col>
-                <el-col :span="15">
+                <el-col :span="14">
                     <el-form-item>
                         <span>{{ previewContent }}</span>
                     </el-form-item>

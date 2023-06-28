@@ -36,7 +36,7 @@ const init = () => {
             bottom: 'bottom',
             padding: 0,
             textStyle: {
-                fontWeight: 'normal',
+                fontWeight: 400,
                 color: theme === 'dark' ? '#d4d4d4' : '#1d212a',
                 fontSize: 14
             }
@@ -50,7 +50,11 @@ const init = () => {
             orient: 'vertical',
             textStyle: {
                 color: theme === 'dark' ? '#d4d4d4' : '#1d212a',
-                fontSize: 11
+                fontSize: 10
+            },
+            lineStyle: {
+                width: 10,
+                height: 10
             },
             formatter: function (name: string) {
                 let datas = option.series[0].data

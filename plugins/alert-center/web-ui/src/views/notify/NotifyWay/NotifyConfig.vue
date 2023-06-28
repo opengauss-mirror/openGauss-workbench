@@ -6,7 +6,7 @@
                 }}</el-checkbox>
             </el-col>
             <el-col :span="20" class="form-inline">
-                <el-form :inline="true" :model="emailConfig" ref="emailForm" :rules="emailRules" label-position="right" label-width="100px">
+                <el-form :inline="true" :model="emailConfig" ref="emailForm" :rules="emailRules" label-position="left" label-width="100px">
                     <el-form-item :label="$t('notifyConfig.senderEmail')" prop="email">
                         <el-input v-model="emailConfig.email" :disabled="emailConfig.enable === 0"
                             :placeholder="$t('notifyConfig.inputTip') + $t('notifyConfig.senderEmail')" />
@@ -367,7 +367,6 @@ onMounted(() => {
     width: 60px;
     height: 32px;
     background: #FFFFFF;
-    /* 边框/配置项按钮边框 */
     border: 1px solid #D9D9D9;
     border-radius: 2px;
     margin: 5px 16px;

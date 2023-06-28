@@ -83,6 +83,21 @@ html.dark {
     --el-table-cell-center-background: #424242;
     --el-color-primary-light-3: var(--primary-6);
     --color-bg-2: #232324;
+
+    --color-1: #FFFFFF;
+    --border-1: #484849;
+    --border-2: #2ba1fa;
+    --border-rule: #A9ABB0;
+    --background-color-1: #484949;
+    --background-color-2: #2e2d2f;
+    --background-color-3: #484949;
+    --background-color-4: #1D1D1D;
+    --background-color-rule: #333333;
+    --text-1: #f5f6f6;
+    --text-2: #868F9C;
+    --button-1-color: #ffffff;
+    --button-1-background: #232324;
+    --button-1-border: #484949;
 }
 
 :root.dark {
@@ -111,10 +126,14 @@ html.dark {
     --color-1: #FFFFFF;
     --border-1: #484849;
     --border-2: #2ba1fa;
+    --border-rule: #A9ABB0;
     --background-color-1: #484949;
     --background-color-2: #2e2d2f;
     --background-color-3: #484949;
+    --background-color-4: #1D1D1D;
+    --background-color-rule: #333333;
     --text-1: #f5f6f6;
+    --text-2: #868F9C;
     --button-1-color: #ffffff;
     --button-1-background: #232324;
     --button-1-border: #484949;

@@ -1,31 +1,39 @@
 <template>
     <div v-if="showMain">
-        <el-breadcrumb separator="/">
-            <el-breadcrumb-item>{{ t('alertTemplate.title') }}</el-breadcrumb-item>
-        </el-breadcrumb>
-        <el-divider />
+        <div class="page-header">
+            <div class="icon"></div>
+            <div class="title">{{ t('alertTemplate.title') }}</div>
+            <div class="seperator"></div>
+            <div class="alert-title">{{ t('alertTemplate.title') }} </div>
+            <div class="alert-seperator">&nbsp;/&nbsp;</div>
+        </div>
         <el-row>
-            <el-col :span="8" class="container">
-                <el-descriptions :title="t('alertTemplate.title')"></el-descriptions>
-                <div class="search-form">
-                    <div class="filter">
-                        <el-button type="primary" @click="addTemplate">{{ $t('app.add') }}</el-button>
+            <el-col :span="6">
+                <div class="alert-table">
+                    <div class="page-header" style="padding: 7px;">
+                        <div class="icon"></div>
+                        <div class="title" style="font-size: 14px;font-weight: 500;">{{ t('alertTemplate.title') }}
+                        </div>
                     </div>
-                    <div class="seperator"></div>
-                    <div class="filter search">
-                        <el-input v-model="formData.templateName" style="width: 150px"
-                            :placeholder="$t('alertTemplate.templateNamePlaceholder')">
-                            <template #suffix>
-                                <el-button :icon="Search" @click="search" />
-                            </template>
-                        </el-input>
+                    <div class="search-form">
+                        <div class="filter">
+                            <el-button type="primary" @click="addTemplate">{{ $t('app.add') }}</el-button>
+                        </div>
+                        <div class="seperator"></div>
+                        <div class="filter">
+                            <el-input v-model="formData.templateName" style="width: 150px"
+                                :placeholder="$t('alertTemplate.templateNamePlaceholder')">
+                                <template #suffix>
+                                    <el-button :icon="Search" @click="search" />
+                                </template>
+                            </el-input>
+                        </div>
                     </div>
-                </div>
-                <div class="template-table">
-                    <el-table size="small" :data="tableDatas" style="width: 100%" header-cell-class-name="grid-header" border>
-                        <el-table-column width="50">
+                    <el-table size="small" :data="tableDatas" style="width: 100%;"
+                        header-cell-class-name="grid-header" border>
+                        <el-table-column width="31">
                             <template #default="scope">
-                                <el-radio :label="scope.row.id" v-model="currentId"
+                                <el-radio :label="scope.row.id" v-model="currentId" style="width: 31px;"
                                     @change="getCurrentRow(scope.row.id)">&nbsp;</el-radio>
                             </template>
                         </el-table-column>
@@ -41,26 +49,30 @@
                     </el-table>
                     <div class="pagination">
                         <el-pagination v-model:currentPage="page.currentPage" v-model:pageSize="page.pageSize"
-                            :total="page.total" :page-sizes="[10, 20, 30, 40]" layout="total,sizes,prev,pager,next"
+                            :total="page.total" :page-sizes="[10, 20, 30, 40]" layout="total,sizes,prev,next"
                             background small @size-change="handleSizeChange" @current-change="handleCurrentChange" />
                     </div>
                 </div>
             </el-col>
-            <el-col :span="16" class="container">
-                <el-descriptions :title="t('alertRule.title')"></el-descriptions>
-                <div class="search-form">
-                    <div class="filter search">
-                        <el-input v-model="ruleFormData.ruleName" style="width: 150px"
-                            :placeholder="$t('alertRule.ruleNamePlaceholder')">
-                            <template #suffix>
-                                <el-button :icon="Search" @click="ruleSearch" />
-                            </template>
-                        </el-input>
+            <el-col :span="18" style="padding-left: 8px;">
+                <div class="alert-table">
+                    <div class="page-header" style="padding: 7px;">
+                        <div class="icon"></div>
+                        <div class="title" style="font-size: 14px;font-weight: 500;">{{ t('alertRule.title') }}
+                        </div>
                     </div>
-                </div>
-                <div class="template-table">
-                    <el-table size="small" :data="ruleTableDatas" style="width: 100%" header-cell-class-name="grid-header"
-                        border>
+                    <div class="search-form">
+                        <div class="filter">
+                            <el-input v-model="ruleFormData.ruleName" style="width: 150px"
+                                :placeholder="$t('alertRule.ruleNamePlaceholder')">
+                                <template #suffix>
+                                    <el-button :icon="Search" @click="ruleSearch" />
+                                </template>
+                            </el-input>
+                        </div>
+                    </div>
+                    <el-table size="small" :data="ruleTableDatas" style="width: 100%;"
+                        header-cell-class-name="grid-header" border>
                         <el-table-column :label="$t('alertRule.table[0]')" prop="ruleName" width="140"></el-table-column>
                         <el-table-column :label="$t('alertRule.table[1]')" prop="ruleType" width="100">
                             <template #default="scope">
@@ -100,7 +112,7 @@
                     </el-table>
                     <div class="pagination">
                         <el-pagination v-model:currentPage="rulePage.currentPage" v-model:pageSize="rulePage.pageSize"
-                            :total="rulePage.total" :page-sizes="[10, 20, 30, 40]" class="pagination"
+                            :total="rulePage.total" :page-sizes="[10, 20, 30, 40]"
                             layout="total,sizes,prev,pager,next" background small @size-change="handleRuleSizeChange"
                             @current-change="handleRuleCurrentChange" />
                     </div>
@@ -301,15 +313,8 @@ onMounted(() => {
 })
 </script>
 <style scoped lang='scss'>
-.container {
-    border: #ebeef5 1px solid;
-    padding: 5px;
-    min-height: 600px;
-}
-.template-table {
-    :deep(.el-link) {
-        color: #409EFF !important;
-    }
+.el-table {
+    height: calc(100vh - 170px - 62px - 88px - 34px);
 }
 
 .pagination {

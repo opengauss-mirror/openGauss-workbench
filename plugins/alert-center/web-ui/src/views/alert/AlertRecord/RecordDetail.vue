@@ -1,11 +1,15 @@
 <template>
     <div>
-        <el-breadcrumb separator="/">
-            <el-breadcrumb-item>{{ t('alertRecord.title') }}</el-breadcrumb-item>
-            <el-breadcrumb-item>{{ t('alertRecord.detailTitle') }}</el-breadcrumb-item>
-        </el-breadcrumb>
-        <el-divider />
-        <el-row>
+        <div class="page-header">
+            <div class="icon"></div>
+            <div class="title">{{ t('alertRecord.detailTitle') }}</div>
+            <div class="seperator"></div>
+            <div class="alert-title">{{ t('alertRecord.title') }} </div>
+            <div class="alert-seperator">&nbsp;/&nbsp;</div>
+            <div class="alert-title">{{ t('alertRecord.detailTitle') }} </div>
+        </div>
+
+        <el-row style="margin-top: 8px;">
             <el-col :span="8">
                 <div class="record-detail">
                     <el-space wrap>
@@ -14,7 +18,7 @@
                         </el-icon>
                         <h5 class="title">{{ t('alertRecord.alertInstance') }}</h5>
                     </el-space>
-                    <el-form label-position="right" label-width="120">
+                    <el-form label-position="right" label-width="100">
                         <el-form-item :label="$t('alertRecord.clusterName') + ':'" style="margin-bottom: 5px !important">
                             <span>{{ formData.clusterId }}</span>
                         </el-form-item>
@@ -35,7 +39,7 @@
                         </el-icon>
                         <h5 class="title">{{ t('alertRecord.alertRule') }}</h5>
                     </el-space>
-                    <el-form label-position="right" label-width="120">
+                    <el-form label-position="right" label-width="100">
                         <el-form-item :label="$t('alertRule.ruleName') + ':'" style="margin-bottom: 5px !important">
                             <span>{{ formData.templateRuleName }}</span>
                         </el-form-item>
@@ -62,7 +66,7 @@
                         </el-icon>
                         <h5 class="title">{{ t('alertRecord.alertStatus') }}</h5>
                     </el-space>
-                    <el-form label-position="right" label-width="120">
+                    <el-form label-position="right" label-width="100">
                         <el-form-item :label="$t('alertRecord.table[7]') + ':'" style="margin-bottom: 5px !important">
                             <span>{{ formData.startTime }}</span>
                         </el-form-item>
@@ -80,9 +84,11 @@
                 </div>
             </el-col>
         </el-row>
-        <el-divider style="margin: 5px 0;" />
-        <div style="min-height: 370px;" v-if="formData.templateRuleType === 'index'">
-            <h5 class="title">{{ t('alertRecord.alertRelationView') }}</h5>
+        <div class="alert-table" style="margin-top: 8px;" v-if="formData.templateRuleType === 'index'">
+            <div class="page-header" style="padding: 7px;">
+                <div class="icon"></div>
+                <div class="title" style="font-size: 14px;font-weight: 500;">{{ t('alertRecord.alertRelationView') }}</div>
+            </div>
             <div v-for="(item, index) in relationDatas" style="width: 100%; height: 200px;margin-top: 20px;" :key="index">
                 <RecordLine :title="item.name" :datas="item.datas" :unit="item.unit" />
             </div>
@@ -195,6 +201,9 @@ onMounted(() => {
 })
 </script>
 <style scoped lang='scss'>
+.alert-table {
+    min-height: calc(100vh - 170px - 72px - 238px);
+}
 .card-header {
     display: flex;
     justify-content: space-between;

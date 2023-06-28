@@ -1,133 +1,141 @@
 <template>
     <div v-if="showMain">
-        <el-breadcrumb separator="/">
-            <el-breadcrumb-item>{{ t('AlertClusterNodeConf.title') }}</el-breadcrumb-item>
-            <el-breadcrumb-item>{{ t('AlertClusterNodeConf.detailTitle') }}</el-breadcrumb-item>
-        </el-breadcrumb>
-        <el-divider />
-        <el-form label-position="right" label-width="80" size="large">
-            <el-form-item :label="$t('AlertClusterNodeConf.selectedInstance') + ':'">
-                <el-tag v-for="(item, index) in clusterNodeList0" :key="item.clusterNodeId" type="info" size="large"
-                    class="mx-1" style="margin-right: 5px;" effect="dark" closable @close="closeTag(index)">{{ item.nodeName
-                    }}</el-tag>
+        <div class="page-header">
+            <div class="icon"></div>
+            <div class="title">{{ t('AlertClusterNodeConf.detailTitle') }}</div>
+            <div class="seperator"></div>
+            <div class="alert-title">{{ t('AlertClusterNodeConf.title') }} </div>
+            <div class="alert-seperator">&nbsp;/&nbsp;</div>
+            <div class="alert-title">{{ t('AlertClusterNodeConf.detailTitle') }} </div>
+        </div>
+        <el-form label-position="right" label-width="80" size="large" style="margin-top: 8px;">
+            <el-form-item :label="$t('AlertClusterNodeConf.selectedInstance') + ':'" style="margin-bottom: 10px !important;">
+                <el-tag v-for="(item, index) in clusterNodeList0" :key="item.clusterNodeId" size="large" closable
+                    @close="closeTag(index)">{{ item.nodeName }}</el-tag>
             </el-form-item>
         </el-form>
-        <el-tabs v-model="activeName" class="node-tabs" type="border-card">
-            <el-tab-pane :label="$t('AlertClusterNodeConf.alertTemplateTab')" name="template">
-                <el-row style="min-height: 350px;">
-                    <!-- style="border-right-style:solid;border-color: #E6E8EB;padding-right: 2px;" -->
-                    <el-col :span="4">
-                        <div>
-                            <el-table size="small" :data="tableDatas" style="width: 100%" ref="templateTable" header-cell-class-name="grid-header" border>
-                                <el-table-column width="50">
-                                    <template #default="scope">
-                                        <el-radio :label="scope.$index + ''" v-model="templateIndex"
-                                            @change="getCurrentRow(scope.row.id)">&nbsp;</el-radio>
-                                    </template>
-                                </el-table-column>
-                                <el-table-column prop="templateName" :label="$t('alertTemplate.table[0]')" />
-                            </el-table>
-                        </div>
-                    </el-col>
-                    <el-col :span="20" style="padding-left: 5px;">
-                        <el-descriptions :title="t('alertTemplate.detailTitle')">
+        <div class="alert-table">
+            <el-tabs v-model="activeName" class="node-tabs">
+                <el-tab-pane :label="$t('AlertClusterNodeConf.alertTemplateTab')" name="template" style="margin-top: 8px;">
+                    <el-row>
+                        <!-- style="border-right-style:solid;border-color: #E6E8EB;padding-right: 2px;" -->
+                        <el-col :span="4">
+                            <div>
+                                <el-table size="small" :data="tableDatas" style="width: 100%;" ref="templateTable" class="templateTable"
+                                    header-cell-class-name="grid-header" border>
+                                    <el-table-column width="50">
+                                        <template #default="scope">
+                                            <el-radio :label="scope.$index + ''" v-model="templateIndex"
+                                                @change="getCurrentRow(scope.row.id)">&nbsp;</el-radio>
+                                        </template>
+                                    </el-table-column>
+                                    <el-table-column prop="templateName" :label="$t('alertTemplate.table[0]')" />
+                                </el-table>
+                            </div>
+                        </el-col>
+                        <el-col :span="20" style="padding-left: 5px;">
+                            <el-descriptions :title="t('alertTemplate.detailTitle')">
+                            </el-descriptions>
+                            <div class="template-table">
+                                <el-table size="small" :data="ruleTableDatas" style="width: 100%;" class="ruleTable"
+                                    header-cell-class-name="grid-header" border>
+                                    <el-table-column :label="$t('alertRule.table[0]')" prop="ruleName"
+                                        width="140"></el-table-column>
+                                    <el-table-column :label="$t('alertRule.table[1]')" prop="ruleType" width="100">
+                                        <template #default="scope">
+                                            <span>{{ $t(`alertRule.${scope.row.ruleType}`) }}</span>
+                                        </template>
+                                    </el-table-column>
+                                    <el-table-column prop="level" :label="$t('alertRule.table[2]')" width="100">
+                                        <template #default="scope">
+                                            <span>{{ $t(`alertRule.${scope.row.level}`) }}</span>
+                                        </template>
+                                    </el-table-column>
+                                    <el-table-column prop="ruleExpDesc" :label="$t('alertRule.table[8]')" min-width="200">
+                                        <template #default="scope">
+                                            <span v-html="scope.row.ruleExpDesc"></span>
+                                        </template>
+                                    </el-table-column>
+                                    <el-table-column prop="ruleExpComb" :label="$t('alertRule.table[9]')">
+                                    </el-table-column>
+                                    <el-table-column prop="isRepeat" :label="$t('alertRule.table[3]')" width="100">
+                                        <template #default="scope">
+                                            <span>{{ scope.row.isRepeat === 1 ? $t('alertRule.isRepeat') :
+                                                $t('alertRule.isNotRepeat') }}</span>
+                                        </template>
+                                    </el-table-column>
+                                    <el-table-column prop="isSilence" :label="$t('alertRule.table[4]')" width="200">
+                                        <template #default="scope">
+                                            <span>{{ scope.row.isSilence === 1 ? scope.row.silenceStartTime +
+                                                $t('alertRule.to') +
+                                                scope.row.silenceEndTime : $t('alertRule.isNotSilence') }}</span>
+                                        </template>
+                                    </el-table-column>
+                                    <el-table-column prop="alertNotify" :label="$t('alertRule.table[5]')" width="120">
+                                        <template #default="scope">
+                                            <span v-text="showAlertNotify(scope.row.alertNotify)"></span>
+                                        </template>
+                                    </el-table-column>
+                                    <!-- <el-table-column prop="ruleContent" :label="$t('alertRule.table[6]')" /> -->
+                                </el-table>
+                            </div>
+                        </el-col>
+                    </el-row>
+                </el-tab-pane>
+                <el-tab-pane :label="$t('AlertClusterNodeConf.alertRuleTab')" name="rule" style="margin-top: 8px;">
+                    <el-row>
+                        <el-table size="small" :data="ruleTableDataList" ref="ruleTable" style="width: 100%;" class="templateTable"
+                            header-cell-class-name="grid-header" border>
+                            <el-table-column type="selection" width="40" />
+                            <el-table-column :label="$t('alertRule.table[0]')" prop="ruleName"
+                                width="140"></el-table-column>
+                            <el-table-column :label="$t('alertRule.table[1]')" prop="ruleType" width="100">
+                                <template #default="scope">
+                                    <span>{{ $t(`alertRule.${scope.row.ruleType}`) }}</span>
+                                </template>
+                            </el-table-column>
+                            <el-table-column prop="level" :label="$t('alertRule.table[2]')" width="100">
+                                <template #default="scope">
+                                    <span>{{ $t(`alertRule.${scope.row.level}`) }}</span>
+                                </template>
+                            </el-table-column>
+                            <el-table-column prop="ruleExpDesc" :label="$t('alertRule.table[8]')" min-width="200">
+                                <template #default="scope">
+                                    <span v-html="scope.row.ruleExpDesc"></span>
+                                </template>
+                            </el-table-column>
+                            <el-table-column prop="ruleExpComb" :label="$t('alertRule.table[9]')">
+                            </el-table-column>
+                            <el-table-column prop="isRepeat" :label="$t('alertRule.table[3]')" width="100">
+                                <template #default="scope">
+                                    <span>{{ scope.row.isRepeat === 1 ? $t('alertRule.isRepeat') :
+                                        $t('alertRule.isNotRepeat') }}</span>
+                                </template>
+                            </el-table-column>
+                            <el-table-column prop="isSilence" :label="$t('alertRule.table[4]')" width="200">
+                                <template #default="scope">
+                                    <span>{{ scope.row.isSilence === 1 ? scope.row.silenceStartTime + $t('alertRule.to') +
+                                        scope.row.silenceEndTime : $t('alertRule.isNotSilence') }}</span>
+                                </template>
+                            </el-table-column>
+                            <el-table-column prop="alertNotify" :label="$t('alertRule.table[5]')" width="120">
+                                <template #default="scope">
+                                    <span v-text="showAlertNotify(scope.row.alertNotify)"></span>
+                                </template>
+                            </el-table-column>
+                            <el-table-column :label="$t('alertRule.table[7]')" fixed="right">
+                                <template #default="scope">
+                                    <el-button link type="primary" size="small" @click.prevent="editRule(scope.row)">
+                                        {{ t('app.edit') }}
+                                    </el-button>
+                                </template>
+                            </el-table-column>
+                        </el-table>
+                    </el-row>
+                </el-tab-pane>
+            </el-tabs>
+        </div>
 
-                        </el-descriptions>
-                        <div class="template-table">
-                            <el-table size="small" :data="ruleTableDatas" style="width: 100%" header-cell-class-name="grid-header" border>
-                                <el-table-column :label="$t('alertRule.table[0]')" prop="ruleName"
-                                    width="140"></el-table-column>
-                                <el-table-column :label="$t('alertRule.table[1]')" prop="ruleType" width="100">
-                                    <template #default="scope">
-                                        <span>{{ $t(`alertRule.${scope.row.ruleType}`) }}</span>
-                                    </template>
-                                </el-table-column>
-                                <el-table-column prop="level" :label="$t('alertRule.table[2]')" width="100">
-                                    <template #default="scope">
-                                        <span>{{ $t(`alertRule.${scope.row.level}`) }}</span>
-                                    </template>
-                                </el-table-column>
-                                <el-table-column prop="ruleExpDesc" :label="$t('alertRule.table[8]')" min-width="200">
-                                    <template #default="scope">
-                                        <span v-html="scope.row.ruleExpDesc"></span>
-                                    </template>
-                                </el-table-column>
-                                <el-table-column prop="ruleExpComb" :label="$t('alertRule.table[9]')">
-                                </el-table-column>
-                                <el-table-column prop="isRepeat" :label="$t('alertRule.table[3]')" width="100">
-                                    <template #default="scope">
-                                        <span>{{ scope.row.isRepeat === 1 ? $t('alertRule.isRepeat') :
-                                            $t('alertRule.isNotRepeat') }}</span>
-                                    </template>
-                                </el-table-column>
-                                <el-table-column prop="isSilence" :label="$t('alertRule.table[4]')" width="200">
-                                    <template #default="scope">
-                                        <span>{{ scope.row.isSilence === 1 ? scope.row.silenceStartTime +
-                                            $t('alertRule.to') +
-                                            scope.row.silenceEndTime : $t('alertRule.isNotSilence') }}</span>
-                                    </template>
-                                </el-table-column>
-                                <el-table-column prop="alertNotify" :label="$t('alertRule.table[5]')" width="120">
-                                    <template #default="scope">
-                                        <span v-text="showAlertNotify(scope.row.alertNotify)"></span>
-                                    </template>
-                                </el-table-column>
-                                <!-- <el-table-column prop="ruleContent" :label="$t('alertRule.table[6]')" /> -->
-                            </el-table>
-                        </div>
-                    </el-col>
-                </el-row>
-            </el-tab-pane>
-            <el-tab-pane :label="$t('AlertClusterNodeConf.alertRuleTab')" name="rule">
-                <el-row style="min-height: 350px;">
-                    <el-table size="small" :data="ruleTableDataList" ref="ruleTable" style="width: 100%" header-cell-class-name="grid-header" border>
-                        <el-table-column type="selection" width="55" />
-                        <el-table-column :label="$t('alertRule.table[0]')" prop="ruleName" width="140"></el-table-column>
-                        <el-table-column :label="$t('alertRule.table[1]')" prop="ruleType" width="100">
-                            <template #default="scope">
-                                <span>{{ $t(`alertRule.${scope.row.ruleType}`) }}</span>
-                            </template>
-                        </el-table-column>
-                        <el-table-column prop="level" :label="$t('alertRule.table[2]')" width="100">
-                            <template #default="scope">
-                                <span>{{ $t(`alertRule.${scope.row.level}`) }}</span>
-                            </template>
-                        </el-table-column>
-                        <el-table-column prop="ruleExpDesc" :label="$t('alertRule.table[8]')" min-width="200">
-                            <template #default="scope">
-                                <span v-html="scope.row.ruleExpDesc"></span>
-                            </template>
-                        </el-table-column>
-                        <el-table-column prop="ruleExpComb" :label="$t('alertRule.table[9]')">
-                        </el-table-column>
-                        <el-table-column prop="isRepeat" :label="$t('alertRule.table[3]')" width="100">
-                            <template #default="scope">
-                                <span>{{ scope.row.isRepeat === 1 ? $t('alertRule.isRepeat') :
-                                    $t('alertRule.isNotRepeat') }}</span>
-                            </template>
-                        </el-table-column>
-                        <el-table-column prop="isSilence" :label="$t('alertRule.table[4]')" width="200">
-                            <template #default="scope">
-                                <span>{{ scope.row.isSilence === 1 ? scope.row.silenceStartTime + $t('alertRule.to') +
-                                    scope.row.silenceEndTime : $t('alertRule.isNotSilence') }}</span>
-                            </template>
-                        </el-table-column>
-                        <el-table-column prop="alertNotify" :label="$t('alertRule.table[5]')" width="120">
-                            <template #default="scope">
-                                <span v-text="showAlertNotify(scope.row.alertNotify)"></span>
-                            </template>
-                        </el-table-column>
-                        <el-table-column :label="$t('alertRule.table[7]')" fixed="right">
-                            <template #default="scope">
-                                <el-button link type="primary" size="small" @click.prevent="editRule(scope.row)">
-                                    {{ t('app.edit') }}
-                                </el-button>
-                            </template>
-                        </el-table-column>
-                    </el-table>
-                </el-row>
-            </el-tab-pane>
-        </el-tabs>
         <el-row style="margin-top: 10px;">
             <el-button type="primary" @click="confirm">{{ t('app.confirm') }}</el-button>
             <el-button @click="cancel">{{ t('app.cancel') }}</el-button>
@@ -425,6 +433,12 @@ onMounted(() => {
 
 </script>
 <style scoped lang='scss'>
+.templateTable {
+    height: calc(100vh - 170px - 62px - 177px);
+}
+.ruleTable {
+    height: calc(100vh - 170px - 62px - 177px - 34px);
+}
 .node-tabs>.el-tabs__content {
     padding: 32px;
     color: #6b778c;
