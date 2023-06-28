@@ -11,7 +11,7 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.opengauss.plugin.agent.server.HostMetric;
+import org.opengauss.plugin.agent.config.DbConfig;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -23,7 +23,7 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/config")
 @RequiredArgsConstructor
 public class Config {
-    private final HostMetric hostMetric;
+    private final DbConfig dbConfig;
 
     @GetMapping("/set")
     public void set(String hostId, String nodeId, Integer dbport, String username, String password) throws IOException {
@@ -38,7 +38,7 @@ public class Config {
             map.put("conf", Map.of("hostId", hostId, "node",
                     Map.of("nodeId", nodeId, "dbport", dbport, "username", username, "password", password)));
             // refresh curr config
-            hostMetric.setHostId(hostId).setNodeId(nodeId).setDbport(dbport).setDbUsername(username)
+            dbConfig.setHostId(hostId).setNodeId(nodeId).setDbport(dbport).setDbUsername(username)
                     .setDbPassword(password);
             try (var writer = new FileWriter(application)) {
                 writer.write(yaml.dumpAsMap(map));

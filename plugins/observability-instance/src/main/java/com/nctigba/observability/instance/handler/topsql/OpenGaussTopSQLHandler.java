@@ -15,18 +15,18 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
-import com.nctigba.observability.instance.constants.CommonConstants;
-import com.nctigba.observability.instance.dto.topsql.TopSQLNowReq;
-import org.opengauss.admin.common.exception.CustomException;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.opengauss.admin.common.exception.CustomException;
 import org.springframework.stereotype.Component;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.nctigba.observability.instance.constants.CommonConstants;
 import com.nctigba.observability.instance.constants.DatabaseType;
 import com.nctigba.observability.instance.dto.topsql.TopSQLListReq;
+import com.nctigba.observability.instance.dto.topsql.TopSQLNowReq;
 import com.nctigba.observability.instance.model.ExecutionPlan;
 import com.nctigba.observability.instance.model.IndexAdvice;
 import com.nctigba.observability.instance.model.InstanceNodeInfo;
@@ -48,8 +48,8 @@ import lombok.extern.slf4j.Slf4j;
 public class OpenGaussTopSQLHandler implements TopSQLHandler {
     private static final String TEST_SQL = "select 1";
     private static final String TOP_SQL_LIST_SQL = "select unique_query_id,debug_query_id,db_name,schema_name,user_name,application_name,start_time,finish_time,db_time,cpu_time,execution_time from dbe_perf.statement_history where debug_query_id != 0 and finish_time >= ? and finish_time <= ? order by %s desc,execution_time desc,cpu_time desc,db_time desc limit 10";
-    private static final String TOP_SQL_Now_SQL = "select round(extract(epoch FROM (now() - query_start)),1) as duration,query_start,unique_sql_id,datname ,usename,application_name ,datid,pid,sessionid,usesysid,usename,client_addr ,client_hostname,client_port,backend_start ,xact_start ,state_change ,waiting,enqueue,state ,resource_pool,query_id ,query ,connection_info,trace_id\n"
-            + "from pg_stat_activity where query_start is not null and unique_sql_id != 0 order by (now() - query_start) desc limit 10";
+    private static final String TOP_SQL_Now_SQL = "select round(extract(epoch FROM (now() - query_start)),2) as duration,query_start,unique_sql_id,datname ,usename,application_name ,datid,pid,sessionid,usesysid,usename,client_addr ,client_hostname,client_port,backend_start ,xact_start ,state_change ,waiting,enqueue,state ,resource_pool,query_id ,query ,connection_info,trace_id\n"
+            + "from pg_stat_activity where query_start is not null and unique_sql_id != 0 and duration != 0 order by (now() - query_start) desc limit 10";
     // private static final String TOP_SQL_LIST_SQL = "select
     // unique_query_id,debug_query_id,db_name,schema_name,user_name,application_name,start_time,finish_time,db_time,cpu_time,execution_time
     // from dbe_perf.statement_history where debug_query_id != 0 and finish_time >=
@@ -193,7 +193,7 @@ public class OpenGaussTopSQLHandler implements TopSQLHandler {
 
     /**
      * pre-check top sql list job
-     * 
+     *
      * @param connection connection info
      */
     private boolean topSqlListPreCheck(Connection connection) {
@@ -223,7 +223,7 @@ public class OpenGaussTopSQLHandler implements TopSQLHandler {
             return true;
         }
         String[] settingArr = setting.split(",");
-        if (settingArr[0].equalsIgnoreCase("off")) {
+        if ("off".equalsIgnoreCase(settingArr[0])) {
             return true;
         }
         return false;
@@ -408,7 +408,7 @@ public class OpenGaussTopSQLHandler implements TopSQLHandler {
 
     /**
      * pre-check execution plan job
-     * 
+     *
      * @param connection connection info
      */
     private boolean executionPlanPreCheck(Connection connection) {
@@ -624,7 +624,7 @@ public class OpenGaussTopSQLHandler implements TopSQLHandler {
 
     /**
      * generate readable index advice
-     * 
+     *
      * @param results return result
      * @param advices list of index advice
      */
