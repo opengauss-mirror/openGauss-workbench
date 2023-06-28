@@ -35,6 +35,7 @@ export default {
     status: 'status',
     export: 'export',
     delete: 'delete',
+    create: 'create',
   },
   utils: {
     colorError: 'Wrong {name} color value',
@@ -171,6 +172,7 @@ export default {
       version: 'version',
     },
     rules: {
+      host: ['The value does not conform to the host range'],
       port: ['The value does not conform to the port range'],
     },
     success: {
