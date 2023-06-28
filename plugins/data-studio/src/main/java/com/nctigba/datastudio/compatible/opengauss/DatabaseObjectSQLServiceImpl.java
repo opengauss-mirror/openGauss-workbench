@@ -91,7 +91,7 @@ public class DatabaseObjectSQLServiceImpl implements DatabaseObjectSQLService {
     @Override
     public String databaseAttributeSQL(DatabaseNameDTO request) {
         log.info("databaseAttributeSQL request is: " + request);
-        String ddl = String.format(DATABASE_ATTRIBUTE_SQL + request.getDatabaseName());
+        String ddl = String.format(DATABASE_ATTRIBUTE_SQL , request.getDatabaseName());
         log.info("databaseAttributeSQL DDL is: " + ddl);
         return ddl;
     }
