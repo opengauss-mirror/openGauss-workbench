@@ -351,7 +351,7 @@ public class SqlConstants {
     public static final String QUERY_SCHEMA_SQL = "select pn.oid, pn.nspname, pr.rolname, pd.description from pg_namespace pn " +
             "left join pg_description pd on pn.oid = pd.objoid left join pg_roles pr " +
             "on pr.oid = pn.nspowner where pn.oid = %s;";
-    public static final String CREATE_SCHEMA_SQL = "create schema ";
+    public static final String CREATE_SCHEMA_SQL = "create schema %s;";
     public static final String CREATE_SCHEMA_DDL_SQL = "create schema %s authorization %s;";
     public static final String ALTER_SCHEMA_NAME_SQL = "alter schema %s rename to %s;";
     public static final String ALTER_SCHEMA_OWNER_SQL = "alter schema %s owner to %s;";

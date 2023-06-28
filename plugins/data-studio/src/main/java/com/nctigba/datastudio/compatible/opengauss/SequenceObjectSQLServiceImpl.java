@@ -12,6 +12,7 @@ import com.nctigba.datastudio.model.dto.DatabaseSequenceDdlDTO;
 import com.nctigba.datastudio.util.DebugUtils;
 import com.nctigba.datastudio.util.LocaleString;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.opengauss.admin.common.exception.CustomException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -84,13 +85,13 @@ public class SequenceObjectSQLServiceImpl implements SequenceObjectSQLService {
         if (request.getCycle().equals("CYCLE")) {
             ddl = ddl + LF + CYCLE_KEYWORD_SQL;
         }
-        if (!Objects.nonNull(request.getTableSchema())) {
+        if (StringUtils.isNotEmpty(request.getTableSchema())) {
             ddl = ddl + LF + OWNED_KEYWORD_SQL + DebugUtils.containsSqlInjection(request.getTableSchema()) + POINT;
         }
-        if (!Objects.nonNull(request.getTableName())) {
+        if (StringUtils.isNotEmpty(request.getTableName())) {
             ddl = ddl + DebugUtils.containsSqlInjection(request.getTableName()) + POINT;
         }
-        if (!Objects.nonNull(request.getTableColumn())) {
+        if (StringUtils.isNotEmpty(request.getTableColumn())) {
             ddl = ddl + DebugUtils.containsSqlInjection(request.getTableColumn());
         }
         log.info("splicingSequenceDDL response is: " + ddl);
