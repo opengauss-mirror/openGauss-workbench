@@ -12,7 +12,7 @@
             <div class="alert-title" v-if="state === 'edit'">{{ t('notifyTemplate.editTitle') }}</div>
             <div class="alert-title" v-if="state === 'detail'">{{ t('notifyTemplate.detailTitle') }}</div>
         </div>
-        <el-form style="margin-top: 8px;" :model="formData" :rules="formRules" ref="formRef" label-position="left" label-width="100px">
+        <el-form style="margin-top: 8px;" :model="formData" size="default" :rules="formRules" ref="formRef" label-position="left" label-width="100px">
             <el-form-item :label="$t('notifyTemplate.templateName')" prop="notifyTemplateName">
                 <el-input v-model="formData.notifyTemplateName" :placeholder="$t('notifyTemplate.templateNamePlaceholder')"
                     :disabled="disabled"></el-input>

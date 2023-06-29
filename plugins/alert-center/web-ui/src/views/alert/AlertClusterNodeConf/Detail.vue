@@ -8,7 +8,7 @@
             <div class="alert-seperator">&nbsp;/&nbsp;</div>
             <div class="alert-title">{{ t('AlertClusterNodeConf.detailTitle') }} </div>
         </div>
-        <el-form label-position="right" label-width="80" size="large" style="margin-top: 8px;">
+        <el-form label-position="right" label-width="80" size="default" style="margin-top: 8px;">
             <el-form-item :label="$t('AlertClusterNodeConf.selectedInstance') + ':'" style="margin-bottom: 10px !important;">
                 <el-tag v-for="(item, index) in clusterNodeList0" :key="item.clusterNodeId" size="large" closable
                     @close="closeTag(index)">{{ item.nodeName }}</el-tag>

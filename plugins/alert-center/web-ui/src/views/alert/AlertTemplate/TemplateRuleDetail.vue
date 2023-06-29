@@ -2,15 +2,17 @@
     <div>
         <div class="page-header" v-if="titleList.length > 0">
             <div class="icon"></div>
-            <div class="title">{{ titleList[0] }}</div>
+            <div class="title">{{ titleList[titleList.length - 1] }}</div>
             <div class="seperator"></div>
             <span v-for="(item, index) in titleList" :key="item">
                 <span class="alert-title">{{ item }} </span>
                 <span class="alert-seperator" v-if="index === 0 || index !== titleList.length - 1">&nbsp;/&nbsp;</span>
             </span>
         </div>
-        <el-descriptions :title="$t('alertRule.alertTitle')"></el-descriptions>
-        <el-form :model="formData" :rules="formRules" ref="formRef" label-position="left" label-width="100px">
+        <div class="form-header">
+            <el-descriptions :title="$t('alertRule.alertTitle')"></el-descriptions>
+        </div>
+        <el-form :model="formData" :rules="formRules" ref="formRef" label-position="left" label-width="100px" size="default">
             <el-form-item :label="$t('alertRule.ruleName')" prop="ruleName">
                 <el-input v-model="formData.ruleName" disabled
                     :placeholder="$t('alertRule.ruleNamePlaceholder')"></el-input>
@@ -27,9 +29,8 @@
                 </el-radio-group>
             </el-form-item>
             <el-form-item :label="$t('alertRule.ruleItem')">
-                <el-card class="box-card" v-for="item in formData.alertRuleItemList" :key="item.id"
-                    body-style="padding: 5px">
-                    <span style="margin: 5px 0;">{{ $t('alertRule.ruleItemNum') }}:</span><el-input v-model="item.ruleMark"
+                <span v-for="item in formData.alertRuleItemList" :key="item.id" class="rule">
+                    <span style="margin: 5px;">{{ $t('alertRule.ruleItemNum') }}:</span><el-input v-model="item.ruleMark"
                         disabled style="width: 30px;margin: 5px;"></el-input>
                     <span style="margin: 5px 0 10px 5px;">{{ $t('alertRule.ruleItemExp') }}:</span>
                     <el-select v-model="item.ruleExpName" disabled style="width: 100px;margin: 5px 0 5px 5px;">
@@ -47,7 +48,7 @@
                     <el-input v-model="item.operate" style="width: 50px;margin: 5px;" disabled></el-input>
                     <el-input v-model="item.limitValue" style="width: 100px;margin: 5px;"></el-input>
                     <span style="width: 50px;margin: 5px;">{{ item.unit }}</span>
-                </el-card>
+                </span>
             </el-form-item>
             <el-form-item :label="$t('alertRule.ruleExpComb')" prop="ruleExpComb">
                 <span v-for="item in ruleExpComb" :key="item">
@@ -60,7 +61,7 @@
             </el-form-item>
             <el-row>
                 <el-col :span="14">
-                    <el-form-item :label="$t('alertRule.ruleContent')" prop="ruleContent" style="margin-bottom: 0px;">
+                    <el-form-item :label="$t('alertRule.ruleContent')" prop="ruleContent" style="margin-bottom: 0px !important;">
                         <el-input v-model="formData.ruleContent" @blur="preview"></el-input>
                     </el-form-item>
                 </el-col>
@@ -96,8 +97,10 @@
                 <el-input v-model="formData.alertDesc" style="width: 50%;"></el-input>
             </el-form-item>
         </el-form>
-        <el-descriptions :title="$t('alertRule.notifyTitle')"></el-descriptions>
-        <el-form :model="formData" :rules="formRules" ref="formRef" label-position="right" label-width="100px">
+        <div class="form-header">
+            <el-descriptions :title="$t('alertRule.notifyTitle')"></el-descriptions>
+        </div>
+        <el-form :model="formData" :rules="formRules" ref="formRef" label-position="right" label-width="100px" size="default">
             <el-form-item :label="$t('alertRule.alertNotify')" prop="notifyDuration">
                 <el-checkbox-group v-model="alertNotifyList">
                     <el-checkbox label="firing">{{ $t('alertRule.firing') }}</el-checkbox>

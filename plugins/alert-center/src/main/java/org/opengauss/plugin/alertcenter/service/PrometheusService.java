@@ -128,7 +128,7 @@ public class PrometheusService {
             throw new ServiceException("the host user Prometheus is not exist");
         }
         OpsHostUserEntity promUser = promUserList.get(0);
-        // The code comments need to be uncommented in the development environment:  encryptionUtils.refreshKeyPair()
+        encryptionUtils.refreshKeyPair();
         prometheusEnvDto.setPromIp(promeHost.getPublicIp()).setHostPort(promeHost.getPort()).setPromPort(
             promEnv.getPort()).setPromUsername(promUser.getUsername()).setPromPasswd(
             encryptionUtils.decrypt(promUser.getPassword())).setPath(promEnv.getPath());
