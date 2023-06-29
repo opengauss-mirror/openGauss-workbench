@@ -251,6 +251,11 @@
     ip: [
       { required: true, message: t('rules.empty', [t('connection.host')]), trigger: 'blur' },
       { min: 1, max: 30, message: t('rules.charLength', 30), trigger: 'blur' },
+      {
+        message: t('connection.rules.host[0]'),
+        trigger: 'blur',
+        pattern: /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/,
+      },
     ],
     port: [
       { required: true, message: t('rules.empty', [t('connection.port')]), trigger: 'blur' },

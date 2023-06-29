@@ -23,9 +23,9 @@
               <el-select v-model="form.schema" teleported @change="fetchObjectNameList">
                 <el-option
                   v-for="item in list.schemaList"
-                  :key="item.oid"
+                  :key="item.name"
                   :label="item.name"
-                  :value="item.oid"
+                  :value="item.name"
                 />
               </el-select>
             </el-form-item>

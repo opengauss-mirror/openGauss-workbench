@@ -970,6 +970,7 @@
         db.isConnect && (await closeConnections(db.uuid));
       }
       treeRef.value.remove(treeRef.value.getNode(currentContextNodeData.id));
+      ElMessage.success(t('message.deleteSuccess'));
       updateConnectListPersist();
       refreshConnectListMap();
       if (connectionList.value.length == 0) {

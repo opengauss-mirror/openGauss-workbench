@@ -34,6 +34,7 @@ export default {
     status: '状态',
     export: '导出',
     delete: '删除',
+    create: '创建',
   },
   utils: {
     colorError: '输入错误的{name}颜色值',
@@ -165,6 +166,7 @@ export default {
       version: '版本信息',
     },
     rules: {
+      host: ['填写内容不符合主机范围，请确认是否填写有误'],
       port: ['填写内容不符合端口范围，请确认是否填写有误'],
     },
     success: {
