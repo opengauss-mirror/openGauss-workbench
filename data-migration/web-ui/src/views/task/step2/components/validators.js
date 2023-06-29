@@ -11,7 +11,7 @@ export function getValidator(record) {
     if (record.paramType === PORTAL_PARAM_TYPE.REGEX) {
         validator.push({ trigger: 'blur', validator: regexValidator })
     }
-    if (record.paramType === PORTAL_PARAM_TYPE.STRING && record.paramRules) {
+    if ((record.paramType === PORTAL_PARAM_TYPE.STRING || record.paramType === PORTAL_PARAM_TYPE.VAR) && record.paramRules) {
         const rulesArr = JSON.parse(record.paramRules)
         if (Array.isArray(rulesArr)) {
             const isDoubleArray = rulesArr.some(item => Array.isArray(item))
