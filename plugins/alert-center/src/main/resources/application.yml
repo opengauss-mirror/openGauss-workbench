@@ -1,7 +1,7 @@
 ## Spring配置
-#context:
-#  listener:
-#    classes: org.opengauss.plugin.alertcenter.listener.PluginListener
+context:
+  listener:
+    classes: org.opengauss.plugin.alertcenter.listener.PluginListener
 #server:
 #  servlet:
 #    context-path: /alertCenter/api/v1
