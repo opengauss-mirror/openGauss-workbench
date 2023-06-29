@@ -717,7 +717,7 @@ DELETE FROM "public"."tb_migration_task_init_global_param" WHERE "id" = 33;
 DELETE FROM "public"."tb_migration_task_init_global_param" WHERE "id" = 34;
 
 INSERT INTO "public"."tb_migration_task_init_global_param" ("id", "param_key", "param_value", "param_desc", "param_type", "param_extends", "param_rules") 
-VALUES(0, 'opengauss.database.schema', '', '源端数据库的schema', 6, '', '[1,64]') ON DUPLICATE KEY UPDATE NOTHING;
+VALUES(0, 'opengauss.database.schema', '', '将数据迁移至openGauss端数据库的对应schema名 | 与mysql数据库名保持一致', 6, '', '[1,64]') ON DUPLICATE KEY UPDATE NOTHING;
 
 UPDATE "public"."tb_migration_task_init_global_param"
 SET "param_key" = 'sink.query-dop', "param_value" = '8', "param_desc" = 'sink端数据库并行查询会话配置',
@@ -778,7 +778,7 @@ WHERE "id" = 11;
 UPDATE "public"."tb_migration_task_init_global_param"
 SET "param_key"     = 'source.debezium-num-period', "param_value"   = '1000',
     "param_desc"    = 'Debezium增量校验数量的阈值，默认值为1000，应大于100',
-    "param_type"    = 2, "param_extends" = NULL, "param_rules" = '[10,10000]'
+    "param_type"    = 2, "param_extends" = NULL, "param_rules" = '[100,10000]'
 WHERE "id" = 12;
 
 UPDATE "public"."tb_migration_task_init_global_param"
@@ -799,7 +799,7 @@ UPDATE "public"."tb_migration_task_init_global_param"
 SET "param_key"     = 'rules.row', "param_value"   = '0',
     "param_desc"    = '配置行级过滤规则，规则继承table规则类；允许配置多组行过滤规则；行级规则等效于select * from table order by primaryKey asc limit offset,count; 如果多组规则配置的正则表达式过滤出的表产生交集，那么行过滤条件只生效最先匹配到的规则条件。值为row规则的数量',
     "param_type"    = 9,
-    "param_extends" = '[{"subKeyPrefix": "rules.row.name","paramType": 5,"paramValue":"","desc": "配置规则表名过滤正则表达式，用于匹配表名称；name规则不可为空，不可重复"},{"subKeyPrefix":"rules.row.text","paramType": 1,"paramValue":"0,0","desc": "配置行过滤规则的具体条件，配置格式为[offset,count]，必须为数字，否则该规则无效", "paramRules": "[[0, 5000000], [0, 10000]]"}]',
+    "param_extends" = '[{"subKeyPrefix": "rules.row.name","paramType": 5,"paramValue":"","desc": "配置规则表名过滤正则表达式，用于匹配表名称；name规则不可为空，不可重复"},{"subKeyPrefix":"rules.row.text","paramType": 1,"paramValue":"0,0","desc": "配置行过滤规则的具体条件，配置格式为[offset,count]，必须为数字，否则该规则无效", "paramRules": "[[1, 5000000], [1, 10000]]"}]',
     "param_rules" = '[0,9]'
 WHERE "id" = 19;
 
@@ -807,7 +807,7 @@ UPDATE "public"."tb_migration_task_init_global_param"
 SET "param_key"     = 'rules.column', "param_value"   = '0',
     "param_desc"    = '列过滤规则，用于对表字段列进行过滤校验。可配置多组规则，name不可重复，重复会进行规则去重。值为column规则的数量。',
     "param_type"    = 9,
-    "param_extends" = '[{"subKeyPrefix": "rules.column.name","paramType": 1,"paramValue":"","desc": "待过滤字段的表名称", "paramRules": "[0, 512]"},{"subKeyPrefix":"rules.column.text","paramType": 1,"paramValue":"","desc": "配置当前表待过滤的字段名称列表，如果某字段名称不属于当前表，则该字段不生效", "paramRules": "[0, 512]"},{"subKeyPrefix":"rules.column.attribute","paramType": 4,"paramValue":"exclude","desc": "当前表过滤字段模式，include包含text配置的字段，exclude排除text配置的字段；如果为include模式，text默认添加主键字段，不论text是否配置；如果为exclude模式，text默认不添加主键字段，不论是否配置", "paramRules": "[\"include\", \"exclude\"]"}]',
+    "param_extends" = '[{"subKeyPrefix": "rules.column.name","paramType": 1,"paramValue":"","desc": "待过滤字段的表名称", "paramRules": "[1, 512]"},{"subKeyPrefix":"rules.column.text","paramType": 1,"paramValue":"","desc": "配置当前表待过滤的字段名称列表，如果某字段名称不属于当前表，则该字段不生效", "paramRules": "[1, 512]"},{"subKeyPrefix":"rules.column.attribute","paramType": 4,"paramValue":"exclude","desc": "当前表过滤字段模式，include包含text配置的字段，exclude排除text配置的字段；如果为include模式，text默认添加主键字段，不论text是否配置；如果为exclude模式，text默认不添加主键字段，不论是否配置", "paramRules": "[\"include\", \"exclude\"]"}]',
     "param_rules" = '[0,9]'
 WHERE "id" = 24;
 
@@ -815,6 +815,6 @@ UPDATE "public"."tb_migration_task_init_global_param"
 SET "param_key"     = 'type_override', "param_value"   = '0',
     "param_desc"    = '全量迁移类型转换数量，值为类型转换规则的数量',
     "param_type"    = 9,
-    "param_extends" = '[{"subKeyPrefix": "override_type","paramType": 1,"paramValue":"","desc": "全量迁移类型转换mysql数据类型", "paramRules": "[0, 20]"}, {"subKeyPrefix":"override_to","paramType": 1,"paramValue":"","desc": "全量迁移类型转换opengauss数据种类", "paramRules": "[0, 20]"},{"subKeyPrefix":"override_tables","paramType": 1,"paramValue":"''*''","desc": "全量迁移类型转换适用的表", "paramRules": "[0, 512]"}]',
+    "param_extends" = '[{"subKeyPrefix": "override_type","paramType": 1,"paramValue":"","desc": "全量迁移类型转换mysql数据类型", "paramRules": "[1, 64]"}, {"subKeyPrefix":"override_to","paramType": 1,"paramValue":"","desc": "全量迁移类型转换opengauss数据种类", "paramRules": "[1, 64]"},{"subKeyPrefix":"override_tables","paramType": 1,"paramValue":"''*''","desc": "全量迁移类型转换适用的表", "paramRules": "[1, 512]"}]',
     "param_rules" = '[0,9]'
 WHERE "id" = 31;
