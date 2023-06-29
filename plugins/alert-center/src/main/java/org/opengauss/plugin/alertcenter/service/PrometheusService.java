@@ -28,7 +28,6 @@ import org.opengauss.plugin.alertcenter.constant.CommonConstants;
 import org.opengauss.plugin.alertcenter.dto.AlertRuleConfigDto;
 import org.opengauss.plugin.alertcenter.dto.PrometheusConfigDto;
 import org.opengauss.plugin.alertcenter.dto.PrometheusEnvDto;
-import org.opengauss.plugin.alertcenter.entity.AlertClusterNodeConf;
 import org.opengauss.plugin.alertcenter.entity.AlertConfig;
 import org.opengauss.plugin.alertcenter.entity.AlertTemplateRule;
 import org.opengauss.plugin.alertcenter.entity.AlertTemplateRuleItem;
@@ -217,7 +216,7 @@ public class PrometheusService {
                         item -> item.getAlertIp() + ":" + item.getAlertPort()).collect(
                         Collectors.toList()) : new ArrayList<>();
                     targets0 = targets0.stream().filter(
-                        item -> !delTargets.contains(item) || !targets.contains(item)).collect(Collectors.toList());
+                        item -> !delTargets.contains(item) && !targets.contains(item)).collect(Collectors.toList());
                     targets.addAll(targets0);
                 }
                 alertmanagers.set(0, alertmanagerNew);
@@ -326,16 +325,21 @@ public class PrometheusService {
         return dataResult;
     }
 
-    public void updateRuleConfig(Collection<Long> templateIdList, Collection<String> delNodeConfIds) {
-        if (CollectionUtil.isEmpty(templateIdList)) {
+    /**
+     * use to update the prometheus rule config
+     *
+     * @param ruleConfigMap the key is templateId,the value is clusterNodeIds
+     */
+    public void updateRuleConfig(Map<Long, String> ruleConfigMap) {
+        if (CollectionUtil.isEmpty(ruleConfigMap)) {
             return;
         }
         initPrometheusEnvDto();
         try {
             SshSession session = SshSession.connect(prometheusEnvDto.getPromIp(), prometheusEnvDto.getHostPort(),
                 prometheusEnvDto.getPromUsername(), prometheusEnvDto.getPromPasswd());
-            for (Long templateId : templateIdList) {
-                updateRuleConfig(session, templateId, delNodeConfIds);
+            for (Long templateId : ruleConfigMap.keySet()) {
+                updateRuleConfig(session, templateId, ruleConfigMap.get(templateId));
             }
             session.close();
         } catch (IOException e) {
@@ -345,7 +349,7 @@ public class PrometheusService {
     }
 
 
-    public void updateRuleConfig(Long templateId, Collection<String> delNodeConfIds) {
+    public void updateRuleConfig(Long templateId, String clusterNodeIds) {
         if (templateId == null) {
             return;
         }
@@ -354,7 +358,7 @@ public class PrometheusService {
             initPrometheusEnvDto();
             SshSession session = SshSession.connect(prometheusEnvDto.getPromIp(), prometheusEnvDto.getHostPort(),
                 prometheusEnvDto.getPromUsername(), prometheusEnvDto.getPromPasswd());
-            updateRuleConfig(session, templateId, delNodeConfIds);
+            updateRuleConfig(session, templateId, clusterNodeIds);
             session.close();
         } catch (IOException e) {
             log.error(e.getMessage(), e);
@@ -363,19 +367,12 @@ public class PrometheusService {
     }
 
     private void updateRuleConfig(
-        SshSession session, Long templateId, Collection<String> delNodeConfIds) throws IOException {
-        List<AlertClusterNodeConf> alertClusterNodeConfs = clusterNodeConfMapper.selectList(
-            Wrappers.<AlertClusterNodeConf>lambdaQuery().eq(AlertClusterNodeConf::getTemplateId, templateId).eq(
-                    AlertClusterNodeConf::getIsDeleted, CommonConstants.IS_NOT_DELETE)
-                .notIn(CollectionUtil.isNotEmpty(delNodeConfIds),
-                    AlertClusterNodeConf::getClusterNodeId, delNodeConfIds));
-
-        AlertRuleConfigDto config = getAlertRuleConfigDto(session, templateId, alertClusterNodeConfs);
+        SshSession session, Long templateId, String clusterNodeIds) throws IOException {
+        AlertRuleConfigDto config = getAlertRuleConfigDto(session, templateId, clusterNodeIds);
         if (config == null || config.getGroups() == null) {
             return;
         }
-        String instances = alertClusterNodeConfs.stream().map(item -> item.getClusterNodeId()).collect(
-            Collectors.joining("|"));
+        String instances = String.join("|", clusterNodeIds.split(CommonConstants.DELIMITER));
         List<AlertTemplateRule> alertTemplateRules = alertTemplateRuleMapper.selectList(
             Wrappers.<AlertTemplateRule>lambdaQuery().eq(AlertTemplateRule::getTemplateId, templateId));
         if (checkAndUpdateRuleConfig(instances, config, alertTemplateRules)) {
@@ -401,7 +398,7 @@ public class PrometheusService {
 
     private AlertRuleConfigDto getAlertRuleConfigDto(
         SshSession session, Long templateId,
-        List<AlertClusterNodeConf> alertClusterNodeConfs) throws IOException {
+        String clusterNodeIds) throws IOException {
         String ruleDir = alertProperty.getRuleFilePrefix().endsWith(CommonConstants.SLASH)
             ? alertProperty.getRuleFilePrefix().substring(0,
             alertProperty.getRuleFilePrefix().length() - 1) : alertProperty.getRuleFilePrefix();
@@ -410,7 +407,7 @@ public class PrometheusService {
         String dir = prometheusEnvDto.getPath() + CommonConstants.SLASH + alertProperty.getRuleFilePrefix();
         AlertRuleConfigDto config = new AlertRuleConfigDto();
         if (!Arrays.asList(dirFileArr).contains(ruleDir)) {
-            if (CollectionUtil.isEmpty(alertClusterNodeConfs)) {
+            if (StrUtil.isBlank(clusterNodeIds)) {
                 return config;
             }
             session.execute("mkdir " + dir);
@@ -419,14 +416,14 @@ public class PrometheusService {
         String fileName = "rule_template_" + templateId + alertProperty.getRuleFileSuffix();
         String path = dir + fileName;
         if (StrUtil.isBlank(ruleFileStr)) {
-            if (CollectionUtil.isEmpty(alertClusterNodeConfs)) {
+            if (StrUtil.isBlank(clusterNodeIds)) {
                 return config;
             }
             session.execute("touch " + path);
         } else {
             String[] ruleFileArr = ruleFileStr.split(CommonConstants.LINE_SEPARATOR);
             if (Arrays.asList(ruleFileArr).contains(fileName)) {
-                if (CollectionUtil.isEmpty(alertClusterNodeConfs)) {
+                if (StrUtil.isBlank(clusterNodeIds)) {
                     // delete rule_template_xxx.yml
                     session.execute("rm -f " + path);
                     HttpUtil.post("http://" + prometheusEnvDto.getPromIp() + ":" + prometheusEnvDto.getPromPort()
