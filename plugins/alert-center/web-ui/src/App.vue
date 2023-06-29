@@ -10,7 +10,6 @@ import { useAlertConfigStore } from "./store/alertConfig";
 import AlertConfig from "@/components/AlertConfig.vue";
 import { checkPrometheus } from "./api/environment";
 import { getAlertConf } from "./api/alertConfig"
-import { fa } from "element-plus/es/locale";
 
 const observabilitySign = 'alert-center';
 

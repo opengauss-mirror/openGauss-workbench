@@ -363,6 +363,7 @@ COMMENT ON TABLE "public"."alert_template_rule_item" IS '告警模板规则项�
 
 CREATE TABLE alert_template_rule_item_param (
     id int8 NOT NULL PRIMARY KEY DEFAULT nextval('sq_alert_template_rule_item_param_id'::regclass),
+    item_id bigint NOT NULL,
     param_name varchar(20) COLLATE "pg_catalog"."default",
         param_value varchar(100) COLLATE "pg_catalog"."default",
         "param_order" int default 0,
