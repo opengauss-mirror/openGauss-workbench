@@ -1,3 +1,70 @@
+<template>
+    <div class="sql-detail" v-loading="statisticalInfoLoading">
+        <my-card
+            :title="$t('sql.sqlText')"
+            :bodyPadding="false"
+            @resize-body-height="resizeBodyHeight"
+            collapse
+            resize
+            :maxBodyHeight="`${editorMaxHeight}px`"
+        >
+            <monaco-editor
+                :modelValue="data.sqlText"
+                style="margin: 4px 0; border: 1px solid #ddd"
+                :height="editorHeight"
+            />
+        </my-card>
+        <div class="sql-detail-tab">
+            <el-tabs v-model="tab" class="tab2">
+                <el-tab-pane :label="$t('sql.statisticalInformation')" name="statisticalInformation">
+                    <StatisticalInformation :data="data.statisticalInfo" :loading="statisticalInfoLoading" />
+                </el-tab-pane>
+                <el-tab-pane :label="$t('sql.implementationPlan')" name="implementationPlan">
+                    <ImplementationPlanThis
+                        v-if="tab === 'implementationPlan'"
+                        :sqlId="urlParam.sqlId"
+                        :dbid="urlParam.dbid"
+                    />
+                </el-tab-pane>
+                <el-tab-pane :label="$t('sql.systemSource')" name="systemSource">
+                    <SystemSource v-if="tab === 'systemSource'" :fixedRangeTime="data.fixedRangeTime" />
+                </el-tab-pane>
+                <el-tab-pane :label="$t('sql.objectInformation')" name="objectInformation">
+                    <ObjectInformation
+                        v-if="tab === 'objectInformation'"
+                        :sqlId="urlParam.sqlId"
+                        :dbid="urlParam.dbid"
+                    />
+                </el-tab-pane>
+                <el-tab-pane :label="$t('sql.indexSuggestions')" name="indexSuggestions">
+                    <IndexSuggestionData
+                        v-if="tab === 'indexSuggestions'"
+                        :sqlId="urlParam.sqlId"
+                        :dbid="urlParam.dbid"
+                        :sqlText="data.sqlText"
+                    />
+                </el-tab-pane>
+                <el-tab-pane :label="$t('sql.waitEvent')" name="waitEvent">
+                    <WaitEvent
+                        v-if="tab === 'waitEvent'"
+                        :sqlId="urlParam.sqlId"
+                        :dbid="urlParam.dbid"
+                        :sqlText="data.sqlText"
+                    />
+                </el-tab-pane>
+                <el-tab-pane :label="$t('sql.sqlDiagnose')" name="diagnose">
+                    <SqlDiagnose
+                        v-if="tab === 'diagnose'"
+                        :sqlId="urlParam.sqlId"
+                        :dbid="urlParam.dbid"
+                        :dbName="dbName"
+                        :sqlText="data.sqlText"
+                    />
+                </el-tab-pane>
+            </el-tabs>
+        </div>
+    </div>
+</template>
 <script setup lang="ts">
 import { useRequest } from 'vue-request'
 import { useRouter } from 'vue-router'
@@ -82,74 +149,6 @@ watch(statisticalInfoRes, (res) => {
     }
 })
 </script>
-
-<template>
-    <div class="sql-detail" v-loading="statisticalInfoLoading">
-        <my-card
-            :title="$t('sql.sqlText')"
-            :bodyPadding="false"
-            @resize-body-height="resizeBodyHeight"
-            collapse
-            resize
-            :maxBodyHeight="`${editorMaxHeight}px`"
-        >
-            <monaco-editor
-                :modelValue="data.sqlText"
-                style="margin: 4px 0; border: 1px solid #ddd"
-                :height="editorHeight"
-            />
-        </my-card>
-        <div class="sql-detail-tab">
-            <el-tabs v-model="tab">
-                <el-tab-pane :label="$t('sql.statisticalInformation')" name="statisticalInformation">
-                    <StatisticalInformation :data="data.statisticalInfo" :loading="statisticalInfoLoading" />
-                </el-tab-pane>
-                <el-tab-pane :label="$t('sql.implementationPlan')" name="implementationPlan">
-                    <ImplementationPlanThis
-                        v-if="tab === 'implementationPlan'"
-                        :sqlId="urlParam.sqlId"
-                        :dbid="urlParam.dbid"
-                    />
-                </el-tab-pane>
-                <el-tab-pane :label="$t('sql.systemSource')" name="systemSource">
-                    <SystemSource v-if="tab === 'systemSource'" :fixedRangeTime="data.fixedRangeTime" />
-                </el-tab-pane>
-                <el-tab-pane :label="$t('sql.objectInformation')" name="objectInformation">
-                    <ObjectInformation
-                        v-if="tab === 'objectInformation'"
-                        :sqlId="urlParam.sqlId"
-                        :dbid="urlParam.dbid"
-                    />
-                </el-tab-pane>
-                <el-tab-pane :label="$t('sql.indexSuggestions')" name="indexSuggestions">
-                    <IndexSuggestionData
-                        v-if="tab === 'indexSuggestions'"
-                        :sqlId="urlParam.sqlId"
-                        :dbid="urlParam.dbid"
-                        :sqlText="data.sqlText"
-                    />
-                </el-tab-pane>
-                <el-tab-pane :label="$t('sql.waitEvent')" name="waitEvent">
-                    <WaitEvent
-                        v-if="tab === 'waitEvent'"
-                        :sqlId="urlParam.sqlId"
-                        :dbid="urlParam.dbid"
-                        :sqlText="data.sqlText"
-                    />
-                </el-tab-pane>
-                <el-tab-pane :label="$t('sql.sqlDiagnose')" name="diagnose">
-                    <SqlDiagnose
-                        v-if="tab === 'diagnose'"
-                        :sqlId="urlParam.sqlId"
-                        :dbid="urlParam.dbid"
-                        :dbName="dbName"
-                        :sqlText="data.sqlText"
-                    />
-                </el-tab-pane>
-            </el-tabs>
-        </div>
-    </div>
-</template>
 
 <style scoped lang="scss">
 .sql-detail {

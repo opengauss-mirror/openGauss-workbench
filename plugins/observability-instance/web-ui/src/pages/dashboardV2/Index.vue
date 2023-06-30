@@ -1,12 +1,12 @@
 <template>
     <div class="tab-wrapper">
         <el-container>
-            <el-aside :width="isCollapse ? '0px' : '300px'">
+            <el-aside :width="isCollapse ? '0px' : '310px'">
                 <div style="height: 13px"></div>
-                <Install />
+                <Install style="margin-right: 10px" />
             </el-aside>
-            <el-main style="position: relative; padding-top: 0px">
-                <div class="page-header" style="padding-left: 16px">
+            <el-main style="position: relative; padding-top: 0px" class="padding-fix">
+                <div class="page-header" style="padding-left: 20px">
                     <div class="icon"></div>
                     <div class="title">{{ $t('instanceMonitor.instanceMonitor') }}</div>
                     <div class="seperator"></div>
@@ -14,7 +14,7 @@
 
                     <el-cascader v-model="clusterNodeId" :options="clusterList" />
                 </div>
-                <div style="position: absolute; left: 10px; top: 3px; z-index: 9999" @click="toggleCollapse">
+                <div style="position: absolute; left: 0px; top: 5px; z-index: 9999" @click="toggleCollapse">
                     <el-icon v-if="!isCollapse" size="20px"><Fold /></el-icon>
                     <el-icon v-if="isCollapse" size="20px"><Expand /></el-icon>
                 </div>
@@ -39,14 +39,25 @@
                             "
                         />
                     </el-tab-pane>
-                    <el-tab-pane :label="$t('instanceMonitor.instanceMonitor')" :name="tabKeys.InstanceMonitor">
-                        <instance-monitor
-                            ref="refInstanceMonitor"
+                    <el-tab-pane :label="$t('instanceIndex.instanceMetrics')" :name="tabKeys.InstanceMonitorInstance">
+                        <InstanceMetrics
+                            ref="refInstanceMonitorInstance"
                             @goto="goto"
                             :tabId="tabId"
                             v-if="
-                                tabKeyLoaded.indexOf(tabKeys.InstanceMonitor) >= 0 ||
-                                dashboardTabKey === tabKeys.InstanceMonitor
+                                tabKeyLoaded.indexOf(tabKeys.InstanceMonitorInstance) >= 0 ||
+                                dashboardTabKey === tabKeys.InstanceMonitorInstance
+                            "
+                        />
+                    </el-tab-pane>
+                    <el-tab-pane label="TOP SQL" :name="tabKeys.InstanceMonitorTOPSQL">
+                        <TOPSQL
+                            ref="refInstanceMonitorTOPSQL"
+                            @goto="goto"
+                            :tabId="tabId"
+                            v-if="
+                                tabKeyLoaded.indexOf(tabKeys.InstanceMonitorTOPSQL) >= 0 ||
+                                dashboardTabKey === tabKeys.InstanceMonitorTOPSQL
                             "
                         />
                     </el-tab-pane>
@@ -84,7 +95,8 @@ import { storeToRefs } from 'pinia'
 import { useMonitorStore } from '@/store/monitor'
 import PerformanceLoad from '@/pages/dashboardV2/performanceLoad/Index.vue'
 import ResourceMonitor from '@/pages/dashboardV2/resourceMonitor/Index.vue'
-import InstanceMonitor from '@/pages/dashboardV2/instanceMonitor/Index.vue'
+import InstanceMetrics from '@/pages/dashboardV2/instanceMonitor/instanceMetrics/Index.vue'
+import TOPSQL from '@/pages/dashboardV2/instanceMonitor/topSQL/Index.vue'
 import Wdr from '@/pages/dashboardV2/wdr/Index.vue'
 import ogRequest from '@/request'
 import { useRequest } from 'vue-request'
@@ -110,6 +122,8 @@ const paramConfigComponent = ref(null)
 const performanceLoadRef = ref<InstanceType<typeof PerformanceLoad>>()
 const refResourceMonitor = ref<InstanceType<typeof ResourceMonitor>>()
 const refInstanceMonitor = ref<InstanceType<typeof InstanceMonitor>>()
+const refInstanceMonitorTOPSQL = ref<InstanceType<typeof TOPSQL>>()
+const refInstanceMonitorInstance = ref<InstanceType<typeof InstanceMetrics>>()
 const dashboardTabKey = ref<string>('')
 const tabId = uuid()
 const { instanceId } = storeToRefs(useMonitorStore(tabId))
@@ -169,11 +183,10 @@ const toggleCollapse = () => {
 }
 
 const goto = (key: string, param: object) => {
-    console.log('DEBUG: dashboard key', key)
     if (key === tabKeys.InstanceMonitorTOPSQL) {
-        dashboardTabKey.value = tabKeys.InstanceMonitor
+        dashboardTabKey.value = tabKeys.InstanceMonitorTOPSQL
         nextTick(() => {
-            refInstanceMonitor.value!.outsideGoto(key, param)
+            refInstanceMonitorTOPSQL.value!.outsideGoto(key, param)
         })
     } else if (
         key === tabKeys.ResourceMonitorCPU ||
@@ -212,3 +225,11 @@ const treeTransform = (arr: any) => {
     return obj
 }
 </script>
+
+<style scoped lang="scss">
+// in DataKit,page has padding,this to fix the padding,to make main-container to border to be 16px
+.padding-fix {
+    padding-left: 0px;
+    padding-right: 9px;
+}
+</style>

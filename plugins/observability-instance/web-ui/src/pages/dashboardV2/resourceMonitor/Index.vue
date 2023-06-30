@@ -1,5 +1,5 @@
 <template>
-    <div>
+    <div style="margin-top: 6px;">
         <IndexBar :tabId="props.tabId"></IndexBar>
         <el-tabs v-model="resourceMonitorTabIndex" type="card" class="card-tabs">
             <el-tab-pane label="CPU" :name="tabKeys.ResourceMonitorCPU">

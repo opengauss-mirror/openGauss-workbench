@@ -3,8 +3,11 @@
  */
 package com.nctigba.observability.instance.controller;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import com.nctigba.observability.instance.service.SessionService;
 import org.opengauss.admin.common.core.domain.AjaxResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,6 +27,8 @@ public class IndexController extends ControllerConfig {
     MetricsService metricsService;
     @Autowired
     TopSQLService topSQLService;
+    @Autowired
+    SessionService sessionService;
 
     private static final MetricsLine[] MAIN = {
             MetricsLine.CPU,
@@ -37,12 +42,17 @@ public class IndexController extends ControllerConfig {
 
     @GetMapping("mainMetrics")
     public AjaxResult mainMetrics(String id, Long start, Long end, Integer step) {
-        return AjaxResult.success(metricsService.listBatch(MAIN, id, start, end, step));
+        HashMap<String, Object> metrics = metricsService.listBatch(MAIN, id, start, end, step);
+        JSONObject simpleStatistic = sessionService.simpleStatistic(id);
+        metrics.putAll(simpleStatistic);
+        return AjaxResult.success(metrics);
     }
 
     @GetMapping(value = "/topSQLNow")
     public AjaxResult topSQLNow(TopSQLNowReq topSQLNowReq) {
-        List<JSONObject> list = topSQLService.getTopSQLNow(topSQLNowReq);
-        return AjaxResult.success(list);
+        Map<String, List<JSONObject>> blockAndLongTxc = sessionService.blockAndLongTxc(topSQLNowReq.getId());
+        List<JSONObject> topSQLNow = topSQLService.getTopSQLNow(topSQLNowReq);
+        blockAndLongTxc.put("topSQLNow", topSQLNow);
+        return AjaxResult.success(blockAndLongTxc);
     }
 }

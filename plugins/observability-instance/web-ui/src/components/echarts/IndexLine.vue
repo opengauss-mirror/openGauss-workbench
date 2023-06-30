@@ -34,8 +34,6 @@ import { useEventListener, useIntersectionObserver } from '@vueuse/core'
 import moment from 'moment'
 import { useI18n } from 'vue-i18n'
 import { useDataZoom } from '@/hooks/echarts'
-import { storeToRefs } from 'pinia'
-import { useWindowStore } from '@/store/window'
 import { i18n } from '@/i18n'
 
 export interface LineData {
@@ -150,7 +148,7 @@ const renderChart = () => {
             yAxisIndex: 0,
             zlevel: 1,
             ...d,
-            lineStyle: { color: '#FFDC83' },
+            lineStyle: d.lineStyle ? d.lineStyle : { color: '#83CBFF' },
             areaStyle: { color: '#FFFFFF', opacity: 0.4 },
         }
         if (props.bar) {
@@ -161,7 +159,6 @@ const renderChart = () => {
         if (props.stack) {
             o['stack'] = 'total'
         }
-
         data.push(o)
     })
     if (props.scatterData) {
