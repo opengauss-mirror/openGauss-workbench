@@ -198,7 +198,7 @@ public class AlertApiService {
         String[] notifyWayIdArr = notifyWayIds.split(CommonConstants.DELIMITER);
         for (String notifyWayId : notifyWayIdArr) {
             NotifyMessage notifyMessage = new NotifyMessage();
-            NotifyWay notifyWay = notifyWayMapper.selectById(Integer.valueOf(notifyWayId));
+            NotifyWay notifyWay = notifyWayMapper.selectById(notifyWayId);
             Long notifyTemplateId = notifyWay.getNotifyTemplateId();
             NotifyTemplate notifyTemplate = notifyTemplateMapper.selectById(notifyTemplateId);
             notifyMessage.setMessageType(notifyWay.getNotifyType());
