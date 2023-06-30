@@ -157,6 +157,12 @@ const renderChart = () => {
         if (props.stack) {
             o['stack'] = 'total'
         }
+        if (o.lineStyle) o.lineStyle.width = 1
+        else {
+            o.lineStyle = {
+                width: 1,
+            }
+        }
         data.push(o)
     })
     if (props.scatterData) {
@@ -194,6 +200,9 @@ const renderChart = () => {
                 fontWeight: 400,
                 fontSize: 11,
             },
+            icon: 'roundRect',
+            itemWidth: 12,
+            itemHeight: 4,
         },
         grid: {
             left: 15,
@@ -365,5 +374,4 @@ useEventListener(window, 'resize', () => {
 })
 </script>
 
-<style scoped lang="scss">
-</style>
+<style scoped lang="scss"></style>

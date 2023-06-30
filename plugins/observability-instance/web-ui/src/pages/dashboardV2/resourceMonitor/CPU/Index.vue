@@ -42,12 +42,13 @@
         </el-col>
     </el-row>
 
+    <div style="margin-bottom: 12px"></div>
     <div style="position: relative">
         <div
             style="
                 position: absolute;
                 right: 0px;
-                top: 7px;
+                top: 2px;
                 z-index: 1;
                 display: flex;
                 flex-direction: row;
@@ -56,13 +57,6 @@
             "
         >
             <div style="margin-right: 12px">{{ $t('app.refreshOn') }} {{ innerRefreshDoneTime }}</div>
-            <el-button
-                class="refresh-button"
-                type="primary"
-                :icon="Refresh"
-                style="margin-right: 8px"
-                @click="loadTOPCPUProcessNow(props.tabId)"
-            />
             <div>{{ $t('app.autoRefreshFor') }}</div>
             <el-select v-model="innerRefreshTime" style="width: 60px; margin: 0 4px" @change="updateTimerInner">
                 <el-option :value="1" label="1s" />
@@ -70,8 +64,15 @@
                 <el-option :value="30" label="30s" />
                 <el-option :value="60" label="60s" />
             </el-select>
+            <el-button
+                class="refresh-button"
+                type="primary"
+                :icon="Refresh"
+                style="margin-left: 8px"
+                @click="loadTOPCPUProcessNow(props.tabId)"
+            />
         </div>
-        <el-tabs v-model="tab">
+        <el-tabs v-model="tab" class="tab2">
             <el-tab-pane :label="$t('resourceMonitor.cpu.topProcess')" :name="0">
                 <el-table
                     :table-layout="'auto'"
@@ -88,7 +89,7 @@
                     <el-table-column prop="%MEM" label="%MEM" width="60" />
                     <el-table-column prop="COMMAND" label="COMMAND" />
                     <el-table-column prop="NI" label="NI" width="40" />
-                    <el-table-column prop="PID" label="PID" width="60" />
+                    <el-table-column prop="PID" label="PID" width="90" />
                     <el-table-column prop="PR" label="PR" width="40" />
                     <el-table-column prop="RES" label="RES" width="80" />
                     <el-table-column prop="S" label="S" width="40" />
@@ -114,7 +115,7 @@
                     <el-table-column prop="%MEM" label="%MEM" width="60" />
                     <el-table-column prop="COMMAND" label="COMMAND" />
                     <el-table-column prop="NI" label="NI" width="40" />
-                    <el-table-column prop="PID" label="PID" width="60" />
+                    <el-table-column prop="PID" label="PID" width="90" />
                     <el-table-column prop="PR" label="PR" width="40" />
                     <el-table-column prop="RES" label="RES" width="80" />
                     <el-table-column prop="S" label="S" width="40" />

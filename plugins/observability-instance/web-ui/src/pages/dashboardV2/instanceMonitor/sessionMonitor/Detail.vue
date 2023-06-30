@@ -13,7 +13,7 @@
                         style="
                             position: absolute;
                             right: 0px;
-                            top: 7px;
+                            top: 2px;
                             z-index: 1;
                             display: flex;
                             flex-direction: row;
@@ -22,13 +22,7 @@
                         "
                     >
                         <div style="margin-right: 12px">{{ $t('app.refreshOn') }} {{ innerRefreshDoneTime }}</div>
-                        <el-button
-                            class="refresh-button"
-                            type="primary"
-                            :icon="Refresh"
-                            style="margin-right: 8px"
-                            @click="loadSessionData(instanceId, sessionId)"
-                        />
+
                         <div>{{ $t('app.autoRefreshFor') }}</div>
                         <el-select
                             v-model="innerRefreshTime"
@@ -40,8 +34,15 @@
                             <el-option :value="30" label="30s" />
                             <el-option :value="60" label="60s" />
                         </el-select>
+                        <el-button
+                            class="refresh-button"
+                            type="primary"
+                            :icon="Refresh"
+                            style="margin-left: 8px"
+                            @click="loadSessionData(instanceId, sessionId)"
+                        />
                     </div>
-                    <el-tabs v-model="dashboardTabKey">
+                    <el-tabs v-model="dashboardTabKey" class="tab2">
                         <el-tab-pane :label="$t('session.detail.info.tabTitle')" :name="tabKeys[0]">
                             <div class="line-tips center" v-if="tips">
                                 <div class=""><svg-icon name="info" />{{ tips }}</div>

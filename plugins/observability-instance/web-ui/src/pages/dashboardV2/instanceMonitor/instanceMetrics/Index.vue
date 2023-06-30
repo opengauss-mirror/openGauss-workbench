@@ -1,4 +1,5 @@
 <template>
+    <div style="margin-bottom: 6px"></div>
     <el-row :gutter="12">
         <el-col :span="12">
             <my-card :title="'TPS'" height="300" :bodyPadding="false">

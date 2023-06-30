@@ -1,5 +1,5 @@
 #
-# Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+# Copyright (c) 2023 Huawei Technologies Co.,Ltd.
 #
 
 # ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -163,47 +163,6 @@ pg_downstream:
   public: true
 
 
-
-
-# ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# ┃ local_threadpool_status
-# ┃ thread pool utilization rate
-# ┣┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
-# ┃ TTL      ┆ 60
-# ┃ Timeout  ┆ 100ms
-# ┣┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
-# ┃ LABEL    state                          downstream state
-# ┃ GAUGE    count                          downstream count
-# ┣┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
-# ┃ pg_downstream_count{state}  GAUGE    downstream count
-# ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-local_threadpool_status:
-  name: local_threadpool_status
-  desc: thread pool utilization rate
-  query:
-    - name: local_threadpool_status
-      sql: |
-        select  
-        NVL(
-        sum((
-        (regexp_split_to_array(worker_info, ': | ') )[8]-
-        (regexp_split_to_array(worker_info, ': | ') )[10]
-        ))/sum(
-        (regexp_split_to_array(worker_info , ': | ') )[6])*100,0) pool_utilization_rate
-        from   dbe_perf.LOCAL_THREADPOOL_STATUS
-      version: '>=0.0.0'
-      timeout: 0.1
-      ttl: 10
-      status: enable
-      dbRole: ""
-  metrics:
-    - name: pool_utilization_rate
-      description: thread pool utilization rate
-      usage: GAUGE
-  status: enable
-  ttl: 60
-  timeout: 0.1
-  public: true
 
 
 # ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -1547,18 +1506,18 @@ gauss_thread_wait_status:
   desc: openGauss database thread metrics
   query:
     - name: gauss_thread_wait_status
-      sql: select wait_status, count(*) count from pg_thread_wait_status group by wait_status;
+      sql: select (select count(*) from pg_thread_wait_status) as thread_total_count, count(*) as wait_thread_count from pg_thread_wait_status where wait_status = 'none' or wait_status = 'wait_cmd';
       version: '>=0.0.0'
       timeout: 1
       ttl: 60
       status: enable
   metrics:
-    - name: count
+    - name: thread_total_count
       description: Thread total count
       usage: GAUGE
-    - name: wait_status
+    - name: wait_thread_count
       description: Wait thread total count
-      usage: LABEL
+      usage: GAUGE
   status: enable
   ttl: 60
   timeout: 1
@@ -2511,22 +2470,3 @@ pg_index:
   timeout: 1
   public: true
 
-pg_state_activity_group:
-  name: count
-  query:
-    - name: count
-      sql: |-
-        select decode(state,null,'other',state) state ,count(*) count from pg_stat_activity group by state union 
-        select 'waiting' as state, count(*) from pg_stat_activity where waiting;
-      version: '>=0.0.0'
-      timeout: 10
-      ttl: 3600
-      dbRole: "primary"
-      status: enable
-  metrics:
-    - name: state
-      description: database name of this relation
-      usage: LABEL
-    - name: count
-      description: index scans initiated on this index
-      usage: GAUGE
