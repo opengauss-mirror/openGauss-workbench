@@ -77,7 +77,6 @@ public class AlertApiService {
 
     @Transactional
     public void alerts(List<AlertApiReq> alertApiReqList) {
-        log.info("告警信息：", alertApiReqList);
         for (AlertApiReq alertApiReq : alertApiReqList) {
             AlertLabels labels = alertApiReq.getLabels();
             Long templateRuleId = labels.getTemplateRuleId();

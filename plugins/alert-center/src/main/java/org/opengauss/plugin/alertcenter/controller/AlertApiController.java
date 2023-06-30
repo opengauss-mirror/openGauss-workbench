@@ -47,7 +47,6 @@ public class AlertApiController {
      */
     @PostMapping("/alerts")
     public AjaxResult alerts(@RequestBody @Valid List<JSONObject> paramList) {
-        log.info("告警接口参数：" + paramList);
         List<AlertApiReq> alertApiReqList = new ArrayList<>();
         for (JSONObject jsonObject : paramList) {
             jsonObject.put("startsAt", jsonObject.getStr("startsAt").replace("T", " ").substring(0, 19));
