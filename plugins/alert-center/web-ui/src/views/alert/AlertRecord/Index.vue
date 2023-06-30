@@ -13,9 +13,9 @@
                     <Bell />
                 </el-icon>
                 <span>{{ $t(`alertRecord.alertTotal`) }}：</span><span class="statistics">{{ statisticsData.totalNum }}</span>
-                <span style="margin-left: 20px;">{{ $t(`alertRecord.unread`) }}：</span><span class="statistics">{{ statisticsData.unReadNum
+                <span style="margin-left: 10px;">{{ $t(`alertRecord.unread`) }}：</span><span class="statistics">{{ statisticsData.unReadNum
                 }}</span>
-                <span style="margin-left: 20px;">{{ $t(`alertRecord.read`) }}：</span><span class="statistics">{{ statisticsData.readNum
+                <span style="margin-left: 10px;">{{ $t(`alertRecord.read`) }}：</span><span class="statistics">{{ statisticsData.readNum
                 }}</span>
             </div>
             <div class="seperator"></div>

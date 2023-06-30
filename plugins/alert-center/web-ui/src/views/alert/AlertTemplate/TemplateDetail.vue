@@ -8,7 +8,7 @@
             <div class="alert-seperator">&nbsp;/&nbsp;</div>
             <div class="alert-title">{{ title }} </div>
         </div>
-        <el-form :model="formData" :rules="formRules" ref="formRef" size="" label-position="left" style="margin-top: 8px;" label-width="100px">
+        <el-form :model="formData" :rules="formRules" ref="formRef" size="" label-position="left" style="margin-top: 8px;" label-width="120px">
             <el-form-item :label="$t('alertTemplate.templateName')" prop="templateName">
                 <el-input v-model="formData.templateName" style="height: 32px !important;"
                     :placeholder="$t('alertTemplate.templateNamePlaceholder')"></el-input>

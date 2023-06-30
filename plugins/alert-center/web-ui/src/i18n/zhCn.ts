@@ -122,7 +122,7 @@ export default {
         alertTimeRange: '告警时间范围',
         startTimePlaceholder: '开始时间',
         endTimePlaceholder: '结束时间',
-        table: ['实例名称', '主机IP', '数据库类型', '告警模板', '告警规则', '规则类型', '告警等级', '开始时间', '结束时间', '持续时间(秒)', '告警状态', '通知方式', '信息状态', '操作'],
+        table: ['实例名称', '主机IP', '数据库类型', '告警模板', '告警规则', '规则类型', '告警等级', '开始时间', '结束时间', '持续时间', '告警状态', '通知方式', '信息状态', '操作'],
         tableDataSelectTip: '至少选择一个数据',
         detailTitle: '告警详细',
         alertInstance: '告警对象',

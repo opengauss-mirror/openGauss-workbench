@@ -18,14 +18,14 @@
                         </el-icon>
                         <h5 class="title">{{ t('alertRecord.alertInstance') }}</h5>
                     </el-space>
-                    <el-form label-position="right" label-width="100">
-                        <el-form-item :label="$t('alertRecord.clusterName') + ':'" style="margin-bottom: 5px !important">
+                    <el-form label-position="left" label-width="120">
+                        <el-form-item :label="$t('alertRecord.clusterName') + ':'" style="margin-bottom: 5px !important;margin-left: 5px;">
                             <span>{{ formData.clusterId }}</span>
                         </el-form-item>
-                        <el-form-item :label="$t('alertRecord.IPAndPort') + ':'" style="margin-bottom: 5px !important">
+                        <el-form-item :label="$t('alertRecord.IPAndPort') + ':'" style="margin-bottom: 5px !important;margin-left: 5px;">
                             <span>{{ formData.hostIpAndPort }}</span>
                         </el-form-item>
-                        <el-form-item :label="$t('alertRecord.nodeRole') + ':'" style="margin-bottom: 5px !important">
+                        <el-form-item :label="$t('alertRecord.nodeRole') + ':'" style="margin-bottom: 5px !important;margin-left: 5px;">
                             <span>{{ formData.nodeRole }}</span>
                         </el-form-item>
                     </el-form>
@@ -39,20 +39,20 @@
                         </el-icon>
                         <h5 class="title">{{ t('alertRecord.alertRule') }}</h5>
                     </el-space>
-                    <el-form label-position="right" label-width="100">
-                        <el-form-item :label="$t('alertRule.ruleName') + ':'" style="margin-bottom: 5px !important">
+                    <el-form label-position="left" label-width="100">
+                        <el-form-item :label="$t('alertRule.ruleName') + ':'" style="margin-bottom: 5px !important;margin-left: 5px;">
                             <span>{{ formData.templateRuleName }}</span>
                         </el-form-item>
-                        <el-form-item :label="$t('alertRecord.table[6]') + ':'" style="margin-bottom: 5px !important">
+                        <el-form-item :label="$t('alertRecord.table[6]') + ':'" style="margin-bottom: 5px !important;margin-left: 5px;">
                             <span>{{ $t(`alertRule.${formData.level}`) }}</span>
                         </el-form-item>
-                        <el-form-item :label="$t('alertRecord.table[3]') + ':'" style="margin-bottom: 5px !important">
+                        <el-form-item :label="$t('alertRecord.table[3]') + ':'" style="margin-bottom: 5px !important;margin-left: 5px;">
                             <span>{{ formData.templateName }}</span>
                         </el-form-item>
-                        <el-form-item :label="$t('alertRecord.table[11]') + ':'" style="margin-bottom: 5px !important">
+                        <el-form-item :label="$t('alertRecord.table[11]') + ':'" style="margin-bottom: 5px !important;margin-left: 5px;">
                             <span>{{ formData.notifyWayName }}</span>
                         </el-form-item>
-                        <el-form-item :label="$t('alertRecord.alertContent') + ':'" style="margin-bottom: 5px !important">
+                        <el-form-item :label="$t('alertRecord.alertContent') + ':'" style="margin-bottom: 5px !important;margin-left: 5px;">
                             <span>{{ formData.alertContent }}</span>
                         </el-form-item>
                     </el-form>
@@ -66,17 +66,17 @@
                         </el-icon>
                         <h5 class="title">{{ t('alertRecord.alertStatus') }}</h5>
                     </el-space>
-                    <el-form label-position="right" label-width="100">
-                        <el-form-item :label="$t('alertRecord.table[7]') + ':'" style="margin-bottom: 5px !important">
+                    <el-form label-position="left" label-width="100">
+                        <el-form-item :label="$t('alertRecord.table[7]') + ':'" style="margin-bottom: 5px !important;margin-left: 5px;">
                             <span>{{ formData.startTime }}</span>
                         </el-form-item>
-                        <el-form-item :label="$t('alertRecord.table[8]') + ':'" style="margin-bottom: 5px !important">
+                        <el-form-item :label="$t('alertRecord.table[8]') + ':'" style="margin-bottom: 5px !important;margin-left: 5px;">
                             <span>{{ formData.endTime }}</span>
                         </el-form-item>
-                        <el-form-item :label="$t('alertRecord.table[9]') + ':'" style="margin-bottom: 5px !important">
+                        <el-form-item :label="$t('alertRecord.table[9]') + ':'" style="margin-bottom: 5px !important;margin-left: 5px;">
                             <span>{{ durationFormat(formData.duration) }}</span>
                         </el-form-item>
-                        <el-form-item :label="$t('alertRecord.table[12]') + ':'" style="margin-bottom: 5px !important">
+                        <el-form-item :label="$t('alertRecord.table[12]') + ':'" style="margin-bottom: 5px !important;margin-left: 5px;">
                             <el-switch v-model="formData.recordStatus" :active-value="1" :inactive-value="0"
                                 @change="markAs" />
                         </el-form-item>

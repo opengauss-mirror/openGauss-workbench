@@ -1,12 +1,12 @@
 <template>
     <div>
         <el-row>
-            <el-col :span="2">
-                <el-checkbox v-model="emailConfig.enable" :true-label="1" :false-label="0">{{ $t('notifyConfig.emailConfig')
+            <el-col :span="3">
+                <el-checkbox v-model="emailConfig.enable" style="width: auto;" :true-label="1" :false-label="0">{{ $t('notifyConfig.emailConfig')
                 }}</el-checkbox>
             </el-col>
-            <el-col :span="20" class="form-inline">
-                <el-form :inline="true" :model="emailConfig" ref="emailForm" :rules="emailRules" label-position="left" label-width="100px">
+            <el-col :span="19" class="form-inline">
+                <el-form :inline="true" :model="emailConfig" ref="emailForm" :rules="emailRules" label-position="left" label-width="120px">
                     <el-form-item :label="$t('notifyConfig.senderEmail')" prop="email">
                         <el-input v-model="emailConfig.email" :disabled="emailConfig.enable === 0"
                             :placeholder="$t('notifyConfig.inputTip') + $t('notifyConfig.senderEmail')" />
@@ -39,12 +39,12 @@
             </el-col>
         </el-row>
         <el-row style="margin-top: 10px;">
-            <el-col :span="2">
-                <el-checkbox v-model="weComConfig.enable" :true-label="1" :false-label="0">{{ t('notifyConfig.weComConfig')
+            <el-col :span="3">
+                <el-checkbox v-model="weComConfig.enable" style="width: auto;" :true-label="1" :false-label="0">{{ t('notifyConfig.weComConfig')
                 }}</el-checkbox>
             </el-col>
-            <el-col :span="20" class="form-inline">
-                <el-form :inline="true" :model="weComConfig" ref="weComForm" :rules="weComRules" label-position="right" label-width="100px">
+            <el-col :span="19" class="form-inline">
+                <el-form :inline="true" :model="weComConfig" ref="weComForm" :rules="weComRules" label-position="left" label-width="120px">
                     <el-form-item :label="$t('notifyConfig.weComAppKey')" prop="appKey">
                         <el-input v-model="weComConfig.appKey" :disabled="weComConfig.enable === 0"
                             :placeholder="$t('notifyConfig.inputTip') + $t('notifyConfig.weComAppKey')" />
@@ -64,12 +64,12 @@
             </el-col>
         </el-row>
         <el-row style="margin-top: 10px;">
-            <el-col :span="2">
+            <el-col :span="3">
                 <el-checkbox v-model="dingTalkConfig.enable" :true-label="1" :false-label="0">{{
                     t('notifyConfig.dingTalkConfig') }}</el-checkbox>
             </el-col>
-            <el-col :span="20" class="form-inline">
-                <el-form :inline="true" :model="dingTalkConfig" ref="dingTalkForm" :rules="dingTalkRules" label-position="right" label-width="100px">
+            <el-col :span="19" class="form-inline">
+                <el-form :inline="true" :model="dingTalkConfig" ref="dingTalkForm" :rules="dingTalkRules" label-position="left" label-width="120px">
                     <el-form-item :label="$t('notifyConfig.appKey')" prop="appKey">
                         <el-input v-model="dingTalkConfig.appKey" :disabled="dingTalkConfig.enable === 0"
                             :placeholder="$t('notifyConfig.inputTip') + $t('notifyConfig.appKey')" />
