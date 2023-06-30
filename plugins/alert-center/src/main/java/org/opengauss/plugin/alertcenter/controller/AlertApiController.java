@@ -5,6 +5,7 @@
 package org.opengauss.plugin.alertcenter.controller;
 
 import cn.hutool.json.JSONObject;
+import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.core.domain.AjaxResult;
 import org.opengauss.plugin.alertcenter.model.api.AlertApiReq;
 import org.opengauss.plugin.alertcenter.service.AlertApiService;
@@ -25,6 +26,7 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/alertCenter/api/v1")
+@Slf4j
 public class AlertApiController {
     @Autowired
     private AlertApiService alertApiService;
@@ -45,6 +47,7 @@ public class AlertApiController {
      */
     @PostMapping("/alerts")
     public AjaxResult alerts(@RequestBody @Valid List<JSONObject> paramList) {
+        log.info("告警接口参数：" + paramList);
         List<AlertApiReq> alertApiReqList = new ArrayList<>();
         for (JSONObject jsonObject : paramList) {
             jsonObject.put("startsAt", jsonObject.getStr("startsAt").replace("T", " ").substring(0, 19));

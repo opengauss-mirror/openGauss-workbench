@@ -519,28 +519,28 @@ CREATE TABLE IF NOT EXISTS "public"."alert_config" (
 INSERT INTO public.alert_rule (id,rule_name,level,rule_type,rule_exp_comb,rule_content,notify_duration,notify_duration_unit,is_repeat,is_silence,silence_start_time,silence_end_time,alert_notify,notify_way_ids,alert_desc,is_deleted,create_time,update_time)
  VALUES (1,'CPU使用率过高','warn','index','A','$'||'{nodeName}的CPU使用率超过90%',2,'m',1,0,null,null,'firing,recover','1',null,0,'2023-04-26 08:30:22.02',null) ON DUPLICATE KEY UPDATE NOTHING;
 INSERT INTO public.alert_rule_item (id,rule_id,rule_mark,rule_exp_name,operate,limit_value,unit,rule_exp,rule_item_desc,is_deleted,create_time,update_time,action)
- VALUES (1,1,'A','cpuUsage','>=',90,'%','100 - avg(rate(node_cpu_seconds_total{mode="idle",instance=~"$'||'{instances}"}[5m])) by(instance)  * 100','CPU使用率大于等于90%',0,'2023-06-05 15:45:20.02',null,'normal') ON DUPLICATE KEY UPDATE NOTHING;
+ VALUES (1,1,'A','cpuUsage','>=',90,'%','100 - avg(rate(agent_cpu_seconds_total{mode="idle",instance=~"$'||'{instances}"}[5m])) by(instance)  * 100','CPU使用率大于等于90%',0,'2023-06-05 15:45:20.02',null,'normal') ON DUPLICATE KEY UPDATE NOTHING;
 
 INSERT INTO public.alert_rule (id,rule_name,level,rule_type,rule_exp_comb,rule_content,notify_duration,notify_duration_unit,is_repeat,is_silence,silence_start_time,silence_end_time,alert_notify,notify_way_ids,alert_desc,is_deleted,create_time,update_time)
  VALUES (2,'内存使用率过高','serious','index','A','$'||'{nodeName}的内存使用率超过90%',2,'m',1,0,null,null,'firing,recover','1','内存使用率过高',0,'2023-06-05 15:45:20.02',null) ON DUPLICATE KEY UPDATE NOTHING;
 INSERT INTO public.alert_rule_item (id,rule_id,rule_mark,rule_exp_name,operate,limit_value,unit,rule_exp,rule_item_desc,is_deleted,create_time,update_time,action)
- VALUES (2,2,'A','memoryUsage','>=',90,'%','100 * (1 - (node_memory_MemFree_bytes + node_memory_Cached_bytes + node_memory_Buffers_bytes) / node_memory_MemTotal_bytes{instance=~"$'||'{instances}"})','内存使用率大于等于90%',0,'2023-06-05 15:45:20.02',null,'normal') ON DUPLICATE KEY UPDATE NOTHING;
+ VALUES (2,2,'A','memoryUsage','>=',90,'%','100 * (1 - (agent_memory_MemFree_bytes + agent_memory_Cached_bytes + agent_memory_Buffers_bytes) / agent_memory_MemTotal_bytes{instance=~"$'||'{instances}"})','内存使用率大于等于90%',0,'2023-06-05 15:45:20.02',null,'normal') ON DUPLICATE KEY UPDATE NOTHING;
 
 INSERT INTO public.alert_rule (id,rule_name,level,rule_type,rule_exp_comb,rule_content,notify_duration,notify_duration_unit,is_repeat,is_silence,silence_start_time,silence_end_time,alert_notify,notify_way_ids,alert_desc,is_deleted,create_time,update_time)
  VALUES (3,'磁盘使用量过高','serious','index','A','$'||'{nodeName}的磁盘（/dev/vda1）使用量超过15GB',2,'m',1,0,null,null,'firing,recover','1','磁盘使用量过高',0,'2023-06-05 15:45:20.02',null) ON DUPLICATE KEY UPDATE NOTHING;
 INSERT INTO public.alert_rule_item (id,rule_id,rule_mark,rule_exp_name,operate,limit_value,unit,rule_exp,rule_item_desc,is_deleted,create_time,update_time,action)
- VALUES (3,3,'A','diskUsage','>=',15360,'MB','(node_filesystem_size_bytes{device=~"/dev/vda1",instance="$' || '{instances}"} - node_filesystem_free_bytes) /1024/1024','内存使用率大于等于90%',0,'2023-06-05 15:45:20.02',null,'normal') ON DUPLICATE KEY UPDATE NOTHING;
+ VALUES (3,3,'A','diskUsage','>=',15360,'MB','(agent_filesystem_size_bytes{device=~"/dev/vda1",instance="$' || '{instances}"} - agent_filesystem_free_bytes) /1024/1024','内存使用率大于等于90%',0,'2023-06-05 15:45:20.02',null,'normal') ON DUPLICATE KEY UPDATE NOTHING;
 insert into public.alert_rule_item_param(id,item_id,param_name,param_value,param_order,is_deleted,create_time) values(1,3,'filesystemPath','/dev/vda1',1,0,'2023-06-05 15:45:20.02');
 
 INSERT INTO public.alert_rule (id,rule_name,level,rule_type,rule_exp_comb,rule_content,notify_duration,notify_duration_unit,is_repeat,is_silence,silence_start_time,silence_end_time,alert_notify,notify_way_ids,alert_desc,is_deleted,create_time,update_time)
  VALUES (4,'磁盘写速率过高','serious','index','A','$'||'{nodeName}的磁盘写速率大于等于100MB/s',2,'m',1,0,null,null,'firing','1','磁盘写速率过高',0,'2023-06-05 15:45:20.02',null) ON DUPLICATE KEY UPDATE NOTHING;
 INSERT INTO public.alert_rule_item (id,rule_id,rule_mark,rule_exp_name,operate,limit_value,unit,rule_exp,rule_item_desc,is_deleted,create_time,update_time,action)
- VALUES (4,4,'A','diskWriteRate','>=',100,'MB/s','sum(rate(node_disk_written_bytes_total{instance=~"$' || '{instances}"}[2m])) by (instance) /1024/1024','磁盘写速率大于等于100MB/s',0,'2023-06-05 15:45:20.02',null,'normal') ON DUPLICATE KEY UPDATE NOTHING;
+ VALUES (4,4,'A','diskWriteRate','>=',100,'MB/s','sum(rate(agent_disk_written_bytes_total{instance=~"$' || '{instances}"}[2m])) by (instance) /1024/1024','磁盘写速率大于等于100MB/s',0,'2023-06-05 15:45:20.02',null,'normal') ON DUPLICATE KEY UPDATE NOTHING;
 
 INSERT INTO public.alert_rule (id,rule_name,level,rule_type,rule_exp_comb,rule_content,notify_duration,notify_duration_unit,is_repeat,is_silence,silence_start_time,silence_end_time,alert_notify,notify_way_ids,alert_desc,is_deleted,create_time,update_time)
  VALUES (5,'磁盘读速率过高','serious','index','A','$'||'{nodeName}的磁盘读速率大于等于100MB/s',2,'m',1,0,null,null,'firing','1','磁盘读速率过高',0,'2023-06-05 15:45:20.02',null) ON DUPLICATE KEY UPDATE NOTHING;
 INSERT INTO public.alert_rule_item (id,rule_id,rule_mark,rule_exp_name,operate,limit_value,unit,rule_exp,rule_item_desc,is_deleted,create_time,update_time,action)
- VALUES (5,5,'A','diskReadRate','>=',100,'MB/s','sum(rate(node_disk_read_bytes_total{instance=~"$'||'{instances}"}[2m])) by (instance) /1024/1024','磁盘读速率大于等于100MB/s',0,'2023-06-05 15:45:20.02',null,'normal') ON DUPLICATE KEY UPDATE NOTHING;
+ VALUES (5,5,'A','diskReadRate','>=',100,'MB/s','sum(rate(agent_disk_read_bytes_total{instance=~"$'||'{instances}"}[2m])) by (instance) /1024/1024','磁盘读速率大于等于100MB/s',0,'2023-06-05 15:45:20.02',null,'normal') ON DUPLICATE KEY UPDATE NOTHING;
 
 INSERT INTO public.notify_template (id,notify_template_name,notify_template_desc,notify_title,notify_content,notify_template_type,is_deleted,create_time,update_time)
 VALUES (1,'通用告警模板',null,'告警信息','告警时间：$'||'{alertTime}'||chr(10)||'告警等级：$'||'{level}'||chr(10)||'告警实例：$'||'{nodeName}'||chr(10)||'主机IP：$'||'{hostIp}'||chr(10)||'告警内容：$'||'{content}'||chr(10),'email',0,'2023-04-26 08:30:22.02',null) ON DUPLICATE KEY UPDATE NOTHING;
