@@ -12,7 +12,7 @@
         <div class="form-header">
             <el-descriptions :title="$t('alertRule.alertTitle')"></el-descriptions>
         </div>
-        <el-form :model="formData" :rules="formRules" ref="formRef" label-position="left" label-width="100px" size="default">
+        <el-form :model="formData" :rules="formRules" ref="formRef" label-position="left" label-width="120px" size="default">
             <el-form-item :label="$t('alertRule.ruleName')" prop="ruleName">
                 <el-input v-model="formData.ruleName" disabled
                     :placeholder="$t('alertRule.ruleNamePlaceholder')"></el-input>

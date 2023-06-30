@@ -106,7 +106,12 @@ const cancel = () => {
 
 }
 const gotoInstall = () => {
-
+    if (window.$wujie) {
+        window.$wujie?.props.methods.jump({
+            name: `Static-pluginObservability-instanceVemDashboardInstance`
+        });
+    }
+    closeTip()
 }
 const closeTip = () => {
     dialogVisible.value = false
@@ -151,6 +156,7 @@ onMounted(() => {
         padding: 0 !important;
         border: none !important;
     }
+
     .title {
         font-size: 16px;
         font-family: Source Han Sans CN;
@@ -158,6 +164,7 @@ onMounted(() => {
         line-height: 24px;
         margin-bottom: 17px;
     }
+
     .content {
         font-size: 14px;
         font-family: Source Han Sans CN;
