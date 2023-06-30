@@ -65,13 +65,13 @@ public class AlertApiService {
     private NotifyTemplateMapper notifyTemplateMapper;
     @Autowired
     private NotifyMessageMapper notifyMessageMapper;
-    @Autowired(required = false)
+    @Autowired
     @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
     private IOpsClusterService clusterService;
-    @Autowired(required = false)
+    @Autowired
     @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
     private IOpsClusterNodeService clusterNodeService;
-    @Autowired(required = false)
+    @Autowired
     @AutowiredType(AutowiredType.Type.MAIN_PLUGIN)
     private HostFacade hostFacade;
 
@@ -100,8 +100,8 @@ public class AlertApiService {
 
             AlertRecord alertRecord = saveAndGetRecord(alertApiReq, notifyWayNames, alertTemplateRule, contentParamDto);
             contentParamDto.setContent(alertRecord.getAlertContent());
-            // 添加消息
-            Integer isRepeat = alertTemplateRule.getIsRepeat();  // 是否重复告警
+
+            Integer isRepeat = alertTemplateRule.getIsRepeat();
             if (isRepeat == CommonConstants.IS_NOT_REPEAT) {
                 Long count = notifyMessageMapper.selectCount(
                     Wrappers.<NotifyMessage>lambdaQuery().eq(NotifyMessage::getRecordId, alertRecord.getId()));
@@ -146,6 +146,7 @@ public class AlertApiService {
             TextParser textParser = new TextParser();
             alertRecord.setAlertContent(textParser.parse(ruleContent, contentParamDto));
             alertRecordMapper.insert(alertRecord);
+            log.info("insert new alert record");
         } else {
             alertRecord = alertRecords.get(0);
             if (alertRecord.getAlertStatus() == CommonConstants.RECOVER_STATUS) {
@@ -159,6 +160,7 @@ public class AlertApiService {
                 Duration.between(alertRecord.getStartTime(), alertRecord.getEndTime()).toSeconds());
             alertRecord.setUpdateTime(LocalDateTime.now());
             alertRecordMapper.updateById(alertRecord);
+            log.info("update alert record");
         }
         return alertRecord;
     }
