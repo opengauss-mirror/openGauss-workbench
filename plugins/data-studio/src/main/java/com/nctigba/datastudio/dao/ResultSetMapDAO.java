@@ -8,6 +8,7 @@ import com.nctigba.datastudio.model.dto.WinInfoDTO;
 import com.nctigba.datastudio.service.impl.sql.TableDataServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Repository;
@@ -54,6 +55,7 @@ public class ResultSetMapDAO {
     }
 
     @Autowired
+    @Lazy
     TableDataServiceImpl tableDataServiceImpl;
 
     public void overtimeCloseWin(String winID) throws Exception {
