@@ -234,54 +234,8 @@ public class SystemPluginController extends BaseController {
                 .setStartPlugin(true)
                 .setUnpackPlugin(false);
             PluginInfo pluginInfo = pluginOperator.uploadPlugin(uploadParam);
-            if (pluginInfo != null) {
-                String logo = null;
-                Integer pluginType = null;
-                Integer isNeedConfigured = null;
-                String theme = null;
-                String configAttrs = null;
-                String descriptionEn = null;
-                if (pluginInfo.getExtensionInfo() != null) {
-                    logo = MapUtil.getStr(pluginInfo.getExtensionInfo(), "logo");
-                    descriptionEn = MapUtil.getStr(pluginInfo.getExtensionInfo(), "descriptionEn");
-                    pluginType = MapUtil.getInt(pluginInfo.getExtensionInfo(), "pluginType");
-                    isNeedConfigured = MapUtil.getInt(pluginInfo.getExtensionInfo(), "isNeedConfigured");
-                    theme = MapUtil.getStr(pluginInfo.getExtensionInfo(), "theme");
-                    configAttrs = MapUtil.getStr(pluginInfo.getExtensionInfo(), "configAttrs");
-
-                    if (!SysPluginTheme.DARK.getCode().equals(theme) && !SysPluginTheme.LIGHT.getCode().equals(theme)) {
-                        theme = null;
-                    }
-                    if (StringUtils.isNotBlank(logo)) {
-                        logo = Base64.decodeStr(logo);
-                        logo = FileUploadUtils.writeMenuSvgIcon(logo);
-                    }
-                }
-                SysPlugin plugin = SysPlugin.builder().pluginId(pluginInfo.getPluginId())
-                    .pluginDesc(pluginInfo.getPluginDescriptor().getDescription()).pluginDescEn(descriptionEn)
-                    .bootstrapClass(pluginInfo.getPluginDescriptor().getPluginBootstrapClass())
-                    .pluginProvider(pluginInfo.getPluginDescriptor().getProvider()).isNeedConfigured(isNeedConfigured)
-                    .pluginType(pluginType).pluginVersion(pluginInfo.getPluginDescriptor().getPluginVersion())
-                    .theme(theme).build();
-                sysPluginService.save(plugin);
-                Map<String, Object> result = Maps.newHashMap();
-                result.put("isNeedConfigured", isNeedConfigured);
-                result.put("pluginId", pluginInfo.getPluginId());
-                if (isNeedConfigured != null && isNeedConfigured == 1) {
-                    sysPluginConfigService.savePluginConfig(pluginInfo.getPluginId(), configAttrs);
-                    result.put("configAttrs", configAttrs);
-                    String alreadyData = sysPluginConfigDataService.getDataByPluginId(pluginInfo.getPluginId());
-                    if (StringUtils.isNotBlank(alreadyData)) {
-                        result.put("configData", alreadyData);
-                    }
-                }
-                if (StringUtils.isNotBlank(theme)) {
-                    sysMenuService.updatePluginMenuTheme(pluginInfo.getPluginId(), theme);
-                }
-                if (StringUtils.isNotBlank(logo)) {
-                    sysMenuService.updatePluginMenuIcon(pluginInfo.getPluginId(), logo);
-                    iSysPluginLogoService.savePluginConfig(pluginInfo.getPluginId(), logo);
-                }
+            Map<String, Object> result;
+            if ((result = updateSystemByPluginInfo(pluginInfo)) != null) {
                 return AjaxResult.success(result);
             } else {
                 return AjaxResult.error(ResponseCode.INTEGRATION_PLUGIN_INSTALL_ERROR.code());
@@ -292,6 +246,68 @@ public class SystemPluginController extends BaseController {
             log.error(errorsWriter.toString());
             return AjaxResult.error(ResponseCode.INTEGRATION_PLUGIN_INSTALL_ERROR.code());
         }
+    }
+    
+    /**
+     * Update plugin service info.
+     * @param pluginInfo the plugin info.
+     * @return addition map attr.
+     */
+    public Map<String, Object> updateSystemByPluginInfo(PluginInfo pluginInfo) {
+        if (pluginInfo == null) {
+            return null;
+        }
+        String logo = null;
+        Integer pluginType = null;
+        Integer isNeedConfigured = null;
+        String theme = null;
+        String configAttrs = null;
+        String descriptionEn = null;
+        if (pluginInfo.getExtensionInfo() != null) {
+            logo = MapUtil.getStr(pluginInfo.getExtensionInfo(), "logo");
+            descriptionEn = MapUtil.getStr(pluginInfo.getExtensionInfo(), "descriptionEn");
+            pluginType = MapUtil.getInt(pluginInfo.getExtensionInfo(), "pluginType");
+            isNeedConfigured = MapUtil.getInt(pluginInfo.getExtensionInfo(), "isNeedConfigured");
+            theme = MapUtil.getStr(pluginInfo.getExtensionInfo(), "theme");
+            configAttrs = MapUtil.getStr(pluginInfo.getExtensionInfo(), "configAttrs");
+        
+            if (!SysPluginTheme.DARK.getCode().equals(theme) && !SysPluginTheme.LIGHT.getCode().equals(theme)) {
+                theme = null;
+            }
+            if (StringUtils.isNotBlank(logo)) {
+                logo = Base64.decodeStr(logo);
+                logo = FileUploadUtils.writeMenuSvgIcon(logo);
+            }
+        }
+        SysPlugin plugin = sysPluginService.getByPluginId(pluginInfo.getPluginId());
+        if (plugin == null) {
+            plugin = SysPlugin.builder().pluginId(pluginInfo.getPluginId())
+                    .pluginDesc(pluginInfo.getPluginDescriptor().getDescription()).pluginDescEn(descriptionEn)
+                    .bootstrapClass(pluginInfo.getPluginDescriptor().getPluginBootstrapClass())
+                    .pluginProvider(pluginInfo.getPluginDescriptor().getProvider()).isNeedConfigured(isNeedConfigured)
+                    .pluginType(pluginType).pluginVersion(pluginInfo.getPluginDescriptor().getPluginVersion())
+                    .theme(theme).build();
+            sysPluginService.save(plugin);
+        }
+        Map<String, Object> result = Maps.newHashMap();
+        result.put("isNeedConfigured", isNeedConfigured);
+        result.put("pluginId", pluginInfo.getPluginId());
+        if (isNeedConfigured != null && isNeedConfigured == 1) {
+            sysPluginConfigService.savePluginConfig(pluginInfo.getPluginId(), configAttrs);
+            result.put("configAttrs", configAttrs);
+            String alreadyData = sysPluginConfigDataService.getDataByPluginId(pluginInfo.getPluginId());
+            if (StringUtils.isNotBlank(alreadyData)) {
+                result.put("configData", alreadyData);
+            }
+        }
+        if (StringUtils.isNotBlank(theme)) {
+            sysMenuService.updatePluginMenuTheme(pluginInfo.getPluginId(), theme);
+        }
+        if (StringUtils.isNotBlank(logo)) {
+            sysMenuService.updatePluginMenuIcon(pluginInfo.getPluginId(), logo);
+            iSysPluginLogoService.savePluginConfig(pluginInfo.getPluginId(), logo);
+        }
+        return result;
     }
 
     /**
