@@ -39,10 +39,10 @@ baomidou:
   version: 3.5.0
   url: https://github.com/baomidou/mybatis-plus
 jsch:
-  groupId: com.jcraft
+  groupId: com.github.mwiede
   artifactId: jsch
-  version: 0.1.55
-  url: http://git.jcraft.com/jsch.git
+  version: 0.2.9
+  url: https://github.com/mwiede/jsch
 javax.servlet-api:
   groupId: javax.servlet
   artifactId: javax.servlet-api
