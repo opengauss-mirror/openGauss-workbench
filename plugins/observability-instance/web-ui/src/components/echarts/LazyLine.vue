@@ -86,6 +86,7 @@ const props = withDefaults(
         interval?: number // yAxis interval
         tabId: string
         rangeSelect: boolean
+        isTooltipsFormatDate: boolean // x value is date,and format to YYYY-MM-DD HH:mm:ss
 
         unit?: string
         scatterUnit?: string
@@ -123,6 +124,8 @@ const props = withDefaults(
         rangeSelect: false,
         theme: 'dark',
         translate: true,
+        isTooltipsFormatDate: true,
+        enterable: true,
         countByDataTimePicker: true,
     }
 )
@@ -215,24 +218,43 @@ const renderChart = () => {
             trigger: 'axis',
             confine: true,
             enterable: props.enterable,
-            backgroundColor: '#212121',
-            borderColor: '#4a4a4a',
+            backgroundColor: 'rgba(0, 0, 0, 0.64)',
+            borderWidth: 0,
             formatter: (params) => {
-                let str = `<div style="${props.enterable ? 'max-height: 155px;' : ''}overflow: auto;color: #D4D4D4">`
+                let htmlStr =
+                    '<div style="height: auto;max-height: 180px;overflow-y: scroll;border-radius: 4px;color:#fff">'
                 if (Array.isArray(params)) {
-                    params.forEach((p, i) => {
-                        const seriesName = props.translate ? t(`${p.seriesName}`) : p.seriesName
-                        if (i === 0) {
-                            str += p.name
-                        }
-                        str += `<div style="display: flex;justify-content: space-between;"><div style="margin-right: 24px;">${p.marker} ${seriesName} </div>${p.data}</div>`
-                    })
+                    if (props.isTooltipsFormatDate) {
+                        htmlStr +=
+                            '<div style="font-size:14px">' +
+                            moment(new Date(params[0].axisValue)).format('YYYY-MM-DD HH:mm:ss') +
+                            '</div>'
+                    } else {
+                        htmlStr += '<div style="font-size:14px">' + params[0].axisValue + '</div>'
+                    }
+
+                    for (let i = 0; i < params.length; i++) {
+                        // htmlStr += '<div ">' + params[i].marker + params[i].seriesName + ':' + params[i].value + '</div>'
+                        htmlStr +=
+                            '<div style="display: flex;flex-direction: row;align-items:center;font-size:12px">' +
+                            '<div style="display: inline-block; width: 14px; height: 4px;border-radius: 1px;margin-right:8px;background-color: ' +
+                            params[i].color +
+                            ';"></div>' +
+                            '<div style="flex-grow:1;padding-right:12px">' +
+                            params[i].seriesName +
+                            '</div>' +
+                            '<div style="">' +
+                            params[i].value +
+                            (props.unit ? props.unit : '') +
+                            '</div>' +
+                            '</div>'
+                    }
                 } else {
                     const seriesName = props.translate ? t(`${params.seriesName}`) : params.seriesName
-                    str += `${params.name}<div style="display: flex;justify-content: space-between;"><div style="margin-right: 24px;">${params.marker} ${seriesName}</div>${params.data}</div>`
+                    htmlStr += `${params.name}<div style="display: flex;justify-content: space-between;"><div style="margin-right: 24px;">${params.marker} ${seriesName}</div>${params.data}</div>`
                 }
-                str += '</div>'
-                return str
+                htmlStr += '</div>'
+                return htmlStr
             },
         },
         toolbox: {

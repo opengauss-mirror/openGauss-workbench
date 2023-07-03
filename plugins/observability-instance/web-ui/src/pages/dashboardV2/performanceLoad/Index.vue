@@ -580,7 +580,7 @@ watch(
         for (let item in sortedData) {
             let tempData: string[] = []
             Object.values(sortedData[item])[0].forEach((element) => {
-                tempData.push(toFixed(element))
+                tempData.push(element.toString())
             })
             metricsData.value.session.push({
                 data: tempData,
