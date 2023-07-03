@@ -1,5 +1,5 @@
 import JsEncrypt from "jsencrypt";
-import platformRequest from "../request/platform";
+import platformRequest from "@/request/platform";
 
 interface KeyValue {
     [key: string]: any;
@@ -19,7 +19,7 @@ export async function encryptPassword(pwd: string) {
     encryptor.setPublicKey(publicKey);
     return encryptor.encrypt(pwd);
 }
-const getEntryKey: KeyValue = (data) => {
+const getEntryKey: KeyValue = () => {
     return platformRequest
         .getNative("/encryption/getKey", {})
         .then(function (res: Res) {

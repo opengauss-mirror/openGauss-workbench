@@ -17,7 +17,7 @@ import javax.validation.constraints.NotNull;
 @Data
 public class AlertClusterNodeConfReq {
     @NotBlank
-    private String clusterNodeIds; // 实例nodeId，多个，逗号分隔
+    private String clusterNodeIds;
     @NotNull
-    private Long templateId; // 告警模板ID
+    private Long templateId;
 }

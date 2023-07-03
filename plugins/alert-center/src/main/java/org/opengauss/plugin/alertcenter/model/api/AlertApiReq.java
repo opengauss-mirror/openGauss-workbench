@@ -13,7 +13,7 @@ import java.util.Map;
 /**
  * @author wuyuebin
  * @date 2023/4/30 01:56
- * @description prometheus推送的告警信息
+ * @description Prometheus pushes alert messages.
  */
 @Data
 public class AlertApiReq {

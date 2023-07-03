@@ -32,21 +32,22 @@ public class AlertApiController {
     private AlertApiService alertApiService;
 
     /**
-     * 这是prometheus推送数据的接口
-     * prometheus固定推送的接口是：/%pre/api/%v/alerts
-     * prometheus配置文件中的path_prefix(%pre)是: /alertCenter
-     * prometheus配置文件中的api_version(%v)是: v1
+     * This is the interface for Prometheus to push data.
      * <p>
-     * appcation.yml中配置的context-path是/alertCenter/api/v1
+     * The fixed interface for Prometheus to push data is:/%pre/api/%v/alerts
      * <p>
-     * 注：context-path的"/alertCenter" 和 "v1" 必须和prometheus配置文件中的path_prefix、api_version匹配，
-     * 后续如果需要修改context-path，需要去修改prometheus的配置或本接口的url路径
+     * In Prometheus configuration file, the path_prefix (%pre) for Prometheus is: /plugins/alert-center/alertCenter.
+     * <p>
+     * In the Prometheus configuration file, the api_version (%v) is: v1.
+     * <p>
+     * Note：The interface address must match the configuration of Prometheus.
      *
-     * @param paramList 告警信息
-     * @return 返回成功信息
+     * @param paramList alert info
+     * @return return success info
      */
     @PostMapping("/alerts")
     public AjaxResult alerts(@RequestBody @Valid List<JSONObject> paramList) {
+        log.info("alert info params is:", paramList);
         List<AlertApiReq> alertApiReqList = new ArrayList<>();
         for (JSONObject jsonObject : paramList) {
             jsonObject.put("startsAt", jsonObject.getStr("startsAt").replace("T", " ").substring(0, 19));

@@ -1,6 +1,46 @@
+<template>
+    <div class="og-card">
+        <div class="og-card-header">
+            <span class="og-card-header--title">
+                <svg-icon v-if="props.collapse" name="arrow" :class="{ 'is-collapse': isCollapse }" @click="toggleCollapse" />
+                {{ props.title }}
+            </span>
+            <slot name="extra">
+                <div ref="extraRef" class="og-card-header--extra"
+                    :style="{ justifyContent: overflow || !isFinish ? 'flex-start' : 'flex-end' }">
+                    <el-dropdown ref="dropdownRef" :hide-on-click="false" :max-height="200">
+                        <div></div>
+                        <template #dropdown>
+                            <el-dropdown-menu>
+                                <el-dropdown-item v-for="l in props.legend" :key="l.name">
+                                    <div class="hover">
+                                        <div :style="{ background: l.color }" class="rect"></div>
+                                        <span :title="l.name">{{ l.name }}</span>
+                                    </div>
+                                </el-dropdown-item>
+                            </el-dropdown-menu>
+                        </template>
+                    </el-dropdown>
+                    <div v-for="l in props.legend" :key="l.name">
+                        <div :style="{ background: l.color }" class="rect"></div>
+                        <span :title="l.name">{{ l.name }}</span>
+                    </div>
+                </div>
+            </slot>
+        </div>
+        <div class="og-card-body" :class="{ 'is-collapse': isCollapse }" ref="bodyRef" :style="{
+            resize: props.resize ? 'vertical' : 'none',
+        }">
+            <div>
+                <slot />
+            </div>
+        </div>
+    </div>
+</template>
+
 <script setup lang="ts">
 import { useDebounceFn } from '@vueuse/core';
-import { useWidthOverflow } from '../hooks/dom';
+import { useWidthOverflow } from '@/hooks/dom';
 
 const props = withDefaults(defineProps<{
     title: string,
@@ -86,60 +126,6 @@ defineExpose({
 })
 </script>
 
-<template>
-<div class="og-card">
-    <div class="og-card-header">
-        <span class="og-card-header--title">
-            <svg-icon
-                v-if="props.collapse"
-                name="arrow"
-                :class="{'is-collapse': isCollapse}"
-                @click="toggleCollapse"
-            />
-            {{ props.title }}
-        </span>
-        <slot name="extra">
-            <div
-                ref="extraRef"
-                class="og-card-header--extra"
-                :style="{justifyContent: overflow || !isFinish ? 'flex-start' : 'flex-end'}"
-            >
-                <el-dropdown ref="dropdownRef" :hide-on-click="false" :max-height="200">
-                    <div></div>
-                    <template #dropdown>
-                        <el-dropdown-menu>
-                            <el-dropdown-item v-for="l in props.legend" :key="l.name">
-                                <div class="hover">
-                                    <div :style="{ background: l.color }" class="rect"></div>
-                                    <span :title="l.name">{{ l.name }}</span>
-                                </div>
-                            </el-dropdown-item>
-                        </el-dropdown-menu>
-                    </template>
-                </el-dropdown>
-                <div v-for="l in props.legend" :key="l.name">
-                    <div :style="{ background: l.color }" class="rect"></div>
-                    <span :title="l.name">{{ l.name }}</span>
-                </div>
-            </div>
-            <!-- <span v-show="overflow">...</span> -->
-        </slot>
-    </div>
-    <div
-        class="og-card-body"
-        :class="{'is-collapse': isCollapse}"
-        ref="bodyRef"
-        :style="{
-            resize: props.resize ? 'vertical' : 'none',
-        }"
-    >
-        <div>
-            <slot />
-        </div>
-    </div>
-</div>
-</template>   
-
 <style scoped lang="scss">
 .og-card {
     box-sizing: border-box;
@@ -147,6 +133,7 @@ defineExpose({
     border: 1px solid var(--el-og-border-color);
     border-radius: v-bind(withTableBorderRadius);
     overflow: v-bind(hidden);
+
     &-header {
         display: flex;
         overflow: hidden;
@@ -157,20 +144,24 @@ defineExpose({
         min-width: 0;
         height: 39px;
         border-bottom: 1px solid var(--el-og-border-color);
+
         &--title {
             font-weight: 700;
             font-size: 16px;
             flex-shrink: 0;
-            > svg {
+
+            >svg {
                 position: relative;
                 top: -2px;
                 margin-right: 12px;
                 transition: transform var(--el-transition-duration);
+
                 &.is-collapse {
                     transform: rotate(-90deg);
                 }
             }
         }
+
         &--extra {
             position: relative;
             display: flex;
@@ -181,20 +172,24 @@ defineExpose({
             align-items: center;
             font-size: 12px;
             height: 40px;
-            > div {
+
+            >div {
                 display: flex;
                 flex-shrink: 0;
                 margin-right: 12px;
                 min-width: 0;
-                > span {
+
+                >span {
                     margin-left: 4px;
                 }
+
                 &:last-of-type {
                     margin-right: 0;
                 }
             }
         }
     }
+
     &-body {
         box-sizing: border-box;
         height: v-bind(bodyHeight);
@@ -204,23 +199,28 @@ defineExpose({
         background-color: var(--el-bg-color-og);
         border-radius: 0 0 8px 8px;
         will-change: height;
-        > div {
+
+        >div {
             box-sizing: border-box;
             padding: v-bind(padding);
             height: v-bind(bodyHeight);
         }
+
         &.is-collapse {
-            height: 0!important;
+            height: 0 !important;
         }
     }
 }
+
 .hover {
     display: flex;
     align-items: center;
-    > span {
+
+    >span {
         margin-left: 4px;
     }
 }
+
 .rect {
     width: 16px;
     height: 16px;

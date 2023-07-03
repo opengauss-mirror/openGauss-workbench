@@ -8,18 +8,22 @@
 .el-link.el-link--primary {
     color: var(--primary-6) !important;
 }
+
 :deep(.el-pagination) {
     display: flex;
     justify-content: flex-end;
 }
+
 .deleteBtn {
     color: #d4d4d4;
 }
+
 .deleteBtn-icon {
     position: relative;
     top: 2px;
     right: 5px;
 }
+
 :deep(.el-range-editor--small.el-input__wrapper) {
     width: 240px;
 }
@@ -28,18 +32,23 @@
     &:deep(.el-dialog .el-dialog__header) {
         text-align: center;
     }
+
     &:deep(.el-form-item--small .el-form-item__label) {
         width: 110px;
     }
+
     &:deep(.el-dialog .el-dialog__footer) {
         border: none !important;
     }
+
     .form-textarea {
         width: 100%;
+
         &:deep(.el-textarea__inner) {
             height: 100px;
         }
     }
+
     .option-wrap {
         margin-right: 20px;
     }

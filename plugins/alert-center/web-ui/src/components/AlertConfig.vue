@@ -53,7 +53,6 @@
 
 <script setup lang='ts'>
 import "element-plus/es/components/message-box/style/index";
-import { useRequest } from "vue-request";
 import request from "@/request";
 import { ElMessage } from "element-plus";
 import { useI18n } from "vue-i18n";

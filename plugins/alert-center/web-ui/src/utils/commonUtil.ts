@@ -1,5 +1,3 @@
-
-
 export function parseContent(content: string, param: any) {
     if (!content || !param) {
         return content

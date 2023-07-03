@@ -1,5 +1,5 @@
-import { uuid } from "../shared";
-import DelModalVue from "./DelModal.vue";
+import { uuid } from "@/shared";
+import DelModalVue from "@/hooks/DelModal.vue";
 
 /**
  * delete comfirm

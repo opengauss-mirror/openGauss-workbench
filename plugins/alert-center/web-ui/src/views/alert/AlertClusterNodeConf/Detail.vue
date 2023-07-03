@@ -172,8 +172,7 @@ import { InfoFilled } from "@element-plus/icons-vue";
 import "element-plus/es/components/message-box/style/index";
 import { useRequest } from "vue-request";
 import request from "@/request";
-import { i18n } from "@/i18n";
-import { ElMessageBox, ElMessage } from "element-plus";
+import { ElMessage } from "element-plus";
 import { useI18n } from "vue-i18n";
 import { ref, onMounted, nextTick } from 'vue'
 import TemplateRuleDetail from "@/views/alert/AlertTemplate/TemplateRuleDetail.vue";
@@ -358,14 +357,6 @@ const cancel = () => {
 
 const editRule = (ruleRow: any) => {
     selectedRuleRows.value = ruleTable.value.getSelectionRows() || []
-    // let selectedRuleIdArr = selectedRuleRows.value.map((item: any) => item.ruleId) || []
-    // if (!selectedRuleIdArr.includes(ruleRow.ruleId)) {
-    //     ElMessage({
-    //         message: t('app.selectUpdateDataTip'),
-    //         type: 'warning'
-    //     })
-    //     return;
-    // }
     editTemplateRuleId.value = ruleRow.templateRuleId
     editRuleId.value = ruleRow.ruleId
     titleList.value = [t('AlertClusterNodeConf.title'), t('AlertClusterNodeConf.detailTitle'), t('alertRule.editTitle')]
@@ -374,7 +365,16 @@ const editRule = (ruleRow: any) => {
 const updateTemplateRuleSuccess = (templateRule: any) => {
     for (let i = 0; i < ruleTableDataList.value.length; i++) {
         if (ruleTableDataList.value[i].ruleId === templateRule.ruleId) {
-            ruleTableDataList.value[i] = templateRule
+            ruleTableDataList.value[i].templateRuleId = templateRule.templateRuleId
+            ruleTableDataList.value[i].level = templateRule.level
+            ruleTableDataList.value[i].ruleExpDesc = templateRule.ruleExpDesc
+            ruleTableDataList.value[i].ruleExpComb = templateRule.ruleExpComb
+            ruleTableDataList.value[i].isRepeat = templateRule.isRepeat
+            ruleTableDataList.value[i].isSilence = templateRule.isSilence
+            ruleTableDataList.value[i].silenceStartTime = templateRule.silenceStartTime
+            ruleTableDataList.value[i].silenceEndTime = templateRule.silenceEndTime
+            ruleTableDataList.value[i].alertNotify = templateRule.alertNotify
+            ruleTableDataList.value[i].notifyWayIds = templateRule.notifyWayIds
         }
     }
     showMain.value = true
@@ -434,10 +434,10 @@ onMounted(() => {
 </script>
 <style scoped lang='scss'>
 .templateTable {
-    height: calc(100vh - 170px - 62px - 177px);
+    height: calc(100vh - 110px - 62px - 177px);
 }
 .ruleTable {
-    height: calc(100vh - 170px - 62px - 177px - 34px);
+    height: calc(100vh - 110px - 62px - 177px - 34px);
 }
 .node-tabs>.el-tabs__content {
     padding: 32px;

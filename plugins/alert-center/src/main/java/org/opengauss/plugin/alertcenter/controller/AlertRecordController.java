@@ -52,6 +52,12 @@ public class AlertRecordController extends BaseController {
         return AjaxResult.success(alertRecordDto);
     }
 
+    /**
+     * mark the read record as unread
+     *
+     * @param ids Primary key ID collection
+     * @return return success info
+     */
     @PostMapping("/markAsUnread")
     public AjaxResult markAsUnread(@RequestParam String ids) {
         String result = alertRecordService.markAsUnread(ids);
@@ -59,10 +65,10 @@ public class AlertRecordController extends BaseController {
     }
 
     /**
-     * 处理告警信息，将未读状态改为已读
+     * mark the unread record as read
      *
-     * @param ids 多个，逗号分隔
-     * @return success
+     * @param ids Primary key ID collection
+     * @return return success info
      */
     @PostMapping("/markAsRead")
     public AjaxResult markAsRead(@RequestParam String ids) {

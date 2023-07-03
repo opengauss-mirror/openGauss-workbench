@@ -110,11 +110,10 @@
 </template>
 
 <script setup lang='ts'>
-import { ElLoading } from 'element-plus'
+import { ElLoading, ElMessage } from 'element-plus'
 import "element-plus/es/components/message-box/style/index";
 import { useRequest } from "vue-request";
 import request from "@/request";
-import { ElMessageBox, ElMessage } from "element-plus";
 import { useI18n } from "vue-i18n";
 import { cloneDeep } from 'lodash-es';
 import type { FormInstance, FormRules } from 'element-plus'
@@ -236,7 +235,7 @@ const testNotify = (type: string) => {
     curType.value = type
     requestNotifyWayData(type)
 }
-const loading = ref(false) // loading
+const loading = ref<any>(false) // loading
 const openLoading = () => {
     loading.value = ElLoading.service({
         lock: true,
@@ -350,7 +349,6 @@ onMounted(() => {
     box-sizing: border-box;
     color: v-bind(color);
     background: v-bind(background);
-    // background: #FBFBFB;
 
     border: 1px solid #EAEBEE;
     border-radius: 2px;

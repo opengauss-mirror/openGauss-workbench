@@ -54,30 +54,21 @@ import { Search } from "@element-plus/icons-vue";
 import "element-plus/es/components/message-box/style/index";
 import { useRequest } from "vue-request";
 import request from "@/request";
-import { i18n } from "@/i18n";
-import { ElMessageBox, ElMessage } from "element-plus";
+import { ElMessage } from "element-plus";
 import { useI18n } from "vue-i18n";
 import { ref, onMounted } from 'vue'
 import Detail from "@/views/alert/AlertClusterNodeConf/Detail.vue"
 import { cloneDeep } from "lodash";
 const { t } = useI18n();
 
-
 const showMain = ref<boolean>(true)
-
 const formData = ref<any>({
     nodeName: ''
 })
 const table = ref();
 const srcTableDatas = ref<any[]>([])
 const tableDatas = ref<any[]>([])
-// const page = reactive({
-//     currentPage: 1,
-//     pageSize: 10,
-//     total: 0,
-// })
 const selectedDatas = ref<any[]>([])
-
 
 const addClusterNodeConf = () => {
     const rows = table.value.getSelectionRows()
@@ -99,8 +90,6 @@ const editClusterNodeConf = (row: any) => {
 
 const updateConfigSuccess = () => {
     showMain.value = true
-    // page.pageSize = 10
-    // page.currentPage = 1
     requestData()
 }
 const cancelConfig = () => {
@@ -116,12 +105,8 @@ const { data: res, run: requestData } = useRequest(
 )
 watch(res, (res: any) => {
     if (res && res.code === 200) {
-        // tableDatas.value = res.rows || []
-        // page.total = res.total
         tableDatas.value = srcTableDatas.value = res.data || []
     } else {
-        // tableDatas.value = []
-        // page.total = 0
         srcTableDatas.value = []
         tableDatas.value = []
     }
@@ -134,15 +119,6 @@ const search = () => {
         tableDatas.value = srcTableDatas.value.filter(item => item.nodeName.indexOf(formData.value.nodeName) !== -1)
     }
 }
-
-// const handleSizeChange = (val: any) => {
-//     page.pageSize = val
-//     requestData()
-// }
-// const handleCurrentChange = (val: any) => {
-//     page.currentPage = val
-//     requestData()
-// }
 
 onMounted(() => {
     requestData()

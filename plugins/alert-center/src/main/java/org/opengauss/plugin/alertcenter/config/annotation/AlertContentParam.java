@@ -12,7 +12,7 @@ import java.lang.annotation.Target;
 /**
  * @author wuyuebin
  * @date 2023/6/16 14:53
- * @description 常驻参数说明
+ * @description Permanent parameter description
  */
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)

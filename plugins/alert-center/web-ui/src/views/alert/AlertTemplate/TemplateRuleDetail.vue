@@ -12,7 +12,7 @@
         <div class="form-header">
             <el-descriptions :title="$t('alertRule.alertTitle')"></el-descriptions>
         </div>
-        <el-form :model="formData" :rules="formRules" ref="formRef" label-position="left" label-width="120px" size="default">
+        <el-form :model="formData" ref="formRef" label-position="left" label-width="120px" size="default">
             <el-form-item :label="$t('alertRule.ruleName')" prop="ruleName">
                 <el-input v-model="formData.ruleName" disabled
                     :placeholder="$t('alertRule.ruleNamePlaceholder')"></el-input>
@@ -72,7 +72,7 @@
                     <div class="alert-param">
                         <div class="title"><svg-icon name="tip" />{{ t('alertRule.alertContentTitle') }}</div>
                         <div class="content">
-                            <span>{{ t('alertRule.alertContentTip') }}</span>
+                            <span v-html="t('alertRule.alertContentTip')"></span>
                             <el-row style="margin-top: 10px;">
                                 <el-col :span="12" v-for="item in paramNameList" :key="item">{{ `${item}:
                                                                     ${alertContentParam[item]['name']}` }}</el-col>
@@ -100,7 +100,7 @@
         <div class="form-header">
             <el-descriptions :title="$t('alertRule.notifyTitle')"></el-descriptions>
         </div>
-        <el-form :model="formData" :rules="formRules" ref="formRef" label-position="right" label-width="100px" size="default">
+        <el-form :model="formData" ref="formRef" label-position="right" label-width="100px" size="default">
             <el-form-item :label="$t('alertRule.alertNotify')" prop="notifyDuration">
                 <el-checkbox-group v-model="alertNotifyList">
                     <el-checkbox label="firing">{{ $t('alertRule.firing') }}</el-checkbox>
@@ -144,8 +144,7 @@
 import "element-plus/es/components/message-box/style/index";
 import { useRequest } from "vue-request";
 import request from "@/request";
-import { i18n } from "@/i18n";
-import { ElMessageBox, ElMessage } from "element-plus";
+import { ElMessage } from "element-plus";
 import { useI18n } from "vue-i18n";
 import SvgIcon from "@/components/SvgIcon.vue";
 import { parseContent } from "@/utils/commonUtil"
@@ -162,7 +161,9 @@ const props = withDefaults(
         titleList: string[]
     }>(),
     {
-        titleList: () => []
+        titleList: () => [],
+        ruleId: undefined,
+        templateRuleId: undefined
     }
 );
 const emit = defineEmits(["updateTemplateRuleSuccess", "cancelUpdateTemplateRule"]);
@@ -204,8 +205,6 @@ const ruleTypeList = reactive(['index', 'log'])
 const levelList = reactive(['serious', 'warn', 'info'])
 const ruleExpComb = ref<string[]>([])
 const alertNotifyList = ref<string[]>([])
-// const isRepeat = ref<string>('')
-// const isSilence = ref<string>('')
 const silenceTimes = ref<any[]>([])
 const showLogicSelect = (logicSymbol: string) => {
     return logicSymbolList.value.includes(logicSymbol)
@@ -360,11 +359,6 @@ onMounted(() => {
                 }]
             });
         });
-        // wujie?.bus.$on('opengauss-theme-change', (val: string) => {
-        //     nextTick(() => {
-        //         requestPisData()
-        //     });
-        // });
     }
 })
 

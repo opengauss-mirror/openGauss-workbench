@@ -48,13 +48,9 @@ public class EmailService {
 
     private Properties applyProperties(NotifyConfig notifyConfig) {
         Properties properties = new Properties();
-        // 邮件服务器
         properties.setProperty("mail.smtp.host", notifyConfig.getSever());
-        // 端口号
         properties.setProperty("mail.smtp.port", notifyConfig.getPort() + "");
-        // 需要身份验证
         properties.setProperty("mail.smtp.auth", "true");
-        // 发送邮件协议
         properties.setProperty("mail.transport.protocol", "smtp");
         properties.setProperty("mail.user", notifyConfig.getSender());
         properties.setProperty("mail.from", notifyConfig.getAccount());

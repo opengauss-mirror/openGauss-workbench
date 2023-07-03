@@ -11,12 +11,12 @@ import lombok.Data;
 /**
  * @author wuyuebin
  * @date 2023/4/30 01:59
- * @description prometheus推送的告警信息额外信息
+ * @description The additional information included in the alert messages pushed by Prometheus.
  */
 @Data
 public class AlertLabels {
     private String alertname;
-    private String instance; // 对应cluster_node_id
+    private String instance; // cluster_node_id
     private String level;
     @JsonSerialize(using = ToStringSerializer.class)
     private Long templateId;

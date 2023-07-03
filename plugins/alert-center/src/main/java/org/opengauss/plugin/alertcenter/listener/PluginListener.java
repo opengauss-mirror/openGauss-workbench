@@ -25,32 +25,30 @@ public class PluginListener implements ApplicationListener<ApplicationEvent> {
     public void onApplicationEvent(ApplicationEvent event) {
         if (event instanceof ApplicationReadyEvent) {
             MainApplicationContext context = ((ApplicationReadyEvent) event).getApplicationContext().getBean(
-                    MainApplicationContext.class);
+                MainApplicationContext.class);
             SpringBeanFactory factory = context.getSpringBeanFactory();
             MenuFacade menuFacade = factory.getBean(MenuFacade.class);
             if (menuFacade != null) {
-                MenuVo firstMenu = menuFacade.savePluginMenu(pluginId, "监控告警", "Alert Center", 6, "alert");
+                MenuVo firstMenu = menuFacade.savePluginMenu(pluginId, "告警监控", "Alert Center", 6, "alert");
                 menuFacade.savePluginMenu(pluginId, "告警记录", "Alert Record", 22, "vem/alert/alertRecord",
-                        firstMenu.getMenuId());
+                    firstMenu.getMenuId());
                 menuFacade.savePluginRoute(pluginId, "告警详细", "Alert Record Detail", "vem/alert/recordDetail",
-                        firstMenu.getMenuId());
+                    firstMenu.getMenuId());
                 menuFacade.savePluginMenu(pluginId, "告警配置", "Alert Config", 23, "vem/alert/AlertClusterNodeConf",
-                        firstMenu.getMenuId());
+                    firstMenu.getMenuId());
                 menuFacade.savePluginMenu(pluginId, "告警模板", "Alert Template", 24, "vem/alert/alertTemplate",
-                        firstMenu.getMenuId());
+                    firstMenu.getMenuId());
                 menuFacade.savePluginMenu(pluginId, "告警规则", "Alert Rule", 25, "vem/alert/alertRule",
-                        firstMenu.getMenuId());
-                MenuVo secondMenu = menuFacade.savePluginMenu(pluginId, "通知配置", "Notify Configuration", 7,
-                        "notify");
+                    firstMenu.getMenuId());
                 menuFacade.savePluginMenu(pluginId, "通知模板", "Notify Template", 26, "vem/notify/notifyTemplate",
-                        secondMenu.getMenuId());
+                    firstMenu.getMenuId());
                 menuFacade.savePluginMenu(pluginId, "通知方式", "Notify Way", 27, "vem/notify/notifyWay",
-                        secondMenu.getMenuId());
+                    firstMenu.getMenuId());
             }
         }
         if (event instanceof ContextClosedEvent) {
             MainApplicationContext context = ((ContextClosedEvent) event).getApplicationContext().getBean(
-                    MainApplicationContext.class);
+                MainApplicationContext.class);
             SpringBeanFactory factory = context.getSpringBeanFactory();
             MenuFacade menuFacade = factory.getBean(MenuFacade.class);
             if (menuFacade != null) {

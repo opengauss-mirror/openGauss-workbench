@@ -44,9 +44,6 @@
                     </el-table-column>
                     <el-table-column :label="$t('app.operate')" width="120" fixed="right">
                         <template #default="scope">
-                            <!-- <el-button link type="primary" size="small" @click="showDetail(scope.row.id)">{{
-                                $t('app.view')
-                            }}</el-button> -->
                             <el-button link type="primary" size="small" @click="editTemplate(scope.row.id)">{{
                                 $t('app.edit')
                             }}</el-button>
@@ -152,11 +149,6 @@ const addTemplate = () => {
     state.value = 'add'
     showMain.value = false
 }
-// const showDetail = (id: number) => {
-//     state.value = 'detail'
-//     curId.value = id
-//     showMain.value = false
-// }
 const editTemplate = (id: number) => {
     emit('updateState', 'editNotifyWay')
     curId.value = id
@@ -227,6 +219,6 @@ onMounted(() => {
 </script>
 <style scoped lang='scss'>
 .el-table {
-    height: calc(100vh - 170px - 62px - 82px - 34px);
+    height: calc(100vh - 110px - 62px - 82px - 34px);
 }
 </style>

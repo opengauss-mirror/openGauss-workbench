@@ -27,7 +27,7 @@
                 <span class="demonstration">{{ $t(`alertRecord.alertTimeRange`) }}:&nbsp;</span>
                 <el-date-picker v-model="alertTimeRange" type="datetimerange" range-separator="~"
                     format="YYYY-MM-DD HH:mm:ss" value-format="YYYY-MM-DD HH:mm:ss"
-                    :start-placeholder="t(`alertRecord.startTimePlaceholder`)"
+                    :start-placeholder="t(`alertRecord.startTimePlaceholder`)" @visible-change="onDatePackerVisible"
                     :end-placeholder="t(`alertRecord.endTimePlaceholder`)" @change="changeAlertTimeRange" />
             </div>
         </div>
@@ -82,8 +82,6 @@
                 header-cell-class-name="grid-header" border>
                 <el-table-column type="selection" width="40" align="center" header-align="center"/>
                 <el-table-column prop="clusterNodeName" min-width="150" :label="$t('alertRecord.table[0]')" />
-                <!-- <el-table-column prop="hostIp" :label="$t('alertRecord.table[1]')" />
-                <el-table-column prop="dbType" :label="$t('alertRecord.table[2]')" /> -->
                 <el-table-column prop="templateName" :label="$t('alertRecord.table[3]')" />
                 <el-table-column prop="templateRuleName" :label="$t('alertRecord.table[4]')" />
                 <el-table-column prop="templateRuleType" :label="$t('alertRecord.table[5]')">
@@ -114,7 +112,7 @@
                             $t(`alertRecord.alerted`) }}</span>
                     </template>
                 </el-table-column>
-                <el-table-column prop="notifyWayName" :label="$t('alertRecord.table[11]')" />
+                <el-table-column prop="notifyWayNames" :label="$t('alertRecord.table[11]')" />
                 <el-table-column prop="recordStatus" :label="$t('alertRecord.table[12]')">
                     <template #default="scope">
                         <span v-if="scope.row.recordStatus === 0">{{ $t(`alertRecord.unread`) }}</span>
@@ -142,9 +140,8 @@
 import { Bell } from "@element-plus/icons-vue";
 import "element-plus/es/components/message-box/style/index";
 import { useRequest } from "vue-request";
-import request from "@/request";
-import { i18n } from "@/i18n";
-import { ElMessageBox, ElMessage } from "element-plus";
+import request from '@/request';
+import { ElMessage } from "element-plus";
 import { useI18n } from "vue-i18n";
 import RecordPid from "@/views/alert/AlertRecord/components/RecordPie.vue"
 const { t } = useI18n();
@@ -158,8 +155,8 @@ const formData = ref<any>({
     alertStatus: [],
     alertLevel: []
 })
-const clusterList = ref<Array<any>[]>([])
-const alertTimeRange = ref<Array<any>[]>([])
+const clusterList = ref<any[]>([])
+const alertTimeRange = ref<any[]>([])
 const statisticsData = ref<any>({})
 const recordStatusData = ref<any[]>([])
 const alertStatusData = ref<any[]>([])
@@ -268,9 +265,9 @@ const durationFormat = (val: any) => {
         if (val <= 0) {
             return '00:00:00';
         } else {
-            let hh = parseInt(val / 3600);
+            let hh = Math.floor(val / 3600);
             let shh = val - hh * 3600;
-            let ii = parseInt(shh / 60);
+            let ii = Math.floor(shh / 60);
             let ss = shh - ii * 60;
             return (hh < 10 ? '0' + hh : hh) + ':' + (ii < 10 ? '0' + ii : ii) + ':' + (ss < 10 ? '0' + ss : ss);
         }
@@ -308,6 +305,18 @@ const changeAlertTimeRange = () => {
     }
     requestPisData()
     requestData()
+}
+const onDatePackerVisible = (show: boolean) => {
+    if (!show) {
+        const docu = document.getElementsByClassName('el-range-input')
+        if (docu.length > 0) {
+            for (let index = 0; index < docu.length; index++) {
+                const element = docu[index]
+                // @ts-ignore
+                element.blur()
+            }
+        }
+    }
 }
 
 const changeClusterNode = () => {
@@ -363,11 +372,11 @@ const markAsRead = () => {
 const router = useRouter();
 
 const handleSizeChange = (val: any) => {
-    page.currentPage = val
+    page.pageSize = val
     requestData()
 }
 const handleCurrentChange = (val: any) => {
-    page.pageSize = val
+    page.currentPage = val
     requestData()
 }
 
@@ -404,16 +413,11 @@ onMounted(() => {
                 requestPisData()
             });
         });
-        // wujie?.bus.$on('opengauss-theme-change', (val: string) => {
-        //     nextTick(() => {
-        //         requestPisData()
-        //     });
-        // });
     }
 })
 </script>
 <style scoped lang='scss'>
 .el-table {
-    height: calc(100vh - 170px - 62px - 250px - 34px);
+    height: calc(100vh - 110px - 62px - 250px - 34px);
 }
 </style>

@@ -325,10 +325,12 @@ body {
     color: var(--color-1) !important;
     font-size: 12px;
     line-height: 20px;
+
     .el-tag__close {
-        color: var(--color-1) !important; 
+        color: var(--color-1) !important;
     }
 }
+
 .el-form-item--default {
     margin-bottom: 10px !important;
 }

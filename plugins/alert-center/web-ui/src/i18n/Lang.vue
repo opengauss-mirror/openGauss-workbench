@@ -1,11 +1,3 @@
-<script setup lang="ts">
-import { i18n, LocaleType } from '.';
-
-const changeLang = (locale: LocaleType) => {
-    i18n.global.locale.value = locale
-}
-</script>
-
 <template>
     <el-dropdown>
         <svg-icon name="lang" style="width: 20px;height: 20px;" />
@@ -22,3 +14,11 @@ const changeLang = (locale: LocaleType) => {
         </template>
     </el-dropdown>
 </template>
+
+<script setup lang="ts">
+import { i18n, LocaleType } from '@/i18n';
+
+const changeLang = (locale: LocaleType) => {
+    i18n.global.locale.value = locale
+}
+</script>

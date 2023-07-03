@@ -74,10 +74,11 @@
                             <span v-text="showAlertNotify(scope.row.alertNotify)"></span>
                         </template>
                     </el-table-column>
-                    <el-table-column prop="ruleContent" :label="$t('alertRule.table[6]')" min-width="200"/>
+                    <el-table-column prop="ruleContent" :label="$t('alertRule.table[6]')" min-width="200" />
                     <el-table-column :label="$t('alertRule.table[7]')" width="120" fixed="right">
                         <template #default="scope">
-                            <el-button link type="primary" size="small" @click="showDetail(scope.row.ruleId)">{{ $t('app.view')
+                            <el-button link type="primary" size="small" @click="showDetail(scope.row.ruleId)">{{
+                                $t('app.view')
                             }}</el-button>
                         </template>
                     </el-table-column>
@@ -89,17 +90,16 @@
         </div>
     </div>
     <div v-else>
-        <RuleDetail :ruleId="curId" @updateRule="updateRule" @cancelRule="cancelRule" :state="state"/>
+        <RuleDetail :ruleId="curId" @updateRule="updateRule" @cancelRule="cancelRule" :state="state" />
     </div>
 </template>
 
 <script setup lang="ts">
-import { Search, Refresh, Delete } from "@element-plus/icons-vue";
+import { Search } from "@element-plus/icons-vue";
 import "element-plus/es/components/message-box/style/index";
 import { useRequest } from "vue-request";
 import request from "@/request";
-import { i18n } from "@/i18n";
-import { ElMessageBox, ElMessage } from "element-plus";
+import { ElMessage } from "element-plus";
 import { useI18n } from "vue-i18n";
 import RuleDetail from "@/views/alert/AlertRule/RuleDetail.vue";
 const { t } = useI18n();
@@ -193,6 +193,6 @@ onMounted(() => {
 </script>
 <style lang='scss' scoped>
 .el-table {
-    height: calc(100vh - 170px - 62px - 42px - 34px);
+    height: calc(100vh - 110px - 62px - 42px - 34px);
 }
 </style>

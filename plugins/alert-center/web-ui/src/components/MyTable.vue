@@ -1,8 +1,17 @@
+<template>
+    <el-table ref="multipleTableRef" v-bind="$attrs" class="z-table" :data="_data" :max-height="maxHeight"
+        :style="{ 'max-height': `${maxHeight}px` }" row-key="__vem_id" border @sort-change="handleSortChange">
+        <slot />
+    </el-table>
+    <el-pagination v-model:currentPage="state.page" v-model:pageSize="state.size" :total="state.total" class="pagination"
+        layout="total,prev,pager,next" hide-on-single-page background small />
+</template>
+
 <script setup lang="ts">
 import { useDebounceFn, useEventListener } from "@vueuse/core";
 import { ElTable } from "element-plus";
 import { useRequest } from "vue-request";
-import ogRequest from "../request";
+import ogRequest from "@/request";
 
 const props = withDefaults(
     defineProps<{
@@ -25,7 +34,7 @@ const state = reactive({
 });
 const maxHeight = ref(props.maxHeight || 500);
 
-const myEmit = defineEmits<{(event: 'load-data', data: unknown[]): void}>()
+const myEmit = defineEmits<{ (event: 'load-data', data: unknown[]): void }>()
 const multipleTableRef = ref<InstanceType<typeof ElTable>>()
 const toggleRowSelection = (row: any, selected: boolean, prop: string) => {
     nextTick(() => {
@@ -52,8 +61,8 @@ const { run, data } = useRequest(() => {
         return ogRequest.get<TableData>(props.api, payload)
     }
 }, { manual: true, debounceInterval: 200 });
-watch(data, d => {
-    state.data = d?.list.map(item => {
+watch(data, (d: any) => {
+    state.data = d?.list.map((item: any) => {
         if (props.formatter) {
             props.formatter(item)
         }
@@ -107,38 +116,12 @@ const _data = computed(() => {
 // sort
 const sortKey = ref('')
 const sortOrder = ref('')
-const handleSortChange = (cell: {prop: string | null, order: 'ascending' | 'descending' | null}) => {
+const handleSortChange = (cell: { prop: string | null, order: 'ascending' | 'descending' | null }) => {
     sortKey.value = cell.prop || ''
     sortOrder.value = cell.order || ''
     run()
 }
 </script>
-
-<template>
-<el-table
-    ref="multipleTableRef"
-    v-bind="$attrs"
-    class="z-table"
-    :data="_data"
-    :max-height="maxHeight"
-    :style="{ 'max-height': `${maxHeight}px` }"
-    row-key="__vem_id"
-    border
-    @sort-change="handleSortChange"
->
-    <slot />
-</el-table>
-<el-pagination
-    v-model:currentPage="state.page"
-    v-model:pageSize="state.size"
-    :total="state.total"
-    class="pagination"
-    layout="total,prev,pager,next"
-    hide-on-single-page
-    background
-    small
-/>
-</template>
 
 <style scoped>
 .pagination {

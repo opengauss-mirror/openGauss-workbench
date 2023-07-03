@@ -1,26 +1,39 @@
+<template>
+    <el-config-provider size="small" :locale="$i18n.locale === 'zhCn' ? zhCn : en">
+        <div class="container">
+            <aside v-if="!isFromObservability">
+                <my-menu :collapse="collapse" />
+            </aside>
+            <div class="main" ref="mainDiv">
+                <div class="page" v-if="alertConfigEnv.showMain"><router-view />
+                </div>
+                <AlertConfig class="page" v-else />
+            </div>
+        </div>
+    </el-config-provider>
+</template>
+
 <script setup lang="ts">
 import zhCn from "element-plus/lib/locale/lang/zh-cn";
 import en from "element-plus/lib/locale/lang/en";
 import { useDark, useToggle } from "@vueuse/core";
-import { useWindowStore } from "./store/window";
-import router from './router';
-import { i18n } from './i18n'
-import { useMonitorStore } from "./store/monitor";
-import { useAlertConfigStore } from "./store/alertConfig";
+import { useWindowStore } from "@/store/window";
+import router from '@/router';
+import { i18n } from '@/i18n'
+import { useMonitorStore } from "@/store/monitor";
+import { useAlertConfigStore } from "@/store/alertConfig";
 import AlertConfig from "@/components/AlertConfig.vue";
-import { checkPrometheus } from "./api/environment";
-import { getAlertConf } from "./api/alertConfig"
+import { checkPrometheus } from "@/api/environment";
+import { getAlertConf } from "@/api/alertConfig"
 
 const observabilitySign = 'alert-center';
 
 const themeBool = ref<boolean>(false)
 
 const isDark = useDark({
-    // 存储到localStorage/sessionStorage中的Key 根据自己的需求更改
+    // Key stored in localStorage/sessionStorage, modify according to your own needs.
     storageKey: 'theme',
-    // 暗黑class名字
     valueDark: 'dark',
-    // 高亮class名字
     valueLight: 'light',
 })
 
@@ -141,21 +154,6 @@ onMounted(async () => {
     }
 })
 </script>
-    
-<template>
-    <el-config-provider size="small" :locale="$i18n.locale === 'zhCn' ? zhCn : en">
-        <div class="container">
-            <aside v-if="!isFromObservability">
-                <my-menu :collapse="collapse" />
-            </aside>
-            <div class="main" ref="mainDiv">
-                <div class="page" v-if="alertConfigEnv.showMain"><router-view />
-                </div>
-                <AlertConfig class="page" v-else />
-            </div>
-        </div>
-    </el-config-provider>
-</template>
 
 <style scoped lang="scss">
 .container {

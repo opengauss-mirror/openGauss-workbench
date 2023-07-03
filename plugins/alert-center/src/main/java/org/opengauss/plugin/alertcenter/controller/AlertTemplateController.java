@@ -30,7 +30,7 @@ import java.util.List;
 /**
  * @author wuyuebin
  * @date 2023/4/14 17:03
- * @description 告警模板相关
+ * @description
  */
 @RestController
 @RequestMapping("/alertCenter/api/v1/alertTemplate")

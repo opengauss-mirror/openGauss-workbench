@@ -1,10 +1,5 @@
 <template>
-    <svg
-        aria-hidden="true"
-        style="vertical-align: middle; cursor: pointer;"
-        :class="$style.icon"
-        :fill="color"
-    >
+    <svg aria-hidden="true" style="vertical-align: middle; cursor: pointer;" :class="$style.icon" :fill="color">
         <use :href="symbolId" />
     </svg>
 </template>

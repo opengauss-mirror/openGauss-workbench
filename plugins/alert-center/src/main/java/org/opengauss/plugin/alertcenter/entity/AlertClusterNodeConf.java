@@ -16,7 +16,7 @@ import java.sql.Timestamp;
 /**
  * @author wuyuebin
  * @date 2023/4/26 16:11
- * @description 实例告警配置类
+ * @description
  */
 @Accessors(chain = true)
 @Data

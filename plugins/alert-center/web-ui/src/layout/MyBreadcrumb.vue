@@ -1,5 +1,11 @@
+<template>
+    <el-breadcrumb>
+        <el-breadcrumb-item v-for="p in paths" :key="p.title" :to="p.path">{{ $t(p.title!) }}</el-breadcrumb-item>
+    </el-breadcrumb>
+</template>
+
 <script setup lang="ts">
-import { routes } from '../router/index';
+import { routes } from '@/router/index';
 
 const route = useRoute()
 const hasComponents: Record<string, string> = {}
@@ -42,21 +48,17 @@ const paths = computed(() => {
 })
 </script>
 
-<template>
-<el-breadcrumb>
-    <el-breadcrumb-item v-for="p in paths" :key="p.title" :to="p.path">{{ $t(p.title!) }}</el-breadcrumb-item>
-</el-breadcrumb>
-</template>
-
 <style scoped lang="scss">
-    :deep(.el-breadcrumb__inner.is-link, .el-breadcrumb__inner a) {
-        // color: $og-text-color;
-        font-weight: 400;
-    }
-    :deep(.el-breadcrumb__inner.is-link:hover, .el-breadcrumb__inner a:hover) {
-        text-decoration: underline;
-    }
-    :deep(.el-breadcrumb__item:last-of-type .el-breadcrumb__inner) {
-        font-weight: 700;
-    }
+:deep(.el-breadcrumb__inner.is-link, .el-breadcrumb__inner a) {
+    // color: $og-text-color;
+    font-weight: 400;
+}
+
+:deep(.el-breadcrumb__inner.is-link:hover, .el-breadcrumb__inner a:hover) {
+    text-decoration: underline;
+}
+
+:deep(.el-breadcrumb__item:last-of-type .el-breadcrumb__inner) {
+    font-weight: 700;
+}
 </style>

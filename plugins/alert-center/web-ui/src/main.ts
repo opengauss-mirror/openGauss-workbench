@@ -7,13 +7,13 @@ import 'element-plus/theme-chalk/dark/css-vars.css';
 import '@/assets/style/dark.scss'
 import '@/assets/style/reset.scss';
 import '@/assets/style/common.scss';
-import App from "./App.vue";
+import App from "@/App.vue";
 import { createPinia } from "pinia";
 import piniaPluginPersistedstate from "pinia-plugin-persistedstate";
 import "virtual:svg-icons-register";
-import router from "./router";
+import router from "@/router";
 import { vLoading } from "element-plus";
-import { i18n } from './i18n'
+import { i18n } from '@/i18n'
 
 const pinia = createPinia();
 pinia.use(piniaPluginPersistedstate);

@@ -50,7 +50,7 @@
                             <span>{{ formData.templateName }}</span>
                         </el-form-item>
                         <el-form-item :label="$t('alertRecord.table[11]') + ':'" style="margin-bottom: 5px !important;margin-left: 5px;">
-                            <span>{{ formData.notifyWayName }}</span>
+                            <span>{{ formData.notifyWayNames }}</span>
                         </el-form-item>
                         <el-form-item :label="$t('alertRecord.alertContent') + ':'" style="margin-bottom: 5px !important;margin-left: 5px;">
                             <span>{{ formData.alertContent }}</span>
@@ -114,7 +114,7 @@ const formData = ref<any>({})
 const relationDatas = ref<any[]>([])
 
 const { data: res, run: requestData } = useRequest(
-    (id: number) => {
+    (id: any) => {
         return request.get(`/alertCenter/api/v1/alertRecord/${id}`)
     },
     { manual: true }
@@ -145,7 +145,7 @@ const markAs = (val: any) => {
 }
 
 const { data: relationRes, run: requestRelationData } = useRequest(
-    (id: number) => {
+    (id: any) => {
         return request.get(`/alertCenter/api/v1/alertRecord/${id}/relation`)
     },
     { manual: true }
@@ -162,9 +162,9 @@ const durationFormat = (val: any) => {
         if (val <= 0) {
             return '00:00:00';
         } else {
-            let hh = parseInt(val / 3600); 
+            let hh = Math.floor(val / 3600); 
             let shh = val - hh * 3600;
-            let ii = parseInt(shh / 60);
+            let ii = Math.floor(shh / 60);
             let ss = shh - ii * 60;
             return (hh < 10 ? '0' + hh : hh) + ':' + (ii < 10 ? '0' + ii : ii) + ':' + (ss < 10 ? '0' + ss : ss);
         }
@@ -178,8 +178,9 @@ onMounted(() => {
     offsetHeight.value = document.body.offsetHeight - 50
     carHeight.value = offsetHeight.value * 0.4
     let _id = null
-    if (window.$wujie) {
-        _id = window.$wujie?.props.data.id as number;
+    const wujie = window.$wujie;
+    if (wujie) {
+        _id = wujie?.props.data.id as number;
     } else {
         let param = router.currentRoute.value.query
         _id = param.id
@@ -188,8 +189,6 @@ onMounted(() => {
         requestData(_id)
         requestRelationData(_id)
     }
-
-    const wujie = window.$wujie;
     if (wujie) {
         wujie?.bus.$on('opengauss-theme-change', (val: string) => {
             nextTick(() => {
@@ -202,7 +201,7 @@ onMounted(() => {
 </script>
 <style scoped lang='scss'>
 .alert-table {
-    min-height: calc(100vh - 170px - 72px - 238px);
+    min-height: calc(100vh - 110px - 72px - 238px);
 }
 .card-header {
     display: flex;

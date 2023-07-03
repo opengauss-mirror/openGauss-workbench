@@ -5,13 +5,10 @@
 @use './color.scss' as *;
 @use 'sass:map';
 
-@forward 'element-plus/theme-chalk/src/common/var.scss' with (
-    $bg-color: (
-        '': #fefefe,
+@forward 'element-plus/theme-chalk/src/common/var.scss' with ($bg-color: ('': #fefefe,
         'page': #fefefe,
         'overlay': #fefefe,
-    )
-);
+    ));
 
 html {
     --hw-primary-1: #e41d1d;
