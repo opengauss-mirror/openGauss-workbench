@@ -18,8 +18,8 @@
                     <el-icon v-if="!isCollapse" size="20px"><Fold /></el-icon>
                     <el-icon v-if="isCollapse" size="20px"><Expand /></el-icon>
                 </div>
-                <el-tabs v-model="dashboardTabKey">
-                    <el-tab-pane :label="$t('instanceMonitor.index')" :name="tabKeys.Home">
+                <el-tabs v-model="dashboardTabKey" class="index-tabs">
+                    <el-tab-pane class="min-height" :label="$t('instanceMonitor.index')" :name="tabKeys.Home">
                         <performance-load
                             ref="performanceLoadRef"
                             @goto="goto"
@@ -28,7 +28,11 @@
                             :nodeVersion="nodeVersion"
                         />
                     </el-tab-pane>
-                    <el-tab-pane :label="$t('instanceMonitor.resourceMonitor')" :name="tabKeys.ResourceMonitor">
+                    <el-tab-pane
+                        class="min-height"
+                        :label="$t('instanceMonitor.resourceMonitor')"
+                        :name="tabKeys.ResourceMonitor"
+                    >
                         <resource-monitor
                             ref="refResourceMonitor"
                             @goto="goto"
@@ -39,7 +43,11 @@
                             "
                         />
                     </el-tab-pane>
-                    <el-tab-pane :label="$t('instanceIndex.instanceMetrics')" :name="tabKeys.InstanceMonitorInstance">
+                    <el-tab-pane
+                        class="min-height"
+                        :label="$t('instanceIndex.instanceMetrics')"
+                        :name="tabKeys.InstanceMonitorInstance"
+                    >
                         <InstanceMetrics
                             ref="refInstanceMonitorInstance"
                             @goto="goto"
@@ -50,7 +58,7 @@
                             "
                         />
                     </el-tab-pane>
-                    <el-tab-pane label="TOP SQL" :name="tabKeys.InstanceMonitorTOPSQL">
+                    <el-tab-pane class="min-height" label="TOP SQL" :name="tabKeys.InstanceMonitorTOPSQL">
                         <TOPSQL
                             ref="refInstanceMonitorTOPSQL"
                             @goto="goto"
@@ -61,7 +69,7 @@
                             "
                         />
                     </el-tab-pane>
-                    <el-tab-pane :label="$t('dashboard.wdrReports.tabName')" :name="tabKeys.WDR">
+                    <el-tab-pane class="min-height" :label="$t('dashboard.wdrReports.tabName')" :name="tabKeys.WDR">
                         <wdr
                             :tabId="tabId"
                             @goto="goto"
@@ -70,7 +78,11 @@
                             :instanceId="instanceId"
                         />
                     </el-tab-pane>
-                    <el-tab-pane :label="$t('dashboard.systemConfig.tabName')" :name="tabKeys.SystemConfig">
+                    <el-tab-pane
+                        class="min-height"
+                        :label="$t('dashboard.systemConfig.tabName')"
+                        :name="tabKeys.SystemConfig"
+                    >
                         <systemConfiguration
                             :tabId="tabId"
                             @goto="goto"
@@ -121,7 +133,6 @@ const wdrComponent = ref(null)
 const paramConfigComponent = ref(null)
 const performanceLoadRef = ref<InstanceType<typeof PerformanceLoad>>()
 const refResourceMonitor = ref<InstanceType<typeof ResourceMonitor>>()
-const refInstanceMonitor = ref<InstanceType<typeof InstanceMonitor>>()
 const refInstanceMonitorTOPSQL = ref<InstanceType<typeof TOPSQL>>()
 const refInstanceMonitorInstance = ref<InstanceType<typeof InstanceMetrics>>()
 const dashboardTabKey = ref<string>('')
@@ -231,5 +242,9 @@ const treeTransform = (arr: any) => {
 .padding-fix {
     padding-left: 0px;
     padding-right: 9px;
+}
+
+.min-height {
+    min-height: 500px !important;
 }
 </style>

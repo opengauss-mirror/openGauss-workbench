@@ -125,30 +125,6 @@ export const useMonitorStore = (tabId: string) => {
             refreshTimeForBind: (state: State) => {
                 return state.autoRefreshTime
             },
-            culRangeTimeAndStep: (state: State) => {
-                let start = 0
-                let end = 0
-                if (state.timeType === timeTypeSelection.CUSTOM) {
-                    start = Number.parseInt(`${new Date(state.timeRange![0]).getTime() / 1000}`)
-                    end = Number.parseInt(`${new Date(state.timeRange![1]).getTime() / 1000}`)
-                } else {
-                    let min = 0
-                    let now = new Date()
-                    if (state.timeType === timeTypeSelection.MIN15) min = 15
-                    else if (state.timeType === timeTypeSelection.MIN30) min = 30
-                    else if (state.timeType === timeTypeSelection.HOUR1) min = 1 * 60
-                    else if (state.timeType === timeTypeSelection.HOUR3) min = 3 * 60
-                    else if (state.timeType === timeTypeSelection.HOUR6) min = 6 * 60
-                    else if (state.timeType === timeTypeSelection.HOUR12) min = 12 * 60
-                    else if (state.timeType === timeTypeSelection.DAY1) min = 1 * 24 * 60
-                    else if (state.timeType === timeTypeSelection.DAY2) min = 2 * 24 * 60
-                    else if (state.timeType === timeTypeSelection.DAY7) min = 7 * 24 * 60
-                    start = Number.parseInt(`${(now.getTime() - 1000 * min * 60) / 1000}`)
-                    end = Number.parseInt(`${now.getTime() / 1000}`)
-                }
-                console.log('(end - start) / 260', Math.round((end - start) / 260))
-                return [start, end, Math.max(14, Number.parseInt(`${Math.round((end - start) / 260)}`))]
-            },
 
             // below may not be use anymore 0525
             refreshTime: (state: State) => {
@@ -175,6 +151,33 @@ export const useMonitorStore = (tabId: string) => {
                     count: this.updateCounter.count + 1,
                     source: sourceType.INSTANCE,
                 }
+            },
+            culRangeTimeAndStep() {
+                console.log('DEBUG: culRangeTimeAndStep')
+                let start = 0
+                let end = 0
+                if (this.timeType === timeTypeSelection.CUSTOM) {
+                    start = Number.parseInt(`${new Date(this.timeRange![0]).getTime() / 1000}`)
+                    end = Number.parseInt(`${new Date(this.timeRange![1]).getTime() / 1000}`)
+                } else {
+                    let min = 0
+                    let now = new Date()
+                    if (this.timeType === timeTypeSelection.MIN15) min = 15
+                    else if (this.timeType === timeTypeSelection.MIN30) min = 30
+                    else if (this.timeType === timeTypeSelection.HOUR1) min = 1 * 60
+                    else if (this.timeType === timeTypeSelection.HOUR3) min = 3 * 60
+                    else if (this.timeType === timeTypeSelection.HOUR6) min = 6 * 60
+                    else if (this.timeType === timeTypeSelection.HOUR12) min = 12 * 60
+                    else if (this.timeType === timeTypeSelection.DAY1) min = 1 * 24 * 60
+                    else if (this.timeType === timeTypeSelection.DAY2) min = 2 * 24 * 60
+                    else if (this.timeType === timeTypeSelection.DAY7) min = 7 * 24 * 60
+                    start = Number.parseInt(`${(now.getTime() - 1000 * min * 60) / 1000}`)
+                    end = Number.parseInt(`${now.getTime() / 1000}`)
+                }
+                console.log('DEBUG: start', start)
+                console.log('DEBUG: end', end)
+                console.log('(end - start) / 260', Math.round((end - start) / 260))
+                return [start, end, Math.max(14, Number.parseInt(`${Math.round((end - start) / 260)}`))]
             },
             updateTabNow(tabNow: string) {
                 this.tabNow = tabNow

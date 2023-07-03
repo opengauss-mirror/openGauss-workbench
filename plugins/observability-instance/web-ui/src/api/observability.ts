@@ -87,11 +87,12 @@ export async function getIndexMetrics(tabId: string): Promise<void | {
 }> {
     const monitorStore = useMonitorStore(tabId)
     const { instanceId, culRangeTimeAndStep } = monitorStore
+    let timeRange = culRangeTimeAndStep()
     return ogRequest.get('/instanceMonitoring/api/v1/mainMetrics', {
         id: instanceId,
-        start: culRangeTimeAndStep[0],
-        end: culRangeTimeAndStep[1],
-        step: culRangeTimeAndStep[2],
+        start: timeRange[0],
+        end: timeRange[1],
+        step: timeRange[2],
         type: 'LINE',
     })
 }
@@ -110,11 +111,12 @@ export async function getCPUMetrics(tabId: string): Promise<void | {
 }> {
     const monitorStore = useMonitorStore(tabId)
     const { instanceId, culRangeTimeAndStep } = monitorStore
+    let timeRange = culRangeTimeAndStep()
     return ogRequest.get('/instanceMonitoring/api/v1/cpu', {
         id: instanceId,
-        start: culRangeTimeAndStep[0],
-        end: culRangeTimeAndStep[1],
-        step: culRangeTimeAndStep[2],
+        start: timeRange[0],
+        end: timeRange[1],
+        step: timeRange[2],
         type: 'LINE',
     })
 }
@@ -138,11 +140,12 @@ export async function getMemoryMetrics(tabId: string): Promise<void | {
 }> {
     const monitorStore = useMonitorStore(tabId)
     const { instanceId, culRangeTimeAndStep } = monitorStore
+    let timeRange = culRangeTimeAndStep()
     return ogRequest.get('/instanceMonitoring/api/v1/memory', {
         id: instanceId,
-        start: culRangeTimeAndStep[0],
-        end: culRangeTimeAndStep[1],
-        step: culRangeTimeAndStep[2],
+        start: timeRange[0],
+        end: timeRange[1],
+        step: timeRange[2],
         type: 'LINE',
     })
 }
@@ -163,11 +166,12 @@ export async function getNetworkMetrics(tabId: string): Promise<void | {
 }> {
     const monitorStore = useMonitorStore(tabId)
     const { instanceId, culRangeTimeAndStep } = monitorStore
+    let timeRange = culRangeTimeAndStep()
     return ogRequest.get('/instanceMonitoring/api/v1/network', {
         id: instanceId,
-        start: culRangeTimeAndStep[0],
-        end: culRangeTimeAndStep[1],
-        step: culRangeTimeAndStep[2],
+        start: timeRange[0],
+        end: timeRange[1],
+        step: timeRange[2],
         type: 'LINE',
     })
 }
@@ -187,11 +191,12 @@ export async function getIOMetrics(tabId: string): Promise<void | {
 }> {
     const monitorStore = useMonitorStore(tabId)
     const { instanceId, culRangeTimeAndStep } = monitorStore
+    let timeRange = culRangeTimeAndStep()
     return ogRequest.get('/instanceMonitoring/api/v1/io', {
         id: instanceId,
-        start: culRangeTimeAndStep[0],
-        end: culRangeTimeAndStep[1],
-        step: culRangeTimeAndStep[2],
+        start: timeRange[0],
+        end: timeRange[1],
+        step: timeRange[2],
         type: 'LINE',
     })
 }
@@ -305,11 +310,12 @@ export async function getInstanceMetrics(tabId: string): Promise<void | {
 }> {
     const monitorStore = useMonitorStore(tabId)
     const { instanceId, culRangeTimeAndStep } = monitorStore
+    let timeRange = culRangeTimeAndStep()
     return ogRequest.get('/instanceMonitoring/api/v1/instance', {
         id: instanceId,
-        start: culRangeTimeAndStep[0],
-        end: culRangeTimeAndStep[1],
-        step: culRangeTimeAndStep[2],
+        start: timeRange[0],
+        end: timeRange[1],
+        step: timeRange[2],
         type: 'LINE',
     })
 }
@@ -329,15 +335,15 @@ export async function getSessionMetrics(tabId: string): Promise<void | {
 }> {
     const monitorStore = useMonitorStore(tabId)
     const { instanceId, culRangeTimeAndStep } = monitorStore
+    let timeRange = culRangeTimeAndStep()
     return ogRequest.get('/instanceMonitoring/api/v1/session/sessionStatistic', {
         id: instanceId,
-        start: culRangeTimeAndStep[0],
-        end: culRangeTimeAndStep[1],
-        step: culRangeTimeAndStep[2],
+        start: timeRange[0],
+        end: timeRange[1],
+        step: timeRange[2],
         type: 'LINE',
     })
 }
-
 
 export type SessionTables = {
     blockTree: BlockTable[]
