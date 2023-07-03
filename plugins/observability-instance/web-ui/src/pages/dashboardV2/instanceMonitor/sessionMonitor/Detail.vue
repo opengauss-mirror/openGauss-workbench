@@ -510,13 +510,10 @@ watch(
 )
 const fixTreeKey = (nodes: any[]) => {
     // loop nodes
-    for (let nodeIndex = 0; nodeIndex < nodes.length; nodeIndex++) {
-        // node
-        const node = nodes[nodeIndex]
+    for (let node of nodes) {
         // node has children
         if (node.children && node.children.length > 0) {
-            for (let nodeChildrenIndex = 0; nodeChildrenIndex < node.children.length; nodeChildrenIndex++) {
-                const nodeChild = node.children[nodeChildrenIndex]
+            for (let nodeChild of node.children) {
                 // child has children
                 if (nodeChild.children && nodeChild.children.length > 0) {
                     fixTreeKey(nodeChild.children)
