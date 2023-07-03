@@ -1,21 +1,21 @@
 <template>
     <div class="filter">
         <span>{{ props.title }}&nbsp;</span>
-        <el-cascader v-model="cluster" :options="clusterList" @change="getClusterValue" style="max-width: 200px" :style="{ width: width ? width + 'px' : 'auto' }" :clearable="!notClearable" />
+        <el-cascader v-model="cluster" :options="clusterList" @change="getClusterValue" style="max-width: 200px"
+            :style="{ width: width ? width + 'px' : 'auto' }" :clearable="!notClearable" />
     </div>
 </template>
 
 <script lang="ts" setup>
-import ogRequest from "../request";
+import ogRequest from "@/request";
 import { useRequest } from "vue-request";
 
 type Rer =
-    | [
-          {
-              [propName: string]: string | number;
-          }
-      ]
-    | undefined;
+    [
+        {
+            [propName: string]: string | number;
+        }
+    ];
 const props = withDefaults(
     defineProps<{
         title?: string;

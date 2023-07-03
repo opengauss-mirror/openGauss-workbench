@@ -16,7 +16,8 @@ public class AlertStatisticsReq {
     private String clusterNodeId;
 
     /**
-     * 平台处理get请求时，无法将string（yyyy-MM-dd HH:mm:ss）参数转化为日期
+     * When processing a GET request, the platform is unable to convert the string ("yyyy-MM-dd HH:mm:ss")
+     * parameter to a date.
      */
     private String startTime; // yyyy-MM-dd HH:mm:ss
 

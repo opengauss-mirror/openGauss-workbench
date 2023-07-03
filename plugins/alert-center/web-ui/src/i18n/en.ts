@@ -91,7 +91,7 @@ export default {
         increaseAction: 'keeping increase',
         decreaseAction: 'keeping decrease',
         alertContentTitle: 'Alert content description',
-        alertContentTip: 'The main purpose of the alert content is to notify the user, and it supports configuring parameters using ${xxx} to represent the parameters. For example, the alert content is "In the last minute, the CPU usage rate of ${nodeName} has been greater than 90%", where ${nodeName} is a parameter. The configurable parameters are as follows:'
+        alertContentTip: 'The main purpose of the alert content is to notify the user, and it supports configuring parameters using $&#123;xxx&#125; to represent the parameters. For example, the alert content is "In the last minute, the CPU usage rate of $&#123;nodeName&#125; has been greater than 90%", where $&#123;nodeName&#125; is a parameter. The configurable parameters are as follows:'
     },
     alertTemplate: {
         title: 'alert template',
@@ -169,7 +169,7 @@ export default {
         DingTalk: 'DingTalk',
         previewContent: 'preview',
         notifyContentTitle: 'notify content description',
-        notifyContentTip: 'The message content mainly wraps the alert content, adds additional content, and finally sends the wrapped alert content to the user. It supports configuring parameters using ${xxx} to represent the parameters. The configurable parameter meanings are as follows:'
+        notifyContentTip: 'The message content mainly wraps the alert content, adds additional content, and finally sends the wrapped alert content to the user. It supports configuring parameters using $&#123;xxx&#125; to represent the parameters. The configurable parameter meanings are as follows:'
     },
     notifyWay: {
         title: 'notify way',

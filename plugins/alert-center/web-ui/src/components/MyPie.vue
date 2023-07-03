@@ -1,3 +1,7 @@
+<template>
+    <div ref="loadRef" :id="domId" style="width: 100%; height: 100%;position: relative;"></div>
+</template>
+    
 <script setup lang="ts">
 import * as echarts from 'echarts/core';
 import {
@@ -12,7 +16,7 @@ import {
 import { PieChart, PieSeriesOption } from 'echarts/charts';
 import { LabelLayout } from 'echarts/features';
 import { CanvasRenderer } from 'echarts/renderers';
-import { uuid } from '../shared';
+import { uuid } from '@/shared';
 import { useDebounceFn, useEventListener, useIntersectionObserver } from '@vueuse/core';
 
 echarts.use([
@@ -40,7 +44,7 @@ const colorArray: Array<string> = [
 ]
 
 type EChartsOption = echarts.ComposeOption<
-  TooltipComponentOption | LegendComponentOption | PieSeriesOption | GridComponentOption | TitleComponentOption
+    TooltipComponentOption | LegendComponentOption | PieSeriesOption | GridComponentOption | TitleComponentOption
 >;
 
 const props = withDefaults(
@@ -49,7 +53,7 @@ const props = withDefaults(
         areaColor?: echarts.graphic.LinearGradient,
         radius?: [string, string]
         center?: [string, string]
-        data: {value: number, name: string}[],
+        data: { value: number, name: string }[],
         text?: string,
         height?: string,
         showLegend?: boolean,
@@ -153,14 +157,6 @@ useEventListener(window, 'resize', useDebounceFn(() => {
     }
 }, 500))
 </script>
-
-<template>
-<div ref="loadRef" :id="domId" style="width: 100%; height: 100%;position: relative;"></div>
-<!-- <div class="text">
-    <div style="font-size: 20px;">{{ props.data.reduce((acc, cur) => acc + cur.value, 0) }}</div>
-    <div style="font-size: 12px;">{{ props.text }}</div>
-</div> -->
-</template>
 
 <style scoped>
 .text {

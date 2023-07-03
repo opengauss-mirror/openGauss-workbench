@@ -1,7 +1,7 @@
 import { EChartsOption } from "echarts";
 import { ECharts } from "echarts/core";
 import { Ref } from "vue";
-import { useMonitorStore } from "../store/monitor";
+import { useMonitorStore } from "@/store/monitor";
 
 type XAxisType = EChartsOption['XAXisOption'] & { data: string[] }
 
@@ -35,7 +35,6 @@ export const useClearBrushSelect = (uuid: string) => {
         command: 'clear',
         areas: []
     })
-    // toggleBrush(false, uuid)
     addBrushEvent(uuid)
 }
 export const useRange = (uuid: string) => {

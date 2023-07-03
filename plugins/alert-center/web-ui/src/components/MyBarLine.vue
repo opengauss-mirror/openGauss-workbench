@@ -1,5 +1,9 @@
+<template>
+    <div :id="domId" style="width: 100%;height: 100%;"></div>
+</template>
+
 <script lang="ts" setup>
-import { uuid } from "../shared";
+import { uuid } from "@/shared";
 import * as echarts from "echarts/core";
 import { GridComponent, GridComponentOption, TooltipComponent, TooltipComponentOption, LegendComponent, TitleComponent, ToolboxComponent } from "echarts/components";
 import { useEventListener } from "@vueuse/core";
@@ -159,10 +163,6 @@ const renderChart = () => {
     }
     myChart.setOption(option);
 }
-    
-// onMounted(() => {
-//     renderChart();
-// })
 watch(() => props.data, () => {
     nextTick(renderChart)
 }, { deep: true })
@@ -171,7 +171,3 @@ useEventListener(window, "resize", () => {
 });
     
 </script>
-    
-    <template>
-        <div :id="domId" style="width: 100%;height: 100%;"></div>
-    </template>

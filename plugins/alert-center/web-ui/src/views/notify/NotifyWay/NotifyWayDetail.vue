@@ -67,6 +67,7 @@ const props = withDefaults(
     }>(),
     {
         state: 'detail',
+        id: undefined
     }
 )
 

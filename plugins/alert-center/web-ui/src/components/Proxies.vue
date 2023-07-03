@@ -1,13 +1,15 @@
 <template>
     <div>
-        <el-select v-model="machineValue" @change="selectMachine" :clearable="!notClearable" :style="{ width: width ? width + 'px' : 'auto' }">
-            <el-option v-for="item in machineList" :key="item.hostId" :label="item.privateIp + '(' + item.publicIp + ')'" :value="item.hostId" />
+        <el-select v-model="machineValue" @change="selectMachine" :clearable="!notClearable"
+            :style="{ width: width ? width + 'px' : 'auto' }">
+            <el-option v-for="item in machineList" :key="item.hostId" :label="item.privateIp + '(' + item.publicIp + ')'"
+                :value="item.hostId" />
         </el-select>
     </div>
 </template>
 
 <script lang="ts" setup>
-import ogRequest from "../request";
+import ogRequest from "@/request";
 import { useRequest } from "vue-request";
 
 const props = withDefaults(

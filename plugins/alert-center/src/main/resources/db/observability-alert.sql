@@ -529,7 +529,8 @@ INSERT INTO public.alert_rule_item (id,rule_id,rule_mark,rule_exp_name,operate,l
 INSERT INTO public.alert_rule (id,rule_name,level,rule_type,rule_exp_comb,rule_content,notify_duration,notify_duration_unit,is_repeat,is_silence,silence_start_time,silence_end_time,alert_notify,notify_way_ids,alert_desc,is_deleted,create_time,update_time)
  VALUES (3,'磁盘使用量过高','serious','index','A','$'||'{nodeName}的磁盘（/dev/vda1）使用量超过15GB',2,'m',1,0,null,null,'firing,recover','1','磁盘使用量过高',0,'2023-06-05 15:45:20.02',null) ON DUPLICATE KEY UPDATE NOTHING;
 INSERT INTO public.alert_rule_item (id,rule_id,rule_mark,rule_exp_name,operate,limit_value,unit,rule_exp,rule_item_desc,is_deleted,create_time,update_time,action)
- VALUES (3,3,'A','diskUsage','>=',15360,'MB','(agent_filesystem_size_bytes{device=~"/dev/vda1",instance="$' || '{instances}"} - agent_filesystem_free_bytes) /1024/1024','内存使用率大于等于90%',0,'2023-06-05 15:45:20.02',null,'normal') ON DUPLICATE KEY UPDATE NOTHING;
+ VALUES (3,3,'A','diskUsage','>=',15360,'MB','(agent_filesystem_size_bytes{device=~"/dev/vda1",instance=~"$' ||
+ '{instances}"} - agent_filesystem_free_bytes) /1024/1024','内存使用率大于等于90%',0,'2023-06-05 15:45:20.02',null,'normal') ON DUPLICATE KEY UPDATE NOTHING;
 insert into public.alert_rule_item_param(id,item_id,param_name,param_value,param_order,is_deleted,create_time) values(1,3,'filesystemPath','/dev/vda1',1,0,'2023-06-05 15:45:20.02');
 
 INSERT INTO public.alert_rule (id,rule_name,level,rule_type,rule_exp_comb,rule_content,notify_duration,notify_duration_unit,is_repeat,is_silence,silence_start_time,silence_end_time,alert_notify,notify_way_ids,alert_desc,is_deleted,create_time,update_time)

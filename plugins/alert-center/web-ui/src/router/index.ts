@@ -52,9 +52,7 @@ export const routes: RouteRecordRaw[] = [
                 component: () => import("@/views/alert/AlertRule/Index.vue"),
                 meta: {
                     title: 'alertRule.title',
-                    // breadcrumb: ['app.menuName', 'dashboard.name'],
                     breadcrumb: [],
-                    // hidden: true,
                 },
             },
             {
@@ -71,17 +69,6 @@ export const routes: RouteRecordRaw[] = [
                     title: 'notifyWay.title',
                 },
             },
-            // {
-            //     path: "/vem/sql_detail",
-            //     meta: {
-            //         icon: "vite",
-            //         title: 'sql.sqlDetail',
-            //         breadcrumb: ['app.menuName', 'dashboard.instance'],
-            //         hidden: true
-            //     },
-            //     name: "SqlDetail",
-            //     component: () => import("@/pages/sql_detail/Index.vue"),
-            // }
         ]
     },
 ];

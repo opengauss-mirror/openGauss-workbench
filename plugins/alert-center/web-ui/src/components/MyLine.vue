@@ -1,3 +1,7 @@
+<template>
+    <div :id="domId" ref="loadRef" style="width: 100%; height: 100%;"></div>
+</template>
+
 <script setup lang="ts">
 import * as echarts from "echarts/core";
 import {
@@ -17,13 +21,13 @@ import {
 import { LineChart, LineSeriesOption, ScatterChart, ScatterSeriesOption, BarChart, BarSeriesOption } from "echarts/charts";
 import { UniversalTransition } from 'echarts/features';
 import { CanvasRenderer } from "echarts/renderers";
-import { uuid } from "../shared";
+import { uuid } from "@/shared";
 import { useEventListener, useIntersectionObserver } from "@vueuse/core";
 import moment from "moment";
 import { useI18n } from 'vue-i18n';
-import { useDataZoom } from "../hooks/echarts";
+import { useDataZoom } from "@/hooks/echarts";
 import { storeToRefs } from "pinia";
-import { useMonitorStore } from "../store/monitor";
+import { useMonitorStore } from "@/store/monitor";
 
 export interface LineData {
     name: string,
@@ -256,7 +260,7 @@ const renderChart = () => {
                 const width = interval / 120 * allWidth;
                 const start = Math.round(r - width / 2);
                 const end = Math.round(r + width / 2);
-                range = [start, end]   
+                range = [start, end]
             } else {
                 range = [startIndexPosi, endIndexPosi]
             }
@@ -300,7 +304,3 @@ useEventListener(window, "resize", () => {
     myChart?.resize();
 });
 </script>
-
-<template>
-<div :id="domId" ref="loadRef" style="width: 100%; height: 100%;"></div>
-</template>

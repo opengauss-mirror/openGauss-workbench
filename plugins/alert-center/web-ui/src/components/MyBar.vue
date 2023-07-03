@@ -5,7 +5,7 @@ import { BarSeriesOption, BarChart } from "echarts/charts";
 import { UniversalTransition } from 'echarts/features';
 import { CanvasRenderer } from "echarts/renderers";
 import { useEventListener } from "@vueuse/core";
-import { uuid } from "../shared";
+import { uuid } from "@/shared";
 import { YAXisOption } from "echarts/types/dist/shared";
 import { OptionDataValue } from 'echarts/types/src/util/types'
 

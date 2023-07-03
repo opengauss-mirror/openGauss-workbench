@@ -12,7 +12,8 @@
             <div class="alert-title" v-if="state === 'edit'">{{ t('notifyTemplate.editTitle') }}</div>
             <div class="alert-title" v-if="state === 'detail'">{{ t('notifyTemplate.detailTitle') }}</div>
         </div>
-        <el-form style="margin-top: 8px;" :model="formData" size="default" :rules="formRules" ref="formRef" label-position="left" label-width="120px">
+        <el-form style="margin-top: 8px;" :model="formData" size="default" :rules="formRules" ref="formRef"
+            label-position="left" label-width="120px">
             <el-form-item :label="$t('notifyTemplate.templateName')" prop="notifyTemplateName">
                 <el-input v-model="formData.notifyTemplateName" :placeholder="$t('notifyTemplate.templateNamePlaceholder')"
                     :disabled="disabled"></el-input>
@@ -30,15 +31,11 @@
                 <el-input v-model="formData.notifyTitle" :placeholder="$t('notifyTemplate.notifyTitlePlaceholder')"
                     :disabled="disabled"></el-input>
             </el-form-item>
-            <!-- <el-form-item :label="$t('notifyTemplate.notifyContent')" prop="notifyContent">
-                <el-input v-model="formData.notifyContent" type="textarea" :rows="10"
-                    :placeholder="$t('notifyTemplate.notifyContentPlaceholder')" :disabled="disabled"></el-input>
-            </el-form-item> -->
             <el-row>
                 <el-col :span="14">
                     <el-form-item :label="$t('notifyTemplate.notifyContent')" prop="notifyContent">
                         <el-input v-model="formData.notifyContent" type="textarea" :rows="10"
-                        :placeholder="$t('notifyTemplate.notifyContentPlaceholder')" :disabled="disabled"></el-input>
+                            :placeholder="$t('notifyTemplate.notifyContentPlaceholder')" :disabled="disabled"></el-input>
                     </el-form-item>
                 </el-col>
                 <el-col :span="2">
@@ -53,7 +50,7 @@
                     <div class="alert-param">
                         <div class="title"><svg-icon name="tip" />{{ t('notifyTemplate.notifyContentTitle') }}</div>
                         <div class="content">
-                            <span>{{ t('notifyTemplate.notifyContentTip') }}</span>
+                            <span v-html="t('notifyTemplate.notifyContentTip')"></span>
                             <el-row style="margin-top: 10px;">
                                 <el-col :span="12" v-for="item in paramNameList" :key="item">{{ `${item}:
                                                                     ${alertContentParam[item]['name']}` }}</el-col>
@@ -100,7 +97,8 @@ const props = withDefaults(
         state: string,
     }>(),
     {
-        state: 'detail'
+        state: 'detail',
+        id: undefined
     }
 )
 
@@ -155,7 +153,12 @@ watch(res, (res: any) => {
             let param = {}
             let keys = Object.keys(alertContentParam.value);
             for (let key of keys) {
-                param[key] = alertContentParam.value[key]['preVal']
+                Object.defineProperty(param, key, {
+                    value: alertContentParam.value[key]['preVal'],
+                    writable: true,
+                    enumerable: true,
+                    configurable: true
+                });
             }
             previewContent.value = parseContent(formData.value.notifyContent, param)
         }
@@ -211,7 +214,12 @@ const requestNotifyContentParam = () => {
                 let param = {}
                 let keys = Object.keys(alertContentParam.value);
                 for (let key of keys) {
-                    param[key] = alertContentParam.value[key]['preVal']
+                    Object.defineProperty(param, key, {
+                        value: alertContentParam.value[key]['preVal'],
+                        writable: true,
+                        enumerable: true,
+                        configurable: true
+                    });
                 }
                 previewContent.value = parseContent(formData.value.notifyContent, param)
             }
@@ -227,7 +235,12 @@ const preview = () => {
         let param = {}
         let keys = Object.keys(alertContentParam.value);
         for (let key of keys) {
-            param[key] = alertContentParam.value[key]['preVal']
+            Object.defineProperty(param, key, {
+                value: alertContentParam.value[key]['preVal'],
+                writable: true,
+                enumerable: true,
+                configurable: true
+            });
         }
         previewContent.value = parseContent(formData.value.notifyContent, param)
     } else {
@@ -256,7 +269,6 @@ onMounted(() => {
     align-items: flex-start;
     padding: 9px 16px;
     gap: 6px;
-    // background: #F4FAFF;
     border: 1px solid #94BFFF;
     border-radius: 2px;
 
@@ -265,7 +277,6 @@ onMounted(() => {
         font-weight: 800;
         font-size: 14px;
         line-height: 24px;
-        // color: #1D2129;
     }
 
     .content {
@@ -273,7 +284,6 @@ onMounted(() => {
         font-weight: 400;
         font-size: 12px;
         line-height: 18px;
-        // color: #4E5969;
     }
 }
 </style>

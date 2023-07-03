@@ -32,7 +32,6 @@ import org.opengauss.plugin.alertcenter.entity.AlertConfig;
 import org.opengauss.plugin.alertcenter.entity.AlertTemplateRule;
 import org.opengauss.plugin.alertcenter.entity.AlertTemplateRuleItem;
 import org.opengauss.plugin.alertcenter.entity.NctigbaEnv;
-import org.opengauss.plugin.alertcenter.mapper.AlertClusterNodeConfMapper;
 import org.opengauss.plugin.alertcenter.mapper.AlertTemplateRuleItemMapper;
 import org.opengauss.plugin.alertcenter.mapper.AlertTemplateRuleMapper;
 import org.opengauss.plugin.alertcenter.mapper.NctigbaEnvMapper;
@@ -51,7 +50,6 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -60,7 +58,7 @@ import java.util.stream.Collectors;
 /**
  * @author wuyuebin
  * @date 2023/5/19 09:50
- * @description 用于请求prometheus数据或者修改其配置
+ * @description Used for requesting Prometheus data or modifying its configuration.
  */
 @Service
 @Slf4j
@@ -91,9 +89,6 @@ public class PrometheusService {
     @Autowired
     @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
     private HostUserFacade hostUserFacade;
-
-    @Autowired
-    private AlertClusterNodeConfMapper clusterNodeConfMapper;
 
     private PrometheusEnvDto prometheusEnvDto;
 
@@ -134,7 +129,7 @@ public class PrometheusService {
     }
 
     private PrometheusConfigDto getPromConfig() {
-        //        String promYmlStr = session.execute("cat " + promEnv.getPath() + CommonConstants.PROMETHEUS_YML);
+        //  Method:  String promYmlStr = session.execute("cat " + promEnv.getPath() + CommonConstants.PROMETHEUS_YML);
         String promYmlStr = "";
         String url = "http://" + prometheusEnvDto.getPromIp() + ":" + prometheusEnvDto.getPromPort() + "/api/v1/status"
             + "/config";
@@ -265,7 +260,7 @@ public class PrometheusService {
      * @param query query=promQL &start=1683316800 &end=1683489600 &step=691
      *
      *              step = Math.max(Math.floor(60 * 60 * 1000 / 250000), 1)
-     *              默认1个小时,this.props.options.range=60 * 60 * 1000
+     *              Default of one hour,this.props.options.range=60 * 60 * 1000
      *
      * @param startTime startTime = endTime - this.props.options.range / 1000
      * @param endTime end = this.getEndTime().valueOf() / 1000

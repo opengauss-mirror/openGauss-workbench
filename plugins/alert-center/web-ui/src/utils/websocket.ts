@@ -29,7 +29,6 @@ export default class WebSocketClass {
         }
         const baseURL = import.meta.env.DEV ? `${import.meta.env.VITE_WS_BASE_URL}` : `${location.protocol == "http:" ? "ws:" : "wss:"}//${location.host}`;
         const url = `${baseURL}/ws/alert-center/${sessionId}`;
-        // const url = `ws://127.0.0.1:9494/ws/observability-instance/${sessionId}`;
         this.ws = new WebSocket(url);
 
         this.ws.onopen = () => {

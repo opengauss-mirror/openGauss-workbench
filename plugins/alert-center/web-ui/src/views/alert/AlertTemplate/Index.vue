@@ -127,11 +127,10 @@
 </template>
 
 <script setup lang='ts'>
-import { Search, Refresh, Delete } from "@element-plus/icons-vue";
+import { Search } from "@element-plus/icons-vue";
 import "element-plus/es/components/message-box/style/index";
 import { useRequest } from "vue-request";
 import request from "@/request";
-import { i18n } from "@/i18n";
 import { ElMessageBox, ElMessage } from "element-plus";
 import { useI18n } from "vue-i18n";
 import TemplateDetail from "@/views/alert/AlertTemplate/TemplateDetail.vue";
@@ -191,9 +190,15 @@ watch(templateRes, (templateRes: any) => {
             currentId.value = tableDatas.value[0].id
             requestRuleData()
         }
+        if (tableDatas.value.length === 0) {
+            ruleTableDatas.value = []
+            rulePage.total = 0
+        }
     } else {
         tableDatas.value = []
         page.total = 0
+        ruleTableDatas.value = []
+        rulePage.total = 0
         const msg = t("app.queryFail");
         ElMessage({
             showClose: true,
@@ -314,12 +319,10 @@ onMounted(() => {
 </script>
 <style scoped lang='scss'>
 .el-table {
-    height: calc(100vh - 170px - 62px - 88px - 34px);
+    height: calc(100vh - 110px - 62px - 88px - 34px);
 }
 
 .pagination {
     margin-top: 5px;
-    // bottom: 50px;
-    // position: fixed;
 }
 </style>

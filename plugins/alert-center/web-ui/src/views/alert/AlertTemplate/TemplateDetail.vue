@@ -76,13 +76,11 @@
 </template>
 
 <script setup lang='ts'>
-// import { } from "@element-plus/icons-vue";
 import "element-plus/es/components/message-box/style/index";
 import { ref, nextTick } from 'vue'
 import { useRequest } from "vue-request";
 import request from "@/request";
-import { i18n } from "@/i18n";
-import { ElMessageBox, ElMessage } from "element-plus";
+import { ElMessage } from "element-plus";
 import { useI18n } from "vue-i18n";
 import type { FormInstance, FormRules } from 'element-plus'
 import TemplateRuleDetail from "@/views/alert/AlertTemplate/TemplateRuleDetail.vue";
@@ -93,7 +91,8 @@ const props = withDefaults(
         state: string,
     }>(),
     {
-        state: 'add'
+        state: 'add',
+        templateId: undefined
     }
 );
 const emit = defineEmits(["updateTemplate", "cancelTemplate"]);
@@ -238,14 +237,6 @@ const cancel = () => {
 
 const edit = (templateRuleId: any, ruleId: any) => {
     selectedRuleRows.value = ruleTable.value.getSelectionRows() || []
-    // let selectedRuleIdArr = selectedRuleRows.value.map((item: any) => item.ruleId) || []
-    // if (!selectedRuleIdArr.includes(ruleId)) {
-    //     ElMessage({
-    //         message: t('app.selectUpdateDataTip'),
-    //         type: 'warning'
-    //     })
-    //     return;
-    // }
     editTemplateRuleId.value = templateRuleId
     editRuleId.value = ruleId
     let curTitle = title.value || ''
@@ -262,8 +253,10 @@ const updateTemplateRuleSuccess = (templateRule: any) => {
             tableDatas.value[i].ruleExpComb = templateRule.ruleExpComb
             tableDatas.value[i].isRepeat = templateRule.isRepeat
             tableDatas.value[i].isSilence = templateRule.isSilence
-            tableDatas.value[i].isSilence = templateRule.silenceStartTime
-            tableDatas.value[i].isSilence = templateRule.silenceEndTime
+            tableDatas.value[i].silenceStartTime = templateRule.silenceStartTime
+            tableDatas.value[i].silenceEndTime = templateRule.silenceEndTime
+            tableDatas.value[i].alertNotify = templateRule.alertNotify
+            tableDatas.value[i].notifyWayIds = templateRule.notifyWayIds
         }
     }
     showMain.value = true

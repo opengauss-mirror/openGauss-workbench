@@ -1,3 +1,8 @@
+<template>
+    <el-date-picker v-bind="$attrs" v-model="dateValue" :type="type" :shortcuts="shortcuts"
+        :start-placeholder="startPlaceholder" :end-placeholder="endPlaceholder" />
+</template>
+
 <script setup lang="ts">
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
@@ -18,7 +23,7 @@ const props = withDefaults(
         showShortcuts?: boolean,
         startPlaceholder?: string;
         endPlaceholder?: string;
-        valueFormatToISO?: boolean; // 是否处理为ISO8601 格式字符串 '2020-04-02T08:02:17-05:00'
+        valueFormatToISO?: boolean;
         shortcutsConfig?: any[];
     }>(),
     {
@@ -63,23 +68,23 @@ const dateValue = computed({
         } else if (val && !props.valueFormatToISO) {
             let fmt: string;
             switch (props.type) {
-            case 'date':
-            case 'daterange':
-                fmt = 'YYYY-MM-DD'
-                break;
-            case 'datetime':
-            case 'datetimerange':
-                fmt = 'YYYY-MM-DD HH:mm:ss';
-                break;
-            case 'year':
-                fmt = 'YYYY';
-                break;
-            case 'month':
-                fmt = 'YYYY-MM';
-                break;
-            default:
-                fmt = 'YYYY-MM-DD';
-                break;
+                case 'date':
+                case 'daterange':
+                    fmt = 'YYYY-MM-DD'
+                    break;
+                case 'datetime':
+                case 'datetimerange':
+                    fmt = 'YYYY-MM-DD HH:mm:ss';
+                    break;
+                case 'year':
+                    fmt = 'YYYY';
+                    break;
+                case 'month':
+                    fmt = 'YYYY-MM';
+                    break;
+                default:
+                    fmt = 'YYYY-MM-DD';
+                    break;
             }
             value = Array.isArray(val) ? val.map(item => dayjs(item).format(fmt)) : dayjs(val).format(fmt);
         } else {
@@ -90,14 +95,3 @@ const dateValue = computed({
     }
 })
 </script>
-
-<template>
-    <el-date-picker
-        v-bind="$attrs"
-        v-model="dateValue"
-        :type="type"
-        :shortcuts="shortcuts"
-        :start-placeholder="startPlaceholder"
-        :end-placeholder="endPlaceholder"
-    />
-</template>

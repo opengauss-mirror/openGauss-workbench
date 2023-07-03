@@ -17,7 +17,7 @@ import lombok.experimental.Accessors;
 @Data
 @Accessors(chain = true)
 public class AlertClusterNodeConfDto {
-    private String clusterNodeId;  // 实例ID
+    private String clusterNodeId;
     private String nodeName;
     @JsonSerialize(using = ToStringSerializer.class)
     private Long templateId;

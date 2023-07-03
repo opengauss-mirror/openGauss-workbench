@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component;
 /**
  * @author wuyuebin
  * @date 2023/4/27 16:17
- * @description 初始化操作
+ * @description
  */
 @Component
 @Slf4j

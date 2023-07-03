@@ -1,15 +1,11 @@
-## Spring配置
 context:
   listener:
     classes: org.opengauss.plugin.alertcenter.listener.PluginListener
-#server:
-#  servlet:
-#    context-path: /alertCenter/api/v1
 spring:
   servlet:
     multipart:
-      max-file-size: 20MB #单个文件最大为20M
-      max-request-size: 20MB #单次请求文件总数大小为20M
+      max-file-size: 20MB #The maximum file size is 20MB.
+      max-request-size: 20MB #The total file size for a single request is limited to 20MB.
   sql:
     init:
       mode: always
@@ -21,7 +17,7 @@ spring:
     static-locations: classpath:resources,file:D://static
   datasource:
     dynamic:
-      strict: false #严格匹配数据源,默认false. true未匹配到指定数据源时抛异常,false使用默认数据源
+      strict: false #Strictly match the data source, default is false. When set to true and no specified data source is matched, an exception will be thrown. When set to false, the default data source will be used.
   jackson:
     time-zone: GMT+8
     date-format: yyyy-MM-dd HH:mm:ss
@@ -37,11 +33,8 @@ server.compression:
   enabled: true
   mime-types: application/javascript,text/css,application/json,application/xml,text/html,text/xml,text/plain
 mybatis-plus:
-  # 搜索指定包别名
   typeAliasesPackage: org.opengauss.plugin.alertcenter.entity
-  # 配置mapper的扫描，找到所有的mapper.xml映射文件
   mapperLocations: classpath*:mapper/*.xml
-  # 加载全局的配置文件
   configuration:
     mapUnderscoreToCamelCase: true
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
@@ -49,7 +42,7 @@ mybatis-plus:
 alert:
   rule-file-prefix: rules/
   rule-file-suffix: .yml
-  alertmanager:  #prometheus推送的完整路径是 /plugins/alert-center/alertCenter/api/v1/alerts
+  alertmanager:  #The complete path for Prometheus push is /plugins/alert-center/alertCenter/api/v1/alerts.
     path-prefix: /plugins/alert-center/alertCenter
     api-version: v1
   ruleItems:

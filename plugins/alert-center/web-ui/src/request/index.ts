@@ -1,7 +1,6 @@
 import axios, { AxiosError, AxiosRequestConfig, AxiosResponse } from "axios";
 
 const observabilityBaseURL = process.env.mode === 'production' ? '/plugins/alert-center' : '';
-// const observabilityBaseURL ='/plugins/observability-instance-zh25';
 
 interface ApiResponse<T = any> {
     code: string | number;

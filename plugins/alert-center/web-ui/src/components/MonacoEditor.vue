@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import * as monaco from "monaco-editor";
 import { format } from "sql-formatter";
-import { uuid } from "../shared";
+import { uuid } from "@/shared";
 
 const id = 'monaco_' + uuid()
 const props = withDefaults(

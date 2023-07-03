@@ -15,7 +15,7 @@
         <div class="form-header">
             <el-descriptions :title="$t('alertRule.alertTitle')"></el-descriptions>
         </div>
-        <el-form :model="formData" :rules="formRules" ref="formRef" label-position="right" label-width="100px"
+        <el-form :model="formData" ref="formRef" label-position="right" label-width="100px"
             size="default">
             <el-form-item :label="$t('alertRule.ruleName')" prop="ruleName">
                 <el-input v-model="formData.ruleName" :placeholder="$t('alertRule.ruleNamePlaceholder')"
@@ -81,7 +81,7 @@
         <div class="form-header">
             <el-descriptions :title="$t('alertRule.notifyTitle')"></el-descriptions>
         </div>
-        <el-form :model="formData" :rules="formRules" ref="formRef" label-position="right" label-width="100px"
+        <el-form :model="formData" ref="formRef" label-position="right" label-width="100px"
             size="default">
             <el-form-item :label="$t('alertRule.alertNotify')" prop="notifyDuration">
                 <el-checkbox-group v-model="alertNotifyList" :disabled="disabled">
@@ -116,19 +116,16 @@
             </el-form-item>
         </el-form>
         <el-row style="margin-top: 10px;">
-            <!-- <el-button type="primary" @click="confirm">{{ t('app.confirm') }}</el-button> -->
             <el-button @click="cancel">{{ t('app.cancel') }}</el-button>
         </el-row>
     </div>
 </template>
 
 <script setup lang='ts'>
-import { Search, Refresh, Delete } from "@element-plus/icons-vue";
 import "element-plus/es/components/message-box/style/index";
 import { useRequest } from "vue-request";
 import request from "@/request";
-import { i18n } from "@/i18n";
-import { ElMessageBox, ElMessage } from "element-plus";
+import { ElMessage } from "element-plus";
 import { useI18n } from "vue-i18n";
 const { t } = useI18n();
 
@@ -138,7 +135,8 @@ const props = withDefaults(
         state: string,
     }>(),
     {
-        state: 'detail'
+        state: 'detail',
+        ruleId: undefined
     }
 );
 
@@ -168,7 +166,7 @@ const durationUnitList = ref<any[]>([{
     value: 'd'
 }])
 const notifyWayIdArr = ref<string[]>([])
-const notifyWayList = ref<string[]>([])
+const notifyWayList = ref<any[]>([])
 const formData = ref<any>({
     ruleName: '',
     ruleType: '',
@@ -182,7 +180,7 @@ const levelList = reactive(['serious', 'warn', 'info'])
 const ruleExpComb = ref<string[]>([])
 const alertNotifyList = ref<string[]>([])
 const isRepeat = ref<string>('')
-const isSilence = ref<string>('')
+const isSilence = ref<any>('')
 const silenceTimes = ref<any[]>([])
 const showLogicSelect = (logicSymbol: string) => {
     return logicSymbolList.value.includes(logicSymbol)
@@ -272,13 +270,7 @@ onMounted(() => {
                 }]
             });
         });
-        // wujie?.bus.$on('opengauss-theme-change', (val: string) => {
-        //     nextTick(() => {
-        //         requestPisData()
-        //     });
-        // });
     }
 })
 </script>
-<style scoped lang='scss'>
-</style>
+<style scoped lang='scss'></style>

@@ -1,37 +1,3 @@
-<script setup lang="ts">
-import { WarningFilled, CircleCloseFilled } from '@element-plus/icons-vue'
-
-const props = withDefaults(defineProps<{
-    type: string;
-    tip?: Error | undefined | string;
-    defaultTip?: string;
-}>(), {
-    type: 'info',
-    tip: undefined,
-    defaultTip: '',
-})
-
-const baseColor = ref('');
-
-const finalTip = ref<Error | undefined | string >();
-
-onMounted(() => {
-    switch (props.type) {
-    case 'info':
-        baseColor.value = '#0093FF';
-        break;
-    case 'error':
-        baseColor.value = '#ff4d4f99';
-        break;
-    default:
-        baseColor.value = '#FFF'
-    }
-
-    finalTip.value = props.tip !== undefined ? props.tip : props.defaultTip
-})
-
-</script>
-
 <template>
     <div class="message-error">
         <div class="message-error-info" :style="{ border: `1px solid ${baseColor}` }">
@@ -47,6 +13,40 @@ onMounted(() => {
         </div>
     </div>
 </template>
+
+<script setup lang="ts">
+import { WarningFilled, CircleCloseFilled } from '@element-plus/icons-vue'
+
+const props = withDefaults(defineProps<{
+    type: string;
+    tip?: Error | undefined | string;
+    defaultTip?: string;
+}>(), {
+    type: 'info',
+    tip: undefined,
+    defaultTip: '',
+})
+
+const baseColor = ref('');
+
+const finalTip = ref<Error | undefined | string>();
+
+onMounted(() => {
+    switch (props.type) {
+        case 'info':
+            baseColor.value = '#0093FF';
+            break;
+        case 'error':
+            baseColor.value = '#ff4d4f99';
+            break;
+        default:
+            baseColor.value = '#FFF'
+    }
+
+    finalTip.value = props.tip !== undefined ? props.tip : props.defaultTip
+})
+
+</script>
 
 <style scoped lang="scss">
 .message-error {

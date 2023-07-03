@@ -91,7 +91,7 @@ export default {
         increaseAction: '持续增长',
         decreaseAction: '持续下降',
         alertContentTitle: '告警内容说明',
-        alertContentTip: '告警内容主用来通知用户，它支持配置参数，用${xxx}来表示参数。比如：告警内容为“最近一分钟，${nodeName}的CPU使用率一直大于90%”，其中${nodeName}为参数。可配置参数如下：',
+        alertContentTip: '告警内容主用来通知用户，它支持配置参数，用$&#123;xxx&#125;来表示参数。比如：告警内容为“最近一分钟，$&#123;nodeName&#125;的CPU使用率一直大于90%”，其中$&#123;nodeName&#125;为参数。可配置参数如下：',
     },
     alertTemplate: {
         title: '告警模板',
@@ -169,7 +169,7 @@ export default {
         DingTalk: '钉钉',
         previewContent: '消息预览',
         notifyContentTitle: '消息内容说明',
-        notifyContentTip: '消息内容主要将告警内容进行包装，添加额外内容，最终将包装的告警内容发送给用户。它支持配置参数，用${xxx}来表示参数。可配置的参数含义如下:'
+        notifyContentTip: '消息内容主要将告警内容进行包装，添加额外内容，最终将包装的告警内容发送给用户。它支持配置参数，用$&#123;xxx&#125;来表示参数。可配置的参数含义如下:'
     },
     notifyWay: {
         title: '通知方式',

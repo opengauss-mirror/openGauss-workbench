@@ -16,12 +16,12 @@ public class AlertRecordReq {
     private String clusterNodeId;
 
     /**
-     * 平台处理get请求时，无法将string（yyyy-MM-dd HH:mm:ss）参数转化为日期
+     * When processing a GET request, the platform is unable to convert the string ("yyyy-MM-dd HH:mm:ss")
+     * parameter to a date.
      */
     private String startTime; // yyyy-MM-dd HH:mm:ss
-
     private String endTime; // yyyy-MM-dd HH:mm:ss
-    private String recordStatus; // 多个，逗号分隔
-    private String alertStatus; // 多个，逗号分隔
-    private String alertLevel; // 多个，逗号分隔
+    private String recordStatus;
+    private String alertStatus;
+    private String alertLevel;
 }

@@ -36,7 +36,6 @@ import org.opengauss.plugin.alertcenter.service.AlertClusterNodeConfService;
 import org.opengauss.plugin.alertcenter.service.AlertTemplateRuleItemParamService;
 import org.opengauss.plugin.alertcenter.service.AlertTemplateRuleService;
 import org.opengauss.plugin.alertcenter.service.AlertTemplateService;
-import org.opengauss.plugin.alertcenter.service.PrometheusService;
 import org.opengauss.plugin.alertcenter.utils.MessageSourceUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -65,8 +64,6 @@ public class AlertTemplateServiceImpl extends ServiceImpl<AlertTemplateMapper, A
     private AlertTemplateRuleMapper alertTemplateRuleMapper;
     @Autowired
     private AlertTemplateRuleItemMapper alertTemplateRuleItemMapper;
-    @Autowired
-    private PrometheusService prometheusService;
     @Autowired
     private AlertTemplateRuleService templateRuleService;
     @Autowired
@@ -282,7 +279,6 @@ public class AlertTemplateServiceImpl extends ServiceImpl<AlertTemplateMapper, A
     @Override
     public void delTemplate(Long id) {
         MessageSourceUtil.reset();
-        // 查看是否被引用
         List<AlertClusterNodeConf> nodeConfList = nodeConfService.list(
             Wrappers.<AlertClusterNodeConf>lambdaQuery().eq(AlertClusterNodeConf::getTemplateId, id).eq(
                 AlertClusterNodeConf::getIsDeleted, CommonConstants.IS_NOT_DELETE));

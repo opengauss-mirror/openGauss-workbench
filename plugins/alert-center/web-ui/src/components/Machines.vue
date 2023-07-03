@@ -7,7 +7,7 @@
 </template>
 
 <script lang="ts" setup>
-import restRequest from "../request/restful";
+import restRequest from "@/request/restful";
 import { useRequest } from "vue-request";
 
 const props = withDefaults(

@@ -1,6 +1,20 @@
+<template>
+    <div class="header-container">
+        <div class="left">
+            <el-icon :size="18" v-if="collapse && props.showIcon" style="cursor: pointer;" @click="() => emitCollapse(false)"><Expand /></el-icon>
+            <el-icon :size="18" v-if="!collapse && props.showIcon" style="cursor: pointer;" @click="() => emitCollapse(true)"><Fold /></el-icon>
+            <my-breadcrumb class="bread" />
+        </div>
+        <div class="right">
+            <span class="header-change-theme" @click.stop="onChangeTheme()">{{ themeText }}</span>
+            <Lang />
+        </div>
+    </div>
+</template>
+
 <script setup lang="ts">
 import { Fold, Expand } from '@element-plus/icons-vue';
-import Lang from '../i18n/Lang.vue';
+import Lang from '@/i18n/Lang.vue';
 
 const props = withDefaults(defineProps<{
     showIcon: boolean
@@ -22,20 +36,6 @@ const onChangeTheme = () => {
     themeText.value = themeText.value === 'dark' ? 'light' : 'dark';
 }
 </script>
-
-<template>
-    <div class="header-container">
-        <div class="left">
-            <el-icon :size="18" v-if="collapse && props.showIcon" style="cursor: pointer;" @click="() => emitCollapse(false)"><Expand /></el-icon>
-            <el-icon :size="18" v-if="!collapse && props.showIcon" style="cursor: pointer;" @click="() => emitCollapse(true)"><Fold /></el-icon>
-            <my-breadcrumb class="bread" />
-        </div>
-        <div class="right">
-            <span class="header-change-theme" @click.stop="onChangeTheme()">{{ themeText }}</span>
-            <Lang />
-        </div>
-    </div>
-</template>
 
 <style scoped lang="scss">
 .header-container {

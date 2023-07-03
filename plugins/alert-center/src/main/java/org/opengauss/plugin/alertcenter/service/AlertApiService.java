@@ -130,12 +130,15 @@ public class AlertApiService {
                 alertApiReq.getStartsAt())
             .orderByDesc(AlertRecord::getUpdateTime));
         AlertRecord alertRecord = null;
+        LocalDateTime endsAt = alertApiReq.getEndsAt();
+        LocalDateTime now = LocalDateTime.now();
+        endsAt = endsAt.isAfter(now) ? now : endsAt;
         if (CollectionUtils.isEmpty(alertRecords)) {
             alertRecord = new AlertRecord();
             AlertTemplate alertTemplate = templateMapper.selectById(templateId);
             alertRecord.setClusterNodeId(clusterNodeId).setTemplateId(templateId).setTemplateRuleId(
-                alertTemplateRule.getId()).setStartTime(alertApiReq.getStartsAt()).setEndTime(
-                alertApiReq.getEndsAt()).setCreateTime(LocalDateTime.now());
+                alertTemplateRule.getId()).setStartTime(alertApiReq.getStartsAt()).setEndTime(endsAt)
+                .setCreateTime(LocalDateTime.now());
             alertRecord.setDuration(
                 Duration.between(alertRecord.getStartTime(), alertRecord.getEndTime()).toSeconds());
             alertRecord.setTemplateName(alertTemplate.getTemplateName()).setTemplateRuleName(
@@ -153,9 +156,10 @@ public class AlertApiService {
                 return alertRecord;
             }
             alertRecord.setNotifyWayIds(alertTemplateRule.getNotifyWayIds()).setNotifyWayNames(notifyWayNames);
-            alertRecord.setAlertStatus(alertRecord.getEndTime().equals(
-                alertApiReq.getEndsAt()) ? CommonConstants.RECOVER_STATUS : CommonConstants.FIRING_STATUS);
-            alertRecord.setEndTime(alertApiReq.getEndsAt());
+            alertRecord.setAlertStatus(alertRecord.getEndTime().equals(endsAt)
+                || alertRecord.getEndTime().isAfter(endsAt)
+                ? CommonConstants.RECOVER_STATUS : CommonConstants.FIRING_STATUS);
+            alertRecord.setEndTime(endsAt);
             alertRecord.setDuration(
                 Duration.between(alertRecord.getStartTime(), alertRecord.getEndTime()).toSeconds());
             alertRecord.setUpdateTime(LocalDateTime.now());

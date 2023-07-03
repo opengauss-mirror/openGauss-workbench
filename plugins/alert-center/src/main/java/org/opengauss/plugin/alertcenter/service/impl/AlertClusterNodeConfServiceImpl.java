@@ -21,9 +21,7 @@ import org.opengauss.plugin.alertcenter.dto.AlertClusterNodeConfDto;
 import org.opengauss.plugin.alertcenter.entity.AlertClusterNodeConf;
 import org.opengauss.plugin.alertcenter.entity.AlertTemplate;
 import org.opengauss.plugin.alertcenter.mapper.AlertClusterNodeConfMapper;
-import org.opengauss.plugin.alertcenter.mapper.AlertConfigMapper;
 import org.opengauss.plugin.alertcenter.mapper.AlertTemplateMapper;
-import org.opengauss.plugin.alertcenter.mapper.NctigbaEnvMapper;
 import org.opengauss.plugin.alertcenter.model.AlertClusterNodeAndTemplateReq;
 import org.opengauss.plugin.alertcenter.model.AlertClusterNodeConfReq;
 import org.opengauss.plugin.alertcenter.model.AlertTemplateReq;
@@ -56,9 +54,6 @@ public class AlertClusterNodeConfServiceImpl
     private AlertTemplateMapper templateMapper;
 
     @Autowired
-    private NctigbaEnvMapper envMapper;
-
-    @Autowired
     @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
     private IOpsClusterService clusterService;
 
@@ -76,8 +71,6 @@ public class AlertClusterNodeConfServiceImpl
     @Autowired
     private AlertTemplateService templateService;
 
-    @Autowired
-    private AlertConfigMapper alertConfigMapper;
 
     @Transactional
     public void saveClusterNodeConf(AlertClusterNodeConfReq alertClusterNodeConfReq) {

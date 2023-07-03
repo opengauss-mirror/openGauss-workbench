@@ -1,3 +1,32 @@
+<template>
+    <div class="my-progress" :style="{ height: props.height, width: props.width }">
+        <el-tooltip effect="light" placement="right">
+            <template #content>
+                <div class="my-progress-content" v-for="(item, index) in progressData.contentData" :key="index">
+                    <div class="my-progress-content-item" v-show="!item.hide">
+                        <div class="my-progress-content-legend" :style="{
+                            backgroundColor: props.fixColor ? props.fixColor[index] : item.color
+                        }" />
+                        <div class="my-progress-content-label">{{ item.label }}</div>
+                    </div>
+                    <p class="my-progress-content-label" v-show="!item.hide">{{ index === 1 ? props.fixTotal || item.value :
+                        item.value }}</p>
+                </div>
+            </template>
+            <div class="my-progress-line" :style="{
+                backgroundColor: progressData.isHasTotal ? progressData.totalBackgroundColor : 'transparent'
+            }">
+                <div v-for="(item, index) in progressData.line" :key="index" :style="{
+                    height: props.height,
+                    width: item.percentage,
+                    backgroundColor: item.backgroundColor
+                }" />
+            </div>
+        </el-tooltip>
+        <div class="my-progress-text" v-if="props.text !== undefined">{{ props.text }}</div>
+    </div>
+</template>
+
 <script setup lang="ts">
 
 type optionType = { label: string, value: number, total?: boolean, color?: string, hide?: boolean }
@@ -66,47 +95,6 @@ onMounted(() => {
 
 </script>
 
-<template>
-    <div class="my-progress" :style="{ height: props.height, width: props.width }">
-        <el-tooltip
-                effect="light"
-                placement="right"
-            >
-                <template #content>
-                    <div class="my-progress-content" v-for="(item, index) in progressData.contentData" :key="index">
-                        <div class="my-progress-content-item" v-show="!item.hide">
-                            <div
-                                class="my-progress-content-legend"
-                                :style="{
-                                    backgroundColor: props.fixColor ? props.fixColor[index] : item.color
-                                }"
-                            />
-                            <div class="my-progress-content-label">{{ item.label }}</div>
-                        </div>
-                        <p class="my-progress-content-label" v-show="!item.hide">{{ index === 1 ? props.fixTotal || item.value : item.value }}</p>
-                    </div>
-                </template>
-                <div
-                    class="my-progress-line"
-                    :style="{
-                        backgroundColor: progressData.isHasTotal ? progressData.totalBackgroundColor : 'transparent'
-                    }"
-                >
-                    <div
-                        v-for="(item, index) in progressData.line" 
-                        :key="index"
-                        :style="{
-                            height: props.height, 
-                            width: item.percentage,
-                            backgroundColor: item.backgroundColor
-                        }"
-                    />
-                </div>
-        </el-tooltip>
-        <div class="my-progress-text" v-if="props.text !== undefined">{{ props.text }}</div>
-    </div>
-</template>
-
 <style scoped lang="scss">
 .my-progress {
     width: 100%;
@@ -126,7 +114,7 @@ onMounted(() => {
             display: flex;
             align-items: center;
         }
-       
+
         &-legend {
             width: 16px;
             height: 4px;
