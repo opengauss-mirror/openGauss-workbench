@@ -493,19 +493,10 @@ watch(
             })
 
             // block sessions
-            for (let index = 0; index < sessionResult.blockTree.length; index++) {
-                const element = sessionResult.blockTree[index]
-                if (element.children && element.children.length > 0) {
-                    for (let index2 = 0; index2 < element.children.length; index2++) {
-                        const element2 = element.children[index2]
-                        element2.hasChildren = undefined
-                        element2.children = undefined
-                    }
-                } else {
-                    element.children = undefined
-                }
+            if (sessionResult.blockTree) {
+                fixTreeKey(sessionResult.blockTree)
+                sessionData.value.blockTree = sessionResult.blockTree
             }
-            sessionData.value.blockTree = sessionResult.blockTree
 
             // waiting
             for (let index = 0; index < sessionResult.waiting.length; index++) {
@@ -517,6 +508,29 @@ watch(
     },
     { deep: true }
 )
+const fixTreeKey = (nodes: any[]) => {
+    // loop nodes
+    for (let nodeIndex = 0; nodeIndex < nodes.length; nodeIndex++) {
+        // node
+        const node = nodes[nodeIndex]
+        // node has children
+        if (node.children && node.children.length > 0) {
+            for (let nodeChildrenIndex = 0; nodeChildrenIndex < node.children.length; nodeChildrenIndex++) {
+                const nodeChild = node.children[nodeChildrenIndex]
+                // child has children
+                if (nodeChild.children && nodeChild.children.length > 0) {
+                    fixTreeKey(nodeChild.children)
+                } else {
+                    nodeChild.hasChildren = undefined
+                    nodeChild.children = undefined
+                }
+            }
+        } else {
+            // node has not children
+            node.children = undefined
+        }
+    }
+}
 const tips = ref<string | undefined>()
 const timerInner = ref<number>()
 const updateTimerInner = () => {

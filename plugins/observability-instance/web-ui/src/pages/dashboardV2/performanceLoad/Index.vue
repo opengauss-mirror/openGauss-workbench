@@ -604,19 +604,10 @@ watch(
         topSQLData.value = topSQLNowData.value.topSQLNow
 
         // block sessions
-        for (let index = 0; index < topSQLNowData.value.blockTree.length; index++) {
-            const element = topSQLNowData.value.blockTree[index]
-            if (element.children && element.children.length > 0) {
-                for (let index2 = 0; index2 < element.children.length; index2++) {
-                    const element2 = element.children[index2]
-                    element2.hasChildren = undefined
-                    element2.children = undefined
-                }
-            } else {
-                element.children = undefined
-            }
+        if (topSQLNowData.value.blockTree) {
+            fixTreeKey(topSQLNowData.value.blockTree)
+            blockSessionTable.value = topSQLNowData.value.blockTree
         }
-        blockSessionTable.value = topSQLNowData.value.blockTree ? topSQLNowData.value.blockTree : []
 
         // trans
         transTable.value = topSQLNowData.value.longTxc ? topSQLNowData.value.longTxc : []
@@ -625,6 +616,29 @@ watch(
     },
     { deep: true }
 )
+const fixTreeKey = (nodes: any[]) => {
+    // loop nodes
+    for (let nodeIndex = 0; nodeIndex < nodes.length; nodeIndex++) {
+        // node
+        const node = nodes[nodeIndex]
+        // node has children
+        if (node.children && node.children.length > 0) {
+            for (let nodeChildrenIndex = 0; nodeChildrenIndex < node.children.length; nodeChildrenIndex++) {
+                const nodeChild = node.children[nodeChildrenIndex]
+                // child has children
+                if (nodeChild.children && nodeChild.children.length > 0) {
+                    fixTreeKey(nodeChild.children)
+                } else {
+                    nodeChild.hasChildren = undefined
+                    nodeChild.children = undefined
+                }
+            }
+        } else {
+            // node has not children
+            node.children = undefined
+        }
+    }
+}
 const timerInner = ref<number>()
 const updateTimerInner = () => {
     clearInterval(timerInner.value)

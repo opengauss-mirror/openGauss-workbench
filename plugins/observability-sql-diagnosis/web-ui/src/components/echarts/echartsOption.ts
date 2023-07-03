@@ -60,25 +60,3 @@ export function getDefaultEcharOption() {
     }
     return themeColor
 }
-
-const isArr = (origin: any): boolean => {
-    let str = '[object Array]'
-    return Object.prototype.toString.call(origin) === str
-}
-
-const deepClone = <T>(origin: T, target?: Record<string, any> | T): T => {
-    let tar = target || {}
-
-    for (const key in origin) {
-        if (Object.prototype.hasOwnProperty.call(origin, key)) {
-            if (typeof origin[key] === 'object' && origin[key] !== null) {
-                tar[key] = isArr(origin[key]) ? [] : {}
-                deepClone(origin[key], tar[key])
-            } else {
-                tar[key] = origin[key]
-            }
-        }
-    }
-
-    return tar as T
-}

@@ -83,15 +83,17 @@ watch(res, (res: any) => {
 
     pointInfo.value = baseData
     if (pointInfo.value?.pointState !== 'NORMAL') return
+
+    // cpu
     {
-        let chartData = baseData.pointData[0]
+        let chartData = baseData.pointData[0][0]
         let tempData: string[] = []
 
         chartData.datas[0].data.forEach((d: number) => {
             tempData.push(toFixed(d))
         })
         let matchData: any[] = []
-        if (baseData.pointData.length > 1) findMatchTime(baseData.pointData[1], chartData.time)
+        if (baseData.pointData.length > 1) findMatchTime(baseData.pointData[1][0], chartData.time)
         let markArea = []
         if (matchData.length > 0) {
             for (let index = 0; index < matchData.length; index++) {
@@ -123,7 +125,6 @@ watch(res, (res: any) => {
     }
 })
 const findMatchTime = (realMarkArea: any, times: any) => {
-    console.log('DEBUG: OLD realMarkArea', realMarkArea)
     let timesIndex = 0
     for (let index = 0; index < realMarkArea.length; index++) {
         const element = realMarkArea[index]
@@ -132,13 +133,10 @@ const findMatchTime = (realMarkArea: any, times: any) => {
         }
         element.startTime = times[timesIndex]
         while (times[timesIndex] <= element.endTime && timesIndex < times.length) {
-            console.log('DEBUG: times[timesIndex + 1]', times[timesIndex + 1])
-            console.log('DEBUG: element.startTime', element.startTime)
             timesIndex++
         }
         element.endTime = times[timesIndex]
     }
-    console.log('DEBUG: realMarkArea', realMarkArea)
     return realMarkArea
 }
 </script>
