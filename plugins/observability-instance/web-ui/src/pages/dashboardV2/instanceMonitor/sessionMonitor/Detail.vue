@@ -493,19 +493,9 @@ watch(
             })
 
             // block sessions
-            for (let index = 0; index < sessionResult.blockTree.length; index++) {
-                const element = sessionResult.blockTree[index]
-                if (element.children && element.children.length > 0) {
-                    for (let index2 = 0; index2 < element.children.length; index2++) {
-                        const element2 = element.children[index2]
-                        element2.hasChildren = undefined
-                        element2.children = undefined
-                    }
-                } else {
-                    element.children = undefined
-                }
+            if (sessionResult.blockTree) {
+                sessionData.value.blockTree = sessionResult.blockTree
             }
-            sessionData.value.blockTree = sessionResult.blockTree
 
             // waiting
             for (let index = 0; index < sessionResult.waiting.length; index++) {

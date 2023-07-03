@@ -131,17 +131,9 @@ import restRequest from '@/request/restful'
 import BuildWdr from '@/pages/dashboardV2/wdr/buildWdr.vue'
 import SnapshotManage from '@/pages/dashboardV2/wdr/snapshotManage.vue'
 import { cloneDeep } from 'lodash-es'
-import { useI18n } from 'vue-i18n'
 import { useMonitorStore } from '@/store/monitor'
 import { tabKeys } from '@/pages/dashboardV2/common'
 import { storeToRefs } from 'pinia'
-const { t } = useI18n()
-
-const shortcutsConfig = ref<any[]>([
-    { text: t('dashboard.last1H'), value: 1 },
-    { text: t('dashboard.last3H'), value: 3 },
-    { text: t('dashboard.last6H'), value: 6 },
-])
 
 const errorInfo = ref<string | Error>()
 

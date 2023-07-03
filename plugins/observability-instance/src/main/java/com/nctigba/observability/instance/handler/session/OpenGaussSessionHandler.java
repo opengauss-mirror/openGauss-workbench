@@ -255,9 +255,6 @@ public class OpenGaussSessionHandler implements SessionHandler {
             throw new InstanceException(CommonConstants.CONNECTION_FAIL);
         }
         try {
-            if (!checkSessionIsWaiting(conn, sessionid)) {
-                return list;
-            }
             PreparedStatement stm = conn.prepareStatement(SESSION_WAITING_REC_SQL);
             stm.setLong(1, Long.parseLong(sessionid));
             list = executeQuery(stm);
