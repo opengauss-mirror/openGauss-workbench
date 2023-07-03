@@ -605,7 +605,6 @@ watch(
 
         // block sessions
         if (topSQLNowData.value.blockTree) {
-            fixTreeKey(topSQLNowData.value.blockTree)
             blockSessionTable.value = topSQLNowData.value.blockTree
         }
 
@@ -616,26 +615,6 @@ watch(
     },
     { deep: true }
 )
-const fixTreeKey = (nodes: any[]) => {
-    // loop nodes
-    for (let node of nodes) {
-        // node has children
-        if (node.children && node.children.length > 0) {
-            for (let nodeChild of node.children) {
-                // child has children
-                if (nodeChild.children && nodeChild.children.length > 0) {
-                    fixTreeKey(nodeChild.children)
-                } else {
-                    nodeChild.hasChildren = undefined
-                    nodeChild.children = undefined
-                }
-            }
-        } else {
-            // node has not children
-            node.children = undefined
-        }
-    }
-}
 const timerInner = ref<number>()
 const updateTimerInner = () => {
     clearInterval(timerInner.value)
