@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -25,6 +26,7 @@ import com.nctigba.observability.instance.mapper.TopSqlMapper;
 import com.nctigba.observability.instance.model.InstanceNodeInfo;
 import com.nctigba.observability.instance.service.TopSQLService.waitEvent.event;
 
+import cn.hutool.core.util.StrUtil;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -121,7 +123,7 @@ public class TopSQLService {
 
     /**
      * Query instance node information
-     * 
+     *
      * @param nodeId instance node id
      * @return Instance node information
      */
@@ -142,6 +144,9 @@ public class TopSQLService {
         try {
             clusterManager.setCurrentDatasource(nodeId, null);
             String table = topSqlMapper.waitEvent(sqlId);
+            if (StrUtil.isBlank(table)) {
+                return Collections.emptyList();
+            }
             String[] lines = table.split(",");
             waitEvent pre = null;
             for (String string : lines) {
