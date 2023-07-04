@@ -13,6 +13,46 @@
                     :markArea="pointData.cpuChart.markArea"
                 />
             </my-card>
+            <my-card
+                :title="$t('historyDiagnosis.businessConnCount.title')"
+                height="500"
+                :bodyPadding="false"
+                style="margin-top: 10px"
+            >
+                <el-table
+                    :data="pointData.connectionTime.data"
+                    style="width: 100%; height: 460px"
+                    :border="true"
+                    :header-cell-class-name="
+                        () => {
+                            return 'grid-header'
+                        }
+                    "
+                >
+                    <el-table-column
+                        :label="$t('historyDiagnosis.businessConnCount.nowStartTime')"
+                        prop="nowStartTime"
+                        :formatter="(r: any) => moment(r.nowStartTime).format('YYYY-MM-DD HH:mm:ss')"
+                        width="140"
+                    ></el-table-column>
+                    <el-table-column
+                        :label="$t('historyDiagnosis.businessConnCount.nowEndTime')"
+                        prop="nowEndTime"
+                        :formatter="(r: any) => moment(r.nowEndTime).format('YYYY-MM-DD HH:mm:ss')"
+                        width="140"
+                    ></el-table-column>
+                    <el-table-column
+                        :label="$t('historyDiagnosis.businessConnCount.nowSessionCount')"
+                        prop="nowSessionCount"
+                        width="160"
+                    ></el-table-column>
+                    <el-table-column
+                        :label="$t('historyDiagnosis.businessConnCount.beforeSessionCount')"
+                        prop="beforeSessionCount"
+                        width="160"
+                    ></el-table-column>
+                </el-table>
+            </my-card>
         </point-info-wrapper>
     </el-tabs>
 </template>
@@ -23,6 +63,8 @@ import { useRequest } from 'vue-request'
 import LazyLine from '@/components/echarts/LazyLine.vue'
 import { toFixed } from '@/shared'
 import PointInfoWrapper from '@/pages/diagnosisTask/detail/PointInfoWrapper.vue'
+import moment from 'moment'
+import { i18n } from '@/i18n'
 
 const props = withDefaults(
     defineProps<{
@@ -45,6 +87,10 @@ const defaultData = {
         time: [],
         markArea: [],
     },
+    connectionTime: {
+        title: '',
+        data: [],
+    },
 }
 const pointData = ref<{
     cpuChart: {
@@ -53,6 +99,10 @@ const pointData = ref<{
         unit: string
         time: Array<any>
         markArea: Array<any>
+    }
+    connectionTime: {
+        title: string
+        data: Array<any>
     }
 }>(defaultData)
 
@@ -93,19 +143,23 @@ watch(res, (res: any) => {
             tempData.push(toFixed(d))
         })
         let matchData: any[] = []
-        if (baseData.pointData.length > 1) findMatchTime(baseData.pointData[1][0], chartData.time)
+        console.log('DEBUG: chartData.time', chartData.time)
+        console.log('DEBUG: baseData.pointData[1].timeSlot', baseData.pointData[1].timeSlot)
         let markArea = []
-        if (matchData.length > 0) {
-            for (let index = 0; index < matchData.length; index++) {
-                const element = matchData[index]
-                markArea.push([
-                    {
-                        xAxis: element.startTime,
-                    },
-                    {
-                        xAxis: element.endTime,
-                    },
-                ])
+        if (baseData.pointData.length > 1) {
+            matchData = findMatchTime(baseData.pointData[1].timeSlot, chartData.time)
+            if (matchData.length > 0) {
+                for (let index = 0; index < matchData.length; index++) {
+                    const element = matchData[index]
+                    markArea.push([
+                        {
+                            xAxis: element.startTime,
+                        },
+                        {
+                            xAxis: element.endTime,
+                        },
+                    ])
+                }
             }
         }
         pointData.value.cpuChart = {
@@ -122,6 +176,11 @@ watch(res, (res: any) => {
             time: chartData.time,
             markArea,
         }
+    }
+
+    // connectionTime
+    if (baseData.pointData.length > 1) {
+        pointData.value.connectionTime.data = baseData.pointData[1].connCount
     }
 })
 const findMatchTime = (realMarkArea: any, times: any) => {

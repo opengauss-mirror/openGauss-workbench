@@ -83,13 +83,20 @@ export default {
             troubleshooting: '排查建议',
         },
         currentCpuUsage: {
-            for: '，为',
+            for: '当前CPU使用率：',
         },
         lock: {
             logTime: '日志时间',
             processId: '线程ID',
             transactionId: '事务ID',
             log: '日志内容',
+        },
+        businessConnCount: {
+            title: 'CPU秒级抖动与业务连接数关系',
+            nowStartTime: '抖动起始时间',
+            nowEndTime: '抖动结束时间',
+            nowSessionCount: '抖动区间平均每秒连接数',
+            beforeSessionCount: '抖动前平均每秒连接数',
         },
     },
     install: {

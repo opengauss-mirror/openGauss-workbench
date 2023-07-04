@@ -83,13 +83,20 @@ export default {
             troubleshooting: 'Troubleshooting Suggestions',
         },
         currentCpuUsage: {
-            for: ',is ',
+            for: 'Current CPU usage:',
         },
         lock: {
             logTime: 'Log Time',
             processId: 'Process ID',
             transactionId: 'Transaction ID',
             log: 'Log Content',
+        },
+        businessConnCount: {
+            title: 'The relationship between CPU second-level jitter and the number of business connections',
+            nowStartTime: 'Jitter start time',
+            nowEndTime: 'Jitter end time',
+            nowSessionCount: 'The average number of connections per second in the jitter interval',
+            beforeSessionCount: 'Average connections per second before jitter',
         },
     },
     dashboard: {

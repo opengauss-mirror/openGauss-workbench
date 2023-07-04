@@ -1,8 +1,10 @@
 <template>
-    <div class="line-tips" v-if="tips">
-        <div class=""><svg-icon name="info" />{{ tips }}</div>
+    <div style="width: 100%; height: 100%">
+        <div class="line-tips" v-if="tips">
+            <div class=""><svg-icon name="info" />{{ tips }}</div>
+        </div>
+        <div :key="`${i18n.global.locale.value}`" :id="domId" ref="loadRef" style="width: 100%; height: 100%"></div>
     </div>
-    <div :key="`${i18n.global.locale.value}`" :id="domId" ref="loadRef" style="width: 100%; height: 100%"></div>
 </template>
 
 <!-- eslint-disable indent -->
@@ -34,7 +36,7 @@ import {
 import { UniversalTransition } from 'echarts/features'
 import { CanvasRenderer } from 'echarts/renderers'
 import { uuid } from '@/shared'
-import { useEventListener, useIntersectionObserver } from '@vueuse/core'
+import { useIntersectionObserver } from '@vueuse/core'
 import moment from 'moment'
 import { useI18n } from 'vue-i18n'
 import { useDataZoom } from '@/hooks/echarts'
@@ -97,7 +99,6 @@ const props = withDefaults(
         areaStyle?: boolean
         // chart colors
         color?: Array<string>
-        theme?: string
         /**
          * enable brush for select range time, the value is uuid
          */
@@ -122,7 +123,6 @@ const props = withDefaults(
         scatterUnit: '',
         areaStyle: false,
         rangeSelect: false,
-        theme: 'dark',
         translate: true,
         isTooltipsFormatDate: true,
         enterable: true,
@@ -134,7 +134,22 @@ onMounted(() => {
     // when windows resize,other chart in tab cannot get the windows size
     // then will become small ones
     window.addEventListener('click', () => {
-        myChart.resize()
+        nextTick(() => {
+            myChart.resize()
+        })
+        // There will be a BUG when the installation bar is folded, and it needs to be resized again
+        setTimeout(() => {
+            myChart.resize()
+        }, 100)
+    })
+    window.addEventListener('resize', () => {
+        nextTick(() => {
+            myChart.resize()
+        })
+        // when switch tab in dataKit, only resize above not work
+        setTimeout(() => {
+            myChart.resize()
+        }, 100)
     })
 })
 const colorArray: Array<string> = colorCharts.chartColors.split(',')
@@ -339,7 +354,6 @@ const renderChart = () => {
         props.defaultBrushArea.length === 2 &&
         props.xData.length > 0
     ) {
-        console.log('defaultBrushArea', props.defaultBrushArea)
         nextTick(() => {
             let interval =
                 (moment(props.defaultBrushArea![1]).valueOf() - moment(props.defaultBrushArea![0]).valueOf()) / 1000
@@ -391,9 +405,6 @@ watch(
     },
     { deep: true }
 )
-useEventListener(window, 'resize', () => {
-    myChart?.resize()
-})
 </script>
 
 <style scoped lang="scss"></style>

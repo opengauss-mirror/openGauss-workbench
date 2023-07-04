@@ -30,10 +30,9 @@ import {
 import { UniversalTransition } from 'echarts/features'
 import { CanvasRenderer } from 'echarts/renderers'
 import { uuid } from '@/shared'
-import { useEventListener, useIntersectionObserver } from '@vueuse/core'
+import { useIntersectionObserver } from '@vueuse/core'
 import moment from 'moment'
 import { useI18n } from 'vue-i18n'
-import { useDataZoom } from '@/hooks/echarts'
 import { i18n } from '@/i18n'
 
 export interface LineData {
@@ -87,7 +86,6 @@ const props = withDefaults(
         areaStyle?: boolean
         // chart colors
         color?: string[]
-        theme?: string
         /**
          * enable brush for select range time, the value is uuid
          */
@@ -123,22 +121,35 @@ const props = withDefaults(
             '#8B00E1',
             '#0F866A',
         ],
-        theme: 'dark',
         translate: true,
         countByDataTimePicker: true,
     }
 )
+let myChart: echarts.ECharts
 onMounted(() => {
     // to solve the problem
     // when windows resize,other chart in tab cannot get the windows size
     // then will become small ones
     window.addEventListener('click', () => {
-        myChart.resize()
+        nextTick(() => {
+            myChart.resize()
+        })
+        // There will be a BUG when the installation bar is folded, and it needs to be resized again
+        setTimeout(() => {
+            myChart.resize()
+        }, 100)
+    })
+    window.addEventListener('resize', () => {
+        nextTick(() => {
+            myChart.resize()
+        })
+        // when switch tab in dataKit, only resize above not work
+        setTimeout(() => {
+            myChart.resize()
+        }, 100)
     })
 })
-const theme = 'auto' // Index Line has background color ,so don't mater with theme
 const domId = uuid()
-let myChart: echarts.ECharts
 const renderChart = () => {
     let data: Array<LineSeriesOption | ScatterSeriesOption | BarSeriesOption> = []
     props.data.forEach((d) => {
@@ -182,7 +193,7 @@ const renderChart = () => {
             left: 'center',
             top: 'center',
             textStyle: {
-                color: theme.value === 'dark' ? '#ddd' : '#FFFFFF',
+                color: '#FFFFFF',
                 opacity: 0.5,
                 fontSize: '10px',
                 fontWeight: 400,
@@ -206,7 +217,7 @@ const renderChart = () => {
         brush: {
             brushStyle: {
                 borderWidth: 0,
-                color: theme.value === 'dark' ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)',
+                color: 'rgba(0, 0, 0, 0.2)',
             },
             transformable: !props.defaultBrushArea,
             outOfBrush:
@@ -222,11 +233,11 @@ const renderChart = () => {
             axisTick: { show: false },
             axisLine: {
                 lineStyle: {
-                    color: theme.value === 'dark' ? '#D4D4D4' : '#EAEBEE',
+                    color: '#EAEBEE',
                 },
             },
             axisLabel: {
-                color: theme.value === 'dark' ? '#D4D4D4' : '#FFFFFF',
+                color: '#FFFFFF',
                 fontSize: 7.3,
                 opacity: 0.7,
                 formatter: (v) => moment(new Date(v)).format('HH:mm'),
@@ -238,19 +249,19 @@ const renderChart = () => {
                   {
                       type: 'value',
                       axisLabel: {
-                          color: theme.value === 'dark' ? '#D4D4D4' : '#FFFFFF',
+                          color: '#FFFFFF',
                           opacity: 0.7,
                           fontSize: 8,
                           formatter: `{value}${props.unit}`,
                       },
                       splitLine: {
-                          lineStyle: { color: theme.value === 'dark' ? '#4a4a4a' : '#EAEBEE', opacity: 0.7 },
+                          lineStyle: { color: '#EAEBEE', opacity: 0.7 },
                       },
                   },
                   {
                       type: 'value',
                       axisLabel: {
-                          color: theme.value === 'dark' ? '#D4D4D4' : '#FFFFFF',
+                          color: '#FFFFFF',
                           fontSize: 8,
                           formatter: `{value}${props.scatterUnit}`,
                           opacity: 0.7,
@@ -264,13 +275,13 @@ const renderChart = () => {
                   min: props.min,
                   interval: props.interval,
                   axisLabel: {
-                      color: theme.value === 'dark' ? '#D4D4D4' : '#FFFFFF',
+                      color: '#FFFFFF',
                       fontSize: 8,
                       formatter: `{value}${props.unit}`,
                       opacity: 0.7,
                   },
                   splitLine: {
-                      lineStyle: { color: theme.value === 'dark' ? '#4a4a4a' : '#EAEBEE', opacity: 0.7 },
+                      lineStyle: { color: '#EAEBEE', opacity: 0.7 },
                   },
               },
         series: data.length > 0 ? data : [],
@@ -311,9 +322,6 @@ const renderChart = () => {
             })
         })
     }
-    if (props.brush) {
-        useDataZoom(myChart)
-    }
 }
 // lazy load
 const myEmit = defineEmits<{
@@ -334,7 +342,4 @@ watch(
     },
     { deep: true }
 )
-useEventListener(window, 'resize', () => {
-    myChart?.resize()
-})
 </script>
