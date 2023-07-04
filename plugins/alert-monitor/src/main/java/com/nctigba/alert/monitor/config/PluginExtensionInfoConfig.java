@@ -6,14 +6,13 @@ package com.nctigba.alert.monitor.config;
 
 import com.gitee.starblues.core.PluginExtensionInfo;
 import org.springframework.stereotype.Component;
-
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * @author wuyuebin
- * @date 2023/4/13 11:37
- * @description
+ * plugin extension info
+ *
+ * @since 2023/4/13 11:37
  */
 @Component
 public class PluginExtensionInfoConfig implements PluginExtensionInfo {
