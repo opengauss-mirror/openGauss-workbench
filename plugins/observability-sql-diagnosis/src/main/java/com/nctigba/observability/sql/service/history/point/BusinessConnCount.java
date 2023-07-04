@@ -7,15 +7,13 @@ package com.nctigba.observability.sql.service.history.point;
 import com.nctigba.common.web.exception.HisDiagnosisException;
 import com.nctigba.observability.sql.constants.history.MetricCommon;
 import com.nctigba.observability.sql.constants.history.PrometheusConstants;
-import com.nctigba.observability.sql.constants.history.SqlCommon;
 import com.nctigba.observability.sql.constants.history.ThresholdCommon;
 import com.nctigba.observability.sql.mapper.history.HisDiagnosisTaskMapper;
 import com.nctigba.observability.sql.model.history.HisDiagnosisResult;
 import com.nctigba.observability.sql.model.history.HisDiagnosisTask;
-import com.nctigba.observability.sql.model.history.HisDiagnosisThreshold;
-import com.nctigba.observability.sql.model.history.data.DatabaseData;
 import com.nctigba.observability.sql.model.history.data.PrometheusData;
 import com.nctigba.observability.sql.model.history.dto.AnalysisDTO;
+import com.nctigba.observability.sql.model.history.dto.ConnCountDTO;
 import com.nctigba.observability.sql.model.history.point.AspAnalysisDTO;
 import com.nctigba.observability.sql.model.history.point.BusinessConnCountDTO;
 import com.nctigba.observability.sql.model.history.point.MetricDataDTO;
@@ -23,8 +21,8 @@ import com.nctigba.observability.sql.model.history.point.PrometheusDataDTO;
 import com.nctigba.observability.sql.service.history.DataStoreService;
 import com.nctigba.observability.sql.service.history.HisDiagnosisPointService;
 import com.nctigba.observability.sql.service.history.collection.CollectionItem;
+import com.nctigba.observability.sql.service.history.collection.metric.BusinessConnCountItem;
 import com.nctigba.observability.sql.service.history.collection.metric.DbAvgCpuItem;
-import com.nctigba.observability.sql.util.DbUtil;
 import com.nctigba.observability.sql.util.LocaleString;
 import com.nctigba.observability.sql.util.PointUtil;
 import com.nctigba.observability.sql.util.PrometheusUtil;
@@ -51,9 +49,9 @@ public class BusinessConnCount implements HisDiagnosisPointService<Object> {
     @Autowired
     private DbAvgCpuItem dbAvgCpuItem;
     @Autowired
-    private HisDiagnosisTaskMapper taskMapper;
+    private BusinessConnCountItem countItem;
     @Autowired
-    private DbUtil dbUtil;
+    private HisDiagnosisTaskMapper taskMapper;
     @Autowired
     private PointUtil pointUtil;
     @Autowired
@@ -68,6 +66,7 @@ public class BusinessConnCount implements HisDiagnosisPointService<Object> {
     public List<CollectionItem<?>> getSourceDataKeys() {
         List<CollectionItem<?>> list = new ArrayList<>();
         list.add(dbAvgCpuItem);
+        list.add(countItem);
         return list;
     }
 
@@ -75,16 +74,7 @@ public class BusinessConnCount implements HisDiagnosisPointService<Object> {
     public AnalysisDTO analysis(HisDiagnosisTask task, DataStoreService dataStoreService) {
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
         simpleDateFormat.setTimeZone(TimeZone.getTimeZone("GMT+00:00"));
-        HashMap<String, String> map = new HashMap<>();
-        List<HisDiagnosisThreshold> thresholds = task.getThresholds();
-        for (HisDiagnosisThreshold threshold : thresholds) {
-            if (threshold.getThreshold().equals(ThresholdCommon.ACTIVITY_NUM)) {
-                map.put(threshold.getThreshold(), threshold.getThresholdValue());
-            }
-        }
-        if (map.isEmpty()) {
-            throw new HisDiagnosisException("fetch threshold data failed!");
-        }
+        HashMap<String, String> map = pointUtil.thresholdMap(task.getThresholds());
         List<?> proList = (List<?>) dataStoreService.getData(dbAvgCpuItem).getCollectionData();
         AnalysisDTO analysisDTO = new AnalysisDTO();
         if (CollectionUtils.isEmpty(proList)) {
@@ -102,9 +92,9 @@ public class BusinessConnCount implements HisDiagnosisPointService<Object> {
         if (CollectionUtils.isEmpty(prometheusDataList)) {
             analysisDTO.setIsHint(HisDiagnosisResult.ResultState.NO_ADVICE);
         } else {
-            dtoList = pointUtil.getAspTimeSlot(prometheusDataList);
+            dtoList = pointUtil.aspTimeSlot(prometheusDataList);
         }
-        List<BusinessConnCountDTO> dataList = new ArrayList<>();
+        List<ConnCountDTO> connCount = new ArrayList<>();
         if (!CollectionUtils.isEmpty(dtoList)) {
             for (AspAnalysisDTO dto : dtoList) {
                 Date sTime;
@@ -114,63 +104,68 @@ public class BusinessConnCount implements HisDiagnosisPointService<Object> {
                 try {
                     sTime = new Date(simpleDateFormat.parse(dto.getStartTime()).getTime());
                     eTime = new Date(simpleDateFormat.parse(dto.getEndTime()).getTime());
-                    preStartTime = new Date((sTime.getTime() * PrometheusConstants.MS - 60));
-                    preEndTime = sTime;
+                    preEndTime = new Date(
+                            (sTime.getTime() - Integer.parseInt(PrometheusConstants.STEP) * PrometheusConstants.MS));
+                    long slot = (eTime.getTime() - sTime.getTime()) / PrometheusConstants.MS;
+                    if (slot == 0) {
+                        preStartTime = preEndTime;
+                    } else {
+                        preStartTime = new Date((sTime.getTime() - slot * PrometheusConstants.MS));
+                    }
                 } catch (ParseException e) {
                     throw new HisDiagnosisException("error:", e);
                 }
-                Object preObjectData = dbUtil.rangQuery(SqlCommon.BUSINESS_CONN_COUNT,
-                                                        preStartTime, preEndTime,
-                                                        task.getNodeId());
-                List<DatabaseData> preData = new ArrayList<>();
-                if (preObjectData != null) {
-                    List<?> preDataList = (List<?>) preObjectData;
-                    for (Object object : preDataList) {
-                        if (object instanceof DatabaseData) {
-                            preData.add((DatabaseData) object);
+                HisDiagnosisTask queryTask = new HisDiagnosisTask();
+                queryTask.setNodeId(task.getNodeId());
+                queryTask.setHisDataEndTime(preEndTime);
+                queryTask.setHisDataStartTime(preStartTime);
+                List<?> preObjectData = (List<?>) countItem.queryData(queryTask);
+                int avgPreCount = 0;
+                if (!CollectionUtils.isEmpty(preObjectData)) {
+                    List<PrometheusData> preData = new ArrayList<>();
+                    for (Object object : preObjectData) {
+                        if (object instanceof PrometheusData) {
+                            preData.add((PrometheusData) object);
                         }
                     }
-                }
-                List<?> preDataList = (List<?>) preData.get(0).getValue().get(0);
-                HashMap<String, String> hashMap = new HashMap<>();
-                for (Object o1 : preDataList) {
-                    if (o1 instanceof HashMap) {
-                        hashMap.put("count", String.valueOf(((HashMap<?, ?>) o1).get("count")));
-                        break;
-                    }
-                }
-                Object objectData = dbUtil.rangQuery(SqlCommon.BUSINESS_CONN_COUNT, sTime,
-                                                     eTime,
-                                                     task.getNodeId());
-                List<DatabaseData> data = new ArrayList<>();
-                if (objectData != null) {
-                    List<?> datas = (List<?>) objectData;
-                    for (Object object : datas) {
-                        if (object instanceof DatabaseData) {
-                            data.add((DatabaseData) object);
+                    List<?> preDataList = preData.get(0).getValues();
+                    int preCount = 0;
+                    for (Object o1 : preDataList) {
+                        if (o1 instanceof List) {
+                            preCount += Integer.parseInt(String.valueOf(((List<?>) o1).get(1)));
                         }
                     }
+                    avgPreCount = preCount / preDataList.size();
                 }
-                List<?> datasList = (List<?>) data.get(0).getValue().get(0);
-                HashMap<String, String> hashMap1 = new HashMap<>();
-                for (Object o2 : datasList) {
-                    if (o2 instanceof HashMap) {
-                        hashMap1.put("count", String.valueOf(((HashMap<?, ?>) o2).get("count")));
-                        break;
+                List<?> objectData = (List<?>) countItem.queryData(queryTask);
+                int avgCount = 0;
+                if (!CollectionUtils.isEmpty(objectData)) {
+                    List<PrometheusData> data = new ArrayList<>();
+                    for (Object object : objectData) {
+                        if (object instanceof PrometheusData) {
+                            data.add((PrometheusData) object);
+                        }
                     }
+                    List<?> datasList = data.get(0).getValues();
+                    int count = 0;
+                    for (Object o1 : datasList) {
+                        if (o1 instanceof List) {
+                            count += Integer.parseInt(String.valueOf(((List<?>) o1).get(1)));
+                        }
+                    }
+                    avgCount = count / datasList.size();
                 }
-                int preCount = Integer.parseInt(hashMap.get("count"));
-                int count = Integer.parseInt(hashMap1.get("count"));
-                if (count - preCount > Integer.parseInt(map.get(ThresholdCommon.ACTIVITY_NUM))) {
+                if (avgCount - avgPreCount > Integer.parseInt(
+                        map.get(ThresholdCommon.CONNECTION_NUM))) {
                     analysisDTO.setIsHint(HisDiagnosisResult.ResultState.SUGGESTIONS);
-                    BusinessConnCountDTO countDTO = new BusinessConnCountDTO();
+                    ConnCountDTO countDTO = new ConnCountDTO();
                     countDTO.setNowStartTime(simpleDateFormat.format(sTime));
                     countDTO.setNowEndTime(simpleDateFormat.format(eTime));
-                    countDTO.setNowSessionCount(String.valueOf(count));
+                    countDTO.setNowSessionCount(String.valueOf(avgCount));
                     countDTO.setBeforeStartTime(simpleDateFormat.format(preStartTime));
                     countDTO.setBeforeEndTime(simpleDateFormat.format(preEndTime));
-                    countDTO.setBeforeSessionCount(String.valueOf(preCount));
-                    dataList.add(countDTO);
+                    countDTO.setBeforeSessionCount(String.valueOf(avgPreCount));
+                    connCount.add(countDTO);
                 } else {
                     analysisDTO.setIsHint(HisDiagnosisResult.ResultState.NO_ADVICE);
                 }
@@ -178,7 +173,10 @@ public class BusinessConnCount implements HisDiagnosisPointService<Object> {
         } else {
             analysisDTO.setIsHint(HisDiagnosisResult.ResultState.NO_ADVICE);
         }
-        analysisDTO.setPointData(dataList);
+        BusinessConnCountDTO businessConnCountDTO = new BusinessConnCountDTO();
+        businessConnCountDTO.setConnCount(connCount);
+        businessConnCountDTO.setTimeSlot(dtoList);
+        analysisDTO.setPointData(businessConnCountDTO);
         analysisDTO.setPointType(HisDiagnosisResult.PointType.DIAGNOSIS);
         return analysisDTO;
     }
@@ -192,12 +190,7 @@ public class BusinessConnCount implements HisDiagnosisPointService<Object> {
         List<PrometheusDataDTO> dataList = new ArrayList<>();
         for (CollectionItem<?> item : getSourceDataKeys()) {
             List<?> list = (List<?>) item.queryData(task);
-            List<PrometheusData> prometheusDataList = new ArrayList<>();
-            list.forEach(data -> {
-                if (data instanceof PrometheusData) {
-                    prometheusDataList.add((PrometheusData) data);
-                }
-            });
+            List<PrometheusData> prometheusDataList = pointUtil.dataToObject(list);
             if (CollectionUtils.isEmpty(prometheusDataList)) {
                 continue;
             }
@@ -208,11 +201,21 @@ public class BusinessConnCount implements HisDiagnosisPointService<Object> {
             if (dto.getChartName() != null && dto.getChartName().equals(MetricCommon.DB_AVG_CPU_USAGE_RATE)) {
                 dto.setUnit("%");
                 dto.setChartName(LocaleString.format("history.DB_AVG_CPU_USAGE_RATE.metric"));
-                List<MetricDataDTO> datas = dto.getDatas();
-                for (MetricDataDTO dataDTO : datas) {
-                    if (dataDTO.getName() != null && dataDTO.getName().equals(MetricCommon.DB_AVG_CPU_USAGE_RATE)) {
-                        dataDTO.setName(LocaleString.format("history.DB_AVG_CPU_USAGE_RATE.metric"));
-                    }
+            } else if (dto.getChartName() != null && dto.getChartName().equals(MetricCommon.BUSINESS_CONN_COUNT)) {
+                dto.setUnit("pcs");
+                dto.setChartName(LocaleString.format("history.BUSINESS_CONN_COUNT.metric"));
+            } else {
+                dto.setUnit(null);
+                dto.setChartName(null);
+            }
+            List<MetricDataDTO> datas = dto.getDatas();
+            for (MetricDataDTO dataDTO : datas) {
+                if (dataDTO.getName() != null && dataDTO.getName().equals(MetricCommon.DB_AVG_CPU_USAGE_RATE)) {
+                    dataDTO.setName(LocaleString.format("history.DB_AVG_CPU_USAGE_RATE.metric"));
+                } else if (dataDTO.getName() != null && dataDTO.getName().equals(MetricCommon.BUSINESS_CONN_COUNT)) {
+                    dataDTO.setName(LocaleString.format("history.BUSINESS_CONN_COUNT.metric"));
+                } else {
+                    dataDTO.setName(null);
                 }
             }
         }

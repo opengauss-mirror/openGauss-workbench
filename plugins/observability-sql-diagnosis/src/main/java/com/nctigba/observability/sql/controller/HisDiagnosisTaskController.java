@@ -4,12 +4,12 @@
 
 package com.nctigba.observability.sql.controller;
 
-import com.nctigba.common.web.result.AppResult;
 import com.nctigba.observability.sql.model.history.dto.HisDiagnosisTaskDTO;
 import com.nctigba.observability.sql.service.history.TaskService;
 import com.nctigba.observability.sql.util.LocaleString;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.opengauss.admin.common.core.domain.AjaxResult;
 import org.springframework.beans.propertyeditors.CustomDateEditor;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -35,7 +35,8 @@ import java.util.Date;
 public class HisDiagnosisTaskController {
     @InitBinder
     public void initBinder(WebDataBinder webDataBinder) {
-        webDataBinder.registerCustomEditor(Date.class,
+        webDataBinder.registerCustomEditor(
+                Date.class,
                 new CustomDateEditor(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"), true));
     }
 
@@ -43,14 +44,15 @@ public class HisDiagnosisTaskController {
     private final LocaleString localeToString;
 
     @PostMapping("/tasks")
-    public AppResult start(@RequestBody HisDiagnosisTaskDTO hisDiagnosisTaskDTO) {
+    public AjaxResult start(@RequestBody HisDiagnosisTaskDTO hisDiagnosisTaskDTO) {
         int taskId = taskService.add(hisDiagnosisTaskDTO);
         taskService.start(taskId, hisDiagnosisTaskDTO);
-        return AppResult.ok("success").addData(taskId);
+        return AjaxResult.success(taskId);
     }
 
     @GetMapping("/options")
-    public AppResult option() {
-        return AppResult.ok("success").addData(localeToString.trapLanguage(taskService.getOption()));
+    public AjaxResult option() {
+        var options = localeToString.trapLanguage(taskService.getOption());
+        return AjaxResult.success(options);
     }
 }

@@ -4,11 +4,11 @@
 
 package com.nctigba.observability.sql.controller;
 
-import com.nctigba.common.web.result.AppResult;
 import com.nctigba.observability.sql.service.history.HisDiagnosisService;
 import com.nctigba.observability.sql.util.LocaleString;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.opengauss.admin.common.core.domain.AjaxResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -30,18 +30,20 @@ public class HisDiagnosisController {
     private final LocaleString localeToString;
 
     @GetMapping("/{taskId}/points/{nodeName}")
-    public AppResult getNodeDetail(@PathVariable int taskId, @PathVariable("nodeName") String nodeName) {
-        return AppResult.ok("success").addData(hisDiagnosisService.getNodeDetail(taskId, nodeName));
+    public AjaxResult getNodeDetail(@PathVariable int taskId, @PathVariable("nodeName") String nodeName) {
+        var nodeDetail = hisDiagnosisService.getNodeDetail(taskId, nodeName);
+        return AjaxResult.success(nodeDetail);
     }
 
     @GetMapping("/{taskId}/point/all")
-    public AppResult getAllPoint(@PathVariable int taskId) {
-        return AppResult.ok("success").addData(localeToString.trapLanguage(hisDiagnosisService.getAllPoint(taskId)));
+    public AjaxResult getAllPoint(@PathVariable int taskId) {
+        var allPoint = localeToString.trapLanguage(hisDiagnosisService.getAllPoint(taskId));
+        return AjaxResult.success(allPoint);
     }
 
     @GetMapping("/{taskId}/suggestPoints/{type}")
-    public AppResult getTopologyMap(@PathVariable int taskId, @RequestParam(defaultValue = "true") boolean isAll) {
-        return AppResult.ok("success").addData(
-                localeToString.trapLanguage(hisDiagnosisService.getTopologyMap(taskId, isAll)));
+    public AjaxResult getTopologyMap(@PathVariable int taskId, @RequestParam(defaultValue = "true") boolean isAll) {
+        var topologyMap = localeToString.trapLanguage(hisDiagnosisService.getTopologyMap(taskId, isAll));
+        return AjaxResult.success(topologyMap);
     }
 }

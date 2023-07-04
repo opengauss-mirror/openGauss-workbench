@@ -39,7 +39,8 @@ public class DbUtil {
             return "error:nodeId is not exist!";
         }
         SimpleDateFormat stringFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        String sql = item.replace("taskStartTime", stringFormat.format(startTime)).replace("hisDataEndTime",
+        String sql = item.replace("hisDataStartTime", stringFormat.format(startTime)).replace(
+                "hisDataEndTime",
                 stringFormat.format(endTime));
         List<DatabaseData> list = new ArrayList<>();
         try (var conn = clusterManager.getConnectionByNodeId(

@@ -18,6 +18,7 @@ import com.nctigba.observability.sql.service.history.HisDiagnosisPointService;
 import com.nctigba.observability.sql.service.history.collection.CollectionItem;
 import com.nctigba.observability.sql.service.history.collection.metric.DbAvgCpuItem;
 import com.nctigba.observability.sql.util.LocaleString;
+import com.nctigba.observability.sql.util.PointUtil;
 import com.nctigba.observability.sql.util.PrometheusUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -40,6 +41,8 @@ public class DbProcessAvgCpuUsage implements HisDiagnosisPointService<List<Prome
     private HisDiagnosisTaskMapper taskMapper;
     @Autowired
     private DbAvgCpuItem dbAvgCpuItem;
+    @Autowired
+    private PointUtil pointUtil;
 
     @Override
     public List<String> getOption() {
@@ -76,12 +79,7 @@ public class DbProcessAvgCpuUsage implements HisDiagnosisPointService<List<Prome
         List<PrometheusDataDTO> dataList = new ArrayList<>();
         for (CollectionItem<?> item : getSourceDataKeys()) {
             List<?> list = (List<?>) item.queryData(task);
-            List<PrometheusData> prometheusDataList = new ArrayList<>();
-            list.forEach(data -> {
-                if (data instanceof PrometheusData) {
-                    prometheusDataList.add((PrometheusData) data);
-                }
-            });
+            List<PrometheusData> prometheusDataList = pointUtil.dataToObject(list);
             if (CollectionUtils.isEmpty(prometheusDataList)) {
                 continue;
             }

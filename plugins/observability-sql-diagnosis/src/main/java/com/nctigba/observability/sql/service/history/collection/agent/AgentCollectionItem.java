@@ -20,12 +20,16 @@ public abstract class AgentCollectionItem implements CollectionItem<Object> {
     AgentUtil util;
 
     public Object collectData(HisDiagnosisTask task) {
-        return util.rangQuery(task.getNodeId(), getHttpParam());
+        return query(task);
     }
 
     public Object queryData(HisDiagnosisTask task) {
-        return util.rangQuery(task.getNodeId(), getHttpParam());
+        return query(task);
     }
 
     abstract String getHttpParam();
+
+    private Object query(HisDiagnosisTask task) {
+        return util.rangQuery(task.getNodeId(), getHttpParam());
+    }
 }

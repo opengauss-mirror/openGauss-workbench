@@ -4,12 +4,12 @@
 
 package com.nctigba.observability.sql.controller;
 
-import com.nctigba.common.web.result.AppResult;
 import com.nctigba.observability.sql.model.history.query.HisThresholdQuery;
 import com.nctigba.observability.sql.service.history.HisThresholdService;
 import com.nctigba.observability.sql.util.LocaleString;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.opengauss.admin.common.core.domain.AjaxResult;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -33,19 +33,20 @@ public class HisThresholdController {
     private final LocaleString localeToString;
 
     @GetMapping("")
-    public AppResult select() {
-        return AppResult.ok("success").addData(localeToString.trapLanguage(hisThresholdService.select()));
+    public AjaxResult select() {
+        var thresholds = localeToString.trapLanguage(hisThresholdService.select());
+        return AjaxResult.success(thresholds);
     }
 
     @PostMapping("")
-    public AppResult insertOrUpdate(@RequestBody HisThresholdQuery hisThresholdQuery) {
+    public AjaxResult insertOrUpdate(@RequestBody HisThresholdQuery hisThresholdQuery) {
         hisThresholdService.insertOrUpdate(hisThresholdQuery);
-        return AppResult.ok("success");
+        return AjaxResult.success("success");
     }
 
     @DeleteMapping("/{thresholdId}")
-    public AppResult delete(@PathVariable int thresholdId) {
+    public AjaxResult delete(@PathVariable int thresholdId) {
         hisThresholdService.delete(thresholdId);
-        return AppResult.ok("success");
+        return AjaxResult.success("success");
     }
 }

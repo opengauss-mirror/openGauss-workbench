@@ -4,10 +4,11 @@
 
 package com.nctigba.observability.sql.util;
 
+import cn.hutool.http.HttpUtil;
+import cn.hutool.json.JSONArray;
+import cn.hutool.json.JSONObject;
+import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 import com.nctigba.common.web.exception.HisDiagnosisException;
 import com.nctigba.observability.sql.mapper.NctigbaEnvMapper;
@@ -17,9 +18,7 @@ import com.nctigba.observability.sql.model.history.dto.AgentDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.system.plugin.facade.HostFacade;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -54,25 +53,11 @@ public class AgentUtil {
     }
 
     public Object rangQuery(String id, String param) {
-        List<Object> dataList;
-        try {
-            final RestTemplate restTemplate = new RestTemplate();
-            ResponseEntity<String> response = restTemplate.getForEntity(getAgentUrl(id) + param, String.class);
-            String responseData = response.getBody();
-            ObjectMapper objectMapper = new ObjectMapper();
-            dataList = objectMapper.readValue(responseData, new TypeReference<>() {
-            });
-        } catch (JsonProcessingException e) {
-            log.info(e.getMessage());
-            return "error:" + e.getMessage();
-        } catch (HisDiagnosisException e) {
-            log.info(e.getMessage());
-            return "error:" + e.getMessage();
-        }
-        List<HashMap<String, String>> sysMaps = (List<HashMap<String, String>>) dataList.get(0);
-        List<AgentDTO> sysList = setData(sysMaps);
-        List<HashMap<String, String>> dbMaps = (List<HashMap<String, String>>) dataList.get(1);
-        List<AgentDTO> dbList = setData(dbMaps);
+        String baseUrl = getAgentUrl(id) + param;
+        var result = HttpUtil.get(baseUrl, new HashMap<>());
+        var data = JSONUtil.parseArray(result);
+        List<AgentDTO> sysList = setData((JSONArray) data.get(0));
+        List<AgentDTO> dbList = setData((JSONArray) data.get(1));
         AgentData agentData = new AgentData();
         agentData.setParamName(param);
         agentData.setSysValue(sysList);
@@ -80,7 +65,17 @@ public class AgentUtil {
         return agentData;
     }
 
-    private List<AgentDTO> setData(List<HashMap<String, String>> maps) {
+    private List<AgentDTO> setData(JSONArray jsonArray) {
+        List<HashMap<String, String>> maps = new ArrayList<>();
+        for (Object object : jsonArray) {
+            HashMap<String, String> hashMap = new HashMap<>();
+            JSONObject jsonObject = (JSONObject) object;
+            for (String key : jsonObject.keySet()) {
+                Object value = jsonObject.get(key);
+                hashMap.put(key, value.toString());
+            }
+            maps.add(hashMap);
+        }
         List<AgentDTO> list = new ArrayList<>();
         for (HashMap<String, String> map : maps) {
             AgentDTO dto = new AgentDTO();

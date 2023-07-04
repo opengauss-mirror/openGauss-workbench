@@ -13,6 +13,8 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.nctigba.common.mybatis.JacksonJsonWithClassTypeHandler;
+import com.nctigba.observability.sql.model.history.dto.AnalysisDTO;
+import com.nctigba.observability.sql.util.LocaleString;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
@@ -87,5 +89,40 @@ public class HisDiagnosisResult {
             this.pointData = (JSON) jsonObject;
         }
         return this;
+    }
+
+    public HisDiagnosisResult(HisDiagnosisTask task, String pointName, PointState pointState, ResultState isHint) {
+        this.clusterId = task.getClusterId();
+        this.nodeId = task.getNodeId();
+        this.taskId = task.getId();
+        this.pointName = pointName;
+        this.pointTitle = LocaleString.format("history." + pointName + ".title");
+        this.pointSuggestion = LocaleString.format("history." + pointName + ".suggest");
+        this.isHint = isHint;
+        this.pointDetail = LocaleString.format("history." + pointName + ".detail");
+        this.pointState = pointState;
+    }
+
+    public HisDiagnosisResult(HisDiagnosisTask task, AnalysisDTO analysisDTO, String pointName, PointState pointState) {
+        this.clusterId = task.getClusterId();
+        this.nodeId = task.getNodeId();
+        this.taskId = task.getId();
+        this.pointName = pointName;
+        if (analysisDTO.getIsHint() != null && analysisDTO.getIsHint().equals(
+                ResultState.SUGGESTIONS)) {
+            this.pointSuggestion = LocaleString.format("history." + pointName + ".suggest.high");
+            this.pointTitle = LocaleString.format("history." + pointName + ".title.high");
+        } else {
+            this.pointSuggestion = LocaleString.format("history." + pointName + ".suggest.normal");
+            this.pointTitle = LocaleString.format("history." + pointName + ".title.normal");
+        }
+        this.isHint = analysisDTO.getIsHint();
+        this.pointType = analysisDTO.getPointType();
+        this.pointDetail = LocaleString.format("history." + pointName + ".detail");
+        this.pointState = pointState;
+        Object jsonObject = JSONObject.toJSON(analysisDTO.getPointData());
+        if (jsonObject instanceof JSON) {
+            this.pointData = (JSON) jsonObject;
+        }
     }
 }
