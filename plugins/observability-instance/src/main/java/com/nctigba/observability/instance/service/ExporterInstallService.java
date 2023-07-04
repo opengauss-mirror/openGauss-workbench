@@ -91,6 +91,22 @@ public class ExporterInstallService extends AbstractInstaller {
             }).findFirst().orElse(null);
             try (var session = SshSession.connect(hostEntity.getPublicIp(), hostEntity.getPort(), user.getUsername(),
                     encryptionUtils.decrypt(user.getPassword()));) {
+                // check port
+                try {
+                    if (StrUtil.isNotBlank(session.execute("ss -tuln | grep " + httpPort))) {
+                        throw new CustomException("port in use:" + httpPort);
+                    }
+                } catch (CustomException e) {
+                    throw new CustomException("port in use:" + httpPort);
+                }
+                try {
+                    if (StrUtil.isNotBlank(session.execute("ss -tuln | grep " + exporterPort))) {
+                        throw new CustomException("port in use:" + httpPort);
+                    }
+                } catch (CustomException e) {
+                    throw new CustomException("port in use:" + httpPort);
+                }
+
                 expEnv = envMapper.selectOne(Wrappers.<NctigbaEnv>lambdaQuery().eq(NctigbaEnv::getHostid, hostId)
                         .eq(NctigbaEnv::getType, envType.EXPORTER).eq(NctigbaEnv::getNodeid, nodeId));
                 session.execute("mkdir -p " + path);
