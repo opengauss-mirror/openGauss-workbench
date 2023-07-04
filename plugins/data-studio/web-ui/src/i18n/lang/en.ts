@@ -35,6 +35,7 @@ export default {
     status: 'status',
     export: 'export',
     delete: 'delete',
+    create: 'create',
   },
   utils: {
     colorError: 'Wrong {name} color value',

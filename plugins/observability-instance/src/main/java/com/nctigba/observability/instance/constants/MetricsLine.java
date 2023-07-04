@@ -103,11 +103,10 @@ public enum MetricsLine {
     SESSION_IDLE_CONNECTION(Type.DB, "pg_state_activity_group_count{state='idle',instanceId='ogbrench'}"),
     SESSION_ACTIVE_CONNECTION(Type.DB, "pg_state_activity_group_count{state='active',instanceId='ogbrench'}"),
     SESSION_WAITING_CONNECTION(Type.DB,
-            "pg_state_activity_group_count{state='waiting',instanceId='ogbrench'} "
-                    + "or pg_state_activity_group_count{state='idle',instanceId='ogbrench'} * 0"),
+            "pg_state_activity_group_count{state='waiting',instanceId='ogbrench'}"),
 
     // wait event !pg_wait_events_total_wait_time
-    WAIT_EVENT_COUNT(Type.DB, "gauss_wait_events_value{instance='ogbrench'}", "{type}"),
+    WAIT_EVENT_COUNT(Type.DB, "gauss_wait_events_value{instanceId='ogbrench'}", "{type}"),
     ;
 
     private enum Type {

@@ -1,14 +1,38 @@
 <template>
     <div class="task-dialog">
-        <el-dialog width="800px" :title="$t('datasource.addTaTitle')" v-model="visible" :close-on-click-modal="false" draggable @close="taskClose">
+        <el-dialog
+            width="800px"
+            :title="$t('datasource.addTaTitle')"
+            v-model="visible"
+            :close-on-click-modal="false"
+            draggable
+            @close="taskClose"
+        >
             <div class="dialog-content">
                 <el-form :model="formData" :rules="connectionFormRules" ref="connectionFormRef">
                     <el-form-item :label="$t('datasource.taskName')" prop="name">
-                        <el-input class="form-input" v-model="formData.name" :placeholder="$t('datasource.selectTaskName')" type="text" />
+                        <el-input
+                            class="form-input"
+                            v-model="formData.name"
+                            :placeholder="$t('datasource.selectTaskName')"
+                            type="text"
+                        />
                     </el-form-item>
                     <el-form-item label="SQL" prop="sql">
-                        <el-input v-if="props.sqlText" class="form-textarea" v-model="formData.sql" disabled="true" type="textarea" />
-                        <el-input v-if="!props.sqlText" class="form-textarea" v-model="formData.sql" :placeholder="$t('datasource.selectSql')" type="textarea" />
+                        <el-input
+                            v-if="props.sqlText"
+                            class="form-textarea"
+                            v-model="formData.sql"
+                            :disabled="true"
+                            type="textarea"
+                        />
+                        <el-input
+                            v-if="!props.sqlText"
+                            class="form-textarea"
+                            v-model="formData.sql"
+                            :placeholder="$t('datasource.selectSql')"
+                            type="textarea"
+                        />
                     </el-form-item>
                     <el-form-item :label="$t('datasource.option')">
                         <div class="option-wrap">
@@ -36,7 +60,9 @@
             </div>
 
             <template #footer>
-                <el-button style="padding: 5px 20px" type="primary" :loading="addTasking" @click="handleconfirmModel">{{ $t('datasource.createTask') }}</el-button>
+                <el-button style="padding: 5px 20px" type="primary" :loading="addTasking" @click="handleconfirmModel">{{
+                    $t('datasource.createTask')
+                }}</el-button>
                 <el-button style="padding: 5px 20px" @click="handleCancelModel">{{ $t('app.cancel') }}</el-button>
             </template>
         </el-dialog>
@@ -45,7 +71,7 @@
 
 <script lang="ts" setup>
 import { cloneDeep } from 'lodash-es'
-import diagnosisRequest from '../../../request/diagnosis'
+import diagnosisRequest from '@/request/diagnosis'
 import { useRequest } from 'vue-request'
 import { FormRules, FormInstance, ElMessage } from 'element-plus'
 import { useI18n } from 'vue-i18n'
@@ -58,7 +84,6 @@ type Rez =
     | undefined
 
 const visible = ref(false)
-const dbList = ref<Array<any>>([])
 const props = withDefaults(
     defineProps<{
         show: boolean
@@ -85,7 +110,7 @@ const initFormData = {
 }
 const formData = reactive(cloneDeep(initFormData))
 const queryData = computed(() => {
-    const { name, sql, onCpu, offCpu, analyze, paramAnalysis,cluster, dbName } = formData
+    const { name, sql, onCpu, offCpu, analyze, paramAnalysis, cluster, dbName } = formData
     let instanceId, clusterId: any
     if (props.type === 2) {
         instanceId = props.clusterId
@@ -119,9 +144,6 @@ const taskClose = () => {
 const handleCancelModel = () => {
     visible.value = false
     emit('changeModal', visible.value)
-}
-const getClusterValue = (val: string[]) => {
-    dbData(val[1])
 }
 const connectionFormRef = ref<FormInstance>()
 async function handleconfirmModel() {
@@ -164,29 +186,26 @@ watch(
     { immediate: true }
 )
 
-const { data: rez, run: addTasks,loading: addTasking  } = useRequest(
+const {
+    data: rez,
+    run: addTasks,
+    loading: addTasking,
+} = useRequest(
     () => {
         const msg = t('datasource.diagnosisAddTaskSuccess')
-        return diagnosisRequest
-            .post('/sqlDiagnosis/api/v1/diagnosisTasks', queryData.value, {
-                headers: {
-                    'content-type': 'multipart/form-data',
-                },
+        return diagnosisRequest.post('/sqlDiagnosis/api/v1/diagnosisTasks', queryData.value).then(function (res) {
+            ElMessage({
+                showClose: true,
+                message: msg,
+                type: 'success',
             })
-            .then(function (res) {
-                ElMessage({
-                    showClose: true,
-                    message: msg,
-                    type: 'success',
-                })
-                return res
-            })
+            return res
+        })
     },
     { manual: true }
 )
 watch(rez, (rez: Rez) => {
     if (rez && Object.keys(rez).length) {
-        dbList.value = []
         Object.assign(formData, cloneDeep(initFormData))
         emit('conveyFlag', 200)
     }

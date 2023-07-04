@@ -47,8 +47,8 @@
       <DDL v-show="currentTabName == 'DDL'" :data="dataMap.DDL.data" />
     </div>
     <div class="page-button">
-      <el-button type="primary" @click="handleSave">创建</el-button>
-      <el-button @click="handleReset">重置</el-button>
+      <el-button type="primary" @click="handleSave">{{ $t('button.create') }}</el-button>
+      <el-button @click="handleReset">{{ $t('button.reset') }}</el-button>
     </div>
   </div>
 </template>

@@ -71,6 +71,10 @@ export async function testConnection(dbNode: Partial<OpenGaussNode>): Promise<bo
 }
 
 export async function getIndexMetrics(tabId: string): Promise<void | {
+    max_conn: number
+    active: number
+    waiting: number
+    max_runtime: number
     CPU: number[]
     IO: number[]
     MEMORY: number[]
@@ -83,11 +87,12 @@ export async function getIndexMetrics(tabId: string): Promise<void | {
 }> {
     const monitorStore = useMonitorStore(tabId)
     const { instanceId, culRangeTimeAndStep } = monitorStore
+    let timeRange = culRangeTimeAndStep()
     return ogRequest.get('/instanceMonitoring/api/v1/mainMetrics', {
         id: instanceId,
-        start: culRangeTimeAndStep[0],
-        end: culRangeTimeAndStep[1],
-        step: culRangeTimeAndStep[2],
+        start: timeRange[0],
+        end: timeRange[1],
+        step: timeRange[2],
         type: 'LINE',
     })
 }
@@ -106,11 +111,12 @@ export async function getCPUMetrics(tabId: string): Promise<void | {
 }> {
     const monitorStore = useMonitorStore(tabId)
     const { instanceId, culRangeTimeAndStep } = monitorStore
+    let timeRange = culRangeTimeAndStep()
     return ogRequest.get('/instanceMonitoring/api/v1/cpu', {
         id: instanceId,
-        start: culRangeTimeAndStep[0],
-        end: culRangeTimeAndStep[1],
-        step: culRangeTimeAndStep[2],
+        start: timeRange[0],
+        end: timeRange[1],
+        step: timeRange[2],
         type: 'LINE',
     })
 }
@@ -134,11 +140,12 @@ export async function getMemoryMetrics(tabId: string): Promise<void | {
 }> {
     const monitorStore = useMonitorStore(tabId)
     const { instanceId, culRangeTimeAndStep } = monitorStore
+    let timeRange = culRangeTimeAndStep()
     return ogRequest.get('/instanceMonitoring/api/v1/memory', {
         id: instanceId,
-        start: culRangeTimeAndStep[0],
-        end: culRangeTimeAndStep[1],
-        step: culRangeTimeAndStep[2],
+        start: timeRange[0],
+        end: timeRange[1],
+        step: timeRange[2],
         type: 'LINE',
     })
 }
@@ -159,11 +166,12 @@ export async function getNetworkMetrics(tabId: string): Promise<void | {
 }> {
     const monitorStore = useMonitorStore(tabId)
     const { instanceId, culRangeTimeAndStep } = monitorStore
+    let timeRange = culRangeTimeAndStep()
     return ogRequest.get('/instanceMonitoring/api/v1/network', {
         id: instanceId,
-        start: culRangeTimeAndStep[0],
-        end: culRangeTimeAndStep[1],
-        step: culRangeTimeAndStep[2],
+        start: timeRange[0],
+        end: timeRange[1],
+        step: timeRange[2],
         type: 'LINE',
     })
 }
@@ -183,11 +191,12 @@ export async function getIOMetrics(tabId: string): Promise<void | {
 }> {
     const monitorStore = useMonitorStore(tabId)
     const { instanceId, culRangeTimeAndStep } = monitorStore
+    let timeRange = culRangeTimeAndStep()
     return ogRequest.get('/instanceMonitoring/api/v1/io', {
         id: instanceId,
-        start: culRangeTimeAndStep[0],
-        end: culRangeTimeAndStep[1],
-        step: culRangeTimeAndStep[2],
+        start: timeRange[0],
+        end: timeRange[1],
+        step: timeRange[2],
         type: 'LINE',
     })
 }
@@ -200,7 +209,41 @@ export type TopSQLNow = {
     userName: string
     userPassword: string
 }
-export async function getTOPSQLNow(tabId: string): Promise<void | TopSQLNow[]> {
+export type BlockTable = {
+    depth: string
+    application_name: string
+    tree_id: string
+    backend_start: string
+    hasChildren?: boolean
+    children?: undefined | BlockTable[]
+    client_addr: string
+    datname: string
+    pathid: string
+    id: string
+    usename: string
+    state: string
+    parentid: string
+}
+export type TransTable = {
+    application_name: string
+    client_addr: string
+    datname: string
+    pid: string
+    query: string
+    query_duration: string
+    query_start: string
+    sessionid: string
+    state: string
+    usename: string
+    xact_duration: string
+    xact_start: string
+}
+export type MainNowTable = {
+    blockTree: BlockTable[]
+    longTxc: TransTable[]
+    topSQLNow: TopSQLNow[]
+}
+export async function getTOPSQLNow(tabId: string): Promise<void | MainNowTable> {
     const monitorStore = useMonitorStore(tabId)
     const { instanceId } = monitorStore
     return ogRequest.get('/instanceMonitoring/api/v1/topSQLNow', {
@@ -267,11 +310,12 @@ export async function getInstanceMetrics(tabId: string): Promise<void | {
 }> {
     const monitorStore = useMonitorStore(tabId)
     const { instanceId, culRangeTimeAndStep } = monitorStore
+    let timeRange = culRangeTimeAndStep()
     return ogRequest.get('/instanceMonitoring/api/v1/instance', {
         id: instanceId,
-        start: culRangeTimeAndStep[0],
-        end: culRangeTimeAndStep[1],
-        step: culRangeTimeAndStep[2],
+        start: timeRange[0],
+        end: timeRange[1],
+        step: timeRange[2],
         type: 'LINE',
     })
 }
@@ -291,43 +335,14 @@ export async function getSessionMetrics(tabId: string): Promise<void | {
 }> {
     const monitorStore = useMonitorStore(tabId)
     const { instanceId, culRangeTimeAndStep } = monitorStore
+    let timeRange = culRangeTimeAndStep()
     return ogRequest.get('/instanceMonitoring/api/v1/session/sessionStatistic', {
         id: instanceId,
-        start: culRangeTimeAndStep[0],
-        end: culRangeTimeAndStep[1],
-        step: culRangeTimeAndStep[2],
+        start: timeRange[0],
+        end: timeRange[1],
+        step: timeRange[2],
         type: 'LINE',
     })
-}
-
-export type BlockTable = {
-    depth: string
-    application_name: string
-    tree_id: string
-    backend_start: string
-    hasChildren?: boolean
-    children?: undefined | BlockTable[]
-    client_addr: string
-    datname: string
-    pathid: string
-    id: string
-    usename: string
-    state: string
-    parentid: string
-}
-export type TransTable = {
-    application_name: string
-    client_addr: string
-    datname: string
-    pid: string
-    query: string
-    query_duration: string
-    query_start: string
-    sessionid: string
-    state: string
-    usename: string
-    xact_duration: string
-    xact_start: string
 }
 
 export type SessionTables = {

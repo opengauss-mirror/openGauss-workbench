@@ -105,8 +105,9 @@ export default {
         },
     },
     instanceIndex: {
+        instanceMetrics: 'Instance Metrics',
         memory: 'Memory',
-        networkInOut: 'Network(In/Out)',
+        networkInOut: 'Network',
         activeSessionQty: 'Number of Active Sessions',
         activeSessionQtyTips: 'You can select an interval in the graph to drill down for analysis',
         threadPoolUsed: 'Thread Pool Usage',

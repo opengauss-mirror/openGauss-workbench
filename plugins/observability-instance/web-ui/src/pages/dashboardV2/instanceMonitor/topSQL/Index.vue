@@ -1,41 +1,40 @@
 <template>
+    <IndexBar :tabId="props.tabId"></IndexBar>
+    <div style="margin-bottom: 0px"></div>
     <div class="top-sql">
-        <el-tabs v-model="typeTab">
+        <el-tabs v-model="typeTab" class="tab2">
             <el-tab-pane label="DB_TIME" name="db_time" />
             <el-tab-pane label="CPU_TIME" name="cpu_time" />
             <el-tab-pane label="EXEC_TIME" name="execution_time" />
         </el-tabs>
         <div class="top-sql-table" v-if="!errorInfo" v-loading="loading">
             <el-table :data="data.tableData" border>
-                <el-table-column label="SQLID">
+                <el-table-column label="SQLID" width="150">
                     <template #default="scope">
-                        <el-link
-                            type="primary"
-                            @click="gotoTopsqlDetail(scope.row.debug_query_id)"
-                        >
+                        <el-link type="primary" @click="gotoTopsqlDetail(scope.row.debug_query_id)">
                             {{ scope.row.debug_query_id }}
                         </el-link>
                     </template>
                 </el-table-column>
-                <el-table-column :label="$t('sql.dbName')" prop="db_name"></el-table-column>
-                <el-table-column :label="$t('sql.schemaName')" prop="schema_name"></el-table-column>
-                <el-table-column :label="$t('sql.userName')" prop="user_name"></el-table-column>
+                <el-table-column :label="$t('sql.dbName')" prop="db_name" width="90"></el-table-column>
+                <el-table-column :label="$t('sql.schemaName')" prop="schema_name" width="140"></el-table-column>
+                <el-table-column :label="$t('sql.userName')" prop="user_name" width="90"></el-table-column>
                 <el-table-column :label="$t('sql.applicationName')" prop="application_name"></el-table-column>
                 <el-table-column
                     :label="$t('sql.startTime')"
                     :formatter="(r: any) => moment(r.start_time).format('YYYY-MM-DD HH:mm:ss')"
+                    width="140"
+                ></el-table-column>
                 />
                 <el-table-column
                     :label="$t('sql.finishTime')"
                     :formatter="(r: any) => moment(r.finish_time).format('YYYY-MM-DD HH:mm:ss')"
+                    width="140"
+                ></el-table-column>
                 />
                 <el-table-column :label="$t('sql.dbTime')" prop="db_time" width="110"></el-table-column>
                 <el-table-column :label="$t('sql.cpuTime')" prop="cpu_time" width="115"></el-table-column>
-                <el-table-column
-                    :label="$t('sql.excutionTime')"
-                    prop="execution_time"
-                    :width="i18n.global.locale.value === 'en' ? 150 : 105"
-                ></el-table-column>
+                <el-table-column :label="$t('sql.excutionTime')" prop="execution_time" width="120"></el-table-column>
             </el-table>
         </div>
         <my-message v-if="errorInfo" type="error" :tip="errorInfo" defaultTip="" />
@@ -50,7 +49,6 @@ import { useMonitorStore } from '@/store/monitor'
 import { storeToRefs } from 'pinia'
 import ogRequest from '@/request'
 import router from '@/router'
-import { i18n } from '@/i18n'
 import { useI18n } from 'vue-i18n'
 import { tabKeys } from '@/pages/dashboardV2/common'
 import { dateFormat } from '@/utils/date'
@@ -61,9 +59,9 @@ const typeTab = ref('db_time')
 const errorInfo = ref<string | Error>()
 
 const props = withDefaults(defineProps<{ tabId: string }>(), {})
-const { culRangeTimeAndStep, updateCounter, sourceType, autoRefreshTime, tabNow, instanceId } = storeToRefs(
-    useMonitorStore(props.tabId)
-)
+const monitorStore = useMonitorStore(props.tabId)
+const { updateCounter, sourceType, autoRefreshTime, tabNow, instanceId } = storeToRefs(monitorStore)
+const { culRangeTimeAndStep } = monitorStore
 
 const data = reactive<{
     tableData: Array<Record<string, string>>
@@ -74,8 +72,8 @@ const data = reactive<{
 const getParam = () => {
     return {
         dbid: instanceId,
-        startTime: dateFormat(new Date(culRangeTimeAndStep.value[0] * 1000)),
-        finishTime: dateFormat(new Date(culRangeTimeAndStep.value[1] * 1000)),
+        startTime: dateFormat(new Date(culRangeTimeAndStep()[0] * 1000)),
+        finishTime: dateFormat(new Date(culRangeTimeAndStep()[1] * 1000)),
     }
 }
 

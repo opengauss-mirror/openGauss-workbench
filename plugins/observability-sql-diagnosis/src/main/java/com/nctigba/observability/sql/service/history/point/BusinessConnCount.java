@@ -4,7 +4,6 @@
 
 package com.nctigba.observability.sql.service.history.point;
 
-import com.alibaba.fastjson.JSONArray;
 import com.nctigba.common.web.exception.HisDiagnosisException;
 import com.nctigba.observability.sql.constants.history.MetricCommon;
 import com.nctigba.observability.sql.constants.history.PrometheusConstants;
@@ -27,6 +26,7 @@ import com.nctigba.observability.sql.service.history.collection.CollectionItem;
 import com.nctigba.observability.sql.service.history.collection.metric.DbAvgCpuItem;
 import com.nctigba.observability.sql.util.DbUtil;
 import com.nctigba.observability.sql.util.LocaleString;
+import com.nctigba.observability.sql.util.PointUtil;
 import com.nctigba.observability.sql.util.PrometheusUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -54,6 +54,8 @@ public class BusinessConnCount implements HisDiagnosisPointService<Object> {
     private HisDiagnosisTaskMapper taskMapper;
     @Autowired
     private DbUtil dbUtil;
+    @Autowired
+    private PointUtil pointUtil;
     @Autowired
     private PrometheusUtil util;
 
@@ -84,6 +86,12 @@ public class BusinessConnCount implements HisDiagnosisPointService<Object> {
             throw new HisDiagnosisException("fetch threshold data failed!");
         }
         List<?> proList = (List<?>) dataStoreService.getData(dbAvgCpuItem).getCollectionData();
+        AnalysisDTO analysisDTO = new AnalysisDTO();
+        if (CollectionUtils.isEmpty(proList)) {
+            analysisDTO.setIsHint(HisDiagnosisResult.ResultState.NO_ADVICE);
+            analysisDTO.setPointType(HisDiagnosisResult.PointType.DIAGNOSIS);
+            return analysisDTO;
+        }
         List<PrometheusData> prometheusDataList = new ArrayList<>();
         for (Object object : proList) {
             if (object instanceof PrometheusData) {
@@ -91,126 +99,10 @@ public class BusinessConnCount implements HisDiagnosisPointService<Object> {
             }
         }
         List<AspAnalysisDTO> dtoList = new ArrayList<>();
-        AnalysisDTO analysisDTO = new AnalysisDTO();
         if (CollectionUtils.isEmpty(prometheusDataList)) {
             analysisDTO.setIsHint(HisDiagnosisResult.ResultState.NO_ADVICE);
         } else {
-            List<Integer> timeList = new ArrayList<>();
-            for (PrometheusData data : prometheusDataList) {
-                JSONArray values = data.getValues();
-                for (Object value : values) {
-                    JSONArray timeJson = new JSONArray();
-                    if (value instanceof JSONArray) {
-                        timeJson = (JSONArray) value;
-                    }
-                    Object time = timeJson.get(0);
-                    timeList.add(Integer.parseInt(time.toString()));
-                }
-            }
-            int minute = PrometheusConstants.MINUTE;
-            long ms = PrometheusConstants.MS;
-            int mCount = minute / Integer.parseInt(PrometheusConstants.STEP) - 1;
-            if (timeList.size() == 1) {
-                AspAnalysisDTO dto = new AspAnalysisDTO();
-                dto.setStartTime(simpleDateFormat.format(new Date(timeList.get(0) * PrometheusConstants.MS)));
-                dto.setEndTime(simpleDateFormat.format(new Date(timeList.get(0) * PrometheusConstants.MS)));
-                dtoList.add(dto);
-            } else if (timeList.size() == 2) {
-                if (timeList.get(0) + Integer.parseInt(PrometheusConstants.STEP) == timeList.get(1)) {
-                    AspAnalysisDTO dto = new AspAnalysisDTO();
-                    dto.setStartTime(simpleDateFormat.format(new Date(timeList.get(0) * PrometheusConstants.MS)));
-                    dto.setEndTime(simpleDateFormat.format(new Date(timeList.get(1) * PrometheusConstants.MS)));
-                    dtoList.add(dto);
-                } else {
-                    AspAnalysisDTO dto1 = new AspAnalysisDTO();
-                    dto1.setStartTime(simpleDateFormat.format(new Date(timeList.get(0) * PrometheusConstants.MS)));
-                    dto1.setEndTime(simpleDateFormat.format(new Date(timeList.get(0) * PrometheusConstants.MS)));
-                    dtoList.add(dto1);
-                    AspAnalysisDTO dto2 = new AspAnalysisDTO();
-                    dto2.setStartTime(simpleDateFormat.format(new Date(timeList.get(1) * PrometheusConstants.MS)));
-                    dto2.setEndTime(simpleDateFormat.format(new Date(timeList.get(1) * PrometheusConstants.MS)));
-                    dtoList.add(dto2);
-                }
-            } else if (timeList.size() == 3) {
-                if (timeList.get(0) + Integer.parseInt(PrometheusConstants.STEP) * 2 == timeList.get(2)) {
-                    AspAnalysisDTO dto = new AspAnalysisDTO();
-                    dto.setStartTime(simpleDateFormat.format(new Date(timeList.get(0) * PrometheusConstants.MS)));
-                    dto.setEndTime(simpleDateFormat.format(new Date(timeList.get(2) * PrometheusConstants.MS)));
-                    dtoList.add(dto);
-                } else {
-                    if (timeList.get(0) + Integer.parseInt(PrometheusConstants.STEP) == timeList.get(1)) {
-                        AspAnalysisDTO dto1 = new AspAnalysisDTO();
-                        dto1.setStartTime(simpleDateFormat.format(new Date(timeList.get(0) * PrometheusConstants.MS)));
-                        dto1.setEndTime(simpleDateFormat.format(new Date(timeList.get(1) * PrometheusConstants.MS)));
-                        dtoList.add(dto1);
-                        AspAnalysisDTO dto2 = new AspAnalysisDTO();
-                        dto2.setStartTime(simpleDateFormat.format(new Date(timeList.get(2) * PrometheusConstants.MS)));
-                        dto2.setEndTime(simpleDateFormat.format(new Date(timeList.get(2) * PrometheusConstants.MS)));
-                        dtoList.add(dto2);
-                    } else if (timeList.get(1) + Integer.parseInt(PrometheusConstants.STEP) == timeList.get(2)) {
-                        AspAnalysisDTO dto1 = new AspAnalysisDTO();
-                        dto1.setStartTime(simpleDateFormat.format(new Date(timeList.get(0) * PrometheusConstants.MS)));
-                        dto1.setEndTime(simpleDateFormat.format(new Date(timeList.get(0) * PrometheusConstants.MS)));
-                        dtoList.add(dto1);
-                        AspAnalysisDTO dto2 = new AspAnalysisDTO();
-                        dto2.setStartTime(simpleDateFormat.format(new Date(timeList.get(1) * PrometheusConstants.MS)));
-                        dto2.setEndTime(simpleDateFormat.format(new Date(timeList.get(2) * PrometheusConstants.MS)));
-                        dtoList.add(dto2);
-                    } else {
-                        AspAnalysisDTO dto1 = new AspAnalysisDTO();
-                        dto1.setStartTime(simpleDateFormat.format(new Date(timeList.get(0) * PrometheusConstants.MS)));
-                        dto1.setEndTime(simpleDateFormat.format(new Date(timeList.get(0) * PrometheusConstants.MS)));
-                        dtoList.add(dto1);
-                        AspAnalysisDTO dto2 = new AspAnalysisDTO();
-                        dto2.setStartTime(simpleDateFormat.format(new Date(timeList.get(1) * PrometheusConstants.MS)));
-                        dto2.setEndTime(simpleDateFormat.format(new Date(timeList.get(1) * PrometheusConstants.MS)));
-                        dtoList.add(dto2);
-                        AspAnalysisDTO dto3 = new AspAnalysisDTO();
-                        dto3.setStartTime(simpleDateFormat.format(new Date(timeList.get(2) * PrometheusConstants.MS)));
-                        dto3.setEndTime(simpleDateFormat.format(new Date(timeList.get(2) * PrometheusConstants.MS)));
-                        dtoList.add(dto3);
-                    }
-                }
-            } else {
-                int cursor = 0;
-                for (int i = 0; i < timeList.size() - 3; i = cursor) {
-                    int step = Integer.parseInt(PrometheusConstants.STEP);
-                    int count = minute / step - 1;
-                    int startTime = timeList.get(i);
-                    int realityTime = timeList.get(i + count);
-                    int expectTime = startTime + step * (count);
-                    int temp = 0;
-                    if (realityTime == expectTime) {
-                        for (int n = i + count; n < timeList.size() - i - count; n++) {
-                            int realityValue = timeList.get(n);
-                            int expectValue = startTime + step * (n - i);
-                            if (realityValue > expectValue) {
-                                cursor = n;
-                                temp++;
-                                break;
-                            }
-                        }
-                    }
-                    if (temp > 0) {
-                        continue;
-                    } else {
-                        cursor = i + mCount;
-                    }
-                    AspAnalysisDTO dto = new AspAnalysisDTO();
-                    if (realityTime > expectTime) {
-                        while (count > 0) {
-                            if (timeList.get(i + count) == startTime + step * (count)) {
-                                int entTime = timeList.get(i + count);
-                                dto.setStartTime(simpleDateFormat.format(new Date(startTime * ms)));
-                                dto.setEndTime(simpleDateFormat.format(new Date(entTime * ms)));
-                                dtoList.add(dto);
-                                break;
-                            }
-                            count--;
-                        }
-                    }
-                }
-            }
+            dtoList = pointUtil.getAspTimeSlot(prometheusDataList);
         }
         List<BusinessConnCountDTO> dataList = new ArrayList<>();
         if (!CollectionUtils.isEmpty(dtoList)) {
@@ -227,9 +119,18 @@ public class BusinessConnCount implements HisDiagnosisPointService<Object> {
                 } catch (ParseException e) {
                     throw new HisDiagnosisException("error:", e);
                 }
-                List<DatabaseData> preData = (List<DatabaseData>) dbUtil.rangQuery(SqlCommon.BUSINESS_CONN_COUNT,
-                        preStartTime, preEndTime,
-                        task.getNodeId());
+                Object preObjectData = dbUtil.rangQuery(SqlCommon.BUSINESS_CONN_COUNT,
+                                                        preStartTime, preEndTime,
+                                                        task.getNodeId());
+                List<DatabaseData> preData = new ArrayList<>();
+                if (preObjectData != null) {
+                    List<?> preDataList = (List<?>) preObjectData;
+                    for (Object object : preDataList) {
+                        if (object instanceof DatabaseData) {
+                            preData.add((DatabaseData) object);
+                        }
+                    }
+                }
                 List<?> preDataList = (List<?>) preData.get(0).getValue().get(0);
                 HashMap<String, String> hashMap = new HashMap<>();
                 for (Object o1 : preDataList) {
@@ -238,9 +139,18 @@ public class BusinessConnCount implements HisDiagnosisPointService<Object> {
                         break;
                     }
                 }
-                List<DatabaseData> data = (List<DatabaseData>) dbUtil.rangQuery(SqlCommon.BUSINESS_CONN_COUNT, sTime,
-                        eTime,
-                        task.getNodeId());
+                Object objectData = dbUtil.rangQuery(SqlCommon.BUSINESS_CONN_COUNT, sTime,
+                                                     eTime,
+                                                     task.getNodeId());
+                List<DatabaseData> data = new ArrayList<>();
+                if (objectData != null) {
+                    List<?> datas = (List<?>) objectData;
+                    for (Object object : datas) {
+                        if (object instanceof DatabaseData) {
+                            data.add((DatabaseData) object);
+                        }
+                    }
+                }
                 List<?> datasList = (List<?>) data.get(0).getValue().get(0);
                 HashMap<String, String> hashMap1 = new HashMap<>();
                 for (Object o2 : datasList) {

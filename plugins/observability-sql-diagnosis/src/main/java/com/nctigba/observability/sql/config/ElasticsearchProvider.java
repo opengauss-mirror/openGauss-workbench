@@ -10,6 +10,7 @@ import co.elastic.clients.transport.ElasticsearchTransport;
 import co.elastic.clients.transport.rest_client.RestClientTransport;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
+import com.nctigba.common.web.exception.HisDiagnosisException;
 import com.nctigba.observability.sql.mapper.NctigbaEnvMapper;
 import com.nctigba.observability.sql.model.NctigbaEnv;
 import org.apache.http.HttpHost;
@@ -44,6 +45,9 @@ public class ElasticsearchProvider {
     public ElasticsearchClient client() {
         var env = envMapper.selectOne(
                 Wrappers.<NctigbaEnv>lambdaQuery().eq(NctigbaEnv::getType, NctigbaEnv.envType.ELASTICSEARCH));
+        if (env == null) {
+            throw new HisDiagnosisException("ElasticSearch not found");
+        }
         var host = hostFacade.getById(env.getHostid());
         // Split ip when clustering
         HttpHost[] httpHosts = {new HttpHost(host.getPublicIp(), env.getPort())};

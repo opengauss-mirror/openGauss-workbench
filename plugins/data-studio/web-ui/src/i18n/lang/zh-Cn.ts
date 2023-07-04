@@ -34,6 +34,7 @@ export default {
     status: '状态',
     export: '导出',
     delete: '删除',
+    create: '创建',
   },
   utils: {
     colorError: '输入错误的{name}颜色值',

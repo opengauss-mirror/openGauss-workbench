@@ -103,6 +103,7 @@
     }
 }
 
+
 // grid header when grid is in card
 .grid-header-in-card {
     background: var(--background-color-3) !important;
@@ -173,8 +174,9 @@
     &-container {
         height: 500px;
         position: absolute;
-        right: 0px;
+        right: -14px;
         top: 0px;
+        padding-top: 1px;
         display: flex;
         margin-bottom: 10px;
         justify-content: end;
@@ -226,7 +228,7 @@
     background-color: var(--button-1-background) !important;
     border: 1px solid var(--button-1-border) !important;
     color: var(--button-1-color) !important;
-    padding: 5px !important;
+    padding: 8px !important;
 }
 
 .divider {

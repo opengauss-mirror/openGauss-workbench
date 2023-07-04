@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.opengauss.plugin.agent.server.HostMetric;
+import org.opengauss.plugin.agent.config.DbConfig;
 import org.opengauss.plugin.agent.util.CmdUtil;
 import org.opengauss.plugin.agent.util.StringUtil;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -33,7 +33,7 @@ public class Command {
     private static final String TOP = "top -b -n 1";
     private static final String TOP_DB_PID = "netstat -nap|grep :'|grep LISTEN";
     private static final String TOP_DB_THREAD = "top -H -bn1 -p ";
-    private final HostMetric hostMetric;
+    private final DbConfig dbConfig;
 
     @GetMapping("/top")
     public Object top(@RequestParam(required = false) String sort) throws FileNotFoundException, IOException {
@@ -47,14 +47,14 @@ public class Command {
                 Collections.addAll(header, part);
                 return;
             }
-            Map<String, String> obj = new HashMap<String, String>();
+            Map<String, String> obj = new HashMap<>();
             for (int j = 0; j < header.size(); j++) {
                 obj.put(header.get(j), part[j]);
             }
             top.add(obj);
         });
         Set<String> pids = new HashSet<>();
-        CmdUtil.readFromCmd(TOP_DB_PID.replaceAll("'", hostMetric.getDbport().toString()), line -> {
+        CmdUtil.readFromCmd(TOP_DB_PID.replaceAll("'", dbConfig.getDbport().toString()), line -> {
             var part = StringUtil.splitByBlank(line);
             var pid = part[part.length - 1];
             pid = pid.split("/")[0];
@@ -72,7 +72,7 @@ public class Command {
                     Collections.addAll(header, part);
                     return;
                 }
-                Map<String, String> obj = new HashMap<String, String>();
+                Map<String, String> obj = new HashMap<>();
                 for (int j = 0; j < header.size(); j++) {
                     obj.put(header.get(j), part[j]);
                 }

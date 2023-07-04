@@ -50,6 +50,10 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
 import static com.nctigba.datastudio.constants.CommonConstants.FUNCTION;
@@ -207,9 +211,7 @@ public class ExportServiceImpl implements ExportService {
         ) {
             StringBuilder columnSb = new StringBuilder();
             List<String> columnList = request.getColumnList();
-            columnList.forEach(column -> {
-                columnSb.append(column).append(COMMA);
-            });
+            columnList.forEach(column -> columnSb.append(column).append(COMMA));
             log.info("ExportService exportExcel columnSb: " + columnSb);
 
             String tableName = request.getTableName();
@@ -297,13 +299,28 @@ public class ExportServiceImpl implements ExportService {
             exportRequest.setViewList(viewList);
             exportRequest.setSequenceList(sequenceList);
 
-            sb.append(addHeader(false, schema, SCHEMA, schema)).append(CREATE_SCHEMA_SQL).append(schema)
-                    .append(getTableDdl(exportRequest)).append(getFunctionDdl(exportRequest))
-                    .append(getViewDdl(exportRequest)).append(getSequenceDdl(exportRequest));
+            sb.append(addHeader(false, schema, SCHEMA, schema)).append(String.format(CREATE_SCHEMA_SQL, schema));
+            sb.append(asyncExecute(exportRequest));
+
         }
 
         String fileName = getFileName(dataFlag, SCHEMA, schemaList);
         DebugUtils.exportFile(fileName, sb.toString(), response);
+    }
+
+    private String asyncExecute(ExportRequest exportRequest) throws ExecutionException, InterruptedException {
+        ExecutorService executorService = Executors.newFixedThreadPool(20);
+        List<Future<String>> futureList = new ArrayList<>();
+        futureList.add(executorService.submit(() -> getTableDdl(exportRequest)));
+        futureList.add(executorService.submit(() -> getFunctionDdl(exportRequest)));
+        futureList.add(executorService.submit(() -> getViewDdl(exportRequest)));
+        futureList.add(executorService.submit(() -> getSequenceDdl(exportRequest)));
+
+        StringBuilder sb = new StringBuilder();
+        for (Future<String> future : futureList) {
+            sb.append(future.get());
+        }
+        return sb.toString();
     }
 
     private String getTableDdl(ExportRequest request) throws Exception {
@@ -312,21 +329,21 @@ public class ExportServiceImpl implements ExportService {
         String uuid = request.getUuid();
         String schema = request.getSchema();
 
-        List<String> tableList = request.getTableList();
-        for (String name : tableList) {
-            SelectDataQuery dto = new SelectDataQuery();
-            dto.setUuid(uuid);
-            dto.setSchema(schema);
-            dto.setTableName(name);
+        try (
+                Connection connection = connectionConfig.connectDatabase(request.getUuid());
+                Statement statement = connection.createStatement()
+        ) {
+            List<String> tableList = request.getTableList();
+            for (String name : tableList) {
+                SelectDataQuery dto = new SelectDataQuery();
+                dto.setUuid(uuid);
+                dto.setSchema(schema);
+                dto.setTableName(name);
 
-            String ddl = tableDataService.tableDdl(dto).get(RESULT);
-            sb.append(addHeader(false, name, TABLE, schema));
-            sb.append(ddl);
+                String ddl = tableDataService.tableDdl(dto).get(RESULT);
+                sb.append(addHeader(false, name, TABLE, schema));
+                sb.append(ddl);
 
-            try (
-                    Connection connection = connectionConfig.connectDatabase(request.getUuid());
-                    Statement statement = connection.createStatement()
-            ) {
                 if (request.isDataFlag()) {
                     String tableData = getTableData(statement, request.getSchema(), name);
                     if (StringUtils.isNotEmpty(tableData)) {
@@ -345,17 +362,17 @@ public class ExportServiceImpl implements ExportService {
         String uuid = request.getUuid();
         String schema = request.getSchema();
 
-        List<Integer> functionMap = request.getFunctionMap();
-        for (Integer oid : functionMap) {
-            DatabaseFunctionSPDTO dto = new DatabaseFunctionSPDTO();
-            dto.setUuid(uuid);
-            dto.setSchema(schema);
-            dto.setOid(oid.toString());
+        try (
+                Connection connection = connectionConfig.connectDatabase(request.getUuid());
+                Statement statement = connection.createStatement()
+        ) {
+            List<Integer> functionMap = request.getFunctionMap();
+            for (Integer oid : functionMap) {
+                DatabaseFunctionSPDTO dto = new DatabaseFunctionSPDTO();
+                dto.setUuid(uuid);
+                dto.setSchema(schema);
+                dto.setOid(oid.toString());
 
-            try (
-                    Connection connection = connectionConfig.connectDatabase(request.getUuid());
-                    Statement statement = connection.createStatement()
-            ) {
                 String name = Strings.EMPTY;
                 ResultSet nameResultSet = statement.executeQuery(String.format(PROC_SQL, oid));
                 if (nameResultSet.next()) {

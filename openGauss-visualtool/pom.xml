@@ -31,7 +31,7 @@
         <jwt.version>0.9.1</jwt.version>
         <oshi.version>5.8.0</oshi.version>
         <bitwalker.version>1.21</bitwalker.version>
-        <jsch.version>0.1.55</jsch.version>
+        <jsch.version>0.2.9</jsch.version>
         <prometheus.version>1.8.1</prometheus.version>
 
         <web.path/>
@@ -153,7 +153,7 @@
                 <version>${bitwalker.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.jcraft</groupId>
+                <groupId>com.github.mwiede</groupId>
                 <artifactId>jsch</artifactId>
                 <version>${jsch.version}</version>
             </dependency>

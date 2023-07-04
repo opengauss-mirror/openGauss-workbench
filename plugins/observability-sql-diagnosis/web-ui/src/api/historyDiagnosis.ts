@@ -48,9 +48,12 @@ export async function getTask(id: string): Promise<Threshold2> {
 }
 
 export type PointInfo = {
-    thresholdName: string
-    thresholdValue: string
-    thresholdType: string
+    pointDetail: string
+    pointName: string
+    pointState: string
+    pointSuggestion: string
+    isHint: string
+    pointData: any
 }
 export async function getPointData(id: string, pointKey: string): Promise<PointInfo> {
     return restRequest.get('/historyDiagnosis/api/v1/tasks/' + id + '/points/' + pointKey)

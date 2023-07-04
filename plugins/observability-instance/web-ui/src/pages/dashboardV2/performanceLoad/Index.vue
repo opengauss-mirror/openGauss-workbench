@@ -1,154 +1,147 @@
 <template>
-    <div style="margin-bottom: 40px"></div>
+    <div style="margin-bottom: 50px"></div>
     <IndexBar :tabId="props.tabId"></IndexBar>
     <div class="small-charts">
-        <el-row :gutter="12">
-            <el-col :span="4">
-                <div class="container" :class="[cpuBackGroud]">
-                    <div class="title">CPU</div>
-                    <div class="value" v-if="metricsData.cpu && metricsData.cpu.length > 0">{{ cpuValue }}%</div>
-                    <div class="detail" @click="goto(tabKeys.ResourceMonitorCPU)">
-                        <div class="text">
-                            <div>{{ $t('instanceIndex.detail') }}</div>
-                            <svg-icon class="icon" name="detail" />
+        <div style="display: flex; flex-direction: row; justify-content: space-between">
+            <div class="container" :class="[cpuBackGroud]">
+                <div class="title">CPU</div>
+                <div class="value" v-if="metricsData.cpu && metricsData.cpu.length > 0">{{ cpuValue }}%</div>
+                <div class="detail" @click="goto(tabKeys.ResourceMonitorCPU)">
+                    <div class="text">
+                        <div>{{ $t('instanceIndex.detail') }}</div>
+                        <svg-icon class="icon" name="detail" />
+                    </div>
+                </div>
+                <div class="chart">
+                    <IndexLine
+                        :tabId="props.tabId"
+                        :formatter="toFixed"
+                        :data="metricsData.cpu"
+                        :xData="metricsData.time"
+                        :max="metricsData.cpu && metricsData.cpu.length > 0 ? 100 : undefined"
+                        :min="0"
+                        :interval="25"
+                        :unit="'%'"
+                    />
+                </div>
+            </div>
+            <div class="spliter"></div>
+            <div class="container" :class="[memoryBackGroud]">
+                <div class="title">{{ $t('instanceIndex.memory') }}</div>
+                <div class="value" v-if="metricsData.memory && metricsData.memory.length > 0">{{ memoryValue }}%</div>
+                <div class="detail" @click="goto(tabKeys.ResourceMonitorMemory)">
+                    <div class="text">
+                        <div>{{ $t('instanceIndex.detail') }}</div>
+                        <svg-icon class="icon" name="detail" />
+                    </div>
+                </div>
+                <div class="chart">
+                    <IndexLine
+                        :tabId="props.tabId"
+                        :formatter="toFixed"
+                        :data="metricsData.memory"
+                        :xData="metricsData.time"
+                        :max="metricsData.memory && metricsData.memory.length > 0 ? 100 : undefined"
+                        :min="0"
+                        :interval="25"
+                        :unit="'%'"
+                    />
+                </div>
+            </div>
+            <div class="spliter"></div>
+            <div class="container" :class="[networkBackGroud]">
+                <div class="title">{{ $t('instanceIndex.networkInOut') }}</div>
+                <div
+                    class="value"
+                    style="margin-top: -10px"
+                    v-if="metricsData.network && metricsData.network.length > 0"
+                >
+                    <div class="network-box">
+                        <div class="item">
+                            <div class="title-row">
+                                <div class="line-sample in"></div>
+                                <div>In</div>
+                            </div>
+                            <div class="mb">
+                                <div class="mb-value">{{ networkInValue }}</div>
+                                <div class="mb-unit">MB/S</div>
+                            </div>
+                        </div>
+                        <div class="item out">
+                            <div class="title-row">
+                                <div class="line-sample out"></div>
+                                <div>Out</div>
+                            </div>
+                            <div class="mb">
+                                <div class="mb-value">{{ networkOutValue }}</div>
+                                <div class="mb-unit">MB/S</div>
+                            </div>
                         </div>
                     </div>
-                    <div class="chart">
-                        <IndexLine
-                            :tabId="props.tabId"
-                            :formatter="toFixed"
-                            :data="metricsData.cpu"
-                            :xData="metricsData.time"
-                            :max="metricsData.cpu && metricsData.cpu.length > 0 ? 100 : undefined"
-                            :min="0"
-                            :interval="25"
-                            :unit="'%'"
-                        />
+                </div>
+                <div class="detail" @click="goto(tabKeys.ResourceMonitorNetwork)">
+                    <div class="text">
+                        <div>{{ $t('instanceIndex.detail') }}</div>
+                        <svg-icon class="icon" name="detail" />
                     </div>
                 </div>
-            </el-col>
-            <el-col :span="4">
-                <div class="container" :class="[memoryBackGroud]">
-                    <div class="title">{{ $t('instanceIndex.memory') }}</div>
-                    <div class="value" v-if="metricsData.memory && metricsData.memory.length > 0">
-                        {{ memoryValue }}%
-                    </div>
-                    <div class="detail" @click="goto(tabKeys.ResourceMonitorMemory)">
-                        <div class="text">
-                            <div>{{ $t('instanceIndex.detail') }}</div>
-                            <svg-icon class="icon" name="detail" />
-                        </div>
-                    </div>
-                    <div class="chart">
-                        <IndexLine
-                            :tabId="props.tabId"
-                            :formatter="toFixed"
-                            :data="metricsData.memory"
-                            :xData="metricsData.time"
-                            :max="metricsData.memory && metricsData.memory.length > 0 ? 100 : undefined"
-                            :min="0"
-                            :interval="25"
-                            :unit="'%'"
-                        />
+                <div class="chart">
+                    <IndexLine
+                        :tabId="props.tabId"
+                        :formatter="toFixed"
+                        :data="metricsData.network"
+                        :xData="metricsData.time"
+                        :unit="'M/S'"
+                    />
+                </div>
+            </div>
+            <div class="spliter"></div>
+            <div class="container" :class="[ioBackGroud]">
+                <div class="title">IO</div>
+                <div class="value" v-if="metricsData.io && metricsData.io.length > 0">{{ ioValue }}%</div>
+                <div class="detail" @click="goto(tabKeys.ResourceMonitorIO)">
+                    <div class="text">
+                        <div>{{ $t('instanceIndex.detail') }}</div>
+                        <svg-icon class="icon" name="detail" />
                     </div>
                 </div>
-            </el-col>
-            <el-col :span="4">
-                <div class="container" :class="[networkBackGroud]">
-                    <div class="title">{{ $t('instanceIndex.networkInOut') }}</div>
-                    <div
-                        class="value"
-                        style="font-size: 28px"
-                        v-if="metricsData.network && metricsData.network.length > 0"
-                    >
-                        {{ networkValue }} M/s
-                    </div>
-                    <div class="detail" @click="goto(tabKeys.ResourceMonitorNetwork)">
-                        <div class="text">
-                            <div>{{ $t('instanceIndex.detail') }}</div>
-                            <svg-icon class="icon" name="detail" />
-                        </div>
-                    </div>
-                    <div class="chart">
-                        <IndexLine
-                            :tabId="props.tabId"
-                            :formatter="toFixed"
-                            :data="metricsData.network"
-                            :xData="metricsData.time"
-                            :unit="'M/S'"
-                        />
+                <div class="chart">
+                    <IndexLine
+                        :tabId="props.tabId"
+                        :formatter="toFixed"
+                        :data="metricsData.io"
+                        :xData="metricsData.time"
+                        :max="metricsData.io && metricsData.io.length > 0 ? 100 : undefined"
+                        :min="0"
+                        :interval="25"
+                        :unit="'%'"
+                    />
+                </div>
+            </div>
+            <div class="spliter"></div>
+            <div class="container" :class="[swapBackGroud]">
+                <div class="title">SWAP</div>
+                <div class="value" v-if="metricsData.swap && metricsData.swap.length > 0">{{ swapValue }}%</div>
+                <div class="detail" @click="goto(tabKeys.ResourceMonitorMemory)">
+                    <div class="text">
+                        <div>{{ $t('instanceIndex.detail') }}</div>
+                        <svg-icon class="icon" name="detail" />
                     </div>
                 </div>
-            </el-col>
-            <el-col :span="4">
-                <div class="container" :class="[ioBackGroud]">
-                    <div class="title">IO</div>
-                    <div class="value" v-if="metricsData.io && metricsData.io.length > 0">{{ ioValue }}%</div>
-                    <div class="detail" @click="goto(tabKeys.ResourceMonitorIO)">
-                        <div class="text">
-                            <div>{{ $t('instanceIndex.detail') }}</div>
-                            <svg-icon class="icon" name="detail" />
-                        </div>
-                    </div>
-                    <div class="chart">
-                        <IndexLine
-                            :tabId="props.tabId"
-                            :formatter="toFixed"
-                            :data="metricsData.io"
-                            :xData="metricsData.time"
-                            :max="metricsData.io && metricsData.io.length > 0 ? 100 : undefined"
-                            :min="0"
-                            :interval="25"
-                            :unit="'%'"
-                        />
-                    </div>
+                <div class="chart">
+                    <IndexLine
+                        :tabId="props.tabId"
+                        :formatter="toFixed"
+                        :data="metricsData.swap"
+                        :xData="metricsData.time"
+                        :max="metricsData.swap && metricsData.swap.length > 0 ? 100 : undefined"
+                        :min="0"
+                        :interval="25"
+                        :unit="'%'"
+                    />
                 </div>
-            </el-col>
-            <el-col :span="4">
-                <div class="container" :class="[swapBackGroud]">
-                    <div class="title">SWAP</div>
-                    <div class="value" v-if="metricsData.swap && metricsData.swap.length > 0">{{ swapValue }}%</div>
-                    <div class="detail" @click="goto(tabKeys.ResourceMonitorMemory)">
-                        <div class="text">
-                            <div>{{ $t('instanceIndex.detail') }}</div>
-                            <svg-icon class="icon" name="detail" />
-                        </div>
-                    </div>
-                    <div class="chart">
-                        <IndexLine
-                            :tabId="props.tabId"
-                            :formatter="toFixed"
-                            :data="metricsData.swap"
-                            :xData="metricsData.time"
-                            :max="metricsData.swap && metricsData.swap.length > 0 ? 100 : undefined"
-                            :min="0"
-                            :interval="25"
-                            :unit="'%'"
-                        />
-                    </div>
-                </div>
-            </el-col>
-            <el-col :span="4">
-                <div class="container" :class="[threadPoolBackGroud]">
-                    <div class="title">{{ $t('instanceIndex.threadPoolUsed') }}</div>
-                    <div class="value" v-if="metricsData.threadPool && metricsData.threadPool.length > 0">
-                        {{ threadPooValue }}%
-                    </div>
-                    <div class="chart">
-                        <IndexLine
-                            :tabId="props.tabId"
-                            :formatter="toFixed"
-                            :data="metricsData.threadPool"
-                            :xData="metricsData.time"
-                            :max="metricsData.threadPool && metricsData.threadPool.length > 0 ? 100 : undefined"
-                            :min="0"
-                            :interval="25"
-                            :unit="'%'"
-                        />
-                    </div>
-                </div>
-            </el-col>
-        </el-row>
+            </div>
+        </div>
     </div>
 
     <div style="margin-bottom: 20px"></div>
@@ -163,6 +156,12 @@
         :bodyPadding="false"
     >
         <template #headerExtend>
+            <div class="info-row">
+                <div>{{ $t('session.maxSessionCount') }}{{ metricsData.max_conn }}</div>
+                <div>{{ $t('session.activeSessionCount') }}{{ metricsData.active }}</div>
+                <div>{{ $t('session.blockedSessionCount') }}{{ metricsData.waiting }}</div>
+                <div>{{ $t('session.longestSessionRuntime') }}{{ metricsData.max_runtime }}秒</div>
+            </div>
             <div class="card-links">
                 <el-link v-if="isManualRangeSelected" type="primary" @click="goto(tabKeys.InstanceMonitorTOPSQL)">
                     TOP SQL
@@ -182,12 +181,13 @@
         />
     </my-card>
 
+    <div style="margin-bottom: 12px"></div>
     <div style="position: relative">
         <div
             style="
                 position: absolute;
                 right: 0px;
-                top: 7px;
+                top: 2px;
                 z-index: 9;
                 display: flex;
                 flex-direction: row;
@@ -196,13 +196,6 @@
             "
         >
             <div style="margin-right: 12px">{{ $t('app.refreshOn') }} {{ innerRefreshDoneTime }}</div>
-            <el-button
-                class="refresh-button"
-                type="primary"
-                :icon="Refresh"
-                style="margin-right: 8px"
-                @click="loadTopSQL(props.tabId)"
-            />
             <div>{{ $t('app.autoRefreshFor') }}</div>
             <el-select v-model="innerRefreshTime" style="width: 60px; margin: 0 4px" @change="updateTimerInner">
                 <el-option :value="1" label="1s" />
@@ -210,8 +203,15 @@
                 <el-option :value="30" label="30s" />
                 <el-option :value="60" label="60s" />
             </el-select>
+            <el-button
+                class="refresh-button"
+                type="primary"
+                :icon="Refresh"
+                style="margin-left: 8px"
+                @click="loadTopSQL(props.tabId)"
+            />
         </div>
-        <el-tabs v-model="tab">
+        <el-tabs v-model="tab" class="tab2">
             <el-tab-pane :label="$t('instanceIndex.nowTOPSQL')" :name="0">
                 <el-table
                     :table-layout="'auto'"
@@ -224,14 +224,7 @@
                         }
                     "
                 >
-                    <el-table-column label="SQLID" width="130" v-if="false">
-                        <template #default="scope">
-                            <a class="table-link" @click="gotoTopsqlDetail(scope.row.query_id)">
-                                {{ scope.row.query_id }}
-                            </a>
-                        </template>
-                    </el-table-column>
-                    <el-table-column prop="query_id" label="SQLID" width="130" />
+                    <el-table-column prop="query_id" label="SQLID" width="150" />
                     <el-table-column prop="datname" :label="$t('instanceIndex.dbName')" width="90" />
                     <el-table-column prop="usename" :label="$t('instanceIndex.userName')" width="96" />
                     <el-table-column prop="application_name" :label="$t('instanceIndex.appName')" width="110" />
@@ -251,7 +244,96 @@
                     </el-table-column>
                 </el-table>
             </el-tab-pane>
-            <el-tab-pane label="&nbsp;" :name="1" disabled style="cursor: auto !important"> </el-tab-pane>
+            <el-tab-pane :label="$t('session.blockSessions.tabTitle')" :name="1">
+                <div class="row" style="margin-bottom: 8px">
+                    <div class="filter">
+                        <el-button
+                            @click="
+                                () => {
+                                    expandRowKeys = []
+                                }
+                            "
+                            >{{ $t('session.blockSessions.collapseAll') }}</el-button
+                        >
+                    </div>
+                </div>
+
+                <el-table
+                    :table-layout="'auto'"
+                    :data="blockSessionTable"
+                    style="width: 100%"
+                    border
+                    :header-cell-class-name="
+                        () => {
+                            return 'grid-header'
+                        }
+                    "
+                    row-key="id"
+                    :expand-row-keys="expandRowKeys"
+                >
+                    <el-table-column :label="$t('session.blockSessions.sessionID')" width="160">
+                        <template #default="scope">
+                            <el-link type="primary" @click="gotoSessionDetail(scope.row.id)">
+                                {{ scope.row.id === '0' ? '' : scope.row.id }}
+                            </el-link>
+                        </template>
+                    </el-table-column>
+                    <el-table-column :label="$t('session.blockSessions.blockedSessionID')" width="130">
+                        <template #default="scope">
+                            <el-link type="primary" @click="gotoSessionDetail(scope.row.parentid)">
+                                {{ scope.row.parentid === '0' ? '' : scope.row.parentid }}
+                            </el-link>
+                        </template>
+                    </el-table-column>
+                    <el-table-column
+                        prop="backend_start"
+                        :label="$t('session.blockSessions.sessionStartTime')"
+                        :formatter="(r) => dateFormat(r.backend_start, 'MM-DD HH:mm:ss')"
+                        width="110"
+                    />
+                    <el-table-column prop="wait_status" :label="$t('session.blockSessions.waitState')" width="100" />
+                    <el-table-column prop="wait_event" :label="$t('session.blockSessions.waitEvent')" width="100" />
+                    <el-table-column prop="lockmode" :label="$t('session.blockSessions.waitLockMode')" width="120" />
+                    <el-table-column prop="datname" :label="$t('session.blockSessions.dbName')" width="110" />
+                    <el-table-column prop="usename" :label="$t('session.blockSessions.userName')" width="90" />
+                    <el-table-column prop="client_addr" :label="$t('session.blockSessions.clientIP')" width="120" />
+                    <el-table-column prop="application_name" :label="$t('session.blockSessions.appName')" />
+                </el-table>
+            </el-tab-pane>
+            <el-tab-pane :label="$t('session.trans.longTransaction')" :name="2">
+                <el-table
+                    :table-layout="'auto'"
+                    :data="transTable"
+                    style="width: 100%"
+                    border
+                    :header-cell-class-name="
+                        () => {
+                            return 'grid-header'
+                        }
+                    "
+                >
+                    <el-table-column prop="pid" label="PID" width="130" />
+                    <el-table-column :label="$t('session.trans.sessionID')" width="130">
+                        <template #default="scope">
+                            <el-link
+                                type="primary"
+                                class="top-sql-table-id"
+                                @click="gotoSessionDetail(scope.row.sessionid)"
+                            >
+                                {{ scope.row.sessionid }}
+                            </el-link>
+                        </template>
+                    </el-table-column>
+                    <el-table-column prop="usename" :label="$t('session.trans.userName')" width="100" />
+                    <el-table-column prop="datname" :label="$t('session.trans.dbName')" width="100" />
+                    <el-table-column prop="application_name" :label="$t('session.trans.appName')" width="130" />
+                    <el-table-column prop="client_addr" :label="$t('session.trans.clientAddr')" width="120" />
+                    <el-table-column prop="query" label="SQL" width="200" />
+                    <el-table-column prop="xact_start" :label="$t('session.trans.txStart')" width="134" />
+                    <el-table-column prop="xact_duration" :label="$t('session.trans.txDuration')" width="120" />
+                    <el-table-column prop="state" :label="$t('session.trans.sessionState')" width="100" />
+                </el-table>
+            </el-tab-pane>
         </el-tabs>
     </div>
 </template>
@@ -263,7 +345,7 @@ import { useMonitorStore } from '@/store/monitor'
 import { toFixed } from '@/shared'
 import { storeToRefs } from 'pinia'
 import { useIntervalTime } from '@/hooks/time'
-import { getIndexMetrics, getTOPSQLNow, TopSQLNow } from '@/api/observability'
+import { getIndexMetrics, getTOPSQLNow, TopSQLNow, TransTable, BlockTable } from '@/api/observability'
 import { hasSQLDiagnosisModule } from '@/api/sqlDiagnosis'
 import { useRequest } from 'vue-request'
 import { tabKeys } from '@/pages/dashboardV2/common'
@@ -272,6 +354,7 @@ import router from '@/router'
 import { Refresh } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { useI18n } from 'vue-i18n'
+import { dateFormat } from '@/utils/date'
 
 const props = withDefaults(defineProps<{ tabId: string }>(), {})
 const { updateCounter, sourceType, autoRefreshTime, tabNow, instanceId, isManualRangeSelected, timeRange } =
@@ -286,26 +369,39 @@ interface LineData {
     [other: string]: any
 }
 interface MetricsData {
+    max_conn: number
+    active: number
+    waiting: number
+    max_runtime: number
     cpu: LineData[]
     memory: LineData[]
     io: LineData[]
     network: LineData[]
     swap: LineData[]
     session: LineData[]
-    threadPool: LineData[]
+    sessionQty: LineData[]
+    waitEvents: LineData[]
     time: string[]
 }
 const metricsData = ref<MetricsData>({
+    max_conn: 0,
+    active: 0,
+    waiting: 0,
+    max_runtime: 0,
     cpu: [],
     memory: [],
     io: [],
     network: [],
     swap: [],
     session: [],
-    threadPool: [],
+    sessionQty: [],
+    waitEvents: [],
     time: ['0'],
 })
+const expandRowKeys = ref<string[]>([])
+const blockSessionTable = ref<BlockTable[]>([])
 const topSQLData = ref<void | TopSQLNow[]>([])
+const transTable = ref<TransTable[]>([])
 const innerRefreshTime = ref<number>(30)
 const innerRefreshDoneTime = ref<string>('')
 const cpuValue = computed(() => {
@@ -317,14 +413,14 @@ const memoryValue = computed(() => {
 const ioValue = computed(() => {
     return getMetricsValue(metricsData.value.io)
 })
-const networkValue = computed(() => {
-    return getMetricsValue(metricsData.value.network, 0) + '/' + getMetricsValue(metricsData.value.network, 1)
+const networkInValue = computed(() => {
+    return getMetricsValue(metricsData.value.network, 1)
+})
+const networkOutValue = computed(() => {
+    return getMetricsValue(metricsData.value.network, 0)
 })
 const swapValue = computed(() => {
     return getMetricsValue(metricsData.value.swap)
-})
-const threadPooValue = computed(() => {
-    return getMetricsValue(metricsData.value.threadPool)
 })
 const getMetricsValue = (data: LineData[], index: number = 0) => {
     let value = 0
@@ -343,22 +439,27 @@ const memoryBackGroud = computed(() => {
 })
 const networkBackGroud = computed(() => {
     if (metricsData.value.network.length <= 0) return 'none'
-    return 'normal'
+    return 'cold'
 })
 const swapBackGroud = computed(() => {
-    return getBackground(metricsData.value.swap)
+    if (metricsData.value.swap.length <= 0) return 'none'
+    return 'cold'
 })
 const ioBackGroud = computed(() => {
-    return getBackground(metricsData.value.io)
-})
-const threadPoolBackGroud = computed(() => {
-    return getBackground(metricsData.value.threadPool)
+    if (metricsData.value.io.length <= 0) return 'none'
+    return 'cold'
 })
 const getBackground = (data: LineData[]) => {
     if (data.length <= 0) return 'none'
-    else if (getMetricsValue(data) < 50) return 'cold'
-    else if (getMetricsValue(data) < 75) return 'normal'
-    else return 'hot'
+    else if (getMetricsValue(data) < 80) return 'green'
+    else if (getMetricsValue(data) < 90) return 'yellow'
+    else return 'red'
+}
+const getLineColor = (data: LineData[]) => {
+    if (data.length <= 0) return 'none'
+    else if (getMetricsValue(data) < 80) return '#ABFF83'
+    else if (getMetricsValue(data) < 90) return '#FFDC83'
+    else return '#FF8D8D'
 }
 // get data
 const load = (checkTab?: boolean, checkRange?: boolean) => {
@@ -376,11 +477,18 @@ watch(
         metricsData.value.io = []
         metricsData.value.swap = []
         metricsData.value.session = []
-        metricsData.value.threadPool = []
+        metricsData.value.sessionQty = []
+        metricsData.value.waitEvents = []
         metricsData.value.time = ['0']
 
         const baseData = indexData.value
         if (!baseData) return
+
+        // info
+        metricsData.value.max_conn = baseData.max_conn
+        metricsData.value.active = baseData.active
+        metricsData.value.waiting = baseData.waiting
+        metricsData.value.max_runtime = baseData.max_runtime
 
         // CPU
         if (baseData.CPU && baseData.CPU.length > 0) {
@@ -388,7 +496,13 @@ watch(
             baseData.CPU.forEach((d: number) => {
                 tempData.push(toFixed(d))
             })
-            metricsData.value.cpu.push({ data: tempData, name: 'CPU' })
+            metricsData.value.cpu.push({
+                data: tempData,
+                name: 'CPU',
+            })
+            metricsData.value.cpu[0].lineStyle = {
+                color: getLineColor(metricsData.value.cpu),
+            }
         }
         // MEMORY
         if (baseData.MEMORY && baseData.MEMORY.length > 0) {
@@ -397,21 +511,40 @@ watch(
                 tempData.push(toFixed(d))
             })
             metricsData.value.memory.push({ data: tempData, name: 'MEMORY' })
+            metricsData.value.memory[0].lineStyle = {
+                color: getLineColor(metricsData.value.memory),
+            }
         }
         // Network
-        if (baseData.NETWORK_IN_TOTAL && baseData.NETWORK_IN_TOTAL.length > 0) {
-            let tempData: string[] = []
-            baseData.NETWORK_IN_TOTAL.forEach((d: number) => {
-                tempData.push(toFixed(d / 1024 / 1024, 1))
-            })
-            metricsData.value.network.push({ data: tempData, areaStyle: {}, stack: 'Total', name: 'In' })
-        }
         if (baseData.NETWORK_OUT_TOTAL && baseData.NETWORK_OUT_TOTAL.length > 0) {
             let tempData: string[] = []
             baseData.NETWORK_OUT_TOTAL.forEach((d: number) => {
                 tempData.push(toFixed(d / 1024 / 1024, 1))
             })
-            metricsData.value.network.push({ data: tempData, areaStyle: {}, stack: 'Total', name: 'Out' })
+            metricsData.value.network.push({
+                data: tempData,
+                areaStyle: {},
+                stack: 'Total',
+                name: 'Out',
+                lineStyle: {
+                    color: '#0E78DA',
+                },
+            })
+        }
+        if (baseData.NETWORK_IN_TOTAL && baseData.NETWORK_IN_TOTAL.length > 0) {
+            let tempData: string[] = []
+            baseData.NETWORK_IN_TOTAL.forEach((d: number) => {
+                tempData.push(toFixed(d / 1024 / 1024, 1))
+            })
+            metricsData.value.network.push({
+                data: tempData,
+                areaStyle: {},
+                stack: 'Total',
+                name: 'In',
+                lineStyle: {
+                    color: '#83CBFF',
+                },
+            })
         }
         // IO
         if (baseData.IO && baseData.IO.length > 0) {
@@ -419,7 +552,13 @@ watch(
             baseData.IO.forEach((d: number) => {
                 tempData.push(toFixed(d))
             })
-            metricsData.value.io.push({ data: tempData, name: 'IO' })
+            metricsData.value.io.push({
+                data: tempData,
+                name: 'IO',
+                lineStyle: {
+                    color: '#83CBFF',
+                },
+            })
         }
 
         // SWAP
@@ -432,21 +571,23 @@ watch(
         }
 
         // Session
-        for (let key in baseData.DB_ACTIVE_SESSION) {
+        const propertyNames = Object.keys(baseData.DB_ACTIVE_SESSION).sort()
+        const sortedData = propertyNames
+            .map((property) => ({
+                [property]: baseData.DB_ACTIVE_SESSION[property],
+            }))
+            .sort((a, b) => b[Object.keys(b)[0]][0] - a[Object.keys(a)[0]][0])
+        for (let item in sortedData) {
             let tempData: string[] = []
-            baseData.DB_ACTIVE_SESSION[key].forEach((element) => {
-                tempData.push(toFixed(element))
+            Object.values(sortedData[item])[0].forEach((element) => {
+                tempData.push(element.toString())
             })
-            metricsData.value.session.push({ data: tempData, areaStyle: {}, stack: 'Total', name: key })
-        }
-
-        // Thread Pool
-        if (baseData.DB_THREAD_POOL && baseData.DB_THREAD_POOL.length > 0) {
-            let tempData: string[] = []
-            baseData.DB_THREAD_POOL.forEach((d: number) => {
-                tempData.push(toFixed(d))
+            metricsData.value.session.push({
+                data: tempData,
+                areaStyle: {},
+                stack: 'Total',
+                name: Object.keys(sortedData[item])[0],
             })
-            metricsData.value.threadPool.push({ data: tempData, name: 'Thread Pool' })
         }
 
         // time
@@ -458,7 +599,18 @@ const { data: topSQLNowData, run: loadTopSQL } = useRequest(getTOPSQLNow, { manu
 watch(
     topSQLNowData,
     () => {
-        topSQLData.value = topSQLNowData.value
+        if (!topSQLNowData.value) return
+
+        topSQLData.value = topSQLNowData.value.topSQLNow
+
+        // block sessions
+        if (topSQLNowData.value.blockTree) {
+            blockSessionTable.value = topSQLNowData.value.blockTree
+        }
+
+        // trans
+        transTable.value = topSQLNowData.value.longTxc ? topSQLNowData.value.longTxc : []
+
         innerRefreshDoneTime.value = moment(new Date()).format('HH:mm:ss')
     },
     { deep: true }
@@ -503,24 +655,6 @@ watch(
     { immediate: true }
 )
 // same for every page in index
-
-const gotoTopsqlDetail = (id: string) => {
-    const curMode = localStorage.getItem('INSTANCE_CURRENT_MODE')
-    if (curMode === 'wujie') {
-        // @ts-ignore plug-in components
-        window.$wujie?.props.methods.jump({
-            name: `Static-pluginObservability-instanceVemSql_detail`,
-            query: {
-                dbid: instanceId.value,
-                id,
-            },
-        })
-    } else {
-        // local
-        window.sessionStorage.setItem('sqlId', id)
-        router.push(`/vem/sql_detail/${instanceId.value}/${id}`)
-    }
-}
 const emit = defineEmits(['goto'])
 const goto = (key: string, param?: object) => {
     emit('goto', key, param)
@@ -566,9 +700,23 @@ const gotoSessionDetail = (id: string) => {
 </script>
 
 <style scoped lang="scss">
+.info-row {
+    flex-grow: 1;
+    font-size: 14px;
+    font-weight: 400;
+    display: flex;
+    div {
+        margin-right: 36px;
+    }
+}
 .small-charts {
     color: #ffffff;
+    .spliter {
+        width: 12px;
+        flex-shrink: 0;
+    }
     .container {
+        width: 100%;
         height: 114px;
         &.none {
             background: linear-gradient(124.23deg, #82848a 0.83%, #3d444a 69.42%);
@@ -576,11 +724,14 @@ const gotoSessionDetail = (id: string) => {
         &.cold {
             background: linear-gradient(124.23deg, #64a3f5 0.83%, #5e8be2 69.42%);
         }
-        &.normal {
+        &.green {
             background: linear-gradient(124.23deg, #6abc6a 0.83%, #6ab357 69.41%);
         }
-        &.hot {
+        &.yellow {
             background: linear-gradient(124.23deg, #f4bd24 0.83%, #f38825 78.2%);
+        }
+        &.red {
+            background: linear-gradient(134deg, #fe6b4b 0%, #e31111 71.22%);
         }
 
         border-radius: 2.89424px;
@@ -600,11 +751,13 @@ const gotoSessionDetail = (id: string) => {
             color: #ffffff;
         }
         .value {
-            z-index: 0;
+            z-index: 1;
             position: absolute;
-            height: 12.57px;
+            height: 32.57px;
             top: 32.64px;
-            left: 39.78px;
+            padding-left: 48px;
+            box-sizing: border-box;
+            width: 100%;
 
             font-family: 'DINPro';
             font-style: normal;
@@ -613,6 +766,50 @@ const gotoSessionDetail = (id: string) => {
             line-height: 14px;
             letter-spacing: -1.81613px;
             color: #ffffff;
+
+            .network-box {
+                display: flex !important;
+                flex-direction: row;
+                justify-content: space-between;
+                widows: 100%;
+                .item {
+                    &.out {
+                        padding-right: 10px;
+                    }
+                    .title-row {
+                        display: flex;
+                        flex-direction: row;
+                        font-size: 14px;
+                        align-items: center;
+                        margin-bottom: 4px;
+                        font-weight: 500;
+                        .line-sample {
+                            margin-right: 4px;
+                            width: 8px;
+                            height: 8px;
+                            border: 1px solid #daefff;
+                            &.in {
+                                background-color: #83cbff;
+                            }
+                            &.out {
+                                background-color: #0e78da;
+                            }
+                        }
+                    }
+                    .mb {
+                        display: flex;
+                        flex-direction: row;
+                        align-items: baseline;
+                        .mb-value {
+                            font-size: 20px;
+                        }
+                        .mb-unit {
+                            font-weight: 550;
+                            font-size: 14px;
+                        }
+                    }
+                }
+            }
         }
 
         .detail {
@@ -639,7 +836,7 @@ const gotoSessionDetail = (id: string) => {
                 }
             }
         }
-        .detail:hover .text {
+        .detail .text {
             display: flex;
         }
         .chart {

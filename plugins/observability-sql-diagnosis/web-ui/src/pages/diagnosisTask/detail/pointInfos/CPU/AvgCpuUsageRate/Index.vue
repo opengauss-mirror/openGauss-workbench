@@ -1,11 +1,6 @@
 <template>
     <el-tabs v-model="tab" class="tast-detail-tabs">
-        <el-tab-pane :label="$t('historyDiagnosis.result')" :name="1">
-            <div>
-                <div class="suggest-content">
-                    <svg-icon name="suggest" class="icon" />
-                    <div>{{ pointData.suggest }}</div>
-                </div>
+        <point-info-wrapper :point-data="pointInfo">
 
                 <my-card :title="pointData.cpuChart.title" height="300" :bodyPadding="false">
                     <LazyLine
@@ -18,19 +13,16 @@
                         :unit="pointData.cpuChart.unit"
                     />
                 </my-card>
-            </div>
-        </el-tab-pane>
-        <el-tab-pane :label="$t('historyDiagnosis.explanation')" :name="2">
-            <div class="explanation">{{ pointData.explanation }}</div>
-        </el-tab-pane>
+        </point-info-wrapper>
     </el-tabs>
 </template>
 
 <script lang="ts" setup>
-import { getPointData } from '@/api/historyDiagnosis'
+import { PointInfo, getPointData } from '@/api/historyDiagnosis'
 import { useRequest } from 'vue-request'
 import LazyLine from '@/components/echarts/LazyLine.vue'
 import { toFixed } from '@/shared'
+import PointInfoWrapper from '@/pages/diagnosisTask/detail/PointInfoWrapper.vue'
 
 const props = withDefaults(
     defineProps<{
@@ -44,9 +36,8 @@ const props = withDefaults(
 )
 
 const tab = ref(1)
+const pointInfo = ref<PointInfo | null>(null)
 const defaultData = {
-    suggest: '',
-    explanation: '',
     cpuChart: {
         title: '',
         data: [],
@@ -55,8 +46,6 @@ const defaultData = {
     },
 }
 const pointData = ref<{
-    suggest: string
-    explanation: string
     cpuChart: {
         title: string
         data: Array<any>
@@ -90,8 +79,8 @@ watch(res, (res: any) => {
     const baseData = res
     if (!baseData) return
 
-    pointData.value.suggest = baseData.pointSuggestion
-    pointData.value.explanation = baseData.pointDetail
+    pointInfo.value = baseData
+    if (pointInfo.value?.pointState !== 'NORMAL') return
     {
         let chartData = baseData.pointData[0]
         let tempData: string[] = []

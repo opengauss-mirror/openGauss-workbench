@@ -105,8 +105,9 @@ export default {
         },
     },
     instanceIndex: {
+        instanceMetrics: '实例指标',
         memory: '内存',
-        networkInOut: '网络（In/Out）',
+        networkInOut: '网络',
         threadPoolUsed: '线程池使用率',
         activeSessionQty: '活跃会话数量',
         activeSessionQtyTips: '可以在图中选取区间下钻分析',

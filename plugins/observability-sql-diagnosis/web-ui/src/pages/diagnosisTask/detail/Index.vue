@@ -17,22 +17,34 @@
                 </keep-alive>
             </my-card>
         </div>
-        <div class="detail-right" v-show="!showLarge">
-            <div class="detail-info">
-                <my-card :title="$t('datasource.detailTitle')" :bodyPadding="false" style="position: relative">
+        <div
+            :class="{ 'detail-right': !showLarge }"
+            :style="{
+                width: showLarge ? '100%' : '450px',
+            }"
+        >
+            <div
+                :class="{ 'detail-info': !showLarge }"
+                :style="{
+                    width: showLarge ? '100%' : 'auto',
+                }"
+            >
+                <my-card
+                    :title="$t('datasource.detailTitle')"
+                    :bodyPadding="false"
+                    :style="{
+                        position: showLarge ? 'unset' : 'relative',
+                        width: showLarge ? '100%' : 'auto',
+                    }"
+                >
                     <template #headerExtend>
-                        <svg-icon name="expand" class="shrink-img" @click="goToTask" />
+                        <svg-icon v-if="!showLarge" name="expand" class="shrink-img" @click="showLargeWindow" />
+                        <svg-icon v-if="showLarge" name="expand" class="shrink-img" @click="hideLargeWindow" />
                     </template>
                     <PointInfo @goto-large="showLarge = true" :nodesType="nodesType" :taskId="urlParam.dbId" />
                 </my-card>
             </div>
         </div>
-        <my-card v-if="showLarge" :title="$t('datasource.detailTitle')" :bodyPadding="false" style="width: 100%">
-            <template #headerExtend>
-                <svg-icon name="expand" class="shrink-img" @click="hideLargeWindow" />
-            </template>
-            <PointInfo @goto-large="showLarge = true" :nodesType="nodesType" :taskId="urlParam.dbId" />
-        </my-card>
     </div>
 </template>
 
@@ -117,9 +129,6 @@ const hideLargeWindow = () => {
     showLarge.value = false
 }
 const router = useRouter()
-const goToTask = () => {
-    showLargeWindow()
-}
 const getNodeInfo = (obj: any) => {
     nodesType.value = obj.pointName
     console.log('DEBUG: nodesType.value', nodesType.value)

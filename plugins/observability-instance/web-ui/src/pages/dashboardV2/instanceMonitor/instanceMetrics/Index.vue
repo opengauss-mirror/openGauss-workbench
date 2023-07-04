@@ -1,4 +1,6 @@
 <template>
+    <IndexBar :tabId="props.tabId"></IndexBar>
+    <div style="margin-bottom: 38px"></div>
     <el-row :gutter="12">
         <el-col :span="12">
             <my-card :title="'TPS'" height="300" :bodyPadding="false">
@@ -174,7 +176,7 @@ watch(
         if (baseData.INSTANCE_DB_CONNECTION_ACTIVE) {
             let tempData: string[] = []
             baseData.INSTANCE_DB_CONNECTION_ACTIVE.forEach((d: number) => {
-                tempData.push(toFixed(d))
+                tempData.push(d.toString())
             })
             metricsData.value.connection.push({
                 data: tempData,
@@ -186,7 +188,7 @@ watch(
         if (baseData.INSTANCE_DB_CONNECTION_IDLE) {
             let tempData: string[] = []
             baseData.INSTANCE_DB_CONNECTION_IDLE.forEach((d: number) => {
-                tempData.push(toFixed(d))
+                tempData.push(d.toString())
             })
             metricsData.value.connection.push({
                 data: tempData,
@@ -198,14 +200,14 @@ watch(
         if (baseData.INSTANCE_DB_CONNECTION_CURR) {
             let tempData: string[] = []
             baseData.INSTANCE_DB_CONNECTION_CURR.forEach((d: number) => {
-                tempData.push(toFixed(d))
+                tempData.push(d.toString())
             })
             metricsData.value.connection.push({ data: tempData, name: t('instanceMonitor.instance.connectionQtyNow') })
         }
         if (baseData.INSTANCE_DB_CONNECTION_TOTAL) {
             let tempData: string[] = []
             baseData.INSTANCE_DB_CONNECTION_TOTAL.forEach((d: number) => {
-                tempData.push(toFixed(d))
+                tempData.push(d.toString())
             })
             metricsData.value.connection.push({ data: tempData, name: t('instanceMonitor.instance.maxConnectionQty') })
         }
@@ -214,7 +216,7 @@ watch(
         if (baseData.INSTANCE_DB_SLOWSQL) {
             let tempData: string[] = []
             baseData.INSTANCE_DB_SLOWSQL.forEach((d: number) => {
-                tempData.push(toFixed(d))
+                tempData.push(d.toString())
             })
             metricsData.value.slowSQL.push({ data: tempData, name: t('instanceMonitor.instance.slowSQLQty') })
         }

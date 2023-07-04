@@ -120,7 +120,8 @@ public class OpenGaussSessionHandler implements SessionHandler {
             + "select distinct  "
             + "       '/'||array_to_string(a0.pathid,'/') as pathid, "
             + "       a0.depth, "
-            + "       a0.id,a0.parentid,lpad(a0.id::text, 2*a0.depth-1+length(a0.id::text),' ') as tree_id, "
+            + "       a0.id,a0.parentid, a0.pathid[1] as tree_id, "
+            + "       lpad(a0.id::text, 2*a0.depth-1+length(a0.id::text),' ') as tree, "
             + "       a2.datname,a2.usename,a2.application_name,a2.client_addr,a2.state, "
             + "       TO_CHAR(a2.backend_start,'YYYY-MM-DD HH:MI:SS') as backend_start,a2.query,  "
             + "       a0.wait_status,a0.wait_event,a0.lockmode "
@@ -254,9 +255,6 @@ public class OpenGaussSessionHandler implements SessionHandler {
             throw new InstanceException(CommonConstants.CONNECTION_FAIL);
         }
         try {
-            if (!checkSessionIsWaiting(conn, sessionid)) {
-                return list;
-            }
             PreparedStatement stm = conn.prepareStatement(SESSION_WAITING_REC_SQL);
             stm.setLong(1, Long.parseLong(sessionid));
             list = executeQuery(stm);
@@ -278,18 +276,13 @@ public class OpenGaussSessionHandler implements SessionHandler {
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
-        List<JSONObject> treeList = toTreeData(queryList);
         if (StringUtils.isNotEmpty(sessionid)) {
-            List<JSONObject> result = new ArrayList<>();
-            for (JSONObject object : treeList) {
-                String id = object.getString("id");
-                if (sessionid.equals(id)) {
-                    result.add(object);
-                    return result;
-                }
-            }
+            Set<String> treeIdSet = queryList.stream().filter(obj -> obj.getString("pathid").contains(sessionid))
+                    .map(obj -> obj.getString("tree_id")).collect(Collectors.toSet());
+            queryList = queryList.stream().filter(obj -> treeIdSet.contains(obj.getString("tree_id")))
+                    .collect(Collectors.toList());
         }
-        return treeList;
+        return toTreeData(queryList);
     }
 
     @Override
