@@ -56,8 +56,16 @@ public class AgentUtil {
         String baseUrl = getAgentUrl(id) + param;
         var result = HttpUtil.get(baseUrl, new HashMap<>());
         var data = JSONUtil.parseArray(result);
-        List<AgentDTO> sysList = setData((JSONArray) data.get(0));
-        List<AgentDTO> dbList = setData((JSONArray) data.get(1));
+        JSONArray sysJson = new JSONArray();
+        if (data.get(0) instanceof JSONArray) {
+            sysJson = (JSONArray) data.get(0);
+        }
+        List<AgentDTO> sysList = setData((sysJson));
+        JSONArray dbJson = new JSONArray();
+        if (data.get(1) instanceof JSONArray) {
+            dbJson = (JSONArray) data.get(0);
+        }
+        List<AgentDTO> dbList = setData((dbJson));
         AgentData agentData = new AgentData();
         agentData.setParamName(param);
         agentData.setSysValue(sysList);
@@ -69,7 +77,10 @@ public class AgentUtil {
         List<HashMap<String, String>> maps = new ArrayList<>();
         for (Object object : jsonArray) {
             HashMap<String, String> hashMap = new HashMap<>();
-            JSONObject jsonObject = (JSONObject) object;
+            JSONObject jsonObject = new JSONObject();
+            if (object instanceof JSONObject) {
+                jsonObject = (JSONObject) object;
+            }
             for (String key : jsonObject.keySet()) {
                 Object value = jsonObject.get(key);
                 hashMap.put(key, value.toString());

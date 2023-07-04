@@ -24,6 +24,11 @@ public class AspAnalysisDTO {
     private String startTime;
     private String endTime;
 
+    /**
+     *
+     * AspAnalysisDTO
+     * @since 2023-07-04
+     */
     public AspAnalysisDTO(int startTime, int endTime) {
         super();
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");

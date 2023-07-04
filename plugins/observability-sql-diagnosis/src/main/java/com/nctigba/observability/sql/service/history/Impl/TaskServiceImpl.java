@@ -4,7 +4,6 @@
 
 package com.nctigba.observability.sql.service.history.Impl;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.nctigba.observability.sql.constants.history.DiagnosisTypeCommon;
 import com.nctigba.observability.sql.constants.history.OptionCommon;
@@ -101,9 +100,8 @@ public class TaskServiceImpl implements TaskService {
             if (isRun || CollectionUtils.isEmpty(params) || isDiagnosisType) {
                 if (!CollectionUtils.isEmpty(params)) {
                     sb.append(pointService).append(";");
-                    HisDiagnosisResult result =
-                            new HisDiagnosisResult(task, pointName, HisDiagnosisResult.PointState.NOT_ANALYZED,
-                                                   HisDiagnosisResult.ResultState.NO_ADVICE);
+                    HisDiagnosisResult result =new HisDiagnosisResult(task, pointName,
+                        HisDiagnosisResult.PointState.NOT_ANALYZED, HisDiagnosisResult.ResultState.NO_ADVICE);
                     resultMapper.insert(result);
                 }
                 continue;
@@ -124,9 +122,8 @@ public class TaskServiceImpl implements TaskService {
                             if (g == item && !sb.toString().contains(f.toString())) {
                                 String pointName = getClassName(f);
                                 sb.append(f).append(";");
-                                HisDiagnosisResult result =
-                                        new HisDiagnosisResult(task, pointName, HisDiagnosisResult.PointState.ABNORMAL,
-                                                               HisDiagnosisResult.ResultState.NO_ADVICE);
+                                HisDiagnosisResult result = new HisDiagnosisResult(task, pointName,
+                                    HisDiagnosisResult.PointState.ABNORMAL, HisDiagnosisResult.ResultState.NO_ADVICE);
                                 resultMapper.insert(result);
                             }
                         });
@@ -141,10 +138,8 @@ public class TaskServiceImpl implements TaskService {
                                 if (g == item && !sb.toString().contains(f.toString())) {
                                     String pointName = getClassName(f);
                                     sb.append(f).append(";");
-                                    HisDiagnosisResult result =
-                                            new HisDiagnosisResult(task, pointName,
-                                                                   HisDiagnosisResult.PointState.ABNORMAL,
-                                                                   HisDiagnosisResult.ResultState.NO_ADVICE);
+                                    HisDiagnosisResult result = new HisDiagnosisResult(task, pointName,
+                                        HisDiagnosisResult.PointState.ABNORMAL, HisDiagnosisResult.ResultState.NO_ADVICE);
                                     result.setPointSuggestion(itemData.toString());
                                     resultMapper.insert(result);
                                 }
@@ -176,7 +171,7 @@ public class TaskServiceImpl implements TaskService {
                     AnalysisDTO analysisDTO = pointService.analysis(task, dataStoreService);
                     task.addRemarks("stop analysis " + pointName);
                     HisDiagnosisResult result =
-                            new HisDiagnosisResult(task, analysisDTO, pointName, HisDiagnosisResult.PointState.NORMAL);
+                        new HisDiagnosisResult(task, analysisDTO, pointName, HisDiagnosisResult.PointState.NORMAL);
                     resultMapper.insert(result);
                 }
             }

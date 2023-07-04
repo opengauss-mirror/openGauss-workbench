@@ -29,6 +29,11 @@ public class PointUtil {
     @Autowired
     private HisThresholdMapper hisThresholdMapper;
 
+    /**
+     *
+     * aspTimeSlot
+     * @since 2023-07-04
+     */
     public List<AspAnalysisDTO> aspTimeSlot(List<PrometheusData> prometheusDataList) {
         List<AspAnalysisDTO> dtoList = new ArrayList<>();
         List<Integer> timeList = new ArrayList<>();
@@ -58,19 +63,30 @@ public class PointUtil {
             } else if (count == 0) {
                 AspAnalysisDTO dto = new AspAnalysisDTO(timeList.get(i), timeList.get(i));
                 dtoList.add(dto);
+            } else {
+                log.info("not exists slot");
             }
             cursor = i + count + 1;
         }
         return dtoList;
     }
 
+    /**
+     *
+     * dataToObject
+     * @since 2023-07-04
+     */
     public List<PrometheusData> dataToObject(List<?> list) {
         List<PrometheusData> prometheusDataList = new ArrayList<>();
         if (CollectionUtils.isEmpty(list)) {
             return prometheusDataList;
         }
         PrometheusData prometheusData = new PrometheusData();
-        prometheusData.setMetric(((PrometheusData) list.get(0)).getMetric());
+        PrometheusData objectData = new PrometheusData();
+        if (list.get(0) instanceof PrometheusData) {
+            objectData = (PrometheusData) list.get(0);
+        }
+        prometheusData.setMetric(objectData.getMetric());
         JSONArray jsonArray = new JSONArray();
         for (Object object : list) {
             if (object instanceof PrometheusData) {
@@ -82,6 +98,11 @@ public class PointUtil {
         return prometheusDataList;
     }
 
+    /**
+     *
+     * thresholdMap
+     * @since 2023-07-04
+     */
     public HashMap<String, String> thresholdMap(List<HisDiagnosisThreshold> thresholds) {
         LambdaQueryWrapper<HisDiagnosisThreshold> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.orderByDesc(HisDiagnosisThreshold::getThresholdType);

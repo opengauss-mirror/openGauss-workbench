@@ -83,14 +83,11 @@ public class HisDiagnosisResult {
         NORMAL
     }
 
-    public HisDiagnosisResult setData(Object obj) {
-        Object jsonObject = JSONObject.toJSON(obj);
-        if (jsonObject instanceof JSON) {
-            this.pointData = (JSON) jsonObject;
-        }
-        return this;
-    }
-
+    /**
+     *
+     * HisDiagnosisResult
+     * @since 2023-07-04
+     */
     public HisDiagnosisResult(HisDiagnosisTask task, String pointName, PointState pointState, ResultState isHint) {
         this.clusterId = task.getClusterId();
         this.nodeId = task.getNodeId();
@@ -103,6 +100,11 @@ public class HisDiagnosisResult {
         this.pointState = pointState;
     }
 
+    /**
+     *
+     * HisDiagnosisResult
+     * @since 2023-07-04
+     */
     public HisDiagnosisResult(HisDiagnosisTask task, AnalysisDTO analysisDTO, String pointName, PointState pointState) {
         this.clusterId = task.getClusterId();
         this.nodeId = task.getNodeId();
@@ -124,5 +126,18 @@ public class HisDiagnosisResult {
         if (jsonObject instanceof JSON) {
             this.pointData = (JSON) jsonObject;
         }
+    }
+
+    /**
+     *
+     * setData
+     * @since 2023-07-04
+     */
+    public HisDiagnosisResult setData(Object obj) {
+        Object jsonObject = JSONObject.toJSON(obj);
+        if (jsonObject instanceof JSON) {
+            this.pointData = (JSON) jsonObject;
+        }
+        return this;
     }
 }

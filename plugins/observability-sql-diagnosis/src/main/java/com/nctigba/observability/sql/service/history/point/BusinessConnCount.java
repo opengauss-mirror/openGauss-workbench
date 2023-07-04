@@ -74,7 +74,6 @@ public class BusinessConnCount implements HisDiagnosisPointService<Object> {
     public AnalysisDTO analysis(HisDiagnosisTask task, DataStoreService dataStoreService) {
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
         simpleDateFormat.setTimeZone(TimeZone.getTimeZone("GMT+00:00"));
-        HashMap<String, String> map = pointUtil.thresholdMap(task.getThresholds());
         List<?> proList = (List<?>) dataStoreService.getData(dbAvgCpuItem).getCollectionData();
         AnalysisDTO analysisDTO = new AnalysisDTO();
         if (CollectionUtils.isEmpty(proList)) {
@@ -155,6 +154,7 @@ public class BusinessConnCount implements HisDiagnosisPointService<Object> {
                     }
                     avgCount = count / datasList.size();
                 }
+                HashMap<String, String> map = pointUtil.thresholdMap(task.getThresholds());
                 if (avgCount - avgPreCount > Integer.parseInt(
                         map.get(ThresholdCommon.CONNECTION_NUM))) {
                     analysisDTO.setIsHint(HisDiagnosisResult.ResultState.SUGGESTIONS);
