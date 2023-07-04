@@ -1,0 +1,87 @@
+context:
+  listener:
+    classes: com.nctigba.alert.monitor.listener.PluginListener
+spring:
+  servlet:
+    multipart:
+      max-file-size: 20MB #The maximum file size is 20MB.
+      max-request-size: 20MB #The total file size for a single request is limited to 20MB.
+  sql:
+    init:
+      mode: always
+      data-locations: classpath:db/observability-alert.sql
+      continue-on-error: true
+  profiles:
+    active: '@profiles.active@'
+  resources:
+    static-locations: classpath:resources,file:D://static
+  datasource:
+    dynamic:
+      strict: false #Strictly match the data source, default is false. When set to true and no specified data source is matched, an exception will be thrown. When set to false, the default data source will be used.
+  jackson:
+    time-zone: GMT+8
+    date-format: yyyy-MM-dd HH:mm:ss
+    serialization:
+      indent_output: true
+      fail_on_empty_beans: false
+    deserialization:
+      fail_on_unknown_properties: true
+    parser:
+      allow_unquoted_control_chars: true
+      allow_single_quotes: true
+server.compression:
+  enabled: true
+  mime-types: application/javascript,text/css,application/json,application/xml,text/html,text/xml,text/plain
+mybatis-plus:
+  typeAliasesPackage: org.opengauss.plugin.alertcenter.entity
+  mapperLocations: classpath*:mapper/*.xml
+  configuration:
+    mapUnderscoreToCamelCase: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+alert:
+  rule-file-prefix: rules/
+  rule-file-suffix: .yml
+  alertmanager:  #The complete path for Prometheus push is /plugins/alert-monitor/api/v1/alerts. /plugins/alert-monitor
+    path-prefix: /plugins/alert-monitor
+    api-version: v1
+  ruleItems:
+    - name: cpuUsage
+      unit: "%"
+      ruleExps:
+      - type: normal
+        exp: (1- avg(rate(agent_cpu_seconds_total{mode=\"idle\",instance=~\"${instances}\"}[5m])) by(instance))  * 100
+      - type: trend
+        exp: avg by(instance) (rate(agent_cpu_seconds_total{mode=\"idle\",instance=~\"${instances}\"}[5m] offset 15s)) - avg by(instance) (rate(agent_cpu_seconds_total{mode=\"idle\",instance=~\"${instances}\"}[5m]))
+    - name: memoryUsage
+      unit: "%"
+      ruleExps:
+        - type: normal
+          exp: 100 * (1 - (agent_memory_MemFree_bytes + agent_memory_Cached_bytes + agent_memory_Buffers_bytes) / agent_memory_MemTotal_bytes{instance=~\"${instances}\"})
+        - type: trend
+          exp: (agent_memory_MemFree_bytes offset 15s + agent_memory_Cached_bytes offset 15s + agent_memory_Buffers_bytes offset 15s) / agent_memory_MemTotal_bytes{instance=~\"${instances}\"} - (agent_memory_MemFree_bytes + agent_memory_Cached_bytes + agent_memory_Buffers_bytes) / agent_memory_MemTotal_bytes{instance=~\"${instances}\"}
+    - name: diskUsage
+      unit: MB
+      ruleExps:
+        - type: normal
+          exp: (agent_filesystem_size_bytes{device=~\"${filesystemPath}\",instance=~\"${instances}\"} - agent_filesystem_free_bytes) /1024/1024
+        - type: trend
+          exp: agent_filesystem_free_bytes{device=~\"${filesystemPath}\",instance=~\"${instances}\"} offset 15s - agent_filesystem_free_bytes{device=~\"${filesystemPath}\",instance=~\"${instances}\"}
+      params:
+        paramName: filesystemPath
+        paramValue:
+        paramOrder: 1
+    - name: diskWriteRate
+      unit: MB/s
+      ruleExps:
+        - type: normal
+          exp: sum(rate(agent_disk_written_bytes_total{instance=~\"${instances}\"}[2m])) by (instance) /1024/1024
+        - type: trend
+          exp: sum(rate(agent_disk_written_bytes_total{instance=~\"${instances}\"}[2m])) by (instance) - sum(rate(agent_disk_written_bytes_total{instance=~\"${instances}\"}[5m] offset 15s)) by (instance)
+    - name: diskReadRate
+      unit: MB/s
+      ruleExps:
+        - type: normal
+          exp: sum(rate(agent_disk_read_bytes_total{instance=~\"${instances}\"}[2m])) by (instance) /1024/1024
+        - type: trend
+          exp: sum(rate(agent_disk_read_bytes_total{instance=~\"${instances}\"}[2m])) by (instance) - sum(rate(agent_disk_read_bytes_total{instance=~\"${instances}\"}[5m] offset 15s)) by (instance)
