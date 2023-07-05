@@ -332,7 +332,6 @@ const handleClusterValue = (val: any) => {
     diagnosisParam.value.nodeId = nodeId
 }
 onMounted(() => {
-    // router.push(`/vem/diagnosisTaskDetail/67`)
     // @ts-ignore
     const wujie = window.$wujie
     const startTime = wujie?.props.data.startTime

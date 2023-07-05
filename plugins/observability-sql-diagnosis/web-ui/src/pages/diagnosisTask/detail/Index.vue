@@ -18,13 +18,15 @@
             </my-card>
         </div>
         <div
-            :class="{ 'detail-right': !showLarge }"
+            class="detail-right"
             :style="{
                 width: showLarge ? '100%' : '450px',
+                height: '100%',
+                'margin-left': showLarge ? '0px' : '10px',
             }"
         >
             <div
-                :class="{ 'detail-info': !showLarge }"
+                class="detail-info"
                 :style="{
                     width: showLarge ? '100%' : 'auto',
                 }"
@@ -33,7 +35,7 @@
                     :title="$t('datasource.detailTitle')"
                     :bodyPadding="false"
                     :style="{
-                        position: showLarge ? 'unset' : 'relative',
+                        position: showLarge ? 'relative' : 'relative',
                         width: showLarge ? '100%' : 'auto',
                     }"
                 >
@@ -251,8 +253,6 @@ watch(res, (res: any) => {
 
     .detail-right {
         height: 100%;
-        width: 450px;
-        margin-left: 10px;
         .detail-info {
             height: 100%;
         }
