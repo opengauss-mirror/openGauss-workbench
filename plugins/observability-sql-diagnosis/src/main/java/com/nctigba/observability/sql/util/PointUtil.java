@@ -30,9 +30,10 @@ public class PointUtil {
     private HisThresholdMapper hisThresholdMapper;
 
     /**
+     * Get asp time slot
      *
-     * aspTimeSlot
-     * @since 2023-07-04
+     * @param prometheusDataList Prometheus data
+     * @return list
      */
     public List<AspAnalysisDTO> aspTimeSlot(List<PrometheusData> prometheusDataList) {
         List<AspAnalysisDTO> dtoList = new ArrayList<>();
@@ -72,9 +73,10 @@ public class PointUtil {
     }
 
     /**
+     * Prometheus' data transform to list
      *
-     * dataToObject
-     * @since 2023-07-04
+     * @param list Prometheus data
+     * @return list
      */
     public List<PrometheusData> dataToObject(List<?> list) {
         List<PrometheusData> prometheusDataList = new ArrayList<>();
@@ -99,9 +101,10 @@ public class PointUtil {
     }
 
     /**
+     * Threshold info transform to maps
      *
-     * thresholdMap
-     * @since 2023-07-04
+     * @param thresholds Threshold info
+     * @return HashMap
      */
     public HashMap<String, String> thresholdMap(List<HisDiagnosisThreshold> thresholds) {
         LambdaQueryWrapper<HisDiagnosisThreshold> queryWrapper = new LambdaQueryWrapper<>();

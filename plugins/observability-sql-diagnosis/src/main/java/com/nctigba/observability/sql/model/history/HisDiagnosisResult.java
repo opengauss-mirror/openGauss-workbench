@@ -65,28 +65,13 @@ public class HisDiagnosisResult {
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'", timezone = "UTC")
     Date updateTime = new Date();
 
-    public enum ResultState {
-        NO_ADVICE,
-        SUGGESTIONS
-    }
-
-    public enum PointType {
-        ROOT,
-        CENTER,
-        DIAGNOSIS,
-        DISPLAY
-    }
-
-    public enum PointState {
-        NOT_ANALYZED,
-        ABNORMAL,
-        NORMAL
-    }
-
     /**
+     * Construction method
      *
-     * HisDiagnosisResult
-     * @since 2023-07-04
+     * @param task Diagnosis task info
+     * @param pointName Diagnosis point name
+     * @param pointState Diagnosis point state
+     * @param isHint Diagnosis point is or not hint
      */
     public HisDiagnosisResult(HisDiagnosisTask task, String pointName, PointState pointState, ResultState isHint) {
         this.clusterId = task.getClusterId();
@@ -101,9 +86,12 @@ public class HisDiagnosisResult {
     }
 
     /**
+     * Construction method
      *
-     * HisDiagnosisResult
-     * @since 2023-07-04
+     * @param task Diagnosis task info
+     * @param analysisDTO Diagnosis data
+     * @param pointName Diagnosis point name
+     * @param pointState Diagnosis point state
      */
     public HisDiagnosisResult(HisDiagnosisTask task, AnalysisDTO analysisDTO, String pointName, PointState pointState) {
         this.clusterId = task.getClusterId();
@@ -129,9 +117,10 @@ public class HisDiagnosisResult {
     }
 
     /**
+     * set method
      *
-     * setData
-     * @since 2023-07-04
+     * @param obj Diagnosis data
+     * @return JSON formatted data
      */
     public HisDiagnosisResult setData(Object obj) {
         Object jsonObject = JSONObject.toJSON(obj);
@@ -139,5 +128,23 @@ public class HisDiagnosisResult {
             this.pointData = (JSON) jsonObject;
         }
         return this;
+    }
+
+    public enum ResultState {
+        NO_ADVICE,
+        SUGGESTIONS
+    }
+
+    public enum PointType {
+        ROOT,
+        CENTER,
+        DIAGNOSIS,
+        DISPLAY
+    }
+
+    public enum PointState {
+        NOT_ANALYZED,
+        ABNORMAL,
+        NORMAL
     }
 }

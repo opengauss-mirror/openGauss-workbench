@@ -25,9 +25,10 @@ public class AspAnalysisDTO {
     private String endTime;
 
     /**
+     * Construction method
      *
-     * AspAnalysisDTO
-     * @since 2023-07-04
+     * @param startTime Start time of second level jitter
+     * @param endTime End time of second level jitter
      */
     public AspAnalysisDTO(int startTime, int endTime) {
         super();

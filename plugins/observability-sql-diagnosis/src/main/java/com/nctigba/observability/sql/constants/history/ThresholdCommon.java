@@ -15,10 +15,9 @@ public class ThresholdCommon {
     public static final String DB_CPU_USAGE_RATE = "dbCpuUsageRate";
     public static final String PRO_CPU_USAGE_RATE = "proCpuUsageRate";
     public static final String ACTIVITY_NUM = "activityNum";
+
     /**
-     *
-     * connectionNum
-     * @since 2023-07-04
+     * Business connection number threshold constant value
      */
     public static final String CONNECTION_NUM = "connectionNum";
     public static final String THREAD_POOL_USAGE_RATE = "threadPoolUsageRate";

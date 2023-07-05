@@ -48,16 +48,16 @@ public abstract class PrometheusCollectionItem implements CollectionItem<Object>
                 String start = String.valueOf(startTime + (long) PrometheusConstants.MAX_STEP_NUM * (i - 1));
                 if (rangTime - (long) PrometheusConstants.MAX_STEP_NUM * (i - 1)
                         == rangTime % PrometheusConstants.MAX_STEP_NUM) {
-                    List<?> data = (List<?>) prometheusUtil.rangeQuery(queryId, metric,
-                        start, String.valueOf(endTime), PrometheusConstants.STEP);
+                    List<?> data = (List<?>) prometheusUtil.rangeQuery(
+                            queryId, metric, start, String.valueOf(endTime), PrometheusConstants.STEP);
                     for (Object object : data) {
                         if (object instanceof PrometheusData) {
                             partList.add((PrometheusData) object);
                         }
                     }
                 } else {
-                    partList = (List<PrometheusData>) prometheusUtil.rangeQuery(queryId, metric,
-                        start, String.valueOf(startTime + (long) PrometheusConstants.MAX_STEP_NUM  * i), PrometheusConstants.STEP);
+                    partList = (List<PrometheusData>) prometheusUtil.rangeQuery(queryId, metric, start, String.valueOf(
+                            startTime + (long) PrometheusConstants.MAX_STEP_NUM * i), PrometheusConstants.STEP);
                 }
                 if (CollectionUtils.isEmpty(partList)) {
                     continue;
@@ -65,10 +65,10 @@ public abstract class PrometheusCollectionItem implements CollectionItem<Object>
                 dataList.addAll(partList);
             }
         } else {
-            dataList = (List<PrometheusData>) prometheusUtil.rangeQuery(queryId, metric,
-                String.valueOf(task.getHisDataStartTime().getTime()/ PrometheusConstants.MS),
-                String.valueOf(task.getHisDataEndTime().getTime()/ PrometheusConstants.MS),
-                PrometheusConstants.STEP);
+            dataList = (List<PrometheusData>) prometheusUtil.rangeQuery(
+                    queryId, metric, String.valueOf(task.getHisDataStartTime().getTime() / PrometheusConstants.MS),
+                    String.valueOf(task.getHisDataEndTime().getTime() / PrometheusConstants.MS),
+                    PrometheusConstants.STEP);
         }
         return dataList;
     }
@@ -89,8 +89,7 @@ public abstract class PrometheusCollectionItem implements CollectionItem<Object>
         }
         String metric = getPrometheusParam(null);
         String queryId = getParamId(metric, task.getNodeId());
-        return prometheusUtil.rangeQuery(queryId, metric,
-            String.valueOf(startTime), String.valueOf(endTime), step);
+        return prometheusUtil.rangeQuery(queryId, metric, String.valueOf(startTime), String.valueOf(endTime), step);
     }
 
     abstract String getPrometheusParam(List<HisDiagnosisThreshold> thresholds);

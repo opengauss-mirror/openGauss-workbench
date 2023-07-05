@@ -20,10 +20,9 @@ public class MetricCommon {
     public static final String THREAD_POOL_USAGE_RATE =
             "local_threadpool_status_pool_utilization_rate{instanceId=\"history_diagnosis_nodeId\"}";
     public static final String WAIT_EVENT = "gauss_thread_wait_status_count{instanceId=\"history_diagnosis_nodeId\"}";
+
     /**
-     *
-     * connectionNum
-     * @since 2023-07-04
+     * Business connection number constant value
      */
     public static final String BUSINESS_CONN_COUNT =
             "sum(pg_stat_activity_count{instanceId=\"history_diagnosis_nodeId\"})";
