@@ -76,11 +76,11 @@ public class AvgCpuUsageRate implements HisDiagnosisPointService<List<Prometheus
         for (CollectionItem<?> item : getSourceDataKeys()) {
             List<?> list = (List<?>) item.queryData(task);
             List<PrometheusData> prometheusDataList = new ArrayList<>();
-            list.forEach(data -> {
-                if (data instanceof PrometheusData) {
-                    prometheusDataList.add((PrometheusData) data);
+            for (Object object : list) {
+                if (object instanceof PrometheusData) {
+                    prometheusDataList.add((PrometheusData) object);
                 }
-            });
+            }
             if (CollectionUtils.isEmpty(prometheusDataList)) {
                 continue;
             }

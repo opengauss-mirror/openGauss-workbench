@@ -13,6 +13,8 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.nctigba.common.mybatis.JacksonJsonWithClassTypeHandler;
+import com.nctigba.observability.sql.model.history.dto.AnalysisDTO;
+import com.nctigba.observability.sql.util.LocaleString;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
@@ -63,6 +65,71 @@ public class HisDiagnosisResult {
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'", timezone = "UTC")
     Date updateTime = new Date();
 
+    /**
+     * Construction method
+     *
+     * @param task Diagnosis task info
+     * @param pointName Diagnosis point name
+     * @param pointState Diagnosis point state
+     * @param isHint Diagnosis point is or not hint
+     */
+    public HisDiagnosisResult(HisDiagnosisTask task, String pointName, PointState pointState, ResultState isHint) {
+        this.clusterId = task.getClusterId();
+        this.nodeId = task.getNodeId();
+        this.taskId = task.getId();
+        this.pointName = pointName;
+        this.pointTitle = LocaleString.format("history." + pointName + ".title");
+        this.pointSuggestion = LocaleString.format("history." + pointName + ".suggest");
+        this.isHint = isHint;
+        this.pointDetail = LocaleString.format("history." + pointName + ".detail");
+        this.pointState = pointState;
+    }
+
+    /**
+     * Construction method
+     *
+     * @param task Diagnosis task info
+     * @param analysisDTO Diagnosis data
+     * @param pointName Diagnosis point name
+     * @param pointState Diagnosis point state
+     */
+    public HisDiagnosisResult(HisDiagnosisTask task, AnalysisDTO analysisDTO, String pointName, PointState pointState) {
+        this.clusterId = task.getClusterId();
+        this.nodeId = task.getNodeId();
+        this.taskId = task.getId();
+        this.pointName = pointName;
+        if (analysisDTO.getIsHint() != null && analysisDTO.getIsHint().equals(
+                ResultState.SUGGESTIONS)) {
+            this.pointSuggestion = LocaleString.format("history." + pointName + ".suggest.high");
+            this.pointTitle = LocaleString.format("history." + pointName + ".title.high");
+        } else {
+            this.pointSuggestion = LocaleString.format("history." + pointName + ".suggest.normal");
+            this.pointTitle = LocaleString.format("history." + pointName + ".title.normal");
+        }
+        this.isHint = analysisDTO.getIsHint();
+        this.pointType = analysisDTO.getPointType();
+        this.pointDetail = LocaleString.format("history." + pointName + ".detail");
+        this.pointState = pointState;
+        Object jsonObject = JSONObject.toJSON(analysisDTO.getPointData());
+        if (jsonObject instanceof JSON) {
+            this.pointData = (JSON) jsonObject;
+        }
+    }
+
+    /**
+     * set method
+     *
+     * @param obj Diagnosis data
+     * @return JSON formatted data
+     */
+    public HisDiagnosisResult setData(Object obj) {
+        Object jsonObject = JSONObject.toJSON(obj);
+        if (jsonObject instanceof JSON) {
+            this.pointData = (JSON) jsonObject;
+        }
+        return this;
+    }
+
     public enum ResultState {
         NO_ADVICE,
         SUGGESTIONS
@@ -79,13 +146,5 @@ public class HisDiagnosisResult {
         NOT_ANALYZED,
         ABNORMAL,
         NORMAL
-    }
-
-    public HisDiagnosisResult setData(Object obj) {
-        Object jsonObject = JSONObject.toJSON(obj);
-        if (jsonObject instanceof JSON) {
-            this.pointData = (JSON) jsonObject;
-        }
-        return this;
     }
 }

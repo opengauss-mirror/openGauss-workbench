@@ -33,35 +33,23 @@ import java.util.TimeZone;
  * @author luomeng
  * @since 2023/6/9
  */
-public abstract class ElasticSearchCollectionItem implements CollectionItem<LogInfoDTO> {
+public abstract class ElasticSearchCollectionItem implements CollectionItem<Object> {
     @Autowired
     private EsLogSearchUtils utils;
 
     @Override
-    public LogInfoDTO collectData(HisDiagnosisTask task) {
-        if (task.getHisDataEndTime() == null) {
-            Date endDate = new Date();
-            task.setHisDataEndTime(endDate);
-        }
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
-        SimpleDateFormat stringFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
-        dateFormat.setTimeZone(TimeZone.getTimeZone("GMT+00:00"));
-        List<String> nodes = new ArrayList<>();
-        nodes.add(task.getNodeId());
-        EsSearchQuery query = new EsSearchQuery();
-        try {
-            query.setStartDate(stringFormat.parse(dateFormat.format(task.getHisDataStartTime())));
-            query.setEndDate(stringFormat.parse(dateFormat.format(task.getHisDataEndTime())));
-        } catch (ParseException e) {
-            throw new HisDiagnosisException("error:", e);
-        }
-        query.setNodeId(nodes);
-        query.setSearchPhrase(getQueryParam());
-        return getLogByQuery(query).orElse(null);
+    public Object collectData(HisDiagnosisTask task) {
+        return query(task);
     }
 
     @Override
-    public LogInfoDTO queryData(HisDiagnosisTask task) {
+    public Object queryData(HisDiagnosisTask task) {
+        return query(task);
+    }
+
+    abstract String getQueryParam();
+
+    private Object query(HisDiagnosisTask task) {
         if (task.getHisDataEndTime() == null) {
             Date endDate = new Date();
             task.setHisDataEndTime(endDate);
@@ -73,17 +61,17 @@ public abstract class ElasticSearchCollectionItem implements CollectionItem<LogI
         nodes.add(task.getNodeId());
         EsSearchQuery query = new EsSearchQuery();
         query.setNodeId(nodes);
+        query.setSearchPhrase(getQueryParam());
+        LogInfoDTO logInfoDTO;
         try {
             query.setStartDate(stringFormat.parse(dateFormat.format(task.getHisDataStartTime())));
             query.setEndDate(stringFormat.parse(dateFormat.format(task.getHisDataEndTime())));
-        } catch (ParseException e) {
-            throw new HisDiagnosisException("error", e);
+            logInfoDTO = getLogByQuery(query).orElse(null);
+        } catch (ParseException | HisDiagnosisException e) {
+            return "error" + e.getMessage();
         }
-        query.setSearchPhrase(getQueryParam());
-        return getLogByQuery(query).orElse(null);
+        return logInfoDTO;
     }
-
-    abstract String getQueryParam();
 
     private Optional<LogInfoDTO> getLogByQuery(EsSearchQuery queryParam) {
         List<String> logType = new ArrayList<>();
@@ -107,7 +95,12 @@ public abstract class ElasticSearchCollectionItem implements CollectionItem<LogI
             return Optional.empty();
         } else {
             var list = new ArrayList<LogDetailInfoDTO>();
-            SearchResponse<HashMap> searchResponse = utils.queryLogInfo(queryParam).orElse(null);
+            SearchResponse<HashMap> searchResponse;
+            try {
+                searchResponse = utils.queryLogInfo(queryParam).orElse(null);
+            } catch (HisDiagnosisException e) {
+                throw new HisDiagnosisException("error" + e.getMessage());
+            }
             if (searchResponse == null) {
                 return Optional.empty();
             }
@@ -136,8 +129,6 @@ public abstract class ElasticSearchCollectionItem implements CollectionItem<LogI
             List<String> sorts = new ArrayList<>();
             if (!hits.isEmpty()) {
                 sorts.addAll(hits.get(hits.size() - 1).sort());
-            } else {
-                sorts.addAll(queryParam.getSorts());
             }
             LogInfoDTO logInfoDTO = new LogInfoDTO();
             logInfoDTO.setSorts(sorts);

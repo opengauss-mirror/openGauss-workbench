@@ -4,8 +4,11 @@
 
 package com.nctigba.observability.sql.model.history.point;
 
+import com.nctigba.observability.sql.model.history.dto.ConnCountDTO;
 import lombok.Data;
 import lombok.experimental.Accessors;
+
+import java.util.List;
 
 /**
  * BusinessConnCountDTO
@@ -16,10 +19,6 @@ import lombok.experimental.Accessors;
 @Data
 @Accessors(chain = true)
 public class BusinessConnCountDTO {
-    private String beforeStartTime;
-    private String beforeEndTime;
-    private String beforeSessionCount;
-    private String nowStartTime;
-    private String nowEndTime;
-    private String nowSessionCount;
+    List<ConnCountDTO> connCount;
+    List<AspAnalysisDTO> timeSlot;
 }

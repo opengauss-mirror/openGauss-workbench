@@ -4,7 +4,7 @@
 
 package com.nctigba.observability.sql.service.history.Impl;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.nctigba.observability.sql.constants.history.DiagnosisTypeCommon;
 import com.nctigba.observability.sql.constants.history.OptionCommon;
 import com.nctigba.observability.sql.mapper.history.HisDiagnosisResultMapper;
@@ -24,7 +24,6 @@ import com.nctigba.observability.sql.service.history.DataStoreService;
 import com.nctigba.observability.sql.service.history.HisDiagnosisPointService;
 import com.nctigba.observability.sql.service.history.TaskService;
 import com.nctigba.observability.sql.service.history.collection.CollectionItem;
-import com.nctigba.observability.sql.util.LocaleString;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -101,16 +100,8 @@ public class TaskServiceImpl implements TaskService {
             if (isRun || CollectionUtils.isEmpty(params) || isDiagnosisType) {
                 if (!CollectionUtils.isEmpty(params)) {
                     sb.append(pointService).append(";");
-                    HisDiagnosisResult result = new HisDiagnosisResult();
-                    result.setTaskId(task.getId());
-                    result.setPointName(pointName);
-                    result.setPointDetail(LocaleString.format("history." + pointName + ".detail"));
-                    result.setPointSuggestion(LocaleString.format("history." + pointName + ".suggest"));
-                    result.setPointTitle(LocaleString.format("history." + pointName + ".title"));
-                    result.setPointState(HisDiagnosisResult.PointState.NOT_ANALYZED);
-                    result.setIsHint(HisDiagnosisResult.ResultState.NO_ADVICE);
-                    result.setClusterId(task.getClusterId());
-                    result.setNodeId(task.getNodeId());
+                    HisDiagnosisResult result = new HisDiagnosisResult(task, pointName,
+                            HisDiagnosisResult.PointState.NOT_ANALYZED, HisDiagnosisResult.ResultState.NO_ADVICE);
                     resultMapper.insert(result);
                 }
                 continue;
@@ -131,16 +122,9 @@ public class TaskServiceImpl implements TaskService {
                             if (g == item && !sb.toString().contains(f.toString())) {
                                 String pointName = getClassName(f);
                                 sb.append(f).append(";");
-                                HisDiagnosisResult result = new HisDiagnosisResult();
-                                result.setTaskId(task.getId());
-                                result.setPointName(pointName);
-                                result.setPointDetail(LocaleString.format("history." + pointName + ".detail"));
-                                result.setPointSuggestion(LocaleString.format("history." + pointName + ".suggest"));
-                                result.setPointTitle(LocaleString.format("history." + pointName + ".title"));
-                                result.setPointState(HisDiagnosisResult.PointState.ABNORMAL);
-                                result.setIsHint(HisDiagnosisResult.ResultState.NO_ADVICE);
-                                result.setClusterId(task.getClusterId());
-                                result.setNodeId(task.getNodeId());
+                                HisDiagnosisResult result = new HisDiagnosisResult(task, pointName,
+                                        HisDiagnosisResult.PointState.ABNORMAL,
+                                        HisDiagnosisResult.ResultState.NO_ADVICE);
                                 resultMapper.insert(result);
                             }
                         });
@@ -155,16 +139,10 @@ public class TaskServiceImpl implements TaskService {
                                 if (g == item && !sb.toString().contains(f.toString())) {
                                     String pointName = getClassName(f);
                                     sb.append(f).append(";");
-                                    HisDiagnosisResult result = new HisDiagnosisResult();
-                                    result.setTaskId(task.getId());
-                                    result.setPointName(pointName);
-                                    result.setPointDetail(LocaleString.format("history." + pointName + ".detail"));
+                                    HisDiagnosisResult result = new HisDiagnosisResult(task, pointName,
+                                            HisDiagnosisResult.PointState.ABNORMAL,
+                                            HisDiagnosisResult.ResultState.NO_ADVICE);
                                     result.setPointSuggestion(itemData.toString());
-                                    result.setPointTitle(LocaleString.format("history." + pointName + ".title"));
-                                    result.setPointState(HisDiagnosisResult.PointState.ABNORMAL);
-                                    result.setIsHint(HisDiagnosisResult.ResultState.NO_ADVICE);
-                                    result.setClusterId(task.getClusterId());
-                                    result.setNodeId(task.getNodeId());
                                     resultMapper.insert(result);
                                 }
                             });
@@ -194,23 +172,8 @@ public class TaskServiceImpl implements TaskService {
                     task.addRemarks("start analysis " + pointName);
                     AnalysisDTO analysisDTO = pointService.analysis(task, dataStoreService);
                     task.addRemarks("stop analysis " + pointName);
-                    HisDiagnosisResult result = new HisDiagnosisResult();
-                    result.setTaskId(task.getId());
-                    result.setPointName(pointName);
-                    result.setPointDetail(LocaleString.format("history." + pointName + ".detail"));
-                    if (analysisDTO.getIsHint().equals(HisDiagnosisResult.ResultState.SUGGESTIONS)) {
-                        result.setPointSuggestion(LocaleString.format("history." + pointName + ".suggest.high"));
-                        result.setPointTitle(LocaleString.format("history." + pointName + ".title.high"));
-                    } else {
-                        result.setPointSuggestion(LocaleString.format("history." + pointName + ".suggest.normal"));
-                        result.setPointTitle(LocaleString.format("history." + pointName + ".title.normal"));
-                    }
-                    result.setData(analysisDTO.getPointData());
-                    result.setPointState(HisDiagnosisResult.PointState.NORMAL);
-                    result.setPointType(analysisDTO.getPointType());
-                    result.setIsHint(analysisDTO.getIsHint());
-                    result.setClusterId(task.getClusterId());
-                    result.setNodeId(task.getNodeId());
+                    HisDiagnosisResult result = new HisDiagnosisResult(
+                            task, analysisDTO, pointName, HisDiagnosisResult.PointState.NORMAL);
                     resultMapper.insert(result);
                 }
             }
@@ -272,8 +235,7 @@ public class TaskServiceImpl implements TaskService {
     }
 
     private List<HisDiagnosisThreshold> getThresholds(List<HisThresholdDTO> dtoList) {
-        LambdaQueryWrapper<HisDiagnosisThreshold> queryWrapper = new LambdaQueryWrapper<>();
-        List<HisDiagnosisThreshold> thresholdList = hisThresholdMapper.selectList(queryWrapper);
+        List<HisDiagnosisThreshold> thresholdList = hisThresholdMapper.selectList(Wrappers.emptyWrapper());
         if (!CollectionUtils.isEmpty(dtoList)) {
             thresholdList.forEach(f -> dtoList.forEach(g -> {
                 if (g.getThreshold().equals(f.getThreshold())) {

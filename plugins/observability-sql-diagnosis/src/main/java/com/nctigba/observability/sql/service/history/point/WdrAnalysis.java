@@ -21,16 +21,14 @@ import com.nctigba.observability.sql.service.history.HisDiagnosisPointService;
 import com.nctigba.observability.sql.service.history.collection.CollectionItem;
 import com.nctigba.observability.sql.service.history.collection.metric.DbAvgCpuItem;
 import com.nctigba.observability.sql.util.LocaleString;
+import com.nctigba.observability.sql.util.PointUtil;
 import com.nctigba.observability.sql.util.PrometheusUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
-import java.util.TimeZone;
 
 /**
  * WdrAnalysis
@@ -46,6 +44,8 @@ public class WdrAnalysis implements HisDiagnosisPointService<List<PrometheusData
     private HisDiagnosisTaskMapper taskMapper;
     @Autowired
     private DbAvgCpuItem dbAvgCpuItem;
+    @Autowired
+    private PointUtil pointUtil;
 
     @Override
     public List<String> getOption() {
@@ -97,7 +97,6 @@ public class WdrAnalysis implements HisDiagnosisPointService<List<PrometheusData
                 for (int i = 0; i <= timeList.size() - mCount * minute; i = i + hCount) {
                     int step = Integer.parseInt(PrometheusConstants.STEP);
                     int count = minute / step * minute;
-                    AspAnalysisDTO dto = new AspAnalysisDTO();
                     int startTime = timeList.get(i);
                     int realityTime = timeList.get(i + count);
                     int expectTime = startTime + step * (count);
@@ -105,10 +104,7 @@ public class WdrAnalysis implements HisDiagnosisPointService<List<PrometheusData
                         while (timeList.size() - count > 0) {
                             if (timeList.get(i + count) > startTime + step * (count)) {
                                 int endTime = timeList.get(i + count);
-                                SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
-                                simpleDateFormat.setTimeZone(TimeZone.getTimeZone("GMT+00:00"));
-                                dto.setStartTime(simpleDateFormat.format(new Date(startTime * PrometheusConstants.MS)));
-                                dto.setEndTime(simpleDateFormat.format(new Date(endTime * PrometheusConstants.MS)));
+                                AspAnalysisDTO dto = new AspAnalysisDTO(startTime, endTime);
                                 dtoList.add(dto);
                                 break;
                             }
@@ -136,12 +132,7 @@ public class WdrAnalysis implements HisDiagnosisPointService<List<PrometheusData
         List<PrometheusDataDTO> dataList = new ArrayList<>();
         for (CollectionItem<?> item : getSourceDataKeys()) {
             List<?> list = (List<?>) item.queryData(task);
-            List<PrometheusData> prometheusDataList = new ArrayList<>();
-            list.forEach(data -> {
-                if (data instanceof PrometheusData) {
-                    prometheusDataList.add((PrometheusData) data);
-                }
-            });
+            List<PrometheusData> prometheusDataList = pointUtil.dataToObject(list);
             if (CollectionUtils.isEmpty(prometheusDataList)) {
                 continue;
             }

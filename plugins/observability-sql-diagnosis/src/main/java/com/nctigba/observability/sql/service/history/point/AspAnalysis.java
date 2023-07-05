@@ -72,7 +72,7 @@ public class AspAnalysis implements HisDiagnosisPointService<List<PrometheusData
         if (CollectionUtils.isEmpty(prometheusDataList)) {
             analysisDTO.setIsHint(HisDiagnosisResult.ResultState.NO_ADVICE);
         } else {
-            dtoList = pointUtil.getAspTimeSlot(prometheusDataList);
+            dtoList = pointUtil.aspTimeSlot(prometheusDataList);
             if (!CollectionUtils.isEmpty(dtoList)) {
                 analysisDTO.setIsHint(HisDiagnosisResult.ResultState.SUGGESTIONS);
             } else {
@@ -93,12 +93,7 @@ public class AspAnalysis implements HisDiagnosisPointService<List<PrometheusData
         List<PrometheusDataDTO> dataList = new ArrayList<>();
         for (CollectionItem<?> item : getSourceDataKeys()) {
             List<?> list = (List<?>) item.queryData(task);
-            List<PrometheusData> prometheusDataList = new ArrayList<>();
-            list.forEach(data -> {
-                if (data instanceof PrometheusData) {
-                    prometheusDataList.add((PrometheusData) data);
-                }
-            });
+            List<PrometheusData> prometheusDataList = pointUtil.dataToObject(list);
             if (CollectionUtils.isEmpty(prometheusDataList)) {
                 continue;
             }

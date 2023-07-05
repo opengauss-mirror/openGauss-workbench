@@ -39,7 +39,7 @@ public class LockAnalysis implements HisDiagnosisPointService<String> {
     @Override
     public AnalysisDTO analysis(HisDiagnosisTask task, DataStoreService dataStoreService) {
         AnalysisDTO analysisDTO = new AnalysisDTO();
-        analysisDTO.setIsHint(HisDiagnosisResult.ResultState.SUGGESTIONS);
+        analysisDTO.setIsHint(HisDiagnosisResult.ResultState.NO_ADVICE);
         analysisDTO.setPointType(HisDiagnosisResult.PointType.CENTER);
         return analysisDTO;
     }

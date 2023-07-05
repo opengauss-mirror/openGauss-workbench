@@ -68,8 +68,7 @@ public class EsLogSearchUtils {
             }, HashMap.class);
             return Optional.of(response);
         } catch (IOException | HisDiagnosisException e) {
-            log.info(e.getMessage());
-            return Optional.empty();
+            throw new HisDiagnosisException("error" + e.getMessage());
         }
     }
 

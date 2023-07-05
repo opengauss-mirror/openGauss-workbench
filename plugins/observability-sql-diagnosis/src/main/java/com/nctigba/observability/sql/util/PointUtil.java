@@ -1,17 +1,21 @@
 package com.nctigba.observability.sql.util;
 
 import com.alibaba.fastjson.JSONArray;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.nctigba.common.web.exception.HisDiagnosisException;
 import com.nctigba.observability.sql.constants.history.PrometheusConstants;
+import com.nctigba.observability.sql.mapper.history.HisThresholdMapper;
+import com.nctigba.observability.sql.model.history.HisDiagnosisThreshold;
 import com.nctigba.observability.sql.model.history.data.PrometheusData;
 import com.nctigba.observability.sql.model.history.point.AspAnalysisDTO;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
-import java.util.TimeZone;
 
 /**
  * PointUtil
@@ -22,7 +26,16 @@ import java.util.TimeZone;
 @Component
 @Slf4j
 public class PointUtil {
-    public List<AspAnalysisDTO> getAspTimeSlot(List<PrometheusData> prometheusDataList) {
+    @Autowired
+    private HisThresholdMapper hisThresholdMapper;
+
+    /**
+     * Get asp time slot
+     *
+     * @param prometheusDataList Prometheus data
+     * @return list
+     */
+    public List<AspAnalysisDTO> aspTimeSlot(List<PrometheusData> prometheusDataList) {
         List<AspAnalysisDTO> dtoList = new ArrayList<>();
         List<Integer> timeList = new ArrayList<>();
         for (PrometheusData data : prometheusDataList) {
@@ -36,112 +49,79 @@ public class PointUtil {
                 timeList.add(Integer.parseInt(time.toString()));
             }
         }
-        int minute = PrometheusConstants.MINUTE;
-        long ms = PrometheusConstants.MS;
-        int mCount = minute / Integer.parseInt(PrometheusConstants.STEP) - 1;
-        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
-        simpleDateFormat.setTimeZone(TimeZone.getTimeZone("GMT+00:00"));
-        if (timeList.size() == 1) {
-            AspAnalysisDTO dto = new AspAnalysisDTO();
-            dto.setStartTime(simpleDateFormat.format(new Date(timeList.get(0) * ms)));
-            dto.setEndTime(simpleDateFormat.format(new Date(timeList.get(0) * ms)));
-            dtoList.add(dto);
-        } else if (timeList.size() == 2) {
-            if (timeList.get(0) + Integer.parseInt(PrometheusConstants.STEP) == timeList.get(1)) {
-                AspAnalysisDTO dto = new AspAnalysisDTO();
-                dto.setStartTime(simpleDateFormat.format(new Date(timeList.get(0) * ms)));
-                dto.setEndTime(simpleDateFormat.format(new Date(timeList.get(1) * ms)));
+        int mCount = PrometheusConstants.MINUTE / Integer.parseInt(PrometheusConstants.STEP) - 1;
+        int cursor;
+        for (int i = 0; i < timeList.size(); i = cursor) {
+            int count = 0;
+            for (int j = i + 1; j < timeList.size(); j++) {
+                if (timeList.get(i) == timeList.get(j) - Integer.parseInt(PrometheusConstants.STEP) * (j - i)) {
+                    count++;
+                }
+            }
+            if (count < mCount && count > 0) {
+                AspAnalysisDTO dto = new AspAnalysisDTO(timeList.get(i), timeList.get(i + count));
+                dtoList.add(dto);
+            } else if (count == 0) {
+                AspAnalysisDTO dto = new AspAnalysisDTO(timeList.get(i), timeList.get(i));
                 dtoList.add(dto);
             } else {
-                AspAnalysisDTO dto1 = new AspAnalysisDTO();
-                dto1.setStartTime(simpleDateFormat.format(new Date(timeList.get(0) * ms)));
-                dto1.setEndTime(simpleDateFormat.format(new Date(timeList.get(0) * ms)));
-                dtoList.add(dto1);
-                AspAnalysisDTO dto2 = new AspAnalysisDTO();
-                dto2.setStartTime(simpleDateFormat.format(new Date(timeList.get(1) * ms)));
-                dto2.setEndTime(simpleDateFormat.format(new Date(timeList.get(1) * ms)));
-                dtoList.add(dto2);
+                log.info("not exists slot");
             }
-        } else if (timeList.size() == 3) {
-            if (timeList.get(0) + Integer.parseInt(PrometheusConstants.STEP) * 2 == timeList.get(2)) {
-                AspAnalysisDTO dto = new AspAnalysisDTO();
-                dto.setStartTime(simpleDateFormat.format(new Date(timeList.get(0) * ms)));
-                dto.setEndTime(simpleDateFormat.format(new Date(timeList.get(2) * ms)));
-                dtoList.add(dto);
-            } else {
-                if (timeList.get(0) + Integer.parseInt(PrometheusConstants.STEP) == timeList.get(1)) {
-                    AspAnalysisDTO dto1 = new AspAnalysisDTO();
-                    dto1.setStartTime(simpleDateFormat.format(new Date(timeList.get(0) * ms)));
-                    dto1.setEndTime(simpleDateFormat.format(new Date(timeList.get(1) * ms)));
-                    dtoList.add(dto1);
-                    AspAnalysisDTO dto2 = new AspAnalysisDTO();
-                    dto2.setStartTime(simpleDateFormat.format(new Date(timeList.get(2) * ms)));
-                    dto2.setEndTime(simpleDateFormat.format(new Date(timeList.get(2) * ms)));
-                    dtoList.add(dto2);
-                } else if (timeList.get(1) + Integer.parseInt(PrometheusConstants.STEP) == timeList.get(2)) {
-                    AspAnalysisDTO dto1 = new AspAnalysisDTO();
-                    dto1.setStartTime(simpleDateFormat.format(new Date(timeList.get(0) * ms)));
-                    dto1.setEndTime(simpleDateFormat.format(new Date(timeList.get(0) * ms)));
-                    dtoList.add(dto1);
-                    AspAnalysisDTO dto2 = new AspAnalysisDTO();
-                    dto2.setStartTime(simpleDateFormat.format(new Date(timeList.get(1) * ms)));
-                    dto2.setEndTime(simpleDateFormat.format(new Date(timeList.get(2) * ms)));
-                    dtoList.add(dto2);
-                } else {
-                    AspAnalysisDTO dto1 = new AspAnalysisDTO();
-                    dto1.setStartTime(simpleDateFormat.format(new Date(timeList.get(0) * ms)));
-                    dto1.setEndTime(simpleDateFormat.format(new Date(timeList.get(0) * ms)));
-                    dtoList.add(dto1);
-                    AspAnalysisDTO dto2 = new AspAnalysisDTO();
-                    dto2.setStartTime(simpleDateFormat.format(new Date(timeList.get(1) * ms)));
-                    dto2.setEndTime(simpleDateFormat.format(new Date(timeList.get(1) * ms)));
-                    dtoList.add(dto2);
-                    AspAnalysisDTO dto3 = new AspAnalysisDTO();
-                    dto3.setStartTime(simpleDateFormat.format(new Date(timeList.get(2) * ms)));
-                    dto3.setEndTime(simpleDateFormat.format(new Date(timeList.get(2) * ms)));
-                    dtoList.add(dto3);
-                }
-            }
-        } else {
-            int cursor = 0;
-            for (int i = 0; i < timeList.size() - 3; i = cursor) {
-                int step = Integer.parseInt(PrometheusConstants.STEP);
-                int count = minute / step - 1;
-                int startTime = timeList.get(i);
-                int realityTime = timeList.get(i + count);
-                int expectTime = startTime + step * (count);
-                int temp = 0;
-                if (realityTime == expectTime) {
-                    for (int n = i + count; n < timeList.size() - i - count; n++) {
-                        int realityValue = timeList.get(n);
-                        int expectValue = startTime + step * (n - i);
-                        if (realityValue > expectValue) {
-                            cursor = n;
-                            temp++;
-                            break;
-                        }
-                    }
-                }
-                if (temp > 0) {
-                    continue;
-                } else {
-                    cursor = i + mCount;
-                }
-                AspAnalysisDTO dto = new AspAnalysisDTO();
-                if (realityTime > expectTime) {
-                    while (count > 0) {
-                        if (timeList.get(i + count) == startTime + step * (count)) {
-                            int entTime = timeList.get(i + count);
-                            dto.setStartTime(simpleDateFormat.format(new Date(startTime * ms)));
-                            dto.setEndTime(simpleDateFormat.format(new Date(entTime * ms)));
-                            dtoList.add(dto);
-                            break;
-                        }
-                        count--;
-                    }
-                }
-            }
+            cursor = i + count + 1;
         }
         return dtoList;
+    }
+
+    /**
+     * Prometheus' data transform to list
+     *
+     * @param list Prometheus data
+     * @return list
+     */
+    public List<PrometheusData> dataToObject(List<?> list) {
+        List<PrometheusData> prometheusDataList = new ArrayList<>();
+        if (CollectionUtils.isEmpty(list)) {
+            return prometheusDataList;
+        }
+        PrometheusData prometheusData = new PrometheusData();
+        PrometheusData objectData = new PrometheusData();
+        if (list.get(0) instanceof PrometheusData) {
+            objectData = (PrometheusData) list.get(0);
+        }
+        prometheusData.setMetric(objectData.getMetric());
+        JSONArray jsonArray = new JSONArray();
+        for (Object object : list) {
+            if (object instanceof PrometheusData) {
+                jsonArray.addAll(((PrometheusData) object).getValues());
+            }
+        }
+        prometheusData.setValues(jsonArray);
+        prometheusDataList.add(prometheusData);
+        return prometheusDataList;
+    }
+
+    /**
+     * Threshold info transform to maps
+     *
+     * @param thresholds Threshold info
+     * @return HashMap
+     */
+    public HashMap<String, String> thresholdMap(List<HisDiagnosisThreshold> thresholds) {
+        LambdaQueryWrapper<HisDiagnosisThreshold> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.orderByDesc(HisDiagnosisThreshold::getThresholdType);
+        List<HisDiagnosisThreshold> thresholdList = hisThresholdMapper.selectList(queryWrapper);
+        HashMap<String, String> map = new HashMap<>();
+        for (HisDiagnosisThreshold threshold : thresholdList) {
+            thresholds.forEach(f -> {
+                if (f.getThreshold().equals(threshold.getThreshold())) {
+                    threshold.setThresholdValue(f.getThresholdValue());
+                }
+            });
+            map.put(threshold.getThreshold(), threshold.getThresholdValue());
+        }
+        if (map.isEmpty()) {
+            throw new HisDiagnosisException("fetch threshold data failed!");
+        }
+        return map;
     }
 }

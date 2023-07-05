@@ -14,30 +14,13 @@ import java.util.Comparator;
  * @author luomeng
  * @since 2023/6/9
  */
-public class ComparatorUtil implements Comparator<Object> {
+public class ComparatorUtil implements Comparator<WaitEventInfo> {
     @Override
-    public int compare(Object o1, Object o2) {
-        Integer count1 = 0;
-        if (o1 instanceof WaitEventInfo) {
-            count1 = ((WaitEventInfo) o1).getEventCount();
-        }
-        Integer count2 = 0;
-        if (o2 instanceof WaitEventInfo) {
-            count2 = ((WaitEventInfo) o2).getEventCount();
-        }
-        int compareByCount = Integer.compare(count2, count1);
+    public int compare(WaitEventInfo o1, WaitEventInfo o2) {
+        int compareByCount = Integer.compare(o1.getEventCount(), o2.getEventCount());
         if (compareByCount != 0) {
             return compareByCount;
-        } else {
-            String name1 = "";
-            if (o1 instanceof WaitEventInfo) {
-                name1 = ((WaitEventInfo) o1).getEventName();
-            }
-            String name2 = "";
-            if (o2 instanceof WaitEventInfo) {
-                name2 = ((WaitEventInfo) o2).getEventName();
-            }
-            return name1.compareTo(name2);
         }
+        return o1.getEventName().compareTo(o2.getEventName());
     }
 }

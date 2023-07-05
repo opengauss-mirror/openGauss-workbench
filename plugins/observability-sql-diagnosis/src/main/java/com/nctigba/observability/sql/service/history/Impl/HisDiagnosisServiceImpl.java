@@ -4,7 +4,6 @@
 
 package com.nctigba.observability.sql.service.history.Impl;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.nctigba.common.web.exception.HisDiagnosisException;
 import com.nctigba.observability.sql.mapper.history.HisDiagnosisResultMapper;
@@ -54,9 +53,8 @@ public class HisDiagnosisServiceImpl implements HisDiagnosisService {
 
     @Override
     public HisTreeNode getTopologyMap(int taskId, boolean isAll) {
-        LambdaQueryWrapper<HisDiagnosisResult> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(HisDiagnosisResult::getTaskId, taskId);
-        List<HisDiagnosisResult> resultList = resultMapper.selectList(queryWrapper);
+        List<HisDiagnosisResult> resultList = resultMapper.selectList(
+                Wrappers.<HisDiagnosisResult>lambdaQuery().eq(HisDiagnosisResult::getTaskId, taskId));
         HisTreeNode treeNode = this.createHisTreeNode(resultList);
         HisTreeNode hisTreeNode = this.refreshTreeNode(treeNode);
         hisTreeNode.setIsHidden(false);
@@ -80,10 +78,9 @@ public class HisDiagnosisServiceImpl implements HisDiagnosisService {
         if (map.isEmpty()) {
             throw new HisDiagnosisException("fetch threshold data failed!");
         }
-        LambdaQueryWrapper<HisDiagnosisResult> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(HisDiagnosisResult::getPointName, pointName);
-        queryWrapper.eq(HisDiagnosisResult::getTaskId, taskId);
-        HisDiagnosisResult result = resultMapper.selectOne(queryWrapper);
+        HisDiagnosisResult result = resultMapper.selectOne(
+                Wrappers.<HisDiagnosisResult>lambdaQuery().eq(HisDiagnosisResult::getPointName, pointName).eq(
+                        HisDiagnosisResult::getTaskId, taskId));
         if (result == null) {
             return "No data found!";
         }
@@ -120,9 +117,8 @@ public class HisDiagnosisServiceImpl implements HisDiagnosisService {
 
     @Override
     public Object getAllPoint(int taskId) {
-        LambdaQueryWrapper<HisDiagnosisResult> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(HisDiagnosisResult::getTaskId, taskId);
-        return resultMapper.selectList(queryWrapper);
+        return resultMapper.selectList(
+                Wrappers.<HisDiagnosisResult>lambdaQuery().eq(HisDiagnosisResult::getTaskId, taskId));
     }
 
     private HisTreeNode createHisTreeNode(List<HisDiagnosisResult> resultList) {
@@ -141,27 +137,30 @@ public class HisDiagnosisServiceImpl implements HisDiagnosisService {
                 Node node = new Node();
                 node.setNodeName(list.get(i).replace("-", ""));
                 for (int j = i; j >= 0; j--) {
-                    if (list.get(i).split("-").length == 2) {
+                    int iDepth = list.get(i).split("-").length;
+                    int jDepth = list.get(j).split("-").length;
+                    String parentNode = list.get(j).replace("-", "");
+                    if (iDepth == 2) {
                         node.setParentNode("0");
                         break;
-                    } else if (list.get(i).split("-").length == 3) {
-                        if (list.get(j).split("-").length == 2) {
-                            node.setParentNode(list.get(j).replace("-", ""));
+                    } else if (iDepth == 3) {
+                        if (jDepth == 2) {
+                            node.setParentNode(parentNode);
                             break;
                         }
-                    } else if (list.get(i).split("-").length == 4) {
-                        if (list.get(j).split("-").length == 3) {
-                            node.setParentNode(list.get(j).replace("-", ""));
+                    } else if (iDepth == 4) {
+                        if (jDepth == 3) {
+                            node.setParentNode(parentNode);
                             break;
                         }
-                    } else if (list.get(i).split("-").length == 5) {
-                        if (list.get(j).split("-").length == 4) {
-                            node.setParentNode(list.get(j).replace("-", ""));
+                    } else if (iDepth == 5) {
+                        if (jDepth == 4) {
+                            node.setParentNode(parentNode);
                             break;
                         }
-                    } else if (list.get(i).split("-").length == 6) {
-                        if (list.get(j).split("-").length == 5) {
-                            node.setParentNode(list.get(j).replace("-", ""));
+                    } else if (iDepth == 6) {
+                        if (jDepth == 5) {
+                            node.setParentNode(parentNode);
                             break;
                         }
                     }

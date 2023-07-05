@@ -53,12 +53,10 @@ public class LockTimeout implements HisDiagnosisPointService<LockDTO> {
 
     @Override
     public AnalysisDTO analysis(HisDiagnosisTask task, DataStoreService dataStoreService) {
-        List<?> list = (List<?>) dataStoreService.getData(item).getCollectionData();
+        Object collectionData = dataStoreService.getData(item).getCollectionData();
         LogInfoDTO logInfoDTO = null;
-        for (Object object : list) {
-            if (object instanceof LogInfoDTO) {
-                logInfoDTO = (LogInfoDTO) object;
-            }
+        if (collectionData instanceof LogInfoDTO) {
+            logInfoDTO = (LogInfoDTO) collectionData;
         }
         AnalysisDTO analysisDTO = new AnalysisDTO();
         if (logInfoDTO != null && logInfoDTO.getLogs().size() > 0) {
