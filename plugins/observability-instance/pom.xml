@@ -9,7 +9,6 @@
         <plugin-id>observability-instance</plugin-id>
         <npm.run.script>buildNoTest</npm.run.script>
         <web.build.skip>false</web.build.skip>
-        <web.clean.skip>false</web.clean.skip>
         <!--project-->
         <java.version>11</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -171,7 +170,7 @@
                             <followSymlinks>false</followSymlinks>
                         </fileset>
                     </filesets>
-                    <skip>${web.clean.skip}</skip>
+                    <skip>${web.build.skip}</skip>
                     <failOnError>true</failOnError>
                 </configuration>
             </plugin>

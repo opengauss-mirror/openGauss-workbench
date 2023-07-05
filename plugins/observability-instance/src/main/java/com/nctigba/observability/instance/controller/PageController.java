@@ -1,6 +1,7 @@
 /*
  * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
  */
+
 package com.nctigba.observability.instance.controller;
 
 import java.util.HashMap;
@@ -27,12 +28,7 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/instanceMonitoring/api/v1/")
 @RequiredArgsConstructor
 public class PageController extends ControllerConfig {
-    private final MetricsService metricsService;
-    private final DbConfigMapper dbConfigMapper;
-    private final ClusterManager clusterManager;
-    private final MessageSource messageSource;
-
-    private static final Object[] MEMORY = {
+    private static final Enum<?>[] MEMORY = {
             MetricsLine.MEMORY_USED,
             MetricsLine.MEMORY_DB_USED,
             MetricsValue.MEM_TOTAL,
@@ -42,30 +38,8 @@ public class PageController extends ControllerConfig {
             MetricsValue.SWAP_TOTAL,
             MetricsValue.SWAP_USED,
             MetricsValue.SWAP_FREE,
-            MetricsLine.MEMORY_SWAP, };
-
-    @GetMapping("memory")
-    public Map<String, Object> memory(String id, Long start, Long end, Integer step) {
-        HashMap<String, Object> batch = metricsService.listBatch(MEMORY, id, start, end, step);
-        clusterManager.setCurrentDatasource(id, null);
-        // memory node detail
-        List<Map<String, Object>> memoryNodeDetail = dbConfigMapper.memoryNodeDetail();
-        memoryNodeDetail.forEach(map -> {
-            var str = map.get("memorytype").toString();
-            map.put("desc", messageSource.getMessage("memory.node." + str, null, str, Language.getLocale()));
-        });
-        batch.put("memoryNodeDetail", memoryNodeDetail);
-        // memory config detail
-        List<Map<String, Object>> memoryConfig = dbConfigMapper.memoryConfig();
-        memoryConfig.forEach(map -> {
-            var str = map.get("name").toString();
-            map.put("desc", messageSource.getMessage("memory.config." + str, null, str, Language.getLocale()));
-        });
-        batch.put("memoryConfig", memoryConfig);
-        clusterManager.pool();
-        return AjaxResult.success(batch);
-    }
-
+            MetricsLine.MEMORY_SWAP
+    };
     private static final MetricsLine[] IO = {
             MetricsLine.IOPS_R,
             MetricsLine.IOPS_W,
@@ -75,7 +49,8 @@ public class PageController extends ControllerConfig {
             MetricsLine.IO_UTIL,
             MetricsLine.IO_AVG_REPONSE_TIME_READ,
             MetricsLine.IO_AVG_REPONSE_TIME_WRITE,
-            MetricsLine.IO_AVG_REPONSE_TIME_RW, };
+            MetricsLine.IO_AVG_REPONSE_TIME_RW
+    };
 
     private static final MetricsValue[] IO_TABLE = {
             MetricsValue.IO_TPS,
@@ -84,31 +59,8 @@ public class PageController extends ControllerConfig {
             MetricsValue.IO_AVGRQ_SZ,
             MetricsValue.IO_AVGQU_SZ,
             MetricsValue.IO_AWAIT,
-            MetricsValue.IO_UTIL };
-
-    @SuppressWarnings("unchecked")
-    @GetMapping("io")
-    public Map<String, Object> io(String id, Long start, Long end, Integer step) {
-        HashMap<String, Object> io = metricsService.listBatch(IO, id, start, end, step);
-        HashMap<String, Object> table = metricsService.listBatch(IO_TABLE, id, start, end, step);
-        HashMap<String, Object> lines = new HashMap<>();
-        for (MetricsValue m : IO_TABLE) {
-            var map = (HashMap<String, Object>) table.get(m.name());
-            if (map == null)
-                continue;
-            map.forEach((k, v) -> {
-                if (!lines.containsKey(k)) {
-                    HashMap<String, Object> line = new HashMap<String, Object>();
-                    line.put("device", k);
-                    lines.put(k, line);
-                }
-                ((HashMap<String, Object>) lines.get(k)).put(m.name(), v);
-            });
-        }
-        io.put("table", lines.values().stream().collect(Collectors.toList()));
-        return AjaxResult.success(io);
-    }
-
+            MetricsValue.IO_UTIL
+    };
     private static final MetricsLine[] NETWORK = {
             MetricsLine.NETWORK_IN,
             MetricsLine.NETWORK_OUT,
@@ -118,7 +70,8 @@ public class PageController extends ControllerConfig {
             MetricsLine.NETWORK_TCP_INSEGS,
             MetricsLine.NETWORK_TCP_OUTSEGS,
             MetricsLine.NETWORK_TCP_SOCKET,
-            MetricsLine.NETWORK_UDP_SOCKET, };
+            MetricsLine.NETWORK_UDP_SOCKET
+    };
 
     private static final MetricsValue[] NETWORK_TABLE = {
             MetricsValue.NETWORK_RXPCK,
@@ -130,31 +83,8 @@ public class PageController extends ControllerConfig {
             MetricsValue.NETWORK_RXDROP,
             MetricsValue.NETWORK_TXDROP,
             MetricsValue.NETWORK_RXFIFO,
-            MetricsValue.NETWORK_TXFIFO, };
-
-    @SuppressWarnings("unchecked")
-    @GetMapping("network")
-    public Map<String, Object> network(String id, Long start, Long end, Integer step) {
-        HashMap<String, Object> network = metricsService.listBatch(NETWORK, id, start, end, step);
-        HashMap<String, Object> table = metricsService.listBatch(NETWORK_TABLE, id, start, end, step);
-        HashMap<String, Object> lines = new HashMap<>();
-        for (MetricsValue m : NETWORK_TABLE) {
-            var map = (HashMap<String, Object>) table.get(m.name());
-            if (map == null)
-                continue;
-            map.forEach((k, v) -> {
-                if (!lines.containsKey(k)) {
-                    HashMap<String, Object> line = new HashMap<String, Object>();
-                    line.put("device", k);
-                    lines.put(k, line);
-                }
-                ((HashMap<String, Object>) lines.get(k)).put(m.name(), v);
-            });
-        }
-        network.put("table", lines.values().stream().collect(Collectors.toList()));
-        return AjaxResult.success(network);
-    }
-
+            MetricsValue.NETWORK_TXFIFO
+    };
     private static final MetricsLine[] INSTANCE = {
             MetricsLine.INSTANCE_TPS_COMMIT,
             MetricsLine.INSTANCE_TPS_ROLLBACK,
@@ -164,17 +94,98 @@ public class PageController extends ControllerConfig {
             MetricsLine.INSTANCE_DB_CONNECTION_IDLE,
             MetricsLine.INSTANCE_DB_CONNECTION_CURR,
             MetricsLine.INSTANCE_DB_CONNECTION_TOTAL,
-            MetricsLine.INSTANCE_DB_SLOWSQL, };
+            MetricsLine.INSTANCE_DB_SLOWSQL
+    };
+    private static final MetricsLine[] WAIT_EVENT = {
+            MetricsLine.WAIT_EVENT_COUNT
+    };
+
+    private final MetricsService metricsService;
+    private final DbConfigMapper dbConfigMapper;
+    private final ClusterManager clusterManager;
+    private final MessageSource messageSource;
+    private final Language language;
+
+    @GetMapping("memory")
+    public Map<String, Object> memory(String id, Long start, Long end, Integer step) {
+        HashMap<String, Object> batch = metricsService.listBatch(MEMORY, id, start, end, step);
+        try {
+            clusterManager.setCurrentDatasource(id, null);
+            // memory node detail
+            List<Map<String, Object>> memoryNodeDetail = dbConfigMapper.memoryNodeDetail();
+            memoryNodeDetail.forEach(map -> {
+                var str = map.get("memorytype").toString();
+                map.put("desc", messageSource.getMessage("memory.node." + str, null, str, language.getLocale()));
+            });
+            batch.put("memoryNodeDetail", memoryNodeDetail);
+            // memory config detail
+            List<Map<String, Object>> memoryConfig = dbConfigMapper.memoryConfig();
+            memoryConfig.forEach(map -> {
+                var str = map.get("name").toString();
+                map.put("desc", messageSource.getMessage("memory.config." + str, null, str, language.getLocale()));
+            });
+            batch.put("memoryConfig", memoryConfig);
+        } finally {
+            clusterManager.pool();
+        }
+        return AjaxResult.success(batch);
+    }
+
+    @SuppressWarnings("unchecked")
+    @GetMapping("io")
+    public Map<String, Object> io(String id, Long start, Long end, Integer step) {
+        HashMap<String, Object> io = metricsService.listBatch(IO, id, start, end, step);
+        HashMap<String, Object> table = metricsService.listBatch(IO_TABLE, id, start, end, step);
+        HashMap<String, Object> lines = new HashMap<>();
+        for (MetricsValue metric : IO_TABLE) {
+            var map = (HashMap<String, Object>) table.get(metric.name());
+            if (map == null) {
+                continue;
+            }
+            map.forEach((k, v) -> {
+                if (!lines.containsKey(k)) {
+                    HashMap<String, Object> line = new HashMap<>();
+                    line.put("device", k);
+                    lines.put(k, line);
+                }
+                ((HashMap<String, Object>) lines.get(k)).put(metric.name(), v);
+            });
+        }
+        io.put("table", lines.values().stream().collect(Collectors.toList()));
+        return AjaxResult.success(io);
+    }
+
+    @SuppressWarnings("unchecked")
+    @GetMapping("network")
+    public Map<String, Object> network(String id, Long start, Long end, Integer step) {
+        HashMap<String, Object> network = metricsService.listBatch(NETWORK, id, start, end, step);
+        HashMap<String, Object> table = metricsService.listBatch(NETWORK_TABLE, id, start, end, step);
+        HashMap<String, Object> lines = new HashMap<>();
+        for (MetricsValue metric : NETWORK_TABLE) {
+            var map = (HashMap<String, Object>) table.get(metric.name());
+            if (map == null) {
+                continue;
+            }
+            map.forEach((k, v) -> {
+                if (!lines.containsKey(k)) {
+                    HashMap<String, Object> line = new HashMap<>();
+                    line.put("device", k);
+                    lines.put(k, line);
+                }
+                ((HashMap<String, Object>) lines.get(k)).put(metric.name(), v);
+            });
+        }
+        network.put("table", lines.values().stream().collect(Collectors.toList()));
+        return AjaxResult.success(network);
+    }
 
     @GetMapping("instance")
     public Map<String, Object> instance(String id, Long start, Long end, Integer step) {
         return AjaxResult.success(metricsService.listBatch(INSTANCE, id, start, end, step));
     }
 
-    private static final MetricsLine[] WAIT_EVENT = { MetricsLine.WAIT_EVENT_COUNT, };
-
     @GetMapping("wait_event")
-    public Map<String, Object> wait_event(String id, Long start, Long end, Integer step) {
+    public Map<String, Object> waitEvent(String id, Long start, Long end, Integer step) {
         return AjaxResult.success(metricsService.listBatch(WAIT_EVENT, id, start, end, step));
     }
 
