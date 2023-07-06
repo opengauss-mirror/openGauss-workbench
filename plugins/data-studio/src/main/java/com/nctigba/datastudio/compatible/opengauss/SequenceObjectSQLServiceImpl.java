@@ -110,7 +110,7 @@ public class SequenceObjectSQLServiceImpl implements SequenceObjectSQLService {
     }
 
     @Override
-    public String returnSequenceDDL(DatabaseSequenceDdlDTO request) throws SQLException {
+    public String returnSequenceDDL(DatabaseSequenceDdlDTO request) throws Exception {
         log.info("returnSequenceDDL request is: " + request);
         try (
                 Connection connection = connectionConfig.connectDatabase(request.getUuid());
