@@ -8,8 +8,6 @@ import lombok.Data;
 @Data
 public class AppResult {
     private String code = "200";
-
-    private String error;
     private String msg;
     private Object data;
 
