@@ -242,10 +242,14 @@
   const handleReset = () => {
     generalref.value.resetFields();
     partitionRef.value.resetFields();
+    dataMap.GeneralTab.isPartition = false;
     dataMap.ColumnTab.data = [];
     dataMap.ConstraintTab.data = [];
     dataMap.IndexesTab.data = [];
     dataMap.DDL.data = '';
+    if (currentTabName.value === 'PartitionTab') {
+      currentTabName.value = 'GeneralTab';
+    }
   };
   const fetchTablespaceList = async () => {
     const res = (await getTablespaceList(commonParams.uuid)) as unknown as string[];
