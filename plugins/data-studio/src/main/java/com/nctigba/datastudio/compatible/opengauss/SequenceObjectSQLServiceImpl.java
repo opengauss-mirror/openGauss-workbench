@@ -19,8 +19,8 @@ import org.springframework.stereotype.Service;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.Objects;
 
 import static com.nctigba.datastudio.constants.CommonConstants.OPENGAUSS;
 import static com.nctigba.datastudio.constants.SqlConstants.CACHE_KEYWORD_SQL;
@@ -48,6 +48,11 @@ import static com.nctigba.datastudio.constants.SqlConstants.START_KEYWORD_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.START_WITH_SQL;
 import static org.apache.commons.lang3.StringUtils.isNumeric;
 
+/**
+ * SequenceObjectSQLService achieve
+ *
+ * @since 2023-06-26
+ */
 @Slf4j
 @Service
 public class SequenceObjectSQLServiceImpl implements SequenceObjectSQLService {
@@ -82,18 +87,17 @@ public class SequenceObjectSQLServiceImpl implements SequenceObjectSQLService {
         if (isNumeric(request.getCache())) {
             ddl = ddl + LF + CACHE_KEYWORD_SQL + DebugUtils.containsSqlInjection(request.getCache());
         }
-        if (request.getCycle().equals("CYCLE")) {
+        if (request.getIsCycle()) {
             ddl = ddl + LF + CYCLE_KEYWORD_SQL;
         }
-        if (StringUtils.isNotEmpty(request.getTableSchema())) {
-            ddl = ddl + LF + OWNED_KEYWORD_SQL + DebugUtils.containsSqlInjection(request.getTableSchema()) + POINT;
-        }
         if (StringUtils.isNotEmpty(request.getTableName())) {
-            ddl = ddl + DebugUtils.containsSqlInjection(request.getTableName()) + POINT;
+            ddl = ddl + LF + OWNED_KEYWORD_SQL + DebugUtils.containsSqlInjection(request.getTableSchema()) + POINT
+                    + DebugUtils.containsSqlInjection(request.getTableName());
         }
         if (StringUtils.isNotEmpty(request.getTableColumn())) {
-            ddl = ddl + DebugUtils.containsSqlInjection(request.getTableColumn());
+            ddl = ddl + POINT + DebugUtils.containsSqlInjection(request.getTableColumn());
         }
+        ddl = ddl + SEMICOLON;
         log.info("splicingSequenceDDL response is: " + ddl);
         return ddl;
     }
@@ -106,7 +110,7 @@ public class SequenceObjectSQLServiceImpl implements SequenceObjectSQLService {
     }
 
     @Override
-    public String returnSequenceDDL(DatabaseSequenceDdlDTO request) {
+    public String returnSequenceDDL(DatabaseSequenceDdlDTO request) throws SQLException {
         log.info("returnSequenceDDL request is: " + request);
         try (
                 Connection connection = connectionConfig.connectDatabase(request.getUuid());
@@ -115,12 +119,12 @@ public class SequenceObjectSQLServiceImpl implements SequenceObjectSQLService {
             String selectSql = String.format(SELECT_SEQUENCE_DDL_SQL,
                     request.getSchema(), request.getSequenceName());
             try (
-                    ResultSet count = statement.executeQuery(String.format(SELECT_SEQUENCE_COUNT_SQL,
+                    ResultSet countResult = statement.executeQuery(String.format(SELECT_SEQUENCE_COUNT_SQL,
                             request.getSchema(), request.getSequenceName()))
             ) {
-                count.next();
-                int a = count.getInt("count");
-                if (a == 0) {
+                countResult.next();
+                int count = countResult.getInt("count");
+                if (count == 0) {
                     throw new CustomException(LocaleString.transLanguage("2012"));
                 }
             }
@@ -150,9 +154,6 @@ public class SequenceObjectSQLServiceImpl implements SequenceObjectSQLService {
                 log.info("returnSequenceDDL response is: " + ddl);
             }
             return ddl;
-        } catch (Exception e) {
-            log.info(e.toString());
-            throw new RuntimeException(e);
         }
     }
 }

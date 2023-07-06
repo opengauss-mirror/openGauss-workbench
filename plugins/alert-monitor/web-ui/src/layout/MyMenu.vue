@@ -56,7 +56,6 @@ onMounted(() => {
 .logo {
     width: auto;
     height: 60px;
-    // color: $og-text-color;
     line-height: 60px;
     text-align: center;
     font-size: 18px;

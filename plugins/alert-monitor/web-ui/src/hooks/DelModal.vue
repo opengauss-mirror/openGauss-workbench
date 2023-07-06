@@ -2,16 +2,18 @@
     <el-dialog :width="400" v-model="visible" :close-on-click-modal="false" custom-class="del-dialog" center draggable
         @close="close">
         <template #header></template>
-        <div class="del-text">确认删除</div>
+        <div class="del-text">{{ t('app.deleteTip0') }}</div>
         <div class="content-text">{{ props.content }}</div>
         <template #footer>
-            <el-button style="padding: 5px 20px;" type="primary" @click="confirm">确定</el-button>
-            <el-button style="padding: 5px 20px;" @click="() => visible = false">取消</el-button>
+            <el-button style="padding: 5px 20px;" type="primary" @click="confirm">{{ t('app.confirm') }}</el-button>
+            <el-button style="padding: 5px 20px;" @click="() => visible = false">{{ t('app.cancel') }}</el-button>
         </template>
     </el-dialog>
 </template>
 
 <script setup lang="ts">
+import { useI18n } from "vue-i18n";
+const { t } = useI18n();
 const props = withDefaults(
     defineProps<{
         content: string

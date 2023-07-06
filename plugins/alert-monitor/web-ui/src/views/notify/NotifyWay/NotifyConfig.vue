@@ -119,10 +119,6 @@ import { cloneDeep } from 'lodash-es';
 import type { FormInstance, FormRules } from 'element-plus'
 const { t } = useI18n();
 
-const theme = localStorage.getItem('theme');
-const color = ref<string>(theme === 'dark' ? '#d4d4d4' : '#1d212a')
-const background = ref<string>(theme === 'dark' ? '#303030' : '#F5F7FB')
-
 const baseConfig = {
     id: null,
     type: '',
@@ -332,23 +328,13 @@ const confirm = async() => {
 }
 onMounted(() => {
     requestData()
-
-    const wujie = window.$wujie;
-    if (wujie) {
-        wujie?.bus.$on('opengauss-theme-change', (val: string) => {
-            nextTick(() => {
-                color.value = theme === 'dark' ? '#d4d4d4' : '#1d212a'
-                background.value = theme === 'dark' ? '#303030' : '#F5F7FB'
-            });
-        });
-    }
 })
 </script>
 <style scoped lang='scss'>
 .form-inline {
     box-sizing: border-box;
-    color: v-bind(color);
-    background: v-bind(background);
+    background: var(--background-color-4);
+    color: var(--color-hw-text-2);
 
     border: 1px solid #EAEBEE;
     border-radius: 2px;

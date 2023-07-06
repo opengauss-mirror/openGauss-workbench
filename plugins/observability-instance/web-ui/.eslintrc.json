@@ -14,7 +14,7 @@
         "prefer-regex-literals": 0,
         "vue/multi-word-component-names": 0,
         "no-control-regex": 0,
-        "indent": ["error", 4, { "SwitchCase": 1 }],
+        "indent": ["error", 2, { "SwitchCase": 1 }],
         "quotes": 0,
         "comma-dangle": 0,
         "semi": 0,

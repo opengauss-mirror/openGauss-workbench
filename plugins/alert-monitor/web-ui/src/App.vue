@@ -28,8 +28,6 @@ import { getAlertConf } from "@/api/alertConfig"
 
 const observabilitySign = 'alert-monitor';
 
-const themeBool = ref<boolean>(false)
-
 const isDark = useDark({
     // Key stored in localStorage/sessionStorage, modify according to your own needs.
     storageKey: 'theme',
@@ -70,10 +68,10 @@ const dealUrlTo = () => {
     router.replace(urlTo);
 }
 
-const onThemeChange = (bool: boolean, themeType: string) => {
-    themeBool.value = bool;
+const onThemeChange = (themeType: string) => {
     localStorage.setItem("theme", themeType)
     windowStore.setTheme(themeType);
+    document.documentElement.setAttribute('class', themeType === 'dark' ? themeType : '')
 }
 
 const wujieInit = () => {
@@ -83,9 +81,9 @@ const wujieInit = () => {
         i18n.global.locale.value = 'zhCn';
     }
     if (localStorage.getItem("opengauss-theme") === "dark") {
-        onThemeChange(false, 'dark');
+        onThemeChange('dark');
     } else {
-        onThemeChange(true, 'auto');
+        onThemeChange('auto');
     }
 }
 
@@ -109,9 +107,9 @@ onMounted(async () => {
         // Monitoring platform theme changes
         wujie?.bus.$on('opengauss-theme-change', (val: string) => {
             if (val === 'dark') {
-                onThemeChange(false, 'dark');
+                onThemeChange('dark');
             } else {
-                onThemeChange(true, 'auto');
+                onThemeChange('auto');
             }
         })
 

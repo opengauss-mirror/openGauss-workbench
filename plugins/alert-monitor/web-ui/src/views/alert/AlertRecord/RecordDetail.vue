@@ -104,9 +104,6 @@ import { Bell } from "@element-plus/icons-vue";
 import { useI18n } from "vue-i18n";
 import RecordLine from "@/views/alert/AlertRecord/components/RecordLine.vue"
 const { t } = useI18n();
-const theme = localStorage.getItem('theme');
-const color = ref<string>(theme === 'dark' ? '#d4d4d4' : '#1d212a')
-const background = ref<string>(theme === 'dark' ? '#303030' : '#F5F7FB')
 
 const offsetHeight = ref<number>()
 const carHeight = ref<number>()
@@ -189,14 +186,6 @@ onMounted(() => {
         requestData(_id)
         requestRelationData(_id)
     }
-    if (wujie) {
-        wujie?.bus.$on('opengauss-theme-change', (val: string) => {
-            nextTick(() => {
-                color.value = theme === 'dark' ? '#d4d4d4' : '#1d212a'
-                background.value = theme === 'dark' ? '#303030' : '#F5F7FB'
-            });
-        });
-    }
 })
 </script>
 <style scoped lang='scss'>
@@ -210,8 +199,8 @@ onMounted(() => {
 }
 
 .record-detail {
-    background: v-bind(background);
-    color: v-bind(color);
+    background: var(--background-color-4);
+    color: var(--color-hw-text-2);
     border-radius: 2px;
     margin: 5px;
     height: 220px;

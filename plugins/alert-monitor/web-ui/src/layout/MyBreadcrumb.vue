@@ -50,7 +50,6 @@ const paths = computed(() => {
 
 <style scoped lang="scss">
 :deep(.el-breadcrumb__inner.is-link, .el-breadcrumb__inner a) {
-    // color: $og-text-color;
     font-weight: 400;
 }
 

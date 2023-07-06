@@ -77,10 +77,6 @@ import NotifyWayDetail from "@/views/notify/NotifyWay/NotifyWayDetail.vue";
 
 const emit = defineEmits(["updateState"])
 
-const theme = localStorage.getItem('theme');
-const color = ref<string>(theme === 'dark' ? '#d4d4d4' : '#1d212a')
-const background = ref<string>(theme === 'dark' ? '#303030' : '#F5F7FB')
-
 const { t } = useI18n();
 const initFormData = {
     name: '',
@@ -204,16 +200,6 @@ const cancelNotifyWay = () => {
 
 onMounted(() => {
     requestData()
-
-    const wujie = window.$wujie;
-    if (wujie) {
-        wujie?.bus.$on('opengauss-theme-change', (val: string) => {
-            nextTick(() => {
-                color.value = theme === 'dark' ? '#d4d4d4' : '#1d212a'
-                background.value = theme === 'dark' ? '#303030' : '#F5F7FB'
-            });
-        });
-    }
 })
 
 </script>

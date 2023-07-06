@@ -7,6 +7,11 @@ package com.nctigba.datastudio.model.dto;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * DatabaseCreateSequenceDTO
+ *
+ * @since 2023-6-26
+ */
 @NoArgsConstructor
 @Data
 public class DatabaseCreateSequenceDTO {
@@ -20,7 +25,7 @@ public class DatabaseCreateSequenceDTO {
     private String minValue;
     private String maxValue;
     private String cache;
-    private String cycle;
+    private Boolean isCycle;
     private String tableSchema;
     private String tableName;
     private String tableColumn;
