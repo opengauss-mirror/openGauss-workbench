@@ -88,7 +88,11 @@
                                 <el-link size="small" type="primary" @click="handleDownload(scope.row)">{{
                                     $t('app.download')
                                 }}</el-link>
-                                <el-popconfirm title="Are you sure to delete this?" @confirm="hanleDelete(scope.row)">
+                                <el-popconfirm
+                                    width="400"
+                                    :title="$t('dashboard.wdrReports.confirmDel')"
+                                    @confirm="hanleDelete(scope.row)"
+                                >
                                     <template #reference>
                                         <el-link size="small" type="primary">{{ $t('app.delete') }}</el-link>
                                     </template>

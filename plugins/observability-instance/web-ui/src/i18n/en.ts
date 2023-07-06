@@ -336,6 +336,7 @@ export default {
             buildTime: 'Production time',
             snapshotManage: 'Snapshot Manage',
             buildWDR: 'Generate WDR',
+            confirmDel: 'Are you sure to delete this?',
             list: {
                 buildTime: 'Report Generation Time',
                 reportName: 'Report Name',

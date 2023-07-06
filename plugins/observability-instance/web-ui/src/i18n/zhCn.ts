@@ -326,6 +326,7 @@ export default {
             buildTime: '生产时间',
             snapshotManage: '快照管理',
             buildWDR: '生成WDR',
+            confirmDel: '是否确认删除？',
             list: {
                 buildTime: '报告生成时间',
                 reportName: '报告名称',
