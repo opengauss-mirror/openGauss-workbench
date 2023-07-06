@@ -165,7 +165,7 @@ body {
     border-color: $og-border-color !important;
 }
 
-// 弹窗loading
+
 .el-loading-spinner .el-loading-text {
     color: $og-sub-primary-color !important;
 }
@@ -175,7 +175,6 @@ body {
 }
 
 .el-button--small {
-    //     background-color: var(--el-button-color-small) !important;
     border: none !important;
     color: var(--el-text-color-og);
 }
@@ -273,10 +272,6 @@ body {
     cursor: pointer;
 }
 
-// check-box
-// .el-checkbox__inner::after {
-//     border-color: var(--color-bg-2) !important;
-// }
 
 // button for message box
 .el-message-box__btns .el-button.el-button--primary {

@@ -372,7 +372,6 @@ onMounted(() => {
     align-items: flex-start;
     padding: 9px 16px;
     gap: 6px;
-    // background: #F4FAFF;
     border: 1px solid #94BFFF;
     border-radius: 2px;
 
@@ -381,7 +380,6 @@ onMounted(() => {
         font-weight: 800;
         font-size: 14px;
         line-height: 24px;
-        // color: #1D2129;
     }
 
     .content {
@@ -389,7 +387,6 @@ onMounted(() => {
         font-weight: 800;
         font-size: 12px;
         line-height: 18px;
-        // color: #4E5969;
     }
 }
 </style>
