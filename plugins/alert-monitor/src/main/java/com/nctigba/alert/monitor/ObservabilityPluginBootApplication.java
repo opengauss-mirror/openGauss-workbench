@@ -28,7 +28,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
         HibernateJpaAutoConfiguration.class,
         RedisAutoConfiguration.class,
         RedisRepositoriesAutoConfiguration.class})
-@ComponentScan(basePackages = {"org.opengauss.plugin.alertcenter",
+@ComponentScan(basePackages = {"com.nctigba.alert.monitor",
         "org.opengauss.admin.system.service.ops",
         "org.opengauss.admin.common.utils.ops",
         "org.opengauss.admin.common.core.handler.ops.cache"},
@@ -41,7 +41,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
                         org.opengauss.admin.system.plugin.facade.SysSettingFacade.class,
                         org.opengauss.admin.system.plugin.facade.TaskFacade.class,
                         org.opengauss.admin.system.plugin.facade.WsFacade.class})})
-@MapperScan({"org.opengauss.plugin.alertcenter.mapper", "org.opengauss.admin.system.mapper"})
+@MapperScan({"com.nctigba.alert.monitor.mapper", "org.opengauss.admin.system.mapper"})
 public class ObservabilityPluginBootApplication {
     public static void main(String[] args) {
         SpringApplication.run(ObservabilityPluginBootApplication.class, args);

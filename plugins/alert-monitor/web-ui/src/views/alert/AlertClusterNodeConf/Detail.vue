@@ -18,7 +18,6 @@
             <el-tabs v-model="activeName" class="node-tabs">
                 <el-tab-pane :label="$t('AlertClusterNodeConf.alertTemplateTab')" name="template" style="margin-top: 8px;">
                     <el-row>
-                        <!-- style="border-right-style:solid;border-color: #E6E8EB;padding-right: 2px;" -->
                         <el-col :span="4">
                             <div>
                                 <el-table size="small" :data="tableDatas" style="width: 100%;" ref="templateTable" class="templateTable"
@@ -76,7 +75,6 @@
                                             <span v-text="showAlertNotify(scope.row.alertNotify)"></span>
                                         </template>
                                     </el-table-column>
-                                    <!-- <el-table-column prop="ruleContent" :label="$t('alertRule.table[6]')" /> -->
                                 </el-table>
                             </div>
                         </el-col>
@@ -222,7 +220,8 @@ const closeTag = (index: number) => {
 const { data: res, run: requestData } = useRequest(
     (clusterNodeId) => {
         return request.get(`/api/v1/alertClusterNodeConf/clusterNode/${clusterNodeId}`)
-    }
+    },
+    { manual: true }
 )
 
 const { data: templateRes, run: requestTemplateData } = useRequest(

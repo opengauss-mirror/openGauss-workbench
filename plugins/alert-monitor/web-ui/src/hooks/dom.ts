@@ -16,8 +16,6 @@ export const useWidthOverflow = (targetRef: Ref<HTMLElement>, dropdownRef: Ref<a
             isFinish.value = true
             useEventListener(t, 'mouseenter', (e: MouseEvent) => {
                 if (dropdownRef && dropdownRef.value) {
-                    // const l = t.getBoundingClientRect().left - document.querySelector('#app')!.getBoundingClientRect().left
-                    // dropdownRef.value.$el.style.left = e.pageX - l + 'px'
                     dropdownRef.value.$el.style.left = '300px'
                     if (overflow.value) {
                         dropdownRef.value.handleOpen()

@@ -16,13 +16,15 @@
             <slot name="column"></slot>
         </my-table>
         <template #footer>
-            <el-button style="padding: 5px 20px;" @click="() => visible = false">取消</el-button>
-            <el-button style="padding: 5px 20px;" type="primary" @click="confirm">确定</el-button>
+            <el-button style="padding: 5px 20px;" @click="() => visible = false">{{ t('app.cancel') }}</el-button>
+            <el-button style="padding: 5px 20px;" type="primary" @click="confirm">{{ t('app.confirm') }}</el-button>
         </template>
     </el-dialog>
 </template>
 
 <script setup lang="ts">
+import { useI18n } from "vue-i18n";
+const { t } = useI18n();
 const props = withDefaults(
     defineProps<{
         id: string

@@ -9,13 +9,12 @@
         </div>
         <div class="search-form">
             <div class="filter">
-                <el-button type="primary" @click="addClusterNodeConf">{{ $t('AlertClusterNodeConf.confBtn') }}</el-button>
-                <!-- <el-button type="primary" @click="setAlertConfig">{{ $t('AlertClusterNodeConf.setInterface') }}</el-button> -->
+                <el-button type="primary" @click="addClusterNodeConf">{{ t('AlertClusterNodeConf.confBtn') }}</el-button>
             </div>
             <div class="seperator"></div>
             <div class="filter">
                 <el-input v-model="formData.nodeName" style="width: 200px"
-                    :placeholder="$t('AlertClusterNodeConf.nodeNamePlaceholder')">
+                    :placeholder="t('AlertClusterNodeConf.nodeNamePlaceholder')">
                     <template #suffix>
                         <el-button :icon="Search" @click="search" />
                     </template>
@@ -26,22 +25,15 @@
             <el-table size="small" :data="tableDatas" ref="table" style="width: 100%" header-cell-class-name="grid-header"
                 border>
                 <el-table-column type="selection" width="40" />
-                <el-table-column prop="nodeName" :label="$t('AlertClusterNodeConf.table[0]')" />
-                <!-- <el-table-column prop="dbType" :label="$t('AlertClusterNodeConf.table[1]')" />
-                <el-table-column prop="hostIp" :label="$t('AlertClusterNodeConf.table[2]')" /> -->
-                <el-table-column prop="templateName" :label="$t('AlertClusterNodeConf.table[3]')" />
-                <el-table-column :label="$t('AlertClusterNodeConf.table[4]')">
+                <el-table-column prop="nodeName" :label="t('AlertClusterNodeConf.table[0]')" />
+                <el-table-column prop="templateName" :label="t('AlertClusterNodeConf.table[3]')" />
+                <el-table-column :label="t('AlertClusterNodeConf.table[4]')">
                     <template #default="scope">
                         <el-button link type="primary" size="small" @click="editClusterNodeConf(scope.row)">{{
-                            $t('AlertClusterNodeConf.confBtn') }}</el-button>
+                            t('AlertClusterNodeConf.confBtn') }}</el-button>
                     </template>
                 </el-table-column>
             </el-table>
-            <!-- <div class="pagination">
-                <el-pagination v-model:currentPage="page.currentPage" v-model:pageSize="page.pageSize" :total="page.total"
-                    :page-sizes="[10, 20, 30, 40]" layout="total,sizes,prev,pager,next" background small
-                    @size-change="handleSizeChange" @current-change="handleCurrentChange" />
-            </div> -->
         </div>
     </div>
     <div v-else>
