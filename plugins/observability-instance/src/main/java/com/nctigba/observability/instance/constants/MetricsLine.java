@@ -95,18 +95,16 @@ public enum MetricsLine {
     INSTANCE_DB_CONNECTION_CURR(Type.DB, "sum(pg_stat_activity_count{instanceId='ogbrench'})"),
     INSTANCE_DB_CONNECTION_TOTAL(Type.DB, "pg_connections_max_conn{instanceId='ogbrench'}"),
 
-    INSTANCE_DB_SLOWSQL(Type.DB, "sum(pg_stat_activity_max_tx_duration{instanceId='ogbrench',state!='idle'}) > bool 3"),
+    INSTANCE_DB_SLOWSQL(Type.DB, "pg_stat_activity_slow_count{instanceId='ogbrench',state!='idle'}"),
 
     // opengauss session
     SESSION_MAX_CONNECTION(Type.DB, "pg_connections_max_conn{instanceId='ogbrench'}"),
     SESSION_IDLE_CONNECTION(Type.DB, "pg_state_activity_group_count{state='idle',instanceId='ogbrench'}"),
     SESSION_ACTIVE_CONNECTION(Type.DB, "pg_state_activity_group_count{state='active',instanceId='ogbrench'}"),
-    SESSION_WAITING_CONNECTION(Type.DB,
-            "pg_state_activity_group_count{state='waiting',instanceId='ogbrench'}"),
+    SESSION_WAITING_CONNECTION(Type.DB, "pg_state_activity_group_count{state='waiting',instanceId='ogbrench'}"),
 
     // wait event !pg_wait_events_total_wait_time
-    WAIT_EVENT_COUNT(Type.DB, "gauss_wait_events_value{instanceId='ogbrench'}", "{type}"),
-    ;
+    WAIT_EVENT_COUNT(Type.DB, "gauss_wait_events_value{instanceId='ogbrench'}", "{type}");
 
     private enum Type {
         OS,

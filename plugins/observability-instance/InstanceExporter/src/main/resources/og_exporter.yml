@@ -2530,3 +2530,25 @@ pg_state_activity_group:
     - name: count
       description: index scans initiated on this index
       usage: GAUGE
+
+pg_stat_activity_slow:
+  name: count
+  query:
+    - name: count
+      sql: |-
+        select count(1) count
+        from pg_stat_activity
+        where
+          pid <> pg_backend_pid()
+          and xact_start is not null
+          and state = 'active'
+          and extract(epoch from now() - xact_start)>33
+      version: '>=0.0.0'
+      timeout: 10
+      ttl: 3600
+      dbRole: "primary"
+      status: enable
+  metrics:
+    - name: count
+      description: index scans initiated on this index
+      usage: GAUGE
