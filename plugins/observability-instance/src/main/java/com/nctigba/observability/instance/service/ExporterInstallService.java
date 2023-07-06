@@ -17,6 +17,7 @@ import java.util.Map;
 
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.core.domain.model.ops.WsSession;
+import org.opengauss.admin.common.exception.CustomException;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Service;
 
