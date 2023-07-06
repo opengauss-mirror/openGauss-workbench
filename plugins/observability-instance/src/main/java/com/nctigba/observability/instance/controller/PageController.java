@@ -104,7 +104,6 @@ public class PageController extends ControllerConfig {
     private final DbConfigMapper dbConfigMapper;
     private final ClusterManager clusterManager;
     private final MessageSource messageSource;
-    private final Language language;
 
     @GetMapping("memory")
     public Map<String, Object> memory(String id, Long start, Long end, Integer step) {
@@ -115,14 +114,14 @@ public class PageController extends ControllerConfig {
             List<Map<String, Object>> memoryNodeDetail = dbConfigMapper.memoryNodeDetail();
             memoryNodeDetail.forEach(map -> {
                 var str = map.get("memorytype").toString();
-                map.put("desc", messageSource.getMessage("memory.node." + str, null, str, language.getLocale()));
+                map.put("desc", messageSource.getMessage("memory.node." + str, null, str, Language.getLocale()));
             });
             batch.put("memoryNodeDetail", memoryNodeDetail);
             // memory config detail
             List<Map<String, Object>> memoryConfig = dbConfigMapper.memoryConfig();
             memoryConfig.forEach(map -> {
                 var str = map.get("name").toString();
-                map.put("desc", messageSource.getMessage("memory.config." + str, null, str, language.getLocale()));
+                map.put("desc", messageSource.getMessage("memory.config." + str, null, str, Language.getLocale()));
             });
             batch.put("memoryConfig", memoryConfig);
         } finally {
