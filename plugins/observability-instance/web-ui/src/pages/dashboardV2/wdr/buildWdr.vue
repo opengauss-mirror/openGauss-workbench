@@ -118,7 +118,7 @@ const { data: res, run: requestData } = useRequest(
                 clusterId: formData.clusterId,
                 hostId: formData.hostId,
                 orderby: 'snapshot_id desc',
-                pageSize: 20,
+                pageSize: 99999,
                 pageNum: 1,
             })
             .then(function (res) {
