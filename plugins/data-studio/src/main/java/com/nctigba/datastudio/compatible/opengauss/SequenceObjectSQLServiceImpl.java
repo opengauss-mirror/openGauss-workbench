@@ -19,7 +19,6 @@ import org.springframework.stereotype.Service;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.sql.Statement;
 
 import static com.nctigba.datastudio.constants.CommonConstants.OPENGAUSS;
@@ -110,7 +109,7 @@ public class SequenceObjectSQLServiceImpl implements SequenceObjectSQLService {
     }
 
     @Override
-    public String returnSequenceDDL(DatabaseSequenceDdlDTO request) throws SQLException {
+    public String returnSequenceDDL(DatabaseSequenceDdlDTO request) throws Exception {
         log.info("returnSequenceDDL request is: " + request);
         try (
                 Connection connection = connectionConfig.connectDatabase(request.getUuid());

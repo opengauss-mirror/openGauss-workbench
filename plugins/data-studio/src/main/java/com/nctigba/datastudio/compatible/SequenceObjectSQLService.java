@@ -21,7 +21,7 @@ public interface SequenceObjectSQLService {
         throw new CustomException(DebugUtils.getMessage());
     }
 
-    default String returnSequenceDDL(DatabaseSequenceDdlDTO request) {
+    default String returnSequenceDDL(DatabaseSequenceDdlDTO request) throws Exception {
         throw new CustomException(DebugUtils.getMessage());
     }
 }
