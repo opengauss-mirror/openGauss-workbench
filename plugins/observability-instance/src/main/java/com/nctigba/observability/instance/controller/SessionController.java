@@ -3,26 +3,28 @@
  */
 package com.nctigba.observability.instance.controller;
 
-import cn.hutool.core.thread.ThreadUtil;
-import com.alibaba.fastjson.JSONObject;
-import com.nctigba.common.web.result.AppResult;
-import com.nctigba.observability.instance.constants.MetricsLine;
-import com.nctigba.observability.instance.model.monitoring.MonitoringParam;
-import com.nctigba.observability.instance.service.MetricsService;
-import com.nctigba.observability.instance.service.MonitoringService;
-import com.nctigba.observability.instance.service.SessionService;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.opengauss.admin.common.exception.CustomException;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+
+import org.opengauss.admin.common.core.domain.AjaxResult;
+import org.opengauss.admin.common.exception.CustomException;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.alibaba.fastjson.JSONObject;
+import com.nctigba.observability.instance.constants.MetricsLine;
+import com.nctigba.observability.instance.model.monitoring.MonitoringParam;
+import com.nctigba.observability.instance.service.MetricsService;
+import com.nctigba.observability.instance.service.MonitoringService;
+import com.nctigba.observability.instance.service.SessionService;
+
+import cn.hutool.core.thread.ThreadUtil;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @RestController
 @RequestMapping("/instanceMonitoring/api/v1/session/")
@@ -44,7 +46,7 @@ public class SessionController {
     };
 
     @GetMapping("sessionStatistic")
-    public AppResult sessionStatistic(String id, Long start, Long end, Integer step) {
+    public AjaxResult sessionStatistic(String id, Long start, Long end, Integer step) {
         MonitoringParam monitoringParam = new MonitoringParam();
         monitoringParam.setId(id);
         monitoringParam.setStart(String.valueOf(start));
@@ -53,12 +55,11 @@ public class SessionController {
         monitoringParam.setQuery(MetricsLine.WAIT_EVENT_COUNT.promQl(null, id));
         monitoringParam.setType("LINE");
         monitoringParam.setLegendName("event");
-        Future<Object> waitingEventFuture = ThreadUtil.execAsync(() ->
-                monitoringService.getRangeMonitoringData(monitoringParam).get(0));
-        Future<JSONObject> simpleFuture = ThreadUtil.execAsync(() ->
-                sessionService.simpleStatistic(id));
-        Future<HashMap<String, Object>> metricsFuture = ThreadUtil.execAsync(() ->
-                metricsService.listBatch(SESSION_STATISTIC, id, start, end, step));
+        Future<Object> waitingEventFuture = ThreadUtil
+                .execAsync(() -> monitoringService.getRangeMonitoringData(monitoringParam).get(0));
+        Future<JSONObject> simpleFuture = ThreadUtil.execAsync(() -> sessionService.simpleStatistic(id));
+        Future<HashMap<String, Object>> metricsFuture = ThreadUtil
+                .execAsync(() -> metricsService.listBatch(SESSION_STATISTIC, id, start, end, step));
         JSONObject simple;
         Object waitEvent;
         Map<String, Object> metrics;
@@ -80,36 +81,36 @@ public class SessionController {
         }
         map.putAll(metrics);
         map.putAll(simple);
-        return AppResult.ok(map);
+        return AjaxResult.success(map);
     }
 
     @GetMapping(value = "blockAndLongTxc")
-    public AppResult blockAndLongTxc(String id) {
-        return AppResult.ok(sessionService.blockAndLongTxc(id));
+    public AjaxResult blockAndLongTxc(String id) {
+        return AjaxResult.success(sessionService.blockAndLongTxc(id));
     }
 
     @GetMapping(value = "detail/general")
-    public AppResult detailGeneral(String id, String sessionid) {
-        return AppResult.ok(sessionService.detailGeneral(id, sessionid));
+    public AjaxResult detailGeneral(String id, String sessionid) {
+        return AjaxResult.success(sessionService.detailGeneral(id, sessionid));
     }
 
     @GetMapping(value = "detail/statistic")
-    public AppResult detailStatistic(String id, String sessionid) {
-        return AppResult.ok(sessionService.detailStatistic(id, sessionid));
+    public AjaxResult detailStatistic(String id, String sessionid) {
+        return AjaxResult.success(sessionService.detailStatistic(id, sessionid));
     }
 
     @GetMapping(value = "detail/blockTree")
-    public AppResult detailBlockTree(String id, String sessionid) {
-        return AppResult.ok(sessionService.detailBlockTree(id, sessionid));
+    public AjaxResult detailBlockTree(String id, String sessionid) {
+        return AjaxResult.success(sessionService.detailBlockTree(id, sessionid));
     }
 
     @GetMapping(value = "detail/waiting")
-    public AppResult detailWaiting(String id, String sessionid) {
-        return AppResult.ok(sessionService.detailWaiting(id, sessionid));
+    public AjaxResult detailWaiting(String id, String sessionid) {
+        return AjaxResult.success(sessionService.detailWaiting(id, sessionid));
     }
 
     @GetMapping(value = "detail")
-    public AppResult detail(String id, String sessionid) {
-        return AppResult.ok(sessionService.detail(id, sessionid));
+    public AjaxResult detail(String id, String sessionid) {
+        return AjaxResult.success(sessionService.detail(id, sessionid));
     }
 }

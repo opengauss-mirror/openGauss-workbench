@@ -17,7 +17,6 @@ import java.util.Map;
 
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.core.domain.model.ops.WsSession;
-import org.opengauss.admin.common.exception.CustomException;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Service;
 
@@ -93,26 +92,14 @@ public class ExporterInstallService extends AbstractInstaller {
             try (var session = SshSession.connect(hostEntity.getPublicIp(), hostEntity.getPort(), user.getUsername(),
                     encryptionUtils.decrypt(user.getPassword()));) {
                 // check port
-                try {
-                    if (StrUtil.isNotBlank(session.execute("ss -tuln | grep " + httpPort))) {
-                        throw new CustomException("port in use:" + httpPort);
-                    }
-                } catch (CustomException e) {
-                    throw new CustomException("port in use:" + httpPort);
-                }
-                try {
-                    if (StrUtil.isNotBlank(session.execute("ss -tuln | grep " + exporterPort))) {
-                        throw new CustomException("port in use:" + httpPort);
-                    }
-                } catch (CustomException e) {
-                    throw new CustomException("port in use:" + httpPort);
-                }
+                session.testPortCanUse(httpPort);
+                session.testPortCanUse(exporterPort);
 
                 expEnv = envMapper.selectOne(Wrappers.<NctigbaEnv>lambdaQuery().eq(NctigbaEnv::getHostid, hostId)
                         .eq(NctigbaEnv::getType, envType.EXPORTER).eq(NctigbaEnv::getNodeid, nodeId));
-                session.execute("mkdir -p " + path);
                 curr = nextStep(wsSession, steps, curr);
                 if (expEnv == null) {
+                    session.execute("mkdir -p " + path);
                     expEnv = new NctigbaEnv().setHostid(hostId).setNodeid(nodeId).setPort(httpPort)
                             .setUsername(node.getInstallUserName()).setType(envType.EXPORTER);
                     // install new exporter
