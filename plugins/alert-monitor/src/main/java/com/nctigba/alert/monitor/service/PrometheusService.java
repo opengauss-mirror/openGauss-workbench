@@ -247,7 +247,7 @@ public class PrometheusService {
             PrometheusConfigDto config = getPromConfig();
             updatePromConfig(session, config);
             session.close();
-        } catch (IOException | CryptoException e) {
+        } catch (IOException | CryptoException | ServiceException | NullPointerException e) {
             log.error("init prometheus configuration fail: ", e);
         }
     }
