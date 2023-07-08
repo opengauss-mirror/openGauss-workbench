@@ -348,7 +348,7 @@ public class PrometheusService {
         if (templateId == null) {
             return;
         }
-        // 更新prometheus规则配置文件
+        // update the rule configuration file of the prometheus
         try {
             initPrometheusEnvDto();
             SshSession session = SshSession.connect(prometheusEnvDto.getPromIp(), prometheusEnvDto.getHostPort(),
