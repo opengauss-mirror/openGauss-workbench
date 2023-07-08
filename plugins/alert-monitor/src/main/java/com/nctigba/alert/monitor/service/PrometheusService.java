@@ -247,7 +247,7 @@ public class PrometheusService {
             PrometheusConfigDto config = getPromConfig();
             updatePromConfig(session, config);
             session.close();
-        } catch (IOException | CryptoException e) {
+        } catch (IOException | CryptoException | ServiceException | NullPointerException e) {
             log.error("init prometheus configuration fail: ", e);
         }
     }
@@ -348,7 +348,7 @@ public class PrometheusService {
         if (templateId == null) {
             return;
         }
-        // 更新prometheus规则配置文件
+        // update the rule configuration file of the prometheus
         try {
             initPrometheusEnvDto();
             SshSession session = SshSession.connect(prometheusEnvDto.getPromIp(), prometheusEnvDto.getHostPort(),
