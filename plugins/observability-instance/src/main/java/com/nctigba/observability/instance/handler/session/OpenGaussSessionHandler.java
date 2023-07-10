@@ -4,6 +4,9 @@
 package com.nctigba.observability.instance.handler.session;
 
 import com.alibaba.fastjson.JSONObject;
+import com.baomidou.dynamic.datasource.DynamicRoutingDataSource;
+import com.baomidou.dynamic.datasource.creator.DefaultDataSourceCreator;
+import com.baomidou.dynamic.datasource.spring.boot.autoconfigure.DataSourceProperty;
 import com.nctigba.common.web.exception.InstanceException;
 import com.nctigba.observability.instance.constants.CommonConstants;
 import com.nctigba.observability.instance.constants.DatabaseType;
@@ -15,7 +18,11 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
-import java.sql.*;
+import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -26,7 +33,6 @@ import static com.nctigba.common.web.exception.InstanceExceptionMsgEnum.SESSION_
 @RequiredArgsConstructor
 @Slf4j
 public class OpenGaussSessionHandler implements SessionHandler {
-
     private static final String TEST_SQL = "select 1";
     private static final String CHECK_SESSION_IS_WAIT_SQL = "select count(waiting) as count from pg_stat_activity "
             + "where sessionid = ? and waiting";
@@ -156,6 +162,8 @@ public class OpenGaussSessionHandler implements SessionHandler {
                     + "'ApplyLauncher') "
                     + "and now()-xact_start > interval '30 SECOND' "
                     + "ORDER BY xact_start;";
+    private final DynamicRoutingDataSource dynamicRoutingDataSource;
+    private final DefaultDataSourceCreator dataSourceCreator;
 
     @Override
     public String getDatabaseType() {
@@ -164,19 +172,27 @@ public class OpenGaussSessionHandler implements SessionHandler {
 
     @Override
     public Connection getConnection(InstanceNodeInfo nodeInfo) {
-        String driver = "org.opengauss.Driver";
-        String jdbcUrl = "jdbc:opengauss://" + nodeInfo.getIp() + ":" + nodeInfo.getPort() + "/" + nodeInfo.getDbName();
         try {
-            Class.forName(driver);
-            Connection conn = DriverManager.getConnection(jdbcUrl, nodeInfo.getDbUser(), nodeInfo.getDbUserPassword());
-            if (testConnection(conn)) {
-                return conn;
+            Connection connection;
+            if (dynamicRoutingDataSource.getDataSources().containsKey(nodeInfo.getId())) {
+                connection = dynamicRoutingDataSource.getDataSource(nodeInfo.getId()).getConnection();
+            } else {
+                DataSource dataSource = dataSourceCreator.createDataSource(new DataSourceProperty()
+                        .setDriverClassName("org.opengauss.Driver")
+                        .setUrl(CommonConstants.JDBC_OPENGAUSS + nodeInfo.getIp() + ":" + nodeInfo.getPort() + "/"
+                                + nodeInfo.getDbName())
+                        .setUsername(nodeInfo.getDbUser()).setPassword(nodeInfo.getDbUserPassword()));
+                dynamicRoutingDataSource.addDataSource(nodeInfo.getId(), dataSource);
+                connection = dataSource.getConnection();
             }
-        } catch (Exception e) {
-            log.error("get connection fail:{}", e.getMessage());
-            throw new InstanceException(e.getMessage());
+            if (!testConnection(connection)) {
+                dynamicRoutingDataSource.removeDataSource(nodeInfo.getId());
+                return null;
+            }
+            return connection;
+        } catch (SQLException e) {
+            throw new InstanceException(e.getMessage(), e);
         }
-        return null;
     }
 
     @Override
