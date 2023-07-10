@@ -3,9 +3,11 @@
  */
 package com.nctigba.observability.instance.constants;
 
+import lombok.Generated;
 import lombok.Getter;
 
 @Getter
+@Generated
 public enum MetricsLine {
     // index
     CPU(Type.OS, "(avg(sum(irate(agent_cpu_seconds_total{mode!='idle',host='ogbrench'}[5m]))by (cpu))) * 100"),
@@ -79,8 +81,8 @@ public enum MetricsLine {
     NETWORK_TCP_INSEGS(Type.OS, "rate(agent_netstat_Tcp_InSegs{host='ogbrench'}[5m])"),
     NETWORK_TCP_OUTSEGS(Type.OS, "rate(agent_netstat_Tcp_OutSegs{host='ogbrench'}[5m])"),
 
-    NETWORK_TCP_SOCKET(Type.OS, "agent_network_socket{proto=~'tcp|tcp6',host='ogbrench'} by (state)", "{state}"),
-    NETWORK_UDP_SOCKET(Type.OS, "agent_network_socket{proto=~'udp|udp6',host='ogbrench'}"),
+    NETWORK_TCP_SOCKET(Type.OS, "agent_network_socket{proto=~'tcp|tcp6',host='ogbrench'}", "{state}"),
+    NETWORK_UDP_SOCKET(Type.OS, "sum(agent_network_socket{proto=~'udp|udp6',host='ogbrench'})"),
 
     // opengauss instance
     INSTANCE_TPS_COMMIT(Type.DB, "sum(irate(pg_stat_database_xact_rollback_total{instanceId='ogbrench'}[5m]))"),
@@ -127,8 +129,6 @@ public enum MetricsLine {
     }
 
     public String promQl(String host, String node) {
-        if (this.expression == null)
-            return null;
         return this.expression.replace("ogbrench", this.type == Type.OS ? host : node);
     }
 }

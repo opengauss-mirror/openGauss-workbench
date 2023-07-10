@@ -73,7 +73,7 @@ public class SessionController {
         }
         Map<String, Object> map = new HashMap<>();
         map.put("gauss_wait_events_value", waitEvent);
-        List time = (List) metrics.get("time");
+        var time = (List<?>) metrics.get("time");
         for (Map.Entry<String, Object> entry : metrics.entrySet()) {
             if (entry.getValue() == null) {
                 entry.setValue(new int[time.size()]);

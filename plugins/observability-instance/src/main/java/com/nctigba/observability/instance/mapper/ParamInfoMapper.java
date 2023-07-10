@@ -10,11 +10,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.nctigba.observability.instance.constants.CommonConstants;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Service;
 
 import com.nctigba.observability.instance.config.ParamInfoInitConfig;
+import com.nctigba.observability.instance.constants.CommonConstants;
 import com.nctigba.observability.instance.entity.ParamInfo;
 import com.nctigba.observability.instance.entity.ParamInfo.type;
 
@@ -61,7 +61,6 @@ public class ParamInfoMapper implements InitializingBean {
     }
 
     public static ParamInfo getParamInfo(ParamInfo.type type, String name) {
-
         return MAP.get(type).get(name);
     }
 
