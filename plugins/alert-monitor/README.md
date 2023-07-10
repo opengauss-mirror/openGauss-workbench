@@ -159,13 +159,11 @@ git clone https://gitee.com/opengauss/openGauss-workbench
 
 | 文件夹/文件 | 说明            |
 | ----------- | --------------- |
+| doc         | README.md资源图 |
 | src/main    | 后端代码        |
 | web-ui      | 前端代码        |
-| doc         | readme.md资源图 |
-| readme.md   | 插件的操作手册  |
+| README.md   | 插件的操作手册  |
 | pom.xml     | 后端依赖项      |
-
-
 
 ### 3.5 系统要求
 
