@@ -3,14 +3,16 @@
  */
 package com.nctigba.observability.instance.entity;
 
-import java.time.LocalDateTime;
 import java.io.Serializable;
+import java.time.LocalDateTime;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.Generated;
 
 /**
  * <p>
@@ -23,6 +25,7 @@ import lombok.EqualsAndHashCode;
 @Data
 @EqualsAndHashCode(callSuper = false)
 @TableName("observability.server_info")
+@Generated
 public class ServerInfoEntity implements Serializable {
 
     private static final long serialVersionUID = 1L;

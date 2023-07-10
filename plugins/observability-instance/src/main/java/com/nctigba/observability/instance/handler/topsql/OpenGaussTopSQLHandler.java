@@ -3,26 +3,13 @@
  */
 package com.nctigba.observability.instance.handler.topsql;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
-
-import org.apache.commons.lang3.ObjectUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.opengauss.admin.common.exception.CustomException;
-import org.springframework.stereotype.Component;
-
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.baomidou.dynamic.datasource.DynamicRoutingDataSource;
+import com.baomidou.dynamic.datasource.creator.DefaultDataSourceCreator;
+import com.baomidou.dynamic.datasource.spring.boot.autoconfigure.DataSourceProperty;
+import com.nctigba.common.web.exception.InstanceException;
 import com.nctigba.observability.instance.constants.CommonConstants;
 import com.nctigba.observability.instance.constants.DatabaseType;
 import com.nctigba.observability.instance.dto.topsql.TopSQLListReq;
@@ -30,9 +17,19 @@ import com.nctigba.observability.instance.dto.topsql.TopSQLNowReq;
 import com.nctigba.observability.instance.model.ExecutionPlan;
 import com.nctigba.observability.instance.model.IndexAdvice;
 import com.nctigba.observability.instance.model.InstanceNodeInfo;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.opengauss.admin.common.exception.CustomException;
+import org.springframework.stereotype.Component;
+
+import javax.sql.DataSource;
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * <p>
@@ -46,6 +43,8 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @Slf4j
 public class OpenGaussTopSQLHandler implements TopSQLHandler {
+    private final DynamicRoutingDataSource dynamicRoutingDataSource;
+    private final DefaultDataSourceCreator dataSourceCreator;
     private static final String TEST_SQL = "select 1";
     private static final String TOP_SQL_LIST_SQL = "select unique_query_id,debug_query_id,db_name,schema_name,user_name,application_name,start_time,finish_time,db_time,cpu_time,execution_time from dbe_perf.statement_history where debug_query_id != 0 and finish_time >= ? and finish_time <= ? order by %s desc,execution_time desc,cpu_time desc,db_time desc limit 10";
     private static final String TOP_SQL_Now_SQL = "select round(extract(epoch FROM (now() - query_start)),2) as duration,query_start,unique_sql_id,datname ,usename,application_name ,datid,pid,sessionid,usesysid,usename,client_addr ,client_hostname,client_port,backend_start ,xact_start ,state_change ,waiting,enqueue,state ,resource_pool,query_id ,query ,connection_info,trace_id\n"
@@ -106,21 +105,27 @@ public class OpenGaussTopSQLHandler implements TopSQLHandler {
 
     @Override
     public Connection getConnection(InstanceNodeInfo nodeInfo) {
-        String driver = "org.opengauss.Driver";
-        String jdbcUrl = "jdbc:opengauss://" + nodeInfo.getIp() + ":" + nodeInfo.getPort() + "/" + nodeInfo.getDbName();
-        // String key = nodeInfo.getIp() + "_" + nodeInfo.getPort() + "_" +
-        // nodeInfo.getDbName() + "_" + nodeInfo.getDbUser();
         try {
-            Class.forName(driver);
-            Connection conn = DriverManager.getConnection(jdbcUrl, nodeInfo.getDbUser(), nodeInfo.getDbUserPassword());
-            if (testConnection(conn)) {
-                return conn;
+            Connection connection;
+            if (dynamicRoutingDataSource.getDataSources().containsKey(nodeInfo.getId())) {
+                connection = dynamicRoutingDataSource.getDataSource(nodeInfo.getId()).getConnection();
+            } else {
+                DataSource dataSource = dataSourceCreator.createDataSource(new DataSourceProperty()
+                        .setDriverClassName("org.opengauss.Driver")
+                        .setUrl(CommonConstants.JDBC_OPENGAUSS + nodeInfo.getIp() + ":" + nodeInfo.getPort() + "/"
+                                + nodeInfo.getDbName())
+                        .setUsername(nodeInfo.getDbUser()).setPassword(nodeInfo.getDbUserPassword()));
+                dynamicRoutingDataSource.addDataSource(nodeInfo.getId(), dataSource);
+                connection = dataSource.getConnection();
             }
-        } catch (Exception e) {
-            log.error("get connection fail:{}", e.getMessage());
-            throw new CustomException(e.getMessage());
+            if (!testConnection(connection)) {
+                dynamicRoutingDataSource.removeDataSource(nodeInfo.getId());
+                return null;
+            }
+            return connection;
+        } catch (SQLException e) {
+            throw new InstanceException(e.getMessage(), e);
         }
-        return null;
     }
 
     @Override
