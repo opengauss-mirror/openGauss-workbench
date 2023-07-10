@@ -25,7 +25,12 @@ import org.opengauss.admin.common.exception.CustomException;
 import org.springframework.stereotype.Component;
 
 import javax.sql.DataSource;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -43,8 +48,6 @@ import java.util.List;
 @RequiredArgsConstructor
 @Slf4j
 public class OpenGaussTopSQLHandler implements TopSQLHandler {
-    private final DynamicRoutingDataSource dynamicRoutingDataSource;
-    private final DefaultDataSourceCreator dataSourceCreator;
     private static final String TEST_SQL = "select 1";
     private static final String TOP_SQL_LIST_SQL = "select unique_query_id,debug_query_id,db_name,schema_name,user_name,application_name,start_time,finish_time,db_time,cpu_time,execution_time from dbe_perf.statement_history where debug_query_id != 0 and finish_time >= ? and finish_time <= ? order by %s desc,execution_time desc,cpu_time desc,db_time desc limit 10";
     private static final String TOP_SQL_Now_SQL = "select round(extract(epoch FROM (now() - query_start)),2) as duration,query_start,unique_sql_id,datname ,usename,application_name ,datid,pid,sessionid,usesysid,usename,client_addr ,client_hostname,client_port,backend_start ,xact_start ,state_change ,waiting,enqueue,state ,resource_pool,query_id ,query ,connection_info,trace_id\n"
@@ -88,6 +91,8 @@ public class OpenGaussTopSQLHandler implements TopSQLHandler {
     private int totalPlanRows = 0;
     private int totalPlanWidth = 0;
     private List<String> objectNameList = new ArrayList<>();
+    private final DynamicRoutingDataSource dynamicRoutingDataSource;
+    private final DefaultDataSourceCreator dataSourceCreator;
 
     private boolean testConnection(Connection conn) {
         if (ObjectUtils.isNotEmpty(conn)) {

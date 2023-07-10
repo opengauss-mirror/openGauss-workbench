@@ -33,9 +33,6 @@ import static com.nctigba.common.web.exception.InstanceExceptionMsgEnum.SESSION_
 @RequiredArgsConstructor
 @Slf4j
 public class OpenGaussSessionHandler implements SessionHandler {
-
-    private final DynamicRoutingDataSource dynamicRoutingDataSource;
-    private final DefaultDataSourceCreator dataSourceCreator;
     private static final String TEST_SQL = "select 1";
     private static final String CHECK_SESSION_IS_WAIT_SQL = "select count(waiting) as count from pg_stat_activity "
             + "where sessionid = ? and waiting";
@@ -165,6 +162,8 @@ public class OpenGaussSessionHandler implements SessionHandler {
                     + "'ApplyLauncher') "
                     + "and now()-xact_start > interval '30 SECOND' "
                     + "ORDER BY xact_start;";
+    private final DynamicRoutingDataSource dynamicRoutingDataSource;
+    private final DefaultDataSourceCreator dataSourceCreator;
 
     @Override
     public String getDatabaseType() {
