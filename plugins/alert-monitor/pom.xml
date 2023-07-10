@@ -41,7 +41,6 @@
             <groupId>org.opengauss</groupId>
             <artifactId>visualtool-framework</artifactId>
             <version>5.0.0</version>
-            <scope>provided</scope>
             <exclusions>
                 <!--druid-spring-boot-starter removed-->
                 <exclusion>
@@ -204,6 +203,20 @@
                 <profiles.active>prod</profiles.active>
                 <swagger.scope>provided</swagger.scope>
             </properties>
+            <dependencies>
+                <dependency>
+                    <groupId>org.opengauss</groupId>
+                    <artifactId>visualtool-framework</artifactId>
+                    <version>5.0.0</version>
+                    <scope>provided</scope>
+                    <exclusions>
+                        <exclusion>
+                            <groupId>org.springframework.boot</groupId>
+                            <artifactId>spring-boot-starter-data-redis</artifactId>
+                        </exclusion>
+                    </exclusions>
+                </dependency>
+            </dependencies>
         </profile>
     </profiles>
 
