@@ -2542,7 +2542,7 @@ pg_stat_activity_slow:
           pid <> pg_backend_pid()
           and xact_start is not null
           and state = 'active'
-          and extract(epoch from now() - xact_start)>33
+          and extract(epoch from now() - xact_start)>3
       version: '>=0.0.0'
       timeout: 10
       ttl: 3600

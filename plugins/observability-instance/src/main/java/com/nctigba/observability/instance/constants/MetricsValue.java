@@ -3,9 +3,11 @@
  */
 package com.nctigba.observability.instance.constants;
 
+import lombok.Generated;
 import lombok.Getter;
 
 @Getter
+@Generated
 public enum MetricsValue {
     // memory
     MEM_TOTAL(Type.OS, "agent_free_Mem_total_bytes{host='ogbrench'}"),
@@ -53,8 +55,7 @@ public enum MetricsValue {
             "{device}"),
     NETWORK_TXDROP(Type.OS, "max(rate(agent_network_transmit_dropped_total{host='ogbrench'}[5m])) by (device)",
             "{device}"),
-    NETWORK_RXFIFO(Type.OS, "max(rate(agent_network_receive_fifo_total{host='ogbrench'}[5m])) by (device)",
-            "{device}"),
+    NETWORK_RXFIFO(Type.OS, "max(rate(agent_network_receive_fifo_total{host='ogbrench'}[5m])) by (device)", "{device}"),
     NETWORK_TXFIFO(Type.OS, "max(rate(agent_network_transmit_fifo_total{host='ogbrench'}[5m])) by (device)",
             "{device}"),;
 
@@ -79,8 +80,6 @@ public enum MetricsValue {
     }
 
     public String promQl(String host, String node) {
-        if (this.expression == null)
-            return null;
         return this.expression.replace("ogbrench", this.type == Type.OS ? host : node);
     }
 }

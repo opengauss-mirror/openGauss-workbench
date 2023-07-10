@@ -3,7 +3,18 @@
  */
 package com.nctigba.observability.instance.service.impl;
 
-import cn.hutool.core.thread.ThreadUtil;
+import java.sql.Connection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+
+import org.opengauss.admin.common.core.domain.model.ops.OpsClusterNodeVO;
+import org.opengauss.admin.common.exception.CustomException;
+import org.springframework.stereotype.Service;
+
 import com.alibaba.fastjson.JSONObject;
 import com.nctigba.common.web.exception.InstanceException;
 import com.nctigba.observability.instance.constants.DatabaseType;
@@ -13,19 +24,10 @@ import com.nctigba.observability.instance.handler.session.SessionHandler;
 import com.nctigba.observability.instance.model.InstanceNodeInfo;
 import com.nctigba.observability.instance.service.ClusterManager;
 import com.nctigba.observability.instance.service.SessionService;
+
+import cn.hutool.core.thread.ThreadUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.opengauss.admin.common.core.domain.model.ops.OpsClusterNodeVO;
-import org.opengauss.admin.common.exception.CustomException;
-import org.springframework.stereotype.Service;
-
-import java.sql.Connection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
 
 @Service
 @RequiredArgsConstructor
@@ -175,6 +177,10 @@ public class SessionServiceImpl implements SessionService {
         return res;
     }
 
+    @SuppressWarnings({
+            "rawtypes",
+            "unchecked"
+    })
     @Override
     public Map<String, Object> detail(String id, String sessionid) {
         // query node info
