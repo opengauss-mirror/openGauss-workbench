@@ -1,7 +1,3 @@
-///
-/// Copyright (c) 2023 Huawei Technologies Co.,Ltd.
-///
-
 import { ComputedGetter, Ref } from 'vue'
 
 export const useIntervalTime = (cb: Function, timeFn: ComputedGetter<number> | Ref<number>) => {
