@@ -3,15 +3,21 @@
  */
 package com.nctigba.observability.instance.service;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.util.Collections;
-import java.util.List;
-import java.util.Properties;
-
-import javax.sql.DataSource;
-
+import com.baomidou.dynamic.datasource.DynamicRoutingDataSource;
+import com.baomidou.dynamic.datasource.creator.DefaultDataSourceCreator;
+import com.baomidou.dynamic.datasource.spring.boot.autoconfigure.DataSourceProperty;
+import com.baomidou.dynamic.datasource.toolkit.DynamicDataSourceContextHolder;
+import com.gitee.starblues.bootstrap.annotation.AutowiredType;
+import com.gitee.starblues.bootstrap.annotation.AutowiredType.Type;
+import com.nctigba.common.web.exception.CustomException;
+import com.nctigba.common.web.exception.InstanceException;
+import com.nctigba.observability.instance.constants.CommonConstants;
+import com.nctigba.observability.instance.model.InstanceNodeInfo;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.opengauss.admin.common.core.domain.model.ops.OpsClusterNodeVO;
 import org.opengauss.admin.common.core.domain.model.ops.OpsClusterVO;
@@ -23,20 +29,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
-import com.baomidou.dynamic.datasource.DynamicRoutingDataSource;
-import com.baomidou.dynamic.datasource.creator.DefaultDataSourceCreator;
-import com.baomidou.dynamic.datasource.spring.boot.autoconfigure.DataSourceProperty;
-import com.baomidou.dynamic.datasource.toolkit.DynamicDataSourceContextHolder;
-import com.gitee.starblues.bootstrap.annotation.AutowiredType;
-import com.gitee.starblues.bootstrap.annotation.AutowiredType.Type;
-import com.nctigba.common.web.exception.CustomException;
-import com.nctigba.observability.instance.constants.CommonConstants;
-
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.util.Collections;
+import java.util.List;
+import java.util.Properties;
 
 @Service
 @Slf4j
@@ -92,9 +91,9 @@ public class ClusterManager {
 
     /**
      * Set the current data source and manually clear it
-     * 
-     * @see com.baomidou.dynamic.datasource.toolkit.DynamicDataSourceContextHolder#push(String)
-     * @see com.nctigba.observability.instance.service.ClusterManager#pool()
+     *
+     * @see DynamicDataSourceContextHolder#push(String)
+     * @see ClusterManager#pool()
      */
     public void setCurrentDatasource(String nodeId, String dbname) {
         if (StringUtils.isBlank(nodeId))
@@ -163,7 +162,7 @@ public class ClusterManager {
                     CommonConstants.JDBC_OPENGAUSS + getPublicIp() + ":" + getDbPort() + "/" + getDbName(), getDbUser(),
                     getDbUserPassword());
             try (var preparedStatement = conn.prepareStatement("select 1");
-                    var rs = preparedStatement.executeQuery();) {
+                 var rs = preparedStatement.executeQuery();) {
                 return conn;
             } catch (Exception e) {
                 log.error("test connection fail:{}", e.getMessage());
@@ -207,5 +206,35 @@ public class ClusterManager {
             }
         }
         throw new CustomException(CommonConstants.NODE_NOT_FOUND);
+    }
+
+    /**
+     * get openGauss jdbc-connection by NodeInfo
+     *
+     * @param nodeInfo nodeInfo
+     * @return jdbc Connection
+     */
+    public Connection getConnectionByNodeInfo(InstanceNodeInfo nodeInfo) {
+        try {
+            Connection connection;
+            if (!(dataSource instanceof DynamicRoutingDataSource)) {
+                throw new InstanceException("dataSource is not type of DynamicRoutingDataSource");
+            }
+            var dynamicRoutingDataSource = (DynamicRoutingDataSource) dataSource;
+            if (dynamicRoutingDataSource.getDataSources().containsKey(nodeInfo.getId())) {
+                connection = dynamicRoutingDataSource.getDataSource(nodeInfo.getId()).getConnection();
+            } else {
+                DataSource newDataSource = dataSourceCreator.createDataSource(new DataSourceProperty()
+                        .setDriverClassName("org.opengauss.Driver")
+                        .setUrl(CommonConstants.JDBC_OPENGAUSS + nodeInfo.getIp() + ":" + nodeInfo.getPort() + "/"
+                                + nodeInfo.getDbName())
+                        .setUsername(nodeInfo.getDbUser()).setPassword(nodeInfo.getDbUserPassword()));
+                dynamicRoutingDataSource.addDataSource(nodeInfo.getId(), newDataSource);
+                connection = newDataSource.getConnection();
+            }
+            return connection;
+        } catch (SQLException e) {
+            throw new InstanceException(e.getMessage(), e);
+        }
     }
 }
