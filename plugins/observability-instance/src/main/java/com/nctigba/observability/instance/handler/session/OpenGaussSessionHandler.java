@@ -4,26 +4,28 @@
 package com.nctigba.observability.instance.handler.session;
 
 import com.alibaba.fastjson.JSONObject;
-import com.baomidou.dynamic.datasource.DynamicRoutingDataSource;
-import com.baomidou.dynamic.datasource.creator.DefaultDataSourceCreator;
-import com.baomidou.dynamic.datasource.spring.boot.autoconfigure.DataSourceProperty;
 import com.nctigba.common.web.exception.InstanceException;
 import com.nctigba.observability.instance.constants.CommonConstants;
 import com.nctigba.observability.instance.constants.DatabaseType;
 import com.nctigba.observability.instance.dto.session.DetailStatisticDto;
 import com.nctigba.observability.instance.model.InstanceNodeInfo;
+import com.nctigba.observability.instance.service.ClusterManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
-import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static com.nctigba.common.web.exception.InstanceExceptionMsgEnum.SESSION_DETAIL_GENERAL_MESSAGE;
@@ -162,8 +164,7 @@ public class OpenGaussSessionHandler implements SessionHandler {
                     + "'ApplyLauncher') "
                     + "and now()-xact_start > interval '30 SECOND' "
                     + "ORDER BY xact_start;";
-    private final DynamicRoutingDataSource dynamicRoutingDataSource;
-    private final DefaultDataSourceCreator dataSourceCreator;
+    private final ClusterManager clusterManager;
 
     @Override
     public String getDatabaseType() {
@@ -172,27 +173,11 @@ public class OpenGaussSessionHandler implements SessionHandler {
 
     @Override
     public Connection getConnection(InstanceNodeInfo nodeInfo) {
-        try {
-            Connection connection;
-            if (dynamicRoutingDataSource.getDataSources().containsKey(nodeInfo.getId())) {
-                connection = dynamicRoutingDataSource.getDataSource(nodeInfo.getId()).getConnection();
-            } else {
-                DataSource dataSource = dataSourceCreator.createDataSource(new DataSourceProperty()
-                        .setDriverClassName("org.opengauss.Driver")
-                        .setUrl(CommonConstants.JDBC_OPENGAUSS + nodeInfo.getIp() + ":" + nodeInfo.getPort() + "/"
-                                + nodeInfo.getDbName())
-                        .setUsername(nodeInfo.getDbUser()).setPassword(nodeInfo.getDbUserPassword()));
-                dynamicRoutingDataSource.addDataSource(nodeInfo.getId(), dataSource);
-                connection = dataSource.getConnection();
-            }
-            if (!testConnection(connection)) {
-                dynamicRoutingDataSource.removeDataSource(nodeInfo.getId());
-                return null;
-            }
-            return connection;
-        } catch (SQLException e) {
-            throw new InstanceException(e.getMessage(), e);
+        Connection connection = clusterManager.getConnectionByNodeInfo(nodeInfo);
+        if (!testConnection(connection)) {
+            return null;
         }
+        return connection;
     }
 
     @Override

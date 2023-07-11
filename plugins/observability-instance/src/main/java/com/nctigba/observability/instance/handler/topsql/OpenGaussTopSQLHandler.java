@@ -6,10 +6,6 @@ package com.nctigba.observability.instance.handler.topsql;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.baomidou.dynamic.datasource.DynamicRoutingDataSource;
-import com.baomidou.dynamic.datasource.creator.DefaultDataSourceCreator;
-import com.baomidou.dynamic.datasource.spring.boot.autoconfigure.DataSourceProperty;
-import com.nctigba.common.web.exception.InstanceException;
 import com.nctigba.observability.instance.constants.CommonConstants;
 import com.nctigba.observability.instance.constants.DatabaseType;
 import com.nctigba.observability.instance.dto.topsql.TopSQLListReq;
@@ -17,6 +13,7 @@ import com.nctigba.observability.instance.dto.topsql.TopSQLNowReq;
 import com.nctigba.observability.instance.model.ExecutionPlan;
 import com.nctigba.observability.instance.model.IndexAdvice;
 import com.nctigba.observability.instance.model.InstanceNodeInfo;
+import com.nctigba.observability.instance.service.ClusterManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
@@ -24,7 +21,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.opengauss.admin.common.exception.CustomException;
 import org.springframework.stereotype.Component;
 
-import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -91,8 +87,7 @@ public class OpenGaussTopSQLHandler implements TopSQLHandler {
     private int totalPlanRows = 0;
     private int totalPlanWidth = 0;
     private List<String> objectNameList = new ArrayList<>();
-    private final DynamicRoutingDataSource dynamicRoutingDataSource;
-    private final DefaultDataSourceCreator dataSourceCreator;
+    private final ClusterManager clusterManager;
 
     private boolean testConnection(Connection conn) {
         if (ObjectUtils.isNotEmpty(conn)) {
@@ -110,27 +105,11 @@ public class OpenGaussTopSQLHandler implements TopSQLHandler {
 
     @Override
     public Connection getConnection(InstanceNodeInfo nodeInfo) {
-        try {
-            Connection connection;
-            if (dynamicRoutingDataSource.getDataSources().containsKey(nodeInfo.getId())) {
-                connection = dynamicRoutingDataSource.getDataSource(nodeInfo.getId()).getConnection();
-            } else {
-                DataSource dataSource = dataSourceCreator.createDataSource(new DataSourceProperty()
-                        .setDriverClassName("org.opengauss.Driver")
-                        .setUrl(CommonConstants.JDBC_OPENGAUSS + nodeInfo.getIp() + ":" + nodeInfo.getPort() + "/"
-                                + nodeInfo.getDbName())
-                        .setUsername(nodeInfo.getDbUser()).setPassword(nodeInfo.getDbUserPassword()));
-                dynamicRoutingDataSource.addDataSource(nodeInfo.getId(), dataSource);
-                connection = dataSource.getConnection();
-            }
-            if (!testConnection(connection)) {
-                dynamicRoutingDataSource.removeDataSource(nodeInfo.getId());
-                return null;
-            }
-            return connection;
-        } catch (SQLException e) {
-            throw new InstanceException(e.getMessage(), e);
+        Connection connection = clusterManager.getConnectionByNodeInfo(nodeInfo);
+        if (!testConnection(connection)) {
+            return null;
         }
+        return connection;
     }
 
     @Override
