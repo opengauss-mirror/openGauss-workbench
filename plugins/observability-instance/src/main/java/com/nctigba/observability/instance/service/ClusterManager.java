@@ -92,8 +92,8 @@ public class ClusterManager {
     /**
      * Set the current data source and manually clear it
      *
-     * @see com.baomidou.dynamic.datasource.toolkit.DynamicDataSourceContextHolder#push(String)
-     * @see com.nctigba.observability.instance.service.ClusterManager#pool()
+     * @see DynamicDataSourceContextHolder#push(String)
+     * @see ClusterManager#pool()
      */
     public void setCurrentDatasource(String nodeId, String dbname) {
         if (StringUtils.isBlank(nodeId))
@@ -208,20 +208,29 @@ public class ClusterManager {
         throw new CustomException(CommonConstants.NODE_NOT_FOUND);
     }
 
+    /**
+     * get openGauss jdbc-connection by NodeInfo
+     *
+     * @param nodeInfo nodeInfo
+     * @return jdbc Connection
+     */
     public Connection getConnectionByNodeInfo(InstanceNodeInfo nodeInfo) {
         try {
             Connection connection;
+            if (!(dataSource instanceof DynamicRoutingDataSource)) {
+                throw new InstanceException("dataSource is not type of DynamicRoutingDataSource");
+            }
             var dynamicRoutingDataSource = (DynamicRoutingDataSource) dataSource;
             if (dynamicRoutingDataSource.getDataSources().containsKey(nodeInfo.getId())) {
                 connection = dynamicRoutingDataSource.getDataSource(nodeInfo.getId()).getConnection();
             } else {
-                DataSource dataSource = dataSourceCreator.createDataSource(new DataSourceProperty()
+                DataSource newDataSource = dataSourceCreator.createDataSource(new DataSourceProperty()
                         .setDriverClassName("org.opengauss.Driver")
                         .setUrl(CommonConstants.JDBC_OPENGAUSS + nodeInfo.getIp() + ":" + nodeInfo.getPort() + "/"
                                 + nodeInfo.getDbName())
                         .setUsername(nodeInfo.getDbUser()).setPassword(nodeInfo.getDbUserPassword()));
-                dynamicRoutingDataSource.addDataSource(nodeInfo.getId(), dataSource);
-                connection = dataSource.getConnection();
+                dynamicRoutingDataSource.addDataSource(nodeInfo.getId(), newDataSource);
+                connection = newDataSource.getConnection();
             }
             return connection;
         } catch (SQLException e) {
