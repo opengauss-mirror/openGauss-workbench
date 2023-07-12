@@ -137,7 +137,7 @@ public class SqlConstants {
             + "left join (select oid, unnest(conkey) as conkey, conrelid,"
             + " contype, conname from pg_constraint) con  " + LF
             + "on  con.conrelid = pc.oid and col.ordinal_position = con.conkey and con.contype = 'u'" + LF
-            + "left join PG_DESCRIPTION pd on pd.objsubid = con.conkey and objoid = %s" + LF
+            + "left join PG_DESCRIPTION pd on pd.objsubid = col.ORDINAL_POSITION and objoid = %s" + LF
             + "where  col.table_schema = '%s' and col.table_name = '%s'";
     public static final String ALTER_TABLE_SQL = "ALTER TABLE ";
     public static final String ALTER_TABLE_COLUMN_DROPQL = "ALTER TABLE %s.%s DROP COLUMN %s;";
