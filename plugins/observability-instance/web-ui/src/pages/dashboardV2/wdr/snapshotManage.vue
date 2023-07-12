@@ -80,7 +80,7 @@ const props = withDefaults(defineProps<{ tabId: string }>(), {})
 const page = reactive({
   pageSize: 10,
   currentPage: 1,
-  total: 30,
+  total: 0,
 })
 const handleSizeChange = (val: number) => {
   page.currentPage = 1
