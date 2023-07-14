@@ -7,6 +7,7 @@ package com.nctigba.alert.monitor.dto;
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.StrUtil;
 import lombok.Data;
+import lombok.Generated;
 import lombok.experimental.Accessors;
 import com.nctigba.alert.monitor.constant.CommonConstants;
 import com.nctigba.alert.monitor.entity.AlertTemplateRule;
@@ -21,6 +22,7 @@ import java.util.stream.Collectors;
  * @description
  */
 @Data
+@Generated
 @Accessors(chain = true)
 public class AlertTemplateRuleDto extends AlertTemplateRule {
     private String ruleExpDesc;

@@ -5,6 +5,7 @@
 package com.nctigba.alert.monitor.model;
 
 import lombok.Data;
+import lombok.Generated;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
@@ -15,6 +16,7 @@ import javax.validation.constraints.NotNull;
  * @description
  */
 @Data
+@Generated
 public class AlertClusterNodeConfReq {
     @NotBlank
     private String clusterNodeIds;

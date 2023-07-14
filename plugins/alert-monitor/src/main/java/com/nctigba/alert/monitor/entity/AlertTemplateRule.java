@@ -12,6 +12,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import lombok.Data;
+import lombok.Generated;
 import lombok.experimental.Accessors;
 import org.springframework.format.annotation.DateTimeFormat;
 
@@ -28,6 +29,7 @@ import java.util.List;
  * @description
  */
 @Data
+@Generated
 @Accessors(chain = true)
 @TableName("alert_template_rule")
 public class AlertTemplateRule {

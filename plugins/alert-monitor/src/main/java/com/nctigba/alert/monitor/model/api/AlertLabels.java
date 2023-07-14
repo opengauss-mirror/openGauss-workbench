@@ -7,6 +7,7 @@ package com.nctigba.alert.monitor.model.api;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import lombok.Data;
+import lombok.Generated;
 
 /**
  * @author wuyuebin
@@ -14,6 +15,7 @@ import lombok.Data;
  * @description The additional information included in the alert messages pushed by Prometheus.
  */
 @Data
+@Generated
 public class AlertLabels {
     private String alertname;
     private String instance; // cluster_node_id

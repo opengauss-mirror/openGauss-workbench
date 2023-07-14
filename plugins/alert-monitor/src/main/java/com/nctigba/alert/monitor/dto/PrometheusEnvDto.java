@@ -5,6 +5,7 @@
 package com.nctigba.alert.monitor.dto;
 
 import lombok.Data;
+import lombok.Generated;
 import lombok.experimental.Accessors;
 import com.nctigba.alert.monitor.entity.AlertConfig;
 
@@ -16,6 +17,7 @@ import java.util.List;
  * @description
  */
 @Data
+@Generated
 @Accessors(chain = true)
 public class PrometheusEnvDto {
     private String promIp;
