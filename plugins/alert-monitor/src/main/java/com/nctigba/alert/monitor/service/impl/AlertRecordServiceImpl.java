@@ -294,7 +294,6 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
 
     @Override
     public List<AlertRelationDto> getRelationData(Long id) {
-        MessageSourceUtil.reset();
         AlertRecord alertRecord = this.baseMapper.selectById(id);
         Long templateRuleId = alertRecord.getTemplateRuleId();
         List<AlertTemplateRuleItem> templateRuleItems = templateRuleItemMapper.selectList(

@@ -83,8 +83,7 @@ public class AlertClusterNodeConfServiceImpl
                 .eq(AlertClusterNodeConf::getTemplateId, templateId)
                 .eq(AlertClusterNodeConf::getIsDeleted, CommonConstants.IS_NOT_DELETE));
         List<String> oldNodeIdListByTemplateId = oldListByTemplateId.stream().map(
-            item -> item.getClusterNodeId()).collect(
-            Collectors.toList());
+            item -> item.getClusterNodeId()).collect(Collectors.toList());
         List<String> newNodeIdList = clusterNodeIdList.stream().filter(
             item -> !oldNodeIdListByTemplateId.contains(item)).collect(Collectors.toList());
         if (CollectionUtil.isEmpty(newNodeIdList)) {
