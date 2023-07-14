@@ -121,7 +121,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers("/ws/**").anonymous()
                 .antMatchers("/static-plugin/**").anonymous()
                 .antMatchers("/plugins/observability-sql-diagnosis/sqlDiagnosis/api/open/v1/diagnosisTasks/**").anonymous()
-				.antMatchers("/plugins/alert-center/alertCenter/api/v1/alerts").anonymous()
+				.antMatchers("/plugins/alert-monitor/api/v1/alerts").anonymous()
                 .antMatchers("/login").anonymous()
                 .antMatchers("/modeling/visualization/report/share/**").permitAll()
                 .antMatchers("/prometheus").permitAll()
