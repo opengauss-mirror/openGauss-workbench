@@ -11,7 +11,6 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import org.opengauss.admin.common.exception.ServiceException;
 import com.nctigba.alert.monitor.constant.CommonConstants;
 import com.nctigba.alert.monitor.dto.AlertTemplateDto;
 import com.nctigba.alert.monitor.dto.AlertTemplateRuleDto;
@@ -37,6 +36,7 @@ import com.nctigba.alert.monitor.service.AlertTemplateRuleItemParamService;
 import com.nctigba.alert.monitor.service.AlertTemplateRuleService;
 import com.nctigba.alert.monitor.service.AlertTemplateService;
 import com.nctigba.alert.monitor.utils.MessageSourceUtil;
+import org.opengauss.admin.common.exception.ServiceException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -292,7 +292,7 @@ public class AlertTemplateServiceImpl extends ServiceImpl<AlertTemplateMapper, A
                 AlertTemplateRule::getIsDeleted, CommonConstants.IS_NOT_DELETE));
         alertTemplateRuleMapper.update(null,
             new LambdaUpdateWrapper<AlertTemplateRule>().set(AlertTemplateRule::getIsDeleted, CommonConstants.IS_DELETE)
-                .set(AlertTemplateRule::getUpdateTime, LocalDateTime.now()).eq(AlertTemplateRule::getTemplateId,id)
+                .set(AlertTemplateRule::getUpdateTime, LocalDateTime.now()).eq(AlertTemplateRule::getTemplateId, id)
                 .eq(AlertTemplateRule::getIsDeleted, CommonConstants.IS_NOT_DELETE));
         List<Long> templateRuleIds = templateRuleList.stream().map(item -> item.getId()).collect(Collectors.toList());
         if (CollectionUtil.isEmpty(templateRuleIds)) {
