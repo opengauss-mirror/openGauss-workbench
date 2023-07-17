@@ -35,7 +35,7 @@ public class DbUtil {
                         conn = DriverManager
                                 .getConnection(
                                         "jdbc:opengauss://" + "localhost" + ":" + dbConfig.getDbport() + "/"
-                                                + "postgres" + "?TimeZone=UTC",
+                                                + "postgres" + "?TimeZone=UTC&ApplicationName=DataKit Instance Monitoring Agent",
                                         dbConfig.getDbUsername(), dbConfig.getDbPassword());
                     }
                 } catch (SQLException e) {

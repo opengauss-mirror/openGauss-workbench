@@ -92,8 +92,8 @@ public class ClusterManager {
     /**
      * Set the current data source and manually clear it
      *
-     * @see DynamicDataSourceContextHolder#push(String)
-     * @see ClusterManager#pool()
+     * @see com.baomidou.dynamic.datasource.toolkit.DynamicDataSourceContextHolder#push(String)
+     * @see com.nctigba.observability.instance.service.ClusterManager#pool()
      */
     public void setCurrentDatasource(String nodeId, String dbname) {
         if (StringUtils.isBlank(nodeId))
