@@ -47,10 +47,10 @@ import static org.mockito.Mockito.when;
 @RunWith(MockitoJUnitRunner.class)
 public class TestPrometheusUtil {
     @Mock
-    protected NctigbaEnvMapper envMapper;
+    private NctigbaEnvMapper envMapper;
 
     @Mock
-    protected HostFacade hostFacade;
+    private HostFacade hostFacade;
     @InjectMocks
     private PrometheusUtil util;
 
@@ -77,11 +77,6 @@ public class TestPrometheusUtil {
 
     @Test
     public void testRangQuery() {
-        String paramId = "";
-        String item = MetricCommon.AVG_CPU_USAGE_RATE;
-        String start = "";
-        String end = "";
-        String step = "";
         NctigbaEnv env = new NctigbaEnv();
         env.setPort(11);
         env.setHostid("8080");
@@ -100,6 +95,11 @@ public class TestPrometheusUtil {
             when(uriComponents.toUriString()).thenReturn("http://127.0.0.1:8080");
             mockHttpStatic.when(() -> HttpUtils.sendGet(anyString(), anyString()))
                     .thenReturn("");
+            String paramId = "";
+            String item = MetricCommon.AVG_CPU_USAGE_RATE;
+            String start = "";
+            String end = "";
+            String step = "";
             Object result = util.rangeQuery(paramId, item, start, end, step);
             assertNotNull(result);
         }

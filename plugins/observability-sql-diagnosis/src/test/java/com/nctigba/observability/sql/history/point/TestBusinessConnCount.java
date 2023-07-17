@@ -75,26 +75,26 @@ public class TestBusinessConnCount {
 
     @Before
     public void before() {
-        String nodeId = "37e8a893-0b7e-49b2-a0b4-e6fdf7dc4345";
-        Date sTime = new Date();
-        Date eTime = new Date();
         OptionQuery optionQuery = new OptionQuery();
         optionQuery.setOption(String.valueOf(OptionCommon.IS_MEMORY));
         optionQuery.setIsCheck(true);
-        List<OptionQuery> config = new ArrayList<>() {{
-            add(optionQuery);
-        }};
         HisDiagnosisThreshold diagnosisThreshold = new HisDiagnosisThreshold();
         diagnosisThreshold.setThreshold(ThresholdCommon.CONNECTION_NUM);
         diagnosisThreshold.setThresholdValue("20");
-        List<HisDiagnosisThreshold> threshold = new ArrayList<>() {{
-            add(diagnosisThreshold);
-        }};
         hisDiagnosisTask = new HisDiagnosisTask();
+        String nodeId = "37e8a893-0b7e-49b2-a0b4-e6fdf7dc4345";
+        Date sTime = new Date();
+        Date eTime = new Date();
         hisDiagnosisTask.setNodeId(nodeId);
         hisDiagnosisTask.setHisDataStartTime(sTime);
         hisDiagnosisTask.setHisDataEndTime(eTime);
+        List<OptionQuery> config = new ArrayList<>() {{
+            add(optionQuery);
+        }};
         hisDiagnosisTask.setConfigs(config);
+        List<HisDiagnosisThreshold> threshold = new ArrayList<>() {{
+            add(diagnosisThreshold);
+        }};
         hisDiagnosisTask.setThresholds(threshold);
         hisDiagnosisTask.setSpan("50s");
         hisDiagnosisTask.setClusterId(nodeId);
@@ -158,8 +158,8 @@ public class TestBusinessConnCount {
         List<PrometheusData> list = new ArrayList<>();
         PrometheusData prometheusData = new PrometheusData();
         prometheusData.setMetric(new JSONObject());
-        JSONArray jsonArray=new JSONArray();
-        List<String> stringList=new ArrayList<>();
+        JSONArray jsonArray = new JSONArray();
+        List<String> stringList = new ArrayList<>();
         stringList.add("100");
         stringList.add("200");
         jsonArray.add(stringList);
@@ -207,10 +207,10 @@ public class TestBusinessConnCount {
         when(taskMapper.selectById(taskId)).thenReturn(hisDiagnosisTask);
         List<PrometheusData> cpuList = new ArrayList<>();
         PrometheusData cpuData = new PrometheusData();
-        JSONObject jsonObject=new JSONObject();
-        jsonObject.put("cpu","50");
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("cpu", "50");
         cpuData.setMetric(jsonObject);
-        JSONArray jsonArray=new JSONArray();
+        JSONArray jsonArray = new JSONArray();
         jsonArray.add("cpu");
         cpuData.setValues(jsonArray);
         cpuList.add(cpuData);

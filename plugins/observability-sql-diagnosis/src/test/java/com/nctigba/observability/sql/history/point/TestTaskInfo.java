@@ -50,51 +50,51 @@ public class TestTaskInfo {
     @Mock
     private ClusterManager clusterManager;
     @InjectMocks
-    private TaskInfo TaskInfo;
+    private TaskInfo taskInfo;
 
     private HisDiagnosisTask hisDiagnosisTask;
 
     @Before
     public void before() {
-        String nodeId = "37e8a893-0b7e-49b2-a0b4-e6fdf7dc4345";
-        Date sTime = new Date();
-        Date eTime = new Date();
         OptionQuery optionQuery = new OptionQuery();
         optionQuery.setOption("IS_LOCK");
         optionQuery.setIsCheck(true);
-        List<OptionQuery> config = new ArrayList<>() {{
-            add(optionQuery);
-        }};
         HisDiagnosisThreshold diagnosisThreshold = new HisDiagnosisThreshold();
         diagnosisThreshold.setThreshold("cpuUsageRate");
         diagnosisThreshold.setThresholdValue("20");
-        List<HisDiagnosisThreshold> threshold = new ArrayList<>() {{
-            add(diagnosisThreshold);
-        }};
         hisDiagnosisTask = new HisDiagnosisTask();
+        String nodeId = "37e8a893-0b7e-49b2-a0b4-e6fdf7dc4345";
+        Date sTime = new Date();
+        Date eTime = new Date();
         hisDiagnosisTask.setNodeId(nodeId);
         hisDiagnosisTask.setHisDataStartTime(sTime);
         hisDiagnosisTask.setHisDataEndTime(eTime);
+        List<OptionQuery> config = new ArrayList<>() {{
+            add(optionQuery);
+        }};
         hisDiagnosisTask.setConfigs(config);
+        List<HisDiagnosisThreshold> threshold = new ArrayList<>() {{
+            add(diagnosisThreshold);
+        }};
         hisDiagnosisTask.setThresholds(threshold);
         hisDiagnosisTask.setSpan("50s");
     }
 
     @Test
     public void testGetOption() {
-        List<String> list = TaskInfo.getOption();
+        List<String> list = taskInfo.getOption();
         assertNull(list);
     }
 
     @Test
     public void testGetSourceDataKeys() {
-        List<CollectionItem<?>> result = TaskInfo.getSourceDataKeys();
+        List<CollectionItem<?>> result = taskInfo.getSourceDataKeys();
         assertNull(result);
     }
 
     @Test
     public void testAnalysisData() {
-        AnalysisDTO result = TaskInfo.analysis(mock(HisDiagnosisTask.class), dataStoreService);
+        AnalysisDTO result = taskInfo.analysis(mock(HisDiagnosisTask.class), dataStoreService);
         Assertions.assertEquals(HisDiagnosisResult.ResultState.SUGGESTIONS, result.getIsHint());
         Assertions.assertEquals(HisDiagnosisResult.PointType.ROOT, result.getPointType());
         assertNotNull(result);
@@ -104,7 +104,7 @@ public class TestTaskInfo {
     public void testGetShowData_Exception() {
         int taskId = 1;
         when(taskMapper.selectById(taskId)).thenReturn(null);
-        assertThrows(HisDiagnosisException.class, () -> TaskInfo.getShowData(taskId));
+        assertThrows(HisDiagnosisException.class, () -> taskInfo.getShowData(taskId));
     }
 
     @Test
@@ -122,7 +122,7 @@ public class TestTaskInfo {
         opsClusterVO.setClusterNodes(clusterNodes);
         clusterVOList.add(opsClusterVO);
         when(clusterManager.getAllOpsCluster()).thenReturn(clusterVOList);
-        HisDiagnosisTask task = TaskInfo.getShowData(1);
+        HisDiagnosisTask task = taskInfo.getShowData(1);
         assertNotNull(task);
     }
 }

@@ -34,10 +34,10 @@ import static org.mockito.Mockito.when;
 @RunWith(MockitoJUnitRunner.class)
 public class TestAgentUtil {
     @Mock
-    protected NctigbaEnvMapper envMapper;
+    private NctigbaEnvMapper envMapper;
 
     @Mock
-    protected HostFacade hostFacade;
+    private HostFacade hostFacade;
     @InjectMocks
     private AgentUtil util;
 
@@ -69,20 +69,6 @@ public class TestAgentUtil {
                             + "            \"SHR\": \"1532\","
                             + "            \"TIME+\": \"0:00.04\","
                             + "            \"VIRT\": \"162104\""
-                            + "        },"
-                            + "        {"
-                            + "            \"RES\": \"4096\","
-                            + "            \"%MEM\": \"0.0\","
-                            + "            \"PR\": \"20\","
-                            + "            \"%CPU\": \"0.0\","
-                            + "            \"S\": \"S\","
-                            + "            \"PID\": \"1\","
-                            + "            \"COMMAND\": \"systemd\","
-                            + "            \"NI\": \"0\","
-                            + "            \"USER\": \"root\","
-                            + "            \"SHR\": \"2504\","
-                            + "            \"TIME+\": \"5:18.99\","
-                            + "            \"VIRT\": \"193996\""
                             + "        }"
                             + "\t],"
                             + "\t["
@@ -99,20 +85,6 @@ public class TestAgentUtil {
                             + "            \"SHR\": \"1532\","
                             + "            \"TIME+\": \"0:00.04\","
                             + "            \"VIRT\": \"162104\""
-                            + "        },"
-                            + "        {"
-                            + "            \"RES\": \"4096\","
-                            + "            \"%MEM\": \"0.0\","
-                            + "            \"PR\": \"20\","
-                            + "            \"%CPU\": \"0.0\","
-                            + "            \"S\": \"S\","
-                            + "            \"PID\": \"1\","
-                            + "            \"COMMAND\": \"systemd\","
-                            + "            \"NI\": \"0\","
-                            + "            \"USER\": \"root\","
-                            + "            \"SHR\": \"2504\","
-                            + "            \"TIME+\": \"5:18.99\","
-                            + "            \"VIRT\": \"193996\""
                             + "        }"
                             + "\t]"
                             + "]");

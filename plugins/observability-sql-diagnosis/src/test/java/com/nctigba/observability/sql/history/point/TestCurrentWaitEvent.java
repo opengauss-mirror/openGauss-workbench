@@ -56,26 +56,26 @@ public class TestCurrentWaitEvent {
 
     @Before
     public void before() {
-        String nodeId = "37e8a893-0b7e-49b2-a0b4-e6fdf7dc4345";
-        Date sTime = new Date();
-        Date eTime = new Date();
         OptionQuery optionQuery = new OptionQuery();
         optionQuery.setOption(String.valueOf(OptionCommon.IS_CPU));
         optionQuery.setIsCheck(true);
-        List<OptionQuery> config = new ArrayList<>() {{
-            add(optionQuery);
-        }};
         HisDiagnosisThreshold diagnosisThreshold = new HisDiagnosisThreshold();
         diagnosisThreshold.setThreshold(ThresholdCommon.WAIT_EVENT_NUM);
         diagnosisThreshold.setThresholdValue("20");
-        List<HisDiagnosisThreshold> threshold = new ArrayList<>() {{
-            add(diagnosisThreshold);
-        }};
         hisDiagnosisTask = new HisDiagnosisTask();
+        String nodeId = "37e8a893-0b7e-49b2-a0b4-e6fdf7dc4345";
+        Date sTime = new Date();
+        Date eTime = new Date();
         hisDiagnosisTask.setNodeId(nodeId);
         hisDiagnosisTask.setHisDataStartTime(sTime);
         hisDiagnosisTask.setHisDataEndTime(new Date(eTime.getTime() + 20000));
+        List<OptionQuery> config = new ArrayList<>() {{
+            add(optionQuery);
+        }};
         hisDiagnosisTask.setConfigs(config);
+        List<HisDiagnosisThreshold> threshold = new ArrayList<>() {{
+            add(diagnosisThreshold);
+        }};
         hisDiagnosisTask.setThresholds(threshold);
         hisDiagnosisTask.setSpan("50s");
     }
@@ -110,8 +110,6 @@ public class TestCurrentWaitEvent {
         config.setCollectionItem(item);
         config.setCount(1);
         when(dataStoreService.getData(item)).thenReturn(config);
-        List<DatabaseData> list = new ArrayList<>();
-        DatabaseData databaseData = new DatabaseData();
         JSONArray array = new JSONArray();
         List<HashMap<String, String>> hashMaps = new ArrayList<>();
         HashMap<String, String> hashMap = new HashMap<>();
@@ -119,11 +117,13 @@ public class TestCurrentWaitEvent {
         hashMap.put("wait_status", "hash join");
         hashMaps.add(hashMap);
         array.add(hashMaps);
+        DatabaseData databaseData = new DatabaseData();
         databaseData.setValue(new JSONArray());
         JSONObject sqlName = new JSONObject();
         sqlName.put("__name__", SqlCommon.WAIT_EVENT);
         databaseData.setSqlName(sqlName);
         databaseData.setValue(array);
+        List<DatabaseData> list = new ArrayList<>();
         list.add(databaseData);
         when(config.getCollectionData()).thenReturn(list);
         AnalysisDTO result = currentWaitEvent.analysis(hisDiagnosisTask, dataStoreService);

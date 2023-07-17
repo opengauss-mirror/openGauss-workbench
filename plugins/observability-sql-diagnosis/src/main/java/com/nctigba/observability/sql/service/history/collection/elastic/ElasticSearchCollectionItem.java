@@ -47,6 +47,11 @@ public abstract class ElasticSearchCollectionItem implements CollectionItem<Obje
         return query(task);
     }
 
+    /**
+     * Get query param
+     *
+     * @return String
+     */
     public abstract String getQueryParam();
 
     private Object query(HisDiagnosisTask task) {

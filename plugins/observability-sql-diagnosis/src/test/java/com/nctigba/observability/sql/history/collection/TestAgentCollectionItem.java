@@ -57,15 +57,9 @@ public class TestAgentCollectionItem {
 
     @Before
     public void before() {
-        String nodeId = "37e8a893-0b7e-49b2-a0b4-e6fdf7dc4345";
-        Date sTime = new Date();
-        Date eTime = new Date();
         OptionQuery optionQuery = new OptionQuery();
         optionQuery.setOption(String.valueOf(OptionCommon.IS_CPU));
         optionQuery.setIsCheck(true);
-        List<OptionQuery> config = new ArrayList<>() {{
-            add(optionQuery);
-        }};
         HisDiagnosisThreshold diagnosisThreshold = new HisDiagnosisThreshold();
         diagnosisThreshold.setThreshold(ThresholdCommon.DURING);
         diagnosisThreshold.setThresholdValue("20");
@@ -73,9 +67,15 @@ public class TestAgentCollectionItem {
             add(diagnosisThreshold);
         }};
         hisDiagnosisTask = new HisDiagnosisTask();
+        String nodeId = "37e8a893-0b7e-49b2-a0b4-e6fdf7dc4345";
         hisDiagnosisTask.setNodeId(nodeId);
+        Date sTime = new Date();
+        Date eTime = new Date();
         hisDiagnosisTask.setHisDataStartTime(sTime);
         hisDiagnosisTask.setHisDataEndTime(eTime);
+        List<OptionQuery> config = new ArrayList<>() {{
+            add(optionQuery);
+        }};
         hisDiagnosisTask.setConfigs(config);
         hisDiagnosisTask.setThresholds(threshold);
         hisDiagnosisTask.setSpan("50s");

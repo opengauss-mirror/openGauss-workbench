@@ -61,9 +61,6 @@ public class TestHisDiagnosisServiceImpl {
     public void before() {
         pointServiceList.add(aspAnalysis);
         pointServiceList.add(lockTimeout);
-        String nodeId = "37e8a893-0b7e-49b2-a0b4-e6fdf7dc4345";
-        Date sTime = new Date();
-        Date eTime = new Date();
         OptionQuery optionQuery = new OptionQuery();
         optionQuery.setOption("IS_LOCK");
         optionQuery.setIsCheck(true);
@@ -77,8 +74,11 @@ public class TestHisDiagnosisServiceImpl {
             add(diagnosisThreshold);
         }};
         HisDiagnosisTask hisDiagnosisTask = new HisDiagnosisTask();
+        String nodeId = "37e8a893-0b7e-49b2-a0b4-e6fdf7dc4345";
         hisDiagnosisTask.setNodeId(nodeId);
+        Date sTime = new Date();
         hisDiagnosisTask.setHisDataStartTime(sTime);
+        Date eTime = new Date();
         hisDiagnosisTask.setHisDataEndTime(eTime);
         hisDiagnosisTask.setConfigs(config);
         hisDiagnosisTask.setThresholds(threshold);

@@ -73,38 +73,38 @@ public class TaskServiceImplTest {
 
     @Before
     public void before() {
-        String nodeId = "37e8a893-0b7e-49b2-a0b4-e6fdf7dc4345";
-        Date sTime = new Date();
-        Date eTime = new Date();
-        List<OptionDTO> configs = new ArrayList<>() {{
-            add(new OptionDTO().setOption("IS_LOCK").setIsCheck(true));
-        }};
-        List<HisThresholdDTO> thresholds = new ArrayList<>() {{
-            add(new HisThresholdDTO().setThreshold("cpuUsageRate").setThresholdValue("20"));
-        }};
         OptionQuery optionQuery = new OptionQuery();
         optionQuery.setOption("IS_LOCK");
         optionQuery.setIsCheck(true);
-        List<OptionQuery> config = new ArrayList<>() {{
-            add(optionQuery);
-        }};
         HisDiagnosisThreshold diagnosisThreshold = new HisDiagnosisThreshold();
         diagnosisThreshold.setThreshold("cpuUsageRate");
         diagnosisThreshold.setThresholdValue("20");
-        List<HisDiagnosisThreshold> threshold = new ArrayList<>() {{
-            add(diagnosisThreshold);
-        }};
         hisDiagnosisTaskDTO = new HisDiagnosisTaskDTO();
+        String nodeId = "37e8a893-0b7e-49b2-a0b4-e6fdf7dc4345";
         hisDiagnosisTaskDTO.setNodeId(nodeId);
+        Date sTime = new Date();
         hisDiagnosisTaskDTO.setHisDataStartTime(sTime);
+        Date eTime = new Date();
         hisDiagnosisTaskDTO.setHisDataEndTime(eTime);
+        List<OptionDTO> configs = new ArrayList<>() {{
+            add(new OptionDTO().setOption("IS_LOCK").setIsCheck(true));
+        }};
         hisDiagnosisTaskDTO.setConfigs(configs);
+        List<HisThresholdDTO> thresholds = new ArrayList<>() {{
+            add(new HisThresholdDTO().setThreshold("cpuUsageRate").setThresholdValue("20"));
+        }};
         hisDiagnosisTaskDTO.setThresholds(thresholds);
         hisDiagnosisTask = new HisDiagnosisTask();
         hisDiagnosisTask.setNodeId(nodeId);
         hisDiagnosisTask.setHisDataStartTime(sTime);
         hisDiagnosisTask.setHisDataEndTime(eTime);
+        List<OptionQuery> config = new ArrayList<>() {{
+            add(optionQuery);
+        }};
         hisDiagnosisTask.setConfigs(config);
+        List<HisDiagnosisThreshold> threshold = new ArrayList<>() {{
+            add(diagnosisThreshold);
+        }};
         hisDiagnosisTask.setThresholds(threshold);
         hisDiagnosisTask.setSpan("50s");
     }
@@ -135,7 +135,6 @@ public class TaskServiceImplTest {
         options.add("IS_LOCK");
         when(aspAnalysis.getOption()).thenReturn(options);
         when(lockTimeout.getOption()).thenReturn(options);
-        HisDiagnosisTaskDTO taskDTO = hisDiagnosisTaskDTO;
         pointServiceList.add(aspAnalysis);
         pointServiceList.add(lockTimeout);
         when(taskMapper.selectById(taskId)).thenReturn(hisDiagnosisTask);
@@ -153,6 +152,7 @@ public class TaskServiceImplTest {
         hisDiagnosisTask.addRemarks(TaskState.FINISH);
         when(dbAvgCpuItem.queryData(hisDiagnosisTask)).thenReturn(null);
         when(lockTimeoutItem.queryData(hisDiagnosisTask)).thenReturn(null);
+        HisDiagnosisTaskDTO taskDTO = hisDiagnosisTaskDTO;
         taskService.start(taskId, taskDTO);
     }
 
@@ -163,7 +163,6 @@ public class TaskServiceImplTest {
         options.add("IS_LOCK");
         when(aspAnalysis.getOption()).thenReturn(options);
         when(lockTimeout.getOption()).thenReturn(options);
-        HisDiagnosisTaskDTO taskDTO = hisDiagnosisTaskDTO;
         pointServiceList.add(aspAnalysis);
         pointServiceList.add(lockTimeout);
         when(taskMapper.selectById(taskId)).thenReturn(hisDiagnosisTask);
@@ -178,6 +177,7 @@ public class TaskServiceImplTest {
         analysisDTO.setIsHint(HisDiagnosisResult.ResultState.NO_ADVICE);
         analysisDTO.setPointType(HisDiagnosisResult.PointType.DIAGNOSIS);
         when(aspAnalysis.analysis(hisDiagnosisTask, dataStoreService)).thenReturn(analysisDTO);
+        HisDiagnosisTaskDTO taskDTO = hisDiagnosisTaskDTO;
         taskService.start(taskId, taskDTO);
     }
 
@@ -188,7 +188,6 @@ public class TaskServiceImplTest {
         options.add("IS_LOCK");
         when(aspAnalysis.getOption()).thenReturn(options);
         when(lockTimeout.getOption()).thenReturn(options);
-        HisDiagnosisTaskDTO taskDTO = hisDiagnosisTaskDTO;
         pointServiceList.add(aspAnalysis);
         pointServiceList.add(lockTimeout);
         when(taskMapper.selectById(taskId)).thenReturn(hisDiagnosisTask);
@@ -201,13 +200,13 @@ public class TaskServiceImplTest {
         when(lockTimeout.getSourceDataKeys()).thenReturn(items);
         when(dbAvgCpuItem.queryData(hisDiagnosisTask)).thenReturn("error");
         when(lockTimeoutItem.queryData(hisDiagnosisTask)).thenReturn(null);
+        HisDiagnosisTaskDTO taskDTO = hisDiagnosisTaskDTO;
         taskService.start(taskId, taskDTO);
     }
 
     @Test
     public void testStartAbnormal() throws NullPointerException {
         int taskId = 1;
-        HisDiagnosisTaskDTO taskDTO = hisDiagnosisTaskDTO;
         pointServiceList.add(aspAnalysis);
         pointServiceList.add(lockTimeout);
         when(taskMapper.selectById(taskId)).thenReturn(hisDiagnosisTask);
@@ -220,6 +219,7 @@ public class TaskServiceImplTest {
         when(lockTimeout.getSourceDataKeys()).thenReturn(items);
         when(dbAvgCpuItem.queryData(hisDiagnosisTask)).thenReturn("error");
         when(lockTimeoutItem.queryData(hisDiagnosisTask)).thenReturn(new LogInfoDTO());
+        HisDiagnosisTaskDTO taskDTO = hisDiagnosisTaskDTO;
         taskService.start(taskId, taskDTO);
     }
 }

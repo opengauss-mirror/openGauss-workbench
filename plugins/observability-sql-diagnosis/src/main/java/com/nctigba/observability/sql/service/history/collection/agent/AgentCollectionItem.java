@@ -27,6 +27,11 @@ public abstract class AgentCollectionItem implements CollectionItem<Object> {
         return query(task);
     }
 
+    /**
+     * Get http param
+     *
+     * @return String
+     */
     public abstract String getHttpParam();
 
     private Object query(HisDiagnosisTask task) {

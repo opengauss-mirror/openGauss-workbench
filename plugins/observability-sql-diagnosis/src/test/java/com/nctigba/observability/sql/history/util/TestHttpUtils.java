@@ -21,7 +21,6 @@ import static org.mockito.Mockito.mockStatic;
  */
 @RunWith(MockitoJUnitRunner.class)
 public class TestHttpUtils {
-
     @Test
     public void testSendGet() {
         String result = "";

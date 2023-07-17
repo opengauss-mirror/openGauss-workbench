@@ -8,7 +8,6 @@ import com.nctigba.observability.sql.mapper.history.HisThresholdMapper;
 import com.nctigba.observability.sql.model.history.HisDiagnosisThreshold;
 import com.nctigba.observability.sql.model.history.query.HisThresholdQuery;
 import com.nctigba.observability.sql.service.history.Impl.HisThresholdServiceImpl;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
@@ -36,10 +35,6 @@ public class TestHisThresholdServiceImpl {
     @InjectMocks
     private HisThresholdServiceImpl service;
 
-    @Before
-    public void before() {
-    }
-
     @Test
     public void testSelect() {
         List<HisDiagnosisThreshold> list = service.select();
@@ -53,7 +48,7 @@ public class TestHisThresholdServiceImpl {
 
     @Test
     public void testUpdate() {
-        HisThresholdQuery query=new HisThresholdQuery();
+        HisThresholdQuery query = new HisThresholdQuery();
         query.setId(1);
         service.insertOrUpdate(query);
     }

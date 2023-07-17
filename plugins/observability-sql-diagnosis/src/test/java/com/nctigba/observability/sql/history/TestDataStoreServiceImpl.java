@@ -8,7 +8,6 @@ import com.nctigba.observability.sql.model.history.DataStoreConfig;
 import com.nctigba.observability.sql.service.history.Impl.DataStoreServiceImpl;
 import com.nctigba.observability.sql.service.history.collection.CollectionItem;
 import com.nctigba.observability.sql.service.history.collection.metric.DbAvgCpuItem;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
@@ -30,17 +29,13 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 public class TestDataStoreServiceImpl {
     @Mock
     private DbAvgCpuItem dbAvgCpuItem;
-    private final List<DataStoreConfig> dataList =new ArrayList<>();
+    private final List<DataStoreConfig> dataList = new ArrayList<>();
     @InjectMocks
     private DataStoreServiceImpl dataStoreService;
 
-    @Before
-    public void before() {
-    }
-
     @Test
     public void testStoreData() {
-        DataStoreConfig config=new DataStoreConfig();
+        DataStoreConfig config = new DataStoreConfig();
         config.setCollectionItem(dbAvgCpuItem);
         config.setCount(1);
         dataList.add(config);
@@ -49,7 +44,7 @@ public class TestDataStoreServiceImpl {
 
     @Test
     public void testGetCollectionItem() {
-        DataStoreConfig config=new DataStoreConfig();
+        DataStoreConfig config = new DataStoreConfig();
         config.setCollectionItem(dbAvgCpuItem);
         config.setCount(1);
         dataList.add(config);
@@ -60,7 +55,7 @@ public class TestDataStoreServiceImpl {
 
     @Test
     public void testGetData_NotData() {
-        DataStoreConfig config=new DataStoreConfig();
+        DataStoreConfig config = new DataStoreConfig();
         config.setCollectionItem(dbAvgCpuItem);
         config.setCount(1);
         dataList.add(config);
@@ -71,7 +66,7 @@ public class TestDataStoreServiceImpl {
 
     @Test
     public void testGetData_hasData() {
-        DataStoreConfig config=new DataStoreConfig();
+        DataStoreConfig config = new DataStoreConfig();
         config.setCollectionItem(dbAvgCpuItem);
         config.setCount(1);
         dataList.add(config);
@@ -82,7 +77,7 @@ public class TestDataStoreServiceImpl {
 
     @Test
     public void testGetData_hasData2() {
-        DataStoreConfig config=new DataStoreConfig();
+        DataStoreConfig config = new DataStoreConfig();
         config.setCollectionItem(dbAvgCpuItem);
         config.setCount(2);
         dataList.add(config);

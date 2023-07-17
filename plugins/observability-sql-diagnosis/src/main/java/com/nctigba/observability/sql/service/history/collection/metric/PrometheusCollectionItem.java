@@ -92,6 +92,11 @@ public abstract class PrometheusCollectionItem implements CollectionItem<Object>
         return prometheusUtil.rangeQuery(queryId, metric, String.valueOf(startTime), String.valueOf(endTime), step);
     }
 
+    /**
+     * Get prometheus param
+     *
+     * @return String
+     */
     public abstract String getPrometheusParam(List<HisDiagnosisThreshold> thresholds);
 
     private String getParamId(String metric, String nodeId) {
