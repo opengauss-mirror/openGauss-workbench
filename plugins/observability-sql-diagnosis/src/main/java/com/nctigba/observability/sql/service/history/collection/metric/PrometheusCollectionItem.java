@@ -95,6 +95,7 @@ public abstract class PrometheusCollectionItem implements CollectionItem<Object>
     /**
      * Get prometheus param
      *
+     * @param thresholds Request parameters
      * @return String
      */
     public abstract String getPrometheusParam(List<HisDiagnosisThreshold> thresholds);

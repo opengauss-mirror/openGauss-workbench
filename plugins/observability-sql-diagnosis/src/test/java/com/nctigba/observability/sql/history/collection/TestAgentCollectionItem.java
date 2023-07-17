@@ -63,9 +63,6 @@ public class TestAgentCollectionItem {
         HisDiagnosisThreshold diagnosisThreshold = new HisDiagnosisThreshold();
         diagnosisThreshold.setThreshold(ThresholdCommon.DURING);
         diagnosisThreshold.setThresholdValue("20");
-        List<HisDiagnosisThreshold> threshold = new ArrayList<>() {{
-            add(diagnosisThreshold);
-        }};
         hisDiagnosisTask = new HisDiagnosisTask();
         String nodeId = "37e8a893-0b7e-49b2-a0b4-e6fdf7dc4345";
         hisDiagnosisTask.setNodeId(nodeId);
@@ -77,6 +74,9 @@ public class TestAgentCollectionItem {
             add(optionQuery);
         }};
         hisDiagnosisTask.setConfigs(config);
+        List<HisDiagnosisThreshold> threshold = new ArrayList<>() {{
+            add(diagnosisThreshold);
+        }};
         hisDiagnosisTask.setThresholds(threshold);
         hisDiagnosisTask.setSpan("50s");
     }

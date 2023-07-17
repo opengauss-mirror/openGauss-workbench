@@ -64,15 +64,9 @@ public class TestHisDiagnosisServiceImpl {
         OptionQuery optionQuery = new OptionQuery();
         optionQuery.setOption("IS_LOCK");
         optionQuery.setIsCheck(true);
-        List<OptionQuery> config = new ArrayList<>() {{
-            add(optionQuery);
-        }};
         HisDiagnosisThreshold diagnosisThreshold = new HisDiagnosisThreshold();
         diagnosisThreshold.setThreshold("cpuUsageRate");
         diagnosisThreshold.setThresholdValue("20");
-        List<HisDiagnosisThreshold> threshold = new ArrayList<>() {{
-            add(diagnosisThreshold);
-        }};
         HisDiagnosisTask hisDiagnosisTask = new HisDiagnosisTask();
         String nodeId = "37e8a893-0b7e-49b2-a0b4-e6fdf7dc4345";
         hisDiagnosisTask.setNodeId(nodeId);
@@ -80,7 +74,13 @@ public class TestHisDiagnosisServiceImpl {
         hisDiagnosisTask.setHisDataStartTime(sTime);
         Date eTime = new Date();
         hisDiagnosisTask.setHisDataEndTime(eTime);
+        List<OptionQuery> config = new ArrayList<>() {{
+            add(optionQuery);
+        }};
         hisDiagnosisTask.setConfigs(config);
+        List<HisDiagnosisThreshold> threshold = new ArrayList<>() {{
+            add(diagnosisThreshold);
+        }};
         hisDiagnosisTask.setThresholds(threshold);
         hisDiagnosisTask.setSpan("50s");
         hisDiagnosisResult = new HisDiagnosisResult();

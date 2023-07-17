@@ -138,11 +138,11 @@ public class TestCpuTimeTopSql {
     public void testGetShowData_error() {
         int taskId = 1;
         when(taskMapper.selectById(taskId)).thenReturn(hisDiagnosisTask);
-        String error="error:";
+        String error = "error:";
         when(item.queryData(hisDiagnosisTask)).thenReturn(error);
         List<?> dataDTOList = cpuTimeTopSql.getShowData(taskId);
         assertNotNull(dataDTOList);
-        assertEquals(error,dataDTOList.get(0));
+        assertEquals(error, dataDTOList.get(0));
     }
 
     @Test
