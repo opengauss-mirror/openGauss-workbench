@@ -13,17 +13,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
 
 import java.sql.ResultSet;
 import java.sql.Statement;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
-import static com.nctigba.datastudio.constants.CommonConstants.BREAK_POINT;
 import static com.nctigba.datastudio.constants.CommonConstants.FUNC_OID;
 import static com.nctigba.datastudio.constants.CommonConstants.OID;
 import static com.nctigba.datastudio.constants.CommonConstants.RESULT;
@@ -80,7 +76,6 @@ public class StepOutImpl implements OperationInterface {
             webSocketServer.sendMessage(windowName, switchWindow, SUCCESS, map);
             DebugUtils.disableButton(webSocketServer, windowName);
         } else {
-            deleteBreakPoint(webSocketServer, paramReq);
             webSocketServer.sendMessage(windowName, closeWindow, SUCCESS, null);
             Map<String, Object> paramMap = webSocketServer.getParamMap(rootWindowName);
             paramMap.keySet().removeIf(oid::equals);
@@ -90,21 +85,6 @@ public class StepOutImpl implements OperationInterface {
         paramReq.setCloseWindow(true);
         paramReq.setOldWindowName(name);
         singleStep.showDebugInfo(webSocketServer, paramReq);
-    }
-
-    public void deleteBreakPoint(WebSocketServer webSocketServer, PublicParamReq paramReq) throws Exception {
-        Map<Integer, String> breakPointMap = (Map<Integer, String>) webSocketServer
-                .getParamMap(paramReq.getWindowName()).get(BREAK_POINT);
-        log.info("stepOut deleteBreakPoint breakPointMap: " + breakPointMap);
-
-        if (!CollectionUtils.isEmpty(breakPointMap)) {
-            Set<Integer> integers = breakPointMap.keySet();
-            List<Integer> list = new ArrayList<>(integers);
-            for (Integer integer : list) {
-                paramReq.setLine(integer);
-                deleteBreakPoint.operate(webSocketServer, paramReq);
-            }
-        }
     }
 
     @Override

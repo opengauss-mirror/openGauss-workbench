@@ -5,6 +5,7 @@
 package com.nctigba.alert.monitor.config.properties;
 
 import lombok.Data;
+import lombok.Generated;
 
 /**
  * @author wuyuebin
@@ -12,6 +13,7 @@ import lombok.Data;
  * @description
  */
 @Data
+@Generated
 public class RuleItemParamProperty {
     private String paramName;
     private String paramValue;

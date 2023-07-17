@@ -516,6 +516,16 @@ CREATE TABLE IF NOT EXISTS "public"."alert_config" (
 "alert_port" varchar(10) COLLATE "pg_catalog"."default"
 );
 
+CREATE TABLE IF NOT EXISTS "public"."nctigba_env" (
+	id varchar NULL,
+	hostid varchar NULL,
+	"type" varchar NULL,
+	username varchar NULL,
+	"path" varchar NULL,
+	port int8 NULL,
+	nodeid varchar NULL
+);
+
 INSERT INTO public.alert_rule (id,rule_name,level,rule_type,rule_exp_comb,rule_content,notify_duration,notify_duration_unit,is_repeat,is_silence,silence_start_time,silence_end_time,alert_notify,notify_way_ids,alert_desc,is_deleted,create_time,update_time)
  VALUES (1,'CPU使用率过高','warn','index','A','$'||'{nodeName}的CPU使用率超过90%',2,'m',1,0,null,null,'firing,recover','1',null,0,'2023-04-26 08:30:22.02',null) ON DUPLICATE KEY UPDATE NOTHING;
 INSERT INTO public.alert_rule_item (id,rule_id,rule_mark,rule_exp_name,operate,limit_value,unit,rule_exp,rule_item_desc,is_deleted,create_time,update_time,action)

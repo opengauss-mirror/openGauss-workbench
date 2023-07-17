@@ -5,6 +5,7 @@
 package com.nctigba.alert.monitor.config.properties;
 
 import lombok.Data;
+import lombok.Generated;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.NestedConfigurationProperty;
 import org.springframework.stereotype.Component;
@@ -19,6 +20,7 @@ import java.util.List;
 @ConfigurationProperties(prefix = "alert")
 @Component
 @Data
+@Generated
 public class AlertProperty {
     private String ruleFilePrefix;
 

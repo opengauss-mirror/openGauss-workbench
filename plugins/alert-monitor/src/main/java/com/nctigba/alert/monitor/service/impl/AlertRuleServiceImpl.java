@@ -48,7 +48,6 @@ public class AlertRuleServiceImpl extends ServiceImpl<AlertRuleMapper, AlertRule
 
     @Override
     public Page<AlertRuleDto> getRulePage(RuleReq ruleReq, Page page) {
-        MessageSourceUtil.reset();
         Page<AlertRuleDto> ruleDtoPage = new Page<>();
         Page<AlertRule> alertRulePage = this.baseMapper.selectPage(page, Wrappers.<AlertRule>lambdaQuery()
                 .like(StrUtil.isNotBlank(ruleReq.getRuleName()), AlertRule::getRuleName, ruleReq.getRuleName())
@@ -99,7 +98,6 @@ public class AlertRuleServiceImpl extends ServiceImpl<AlertRuleMapper, AlertRule
 
     @Override
     public AlertRule getRuleById(Long id) {
-        MessageSourceUtil.reset();
         AlertRule alertRule = this.baseMapper.selectById(id);
         if (alertRule == null) {
             throw new ServiceException("the rule is not found");
@@ -122,7 +120,6 @@ public class AlertRuleServiceImpl extends ServiceImpl<AlertRuleMapper, AlertRule
 
     @Override
     public List<RuleItemPropertyDto> getRuleItemProperties() {
-        MessageSourceUtil.reset();
         List<RuleItemPropertyDto> ruleItemDtoList = new ArrayList<>();
         List<RuleItemProperty> ruleItems = alertProperty.getRuleItems();
         for (RuleItemProperty ruleItem : ruleItems) {
@@ -137,7 +134,6 @@ public class AlertRuleServiceImpl extends ServiceImpl<AlertRuleMapper, AlertRule
 
     @Override
     public List<AlertRuleDto> getRuleList() {
-        MessageSourceUtil.reset();
         List<AlertRule> alertRules =
                 this.baseMapper.selectList(Wrappers.<AlertRule>lambdaQuery().eq(AlertRule::getIsDeleted,
                         CommonConstants.IS_NOT_DELETE).orderByDesc(AlertRule::getId));

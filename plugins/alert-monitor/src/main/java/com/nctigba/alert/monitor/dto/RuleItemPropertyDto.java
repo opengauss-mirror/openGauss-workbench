@@ -5,6 +5,7 @@
 package com.nctigba.alert.monitor.dto;
 
 import lombok.Data;
+import lombok.Generated;
 import com.nctigba.alert.monitor.config.properties.RuleItemProperty;
 
 /**
@@ -13,6 +14,7 @@ import com.nctigba.alert.monitor.config.properties.RuleItemProperty;
  * @description
  */
 @Data
+@Generated
 public class RuleItemPropertyDto extends RuleItemProperty {
     private String i18nName;
 }

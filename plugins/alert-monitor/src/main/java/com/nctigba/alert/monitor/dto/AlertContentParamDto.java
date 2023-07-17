@@ -5,6 +5,7 @@
 package com.nctigba.alert.monitor.dto;
 
 import lombok.Data;
+import lombok.Generated;
 import lombok.experimental.Accessors;
 import com.nctigba.alert.monitor.config.annotation.AlertContentParam;
 
@@ -14,6 +15,7 @@ import com.nctigba.alert.monitor.config.annotation.AlertContentParam;
  * @description
  */
 @Data
+@Generated
 @Accessors(chain = true)
 public class AlertContentParamDto {
     @AlertContentParam(name = "alertContentParam.nodeName",

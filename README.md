@@ -14,6 +14,10 @@ openGauss的安装、运维场景对于初级用户或单纯想要测试openGaus
 ├── openGauss-visualtool  //平台项目
 ├── openGauss-visualtool-plugin  //平台项目插件开发脚手架
 ```
+## 下载链接
+
+https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/Datakit-5.0.0.tar.gz
+
 ## 说明
 1、插件需要安装在平台上运行，因此需要先将平台项目安装部署后，再将其他插件项目打包安装使用。
 

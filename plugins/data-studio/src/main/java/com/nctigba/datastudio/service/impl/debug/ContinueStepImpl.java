@@ -76,7 +76,6 @@ public class ContinueStepImpl implements OperationInterface {
                     paramReq.setOldWindowName(name);
                 }
                 if (!oidList.contains(oid)) {
-                    stepOut.deleteBreakPoint(webSocketServer, paramReq);
                     webSocketServer.sendMessage(windowName, closeWindow, SUCCESS, null);
                     DebugUtils.enableButton(webSocketServer, oldWindowName);
                     paramReq.setCloseWindow(true);
