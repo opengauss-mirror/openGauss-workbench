@@ -31,6 +31,8 @@ spring:
         connection-error-retry-attempts: 0
         break-after-acquire-failure: true
         max-wait: 3000
+        connection-properties:
+          ApplicationName: DataKit Instance Monitoring
   jackson:
     time-zone: GMT+8
     date-format: yyyy-MM-dd HH:mm:ss

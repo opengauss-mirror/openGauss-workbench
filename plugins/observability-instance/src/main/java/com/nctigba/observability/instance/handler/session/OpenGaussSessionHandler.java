@@ -153,7 +153,7 @@ public class OpenGaussSessionHandler implements SessionHandler {
             + " (select extract(EPOCH from(max(now() - backend_start)))::INTEGER as max_runtime, 1 as key from "
             + "pg_stat_activity where application_name not in "
             + "('WLMArbiter','workload','WorkloadMonitor','WDRSnapshot','JobScheduler','PercentileJob'"
-            + ",'statement flush thread','Asp','ApplyLauncher')) d "
+            + ",'statement flush thread','Asp','ApplyLauncher') and application_name not like 'DataKit%' ) d "
             + " on c.key = d.key";
     private final String LONG_TXC_SQL =
             "SELECT pid,sessionid,usename,datname,application_name,client_addr,query, xact_start,  "
@@ -161,7 +161,7 @@ public class OpenGaussSessionHandler implements SessionHandler {
                     + "FROM pg_stat_activity WHERE STATE <>'idle' and application_name not in  "
                     + "('WLMArbiter','workload',"
                     + "'WorkloadMonitor','WDRSnapshot','JobScheduler','PercentileJob','statement flush thread','Asp',"
-                    + "'ApplyLauncher') "
+                    + "'ApplyLauncher') and application_name not like 'DataKit%' "
                     + "and now()-xact_start > interval '30 SECOND' "
                     + "ORDER BY xact_start;";
     private final ClusterManager clusterManager;
