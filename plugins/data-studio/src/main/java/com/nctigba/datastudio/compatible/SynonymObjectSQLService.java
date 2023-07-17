@@ -8,21 +8,48 @@ import com.nctigba.datastudio.model.dto.DatabaseCreateSynonymDTO;
 import com.nctigba.datastudio.model.dto.DatabaseDropSynonymDTO;
 import com.nctigba.datastudio.model.dto.DatabaseSynonymAttributeDTO;
 import com.nctigba.datastudio.util.DebugUtils;
-import com.nctigba.datastudio.util.LocaleString;
 import org.opengauss.admin.common.exception.CustomException;
 
+/**
+ *  SynonymObjectSQLService
+ *
+ * @since 2023-06-25
+ */
 public interface SynonymObjectSQLService {
+    /**
+     * type
+     *
+     * @return String
+     */
     String type();
 
-    default String splicingSequenceDDL(DatabaseCreateSynonymDTO request) {
+    /**
+     * splicing synonym ddl
+     *
+     * @param request request
+     * @return String
+     */
+    default String splicingSynonymDDL(DatabaseCreateSynonymDTO request) {
         throw new CustomException(DebugUtils.getMessage());
     }
 
 
+    /**
+     * synonym attribute sql
+     *
+     * @param request request
+     * @return String
+     */
     default String synonymAttributeSQL(DatabaseSynonymAttributeDTO request) {
         throw new CustomException(DebugUtils.getMessage());
     }
 
+    /**
+     * drop synonym sql
+     *
+     * @param request request
+     * @return String
+     */
     default String dropSynonymSQL(DatabaseDropSynonymDTO request) {
         throw new CustomException(DebugUtils.getMessage());
     }

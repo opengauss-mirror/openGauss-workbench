@@ -13,10 +13,11 @@ import com.nctigba.datastudio.util.LocaleString;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.util.Strings;
-import org.opengauss.admin.common.exception.CustomException;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -27,16 +28,21 @@ import static com.nctigba.datastudio.constants.CommonConstants.OID;
 import static com.nctigba.datastudio.constants.CommonConstants.RESULT;
 import static com.nctigba.datastudio.constants.CommonConstants.SUCCESS;
 import static com.nctigba.datastudio.constants.SqlConstants.QUERY_OID_SQL;
-import static com.nctigba.datastudio.enums.MessageEnum.message;
-import static com.nctigba.datastudio.enums.MessageEnum.newFile;
-import static com.nctigba.datastudio.enums.MessageEnum.text;
+import static com.nctigba.datastudio.enums.MessageEnum.MESSAGE;
+import static com.nctigba.datastudio.enums.MessageEnum.NEW_FILE;
+import static com.nctigba.datastudio.enums.MessageEnum.TEXT;
 
+/**
+ * CompileImpl
+ *
+ * @since 2023-6-26
+ */
 @Slf4j
 @Service("compile")
 public class CompileImpl implements OperationInterface {
     @Override
-    public void operate(WebSocketServer webSocketServer, Object obj) throws Exception {
-        PublicParamReq paramReq = (PublicParamReq) obj;
+    public void operate(WebSocketServer webSocketServer, Object obj) throws SQLException, IOException {
+        PublicParamReq paramReq = DebugUtils.changeParamType(obj);
         log.info("compile paramReq: " + paramReq);
 
         String rootWindowName = paramReq.getRootWindowName();
@@ -60,9 +66,6 @@ public class CompileImpl implements OperationInterface {
             while (resultSetOld.next()) {
                 oldOidList.add(resultSetOld.getString(OID));
             }
-        } catch (Exception e) {
-            log.info(e.toString());
-            throw new RuntimeException(e);
         }
 
         log.info("compile oldOidList: " + oldOidList);
@@ -75,9 +78,6 @@ public class CompileImpl implements OperationInterface {
             while (resultSetNew.next()) {
                 newOidList.add(resultSetNew.getString(OID));
             }
-        } catch (Exception e) {
-            log.info(e.toString());
-            throw new RuntimeException(e);
         }
         log.info("compile newOidList: " + newOidList);
 
@@ -90,16 +90,16 @@ public class CompileImpl implements OperationInterface {
         log.info("compile newOid: " + newOid);
         String windowName = paramReq.getRootWindowName();
         if (StringUtils.isEmpty(newOid)) {
-            webSocketServer.sendMessage(windowName, text, LocaleString.transLanguageWs("1002", webSocketServer), null);
+            webSocketServer.sendMessage(windowName, TEXT, LocaleString.transLanguageWs("1002", webSocketServer), null);
             return;
         }
 
         Map<String, String> messageMap = new HashMap<>();
         messageMap.put(RESULT, LocaleString.transLanguageWs("1005", webSocketServer));
-        webSocketServer.sendMessage(windowName, message, SUCCESS, messageMap);
+        webSocketServer.sendMessage(windowName, MESSAGE, SUCCESS, messageMap);
         paramReq.setOid(newOid);
         Map<String, Map<String, String>> map = DebugUtils.getResultMap(webSocketServer, paramReq);
-        webSocketServer.sendMessage(windowName, newFile, SUCCESS, map);
+        webSocketServer.sendMessage(windowName, NEW_FILE, SUCCESS, map);
     }
 
     @Override

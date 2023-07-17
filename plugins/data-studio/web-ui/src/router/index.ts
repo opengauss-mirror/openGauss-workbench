@@ -98,7 +98,7 @@ export const constantRoutes: Array<RouteRecordRaw & extendRoute> = [
 export const asyncRoutes = [];
 
 const router = createRouter({
-  history: createWebHashHistory(), // hash
+  history: createWebHashHistory(),
   routes: constantRoutes,
 });
 

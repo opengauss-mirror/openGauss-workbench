@@ -10,11 +10,12 @@ import com.nctigba.datastudio.model.PublicParamReq;
 import com.nctigba.datastudio.service.OperationInterface;
 import com.nctigba.datastudio.util.DebugUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.opengauss.admin.common.exception.CustomException;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
+import java.io.IOException;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashMap;
 import java.util.List;
@@ -30,37 +31,39 @@ import static com.nctigba.datastudio.constants.CommonConstants.SUCCESS;
 import static com.nctigba.datastudio.constants.SqlConstants.ADD_BREAKPOINT_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.INFO_BREAKPOINT_PRE;
 import static com.nctigba.datastudio.constants.SqlConstants.INFO_BREAKPOINT_SQL;
-import static com.nctigba.datastudio.enums.MessageEnum.breakPoint;
+import static com.nctigba.datastudio.enums.MessageEnum.BREAKPOINT;
 
 /**
- * add break point
+ * AddBreakPointImpl
+ *
+ * @since 2023-6-26
  */
 @Slf4j
 @Service("addBreakPoint")
 public class AddBreakPointImpl implements OperationInterface {
     @Override
-    public void operate(WebSocketServer webSocketServer, Object obj) throws Exception {
-        PublicParamReq paramReq = (PublicParamReq) obj;
+    public void operate(WebSocketServer webSocketServer, Object obj) throws SQLException, IOException {
+        PublicParamReq paramReq = DebugUtils.changeParamType(obj);
         log.info("AddBreakPointImpl paramReq: " + paramReq);
 
         String windowName = paramReq.getWindowName();
-        Map<Integer, String> breakPointMap = (Map<Integer, String>) webSocketServer.getParamMap(windowName).get(
-                BREAK_POINT);
+        Map<Integer, String> breakPointMap = DebugUtils.changeParamType(webSocketServer, windowName, BREAK_POINT);
         if (CollectionUtils.isEmpty(breakPointMap)) {
             breakPointMap = new HashMap<>();
         }
         log.info("AddBreakPointImpl old breakPointMap: " + breakPointMap);
 
         String rootWindowName = paramReq.getRootWindowName();
-        Statement stat = (Statement) webSocketServer.getParamMap(rootWindowName).get(STATEMENT);
+        Statement stat = DebugUtils.changeParamType(webSocketServer, rootWindowName, STATEMENT);
         if (stat == null) {
             return;
         }
 
         int line = paramReq.getLine();
-        int differ = (int) webSocketServer.getParamMap(windowName).get(DIFFER);
-        String oid = (String) webSocketServer.getParamMap(windowName).get(OID);
-        List<Integer> list = (List<Integer>) webSocketServer.getParamMap(windowName).get(CAN_BREAK);
+        int differ = DebugUtils.changeParamType(webSocketServer, windowName, DIFFER);
+        String oid = DebugUtils.changeParamType(webSocketServer, windowName, OID);
+        List<Integer> list = DebugUtils.changeParamType(webSocketServer, windowName, CAN_BREAK);
+        log.info("AddBreakPointImpl list: " + list);
         if (list.contains(line - differ)) {
             try (
                     ResultSet resultSet = stat.executeQuery(String.format(ADD_BREAKPOINT_SQL, oid, (line - differ)))
@@ -69,16 +72,13 @@ public class AddBreakPointImpl implements OperationInterface {
                     String no = resultSet.getString(BREAK_POINT_NO);
                     breakPointMap.put(line, no);
                 }
-            } catch (Exception e) {
-                log.info(e.toString());
-                throw new RuntimeException(e);
             }
         }
         webSocketServer.setParamMap(windowName, BREAK_POINT, breakPointMap);
         log.info("AddBreakPointImpl new breakPointMap: " + breakPointMap);
 
         ResultSet bpResult = stat.executeQuery(INFO_BREAKPOINT_PRE + differ + INFO_BREAKPOINT_SQL);
-        webSocketServer.sendMessage(windowName, breakPoint, SUCCESS, DebugUtils.parseBreakPoint(bpResult, oid));
+        webSocketServer.sendMessage(windowName, BREAKPOINT, SUCCESS, DebugUtils.parseBreakPoint(bpResult, oid));
     }
 
     @Override

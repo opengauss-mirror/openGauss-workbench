@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import java.sql.Connection;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashMap;
 import java.util.List;
@@ -28,6 +29,11 @@ import java.util.Map;
 
 import static com.nctigba.datastudio.dao.ConnectionMapDAO.conMap;
 
+/**
+ * DatabaseSynonymServiceImpl
+ *
+ * @since 2023-6-26
+ */
 @Slf4j
 @Service
 public class DatabaseSynonymServiceImpl implements DatabaseSynonymService {
@@ -36,24 +42,29 @@ public class DatabaseSynonymServiceImpl implements DatabaseSynonymService {
 
     private Map<String, SynonymObjectSQLService> synonymObjectSQLService;
 
+    /**
+     * set synonym object sql service
+     *
+     * @param SQLServiceList SQLServiceList
+     */
     @Resource
     public void setSynonymObjectSQLService(List<SynonymObjectSQLService> SQLServiceList) {
         synonymObjectSQLService = new HashMap<>();
-        for (SynonymObjectSQLService s : SQLServiceList) {
-            synonymObjectSQLService.put(s.type(), s);
+        for (SynonymObjectSQLService service : SQLServiceList) {
+            synonymObjectSQLService.put(service.type(), service);
         }
     }
 
     @Override
-    public String createSynonymDDL(DatabaseCreateSynonymDTO request) throws Exception {
+    public String createSynonymDDL(DatabaseCreateSynonymDTO request) {
         log.info("createSynonymDDL request is: " + request);
-        String ddl = synonymObjectSQLService.get(conMap.get(request.getUuid()).getType()).splicingSequenceDDL(request);
+        String ddl = synonymObjectSQLService.get(conMap.get(request.getUuid()).getType()).splicingSynonymDDL(request);
         log.info("createSynonymDDL response is: " + ddl);
         return ddl;
     }
 
     @Override
-    public Map<String, Object> synonymAttribute(DatabaseSynonymAttributeDTO request) {
+    public Map<String, Object> synonymAttribute(DatabaseSynonymAttributeDTO request) throws SQLException {
         log.info("synonymAttribute request is: " + request);
         try (
                 Connection connection = connectionConfig.connectDatabase(request.getUuid());
@@ -78,29 +89,25 @@ public class DatabaseSynonymServiceImpl implements DatabaseSynonymService {
                 log.info("synonymAttribute response is: " + resultMap);
             }
             return resultMap;
-        } catch (Exception e) {
-            throw new RuntimeException(e);
         }
     }
 
     @Override
-    public void createSynonym(DatabaseCreateSynonymDTO request) {
+    public void createSynonym(DatabaseCreateSynonymDTO request) throws SQLException {
         log.info("createSynonym request is: " + request);
         try (
                 Connection connection = connectionConfig.connectDatabase(request.getUuid());
                 Statement statement = connection.createStatement()
         ) {
-            String ddl = synonymObjectSQLService.get(conMap.get(request.getUuid()).getType()).splicingSequenceDDL(
+            String ddl = synonymObjectSQLService.get(conMap.get(request.getUuid()).getType()).splicingSynonymDDL(
                     request);
             statement.execute(ddl);
             log.info("createSynonym sql is: " + ddl);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
         }
     }
 
     @Override
-    public void dropSynonym(DatabaseDropSynonymDTO request) {
+    public void dropSynonym(DatabaseDropSynonymDTO request) throws SQLException {
         log.info("dropSynonym request is: " + request);
         try (
                 Connection connection = connectionConfig.connectDatabase(request.getUuid());
@@ -109,9 +116,6 @@ public class DatabaseSynonymServiceImpl implements DatabaseSynonymService {
             String sql = synonymObjectSQLService.get(conMap.get(request.getUuid()).getType()).dropSynonymSQL(request);
             statement.execute(sql);
             log.info("dropSynonym sql is: " + sql);
-        } catch (Exception e) {
-            log.info(e.toString());
-            throw new RuntimeException(e);
         }
     }
 }

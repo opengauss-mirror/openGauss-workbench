@@ -14,7 +14,9 @@ import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashMap;
 import java.util.List;
@@ -26,11 +28,13 @@ import static com.nctigba.datastudio.constants.CommonConstants.RESULT;
 import static com.nctigba.datastudio.constants.CommonConstants.STATEMENT;
 import static com.nctigba.datastudio.constants.CommonConstants.SUCCESS;
 import static com.nctigba.datastudio.constants.SqlConstants.FINISH_SQL;
-import static com.nctigba.datastudio.enums.MessageEnum.closeWindow;
-import static com.nctigba.datastudio.enums.MessageEnum.switchWindow;
+import static com.nctigba.datastudio.enums.MessageEnum.CLOSE_WINDOW;
+import static com.nctigba.datastudio.enums.MessageEnum.SWITCH_WINDOW;
 
 /**
- * step out
+ * StepOutImpl
+ *
+ * @since 2023-6-26
  */
 @Slf4j
 @Service("stepOut")
@@ -42,17 +46,17 @@ public class StepOutImpl implements OperationInterface {
     private DeleteBreakPointImpl deleteBreakPoint;
 
     @Override
-    public void operate(WebSocketServer webSocketServer, Object obj) throws Exception {
-        PublicParamReq paramReq = (PublicParamReq) obj;
+    public void operate(WebSocketServer webSocketServer, Object obj) throws SQLException, IOException {
+        PublicParamReq paramReq = DebugUtils.changeParamType(obj);
         log.info("stepOut paramReq: " + paramReq);
         String rootWindowName = paramReq.getRootWindowName();
-        Statement stat = (Statement) webSocketServer.getParamMap(rootWindowName).get(STATEMENT);
+        Statement stat = DebugUtils.changeParamType(webSocketServer, rootWindowName, STATEMENT);
         if (stat == null) {
             return;
         }
 
         String windowName = paramReq.getWindowName();
-        String oid = (String) webSocketServer.getParamMap(windowName).get(OID);
+        String oid = DebugUtils.changeParamType(webSocketServer, windowName, OID);
         log.info("stepOut oid: " + oid);
 
         String newOid = Strings.EMPTY;
@@ -67,16 +71,16 @@ public class StepOutImpl implements OperationInterface {
 
         List<String> oidList = DebugUtils.getOidList(webSocketServer, rootWindowName);
         if (oid.equals(newOid)) {
-            singleStep.showDebugInfo(webSocketServer, paramReq);
+            singleStep.showDebugInfo(webSocketServer, stat, paramReq);
             return;
         }
         if (oidList.contains(oid)) {
             Map<String, String> map = new HashMap<>();
             map.put(RESULT, newOid);
-            webSocketServer.sendMessage(windowName, switchWindow, SUCCESS, map);
+            webSocketServer.sendMessage(windowName, SWITCH_WINDOW, SUCCESS, map);
             DebugUtils.disableButton(webSocketServer, windowName);
         } else {
-            webSocketServer.sendMessage(windowName, closeWindow, SUCCESS, null);
+            webSocketServer.sendMessage(windowName, CLOSE_WINDOW, SUCCESS, null);
             Map<String, Object> paramMap = webSocketServer.getParamMap(rootWindowName);
             paramMap.keySet().removeIf(oid::equals);
         }
@@ -84,7 +88,7 @@ public class StepOutImpl implements OperationInterface {
         DebugUtils.enableButton(webSocketServer, name);
         paramReq.setCloseWindow(true);
         paramReq.setOldWindowName(name);
-        singleStep.showDebugInfo(webSocketServer, paramReq);
+        singleStep.showDebugInfo(webSocketServer, stat, paramReq);
     }
 
     @Override

@@ -7,13 +7,20 @@ package com.nctigba.datastudio.model.dto;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
+import lombok.Generated;
 import lombok.NoArgsConstructor;
 
 import java.util.List;
 import java.util.Map;
 
+/**
+ * DataListDTO
+ *
+ * @since 2023-6-26
+ */
 @NoArgsConstructor
 @Data
+@Generated
 @ApiModel("Database list content")
 public class DataListDTO {
     @ApiModelProperty("schema_name")

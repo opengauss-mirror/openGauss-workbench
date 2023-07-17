@@ -4,11 +4,31 @@
 
 package com.nctigba.datastudio.enums;
 
+/**
+ * ParamTypeEnum
+ *
+ * @since 2023-6-26
+ */
 public enum ParamTypeEnum {
-    int8("bigint"),
-    int4("integer"),
-    int2("smallint"),
-    int1("tinyint");
+    /**
+     * int8
+     */
+    INT8("bigint"),
+
+    /**
+     * int4
+     */
+    INT4("integer"),
+
+    /**
+     * int2
+     */
+    INT2("smallint"),
+
+    /**
+     * int1
+     */
+    INT1("tinyint");
 
     private String type;
 
@@ -16,6 +36,12 @@ public enum ParamTypeEnum {
         this.type = type;
     }
 
+    /**
+     * get name
+     *
+     * @param type type
+     * @return String
+     */
     public static String getName(String type) {
         for (ParamTypeEnum paramType : ParamTypeEnum.values()) {
             if (paramType.type.equalsIgnoreCase(type)) {
@@ -25,6 +51,12 @@ public enum ParamTypeEnum {
         return type;
     }
 
+    /**
+     * parse type
+     *
+     * @param name name
+     * @return String
+     */
     public static String parseType(String name) {
         for (ParamTypeEnum paramTypeEnum : ParamTypeEnum.values()) {
             if (paramTypeEnum.name().equalsIgnoreCase(name)) {

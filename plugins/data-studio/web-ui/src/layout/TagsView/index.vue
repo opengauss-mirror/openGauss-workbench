@@ -374,7 +374,7 @@
 
     router.beforeEach(async (to, from, next) => {
       if (to.fullPath === '/home') {
-        let whiteList = ['/error/404', '/error/401'];
+        let whiteList = ['/error/404'];
         await TagsViewStore.removeView(whiteList);
       }
       next();

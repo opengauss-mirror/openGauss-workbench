@@ -695,11 +695,19 @@ export const manualStringify = (value) => {
   return str;
 };
 
-export const upperSentenceFirstLetter = (str: string) => {
+/**
+ * Update only the first letter of the first word in the sentence to uppercase
+ * @example 'hello world' => 'Hello world'
+ */
+export const upperSentenceFirstLetter = (str: string): string => {
   return str.slice(0, 1).toUpperCase() + str.slice(1).toLowerCase();
 };
 
-export const upperWordFirstLetter = (str: string) => {
+/**
+ * Capitalize the first letter of each word
+ * @example 'hello world' => 'Hello World'
+ */
+export const upperWordFirstLetter = (str: string): string => {
   const strArr = str.split(' ');
   for (let i = 0; i < strArr.length; i++) {
     strArr[i] = strArr[i].substring(0, 1).toUpperCase() + strArr[i].toLowerCase().substring(1);
@@ -707,11 +715,11 @@ export const upperWordFirstLetter = (str: string) => {
   return strArr.join(' ');
 };
 
-export const isBodyElement = (node: Element) => {
+export const isBodyElement = (node: Element): boolean => {
   return node && node.nodeType == 1 && node.tagName.toLowerCase() == 'body';
 };
 
-export const findParentElement = (el: Element, parentClassName: string) => {
+export const findParentElement = (el: Element, parentClassName: string): undefined | Element => {
   if (!el) return;
   if (isBodyElement(el)) return;
   if (el.classList.contains(parentClassName)) return el;
@@ -719,13 +727,13 @@ export const findParentElement = (el: Element, parentClassName: string) => {
 };
 
 /**
- * such as 'abcDef' to 'Abc Def'
- * such as ' abc Def' to 'Abc Def'
  * @param str string
  * @returns string
+ * @example 'abcDef' => 'Abc Def'
+ * @example ' abc Def' => 'Abc Def'
  */
 export const toSpacePascalCase = (str: string): string => {
-  const toUppercase = (str) => str.toUpperCase();
+  const toUppercase = (str: string) => str.toUpperCase();
   return str
     .replace(/\B[A-Z]/g, ' $&')
     .trim()
@@ -733,7 +741,7 @@ export const toSpacePascalCase = (str: string): string => {
     .replace(/\b\w/g, toUppercase);
 };
 
-export const downloadHtml = (htmlContent, fileName) => {
+export const downloadHtml = (htmlContent: BlobPart, fileName?: string): void => {
   const blob = new Blob([htmlContent], { type: 'text/html' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
@@ -743,21 +751,21 @@ export const downloadHtml = (htmlContent, fileName) => {
   URL.revokeObjectURL(url);
 };
 
-export const simpleDownloadUrl = async (url, fileName) => {
+export const simpleDownloadUrl = async (url: string, fileName?: string): Promise<void> => {
   const link = document.createElement('a');
   link.href = url;
   link.download = fileName || '';
   link.click();
 };
 
-export const downLoadURL = (href, fileName) => {
+export const downLoadURL = (url, fileName) => {
   const elink = document.createElement('a');
   elink.download = fileName;
   elink.style.display = 'none';
-  if (href instanceof Blob) {
-    elink.href = URL.createObjectURL(href);
+  if (url instanceof Blob) {
+    elink.href = URL.createObjectURL(url);
   } else {
-    elink.href = href;
+    elink.href = url;
   }
   document.body.appendChild(elink);
   elink.click();
@@ -765,7 +773,7 @@ export const downLoadURL = (href, fileName) => {
   document.body.removeChild(elink);
 };
 
-export const downLoadURLBlob = async (url: string, fileName?: string) => {
+export const downLoadURLBlob = async (url: string, fileName?: string): Promise<void> => {
   if (!fileName) {
     const arr = url.split('?')[0].split('/');
     fileName = arr[arr.length - 1];
@@ -781,7 +789,7 @@ export const downLoadURLBlob = async (url: string, fileName?: string) => {
   URL.revokeObjectURL(eleA.href);
 };
 
-export const downLoadMyBlobType = async (fileName: string, data: any) => {
+export const downLoadMyBlobType = async (fileName: string, data: any): Promise<void> => {
   const blob = new Blob([data]);
   const tag = document.createElement('a');
   tag.href = window.URL.createObjectURL(blob);

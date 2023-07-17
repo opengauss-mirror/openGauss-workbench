@@ -5,13 +5,17 @@
 package com.nctigba.datastudio.model.entity;
 
 import lombok.Data;
+import lombok.Generated;
 import lombok.NoArgsConstructor;
-import lombok.experimental.SuperBuilder;
 
-
-@SuperBuilder
+/**
+ * DatabaseConnectionDO
+ *
+ * @since 2023-6-26
+ */
 @NoArgsConstructor
 @Data
+@Generated
 public class DatabaseConnectionDO {
     private String connectionid;
 

@@ -16,28 +16,38 @@ import org.springframework.context.annotation.Configuration;
 
 import java.io.IOException;
 
+/**
+ * FastjsonConfig
+ *
+ * @since 2023-06-25
+ */
 @Configuration
 public class FastjsonConfig {
     @Bean
     public ObjectMapper fastJsonHttpMessageConverters() {
         var objectMapper = new ObjectMapper();
         var module = new SimpleModule();
-        module.addSerializer(PgArray.class, new JsonSerializer<PgArray>() {
+        module.addSerializer(PgArray.class, new JsonSerializer<>() {
             @Override
             public void serialize(PgArray value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
                 if (value == null) {
-                    gen.writeString((String) null);
+                    if (null instanceof String) {
+                        gen.writeString((String) null);
+                    }
                     return;
                 }
                 gen.writeString(value.toString());
             }
         });
-        module.addSerializer(PGobject.class, new JsonSerializer<PGobject>() {
+        module.addSerializer(PGobject.class, new JsonSerializer<>() {
             @Override
-            public void serialize(PGobject value, JsonGenerator gen,
-                                  SerializerProvider serializers) throws IOException {
+            public void serialize(
+                    PGobject value, JsonGenerator gen,
+                    SerializerProvider serializers) throws IOException {
                 if (value == null) {
-                    gen.writeString((String) null);
+                    if (null instanceof String) {
+                        gen.writeString((String) null);
+                    }
                     return;
                 }
                 gen.writeString(value.toString());

@@ -14,7 +14,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
-import org.opengauss.admin.common.exception.CustomException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -55,84 +54,89 @@ import static com.nctigba.datastudio.constants.SqlConstants.DELETE_BY_ID_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.HIS_COVERAGE_OID_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.LF;
 
+/**
+ * CoverageRateServiceImpl
+ *
+ * @since 2023-6-26
+ */
 @Slf4j
 @Service
 public class CoverageRateServiceImpl implements CoverageRateService {
-    public static final String EXPORT_HTML = "<!DOCTYPE html>" + LF +
-            "<html>" + LF +
-            "<body>" + LF +
-            "    <table style=\"height:50px\">" + LF +
-            "        <thead>" + LF +
-            "            <tr>" + LF +
-            "                <th colspan=\"4\" id=\"EXECUTE_STATEMENT\"></th>" + LF +
-            "            </tr>" + LF +
-            "        </thead>" + LF +
-            "        <tbody id=\"executeSql\">" + LF +
-            "        </tbody>" + LF +
-            "    </table>" + LF +
-            "    <table>" + LF +
-            "        <thead>" + LF +
-            "            <tr>" + LF +
-            "                <th id=\"SERIAL_NUMBER\"></th>" + LF +
-            "                <th id=\"TOTAL_ROWS\"></th>" + LF +
-            "                <th id=\"EXECUTION_ROWS\"></th>" + LF +
-            "                <th id=\"TOTAL_COVERAGE\"></th>" + LF +
-            "                <th id=\"ALL_LINE_NUMBER\"></th>" + LF +
-            "                <th id=\"EXECUTION_LINE_NUMBER\"></th>" + LF +
-            "                <th id=\"EXECUTION_COVERAGE\"></th>" + LF +
-            "                <th id=\"INPUT_PARAMS\"></th>" + LF +
-            "                <th id=\"UPDATE_TIME\"></th>" + LF +
-            "            </tr>" + LF +
-            "        </thead>" + LF +
-            "        <tbody id =\"data\">" + LF +
-            "        </tbody>" + LF +
-            "    </table>" + LF +
-            "</body>" + LF +
-            "<style>" + LF +
-            "    .bac_nor {" + LF +
-            "        border-top: none;" + LF +
-            "        border-bottom: none;" + LF +
-            "    }" + LF +
-            "    .bac_remark {" + LF +
-            "        background-color: rgb(167, 169, 169);" + LF +
-            "    }" + LF +
-            "    .bac_fail {" + LF +
-            "        width: 10px;" + LF +
-            "        height: 10px;" + LF +
-            "        background-color: #ff0000;" + LF +
-            "        border-radius: 50%;" + LF +
-            "        float: right;" + LF +
-            "    }" + LF +
-            "    .bac_pass {" + LF +
-            "        width: 10px;" + LF +
-            "        height: 10px;" + LF +
-            "        background-color: #008000;" + LF +
-            "        border-radius: 50%;" + LF +
-            "        float: right;" + LF +
-            "    }" + LF +
-            "" + LF +
-            "    table {" + LF +
-            "        width: 100%;" + LF +
-            "        height: 200px;" + LF +
-            "        border-collapse: collapse;" + LF +
-            "        border: 1px solid black;" + LF +
-            "    }" + LF +
-            "" + LF +
-            "    td {" + LF +
-            "        border: 1px solid black;" + LF +
-            "        text-align: center;" + LF +
-            "    }" + LF +
-            "" + LF +
-            "    thead {" + LF +
-            "        background-color: rgb(220, 157, 157);" + LF +
-            "    }" + LF +
-            "</style>" + LF +
-            "</html>";
+    public static final String EXPORT_HTML = "<!DOCTYPE html>" + LF
+            + "<html>" + LF
+            + "<body>" + LF
+            + "    <table style=\"height:50px\">" + LF
+            + "        <thead>" + LF
+            + "            <tr>" + LF
+            + "                <th colspan=\"4\" id=\"EXECUTE_STATEMENT\"></th>" + LF
+            + "            </tr>" + LF
+            + "        </thead>" + LF
+            + "        <tbody id=\"executeSql\">" + LF
+            + "        </tbody>" + LF
+            + "    </table>" + LF
+            + "    <table>" + LF
+            + "        <thead>" + LF
+            + "            <tr>" + LF
+            + "                <th id=\"SERIAL_NUMBER\"></th>" + LF
+            + "                <th id=\"TOTAL_ROWS\"></th>" + LF
+            + "                <th id=\"EXECUTION_ROWS\"></th>" + LF
+            + "                <th id=\"TOTAL_COVERAGE\"></th>" + LF
+            + "                <th id=\"ALL_LINE_NUMBER\"></th>" + LF
+            + "                <th id=\"EXECUTION_LINE_NUMBER\"></th>" + LF
+            + "                <th id=\"EXECUTION_COVERAGE\"></th>" + LF
+            + "                <th id=\"INPUT_PARAMS\"></th>" + LF
+            + "                <th id=\"UPDATE_TIME\"></th>" + LF
+            + "            </tr>" + LF
+            + "        </thead>" + LF
+            + "        <tbody id =\"data\">" + LF
+            + "        </tbody>" + LF
+            + "    </table>" + LF
+            + "</body>" + LF
+            + "<style>" + LF
+            + "    .bac_nor {" + LF
+            + "        border-top: none;" + LF
+            + "        border-bottom: none;" + LF
+            + "    }" + LF
+            + "    .bac_remark {" + LF
+            + "        background-color: rgb(167, 169, 169);" + LF
+            + "    }" + LF
+            + "    .bac_fail {" + LF
+            + "        width: 10px;" + LF
+            + "        height: 10px;" + LF
+            + "        background-color: #ff0000;" + LF
+            + "        border-radius: 50%;" + LF
+            + "        float: right;" + LF
+            + "    }" + LF
+            + "    .bac_pass {" + LF
+            + "        width: 10px;" + LF
+            + "        height: 10px;" + LF
+            + "        background-color: #008000;" + LF
+            + "        border-radius: 50%;" + LF
+            + "        float: right;" + LF
+            + "    }" + LF
+            + "" + LF
+            + "    table {" + LF
+            + "        width: 100%;" + LF
+            + "        height: 200px;" + LF
+            + "        border-collapse: collapse;" + LF
+            + "        border: 1px solid black;" + LF
+            + "    }" + LF
+            + "" + LF
+            + "    td {" + LF
+            + "        border: 1px solid black;" + LF
+            + "        text-align: center;" + LF
+            + "    }" + LF
+            + "" + LF
+            + "    thead {" + LF
+            + "        background-color: rgb(220, 157, 157);" + LF
+            + "    }" + LF
+            + "</style>" + LF
+            + "</html>";
     @Autowired
     private ConnectionConfig connectionConfig;
 
     @Override
-    public List<CoverageRateDO> queryCoverageRate(CoverageRateRequest request) throws Exception {
+    public List<CoverageRateDO> queryCoverageRate(CoverageRateRequest request) throws SQLException {
         log.info("CoverageRateServiceImpl queryCoverageRate request: " + request);
         try (
                 Connection connection = connectionConfig.connectDatabase(request.getUuid());
@@ -146,7 +150,7 @@ public class CoverageRateServiceImpl implements CoverageRateService {
     }
 
     @Override
-    public void delete(CoverageRateRequest request) throws Exception {
+    public void delete(CoverageRateRequest request) throws SQLException {
         log.info("CoverageRateServiceImpl delete request: " + request);
         try (
                 Connection connection = connectionConfig.connectDatabase(request.getUuid());
@@ -166,7 +170,8 @@ public class CoverageRateServiceImpl implements CoverageRateService {
     }
 
     @Override
-    public void export(CoverageRateRequest request, HttpServletResponse response) throws Exception {
+    public void export(CoverageRateRequest request, HttpServletResponse response)
+            throws SQLException, IOException, NoSuchFieldException, IllegalAccessException {
         log.info("CoverageRateServiceImpl export request: " + request);
         List<CoverageRateDO> list;
         try (
@@ -226,7 +231,8 @@ public class CoverageRateServiceImpl implements CoverageRateService {
         return list;
     }
 
-    private String parseHtml(List<CoverageRateDO> coverageRateList, List<Long> cidList) {
+    private String parseHtml(List<CoverageRateDO> coverageRateList, List<Long> cidList)
+            throws NoSuchFieldException, IllegalAccessException, IOException {
         Document document = Jsoup.parse(EXPORT_HTML, "gbk");
         convert(document);
         log.info("CoverageRateServiceImpl parseHtml document: " + document);
@@ -305,31 +311,27 @@ public class CoverageRateServiceImpl implements CoverageRateService {
         updateTime.text(LocaleString.transLanguage("3010"));
     }
 
-    private List<String> beanToList(CoverageRateDO coverageRateDO) {
+    private List<String> beanToList(CoverageRateDO coverageRateDO) throws NoSuchFieldException, IllegalAccessException {
         log.info("CoverageRateServiceImpl beanToList coverageRateDO: " + coverageRateDO);
         List<String> list = new ArrayList<>();
         Field[] fields = coverageRateDO.getClass().getDeclaredFields();
-        try {
-            for (int i = 3; i < fields.length - 1; i++) {
-                Field f = coverageRateDO.getClass().getDeclaredField(fields[i].getName());
-                f.setAccessible(true);
-                Object o = f.get(coverageRateDO);
-                list.add(o.toString());
-            }
-        } catch (Exception e) {
-            log.info(e.toString());
-
+        for (int i = 3; i < fields.length - 1; i++) {
+            Field field = coverageRateDO.getClass().getDeclaredField(fields[i].getName());
+            field.setAccessible(true);
+            Object obj = field.get(coverageRateDO);
+            list.add(obj.toString());
         }
+
         log.info("CoverageRateServiceImpl beanToList list: " + list);
         return list;
     }
 
-    private Map<Integer, String> splitSourceCode(String sourceCode, Map<String, Integer> offsetMap) {
+    private Map<Integer, String> splitSourceCode(String sourceCode, Map<String, Integer> offsetMap) throws IOException {
         log.info("CoverageRateServiceImpl splitSourceCode sourceCode: " + sourceCode);
         Map<Integer, String> map = new HashMap<>();
         try (
                 InputStreamReader isr = new InputStreamReader(new ByteArrayInputStream(sourceCode.getBytes()));
-                BufferedReader br = new BufferedReader(isr);
+                BufferedReader br = new BufferedReader(isr)
         ) {
             String line;
             int index = 1;
@@ -343,8 +345,6 @@ public class CoverageRateServiceImpl implements CoverageRateService {
                 }
                 index++;
             }
-        } catch (IOException e) {
-            throw new CustomException(e.getMessage());
         }
         log.info("CoverageRateServiceImpl splitSourceCode map: " + map);
         log.info("CoverageRateServiceImpl splitSourceCode offsetMap: " + offsetMap);

@@ -4,9 +4,13 @@
 
 package com.nctigba.datastudio.constants;
 
-import com.nctigba.datastudio.util.LocaleString;
-
+/**
+ * CommonConstants
+ *
+ * @since 2023-06-25
+ */
 public class CommonConstants {
+    public static final String TRANS_POINT = "\\.";
     public static final String WEBDS_PLUGIN = "webds-plugin";
     public static final String FIVE_HUNDRED = "500";
     public static final String TWO_HUNDRED = "200";
@@ -15,7 +19,6 @@ public class CommonConstants {
 
     public static final String UNDERLINE = "_";
 
-    public static final String N_SLASH = System.getProperty("line.separator");
 
     public static final String SUCCESS = "success";
 
@@ -99,8 +102,8 @@ public class CommonConstants {
     public static final String OUT = "OUT";
     public static final String INOUT = "INOUT";
     public static final String VARIADIC = "VARIADIC";
-    public static final String T = "t";
-    public static final String F = "f";
+    public static final String T_STR = "t";
+    public static final String F_STR = "f";
     public static final String CID = "cid";
     public static final String COVERAGE_LINES = "coveragelines";
     public static final String REMARK_LINES = "remarklines";
@@ -117,8 +120,4 @@ public class CommonConstants {
     public static final String MIN_VALUE = "min_value";
     public static final String NEXT_VALUE = "nextval";
     public static final String IS_CALLED = "is_called";
-
-    public static final String LOG_VALID = LocaleString.transLanguage("2018");
-
-
 }

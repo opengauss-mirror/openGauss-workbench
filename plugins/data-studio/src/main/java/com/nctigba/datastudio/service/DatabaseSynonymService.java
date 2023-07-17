@@ -8,14 +8,45 @@ import com.nctigba.datastudio.model.dto.DatabaseCreateSynonymDTO;
 import com.nctigba.datastudio.model.dto.DatabaseDropSynonymDTO;
 import com.nctigba.datastudio.model.dto.DatabaseSynonymAttributeDTO;
 
+import java.sql.SQLException;
 import java.util.Map;
 
+/**
+ * DatabaseSynonymService
+ *
+ * @since 2023-6-26
+ */
 public interface DatabaseSynonymService {
-    String createSynonymDDL(DatabaseCreateSynonymDTO request) throws Exception;
+    /**
+     * create synonym ddl
+     *
+     * @param request request
+     * @return String
+     */
+    String createSynonymDDL(DatabaseCreateSynonymDTO request);
 
-    void createSynonym(DatabaseCreateSynonymDTO request) throws Exception;
+    /**
+     * create synonym
+     *
+     * @param request request
+     * @throws SQLException SQLException
+     */
+    void createSynonym(DatabaseCreateSynonymDTO request) throws SQLException;
 
-    Map<String, Object> synonymAttribute(DatabaseSynonymAttributeDTO request) throws Exception;
+    /**
+     * synonym attribute
+     *
+     * @param request request
+     * @return Map
+     * @throws SQLException SQLException
+     */
+    Map<String, Object> synonymAttribute(DatabaseSynonymAttributeDTO request) throws SQLException;
 
-    void dropSynonym(DatabaseDropSynonymDTO request) throws Exception;
+    /**
+     * drop synonym
+     *
+     * @param request request
+     * @throws SQLException SQLException
+     */
+    void dropSynonym(DatabaseDropSynonymDTO request) throws SQLException;
 }

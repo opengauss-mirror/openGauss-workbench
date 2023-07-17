@@ -5,10 +5,17 @@
 package com.nctigba.datastudio.model.entity;
 
 import lombok.Data;
+import lombok.Generated;
 import lombok.NoArgsConstructor;
 
+/**
+ * CoverageRateDO
+ *
+ * @since 2023-6-26
+ */
 @NoArgsConstructor
 @Data
+@Generated
 public class CoverageRateDO {
     private String name;
 

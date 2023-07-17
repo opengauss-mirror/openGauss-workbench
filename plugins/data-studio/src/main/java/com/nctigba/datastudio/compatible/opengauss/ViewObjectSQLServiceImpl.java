@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashMap;
 import java.util.Map;
@@ -33,6 +34,11 @@ import static com.nctigba.datastudio.constants.SqlConstants.SELECT_VIEW_DDL_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.SELECT_VIEW_TYPE_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.VIEW_DATA_SQL;
 
+/**
+ * ViewObjectSQLService achieve
+ *
+ * @since 2023-06-26
+ */
 @Slf4j
 @Service
 public class ViewObjectSQLServiceImpl implements ViewObjectSQLService {
@@ -53,12 +59,13 @@ public class ViewObjectSQLServiceImpl implements ViewObjectSQLService {
         } else {
             viewType = COMMON_VIEW_SQL;
         }
-        String ddl = String.format(CREATE_VIEW_SQL, viewType, request.getSchema(), request.getViewName(), request.getSql());
+        String ddl = String.format(
+                CREATE_VIEW_SQL, viewType, request.getSchema(), request.getViewName(), request.getSql());
         log.info("splicingViewDDL response is: " + ddl);
         return ddl;
     }
 
-    public Map<String, Object> returnViewDDLData(DatabaseViewDdlDTO request) {
+    public Map<String, Object> returnViewDDLData(DatabaseViewDdlDTO request) throws SQLException {
         log.info("returnViewDDLData request is: " + request);
         try (
                 Connection connection = connectionConfig.connectDatabase(request.getUuid());
@@ -73,9 +80,6 @@ public class ViewObjectSQLServiceImpl implements ViewObjectSQLService {
                 if (StringUtils.isBlank(String.valueOf(count.getString("relkind")))) {
                     throw new CustomException(LocaleString.transLanguage("2010"));
                 }
-            } catch (Exception e) {
-                log.info(e.toString());
-                throw new RuntimeException(e);
             }
             try (
                     ResultSet resultSet = statement.executeQuery(selectSql)
@@ -92,49 +96,39 @@ public class ViewObjectSQLServiceImpl implements ViewObjectSQLService {
                     }
                 }
                 return resultMap;
-            } catch (Exception e) {
-                log.info(e.toString());
-                throw new RuntimeException(e);
             }
-        } catch (Exception e) {
-            log.info(e.toString());
-            throw new RuntimeException(e);
         }
     }
 
     @Override
-    public String returnDatabaseViewDDL(DatabaseViewDdlDTO request) {
+    public String returnDatabaseViewDDL(DatabaseViewDdlDTO request) throws SQLException {
         log.info("returnViewDDL request is: " + request);
-        try {
-            Map<String, Object> resultMap = returnViewDDLData(request);
-            String viewType;
-            String ddl;
-            if (resultMap.get("relkind").equals("m")) {
-                viewType = MATERIALIZED_VIEW_SQL;
-            } else {
-                viewType = COMMON_VIEW_SQL;
-            }
-            ddl = String.format(CREATE_VIEW_SQL, viewType, resultMap.get("schemaname"), resultMap.get("matviewname"), resultMap.get("definition"));
-            log.info("returnViewDDL response is: " + ddl);
-            return ddl;
-        } catch (Exception e) {
-            log.info(e.toString());
-            throw new RuntimeException(e);
+        Map<String, Object> resultMap = returnViewDDLData(request);
+        String viewType;
+        String ddl;
+        if (resultMap.get("relkind").equals("m")) {
+            viewType = MATERIALIZED_VIEW_SQL;
+        } else {
+            viewType = COMMON_VIEW_SQL;
         }
+        ddl = String.format(CREATE_VIEW_SQL, viewType, resultMap.get("schemaname"), resultMap.get("matviewname"),
+                resultMap.get("definition"));
+        log.info("returnViewDDL response is: " + ddl);
+        return ddl;
     }
 
-    public String viewTypeData(DatabaseViewDdlDTO request) {
+    public String viewTypeData(DatabaseViewDdlDTO request) throws SQLException {
         log.info("viewAttributeData request is: " + request);
         try (
                 Connection connection = connectionConfig.connectDatabase(request.getUuid());
                 Statement statement = connection.createStatement()
         ) {
-            String selectsql = String.format(SELECT_VIEW_TYPE_SQL, request.getSchema(), request.getViewName());
+            String selectSql = String.format(SELECT_VIEW_TYPE_SQL, request.getSchema(), request.getViewName());
             try (
-                    ResultSet resultSet = statement.executeQuery(selectsql)
+                    ResultSet resultSet = statement.executeQuery(selectSql)
             ) {
                 log.info("count sql is: " + resultSet);
-                log.info("viewAttributeData sql is: " + selectsql);
+                log.info("viewAttributeData sql is: " + selectSql);
                 String type;
                 if (resultSet.next()) {
                     type = resultSet.getString("relkind");
@@ -144,18 +138,16 @@ public class ViewObjectSQLServiceImpl implements ViewObjectSQLService {
                 log.info("resultMap response is: " + type);
                 return type;
             }
-        } catch (Exception e) {
-            log.info(e.toString());
-            throw new RuntimeException(e);
         }
     }
 
     @Override
-    public String returnDropViewSQL(DatabaseViewDdlDTO request) {
+    public String returnDropViewSQL(DatabaseViewDdlDTO request) throws SQLException {
         log.info("dropView request is: " + request);
         String type = viewTypeData(request);
         if (type.equals("m")) {
-            String materializedSql = String.format(DROP_MATERIALIZED_VIEW_SQL, request.getSchema(), request.getViewName());
+            String materializedSql = String.format(
+                    DROP_MATERIALIZED_VIEW_SQL, request.getSchema(), request.getViewName());
             log.info("dropView sql is: " + materializedSql);
             return materializedSql;
         } else {

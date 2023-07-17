@@ -5,60 +5,49 @@
 package com.nctigba.datastudio.model;
 
 import lombok.Data;
+import lombok.Generated;
 import lombok.NoArgsConstructor;
 
 import java.util.List;
 import java.util.Map;
 
 /**
- * Debug transmission entity class
+ * PublicParamReq
+ *
+ * @since 2023-6-26
  */
 @Data
+@Generated
 @NoArgsConstructor
 public class PublicParamReq {
-    // operate type
     private String operation;
 
-    // function/procedure sql
     private String sql;
 
-    // web user
     private String webUser;
 
-    // break point list
     private List<Integer> breakPoints;
 
-    // input param list
     private List<Map<String, Object>> inputParams;
 
-    // break point line
     private Integer line;
 
-    // function/procedure name(include param)
     private String fullName;
 
-    // function/procedure schema
     private String schema;
 
-    // window name
     private String windowName;
 
-    // old window name
     private String oldWindowName;
 
-    // root window name
     private String rootWindowName;
 
-    // is close window
     private boolean isCloseWindow;
 
-    // uuid
     private String uuid;
 
-    // language
     private String language;
 
-    // oid
     private String oid;
 
     private boolean isContinue;

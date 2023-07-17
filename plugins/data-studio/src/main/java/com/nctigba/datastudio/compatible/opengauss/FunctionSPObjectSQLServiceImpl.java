@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
 
 import static com.nctigba.datastudio.constants.CommonConstants.DEFINITION;
@@ -27,6 +28,11 @@ import static com.nctigba.datastudio.constants.SqlConstants.DROP_PROCEDURE_KEYWO
 import static com.nctigba.datastudio.constants.SqlConstants.PROC_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.QUERY_DEF_SQL;
 
+/**
+ * FunctionSPObjectSQLService achieve
+ *
+ * @since 2023-06-26
+ */
 @Slf4j
 @Service
 public class FunctionSPObjectSQLServiceImpl implements FunctionSPObjectSQLService {
@@ -39,7 +45,7 @@ public class FunctionSPObjectSQLServiceImpl implements FunctionSPObjectSQLServic
     }
 
     @Override
-    public String functionDdl(DatabaseFunctionSPDTO request) {
+    public String functionDdl(DatabaseFunctionSPDTO request) throws SQLException {
         log.info("FunctionSPObjectSQLServiceImpl functionDdl request: " + request);
         try (
                 Connection connection = connectionConfig.connectDatabase(request.getUuid());
@@ -59,14 +65,11 @@ public class FunctionSPObjectSQLServiceImpl implements FunctionSPObjectSQLServic
                 log.info("dropFunctionSP definition is: " + definition);
                 return definition;
             }
-        } catch (Exception e) {
-            log.info(e.toString());
-            throw new RuntimeException(e);
         }
     }
 
     @Override
-    public String dropFunctionSP(DatabaseFunctionSPDTO request) {
+    public String dropFunctionSP(DatabaseFunctionSPDTO request) throws SQLException {
         log.info("dropFunctionSP request is: " + request);
         try (
                 Connection connection = connectionConfig.connectDatabase(request.getUuid());
@@ -90,9 +93,6 @@ public class FunctionSPObjectSQLServiceImpl implements FunctionSPObjectSQLServic
                 log.info("dropFunctionSP sql is: " + sql);
                 return sql;
             }
-        } catch (Exception e) {
-            log.info(e.toString());
-            throw new RuntimeException(e);
         }
     }
 }

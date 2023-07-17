@@ -7,17 +7,77 @@ package com.nctigba.datastudio.service;
 import com.nctigba.datastudio.model.query.ExportRequest;
 
 import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.sql.SQLException;
+import java.util.concurrent.ExecutionException;
 
+/**
+ * ExportService
+ *
+ * @since 2023-6-26
+ */
 public interface ExportService {
-    void exportTableDdl(ExportRequest request, HttpServletResponse response) throws Exception;
+    /**
+     * export table ddl
+     *
+     * @param request request
+     * @param response response
+     * @throws SQLException SQLException
+     * @throws IOException IOException
+     */
+    void exportTableDdl(ExportRequest request, HttpServletResponse response) throws SQLException, IOException;
 
-    void exportTableData(ExportRequest request, HttpServletResponse response) throws Exception;
+    /**
+     * export table data
+     *
+     * @param request request
+     * @param response response
+     * @throws SQLException SQLException
+     * @throws IOException IOException
+     */
+    void exportTableData(ExportRequest request, HttpServletResponse response) throws SQLException, IOException;
 
-    void exportFunctionDdl(ExportRequest request, HttpServletResponse response) throws Exception;
+    /**
+     * export function ddl
+     *
+     * @param request request
+     * @param response response
+     * @throws SQLException SQLException
+     * @throws IOException IOException
+     */
+    void exportFunctionDdl(ExportRequest request, HttpServletResponse response) throws SQLException, IOException;
 
-    void exportViewDdl(ExportRequest request, HttpServletResponse response) throws Exception;
+    /**
+     * export view ddl
+     *
+     * @param request request
+     * @param response response
+     * @throws SQLException SQLException
+     * @throws IOException IOException
+     */
+    void exportViewDdl(ExportRequest request, HttpServletResponse response) throws SQLException, IOException;
 
-    void exportSequenceDdl(ExportRequest request, HttpServletResponse response) throws Exception;
+    /**
+     * export sequence ddl
+     *
+     * @param request request
+     * @param response response
+     * @throws SQLException SQLException
+     * @throws IOException IOException
+     */
+    void exportSequenceDdl(ExportRequest request, HttpServletResponse response) throws SQLException, IOException;
 
-    void exportSchemaDdl(ExportRequest request, HttpServletResponse response) throws Exception;
+    /**
+     * export schema ddl
+     *
+     * @param request request
+     * @param response response
+     * @throws SQLException SQLException
+     * @throws IOException IOException
+     * @throws ExecutionException ExecutionException
+     * @throws InterruptedException InterruptedException
+     */
+    void exportSchemaDdl(
+            ExportRequest request,
+            HttpServletResponse response) throws SQLException, IOException, ExecutionException, InterruptedException;
 }

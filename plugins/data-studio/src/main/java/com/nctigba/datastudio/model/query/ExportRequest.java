@@ -4,19 +4,28 @@
 
 package com.nctigba.datastudio.model.query;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
+import lombok.Generated;
 import lombok.NoArgsConstructor;
 
 import java.util.List;
 
+/**
+ * ExportRequest
+ *
+ * @since 2023-6-26
+ */
 @Data
+@Generated
 @NoArgsConstructor
 public class ExportRequest {
     private String uuid;
 
     private String schema;
 
-    private boolean dataFlag;
+    @JsonProperty("dataFlag")
+    private boolean isDataFlag;
 
     private List<String> tableList;
 
@@ -26,7 +35,8 @@ public class ExportRequest {
 
     private String fileType;
 
-    private boolean titleFlag;
+    @JsonProperty("titleFlag")
+    private boolean isTitleFlag;
 
     private String quote;
 

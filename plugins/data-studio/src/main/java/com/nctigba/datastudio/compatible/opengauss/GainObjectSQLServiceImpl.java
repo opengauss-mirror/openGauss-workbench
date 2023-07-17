@@ -11,12 +11,12 @@ import com.nctigba.datastudio.model.query.DatabaseMetaarrayQuery;
 import com.nctigba.datastudio.model.query.DatabaseMetaarraySchemaQuery;
 import com.nctigba.datastudio.util.DebugUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.opengauss.admin.common.exception.CustomException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -36,6 +36,11 @@ import static com.nctigba.datastudio.constants.SqlConstants.SELECT_OBJECT_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.SELECT_TABLE_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.SELECT_VIEW_SQL;
 
+/**
+ * GainObjectSQLService achieve
+ *
+ * @since 2023-06-26
+ */
 @Slf4j
 @Service
 public class GainObjectSQLServiceImpl implements GainObjectSQLService {
@@ -48,7 +53,7 @@ public class GainObjectSQLServiceImpl implements GainObjectSQLService {
     }
 
     @Override
-    public String databaseList() throws Exception {
+    public String databaseList() {
         String ddl;
         ddl = GET_DATABASE_SQL;
         log.info("databaseListDDL response is: " + ddl);
@@ -56,7 +61,7 @@ public class GainObjectSQLServiceImpl implements GainObjectSQLService {
     }
 
     @Override
-    public List<Map<String, String>> schemaList(DatabaseMetaarraySchemaQuery request) {
+    public List<Map<String, String>> schemaList(DatabaseMetaarraySchemaQuery request) throws SQLException {
         log.info("schemaList request is: " + request);
         List<Map<String, String>> schemaList = new ArrayList<>();
         try (
@@ -72,13 +77,11 @@ public class GainObjectSQLServiceImpl implements GainObjectSQLService {
             }
             log.info("schemaList response is: " + schemaList);
             return schemaList;
-        } catch (Exception e) {
-            throw new RuntimeException(e);
         }
     }
 
     @Override
-    public List<String> objectList(DatabaseMetaarrayQuery request) {
+    public List<String> objectList(DatabaseMetaarrayQuery request) throws SQLException {
         log.info("objectList request is: " + request);
         try (
                 Connection connection = connectionConfig.connectDatabase(request.getUuid());
@@ -143,13 +146,11 @@ public class GainObjectSQLServiceImpl implements GainObjectSQLService {
                     return objectList;
                 }
             }
-        } catch (Exception e) {
-            throw new RuntimeException(e);
         }
     }
 
     @Override
-    public List<String> tableColumnList(DatabaseMetaarrayColumnQuery request) {
+    public List<String> tableColumnList(DatabaseMetaarrayColumnQuery request) throws SQLException {
         log.info("tableColumnList request is: " + request);
         List<String> columnList = new ArrayList<>();
         try (
@@ -163,8 +164,6 @@ public class GainObjectSQLServiceImpl implements GainObjectSQLService {
             }
             log.info("tableColumnList response is: " + columnList);
             return columnList;
-        } catch (Exception e) {
-            throw new RuntimeException(e);
         }
     }
 
@@ -179,14 +178,15 @@ public class GainObjectSQLServiceImpl implements GainObjectSQLService {
     @Override
     public String tableSql(String schema) {
         String ddl;
-        ddl = "select x.oid,relname as tablename,parttype" + LF +
-                "  from (select tbl.oid as oid, tbl.relname relname,case when parttype='n' then 'n' else 'y' end as parttype  " + LF +
-                "          from pg_class tbl" + LF +
-                "         inner join pg_namespace ns on tbl.relnamespace = ns.oid" + LF +
-                "         where tbl.relkind = 'r'" + LF +
-                "           and ns.nspname = '" + DebugUtils.containsSqlInjection(schema) + "' ) x" + LF +
-                " where has_table_privilege(x.oid, 'SELECT')" +
-                " order by 1";
+        ddl = "select x.oid,relname as tablename,parttype" + LF
+                + "  from (select tbl.oid as oid, tbl.relname relname,"
+                + "         case when parttype='n' then 'n' else 'y' end as parttype  " + LF
+                + "         from pg_class tbl" + LF
+                + "         inner join pg_namespace ns on tbl.relnamespace = ns.oid" + LF
+                + "         where tbl.relkind = 'r'" + LF
+                + "           and ns.nspname = '" + DebugUtils.containsSqlInjection(schema) + "' ) x" + LF
+                + " where has_table_privilege(x.oid, 'SELECT')"
+                + " order by 1";
         log.info("splicingSequenceDDL response is: " + ddl);
         return ddl;
     }
@@ -194,7 +194,9 @@ public class GainObjectSQLServiceImpl implements GainObjectSQLService {
     @Override
     public String viewSql(String schema) {
         String ddl;
-        ddl = "select c.oid,c.relname as viewname from pg_class c INNER JOIN pg_namespace n ON n.oid = c.relnamespace and n.nspname = '" + DebugUtils.containsSqlInjection(schema) + "' where c.relkind in ('v','m" + "') order by 1;";
+        ddl = "select c.oid,c.relname as viewname from pg_class c INNER JOIN pg_namespace n "
+                + "ON n.oid = c.relnamespace and n.nspname = '" + DebugUtils.containsSqlInjection(schema)
+                + "' where c.relkind in ('v','m" + "') order by 1;";
         log.info("splicingSequenceDDL response is: " + ddl);
         return ddl;
     }
@@ -202,9 +204,10 @@ public class GainObjectSQLServiceImpl implements GainObjectSQLService {
     @Override
     public String fun_prosSql(String schema) {
         String ddl;
-        ddl = "SELECT oid,proname,proargtypes FROM pg_proc" + LF +
-                "WHERE pronamespace = (SELECT pg_namespace.oid FROM pg_namespace WHERE nspname = '" + DebugUtils.containsSqlInjection(schema) + "')" +
-                " order by 1" + LF;
+        ddl = "SELECT oid,proname,proargtypes FROM pg_proc" + LF
+                + "WHERE pronamespace = (SELECT pg_namespace.oid FROM pg_namespace WHERE nspname = '"
+                + DebugUtils.containsSqlInjection(schema) + "')"
+                + " order by 1" + LF;
         log.info("splicingSequenceDDL response is: " + ddl);
         return ddl;
     }
@@ -212,10 +215,10 @@ public class GainObjectSQLServiceImpl implements GainObjectSQLService {
     @Override
     public String sequenceSql(String schema) {
         String ddl;
-        ddl = "select c.oid,c.relname as relname from" + LF +
-                "pg_class c INNER JOIN pg_namespace n ON n.oid = c.relnamespace " + LF +
-                "and n.nspname = '" + DebugUtils.containsSqlInjection(schema) + "' where c.relkind = 'S'" + LF +
-                " order by 1";
+        ddl = "select c.oid,c.relname as relname from" + LF
+                + "pg_class c INNER JOIN pg_namespace n ON n.oid = c.relnamespace " + LF
+                + "and n.nspname = '" + DebugUtils.containsSqlInjection(schema) + "' where c.relkind = 'S'" + LF
+                + " order by 1";
         log.info("splicingSequenceDDL response is: " + ddl);
         return ddl;
     }
@@ -223,10 +226,10 @@ public class GainObjectSQLServiceImpl implements GainObjectSQLService {
     @Override
     public String synonymSql(String schema) {
         String ddl;
-        ddl = "select pgs.oid,synname from PG_SYNONYM pgs, pg_namespace pgn" + LF +
-                "   where pgn.oid = pgs.synnamespace" + LF +
-                "     and pgn.nspname  ='" + DebugUtils.containsSqlInjection(schema) + "'" + LF +
-                " order by 1";
+        ddl = "select pgs.oid,synname from PG_SYNONYM pgs, pg_namespace pgn" + LF
+                + "   where pgn.oid = pgs.synnamespace" + LF
+                + "     and pgn.nspname  ='" + DebugUtils.containsSqlInjection(schema) + "'" + LF
+                + " order by 1";
         log.info("splicingSequenceDDL response is: " + ddl);
         return ddl;
     }
@@ -234,12 +237,12 @@ public class GainObjectSQLServiceImpl implements GainObjectSQLService {
     @Override
     public String baseTypeListSQL() {
         String ddl;
-        ddl = "select pg_catalog.format_type(typ.oid,typ.typtypmod) as type" + LF +
-                "from pg_type typ left join pg_description des on (typ.oid = des.objoid) " + LF +
-                "where typ.typnamespace in (select oid from pg_namespace where nspname in " + LF +
-                "('information_schema', 'pg_catalog'))" + LF +
-                "and typtype = 'b'" + LF +
-                "order by 1";
+        ddl = "select pg_catalog.format_type(typ.oid,typ.typtypmod) as type" + LF
+                + "from pg_type typ left join pg_description des on (typ.oid = des.objoid) " + LF
+                + "where typ.typnamespace in (select oid from pg_namespace where nspname in " + LF
+                + "('information_schema', 'pg_catalog'))" + LF
+                + "and typtype = 'b'" + LF
+                + "order by 1";
         log.info("splicingSequenceDDL response is: " + ddl);
         return ddl;
     }
@@ -247,8 +250,8 @@ public class GainObjectSQLServiceImpl implements GainObjectSQLService {
     @Override
     public String tablespaceListSQL() {
         String ddl;
-        ddl = "select spcname from pg_tablespace " + LF +
-                "order by 1";
+        ddl = "select spcname from pg_tablespace " + LF
+                + "order by 1";
         log.info("splicingSequenceDDL response is: " + ddl);
         return ddl;
     }

@@ -4,12 +4,18 @@
 
 package com.nctigba.datastudio.model.dto;
 
-
 import lombok.Data;
+import lombok.Generated;
 import lombok.NoArgsConstructor;
 
+/**
+ * DatabaseConstraintPkDTO
+ *
+ * @since 2023-6-26
+ */
 @NoArgsConstructor
 @Data
+@Generated
 public class DatabaseConstraintPkDTO {
     private String uuid;
     private String schema;

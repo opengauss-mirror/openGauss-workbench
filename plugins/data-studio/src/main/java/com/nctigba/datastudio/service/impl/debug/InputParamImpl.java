@@ -13,13 +13,14 @@ import com.nctigba.datastudio.util.DebugUtils;
 import com.nctigba.datastudio.util.LocaleString;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
-import org.opengauss.admin.common.exception.CustomException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -43,14 +44,16 @@ import static com.nctigba.datastudio.constants.SqlConstants.INFO_BREAKPOINT_PRE;
 import static com.nctigba.datastudio.constants.SqlConstants.INFO_BREAKPOINT_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.INFO_LOCALS_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.TURN_ON_SQL;
-import static com.nctigba.datastudio.enums.MessageEnum.breakPoint;
-import static com.nctigba.datastudio.enums.MessageEnum.stack;
-import static com.nctigba.datastudio.enums.MessageEnum.table;
-import static com.nctigba.datastudio.enums.MessageEnum.text;
-import static com.nctigba.datastudio.enums.MessageEnum.variable;
+import static com.nctigba.datastudio.enums.MessageEnum.BREAKPOINT;
+import static com.nctigba.datastudio.enums.MessageEnum.STACK;
+import static com.nctigba.datastudio.enums.MessageEnum.TABLE;
+import static com.nctigba.datastudio.enums.MessageEnum.TEXT;
+import static com.nctigba.datastudio.enums.MessageEnum.VARIABLE;
 
 /**
- * input param
+ * InputParamImpl
+ *
+ * @since 2023-6-26
  */
 @Slf4j
 @Service("inputParam")
@@ -62,8 +65,8 @@ public class InputParamImpl implements OperationInterface {
     private AddBreakPointImpl addBreakPoint;
 
     @Override
-    public void operate(WebSocketServer webSocketServer, Object obj) throws Exception {
-        PublicParamReq paramReq = (PublicParamReq) obj;
+    public void operate(WebSocketServer webSocketServer, Object obj) throws SQLException, IOException {
+        PublicParamReq paramReq = DebugUtils.changeParamType(obj);
         log.info("inputParam paramReq: " + paramReq);
         String windowName = paramReq.getWindowName();
 
@@ -77,15 +80,15 @@ public class InputParamImpl implements OperationInterface {
             List<List<Object>> list = (List<List<Object>>) map.get(RESULT);
             if (list.size() == 1) {
                 if (list.get(0).size() == 1) {
-                    webSocketServer.sendMessage(windowName, text, SUCCESS, map);
+                    webSocketServer.sendMessage(windowName, TEXT, SUCCESS, map);
                 } else {
                     Map<String, String> messageMap = new HashMap<>();
                     messageMap.put(RESULT, LocaleString.transLanguageWs("1008", webSocketServer));
-                    webSocketServer.sendMessage(windowName, text, SUCCESS, messageMap);
-                    webSocketServer.sendMessage(windowName, table, SUCCESS, map);
+                    webSocketServer.sendMessage(windowName, TEXT, SUCCESS, messageMap);
+                    webSocketServer.sendMessage(windowName, TABLE, SUCCESS, map);
                 }
             } else {
-                webSocketServer.sendMessage(windowName, text, SUCCESS, map);
+                webSocketServer.sendMessage(windowName, TEXT, SUCCESS, map);
             }
             statement.close();
             webSocketServer.setStatement(windowName, null);
@@ -94,7 +97,8 @@ public class InputParamImpl implements OperationInterface {
         }
     }
 
-    private void debugOperate(WebSocketServer webSocketServer, PublicParamReq paramReq) throws Exception {
+    private void debugOperate(
+            WebSocketServer webSocketServer, PublicParamReq paramReq) throws SQLException, IOException {
         String windowName = paramReq.getWindowName();
         Statement statement = webSocketServer.getStatement(windowName);
 
@@ -128,9 +132,6 @@ public class InputParamImpl implements OperationInterface {
                     port = turnNoResult.getString(PORT);
                     log.info("inputParam nodeName and port is: " + nodeName + "---" + port);
                 }
-            } catch (Exception e) {
-                log.info(e.toString());
-                throw new RuntimeException(e);
             }
         }
 
@@ -144,7 +145,7 @@ public class InputParamImpl implements OperationInterface {
         statNew.execute(String.format(ATTACH_SQL, nodeName, port));
         List<Integer> list = DebugUtils.getAvailableBreakPoints(paramReq, webSocketServer);
         List<Integer> breakPoints = paramReq.getBreakPoints();
-        int differ = (int) webSocketServer.getParamMap(windowName).get(DIFFER);
+        int differ = DebugUtils.changeParamType(webSocketServer, windowName, DIFFER);
         if (!CollectionUtils.isEmpty(breakPoints)) {
             for (Integer i : breakPoints) {
                 if (list.contains(i - differ)) {
@@ -155,14 +156,14 @@ public class InputParamImpl implements OperationInterface {
         }
 
         ResultSet stackResult = statNew.executeQuery(BACKTRACE_SQL_PRE + differ + BACKTRACE_SQL);
-        webSocketServer.sendMessage(windowName, stack, SUCCESS, DebugUtils.parseResultSet(stackResult));
+        webSocketServer.sendMessage(windowName, STACK, SUCCESS, DebugUtils.parseResultSet(stackResult));
 
         ResultSet bpResult = statNew.executeQuery(INFO_BREAKPOINT_PRE + differ + INFO_BREAKPOINT_SQL);
-        webSocketServer.sendMessage(windowName, breakPoint, SUCCESS, DebugUtils.parseBreakPoint(bpResult, oid));
+        webSocketServer.sendMessage(windowName, BREAKPOINT, SUCCESS, DebugUtils.parseBreakPoint(bpResult, oid));
 
         Map<String, Object> variableMap = DebugUtils.parseVariable(statNew.executeQuery(INFO_LOCALS_SQL));
         Map<String, Object> paramMap = DebugUtils.addMapParam(variableMap, webSocketServer, paramReq);
-        webSocketServer.sendMessage(windowName, variable, SUCCESS, paramMap);
+        webSocketServer.sendMessage(windowName, VARIABLE, SUCCESS, paramMap);
     }
 
     @Override

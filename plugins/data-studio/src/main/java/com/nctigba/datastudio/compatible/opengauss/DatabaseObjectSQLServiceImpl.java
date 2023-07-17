@@ -30,6 +30,11 @@ import static com.nctigba.datastudio.constants.SqlConstants.QUOTES;
 import static com.nctigba.datastudio.constants.SqlConstants.SEMICOLON;
 import static com.nctigba.datastudio.constants.SqlConstants.WITH_ENCODING_SQL;
 
+/**
+ * DatabaseObjectSQLService achieve
+ *
+ * @since 2023-06-26
+ */
 @Slf4j
 @Service
 public class DatabaseObjectSQLServiceImpl implements DatabaseObjectSQLService {
@@ -42,14 +47,15 @@ public class DatabaseObjectSQLServiceImpl implements DatabaseObjectSQLService {
     public String createDatabase(CreateDatabaseDTO request) {
         log.info("createDatabaseDDL request is: " + request);
         String ddl =
-                CREATE_DATABASE_SQL + DebugUtils.containsSqlInjection(request.getDatabaseName()) + WITH_ENCODING_SQL + request.getDatabaseCode() + DBCOMPATIBILITY_SQL + request.getCompatibleType();
+                CREATE_DATABASE_SQL + DebugUtils.containsSqlInjection(request.getDatabaseName()) + WITH_ENCODING_SQL
+                        + request.getDatabaseCode() + DBCOMPATIBILITY_SQL + request.getCompatibleType();
         if (!StringUtils.isEmpty(request.getCollation())) {
             ddl = ddl + LC_COLLATE_SQL + request.getCollation();
         }
         if (!StringUtils.isEmpty(request.getCharacterType())) {
             ddl = ddl + LC_CTYPE_SQL + request.getCharacterType();
         }
-        if (Integer.valueOf(request.getConRestrictions()) >= -1) {
+        if (Integer.parseInt(request.getConRestrictions()) >= -1) {
             ddl = ddl + QUOTES + CONNECTION_LIMIT_SQL + request.getConRestrictions() + SEMICOLON;
         } else {
             throw new CustomException(LocaleString.transLanguage("2013"));
@@ -60,8 +66,7 @@ public class DatabaseObjectSQLServiceImpl implements DatabaseObjectSQLService {
 
     @Override
     public String connectionDatabaseTest() {
-        String ddl = "SELECT 1";
-        return ddl;
+        return "SELECT 1";
     }
 
     @Override
@@ -91,7 +96,7 @@ public class DatabaseObjectSQLServiceImpl implements DatabaseObjectSQLService {
     @Override
     public String databaseAttributeSQL(DatabaseNameDTO request) {
         log.info("databaseAttributeSQL request is: " + request);
-        String ddl = String.format(DATABASE_ATTRIBUTE_SQL , request.getDatabaseName());
+        String ddl = String.format(DATABASE_ATTRIBUTE_SQL, request.getDatabaseName());
         log.info("databaseAttributeSQL DDL is: " + ddl);
         return ddl;
     }

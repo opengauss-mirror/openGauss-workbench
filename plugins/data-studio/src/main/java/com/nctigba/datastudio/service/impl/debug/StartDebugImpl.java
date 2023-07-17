@@ -19,7 +19,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
+import java.io.IOException;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashMap;
 import java.util.List;
@@ -30,11 +32,13 @@ import static com.nctigba.datastudio.constants.CommonConstants.FIVE_HUNDRED;
 import static com.nctigba.datastudio.constants.CommonConstants.RESULT;
 import static com.nctigba.datastudio.constants.CommonConstants.SUCCESS;
 import static com.nctigba.datastudio.constants.SqlConstants.QUERY_DEF_SQL;
-import static com.nctigba.datastudio.enums.MessageEnum.paramWindow;
-import static com.nctigba.datastudio.enums.MessageEnum.window;
+import static com.nctigba.datastudio.enums.MessageEnum.PARAM_WINDOW;
+import static com.nctigba.datastudio.enums.MessageEnum.WINDOW;
 
 /**
- * start debug
+ * StartDebugImpl
+ *
+ * @since 2023-6-26
  */
 @Slf4j
 @Service("startDebug")
@@ -46,8 +50,8 @@ public class StartDebugImpl implements OperationInterface {
     private FuncProcedureImpl funcProcedure;
 
     @Override
-    public void operate(WebSocketServer webSocketServer, Object obj) throws Exception {
-        PublicParamReq paramReq = (PublicParamReq) obj;
+    public void operate(WebSocketServer webSocketServer, Object obj) throws SQLException, IOException {
+        PublicParamReq paramReq = DebugUtils.changeParamType(obj);
         log.info("startDebug paramReq: " + paramReq);
 
         String rootWindowName = paramReq.getRootWindowName();
@@ -64,19 +68,18 @@ public class StartDebugImpl implements OperationInterface {
                 ResultSet defResultSet = statement.executeQuery(String.format(QUERY_DEF_SQL, oid))
         ) {
             while (defResultSet.next()) {
-                definition = DebugUtils.sqlHandleAfter(defResultSet.getString(DEFINITION));
+                definition = defResultSet.getString(DEFINITION);
                 if (StringUtils.isEmpty(definition)) {
                     throw new CustomException(LocaleString.transLanguageWs("2015", webSocketServer));
+                } else {
+                    definition = DebugUtils.sqlHandleAfter(definition);
                 }
             }
             log.info("startDebug definition: " + definition);
-        } catch (Exception e) {
-            log.info(e.toString());
-            throw new RuntimeException(e);
         }
 
         if (!paramReq.getSql().equals(definition)) {
-            webSocketServer.sendMessage(windowName, window, FIVE_HUNDRED,
+            webSocketServer.sendMessage(windowName, WINDOW, FIVE_HUNDRED,
                     LocaleString.transLanguageWs("1007", webSocketServer), null);
             return;
         }
@@ -93,7 +96,7 @@ public class StartDebugImpl implements OperationInterface {
         if (CollectionUtils.isEmpty(paramList)) {
             inputParam.operate(webSocketServer, paramReq);
         } else {
-            webSocketServer.sendMessage(windowName, paramWindow, SUCCESS, map);
+            webSocketServer.sendMessage(windowName, PARAM_WINDOW, SUCCESS, map);
         }
     }
 

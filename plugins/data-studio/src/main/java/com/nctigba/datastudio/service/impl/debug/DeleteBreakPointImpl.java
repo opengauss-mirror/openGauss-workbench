@@ -12,7 +12,9 @@ import com.nctigba.datastudio.util.DebugUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Iterator;
 import java.util.List;
@@ -27,33 +29,35 @@ import static com.nctigba.datastudio.constants.CommonConstants.SUCCESS;
 import static com.nctigba.datastudio.constants.SqlConstants.DELETE_BREAKPOINT_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.INFO_BREAKPOINT_PRE;
 import static com.nctigba.datastudio.constants.SqlConstants.INFO_BREAKPOINT_SQL;
-import static com.nctigba.datastudio.enums.MessageEnum.breakPoint;
+import static com.nctigba.datastudio.enums.MessageEnum.BREAKPOINT;
 
 /**
- * delete break point
+ * DeleteBreakPointImpl
+ *
+ * @since 2023-6-26
  */
 @Slf4j
 @Service("deleteBreakPoint")
 public class DeleteBreakPointImpl implements OperationInterface {
     @Override
-    public void operate(WebSocketServer webSocketServer, Object obj) throws Exception {
-        PublicParamReq paramReq = (PublicParamReq) obj;
+    public void operate(WebSocketServer webSocketServer, Object obj) throws SQLException, IOException {
+        PublicParamReq paramReq = DebugUtils.changeParamType(obj);
         log.info("deleteBreakPoint paramReq: " + paramReq);
 
         String windowName = paramReq.getWindowName();
-        Map<Integer, String> breakPointMap = (Map<Integer, String>) webSocketServer.getParamMap(windowName).get(
-                BREAK_POINT);
+        Map<Integer, String> breakPointMap = DebugUtils.changeParamType(webSocketServer, windowName, BREAK_POINT);
         log.info("deleteBreakPoint breakPointMap: " + breakPointMap);
 
         String rootWindowName = paramReq.getRootWindowName();
-        Statement stat = (Statement) webSocketServer.getParamMap(rootWindowName).get(STATEMENT);
+        Statement stat = DebugUtils.changeParamType(webSocketServer, rootWindowName, STATEMENT);
         if (stat == null) {
             return;
         }
 
         int line = paramReq.getLine();
-        int differ = (int) webSocketServer.getParamMap(windowName).get(DIFFER);
-        List<Integer> list = (List<Integer>) webSocketServer.getParamMap(windowName).get(CAN_BREAK);
+        int differ = DebugUtils.changeParamType(webSocketServer, windowName, DIFFER);
+        List<Integer> list = DebugUtils.changeParamType(webSocketServer, windowName, CAN_BREAK);
+        log.info("deleteBreakPoint list: " + list);
         if (list.contains(line - differ)) {
             int no = Integer.parseInt(breakPointMap.get(line));
             stat.execute(String.format(DELETE_BREAKPOINT_SQL, no));
@@ -69,8 +73,8 @@ public class DeleteBreakPointImpl implements OperationInterface {
 
         if (!paramReq.isCloseWindow()) {
             ResultSet bpResult = stat.executeQuery(INFO_BREAKPOINT_PRE + differ + INFO_BREAKPOINT_SQL);
-            String oid = (String) webSocketServer.getParamMap(windowName).get(OID);
-            webSocketServer.sendMessage(windowName, breakPoint, SUCCESS, DebugUtils.parseBreakPoint(bpResult, oid));
+            String oid = DebugUtils.changeParamType(webSocketServer, windowName, OID);
+            webSocketServer.sendMessage(windowName, BREAKPOINT, SUCCESS, DebugUtils.parseBreakPoint(bpResult, oid));
         }
     }
 

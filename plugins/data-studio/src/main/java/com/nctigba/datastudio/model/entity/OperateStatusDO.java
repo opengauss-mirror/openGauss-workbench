@@ -4,91 +4,129 @@
 
 package com.nctigba.datastudio.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
+import lombok.Generated;
 
+/**
+ * OperateStatusDO
+ *
+ * @since 2023-6-26
+ */
 @Data
+@Generated
 public class OperateStatusDO {
+    @JsonProperty("debug")
     private boolean isDebug;
-    private boolean compile;
+    @JsonProperty("compile")
+    private boolean isCompile;
 
-    private boolean execute;
+    @JsonProperty("execute")
+    private boolean isExecute;
 
-    private boolean startDebug;
+    @JsonProperty("startDebug")
+    private boolean isStartDebug;
 
-    private boolean stopDebug;
+    @JsonProperty("stopDebug")
+    private boolean isStopDebug;
 
-    private boolean continueStep;
+    @JsonProperty("continueStep")
+    private boolean isContinueStep;
 
-    private boolean singleStep;
+    @JsonProperty("singleStep")
+    private boolean isSingleStep;
 
-    private boolean startRun;
+    @JsonProperty("startRun")
+    private boolean isStartRun;
 
-    private boolean stopRun;
+    @JsonProperty("stopRun")
+    private boolean isStopRun;
 
-    private boolean stepIn;
+    @JsonProperty("stepIn")
+    private boolean isStepIn;
 
-    private boolean stepOut;
+    @JsonProperty("stepOut")
+    private boolean isStepOut;
 
-    private boolean coverageRate;
+    @JsonProperty("coverageRate")
+    private boolean isCoverageRate;
 
     public OperateStatusDO() {
         init();
     }
 
+    /**
+     * init button status
+     */
     public void init() {
-        this.compile = true;
-        this.execute = false;
-        this.startDebug = false;
-        this.stopDebug = false;
-        this.continueStep = false;
-        this.singleStep = false;
-        this.startRun = false;
-        this.stopRun = false;
-        this.stepIn = false;
-        this.stepOut = false;
-        this.coverageRate = false;
+        this.isCompile = true;
+        this.isExecute = false;
+        this.isStartDebug = false;
+        this.isStopDebug = false;
+        this.isContinueStep = false;
+        this.isSingleStep = false;
+        this.isStartRun = false;
+        this.isStopRun = false;
+        this.isStepIn = false;
+        this.isStepOut = false;
+        this.isCoverageRate = false;
     }
 
+    /**
+     * enable stop run
+     */
     public void enableStopRun() {
-        this.startRun = true;
-        this.stopRun = false;
+        this.isStartRun = true;
+        this.isStopRun = false;
     }
 
+    /**
+     * enable start debug
+     */
     public void enableStartDebug() {
-        this.compile = true;
-        this.execute = true;
-        this.startDebug = true;
-        this.stopDebug = false;
-        this.continueStep = false;
-        this.singleStep = false;
-        this.stepIn = false;
-        this.stepOut = false;
-        this.coverageRate = true;
+        this.isCompile = true;
+        this.isExecute = true;
+        this.isStartDebug = true;
+        this.isStopDebug = false;
+        this.isContinueStep = false;
+        this.isSingleStep = false;
+        this.isStepIn = false;
+        this.isStepOut = false;
+        this.isCoverageRate = true;
     }
 
+    /**
+     * enable stop debug
+     */
     public void enableStopDebug() {
-        this.compile = false;
-        this.execute = false;
-        this.startDebug = false;
-        this.stopDebug = true;
-        this.continueStep = true;
-        this.singleStep = true;
-        this.stepIn = true;
-        this.stepOut = true;
-        this.coverageRate = false;
+        this.isCompile = false;
+        this.isExecute = false;
+        this.isStartDebug = false;
+        this.isStopDebug = true;
+        this.isContinueStep = true;
+        this.isSingleStep = true;
+        this.isStepIn = true;
+        this.isStepOut = true;
+        this.isCoverageRate = false;
     }
 
+    /**
+     * sub all true
+     */
     public void subAllTrue() {
-        this.continueStep = true;
-        this.singleStep = true;
-        this.stepIn = true;
-        this.stepOut = true;
+        this.isContinueStep = true;
+        this.isSingleStep = true;
+        this.isStepIn = true;
+        this.isStepOut = true;
     }
 
+    /**
+     * sub all false
+     */
     public void subAllFalse() {
-        this.continueStep = false;
-        this.singleStep = false;
-        this.stepIn = false;
-        this.stepOut = false;
+        this.isContinueStep = false;
+        this.isSingleStep = false;
+        this.isStepIn = false;
+        this.isStepOut = false;
     }
 }
