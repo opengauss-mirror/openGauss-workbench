@@ -1,6 +1,7 @@
 /*
  * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
  */
+
 package com.nctigba.observability.instance.handler.session;
 
 import com.alibaba.fastjson.JSONObject;
@@ -38,22 +39,16 @@ import static org.mockito.Mockito.when;
  */
 @RunWith(MockitoJUnitRunner.class)
 public class OpenGaussSessionHandlerTest {
-
     @InjectMocks
     private OpenGaussSessionHandler sessionHandler;
-
     @Mock
     private Connection mockConnection;
-
     @Mock
     private PreparedStatement mockPreparedStatement;
-
     @Mock
     private ResultSet mockResultSet;
-
     @Mock
     private ResultSetMetaData mockResultSetMetaData;
-
     @Mock
     private ClusterManager clusterManager;
 
@@ -62,7 +57,6 @@ public class OpenGaussSessionHandlerTest {
         when(mockConnection.prepareStatement(anyString())).thenReturn(mockPreparedStatement);
         when(mockPreparedStatement.executeQuery()).thenReturn(mockResultSet);
         when(mockPreparedStatement.executeQuery()).thenReturn(mockResultSet);
-
     }
 
     @Test
@@ -125,7 +119,6 @@ public class OpenGaussSessionHandlerTest {
 
     @Test
     public void testDetailBlockTree() throws SQLException {
-        String sessionId = "1";
         when(mockResultSet.getMetaData()).thenReturn(mockResultSetMetaData);
         when(mockResultSetMetaData.getColumnCount()).thenReturn(4);
         when(mockResultSetMetaData.getColumnLabel(eq(1))).thenReturn("id");
@@ -137,6 +130,7 @@ public class OpenGaussSessionHandlerTest {
         when(mockResultSet.getString(eq(3))).thenReturn("0").thenReturn("1").thenReturn("2");
         when(mockResultSet.getString(eq(4))).thenReturn("1");
         when(mockResultSet.next()).thenReturn(true, true, true, false);
+        String sessionId = "1";
         List<JSONObject> blockTree = sessionHandler.detailBlockTree(mockConnection, sessionId);
         assertNotNull(blockTree);
         assertEquals(1, blockTree.size());
@@ -180,5 +174,4 @@ public class OpenGaussSessionHandlerTest {
         sessionHandler.close(mockConnection);
         verify(mockConnection, times(1)).close();
     }
-
 }

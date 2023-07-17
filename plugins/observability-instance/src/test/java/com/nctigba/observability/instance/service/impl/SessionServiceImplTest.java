@@ -1,6 +1,7 @@
 /*
  * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
  */
+
 package com.nctigba.observability.instance.service.impl;
 
 import com.alibaba.fastjson.JSONObject;
@@ -134,7 +135,6 @@ public class SessionServiceImplTest {
         when(sessionHandler.simpleStatistic(connection)).thenReturn(expectedResult);
         JSONObject result = sessionService.simpleStatistic(getId());
         assertEquals(expectedResult, result);
-
         verify(sessionHandlerFactory, times(1)).getInstance(DatabaseType.DEFAULT.getDbType());
         verify(sessionHandler, times(1)).getConnection(instanceNodeInfo);
         verify(sessionHandler, times(1)).simpleStatistic(connection);
@@ -164,10 +164,8 @@ public class SessionServiceImplTest {
         HashMap<String, List<JSONObject>> expectedResult = new HashMap<>();
         expectedResult.put("blockTree", blockTree);
         expectedResult.put("longTxc", longTxc);
-
         when(sessionHandler.detailBlockTree(connection, null)).thenReturn(blockTree);
         when(sessionHandler.longTxc(connection)).thenReturn(longTxc);
-
         HashMap<String, List<JSONObject>> result = sessionService.blockAndLongTxc(getId());
         assertEquals(expectedResult, result);
     }
@@ -184,12 +182,10 @@ public class SessionServiceImplTest {
         expectedResult.put("general", object);
         expectedResult.put("statistic", statistic);
         expectedResult.put("waiting", waiting);
-
         when(sessionHandler.detailWaiting(connection, getId())).thenReturn(waiting);
         when(sessionHandler.detailStatistic(connection, getId())).thenReturn(statistic);
         when(sessionHandler.detailBlockTree(connection, getId())).thenReturn(blockTree);
         when(sessionHandler.detailGeneral(connection, getId())).thenReturn(object);
-
         Map<String, Object> result = sessionService.detail(getId(), getId());
         assertEquals(expectedResult, result);
     }
