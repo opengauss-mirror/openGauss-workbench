@@ -6,6 +6,7 @@ package com.nctigba.observability.sql.model.history.result;
 
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.nctigba.observability.sql.util.LocaleString;
+import lombok.Generated;
 
 /**
  * TaskState
@@ -13,6 +14,7 @@ import com.nctigba.observability.sql.util.LocaleString;
  * @author luomeng
  * @since 2023/6/9
  */
+@Generated
 public enum TaskState {
     CREATE, WAITING, FINISH, DATA;
 

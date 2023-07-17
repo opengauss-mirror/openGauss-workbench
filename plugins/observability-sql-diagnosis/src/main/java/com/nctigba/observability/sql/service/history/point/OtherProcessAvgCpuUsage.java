@@ -63,7 +63,7 @@ public class OtherProcessAvgCpuUsage implements HisDiagnosisPointService<Prometh
         List<PrometheusData> sysList = new ArrayList<>();
         List<PrometheusData> proList = new ArrayList<>();
         for (CollectionItem<?> item : getSourceDataKeys()) {
-            List<?> list = (List<?>) item.queryData(task);
+            List<?> list = (List<?>) dataStoreService.getData(item).getCollectionData();
             for (Object object : list) {
                 if (object instanceof PrometheusData) {
                     if (item == avgCpuItem) {

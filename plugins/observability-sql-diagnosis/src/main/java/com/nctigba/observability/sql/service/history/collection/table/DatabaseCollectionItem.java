@@ -91,5 +91,5 @@ public abstract class DatabaseCollectionItem implements CollectionItem<Object> {
                 task.getNodeId());
     }
 
-    abstract String getDatabaseSql();
+    public abstract String getDatabaseSql();
 }

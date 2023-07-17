@@ -30,7 +30,7 @@ import java.util.List;
  * @since 2023/6/9
  */
 @Service
-public class TopDbProcess implements HisDiagnosisPointService<List<AgentDTO>> {
+public class TopDbProcess implements HisDiagnosisPointService<AgentDTO> {
     @Autowired
     private TopDbProcessItem item;
 
@@ -54,7 +54,7 @@ public class TopDbProcess implements HisDiagnosisPointService<List<AgentDTO>> {
 
     @Override
     public AnalysisDTO analysis(HisDiagnosisTask task, DataStoreService dataStoreService) {
-        Object object = item.queryData(task);
+        Object object = dataStoreService.getData(item).getCollectionData();
         AgentData agentData = null;
         if (object instanceof AgentData) {
             agentData = (AgentData) object;
@@ -71,14 +71,18 @@ public class TopDbProcess implements HisDiagnosisPointService<List<AgentDTO>> {
         }
         CurrentCpuDTO cpuDTO = new CurrentCpuDTO();
         cpuDTO.setChartName(LocaleString.format("history.currentProCpu.agent"));
-        cpuDTO.setDataList(dtoList.subList(0, 10));
+        if (dtoList.size() > 10) {
+            cpuDTO.setDataList(dtoList.subList(0, 10));
+        } else {
+            cpuDTO.setDataList(dtoList);
+        }
         analysisDTO.setPointData(cpuDTO);
         analysisDTO.setPointType(HisDiagnosisResult.PointType.DISPLAY);
         return analysisDTO;
     }
 
     @Override
-    public List<AgentDTO> getShowData(int taskId) {
+    public AgentDTO getShowData(int taskId) {
         return null;
     }
 }

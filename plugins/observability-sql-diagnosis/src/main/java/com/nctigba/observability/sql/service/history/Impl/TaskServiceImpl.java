@@ -4,6 +4,7 @@
 
 package com.nctigba.observability.sql.service.history.Impl;
 
+import cn.hutool.core.thread.ThreadUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.nctigba.observability.sql.constants.history.DiagnosisTypeCommon;
 import com.nctigba.observability.sql.constants.history.OptionCommon;
@@ -85,8 +86,6 @@ public class TaskServiceImpl implements TaskService {
         List<HisDiagnosisThreshold> thresholdList = getThresholds(taskDTO.getThresholds());
         HisDiagnosisTask task = taskMapper.selectById(taskId);
         task.setThresholds(thresholdList);
-        task.setState(TaskState.WAITING);
-        taskMapper.updateById(task);
         task.addRemarks("start running diagnosis");
         HashMap<CollectionItem<?>, Integer> hashMap = new HashMap<>();
         StringBuilder sb = new StringBuilder();
@@ -111,28 +110,12 @@ public class TaskServiceImpl implements TaskService {
             }
         }
         for (CollectionItem<?> item : hashMap.keySet()) {
-            DataStoreConfig config = new DataStoreConfig();
-            config.setCollectionItem(item);
-            Object isExistData = item.queryData(task);
-            Object itemData = item.queryData(task);
-            if (isExistData == null) {
-                pointServiceList.forEach(f -> {
-                    if (!CollectionUtils.isEmpty(f.getSourceDataKeys())) {
-                        f.getSourceDataKeys().forEach(g -> {
-                            if (g == item && !sb.toString().contains(f.toString())) {
-                                String pointName = getClassName(f);
-                                sb.append(f).append(";");
-                                HisDiagnosisResult result = new HisDiagnosisResult(task, pointName,
-                                        HisDiagnosisResult.PointState.ABNORMAL,
-                                        HisDiagnosisResult.ResultState.NO_ADVICE);
-                                resultMapper.insert(result);
-                            }
-                        });
-                    }
-                });
-                continue;
-            } else {
-                if (itemData.toString().contains("error")) {
+            ThreadUtil.execAsync(() -> {
+                String itemName = getClassName(item);
+                task.addRemarks("start check collection " + itemName);
+                Object isExistData = item.queryData(task);
+                task.addRemarks("stop check collection " + itemName);
+                if (isExistData == null) {
                     pointServiceList.forEach(f -> {
                         if (!CollectionUtils.isEmpty(f.getSourceDataKeys())) {
                             f.getSourceDataKeys().forEach(g -> {
@@ -142,42 +125,62 @@ public class TaskServiceImpl implements TaskService {
                                     HisDiagnosisResult result = new HisDiagnosisResult(task, pointName,
                                             HisDiagnosisResult.PointState.ABNORMAL,
                                             HisDiagnosisResult.ResultState.NO_ADVICE);
-                                    result.setPointSuggestion(itemData.toString());
                                     resultMapper.insert(result);
                                 }
                             });
                         }
                     });
-                    continue;
+                    //continue;
+                } else {
+                    if (isExistData.toString().contains("error")) {
+                        pointServiceList.forEach(f -> {
+                            if (!CollectionUtils.isEmpty(f.getSourceDataKeys())) {
+                                f.getSourceDataKeys().forEach(g -> {
+                                    if (g == item && !sb.toString().contains(f.toString())) {
+                                        String pointName = getClassName(f);
+                                        sb.append(f).append(";");
+                                        HisDiagnosisResult result = new HisDiagnosisResult(task, pointName,
+                                                HisDiagnosisResult.PointState.ABNORMAL,
+                                                HisDiagnosisResult.ResultState.NO_ADVICE);
+                                        result.setPointSuggestion(isExistData.toString());
+                                        resultMapper.insert(result);
+                                    }
+                                });
+                            }
+                        });
+                        //continue;
+                    }
                 }
-            }
-            String itemName = getClassName(item);
-            task.addRemarks("start collection " + itemName);
-            config.setCollectionData(item.collectData(task));
-            task.addRemarks("stop collection " + itemName);
-            config.setCount(hashMap.get(item));
-            List<DataStoreConfig> list = new ArrayList<>();
-            list.add(config);
-            dataStoreService.storeData(list);
-            List<CollectionItem<?>> itemList = dataStoreService.getCollectionItem();
-            for (HisDiagnosisPointService<?> pointService : pointServiceList) {
-                String pointName = getClassName(pointService);
-                if (sb.toString().contains(pointService.toString())) {
-                    continue;
+                DataStoreConfig config = new DataStoreConfig();
+                config.setCollectionItem(item);
+                task.addRemarks("start collection " + itemName);
+                config.setCollectionData(item.collectData(task));
+                task.addRemarks("stop collection " + itemName);
+                config.setCount(hashMap.get(item));
+                List<DataStoreConfig> list = new ArrayList<>();
+                list.add(config);
+                dataStoreService.storeData(list);
+                List<CollectionItem<?>> itemList = dataStoreService.getCollectionItem();
+                for (HisDiagnosisPointService<?> pointService : pointServiceList) {
+                    String pointName = getClassName(pointService);
+                    if (sb.toString().contains(pointService.toString())) {
+                        continue;
+                    }
+                    boolean isDataReady = CollectionUtils.isEmpty(pointService.getSourceDataKeys()) || new HashSet<>(
+                            itemList).containsAll(pointService.getSourceDataKeys());
+                    if (isDataReady) {
+                        sb.append(pointService).append(";");
+                        task.addRemarks("start analysis " + pointName);
+                        AnalysisDTO analysisDTO = pointService.analysis(task, dataStoreService);
+                        task.addRemarks("stop analysis " + pointName);
+                        HisDiagnosisResult result = new HisDiagnosisResult(
+                                task, analysisDTO, pointName, HisDiagnosisResult.PointState.NORMAL);
+                        resultMapper.insert(result);
+                    }
                 }
-                boolean isDataReady = CollectionUtils.isEmpty(pointService.getSourceDataKeys()) || new HashSet<>(
-                        itemList).containsAll(pointService.getSourceDataKeys());
-                if (isDataReady) {
-                    sb.append(pointService).append(";");
-                    task.addRemarks("start analysis " + pointName);
-                    AnalysisDTO analysisDTO = pointService.analysis(task, dataStoreService);
-                    task.addRemarks("stop analysis " + pointName);
-                    HisDiagnosisResult result = new HisDiagnosisResult(
-                            task, analysisDTO, pointName, HisDiagnosisResult.PointState.NORMAL);
-                    resultMapper.insert(result);
-                }
-            }
+            });
         }
+        ThreadUtil.sleep(1000);
         dataStoreService.clearData();
         task.addRemarks("finish diagnosis");
         task.setTaskEndTime(new Date());

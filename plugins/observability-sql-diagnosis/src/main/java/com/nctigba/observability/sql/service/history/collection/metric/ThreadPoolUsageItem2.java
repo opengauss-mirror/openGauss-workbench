@@ -21,7 +21,7 @@ import java.util.List;
 @Service
 public class ThreadPoolUsageItem2 extends PrometheusCollectionItem {
     @Override
-    String getPrometheusParam(List<HisDiagnosisThreshold> thresholds) {
+    public String getPrometheusParam(List<HisDiagnosisThreshold> thresholds) {
         if (CollectionUtils.isEmpty(thresholds)) {
             return MetricCommon.THREAD_POOL_USAGE_RATE;
         } else {

@@ -16,7 +16,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class LockTimeoutItem extends ElasticSearchCollectionItem {
     @Override
-    String getQueryParam() {
+    public String getQueryParam() {
         return ElasticSearchCommon.LOCK_TIMEOUT;
     }
 }

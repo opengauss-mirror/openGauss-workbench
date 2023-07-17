@@ -27,7 +27,7 @@ public abstract class AgentCollectionItem implements CollectionItem<Object> {
         return query(task);
     }
 
-    abstract String getHttpParam();
+    public abstract String getHttpParam();
 
     private Object query(HisDiagnosisTask task) {
         return util.rangQuery(task.getNodeId(), getHttpParam());

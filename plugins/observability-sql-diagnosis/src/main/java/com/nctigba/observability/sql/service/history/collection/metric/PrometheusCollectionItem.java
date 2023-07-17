@@ -81,8 +81,8 @@ public abstract class PrometheusCollectionItem implements CollectionItem<Object>
         String step;
         long startTime = task.getHisDataStartTime().getTime() / PrometheusConstants.MS;
         long endTime = task.getHisDataEndTime().getTime() / PrometheusConstants.MS;
-        int slot = (int) ((endTime - startTime) / Integer.parseInt(PrometheusConstants.STEP));
-        if (slot < PrometheusConstants.MIN_STEP_NUM) {
+        int slot = (int) (endTime - startTime);
+        if (slot < PrometheusConstants.MAX_STEP_NUM) {
             step = PrometheusConstants.STEP;
         } else {
             step = String.valueOf(slot / PrometheusConstants.MIN_STEP_NUM);
@@ -92,7 +92,7 @@ public abstract class PrometheusCollectionItem implements CollectionItem<Object>
         return prometheusUtil.rangeQuery(queryId, metric, String.valueOf(startTime), String.valueOf(endTime), step);
     }
 
-    abstract String getPrometheusParam(List<HisDiagnosisThreshold> thresholds);
+    public abstract String getPrometheusParam(List<HisDiagnosisThreshold> thresholds);
 
     private String getParamId(String metric, String nodeId) {
         String queryId = null;
