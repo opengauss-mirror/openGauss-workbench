@@ -44,10 +44,12 @@ public class EnvironmentServiceTest {
     private NctigbaEnvMapper envMapper;
     @Mock
     private OpsFacade opsFacade;
+
     @Before
     public void setUp() {
         MockitoAnnotations.initMocks(this);
     }
+
     @Test
     public void testCluster() {
         List<OpsClusterVO> list = new ArrayList<>();
@@ -56,6 +58,7 @@ public class EnvironmentServiceTest {
         verify(opsFacade, times(1)).listCluster();
         assertEquals(clusterList, list);
     }
+
     @Test(expected = ServiceException.class)
     public void testCheckPrometheusThrowException() {
         List<NctigbaEnv> envList = new ArrayList<>();
@@ -63,6 +66,7 @@ public class EnvironmentServiceTest {
         environmentService.checkPrometheus();
         verify(envMapper, times(1)).selectList(any());
     }
+
     @Test
     public void testCheckPrometheus() {
         List<NctigbaEnv> envList = new ArrayList<>();
@@ -73,6 +77,7 @@ public class EnvironmentServiceTest {
         environmentService.checkPrometheus();
         verify(envMapper, times(1)).selectList(any());
     }
+
     @Test
     public void testGetAlertContentParam1() {
         try (MockedStatic<MessageSourceUtil> mockedStatic = mockStatic(MessageSourceUtil.class)) {
@@ -80,6 +85,7 @@ public class EnvironmentServiceTest {
             Assertions.assertEquals(7, map.keySet().size());
         }
     }
+
     @Test
     public void testGetAlertContentParam2() {
         try (MockedStatic<MessageSourceUtil> mockedStatic = mockStatic(MessageSourceUtil.class)) {

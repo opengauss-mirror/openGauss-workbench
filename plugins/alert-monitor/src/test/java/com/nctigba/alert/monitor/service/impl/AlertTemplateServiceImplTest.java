@@ -166,7 +166,6 @@ public class AlertTemplateServiceImplTest {
             verify(tRuleItemParamMapper, times(1)).selectList(any());
             assertEquals(1, result.getTotal());
         }
-
     }
 
     @Test

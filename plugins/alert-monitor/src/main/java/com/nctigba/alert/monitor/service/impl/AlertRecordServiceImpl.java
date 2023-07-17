@@ -294,8 +294,8 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
                 + "(" + opsClusterNodeEntity.getClusterRole() + ")";
         alertRecordDto.setClusterNodeName(nodeName).setHostIpAndPort(
             opsHostEntity.getPublicIp() + ":" + opsClusterEntity.getPort()).setClusterId(
-            opsClusterEntity.getClusterId()).setNodeRole(opsClusterNodeEntity.getClusterRole() != null ?
-            opsClusterNodeEntity.getClusterRole().name() : "");
+            opsClusterEntity.getClusterId()).setNodeRole(opsClusterNodeEntity.getClusterRole() != null
+            ? opsClusterNodeEntity.getClusterRole().name() : "");
         return alertRecordDto;
     }
 
