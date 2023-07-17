@@ -9,19 +9,63 @@ import com.nctigba.datastudio.model.dto.DatabaseNameDTO;
 import com.nctigba.datastudio.model.dto.RenameDatabaseDTO;
 import com.nctigba.datastudio.model.entity.DatabaseConnectionDO;
 
+import java.sql.SQLException;
 import java.util.Map;
 
+/**
+ * CreateDatabaseService
+ *
+ * @since 2023-6-26
+ */
 public interface CreateDatabaseService {
-    void createDatabase(CreateDatabaseDTO database) throws Exception;
+    /**
+     * create database
+     *
+     * @param database database
+     * @throws SQLException SQLException
+     */
+    void createDatabase(CreateDatabaseDTO database) throws SQLException;
 
-    DatabaseConnectionDO connectionDatabase(DatabaseConnectionDO database) throws Exception;
+    /**
+     * connection database
+     *
+     * @param database database
+     * @return DatabaseConnectionDO
+     */
+    DatabaseConnectionDO connectionDatabase(DatabaseConnectionDO database);
 
-    void deleteDatabase(DatabaseNameDTO database) throws Exception;
+    /**
+     * delete database
+     *
+     * @param database database
+     * @throws SQLException SQLException
+     */
+    void deleteDatabase(DatabaseNameDTO database) throws SQLException;
 
-    void renameDatabase(RenameDatabaseDTO database) throws Exception;
+    /**
+     * rename database
+     *
+     * @param database database
+     * @throws SQLException SQLException
+     */
+    void renameDatabase(RenameDatabaseDTO database) throws SQLException;
 
-    Map<String, Object> databaseAttribute(DatabaseNameDTO database) throws Exception;
+    /**
+     * database attribute
+     *
+     * @param database database
+     * @return Map
+     * @throws SQLException SQLException
+     */
+    Map<String, Object> databaseAttribute(DatabaseNameDTO database) throws SQLException;
 
-    Map<String, Object> databaseAttributeUpdate(DatabaseNameDTO database) throws Exception;
+    /**
+     * update database attribute
+     *
+     * @param database database
+     * @return Map
+     * @throws SQLException SQLException
+     */
+    Map<String, Object> databaseAttributeUpdate(DatabaseNameDTO database) throws SQLException;
 
 }

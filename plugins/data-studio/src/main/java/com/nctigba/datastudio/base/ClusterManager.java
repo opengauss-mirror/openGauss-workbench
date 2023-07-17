@@ -26,6 +26,11 @@ import java.util.List;
 import static com.nctigba.datastudio.constants.SqlConstants.CONFIGURE_TIME;
 import static com.nctigba.datastudio.constants.SqlConstants.GET_URL_JDBC;
 
+/**
+ * ClusterManager
+ *
+ * @since 2023-6-26
+ */
 @Service
 @Slf4j
 public class ClusterManager {
@@ -33,29 +38,46 @@ public class ClusterManager {
     @AutowiredType(Type.MAIN_PLUGIN)
     private OpsFacade opsFacade;
 
+    /**
+     * get all ops cluster
+     *
+     * @return List
+     */
     public List<OpsClusterVO> getAllOpsCluster() {
         List<OpsClusterVO> opsClusterVOList = new ArrayList<>();
-        try {
-            if (opsFacade != null) {
-                opsClusterVOList = opsFacade.listCluster();
-            }
-        } catch (Exception e) {
-            log.info("get all ops cluster fail:{}", e.getMessage());
+        if (opsFacade != null) {
+            opsClusterVOList = opsFacade.listCluster();
         }
         return opsClusterVOList;
     }
 
+    /**
+     * cluster node class
+     *
+     */
     @Data
     @NoArgsConstructor
     @EqualsAndHashCode(callSuper = true)
     public static class OpsClusterNodeVOSub extends OpsClusterNodeVO {
         private String version;
 
+        /**
+         * copy cluster node vo
+         *
+         * @param opsClusterNodeVO opsClusterNodeVO
+         * @param version version
+         */
         public OpsClusterNodeVOSub(OpsClusterNodeVO opsClusterNodeVO, String version) {
             BeanUtils.copyProperties(opsClusterNodeVO, this);
             this.version = version;
         }
 
+        /**
+         * get connection
+         *
+         * @return Connection
+         * @throws SQLException SQLException
+         */
         public Connection connection() throws SQLException {
             return DriverManager.getConnection(
                     GET_URL_JDBC + getPrivateIp() + ":" + getDbPort() + "/" + getDbName() + CONFIGURE_TIME,

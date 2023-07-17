@@ -7,7 +7,6 @@ import path from 'path';
 
 import vue from '@vitejs/plugin-vue';
 import AutoImport from 'unplugin-auto-import/vite';
-// import { ElementPlusResolver } from 'unplugin-vue-components/resolvers';
 import { createSvgIconsPlugin } from 'vite-plugin-svg-icons';
 
 import vueSetupExtend from 'vite-plugin-vue-setup-extend';
@@ -24,7 +23,6 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
       vue(),
       vueSetupExtend(),
       AutoImport({
-        // resolvers: [ElementPlusResolver()],
         imports: ['vue'],
         dts: 'src/auto-imports.d.ts',
         eslintrc: {

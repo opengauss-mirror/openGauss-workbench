@@ -8,12 +8,14 @@ import com.alibaba.fastjson.JSON;
 import com.nctigba.datastudio.base.WebSocketServer;
 import com.nctigba.datastudio.model.PublicParamReq;
 import com.nctigba.datastudio.service.OperationInterface;
+import com.nctigba.datastudio.util.DebugUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.util.Strings;
-import org.opengauss.admin.common.exception.CustomException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -32,7 +34,7 @@ import static com.nctigba.datastudio.constants.CommonConstants.LINE_NO;
 import static com.nctigba.datastudio.constants.CommonConstants.NODE_NAME;
 import static com.nctigba.datastudio.constants.CommonConstants.PORT;
 import static com.nctigba.datastudio.constants.CommonConstants.STATEMENT;
-import static com.nctigba.datastudio.constants.CommonConstants.T;
+import static com.nctigba.datastudio.constants.CommonConstants.T_STR;
 import static com.nctigba.datastudio.constants.SqlConstants.ATTACH_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.COMMA;
 import static com.nctigba.datastudio.constants.SqlConstants.CONTINUE_SQL;
@@ -44,7 +46,9 @@ import static com.nctigba.datastudio.constants.SqlConstants.NEXT_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.TURN_ON_SQL;
 
 /**
- * input param
+ * CreateCoverageRateImpl
+ *
+ * @since 2023-6-26
  */
 @Slf4j
 @Service("createCoverageRate")
@@ -53,36 +57,31 @@ public class CreateCoverageRateImpl implements OperationInterface {
     private AsyncHelper asyncHelper;
 
     @Override
-    public void operate(WebSocketServer webSocketServer, Object obj) throws Exception {
-        PublicParamReq paramReq = (PublicParamReq) obj;
+    public void operate(WebSocketServer webSocketServer, Object obj) throws SQLException, IOException {
+        PublicParamReq paramReq = DebugUtils.changeParamType(obj);
         log.info("createCoverage paramReq: " + paramReq);
         String windowName = paramReq.getWindowName();
         Connection connection = webSocketServer.getConnection(windowName);
         Statement statement = connection.createStatement();
         webSocketServer.setStatement(windowName, statement);
 
-        List<String> oidList = new ArrayList<>();
-        List<String> nodeNameList = new ArrayList<>();
-        List<String> portList = new ArrayList<>();
+        String oid = paramReq.getOid();
+        String nodeName = Strings.EMPTY;
+        String port = Strings.EMPTY;
         try (
                 ResultSet serverInfo = statement.executeQuery(DEBUG_SERVER_INFO_SQL)
         ) {
             while (serverInfo.next()) {
-                oidList.add(serverInfo.getString(FUNC_OID));
-                nodeNameList.add(serverInfo.getString(NODE_NAME));
-                portList.add(serverInfo.getString(PORT));
+                String oldOid = serverInfo.getString(FUNC_OID);
+                if (oldOid.equals(oid)) {
+                    nodeName = serverInfo.getString(NODE_NAME);
+                    port = serverInfo.getString(PORT);
+                }
             }
-            log.info("createCoverage oidList: " + oidList);
+            log.info("createCoverage nodeName and port is: " + nodeName + "---" + port);
         }
 
-        String nodeName = Strings.EMPTY;
-        String port = Strings.EMPTY;
-        String oid = paramReq.getOid();
-        if (oidList.contains(oid)) {
-            int index = oidList.indexOf(oid);
-            nodeName = nodeNameList.get(index);
-            port = portList.get(index);
-        } else {
+        if (StringUtils.isEmpty(nodeName) && StringUtils.isEmpty(port)) {
             try (
                     ResultSet turnNoResult = statement.executeQuery(String.format(TURN_ON_SQL, oid))
             ) {
@@ -91,67 +90,74 @@ public class CreateCoverageRateImpl implements OperationInterface {
                     port = turnNoResult.getString(PORT);
                     log.info("inputParam nodeName and port is: " + nodeName + "---" + port);
                 }
-            } catch (Exception e) {
-                log.info(e.toString());
-                throw new RuntimeException(e);
             }
         }
 
-        boolean coverage = paramReq.isCoverage();
+        boolean isCoverage = paramReq.isCoverage();
         paramReq.setCoverage(true);
         asyncHelper.task(webSocketServer, paramReq);
+
         Connection conn = webSocketServer.createConnection(paramReq.getUuid(), windowName);
         Statement statNew = conn.createStatement();
         webSocketServer.setParamMap(windowName, CONNECTION, conn);
         webSocketServer.setParamMap(windowName, STATEMENT, statNew);
-        if (coverage) {
-            int differ = (int) webSocketServer.getParamMap(windowName).get(DIFFER);
-            StringBuilder runLines = new StringBuilder();
-            try (
-                    ResultSet rs = statNew.executeQuery(String.format(ATTACH_SQL, nodeName, port))
-            ) {
-                while (rs.next()) {
-                    runLines.append(rs.getInt(LINE_NO) + differ).append(COMMA);
-                }
-            }
-            statNew.execute(CREATE_COVERAGE_SQL);
-            StringBuilder allLines = new StringBuilder();
-            try (
-                    ResultSet allLineResult = statNew.executeQuery(String.format(INFO_CODE_SQL, paramReq.getOid()))
-            ) {
-                while (allLineResult.next()) {
-                    if (T.equals(allLineResult.getString(CAN_BREAK))) {
-                        allLines.append(allLineResult.getInt(LINE_NO) + differ).append(COMMA);
-                    }
-                }
-            }
-            allLines.deleteCharAt(allLines.length() - 1);
-            log.info("createCoverage allLines: " + allLines);
+        int differ = DebugUtils.changeParamType(webSocketServer, windowName, DIFFER);
+        String sql = String.format(ATTACH_SQL, nodeName, port);
 
-            int index = 0;
-            do {
-                try (
-                        ResultSet resultSet = statNew.executeQuery(NEXT_SQL)
-                ) {
-                    if (resultSet.next()) {
-                        index = resultSet.getInt(LINE_NO);
-                        if (index != 0) {
-                            runLines.append(index + differ).append(COMMA);
-                        }
-                    }
-                }
-            } while (index != 0);
-            runLines.deleteCharAt(runLines.length() - 1);
-            log.info("createCoverage runLines: " + runLines);
-            insertTable(connection, paramReq, runLines.toString(), allLines.toString());
+        if (isCoverage) {
+            assembleParam(paramReq, connection, sql, statNew, differ);
         } else {
-            statNew.execute(String.format(ATTACH_SQL, nodeName, port));
+            statNew.execute(sql);
             statNew.executeQuery(CONTINUE_SQL);
         }
     }
 
-    private void insertTable(Connection connection, PublicParamReq paramReq, String runLines,
-                             String allLines) throws SQLException {
+    private void assembleParam(
+            PublicParamReq paramReq, Connection connection, String sql, Statement statNew,
+            int differ) throws SQLException {
+        StringBuilder runLines = new StringBuilder();
+        try (
+                ResultSet rs = statNew.executeQuery(sql)
+        ) {
+            while (rs.next()) {
+                runLines.append(rs.getInt(LINE_NO) + differ).append(COMMA);
+            }
+        }
+        statNew.execute(CREATE_COVERAGE_SQL);
+        StringBuilder allLines = new StringBuilder();
+        try (
+                ResultSet allLineResult = statNew.executeQuery(String.format(INFO_CODE_SQL, paramReq.getOid()))
+        ) {
+            while (allLineResult.next()) {
+                if (T_STR.equals(allLineResult.getString(CAN_BREAK))) {
+                    allLines.append(allLineResult.getInt(LINE_NO) + differ).append(COMMA);
+                }
+            }
+        }
+        allLines.deleteCharAt(allLines.length() - 1);
+        log.info("createCoverage allLines: " + allLines);
+
+        int index = 0;
+        do {
+            try (
+                    ResultSet resultSet = statNew.executeQuery(NEXT_SQL)
+            ) {
+                if (resultSet.next()) {
+                    index = resultSet.getInt(LINE_NO);
+                    if (index != 0) {
+                        runLines.append(index + differ).append(COMMA);
+                    }
+                }
+            }
+        } while (index != 0);
+        runLines.deleteCharAt(runLines.length() - 1);
+        log.info("createCoverage runLines: " + runLines);
+        insertTable(connection, paramReq, runLines.toString(), allLines.toString());
+    }
+
+    private void insertTable(
+            Connection connection, PublicParamReq paramReq, String runLines,
+            String allLines) throws SQLException {
         List<Object> list = new ArrayList<>();
         List<Map<String, Object>> inputParamsList = paramReq.getInputParams();
         for (Map<String, Object> map : inputParamsList) {

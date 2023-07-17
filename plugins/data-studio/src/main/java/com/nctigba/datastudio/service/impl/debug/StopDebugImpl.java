@@ -9,11 +9,14 @@ import com.nctigba.datastudio.base.WebSocketServer;
 import com.nctigba.datastudio.model.PublicParamReq;
 import com.nctigba.datastudio.model.entity.OperateStatusDO;
 import com.nctigba.datastudio.service.OperationInterface;
+import com.nctigba.datastudio.util.DebugUtils;
 import com.nctigba.datastudio.util.LocaleString;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashMap;
 import java.util.Map;
@@ -23,27 +26,27 @@ import static com.nctigba.datastudio.constants.CommonConstants.RESULT;
 import static com.nctigba.datastudio.constants.CommonConstants.STATEMENT;
 import static com.nctigba.datastudio.constants.CommonConstants.SUCCESS;
 import static com.nctigba.datastudio.constants.SqlConstants.ABORT_SQL;
-import static com.nctigba.datastudio.enums.MessageEnum.text;
+import static com.nctigba.datastudio.enums.MessageEnum.TEXT;
 
 /**
- * stop debug
+ * StopDebugImpl
+ *
+ * @since 2023-6-26
  */
 @Slf4j
 @Service("stopDebug")
 public class StopDebugImpl implements OperationInterface {
     @Override
-    public void operate(WebSocketServer webSocketServer, Object obj) throws Exception {
-        PublicParamReq paramReq = (PublicParamReq) obj;
+    public void operate(WebSocketServer webSocketServer, Object obj) throws SQLException, IOException {
+        PublicParamReq paramReq = DebugUtils.changeParamType(obj);
         log.info("stopDebug paramReq: " + paramReq);
         String windowName = paramReq.getWindowName();
-        Connection conn = (Connection) webSocketServer.getParamMap(windowName).get(CONNECTION);
-        Statement statNew = (Statement) webSocketServer.getParamMap(windowName).get(STATEMENT);
+        Connection conn = DebugUtils.changeParamType(webSocketServer, windowName, CONNECTION);
+        Statement statNew = DebugUtils.changeParamType(webSocketServer, windowName, STATEMENT);
         try {
             if (statNew != null) {
                 statNew.execute(ABORT_SQL);
             }
-        } catch (Exception e) {
-            log.info(e.toString());
         } finally {
             if (statNew != null) {
                 statNew.close();
@@ -61,7 +64,7 @@ public class StopDebugImpl implements OperationInterface {
         webSocketServer.setOperateStatus(windowName, operateStatus);
         Map<String, String> map = new HashMap<>();
         map.put(RESULT, LocaleString.transLanguageWs("1003", webSocketServer));
-        webSocketServer.sendMessage(windowName, text, SUCCESS, map);
+        webSocketServer.sendMessage(windowName, TEXT, SUCCESS, map);
 
         Statement statement = webSocketServer.getStatement(windowName);
         if (statement != null) {

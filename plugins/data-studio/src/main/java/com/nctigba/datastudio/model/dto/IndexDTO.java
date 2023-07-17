@@ -5,15 +5,22 @@
 package com.nctigba.datastudio.model.dto;
 
 import lombok.Data;
+import lombok.Generated;
 import lombok.NoArgsConstructor;
 
+/**
+ * IndexDTO
+ *
+ * @since 2023-6-26
+ */
 @NoArgsConstructor
 @Data
+@Generated
 public class IndexDTO {
-    private String attname;
+    private String attName;
     private String indexName;
     private String oldIndexName;
-    private String amname;
+    private String amName;
     private String description;
     private String expression;
     private Boolean unique;

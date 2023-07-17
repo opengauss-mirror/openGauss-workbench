@@ -1,6 +1,5 @@
 import { wsHeartbeatTime } from '@/config';
 export default class WebSocketClass {
-  // ws = null;
   ws: WebSocket;
   name = null;
   sessionId: null;

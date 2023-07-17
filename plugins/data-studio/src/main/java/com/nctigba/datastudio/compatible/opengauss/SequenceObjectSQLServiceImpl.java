@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
 
 import static com.nctigba.datastudio.constants.CommonConstants.OPENGAUSS;
@@ -68,7 +69,8 @@ public class SequenceObjectSQLServiceImpl implements SequenceObjectSQLService {
     public String splicingSequenceDDL(DatabaseCreateSequenceDTO request) {
         log.info("splicingSequenceDDL request is: " + request);
         String ddl =
-                CREATE_SQL + SEQUENCE_KEYWORD_SQL + DebugUtils.containsSqlInjection(request.getSchema()) + POINT + DebugUtils.containsSqlInjection(request.getSequenceName());
+                CREATE_SQL + SEQUENCE_KEYWORD_SQL + DebugUtils.containsSqlInjection(request.getSchema()) + POINT
+                        + DebugUtils.containsSqlInjection(request.getSequenceName());
         if (isNumeric(request.getStart())) {
             ddl = ddl + LF + START_KEYWORD_SQL + DebugUtils.containsSqlInjection(request.getStart());
         }
@@ -109,7 +111,7 @@ public class SequenceObjectSQLServiceImpl implements SequenceObjectSQLService {
     }
 
     @Override
-    public String returnSequenceDDL(DatabaseSequenceDdlDTO request) throws Exception {
+    public String returnSequenceDDL(DatabaseSequenceDdlDTO request) throws SQLException {
         log.info("returnSequenceDDL request is: " + request);
         try (
                 Connection connection = connectionConfig.connectDatabase(request.getUuid());

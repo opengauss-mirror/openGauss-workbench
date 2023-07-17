@@ -16,6 +16,7 @@ import org.springframework.util.CollectionUtils;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URLEncoder;
@@ -57,9 +58,10 @@ import static com.nctigba.datastudio.constants.CommonConstants.RESULT;
 import static com.nctigba.datastudio.constants.CommonConstants.SLASH;
 import static com.nctigba.datastudio.constants.CommonConstants.SPACE;
 import static com.nctigba.datastudio.constants.CommonConstants.STATEMENT;
-import static com.nctigba.datastudio.constants.CommonConstants.T;
+import static com.nctigba.datastudio.constants.CommonConstants.TRANS_POINT;
 import static com.nctigba.datastudio.constants.CommonConstants.TYPE;
 import static com.nctigba.datastudio.constants.CommonConstants.TYP_NAME;
+import static com.nctigba.datastudio.constants.CommonConstants.T_STR;
 import static com.nctigba.datastudio.constants.CommonConstants.VARIADIC;
 import static com.nctigba.datastudio.constants.SqlConstants.BACKTRACE_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.BACKTRACE_SQL_PRE;
@@ -73,10 +75,19 @@ import static com.nctigba.datastudio.constants.SqlConstants.POINT;
 import static com.nctigba.datastudio.constants.SqlConstants.PROC_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.RIGHT_BRACKET;
 
+/**
+ * DebugUtils
+ *
+ * @since 2023-6-26
+ */
 @Slf4j
 public class DebugUtils {
-    public static final String TRANS_POINT = "\\.";
-
+    /**
+     * get schema by sql
+     *
+     * @param sql sql
+     * @return String
+     */
     public static String getSchemaBySql(String sql) {
         String substring = sql.substring(0, sql.indexOf(LEFT_BRACKET));
         log.info("DebugUtils getSchemaBySql substring: " + substring);
@@ -90,6 +101,12 @@ public class DebugUtils {
         return fullName.split(TRANS_POINT)[0];
     }
 
+    /**
+     * get name by sql
+     *
+     * @param sql sql
+     * @return String
+     */
     public static String getNameBySql(String sql) {
         String substring = sql.substring(0, sql.indexOf(LEFT_BRACKET));
         log.info("DebugUtils getNameBySql substring: " + substring);
@@ -103,8 +120,17 @@ public class DebugUtils {
         return fullName.split(TRANS_POINT)[1];
     }
 
-    public static List<Map<String, Object>> getParamMap(WebSocketServer webSocketServer, String windowName,
-                                                        String oid) throws SQLException {
+    /**
+     * get param map
+     *
+     * @param webSocketServer webSocketServer
+     * @param windowName      windowName
+     * @param oid             oid
+     * @return List
+     * @throws SQLException SQLException
+     */
+    public static List<Map<String, Object>> getParamMap(
+            WebSocketServer webSocketServer, String windowName, String oid) throws SQLException {
         log.info("DebugUtils getParamMap windowName--oid: " + windowName + "--" + oid);
         List<Map<String, Object>> list = new ArrayList<>();
         Statement statement = webSocketServer.getStatement(windowName);
@@ -127,9 +153,6 @@ public class DebugUtils {
                     proArgNames = new String[argTypes.split(SPACE).length];
                 }
             }
-        } catch (Exception e) {
-            log.info(e.toString());
-            throw new RuntimeException(e);
         }
 
         try (
@@ -146,32 +169,38 @@ public class DebugUtils {
             }
             log.info("DebugUtils getParamMap list: " + list);
             return list;
-        } catch (Exception e) {
-            log.info(e.toString());
-            throw new RuntimeException(e);
         }
     }
 
+    /**
+     * get oid list
+     *
+     * @param webSocketServer webSocketServer
+     * @param rootWindowName  rootWindowName
+     * @return List
+     * @throws SQLException SQLException
+     */
     public static List<String> getOidList(WebSocketServer webSocketServer, String rootWindowName) throws SQLException {
         log.info("DebugUtils getOidList rootWindowName: " + rootWindowName);
         List<String> list = new ArrayList<>();
-
-        try {
-            Statement statement = (Statement) webSocketServer.getParamMap(rootWindowName).get(STATEMENT);
-            ResultSet stackResult = statement.executeQuery(BACKTRACE_SQL_PRE + 0 + BACKTRACE_SQL);
-            while (stackResult.next()) {
-                list.add(stackResult.getString(FUNC_OID));
-            }
-        } catch (Exception e) {
-            log.info(e.toString());
-            return new ArrayList<>();
+        Statement statement = DebugUtils.changeParamType(webSocketServer, rootWindowName, STATEMENT);
+        ResultSet stackResult = statement.executeQuery(BACKTRACE_SQL_PRE + 0 + BACKTRACE_SQL);
+        while (stackResult.next()) {
+            list.add(stackResult.getString(FUNC_OID));
         }
-
-        log.info("DebugUtils getOidList list: " + list);
         return list;
     }
 
-    public static Map<String, Object> getParamType(WebSocketServer webSocketServer, PublicParamReq paramReq) {
+    /**
+     * get param type
+     *
+     * @param webSocketServer webSocketServer
+     * @param paramReq        return
+     * @return Map
+     * @throws SQLException SQLException
+     */
+    public static Map<String, Object> getParamType(WebSocketServer webSocketServer, PublicParamReq paramReq)
+            throws SQLException {
         log.info("DebugUtils getParamType paramReq: " + paramReq);
         Map<String, Object> map = new HashMap<>();
         try (
@@ -181,6 +210,9 @@ public class DebugUtils {
         ) {
             while (resultSet.next()) {
                 String argName = resultSet.getString(PRO_ARG_NAMES);
+                if (StringUtils.isEmpty(argName)) {
+                    return map;
+                }
                 String[] proArgNames = argName.substring(1, argName.length() - 1).split(COMMA);
                 for (int i = 0; i < proArgNames.length; i++) {
                     String argMode = resultSet.getString(PRO_ARG_MODES);
@@ -205,13 +237,17 @@ public class DebugUtils {
                     }
                 }
             }
-        } catch (Exception e) {
-            return map;
         }
         log.info("DebugUtils getParamType map: " + map);
         return map;
     }
 
+    /**
+     * prepare sql
+     *
+     * @param paramReq paramReq
+     * @return String
+     */
     public static String prepareSql(PublicParamReq paramReq) {
         String sql = paramReq.getSql();
         StringBuilder sb = new StringBuilder();
@@ -241,13 +277,26 @@ public class DebugUtils {
         return String.format(FUNCTION_SQL, getFullName(sql), sb);
     }
 
+    /**
+     * get full name
+     *
+     * @param sql sql
+     * @return String
+     */
     public static String getFullName(String sql) {
         String[] split = sql.split("\\(");
-        String[] s = split[0].trim().split(SPACE);
-        log.info("DebugUtils getFullName s: " + Arrays.toString(s));
-        return s[s.length - 1];
+        String[] str = split[0].trim().split(SPACE);
+        log.info("DebugUtils getFullName str: " + Arrays.toString(str));
+        return str[str.length - 1];
     }
 
+    /**
+     * parse resulte set
+     *
+     * @param resultSet resultSet
+     * @return Map
+     * @throws SQLException SQLException
+     */
     public static Map<String, Object> parseResultSet(ResultSet resultSet) throws SQLException {
         Map<String, Object> map = new HashMap<>();
         List<String> columnList = getColumnList(resultSet.getMetaData(), map);
@@ -265,27 +314,35 @@ public class DebugUtils {
         return map;
     }
 
-    public static Map<String, Object> parseResultSet(ResultSet resultSet, Integer size,
-                                                     Integer pageNum) throws SQLException {
+    /**
+     * parse resulte set
+     *
+     * @param resultSet resultSet
+     * @param size      size
+     * @param pageNum   pageNum
+     * @return Map
+     * @throws SQLException SQLException
+     */
+    public static Map<String, Object> parseResultSet(
+            ResultSet resultSet, Integer size, Integer pageNum) throws SQLException {
         log.info("ResultSet map: " + resultSet);
         log.info("size map: " + size);
         log.info("pageNum map: " + pageNum);
         Map<String, Object> map = new HashMap<>();
         List<String> columnList = getColumnList(resultSet.getMetaData(), map);
         List<List<Object>> dataList = new ArrayList<>();
-        Integer i = 0;
+        int index = 0;
         if (pageNum != 1) {
             resultSet.absolute(size * pageNum - 1);
         } else {
             resultSet.absolute(0);
         }
-        boolean a = i < size;
-        while (resultSet.next() && i < size) {
+        while (resultSet.next() && index < size) {
             List<Object> list = new ArrayList<>();
             for (String column : columnList) {
                 list.add(resultSet.getObject(column));
             }
-            i++;
+            index++;
             dataList.add(list);
         }
         map.put(RESULT, dataList);
@@ -293,6 +350,14 @@ public class DebugUtils {
         return map;
     }
 
+    /**
+     * parse break point
+     *
+     * @param resultSet resultSet
+     * @param oid       oid
+     * @return Map
+     * @throws SQLException SQLException
+     */
     public static Map<String, Object> parseBreakPoint(ResultSet resultSet, String oid) throws SQLException {
         Map<String, Object> map = new HashMap<>();
         List<String> columnList = getColumnList(resultSet.getMetaData(), map);
@@ -319,6 +384,13 @@ public class DebugUtils {
         return map;
     }
 
+    /**
+     * parse variable
+     *
+     * @param resultSet resultSet
+     * @return Map
+     * @throws SQLException SQLException
+     */
     public static Map<String, Object> parseVariable(ResultSet resultSet) throws SQLException {
         Map<String, Object> map = new HashMap<>();
         List<String> columnList = getColumnList(resultSet.getMetaData(), map);
@@ -341,6 +413,14 @@ public class DebugUtils {
         return map;
     }
 
+    /**
+     * get column list
+     *
+     * @param metaData metaData
+     * @param map      map
+     * @return List
+     * @throws SQLException SQLException
+     */
     private static List<String> getColumnList(ResultSetMetaData metaData, Map<String, Object> map) throws SQLException {
         List<String> columnList = new ArrayList<>();
         for (int i = 0; i < metaData.getColumnCount(); i++) {
@@ -351,51 +431,82 @@ public class DebugUtils {
         return columnList;
     }
 
-    public static Map<String, Object> addMapParam(Map<String, Object> map, WebSocketServer webSocketServer,
-                                                  PublicParamReq paramReq) {
+    /**
+     * add param map
+     *
+     * @param map             map
+     * @param webSocketServer webSocketServer
+     * @param paramReq        paramReq
+     * @return Map
+     * @throws SQLException SQLException
+     */
+    public static Map<String, Object> addMapParam(
+            Map<String, Object> map, WebSocketServer webSocketServer, PublicParamReq paramReq) throws SQLException {
         log.info("DebugUtils addMapParam map: " + map);
         List<String> columnList = (List<String>) map.get(COLUMN);
         List<List<Object>> dataList = (List<List<Object>>) map.get(RESULT);
 
         Map<String, Object> paramList = getParamType(webSocketServer, paramReq);
         log.info("DebugUtils addMapParam paramList: " + paramList);
-        if (!CollectionUtils.isEmpty(map)) {
-            columnList.add("paramType");
-            for (int i = 0; i < dataList.size(); i++) {
-                List<Object> data = dataList.get(i);
-                if (!CollectionUtils.isEmpty(paramList)) {
-                    if (i < paramList.size()) {
-                        String value = (String) paramList.get(data.get(0));
-                        data.add(value);
-                    } else {
-                        data.add("temp");
-                    }
+        columnList.add("paramType");
+        for (int i = 0; i < dataList.size(); i++) {
+            List<Object> data = dataList.get(i);
+            if (!CollectionUtils.isEmpty(paramList)) {
+                if (i < paramList.size()) {
+                    data.add(paramList.get(data.get(0)));
                 } else {
                     data.add("temp");
                 }
+            } else {
+                data.add("temp");
             }
         }
         log.info("DebugUtils addMapParam map: " + map);
         return map;
     }
 
+    /**
+     * sql handle after
+     *
+     * @param sql sql
+     * @return String
+     */
     public static String sqlHandleAfter(String sql) {
         sql = sql.replace(FUNCTION_DOLLAR, DOLLAR);
         return sql + SLASH;
     }
 
+    /**
+     * disable button
+     *
+     * @param webSocketServer webSocketServer
+     * @param windowName      windowName
+     */
     public static void disableButton(WebSocketServer webSocketServer, String windowName) {
         OperateStatusDO operateStatus = webSocketServer.getOperateStatus(windowName);
         operateStatus.subAllFalse();
         webSocketServer.setOperateStatus(windowName, operateStatus);
     }
 
+    /**
+     * enable button
+     *
+     * @param webSocketServer webSocketServer
+     * @param windowName      windowName
+     */
     public static void enableButton(WebSocketServer webSocketServer, String windowName) {
         OperateStatusDO operateStatus = webSocketServer.getOperateStatus(windowName);
         operateStatus.subAllTrue();
         webSocketServer.setOperateStatus(windowName, operateStatus);
     }
 
+    /**
+     * get available break point
+     *
+     * @param paramReq        paramReq
+     * @param webSocketServer webSocketServer
+     * @return List
+     */
     public static List<Integer> getAvailableBreakPoints(PublicParamReq paramReq, WebSocketServer webSocketServer) {
         List<Integer> list = new ArrayList<>();
         int differ = 0;
@@ -410,7 +521,7 @@ public class DebugUtils {
                     differ++;
                 }
                 String canBreak = resultSet.getString(CAN_BREAK);
-                if (T.equals(canBreak)) {
+                if (T_STR.equals(canBreak)) {
                     list.add(Integer.valueOf(lineNo));
                 }
             }
@@ -420,14 +531,21 @@ public class DebugUtils {
             webSocketServer.setParamMap(windowName, DIFFER, differ);
             log.info("DebugUtils getAvailableBreakPoints differ: " + differ);
             log.info("DebugUtils getAvailableBreakPoints list: " + list);
-        } catch (Exception e) {
-            return list;
+        } catch (SQLException e) {
+            log.info(e.getMessage());
         }
         return list;
     }
 
-    public static Map<String, Map<String, String>> getResultMap(WebSocketServer webSocketServer,
-                                                                PublicParamReq paramReq) {
+    /**
+     * get result map
+     *
+     * @param webSocketServer webSocketServer
+     * @param paramReq        paramReq
+     * @return Map
+     */
+    public static Map<String, Map<String, String>> getResultMap(
+            WebSocketServer webSocketServer, PublicParamReq paramReq) {
         log.info("DebugUtils getResultMap paramReq: " + paramReq);
         Map<String, String> paramMap = new HashMap<>();
         String oid = paramReq.getOid();
@@ -463,17 +581,14 @@ public class DebugUtils {
                             }
                         }
                     }
-                } catch (Exception e) {
-                    log.info(e.toString());
-                    throw new RuntimeException(e);
                 }
             }
 
             sb.append(RIGHT_BRACKET);
             log.info("DebugUtils sb: " + sb);
             paramMap.put(NAME, sb.toString());
-        } catch (Exception e) {
-            return null;
+        } catch (SQLException e) {
+            log.info(e.getMessage());
         }
 
         Map<String, Map<String, String>> map = new HashMap<>();
@@ -482,7 +597,15 @@ public class DebugUtils {
         return map;
     }
 
-    public static void exportFile(String fileName, String content, HttpServletResponse response) throws Exception {
+    /**
+     * export file
+     *
+     * @param fileName fileName
+     * @param content  content
+     * @param response response
+     * @throws IOException IOException
+     */
+    public static void exportFile(String fileName, String content, HttpServletResponse response) throws IOException {
         response.reset();
         response.setContentType("application/octet-stream");
         response.setHeader("Content-Disposition", URLEncoder.encode(fileName, StandardCharsets.UTF_8));
@@ -493,39 +616,89 @@ public class DebugUtils {
                 InputStream inputStream = new ByteArrayInputStream(content.getBytes());
                 OutputStream outputStream = response.getOutputStream()
         ) {
-            byte[] b = new byte[1024];
+            byte[] bytes = new byte[1024];
             int len;
-            while ((len = inputStream.read(b)) > 0) {
-                outputStream.write(b, 0, len);
+            while ((len = inputStream.read(bytes)) > 0) {
+                outputStream.write(bytes, 0, len);
             }
             outputStream.flush();
         }
     }
 
+    /**
+     * get old window name
+     *
+     * @param webSocketServer webSocketServer
+     * @param rootWindowName  rootWindowName
+     * @param oid             oid
+     * @return String
+     */
     public static String getOldWindowName(WebSocketServer webSocketServer, String rootWindowName, String oid) {
         String name = Strings.EMPTY;
         Map<String, Object> paramMap = webSocketServer.getParamMap(rootWindowName);
         log.info("DebugUtils getOldWindowName paramMap: " + paramMap);
         for (String key : paramMap.keySet()) {
             if (key.equals(oid)) {
-                name = (String) paramMap.get(key);
+                if (paramMap.get(key) instanceof String) {
+                    name = (String) paramMap.get(key);
+                }
             }
         }
         log.info("DebugUtils getOldWindowName name: " + name);
         return name;
     }
 
+    /**
+     * change param type
+     *
+     * @param webSocketServer webSocketServer
+     * @param windowName      windowName
+     * @param key             key
+     * @param <T>             <T>
+     * @return T
+     */
+    public static <T> T changeParamType(WebSocketServer webSocketServer, String windowName, String key) {
+        Map<String, Object> paramMap = webSocketServer.getParamMap(windowName);
+        return (T) paramMap.get(key);
+    }
+
+    /**
+     * change param type
+     *
+     * @param obj             obj
+     * @return T
+     */
+    public static <T> T changeParamType(Object obj) {
+        PublicParamReq paramReq = new PublicParamReq();
+        if (obj instanceof PublicParamReq) {
+            paramReq = (PublicParamReq) obj;
+        }
+        return (T) paramReq;
+    }
+
+    /**
+     * contains sql injection
+     *
+     * @param value value
+     * @return String
+     */
     public static String containsSqlInjection(String value) {
         Pattern pattern = Pattern.compile(
-                "(?:')|(?:--)|(/\\*(?:.|[\\n\\r])*?\\*/)|(\\b(select|update|and|or|delete"
-                        + "|insert|trancate|char|substr|ascii|declare|exec|count|master|into|drop|execute)\\b|(\\*|;|\\+|'|%))");
+                "(?:')|(?:--)|(/\\*(?:.|[\\n\\r])*?\\*/)|(\\b(select|update|and|or|delete|insert|trancate"
+                        + "|char|substr|ascii|declare|exec|count|master|into|drop|execute)\\b|(\\*|;|\\+|'|%))");
         Matcher matcher = pattern.matcher(value);
-        if(matcher.find()){
+        if (matcher.find()) {
             throw new CustomException(LocaleString.transLanguage("2018"));
-        }else {
-            return  value;
+        } else {
+            return value;
         }
     }
+
+    /**
+     * get message
+     *
+     * @return String
+     */
     public static String getMessage() {
         return LocaleString.transLanguage("2016");
     }

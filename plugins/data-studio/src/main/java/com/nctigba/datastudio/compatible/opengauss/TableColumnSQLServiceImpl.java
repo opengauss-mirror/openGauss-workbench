@@ -20,7 +20,6 @@ import com.nctigba.datastudio.model.query.TablePartitionInfoQuery;
 import com.nctigba.datastudio.model.query.TableUnderlyingInfoQuery;
 import com.nctigba.datastudio.util.DebugUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.opengauss.admin.common.exception.CustomException;
 import org.opengauss.admin.common.utils.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -62,7 +61,6 @@ import static com.nctigba.datastudio.constants.SqlConstants.FOREIGN_KEY_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.GET_COLUMN_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.HASH_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.INTERVAL_SQL;
-import static com.nctigba.datastudio.constants.SqlConstants.IS_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.LEFT_BRACKET;
 import static com.nctigba.datastudio.constants.SqlConstants.LF;
 import static com.nctigba.datastudio.constants.SqlConstants.LIST_SQL;
@@ -75,7 +73,6 @@ import static com.nctigba.datastudio.constants.SqlConstants.POINT;
 import static com.nctigba.datastudio.constants.SqlConstants.PRIMARY_KEY_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.QUOTES;
 import static com.nctigba.datastudio.constants.SqlConstants.QUOTES_LF_COMMA;
-import static com.nctigba.datastudio.constants.SqlConstants.QUOTES_SEMICOLON;
 import static com.nctigba.datastudio.constants.SqlConstants.RANGE_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.RENAME_KEYWORD_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.RIGHT_BRACKET;
@@ -91,13 +88,18 @@ import static com.nctigba.datastudio.constants.SqlConstants.UNIQUE_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.WITH_DOUBLE_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.WITH_SQL;
 
+/**
+ * TableColumnSQLService achieve
+ *
+ * @since 2023-06-26
+ */
 @Slf4j
 @Service
 public class TableColumnSQLServiceImpl implements TableColumnSQLService {
+    private final String[] arrayRefVar = {
+            "bigint", "smallint", "tinyint", "integer", "int16", "real", "double precision"};
     @Autowired
     private ConnectionConfig connectionConfig;
-
-    private final String[] arrayRefVar = {"bigint", "smallint", "tinyint", "integer", "int16", "real", "double precision"};
 
     @Override
     public String type() {
@@ -122,56 +124,52 @@ public class TableColumnSQLServiceImpl implements TableColumnSQLService {
     public void editConstraint(DatabaseConstraintDTO request) throws SQLException {
         List<ConstraintDTO> list = request.getConstraints();
         log.info("List<ConstraintDTO> request is: " + list.toString());
-        if (list != null) {
-            Connection connection = null;
-            Statement statement = null;
-            try {
-                connection = connectionConfig.connectDatabase(request.getUuid());
-                connection.setAutoCommit(false);
-                statement = connection.createStatement();
-                for (ConstraintDTO obj : list) {
-                    if (obj.getType() == 1) {
-                        this.addConstraint(request, obj, statement);
-                    } else if (obj.getType() == 2) {
-                        statement.addBatch(String.format(SqlConstants.CONSTRAINT_DROP_SQL, request.getSchema(),
-                                request.getTableName(), obj.getConname()));
-                    } else if (obj.getType() == 3) {
-                        this.updateConstraint(request, obj, statement);
-                    }
+        Connection connection = null;
+        Statement statement = null;
+        try {
+            connection = connectionConfig.connectDatabase(request.getUuid());
+            connection.setAutoCommit(false);
+            statement = connection.createStatement();
+            for (ConstraintDTO obj : list) {
+                if (obj.getType() == 1) {
+                    this.addConstraint(request, obj, statement);
+                } else if (obj.getType() == 2) {
+                    statement.addBatch(String.format(SqlConstants.CONSTRAINT_DROP_SQL, request.getSchema(),
+                            request.getTableName(), obj.getConName()));
+                } else if (obj.getType() == 3) {
+                    this.updateConstraint(request, obj, statement);
                 }
-                statement.executeBatch();
-                connection.commit();
-            } catch (Exception e) {
+            }
+            statement.executeBatch();
+            connection.commit();
+        } catch (SQLException e) {
+            if (connection != null) {
                 connection.rollback();
-                throw new RuntimeException(e);
-            } finally {
-                if (statement != null) {
-                    statement.close();
-                }
-                if (connection != null) {
-                    connection.close();
-                }
+            }
+            throw new SQLException(e);
+        } finally {
+            if (statement != null) {
+                statement.close();
+            }
+            if (connection != null) {
+                connection.close();
             }
         }
     }
 
     @Override
-    public void editPkConstraint(DatabaseConstraintPkDTO request) {
+    public void editPkConstraint(DatabaseConstraintPkDTO request) throws SQLException {
         log.info("DatabaseConstraintPkDTO request is: {}", request);
-        String attname = request.getTableName() + "_PK";
+        String attName = request.getTableName() + "_PK";
         try (
                 Connection connection = connectionConfig.connectDatabase(request.getUuid());
                 Statement statement = connection.createStatement()
         ) {
-            log.info("sqlPK request is: {}",
-                    String.format(SqlConstants.CONSTRAINT_PRIMARY_SQL, request.getSchema(), request.getTableName(),
-                            attname, request.getColumn()));
-            statement.execute(
-                    String.format(SqlConstants.CONSTRAINT_PRIMARY_SQL, request.getSchema(), request.getTableName(),
-                            attname, request.getColumn()));
-            log.info("sqlPK1 request is: {}");
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+            String sqlPk = String.format(SqlConstants.CONSTRAINT_PRIMARY_SQL, request.getSchema(),
+                    request.getTableName(),
+                    attName, request.getColumn());
+            log.info("sqlPK request is: {}", sqlPk);
+            statement.execute(sqlPk);
         }
     }
 
@@ -186,35 +184,35 @@ public class TableColumnSQLServiceImpl implements TableColumnSQLService {
     public void editIndex(DatabaseIndexDTO request) throws SQLException {
         List<IndexDTO> list = request.getIndexs();
         log.info("List<IndexDTO> request is: " + list.toString());
-        if (list != null) {
-            Connection connection = null;
-            Statement statement = null;
-            try {
-                connection = connectionConfig.connectDatabase(request.getUuid());
-                connection.setAutoCommit(false);
-                statement = connection.createStatement();
-                for (IndexDTO obj : list) {
-                    if (obj.getType() == 1) {
-                        this.addIndex(request, obj, statement);
-                    } else if (obj.getType() == 2) {
-                        statement.addBatch(
-                                String.format(SqlConstants.INDEX_DROP_SQL, request.getSchema(), obj.getIndexName()));
-                    } else if (obj.getType() == 3) {
-                        this.updateIndex(request, obj, statement);
-                    }
+        Connection connection = null;
+        Statement statement = null;
+        try {
+            connection = connectionConfig.connectDatabase(request.getUuid());
+            connection.setAutoCommit(false);
+            statement = connection.createStatement();
+            for (IndexDTO obj : list) {
+                if (obj.getType() == 1) {
+                    this.addIndex(request, obj, statement);
+                } else if (obj.getType() == 2) {
+                    statement.addBatch(
+                            String.format(SqlConstants.INDEX_DROP_SQL, request.getSchema(), obj.getIndexName()));
+                } else if (obj.getType() == 3) {
+                    this.updateIndex(request, obj, statement);
                 }
-                statement.executeBatch();
-                connection.commit();
-            } catch (Exception e) {
+            }
+            statement.executeBatch();
+            connection.commit();
+        } catch (SQLException e) {
+            if (connection != null) {
                 connection.rollback();
-                throw new RuntimeException(e);
-            } finally {
-                if (statement != null) {
-                    statement.close();
-                }
-                if (connection != null) {
-                    connection.close();
-                }
+            }
+            throw new SQLException(e);
+        } finally {
+            if (statement != null) {
+                statement.close();
+            }
+            if (connection != null) {
+                connection.close();
             }
         }
     }
@@ -227,12 +225,13 @@ public class TableColumnSQLServiceImpl implements TableColumnSQLService {
     }
 
     @Override
-    public List<String> tableColumnAddSQL(DatabaseCreUpdColumnDTO.CreUpdColumnDataDTO data, String schema,
-                                          String tableName) {
+    public List<String> tableColumnAddSQL(
+            DatabaseCreUpdColumnDTO.CreUpdColumnDataDTO data, String schema,
+            String tableName) {
         List<String> list = new ArrayList<>();
         StringBuilder ddl = new StringBuilder(String.format(ALTER_TABLE_COLUMN_ADD_SQL, schema, tableName,
                 data.getNewColumnName()));
-        log.info("123123123tableColumnAddSQL response is: " + ddl);
+        log.info("tableColumnAddSQL response is: " + ddl);
         list.add(String.valueOf(ddl.append(columnAddSQL(data)).append(SEMICOLON)));
         list.add(commentAddSQL(data, schema, tableName));
         log.info("tableColumnAddSQL response is: " + ddl);
@@ -260,24 +259,26 @@ public class TableColumnSQLServiceImpl implements TableColumnSQLService {
             ddl.append(data.getType());
             ddl.append(precision);
         }
-        if (data.getEmpty() != null && data.getEmpty()) {
+        if (data.getIsEmpty() != null && data.getIsEmpty()) {
             ddl.append(NOT_KEYWORD_SQL).append(NULL_KEYWORD_SQL);
         }
         if (!StringUtils.isEmpty(data.getDefaultValue())) {
             if (Arrays.asList(arrayRefVar).contains(data.getType())) {
                 ddl.append(DEFAULT_KEYWORD_SQL).append(DebugUtils.containsSqlInjection(data.getDefaultValue()));
             } else {
-                ddl.append(DEFAULT_KEYWORD_SQL).append(QUOTES).append(DebugUtils.containsSqlInjection(data.getDefaultValue())).append(QUOTES);
+                ddl.append(DEFAULT_KEYWORD_SQL).append(QUOTES).append(
+                        DebugUtils.containsSqlInjection(data.getDefaultValue())).append(QUOTES);
             }
         }
-        if (data.getOnly() != null && data.getOnly()) {
+        if (data.getIsOnly() != null && data.getIsOnly()) {
             ddl.append(UNIQUE_KEYWORD_SQL);
         }
         return ddl.toString();
     }
 
-    public String commentAddSQL(DatabaseCreUpdColumnDTO.CreUpdColumnDataDTO data, String schema,
-                                String tableName) {
+    public String commentAddSQL(
+            DatabaseCreUpdColumnDTO.CreUpdColumnDataDTO data, String schema,
+            String tableName) {
         if (StringUtils.isNotEmpty(data.getComment())) {
             String ddl = String.format(COMMENT_ON_COLUMN_SQL, schema, tableName, data.getNewColumnName(),
                     data.getComment());
@@ -289,25 +290,27 @@ public class TableColumnSQLServiceImpl implements TableColumnSQLService {
 
 
     @Override
-    public String tableColumnDropSQL(DatabaseCreUpdColumnDTO.CreUpdColumnDataDTO data, String schema,
-                                     String tableName) {
+    public String tableColumnDropSQL(
+            DatabaseCreUpdColumnDTO.CreUpdColumnDataDTO data, String schema,
+            String tableName) {
         String ddl = String.format(ALTER_TABLE_COLUMN_DROPQL, schema, tableName, data.getColumnName());
         log.info("tableColumnDropSQL response is: " + ddl);
         return ddl;
     }
 
     @Override
-    public List<String> tableColumnUpdateSQL(DatabaseCreUpdColumnDTO.CreUpdColumnDataDTO data,
-                                             String schema, String tableName, String uuid) {
+    public List<String> tableColumnUpdateSQL(
+            DatabaseCreUpdColumnDTO.CreUpdColumnDataDTO data,
+            String schema, String tableName, String uuid) throws SQLException {
         List<String> list = new ArrayList<>();
         StringBuilder ddl = new StringBuilder(ALTER_TABLE_SQL).append(schema).append(POINT)
                 .append(tableName);
         String column;
-        if (StringUtils.isNotEmpty(data.getNewColumnName()) && !data.getNewColumnName().equals(data.getColumnName())) {
-            StringBuilder rename = new StringBuilder(ddl).append(RENAME_KEYWORD_SQL).append(COLUMN_KEYWORD_SQL)
-                    .append(DebugUtils.containsSqlInjection(data.getColumnName())).append(TO_KEYWORD_SQL)
-                    .append(DebugUtils.containsSqlInjection(data.getNewColumnName())).append(SEMICOLON);
-            list.add(rename.toString());
+        if (!StringUtils.isEmpty(data.getNewColumnName()) && !data.getNewColumnName().equals(data.getColumnName())) {
+            String rename = ddl + RENAME_KEYWORD_SQL + COLUMN_KEYWORD_SQL
+                    + DebugUtils.containsSqlInjection(data.getColumnName()) + TO_KEYWORD_SQL
+                    + DebugUtils.containsSqlInjection(data.getNewColumnName()) + SEMICOLON;
+            list.add(rename);
             column = DebugUtils.containsSqlInjection(data.getNewColumnName());
         } else {
             column = DebugUtils.containsSqlInjection(data.getColumnName());
@@ -333,9 +336,9 @@ public class TableColumnSQLServiceImpl implements TableColumnSQLService {
             }
             list.add(alter.toString());
         }
-        if (data.getEmpty() != null) {
+        if (data.getIsEmpty() != null) {
             StringBuilder alter = new StringBuilder(ddl);
-            if (data.getEmpty()) {
+            if (data.getIsEmpty()) {
                 alter.append(SET_KEYWORD_SQL).append(NOT_KEYWORD_SQL).append(NULL_KEYWORD_SQL).append(SEMICOLON);
             } else {
                 alter.append(SPACE).append(DROP_SQL).append(NOT_KEYWORD_SQL).append(NULL_KEYWORD_SQL).append(SEMICOLON);
@@ -347,9 +350,7 @@ public class TableColumnSQLServiceImpl implements TableColumnSQLService {
             if (Arrays.asList(arrayRefVar).contains(data.getType())) {
                 value = DebugUtils.containsSqlInjection(data.getDefaultValue());
             } else {
-                value =
-                        String.valueOf(new StringBuilder(QUOTES)
-                                .append(DebugUtils.containsSqlInjection(data.getDefaultValue())).append(QUOTES));
+                value = QUOTES + DebugUtils.containsSqlInjection(data.getDefaultValue()) + QUOTES;
             }
             String alterDrop = String.format(ALTER_DEFAULT_SQL, schema, tableName, column, value);
             list.add(alterDrop);
@@ -357,11 +358,10 @@ public class TableColumnSQLServiceImpl implements TableColumnSQLService {
             String ddlDrop = String.format(DROP_DEFAULT_SQL, schema, tableName, column);
             list.add(ddlDrop);
         }
-        if (data.getOnly() != null) {
-            StringBuilder alter = new StringBuilder(ddl);
-            if (data.getOnly()) {
-                StringBuilder uniqueKey = new StringBuilder(tableName).append("_").append(column).append("_key");
-                String unique = String.format(CONSTRAINT_UNIQUE_SQL, schema, tableName, uniqueKey, column);
+        if (data.getIsOnly() != null) {
+            if (data.getIsOnly()) {
+                String unique = String.format(CONSTRAINT_UNIQUE_SQL, schema, tableName,
+                        tableName + "_" + column + "_key", column);
                 list.add(unique);
             } else {
                 String uniqueKey = getConname(String.format(CONSTRAINT_TABLE_COLUMN_SQL, schema, tableName,
@@ -383,63 +383,62 @@ public class TableColumnSQLServiceImpl implements TableColumnSQLService {
     }
 
 
-    private void addConstraint(DatabaseConstraintDTO request, ConstraintDTO obj, Statement statement) throws SQLException {
-        if ("u".equals(obj.getContype())) {
-            if (obj.getCondeferrable() == null
-                    || !obj.getCondeferrable() || CommonConstants.F.equals(obj.getCondeferrable())) {
-                //ALTER TABLE table_name ADD CONSTRAINT id_unique UNIQUE (id);
+    private void addConstraint(DatabaseConstraintDTO request, ConstraintDTO obj, Statement statement)
+            throws SQLException {
+        if ("u".equals(obj.getConType())) {
+            if (obj.getConDeferrable() == null || !obj.getConDeferrable()) {
                 statement.addBatch(
                         String.format(SqlConstants.CONSTRAINT_UNIQUE_SQL, request.getSchema(), request.getTableName(),
-                                obj.getConname(), obj.getAttname()));
+                                obj.getConName(), obj.getAttName()));
             } else {
                 statement.addBatch(String.format(SqlConstants.CONSTRAINT_UNIQUE_IMMEDIATE_SQL, request.getSchema(),
-                        request.getTableName(), obj.getConname(), obj.getAttname()));
+                        request.getTableName(), obj.getConName(), obj.getAttName()));
             }
-        } else if ("p".equals(obj.getContype())) {
-            if (obj.getCondeferrable() == null
-                    || !obj.getCondeferrable() || CommonConstants.F.equals(obj.getCondeferrable())) {
+        } else if ("p".equals(obj.getConType())) {
+            if (obj.getConDeferrable() == null || !obj.getConDeferrable()) {
                 statement.addBatch(
                         String.format(SqlConstants.CONSTRAINT_PRIMARY_SQL, request.getSchema(), request.getTableName(),
-                                obj.getConname(), obj.getAttname()));
+                                obj.getConName(), obj.getAttName()));
             } else {
                 statement.addBatch(String.format(SqlConstants.CONSTRAINT_PRIMARY_IMMEDIATE_SQL, request.getSchema(),
-                        request.getTableName(), obj.getConname(), obj.getAttname()));
+                        request.getTableName(), obj.getConName(), obj.getAttName()));
             }
-        } else if ("c".equals(obj.getContype())) {
-            if (org.apache.commons.lang3.StringUtils.isAnyEmpty(obj.getConstraintdef())) {
+        } else if ("c".equals(obj.getConType())) {
+            if (org.apache.commons.lang3.StringUtils.isAnyEmpty(obj.getConstraintDef())) {
                 throw new CustomException("Expression is empty");
             }
-            if (obj.getConstraintdef() != null && obj.getConstraintdef().toLowerCase().trim().startsWith("check")) {
+            if (obj.getConstraintDef() != null && obj.getConstraintDef().toLowerCase().trim().startsWith("check")) {
                 statement.addBatch(
                         String.format(SqlConstants.CONSTRAINT_NO_CHECK_SQL, request.getSchema(), request.getTableName(),
-                                obj.getConname(), obj.getConstraintdef()));
+                                obj.getConName(), obj.getConstraintDef()));
             } else {
                 statement.addBatch(
                         String.format(SqlConstants.CONSTRAINT_CHECK_SQL, request.getSchema(), request.getTableName(),
-                                obj.getConname(), obj.getConstraintdef()));
+                                obj.getConName(), obj.getConstraintDef()));
             }
-        } else if ("f".equals(obj.getContype())) {
+        } else if ("f".equals(obj.getConType())) {
             statement.addBatch(
                     String.format(SqlConstants.CONSTRAINT_FOREIGN_KEY_SQL, request.getSchema(), request.getTableName()
-                            , obj.getConname(), obj.getAttname(), obj.getNspname(), obj.getTbname(), obj.getColname()));
-        } else if ("s".equals(obj.getContype())) {
+                            , obj.getConName(), obj.getAttName(), obj.getNspName(), obj.getTbName(), obj.getColName()));
+        } else if ("s".equals(obj.getConType())) {
             statement.addBatch(String.format(SqlConstants.CONSTRAINT_PARTIAL_CLUSTER_KEY_SQL, request.getSchema(),
-                    request.getTableName(), obj.getConname(), obj.getAttname()));
+                    request.getTableName(), obj.getConName(), obj.getAttName()));
         }
         if (!StringUtils.isEmpty(obj.getDescription())) {
-            statement.addBatch(String.format(SqlConstants.CONSTRAINT_COMMENT_SQL, obj.getConname(), request.getSchema(),
+            statement.addBatch(String.format(SqlConstants.CONSTRAINT_COMMENT_SQL, obj.getConName(), request.getSchema(),
                     request.getTableName(), obj.getDescription()));
         }
     }
 
-    private void updateConstraint(DatabaseConstraintDTO request, ConstraintDTO obj,
-                                  Statement statement) throws SQLException {
+    private void updateConstraint(
+            DatabaseConstraintDTO request, ConstraintDTO obj,
+            Statement statement) throws SQLException {
         statement.addBatch(String.format(SqlConstants.CONSTRAINT_DROP_SQL, request.getSchema(), request.getTableName(),
-                obj.getOldConname()));
+                obj.getOldConName()));
         this.addConstraint(request, obj, statement);
     }
 
-    private void addIndex(DatabaseIndexDTO request, IndexDTO obj, Statement statement) throws Exception {
+    private void addIndex(DatabaseIndexDTO request, IndexDTO obj, Statement statement) throws SQLException {
         statement.addBatch(this.addIndexSQL(DebugUtils.containsSqlInjection(request.getSchema()),
                 DebugUtils.containsSqlInjection(request.getTableName()), obj));
         if (!StringUtils.isEmpty(obj.getDescription())) {
@@ -448,19 +447,19 @@ public class TableColumnSQLServiceImpl implements TableColumnSQLService {
     }
 
     private String addIndexSQL(String schema, String tableName, IndexDTO obj) {
-        String u = CommonConstants.SPACE;
+        String unique = CommonConstants.SPACE;
         if (obj.getUnique() != null && obj.getUnique()) {
-            u = " UNIQUE ";
+            unique = " UNIQUE ";
         }
         String amname = CommonConstants.SPACE;
-        if (!StringUtils.isEmpty(obj.getAmname())) {
-            amname = " using  " + DebugUtils.containsSqlInjection(obj.getAmname());
+        if (!StringUtils.isEmpty(obj.getAmName())) {
+            amname = " using  " + DebugUtils.containsSqlInjection(obj.getAmName());
         }
-        String att = DebugUtils.containsSqlInjection(obj.getAttname());
+        String att = DebugUtils.containsSqlInjection(obj.getAttName());
         if (StringUtils.isEmpty(att) && !StringUtils.isEmpty(obj.getExpression())) {
             att = DebugUtils.containsSqlInjection(obj.getExpression());
         }
-        return String.format(SqlConstants.INDEX_CREATE_SQL, u, obj.getIndexName(), schema,
+        return String.format(SqlConstants.INDEX_CREATE_SQL, unique, obj.getIndexName(), schema,
                 tableName, amname, att);
     }
 
@@ -471,24 +470,22 @@ public class TableColumnSQLServiceImpl implements TableColumnSQLService {
         return null;
     }
 
-    private void updateIndex(DatabaseIndexDTO request, IndexDTO obj, Statement statement) throws Exception {
+    private void updateIndex(DatabaseIndexDTO request, IndexDTO obj, Statement statement) throws SQLException {
         statement.addBatch(String.format(SqlConstants.INDEX_DROP_SQL, request.getSchema(), obj.getOldIndexName()));
         this.addIndex(request, obj, statement);
     }
 
-    private String getConname(String sql, String uuid) {
+    private String getConname(String sql, String uuid) throws SQLException {
         try (
                 Connection connection = connectionConfig.connectDatabase(uuid);
                 Statement statement = connection.createStatement();
                 ResultSet resultSet = statement.executeQuery(sql)
         ) {
-            String conname = null;
+            String conName = null;
             while (resultSet.next()) {
-                conname = resultSet.getString("conname");
+                conName = resultSet.getString("conname");
             }
-            return conname;
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+            return conName;
         }
     }
 
@@ -496,10 +493,10 @@ public class TableColumnSQLServiceImpl implements TableColumnSQLService {
         log.info("createTable response is: {}", request);
         TableUnderlyingInfoQuery tableUnderlyingInfoQuery = request.getTableInfo();
         String ddl;
-        if (tableUnderlyingInfoQuery.getExists() && tableUnderlyingInfoQuery.getTableType().equals("UNLOGGED")) {
+        if (tableUnderlyingInfoQuery.getIsExists() && tableUnderlyingInfoQuery.getTableType().equals("UNLOGGED")) {
             ddl = String.format(CREATE_UNLOGGED_TABLE_EXISTS_SQL, request.getSchema(),
                     tableUnderlyingInfoQuery.getTableName());
-        } else if (tableUnderlyingInfoQuery.getExists()) {
+        } else if (tableUnderlyingInfoQuery.getIsExists()) {
             ddl = String.format(CREATE_TABLE_EXISTS_SQL, request.getSchema(), tableUnderlyingInfoQuery.getTableName());
         } else if (tableUnderlyingInfoQuery.getTableType().equals("UNLOGGED")) {
             ddl = String.format(CREATE_UNLOGGED_TABLE_SQL, request.getSchema(),
@@ -514,7 +511,7 @@ public class TableColumnSQLServiceImpl implements TableColumnSQLService {
             DatabaseCreUpdColumnDTO.CreUpdColumnDataDTO col = request.getColumn().get(i);
             String columnSql = columnAddSQL(col);
             cteate.append(col.getNewColumnName()).append(SPACE).append(columnSql);
-            log.info("cteate response is: {}", cteate);
+            log.info("create response is: {}", cteate);
             if (i < request.getColumn().size() - 1) {
                 cteate.append(QUOTES_LF_COMMA);
             } else {
@@ -534,23 +531,23 @@ public class TableColumnSQLServiceImpl implements TableColumnSQLService {
             }
             if (StringUtils.isNotEmpty(constraintDTO.getDescription())) {
                 constraintsComment.append(
-                        String.format(CONSTRAINT_COMMENT_SQL, constraintDTO.getConname(), request.getSchema(),
+                        String.format(CONSTRAINT_COMMENT_SQL, constraintDTO.getConName(), request.getSchema(),
                                 tableUnderlyingInfoQuery.getTableName(), constraintDTO.getDescription())).append(LF);
             }
         }
         cteate.append(RIGHT_BRACKET);
         if (tableUnderlyingInfoQuery.getStorage().equals("COLUMN")) {
             cteate.append(COLUMN_SQL);
-        } else if (tableUnderlyingInfoQuery.getOids() && tableUnderlyingInfoQuery.getFillingFactor() != 100) {
+        } else if (tableUnderlyingInfoQuery.getIsOids() && tableUnderlyingInfoQuery.getFillingFactor() != 100) {
             cteate.append(String.format(WITH_DOUBLE_SQL, FILLFACTOR_SQL, tableUnderlyingInfoQuery.getFillingFactor(),
                     OIDS_SQL));
-        } else if (tableUnderlyingInfoQuery.getOids()) {
+        } else if (tableUnderlyingInfoQuery.getIsOids()) {
             cteate.append(String.format(WITH_SQL, OIDS_SQL));
         } else if (tableUnderlyingInfoQuery.getFillingFactor() != 100) {
             cteate.append(String.format(WITH_SQL, FILLFACTOR_SQL, tableUnderlyingInfoQuery.getFillingFactor()));
         }
-        cteate.append(String.format(TABLESPACE_SQL, tableUnderlyingInfoQuery.getTableSpace())).append(
-                getPartitionSQL(request.getPartitionInfo())).append(SEMICOLON).append(LF);
+        cteate.append(String.format(TABLESPACE_SQL, tableUnderlyingInfoQuery.getTableSpace())).append(SEMICOLON).append(
+                getPartitionSQL(request.getPartitionInfo())).append(LF);
         StringBuilder indexComment = new StringBuilder();
         for (var index : request.getIndexs()) {
             String indexSql = addIndexSQL(request.getSchema(), tableUnderlyingInfoQuery.getTableName(), index);
@@ -588,6 +585,7 @@ public class TableColumnSQLServiceImpl implements TableColumnSQLService {
                 partition.append(String.format(HASH_SQL, request.getPartitionColumn(), request.getPartitionName(),
                         request.getTableSpace()));
             }
+            partition.append(SEMICOLON);
             return partition.toString();
         }
         return "";
@@ -595,23 +593,23 @@ public class TableColumnSQLServiceImpl implements TableColumnSQLService {
 
     private String getConstraintSQL(ConstraintDTO request) {
         StringBuilder partition = new StringBuilder();
-        if (StringUtils.isNotEmpty(request.getContype())) {
-            if (request.getContype().equals("u")) {
-                if (request.getCondeferrable() != null && request.getCondeferrable()) {
-                    partition.append(String.format(UNIQUE_IMMEDIATE_SQL, request.getConname(), request.getAttname()));
+        if (StringUtils.isNotEmpty(request.getConType())) {
+            if (request.getConType().equals("u")) {
+                if (request.getConDeferrable() != null && request.getConDeferrable()) {
+                    partition.append(String.format(UNIQUE_IMMEDIATE_SQL, request.getConName(), request.getAttName()));
                 } else {
-                    partition.append(String.format(UNIQUE_SQL, request.getConname(), request.getAttname()));
+                    partition.append(String.format(UNIQUE_SQL, request.getConName(), request.getAttName()));
                 }
-            } else if (request.getContype().equals("p")) {
-                partition.append(String.format(PRIMARY_KEY_SQL, request.getConname(), request.getAttname()));
-            } else if (request.getContype().equals("c")) {
-                partition.append(String.format(CHECK_SQL, request.getConname(), request.getAttname()));
-            } else if (request.getContype().equals("f")) {
+            } else if (request.getConType().equals("p")) {
+                partition.append(String.format(PRIMARY_KEY_SQL, request.getConName(), request.getAttName()));
+            } else if (request.getConType().equals("c")) {
+                partition.append(String.format(CHECK_SQL, request.getConName(), request.getAttName()));
+            } else if (request.getConType().equals("f")) {
                 partition.append(
-                        String.format(FOREIGN_KEY_SQL, request.getConname(), request.getAttname(), request.getNspname(),
-                                request.getTbname(), request.getColname()));
-            } else if (request.getContype().equals("s")) {
-                partition.append(String.format(PARTIAL_CLUSTER_KEY_SQL, request.getConname(), request.getAttname()));
+                        String.format(FOREIGN_KEY_SQL, request.getConName(), request.getAttName(), request.getNspName(),
+                                request.getTbName(), request.getColName()));
+            } else if (request.getConType().equals("s")) {
+                partition.append(String.format(PARTIAL_CLUSTER_KEY_SQL, request.getConName(), request.getAttName()));
             }
             return partition.toString();
         }

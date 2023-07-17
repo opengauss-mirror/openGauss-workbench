@@ -6,17 +6,55 @@ package com.nctigba.datastudio.service;
 
 import com.nctigba.datastudio.model.query.SchemaManagerRequest;
 
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * SchemaManagerService
+ *
+ * @since 2023-6-26
+ */
 public interface SchemaManagerService {
-    List<String> queryAllUsers(SchemaManagerRequest request) throws Exception;
+    /**
+     * query all users
+     *
+     * @param request request
+     * @return List
+     * @throws SQLException SQLException
+     */
+    List<String> queryAllUsers(SchemaManagerRequest request) throws SQLException;
 
-    Map<String, String> querySchema(SchemaManagerRequest request) throws Exception;
+    /**
+     * query schema
+     *
+     * @param request request
+     * @return Map
+     * @throws SQLException SQLException
+     */
+    Map<String, String> querySchema(SchemaManagerRequest request) throws SQLException;
 
-    void createSchema(SchemaManagerRequest request) throws Exception;
+    /**
+     * create schema
+     *
+     * @param request request
+     * @throws SQLException SQLException
+     */
+    void createSchema(SchemaManagerRequest request) throws SQLException;
 
-    void updateSchema(SchemaManagerRequest request) throws Exception;
+    /**
+     * update schema
+     *
+     * @param request request
+     * @throws SQLException SQLException
+     */
+    void updateSchema(SchemaManagerRequest request) throws SQLException;
 
-    void deleteSchema(SchemaManagerRequest request) throws Exception;
+    /**
+     * delete schema
+     *
+     * @param request request
+     * @throws SQLException SQLException
+     */
+    void deleteSchema(SchemaManagerRequest request) throws SQLException;
 }

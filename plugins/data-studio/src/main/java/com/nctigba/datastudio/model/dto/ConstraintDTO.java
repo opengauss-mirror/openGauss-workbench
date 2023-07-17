@@ -4,21 +4,30 @@
 
 package com.nctigba.datastudio.model.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
+import lombok.Generated;
 import lombok.NoArgsConstructor;
 
+/**
+ * ConstraintDTO
+ *
+ * @since 2023-6-26
+ */
 @NoArgsConstructor
 @Data
+@Generated
 public class ConstraintDTO {
-    private String attname;       //attribute  name
-    private String conname;      //Constraint name
-    private String oldConname;      //old Constraint name
-    private String contype;      //Constraint type
-    private String constraintdef;
-    private Boolean condeferrable; //DEFERRED
-    private String nspname;    //Foreign name space name
-    private String tbname;    //Foreign table name
-    private String colname;  //Foreign primary column
+    private String attName;
+    private String conName;
+    private String oldConName;
+    private String conType;
+    private String constraintDef;
+    @JsonProperty("conDeferrable")
+    private Boolean conDeferrable;
+    private String nspName;
+    private String tbName;
+    private String colName;
     private String description;
-    private int type;  //1=add  2=delete 3=update
+    private int type;
 }

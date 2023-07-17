@@ -42,6 +42,11 @@ import static com.nctigba.datastudio.constants.SqlConstants.TABLE_SEQUENCE_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.TABLE_TRUNCATE_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.VACUUM_SQL;
 
+/**
+ * TableObjectSQLService achieve
+ *
+ * @since 2023-06-26
+ */
 @Slf4j
 @Service
 public class TableObjectSQLServiceImpl implements TableObjectSQLService {
@@ -75,7 +80,7 @@ public class TableObjectSQLServiceImpl implements TableObjectSQLService {
     }
 
     @Override
-    public Map<String, String> tableDdl(SelectDataQuery request) {
+    public Map<String, String> tableDdl(SelectDataQuery request) throws SQLException {
         log.info("tableDdl request is: " + request);
         Map<String, String> resultMap = new HashMap<>();
         try (
@@ -94,8 +99,6 @@ public class TableObjectSQLServiceImpl implements TableObjectSQLService {
             }
             log.info("tableDdl map is: " + resultMap);
             return resultMap;
-        } catch (Exception e) {
-            throw new RuntimeException(e);
         }
     }
 
@@ -163,7 +166,7 @@ public class TableObjectSQLServiceImpl implements TableObjectSQLService {
     }
 
     @Override
-    public List<Map<String, Object>> tableAttributeSQL(String uuid, String oid, String tableType) {
+    public List<Map<String, Object>> tableAttributeSQL(String uuid, String oid, String tableType) throws SQLException {
         String ddl;
         if (tableType.equals("n")) {
             ddl = String.format(TABLE_ATTRIBUTE_SQL, oid);
@@ -176,7 +179,7 @@ public class TableObjectSQLServiceImpl implements TableObjectSQLService {
                 Statement statement = connection.createStatement()
         ) {
             try (ResultSet resultSet = statement.executeQuery(ddl)) {
-                List list;
+                List<Map<String, Object>> list;
                 if (tableType.equals("y")) {
                     list = tableAttributeResultSet(resultSet, 15);
                 } else {
@@ -185,13 +188,11 @@ public class TableObjectSQLServiceImpl implements TableObjectSQLService {
                 log.info("tableColumn list is: " + list);
                 return list;
             }
-        } catch (Exception e) {
-            throw new RuntimeException(e);
         }
     }
 
     public static List<Map<String, Object>> tableAttributeResultSet(ResultSet resultSet, int num) throws SQLException {
-        List list = new ArrayList<>();
+        List<Map<String, Object>> list = new ArrayList<>();
         resultSet.next();
         for (int i = 1; i <= num; i++) {
             Map<String, Object> map = new HashMap<>();

@@ -18,13 +18,16 @@ import org.springframework.context.event.ContextRefreshedEvent;
 import static com.nctigba.datastudio.constants.CommonConstants.WEBDS_PLUGIN;
 
 /**
- * @className: ImplListener
- * @description: TODO
- * @author: xielibo
- * @date: 2022年08月16日 3:48 PM
- **/
+ * PluginListener
+ *
+ * @since 2023-6-26
+ */
 public class PluginListener implements ApplicationListener<ApplicationEvent> {
-
+    /**
+     * on application event
+     *
+     * @param event event
+     */
     @Override
     public void onApplicationEvent(ApplicationEvent event) {
         if (event instanceof ApplicationEnvironmentPreparedEvent) {
@@ -38,17 +41,13 @@ public class PluginListener implements ApplicationListener<ApplicationEvent> {
                     .getBean(MainApplicationContext.class);
             SpringBeanFactory factory = context.getSpringBeanFactory();
             MenuFacade menuFacade = factory.getBean(MenuFacade.class);
-            if (menuFacade != null) {
-                menuFacade.savePluginMenu(WEBDS_PLUGIN, "业务开发", "DataStudio", 10, "index");
-            }
+            menuFacade.savePluginMenu(WEBDS_PLUGIN, "业务开发", "DataStudio", 10, "index");
         } else if (event instanceof ContextClosedEvent) {
             MainApplicationContext context = ((ContextClosedEvent) event).getApplicationContext()
                     .getBean(MainApplicationContext.class);
             SpringBeanFactory factory = context.getSpringBeanFactory();
             MenuFacade menuFacade = factory.getBean(MenuFacade.class);
-            if (menuFacade != null) {
-                menuFacade.deletePluginMenu(WEBDS_PLUGIN);
-            }
+            menuFacade.deletePluginMenu(WEBDS_PLUGIN);
         }
     }
 }

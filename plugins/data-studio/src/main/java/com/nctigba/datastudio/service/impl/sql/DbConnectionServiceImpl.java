@@ -22,6 +22,7 @@ import org.opengauss.admin.common.exception.CustomException;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -32,6 +33,11 @@ import static com.nctigba.datastudio.constants.SqlConstants.CONFIGURE_TIME;
 import static com.nctigba.datastudio.constants.SqlConstants.GET_URL_JDBC;
 import static com.nctigba.datastudio.dao.ConnectionMapDAO.conMap;
 
+/**
+ * DbConnectionServiceImpl
+ *
+ * @since 2023-6-26
+ */
 @Slf4j
 @Service
 public class DbConnectionServiceImpl implements DbConnectionService {
@@ -48,11 +54,16 @@ public class DbConnectionServiceImpl implements DbConnectionService {
 
     private Map<String, GainObjectSQLService> gainObjectSQLService;
 
+    /**
+     * set gain object sql service
+     *
+     * @param SQLServiceList SQLServiceList
+     */
     @Resource
     public void setGainObjectSQLService(List<GainObjectSQLService> SQLServiceList) {
         gainObjectSQLService = new HashMap<>();
-        for (GainObjectSQLService s : SQLServiceList) {
-            gainObjectSQLService.put(s.type(), s);
+        for (GainObjectSQLService service : SQLServiceList) {
+            gainObjectSQLService.put(service.type(), service);
         }
     }
 
@@ -60,21 +71,17 @@ public class DbConnectionServiceImpl implements DbConnectionService {
     public DatabaseConnectionDO addDatabaseConnection(DbConnectionCreateDTO request) {
         if (databaseConnectionDAO.getJudgeName(request.getName(), request.getWebUser()) == 0) {
             DatabaseConnectionDO conn = request.toDatabaseConnection();
-            try {
-                conn.setEdition(test(request));
-                databaseConnectionDAO.insertTable(conn);
-                DatabaseConnectionDO dataList = databaseConnectionDAO.getAttributeByName(request.getName(),
-                        request.getWebUser());
-                String uuid = UUID.randomUUID().toString();
-                dataList.setConnectionid(uuid);
-                ConnectionDTO connectionDTO = new ConnectionDTO();
-                connectionDTO.setIpConnectionDTO(dataList);
-                ConnectionMapDAO.setConMap(uuid, connectionDTO);
-                dataList.setPassword("");
-                return dataList;
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
+            conn.setEdition(test(request));
+            databaseConnectionDAO.insertTable(conn);
+            DatabaseConnectionDO dataList = databaseConnectionDAO.getAttributeByName(request.getName(),
+                    request.getWebUser());
+            String uuid = UUID.randomUUID().toString();
+            dataList.setConnectionid(uuid);
+            ConnectionDTO connectionDTO = new ConnectionDTO();
+            connectionDTO.setIpConnectionDTO(dataList);
+            ConnectionMapDAO.setConMap(uuid, connectionDTO);
+            dataList.setPassword("");
+            return dataList;
         } else {
             return loginDatabaseConnection(request);
         }
@@ -82,38 +89,23 @@ public class DbConnectionServiceImpl implements DbConnectionService {
 
     @Override
     public void deleteDatabaseConnectionList(String id) {
-        try {
-            databaseConnectionDAO.deleteTable(Integer.parseInt(id));
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        databaseConnectionDAO.deleteTable(Integer.parseInt(id));
     }
 
     @Override
     public DatabaseConnectionDO databaseAttributeConnection(String id) {
-        try {
-            DatabaseConnectionDO atabaseConnectionEntity = databaseConnectionDAO.getAttributeById(id, "A");
-            atabaseConnectionEntity.setPassword("");
-            return atabaseConnectionEntity;
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        DatabaseConnectionDO databaseConnectionEntity = databaseConnectionDAO.getAttributeById(id, "A");
+        databaseConnectionEntity.setPassword("");
+        return databaseConnectionEntity;
     }
 
     @Override
     public List<DatabaseConnectionDO> databaseConnectionList(String webUser) {
-        try {
-            List<DatabaseConnectionDO> databaseConnectionEntity = new ArrayList<>();
-            databaseConnectionEntity = databaseConnectionDAO.selectTable(webUser);
-            return databaseConnectionEntity;
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        return databaseConnectionDAO.selectTable(webUser);
     }
 
     @Override
-    public DatabaseConnectionDO updateDatabaseConnection(DbConnectionCreateDTO request) {
-        try {
+    public DatabaseConnectionDO updateDatabaseConnection(DbConnectionCreateDTO request) throws SQLException {
             DatabaseConnectionDO conn = request.toDatabaseConnection();
             conn.setEdition(test(request));
             connectionMapDAO.deleteConnection(request.getConnectionid());
@@ -128,41 +120,35 @@ public class DbConnectionServiceImpl implements DbConnectionService {
             connectionDTO.setConnectionDTO(databaseConnectionUrlDO);
             ConnectionMapDAO.setConMap(uuid, connectionDTO);
             return dataList;
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
     }
 
     @Override
     public DatabaseConnectionDO loginDatabaseConnection(DbConnectionCreateDTO request) {
-        try {
-            DatabaseConnectionDO conn = request.toDatabaseConnection();
-            conn.setEdition(test(request));
-            databaseConnectionDAO.updateTable(conn);
-            DatabaseConnectionDO dataList = databaseConnectionDAO.getAttributeByName(request.getName(),
-                    request.getWebUser());
-            String uuid = UUID.randomUUID().toString();
-            dataList.setConnectionid(uuid);
-            ConnectionDTO connectionDTO = new ConnectionDTO();
-            DatabaseConnectionUrlDO databaseConnectionUrlDO = databaseConnectionDAO.getByName(request.getName(),
-                    request.getWebUser());
-            connectionDTO.setConnectionDTO(databaseConnectionUrlDO);
-            ConnectionMapDAO.setConMap(uuid, connectionDTO);
-            return dataList;
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        DatabaseConnectionDO conn = request.toDatabaseConnection();
+        conn.setEdition(test(request));
+        databaseConnectionDAO.updateTable(conn);
+        DatabaseConnectionDO dataList = databaseConnectionDAO.getAttributeByName(request.getName(),
+                request.getWebUser());
+        String uuid = UUID.randomUUID().toString();
+        dataList.setConnectionid(uuid);
+        ConnectionDTO connectionDTO = new ConnectionDTO();
+        DatabaseConnectionUrlDO databaseConnectionUrlDO = databaseConnectionDAO.getByName(request.getName(),
+                request.getWebUser());
+        connectionDTO.setConnectionDTO(databaseConnectionUrlDO);
+        ConnectionMapDAO.setConMap(uuid, connectionDTO);
+        return dataList;
     }
 
     @Override
     public List<DataListDTO> schemaObjectList(DatabaseMetaarrayIdSchemaQuery schema) {
-        try {
             if (!conMap.containsKey(schema.getUuid())) {
                 throw new CustomException(LocaleString.transLanguage("1004"));
             }
             ConnectionDTO connectionDTO = conMap.get(schema.getUuid());
             List<DataListDTO> listDataList = new ArrayList<>();
-            DataListDTO dataList = dataListByJdbcService.dataListQuerySQL(
+        DataListDTO dataList = null;
+        try {
+            dataList = dataListByJdbcService.dataListQuerySQL(
                     connectionDTO.getUrl(),
                     connectionDTO.getDbUser(),
                     connectionDTO.getDbPassword(),
@@ -173,18 +159,17 @@ public class DbConnectionServiceImpl implements DbConnectionService {
                     gainObjectSQLService.get(conMap.get(schema.getUuid()).getType()).synonymSql(schema.getSchema()),
                     schema.getSchema()
             );
-            connectionDTO.updataConnectionDTO(connectionDTO);
+        } catch (SQLException e) {
+            throw new CustomException(e.getMessage());
+        }
+        connectionDTO.updateConnectionDTO(connectionDTO);
             ConnectionMapDAO.setConMap(schema.getUuid(), connectionDTO);
             listDataList.add(dataList);
             return listDataList;
-        } catch (Exception e) {
-            log.info(e.toString());
-            throw new RuntimeException(e);
-        }
     }
 
     @Override
-    public String test(DbConnectionCreateDTO request) throws Exception {
+    public String test(DbConnectionCreateDTO request) {
         log.info("{}", request);
         log.info("{}", gainObjectSQLService.keySet());
         return metaDataByJdbcService.versionSQL(

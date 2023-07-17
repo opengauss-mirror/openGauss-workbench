@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashMap;
 import java.util.List;
@@ -22,6 +23,11 @@ import java.util.Map;
 
 import static com.nctigba.datastudio.dao.ConnectionMapDAO.conMap;
 
+/**
+ * DatabaseFunctionSPServiceImpl
+ *
+ * @since 2023-6-26
+ */
 @Slf4j
 @Service
 public class DatabaseFunctionSPServiceImpl implements DatabaseFunctionSPService {
@@ -30,16 +36,21 @@ public class DatabaseFunctionSPServiceImpl implements DatabaseFunctionSPService 
 
     private Map<String, FunctionSPObjectSQLService> functionSPObjectSQLService;
 
+    /**
+     * set function object sql service
+     *
+     * @param SQLServiceList SQLServiceList
+     */
     @Resource
-    public void setfunctionSPObjectSQLService(List<FunctionSPObjectSQLService> SQLServiceList) {
+    public void setFunctionSPObjectSQLService(List<FunctionSPObjectSQLService> SQLServiceList) {
         functionSPObjectSQLService = new HashMap<>();
-        for (FunctionSPObjectSQLService s : SQLServiceList) {
-            functionSPObjectSQLService.put(s.type(), s);
+        for (FunctionSPObjectSQLService service : SQLServiceList) {
+            functionSPObjectSQLService.put(service.type(), service);
         }
     }
 
     @Override
-    public String functionDdl(DatabaseFunctionSPDTO request) throws Exception {
+    public String functionDdl(DatabaseFunctionSPDTO request) throws SQLException {
         log.info("functionDdl request is: " + request);
         return functionSPObjectSQLService.get(conMap.get(request.getUuid()).getType()).functionDdl(request);
     }
@@ -55,10 +66,9 @@ public class DatabaseFunctionSPServiceImpl implements DatabaseFunctionSPService 
                     request);
             statement.execute(sql);
             log.info("dropFunctionSP sql is: " + sql);
-        } catch (Exception e) {
+        } catch (SQLException e) {
             log.info(e.toString());
-            throw new RuntimeException(e);
+            throw new CustomException(e.getMessage());
         }
     }
-
 }

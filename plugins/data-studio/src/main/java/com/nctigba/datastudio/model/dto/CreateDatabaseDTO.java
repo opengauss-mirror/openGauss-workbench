@@ -5,12 +5,18 @@
 package com.nctigba.datastudio.model.dto;
 
 import lombok.Data;
+import lombok.Generated;
 import lombok.NoArgsConstructor;
 
+/**
+ * CreateDatabaseDTO
+ *
+ * @since 2023-6-26
+ */
 @NoArgsConstructor
 @Data
+@Generated
 public class CreateDatabaseDTO {
-
     private String uuid;
     private String databaseName;
     private String databaseCode;

@@ -16,6 +16,11 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.util.Locale;
 
+/**
+ * LocaleString
+ *
+ * @since 2023-6-26
+ */
 @Slf4j
 @Component
 public class LocaleString {
@@ -26,17 +31,37 @@ public class LocaleString {
         LocaleString.messageSource = messageSource;
     }
 
+    /**
+     * trans language
+     *
+     * @param str str
+     * @return String
+     */
     public static String transLanguage(String str) {
         ServletRequestAttributes requestAttributes = (ServletRequestAttributes) RequestContextHolder.currentRequestAttributes();
         String language = requestAttributes.getRequest().getHeader(HttpHeaders.ACCEPT_LANGUAGE);
         return translate(str, language);
     }
 
+    /**
+     * trans language websocket
+     *
+     * @param str str
+     * @param webSocketServer webSocketServer
+     * @return String
+     */
     public static String transLanguageWs(String str, WebSocketServer webSocketServer) {
         String language = webSocketServer.getLanguage();
         return translate(str, language);
     }
 
+    /**
+     * translate
+     *
+     * @param str str
+     * @param language language
+     * @return String
+     */
     private static String translate(String str, String language) {
         log.info("LocaleString language is: " + language);
         Locale locale;

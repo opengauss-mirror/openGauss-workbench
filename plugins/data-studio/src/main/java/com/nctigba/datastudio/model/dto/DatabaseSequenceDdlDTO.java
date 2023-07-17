@@ -5,10 +5,17 @@
 package com.nctigba.datastudio.model.dto;
 
 import lombok.Data;
+import lombok.Generated;
 import lombok.NoArgsConstructor;
 
+/**
+ * DatabaseSequenceDdlDTO
+ *
+ * @since 2023-6-26
+ */
 @NoArgsConstructor
 @Data
+@Generated
 public class DatabaseSequenceDdlDTO {
     private String uuid;
     private String webUser;

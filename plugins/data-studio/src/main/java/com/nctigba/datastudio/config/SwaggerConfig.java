@@ -14,10 +14,20 @@ import springfox.documentation.spi.DocumentationType;
 import springfox.documentation.spring.web.plugins.Docket;
 import springfox.documentation.swagger2.annotations.EnableSwagger2;
 
+/**
+ * SwaggerConfig
+ *
+ * @since 2023-06-25
+ */
 @Profile("dev")
 @Configuration
 @EnableSwagger2
 public class SwaggerConfig {
+    /**
+     * customDocket
+     *
+     * @return Docket
+     */
     @Bean
     public Docket customDocket() {
         return new Docket(DocumentationType.SWAGGER_2)

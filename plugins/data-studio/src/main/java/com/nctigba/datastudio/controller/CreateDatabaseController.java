@@ -19,45 +19,89 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
+import java.sql.SQLException;
 import java.util.Map;
 
+/**
+ * CreateDatabaseController
+ *
+ * @since 2023-6-26
+ */
 @Api(tags = {"Metadata query interface"})
 @RestController
 @RequestMapping(value = "/dataStudio/web/v1")
 public class CreateDatabaseController {
 
     @Resource
-    private CreateDatabaseService creaeteDatabaseService;
+    private CreateDatabaseService createDatabaseService;
 
 
+    /**
+     * create database
+     *
+     * @param database database
+     * @throws SQLException SQLException
+     */
     @PostMapping(value = "/database/create", produces = MediaType.APPLICATION_JSON_VALUE)
-    public void createDatabase(@RequestBody CreateDatabaseDTO database) throws Exception {
-        creaeteDatabaseService.createDatabase(database);
+    public void createDatabase(@RequestBody CreateDatabaseDTO database) throws SQLException {
+        createDatabaseService.createDatabase(database);
     }
 
+    /**
+     * connection database
+     *
+     * @param database database
+     * @return DatabaseConnectionDO
+     */
     @PostMapping(value = "/database/connection", produces = MediaType.APPLICATION_JSON_VALUE)
-    public DatabaseConnectionDO connectionDatabase(@RequestBody DatabaseConnectionDO database) throws Exception {
-        return creaeteDatabaseService.connectionDatabase(database);
+    public DatabaseConnectionDO connectionDatabase(@RequestBody DatabaseConnectionDO database) {
+        return createDatabaseService.connectionDatabase(database);
     }
 
+    /**
+     * delete database
+     *
+     * @param database database
+     * @throws SQLException SQLException
+     */
     @DeleteMapping(value = "/database/delete", produces = MediaType.APPLICATION_JSON_VALUE)
-    public void deleteDatabase(@RequestBody DatabaseNameDTO database) throws Exception {
-        creaeteDatabaseService.deleteDatabase(database);
+    public void deleteDatabase(@RequestBody DatabaseNameDTO database) throws SQLException {
+        createDatabaseService.deleteDatabase(database);
     }
 
+    /**
+     * rename database
+     *
+     * @param database database
+     * @throws SQLException SQLException
+     */
     @PostMapping(value = "/database/rename", produces = MediaType.APPLICATION_JSON_VALUE)
-    public void renameDatabase(@RequestBody RenameDatabaseDTO database) throws Exception {
-        creaeteDatabaseService.renameDatabase(database);
+    public void renameDatabase(@RequestBody RenameDatabaseDTO database) throws SQLException {
+        createDatabaseService.renameDatabase(database);
     }
 
+    /**
+     * database attribute
+     *
+     * @param request request
+     * @return Map
+     * @throws SQLException SQLException
+     */
     @GetMapping(value = "/database/attribute", produces = MediaType.APPLICATION_JSON_VALUE)
-    public Map<String, Object> databaseAttribute(DatabaseNameDTO request) throws Exception {
-        return creaeteDatabaseService.databaseAttribute(request);
+    public Map<String, Object> databaseAttribute(DatabaseNameDTO request) throws SQLException {
+        return createDatabaseService.databaseAttribute(request);
     }
 
+    /**
+     * update database attribute
+     *
+     * @param request request
+     * @return Map
+     * @throws SQLException SQLException
+     */
     @GetMapping(value = "/database/attribute/update", produces = MediaType.APPLICATION_JSON_VALUE)
-    public Map<String, Object> databaseAttributeUpdate(DatabaseNameDTO request) throws Exception {
-        return creaeteDatabaseService.databaseAttributeUpdate(request);
+    public Map<String, Object> databaseAttributeUpdate(DatabaseNameDTO request) throws SQLException {
+        return createDatabaseService.databaseAttributeUpdate(request);
     }
 
 }

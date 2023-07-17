@@ -19,38 +19,67 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
+import java.sql.SQLException;
 import java.util.Map;
 
+/**
+ * DatabaseSynonymController
+ *
+ * @since 2023-6-26
+ */
 @Api(tags = {"Metadata query interface"})
 @RestController
 @RequestMapping(value = "/dataStudio/web/v1")
 public class DatabaseSynonymController {
     @Resource
-    DatabaseSynonymService databaseSynonymService;
+    private DatabaseSynonymService databaseSynonymService;
 
-
+    /**
+     * create
+     *
+     * @param request request
+     * @return String
+     */
     @ApiOperation(value = "CREATE SYNONYM DDL")
     @PostMapping(value = "/synonyms/action", params = "action=createSynonymDdl", produces = MediaType.APPLICATION_JSON_VALUE)
-    public String createSequenceDDL(@RequestBody DatabaseCreateSynonymDTO request) throws Exception {
+    public String createSynonymDDL(@RequestBody DatabaseCreateSynonymDTO request) {
         return databaseSynonymService.createSynonymDDL(request);
     }
 
-
+    /**
+     * create synonym
+     *
+     * @param request request
+     * @throws SQLException SQLException
+     */
     @ApiOperation(value = "CREATE SYNONYM")
     @PostMapping(value = "/synonyms", produces = MediaType.APPLICATION_JSON_VALUE)
-    public void createSequence(@RequestBody DatabaseCreateSynonymDTO request) throws Exception {
+    public void createSynonym(@RequestBody DatabaseCreateSynonymDTO request) throws SQLException {
         databaseSynonymService.createSynonym(request);
     }
 
+    /**
+     * synonym attribute
+     *
+     * @param request request
+     * @return Map
+     * @throws SQLException SQLException
+     */
     @ApiOperation(value = "CREATE SYNONYM")
     @GetMapping(value = "/synonyms", produces = MediaType.APPLICATION_JSON_VALUE)
-    public Map<String, Object> sequenceAttribute(DatabaseSynonymAttributeDTO request) throws Exception {
+    public Map<String, Object> synonymAttribute(DatabaseSynonymAttributeDTO request) throws SQLException {
         return databaseSynonymService.synonymAttribute(request);
     }
 
+    /**
+     * drop synonym
+     *
+     * @param request request
+     * @throws SQLException SQLException
+     */
     @ApiOperation(value = "DROP SYNONYM")
     @DeleteMapping(value = "/synonyms", produces = MediaType.APPLICATION_JSON_VALUE)
-    public void dropSequence(@RequestBody DatabaseDropSynonymDTO request) throws Exception {
+    public void dropSynonym(@RequestBody DatabaseDropSynonymDTO request) throws SQLException {
         databaseSynonymService.dropSynonym(request);
     }
 }

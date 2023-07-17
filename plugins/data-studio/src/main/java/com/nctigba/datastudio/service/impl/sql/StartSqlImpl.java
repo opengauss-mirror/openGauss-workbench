@@ -22,19 +22,23 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 import static com.nctigba.datastudio.constants.CommonConstants.FIVE_HUNDRED;
-import static com.nctigba.datastudio.enums.MessageEnum.button;
-import static com.nctigba.datastudio.enums.MessageEnum.table;
-import static com.nctigba.datastudio.enums.MessageEnum.text;
-import static com.nctigba.datastudio.enums.MessageEnum.window;
+import static com.nctigba.datastudio.enums.MessageEnum.BUTTON;
+import static com.nctigba.datastudio.enums.MessageEnum.TABLE;
+import static com.nctigba.datastudio.enums.MessageEnum.TEXT;
+import static com.nctigba.datastudio.enums.MessageEnum.WINDOW;
 
+/**
+ * StartSqlImpl
+ *
+ * @since 2023-6-26
+ */
 @Slf4j
 @Service("startRun")
 public class StartSqlImpl implements OperationInterface {
-
     @Override
     @Async
-    public void operate(WebSocketServer webSocketServer, Object obj) throws Exception {
-        PublicParamReq paramReq = (PublicParamReq) obj;
+    public void operate(WebSocketServer webSocketServer, Object obj) throws SQLException {
+        PublicParamReq paramReq = DebugUtils.changeParamType(obj);
         String windowName = paramReq.getWindowName();
         Connection connection = webSocketServer.getConnection(windowName);
         Statement stat = connection.createStatement();
@@ -43,39 +47,38 @@ public class StartSqlImpl implements OperationInterface {
         log.info("tableColumnList request is: " + paramReq);
         ThreadUtil.execAsync(() -> {
             try {
-                webSocketServer.sendMessage(windowName, text, LocaleString.transLanguageWs("2001", webSocketServer),
-                        null);
+                webSocketServer.sendMessage(windowName, TEXT,
+                        LocaleString.transLanguageWs("2001", webSocketServer), null);
                 boolean result = stat.execute(paramReq.getSql());
-                webSocketServer.sendMessage(windowName, button, LocaleString.transLanguageWs("2006", webSocketServer),
-                        null);
+                webSocketServer.sendMessage(windowName, BUTTON,
+                        LocaleString.transLanguageWs("2006", webSocketServer), null);
                 OperateStatusDO operateStatus = webSocketServer.getOperateStatus(windowName);
                 operateStatus.enableStopRun();
                 webSocketServer.setOperateStatus(windowName, operateStatus);
                 while (true) {
                     if (result) {
-                        webSocketServer.sendMessage(windowName, table,
+                        webSocketServer.sendMessage(windowName, TABLE,
                                 LocaleString.transLanguageWs("2002", webSocketServer),
                                 DebugUtils.parseResultSet(stat.getResultSet()));
-                        webSocketServer.sendMessage(windowName, text,
+                        webSocketServer.sendMessage(windowName, TEXT,
                                 LocaleString.transLanguageWs("2002", webSocketServer), null);
                     } else {
                         if (stat.getUpdateCount() != -1) {
-                            webSocketServer.sendMessage(windowName, text,
-                                    LocaleString.transLanguageWs("2005", webSocketServer) + stat.getUpdateCount(),
-                                    null);
+                            webSocketServer.sendMessage(windowName, TEXT, LocaleString.transLanguageWs(
+                                    "2005", webSocketServer) + stat.getUpdateCount(), null);
                         } else {
                             break;
                         }
                     }
                     result = stat.getMoreResults();
                 }
-                webSocketServer.sendMessage(windowName, text, LocaleString.transLanguageWs("2003", webSocketServer),
-                        null);
+                webSocketServer.sendMessage(windowName, TEXT,
+                        LocaleString.transLanguageWs("2003", webSocketServer), null);
             } catch (IOException | SQLException e) {
                 log.info(e.toString());
                 try {
-                    webSocketServer.sendMessage(windowName, window, FIVE_HUNDRED, e.getMessage(), e.getStackTrace());
-                    webSocketServer.sendMessage(windowName, button,
+                    webSocketServer.sendMessage(windowName, WINDOW, FIVE_HUNDRED, e.getMessage(), e.getStackTrace());
+                    webSocketServer.sendMessage(windowName, BUTTON,
                             LocaleString.transLanguageWs("2006", webSocketServer), null);
                     OperateStatusDO operateStatus = webSocketServer.getOperateStatus(windowName);
                     operateStatus.enableStopRun();

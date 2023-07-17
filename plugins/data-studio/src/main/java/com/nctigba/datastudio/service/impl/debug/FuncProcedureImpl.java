@@ -18,8 +18,10 @@ import org.opengauss.admin.common.exception.CustomException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashMap;
 import java.util.Map;
@@ -33,10 +35,12 @@ import static com.nctigba.datastudio.constants.CommonConstants.SUCCESS;
 import static com.nctigba.datastudio.constants.CommonConstants.TYPE;
 import static com.nctigba.datastudio.constants.SqlConstants.PROC_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.QUERY_DEF_SQL;
-import static com.nctigba.datastudio.enums.MessageEnum.view;
+import static com.nctigba.datastudio.enums.MessageEnum.VIEW;
 
 /**
- * show function/procedure
+ * FuncProcedureImpl
+ *
+ * @since 2023-6-26
  */
 @Slf4j
 @Service("funcProcedure")
@@ -45,8 +49,8 @@ public class FuncProcedureImpl implements OperationInterface {
     private StopDebugImpl stopDebug;
 
     @Override
-    public void operate(WebSocketServer webSocketServer, Object obj) throws Exception {
-        PublicParamReq paramReq = (PublicParamReq) obj;
+    public void operate(WebSocketServer webSocketServer, Object obj) throws SQLException, IOException {
+        PublicParamReq paramReq = DebugUtils.changeParamType(obj);
         log.info("funcProcedure paramReq: " + paramReq);
 
         String rootWindowName = paramReq.getRootWindowName();
@@ -56,7 +60,7 @@ public class FuncProcedureImpl implements OperationInterface {
         operateStatus.enableStartDebug();
         webSocketServer.setOperateStatus(windowName, operateStatus);
 
-        Statement statement;
+        Statement statement = null;
         if (StringUtils.isEmpty(oldWindowName)) {
             statement = webSocketServer.getStatement(rootWindowName);
             if (statement == null || statement.isClosed()) {
@@ -68,26 +72,28 @@ public class FuncProcedureImpl implements OperationInterface {
                 webSocketServer.setStatement(rootWindowName, statement);
             }
         } else {
-            statement = (Statement) webSocketServer.getParamMap(rootWindowName).get(STATEMENT);
+            statement = DebugUtils.changeParamType(webSocketServer, rootWindowName, STATEMENT);
         }
 
         String oid = paramReq.getOid();
         webSocketServer.setParamMap(windowName, OID, oid);
         log.info("funcProcedure oid: " + oid);
         String definition = Strings.EMPTY;
+        if (statement == null) {
+            return;
+        }
         try (
                 ResultSet defResultSet = statement.executeQuery(String.format(QUERY_DEF_SQL, oid))
         ) {
             while (defResultSet.next()) {
-                definition = DebugUtils.sqlHandleAfter(defResultSet.getString(DEFINITION));
+                definition = defResultSet.getString(DEFINITION);
                 if (StringUtils.isEmpty(definition)) {
                     throw new CustomException(LocaleString.transLanguageWs("2015", webSocketServer));
+                } else {
+                    definition = DebugUtils.sqlHandleAfter(definition);
                 }
             }
             log.info("funcProcedure definition: " + definition);
-        } catch (Exception e) {
-            log.info(e.toString());
-            throw new RuntimeException(e);
         }
 
         try (
@@ -96,13 +102,10 @@ public class FuncProcedureImpl implements OperationInterface {
             while (resultSet.next()) {
                 webSocketServer.setParamMap(windowName, TYPE, resultSet.getString(PRO_KIND));
             }
-        } catch (Exception e) {
-            log.info(e.toString());
-            throw new RuntimeException(e);
         }
         Map<String, Object> map = new HashMap<>();
         map.put(RESULT, definition);
-        webSocketServer.sendMessage(windowName, view, SUCCESS, map);
+        webSocketServer.sendMessage(windowName, VIEW, SUCCESS, map);
         webSocketServer.setParamMap(rootWindowName, oid, windowName);
     }
 

@@ -16,8 +16,15 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.sql.SQLException;
 import java.util.List;
 
+/**
+ * CoverageRateController
+ *
+ * @since 2023-06-25
+ */
 @Api(tags = {"Schema manager interface"})
 @RestController
 @RequestMapping(value = "/dataStudio/web/v1")
@@ -25,18 +32,42 @@ public class CoverageRateController {
     @Resource
     private CoverageRateService coverageRateService;
 
+    /**
+     * query coverage rate
+     *
+     * @param request request
+     * @return List
+     * @throws SQLException SQLException
+     */
     @PostMapping(value = "/coverageRate/query", produces = MediaType.APPLICATION_JSON_VALUE)
-    public List<CoverageRateDO> queryByOid(@RequestBody CoverageRateRequest request) throws Exception {
+    public List<CoverageRateDO> queryByOid(@RequestBody CoverageRateRequest request) throws SQLException {
         return coverageRateService.queryCoverageRate(request);
     }
 
+    /**
+     * delete coverage rate
+     *
+     * @param request request
+     * @throws SQLException SQLException
+     */
     @PostMapping(value = "/coverageRate/delete", produces = MediaType.APPLICATION_JSON_VALUE)
-    public void delete(@RequestBody CoverageRateRequest request) throws Exception {
+    public void delete(@RequestBody CoverageRateRequest request) throws SQLException {
         coverageRateService.delete(request);
     }
 
+    /**
+     * export coverage rate
+     *
+     * @param request request
+     * @param response response
+     * @throws SQLException SQLException
+     * @throws IOException IOException
+     * @throws NoSuchFieldException NoSuchFieldException
+     * @throws IllegalAccessException IllegalAccessException
+     */
     @PostMapping(value = "/coverageRate/export", produces = MediaType.APPLICATION_JSON_VALUE)
-    public void export(@RequestBody CoverageRateRequest request, HttpServletResponse response) throws Exception {
+    public void export(@RequestBody CoverageRateRequest request, HttpServletResponse response)
+            throws SQLException, IOException, NoSuchFieldException, IllegalAccessException {
         coverageRateService.export(request, response);
     }
 }
