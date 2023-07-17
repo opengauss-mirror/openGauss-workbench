@@ -81,7 +81,7 @@ public class AlertApiService {
             AlertLabels labels = alertApiReq.getLabels();
             Long templateRuleId = labels.getTemplateRuleId();
             AlertTemplateRule alertTemplateRule = templateRuleMapper.selectById(templateRuleId);
-            if (alertTemplateRule == null) {
+            if (alertTemplateRule == null ) {
                 return;
             }
             String notifyWayIds = alertTemplateRule.getNotifyWayIds();
@@ -97,9 +97,18 @@ public class AlertApiService {
             String clusterNodeId = labels.getInstance();
             AlertContentParamDto contentParamDto = setAndGetAlertContentParamDto(clusterNodeId,
                 alertApiReq.getStartsAt(), labels.getLevel());
-
             AlertRecord alertRecord = saveAndGetRecord(alertApiReq, notifyWayNames, alertTemplateRule, contentParamDto);
             contentParamDto.setContent(alertRecord.getAlertContent());
+            if(StrUtil.isBlank(alertTemplateRule.getAlertNotify())) {
+                continue;
+            }
+            List<String> alertNotifyList = Arrays.asList(alertTemplateRule.getAlertNotify()
+                .split(CommonConstants.DELIMITER));
+            String alertStatus = alertRecord.getAlertStatus().equals(CommonConstants.FIRING_STATUS)
+                ? "firing" : "recover";
+            if(!alertNotifyList.contains(alertStatus)) {
+                continue;
+            }
 
             Integer isRepeat = alertTemplateRule.getIsRepeat();
             if (isRepeat == CommonConstants.IS_NOT_REPEAT) {
@@ -109,7 +118,7 @@ public class AlertApiService {
                     continue;
                 }
             }
-            Integer isSilence = alertTemplateRule.getIsSilence(); // 是否静默
+            Integer isSilence = alertTemplateRule.getIsSilence();
             LocalDateTime now = LocalDateTime.now();
             if (isSilence == CommonConstants.IS_SILENCE && now.isAfter(alertTemplateRule.getSilenceStartTime())
                 && now.isBefore(alertTemplateRule.getSilenceEndTime())) {
@@ -142,7 +151,7 @@ public class AlertApiService {
             alertRecord.setDuration(
                 Duration.between(alertRecord.getStartTime(), alertRecord.getEndTime()).toSeconds());
             alertRecord.setTemplateName(alertTemplate.getTemplateName()).setTemplateRuleName(
-                    alertTemplateRule.getRuleName())
+                    alertTemplateRule.getRuleName()).setAlertStatus(CommonConstants.FIRING_STATUS)
                 .setTemplateRuleType(alertTemplateRule.getRuleType()).setLevel(alertTemplateRule.getLevel())
                 .setNotifyWayIds(alertTemplateRule.getNotifyWayIds()).setNotifyWayNames(notifyWayNames);
             String ruleContent = alertTemplateRule.getRuleContent();
@@ -188,7 +197,7 @@ public class AlertApiService {
             opsClusterEntity.getClusterId() + "/" + opsHost.getPublicIp() + ":" + opsClusterEntity.getPort()
                 + "(" + opsClusterNodeEntity.getClusterRole() + ")";
         contentParamDto.setHostname(opsHost.getHostname()).setNodeName(nodeName).setPort(
-            opsClusterEntity.getPort() != null ? opsHost.getPort().toString() : "").setHostIp(
+            opsClusterEntity.getPort() != null ? opsClusterEntity.getPort().toString() : "").setHostIp(
             opsHost.getPublicIp()).setAlertTime(
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(alertTime)).setLevel(
             level);
