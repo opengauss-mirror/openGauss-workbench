@@ -17,6 +17,7 @@ import com.nctigba.observability.sql.model.history.result.Node;
 import com.nctigba.observability.sql.service.history.HisDiagnosisPointService;
 import com.nctigba.observability.sql.service.history.HisDiagnosisService;
 import com.nctigba.observability.sql.util.LocaleString;
+import com.nctigba.observability.sql.util.PointUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -50,6 +51,8 @@ public class HisDiagnosisServiceImpl implements HisDiagnosisService {
     private HisThresholdMapper hisThresholdMapper;
     @Autowired
     private HisDiagnosisTaskMapper taskMapper;
+    @Autowired
+    private PointUtil pointUtil;
 
     @Override
     public HisTreeNode getTopologyMap(int taskId, boolean isAll) {
@@ -170,7 +173,7 @@ public class HisDiagnosisServiceImpl implements HisDiagnosisService {
             var nodeMap = new HashMap<String, HisTreeNode>();
             for (Node node : nodeList) {
                 HisTreeNode treeNode = new HisTreeNode(LocaleString.format("history." + node.getNodeName() + ".title"),
-                                                       node.getNodeName(), null, null, true);
+                        node.getNodeName(), null, null, true);
                 nodeMap.put(node.getNodeName(), treeNode);
                 if (!CollectionUtils.isEmpty(resultList)) {
                     for (HisDiagnosisResult result : resultList) {
@@ -178,7 +181,7 @@ public class HisDiagnosisServiceImpl implements HisDiagnosisService {
                             boolean isSuggestion = HisDiagnosisResult.ResultState.NO_ADVICE.equals(result.getIsHint());
                             HisTreeNode hisTreeNode =
                                     new HisTreeNode(result.getPointTitle(), node.getNodeName(), result.getPointType(),
-                                                    result.getPointState(), isSuggestion);
+                                            result.getPointState(), isSuggestion);
                             nodeMap.put(node.getNodeName(), hisTreeNode);
                         }
                     }
@@ -198,7 +201,7 @@ public class HisDiagnosisServiceImpl implements HisDiagnosisService {
         }
     }
 
-    public HisTreeNode refreshTreeNode(HisTreeNode treeNode) {
+    private HisTreeNode refreshTreeNode(HisTreeNode treeNode) {
         List<HisTreeNode> list = treeNode.getChild();
         if (CollectionUtils.isEmpty(list)) {
             return treeNode;

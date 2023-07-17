@@ -69,7 +69,7 @@ public class CurrentCpuUsage implements HisDiagnosisPointService<AgentDTO> {
         if (map.isEmpty()) {
             throw new HisDiagnosisException("fetch threshold data failed!");
         }
-        Object object = item.queryData(task);
+        Object object = dataStoreService.getData(item).getCollectionData();
         AgentData agentData = null;
         if (object instanceof AgentData) {
             agentData = (AgentData) object;

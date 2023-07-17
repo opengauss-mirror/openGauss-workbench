@@ -34,11 +34,11 @@ import java.util.List;
 @Slf4j
 public class AgentUtil {
     @Autowired
-    protected NctigbaEnvMapper envMapper;
+    private NctigbaEnvMapper envMapper;
 
     @Autowired
     @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
-    protected HostFacade hostFacade;
+    private HostFacade hostFacade;
 
     private String getAgentUrl(String id) {
         var env = envMapper.selectOne(

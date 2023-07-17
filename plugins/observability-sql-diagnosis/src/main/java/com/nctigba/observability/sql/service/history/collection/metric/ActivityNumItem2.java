@@ -21,7 +21,7 @@ import java.util.List;
 @Service
 public class ActivityNumItem2 extends PrometheusCollectionItem {
     @Override
-    String getPrometheusParam(List<HisDiagnosisThreshold> thresholds) {
+    public String getPrometheusParam(List<HisDiagnosisThreshold> thresholds) {
         if (CollectionUtils.isEmpty(thresholds)) {
             return MetricCommon.ACTIVITY_NUM;
         } else {

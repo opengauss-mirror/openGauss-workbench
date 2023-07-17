@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * DataStoreServiceImpl
@@ -20,7 +21,7 @@ import java.util.List;
  */
 @Service
 public class DataStoreServiceImpl implements DataStoreService {
-    private final List<DataStoreConfig> dataList = new ArrayList<>();
+    private final List<DataStoreConfig> dataList = new CopyOnWriteArrayList<>();
 
     @Override
     public void storeData(List<DataStoreConfig> list) {

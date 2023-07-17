@@ -16,7 +16,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class TopDbProcessItem extends AgentCollectionItem {
     @Override
-    String getHttpParam() {
+    public String getHttpParam() {
         return AgentParamCommon.TOP;
     }
 }

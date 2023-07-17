@@ -6,6 +6,7 @@ package com.nctigba.observability.sql.model.history.result;
 
 import com.nctigba.observability.sql.model.history.HisDiagnosisResult;
 import lombok.Data;
+import lombok.Generated;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 import org.springframework.util.CollectionUtils;
@@ -22,6 +23,7 @@ import java.util.List;
 @Data
 @Accessors(chain = true)
 @NoArgsConstructor
+@Generated
 public class HisTreeNode {
     private String title;
     private String pointName;

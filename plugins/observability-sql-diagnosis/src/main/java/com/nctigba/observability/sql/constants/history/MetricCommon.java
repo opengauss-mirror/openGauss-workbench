@@ -4,17 +4,20 @@
 
 package com.nctigba.observability.sql.constants.history;
 
+import lombok.Generated;
+
 /**
  * MetricCommon
  *
  * @author luomeng
  * @since 2023/6/11
  */
+@Generated
 public class MetricCommon {
     public static final String AVG_CPU_USAGE_RATE =
             "(avg(sum(irate(agent_cpu_seconds_total{mode!='idle',"
                     + "host=\"history_diagnosis_hostId\"}[5m]))by (cpu))) * 100";
-    public static final String DB_AVG_CPU_USAGE_RATE = "top_db_cpu{host=\"history_diagnosis_hostId\"}/8";
+    public static final String DB_AVG_CPU_USAGE_RATE = "top_db_cpu{instanceId=\"history_diagnosis_nodeId\"}/8";
     public static final String ACTIVITY_NUM =
             "sum(gauss_thread_wait_status_count{instanceId=\"history_diagnosis_nodeId\"})";
     public static final String THREAD_POOL_USAGE_RATE =

@@ -123,7 +123,7 @@ public class ParamInfoInitConfig {
                     " values(\"DB\",\"enable_thread_pool\",\"控制是否使用线程池功能\",\"off\",\"off\",\"布尔值\",\"on表示开启线程池功能。\n" +
                     "off表示不开启线程池功能\",\"actualValue=='off'\");",
             CommonConstants.INSERT_INTO_PARAM_INFO +
-                    " values(\"DB\",\"thread_pool_attr\",\"用于控制线程池功能的详细属性，该参数仅在enable_thread_pool打开后生效。\",\"长度大于0\",\"16, 2, (nobind)\",\"字符型\",\"\",\"actualValue>0\");",
+                    " values(\"DB\",\"thread_pool_attr\",\"用于控制线程池功能的详细属性，该参数仅在enable_thread_pool打开后生效。\",\"16, 2, (nobind)\",\"16, 2, (nobind)\",\"字符型\",\"\",\"actualValue='16, 2, (nobind)'\");",
             CommonConstants.INSERT_INTO_PARAM_INFO +
                     " values(\"DB\",\"log_statement\",\"控制记录SQL语句。对于使用扩展查询协议的客户端，记录接收到执行消息的事件和绑定参数的值\",\"none\",\"none\",\"枚举型\",\"none表示不记录语句。\n" +
                     "ddl表示记录所有的数据定义语句，比如CREATE、ALTER和DROP语句。\n" +

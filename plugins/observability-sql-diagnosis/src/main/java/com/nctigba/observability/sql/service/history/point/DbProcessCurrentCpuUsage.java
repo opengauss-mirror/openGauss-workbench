@@ -36,7 +36,7 @@ import java.util.List;
  * @since 2023/6/9
  */
 @Service
-public class DbProcessCurrentCpuUsage implements HisDiagnosisPointService<List<AgentDTO>> {
+public class DbProcessCurrentCpuUsage implements HisDiagnosisPointService<AgentDTO> {
     @Autowired
     private DbProcessCurrentCpuItem item;
 
@@ -70,7 +70,7 @@ public class DbProcessCurrentCpuUsage implements HisDiagnosisPointService<List<A
         if (map.isEmpty()) {
             throw new HisDiagnosisException("fetch threshold data failed!");
         }
-        Object object = item.queryData(task);
+        Object object = dataStoreService.getData(item).getCollectionData();
         AgentData agentData = null;
         if (object instanceof AgentData) {
             agentData = (AgentData) object;
@@ -92,7 +92,12 @@ public class DbProcessCurrentCpuUsage implements HisDiagnosisPointService<List<A
         } else {
             analysisDTO.setIsHint(HisDiagnosisResult.ResultState.NO_ADVICE);
         }
-        List<AgentDTO> subList = dtoList.subList(0, 10);
+        List<AgentDTO> subList;
+        if (dtoList.size() > 10) {
+            subList = dtoList.subList(0, 10);
+        } else {
+            subList = dtoList;
+        }
         subList.forEach(f -> f.setCpu(avgCpu.toString()));
         CurrentCpuDTO cpuDTO = new CurrentCpuDTO();
         cpuDTO.setChartName(LocaleString.format("history.currentCpu.agent"));
@@ -103,7 +108,7 @@ public class DbProcessCurrentCpuUsage implements HisDiagnosisPointService<List<A
     }
 
     @Override
-    public List<AgentDTO> getShowData(int taskId) {
+    public AgentDTO getShowData(int taskId) {
         return null;
     }
 }

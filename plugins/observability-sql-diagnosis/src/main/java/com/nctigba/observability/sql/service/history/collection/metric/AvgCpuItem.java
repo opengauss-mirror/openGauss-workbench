@@ -21,7 +21,7 @@ import java.util.List;
 @Service
 public class AvgCpuItem extends PrometheusCollectionItem {
     @Override
-    String getPrometheusParam(List<HisDiagnosisThreshold> thresholds) {
+    public String getPrometheusParam(List<HisDiagnosisThreshold> thresholds) {
         if (CollectionUtils.isEmpty(thresholds)) {
             return MetricCommon.AVG_CPU_USAGE_RATE;
         } else {

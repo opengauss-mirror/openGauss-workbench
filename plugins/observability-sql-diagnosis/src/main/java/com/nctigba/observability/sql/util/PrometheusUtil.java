@@ -47,10 +47,10 @@ import java.util.TimeZone;
 @Slf4j
 public class PrometheusUtil {
     @Autowired
-    protected NctigbaEnvMapper envMapper;
+    private NctigbaEnvMapper envMapper;
     @Autowired
     @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
-    protected HostFacade hostFacade;
+    private HostFacade hostFacade;
 
     private String getPrometheusUrl() {
         var env = envMapper.selectOne(

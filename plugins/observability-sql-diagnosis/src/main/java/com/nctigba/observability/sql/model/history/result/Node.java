@@ -4,12 +4,15 @@
 
 package com.nctigba.observability.sql.model.history.result;
 
+import lombok.Generated;
+
 /**
  * Node
  *
  * @author luomeng
  * @since 2023/6/9
  */
+@Generated
 public class Node {
     private String nodeName;
     private String parentNode;

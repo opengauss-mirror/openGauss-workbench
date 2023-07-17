@@ -6,6 +6,7 @@ package com.nctigba.observability.sql.model.history.point;
 
 import com.nctigba.observability.sql.model.history.dto.LockAnalysisDTO;
 import lombok.Data;
+import lombok.Generated;
 import lombok.experimental.Accessors;
 
 import java.util.List;
@@ -18,6 +19,7 @@ import java.util.List;
  */
 @Data
 @Accessors(chain = true)
+@Generated
 public class LockDTO {
     private String chartName;
     private List<LockAnalysisDTO> lockAnalysisDTOList;

@@ -12,6 +12,7 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.Generated;
 import lombok.NoArgsConstructor;
 
 import java.util.Date;
@@ -26,6 +27,7 @@ import java.util.Date;
 @NoArgsConstructor
 @AllArgsConstructor
 @TableName(value = "his_diagnosis_threshold_info", autoResultMap = true)
+@Generated
 public class HisDiagnosisThreshold {
     @TableId(type = IdType.AUTO)
     Integer id;
