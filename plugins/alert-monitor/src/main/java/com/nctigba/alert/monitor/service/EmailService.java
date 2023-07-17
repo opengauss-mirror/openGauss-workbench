@@ -7,6 +7,11 @@ package com.nctigba.alert.monitor.service;
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.nctigba.alert.monitor.constant.CommonConstants;
+import com.nctigba.alert.monitor.entity.NotifyConfig;
+import com.nctigba.alert.monitor.entity.NotifyMessage;
+import com.nctigba.alert.monitor.mapper.NotifyConfigMapper;
+import com.nctigba.alert.monitor.mapper.NotifyMessageMapper;
 import jakarta.mail.Authenticator;
 import jakarta.mail.Message;
 import jakarta.mail.MessagingException;
@@ -19,11 +24,6 @@ import jakarta.mail.internet.MimeMessage;
 import jakarta.mail.internet.MimeUtility;
 import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.exception.ServiceException;
-import com.nctigba.alert.monitor.constant.CommonConstants;
-import com.nctigba.alert.monitor.entity.NotifyConfig;
-import com.nctigba.alert.monitor.entity.NotifyMessage;
-import com.nctigba.alert.monitor.mapper.NotifyConfigMapper;
-import com.nctigba.alert.monitor.mapper.NotifyMessageMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -69,12 +69,7 @@ public class EmailService {
         NotifyConfig notifyConfig = emailConfigList.get(0);
         Properties properties = this.applyProperties(notifyConfig);
         try {
-            Session session = Session.getInstance(properties, new Authenticator() {
-                @Override
-                protected PasswordAuthentication getPasswordAuthentication() {
-                    return new PasswordAuthentication(notifyConfig.getAccount(), notifyConfig.getPasswd());
-                }
-            });
+            Session session = getSession(properties, notifyConfig.getAccount(), notifyConfig.getPasswd());
             MimeMessage mimeMessage = new MimeMessage(session);
             String[] receiverArr = notifyMessage.getEmail().split(",");
             InternetAddress[] addresses = Stream.of(receiverArr).map(item -> {
@@ -112,12 +107,7 @@ public class EmailService {
         Properties properties = this.applyProperties(notifyConfig);
         for (NotifyMessage notifyMessage : notifyMessageList) {
             try {
-                Session session = Session.getInstance(properties, new Authenticator() {
-                    @Override
-                    protected PasswordAuthentication getPasswordAuthentication() {
-                        return new PasswordAuthentication(notifyConfig.getAccount(), notifyConfig.getPasswd());
-                    }
-                });
+                Session session = getSession(properties, notifyConfig.getAccount(), notifyConfig.getPasswd());
                 MimeMessage mimeMessage = new MimeMessage(session);
                 String[] receiverArr = notifyMessage.getEmail().split(",");
                 InternetAddress[] addresses = Stream.of(receiverArr).map(item -> {
@@ -146,12 +136,7 @@ public class EmailService {
     public void sendTest(NotifyConfig notifyConfig, String receiver, String title, String content) {
         Properties properties = this.applyProperties(notifyConfig);
         try {
-            Session session = Session.getInstance(properties, new Authenticator() {
-                @Override
-                protected PasswordAuthentication getPasswordAuthentication() {
-                    return new PasswordAuthentication(notifyConfig.getAccount(), notifyConfig.getPasswd());
-                }
-            });
+            Session session = getSession(properties, notifyConfig.getAccount(), notifyConfig.getPasswd());
             MimeMessage mimeMessage = new MimeMessage(session);
             String[] receiverArr = receiver.split(",");
             InternetAddress[] addresses = Stream.of(receiverArr).map(item -> {
@@ -178,5 +163,14 @@ public class EmailService {
         }
         return "<div style='white-space: pre-line;'> " + content.replaceAll(CommonConstants.LINE_SEPARATOR, "<br/>")
             + "</div>";
+    }
+
+    private Session getSession(Properties properties, String account, String passwd) {
+        return Session.getInstance(properties, new Authenticator() {
+            @Override
+            protected PasswordAuthentication getPasswordAuthentication() {
+                return new PasswordAuthentication(account, passwd);
+            }
+        });
     }
 }

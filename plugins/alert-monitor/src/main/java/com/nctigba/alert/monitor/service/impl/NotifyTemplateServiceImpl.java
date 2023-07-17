@@ -59,7 +59,6 @@ public class NotifyTemplateServiceImpl extends ServiceImpl<NotifyTemplateMapper,
 
     @Override
     public void delById(Long id) {
-        MessageSourceUtil.reset();
         List<NotifyWay> list = notifyWayService.list(
                 Wrappers.<NotifyWay>lambdaQuery().eq(NotifyWay::getNotifyTemplateId, id).eq(NotifyWay::getIsDeleted,
                         CommonConstants.IS_NOT_DELETE));

@@ -12,6 +12,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import org.opengauss.admin.common.core.domain.AjaxResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -19,7 +20,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.nctigba.common.web.exception.CustomException;
-import com.nctigba.common.web.result.AppResult;
 import com.nctigba.observability.instance.model.monitoring.MonitoringParam;
 import com.nctigba.observability.instance.service.MonitoringService;
 
@@ -37,7 +37,7 @@ import lombok.RequiredArgsConstructor;
 public class MonitoringController {
     private final MonitoringService monitoringService;
     private final ThreadPoolExecutor pool = new ThreadPoolExecutor(10, 50, 60, TimeUnit.SECONDS,
-            new ArrayBlockingQueue<Runnable>(100));
+            new ArrayBlockingQueue<>(100));
 
     private static final List<String> names = Arrays.asList("cpu", "memory", "disk_read", "disk_written",
             "network_transmit", "network_receive", "load5", "run_time", "mem", "cpu_cnt", "uname", "os");
@@ -122,18 +122,18 @@ public class MonitoringController {
             "sum(gauss_global_pagewriter_status_remain_dirty_page_num{instance='ogbrench'})");
 
     @PostMapping("/point")
-    public AppResult point(@RequestBody MonitoringParam monitoringParam) {
+    public AjaxResult point(@RequestBody MonitoringParam monitoringParam) {
         // The specified time point can only be returned in table data format
-        return AppResult.ok("").addData(monitoringService.getPointMonitoringData(monitoringParam));
+        return AjaxResult.success(monitoringService.getPointMonitoringData(monitoringParam));
     }
 
     @PostMapping("/range")
-    public AppResult range(@RequestBody MonitoringParam monitoringParam) {
-        return AppResult.ok("").addData(monitoringService.getRangeMonitoringData(monitoringParam));
+    public AjaxResult range(@RequestBody MonitoringParam monitoringParam) {
+        return AjaxResult.success(monitoringService.getRangeMonitoringData(monitoringParam));
     }
 
     @GetMapping("/server-metric")
-    public AppResult pointMetrics(MonitoringParam monitoringParam) {
+    public AjaxResult pointMetrics(MonitoringParam monitoringParam) {
         Map<String, Object> map = new HashMap<>();
         int i = 0;
         for (String metric : metrics) {
@@ -142,11 +142,11 @@ public class MonitoringController {
             }
             handlePoint(map, monitoringParam, metric, i++);
         }
-        return AppResult.ok("").addData(map);
+        return AjaxResult.success(map);
     }
 
     @GetMapping("/server-info")
-    public AppResult pointInfo(MonitoringParam monitoringParam) {
+    public AjaxResult pointInfo(MonitoringParam monitoringParam) {
         Map<String, Object> map = new HashMap<>();
         int i = 0;
         for (String metric : metrics) {
@@ -156,7 +156,7 @@ public class MonitoringController {
             }
             handlePoint(map, monitoringParam, metric, i++);
         }
-        return AppResult.ok("").addData(map);
+        return AjaxResult.success(map);
     }
 
     private void handlePoint(Map<String, Object> map, MonitoringParam monitoringParam, String metric, int i) {
@@ -174,7 +174,7 @@ public class MonitoringController {
     }
 
     @GetMapping("/database-metrics")
-    public AppResult getDatabaseMetrics(MonitoringParam monitoringParam) {
+    public AjaxResult getDatabaseMetrics(MonitoringParam monitoringParam) {
         Map<String, Object> map = new HashMap<>();
         int i = 0;
         CountDownLatch countDownLatch = new CountDownLatch(databaseMetrics.size());
@@ -207,6 +207,6 @@ public class MonitoringController {
         } catch (InterruptedException e) {
             throw new CustomException(e.getMessage());
         }
-        return AppResult.ok("").addData(map);
+        return AjaxResult.success(map);
     }
 }

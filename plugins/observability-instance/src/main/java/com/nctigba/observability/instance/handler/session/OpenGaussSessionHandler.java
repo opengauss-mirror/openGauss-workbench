@@ -9,14 +9,23 @@ import com.nctigba.observability.instance.constants.CommonConstants;
 import com.nctigba.observability.instance.constants.DatabaseType;
 import com.nctigba.observability.instance.dto.session.DetailStatisticDto;
 import com.nctigba.observability.instance.model.InstanceNodeInfo;
+import com.nctigba.observability.instance.service.ClusterManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
-import java.sql.*;
-import java.util.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static com.nctigba.common.web.exception.InstanceExceptionMsgEnum.SESSION_DETAIL_GENERAL_MESSAGE;
@@ -26,7 +35,6 @@ import static com.nctigba.common.web.exception.InstanceExceptionMsgEnum.SESSION_
 @RequiredArgsConstructor
 @Slf4j
 public class OpenGaussSessionHandler implements SessionHandler {
-
     private static final String TEST_SQL = "select 1";
     private static final String CHECK_SESSION_IS_WAIT_SQL = "select count(waiting) as count from pg_stat_activity "
             + "where sessionid = ? and waiting";
@@ -145,7 +153,7 @@ public class OpenGaussSessionHandler implements SessionHandler {
             + " (select extract(EPOCH from(max(now() - backend_start)))::INTEGER as max_runtime, 1 as key from "
             + "pg_stat_activity where application_name not in "
             + "('WLMArbiter','workload','WorkloadMonitor','WDRSnapshot','JobScheduler','PercentileJob'"
-            + ",'statement flush thread','Asp','ApplyLauncher')) d "
+            + ",'statement flush thread','Asp','ApplyLauncher') and application_name not like 'DataKit%' ) d "
             + " on c.key = d.key";
     private final String LONG_TXC_SQL =
             "SELECT pid,sessionid,usename,datname,application_name,client_addr,query, xact_start,  "
@@ -153,9 +161,10 @@ public class OpenGaussSessionHandler implements SessionHandler {
                     + "FROM pg_stat_activity WHERE STATE <>'idle' and application_name not in  "
                     + "('WLMArbiter','workload',"
                     + "'WorkloadMonitor','WDRSnapshot','JobScheduler','PercentileJob','statement flush thread','Asp',"
-                    + "'ApplyLauncher') "
+                    + "'ApplyLauncher') and application_name not like 'DataKit%' "
                     + "and now()-xact_start > interval '30 SECOND' "
                     + "ORDER BY xact_start;";
+    private final ClusterManager clusterManager;
 
     @Override
     public String getDatabaseType() {
@@ -164,19 +173,11 @@ public class OpenGaussSessionHandler implements SessionHandler {
 
     @Override
     public Connection getConnection(InstanceNodeInfo nodeInfo) {
-        String driver = "org.opengauss.Driver";
-        String jdbcUrl = "jdbc:opengauss://" + nodeInfo.getIp() + ":" + nodeInfo.getPort() + "/" + nodeInfo.getDbName();
-        try {
-            Class.forName(driver);
-            Connection conn = DriverManager.getConnection(jdbcUrl, nodeInfo.getDbUser(), nodeInfo.getDbUserPassword());
-            if (testConnection(conn)) {
-                return conn;
-            }
-        } catch (Exception e) {
-            log.error("get connection fail:{}", e.getMessage());
-            throw new InstanceException(e.getMessage());
+        Connection connection = clusterManager.getConnectionByNodeInfo(nodeInfo);
+        if (!testConnection(connection)) {
+            return null;
         }
-        return null;
+        return connection;
     }
 
     @Override

@@ -9,10 +9,12 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
+import lombok.Generated;
 import lombok.experimental.Accessors;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 
 @Data
+@Generated
 @Accessors(chain = true)
 @TableName("nctigba_env")
 public class NctigbaEnv {

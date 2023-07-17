@@ -8,14 +8,6 @@ import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
-import lombok.extern.slf4j.Slf4j;
-import org.opengauss.admin.common.core.domain.entity.ops.OpsClusterEntity;
-import org.opengauss.admin.common.core.domain.entity.ops.OpsClusterNodeEntity;
-import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
-import org.opengauss.admin.common.exception.ServiceException;
-import org.opengauss.admin.system.plugin.facade.HostFacade;
-import org.opengauss.admin.system.service.ops.IOpsClusterNodeService;
-import org.opengauss.admin.system.service.ops.IOpsClusterService;
 import com.nctigba.alert.monitor.constant.CommonConstants;
 import com.nctigba.alert.monitor.dto.AlertContentParamDto;
 import com.nctigba.alert.monitor.entity.AlertRecord;
@@ -33,6 +25,14 @@ import com.nctigba.alert.monitor.mapper.NotifyWayMapper;
 import com.nctigba.alert.monitor.model.api.AlertApiReq;
 import com.nctigba.alert.monitor.model.api.AlertLabels;
 import com.nctigba.alert.monitor.utils.TextParser;
+import lombok.extern.slf4j.Slf4j;
+import org.opengauss.admin.common.core.domain.entity.ops.OpsClusterEntity;
+import org.opengauss.admin.common.core.domain.entity.ops.OpsClusterNodeEntity;
+import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
+import org.opengauss.admin.common.exception.ServiceException;
+import org.opengauss.admin.system.plugin.facade.HostFacade;
+import org.opengauss.admin.system.service.ops.IOpsClusterNodeService;
+import org.opengauss.admin.system.service.ops.IOpsClusterService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -97,9 +97,18 @@ public class AlertApiService {
             String clusterNodeId = labels.getInstance();
             AlertContentParamDto contentParamDto = setAndGetAlertContentParamDto(clusterNodeId,
                 alertApiReq.getStartsAt(), labels.getLevel());
-
             AlertRecord alertRecord = saveAndGetRecord(alertApiReq, notifyWayNames, alertTemplateRule, contentParamDto);
             contentParamDto.setContent(alertRecord.getAlertContent());
+            if (StrUtil.isBlank(alertTemplateRule.getAlertNotify())) {
+                continue;
+            }
+            List<String> alertNotifyList = Arrays.asList(alertTemplateRule.getAlertNotify()
+                .split(CommonConstants.DELIMITER));
+            String alertStatus = alertRecord.getAlertStatus().equals(CommonConstants.FIRING_STATUS)
+                ? "firing" : "recover";
+            if (!alertNotifyList.contains(alertStatus)) {
+                continue;
+            }
 
             Integer isRepeat = alertTemplateRule.getIsRepeat();
             if (isRepeat == CommonConstants.IS_NOT_REPEAT) {
@@ -109,7 +118,7 @@ public class AlertApiService {
                     continue;
                 }
             }
-            Integer isSilence = alertTemplateRule.getIsSilence(); // 是否静默
+            Integer isSilence = alertTemplateRule.getIsSilence();
             LocalDateTime now = LocalDateTime.now();
             if (isSilence == CommonConstants.IS_SILENCE && now.isAfter(alertTemplateRule.getSilenceStartTime())
                 && now.isBefore(alertTemplateRule.getSilenceEndTime())) {
@@ -137,12 +146,12 @@ public class AlertApiService {
             alertRecord = new AlertRecord();
             AlertTemplate alertTemplate = templateMapper.selectById(templateId);
             alertRecord.setClusterNodeId(clusterNodeId).setTemplateId(templateId).setTemplateRuleId(
-                alertTemplateRule.getId()).setStartTime(alertApiReq.getStartsAt()).setEndTime(endsAt)
+                    alertTemplateRule.getId()).setStartTime(alertApiReq.getStartsAt()).setEndTime(endsAt)
                 .setCreateTime(LocalDateTime.now());
             alertRecord.setDuration(
                 Duration.between(alertRecord.getStartTime(), alertRecord.getEndTime()).toSeconds());
             alertRecord.setTemplateName(alertTemplate.getTemplateName()).setTemplateRuleName(
-                    alertTemplateRule.getRuleName())
+                    alertTemplateRule.getRuleName()).setAlertStatus(CommonConstants.FIRING_STATUS)
                 .setTemplateRuleType(alertTemplateRule.getRuleType()).setLevel(alertTemplateRule.getLevel())
                 .setNotifyWayIds(alertTemplateRule.getNotifyWayIds()).setNotifyWayNames(notifyWayNames);
             String ruleContent = alertTemplateRule.getRuleContent();
@@ -188,7 +197,7 @@ public class AlertApiService {
             opsClusterEntity.getClusterId() + "/" + opsHost.getPublicIp() + ":" + opsClusterEntity.getPort()
                 + "(" + opsClusterNodeEntity.getClusterRole() + ")";
         contentParamDto.setHostname(opsHost.getHostname()).setNodeName(nodeName).setPort(
-            opsClusterEntity.getPort() != null ? opsHost.getPort().toString() : "").setHostIp(
+            opsClusterEntity.getPort() != null ? opsClusterEntity.getPort().toString() : "").setHostIp(
             opsHost.getPublicIp()).setAlertTime(
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(alertTime)).setLevel(
             level);

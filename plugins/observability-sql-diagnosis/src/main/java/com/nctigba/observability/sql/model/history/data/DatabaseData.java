@@ -7,6 +7,7 @@ package com.nctigba.observability.sql.model.history.data;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import lombok.Data;
+import lombok.Generated;
 
 /**
  * DatabaseData
@@ -15,6 +16,7 @@ import lombok.Data;
  * @since 2023/6/9
  */
 @Data
+@Generated
 public class DatabaseData {
     private JSONObject sqlName;
     private String tableName;

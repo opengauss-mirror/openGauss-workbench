@@ -12,33 +12,10 @@
                 </div>
             </div>
             <div class="search-form">
-                <div class="filter">
-                    <!-- <div class="el-input el-input-group el-input-group--append el-input--suffix">
-                        <div class="el-input__wrapper">
-                            <span class="el-input__inner">上下文</span>
-                            <span class="el-input-group__append">
-                                <el-select v-model="formData.contextCount" clearable placeholder="$t('datasource.logContextPlaceholder')">
-                                    <el-option v-for="item in logContextCountList" :key="item.value" :label="item.label" :value="item.value" />
-                                </el-select>
-                            </span>
-                            <span class="el-input__suffix">
-                                <span class="el-input__suffix-inner">
-                                    <el-icon class="el-input__icon"><CloseBold /></el-icon>
-                                </span>
-                            </span>
-                        </div>
-                    </div> -->
-                </div>
                 <div class="filter" v-if="showContextCount">
-                    <!-- <span>{{ $t('datasource.logContext') }}&nbsp;</span>
-                    <el-select v-model="formData.contextCount" clearable placeholder="$t('datasource.logContextPlaceholder')">
-                        <el-option v-for="item in logContextCountList" :key="item.value" :label="item.label" :value="item.value" />
-                    </el-select>
-                    <el-button text bg type="" :icon="CloseBold" size="small" style="position: relative;  left: 0" @click="hideContextCount" /> -->
                     <div class="log-context">
                         <span>{{ $t('datasource.logContext') }}&nbsp;&nbsp;</span>
                         <select v-model="formData.contextCount">
-                            <!-- <option v-for="item in logContextCountList" :value="item.value">{{item.label }}</option> -->
                             <option  :value="5">{{t('app.logContextCountLabelList[0]') }}</option> 
                             <option  :value="10">{{t('app.logContextCountLabelList[1]')}}</option> 
                             <option  :value="20">{{t('app.logContextCountLabelList[2]') }}</option> 
@@ -207,32 +184,6 @@ const nodeIds = ref<string[]>([]);
 const sorts = ref<string[]>([]);
 const typeNames = ref<string[]>([]);
 const logLevelSelected = ref<string[]>([]);
-const logContextCountList = ref<any[]>([
-    {
-        label: t('app.logContextCountLabelList[0]'),
-        value: 5,
-    },
-    {
-        label: t('app.logContextCountLabelList[1]'),
-        value: 10,
-    },
-    {
-        label: t('app.logContextCountLabelList[2]'),
-        value: 20,
-    },
-    {
-        label: t('app.logContextCountLabelList[3]'),
-        value: 30,
-    },
-    {
-        label: t('app.logContextCountLabelList[4]'),
-        value: 40,
-    },
-    {
-        label: t('app.logContextCountLabelList[5]'),
-        value: 50,
-    },
-]);
 
 type LogsRes =
     | {
@@ -314,9 +265,9 @@ const scrollToBottom = () => {
     if (!noMore.value) listLogScrollData();
 };
 const refreshLog = () => {
-    // if (formData.searchText || (formData.dateValue && formData.dateValue.length > 0)) {
-    //     showContextCount.value = false;
-    // }
+    if (formData.searchText || (formData.dateValue && formData.dateValue.length > 0)) {
+        showContextCount.value = false;
+    }
     noMore.value = false;
     loading.value = false;
     scrollId.value = null;
@@ -408,7 +359,6 @@ const mouseLeave = (event: any) => {
     if (pageX <= left) {
         showSearchBtn.value = false;
         curRow.value = {};
-        return;
     }
 };
 const showContextCount = ref<boolean>(false);
@@ -714,10 +664,6 @@ onMounted(() => {
         nodeIds.value = _nodeIds;
     }
     curLogData.id = _id ? _id : param && param.id ? param.id : '';
-    // curLogData.logTime = _logTime ? _logTime : param && param.logTime ? param.logTime : '';
-    // curLogData.logType = _logType ? _logType : param && param.logType ? param.logType : '';
-    // curLogData.typeNames = _typeNames ? _typeNames : param && param.typeNames ? param.typeNames : '';
-    // curLogData.logLevelSelected = _logLevelSelected ? _logLevelSelected : param && param.logLevelSelected ? param.logLevelSelected : '';
     listClusterData();
     listLogTypeData();
     listLogLevelData();

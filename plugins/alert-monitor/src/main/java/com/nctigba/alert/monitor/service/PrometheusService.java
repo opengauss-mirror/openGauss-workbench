@@ -15,13 +15,6 @@ import cn.hutool.json.JSONObject;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
-import lombok.extern.slf4j.Slf4j;
-import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
-import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
-import org.opengauss.admin.common.exception.ServiceException;
-import org.opengauss.admin.system.plugin.facade.HostFacade;
-import org.opengauss.admin.system.plugin.facade.HostUserFacade;
-import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
 import com.nctigba.alert.monitor.config.properties.AlertProperty;
 import com.nctigba.alert.monitor.config.properties.AlertmanagerProperty;
 import com.nctigba.alert.monitor.constant.CommonConstants;
@@ -37,6 +30,13 @@ import com.nctigba.alert.monitor.mapper.AlertTemplateRuleMapper;
 import com.nctigba.alert.monitor.mapper.NctigbaEnvMapper;
 import com.nctigba.alert.monitor.utils.SshSession;
 import com.nctigba.alert.monitor.utils.YamlUtil;
+import lombok.extern.slf4j.Slf4j;
+import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
+import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
+import org.opengauss.admin.common.exception.ServiceException;
+import org.opengauss.admin.system.plugin.facade.HostFacade;
+import org.opengauss.admin.system.plugin.facade.HostUserFacade;
+import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -122,7 +122,8 @@ public class PrometheusService {
             throw new ServiceException("the host user Prometheus is not exist");
         }
         OpsHostUserEntity promUser = promUserList.get(0);
-        encryptionUtils.refreshKeyPair();
+        // get the publicKey. if publicKey is null or "",it will refresh the publicKey and the privateKey
+        encryptionUtils.getKey();
         prometheusEnvDto.setPromIp(promeHost.getPublicIp()).setHostPort(promeHost.getPort()).setPromPort(
             promEnv.getPort()).setPromUsername(promUser.getUsername()).setPromPasswd(
             encryptionUtils.decrypt(promUser.getPassword())).setPath(promEnv.getPath());
@@ -247,7 +248,7 @@ public class PrometheusService {
             PrometheusConfigDto config = getPromConfig();
             updatePromConfig(session, config);
             session.close();
-        } catch (IOException | CryptoException e) {
+        } catch (IOException | CryptoException | ServiceException | NullPointerException e) {
             log.error("init prometheus configuration fail: ", e);
         }
     }
@@ -307,7 +308,7 @@ public class PrometheusService {
             return new Number[0][0];
         }
         JSONObject metricInfo = result.getJSONObject(0);
-        if (metricInfo == null) {
+        if (metricInfo.isEmpty()) {
             return new Number[0][0];
         }
         JSONArray values = metricInfo.getJSONArray("values");
@@ -348,7 +349,7 @@ public class PrometheusService {
         if (templateId == null) {
             return;
         }
-        // 更新prometheus规则配置文件
+        // update the rule configuration file of the prometheus
         try {
             initPrometheusEnvDto();
             SshSession session = SshSession.connect(prometheusEnvDto.getPromIp(), prometheusEnvDto.getHostPort(),

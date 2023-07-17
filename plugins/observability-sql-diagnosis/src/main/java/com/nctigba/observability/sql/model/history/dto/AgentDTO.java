@@ -5,6 +5,7 @@
 package com.nctigba.observability.sql.model.history.dto;
 
 import lombok.Data;
+import lombok.Generated;
 
 /**
  * AgentDTO
@@ -13,6 +14,7 @@ import lombok.Data;
  * @since 2023/6/9
  */
 @Data
+@Generated
 public class AgentDTO {
     private String res;
     private String mem;

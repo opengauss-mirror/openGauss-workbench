@@ -16,6 +16,7 @@ import com.nctigba.observability.sql.constants.CommonConstants;
 import com.nctigba.observability.sql.model.history.query.OptionQuery;
 import com.nctigba.observability.sql.model.history.result.TaskState;
 import lombok.Data;
+import lombok.Generated;
 import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.core.domain.model.ops.OpsClusterVO;
@@ -36,6 +37,7 @@ import java.util.List;
 @TableName(value = "his_diagnosis_task_info", autoResultMap = true)
 @Accessors(chain = true)
 @Slf4j
+@Generated
 public class HisDiagnosisTask {
     @TableId(type = IdType.AUTO)
     Integer id;

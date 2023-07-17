@@ -303,7 +303,7 @@ public class TableColumnSQLServiceImpl implements TableColumnSQLService {
         StringBuilder ddl = new StringBuilder(ALTER_TABLE_SQL).append(schema).append(POINT)
                 .append(tableName);
         String column;
-        if (!StringUtils.isEmpty(data.getNewColumnName()) && !data.getNewColumnName().equals(data.getColumnName())) {
+        if (StringUtils.isNotEmpty(data.getNewColumnName()) && !data.getNewColumnName().equals(data.getColumnName())) {
             StringBuilder rename = new StringBuilder(ddl).append(RENAME_KEYWORD_SQL).append(COLUMN_KEYWORD_SQL)
                     .append(DebugUtils.containsSqlInjection(data.getColumnName())).append(TO_KEYWORD_SQL)
                     .append(DebugUtils.containsSqlInjection(data.getNewColumnName())).append(SEMICOLON);
@@ -312,8 +312,7 @@ public class TableColumnSQLServiceImpl implements TableColumnSQLService {
         } else {
             column = DebugUtils.containsSqlInjection(data.getColumnName());
         }
-        ddl.append(SPACE).append(ALTER_SQL).append(COLUMN_KEYWORD_SQL).append(column).append(SPACE).append(
-                TYPE_KEYWORD_SQL);
+        ddl.append(SPACE).append(ALTER_SQL).append(COLUMN_KEYWORD_SQL).append(column).append(SPACE);
         if (!StringUtils.isEmpty(data.getType())) {
             StringBuilder alter = new StringBuilder(ddl);
             StringBuilder precision = new StringBuilder();
@@ -324,9 +323,10 @@ public class TableColumnSQLServiceImpl implements TableColumnSQLService {
                 }
                 precision.append(RIGHT_BRACKET);
             }
+            alter.append(TYPE_KEYWORD_SQL);
             if (data.getType().endsWith("[]")) {
-                alter.append(data.getType(), 0, data.getType().length() - 2);
-                alter.append(precision).append("[]").append(SEMICOLON);
+                alter.append(data.getType(), 0, data.getType().length() - 2)
+                        .append(precision).append("[]").append(SEMICOLON);
             } else {
                 alter.append(data.getType());
                 alter.append(precision).append(SEMICOLON);
@@ -348,7 +348,8 @@ public class TableColumnSQLServiceImpl implements TableColumnSQLService {
                 value = DebugUtils.containsSqlInjection(data.getDefaultValue());
             } else {
                 value =
-                        String.valueOf(new StringBuilder(QUOTES).append(DebugUtils.containsSqlInjection(data.getDefaultValue())).append(QUOTES));
+                        String.valueOf(new StringBuilder(QUOTES)
+                                .append(DebugUtils.containsSqlInjection(data.getDefaultValue())).append(QUOTES));
             }
             String alterDrop = String.format(ALTER_DEFAULT_SQL, schema, tableName, column, value);
             list.add(alterDrop);
@@ -372,11 +373,10 @@ public class TableColumnSQLServiceImpl implements TableColumnSQLService {
                 list.add(sql);
             }
         }
-        if (!StringUtils.isEmpty(data.getComment())) {
-            StringBuilder comment = new StringBuilder(COMMENT_ON_COLUMN_SQL).append(schema).append(POINT)
-                    .append(tableName).append(POINT).append(DebugUtils.containsSqlInjection(data.getNewColumnName())).append(IS_SQL)
-                    .append(DebugUtils.containsSqlInjection(data.getComment())).append(QUOTES_SEMICOLON);
-            list.add(comment.toString());
+        if (StringUtils.isNotEmpty(data.getComment())) {
+            String sql = String.format(COMMENT_ON_COLUMN_SQL, schema, tableName, column, data.getComment());
+            log.info("Comment response is: " + sql);
+            list.add(sql);
         }
         log.info("tableColumnUpdateSQL response is: " + list);
         return list;
@@ -457,7 +457,7 @@ public class TableColumnSQLServiceImpl implements TableColumnSQLService {
             amname = " using  " + DebugUtils.containsSqlInjection(obj.getAmname());
         }
         String att = DebugUtils.containsSqlInjection(obj.getAttname());
-        if (StringUtils.isEmpty(att)&&!StringUtils.isEmpty(obj.getExpression())) {
+        if (StringUtils.isEmpty(att) && !StringUtils.isEmpty(obj.getExpression())) {
             att = DebugUtils.containsSqlInjection(obj.getExpression());
         }
         return String.format(SqlConstants.INDEX_CREATE_SQL, u, obj.getIndexName(), schema,
@@ -549,8 +549,8 @@ public class TableColumnSQLServiceImpl implements TableColumnSQLService {
         } else if (tableUnderlyingInfoQuery.getFillingFactor() != 100) {
             cteate.append(String.format(WITH_SQL, FILLFACTOR_SQL, tableUnderlyingInfoQuery.getFillingFactor()));
         }
-        cteate.append(String.format(TABLESPACE_SQL, tableUnderlyingInfoQuery.getTableSpace())).append(SEMICOLON).append(
-                getPartitionSQL(request.getPartitionInfo())).append(LF);
+        cteate.append(String.format(TABLESPACE_SQL, tableUnderlyingInfoQuery.getTableSpace())).append(
+                getPartitionSQL(request.getPartitionInfo())).append(SEMICOLON).append(LF);
         StringBuilder indexComment = new StringBuilder();
         for (var index : request.getIndexs()) {
             String indexSql = addIndexSQL(request.getSchema(), tableUnderlyingInfoQuery.getTableName(), index);
@@ -560,7 +560,7 @@ public class TableColumnSQLServiceImpl implements TableColumnSQLService {
             }
         }
 
-        if (StringUtils.isEmpty(tableUnderlyingInfoQuery.getComment()) && !tableUnderlyingInfoQuery.getComment()
+        if (StringUtils.isNotEmpty(tableUnderlyingInfoQuery.getComment()) && !tableUnderlyingInfoQuery.getComment()
                 .equals("")) {
             cteate.append(String.format(COMMENT_TABLE_SQL, request.getSchema(), tableUnderlyingInfoQuery.getTableName(),
                     tableUnderlyingInfoQuery.getComment()));
@@ -588,7 +588,6 @@ public class TableColumnSQLServiceImpl implements TableColumnSQLService {
                 partition.append(String.format(HASH_SQL, request.getPartitionColumn(), request.getPartitionName(),
                         request.getTableSpace()));
             }
-            partition.append(SEMICOLON);
             return partition.toString();
         }
         return "";

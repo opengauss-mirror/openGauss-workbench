@@ -71,7 +71,6 @@ public class AlertTemplateRuleServiceImpl extends ServiceImpl<AlertTemplateRuleM
 
     @Override
     public AlertTemplateRuleDto saveTemplateRule(AlertTemplateRule alertTemplateRule) {
-        MessageSourceUtil.reset();
         AlertTemplateRuleDto templateRuleDto = new AlertTemplateRuleDto();
         if (alertTemplateRule.getId() == null) {
             alertTemplateRule.setCreateTime(LocalDateTime.now());
@@ -113,7 +112,6 @@ public class AlertTemplateRuleServiceImpl extends ServiceImpl<AlertTemplateRuleM
 
 
     public List<AlertTemplateRuleDto> getDtoListByTemplateId(Long templateId) {
-        MessageSourceUtil.reset();
         List<AlertTemplateRule> alertRules =
                 this.baseMapper.selectList(
                         Wrappers.<AlertTemplateRule>lambdaQuery().eq(AlertTemplateRule::getTemplateId, templateId).eq(

@@ -16,7 +16,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class DeadlockItem extends ElasticSearchCollectionItem {
     @Override
-    String getQueryParam() {
+    public String getQueryParam() {
         return ElasticSearchCommon.DEADLOCK;
     }
 }

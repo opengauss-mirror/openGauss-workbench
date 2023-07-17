@@ -4,12 +4,15 @@
 
 package com.nctigba.observability.sql.constants.history;
 
+import lombok.Generated;
+
 /**
  * ElasticSearchCommon
  *
  * @author luomeng
  * @since 2023/6/11
  */
+@Generated
 public class ElasticSearchCommon {
     public static final String LOCK_TIMEOUT = "Lock wait timeout";
     public static final String DEADLOCK = "deadlock detected";

@@ -6,6 +6,7 @@ package com.nctigba.observability.sql.model.history.point;
 
 import com.nctigba.observability.sql.constants.history.PrometheusConstants;
 import lombok.Data;
+import lombok.Generated;
 import lombok.experimental.Accessors;
 
 import java.text.SimpleDateFormat;
@@ -20,6 +21,7 @@ import java.util.TimeZone;
  */
 @Data
 @Accessors(chain = true)
+@Generated
 public class AspAnalysisDTO {
     private String startTime;
     private String endTime;

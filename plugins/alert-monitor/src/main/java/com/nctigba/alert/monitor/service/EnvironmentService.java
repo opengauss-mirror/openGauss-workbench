@@ -50,7 +50,6 @@ public class EnvironmentService {
     }
 
     public Map<String, Map<String, String>> getAlertContentParam(String type) {
-        MessageSourceUtil.reset();
         Map<String, Map<String, String>> map = new HashMap<>();
         Class<AlertContentParamDto> clazz = AlertContentParamDto.class;
         Field[] declaredFields = clazz.getDeclaredFields();

@@ -44,6 +44,8 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @MapperScan({"com.nctigba.alert.monitor.mapper", "org.opengauss.admin.system.mapper"})
 public class ObservabilityPluginBootApplication {
     public static void main(String[] args) {
-        SpringApplication.run(ObservabilityPluginBootApplication.class, args);
+        SpringApplication app = new SpringApplication(ObservabilityPluginBootApplication.class);
+        app.setAdditionalProfiles("dev");
+        app.run(args);
     }
 }

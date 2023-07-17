@@ -4,8 +4,6 @@
 
 package com.nctigba.alert.monitor.constant;
 
-import java.io.File;
-
 /**
  * @author wuyuebin
  * @date 2023/4/27 17:49
@@ -33,6 +31,6 @@ public class CommonConstants {
     public static final Integer ENABLE = 1;
     public static final Integer DISABLE = 0;
     //dev use "/"
-    public static final String SLASH = File.separator;
+    public static final String SLASH = "/";
     public static final String LINE_SEPARATOR = System.lineSeparator();
 }

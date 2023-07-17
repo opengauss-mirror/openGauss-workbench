@@ -4,7 +4,6 @@
 
 package com.nctigba.observability.sql.util;
 
-import co.elastic.clients.elasticsearch._types.FieldValue;
 import co.elastic.clients.elasticsearch._types.SortOptions;
 import co.elastic.clients.elasticsearch._types.SortOrder;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
@@ -146,135 +145,26 @@ public class EsLogSearchUtils {
      */
     public Function<Query.Builder, ObjectBuilder<Query>> query(EsSearchQuery queryParam) {
         boolean isPhrase = StringUtils.isNotBlank(queryParam.getSearchPhrase());
-        boolean isLogLevel = queryParam.getLogLevel() != null && queryParam.getLogLevel().size() > 0;
-        List<FieldValue> fieldValues = new ArrayList<>();
-        if (!isPhrase && !queryParam.hasDateFilter() && !isLogLevel) {
+        if (!isPhrase && !queryParam.hasDateFilter()) {
             return q -> q.matchAll(f -> f);
         }
-        if (isLogLevel) {
-            for (String logLevel : queryParam.getLogLevel()) {
-                fieldValues.add(FieldValue.of(logLevel));
-            }
-        }
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
-        if (isLogLevel && queryParam.hasDateFilter() && !isPhrase) {
-            if (queryParam.getStartDate() != null && queryParam.getEndDate() == null) {
-                return q -> {
-                    q.bool(b -> b.filter(f -> f.range(
-                            r -> r.field("@timestamp").gte(JsonData.of(sdf.format(queryParam.getStartDate()))))).must(
-                            r -> r.terms(f -> f.field("log_level.keyword").terms(g -> g.value(fieldValues)))));
-                    return q;
-                };
-            } else if (queryParam.getEndDate() != null && queryParam.getStartDate() == null) {
-                return q -> {
-                    q.bool(b -> b.filter(f -> f.range(
-                            r -> r.field("@timestamp").lt(JsonData.of(sdf.format(queryParam.getEndDate()))))).must(
-                            r -> r.terms(f -> f.field("log_level.keyword").terms(g -> g.value(fieldValues)))));
-                    return q;
-                };
-            } else {
-                return q -> {
-                    q.bool(b -> b.filter(f -> f.range(
-                            r -> r.field("@timestamp").gte(JsonData.of(sdf.format(queryParam.getStartDate()))).lt(
-                                    JsonData.of(sdf.format(queryParam.getEndDate()))))).must(
-                            r -> r.terms(f -> f.field("log_level.keyword").terms(g -> g.value(fieldValues)))));
-                    return q;
-                };
-            }
-        } else if (isLogLevel && queryParam.hasDateFilter() && isPhrase) {
-            if (queryParam.getStartDate() != null && queryParam.getEndDate() == null) {
-                return q -> {
-                    q.bool(b -> b.filter(f -> f.range(
-                            r -> r.field("@timestamp").gte(JsonData.of(sdf.format(queryParam.getStartDate()))))).must(
-                            r -> r.terms(f -> f.field("log_level.keyword").terms(g -> g.value(fieldValues)))).must(
-                            r -> r.matchPhrase(
-                                    f -> f.field("message").query(queryParam.getSearchPhrase().toLowerCase()))));
-                    return q;
-                };
-            } else if (queryParam.getEndDate() != null && queryParam.getStartDate() == null) {
-                return q -> {
-                    q.bool(b -> b.filter(f -> f.range(
-                            r -> r.field("@timestamp").lt(JsonData.of(sdf.format(queryParam.getEndDate()))))).must(
-                            r -> r.terms(f -> f.field("log_level.keyword").terms(g -> g.value(fieldValues)))).must(
-                            r -> r.matchPhrase(
-                                    f -> f.field("message").query(queryParam.getSearchPhrase().toLowerCase()))));
-                    return q;
-                };
-            } else {
-                return q -> {
-                    q.bool(b -> b.filter(f -> f.range(
-                            r -> r.field("@timestamp").gte(JsonData.of(sdf.format(queryParam.getStartDate()))).lt(
-                                    JsonData.of(sdf.format(queryParam.getEndDate()))))).must(
-                            r -> r.terms(f -> f.field("log_level.keyword").terms(g -> g.value(fieldValues)))).must(
-                            r -> r.matchPhrase(
-                                    f -> f.field("message").query(queryParam.getSearchPhrase().toLowerCase()))));
-                    return q;
-                };
-            }
-        } else if (!isLogLevel && queryParam.hasDateFilter() && isPhrase) {
-            if (queryParam.getStartDate() != null && queryParam.getEndDate() == null) {
-                return q -> {
-                    q.bool(b -> b.filter(f -> f.range(
-                            r -> r.field("@timestamp").gte(JsonData.of(sdf.format(queryParam.getStartDate()))))).must(
-                            r -> r.matchPhrase(
-                                    f -> f.field("message").query(queryParam.getSearchPhrase().toLowerCase()))));
-                    return q;
-                };
-            } else if (queryParam.getEndDate() != null && queryParam.getStartDate() == null) {
-                return q -> {
-                    q.bool(b -> b.filter(f -> f.range(
-                            r -> r.field("@timestamp").lt(JsonData.of(sdf.format(queryParam.getEndDate()))))).must(
-                            r -> r.matchPhrase(
-                                    f -> f.field("message").query(queryParam.getSearchPhrase().toLowerCase()))));
-                    return q;
-                };
-            } else {
-                return q -> {
-                    q.bool(b -> b.filter(f -> f.range(
-                            r -> r.field("@timestamp").gte(JsonData.of(sdf.format(queryParam.getStartDate()))).lt(
-                                    JsonData.of(sdf.format(queryParam.getEndDate()))))).must(r -> r.matchPhrase(
-                            f -> f.field("message").query(queryParam.getSearchPhrase().toLowerCase()))));
-                    return q;
-                };
-            }
-        } else if (isLogLevel && !queryParam.hasDateFilter() && isPhrase) {
+        if (queryParam.getEndDate() == null) {
             return q -> {
-                q.bool(b -> b.must(
-                        r -> r.terms(f -> f.field("log_level.keyword").terms(g -> g.value(fieldValues)))).must(
-                        r -> r.matchPhrase(f -> f.field("message").query(queryParam.getSearchPhrase().toLowerCase()))));
-                return q;
-            };
-        } else if (isLogLevel && !queryParam.hasDateFilter() && !isPhrase) {
-            return q -> {
-                q.terms(f -> f.field("log_level.keyword").terms(g -> g.value(fieldValues)));
-                return q;
-            };
-        } else if (!isLogLevel && !queryParam.hasDateFilter() && isPhrase) {
-            return q -> {
-                q.matchPhrase(f -> f.field("message").query(queryParam.getSearchPhrase().toLowerCase()));
+                q.bool(b -> b.filter(f -> f.range(
+                        r -> r.field("@timestamp").gte(JsonData.of(sdf.format(queryParam.getStartDate()))))).must(
+                        r -> r.matchPhrase(
+                                f -> f.field("message").query(queryParam.getSearchPhrase().toLowerCase()))));
                 return q;
             };
         } else {
-            if (queryParam.getStartDate() != null && queryParam.getEndDate() == null) {
-                return q -> {
-                    q.bool(b -> b.filter(f -> f.range(
-                            r -> r.field("@timestamp").gte(JsonData.of(sdf.format(queryParam.getStartDate()))))));
-                    return q;
-                };
-            } else if (queryParam.getEndDate() != null && queryParam.getStartDate() == null) {
-                return q -> {
-                    q.bool(b -> b.filter(f -> f.range(
-                            r -> r.field("@timestamp").lt(JsonData.of(sdf.format(queryParam.getEndDate()))))));
-                    return q;
-                };
-            } else {
-                return q -> {
-                    q.bool(b -> b.filter(f -> f.range(
-                            r -> r.field("@timestamp").gte(JsonData.of(sdf.format(queryParam.getStartDate()))).lt(
-                                    JsonData.of(sdf.format(queryParam.getEndDate()))))));
-                    return q;
-                };
-            }
+            return q -> {
+                q.bool(b -> b.filter(f -> f.range(
+                        r -> r.field("@timestamp").gte(JsonData.of(sdf.format(queryParam.getStartDate()))).lt(
+                                JsonData.of(sdf.format(queryParam.getEndDate()))))).must(r -> r.matchPhrase(
+                        f -> f.field("message").query(queryParam.getSearchPhrase().toLowerCase()))));
+                return q;
+            };
         }
     }
 

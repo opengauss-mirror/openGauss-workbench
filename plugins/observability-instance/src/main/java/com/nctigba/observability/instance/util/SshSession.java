@@ -18,6 +18,7 @@ import org.apache.sshd.client.SshClient;
 import org.apache.sshd.client.channel.ClientChannelEvent;
 import org.apache.sshd.client.session.ClientSession;
 import org.apache.sshd.sftp.client.SftpClientFactory;
+import org.opengauss.admin.common.exception.CustomException;
 
 import cn.hutool.core.thread.ThreadUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -53,6 +54,23 @@ public class SshSession implements AutoCloseable {
         }
     }
 
+    /**
+     * check port if in use
+     *
+     * @param port port to check
+     * @throws IOException     from
+     *                         org.apache.sshd.client.session.ClientSession#createExecChannel
+     * @throws CustomException when port in use throws Exception
+     */
+    public void testPortCanUse(int port) throws IOException {
+        try {
+            execute("netstat -tuln | grep " + port);
+        } catch (CustomException e) {
+            return;
+        }
+        throw new CustomException("port in use:" + port);
+    }
+
     public boolean test(String command) throws IOException {
         try {
             execute(command);
@@ -82,7 +100,7 @@ public class SshSession implements AutoCloseable {
         for (int i = 0; i < 100 && ec.getExitStatus() == null; i++)
             ThreadUtil.sleep(100L);
         if (ec.getExitStatus() != null && ec.getExitStatus() != 0)
-            throw new RuntimeException(command + " \n " + os.toString().trim());
+            throw new CustomException(command + " \n " + os.toString().trim());
         return os.toString().trim();
     }
 

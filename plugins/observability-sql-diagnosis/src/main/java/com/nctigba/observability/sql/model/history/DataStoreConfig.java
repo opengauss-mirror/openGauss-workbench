@@ -6,6 +6,7 @@ package com.nctigba.observability.sql.model.history;
 
 import com.nctigba.observability.sql.service.history.collection.CollectionItem;
 import lombok.Data;
+import lombok.Generated;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
@@ -18,6 +19,7 @@ import lombok.experimental.Accessors;
 @Data
 @NoArgsConstructor
 @Accessors(chain = true)
+@Generated
 public class DataStoreConfig {
     private CollectionItem<?> collectionItem;
     private Object collectionData;

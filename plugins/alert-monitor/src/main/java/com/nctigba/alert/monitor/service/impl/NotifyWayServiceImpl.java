@@ -71,7 +71,6 @@ public class NotifyWayServiceImpl extends ServiceImpl<NotifyWayMapper, NotifyWay
 
     @Override
     public void delById(Long id) {
-        MessageSourceUtil.reset();
         List<AlertRule> ruleList = ruleService.list(
                 Wrappers.<AlertRule>query().eq("is_deleted", CommonConstants.IS_NOT_DELETE).and(
                         wrapper -> wrapper.gt("position('" + id + ",' in notify_way_ids)", 0).or().gt(

@@ -6,8 +6,8 @@ package com.nctigba.observability.instance.constants;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
-@RequiredArgsConstructor
 @Getter
+@RequiredArgsConstructor
 public enum MonitoringType {
 
     DEFAULT("prometheus");

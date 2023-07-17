@@ -16,7 +16,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class DbProcessCurrentCpuItem extends AgentCollectionItem {
     @Override
-    String getHttpParam() {
+    public String getHttpParam() {
         return AgentParamCommon.TOP;
     }
 }

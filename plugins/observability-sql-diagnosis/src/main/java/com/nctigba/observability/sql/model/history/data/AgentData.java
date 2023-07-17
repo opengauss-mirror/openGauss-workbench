@@ -6,6 +6,7 @@ package com.nctigba.observability.sql.model.history.data;
 
 import com.nctigba.observability.sql.model.history.dto.AgentDTO;
 import lombok.Data;
+import lombok.Generated;
 
 import java.util.List;
 
@@ -16,6 +17,7 @@ import java.util.List;
  * @since 2023/6/9
  */
 @Data
+@Generated
 public class AgentData {
     private String paramName;
     private List<AgentDTO> sysValue;

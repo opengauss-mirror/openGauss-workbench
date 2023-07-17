@@ -125,17 +125,20 @@ public class SqlConstants {
             "inner join pg_namespace ns on cla.relnamespace = ns.oid and ns.nspname = '%s'" + LF +
             "where relname = '%s'";
 
-    public static final String GET_COLUMN_SQL = "select col.column_name,col.data_type," +
-            "case when col.is_nullable = 'YES' then FALSE  else TRUE end as is_null," + LF +
-            "substr(col.column_default,1,instr(col.column_default,'::')-1) as column_default, case when con.conname is null then FALSE ELSE TRUE end as is_only," + LF +
-            "case when col.CHARACTER_MAXIMUM_LENGTH is not null then col.CHARACTER_MAXIMUM_LENGTH" + LF +
-            "when col.numeric_precision is not null then col.numeric_precision end as precision, col.NUMERIC_SCALE, pd.description" + LF +
-            "from information_schema.columns col" + LF +
-            "inner join pg_class pc on  pc.relname = col.table_name and pc.oid = %s" + LF +
-            "left join (select oid, unnest(conkey) as conkey, conrelid, contype, conname from pg_constraint) con  " + LF +
-            "on  con.conrelid = pc.oid and col.ordinal_position = con.conkey and con.contype = 'u'" + LF +
-            "left join PG_DESCRIPTION pd on pd.objsubid = con.conkey and objoid = %s" + LF +
-            "where  col.table_schema = '%s' and col.table_name = '%s'";
+    public static final String GET_COLUMN_SQL = "select col.column_name,col.data_type,"
+            + "case when col.is_nullable = 'YES' then FALSE  else TRUE end as is_null," + LF
+            + "col.column_default as column_default, "
+            + "case when con.conname is null then FALSE ELSE TRUE end as is_only," + LF
+            + "case when col.CHARACTER_MAXIMUM_LENGTH is not null then col.CHARACTER_MAXIMUM_LENGTH" + LF
+            + "when col.numeric_precision is not null then col.numeric_precision end as precision,"
+            + " col.NUMERIC_SCALE, pd.description" + LF
+            + "from information_schema.columns col" + LF
+            + "inner join pg_class pc on  pc.relname = col.table_name and pc.oid = %s" + LF
+            + "left join (select oid, unnest(conkey) as conkey, conrelid,"
+            + " contype, conname from pg_constraint) con  " + LF
+            + "on  con.conrelid = pc.oid and col.ordinal_position = con.conkey and con.contype = 'u'" + LF
+            + "left join PG_DESCRIPTION pd on pd.objsubid = col.ORDINAL_POSITION and objoid = %s" + LF
+            + "where  col.table_schema = '%s' and col.table_name = '%s'";
     public static final String ALTER_TABLE_SQL = "ALTER TABLE ";
     public static final String ALTER_TABLE_COLUMN_DROPQL = "ALTER TABLE %s.%s DROP COLUMN %s;";
 
@@ -234,7 +237,7 @@ public class SqlConstants {
     public static final String ALTER_DEFAULT_SQL = " ALTER TABLE %s.%s ALTER COLUMN %s SET DEFAULT %s;";
     public static final String DEFAULT_KEYWORD_SQL = " DEFAULT ";
     public static final String SELECT_KEYWORD_SQL = "SELECT ";
-    public static final String SELECT_SEQUENCE_COUNT_SQL = "SELECT  count(1) as count  from PG_CLASS c INNER JOIN pg_namespace n ON n.oid = c.relnamespace"  + LF +
+    public static final String SELECT_SEQUENCE_COUNT_SQL = "SELECT  count(1) as count  from PG_CLASS c INNER JOIN pg_namespace n ON n.oid = c.relnamespace" + LF +
             "and n.nspname = '%s' where relname = '%s' and relkind = 'S';";
     public static final String FROM_KEYWORD_SQL = " FROM ";
     public static final String SEQUENCE_KEYWORD_SQL = "SEQUENCE ";

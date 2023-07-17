@@ -83,8 +83,7 @@ public class AlertClusterNodeConfServiceImpl
                 .eq(AlertClusterNodeConf::getTemplateId, templateId)
                 .eq(AlertClusterNodeConf::getIsDeleted, CommonConstants.IS_NOT_DELETE));
         List<String> oldNodeIdListByTemplateId = oldListByTemplateId.stream().map(
-            item -> item.getClusterNodeId()).collect(
-            Collectors.toList());
+            item -> item.getClusterNodeId()).collect(Collectors.toList());
         List<String> newNodeIdList = clusterNodeIdList.stream().filter(
             item -> !oldNodeIdListByTemplateId.contains(item)).collect(Collectors.toList());
         if (CollectionUtil.isEmpty(newNodeIdList)) {
@@ -115,8 +114,8 @@ public class AlertClusterNodeConfServiceImpl
         // set the old rule configuration params which should be updated
         List<AlertClusterNodeConf> oldListByNodeIds = this.baseMapper.selectList(
             Wrappers.<AlertClusterNodeConf>lambdaQuery().ne(AlertClusterNodeConf::getTemplateId, templateId).in(
-                AlertClusterNodeConf::getClusterNodeId,
-                clusterNodeIdList).eq(AlertClusterNodeConf::getIsDeleted, CommonConstants.IS_NOT_DELETE));
+                AlertClusterNodeConf::getClusterNodeId, clusterNodeIdList)
+                .eq(AlertClusterNodeConf::getIsDeleted, CommonConstants.IS_NOT_DELETE));
         Map<Long, String> ruleConfigMap = new HashMap<>();
         if (CollectionUtil.isNotEmpty(oldListByNodeIds)) {
             Map<Long, List<String>> listMap = oldListByNodeIds.stream().collect(
