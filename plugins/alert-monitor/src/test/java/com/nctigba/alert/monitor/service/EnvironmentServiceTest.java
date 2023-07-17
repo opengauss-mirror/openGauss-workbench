@@ -4,7 +4,6 @@
 
 package com.nctigba.alert.monitor.service;
 
-import com.nctigba.alert.monitor.config.annotation.AlertContentParam;
 import com.nctigba.alert.monitor.entity.NctigbaEnv;
 import com.nctigba.alert.monitor.mapper.NctigbaEnvMapper;
 import com.nctigba.alert.monitor.utils.MessageSourceUtil;
@@ -21,14 +20,12 @@ import org.opengauss.admin.common.exception.ServiceException;
 import org.opengauss.admin.system.plugin.facade.OpsFacade;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -47,12 +44,10 @@ public class EnvironmentServiceTest {
     private NctigbaEnvMapper envMapper;
     @Mock
     private OpsFacade opsFacade;
-
     @Before
     public void setUp() {
         MockitoAnnotations.initMocks(this);
     }
-
     @Test
     public void testCluster() {
         List<OpsClusterVO> list = new ArrayList<>();
@@ -61,7 +56,6 @@ public class EnvironmentServiceTest {
         verify(opsFacade, times(1)).listCluster();
         assertEquals(clusterList, list);
     }
-
     @Test(expected = ServiceException.class)
     public void testCheckPrometheusThrowException() {
         List<NctigbaEnv> envList = new ArrayList<>();
@@ -69,7 +63,6 @@ public class EnvironmentServiceTest {
         environmentService.checkPrometheus();
         verify(envMapper, times(1)).selectList(any());
     }
-
     @Test
     public void testCheckPrometheus() {
         List<NctigbaEnv> envList = new ArrayList<>();
@@ -80,7 +73,6 @@ public class EnvironmentServiceTest {
         environmentService.checkPrometheus();
         verify(envMapper, times(1)).selectList(any());
     }
-
     @Test
     public void testGetAlertContentParam1() {
         try (MockedStatic<MessageSourceUtil> mockedStatic = mockStatic(MessageSourceUtil.class)) {
@@ -88,7 +80,6 @@ public class EnvironmentServiceTest {
             Assertions.assertEquals(7, map.keySet().size());
         }
     }
-
     @Test
     public void testGetAlertContentParam2() {
         try (MockedStatic<MessageSourceUtil> mockedStatic = mockStatic(MessageSourceUtil.class)) {
@@ -96,5 +87,4 @@ public class EnvironmentServiceTest {
             Assertions.assertEquals(0, map.keySet().size());
         }
     }
-
 }

@@ -14,8 +14,6 @@ import com.nctigba.alert.monitor.dto.RuleItemPropertyDto;
 import com.nctigba.alert.monitor.entity.AlertRule;
 import com.nctigba.alert.monitor.entity.AlertRuleItem;
 import com.nctigba.alert.monitor.entity.AlertRuleItemParam;
-import com.nctigba.alert.monitor.entity.AlertTemplateRuleItem;
-import com.nctigba.alert.monitor.entity.AlertTemplateRuleItemParam;
 import com.nctigba.alert.monitor.mapper.AlertRuleItemMapper;
 import com.nctigba.alert.monitor.mapper.AlertRuleItemParamMapper;
 import com.nctigba.alert.monitor.mapper.AlertRuleMapper;
@@ -126,7 +124,6 @@ public class AlertRuleServiceImplTest {
             verify(ruleItemParamMapper, times(1)).selectList(any());
             assertEquals(1L, ruleDtoPage.getTotal());
         }
-
     }
 
     @Test(expected = ServiceException.class)
@@ -220,7 +217,7 @@ public class AlertRuleServiceImplTest {
 
             List<AlertRuleDto> ruleList = alertRuleService.getRuleList();
 
-            verify(baseMapper, times(1)).selectList( any());
+            verify(baseMapper, times(1)).selectList(any());
             verify(alertRuleItemMapper, times(1)).selectList(any());
             verify(ruleItemParamMapper, times(1)).selectList(any());
             assertEquals(alertRules.size(), ruleList.size());

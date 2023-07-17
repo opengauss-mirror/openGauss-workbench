@@ -185,5 +185,4 @@ public class NotifyConfigServiceImplTest {
         verify(notifyWayMapper, times(1)).selectById(anyLong());
         verify(notifyTemplateMapper, times(1)).selectById(anyLong());
     }
-
 }

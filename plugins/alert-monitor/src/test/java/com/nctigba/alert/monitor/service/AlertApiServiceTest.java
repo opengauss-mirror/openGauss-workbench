@@ -580,5 +580,4 @@ public class AlertApiServiceTest {
         alertApiReq.setLabels(labels);
         return alertApiReq;
     }
-
 }

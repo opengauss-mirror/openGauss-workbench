@@ -184,7 +184,7 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
         List<Map<String, Object>> alertStatusMaps = this.listMaps(queryWrapper);
         AlertStatisticsDto alertStatisticsDto = new AlertStatisticsDto();
         for (Map<String, Object> alertStatusMap : alertStatusMaps) {
-            if(alertStatusMap.get("alertstatus") == null) {
+            if (alertStatusMap.get("alertstatus") == null) {
                 continue;
             }
             int count = 0;
@@ -212,7 +212,7 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
         List<Map<String, Object>> recordStatusMaps = this.listMaps(queryWrapper);
         AlertStatisticsDto alertStatisticsDto = new AlertStatisticsDto();
         for (Map<String, Object> recordStatusMap : recordStatusMaps) {
-            if(recordStatusMap.get("recordstatus") == null) {
+            if (recordStatusMap.get("recordstatus") == null) {
                 continue;
             }
             int count = 0;
@@ -239,7 +239,7 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
         List<Map<String, Object>> levelMaps = this.listMaps(queryWrapper);
         AlertStatisticsDto alertStatisticsDto = new AlertStatisticsDto();
         for (Map<String, Object> levelMap : levelMaps) {
-            if(levelMap.get("level") == null) {
+            if (levelMap.get("level") == null) {
                 continue;
             }
             int count = 0;

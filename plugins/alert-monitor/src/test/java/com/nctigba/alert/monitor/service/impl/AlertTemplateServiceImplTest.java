@@ -382,42 +382,44 @@ public class AlertTemplateServiceImplTest {
             verify(nodeConfService, times(1)).list(any());
         }
     }
+
     @Test
     public void testDelTemplate1() {
         List<AlertClusterNodeConf> nodeConfList = new ArrayList<>();
         when(nodeConfService.list(any())).thenReturn(nodeConfList);
 
-        when(baseMapper.update(any(),any())).thenReturn(1);
+        when(baseMapper.update(any(), any())).thenReturn(1);
 
         List<AlertTemplateRule> templateRuleList = new ArrayList<>();
         when(alertTemplateRuleMapper.selectList(any())).thenReturn(templateRuleList);
-        when(alertTemplateRuleMapper.update(any(),any())).thenReturn(1);
+        when(alertTemplateRuleMapper.update(any(), any())).thenReturn(1);
 
         alertTemplateService.delTemplate(anyLong());
         verify(nodeConfService, times(1)).list(any());
-        verify(baseMapper, times(1)).update(any(),any());
+        verify(baseMapper, times(1)).update(any(), any());
         verify(alertTemplateRuleMapper, times(1)).selectList(any());
-        verify(alertTemplateRuleMapper, times(1)).update(any(),any());
+        verify(alertTemplateRuleMapper, times(1)).update(any(), any());
     }
+
     @Test
     public void testDelTemplate2() {
         List<AlertClusterNodeConf> nodeConfList = new ArrayList<>();
         when(nodeConfService.list(any())).thenReturn(nodeConfList);
 
-        when(baseMapper.update(any(),any())).thenReturn(1);
+        when(baseMapper.update(any(), any())).thenReturn(1);
 
         AlertTemplateRule templateRule = new AlertTemplateRule().setId(1L);
         List<AlertTemplateRule> templateRuleList = new ArrayList<>();
         templateRuleList.add(templateRule);
         when(alertTemplateRuleMapper.selectList(any())).thenReturn(templateRuleList);
-        when(alertTemplateRuleMapper.update(any(),any())).thenReturn(1);
-        when(alertTemplateRuleItemMapper.update(any(),any())).thenReturn(1);
+        when(alertTemplateRuleMapper.update(any(), any())).thenReturn(1);
+        when(alertTemplateRuleItemMapper.update(any(), any())).thenReturn(1);
 
         alertTemplateService.delTemplate(anyLong());
         verify(nodeConfService, times(1)).list(any());
-        verify(baseMapper, times(1)).update(any(),any());
+        verify(baseMapper, times(1)).update(any(), any());
         verify(alertTemplateRuleMapper, times(1)).selectList(any());
-        verify(alertTemplateRuleMapper, times(1)).update(any(),any());
-        verify(alertTemplateRuleMapper, times(1)).update(any(),any());
+        verify(alertTemplateRuleMapper, times(1)).update(any(), any());
+        verify(alertTemplateRuleMapper, times(1)).update(any(), any());
     }
 }

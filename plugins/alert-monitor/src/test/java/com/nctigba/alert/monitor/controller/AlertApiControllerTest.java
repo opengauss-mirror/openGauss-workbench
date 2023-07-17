@@ -43,7 +43,6 @@ public class AlertApiControllerTest {
 
     @Test
     public void testAlerts() {
-        List<JSONObject> paramList = new ArrayList<>();
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("startsAt", "2023-04-29T17:38:17.71694477Z");
         jsonObject.put("endsAt", "2023-04-29T17:42:17.71694477Z");
@@ -59,6 +58,7 @@ public class AlertApiControllerTest {
         annotations.put("summary", "summary");
         annotations.put("description", "description");
         jsonObject.put("annotations", annotations);
+        List<JSONObject> paramList = new ArrayList<>();
         paramList.add(jsonObject);
 
         doNothing().when(alertApiService).alerts(anyList());

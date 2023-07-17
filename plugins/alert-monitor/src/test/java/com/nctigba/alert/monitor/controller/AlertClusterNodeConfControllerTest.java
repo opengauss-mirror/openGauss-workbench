@@ -77,7 +77,8 @@ public class AlertClusterNodeConfControllerTest {
 
     @Test
     public void testSaveAlertTemplateAndConfig() {
-        doNothing().when(alertClusterNodeConfService).saveAlertTemplateAndConfig(any(AlertClusterNodeAndTemplateReq.class));
+        doNothing().when(alertClusterNodeConfService)
+            .saveAlertTemplateAndConfig(any(AlertClusterNodeAndTemplateReq.class));
         AlertClusterNodeAndTemplateReq clusterNodeAndTemplateReq = new AlertClusterNodeAndTemplateReq();
         AjaxResult result = alertClusterNodeConfController.saveAlertTemplateAndConfig(clusterNodeAndTemplateReq);
         verify(alertClusterNodeConfService, times(1))

@@ -111,7 +111,6 @@ public class AlertTemplateRuleServiceImplTest {
     @Test
     public void testSaveTemplateRule() {
         try (MockedStatic<MessageSourceUtil> mockedStatic = mockStatic(MessageSourceUtil.class)) {
-            AlertTemplateRule alertTemplateRule = new AlertTemplateRule().setId(1L);
             AlertTemplateRuleItem ruleItem = new AlertTemplateRuleItem().setId(1L).setTemplateRuleId(1L)
                 .setAction("normal").setOperate(">=").setLimitValue("50").setRuleMark("A").setRuleExpName("cpu")
                 .setUnit("%");
@@ -123,6 +122,7 @@ public class AlertTemplateRuleServiceImplTest {
             templateRuleItemList.add(ruleItem);
             templateRuleItemList.add(ruleItem2);
             templateRuleItemList.add(ruleItem3);
+            AlertTemplateRule alertTemplateRule = new AlertTemplateRule().setId(1L);
             alertTemplateRule.setAlertRuleItemList(templateRuleItemList);
             List<AlertTemplateRuleItemParam> itemParamList = new ArrayList<>();
             AlertTemplateRuleItemParam ruleItemParam = new AlertTemplateRuleItemParam().setItemId(1L).setId(1L);
@@ -186,6 +186,5 @@ public class AlertTemplateRuleServiceImplTest {
             verify(ruleItemParamMapper, times(1)).selectList(any());
             assertEquals(1, dtoList.size());
         }
-
     }
 }
