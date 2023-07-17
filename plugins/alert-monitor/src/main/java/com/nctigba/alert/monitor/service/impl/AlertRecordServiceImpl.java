@@ -97,9 +97,6 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
             .ge(startTime != null, AlertRecord::getStartTime, startTime)
             .le(endTime != null, AlertRecord::getEndTime, endTime).orderByDesc(AlertRecord::getId));
         Page<AlertRecordDto> recordDtoPage = new Page<>();
-        if (recordPage == null) {
-            return recordDtoPage;
-        }
         List<AlertRecord> records = recordPage.getRecords();
         recordDtoPage.setTotal(recordPage.getTotal()).setCurrent(recordPage.getCurrent()).setSize(recordPage.getSize());
         if (CollectionUtil.isEmpty(records)) {
@@ -187,6 +184,9 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
         List<Map<String, Object>> alertStatusMaps = this.listMaps(queryWrapper);
         AlertStatisticsDto alertStatisticsDto = new AlertStatisticsDto();
         for (Map<String, Object> alertStatusMap : alertStatusMaps) {
+            if (alertStatusMap.get("alertstatus") == null) {
+                continue;
+            }
             int count = 0;
             if (alertStatusMap.get("count") instanceof Long) {
                 count = ((Long) alertStatusMap.get("count")).intValue();
@@ -212,6 +212,9 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
         List<Map<String, Object>> recordStatusMaps = this.listMaps(queryWrapper);
         AlertStatisticsDto alertStatisticsDto = new AlertStatisticsDto();
         for (Map<String, Object> recordStatusMap : recordStatusMaps) {
+            if (recordStatusMap.get("recordstatus") == null) {
+                continue;
+            }
             int count = 0;
             if (recordStatusMap.get("count") instanceof Long) {
                 count = ((Long) recordStatusMap.get("count")).intValue();
@@ -236,6 +239,9 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
         List<Map<String, Object>> levelMaps = this.listMaps(queryWrapper);
         AlertStatisticsDto alertStatisticsDto = new AlertStatisticsDto();
         for (Map<String, Object> levelMap : levelMaps) {
+            if (levelMap.get("level") == null) {
+                continue;
+            }
             int count = 0;
             if (levelMap.get("count") instanceof Long) {
                 count = ((Long) levelMap.get("count")).intValue();
@@ -275,7 +281,7 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
         OpsClusterEntity opsClusterEntity = new OpsClusterEntity();
         OpsClusterNodeEntity opsClusterNodeEntity = clusterNodeService.getById(clusterNodeId);
         if (opsClusterNodeEntity == null) {
-            opsClusterNodeEntity = new OpsClusterNodeEntity();
+            return alertRecordDto;
         }
         if (StrUtil.isNotBlank(opsClusterNodeEntity.getHostId())) {
             opsHostEntity = hostFacade.getById(opsClusterNodeEntity.getHostId());
@@ -288,7 +294,8 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
                 + "(" + opsClusterNodeEntity.getClusterRole() + ")";
         alertRecordDto.setClusterNodeName(nodeName).setHostIpAndPort(
             opsHostEntity.getPublicIp() + ":" + opsClusterEntity.getPort()).setClusterId(
-            opsClusterEntity.getClusterId()).setNodeRole(opsClusterNodeEntity.getClusterRole().name());
+            opsClusterEntity.getClusterId()).setNodeRole(opsClusterNodeEntity.getClusterRole() != null
+            ? opsClusterNodeEntity.getClusterRole().name() : "");
         return alertRecordDto;
     }
 
@@ -308,7 +315,7 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
             relationDto.setName(MessageSourceUtil.get(templateRuleItem.getRuleExpName())).setUnit(
                 templateRuleItem.getUnit()).setStartTime(alertRecord.getStartTime()).setEndTime(
                 alertRecord.getEndTime());
-            // 向前推30分钟，向后推30分钟
+
             LocalDateTime minTime = alertRecord.getStartTime().minusMinutes(30L);
             LocalDateTime maxTime = alertRecord.getEndTime().plusMinutes(30L);
             relationDto.setMinTime(minTime).setMaxTime(maxTime);

@@ -308,7 +308,7 @@ public class PrometheusService {
             return new Number[0][0];
         }
         JSONObject metricInfo = result.getJSONObject(0);
-        if (metricInfo == null) {
+        if (metricInfo.isEmpty()) {
             return new Number[0][0];
         }
         JSONArray values = metricInfo.getJSONArray("values");
