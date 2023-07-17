@@ -9,7 +9,6 @@ import com.alibaba.fastjson.JSONObject;
 import com.nctigba.observability.sql.constants.history.OptionCommon;
 import com.nctigba.observability.sql.constants.history.SqlCommon;
 import com.nctigba.observability.sql.constants.history.ThresholdCommon;
-import com.nctigba.observability.sql.mapper.history.HisDiagnosisTaskMapper;
 import com.nctigba.observability.sql.model.history.DataStoreConfig;
 import com.nctigba.observability.sql.model.history.HisDiagnosisResult;
 import com.nctigba.observability.sql.model.history.HisDiagnosisTask;
@@ -21,7 +20,6 @@ import com.nctigba.observability.sql.service.history.DataStoreService;
 import com.nctigba.observability.sql.service.history.collection.CollectionItem;
 import com.nctigba.observability.sql.service.history.collection.table.ThreadWaitEventItem;
 import com.nctigba.observability.sql.service.history.point.CurrentWaitEvent;
-import com.nctigba.observability.sql.util.PrometheusUtil;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.jupiter.api.Assertions;
@@ -48,10 +46,6 @@ import static org.mockito.Mockito.when;
  */
 @RunWith(MockitoJUnitRunner.class)
 public class TestCurrentWaitEvent {
-    @Mock
-    private PrometheusUtil util;
-    @Mock
-    private HisDiagnosisTaskMapper taskMapper;
     @Mock
     private ThreadWaitEventItem item;
     @Mock

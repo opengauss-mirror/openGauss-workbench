@@ -9,7 +9,6 @@ import com.alibaba.fastjson.JSONObject;
 import com.nctigba.observability.sql.constants.history.DiagnosisTypeCommon;
 import com.nctigba.observability.sql.constants.history.OptionCommon;
 import com.nctigba.observability.sql.constants.history.ThresholdCommon;
-import com.nctigba.observability.sql.mapper.history.HisDiagnosisTaskMapper;
 import com.nctigba.observability.sql.model.history.DataStoreConfig;
 import com.nctigba.observability.sql.model.history.HisDiagnosisResult;
 import com.nctigba.observability.sql.model.history.HisDiagnosisTask;
@@ -46,8 +45,6 @@ import static org.mockito.Mockito.when;
  */
 @RunWith(MockitoJUnitRunner.class)
 public class TestCurrentSlowSql {
-    @Mock
-    private HisDiagnosisTaskMapper taskMapper;
     @Mock
     private SlowSqlItem item;
     @Mock

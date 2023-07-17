@@ -12,7 +12,6 @@ import com.nctigba.observability.sql.model.history.HisDiagnosisThreshold;
 import com.nctigba.observability.sql.model.history.query.OptionQuery;
 import com.nctigba.observability.sql.service.history.collection.agent.AgentCollectionItem;
 import com.nctigba.observability.sql.service.history.collection.agent.CurrentCpuUsageItem;
-import com.nctigba.observability.sql.util.AgentUtil;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -35,8 +34,6 @@ import static org.mockito.Mockito.when;
  */
 @RunWith(MockitoJUnitRunner.class)
 public class TestAgentCollectionItem {
-    @Mock
-    private AgentUtil dbUtil;
     @Mock
     private CurrentCpuUsageItem item;
     @InjectMocks

@@ -4,12 +4,9 @@
 
 package com.nctigba.observability.sql.history;
 
-import com.alibaba.fastjson.JSONObject;
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.nctigba.common.web.exception.HisDiagnosisException;
 import com.nctigba.observability.sql.mapper.history.HisDiagnosisResultMapper;
 import com.nctigba.observability.sql.mapper.history.HisDiagnosisTaskMapper;
-import com.nctigba.observability.sql.mapper.history.HisThresholdMapper;
 import com.nctigba.observability.sql.model.history.HisDiagnosisResult;
 import com.nctigba.observability.sql.model.history.HisDiagnosisTask;
 import com.nctigba.observability.sql.model.history.HisDiagnosisThreshold;
@@ -17,11 +14,8 @@ import com.nctigba.observability.sql.model.history.query.OptionQuery;
 import com.nctigba.observability.sql.model.history.result.HisTreeNode;
 import com.nctigba.observability.sql.service.history.HisDiagnosisPointService;
 import com.nctigba.observability.sql.service.history.Impl.HisDiagnosisServiceImpl;
-import com.nctigba.observability.sql.service.history.collection.elastic.LockTimeoutItem;
-import com.nctigba.observability.sql.service.history.collection.metric.DbAvgCpuItem;
 import com.nctigba.observability.sql.service.history.point.AspAnalysis;
 import com.nctigba.observability.sql.service.history.point.LockTimeout;
-import com.nctigba.observability.sql.util.LocaleString;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -34,7 +28,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -49,10 +42,6 @@ import static org.mockito.Mockito.when;
 @RunWith(MockitoJUnitRunner.class)
 public class TestHisDiagnosisServiceImpl {
     @Mock
-    private DbAvgCpuItem dbAvgCpuItem;
-    @Mock
-    private LockTimeoutItem lockTimeoutItem;
-    @Mock
     private AspAnalysis aspAnalysis;
     @Mock
     private LockTimeout lockTimeout;
@@ -61,18 +50,12 @@ public class TestHisDiagnosisServiceImpl {
     @Spy
     private List<HisDiagnosisPointService<?>> pointServiceList = new ArrayList<>();
     @Mock
-    private LocaleString localeToString;
-    @Mock
-    private HisThresholdMapper hisThresholdMapper;
-    @Mock
     private HisDiagnosisTaskMapper taskMapper;
     @InjectMocks
     private HisDiagnosisServiceImpl hisDiagnosisService;
-    private HisDiagnosisTask hisDiagnosisTask;
     private HisDiagnosisResult hisDiagnosisResult;
     private final int taskId = 1;
     private final String pointName = "AspAnalysis";
-    private List<HisDiagnosisThreshold> threshold;
 
     @Before
     public void before() {
@@ -90,10 +73,10 @@ public class TestHisDiagnosisServiceImpl {
         HisDiagnosisThreshold diagnosisThreshold = new HisDiagnosisThreshold();
         diagnosisThreshold.setThreshold("cpuUsageRate");
         diagnosisThreshold.setThresholdValue("20");
-        threshold = new ArrayList<>() {{
+        List<HisDiagnosisThreshold> threshold = new ArrayList<>() {{
             add(diagnosisThreshold);
         }};
-        hisDiagnosisTask = new HisDiagnosisTask();
+        HisDiagnosisTask hisDiagnosisTask = new HisDiagnosisTask();
         hisDiagnosisTask.setNodeId(nodeId);
         hisDiagnosisTask.setHisDataStartTime(sTime);
         hisDiagnosisTask.setHisDataEndTime(eTime);
@@ -123,35 +106,6 @@ public class TestHisDiagnosisServiceImpl {
         HisTreeNode treeNode = hisDiagnosisService.getTopologyMap(taskId, isAll);
         assertNotNull(treeNode);
     }
-
-    /*@Test
-    public void testGetNodeDetail_NoData() {
-        when(resultMapper.selectOne(any())).thenReturn(null);
-        when(taskMapper.selectById(taskId)).thenReturn(hisDiagnosisTask);
-        Object object = hisDiagnosisService.getNodeDetail(taskId, pointName);
-        assertNotNull(object);
-    }
-
-    @Test
-    public void testGetNodeDetail_HasData() {
-        when(resultMapper.selectOne(any())).thenReturn(hisDiagnosisResult);
-        when(taskMapper.selectById(taskId)).thenReturn(hisDiagnosisTask);
-        when(hisThresholdMapper.selectList(Wrappers.emptyWrapper())).thenReturn(threshold);
-        when(localeToString.trapLanguage(hisDiagnosisResult)).thenReturn(hisDiagnosisResult);
-        Object object = hisDiagnosisService.getNodeDetail(taskId, pointName);
-        assertEquals(object, hisDiagnosisResult);
-    }
-
-    @Test
-    public void testGetNodeDetail_HasDatas() {
-        hisDiagnosisResult.setPointData(new JSONObject());
-        when(resultMapper.selectOne(any())).thenReturn(hisDiagnosisResult);
-        when(taskMapper.selectById(taskId)).thenReturn(hisDiagnosisTask);
-        when(hisThresholdMapper.selectList(Wrappers.emptyWrapper())).thenReturn(threshold);
-        when(localeToString.trapLanguage(hisDiagnosisResult)).thenReturn(hisDiagnosisResult);
-        Object object = hisDiagnosisService.getNodeDetail(taskId, pointName);
-        assertEquals(object, hisDiagnosisResult);
-    }*/
 
     @Test
     public void testGetNodeDetail_Exception() {

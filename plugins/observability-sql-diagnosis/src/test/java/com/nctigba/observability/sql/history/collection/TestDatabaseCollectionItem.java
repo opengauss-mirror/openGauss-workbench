@@ -12,7 +12,6 @@ import com.nctigba.observability.sql.model.history.HisDiagnosisThreshold;
 import com.nctigba.observability.sql.model.history.query.OptionQuery;
 import com.nctigba.observability.sql.service.history.collection.table.DatabaseCollectionItem;
 import com.nctigba.observability.sql.service.history.collection.table.PoorSqlItem;
-import com.nctigba.observability.sql.util.DbUtil;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -35,8 +34,6 @@ import static org.mockito.Mockito.when;
  */
 @RunWith(MockitoJUnitRunner.class)
 public class TestDatabaseCollectionItem {
-    @Mock
-    private DbUtil dbUtil;
     @Mock
     private PoorSqlItem sqlItem;
     @InjectMocks

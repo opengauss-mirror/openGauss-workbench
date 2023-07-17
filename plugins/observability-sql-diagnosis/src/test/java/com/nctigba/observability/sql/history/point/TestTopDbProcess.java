@@ -5,7 +5,6 @@
 package com.nctigba.observability.sql.history.point;
 
 import com.nctigba.observability.sql.constants.history.DiagnosisTypeCommon;
-import com.nctigba.observability.sql.mapper.history.HisDiagnosisTaskMapper;
 import com.nctigba.observability.sql.model.history.DataStoreConfig;
 import com.nctigba.observability.sql.model.history.HisDiagnosisResult;
 import com.nctigba.observability.sql.model.history.HisDiagnosisTask;
@@ -16,9 +15,7 @@ import com.nctigba.observability.sql.model.history.dto.AnalysisDTO;
 import com.nctigba.observability.sql.model.history.query.OptionQuery;
 import com.nctigba.observability.sql.service.history.DataStoreService;
 import com.nctigba.observability.sql.service.history.collection.CollectionItem;
-import com.nctigba.observability.sql.service.history.collection.agent.CurrentCpuUsageItem;
 import com.nctigba.observability.sql.service.history.collection.agent.TopDbProcessItem;
-import com.nctigba.observability.sql.service.history.point.CurrentCpuUsage;
 import com.nctigba.observability.sql.service.history.point.TopDbProcess;
 import org.junit.Before;
 import org.junit.Test;
@@ -45,8 +42,6 @@ import static org.mockito.Mockito.when;
  */
 @RunWith(MockitoJUnitRunner.class)
 public class TestTopDbProcess {
-    @Mock
-    private HisDiagnosisTaskMapper taskMapper;
     @Mock
     private TopDbProcessItem item;
     @Mock

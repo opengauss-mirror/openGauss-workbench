@@ -14,7 +14,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
- * 功能描述
+ * TestThreadWaitEventItem
  *
  * @author luomeng
  * @since 2023/7/12

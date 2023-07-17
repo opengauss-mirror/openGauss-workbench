@@ -130,7 +130,6 @@ public class TaskServiceImpl implements TaskService {
                             });
                         }
                     });
-                    //continue;
                 } else {
                     if (isExistData.toString().contains("error")) {
                         pointServiceList.forEach(f -> {
@@ -148,7 +147,6 @@ public class TaskServiceImpl implements TaskService {
                                 });
                             }
                         });
-                        //continue;
                     }
                 }
                 DataStoreConfig config = new DataStoreConfig();

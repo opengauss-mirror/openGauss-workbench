@@ -5,7 +5,6 @@
 package com.nctigba.observability.sql.history.point;
 
 import com.nctigba.observability.sql.constants.history.DiagnosisTypeCommon;
-import com.nctigba.observability.sql.mapper.history.HisDiagnosisTaskMapper;
 import com.nctigba.observability.sql.model.history.DataStoreConfig;
 import com.nctigba.observability.sql.model.history.HisDiagnosisResult;
 import com.nctigba.observability.sql.model.history.HisDiagnosisTask;
@@ -43,8 +42,6 @@ import static org.mockito.Mockito.when;
  */
 @RunWith(MockitoJUnitRunner.class)
 public class TestCurrentCpuUsage {
-    @Mock
-    private HisDiagnosisTaskMapper taskMapper;
     @Mock
     private CurrentCpuUsageItem item;
     @Mock

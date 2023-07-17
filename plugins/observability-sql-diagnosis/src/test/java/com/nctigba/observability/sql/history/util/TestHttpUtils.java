@@ -7,7 +7,6 @@ package com.nctigba.observability.sql.history.util;
 import com.nctigba.observability.sql.util.HttpUtils;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.InjectMocks;
 import org.mockito.MockedStatic;
 import org.mockito.junit.MockitoJUnitRunner;
 
@@ -22,15 +21,12 @@ import static org.mockito.Mockito.mockStatic;
  */
 @RunWith(MockitoJUnitRunner.class)
 public class TestHttpUtils {
-    @InjectMocks
-    private HttpUtils util;
 
     @Test
     public void testSendGet() {
         String result = "";
         try (MockedStatic<HttpUtils> mockStatic = mockStatic(HttpUtils.class)) {
-            mockStatic.when(() -> HttpUtils.sendGet(anyString(), anyString()))
-                    .thenReturn(result);
+            mockStatic.when(() -> HttpUtils.sendGet(anyString(), anyString())).thenReturn(result);
         }
     }
 
@@ -38,8 +34,7 @@ public class TestHttpUtils {
     public void testSendGet2() {
         String result = "";
         try (MockedStatic<HttpUtils> mockStatic = mockStatic(HttpUtils.class)) {
-            mockStatic.when(() -> HttpUtils.sendGet(anyString(), anyString(), anyString()))
-                    .thenReturn(result);
+            mockStatic.when(() -> HttpUtils.sendGet(anyString(), anyString(), anyString())).thenReturn(result);
         }
     }
 }

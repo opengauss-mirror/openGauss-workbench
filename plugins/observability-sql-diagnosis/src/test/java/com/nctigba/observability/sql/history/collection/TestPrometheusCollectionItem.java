@@ -6,7 +6,6 @@ package com.nctigba.observability.sql.history.collection;
 
 import com.nctigba.observability.sql.constants.history.MetricCommon;
 import com.nctigba.observability.sql.constants.history.OptionCommon;
-import com.nctigba.observability.sql.constants.history.PrometheusConstants;
 import com.nctigba.observability.sql.constants.history.ThresholdCommon;
 import com.nctigba.observability.sql.model.history.HisDiagnosisTask;
 import com.nctigba.observability.sql.model.history.HisDiagnosisThreshold;
@@ -52,7 +51,6 @@ public class TestPrometheusCollectionItem {
     };
 
     private HisDiagnosisTask hisDiagnosisTask;
-
 
     @Before
     public void before() {
