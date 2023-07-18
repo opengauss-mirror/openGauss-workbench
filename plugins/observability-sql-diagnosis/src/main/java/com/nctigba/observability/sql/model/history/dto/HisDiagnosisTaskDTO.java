@@ -5,7 +5,6 @@
 package com.nctigba.observability.sql.model.history.dto;
 
 import lombok.Data;
-import lombok.Generated;
 
 import java.util.Date;
 import java.util.List;
@@ -17,7 +16,6 @@ import java.util.List;
  * @since 2023/6/9
  */
 @Data
-@Generated
 public class HisDiagnosisTaskDTO {
     private String clusterId;
     private String nodeId;

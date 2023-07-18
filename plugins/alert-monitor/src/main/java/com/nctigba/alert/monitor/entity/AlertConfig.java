@@ -6,7 +6,6 @@ package com.nctigba.alert.monitor.entity;
 
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
-import lombok.Generated;
 import lombok.experimental.Accessors;
 
 import javax.validation.constraints.NotBlank;
@@ -17,7 +16,6 @@ import javax.validation.constraints.NotBlank;
  * @description
  */
 @Data
-@Generated
 @Accessors(chain = true)
 @TableName("alert_config")
 public class AlertConfig {

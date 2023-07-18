@@ -1,6 +1,7 @@
 /*
  * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
  */
+
 package com.nctigba.common.web.exception;
 
 import lombok.Data;
@@ -27,13 +28,5 @@ public class InstanceException extends BaseI18nException {
 
     public InstanceException(String message, Throwable cause) {
         super(message, cause);
-    }
-
-    public InstanceException(InstanceExceptionMsgEnum msgEnum, Object... objs) {
-        this(msgEnum.getMsg(), msgEnum.getCode(), objs);
-    }
-
-    public InstanceException(InstanceExceptionMsgEnum msgEnum) {
-        this(msgEnum.getMsg(), msgEnum.getCode());
     }
 }

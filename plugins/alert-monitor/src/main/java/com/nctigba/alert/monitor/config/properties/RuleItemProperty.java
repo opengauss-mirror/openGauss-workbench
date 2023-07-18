@@ -5,7 +5,6 @@
 package com.nctigba.alert.monitor.config.properties;
 
 import lombok.Data;
-import lombok.Generated;
 import org.springframework.boot.context.properties.NestedConfigurationProperty;
 
 import java.util.List;
@@ -16,7 +15,6 @@ import java.util.List;
  * @description
  */
 @Data
-@Generated
 public class RuleItemProperty {
     private String name;
     private String unit;

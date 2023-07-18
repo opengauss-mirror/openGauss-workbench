@@ -5,7 +5,6 @@
 package com.nctigba.alert.monitor.model;
 
 import lombok.Data;
-import lombok.Generated;
 import lombok.experimental.Accessors;
 
 import javax.validation.Valid;
@@ -19,7 +18,6 @@ import java.util.List;
  * @description
  */
 @Data
-@Generated
 @Accessors(chain = true)
 public class AlertClusterNodeAndTemplateReq {
     @NotBlank

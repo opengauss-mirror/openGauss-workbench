@@ -14,8 +14,8 @@
 </template>
 
 <script setup lang="ts">
-import zhCn from "element-plus/lib/locale/lang/zh-cn";
-import en from "element-plus/lib/locale/lang/en";
+import zhCn from "element-plus/dist/locale/zh-cn.mjs";
+import en from "element-plus/dist/locale/en.mjs";
 import { useDark, useToggle } from "@vueuse/core";
 import { useWindowStore } from "@/store/window";
 import router from '@/router';

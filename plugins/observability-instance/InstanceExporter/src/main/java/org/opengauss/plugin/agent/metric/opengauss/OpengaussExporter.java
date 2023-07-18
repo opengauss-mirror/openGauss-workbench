@@ -1,6 +1,7 @@
 /*
  * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
  */
+
 package org.opengauss.plugin.agent.metric.opengauss;
 
 import java.io.FileNotFoundException;
@@ -14,18 +15,17 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
 
+import org.opengauss.plugin.agent.metric.DBmetric;
 import org.opengauss.plugin.agent.metric.Metric;
+import org.opengauss.plugin.agent.metric.opengauss.OpengaussExporter.queryInstance.metricInfo.usage;
+import org.opengauss.plugin.agent.metric.opengauss.OpengaussExporter.queryInstance.query;
+import org.opengauss.plugin.agent.metric.opengauss.OpengaussExporter.queryInstance.query.state;
 import org.opengauss.plugin.agent.util.DbUtil;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.yaml.snakeyaml.Yaml;
-
-import org.opengauss.plugin.agent.metric.DBmetric;
-import org.opengauss.plugin.agent.metric.opengauss.OpengaussExporter.queryInstance.metricInfo.usage;
-import org.opengauss.plugin.agent.metric.opengauss.OpengaussExporter.queryInstance.query;
-import org.opengauss.plugin.agent.metric.opengauss.OpengaussExporter.queryInstance.query.state;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.thread.ThreadUtil;
@@ -45,7 +45,7 @@ import lombok.extern.log4j.Log4j2;
 public class OpengaussExporter implements DBmetric, InitializingBean {
     private static final Map<String, queryInstance> CONFIG = new HashMap<>();
     private static Map<String, Metric> metricData = new HashMap<>();
-    
+
     private final DbUtil dbUtil;
 
     /**

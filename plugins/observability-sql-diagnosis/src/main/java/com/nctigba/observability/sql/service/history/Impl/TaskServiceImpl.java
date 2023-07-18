@@ -6,6 +6,7 @@ package com.nctigba.observability.sql.service.history.Impl;
 
 import cn.hutool.core.thread.ThreadUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.nctigba.common.web.exception.HisDiagnosisException;
 import com.nctigba.observability.sql.constants.history.DiagnosisTypeCommon;
 import com.nctigba.observability.sql.constants.history.OptionCommon;
 import com.nctigba.observability.sql.mapper.history.HisDiagnosisResultMapper;
@@ -34,6 +35,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -109,8 +112,9 @@ public class TaskServiceImpl implements TaskService {
                 hashMap.merge(param, 1, Integer::sum);
             }
         }
+        ExecutorService executor = ThreadUtil.newExecutor();
         for (CollectionItem<?> item : hashMap.keySet()) {
-            ThreadUtil.execAsync(() -> {
+            executor.execute(() -> {
                 String itemName = getClassName(item);
                 task.addRemarks("start check collection " + itemName);
                 Object isExistData = item.queryData(task);
@@ -178,7 +182,15 @@ public class TaskServiceImpl implements TaskService {
                 }
             });
         }
-        ThreadUtil.sleep(1000);
+        executor.shutdown();
+        try {
+            boolean isFinish = executor.awaitTermination(5, TimeUnit.MINUTES);
+            if (isFinish) {
+                task.addRemarks("analysis finish");
+            }
+        } catch (InterruptedException e) {
+            throw new HisDiagnosisException("Exception:" + e);
+        }
         dataStoreService.clearData();
         task.addRemarks("finish diagnosis");
         task.setTaskEndTime(new Date());

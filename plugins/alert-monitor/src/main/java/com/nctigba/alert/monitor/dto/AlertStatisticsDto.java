@@ -5,7 +5,6 @@
 package com.nctigba.alert.monitor.dto;
 
 import lombok.Data;
-import lombok.Generated;
 import lombok.experimental.Accessors;
 
 /**
@@ -14,7 +13,6 @@ import lombok.experimental.Accessors;
  * @description
  */
 @Data
-@Generated
 @Accessors(chain = true)
 public class AlertStatisticsDto {
     private Integer totalNum = 0;

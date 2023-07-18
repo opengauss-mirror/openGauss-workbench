@@ -5,7 +5,6 @@
 package com.nctigba.alert.monitor.model;
 
 import lombok.Data;
-import lombok.Generated;
 
 /**
  * @author wuyuebin
@@ -13,7 +12,6 @@ import lombok.Generated;
  * @description
  */
 @Data
-@Generated
 public class RuleReq {
     private String ruleName;
     private String ruleType;

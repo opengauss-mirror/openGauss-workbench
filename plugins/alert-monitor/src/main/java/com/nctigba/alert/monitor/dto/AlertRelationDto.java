@@ -6,7 +6,6 @@ package com.nctigba.alert.monitor.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
-import lombok.Generated;
 import lombok.experimental.Accessors;
 import org.springframework.format.annotation.DateTimeFormat;
 
@@ -18,7 +17,6 @@ import java.time.LocalDateTime;
  * @description
  */
 @Data
-@Generated
 @Accessors(chain = true)
 public class AlertRelationDto {
     private String name;

@@ -1,9 +1,11 @@
 /*
  * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
  */
+
 package com.nctigba.common.web.exception;
 
 import com.nctigba.observability.instance.util.MessageSourceUtil;
+
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -12,7 +14,7 @@ import lombok.NoArgsConstructor;
  * 功能描述
  *
  * @author liupengfei
- * @since 2023/6/20 
+ * @since 2023/6/20
  */
 @EqualsAndHashCode(callSuper = true)
 @Data

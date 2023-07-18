@@ -7,19 +7,18 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.opengauss.admin.common.exception.CustomException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.nctigba.common.web.exception.CustomException;
-import com.nctigba.common.web.exception.CustomExceptionEnum;
 import com.nctigba.observability.instance.constants.MonitoringResultType;
 import com.nctigba.observability.instance.factory.MonitoringHandlerFactory;
 import com.nctigba.observability.instance.handler.monitoring.MonitoringHandler;
 import com.nctigba.observability.instance.model.monitoring.MonitoringMetric;
 import com.nctigba.observability.instance.model.monitoring.MonitoringParam;
 import com.nctigba.observability.instance.service.MonitoringService;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 
 @Service
 public class MonitoringServiceImpl implements MonitoringService {
@@ -60,8 +59,7 @@ public class MonitoringServiceImpl implements MonitoringService {
         } else if (MonitoringResultType.LINE.name().equalsIgnoreCase(param.getType())) {
             return monitoringHandler.metricToLine(monitoringMetricList, param);
         } else {
-            throw new CustomException(CustomExceptionEnum.PARAM_INVALID_ERROR,
-                    "Unsupported data format:" + param.getType());
+            throw new CustomException("Unsupported data format:" + param.getType(), 400);
         }
     }
 }

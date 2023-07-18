@@ -224,7 +224,6 @@ public class SessionServiceImpl implements SessionService {
     public InstanceNodeInfo queryNodeInfo(String nodeId) {
         OpsClusterNodeVO opsClusterNode = opsFacade.getOpsNodeById(nodeId);
         InstanceNodeInfo instanceNodeInfo = new InstanceNodeInfo();
-        instanceNodeInfo.setId(opsClusterNode.getNodeId());
         instanceNodeInfo.setIp(opsClusterNode.getPublicIp());
         instanceNodeInfo.setPort(opsClusterNode.getDbPort());
         instanceNodeInfo.setDbName(opsClusterNode.getDbName());

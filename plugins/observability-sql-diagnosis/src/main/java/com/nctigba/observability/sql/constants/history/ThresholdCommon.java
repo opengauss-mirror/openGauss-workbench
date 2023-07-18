@@ -4,15 +4,12 @@
 
 package com.nctigba.observability.sql.constants.history;
 
-import lombok.Generated;
-
 /**
  * ThresholdCommon
  *
  * @author luomeng
  * @since 2023/6/11
  */
-@Generated
 public class ThresholdCommon {
     public static final String CPU_USAGE_RATE = "cpuUsageRate";
     public static final String DB_CPU_USAGE_RATE = "dbCpuUsageRate";

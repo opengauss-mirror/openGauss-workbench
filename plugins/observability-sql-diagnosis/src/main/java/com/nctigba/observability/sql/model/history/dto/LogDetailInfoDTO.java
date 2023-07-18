@@ -5,7 +5,6 @@
 package com.nctigba.observability.sql.model.history.dto;
 
 import lombok.Data;
-import lombok.Generated;
 
 /**
  * <p>
@@ -16,7 +15,6 @@ import lombok.Generated;
  * @since 2022/11/17 09:05
  */
 @Data
-@Generated
 public class LogDetailInfoDTO {
     private Object logTime;
     private Object logType;

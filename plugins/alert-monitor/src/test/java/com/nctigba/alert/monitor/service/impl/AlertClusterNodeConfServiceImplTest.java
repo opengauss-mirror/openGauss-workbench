@@ -97,7 +97,8 @@ public class AlertClusterNodeConfServiceImplTest {
         alertClusterNodeConfReq.setTemplateId(1L);
         AlertClusterNodeConf clusterNodeConf = new AlertClusterNodeConf();
         clusterNodeConf.setId(1L).setTemplateId(1L).setClusterNodeId("node1");
-        List<AlertClusterNodeConf> oldList = List.of(clusterNodeConf);
+        List<AlertClusterNodeConf> oldList = new ArrayList<>();
+        oldList.add(clusterNodeConf);
         when(baseMapper.selectList(any())).thenReturn(oldList);
         alertClusterNodeConfService.saveClusterNodeConf(alertClusterNodeConfReq);
         verify(baseMapper, times(1)).selectList(any());
@@ -146,8 +147,8 @@ public class AlertClusterNodeConfServiceImplTest {
 
     @Test
     public void testGetByClusterNodeIdNull() {
-        String clusterNodeId = "node1";
         when(baseMapper.selectList(any())).thenReturn(anyList());
+        String clusterNodeId = "node1";
         AlertClusterNodeConf alertClusterNodeConf = alertClusterNodeConfService.getByClusterNodeId(clusterNodeId);
         verify(baseMapper, times(1)).selectList(any());
         assertNotNull(alertClusterNodeConf);
@@ -156,9 +157,11 @@ public class AlertClusterNodeConfServiceImplTest {
 
     @Test
     public void testGetByClusterNodeId() {
-        String clusterNodeId = "node1";
-        List<AlertClusterNodeConf> list = List.of(new AlertClusterNodeConf().setClusterNodeId("node1"));
+        AlertClusterNodeConf alertClusterNodeConf = new AlertClusterNodeConf().setClusterNodeId("node1");
+        List<AlertClusterNodeConf> list = new ArrayList<>();
+        list.add(alertClusterNodeConf);
         when(baseMapper.selectList(any())).thenReturn(list);
+        String clusterNodeId = "node1";
         AlertClusterNodeConf alertClusterNodeConf1 = alertClusterNodeConfService.getByClusterNodeId(clusterNodeId);
         verify(baseMapper, times(1)).selectList(any());
         assertEquals("node1", alertClusterNodeConf1.getClusterNodeId());

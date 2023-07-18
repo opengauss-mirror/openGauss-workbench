@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.alibaba.fastjson.JSONObject;
-import com.nctigba.common.web.exception.CustomExceptionEnum;
 import com.nctigba.observability.instance.dto.topsql.TopSQLInfoReq;
 import com.nctigba.observability.instance.dto.topsql.TopSQLListReq;
 import com.nctigba.observability.instance.service.ClusterManager;
@@ -44,7 +43,7 @@ public class TopSQLController {
     public AjaxResult top10(TopSQLListReq topSQLListReq) {
         List<JSONObject> list = topSQLService.getTopSQLList(topSQLListReq);
         if (list == null) {
-            return AjaxResult.error(CustomExceptionEnum.TOLSQL_IS_RIGHT_PARAM.getMsg(), "top sql pre check fail");
+            return AjaxResult.error("602", "top sql pre check fail");
         }
         return AjaxResult.success(list);
     }
@@ -58,8 +57,7 @@ public class TopSQLController {
     public AjaxResult plan(TopSQLInfoReq topSQLPlanReq) {
         JSONObject res = topSQLService.getExecutionPlan(topSQLPlanReq, "");
         if (res == null) {
-            return AjaxResult.error(CustomExceptionEnum.TOLSQL_IS_RIGHT_PARAM.getMsg(),
-                    "execution plan pre check fail");
+            return AjaxResult.error("602", "execution plan pre check fail");
         }
         return AjaxResult.success(res);
     }

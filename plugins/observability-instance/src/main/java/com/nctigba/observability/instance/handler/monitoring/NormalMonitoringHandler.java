@@ -16,9 +16,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.nctigba.observability.instance.constants.CommonConstants;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.opengauss.admin.common.exception.CustomException;
 import org.opengauss.admin.system.plugin.facade.HostFacade;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -31,8 +31,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.TypeReference;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
-import com.nctigba.common.web.exception.CustomException;
-import com.nctigba.common.web.exception.CustomExceptionEnum;
+import com.nctigba.observability.instance.constants.CommonConstants;
 import com.nctigba.observability.instance.constants.MonitoringConstants;
 import com.nctigba.observability.instance.constants.MonitoringType;
 import com.nctigba.observability.instance.entity.NctigbaEnv;
@@ -96,7 +95,7 @@ public class NormalMonitoringHandler implements MonitoringHandler {
             } else {
                 log.info("query prometheus range data failed ! please check the log, the error message is:{}",
                         response);
-                throw new CustomException(CustomExceptionEnum.INTERNAL_SERVER_ERROR);
+                throw new CustomException("");
             }
         } catch (CustomException e) {
             log.error(e.getMessage());
@@ -133,7 +132,7 @@ public class NormalMonitoringHandler implements MonitoringHandler {
             } else {
                 log.info("query prometheus range data failed ! please check the log, the error message is:{}",
                         response);
-                throw new CustomException(CustomExceptionEnum.INTERNAL_SERVER_ERROR);
+                throw new CustomException("");
             }
         } catch (CustomException e) {
             log.error(e.getMessage());
@@ -150,7 +149,7 @@ public class NormalMonitoringHandler implements MonitoringHandler {
         Map<String, List<Object>> timeMetricMap = transToTimeList(metricList);
         if (MapUtil.isEmpty(timeMetricMap)) {
             log.error("prometheus to table: data is empty!");
-            throw new CustomException(CustomExceptionEnum.MONITORING_ACCESS_DATA_ERROR);
+            throw new CustomException("601", 601);
         }
         List<Object> data = new ArrayList<>();
         List<String> columnNames = new ArrayList<>();
@@ -201,7 +200,7 @@ public class NormalMonitoringHandler implements MonitoringHandler {
     private Map<String, List<Object>> transToTimeList(List<MonitoringMetric> metricList) {
         if (CollectionUtils.isEmpty(metricList)) {
             log.error("transToTimeList: prometheus data is empty!");
-            throw new CustomException(CustomExceptionEnum.MONITORING_ACCESS_DATA_ERROR);
+            throw new CustomException("601", 601);
         }
         // 1. Processing of original data and extracting duplicates__ name__ Value Data
         Map<String, List<MonitoringMetric>> metricMap = new HashMap<>();
@@ -221,7 +220,7 @@ public class NormalMonitoringHandler implements MonitoringHandler {
         // the processed data
         if (metricMap.isEmpty()) {
             log.error("The first processing of the raw data results in a null result!");
-            throw new CustomException(CustomExceptionEnum.MONITORING_ACCESS_DATA_ERROR);
+            throw new CustomException("601", 601);
         }
         Map<String, List<Object>> timeMetricMap = new HashMap<>();
         for (List<MonitoringMetric> metrics : metricMap.values()) {
@@ -303,15 +302,15 @@ public class NormalMonitoringHandler implements MonitoringHandler {
         String field = param.getField();
         if (StringUtils.isEmpty(field)) {
             log.error("field cannot be null!");
-            throw new CustomException(CustomExceptionEnum.PARAM_INVALID_ERROR, "field cannot be null!");
+            throw new CustomException("field cannot be null!", 400);
         }
         if (StringUtils.isEmpty(param.getOrder())) {
             log.error("order cannot be null!");
-            throw new CustomException(CustomExceptionEnum.PARAM_INVALID_ERROR, "order cannot be null!");
+            throw new CustomException("order cannot be null!", 400);
         }
         if (ObjectUtils.isEmpty(tableList)) {
             log.error("result is null!");
-            throw new CustomException(CustomExceptionEnum.PARAM_INVALID_ERROR, "result cannot be null!");
+            throw new CustomException("result cannot be null!", 400);
         }
         // Sort by field
         List<Map<String, String>> listMapSort = JSON.parseObject(JSON.toJSONString(tableList),

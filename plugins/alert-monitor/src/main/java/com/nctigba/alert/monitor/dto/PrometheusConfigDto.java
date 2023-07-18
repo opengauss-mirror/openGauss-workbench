@@ -6,7 +6,6 @@ package com.nctigba.alert.monitor.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
-import lombok.Generated;
 
 import java.util.List;
 import java.util.Map;
@@ -30,7 +29,6 @@ import java.util.Map;
  * - localhost:9090
  */
 @Data
-@Generated
 public class PrometheusConfigDto {
     private Global global;
     private Alert alerting;
@@ -40,7 +38,6 @@ public class PrometheusConfigDto {
     private List<Job> scrapeConfigs;
 
     @Data
-@Generated
     public static class Global {
         @JsonProperty("scrape_interval")
         private String scrapeInterval;
@@ -51,12 +48,10 @@ public class PrometheusConfigDto {
     }
 
     @Data
-@Generated
     public static class Alert {
         private List<Alertmanager> alertmanagers;
 
         @Data
-@Generated
         public static class Alertmanager {
             @JsonProperty("api_version")
             private String apiVersion;
@@ -72,7 +67,6 @@ public class PrometheusConfigDto {
             private String timeout;
 
             @Data
-@Generated
             public static class Conf {
                 private List<String> targets;
             }
@@ -80,7 +74,6 @@ public class PrometheusConfigDto {
     }
 
     @Data
-@Generated
     public static class Job {
         @JsonProperty("job_name")
         private String jobName;
@@ -101,7 +94,6 @@ public class PrometheusConfigDto {
         private Boolean isEnableHttp2;
 
         @Data
-@Generated
         public static class Conf {
             private List<String> targets;
             private Map<String, String> labels;

@@ -5,7 +5,6 @@
 package com.nctigba.observability.sql.model.history.point;
 
 import lombok.Data;
-import lombok.Generated;
 import lombok.experimental.Accessors;
 
 /**
@@ -16,7 +15,6 @@ import lombok.experimental.Accessors;
  */
 @Data
 @Accessors(chain = true)
-@Generated
 public class CurrentCpuUsageDTO {
     private float totalUsage;
     private float avgUsage;

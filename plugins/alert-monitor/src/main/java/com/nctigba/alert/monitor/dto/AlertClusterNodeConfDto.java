@@ -7,7 +7,6 @@ package com.nctigba.alert.monitor.dto;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import lombok.Data;
-import lombok.Generated;
 import lombok.experimental.Accessors;
 
 /**
@@ -16,7 +15,6 @@ import lombok.experimental.Accessors;
  * @description
  */
 @Data
-@Generated
 @Accessors(chain = true)
 public class AlertClusterNodeConfDto {
     private String clusterNodeId;

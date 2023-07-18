@@ -3,7 +3,18 @@
  */
 package com.nctigba.observability.instance.service;
 
-import cn.hutool.core.util.StrUtil;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
+import org.opengauss.admin.common.core.domain.model.ops.OpsClusterNodeVO;
+import org.springframework.stereotype.Service;
+
 import com.alibaba.fastjson.JSONObject;
 import com.nctigba.observability.instance.constants.DatabaseType;
 import com.nctigba.observability.instance.dto.topsql.TopSQLInfoReq;
@@ -14,20 +25,12 @@ import com.nctigba.observability.instance.handler.topsql.TopSQLHandler;
 import com.nctigba.observability.instance.mapper.TopSqlMapper;
 import com.nctigba.observability.instance.model.InstanceNodeInfo;
 import com.nctigba.observability.instance.service.TopSQLService.waitEvent.event;
+
+import cn.hutool.core.util.StrUtil;
 import lombok.Data;
+import lombok.Generated;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.opengauss.admin.common.core.domain.model.ops.OpsClusterNodeVO;
-import org.springframework.stereotype.Service;
-
-import java.time.Duration;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
 
 /**
  * <p>
@@ -128,7 +131,6 @@ public class TopSQLService {
     public InstanceNodeInfo queryNodeInfo(String nodeId) {
         OpsClusterNodeVO opsClusterNode = clusterManager.getOpsNodeById(nodeId);
         InstanceNodeInfo instanceNodeInfo = new InstanceNodeInfo();
-        instanceNodeInfo.setId(opsClusterNode.getNodeId());
         instanceNodeInfo.setIp(opsClusterNode.getPublicIp());
         instanceNodeInfo.setPort(opsClusterNode.getDbPort());
         instanceNodeInfo.setDbName(opsClusterNode.getDbName());
@@ -165,6 +167,7 @@ public class TopSQLService {
     }
 
     @Data
+    @Generated
     public static class waitEvent {
         private static final DateTimeFormatter[] FORMATTERS = {
                 DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSSx"),
@@ -172,7 +175,8 @@ public class TopSQLService {
                 DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSx"),
                 DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSx"),
                 DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSx"),
-                DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.Sx") };
+                DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.Sx")
+        };
         private String index;
         private event e;
         private LocalDateTime time;

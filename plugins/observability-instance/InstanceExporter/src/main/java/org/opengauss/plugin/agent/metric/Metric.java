@@ -11,10 +11,12 @@ import cn.hutool.core.util.StrUtil;
 import io.prometheus.client.Collector;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.Generated;
 import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
+@Generated
 public class Metric {
     Collector.Type type;
     String help;
@@ -46,6 +48,7 @@ public class Metric {
     }
 
     @Data
+    @Generated
     @AllArgsConstructor
     public static class values {
         private List<String> labelValues;

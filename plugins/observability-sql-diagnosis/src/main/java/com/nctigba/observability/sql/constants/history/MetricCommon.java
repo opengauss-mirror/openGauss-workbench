@@ -4,15 +4,12 @@
 
 package com.nctigba.observability.sql.constants.history;
 
-import lombok.Generated;
-
 /**
  * MetricCommon
  *
  * @author luomeng
  * @since 2023/6/11
  */
-@Generated
 public class MetricCommon {
     public static final String AVG_CPU_USAGE_RATE =
             "(avg(sum(irate(agent_cpu_seconds_total{mode!='idle',"

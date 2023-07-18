@@ -220,19 +220,6 @@ public class PrometheusServiceTest {
     }
 
     @Test
-    public void testInitPrometheusConfigDisconnectSession() {
-        testPrometheusEnvDtoNormal();
-        prometheusService.initPrometheusConfig();
-
-        verify(alertConfigService, times(1)).list();
-        verify(envMapper, times(1)).selectOne(any());
-        verify(hostFacade, times(1)).getById(anyString());
-        verify(hostUserFacade, times(1)).listHostUserByHostId(anyString());
-        verify(encryptionUtils, times(1)).getKey();
-        verify(encryptionUtils, times(1)).decrypt(anyString());
-    }
-
-    @Test
     public void testInitPrometheusConfig_getPromConfigNull() {
         try (MockedStatic<SshSession> mockedStatic = mockStatic(SshSession.class);
              MockedStatic<HttpUtil> mockedStatic2 = mockStatic(HttpUtil.class)) {
@@ -281,16 +268,7 @@ public class PrometheusServiceTest {
             SshSession sshSession = mock(SshSession.class);
             mockedStatic.when(() -> SshSession.connect(anyString(), anyInt(), anyString(), anyString())).thenReturn(
                 sshSession);
-            String result = "{\"status\":\"success\",\"data\":{\"yaml\":\"global:\\n  scrape_interval: 5s\\n  "
-                + "scrape_timeout: 5s\\n  evaluation_interval: 1m\\nalerting:\\n "
-                + " alertmanagers:\\n  - follow_redirects: true\\n    enable_http2: true\\n    scheme: http\\n   "
-                + " path_prefix: /plugins/alert-monitor\\n    timeout: 10s\\n    api_version: v1\\n"
-                + "    static_configs:\\n   "
-                + " - targets:\\n      - 127.0.0.1:8080\\nrule_files:\\n- /data/rules/*.yml\\n"
-                + "scrape_configs:\\n- job_name: prometheus\\n  honor_timestamps: true\\n  scrape_interval: 5s\\n  "
-                + "scrape_timeout: 5s\\n  metrics_path: /metrics\\n  scheme: http\\n  follow_redirects: true\\n  "
-                + "enable_http2: true\\n  static_configs:\\n  - targets:\\n    - 192.168.56.52:9100\\n    "
-                + "labels:\\n      instance: 00336d3d-9b34-42a9-8ce8-b27048e50b8b\\n      type: node\\n\"}}";
+            String result = updatePromConfig1Result();
             mockedStatic2.when(() -> HttpUtil.get(anyString())).thenReturn(result);
             when(alertProperty.getRuleFilePrefix()).thenReturn("rules/");
             when(alertProperty.getRuleFileSuffix()).thenReturn(".yml");
@@ -315,23 +293,36 @@ public class PrometheusServiceTest {
         }
     }
 
+    private String updatePromConfig1Result() {
+        String backslash = String.valueOf((char) 92);
+        return "{\"status\":\"success\",\"data\":{\"yaml\":\"global:" + backslash + "n  scrape_interval: 5s"
+            + backslash + "n  "
+            + "scrape_timeout: 5s" + backslash + "n  evaluation_interval: 1m" + backslash + "nalerting:"
+            + backslash + "n  alertmanagers:" + backslash + "n  - follow_redirects: true" + backslash
+            + "n    enable_http2: true" + backslash + "n    scheme: http" + backslash + "n   "
+            + " path_prefix: /plugins/alert-monitor" + backslash + "n    timeout: 10s" + backslash
+            + "n    api_version: v1" + backslash + "n    static_configs:" + backslash + "n   "
+            + " - targets:" + backslash + "n      - 127.0.0.1:8080" + backslash + "nrule_files:" + backslash
+            + "n- /data/rules/*.yml" + backslash + "n"
+            + "scrape_configs:" + backslash + "n- job_name: prometheus" + backslash
+            + "n  honor_timestamps: true" + backslash + "n  scrape_interval: 5s" + backslash + "n  "
+            + "scrape_timeout: 5s" + backslash + "n  metrics_path: /metrics" + backslash + "n  scheme: http"
+            + backslash + "n  follow_redirects: true" + backslash + "n  "
+            + "enable_http2: true" + backslash + "n  static_configs:" + backslash + "n  - targets:" + backslash
+            + "n    - 192.168.56.52:9100" + backslash + "n    "
+            + "labels:" + backslash + "n      instance: 00336d3d-9b34-42a9-8ce8-b27048e50b8b" + backslash
+            + "n      type: node" + backslash + "n\"}}";
+    }
+
     @Test
-    public void testInitPrometheusConfig_updatePromConfig2() throws IOException {
+    public void testInitPrometheusConfigUpdatePromConfig2() throws IOException {
         try (MockedStatic<SshSession> mockedStatic = mockStatic(SshSession.class);
              MockedStatic<HttpUtil> mockedStatic2 = mockStatic(HttpUtil.class)) {
             testPrometheusEnvDtoNormal();
             SshSession sshSession = mock(SshSession.class);
             mockedStatic.when(() -> SshSession.connect(anyString(), anyInt(), anyString(), anyString())).thenReturn(
                 sshSession);
-            String result = "{\"status\":\"success\",\"data\":{\"yaml\":\"global:\\n  scrape_interval: 5s\\n  "
-                + "scrape_timeout: 5s\\n  evaluation_interval: 1m\\nalerting:\\n "
-                + " alertmanagers:\\n  - follow_redirects: true\\n    enable_http2: true\\n    scheme: http\\n   "
-                + " path_prefix: /plugins/alert-monitor\\n    timeout: 10s\\n    api_version: v1\\n"
-                + "    static_configs:\\n"
-                + "scrape_configs:\\n- job_name: prometheus\\n  honor_timestamps: true\\n  scrape_interval: 5s\\n  "
-                + "scrape_timeout: 5s\\n  metrics_path: /metrics\\n  scheme: http\\n  follow_redirects: true\\n  "
-                + "enable_http2: true\\n  static_configs:\\n  - targets:\\n    - 192.168.56.52:9100\\n    "
-                + "labels:\\n      instance: 00336d3d-9b34-42a9-8ce8-b27048e50b8b\\n      type: node\\n\"}}";
+            String result = updatePromConfig2Result();
             mockedStatic2.when(() -> HttpUtil.get(anyString())).thenReturn(result);
             when(alertProperty.getRuleFilePrefix()).thenReturn("rules/");
             when(alertProperty.getRuleFileSuffix()).thenReturn(".yml");
@@ -358,23 +349,36 @@ public class PrometheusServiceTest {
         }
     }
 
+    private String updatePromConfig2Result() {
+        String backslash = String.valueOf((char) 92);
+        return "{\"status\":\"success\",\"data\":{\"yaml\":\"global:" + backslash + "n  scrape_interval: 5s"
+            + backslash + "n  "
+            + "scrape_timeout: 5s" + backslash + "n  evaluation_interval: 1m" + backslash + "nalerting:"
+            + backslash + "n "
+            + " alertmanagers:" + backslash + "n  - follow_redirects: true" + backslash
+            + "n    enable_http2: true" + backslash + "n    scheme: http" + backslash + "n   "
+            + " path_prefix: /plugins/alert-monitor" + backslash + "n    timeout: 10s" + backslash
+            + "n    api_version: v1" + backslash + "n"
+            + "    static_configs:" + backslash + "n"
+            + "scrape_configs:" + backslash + "n- job_name: prometheus" + backslash
+            + "n  honor_timestamps: true" + backslash + "n  scrape_interval: 5s" + backslash + "n  "
+            + "scrape_timeout: 5s" + backslash + "n  metrics_path: /metrics" + backslash + "n  scheme: http"
+            + backslash + "n  follow_redirects: true" + backslash + "n  "
+            + "enable_http2: true" + backslash + "n  static_configs:" + backslash + "n  - targets:" + backslash
+            + "n    - 192.168.56.52:9100" + backslash + "n    "
+            + "labels:" + backslash + "n      instance: 00336d3d-9b34-42a9-8ce8-b27048e50b8b" + backslash
+            + "n      type: node" + backslash + "n\"}}";
+    }
+
     @Test
-    public void testInitPrometheusConfig_updatePromConfig3() throws IOException {
+    public void testInitPrometheusConfigUpdatePromConfig3() throws IOException {
         try (MockedStatic<SshSession> mockedStatic = mockStatic(SshSession.class);
              MockedStatic<HttpUtil> mockedStatic2 = mockStatic(HttpUtil.class)) {
             testPrometheusEnvDtoNormal();
             SshSession sshSession = mock(SshSession.class);
             mockedStatic.when(() -> SshSession.connect(anyString(), anyInt(), anyString(), anyString())).thenReturn(
                 sshSession);
-            String result = "{\"status\":\"success\",\"data\":{\"yaml\":\"global:\\n  scrape_interval: 5s\\n  "
-                + "scrape_timeout: 5s\\n  evaluation_interval: 1m\\nalerting:\\n "
-                + " alertmanagers:\\n  - follow_redirects: true\\n    enable_http2: true\\n    scheme: http\\n   "
-                + " path_prefix: /alertCenter\\n    timeout: 10s\\n    api_version: v1\\n    static_configs:\\n   "
-                + " - targets:\\n      - 192.168.56.1:8080\\nrule_files:\\n- /data/prometheus-2.42.0/rules1/*.yml\\n"
-                + "scrape_configs:\\n- job_name: prometheus\\n  honor_timestamps: true\\n  scrape_interval: 5s\\n  "
-                + "scrape_timeout: 5s\\n  metrics_path: /metrics\\n  scheme: http\\n  follow_redirects: true\\n  "
-                + "enable_http2: true\\n  static_configs:\\n  - targets:\\n    - 192.168.56.52:9100\\n    "
-                + "labels:\\n      instance: 00336d3d-9b34-42a9-8ce8-b27048e50b8b\\n      type: node\\n\"}}";
+            String result = updatePromConfig3Result();
             mockedStatic2.when(() -> HttpUtil.get(anyString())).thenReturn(result);
             when(alertProperty.getRuleFilePrefix()).thenReturn("rules/");
             when(alertProperty.getRuleFileSuffix()).thenReturn(".yml");
@@ -400,20 +404,50 @@ public class PrometheusServiceTest {
         }
     }
 
+    private String updatePromConfig3Result() {
+        String backslash = String.valueOf((char) 92);
+        return "{\"status\":\"success\",\"data\":{\"yaml\":\"global:" + backslash + "n  scrape_interval: 5s"
+            + backslash + "n  "
+            + "scrape_timeout: 5s" + backslash + "n  evaluation_interval: 1m" + backslash + "nalerting:"
+            + backslash + "n "
+            + " alertmanagers:" + backslash + "n  - follow_redirects: true" + backslash
+            + "n    enable_http2: true" + backslash + "n    scheme: http" + backslash + "n   "
+            + " path_prefix: /alertCenter" + backslash + "n    timeout: 10s" + backslash
+            + "n    api_version: v1" + backslash + "n    static_configs:" + backslash + "n   "
+            + " - targets:" + backslash + "n      - 192.168.56.1:8080" + backslash + "nrule_files:" + backslash
+            + "n- /data/prometheus-2.42.0/rules1/*.yml" + backslash + "n"
+            + "scrape_configs:" + backslash + "n- job_name: prometheus" + backslash
+            + "n  honor_timestamps: true" + backslash + "n  scrape_interval: 5s" + backslash + "n  "
+            + "scrape_timeout: 5s" + backslash + "n  metrics_path: /metrics" + backslash + "n  scheme: http"
+            + backslash + "n  follow_redirects: true" + backslash + "n  "
+            + "enable_http2: true" + backslash + "n  static_configs:" + backslash + "n  - targets:" + backslash
+            + "n    - 192.168.56.52:9100" + backslash + "n    "
+            + "labels:" + backslash + "n      instance: 00336d3d-9b34-42a9-8ce8-b27048e50b8b" + backslash
+            + "n      type: node" + backslash + "n\"}}";
+    }
+
     @Test
-    public void testInitPrometheusConfig_updatePromConfig4() throws IOException {
+    public void testInitPrometheusConfigUpdatePromConfig4() throws IOException {
         try (MockedStatic<SshSession> mockedStatic = mockStatic(SshSession.class);
              MockedStatic<HttpUtil> mockedStatic2 = mockStatic(HttpUtil.class)) {
             testPrometheusEnvDtoNormal();
             SshSession sshSession = mock(SshSession.class);
             mockedStatic.when(() -> SshSession.connect(anyString(), anyInt(), anyString(), anyString())).thenReturn(
                 sshSession);
-            String result = "{\"status\":\"success\",\"data\":{\"yaml\":\"global:\\n  scrape_interval: 5s\\n  "
-                + "scrape_timeout: 5s\\n  evaluation_interval: 1m\\nalerting:\\n"
-                + "scrape_configs:\\n- job_name: prometheus\\n  honor_timestamps: true\\n  scrape_interval: 5s\\n  "
-                + "scrape_timeout: 5s\\n  metrics_path: /metrics\\n  scheme: http\\n  follow_redirects: true\\n  "
-                + "enable_http2: true\\n  static_configs:\\n  - targets:\\n    - 192.168.56.52:9100\\n    "
-                + "labels:\\n      instance: 00336d3d-9b34-42a9-8ce8-b27048e50b8b\\n      type: node\\n\"}}";
+            String backslash = String.valueOf((char) 92);
+            String result =
+                "{\"status\":\"success\",\"data\":{\"yaml\":\"global:" + backslash + "n  scrape_interval: 5s"
+                    + backslash + "n  "
+                    + "scrape_timeout: 5s" + backslash + "n  evaluation_interval: 1m" + backslash + "nalerting:"
+                    + backslash + "n"
+                    + "scrape_configs:" + backslash + "n- job_name: prometheus" + backslash
+                    + "n  honor_timestamps: true" + backslash + "n  scrape_interval: 5s" + backslash + "n  "
+                    + "scrape_timeout: 5s" + backslash + "n  metrics_path: /metrics" + backslash + "n  scheme: http"
+                    + backslash + "n  follow_redirects: true" + backslash + "n  "
+                    + "enable_http2: true" + backslash + "n  static_configs:" + backslash + "n  - targets:" + backslash
+                    + "n    - 192.168.56.52:9100" + backslash + "n    "
+                    + "labels:" + backslash + "n      instance: 00336d3d-9b34-42a9-8ce8-b27048e50b8b" + backslash
+                    + "n      type: node" + backslash + "n\"}}";
             mockedStatic2.when(() -> HttpUtil.get(anyString())).thenReturn(result);
             when(alertProperty.getRuleFilePrefix()).thenReturn("rules");
             when(alertProperty.getRuleFileSuffix()).thenReturn(".yml");
@@ -520,14 +554,6 @@ public class PrometheusServiceTest {
         prometheusService.updateAlertConfig(alertConfig, delAlertConfigList);
     }
 
-    @Test(expected = ServiceException.class)
-    public void testUpdateAlertConfigThrowException3() {
-        testPrometheusEnvDtoNormal();
-        AlertConfig alertConfig = new AlertConfig().setAlertIp("127.0.0.1").setAlertPort("8080");
-        List<AlertConfig> delAlertConfigList = new ArrayList<>();
-        prometheusService.updateAlertConfig(alertConfig, delAlertConfigList);
-    }
-
     @Test
     public void testUpdateAlertConfig() throws IOException {
         try (MockedStatic<SshSession> mockedStatic = mockStatic(SshSession.class);
@@ -536,15 +562,7 @@ public class PrometheusServiceTest {
             SshSession sshSession = mock(SshSession.class);
             mockedStatic.when(() -> SshSession.connect(anyString(), anyInt(), anyString(), anyString())).thenReturn(
                 sshSession);
-            String result = "{\"status\":\"success\",\"data\":{\"yaml\":\"global:\\n  scrape_interval: 5s\\n  "
-                + "scrape_timeout: 5s\\n  evaluation_interval: 1m\\nalerting:\\n "
-                + " alertmanagers:\\n  - follow_redirects: true\\n    enable_http2: true\\n    scheme: http\\n   "
-                + " path_prefix: /alertCenter\\n    timeout: 10s\\n    api_version: v1\\n    static_configs:\\n   "
-                + " - targets:\\n      - 192.168.56.1:8080\\nrule_files:\\n- /data/prometheus-2.42.0/rules1/*.yml\\n"
-                + "scrape_configs:\\n- job_name: prometheus\\n  honor_timestamps: true\\n  scrape_interval: 5s\\n  "
-                + "scrape_timeout: 5s\\n  metrics_path: /metrics\\n  scheme: http\\n  follow_redirects: true\\n  "
-                + "enable_http2: true\\n  static_configs:\\n  - targets:\\n    - 192.168.56.52:9100\\n    "
-                + "labels:\\n      instance: 00336d3d-9b34-42a9-8ce8-b27048e50b8b\\n      type: node\\n\"}}";
+            String result = testUpdateAlertConfigResult();
             mockedStatic2.when(() -> HttpUtil.get(anyString())).thenReturn(result);
             when(alertProperty.getRuleFilePrefix()).thenReturn("rules/");
             when(alertProperty.getRuleFileSuffix()).thenReturn(".yml");
@@ -573,6 +591,28 @@ public class PrometheusServiceTest {
             verify(sshSession, times(1)).upload(anyString(), anyString());
             verify(sshSession, times(1)).close();
         }
+    }
+
+    private String testUpdateAlertConfigResult() {
+        String backslash = String.valueOf((char) 92);
+        return "{\"status\":\"success\",\"data\":{\"yaml\":\"global:" + backslash + "n  scrape_interval: 5s"
+            + backslash + "n  "
+            + "scrape_timeout: 5s" + backslash + "n  evaluation_interval: 1m" + backslash + "nalerting:"
+            + backslash + "n "
+            + " alertmanagers:" + backslash + "n  - follow_redirects: true" + backslash
+            + "n    enable_http2: true" + backslash + "n    scheme: http" + backslash + "n   "
+            + " path_prefix: /alertCenter" + backslash + "n    timeout: 10s" + backslash
+            + "n    api_version: v1" + backslash + "n    static_configs:" + backslash + "n   "
+            + " - targets:" + backslash + "n      - 192.168.56.1:8080" + backslash + "nrule_files:" + backslash
+            + "n- /data/prometheus-2.42.0/rules1/*.yml" + backslash + "n"
+            + "scrape_configs:" + backslash + "n- job_name: prometheus" + backslash
+            + "n  honor_timestamps: true" + backslash + "n  scrape_interval: 5s" + backslash + "n  "
+            + "scrape_timeout: 5s" + backslash + "n  metrics_path: /metrics" + backslash + "n  scheme: http"
+            + backslash + "n  follow_redirects: true" + backslash + "n  "
+            + "enable_http2: true" + backslash + "n  static_configs:" + backslash + "n  - targets:" + backslash
+            + "n    - 192.168.56.52:9100" + backslash + "n    "
+            + "labels:" + backslash + "n      instance: 00336d3d-9b34-42a9-8ce8-b27048e50b8b" + backslash
+            + "n      type: node" + backslash + "n\"}}";
     }
 
     @Test

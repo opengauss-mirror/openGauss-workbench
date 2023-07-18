@@ -4,6 +4,25 @@
 
 package com.nctigba.observability.instance.service.impl;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.sql.Connection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
 import com.alibaba.fastjson.JSONObject;
 import com.nctigba.observability.instance.constants.DatabaseType;
 import com.nctigba.observability.instance.dto.session.DetailStatisticDto;
@@ -11,32 +30,14 @@ import com.nctigba.observability.instance.factory.SessionHandlerFactory;
 import com.nctigba.observability.instance.handler.session.SessionHandler;
 import com.nctigba.observability.instance.model.InstanceNodeInfo;
 import com.nctigba.observability.instance.service.ClusterManager;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
-
-import java.sql.Connection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 /**
- * Test
+ * SessionServiceImplTest.java
  *
- * @author liupengfei
- * @since 2023/6/30
+ * @since 2023年7月17日
  */
-@RunWith(MockitoJUnitRunner.class)
-public class SessionServiceImplTest {
+@ExtendWith(MockitoExtension.class)
+class SessionServiceImplTest {
     @InjectMocks
     private SessionServiceImpl sessionService;
     @Mock
@@ -49,7 +50,7 @@ public class SessionServiceImplTest {
     private InstanceNodeInfo instanceNodeInfo;
     private ClusterManager.OpsClusterNodeVOSub opsClusterNode;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         instanceNodeInfo = new InstanceNodeInfo();
         instanceNodeInfo.setIp("127.0.0.1");
@@ -64,7 +65,7 @@ public class SessionServiceImplTest {
         opsClusterNode.setDbName("testDb");
         opsClusterNode.setDbUser("testUser");
         opsClusterNode.setDbUserPassword("testPassword");
-        when(opsFacade.getOpsNodeById(getId())).thenReturn(opsClusterNode);
+        when(opsFacade.getOpsNodeById(any())).thenReturn(opsClusterNode);
         when(sessionHandlerFactory.getInstance(DatabaseType.DEFAULT.getDbType())).thenReturn(sessionHandler);
         when(sessionHandler.getConnection(instanceNodeInfo)).thenReturn(connection);
     }
@@ -135,6 +136,7 @@ public class SessionServiceImplTest {
         when(sessionHandler.simpleStatistic(connection)).thenReturn(expectedResult);
         JSONObject result = sessionService.simpleStatistic(getId());
         assertEquals(expectedResult, result);
+
         verify(sessionHandlerFactory, times(1)).getInstance(DatabaseType.DEFAULT.getDbType());
         verify(sessionHandler, times(1)).getConnection(instanceNodeInfo);
         verify(sessionHandler, times(1)).simpleStatistic(connection);
@@ -164,8 +166,10 @@ public class SessionServiceImplTest {
         HashMap<String, List<JSONObject>> expectedResult = new HashMap<>();
         expectedResult.put("blockTree", blockTree);
         expectedResult.put("longTxc", longTxc);
+
         when(sessionHandler.detailBlockTree(connection, null)).thenReturn(blockTree);
         when(sessionHandler.longTxc(connection)).thenReturn(longTxc);
+
         HashMap<String, List<JSONObject>> result = sessionService.blockAndLongTxc(getId());
         assertEquals(expectedResult, result);
     }
@@ -182,10 +186,12 @@ public class SessionServiceImplTest {
         expectedResult.put("general", object);
         expectedResult.put("statistic", statistic);
         expectedResult.put("waiting", waiting);
+
         when(sessionHandler.detailWaiting(connection, getId())).thenReturn(waiting);
         when(sessionHandler.detailStatistic(connection, getId())).thenReturn(statistic);
         when(sessionHandler.detailBlockTree(connection, getId())).thenReturn(blockTree);
         when(sessionHandler.detailGeneral(connection, getId())).thenReturn(object);
+
         Map<String, Object> result = sessionService.detail(getId(), getId());
         assertEquals(expectedResult, result);
     }
