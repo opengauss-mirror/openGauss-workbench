@@ -4,15 +4,12 @@
 
 package com.nctigba.observability.sql.constants.history;
 
-import lombok.Generated;
-
 /**
  * SqlCommon
  *
  * @author luomeng
  * @since 2023/6/11
  */
-@Generated
 public class SqlCommon {
     public static final String BUSINESS_CONN_COUNT =
             "select count(1) as count from gs_asp where wait_status <>'none' and "

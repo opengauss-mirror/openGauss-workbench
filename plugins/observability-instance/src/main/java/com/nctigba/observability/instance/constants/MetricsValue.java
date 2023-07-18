@@ -1,13 +1,14 @@
 /*
  * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
  */
+
 package com.nctigba.observability.instance.constants;
 
-import lombok.Generated;
+import org.opengauss.admin.common.core.domain.model.ops.OpsClusterNodeVO;
+
 import lombok.Getter;
 
 @Getter
-@Generated
 public enum MetricsValue {
     // memory
     MEM_TOTAL(Type.OS, "agent_free_Mem_total_bytes{host='ogbrench'}"),
@@ -77,6 +78,16 @@ public enum MetricsValue {
         this.type = type;
         this.expression = expression;
         this.template = template;
+    }
+
+    /**
+     * node to promQl
+     *
+     * @param node instance node
+     * @return promQl
+     */
+    public String promQl(OpsClusterNodeVO node) {
+        return this.promQl(node.getHostId(), node.getNodeId());
     }
 
     public String promQl(String host, String node) {

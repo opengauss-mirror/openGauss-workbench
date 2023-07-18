@@ -12,6 +12,7 @@ import com.nctigba.observability.sql.model.history.HisDiagnosisThreshold;
 import com.nctigba.observability.sql.model.history.query.OptionQuery;
 import com.nctigba.observability.sql.service.history.collection.agent.AgentCollectionItem;
 import com.nctigba.observability.sql.service.history.collection.agent.CurrentCpuUsageItem;
+import com.nctigba.observability.sql.util.AgentUtil;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -24,6 +25,7 @@ import java.util.Date;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 /**
@@ -36,6 +38,8 @@ import static org.mockito.Mockito.when;
 public class TestAgentCollectionItem {
     @Mock
     private CurrentCpuUsageItem item;
+    @Mock
+    private AgentUtil util;
     @InjectMocks
     private AgentCollectionItem collectionItem = new AgentCollectionItem() {
         @Override
@@ -85,6 +89,7 @@ public class TestAgentCollectionItem {
     public void testCollectData() {
         when(item.getHttpParam()).thenReturn(AgentParamCommon.TOP);
         hisDiagnosisTask.setHisDataEndTime(null);
+        when(util.rangQuery(any(), any())).thenReturn(null);
         Object data = collectionItem.collectData(hisDiagnosisTask);
         assertNull(data);
     }
@@ -93,6 +98,7 @@ public class TestAgentCollectionItem {
     public void testQueryData() {
         when(item.getHttpParam()).thenReturn(AgentParamCommon.TOP);
         hisDiagnosisTask.setHisDataEndTime(null);
+        when(util.rangQuery(any(), any())).thenReturn(null);
         Object data = collectionItem.queryData(hisDiagnosisTask);
         assertNull(data);
     }

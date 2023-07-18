@@ -5,7 +5,6 @@
 package com.nctigba.alert.monitor.model;
 
 import lombok.Data;
-import lombok.Generated;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
@@ -19,7 +18,6 @@ import java.util.List;
  * @description
  */
 @Data
-@Generated
 public class AlertTemplateReq {
     private Long id;
     @NotBlank

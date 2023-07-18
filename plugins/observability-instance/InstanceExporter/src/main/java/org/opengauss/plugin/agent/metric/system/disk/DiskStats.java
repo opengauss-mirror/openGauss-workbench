@@ -1,6 +1,7 @@
 /*
  * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
  */
+
 package org.opengauss.plugin.agent.metric.system.disk;
 
 import java.io.FileNotFoundException;
@@ -10,11 +11,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.opengauss.plugin.agent.metric.Metric;
+import org.opengauss.plugin.agent.metric.OSmetric;
 import org.opengauss.plugin.agent.util.FileUtil;
 import org.opengauss.plugin.agent.util.StringUtil;
 import org.springframework.stereotype.Service;
-
-import org.opengauss.plugin.agent.metric.OSmetric;
 
 import cn.hutool.core.util.ReUtil;
 import io.prometheus.client.Collector.Type;
@@ -22,7 +22,7 @@ import io.prometheus.client.Collector.Type;
 /**
  * Linux 2.6 file {@code /proc/diskstats}<br/>
  * Linux 2.4 file {@code /proc/partitions} TODO
- * 
+ *
  * @see <a href=
  *      "https://www.kernel.org/doc/Documentation/ABI/testing/procfs-diskstats">
  *      kernel.org/doc/procfs-diskstats</a>
@@ -55,7 +55,8 @@ public class DiskStats implements OSmetric {
             "time spent discarding",
             // Kernel 5.5+
             "flush requests completed successfully",
-            "time spent flushing", };
+            "time spent flushing",
+    };
 
     private static final String IGNORE = "^(ram|loop|fd|(h|s|v|xv)d[a-z]|nvme\\d+n\\d+p)\\d+$";
 

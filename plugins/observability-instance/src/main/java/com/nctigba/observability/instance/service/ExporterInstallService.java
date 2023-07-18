@@ -17,6 +17,7 @@ import java.util.Map;
 
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.core.domain.model.ops.WsSession;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Service;
 
@@ -40,17 +41,17 @@ import cn.hutool.core.thread.ThreadUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.HttpUtil;
 import cn.hutool.json.JSONUtil;
-import lombok.RequiredArgsConstructor;
 
 @Service
-@RequiredArgsConstructor
 public class ExporterInstallService extends AbstractInstaller {
     private static final String EXPORTER_NAME = "instance-exporter.jar";
     private static final String JDK = "https://mirrors.huaweicloud.com/kunpeng/archive/compiler/bisheng_jdk/";
     private static final String JDKPKG = "bisheng-jdk-11.0.17-linux-{0}.tar.gz";
 
-    private final ClusterManager clusterManager;
-    private final ResourceLoader loader;
+    @Autowired
+    private ClusterManager clusterManager;
+    @Autowired
+    private ResourceLoader loader;
 
     public void install(WsSession wsSession, String nodeId, String path, Integer exporterPort, Integer httpPort) {
         // @formatter:off
@@ -141,16 +142,17 @@ public class ExporterInstallService extends AbstractInstaller {
                     session.executeNoWait("cd " + path + " && " + java + " -jar " + EXPORTER_NAME + " --server.port="
                             + httpPort + " --exporter.port=" + exporterPort + " &");
                     expEnv.setPath(path);
-                    for (int i = 0; i < 10; i++) {
-                        ThreadUtil.sleep(5000L);
+                    for (int i = 0; i < 11; i++) {
                         try {
                             HttpUtil.get("http://" + hostEntity.getPublicIp() + ":" + expEnv.getPort() + "/config/set",
                                     Map.of("hostId", hostId, "nodeId", nodeId, "dbport", node.getDbPort(), "username",
                                             node.getDbUser(), "password", node.getDbUserPassword()));
+                            break;
                         } catch (IORuntimeException e) {
-                            if (i == 9)
+                            if (i == 10)
                                 throw e;
                         }
+                        ThreadUtil.sleep(5000L);
                     }
                     curr = nextStep(wsSession, steps, curr);
                     envMapper.insert(expEnv);
@@ -197,6 +199,7 @@ public class ExporterInstallService extends AbstractInstaller {
                 }
             }
         } catch (Exception e) {
+            e.printStackTrace();
             if (expEnv != null)
                 envMapper.deleteById(expEnv);
             steps.get(curr).setState(status.ERROR).add(e.getMessage());

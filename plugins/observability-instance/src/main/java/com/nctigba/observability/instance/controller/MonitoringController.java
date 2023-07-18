@@ -13,13 +13,13 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import org.opengauss.admin.common.core.domain.AjaxResult;
+import org.opengauss.admin.common.exception.CustomException;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.nctigba.common.web.exception.CustomException;
 import com.nctigba.observability.instance.model.monitoring.MonitoringParam;
 import com.nctigba.observability.instance.service.MonitoringService;
 

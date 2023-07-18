@@ -3,7 +3,13 @@
  */
 package com.nctigba.observability.instance.service;
 
-import cn.hutool.core.util.StrUtil;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 import com.nctigba.common.web.exception.InstanceException;
 import com.nctigba.observability.instance.constants.CommonConstants;
@@ -15,24 +21,20 @@ import com.nctigba.observability.instance.mapper.ParamValueInfoMapper;
 import com.nctigba.observability.instance.model.param.ParamQuery;
 import com.nctigba.observability.instance.util.MessageSourceUtil;
 import com.nctigba.observability.instance.util.SshSession;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
+import cn.hutool.core.util.StrUtil;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@RequiredArgsConstructor
 @Service
 public class ParamInfoService {
-    private final ClusterManager opsFacade;
+    @Autowired
+    private ClusterManager opsFacade;
     @Autowired
     @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
     protected EncryptionUtils encryptionUtils;
-    protected final ParamValueInfoMapper paramValueInfoMapper;
+    @Autowired
+    protected ParamValueInfoMapper paramValueInfoMapper;
 
     public List<ParamInfoDTO> getParamInfo(ParamQuery paramQuery) {
         if ("1".equals(paramQuery.getIsRefresh())) {

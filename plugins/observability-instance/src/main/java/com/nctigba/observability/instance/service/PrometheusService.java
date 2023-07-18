@@ -1,6 +1,7 @@
 /*
  * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
  */
+
 package com.nctigba.observability.instance.service;
 
 import java.io.File;
@@ -105,18 +106,17 @@ public class PrometheusService extends AbstractInstaller {
                     sshsession.executeNoWait(
                             "cd " + env.getPath() + " && ./prometheus --web.enable-lifecycle --web.listen-address=:"
                                     + promport + " --config.file=prometheus.yml &");
-                    ThreadUtil.sleep(3000L);
 
                     curr = nextStep(wsSession, steps, curr);
-                    for (int i = 0; i < 10; i++) {
-                        ThreadUtil.sleep(3000L);
+                    for (int i = 0; i < 11; i++) {
                         try {
                             String str = HttpUtil.get("http://" + env.getHost().getPublicIp() + ":" + env.getPort()
                                     + "/api/v1/status/runtimeinfo");
                             if (StringUtils.isBlank(str))
                                 throw new Exception();
                         } catch (Exception e) {
-                            if (i == 9)
+                            ThreadUtil.sleep(3000L);
+                            if (i == 10)
                                 throw new RuntimeException("prominstall.promstartfail");
                         }
                     }

@@ -6,6 +6,7 @@ package com.nctigba.observability.sql.history;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.nctigba.observability.sql.constants.history.DiagnosisTypeCommon;
+import com.nctigba.observability.sql.mapper.history.HisDiagnosisResultMapper;
 import com.nctigba.observability.sql.mapper.history.HisDiagnosisTaskMapper;
 import com.nctigba.observability.sql.mapper.history.HisThresholdMapper;
 import com.nctigba.observability.sql.model.history.HisDiagnosisResult;
@@ -63,6 +64,8 @@ public class TaskServiceImplTest {
     private DataStoreService dataStoreService;
     @Mock
     private HisThresholdMapper hisThresholdMapper;
+    @Mock
+    private HisDiagnosisResultMapper resultMapper;
     @Spy
     private List<HisDiagnosisPointService<?>> pointServiceList = new ArrayList<>();
     @InjectMocks

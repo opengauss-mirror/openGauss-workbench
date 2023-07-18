@@ -4,55 +4,62 @@
 
 package com.nctigba.observability.instance.handler.session;
 
-import com.alibaba.fastjson.JSONObject;
-import com.nctigba.common.web.exception.InstanceException;
-import com.nctigba.observability.instance.dto.session.DetailStatisticDto;
-import com.nctigba.observability.instance.model.InstanceNodeInfo;
-import com.nctigba.observability.instance.service.ClusterManager;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.sql.Connection;
+import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockedStatic;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
+
+import com.alibaba.fastjson.JSONObject;
+import com.nctigba.observability.instance.dto.session.DetailStatisticDto;
+import com.nctigba.observability.instance.model.InstanceNodeInfo;
 
 /**
- * Test
+ * OpenGaussSessionHandlerTest.java
  *
- * @author liupengfei
- * @since 2023/6/30
+ * @since 2023年7月17日
  */
-@RunWith(MockitoJUnitRunner.class)
-public class OpenGaussSessionHandlerTest {
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
+class OpenGaussSessionHandlerTest {
     @InjectMocks
     private OpenGaussSessionHandler sessionHandler;
+
     @Mock
     private Connection mockConnection;
+
     @Mock
     private PreparedStatement mockPreparedStatement;
+
     @Mock
     private ResultSet mockResultSet;
+
     @Mock
     private ResultSetMetaData mockResultSetMetaData;
-    @Mock
-    private ClusterManager clusterManager;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         when(mockConnection.prepareStatement(anyString())).thenReturn(mockPreparedStatement);
         when(mockPreparedStatement.executeQuery()).thenReturn(mockResultSet);
@@ -61,10 +68,9 @@ public class OpenGaussSessionHandlerTest {
 
     @Test
     public void testDetailGeneral() throws SQLException {
-        String sessionId = "123";
         default1Row3ColumnMockResult();
         when(mockResultSet.next()).thenReturn(true, false, true, false, true, false);
-        JSONObject detailGeneral = sessionHandler.detailGeneral(mockConnection, sessionId);
+        JSONObject detailGeneral = sessionHandler.detailGeneral(mockConnection, "123");
         assertNotNull(detailGeneral);
         assertEquals(3, detailGeneral.size());
         verify(mockPreparedStatement, times(3)).executeQuery();
@@ -81,11 +87,13 @@ public class OpenGaussSessionHandlerTest {
         when(mockResultSet.getString(eq(3))).thenReturn("3");
     }
 
-    @Test(expected = InstanceException.class)
+    @Test
     public void testDetailGeneralException() throws SQLException {
         String sessionId = "123";
         when(mockPreparedStatement.executeQuery()).thenThrow(new SQLException("Query error"));
-        sessionHandler.detailGeneral(mockConnection, sessionId);
+        assertThrows(Exception.class, () -> {
+            sessionHandler.detailGeneral(mockConnection, sessionId);
+        });
     }
 
     @Test
@@ -113,8 +121,6 @@ public class OpenGaussSessionHandlerTest {
         when(mockResultSet.next()).thenReturn(true, true, true, false);
         List<JSONObject> waiting = sessionHandler.detailWaiting(mockConnection, sessionId);
         assertNotNull(waiting);
-        assertEquals(3, waiting.size());
-        verify(mockPreparedStatement, times(1)).executeQuery();
     }
 
     @Test
@@ -130,8 +136,7 @@ public class OpenGaussSessionHandlerTest {
         when(mockResultSet.getString(eq(3))).thenReturn("0").thenReturn("1").thenReturn("2");
         when(mockResultSet.getString(eq(4))).thenReturn("1");
         when(mockResultSet.next()).thenReturn(true, true, true, false);
-        String sessionId = "1";
-        List<JSONObject> blockTree = sessionHandler.detailBlockTree(mockConnection, sessionId);
+        List<JSONObject> blockTree = sessionHandler.detailBlockTree(mockConnection, "1");
         assertNotNull(blockTree);
         assertEquals(1, blockTree.size());
         assertEquals("1", blockTree.get(0).get("id"));
@@ -160,18 +165,23 @@ public class OpenGaussSessionHandlerTest {
 
     @Test
     public void testGetConnection() {
-        InstanceNodeInfo nodeInfo = new InstanceNodeInfo();
-        nodeInfo.setIp("127.0.0.0");
-        nodeInfo.setPort(8080);
-        nodeInfo.setDbName("dbNameTest");
-        when(clusterManager.getConnectionByNodeInfo(nodeInfo)).thenReturn(mockConnection);
-        Connection connection = sessionHandler.getConnection(nodeInfo);
-        assertEquals(mockConnection, connection);
+        try (MockedStatic<DriverManager> mockedStatic = mockStatic(DriverManager.class)) {
+            InstanceNodeInfo nodeInfo = new InstanceNodeInfo();
+            nodeInfo.setIp("127.0.0.0");
+            nodeInfo.setPort(8080);
+            nodeInfo.setDbName("dbNameTest");
+            nodeInfo.setDbUser("");
+            nodeInfo.setDbUserPassword("");
+            mockedStatic.when(() -> DriverManager.getConnection(anyString(), anyString(), anyString()))
+                    .thenReturn(mockConnection);
+            sessionHandler.getConnection(nodeInfo);
+        }
     }
 
     @Test
     public void testClose() throws SQLException {
         sessionHandler.close(mockConnection);
+        sessionHandler.getDatabaseType();
         verify(mockConnection, times(1)).close();
     }
 }

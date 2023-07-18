@@ -5,7 +5,6 @@
 package com.nctigba.observability.sql.model.history.query;
 
 import lombok.Data;
-import lombok.Generated;
 
 /**
  * OptionQuery
@@ -14,7 +13,6 @@ import lombok.Generated;
  * @since 2023/6/9
  */
 @Data
-@Generated
 public class OptionQuery {
     private String option;
     private String name;

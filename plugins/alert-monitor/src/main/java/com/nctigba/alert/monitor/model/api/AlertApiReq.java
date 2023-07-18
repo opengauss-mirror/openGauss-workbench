@@ -6,7 +6,6 @@ package com.nctigba.alert.monitor.model.api;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
-import lombok.Generated;
 
 import java.time.LocalDateTime;
 import java.util.Map;
@@ -17,7 +16,6 @@ import java.util.Map;
  * @description Prometheus pushes alert messages.
  */
 @Data
-@Generated
 public class AlertApiReq {
     private AlertLabels labels;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")

@@ -10,13 +10,14 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.opengauss.admin.common.exception.CustomException;
 import org.springframework.stereotype.Component;
 import org.sqlite.JDBC;
 import org.sqlite.SQLiteDataSource;
 
-import com.nctigba.common.web.exception.CustomException;
 import com.nctigba.observability.instance.constants.CommonConstants;
 
+import cn.hutool.core.io.FileUtil;
 import lombok.extern.slf4j.Slf4j;
 
 @Component
@@ -25,8 +26,8 @@ public class ParamInfoInitConfig {
     public static final String PARAMINFO = "paramInfo";
     public static final String PARAMVALUEINFO = "paramValueInfo";
     private static final Map<String, Connection> map = new HashMap<>();
-    private static String paramInfoPath = "data" + File.separatorChar + "paramInfo.db";
-    private static String paramValueInfoPath = "data" + File.separatorChar + "paramValueInfo.db";
+    private static final String PARAMINFOPATH = "data" + File.separatorChar + "paramInfo.db";
+    private static final String PARAMVALUEINFOPATH = "data" + File.separatorChar + "paramValueInfo.db";
 
     public static Connection getCon(String key) {
         if (!map.containsKey(key)) {
@@ -157,19 +158,21 @@ public class ParamInfoInitConfig {
             CommonConstants.INSERT_INTO_PARAM_INFO_SQL
                     + " values(\"DB\",\"log_min_error_statement\",\"控制在服务器日志中记录错误的SQL语句。\","
                     + "\"error\",\"error\",\"枚举型\"," + "\"有效值有debug、debug5、debug4、debug3、debug2、debug1、info、log、"
-                    + "notice、warning、error、fatal、panic。\",\"\");" };
+                    + "notice、warning、error、fatal、panic。\",\"\");"
+    };
 
     private static final String[] paramValueVnfo = {
             "CREATE TABLE param_value_info (id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, sid INTEGER,"
-                    + " instance TEXT, actualValue TEXT);" };
+                    + " instance TEXT, actualValue TEXT);"
+    };
 
     private static void init() throws IOException {
-        map.put(PARAMINFO, initSqlite(paramInfoPath, paramInfos));
-        map.put(PARAMVALUEINFO, initSqlite(paramValueInfoPath, paramValueVnfo));
+        map.put(PARAMINFO, initSqlite(PARAMINFOPATH, paramInfos));
+        map.put(PARAMVALUEINFO, initSqlite(PARAMVALUEINFOPATH, paramValueVnfo));
     }
 
     private static Connection initSqlite(String path, String[] sqls) throws IOException {
-        File f = new File(path);
+        File f = FileUtil.file(path);
         log.info("sqlite:" + f.getCanonicalPath());
         if (!f.exists()) {
             var parent = f.getParentFile();

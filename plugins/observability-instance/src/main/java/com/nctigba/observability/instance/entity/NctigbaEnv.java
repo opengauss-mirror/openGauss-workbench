@@ -1,6 +1,7 @@
 /*
  * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
  */
+
 package com.nctigba.observability.instance.entity;
 
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;

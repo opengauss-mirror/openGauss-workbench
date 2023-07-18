@@ -8,7 +8,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import lombok.Data;
-import lombok.Generated;
 
 import java.util.List;
 
@@ -18,18 +17,15 @@ import java.util.List;
  * @description
  */
 @Data
-@Generated
 public class AlertRuleConfigDto {
     private List<Group> groups;
 
     @Data
-@Generated
     public static class Group {
         private String name;
         private List<Rule> rules;
 
         @Data
-@Generated
         public static class Rule {
             private String alert;
             private String expr;
@@ -39,7 +35,6 @@ public class AlertRuleConfigDto {
             private Annotations annotations;
 
             @Data
-@Generated
             public static class Labels {
                 private String level;
                 @JsonSerialize(using = ToStringSerializer.class)
@@ -49,7 +44,6 @@ public class AlertRuleConfigDto {
             }
 
             @Data
-@Generated
             public static class Annotations {
                 private String summary;
                 private String description;

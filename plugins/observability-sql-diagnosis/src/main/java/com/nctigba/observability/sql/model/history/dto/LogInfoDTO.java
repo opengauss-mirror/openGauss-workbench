@@ -5,7 +5,6 @@
 package com.nctigba.observability.sql.model.history.dto;
 
 import lombok.Data;
-import lombok.Generated;
 
 import java.util.List;
 
@@ -18,7 +17,6 @@ import java.util.List;
  * @since 2022/11/17 09:05
  */
 @Data
-@Generated
 public class LogInfoDTO {
     private String scrollId;
     private List<LogDetailInfoDTO> logs;

@@ -1,6 +1,7 @@
 /*
  * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
  */
+
 package org.opengauss.plugin.agent.config;
 
 import org.springframework.beans.factory.annotation.Value;
