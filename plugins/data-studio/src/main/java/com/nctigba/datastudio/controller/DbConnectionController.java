@@ -26,8 +26,14 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
+import java.sql.SQLException;
 import java.util.List;
 
+/**
+ * DbConnectionController
+ *
+ * @since 2023-6-26
+ */
 @Slf4j
 @Api(tags = {"Connection management interface"})
 @RestController
@@ -42,50 +48,87 @@ public class DbConnectionController {
     @Resource
     private ConnectionMapDAO connectionMapDAO;
 
+    /**
+     * get all cluster
+     *
+     * @return List
+     */
     @GetMapping(value = "/clusters", produces = MediaType.APPLICATION_JSON_VALUE)
-    public List<OpsClusterVO> allCluster() throws Exception {
+    public List<OpsClusterVO> allCluster() {
         List<OpsClusterVO> list = clusterManager.getAllOpsCluster();
         log.info("cluster list is: " + list);
         return list;
     }
 
-
+    /**
+     * connection database
+     *
+     * @param request request
+     * @return DatabaseConnectionDO
+     */
     @ApiOperation(value = "Add connections")
     @PostMapping(value = "/connections", produces = MediaType.APPLICATION_JSON_VALUE)
-    public DatabaseConnectionDO create(@RequestBody DbConnectionCreateDTO request) throws Exception {
+    public DatabaseConnectionDO create(@RequestBody DbConnectionCreateDTO request) {
         return dbConnectionService.addDatabaseConnection(request);
     }
 
-
+    /**
+     * database attribute
+     *
+     * @param id id
+     * @return DatabaseConnectionDO
+     */
     @ApiOperation(value = "Attribute")
     @GetMapping(value = "/connections/{id}/attribute", produces = MediaType.APPLICATION_JSON_VALUE)
-    public DatabaseConnectionDO attribute(@PathVariable("id") String id) throws Exception {
+    public DatabaseConnectionDO attribute(@PathVariable("id") String id) {
         return dbConnectionService.databaseAttributeConnection(id);
     }
 
-
+    /**
+     * delete database connection list
+     *
+     * @param id id
+     */
     @ApiOperation(value = "Delete Connectionll")
     @DeleteMapping(value = "/connections/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public void deleteList(@PathVariable("id") String id) throws Exception {
+    public void deleteList(@PathVariable("id") String id) {
         dbConnectionService.deleteDatabaseConnectionList(id);
     }
 
+    /**
+     * delete connection
+     *
+     * @param uuid uuid
+     * @throws SQLException SQLException
+     */
     @ApiOperation(value = "Delete connections")
     @DeleteMapping(value = "/connections/close/{uuid}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public void delete(@PathVariable("uuid") String uuid) throws Exception {
+    public void delete(@PathVariable("uuid") String uuid) throws SQLException {
         connectionMapDAO.deleteConnection(uuid);
     }
 
+    /**
+     * database connection list
+     *
+     * @param webUser webUser
+     * @return List
+     */
     @ApiOperation(value = "Database Connectionll List")
     @GetMapping(value = "/connections", produces = MediaType.APPLICATION_JSON_VALUE)
-    public List<DatabaseConnectionDO> dataList(@RequestParam(value = "webUser") String webUser) throws Exception {
+    public List<DatabaseConnectionDO> dataList(@RequestParam(value = "webUser") String webUser) {
         return dbConnectionService.databaseConnectionList(webUser);
     }
 
-
+    /**
+     * update database connection
+     *
+     * @param request request
+     * @return DatabaseConnectionDO
+     * @throws SQLException SQLException
+     */
     @ApiOperation(value = "Update Connections")
     @PutMapping(value = "/connections", produces = MediaType.APPLICATION_JSON_VALUE)
-    public DatabaseConnectionDO updateTable(@RequestBody DbConnectionCreateDTO request) throws Exception {
+    public DatabaseConnectionDO updateTable(@RequestBody DbConnectionCreateDTO request) throws SQLException {
         return dbConnectionService.updateDatabaseConnection(request);
     }
 

@@ -28,6 +28,7 @@ import org.springframework.util.CollectionUtils;
 import javax.websocket.Session;
 import java.io.IOException;
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashMap;
 import java.util.Map;
@@ -40,8 +41,13 @@ import static com.nctigba.datastudio.constants.CommonConstants.STOP_DEBUG;
 import static com.nctigba.datastudio.constants.CommonConstants.STOP_RUN;
 import static com.nctigba.datastudio.constants.CommonConstants.TWO_HUNDRED;
 import static com.nctigba.datastudio.constants.CommonConstants.WEBDS_PLUGIN;
-import static com.nctigba.datastudio.enums.MessageEnum.window;
+import static com.nctigba.datastudio.enums.MessageEnum.WINDOW;
 
+/**
+ * WebSocketServer
+ *
+ * @since 2023-6-26
+ */
 @Slf4j
 @Service
 @Extract(bus = "webds-plugin")
@@ -51,7 +57,7 @@ public class WebSocketServer implements SocketExtract {
     private final Map<String, Statement> statementMap = new HashMap<>();
     private final Map<String, OperateStatusDO> operationStatusMap = new HashMap<>();
     @Autowired
-    ObjectMapper objectMapper;
+    private ObjectMapper objectMapper;
     @Autowired
     @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
     private WsFacade wsFacade;
@@ -83,16 +89,15 @@ public class WebSocketServer implements SocketExtract {
         ThreadUtil.execAsync(() -> {
             try {
                 aa.operate(this, message);
-            } catch (Exception e) {
-                log.error("method error: ", e);
+            } catch (IOException | SQLException e) {
                 try {
-                    sendMessage(sessionId, window, FIVE_HUNDRED, e.getMessage(), e.getStackTrace());
+                    sendMessage(sessionId, WINDOW, FIVE_HUNDRED, e.getMessage(), e.getStackTrace());
                     if (!operation.equals(START_RUN) && !operation.equals(STOP_RUN)
-                        && !operation.equals(COMPILE) && !operation.equals(EXECUTE)) {
+                            && !operation.equals(COMPILE) && !operation.equals(EXECUTE)) {
                         SpringApplicationContext.getApplicationContext().getBean(STOP_DEBUG, OperationInterface.class)
                                 .operate(this, message);
                     }
-                } catch (Exception ex) {
+                } catch (IOException | SQLException ex) {
                     log.error("method error: ", ex);
                 }
             }
@@ -102,34 +107,46 @@ public class WebSocketServer implements SocketExtract {
     @Override
     public void onClose(String pluginId, String sessionId) {
         log.info("onClose pluginId: " + pluginId + ",sessionId:" + sessionId);
+        Statement statement = statementMap.get(sessionId);
+        Connection connection = connectionMap.get(sessionId);
         try {
-            if (statementMap.get(sessionId) != null) {
-                statementMap.get(sessionId).close();
+            if (statement != null) {
+                statement.close();
             }
-            if (connectionMap.get(sessionId) != null) {
-                connectionMap.get(sessionId).close();
+            if (connection != null) {
+                connection.close();
             }
-        } catch (Exception e) {
-            log.error("method error: ", e);
+        } catch (SQLException e) {
+            log.info(e.getMessage());
         }
     }
 
     /**
      * server send message to client
      *
-     * @param type
-     * @param code
-     * @param message
-     * @param obj
-     * @throws IOException
+     * @param sessionId sessionId
+     * @param type      type
+     * @param code      code
+     * @param message   message
+     * @param obj       obj
+     * @throws IOException IOException
      */
-    public synchronized void sendMessage(String sessionId, MessageEnum type, String code, String message,
-        Object obj) throws IOException {
+    public synchronized void sendMessage(
+            String sessionId, MessageEnum type, String code, String message, Object obj) throws IOException {
         WebDsResult result = WebDsResult.ok(type.toString(), message).addData(obj);
         result.setCode(code);
         wsFacade.sendMessage(WEBDS_PLUGIN, sessionId, objectMapper.writeValueAsString(result));
     }
 
+    /**
+     * server send message to client
+     *
+     * @param sessionId sessionId
+     * @param type      type
+     * @param message   message
+     * @param obj       obj
+     * @throws IOException IOException
+     */
     public void sendMessage(String sessionId, MessageEnum type, String message, Object obj) throws IOException {
         sendMessage(sessionId, type, TWO_HUNDRED, message, obj);
     }
@@ -142,7 +159,15 @@ public class WebSocketServer implements SocketExtract {
         this.connectionMap.put(sessionId, connection);
     }
 
-    public Connection createConnection(String uuid, String winName) throws Exception {
+    /**
+     * create connection
+     *
+     * @param uuid    uuid
+     * @param winName winName
+     * @return Connection
+     * @throws SQLException SQLException
+     */
+    public Connection createConnection(String uuid, String winName) throws SQLException {
         return SpringApplicationContext.getApplicationContext().getBean("connectionConfig",
                 ConnectionConfig.class).connectDatabaseMap(uuid, winName);
     }

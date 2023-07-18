@@ -4,8 +4,30 @@
 
 package com.nctigba.datastudio.service;
 
+/**
+ * MetaDataByJdbcService
+ *
+ * @since 2023-6-26
+ */
 public interface MetaDataByJdbcService {
-    void testQuerySQL(String jdbcUrl, String userName, String password, String sql) throws Exception;
+    /**
+     * test query sql
+     *
+     * @param jdbcUrl jdbcUrl
+     * @param userName userName
+     * @param password password
+     * @param sql sql
+     */
+    void testQuerySQL(String jdbcUrl, String userName, String password, String sql);
 
-    String versionSQL(String jdbcUrl, String userName, String password, String sql) throws Exception;
+    /**
+     * version sql
+     *
+     * @param jdbcUrl jdbcUrl
+     * @param userName userName
+     * @param password password
+     * @param sql sql
+     * @return String
+     */
+    String versionSQL(String jdbcUrl, String userName, String password, String sql);
 }

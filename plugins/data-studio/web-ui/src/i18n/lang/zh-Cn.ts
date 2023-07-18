@@ -384,7 +384,7 @@ export default {
     minValue: '最小值',
     maxValue: '最大值',
     cacheValue: '缓存数值',
-    isCycle: '循环',
+    cycle: '循环',
     belongObject: '所属对象',
     mode: '模式',
     table: '表',

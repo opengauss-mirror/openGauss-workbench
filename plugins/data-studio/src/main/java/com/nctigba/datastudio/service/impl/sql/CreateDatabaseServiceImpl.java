@@ -26,6 +26,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import java.sql.Connection;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashMap;
 import java.util.List;
@@ -36,6 +37,11 @@ import static com.nctigba.datastudio.constants.SqlConstants.CONFIGURE_TIME;
 import static com.nctigba.datastudio.constants.SqlConstants.GET_URL_JDBC;
 import static com.nctigba.datastudio.dao.ConnectionMapDAO.conMap;
 
+/**
+ * CreateDatabaseServiceImpl
+ *
+ * @since 2023-6-26
+ */
 @Slf4j
 @Service
 public class CreateDatabaseServiceImpl implements CreateDatabaseService {
@@ -49,17 +55,22 @@ public class CreateDatabaseServiceImpl implements CreateDatabaseService {
 
     private Map<String, DatabaseObjectSQLService> databaseObjectSQLService;
 
+    /**
+     * set database object sql service
+     *
+     * @param SQLServiceList SQLServiceList
+     */
     @Resource
     public void setDatabaseObjectSQLService(List<DatabaseObjectSQLService> SQLServiceList) {
         databaseObjectSQLService = new HashMap<>();
-        for (DatabaseObjectSQLService s : SQLServiceList) {
-            databaseObjectSQLService.put(s.type(), s);
+        for (DatabaseObjectSQLService service : SQLServiceList) {
+            databaseObjectSQLService.put(service.type(), service);
         }
     }
 
 
     @Override
-    public void createDatabase(CreateDatabaseDTO request) throws Exception {
+    public void createDatabase(CreateDatabaseDTO request) throws SQLException {
         log.info("createDatabase request is: " + request);
 
         try (
@@ -69,14 +80,11 @@ public class CreateDatabaseServiceImpl implements CreateDatabaseService {
             String ddl = databaseObjectSQLService.get(conMap.get(request.getUuid()).getType()).createDatabase(request);
             statement.execute(ddl);
             log.info("createDatabase sql is: " + ddl);
-        } catch (Exception e) {
-            log.info(e.toString());
-            throw new RuntimeException(e);
         }
     }
 
     @Override
-    public DatabaseConnectionDO connectionDatabase(DatabaseConnectionDO database) throws Exception {
+    public DatabaseConnectionDO connectionDatabase(DatabaseConnectionDO database) {
         log.info("connectionDatabase request is: " + database);
         ConnectionDTO connectionDTO = new ConnectionDTO();
         DatabaseConnectionUrlDO databaseConnectionUrlDO = new DatabaseConnectionUrlDO();
@@ -86,7 +94,8 @@ public class CreateDatabaseServiceImpl implements CreateDatabaseService {
         databaseConnectionDO.setConnectionid(uuid);
         databaseConnectionDO.setDataName(database.getDataName());
         databaseConnectionUrlDO.setUrl(
-                GET_URL_JDBC + databaseConnectionDO.getIp() + ":" + databaseConnectionDO.getPort() + "/" + database.getDataName() + CONFIGURE_TIME);
+                GET_URL_JDBC + databaseConnectionDO.getIp() + ":" + databaseConnectionDO.getPort()
+                        + "/" + database.getDataName() + CONFIGURE_TIME);
         databaseConnectionUrlDO.setUserName(databaseConnectionDO.getUserName());
         databaseConnectionUrlDO.setPassword(databaseConnectionDO.getPassword());
         databaseConnectionUrlDO.setType(databaseConnectionDO.getType());
@@ -99,7 +108,7 @@ public class CreateDatabaseServiceImpl implements CreateDatabaseService {
     }
 
     @Override
-    public void deleteDatabase(DatabaseNameDTO request) throws Exception {
+    public void deleteDatabase(DatabaseNameDTO request) throws SQLException {
         log.info("deleteDatabase request is: {}", request);
         String ddl = databaseObjectSQLService.get(conMap.get(request.getUuid()).getType()).deleteDatabaseSQL(request);
         try (
@@ -108,16 +117,13 @@ public class CreateDatabaseServiceImpl implements CreateDatabaseService {
         ) {
             statement.execute(ddl);
             log.info("deleteDatabase sql is: " + ddl);
-        } catch (Exception e) {
-            log.info(e.toString());
-            throw new RuntimeException(e);
         }
     }
 
     @Override
-    public void renameDatabase(RenameDatabaseDTO request) throws Exception {
+    public void renameDatabase(RenameDatabaseDTO request) throws SQLException {
         log.info("deleteDatabase request is: " + request);
-        String ddl = null;
+        String ddl;
         try (
                 Connection connection = connectionConfig.connectDatabase(request.getUuid())
         ) {
@@ -130,7 +136,7 @@ public class CreateDatabaseServiceImpl implements CreateDatabaseService {
                     log.info("deleteDatabase sql is: " + ddl);
                 }
             }
-            if (Integer.valueOf(request.getConRestrictions()) >= -1) {
+            if (Integer.parseInt(request.getConRestrictions()) >= -1) {
                 ddl = databaseObjectSQLService.get(conMap.get(request.getUuid()).getType()).conRestrictionsSQL(request);
                 try (
                         Statement statement = connection.createStatement()
@@ -141,14 +147,11 @@ public class CreateDatabaseServiceImpl implements CreateDatabaseService {
             } else {
                 throw new CustomException(LocaleString.transLanguage("2013"));
             }
-        } catch (Exception e) {
-            log.info(e.toString());
-            throw new RuntimeException(e);
         }
     }
 
     @Override
-    public Map<String, Object> databaseAttribute(DatabaseNameDTO request) throws Exception {
+    public Map<String, Object> databaseAttribute(DatabaseNameDTO request) throws SQLException {
         log.info("deleteDatabase request is: " + request);
         Map<String, Object> resultMap;
         try (
@@ -165,14 +168,11 @@ public class CreateDatabaseServiceImpl implements CreateDatabaseService {
                 log.info("synonymAttribute response is: " + resultMap);
             }
             return resultMap;
-        } catch (Exception e) {
-            log.info(e.toString());
-            throw new RuntimeException(e);
         }
     }
 
     @Override
-    public Map<String, Object> databaseAttributeUpdate(DatabaseNameDTO request) throws Exception {
+    public Map<String, Object> databaseAttributeUpdate(DatabaseNameDTO request) throws SQLException {
         log.info("deleteDatabase request is: " + request);
         Map<String, Object> resultMap;
         try (
@@ -189,9 +189,6 @@ public class CreateDatabaseServiceImpl implements CreateDatabaseService {
                 log.info("synonymAttribute response is: " + resultMap);
             }
             return resultMap;
-        } catch (Exception e) {
-            log.info(e.toString());
-            throw new RuntimeException(e);
         }
     }
 }

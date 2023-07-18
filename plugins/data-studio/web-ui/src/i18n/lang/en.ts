@@ -393,7 +393,7 @@ export default {
     minValue: 'min value',
     maxValue: 'max value',
     cacheValue: 'cache value',
-    isCycle: 'cycle',
+    cycle: 'cycle',
     belongObject: 'belong object',
     mode: 'mode',
     table: 'table',

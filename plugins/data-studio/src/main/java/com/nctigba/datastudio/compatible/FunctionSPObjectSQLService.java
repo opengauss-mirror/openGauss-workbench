@@ -8,14 +8,40 @@ import com.nctigba.datastudio.model.dto.DatabaseFunctionSPDTO;
 import com.nctigba.datastudio.util.DebugUtils;
 import org.opengauss.admin.common.exception.CustomException;
 
+import java.sql.SQLException;
+
+/**
+ * FunctionSPObjectSQLService
+ *
+ * @since 2023-6-26
+ */
 public interface FunctionSPObjectSQLService {
+    /**
+     * type
+     *
+     * @return String
+     */
     String type();
 
-    default String functionDdl(DatabaseFunctionSPDTO request) {
+    /**
+     * get function ddl
+     *
+     * @param request request
+     * @return String
+     * @throws SQLException SQLException
+     */
+    default String functionDdl(DatabaseFunctionSPDTO request) throws SQLException {
         throw new CustomException(DebugUtils.getMessage());
     }
 
-    default String dropFunctionSP(DatabaseFunctionSPDTO request) {
+    /**
+     * drop function
+     *
+     * @param request request
+     * @return String
+     * @throws SQLException SQLException
+     */
+    default String dropFunctionSP(DatabaseFunctionSPDTO request) throws SQLException {
         throw new CustomException(DebugUtils.getMessage());
     }
 }

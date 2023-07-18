@@ -36,6 +36,7 @@ import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -86,6 +87,11 @@ import static com.nctigba.datastudio.constants.SqlConstants.SEQUENCE_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.SET_VALUE_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.TABLE_DATA_SQL;
 
+/**
+ * ExportServiceImpl
+ *
+ * @since 2023-6-26
+ */
 @Slf4j
 @Service
 public class ExportServiceImpl implements ExportService {
@@ -108,13 +114,14 @@ public class ExportServiceImpl implements ExportService {
     private DbConnectionService dbConnectionService;
 
     @Override
-    public void exportTableDdl(ExportRequest request, HttpServletResponse response) throws Exception {
+    public void exportTableDdl(ExportRequest request, HttpServletResponse response) throws SQLException, IOException {
         String fileName = getFileName(request.isDataFlag(), TABLE, request.getTableList());
         DebugUtils.exportFile(fileName, getTableDdl(request), response);
     }
 
     @Override
-    public void exportTableData(ExportRequest request, HttpServletResponse response) throws Exception {
+    public void exportTableData(ExportRequest request, HttpServletResponse response)
+            throws IOException, SQLException {
         log.info("ExportService exportTableData request: " + request);
         String fileType = request.getFileType();
         String tableName = request.getTableName();
@@ -136,7 +143,10 @@ public class ExportServiceImpl implements ExportService {
                 BufferedInputStream bis = new BufferedInputStream(new FileInputStream(path));
                 OutputStream os = response.getOutputStream()
         ) {
-            CopyManager copyManager = new CopyManager((BaseConnection) connection);
+            CopyManager copyManager = null;
+            if (connection instanceof BaseConnection) {
+                copyManager = new CopyManager((BaseConnection) connection);
+            }
             StringBuilder sb = new StringBuilder();
             sb.append("COPY ").append(request.getSchema()).append(POINT).append(tableName);
             List<String> columnList = request.getColumnList();
@@ -161,8 +171,8 @@ public class ExportServiceImpl implements ExportService {
                     sb.append(" NULL ").append(QUOTES).append(replaceNull).append(QUOTES);
                 }
                 sb.append(" CSV ");
-                boolean titleFlag = request.isTitleFlag();
-                if (titleFlag) {
+                boolean isTitleFlag = request.isTitleFlag();
+                if (isTitleFlag) {
                     sb.append(" HEADER ");
                 }
                 String quote = request.getQuote();
@@ -179,6 +189,7 @@ public class ExportServiceImpl implements ExportService {
                 sb.append(" ENCODING ").append(QUOTES).append(encoding).append(QUOTES);
             }
             sb.append(SEMICOLON);
+            assert copyManager != null;
             copyManager.copyOut(sb.toString(), fileOutputStream);
             log.info("ExportService exportTableData sb: " + sb);
 
@@ -187,21 +198,22 @@ public class ExportServiceImpl implements ExportService {
             response.addHeader("Response-Type", "blob");
 
             byte[] buffer = new byte[1024];
-            int i = bis.read(buffer);
-            while (i != -1) {
-                os.write(buffer, 0, i);
-                i = bis.read(buffer);
+            int len = bis.read(buffer);
+            while (len != -1) {
+                os.write(buffer, 0, len);
+                len = bis.read(buffer);
             }
         }
 
         File file = new File(path);
         if (file.exists()) {
-            file.delete();
+            boolean delete = file.delete();
+            log.info("ExportService exportTableData delete: " + delete);
         }
         log.info("ExportService exportTableData end: ");
     }
 
-    private void exportExcel(ExportRequest request, HttpServletResponse response) throws Exception {
+    private void exportExcel(ExportRequest request, HttpServletResponse response) throws SQLException, IOException {
         log.info("ExportService exportExcel request: " + request);
         try (
                 Connection connection = connectionConfig.connectDatabase(request.getUuid());
@@ -252,28 +264,32 @@ public class ExportServiceImpl implements ExportService {
     }
 
     @Override
-    public void exportFunctionDdl(ExportRequest request, HttpServletResponse response) throws Exception {
+    public void exportFunctionDdl(ExportRequest request, HttpServletResponse response)
+            throws SQLException, IOException {
         String fileName = getFileName(false, FUNCTION, request.getFunctionMap());
         DebugUtils.exportFile(fileName, getFunctionDdl(request), response);
     }
 
     @Override
-    public void exportViewDdl(ExportRequest request, HttpServletResponse response) throws Exception {
+    public void exportViewDdl(ExportRequest request, HttpServletResponse response) throws SQLException, IOException {
         String fileName = getFileName(false, VIEW, request.getViewList());
         DebugUtils.exportFile(fileName, getViewDdl(request), response);
     }
 
     @Override
-    public void exportSequenceDdl(ExportRequest request, HttpServletResponse response) throws Exception {
+    public void exportSequenceDdl(ExportRequest request, HttpServletResponse response)
+            throws SQLException, IOException {
         String fileName = getFileName(request.isDataFlag(), SEQUENCE, request.getSequenceList());
         DebugUtils.exportFile(fileName, getSequenceDdl(request), response);
     }
 
     @Override
-    public void exportSchemaDdl(ExportRequest request, HttpServletResponse response) throws Exception {
+    public void exportSchemaDdl(
+            ExportRequest request,
+            HttpServletResponse response) throws IOException, ExecutionException, InterruptedException {
         log.info("ExportService exportSchemaDdl request: " + request);
         String uuid = request.getUuid();
-        boolean dataFlag = request.isDataFlag();
+        boolean isDataFlag = request.isDataFlag();
         List<String> schemaList = request.getSchemaList();
         StringBuilder sb = new StringBuilder();
 
@@ -291,7 +307,7 @@ public class ExportServiceImpl implements ExportService {
             List<String> sequenceList = parseList(dataList.getSequence(), NAME);
 
             ExportRequest exportRequest = new ExportRequest();
-            exportRequest.setDataFlag(dataFlag);
+            exportRequest.setDataFlag(isDataFlag);
             exportRequest.setSchema(schema);
             exportRequest.setUuid(uuid);
             exportRequest.setTableList(tableList);
@@ -301,10 +317,10 @@ public class ExportServiceImpl implements ExportService {
 
             sb.append(addHeader(false, schema, SCHEMA, schema)).append(String.format(CREATE_SCHEMA_SQL, schema));
             sb.append(asyncExecute(exportRequest));
-
+            log.info("ExportService exportSchemaDdl sb: " + sb);
         }
 
-        String fileName = getFileName(dataFlag, SCHEMA, schemaList);
+        String fileName = getFileName(isDataFlag, SCHEMA, schemaList);
         DebugUtils.exportFile(fileName, sb.toString(), response);
     }
 
@@ -323,7 +339,7 @@ public class ExportServiceImpl implements ExportService {
         return sb.toString();
     }
 
-    private String getTableDdl(ExportRequest request) throws Exception {
+    private String getTableDdl(ExportRequest request) throws SQLException {
         log.info("ExportService getTableDdl request: " + request);
         StringBuilder sb = new StringBuilder();
         String uuid = request.getUuid();
@@ -356,7 +372,7 @@ public class ExportServiceImpl implements ExportService {
         return sb.toString();
     }
 
-    private String getFunctionDdl(ExportRequest request) throws Exception {
+    private String getFunctionDdl(ExportRequest request) throws SQLException {
         log.info("ExportService getFunctionDdl request: " + request);
         StringBuilder sb = new StringBuilder();
         String uuid = request.getUuid();
@@ -388,7 +404,7 @@ public class ExportServiceImpl implements ExportService {
         return sb.toString();
     }
 
-    private String getViewDdl(ExportRequest request) throws Exception {
+    private String getViewDdl(ExportRequest request) throws SQLException {
         log.info("ExportService getViewDdl request: " + request);
         StringBuilder sb = new StringBuilder();
         String uuid = request.getUuid();
@@ -409,7 +425,7 @@ public class ExportServiceImpl implements ExportService {
         return sb.toString();
     }
 
-    private String getSequenceDdl(ExportRequest request) throws Exception {
+    private String getSequenceDdl(ExportRequest request) throws SQLException {
         log.info("ExportService getSequenceDdl request: " + request);
         StringBuilder sb = new StringBuilder();
         String uuid = request.getUuid();
@@ -445,9 +461,9 @@ public class ExportServiceImpl implements ExportService {
         return list;
     }
 
-    private String getFileName(boolean flag, String type, List list) {
+    private String getFileName(boolean isData, String type, List list) {
         StringBuilder sb = new StringBuilder();
-        if (flag) {
+        if (isData) {
             sb.append("ddl_data_");
         } else {
             sb.append("ddl_");
@@ -472,9 +488,9 @@ public class ExportServiceImpl implements ExportService {
         return sb.toString();
     }
 
-    private String addHeader(boolean flag, String name, String type, String schema) {
+    private String addHeader(boolean isData, String name, String type, String schema) {
         String str = LF + LF + "-- ";
-        if (flag) {
+        if (isData) {
             str = str + "Data for ";
         }
         str = str + "Name: " + name + "; Type: " + type + "; Schema: " + schema + ";" + LF + LF;
@@ -521,10 +537,10 @@ public class ExportServiceImpl implements ExportService {
         return sb.toString();
     }
 
-    private String getSequenceData(ExportRequest request, String name) throws Exception {
+    private String getSequenceData(ExportRequest request, String name) {
         log.info("ExportService getSequenceData request: " + request);
         String schema = request.getSchema();
-        boolean called = false;
+        boolean isCalled = false;
         long nextVal = 0;
         long maxValue = 0;
         long minValue = 0;
@@ -536,7 +552,7 @@ public class ExportServiceImpl implements ExportService {
             while (resultSet.next()) {
                 maxValue = resultSet.getLong(MAX_VALUE);
                 minValue = resultSet.getLong(MIN_VALUE);
-                called = resultSet.getBoolean(IS_CALLED);
+                isCalled = resultSet.getBoolean(IS_CALLED);
             }
 
             ResultSet nextResultSet = statement.executeQuery(String.format(NEXT_VALUE_SQL, schema + POINT + name));
@@ -544,19 +560,19 @@ public class ExportServiceImpl implements ExportService {
                 nextVal = nextResultSet.getInt(NEXT_VALUE);
             }
             log.info("ExportService getSequenceData nextVal: " + nextVal);
-        } catch (SQLException exception) {
-            String msg = exception.getMessage();
+        } catch (SQLException e) {
+            String msg = e.getMessage();
             if (msg.contains("Sequence reached maximum value")) {
                 nextVal = maxValue;
-                called = true;
+                isCalled = true;
             }
             if (msg.contains("Sequence reached minimum value")) {
                 nextVal = minValue;
-                called = true;
+                isCalled = true;
             }
         }
 
-        String ddl = String.format(SET_VALUE_SQL, name, nextVal, called);
+        String ddl = String.format(SET_VALUE_SQL, name, nextVal, isCalled);
         log.info("ExportService getSequenceData ddl: " + ddl);
         return ddl;
     }
@@ -589,9 +605,9 @@ public class ExportServiceImpl implements ExportService {
             }
             case Types.BIT: {
                 if ("bool".equalsIgnoreCase(columnTypeName)) {
-                    Boolean boolValue = BooleanUtils.toBooleanObject(value);
-                    if (boolValue != null) {
-                        newValue = boolValue.toString();
+                    Boolean isBoolValue = BooleanUtils.toBooleanObject(value);
+                    if (isBoolValue != null) {
+                        newValue = isBoolValue.toString();
                     } else {
                         newValue = value;
                     }

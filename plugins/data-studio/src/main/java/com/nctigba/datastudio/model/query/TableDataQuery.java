@@ -5,8 +5,15 @@
 package com.nctigba.datastudio.model.query;
 
 import lombok.Data;
+import lombok.Generated;
 
+/**
+ * TableDataQuery
+ *
+ * @since 2023-6-26
+ */
 @Data
+@Generated
 public class TableDataQuery {
     private String winId;
     private String uuid;

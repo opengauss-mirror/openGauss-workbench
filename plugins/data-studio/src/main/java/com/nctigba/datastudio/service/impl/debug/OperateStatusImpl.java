@@ -9,31 +9,35 @@ import com.nctigba.datastudio.base.WebSocketServer;
 import com.nctigba.datastudio.model.PublicParamReq;
 import com.nctigba.datastudio.model.entity.OperateStatusDO;
 import com.nctigba.datastudio.service.OperationInterface;
+import com.nctigba.datastudio.util.DebugUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
 import static com.nctigba.datastudio.constants.CommonConstants.RESULT;
 import static com.nctigba.datastudio.constants.CommonConstants.SUCCESS;
-import static com.nctigba.datastudio.enums.MessageEnum.operateStatus;
+import static com.nctigba.datastudio.enums.MessageEnum.OPERATE_STATUS;
 
 /**
- * operate status
+ * OperateStatusImpl
+ *
+ * @since 2023-6-26
  */
 @Slf4j
 @Service("operateStatus")
 public class OperateStatusImpl implements OperationInterface {
     @Override
-    public void operate(WebSocketServer webSocketServer, Object obj) throws Exception {
+    public void operate(WebSocketServer webSocketServer, Object obj) throws IOException {
         log.info("operateStatus obj is: " + obj);
-        PublicParamReq paramReq = (PublicParamReq) obj;
+        PublicParamReq paramReq = DebugUtils.changeParamType(obj);
         String windowName = paramReq.getWindowName();
         OperateStatusDO operateStatusDO = webSocketServer.getOperateStatus(windowName);
         Map<String, Object> map = new HashMap<>();
         map.put(RESULT, operateStatusDO);
-        webSocketServer.sendMessage(windowName, operateStatus, SUCCESS, map);
+        webSocketServer.sendMessage(windowName, OPERATE_STATUS, SUCCESS, map);
     }
 
     @Override

@@ -19,54 +19,207 @@ import com.nctigba.datastudio.model.query.TableDataEditQuery;
 import com.nctigba.datastudio.model.query.TableDataQuery;
 import com.nctigba.datastudio.model.query.TablePKDataQuery;
 
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * TableDataService
+ *
+ * @since 2023-6-26
+ */
 public interface TableDataService {
-    TableDataDTO tableData(TableDataQuery request) throws Exception;
+    /**
+     * table data
+     *
+     * @param request request
+     * @return TableDataDTO
+     * @throws SQLException SQLException
+     */
+    TableDataDTO tableData(TableDataQuery request) throws SQLException;
 
-    Map<String, Object> tableColumn(SelectDataQuery request) throws Exception;
+    /**
+     * table column
+     *
+     * @param request request
+     * @return Map
+     * @throws SQLException SQLException
+     */
+    Map<String, Object> tableColumn(SelectDataQuery request) throws SQLException;
 
-    Map<String, Object> tableIndex(SelectDataQuery request) throws Exception;
+    /**
+     * table index
+     *
+     * @param request request
+     * @return Map
+     * @throws SQLException SQLException
+     */
+    Map<String, Object> tableIndex(SelectDataQuery request) throws SQLException;
 
-    Map<String, Object> tableConstraint(SelectDataQuery request) throws Exception;
+    /**
+     * table constraint
+     *
+     * @param request request
+     * @return Map
+     * @throws SQLException SQLException
+     */
+    Map<String, Object> tableConstraint(SelectDataQuery request) throws SQLException;
 
-    Map<String, String> tableDdl(SelectDataQuery request) throws Exception;
+    /**
+     * table ddl
+     *
+     * @param request request
+     * @return Map
+     * @throws SQLException SQLException
+     */
+    Map<String, String> tableDdl(SelectDataQuery request) throws SQLException;
+
+    /**
+     * edit table column
+     *
+     * @param request request
+     * @return Map
+     * @throws SQLException SQLException
+     */
+    Map<String, Object> tableColumnEdit(DatabaseCreUpdColumnDTO request) throws SQLException;
 
 
-    Map<String, Object> tableColumnEdit(DatabaseCreUpdColumnDTO request) throws Exception;
+    /**
+     * table data close
+     *
+     * @param winId winId
+     * @throws SQLException SQLException
+     */
+    void tableDataClose(String winId) throws SQLException;
 
-    void tableDataClose(String winId) throws Exception;
+    /**
+     * edit table data
+     *
+     * @param request request
+     * @return TablePKDataQuery
+     * @throws SQLException SQLException
+     */
+    TablePKDataQuery tableDataEdit(TableDataEditQuery request) throws SQLException;
 
-    TablePKDataQuery tableDataEdit(TableDataEditQuery request) throws Exception;
+    /**
+     * edit table constraint
+     *
+     * @param request request
+     * @throws SQLException SQLException
+     */
+    void tableEditConstraint(DatabaseConstraintDTO request) throws SQLException;
 
-    void tableEditConstraint(DatabaseConstraintDTO request) throws Exception;
+    /**
+     * edit table pk constraint
+     *
+     * @param request request
+     * @throws SQLException SQLException
+     */
+    void tableEditPkConstraint(DatabaseConstraintPkDTO request) throws SQLException;
 
-    void tableEditPkConstraint(DatabaseConstraintPkDTO request) throws Exception;
+    /**
+     * edit table index
+     *
+     * @param request request
+     * @throws SQLException SQLException
+     */
+    void tableEditIndex(DatabaseIndexDTO request) throws SQLException;
 
-    void tableEditIndex(DatabaseIndexDTO request) throws Exception;
+    /**
+     * create table
+     *
+     * @param request request
+     * @throws SQLException SQLException
+     */
+    void tableCreate(DatabaseCreateTableDTO request) throws SQLException;
 
-    void tableCreate(DatabaseCreateTableDTO request) throws Exception;
+    /**
+     * return table create
+     *
+     * @param request request
+     * @return String
+     */
+    String returnTableCreate(DatabaseCreateTableDTO request);
 
-    String returnTableCreate(DatabaseCreateTableDTO request) throws Exception;
+    /**
+     * table truncate
+     *
+     * @param request request
+     * @throws SQLException SQLException
+     */
+    void tableTruncate(TableNameDTO request) throws SQLException;
 
-    void tableTruncate(TableNameDTO request) throws Exception;
+    /**
+     * table vacuum
+     *
+     * @param request request
+     * @throws SQLException SQLException
+     */
+    void tableVacuum(TableNameDTO request) throws SQLException;
 
-    void tableVacuum(TableNameDTO request) throws Exception;
+    /**
+     * table reindex
+     *
+     * @param request request
+     * @throws SQLException SQLException
+     */
+    void tableReindex(TableNameDTO request) throws SQLException;
 
-    void tableReindex(TableNameDTO request) throws Exception;
+    /**
+     * table rename
+     *
+     * @param request request
+     * @throws SQLException SQLException
+     */
+    void tableRename(TableAlterDTO request) throws SQLException;
 
-    void tableRename(TableAlterDTO request) throws Exception;
+    /**
+     * table comment
+     *
+     * @param request request
+     * @throws SQLException SQLException
+     */
+    void tableComment(TableAlterDTO request) throws SQLException;
 
-    void tableComment(TableAlterDTO request) throws Exception;
+    /**
+     * table alter schema
+     *
+     * @param request request
+     * @throws SQLException SQLException
+     */
+    void tableAlterSchema(TableAlterDTO request) throws SQLException;
 
-    void tableAlterSchema(TableAlterDTO request) throws Exception;
+    /**
+     * drop table
+     *
+     * @param request request
+     * @throws SQLException SQLException
+     */
+    void tableDrop(TableNameDTO request) throws SQLException;
 
-    void tableDrop(TableNameDTO request) throws Exception;
+    /**
+     * table alter space
+     *
+     * @param request request
+     * @throws SQLException SQLException
+     */
+    void tableAlterTablespace(TableAlterDTO request) throws SQLException;
 
-    void tableAlterTablespace(TableAlterDTO request) throws Exception;
+    /**
+     * table sequence
+     *
+     * @param request request
+     * @return Map
+     * @throws SQLException SQLException
+     */
+    Map<String, Object> tableSequence(TableNameDTO request) throws SQLException;
 
-    Map<String, Object> tableSequence(TableNameDTO request) throws Exception;
-
-    List<Map<String, Object>> tableAttribute(TableAttributeDTO request) throws Exception;
+    /**
+     * table attribute
+     *
+     * @param request request
+     * @return List
+     * @throws SQLException SQLException
+     */
+    List<Map<String, Object>> tableAttribute(TableAttributeDTO request) throws SQLException;
 }

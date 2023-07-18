@@ -34,8 +34,8 @@
             <el-form-item prop="cache" :label="$t('sequence.cacheValue')">
               <el-input v-model.number="form.cache" />
             </el-form-item>
-            <el-form-item prop="isCycle" :label="$t('sequence.isCycle')">
-              <el-switch v-model="form.isCycle" />
+            <el-form-item prop="cycle" :label="$t('sequence.cycle')">
+              <el-switch v-model="form.cycle" />
             </el-form-item>
             <el-form-item :label="$t('sequence.belongObject')">
               <hr style="width: 100%; border: none; height: 1px; background-color: #d9dbe1" />
@@ -117,7 +117,7 @@
   const ruleFormRef = ref<FormInstance>();
   const UserStore = useUserStore();
   const editorPreRef = ref();
-  const activeName = ref('Base');
+  const activeName: Ref<string | number> = ref('Base');
   const connectData = computed(() => props.connectData);
   const form = reactive({
     sequenceName: '',
@@ -126,7 +126,7 @@
     minValue: '',
     maxValue: '',
     cache: '',
-    isCycle: false,
+    cycle: false,
     tableSchema: '',
     tableName: '',
     schema: '',
@@ -250,7 +250,7 @@
       minValue: '',
       maxValue: '',
       cache: '',
-      isCycle: false,
+      cycle: false,
       tableName: '',
       tableColumn: '',
     });

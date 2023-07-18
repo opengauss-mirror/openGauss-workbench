@@ -14,15 +14,28 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.sql.Connection;
+import java.sql.SQLException;
 
 import static com.nctigba.datastudio.dao.ConnectionMapDAO.conMap;
 
+/**
+ * ConnectionConfig
+ *
+ * @since 2023-06-26
+ */
 @Service("connectionConfig")
 public class ConnectionConfig {
     @Resource
     private DbConnectionServiceImpl dbConnectionServiceImpl;
 
-    public Connection connectDatabase(String uuid) throws Exception {
+    /**
+     * connect database
+     *
+     * @param uuid uuid
+     * @return Connection
+     * @throws SQLException SQLException
+     */
+    public Connection connectDatabase(String uuid) throws SQLException {
         if (!conMap.containsKey(uuid)) {
             throw new CustomException(LocaleString.transLanguage("1004"));
         }
@@ -31,12 +44,20 @@ public class ConnectionConfig {
                 connectionDTO.getUrl(),
                 connectionDTO.getDbUser(),
                 connectionDTO.getDbPassword());
-        connectionDTO.updataConnectionDTO(connectionDTO);
+        connectionDTO.updateConnectionDTO(connectionDTO);
         ConnectionMapDAO.setConMap(uuid, connectionDTO);
         return connection;
     }
 
-    public Connection connectDatabaseMap(String uuid, String winName) throws Exception {
+    /**
+     * connect database map
+     *
+     * @param uuid    uuid
+     * @param winName winName
+     * @return Connection
+     * @throws SQLException SQLException
+     */
+    public Connection connectDatabaseMap(String uuid, String winName) throws SQLException {
         if (!conMap.containsKey(uuid)) {
             throw new CustomException(LocaleString.transLanguage("1004"));
         }
@@ -45,7 +66,7 @@ public class ConnectionConfig {
                 connectionDTO.getUrl(),
                 connectionDTO.getDbUser(),
                 connectionDTO.getDbPassword());
-        connectionDTO.updataConnectionDTO(connectionDTO, winName);
+        connectionDTO.updateConnectionDTO(connectionDTO, winName);
         ConnectionMapDAO.setConMap(uuid, connectionDTO);
         return connection;
     }

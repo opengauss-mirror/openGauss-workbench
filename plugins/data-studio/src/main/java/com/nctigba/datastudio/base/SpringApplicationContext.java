@@ -10,6 +10,13 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.Nonnull;
+
+/**
+ * SpringApplicationContext
+ *
+ * @since 2023-6-26
+ */
 @Component
 @Lazy(false)
 public class SpringApplicationContext implements ApplicationContextAware, DisposableBean {
@@ -23,24 +30,22 @@ public class SpringApplicationContext implements ApplicationContextAware, Dispos
     }
 
     @Override
-    public void setApplicationContext(ApplicationContext applicationContext) {
+    public void setApplicationContext(@Nonnull ApplicationContext applicationContext) {
         SpringApplicationContext.applicationContext = applicationContext;
     }
 
-    public static <T> T getBean(String name) {
-        return (T) applicationContext.getBean(name);
-    }
-
-    public static <T> T getBean(Class<T> requiredType) {
-        return applicationContext.getBean(requiredType);
-    }
-
+    /**
+     * clear holder
+     */
     public static void clearHolder() {
         applicationContext = null;
     }
 
+    /**
+     * destroy
+     */
     @Override
-    public void destroy() throws Exception {
+    public void destroy() {
         clearHolder();
     }
 }

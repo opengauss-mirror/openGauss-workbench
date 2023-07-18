@@ -6,12 +6,19 @@ package com.nctigba.datastudio.model.dto;
 
 
 import lombok.Data;
+import lombok.Generated;
 import lombok.NoArgsConstructor;
 
 import java.util.List;
 
+/**
+ * DatabaseIndexDTO
+ *
+ * @since 2023-6-26
+ */
 @NoArgsConstructor
 @Data
+@Generated
 public class DatabaseIndexDTO {
     private String uuid;
     private String webUser;

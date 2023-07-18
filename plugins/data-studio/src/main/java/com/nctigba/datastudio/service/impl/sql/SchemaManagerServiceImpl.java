@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import java.sql.Connection;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -30,6 +31,11 @@ import static com.nctigba.datastudio.constants.CommonConstants.ROL_NAME;
 import static com.nctigba.datastudio.constants.CommonConstants.SCHEMA_NAME;
 import static com.nctigba.datastudio.dao.ConnectionMapDAO.conMap;
 
+/**
+ * SchemaManagerServiceImpl
+ *
+ * @since 2023-6-26
+ */
 @Slf4j
 @Service
 public class SchemaManagerServiceImpl implements SchemaManagerService {
@@ -38,16 +44,21 @@ public class SchemaManagerServiceImpl implements SchemaManagerService {
 
     private Map<String, SchemaObjectSQLService> schemaObjectSQLService;
 
+    /**
+     * set schema object sql service
+     *
+     * @param SQLServiceList SQLServiceList
+     */
     @Resource
     public void setSchemaObjectSQLService(List<SchemaObjectSQLService> SQLServiceList) {
         schemaObjectSQLService = new HashMap<>();
-        for (SchemaObjectSQLService s : SQLServiceList) {
-            schemaObjectSQLService.put(s.type(), s);
+        for (SchemaObjectSQLService service : SQLServiceList) {
+            schemaObjectSQLService.put(service.type(), service);
         }
     }
 
     @Override
-    public List<String> queryAllUsers(SchemaManagerRequest request) throws Exception {
+    public List<String> queryAllUsers(SchemaManagerRequest request) throws SQLException {
         log.info("SchemaManagerService queryAllUsers request: " + request);
         try (
                 Connection connection = connectionConfig.connectDatabase(request.getUuid());
@@ -65,7 +76,7 @@ public class SchemaManagerServiceImpl implements SchemaManagerService {
     }
 
     @Override
-    public Map<String, String> querySchema(SchemaManagerRequest request) throws Exception {
+    public Map<String, String> querySchema(SchemaManagerRequest request) throws SQLException {
         log.info("SchemaManagerService querySchema request: " + request);
         try (
                 Connection connection = connectionConfig.connectDatabase(request.getUuid());
@@ -86,7 +97,7 @@ public class SchemaManagerServiceImpl implements SchemaManagerService {
     }
 
     @Override
-    public void createSchema(SchemaManagerRequest request) throws Exception {
+    public void createSchema(SchemaManagerRequest request) throws SQLException {
         log.info("SchemaManagerService createSchema request: " + request);
         try (
                 Connection connection = connectionConfig.connectDatabase(request.getUuid());
@@ -95,7 +106,7 @@ public class SchemaManagerServiceImpl implements SchemaManagerService {
             String schemaName = request.getSchemaName();
             String owner = request.getOwner();
             statement.execute(schemaObjectSQLService.get(conMap.get(request.getUuid()).getType())
-                            .createSchemaSQL(schemaName, owner));
+                    .createSchemaSQL(schemaName, owner));
             String description = request.getDescription();
             if (StringUtils.isNotEmpty(description)) {
                 statement.execute(schemaObjectSQLService.get(conMap.get(request.getUuid()).getType())
@@ -106,7 +117,7 @@ public class SchemaManagerServiceImpl implements SchemaManagerService {
     }
 
     @Override
-    public void updateSchema(SchemaManagerRequest request) throws Exception {
+    public void updateSchema(SchemaManagerRequest request) throws SQLException {
         log.info("SchemaManagerService updateSchema request: " + request);
         try (
                 Connection connection = connectionConfig.connectDatabase(request.getUuid());
@@ -137,7 +148,7 @@ public class SchemaManagerServiceImpl implements SchemaManagerService {
     }
 
     @Override
-    public void deleteSchema(SchemaManagerRequest request) throws Exception {
+    public void deleteSchema(SchemaManagerRequest request) throws SQLException {
         log.info("SchemaManagerService deleteSchema request: " + request);
         try (
                 Connection connection = connectionConfig.connectDatabase(request.getUuid());

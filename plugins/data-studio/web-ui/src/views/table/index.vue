@@ -484,24 +484,24 @@
             .map((item) => {
               return {
                 type: saveType[item[rowStatusKey]],
-                conname: item.constrainName,
-                oldConname: originData.find((e) => e[idKey] == item[idKey])?.constrainName,
-                attname: Array.isArray(item.columnName) ? item.columnName.join(',') : '',
-                contype: Array.isArray(item.constrainType) ? item.constrainType[0] : null,
-                nspname:
+                conName: item.constrainName,
+                oldConName: originData.find((e) => e[idKey] == item[idKey])?.constrainName,
+                attName: Array.isArray(item.columnName) ? item.columnName.join(',') : '',
+                conType: Array.isArray(item.constrainType) ? item.constrainType[0] : null,
+                nspName:
                   item.constrainType?.[0] == 'f' && item.constrainType[1]
                     ? item.constrainType[1]
                     : null, //fKey namespace
-                tbname:
+                tbName:
                   item.constrainType?.[0] == 'f' && item.constrainType[2]
                     ? item.constrainType[2]
-                    : null, //fKey tablename
-                colname:
+                    : null, //fKey tableName
+                colName:
                   item.constrainType?.[0] == 'f' && item.constrainType[3]
                     ? item.constrainType[3]
-                    : null, //fKey colname
-                constraintdef: item.expression,
-                condeferrable: item.isDeffered,
+                    : null, //fKey colName
+                constraintDef: item.expression,
+                conDeferrable: item.isDeffered,
                 description: item.description,
               };
             }),
@@ -519,8 +519,8 @@
                 indexName: item.indexName,
                 oldIndexName: originData.find((e) => e[idKey] == item[idKey])?.indexName,
                 unique: item.isUnique,
-                amname: item.accessMethod,
-                attname: Array.isArray(item.columnName) ? item.columnName.join(',') : '',
+                amName: item.accessMethod,
+                attName: Array.isArray(item.columnName) ? item.columnName.join(',') : '',
                 expression: item.expression,
                 description: item.description,
               };
@@ -530,9 +530,9 @@
       }
       if (tabName == 'DataTab') {
         enum saveDataType {
-          'add' = 'Insert',
-          'delete' = 'Delete',
-          'edit' = 'Update',
+          'add' = 'INSERT',
+          'delete' = 'DELETE',
+          'edit' = 'UPDATE',
         }
         const param = {
           winId: page.value.winId,

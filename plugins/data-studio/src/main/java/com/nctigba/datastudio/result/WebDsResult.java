@@ -7,6 +7,11 @@ package com.nctigba.datastudio.result;
 import static com.nctigba.datastudio.constants.CommonConstants.FIVE_HUNDRED;
 import static com.nctigba.datastudio.constants.CommonConstants.TWO_HUNDRED;
 
+/**
+ * WebDsResult
+ *
+ * @since 2023-6-26
+ */
 public class WebDsResult {
     private String type;
 
@@ -18,6 +23,13 @@ public class WebDsResult {
 
     private String error;
 
+    /**
+     * ok
+     *
+     * @param type type
+     * @param statusMsg statusMsg
+     * @return WebDsResult
+     */
     public static WebDsResult ok(String type, String statusMsg) {
         WebDsResult result = new WebDsResult();
         result.setType(type);
@@ -26,6 +38,13 @@ public class WebDsResult {
         return result;
     }
 
+    /**
+     * error
+     *
+     * @param type type
+     * @param statusMsg statusMsg
+     * @return WebDsResult
+     */
     public static WebDsResult error(String type, String statusMsg) {
         WebDsResult result = new WebDsResult();
         result.setType(type);
@@ -34,6 +53,12 @@ public class WebDsResult {
         return result;
     }
 
+    /**
+     * add data
+     *
+     * @param object object
+     * @return WebDsResult
+     */
     public WebDsResult addData(Object object) {
         this.setData(object);
         return this;

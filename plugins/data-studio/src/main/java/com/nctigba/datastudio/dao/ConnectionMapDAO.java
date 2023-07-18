@@ -16,6 +16,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Repository;
 
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Date;
 import java.util.HashMap;
@@ -25,24 +26,39 @@ import java.util.Map;
 
 import static java.util.concurrent.TimeUnit.HOURS;
 
+/**
+ * ConnectionMapDAO
+ *
+ * @since 2023-6-26
+ */
 @Slf4j
 @Repository
 @EnableScheduling
 public class ConnectionMapDAO {
+    /**
+     * connection map
+     */
     public static Map<String, ConnectionDTO> conMap = new HashMap<>(1);
+    @Autowired
+    WebSocketServer webSocketServer;
 
-    public static void setConMap(String uuiD, ConnectionDTO con) throws Exception {
+    public static void setConMap(String uuiD, ConnectionDTO con) {
         if (conMap.size() <= 100) {
             conMap.put(uuiD, con);
         } else {
             log.info("The number of connections reached 100, conMap is: " + conMap);
-            throw new Exception(LocaleString.transLanguage("2014"));
+            throw new CustomException(LocaleString.transLanguage("2014"));
         }
 
     }
 
+    /**
+     * over time
+     *
+     * @throws SQLException SQLException
+     */
     @Scheduled(fixedRate = 2, timeUnit = HOURS)
-    public void overtime() {
+    public void overtime() throws SQLException {
         log.info("Start scheduled cleanup of connections. Connection number is: " + conMap.size());
         Date nowData = new Date();
         log.info("conMap is: {}", conMap);
@@ -53,39 +69,33 @@ public class ConnectionMapDAO {
             long diff = nowData.getTime() - lastDate.getTime();
             log.info("diff is: " + diff);
             if (diff > 2 * 60 * 60 * 1000) {
-
-                try {
                     log.info("connectionDTO.getSocketSet() is: " + connectionDTO.getSocketSet());
                     overtimeCloseSocket(connectionDTO.getSocketSet());
                     conMap.remove(key);
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
+
             }
             log.info("End scheduled cleanup of connections. Connection number is: " + conMap.size());
         }
     }
 
-    public void deleteConnection(String uuid) {
+    /**
+     * delete connection
+     *
+     * @param uuid uuid
+     * @throws SQLException SQLException
+     */
+    public void deleteConnection(String uuid) throws SQLException {
         if (conMap.containsKey(uuid)) {
-            try {
                 ConnectionDTO connectionDTO = conMap.get(uuid);
                 log.info("connectionDTO is: " + connectionDTO);
                 overtimeCloseSocket(connectionDTO.getSocketSet());
                 log.info("old conMap is: " + conMap);
                 conMap.remove(uuid);
                 log.info("new conMap is: " + conMap);
-            } catch (Exception e) {
-                log.info(e.toString());
-                throw new RuntimeException(e);
-            }
         }
     }
 
-    @Autowired
-    WebSocketServer webSocketServer;
-
-    public void overtimeCloseSocket(HashSet socketSet) throws Exception {
+    public void overtimeCloseSocket(HashSet<String> socketSet) throws SQLException {
         log.info("socketSet is: " + socketSet);
         Iterator<String> iterator = socketSet.iterator();
         log.info("iterator is: " + iterator);

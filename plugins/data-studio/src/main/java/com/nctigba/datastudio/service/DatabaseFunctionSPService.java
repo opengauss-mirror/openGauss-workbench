@@ -6,8 +6,27 @@ package com.nctigba.datastudio.service;
 
 import com.nctigba.datastudio.model.dto.DatabaseFunctionSPDTO;
 
-public interface DatabaseFunctionSPService {
-    String functionDdl(DatabaseFunctionSPDTO request) throws Exception;
+import java.sql.SQLException;
 
-    void dropFunctionSP(DatabaseFunctionSPDTO request) throws Exception;
+/**
+ * DatabaseFunctionSPService
+ *
+ * @since 2023-6-26
+ */
+public interface DatabaseFunctionSPService {
+    /**
+     * get function ddl
+     *
+     * @param request request
+     * @return String
+     * @throws SQLException SQLException
+     */
+    String functionDdl(DatabaseFunctionSPDTO request) throws SQLException;
+
+    /**
+     * drop function
+     *
+     * @param request request
+     */
+    void dropFunctionSP(DatabaseFunctionSPDTO request);
 }

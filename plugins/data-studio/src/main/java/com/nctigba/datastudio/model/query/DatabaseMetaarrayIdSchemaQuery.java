@@ -5,10 +5,17 @@
 package com.nctigba.datastudio.model.query;
 
 import lombok.Data;
+import lombok.Generated;
 import lombok.NoArgsConstructor;
 
+/**
+ * DatabaseMetaarrayIdSchemaQuery
+ *
+ * @since 2023-6-26
+ */
 @NoArgsConstructor
 @Data
+@Generated
 public class DatabaseMetaarrayIdSchemaQuery {
     private String uuid;
     private String webUser;

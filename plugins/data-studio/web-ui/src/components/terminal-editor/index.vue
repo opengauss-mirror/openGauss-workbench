@@ -300,11 +300,11 @@
     if (!isGlobalEnable.value) return loading.value?.close();
     let res: Message = JSON.parse(data);
     if (res.code == '200') {
-      if (['debug', 'debugChild'].includes(props.editorType) && res.type != 'operateStatus') {
+      if (['debug', 'debugChild'].includes(props.editorType) && res.type != 'OPERATE_STATUS') {
         getButtonStatus();
       }
       const result = res.data?.result;
-      if (res.type == 'text') {
+      if (res.type == 'TEXT') {
         if (
           props.editorType == 'sql' &&
           ['End of execution', 'Close successfully'].includes(res.msg)
@@ -320,10 +320,10 @@
             text: `[SUCCESS] ${result || res.msg}`,
           });
       }
-      if (res.type == 'button') {
+      if (res.type == 'BUTTON') {
         getButtonStatus();
       }
-      if (res.type == 'operateStatus') {
+      if (res.type == 'OPERATE_STATUS') {
         if (props.editorType == 'sql') {
           sqlData.barStatus = {
             execute: result.startRun,
@@ -341,15 +341,15 @@
           debug.isDebugging = !(result.startDebug || result.execute);
         }
       }
-      if (res.type == 'message') {
+      if (res.type == 'MESSAGE') {
         res.msg == 'success' && ElMessage.success(result);
       }
-      if (res.type == 'confirm') {
+      if (res.type == 'CONFIRM') {
         ElMessageBox.confirm(result).then(() => {
           handleExecute(true);
         });
       }
-      if (res.type == 'createCoverageRate') {
+      if (res.type == 'CREATE_COVERAGE_RATE') {
         ElMessageBox.confirm(result)
           .then(() => {
             handleCreateCoverageRate(true);
@@ -358,7 +358,7 @@
             handleCreateCoverageRate(false);
           });
       }
-      if (res.type == 'paramWindow') {
+      if (res.type == 'PARAM_WINDOW') {
         const arr = result.map((item: { key: string | null; type: string }) => {
           return {
             name: item.key,
@@ -369,7 +369,7 @@
         enterParams.data = arr;
         enterParams.showParams = true;
       }
-      if (res.type == 'table') {
+      if (res.type == 'TABLE') {
         const { columns, data } = formatTableV2Data(res.data.column, result, { showIndex: true });
         const name = `${t('resultTab.result')}${tabList.value.length + 1}`;
         tabList.value.push({
@@ -381,25 +381,26 @@
         tabValue.value = name;
         showResult.value = true;
       }
-      if (res.type == 'breakPoint') {
+      if (res.type == 'BREAKPOINT') {
         debug.breakPointList = formatTableData(res.data.column, result);
       }
-      if (res.type == 'variable') {
+      if (res.type == 'VARIABLE') {
         debug.variableList = formatTableData(res.data.column, result);
       }
-      if (res.type == 'stack') {
+      if (res.type == 'STACK') {
         debug.stackList = formatTableData(res.data.column, result);
       }
       // get file's content
-      if (res.type == 'view') {
+      if (res.type == 'VIEW') {
         if (isSaving.value) {
           clearInterval(refreshCounter.counter);
           loading.value.close();
           TagsViewStore.delCurrentView(route);
           const title = saveFile.name;
           router.push({
-            // eslint-disable-next-line prettier/prettier
-            path: `/debug/${encodeURIComponent(route.query.connectInfoId as string)}_${route.query.schema}_fun_pro_${title}`,
+            path: `/debug/${encodeURIComponent(route.query.connectInfoId as string)}_${
+              route.query.schema
+            }_fun_pro_${title}`,
             query: {
               title: `${title}@${route.query.connectInfoName}`,
               fileName: title,
@@ -425,15 +426,16 @@
           });
         }
       }
-      if (res.type == 'newFile') {
+      if (res.type == 'NEW_FILE') {
         saveFile.name = result.name;
         saveFile.oid = result.oid;
         const title = result.name;
         const oid = result.oid;
         TagsViewStore.delViewById(tagId);
         router.push({
-          // eslint-disable-next-line prettier/prettier
-          path: `/debug/${encodeURIComponent(route.query.connectInfoId as string)}_${route.query.schema}_fun_pro_${oid}`,
+          path: `/debug/${encodeURIComponent(route.query.connectInfoId as string)}_${
+            route.query.schema
+          }_fun_pro_${oid}`,
           query: {
             title: `${title}@${route.query.connectInfoName}`,
             fileName: title,
@@ -447,10 +449,10 @@
           },
         });
       }
-      if (res.type == 'variableHighLight') {
+      if (res.type == 'VARIABLE_HIGHLIGHT') {
         debug.variableHighLight = result;
       }
-      if (res.type == 'newWindow') {
+      if (res.type == 'NEW_WINDOW') {
         const { name, oid } = result;
         const path = `/debugChild/${encodeURIComponent(route.query.dbname + '_' + oid)}`;
         const visitedViews = TagsViewStore.visitedViews;
@@ -477,7 +479,7 @@
           });
         }
       }
-      if (res.type == 'switchWindow') {
+      if (res.type == 'SWITCH_WINDOW') {
         const targetView = TagsViewStore.getViewByOid(result);
         if (targetView?.fullPath) {
           loading.value = loadingInstance();
@@ -485,7 +487,7 @@
           loading.value.close();
         }
       }
-      if (res.type == 'closeWindow') {
+      if (res.type == 'CLOSE_WINDOW') {
         const parentView = TagsViewStore.getViewById(ws.parentTagId);
         if (parentView?.fullPath) {
           alreadyCloseWindow.value = true;
@@ -495,7 +497,7 @@
           loading.value.close();
         }
       }
-    } else if (res.code == '500' && res.type == 'ignoreWindow' && isSaving.value) {
+    } else if (res.code == '500' && res.type == 'IGNORE_WINDOW' && isSaving.value) {
       return;
     } else {
       loading.value?.close();

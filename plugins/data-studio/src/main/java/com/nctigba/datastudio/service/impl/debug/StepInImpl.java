@@ -15,7 +15,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
+import java.io.IOException;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -29,19 +31,21 @@ import static com.nctigba.datastudio.constants.CommonConstants.OID;
 import static com.nctigba.datastudio.constants.CommonConstants.RESULT;
 import static com.nctigba.datastudio.constants.CommonConstants.STATEMENT;
 import static com.nctigba.datastudio.constants.CommonConstants.SUCCESS;
-import static com.nctigba.datastudio.constants.CommonConstants.T;
 import static com.nctigba.datastudio.constants.CommonConstants.TYPE;
+import static com.nctigba.datastudio.constants.CommonConstants.T_STR;
 import static com.nctigba.datastudio.constants.SqlConstants.BACKTRACE_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.BACKTRACE_SQL_PRE;
 import static com.nctigba.datastudio.constants.SqlConstants.INFO_CODE_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.NEXT_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.STEP_SQL;
-import static com.nctigba.datastudio.enums.MessageEnum.closeWindow;
-import static com.nctigba.datastudio.enums.MessageEnum.newWindow;
-import static com.nctigba.datastudio.enums.MessageEnum.switchWindow;
+import static com.nctigba.datastudio.enums.MessageEnum.CLOSE_WINDOW;
+import static com.nctigba.datastudio.enums.MessageEnum.NEW_WINDOW;
+import static com.nctigba.datastudio.enums.MessageEnum.SWITCH_WINDOW;
 
 /**
- * step in
+ * StepInImpl
+ *
+ * @since 2023-6-26
  */
 @Slf4j
 @Service("stepIn")
@@ -49,24 +53,18 @@ public class StepInImpl implements OperationInterface {
     @Autowired
     private SingleStepImpl singleStep;
 
-    @Autowired
-    private StepOutImpl stepOut;
-
-    @Autowired
-    private StopDebugImpl stopDebug;
-
     @Override
-    public void operate(WebSocketServer webSocketServer, Object obj) throws Exception {
-        PublicParamReq paramReq = (PublicParamReq) obj;
+    public void operate(WebSocketServer webSocketServer, Object obj) throws SQLException, IOException {
+        PublicParamReq paramReq = DebugUtils.changeParamType(obj);
         log.info("stepIn paramReq: " + paramReq);
         String rootWindowName = paramReq.getRootWindowName();
-        Statement stat = (Statement) webSocketServer.getParamMap(rootWindowName).get(STATEMENT);
+        Statement stat = DebugUtils.changeParamType(webSocketServer, rootWindowName, STATEMENT);
         if (stat == null) {
             return;
         }
 
         String windowName = paramReq.getWindowName();
-        String oid = (String) webSocketServer.getParamMap(windowName).get(OID);
+        String oid = DebugUtils.changeParamType(webSocketServer, windowName, OID);
         log.info("stepIn oid: " + oid);
 
         List<Integer> lineList = new ArrayList<>();
@@ -81,7 +79,7 @@ public class StepInImpl implements OperationInterface {
                 ResultSet allLineResult = stat.executeQuery(String.format(INFO_CODE_SQL, oid))
         ) {
             while (allLineResult.next()) {
-                if (T.equals(allLineResult.getString(CAN_BREAK))) {
+                if (T_STR.equals(allLineResult.getString(CAN_BREAK))) {
                     lastLine = allLineResult.getInt(LINE_NO);
                 }
             }
@@ -104,22 +102,22 @@ public class StepInImpl implements OperationInterface {
 
         if (lineList.get(0) != lastLine) {
             if (newOid.equals(oid)) {
-                singleStep.showDebugInfo(webSocketServer, paramReq);
+                singleStep.showDebugInfo(webSocketServer, stat, paramReq);
             } else if (oidList.contains(newOid)) {
                 Map<String, String> map = new HashMap<>();
                 map.put(RESULT, newOid);
-                webSocketServer.sendMessage(windowName, switchWindow, SUCCESS, map);
+                webSocketServer.sendMessage(windowName, SWITCH_WINDOW, SUCCESS, map);
                 String name = DebugUtils.getOldWindowName(webSocketServer, rootWindowName, newOid);
                 DebugUtils.disableButton(webSocketServer, windowName);
                 DebugUtils.enableButton(webSocketServer, name);
                 paramReq.setCloseWindow(true);
                 paramReq.setOldWindowName(name);
-                singleStep.showDebugInfo(webSocketServer, paramReq);
+                singleStep.showDebugInfo(webSocketServer, stat, paramReq);
             } else {
                 paramReq.setWindowName(rootWindowName);
                 paramReq.setOid(newOid);
                 Map<String, Map<String, String>> resultMap = DebugUtils.getResultMap(webSocketServer, paramReq);
-                webSocketServer.sendMessage(windowName, newWindow, SUCCESS, resultMap);
+                webSocketServer.sendMessage(windowName, NEW_WINDOW, SUCCESS, resultMap);
                 DebugUtils.disableButton(webSocketServer, windowName);
             }
             return;
@@ -127,7 +125,7 @@ public class StepInImpl implements OperationInterface {
 
         oidList = DebugUtils.getOidList(webSocketServer, rootWindowName);
         String oldWindowName = paramReq.getOldWindowName();
-        String type = (String) webSocketServer.getParamMap(windowName).get(TYPE);
+        String type = DebugUtils.changeParamType(webSocketServer, windowName, TYPE);
         if (!CollectionUtils.isEmpty(oidList)) {
             if ("f".equals(type) && lineNo == 0) {
                 ResultSet resultSet = stat.executeQuery(NEXT_SQL);
@@ -139,7 +137,7 @@ public class StepInImpl implements OperationInterface {
             if (oidList.contains(oid) && !oidList.get(0).equals(oid)) {
                 Map<String, String> map = new HashMap<>();
                 map.put(RESULT, oidList.get(0));
-                webSocketServer.sendMessage(windowName, switchWindow, SUCCESS, map);
+                webSocketServer.sendMessage(windowName, SWITCH_WINDOW, SUCCESS, map);
                 String name = DebugUtils.getOldWindowName(webSocketServer, rootWindowName, newOid);
                 DebugUtils.disableButton(webSocketServer, windowName);
                 DebugUtils.enableButton(webSocketServer, name);
@@ -147,14 +145,14 @@ public class StepInImpl implements OperationInterface {
                 paramReq.setOldWindowName(name);
             }
             if (!oidList.contains(oid)) {
-                webSocketServer.sendMessage(windowName, closeWindow, SUCCESS, null);
+                webSocketServer.sendMessage(windowName, CLOSE_WINDOW, SUCCESS, null);
                 DebugUtils.enableButton(webSocketServer, oldWindowName);
                 paramReq.setCloseWindow(true);
                 Map<String, Object> paramMap = webSocketServer.getParamMap(rootWindowName);
                 paramMap.keySet().removeIf(oid::equals);
             }
         }
-        singleStep.showDebugInfo(webSocketServer, paramReq);
+        singleStep.showDebugInfo(webSocketServer, stat, paramReq);
     }
 
     @Override

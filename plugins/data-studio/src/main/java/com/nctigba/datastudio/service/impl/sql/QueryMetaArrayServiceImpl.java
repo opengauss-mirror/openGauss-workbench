@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import java.sql.Connection;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -26,24 +27,33 @@ import java.util.Map;
 
 import static com.nctigba.datastudio.dao.ConnectionMapDAO.conMap;
 
+/**
+ * QueryMetaArrayServiceImpl
+ *
+ * @since 2023-6-26
+ */
 @Slf4j
 @Service
 public class QueryMetaArrayServiceImpl implements QueryMetaArrayService {
     @Autowired
     private ConnectionConfig connectionConfig;
 
-
     private Map<String, GainObjectSQLService> gainObjectSQLService;
 
+    /**
+     * set gain object sql service
+     *
+     * @param SQLServiceList SQLServiceList
+     */
     @Resource
     public void setGainObjectSQLService(List<GainObjectSQLService> SQLServiceList) {
         gainObjectSQLService = new HashMap<>();
-        for (GainObjectSQLService s : SQLServiceList) {
-            gainObjectSQLService.put(s.type(), s);
+        for (GainObjectSQLService service : SQLServiceList) {
+            gainObjectSQLService.put(service.type(), service);
         }
     }
 
-    public List<String> databaseList(String uuid) throws Exception {
+    public List<String> databaseList(String uuid) {
         log.info("schemaList request is: " + uuid);
         String sql;
         List<String> databaseList = new ArrayList<>();
@@ -61,35 +71,32 @@ public class QueryMetaArrayServiceImpl implements QueryMetaArrayService {
                 log.info("schemaList response is: " + databaseList);
                 return databaseList;
 
-            } catch (Exception e) {
+            } catch (SQLException e) {
                 log.info(e.toString());
-                throw new RuntimeException(e);
+                throw new CustomException(e.getMessage());
             }
-        } catch (Exception e) {
+        } catch (SQLException e) {
             log.info(e.toString());
-            throw new RuntimeException(e);
+            throw new CustomException(e.getMessage());
         }
     }
 
-    public List<Map<String, String>> schemaList(DatabaseMetaarraySchemaQuery request) throws Exception {
+    public List<Map<String, String>> schemaList(DatabaseMetaarraySchemaQuery request) throws SQLException {
         log.info("schemaList request is: " + request);
         return gainObjectSQLService.get(conMap.get(request.getUuid()).getType()).schemaList(request);
     }
 
-    public List<String> objectList(DatabaseMetaarrayQuery request) throws Exception {
+    public List<String> objectList(DatabaseMetaarrayQuery request) throws SQLException {
         log.info("objectList request is: " + request);
-        List<String> objectList = gainObjectSQLService.get(conMap.get(request.getUuid()).getType()).objectList(request);
-        return objectList;
+        return gainObjectSQLService.get(conMap.get(request.getUuid()).getType()).objectList(request);
     }
 
-    public List<String> tableColumnList(DatabaseMetaarrayColumnQuery request) {
+    public List<String> tableColumnList(DatabaseMetaarrayColumnQuery request) throws SQLException {
         log.info("tableColumnList request is: " + request);
-        List<String> columnList = gainObjectSQLService.get(conMap.get(request.getUuid()).getType()).tableColumnList(
-                request);
-        return columnList;
+        return gainObjectSQLService.get(conMap.get(request.getUuid()).getType()).tableColumnList(request);
     }
 
-    public List<String> baseTypeList(String uuid) throws Exception {
+    public List<String> baseTypeList(String uuid) throws SQLException {
         try (
                 Connection connection = connectionConfig.connectDatabase(uuid);
                 Statement statement = connection.createStatement();
@@ -104,7 +111,7 @@ public class QueryMetaArrayServiceImpl implements QueryMetaArrayService {
         }
     }
 
-    public List<String> tablespaceList(String uuid) throws Exception {
+    public List<String> tablespaceList(String uuid) throws SQLException {
         try (
                 Connection connection = connectionConfig.connectDatabase(uuid);
                 Statement statement = connection.createStatement();

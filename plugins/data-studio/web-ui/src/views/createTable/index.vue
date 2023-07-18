@@ -69,12 +69,10 @@
   import { getCreateTableDdl, createTable } from '@/api/table';
   import { loadingInstance } from '@/utils';
   import EventBus, { EventTypeName } from '@/utils/event-bus';
-  import { eventQueue } from '@/hooks/saveData';
 
   const route = useRoute();
   const router = useRouter();
   const TagsViewStore = useTagsViewStore();
-  const tagId = TagsViewStore.getViewByRoute(route)?.id;
   const { t } = useI18n();
   const loading = ref(null);
 
@@ -164,17 +162,17 @@
       constraints: dataMap.ConstraintTab.data.map((item) => {
         return {
           type: 1,
-          conname: item.constrainName,
-          attname: Array.isArray(item.columnName) ? item.columnName.join(',') : '',
-          contype: Array.isArray(item.constrainType) ? item.constrainType[0] : null,
-          nspname:
+          conName: item.constrainName,
+          attName: Array.isArray(item.columnName) ? item.columnName.join(',') : '',
+          conType: Array.isArray(item.constrainType) ? item.constrainType[0] : null,
+          nspName:
             item.constrainType?.[0] == 'f' && item.constrainType[1] ? item.constrainType[1] : null, //fKey namespace
-          tbname:
-            item.constrainType?.[0] == 'f' && item.constrainType[2] ? item.constrainType[2] : null, //fKey tablename
-          colname:
-            item.constrainType?.[0] == 'f' && item.constrainType[3] ? item.constrainType[3] : null, //fKey colname
-          constraintdef: item.expression,
-          condeferrable: item.isDeffered,
+          tbName:
+            item.constrainType?.[0] == 'f' && item.constrainType[2] ? item.constrainType[2] : null, //fKey tableName
+          colName:
+            item.constrainType?.[0] == 'f' && item.constrainType[3] ? item.constrainType[3] : null, //fKey colName
+          constraintDef: item.expression,
+          conDeferrable: item.isDeffered,
           description: item.description,
         };
       }),
@@ -183,8 +181,8 @@
           type: 1,
           indexName: item.indexName,
           unique: item.isUnique,
-          amname: item.accessMethod,
-          attname: Array.isArray(item.columnName) ? item.columnName.join(',') : '',
+          amName: item.accessMethod,
+          attName: Array.isArray(item.columnName) ? item.columnName.join(',') : '',
           expression: item.expression,
           description: item.description,
         };
@@ -215,13 +213,12 @@
       await Promise.all([generalValid(), dataMap.GeneralTab.isPartition ? partitionValid() : true]);
     } catch (error) {
       currentTabName.value = error;
-      return Promise.reject();
+      return;
     }
     const actualColumns = dataMap.ColumnTab.data.filter((item) => item.columnName?.trim());
     if (actualColumns.length == 0) {
       currentTabName.value = 'ColumnTab';
-      ElMessage.error(t('message.leastOneColumn'));
-      return Promise.reject();
+      return ElMessage.error(t('message.leastOneColumn'));
     }
     const params = getFinallyParams();
     loading.value = loadingInstance();
@@ -232,8 +229,6 @@
       TagsViewStore.delCurrentView(route);
       const visitedViews = TagsViewStore.visitedViews;
       router.push(visitedViews.slice(-1)[0].fullPath);
-    } catch {
-      return Promise.reject();
     } finally {
       loading.value.close();
     }
@@ -242,14 +237,10 @@
   const handleReset = () => {
     generalref.value.resetFields();
     partitionRef.value.resetFields();
-    dataMap.GeneralTab.isPartition = false;
     dataMap.ColumnTab.data = [];
     dataMap.ConstraintTab.data = [];
     dataMap.IndexesTab.data = [];
     dataMap.DDL.data = '';
-    if (currentTabName.value === 'PartitionTab') {
-      currentTabName.value = 'GeneralTab';
-    }
   };
   const fetchTablespaceList = async () => {
     const res = (await getTablespaceList(commonParams.uuid)) as unknown as string[];
@@ -268,7 +259,6 @@
       schemaId,
     });
     nextTick(fetchTablespaceList);
-    eventQueue[tagId] = () => handleSave();
   });
 </script>
 <style lang="scss" scoped>

@@ -17,6 +17,11 @@ import static com.nctigba.datastudio.constants.SqlConstants.CREATE_SYNONYM_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.DROP_SYNONYM_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.SYNONYM_ATTRIBUTE_SQL;
 
+/**
+ * SynonymObjectSQLService achieve
+ *
+ * @since 2023-06-26
+ */
 @Slf4j
 @Service
 public class SynonymObjectSQLServiceImpl implements SynonymObjectSQLService {
@@ -26,7 +31,7 @@ public class SynonymObjectSQLServiceImpl implements SynonymObjectSQLService {
     }
 
     @Override
-    public String splicingSequenceDDL(DatabaseCreateSynonymDTO request) {
+    public String splicingSynonymDDL(DatabaseCreateSynonymDTO request) {
         log.info("splicingSequenceDDL request is: " + request);
         String ddl;
         if (request.isReplace()) {

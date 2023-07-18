@@ -9,26 +9,77 @@ import com.nctigba.datastudio.model.dto.DbConnectionCreateDTO;
 import com.nctigba.datastudio.model.entity.DatabaseConnectionDO;
 import com.nctigba.datastudio.model.query.DatabaseMetaarrayIdSchemaQuery;
 
+import java.sql.SQLException;
 import java.util.List;
 
+/**
+ * DataListByJdbcService
+ *
+ * @since 2023-6-26
+ */
 public interface DbConnectionService {
+    /**
+     * test connection
+     *
+     * @param request request
+     * @return String
+     */
+    String test(DbConnectionCreateDTO request);
 
-    String test(DbConnectionCreateDTO request) throws Exception;
+    /**
+     * delete database connection
+     *
+     * @param id id
+     */
+    void deleteDatabaseConnectionList(String id);
 
-    void deleteDatabaseConnectionList(String id) throws Exception;
+    /**
+     * database connection attribute
+     *
+     * @param id id
+     * @return DatabaseConnectionDO
+     */
+    DatabaseConnectionDO databaseAttributeConnection(String id);
 
-    DatabaseConnectionDO databaseAttributeConnection(String id) throws Exception;
+    /**
+     * database connection list
+     *
+     * @param webUser webUser
+     * @return List
+     */
+    List<DatabaseConnectionDO> databaseConnectionList(String webUser);
 
-    List<DatabaseConnectionDO> databaseConnectionList(String webUser) throws Exception;
+    /**
+     * update database connection
+     *
+     * @param request request
+     * @return DatabaseConnectionDO
+     * @throws SQLException SQLException
+     */
+    DatabaseConnectionDO updateDatabaseConnection(DbConnectionCreateDTO request) throws SQLException;
 
-    DatabaseConnectionDO updateDatabaseConnection(DbConnectionCreateDTO request) throws Exception;
-
-//    List<DataListDTO> dataList(String id);
-
+    /**
+     * schema object list
+     *
+     * @param schema schema
+     * @return List
+     */
     List<DataListDTO> schemaObjectList(DatabaseMetaarrayIdSchemaQuery schema);
 
-    DatabaseConnectionDO addDatabaseConnection(DbConnectionCreateDTO request) throws Exception;
+    /**
+     * add database connection
+     *
+     * @param request request
+     * @return DatabaseConnectionDO
+     */
+    DatabaseConnectionDO addDatabaseConnection(DbConnectionCreateDTO request);
 
-    DatabaseConnectionDO loginDatabaseConnection(DbConnectionCreateDTO request) throws Exception;
+    /**
+     * login database connection
+     *
+     * @param request request
+     * @return DatabaseConnectionDO
+     */
+    DatabaseConnectionDO loginDatabaseConnection(DbConnectionCreateDTO request);
 
 }
