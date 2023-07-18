@@ -34,16 +34,6 @@ spring:
         max-wait: 3000
         connection-properties:
           ApplicationName: DataKit Instance Monitoring
-      druid:
-        test-while-idle: false
-        test-on-borrow: true
-        validation-query: "select 1"
-        validation-query-timeout: 10000
-        connection-error-retry-attempts: 0
-        break-after-acquire-failure: true
-        max-wait: 3000
-        connection-properties:
-          ApplicationName: DataKit Instance Monitoring
   jackson:
     time-zone: GMT+8
     date-format: yyyy-MM-dd HH:mm:ss
