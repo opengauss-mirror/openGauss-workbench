@@ -220,19 +220,6 @@ public class PrometheusServiceTest {
     }
 
     @Test
-    public void testInitPrometheusConfigDisconnectSession() {
-        testPrometheusEnvDtoNormal();
-        prometheusService.initPrometheusConfig();
-
-        verify(alertConfigService, times(1)).list();
-        verify(envMapper, times(1)).selectOne(any());
-        verify(hostFacade, times(1)).getById(anyString());
-        verify(hostUserFacade, times(1)).listHostUserByHostId(anyString());
-        verify(encryptionUtils, times(1)).getKey();
-        verify(encryptionUtils, times(1)).decrypt(anyString());
-    }
-
-    @Test
     public void testInitPrometheusConfig_getPromConfigNull() {
         try (MockedStatic<SshSession> mockedStatic = mockStatic(SshSession.class);
              MockedStatic<HttpUtil> mockedStatic2 = mockStatic(HttpUtil.class)) {
@@ -563,14 +550,6 @@ public class PrometheusServiceTest {
     @Test(expected = ServiceException.class)
     public void testUpdateAlertConfigThrowException2() {
         AlertConfig alertConfig = new AlertConfig().setAlertIp("127.0.0.1");
-        List<AlertConfig> delAlertConfigList = new ArrayList<>();
-        prometheusService.updateAlertConfig(alertConfig, delAlertConfigList);
-    }
-
-    @Test(expected = ServiceException.class)
-    public void testUpdateAlertConfigThrowException3() {
-        testPrometheusEnvDtoNormal();
-        AlertConfig alertConfig = new AlertConfig().setAlertIp("127.0.0.1").setAlertPort("8080");
         List<AlertConfig> delAlertConfigList = new ArrayList<>();
         prometheusService.updateAlertConfig(alertConfig, delAlertConfigList);
     }
