@@ -172,7 +172,7 @@ public class SqlConstants {
             + "       tbl.relhasindex as has_index," + LF
             + "       tbl.relisshared as is_shared,split_part("
             + "split_part(array_to_string(tbl.reloptions, ','),',', 1),'=',2) orientation ," + LF
-            + "       split_part(split_part(array_to_string(tbl.reloptions, ','),',', 2),'=',2) compression ," + LF
+            + "       split_part(split_part(array_to_string(tbl.reloptions, ','),',', 2),'=',2) as compression ," + LF
             + "       tbl.relhasoids as hashoid," + LF
             + "       d.description as tbl_desc," + LF
             + "       'Y' as partition"
@@ -192,7 +192,7 @@ public class SqlConstants {
             + "       tbl.relhasindex as has_index," + LF
             + "       tbl.relisshared as is_shared,split_part("
             + "split_part(array_to_string(tbl.reloptions, ','),',', 1),'=',2) orientation ," + LF
-            + "       split_part(split_part(array_to_string(tbl.reloptions, ','),',', 2),'=',2) compression ," + LF
+            + "       split_part(split_part(array_to_string(tbl.reloptions, ','),',', 2),'=',2) as compression ," + LF
             + "       tbl.relhasoids as hashoid," + LF
             + "       d.description as tbl_desc" + LF
             + "  FROM pg_class tbl" + LF
