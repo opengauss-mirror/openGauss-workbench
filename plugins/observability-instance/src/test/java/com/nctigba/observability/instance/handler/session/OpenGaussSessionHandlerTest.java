@@ -4,37 +4,34 @@
 
 package com.nctigba.observability.instance.handler.session;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mockStatic;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import com.alibaba.fastjson.JSONObject;
+import com.nctigba.observability.instance.dto.session.DetailStatisticDto;
+import com.nctigba.observability.instance.model.InstanceNodeInfo;
+import com.nctigba.observability.instance.service.ClusterManager;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.List;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockedStatic;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.mockito.junit.jupiter.MockitoSettings;
-import org.mockito.quality.Strictness;
-
-import com.alibaba.fastjson.JSONObject;
-import com.nctigba.observability.instance.dto.session.DetailStatisticDto;
-import com.nctigba.observability.instance.model.InstanceNodeInfo;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 /**
  * OpenGaussSessionHandlerTest.java
@@ -58,6 +55,9 @@ class OpenGaussSessionHandlerTest {
 
     @Mock
     private ResultSetMetaData mockResultSetMetaData;
+
+    @Mock
+    private ClusterManager clusterManager;
 
     @BeforeEach
     public void setUp() throws Exception {
@@ -165,17 +165,13 @@ class OpenGaussSessionHandlerTest {
 
     @Test
     public void testGetConnection() {
-        try (MockedStatic<DriverManager> mockedStatic = mockStatic(DriverManager.class)) {
-            InstanceNodeInfo nodeInfo = new InstanceNodeInfo();
-            nodeInfo.setIp("127.0.0.0");
-            nodeInfo.setPort(8080);
-            nodeInfo.setDbName("dbNameTest");
-            nodeInfo.setDbUser("");
-            nodeInfo.setDbUserPassword("");
-            mockedStatic.when(() -> DriverManager.getConnection(anyString(), anyString(), anyString()))
-                    .thenReturn(mockConnection);
-            sessionHandler.getConnection(nodeInfo);
-        }
+        InstanceNodeInfo nodeInfo = new InstanceNodeInfo();
+        nodeInfo.setIp("127.0.0.0");
+        nodeInfo.setPort(8080);
+        nodeInfo.setDbName("dbNameTest");
+        when(clusterManager.getConnectionByNodeInfo(nodeInfo)).thenReturn(mockConnection);
+        Connection connection = sessionHandler.getConnection(nodeInfo);
+        assertEquals(mockConnection, connection);
     }
 
     @Test

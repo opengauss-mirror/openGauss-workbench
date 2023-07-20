@@ -1,24 +1,8 @@
 /*
  * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
  */
+
 package com.nctigba.observability.instance.handler.topsql;
-
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
-
-import org.apache.commons.lang3.ObjectUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.opengauss.admin.common.exception.CustomException;
-import org.springframework.stereotype.Component;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
@@ -30,9 +14,24 @@ import com.nctigba.observability.instance.dto.topsql.TopSQLNowReq;
 import com.nctigba.observability.instance.model.ExecutionPlan;
 import com.nctigba.observability.instance.model.IndexAdvice;
 import com.nctigba.observability.instance.model.InstanceNodeInfo;
-
+import com.nctigba.observability.instance.service.ClusterManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.opengauss.admin.common.exception.CustomException;
+import org.springframework.stereotype.Component;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * <p>
@@ -89,6 +88,7 @@ public class OpenGaussTopSQLHandler implements TopSQLHandler {
     private int totalPlanRows = 0;
     private int totalPlanWidth = 0;
     private List<String> objectNameList = new ArrayList<>();
+    private final ClusterManager clusterManager;
 
     private boolean testConnection(Connection conn) {
         if (ObjectUtils.isNotEmpty(conn)) {
@@ -106,19 +106,11 @@ public class OpenGaussTopSQLHandler implements TopSQLHandler {
 
     @Override
     public Connection getConnection(InstanceNodeInfo nodeInfo) {
-        String driver = "org.opengauss.Driver";
-        String jdbcUrl = "jdbc:opengauss://" + nodeInfo.getIp() + ":" + nodeInfo.getPort() + "/" + nodeInfo.getDbName();
-        try {
-            Class.forName(driver);
-            Connection conn = DriverManager.getConnection(jdbcUrl, nodeInfo.getDbUser(), nodeInfo.getDbUserPassword());
-            if (testConnection(conn)) {
-                return conn;
-            }
-        } catch (SQLException | ClassNotFoundException e) {
-            log.error("get connection fail:{}", e.getMessage());
-            throw new CustomException(e.getMessage());
+        Connection connection = clusterManager.getConnectionByNodeInfo(nodeInfo);
+        if (!testConnection(connection)) {
+            return null;
         }
-        return null;
+        return connection;
     }
 
     @Override
