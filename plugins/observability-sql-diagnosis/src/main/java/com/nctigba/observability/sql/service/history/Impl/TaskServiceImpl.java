@@ -92,8 +92,8 @@ public class TaskServiceImpl implements TaskService {
         task.addRemarks("start running diagnosis");
         HashMap<CollectionItem<?>, Integer> hashMap = new HashMap<>();
         StringBuilder sb = new StringBuilder();
+        List<HisDiagnosisResult> resultList = new ArrayList<>();
         for (HisDiagnosisPointService<?> pointService : pointServiceList) {
-            String pointName = getClassName(pointService);
             List<String> option = pointService.getOption();
             boolean isRun = isRun(option, taskDTO.getConfigs());
             List<CollectionItem<?>> params = pointService.getSourceDataKeys();
@@ -102,9 +102,10 @@ public class TaskServiceImpl implements TaskService {
             if (isRun || CollectionUtils.isEmpty(params) || isDiagnosisType) {
                 if (!CollectionUtils.isEmpty(params)) {
                     sb.append(pointService).append(";");
+                    String pointName = getClassName(pointService);
                     HisDiagnosisResult result = new HisDiagnosisResult(task, pointName,
                             HisDiagnosisResult.PointState.NOT_ANALYZED, HisDiagnosisResult.ResultState.NO_ADVICE);
-                    resultMapper.insert(result);
+                    resultList.add(result);
                 }
                 continue;
             }
@@ -129,7 +130,7 @@ public class TaskServiceImpl implements TaskService {
                                     HisDiagnosisResult result = new HisDiagnosisResult(task, pointName,
                                             HisDiagnosisResult.PointState.ABNORMAL,
                                             HisDiagnosisResult.ResultState.NO_ADVICE);
-                                    resultMapper.insert(result);
+                                    resultList.add(result);
                                 }
                             });
                         }
@@ -146,7 +147,7 @@ public class TaskServiceImpl implements TaskService {
                                                 HisDiagnosisResult.PointState.ABNORMAL,
                                                 HisDiagnosisResult.ResultState.NO_ADVICE);
                                         result.setPointSuggestion(isExistData.toString());
-                                        resultMapper.insert(result);
+                                        resultList.add(result);
                                     }
                                 });
                             }
@@ -164,20 +165,21 @@ public class TaskServiceImpl implements TaskService {
                 dataStoreService.storeData(list);
                 List<CollectionItem<?>> itemList = dataStoreService.getCollectionItem();
                 for (HisDiagnosisPointService<?> pointService : pointServiceList) {
-                    String pointName = getClassName(pointService);
                     if (sb.toString().contains(pointService.toString())) {
                         continue;
                     }
-                    boolean isDataReady = CollectionUtils.isEmpty(pointService.getSourceDataKeys()) || new HashSet<>(
-                            itemList).containsAll(pointService.getSourceDataKeys());
+                    List<CollectionItem<?>> collectionItemList = pointService.getSourceDataKeys();
+                    boolean isDataReady = CollectionUtils.isEmpty(collectionItemList) || new HashSet<>(
+                            itemList).containsAll(collectionItemList);
                     if (isDataReady) {
+                        String pointName = getClassName(pointService);
                         sb.append(pointService).append(";");
                         task.addRemarks("start analysis " + pointName);
                         AnalysisDTO analysisDTO = pointService.analysis(task, dataStoreService);
                         task.addRemarks("stop analysis " + pointName);
                         HisDiagnosisResult result = new HisDiagnosisResult(
                                 task, analysisDTO, pointName, HisDiagnosisResult.PointState.NORMAL);
-                        resultMapper.insert(result);
+                        resultList.add(result);
                     }
                 }
             });
@@ -191,6 +193,7 @@ public class TaskServiceImpl implements TaskService {
         } catch (InterruptedException e) {
             throw new HisDiagnosisException("Exception:" + e);
         }
+        resultMapper.batchInert(resultList);
         dataStoreService.clearData();
         task.addRemarks("finish diagnosis");
         task.setTaskEndTime(new Date());
