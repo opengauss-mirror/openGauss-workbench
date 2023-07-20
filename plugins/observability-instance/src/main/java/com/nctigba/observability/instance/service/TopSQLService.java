@@ -131,6 +131,7 @@ public class TopSQLService {
     public InstanceNodeInfo queryNodeInfo(String nodeId) {
         OpsClusterNodeVO opsClusterNode = clusterManager.getOpsNodeById(nodeId);
         InstanceNodeInfo instanceNodeInfo = new InstanceNodeInfo();
+        instanceNodeInfo.setId(opsClusterNode.getNodeId());
         instanceNodeInfo.setIp(opsClusterNode.getPublicIp());
         instanceNodeInfo.setPort(opsClusterNode.getDbPort());
         instanceNodeInfo.setDbName(opsClusterNode.getDbName());

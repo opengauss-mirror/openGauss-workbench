@@ -4,8 +4,20 @@
 
 package com.nctigba.observability.instance.handler.session;
 
+import com.alibaba.fastjson.JSONObject;
+import com.nctigba.common.web.exception.InstanceException;
+import com.nctigba.observability.instance.constants.CommonConstants;
+import com.nctigba.observability.instance.constants.DatabaseType;
+import com.nctigba.observability.instance.dto.session.DetailStatisticDto;
+import com.nctigba.observability.instance.model.InstanceNodeInfo;
+import com.nctigba.observability.instance.service.ClusterManager;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.stereotype.Component;
+
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -16,20 +28,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import org.apache.commons.lang3.ObjectUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.stereotype.Component;
-
-import com.alibaba.fastjson.JSONObject;
-import com.nctigba.common.web.exception.InstanceException;
-import com.nctigba.observability.instance.constants.CommonConstants;
-import com.nctigba.observability.instance.constants.DatabaseType;
-import com.nctigba.observability.instance.dto.session.DetailStatisticDto;
-import com.nctigba.observability.instance.model.InstanceNodeInfo;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 @Component
 @RequiredArgsConstructor
@@ -124,6 +122,7 @@ public class OpenGaussSessionHandler implements SessionHandler {
             + "'WorkloadMonitor','WDRSnapshot','JobScheduler','PercentileJob','statement flush thread','Asp',"
             + "'ApplyLauncher') and application_name not like 'DataKit%' "
             + "and now()-xact_start > interval '30 SECOND' " + "ORDER BY xact_start;";
+    private final ClusterManager clusterManager;
 
     @Override
     public String getDatabaseType() {
@@ -132,19 +131,11 @@ public class OpenGaussSessionHandler implements SessionHandler {
 
     @Override
     public Connection getConnection(InstanceNodeInfo nodeInfo) {
-        String driver = "org.opengauss.Driver";
-        String jdbcUrl = "jdbc:opengauss://" + nodeInfo.getIp() + ":" + nodeInfo.getPort() + "/" + nodeInfo.getDbName();
-        try {
-            Class.forName(driver);
-            Connection conn = DriverManager.getConnection(jdbcUrl, nodeInfo.getDbUser(), nodeInfo.getDbUserPassword());
-            if (testConnection(conn)) {
-                return conn;
-            }
-        } catch (SQLException | ClassNotFoundException e) {
-            log.error("get connection fail:{}", e.getMessage());
-            throw new InstanceException(e.getMessage());
+        Connection connection = clusterManager.getConnectionByNodeInfo(nodeInfo);
+        if (!testConnection(connection)) {
+            return null;
         }
-        return null;
+        return connection;
     }
 
     @Override
