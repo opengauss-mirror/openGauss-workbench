@@ -167,6 +167,7 @@ public class ClusterManager {
         }
         throw new CustomException(CommonConstants.NODE_NOT_FOUND);
     }
+
     /**
      * get openGauss jdbc-connection by NodeInfo
      *
