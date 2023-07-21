@@ -26,17 +26,20 @@ package org.opengauss.admin.plugin.domain.model.ops;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.StrUtil;
 import com.mysql.cj.jdbc.exceptions.CommunicationsException;
+import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.utils.uuid.UUID;
 import org.opengauss.admin.plugin.enums.ops.HostFileTypeEnum;
 import lombok.Data;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Date;
 
 /**
  * @author lhf
  * @date 2022/8/7 22:37
  **/
+@Slf4j
 @Data
 public class HostFile implements Comparable<HostFile> {
     private String id;
@@ -74,7 +77,11 @@ public class HostFile implements Comparable<HostFile> {
         hostFile.setName(fileName);
         hostFile.setType(fileType);
         hostFile.setSize(length);
-        hostFile.setPath(file.getAbsolutePath());
+        try {
+            hostFile.setPath(file.getCanonicalPath());
+        } catch (IOException ex) {
+            log.error("set host file path error: " + ex.getMessage());
+        }
 
         hostFile.setCpuArch(vo.getCpuArch());
         hostFile.setOs(vo.getOs());

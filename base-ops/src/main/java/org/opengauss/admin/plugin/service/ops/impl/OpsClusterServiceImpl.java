@@ -3099,7 +3099,11 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                 if (f.isDirectory()) {
                     fileList.addAll(getAllFiles(f.getPath()));
                 } else {
-                    fileList.add(f.getAbsolutePath());
+                    try {
+                        fileList.add(f.getCanonicalPath());
+                    } catch (IOException ex) {
+                        log.error("get file path error: " + ex.getMessage());
+                    }
                 }
             }
         }
