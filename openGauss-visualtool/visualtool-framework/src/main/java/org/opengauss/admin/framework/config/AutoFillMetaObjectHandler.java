@@ -54,7 +54,7 @@ public class AutoFillMetaObjectHandler implements MetaObjectHandler {
         try {
             loginUser = tokenService.getLoginUser(ServletUtils.getRequest());
         } catch (Exception e) {
-            log.error("user information not obtained");
+            log.info("default user information not found, this is a new installation");
         }
 
         if (loginUser != null) {

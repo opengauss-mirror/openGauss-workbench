@@ -26,6 +26,7 @@ package org.opengauss.admin.plugin.domain.model.ops;
 import com.alibaba.fastjson.annotation.JSONField;
 import com.alibaba.fastjson.support.spring.FastJsonHttpMessageConverter;
 import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -37,6 +38,8 @@ import org.springframework.boot.jackson.JsonObjectDeserializer;
 import org.springframework.boot.jackson.JsonObjectSerializer;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Date;
+
 /**
  * @author wangyl
  * @date 203/03/08 13:40
@@ -44,6 +47,7 @@ import org.springframework.web.multipart.MultipartFile;
 @Data
 public class OpsPackageVO {
     private String packageId;
+    private String name;
     private String os;
     private String cpuArch;
     private String packageVersion;
@@ -55,10 +59,13 @@ public class OpsPackageVO {
     @JSONField(serialize = false, deserialize = false)
     private MultipartFile file;
     private String remark;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private Date updateTime;
 
     public OpsPackageManagerEntity toEntity() {
         OpsPackageManagerEntity entity = new OpsPackageManagerEntity();
         entity.setPackageId(packageId);
+        entity.setName(name);
         entity.setOs(os);
         entity.setCpuArch(cpuArch);
         entity.setPackageVersion(packageVersion);

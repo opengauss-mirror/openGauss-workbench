@@ -28,12 +28,15 @@ import cn.hutool.core.io.IoUtil;
 import cn.hutool.core.lang.UUID;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.core.domain.UploadInfo;
 import org.opengauss.admin.common.core.domain.entity.SysSettingEntity;
+import org.opengauss.admin.common.core.domain.entity.ops.OpsAzEntity;
 import org.opengauss.admin.common.enums.CpuArchName;
 import org.opengauss.admin.common.enums.OsName;
 import org.opengauss.admin.common.exception.ops.OpsException;
@@ -94,7 +97,7 @@ public class OpsPackageManagerService extends ServiceImpl<OpsPackageManagerMappe
     @Override
     public void savePackage(OpsPackageManagerEntity pkg, Integer userId) throws OpsException {
         // upload file
-        savePackageTarFile(pkg, userId);
+        savePackageTarFile(pkg, pkg.getName(), userId);
         saveOrUpdate(pkg);
     }
 
@@ -165,13 +168,14 @@ public class OpsPackageManagerService extends ServiceImpl<OpsPackageManagerMappe
         return result;
     }
 
+    @Deprecated
     @Override
     public UploadInfo upload(MultipartFile file, Integer userId) throws OpsException {
         OpsPackageManagerEntity entity = new OpsPackageManagerEntity();
         UploadInfo info = new UploadInfo();
         entity.setPackagePath(info);
         entity.setFile(file);
-        savePackageTarFile(entity, userId);
+        savePackageTarFile(entity, "", userId);
         return info;
     }
 
@@ -396,7 +400,7 @@ public class OpsPackageManagerService extends ServiceImpl<OpsPackageManagerMappe
      * @param pkg
      * @param userId
      */
-    private void savePackageTarFile(OpsPackageManagerEntity pkg, Integer userId) throws OpsException {
+    private void savePackageTarFile(OpsPackageManagerEntity pkg, String pkgManagedName, Integer userId) throws OpsException {
         MultipartFile file = pkg.getFile();
         if (ObjectUtil.isNull(file) || StrUtil.isNotEmpty(pkg.getRealPath())) {
             return;
@@ -407,16 +411,17 @@ public class OpsPackageManagerService extends ServiceImpl<OpsPackageManagerMappe
             throw new OpsException("Cannot find system setting of your account, please try again");
         }
         // create folder
-        File folder = new File(entity.getUploadPath());
+        String uploadFolder = entity.getUploadPath() + pkgManagedName;
+        File folder = new File(uploadFolder);
         if (!folder.exists()) {
             boolean res = folder.mkdirs();
             if (!res) {
-                String errMsg = String.format("Can't create folder: %s, please try again", entity.getUploadPath());
+                String errMsg = String.format("Can't create folder: %s, please try again", uploadFolder);
                 log.error(errMsg);
                 throw new OpsException(errMsg);
             }
         }
-        String fileRealPath = Path.of(entity.getUploadPath(), file.getOriginalFilename()).toString();
+        String fileRealPath = Path.of(uploadFolder, file.getOriginalFilename()).toString();
         try {
             file.transferTo(new File(fileRealPath));
             UploadInfo info = pkg.getPackagePath();
@@ -431,5 +436,12 @@ public class OpsPackageManagerService extends ServiceImpl<OpsPackageManagerMappe
             log.error(errMsg);
             throw new OpsException(errMsg);
         }
+    }
+
+    @Override
+    public boolean hasName(String name) {
+        LambdaQueryWrapper<OpsPackageManagerEntity> queryWrapper = Wrappers.lambdaQuery(OpsPackageManagerEntity.class)
+                .eq(OpsPackageManagerEntity::getName, name);
+        return count(queryWrapper) > 0;
     }
 }

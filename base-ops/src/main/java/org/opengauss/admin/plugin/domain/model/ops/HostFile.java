@@ -23,40 +23,63 @@
 
 package org.opengauss.admin.plugin.domain.model.ops;
 
+import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.StrUtil;
+import com.mysql.cj.jdbc.exceptions.CommunicationsException;
+import org.opengauss.admin.common.utils.uuid.UUID;
 import org.opengauss.admin.plugin.enums.ops.HostFileTypeEnum;
 import lombok.Data;
 
 import java.io.File;
-import java.util.UUID;
+import java.util.Date;
 
 /**
  * @author lhf
  * @date 2022/8/7 22:37
  **/
 @Data
-public class HostFile {
-
+public class HostFile implements Comparable<HostFile> {
+    private String id;
     private String name;
-
     private HostFileTypeEnum type;
     /**
      * size（byte）
      */
     private Long size;
-
+    // file path
+    private String path;
+    // package manage name if exist
+    private String pkgManagedName;
     private String openGaussVersionNum;
+    private String openGaussVersion;
+    private String cpuArch;
+    private String os;
+    private String remark;
+    private Date updateTime;
 
-    public static HostFile build(File file) {
+    public static HostFile build(File file, OpsPackageVO vo) {
         HostFile hostFile = new HostFile();
         String fileName = file.getName();
         HostFileTypeEnum fileType = file.isFile() ? HostFileTypeEnum.FILE : HostFileTypeEnum.DIRECTORY;
         long length = file.length();
-        hostFile.setOpenGaussVersionNum(parseVersionNum(fileName));
+        if (StrUtil.isNotEmpty(vo.getName())) {
+            hostFile.setUpdateTime(vo.getUpdateTime());
+            hostFile.setOpenGaussVersionNum(vo.getPackageVersionNum());
+            hostFile.setRemark(vo.getRemark());
+        } else {
+            hostFile.setUpdateTime(new Date(file.lastModified()));
+            hostFile.setOpenGaussVersionNum(parseVersionNum(fileName));
+        }
+        hostFile.setId(UUID.fastUuid().toString());
         hostFile.setName(fileName);
         hostFile.setType(fileType);
         hostFile.setSize(length);
+        hostFile.setPath(file.getAbsolutePath());
 
+        hostFile.setCpuArch(vo.getCpuArch());
+        hostFile.setOs(vo.getOs());
+        hostFile.setOpenGaussVersion(vo.getPackageVersion());
+        hostFile.setPkgManagedName(vo.getName());
         return hostFile;
     }
 
@@ -69,26 +92,31 @@ public class HostFile {
     }
 
     private static String parseVersionNum(String fileName) {
-        if (StrUtil.isNotEmpty(fileName)){
-            if (fileName.startsWith("openGauss-Lite-")){
+        if (StrUtil.isNotEmpty(fileName)) {
+            if (fileName.startsWith("openGauss-Lite-")) {
                 String[] split = fileName.split("-");
-                if (split.length>=3){
+                if (split.length >= 3) {
                     return split[2];
-                }else {
+                } else {
                     return null;
                 }
-            }else if (fileName.startsWith("openGauss-")){
+            } else if (fileName.startsWith("openGauss-")) {
                 String[] split = fileName.split("-");
-                if (split.length>=2){
+                if (split.length >= 2) {
                     return split[1];
-                }else {
+                } else {
                     return null;
                 }
-            }else {
+            } else {
                 //uuid
                 return parseVersionNum(fileName.substring(fileName.indexOf("openGauss")));
             }
         }
         return null;
+    }
+
+    @Override
+    public int compareTo(HostFile o) {
+        return DateUtil.compare(o.getUpdateTime(), updateTime);
     }
 }
