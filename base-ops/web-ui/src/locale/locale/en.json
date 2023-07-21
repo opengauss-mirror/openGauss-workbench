@@ -93,7 +93,9 @@
             "5mpn1nwazvg0": "ENTERPRISE",
             "else1": "If the DataKit is installed offline, upload the installation package to the server where the DataKit is located.",
             "else2": "The path can only be a Linux path",
-            "else3": "The CPU architecture information of the installation package is being obtained. Please wait"
+            "else3": "The CPU architecture information of the installation package is being obtained. Please wait",
+            "5mpn1nwazvg2": "FilePath:",
+            "5mpn1nwazvg3": "PackageManagedName:"
         },
         "OnlineInstall": {
             "else1": "The installation package has been selected",
@@ -104,7 +106,8 @@
             "5mpn3mp11g00": "Download Progress",
             "else2": "Obtaining the installation package",
             "else3": "No installation package information is available",
-            "else4": "Add an installation package"
+            "else4": "Add an installation package",
+            "5mpn3mp11g01": "file extension not correct, must be one of .tar.gz|.tar|.tar.bz2"
         },
         "OneCheck": {
             "clusterName": "Cluster Name",
@@ -891,6 +894,7 @@
             "5myq5c8zn100": "Confirm",
             "5myq5c8zn7k0": "Cancel",
             "5myq5c8znew0": "Delete",
+            "5myq5c8zpu85": "Name",
             "5myq5c8zpu83": "Package Type",
             "5myq5c8znkk0": "Owning System",
             "5myq5c8zns00": "Version Name",
@@ -934,7 +938,10 @@
             "5myq6nnecc47": "You can upload any file as an installation package",
             "5myq6nnecc48": "Current upload path is: ",
             "5myq6nnecc49": ", You can change this setting in System Setting",
-            "5myq6nnecc50": "Please select a install package to upload"
+            "5myq6nnecc50": "Please select a install package to upload",
+            "5myq5c8zpu93": "Name",
+            "5myq5c8zpu94": "Package name duplicated",
+            "5myq5c8zpu95": "please input package name"
         }
     },
     "modeling": {

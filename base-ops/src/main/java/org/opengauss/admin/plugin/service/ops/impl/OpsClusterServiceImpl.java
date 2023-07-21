@@ -36,6 +36,7 @@ import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 import com.jcraft.jsch.ChannelShell;
 import com.jcraft.jsch.Session;
 import lombok.extern.slf4j.Slf4j;
+import org.opengauss.admin.common.core.domain.UploadInfo;
 import org.opengauss.admin.common.core.domain.entity.SysSettingEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
@@ -43,28 +44,8 @@ import org.opengauss.admin.common.exception.ops.OpsException;
 import org.opengauss.admin.plugin.domain.entity.ops.OpsCheckEntity;
 import org.opengauss.admin.plugin.domain.entity.ops.OpsClusterEntity;
 import org.opengauss.admin.plugin.domain.entity.ops.OpsClusterNodeEntity;
-import org.opengauss.admin.plugin.domain.model.ops.ClusterSummaryVO;
-import org.opengauss.admin.plugin.domain.model.ops.DownloadBody;
-import org.opengauss.admin.plugin.domain.model.ops.HostFile;
-import org.opengauss.admin.plugin.domain.model.ops.HostInfoHolder;
-import org.opengauss.admin.plugin.domain.model.ops.ImportClusterBody;
-import org.opengauss.admin.plugin.domain.model.ops.InstallBody;
-import org.opengauss.admin.plugin.domain.model.ops.InstallContext;
-import org.opengauss.admin.plugin.domain.model.ops.JschResult;
-import org.opengauss.admin.plugin.domain.model.ops.ListDir;
-import org.opengauss.admin.plugin.domain.model.ops.NodeMonitorVO;
-import org.opengauss.admin.plugin.domain.model.ops.NodeNetMonitor;
-import org.opengauss.admin.plugin.domain.model.ops.OpsClusterBody;
-import org.opengauss.admin.plugin.domain.model.ops.OpsClusterContext;
-import org.opengauss.admin.plugin.domain.model.ops.OpsClusterNodeVO;
-import org.opengauss.admin.plugin.domain.model.ops.OpsClusterVO;
-import org.opengauss.admin.plugin.domain.model.ops.SSHBody;
-import org.opengauss.admin.plugin.domain.model.ops.SshCommandConstants;
-import org.opengauss.admin.plugin.domain.model.ops.UnInstallBody;
-import org.opengauss.admin.plugin.domain.model.ops.UnInstallContext;
-import org.opengauss.admin.plugin.domain.model.ops.UpgradeBody;
-import org.opengauss.admin.plugin.domain.model.ops.UpgradeContext;
-import org.opengauss.admin.plugin.domain.model.ops.WsSession;
+import org.opengauss.admin.plugin.domain.entity.ops.OpsPackageManagerEntity;
+import org.opengauss.admin.plugin.domain.model.ops.*;
 import org.opengauss.admin.plugin.domain.model.ops.cache.SSHChannelManager;
 import org.opengauss.admin.plugin.domain.model.ops.cache.TaskManager;
 import org.opengauss.admin.plugin.domain.model.ops.cache.WsConnectorManager;
@@ -84,6 +65,7 @@ import org.opengauss.admin.plugin.mapper.ops.OpsClusterMapper;
 import org.opengauss.admin.plugin.service.ops.IOpsCheckService;
 import org.opengauss.admin.plugin.service.ops.IOpsClusterNodeService;
 import org.opengauss.admin.plugin.service.ops.IOpsClusterService;
+import org.opengauss.admin.plugin.service.ops.IOpsPackageManagerService;
 import org.opengauss.admin.plugin.service.ops.impl.provider.EnterpriseOpsProvider;
 import org.opengauss.admin.plugin.utils.DBUtil;
 import org.opengauss.admin.plugin.utils.DownloadUtil;
@@ -156,9 +138,6 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
     @Autowired
     private IOpsClusterNodeService opsClusterNodeService;
     @Autowired
-    @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
-    private AzFacade azFacade;
-    @Autowired
     private IOpsCheckService opsCheckService;
     @Autowired
     private WsUtil wsUtil;
@@ -182,6 +161,10 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
     @Autowired
     @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
     private SysSettingFacade sysSettingFacade;
+
+    @Autowired
+    @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
+    private IOpsPackageManagerService pkgManagerService;
 
     @Override
     public void download(DownloadBody downloadBody) {
@@ -1856,7 +1839,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
             extension = new String[]{".tar.gz", ".tar.bz2"};
         }
 
-        listDir.setFiles(listFiles(entity.getUploadPath(), extension, namePart));
+        listDir.setFiles(listFiles(entity.getUploadPath(), openGaussVersionEnum, extension, namePart));
         return listDir;
     }
 
@@ -1889,29 +1872,38 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         return false;
     }
 
-    private List<HostFile> listFiles(String path, String[] extension, String[] namePart) {
-        log.info("List the files under the path: {}", path);
-
+    private List<HostFile> listFiles(String uploadPath, OpenGaussVersionEnum openGaussVersionEnum, String[] extension, String[] namePart) {
+        log.info("List the files under the path: {}", uploadPath);
+        List<OpsPackageManagerEntity> pkgList = pkgManagerService.list();
         List<HostFile> result = new ArrayList<>();
-        Assert.notEmpty(path, "Failed to enumerate files, path cannot be empty");
+        Assert.notEmpty(uploadPath, "Failed to enumerate files, path cannot be empty");
 
-        File filePath = new File(path);
-        if (filePath.isDirectory()) {
-            File[] files = filePath.listFiles();
-
-            if (Objects.nonNull(files) && files.length > 0) {
-                for (File file : files) {
-                    if (extensionFilter(file, extension) && nameFilter(file, namePart)) {
-                        result.add(HostFile.build(file));
-                    }
+        File folderPath = new File(uploadPath);
+        if (!folderPath.isDirectory()) {
+            return result;
+        }
+        List<String> files = getAllFiles(uploadPath);
+        if (files.size() <= 0) {
+            return result;
+        }
+        for (String filePath : files) {
+            File file = new File(filePath);
+            if (!file.isFile() || !file.exists()) {
+                continue;
+            }
+            OpsPackageManagerEntity entity = CollUtil.findOne(pkgList, item -> item.getName() != null && filePath.contains(item.getName()));
+            // is managed, get info here
+            if (entity != null && entity.getPackageVersion().equalsIgnoreCase(openGaussVersionEnum.toString())) {
+                OpsPackageVO vo = entity.toVO();
+                result.add(HostFile.build(file, vo));
+            } else {
+                // not managed, filter by name
+                if (extensionFilter(file, extension) && nameFilter(file, namePart)) {
+                    result.add(HostFile.build(file, new OpsPackageVO()));
                 }
             }
-        } else {
-            if (filePath.exists() && extensionFilter(filePath, extension) && nameFilter(filePath, namePart)) {
-                result.add(HostFile.build(filePath));
-            }
         }
-
+        Collections.sort(result);
         return result;
     }
 
@@ -3096,5 +3088,25 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         }
 
         return osProperty;
+    }
+
+    private List<String> getAllFiles(String path) {
+        List<String> fileList = new ArrayList<>();
+        File file = new File(path);
+        File[] files = file.listFiles();
+        if (files != null) {
+            for (File f : files) {
+                if (f.isDirectory()) {
+                    fileList.addAll(getAllFiles(f.getPath()));
+                } else {
+                    try {
+                        fileList.add(f.getCanonicalPath());
+                    } catch (IOException ex) {
+                        log.error("get file path error: " + ex.getMessage());
+                    }
+                }
+            }
+        }
+        return fileList;
     }
 }

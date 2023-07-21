@@ -17,3 +17,7 @@ export interface UploadInfo {
   name: string,
   file: File
 }
+
+export enum DefaultOpenGauss {
+  VERSION = '5.0.0'
+}

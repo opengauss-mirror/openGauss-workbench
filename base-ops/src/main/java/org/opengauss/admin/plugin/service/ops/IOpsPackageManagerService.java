@@ -46,6 +46,7 @@ public interface IOpsPackageManagerService extends IService<OpsPackageManagerEnt
 
     OpsPackageVO analysisPkg(String pkgName, String pkgType);
 
+    @Deprecated
     UploadInfo upload(MultipartFile file, Integer userId) throws OpsException;
 
     boolean deletePkgTar(String path, String id);
@@ -53,4 +54,6 @@ public interface IOpsPackageManagerService extends IService<OpsPackageManagerEnt
     String getSysUploadPath(Integer userId);
 
     boolean checkUploadPath(String path, Integer userId);
+
+    boolean hasName(String name);
 }

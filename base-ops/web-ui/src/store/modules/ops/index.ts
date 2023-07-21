@@ -6,6 +6,8 @@ const installStore = defineStore('install', {
   state: () => {
     return {
       installContext: {
+        // only for ui use
+        id: '',
         installType: 'install',
         installOs: 'CENTOS_X86_64',
         openGaussVersion: OpenGaussVersionEnum.LITE,
