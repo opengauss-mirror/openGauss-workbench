@@ -32,6 +32,7 @@ import static com.nctigba.datastudio.constants.SqlConstants.DROP_VIEW_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.MATERIALIZED_VIEW_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.SELECT_VIEW_DDL_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.SELECT_VIEW_TYPE_SQL;
+import static com.nctigba.datastudio.constants.SqlConstants.SEMICOLON;
 import static com.nctigba.datastudio.constants.SqlConstants.VIEW_DATA_SQL;
 
 /**
@@ -55,8 +56,8 @@ public class ViewObjectSQLServiceImpl implements ViewObjectSQLService {
         log.info("splicingViewDDL request is: " + request);
         String sql = request.getSql();
         String lastChar = sql.substring(sql.length() - 1);
-        if (lastChar.equals(";")) {
-            sql = sql.substring(0, sql.length() - 1);
+        if (!lastChar.equals(";")) {
+            sql = sql + SEMICOLON;
         }
         String viewType;
         if (request.getViewType().equals("MATERIALIZED")) {
