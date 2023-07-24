@@ -203,7 +203,7 @@ public class SqlConstants {
     public static final String CREATE_SQL = "CREATE ";
     public static final String CREATE_VIEW_SQL = "CREATE %s VIEW %s.%s "
             + "AS "
-            + "%s;";
+            + "%s";
     public static final String CREATE_SYNONYM_SQL = "CREATE SYNONYM %s.%s FOR %s.%s;";
     public static final String CREATE_REPLACE_SYNONYM_SQL = "CREATE OR REPLACE SYNONYM %s.%s FOR %s.%s";
     public static final String CREATE_DATABASE_SQL = "CREATE DATABASE ";
