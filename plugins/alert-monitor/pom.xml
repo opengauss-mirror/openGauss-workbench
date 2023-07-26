@@ -29,6 +29,7 @@
         <fastjson.version>1.2.78</fastjson.version>
         <lombok.version>1.18.24</lombok.version>
         <hutool.version>5.0.3</hutool.version>
+        <build.frontend.skip>false</build.frontend.skip>
     </properties>
 
     <dependencies>
@@ -298,7 +299,7 @@
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>1.6.0</version>
                 <configuration>
-                    <skip>false</skip>
+                    <skip>${build.frontend.skip}</skip>
                 </configuration>
                 <executions>
                     <execution>

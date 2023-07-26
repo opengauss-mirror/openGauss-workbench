@@ -29,6 +29,7 @@
 		<es-java-client.version>8.3.3</es-java-client.version>
 		<es-java-client-jackson-databind.version>2.12.3</es-java-client-jackson-databind.version>
 		<es-java-client-jakarta.version>2.0.1</es-java-client-jakarta.version>
+		<build.frontend.skip>false</build.frontend.skip>
 	</properties>
 	<dependencies>
 		<!-- same as framework -->
@@ -308,7 +309,7 @@
 				<artifactId>exec-maven-plugin</artifactId>
 				<version>1.6.0</version>
 				<configuration>
-					<skip>false</skip>
+					<skip>${build.frontend.skip}</skip>
 				</configuration>
 				<executions>
 					<execution>
