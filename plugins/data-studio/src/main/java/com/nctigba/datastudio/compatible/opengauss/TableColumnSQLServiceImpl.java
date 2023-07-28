@@ -546,8 +546,8 @@ public class TableColumnSQLServiceImpl implements TableColumnSQLService {
         } else if (tableUnderlyingInfoQuery.getFillingFactor() != 100) {
             cteate.append(String.format(WITH_SQL, FILLFACTOR_SQL, tableUnderlyingInfoQuery.getFillingFactor()));
         }
-        cteate.append(String.format(TABLESPACE_SQL, tableUnderlyingInfoQuery.getTableSpace())).append(SEMICOLON).append(
-                getPartitionSQL(request.getPartitionInfo())).append(LF);
+        cteate.append(String.format(TABLESPACE_SQL, tableUnderlyingInfoQuery.getTableSpace())).append(
+                getPartitionSQL(request.getPartitionInfo())).append(LF).append(SEMICOLON);
         StringBuilder indexComment = new StringBuilder();
         for (var index : request.getIndexs()) {
             String indexSql = addIndexSQL(request.getSchema(), tableUnderlyingInfoQuery.getTableName(), index);
@@ -585,7 +585,6 @@ public class TableColumnSQLServiceImpl implements TableColumnSQLService {
                 partition.append(String.format(HASH_SQL, request.getPartitionColumn(), request.getPartitionName(),
                         request.getTableSpace()));
             }
-            partition.append(SEMICOLON);
             return partition.toString();
         }
         return "";
