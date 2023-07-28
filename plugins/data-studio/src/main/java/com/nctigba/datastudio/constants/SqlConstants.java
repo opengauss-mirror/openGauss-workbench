@@ -301,7 +301,7 @@ public class SqlConstants {
     public static final String CONSTRAINT_FOREIGN_KEY_SQL = " ALTER TABLE %s.%s ADD CONSTRAINT %s "
             + "FOREIGN KEY (%s) REFERENCES %s.%s (%s) ";
     public static final String CONSTRAINT_TABLE_SQL = "select con.conname, "
-            + "string_agg(DISTINCT att.attname, ',' order by tt.attname) as attname, con.contype,"
+            + "string_agg(DISTINCT att.attname, ',' order by att.attname) as attname, con.contype,"
             + " pg_get_constraintdef(con.oid) constraintdef,"
             + " con.condeferrable, d.description,f.nspname AS ref_nspname , f.relname AS ref_tbname , "
             + "string_agg(DISTINCT f.attname, ', ') AS ref_columns "
