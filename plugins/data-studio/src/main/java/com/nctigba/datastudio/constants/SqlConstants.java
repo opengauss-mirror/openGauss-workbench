@@ -144,7 +144,7 @@ public class SqlConstants {
 
     public static final String GET_COLUMN_SQL = "select col.column_name,col.data_type,"
             + "case when col.is_nullable = 'YES' then FALSE  else TRUE end as is_null," + LF
-            + "substr(col.column_default,1,instr(col.column_default,'::')-1) as column_default,"
+            + "col.column_default as column_default,"
             + " case when con.conname is null then FALSE ELSE TRUE end as is_only," + LF
             + "case when col.CHARACTER_MAXIMUM_LENGTH is not null then col.CHARACTER_MAXIMUM_LENGTH" + LF
             + "when col.numeric_precision is not null then col.numeric_precision end as precision, "
