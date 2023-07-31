@@ -568,7 +568,7 @@ public class TableColumnSQLServiceImpl implements TableColumnSQLService {
     }
 
     private String getPartitionSQL(TablePartitionInfoQuery request) {
-        log.info("getPartitionSQL response is: {}", request);
+        log.info("getPartitionSQL  response is: {}", request);
         if (request != null && StringUtils.isNotEmpty(
                 request.getPartitionName()) && !request.getPartitionName().equals("")) {
             StringBuilder partition = new StringBuilder().append(PARTITION_BY_SQL);
