@@ -74,7 +74,7 @@ public class WsEndpoint {
         log.error("onError，type:{},businessId:{},err",type,businessId,error);
     }
 
-    @OnMessage
+    @OnMessage(maxMessageSize = 10 * 1024 * 1024)
     public void onMessage(@PathParam("type") String type,
                           @PathParam("businessId") String businessId,
                           String message, Session session) {

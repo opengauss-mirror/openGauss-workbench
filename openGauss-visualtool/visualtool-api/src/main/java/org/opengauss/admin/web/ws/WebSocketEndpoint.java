@@ -74,7 +74,7 @@ public class WebSocketEndpoint {
         log.error("onError，pluginId:{},sessionId:{},errorMessage:{}",pluginId,sessionId,error.getMessage());
     }
 
-    @OnMessage
+    @OnMessage(maxMessageSize = 10 * 1024 * 1024)
     public void onMessage(@PathParam("pluginId") String pluginId,
                           @PathParam("sessionId") String sessionId,
                           String message, Session session) {

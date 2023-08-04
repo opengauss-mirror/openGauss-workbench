@@ -34,8 +34,7 @@ export function getValidator(record) {
 const regexValidator = (value, cb) => {
     if (
         !value ||
-        value?.length <= 0 ||
-        /^\/((\\\/|[^\/])+)\/([gim]{0,3})$/.test(value)
+        value?.length <= 0
     ) {
         cb()
     } else {
