@@ -13,7 +13,7 @@ spring:
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
     driver-class-name: org.opengauss.Driver
-    url: jdbc:opengauss://127.0.0.1:5432/databasename?currentSchema=public
+    url: jdbc:opengauss://127.0.0.1:5432/databasename?currentSchema=public&batchMode=off
     username: username
     password: password
     druid:

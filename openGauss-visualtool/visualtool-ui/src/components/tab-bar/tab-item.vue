@@ -1,12 +1,17 @@
 <template>
   <a-dropdown trigger="contextMenu" @select="actionSelect">
-    <span class="arco-tag arco-tag-size-medium arco-tag-checked"
-      :class="{ 'link-activated': itemData.fullPath === route.fullPath }" @click="goto(itemData)">
+    <span
+      class="arco-tag arco-tag-size-medium arco-tag-checked"
+      :class="{ 'link-activated': itemData.fullPath === route.fullPath }"
+      @click="goto(itemData)"
+    >
       <span class="tag-link">
         {{ itemData.title }}
       </span>
-      <span class="arco-icon-hover arco-tag-icon-hover arco-icon-hover-size-medium arco-tag-close-btn"
-        @click.stop="tagClose(itemData, index)">
+      <span
+        class="arco-icon-hover arco-tag-icon-hover arco-icon-hover-size-medium arco-tag-close-btn"
+        @click.stop="tagClose(itemData, index)"
+      >
         <icon-close />
       </span>
     </span>
@@ -51,13 +56,13 @@ enum Eaction {
   left = 'left',
   right = 'right',
   others = 'others',
-  all = 'all',
+  all = 'all'
 }
 
 const props = defineProps({
   itemData: {
     type: Object as PropType<TagProps>,
-    default () {
+    default() {
       return []
     }
   },
@@ -119,7 +124,7 @@ const actionSelect = (value: any) => {
     }
     tabBarStore.freshTabList(copyTagList)
     if (currentRouteIdx < index) {
-      router.push({ name: itemData.name })
+      router.push({ path: itemData.fullPath, query: itemData.query })
     }
   } else if (value === Eaction.right) {
     const currentRouteIdx = findCurrentRouteIndex()
@@ -129,7 +134,7 @@ const actionSelect = (value: any) => {
     }
     tabBarStore.freshTabList(copyTagList)
     if (currentRouteIdx > index) {
-      router.push({ name: itemData.name })
+      router.push({ path: itemData.fullPath, query: itemData.query })
     }
   } else if (value === Eaction.others) {
     const filterList = tagList.value.filter((el, idx) => {
@@ -142,7 +147,7 @@ const actionSelect = (value: any) => {
       return
     }
     tabBarStore.freshTabList(filterList)
-    router.push({ name: itemData.name })
+    router.push({ path: itemData.fullPath, query: itemData.query })
   } else {
     const removeTagList = tagList.value.filter((el, idx) => {
       return idx !== 0
@@ -185,7 +190,7 @@ const hasSpecialTag = (removeTags: TagProps[]) => {
     color: rgb(var(--link-6));
   }
 
-  &+.arco-tag-close-btn {
+  & + .arco-tag-close-btn {
     color: rgb(var(--link-6));
   }
 }
