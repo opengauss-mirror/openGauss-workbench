@@ -186,6 +186,7 @@ export default {
     function: 'create function',
     process: 'create process',
     sql: 'create sql',
+    anonymous: 'anonymous block',
     view: 'create view',
     synonym: 'create synonym',
     sequence: 'create sequence',

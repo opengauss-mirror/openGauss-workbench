@@ -111,6 +111,21 @@ public class OperateStatusDO {
     }
 
     /**
+     * enable start anonymous block debug
+     */
+    public void enableStartAnonymous() {
+        this.isCompile = false;
+        this.isExecute = true;
+        this.isStartDebug = true;
+        this.isStopDebug = false;
+        this.isContinueStep = false;
+        this.isSingleStep = false;
+        this.isStepIn = false;
+        this.isStepOut = false;
+        this.isCoverageRate = false;
+    }
+
+    /**
      * sub all true
      */
     public void subAllTrue() {
