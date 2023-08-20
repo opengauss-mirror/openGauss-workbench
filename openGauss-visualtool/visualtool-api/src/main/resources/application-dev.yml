@@ -17,13 +17,16 @@ spring:
     username: username
     password: password
     druid:
-      test-while-idle: false
+      test-while-idle: true
       test-on-borrow: true
       validation-query: "select 1"
       validation-query-timeout: 10000
       connection-error-retry-attempts: 0
       break-after-acquire-failure: true
       max-wait: 3000
+      keep-alive: true
+      max-active: 30
+      min-evictable-idle-time-millis: 600000
 swagger:
   enabled: true
   pathMapping: /dev-api
