@@ -144,7 +144,7 @@ public class SqlConstants {
 
     public static final String GET_COLUMN_SQL = "select col.column_name,col.data_type,"
             + "case when col.is_nullable = 'YES' then FALSE  else TRUE end as is_null," + LF
-            + "substr(col.column_default,1,instr(col.column_default,'::')-1) as column_default,"
+            + "col.column_default as column_default,"
             + " case when con.conname is null then FALSE ELSE TRUE end as is_only," + LF
             + "case when col.CHARACTER_MAXIMUM_LENGTH is not null then col.CHARACTER_MAXIMUM_LENGTH" + LF
             + "when col.numeric_precision is not null then col.numeric_precision end as precision, "
@@ -172,7 +172,7 @@ public class SqlConstants {
             + "       tbl.relhasindex as has_index," + LF
             + "       tbl.relisshared as is_shared,split_part("
             + "split_part(array_to_string(tbl.reloptions, ','),',', 1),'=',2) orientation ," + LF
-            + "       split_part(split_part(array_to_string(tbl.reloptions, ','),',', 2),'=',2) compression ," + LF
+            + "       split_part(split_part(array_to_string(tbl.reloptions, ','),',', 2),'=',2) as compression ," + LF
             + "       tbl.relhasoids as hashoid," + LF
             + "       d.description as tbl_desc," + LF
             + "       'Y' as partition"
@@ -192,7 +192,7 @@ public class SqlConstants {
             + "       tbl.relhasindex as has_index," + LF
             + "       tbl.relisshared as is_shared,split_part("
             + "split_part(array_to_string(tbl.reloptions, ','),',', 1),'=',2) orientation ," + LF
-            + "       split_part(split_part(array_to_string(tbl.reloptions, ','),',', 2),'=',2) compression ," + LF
+            + "       split_part(split_part(array_to_string(tbl.reloptions, ','),',', 2),'=',2) as compression ," + LF
             + "       tbl.relhasoids as hashoid," + LF
             + "       d.description as tbl_desc" + LF
             + "  FROM pg_class tbl" + LF
@@ -203,7 +203,7 @@ public class SqlConstants {
     public static final String CREATE_SQL = "CREATE ";
     public static final String CREATE_VIEW_SQL = "CREATE %s VIEW %s.%s "
             + "AS "
-            + "%s;";
+            + "%s";
     public static final String CREATE_SYNONYM_SQL = "CREATE SYNONYM %s.%s FOR %s.%s;";
     public static final String CREATE_REPLACE_SYNONYM_SQL = "CREATE OR REPLACE SYNONYM %s.%s FOR %s.%s";
     public static final String CREATE_DATABASE_SQL = "CREATE DATABASE ";
@@ -301,7 +301,7 @@ public class SqlConstants {
     public static final String CONSTRAINT_FOREIGN_KEY_SQL = " ALTER TABLE %s.%s ADD CONSTRAINT %s "
             + "FOREIGN KEY (%s) REFERENCES %s.%s (%s) ";
     public static final String CONSTRAINT_TABLE_SQL = "select con.conname, "
-            + "string_agg(DISTINCT att.attname, ',' order by tt.attname) as attname, con.contype,"
+            + "string_agg(DISTINCT att.attname, ',' order by att.attname) as attname, con.contype, "
             + " pg_get_constraintdef(con.oid) constraintdef,"
             + " con.condeferrable, d.description,f.nspname AS ref_nspname , f.relname AS ref_tbname , "
             + "string_agg(DISTINCT f.attname, ', ') AS ref_columns "

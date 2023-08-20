@@ -6,35 +6,82 @@
         {{ $t('components.OfflineInstall.5mpn1nwaywo0') }}
       </div>
       <div class="label-color mb">
-        {{ $t('components.OfflineInstall.5mpn1nwaz280') }} {{
-          (data.path && data.fileName) ? data.path + data.fileName :
-          'no choose'
+        {{ $t('components.OfflineInstall.5mpn1nwaz280') }}
+        {{
+          data.path && data.fileName ? data.path + data.fileName : 'no choose'
         }}
       </div>
-      <a-link class="mb-s" @click="showUploadModal">{{ $t('components.OfflineInstall.5mpn1nwaz600') }}</a-link>
+      <a-link class="mb-s" @click="showUploadModal">{{
+        $t('components.OfflineInstall.5mpn1nwaz600')
+      }}</a-link>
     </div>
-    <a-spin class="flex-row-center" width="50%" :loading="data.getArchLoading"
-      :tip="$t('components.OfflineInstall.else3')">
+    <a-spin
+      class="flex-row-center"
+      :loading="data.getArchLoading"
+      :tip="$t('components.OfflineInstall.else3')"
+    >
       <div class="panel-body">
         <div class="flex-col">
           <div v-for="(item, index) in data.files" :key="index">
             <div
-              :class="'label-color install-package-card mb ' + (data.fileName === item.name ? 'center-item-active' : '')"
-              @click="choosePackge(item)">
-              <svg-icon icon-class="ops-offline-install" class="icon-size-s mr"></svg-icon>
-              <div class="ft-main">{{ item.name }}</div>
+              :class="
+                'label-color install-package-card mb ' +
+                (data.id === item.id ? 'center-item-active' : '')
+              "
+              @click="choosePackge(item)"
+            >
+              <svg-icon
+                icon-class="ops-offline-install"
+                class="icon-size-s mr"
+              ></svg-icon>
+              <div class="label-color ft-main mr-xlg" style="flex: 1">
+                <div
+                  v-if="item.pkgManagedName"
+                  class="mb-s"
+                  style="font-weight: bold"
+                >
+                  {{
+                    `${t('components.OfflineInstall.5mpn1nwazvg3')}${
+                      item.pkgManagedName
+                    }`
+                  }}
+                  <icon-launch
+                    v-if="item.pkgManagedName"
+                    @click="handleGoToPkgList(item.pkgManagedName)"
+                  />
+                </div>
+                <div class="mb-s">
+                  {{
+                    `${t('components.OfflineInstall.5mpn1nwazvg2')}${item.path}`
+                  }}
+                </div>
+                <div>
+                  <a-tag v-if="item.os" class="mr-s">{{ item.os }}</a-tag>
+                  <a-tag v-if="item.cpuArch" class="mr-s">{{
+                    item.cpuArch
+                  }}</a-tag>
+                  <a-tag>{{ item.openGaussVersionNum }}</a-tag>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
     </a-spin>
-    <tar-upload-modal ref="tarUploadModal" @finish="dialogSubmit"></tar-upload-modal>
+    <tar-upload-modal
+      ref="tarUploadModal"
+      @finish="dialogSubmit"
+    ></tar-upload-modal>
   </div>
 </template>
 
 <script lang="ts" setup>
 import { computed, onMounted, reactive, ref, inject } from 'vue'
-import { listInstallPackage, getPackageCpuArch, getSysUploadPath } from '@/api/ops'
+import {
+  listInstallPackage,
+  getPackageCpuArch,
+  getSysUploadPath
+} from '@/api/ops'
 import { KeyValue } from '@/types/global'
 import { useOpsStore } from '@/store'
 import { FormInstance } from '@arco-design/web-vue/es/form'
@@ -42,9 +89,11 @@ import { Message } from '@arco-design/web-vue'
 import { OpenGaussVersionEnum } from '@/types/ops/install'
 import TarUploadModal from './TarUploadModal.vue'
 import { useI18n } from 'vue-i18n'
+import { useRoute, useRouter } from 'vue-router'
 
 const { t } = useI18n()
 const installStore = useOpsStore()
+const router = useRouter()
 
 const loadingFunc = inject<any>('loading')
 
@@ -59,7 +108,9 @@ const data = reactive<KeyValue>({
 
 const currentVersion = computed(() => {
   if (storeData.value && storeData.value.openGaussVersion) {
-    if (storeData.value.openGaussVersion === OpenGaussVersionEnum.MINIMAL_LIST) {
+    if (
+      storeData.value.openGaussVersion === OpenGaussVersionEnum.MINIMAL_LIST
+    ) {
       return t('components.OfflineInstall.5mpn1nwazok0')
     } else if (storeData.value.openGaussVersion === OpenGaussVersionEnum.LITE) {
       return t('components.OfflineInstall.5mpn1nwazs80')
@@ -89,11 +140,13 @@ const getAllPackage = () => {
       data.files = res.data.files
       if (storeData.value && storeData.value.packageName) {
         data.fileName = storeData.value.packageName
+        data.id = storeData.value.id
         data.openGaussVersionNum = storeData.value.openGaussVersionNum
       } else {
         if (data.files.length) {
           data.fileName = res.data.files[0].name
           data.openGaussVersionNum = res.data.files[0].openGaussVersionNum
+          data.id = res.data.files[0].id
           setPathToStore()
         }
       }
@@ -102,6 +155,7 @@ const getAllPackage = () => {
 }
 const choosePackge = (row: KeyValue) => {
   data.fileName = row.name
+  data.id = row.id
   data.openGaussVersionNum = row.openGaussVersionNum
   setPathToStore()
 }
@@ -133,39 +187,66 @@ const dialogSubmit = () => {
         Message.warning('No files in the directory were detected')
       }
     } else {
-      Message.error(`Failed to obtain the installation package in the directory: ${res.msg}`)
+      Message.error(
+        `Failed to obtain the installation package in the directory: ${res.msg}`
+      )
     }
   })
 }
 
 const setPathToStore = () => {
-  if (data.fileName && data.path) {
+  if (!data.fileName || !data.path) {
+    return
+  }
+  const fileInfo = data.files.find((item: KeyValue) => data.id === item.id)
+  if (fileInfo.pkgManagedName) {
+    let cpuArchStr = fileInfo.cpuArch
+    if (cpuArchStr.includes('-')) {
+      cpuArchStr = cpuArchStr.replace('-', '_')
+    }
+    const temp =
+      getInstallOs(fileInfo.os) + '_' + cpuArchStr.toLocaleUpperCase()
+    installStore.setInstallContext({
+      packagePath: data.path,
+      packageName: data.fileName,
+      installPackagePath: fileInfo.path,
+      openGaussVersionNum: fileInfo.openGaussVersionNum,
+      installOs: temp
+    })
+  } else {
     loadingFunc.toLoading()
     data.getArchLoading = true
     const param = {
-      installPackagePath: data.path + data.fileName,
+      installPackagePath: fileInfo.path,
       version: storeData.value.openGaussVersion
     }
-    getPackageCpuArch(param).then((res: KeyValue) => {
-      if (Number(res.code) === 200) {
-        let cpuArchStr = res.msg
-        if (cpuArchStr.includes('-')) {
-          cpuArchStr = cpuArchStr.replace('-', '_')
+    getPackageCpuArch(param)
+      .then((res: KeyValue) => {
+        if (Number(res.code) === 200) {
+          let cpuArchStr = res.msg
+          if (cpuArchStr.includes('-')) {
+            cpuArchStr = cpuArchStr.replace('-', '_')
+          }
+          const temp =
+            getInstallOs(data.fileName) + '_' + cpuArchStr.toLocaleUpperCase()
+          installStore.setInstallContext({
+            packagePath: data.path,
+            packageName: data.fileName,
+            installPackagePath: fileInfo.path,
+            openGaussVersionNum: data.openGaussVersionNum,
+            installOs: temp
+          })
+          const file = data.files.find((item: KeyValue) => item.id === data.id)
+          if (file) {
+            file.os = getInstallOs(data.fileName)
+            file.cpuArch = cpuArchStr
+          }
         }
-        const temp = getInstallOs() + '_' + cpuArchStr.toLocaleUpperCase()
-        installStore.setInstallContext({
-          packagePath: data.path,
-          packageName: data.fileName,
-          installPackagePath: data.path + data.fileName,
-          openGaussVersionNum: data.openGaussVersionNum,
-          installOs: temp
-        })
-        console.log('show cpuArch', installStore.getInstallConfig)
-      }
-    }).finally(() => {
-      loadingFunc.cancelLoading()
-      data.getArchLoading = false
-    })
+      })
+      .finally(() => {
+        loadingFunc.cancelLoading()
+        data.getArchLoading = false
+      })
   }
 }
 
@@ -179,9 +260,9 @@ enum cpuArchEnum {
   AARCH64 = 'AARCH64'
 }
 
-const getInstallOs = () => {
+const getInstallOs = (name: string) => {
   let os = ''
-  const fileName = data.fileName.toLocaleUpperCase()
+  const fileName = name.toLocaleUpperCase()
   if (fileName.includes(osEnum.CENTOS)) {
     os = osEnum.CENTOS
   } else if (fileName.includes(osEnum.OPENEULER)) {
@@ -190,8 +271,11 @@ const getInstallOs = () => {
   return os
 }
 
-const storeData = computed(() => installStore.getInstallConfig)
+const handleGoToPkgList = (name: string) => {
+  router.push({ name: 'PackageManage', query: { name: name } })
+}
 
+const storeData = computed(() => installStore.getInstallConfig)
 </script>
 
 <style lang="less" scoped>
@@ -202,11 +286,11 @@ const storeData = computed(() => installStore.getInstallConfig)
 }
 
 .install-package-card {
-  width: 250px;
-  height: 100px;
+  height: 150px;
   padding: 24px;
+  width: 1000px;
   border-radius: 8px;
-  border: 1px solid #C9CDD4;
+  border: 1px solid #c9cdd4;
   display: flex;
   justify-content: flex-start;
   align-items: center;

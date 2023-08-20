@@ -32,11 +32,7 @@ export function getValidator(record) {
 }
 
 const regexValidator = (value, cb) => {
-    if (
-        !value ||
-        value?.length <= 0 ||
-        /^\/((\\\/|[^\/])+)\/([gim]{0,3})$/.test(value)
-    ) {
+    if (value) {
         cb()
     } else {
         cb(i18n.global.t('components.ParamsConfig.5q0aazspqfs2'))

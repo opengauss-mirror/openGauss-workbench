@@ -337,16 +337,16 @@ export const analysisPkg = (pkgName: string, pkgType: string) => {
   })
 }
 
-export const uploadPkgTar = (file: File) => {
-  return axios.post('installPackageManager/upload', file)
-}
-
 export const delPkgTar = (path: string, id?: string) => {
   return axios.delete('installPackageManager/delPkgTar', { params: { path: path, id: id } })
 }
 
 export const getSysUploadPath = () => {
   return axios.get('installPackageManager/sysUploadPath')
+}
+
+export const hasPkgName = (name: string) => {
+  return axios.get('/installPackageManager/hasName', { params: { name: name } })
 }
 
 export const generateRuleYaml = (data: KeyValue) => {

@@ -3,17 +3,15 @@
  */
 package com.nctigba.observability.instance.listener;
 
-import com.gitee.starblues.spring.MainApplicationContext;
-import com.gitee.starblues.spring.SpringBeanFactory;
 import org.opengauss.admin.common.core.vo.MenuVo;
 import org.opengauss.admin.system.plugin.facade.MenuFacade;
-import org.springframework.boot.context.event.ApplicationEnvironmentPreparedEvent;
-import org.springframework.boot.context.event.ApplicationPreparedEvent;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextClosedEvent;
-import org.springframework.context.event.ContextRefreshedEvent;
+
+import com.gitee.starblues.spring.MainApplicationContext;
+import com.gitee.starblues.spring.SpringBeanFactory;
 
 /**
  * @description: Plugin listener
@@ -25,10 +23,7 @@ public class PluginListener implements ApplicationListener<ApplicationEvent> {
 
     @Override
     public void onApplicationEvent(ApplicationEvent event) {
-        if (event instanceof ApplicationEnvironmentPreparedEvent) {
-        } else if (event instanceof ApplicationPreparedEvent) {
-        } else if (event instanceof ContextRefreshedEvent) {
-        } else if (event instanceof ApplicationReadyEvent) {
+        if (event instanceof ApplicationReadyEvent) {
             MainApplicationContext context = ((ApplicationReadyEvent) event).getApplicationContext()
                     .getBean(MainApplicationContext.class);
             SpringBeanFactory factory = context.getSpringBeanFactory();

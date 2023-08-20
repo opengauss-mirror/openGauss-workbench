@@ -1,6 +1,7 @@
 /*
  * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
  */
+
 package com.nctigba.observability.instance.service;
 
 import com.baomidou.dynamic.datasource.DynamicRoutingDataSource;
@@ -9,18 +10,17 @@ import com.baomidou.dynamic.datasource.spring.boot.autoconfigure.DataSourcePrope
 import com.baomidou.dynamic.datasource.toolkit.DynamicDataSourceContextHolder;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType.Type;
-import com.nctigba.common.web.exception.CustomException;
 import com.nctigba.common.web.exception.InstanceException;
 import com.nctigba.observability.instance.constants.CommonConstants;
 import com.nctigba.observability.instance.model.InstanceNodeInfo;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.opengauss.admin.common.core.domain.model.ops.OpsClusterNodeVO;
 import org.opengauss.admin.common.core.domain.model.ops.OpsClusterVO;
+import org.opengauss.admin.common.exception.CustomException;
 import org.opengauss.admin.system.plugin.facade.HostFacade;
 import org.opengauss.admin.system.plugin.facade.OpsFacade;
 import org.opengauss.admin.system.service.ops.IOpsClusterService;
@@ -39,10 +39,11 @@ import java.util.Properties;
 
 @Service
 @Slf4j
-@RequiredArgsConstructor
 public class ClusterManager {
-    private final DataSource dataSource;
-    private final DefaultDataSourceCreator dataSourceCreator;
+    @Autowired
+    private DataSource dataSource;
+    @Autowired
+    private DefaultDataSourceCreator dataSourceCreator;
 
     @Autowired(required = false)
     @AutowiredType(Type.MAIN_PLUGIN)
@@ -53,25 +54,6 @@ public class ClusterManager {
     @Autowired(required = false)
     @AutowiredType(Type.MAIN_PLUGIN)
     private IOpsClusterService opsClusterService;
-
-    public void setCurrentDatasourceByClusterHost(String clusterId, String hostId) {
-        var ds = (DynamicRoutingDataSource) dataSource;
-        // Switch if data source exists
-        if (ds.getDataSources().containsKey(hostId)) {
-            DynamicDataSourceContextHolder.push(hostId);
-            return;
-        }
-        // Add if it does not exist
-        var clusterEntity = opsClusterService.getById(clusterId);
-        var hostEntity = hostFacade.getById(hostId);
-        ds.addDataSource(hostId,
-                dataSourceCreator.createDataSource(new DataSourceProperty().setDriverClassName("org.opengauss.Driver")
-                        .setUrl(CommonConstants.JDBC_OPENGAUSS + hostEntity.getPublicIp() + ":"
-                                + clusterEntity.getPort() + "/postgres")
-                        .setUsername(clusterEntity.getDatabaseUsername())
-                        .setPassword(clusterEntity.getDatabasePassword())));
-        DynamicDataSourceContextHolder.push(hostId);
-    }
 
     public Connection getConnectionByClusterHost(String clusterId, String hostId) {
         var clusterEntity = opsClusterService.getById(clusterId);
@@ -134,18 +116,6 @@ public class ClusterManager {
         return Collections.emptyList();
     }
 
-    public String getOpsClusterIdByNodeId(String nodeId) {
-        if ("0".equals(nodeId))
-            return "0";
-        for (OpsClusterVO cluster : getAllOpsCluster()) {
-            if (cluster.getClusterNodes().stream().anyMatch(node -> {
-                return nodeId.equals(node.getNodeId());
-            }))
-                return cluster.getClusterId();
-        }
-        throw new CustomException("cluster not found");
-    }
-
     @Data
     @NoArgsConstructor
     @EqualsAndHashCode(callSuper = true)
@@ -162,7 +132,7 @@ public class ClusterManager {
                     CommonConstants.JDBC_OPENGAUSS + getPublicIp() + ":" + getDbPort() + "/" + getDbName(), getDbUser(),
                     getDbUserPassword());
             try (var preparedStatement = conn.prepareStatement("select 1");
-                 var rs = preparedStatement.executeQuery();) {
+                    var rs = preparedStatement.executeQuery();) {
                 return conn;
             } catch (Exception e) {
                 log.error("test connection fail:{}", e.getMessage());
@@ -176,16 +146,6 @@ public class ClusterManager {
      */
     public Connection getConnectionByNodeId(String nodeId) throws SQLException {
         return getOpsNodeById(nodeId).connection();
-    }
-
-    public OpsClusterVO getOpsClusterById(String clusterId) {
-        List<OpsClusterVO> opsClusterVOList = getAllOpsCluster();
-        if (CollectionUtils.isEmpty(opsClusterVOList))
-            return null;
-        for (OpsClusterVO cluster : opsClusterVOList)
-            if (cluster.getClusterId().equals(clusterId))
-                return cluster;
-        return null;
     }
 
     /**

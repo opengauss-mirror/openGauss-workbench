@@ -111,15 +111,18 @@ public class AlertRecordServiceImplTest {
         opsClusterNode.setClusterId("test");
         opsClusterNode.setHostId("1");
         opsClusterNode.setClusterRole(ClusterRoleEnum.MASTER);
-        List<OpsClusterNodeEntity> opsClusterNodeEntities = List.of(opsClusterNode);
+        List<OpsClusterNodeEntity> opsClusterNodeEntities = new ArrayList<>();
+        opsClusterNodeEntities.add(opsClusterNode);
         OpsHostEntity opsHostEntity = new OpsHostEntity();
         opsHostEntity.setHostId("1");
         opsHostEntity.setPublicIp("127.0.0.1");
-        List<OpsHostEntity> opsHostEntities = List.of(opsHostEntity);
+        List<OpsHostEntity> opsHostEntities = new ArrayList<>();
+        opsHostEntities.add(opsHostEntity);
         OpsClusterEntity opsClusterEntity = new OpsClusterEntity();
         opsClusterEntity.setClusterId("test");
         opsClusterEntity.setPort(80);
-        List<OpsClusterEntity> opsClusterEntities = List.of(opsClusterEntity);
+        List<OpsClusterEntity> opsClusterEntities = new ArrayList<>();
+        opsClusterEntities.add(opsClusterEntity);
         // Mock dependencies
         when(clusterNodeService.listByIds(anyList())).thenReturn(opsClusterNodeEntities);
         when(hostFacade.listByIds(anyList())).thenReturn(opsHostEntities);
@@ -159,15 +162,18 @@ public class AlertRecordServiceImplTest {
         opsClusterNode.setClusterId("test");
         opsClusterNode.setHostId("1");
         opsClusterNode.setClusterRole(ClusterRoleEnum.MASTER);
-        List<OpsClusterNodeEntity> opsClusterNodeEntities = List.of(opsClusterNode);
+        List<OpsClusterNodeEntity> opsClusterNodeEntities = new ArrayList<>();
+        opsClusterNodeEntities.add(opsClusterNode);
         OpsHostEntity opsHostEntity = new OpsHostEntity();
         opsHostEntity.setHostId("1");
         opsHostEntity.setPublicIp("127.0.0.1");
-        List<OpsHostEntity> opsHostEntities = List.of(opsHostEntity);
+        List<OpsHostEntity> opsHostEntities = new ArrayList<>();
+        opsHostEntities.add(opsHostEntity);
         OpsClusterEntity opsClusterEntity = new OpsClusterEntity();
         opsClusterEntity.setClusterId("test");
         opsClusterEntity.setPort(80);
-        List<OpsClusterEntity> opsClusterEntities = List.of(opsClusterEntity);
+        List<OpsClusterEntity> opsClusterEntities = new ArrayList<>();
+        opsClusterEntities.add(opsClusterEntity);
         // Mock dependencies
         when(clusterNodeService.listByIds(anyList())).thenReturn(opsClusterNodeEntities);
         when(hostFacade.listByIds(anyList())).thenReturn(opsHostEntities);
@@ -375,7 +381,8 @@ public class AlertRecordServiceImplTest {
             when(baseMapper.selectById(any())).thenReturn(alertRecord);
             AlertTemplateRuleItem ruleItem = new AlertTemplateRuleItem();
             ruleItem.setRuleExpName("ruleExpName").setUnit("unit").setLimitValue("10").setRuleExp("ruleExp");
-            List<AlertTemplateRuleItem> ruleItemList = List.of(ruleItem);
+            List<AlertTemplateRuleItem> ruleItemList = new ArrayList<>();
+            ruleItemList.add(ruleItem);
             when(templateRuleItemMapper.selectList(any())).thenReturn(ruleItemList);
             NctigbaEnv promEnv = new NctigbaEnv();
             promEnv.setHostid("1").setPort(9090);

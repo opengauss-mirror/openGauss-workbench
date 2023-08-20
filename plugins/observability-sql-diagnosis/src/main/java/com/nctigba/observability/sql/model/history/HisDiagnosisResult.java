@@ -16,7 +16,6 @@ import com.nctigba.common.mybatis.JacksonJsonWithClassTypeHandler;
 import com.nctigba.observability.sql.model.history.dto.AnalysisDTO;
 import com.nctigba.observability.sql.util.LocaleString;
 import lombok.Data;
-import lombok.Generated;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
@@ -32,7 +31,6 @@ import java.util.Date;
 @TableName(value = "his_diagnosis_result_info", autoResultMap = true)
 @Accessors(chain = true)
 @NoArgsConstructor
-@Generated
 public class HisDiagnosisResult {
     @TableId(type = IdType.AUTO)
     Integer id;

@@ -1,13 +1,14 @@
 /*
  * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
  */
-package com.nctigba.observability.instance.model;
 
-import lombok.Data;
+package com.nctigba.observability.instance.model;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+
+import lombok.Data;
 
 /**
  * <p>

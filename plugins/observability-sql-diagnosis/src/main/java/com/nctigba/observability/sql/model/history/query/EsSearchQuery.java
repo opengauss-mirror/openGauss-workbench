@@ -6,7 +6,6 @@ package com.nctigba.observability.sql.model.history.query;
 
 import cn.hutool.core.date.DateUtil;
 import lombok.Data;
-import lombok.Generated;
 
 import java.util.Date;
 import java.util.List;
@@ -20,7 +19,6 @@ import java.util.List;
  * @since 2022/11/17 09:05
  */
 @Data
-@Generated
 public class EsSearchQuery {
     private List<String> clusterId;
     private List<String> nodeId;
@@ -67,7 +65,7 @@ public class EsSearchQuery {
      * @return isEmptyObject boolean
      */
     public boolean isEmptyObject() {
-        boolean isDate=startDate == null && endDate == null;
+        boolean isDate = startDate == null && endDate == null;
         boolean isEmpty = startDate == null && endDate == null && nodeId == null && logType == null && logLevel == null
                 && searchPhrase == null;
         return isEmpty;

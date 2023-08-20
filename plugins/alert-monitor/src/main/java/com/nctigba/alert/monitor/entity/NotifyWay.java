@@ -9,10 +9,9 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
-import lombok.Data;
-import lombok.Generated;
-import lombok.experimental.Accessors;
 import com.nctigba.alert.monitor.constant.CommonConstants;
+import lombok.Data;
+import lombok.experimental.Accessors;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import javax.validation.constraints.NotBlank;
@@ -26,7 +25,6 @@ import java.time.LocalDateTime;
  */
 @Accessors(chain = true)
 @Data
-@Generated
 @TableName("notify_way")
 public class NotifyWay {
     @TableId

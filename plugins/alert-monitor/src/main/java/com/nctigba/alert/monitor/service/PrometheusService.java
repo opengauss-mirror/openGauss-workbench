@@ -34,6 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
 import org.opengauss.admin.common.exception.ServiceException;
+import org.opengauss.admin.common.exception.base.BaseException;
 import org.opengauss.admin.system.plugin.facade.HostFacade;
 import org.opengauss.admin.system.plugin.facade.HostUserFacade;
 import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
@@ -248,7 +249,7 @@ public class PrometheusService {
             PrometheusConfigDto config = getPromConfig();
             updatePromConfig(session, config);
             session.close();
-        } catch (IOException | CryptoException | ServiceException | NullPointerException e) {
+        } catch (IOException | CryptoException | ServiceException | NullPointerException | BaseException e) {
             log.error("init prometheus configuration fail: ", e);
         }
     }

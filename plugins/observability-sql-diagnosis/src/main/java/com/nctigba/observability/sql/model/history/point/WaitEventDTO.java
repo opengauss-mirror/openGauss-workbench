@@ -6,7 +6,6 @@ package com.nctigba.observability.sql.model.history.point;
 
 import com.nctigba.observability.sql.model.history.dto.WaitEventInfo;
 import lombok.Data;
-import lombok.Generated;
 import lombok.experimental.Accessors;
 
 import java.util.List;
@@ -19,7 +18,6 @@ import java.util.List;
  */
 @Data
 @Accessors(chain = true)
-@Generated
 public class WaitEventDTO {
     private String chartName;
     private List<WaitEventInfo> data;

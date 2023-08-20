@@ -4,35 +4,35 @@
 
 package com.nctigba.observability.instance.controller;
 
-import com.alibaba.fastjson.JSONObject;
-import com.nctigba.observability.instance.service.MetricsService;
-import com.nctigba.observability.instance.service.impl.MonitoringServiceImpl;
-import com.nctigba.observability.instance.service.impl.SessionServiceImpl;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
-import org.opengauss.admin.common.core.domain.AjaxResult;
-
-import java.util.HashMap;
-import java.util.List;
-
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.opengauss.admin.common.core.domain.AjaxResult.DATA_TAG;
+
+import java.util.HashMap;
+import java.util.List;
+
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.opengauss.admin.common.core.domain.AjaxResult;
+
+import com.alibaba.fastjson.JSONObject;
+import com.nctigba.observability.instance.service.MetricsService;
+import com.nctigba.observability.instance.service.impl.MonitoringServiceImpl;
+import com.nctigba.observability.instance.service.impl.SessionServiceImpl;
 
 /**
- * Test
+ * SessionServiceImplTest.java
  *
  * @author liupengfei
  * @since 2023/6/30
  */
-@RunWith(MockitoJUnitRunner.class)
-public class SessionControllerTest {
+@ExtendWith(MockitoExtension.class)
+class SessionControllerTest {
     @InjectMocks
     SessionController sessionController;
     @Mock
@@ -55,8 +55,9 @@ public class SessionControllerTest {
         HashMap<String, Object> metric = new HashMap<>();
         metric.put("metric", "val");
         when(metricsService.listBatch(any(), any(), any(), any(), any())).thenReturn(metric);
-        AjaxResult appResult = sessionController.sessionStatistic(id, start, end, step);
-        assertNotNull(appResult.get(DATA_TAG));
+
+        var appResult = sessionController.sessionStatistic(id, start, end, step);
+        assertNotNull(appResult.getOrDefault(AjaxResult.DATA_TAG, null));
         verify(sessionService, times(1)).simpleStatistic(any());
     }
 }

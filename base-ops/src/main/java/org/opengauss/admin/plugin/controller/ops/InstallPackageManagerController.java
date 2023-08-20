@@ -93,6 +93,7 @@ public class InstallPackageManagerController extends BaseController {
 
         if (StrUtil.isNotEmpty(name)) {
             queryWrapper.and(orWrapper -> orWrapper
+                    .or().like(OpsPackageManagerEntity::getName, name)
                     .or().like(OpsPackageManagerEntity::getOs, name)
                     .or().like(OpsPackageManagerEntity::getCpuArch, name)
                     .or().like(OpsPackageManagerEntity::getPackageVersionNum, name));
@@ -132,6 +133,7 @@ public class InstallPackageManagerController extends BaseController {
         return AjaxResult.success(result);
     }
 
+    @Deprecated
     @PostMapping("/upload")
     public AjaxResult upload(@RequestParam MultipartFile file) {
         try {
@@ -152,6 +154,11 @@ public class InstallPackageManagerController extends BaseController {
     public AjaxResult getSysUploadPath() {
         String result = opsPackageManagerService.getSysUploadPath(getUserId());
         return AjaxResult.success("ok", result);
+    }
+
+    @GetMapping("/hasName")
+    public AjaxResult hasName(@RequestParam("name") String name) {
+        return AjaxResult.success(opsPackageManagerService.hasName(name));
     }
 
     @InitBinder

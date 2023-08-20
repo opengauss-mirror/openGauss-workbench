@@ -4,15 +4,12 @@
 
 package com.nctigba.observability.sql.constants.history;
 
-import lombok.Generated;
-
 /**
  * PrometheusConstants
  *
  * @author luomeng
  * @since 2023/6/11
  */
-@Generated
 public class PrometheusConstants {
     // prometheus query ?query={query}
     public static final String PROMETHEUS_QUERY_POINT = "/api/v1/query";

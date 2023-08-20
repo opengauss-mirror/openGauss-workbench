@@ -37,6 +37,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.opengauss.admin.common.core.domain.UploadInfo;
 import org.opengauss.admin.plugin.domain.BaseEntity;
+import org.opengauss.admin.plugin.domain.model.ops.OpsPackageVO;
 import org.springframework.boot.jackson.JsonObjectDeserializer;
 import org.springframework.boot.jackson.JsonObjectSerializer;
 import org.springframework.web.multipart.MultipartFile;
@@ -51,6 +52,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class OpsPackageManagerEntity extends BaseEntity {
     @TableId
     private String packageId;
+    private String name;
     @TableField(exist = false)
     private String urlPrefix;
     private String os;
@@ -78,5 +80,21 @@ public class OpsPackageManagerEntity extends BaseEntity {
             return "";
         }
         return packagePath.getName();
+    }
+
+    public OpsPackageVO toVO() {
+        OpsPackageVO vo = new OpsPackageVO();
+        vo.setName(name);
+        vo.setPackageId(packageId);
+        vo.setPackageVersion(packageVersion);
+        vo.setPackageVersionNum(packageVersionNum);
+        vo.setOs(os);
+        vo.setCpuArch(cpuArch);
+        vo.setRemark(getRemark());
+        vo.setType(type);
+        vo.setPackageUrl(packageUrl);
+        vo.setPackagePath(packagePath);
+        vo.setUpdateTime(getUpdateTime());
+        return vo;
     }
 }

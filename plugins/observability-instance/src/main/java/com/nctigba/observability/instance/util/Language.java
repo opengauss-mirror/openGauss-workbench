@@ -8,11 +8,13 @@ import java.util.Locale;
 import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.http.HttpHeaders;
+import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+@Component
 public class Language {
-    public static Locale getLocale() {
+    public Locale getLocale() {
         final HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes())
                 .getRequest();
         var language = request.getHeader(HttpHeaders.CONTENT_LANGUAGE);

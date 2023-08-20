@@ -9,7 +9,6 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import lombok.Data;
-import lombok.Generated;
 import lombok.experimental.Accessors;
 
 import java.sql.Timestamp;
@@ -21,7 +20,6 @@ import java.sql.Timestamp;
  */
 @Accessors(chain = true)
 @Data
-@Generated
 @TableName("alert_cluster_node_conf")
 public class AlertClusterNodeConf {
     @TableId

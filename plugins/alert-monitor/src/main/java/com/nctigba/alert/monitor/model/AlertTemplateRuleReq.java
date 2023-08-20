@@ -5,7 +5,6 @@
 package com.nctigba.alert.monitor.model;
 
 import lombok.Data;
-import lombok.Generated;
 
 import javax.validation.constraints.NotNull;
 
@@ -15,7 +14,6 @@ import javax.validation.constraints.NotNull;
  * @description
  */
 @Data
-@Generated
 public class AlertTemplateRuleReq {
     private Long templateRuleId;
     @NotNull

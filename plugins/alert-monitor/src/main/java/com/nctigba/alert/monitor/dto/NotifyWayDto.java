@@ -4,10 +4,9 @@
 
 package com.nctigba.alert.monitor.dto;
 
-import lombok.Data;
-import lombok.Generated;
-import lombok.experimental.Accessors;
 import com.nctigba.alert.monitor.entity.NotifyWay;
+import lombok.Data;
+import lombok.experimental.Accessors;
 
 /**
  * @author wuyuebin
@@ -15,7 +14,6 @@ import com.nctigba.alert.monitor.entity.NotifyWay;
  * @description
  */
 @Data
-@Generated
 @Accessors(chain = true)
 public class NotifyWayDto extends NotifyWay {
     private String notifyTemplateName;

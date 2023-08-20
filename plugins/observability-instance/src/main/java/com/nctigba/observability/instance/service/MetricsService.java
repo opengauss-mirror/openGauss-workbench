@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import org.opengauss.admin.common.core.domain.model.ops.OpsClusterNodeVO;
 import org.opengauss.admin.common.exception.CustomException;
 import org.opengauss.admin.system.plugin.facade.HostFacade;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -72,7 +73,14 @@ public class MetricsService {
         return prometheusResult;
     }
 
-    private List<MonitoringMetric> value(String query, Long time) {
+    /**
+     * prometheus one value
+     *
+     * @param query promql
+     * @param time  second
+     * @return prometheus result
+     */
+    public List<MonitoringMetric> value(String query, Long time) {
         if (StrUtil.isBlank(query)) {
             throw new NullPointerException("query null");
         }
@@ -82,7 +90,16 @@ public class MetricsService {
         return prometheusResult.getData().getResult();
     }
 
-    private List<MonitoringMetric> list(String query, Number start, Number end, Integer step) {
+    /**
+     * prometheus line value
+     *
+     * @param query promql
+     * @param start second
+     * @param end   second
+     * @param step  second
+     * @return prometheus result
+     */
+    public List<MonitoringMetric> list(String query, Number start, Number end, Integer step) {
         if (StrUtil.isBlank(query)) {
             return Collections.emptyList();
         }
@@ -95,29 +112,16 @@ public class MetricsService {
     public HashMap<String, Object> listBatch(Enum<?>[] metricsArr, String nodeId, Long start, Long end, Integer step) {
         var result = new HashMap<String, Object>();
         var node = clusterManager.getOpsNodeById(nodeId);
-        var hostId = node.getHostId();
         List<Long> timeline = new ArrayList<>();
-        for (long l = start; l < end; l += step) {
-            timeline.add(l);
+        for (long i = start; i < end; i += step) {
+            timeline.add(i);
         }
         result.put(TIME, timeline.stream().map(t -> new Date(t.longValue() * 1000)).collect(Collectors.toList()));
         var countDown = ThreadUtil.newCountDownLatch(metricsArr.length);
         for (Object metric : metricsArr) {
             ThreadUtil.execute(() -> {
                 try {
-                    if (metric instanceof MetricsLine) {
-                        MetricsLine metricLine = (MetricsLine) metric;
-                        String promQl = metricLine.promQl(hostId, nodeId);
-                        var metrics = list(metricLine.promQl(hostId, nodeId), start, end, step);
-                        result.put(metricLine.name(), parseLine(promQl, metrics, timeline, metricLine.getTemplate()));
-                        return;
-                    }
-                    if (metric instanceof MetricsValue) {
-                        MetricsValue m = (MetricsValue) metric;
-                        String promQl = m.promQl(hostId, nodeId);
-                        var metrics = value(m.promQl(hostId, nodeId), System.currentTimeMillis() / 1000);
-                        result.put(m.name(), parseValue(promQl, metrics, m.getTemplate()));
-                    }
+                    result.putAll(extracted(node, start, end, step, metric));
                 } finally {
                     countDown.countDown();
                 }
@@ -129,6 +133,26 @@ public class MetricsService {
             throw new CustomException(e.getMessage());
         }
         return result;
+    }
+
+    private Map<String, Object> extracted(OpsClusterNodeVO node, Long start, Long end, Integer step, Object metric) {
+        if (metric instanceof MetricsLine) {
+            MetricsLine metricLine = (MetricsLine) metric;
+            String promQl = metricLine.promQl(node);
+            var metrics = list(promQl, start, end, step);
+            List<Long> timeline = new ArrayList<>();
+            for (long i = start; i < end; i += step) {
+                timeline.add(i);
+            }
+            return Map.of(metricLine.name(), parseLine(promQl, metrics, timeline, metricLine.getTemplate()));
+        }
+        if (metric instanceof MetricsValue) {
+            MetricsValue metricValue = (MetricsValue) metric;
+            String promQl = metricValue.promQl(node);
+            var metrics = value(promQl, System.currentTimeMillis() / 1000);
+            return Map.of(metricValue.name(), parseValue(promQl, metrics, metricValue.getTemplate()));
+        }
+        return Collections.emptyMap();
     }
 
     private Object parseValue(String promQl, List<MonitoringMetric> metric, String template) {

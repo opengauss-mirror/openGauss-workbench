@@ -22,7 +22,8 @@ spring:
     static-locations: classpath:resources,file:D://static
   datasource:
     dynamic:
-      strict: false #严格匹配数据源,默认false. true未匹配到指定数据源时抛异常,false使用默认数据源
+      #严格匹配数据源,默认false. true未匹配到指定数据源时抛异常,false使用默认数据源
+      strict: false
       druid:
         test-while-idle: false
         test-on-borrow: true

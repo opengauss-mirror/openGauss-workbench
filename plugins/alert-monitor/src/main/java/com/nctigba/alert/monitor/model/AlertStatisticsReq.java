@@ -5,7 +5,6 @@
 package com.nctigba.alert.monitor.model;
 
 import lombok.Data;
-import lombok.Generated;
 import lombok.experimental.Accessors;
 
 /**
@@ -15,7 +14,6 @@ import lombok.experimental.Accessors;
  */
 @Data
 @Accessors(chain = true)
-@Generated
 public class AlertStatisticsReq {
     private String clusterNodeId;
 
