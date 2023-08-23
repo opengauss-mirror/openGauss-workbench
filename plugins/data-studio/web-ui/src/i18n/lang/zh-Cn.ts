@@ -180,6 +180,7 @@ export default {
     function: '创建函数',
     process: '创建过程',
     sql: '创建SQL函数',
+    anonymous: '匿名块',
     view: '创建视图',
     synonym: '创建同义词',
     sequence: '创建序列',

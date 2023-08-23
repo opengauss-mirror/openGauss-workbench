@@ -48,38 +48,29 @@ public class AsyncHelper {
         log.info("AsyncHelper paramReq: " + paramReq);
         String windowName = paramReq.getWindowName();
         Statement statement = webSocketServer.getStatement(windowName);
-        try (
+        if (isAnonymousOid(paramReq)) {
+            try {
+                statement.executeUpdate(paramReq.getSql());
+            } catch (SQLException e) {
+                webSocketServer.sendMessage(windowName, WINDOW, FIVE_HUNDRED, e.getMessage(), e.getStackTrace());
+            }
+        } else {
+            try (
                 ResultSet resultSet = statement.executeQuery(DebugUtils.prepareSql(paramReq))
-        ) {
-            if (!paramReq.isCoverage()) {
-                closeConnection(webSocketServer, windowName, statement);
-                Map<String, String> map = new HashMap<>();
-                map.put(RESULT, LocaleString.transLanguageWs("1010", webSocketServer));
-                webSocketServer.sendMessage(windowName, CREATE_COVERAGE_RATE, SUCCESS, map);
-                return;
+            ) {
+                funcTask(webSocketServer, paramReq, resultSet);
+            } catch (SQLException | IOException e) {
+                webSocketServer.sendMessage(windowName, WINDOW, FIVE_HUNDRED, e.getMessage(), e.getStackTrace());
             }
-
-            Map<String, Object> map = DebugUtils.parseResultSet(resultSet);
-            log.info("AsyncHelper result map: " + map);
-            List<List<Object>> list = (List<List<Object>>) map.get(RESULT);
-            if (list.size() == 1) {
-                if (list.get(0).size() == 1) {
-                    webSocketServer.sendMessage(windowName, TEXT, SUCCESS, map);
-                } else {
-                    Map<String, String> messageMap = new HashMap<>();
-                    messageMap.put(RESULT, LocaleString.transLanguageWs("1008", webSocketServer));
-                    webSocketServer.sendMessage(windowName, TEXT, SUCCESS, messageMap);
-                    webSocketServer.sendMessage(windowName, TABLE, SUCCESS, map);
-                }
-            } else {
-                webSocketServer.sendMessage(windowName, TEXT, SUCCESS, map);
-            }
-        } catch (SQLException | IOException e) {
-            webSocketServer.sendMessage(windowName, WINDOW, FIVE_HUNDRED, e.getMessage(), e.getStackTrace());
         }
+        
 
         OperateStatusDO operateStatusDO = webSocketServer.getOperateStatus(windowName);
-        operateStatusDO.enableStartDebug();
+        if (isAnonymousOid(paramReq)) {
+            operateStatusDO.enableStartAnonymous();
+        } else {
+            operateStatusDO.enableStartDebug();
+        }
         webSocketServer.setOperateStatus(windowName, operateStatusDO);
         Map<String, Object> operateStatusMap = new HashMap<>();
         operateStatusMap.put(RESULT, operateStatusDO);
@@ -89,6 +80,41 @@ public class AsyncHelper {
         statement.execute(String.format(TURN_OFF_SQL, oid));
         log.info("AsyncHelper oid: " + oid);
         closeConnection(webSocketServer, windowName, statement);
+    }
+
+    private void funcTask(WebSocketServer webSocketServer, PublicParamReq paramReq, ResultSet resultSet)
+            throws SQLException, IOException {
+        String windowName = paramReq.getWindowName();
+        Statement statement = webSocketServer.getStatement(windowName);
+
+        if (!paramReq.isCoverage()) {
+            closeConnection(webSocketServer, windowName, statement);
+            Map<String, String> map = new HashMap<>();
+            map.put(RESULT, LocaleString.transLanguageWs("1010", webSocketServer));
+            webSocketServer.sendMessage(windowName, CREATE_COVERAGE_RATE, SUCCESS, map);
+            return;
+        }
+
+        Map<String, Object> map = DebugUtils.parseResultSet(resultSet);
+        log.info("AsyncHelper result map: " + map);
+        List<List<Object>> list = (List<List<Object>>) map.get(RESULT);
+        if (list.size() == 1) {
+            if (list.get(0).size() == 1) {
+                webSocketServer.sendMessage(windowName, TEXT, SUCCESS, map);
+            } else {
+                Map<String, String> messageMap = new HashMap<>();
+                messageMap.put(RESULT, LocaleString.transLanguageWs("1008", webSocketServer));
+                webSocketServer.sendMessage(windowName, TEXT, SUCCESS, messageMap);
+                webSocketServer.sendMessage(windowName, TABLE, SUCCESS, map);
+            }
+        } else {
+            webSocketServer.sendMessage(windowName, TEXT, SUCCESS, map);
+        }
+    }
+
+    private boolean isAnonymousOid(PublicParamReq paramReq) {
+        String funcOid = paramReq.getOid();
+        return funcOid.equals("0");
     }
 
     private void closeConnection(

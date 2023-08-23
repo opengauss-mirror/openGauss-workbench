@@ -213,6 +213,7 @@
             <li @click="hanldeCreate('function')"> {{ $t('create.function') }}</li>
             <li @click="hanldeCreate('procedure')"> {{ $t('create.process') }}</li>
             <li @click="hanldeCreate('sql')"> {{ $t('create.sql') }}</li>
+            <li @click="hanldeCreate('anonymous')"> {{ $t('create.anonymous') }}</li>
           </ul>
           <ul
             v-if="treeContext.tableCollectVisible"
@@ -1382,11 +1383,12 @@
     });
     treeContext.tableCollectVisible = false;
   };
-  const hanldeCreate = (type: 'function' | 'procedure' | 'sql') => {
+  const hanldeCreate = (type: 'function' | 'procedure' | 'sql' | 'anonymous') => {
     enum titleMap {
       function = 'create_F',
       procedure = 'create_P',
       sql = 'create_SQL',
+      anonymous = 'anonymous_block',
     }
     const time = Date.now();
     const connectInfo: any = currentContextNodeData.connectInfo;

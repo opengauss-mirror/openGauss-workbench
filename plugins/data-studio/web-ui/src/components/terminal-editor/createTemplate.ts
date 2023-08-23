@@ -51,6 +51,17 @@ AS $$
 $$
 /
 `;
+      case 'anonymous': //anoymous block
+        return `DO
+$$
+DECLARE
+  /*declaration_section*/
+BEGIN
+  /*executable_section*/
+END
+$$
+LANGUAGE plpgsql;
+`;
       default:
         return ``;
     }

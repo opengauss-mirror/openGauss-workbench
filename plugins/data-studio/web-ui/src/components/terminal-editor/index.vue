@@ -497,6 +497,9 @@
           loading.value.close();
         }
       }
+      if (res.type == 'OTHER') {
+        loading.value.close();
+      }
     } else if (res.code == '500' && res.type == 'IGNORE_WINDOW' && isSaving.value) {
       return;
     } else {
@@ -507,7 +510,7 @@
   };
 
   const getButtonStatus = () => {
-    if (route.name != 'createDebug') {
+    if (route.name != 'createDebug' || route.query.type == 'anonymous') {
       ws.instance.send({
         operation: 'operateStatus',
         ...commonWsParams.value,
@@ -545,7 +548,7 @@
         sql: editorRef.value.getSelectionValue() || editorRef.value.getValue(),
       });
     }
-    if (props.editorType == 'debug') {
+    if (props.editorType == 'debug' && route.query.type != 'anonymous') {
       ws.instance.send({
         operation: 'execute',
         ...commonWsParams.value,
@@ -553,6 +556,13 @@
         isContinue,
       });
       getButtonStatus();
+    }
+    if (route.query.type == 'anonymous') {
+      ws.instance.send({
+        operation: 'startRun',
+        ...commonWsParams.value,
+        sql: editorRef.value.getSelectionValue() || editorRef.value.getValue(),
+      });
     }
   };
 
@@ -573,18 +583,35 @@
     showResult.value = false;
     tabList.value = [];
     debug.isDebugging = true;
-    ws.instance.send({
-      operation: 'startDebug',
-      ...commonWsParams.value,
-      sql: editorRef.value.getValue(),
-    });
+    if (route.query.type == 'anonymous') {
+      ws.instance.send({
+        operation: 'anonymousStartDebug',
+        ...commonWsParams.value,
+        sql: editorRef.value.getValue(),
+        oid: '0',
+      });
+    } else {
+      ws.instance.send({
+        operation: 'startDebug',
+        ...commonWsParams.value,
+        sql: editorRef.value.getValue(),
+      });
+    }
   };
 
   const handleStopDebug = (isToParent) => {
-    ws.instance.send({
-      operation: 'stopDebug',
-      ...commonWsParams.value,
-    });
+    if (route.query.type == 'anonymous') {
+      ws.instance.send({
+        operation: 'stopDebug',
+        ...commonWsParams.value,
+        oid: '0',
+      });
+    } else {
+      ws.instance.send({
+        operation: 'stopDebug',
+        ...commonWsParams.value,
+      });
+    }
     debug.isDebugging = false;
     TagsViewStore.closeAllChildViews(tagId);
     const rootDebugView = TagsViewStore.getViewById(tagId);
@@ -700,6 +727,18 @@
         ws.instance.send({
           operation: 'funcProcedure',
           oldWindowName: route.name == 'debugChild' ? ws.parentWindowName : undefined,
+          ...commonWsParams.value,
+        });
+      } catch (error) {
+        loading.value.close();
+      }
+    }
+
+    if (route.query.type == 'anonymous') {
+      loading.value = loadingInstance();
+      try {
+        ws.instance.send({
+          operation: 'anonymousBlock',
           ...commonWsParams.value,
         });
       } catch (error) {
