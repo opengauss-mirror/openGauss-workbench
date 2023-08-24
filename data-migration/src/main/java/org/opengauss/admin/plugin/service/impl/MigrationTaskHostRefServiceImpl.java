@@ -152,7 +152,7 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
                 OpsHostUserEntity notRoot = opsHostUserEntities.stream().filter(x -> !x.getUsername().equals("root")).findFirst().orElse(null);
                 if (notRoot != null) {
                     h.setUser(notRoot.getUsername());
-                    h.setPassword(encryptionUtils.decrypt(notRoot.getPassword()));
+                    h.setPassword(notRoot.getPassword());
                 }
             }
         });
@@ -185,14 +185,15 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
                     eachOne.setBaseInfos(ListUtil.toList(opsHosInfo));
                     eachOne.setInstallPortalStatus(PortalInstallStatus.NOT_INSTALL.getCode());
                 } else {
-                    String[] hostInfo = PortalHandle.getHostBaseInfo(installHost.getHost(), installHost.getPort(), installHost.getRunUser(), installHost.getRunPassword());
+                    String password = encryptionUtils.decrypt(installHost.getRunPassword());
+                    String[] hostInfo = PortalHandle.getHostBaseInfo(installHost.getHost(), installHost.getPort(), installHost.getRunUser(), password);
                     if (hostInfo.length == 0) {
                         return null;
                     }
                     eachOne.setBaseInfos(ListUtil.toList(hostInfo));
                     eachOne.setInstallInfo(installHost);
                     if (installHost.getInstallStatus().equals(PortalInstallStatus.INSTALLED.getCode())) {
-                        boolean isInstallPortal = PortalHandle.checkInstallPortal(installHost.getHost(), installHost.getPort(), installHost.getRunUser(), installHost.getRunPassword(), installHost.getInstallPath());
+                        boolean isInstallPortal = PortalHandle.checkInstallPortal(installHost.getHost(), installHost.getPort(), installHost.getRunUser(), password, installHost.getInstallPath());
                         eachOne.setInstallPortalStatus(isInstallPortal ? PortalInstallStatus.INSTALLED.getCode() : PortalInstallStatus.NOT_INSTALL.getCode());
                     } else {
                         eachOne.setInstallPortalStatus(installHost.getInstallStatus());
@@ -503,15 +504,13 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
             return result;
         }
 
-        String password = encryptionUtils.decrypt(hostUser.getPassword());
-
         MigrationHostPortalInstall physicalInstallParams = new MigrationHostPortalInstall();
         physicalInstallParams.setRunHostId(hostId);
         physicalInstallParams.setHost(opsHost.getPublicIp());
         physicalInstallParams.setPort(opsHost.getPort());
         physicalInstallParams.setRunUser(hostUser.getUsername());
         physicalInstallParams.setHostUserId(hostUser.getHostUserId());
-        physicalInstallParams.setRunPassword(password);
+        physicalInstallParams.setRunPassword(hostUser.getPassword());
         physicalInstallParams.setInstallPath(realInstallPath);
         physicalInstallParams.setJarName(install.getJarName());
         physicalInstallParams.setPkgName(install.getPkgName());
@@ -524,7 +523,6 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
         }
 
         syncInstallPortalHandler(physicalInstallParams);
-        migrationHostPortalInstallHostService.saveRecord(physicalInstallParams);
 
         // if reinstall path changed, clear old package
         if (isReInstall && !realInstallPath.equals(oldInstall.getInstallPath())) {
@@ -545,6 +543,7 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
                 }
                 migrationHostPortalInstallHostService.saveRecord(installParams);
                 // install portal
+                installParams.setRunPassword(encryptionUtils.decrypt(installParams.getRunPassword()));
                 isInstallSuccess = PortalHandle.installPortal(installParams);
             } catch (PortalInstallException e) {
                 String cmd = String.format("mkdir -p %s && echo '%s' >> %s", installParams.getInstallPath(), e.getMessage(), installParams.getDatakitLogPath());
@@ -562,15 +561,15 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
     @Override
     public String getPortalInstallLog(String hostId) {
         MigrationHostPortalInstall installHost = migrationHostPortalInstallHostService.getOneByHostId(hostId);
-
+        String password = encryptionUtils.decrypt(installHost.getRunPassword());
         String datakitLogPath = installHost.getDatakitLogPath();
-        String datakitContent = PortalHandle.getTaskLogs(installHost.getHost(), installHost.getPort(), installHost.getRunUser(), installHost.getRunPassword(), datakitLogPath);
+        String datakitContent = PortalHandle.getTaskLogs(installHost.getHost(), installHost.getPort(), installHost.getRunUser(), password, datakitLogPath);
         if (StringUtils.isNotBlank(datakitContent)) {
             return datakitContent;
         }
 
         String logPath = installHost.getPortalLogPath();
-        String content = PortalHandle.getTaskLogs(installHost.getHost(), installHost.getPort(), installHost.getRunUser(), installHost.getRunPassword(), logPath);
+        String content = PortalHandle.getTaskLogs(installHost.getHost(), installHost.getPort(), installHost.getRunUser(), password, logPath);
         String logContent = " ";
         if (StringUtils.isNotBlank(content)) {
             logContent = content;
@@ -704,7 +703,7 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
             return result;
         }
         try (InputStream in = multipartFile.getInputStream()) {
-            ShellUtil.uploadFile(install.getHost(), install.getPort(), install.getRunUser(), install.getRunPassword(), install.getInstallPath() + multipartFile.getOriginalFilename(), in);
+            ShellUtil.uploadFile(install.getHost(), install.getPort(), install.getRunUser(), encryptionUtils.decrypt(install.getRunPassword()), install.getInstallPath() + multipartFile.getOriginalFilename(), in);
             result.setName(multipartFile.getOriginalFilename());
             result.setRealPath(install.getInstallPath());
         } catch (Exception e) {

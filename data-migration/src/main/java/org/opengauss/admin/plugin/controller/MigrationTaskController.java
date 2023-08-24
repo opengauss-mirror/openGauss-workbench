@@ -26,6 +26,7 @@ package org.opengauss.admin.plugin.controller;
 
 import cn.hutool.core.date.DateUtil;
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.annotation.Log;
 import org.opengauss.admin.common.core.domain.AjaxResult;
@@ -42,6 +43,7 @@ import org.opengauss.admin.plugin.service.MainTaskEnvErrorHostService;
 import org.opengauss.admin.plugin.service.MigrationMainTaskService;
 import org.opengauss.admin.plugin.service.MigrationTaskService;
 import org.opengauss.admin.plugin.utils.FileUtils;
+import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
@@ -69,6 +71,10 @@ public class MigrationTaskController extends BaseController {
 
     @Autowired
     private MainTaskEnvErrorHostService mainTaskEnvErrorHostService;
+
+    @Autowired
+    @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
+    private EncryptionUtils encryptionUtils;
 
     /**
      * page list
@@ -221,7 +227,7 @@ public class MigrationTaskController extends BaseController {
     @GetMapping("/subTask/log/download/{id}")
     public void logDownload(@PathVariable Integer id, String filePath, HttpServletResponse response) throws Exception {
         MigrationTask task = migrationTaskService.getById(id);
-        String logContent = PortalHandle.getTaskLogs(task.getRunHost(), task.getRunPort(), task.getRunUser(), task.getRunPass(), filePath);
+        String logContent = PortalHandle.getTaskLogs(task.getRunHost(), task.getRunPort(), task.getRunUser(), encryptionUtils.decrypt(task.getRunPass()), filePath);
         if (StringUtils.isBlank(logContent)) {
             logContent = " ";
         }

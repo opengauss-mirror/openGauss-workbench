@@ -240,7 +240,7 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
         List<String> logPaths = new ArrayList<>();
         if (!task.getExecStatus().equals(TaskStatus.NOT_RUN.getCode())) {
             MigrationHostPortalInstall installHost = migrationHostPortalInstallHostService.getOneByHostId(task.getRunHostId());
-            logPaths = PortalHandle.getPortalLogPath(installHost.getHost(), installHost.getPort(), installHost.getRunUser(), installHost.getRunPassword(), installHost.getInstallPath(), task);
+            logPaths = PortalHandle.getPortalLogPath(installHost.getHost(), installHost.getPort(), installHost.getRunUser(), encryptionUtils.decrypt(installHost.getRunPassword()), installHost.getInstallPath(), task);
         }
         result.put("logs", logPaths);
         return result;
@@ -251,7 +251,8 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
     public Map<String, Object> getSingleTaskStatusAndProcessByProtal(MigrationTask t) {
         Map<String, Object> result = new HashMap<>();
         MigrationHostPortalInstall installHost = migrationHostPortalInstallHostService.getOneByHostId(t.getRunHostId());
-        String portalStatus = PortalHandle.getPortalStatus(installHost.getHost(), installHost.getPort(), installHost.getRunUser(), installHost.getRunPassword(), installHost.getInstallPath(), t);
+        String password = encryptionUtils.decrypt(installHost.getRunPassword());
+        String portalStatus = PortalHandle.getPortalStatus(installHost.getHost(), installHost.getPort(), installHost.getRunUser(), password, installHost.getInstallPath(), t);
         log.debug("get portal stauts content: {}, subTaskId: {}", portalStatus, t.getId());
         if (org.opengauss.admin.common.utils.StringUtils.isNotEmpty(portalStatus)) {
             List<Map<String, Object>> statusList = (List<Map<String, Object>>) JSON.parse(portalStatus);
@@ -261,21 +262,21 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
             MigrationTask update = MigrationTask.builder().id(t.getId()).build();
             migrationTaskStatusRecordService.saveTaskRecord(t.getId(), statusResultList);
             BigDecimal migrationProcess = new BigDecimal(0);
-            String portalFullProcess = PortalHandle.getPortalFullProcess(installHost.getHost(), installHost.getPort(), installHost.getRunUser(), installHost.getRunPassword(), installHost.getInstallPath(), t);
+            String portalFullProcess = PortalHandle.getPortalFullProcess(installHost.getHost(), installHost.getPort(), installHost.getRunUser(), password, installHost.getInstallPath(), t);
             log.debug("get portal full process content: {}, subTaskId: {}", portalFullProcess, t.getId());
             if (StringUtils.isNotBlank(portalFullProcess)) {
                 migrationTaskExecResultDetailService.saveOrUpdateByTaskId(t.getId(), portalFullProcess.trim(), ProcessType.FULL.getCode());
                 migrationProcess = calculateFullMigrationProgress(portalFullProcess);
             }
             result.put("fullProcess", portalFullProcess);
-            String portalDataCheckProcess = PortalHandle.getPortalDataCheckProcess(installHost.getHost(), installHost.getPort(), installHost.getRunUser(), installHost.getRunPassword(), installHost.getInstallPath(), t);
+            String portalDataCheckProcess = PortalHandle.getPortalDataCheckProcess(installHost.getHost(), installHost.getPort(), installHost.getRunUser(), password, installHost.getInstallPath(), t);
             log.debug("get portal data check process content: {}, subTaskId: {}", portalDataCheckProcess, t.getId());
             if (StringUtils.isNotBlank(portalDataCheckProcess)) {
                 migrationTaskExecResultDetailService.saveOrUpdateByTaskId(t.getId(), portalDataCheckProcess.trim(), ProcessType.DATA_CHECK.getCode());
                 result.put("dataCheckProcess", portalDataCheckProcess);
             }
             if (TaskStatus.INCREMENTAL_START.getCode().equals(state) || TaskStatus.INCREMENTAL_RUNNING.getCode().equals(state)) {
-                String portalIncrementalProcess = PortalHandle.getPortalIncrementalProcess(installHost.getHost(), installHost.getPort(), installHost.getRunUser(), installHost.getRunPassword(), installHost.getInstallPath(), t);
+                String portalIncrementalProcess = PortalHandle.getPortalIncrementalProcess(installHost.getHost(), installHost.getPort(), installHost.getRunUser(), password, installHost.getInstallPath(), t);
                 log.debug("get portal incremental process content: {}, subTaskId: {}", portalIncrementalProcess, t.getId());
                 if (StringUtils.isNotBlank(portalIncrementalProcess)) {
                     migrationTaskExecResultDetailService.saveOrUpdateByTaskId(t.getId(), portalIncrementalProcess.trim(), ProcessType.INCREMENTAL.getCode());
@@ -291,10 +292,10 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
                 }
                 result.put("incrementalProcess", portalIncrementalProcess);
             } else if (TaskStatus.INCREMENTAL_STOPPED.getCode().equals(state) || TaskStatus.INCREMENTAL_FINISHED.getCode().equals(state)) {
-                String portalIncrementalProcess = PortalHandle.getPortalIncrementalProcess(installHost.getHost(), installHost.getPort(), installHost.getRunUser(), installHost.getRunPassword(), installHost.getInstallPath(), t);
+                String portalIncrementalProcess = PortalHandle.getPortalIncrementalProcess(installHost.getHost(), installHost.getPort(), installHost.getRunUser(), password, installHost.getInstallPath(), t);
                 result.put("incrementalProcess", portalIncrementalProcess);
             } else if (TaskStatus.REVERSE_START.getCode().equals(state) || TaskStatus.REVERSE_RUNNING.getCode().equals(state)) {
-                String portaReverselProcess = PortalHandle.getPortalReverseProcess(installHost.getHost(), installHost.getPort(), installHost.getRunUser(), installHost.getRunPassword(), installHost.getInstallPath(), t);
+                String portaReverselProcess = PortalHandle.getPortalReverseProcess(installHost.getHost(), installHost.getPort(), installHost.getRunUser(), password, installHost.getInstallPath(), t);
                 log.debug("get portal reverse process content: {}, subTaskId: {}", portaReverselProcess, t.getId());
                 if (StringUtils.isNotBlank(portaReverselProcess)) {
                     migrationTaskExecResultDetailService.saveOrUpdateByTaskId(t.getId(), portaReverselProcess.trim(), ProcessType.REVERSE.getCode());
@@ -309,7 +310,7 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
                     }
                 }
                 result.put("reverseProcess", portaReverselProcess);
-                String portalIncrementalProcess = PortalHandle.getPortalIncrementalProcess(installHost.getHost(), installHost.getPort(), installHost.getRunUser(), installHost.getRunPassword(), installHost.getInstallPath(), t);
+                String portalIncrementalProcess = PortalHandle.getPortalIncrementalProcess(installHost.getHost(), installHost.getPort(), installHost.getRunUser(), password, installHost.getInstallPath(), t);
                 result.put("incrementalProcess", portalIncrementalProcess);
             }
             if (state > t.getExecStatus()) {
@@ -462,6 +463,7 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
     public void runTask(MigrationTaskHostRef h, MigrationTask t, List<MigrationTaskGlobalParam> globalParams) {
         LoginUser loginUser = SecurityUtils.getLoginUser();
         MigrationHostPortalInstall installHost = migrationHostPortalInstallHostService.getOneByHostId(h.getRunHostId());
+        installHost.setRunPassword(encryptionUtils.decrypt(installHost.getRunPassword()));
         PortalHandle.startPortal(installHost, t, installHost.getJarName(), getTaskParam(globalParams, t));
         MigrationTask update = MigrationTask.builder().id(t.getId()).runHostId(h.getRunHostId()).runHost(h.getHost()).runHostname(h.getHostName())
                 .runPort(h.getPort()).runUser(h.getUser()).runPass(h.getPassword()).execStatus(TaskStatus.FULL_START.getCode()).execTime(new Date()).build();
