@@ -637,7 +637,7 @@ CREATE OR REPLACE FUNCTION add_host_portal_install_field_func() RETURNS integer 
                AND COLUMN_NAME = ''run_password'') = 0
     THEN
         ALTER TABLE tb_migration_host_portal_install
-            ADD COLUMN run_password varchar(512) COLLATE "pg_catalog"."default";
+            ADD COLUMN run_password text COLLATE "pg_catalog"."default";
         COMMENT ON COLUMN "public"."tb_migration_host_portal_install"."run_password" IS ''用户密码'';
     END IF;
     IF

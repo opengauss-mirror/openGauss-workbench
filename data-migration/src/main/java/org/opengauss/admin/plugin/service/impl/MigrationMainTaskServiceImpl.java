@@ -454,7 +454,7 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
         LoginUser loginUser = SecurityUtils.getLoginUser();
         tasks.stream().forEach(t -> {
             MigrationHostPortalInstall installHost = migrationHostPortalInstallHostService.getOneByHostId(t.getRunHostId());
-            PortalHandle.finishPortal(t.getRunHost(), t.getRunPort(), t.getRunUser(), t.getRunPass(), installHost.getInstallPath(), installHost.getJarName(), t);
+            PortalHandle.finishPortal(t.getRunHost(), t.getRunPort(), t.getRunUser(), encryptionUtils.decrypt(t.getRunPass()), installHost.getInstallPath(), installHost.getJarName(), t);
             MigrationTask update = MigrationTask.builder().id(t.getId()).execStatus(TaskStatus.MIGRATION_FINISH.getCode()).finishTime(new Date()).build();
             migrationTaskOperateRecordService.saveRecord(t.getId(), TaskOperate.FINISH_MIGRATION, loginUser.getUsername());
             migrationTaskService.updateById(update);
@@ -470,7 +470,7 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
         }
         MigrationHostPortalInstall installHost = migrationHostPortalInstallHostService.getOneByHostId(subTask.getRunHostId());
         PortalHandle.finishPortal(subTask.getRunHost(), subTask.getRunPort(),
-                subTask.getRunUser(), subTask.getRunPass(), installHost.getInstallPath(), installHost.getJarName(), subTask);
+                subTask.getRunUser(), encryptionUtils.decrypt(subTask.getRunPass()), installHost.getInstallPath(), installHost.getJarName(), subTask);
         MigrationTask update = MigrationTask.builder().id(subTask.getId()).execStatus(TaskStatus.MIGRATION_FINISH.getCode()).finishTime(new Date()).build();
         migrationTaskService.updateById(update);
         LoginUser loginUser = SecurityUtils.getLoginUser();
@@ -490,7 +490,7 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
         }
         MigrationHostPortalInstall installHost = migrationHostPortalInstallHostService.getOneByHostId(subTask.getRunHostId());
         PortalHandle.stopIncrementalPortal(subTask.getRunHost(), subTask.getRunPort(),
-                subTask.getRunUser(), subTask.getRunPass(), installHost.getInstallPath(), installHost.getJarName(), subTask);
+                subTask.getRunUser(), encryptionUtils.decrypt(subTask.getRunPass()), installHost.getInstallPath(), installHost.getJarName(), subTask);
         MigrationTask update = MigrationTask.builder().id(subTask.getId()).execStatus(TaskStatus.INCREMENTAL_FINISHED.getCode()).execTime(new Date()).build();
         migrationTaskService.updateById(update);
         LoginUser loginUser = SecurityUtils.getLoginUser();
@@ -572,7 +572,7 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
         MigrationHostPortalInstall installHost = migrationHostPortalInstallHostService
                 .getOneByHostId(subTask.getRunHostId());
         PortalHandle.startReversePortal(subTask.getRunHost(), subTask.getRunPort(),
-                subTask.getRunUser(), subTask.getRunPass(), installHost.getInstallPath(), installHost.getJarName(), subTask);
+                subTask.getRunUser(), encryptionUtils.decrypt(subTask.getRunPass()), installHost.getInstallPath(), installHost.getJarName(), subTask);
         MigrationTask update = MigrationTask.builder().id(subTask.getId())
                 .execStatus(TaskStatus.REVERSE_START.getCode()).execTime(new Date()).build();
         migrationTaskService.updateById(update);
