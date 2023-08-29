@@ -8,11 +8,18 @@ openGauss的安装、运维场景对于初级用户或单纯想要测试openGaus
 
 ## 项目仓库结构
 ```
-├── base-ops              //基础运维插件项目
-├── datasync-mysql        //Mysql数据迁移插件项目(老版本)
-├── data-migration        //数据迁移插件项目（基于Portal）
-├── openGauss-visualtool  //平台项目
-├── openGauss-visualtool-plugin  //平台项目插件开发脚手架
+├── openGauss-datakit  //平台项目
+├── plugins
+├───├─alert-monitor         // 告警插件
+├───├─base-ops              //基础运维插件项目
+├───├─data-migration        //MySql数据迁移插件项目
+├───├─data-studio           // Web 版本DataStudio
+├───├─datakit-demo-plugin  //平台项目插件开发脚手架
+├───├─datasync-mysql        //MySql数据迁移插件项目(已弃用)
+├───├─observability-instance  //智能运维插件实例监控项目
+├───├─observability-log-search  //智能运维插件日志检索项目
+├───├─observability-sql-diagnosis  //智能运维插件慢sql诊断项目
+├───├─openGauss-tools-monitor  // openGauss 数据库监控插件
 ```
 ## 下载链接
 
@@ -23,3 +30,53 @@ https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/Datakit-
 
 2、插件开发脚手架项目是为了方便开发者快速开发与平台适配的插件，而搭建的插件开发脚手架，开发者可在此脚手架之上开发业务功能。该脚手架配置的各项依赖版本已经经过验证，和平台兼容性最好，因此建议不要修改依赖版本。
 
+## 编译代码
+1. 请提前安装java 11+, maven 3.8.0+, node v18+(含npm)，并配置好maven镜像源和node镜像源
+2. 执行`sh build.sh`
+3. 编译输出件在output/Datakit-${pom_version}.tar.gz
+
+## 使用
+1. 解压安装包，目录如下:
+   ```java
+   $ ls -l
+   total 92389
+   -rw-r--r-- 1 Administrator 197121    22173  8月 29 15:25 alert-monitor-README.md
+   -rw-r--r-- 1 Administrator 197121      977  8月 29 15:22 application-temp.yml
+   -rw-r--r-- 1 Administrator 197121     6923  8月 29 15:30 base-ops-README.md
+   -rw-r--r-- 1 Administrator 197121     1162  8月 29 15:32 datakit-demo-plugin-README.md
+   -rw-r--r-- 1 Administrator 197121     7928  8月 29 15:22 datakit-README.md
+   -rw-r--r-- 1 Administrator 197121     3839  8月 29 15:34 data-migration-README.md
+   -rw-r--r-- 1 Administrator 197121    86951  8月 29 15:36 data-studio-README.md
+   -rw-r--r-- 1 Administrator 197121       69  8月 29 15:37 datasync-mysql-README.md
+   -rw-r--r-- 1 Administrator 197121    18837  8月 29 15:41 observability-instance-README.md
+   -rw-r--r-- 1 Administrator 197121     8931  8月 29 15:44 observability-log-search-README.md
+   -rw-r--r-- 1 Administrator 197121 94425028  8月 29 15:22 openGauss-datakit-5.0.0.jar
+   drwxr-xr-x 1 Administrator 197121        0  8月 29 15:44 visualtool-plugin```
+2. 创建新的目录
+ ```shell
+mkdir config files ssl logs
+```
+3. 更改配置文件
+解压的文件中`application-temp.yml`内容需要移动到第二步的config目录下,同时需要正确编辑, /ops路径统一修改为实际路径，而第二步的目录就是为了此处统一使用的:
+   system.defaultStoragePath: /ops/files  
+   server.ssl.key-store: /ops/ssl/keystore.p12
+   logging.file.path: /ops/logs
+   还有数据库采用openGauss请正确配置连接信息.
+4. 生成密钥信息
+   ```shell
+   keytool -genkey -noprompt \
+   -dname "CN=opengauss, OU=opengauss, O=opengauss, L=Beijing, S=Beijing, C=CN"\
+   -alias opengauss\
+   -storetype PKCS12 \
+   -keyalg RSA \
+   -keysize 2048 \
+   -keystore /ops/ssl/keystore.p12 \
+   -validity 3650 \
+   -storepass 123456```
+   *注意*:这里的storepass与配置文件中的key-store-password应该保持一致。 keystore路径即为配置文件中的key-store路径
+5.启动
+nohup java -Xms2048m -Xmx4096m -jar openGauss-datakit-5.0.0.jar --spring.profiles.active=temp >datakit.out 2>&1 &
+
+## 参与开发
+插件开发请参考 openGauss-datakit/doc 目录下的开发手册
+新增插件请勿必更新build.sh脚本，保证可以一键编译
