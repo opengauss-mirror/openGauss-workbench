@@ -62,8 +62,9 @@ mysql:
   driver: com.mysql.cj.jdbc.Driver
   timeout: 3
 
-file.setting.config: config.json
-file.setting.relation: relation.json
-file.setting.task: task.json
+file:
+  dataSourceConfig: config.json
+  relationConfig: relation.json
+  taskConfig: task.json
 
 date.pattern: yyyy-MM-dd HH:mm
