@@ -117,7 +117,7 @@
                         <bootstrapClass>org.opengauss.admin.plugin.PluginApplication</bootstrapClass>
                         <version>1.0.0</version>
                         <provider>openGauss-tools-monitor</provider>
-                        <description>数据库监控插件生成工具：提供一键式将openGauss自定义的监控SQL转换为Prometheus、Zabbix、Nagios监控平台插件，内置50个openGauss通用插件，覆盖对连接数、动态内存、共享内存、TPS、QPS、长连接等常用指标监控，可快速实现对openGauss的监控部署。</description>
+                        <description>数据库监控插件生成工具：提供一键式将openGauss自定义的监控SQL转换为Prometheus、Zabbix、Nagios监控平台插件，内置50个openGauss通用指标，覆盖对连接数、动态内存、共享内存、TPS、QPS、长连接等常用指标监控，可快速实现对openGauss的监控部署。</description>
                         <configFileName>application.yml</configFileName>
                     </pluginInfo>
                     <prodConfig>
