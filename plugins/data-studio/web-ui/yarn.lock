@@ -3238,6 +3238,11 @@
   "resolved" "https://registry.npmmirror.com/wrappy/-/wrappy-1.0.2.tgz"
   "version" "1.0.2"
 
+"xe-utils@^3.5.0":
+  "integrity" "sha512-g+KntGC41vYJ+GzDngy28LIGAu3kSfhQxiprYxv1P6jP3DRVLNnTruBFD4WIVmMF2AUm1o23IMyAcQ10m2XSyQ=="
+  "resolved" "https://registry.npmjs.org/xe-utils/-/xe-utils-3.5.12.tgz"
+  "version" "3.5.12"
+
 "xml-name-validator@^4.0.0":
   "integrity" "sha512-ICP2e+jsHvAj2E2lIHxa5tjXRlKDJo4IdvPvCXbXQGdzSfmSpNVyIKMvoZHjDY9DP0zV17iI85o90vRFXNccRw=="
   "resolved" "https://registry.npmmirror.com/xml-name-validator/-/xml-name-validator-4.0.0.tgz"
