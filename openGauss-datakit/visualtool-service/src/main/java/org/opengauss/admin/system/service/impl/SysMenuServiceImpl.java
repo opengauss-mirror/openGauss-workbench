@@ -28,6 +28,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.google.common.collect.Maps;
+import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.constant.UserConstants;
 import org.opengauss.admin.common.core.domain.TreeSelect;
 import org.opengauss.admin.common.core.domain.entity.SysMenu;
@@ -57,8 +58,8 @@ import java.util.stream.Collectors;
  * @author xielibo
  */
 @Service
+@Slf4j
 public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> implements ISysMenuService {
-
     @Autowired
     private SysMenuMapper menuMapper;
 
@@ -487,8 +488,9 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
 
     /**
      * update plugin menu theme
-     * @param pluginId
-     * @param theme
+     *
+     * @param pluginId pluginId
+     * @param theme theme
      */
     @Override
     public void updatePluginMenuTheme(String pluginId, String theme) {
@@ -503,8 +505,9 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
 
     /**
      * update plugin menu icon
-     * @param pluginId
-     * @param theme
+     *
+     * @param pluginId pluginId
+     * @param icon icon
      */
     @Override
     public void updatePluginMenuIcon(String pluginId, String icon) {
@@ -516,4 +519,29 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
             this.update(menu, queryWrapper);
         }
     }
+
+    /**
+     * update plugin menu icon
+     *
+     * @param pluginId pluginId
+     * @param icon icon
+     */
+    @Override
+    public void updatePluginFatherMenuIcon(String pluginId, String icon) {
+        if (StringUtils.isNotBlank(pluginId) && StringUtils.isNotBlank(icon)) {
+            List<Integer> menuIds = menuMapper.selectParentMenuIdByPluginId(pluginId);
+            log.info("pluginId:{},menuids:{}", pluginId, menuIds);
+            if (menuIds.isEmpty()) {
+                return;
+            }
+            menuIds.forEach(menuId -> {
+                SysMenu menu = new SysMenu();
+                menu.setIcon(icon);
+                LambdaQueryWrapper<SysMenu> queryWrapper = new LambdaQueryWrapper<>();
+                queryWrapper.eq(SysMenu::getMenuId, menuId);
+                this.update(menu, queryWrapper);
+            });
+        }
+    }
+
 }

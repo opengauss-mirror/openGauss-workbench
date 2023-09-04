@@ -164,4 +164,12 @@ public interface ISysMenuService extends IService<SysMenu> {
      * @return result
      */
     public int updateDisableByPluginId(String pluginId);
+
+    /**
+     * update parent menu icon by pluginId
+     *
+     * @param pluginId pluginId
+     * @param icon icon
+     */
+    void updatePluginFatherMenuIcon(String pluginId, String icon);
 }
