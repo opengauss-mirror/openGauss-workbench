@@ -35,7 +35,6 @@ import org.opengauss.admin.system.mapper.ops.OpsEncryptionMapper;
 import org.opengauss.admin.system.service.ops.IEncryptionService;
 import org.opengauss.admin.system.service.ops.IHostUserService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.Cipher;
@@ -53,7 +52,7 @@ import java.util.Objects;
  **/
 @Slf4j
 @Component
-public class EncryptionUtils implements CommandLineRunner {
+public class EncryptionUtils {
 
     private static String gcm256algorithm = "AES/GCM/PKCS5Padding";
 
@@ -194,17 +193,27 @@ public class EncryptionUtils implements CommandLineRunner {
     }
 
     public void refreshKeyPair() {
-        log.info("refreshKeyPair");
+        this.refreshKeyPair(true);
+    }
+
+    /**
+     * 刷新公钥和私钥
+     *
+     * @param isEnforce 是否强制
+     */
+    public void refreshKeyPair(boolean isEnforce) {
         OpsEncryptionEntity opsEncryptionEntity = encryptionMapper.selectOne(null);
         if (Objects.isNull(opsEncryptionEntity)) {
             opsEncryptionEntity = new OpsEncryptionEntity();
-            log.info("key pair not found");
+            log.info("encryption key not found, generate it.");
             generateKeyPair();
             saveKeyPair(opsEncryptionEntity);
-        } else {
-            log.info("key pair found");
+        } else if (StrUtil.isEmpty(publicKey) || isEnforce) {
+            log.info("refresh encryption key.");
             publicKey = opsEncryptionEntity.getPublicKey();
             privateKey = opsEncryptionEntity.getPrivateKey();
+        } else {
+            log.info("dont refresh encryption key.");
         }
     }
 
@@ -213,10 +222,5 @@ public class EncryptionUtils implements CommandLineRunner {
         opsEncryptionEntity.setPublicKey(publicKey);
         opsEncryptionEntity.setPrivateKey(privateKey);
         encryptionService.save(opsEncryptionEntity);
-    }
-
-    @Override
-    public void run(String... args) throws Exception {
-        refreshKeyPair();
     }
 }
