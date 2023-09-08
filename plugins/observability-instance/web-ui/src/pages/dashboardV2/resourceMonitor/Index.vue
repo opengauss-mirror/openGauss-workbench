@@ -15,11 +15,13 @@
       </el-tab-pane>
       <el-tab-pane :label="$t('resourceMonitor.memoryTab')" :name="tabKeys.ResourceMonitorMemory">
         <Memory
+          @changeCluster="toChangeCluster"
           :tabId="props.tabId"
           v-if="
             tabKeyLoaded.indexOf(tabKeys.ResourceMonitorMemory) >= 0 ||
             resourceMonitorTabIndex === tabKeys.ResourceMonitorMemory
           "
+          @goto="goto"
         >
         </Memory>
       </el-tab-pane>
@@ -30,6 +32,7 @@
             tabKeyLoaded.indexOf(tabKeys.ResourceMonitorIO) >= 0 ||
             resourceMonitorTabIndex === tabKeys.ResourceMonitorIO
           "
+          @goto="goto"
         >
         </IO>
       </el-tab-pane>
@@ -40,6 +43,7 @@
             tabKeyLoaded.indexOf(tabKeys.ResourceMonitorNetwork) >= 0 ||
             resourceMonitorTabIndex === tabKeys.ResourceMonitorNetwork
           "
+          @goto="goto"
         >
         </Network>
       </el-tab-pane>
@@ -79,10 +83,12 @@ onMounted(() => {
 watch(resourceMonitorTabIndex, (v) => {
   setNowTab()
 })
-const emit = defineEmits(['goto'])
+const emit = defineEmits(['goto', 'changeCluster'])
 const goto = (key: string, param: object) => {
-  console.log('DEBUG: resourceMonitor param', param)
   emit('goto', key, param)
+}
+const toChangeCluster = (publicIp: string, port: string) => {
+  emit('changeCluster', publicIp, port)
 }
 
 // same for every page in index

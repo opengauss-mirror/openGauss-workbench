@@ -31,6 +31,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
@@ -58,8 +60,8 @@ public class DatabaseTableController {
      * @throws SQLException SQLException
      */
     @ApiOperation(value = "Table Data List")
-    @GetMapping(value = "/tableDatas", produces = MediaType.APPLICATION_JSON_VALUE)
-    public TableDataDTO tableData(TableDataQuery request) throws SQLException {
+    @PostMapping(value = "/tableDatas", produces = MediaType.APPLICATION_JSON_VALUE)
+    public TableDataDTO tableData(@RequestBody TableDataQuery request) throws SQLException {
         log.info("tableDataController request is: {}", request);
         return tableDataService.tableData(request);
     }
@@ -338,4 +340,42 @@ public class DatabaseTableController {
         return tableDataService.tableAttribute(request);
     }
 
+    /**
+     * get table analyze
+     *
+     * @param request request
+     * @throws SQLException SQLException
+     */
+    @ApiOperation(value = "Table ANALYZE")
+    @PostMapping(value = "/table/analyze", produces = MediaType.APPLICATION_JSON_VALUE)
+    public void tableAnalyze(@RequestBody TableNameDTO request) throws SQLException {
+        tableDataService.tableAnalyze(request);
+    }
+
+    /**
+     * get table attribute partition
+     *
+     * @param request request
+     * @return Map
+     * @throws SQLException SQLException
+     */
+    @ApiOperation(value = "Table ANALYZE")
+    @GetMapping(value = "/table/attribute/partition", produces = MediaType.APPLICATION_JSON_VALUE)
+    public Map<String, Object> tableAttributePartition(TableNameDTO request) throws SQLException {
+        return tableDataService.tableAttributePartition(request);
+    }
+
+    /**
+     * export table data by page
+     *
+     * @param request request
+     * @param response response
+     * @throws SQLException SQLException
+     * @throws IOException IOException
+     */
+    @PostMapping(value = "/table/exportData", produces = MediaType.APPLICATION_JSON_VALUE)
+    public void exportData(
+            @RequestBody TableDataQuery request, HttpServletResponse response) throws SQLException, IOException {
+        tableDataService.exportData(request, response);
+    }
 }

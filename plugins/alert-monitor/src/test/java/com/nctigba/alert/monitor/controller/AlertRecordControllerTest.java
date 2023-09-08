@@ -8,9 +8,12 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.nctigba.alert.monitor.dto.AlertRecordDto;
 import com.nctigba.alert.monitor.dto.AlertRelationDto;
 import com.nctigba.alert.monitor.dto.AlertStatisticsDto;
+import com.nctigba.alert.monitor.dto.LogInfoDTO;
 import com.nctigba.alert.monitor.model.AlertRecordReq;
 import com.nctigba.alert.monitor.model.AlertStatisticsReq;
 import com.nctigba.alert.monitor.service.AlertRecordService;
+import com.nctigba.alert.monitor.utils.MessageSourceUtil;
+import org.apache.poi.ss.usermodel.Workbook;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
@@ -22,13 +25,20 @@ import org.opengauss.admin.common.core.page.TableDataInfo;
 import org.opengauss.admin.common.utils.ServletUtils;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.contains;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -106,5 +116,45 @@ public class AlertRecordControllerTest {
         AjaxResult result = alertRecordController.getRelationData(1L);
         verify(alertRecordService, times(1)).getRelationData(anyLong());
         assertEquals(relationData, result.get("data"));
+    }
+
+    @Test
+    public void testGetRelationLog() {
+        LogInfoDTO logInfoDTO = new LogInfoDTO();
+        when(alertRecordService.getRelationLog(anyLong(), anyBoolean(), anyString())).thenReturn(logInfoDTO);
+        AjaxResult result = alertRecordController.getRelationLog(anyLong(), anyBoolean(), anyString());
+        verify(alertRecordService, times(1)).getRelationLog(anyLong(), anyBoolean(), anyString());
+        assertEquals(logInfoDTO, result.get("data"));
+    }
+
+    @Test
+    public void testExport() throws IOException {
+        try (MockedStatic<MessageSourceUtil> mockedStatic = mockStatic(MessageSourceUtil.class)) {
+            Workbook workbook = mock(Workbook.class);
+            when(alertRecordService.exportWorkbook(any(AlertStatisticsReq.class))).thenReturn(workbook);
+            HttpServletResponse response = mock(HttpServletResponse.class);
+            ServletOutputStream outputStream = mock(ServletOutputStream.class);
+            when(response.getOutputStream()).thenReturn(outputStream);
+            mockedStatic.when(() -> MessageSourceUtil.get("alertRecord")).thenReturn("alertRecord");
+            alertRecordController.export(new AlertStatisticsReq(), response);
+            verify(response).setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+            verify(response).setHeader(eq("Content-Disposition"), contains("alertRecord.xlsx"));
+            verify(alertRecordService).exportWorkbook(any(AlertStatisticsReq.class));
+            verify(workbook).write(outputStream);
+            verify(workbook).close();
+        }
+    }
+
+    @Test
+    public void testExportReport() throws IOException {
+        try (MockedStatic<MessageSourceUtil> mockedStatic = mockStatic(MessageSourceUtil.class)) {
+            HttpServletResponse response = mock(HttpServletResponse.class);
+            ServletOutputStream outputStream = mock(ServletOutputStream.class);
+            when(response.getOutputStream()).thenReturn(outputStream);
+            mockedStatic.when(() -> MessageSourceUtil.get("alertRecord")).thenReturn("alertRecord");
+            when(alertRecordService.exportReport(any(AlertStatisticsReq.class))).thenReturn("html");
+            alertRecordController.exportReport(new AlertStatisticsReq(), response);
+            verify(alertRecordService).exportReport(any(AlertStatisticsReq.class));
+        }
     }
 }

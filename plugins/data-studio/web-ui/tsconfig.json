@@ -17,7 +17,12 @@
     "paths": {
       "@/*": ["src/*"],
       "src": ["./src/"],
-    }
+    },
+    "types": [
+      "vite/client",
+      "element-plus/global",
+      "vite-plugin-svg-icons/client",
+    ],
   },
   "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.tsx", "src/**/*.vue"],
   "references": [{ "path": "./tsconfig.node.json" }]

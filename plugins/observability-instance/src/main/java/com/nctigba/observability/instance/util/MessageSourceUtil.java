@@ -69,7 +69,7 @@ public class MessageSourceUtil {
     }
 
     public static String getMsg(String key) {
-        return messageSource.getMessage(key, null, key, getRequestLocale());
+        return messageSource.getMessage(key, null, null, getRequestLocale());
     }
 
     public static String getMsg(String key, Object... objs) {

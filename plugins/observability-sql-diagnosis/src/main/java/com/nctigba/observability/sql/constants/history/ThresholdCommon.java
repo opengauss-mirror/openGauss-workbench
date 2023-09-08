@@ -26,5 +26,5 @@ public class ThresholdCommon {
     public static final String SQL_NUM = "sqlNum";
     public static final String INSERT =
             "insert into his_diagnosis_threshold_info(threshold_type,threshold,threshold_name,"
-                    + "threshold_value,threshold_unit,threshold_detail,sort_no) ";
+                    + "threshold_value,threshold_unit,threshold_detail,sort_no,diagnosis_type) ";
 }

@@ -11,10 +11,19 @@
         </div>
       </div>
     </template>
+    <input
+      v-if="displayButton.importFile?.show"
+      type="file"
+      id="uploadInput"
+      ref="uploadInput"
+      accept=".sql"
+      style="display: none"
+    />
   </div>
 </template>
 
 <script lang="ts" setup>
+  import { ElMessage } from 'element-plus';
   import { useI18n } from 'vue-i18n';
 
   const { t } = useI18n();
@@ -50,7 +59,11 @@
     (e: 'stepOut'): void;
     (e: 'format'): void;
     (e: 'coverageRate'): void;
+    (e: 'importFile', value: string): void;
+    (e: 'exportFile'): void;
   }>();
+
+  const uploadInput = ref<HTMLInputElement>(null);
 
   const handleCompile = () => {
     emit('compile');
@@ -96,7 +109,31 @@
   const handleCoverageRate = () => {
     emit('coverageRate');
   };
-
+  const handleImportFile = () => {
+    const uploadInputElement = uploadInput.value;
+    uploadInputElement.click();
+    uploadInputElement.onchange = (event: Event) => {
+      const target = event.target as HTMLInputElement;
+      const file = target.files[0];
+      if (file && !/\.sql$/i.test(file.name)) {
+        ElMessage.error(t('message.importSqlSuffixName'));
+        target.value = '';
+        return;
+      }
+      if (file && /\.sql$/i.test(file.name)) {
+        const reader = new FileReader();
+        reader.readAsText(file);
+        reader.onload = () => {
+          const result = reader.result as string;
+          emit('importFile', result);
+          target.value = '';
+        };
+      }
+    };
+  };
+  const handleExportFile = () => {
+    emit('exportFile');
+  };
   const displayButton = computed(() => {
     return {
       compile: {
@@ -194,6 +231,22 @@
         on: handleCoverageRate,
         icon: 'report',
         disabledIcon: 'report-disabled',
+      },
+      importFile: {
+        name: t('button.import'),
+        show: ['sql'].includes(props.type),
+        enabled: true,
+        on: handleImportFile,
+        icon: 'import',
+        disabledIcon: 'import',
+      },
+      exportFile: {
+        name: t('button.export'),
+        show: ['sql'].includes(props.type),
+        enabled: true,
+        on: handleExportFile,
+        icon: 'daochu',
+        disabledIcon: 'daochu',
       },
     };
   });

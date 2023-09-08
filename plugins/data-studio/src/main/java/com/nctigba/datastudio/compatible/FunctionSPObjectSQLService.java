@@ -5,6 +5,7 @@
 package com.nctigba.datastudio.compatible;
 
 import com.nctigba.datastudio.model.dto.DatabaseFunctionSPDTO;
+import com.nctigba.datastudio.model.query.PackageRequest;
 import com.nctigba.datastudio.util.DebugUtils;
 import org.opengauss.admin.common.exception.CustomException;
 
@@ -42,6 +43,17 @@ public interface FunctionSPObjectSQLService {
      * @throws SQLException SQLException
      */
     default String dropFunctionSP(DatabaseFunctionSPDTO request) throws SQLException {
+        throw new CustomException(DebugUtils.getMessage());
+    }
+
+    /**
+     * drop package
+     *
+     * @param request request
+     * @return String
+     * @throws SQLException SQLException
+     */
+    default String dropPackage(PackageRequest request) throws SQLException {
         throw new CustomException(DebugUtils.getMessage());
     }
 }

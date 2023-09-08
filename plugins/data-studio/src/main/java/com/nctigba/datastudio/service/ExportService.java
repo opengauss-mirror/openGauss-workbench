@@ -38,6 +38,16 @@ public interface ExportService {
     void exportTableData(ExportRequest request, HttpServletResponse response) throws SQLException, IOException;
 
     /**
+     * import table data
+     *
+     * @param request request
+     * @throws SQLException SQLException
+     * @throws IOException IOException
+     */
+    void importTableData(ExportRequest request) throws SQLException, IOException;
+
+
+    /**
      * export function ddl
      *
      * @param request request

@@ -181,13 +181,13 @@ const queryData = computed(() => {
 })
 const { data: ret, run: requestResult } = useRequest(
   () => {
-    return ogRequest.get('/sqlDiagnosis/api/v1/diagnosisTasks/' + urlParam.dbId + '/suggestions/' + nodesType.value)
+    return ogRequest.get('/historyDiagnosis/api/tasks/' + urlParam.dbId + '/points/' + nodesType.value)
   },
   { manual: true }
 )
 const { data: res, run: requestData } = useRequest(
   () => {
-    return ogRequest.get('/sqlDiagnosis/api/v1/diagnosisTasks/' + urlParam.dbId + '/suggestPoints', { all: false })
+    return ogRequest.get('/historyDiagnosis/api/tasks/' + urlParam.dbId + '/points', { all: false })
   },
   { manual: true }
 )

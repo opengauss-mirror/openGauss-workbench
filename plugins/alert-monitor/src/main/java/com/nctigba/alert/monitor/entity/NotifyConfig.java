@@ -8,6 +8,11 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
+import com.nctigba.alert.monitor.config.annotation.NotBlankConditional;
+import com.nctigba.alert.monitor.config.annotation.NotBlankSummary;
+import com.nctigba.alert.monitor.config.annotation.NotNullConditional;
+import com.nctigba.alert.monitor.config.annotation.NotNullSummary;
+import com.nctigba.alert.monitor.constant.CommonConstants;
 import lombok.Data;
 import lombok.experimental.Accessors;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -23,31 +28,36 @@ import java.time.LocalDateTime;
  */
 @Data
 @Accessors(chain = true)
+@NotNullSummary
+@NotBlankSummary
 public class NotifyConfig {
     @TableId
     @JsonSerialize(using = ToStringSerializer.class)
     private Long id;
-    @NotBlank(groups = DefaultGroup.class)
+    @NotBlank
     private String type;
-    @NotBlank(groups = EmailGroup.class)
+    @NotBlankConditional(conditionalField = "type", conditionalValues = {CommonConstants.EMAIL})
     private String email;
-    @NotBlank(groups = EmailGroup.class)
+    @NotBlankConditional(conditionalField = "type", conditionalValues = {CommonConstants.EMAIL})
     private String sender;
-    @NotBlank(groups = EmailGroup.class)
+    @NotBlankConditional(conditionalField = "type", conditionalValues = {CommonConstants.EMAIL})
     private String sever;
-    @NotNull(groups = EmailGroup.class)
+    @NotNullConditional(conditionalField = "type", conditionalValues = {CommonConstants.EMAIL})
     private Integer port;
-    @NotBlank(groups = EmailGroup.class)
+    @NotBlankConditional(conditionalField = "type", conditionalValues = {CommonConstants.EMAIL})
     private String account;
-    @NotBlank(groups = EmailGroup.class)
+    @NotBlankConditional(conditionalField = "type", conditionalValues = {CommonConstants.EMAIL})
     private String passwd;
-    @NotBlank(groups = {WeComGroup.class, DingTalkGroup.class})
+    @NotBlankConditional(conditionalField = "type",
+        conditionalValues = {CommonConstants.WE_COM, CommonConstants.DING_TALK})
     private String agentId;
-    @NotBlank(groups = {WeComGroup.class, DingTalkGroup.class})
+    @NotBlankConditional(conditionalField = "type",
+        conditionalValues = {CommonConstants.WE_COM, CommonConstants.DING_TALK})
     private String appKey;
-    @NotBlank(groups = {WeComGroup.class, DingTalkGroup.class})
+    @NotBlankConditional(conditionalField = "type",
+        conditionalValues = {CommonConstants.WE_COM, CommonConstants.DING_TALK})
     private String secret;
-    @NotNull(groups = DefaultGroup.class)
+    @NotNull
     private Integer enable;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
@@ -56,16 +66,4 @@ public class NotifyConfig {
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime updateTime;
     private Integer isDeleted;
-
-    public interface DefaultGroup {
-    }
-
-    public interface EmailGroup {
-    }
-
-    public interface WeComGroup {
-    }
-
-    public interface DingTalkGroup {
-    }
 }

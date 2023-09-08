@@ -8,7 +8,7 @@ export interface Tree {
   children?: Tree[];
   type?: string;
   isConnect?: boolean;
-  connectTime: null | number;
+  connectTime?: null | number;
   uuid?: string;
   connectInfo: ConnectInfo;
 }
@@ -16,6 +16,8 @@ export interface FetchNode {
   name: string;
   oid: string;
   parttype?: 'n' | 'y' | '';
+  isPackage?: boolean;
+  children?: FetchNode;
 }
 export interface ConnectInfo {
   name: string;
@@ -51,6 +53,7 @@ export interface NodeData {
 export interface RefreshOptions {
   connectInfo: ConnectInfo | undefined;
   rootId: string;
+  parentId: string;
   uuid: string;
   databaseId: string;
   schemaId: string;

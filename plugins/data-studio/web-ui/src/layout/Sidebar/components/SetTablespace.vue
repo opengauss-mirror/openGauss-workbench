@@ -109,7 +109,7 @@
         })
           .then(() => {
             ElMessage.success(`${t('message.editSuccess')}`);
-            EventBus.notify(EventTypeName.REFRESH_ASIDER, 'mode', {
+            EventBus.notify(EventTypeName.REFRESH_ASIDER, 'schema', {
               rootId: props.nodeData.rootId,
               databaseId: props.nodeData.databaseId,
               schemaId: props.nodeData.schemaId,

@@ -10,6 +10,7 @@ import com.nctigba.datastudio.model.dto.DatabaseCreUpdColumnDTO;
 import com.nctigba.datastudio.model.dto.DatabaseCreateTableDTO;
 import com.nctigba.datastudio.model.dto.DatabaseIndexDTO;
 import com.nctigba.datastudio.model.query.SelectDataQuery;
+import com.nctigba.datastudio.model.query.TableDataEditQuery;
 import com.nctigba.datastudio.util.DebugUtils;
 import org.opengauss.admin.common.exception.CustomException;
 
@@ -151,6 +152,46 @@ public interface TableColumnSQLService {
      * @return String
      */
     default String createTable(DatabaseCreateTableDTO request) {
+        throw new CustomException(DebugUtils.getMessage());
+    }
+
+
+    /**
+     * table data add sql
+     *
+     * @param data data
+     * @param schema schema
+     * @param tableName tableName
+     * @return List
+     */
+    default String tableDataAddSQL(
+            TableDataEditQuery.TableDataDTO data, String schema, String tableName) {
+        throw new CustomException(DebugUtils.getMessage());
+    }
+
+    /**
+     * table data drop sql
+     *
+     * @param data      data
+     * @param schema    schema
+     * @param tableName tableName
+     * @return List
+     */
+    default String tableDataDropSQL(
+            TableDataEditQuery.TableDataDTO data, String schema, String tableName) {
+        throw new CustomException(DebugUtils.getMessage());
+    }
+
+    /**
+     * table data update sql
+     *
+     * @param data data
+     * @param schema schema
+     * @param tableName tableName
+     * @return List
+     */
+    default String tableDataUpdateSQL(
+            TableDataEditQuery.TableDataDTO data, String schema, String tableName) {
         throw new CustomException(DebugUtils.getMessage());
     }
 }

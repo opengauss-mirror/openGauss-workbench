@@ -78,7 +78,7 @@ public class StartDebugImpl implements OperationInterface {
             log.info("startDebug definition: " + definition);
         }
 
-        if (!paramReq.getSql().equals(definition)) {
+        if (!DebugUtils.replaceLine(paramReq.getSql()).equals(DebugUtils.replaceLine(definition))) {
             webSocketServer.sendMessage(windowName, WINDOW, FIVE_HUNDRED,
                     LocaleString.transLanguageWs("1007", webSocketServer), null);
             return;

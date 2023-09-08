@@ -1,6 +1,7 @@
 /*
  * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
  */
+
 package com.nctigba.observability.instance.service;
 
 import java.text.MessageFormat;
@@ -10,10 +11,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletResponse;
 
-import com.nctigba.observability.instance.constants.CommonConstants;
 import org.apache.commons.lang3.StringUtils;
 import org.opengauss.admin.common.constant.ops.SshCommandConstants;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsClusterEntity;
@@ -39,16 +40,20 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType.Type;
 import com.jcraft.jsch.Session;
+import com.nctigba.observability.instance.aop.Ds;
+import com.nctigba.observability.instance.constants.CommonConstants;
 import com.nctigba.observability.instance.entity.OpsWdrEntity;
 import com.nctigba.observability.instance.entity.OpsWdrEntity.WdrScopeEnum;
 import com.nctigba.observability.instance.entity.OpsWdrEntity.WdrTypeEnum;
+import com.nctigba.observability.instance.entity.Snapshot;
 import com.nctigba.observability.instance.mapper.OpsWdrMapper;
+import com.nctigba.observability.instance.mapper.SnapshotMapper;
 import com.nctigba.observability.instance.model.WdrGeneratorBody;
-import com.nctigba.observability.instance.model.WdrSnapshotVO;
 import com.nctigba.observability.instance.service.provider.ClusterOpsProviderManager;
 import com.nctigba.observability.instance.util.JschUtil;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.StrUtil;
 import lombok.extern.slf4j.Slf4j;
 
@@ -80,8 +85,13 @@ public class OpsWdrService extends ServiceImpl<OpsWdrMapper, OpsWdrEntity> {
     @Autowired
     @AutowiredType(Type.PLUGIN_MAIN)
     protected EncryptionUtils encryptionUtils;
+    @Autowired
+    private SnapshotMapper snapshotMapper;
 
-    @SuppressWarnings({ "unchecked", "rawtypes" })
+    @SuppressWarnings({
+            "unchecked",
+            "rawtypes"
+    })
     public Page<OpsWdrEntity> listWdr(Page page, String clusterId, WdrScopeEnum wdrScope, WdrTypeEnum wdrType,
             String hostId, Date start, Date end) {
         var wrapper = Wrappers.lambdaQuery(OpsWdrEntity.class).eq(OpsWdrEntity::getClusterId, clusterId)
@@ -122,34 +132,44 @@ public class OpsWdrService extends ServiceImpl<OpsWdrMapper, OpsWdrEntity> {
         }
     }
 
-    @SuppressWarnings({ "rawtypes", "unchecked" })
-    public Page listSnapshot(Page page, String clusterId, String hostId) {
-        var connection = clusterManager.getConnectionByClusterHost(clusterId, hostId);
-        String sqlCount = "select count(*) from snapshot.snapshot";
-        try (var statement = connection.createStatement(); var rs = statement.executeQuery(sqlCount);) {
-            rs.next();
-            page.setTotal(rs.getLong(1));
-        } catch (Exception e) {
-            log.error("Query snapshot record exception", e);
+    /**
+     * findSnapshot
+     *
+     * @param id    id
+     * @param start start
+     * @param end   end
+     * @return Map
+     */
+    public Map<String, Object> findSnapshot(String id, Date start, Date end) {
+        Map<String, Object> map = new HashMap<>();
+        Long startSnapshot = snapshotMapper.getIdByTime(id, Snapshot::getStartTs, DateUtil.offsetHour(start, -1),
+                start);
+        map.put("start", startSnapshot == 0 ? null : startSnapshot);
+        Long endSnapshot = snapshotMapper.getIdByTime(id, Snapshot::getEndTs, end, DateUtil.offsetHour(end, 1));
+        map.put("end", endSnapshot == 0 ? null : endSnapshot);
+        if (startSnapshot == null || endSnapshot == null) {
+            return map;
         }
-        String sql = "select * from snapshot.snapshot";
-        var orderby = ServletUtils.getParameter("orderby");
-        if (StringUtils.isNotBlank(orderby))
-            sql += " order by " + orderby;
-        sql += " limit " + (page.getCurrent() - 1) * page.getSize() + "," + page.getSize();
-        var res = new ArrayList<>();
-        try (var statement = connection.createStatement(); var rs = statement.executeQuery(sql);) {
-            while (rs.next()) {
-                var vo = new WdrSnapshotVO();
-                vo.setSnapshotId(rs.getInt("snapshot_id"));
-                vo.setStartTs(rs.getDate("start_ts"));
-                vo.setEndTs(rs.getDate("end_ts"));
-                res.add(vo);
-            }
-        } catch (Exception e) {
-            log.error("Query snapshot record exception", e);
+        var listWdr = getBaseMapper().selectList(Wrappers.<OpsWdrEntity>lambdaQuery()
+                .eq(OpsWdrEntity::getStartSnapshotId, startSnapshot).eq(OpsWdrEntity::getEndSnapshotId, endSnapshot));
+        map.put("wdrId", listWdr.stream().map(OpsWdrEntity::getWdrId).collect(Collectors.toList()));
+        return map;
+    }
+
+    @SuppressWarnings({
+            "rawtypes",
+            "unchecked"
+    })
+    @Ds(index = 1)
+    public Page listSnapshot(Page page, String nodeId) {
+        page.setTotal(snapshotMapper.selectCount(null));
+        String last = "";
+        String orderBy = ServletUtils.getParameter("orderby");
+        if (StringUtils.isNotBlank(orderBy)) {
+            last += " order by " + orderBy;
         }
-        page.setRecords(res);
+        last += " limit " + (page.getCurrent() - 1) * page.getSize() + "," + page.getSize();
+        page.setRecords(snapshotMapper.selectList(Wrappers.<Snapshot>lambdaQuery().last(last)));
         return page;
     }
 

@@ -89,11 +89,14 @@ const props = withDefaults(
     interval?: number // yAxis interval
     tabId: string
     rangeSelect: boolean
+    legendShown: boolean
     isTooltipsFormatDate: boolean // x value is date,and format to YYYY-MM-DD HH:mm:ss
 
     unit?: string
     scatterUnit?: string
     tips?: string
+    toolTipsSort?: string // desc asc
+    toolTipsExcludeZero?: boolean
     // yAxis Scatter Data
     scatterData?: LineData
     // LineChart use areaStyle
@@ -116,6 +119,7 @@ const props = withDefaults(
     enterable?: boolean
     translate?: boolean
     countByDataTimePicker: boolean
+    xFormater?: string
   }>(),
   {
     xData: () => [],
@@ -124,6 +128,7 @@ const props = withDefaults(
     scatterUnit: '',
     areaStyle: false,
     rangeSelect: false,
+    legendShown: true,
     translate: true,
     isTooltipsFormatDate: true,
     enterable: true,
@@ -168,10 +173,12 @@ const renderChart = () => {
       areaStyle: props.areaStyle ? {} : undefined,
       ...d,
     }
-    if (props.bar) {
+    if (props.bar && d.type === undefined) {
       o.type = 'bar'
+      o['barGap'] = '0%'
+      o['barCategoryGap'] = '0%'
+      o['barWidth'] = '100%'
       o['stack'] = 'total'
-      o['barMaxWidth'] = 12
     }
     if (props.stack) {
       o['stack'] = 'total'
@@ -210,7 +217,7 @@ const renderChart = () => {
     },
     color: props.color ? props.color : colorArray,
     legend: {
-      show: true,
+      show: props.legendShown,
       type: 'scroll',
       left: 10,
       bottom: 0,
@@ -227,7 +234,7 @@ const renderChart = () => {
       left: 15,
       right: 15,
       top: props.tips ? 50 : 25,
-      bottom: 28,
+      bottom: props.legendShown ? 28 : 15,
       containLabel: true,
     },
     tooltip: {
@@ -247,19 +254,30 @@ const renderChart = () => {
           } else {
             htmlStr += '<div style="font-size:14px">' + params[0].axisValue + '</div>'
           }
-
-          for (let i = 0; i < params.length; i++) {
+          let tempParams = params.filter((item: any) => {
+            if (
+              props.toolTipsExcludeZero &&
+              (Number.isNaN(item.value) || item.value === 'NaN' || Number(item.value) === 0)
+            ) {
+              return false
+            } else {
+              return true
+            }
+          })
+          if (props.toolTipsSort === 'desc') tempParams.sort((a: any, b: any) => b.value - a.value)
+          if (props.toolTipsSort === 'asc') tempParams.sort((a: any, b: any) => a.value - b.value)
+          for (let i = 0; i < tempParams.length; i++) {
             // htmlStr += '<div ">' + params[i].marker + params[i].seriesName + ':' + params[i].value + '</div>'
             htmlStr +=
               '<div style="display: flex;flex-direction: row;align-items:center;font-size:12px">' +
               '<div style="display: inline-block; width: 14px; height: 4px;border-radius: 1px;margin-right:8px;background-color: ' +
-              params[i].color +
+              tempParams[i].color +
               ';"></div>' +
               '<div style="flex-grow:1;padding-right:12px">' +
-              params[i].seriesName +
+              tempParams[i].seriesName +
               '</div>' +
               '<div style="">' +
-              params[i].value +
+              tempParams[i].value +
               (props.unit ? props.unit : '') +
               '</div>' +
               '</div>'
@@ -304,7 +322,10 @@ const renderChart = () => {
       axisLabel: {
         color: theme.value === 'dark' ? '#FFFFFF' : '#4E5969',
         fontSize: 10,
-        formatter: (v) => moment(new Date(v)).format('HH:mm'),
+        formatter: (v) => {
+          if (props.xFormater) return moment(new Date(v)).format(props.xFormater)
+          else return moment(new Date(v)).format('HH:mm')
+        },
       },
       data: props.xData,
     },
@@ -347,6 +368,13 @@ const renderChart = () => {
         },
     series: data.length > 0 ? data : [],
   }
+
+  myChart.on('legendselectchanged', function (params: any) {
+    let selectedLegend = params.name
+
+    myEmit('legendSelected', selectedLegend)
+  })
+
   myChart.setOption(option, true)
   if (
     !props.countByDataTimePicker &&
@@ -387,9 +415,7 @@ const renderChart = () => {
   }
 }
 // lazy load
-const myEmit = defineEmits<{
-  (event: 'load'): void
-}>()
+const myEmit = defineEmits(['load', 'legendSelected'])
 const loadRef = ref<HTMLDivElement>()
 const { stop } = useIntersectionObserver(loadRef, ([{ isIntersecting }]) => {
   if (isIntersecting) {

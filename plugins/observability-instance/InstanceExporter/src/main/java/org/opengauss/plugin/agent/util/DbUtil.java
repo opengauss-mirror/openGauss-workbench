@@ -32,14 +32,13 @@ public class DbUtil {
             synchronized (this) {
                 try {
                     if (conn == null) {
-                        conn = DriverManager
-                                .getConnection(
-                                        "jdbc:opengauss://" + "localhost" + ":" + dbConfig.getDbport() + "/"
-                                                + "postgres"
-                                                + "?TimeZone=UTC&ApplicationName=DataKit Instance Monitoring Agent",
-                                        dbConfig.getDbUsername(), dbConfig.getDbPassword());
+                        conn = DriverManager.getConnection(
+                                "jdbc:opengauss://" + "localhost" + ":" + dbConfig.getDbport() + "/" + "postgres"
+                                        + "?TimeZone=UTC&ApplicationName=DataKit Instance Monitoring Agent",
+                                dbConfig.getDbUsername(), dbConfig.getDbPassword());
                     }
                 } catch (SQLException e) {
+                    log.error("db connection fail", e);
                     conn = null;
                 }
             }

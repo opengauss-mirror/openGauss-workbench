@@ -35,67 +35,72 @@ import java.util.Map;
 @Slf4j
 @EnableScheduling
 public class HisDiagnosisInit {
-    private static final String HIS_DIAGNOSIS_TASK_DB = "data/hisDiagnosisTask.db";
-    private static final String HIS_DIAGNOSIS_RESULT_DB = "data/hisDiagnosisResult.db";
-    private static final String HIS_DIAGNOSIS_THRESHOLD_DB = "data/hisDiagnosisThreshold.db";
+    private static final String HIS_DIAGNOSIS_TASK_DB = "data/newDiagnosisTask.db";
+    private static final String HIS_DIAGNOSIS_RESULT_DB = "data/newDiagnosisResult.db";
+    private static final String HIS_DIAGNOSIS_THRESHOLD_DB = "data/newDiagnosisThreshold.db";
     private static final String[] TASK_SQL = {"CREATE TABLE \"his_diagnosis_task_info\" ("
             + "id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, cluster_id TEXT,"
-            + "node_id TEXT,db_name TEXT,task_name TEXT,\"his_data_start_time\" DATETIME,"
+            + "node_id TEXT,db_name TEXT,task_name TEXT,sql_id TEXT,sql TEXT,"
+            + "pid INTEGER,debug_query_id INTEGER,session_id INTEGER,\"his_data_start_time\" DATETIME,"
             + "\"his_data_end_time\" DATETIME,\"task_start_time\" DATETIME,\"task_end_time\" DATETIME,"
-            + "state TEXT,span TEXT,remarks TEXT,conf TEXT,threshold TEXT,node_vo_sub TEXT,is_deleted INTEGER"
+            + "state TEXT,span TEXT,remarks TEXT,conf TEXT,threshold TEXT,task_type TEXT,"
+            + "diagnosis_type TEXT,node_vo_sub TEXT,is_deleted INTEGER"
             + ",create_time DATETIME,update_time DATETIME);"};
     private static final String[] RESULT_SQL = {"CREATE TABLE \"his_diagnosis_result_info\" ("
             + "id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,cluster_id TEXT,node_id TEXT,"
             + "task_id INTEGER,point_name TEXT,point_type TEXT,point_title TEXT,point_suggestion TEXT,"
-            + "is_hint TEXT,point_data TEXT,point_detail TEXT,point_state TEXT,is_deleted INTEGER,"
-            + "create_time DATETIME,update_time DATETIME);"};
+            + "is_hint TEXT,point_data TEXT,point_detail TEXT,point_state TEXT,diagnosis_type TEXT,"
+            + "is_deleted INTEGER,create_time DATETIME,update_time DATETIME);"};
     private static final String[] THRESHOLD_SQL = {
             "CREATE TABLE \"his_diagnosis_threshold_info\" ("
                     + "id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,cluster_id TEXT,node_id TEXT,"
-                    + "threshold_type TEXT,"
-                    + "threshold TEXT,threshold_name TEXT,"
+                    + "threshold_type TEXT,threshold TEXT,threshold_name TEXT,diagnosis_type TEXT,"
                     + "threshold_value TEXT,threshold_unit TEXT,threshold_detail TEXT,sort_no INTEGER,"
                     + "is_deleted INTEGER,create_time DATETIME,update_time DATETIME);",
             ThresholdCommon.INSERT
                     + "values(\"CPU\",\"cpuUsageRate\",\"" + LocaleString.format(
                     "history.threshold.cpuUsageRate.title") + "\",\"50\",\"%\",\"" + LocaleString.format(
-                    "history.threshold.cpuUsageRate.detail") + "\",\"1\");",
+                    "history.threshold.cpuUsageRate.detail") + "\",\"1\",\"history\");",
             ThresholdCommon.INSERT
                     + "values(\"CPU\",\"dbCpuUsageRate\",\"" + LocaleString.format(
                     "history.threshold.dbCpuUsageRate.title") + "\",\"50\",\"%\",\"" + LocaleString.format(
-                    "history.threshold.dbCpuUsageRate.detail") + "\",\"2\");",
+                    "history.threshold.dbCpuUsageRate.detail") + "\",\"2\",\"history\");",
             ThresholdCommon.INSERT
                     + "values(\"CPU\",\"proCpuUsageRate\",\"" + LocaleString.format(
                     "history.threshold.proCpuUsageRate.title") + "\",\"50\",\"%\",\"" + LocaleString.format(
-                    "history.threshold.proCpuUsageRate.detail") + "\",\"3\");",
+                    "history.threshold.proCpuUsageRate.detail") + "\",\"3\",\"history\");",
             ThresholdCommon.INSERT
                     + "values(\"CPU\",\"activityNum\",\"" + LocaleString.format(
                     "history.threshold.activityNum.title") + "\",\"10\",\"pcs\",\"" + LocaleString.format(
-                    "history.threshold.activityNum.detail") + "\",\"4\");",
+                    "history.threshold.activityNum.detail") + "\",\"4\",\"history\");",
             ThresholdCommon.INSERT
                     + "values(\"CPU\",\"threadPoolUsageRate\",\"" + LocaleString.format(
                     "history.threshold.threadPoolUsageRate.title") + "\",\"30\",\"%\",\"" + LocaleString.format(
-                    "history.threshold.threadPoolUsageRate.detail") + "\",\"5\");",
+                    "history.threshold.threadPoolUsageRate.detail") + "\",\"5\",\"history\");",
             ThresholdCommon.INSERT
                     + "values(\"CPU\",\"connectionNum\",\"" + LocaleString.format(
                     "history.threshold.connectionNum.title") + "\",\"10\",\"pcs\",\"" + LocaleString.format(
-                    "history.threshold.connectionNum.detail") + "\",\"6\");",
+                    "history.threshold.connectionNum.detail") + "\",\"6\",\"history\");",
             ThresholdCommon.INSERT
                     + "values(\"CPU\",\"duration\",\"" + LocaleString.format(
                     "history.threshold.duration.title") + "\",\"60\",\"s\",\"" + LocaleString.format(
-                    "history.threshold.duration.detail") + "\",\"7\");",
+                    "history.threshold.duration.detail") + "\",\"7\",\"history\");",
             ThresholdCommon.INSERT
                     + "values(\"CPU\",\"sqlNum\",\"" + LocaleString.format(
                     "history.threshold.sqlNum.title") + "\",\"1\",\"pcs\",\"" + LocaleString.format(
-                    "history.threshold.sqlNum.detail") + "\",\"8\");",
+                    "history.threshold.sqlNum.detail") + "\",\"8\",\"history\");",
             ThresholdCommon.INSERT
                     + "values(\"CPU\",\"waitEventNum\",\"" + LocaleString.format(
                     "history.threshold.waitEventNum.title") + "\",\"10\",\"pcs\",\"" + LocaleString.format(
-                    "history.threshold.waitEventNum.detail") + "\",\"9\");",
+                    "history.threshold.waitEventNum.detail") + "\",\"9\",\"history\");",
             ThresholdCommon.INSERT
                     + "values(\"IO\",\"diskUtilization\",\"" + LocaleString.format(
                     "history.threshold.diskUtilization.title") + "\",\"50\",\"%\",\"" + LocaleString.format(
-                    "history.threshold.diskUtilization.detail") + "\",\"10\");"};
+                    "history.threshold.diskUtilization.detail") + "\",\"10\",\"history\");",
+            ThresholdCommon.INSERT
+                    + "values(\"CPU\",\"sysCpu\",\"" + LocaleString.format(
+                    "sql.threshold.sysCpu.title") + "\",\"50\",\"%\",\"" + LocaleString.format(
+                    "sql.threshold.sysCpu.detail") + "\",\"1\",\"sql\");"};
     public static final String HISTORY_DIAGNOSIS_TASK = "hisDiagnosisTask";
     public static final String HISTORY_DIAGNOSIS_RESULT = "hisDiagnosisResult";
     public static final String HISTORY_DIAGNOSIS_THRESHOLD = "hisDiagnosisThreshold";

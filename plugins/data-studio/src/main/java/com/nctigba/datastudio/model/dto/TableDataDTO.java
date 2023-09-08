@@ -24,6 +24,7 @@ public class TableDataDTO {
     private Integer pageTotal;
     private Integer pageNum;
     private Integer pageSize;
+    private String sql;
 
     /**
      * set table data dto

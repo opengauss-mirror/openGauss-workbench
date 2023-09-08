@@ -6,6 +6,8 @@ package com.nctigba.alert.monitor.listener;
 
 import com.gitee.starblues.spring.MainApplicationContext;
 import com.gitee.starblues.spring.SpringBeanFactory;
+import com.nctigba.alert.monitor.schedule.TaskRegistrar;
+import com.nctigba.alert.monitor.utils.SpringContextUtils;
 import org.opengauss.admin.common.core.vo.MenuVo;
 import org.opengauss.admin.system.plugin.facade.MenuFacade;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
@@ -54,6 +56,9 @@ public class PluginListener implements ApplicationListener<ApplicationEvent> {
             if (menuFacade != null) {
                 menuFacade.deletePluginMenu(pluginId);
             }
+            // clear the schedule
+            TaskRegistrar taskRegistrar = SpringContextUtils.getBean(TaskRegistrar.class);
+            taskRegistrar.destroy();
         }
     }
 }

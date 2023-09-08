@@ -1,13 +1,23 @@
 import { createRouter, RouteRecordRaw, createWebHashHistory } from 'vue-router';
+import type { LocationQuery } from 'vue-router';
+import pinia from '@/store/index';
+import { useTagsViewStore } from '@/store/modules/tagsView';
 import Layout from '@/layout/index.vue';
 
-interface extendRoute {
-  hidden?: boolean;
+declare module 'vue-router' {
+  interface Router {
+    myPush: (to: MyRouteLocationRaw) => void;
+  }
+}
+interface MyRouteLocationRaw {
+  path: string;
+  query?: LocationQuery;
+  exParams?: LocationQuery;
 }
 
 import errorRouter from './modules/error';
 
-export const constantRoutes: Array<RouteRecordRaw & extendRoute> = [
+export const constantRoutes: Array<RouteRecordRaw> = [
   {
     path: '/',
     name: 'layout',
@@ -19,6 +29,12 @@ export const constantRoutes: Array<RouteRecordRaw & extendRoute> = [
         component: () => import('@/views/home/index.vue'),
         name: 'home',
         meta: { title: '', icon: 'home2', affix: true, role: ['other'], keepAlive: true },
+      },
+      {
+        path: '/createUserRole/:id(\\d+)?',
+        component: () => import('@/views/userRole/CreateUserRole.vue'),
+        name: 'createUserRole',
+        meta: { title: '', icon: 'user', keepAlive: true },
       },
       {
         path: '/createTable/:id(\\d+)?',
@@ -101,5 +117,13 @@ const router = createRouter({
   history: createWebHashHistory(),
   routes: constantRoutes,
 });
+
+router.myPush = (to: MyRouteLocationRaw) => {
+  const TagsViewStore = useTagsViewStore(pinia);
+  router.push({
+    path: to.path,
+    query: to.query,
+  });
+};
 
 export default router;

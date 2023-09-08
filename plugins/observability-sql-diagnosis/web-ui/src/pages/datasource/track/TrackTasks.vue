@@ -46,19 +46,19 @@
       >
         <el-table-column :label="$t('datasource.trackTable[0]')" width="160" align="center">
           <template #default="scope">
-            <span v-if="scope.row.name && scope.row.name.length > 18">
-              <el-popover width="300" trigger="hover" :content="scope.row.name" popper-class="sql-popover-tip">
+            <span v-if="scope.row.taskName && scope.row.taskName.length > 18">
+              <el-popover width="300" trigger="hover" :content="scope.row.taskName" popper-class="sql-popover-tip">
                 <template #reference>
                   <a class="table-wrapper-table-id" @click="gotoTaskDetail(scope.row.id)">{{
-                    scope.row.name.substr(0, 18) + '...'
+                    scope.row.taskName.substr(0, 18) + '...'
                   }}</a>
                 </template>
               </el-popover>
             </span>
-            <a class="table-wrapper-table-id" @click="gotoTaskDetail(scope.row.id)" v-else>{{ scope.row.name }}</a>
+            <a class="table-wrapper-table-id" @click="gotoTaskDetail(scope.row.id)" v-else>{{ scope.row.taskName }}</a>
           </template>
         </el-table-column>
-        <el-table-column prop="tasktype" :label="$t('datasource.trackTable[1]')" width="80" align="center" />
+        <el-table-column prop="taskType" :label="$t('datasource.trackTable[1]')" width="80" align="center" />
         <el-table-column label="SQL" width="300">
           <template #default="scope">
             <span v-if="scope.row.sql && scope.row.sql.length > 35">
@@ -74,24 +74,40 @@
         <el-table-column prop="state" :label="$t('datasource.trackTable[2]')" width="100" align="center" />
         <el-table-column :label="$t('datasource.trackTable[3]')" width="140" align="center">
           <template #default="scope">
-            {{ scope.row.starttime ? dayjs.utc(scope.row.starttime).local().format('YYYY-MM-DD HH:mm:ss') : '' }}
+            {{
+              scope.row.taskStartTime ? dayjs.utc(scope.row.taskStartTime).local().format('YYYY-MM-DD HH:mm:ss') : ''
+            }}
           </template>
         </el-table-column>
         <el-table-column :label="$t('datasource.trackTable[4]')" width="140" align="center">
           <template #default="scope">
-            <div>{{ scope.row.endtime ? dayjs.utc(scope.row.endtime).local().format('YYYY-MM-DD HH:mm:ss') : '' }}</div>
+            <div>
+              {{ scope.row.taskEndTime ? dayjs.utc(scope.row.taskEndTime).local().format('YYYY-MM-DD HH:mm:ss') : '' }}
+            </div>
           </template>
         </el-table-column>
         <el-table-column prop="cost" :label="$t('datasource.trackTable[5]')" width="100" />
         <el-table-column :label="$t('datasource.trackTable[6]')" width="140" align="center">
           <template #default="scope">
             <div>
-              {{ scope.row.createtime ? dayjs.utc(scope.row.createtime).local().format('YYYY-MM-DD HH:mm:ss') : '' }}
+              {{ scope.row.createTime ? dayjs.utc(scope.row.createTime).local().format('YYYY-MM-DD HH:mm:ss') : '' }}
             </div>
           </template>
         </el-table-column>
-        <el-table-column prop="clusterId" :label="$t('datasource.trackTable[7]')" width="100" align="center" />
-        <el-table-column prop="nodeId" :label="$t('datasource.trackTable[8]')" width="100" align="center" />
+        <el-table-column
+          prop="clusterId"
+          :label="$t('datasource.trackTable[7]')"
+          width="100"
+          align="center"
+          show-overflow-tooltip
+        />
+        <el-table-column
+          prop="nodeId"
+          :label="$t('datasource.trackTable[8]')"
+          width="100"
+          align="center"
+          show-overflow-tooltip
+        />
         <el-table-column :label="$t('datasource.trackTable[9]')" align="center" fixed="right" width="80">
           <template #default="scope">
             <el-link size="small" type="primary" @click="handleDelete(scope.row)">{{ $t('app.delete') }}</el-link>
@@ -185,6 +201,7 @@ const queryData = computed(() => {
     nodeId: cluster.length > 0 ? cluster[1] : null,
     sqlId: '',
     queryCount: true,
+    diagnosisType: 'sql',
   }
   return queryObj
 })
@@ -261,7 +278,7 @@ const { data: ret, run: dbData } = useRequest(
 )
 const { data: res, run: requestData } = useRequest(
   () => {
-    return ogRequest.get('/sqlDiagnosis/api/v1/diagnosisTasks', queryData.value)
+    return ogRequest.get('/historyDiagnosis/api/v1/pageQuery', queryData.value)
   },
   { manual: true }
 )
@@ -270,7 +287,7 @@ const { data: res, run: requestData } = useRequest(
 const hanleDelete = (id: string) => {
   useRequest(
     () => {
-      return ogRequest.delete(`/sqlDiagnosis/api/v1/diagnosisTasks/${id}`)
+      return ogRequest.delete(`/historyDiagnosis/api/v1/tasks/${id}`)
     },
     {
       onSuccess: (data) => {
@@ -309,10 +326,10 @@ watch(ret, (ret: any[]) => {
     dbList.value = []
   }
 })
-watch(res, (res: Res) => {
-  if (res && Object.keys(res).length) {
-    const { total } = res
-    tableData.value = res.records
+watch(res, (res: any) => {
+  if (res && res.data && Object.keys(res).length) {
+    const { total } = res.data
+    tableData.value = res.data.records
     Object.assign(page, { pageSize: page.pageSize, total })
   } else {
     tableData.value = []

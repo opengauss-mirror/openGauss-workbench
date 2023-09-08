@@ -1,51 +1,69 @@
 <!-- this component line number start with 1. -->
 <template>
   <div class="terminal" :id="id">
-    <div class="editor" :style="{ height: editorHeight }">
-      <FunctionBar
-        :type="sqlData.barType"
-        :status="sqlData.barStatus"
-        :editorReadOnly="sqlData.readOnly"
-        :isGlobalEnable="isGlobalEnable"
-        @compile="handleCompile"
-        @execute="handleExecute(false)"
-        @stopRun="handleStop"
-        @clear="handleClear"
-        @startDebug="handleStartDebug"
-        @stopDebug="handleStopDebug"
-        @continueStep="handleContinueStep"
-        @singleStep="handleSingleStep"
-        @stepIn="handleStepIn"
-        @stepOut="handleStepOut(false)"
-        @format="handleFormat"
-        @coverageRate="showCoverageRateDialog = true"
-      />
-      <div class="monaco-wrapper" ref="monacoWrapper">
-        <AceEditor
-          ref="editorRef"
-          :value="sqlData.sqlText"
-          :height="monacoHeight"
-          :readOnly="!isGlobalEnable || sqlData.readOnly"
-          :openDebug="['debug', 'debugChild'].includes(props.editorType)"
-          @addBreakPoint="(line) => handleBreakPoint(line, 'addBreakPoint')"
-          @removeBreakPoint="(line) => handleBreakPoint(line, 'deleteBreakPoint')"
-          @enableBreakPoint="(line) => handleBreakPoint(line, 'enableBreakPoint')"
-          @disableBreakPoint="(line) => handleBreakPoint(line, 'disableBreakPoint')"
-          style="width: 100%; margin-top: 4px; border: 1px solid #ddd"
-        />
-        <DebugPane
-          v-if="debug.isDebugging"
-          :stackList="debug.stackList"
-          :breakPointList="debug.breakPointList"
-          :variableList="debug.variableList"
-          :variableHighLight="debug.variableHighLight"
-          @changeBreakPoint="changeDebugPanePoint"
-        />
-      </div>
-    </div>
-    <div v-if="showResult" class="result">
-      <ResultTabs :msgData="msgData" v-model:tabList="tabList" v-model:tabValue="tabValue" />
-    </div>
+    <Splitpanes class="default-theme" horizontal :dbl-click-splitter="false">
+      <Pane>
+        <div class="editor">
+          <FunctionBar
+            :type="sqlData.barType"
+            :status="sqlData.barStatus"
+            :editorReadOnly="sqlData.readOnly"
+            :isGlobalEnable="isGlobalEnable"
+            @compile="handleCompile"
+            @execute="handleExecute(false)"
+            @stopRun="handleStop"
+            @clear="handleClear"
+            @startDebug="handleStartDebug"
+            @stopDebug="handleStopDebug"
+            @continueStep="handleContinueStep"
+            @singleStep="handleSingleStep"
+            @stepIn="handleStepIn"
+            @stepOut="handleStepOut(false)"
+            @format="handleFormat"
+            @coverageRate="showCoverageRateDialog = true"
+            @importFile="handleImportFile"
+            @exportFile="handleExportFile"
+          />
+          <div class="monaco-wrapper" ref="monacoWrapper">
+            <Splitpanes class="default-theme" :dbl-click-splitter="false">
+              <Pane>
+                <AceEditor
+                  ref="editorRef"
+                  :value="sqlData.sqlText"
+                  :height="monacoHeight"
+                  :readOnly="!isGlobalEnable || sqlData.readOnly || ws.isInPackage"
+                  :openDebug="['debug', 'debugChild'].includes(props.editorType)"
+                  @addBreakPoint="(line) => handleBreakPoint(line, 'addBreakPoint')"
+                  @removeBreakPoint="(line) => handleBreakPoint(line, 'deleteBreakPoint')"
+                  @enableBreakPoint="(line) => handleBreakPoint(line, 'enableBreakPoint')"
+                  @disableBreakPoint="(line) => handleBreakPoint(line, 'disableBreakPoint')"
+                  style="width: 100%; margin-top: 4px; border: 1px solid #ddd"
+                />
+              </Pane>
+              <Pane v-if="debug.isDebugging" min-size="30" max-size="70" size="30">
+                <DebugPane
+                  :stackList="debug.stackList"
+                  :breakPointList="debug.breakPointList"
+                  :variableList="debug.variableList"
+                  :variableHighLight="debug.variableHighLight"
+                  @changeBreakPoint="changeDebugPanePoint"
+                />
+              </Pane>
+            </Splitpanes>
+          </div>
+        </div>
+      </Pane>
+      <Pane min-size="20" max-size="70" size="35" v-if="showResult">
+        <div class="result">
+          <ResultTabs
+            :msgData="msgData"
+            v-model:tabList="tabList"
+            v-model:tabValue="tabValue"
+            :type="props.editorType == 'sql' ? 'sql' : 'debug'"
+          />
+        </div>
+      </Pane>
+    </Splitpanes>
     <EnterParamsDialog
       v-model="enterParams.showParams"
       :data="enterParams.data"
@@ -59,6 +77,11 @@
       :oid="ws.oid"
       :fileName="ws.fileName"
     />
+    <ImportFileTipsDialog
+      v-model="showImportFileTipsDialog"
+      @operation="handleImportFileComfirm"
+      @close="handleImportFileClose"
+    />
   </div>
 </template>
 
@@ -66,14 +89,22 @@
   import FunctionBar from '@/components/FunctionBar.vue';
   import AceEditor from '@/components/AceEditor.vue';
   import DebugPane from './DebugPane.vue';
-  import ResultTabs from '@/components/ResultTabs.vue';
+  import ResultTabs from './ResultTabs.vue';
   import EnterParamsDialog from './EnterParamsDialog.vue';
   import CoverageRateDialog from './CoverageRateDialog.vue';
+  import ImportFileTipsDialog from './ImportFileTipsDialog.vue';
   import { ElMessage, ElMessageBox } from 'element-plus';
   import createTemplate from './createTemplate';
   import { useRoute, useRouter } from 'vue-router';
   import WebSocketClass from '@/utils/websocket';
-  import { dateFormat, formatTableV2Data, formatTableData, loadingInstance, uuid } from '@/utils';
+  import {
+    dateFormat,
+    formatTableV2Data,
+    formatTableData,
+    loadingInstance,
+    uuid,
+    downLoadMyBlobType,
+  } from '@/utils';
   import { useAppStore } from '@/store/modules/app';
   import { useUserStore } from '@/store/modules/user';
   import { useTagsViewStore } from '@/store/modules/tagsView';
@@ -135,8 +166,7 @@
   const showResult = ref(false);
   const id = 'terminal_' + uuid();
   const monacoWrapper = ref<HTMLElement>();
-  const monacoHeight = ref('295px');
-  const editorHeight = ref<string>('100%');
+  const monacoHeight = ref('calc(100% - 4px)');
   const editorRef = ref();
   const ws = reactive({
     name: '',
@@ -153,6 +183,8 @@
     instance: null,
     parentWindowName: '',
     rootWindowName: '',
+    isPackage: false,
+    isInPackage: false,
   });
   const tagId = TagsViewStore.getViewByRoute(route)?.id;
   const commonWsParams = computed(() => {
@@ -161,6 +193,7 @@
       windowName: ws.sessionId,
       uuid: ws.uuid,
       oid: ws.oid,
+      isInPackage: ws.isInPackage,
     };
   });
   const isGlobalEnable = computed(() => {
@@ -178,26 +211,9 @@
   });
   const alreadyCloseWindow = ref(false);
   const showCoverageRateDialog = ref(false);
+  const showImportFileTipsDialog = ref(false);
+  let importFileData = '';
   const preInputParams = ref([]);
-
-  // set editor height
-  watch(
-    showResult,
-    (val) => {
-      if (!TagsViewStore.getViewByRoute(route)) return;
-      editorHeight.value = val ? '380px' : '100%';
-      setTimeout(() => {
-        let padding =
-          parseFloat(getComputedStyle(monacoWrapper.value).paddingTop) +
-          parseFloat(getComputedStyle(monacoWrapper.value).paddingBottom);
-        monacoHeight.value =
-          monacoWrapper.value.getBoundingClientRect().height - padding - 4 + 'px';
-      }, 500);
-    },
-    {
-      immediate: true,
-    },
-  );
 
   watch(
     () => AppStore.language,
@@ -271,7 +287,9 @@
   watch(
     () => debug.isDebugging,
     (value) => {
-      if (!value) {
+      if (value) {
+        AppStore.isOpenSqlAssistant = false;
+      } else {
         Object.assign(debug, {
           stackList: [],
           breakPointList: [],
@@ -333,12 +351,12 @@
           sqlData.readOnly = !result?.startRun;
         } else {
           sqlData.barStatus = result;
-          sqlData.readOnly = !result?.execute;
-          changeRunningTagStatus(tagId, !result?.execute);
+          sqlData.readOnly = result?.singleStep || result?.stopDebug;
+          changeRunningTagStatus(tagId, result?.singleStep);
         }
-        // can use 'startDebug' button = not isDebugging
+        // use 'singleStep' button = not isDebugging
         if (props.editorType == 'debug') {
-          debug.isDebugging = !(result.startDebug || result.execute);
+          debug.isDebugging = result.singleStep;
         }
       }
       if (res.type == 'MESSAGE') {
@@ -498,7 +516,7 @@
         }
       }
       if (res.type == 'OTHER') {
-        loading.value.close();
+        loading.value?.close();
       }
     } else if (res.code == '500' && res.type == 'IGNORE_WINDOW' && isSaving.value) {
       return;
@@ -533,6 +551,7 @@
       ...commonWsParams.value,
       sql: editorRef.value.getValue(),
       schema: ws.schema,
+      isPackage: ws.isPackage,
     });
     getButtonStatus();
   };
@@ -545,6 +564,7 @@
       ws.instance.send({
         operation: 'startRun',
         ...commonWsParams.value,
+        webUser: UserStore.userId,
         sql: editorRef.value.getSelectionValue() || editorRef.value.getValue(),
       });
     }
@@ -661,6 +681,28 @@
     editorRef.value.formatCode();
   };
 
+  const handleImportFile = (data: string) => {
+    if (editorRef.value.getValue().trim()) {
+      importFileData = data;
+      showImportFileTipsDialog.value = true;
+    } else {
+      editorRef.value.setValue(data);
+    }
+  };
+  const handleImportFileComfirm = (type: 'append' | 'overwrite') => {
+    if (type === 'overwrite') editorRef.value.setValue(importFileData);
+    if (type === 'append')
+      editorRef.value.setValue(`${editorRef.value.getValue()}\n${importFileData}`);
+  };
+  const handleImportFileClose = () => {
+    importFileData = '';
+  };
+
+  const handleExportFile = () => {
+    const data = editorRef.value.getValue();
+    downLoadMyBlobType(`${ws.connectionName}_${Date.now()}.sql`, data);
+  };
+
   type BreakOperation =
     | 'addBreakPoint'
     | 'deleteBreakPoint'
@@ -685,6 +727,12 @@
       isCoverage: status,
     });
   };
+
+  const loadTerminal = (txt) => {
+    const oldSql = editorRef.value.getValue();
+    editorRef.value.setValue(`${oldSql ? oldSql + '\n' : ''}${txt}`);
+  };
+  provide('loadTerminalFunc', loadTerminal);
 
   // is create? and return default tempalate
   onMounted(async () => {
@@ -712,6 +760,8 @@
       oid: route.query.oid,
       parentWindowName: route.query.parentWindowName,
       rootWindowName: route.query.rootWindowName || sessionId,
+      isPackage: route.query.isPackage === 'y',
+      isInPackage: route.query.isInPackage === 'y',
     });
     ws.instance = new WebSocketClass(ws.name, ws.sessionId, onWebSocketMessage);
 
@@ -724,11 +774,19 @@
     if (['debug', 'debugChild'].includes(route.name as string)) {
       loading.value = loadingInstance();
       try {
-        ws.instance.send({
-          operation: 'funcProcedure',
-          oldWindowName: route.name == 'debugChild' ? ws.parentWindowName : undefined,
-          ...commonWsParams.value,
-        });
+        if (ws.isPackage) {
+          ws.instance.send({
+            operation: 'showPackage',
+            ...commonWsParams.value,
+            schema: ws.schema,
+          });
+        } else {
+          ws.instance.send({
+            operation: 'funcProcedure',
+            oldWindowName: route.name == 'debugChild' ? ws.parentWindowName : undefined,
+            ...commonWsParams.value,
+          });
+        }
       } catch (error) {
         loading.value.close();
       }
@@ -771,9 +829,10 @@
   }
   .editor {
     flex-shrink: 0;
+    height: 100%;
     display: flex;
     flex-direction: column;
-    padding: 10px;
+    padding: 10px 10px 8px 0;
   }
   .monaco-wrapper {
     flex: 1;
@@ -783,7 +842,7 @@
   }
 
   .result {
-    flex: 1;
+    height: 100%;
     overflow: hidden;
   }
 </style>

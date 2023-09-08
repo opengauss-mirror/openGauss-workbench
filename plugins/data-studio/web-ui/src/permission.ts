@@ -2,6 +2,7 @@ import router from './router/index';
 import NProgress from 'nprogress';
 import 'nprogress/nprogress.css';
 import { connectListPersist } from '@/config';
+import { sidebarForage } from '@/utils/localforage';
 import pinia from '@/store/index';
 import { useAppStore } from '@/store/modules/app';
 
@@ -16,9 +17,7 @@ router.beforeEach(async (to, from, next) => {
   if (!['debugChild'].includes(to.name as string)) {
     AppStore.updateAppMounted(true);
   }
-  const isDSConnect = JSON.parse(
-    connectListPersist.storage.getItem(connectListPersist.key) || '[]',
-  );
+  const isDSConnect: any[] = (await sidebarForage.getItem(connectListPersist.key)) || [];
   if (isDSConnect.length == 0 && to.name == 'home' && to.fullPath != '/home') {
     next({ path: '/home' });
   } else {

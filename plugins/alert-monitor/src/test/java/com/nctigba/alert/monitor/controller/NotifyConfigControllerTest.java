@@ -55,11 +55,20 @@ public class NotifyConfigControllerTest {
     }
 
     @Test
-    public void testTestConfig() {
-        doNothing().when(notifyConfigService).testConfig(any(NotifyConfigReq.class));
+    public void testTestConfig1() {
+        when(notifyConfigService.testConfig(any(NotifyConfigReq.class))).thenReturn(true);
         NotifyConfigReq notifyConfigReq = new NotifyConfigReq();
         AjaxResult result = notifyConfigController.testConfig(notifyConfigReq);
         verify(notifyConfigService, times(1)).testConfig(any(NotifyConfigReq.class));
         assertEquals(AjaxResult.success(), result);
+    }
+
+    @Test
+    public void testTestConfig2() {
+        when(notifyConfigService.testConfig(any(NotifyConfigReq.class))).thenReturn(false);
+        NotifyConfigReq notifyConfigReq = new NotifyConfigReq();
+        AjaxResult result = notifyConfigController.testConfig(notifyConfigReq);
+        verify(notifyConfigService, times(1)).testConfig(any(NotifyConfigReq.class));
+        assertEquals(AjaxResult.error(), result);
     }
 }

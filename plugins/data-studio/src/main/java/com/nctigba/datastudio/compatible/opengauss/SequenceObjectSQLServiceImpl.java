@@ -69,8 +69,9 @@ public class SequenceObjectSQLServiceImpl implements SequenceObjectSQLService {
     public String splicingSequenceDDL(DatabaseCreateSequenceDTO request) {
         log.info("splicingSequenceDDL request is: " + request);
         String ddl =
-                CREATE_SQL + SEQUENCE_KEYWORD_SQL + DebugUtils.containsSqlInjection(request.getSchema()) + POINT
-                        + DebugUtils.containsSqlInjection(request.getSequenceName());
+                CREATE_SQL + SEQUENCE_KEYWORD_SQL + DebugUtils.containsSqlInjection(
+                        DebugUtils.needQuoteName(request.getSchema())) + POINT
+                        + DebugUtils.containsSqlInjection(DebugUtils.needQuoteName(request.getSequenceName()));
         if (isNumeric(request.getStart())) {
             ddl = ddl + LF + START_KEYWORD_SQL + DebugUtils.containsSqlInjection(request.getStart());
         }
@@ -92,11 +93,13 @@ public class SequenceObjectSQLServiceImpl implements SequenceObjectSQLService {
             ddl = ddl + LF + CYCLE_KEYWORD_SQL;
         }
         if (StringUtils.isNotEmpty(request.getTableName())) {
-            ddl = ddl + LF + OWNED_KEYWORD_SQL + DebugUtils.containsSqlInjection(request.getTableSchema()) + POINT
+            ddl =
+                    ddl + LF + OWNED_KEYWORD_SQL + DebugUtils.containsSqlInjection(
+                            DebugUtils.needQuoteName(request.getTableSchema())) + POINT
                     + DebugUtils.containsSqlInjection(request.getTableName());
         }
         if (StringUtils.isNotEmpty(request.getTableColumn())) {
-            ddl = ddl + POINT + DebugUtils.containsSqlInjection(request.getTableColumn());
+            ddl = ddl + POINT + DebugUtils.containsSqlInjection(DebugUtils.needQuoteName(request.getTableColumn()));
         }
         ddl = ddl + SEMICOLON;
         log.info("splicingSequenceDDL response is: " + ddl);
@@ -106,7 +109,8 @@ public class SequenceObjectSQLServiceImpl implements SequenceObjectSQLService {
     @Override
     public String dropSequenceDDL(DatabaseDropSequenceDTO request) {
         log.info("dropSequenceDDL request is: " + request);
-        String sql = String.format(DROP_SEQUENCE_SQL, request.getSchema(), request.getSequenceName());
+        String sql = String.format(DROP_SEQUENCE_SQL, DebugUtils.needQuoteName(request.getSchema()),
+                DebugUtils.needQuoteName(request.getSequenceName()));
         return sql;
     }
 
@@ -118,10 +122,10 @@ public class SequenceObjectSQLServiceImpl implements SequenceObjectSQLService {
                 Statement statement = connection.createStatement()
         ) {
             String selectSql = String.format(SELECT_SEQUENCE_DDL_SQL,
-                    request.getSchema(), request.getSequenceName());
+                    DebugUtils.needQuoteName(request.getSchema()), DebugUtils.needQuoteName(request.getSequenceName()));
             try (
                     ResultSet countResult = statement.executeQuery(String.format(SELECT_SEQUENCE_COUNT_SQL,
-                            request.getSchema(), request.getSequenceName()))
+                            DebugUtils.needQuoteName(request.getSchema()), DebugUtils.needQuoteName(request.getSequenceName())))
             ) {
                 countResult.next();
                 int count = countResult.getInt("count");

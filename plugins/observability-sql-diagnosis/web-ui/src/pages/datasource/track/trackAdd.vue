@@ -1,7 +1,13 @@
 <template>
   <div class="task-dialog">
-    <el-dialog width="800px" :title="$t('datasource.addTaTitle')" v-model="visible" :close-on-click-modal="false"
-      draggable @close="taskClose">
+    <el-dialog
+      width="800px"
+      :title="$t('datasource.addTaTitle')"
+      v-model="visible"
+      :close-on-click-modal="false"
+      draggable
+      @close="taskClose"
+    >
       <div class="dialog-content">
         <el-form :model="formData" :rules="connectionFormRules" ref="connectionFormRef" label-width="120px">
           <el-form-item :label="$t('datasource.cluterTitle')" prop="cluster" v-if="props.type === 1">
@@ -13,13 +19,28 @@
             </el-select>
           </el-form-item>
           <el-form-item :label="$t('datasource.taskName')" prop="name">
-            <el-input class="form-input" v-model="formData.name" :placeholder="$t('datasource.selectTaskName')"
-              type="text" />
+            <el-input
+              class="form-input"
+              v-model="formData.name"
+              :placeholder="$t('datasource.selectTaskName')"
+              type="text"
+            />
           </el-form-item>
           <el-form-item label="SQL" prop="sql">
-            <el-input v-if="props.sqlText" class="form-textarea" v-model="formData.sql" disabled="true" type="textarea" />
-            <el-input v-if="!props.sqlText" class="form-textarea" v-model="formData.sql"
-              :placeholder="$t('datasource.selectSql')" type="textarea" />
+            <el-input
+              v-if="props.sqlText"
+              class="form-textarea"
+              v-model="formData.sql"
+              disabled="true"
+              type="textarea"
+            />
+            <el-input
+              v-if="!props.sqlText"
+              class="form-textarea"
+              v-model="formData.sql"
+              :placeholder="$t('datasource.selectSql')"
+              type="textarea"
+            />
           </el-form-item>
           <el-form-item :label="$t('datasource.option')">
             <div class="option-wrap">
@@ -48,7 +69,8 @@
 
       <template #footer>
         <el-button style="padding: 5px 20px" :loading="addTasking" type="primary" @click="handleconfirmModel">{{
-          $t('datasource.createTask') }}</el-button>
+          $t('datasource.createTask')
+        }}</el-button>
         <el-button style="padding: 5px 20px" @click="handleCancelModel">{{ $t('app.cancel') }}</el-button>
       </template>
     </el-dialog>
@@ -57,7 +79,7 @@
 
 <script lang="ts" setup>
 import { cloneDeep } from 'lodash-es'
-import ogRequest from '../../../request'
+import ogRequest from '@/request'
 import { useRequest } from 'vue-request'
 import { FormRules, FormInstance, ElMessage } from 'element-plus'
 import { useI18n } from 'vue-i18n'
@@ -66,8 +88,8 @@ const { t } = useI18n()
 
 type Rez =
   | {
-    data: string
-  }
+      data: string
+    }
   | undefined
 
 const visible = ref(false)
@@ -117,13 +139,14 @@ const queryData = computed(() => {
     dbName: props.dbName ? props.dbName : dbName,
     clusterId,
     nodeId: instanceId,
-    name,
+    taskName: name,
     sql: props.sqlText ? parseSql(props.sqlText) : sql,
     onCpu: onCpu.length > 0,
     offCpu: offCpu.length > 0,
     paramAnalysis: paramAnalysis.length > 0,
     explainAnalysis: analyze.length > 0,
     sqlId: props.type === 2 ? props.sqlId : '',
+    diagnosisType: 'sql',
   }
   return queryObj
 })
@@ -191,16 +214,14 @@ const {
 } = useRequest(
   () => {
     const msg = t('datasource.diagnosisAddTaskSuccess')
-    return ogRequest
-      .post('/sqlDiagnosis/api/v1/diagnosisTasks', queryData.value)
-      .then(function (res) {
-        ElMessage({
-          showClose: true,
-          message: msg,
-          type: 'success',
-        })
-        return res
+    return ogRequest.post('/historyDiagnosis/api/v2/tasks', queryData.value).then(function (res) {
+      ElMessage({
+        showClose: true,
+        message: msg,
+        type: 'success',
       })
+      return res
+    })
   },
   { manual: true }
 )

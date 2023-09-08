@@ -1,6 +1,7 @@
 /*
  * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
  */
+
 package com.nctigba.observability.instance.service;
 
 import java.io.File;
@@ -16,6 +17,7 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
+import org.opengauss.admin.common.core.domain.model.ops.OpsClusterNodeVO;
 import org.opengauss.admin.common.core.domain.model.ops.WsSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ResourceLoader;
@@ -26,7 +28,6 @@ import com.nctigba.observability.instance.constants.CommonConstants;
 import com.nctigba.observability.instance.entity.NctigbaEnv;
 import com.nctigba.observability.instance.entity.NctigbaEnv.envType;
 import com.nctigba.observability.instance.service.AbstractInstaller.Step.status;
-import com.nctigba.observability.instance.service.ClusterManager.OpsClusterNodeVOSub;
 import com.nctigba.observability.instance.service.PrometheusService.prometheusConfig;
 import com.nctigba.observability.instance.service.PrometheusService.prometheusConfig.job;
 import com.nctigba.observability.instance.util.Download;
@@ -146,7 +147,8 @@ public class ExporterInstallService extends AbstractInstaller {
                         try {
                             HttpUtil.get("http://" + hostEntity.getPublicIp() + ":" + expEnv.getPort() + "/config/set",
                                     Map.of("hostId", hostId, "nodeId", nodeId, "dbport", node.getDbPort(), "username",
-                                            node.getDbUser(), "password", node.getDbUserPassword()));
+                                            node.getDbUser(), "password", node.getDbUserPassword(), "pass",
+                                            encryptionUtils.decrypt(user.getPassword()), "user", user.getUsername()));
                             break;
                         } catch (IORuntimeException e) {
                             if (i == 10)
@@ -236,7 +238,7 @@ public class ExporterInstallService extends AbstractInstaller {
         }
     }
 
-    private void uninstallExporter(WsSession wsSession, ArrayList<Step> steps, int curr, OpsClusterNodeVOSub node) {
+    private void uninstallExporter(WsSession wsSession, ArrayList<Step> steps, int curr, OpsClusterNodeVO node) {
         var exporterList = envMapper.selectList(Wrappers.<NctigbaEnv>lambdaQuery()
                 .eq(NctigbaEnv::getType, envType.EXPORTER).eq(NctigbaEnv::getHostid, node.getHostId()));
         var exporterenv = exporterList.isEmpty() ? null : exporterList.get(0);
@@ -285,7 +287,7 @@ public class ExporterInstallService extends AbstractInstaller {
     }
 
     private void uninstallNodeAndGaussExporter(WsSession wsSession, ArrayList<Step> steps, int curr,
-            OpsClusterNodeVOSub node) throws IOException {
+            OpsClusterNodeVO node) throws IOException {
         var nodeenvList = envMapper.selectList(Wrappers.<NctigbaEnv>lambdaQuery()
                 .eq(NctigbaEnv::getType, envType.NODE_EXPORTER).eq(NctigbaEnv::getHostid, node.getHostId()));
         var nodeenv = nodeenvList.isEmpty() ? null : nodeenvList.get(0);

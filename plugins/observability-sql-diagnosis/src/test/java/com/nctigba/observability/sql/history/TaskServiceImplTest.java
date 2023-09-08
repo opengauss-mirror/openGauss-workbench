@@ -4,8 +4,9 @@
 
 package com.nctigba.observability.sql.history;
 
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.nctigba.observability.sql.constants.history.DiagnosisTypeCommon;
+import com.nctigba.observability.sql.constants.history.OptionCommon;
+import com.nctigba.observability.sql.constants.history.PointTypeCommon;
 import com.nctigba.observability.sql.mapper.history.HisDiagnosisResultMapper;
 import com.nctigba.observability.sql.mapper.history.HisDiagnosisTaskMapper;
 import com.nctigba.observability.sql.mapper.history.HisThresholdMapper;
@@ -21,12 +22,14 @@ import com.nctigba.observability.sql.model.history.query.OptionQuery;
 import com.nctigba.observability.sql.model.history.result.TaskState;
 import com.nctigba.observability.sql.service.history.DataStoreService;
 import com.nctigba.observability.sql.service.history.HisDiagnosisPointService;
-import com.nctigba.observability.sql.service.history.Impl.TaskServiceImpl;
+import com.nctigba.observability.sql.service.history.impl.TaskServiceImpl;
 import com.nctigba.observability.sql.service.history.collection.CollectionItem;
 import com.nctigba.observability.sql.service.history.collection.elastic.LockTimeoutItem;
 import com.nctigba.observability.sql.service.history.collection.metric.DbAvgCpuItem;
 import com.nctigba.observability.sql.service.history.point.AspAnalysis;
 import com.nctigba.observability.sql.service.history.point.LockTimeout;
+import com.nctigba.observability.sql.service.history.point.sql.BioLatency;
+import com.nctigba.observability.sql.service.history.point.sql.BioSnoop;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -39,6 +42,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.when;
 
@@ -56,6 +60,10 @@ public class TaskServiceImplTest {
     private LockTimeoutItem lockTimeoutItem;
     @Mock
     private HisDiagnosisTaskMapper taskMapper;
+    @Mock
+    private BioLatency bioLatency;
+    @Mock
+    private BioSnoop bioSnoop;
     @Mock
     private AspAnalysis aspAnalysis;
     @Mock
@@ -97,35 +105,19 @@ public class TaskServiceImplTest {
             add(new HisThresholdDTO().setThreshold("cpuUsageRate").setThresholdValue("20"));
         }};
         hisDiagnosisTaskDTO.setThresholds(thresholds);
-        hisDiagnosisTask = new HisDiagnosisTask();
-        hisDiagnosisTask.setNodeId(nodeId);
-        hisDiagnosisTask.setHisDataStartTime(sTime);
-        hisDiagnosisTask.setHisDataEndTime(eTime);
         List<OptionQuery> config = new ArrayList<>() {{
             add(optionQuery);
         }};
-        hisDiagnosisTask.setConfigs(config);
         List<HisDiagnosisThreshold> threshold = new ArrayList<>() {{
             add(diagnosisThreshold);
         }};
-        hisDiagnosisTask.setThresholds(threshold);
+        hisDiagnosisTask = new HisDiagnosisTask(hisDiagnosisTaskDTO, config, threshold);
         hisDiagnosisTask.setSpan("50s");
+        hisDiagnosisTask.setDiagnosisType(DiagnosisTypeCommon.HISTORY);
     }
 
     @Test
     public void testAdd() throws NullPointerException {
-        pointServiceList.add(aspAnalysis);
-        pointServiceList.add(lockTimeout);
-        List<String> options = new ArrayList<>();
-        options.add("IS_LOCK");
-        when(aspAnalysis.getOption()).thenReturn(options);
-        when(lockTimeout.getOption()).thenReturn(options);
-        List<HisDiagnosisThreshold> thresholdList = new ArrayList<>();
-        HisDiagnosisThreshold threshold = new HisDiagnosisThreshold();
-        threshold.setThreshold("cpuUsageRate");
-        threshold.setThresholdValue("50");
-        thresholdList.add(threshold);
-        when(hisThresholdMapper.selectList(Wrappers.emptyWrapper())).thenReturn(thresholdList);
         Integer result = taskService.add(hisDiagnosisTaskDTO);
         assertNull(result);
     }
@@ -141,8 +133,8 @@ public class TaskServiceImplTest {
         pointServiceList.add(aspAnalysis);
         pointServiceList.add(lockTimeout);
         when(taskMapper.selectById(taskId)).thenReturn(hisDiagnosisTask);
-        when(aspAnalysis.getDiagnosisType()).thenReturn(DiagnosisTypeCommon.HISTORY);
-        when(lockTimeout.getDiagnosisType()).thenReturn(DiagnosisTypeCommon.HISTORY);
+        when(aspAnalysis.getDiagnosisType()).thenReturn(PointTypeCommon.HISTORY);
+        when(lockTimeout.getDiagnosisType()).thenReturn(PointTypeCommon.HISTORY);
         List<CollectionItem<?>> items = new ArrayList<>();
         items.add(dbAvgCpuItem);
         items.add(lockTimeoutItem);
@@ -151,12 +143,9 @@ public class TaskServiceImplTest {
         hisDiagnosisTask.addRemarks("test");
         hisDiagnosisTask.addRemarks("RUNNING", new Throwable());
         hisDiagnosisTask.addRemarks(TaskState.WAITING);
-        hisDiagnosisTask.addRemarks(TaskState.DATA, new Throwable());
+        hisDiagnosisTask.addRemarks(TaskState.RECEIVING, new Throwable());
         hisDiagnosisTask.addRemarks(TaskState.FINISH);
-        when(dbAvgCpuItem.queryData(hisDiagnosisTask)).thenReturn(null);
-        when(lockTimeoutItem.queryData(hisDiagnosisTask)).thenReturn(null);
-        HisDiagnosisTaskDTO taskDTO = hisDiagnosisTaskDTO;
-        taskService.start(taskId, taskDTO);
+        taskService.start(taskId);
     }
 
     @Test
@@ -169,19 +158,16 @@ public class TaskServiceImplTest {
         pointServiceList.add(aspAnalysis);
         pointServiceList.add(lockTimeout);
         when(taskMapper.selectById(taskId)).thenReturn(hisDiagnosisTask);
-        when(aspAnalysis.getDiagnosisType()).thenReturn(DiagnosisTypeCommon.HISTORY);
-        when(lockTimeout.getDiagnosisType()).thenReturn(DiagnosisTypeCommon.HISTORY);
+        when(aspAnalysis.getDiagnosisType()).thenReturn(PointTypeCommon.HISTORY);
+        when(lockTimeout.getDiagnosisType()).thenReturn(PointTypeCommon.HISTORY);
         List<CollectionItem<?>> items = new ArrayList<>();
         items.add(lockTimeoutItem);
         when(aspAnalysis.getSourceDataKeys()).thenReturn(null);
         when(lockTimeout.getSourceDataKeys()).thenReturn(items);
-        when(lockTimeoutItem.queryData(hisDiagnosisTask)).thenReturn("true");
         AnalysisDTO analysisDTO = new AnalysisDTO();
         analysisDTO.setIsHint(HisDiagnosisResult.ResultState.NO_ADVICE);
         analysisDTO.setPointType(HisDiagnosisResult.PointType.DIAGNOSIS);
-        when(aspAnalysis.analysis(hisDiagnosisTask, dataStoreService)).thenReturn(analysisDTO);
-        HisDiagnosisTaskDTO taskDTO = hisDiagnosisTaskDTO;
-        taskService.start(taskId, taskDTO);
+        taskService.start(taskId);
     }
 
     @Test
@@ -194,17 +180,14 @@ public class TaskServiceImplTest {
         pointServiceList.add(aspAnalysis);
         pointServiceList.add(lockTimeout);
         when(taskMapper.selectById(taskId)).thenReturn(hisDiagnosisTask);
-        when(aspAnalysis.getDiagnosisType()).thenReturn(DiagnosisTypeCommon.CURRENT);
-        when(lockTimeout.getDiagnosisType()).thenReturn(DiagnosisTypeCommon.HISTORY);
+        when(aspAnalysis.getDiagnosisType()).thenReturn(PointTypeCommon.CURRENT);
+        when(lockTimeout.getDiagnosisType()).thenReturn(PointTypeCommon.HISTORY);
         List<CollectionItem<?>> items = new ArrayList<>();
         items.add(dbAvgCpuItem);
         items.add(lockTimeoutItem);
         when(aspAnalysis.getSourceDataKeys()).thenReturn(items);
         when(lockTimeout.getSourceDataKeys()).thenReturn(items);
-        when(dbAvgCpuItem.queryData(hisDiagnosisTask)).thenReturn("error");
-        when(lockTimeoutItem.queryData(hisDiagnosisTask)).thenReturn(null);
-        HisDiagnosisTaskDTO taskDTO = hisDiagnosisTaskDTO;
-        taskService.start(taskId, taskDTO);
+        taskService.start(taskId);
     }
 
     @Test
@@ -213,8 +196,8 @@ public class TaskServiceImplTest {
         pointServiceList.add(aspAnalysis);
         pointServiceList.add(lockTimeout);
         when(taskMapper.selectById(taskId)).thenReturn(hisDiagnosisTask);
-        when(aspAnalysis.getDiagnosisType()).thenReturn(DiagnosisTypeCommon.CURRENT);
-        when(lockTimeout.getDiagnosisType()).thenReturn(DiagnosisTypeCommon.HISTORY);
+        when(aspAnalysis.getDiagnosisType()).thenReturn(PointTypeCommon.CURRENT);
+        when(lockTimeout.getDiagnosisType()).thenReturn(PointTypeCommon.HISTORY);
         List<CollectionItem<?>> items = new ArrayList<>();
         items.add(dbAvgCpuItem);
         items.add(lockTimeoutItem);
@@ -222,7 +205,20 @@ public class TaskServiceImplTest {
         when(lockTimeout.getSourceDataKeys()).thenReturn(items);
         when(dbAvgCpuItem.queryData(hisDiagnosisTask)).thenReturn("error");
         when(lockTimeoutItem.queryData(hisDiagnosisTask)).thenReturn(new LogInfoDTO());
-        HisDiagnosisTaskDTO taskDTO = hisDiagnosisTaskDTO;
-        taskService.start(taskId, taskDTO);
+        taskService.start(taskId);
+    }
+
+    @Test
+    public void testGetOption() throws NullPointerException {
+        pointServiceList.add(aspAnalysis);
+        pointServiceList.add(lockTimeout);
+        pointServiceList.add(bioLatency);
+        pointServiceList.add(bioSnoop);
+        List<String> option = new ArrayList<>();
+        option.add(String.valueOf(OptionCommon.IS_BCC));
+        when(bioLatency.getOption()).thenReturn(option);
+        String diagnosisType = "sql";
+        List<OptionQuery> optionList = taskService.getOption(diagnosisType);
+        assertNotNull(optionList);
     }
 }

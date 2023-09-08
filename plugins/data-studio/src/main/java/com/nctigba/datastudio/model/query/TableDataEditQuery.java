@@ -9,10 +9,7 @@ import lombok.Generated;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.List;
-import java.util.Map;
 
 /**
  * TableDataEditQuery
@@ -24,44 +21,25 @@ import java.util.Map;
 @Generated
 @Slf4j
 public class TableDataEditQuery {
+    private String uuid;
     private String winId;
+    private String schema;
+    private String tableName;
     private List<TableDataDTO> data;
 
     @Data
-@Generated
+    @Generated
     public static class TableDataDTO {
-        private Map<String, Object> columnData;
-        private Integer rowNum;
-        private type type;
-
-        public enum type {
-            INSERT {
-                public void rs(ResultSet resultSet, TableDataDTO request) throws SQLException {
-                    log.info("TableDataDTO request is: " + request);
-                    resultSet.moveToInsertRow();
-                    for (Map.Entry<String, Object> map : request.columnData.entrySet()) {
-                        resultSet.updateObject(map.getKey(), map.getValue());
-                    }
-                    resultSet.insertRow();
-                }
-            }, DELETE {
-                public void rs(ResultSet resultSet, TableDataDTO request) throws SQLException {
-                    log.info("TableDataDTO request is: " + request);
-                    resultSet.absolute(request.getRowNum());
-                    resultSet.deleteRow();
-                }
-            }, UPDATE {
-                public void rs(ResultSet resultSet, TableDataDTO request) throws SQLException {
-                    log.info("TableDataDTO request is: " + request);
-                    resultSet.absolute(request.getRowNum());
-                    for (Map.Entry<String, Object> map : request.columnData.entrySet()) {
-                        resultSet.updateObject(map.getKey(), map.getValue());
-                    }
-                    resultSet.updateRow();
-                }
-            };
-
-            public abstract void rs(ResultSet resultSet, TableDataDTO request) throws SQLException;
-        }
+        private List<TableDataDTOColumn> line;
+        private String operationType;
+    }
+    @Data
+    @Generated
+    public static class TableDataDTOColumn {
+        private String columnData;
+        private String oldColumnData;
+        private String columnName;
+        private String typeName;
+        private int typeNum;
     }
 }

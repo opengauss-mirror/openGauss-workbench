@@ -1,6 +1,7 @@
 /*
  * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
  */
+
 package com.nctigba.observability.instance.controller;
 
 import java.beans.PropertyEditorSupport;
@@ -31,6 +32,7 @@ import com.nctigba.observability.instance.entity.OpsWdrEntity;
 import com.nctigba.observability.instance.entity.OpsWdrEntity.WdrScopeEnum;
 import com.nctigba.observability.instance.entity.OpsWdrEntity.WdrTypeEnum;
 import com.nctigba.observability.instance.model.WdrGeneratorBody;
+import com.nctigba.observability.instance.service.ClusterManager;
 import com.nctigba.observability.instance.service.OpsWdrService;
 
 /**
@@ -40,69 +42,72 @@ import com.nctigba.observability.instance.service.OpsWdrService;
 @RestController
 @RequestMapping("/wdr")
 public class WdrController {
-	@InitBinder
-	public void initBinder(WebDataBinder binder) {
-		// Date format
-		binder.registerCustomEditor(Date.class, new PropertyEditorSupport() {
-			@Override
-			public void setAsText(String text) {
-				setValue(DateUtils.parseDate(text));
-			}
-		});
-	}
+    @Autowired
+    private ClusterManager clusterManager;
 
-	@Autowired
-	private OpsWdrService wdrService;
+    @InitBinder
+    public void initBinder(WebDataBinder binder) {
+        // Date format
+        binder.registerCustomEditor(Date.class, new PropertyEditorSupport() {
+            @Override
+            public void setAsText(String text) {
+                setValue(DateUtils.parseDate(text));
+            }
+        });
+    }
 
-	@GetMapping("/listSnapshot")
-	public Page<?> listSnapshot(@RequestParam String clusterId, @RequestParam String hostId) {
-		return wdrService.listSnapshot(startPage(), clusterId, hostId);
-	}
+    @Autowired
+    private OpsWdrService wdrService;
 
-	@GetMapping("/createSnapshot")
-	public AjaxResult createSnapshot(@RequestParam String clusterId, @RequestParam String hostId) {
-		wdrService.createSnapshot(clusterId, hostId);
-		return AjaxResult.success();
-	}
+    @GetMapping("/listSnapshot")
+    public Page<?> listSnapshot(@RequestParam String clusterId, @RequestParam String hostId) {
+        return wdrService.listSnapshot(startPage(), clusterManager.getNodeIdByCluster(clusterId, hostId));
+    }
 
-	@GetMapping("/list")
-	public Page<OpsWdrEntity> list(@RequestParam String clusterId,
-			@RequestParam(required = false, value = "wdrScope") WdrScopeEnum wdrScope,
-			@RequestParam(required = false, value = "wdrType") WdrTypeEnum wdrType,
-			@RequestParam(required = false, value = "hostId") String hostId,
-			@RequestParam(required = false, value = "start") @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date start,
-			@RequestParam(required = false, value = "end") @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date end) {
-		return wdrService.listWdr(startPage(), clusterId, wdrScope, wdrType, hostId, start, end);
-	}
+    @GetMapping("/createSnapshot")
+    public AjaxResult createSnapshot(@RequestParam String clusterId, @RequestParam String hostId) {
+        wdrService.createSnapshot(clusterId, hostId);
+        return AjaxResult.success();
+    }
 
-	@DeleteMapping("/del/{id}")
-	public AjaxResult del(@PathVariable("id") String id) {
-		wdrService.del(id);
-		return AjaxResult.success();
-	}
+    @GetMapping("/list")
+    public Page<OpsWdrEntity> list(@RequestParam String clusterId,
+            @RequestParam(required = false, name = "wdrScope") WdrScopeEnum wdrScope,
+            @RequestParam(required = false, name = "wdrType") WdrTypeEnum wdrType,
+            @RequestParam(required = false, name = "hostId") String hostId,
+            @RequestParam(required = false, name = "start") @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date start,
+            @RequestParam(required = false, name = "end") @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date end) {
+        return wdrService.listWdr(startPage(), clusterId, wdrScope, wdrType, hostId, start, end);
+    }
 
-	@PostMapping("/generate")
-	public AjaxResult generate(@RequestBody @Validated WdrGeneratorBody wdrGeneratorBody) {
-		wdrService.generate(wdrGeneratorBody);
-		return AjaxResult.success();
-	}
+    @DeleteMapping("/del/{id}")
+    public AjaxResult del(@PathVariable("id") String id) {
+        wdrService.del(id);
+        return AjaxResult.success();
+    }
 
-	@GetMapping("/downloadWdr")
-	public void downloadWdr(@RequestParam String wdrId, HttpServletResponse response) {
-		wdrService.downloadWdr(wdrId, response);
-	}
+    @PostMapping("/generate")
+    public AjaxResult generate(@RequestBody @Validated WdrGeneratorBody wdrGeneratorBody) {
+        wdrService.generate(wdrGeneratorBody);
+        return AjaxResult.success();
+    }
 
-	@SuppressWarnings("rawtypes")
-	protected Page startPage() {
-		Page page = new Page();
-		Integer pageNum = ServletUtils.getParameterToInt("pageNum");
-		Integer pageSize = ServletUtils.getParameterToInt("pageSize");
-		if (StringUtils.isNotNull(pageNum) && StringUtils.isNotNull(pageSize)) {
-			page.setCurrent((long) pageNum);
-			page.setSize((long) pageSize);
-			page.setOptimizeCountSql(false);
-			page.setMaxLimit(500L);
-		}
-		return page;
-	}
+    @GetMapping("/downloadWdr")
+    public void downloadWdr(@RequestParam String wdrId, HttpServletResponse response) {
+        wdrService.downloadWdr(wdrId, response);
+    }
+
+    @SuppressWarnings("rawtypes")
+    protected Page startPage() {
+        Page page = new Page();
+        Integer pageNum = ServletUtils.getParameterToInt("pageNum");
+        Integer pageSize = ServletUtils.getParameterToInt("pageSize");
+        if (StringUtils.isNotNull(pageNum) && StringUtils.isNotNull(pageSize)) {
+            page.setCurrent(pageNum);
+            page.setSize(pageSize);
+            page.setOptimizeCountSql(false);
+            page.setMaxLimit(500L);
+        }
+        return page;
+    }
 }

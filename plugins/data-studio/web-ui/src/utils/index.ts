@@ -245,7 +245,7 @@ export function debounce(func, wait, immediate) {
     if (!timeout) timeout = setTimeout(later, wait);
     if (callNow) {
       result = func.apply(that, args);
-      that  = null;
+      that = null;
     }
 
     return result;
@@ -556,7 +556,7 @@ export const formatTableV2Data = (
       title: config.indexName || '',
       key: 'index',
       width: 50,
-      cellRenderer: ({ rowIndex }) => `${rowIndex + 1}`,
+      cellRenderer: ({ rowIndex }) => `${rowIndex + 1}` as unknown as VNode,
     });
   }
   return {
@@ -796,4 +796,13 @@ export const downLoadMyBlobType = async (fileName: string, data: any): Promise<v
   tag.download = fileName;
   tag.click();
   URL.revokeObjectURL(tag.href);
+};
+
+export const copyToClickBoard = (text: string) => {
+  const el = document.createElement('input');
+  el.setAttribute('value', text);
+  document.body.appendChild(el);
+  el.select();
+  document.execCommand('copy');
+  document.body.removeChild(el);
 };

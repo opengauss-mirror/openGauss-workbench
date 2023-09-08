@@ -6,7 +6,7 @@ package com.nctigba.observability.sql.history.point;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.nctigba.observability.sql.constants.history.DiagnosisTypeCommon;
+import com.nctigba.observability.sql.constants.history.PointTypeCommon;
 import com.nctigba.observability.sql.constants.history.OptionCommon;
 import com.nctigba.observability.sql.constants.history.ThresholdCommon;
 import com.nctigba.observability.sql.model.history.DataStoreConfig;
@@ -95,7 +95,7 @@ public class TestCurrentSlowSql {
     @Test
     public void testGetDiagnosisType() {
         String type = currentSlowSql.getDiagnosisType();
-        Assertions.assertEquals(DiagnosisTypeCommon.CURRENT, type);
+        Assertions.assertEquals(PointTypeCommon.CURRENT, type);
     }
 
     @Test

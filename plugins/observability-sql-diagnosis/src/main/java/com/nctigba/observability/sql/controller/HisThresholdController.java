@@ -26,25 +26,25 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @Slf4j
 @RestController
-@RequestMapping("/historyDiagnosis/api/v1/thresholds")
+@RequestMapping("/historyDiagnosis/api")
 @RequiredArgsConstructor
 public class HisThresholdController {
     private final HisThresholdService hisThresholdService;
     private final LocaleString localeToString;
 
-    @GetMapping("")
-    public AjaxResult select() {
-        var thresholds = localeToString.trapLanguage(hisThresholdService.select());
+    @GetMapping("/v2/thresholds")
+    public AjaxResult select(String diagnosisType) {
+        var thresholds = localeToString.trapLanguage(hisThresholdService.select(diagnosisType));
         return AjaxResult.success(thresholds);
     }
 
-    @PostMapping("")
+    @PostMapping("/v1")
     public AjaxResult insertOrUpdate(@RequestBody HisThresholdQuery hisThresholdQuery) {
         hisThresholdService.insertOrUpdate(hisThresholdQuery);
         return AjaxResult.success("success");
     }
 
-    @DeleteMapping("/{thresholdId}")
+    @DeleteMapping("/v1/{thresholdId}")
     public AjaxResult delete(@PathVariable int thresholdId) {
         hisThresholdService.delete(thresholdId);
         return AjaxResult.success("success");

@@ -19,8 +19,13 @@ import java.util.List;
 public class HisDiagnosisTaskDTO {
     private String clusterId;
     private String nodeId;
+    private String taskName;
+    private String dbName;
+    private String sqlId;
+    private String sql;
     private Date hisDataStartTime;
     private Date hisDataEndTime;
     List<OptionDTO> configs;
     List<HisThresholdDTO> thresholds;
+    private String diagnosisType;
 }

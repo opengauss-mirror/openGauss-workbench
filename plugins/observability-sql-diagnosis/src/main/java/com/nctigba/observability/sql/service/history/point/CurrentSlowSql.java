@@ -5,7 +5,7 @@
 package com.nctigba.observability.sql.service.history.point;
 
 import com.nctigba.common.web.exception.HisDiagnosisException;
-import com.nctigba.observability.sql.constants.history.DiagnosisTypeCommon;
+import com.nctigba.observability.sql.constants.history.PointTypeCommon;
 import com.nctigba.observability.sql.constants.history.ThresholdCommon;
 import com.nctigba.observability.sql.model.history.HisDiagnosisResult;
 import com.nctigba.observability.sql.model.history.HisDiagnosisTask;
@@ -50,7 +50,7 @@ public class CurrentSlowSql implements HisDiagnosisPointService<Object> {
 
     @Override
     public String getDiagnosisType() {
-        return DiagnosisTypeCommon.CURRENT;
+        return PointTypeCommon.CURRENT;
     }
 
     @Override

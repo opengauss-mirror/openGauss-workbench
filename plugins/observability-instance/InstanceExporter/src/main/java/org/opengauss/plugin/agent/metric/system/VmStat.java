@@ -1,6 +1,7 @@
 /*
  * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
  */
+
 package org.opengauss.plugin.agent.metric.system;
 
 import java.io.FileNotFoundException;
@@ -38,12 +39,13 @@ public class VmStat implements OSmetric {
             "us",
             "sy",
             "wa",
-            "st" };
+            "st"
+    };
 
     @Override
     public Map<String, Metric> getMetric(Integer dbPort) throws FileNotFoundException, IOException {
         Map<String, Metric> map = new HashMap<>();
-        CmdUtil.readFromCmd(CmdUtil.cmd("vmstat"), (index, line) -> {
+        CmdUtil.readFromCmd("vmstat", (index, line) -> {
             if (index < 2)
                 return;
             var part = StringUtil.splitByBlank(line);

@@ -10,8 +10,6 @@ import com.nctigba.datastudio.model.PublicParamReq;
 import com.nctigba.datastudio.service.OperationInterface;
 import com.nctigba.datastudio.util.DebugUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -29,7 +27,6 @@ import java.util.Set;
 import static com.nctigba.datastudio.constants.CommonConstants.CAN_BREAK;
 import static com.nctigba.datastudio.constants.CommonConstants.CONNECTION;
 import static com.nctigba.datastudio.constants.CommonConstants.DIFFER;
-import static com.nctigba.datastudio.constants.CommonConstants.FUNC_OID;
 import static com.nctigba.datastudio.constants.CommonConstants.LINE_NO;
 import static com.nctigba.datastudio.constants.CommonConstants.NODE_NAME;
 import static com.nctigba.datastudio.constants.CommonConstants.PORT;
@@ -39,7 +36,6 @@ import static com.nctigba.datastudio.constants.SqlConstants.ATTACH_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.COMMA;
 import static com.nctigba.datastudio.constants.SqlConstants.CONTINUE_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.CREATE_COVERAGE_SQL;
-import static com.nctigba.datastudio.constants.SqlConstants.DEBUG_SERVER_INFO_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.INFO_CODE_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.INSERT_COVERAGE_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.NEXT_SQL;
@@ -66,49 +62,37 @@ public class CreateCoverageRateImpl implements OperationInterface {
         webSocketServer.setStatement(windowName, statement);
 
         String oid = paramReq.getOid();
-        String nodeName = Strings.EMPTY;
-        String port = Strings.EMPTY;
+        String nodeName = DebugUtils.changeParamType(webSocketServer, windowName, NODE_NAME);
+        String port = DebugUtils.changeParamType(webSocketServer, windowName, PORT);
+
         try (
-                ResultSet serverInfo = statement.executeQuery(DEBUG_SERVER_INFO_SQL)
+                ResultSet turnNoResult = statement.executeQuery(String.format(TURN_ON_SQL, oid))
         ) {
-            while (serverInfo.next()) {
-                String oldOid = serverInfo.getString(FUNC_OID);
-                if (oldOid.equals(oid)) {
-                    nodeName = serverInfo.getString(NODE_NAME);
-                    port = serverInfo.getString(PORT);
-                }
+            while (turnNoResult.next()) {
+                nodeName = turnNoResult.getString(NODE_NAME);
+                port = turnNoResult.getString(PORT);
+                log.info("inputParam nodeName and port is: " + nodeName + "---" + port);
             }
-            log.info("createCoverage nodeName and port is: " + nodeName + "---" + port);
-        }
+        } catch (SQLException e) {
+            log.info(e.getMessage());
+        } finally {
+            boolean isCoverage = paramReq.isCoverage();
+            paramReq.setCoverage(true);
+            asyncHelper.task(webSocketServer, paramReq);
 
-        if (StringUtils.isEmpty(nodeName) && StringUtils.isEmpty(port)) {
-            try (
-                    ResultSet turnNoResult = statement.executeQuery(String.format(TURN_ON_SQL, oid))
-            ) {
-                while (turnNoResult.next()) {
-                    nodeName = turnNoResult.getString(NODE_NAME);
-                    port = turnNoResult.getString(PORT);
-                    log.info("inputParam nodeName and port is: " + nodeName + "---" + port);
-                }
+            Connection conn = webSocketServer.createConnection(paramReq.getUuid(), windowName);
+            Statement statNew = conn.createStatement();
+            webSocketServer.setParamMap(windowName, CONNECTION, conn);
+            webSocketServer.setParamMap(windowName, STATEMENT, statNew);
+            int differ = DebugUtils.changeParamType(webSocketServer, windowName, DIFFER);
+            String sql = String.format(ATTACH_SQL, nodeName, port);
+
+            if (isCoverage) {
+                assembleParam(paramReq, connection, sql, statNew, differ);
+            } else {
+                statNew.execute(sql);
+                statNew.executeQuery(CONTINUE_SQL);
             }
-        }
-
-        boolean isCoverage = paramReq.isCoverage();
-        paramReq.setCoverage(true);
-        asyncHelper.task(webSocketServer, paramReq);
-
-        Connection conn = webSocketServer.createConnection(paramReq.getUuid(), windowName);
-        Statement statNew = conn.createStatement();
-        webSocketServer.setParamMap(windowName, CONNECTION, conn);
-        webSocketServer.setParamMap(windowName, STATEMENT, statNew);
-        int differ = DebugUtils.changeParamType(webSocketServer, windowName, DIFFER);
-        String sql = String.format(ATTACH_SQL, nodeName, port);
-
-        if (isCoverage) {
-            assembleParam(paramReq, connection, sql, statNew, differ);
-        } else {
-            statNew.execute(sql);
-            statNew.executeQuery(CONTINUE_SQL);
         }
     }
 

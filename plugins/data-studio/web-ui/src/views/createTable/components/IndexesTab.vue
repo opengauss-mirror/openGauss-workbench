@@ -214,6 +214,7 @@
 
 <style lang="scss" scoped>
   .table-container {
+    width: 100%;
     flex: 1;
     display: flex;
     flex-direction: column;

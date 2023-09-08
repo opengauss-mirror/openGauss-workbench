@@ -1,60 +1,70 @@
 import restRequest from '@/request/restful'
 
 export type Option = {
-    option: string
-    orderId: string
-    value: string
+  option: string
+  orderId: string
+  value: string
 }
-export async function getOptions(): Promise<Option[]> {
-    return restRequest.get('/historyDiagnosis/api/v1/options')
+export async function getOptions(diagnosisType: string): Promise<Option[]> {
+  return restRequest.get('/historyDiagnosis/api/v2/options', {
+    diagnosisType: diagnosisType !== undefined ? diagnosisType : 'history',
+  })
 }
 
 export type Threshold = {
-    threshold: string
-    thresholdName: string
-    thresholdValue: string
-    thresholdType: string
+  threshold: string
+  thresholdName: string
+  thresholdValue: string
+  thresholdType: string
 }
-export async function getThresholds(): Promise<Threshold[]> {
-    return restRequest.get('/historyDiagnosis/api/v1/thresholds')
+export async function getThresholds(diagnosisType: string): Promise<Threshold[]> {
+  return restRequest.get('/historyDiagnosis/api/v2/thresholds', {
+    diagnosisType: diagnosisType !== undefined ? diagnosisType : 'history',
+  })
 }
 
 export interface DiagnosisParamConfig {
-    option: string
-    isCheck: boolean
+  option: string
+  isCheck: boolean
 }
 export interface DiagnosisParamThreshold {
-    threshold: string
-    thresholdValue: string
+  threshold: string
+  thresholdValue: string
 }
 export interface DiagnosisParam {
-    nodeId: string
-    hisDataStartTime: string
-    hisDataEndTime: string | null
-    configs: DiagnosisParamConfig[]
-    thresholds: DiagnosisParamThreshold[]
+  nodeId: string
+  diagnosisType: string
+  hisDataStartTime: string
+  hisDataEndTime: string | null
+  configs: DiagnosisParamConfig[]
+  thresholds: DiagnosisParamThreshold[]
 }
 export async function addTask(param: DiagnosisParam): Promise<Threshold[]> {
-    return restRequest.post('/historyDiagnosis/api/v1/tasks', param)
+  if (param.diagnosisType === undefined) param.diagnosisType = 'history'
+  return restRequest.post('/historyDiagnosis/api/v2/tasks', param)
 }
 
 export type Threshold2 = {
-    thresholdName: string
-    thresholdValue: string
-    thresholdType: string
+  thresholdName: string
+  thresholdValue: string
+  thresholdType: string
 }
-export async function getTask(id: string): Promise<Threshold2> {
-    return restRequest.get('/historyDiagnosis/api/v1/tasks/' + id + '/suggestPoints/all=false')
+export async function getTask(id: string, diagnosisType?: string): Promise<Threshold2> {
+  return restRequest.get('/historyDiagnosis/api/v2/tasks/' + id + '/suggestPoints/all=false', {
+    diagnosisType: diagnosisType !== undefined ? diagnosisType : 'history',
+  })
 }
 
 export type PointInfo = {
-    pointDetail: string
-    pointName: string
-    pointState: string
-    pointSuggestion: string
-    isHint: string
-    pointData: any
+  pointDetail: string
+  pointName: string
+  pointState: string
+  pointSuggestion: string
+  isHint: string
+  pointData: any
 }
-export async function getPointData(id: string, pointKey: string): Promise<PointInfo> {
-    return restRequest.get('/historyDiagnosis/api/v1/tasks/' + id + '/points/' + pointKey)
+export async function getPointData(id: string, pointKey: string, diagnosisType?: string): Promise<PointInfo> {
+  return restRequest.get('/historyDiagnosis/api/v2/tasks/' + id + '/points/' + pointKey, {
+    diagnosisType: diagnosisType !== undefined ? diagnosisType : 'history',
+  })
 }

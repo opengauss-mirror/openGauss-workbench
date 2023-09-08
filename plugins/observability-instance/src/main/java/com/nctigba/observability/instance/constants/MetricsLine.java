@@ -11,7 +11,7 @@ import lombok.Getter;
 @Getter
 public enum MetricsLine {
     // index
-    CPU(Type.OS, "(avg(sum(irate(agent_cpu_seconds_total{mode!='idle',host='ogbrench'}[5m]))by (cpu))) * 100"),
+    CPU(Type.OS, "(avg(sum(irate(agent_cpu_seconds_total{mode!='idle',host='ogbrench'}[5m]))by (cpu,instance))) * 100"),
     MEMORY(Type.OS,
             "(1 - (agent_memory_MemAvailable_bytes{host='ogbrench'} /"
                     + " (agent_memory_MemTotal_bytes{host='ogbrench'}))) * 100"),
@@ -23,16 +23,39 @@ public enum MetricsLine {
     DB_ACTIVE_SESSION(Type.DB, "gauss_thread_wait_status_count{instanceId='ogbrench'}", "{wait_status}"),
 
     // CPU
-    CPU_TOTAL(Type.OS, "(avg(sum(irate(agent_cpu_seconds_total{mode!='idle',host='ogbrench'}[5m]))by (cpu))) * 100"),
-    CPU_USER(Type.OS, "(avg(sum(irate(agent_cpu_seconds_total{mode='user',host='ogbrench'}[5m]))by (cpu))) * 100"),
-    CPU_SYSTEM(Type.OS, "(avg(sum(irate(agent_cpu_seconds_total{mode='system',host='ogbrench'}[5m]))by (cpu))) * 100"),
-    CPU_IOWAIT(Type.OS, "(avg(sum(irate(agent_cpu_seconds_total{mode='iowait',host='ogbrench'}[5m]))by (cpu))) * 100"),
+    CPU_TOTAL(Type.OS,
+            "clamp_max((avg(sum(irate(agent_cpu_seconds_total"
+                    + "{mode!='idle',host='ogbrench'}[5m]))by (instance,cpu))by (instance)) * 100, 100)"),
+    CPU_USER(Type.OS,
+            "(avg(sum(irate(agent_cpu_seconds_total{mode='user',host='ogbrench'}[5m]))"
+                    + "by (instance,cpu))by (instance)) * 100"),
+    CPU_SYSTEM(Type.OS,
+            "(avg(sum(irate(agent_cpu_seconds_total{mode='system',host='ogbrench'}[5m]))"
+                    + "by (instance,cpu))by (instance)) * 100"),
+    CPU_IOWAIT(Type.OS,
+            "(avg(sum(irate(agent_cpu_seconds_total{mode='iowait',host='ogbrench'}[5m]))"
+                    + "by (instance,cpu))by (instance)) * 100"),
+    CPU_IRQ(Type.OS,
+            "(avg(sum(irate(agent_cpu_seconds_total{mode='irq',host='ogbrench'}[5m]))"
+                    + "by (instance,cpu))by (instance)) * 100"),
+    CPU_SOFTIRQ(Type.OS,
+            "(avg(sum(irate(agent_cpu_seconds_total{mode='softirq',host='ogbrench'}[5m]))"
+                    + "by (instance,cpu))by (instance)) * 100"),
+    CPU_NICE(Type.OS,
+            "(avg(sum(irate(agent_cpu_seconds_total{mode='nice',host='ogbrench'}[5m]))"
+                    + "by (instance,cpu))by (instance)) * 100"),
+    CPU_STEAL(Type.OS,
+            "(avg(sum(irate(agent_cpu_seconds_total{mode='steal',host='ogbrench'}[5m]))"
+                    + "by (instance,cpu))by (instance)) * 100"),
+    CPU_IDLE(Type.OS,
+            "(avg(sum(irate(agent_cpu_seconds_total{mode='idle',host='ogbrench'}[5m]))"
+                    + "by (instance,cpu))by (instance)) * 100"),
     CPU_DB(Type.DB, "top_db_cpu{instanceId='ogbrench'}"),
 
-    CPU_TOTAL_5M_LOAD(Type.OS, "sum(agent_load5{host='ogbrench'})"),
-    CPU_TOTAL_CORE_NUM(Type.OS, "count(agent_cpu_seconds_total{mode='system',host='ogbrench'}) by (host)"),
+    CPU_TOTAL_5M_LOAD(Type.OS, "sum(agent_load5{host='ogbrench'})by (instance)"),
+    CPU_TOTAL_CORE_NUM(Type.OS, "count(agent_cpu_seconds_total{mode='system',host='ogbrench'}) by (host,instance)"),
     CPU_TOTAL_AVERAGE_UTILIZATION(Type.OS,
-            "avg(rate(agent_cpu_seconds_total{mode!='idle',host='ogbrench'}[5m])) by (host) * 100"),
+            "avg(rate(agent_cpu_seconds_total{mode!='idle',host='ogbrench'}[5m])) by (host,instance) * 100"),
     CPU_TIME(Type.OS, "increase(gauss_instance_time_value{host='ogbrench',stat_name='CPU_TIME'}[5m])"),
     NET_SEND_TIME(Type.OS, "increase(gauss_instance_time_value{host='ogbrench',stat_name='NET_SEND_TIME'}[5m])"),
     DATA_IO_TIME(Type.OS, "increase(gauss_instance_time_value{host='ogbrench',stat_name='DATA_IO_TIME'}[5m])"),
@@ -47,6 +70,7 @@ public enum MetricsLine {
 
     // IO
     IOPS_R(Type.OS, "sum(rate(agent_disk_rd_ios_total{host='ogbrench'}[5m]))by(device)", "{device}"),
+    IOPS_R_TOTAL(Type.OS, "sum(rate(agent_disk_rd_ios_total{host='ogbrench'}[5m]))"),
     IOPS_W(Type.OS, "sum(rate(agent_disk_wr_ios_total{host='ogbrench'}[5m]))by(device)", "{device}"),
     IO_DISK_READ_BYTES_PER_SECOND(Type.OS, "sum(rate(agent_disk_rd_sectors_total{host='ogbrench'}[5m]))by(device) *512",
             "{device}"),
@@ -99,6 +123,10 @@ public enum MetricsLine {
     INSTANCE_DB_CONNECTION_TOTAL(Type.DB, "pg_connections_max_conn{instanceId='ogbrench'}"),
 
     INSTANCE_DB_SLOWSQL(Type.DB, "pg_stat_activity_slow_count{instanceId='ogbrench',state!='idle'}"),
+    INSTANCE_DB_RESPONSETIME_P80(Type.DB, "gauss_statement_responsetime_percentile_p80{instanceId="
+            + "'ogbrench'}"),
+    INSTANCE_DB_RESPONSETIME_P95(Type.DB, "gauss_statement_responsetime_percentile_p95{instanceId="
+            + "'ogbrench'}"),
 
     // opengauss session
     SESSION_MAX_CONNECTION(Type.DB, "pg_connections_max_conn{instanceId='ogbrench'}"),
@@ -107,7 +135,15 @@ public enum MetricsLine {
     SESSION_WAITING_CONNECTION(Type.DB, "pg_state_activity_group_count{state='waiting',instanceId='ogbrench'}"),
 
     // wait event !pg_wait_events_total_wait_time
-    WAIT_EVENT_COUNT(Type.DB, "gauss_wait_events_value{instanceId='ogbrench'}", "{type}");
+    WAIT_EVENT_COUNT(Type.DB, "gauss_wait_events_value{instanceId='ogbrench'}", "{type}"),
+
+    // cluster
+    CLUSTER_PRIMARY_WAL_WRITE_TOTAL(Type.DB, "increase(pg_wal_write_total_count{instanceId='ogbrench'}[1d])"),
+    CLUSTER_PRIMARY_WAL_SEND_PRESSURE(Type.DB, "pg_wal_send_pressure_count{instanceId='ogbrench'}"),
+    CLUSTER_PRIMARY_WAL_WRITE_PER_SEC(Type.DB, "rate(pg_wal_write_total_count{instanceId='ogbrench'}[2m])"),
+    CLUSTER_WAL_RECEIVED_DELAY(Type.DB, "pg_wal_delay_received{instanceId='ogbrench'}"),
+    CLUSTER_WAL_WRITE_DELAY(Type.DB, "pg_wal_delay_write{instanceId='ogbrench'}"),
+    CLUSTER_WAL_REPLAY_DELAY(Type.DB, "pg_wal_delay_replay{instanceId='ogbrench'}");
 
     private enum Type {
         OS,

@@ -10,6 +10,14 @@ export function dropFunctionSP(data) {
   });
 }
 
+export function dropPackage(data) {
+  return requestBlob({
+    url: '/dataStudio/web/v1/drop/package',
+    method: 'delete',
+    data,
+  });
+}
+
 export function getCoverageRateList(data) {
   return request({
     url: '/dataStudio/web/v1/coverageRate/query',

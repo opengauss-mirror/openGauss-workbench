@@ -5,11 +5,13 @@
 package com.nctigba.alert.monitor.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import org.opengauss.admin.common.core.domain.AjaxResult;
-import org.opengauss.admin.common.core.page.TableDataInfo;
+import com.nctigba.alert.monitor.constant.CommonConstants;
 import com.nctigba.alert.monitor.entity.NotifyWay;
 import com.nctigba.alert.monitor.service.NotifyWayService;
+import org.opengauss.admin.common.core.domain.AjaxResult;
+import org.opengauss.admin.common.core.page.TableDataInfo;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -18,7 +20,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.validation.Valid;
 import java.util.List;
 
 /**
@@ -51,8 +52,27 @@ public class NotifyWayController extends BaseController {
     }
 
     @PostMapping
-    public AjaxResult saveNotifyWay(@Valid @RequestBody NotifyWay notifyWay) {
+    public AjaxResult saveNotifyWay(@Validated @RequestBody NotifyWay notifyWay) {
         notifyWayService.saveNotifyWay(notifyWay);
+        return AjaxResult.success();
+    }
+
+    /**
+     * test the notify way
+     *
+     * @param notifyWay NotifyWay
+     * @return AjaxResult.success()
+     */
+    @PostMapping("/test")
+    public AjaxResult testNotifyWay(@Validated @RequestBody NotifyWay notifyWay) {
+        if (!notifyWay.getNotifyType().equals(CommonConstants.WEBHOOK)
+            && !notifyWay.getNotifyType().equals(CommonConstants.SNMP)) {
+            return AjaxResult.error();
+        }
+        boolean isSuccess = notifyWayService.testNotifyWay(notifyWay);
+        if (!isSuccess) {
+            return AjaxResult.error();
+        }
         return AjaxResult.success();
     }
 

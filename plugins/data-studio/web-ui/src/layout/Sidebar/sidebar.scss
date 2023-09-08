@@ -6,6 +6,10 @@
   flex-direction: column;
   padding: 8px;
   user-select: none;
+  transition: width 0.28s;
+  background-color: #fff;
+  height: 100%;
+  overflow: hidden;
 }
 .tree {
   width: fit-content;
@@ -13,14 +17,22 @@
 .no-tree {
   width: auto;
 }
+.tree-node-icon {
+  margin-right: 6px;
+  color: #75757e;
+  width: 1em;
+  height: 1em;
+  vertical-align: -0.15em;
+  fill: currentColor;
+  overflow: hidden;
+}
 .database-wrapper {
-  height: 66%;
-  flex-grow: 0;
+  height: 100%;
 }
 
 .windows-wrapper {
-  height: calc(34% - 15px);
-  margin-top: 15px;
+  height: calc(100% - 4px);
+  margin-top: 4px;
 }
 .group-wrapper {
   border: border-style();
@@ -69,21 +81,21 @@
   .windows-item {
     white-space: nowrap;
     cursor: pointer;
-    margin: 3px;
+    margin: 2px 3px;
     padding: 5px;
+    border: 1px solid transparent;
     &:hover {
       background: var(--el-bg-color-bar);
     }
-    &.home,
-    &.home .icon {
-      color: var(--el-color-primary);
-    }
     &.active {
-      background-color: var(--normal-color);
-    }
-    &.active,
-    &.active .icon {
-      color: var(--color-bg-2);
+      color: var(--el-color-primary);
+      border-color: var(--el-color-primary);
+      .icon {
+        color: var(--el-color-primary);
+      }
+      &:hover {
+        background: none;
+      }
     }
   }
 }

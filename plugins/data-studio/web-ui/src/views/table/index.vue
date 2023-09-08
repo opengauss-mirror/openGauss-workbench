@@ -7,6 +7,11 @@
       <el-tab-pane :label="$t('table.constraint.title')" name="ConstraintTab" />
       <el-tab-pane :label="$t('table.indexes.title')" name="IndexesTab" />
       <el-tab-pane :label="$t('table.data.title')" name="DataTab" />
+      <el-tab-pane
+        :label="$t('createTable.partition.title')"
+        name="PartitionTab"
+        v-if="dataMap.PartitionTab.isPartition"
+      />
     </el-tabs>
     <el-icon
       :class="['refresh', { disabled: dataMap[currentTabName]?.edited }]"
@@ -26,47 +31,115 @@
         v-show="currentTabName == item"
         class="table-container"
       >
-        <EditTable
-          :tabName="item"
-          :canEdit="dataMap[item].canEdit"
-          :databaseName="databaseName"
-          :data="dataMap[item].data"
-          :allData="dataMap"
-          :columnNameList="columnNameList"
-          :commonParams="commonParams"
-          :columns="dataMap[item].columns"
-          :idKey="dataMap[item].idKey"
-          :rowStatusKey="dataMap[item].rowStatusKey"
-          :editingSuffix="editingSuffix"
-          :editedSuffix="editedSuffix"
-          :loading="dataMap[item].loading"
-          v-model:edited="dataMap[item].edited"
-          :dataTypeList="dataTypeList"
-          :barStatus="dataMap[item].barStatus"
-          @currentChange="handleCurrentChange"
-          @cellDataChange="handleCellDataChange"
-          @cellDblclick="handleCellDbClick"
-        />
-        <Toolbar
-          :status="dataMap[item].barStatus"
-          :type="item == 'DataTab' ? 'table' : 'common'"
-          :canEdit="dataMap[item].canEdit"
-          v-model:pageNum="page.pageNum"
-          v-model:pageSize="page.pageSize"
-          v-model:pageTotal="page.pageTotal"
-          @save="handleSave(item)"
-          @cancel="handleCancel(item)"
-          @addLine="handleAddLine"
-          @copyLine="handleCopyLine"
-          @removeLine="handleRemoveLine"
-          @firstPage="handleFirstPage"
-          @lastPage="handleLastPage"
-          @previousPage="handlePreviousPage"
-          @nextPage="handleNextPage"
-          @page="handlePage"
-          @update:pageSize="handlePageSize"
-        />
+        <template v-if="item === 'DataTab'">
+          <div class="data-containrer">
+            <EditTable
+              ref="dataTabEditTable"
+              :tabName="item"
+              :canEdit="dataMap.DataTab.canEdit"
+              :databaseName="databaseName"
+              :data="dataMap.DataTab.data"
+              :allData="dataMap"
+              :columnNameList="columnNameList"
+              :commonParams="commonParams"
+              :columns="dataMap.DataTab.columns"
+              :idKey="dataMap.DataTab.idKey"
+              :rowStatusKey="dataMap.DataTab.rowStatusKey"
+              :editingSuffix="editingSuffix"
+              :editedSuffix="editedSuffix"
+              :loading="dataMap.DataTab.loading"
+              v-model:edited="dataMap.DataTab.edited"
+              :dataTypeList="dataTypeList"
+              :barStatus="dataMap.DataTab.barStatus"
+              sortable="custom"
+              @currentChange="handleCurrentChange"
+              @cellDataChange="handleCellDataChange"
+              @cellDblclick="handleCellDbClick"
+              @sortChange="handleSortChange"
+            />
+            <SetSortData
+              v-if="hasLoadSort"
+              v-show="visibleSort"
+              ref="setSortRef"
+              v-model="visibleSort"
+              :columns="dataMap.DataTab.columns"
+              @confirm="handleConfirmSort"
+            />
+            <SetFilterData
+              v-if="hasLoadFilter"
+              v-show="visibleFilter"
+              v-model="visibleFilter"
+              :columns="dataMap.DataTab.columns"
+              @confirm="handleConfirmFilter"
+            />
+          </div>
+          <Toolbar
+            :status="dataMap.DataTab.barStatus"
+            :type="item == 'DataTab' ? 'table' : 'common'"
+            :canEdit="dataMap.DataTab.canEdit"
+            v-model:pageNum="page.pageNum"
+            v-model:pageSize="page.pageSize"
+            v-model:pageTotal="page.pageTotal"
+            v-model:sort="visibleSort"
+            v-model:filter="visibleFilter"
+            @save="handleSave(item)"
+            @cancel="handleCancel(item)"
+            @addLine="handleAddLine"
+            @copyLine="handleCopyLine"
+            @removeLine="handleRemoveLine"
+            @importData="handleImportData"
+            @exportCurrentPage="handleExportCurrentPage"
+            @exportAllPage="handleExportAllPage"
+            @firstPage="handleFirstPage"
+            @lastPage="handleLastPage"
+            @previousPage="handlePreviousPage"
+            @nextPage="handleNextPage"
+            @page="handlePage"
+            @update:pageSize="handlePageSize"
+          />
+          <div v-if="dataMap.DataTab.querySql" class="sql-exhibition">
+            {{ dataMap.DataTab.querySql }}
+          </div>
+        </template>
+        <template v-else>
+          <EditTable
+            :tabName="item"
+            :canEdit="dataMap[item].canEdit"
+            :databaseName="databaseName"
+            :data="dataMap[item].data"
+            :allData="dataMap"
+            :columnNameList="columnNameList"
+            :commonParams="commonParams"
+            :columns="dataMap[item].columns"
+            :idKey="dataMap[item].idKey"
+            :rowStatusKey="dataMap[item].rowStatusKey"
+            :editingSuffix="editingSuffix"
+            :editedSuffix="editedSuffix"
+            :loading="dataMap[item].loading"
+            v-model:edited="dataMap[item].edited"
+            :dataTypeList="dataTypeList"
+            :barStatus="dataMap[item].barStatus"
+            @currentChange="handleCurrentChange"
+            @cellDataChange="handleCellDataChange"
+            @cellDblclick="handleCellDbClick"
+          />
+          <Toolbar
+            :status="dataMap[item].barStatus"
+            :type="item == 'DataTab' ? 'table' : 'common'"
+            :canEdit="dataMap[item].canEdit"
+            @save="handleSave(item)"
+            @cancel="handleCancel(item)"
+            @addLine="handleAddLine"
+            @copyLine="handleCopyLine"
+            @removeLine="handleRemoveLine"
+          />
+        </template>
       </div>
+      <PartitionTab
+        v-show="currentTabName == 'PartitionTab'"
+        :columns="dataMap.PartitionTab.columns"
+        :data="dataMap.PartitionTab.data"
+      />
     </div>
     <SetUniqueKeyDialog
       v-model="showUniqueDialog"
@@ -75,6 +148,26 @@
       :schema="commonParams.schema"
       :uuid="commonParams.uuid"
       @success="dialogUniqueKeySuccess"
+    />
+    <ImportTableDataDialog
+      v-model="visibleImportDialog"
+      :winId="page.winId"
+      :uuid="commonParams.uuid"
+      :schema="commonParams.schema"
+      :tableName="commonParams.tableName"
+      :oid="commonParams.oid"
+    />
+    <ExportFilterDataDialog
+      v-model="visibleExportDialog"
+      :type="exportType"
+      :winId="page.winId"
+      :uuid="commonParams.uuid"
+      :schema="commonParams.schema"
+      :tableName="commonParams.tableName"
+      :filterExpress="dataTabExpansion"
+      :pageNum="page.pageNum"
+      :pageSize="page.pageSize"
+      @success="getData('DataTab')"
     />
   </div>
 </template>
@@ -87,9 +180,14 @@
   import { useTagsViewStore } from '@/store/modules/tagsView';
   import DDL from './components/DDL.vue';
   import GeneralTab from './components/GeneralTab.vue';
+  import PartitionTab from './components/PartitionTab.vue';
   import EditTable from './components/EditTable.vue';
   import Toolbar from './components/Toolbar.vue';
   import SetUniqueKeyDialog from './components/SetUniqueKeyDialog.vue';
+  import SetSortData from './components/SetSortData.vue';
+  import SetFilterData from './components/SetFilterData.vue';
+  import ImportTableDataDialog from './components/ImportTableDataDialog.vue';
+  import ExportFilterDataDialog from './components/ExportFilterDataDialog.vue';
   import { eventQueue } from '@/hooks/saveData';
   import { useI18n } from 'vue-i18n';
   import { useTableDataHooks } from './useTableDataHooks';
@@ -106,10 +204,11 @@
     updateTableData,
     getTableAttribute,
     closeTableDatas,
+    getTablePartition,
   } from '@/api/table';
   import { debounce, formatEditTableData, loadingInstance } from '@/utils';
   import { getColumn } from './columnsData';
-  import type { EditDataResponse } from './types';
+  import type { EditDataResponse, DataTabColumn, DataTabSortColumn } from './types';
 
   const idSuffix = ref('_id');
   const rowStatusSuffix = ref('_rowStatus');
@@ -122,8 +221,10 @@
   const { t } = useI18n();
   const loading = ref(null);
 
-  const currentTabName = ref('DDL');
+  const currentTabName = ref('DataTab');
   const editTabs = ref(['ColumnTab', 'ConstraintTab', 'IndexesTab', 'DataTab']);
+  const dataTabEditTable = ref<Array<InstanceType<typeof EditTable>>>([null]);
+  const setSortRef = ref(null);
   const showUniqueDialog = ref(false);
   const databaseName = ref('');
   const commonParams = reactive({
@@ -133,6 +234,11 @@
     oid: '',
     tableType: '',
   });
+  const dataTabExpansion = reactive({
+    filtration: [],
+    order: [] as DataTabSortColumn[],
+  });
+  let dataTabHideColumns = []; // Will not disappear with requesting data
   const dataTypeList = ref([]);
   const dataMap = reactive({
     DDL: {
@@ -206,7 +312,8 @@
       data: [],
       originData: [],
       canEdit: true,
-      columns: [],
+      columns: [] as DataTabColumn[],
+      querySql: '',
       idKey: '',
       rowStatusKey: '',
       currentRow: undefined,
@@ -227,8 +334,25 @@
         pageSize: true,
       },
     },
+    PartitionTab: {
+      isPartition: false,
+      data: [],
+      columns: [],
+      edited: false,
+      hasLoad: false,
+      loading: false,
+    },
   });
   let confirmUniqueKeyResolve = null;
+
+  const visibleSort = ref(false);
+  const visibleFilter = ref(false);
+  const hasLoadSort = ref(false);
+  const hasLoadFilter = ref(false);
+
+  const visibleImportDialog = ref(false);
+  const visibleExportDialog = ref(false);
+  const exportType = ref<'current' | 'all'>('current');
 
   const globalIsEdit = computed(() => {
     return (
@@ -265,6 +389,13 @@
     },
   );
 
+  watch(visibleSort, (value) => {
+    if (value) hasLoadSort.value = true;
+  });
+  watch(visibleFilter, (value) => {
+    if (value) hasLoadFilter.value = true;
+  });
+
   const handleTabClick = (tab: TabsPaneContext) => {
     if (dataMap[tab.paneName]?.hasLoad) return;
     getData(tab.paneName);
@@ -282,6 +413,7 @@
       ConstraintTab: getTableConstraint,
       IndexesTab: getTableIndex,
       DataTab: getTableData,
+      PartitionTab: getTablePartition,
     };
     if (!Object.keys(api).includes(type)) return;
     dataMap[type].loading = true;
@@ -292,6 +424,12 @@
         pageNum: page.value.pageNum,
         pageSize: page.value.pageSize,
         winId: page.value.winId,
+        expansion: {
+          filtration: dataTabExpansion.filtration,
+          order: dataTabExpansion.order
+            .filter((item) => item.multipleOrder)
+            .map((item) => `${item.name} ${item.multipleOrder}`),
+        },
       };
     }
     api[type](params)
@@ -306,6 +444,15 @@
               value: itemObj[attr],
             };
           });
+        } else if (type == 'PartitionTab') {
+          const columns = res.column;
+          dataMap.PartitionTab.data = res.result.map((rowData) => {
+            const obj = {};
+            columns.forEach((col, colIndex) => {
+              obj[col] = rowData[colIndex];
+            });
+            return obj;
+          });
         } else {
           const { column, result } = res.data || res;
           let idKey = '';
@@ -314,12 +461,24 @@
           if (type == 'DataTab') {
             idKey = (column[0] || '') + idSuffix.value;
             rowStatusKey = (column[0] || '') + rowStatusSuffix.value;
-            columns = column.map((item) => ({ name: item, label: item, type: 'input' }));
+            columns = column.map((item, index) => {
+              const order = dataTabExpansion.order.find((sc) => sc.name == item)?.multipleOrder;
+              return {
+                name: item,
+                label: item,
+                type: 'input',
+                show: !dataTabHideColumns.includes(item),
+                multipleOrder: order || null,
+                systemTypeNum: res.data.typeNum[index],
+                systemTypeName: res.data.typeName[index],
+              };
+            }) as DataTabColumn[];
             Object.assign(page.value, {
               pageNum: res.pageNum || 0,
               pageSize: res.pageSize || 0,
               pageTotal: res.pageTotal || 0,
             });
+            dataMap.DataTab.querySql = res.sql;
           } else {
             idKey = idSuffix.value;
             rowStatusKey = rowStatusSuffix.value;
@@ -392,6 +551,18 @@
     }
   };
 
+  const handleSortChange = async () => {
+    dataTabExpansion.order = dataMap.DataTab.columns.map((col) => ({
+      name: col.name,
+      multipleOrder: col.multipleOrder || null,
+    }));
+    page.value.pageNum = 1;
+    await getData('DataTab');
+    setSortRef.value?.forEach((item) => {
+      item.initSort();
+    });
+  };
+
   const getRowInfo = () => {
     const data = dataMap[currentTabName.value].data;
     const currentRow = dataMap[currentTabName.value].currentRow;
@@ -455,22 +626,27 @@
             .filter((item) => item[currentTabInfo.rowStatusKey])
             .map((item) => {
               const rowStatus = item[rowStatusKey];
-              const getStatus = (row, key) => {
+              const getValue = (row, key) => {
                 if (rowStatus == 'edit')
                   return row[key + editedSuffix.value] ? row[key] : undefined;
                 return row[key];
               };
+              const equalOldDataRow = originData.find((e) => e[idKey] == item[idKey]);
               return {
                 operationType: saveType[item[rowStatusKey]],
-                newColumnName: getStatus(item, 'columnName'),
-                columnName: originData.find((e) => e[idKey] == item[idKey])?.columnName, // old columnName
+                newColumnName: getValue(item, 'columnName'),
+                columnName: equalOldDataRow?.columnName, // old columnName
                 type: item.dataType,
-                empty: getStatus(item, 'canBeNull'),
-                defaultValue: getStatus(item, 'defaultValue'),
-                only: getStatus(item, 'isUnique'),
+                oldType: equalOldDataRow?.dataType,
+                isEmpty: getValue(item, 'canBeNull'),
+                defaultValue: getValue(item, 'defaultValue'),
+                oldDefaultValue: equalOldDataRow?.defaultValue,
+                isOnly: getValue(item, 'isUnique'),
                 precision: item.precisionSize,
+                oldPrecision: equalOldDataRow?.precisionSize,
                 scope: item.range,
-                comment: getStatus(item, 'description'),
+                oldScope: equalOldDataRow?.range,
+                comment: getValue(item, 'description'),
               };
             }),
         };
@@ -536,33 +712,48 @@
         }
         const param = {
           winId: page.value.winId,
+          uuid: commonParams.uuid,
+          schema: commonParams.schema,
+          tableName: commonParams.tableName,
           data: currentTabInfo.data
             .filter((row) => row[currentTabInfo.rowStatusKey])
             .map((row) => {
               const rowStatus = row[rowStatusKey];
-              const type = saveDataType[rowStatus];
-              const columnData = {};
-              if (rowStatus == 'add') {
+              const operationType = saveDataType[rowStatus];
+              const equalOldDataRow = originData.find((e) => e[idKey] == row[idKey]);
+              const dataLine = [];
+              if (['add', 'delete'].includes(rowStatus)) {
                 columns.forEach((col) => {
-                  columnData[col.name] = row[col.name];
+                  dataLine.push({
+                    columnData: row[col.name],
+                    oldColumnData: equalOldDataRow?.[col.name],
+                    columnName: col.name,
+                    typeName: col.systemTypeName,
+                    typeNum: col.systemTypeNum,
+                  });
                 });
               }
               if (rowStatus == 'edit') {
                 columns.forEach((col) => {
                   if (row[col.name + editedSuffix.value]) {
-                    columnData[col.name] = row[col.name];
+                    dataLine.push({
+                      columnData: row[col.name],
+                      oldColumnData: equalOldDataRow?.[col.name],
+                      columnName: col.name,
+                      typeName: col.systemTypeName,
+                      typeNum: col.systemTypeNum,
+                    });
                   }
                 });
               }
               return {
-                type,
-                columnData,
-                rowNum: ['add'].includes(rowStatus) ? null : row[idKey] + 1,
+                operationType,
+                line: dataLine,
               };
             }),
         };
         const res = (await updateTableData(param)) as unknown as EditDataResponse;
-        if (res?.pkcreate) {
+        if (res?.PKCreate) {
           loading.value.close();
           await handleSetUniqueKeyGuide();
           return;
@@ -621,6 +812,18 @@
     }
   };
 
+  const handleImportData = () => {
+    visibleImportDialog.value = true;
+  };
+  const handleExportCurrentPage = () => {
+    exportType.value = 'current';
+    visibleExportDialog.value = true;
+  };
+  const handleExportAllPage = () => {
+    exportType.value = 'all';
+    visibleExportDialog.value = true;
+  };
+
   const {
     page,
     handleCopyLine,
@@ -643,6 +846,27 @@
     getData,
   );
 
+  const handleConfirmSort = (data) => {
+    dataTabExpansion.order = data.map((item) => ({
+      name: item.name,
+      multipleOrder: item.multipleOrder,
+    }));
+    dataMap.DataTab.columns.forEach((col) => {
+      col.multipleOrder = data.find((item) => item.name == col.name)?.multipleOrder || null;
+    });
+    page.value.pageNum = 1;
+    getData('DataTab');
+  };
+  const handleConfirmFilter = ({ hideColumns, filtration }) => {
+    dataTabExpansion.filtration = filtration;
+    dataTabHideColumns = hideColumns;
+    page.value.pageNum = 1;
+    getData('DataTab');
+    nextTick(() => {
+      dataTabEditTable.value.forEach((item) => item?.doLayout());
+    });
+  };
+
   onBeforeMount(() => {
     const { fileName: tableName, schema, uuid, oid, parttype, time } = route.query;
     Object.assign(commonParams, {
@@ -653,7 +877,7 @@
       tableType: parttype,
     });
     fetchDataTypeList();
-    dataMap.DataTab.canEdit = parttype !== 'y';
+    dataMap.PartitionTab.isPartition = parttype == 'y';
     page.value.winId = time as string;
     closeTableDatas(page.value.winId);
     databaseName.value = route.query.dbname as string;
@@ -702,8 +926,22 @@
     overflow: auto;
   }
   .table-container {
+    width: 100%;
     flex: 1;
     display: flex;
     flex-direction: column;
+  }
+  .data-containrer {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+  .sql-exhibition {
+    padding: 5px 7px;
+    background: var(--el-bg-color-bar);
+    min-height: 30px;
+    border-top: 1px solid var(--el-border-color-light);
+    white-space: nowrap;
+    overflow: auto;
   }
 </style>

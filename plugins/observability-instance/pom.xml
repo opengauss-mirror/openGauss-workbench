@@ -11,6 +11,7 @@
         <plugin-id>observability-instance</plugin-id>
         <npm.run.script>buildNoTest</npm.run.script>
         <web.build.skip>false</web.build.skip>
+        <build.frontend.skip>false</build.frontend.skip>
         <!--project-->
         <java.version>11</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -22,7 +23,6 @@
         <fastjson.version>1.2.78</fastjson.version>
         <lombok.version>1.18.24</lombok.version>
         <hutool.version>5.0.3</hutool.version>
-        <build.frontend.skip>false</build.frontend.skip>
     </properties>
     <dependencies>
         <!-- same as framework -->
@@ -241,6 +241,9 @@
                     <source>${java.version}</source>
                     <target>${java.version}</target>
                     <encoding>${project.build.sourceEncoding}</encoding>
+                    <compilerArgs>
+                        <arg>-parameters</arg>
+                    </compilerArgs>
                 </configuration>
             </plugin>
             <plugin>

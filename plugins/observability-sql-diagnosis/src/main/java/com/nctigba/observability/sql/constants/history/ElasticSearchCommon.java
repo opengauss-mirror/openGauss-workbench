@@ -13,7 +13,6 @@ package com.nctigba.observability.sql.constants.history;
 public class ElasticSearchCommon {
     public static final String LOCK_TIMEOUT = "Lock wait timeout";
     public static final String DEADLOCK = "deadlock detected";
-
     public static final String HYPHEN = "-";
     public static final String FIELDS = "fields";
     public static final String LOG_TYPE = "log_type";

@@ -4,20 +4,17 @@
 
 package com.nctigba.observability.instance.service;
 
-import com.baomidou.dynamic.datasource.DynamicRoutingDataSource;
-import com.baomidou.dynamic.datasource.creator.DefaultDataSourceCreator;
-import com.baomidou.dynamic.datasource.spring.boot.autoconfigure.DataSourceProperty;
-import com.baomidou.dynamic.datasource.toolkit.DynamicDataSourceContextHolder;
-import com.gitee.starblues.bootstrap.annotation.AutowiredType;
-import com.gitee.starblues.bootstrap.annotation.AutowiredType.Type;
-import com.nctigba.common.web.exception.InstanceException;
-import com.nctigba.observability.instance.constants.CommonConstants;
-import com.nctigba.observability.instance.model.InstanceNodeInfo;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.util.Collections;
+import java.util.List;
+import java.util.Properties;
+
+import javax.sql.DataSource;
+
 import org.apache.commons.lang3.StringUtils;
+import org.opengauss.admin.common.core.domain.entity.ops.OpsClusterEntity;
 import org.opengauss.admin.common.core.domain.model.ops.OpsClusterNodeVO;
 import org.opengauss.admin.common.core.domain.model.ops.OpsClusterVO;
 import org.opengauss.admin.common.exception.CustomException;
@@ -29,21 +26,26 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
-import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.util.Collections;
-import java.util.List;
-import java.util.Properties;
+import com.baomidou.dynamic.datasource.DynamicRoutingDataSource;
+import com.baomidou.dynamic.datasource.creator.DefaultDataSourceCreator;
+import com.baomidou.dynamic.datasource.spring.boot.autoconfigure.DataSourceProperty;
+import com.baomidou.dynamic.datasource.toolkit.DynamicDataSourceContextHolder;
+import com.gitee.starblues.bootstrap.annotation.AutowiredType;
+import com.gitee.starblues.bootstrap.annotation.AutowiredType.Type;
+import com.nctigba.observability.instance.constants.CommonConstants;
+
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @Slf4j
 public class ClusterManager {
     @Autowired
-    private DataSource dataSource;
+    DataSource dataSource;
     @Autowired
-    private DefaultDataSourceCreator dataSourceCreator;
+    DefaultDataSourceCreator dataSourceCreator;
 
     @Autowired(required = false)
     @AutowiredType(Type.MAIN_PLUGIN)
@@ -54,6 +56,45 @@ public class ClusterManager {
     @Autowired(required = false)
     @AutowiredType(Type.MAIN_PLUGIN)
     private IOpsClusterService opsClusterService;
+
+    /**
+     * getClusterByNodeId
+     *
+     * @param nodeId nodeId
+     * @return OpsClusterEntity
+     */
+    public OpsClusterEntity getClusterByNodeId(String nodeId) {
+        List<OpsClusterVO> opsClusterVOList = getAllOpsCluster();
+        if (CollectionUtils.isEmpty(opsClusterVOList)) {
+            throw new CustomException(CommonConstants.NODE_NOT_FOUND);
+        }
+        for (OpsClusterVO cluster : opsClusterVOList) {
+            List<OpsClusterNodeVO> nodes = cluster.getClusterNodes();
+            if (CollectionUtils.isEmpty(nodes)) {
+                continue;
+            }
+            for (OpsClusterNodeVO clusterNode : nodes) {
+                if (nodeId.equals(clusterNode.getNodeId())) {
+                    return opsClusterService.getById(cluster.getClusterId());
+                }
+            }
+        }
+        throw new CustomException(CommonConstants.NODE_NOT_FOUND);
+    }
+
+    public String getNodeIdByCluster(String clusterId, String hostId) {
+        for (var vo : getAllOpsCluster()) {
+            if (!vo.getClusterId().equals(clusterId)) {
+                continue;
+            }
+            for (var node : vo.getClusterNodes()) {
+                if (node.getHostId().equals(hostId)) {
+                    return node.getNodeId();
+                }
+            }
+        }
+        throw new CustomException(CommonConstants.NODE_NOT_FOUND);
+    }
 
     public Connection getConnectionByClusterHost(String clusterId, String hostId) {
         var clusterEntity = opsClusterService.getById(clusterId);
@@ -66,9 +107,18 @@ public class ClusterManager {
         try {
             return DriverManager.getConnection(sourceURL, info);
         } catch (SQLException e) {
-            e.printStackTrace();
-            throw new RuntimeException("connection fail");
+            throw new CustomException("connection fail", e);
         }
+    }
+
+    /**
+     * Set the current data source and manually clear it
+     *
+     * @see com.baomidou.dynamic.datasource.toolkit.DynamicDataSourceContextHolder#push(String)
+     * @see com.nctigba.observability.instance.service.ClusterManager#pool()
+     */
+    public void setCurrentDatasource(String nodeId) {
+        setCurrentDatasource(nodeId, null);
     }
 
     /**
@@ -126,26 +176,6 @@ public class ClusterManager {
             BeanUtils.copyProperties(opsClusterNodeVO, this);
             this.version = version;
         }
-
-        public Connection connection() throws SQLException {
-            var conn = DriverManager.getConnection(
-                    CommonConstants.JDBC_OPENGAUSS + getPublicIp() + ":" + getDbPort() + "/" + getDbName(), getDbUser(),
-                    getDbUserPassword());
-            try (var preparedStatement = conn.prepareStatement("select 1");
-                    var rs = preparedStatement.executeQuery();) {
-                return conn;
-            } catch (Exception e) {
-                log.error("test connection fail:{}", e.getMessage());
-                throw e;
-            }
-        }
-    }
-
-    /**
-     * Directly obtain the connection of the specified node
-     */
-    public Connection getConnectionByNodeId(String nodeId) throws SQLException {
-        return getOpsNodeById(nodeId).connection();
     }
 
     /**
@@ -166,35 +196,5 @@ public class ClusterManager {
             }
         }
         throw new CustomException(CommonConstants.NODE_NOT_FOUND);
-    }
-
-    /**
-     * get openGauss jdbc-connection by NodeInfo
-     *
-     * @param nodeInfo nodeInfo
-     * @return jdbc Connection
-     */
-    public Connection getConnectionByNodeInfo(InstanceNodeInfo nodeInfo) {
-        try {
-            Connection connection;
-            if (!(dataSource instanceof DynamicRoutingDataSource)) {
-                throw new InstanceException("dataSource is not type of DynamicRoutingDataSource");
-            }
-            var dynamicRoutingDataSource = (DynamicRoutingDataSource) dataSource;
-            if (dynamicRoutingDataSource.getDataSources().containsKey(nodeInfo.getId())) {
-                connection = dynamicRoutingDataSource.getDataSource(nodeInfo.getId()).getConnection();
-            } else {
-                DataSource newDataSource = dataSourceCreator.createDataSource(new DataSourceProperty()
-                        .setDriverClassName("org.opengauss.Driver")
-                        .setUrl(CommonConstants.JDBC_OPENGAUSS + nodeInfo.getIp() + ":" + nodeInfo.getPort() + "/"
-                                + nodeInfo.getDbName())
-                        .setUsername(nodeInfo.getDbUser()).setPassword(nodeInfo.getDbUserPassword()));
-                dynamicRoutingDataSource.addDataSource(nodeInfo.getId(), newDataSource);
-                connection = newDataSource.getConnection();
-            }
-            return connection;
-        } catch (SQLException e) {
-            throw new InstanceException(e.getMessage(), e);
-        }
     }
 }

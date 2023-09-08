@@ -4,6 +4,7 @@
 
 package com.nctigba.observability.sql.controller;
 
+import com.nctigba.observability.sql.mapper.DiagnosisResourceMapper;
 import com.nctigba.observability.sql.service.history.HisDiagnosisService;
 import com.nctigba.observability.sql.util.LocaleString;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +16,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+
 /**
  * HisDiagnosisController
  *
@@ -23,27 +27,52 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @Slf4j
 @RestController
-@RequestMapping("/historyDiagnosis/api/v1/tasks")
+@RequestMapping("/historyDiagnosis/api")
 @RequiredArgsConstructor
 public class HisDiagnosisController {
     private final HisDiagnosisService hisDiagnosisService;
     private final LocaleString localeToString;
+    private final DiagnosisResourceMapper resourceMapper;
 
-    @GetMapping("/{taskId}/points/{nodeName}")
-    public AjaxResult getNodeDetail(@PathVariable int taskId, @PathVariable("nodeName") String nodeName) {
-        var nodeDetail = hisDiagnosisService.getNodeDetail(taskId, nodeName);
+    @GetMapping("/v2/tasks/{taskId}/points/{pointName}")
+    public AjaxResult getNodeDetail(@PathVariable int taskId, @PathVariable("pointName") String pointName,
+            String diagnosisType) {
+        var nodeDetail = hisDiagnosisService.getNodeDetail(taskId, pointName, diagnosisType);
         return AjaxResult.success(nodeDetail);
     }
 
-    @GetMapping("/{taskId}/point/all")
-    public AjaxResult getAllPoint(@PathVariable int taskId) {
-        var allPoint = localeToString.trapLanguage(hisDiagnosisService.getAllPoint(taskId));
-        return AjaxResult.success(allPoint);
+    @GetMapping("/v2/tasks/{taskId}/suggestPoints/{type}")
+    public AjaxResult getTopologyMap(@PathVariable int taskId, @RequestParam(defaultValue = "true") boolean isAll,
+            String diagnosisType) {
+        var topologyMap = localeToString.trapLanguage(hisDiagnosisService.getTopologyMap(taskId, isAll, diagnosisType));
+        return AjaxResult.success(topologyMap);
     }
 
-    @GetMapping("/{taskId}/suggestPoints/{type}")
-    public AjaxResult getTopologyMap(@PathVariable int taskId, @RequestParam(defaultValue = "true") boolean isAll) {
-        var topologyMap = localeToString.trapLanguage(hisDiagnosisService.getTopologyMap(taskId, isAll));
-        return AjaxResult.success(topologyMap);
+    /**
+     * Query onCpu/offCpu svg
+     *
+     * @param id resource id
+     * @param type diagnosis type
+     * @param resp http response
+     */
+    @GetMapping(value = "/v1/res/{id}.{type}")
+    public void res(@PathVariable String id, @PathVariable String type,
+            HttpServletResponse resp) {
+        switch (type) {
+            case "svg":
+                resp.setContentType("image/svg+xml");
+                break;
+            case "png":
+                resp.setContentType("image/png");
+                break;
+            default:
+                log.error("fail data:{}", type);
+                break;
+        }
+        try {
+            resourceMapper.selectById(id).to(resp.getOutputStream());
+        } catch (IOException e) {
+            log.error("fail read data:{}", type);
+        }
     }
 }

@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
 import java.util.List;
 
 /**
@@ -42,7 +41,10 @@ public class NotifyConfigController {
 
     @PostMapping("/testConfig")
     public AjaxResult testConfig(@RequestBody NotifyConfigReq notifyConfigReq) {
-        notifyConfigService.testConfig(notifyConfigReq);
+        boolean isSuccess = notifyConfigService.testConfig(notifyConfigReq);
+        if (!isSuccess) {
+            return AjaxResult.error();
+        }
         return AjaxResult.success();
     }
 }

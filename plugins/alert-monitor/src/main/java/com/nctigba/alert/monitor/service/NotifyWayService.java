@@ -25,4 +25,12 @@ public interface NotifyWayService extends IService<NotifyWay> {
     void saveNotifyWay(NotifyWay notifyWay);
 
     void delById(Long id);
+
+    /**
+     * test notify way
+     *
+     * @param notifyWay NotifyWay
+     * @return boolean
+     */
+    boolean testNotifyWay(NotifyWay notifyWay);
 }

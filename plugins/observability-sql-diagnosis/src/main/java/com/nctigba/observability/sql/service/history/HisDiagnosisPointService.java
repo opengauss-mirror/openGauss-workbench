@@ -4,7 +4,7 @@
 
 package com.nctigba.observability.sql.service.history;
 
-import com.nctigba.observability.sql.constants.history.DiagnosisTypeCommon;
+import com.nctigba.observability.sql.constants.history.PointTypeCommon;
 import com.nctigba.observability.sql.model.history.HisDiagnosisTask;
 import com.nctigba.observability.sql.model.history.dto.AnalysisDTO;
 import com.nctigba.observability.sql.service.history.collection.CollectionItem;
@@ -27,6 +27,6 @@ public interface HisDiagnosisPointService<T> {
     T getShowData(int taskId);
 
     default String getDiagnosisType() {
-        return DiagnosisTypeCommon.HISTORY;
+        return PointTypeCommon.HISTORY;
     }
 }

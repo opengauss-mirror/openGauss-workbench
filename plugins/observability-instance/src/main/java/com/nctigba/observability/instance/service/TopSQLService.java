@@ -1,6 +1,7 @@
 /*
  * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
  */
+
 package com.nctigba.observability.instance.service;
 
 import java.time.Duration;
@@ -8,168 +9,227 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
-import org.opengauss.admin.common.core.domain.model.ops.OpsClusterNodeVO;
+import org.apache.commons.lang3.StringUtils;
+import org.opengauss.admin.common.exception.CustomException;
 import org.springframework.stereotype.Service;
 
-import com.alibaba.fastjson.JSONObject;
-import com.nctigba.observability.instance.constants.DatabaseType;
-import com.nctigba.observability.instance.dto.topsql.TopSQLInfoReq;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.nctigba.observability.instance.aop.Ds;
 import com.nctigba.observability.instance.dto.topsql.TopSQLListReq;
-import com.nctigba.observability.instance.dto.topsql.TopSQLNowReq;
-import com.nctigba.observability.instance.factory.TopSQLHandlerFactory;
-import com.nctigba.observability.instance.handler.topsql.TopSQLHandler;
+import com.nctigba.observability.instance.entity.PgSettings;
+import com.nctigba.observability.instance.mapper.PgSettingMapper;
 import com.nctigba.observability.instance.mapper.TopSqlMapper;
-import com.nctigba.observability.instance.model.InstanceNodeInfo;
-import com.nctigba.observability.instance.service.TopSQLService.waitEvent.event;
+import com.nctigba.observability.instance.model.ExecutionPlan;
+import com.nctigba.observability.instance.model.IndexAdvice;
+import com.nctigba.observability.instance.service.TopSQLService.WaitEvent.Event;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import lombok.Data;
 import lombok.Generated;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * <p>
  * TopSQL services
  * </p>
  *
- * @author zhanggr@vastdata.com.cn
  * @since 2022/9/15 15:46
  */
 @Service
 @RequiredArgsConstructor
-@Slf4j
 public class TopSQLService {
-    private final TopSQLHandlerFactory topSQLHandlerFactory;
-    private final ClusterManager clusterManager;
+    private final PgSettingMapper pgSettingMapper;
     private final TopSqlMapper topSqlMapper;
 
-    public boolean testConnection(String nodeId) {
-        TopSQLHandler handler = topSQLHandlerFactory.getInstance(DatabaseType.DEFAULT.getDbType());
-        InstanceNodeInfo instanceNodeInfo = queryNodeInfo(nodeId);
-        try {
-            return handler.getConnection(instanceNodeInfo) != null;
-        } catch (Exception e) {
-            log.error("test connection exception: {}", e.getMessage());
-            return false;
-        }
-    }
-
-    public List<JSONObject> getTopSQLList(TopSQLListReq topSQLListReq) {
-        // get handler
-        TopSQLHandler handler = topSQLHandlerFactory.getInstance(DatabaseType.DEFAULT.getDbType());
-        // query node info
-        InstanceNodeInfo instanceNodeInfo = queryNodeInfo(topSQLListReq.getId());
-        // query TopSQL list
-        return handler.getTopSQLList(instanceNodeInfo, topSQLListReq);
-    }
-
-    public List<JSONObject> getTopSQLNow(TopSQLNowReq topSQLNowReq) {
-        // get handler
-        TopSQLHandler handler = topSQLHandlerFactory.getInstance(DatabaseType.DEFAULT.getDbType());
-        // query node info
-        InstanceNodeInfo instanceNodeInfo = queryNodeInfo(topSQLNowReq.getId());
-        // query TopSQL list
-        return handler.getTopSQLNow(instanceNodeInfo, topSQLNowReq);
-    }
-
-    public JSONObject getStatisticalInfo(TopSQLInfoReq topSQLDetailReq) {
-        // get handler
-        TopSQLHandler handler = topSQLHandlerFactory.getInstance(DatabaseType.DEFAULT.getDbType());
-        // query node info
-        InstanceNodeInfo instanceNodeInfo = queryNodeInfo(topSQLDetailReq.getId());
-        // query TopSQL statistical information
-        return handler.getStatisticalInfo(instanceNodeInfo, topSQLDetailReq.getSqlId());
-    }
-
-    public JSONObject getExecutionPlan(TopSQLInfoReq topSQLPlanReq, String type) {
-        // get handler
-        TopSQLHandler handler = topSQLHandlerFactory.getInstance(DatabaseType.DEFAULT.getDbType());
-        // query node info
-        InstanceNodeInfo instanceNodeInfo = queryNodeInfo(topSQLPlanReq.getId());
-        // query TopSQL statistical information
-        return handler.getExecutionPlan(instanceNodeInfo, topSQLPlanReq.getSqlId(), type);
-    }
-
-    public List<JSONObject> getPartitionList(TopSQLInfoReq topSQLPartitionReq) {
-        // get handler
-        TopSQLHandler handler = topSQLHandlerFactory.getInstance(DatabaseType.DEFAULT.getDbType());
-        // query node info
-        InstanceNodeInfo instanceNodeInfo = queryNodeInfo(topSQLPartitionReq.getId());
-        // query TopSQL statistical information
-        return handler.getPartitionList(instanceNodeInfo, topSQLPartitionReq.getSqlId());
-    }
-
-    public List<String> getIndexAdvice(TopSQLInfoReq topSQLIndexReq) {
-        // get handler
-        TopSQLHandler handler = topSQLHandlerFactory.getInstance(DatabaseType.DEFAULT.getDbType());
-        // query node info
-        InstanceNodeInfo instanceNodeInfo = queryNodeInfo(topSQLIndexReq.getId());
-        // query TopSQL statistical information
-        return handler.getIndexAdvice(instanceNodeInfo, topSQLIndexReq.getSqlId());
-    }
-
-    public JSONObject getObjectInfo(TopSQLInfoReq topSQLObjectReq) {
-        // get handler
-        TopSQLHandler handler = topSQLHandlerFactory.getInstance(DatabaseType.DEFAULT.getDbType());
-        // query node info
-        InstanceNodeInfo instanceNodeInfo = queryNodeInfo(topSQLObjectReq.getId());
-        // query TopSQL statistical information
-        return handler.getObjectInfo(instanceNodeInfo, topSQLObjectReq.getSqlId());
+    /**
+     * fetch TopSQL list from database
+     *
+     * @param topSQLListReq instance node id
+     * @return TopSQL list
+     */
+    @Ds("id")
+    public List<Map<String, Object>> topSQLList(TopSQLListReq topSQLListReq) {
+        topSqlListPreCheck();
+        return topSqlMapper.historyTopsqlList(topSQLListReq);
     }
 
     /**
-     * Query instance node information
+     * fetch TopSQL now list from database
      *
-     * @param nodeId instance node id
-     * @return Instance node information
+     * @param id instance node id
+     * @return TopSQL list
      */
-    public InstanceNodeInfo queryNodeInfo(String nodeId) {
-        OpsClusterNodeVO opsClusterNode = clusterManager.getOpsNodeById(nodeId);
-        InstanceNodeInfo instanceNodeInfo = new InstanceNodeInfo();
-        instanceNodeInfo.setId(opsClusterNode.getNodeId());
-        instanceNodeInfo.setIp(opsClusterNode.getPublicIp());
-        instanceNodeInfo.setPort(opsClusterNode.getDbPort());
-        instanceNodeInfo.setDbName(opsClusterNode.getDbName());
-        instanceNodeInfo.setDbUser(opsClusterNode.getDbUser());
-        instanceNodeInfo.setDbUserPassword(opsClusterNode.getDbUserPassword());
-        instanceNodeInfo.setDbType(DatabaseType.DEFAULT.getDbType());
-        return instanceNodeInfo;
+    @Ds
+    public List<Map<String, Object>> topSQLNow(String id) {
+        return topSqlMapper.currentTopsqlList();
     }
 
+    /**
+     * fetch TopSQL statistical information from database, page index
+     *
+     * @param nodeId instance node id
+     * @param sqlId  TopSQL debug query id
+     * @return TopSQL statistical information
+     */
+    @Ds
+    public Map<String, Object> detail(String nodeId, String sqlId) {
+        var detail = topSqlMapper.currentDetail(sqlId);
+        if (CollUtil.isNotEmpty(detail)) {
+            return detail;
+        }
+        return topSqlMapper.historyDetail(sqlId);
+    }
+
+    /**
+     * fetch TopSQL execution plan from database
+     *
+     * @param nodeId instance node id
+     * @param sqlId  TopSQL debug query id
+     * @return TopSQL execution plan
+     */
+    @Ds
+    public ExecutionPlan executionPlan(String nodeId, String sqlId) {
+        String plan = topSqlMapper.currentPlan(sqlId);
+        if (StrUtil.isNotBlank(plan)) {
+            return new ExecutionPlan(plan);
+        }
+        // pre-check track_stmt_stat_leve full sql level at least L1
+        var settings = pgSettingMapper
+                .selectOne(Wrappers.<PgSettings>lambdaQuery().eq(PgSettings::getName, "track_stmt_stat_level"));
+        var setting = settings.getSetting();
+        if (StringUtils.startsWith(setting, "OFF") || StringUtils.startsWith(setting, "L0")) {
+            throw new CustomException("failGetExecutionPlan");
+        }
+        // get prepared statement
+        plan = topSqlMapper.historyPlan(sqlId);
+        // get base execution plan object
+        return new ExecutionPlan(plan);
+    }
+
+    /**
+     * fetch TopSQL object information from database
+     *
+     * @param nodeId instance node id
+     * @param sqlId  TopSQL debug query id
+     * @return TopSQL object information
+     */
+    @Ds
+    public Map<String, Object> objectInfo(String nodeId, String sqlId) {
+        // init objectNameList via get execution plan
+        var plan = executionPlan(nodeId, sqlId);
+        Set<String> curObjectNameList = plan.allAlias();
+        List<String> modifyObjectNameList = new LinkedList<>(curObjectNameList);
+        Map<String, Object> tableMetadata = new HashMap<>();
+        Map<String, Object> tableStructure = new HashMap<>();
+        Map<String, Object> tableIndex = new HashMap<>();
+        for (String name : curObjectNameList) {
+            try {
+                tableMetadata.put(name, topSqlMapper.tableMetaData(name));
+                tableStructure.put(name, topSqlMapper.tableStructure(name));
+                tableIndex.put(name, topSqlMapper.indexInfo(name));
+            } catch (Exception e) {
+                modifyObjectNameList.remove(name);
+            }
+        }
+        return Map.of("object_name_list", modifyObjectNameList, "table_metadata", tableMetadata, "table_structure",
+                tableStructure, "table_index", tableIndex);
+    }
+
+    /**
+     * fetch TopSQL index advice from database
+     *
+     * @param nodeId instance node id
+     * @param sqlId  TopSQL debug query id
+     * @return TopSQL index advice
+     */
+    @Ds
+    public List<String> indexAdvice(String nodeId, String sqlId) {
+        List<String> results = new ArrayList<>();
+        var queryText = topSqlMapper.sql(sqlId);
+        var advises = topSqlMapper.advise(queryText);
+        String indexTemplate = "建议为%s模式下的%t表的%c列创建索引";
+        String multiColumnIndexTemplate = "建议为%s模式下的%t表的%c创建复合索引";
+        if (advises.isEmpty()) {
+            results.add("No index suggestions");
+            return results;
+        }
+        // process index advice for every returned line
+        for (IndexAdvice advice : advises) {
+            String column = advice.getColumn();
+            if (StringUtils.isNotEmpty(column)) {
+                String result = column.contains(",") ? multiColumnIndexTemplate : indexTemplate;
+                result = result.replace("%s", advice.getSchema());
+                result = result.replace("%t", advice.getTable());
+                result = result.replace("%c", advice.getColumn());
+                results.add(result);
+            }
+        }
+        return results;
+    }
+
+    @Ds
     public List<Map<String, Object>> waitEvent(String nodeId, String sqlId) {
         List<Map<String, Object>> list = new ArrayList<>();
-        try {
-            clusterManager.setCurrentDatasource(nodeId, null);
-            String table = topSqlMapper.waitEvent(sqlId);
-            if (StrUtil.isBlank(table)) {
-                return Collections.emptyList();
+        String table = topSqlMapper.waitEvent(sqlId);
+        if (StrUtil.isBlank(table)) {
+            return topSqlMapper.currentWaitEvent(sqlId);
+        }
+        String[] lines = table.split(",");
+        WaitEvent pre = null;
+        for (String string : lines) {
+            var curr = new WaitEvent(string);
+            if (pre != null && pre.getE() == Event.LOCK_START && curr.getE() == Event.LOCK_END) {
+                list.add(Map.of("starttime", pre.getTimeStr(), "lockType", pre.getLockType(), "waittime",
+                        (Duration.between(pre.getTime(), curr.getTime()).toNanos() / 1000)));
+                pre = null;
+                continue;
             }
-            String[] lines = table.split(",");
-            waitEvent pre = null;
-            for (String string : lines) {
-                var curr = new waitEvent(string);
-                if (pre != null && pre.getE() == event.LOCK_START && curr.getE() == event.LOCK_END) {
-                    list.add(Map.of("starttime", pre.getTimeStr(), "lockType", pre.getLockType(), "waittime",
-                            (Duration.between(pre.getTime(), curr.getTime()).toNanos() / 1000)));
-                    pre = null;
-                    continue;
-                }
-                pre = curr;
-            }
-        } finally {
-            clusterManager.pool();
+            pre = curr;
         }
         return list;
     }
 
+    /**
+     * pre-check top sql list job
+     *
+     * true when not log; false when can search log
+     */
+    private void topSqlListPreCheck() {
+        var list = pgSettingMapper.selectList(Wrappers.<PgSettings>lambdaQuery().in(PgSettings::getName,
+                "enable_stmt_track", "enable_resource_track", "track_stmt_stat_level'"));
+        for (PgSettings pgSettings : list) {
+            switch (pgSettings.getName()) {
+            case "enable_resource_track":
+            case "enable_stmt_track":
+                if ("off".equals(pgSettings.getSetting())) {
+                    throw new CustomException("top sql pre check fail", 602);
+                }
+                break;
+            case "track_stmt_stat_level":
+                var setting = pgSettings.getSetting();
+                if (StringUtils.isEmpty(setting) || !setting.contains(",")) {
+                    throw new CustomException("top sql pre check fail", 602);
+                }
+                String[] settingArr = setting.split(",");
+                if ("off".equalsIgnoreCase(settingArr[0])) {
+                    throw new CustomException("top sql pre check fail", 602);
+                }
+                break;
+            default:
+            }
+        }
+    }
+
     @Data
     @Generated
-    public static class waitEvent {
+    public static class WaitEvent {
         private static final DateTimeFormatter[] FORMATTERS = {
                 DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSSx"),
                 DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSx"),
@@ -179,16 +239,16 @@ public class TopSQLService {
                 DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.Sx")
         };
         private String index;
-        private event e;
+        private Event e;
         private LocalDateTime time;
         private String timeStr;
         private String id;
         private String lockType;
 
-        public waitEvent(String string) {
+        public WaitEvent(String string) {
             String[] str = string.split("'\\s+'");
             this.index = str[0].replaceAll("'", "");
-            this.e = event.valueOf(str[1].replaceAll("'", ""));
+            this.e = Event.valueOf(str[1].replaceAll("'", ""));
             for (int i = 0; i < FORMATTERS.length; i++) {
                 try {
                     this.time = LocalDateTime.parse(str[2].replaceAll("'", ""), FORMATTERS[i]);
@@ -204,7 +264,7 @@ public class TopSQLService {
                 this.lockType = str[4].replaceAll("'", "");
         }
 
-        public enum event {
+        public enum Event {
             LOCK_START,
             LOCK_END,
             LOCK_RELEASE

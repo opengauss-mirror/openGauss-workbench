@@ -36,7 +36,10 @@
       loading?: boolean;
     }>(),
     {
-      data: [],
+      data: () => ({
+        columns: [],
+        data: [],
+      }),
       loading: false,
     },
   );

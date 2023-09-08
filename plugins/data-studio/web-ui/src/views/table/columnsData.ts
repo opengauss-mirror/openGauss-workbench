@@ -18,7 +18,7 @@ const getColumn = (type: EditColumnType) => {
         options: [],
       },
       {
-        label: 'table.column.canBeNull',
+        label: 'table.column.canBeNotNull',
         name: 'canBeNull',
         isI18nLabel: true,
         type: 'checkbox',

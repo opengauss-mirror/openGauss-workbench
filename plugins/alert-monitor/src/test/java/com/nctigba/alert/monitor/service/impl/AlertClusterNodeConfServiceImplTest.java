@@ -8,14 +8,18 @@ import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.MybatisConfiguration;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
+import com.nctigba.alert.monitor.constant.CommonConstants;
 import com.nctigba.alert.monitor.dto.AlertClusterNodeConfDto;
 import com.nctigba.alert.monitor.entity.AlertClusterNodeConf;
 import com.nctigba.alert.monitor.entity.AlertTemplate;
+import com.nctigba.alert.monitor.entity.AlertTemplateRule;
 import com.nctigba.alert.monitor.mapper.AlertClusterNodeConfMapper;
 import com.nctigba.alert.monitor.mapper.AlertTemplateMapper;
 import com.nctigba.alert.monitor.model.AlertClusterNodeAndTemplateReq;
 import com.nctigba.alert.monitor.model.AlertClusterNodeConfReq;
 import com.nctigba.alert.monitor.model.AlertTemplateReq;
+import com.nctigba.alert.monitor.service.AlertScheduleService;
+import com.nctigba.alert.monitor.service.AlertTemplateRuleService;
 import com.nctigba.alert.monitor.service.AlertTemplateService;
 import com.nctigba.alert.monitor.service.PrometheusService;
 import org.apache.ibatis.builder.MapperBuilderAssistant;
@@ -83,6 +87,12 @@ public class AlertClusterNodeConfServiceImplTest {
     @Mock
     private HostFacade hostFacade;
 
+    @Mock
+    private AlertTemplateRuleService templateRuleService;
+
+    @Mock
+    private AlertScheduleService alertScheduleService;
+
     @Before
     public void before() {
         MockitoAnnotations.initMocks(this);
@@ -116,7 +126,14 @@ public class AlertClusterNodeConfServiceImplTest {
         when(baseMapper.selectList(any())).thenReturn(oldList);
         List list = anyList();
         when(alertClusterNodeConfService.saveBatch(list)).thenReturn(true);
+
         doNothing().when(prometheusService).updateRuleConfig(anyMap());
+        List<AlertTemplateRule> templateRuleList = new ArrayList<>();
+        AlertTemplateRule templateRule = new AlertTemplateRule().setRuleType(CommonConstants.LOG_RULE).setId(1L);
+        templateRuleList.add(templateRule);
+        when(templateRuleService.list(any())).thenReturn(templateRuleList);
+        Set<Long> ruleIdSet = templateRuleList.stream().map(item -> item.getRuleId()).collect(Collectors.toSet());
+        doNothing().when(alertScheduleService).addTasks(ruleIdSet);
 
         alertClusterNodeConfService.saveClusterNodeConf(alertClusterNodeConfReq);
 
@@ -124,6 +141,8 @@ public class AlertClusterNodeConfServiceImplTest {
         verify(alertClusterNodeConfService, times(1)).saveBatch(list);
         verify(alertClusterNodeConfService, times(1)).update(any(), any(LambdaUpdateWrapper.class));
         verify(prometheusService, times(1)).updateRuleConfig(anyMap());
+        verify(templateRuleService, times(1)).list(any());
+        verify(alertScheduleService, times(1)).addTasks(ruleIdSet);
     }
 
     @Test
@@ -136,6 +155,12 @@ public class AlertClusterNodeConfServiceImplTest {
         List list = anyList();
         when(alertClusterNodeConfService.saveBatch(list)).thenReturn(true);
         doNothing().when(prometheusService).updateRuleConfig(anyMap());
+        List<AlertTemplateRule> templateRuleList = new ArrayList<>();
+        AlertTemplateRule templateRule = new AlertTemplateRule().setRuleType(CommonConstants.LOG_RULE).setId(1L);
+        templateRuleList.add(templateRule);
+        when(templateRuleService.list(any())).thenReturn(templateRuleList);
+        Set<Long> ruleIdSet = templateRuleList.stream().map(item -> item.getRuleId()).collect(Collectors.toSet());
+        doNothing().when(alertScheduleService).addTasks(ruleIdSet);
 
         alertClusterNodeConfService.saveClusterNodeConf(alertClusterNodeConfReq);
 
@@ -143,6 +168,120 @@ public class AlertClusterNodeConfServiceImplTest {
         verify(alertClusterNodeConfService, times(1)).saveBatch(list);
         verify(alertClusterNodeConfService, times(1)).update(any(), any(LambdaUpdateWrapper.class));
         verify(prometheusService, times(1)).updateRuleConfig(anyMap());
+        verify(templateRuleService, times(1)).list(any());
+        verify(alertScheduleService, times(1)).addTasks(ruleIdSet);
+    }
+
+    @Test
+    public void testSaveClusterNodeConfWithDelTask() {
+        AlertClusterNodeConfReq alertClusterNodeConfReq = new AlertClusterNodeConfReq();
+        alertClusterNodeConfReq.setClusterNodeIds("node1,node2");
+        alertClusterNodeConfReq.setTemplateId(1L);
+        AlertClusterNodeConf alertClusterNodeConf = new AlertClusterNodeConf();
+        alertClusterNodeConf.setClusterNodeId("node2").setTemplateId(2L);
+        List<AlertClusterNodeConf> oldList = new ArrayList<>();
+        oldList.add(alertClusterNodeConf);
+        List<AlertClusterNodeConf> oldListByNodeIds = new ArrayList<>();
+        oldListByNodeIds.add(new AlertClusterNodeConf().setClusterNodeId("node2").setTemplateId(2L));
+        List<AlertClusterNodeConf> alertClusterNodeConfs = new ArrayList<>();
+        when(baseMapper.selectList(any())).thenReturn(oldList).thenReturn(oldListByNodeIds)
+            .thenReturn(alertClusterNodeConfs);
+        List list = anyList();
+        when(alertClusterNodeConfService.saveBatch(list)).thenReturn(true);
+
+        doNothing().when(prometheusService).updateRuleConfig(anyMap());
+        List<AlertTemplateRule> templateRuleList = new ArrayList<>();
+        templateRuleList.add(new AlertTemplateRule().setRuleType(CommonConstants.LOG_RULE).setId(1L));
+        List<AlertTemplateRule> logTemplateRuleList = new ArrayList<>();
+        logTemplateRuleList.add(new AlertTemplateRule().setId(2L).setRuleId(1L));
+        when(templateRuleService.list(any())).thenReturn(templateRuleList).thenReturn(logTemplateRuleList);
+        Set<Long> ruleIdSet = templateRuleList.stream().map(item -> item.getRuleId()).collect(Collectors.toSet());
+        doNothing().when(alertScheduleService).addTasks(ruleIdSet);
+        doNothing().when(alertScheduleService).removeTasks(anyList());
+
+        alertClusterNodeConfService.saveClusterNodeConf(alertClusterNodeConfReq);
+
+        verify(baseMapper, times(3)).selectList(any());
+        verify(alertClusterNodeConfService, times(1)).saveBatch(list);
+        verify(alertClusterNodeConfService, times(1)).update(any(), any(LambdaUpdateWrapper.class));
+        verify(prometheusService, times(1)).updateRuleConfig(anyMap());
+        verify(templateRuleService, times(2)).list(any());
+        verify(alertScheduleService, times(1)).addTasks(ruleIdSet);
+        verify(alertScheduleService, times(1)).removeTasks(anyList());
+    }
+
+    @Test
+    public void testSaveClusterNodeConfWithoutDelTask1() {
+        AlertClusterNodeConfReq alertClusterNodeConfReq = new AlertClusterNodeConfReq();
+        alertClusterNodeConfReq.setClusterNodeIds("node1,node2");
+        alertClusterNodeConfReq.setTemplateId(1L);
+        AlertClusterNodeConf alertClusterNodeConf = new AlertClusterNodeConf();
+        alertClusterNodeConf.setClusterNodeId("node2").setTemplateId(2L);
+        List<AlertClusterNodeConf> oldList = new ArrayList<>();
+        oldList.add(alertClusterNodeConf);
+        List<AlertClusterNodeConf> oldListByNodeIds = new ArrayList<>();
+        oldListByNodeIds.add(new AlertClusterNodeConf().setClusterNodeId("node2").setTemplateId(2L));
+        List<AlertClusterNodeConf> alertClusterNodeConfs = new ArrayList<>();
+        when(baseMapper.selectList(any())).thenReturn(oldList).thenReturn(oldListByNodeIds)
+            .thenReturn(alertClusterNodeConfs);
+        List list = anyList();
+        when(alertClusterNodeConfService.saveBatch(list)).thenReturn(true);
+
+        doNothing().when(prometheusService).updateRuleConfig(anyMap());
+        List<AlertTemplateRule> templateRuleList = new ArrayList<>();
+        templateRuleList.add(new AlertTemplateRule().setRuleType(CommonConstants.LOG_RULE).setId(1L));
+        List<AlertTemplateRule> logTemplateRuleList = new ArrayList<>();
+        logTemplateRuleList.add(new AlertTemplateRule().setId(2L).setRuleId(1L));
+        when(templateRuleService.list(any())).thenReturn(templateRuleList).thenReturn(logTemplateRuleList);
+        Set<Long> ruleIdSet = templateRuleList.stream().map(item -> item.getRuleId()).collect(Collectors.toSet());
+        doNothing().when(alertScheduleService).addTasks(ruleIdSet);
+        List<Long> ruleIdList = new ArrayList<>();
+        ruleIdList.add(1L);
+        when(baseMapper.getRuleIdExcludeNoIds(any())).thenReturn(ruleIdList);
+
+        alertClusterNodeConfService.saveClusterNodeConf(alertClusterNodeConfReq);
+
+        verify(baseMapper, times(3)).selectList(any());
+        verify(alertClusterNodeConfService, times(1)).saveBatch(list);
+        verify(alertClusterNodeConfService, times(1)).update(any(), any(LambdaUpdateWrapper.class));
+        verify(prometheusService, times(1)).updateRuleConfig(anyMap());
+        verify(templateRuleService, times(2)).list(any());
+        verify(alertScheduleService, times(1)).addTasks(ruleIdSet);
+    }
+
+    @Test
+    public void testSaveClusterNodeConfWithoutDelTask2() {
+        AlertClusterNodeConfReq alertClusterNodeConfReq = new AlertClusterNodeConfReq();
+        alertClusterNodeConfReq.setClusterNodeIds("node1,node2");
+        alertClusterNodeConfReq.setTemplateId(1L);
+        AlertClusterNodeConf alertClusterNodeConf = new AlertClusterNodeConf();
+        alertClusterNodeConf.setClusterNodeId("node2").setTemplateId(2L);
+        List<AlertClusterNodeConf> oldList = new ArrayList<>();
+        oldList.add(alertClusterNodeConf);
+        List<AlertClusterNodeConf> oldListByNodeIds = new ArrayList<>();
+        oldListByNodeIds.add(new AlertClusterNodeConf().setClusterNodeId("node2").setTemplateId(2L));
+        List<AlertClusterNodeConf> alertClusterNodeConfs = new ArrayList<>();
+        when(baseMapper.selectList(any())).thenReturn(oldList).thenReturn(oldListByNodeIds)
+            .thenReturn(alertClusterNodeConfs);
+        List list = anyList();
+        when(alertClusterNodeConfService.saveBatch(list)).thenReturn(true);
+
+        doNothing().when(prometheusService).updateRuleConfig(anyMap());
+        List<AlertTemplateRule> templateRuleList = new ArrayList<>();
+        templateRuleList.add(new AlertTemplateRule().setRuleType(CommonConstants.LOG_RULE).setId(1L));
+        List<AlertTemplateRule> logTemplateRuleList = new ArrayList<>();
+        when(templateRuleService.list(any())).thenReturn(templateRuleList).thenReturn(logTemplateRuleList);
+        Set<Long> ruleIdSet = templateRuleList.stream().map(item -> item.getRuleId()).collect(Collectors.toSet());
+        doNothing().when(alertScheduleService).addTasks(ruleIdSet);
+
+        alertClusterNodeConfService.saveClusterNodeConf(alertClusterNodeConfReq);
+
+        verify(baseMapper, times(3)).selectList(any());
+        verify(alertClusterNodeConfService, times(1)).saveBatch(list);
+        verify(alertClusterNodeConfService, times(1)).update(any(), any(LambdaUpdateWrapper.class));
+        verify(prometheusService, times(1)).updateRuleConfig(anyMap());
+        verify(templateRuleService, times(2)).list(any());
+        verify(alertScheduleService, times(1)).addTasks(ruleIdSet);
     }
 
     @Test

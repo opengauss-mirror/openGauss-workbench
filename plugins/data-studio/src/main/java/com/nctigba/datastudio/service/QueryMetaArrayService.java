@@ -7,6 +7,7 @@ package com.nctigba.datastudio.service;
 import com.nctigba.datastudio.model.query.DatabaseMetaarrayColumnQuery;
 import com.nctigba.datastudio.model.query.DatabaseMetaarrayQuery;
 import com.nctigba.datastudio.model.query.DatabaseMetaarraySchemaQuery;
+import com.nctigba.datastudio.model.query.UserQuery;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -70,5 +71,23 @@ public interface QueryMetaArrayService {
      * @throws SQLException SQLException
      */
     List<String> tablespaceList(String uuid) throws SQLException;
+
+    /**
+     * user list
+     *
+     * @param uuid uuid
+     * @return UserQuery
+     * @throws SQLException SQLException
+     */
+    UserQuery userList(String uuid) throws SQLException;
+
+    /**
+     * resource list
+     *
+     * @param uuid uuid
+     * @return List<String>
+     * @throws SQLException SQLException
+     */
+    List<String> resourceList(String uuid) throws SQLException;
 
 }

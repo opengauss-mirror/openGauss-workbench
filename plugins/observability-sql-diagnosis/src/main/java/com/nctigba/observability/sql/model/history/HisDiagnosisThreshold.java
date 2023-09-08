@@ -46,6 +46,8 @@ public class HisDiagnosisThreshold {
     String thresholdDetail;
     @TableField("sort_no")
     String sortNo;
+    @TableField("diagnosis_type")
+    String diagnosisType;
     @TableField("is_deleted")
     Integer isDeleted = 0;
     @TableField(value = "create_time")

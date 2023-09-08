@@ -7,6 +7,7 @@ package com.nctigba.datastudio.service.impl.sql;
 import com.nctigba.datastudio.compatible.FunctionSPObjectSQLService;
 import com.nctigba.datastudio.config.ConnectionConfig;
 import com.nctigba.datastudio.model.dto.DatabaseFunctionSPDTO;
+import com.nctigba.datastudio.model.query.PackageRequest;
 import com.nctigba.datastudio.service.DatabaseFunctionSPService;
 import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.exception.CustomException;
@@ -66,6 +67,22 @@ public class DatabaseFunctionSPServiceImpl implements DatabaseFunctionSPService 
                     request);
             statement.execute(sql);
             log.info("dropFunctionSP sql is: " + sql);
+        } catch (SQLException e) {
+            log.info(e.toString());
+            throw new CustomException(e.getMessage());
+        }
+    }
+
+    @Override
+    public void dropPackage(PackageRequest request) {
+        log.info("DatabaseFunctionSPServiceImpl dropPackage request: " + request);
+        try (
+                Connection connection = connectionConfig.connectDatabase(request.getUuid());
+                Statement statement = connection.createStatement()
+        ) {
+            String sql = functionSPObjectSQLService.get(conMap.get(request.getUuid()).getType()).dropPackage(request);
+            log.info("DatabaseFunctionSPServiceImpl dropPackage sql: " + sql);
+            statement.execute(sql);
         } catch (SQLException e) {
             log.info(e.toString());
             throw new CustomException(e.getMessage());

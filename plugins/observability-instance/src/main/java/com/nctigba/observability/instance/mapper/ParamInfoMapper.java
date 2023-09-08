@@ -16,14 +16,14 @@ import org.springframework.stereotype.Service;
 import com.nctigba.observability.instance.config.ParamInfoInitConfig;
 import com.nctigba.observability.instance.constants.CommonConstants;
 import com.nctigba.observability.instance.entity.ParamInfo;
-import com.nctigba.observability.instance.entity.ParamInfo.type;
+import com.nctigba.observability.instance.entity.ParamInfo.ParamType;
 
 @Service
 public class ParamInfoMapper implements InitializingBean {
     private static final String SQL = "select * from param_info";
     private static final List<ParamInfo> LIST = new ArrayList<>();
     private static final Map<Integer, ParamInfo> IDS = new HashMap<>();
-    private static final Map<ParamInfo.type, Map<String, ParamInfo>> MAP = new HashMap<>();
+    private static final Map<ParamInfo.ParamType, Map<String, ParamInfo>> MAP = new HashMap<>();
 
     @Override
     public void afterPropertiesSet() throws Exception {
@@ -41,7 +41,7 @@ public class ParamInfoMapper implements InitializingBean {
                         IDS.put(paramInfo.getId(), paramInfo);
                 }
                 synchronized (MAP) {
-                    for (type v : ParamInfo.type.values())
+                    for (ParamType v : ParamInfo.ParamType.values())
                         MAP.put(v, new HashMap<>());
                     for (ParamInfo paramInfo : list)
                         MAP.get(paramInfo.getParamType()).put(paramInfo.getParamName(), paramInfo);
@@ -60,11 +60,11 @@ public class ParamInfoMapper implements InitializingBean {
         return LIST;
     }
 
-    public static ParamInfo getParamInfo(ParamInfo.type type, String name) {
+    public static ParamInfo getParamInfo(ParamInfo.ParamType type, String name) {
         return MAP.get(type).get(name);
     }
 
-    public static List<Integer> getIds(type t) {
+    public static List<Integer> getIds(ParamType t) {
         return MAP.get(t).values().stream().map(ParamInfo::getId).collect(Collectors.toList());
     }
 }

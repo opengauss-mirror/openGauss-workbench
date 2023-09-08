@@ -145,4 +145,22 @@ public interface GainObjectSQLService {
     default String tablespaceListSQL() {
         throw new CustomException(DebugUtils.getMessage());
     }
+
+    /**
+     * user sql
+     *
+     * @return String
+     */
+    default String userSql() {
+        throw new CustomException(DebugUtils.getMessage());
+    }
+
+    /**
+     * table space list sql
+     *
+     * @return String
+     */
+    default String resourceListSQL() {
+        throw new CustomException(DebugUtils.getMessage());
+    }
 }

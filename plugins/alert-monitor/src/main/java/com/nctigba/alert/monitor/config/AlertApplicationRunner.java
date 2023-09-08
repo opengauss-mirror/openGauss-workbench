@@ -6,6 +6,7 @@ package com.nctigba.alert.monitor.config;
 
 import lombok.extern.slf4j.Slf4j;
 import com.nctigba.alert.monitor.service.PrometheusService;
+import org.opengauss.admin.common.exception.ServiceException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
@@ -23,7 +24,11 @@ public class AlertApplicationRunner implements ApplicationRunner {
     private PrometheusService prometheusService;
 
     @Override
-    public void run(ApplicationArguments args) throws Exception {
-        prometheusService.initPrometheusConfig();
+    public void run(ApplicationArguments args) {
+        try {
+            prometheusService.initPrometheusConfig();
+        } catch (ServiceException e) {
+            log.error("init prometheus configuration fail: ", e);
+        }
     }
 }

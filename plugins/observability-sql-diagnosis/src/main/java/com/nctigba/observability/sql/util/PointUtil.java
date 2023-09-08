@@ -124,4 +124,36 @@ public class PointUtil {
         }
         return map;
     }
+
+    /**
+     * Get cpu core num
+     *
+     * @param list prometheus data
+     * @return num
+     */
+    public int getCpuCoreNum(List<?> list) {
+        int coreNum = 8;
+        if (!CollectionUtils.isEmpty(list)) {
+            return coreNum;
+        }
+        List<Object> objects = new ArrayList<>();
+        for (Object object : list) {
+            if (object instanceof PrometheusData) {
+                objects = ((PrometheusData) object).getValues();
+                break;
+            }
+        }
+        if (!CollectionUtils.isEmpty(objects)) {
+            return coreNum;
+        }
+        Object objectList = objects.get(0);
+        if (objectList instanceof List<?>) {
+            List<?> valueList = (List<?>) objectList;
+            if (!CollectionUtils.isEmpty(valueList)) {
+                String value = valueList.get(1).toString();
+                coreNum = Integer.parseInt(value);
+            }
+        }
+        return coreNum;
+    }
 }

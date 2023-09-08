@@ -5,7 +5,7 @@
 package com.nctigba.observability.sql.history;
 
 import com.nctigba.observability.sql.model.history.DataStoreConfig;
-import com.nctigba.observability.sql.service.history.Impl.DataStoreServiceImpl;
+import com.nctigba.observability.sql.service.history.impl.DataStoreServiceImpl;
 import com.nctigba.observability.sql.service.history.collection.CollectionItem;
 import com.nctigba.observability.sql.service.history.collection.metric.DbAvgCpuItem;
 import org.junit.Test;

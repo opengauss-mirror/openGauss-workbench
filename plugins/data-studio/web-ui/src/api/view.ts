@@ -1,7 +1,6 @@
 import request from './request';
 import requestBlob from './requestBlob';
 
-// createView
 export function createView(data) {
   return request({
     url: '/dataStudio/web/v1/views',
@@ -10,7 +9,6 @@ export function createView(data) {
   });
 }
 
-// createViewDdl
 export function createViewDdl(data) {
   return request({
     url: '/dataStudio/web/v1/views/action?action=createViewDdl',
@@ -19,7 +17,6 @@ export function createViewDdl(data) {
   });
 }
 
-// dropView
 export function dropView(data) {
   return request({
     url: '/dataStudio/web/v1/views',
@@ -28,7 +25,6 @@ export function dropView(data) {
   });
 }
 
-// getViewDdls
 export function getViewDdls(data) {
   return request({
     url: '/dataStudio/web/v1/viewDdls',
@@ -37,12 +33,43 @@ export function getViewDdls(data) {
   });
 }
 
-// getViewDatas
 export function getViewDatas(data) {
   return request({
     url: '/dataStudio/web/v1/viewDatas',
     method: 'get',
     params: data,
+  });
+}
+
+export function getViewInfo(data) {
+  return request({
+    url: '/dataStudio/web/v1/view/query',
+    method: 'post',
+    data,
+  });
+}
+
+export function getViewAttribute(data) {
+  return request({
+    url: '/dataStudio/web/v1/view/attribute',
+    method: 'post',
+    data,
+  });
+}
+
+export function getViewColumn(data) {
+  return request({
+    url: '/dataStudio/web/v1/view/column',
+    method: 'post',
+    data,
+  });
+}
+
+export function setEditView(data) {
+  return request({
+    url: '/dataStudio/web/v1/view/edit',
+    method: 'post',
+    data,
   });
 }
 

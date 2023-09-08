@@ -4,7 +4,7 @@
 
 package com.nctigba.observability.sql.history.point;
 
-import com.nctigba.observability.sql.constants.history.DiagnosisTypeCommon;
+import com.nctigba.observability.sql.constants.history.PointTypeCommon;
 import com.nctigba.observability.sql.model.history.DataStoreConfig;
 import com.nctigba.observability.sql.model.history.HisDiagnosisResult;
 import com.nctigba.observability.sql.model.history.HisDiagnosisTask;
@@ -85,7 +85,7 @@ public class TestTopDbProcess {
     @Test
     public void testGetDiagnosisType() {
         String type = topDbProcess.getDiagnosisType();
-        Assertions.assertEquals(DiagnosisTypeCommon.CURRENT, type);
+        Assertions.assertEquals(PointTypeCommon.CURRENT, type);
     }
 
     @Test

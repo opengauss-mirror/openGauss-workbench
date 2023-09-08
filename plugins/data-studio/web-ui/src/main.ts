@@ -11,7 +11,8 @@ import './permission';
 import 'virtual:svg-icons-register';
 import SvgIcon from '@/components/SvgIcon/index.vue'; // svg component
 import FontIcon from '@/components/FontIcon.vue';
-
+import { Splitpanes, Pane } from 'splitpanes';
+import 'splitpanes/dist/splitpanes.css';
 import ElementPlus from 'element-plus';
 import 'element-plus/dist/index.css';
 // dark mode: element-plus 2.2 has dark mode
@@ -29,12 +30,15 @@ import UContainerLayout from '@/components/u-container-layout/index.vue';
 
 import { i18n } from '@/i18n/index';
 import { dispatchEventStorage } from '@/utils';
-import { prevTokenPersist } from '@/config';
+import { prevTokenPersist, userPersist } from '@/config';
+import { sidebarForage } from '@/utils/localforage';
 
 const prevToken = prevTokenPersist.storage.getItem(prevTokenPersist.key);
 const token = localStorage.getItem('opengauss-token');
 if (prevToken !== token) {
   sessionStorage.clear();
+  sidebarForage.clear();
+  userPersist.storage.removeItem(userPersist.key);
   prevTokenPersist.storage.setItem(prevTokenPersist.key, token);
 }
 
@@ -43,6 +47,8 @@ const app = createApp(App);
 app.component('svg-icon', SvgIcon);
 app.component('font-icon', FontIcon);
 app.component('u-container-layout', UContainerLayout);
+app.component('Splitpanes', Splitpanes);
+app.component('Pane', Pane);
 
 // icon
 import * as ElIconsModules from '@element-plus/icons-vue';

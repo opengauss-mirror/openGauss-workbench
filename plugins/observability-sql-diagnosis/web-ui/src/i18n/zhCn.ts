@@ -68,6 +68,12 @@ export default {
       createTime: '创建时间：',
       option: '可选项：',
       thresholdsRemark: '诊断阈值',
+      taskName: '任务名：',
+      dbName: '数据库名：',
+      sqlId: 'Top SQL ID：',
+      taskType: '任务类型：',
+      taskStartTime: '开始时间：',
+      taskEndTime: '结束时间：',
     },
     topCPUTimeSQL: {
       uniqueSQLID: '归一化SQLID',

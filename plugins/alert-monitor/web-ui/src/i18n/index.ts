@@ -5,10 +5,10 @@ import en from '@/i18n/en';
 export type LocaleType = "zhCn" | "en"
 
 export const i18n = createI18n({
-    legacy: false,
-    locale: 'zhCn',
-    messages: {
-        zhCn,
-        en,
-    },
+  legacy: false,
+  locale: 'zhCn',
+  messages: {
+    zhCn,
+    en,
+  },
 })

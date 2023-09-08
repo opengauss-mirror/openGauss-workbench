@@ -8,6 +8,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.nctigba.common.web.exception.HisDiagnosisException;
 import com.nctigba.observability.sql.constants.history.MetricCommon;
 import com.nctigba.observability.sql.constants.history.OptionCommon;
+import com.nctigba.observability.sql.constants.history.PointTypeCommon;
 import com.nctigba.observability.sql.constants.history.ThresholdCommon;
 import com.nctigba.observability.sql.mapper.history.HisDiagnosisTaskMapper;
 import com.nctigba.observability.sql.model.history.DataStoreConfig;
@@ -95,6 +96,12 @@ public class TestAspAnalysis {
     public void testGetOption() {
         List<String> list = aspAnalysis.getOption();
         assertNull(list);
+    }
+
+    @Test
+    public void testDiagnosisType() {
+        String result = aspAnalysis.getDiagnosisType();
+        Assertions.assertEquals(PointTypeCommon.HISTORY, result);
     }
 
     @Test

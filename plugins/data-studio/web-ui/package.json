@@ -16,21 +16,24 @@
   "author": "GBA-NCTI-ISDC",
   "dependencies": {
     "@better-scroll/core": "^2.4.2",
-    "@vueuse/core": "^9.1.1",
+    "@types/jquery": "^3.5.16",
+    "@vueuse/core": "^9.13.0",
     "ace-builds": "^1.13.1",
     "axios": "^0.27.2",
     "core-js": "^3.6.5",
     "crypto-js": "^4.1.1",
     "element-plus": "^2.2.16",
+    "localforage": "^1.10.0",
     "nprogress": "^0.2.0",
     "path-browserify": "^1.0.1",
     "path-to-regexp": "^6.2.0",
     "pinia": "^2.0.21",
     "pinia-plugin-persistedstate": "^2.1.1",
     "sass": "^1.54.0",
+    "splitpanes": "^3.1.5",
     "sql-formatter": "^11.0.2",
     "svg-sprite-loader": "^6.0.11",
-    "vue": "^3.2.39",
+    "vue": "^3.3.4",
     "vue-i18n": "^9.2.2",
     "vue-router": "^4.0.0-0",
     "vuex": "^4.0.0-0",
@@ -55,6 +58,7 @@
     "vue-tsc": "^1.0.0"
   },
   "engines": {
-    "node": ">= 16"
+    "node": ">=16",
+    "npm": ">=7"
   }
 }

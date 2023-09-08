@@ -7,260 +7,306 @@
 
 // page-header
 .page-header {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    padding-bottom: 7px;
-    border-bottom: 1px solid var(--border-1);
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding-bottom: 7px;
+  border-bottom: 1px solid var(--border-1);
 
-    .icon {
-        width: 4px;
-        height: 14px;
-        background: var(--primary-6);
-        border-radius: 1px;
-        margin-right: 4px;
-    }
-    .title {
-        font-family: 'Source Han Sans CN';
-        font-style: normal;
-        font-weight: 700;
-        font-size: 16px;
-        line-height: 22px;
-        height: 22px;
-        /* identical to box height, or 138% */
-        letter-spacing: -0.01px;
-        color: var(--text-1);
-    }
-    .seperator {
-        margin: 0px 16px;
-        width: 18px;
-        height: 0px;
-        border: 1px solid var(--border-1);
-        transform: rotate(90deg);
-    }
-    .cluster-title {
-        height: 22px;
-        font-family: 'Source Han Sans CN';
-        font-style: normal;
-        font-weight: 400;
-        font-size: 14px;
-        line-height: 22px;
-        color: var(--text-1);
-    }
-    .instance-info {
-        margin-left: 4px;
-    }
+  .icon {
+    width: 4px;
+    height: 14px;
+    background: var(--primary-6);
+    border-radius: 1px;
+    margin-right: 4px;
+  }
+  .title {
+    font-family: 'Source Han Sans CN';
+    font-style: normal;
+    font-weight: 700;
+    font-size: 16px;
+    line-height: 22px;
+    height: 22px;
+    /* identical to box height, or 138% */
+    letter-spacing: -0.01px;
+    color: var(--text-1);
+  }
+  .seperator {
+    margin: 0px 16px;
+    width: 18px;
+    height: 0px;
+    border: 1px solid var(--border-1);
+    transform: rotate(90deg);
+  }
+  .cluster-title {
+    height: 22px;
+    font-family: 'Source Han Sans CN';
+    font-style: normal;
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 22px;
+    color: var(--text-1);
+  }
+  .instance-info {
+    margin-left: 4px;
+  }
+}
+
+.main-container {
+  margin-top: 16px;
 }
 
 // card margin bottom
 .card-margin-bottom {
-    margin-bottom: 16px;
+  margin-bottom: 16px;
 }
 .card-links {
-    .el-link {
-        margin-right: 10px;
-    }
+  .el-link {
+    margin-right: 10px;
+  }
 }
 
 // tabs in card
 .card-tabs {
-    &.el-tabs {
-        --el-tabs-header-height: 32px;
-        > .el-tabs__header {
-            .el-tabs__item {
-                padding: 0px 16px !important;
-            }
-        }
+  &.el-tabs {
+    --el-tabs-header-height: 32px;
+    > .el-tabs__header {
+      .el-tabs__item {
+        padding: 0px 16px !important;
+      }
     }
+  }
 }
 
 // table in card
 .table-in-card {
-    padding: 0px 16px;
-    .el-table--border {
-        border: 1px solid rgba(22, 93, 255, 0.4);
-    }
+  padding: 0px 16px;
+  .el-table--border {
+    border: 1px solid rgba(22, 93, 255, 0.4);
+  }
 }
 
 // text in card
 .text-in-card {
-    padding: 8px 16px;
-    .text-row {
-        display: flex;
-        flex-direction: row;
-        .label {
-            width: 115px;
-            text-align: right;
-        }
+  padding: 8px 16px;
+  .text-row {
+    display: flex;
+    flex-direction: row;
+    .label {
+      width: 115px;
+      text-align: right;
     }
+  }
 }
 
 // normal grid header
 .grid-header {
-    background: var(--background-color-2) !important;
-    .cell {
-        line-height: 22px !important;
-    }
+  background: var(--background-color-2) !important;
+  .cell {
+    line-height: 22px !important;
+  }
 }
-
+.highlight-row {
+  background: #fff8df !important;
+}
 
 // grid header when grid is in card
 .grid-header-in-card {
-    background: var(--background-color-3) !important;
-    .cell {
-        line-height: 22px !important;
-    }
+  background: var(--background-color-3) !important;
+  .cell {
+    line-height: 22px !important;
+  }
 }
 
 .table-link {
-    color: var(--link-6);
-    cursor: pointer;
+  color: var(--link-6);
+  cursor: pointer;
 }
 
 .el-tabs__item.is-disabled {
-    cursor: auto !important;
+  cursor: auto !important;
 }
 
 // table
+.filter-bar {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-end;
+  width: 100%;
+  margin-bottom: 8px;
+  .item:not(:last-child) {
+    display: flex;
+    align-items: center;
+    margin-right: 16px;
+  }
+}
 .normal-table {
-    .operate-btns {
-        display: flex;
-        justify-content: space-around;
-    }
+  .operate-btns {
+    display: flex;
+    justify-content: space-around;
+  }
 }
 .search-form {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin-bottom: 20px;
+  .search-time-range {
+    width: 300px;
+  }
+  .filter {
+    display: flex;
+    align-items: center;
+  }
+  .filter:not(:last-child) {
+    margin-right: 15px;
+  }
+  .seperator {
+    margin: auto;
+  }
+}
+.search-form-multirow {
+  .row {
     display: flex;
     justify-content: flex-end;
     align-items: center;
-    margin-bottom: 20px;
     .search-time-range {
-        width: 300px;
+      width: 300px;
     }
     .filter {
-        display: flex;
-        align-items: center;
+      display: flex;
+      align-items: center;
     }
     .filter:not(:last-child) {
-        margin-right: 15px;
+      margin-right: 15px;
     }
     .seperator {
-        margin: auto;
-    }
-}
-.search-form-multirow {
-    .row {
-        display: flex;
-        justify-content: flex-end;
-        align-items: center;
-        .search-time-range {
-            width: 300px;
-        }
-        .filter {
-            display: flex;
-            align-items: center;
-        }
-        .filter:not(:last-child) {
-            margin-right: 15px;
-        }
-        .seperator {
-            margin: auto;
-        }
-        margin-bottom: 10px;
+      margin: auto;
     }
     margin-bottom: 10px;
+  }
+  margin-bottom: 10px;
+}
+.state-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  .state {
+    width: 6px;
+    height: 6px;
+    margin-right: 4px;
+    border-radius: 100px;
+    &.green {
+      background: var(--green, #52c41a);
+      box-shadow: 0px 1px 3px 0px #52c41a;
+    }
+    &.yellow {
+      background: var(--green, #ffa53c);
+      box-shadow: 0px 1px 3px 0px #ffa53c;
+    }
+    &.red {
+      background: var(--green, #f6605a);
+      box-shadow: 0px 1px 3px 0px #f6605a;
+    }
+    &.grey {
+      background: var(--green, #b8b8b8);
+      box-shadow: 0px 1px 3px 0px #b8b8b8;
+    }
+  }
 }
 
 .refresh-bar {
-    &-container {
-        height: 500px;
-        position: absolute;
-        right: -14px;
-        top: 0px;
-        padding-top: 1px;
-        display: flex;
-        margin-bottom: 10px;
-        justify-content: end;
-        overflow: hidden;
-        font-size: 12px;
+  &-container {
+    height: 500px;
+    position: absolute;
+    right: -14px;
+    top: 0px;
+    padding-top: 1px;
+    display: flex;
+    margin-bottom: 10px;
+    justify-content: end;
+    overflow: hidden;
+    font-size: 12px;
+  }
+
+  &-filter {
+    font-size: 12px;
+    width: 800px;
+    z-index: 10;
+    padding-right: 16px;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    height: 30px;
+    > div:not(:last-of-type),
+    > span,
+    > button {
+      margin-right: 4px;
     }
 
-    &-filter {
-        font-size: 12px;
-        width: 800px;
-        z-index: 10;
-        padding-right: 16px;
-        display: flex;
-        align-items: center;
-        padding: 0 10px;
-        height: 30px;
-        > div:not(:last-of-type),
-        > span,
-        > button {
-            margin-right: 4px;
-        }
-
-        :deep(.el-button .el-icon svg) {
-            color: var(--el-color-icon-refresh-color);
-        }
-
-        :deep(.el-select .el-input.is-focus .el-input__wrapper) {
-            box-shadow: 0 0 0 1px var(--hw-primary-1, var(--hw-primary-1)) inset !important;
-        }
-        :deep(.el-select-dropdown__item.selected) {
-            color: var(--el-color-tabbar-active) !important;
-        }
-        :deep(.el-range-editor.is-active) {
-            box-shadow: 0 0 0 1px var(--hw-primary-1, var(--hw-primary-1)) inset !important;
-        }
+    :deep(.el-button .el-icon svg) {
+      color: var(--el-color-icon-refresh-color);
     }
 
-    :deep(.el-range-input) {
-        background-color: var(--el-bg-color);
+    :deep(.el-select .el-input.is-focus .el-input__wrapper) {
+      box-shadow: 0 0 0 1px var(--hw-primary-1, var(--hw-primary-1)) inset !important;
     }
+    :deep(.el-select-dropdown__item.selected) {
+      color: var(--el-color-tabbar-active) !important;
+    }
+    :deep(.el-range-editor.is-active) {
+      box-shadow: 0 0 0 1px var(--hw-primary-1, var(--hw-primary-1)) inset !important;
+    }
+  }
 
-    :deep(.el-date-editor--datetimerange) {
-        width: 100px;
-        background-color: var(--el-bg-color);
-    }
+  :deep(.el-range-input) {
+    background-color: var(--el-bg-color);
+  }
+
+  :deep(.el-date-editor--datetimerange) {
+    width: 100px;
+    background-color: var(--el-bg-color);
+  }
 }
 
 .refresh-button.el-button.el-button--primary {
-    background-color: var(--button-1-background) !important;
-    border: 1px solid var(--button-1-border) !important;
-    color: var(--button-1-color) !important;
-    padding: 8px !important;
+  background-color: var(--button-1-background) !important;
+  border: 1px solid var(--button-1-border) !important;
+  color: var(--button-1-color) !important;
+  padding: 8px !important;
 }
 
 .divider {
-    height: 24px;
-    width: 1px;
-    margin: 0 8px !important;
-    background-color: var(--el-color-divider-border-color);
+  height: 24px;
+  width: 1px;
+  margin: 0 8px !important;
+  background-color: var(--el-color-divider-border-color);
 }
 
 .gap-row {
-    margin-bottom: 16px;
+  margin-bottom: 16px;
 }
 
 .line-tips {
-    position: absolute;
-    top: 8px;
-    left: 13px;
+  position: absolute;
+  top: 8px;
+  left: 13px;
+  display: flex;
+  > div {
+    font-size: 12px;
     display: flex;
-    > div {
-        font-size: 12px;
-        display: flex;
-        flex-direction: row;
-        align-items: center;
-        padding: 4px 12px;
-        gap: 4px;
-        border: 1px solid var(--border-2);
-        border-radius: 2px;
-    }
+    flex-direction: row;
+    align-items: center;
+    padding: 4px 12px;
+    gap: 4px;
+    border: 1px solid var(--border-2);
+    border-radius: 2px;
+  }
 
-    &.center {
-        position: unset;
-        justify-content: center;
-        flex-direction: row;
-    }
+  &.center {
+    position: unset;
+    justify-content: center;
+    flex-direction: row;
+  }
 }

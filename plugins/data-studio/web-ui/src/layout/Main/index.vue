@@ -1,26 +1,53 @@
 <!-- Copyright(c) vue-admin-perfect(zouzhibin). -->
 <template>
   <div class="app-main" v-if="isReload">
-    <router-view v-slot="{ Component, route }">
-      <transition name="fade-slide" mode="out-in" appear>
-        <keep-alive v-if="route.meta && route.meta.keepAlive" :include="cachedViewName">
-          <component
-            :is="wrap(route, Component)"
-            :key="route.fullPath + `_${loadViewTime(route.fullPath)}`"
-          />
-        </keep-alive>
-        <component :is="wrap(route.path, Component)" :key="route.fullPath" v-else />
-      </transition>
-    </router-view>
+    <Splitpanes class="default-theme" :dbl-click-splitter="false">
+      <Pane min-size="30">
+        <router-view v-slot="{ Component, route }">
+          <transition name="fade-slide" mode="out-in" appear>
+            <keep-alive v-if="route.meta && route.meta.keepAlive" :include="cachedViewName">
+              <component
+                :is="wrap(route, Component)"
+                :key="route.fullPath + `_${loadViewTime(route.fullPath)}`"
+              />
+            </keep-alive>
+            <component :is="wrap(route.path, Component)" :key="route.fullPath" v-else />
+          </transition>
+        </router-view>
+      </Pane>
+      <Pane min-size="30" v-if="AppStore.isOpenSqlAssistant">
+        <div class="iframe-wrapper">
+          <div class="iframe-container">
+            <iframe
+              name="assistantFrame"
+              :src="iframeSrc"
+              width="100%"
+              height="100%"
+              frameborder="0"
+              ref="assistantRef"
+            >
+            </iframe>
+          </div>
+        </div>
+      </Pane>
+    </Splitpanes>
   </div>
 </template>
 
 <script lang="ts" setup name="mainVue">
+  import { useAppStore } from '@/store/modules/app';
   import { useSettingStore } from '@/store/modules/setting';
   import { useTagsViewStore } from '@/store/modules/tagsView';
+  const AppStore = useAppStore();
   const SettingStore = useSettingStore();
   const TagsViewStore = useTagsViewStore();
 
+  const baseURL = import.meta.env.BASE_URL;
+  const iframeSrc = computed(() => {
+    return `${baseURL}statics/db_assistant/index_${
+      AppStore.language === 'zh-CN' ? 'zh' : 'en'
+    }.html`;
+  });
   const cachedViewName = computed(() => {
     // attention: `wrapperName` must in `cachedViewName`. Add `loadTime` is to solve problem of keep-alive and mounted More than once
     return TagsViewStore.visitedViews.map((item) => item.path + item.loadTime);
@@ -56,7 +83,6 @@
 <style lang="scss" scoped>
   .app-main {
     flex: 1;
-    height: 100%;
     overflow: hidden;
     flex-direction: column;
     width: 100%;
@@ -65,5 +91,16 @@
   }
   .keepalive-page {
     height: 100%;
+  }
+  .iframe-wrapper {
+    margin: 10px;
+    margin-left: 3px;
+    height: calc(100% - 20px);
+    border: 1px solid #d8d8d8;
+    // padding: 10px;
+    // height: 100%;
+    .iframe-container {
+      height: 100%;
+    }
   }
 </style>

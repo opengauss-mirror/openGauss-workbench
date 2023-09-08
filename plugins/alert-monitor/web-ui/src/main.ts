@@ -12,11 +12,12 @@ import { createPinia } from "pinia";
 import piniaPluginPersistedstate from "pinia-plugin-persistedstate";
 import "virtual:svg-icons-register";
 import router from "@/router";
-import { vLoading } from "element-plus";
+import { vLoading, ElInfiniteScroll } from "element-plus";
 import { i18n } from '@/i18n'
 
 const pinia = createPinia();
 pinia.use(piniaPluginPersistedstate);
 const app = createApp(App)
 app.directive('loading', vLoading)
+app.directive("infiniteScroll", ElInfiniteScroll);
 app.use(i18n).use(router).use(pinia).mount("#app");

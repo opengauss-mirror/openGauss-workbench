@@ -9,7 +9,8 @@
   import TerminalEditor from '@/components/terminal-editor/index.vue';
   import { useAppStore } from '@/store/modules/app';
   import EventBus, { EventTypeName } from '@/utils/event-bus';
-  import { connectListPersist } from '@/config';
+  import { connectListPersist, hasConnectListPersist } from '@/config';
+  import { sidebarForage } from '@/utils/localforage';
 
   const route = useRoute();
   const router = useRouter();
@@ -17,14 +18,16 @@
   const showHome = ref<boolean>(false);
   watch(
     route,
-    (route, oldRoute) => {
+    async (route, oldRoute) => {
       if (route.name == 'home' && route?.fullPath != oldRoute?.fullPath) {
         if (route.fullPath == '/home') {
-          const isDSConnect = JSON.parse(
-            connectListPersist.storage.getItem(connectListPersist.key) || '[]',
+          const isDSConnect: boolean =
+            (((await sidebarForage.getItem(connectListPersist.key)) as any[]) || []).length > 0;
+          const hasConnectList = JSON.parse(
+            hasConnectListPersist.storage.getItem(hasConnectListPersist.key) || 'false',
           );
           showHome.value = false;
-          if (isDSConnect.length) {
+          if (isDSConnect && hasConnectList) {
             const connectInfoName = AppStore.connectListMap[0].info.name;
             const uuid = AppStore.connectListMap[0].connectedDatabase[0]?.uuid;
             const dbname = AppStore.connectListMap[0].connectedDatabase[0]?.name;
@@ -39,13 +42,14 @@
               },
             });
           } else {
+            sidebarForage.clear();
             EventBus.notify(EventTypeName.OPEN_CONNECT_DIALOG, 'create');
           }
         } else {
           showHome.value = !!(
             route.query.connectInfoName &&
             route.query.time &&
-            AppStore.currentConnectInfo?.name
+            AppStore.lastestConnectDatabase?.name
           );
         }
       } else if (route.fullPath == '/home' && route.fullPath == oldRoute?.fullPath) {

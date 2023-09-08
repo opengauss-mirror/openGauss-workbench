@@ -1,3 +1,4 @@
+
 package com.nctigba.observability.log.service;
 
 import java.io.File;
@@ -30,202 +31,203 @@ import cn.hutool.json.JSONUtil;
 
 @Service
 public class ElasticsearchService extends AbstractInstaller {
-	public static final String PATH = "https://artifacts.elastic.co/downloads/elasticsearch/";
-	public static final String NAME = "elasticsearch-8.3.3-linux-";
-	public static final String SRC = "elasticsearch-8.3.3";
+    public static final String PATH = "https://artifacts.elastic.co/downloads/elasticsearch/";
+    public static final String NAME = "elasticsearch-8.3.3-linux-";
+    public static final String SRC = "elasticsearch-8.3.3";
 
-	@Autowired
-	private ResourceLoader loader;
-	@Autowired
-	private ElasticsearchProvider provider;
+    @Autowired
+    private ResourceLoader loader;
+    @Autowired
+    private ElasticsearchProvider provider;
 
-	public void install(WsSession wsSession, String hostId, String path, String username, String rootPassword, Integer port) {
-		// @formatter:off
-		var steps = Arrays.asList(
-				new Step("elastic.install.step1"),
-				new Step("elastic.install.step2"),
-				new Step("elastic.install.step3"),
-				new Step("elastic.install.step4"),
-				new Step("elastic.install.step5"),
-				new Step("elastic.install.step6"),
-				new Step("elastic.install.step7"),
-				new Step("elastic.install.step8"));
-		// @formatter:on
-		int curr = 0;
-		if (!path.endsWith(File.separator)) {
-			path += File.separator;
-		}
-		try {
-			curr = nextStep(wsSession, steps, curr);
-			var env = envMapper
-					.selectOne(Wrappers.<NctigbaEnv>lambdaQuery().eq(NctigbaEnv::getType, type.ELASTICSEARCH));
-			if (env != null)
-				throw new RuntimeException("elasticsearch exists");
-			env = new NctigbaEnv().setHostid(hostId).setPort(port).setPath(path).setType(type.ELASTICSEARCH)
-					.setPath(SRC);
-			// 生成数据库记录,入库
-			envMapper.insert(env);
+    public void install(WsSession wsSession, String hostId, String path, String username, String rootPassword,
+            Integer port) {
+        // @formatter:off
+        var steps = Arrays.asList(
+                new Step("elastic.install.step1"),
+                new Step("elastic.install.step2"),
+                new Step("elastic.install.step3"),
+                new Step("elastic.install.step4"),
+                new Step("elastic.install.step5"),
+                new Step("elastic.install.step6"),
+                new Step("elastic.install.step7"),
+                new Step("elastic.install.step8"));
+        // @formatter:on
+        int curr = 0;
+        if (!path.endsWith(File.separator)) {
+            path += File.separator;
+        }
+        try {
+            curr = nextStep(wsSession, steps, curr);
+            var env = envMapper
+                    .selectOne(Wrappers.<NctigbaEnv>lambdaQuery().eq(NctigbaEnv::getType, type.ELASTICSEARCH));
+            if (env != null)
+                throw new RuntimeException("elasticsearch exists");
+            env = new NctigbaEnv().setHostid(hostId).setPort(port).setPath(path).setType(type.ELASTICSEARCH)
+                    .setPath(SRC);
+            // 生成数据库记录,入库
+            envMapper.insert(env);
 
-			try {
-				curr = nextStep(wsSession, steps, curr);
-				OpsHostEntity hostEntity = hostFacade.getById(hostId);
-				if (hostEntity == null)
-					throw new RuntimeException("host not found");
-				env.setHost(hostEntity);
-				if (rootPassword != null)
-					try (var session = SshSession.connect(hostEntity.getPublicIp(), hostEntity.getPort(), "root",
-							encryptionUtils.decrypt(rootPassword));) {
-						String vm = session.execute("sysctl -n vm.max_map_count");
-						if (NumberUtil.parseInt(vm) < 262144) {
-							session.execute("echo vm.max_map_count = 262144 >> /etc/sysctl.conf");
-							session.execute("sysctl -p");
-						}
-					} catch (Exception e) {
-						throw new RuntimeException("root password error", e);
-					}
-				var user = getUser(hostEntity, username, rootPassword);
-				env.setUsername(username);
-				try (var session = SshSession.connect(hostEntity.getPublicIp(), hostEntity.getPort(),
-						username, encryptionUtils.decrypt(user.getPassword()));) {
+            try {
+                curr = nextStep(wsSession, steps, curr);
+                OpsHostEntity hostEntity = hostFacade.getById(hostId);
+                if (hostEntity == null)
+                    throw new RuntimeException("host not found");
+                env.setHost(hostEntity);
+                if (rootPassword != null)
+                    try (var session = SshSession.connect(hostEntity.getPublicIp(), hostEntity.getPort(), "root",
+                            encryptionUtils.decrypt(rootPassword));) {
+                        String vm = session.execute("/usr/sbin/sysctl -n vm.max_map_count");
+                        if (NumberUtil.parseInt(vm) < 262144) {
+                            session.execute("echo vm.max_map_count = 262144 >> /etc/sysctl.conf");
+                            session.execute("/usr/sbin/sysctl -p");
+                        }
+                    } catch (Exception e) {
+                        throw new RuntimeException("root password error", e);
+                    }
+                var user = getUser(hostEntity, username, rootPassword);
+                env.setUsername(username);
+                try (var session = SshSession.connect(hostEntity.getPublicIp(), hostEntity.getPort(), username,
+                        encryptionUtils.decrypt(user.getPassword()));) {
 
-					curr = nextStep(wsSession, steps, curr);
-					session.execute("mkdir -p " + path);
-					var vm = session.execute("sysctl -n vm.max_map_count");
-					if (NumberUtil.parseInt(vm) < 262144)
-						throw new RuntimeException(
-								"please set vm.max_map_count to upper than 262144, command:echo vm.max_map_count = 262144 >> /etc/sysctl.conf &&sysctl -p");
-					var arch = session.execute(command.ARCH);
-					String name = NAME + arch;
-					String tar = name + TAR;
-					if (!session.test(command.STAT.parse(SRC))) {
-						if (!session.test(command.STAT.parse(tar))) {
-							var pkg = envMapper.selectOne(Wrappers.<NctigbaEnv>lambdaQuery()
-									.eq(NctigbaEnv::getType, type.ELASTICSEARCH_PKG).like(NctigbaEnv::getPath, tar));
-							if (pkg == null) {
-								var f = Download.download(PATH + tar, "pkg/" + tar);
-								pkg = new NctigbaEnv().setPath(f.getCanonicalPath()).setType(type.ELASTICSEARCH_PKG);
-								addMsg(wsSession, steps, curr, "elastic.install.download.success");
-								save(pkg);
-							}
-							session.upload(pkg.getPath(), path + tar);
-						}
-						session.execute("cd " + path + " && " + command.TAR.parse(tar));
-					}
+                    curr = nextStep(wsSession, steps, curr);
+                    session.execute("mkdir -p " + path);
+                    var vm = session.execute("/usr/sbin/sysctl -n vm.max_map_count");
+                    if (NumberUtil.parseInt(vm) < 262144)
+                        throw new RuntimeException(
+                                "please set vm.max_map_count to upper than 262144, command:echo vm.max_map_count = 262144 >> /etc/sysctl.conf &&sysctl -p");
+                    var arch = session.execute(command.ARCH);
+                    String name = NAME + arch;
+                    String tar = name + TAR;
+                    if (!session.test(command.STAT.parse(SRC))) {
+                        if (!session.test(command.STAT.parse(tar))) {
+                            var pkg = envMapper.selectOne(Wrappers.<NctigbaEnv>lambdaQuery()
+                                    .eq(NctigbaEnv::getType, type.ELASTICSEARCH_PKG).like(NctigbaEnv::getPath, tar));
+                            if (pkg == null) {
+                                var f = Download.download(PATH + tar, "pkg/" + tar);
+                                pkg = new NctigbaEnv().setPath(f.getCanonicalPath()).setType(type.ELASTICSEARCH_PKG);
+                                addMsg(wsSession, steps, curr, "elastic.install.download.success");
+                                save(pkg);
+                            }
+                            session.upload(pkg.getPath(), path + tar);
+                        }
+                        session.execute("cd " + path + " && " + command.TAR.parse(tar));
+                    }
 
-					curr = nextStep(wsSession, steps, curr);
-					// 生成配置文件
-					var elasticConfigFile = File.createTempFile("elasticsearch", ".yml");
-					// @formatter:off
-					FileUtil.appendUtf8String(
-							"path.data: " + "data" + System.lineSeparator()
-							+ "path.logs: " + "logs" + System.lineSeparator()
-							+ "cluster.name: dbTools-es" + System.lineSeparator()
-							+ "cluster.initial_master_nodes: [\"node1\"]" + System.lineSeparator()
-							+ "discovery.seed_hosts: [\"127.0.0.1\"]" + System.lineSeparator()
-							+ "node.name: node1" + System.lineSeparator() 
-							+ "network.host: 0.0.0.0" + System.lineSeparator()
-							+ "http.port: " + port + System.lineSeparator()
-							+ "http.host: 0.0.0.0" + System.lineSeparator() 
-							+ "transport.host: 0.0.0.0" + System.lineSeparator()
-							+ "http.cors.enabled: true" + System.lineSeparator()
-							+ "http.cors.allow-origin: \"*\"" + System.lineSeparator() 
-							+ "xpack.security.enrollment.enabled: true" + System.lineSeparator()
-							+ "xpack.security.enabled: false" + System.lineSeparator()
-							+ "xpack.security.http.ssl.enabled: false" + System.lineSeparator()
-							+ "xpack.security.transport.ssl.enabled: false"
-							, elasticConfigFile);
-					// @formatter:on
-					session.execute("mkdir -p "+ path + SRC + "/config");
-					session.upload(elasticConfigFile.getAbsolutePath(), path + SRC + "/config/elasticsearch.yml");
+                    curr = nextStep(wsSession, steps, curr);
+                    // 生成配置文件
+                    var elasticConfigFile = File.createTempFile("elasticsearch", ".yml");
+                    // @formatter:off
+                    FileUtil.appendUtf8String(
+                            "path.data: " + "data" + System.lineSeparator()
+                            + "path.logs: " + "logs" + System.lineSeparator()
+                            + "cluster.name: dbTools-es" + System.lineSeparator()
+                            + "cluster.initial_master_nodes: [\"node1\"]" + System.lineSeparator()
+                            + "discovery.seed_hosts: [\"127.0.0.1\"]" + System.lineSeparator()
+                            + "node.name: node1" + System.lineSeparator()
+                            + "network.host: 0.0.0.0" + System.lineSeparator()
+                            + "http.port: " + port + System.lineSeparator()
+                            + "http.host: 0.0.0.0" + System.lineSeparator()
+                            + "transport.host: 0.0.0.0" + System.lineSeparator()
+                            + "http.cors.enabled: true" + System.lineSeparator()
+                            + "http.cors.allow-origin: \"*\"" + System.lineSeparator()
+                            + "xpack.security.enrollment.enabled: true" + System.lineSeparator()
+                            + "xpack.security.enabled: false" + System.lineSeparator()
+                            + "xpack.security.http.ssl.enabled: false" + System.lineSeparator()
+                            + "xpack.security.transport.ssl.enabled: false"
+                            , elasticConfigFile);
+                    // @formatter:on
+                    session.execute("mkdir -p " + path + SRC + "/config");
+                    session.upload(elasticConfigFile.getAbsolutePath(), path + SRC + "/config/elasticsearch.yml");
 
-					Files.delete(elasticConfigFile.toPath());
+                    Files.delete(elasticConfigFile.toPath());
 
-					var in = loader.getResource("jvm.options").getInputStream();
-					session.upload(in, path + SRC + "/config/jvm.options");
+                    var in = loader.getResource("jvm.options").getInputStream();
+                    session.upload(in, path + SRC + "/config/jvm.options");
 
-					curr = nextStep(wsSession, steps, curr);
-					String cd = "cd " + path + SRC + " && ";
-					session.executeNoWait(cd + " ./bin/elasticsearch -d &");
+                    curr = nextStep(wsSession, steps, curr);
+                    String cd = "cd " + path + SRC + " && ";
+                    session.executeNoWait(cd + " ./bin/elasticsearch -d &");
 
-					curr = nextStep(wsSession, steps, curr);
-					// 调用http验证es
-					for (int i = 0; i < 10; i++) {
-						ThreadUtil.sleep(3000L);
-						try {
-							HttpUtil.get("http://" + env.getHost().getPublicIp() + ":" + env.getPort());
-						} catch (Exception e) {
-							if (i == 9)
-								throw new RuntimeException("elastic.install.start.fail");
-						}
-					}
-				}
+                    curr = nextStep(wsSession, steps, curr);
+                    // 调用http验证es
+                    for (int i = 0; i < 10; i++) {
+                        ThreadUtil.sleep(3000L);
+                        try {
+                            HttpUtil.get("http://" + env.getHost().getPublicIp() + ":" + env.getPort());
+                        } catch (Exception e) {
+                            if (i == 9)
+                                throw new RuntimeException("elastic.install.start.fail");
+                        }
+                    }
+                }
 
-				curr = nextStep(wsSession, steps, curr);
-				envMapper.updateById(env);
-				sendMsg(wsSession, steps, curr, status.DONE);
-			} catch (Exception e) {
-				envMapper.deleteById(env);
-				throw e;
-			}
-		} catch (Exception e) {
-			steps.get(curr).setState(status.ERROR).add(e.getMessage());
-			wsUtil.sendText(wsSession, JSONUtil.toJsonStr(steps));
-			var sw = new StringWriter();
-			try (var pw = new PrintWriter(sw);) {
-				e.printStackTrace(pw);
-			}
-			wsUtil.sendText(wsSession, sw.toString());
-		}
-	}
+                curr = nextStep(wsSession, steps, curr);
+                envMapper.updateById(env);
+                sendMsg(wsSession, steps, curr, status.DONE);
+            } catch (Exception e) {
+                envMapper.deleteById(env);
+                throw e;
+            }
+        } catch (Exception e) {
+            steps.get(curr).setState(status.ERROR).add(e.getMessage());
+            wsUtil.sendText(wsSession, JSONUtil.toJsonStr(steps));
+            var sw = new StringWriter();
+            try (var pw = new PrintWriter(sw);) {
+                e.printStackTrace(pw);
+            }
+            wsUtil.sendText(wsSession, sw.toString());
+        }
+    }
 
-	public void uninstall(WsSession wsSession, String id) {
-		// @formatter:off
-		var steps = Arrays.asList(
-				new Step("elastic.uninstall.step1"),
-				new Step("elastic.uninstall.step2"),
-				new Step("elastic.uninstall.step3"),
-				new Step("elastic.uninstall.step4"),
-				new Step("elastic.uninstall.step5"));
-		// @formatter:on
-		var curr = 0;
+    public void uninstall(WsSession wsSession, String id) {
+        // @formatter:off
+        var steps = Arrays.asList(
+                new Step("elastic.uninstall.step1"),
+                new Step("elastic.uninstall.step2"),
+                new Step("elastic.uninstall.step3"),
+                new Step("elastic.uninstall.step4"),
+                new Step("elastic.uninstall.step5"));
+        // @formatter:on
+        var curr = 0;
 
-		try {
-			curr = nextStep(wsSession, steps, curr);
-			var env = envMapper.selectById(id);
-			if (env == null)
-				throw new RuntimeException("id not found");
+        try {
+            curr = nextStep(wsSession, steps, curr);
+            var env = envMapper.selectById(id);
+            if (env == null)
+                throw new RuntimeException("id not found");
 
-			curr = nextStep(wsSession, steps, curr);
-			OpsHostEntity hostEntity = hostFacade.getById(env.getHostid());
-			if (hostEntity == null)
-				throw new RuntimeException("host not found");
-			env.setHost(hostEntity);
+            curr = nextStep(wsSession, steps, curr);
+            OpsHostEntity hostEntity = hostFacade.getById(env.getHostid());
+            if (hostEntity == null)
+                throw new RuntimeException("host not found");
+            env.setHost(hostEntity);
 
-			var user = hostUserFacade.listHostUserByHostId(hostEntity.getHostId()).stream().filter(e -> {
-				return env.getUsername().equals(e.getUsername());
-			}).findFirst().orElse(null);
-			try (var sshsession = SshSession.connect(hostEntity.getPublicIp(), hostEntity.getPort(), user.getUsername(),
-					encryptionUtils.decrypt(user.getPassword()));) {
-				curr = nextStep(wsSession, steps, curr);
-				var pid = sshsession.execute(command.PS.parse("elasticsearch"));
-				if (StrUtil.isNotBlank(pid) && NumberUtil.isLong(pid)) {
-					curr = nextStep(wsSession, steps, curr);
-					sshsession.execute(command.KILL.parse(pid));
-				} else {
-					curr = skipStep(wsSession, steps, curr);
-				}
-				envMapper.deleteById(id);
-				provider.clear();
-				sendMsg(wsSession, steps, curr, status.DONE);
-			}
-		} catch (Exception e) {
-			steps.get(curr).setState(status.ERROR).add(e.getMessage());
-			wsUtil.sendText(wsSession, JSONUtil.toJsonStr(steps));
-			var sw = new StringWriter();
-			try (var pw = new PrintWriter(sw);) {
-				e.printStackTrace(pw);
-			}
-			wsUtil.sendText(wsSession, sw.toString());
-		}
-	}
+            var user = hostUserFacade.listHostUserByHostId(hostEntity.getHostId()).stream().filter(e -> {
+                return env.getUsername().equals(e.getUsername());
+            }).findFirst().orElse(null);
+            try (var sshsession = SshSession.connect(hostEntity.getPublicIp(), hostEntity.getPort(), user.getUsername(),
+                    encryptionUtils.decrypt(user.getPassword()));) {
+                curr = nextStep(wsSession, steps, curr);
+                var pid = sshsession.execute(command.PS.parse("elasticsearch"));
+                if (StrUtil.isNotBlank(pid) && NumberUtil.isLong(pid)) {
+                    curr = nextStep(wsSession, steps, curr);
+                    sshsession.execute(command.KILL.parse(pid));
+                } else {
+                    curr = skipStep(wsSession, steps, curr);
+                }
+                envMapper.deleteById(id);
+                provider.clear();
+                sendMsg(wsSession, steps, curr, status.DONE);
+            }
+        } catch (Exception e) {
+            steps.get(curr).setState(status.ERROR).add(e.getMessage());
+            wsUtil.sendText(wsSession, JSONUtil.toJsonStr(steps));
+            var sw = new StringWriter();
+            try (var pw = new PrintWriter(sw);) {
+                e.printStackTrace(pw);
+            }
+            wsUtil.sendText(wsSession, sw.toString());
+        }
+    }
 }

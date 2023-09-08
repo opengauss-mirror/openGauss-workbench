@@ -5,7 +5,7 @@
 package com.nctigba.observability.sql.service.history.point;
 
 import com.nctigba.common.web.exception.HisDiagnosisException;
-import com.nctigba.observability.sql.constants.history.DiagnosisTypeCommon;
+import com.nctigba.observability.sql.constants.history.PointTypeCommon;
 import com.nctigba.observability.sql.constants.history.ThresholdCommon;
 import com.nctigba.observability.sql.model.history.HisDiagnosisResult;
 import com.nctigba.observability.sql.model.history.HisDiagnosisTask;
@@ -18,7 +18,9 @@ import com.nctigba.observability.sql.service.history.DataStoreService;
 import com.nctigba.observability.sql.service.history.HisDiagnosisPointService;
 import com.nctigba.observability.sql.service.history.collection.CollectionItem;
 import com.nctigba.observability.sql.service.history.collection.agent.OtherProcessCurrentCpuItem;
+import com.nctigba.observability.sql.service.history.collection.metric.CpuCoreNumItem;
 import com.nctigba.observability.sql.util.LocaleString;
+import com.nctigba.observability.sql.util.PointUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -37,6 +39,10 @@ import java.util.List;
 public class OtherProcessCurrentCpuUsage implements HisDiagnosisPointService<AgentDTO> {
     @Autowired
     private OtherProcessCurrentCpuItem item;
+    @Autowired
+    private CpuCoreNumItem cpuCoreNumItem;
+    @Autowired
+    private PointUtil util;
 
     @Override
     public List<String> getOption() {
@@ -48,12 +54,13 @@ public class OtherProcessCurrentCpuUsage implements HisDiagnosisPointService<Age
     public List<CollectionItem<?>> getSourceDataKeys() {
         List<CollectionItem<?>> list = new ArrayList<>();
         list.add(item);
+        list.add(cpuCoreNumItem);
         return list;
     }
 
     @Override
     public String getDiagnosisType() {
-        return DiagnosisTypeCommon.CURRENT;
+        return PointTypeCommon.CURRENT;
     }
 
     @Override
@@ -84,7 +91,9 @@ public class OtherProcessCurrentCpuUsage implements HisDiagnosisPointService<Age
             }
         }
         AnalysisDTO analysisDTO = new AnalysisDTO();
-        if (cpuNum / 8 > Integer.parseInt(map.get(ThresholdCommon.PRO_CPU_USAGE_RATE))) {
+        List<?> list = (List<?>) dataStoreService.getData(cpuCoreNumItem).getCollectionData();
+        int coreNum = util.getCpuCoreNum(list);
+        if (cpuNum / coreNum > Integer.parseInt(map.get(ThresholdCommon.PRO_CPU_USAGE_RATE))) {
             analysisDTO.setIsHint(HisDiagnosisResult.ResultState.SUGGESTIONS);
         } else {
             analysisDTO.setIsHint(HisDiagnosisResult.ResultState.NO_ADVICE);

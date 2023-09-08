@@ -83,7 +83,7 @@ public class HostMetric implements ApplicationRunner {
         return StringUtil.replaceParenthesis((collector instanceof DBmetric) ? k : "agent_" + collectorName + k);
     }
 
-    @Scheduled(fixedRate = 1000)
+    @Scheduled(fixedDelay = 5000)
     public void cache() {
         try {
             collectors.forEach((collectorName, collector) -> {
@@ -128,6 +128,7 @@ public class HostMetric implements ApplicationRunner {
                 }
                 CACHE.put(collectorName, list);
             });
+            log.info("refresh metric cache!");
         } catch (Exception e) {
             log.error("metric cache err", e);
         }

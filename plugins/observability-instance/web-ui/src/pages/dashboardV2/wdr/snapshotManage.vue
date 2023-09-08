@@ -44,10 +44,21 @@
               :align="'left'"
             />
             <el-table-column
-              prop="endTs"
-              :label="$t('dashboard.wdrReports.snapshotManageDialog.captureTime')"
+              :label="$t('dashboard.wdrReports.snapshotManageDialog.startTime')"
               :align="'left'"
-            />
+            >
+              <template #default="scope">
+                <span>{{ scope.row.startTs ? moment(scope.row.startTs).format('YYYY-MM-DD HH:mm:ss') : '' }}</span>
+              </template>
+            </el-table-column>
+            <el-table-column
+              :label="$t('dashboard.wdrReports.snapshotManageDialog.endTime')"
+              :align="'left'"
+            >
+              <template #default="scope">
+                <span>{{ scope.row.endTs ? moment(scope.row.endTs).format('YYYY-MM-DD HH:mm:ss') : '' }}</span>
+              </template>
+            </el-table-column>
           </el-table>
           <el-pagination
             :currentPage="page.currentPage"
@@ -73,6 +84,7 @@ import restRequest from '@/request/restful'
 import { ElMessage } from 'element-plus'
 import { useMonitorStore } from '@/store/monitor'
 import { useI18n } from 'vue-i18n'
+import moment from 'moment'
 const { t } = useI18n()
 
 const visible = ref(true)

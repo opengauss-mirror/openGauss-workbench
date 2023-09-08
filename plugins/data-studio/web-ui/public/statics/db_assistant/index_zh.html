@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SQL助手</title>
+    <link href="./css/theme.css" rel="stylesheet">
+    <link href="./css/common.css" rel="stylesheet">
+    <link href="./css/demo.css" rel="stylesheet" />
+    <link href="./css/scrollBar.css" rel="stylesheet" />
+    <style type="text/css">
+      #keywordInfoBody > tr > td {
+        background-color: var(--el-bg-color-overlay);
+        color: var(--el-text-color-regular);
+        cursor: pointer;
+      }
+
+      #keywordInfoBody > tr > td:hover {
+        background-color: var(--el-fill-color-light);
+        cursor: pointer;
+      }
+
+      .showList {
+        position: absolute;
+        top: 4px;
+        left: 274px;
+        background: url(img/down.png) no-repeat right bottom;
+        width: 20px;
+        height: 16px;
+        cursor: pointer;
+      }
+
+      .hideList {
+        position: absolute;
+        top: 4px;
+        left: 274px;
+        background: url(img/up.png) no-repeat right bottom;
+        width: 20px;
+        height: 16px;
+        cursor: pointer;
+      }
+    </style>
+    <link href="./css/index.css" rel="stylesheet" />
+    <script src="./js/jquery.min.js"></script>
+    <script src="./js/theme.js"></script>
+    <script src="./js/cookie.js"></script>
+    <script src="./js/suggestionParser.js"></script>
+    <script src="./js/errorcodeParser.js"></script>
+    <script src="./js/stringReader.js"></script>
+    <script src="./js/scrollBar.js"></script>
+    <script>
+      var recordPath = './openGauss1.0.0/zh';
+      setCookie('DS_recordDataPath', recordPath);
+    </script>
+  </head>
+  <body>
+    <div>
+      <div class="buttontitlearea">
+        <div id="grammar" class="button-title-Item button-title-Item-sm center active">语法</div>
+        <div id="operationList" class="button-title-Item button-title-Item-md center">操作列表</div>
+      </div>
+      <div class="contentArea">
+        <div id="grammarContent">
+          <div class="grammar_content_title">
+            <div class="grammar-item-one"
+              ><span class="grammar-font">所有语法：</span
+              ><input
+                type="text"
+                id="keyword"
+                name="keyword"
+                class="keywordselect"
+                value=""
+                autocomplete="off"
+                onclick="hideKeyWord(false);"
+                oninput="checkField(this.value)"
+              />
+              <span id="listStatus" class="showList" onclick="hideOrShowKeyWord();"></span>
+            </div>
+            <div id="keywordInfo" class="keyInfoStyle">
+              <table
+                id="keywordListInfo"
+                cellspacing="0px"
+                width="100%"
+                style="font-size: 10px; line-height: 12px"
+              >
+                <tbody id="keywordInfoBody"></tbody>
+              </table>
+            </div>
+          </div>
+          <div id="divSuggestion" class="divSuggestion"> </div>
+        </div>
+      </div>
+      <script src="./js/index.js"></script>
+      <script src="./js/operationList.js"></script>
+    </div>
+  </body>
+</html>

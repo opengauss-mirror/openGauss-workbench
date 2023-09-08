@@ -69,10 +69,12 @@
   import { getCreateTableDdl, createTable } from '@/api/table';
   import { loadingInstance } from '@/utils';
   import EventBus, { EventTypeName } from '@/utils/event-bus';
+  import { eventQueue } from '@/hooks/saveData';
 
   const route = useRoute();
   const router = useRouter();
   const TagsViewStore = useTagsViewStore();
+  const tagId = TagsViewStore.getViewByRoute(route)?.id;
   const { t } = useI18n();
   const loading = ref(null);
 
@@ -213,22 +215,25 @@
       await Promise.all([generalValid(), dataMap.GeneralTab.isPartition ? partitionValid() : true]);
     } catch (error) {
       currentTabName.value = error;
-      return;
+      return Promise.reject();
     }
     const actualColumns = dataMap.ColumnTab.data.filter((item) => item.columnName?.trim());
     if (actualColumns.length == 0) {
       currentTabName.value = 'ColumnTab';
-      return ElMessage.error(t('message.leastOneColumn'));
+      ElMessage.error(t('message.leastOneColumn'));
+      return Promise.reject();
     }
     const params = getFinallyParams();
     loading.value = loadingInstance();
     try {
       await createTable(params);
       ElMessage.success(t('message.createSuccess'));
-      EventBus.notify(EventTypeName.REFRESH_ASIDER, 'mode', refreshParams);
+      EventBus.notify(EventTypeName.REFRESH_ASIDER, 'schema', refreshParams);
       TagsViewStore.delCurrentView(route);
       const visitedViews = TagsViewStore.visitedViews;
       router.push(visitedViews.slice(-1)[0].fullPath);
+    } catch {
+      return Promise.reject();
     } finally {
       loading.value.close();
     }
@@ -237,10 +242,14 @@
   const handleReset = () => {
     generalref.value.resetFields();
     partitionRef.value.resetFields();
+    dataMap.GeneralTab.isPartition = false;
     dataMap.ColumnTab.data = [];
     dataMap.ConstraintTab.data = [];
     dataMap.IndexesTab.data = [];
     dataMap.DDL.data = '';
+    if (currentTabName.value === 'PartitionTab') {
+      currentTabName.value = 'GeneralTab';
+    }
   };
   const fetchTablespaceList = async () => {
     const res = (await getTablespaceList(commonParams.uuid)) as unknown as string[];
@@ -259,6 +268,7 @@
       schemaId,
     });
     nextTick(fetchTablespaceList);
+    eventQueue[tagId] = () => handleSave();
   });
 </script>
 <style lang="scss" scoped>

@@ -1,141 +1,141 @@
 <template>
   <el-table
+    ref="editTableRef"
     :data="props.data || []"
     v-loading="props.loading"
     border
     highlight-current-row
     :cell-class-name="cellClassFn"
+    :header-cell-class-name="handleHeaderClass"
     @click="handleTableClick"
     @cell-dblclick="handleCellDbClick"
     @current-change="handleCurrentChange"
+    @sort-change="handleSortChange"
     style="width: 100%; height: 100%"
     v-click-outside.el-select__popper.el-cascader__dropdown="clickOutsideTable"
     flexible
     :row-key="idKey"
   >
     <el-table-column type="index" width="50" align="center" />
-    <el-table-column
-      v-for="(item, index) in props.columns || []"
-      :key="index"
-      :prop="item.name"
-      :label="item.isI18nLabel ? t(item.label) : item.label"
-      :max-width="200"
-      align="center"
-      header-align="center"
-      :min-width="item.type == 'select' ? 120 : tableColumnWidth[item.name]"
-    >
-      <template #default="scope">
-        <el-input
-          v-if="
-            props.canEdit &&
-            globalEditing &&
-            scope.row[item.name + props.editingSuffix] &&
-            item.type == 'input'
-          "
-          v-model="scope.row[item.name]"
-          v-bind="item.attributes"
-          @change="handleChangeValue(scope.row, scope.column)"
-        />
-        <el-input-number
-          v-else-if="
-            props.canEdit &&
-            globalEditing &&
-            scope.row[item.name + props.editingSuffix] &&
-            item.type == 'inputNumber'
-          "
-          v-model="scope.row[item.name]"
-          v-bind="item.attributes"
-          :controls="false"
-          @change="handleChangeValue(scope.row, scope.column)"
-          style="width: 100%"
-        />
-        <el-select
-          v-else-if="
-            props.canEdit &&
-            globalEditing &&
-            scope.row[item.name + props.editingSuffix] &&
-            item.type == 'select' &&
-            item.name == 'columnName'
-          "
-          v-model="scope.row[item.name]"
-          v-bind="item.attributes"
-          @change="handleChangeValue(scope.row, scope.column)"
-        >
-          <el-option v-for="op in props.columnNameList" :key="op" :label="op" :value="op" />
-        </el-select>
-        <el-select
-          v-else-if="
-            props.canEdit &&
-            globalEditing &&
-            scope.row[item.name + props.editingSuffix] &&
-            props.tabName == 'ColumnTab' &&
-            item.name == 'dataType'
-          "
-          v-model="scope.row[item.name]"
-          v-bind="item.attributes"
-          @change="handleChangeValue(scope.row, scope.column)"
-        >
-          <el-option v-for="op in props.dataTypeList" :key="op" :label="op" :value="op" />
-        </el-select>
-        <el-select
-          v-else-if="
-            props.canEdit &&
-            globalEditing &&
-            scope.row[item.name + props.editingSuffix] &&
-            item.type == 'select'
-          "
-          v-model="scope.row[item.name]"
-          v-bind="item.attributes"
-          @change="handleChangeValue(scope.row, scope.column)"
-        >
-          <el-option
-            v-for="op in item.options"
-            :key="op.value"
-            :label="op.label"
-            :value="op.value"
+    <template v-for="(item, index) in props.columns || []">
+      <el-table-column
+        :key="index"
+        v-if="item.show !== false"
+        :prop="item.name"
+        :label="item.isI18nLabel ? t(item.label) : item.label"
+        :sortable="props.sortable"
+        :max-width="200"
+        align="center"
+        header-align="center"
+        :min-width="item.type == 'select' ? 120 : tableColumnWidth[item.name]"
+      >
+        <template #default="scope">
+          <el-input
+            v-if="
+              props.canEdit &&
+              globalEditing &&
+              scope.row[item.name + props.editingSuffix] &&
+              item.type == 'input'
+            "
+            v-model="scope.row[item.name]"
+            v-bind="item.attributes"
+            @change="handleChangeValue(scope.row, scope.column)"
           />
-        </el-select>
-        <el-cascader
-          v-else-if="
-            props.canEdit &&
-            globalEditing &&
-            scope.row[item.name + props.editingSuffix] &&
-            item.type == 'cascader' &&
-            item.name == 'constrainType'
-          "
-          v-model="scope.row[item.name]"
-          :props="cascaderProps"
-          :options="item.options"
-          @change="handleChangeValue(scope.row, scope.column)"
-        />
-        <el-checkbox
-          v-else-if="item.type == 'checkbox'"
-          v-model="scope.row[item.name]"
-          :disabled="!props.canEdit"
-          @change="handleChangeValue(scope.row, scope.column)"
-        />
-        <span v-else>{{ formatTextCell(scope.row[item.name], item.type) }}</span>
-      </template>
-    </el-table-column>
+          <el-input-number
+            v-else-if="
+              props.canEdit &&
+              globalEditing &&
+              scope.row[item.name + props.editingSuffix] &&
+              item.type == 'inputNumber'
+            "
+            v-model="scope.row[item.name]"
+            v-bind="item.attributes"
+            :controls="false"
+            @change="handleChangeValue(scope.row, scope.column)"
+            style="width: 100%"
+          />
+          <el-select
+            v-else-if="
+              props.canEdit &&
+              globalEditing &&
+              scope.row[item.name + props.editingSuffix] &&
+              item.type == 'select' &&
+              item.name == 'columnName'
+            "
+            v-model="scope.row[item.name]"
+            v-bind="item.attributes"
+            @change="handleChangeValue(scope.row, scope.column)"
+          >
+            <el-option v-for="op in props.columnNameList" :key="op" :label="op" :value="op" />
+          </el-select>
+          <el-select
+            v-else-if="
+              props.canEdit &&
+              globalEditing &&
+              scope.row[item.name + props.editingSuffix] &&
+              props.tabName == 'ColumnTab' &&
+              item.name == 'dataType'
+            "
+            v-model="scope.row[item.name]"
+            v-bind="item.attributes"
+            @change="handleChangeValue(scope.row, scope.column)"
+          >
+            <el-option v-for="op in props.dataTypeList" :key="op" :label="op" :value="op" />
+          </el-select>
+          <el-select
+            v-else-if="
+              props.canEdit &&
+              globalEditing &&
+              scope.row[item.name + props.editingSuffix] &&
+              item.type == 'select'
+            "
+            v-model="scope.row[item.name]"
+            v-bind="item.attributes"
+            @change="handleChangeValue(scope.row, scope.column)"
+          >
+            <el-option
+              v-for="op in item.options"
+              :key="op.value"
+              :label="op.label"
+              :value="op.value"
+            />
+          </el-select>
+          <el-cascader
+            v-else-if="
+              props.canEdit &&
+              globalEditing &&
+              scope.row[item.name + props.editingSuffix] &&
+              item.type == 'cascader' &&
+              item.name == 'constrainType'
+            "
+            v-model="scope.row[item.name]"
+            :props="cascaderProps"
+            :options="item.options"
+            @change="handleChangeValue(scope.row, scope.column)"
+          />
+          <el-checkbox
+            v-else-if="item.type == 'checkbox'"
+            v-model="scope.row[item.name]"
+            :disabled="!props.canEdit"
+            @change="handleChangeValue(scope.row, scope.column)"
+          />
+          <span v-else>{{ formatTextCell(scope.row[item.name], item.type) }}</span>
+        </template>
+      </el-table-column>
+    </template>
   </el-table>
 </template>
 
 <script lang="ts" setup>
+  import { ElTable } from 'element-plus';
   import vClickOutside from '@/directives/clickOutside';
   import type { CascaderProps } from 'element-plus';
   import { findParentElement, getFlexColumnWidth } from '@/utils';
   import { getSchemaList, getSchemaObjectList } from '@/api/metaData';
   import { getTableColumn } from '@/api/table';
   import { useI18n } from 'vue-i18n';
+  import type { EditTableColumn } from '../types';
 
-  interface Column {
-    label: string;
-    name: string;
-    isI18nLabel: boolean;
-    type: 'input' | 'inputNumber' | 'select' | 'checkbox' | 'cascader';
-    attributes?: Record<string, any>;
-    options?: any[];
-  }
   interface FetchNode {
     name: string;
     oid: string;
@@ -154,7 +154,7 @@
       allData: any;
       columnNameList: string[];
       commonParams: CommonParams;
-      columns: Column[];
+      columns: EditTableColumn[];
       idKey?: string;
       rowStatusKey?: string; // like "id_rowStatus = '' | 'add' | 'delete' | 'edit'"
       editingSuffix: string;
@@ -163,6 +163,7 @@
       loading?: boolean;
       dataTypeList: string[];
       barStatus: any;
+      sortable?: boolean | string;
     }>(),
     {
       canEdit: true,
@@ -172,6 +173,7 @@
       loading: false,
       dataTypeList: () => [],
       barStatus: () => ({}),
+      sortable: false,
     },
   );
 
@@ -179,6 +181,7 @@
     (e: 'currentChange', data: any): void;
     (e: 'cellDataChange', data?: any): void;
     (e: 'cellDblclick', row, column, cell, event): void;
+    (e: 'sortChange', { column, prop, order }): void;
     (e: 'update:edited', value: boolean): void;
   }>();
 
@@ -197,6 +200,7 @@
     },
   };
   const { t } = useI18n();
+  const editTableRef = ref<InstanceType<typeof ElTable>>(null);
   const globalEditing = ref(false);
   const editingElement = ref(null);
   const editingData = reactive({
@@ -212,6 +216,11 @@
     },
   });
   const tableColumnWidth = ref({});
+  const sortOrderMap = {
+    ASC: 'ascending',
+    DESC: 'descending',
+  };
+
   watch(
     edited,
     (value) => {
@@ -233,6 +242,12 @@
       tableColumnWidth.value = obj;
     }
   });
+
+  const doLayout = () => {
+    nextTick(() => {
+      editTableRef.value.doLayout();
+    });
+  };
 
   const formatTextCell = (value: string[] | string, type) => {
     if (type == 'cascader' && Array.isArray(value)) {
@@ -294,6 +309,34 @@
     emit('currentChange', currentRow);
   };
 
+  const handleHeaderClass = ({ column }) => {
+    if (column.sortable == 'custom') {
+      column.order =
+        sortOrderMap[props.columns.find((item) => item.name == column.property)?.multipleOrder] ||
+        null;
+    }
+    return '';
+  };
+
+  const handleSortChange = ({ column, prop, order }) => {
+    if (column.sortable !== 'custom') {
+      return;
+    }
+    if (!column.multipleOrder) {
+      column.multipleOrder = 'DESC';
+    } else if (column.multipleOrder == 'DESC') {
+      column.multipleOrder = 'ASC';
+    } else {
+      column.multipleOrder = null;
+    }
+    props.columns.forEach((item) => {
+      if (item.name == prop) {
+        item.multipleOrder = column.multipleOrder;
+      }
+    });
+    emit('sortChange', { column, prop, order });
+  };
+
   const fetchSchemaList = async () => {
     const data = (await getSchemaList({
       uuid: props.commonParams.uuid,
@@ -321,6 +364,11 @@
     })) as unknown as any;
     return res.result.map((item) => ({ value: item[0], label: item[0], leaf: true }));
   };
+
+  defineExpose({
+    tableRef: toRef(() => editTableRef),
+    doLayout,
+  });
 </script>
 
 <style lang="scss" scoped>

@@ -5,10 +5,12 @@
 package com.nctigba.datastudio.util;
 
 import com.nctigba.datastudio.base.WebSocketServer;
+import com.nctigba.datastudio.constants.SqlConstants;
 import com.nctigba.datastudio.enums.ParamTypeEnum;
 import com.nctigba.datastudio.model.PublicParamReq;
 import com.nctigba.datastudio.model.entity.OperateStatusDO;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.util.Strings;
 import org.opengauss.admin.common.exception.CustomException;
@@ -26,6 +28,7 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -47,6 +50,7 @@ import static com.nctigba.datastudio.constants.CommonConstants.KEY;
 import static com.nctigba.datastudio.constants.CommonConstants.LINE_NO;
 import static com.nctigba.datastudio.constants.CommonConstants.NAME;
 import static com.nctigba.datastudio.constants.CommonConstants.NSP_NAME;
+import static com.nctigba.datastudio.constants.CommonConstants.NULL_STR;
 import static com.nctigba.datastudio.constants.CommonConstants.OID;
 import static com.nctigba.datastudio.constants.CommonConstants.OUT;
 import static com.nctigba.datastudio.constants.CommonConstants.PRON_ARGS;
@@ -60,6 +64,8 @@ import static com.nctigba.datastudio.constants.CommonConstants.SPACE;
 import static com.nctigba.datastudio.constants.CommonConstants.STATEMENT;
 import static com.nctigba.datastudio.constants.CommonConstants.TRANS_POINT;
 import static com.nctigba.datastudio.constants.CommonConstants.TYPE;
+import static com.nctigba.datastudio.constants.CommonConstants.TYPE_NAME;
+import static com.nctigba.datastudio.constants.CommonConstants.TYPE_NUM;
 import static com.nctigba.datastudio.constants.CommonConstants.TYP_NAME;
 import static com.nctigba.datastudio.constants.CommonConstants.T_STR;
 import static com.nctigba.datastudio.constants.CommonConstants.VARIADIC;
@@ -71,8 +77,10 @@ import static com.nctigba.datastudio.constants.SqlConstants.FUNCTION_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.GET_OID_NAME_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.INFO_CODE_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.LEFT_BRACKET;
+import static com.nctigba.datastudio.constants.SqlConstants.LF;
 import static com.nctigba.datastudio.constants.SqlConstants.POINT;
 import static com.nctigba.datastudio.constants.SqlConstants.PROC_SQL;
+import static com.nctigba.datastudio.constants.SqlConstants.QUOTES;
 import static com.nctigba.datastudio.constants.SqlConstants.RIGHT_BRACKET;
 
 /**
@@ -188,6 +196,7 @@ public class DebugUtils {
         while (stackResult.next()) {
             list.add(stackResult.getString(FUNC_OID));
         }
+        log.info("DebugUtils getOidList list: " + list);
         return list;
     }
 
@@ -318,31 +327,20 @@ public class DebugUtils {
      * parse resulte set
      *
      * @param resultSet resultSet
-     * @param size      size
-     * @param pageNum   pageNum
      * @return Map
      * @throws SQLException SQLException
      */
-    public static Map<String, Object> parseResultSet(
-            ResultSet resultSet, Integer size, Integer pageNum) throws SQLException {
-        log.info("ResultSet map: " + resultSet);
-        log.info("size map: " + size);
-        log.info("pageNum map: " + pageNum);
+    public static Map<String, Object> parseResultSetType(ResultSet resultSet) throws SQLException {
         Map<String, Object> map = new HashMap<>();
         List<String> columnList = getColumnList(resultSet.getMetaData(), map);
+        getColumnTypeList(resultSet.getMetaData(), map);
+        getColumnTypeNamwList(resultSet.getMetaData(), map);
         List<List<Object>> dataList = new ArrayList<>();
-        int index = 0;
-        if (pageNum != 1) {
-            resultSet.absolute(size * pageNum - 1);
-        } else {
-            resultSet.absolute(0);
-        }
-        while (resultSet.next() && index < size) {
+        while (resultSet.next()) {
             List<Object> list = new ArrayList<>();
             for (String column : columnList) {
                 list.add(resultSet.getObject(column));
             }
-            index++;
             dataList.add(list);
         }
         map.put(RESULT, dataList);
@@ -432,6 +430,38 @@ public class DebugUtils {
     }
 
     /**
+     * get column type list
+     *
+     * @param metaData metaData
+     * @param map map
+     * @throws SQLException SQLException
+     */
+    private static void getColumnTypeList(ResultSetMetaData metaData, Map<String, Object> map) throws SQLException {
+        List<Integer> columnTypeList = new ArrayList<>();
+        for (int i = 0; i < metaData.getColumnCount(); i++) {
+            columnTypeList.add(metaData.getColumnType(i + 1));
+        }
+        map.put(TYPE_NUM, columnTypeList);
+        log.info("DebugUtils getColumnList: " + columnTypeList);
+    }
+
+    /**
+     * get column type list
+     *
+     * @param metaData metaData
+     * @param map map
+     * @throws SQLException SQLException
+     */
+    private static void getColumnTypeNamwList(ResultSetMetaData metaData, Map<String, Object> map) throws SQLException {
+        List<String> columnTypeNameList = new ArrayList<>();
+        for (int i = 0; i < metaData.getColumnCount(); i++) {
+            columnTypeNameList.add(metaData.getColumnTypeName(i + 1));
+        }
+        map.put(TYPE_NAME, columnTypeNameList);
+        log.info("DebugUtils getColumnList: " + columnTypeNameList);
+    }
+
+    /**
      * add param map
      *
      * @param map             map
@@ -474,6 +504,17 @@ public class DebugUtils {
     public static String sqlHandleAfter(String sql) {
         sql = sql.replace(FUNCTION_DOLLAR, DOLLAR);
         return sql + SLASH;
+    }
+
+    /**
+     * replace line
+     *
+     * @param sql sql
+     * @return String
+     */
+    public static String replaceLine(String sql) {
+        return sql.replace(SqlConstants.SPACE, NULL_STR).replace(LF, NULL_STR).replace("\n", NULL_STR)
+                .replace("\r", NULL_STR);
     }
 
     /**
@@ -701,5 +742,106 @@ public class DebugUtils {
      */
     public static String getMessage() {
         return LocaleString.transLanguage("2016");
+    }
+
+    /**
+     * check name
+     *
+     * @param name name
+     * @return String
+     */
+    public static String needQuoteName(String name) {
+        String regex = "^([a-z_][a-z|0-9|_|$]*)|([a-z_][a-z|0-9|_|,| |.|$]*)$";
+        if (StringUtils.isNotEmpty(name) && name.matches(regex)) {
+            return name;
+        }
+
+        StringBuilder sb = new StringBuilder(2 + name.length() * 11 / 10);
+        sb.append('"');
+
+        for (int index = 0; index < name.length(); ++index) {
+            char ch = name.charAt(index);
+            if (ch == '\0') {
+                throw new CustomException(LocaleString.transLanguage("2020"));
+            }
+            if (ch == '"') {
+                sb.append(ch);
+            }
+            sb.append(ch);
+        }
+
+        sb.append('"');
+        return sb.toString();
+    }
+
+    /**
+     * change param type
+     *
+     * @param value value
+     * @param columnType columnType
+     * @param columnTypeName columnTypeName
+     * @return String
+     */
+    public static String typeChange(String value, int columnType, String columnTypeName) {
+        log.info("ExportService typeChange value: " + value);
+        String newValue;
+        switch (columnType) {
+            case Types.NULL: {
+                newValue = null;
+                break;
+            }
+            case Types.BIGINT:
+            case Types.TINYINT:
+            case Types.NUMERIC:
+            case Types.DECIMAL:
+            case Types.INTEGER:
+            case Types.SMALLINT:
+            case Types.FLOAT:
+            case Types.REAL: {
+                newValue = value;
+                break;
+            }
+            case Types.DOUBLE: {
+                if ("money".equalsIgnoreCase(columnTypeName)) {
+                    newValue = QUOTES + value + QUOTES;
+                } else {
+                    newValue = value;
+                }
+                break;
+            }
+            case Types.BIT: {
+                newValue = getBitString(value, columnTypeName);
+                break;
+            }
+            default: {
+                newValue = QUOTES + value + QUOTES;
+                break;
+            }
+        }
+        log.info("ExportService typeChange newValue: " + newValue);
+        return newValue;
+    }
+
+    private static String getBitString(String value, String columnTypeName) {
+        String newValue;
+        if ("bool".equalsIgnoreCase(columnTypeName)) {
+            Boolean isBoolValue = BooleanUtils.toBooleanObject(value);
+            if (isBoolValue != null) {
+                newValue = isBoolValue.toString();
+            } else {
+                newValue = value;
+            }
+        } else {
+            if ("true".equalsIgnoreCase(value) || "false".equalsIgnoreCase(value)) {
+                if ("true".equalsIgnoreCase(value)) {
+                    newValue = QUOTES + "1" + QUOTES;
+                } else {
+                    newValue = QUOTES + "0" + QUOTES;
+                }
+            } else {
+                newValue = QUOTES + value + QUOTES;
+            }
+        }
+        return newValue;
     }
 }

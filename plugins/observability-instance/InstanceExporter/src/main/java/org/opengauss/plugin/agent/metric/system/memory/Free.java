@@ -1,6 +1,7 @@
 /*
  * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
  */
+
 package org.opengauss.plugin.agent.metric.system.memory;
 
 import java.io.FileNotFoundException;
@@ -9,22 +10,29 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.opengauss.plugin.agent.metric.Metric;
+import org.opengauss.plugin.agent.metric.OSmetric;
 import org.opengauss.plugin.agent.util.CmdUtil;
 import org.opengauss.plugin.agent.util.StringUtil;
 import org.springframework.stereotype.Service;
-
-import org.opengauss.plugin.agent.metric.OSmetric;
 
 import io.prometheus.client.Collector.Type;
 
 @Service("free_")
 public class Free implements OSmetric {
-    private static final String[] KEYS = { "type", "total", "used", "free", "shared", "cache", "available" };
+    private static final String[] KEYS = {
+            "type",
+            "total",
+            "used",
+            "free",
+            "shared",
+            "cache",
+            "available"
+    };
 
     @Override
     public Map<String, Metric> getMetric(Integer dbPort) throws FileNotFoundException, IOException {
         Map<String, Metric> map = new HashMap<>();
-        CmdUtil.readFromCmd(CmdUtil.cmd("free"), (index, line) -> {
+        CmdUtil.readFromCmd("free", (index, line) -> {
             if (index == 0) {
                 // total used free shared buff/cache available
                 return;

@@ -30,7 +30,9 @@
               @contextmenu.prevent="handleContextmenu($event, tag)"
             >
               <svg-icon :icon-class="tag.meta.icon" class-name="pre-icon" />
-              <div class="tags-view-item" :title="tag.title">{{ tag.query.fileName }}</div>
+              <div class="tags-view-item" :title="decodeURIComponent(tag.title)">
+                {{ decodeURIComponent(tag.fileName) }}
+              </div>
               <el-icon
                 v-if="!isAffix(tag)"
                 @click.prevent.stop="closeSelectedTagToLastView(tag)"
@@ -43,10 +45,31 @@
         </div>
       </better-scroll>
     </div>
-    <el-button class="create" @click="createTerminal" plain>
-      <el-icon><Plus /></el-icon>
-      {{ $t('create.terminal') }}
-    </el-button>
+    <el-select
+      v-model="AppStore.currentTerminalInfo"
+      value-key="uuid"
+      size="small"
+      style="width: 150px"
+      :placeholder="t('message.noConnectionSelectorTips')"
+      placement="bottom"
+    >
+      <el-option
+        v-for="item in terminalDbOptions"
+        :key="item.label"
+        :value="item"
+        :label="item.label"
+      ></el-option>
+    </el-select>
+    <div class="operation-icon-wrapper" :title="t('terminal.SQLAssistant')">
+      <svg class="operation-icon" aria-hidden="true" @click="toggleSqlAssistant">
+        <use xlink:href="#icon-bangzhuzhongxin"></use>
+      </svg>
+    </div>
+    <div class="operation-icon-wrapper" :title="t('create.terminal')">
+      <svg class="operation-icon" aria-hidden="true" @click="createTerminal">
+        <use xlink:href="#icon-cmd"></use>
+      </svg>
+    </div>
     <LangButton v-if="!isInFrame" />
     <SwitchDark v-if="!isInFrame" />
     <div class="context-menu" :style="contextMenu.menuStyles">
@@ -54,11 +77,15 @@
         <li @click="refresh(contextTag)" v-if="isActive(contextTag) && contextTag.name == 'table'">
           {{ $t('windows.refresh') }}
         </li>
+        <li @click="renameTerminal" v-if="contextTag.name == 'createTerminal'">
+          {{ $t('windows.renameTerminal') }}
+        </li>
         <li @click="closeCurrentTab">{{ $t('windows.closeCurrentTab') }}</li>
         <li @click="closeOtherTab">{{ $t('windows.closeOtherTab') }}</li>
         <li @click="closeAllTabToLast">{{ $t('windows.closeAllTab') }}</li>
       </ul>
     </div>
+    <RenameTagsDialog v-if="visibleRenameDialog" v-model="visibleRenameDialog" :tag="contextTag" />
   </div>
 </template>
 
@@ -68,6 +95,7 @@
   import LangButton from '@/components/LangButton.vue';
   import { useRoute, useRouter } from 'vue-router';
   import SwitchDark from '@/components/SwitchTheme.vue';
+  import RenameTagsDialog from './RenameTagsDialog.vue';
 
   import { useTagsViewStore } from '@/store/modules/tagsView';
   import { usePermissionStore } from '@/store/modules/permission';
@@ -87,6 +115,7 @@
   const { t } = useI18n();
 
   const isInFrame = ref(self !== parent);
+  const visibleRenameDialog = ref(false);
 
   const refresh = (contextTag) => {
     TagsViewStore.reloadView(contextTag.fullPath);
@@ -97,6 +126,18 @@
   const routes = computed(() => PermissionStore.routes);
 
   const visitedViews = computed(() => TagsViewStore.visitedViews);
+
+  const terminalDbOptions = computed(() => {
+    return AppStore.connectedDatabase.map((item) => {
+      return {
+        label: `${item.name}@${item.connectInfoName}`,
+        rootId: item.rootId,
+        connectInfoName: item.connectInfoName,
+        dbname: item.name,
+        uuid: item.uuid,
+      };
+    });
+  });
 
   const bsScroll = ref();
   let obj = new WeakMap();
@@ -330,8 +371,12 @@
     });
   }
 
+  const toggleSqlAssistant = () => {
+    AppStore.isOpenSqlAssistant = !AppStore.isOpenSqlAssistant;
+  };
+
   const createTerminal = () => {
-    const { name: dbname, rootId, uuid } = AppStore.lastestConnectDatabase;
+    const { dbname, rootId, uuid } = AppStore.currentTerminalInfo;
     const connectInfoName = AppStore.connectListMap.find((item) => item.id == rootId)?.info.name;
     if (!(uuid && connectInfoName)) return ElMessage.warning(t('message.noConnectionAvailable'));
 
@@ -347,14 +392,18 @@
         connectInfoName,
         uuid,
         dbname,
-        terminalNum,
-        time,
+        terminalNum: '' + terminalNum,
+        time: '' + time,
       },
     });
   };
 
+  const renameTerminal = () => {
+    contextMenu.visible = false;
+    visibleRenameDialog.value = true;
+  };
+
   onMounted(() => {
-    initTags();
     addTags();
     nextTick(() => {
       setTimeout(() => {
@@ -403,7 +452,6 @@
     align-items: center;
     position: relative;
     .tags-view {
-      padding-left: 10px;
       height: 30px;
       background: white;
       display: flex;
@@ -444,20 +492,16 @@
     margin-right: 5px;
     border: 1px solid #d8dce5;
     user-select: none;
-    &.home {
-      color: var(--el-color-primary);
-    }
     &.active .tag-icon {
       display: block;
     }
     &.active {
-      background-color: var(--normal-color);
-      color: var(--color-bg-2);
-      border-color: var(--normal-color);
+      color: var(--el-color-primary);
+      border-color: var(--el-color-primary);
     }
   }
   .item-tag-wrap:hover {
-    border-color: var(--normal-color);
+    border-color: var(--el-color-primary);
   }
   .tags-scroll-inner {
     display: flex;
@@ -486,6 +530,16 @@
       display: flex;
       align-items: center;
     }
+  }
+  .operation-icon-wrapper {
+    width: 20px;
+    height: 20px;
+    margin: 0 2px;
+  }
+  .operation-icon {
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
   }
   .context-menu {
     position: fixed;

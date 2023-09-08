@@ -31,13 +31,15 @@ public abstract class DatabaseCollectionItem implements CollectionItem<Object> {
     private DbUtil dbUtil;
 
     public Object collectData(HisDiagnosisTask task) {
-        List<HisDiagnosisThreshold> thresholds = task.getThresholds();
-        String during = null;
-        for (HisDiagnosisThreshold threshold : thresholds) {
-            if (threshold.getThreshold().equals(ThresholdCommon.DURING)) {
-                during = threshold.getThresholdValue();
+        HashMap<String, String> map = new HashMap<>();
+        List<?> thresholdValue = task.getThresholds();
+        for (Object ob : thresholdValue) {
+            if (ob instanceof LinkedHashMap) {
+                LinkedHashMap<String, String> hashMap = (LinkedHashMap<String, String>) ob;
+                map.put(hashMap.get("threshold"), hashMap.get("thresholdValue"));
             }
         }
+        String during = map.get(ThresholdCommon.DURING);
         String sql = getDatabaseSql();
         if (during != null && getDatabaseSql().contains("duration")) {
             LocalTime time = LocalTime.ofSecondOfDay(Integer.parseInt(during));

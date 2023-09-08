@@ -44,10 +44,11 @@ const getValueForTime = (value: string) => {
     return value
 }
 const getValue = (key: string, curData: Record<string, string>) => {
-    if (curData != null) {
-        return curData[key] || '-'
-    }
-    return '-'
+  if (curData != null) {
+    if (typeof curData[key] === 'object') return curData[key].value
+    else return curData[key] || '-'
+  }
+  return '-'
 }
 watch(statisticalInfoRes, (res) => {
     if (Object.keys(res).length === 0) return
@@ -148,7 +149,7 @@ onMounted(() => {
                             </div>
                         </div>
                         <div class="s-i-consuming-legend" v-else>
-                            <div class="s-i-consuming-item" v-for="item in data.useTimeStatistical" :key="item.value">
+                            <div class="s-i-consuming-item" v-for="item in data.useTimeStatistical" :key="item.name">
                                 <span :style="`background-color: ${item.color}`" class="s-i-consuming-item-block"></span>
                                 <span class="s-i-consuming-item-label">{{ $t(`sql.${item.name}`) }}：</span>
                                 <span class="s-i-consuming-item-value">{{ `${item.value.toFixed(2)}%` }}</span>

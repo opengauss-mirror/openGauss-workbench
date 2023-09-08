@@ -4,7 +4,6 @@
 
 package com.nctigba.datastudio.model.dto;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import lombok.Generated;
 import lombok.NoArgsConstructor;
@@ -32,13 +31,15 @@ public class DatabaseCreUpdColumnDTO {
         private String columnName;
         private String newColumnName;
         private String type;
-        @JsonProperty("empty")
+        private String oldType;
         private Boolean isEmpty;
         private String defaultValue;
-        @JsonProperty("only")
+        private String oldDefaultValue;
         private Boolean isOnly;
         private String precision;
+        private String oldPrecision;
         private String scope;
+        private String oldScope;
         private String comment;
         private Integer operationType;
     }

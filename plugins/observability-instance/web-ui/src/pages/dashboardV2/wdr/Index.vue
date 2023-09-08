@@ -1,18 +1,24 @@
 <template>
   <div class="top-sql" style="min-height: 500px">
     <div class="tab-wrapper-container">
+      <div class="row" style="margin-bottom: 10px;">
+          <el-button type="primary" @click="showSnapshotManage">{{
+              $t('dashboard.wdrReports.snapshotManage')
+            }}</el-button>
+            <el-button type="primary" @click="showBuildWDR">{{ $t('dashboard.wdrReports.buildWDR') }}</el-button>
+        </div>
       <div class="search-form-multirow">
         <div class="row">
           <div class="filter">
             <span>{{ $t('dashboard.wdrReports.reportRange') }}&nbsp;</span>
-            <el-select v-model="formData.reportRange" style="width: 160px; margin: 0 4px">
+            <el-select v-model="formData.reportRange" style="width: 160px; margin: 0 4px" clearable>
               <el-option value="CLUSTER" :label="$t('dashboard.wdrReports.reportRangeSelect[0]')" />
               <el-option value="NODE" :label="$t('dashboard.wdrReports.reportRangeSelect[1]')" />
             </el-select>
           </div>
           <div class="filter">
             <span>{{ $t('dashboard.wdrReports.reportType') }}&nbsp;</span>
-            <el-select v-model="formData.reportType" style="width: 160px; margin: 0 4px">
+            <el-select v-model="formData.reportType" style="width: 160px; margin: 0 4px" clearable>
               <el-option value="DETAIL" :label="$t('dashboard.wdrReports.reportTypeSelect[0]')" />
               <el-option value="SUMMARY" :label="$t('dashboard.wdrReports.reportTypeSelect[1]')" />
               <el-option value="ALL" :label="$t('dashboard.wdrReports.reportTypeSelect[2]')" />
@@ -29,16 +35,9 @@
               style="width: 300px"
             />
           </div>
-        </div>
-
-        <div class="row">
           <div class="filter">
             <el-button @click="handleQuery">{{ $t('app.query') }}</el-button>
             <el-button @click="handleReset">{{ $t('app.reset') }}</el-button>
-            <el-button type="primary" @click="showSnapshotManage">{{
-              $t('dashboard.wdrReports.snapshotManage')
-            }}</el-button>
-            <el-button type="primary" @click="showBuildWDR">{{ $t('dashboard.wdrReports.buildWDR') }}</el-button>
           </div>
         </div>
       </div>
@@ -54,28 +53,49 @@
           :default-sort="{ prop: 'date', order: 'descending' }"
         >
           <el-table-column
-            prop="scope"
+            prop="reportName"
+            :label="$t('dashboard.wdrReports.list.reportName')"
+            align="center"
+            min-width="40%"
+          />
+          <el-table-column
+           prop="scope"
             :label="$t('dashboard.wdrReports.reportRange')"
             min-width="10%"
             align="center"
-          />
-          <el-table-column
-            prop="reportAt"
-            :label="$t('dashboard.wdrReports.list.buildTime')"
-            min-width="20%"
-            align="center"
-          />
+          >
+            <template #default="scope">
+              <div v-if="scope.row.scope === 'CLUSTER'">
+                {{ $t('dashboard.wdrReports.reportRangeSelect[0]') }}
+              </div>
+              <div v-if="scope.row.scope === 'NODE'">
+                {{ $t('dashboard.wdrReports.reportRangeSelect[1]') }}
+              </div>
+            </template>
+          </el-table-column>
           <el-table-column
             prop="reportType"
             :label="$t('dashboard.wdrReports.reportType')"
             min-width="10%"
             align="center"
-          />
+          >
+          <template #default="scope">
+            <div v-if="scope.row.reportType === 'DETAIL'">
+              {{ $t('dashboard.wdrReports.reportTypeSelect[0]') }}
+            </div>
+            <div v-if="scope.row.reportType === 'SUMMARY'">
+              {{ $t('dashboard.wdrReports.reportTypeSelect[1]') }}
+            </div>
+            <div v-if="scope.row.reportType === 'ALL'">
+              {{ $t('dashboard.wdrReports.reportTypeSelect[2]') }}
+            </div>
+          </template>
+          </el-table-column>
           <el-table-column
-            prop="reportName"
-            :label="$t('dashboard.wdrReports.list.reportName')"
+            prop="reportAt"
+            :label="$t('dashboard.wdrReports.list.buildTime')"
+            min-width="20%"
             align="center"
-            min-width="40%"
           />
           <el-table-column :label="$t('app.operate')" align="center" fixed="right" min-width="20%">
             <template #default="scope">
@@ -115,6 +135,8 @@
     <SnapshotManage :tabId="tabId" v-if="snapshotManageShown" @changeModal="changeModalSnapshotManage" />
     <BuildWdr
       :tabId="tabId"
+      :startId="startId"
+      :endId="endId"
       v-if="buildWDRShown"
       @changeModal="changeModalBuildWDR"
       @conveyFlag="bandleCoveyBuildWDR"
@@ -140,6 +162,9 @@ const errorInfo = ref<string | Error>()
 const props = withDefaults(defineProps<{ tabId: string }>(), {})
 const { updateCounter, sourceType, tabNow } = storeToRefs(useMonitorStore(props.tabId))
 
+const startId = ref<number>()
+const endId = ref<number>()
+
 // same for every page in index
 onMounted(() => {
   handleQuery()
@@ -156,8 +181,8 @@ watch(
 )
 
 const initFormData = {
-  reportRange: 'CLUSTER',
-  reportType: 'DETAIL',
+  reportRange: '',
+  reportType: '',
   dateValue: [
     moment(new Date()).format('YYYY-MM-DD') + ' 00:00:00',
     moment(new Date()).format('YYYY-MM-DD') + ' 23:59:59',
@@ -185,6 +210,8 @@ const showBuildWDR = () => {
 }
 const changeModalBuildWDR = (val: boolean) => {
   buildWDRShown.value = val
+  startId.value = undefined
+  endId.value = undefined
 }
 const bandleCoveyBuildWDR = (code: number) => {
   requestData()
@@ -336,4 +363,22 @@ function debounce(func: any, delay: any) {
     }, delay)
   }
 }
+
+const outsideGoto = (param: any) => {
+  if (!param) {
+    return;
+  }
+  if (param.operation === 'search') {
+    formData.reportRange = ''
+    formData.reportType = ''
+    formData.dateValue = [param.endTime, param.satrtTime]
+    handleQuery()
+  }
+  if (param.operation === 'edit') {
+    startId.value = param.startId
+    endId.value = param.endId
+    buildWDRShown.value = true
+  }
+}
+defineExpose({ outsideGoto })
 </script>

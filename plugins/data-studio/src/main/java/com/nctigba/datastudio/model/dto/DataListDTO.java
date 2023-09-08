@@ -33,7 +33,7 @@ public class DataListDTO {
     private List<Map<String, String>> view;
 
     @ApiModelProperty("FUNCTION/PROCEDURE")
-    private List<Map<String, String>> fun_pro;
+    private List<Map<String, Object>> fun_pro;
 
     @ApiModelProperty("synonym")
     private List<Map<String, String>> synonym;

@@ -11,8 +11,6 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import lombok.extern.slf4j.Slf4j;
-import org.opengauss.admin.common.exception.ServiceException;
 import com.nctigba.alert.monitor.constant.CommonConstants;
 import com.nctigba.alert.monitor.dto.NotifyWayDto;
 import com.nctigba.alert.monitor.entity.AlertRule;
@@ -21,8 +19,12 @@ import com.nctigba.alert.monitor.entity.NotifyWay;
 import com.nctigba.alert.monitor.mapper.NotifyWayMapper;
 import com.nctigba.alert.monitor.service.AlertRuleService;
 import com.nctigba.alert.monitor.service.AlertTemplateRuleService;
+import com.nctigba.alert.monitor.service.NotifyTemplateService;
 import com.nctigba.alert.monitor.service.NotifyWayService;
+import com.nctigba.alert.monitor.service.ThirdPartyService;
 import com.nctigba.alert.monitor.utils.MessageSourceUtil;
+import lombok.extern.slf4j.Slf4j;
+import org.opengauss.admin.common.exception.ServiceException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -37,26 +39,30 @@ import java.util.List;
 @Service
 @Slf4j
 public class NotifyWayServiceImpl extends ServiceImpl<NotifyWayMapper, NotifyWay>
-        implements NotifyWayService {
+    implements NotifyWayService {
     @Autowired
     private AlertRuleService ruleService;
     @Autowired
     private AlertTemplateRuleService templateRuleService;
+    @Autowired
+    private NotifyTemplateService notifyTemplateService;
+    @Autowired
+    private ThirdPartyService thirdPartyService;
 
     @Override
     public Page<NotifyWayDto> getListPage(String name, String notifyType, Page page) {
         QueryWrapper<NotifyWay> ew =
-                Wrappers.<NotifyWay>query().like(StrUtil.isNotBlank(name), "t1.name", name).eq(
-                        StrUtil.isNotBlank(notifyType), "t1.notify_type", notifyType).eq("t1.is_deleted",
-                        CommonConstants.IS_NOT_DELETE).orderByDesc("t1.id");
+            Wrappers.<NotifyWay>query().like(StrUtil.isNotBlank(name), "t1.name", name).eq(
+                StrUtil.isNotBlank(notifyType), "t1.notify_type", notifyType).eq("t1.is_deleted",
+                CommonConstants.IS_NOT_DELETE).orderByDesc("t1.id");
         return this.baseMapper.selectDtoPage(page, ew);
     }
 
     @Override
     public List<NotifyWay> getList(String notifyType) {
         return this.baseMapper.selectList(Wrappers.<NotifyWay>lambdaQuery().eq(NotifyWay::getIsDeleted,
-                CommonConstants.IS_NOT_DELETE).eq(StrUtil.isNotBlank(notifyType), NotifyWay::getNotifyType,
-                notifyType).orderByDesc(NotifyWay::getId));
+            CommonConstants.IS_NOT_DELETE).eq(StrUtil.isNotBlank(notifyType), NotifyWay::getNotifyType,
+            notifyType).orderByDesc(NotifyWay::getId));
     }
 
     @Override
@@ -72,19 +78,36 @@ public class NotifyWayServiceImpl extends ServiceImpl<NotifyWayMapper, NotifyWay
     @Override
     public void delById(Long id) {
         List<AlertRule> ruleList = ruleService.list(
-                Wrappers.<AlertRule>query().eq("is_deleted", CommonConstants.IS_NOT_DELETE).and(
-                        wrapper -> wrapper.gt("position('" + id + ",' in notify_way_ids)", 0).or().gt(
-                                "position('," + id + "' in notify_way_ids)", 0)));
+            Wrappers.<AlertRule>query().eq("is_deleted", CommonConstants.IS_NOT_DELETE).and(
+                wrapper -> wrapper.gt("position('" + id + ",' in notify_way_ids)", 0).or().gt(
+                    "position('," + id + "' in notify_way_ids)", 0)));
         List<AlertTemplateRule> templateRuleList = templateRuleService.list(
-                Wrappers.<AlertTemplateRule>query().eq("is_deleted", CommonConstants.IS_NOT_DELETE).and(
-                        wrapper -> wrapper.gt("position('" + id + ",' in notify_way_ids)", 0).or().gt(
-                                "position('," + id + "' in notify_way_ids)", 0)));
+            Wrappers.<AlertTemplateRule>query().eq("is_deleted", CommonConstants.IS_NOT_DELETE).and(
+                wrapper -> wrapper.gt("position('" + id + ",' in notify_way_ids)", 0).or().gt(
+                    "position('," + id + "' in notify_way_ids)", 0)));
         if (CollectionUtil.isNotEmpty(ruleList) || CollectionUtil.isNotEmpty(templateRuleList)) {
             throw new ServiceException(MessageSourceUtil.get("notifyWayIsUsed"));
         }
         LambdaUpdateWrapper<NotifyWay> queryWrapper = new LambdaUpdateWrapper<>();
         queryWrapper.set(NotifyWay::getIsDeleted, CommonConstants.IS_DELETE).eq(NotifyWay::getId, id).eq(
-                NotifyWay::getIsDeleted, CommonConstants.IS_NOT_DELETE);
+            NotifyWay::getIsDeleted, CommonConstants.IS_NOT_DELETE);
         this.update(queryWrapper);
+    }
+
+    /**
+     * test notify way
+     *
+     * @param notifyWay NotifyWay
+     * @return boolean
+     */
+    @Override
+    public boolean testNotifyWay(NotifyWay notifyWay) {
+        if (notifyWay.getNotifyType().equals(CommonConstants.WEBHOOK)) {
+            return thirdPartyService.testWebhookByNotifyWay(notifyWay);
+        } else if (notifyWay.getNotifyType().equals(CommonConstants.SNMP)) {
+            return thirdPartyService.testSnmpByNotifyWay(notifyWay);
+        } else {
+            throw new ServiceException("Testing for this type of notifyWay is not supported");
+        }
     }
 }

@@ -5,6 +5,7 @@
 package com.nctigba.alert.monitor.dto;
 
 import com.nctigba.alert.monitor.entity.AlertTemplate;
+import com.nctigba.alert.monitor.entity.AlertTemplateRule;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
@@ -18,5 +19,5 @@ import java.util.List;
 @Data
 @Accessors(chain = true)
 public class AlertTemplateDto extends AlertTemplate {
-    List<AlertTemplateRuleDto> templateRuleDtoList;
+    List<AlertTemplateRule> templateRuleList;
 }
