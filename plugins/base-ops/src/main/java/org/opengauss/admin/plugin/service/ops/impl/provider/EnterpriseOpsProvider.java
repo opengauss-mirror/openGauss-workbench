@@ -559,6 +559,8 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
             autoResponse.put("Please enter password for current user["
                     + masterNodeConfig.getInstallUsername()
                     + "].\r\nPassword:", installUserPassword);
+            // for compatibility with 5.1.0
+            autoResponse.put("Please enter password for current user[root].\r\nPassword:", rootPassword);
             JschResult jschResult = jschUtil.executeCommand(gsPreInstall, rootSession, retSession, autoResponse);
             if (0 != jschResult.getExitCode()) {
                 log.error("gs_preinstall failed, exit code: {}, error message: {}", jschResult.getExitCode(), jschResult.getResult());
