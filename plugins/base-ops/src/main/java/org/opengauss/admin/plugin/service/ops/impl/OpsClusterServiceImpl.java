@@ -36,6 +36,7 @@ import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 import com.jcraft.jsch.ChannelShell;
 import com.jcraft.jsch.Session;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.opengauss.admin.common.core.domain.UploadInfo;
 import org.opengauss.admin.common.core.domain.entity.SysSettingEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
@@ -103,6 +104,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -127,6 +129,9 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClusterEntity> implements IOpsClusterService {
+    private static String[] dependencyPackageNames = {"libaio-devel", "flex", "bison", "ncurses-devel", "glibc-devel",
+            "patch", "redhat-lsb-core", "readline-devel"};
+
     @Autowired
     @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
     private HostFacade hostFacade;
@@ -1946,7 +1951,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
             });
 
             threadPoolTaskExecutor.submit(() -> {
-                hostEnv.setSoftwareEnv(softwareEnvDetect(session));
+                hostEnv.setSoftwareEnv(softwareEnvDetect(session, expectedOs));
                 countDownLatch.countDown();
             });
 
@@ -2650,7 +2655,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
     }
 
 
-    private SoftwareEnv softwareEnvDetect(Session session) {
+    private SoftwareEnv softwareEnvDetect(Session session, OpenGaussSupportOSEnum expectedOs) {
         SoftwareEnv softwareEnv = new SoftwareEnv();
 
         List<EnvProperty> envProperties = new CopyOnWriteArrayList<>();
@@ -2660,7 +2665,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
 
         threadPoolTaskExecutor.submit(() -> {
             // software
-            envProperties.add(dependencyPropertyDetect(session));
+            envProperties.add(dependencyPropertyDetect(session, expectedOs));
             countDownLatch.countDown();
         });
 
@@ -2749,45 +2754,32 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         return firewallProperty;
     }
 
-    private EnvProperty dependencyPropertyDetect(Session session) {
+    private EnvProperty dependencyPropertyDetect(Session session, OpenGaussSupportOSEnum expectedOs) {
         EnvProperty dependencyProperty = new EnvProperty();
         dependencyProperty.setName("software dependency");
         dependencyProperty.setSortNum(1);
-
         try {
-            JschResult jschResult = null;
-            try {
-                jschResult = jschUtil.executeCommand(SshCommandConstants.DEPENDENCY, session);
-            } catch (InterruptedException e) {
-                throw new OpsException("thread is interrupted");
-            }
-            if (jschResult.getExitCode() == 0) {
-                String dependency = jschResult.getResult();
-                try {
-
-                    int dependencyNum = Integer.parseInt(dependency);
-                    dependencyProperty.setStatus(HostEnvStatusEnum.NORMAL);
-
-                    int suggestedNum = 8;
-                    if (dependencyNum < suggestedNum) {
-                        dependencyProperty.setStatus(HostEnvStatusEnum.ERROR);
-                        dependencyProperty.setStatusMessage("dependencies must be installed：libaio-devel,flex,bison,ncurses-devel,glibc-devel,patch,redhat-lsb-core,readline-devel");
-                    }
-                } catch (Exception e) {
-                    log.error("Parse command response error", e);
-                    dependencyProperty.setStatus(HostEnvStatusEnum.ERROR);
-                    dependencyProperty.setStatusMessage("Please check the required dependencies");
+            JschResult jschResult = jschUtil.executeCommand(SshCommandConstants.DEPENDENCY, session);
+            List<String> dependencyPackages = Arrays.stream(dependencyPackageNames).map(
+                    dependency -> dependency + "." + expectedOs.getCpuArch()).collect(Collectors.toList());
+            String dependency = jschResult.getResult();
+            List<String> notInstalledPackages = new ArrayList<>();
+            for (String dependencyPackage : dependencyPackages) {
+                if (!dependency.contains(dependencyPackage)) {
+                    notInstalledPackages.add(dependencyPackage);
                 }
-            } else {
-                dependencyProperty.setStatus(HostEnvStatusEnum.ERROR);
-                dependencyProperty.setStatusMessage("Please check the required dependencies");
             }
-        } catch (IOException e) {
+            dependencyProperty.setStatus(HostEnvStatusEnum.NORMAL);
+            if (!notInstalledPackages.isEmpty()) {
+                dependencyProperty.setStatus(HostEnvStatusEnum.ERROR);
+                dependencyProperty.setStatusMessage("not installed dependencies:"
+                        + StringUtils.join(notInstalledPackages, ","));
+            }
+        } catch (Exception e) {
             log.error("Execute command exception：", e);
             dependencyProperty.setStatus(HostEnvStatusEnum.ERROR);
-            dependencyProperty.setStatusMessage("Please check the required dependencies");
+            dependencyProperty.setStatusMessage(e.getMessage());
         }
-
         return dependencyProperty;
     }
 

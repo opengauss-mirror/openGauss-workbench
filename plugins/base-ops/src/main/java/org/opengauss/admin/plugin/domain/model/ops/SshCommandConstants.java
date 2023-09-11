@@ -67,7 +67,7 @@ public interface SshCommandConstants {
     /**
      * rely
      */
-    String DEPENDENCY = "yum list installed | egrep 'libaio-devel|flex|bison|ncurses-devel|glibc-devel|patch|redhat-lsb-core|readline-devel' | wc -l";
+    String DEPENDENCY = "yum list installed | egrep 'libaio-devel|flex|bison|ncurses-devel|glibc-devel|patch|redhat-lsb-core|readline-devel'";
     /**
      * firewall
      */
