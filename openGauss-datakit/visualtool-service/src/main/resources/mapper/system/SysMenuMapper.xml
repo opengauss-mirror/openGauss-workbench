@@ -112,6 +112,8 @@
         )
     </select>
 
-
-
+    <select id="selectParentMenuIdByPluginId" parameterType="String" resultType="Integer">
+        SELECT distinct parent_id as menu_id from sys_menu where plugin_id= #{pluginId} and parent_id != 0
+        and  parent_id not in (SELECT menu_id from sys_menu where plugin_id= #{pluginId})
+    </select>
 </mapper>

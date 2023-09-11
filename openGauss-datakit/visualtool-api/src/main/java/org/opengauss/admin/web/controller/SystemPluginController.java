@@ -306,6 +306,8 @@ public class SystemPluginController extends BaseController {
         if (StringUtils.isNotBlank(logo)) {
             sysMenuService.updatePluginMenuIcon(pluginInfo.getPluginId(), logo);
             iSysPluginLogoService.savePluginConfig(pluginInfo.getPluginId(), logo);
+            // refresh father logo
+            sysMenuService.updatePluginFatherMenuIcon(pluginInfo.getPluginId(), logo);
         }
         return result;
     }
