@@ -29,7 +29,7 @@
       </el-col>
       <el-col :span="12">
         <el-form-item prop="oids" :label="$t('createTable.general.withOIDS')">
-          <el-checkbox v-model="form.oids" :disabled="form.storage == 'COLUMN'" />
+          <el-checkbox v-model="form.oids" :disabled="form.storage == 'COLUMN' || isPartition" />
         </el-form-item>
       </el-col>
       <el-col :span="12">
@@ -98,7 +98,10 @@
   }>();
   const isPartition = computed({
     get: () => props.isPartition,
-    set: (val) => emit('update:isPartition', val),
+    set: (val) => {
+      if (val) form.oids = false;
+      emit('update:isPartition', val);
+    },
   });
   const { t } = useI18n();
   const tablespaceList = inject('tablespaceList', []);

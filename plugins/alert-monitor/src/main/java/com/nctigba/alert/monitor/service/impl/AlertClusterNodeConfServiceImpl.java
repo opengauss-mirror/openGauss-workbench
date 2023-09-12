@@ -6,10 +6,15 @@ package com.nctigba.alert.monitor.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollectionUtil;
+import cn.hutool.core.util.StrUtil;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
+import com.nctigba.alert.monitor.entity.AlertTemplateRule;
+import com.nctigba.alert.monitor.service.AlertScheduleService;
+import com.nctigba.alert.monitor.service.AlertTemplateRuleService;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsClusterEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsClusterNodeEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
@@ -71,6 +76,12 @@ public class AlertClusterNodeConfServiceImpl
     @Autowired
     private AlertTemplateService templateService;
 
+    @Autowired
+    private AlertTemplateRuleService templateRuleService;
+
+    @Autowired
+    private AlertScheduleService alertScheduleService;
+
 
     @Transactional
     public void saveClusterNodeConf(AlertClusterNodeConfReq alertClusterNodeConfReq) {
@@ -97,7 +108,8 @@ public class AlertClusterNodeConfServiceImpl
         Map<Long, String> ruleConfigMap = new HashMap<>();  // use to update the prometheus rule configuration
         oldNodeIdListByTemplateId.addAll(newNodeIdList);
         ruleConfigMap.put(templateId, String.join(CommonConstants.DELIMITER, oldNodeIdListByTemplateId));
-        ruleConfigMap.putAll(getUpdateRuleConfigMap(templateId, clusterNodeIdList));
+        Map<Long, String> updateRuleConfigMap = getUpdateRuleConfigMap(templateId, clusterNodeIdList);
+        ruleConfigMap.putAll(updateRuleConfigMap);
 
         // delete old data by clusterNodeIdList, which exclude templateId
         LambdaUpdateWrapper<AlertClusterNodeConf> updateWrapper = new LambdaUpdateWrapper<>();
@@ -108,6 +120,41 @@ public class AlertClusterNodeConfServiceImpl
         this.update(null, updateWrapper);
         // update prometheus rule config
         prometheusService.updateRuleConfig(ruleConfigMap);
+        // add log task
+        List<AlertTemplateRule> templateRuleList = templateRuleService.list(Wrappers.<AlertTemplateRule>lambdaQuery()
+            .eq(AlertTemplateRule::getTemplateId, templateId)
+            .eq(AlertTemplateRule::getRuleType, CommonConstants.LOG_RULE)
+            .eq(AlertTemplateRule::getIsDeleted, CommonConstants.IS_NOT_DELETE));
+        Set<Long> ruleIdSet = templateRuleList.stream().map(item -> item.getRuleId()).collect(Collectors.toSet());
+        alertScheduleService.addTasks(ruleIdSet);
+        // remove old log task
+        List<Long> oldTemplateIds = updateRuleConfigMap.keySet().stream().filter(
+            item -> StrUtil.isBlank(updateRuleConfigMap.get(item))).collect(Collectors.toList());
+        if (CollectionUtil.isEmpty(oldTemplateIds)) {
+            return;
+        }
+        removeLogTasks(oldTemplateIds, clusterNodeIdList, ruleIdSet);
+    }
+
+    private void removeLogTasks(List<Long> oldTemplateIds, List<String> excludeNodeIds, Set<Long> excludeRuleIds) {
+        List<AlertTemplateRule> templateRuleList = templateRuleService.list(Wrappers.<AlertTemplateRule>lambdaQuery()
+            .in(AlertTemplateRule::getTemplateId, oldTemplateIds)
+            .eq(AlertTemplateRule::getRuleType, CommonConstants.LOG_RULE)
+            .eq(AlertTemplateRule::getIsDeleted, CommonConstants.IS_NOT_DELETE));
+        Set<Long> ruleIds = templateRuleList.stream().filter(item -> !excludeRuleIds.contains(item.getRuleId()))
+            .map(item -> item.getRuleId()).collect(Collectors.toSet());
+        if (CollectionUtil.isEmpty(ruleIds)) {
+            return;
+        }
+        List<Long> ruleIdList = baseMapper.getRuleIdExcludeNoIds(
+            new QueryWrapper<>().notIn("t1.cluster_node_id", excludeNodeIds)
+                .in("t2.rule_id", ruleIds));
+        List<Long> removeRuleIds =
+            ruleIds.stream().filter(item -> !ruleIdList.contains(item)).collect(Collectors.toList());
+        if (CollectionUtil.isEmpty(removeRuleIds)) {
+            return;
+        }
+        alertScheduleService.removeTasks(removeRuleIds);
     }
 
     private Map<Long, String> getUpdateRuleConfigMap(Long templateId, List<String> clusterNodeIdList) {

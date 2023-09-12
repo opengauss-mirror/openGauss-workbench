@@ -4,6 +4,7 @@
 
 package com.nctigba.datastudio.compatible;
 
+import com.nctigba.datastudio.model.query.SelectDataFiltrationQuery;
 import com.nctigba.datastudio.model.query.SelectDataQuery;
 import com.nctigba.datastudio.util.DebugUtils;
 import org.opengauss.admin.common.exception.CustomException;
@@ -30,9 +31,14 @@ public interface TableObjectSQLService {
      *
      * @param schema schema
      * @param tableName tableName
+     * @param start start
+     * @param pageSize pageSize
+     * @param filtration filtration
      * @return String
      */
-    default String tableDataSQL(String schema, String tableName) {
+    default String tableDataSQL(
+            String schema, String tableName, Integer start, Integer pageSize,
+            SelectDataFiltrationQuery filtration) {
         throw new CustomException(DebugUtils.getMessage());
     }
 
@@ -50,7 +56,7 @@ public interface TableObjectSQLService {
     /**
      * table data count sql
      *
-     * @param schema schema
+     * @param schema    schema
      * @param tableName tableName
      * @return String
      */
@@ -61,7 +67,7 @@ public interface TableObjectSQLService {
     /**
      * table analyse sql
      *
-     * @param schema schema
+     * @param schema    schema
      * @param tableName tableName
      * @return String
      */
@@ -72,7 +78,7 @@ public interface TableObjectSQLService {
     /**
      * table truncate sql
      *
-     * @param schema schema
+     * @param schema    schema
      * @param tableName tableName
      * @return String
      */
@@ -83,7 +89,7 @@ public interface TableObjectSQLService {
     /**
      * table vacuum sql
      *
-     * @param schema schema
+     * @param schema    schema
      * @param tableName tableName
      * @return String
      */
@@ -94,7 +100,7 @@ public interface TableObjectSQLService {
     /**
      * table reindex sql
      *
-     * @param schema schema
+     * @param schema    schema
      * @param tableName tableName
      * @return String
      */
@@ -105,9 +111,9 @@ public interface TableObjectSQLService {
     /**
      * table rename sql
      *
-     * @param schema schema
+     * @param schema    schema
      * @param tableName tableName
-     * @param newName newName
+     * @param newName   newName
      * @return String
      */
     default String tableRenameSQL(String schema, String tableName, String newName) {
@@ -117,9 +123,9 @@ public interface TableObjectSQLService {
     /**
      * table comment sql
      *
-     * @param schema schema
+     * @param schema    schema
      * @param tableName tableName
-     * @param comment comment
+     * @param comment   comment
      * @return String
      */
     default String tableCommentSQL(String schema, String tableName, String comment) {
@@ -129,7 +135,7 @@ public interface TableObjectSQLService {
     /**
      * table alter schema sql
      *
-     * @param schema schema
+     * @param schema    schema
      * @param tableName tableName
      * @param newSchema newSchema
      * @return String
@@ -141,7 +147,7 @@ public interface TableObjectSQLService {
     /**
      * table drop sql
      *
-     * @param schema schema
+     * @param schema    schema
      * @param tableName tableName
      * @return String
      */
@@ -152,8 +158,8 @@ public interface TableObjectSQLService {
     /**
      * table alter table space sql
      *
-     * @param schema schema
-     * @param tableName tableName
+     * @param schema     schema
+     * @param tableName  tableName
      * @param tablespace tablespace
      * @return String
      */
@@ -164,7 +170,7 @@ public interface TableObjectSQLService {
     /**
      * table sequence sql
      *
-     * @param schema schema
+     * @param schema    schema
      * @param tableName tableName
      * @return String
      */
@@ -175,13 +181,49 @@ public interface TableObjectSQLService {
     /**
      * table attribute sql
      *
-     * @param uuid uuid
-     * @param oid oid
+     * @param uuid      uuid
+     * @param oid       oid
      * @param tableType tableType
      * @return List
      * @throws SQLException SQLException
      */
     default List<Map<String, Object>> tableAttributeSQL(String uuid, String oid, String tableType) throws SQLException {
+        throw new CustomException(DebugUtils.getMessage());
+    }
+
+    /**
+     * table analyze sql
+     *
+     * @param schema schema
+     * @param tableName tableName
+     * @return String
+     */
+    default String tableAnalyzeSQL(String schema, String tableName) {
+        throw new CustomException(DebugUtils.getMessage());
+    }
+
+    /**
+     * table sequence sql
+     *
+     * @param oid    oid
+     * @return String
+     */
+    default String tableAttributePartitionSQL(String oid) {
+        throw new CustomException(DebugUtils.getMessage());
+    }
+
+    /**
+     * export table data sql
+     *
+     * @param schema schema
+     * @param tableName tableName
+     * @param pageNum pageNum
+     * @param pageSize pageSize
+     * @param filtration filtration
+     * @return String
+     */
+    default String exportTableData(
+            String schema, String tableName, Integer pageNum, Integer pageSize, SelectDataFiltrationQuery filtration) {
         throw new CustomException(DebugUtils.getMessage());
     }
 }

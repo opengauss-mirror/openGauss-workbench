@@ -20,5 +20,5 @@ public interface NotifyConfigService extends IService<NotifyConfig> {
 
     void saveList(List<NotifyConfig> list);
 
-    void testConfig(NotifyConfigReq notifyConfigReq);
+    boolean testConfig(NotifyConfigReq notifyConfigReq);
 }

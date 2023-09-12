@@ -23,7 +23,6 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 import com.nctigba.observability.instance.constants.MetricsLine;
 import com.nctigba.observability.instance.constants.MetricsValue;
-import com.nctigba.observability.instance.constants.MonitoringConstants;
 import com.nctigba.observability.instance.entity.NctigbaEnv;
 import com.nctigba.observability.instance.mapper.NctigbaEnvMapper;
 import com.nctigba.observability.instance.service.MetricsService.PrometheusResult.PromData.MonitoringMetric;
@@ -39,6 +38,11 @@ import lombok.extern.log4j.Log4j2;
 @Service
 @Log4j2
 public class MetricsService {
+    // prometheus query ?query={query}
+    private static final String PROMETHEUS_QUERY_POINT = "/api/v1/query";
+
+    // prometheus range query ?query={query}&start={start}&end={end}&step={step}
+    private static final String PROMETHEUS_QUERY_RANGE = "/api/v1/query_range";
     private static final String TIME = "time";
     private static final Map<String, String> PROM = new HashMap<>();
     private static final String DEFAULT = "DEFAULT";
@@ -85,8 +89,7 @@ public class MetricsService {
             throw new NullPointerException("query null");
         }
         log.info("promQL:{}, time:{}", query, time);
-        var prometheusResult = query(MonitoringConstants.PROMETHEUS_QUERY_POINT, query,
-                Map.of("query", query, "time", time));
+        var prometheusResult = query(PROMETHEUS_QUERY_POINT, query, Map.of("query", query, "time", time));
         return prometheusResult.getData().getResult();
     }
 
@@ -104,12 +107,12 @@ public class MetricsService {
             return Collections.emptyList();
         }
         log.info("promQL:{}, start:{}, end:{}, step:{}", query, start, end, step);
-        var prometheusResult = query(MonitoringConstants.PROMETHEUS_QUERY_RANGE, query,
+        var prometheusResult = query(PROMETHEUS_QUERY_RANGE, query,
                 Map.of("query", query, "start", start, "end", end, "step", step));
         return prometheusResult.getData().getResult();
     }
 
-    public HashMap<String, Object> listBatch(Enum<?>[] metricsArr, String nodeId, Long start, Long end, Integer step) {
+    public Map<String, Object> listBatch(Enum<?>[] metricsArr, String nodeId, Long start, Long end, Integer step) {
         var result = new HashMap<String, Object>();
         var node = clusterManager.getOpsNodeById(nodeId);
         List<Long> timeline = new ArrayList<>();
@@ -164,7 +167,7 @@ public class MetricsService {
             var map = new HashMap<String, Object>();
             for (var monitoringMetric : metric) {
                 if (template == null)
-                    throw new NullPointerException(promQl);
+                    return metric.get(0).getValue().get(1);
                 String key = StrUtil.format(template, monitoringMetric.getMetric());
                 map.put(key, monitoringMetric.getValue().get(1));
             }
@@ -181,7 +184,7 @@ public class MetricsService {
             var map = new HashMap<String, Object>();
             for (var monitoringMetric : metric) {
                 if (template == null) {
-                    throw new NullPointerException(promQl);
+                    return ListUtil.collect(metric.get(0).getValues(), timeline);
                 }
                 String key = StrUtil.format(template, monitoringMetric.getMetric());
                 var lineNumber = ListUtil.collect(monitoringMetric.getValues(), timeline);

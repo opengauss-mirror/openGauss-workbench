@@ -24,5 +24,9 @@ public class CommonConstants {
     public static final String DATA_FAIL = "data fail:{}";
     public static final String DIAGNOSIS_RULE ="diagnosisRule";
 
+    /**
+     * Max run node num
+     */
+    public static final int MAX_RUN_NODE_NUM = 5;
 
 }

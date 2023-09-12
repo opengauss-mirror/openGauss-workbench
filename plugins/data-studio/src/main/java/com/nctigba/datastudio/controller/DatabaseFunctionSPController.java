@@ -6,6 +6,7 @@ package com.nctigba.datastudio.controller;
 
 
 import com.nctigba.datastudio.model.dto.DatabaseFunctionSPDTO;
+import com.nctigba.datastudio.model.query.PackageRequest;
 import com.nctigba.datastudio.service.DatabaseFunctionSPService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -39,5 +40,15 @@ public class DatabaseFunctionSPController {
     @DeleteMapping(value = "/functionSP", produces = MediaType.APPLICATION_JSON_VALUE)
     public void dropFunctionSP(@RequestBody DatabaseFunctionSPDTO request) {
         databaseFunctionSPService.dropFunctionSP(request);
+    }
+
+    /**
+     * drop package
+     *
+     * @param request request
+     */
+    @DeleteMapping(value = "/drop/package", produces = MediaType.APPLICATION_JSON_VALUE)
+    public void dropPackage(@RequestBody PackageRequest request) {
+        databaseFunctionSPService.dropPackage(request);
     }
 }

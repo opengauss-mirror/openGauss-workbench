@@ -37,6 +37,8 @@ public class PluginListener implements ApplicationListener<ApplicationEvent> {
                         firstMenu.getMenuId());
                 menuFacade.savePluginRoute(pluginId, "会话详情", "Session Details", "vem/sessionDetail",
                         firstMenu.getMenuId());
+                menuFacade.savePluginMenu(pluginId, "集群监控", "Cluster OPS", 10, "vem/dashboard/clusters",
+                        firstMenu.getMenuId());
             }
         } else if (event instanceof ContextClosedEvent) {
             MainApplicationContext context = ((ContextClosedEvent) event).getApplicationContext()

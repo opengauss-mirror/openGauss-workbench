@@ -4,17 +4,20 @@
 
 package com.nctigba.alert.monitor.controller;
 
+import cn.hutool.core.collection.CollectionUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import org.opengauss.admin.common.core.domain.AjaxResult;
-import org.opengauss.admin.common.core.page.TableDataInfo;
+import com.nctigba.alert.monitor.constant.CommonConstants;
 import com.nctigba.alert.monitor.dto.AlertTemplateDto;
-import com.nctigba.alert.monitor.dto.AlertTemplateRuleDto;
 import com.nctigba.alert.monitor.entity.AlertTemplate;
 import com.nctigba.alert.monitor.entity.AlertTemplateRule;
 import com.nctigba.alert.monitor.model.AlertTemplateReq;
 import com.nctigba.alert.monitor.service.AlertTemplateRuleService;
 import com.nctigba.alert.monitor.service.AlertTemplateService;
+import com.nctigba.alert.monitor.utils.MessageSourceUtil;
+import org.opengauss.admin.common.core.domain.AjaxResult;
+import org.opengauss.admin.common.core.page.TableDataInfo;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -24,8 +27,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.validation.ConstraintViolation;
 import javax.validation.Valid;
+import javax.validation.Validation;
+import javax.validation.Validator;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * @author wuyuebin
@@ -60,13 +68,13 @@ public class AlertTemplateController extends BaseController {
 
     @GetMapping("/{id}/rule")
     public TableDataInfo getTemplateRulePage(@PathVariable Long id, String ruleName) {
-        Page<AlertTemplateRuleDto> page = templateService.getTemplateRulePage(id, ruleName, startPage());
+        Page<AlertTemplateRule> page = templateService.getTemplateRulePage(id, ruleName, startPage());
         return getDataTable(page);
     }
 
     @GetMapping("/{id}/rule/list")
     public AjaxResult getTemplateRuleListById(@PathVariable Long id) {
-        List<AlertTemplateRuleDto> list = templateService.getTemplateRuleListById(id);
+        List<AlertTemplateRule> list = templateService.getTemplateRuleListById(id);
         return AjaxResult.success(list);
     }
 
@@ -89,8 +97,58 @@ public class AlertTemplateController extends BaseController {
     }
 
     @PostMapping("/templateRule")
-    public AjaxResult saveTemplateRule(@RequestBody @Valid AlertTemplateRule alertTemplateRule) {
-        AlertTemplateRuleDto templateRuleDto = templateRuleService.saveTemplateRule(alertTemplateRule);
-        return AjaxResult.success(templateRuleDto);
+    public AjaxResult saveTemplateRule(@RequestBody @Validated AlertTemplateRule alertTemplateRule) {
+        Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
+        String errorMsg = MessageSourceUtil.get("validateFail");
+        if (alertTemplateRule.getRuleType().equals(CommonConstants.INDEX_RULE)) {
+            Set<ConstraintViolation<AlertTemplateRule>> error = validator.validate(alertTemplateRule,
+                AlertTemplateRule.IndexRuleGroup.class);
+            if (CollectionUtil.isNotEmpty(error)) {
+                String messages = error.stream().map(item -> item.getPropertyPath() + item.getMessage())
+                    .collect(Collectors.joining(CommonConstants.DELIMITER));
+                return AjaxResult.error(errorMsg + ":" + messages);
+            }
+            if (alertTemplateRule.getIsSilence().equals(CommonConstants.IS_SILENCE)) {
+                error = validator.validate(alertTemplateRule, AlertTemplateRule.SilenceGroup.class);
+                if (CollectionUtil.isNotEmpty(error)) {
+                    String messages = error.stream().map(item -> item.getPropertyPath() + item.getMessage())
+                        .collect(Collectors.joining(CommonConstants.DELIMITER));
+                    return AjaxResult.error(errorMsg + ":" + messages);
+                }
+            }
+        } else {
+            Set<ConstraintViolation<AlertTemplateRule>> error = validator.validate(alertTemplateRule,
+                AlertTemplateRule.LogRuleGroup.class);
+            if (CollectionUtil.isNotEmpty(error)) {
+                String messages = error.stream().map(item -> item.getPropertyPath() + item.getMessage())
+                    .collect(Collectors.joining(CommonConstants.DELIMITER));
+                return AjaxResult.error(errorMsg + ":" + messages);
+            }
+        }
+        return AjaxResult.success(templateRuleService.saveTemplateRule(alertTemplateRule));
+    }
+
+    /**
+     * enable rules
+     *
+     * @param templateRuleId Long
+     * @return AjaxResult
+     */
+    @PostMapping("/templateRule/{templateRuleId}/enable")
+    public AjaxResult enableTemplateRule(@PathVariable Long templateRuleId) {
+        templateRuleService.enableTemplateRule(templateRuleId);
+        return AjaxResult.success();
+    }
+
+    /**
+     * disable rules
+     *
+     * @param templateRuleId Long
+     * @return AjaxResult
+     */
+    @PostMapping("/templateRule/{templateRuleId}/disable")
+    public AjaxResult disableTemplateRule(@PathVariable Long templateRuleId) {
+        templateRuleService.disableTemplateRule(templateRuleId);
+        return AjaxResult.success();
     }
 }

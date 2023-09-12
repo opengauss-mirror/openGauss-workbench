@@ -46,6 +46,7 @@ public class CompileImpl implements OperationInterface {
         log.info("compile paramReq: " + paramReq);
 
         String rootWindowName = paramReq.getRootWindowName();
+        String windowName = paramReq.getRootWindowName();
         Statement statement = webSocketServer.getStatement(rootWindowName);
         if (statement == null) {
             statement = webSocketServer.getConnection(rootWindowName).createStatement();
@@ -53,6 +54,13 @@ public class CompileImpl implements OperationInterface {
         }
 
         String sql = paramReq.getSql();
+        if (paramReq.isPackage()) {
+            statement.execute(sql);
+            Map<String, String> messageMap = new HashMap<>();
+            messageMap.put(RESULT, LocaleString.transLanguageWs("1002", webSocketServer));
+            webSocketServer.sendMessage(windowName, MESSAGE, SUCCESS, messageMap);
+            return;
+        }
         String schema = DebugUtils.getSchemaBySql(sql);
         String name = DebugUtils.getNameBySql(sql);
         if (StringUtils.isEmpty(schema)) {
@@ -88,7 +96,6 @@ public class CompileImpl implements OperationInterface {
             }
         }
         log.info("compile newOid: " + newOid);
-        String windowName = paramReq.getRootWindowName();
         if (StringUtils.isEmpty(newOid)) {
             webSocketServer.sendMessage(windowName, TEXT, LocaleString.transLanguageWs("1002", webSocketServer), null);
             return;

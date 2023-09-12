@@ -1,5 +1,5 @@
 <template>
-  <el-switch @change="(val) => changeSwitch(val)" v-model="isDarkTheme" />
+  <el-switch @change="(val: boolean) => changeSwitch(val)" v-model="isDarkTheme" />
 </template>
 
 <script setup lang="ts" name="switchDark">
@@ -7,7 +7,7 @@
 
   const isDarkTheme = isDark;
 
-  const changeSwitch = (val) => {
+  const changeSwitch = (val: boolean) => {
     toggleDark(val);
   };
 </script>

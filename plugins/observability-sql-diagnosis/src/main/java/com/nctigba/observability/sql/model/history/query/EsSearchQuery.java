@@ -4,7 +4,6 @@
 
 package com.nctigba.observability.sql.model.history.query;
 
-import cn.hutool.core.date.DateUtil;
 import lombok.Data;
 
 import java.util.Date;
@@ -35,24 +34,12 @@ public class EsSearchQuery {
     private long interval;
     private String id;
 
-    public void setStartDate(String startDate) {
-        this.startDate = DateUtil.parseUTC(startDate);
-    }
-
     public void setStartDate(Date startDate) {
         this.startDate = startDate;
     }
 
-    public void setEndDate(String endDate) {
-        this.endDate = DateUtil.parseUTC(endDate);
-    }
-
     public void setEndDate(Date endDate) {
         this.endDate = endDate;
-    }
-
-    public int getRowCount() {
-        return rowCount == 0 ? 10 : rowCount;
     }
 
     public boolean hasDateFilter() {

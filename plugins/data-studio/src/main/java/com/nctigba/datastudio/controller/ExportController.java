@@ -60,6 +60,18 @@ public class ExportController {
     }
 
     /**
+     * import table data
+     *
+     * @param request request
+     * @throws SQLException SQLException
+     * @throws IOException IOException
+     */
+    @PostMapping(value = "/import/table/data", produces = MediaType.APPLICATION_JSON_VALUE)
+    public void importTableData(ExportRequest request) throws SQLException, IOException {
+        exportService.importTableData(request);
+    }
+
+    /**
      * export function ddl
      *
      * @param request request

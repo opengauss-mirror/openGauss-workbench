@@ -15,7 +15,7 @@
           <el-tab-pane :label="$t('sequence.preview')" name="Sql"></el-tab-pane>
         </el-tabs>
         <div v-show="activeName == 'Base'">
-          <el-form :model="form" ref="ruleFormRef" :rules="rules" label-width="70px">
+          <el-form :model="form" ref="ruleFormRef" :rules="rules" label-width="105px">
             <el-form-item prop="sequenceName" :label="$t('sequence.name')">
               <el-input v-model="form.sequenceName" />
             </el-form-item>
@@ -34,8 +34,8 @@
             <el-form-item prop="cache" :label="$t('sequence.cacheValue')">
               <el-input v-model.number="form.cache" />
             </el-form-item>
-            <el-form-item prop="cycle" :label="$t('sequence.cycle')">
-              <el-switch v-model="form.cycle" />
+            <el-form-item prop="isCycle" :label="$t('sequence.isCycle')">
+              <el-switch v-model="form.isCycle" />
             </el-form-item>
             <el-form-item :label="$t('sequence.belongObject')">
               <hr style="width: 100%; border: none; height: 1px; background-color: #d9dbe1" />
@@ -117,7 +117,7 @@
   const ruleFormRef = ref<FormInstance>();
   const UserStore = useUserStore();
   const editorPreRef = ref();
-  const activeName: Ref<string | number> = ref('Base');
+  const activeName = ref('Base');
   const connectData = computed(() => props.connectData);
   const form = reactive({
     sequenceName: '',
@@ -126,7 +126,7 @@
     minValue: '',
     maxValue: '',
     cache: '',
-    cycle: false,
+    isCycle: false,
     tableSchema: '',
     tableName: '',
     schema: '',
@@ -230,7 +230,7 @@
       if (valid) {
         api[type](form).then((res) => {
           if (type === 'Base') {
-            ElMessage.success(`${t('create.sequence')}${t('success')}`);
+            ElMessage.success(`${t('create.sequence')}${t('message.success')}`);
             myEmit('success');
             handleClose();
           } else if (type === 'Sql') {
@@ -250,7 +250,7 @@
       minValue: '',
       maxValue: '',
       cache: '',
-      cycle: false,
+      isCycle: false,
       tableName: '',
       tableColumn: '',
     });

@@ -12,7 +12,6 @@ import com.nctigba.datastudio.service.OperationInterface;
 import com.nctigba.datastudio.util.DebugUtils;
 import com.nctigba.datastudio.util.LocaleString;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -22,14 +21,12 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import static com.nctigba.datastudio.constants.CommonConstants.CONNECTION;
 import static com.nctigba.datastudio.constants.CommonConstants.DIFFER;
-import static com.nctigba.datastudio.constants.CommonConstants.FUNC_OID;
 import static com.nctigba.datastudio.constants.CommonConstants.NODE_NAME;
 import static com.nctigba.datastudio.constants.CommonConstants.OID;
 import static com.nctigba.datastudio.constants.CommonConstants.PORT;
@@ -39,7 +36,6 @@ import static com.nctigba.datastudio.constants.CommonConstants.SUCCESS;
 import static com.nctigba.datastudio.constants.SqlConstants.ATTACH_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.BACKTRACE_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.BACKTRACE_SQL_PRE;
-import static com.nctigba.datastudio.constants.SqlConstants.DEBUG_SERVER_INFO_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.INFO_BREAKPOINT_PRE;
 import static com.nctigba.datastudio.constants.SqlConstants.INFO_BREAKPOINT_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.INFO_LOCALS_SQL;
@@ -102,68 +98,53 @@ public class InputParamImpl implements OperationInterface {
         String windowName = paramReq.getWindowName();
         Statement statement = webSocketServer.getStatement(windowName);
 
-        List<String> oidList = new ArrayList<>();
-        List<String> nodeNameList = new ArrayList<>();
-        List<String> portList = new ArrayList<>();
-        try (
-                ResultSet resultSet = statement.executeQuery(DEBUG_SERVER_INFO_SQL)
-        ) {
-            while (resultSet.next()) {
-                oidList.add(resultSet.getString(FUNC_OID));
-                nodeNameList.add(resultSet.getString(NODE_NAME));
-                portList.add(resultSet.getString(PORT));
-            }
-            log.info("inputParam debugOperate oidList: " + oidList);
-        }
-
-        String nodeName = Strings.EMPTY;
-        String port = Strings.EMPTY;
+        String nodeName = DebugUtils.changeParamType(webSocketServer, windowName, NODE_NAME);
+        String port = DebugUtils.changeParamType(webSocketServer, windowName, PORT);
         String oid = paramReq.getOid();
-        if (oidList.contains(oid)) {
-            int index = oidList.indexOf(oid);
-            nodeName = nodeNameList.get(index);
-            port = portList.get(index);
-        } else {
-            try (
-                    ResultSet turnNoResult = statement.executeQuery(String.format(TURN_ON_SQL, oid))
-            ) {
-                while (turnNoResult.next()) {
-                    nodeName = turnNoResult.getString(NODE_NAME);
-                    port = turnNoResult.getString(PORT);
-                    log.info("inputParam nodeName and port is: " + nodeName + "---" + port);
+
+        try (
+                ResultSet turnNoResult = statement.executeQuery(String.format(TURN_ON_SQL, oid))
+        ) {
+            while (turnNoResult.next()) {
+                nodeName = turnNoResult.getString(NODE_NAME);
+                port = turnNoResult.getString(PORT);
+                log.info("inputParam nodeName and port is: " + nodeName + "---" + port);
+                webSocketServer.setParamMap(windowName, NODE_NAME, nodeName);
+                webSocketServer.setParamMap(windowName, PORT, port);
+            }
+        } catch (SQLException e) {
+            log.info(e.getMessage());
+        } finally {
+            asyncHelper.task(webSocketServer, paramReq);
+            Connection conn = webSocketServer.createConnection(paramReq.getUuid(), windowName);
+            Statement statNew = conn.createStatement();
+            webSocketServer.setParamMap(windowName, OID, oid);
+            webSocketServer.setParamMap(windowName, CONNECTION, conn);
+            webSocketServer.setParamMap(windowName, STATEMENT, statNew);
+
+            statNew.execute(String.format(ATTACH_SQL, nodeName, port));
+            List<Integer> list = DebugUtils.getAvailableBreakPoints(paramReq, webSocketServer);
+            List<Integer> breakPoints = paramReq.getBreakPoints();
+            int differ = DebugUtils.changeParamType(webSocketServer, windowName, DIFFER);
+            if (!CollectionUtils.isEmpty(breakPoints)) {
+                for (Integer i : breakPoints) {
+                    if (list.contains(i - differ)) {
+                        paramReq.setLine(i);
+                        addBreakPoint.operate(webSocketServer, paramReq);
+                    }
                 }
             }
+
+            ResultSet stackResult = statNew.executeQuery(BACKTRACE_SQL_PRE + differ + BACKTRACE_SQL);
+            webSocketServer.sendMessage(windowName, STACK, SUCCESS, DebugUtils.parseResultSet(stackResult));
+
+            ResultSet bpResult = statNew.executeQuery(INFO_BREAKPOINT_PRE + differ + INFO_BREAKPOINT_SQL);
+            webSocketServer.sendMessage(windowName, BREAKPOINT, SUCCESS, DebugUtils.parseBreakPoint(bpResult, oid));
+
+            Map<String, Object> variableMap = DebugUtils.parseVariable(statNew.executeQuery(INFO_LOCALS_SQL));
+            Map<String, Object> paramMap = DebugUtils.addMapParam(variableMap, webSocketServer, paramReq);
+            webSocketServer.sendMessage(windowName, VARIABLE, SUCCESS, paramMap);
         }
-
-        asyncHelper.task(webSocketServer, paramReq);
-        Connection conn = webSocketServer.createConnection(paramReq.getUuid(), windowName);
-        Statement statNew = conn.createStatement();
-        webSocketServer.setParamMap(windowName, OID, oid);
-        webSocketServer.setParamMap(windowName, CONNECTION, conn);
-        webSocketServer.setParamMap(windowName, STATEMENT, statNew);
-
-        statNew.execute(String.format(ATTACH_SQL, nodeName, port));
-        List<Integer> list = DebugUtils.getAvailableBreakPoints(paramReq, webSocketServer);
-        List<Integer> breakPoints = paramReq.getBreakPoints();
-        int differ = DebugUtils.changeParamType(webSocketServer, windowName, DIFFER);
-        if (!CollectionUtils.isEmpty(breakPoints)) {
-            for (Integer i : breakPoints) {
-                if (list.contains(i - differ)) {
-                    paramReq.setLine(i);
-                    addBreakPoint.operate(webSocketServer, paramReq);
-                }
-            }
-        }
-
-        ResultSet stackResult = statNew.executeQuery(BACKTRACE_SQL_PRE + differ + BACKTRACE_SQL);
-        webSocketServer.sendMessage(windowName, STACK, SUCCESS, DebugUtils.parseResultSet(stackResult));
-
-        ResultSet bpResult = statNew.executeQuery(INFO_BREAKPOINT_PRE + differ + INFO_BREAKPOINT_SQL);
-        webSocketServer.sendMessage(windowName, BREAKPOINT, SUCCESS, DebugUtils.parseBreakPoint(bpResult, oid));
-
-        Map<String, Object> variableMap = DebugUtils.parseVariable(statNew.executeQuery(INFO_LOCALS_SQL));
-        Map<String, Object> paramMap = DebugUtils.addMapParam(variableMap, webSocketServer, paramReq);
-        webSocketServer.sendMessage(windowName, VARIABLE, SUCCESS, paramMap);
     }
 
     @Override

@@ -1,6 +1,7 @@
 /*
  * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
  */
+
 package com.nctigba.observability.instance.util;
 
 import java.io.ByteArrayInputStream;
@@ -154,6 +155,30 @@ public class SshSession implements AutoCloseable {
 
     public static SshSession connect(String host, Integer port, String username, String password) throws IOException {
         return new SshSession(host, port, username, password);
+    }
+
+    /**
+     * session is Open
+     *
+     * @return boolean
+     */
+    public boolean isConnected() {
+        return session.isOpen();
+    }
+
+    /**
+     * get session through sessionPool
+     *
+     * @param host     host
+     * @param port     port
+     * @param username username
+     * @param password password
+     * @return SshSession SshSession
+     * @throws IOException IOException
+     */
+    public static SshSession getSession(String host, Integer port, String username, String password)
+            throws IOException {
+        return SshSessionPool.INSTANCE.getSession(host, port, username, password);
     }
 
     @Override

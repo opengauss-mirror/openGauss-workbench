@@ -13,6 +13,40 @@
           <div class="cluster-title">{{ $t('instanceMonitor.clusterTitle') }}</div>
 
           <el-cascader v-model="clusterNodeId" :options="clusterList" />
+          <svg-icon class="info-hollow" name="info-hollow" style="margin-left: 4px" @click="showInfo" />
+          <div style="position: relative" v-if="visible">
+            <div class="instance-info">
+              <div class="title-row">
+                <div class="title">{{ $t('instanceMonitor.nodeInfo.instanceInfo') }}</div>
+                <svg-icon class="close" name="close" style="margin-left: 4px" @click="visible = false" />
+              </div>
+              <div class="text" v-loading="loading">
+                <div>{{ $t('instanceMonitor.nodeInfo.databaseVersion') }}{{ nodeInfoData?.version }}</div>
+                <div>
+                  {{ $t('instanceMonitor.nodeInfo.databaseStartTime')
+                  }}{{ moment(nodeInfoData?.time).format('YYYY-MM-DD HH:mm:ss') as string }}
+                </div>
+                <div>{{ $t('instanceMonitor.nodeInfo.databaseDataDirectory') }}{{ nodeInfoData?.dbDataPath }}</div>
+                <div>{{ $t('instanceMonitor.nodeInfo.databaseLogDirectory') }}{{ nodeInfoData?.dbLogPath }}</div>
+                <div>
+                  {{ $t('instanceMonitor.nodeInfo.enableArchiving')
+                  }}{{
+                    nodeInfoData?.archiveMode === 'on'
+                      ? $t('instanceMonitor.nodeInfo.yes')
+                      : $t('instanceMonitor.nodeInfo.no')
+                  }}
+                </div>
+                <div>{{ $t('instanceMonitor.nodeInfo.operatingSystemVersion') }}{{ nodeInfoData?.osVersion }}</div>
+                <div>{{ $t('instanceMonitor.nodeInfo.serverCPUManufacturer') }}{{ nodeInfoData?.CPUmanufacturer }}</div>
+                <div>{{ $t('instanceMonitor.nodeInfo.serverCPUModel') }}{{ nodeInfoData?.CPUmodel }}</div>
+                <div>
+                  {{ $t('instanceMonitor.nodeInfo.serverCPUCoreCount') }}{{ nodeInfoData?.CPUcores
+                  }}{{ $t('instanceMonitor.nodeInfo.cores') }}
+                </div>
+                <div>{{ $t('instanceMonitor.nodeInfo.totalMemorySize') }}{{ nodeInfoData?.TotalMemory }}</div>
+              </div>
+            </div>
+          </div>
         </div>
         <div style="position: absolute; left: 0px; top: 5px; z-index: 9999" @click="toggleCollapse">
           <el-icon v-if="!isCollapse" size="20px"><Fold /></el-icon>
@@ -36,6 +70,7 @@
             <resource-monitor
               ref="refResourceMonitor"
               @goto="goto"
+              @changeCluster="toChangeCluster"
               :tabId="tabId"
               v-if="tabKeyLoaded.indexOf(tabKeys.ResourceMonitor) >= 0 || dashboardTabKey === tabKeys.ResourceMonitor"
             />
@@ -75,6 +110,15 @@
               :instanceId="instanceId"
             />
           </el-tab-pane>
+          <el-tab-pane class="min-height" :label="'ASP'" :name="tabKeys.ASP">
+            <asp
+              :tabId="tabId"
+              @goto="goto"
+              ref="aspComponent"
+              v-if="tabKeyLoaded.indexOf(tabKeys.ASP) >= 0 || dashboardTabKey === tabKeys.ASP"
+              :instanceId="instanceId"
+            />
+          </el-tab-pane>
           <el-tab-pane class="min-height" :label="$t('dashboard.systemConfig.tabName')" :name="tabKeys.SystemConfig">
             <systemConfiguration
               :tabId="tabId"
@@ -100,12 +144,15 @@ import ResourceMonitor from '@/pages/dashboardV2/resourceMonitor/Index.vue'
 import InstanceMetrics from '@/pages/dashboardV2/instanceMonitor/instanceMetrics/Index.vue'
 import TOPSQL from '@/pages/dashboardV2/instanceMonitor/topSQL/Index.vue'
 import Wdr from '@/pages/dashboardV2/wdr/Index.vue'
+import Asp from '@/pages/dashboardV2/asp/Index.vue'
 import ogRequest from '@/request'
 import { useRequest } from 'vue-request'
 import Install from '@/pages/dashboard/install/Index.vue'
 import SystemConfiguration from '@/pages/dashboardV2/systemConfiguration/Index.vue'
 import { tabKeys } from '@/pages/dashboardV2/common'
 import { uuid } from '@/shared'
+import { getNodeInfo } from '@/api/observability'
+import moment from 'moment'
 
 type Res =
   | [
@@ -119,7 +166,7 @@ const clusterNodeId = ref()
 const clusterList = ref<Array<any>>([])
 const nodeVersion = ref<string>('')
 const lastNodeId = ref<string>('')
-const wdrComponent = ref(null)
+const wdrComponent = ref<InstanceType<typeof Wdr>>()
 const paramConfigComponent = ref(null)
 const performanceLoadRef = ref<InstanceType<typeof PerformanceLoad>>()
 const refResourceMonitor = ref<InstanceType<typeof ResourceMonitor>>()
@@ -129,11 +176,37 @@ const dashboardTabKey = ref<string>('')
 const tabId = uuid()
 const { instanceId } = storeToRefs(useMonitorStore(tabId))
 
+const router = useRouter()
 const tabKeyLoaded = ref<Array<string>>([])
-
+const visible = ref(false)
 onMounted(() => {
   dashboardTabKey.value = tabKeys.Home
 })
+const toChangeCluster = (publicIp: string, port: string) => {
+  for (let p1 = 0; p1 < clusterList.value.length; p1++) {
+    const clusterTemp = clusterList.value[p1]
+    for (let p2 = 0; p2 < clusterTemp.children.length; p2++) {
+      const node = clusterTemp.children[p2]
+      if (node.obj.publicIp === publicIp && node.obj.dbPort.toString() === port.toString()) {
+        clusterNodeId.value = [clusterTemp.value, node.value]
+        return
+      }
+    }
+  }
+}
+const toChangeClusterByNodeId = (nodeId: string) => {
+  for (let p1 = 0; p1 < clusterList.value.length; p1++) {
+    const clusterTemp = clusterList.value[p1]
+    for (let p2 = 0; p2 < clusterTemp.children.length; p2++) {
+      const node = clusterTemp.children[p2]
+      if (node.obj.nodeId === nodeId) {
+        clusterNodeId.value = [clusterTemp.value, node.value]
+        return
+      }
+    }
+  }
+}
+
 // tab render only once
 watch(dashboardTabKey, (v) => {
   if (tabKeyLoaded.value.indexOf(v) < 0) tabKeyLoaded.value.push(v)
@@ -145,11 +218,19 @@ const { data: opsClusterData } = useRequest(() => ogRequest.get('/observability/
 watch(opsClusterData, (res: Res) => {
   if (res && Object.keys(res).length) {
     clusterList.value = treeTransform(res)
+
+    nextTick(() => {
+      let paramsId = router.currentRoute.value.query.nodeId as string
+      let nodeId = window.$wujie?.props.data.nodeId as string
+      if (nodeId) toChangeClusterByNodeId(nodeId)
+      else toChangeClusterByNodeId(paramsId)
+    })
   }
 })
 
 // cluster changed
 watch(clusterNodeId, (res) => {
+  visible.value = false
   // getInstanceId
   let curInstanceId = instanceId.value
   if (typeof res === 'string') {
@@ -165,17 +246,19 @@ watch(clusterNodeId, (res) => {
 
   // find clusterId
   let clusterId = ''
+  let obj = {}
   for (let p1 = 0; p1 < clusterList.value.length; p1++) {
     const clusterTemp = clusterList.value[p1]
     for (let p2 = 0; p2 < clusterTemp.children.length; p2++) {
       const node = clusterTemp.children[p2]
       if (node.value === curInstanceId) {
         clusterId = clusterTemp.value
+        obj = node.obj
         break
       }
     }
   }
-  useMonitorStore(tabId).updateInstanceAndClusterId(curInstanceId, clusterId)
+  useMonitorStore(tabId).updateInstanceAndClusterId(curInstanceId, clusterId, obj)
 })
 
 const isCollapse = ref(true)
@@ -199,6 +282,11 @@ const goto = (key: string, param: object) => {
     nextTick(() => {
       refResourceMonitor.value!.outsideGoto(key)
     })
+  } else if (key === tabKeys.WDR) {
+    dashboardTabKey.value = tabKeys.WDR
+    nextTick(() => {
+      wdrComponent.value!.outsideGoto(param)
+    })
   }
 }
 
@@ -219,12 +307,20 @@ const treeTransform = (arr: any) => {
             item.dbPort +
             (item.clusterRole ? '(' + item.clusterRole + ')' : ''),
         value: item.clusterId ? item.clusterId : item.nodeId,
+        obj: item,
         children: treeTransform(item.clusterNodes),
       })
     })
   }
   return obj
 }
+const showInfo = () => {
+  if (!clusterNodeId.value) return
+  visible.value = !visible.value
+  loadNodeInfo(tabId)
+}
+const { data: nodeInfoData, run: loadNodeInfo, loading } = useRequest(getNodeInfo, { manual: true })
+watch(nodeInfoData, () => {}, { deep: true })
 </script>
 
 <style scoped lang="scss">
@@ -237,5 +333,49 @@ const treeTransform = (arr: any) => {
 
 .min-height {
   min-height: 500px !important;
+}
+
+.instance-info {
+  position: absolute;
+  z-index: 900;
+  top: -18px;
+  left: 0px;
+  width: 406px;
+  border-radius: 4px;
+  background: #fff;
+  box-shadow: 0px 8px 20px 0px rgba(0, 0, 0, 0.2);
+  .title-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    width: 406px;
+    height: 36px;
+    flex-shrink: 0;
+    border-radius: 2px 2px 0px 0px;
+    border-bottom: 1px solid var(--unnamed, #d9d9d9);
+    background: var(--fill, #f7f7f7);
+    .title {
+      font-size: 14px;
+      font-weight: 500;
+      line-height: 24px;
+      flex-grow: 1;
+      text-align: left;
+      padding-left: 24px;
+    }
+    .close {
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+      margin-right: 10px;
+    }
+  }
+
+  .text {
+    font-size: 12px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 29px;
+    padding: 12px 24px;
+  }
 }
 </style>

@@ -7,6 +7,8 @@ package com.nctigba.datastudio.compatible.opengauss;
 import com.nctigba.datastudio.compatible.FunctionSPObjectSQLService;
 import com.nctigba.datastudio.config.ConnectionConfig;
 import com.nctigba.datastudio.model.dto.DatabaseFunctionSPDTO;
+import com.nctigba.datastudio.model.query.PackageRequest;
+import com.nctigba.datastudio.util.DebugUtils;
 import com.nctigba.datastudio.util.LocaleString;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -24,6 +26,7 @@ import static com.nctigba.datastudio.constants.CommonConstants.DEFINITION;
 import static com.nctigba.datastudio.constants.CommonConstants.OPENGAUSS;
 import static com.nctigba.datastudio.constants.CommonConstants.PRO_KIND;
 import static com.nctigba.datastudio.constants.SqlConstants.DROP_FUNCTION_KEYWORD_SQL;
+import static com.nctigba.datastudio.constants.SqlConstants.DROP_PACKAGE_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.DROP_PROCEDURE_KEYWORD_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.PROC_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.QUERY_DEF_SQL;
@@ -86,13 +89,20 @@ public class FunctionSPObjectSQLServiceImpl implements FunctionSPObjectSQLServic
                 }
                 String sql = "";
                 if ("f".equals(proKind)) {
-                    sql = String.format(DROP_FUNCTION_KEYWORD_SQL, request.getSchema(), request.getFunctionSPName());
+                    sql = String.format(DROP_FUNCTION_KEYWORD_SQL, DebugUtils.needQuoteName(request.getSchema()),
+                            request.getFunctionSPName());
                 } else if ("p".equals(proKind)) {
-                    sql = String.format(DROP_PROCEDURE_KEYWORD_SQL, request.getSchema(), request.getFunctionSPName());
+                    sql = String.format(DROP_PROCEDURE_KEYWORD_SQL, DebugUtils.needQuoteName(request.getSchema()),
+                            request.getFunctionSPName());
                 }
                 log.info("dropFunctionSP sql is: " + sql);
                 return sql;
             }
         }
+    }
+
+    @Override
+    public String dropPackage(PackageRequest request) {
+        return String.format(DROP_PACKAGE_SQL, DebugUtils.needQuoteName(request.getSchema()), request.getPackageName());
     }
 }

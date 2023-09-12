@@ -21,10 +21,12 @@ import com.nctigba.alert.monitor.constant.CommonConstants;
 import com.nctigba.alert.monitor.dto.AlertRuleConfigDto;
 import com.nctigba.alert.monitor.dto.PrometheusConfigDto;
 import com.nctigba.alert.monitor.dto.PrometheusEnvDto;
+import com.nctigba.alert.monitor.entity.AlertClusterNodeConf;
 import com.nctigba.alert.monitor.entity.AlertConfig;
 import com.nctigba.alert.monitor.entity.AlertTemplateRule;
 import com.nctigba.alert.monitor.entity.AlertTemplateRuleItem;
 import com.nctigba.alert.monitor.entity.NctigbaEnv;
+import com.nctigba.alert.monitor.mapper.AlertClusterNodeConfMapper;
 import com.nctigba.alert.monitor.mapper.AlertTemplateRuleItemMapper;
 import com.nctigba.alert.monitor.mapper.AlertTemplateRuleMapper;
 import com.nctigba.alert.monitor.mapper.NctigbaEnvMapper;
@@ -69,6 +71,8 @@ public class PrometheusService {
 
     @Autowired
     private AlertTemplateRuleItemMapper alertTemplateRuleItemMapper;
+    @Autowired
+    private AlertClusterNodeConfMapper clusterNodeConfMapper;
 
     @Autowired
     private NctigbaEnvMapper envMapper;
@@ -168,14 +172,18 @@ public class PrometheusService {
             ruleFilesConf.add(ruleFilePath);
             isConfigChange = true;
         }
-        isConfigChange |= checkAndUpdatePromAlertConfig(config);
+        PrometheusConfigDto.Alert alerting = setAndGetPromAlerting(config);
+        if (config.getAlerting() == null || !config.getAlerting().equals(alerting)) {
+            config.setAlerting(alerting);
+            isConfigChange = true;
+        }
 
         if (isConfigChange) {
             uploadFileConfig(session, config);
         }
     }
 
-    private boolean checkAndUpdatePromAlertConfig(PrometheusConfigDto config) {
+    private PrometheusConfigDto.Alert setAndGetPromAlerting(PrometheusConfigDto config) {
         PrometheusConfigDto.Alert alerting = config.getAlerting();
         if (alerting == null) {
             alerting = new PrometheusConfigDto.Alert();
@@ -201,7 +209,8 @@ public class PrometheusService {
         if (CollectionUtils.isEmpty(alertmanagers)) {
             alertmanagers = new ArrayList<PrometheusConfigDto.Alert.Alertmanager>();
             alertmanagers.add(alertmanagerNew);
-            return true;
+            alerting.setAlertmanagers(alertmanagers);
+            return alerting;
         } else {
             PrometheusConfigDto.Alert.Alertmanager alertmanager = alertmanagers.get(0);
             if (!alertmanager.toString().equals(alertmanagerNew.toString())) {
@@ -217,10 +226,11 @@ public class PrometheusService {
                     targets.addAll(targets0);
                 }
                 alertmanagers.set(0, alertmanagerNew);
-                return true;
+                alerting.setAlertmanagers(alertmanagers);
+                return alerting;
             }
         }
-        return false;
+        return alerting;
     }
 
     private void uploadFileConfig(SshSession session, PrometheusConfigDto config) throws IOException {
@@ -238,17 +248,15 @@ public class PrometheusService {
     }
 
     public void initPrometheusConfig() {
-        try {
-            initPrometheusEnvDto();
+        initPrometheusEnvDto();
+        try (SshSession session = SshSession.connect(prometheusEnvDto.getPromIp(), prometheusEnvDto.getHostPort(),
+            prometheusEnvDto.getPromUsername(), prometheusEnvDto.getPromPasswd())) {
             List<AlertConfig> alertConfigs = prometheusEnvDto.getConfigList();
             if (CollectionUtil.isEmpty(alertConfigs)) {
                 return;
             }
-            SshSession session = SshSession.connect(prometheusEnvDto.getPromIp(), prometheusEnvDto.getHostPort(),
-                prometheusEnvDto.getPromUsername(), prometheusEnvDto.getPromPasswd());
             PrometheusConfigDto config = getPromConfig();
             updatePromConfig(session, config);
-            session.close();
         } catch (IOException | CryptoException | ServiceException | NullPointerException | BaseException e) {
             log.error("init prometheus configuration fail: ", e);
         }
@@ -327,18 +335,16 @@ public class PrometheusService {
      *
      * @param ruleConfigMap the key is templateId,the value is clusterNodeIds
      */
-    public void updateRuleConfig(Map<Long, String> ruleConfigMap) {
+    public synchronized void updateRuleConfig(Map<Long, String> ruleConfigMap) {
         if (CollectionUtil.isEmpty(ruleConfigMap)) {
             return;
         }
         initPrometheusEnvDto();
-        try {
-            SshSession session = SshSession.connect(prometheusEnvDto.getPromIp(), prometheusEnvDto.getHostPort(),
-                prometheusEnvDto.getPromUsername(), prometheusEnvDto.getPromPasswd());
+        try (SshSession session = SshSession.connect(prometheusEnvDto.getPromIp(), prometheusEnvDto.getHostPort(),
+            prometheusEnvDto.getPromUsername(), prometheusEnvDto.getPromPasswd())) {
             for (Long templateId : ruleConfigMap.keySet()) {
                 updateRuleConfig(session, templateId, ruleConfigMap.get(templateId));
             }
-            session.close();
         } catch (IOException e) {
             log.error(e.getMessage(), e);
             throw new ServiceException("update the alert rule fail");
@@ -346,17 +352,12 @@ public class PrometheusService {
     }
 
 
-    public void updateRuleConfig(Long templateId, String clusterNodeIds) {
-        if (templateId == null) {
-            return;
-        }
+    private synchronized void updateRuleConfig(Long templateId, String clusterNodeIds) {
         // update the rule configuration file of the prometheus
-        try {
-            initPrometheusEnvDto();
-            SshSession session = SshSession.connect(prometheusEnvDto.getPromIp(), prometheusEnvDto.getHostPort(),
-                prometheusEnvDto.getPromUsername(), prometheusEnvDto.getPromPasswd());
+        initPrometheusEnvDto();
+        try (SshSession session = SshSession.connect(prometheusEnvDto.getPromIp(), prometheusEnvDto.getHostPort(),
+            prometheusEnvDto.getPromUsername(), prometheusEnvDto.getPromPasswd())) {
             updateRuleConfig(session, templateId, clusterNodeIds);
-            session.close();
         } catch (IOException e) {
             log.error(e.getMessage(), e);
             throw new ServiceException("update the alert rule fail");
@@ -365,13 +366,18 @@ public class PrometheusService {
 
     private void updateRuleConfig(
         SshSession session, Long templateId, String clusterNodeIds) throws IOException {
+        List<AlertTemplateRule> alertTemplateRules = alertTemplateRuleMapper.selectList(
+            Wrappers.<AlertTemplateRule>lambdaQuery().eq(AlertTemplateRule::getTemplateId, templateId)
+                .eq(AlertTemplateRule::getRuleType, CommonConstants.INDEX_RULE)
+                .eq(AlertTemplateRule::getIsDeleted, CommonConstants.IS_NOT_DELETE));
+        if (CollectionUtil.isEmpty(alertTemplateRules)) {
+            return;
+        }
         AlertRuleConfigDto config = getAlertRuleConfigDto(session, templateId, clusterNodeIds);
         if (config == null || config.getGroups() == null) {
             return;
         }
         String instances = String.join("|", clusterNodeIds.split(CommonConstants.DELIMITER));
-        List<AlertTemplateRule> alertTemplateRules = alertTemplateRuleMapper.selectList(
-            Wrappers.<AlertTemplateRule>lambdaQuery().eq(AlertTemplateRule::getTemplateId, templateId));
         if (checkAndUpdateRuleConfig(instances, config, alertTemplateRules)) {
             uploadRuleFileConfig(session, config, templateId);
         }
@@ -479,9 +485,12 @@ public class PrometheusService {
     private AlertRuleConfigDto.Group templateRuleToPromRuleGroup(
         AlertTemplateRule alertTemplateRule,
         String instances) {
-        List<AlertTemplateRuleItem> alertTemplateRuleItems = alertTemplateRuleItemMapper.selectList(
-            Wrappers.<AlertTemplateRuleItem>lambdaQuery().eq(AlertTemplateRuleItem::getTemplateRuleId,
-                alertTemplateRule.getId()));
+        List<AlertTemplateRuleItem> alertTemplateRuleItems = alertTemplateRule.getAlertRuleItemList();
+        if (CollectionUtil.isEmpty(alertTemplateRuleItems)) {
+            alertTemplateRuleItems = alertTemplateRuleItemMapper.selectList(
+                Wrappers.<AlertTemplateRuleItem>lambdaQuery().eq(AlertTemplateRuleItem::getTemplateRuleId,
+                    alertTemplateRule.getId()));
+        }
         String ruleExpComb = alertTemplateRule.getRuleExpComb();
         for (AlertTemplateRuleItem alertTemplateRuleItem : alertTemplateRuleItems) {
             ruleExpComb = ruleExpComb.replace(alertTemplateRuleItem.getRuleMark(),
@@ -513,23 +522,132 @@ public class PrometheusService {
     }
 
     public void updateAlertConfig(AlertConfig alertConfig, List<AlertConfig> delAlertConfigList) {
-        try {
+        initPrometheusEnvDto();
+        try (SshSession session = SshSession.connect(prometheusEnvDto.getPromIp(), prometheusEnvDto.getHostPort(),
+            prometheusEnvDto.getPromUsername(), prometheusEnvDto.getPromPasswd())) {
             if (StrUtil.isBlank(alertConfig.getAlertIp()) && StrUtil.isBlank(alertConfig.getAlertPort())) {
-                throw new ServiceException("The alert IP or the alert Port is not empty!");
+                throw new ServiceException("The alert IP or the alert Port is empty!");
             }
-            initPrometheusEnvDto();
             List<AlertConfig> configList = new ArrayList<>();
             configList.add(alertConfig);
             prometheusEnvDto.setConfigList(configList).setDelConfigList(delAlertConfigList);
 
-            SshSession session = SshSession.connect(prometheusEnvDto.getPromIp(), prometheusEnvDto.getHostPort(),
-                prometheusEnvDto.getPromUsername(), prometheusEnvDto.getPromPasswd());
             PrometheusConfigDto config = getPromConfig();
             updatePromConfig(session, config);
-            session.close();
         } catch (IOException | NullPointerException e) {
             log.error(e.getMessage(), e);
             throw new ServiceException("update the alert config fail");
+        }
+    }
+
+    /**
+     * update prometheus rule configuration by templateId
+     *
+     * @param templateId Long
+     */
+    public synchronized void updateRuleConfigByTemplateId(Long templateId) {
+        String clusterNodeIds = getClusterNodeIdsByTemplateId(templateId);
+        if (StrUtil.isBlank(clusterNodeIds)) {
+            return;
+        }
+        updateRuleConfig(templateId, clusterNodeIds);
+    }
+
+    private String getClusterNodeIdsByTemplateId(Long templateId) {
+        List<AlertClusterNodeConf> nodeConfList =
+            clusterNodeConfMapper.selectList(Wrappers.<AlertClusterNodeConf>lambdaQuery()
+                .eq(AlertClusterNodeConf::getTemplateId, templateId)
+                .eq(AlertClusterNodeConf::getIsDeleted,
+                    CommonConstants.IS_NOT_DELETE));
+        if (CollectionUtil.isEmpty(nodeConfList)) {
+            return "";
+        }
+        return nodeConfList.stream().map(item -> item.getClusterNodeId()).collect(
+            Collectors.joining(CommonConstants.DELIMITER));
+    }
+
+    /**
+     * update prometheus rule configuration by template rule
+     *
+     * @param alertTemplateRule AlertTemplateRule
+     */
+    public synchronized void updateRuleByTemplateRule(AlertTemplateRule alertTemplateRule) {
+        Long templateId = alertTemplateRule.getTemplateId();
+        String clusterNodeIds = getClusterNodeIdsByTemplateId(templateId);
+        if (StrUtil.isBlank(clusterNodeIds)) {
+            return;
+        }
+        initPrometheusEnvDto();
+        try (SshSession session = SshSession.connect(prometheusEnvDto.getPromIp(), prometheusEnvDto.getHostPort(),
+            prometheusEnvDto.getPromUsername(), prometheusEnvDto.getPromPasswd())) {
+            AlertRuleConfigDto config = getAlertRuleConfigDto(session, templateId, clusterNodeIds);
+            if (config == null || config.getGroups() == null) {
+                session.close();
+                return;
+            }
+            List<AlertRuleConfigDto.Group> groups = config.getGroups();
+            String instances = String.join("|", clusterNodeIds.split(CommonConstants.DELIMITER));
+            AlertRuleConfigDto.Group groupNew = templateRuleToPromRuleGroup(alertTemplateRule, instances);
+            boolean isConfigChange = false;
+            if (groups.size() == 0) {
+                groups.add(groupNew);
+                isConfigChange = true;
+            }
+            List<String> groupNames = groups.stream().map(item -> item.getName()).collect(Collectors.toList());
+            if (!groupNames.contains(groupNew.getName())) {
+                groups.add(groupNew);
+                isConfigChange = true;
+            }
+            for (int i = 0; i < groups.size(); i++) {
+                AlertRuleConfigDto.Group group = groups.get(i);
+                if (group.getName().equals(groupNew.getName()) && !group.toString().equals(groupNew.toString())) {
+                    groups.set(i, groupNew);
+                    isConfigChange = true;
+                    break;
+                }
+            }
+            if (isConfigChange) {
+                uploadRuleFileConfig(session, config, templateId);
+            }
+        } catch (IOException e) {
+            log.error(e.getMessage(), e);
+            throw new ServiceException("update the alert rule fail");
+        }
+    }
+
+    /**
+     * remove prometheus rule configuration by template rule
+     *
+     * @param alertTemplateRule AlertTemplateRule
+     */
+    public synchronized void removeRuleByTemplateRule(AlertTemplateRule alertTemplateRule) {
+        Long templateId = alertTemplateRule.getTemplateId();
+        String clusterNodeIds = getClusterNodeIdsByTemplateId(templateId);
+        if (StrUtil.isBlank(clusterNodeIds)) {
+            return;
+        }
+        initPrometheusEnvDto();
+        try (SshSession session = SshSession.connect(prometheusEnvDto.getPromIp(), prometheusEnvDto.getHostPort(),
+            prometheusEnvDto.getPromUsername(), prometheusEnvDto.getPromPasswd())) {
+            AlertRuleConfigDto config = getAlertRuleConfigDto(session, templateId, clusterNodeIds);
+            if (config == null || CollectionUtil.isEmpty(config.getGroups())) {
+                session.close();
+                return;
+            }
+            List<AlertRuleConfigDto.Group> groups = config.getGroups();
+            int size = groups.size();
+            List<AlertRuleConfigDto.Group> newGroups = groups.stream().filter(
+                item -> !item.getName().equals("rule_" + alertTemplateRule.getRuleId())).collect(
+                Collectors.toList());
+            if (newGroups.size() == size) {
+                session.close();
+                return;
+            }
+            config.setGroups(newGroups);
+            uploadRuleFileConfig(session, config, templateId);
+        } catch (IOException e) {
+            log.error(e.getMessage(), e);
+            throw new ServiceException("remove the alert rule fail");
         }
     }
 }

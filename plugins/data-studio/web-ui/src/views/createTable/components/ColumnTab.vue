@@ -121,7 +121,7 @@
       options: [],
     },
     {
-      label: 'table.column.canBeNull',
+      label: 'table.column.canBeNotNull',
       prop: 'canBeNull',
       slot: true,
       isI18n: true,

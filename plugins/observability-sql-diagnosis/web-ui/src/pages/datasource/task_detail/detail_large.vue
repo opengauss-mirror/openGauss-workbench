@@ -325,7 +325,7 @@ onMounted(() => {
 const { data: res, run: requestData } = useRequest(
   () => {
     return ogRequest.get(
-      '/sqlDiagnosis/api/v1/diagnosisTasks/' + queryData.value.id + '/suggestions/' + queryData.value.type
+      '/historyDiagnosis/api/tasks/' + queryData.value.id + '/points/' + queryData.value.type
     )
   },
   { manual: true }
@@ -333,7 +333,7 @@ const { data: res, run: requestData } = useRequest(
 
 const { data: ret, run: requestSvg } = useRequest(
   (id: number) => {
-    return ogRequestSvg.get(`/sqlDiagnosis/api/v1/diagnosisTasks/res/${id}.svg`)
+    return ogRequestSvg.get(`/historyDiagnosis/api/tasks/res/${id}.svg`)
   },
   { manual: true }
 )

@@ -11,6 +11,7 @@ import com.nctigba.datastudio.util.DebugUtils;
 import org.opengauss.admin.common.exception.CustomException;
 
 import java.sql.SQLException;
+import java.util.Map;
 
 /**
  * ViewObjectSQLService
@@ -32,6 +33,17 @@ public interface ViewObjectSQLService {
      * @return String
      */
     default String splicingViewDDL(DatabaseCreateViewDTO request) {
+        throw new CustomException(DebugUtils.getMessage());
+    }
+
+    /**
+     * return view ddl data
+     *
+     * @param request request
+     * @return Map
+     * @throws SQLException SQLException
+     */
+    default Map<String, Object> returnViewDDLData(DatabaseViewDdlDTO request) throws SQLException {
         throw new CustomException(DebugUtils.getMessage());
     }
 
@@ -64,6 +76,41 @@ public interface ViewObjectSQLService {
      * @return String
      */
     default String returnSelectViewSQL(DatabaseSelectViewDTO request) {
+        throw new CustomException(DebugUtils.getMessage());
+    }
+
+    /**
+     * rename view
+     *
+     * @param schema schema
+     * @param viewName viewName
+     * @param newName newName
+     * @return String
+     */
+    default String renameView(String schema, String viewName, String newName) {
+        throw new CustomException(DebugUtils.getMessage());
+    }
+
+    /**
+     * set view schema
+     *
+     * @param schema schema
+     * @param viewName viewName
+     * @param newSchemaName newSchemaName
+     * @return String
+     */
+    default String setViewSchema(String schema, String viewName, String newSchemaName) {
+        throw new CustomException(DebugUtils.getMessage());
+    }
+
+    /**
+     * get view column
+     *
+     * @param schema schema
+     * @param viewName viewName
+     * @return String
+     */
+    default String getViewColumn(String schema, String viewName) {
         throw new CustomException(DebugUtils.getMessage());
     }
 }

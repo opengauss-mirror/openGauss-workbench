@@ -2,7 +2,13 @@ import { ElMessage, ElMessageBox } from 'element-plus';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import EventBus, { EventTypeName } from '@/utils/event-bus';
-import { setTableReindex, setTableTruncate, setTableVacuum, dropTable } from '@/api/table';
+import {
+  setTableAnalyze,
+  setTableReindex,
+  setTableTruncate,
+  setTableVacuum,
+  dropTable,
+} from '@/api/table';
 import type { NodeData } from '../Sidebar/types';
 
 export const useSidebarContext = (
@@ -22,7 +28,16 @@ export const useSidebarContext = (
       tableName: name,
     };
   };
-
+  const handleAnalyze = () => {
+    if (options.hideTreeContext) options.hideTreeContext();
+    const params = getTableCommonParams();
+    ElMessageBox.confirm(
+      t('message.analyzeTable', { name: `${params.schema}.${params.tableName}` }),
+    ).then(async () => {
+      await setTableAnalyze(params);
+      ElMessage.success(t('message.success'));
+    });
+  };
   const handleReindex = () => {
     if (options.hideTreeContext) options.hideTreeContext();
     const params = getTableCommonParams();
@@ -87,6 +102,7 @@ export const useSidebarContext = (
   };
 
   return {
+    handleAnalyze,
     handleReindex,
     handleTruncate,
     handleVacuum,

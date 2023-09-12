@@ -26,7 +26,7 @@ public class ParamInfo {
     @TableId(type = IdType.AUTO)
     Integer id;
     @TableField("paramType")
-    type paramType;
+    ParamType paramType;
     @TableField("paramName")
     String paramName;
     String paramDetail;
@@ -39,7 +39,7 @@ public class ParamInfo {
     @TableField("diagnosisRule")
     String diagnosisRule;
 
-    public enum type {
+    public enum ParamType {
         OS,
         DB
     }
@@ -50,7 +50,7 @@ public class ParamInfo {
             var info = new ParamInfo();
             info.setId(rs.getInt("id"));
             info.setParamName(rs.getString("paramName"));
-            info.setParamType(type.valueOf(rs.getString("paramType")));
+            info.setParamType(ParamType.valueOf(rs.getString("paramType")));
             info.setSuggestValue(rs.getString("suggestValue"));
             info.setDefaultValue(rs.getString("defaultValue"));
             list.add(info);

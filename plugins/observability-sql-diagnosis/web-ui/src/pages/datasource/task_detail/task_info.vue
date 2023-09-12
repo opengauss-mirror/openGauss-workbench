@@ -294,16 +294,16 @@ const gotoLarge = () => {
 
 const { data: res, run: requestData } = useRequest(
   () => {
-    return ogRequest.get(
-      '/sqlDiagnosis/api/v1/diagnosisTasks/' + queryData.value.id + '/suggestions/' + queryData.value.type
-    )
+    return ogRequest.get('/historyDiagnosis/api/v2/tasks/' + queryData.value.id + '/points/' + queryData.value.type, {
+      diagnosisType: 'sql',
+    })
   },
   { manual: true }
 )
 
 const { data: ret, run: requestSvg } = useRequest(
   (id: number) => {
-    return ogRequestSvg.get(`/sqlDiagnosis/api/v1/diagnosisTasks/res/${id}.svg`)
+    return ogRequestSvg.get(`/historyDiagnosis/api/v1/res/${id}.svg`)
   },
   { manual: true }
 )
@@ -349,8 +349,9 @@ const handleRequestData = (val: Res, type: string, cases: number) => {
   return dataType
 }
 
-watch(res, (res: Res) => {
+watch(res, (retOrigin: Res) => {
   chartData.value = [] // clear data
+  let res = retOrigin.data.pointData[0]
   if (res && Object.keys(res).length) {
     requestType.value = res.type
     taskData.taskInfo = res.child

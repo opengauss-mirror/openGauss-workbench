@@ -63,7 +63,7 @@ public class AgentUtil {
         List<AgentDTO> sysList = setData((sysJson));
         JSONArray dbJson = new JSONArray();
         if (data.get(1) instanceof JSONArray) {
-            dbJson = (JSONArray) data.get(0);
+            dbJson = (JSONArray) data.get(1);
         }
         List<AgentDTO> dbList = setData((dbJson));
         AgentData agentData = new AgentData();

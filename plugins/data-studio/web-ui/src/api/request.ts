@@ -1,6 +1,8 @@
 import axios, { AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { i18n } from '@/i18n/index';
+import { userPersist } from '@/config';
+import { sidebarForage } from '@/utils/localforage';
 
 declare module 'axios' {
   interface AxiosResponse {
@@ -47,6 +49,8 @@ service.interceptors.response.use(
           if (parent !== self) {
             localStorage.removeItem('opengauss-token');
             sessionStorage.clear();
+            sidebarForage.clear();
+            userPersist.storage.removeItem(userPersist.key);
             parent.location.reload();
           }
           return Promise.reject(response.data.msg);

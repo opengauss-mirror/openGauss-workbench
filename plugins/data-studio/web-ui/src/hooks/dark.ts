@@ -7,4 +7,11 @@ export const isDark = useDark({
 export const toggleDark = (value?: boolean) => {
   useToggle(value || isDark);
   changePrimary(value || isDark.value);
+  window.assistantFrame?.window.postMessage(
+    {
+      type: 'isDark',
+      value,
+    },
+    location.origin,
+  );
 };

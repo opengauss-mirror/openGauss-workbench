@@ -7,6 +7,7 @@ package com.nctigba.alert.monitor.service.impl;
 import com.baomidou.mybatisplus.core.MybatisConfiguration;
 import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.nctigba.alert.monitor.constant.CommonConstants;
 import com.nctigba.alert.monitor.dto.NotifyWayDto;
 import com.nctigba.alert.monitor.entity.AlertRule;
 import com.nctigba.alert.monitor.entity.AlertTemplateRule;
@@ -14,6 +15,7 @@ import com.nctigba.alert.monitor.entity.NotifyWay;
 import com.nctigba.alert.monitor.mapper.NotifyWayMapper;
 import com.nctigba.alert.monitor.service.AlertRuleService;
 import com.nctigba.alert.monitor.service.AlertTemplateRuleService;
+import com.nctigba.alert.monitor.service.ThirdPartyService;
 import com.nctigba.alert.monitor.utils.MessageSourceUtil;
 import org.apache.ibatis.builder.MapperBuilderAssistant;
 import org.junit.Before;
@@ -35,6 +37,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -56,6 +59,8 @@ public class NotifyWayServiceImplTest {
     private AlertTemplateRuleService templateRuleService;
     @Mock
     private NotifyWayMapper baseMapper;
+    @Mock
+    private ThirdPartyService thirdPartyService;
 
     @Before
     public void before() {
@@ -104,6 +109,7 @@ public class NotifyWayServiceImplTest {
     @Test(expected = ServiceException.class)
     public void testDelByIdThrowException1() {
         try (MockedStatic<MessageSourceUtil> mockedStatic = mockStatic(MessageSourceUtil.class)) {
+            mockedStatic.when(() -> MessageSourceUtil.get(any())).thenReturn("alertRule");
             List<AlertRule> ruleList = new ArrayList<>();
             AlertRule alertRule = new AlertRule();
             ruleList.add(alertRule);
@@ -119,6 +125,7 @@ public class NotifyWayServiceImplTest {
     @Test(expected = ServiceException.class)
     public void testDelByIdThrowException2() {
         try (MockedStatic<MessageSourceUtil> mockedStatic = mockStatic(MessageSourceUtil.class)) {
+            mockedStatic.when(() -> MessageSourceUtil.get(any())).thenReturn("alertRule");
             List<AlertRule> ruleList = new ArrayList<>();
             List<AlertTemplateRule> templateRuleList = new ArrayList<>();
             AlertTemplateRule alertTemplateRule = new AlertTemplateRule();
@@ -143,5 +150,27 @@ public class NotifyWayServiceImplTest {
         verify(ruleService, times(1)).list(any());
         verify(templateRuleService, times(1)).list(any());
         verify(baseMapper, times(1)).update(any(), any());
+    }
+
+    @Test
+    public void testTestWebhookNotifyWay() {
+        NotifyWay notifyWay = new NotifyWay().setNotifyType(CommonConstants.WEBHOOK);
+        when(thirdPartyService.testWebhookByNotifyWay(notifyWay)).thenReturn(true);
+        notifyWayService.testNotifyWay(notifyWay);
+        verify(thirdPartyService, times(1)).testWebhookByNotifyWay(notifyWay);
+    }
+
+    @Test
+    public void testTestSnmpNotifyWay() {
+        NotifyWay notifyWay = new NotifyWay().setNotifyType(CommonConstants.SNMP);
+        when(thirdPartyService.testSnmpByNotifyWay(notifyWay)).thenReturn(true);
+        notifyWayService.testNotifyWay(notifyWay);
+        verify(thirdPartyService, times(1)).testSnmpByNotifyWay(notifyWay);
+    }
+
+    @Test(expected = ServiceException.class)
+    public void testTestErrNotifyWay() {
+        NotifyWay notifyWay = new NotifyWay().setNotifyType("other");
+        notifyWayService.testNotifyWay(notifyWay);
     }
 }

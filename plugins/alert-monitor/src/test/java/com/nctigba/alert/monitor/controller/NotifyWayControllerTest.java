@@ -5,8 +5,10 @@
 package com.nctigba.alert.monitor.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.nctigba.alert.monitor.constant.CommonConstants;
 import com.nctigba.alert.monitor.entity.NotifyWay;
 import com.nctigba.alert.monitor.service.NotifyWayService;
+import com.nctigba.alert.monitor.utils.MessageSourceUtil;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
@@ -15,6 +17,7 @@ import org.mockito.MockedStatic;
 import org.opengauss.admin.common.core.domain.AjaxResult;
 import org.opengauss.admin.common.core.page.TableDataInfo;
 import org.opengauss.admin.common.utils.ServletUtils;
+import org.snmp4j.mp.SnmpConstants;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.ArrayList;
@@ -76,12 +79,178 @@ public class NotifyWayControllerTest {
     }
 
     @Test
-    public void testSaveNotifyWay() {
-        doNothing().when(notifyWayService).saveNotifyWay(any(NotifyWay.class));
-        NotifyWay notifyWay = new NotifyWay();
-        AjaxResult result = notifyWayController.saveNotifyWay(notifyWay);
-        verify(notifyWayService, times(1)).saveNotifyWay(any(NotifyWay.class));
-        assertEquals(AjaxResult.success(), result);
+    public void testSaveEmailNotifyWayWithCheckFail() {
+        try (MockedStatic<MessageSourceUtil> mockedStatic = mockStatic(MessageSourceUtil.class)) {
+            mockedStatic.when(() -> MessageSourceUtil.get("validateFail")).thenReturn("Validation failed");
+            NotifyWay notifyWay = new NotifyWay().setNotifyType(CommonConstants.EMAIL);
+            notifyWayController.saveNotifyWay(notifyWay);
+        }
+    }
+
+    @Test
+    public void testSaveEmailNotifyWay() {
+        try (MockedStatic<MessageSourceUtil> mockedStatic = mockStatic(MessageSourceUtil.class)) {
+            mockedStatic.when(() -> MessageSourceUtil.get("validateFail")).thenReturn("Validation failed");
+            NotifyWay notifyWay = new NotifyWay().setNotifyType(CommonConstants.EMAIL).setEmail("123@163.com");
+            doNothing().when(notifyWayService).saveNotifyWay(notifyWay);
+            AjaxResult result = notifyWayController.saveNotifyWay(notifyWay);
+            verify(notifyWayService, times(1)).saveNotifyWay(any(NotifyWay.class));
+            assertEquals(AjaxResult.success(), result);
+        }
+    }
+
+    @Test
+    public void testSaveWeComNotifyWay() {
+        try (MockedStatic<MessageSourceUtil> mockedStatic = mockStatic(MessageSourceUtil.class)) {
+            mockedStatic.when(() -> MessageSourceUtil.get("validateFail")).thenReturn("Validation failed");
+            NotifyWay notifyWay = new NotifyWay().setNotifyType(CommonConstants.WE_COM)
+                .setSendWay(CommonConstants.APP_SEND_WAY).setPersonId("1").setDeptId("1");
+            doNothing().when(notifyWayService).saveNotifyWay(notifyWay);
+            AjaxResult result = notifyWayController.saveNotifyWay(notifyWay);
+            verify(notifyWayService, times(1)).saveNotifyWay(any(NotifyWay.class));
+            assertEquals(AjaxResult.success(), result);
+        }
+    }
+
+    @Test
+    public void testSaveWeComRobotNotifyWay() {
+        try (MockedStatic<MessageSourceUtil> mockedStatic = mockStatic(MessageSourceUtil.class)) {
+            mockedStatic.when(() -> MessageSourceUtil.get("validateFail")).thenReturn("Validation failed");
+            NotifyWay notifyWay = new NotifyWay().setNotifyType(CommonConstants.WE_COM)
+                .setSendWay(CommonConstants.ROBOT_SEND_WAY).setWebhook("http");
+            doNothing().when(notifyWayService).saveNotifyWay(notifyWay);
+            AjaxResult result = notifyWayController.saveNotifyWay(notifyWay);
+            verify(notifyWayService, times(1)).saveNotifyWay(any(NotifyWay.class));
+            assertEquals(AjaxResult.success(), result);
+        }
+    }
+
+    @Test
+    public void testSaveDingTalkNotifyWay() {
+        try (MockedStatic<MessageSourceUtil> mockedStatic = mockStatic(MessageSourceUtil.class)) {
+            mockedStatic.when(() -> MessageSourceUtil.get("validateFail")).thenReturn("Validation failed");
+            NotifyWay notifyWay = new NotifyWay().setNotifyType(CommonConstants.WE_COM)
+                .setSendWay(CommonConstants.APP_SEND_WAY).setPersonId("1");
+            doNothing().when(notifyWayService).saveNotifyWay(notifyWay);
+            AjaxResult result = notifyWayController.saveNotifyWay(notifyWay);
+            verify(notifyWayService, times(1)).saveNotifyWay(any(NotifyWay.class));
+            assertEquals(AjaxResult.success(), result);
+        }
+    }
+
+    @Test
+    public void testSaveDingTalkRobotNotifyWay() {
+        try (MockedStatic<MessageSourceUtil> mockedStatic = mockStatic(MessageSourceUtil.class)) {
+            mockedStatic.when(() -> MessageSourceUtil.get("validateFail")).thenReturn("Validation failed");
+            NotifyWay notifyWay = new NotifyWay().setNotifyType(CommonConstants.DING_TALK)
+                .setSendWay(CommonConstants.ROBOT_SEND_WAY).setWebhook("http");
+            doNothing().when(notifyWayService).saveNotifyWay(notifyWay);
+            AjaxResult result = notifyWayController.saveNotifyWay(notifyWay);
+            verify(notifyWayService, times(1)).saveNotifyWay(any(NotifyWay.class));
+            assertEquals(AjaxResult.success(), result);
+        }
+    }
+
+    @Test
+    public void testSaveWebhookNotifyWay() {
+        try (MockedStatic<MessageSourceUtil> mockedStatic = mockStatic(MessageSourceUtil.class)) {
+            mockedStatic.when(() -> MessageSourceUtil.get("validateFail")).thenReturn("Validation failed");
+            NotifyWay notifyWay = new NotifyWay().setNotifyType(CommonConstants.WEBHOOK).setWebhook("http");
+            doNothing().when(notifyWayService).saveNotifyWay(notifyWay);
+            AjaxResult result = notifyWayController.saveNotifyWay(notifyWay);
+            verify(notifyWayService, times(1)).saveNotifyWay(any(NotifyWay.class));
+            assertEquals(AjaxResult.success(), result);
+        }
+    }
+
+    @Test
+    public void testSaveSnmpNotifyWay() {
+        try (MockedStatic<MessageSourceUtil> mockedStatic = mockStatic(MessageSourceUtil.class)) {
+            mockedStatic.when(() -> MessageSourceUtil.get("validateFail")).thenReturn("Validation failed");
+            NotifyWay notifyWay = new NotifyWay().setNotifyType(CommonConstants.SNMP).setSnmpIp("127.0.0.1")
+                .setSnmpVersion(SnmpConstants.version2c).setSnmpPort("8080").setSnmpCommunity("public")
+                .setSnmpOid("1.2.2.2.2.2.22.2");
+            doNothing().when(notifyWayService).saveNotifyWay(notifyWay);
+            AjaxResult result = notifyWayController.saveNotifyWay(notifyWay);
+            verify(notifyWayService, times(1)).saveNotifyWay(any(NotifyWay.class));
+            assertEquals(AjaxResult.success(), result);
+        }
+    }
+
+    @Test
+    public void testSaveSnmp3NotifyWay() {
+        try (MockedStatic<MessageSourceUtil> mockedStatic = mockStatic(MessageSourceUtil.class)) {
+            mockedStatic.when(() -> MessageSourceUtil.get("validateFail")).thenReturn("Validation failed");
+            NotifyWay notifyWay = new NotifyWay().setNotifyType(CommonConstants.SNMP).setSnmpIp("127.0.0.1")
+                .setSnmpVersion(SnmpConstants.version3).setSnmpPort("8080").setSnmpCommunity("public")
+                .setSnmpOid("1.2.2.2.2.2.22.2").setSnmpUsername("user").setSnmpAuthPasswd("auth")
+                .setSnmpPrivPasswd("priv");
+            doNothing().when(notifyWayService).saveNotifyWay(notifyWay);
+            AjaxResult result = notifyWayController.saveNotifyWay(notifyWay);
+            verify(notifyWayService, times(1)).saveNotifyWay(any(NotifyWay.class));
+            assertEquals(AjaxResult.success(), result);
+        }
+    }
+
+    @Test
+    public void testTestNotifyWayReturnErr() {
+        NotifyWay notifyWay = new NotifyWay().setNotifyType(CommonConstants.WE_COM);
+        AjaxResult result = notifyWayController.testNotifyWay(notifyWay);
+        assertEquals(AjaxResult.error(), result);
+    }
+
+    @Test
+    public void testTestWebHookNotifyWay1() {
+        try (MockedStatic<MessageSourceUtil> mockedStatic = mockStatic(MessageSourceUtil.class)) {
+            mockedStatic.when(() -> MessageSourceUtil.get("validateFail")).thenReturn("Validation failed");
+            NotifyWay notifyWay = new NotifyWay().setNotifyType(CommonConstants.WEBHOOK).setWebhook("http");
+            when(notifyWayService.testNotifyWay(notifyWay)).thenReturn(true);
+            AjaxResult result = notifyWayController.testNotifyWay(notifyWay);
+            verify(notifyWayService, times(1)).testNotifyWay(any(NotifyWay.class));
+            assertEquals(AjaxResult.success(), result);
+        }
+    }
+
+    @Test
+    public void testTestWebHookNotifyWay2() {
+        try (MockedStatic<MessageSourceUtil> mockedStatic = mockStatic(MessageSourceUtil.class)) {
+            mockedStatic.when(() -> MessageSourceUtil.get("validateFail")).thenReturn("Validation failed");
+            NotifyWay notifyWay = new NotifyWay().setNotifyType(CommonConstants.WEBHOOK).setWebhook("http");
+            when(notifyWayService.testNotifyWay(notifyWay)).thenReturn(false);
+            AjaxResult result = notifyWayController.testNotifyWay(notifyWay);
+            verify(notifyWayService, times(1)).testNotifyWay(any(NotifyWay.class));
+            assertEquals(AjaxResult.error(), result);
+        }
+    }
+
+    @Test
+    public void testTestSnmpNotifyWay1() {
+        try (MockedStatic<MessageSourceUtil> mockedStatic = mockStatic(MessageSourceUtil.class)) {
+            mockedStatic.when(() -> MessageSourceUtil.get("validateFail")).thenReturn("Validation failed");
+            NotifyWay notifyWay = new NotifyWay().setNotifyType(CommonConstants.SNMP).setSnmpIp("127.0.0.1")
+                .setSnmpVersion(SnmpConstants.version3).setSnmpPort("8080").setSnmpCommunity("public")
+                .setSnmpOid("1.2.2.2.2.2.22.2").setSnmpUsername("user").setSnmpAuthPasswd("auth")
+                .setSnmpPrivPasswd("priv");
+            when(notifyWayService.testNotifyWay(notifyWay)).thenReturn(true);
+            AjaxResult result = notifyWayController.testNotifyWay(notifyWay);
+            verify(notifyWayService, times(1)).testNotifyWay(any(NotifyWay.class));
+            assertEquals(AjaxResult.success(), result);
+        }
+    }
+
+    @Test
+    public void testTestSnmpNotifyWay2() {
+        try (MockedStatic<MessageSourceUtil> mockedStatic = mockStatic(MessageSourceUtil.class)) {
+            mockedStatic.when(() -> MessageSourceUtil.get("validateFail")).thenReturn("Validation failed");
+            NotifyWay notifyWay = new NotifyWay().setNotifyType(CommonConstants.SNMP).setSnmpIp("127.0.0.1")
+                .setSnmpVersion(SnmpConstants.version3).setSnmpPort("8080").setSnmpCommunity("public")
+                .setSnmpOid("1.2.2.2.2.2.22.2").setSnmpUsername("user").setSnmpAuthPasswd("auth")
+                .setSnmpPrivPasswd("priv");
+            when(notifyWayService.testNotifyWay(notifyWay)).thenReturn(false);
+            AjaxResult result = notifyWayController.testNotifyWay(notifyWay);
+            verify(notifyWayService, times(1)).testNotifyWay(any(NotifyWay.class));
+            assertEquals(AjaxResult.error(), result);
+        }
     }
 
     @Test

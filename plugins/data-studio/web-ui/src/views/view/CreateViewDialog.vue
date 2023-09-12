@@ -2,7 +2,7 @@
   <div class="view-dialog">
     <el-dialog
       v-model="visible"
-      :title="$t('create.view')"
+      :title="props.type === 'create' ? $t('create.view') : $t('edit.view')"
       :width="500"
       align-center
       :close-on-click-modal="false"
@@ -20,22 +20,21 @@
               <el-input v-model="form.viewName" />
             </el-form-item>
             <el-form-item prop="viewType" :label="$t('view.type')">
-              <el-select v-model="form.viewType">
+              <el-select v-model="form.viewType" :disabled="props.type === 'edit'">
                 <el-option :label="$t('view.view')" value="VIEW" />
                 <el-option :label="$t('view.materializedView')" value="MATERIALIZED" />
               </el-select>
             </el-form-item>
             <el-form-item prop="schema" :label="$t('view.objectMode')">
-              <el-select v-model="form.schema" disabled>
-                <el-option :label="form.schema" :value="form.schema" />
+              <el-select v-model="form.schema" :disabled="props.type === 'create'">
+                <el-option v-for="item in schemaList" :key="item" :label="item" :value="item" />
               </el-select>
             </el-form-item>
             <el-form-item prop="sql" :label="$t('view.code')">
               <AceEditor
-                :value="form.sql"
                 ref="editorRef"
-                :readOnly="false"
-                height="450px"
+                :readOnly="props.type === 'edit'"
+                height="400px"
                 style="margin: 4px 0; border: 1px solid #ddd; width: 100%"
               />
             </el-form-item>
@@ -53,7 +52,7 @@
         <span class="dialog-footer">
           <el-button @click="handleClose">{{ $t('button.cancel') }}</el-button>
           <el-button type="primary" @click="resetForm()">
-            {{ $t('button.clear') }}
+            {{ $t('button.reset') }}
           </el-button>
           <el-button type="primary" @click="confirmForm('Base')">
             {{ $t('button.confirm') }}
@@ -68,14 +67,20 @@
   import type { TabsPaneContext } from 'element-plus';
   import AceEditor from '@/components/AceEditor.vue';
   import { useI18n } from 'vue-i18n';
-  import { createView, createViewDdl } from '@/api/view';
+  import { getViewInfo, createView, createViewDdl, setEditView } from '@/api/view';
   import { useUserStore } from '@/store/modules/user';
+  import { getSchemaList } from '@/api/metaData';
+
+  const viewTypeMap = {
+    v: 'VIEW',
+    m: 'MATERIALIZED',
+  };
 
   const props = withDefaults(
     defineProps<{
       modelValue: boolean;
-      type: string;
-      connectData: any;
+      type: 'create' | 'edit';
+      nodeData: any;
     }>(),
     {
       modelValue: false,
@@ -96,8 +101,14 @@
   const editorRef = ref();
   const editorPreRef = ref();
   const UserStore = useUserStore();
-  const connectData = computed(() => props.connectData);
-  const activeName: Ref<string | number> = ref('Base');
+  const nodeData = computed(() => props.nodeData);
+  const activeName = ref('Base');
+  const editDefaultValue = {
+    viewName: '',
+    viewType: 'VIEW',
+    schema: '',
+    sql: '',
+  };
   const form = reactive({
     viewName: '',
     viewType: 'VIEW',
@@ -115,17 +126,46 @@
     ],
     sql: [{ required: true, message: t('rules.empty', [t('view.code')]), trigger: 'blur' }],
   });
+  const schemaList = ref([]);
 
   const handleTabClick = (tab: TabsPaneContext) => {
-    activeName.value = tab.paneName;
+    activeName.value = tab.paneName as string;
     if (activeName.value === 'Sql') confirmForm(activeName.value);
   };
 
+  const getSchemaOptionsList = async () => {
+    const data = (await getSchemaList({
+      uuid: form.uuid,
+      connectionName: form.connectionName,
+      webUser: UserStore.userId,
+    })) as unknown as { name: string; oid: string }[];
+    schemaList.value = data.map((item) => item.name);
+  };
+
   const handleOpen = async () => {
-    nextTick(() => {
-      form.schema = connectData.value.schemaName;
-      form.connectionName = connectData.value.connectInfo.name;
-      form.uuid = connectData.value.uuid;
+    nextTick(async () => {
+      form.schema = nodeData.value.schemaName;
+      form.connectionName = nodeData.value.connectInfo.name;
+      form.uuid = nodeData.value.uuid;
+      if (props.type === 'create') {
+        schemaList.value = [form.schema];
+      } else {
+        getSchemaOptionsList();
+        const res = await getViewInfo({
+          uuid: form.uuid,
+          viewName: nodeData.value.name,
+          schema: form.schema,
+        });
+        const obj = {
+          viewName: res.name,
+          viewType: viewTypeMap[res.type],
+          schema: res.schema,
+          sql: res.sourcecode,
+        };
+        Object.assign(editDefaultValue, obj);
+        Object.assign(form, obj);
+        editorRef.value.setValue(obj.sql);
+      }
     });
   };
   const handleClose = () => {
@@ -133,17 +173,27 @@
     resetForm();
     activeName.value = 'Base';
   };
-  const confirmForm = async (type) => {
+  const confirmForm = async (type: 'Base' | 'Sql') => {
     const api = {
-      Base: createView,
+      Base: props.type === 'create' ? createView : setEditView,
       Sql: createViewDdl,
     };
     form.sql = editorRef.value.getValue();
     ruleFormRef.value.validate((valid) => {
       if (valid) {
-        api[type](form).then((res) => {
+        const params =
+          props.type === 'create' || type == 'Sql'
+            ? form
+            : {
+                uuid: form.uuid,
+                viewName: editDefaultValue.viewName,
+                schema: editDefaultValue.schema,
+                newViewName: form.viewName,
+                newSchema: form.schema,
+              };
+        api[type](params).then((res) => {
           if (type === 'Base') {
-            ElMessage.success(`${t('create.view')}${t('success')}`);
+            ElMessage.success(`${t('message.success')}`);
             myEmit('success');
             handleClose();
           } else if (type === 'Sql') {
@@ -156,14 +206,20 @@
     });
   };
   const resetForm = () => {
-    Object.assign(form, {
-      viewName: '',
-      viewType: 'VIEW',
-      sql: '',
-    });
-    editorRef.value.setValue('');
+    if (props.type == 'create') {
+      Object.assign(form, {
+        viewName: '',
+        viewType: 'VIEW',
+        sql: '',
+      });
+      editorRef.value.setValue('');
+    } else {
+      Object.assign(form, editDefaultValue);
+      editorPreRef.value.setValue(editDefaultValue.sql);
+    }
     editorPreRef.value.setValue('');
     ruleFormRef.value.clearValidate();
+    activeName.value = 'Base';
   };
 </script>
 

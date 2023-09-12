@@ -28,6 +28,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.UnsupportedEncodingException;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Properties;
 import java.util.stream.Stream;
@@ -62,7 +63,8 @@ public class EmailService {
             return;
         }
         List<NotifyConfig> emailConfigList = notifyConfigMapper.selectList(
-            Wrappers.<NotifyConfig>lambdaQuery().eq(NotifyConfig::getEnable, 1).eq(NotifyConfig::getType, "email"));
+            Wrappers.<NotifyConfig>lambdaQuery().eq(NotifyConfig::getEnable, CommonConstants.ENABLE)
+                .eq(NotifyConfig::getType, CommonConstants.EMAIL));
         if (CollectionUtil.isEmpty(emailConfigList)) {
             return;
         }
@@ -99,7 +101,8 @@ public class EmailService {
             return;
         }
         List<NotifyConfig> emailConfigList = notifyConfigMapper.selectList(
-            Wrappers.<NotifyConfig>lambdaQuery().eq(NotifyConfig::getEnable, 1).eq(NotifyConfig::getType, "email"));
+            Wrappers.<NotifyConfig>lambdaQuery().eq(NotifyConfig::getEnable, CommonConstants.ENABLE)
+                .eq(NotifyConfig::getType, CommonConstants.EMAIL));
         if (CollectionUtil.isEmpty(emailConfigList)) {
             return;
         }
@@ -123,10 +126,10 @@ public class EmailService {
                 mimeMessage.setSubject(notifyMessage.getTitle());
                 mimeMessage.setContent(parseContent(notifyMessage.getContent()), "text/html;charset=UTF-8");
                 Transport.send(mimeMessage);
-                notifyMessage.setStatus(1);
+                notifyMessage.setStatus(1).setUpdateTime(LocalDateTime.now());
                 notifyMessageMapper.updateById(notifyMessage);
             } catch (MessagingException | UnsupportedEncodingException | ServiceException e) {
-                notifyMessage.setStatus(2);
+                notifyMessage.setStatus(2).setUpdateTime(LocalDateTime.now());
                 notifyMessageMapper.updateById(notifyMessage);
                 log.error("the email send fail:", e);
             }

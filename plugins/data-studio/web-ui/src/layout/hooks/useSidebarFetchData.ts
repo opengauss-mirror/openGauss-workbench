@@ -3,6 +3,7 @@ import { useAppStore } from '@/store/modules/app';
 import { useUserStore } from '@/store/modules/user';
 import { loadingInstance } from '@/utils';
 import { connectListPersist } from '@/config';
+import { sidebarForage } from '@/utils/localforage';
 import { getDatabaseList } from '@/api/database';
 import { getSchemaList, getSchemaObjectList } from '@/api/metaData';
 import type { FetchNode } from '../Sidebar/types';
@@ -14,8 +15,8 @@ export const useSidebarFetchData = (connectionList, findNode) => {
   const { t } = useI18n();
   const loading = ref(null);
 
-  const getAllConnectList = (connectObj?: { id: string | number }) => {
-    let list = JSON.parse(connectListPersist.storage.getItem(connectListPersist.key) || '[]');
+  const getAllConnectList = async (connectObj?: { id: string | number }) => {
+    let list: any[] = (await sidebarForage.getItem(connectListPersist.key)) || [];
     if (list.length && connectObj) {
       const repeatList: boolean[] = list.map((item) => item.id === connectObj.id);
       repeatList.includes(true)
@@ -26,10 +27,10 @@ export const useSidebarFetchData = (connectionList, findNode) => {
     }
     return list;
   };
-  const updateConnectListPersist = () => {
-    connectListPersist.storage.setItem(
+  const updateConnectListPersist = async () => {
+    await sidebarForage.setItem(
       connectListPersist.key,
-      JSON.stringify(connectionList.value),
+      JSON.parse(JSON.stringify(connectionList.value)),
     );
   };
   const fetchDBList = async (connectInfo, uuid) => {
@@ -68,7 +69,7 @@ export const useSidebarFetchData = (connectionList, findNode) => {
         }),
       };
       connectionList.value = getAllConnectList(root);
-      AppStore.updateCurrentNode(root);
+      // AppStore.updateCurrentNode(root);
       updateConnectListPersist();
     } finally {
       loading.value.close();

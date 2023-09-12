@@ -24,6 +24,7 @@ import java.util.Map;
 
 import static com.nctigba.datastudio.constants.CommonConstants.DIFFER;
 import static com.nctigba.datastudio.constants.CommonConstants.FUNC_OID;
+import static com.nctigba.datastudio.constants.CommonConstants.F_STR;
 import static com.nctigba.datastudio.constants.CommonConstants.LINE_NO;
 import static com.nctigba.datastudio.constants.CommonConstants.OID;
 import static com.nctigba.datastudio.constants.CommonConstants.RESULT;
@@ -62,40 +63,45 @@ public class SingleStepImpl implements OperationInterface {
         ResultSet resultSet = stat.executeQuery(NEXT_SQL);
         if (resultSet.next()) {
             lineNo = resultSet.getInt(LINE_NO);
+            log.info("singleStep lineNo: " + lineNo);
         }
 
         String windowName = paramReq.getWindowName();
         String type = DebugUtils.changeParamType(webSocketServer, windowName, TYPE);
         String oid = DebugUtils.changeParamType(webSocketServer, windowName, OID);
-        List<String> oidList = DebugUtils.getOidList(webSocketServer, rootWindowName);
-        if (!CollectionUtils.isEmpty(oidList)) {
-            String newOid = Strings.EMPTY;
-            if ("f".equals(type) && lineNo == 0) {
-                ResultSet result = stat.executeQuery(NEXT_SQL);
-                if (result.next()) {
-                    newOid = result.getString(FUNC_OID);
+        try {
+            List<String> oidList = DebugUtils.getOidList(webSocketServer, rootWindowName);
+            if (!CollectionUtils.isEmpty(oidList)) {
+                String newOid = Strings.EMPTY;
+                if (F_STR.equals(type) && lineNo == 0) {
+                    ResultSet result = stat.executeQuery(NEXT_SQL);
+                    if (result.next()) {
+                        newOid = result.getString(FUNC_OID);
+                    }
+                    oidList = DebugUtils.getOidList(webSocketServer, rootWindowName);
                 }
-                oidList = DebugUtils.getOidList(webSocketServer, rootWindowName);
+                if (oidList.contains(oid) && !oidList.get(0).equals(oid)) {
+                    Map<String, String> map = new HashMap<>();
+                    map.put(RESULT, oidList.get(0));
+                    webSocketServer.sendMessage(windowName, SWITCH_WINDOW, SUCCESS, map);
+                    String name = DebugUtils.getOldWindowName(webSocketServer, rootWindowName, newOid);
+                    DebugUtils.disableButton(webSocketServer, windowName);
+                    DebugUtils.enableButton(webSocketServer, name);
+                    paramReq.setCloseWindow(true);
+                    paramReq.setOldWindowName(name);
+                }
+                if (!oidList.contains(oid)) {
+                    webSocketServer.sendMessage(windowName, CLOSE_WINDOW, SUCCESS, null);
+                    DebugUtils.enableButton(webSocketServer, paramReq.getOldWindowName());
+                    paramReq.setCloseWindow(true);
+                    Map<String, Object> paramMap = webSocketServer.getParamMap(rootWindowName);
+                    paramMap.keySet().removeIf(oid::equals);
+                }
             }
-            if (oidList.contains(oid) && !oidList.get(0).equals(oid)) {
-                Map<String, String> map = new HashMap<>();
-                map.put(RESULT, oidList.get(0));
-                webSocketServer.sendMessage(windowName, SWITCH_WINDOW, SUCCESS, map);
-                String name = DebugUtils.getOldWindowName(webSocketServer, rootWindowName, newOid);
-                DebugUtils.disableButton(webSocketServer, windowName);
-                DebugUtils.enableButton(webSocketServer, name);
-                paramReq.setCloseWindow(true);
-                paramReq.setOldWindowName(name);
-            }
-            if (!oidList.contains(oid)) {
-                webSocketServer.sendMessage(windowName, CLOSE_WINDOW, SUCCESS, null);
-                DebugUtils.enableButton(webSocketServer, paramReq.getOldWindowName());
-                paramReq.setCloseWindow(true);
-                Map<String, Object> paramMap = webSocketServer.getParamMap(rootWindowName);
-                paramMap.keySet().removeIf(oid::equals);
-            }
+            showDebugInfo(webSocketServer, stat, paramReq);
+        } catch (SQLException e) {
+            log.info(e.getMessage());
         }
-        showDebugInfo(webSocketServer, stat, paramReq);
     }
 
     /**
@@ -107,19 +113,19 @@ public class SingleStepImpl implements OperationInterface {
      * @throws IOException IOException
      * @throws SQLException SQLException
      */
-    public void showDebugInfo(
-            WebSocketServer webSocketServer, Statement statement,
-            PublicParamReq paramReq) throws IOException, SQLException {
+    public void showDebugInfo(WebSocketServer webSocketServer, Statement statement, PublicParamReq paramReq)
+            throws IOException, SQLException {
         log.info("singleStep showDebugInfo paramReq is: " + paramReq);
-
         String name = paramReq.getWindowName();
         if (paramReq.isCloseWindow()) {
             name = paramReq.getOldWindowName();
         }
+
         int differ = DebugUtils.changeParamType(webSocketServer, name, DIFFER);
         log.info("singleStep showDebugInfo differ is: " + differ);
         ResultSet stackResult = statement.executeQuery(BACKTRACE_SQL_PRE + differ + BACKTRACE_SQL);
         webSocketServer.sendMessage(name, STACK, SUCCESS, DebugUtils.parseResultSet(stackResult));
+
         Map<String, Object> variableMap = DebugUtils.parseVariable(statement.executeQuery(INFO_LOCALS_SQL));
         Map<String, Object> paramMap = DebugUtils.addMapParam(variableMap, webSocketServer, paramReq);
         webSocketServer.sendMessage(name, VARIABLE, SUCCESS, paramMap);

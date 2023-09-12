@@ -28,9 +28,148 @@ public class CommonConstants {
     public static final String EMAIL = "email";
     public static final String WE_COM = "WeCom";
     public static final String DING_TALK = "DingTalk";
+
+    /**
+     * webhook
+     */
+    public static final String WEBHOOK = "webhook";
+
+    /**
+     * SNMP
+     */
+    public static final String SNMP = "SNMP";
     public static final Integer ENABLE = 1;
     public static final Integer DISABLE = 0;
     //dev use "/"
     public static final String SLASH = "/";
-    public static final String LINE_SEPARATOR = System.lineSeparator();
+
+    /**
+     * \n
+     */
+    public static final String LINE_SEPARATOR = String.valueOf((char) 10);
+
+    /**
+     * ruleType: index
+     */
+    public static final String INDEX_RULE = "index";
+
+    /**
+     * ruleType: log
+     */
+    public static final String LOG_RULE = "log";
+
+    /**
+     * schedule name prefix
+     */
+    public static final String THREAD_NAME_PREFIX = "alertRule-";
+
+    /**
+     * schedule type: fixedDelay
+     */
+    public static final String FIXED_DELAY = "fixedDelay";
+
+    /**
+     * schedule type: fixedRate
+     */
+    public static final String FIXED_RATE = "fixedRate";
+
+    /**
+     * day
+     */
+    public static final String DAY = "d";
+
+    /**
+     * hour
+     */
+    public static final String HOUR = "h";
+
+    /**
+     * minute
+     */
+    public static final String MINUTE = "m";
+
+    /**
+     * second
+     */
+    public static final String SECOND = "s";
+
+    /**
+     * second to millisecond
+     */
+    public static final Long SEC_TO_MILL = 1000L;
+
+    /**
+     * minute to second
+     */
+    public static final Long MINUTE_TO_SEC = 60L;
+
+    /**
+     * hour to minute
+     */
+    public static final Long HOUR_TO_MINUTE = 60L;
+
+    /**
+     * day to hour
+     */
+    public static final Long DAY_TO_HOUR = 24L;
+
+    /**
+     * unlock
+     */
+    public static final Integer UNLOCK = 0;
+
+    /**
+     * locked
+     */
+    public static final Integer LOCKED = 1;
+
+    /**
+     * es logs: fields
+     */
+    public static final String FIELDS = "fields";
+
+    /**
+     * es logs: log_type
+     */
+    public static final String LOG_TYPE = "log_type";
+
+    /**
+     * es logs: log_level
+     */
+    public static final String LOG_LEVEL = "log_level";
+
+    /**
+     * es logs: message
+     */
+    public static final String MESSAGE = "message";
+
+    /**
+     * es logs: clusterId
+     */
+    public static final String CLUSTER_ID = "clusterId";
+
+    /**
+     * es logs: nodeId
+     */
+    public static final String NODE_ID = "nodeId";
+
+    /**
+     * es logs: @timestamp
+     */
+    public static final String TIMESTAMP = "@timestamp";
+
+    /**
+     * WeCom or DingTalk send way: app
+     */
+    public static final Integer APP_SEND_WAY = 0;
+
+    /**
+     * WeCom or DingTalk send way: robot
+     */
+    public static final Integer ROBOT_SEND_WAY = 1;
+
+    /**
+     * datatime format
+     */
+    public static final String DATETIME_FORMAT_ISO8601 = "yyyy-MM-dd'T'HH:mm:ss'+08:00'";
 }

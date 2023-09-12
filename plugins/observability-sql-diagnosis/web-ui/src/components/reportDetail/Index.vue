@@ -168,7 +168,7 @@ const curChooseRow = ref('')
 const { data: diagnosisData, run: requestDiagnosisData } = useRequest(
   () => {
     // Query all data through ObjectInfoCheck
-    return ogRequest.get('/sqlDiagnosis/api/v1/diagnosisTasks/' + props.id + '/suggestions/ObjectInfoCheck')
+    return ogRequest.get('/historyDiagnosis/api/v2/tasks/' + props.id + '/points/ObjectInfoCheck?diagnosisType=sql')
   },
   { manual: true }
 )
@@ -268,12 +268,13 @@ onMounted(() => {
 const { data: taskData, run: getTastInfo } = useRequest(
   () => {
     // Query all data through ObjectInfoCheck
-    return ogRequest.get('/sqlDiagnosis/api/v1/diagnosisTasks/' + props.id)
+    return ogRequest.get('/historyDiagnosis/api/v1/tasks/' + props.id)
   },
   { manual: true }
 )
 
-watch(taskData, (res) => {
+watch(taskData, (resOrigin) => {
+  let res = resOrigin.data
   console.log('taskDetailData', res)
   Object.assign(taskInfo, {
     clusterId: res.clusterId,
@@ -347,7 +348,7 @@ const getRightValue = (value: Record<string, any>, key: string, type: string) =>
 watch(diagnosisData, (res) => {
   const {
     data: { executionPlan = {} },
-  } = res
+  } = res.data.pointData[0]
   const {
     peakMem = '',
     queryPlan = [],

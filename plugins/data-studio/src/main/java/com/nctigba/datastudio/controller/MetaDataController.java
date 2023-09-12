@@ -9,6 +9,7 @@ import com.nctigba.datastudio.model.query.DatabaseMetaarrayColumnQuery;
 import com.nctigba.datastudio.model.query.DatabaseMetaarrayIdSchemaQuery;
 import com.nctigba.datastudio.model.query.DatabaseMetaarrayQuery;
 import com.nctigba.datastudio.model.query.DatabaseMetaarraySchemaQuery;
+import com.nctigba.datastudio.model.query.UserQuery;
 import com.nctigba.datastudio.service.DbConnectionService;
 import com.nctigba.datastudio.service.QueryMetaArrayService;
 import io.swagger.annotations.Api;
@@ -126,5 +127,31 @@ public class MetaDataController {
     @GetMapping(value = "/tablespace/{uuid}", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<String> tablespaceList(@PathVariable("uuid") String uuid) throws SQLException {
         return queryMetaArrayService.tablespaceList(uuid);
+    }
+
+    /**
+     * user list
+     *
+     * @param uuid uuid..
+     * @return UserQuery
+     * @throws SQLException SQLException
+     */
+    @ApiOperation(value = "Column List")
+    @GetMapping(value = "/user/{uuid}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public UserQuery userList(@PathVariable("uuid") String uuid) throws SQLException {
+        return queryMetaArrayService.userList(uuid);
+    }
+
+    /**
+     * user list
+     *
+     * @param uuid uuid..
+     * @return List<String>
+     * @throws SQLException SQLException
+     */
+    @ApiOperation(value = "Resource List")
+    @GetMapping(value = "/resource/{uuid}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public List<String> resourceList(@PathVariable("uuid") String uuid) throws SQLException {
+        return queryMetaArrayService.resourceList(uuid);
     }
 }

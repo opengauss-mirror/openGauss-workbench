@@ -25,6 +25,7 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import org.yaml.snakeyaml.Yaml;
 
 import cn.hutool.core.bean.BeanUtil;
@@ -70,7 +71,7 @@ public class OpengaussExporter implements DBmetric, InitializingBean {
         return metricData;
     }
 
-    @Scheduled(fixedRate = 15000, initialDelay = 1000)
+    @Scheduled(fixedDelay = 15000, initialDelay = 1000)
     public void catchMetric() {
         if (CONFIG.size() == 0) {
             return;
@@ -97,6 +98,9 @@ public class OpengaussExporter implements DBmetric, InitializingBean {
     private Map<String, Metric> metric(Entry<String, queryInstance> conf) {
         String sql = null;
         for (query q : conf.getValue().getQuery()) {
+            if (!isRoleMatched(q)) {
+                continue;
+            }
             if (q.getStatus() == state.enable) {
                 sql = q.getSql();
                 break;
@@ -141,6 +145,15 @@ public class OpengaussExporter implements DBmetric, InitializingBean {
             });
         }
         return result;
+    }
+
+    private boolean isRoleMatched(query q) {
+        String dbRole = q.getDbRole();
+        if (!StringUtils.hasLength(dbRole)) {
+            return true;
+        }
+        List<Map<String, Object>> query = dbUtil.query("SELECT pg_is_in_recovery();");
+        return ((boolean) query.get(0).get("pg_is_in_recovery")) != "primary".equalsIgnoreCase(dbRole);
     }
 
     @Data

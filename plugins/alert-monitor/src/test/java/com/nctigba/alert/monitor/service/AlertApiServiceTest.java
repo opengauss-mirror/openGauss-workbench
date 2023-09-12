@@ -5,10 +5,10 @@
 package com.nctigba.alert.monitor.service;
 
 import com.nctigba.alert.monitor.constant.CommonConstants;
+import com.nctigba.alert.monitor.dto.AlertContentParamDto;
 import com.nctigba.alert.monitor.entity.AlertRecord;
 import com.nctigba.alert.monitor.entity.AlertTemplate;
 import com.nctigba.alert.monitor.entity.AlertTemplateRule;
-import com.nctigba.alert.monitor.entity.NotifyMessage;
 import com.nctigba.alert.monitor.entity.NotifyTemplate;
 import com.nctigba.alert.monitor.entity.NotifyWay;
 import com.nctigba.alert.monitor.mapper.AlertRecordMapper;
@@ -19,20 +19,14 @@ import com.nctigba.alert.monitor.mapper.NotifyTemplateMapper;
 import com.nctigba.alert.monitor.mapper.NotifyWayMapper;
 import com.nctigba.alert.monitor.model.api.AlertApiReq;
 import com.nctigba.alert.monitor.model.api.AlertLabels;
+import com.nctigba.alert.monitor.utils.AlertContentParamUtil;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.opengauss.admin.common.core.domain.entity.ops.OpsClusterEntity;
-import org.opengauss.admin.common.core.domain.entity.ops.OpsClusterNodeEntity;
-import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
-import org.opengauss.admin.common.enums.ops.ClusterRoleEnum;
-import org.opengauss.admin.common.exception.ServiceException;
-import org.opengauss.admin.system.plugin.facade.HostFacade;
-import org.opengauss.admin.system.service.ops.IOpsClusterNodeService;
-import org.opengauss.admin.system.service.ops.IOpsClusterService;
+import org.snmp4j.mp.SnmpConstants;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.time.LocalDateTime;
@@ -52,6 +46,7 @@ import static org.mockito.Mockito.when;
  *
  * @since 2023/7/15 18:42
  */
+
 @RunWith(SpringRunner.class)
 public class AlertApiServiceTest {
     @InjectMocks
@@ -69,11 +64,9 @@ public class AlertApiServiceTest {
     @Mock
     private NotifyMessageMapper notifyMessageMapper;
     @Mock
-    private IOpsClusterService clusterService;
+    private AlertContentParamUtil contentParamUtil;
     @Mock
-    private IOpsClusterNodeService clusterNodeService;
-    @Mock
-    private HostFacade hostFacade;
+    private AlertRecordService recordService;
 
     @Before
     public void setUp() {
@@ -81,490 +74,375 @@ public class AlertApiServiceTest {
     }
 
     @Test
-    public void testAlerts1() {
+    public void testAlertsNull() {
+        AlertTemplateRule alertTemplateRule = null;
+        when(templateRuleMapper.selectById(anyLong())).thenReturn(alertTemplateRule);
+
         List<AlertApiReq> alertApiReqList = new ArrayList<>();
         AlertApiReq alertApiReq = new AlertApiReq();
         alertApiReqList.add(alertApiReq);
         AlertLabels labels = new AlertLabels();
         labels.setTemplateRuleId(1L);
         alertApiReq.setLabels(labels);
-
-        AlertTemplateRule alertTemplateRule = null;
-        when(templateRuleMapper.selectById(anyLong())).thenReturn(alertTemplateRule);
-
         alertApiService.alerts(alertApiReqList);
         verify(templateRuleMapper, times(1)).selectById(anyLong());
     }
 
-    @Test(expected = ServiceException.class)
-    public void testAlerts2() {
-        List<AlertApiReq> alertApiReqList = new ArrayList<>();
-        AlertApiReq alertApiReq = getAlertApiReq();
-        alertApiReqList.add(alertApiReq);
-
+    @Test
+    public void testAlertsWithNullNotifyWays() {
         AlertTemplateRule alertTemplateRule = new AlertTemplateRule();
         when(templateRuleMapper.selectById(anyLong())).thenReturn(alertTemplateRule);
 
-        OpsClusterNodeEntity opsClusterNodeEntity = null;
-        when(clusterNodeService.getById(anyLong())).thenReturn(opsClusterNodeEntity);
+        AlertContentParamDto contentParamDto = new AlertContentParamDto().setNodeName("nodeName").setHostIp("ip")
+            .setLevel(CommonConstants.WARN).setHostname("centos").setPort("8080")
+            .setAlertStatus("firing").setAlertTime("2023-08-27 22:19:01").setContent("content");
+        when(contentParamUtil.setAndGetAlertContentParamDto(anyString(), any(), anyString(), anyString()))
+            .thenReturn(contentParamDto);
 
-        alertApiService.alerts(alertApiReqList);
-        verify(templateRuleMapper, times(1)).selectById(anyLong());
-        verify(clusterNodeService, times(1)).getById(anyLong());
-    }
-
-    @Test(expected = ServiceException.class)
-    public void testAlerts3() {
         List<AlertApiReq> alertApiReqList = new ArrayList<>();
         AlertApiReq alertApiReq = getAlertApiReq();
         alertApiReqList.add(alertApiReq);
-
-        AlertTemplateRule alertTemplateRule = new AlertTemplateRule().setNotifyWayIds("1");
-        when(templateRuleMapper.selectById(anyLong())).thenReturn(alertTemplateRule);
-
-        List<NotifyWay> notifyWays = new ArrayList<>();
-        NotifyWay notifyWay = new NotifyWay().setId(1L).setName("notifyName");
-        notifyWays.add(notifyWay);
-        when(notifyWayMapper.selectBatchIds(anyList())).thenReturn(notifyWays);
-
-        OpsClusterNodeEntity opsClusterNodeEntity = new OpsClusterNodeEntity();
-        opsClusterNodeEntity.setClusterNodeId("node3");
-        opsClusterNodeEntity.setHostId("1");
-        when(clusterNodeService.getById(anyString())).thenReturn(opsClusterNodeEntity);
-
-        OpsHostEntity opsHost = null;
-        when(hostFacade.getById(opsClusterNodeEntity.getHostId())).thenReturn(opsHost);
-
         alertApiService.alerts(alertApiReqList);
-        verify(templateRuleMapper, times(1)).selectById(anyLong());
-        verify(notifyWayMapper, times(1)).selectById(anyLong());
-        verify(clusterNodeService, times(1)).getById(anyString());
-        verify(hostFacade, times(1)).getById(opsClusterNodeEntity.getHostId());
-    }
-
-    @Test(expected = ServiceException.class)
-    public void testAlerts4() {
-        List<AlertApiReq> alertApiReqList = new ArrayList<>();
-        AlertApiReq alertApiReq = getAlertApiReq();
-        alertApiReqList.add(alertApiReq);
-
-        AlertTemplateRule alertTemplateRule = new AlertTemplateRule().setNotifyWayIds("1");
-        when(templateRuleMapper.selectById(anyLong())).thenReturn(alertTemplateRule);
-
-        List<NotifyWay> notifyWays = new ArrayList<>();
-        when(notifyWayMapper.selectBatchIds(anyList())).thenReturn(notifyWays);
-
-        OpsClusterNodeEntity opsClusterNodeEntity = new OpsClusterNodeEntity();
-        opsClusterNodeEntity.setClusterNodeId("node3");
-        opsClusterNodeEntity.setHostId("1");
-        opsClusterNodeEntity.setClusterId("test");
-        when(clusterNodeService.getById(anyString())).thenReturn(opsClusterNodeEntity);
-
-        OpsHostEntity opsHost = new OpsHostEntity();
-        when(hostFacade.getById(opsClusterNodeEntity.getHostId())).thenReturn(opsHost);
-        OpsClusterEntity opsClusterEntity = null;
-        when(clusterService.getById(opsClusterNodeEntity.getClusterId())).thenReturn(opsClusterEntity);
-
-        alertApiService.alerts(alertApiReqList);
-        verify(templateRuleMapper, times(1)).selectById(anyLong());
-        verify(notifyWayMapper, times(1)).selectById(anyLong());
-        verify(clusterNodeService, times(1)).getById(anyString());
-        verify(hostFacade, times(1)).getById(opsClusterNodeEntity.getHostId());
-        verify(clusterService, times(1)).getById(opsClusterNodeEntity.getClusterId());
     }
 
     @Test
-    public void testAlerts5() {
+    public void testAlertsWithoutRecord() {
+        AlertTemplateRule alertTemplateRule = new AlertTemplateRule().setNotifyWayIds("1").setAlertNotify("firing")
+            .setIsRepeat(CommonConstants.IS_NOT_REPEAT).setRuleContent("content")
+            .setIsSilence(CommonConstants.IS_NOT_SILENCE);
+        when(templateRuleMapper.selectById(anyLong())).thenReturn(alertTemplateRule);
         List<AlertApiReq> alertApiReqList = new ArrayList<>();
         AlertApiReq alertApiReq = getAlertApiReq();
         alertApiReqList.add(alertApiReq);
-
-        AlertTemplateRule alertTemplateRule =
-            new AlertTemplateRule().setNotifyWayIds("1").setRuleContent("content").setRuleName("ruleName")
-                .setRuleType("index").setLevel("warn").setNotifyWayIds("1").setIsRepeat(CommonConstants.IS_NOT_REPEAT)
-                .setAlertNotify("firing");
-        when(templateRuleMapper.selectById(anyLong())).thenReturn(alertTemplateRule);
-
-        List<NotifyWay> notifyWays = new ArrayList<>();
-        NotifyWay notifyWay = new NotifyWay().setId(1L).setName("notifyName");
-        notifyWays.add(notifyWay);
+        AlertContentParamDto contentParamDto = new AlertContentParamDto().setNodeName("nodeName").setHostIp("ip")
+            .setLevel(CommonConstants.WARN).setHostname("centos").setPort("8080")
+            .setAlertStatus("firing").setAlertTime("2023-08-27 22:19:01").setContent("content");
+        when(contentParamUtil.setAndGetAlertContentParamDto(alertApiReq.getLabels().getInstance(),
+            alertApiReq.getStartsAt(), alertApiReq.getLabels().getLevel(), alertTemplateRule.getRuleContent()))
+            .thenReturn(contentParamDto);
+        List<NotifyWay> notifyWays = mockNotifyWays();
         when(notifyWayMapper.selectBatchIds(anyList())).thenReturn(notifyWays);
-
-        OpsClusterNodeEntity opsClusterNodeEntity = new OpsClusterNodeEntity();
-        opsClusterNodeEntity.setClusterNodeId("node3");
-        opsClusterNodeEntity.setHostId("1");
-        opsClusterNodeEntity.setClusterId("test");
-        opsClusterNodeEntity.setClusterRole(ClusterRoleEnum.MASTER);
-        when(clusterNodeService.getById(anyString())).thenReturn(opsClusterNodeEntity);
-
-        OpsHostEntity opsHost = new OpsHostEntity();
-        opsHost.setPublicIp("127.0.0.1");
-        opsHost.setHostname("centos");
-        when(hostFacade.getById(opsClusterNodeEntity.getHostId())).thenReturn(opsHost);
-        OpsClusterEntity opsClusterEntity = new OpsClusterEntity();
-        opsClusterEntity.setClusterId("test");
-        when(clusterService.getById(opsClusterNodeEntity.getClusterId())).thenReturn(opsClusterEntity);
         List<AlertRecord> alertRecords = new ArrayList<>();
         when(alertRecordMapper.selectList(any())).thenReturn(alertRecords);
-
-        AlertTemplate alertTemplate = new AlertTemplate().setTemplateName("name").setId(1L);
+        AlertTemplate alertTemplate = new AlertTemplate().setId(1L).setTemplateName("template");
         when(templateMapper.selectById(anyLong())).thenReturn(alertTemplate);
-        when(alertRecordMapper.insert(any(AlertRecord.class))).thenReturn(1);
+        when(recordService.saveOrUpdate(any(AlertRecord.class))).thenReturn(true);
+        when(notifyMessageMapper.selectCount(any())).thenReturn(0L);
+        NotifyTemplate notifyTemplate = new NotifyTemplate().setNotifyTitle("title").setNotifyContent("content");
+        when(notifyTemplateMapper.selectById(anyLong())).thenReturn(notifyTemplate);
+        when(notifyMessageMapper.insert(any())).thenReturn(1);
+        when(recordService.updateById(any())).thenReturn(true);
+
+        alertApiService.alerts(alertApiReqList);
+    }
+
+    @Test
+    public void testAlertsHasRecord() {
+        AlertTemplateRule alertTemplateRule = new AlertTemplateRule().setNotifyWayIds("1").setAlertNotify("firing")
+            .setIsRepeat(CommonConstants.IS_REPEAT).setRuleContent("content")
+            .setIsSilence(CommonConstants.IS_NOT_SILENCE);
+        when(templateRuleMapper.selectById(anyLong())).thenReturn(alertTemplateRule);
+        List<AlertApiReq> alertApiReqList = new ArrayList<>();
+        AlertApiReq alertApiReq = getAlertApiReq();
+        alertApiReqList.add(alertApiReq);
+        AlertContentParamDto contentParamDto = new AlertContentParamDto().setNodeName("nodeName").setHostIp("ip")
+            .setLevel(CommonConstants.WARN).setHostname("centos").setPort("8080")
+            .setAlertStatus("firing").setAlertTime("2023-08-27 22:19:01").setContent("content");
+        when(contentParamUtil.setAndGetAlertContentParamDto(alertApiReq.getLabels().getInstance(),
+            alertApiReq.getStartsAt(), alertApiReq.getLabels().getLevel(), alertTemplateRule.getRuleContent()))
+            .thenReturn(contentParamDto);
+        List<NotifyWay> notifyWays = mockNotifyWays();
+        when(notifyWayMapper.selectBatchIds(anyList())).thenReturn(notifyWays);
+        List<AlertRecord> alertRecords = new ArrayList<>();
+        alertRecords.add(new AlertRecord().setClusterNodeId(alertApiReq.getLabels().getInstance()).setTemplateId(1L)
+            .setTemplateRuleId(alertTemplateRule.getId()).setCreateTime(LocalDateTime.now())
+            .setTemplateName("template").setTemplateRuleName(alertTemplateRule.getRuleName())
+            .setAlertStatus(CommonConstants.FIRING_STATUS).setTemplateRuleType(alertTemplateRule.getRuleType())
+            .setLevel(alertTemplateRule.getLevel()).setAlertContent(contentParamDto.getContent())
+            .setRecordStatus(CommonConstants.UNREAD_STATUS).setSendTime(LocalDateTime.now().minusHours(1))
+            .setSendCount(10).setEndTime(LocalDateTime.now().minusHours(1))
+            .setStartTime(LocalDateTime.now().minusHours(2)));
+        when(alertRecordMapper.selectList(any())).thenReturn(alertRecords);
+        when(recordService.saveOrUpdate(any(AlertRecord.class))).thenReturn(true);
+        when(notifyMessageMapper.selectCount(any())).thenReturn(0L);
+        NotifyTemplate notifyTemplate = new NotifyTemplate().setNotifyTitle("title").setNotifyContent("content");
+        when(notifyTemplateMapper.selectById(anyLong())).thenReturn(notifyTemplate);
+        when(notifyMessageMapper.insert(any())).thenReturn(1);
+        when(recordService.updateById(any())).thenReturn(true);
+
+        alertApiService.alerts(alertApiReqList);
+    }
+
+    @Test
+    public void testAlertsHasRecordIsRecover() {
+        AlertTemplateRule alertTemplateRule = new AlertTemplateRule().setNotifyWayIds("1").setAlertNotify("firing")
+            .setIsRepeat(CommonConstants.IS_REPEAT).setRuleContent("content")
+            .setIsSilence(CommonConstants.IS_NOT_SILENCE);
+        when(templateRuleMapper.selectById(anyLong())).thenReturn(alertTemplateRule);
+        List<AlertApiReq> alertApiReqList = new ArrayList<>();
+        AlertApiReq alertApiReq = getAlertApiReq();
+        alertApiReqList.add(alertApiReq);
+        AlertContentParamDto contentParamDto = new AlertContentParamDto().setNodeName("nodeName").setHostIp("ip")
+            .setLevel(CommonConstants.WARN).setHostname("centos").setPort("8080")
+            .setAlertStatus("firing").setAlertTime("2023-08-27 22:19:01").setContent("content");
+        when(contentParamUtil.setAndGetAlertContentParamDto(alertApiReq.getLabels().getInstance(),
+            alertApiReq.getStartsAt(), alertApiReq.getLabels().getLevel(), alertTemplateRule.getRuleContent()))
+            .thenReturn(contentParamDto);
+        List<NotifyWay> notifyWays = mockNotifyWays();
+        when(notifyWayMapper.selectBatchIds(anyList())).thenReturn(notifyWays);
+        List<AlertRecord> alertRecords = new ArrayList<>();
+        alertRecords.add(new AlertRecord().setClusterNodeId(alertApiReq.getLabels().getInstance()).setTemplateId(1L)
+            .setTemplateRuleId(alertTemplateRule.getId()).setCreateTime(LocalDateTime.now())
+            .setTemplateName("template").setTemplateRuleName(alertTemplateRule.getRuleName())
+            .setAlertStatus(CommonConstants.FIRING_STATUS).setTemplateRuleType(alertTemplateRule.getRuleType())
+            .setLevel(alertTemplateRule.getLevel()).setAlertContent(contentParamDto.getContent())
+            .setRecordStatus(CommonConstants.UNREAD_STATUS).setSendTime(LocalDateTime.now().minusHours(1))
+            .setSendCount(10).setEndTime(LocalDateTime.now().plusMinutes(10))
+            .setStartTime(LocalDateTime.now().minusHours(2)));
+        when(alertRecordMapper.selectList(any())).thenReturn(alertRecords);
+        when(recordService.saveOrUpdate(any(AlertRecord.class))).thenReturn(true);
+
+        alertApiService.alerts(alertApiReqList);
+    }
+
+    @Test
+    public void testAlertsHasRecovered() {
+        AlertTemplateRule alertTemplateRule = new AlertTemplateRule().setNotifyWayIds("1").setAlertNotify("firing")
+            .setIsRepeat(CommonConstants.IS_REPEAT).setRuleContent("content")
+            .setIsSilence(CommonConstants.IS_NOT_SILENCE);
+        when(templateRuleMapper.selectById(anyLong())).thenReturn(alertTemplateRule);
+        List<AlertApiReq> alertApiReqList = new ArrayList<>();
+        AlertApiReq alertApiReq = getAlertApiReq();
+        alertApiReqList.add(alertApiReq);
+        AlertContentParamDto contentParamDto = new AlertContentParamDto().setNodeName("nodeName").setHostIp("ip")
+            .setLevel(CommonConstants.WARN).setHostname("centos").setPort("8080")
+            .setAlertStatus("firing").setAlertTime("2023-08-27 22:19:01").setContent("content");
+        when(contentParamUtil.setAndGetAlertContentParamDto(alertApiReq.getLabels().getInstance(),
+            alertApiReq.getStartsAt(), alertApiReq.getLabels().getLevel(), alertTemplateRule.getRuleContent()))
+            .thenReturn(contentParamDto);
+        List<NotifyWay> notifyWays = mockNotifyWays();
+        when(notifyWayMapper.selectBatchIds(anyList())).thenReturn(notifyWays);
+        List<AlertRecord> alertRecords = new ArrayList<>();
+        alertRecords.add(new AlertRecord().setClusterNodeId(alertApiReq.getLabels().getInstance()).setTemplateId(1L)
+            .setTemplateRuleId(alertTemplateRule.getId()).setCreateTime(LocalDateTime.now())
+            .setTemplateName("template").setTemplateRuleName(alertTemplateRule.getRuleName())
+            .setAlertStatus(CommonConstants.RECOVER_STATUS).setTemplateRuleType(alertTemplateRule.getRuleType())
+            .setLevel(alertTemplateRule.getLevel()).setAlertContent(contentParamDto.getContent())
+            .setRecordStatus(CommonConstants.UNREAD_STATUS).setSendTime(LocalDateTime.now().minusHours(1))
+            .setSendCount(10).setEndTime(LocalDateTime.now().plusMinutes(10))
+            .setStartTime(LocalDateTime.now().minusHours(2)));
+        when(alertRecordMapper.selectList(any())).thenReturn(alertRecords);
+
+        alertApiService.alerts(alertApiReqList);
+    }
+
+    @Test
+    public void testAlertsIsRead() {
+        AlertTemplateRule alertTemplateRule = new AlertTemplateRule().setNotifyWayIds("1").setAlertNotify("firing")
+            .setIsRepeat(CommonConstants.IS_REPEAT).setRuleContent("content")
+            .setIsSilence(CommonConstants.IS_NOT_SILENCE);
+        when(templateRuleMapper.selectById(anyLong())).thenReturn(alertTemplateRule);
+        List<AlertApiReq> alertApiReqList = new ArrayList<>();
+        AlertApiReq alertApiReq = getAlertApiReq();
+        alertApiReqList.add(alertApiReq);
+        AlertContentParamDto contentParamDto = new AlertContentParamDto().setNodeName("nodeName").setHostIp("ip")
+            .setLevel(CommonConstants.WARN).setHostname("centos").setPort("8080")
+            .setAlertStatus("firing").setAlertTime("2023-08-27 22:19:01").setContent("content");
+        when(contentParamUtil.setAndGetAlertContentParamDto(alertApiReq.getLabels().getInstance(),
+            alertApiReq.getStartsAt(), alertApiReq.getLabels().getLevel(), alertTemplateRule.getRuleContent()))
+            .thenReturn(contentParamDto);
+        List<NotifyWay> notifyWays = mockNotifyWays();
+        when(notifyWayMapper.selectBatchIds(anyList())).thenReturn(notifyWays);
+        List<AlertRecord> alertRecords = new ArrayList<>();
+        alertRecords.add(new AlertRecord().setClusterNodeId(alertApiReq.getLabels().getInstance()).setTemplateId(1L)
+            .setTemplateRuleId(alertTemplateRule.getId()).setCreateTime(LocalDateTime.now())
+            .setTemplateName("template").setTemplateRuleName(alertTemplateRule.getRuleName())
+            .setAlertStatus(CommonConstants.FIRING_STATUS).setTemplateRuleType(alertTemplateRule.getRuleType())
+            .setLevel(alertTemplateRule.getLevel()).setAlertContent(contentParamDto.getContent())
+            .setRecordStatus(CommonConstants.READ_STATUS).setSendTime(LocalDateTime.now().minusHours(1))
+            .setSendCount(10).setEndTime(LocalDateTime.now().minusHours(1))
+            .setStartTime(LocalDateTime.now().minusHours(2)));
+        when(alertRecordMapper.selectList(any())).thenReturn(alertRecords);
+        when(recordService.saveOrUpdate(any(AlertRecord.class))).thenReturn(true);
+
+        alertApiService.alerts(alertApiReqList);
+    }
+
+    @Test
+    public void testAlertsWithoutAlertNotify() {
+        AlertTemplateRule alertTemplateRule = new AlertTemplateRule().setNotifyWayIds("1").setAlertNotify("")
+            .setIsRepeat(CommonConstants.IS_REPEAT).setRuleContent("content")
+            .setIsSilence(CommonConstants.IS_NOT_SILENCE);
+        when(templateRuleMapper.selectById(anyLong())).thenReturn(alertTemplateRule);
+        List<AlertApiReq> alertApiReqList = new ArrayList<>();
+        AlertApiReq alertApiReq = getAlertApiReq();
+        alertApiReqList.add(alertApiReq);
+        AlertContentParamDto contentParamDto = new AlertContentParamDto().setNodeName("nodeName").setHostIp("ip")
+            .setLevel(CommonConstants.WARN).setHostname("centos").setPort("8080")
+            .setAlertStatus("firing").setAlertTime("2023-08-27 22:19:01").setContent("content");
+        when(contentParamUtil.setAndGetAlertContentParamDto(alertApiReq.getLabels().getInstance(),
+            alertApiReq.getStartsAt(), alertApiReq.getLabels().getLevel(), alertTemplateRule.getRuleContent()))
+            .thenReturn(contentParamDto);
+        List<NotifyWay> notifyWays = mockNotifyWays();
+        when(notifyWayMapper.selectBatchIds(anyList())).thenReturn(notifyWays);
+        List<AlertRecord> alertRecords = new ArrayList<>();
+        alertRecords.add(new AlertRecord().setClusterNodeId(alertApiReq.getLabels().getInstance()).setTemplateId(1L)
+            .setTemplateRuleId(alertTemplateRule.getId()).setCreateTime(LocalDateTime.now())
+            .setTemplateName("template").setTemplateRuleName(alertTemplateRule.getRuleName())
+            .setAlertStatus(CommonConstants.FIRING_STATUS).setTemplateRuleType(alertTemplateRule.getRuleType())
+            .setLevel(alertTemplateRule.getLevel()).setAlertContent(contentParamDto.getContent())
+            .setRecordStatus(CommonConstants.UNREAD_STATUS).setSendTime(LocalDateTime.now().minusHours(1))
+            .setSendCount(10).setEndTime(LocalDateTime.now().minusHours(1))
+            .setStartTime(LocalDateTime.now().minusHours(2)));
+        when(alertRecordMapper.selectList(any())).thenReturn(alertRecords);
+        when(recordService.saveOrUpdate(any(AlertRecord.class))).thenReturn(true);
+
+        alertApiService.alerts(alertApiReqList);
+    }
+
+    @Test
+    public void testAlertsIsNotRepeat() {
+        AlertTemplateRule alertTemplateRule = new AlertTemplateRule().setNotifyWayIds("1").setAlertNotify("firing")
+            .setIsRepeat(CommonConstants.IS_NOT_REPEAT).setRuleContent("content")
+            .setIsSilence(CommonConstants.IS_NOT_SILENCE);
+        when(templateRuleMapper.selectById(anyLong())).thenReturn(alertTemplateRule);
+        List<AlertApiReq> alertApiReqList = new ArrayList<>();
+        AlertApiReq alertApiReq = getAlertApiReq();
+        alertApiReqList.add(alertApiReq);
+        AlertContentParamDto contentParamDto = new AlertContentParamDto().setNodeName("nodeName").setHostIp("ip")
+            .setLevel(CommonConstants.WARN).setHostname("centos").setPort("8080")
+            .setAlertStatus("firing").setAlertTime("2023-08-27 22:19:01").setContent("content");
+        when(contentParamUtil.setAndGetAlertContentParamDto(alertApiReq.getLabels().getInstance(),
+            alertApiReq.getStartsAt(), alertApiReq.getLabels().getLevel(), alertTemplateRule.getRuleContent()))
+            .thenReturn(contentParamDto);
+        List<NotifyWay> notifyWays = mockNotifyWays();
+        when(notifyWayMapper.selectBatchIds(anyList())).thenReturn(notifyWays);
+        List<AlertRecord> alertRecords = new ArrayList<>();
+        alertRecords.add(new AlertRecord().setClusterNodeId(alertApiReq.getLabels().getInstance()).setTemplateId(1L)
+            .setTemplateRuleId(alertTemplateRule.getId()).setCreateTime(LocalDateTime.now())
+            .setTemplateName("template").setTemplateRuleName(alertTemplateRule.getRuleName())
+            .setAlertStatus(CommonConstants.FIRING_STATUS).setTemplateRuleType(alertTemplateRule.getRuleType())
+            .setLevel(alertTemplateRule.getLevel()).setAlertContent(contentParamDto.getContent())
+            .setRecordStatus(CommonConstants.UNREAD_STATUS).setSendTime(LocalDateTime.now().minusHours(1))
+            .setSendCount(10).setEndTime(LocalDateTime.now().minusHours(1))
+            .setStartTime(LocalDateTime.now().minusHours(2)));
+        when(alertRecordMapper.selectList(any())).thenReturn(alertRecords);
+        when(recordService.saveOrUpdate(any(AlertRecord.class))).thenReturn(true);
         when(notifyMessageMapper.selectCount(any())).thenReturn(1L);
 
         alertApiService.alerts(alertApiReqList);
-        verify(templateRuleMapper, times(1)).selectById(anyLong());
-        verify(notifyWayMapper, times(1)).selectBatchIds(anyList());
-        verify(clusterNodeService, times(1)).getById(anyString());
-        verify(hostFacade, times(1)).getById(opsClusterNodeEntity.getHostId());
-        verify(clusterService, times(1)).getById(opsClusterNodeEntity.getClusterId());
-        verify(alertRecordMapper, times(1)).selectList(any());
-        verify(templateMapper, times(1)).selectById(anyLong());
-        verify(alertRecordMapper, times(1)).insert(any(AlertRecord.class));
-        verify(notifyMessageMapper, times(1)).selectCount(any());
     }
 
     @Test
-    public void testAlerts6() {
+    public void testAlertsOverMaxRepeat() {
+        AlertTemplateRule alertTemplateRule = new AlertTemplateRule().setNotifyWayIds("1").setAlertNotify("firing")
+            .setIsRepeat(CommonConstants.IS_REPEAT).setRuleContent("content")
+            .setIsSilence(CommonConstants.IS_NOT_SILENCE).setMaxRepeatCount(5);
+        when(templateRuleMapper.selectById(anyLong())).thenReturn(alertTemplateRule);
         List<AlertApiReq> alertApiReqList = new ArrayList<>();
         AlertApiReq alertApiReq = getAlertApiReq();
         alertApiReqList.add(alertApiReq);
-
-        AlertTemplateRule alertTemplateRule = new AlertTemplateRule().setNotifyWayIds("1");
-        when(templateRuleMapper.selectById(anyLong())).thenReturn(alertTemplateRule);
-
-        List<NotifyWay> notifyWays = new ArrayList<>();
-        NotifyWay notifyWay = new NotifyWay().setId(1L).setName("notifyName");
-        notifyWays.add(notifyWay);
+        AlertContentParamDto contentParamDto = new AlertContentParamDto().setNodeName("nodeName").setHostIp("ip")
+            .setLevel(CommonConstants.WARN).setHostname("centos").setPort("8080")
+            .setAlertStatus("firing").setAlertTime("2023-08-27 22:19:01").setContent("content");
+        when(contentParamUtil.setAndGetAlertContentParamDto(alertApiReq.getLabels().getInstance(),
+            alertApiReq.getStartsAt(), alertApiReq.getLabels().getLevel(), alertTemplateRule.getRuleContent()))
+            .thenReturn(contentParamDto);
+        List<NotifyWay> notifyWays = mockNotifyWays();
         when(notifyWayMapper.selectBatchIds(anyList())).thenReturn(notifyWays);
-
-        OpsClusterNodeEntity opsClusterNodeEntity = new OpsClusterNodeEntity();
-        opsClusterNodeEntity.setClusterNodeId("node3");
-        opsClusterNodeEntity.setHostId("1");
-        opsClusterNodeEntity.setClusterId("test");
-        opsClusterNodeEntity.setClusterRole(ClusterRoleEnum.MASTER);
-        when(clusterNodeService.getById(anyString())).thenReturn(opsClusterNodeEntity);
-
-        OpsHostEntity opsHost = new OpsHostEntity();
-        opsHost.setPublicIp("127.0.0.1");
-        opsHost.setHostname("centos");
-        opsHost.setPort(22);
-        when(hostFacade.getById(opsClusterNodeEntity.getHostId())).thenReturn(opsHost);
-        OpsClusterEntity opsClusterEntity = new OpsClusterEntity();
-        opsClusterEntity.setClusterId("test");
-        opsClusterEntity.setPort(80);
-        when(clusterService.getById(opsClusterNodeEntity.getClusterId())).thenReturn(opsClusterEntity);
-
         List<AlertRecord> alertRecords = new ArrayList<>();
-        AlertRecord alertRecord = new AlertRecord().setAlertStatus(CommonConstants.RECOVER_STATUS);
-        alertRecords.add(alertRecord);
+        alertRecords.add(new AlertRecord().setClusterNodeId(alertApiReq.getLabels().getInstance()).setTemplateId(1L)
+            .setTemplateRuleId(alertTemplateRule.getId()).setCreateTime(LocalDateTime.now())
+            .setTemplateName("template").setTemplateRuleName(alertTemplateRule.getRuleName())
+            .setAlertStatus(CommonConstants.FIRING_STATUS).setTemplateRuleType(alertTemplateRule.getRuleType())
+            .setLevel(alertTemplateRule.getLevel()).setAlertContent(contentParamDto.getContent())
+            .setRecordStatus(CommonConstants.UNREAD_STATUS).setSendTime(LocalDateTime.now().minusHours(1))
+            .setSendCount(10).setEndTime(LocalDateTime.now().minusHours(1))
+            .setStartTime(LocalDateTime.now().minusHours(2)));
         when(alertRecordMapper.selectList(any())).thenReturn(alertRecords);
-
-        alertApiService.alerts(alertApiReqList);
-        verify(templateRuleMapper, times(1)).selectById(anyLong());
-        verify(notifyWayMapper, times(1)).selectBatchIds(anyList());
-        verify(clusterNodeService, times(1)).getById(anyString());
-        verify(hostFacade, times(1)).getById(opsClusterNodeEntity.getHostId());
-        verify(clusterService, times(1)).getById(opsClusterNodeEntity.getClusterId());
-        verify(alertRecordMapper, times(1)).selectList(any());
-    }
-
-    @Test
-    public void testAlerts7() {
-        List<AlertApiReq> alertApiReqList = new ArrayList<>();
-        AlertApiReq alertApiReq = getAlertApiReq();
-        alertApiReqList.add(alertApiReq);
-
-        AlertTemplateRule alertTemplateRule = new AlertTemplateRule().setNotifyWayIds("1").setAlertNotify("firing");
-        when(templateRuleMapper.selectById(anyLong())).thenReturn(alertTemplateRule);
-
-        List<NotifyWay> notifyWays = new ArrayList<>();
-        NotifyWay notifyWay = new NotifyWay().setId(1L).setName("notifyName");
-        notifyWays.add(notifyWay);
-        when(notifyWayMapper.selectBatchIds(anyList())).thenReturn(notifyWays);
-
-        OpsClusterNodeEntity opsClusterNodeEntity = new OpsClusterNodeEntity();
-        opsClusterNodeEntity.setClusterNodeId("node3");
-        opsClusterNodeEntity.setHostId("1");
-        opsClusterNodeEntity.setClusterId("test");
-        opsClusterNodeEntity.setClusterRole(ClusterRoleEnum.MASTER);
-        when(clusterNodeService.getById(anyString())).thenReturn(opsClusterNodeEntity);
-
-        OpsHostEntity opsHost = new OpsHostEntity();
-        opsHost.setPublicIp("127.0.0.1");
-        opsHost.setHostname("centos");
-        opsHost.setPort(22);
-        when(hostFacade.getById(opsClusterNodeEntity.getHostId())).thenReturn(opsHost);
-        OpsClusterEntity opsClusterEntity = new OpsClusterEntity();
-        opsClusterEntity.setClusterId("test");
-        opsClusterEntity.setPort(80);
-        when(clusterService.getById(opsClusterNodeEntity.getClusterId())).thenReturn(opsClusterEntity);
-
-        List<AlertRecord> alertRecords = new ArrayList<>();
-        AlertRecord alertRecord = new AlertRecord().setAlertStatus(CommonConstants.RECOVER_STATUS);
-        alertRecords.add(alertRecord);
-        when(alertRecordMapper.selectList(any())).thenReturn(alertRecords);
-
-        alertApiService.alerts(alertApiReqList);
-        verify(templateRuleMapper, times(1)).selectById(anyLong());
-        verify(notifyWayMapper, times(1)).selectBatchIds(anyList());
-        verify(clusterNodeService, times(1)).getById(anyString());
-        verify(hostFacade, times(1)).getById(opsClusterNodeEntity.getHostId());
-        verify(clusterService, times(1)).getById(opsClusterNodeEntity.getClusterId());
-        verify(alertRecordMapper, times(1)).selectList(any());
-    }
-
-    @Test
-    public void testAlerts8() {
-        List<AlertApiReq> alertApiReqList = new ArrayList<>();
-        AlertApiReq alertApiReq = getAlertApiReq();
-        alertApiReqList.add(alertApiReq);
-
-        AlertTemplateRule alertTemplateRule =
-            new AlertTemplateRule().setNotifyWayIds("1").setAlertNotify("firing");
-        when(templateRuleMapper.selectById(anyLong())).thenReturn(alertTemplateRule);
-
-        setCommon();
-
-        List<AlertRecord> alertRecords = new ArrayList<>();
-        AlertRecord alertRecord =
-            new AlertRecord().setAlertStatus(CommonConstants.FIRING_STATUS).setEndTime(alertApiReq.getEndsAt())
-                .setStartTime(alertApiReq.getStartsAt()).setId(1L);
-        alertRecords.add(alertRecord);
-        when(alertRecordMapper.selectList(any())).thenReturn(alertRecords);
-        when(alertRecordMapper.updateById(alertRecord)).thenReturn(1);
-
-        alertApiService.alerts(alertApiReqList);
-        verify(templateRuleMapper, times(1)).selectById(anyLong());
-        verify(notifyWayMapper, times(1)).selectBatchIds(anyList());
-        verify(clusterNodeService, times(1)).getById(anyString());
-        verify(alertRecordMapper, times(1)).selectList(any());
-        verify(alertRecordMapper, times(1)).updateById(alertRecord);
-    }
-
-    @Test
-    public void testAlerts9() {
-        List<AlertApiReq> alertApiReqList = new ArrayList<>();
-        AlertApiReq alertApiReq = getAlertApiReq();
-        alertApiReq.setEndsAt(LocalDateTime.now().plusHours(1));
-        alertApiReqList.add(alertApiReq);
-
-        AlertTemplateRule alertTemplateRule =
-            new AlertTemplateRule().setNotifyWayIds("1").setAlertNotify("firing");
-        when(templateRuleMapper.selectById(anyLong())).thenReturn(alertTemplateRule);
-
-        setCommon();
-
-        List<AlertRecord> alertRecords = new ArrayList<>();
-        AlertRecord alertRecord =
-            new AlertRecord().setAlertStatus(CommonConstants.FIRING_STATUS)
-                .setEndTime(alertApiReq.getEndsAt().plusHours(1))
-                .setStartTime(alertApiReq.getStartsAt()).setId(1L);
-        alertRecords.add(alertRecord);
-        when(alertRecordMapper.selectList(any())).thenReturn(alertRecords);
-        when(alertRecordMapper.updateById(alertRecord)).thenReturn(1);
-
-        alertApiService.alerts(alertApiReqList);
-        verify(templateRuleMapper, times(1)).selectById(anyLong());
-        verify(notifyWayMapper, times(1)).selectBatchIds(anyList());
-        verify(clusterNodeService, times(1)).getById(anyString());
-        verify(alertRecordMapper, times(1)).selectList(any());
-        verify(alertRecordMapper, times(1)).updateById(alertRecord);
-    }
-
-    @Test
-    public void testAlerts10() {
-        List<AlertApiReq> alertApiReqList = new ArrayList<>();
-        AlertApiReq alertApiReq = getAlertApiReq();
-        alertApiReqList.add(alertApiReq);
-
-        AlertTemplateRule alertTemplateRule =
-            new AlertTemplateRule().setNotifyWayIds("1").setAlertNotify("firing")
-                .setIsRepeat(CommonConstants.IS_NOT_REPEAT).setIsSilence(CommonConstants.IS_SILENCE)
-                .setSilenceStartTime(LocalDateTime.now().minusHours(1))
-                .setSilenceEndTime(LocalDateTime.now().plusHours(1));
-        when(templateRuleMapper.selectById(anyLong())).thenReturn(alertTemplateRule);
-
-        setCommon();
-
-        List<AlertRecord> alertRecords = new ArrayList<>();
-        AlertRecord alertRecord =
-            new AlertRecord().setAlertStatus(CommonConstants.FIRING_STATUS)
-                .setEndTime(alertApiReq.getEndsAt().minusMinutes(30))
-                .setStartTime(alertApiReq.getStartsAt()).setId(1L);
-        alertRecords.add(alertRecord);
-        when(alertRecordMapper.selectList(any())).thenReturn(alertRecords);
-        when(alertRecordMapper.updateById(alertRecord)).thenReturn(1);
+        when(recordService.saveOrUpdate(any(AlertRecord.class))).thenReturn(true);
         when(notifyMessageMapper.selectCount(any())).thenReturn(0L);
-
-        alertApiService.alerts(alertApiReqList);
-        verify(templateRuleMapper, times(1)).selectById(anyLong());
-        verify(notifyWayMapper, times(1)).selectBatchIds(anyList());
-        verify(clusterNodeService, times(1)).getById(anyString());
-        verify(alertRecordMapper, times(1)).selectList(any());
-        verify(alertRecordMapper, times(1)).updateById(alertRecord);
-        verify(notifyMessageMapper, times(1)).selectCount(any());
-    }
-
-    @Test
-    public void testAlerts11() {
-        List<AlertApiReq> alertApiReqList = new ArrayList<>();
-        AlertApiReq alertApiReq = getAlertApiReq();
-        alertApiReqList.add(alertApiReq);
-
-        AlertTemplateRule alertTemplateRule =
-            new AlertTemplateRule().setAlertNotify("firing")
-                .setIsRepeat(CommonConstants.IS_REPEAT).setIsSilence(CommonConstants.IS_NOT_SILENCE);
-        when(templateRuleMapper.selectById(anyLong())).thenReturn(alertTemplateRule);
-
-        setCommon();
-
-        List<AlertRecord> alertRecords = new ArrayList<>();
-        AlertRecord alertRecord =
-            new AlertRecord().setAlertStatus(CommonConstants.FIRING_STATUS)
-                .setEndTime(alertApiReq.getEndsAt().minusMinutes(30))
-                .setStartTime(alertApiReq.getStartsAt()).setId(1L);
-        alertRecords.add(alertRecord);
-        when(alertRecordMapper.selectList(any())).thenReturn(alertRecords);
-        when(alertRecordMapper.updateById(alertRecord)).thenReturn(1);
-
-        alertApiService.alerts(alertApiReqList);
-        verify(templateRuleMapper, times(1)).selectById(anyLong());
-        verify(clusterNodeService, times(1)).getById(anyString());
-        verify(alertRecordMapper, times(1)).selectList(any());
-        verify(alertRecordMapper, times(1)).updateById(alertRecord);
-    }
-
-    @Test
-    public void testAlerts12() {
-        List<AlertApiReq> alertApiReqList = new ArrayList<>();
-        AlertApiReq alertApiReq = getAlertApiReq();
-        alertApiReqList.add(alertApiReq);
-
-        AlertTemplateRule alertTemplateRule =
-            new AlertTemplateRule().setNotifyWayIds("1").setAlertNotify("firing")
-                .setIsRepeat(CommonConstants.IS_NOT_REPEAT).setIsSilence(CommonConstants.IS_NOT_SILENCE)
-                .setSilenceStartTime(LocalDateTime.now().minusHours(1))
-                .setSilenceEndTime(LocalDateTime.now().plusHours(1));
-        when(templateRuleMapper.selectById(anyLong())).thenReturn(alertTemplateRule);
-
-        setCommon();
-
-        List<AlertRecord> alertRecords = new ArrayList<>();
-        AlertRecord alertRecord =
-            new AlertRecord().setAlertStatus(CommonConstants.FIRING_STATUS)
-                .setEndTime(alertApiReq.getEndsAt().minusMinutes(30))
-                .setStartTime(alertApiReq.getStartsAt()).setId(1L);
-        alertRecords.add(alertRecord);
-        when(alertRecordMapper.selectList(any())).thenReturn(alertRecords);
-        when(alertRecordMapper.updateById(alertRecord)).thenReturn(1);
-
-        NotifyWay notifyWay = new NotifyWay().setNotifyTemplateId(1L);
-        when(notifyWayMapper.selectById(any())).thenReturn(notifyWay);
-        NotifyTemplate notifyTemplate = new NotifyTemplate();
-        notifyTemplate.setNotifyContent("notifyContent").setId(1L);
+        NotifyTemplate notifyTemplate = new NotifyTemplate().setNotifyTitle("title").setNotifyContent("content");
         when(notifyTemplateMapper.selectById(anyLong())).thenReturn(notifyTemplate);
-        when(notifyMessageMapper.insert(any(NotifyMessage.class))).thenReturn(1);
+        when(notifyMessageMapper.insert(any())).thenReturn(1);
+        when(recordService.updateById(any())).thenReturn(true);
 
         alertApiService.alerts(alertApiReqList);
-        verify(templateRuleMapper, times(1)).selectById(anyLong());
-        verify(notifyWayMapper, times(1)).selectBatchIds(anyList());
-        verify(clusterNodeService, times(1)).getById(anyString());
-        verify(alertRecordMapper, times(1)).selectList(any());
-        verify(alertRecordMapper, times(1)).updateById(alertRecord);
-        verify(notifyWayMapper, times(1)).selectById(any());
-        verify(notifyTemplateMapper, times(1)).selectById(anyLong());
-        verify(notifyMessageMapper, times(1)).insert(any(NotifyMessage.class));
     }
 
     @Test
-    public void testAlerts13() {
+    public void testAlertsIsNotNextRepeat() {
+        AlertTemplateRule alertTemplateRule = new AlertTemplateRule().setNotifyWayIds("1").setAlertNotify("firing")
+            .setIsRepeat(CommonConstants.IS_REPEAT).setRuleContent("content").setMaxRepeatCount(15).setNextRepeat(2)
+            .setIsSilence(CommonConstants.IS_NOT_SILENCE).setNextRepeatUnit(CommonConstants.HOUR);
+        when(templateRuleMapper.selectById(anyLong())).thenReturn(alertTemplateRule);
         List<AlertApiReq> alertApiReqList = new ArrayList<>();
         AlertApiReq alertApiReq = getAlertApiReq();
         alertApiReqList.add(alertApiReq);
-
-        AlertTemplateRule alertTemplateRule =
-            new AlertTemplateRule().setAlertNotify("firing")
-                .setIsRepeat(CommonConstants.IS_NOT_REPEAT).setIsSilence(CommonConstants.IS_SILENCE)
-                .setSilenceStartTime(LocalDateTime.now().plusMinutes(30))
-                .setSilenceEndTime(LocalDateTime.now().plusHours(1));
-        when(templateRuleMapper.selectById(anyLong())).thenReturn(alertTemplateRule);
-
-        setCommon();
-
-        List<AlertRecord> alertRecords = new ArrayList<>();
-        AlertRecord alertRecord =
-            new AlertRecord().setAlertStatus(CommonConstants.FIRING_STATUS)
-                .setEndTime(alertApiReq.getEndsAt().minusMinutes(30))
-                .setStartTime(alertApiReq.getStartsAt()).setId(1L);
-        alertRecords.add(alertRecord);
-        when(alertRecordMapper.selectList(any())).thenReturn(alertRecords);
-        when(alertRecordMapper.updateById(alertRecord)).thenReturn(1);
-        when(notifyMessageMapper.selectCount(any())).thenReturn(0L);
-
-        alertApiService.alerts(alertApiReqList);
-        verify(templateRuleMapper, times(1)).selectById(anyLong());
-        verify(clusterNodeService, times(1)).getById(anyString());
-        verify(alertRecordMapper, times(1)).selectList(any());
-        verify(alertRecordMapper, times(1)).updateById(alertRecord);
-        verify(notifyMessageMapper, times(1)).selectCount(any());
-    }
-
-    @Test
-    public void testAlerts14() {
-        List<AlertApiReq> alertApiReqList = new ArrayList<>();
-        AlertApiReq alertApiReq = getAlertApiReq();
-        alertApiReqList.add(alertApiReq);
-
-        AlertTemplateRule alertTemplateRule =
-            new AlertTemplateRule().setAlertNotify("firing")
-                .setIsRepeat(CommonConstants.IS_NOT_REPEAT).setIsSilence(CommonConstants.IS_SILENCE)
-                .setSilenceStartTime(LocalDateTime.now().minusHours(2))
-                .setSilenceEndTime(LocalDateTime.now().minusHours(1));
-        when(templateRuleMapper.selectById(anyLong())).thenReturn(alertTemplateRule);
-
-        setCommon();
-
-        List<AlertRecord> alertRecords = new ArrayList<>();
-        AlertRecord alertRecord =
-            new AlertRecord().setAlertStatus(CommonConstants.FIRING_STATUS)
-                .setEndTime(alertApiReq.getEndsAt().minusMinutes(30))
-                .setStartTime(alertApiReq.getStartsAt()).setId(1L);
-        alertRecords.add(alertRecord);
-        when(alertRecordMapper.selectList(any())).thenReturn(alertRecords);
-        when(alertRecordMapper.updateById(alertRecord)).thenReturn(1);
-        when(notifyMessageMapper.selectCount(any())).thenReturn(0L);
-
-        alertApiService.alerts(alertApiReqList);
-        verify(templateRuleMapper, times(1)).selectById(anyLong());
-        verify(clusterNodeService, times(1)).getById(anyString());
-        verify(alertRecordMapper, times(1)).selectList(any());
-        verify(alertRecordMapper, times(1)).updateById(alertRecord);
-        verify(notifyMessageMapper, times(1)).selectCount(any());
-    }
-
-    private void setCommon() {
-        List<NotifyWay> notifyWays = new ArrayList<>();
-        NotifyWay notifyWay = new NotifyWay().setId(1L).setName("notifyName");
-        notifyWays.add(notifyWay);
+        AlertContentParamDto contentParamDto = new AlertContentParamDto().setNodeName("nodeName").setHostIp("ip")
+            .setLevel(CommonConstants.WARN).setHostname("centos").setPort("8080")
+            .setAlertStatus("firing").setAlertTime("2023-08-27 22:19:01").setContent("content");
+        when(contentParamUtil.setAndGetAlertContentParamDto(alertApiReq.getLabels().getInstance(),
+            alertApiReq.getStartsAt(), alertApiReq.getLabels().getLevel(), alertTemplateRule.getRuleContent()))
+            .thenReturn(contentParamDto);
+        List<NotifyWay> notifyWays = mockNotifyWays();
         when(notifyWayMapper.selectBatchIds(anyList())).thenReturn(notifyWays);
+        List<AlertRecord> alertRecords = new ArrayList<>();
+        alertRecords.add(new AlertRecord().setClusterNodeId(alertApiReq.getLabels().getInstance()).setTemplateId(1L)
+            .setTemplateRuleId(alertTemplateRule.getId()).setCreateTime(LocalDateTime.now())
+            .setTemplateName("template").setTemplateRuleName(alertTemplateRule.getRuleName())
+            .setAlertStatus(CommonConstants.FIRING_STATUS).setTemplateRuleType(alertTemplateRule.getRuleType())
+            .setLevel(alertTemplateRule.getLevel()).setAlertContent(contentParamDto.getContent())
+            .setRecordStatus(CommonConstants.UNREAD_STATUS).setSendTime(LocalDateTime.now().minusHours(1))
+            .setSendCount(10).setEndTime(LocalDateTime.now().minusHours(1))
+            .setStartTime(LocalDateTime.now().minusHours(2)));
+        when(alertRecordMapper.selectList(any())).thenReturn(alertRecords);
+        when(recordService.saveOrUpdate(any(AlertRecord.class))).thenReturn(true);
+        when(notifyMessageMapper.selectCount(any())).thenReturn(0L);
+        NotifyTemplate notifyTemplate = new NotifyTemplate().setNotifyTitle("title").setNotifyContent("content");
+        when(notifyTemplateMapper.selectById(anyLong())).thenReturn(notifyTemplate);
+        when(notifyMessageMapper.insert(any())).thenReturn(1);
+        when(recordService.updateById(any())).thenReturn(true);
 
-        OpsClusterNodeEntity opsClusterNodeEntity = new OpsClusterNodeEntity();
-        opsClusterNodeEntity.setClusterNodeId("node3");
-        opsClusterNodeEntity.setHostId("1");
-        opsClusterNodeEntity.setClusterId("test");
-        opsClusterNodeEntity.setClusterRole(ClusterRoleEnum.MASTER);
-        when(clusterNodeService.getById(anyString())).thenReturn(opsClusterNodeEntity);
+        alertApiService.alerts(alertApiReqList);
+    }
 
-        OpsHostEntity opsHost = new OpsHostEntity();
-        opsHost.setPublicIp("127.0.0.1");
-        opsHost.setHostname("centos");
-        opsHost.setPort(22);
-        when(hostFacade.getById(opsClusterNodeEntity.getHostId())).thenReturn(opsHost);
-        OpsClusterEntity opsClusterEntity = new OpsClusterEntity();
-        opsClusterEntity.setClusterId("test");
-        opsClusterEntity.setPort(80);
-        when(clusterService.getById(opsClusterNodeEntity.getClusterId())).thenReturn(opsClusterEntity);
+    @Test
+    public void testAlertsIsSilence() {
+        AlertTemplateRule alertTemplateRule = new AlertTemplateRule().setNotifyWayIds("1").setAlertNotify("firing")
+            .setIsRepeat(CommonConstants.IS_REPEAT).setRuleContent("content")
+            .setIsSilence(CommonConstants.IS_SILENCE).setSilenceStartTime(LocalDateTime.now().minusHours(10))
+            .setSilenceEndTime(LocalDateTime.now().plusHours(10));
+        when(templateRuleMapper.selectById(anyLong())).thenReturn(alertTemplateRule);
+        List<AlertApiReq> alertApiReqList = new ArrayList<>();
+        AlertApiReq alertApiReq = getAlertApiReq();
+        alertApiReqList.add(alertApiReq);
+        AlertContentParamDto contentParamDto = new AlertContentParamDto().setNodeName("nodeName").setHostIp("ip")
+            .setLevel(CommonConstants.WARN).setHostname("centos").setPort("8080")
+            .setAlertStatus("firing").setAlertTime("2023-08-27 22:19:01").setContent("content");
+        when(contentParamUtil.setAndGetAlertContentParamDto(alertApiReq.getLabels().getInstance(),
+            alertApiReq.getStartsAt(), alertApiReq.getLabels().getLevel(), alertTemplateRule.getRuleContent()))
+            .thenReturn(contentParamDto);
+        List<NotifyWay> notifyWays = mockNotifyWays();
+        when(notifyWayMapper.selectBatchIds(anyList())).thenReturn(notifyWays);
+        List<AlertRecord> alertRecords = new ArrayList<>();
+        alertRecords.add(new AlertRecord().setClusterNodeId(alertApiReq.getLabels().getInstance()).setTemplateId(1L)
+            .setTemplateRuleId(alertTemplateRule.getId()).setCreateTime(LocalDateTime.now())
+            .setTemplateName("template").setTemplateRuleName(alertTemplateRule.getRuleName())
+            .setAlertStatus(CommonConstants.FIRING_STATUS).setTemplateRuleType(alertTemplateRule.getRuleType())
+            .setLevel(alertTemplateRule.getLevel()).setAlertContent(contentParamDto.getContent())
+            .setRecordStatus(CommonConstants.UNREAD_STATUS).setSendTime(LocalDateTime.now().minusHours(1))
+            .setSendCount(10).setEndTime(LocalDateTime.now().minusHours(1))
+            .setStartTime(LocalDateTime.now().minusHours(2)));
+        when(alertRecordMapper.selectList(any())).thenReturn(alertRecords);
+        when(recordService.saveOrUpdate(any(AlertRecord.class))).thenReturn(true);
+        when(notifyMessageMapper.selectCount(any())).thenReturn(0L);
+        NotifyTemplate notifyTemplate = new NotifyTemplate().setNotifyTitle("title").setNotifyContent("content");
+        when(notifyTemplateMapper.selectById(anyLong())).thenReturn(notifyTemplate);
+        when(notifyMessageMapper.insert(any())).thenReturn(1);
+        when(recordService.updateById(any())).thenReturn(true);
+
+        alertApiService.alerts(alertApiReqList);
     }
 
     private AlertApiReq getAlertApiReq() {
@@ -579,5 +457,31 @@ public class AlertApiServiceTest {
         labels.setAlertname("name");
         alertApiReq.setLabels(labels);
         return alertApiReq;
+    }
+
+    private List<NotifyWay> mockNotifyWays() {
+        List<NotifyWay> notifyWays = new ArrayList<>();
+        notifyWays.add(new NotifyWay().setId(1L).setName("name").setNotifyType(CommonConstants.EMAIL)
+            .setEmail("email").setNotifyTemplateId(1L));
+        notifyWays.add(new NotifyWay().setId(1L).setName("name").setNotifyType(CommonConstants.WE_COM)
+            .setSendWay(CommonConstants.APP_SEND_WAY).setDeptId("1").setPersonId("1").setNotifyTemplateId(1L));
+        notifyWays.add(new NotifyWay().setId(1L).setName("name").setNotifyType(CommonConstants.WE_COM)
+            .setSendWay(CommonConstants.ROBOT_SEND_WAY).setWebhook("webhook").setNotifyTemplateId(1L));
+        notifyWays.add(new NotifyWay().setId(1L).setName("name").setNotifyType(CommonConstants.DING_TALK)
+            .setSendWay(CommonConstants.APP_SEND_WAY).setDeptId("1").setPersonId("1").setNotifyTemplateId(1L));
+        notifyWays.add(new NotifyWay().setId(1L).setName("name").setNotifyType(CommonConstants.DING_TALK)
+            .setSendWay(CommonConstants.ROBOT_SEND_WAY).setWebhook("webhook").setSign("sign").setNotifyTemplateId(1L));
+        notifyWays.add(new NotifyWay().setId(1L).setName("name").setNotifyType(CommonConstants.DING_TALK)
+            .setSendWay(CommonConstants.ROBOT_SEND_WAY).setWebhook("webhook").setSign("").setNotifyTemplateId(1L));
+        notifyWays.add(new NotifyWay().setId(1L).setName("name").setNotifyType(CommonConstants.WEBHOOK)
+            .setWebhook("webhook").setNotifyTemplateId(1L));
+        notifyWays.add(new NotifyWay().setId(1L).setName("name").setNotifyType(CommonConstants.WEBHOOK)
+            .setWebhook("webhook").setHeader("{\"a\":\"b\"}").setParams("{\"k\":\"v\"}").setBody("body")
+            .setResultCode("{\"errCode\":0}").setNotifyTemplateId(1L));
+        notifyWays.add(new NotifyWay().setId(1L).setName("name").setNotifyType(CommonConstants.SNMP)
+            .setSnmpIp("127.0.0.1").setSnmpPort("162").setSnmpVersion(SnmpConstants.version3).setSnmpCommunity(
+                "community").setSnmpOid("oid").setSnmpUsername("user").setSnmpAuthPasswd("123").setSnmpPrivPasswd(
+                "1234").setNotifyTemplateId(1L));
+        return notifyWays;
     }
 }

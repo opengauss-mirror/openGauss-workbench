@@ -4,7 +4,7 @@
 
 package com.nctigba.observability.sql.service.history.point;
 
-import com.nctigba.observability.sql.constants.history.DiagnosisTypeCommon;
+import com.nctigba.observability.sql.constants.history.PointTypeCommon;
 import com.nctigba.observability.sql.model.history.HisDiagnosisResult;
 import com.nctigba.observability.sql.model.history.HisDiagnosisTask;
 import com.nctigba.observability.sql.model.history.data.AgentData;
@@ -41,7 +41,7 @@ public class TopDbProcess implements HisDiagnosisPointService<AgentDTO> {
 
     @Override
     public String getDiagnosisType() {
-        return DiagnosisTypeCommon.CURRENT;
+        return PointTypeCommon.CURRENT;
     }
 
 

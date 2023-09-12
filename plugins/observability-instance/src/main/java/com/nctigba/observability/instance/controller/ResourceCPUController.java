@@ -1,12 +1,14 @@
 /*
  * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
  */
+
 package com.nctigba.observability.instance.controller;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.opengauss.admin.common.core.domain.AjaxResult;
 import org.opengauss.admin.common.exception.CustomException;
@@ -45,14 +47,20 @@ public class ResourceCPUController extends ControllerConfig {
             MetricsLine.CPU_USER,
             MetricsLine.CPU_SYSTEM,
             MetricsLine.CPU_IOWAIT,
+            MetricsLine.CPU_IRQ,
+            MetricsLine.CPU_SOFTIRQ,
+            MetricsLine.CPU_NICE,
+            MetricsLine.CPU_STEAL,
+            MetricsLine.CPU_IDLE,
             MetricsLine.CPU_DB,
             MetricsLine.CPU_TOTAL_5M_LOAD,
-            MetricsLine.CPU_TOTAL_CORE_NUM, };
+            MetricsLine.CPU_TOTAL_CORE_NUM,
+    };
 
     @SuppressWarnings("unchecked")
     @GetMapping("cpu")
     public AjaxResult cpu(String id, Long start, Long end, Integer step) {
-        HashMap<String, Object> cpu = metricsService.listBatch(CPU, id, start, end, step);
+        Map<String, Object> cpu = metricsService.listBatch(CPU, id, start, end, step);
         int core = 1;
         for (Number n : (List<Number>) cpu.get(MetricsLine.CPU_TOTAL_CORE_NUM.name())) {
             if (n.intValue() != 0) {

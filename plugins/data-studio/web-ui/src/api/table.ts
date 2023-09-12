@@ -68,8 +68,8 @@ export const updateTableIndex = async (data) => {
 export const getTableData = async (data) => {
   return await request({
     url: `/dataStudio/web/v1/tableDatas`,
-    method: 'get',
-    params: data,
+    method: 'post',
+    data,
   });
 };
 
@@ -92,6 +92,14 @@ export const getCreateTableDdl = async (data) => {
 export const createTable = async (data) => {
   return await request({
     url: `/dataStudio/web/v1/table`,
+    method: 'post',
+    data,
+  });
+};
+
+export const setTableAnalyze = async (data) => {
+  return await request({
+    url: `/dataStudio/web/v1/table/analyze`,
     method: 'post',
     data,
   });
@@ -177,6 +185,22 @@ export const setTableSchema = async (data) => {
   });
 };
 
+export const getTablePartition = async (data) => {
+  return await request({
+    url: `/dataStudio/web/v1/table/attribute/partition`,
+    method: 'get',
+    params: data,
+  });
+};
+
+export const importTableData = async (data) => {
+  return await requestBlob({
+    url: `/dataStudio/web/v1/import/table/data`,
+    method: 'post',
+    data,
+  });
+};
+
 // export [data, ddl] of table
 export const exportTableDdl = async (data) => {
   return await requestBlob({
@@ -190,6 +214,16 @@ export const exportTableDdl = async (data) => {
 export const exportTableData = async (data) => {
   return await requestBlob({
     url: `/dataStudio/web/v1/export/table/data`,
+    method: 'post',
+    responseType: 'blob',
+    data,
+  });
+};
+
+// export data of table
+export const exportTableFilterData = async (data) => {
+  return await requestBlob({
+    url: `/dataStudio/web/v1/table/exportData`,
     method: 'post',
     responseType: 'blob',
     data,

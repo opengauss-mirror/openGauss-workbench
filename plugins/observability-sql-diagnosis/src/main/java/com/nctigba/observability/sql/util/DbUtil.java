@@ -38,10 +38,15 @@ public class DbUtil {
             log.info("nodeId is not exist!");
             return "error:nodeId is not exist!";
         }
-        SimpleDateFormat stringFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        String sql = item.replace("hisDataStartTime", stringFormat.format(startTime)).replace(
-                "hisDataEndTime",
-                stringFormat.format(endTime));
+        String sql;
+        if (startTime != null && endTime != null) {
+            SimpleDateFormat stringFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            sql = item.replace("hisDataStartTime", stringFormat.format(startTime)).replace(
+                    "hisDataEndTime",
+                    stringFormat.format(endTime));
+        } else {
+            sql = item;
+        }
         List<DatabaseData> list = new ArrayList<>();
         try (var conn = clusterManager.getConnectionByNodeId(
                 nodeId); var stmt = conn.createStatement(); var rs = stmt.executeQuery(sql)) {

@@ -41,6 +41,12 @@ body {
   word-break: break-all;
 }
 
+.single-line-omission {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 ::-webkit-scrollbar {
   width: 7px;
   height: 8px;
@@ -74,7 +80,7 @@ body {
 }
 
 .el-table .el-table__cell.add {
-  background-color: #e4ffb5 !important;
+  background-color: #e4ffb591 !important;
   color: #606266;
   .el-input__inner {
     color: #606266 !important;
@@ -85,4 +91,26 @@ body {
 }
 .el-table .el-table__cell.edited {
   background-color: #f1d4d8 !important;
+}
+
+.common-dialog-wrapper {
+  .el-dialog__body {
+    padding-top: 5px;
+    padding-bottom: 5px;
+  }
+}
+
+.splitpanes.default-theme {
+  .splitpanes__pane{
+    background: none;
+  }
+  .splitpanes__splitter {
+    background: none;
+    &:before, &:after {
+      background-color: #d8d8d8
+    }
+    &:hover:before, &:hover:after {
+      background-color: var(--el-color-primary);
+    }
+  }
 }

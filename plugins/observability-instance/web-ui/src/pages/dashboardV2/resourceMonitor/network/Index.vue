@@ -7,6 +7,9 @@
             <el-link v-if="isManualRangeSelected" type="primary" @click="gotoSQLDiagnosis()">
               {{ $t('app.diagnosis') }}
             </el-link>
+            <el-link v-if="isManualRangeSelected" type="primary" @click="wdr(tabId)" v-loading="wdrLoading">
+              {{$t('instanceIndex.wdrAnalysis')}}
+            </el-link>
           </div>
         </template>
         <LazyLine
@@ -17,6 +20,8 @@
           :data="metricsData.flowIn"
           :xData="metricsData.time"
           :unit="'MB'"
+          :tool-tips-sort="'desc'"
+          :tool-tips-exclude-zero="true"
         />
       </my-card>
     </el-col>
@@ -28,12 +33,21 @@
           :data="metricsData.flowOut"
           :xData="metricsData.time"
           :unit="'MB'"
+          :tool-tips-sort="'desc'"
+          :tool-tips-exclude-zero="true"
         />
       </my-card>
     </el-col>
     <el-col :span="8">
       <my-card :title="$t('resourceMonitor.network.lost')" height="300" :bodyPadding="false">
-        <LazyLine :tabId="props.tabId" :formatter="toFixed" :data="metricsData.lost" :xData="metricsData.time" />
+        <LazyLine
+          :tabId="props.tabId"
+          :formatter="toFixed"
+          :data="metricsData.lost"
+          :xData="metricsData.time"
+          :tool-tips-sort="'desc'"
+          :tool-tips-exclude-zero="true"
+        />
       </my-card>
     </el-col>
   </el-row>
@@ -48,17 +62,33 @@
           :formatter="toFixed"
           :data="metricsData.networkSocket"
           :xData="metricsData.time"
+          :tool-tips-sort="'desc'"
+          :tool-tips-exclude-zero="true"
         />
       </my-card>
     </el-col>
     <el-col :span="8">
       <my-card :title="$t('resourceMonitor.network.tcpQty')" height="300" :bodyPadding="false">
-        <LazyLine :tabId="props.tabId" :formatter="toFixed" :data="metricsData.tcpSocket" :xData="metricsData.time" />
+        <LazyLine
+          :tabId="props.tabId"
+          :formatter="toFixed"
+          :data="metricsData.tcpSocket"
+          :xData="metricsData.time"
+          :tool-tips-sort="'desc'"
+          :tool-tips-exclude-zero="true"
+        />
       </my-card>
     </el-col>
     <el-col :span="8">
       <my-card :title="$t('resourceMonitor.network.UDPQty')" height="300" :bodyPadding="false">
-        <LazyLine :tabId="props.tabId" :formatter="toFixed" :data="metricsData.udpSocket" :xData="metricsData.time" />
+        <LazyLine
+          :tabId="props.tabId"
+          :formatter="toFixed"
+          :data="metricsData.udpSocket"
+          :xData="metricsData.time"
+          :tool-tips-sort="'desc'"
+          :tool-tips-exclude-zero="true"
+        />
       </my-card>
     </el-col>
   </el-row>
@@ -103,9 +133,13 @@ import { useRequest } from 'vue-request'
 import { ElMessage } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 import { hasSQLDiagnosisModule } from '@/api/sqlDiagnosis'
+import { getWDRSnapshot } from '@/api/wdr'
+import moment from 'moment'
 
 const props = withDefaults(defineProps<{ tabId: string }>(), {})
 const { t } = useI18n()
+
+const emit = defineEmits(['goto'])
 
 interface LineData {
   name: string
@@ -302,6 +336,33 @@ const gotoSQLDiagnosis = () => {
       ElMessage.error(t('app.needSQLDiagnosis'))
     })
 }
+
+const { data: wdrData, run: wdr, loading: wdrLoading } = useRequest(getWDRSnapshot, { manual: true })
+watch(
+  wdrData,
+  (res: any) => {
+    // goto wdr
+    if (res && res.wdrId && res.wdrId.length > 0) {
+      const { timeRange } = useMonitorStore(props.tabId)
+      let param = {
+        operation: 'search',
+        startTime: timeRange == null ? '' : moment(timeRange[0]).format("YYYY-MM-DD HH:mm:ss"),
+        endTime: timeRange == null ? '' : moment(timeRange[1]).format("YYYY-MM-DD HH:mm:ss"),
+      }
+      emit('goto', tabKeys.WDR, param)
+    } else if (res && res.start && res.end) {
+      let param = {
+        operation: 'edit',
+        startId: res.start,
+        endId: res.end
+      }
+      emit('goto', tabKeys.WDR, param)
+    } else {
+      ElMessage.error(t('wdrReports.wdrErrtip'))
+    }
+  },
+  { deep: true }
+)
 </script>
 
 <style scoped lang="scss"></style>

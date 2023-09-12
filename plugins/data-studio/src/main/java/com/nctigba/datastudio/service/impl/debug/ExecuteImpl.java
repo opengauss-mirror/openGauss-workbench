@@ -31,6 +31,7 @@ import static com.nctigba.datastudio.constants.CommonConstants.DEFINITION;
 import static com.nctigba.datastudio.constants.CommonConstants.RESULT;
 import static com.nctigba.datastudio.constants.CommonConstants.SUCCESS;
 import static com.nctigba.datastudio.constants.SqlConstants.QUERY_DEF_SQL;
+import static com.nctigba.datastudio.constants.SqlConstants.SPACE;
 import static com.nctigba.datastudio.enums.MessageEnum.CONFIRM;
 import static com.nctigba.datastudio.enums.MessageEnum.PARAM_WINDOW;
 
@@ -78,7 +79,8 @@ public class ExecuteImpl implements OperationInterface {
             log.info("execute definition: " + definition);
         }
 
-        if (!paramReq.getSql().equals(definition) && !paramReq.isContinue()) {
+        if (!DebugUtils.replaceLine(paramReq.getSql()).equals(DebugUtils.replaceLine(definition))
+                && !paramReq.isContinue()) {
             Map<String, String> map = new HashMap<>();
             map.put(RESULT, LocaleString.transLanguageWs("1006", webSocketServer));
             webSocketServer.sendMessage(windowName, CONFIRM, SUCCESS, map);

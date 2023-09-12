@@ -13,28 +13,23 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.nctigba.alert.monitor.constant.CommonConstants;
 import com.nctigba.alert.monitor.dto.AlertTemplateDto;
-import com.nctigba.alert.monitor.dto.AlertTemplateRuleDto;
 import com.nctigba.alert.monitor.entity.AlertClusterNodeConf;
 import com.nctigba.alert.monitor.entity.AlertRule;
 import com.nctigba.alert.monitor.entity.AlertRuleItem;
-import com.nctigba.alert.monitor.entity.AlertRuleItemParam;
 import com.nctigba.alert.monitor.entity.AlertTemplate;
 import com.nctigba.alert.monitor.entity.AlertTemplateRule;
 import com.nctigba.alert.monitor.entity.AlertTemplateRuleItem;
-import com.nctigba.alert.monitor.entity.AlertTemplateRuleItemParam;
 import com.nctigba.alert.monitor.mapper.AlertRuleItemMapper;
-import com.nctigba.alert.monitor.mapper.AlertRuleItemParamMapper;
 import com.nctigba.alert.monitor.mapper.AlertRuleMapper;
 import com.nctigba.alert.monitor.mapper.AlertTemplateMapper;
 import com.nctigba.alert.monitor.mapper.AlertTemplateRuleItemMapper;
-import com.nctigba.alert.monitor.mapper.AlertTemplateRuleItemParamMapper;
 import com.nctigba.alert.monitor.mapper.AlertTemplateRuleMapper;
 import com.nctigba.alert.monitor.model.AlertTemplateReq;
 import com.nctigba.alert.monitor.model.AlertTemplateRuleReq;
 import com.nctigba.alert.monitor.service.AlertClusterNodeConfService;
-import com.nctigba.alert.monitor.service.AlertTemplateRuleItemParamService;
 import com.nctigba.alert.monitor.service.AlertTemplateRuleService;
 import com.nctigba.alert.monitor.service.AlertTemplateService;
+import com.nctigba.alert.monitor.service.PrometheusService;
 import com.nctigba.alert.monitor.utils.MessageSourceUtil;
 import org.opengauss.admin.common.exception.ServiceException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,8 +37,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 /**
@@ -59,20 +54,15 @@ public class AlertTemplateServiceImpl extends ServiceImpl<AlertTemplateMapper, A
     @Autowired
     private AlertRuleItemMapper alertRuleItemMapper;
     @Autowired
-    private AlertRuleItemParamMapper ruleItemParamMapper;
-    @Autowired
     private AlertTemplateRuleMapper alertTemplateRuleMapper;
     @Autowired
     private AlertTemplateRuleItemMapper alertTemplateRuleItemMapper;
     @Autowired
     private AlertTemplateRuleService templateRuleService;
     @Autowired
-    private AlertTemplateRuleItemParamMapper tRuleItemParamMapper;
-    @Autowired
-    private AlertTemplateRuleItemParamService templateRuleItemParamService;
-
-    @Autowired
     private AlertClusterNodeConfService nodeConfService;
+    @Autowired
+    private PrometheusService prometheusService;
 
     @Override
     public Page<AlertTemplate> getTemplatePage(String templateName, Page page) {
@@ -83,52 +73,26 @@ public class AlertTemplateServiceImpl extends ServiceImpl<AlertTemplateMapper, A
     }
 
     @Override
-    public Page<AlertTemplateRuleDto> getTemplateRulePage(Long templateId, String ruleName, Page page) {
-        Page<AlertTemplateRuleDto> ruleDtoPage = new Page<>();
+    public Page<AlertTemplateRule> getTemplateRulePage(Long templateId, String ruleName, Page page) {
         Page<AlertTemplateRule> rulePage = alertTemplateRuleMapper.selectPage(page,
             Wrappers.<AlertTemplateRule>lambdaQuery().eq(AlertTemplateRule::getTemplateId, templateId).like(
                 StrUtil.isNotBlank(ruleName), AlertTemplateRule::getRuleName, ruleName).eq(
                 AlertTemplateRule::getIsDeleted, CommonConstants.IS_NOT_DELETE).orderByDesc(
                 AlertTemplateRule::getId));
-        ruleDtoPage.setSize(rulePage.getSize()).setTotal(rulePage.getTotal()).setCurrent(rulePage.getCurrent());
         List<AlertTemplateRule> records = rulePage.getRecords();
         if (CollectionUtil.isEmpty(records)) {
-            ruleDtoPage.setRecords(new ArrayList<>());
-            return ruleDtoPage;
+            return rulePage;
         }
         List<Long> ruleIdList = records.stream().map(item -> item.getId()).collect(Collectors.toList());
         List<AlertTemplateRuleItem> alertTemplateRuleItems = alertTemplateRuleItemMapper.selectList(
             Wrappers.<AlertTemplateRuleItem>lambdaQuery().in(AlertTemplateRuleItem::getTemplateRuleId,
                 ruleIdList).eq(AlertTemplateRuleItem::getIsDeleted, CommonConstants.IS_NOT_DELETE));
-        List<Long> itemIdList = alertTemplateRuleItems.stream().map(item -> item.getId()).collect(Collectors.toList());
-        List<AlertTemplateRuleItemParam> itemParamList = tRuleItemParamMapper.selectList(
-            Wrappers.<AlertTemplateRuleItemParam>lambdaQuery().in(AlertTemplateRuleItemParam::getItemId,
-                itemIdList).eq(AlertTemplateRuleItemParam::getIsDeleted, CommonConstants.IS_NOT_DELETE));
-        List<AlertTemplateRuleDto> ruleDtoList = new ArrayList<>();
         for (AlertTemplateRule record : records) {
-            AlertTemplateRuleDto ruleDto = new AlertTemplateRuleDto();
-            BeanUtil.copyProperties(record, ruleDto);
             List<AlertTemplateRuleItem> templateRuleItems = alertTemplateRuleItems.stream().filter(
                 item -> item.getTemplateRuleId().equals(record.getId())).collect(Collectors.toList());
-            String ruleExpDesc = templateRuleItems.stream().map(item -> {
-                List<String> paramVals = itemParamList.stream().filter(
-                    item0 -> item0.getItemId().equals(item.getId())).map(item0 -> item0.getParamValue()).collect(
-                    Collectors.toList());
-                return "[" + item.getRuleMark() + "]:" + MessageSourceUtil.get(item.getRuleExpName())
-                    + (CollectionUtil.isNotEmpty(paramVals)
-                    ? "(" + paramVals.stream().collect(Collectors.joining(CommonConstants.DELIMITER)) + ")" : "")
-                    + " " + (item.getAction().equals("normal")
-                    ? MessageSourceUtil.get("rule.ruleItem.normalAction") + " " + item.getOperate()
-                    + item.getLimitValue() + (StrUtil.isNotBlank(
-                    item.getUnit()) ? item.getUnit() : "") : item.getAction().equals(
-                    "increase") ? MessageSourceUtil.get("rule.ruleItem.increaseAction") : MessageSourceUtil.get(
-                    "rule.ruleItem.decreaseAction"));
-            }).collect(Collectors.joining("<br/>"));
-            ruleDto.setRuleExpDesc(ruleExpDesc);
-            ruleDtoList.add(ruleDto);
+            record.setAlertRuleItemList(templateRuleItems);
         }
-        ruleDtoPage.setRecords(ruleDtoList);
-        return ruleDtoPage;
+        return rulePage;
     }
 
 
@@ -137,8 +101,8 @@ public class AlertTemplateServiceImpl extends ServiceImpl<AlertTemplateMapper, A
         AlertTemplate alertTemplate = this.baseMapper.selectById(id);
         AlertTemplateDto templateDto = new AlertTemplateDto();
         BeanUtil.copyProperties(alertTemplate, templateDto);
-        List<AlertTemplateRuleDto> ruleDtoList = templateRuleService.getDtoListByTemplateId(id);
-        templateDto.setTemplateRuleDtoList(ruleDtoList);
+        List<AlertTemplateRule> ruleDtoList = templateRuleService.getListByTemplateId(id);
+        templateDto.setTemplateRuleList(ruleDtoList);
         return templateDto;
     }
 
@@ -152,10 +116,10 @@ public class AlertTemplateServiceImpl extends ServiceImpl<AlertTemplateMapper, A
         if (alertTemplate == null) {
             alertTemplate = new AlertTemplate();
             BeanUtil.copyProperties(templateReq, alertTemplate);
-            alertTemplate.setCreateTime(LocalDateTime.now()).setIsDeleted(0);
+            alertTemplate.setCreateTime(LocalDateTime.now()).setIsDeleted(CommonConstants.IS_NOT_DELETE);
         } else {
             alertTemplate.setTemplateName(templateReq.getTemplateName()).setUpdateTime(
-                LocalDateTime.now()).setIsDeleted(0);
+                LocalDateTime.now()).setIsDeleted(CommonConstants.IS_NOT_DELETE);
         }
         saveOrUpdate(alertTemplate);
 
@@ -165,20 +129,29 @@ public class AlertTemplateServiceImpl extends ServiceImpl<AlertTemplateMapper, A
         // delete the old rules
         List<AlertTemplateRule> alertTemplateRules = alertTemplateRuleMapper.selectList(
             Wrappers.<AlertTemplateRule>lambdaQuery().eq(AlertTemplateRule::getTemplateId,
-                alertTemplate.getId()).notIn(CollectionUtil.isNotEmpty(templateRuleIds),
-                AlertTemplateRule::getId, templateRuleIds));
-        alertTemplateRules.forEach(item -> {
-            item.setIsDeleted(CommonConstants.IS_DELETE);
-            alertTemplateRuleMapper.updateById(item);
+                    alertTemplate.getId()).notIn(CollectionUtil.isNotEmpty(templateRuleIds),
+                    AlertTemplateRule::getId, templateRuleIds)
+                .eq(AlertTemplateRule::getIsDeleted, CommonConstants.IS_NOT_DELETE));
+        if (CollectionUtil.isNotEmpty(alertTemplateRules)) {
+            alertTemplateRules.forEach(item -> item.setIsDeleted(CommonConstants.IS_DELETE)
+                .setUpdateTime(LocalDateTime.now()));
+            templateRuleService.updateBatchById(alertTemplateRules);
+            List<Long> delTemplateRuleIds =
+                alertTemplateRules.stream().map(item -> item.getId()).collect(Collectors.toList());
             alertTemplateRuleItemMapper.update(null,
                 new LambdaUpdateWrapper<AlertTemplateRuleItem>().set(AlertTemplateRuleItem::getIsDeleted,
                         CommonConstants.IS_DELETE).set(AlertTemplateRuleItem::getUpdateTime, LocalDateTime.now())
-                    .eq(AlertTemplateRuleItem::getTemplateRuleId, item.getId())
+                    .in(AlertTemplateRuleItem::getTemplateRuleId, delTemplateRuleIds)
                     .eq(AlertTemplateRuleItem::getIsDeleted, CommonConstants.IS_NOT_DELETE));
-        });
+        }
+        // update
         for (AlertTemplateRuleReq alertTemplateRuleReq : templateRuleReqList) {
             updateByAlertTemplateRuleReq(alertTemplateRuleReq, alertTemplate.getId());
         }
+        Long id = alertTemplate.getId();
+        CompletableFuture.runAsync(() -> {
+            prometheusService.updateRuleConfigByTemplateId(id);
+        });
         return alertTemplate;
     }
 
@@ -199,22 +172,6 @@ public class AlertTemplateServiceImpl extends ServiceImpl<AlertTemplateMapper, A
                 templateRuleItem.setId(null).setTemplateRuleId(alertTemplateRule.getId()).setRuleItemId(
                     alertRuleItem.getId()).setIsDeleted(0).setCreateTime(LocalDateTime.now()).setUpdateTime(null);
                 alertTemplateRuleItemMapper.insert(templateRuleItem);
-                List<AlertRuleItemParam> itemParamList = ruleItemParamMapper.selectList(
-                    Wrappers.<AlertRuleItemParam>lambdaQuery().eq(AlertRuleItemParam::getItemId,
-                        alertRuleItem.getId()).eq(AlertRuleItemParam::getIsDeleted,
-                        CommonConstants.IS_NOT_DELETE));
-                if (CollectionUtil.isEmpty(itemParamList)) {
-                    continue;
-                }
-                List<AlertTemplateRuleItemParam> tItemParamList = new ArrayList<>();
-                for (AlertRuleItemParam alertRuleItemParam : itemParamList) {
-                    AlertTemplateRuleItemParam tRuleItemParam = new AlertTemplateRuleItemParam();
-                    BeanUtil.copyProperties(alertRuleItemParam, tRuleItemParam);
-                    tRuleItemParam.setId(null).setItemId(templateRuleItem.getId()).setCreateTime(
-                        LocalDateTime.now()).setIsDeleted(CommonConstants.IS_NOT_DELETE);
-                    tItemParamList.add(tRuleItemParam);
-                }
-                templateRuleItemParamService.saveBatch(tItemParamList);
             }
         } else {
             AlertTemplateRule alertTemplateRule = alertTemplateRuleMapper.selectById(
@@ -231,50 +188,29 @@ public class AlertTemplateServiceImpl extends ServiceImpl<AlertTemplateMapper, A
     }
 
     @Override
-    public List<AlertTemplateRuleDto> getTemplateRuleListById(Long templateId) {
-        List<AlertTemplateRuleDto> ruleDtoList = new ArrayList<>();
+    public List<AlertTemplateRule> getTemplateRuleListById(Long templateId) {
         List<AlertTemplateRule> templateRuleList =
             alertTemplateRuleMapper.selectList(
                 Wrappers.<AlertTemplateRule>lambdaQuery().eq(AlertTemplateRule::getTemplateId, templateId).eq(
                     AlertTemplateRule::getIsDeleted, CommonConstants.IS_NOT_DELETE).orderByDesc(
                     AlertTemplateRule::getId));
         if (CollectionUtil.isEmpty(templateRuleList)) {
-            return ruleDtoList;
+            return templateRuleList;
         }
         List<Long> ruleIdList = templateRuleList.stream().map(item -> item.getId()).collect(Collectors.toList());
         List<AlertTemplateRuleItem> alertTemplateRuleItems = alertTemplateRuleItemMapper.selectList(
             Wrappers.<AlertTemplateRuleItem>lambdaQuery().in(AlertTemplateRuleItem::getTemplateRuleId,
                 ruleIdList).eq(AlertTemplateRuleItem::getIsDeleted, 0));
-        List<Long> itemIdList = alertTemplateRuleItems.stream().map(item -> item.getId()).collect(Collectors.toList());
-        List<AlertTemplateRuleItemParam> itemParamList = tRuleItemParamMapper.selectList(
-            Wrappers.<AlertTemplateRuleItemParam>lambdaQuery().in(AlertTemplateRuleItemParam::getItemId,
-                itemIdList).eq(AlertTemplateRuleItemParam::getIsDeleted, CommonConstants.IS_NOT_DELETE));
         for (AlertTemplateRule templateRule : templateRuleList) {
-            AlertTemplateRuleDto ruleDto = new AlertTemplateRuleDto();
-            BeanUtil.copyProperties(templateRule, ruleDto);
             List<AlertTemplateRuleItem> templateRuleItems = alertTemplateRuleItems.stream().filter(
                 item -> item.getTemplateRuleId().equals(templateRule.getId())).collect(Collectors.toList());
-            String ruleExpDesc = templateRuleItems.stream().map(item -> {
-                List<String> paramVals = itemParamList.stream().filter(
-                    item0 -> item0.getItemId().equals(item.getId())).map(item0 -> item0.getParamValue()).collect(
-                    Collectors.toList());
-                return "[" + item.getRuleMark() + "]:" + MessageSourceUtil.get(item.getRuleExpName())
-                    + (CollectionUtil.isNotEmpty(paramVals)
-                    ? "(" + paramVals.stream().collect(Collectors.joining(CommonConstants.DELIMITER)) + ")" : "")
-                    + " " + (item.getAction().equals("normal")
-                    ? MessageSourceUtil.get("rule.ruleItem.normalAction") + " " + item.getOperate()
-                    + item.getLimitValue() + (StrUtil.isNotBlank(
-                    item.getUnit()) ? item.getUnit() : "") : item.getAction().equals(
-                    "increase") ? MessageSourceUtil.get("rule.ruleItem.increaseAction") : MessageSourceUtil.get(
-                    "rule.ruleItem.decreaseAction"));
-            }).collect(Collectors.joining("<br/>"));
-            ruleDto.setRuleExpDesc(ruleExpDesc);
-            ruleDtoList.add(ruleDto);
+            templateRule.setAlertRuleItemList(templateRuleItems);
         }
-        return ruleDtoList;
+        return templateRuleList;
     }
 
     @Override
+    @Transactional
     public void delTemplate(Long id) {
         List<AlertClusterNodeConf> nodeConfList = nodeConfService.list(
             Wrappers.<AlertClusterNodeConf>lambdaQuery().eq(AlertClusterNodeConf::getTemplateId, id).eq(

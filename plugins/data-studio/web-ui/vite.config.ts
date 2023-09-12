@@ -46,7 +46,7 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
     resolve: {
       alias: {
         '@': resolve('src'),
-        static: resolve('public/static'),
+        statics: resolve('public/statics'),
       },
       extensions: ['.mjs', '.js', '.ts', '.jsx', '.tsx', '.json', '.vue'],
     },
@@ -59,6 +59,10 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
       proxy: {
         '/dataStudio/web': {
           target: `http://${env.VITE_API_HOST}`,
+          changeOrigin: true,
+        },
+        '/system': {
+          target: `http://${env.VITE_SYSTEM_HOST}`,
           changeOrigin: true,
         },
       },

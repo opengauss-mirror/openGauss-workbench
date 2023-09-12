@@ -23,15 +23,14 @@
   import ConnectInfoDialog from '@/views/connect/Info.vue';
   import EventBus, { EventTypeName } from '@/utils/event-bus';
   import { useAppStore } from '@/store/modules/app';
-  import { useUserStore } from '@/store/modules/user';
   import { useTagsViewStore } from '@/store/modules/tagsView';
   import { isDark, toggleDark } from '@/hooks/dark';
   import { useI18n } from 'vue-i18n';
   import { heartbeat } from '@/api/connect';
   import { httpHeartbeatTime } from '@/config';
+  import { sidebarForage } from '@/utils/localforage';
 
   const AppStore = useAppStore();
-  const UserStore = useUserStore();
   const TagsViewStore = useTagsViewStore();
   TagsViewStore.initVisitedViews();
 
@@ -45,8 +44,7 @@
   const availableUuid = ref('');
   const heartbeatTimer = ref(null);
 
-  onMounted(() => {
-    UserStore.userId = 'A';
+  onMounted(async () => {
     // set init language(from platform)
     const lang = localStorage.getItem('locale') == 'en-US' ? 'en-US' : 'zh-CN';
     i18nLocale.value = lang;
@@ -73,7 +71,7 @@
       isConnectInfoVisible.value = true;
     });
     document.getElementById('app').style.height =
-      import.meta.env.MODE === 'production' ? 'calc(100vh - 190px)' : '100%';
+      import.meta.env.MODE === 'production' ? 'calc(100vh - 115px)' : '100%';
 
     window.$wujie?.bus.$on('opengauss-theme-change', (val) => {
       // 'light' | 'dark'
@@ -94,6 +92,7 @@
     clearInterval(heartbeatTimer.value);
     heartbeatTimer.value = null;
     sessionStorage.clear();
+    sidebarForage.clear();
   });
 </script>
 

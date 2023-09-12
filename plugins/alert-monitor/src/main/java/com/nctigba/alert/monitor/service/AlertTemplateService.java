@@ -7,8 +7,8 @@ package com.nctigba.alert.monitor.service;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.nctigba.alert.monitor.dto.AlertTemplateDto;
-import com.nctigba.alert.monitor.dto.AlertTemplateRuleDto;
 import com.nctigba.alert.monitor.entity.AlertTemplate;
+import com.nctigba.alert.monitor.entity.AlertTemplateRule;
 import com.nctigba.alert.monitor.model.AlertTemplateReq;
 
 import java.util.List;
@@ -21,7 +21,7 @@ import java.util.List;
 public interface AlertTemplateService extends IService<AlertTemplate> {
     Page<AlertTemplate> getTemplatePage(String templateName, Page page);
 
-    Page<AlertTemplateRuleDto> getTemplateRulePage(Long templateId, String ruleName, Page page);
+    Page<AlertTemplateRule> getTemplateRulePage(Long templateId, String ruleName, Page page);
 
     AlertTemplateDto getTemplate(Long id);
 
@@ -29,7 +29,7 @@ public interface AlertTemplateService extends IService<AlertTemplate> {
 
     List<AlertTemplate> getTemplateList();
 
-    List<AlertTemplateRuleDto> getTemplateRuleListById(Long templateId);
+    List<AlertTemplateRule> getTemplateRuleListById(Long templateId);
 
     void delTemplate(Long id);
 }

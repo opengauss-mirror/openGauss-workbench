@@ -13,11 +13,15 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.nctigba.observability.sql.constants.CommonConstants;
+import com.nctigba.observability.sql.model.history.dto.HisDiagnosisTaskDTO;
 import com.nctigba.observability.sql.model.history.query.OptionQuery;
 import com.nctigba.observability.sql.model.history.result.TaskState;
+import com.nctigba.observability.sql.model.history.result.TaskType;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.opengauss.admin.common.core.domain.model.ops.OpsClusterVO;
 
 import java.io.PrintWriter;
@@ -35,6 +39,7 @@ import java.util.List;
 @Data
 @TableName(value = "his_diagnosis_task_info", autoResultMap = true)
 @Accessors(chain = true)
+@NoArgsConstructor
 @Slf4j
 public class HisDiagnosisTask {
     @TableId(type = IdType.AUTO)
@@ -47,6 +52,14 @@ public class HisDiagnosisTask {
     String dbName;
     @TableField("task_name")
     String taskName;
+    @TableField("sql_id")
+    String sqlId;
+    Integer pid;
+    @TableField("debug_query_id")
+    Long debugQueryId;
+    @TableField("session_id")
+    Long sessionId;
+    String sql;
     @TableField("his_data_start_time")
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'", timezone = "UTC")
     Date hisDataStartTime;
@@ -68,6 +81,10 @@ public class HisDiagnosisTask {
     List<HisDiagnosisThreshold> thresholds;
     @TableField(value = "node_vo_sub", typeHandler = TypeHander.class)
     OpsClusterVO nodeVOSub;
+    @TableField("task_type")
+    TaskType taskType;
+    @TableField("diagnosis_type")
+    String diagnosisType;
     @TableField("is_deleted")
     Integer isDeleted = 0;
     @TableField(value = "create_time")
@@ -76,6 +93,43 @@ public class HisDiagnosisTask {
     @TableField(value = "update_time", fill = FieldFill.UPDATE)
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'", timezone = "UTC")
     Date updateTime = new Date();
+
+    /**
+     * Construction method
+     *
+     * @param taskDTO Diagnosis task info
+     * @param optionDTOList Diagnosis option
+     * @param thresholdList Diagnosis threshold
+     */
+    public HisDiagnosisTask(HisDiagnosisTaskDTO taskDTO, List<OptionQuery> optionDTOList,
+            List<HisDiagnosisThreshold> thresholdList) {
+        this.clusterId = taskDTO.getClusterId();
+        this.nodeId = taskDTO.getNodeId();
+        this.dbName = taskDTO.getDbName();
+        this.taskName = taskDTO.getTaskName();
+        this.taskType = TaskType.MANUAL;
+        this.sql = taskDTO.getSql();
+        this.hisDataStartTime = taskDTO.getHisDataStartTime();
+        this.hisDataEndTime = taskDTO.getHisDataEndTime();
+        this.configs = optionDTOList;
+        this.thresholds = thresholdList;
+        this.state = TaskState.CREATE;
+        this.remarks = "***Ready to start diagnosis***";
+        this.diagnosisType = taskDTO.getDiagnosisType();
+        this.taskStartTime = new Date();
+    }
+
+    /**
+     * Explain analysis sql
+     *
+     * @return sql
+     */
+    public String analysisSql() {
+        if (getSessionId() != 0L) {
+            return StringUtils.isBlank(sql) ? "" : "explain analyze " + sql;
+        }
+        return sql;
+    }
 
     public static class TypeHander extends JacksonTypeHandler {
         public TypeHander(Class<?> type) {

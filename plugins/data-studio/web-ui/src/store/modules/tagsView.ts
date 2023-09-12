@@ -4,12 +4,14 @@
 import { defineStore } from 'pinia';
 import { storePersist } from '@/config';
 import { manualStringify, loadingInstance } from '@/utils';
+import { VisitedView } from '@/types/tagsView';
+import { RouteLocationNormalized } from 'vue-router';
 
 let loading = null;
 export const useTagsViewStore = defineStore({
   id: 'tagsViewState',
   state: () => ({
-    visitedViews: [],
+    visitedViews: <VisitedView[]>[],
     maxTagsId: 0,
   }),
   getters: {
@@ -36,13 +38,13 @@ export const useTagsViewStore = defineStore({
       });
       this.maxTagsId = Math.max(...ids, 0);
     },
-    getViewByRoute(route) {
+    getViewByRoute(route: RouteLocationNormalized) {
       return this.visitedViews.find((item) => item.path === route.path);
     },
-    getViewById(id) {
+    getViewById(id: number | string) {
       return this.visitedViews.find((item) => item.id == id);
     },
-    getViewByOid(oid) {
+    getViewByOid(oid: string) {
       return this.visitedViews.find((item) => item.query?.oid == oid);
     },
     setVisitedViewsStorage() {
@@ -55,22 +57,23 @@ export const useTagsViewStore = defineStore({
         manualStringify(visitedViews),
       );
     },
-    removeView(routes) {
+    removeView(routes: string[]) {
       return new Promise((resolve) => {
         this.visitedViews = this.visitedViews.filter((item) => !routes.includes(item.path));
         this.setVisitedViewsStorage();
         resolve(null);
       });
     },
-    addVisitedView(view) {
-      if (this.visitedViews.some((v) => v.path === view.path)) return;
+    addVisitedView(route: RouteLocationNormalized) {
+      if (this.visitedViews.some((v) => v.path === route.path)) return;
       this.visitedViews.push(
-        Object.assign({}, view, {
+        Object.assign({}, route, {
           id: ++this.maxTagsId,
-          title: view.meta?.title || view.query?.title || 'no-name',
-          connectInfoName: view.query?.connectInfoName,
-          dbname: view.query?.dbname,
-          terminalNum: view.query?.terminalNum,
+          title: route.meta?.title || route.query?.title || 'no-name',
+          fileName: route.query?.fileName || 'no-name',
+          connectInfoName: route.query?.connectInfoName,
+          dbname: route.query?.dbname,
+          terminalNum: route.query?.terminalNum,
           isReload: true,
           loadTime: 1,
           isEdit: false,
@@ -78,16 +81,16 @@ export const useTagsViewStore = defineStore({
       );
       this.setVisitedViewsStorage();
     },
-    delView(view) {
+    delView(view: VisitedView | RouteLocationNormalized) {
       this.delVisitedView(view);
       return { visitedViews: [...this.visitedViews] };
     },
-    delCurrentView(route) {
+    delCurrentView(route: Record<'path', string>) {
       const currentView = this.visitedViews.find((item) => item.path === route.path);
       if (!currentView || currentView.path == '/home') return;
       this.delVisitedView(currentView);
     },
-    delVisitedView(view) {
+    delVisitedView(view: VisitedView) {
       if (view.path) {
         this.visitedViews = this.visitedViews.filter((v) => {
           return v.path !== view.path || v.meta.affix;
@@ -95,7 +98,7 @@ export const useTagsViewStore = defineStore({
         this.setVisitedViewsStorage();
       }
     },
-    delViewById(id) {
+    delViewById(id: number | string) {
       this.visitedViews = this.visitedViews.filter((v) => {
         return v.id != id || v.meta.affix;
       });
@@ -111,7 +114,7 @@ export const useTagsViewStore = defineStore({
       }
       return this.visitedViews;
     },
-    delDbViews(dbname) {
+    delDbViews(dbname: string) {
       return new Promise((resolve) => {
         this.visitedViews = this.visitedViews.filter((v) => {
           return v.dbname !== dbname || v.meta.affix;
@@ -127,21 +130,21 @@ export const useTagsViewStore = defineStore({
         resolve([...this.visitedViews]);
       });
     },
-    updateVisitedView(view) {
-      for (let v of this.visitedViews) {
+    updateVisitedView(view: VisitedView | RouteLocationNormalized) {
+      for (const v of this.visitedViews) {
         if (v.path === view.path) {
           Object.assign(v, view);
           break;
         }
       }
     },
-    updateEditStatusById(tagId, status) {
+    updateEditStatusById(tagId: number | string, status: boolean) {
       this.getViewById(tagId)!.isEdit = status;
     },
-    updateEditStatusByRoute(route, status) {
+    updateEditStatusByRoute(route: RouteLocationNormalized, status: boolean) {
       this.getViewByRoute(route)!.isEdit = status;
     },
-    reloadView(fullPath) {
+    reloadView(fullPath: string) {
       const view = this.visitedViews.find((item) => item.fullPath == fullPath);
       if (view) {
         view.isReload = false;
@@ -152,7 +155,12 @@ export const useTagsViewStore = defineStore({
         }, 300);
       }
     },
-    getDebugChildViews(parentTagId) {
+    renameTagById(tagId: number | string, newName: string) {
+      const tagView = this.visitedViews.find((item) => item.id == tagId);
+      tagView.fileName = tagView.title = newName;
+      this.setVisitedViewsStorage();
+    },
+    getDebugChildViews(parentTagId: number | string) {
       const availableViews = this.visitedViews.filter((item) => item.name == 'debugChild');
       function findChildViews(availableViews, parentTagId) {
         const already = [];
@@ -170,7 +178,7 @@ export const useTagsViewStore = defineStore({
       }
       return findChildViews(availableViews, parentTagId);
     },
-    closeAllChildViews(rootTagId) {
+    closeAllChildViews(rootTagId: number | string) {
       if (!rootTagId) return;
       loading = loadingInstance();
       const allChildDebugViewIds = this.visitedViews

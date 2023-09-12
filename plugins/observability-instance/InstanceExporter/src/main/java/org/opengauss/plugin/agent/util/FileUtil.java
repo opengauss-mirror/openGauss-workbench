@@ -1,6 +1,7 @@
 /*
  * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
  */
+
 package org.opengauss.plugin.agent.util;
 
 import java.io.FileNotFoundException;
@@ -23,6 +24,6 @@ public class FileUtil {
      */
     public static final void readFileLine(String name, BiConsumer<Integer, String> consumer)
             throws FileNotFoundException, IOException {
-        CmdUtil.readFromCmd(CmdUtil.cmd("cat", name), consumer);
+        CmdUtil.readFromCmd("cat " + name, consumer);
     }
 }

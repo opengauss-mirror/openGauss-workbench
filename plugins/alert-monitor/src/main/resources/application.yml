@@ -29,6 +29,12 @@ spring:
     parser:
       allow_unquoted_control_chars: true
       allow_single_quotes: true
+  thymeleaf:
+    prefix: classpath:/templates/
+    suffix: .html
+    cache: false
+
+
 server.compression:
   enabled: true
   mime-types: application/javascript,text/css,application/json,application/xml,text/html,text/xml,text/plain
@@ -85,3 +91,12 @@ alert:
           exp: sum(rate(agent_disk_read_bytes_total{instance=~\"${instances}\"}[2m])) by (instance) /1024/1024
         - type: trend
           exp: sum(rate(agent_disk_read_bytes_total{instance=~\"${instances}\"}[2m])) by (instance) - sum(rate(agent_disk_read_bytes_total{instance=~\"${instances}\"}[5m] offset 15s)) by (instance)
+
+notify:
+  weCom:
+    accessTokenUrl: https://qyapi.weixin.qq.com/cgi-bin/gettoken
+    sendMsgUrl: https://qyapi.weixin.qq.com/cgi-bin/message/send
+  dingTalk:
+    accessTokenUrl: https://oapi.dingtalk.com/gettoken
+    sendMsgUrl: https://oapi.dingtalk.com/topapi/message/corpconversation/asyncsend_v2
+

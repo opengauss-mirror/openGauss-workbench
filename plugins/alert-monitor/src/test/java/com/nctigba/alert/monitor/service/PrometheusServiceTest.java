@@ -8,10 +8,12 @@ import cn.hutool.http.HttpUtil;
 import com.nctigba.alert.monitor.config.properties.AlertProperty;
 import com.nctigba.alert.monitor.config.properties.AlertmanagerProperty;
 import com.nctigba.alert.monitor.constant.CommonConstants;
+import com.nctigba.alert.monitor.entity.AlertClusterNodeConf;
 import com.nctigba.alert.monitor.entity.AlertConfig;
 import com.nctigba.alert.monitor.entity.AlertTemplateRule;
 import com.nctigba.alert.monitor.entity.AlertTemplateRuleItem;
 import com.nctigba.alert.monitor.entity.NctigbaEnv;
+import com.nctigba.alert.monitor.mapper.AlertClusterNodeConfMapper;
 import com.nctigba.alert.monitor.mapper.AlertTemplateRuleItemMapper;
 import com.nctigba.alert.monitor.mapper.AlertTemplateRuleMapper;
 import com.nctigba.alert.monitor.mapper.NctigbaEnvMapper;
@@ -41,6 +43,7 @@ import java.util.Map;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doNothing;
@@ -84,13 +87,16 @@ public class PrometheusServiceTest {
     @Mock
     private HostUserFacade hostUserFacade;
 
+    @Mock
+    private AlertClusterNodeConfMapper clusterNodeConfMapper;
+
     @Before
     public void setup() {
         MockitoAnnotations.initMocks(this);
     }
 
-    @Test
-    public void testPrometheusEnvDto1() {
+    @Test(expected = ServiceException.class)
+    public void testPrometheusEnvDtoThrowEx1() {
         List<AlertConfig> alertConfigs = new ArrayList<>();
         AlertConfig alertConfig = new AlertConfig().setAlertIp("127.0.0.1").setAlertPort("8080").setId(1L);
         alertConfigs.add(alertConfig);
@@ -104,8 +110,8 @@ public class PrometheusServiceTest {
         verify(envMapper, times(1)).selectOne(any());
     }
 
-    @Test
-    public void testPrometheusEnvDto2() {
+    @Test(expected = ServiceException.class)
+    public void testPrometheusEnvDtoThrowEx2() {
         List<AlertConfig> alertConfigs = new ArrayList<>();
         AlertConfig alertConfig = new AlertConfig().setAlertIp("127.0.0.1").setAlertPort("8080").setId(1L);
         alertConfigs.add(alertConfig);
@@ -119,8 +125,8 @@ public class PrometheusServiceTest {
         verify(envMapper, times(1)).selectOne(any());
     }
 
-    @Test
-    public void testPrometheusEnvDto3() {
+    @Test(expected = ServiceException.class)
+    public void testPrometheusEnvDtoThrowEx3() {
         List<AlertConfig> alertConfigs = new ArrayList<>();
         AlertConfig alertConfig = new AlertConfig().setAlertIp("127.0.0.1").setAlertPort("8080").setId(1L);
         alertConfigs.add(alertConfig);
@@ -135,8 +141,8 @@ public class PrometheusServiceTest {
         verify(envMapper, times(1)).selectOne(any());
     }
 
-    @Test
-    public void testPrometheusEnvDto4() {
+    @Test(expected = ServiceException.class)
+    public void testPrometheusEnvDtoThrowEx4() {
         List<AlertConfig> alertConfigs = new ArrayList<>();
         AlertConfig alertConfig = new AlertConfig().setAlertIp("127.0.0.1").setAlertPort("8080").setId(1L);
         alertConfigs.add(alertConfig);
@@ -160,8 +166,8 @@ public class PrometheusServiceTest {
         verify(hostUserFacade, times(1)).listHostUserByHostId(anyString());
     }
 
-    @Test
-    public void testPrometheusEnvDto5() {
+    @Test(expected = ServiceException.class)
+    public void testPrometheusEnvDtoThrowEx5() {
         List<AlertConfig> alertConfigs = new ArrayList<>();
         AlertConfig alertConfig = new AlertConfig().setAlertIp("127.0.0.1").setAlertPort("8080").setId(1L);
         alertConfigs.add(alertConfig);
@@ -622,12 +628,32 @@ public class PrometheusServiceTest {
     }
 
     @Test
-    public void testUpdateRuleConfigWithNullClusterNode() throws IOException {
+    public void testUpdateRuleConfigWithNullTemplateRules() throws IOException {
         try (MockedStatic<SshSession> mockedStatic = mockStatic(SshSession.class)) {
             testPrometheusEnvDtoNormal();
             SshSession sshSession = mock(SshSession.class);
             mockedStatic.when(() -> SshSession.connect(anyString(), anyInt(), anyString(), anyString())).thenReturn(
                 sshSession);
+            List<AlertTemplateRule> alertTemplateRules = new ArrayList<>();
+            when(alertTemplateRuleMapper.selectList(any())).thenReturn(alertTemplateRules);
+            doNothing().when(sshSession).close();
+            Map<Long, String> ruleConfigMap = new HashMap<>();
+            ruleConfigMap.put(1L, "");
+            prometheusService.updateRuleConfig(ruleConfigMap);
+            verify(alertTemplateRuleMapper, times(1)).selectList(any());
+        }
+    }
+
+    @Test
+    public void testUpdateRuleConfigWithNullClusterNodeIds1() throws IOException {
+        try (MockedStatic<SshSession> mockedStatic = mockStatic(SshSession.class)) {
+            testPrometheusEnvDtoNormal();
+            SshSession sshSession = mock(SshSession.class);
+            mockedStatic.when(() -> SshSession.connect(anyString(), anyInt(), anyString(), anyString())).thenReturn(
+                sshSession);
+            List<AlertTemplateRule> alertTemplateRules = new ArrayList<>();
+            alertTemplateRules.add(new AlertTemplateRule());
+            when(alertTemplateRuleMapper.selectList(any())).thenReturn(alertTemplateRules);
             when(alertProperty.getRuleFilePrefix()).thenReturn("rule/");
             when(sshSession.execute("ls /data")).thenReturn("");
             doNothing().when(sshSession).close();
@@ -635,27 +661,68 @@ public class PrometheusServiceTest {
             Map<Long, String> ruleConfigMap = new HashMap<>();
             ruleConfigMap.put(1L, "");
             prometheusService.updateRuleConfig(ruleConfigMap);
-
-            verify(alertConfigService, times(1)).list();
-            verify(envMapper, times(1)).selectOne(any());
-            verify(hostFacade, times(1)).getById(anyString());
-            verify(hostUserFacade, times(1)).listHostUserByHostId(anyString());
-            verify(encryptionUtils, times(1)).getKey();
-            verify(encryptionUtils, times(1)).decrypt(anyString());
             verify(alertProperty, times(4)).getRuleFilePrefix();
-            verify(sshSession, times(1)).execute("ls /data");
-            verify(sshSession, times(1)).close();
         }
     }
 
     @Test
-    public void testUpdateRuleConfig1() throws IOException {
+    public void testUpdateRuleConfigWithNullClusterNodeIds2() throws IOException {
+        try (MockedStatic<SshSession> mockedStatic = mockStatic(SshSession.class)) {
+            testPrometheusEnvDtoNormal();
+            SshSession sshSession = mock(SshSession.class);
+            mockedStatic.when(() -> SshSession.connect(anyString(), anyInt(), anyString(), anyString())).thenReturn(
+                sshSession);
+            List<AlertTemplateRule> alertTemplateRules = new ArrayList<>();
+            alertTemplateRules.add(new AlertTemplateRule());
+            when(alertTemplateRuleMapper.selectList(any())).thenReturn(alertTemplateRules);
+            when(alertProperty.getRuleFilePrefix()).thenReturn("rule/");
+            when(sshSession.execute("ls /data")).thenReturn("rule");
+            when(sshSession.execute("ls /data/rule/")).thenReturn("");
+            when(alertProperty.getRuleFileSuffix()).thenReturn(".yml");
+            doNothing().when(sshSession).close();
+
+            Map<Long, String> ruleConfigMap = new HashMap<>();
+            ruleConfigMap.put(1L, "");
+            prometheusService.updateRuleConfig(ruleConfigMap);
+            verify(alertProperty, times(1)).getRuleFileSuffix();
+        }
+    }
+
+    @Test
+    public void testUpdateRuleConfigWithNullClusterNodeIds3() throws IOException {
         try (MockedStatic<SshSession> mockedStatic = mockStatic(SshSession.class);
              MockedStatic<HttpUtil> mockedStatic2 = mockStatic(HttpUtil.class)) {
             testPrometheusEnvDtoNormal();
             SshSession sshSession = mock(SshSession.class);
             mockedStatic.when(() -> SshSession.connect(anyString(), anyInt(), anyString(), anyString())).thenReturn(
                 sshSession);
+            List<AlertTemplateRule> alertTemplateRules = new ArrayList<>();
+            alertTemplateRules.add(new AlertTemplateRule());
+            when(alertTemplateRuleMapper.selectList(any())).thenReturn(alertTemplateRules);
+            when(alertProperty.getRuleFilePrefix()).thenReturn("rule/");
+            when(sshSession.execute("ls /data")).thenReturn("rule");
+            when(sshSession.execute("ls /data/rule/")).thenReturn("rule_template_1.yml");
+            when(alertProperty.getRuleFileSuffix()).thenReturn(".yml");
+            when(sshSession.execute("rm /data/rule/rule_template_1.yml")).thenReturn("");
+            mockedStatic2.when(() -> HttpUtil.post(anyString(), anyString())).thenReturn("");
+            doNothing().when(sshSession).close();
+
+            Map<Long, String> ruleConfigMap = new HashMap<>();
+            ruleConfigMap.put(1L, "");
+            prometheusService.updateRuleConfig(ruleConfigMap);
+        }
+    }
+
+    @Test
+    public void testUpdateRuleConfigWithMkdirOrTouch() throws IOException {
+        try (MockedStatic<SshSession> mockedStatic = mockStatic(SshSession.class);
+             MockedStatic<HttpUtil> mockedStatic2 = mockStatic(HttpUtil.class)) {
+            testPrometheusEnvDtoNormal();
+            SshSession sshSession = mock(SshSession.class);
+            mockedStatic.when(() -> SshSession.connect(anyString(), anyInt(), anyString(), anyString())).thenReturn(
+                sshSession);
+
+            mockAlertTemplateRulesData();
             when(alertProperty.getRuleFilePrefix()).thenReturn("rule/");
             when(sshSession.execute("ls /data")).thenReturn("");
             when(sshSession.execute("mkdir /data/rule/")).thenReturn("");
@@ -663,24 +730,7 @@ public class PrometheusServiceTest {
             when(alertProperty.getRuleFileSuffix()).thenReturn(".yml");
             when(sshSession.execute("touch /data/rule/rule_template_1.yml")).thenReturn("");
             when(sshSession.execute("cat /data/rule/rule_template_1.yml")).thenReturn("");
-
-            List<AlertTemplateRule> alertTemplateRules = new ArrayList<>();
-            AlertTemplateRule alertTemplateRule = new AlertTemplateRule();
-            alertTemplateRule.setId(1L).setTemplateId(1L).setRuleId(1L).setRuleName("CPU使用率过高").setLevel("warn")
-                .setRuleType("index").setRuleExpComb("A").setRuleContent("${nodeName}的CPU使用率超过90%")
-                .setNotifyDuration(2).setNotifyDurationUnit("m").setIsRepeat(CommonConstants.IS_REPEAT).setIsSilence(0)
-                .setAlertNotify("firing").setNotifyWayIds("1");
-            alertTemplateRules.add(alertTemplateRule);
-            when(alertTemplateRuleMapper.selectList(any())).thenReturn(alertTemplateRules);
-            List<AlertTemplateRuleItem> alertTemplateRuleItems = new ArrayList<>();
-            AlertTemplateRuleItem alertTemplateRuleItem = new AlertTemplateRuleItem();
-            alertTemplateRuleItem.setId(1L).setTemplateRuleId(1L).setRuleItemId(1L).setRuleMark("A")
-                .setRuleExpName("cpuUsage").setOperate(">=").setLimitValue("90").setUnit("%").setRuleExp("100 - avg"
-                    + "(rate(agent_cpu_seconds_total{mode=\"idle\",instance=~\"${instances}\"}[5m])) by(instance) "
-                    + " * 100").setAction("normal");
-            alertTemplateRuleItems.add(alertTemplateRuleItem);
-            when(alertTemplateRuleItemMapper.selectList(any())).thenReturn(alertTemplateRuleItems);
-
+            mockAlertTemplateRuleItemsData();
             when(sshSession.execute("rm /data/rule/rule_template_1.yml")).thenReturn("");
             doNothing().when(sshSession).upload(anyString(), anyString());
             mockedStatic2.when(() -> HttpUtil.post(anyString(), anyString())).thenReturn("");
@@ -689,80 +739,86 @@ public class PrometheusServiceTest {
             Map<Long, String> ruleConfigMap = new HashMap<>();
             ruleConfigMap.put(1L, "node1");
             prometheusService.updateRuleConfig(ruleConfigMap);
-
-            verify(encryptionUtils, times(1)).getKey();
-            verify(encryptionUtils, times(1)).decrypt(anyString());
-            verify(alertProperty, times(5)).getRuleFilePrefix();
-            verify(alertProperty, times(2)).getRuleFileSuffix();
-            verify(sshSession, times(6)).execute(anyString());
-            verify(sshSession, times(1)).upload(anyString(), anyString());
-            verify(sshSession, times(1)).close();
         }
     }
 
     @Test
-    public void testUpdateRuleConfigWithNullClusterNode2() throws IOException {
-        try (MockedStatic<SshSession> mockedStatic = mockStatic(SshSession.class)) {
-            testPrometheusEnvDtoNormal();
-            SshSession sshSession = mock(SshSession.class);
-            mockedStatic.when(() -> SshSession.connect(anyString(), anyInt(), anyString(), anyString())).thenReturn(
-                sshSession);
-            when(alertProperty.getRuleFilePrefix()).thenReturn("rule/");
-            when(sshSession.execute("ls /data")).thenReturn("rule");
-            when(sshSession.execute("ls /data/rule/")).thenReturn("");
-            doNothing().when(sshSession).close();
-
-            Map<Long, String> ruleConfigMap = new HashMap<>();
-            ruleConfigMap.put(1L, "");
-            prometheusService.updateRuleConfig(ruleConfigMap);
-
-            verify(alertConfigService, times(1)).list();
-            verify(envMapper, times(1)).selectOne(any());
-            verify(hostFacade, times(1)).getById(anyString());
-            verify(hostUserFacade, times(1)).listHostUserByHostId(anyString());
-            verify(encryptionUtils, times(1)).getKey();
-            verify(encryptionUtils, times(1)).decrypt(anyString());
-            verify(alertProperty, times(4)).getRuleFilePrefix();
-            verify(sshSession, times(1)).execute("ls /data");
-            verify(sshSession, times(1)).execute("ls /data/rule/");
-            verify(sshSession, times(1)).close();
-        }
-    }
-
-    @Test
-    public void testUpdateRuleConfigWithNullClusterNode3() throws IOException {
+    public void testUpdateRuleConfig() throws IOException {
         try (MockedStatic<SshSession> mockedStatic = mockStatic(SshSession.class);
              MockedStatic<HttpUtil> mockedStatic2 = mockStatic(HttpUtil.class)) {
             testPrometheusEnvDtoNormal();
             SshSession sshSession = mock(SshSession.class);
             mockedStatic.when(() -> SshSession.connect(anyString(), anyInt(), anyString(), anyString())).thenReturn(
                 sshSession);
+
+            mockAlertTemplateRulesData();
             when(alertProperty.getRuleFilePrefix()).thenReturn("rule/");
             when(sshSession.execute("ls /data")).thenReturn("rule");
             when(sshSession.execute("ls /data/rule/")).thenReturn("rule_template_1.yml");
             when(alertProperty.getRuleFileSuffix()).thenReturn(".yml");
-            when(sshSession.execute("rm -f /data/rule/rule_template_1.yml")).thenReturn("");
+            when(sshSession.execute("cat /data/rule/rule_template_1.yml")).thenReturn(mockRuleConfigData2());
+            mockAlertTemplateRuleItemsData();
+            when(sshSession.execute("rm /data/rule/rule_template_1.yml")).thenReturn("");
+            doNothing().when(sshSession).upload(anyString(), anyString());
             mockedStatic2.when(() -> HttpUtil.post(anyString(), anyString())).thenReturn("");
             doNothing().when(sshSession).close();
 
             Map<Long, String> ruleConfigMap = new HashMap<>();
-            ruleConfigMap.put(1L, "");
+            ruleConfigMap.put(1L, "node1");
             prometheusService.updateRuleConfig(ruleConfigMap);
-
-            verify(alertConfigService, times(1)).list();
-            verify(envMapper, times(1)).selectOne(any());
-            verify(hostFacade, times(1)).getById(anyString());
-            verify(hostUserFacade, times(1)).listHostUserByHostId(anyString());
-            verify(encryptionUtils, times(1)).getKey();
-            verify(encryptionUtils, times(1)).decrypt(anyString());
-            verify(alertProperty, times(4)).getRuleFilePrefix();
-            verify(sshSession, times(1)).execute("ls /data");
-            verify(sshSession, times(1)).execute("ls /data/rule/");
-            verify(alertProperty, times(1)).getRuleFileSuffix();
-            verify(sshSession, times(1))
-                .execute("rm -f /data/rule/rule_template_1.yml");
-            verify(sshSession, times(1)).close();
         }
+    }
+
+    private void mockAlertTemplateRulesData() {
+        List<AlertTemplateRule> alertTemplateRules = new ArrayList<>();
+        AlertTemplateRule alertTemplateRule1 = new AlertTemplateRule();
+        alertTemplateRule1.setId(1L).setTemplateId(1L).setRuleId(1L).setRuleName("CPU使用率过高").setLevel("warn")
+            .setRuleType("index").setRuleExpComb("A").setRuleContent("${nodeName}的CPU使用率超过90%")
+            .setNotifyDuration(2).setNotifyDurationUnit("m").setIsRepeat(CommonConstants.IS_REPEAT).setIsSilence(0)
+            .setAlertNotify("firing").setNotifyWayIds("1").setAlertDesc("test");
+        alertTemplateRules.add(alertTemplateRule1);
+        AlertTemplateRule alertTemplateRule2 = new AlertTemplateRule();
+        alertTemplateRule2.setId(2L).setTemplateId(1L).setRuleId(2L).setRuleName("CPU使用率过高").setLevel("warn")
+            .setRuleType("index").setRuleExpComb("A").setRuleContent("${nodeName}的CPU使用率超过90%")
+            .setNotifyDuration(2).setNotifyDurationUnit("m").setIsRepeat(CommonConstants.IS_REPEAT).setIsSilence(0)
+            .setAlertNotify("firing").setNotifyWayIds("1");
+        alertTemplateRules.add(alertTemplateRule2);
+        AlertTemplateRule alertTemplateRule3 = new AlertTemplateRule();
+        alertTemplateRule3.setId(1L).setTemplateId(1L).setRuleId(1L).setRuleName("CPU使用率过高").setLevel("info")
+            .setRuleType("index").setRuleExpComb("A").setRuleContent("${nodeName}的CPU使用率超过90%")
+            .setNotifyDuration(2).setNotifyDurationUnit("m").setIsRepeat(CommonConstants.IS_REPEAT).setIsSilence(0)
+            .setAlertNotify("firing").setNotifyWayIds("1");
+        alertTemplateRules.add(alertTemplateRule3);
+        when(alertTemplateRuleMapper.selectList(any())).thenReturn(alertTemplateRules);
+    }
+
+    private void mockAlertTemplateRuleItemsData() {
+        List<AlertTemplateRuleItem> alertTemplateRuleItems1 = new ArrayList<>();
+        AlertTemplateRuleItem alertTemplateRuleItem1 = new AlertTemplateRuleItem();
+        alertTemplateRuleItem1.setId(1L).setTemplateRuleId(1L).setRuleItemId(1L).setRuleMark("A")
+            .setRuleExpName("cpuUsage").setOperate(">=").setLimitValue("90").setUnit("%").setRuleExp("100 - avg"
+                + "(rate(agent_cpu_seconds_total{mode=\"idle\",instance=~\"${instances}\"}[5m])) by(instance) "
+                + " * 100").setAction("normal");
+        alertTemplateRuleItems1.add(alertTemplateRuleItem1);
+
+        List<AlertTemplateRuleItem> alertTemplateRuleItems2 = new ArrayList<>();
+        AlertTemplateRuleItem alertTemplateRuleItem2 = new AlertTemplateRuleItem();
+        alertTemplateRuleItem2.setId(2L).setTemplateRuleId(2L).setRuleItemId(2L).setRuleMark("A")
+            .setRuleExpName("cpuUsage").setOperate(">=").setLimitValue("90").setUnit("%").setRuleExp("100 - avg"
+                + "(rate(agent_cpu_seconds_total{mode=\"idle\",instance=~\"${instances}\"}[5m])) by(instance) "
+                + " * 100").setAction("normal");
+        alertTemplateRuleItems2.add(alertTemplateRuleItem2);
+
+        List<AlertTemplateRuleItem> alertTemplateRuleItems3 = new ArrayList<>();
+        AlertTemplateRuleItem alertTemplateRuleItem3 = new AlertTemplateRuleItem();
+        alertTemplateRuleItem3.setId(3L).setTemplateRuleId(1L).setRuleItemId(2L).setRuleMark("A")
+            .setRuleExpName("cpuUsage").setOperate(">=").setLimitValue("90").setUnit("%").setRuleExp("100 - avg"
+                + "(rate(agent_cpu_seconds_total{mode=\"idle\",instance=~\"${instances}\"}[5m])) by(instance) "
+                + " * 100").setAction("normal");
+        alertTemplateRuleItems3.add(alertTemplateRuleItem3);
+
+        when(alertTemplateRuleItemMapper.selectList(any())).thenReturn(alertTemplateRuleItems1)
+            .thenReturn(alertTemplateRuleItems2).thenReturn(alertTemplateRuleItems3);
     }
 
     private void testPrometheusEnvDtoNormal() {
@@ -786,5 +842,293 @@ public class PrometheusServiceTest {
         when(hostUserFacade.listHostUserByHostId(anyString())).thenReturn(hostUserList);
         when(encryptionUtils.getKey()).thenReturn("");
         when(encryptionUtils.decrypt(anyString())).thenReturn("passwd");
+    }
+
+    @Test
+    public void testUpdateNullRuleConfigByTemplateId() {
+        List<AlertClusterNodeConf> nodeConfList = new ArrayList<>();
+        when(clusterNodeConfMapper.selectList(any())).thenReturn(nodeConfList);
+        prometheusService.updateRuleConfigByTemplateId(anyLong());
+        verify(clusterNodeConfMapper, times(1)).selectList(any());
+    }
+
+    @Test
+    public void testUpdateRuleConfigByTemplateId() throws IOException {
+        try (MockedStatic<SshSession> mockedStatic = mockStatic(SshSession.class)) {
+            List<AlertClusterNodeConf> nodeConfList = new ArrayList<>();
+            nodeConfList.add(new AlertClusterNodeConf().setTemplateId(1L).setClusterNodeId("node1"));
+            when(clusterNodeConfMapper.selectList(any())).thenReturn(nodeConfList);
+            testPrometheusEnvDtoNormal();
+            SshSession sshSession = mock(SshSession.class);
+            mockedStatic.when(() -> SshSession.connect(anyString(), anyInt(), anyString(), anyString())).thenReturn(
+                sshSession);
+            List<AlertTemplateRule> alertTemplateRules = new ArrayList<>();
+            when(alertTemplateRuleMapper.selectList(any())).thenReturn(alertTemplateRules);
+            doNothing().when(sshSession).close();
+
+            prometheusService.updateRuleConfigByTemplateId(anyLong());
+        }
+    }
+
+    @Test
+    public void testUpdateNullRuleByTemplateRule() {
+        List<AlertClusterNodeConf> nodeConfList = new ArrayList<>();
+        when(clusterNodeConfMapper.selectList(any())).thenReturn(nodeConfList);
+        AlertTemplateRule alertTemplateRule = new AlertTemplateRule().setTemplateId(1L);
+        prometheusService.updateRuleByTemplateRule(alertTemplateRule);
+        verify(clusterNodeConfMapper, times(1)).selectList(any());
+    }
+
+    @Test
+    public void testUpdateRuleByTemplateRuleWithEmptyGroups() throws IOException {
+        try (MockedStatic<SshSession> mockedStatic = mockStatic(SshSession.class);
+             MockedStatic<HttpUtil> mockedStatic2 = mockStatic(HttpUtil.class)) {
+            List<AlertClusterNodeConf> nodeConfList = new ArrayList<>();
+            nodeConfList.add(new AlertClusterNodeConf().setTemplateId(1L).setClusterNodeId("node1"));
+            when(clusterNodeConfMapper.selectList(any())).thenReturn(nodeConfList);
+            testPrometheusEnvDtoNormal();
+            SshSession sshSession = mock(SshSession.class);
+            mockedStatic.when(() -> SshSession.connect(anyString(), anyInt(), anyString(), anyString())).thenReturn(
+                sshSession);
+            when(alertProperty.getRuleFilePrefix()).thenReturn("rules/");
+            when(sshSession.execute("ls /data")).thenReturn("");
+            when(sshSession.execute("touch /data/rules/")).thenReturn("");
+            when(sshSession.execute("ls /data/rules/")).thenReturn("");
+            when(alertProperty.getRuleFileSuffix()).thenReturn(".yml");
+            when(sshSession.execute("touch /data/rules/rule_template_1.yml")).thenReturn("");
+            when(sshSession.execute("cat /data/rules/rule_template_1.yml")).thenReturn("");
+            when(sshSession.execute("rm /data/rules/rule_template_1.yml")).thenReturn("");
+            doNothing().when(sshSession).upload(anyString(), anyString());
+            mockedStatic2.when(() -> HttpUtil.post(anyString(), anyString())).thenReturn("");
+            doNothing().when(sshSession).close();
+
+            AlertTemplateRule alertTemplateRule = new AlertTemplateRule();
+            alertTemplateRule.setId(1L).setTemplateId(1L).setRuleId(1L).setRuleName("CPU使用率过高").setLevel("warn")
+                .setRuleType("index").setRuleExpComb("A").setRuleContent("${nodeName}的CPU使用率超过90%")
+                .setNotifyDuration(2).setNotifyDurationUnit("m").setIsRepeat(CommonConstants.IS_REPEAT).setIsSilence(0)
+                .setAlertNotify("firing").setNotifyWayIds("1").setAlertDesc("test");
+            List<AlertTemplateRuleItem> alertTemplateRuleItems = new ArrayList<>();
+            AlertTemplateRuleItem alertTemplateRuleItem = new AlertTemplateRuleItem();
+            alertTemplateRuleItem.setId(1L).setTemplateRuleId(1L).setRuleItemId(1L).setRuleMark("A")
+                .setRuleExpName("cpuUsage").setOperate(">=").setLimitValue("90").setUnit("%").setRuleExp("100 - avg"
+                    + "(rate(agent_cpu_seconds_total{mode=\"idle\",instance=~\"${instances}\"}[5m])) by(instance) "
+                    + " * 100").setAction("normal");
+            alertTemplateRuleItems.add(alertTemplateRuleItem);
+            alertTemplateRule.setAlertRuleItemList(alertTemplateRuleItems);
+            prometheusService.updateRuleByTemplateRule(alertTemplateRule);
+        }
+    }
+
+    @Test
+    public void testUpdateRuleByTemplateRuleWithNewGroups() throws IOException {
+        try (MockedStatic<SshSession> mockedStatic = mockStatic(SshSession.class);
+             MockedStatic<HttpUtil> mockedStatic2 = mockStatic(HttpUtil.class)) {
+            List<AlertClusterNodeConf> nodeConfList = new ArrayList<>();
+            nodeConfList.add(new AlertClusterNodeConf().setTemplateId(1L).setClusterNodeId("node1"));
+            when(clusterNodeConfMapper.selectList(any())).thenReturn(nodeConfList);
+            testPrometheusEnvDtoNormal();
+            SshSession sshSession = mock(SshSession.class);
+            mockedStatic.when(() -> SshSession.connect(anyString(), anyInt(), anyString(), anyString())).thenReturn(
+                sshSession);
+            when(alertProperty.getRuleFilePrefix()).thenReturn("rules/");
+            when(sshSession.execute("ls /data")).thenReturn("rules");
+            when(sshSession.execute("ls /data/rules/")).thenReturn("rule_template_1.yml");
+            when(alertProperty.getRuleFileSuffix()).thenReturn(".yml");
+            when(sshSession.execute("cat /data/rules/rule_template_1.yml")).thenReturn(mockRuleConfigData1());
+            when(sshSession.execute("rm /data/rules/rule_template_1.yml")).thenReturn("");
+            doNothing().when(sshSession).upload(anyString(), anyString());
+            mockedStatic2.when(() -> HttpUtil.post(anyString(), anyString())).thenReturn("");
+            doNothing().when(sshSession).close();
+
+            AlertTemplateRule alertTemplateRule = new AlertTemplateRule();
+            alertTemplateRule.setId(1L).setTemplateId(1L).setRuleId(1L).setRuleName("CPU使用率过高").setLevel("warn")
+                .setRuleType("index").setRuleExpComb("A").setRuleContent("${nodeName}的CPU使用率超过90%")
+                .setNotifyDuration(2).setNotifyDurationUnit("m").setIsRepeat(CommonConstants.IS_REPEAT).setIsSilence(0)
+                .setAlertNotify("firing").setNotifyWayIds("1").setAlertDesc("test");
+            List<AlertTemplateRuleItem> alertTemplateRuleItems = new ArrayList<>();
+            AlertTemplateRuleItem alertTemplateRuleItem = new AlertTemplateRuleItem();
+            alertTemplateRuleItem.setId(1L).setTemplateRuleId(1L).setRuleItemId(1L).setRuleMark("A")
+                .setRuleExpName("cpuUsage").setOperate(">=").setLimitValue("90").setUnit("%").setRuleExp("100 - avg"
+                    + "(rate(agent_cpu_seconds_total{mode=\"idle\",instance=~\"${instances}\"}[5m])) by(instance) "
+                    + " * 100").setAction("normal");
+            alertTemplateRuleItems.add(alertTemplateRuleItem);
+            alertTemplateRule.setAlertRuleItemList(alertTemplateRuleItems);
+            prometheusService.updateRuleByTemplateRule(alertTemplateRule);
+        }
+    }
+
+    private String mockRuleConfigData1() {
+        return "groups:" + CommonConstants.LINE_SEPARATOR
+            + "- name: rule_1675682442954919938" + CommonConstants.LINE_SEPARATOR
+            + "  rules:" + CommonConstants.LINE_SEPARATOR
+            + "  - alert: rule_1675682442954919938" + CommonConstants.LINE_SEPARATOR
+            + "    expr: 100 - avg(rate(node_cpu_seconds_total{mode=\"idle\","
+            + "instance=~\"f8363fcd-d2db-4d00-8ebc-a8fcb6702dac\"}[5m]))" + CommonConstants.LINE_SEPARATOR
+            + "      by(instance)  * 100 >=99" + CommonConstants.LINE_SEPARATOR
+            + "    labels:" + CommonConstants.LINE_SEPARATOR
+            + "      level: warn" + CommonConstants.LINE_SEPARATOR
+            + "      templateId: '1675682487615868929'" + CommonConstants.LINE_SEPARATOR
+            + "      templateRuleId: '1675682442954919938'" + CommonConstants.LINE_SEPARATOR
+            + "    annotations:" + CommonConstants.LINE_SEPARATOR
+            + "      summary: CPU使用率" + CommonConstants.LINE_SEPARATOR
+            + "      description: ''" + CommonConstants.LINE_SEPARATOR
+            + "    for: 2m";
+    }
+
+    @Test
+    public void testUpdateRuleByTemplateRuleWithUpdateGroups() throws IOException {
+        try (MockedStatic<SshSession> mockedStatic = mockStatic(SshSession.class);
+             MockedStatic<HttpUtil> mockedStatic2 = mockStatic(HttpUtil.class)) {
+            List<AlertClusterNodeConf> nodeConfList = new ArrayList<>();
+            nodeConfList.add(new AlertClusterNodeConf().setTemplateId(1L).setClusterNodeId("node1"));
+            when(clusterNodeConfMapper.selectList(any())).thenReturn(nodeConfList);
+            testPrometheusEnvDtoNormal();
+            SshSession sshSession = mock(SshSession.class);
+            mockedStatic.when(() -> SshSession.connect(anyString(), anyInt(), anyString(), anyString())).thenReturn(
+                sshSession);
+            when(alertProperty.getRuleFilePrefix()).thenReturn("rules/");
+            when(sshSession.execute("ls /data")).thenReturn("rules");
+            when(sshSession.execute("ls /data/rules/")).thenReturn("rule_template_1.yml");
+            when(alertProperty.getRuleFileSuffix()).thenReturn(".yml");
+            when(sshSession.execute("cat /data/rules/rule_template_1.yml")).thenReturn(mockRuleConfigData2());
+            when(sshSession.execute("rm /data/rules/rule_template_1.yml")).thenReturn("");
+            doNothing().when(sshSession).upload(anyString(), anyString());
+            mockedStatic2.when(() -> HttpUtil.post(anyString(), anyString())).thenReturn("");
+            doNothing().when(sshSession).close();
+
+            AlertTemplateRule alertTemplateRule = new AlertTemplateRule();
+            alertTemplateRule.setId(1L).setTemplateId(1L).setRuleId(1L).setRuleName("CPU使用率过高").setLevel("warn")
+                .setRuleType("index").setRuleExpComb("A").setRuleContent("${nodeName}的CPU使用率超过90%")
+                .setNotifyDuration(2).setNotifyDurationUnit("m").setIsRepeat(CommonConstants.IS_REPEAT).setIsSilence(0)
+                .setAlertNotify("firing").setNotifyWayIds("1").setAlertDesc("test");
+            List<AlertTemplateRuleItem> alertTemplateRuleItems = new ArrayList<>();
+            AlertTemplateRuleItem alertTemplateRuleItem = new AlertTemplateRuleItem();
+            alertTemplateRuleItem.setId(1L).setTemplateRuleId(1L).setRuleItemId(1L).setRuleMark("A")
+                .setRuleExpName("cpuUsage").setOperate(">=").setLimitValue("90").setUnit("%").setRuleExp("100 - avg"
+                    + "(rate(agent_cpu_seconds_total{mode=\"idle\",instance=~\"${instances}\"}[5m])) by(instance) "
+                    + " * 100").setAction("normal");
+            alertTemplateRuleItems.add(alertTemplateRuleItem);
+            alertTemplateRule.setAlertRuleItemList(alertTemplateRuleItems);
+            prometheusService.updateRuleByTemplateRule(alertTemplateRule);
+        }
+    }
+
+    private String mockRuleConfigData2() {
+        return "groups:" + CommonConstants.LINE_SEPARATOR
+            + "- name: rule_1" + CommonConstants.LINE_SEPARATOR
+            + "  rules:" + CommonConstants.LINE_SEPARATOR
+            + "  - alert: rule_1" + CommonConstants.LINE_SEPARATOR
+            + "    expr: 100 - avg(rate(node_cpu_seconds_total{mode=\"idle\","
+            + "instance=~\"f8363fcd-d2db-4d00-8ebc-a8fcb6702dac\"}[5m]))" + CommonConstants.LINE_SEPARATOR
+            + "      by(instance)  * 100 >=99" + CommonConstants.LINE_SEPARATOR
+            + "    labels:" + CommonConstants.LINE_SEPARATOR
+            + "      level: warn" + CommonConstants.LINE_SEPARATOR
+            + "      templateId: '1675682487615868929'" + CommonConstants.LINE_SEPARATOR
+            + "      templateRuleId: '1675682442954919938'" + CommonConstants.LINE_SEPARATOR
+            + "    annotations:" + CommonConstants.LINE_SEPARATOR
+            + "      summary: CPU使用率" + CommonConstants.LINE_SEPARATOR
+            + "      description: ''" + CommonConstants.LINE_SEPARATOR
+            + "    for: 2m";
+    }
+
+    @Test
+    public void testRemoveNullRuleByTemplateRule() {
+        List<AlertClusterNodeConf> nodeConfList = new ArrayList<>();
+        when(clusterNodeConfMapper.selectList(any())).thenReturn(nodeConfList);
+        AlertTemplateRule alertTemplateRule = new AlertTemplateRule().setTemplateId(1L);
+        prometheusService.removeRuleByTemplateRule(alertTemplateRule);
+    }
+
+    @Test
+    public void testRemoveRuleByTemplateRuleWithEmptyConfig() throws IOException {
+        try (MockedStatic<SshSession> mockedStatic = mockStatic(SshSession.class)) {
+            List<AlertClusterNodeConf> nodeConfList = new ArrayList<>();
+            nodeConfList.add(new AlertClusterNodeConf().setClusterNodeId("node1").setTemplateId(1L));
+            when(clusterNodeConfMapper.selectList(any())).thenReturn(nodeConfList);
+            testPrometheusEnvDtoNormal();
+            SshSession sshSession = mock(SshSession.class);
+            mockedStatic.when(() -> SshSession.connect(anyString(), anyInt(), anyString(), anyString())).thenReturn(
+                sshSession);
+            when(alertProperty.getRuleFilePrefix()).thenReturn("rules/");
+            when(sshSession.execute("ls /data")).thenReturn("rules");
+            when(sshSession.execute("ls /data/rules/")).thenReturn("rule_template_1.yml");
+            when(alertProperty.getRuleFileSuffix()).thenReturn(".yml");
+            when(sshSession.execute("cat /data/rules/rule_template_1.yml")).thenReturn("");
+
+            AlertTemplateRule alertTemplateRule = new AlertTemplateRule().setTemplateId(1L);
+            prometheusService.removeRuleByTemplateRule(alertTemplateRule);
+        }
+    }
+
+    @Test
+    public void testRemoveRuleByTemplateRuleHasConfig() throws IOException {
+        try (MockedStatic<SshSession> mockedStatic = mockStatic(SshSession.class);
+             MockedStatic<HttpUtil> mockedStatic2 = mockStatic(HttpUtil.class)) {
+            List<AlertClusterNodeConf> nodeConfList = new ArrayList<>();
+            nodeConfList.add(new AlertClusterNodeConf().setClusterNodeId("node1").setTemplateId(1L));
+            when(clusterNodeConfMapper.selectList(any())).thenReturn(nodeConfList);
+            testPrometheusEnvDtoNormal();
+            SshSession sshSession = mock(SshSession.class);
+            mockedStatic.when(() -> SshSession.connect(anyString(), anyInt(), anyString(), anyString())).thenReturn(
+                sshSession);
+            when(alertProperty.getRuleFilePrefix()).thenReturn("rules/");
+            when(sshSession.execute("ls /data")).thenReturn("rules");
+            when(sshSession.execute("ls /data/rules/")).thenReturn("rule_template_1.yml");
+            when(alertProperty.getRuleFileSuffix()).thenReturn(".yml");
+            when(sshSession.execute("cat /data/rules/rule_template_1.yml")).thenReturn(mockRuleConfigData1());
+
+            AlertTemplateRule alertTemplateRule = new AlertTemplateRule();
+            alertTemplateRule.setId(1L).setTemplateId(1L).setRuleId(1L).setRuleName("CPU使用率过高").setLevel("warn")
+                .setRuleType("index").setRuleExpComb("A").setRuleContent("${nodeName}的CPU使用率超过90%")
+                .setNotifyDuration(2).setNotifyDurationUnit("m").setIsRepeat(CommonConstants.IS_REPEAT).setIsSilence(0)
+                .setAlertNotify("firing").setNotifyWayIds("1").setAlertDesc("test");
+            List<AlertTemplateRuleItem> alertTemplateRuleItems = new ArrayList<>();
+            AlertTemplateRuleItem alertTemplateRuleItem = new AlertTemplateRuleItem();
+            alertTemplateRuleItem.setId(1L).setTemplateRuleId(1L).setRuleItemId(1L).setRuleMark("A")
+                .setRuleExpName("cpuUsage").setOperate(">=").setLimitValue("90").setUnit("%").setRuleExp("100 - avg"
+                    + "(rate(agent_cpu_seconds_total{mode=\"idle\",instance=~\"${instances}\"}[5m])) by(instance) "
+                    + " * 100").setAction("normal");
+            alertTemplateRuleItems.add(alertTemplateRuleItem);
+            alertTemplateRule.setAlertRuleItemList(alertTemplateRuleItems);
+            prometheusService.removeRuleByTemplateRule(alertTemplateRule);
+        }
+    }
+
+    @Test
+    public void testRemoveRuleByTemplateRule() throws IOException {
+        try (MockedStatic<SshSession> mockedStatic = mockStatic(SshSession.class);
+             MockedStatic<HttpUtil> mockedStatic2 = mockStatic(HttpUtil.class)) {
+            List<AlertClusterNodeConf> nodeConfList = new ArrayList<>();
+            nodeConfList.add(new AlertClusterNodeConf().setClusterNodeId("node1").setTemplateId(1L));
+            when(clusterNodeConfMapper.selectList(any())).thenReturn(nodeConfList);
+            testPrometheusEnvDtoNormal();
+            SshSession sshSession = mock(SshSession.class);
+            mockedStatic.when(() -> SshSession.connect(anyString(), anyInt(), anyString(), anyString())).thenReturn(
+                sshSession);
+            when(alertProperty.getRuleFilePrefix()).thenReturn("rules/");
+            when(sshSession.execute("ls /data")).thenReturn("rules");
+            when(sshSession.execute("ls /data/rules/")).thenReturn("rule_template_1.yml");
+            when(alertProperty.getRuleFileSuffix()).thenReturn(".yml");
+            when(sshSession.execute("cat /data/rules/rule_template_1.yml")).thenReturn(mockRuleConfigData2());
+            when(sshSession.execute("rm /data/rules/rule_template_1.yml")).thenReturn("");
+            doNothing().when(sshSession).upload(anyString(), anyString());
+            mockedStatic2.when(() -> HttpUtil.post(anyString(), anyString())).thenReturn("");
+            doNothing().when(sshSession).close();
+
+            AlertTemplateRule alertTemplateRule = new AlertTemplateRule();
+            alertTemplateRule.setId(1L).setTemplateId(1L).setRuleId(1L).setRuleName("CPU使用率过高").setLevel("warn")
+                .setRuleType("index").setRuleExpComb("A").setRuleContent("${nodeName}的CPU使用率超过90%")
+                .setNotifyDuration(2).setNotifyDurationUnit("m").setIsRepeat(CommonConstants.IS_REPEAT).setIsSilence(0)
+                .setAlertNotify("firing").setNotifyWayIds("1").setAlertDesc("test");
+            List<AlertTemplateRuleItem> alertTemplateRuleItems = new ArrayList<>();
+            AlertTemplateRuleItem alertTemplateRuleItem = new AlertTemplateRuleItem();
+            alertTemplateRuleItem.setId(1L).setTemplateRuleId(1L).setRuleItemId(1L).setRuleMark("A")
+                .setRuleExpName("cpuUsage").setOperate(">=").setLimitValue("90").setUnit("%").setRuleExp("100 - avg"
+                    + "(rate(agent_cpu_seconds_total{mode=\"idle\",instance=~\"${instances}\"}[5m])) by(instance) "
+                    + " * 100").setAction("normal");
+            alertTemplateRuleItems.add(alertTemplateRuleItem);
+            alertTemplateRule.setAlertRuleItemList(alertTemplateRuleItems);
+            prometheusService.removeRuleByTemplateRule(alertTemplateRule);
+        }
     }
 }

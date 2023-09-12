@@ -20,4 +20,12 @@ public class IndexAdvice {
     String table;
     String column;
     String indexType;
+
+    public void setIndexType(String indexType) {
+        this.indexType = indexType;
+    }
+
+    public void setIndextype(String indexType) {
+        this.indexType = indexType;
+    }
 }

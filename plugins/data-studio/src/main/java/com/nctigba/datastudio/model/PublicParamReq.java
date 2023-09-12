@@ -54,26 +54,32 @@ public class PublicParamReq {
 
     private boolean isCoverage;
 
+    private boolean isInPackage;
+
+    private boolean isPackage;
+
     @Override
     public String toString() {
-        return "PublicParamReq{" +
-                "operation='" + operation + '\'' +
-                ", sql='" + sql + '\'' +
-                ", webUser='" + webUser + '\'' +
-                ", breakPoints=" + breakPoints +
-                ", inputParams=" + inputParams +
-                ", line=" + line +
-                ", fullName='" + fullName + '\'' +
-                ", schema='" + schema + '\'' +
-                ", windowName='" + windowName + '\'' +
-                ", oldWindowName='" + oldWindowName + '\'' +
-                ", rootWindowName='" + rootWindowName + '\'' +
-                ", isCloseWindow='" + isCloseWindow + '\'' +
-                ", uuid='" + uuid + '\'' +
-                ", language='" + language + '\'' +
-                ", oid='" + oid + '\'' +
-                ", isContinue='" + isContinue + '\'' +
-                ", isCoverage='" + isCoverage + '\'' +
-                '}';
+        return "PublicParamReq{"
+                + "operation='" + operation + '\''
+                + ", sql='" + sql + '\''
+                + ", webUser='" + webUser + '\''
+                + ", breakPoints=" + breakPoints
+                + ", inputParams=" + inputParams
+                + ", line=" + line
+                + ", fullName='" + fullName + '\''
+                + ", schema='" + schema + '\''
+                + ", windowName='" + windowName + '\''
+                + ", oldWindowName='" + oldWindowName + '\''
+                + ", rootWindowName='" + rootWindowName + '\''
+                + ", isCloseWindow='" + isCloseWindow + '\''
+                + ", uuid='" + uuid + '\''
+                + ", language='" + language + '\''
+                + ", oid='" + oid + '\''
+                + ", isContinue='" + isContinue + '\''
+                + ", isCoverage='" + isCoverage + '\''
+                + ", isInPackage='" + isInPackage + '\''
+                + ", isPackage='" + isPackage + '\''
+                + '}';
     }
 }

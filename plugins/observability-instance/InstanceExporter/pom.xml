@@ -43,8 +43,8 @@
         <!-- https://mvnrepository.com/artifact/org.apache.sshd/sshd-scp -->
         <dependency>
             <groupId>org.apache.sshd</groupId>
-            <artifactId>sshd-sftp</artifactId>
-            <version>2.9.2</version>
+            <artifactId>sshd-core</artifactId>
+            <version>2.10.0</version>
         </dependency>
         <dependency>
             <groupId>org.opengauss</groupId>

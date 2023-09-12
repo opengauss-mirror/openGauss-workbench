@@ -21,4 +21,6 @@ public class TableDataQuery {
     private String tableName;
     private Integer pageNum;
     private Integer pageSize;
+    private SelectDataFiltrationQuery expansion;
+    private String fileType;
 }

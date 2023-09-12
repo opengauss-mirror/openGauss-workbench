@@ -191,7 +191,7 @@
       if (valid) {
         api[type](form).then((res) => {
           if (type === 'Base') {
-            ElMessage.success(`${t('create.synonym')}${t('success')}`);
+            ElMessage.success(`${t('create.synonym')}${t('message.success')}`);
             myEmit('success');
             handleClose();
           } else if (type === 'Sql') {

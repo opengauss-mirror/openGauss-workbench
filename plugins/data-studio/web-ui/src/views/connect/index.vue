@@ -112,9 +112,10 @@
             v-model="form.type"
             disabled
             :placeholder="$t('connection.databaseType_holder')"
+            placement="bottom"
             style="width: 100%"
           >
-            <el-option label="openGauss" value="shanghai" />
+            <el-option label="openGauss" value="openGauss" />
           </el-select>
         </el-form-item>
         <el-form-item prop="name" :label="$t('connection.name')">
@@ -196,6 +197,8 @@
   import { useUserStore } from '@/store/modules/user';
   import Crypto from '@/utils/crypto';
   import { connectListPersist } from '@/config';
+  import { sidebarForage } from '@/utils/localforage';
+  import { getSystemUserProfile } from '@/api/connect';
 
   const { t } = useI18n();
   const UserStore = useUserStore();
@@ -315,6 +318,17 @@
     return list;
   };
 
+  const getUserId = async () => {
+    if (!UserStore.userId) {
+      if (import.meta.env.MODE === 'production') {
+        const res = await getSystemUserProfile();
+        UserStore.userId = res.data.userId;
+      } else {
+        UserStore.userId = 'A';
+      }
+    }
+  };
+
   const getTableList = () => {
     Object.assign(connectListInfo, {
       list: [],
@@ -354,6 +368,7 @@
     formEl.resetFields();
     if (props.type === 'create') {
       title.value = t('connection.new');
+      await getUserId();
       getTableList();
     } else {
       title.value = t('connection.edit');
@@ -379,9 +394,9 @@
     myEmit('update:modelValue', false);
     resetForm(ruleFormRef.value);
   };
-  const handleDelete = () => {
-    const index = JSON.parse(
-      connectListPersist.storage.getItem(connectListPersist.key) || '[]',
+  const handleDelete = async () => {
+    const index = (
+      ((await sidebarForage.getItem(connectListPersist.key)) as any[]) || []
     ).findIndex((list) => list.id == connectListInfo.listCurrentRow.id);
     if (index > -1) {
       ElMessage.warning(t('message.deleteConnectInfo0'));
@@ -430,7 +445,7 @@
     };
     const data =
       props.type === 'create' ? await createConnect(params) : await updateConnect(params);
-    EventBus.notify(EventTypeName.GET_DATABASE_LIST, data);
+    EventBus.notify(EventTypeName.GET_CONNECTION_LIST, data);
     ElMessage({
       message:
         props.type === 'create' ? t('connection.success.create') : t('connection.success.edit'),

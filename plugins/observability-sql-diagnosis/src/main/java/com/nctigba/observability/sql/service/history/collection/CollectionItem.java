@@ -4,6 +4,7 @@
 
 package com.nctigba.observability.sql.service.history.collection;
 
+import com.nctigba.observability.sql.constants.CollectionTypeCommon;
 import com.nctigba.observability.sql.model.history.HisDiagnosisTask;
 
 /**
@@ -14,5 +15,10 @@ import com.nctigba.observability.sql.model.history.HisDiagnosisTask;
  */
 public interface CollectionItem<T> {
     T collectData(HisDiagnosisTask task);
+
     T queryData(HisDiagnosisTask task);
+
+    default String getCollectionType() {
+        return CollectionTypeCommon.MIDDLE;
+    }
 }

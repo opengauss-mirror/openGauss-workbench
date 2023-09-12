@@ -17,7 +17,6 @@ import com.nctigba.datastudio.model.dto.TableAlterDTO;
 import com.nctigba.datastudio.model.dto.TableAttributeDTO;
 import com.nctigba.datastudio.model.dto.TableDataDTO;
 import com.nctigba.datastudio.model.dto.TableNameDTO;
-import com.nctigba.datastudio.model.dto.WinInfoDTO;
 import com.nctigba.datastudio.model.query.SelectDataQuery;
 import com.nctigba.datastudio.model.query.TableDataEditQuery;
 import com.nctigba.datastudio.model.query.TableDataQuery;
@@ -27,22 +26,29 @@ import com.nctigba.datastudio.util.DebugUtils;
 import com.nctigba.datastudio.util.LocaleString;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.opengauss.admin.common.exception.CustomException;
+import org.apache.poi.xssf.usermodel.XSSFRow;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import static com.nctigba.datastudio.dao.ConnectionMapDAO.conMap;
-import static com.nctigba.datastudio.dao.ResultSetMapDAO.setWinMap;
-import static com.nctigba.datastudio.dao.ResultSetMapDAO.winMap;
 import static java.lang.Math.ceil;
 
 /**
@@ -65,41 +71,6 @@ public class TableDataServiceImpl implements TableDataService {
     private Map<String, TableObjectSQLService> tableObjectSQLService;
     private Map<String, TableColumnSQLService> tableColumnSQLService;
 
-    public void setResultSetMap(String winId, ResultSet resultSet) {
-        this.resultSetMap.put(winId, resultSet);
-    }
-
-    public void setConnectionMap(String winId, Connection connection) {
-        this.connectionMap.put(winId, connection);
-    }
-
-    public void setStatementMap(String winId, Statement statement) {
-        this.statementMap.put(winId, statement);
-    }
-
-    public ResultSet getResultSetMap(String winId) {
-        return this.resultSetMap.get(winId);
-    }
-
-    public Connection getConnectionMap(String winId) {
-        return this.connectionMap.get(winId);
-    }
-
-    public Statement getStatementMap(String winId) {
-        return this.statementMap.get(winId);
-    }
-
-    public void removeResultSetMap(String winId) {
-        this.resultSetMap.remove(winId);
-    }
-
-    public void removeConnectionMap(String winId) {
-        this.connectionMap.remove(winId);
-    }
-
-    public void removeStatementMap(String winId) {
-        this.statementMap.remove(winId);
-    }
 
     /**
      * set table object sql service
@@ -130,52 +101,48 @@ public class TableDataServiceImpl implements TableDataService {
     @Override
     public TableDataDTO tableData(TableDataQuery request) throws SQLException {
         log.info("tableData request is: " + request);
-        Connection connection;
-        Statement statement;
-        ResultSet resultSet;
-        if (resultSetMap.containsKey(request.getWinId())) {
-            connection = getConnectionMap(request.getWinId());
-            statement = getStatementMap(request.getWinId());
-            resultSet = getResultSetMap(request.getWinId());
-        } else {
-            connection = connectionConfig.connectDatabase(request.getUuid());
-            statement = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
-            resultSet = statement.executeQuery(tableObjectSQLService.get(conMap.get(request.getUuid())
-                    .getType()).tableDataSQL(request.getSchema(), request.getTableName()));
-            setConnectionMap(request.getWinId(), connection);
-            setStatementMap(request.getWinId(), statement);
-            setResultSetMap(request.getWinId(), resultSet);
-        }
-        TableDataDTO tableDataDTO = new TableDataDTO();
+        String schema = DebugUtils.needQuoteName(request.getSchema());
+        String tableName = DebugUtils.needQuoteName(request.getTableName());
         try (
                 Connection connectionCount = connectionConfig.connectDatabase(request.getUuid());
                 Statement statementCount = connectionCount.createStatement()
         ) {
             statementCount.executeUpdate(tableObjectSQLService.get(conMap.get(request.getUuid())
-                    .getType()).tableAnalyseSQL(request.getSchema(), request.getTableName()));
+                    .getType()).tableAnalyseSQL(schema, tableName));
         } catch (SQLException e) {
             log.info(e.toString());
         }
         try (
+                Connection connection = connectionConfig.connectDatabase(request.getUuid());
+                Statement statement = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE,
+                        ResultSet.CONCUR_UPDATABLE);
                 Statement statementCount = connection.createStatement();
                 ResultSet resultSetCount = statementCount.executeQuery(
                         tableObjectSQLService.get(conMap.get(request.getUuid())
-                                .getType()).tableDataCountSQL(request.getSchema(), request.getTableName()))
+                                .getType()).tableDataCountSQL(schema, request.getTableName()));
+
         ) {
             resultSetCount.next();
             Integer count = resultSetCount.getInt(1);
+            TableDataDTO tableDataDTO = new TableDataDTO();
             tableDataDTO.setTableDataDTO(request);
             tableDataDTO.setDataSize(count);
             tableDataDTO.setPageTotal((int) ceil((double) count / request.getPageSize()));
-            statement.setFetchSize(request.getPageSize());
-            resultSet.setFetchSize(request.getPageSize());
-            WinInfoDTO winInfoDTO = new WinInfoDTO();
-            winInfoDTO.setWinInfoDTO(request.getUuid(), request.getSchema(), request.getTableName());
-            setWinMap(request.getWinId(), winInfoDTO);
-            Map<String, Object> resultMap = DebugUtils.parseResultSet(resultSet, request.getPageSize(),
-                    request.getPageNum());
-            tableDataDTO.setData(resultMap);
-            return tableDataDTO;
+            int start;
+            if (request.getPageNum() != 1) {
+                start = request.getPageSize() * (request.getPageNum() - 1);
+            } else {
+                start = 0;
+            }
+            String sql = tableObjectSQLService.get(
+                    conMap.get(request.getUuid()).getType()).tableDataSQL(schema,
+                    tableName, start, request.getPageSize(), request.getExpansion());
+            try (ResultSet resultSet = statement.executeQuery(sql);) {
+                Map<String, Object> resultMap = DebugUtils.parseResultSetType(resultSet);
+                tableDataDTO.setSql(sql);
+                tableDataDTO.setData(resultMap);
+                return tableDataDTO;
+            }
         }
     }
 
@@ -184,8 +151,9 @@ public class TableDataServiceImpl implements TableDataService {
         log.info("tableColumn request is: " + request);
         TableColumnSQLService tableColumnSQLService1 = tableColumnSQLService.get(
                 conMap.get(request.getUuid()).getType());
-        String ddl = tableColumnSQLService1.tableColumnSQL(request.getOid(), request.getSchema(),
-                request.getTableName());
+        String ddl = tableColumnSQLService1.tableColumnSQL(request.getOid(),
+                DebugUtils.needQuoteName(request.getSchema()),
+                DebugUtils.needQuoteName(request.getTableName()));
         try (
                 Connection connection = connectionConfig.connectDatabase(request.getUuid());
                 Statement statement = connection.createStatement();
@@ -282,30 +250,32 @@ public class TableDataServiceImpl implements TableDataService {
                 switch (data.getOperationType()) {
                     case 1:
                         for (String list : aa.tableColumnAddSQL(data,
-                                DebugUtils.containsSqlInjection(request.getSchema()),
-                                DebugUtils.containsSqlInjection(request.getTableName()))) {
+                                DebugUtils.containsSqlInjection(DebugUtils.needQuoteName(request.getSchema())),
+                                DebugUtils.containsSqlInjection(DebugUtils.needQuoteName(request.getTableName())))) {
                             statement.execute(list);
                         }
                         break;
                     case 2:
                         statement.execute(aa.tableColumnDropSQL(data,
-                                DebugUtils.containsSqlInjection(request.getSchema()),
-                                DebugUtils.containsSqlInjection(request.getTableName())));
+                                DebugUtils.containsSqlInjection(DebugUtils.needQuoteName(request.getSchema())),
+                                DebugUtils.containsSqlInjection(DebugUtils.needQuoteName(request.getTableName()))));
                         break;
                     case 3:
                         for (String list : aa.tableColumnUpdateSQL(data,
-                                DebugUtils.containsSqlInjection(request.getSchema()),
-                                DebugUtils.containsSqlInjection(request.getTableName()),
+                                DebugUtils.containsSqlInjection(DebugUtils.needQuoteName(request.getSchema())),
+                                DebugUtils.containsSqlInjection(DebugUtils.needQuoteName(request.getTableName())),
                                 request.getUuid())) {
                             statement.execute(list);
                         }
+                        break;
+                    default:
                         break;
                 }
             }
             try (
                     ResultSet resultSet = statement.executeQuery(tableColumnSQLService.get(conMap.get(request.getUuid())
-                            .getType()).tableColumnSQL(request.getOid(), request.getSchema(),
-                            request.getTableName()))
+                            .getType()).tableColumnSQL(request.getOid(), DebugUtils.needQuoteName(request.getSchema()),
+                            DebugUtils.needQuoteName(request.getTableName())))
             ) {
                 Map<String, Object> resultMap = DebugUtils.parseResultSet(resultSet);
                 log.info("tableColumn resultMap is: " + resultMap);
@@ -324,38 +294,55 @@ public class TableDataServiceImpl implements TableDataService {
 
     @Override
     public TablePKDataQuery tableDataEdit(TableDataEditQuery request) throws SQLException {
-        log.info("tableDataEdit request is: {}", request);
-        log.info("winMap is: {}", winMap);
-        Connection connection = getConnectionMap(request.getWinId());
-        ResultSet resultSet = getResultSetMap(request.getWinId());
-        TablePKDataQuery tablePKDataQuery = new TablePKDataQuery();
-        boolean isTableEdit = tableDataEdit(request, connection);
-        if (!isTableEdit) {
-            tablePKDataQuery.setMsg(LocaleString.transLanguage("2017"));
-            tablePKDataQuery.setIsPKCreate(true);
-            log.info("TablePKDataQuery is: {}", tablePKDataQuery);
+        log.info("tableColumnEdit request is: " + request);
+        try (
+                Connection connection = connectionConfig.connectDatabase(request.getUuid());
+                Statement statement = connection.createStatement()
+        ) {
+            TablePKDataQuery tablePKDataQuery = new TablePKDataQuery();
+            boolean isTableEdit = tableDataEdit(request, connection);
+            if (!isTableEdit) {
+                tablePKDataQuery.setMsg(LocaleString.transLanguage("2017"));
+                tablePKDataQuery.setIsPKCreate(true);
+                log.info("TablePKDataQuery is: {}", tablePKDataQuery);
+                return tablePKDataQuery;
+            }
+            connection.setAutoCommit(false);
+            for (TableDataEditQuery.TableDataDTO data : request.getData()) {
+                TableColumnSQLService aa = tableColumnSQLService.get(conMap.get(request.getUuid()).getType());
+                switch (data.getOperationType()) {
+                    case "INSERT":
+                        String addSQL = aa.tableDataAddSQL(data,
+                                DebugUtils.containsSqlInjection(DebugUtils.needQuoteName(request.getSchema())),
+                                DebugUtils.containsSqlInjection(DebugUtils.needQuoteName(request.getTableName())));
+                        statement.execute(addSQL);
+                        break;
+                    case "DELETE":
+                        String dropSQL = aa.tableDataDropSQL(data,
+                                DebugUtils.containsSqlInjection(DebugUtils.needQuoteName(request.getSchema())),
+                                DebugUtils.containsSqlInjection(DebugUtils.needQuoteName(request.getTableName())));
+                        statement.execute(dropSQL);
+                        break;
+                    case "UPDATE":
+                        String updateSQL = aa.tableDataUpdateSQL(data,
+                                DebugUtils.containsSqlInjection(DebugUtils.needQuoteName(request.getSchema())),
+                                DebugUtils.containsSqlInjection(DebugUtils.needQuoteName(request.getTableName())));
+                        statement.execute(updateSQL);
+                        break;
+                }
+            }
+            connection.commit();
+            tablePKDataQuery.setMsg("");
+            tablePKDataQuery.setIsPKCreate(false);
             return tablePKDataQuery;
         }
-        connection.setAutoCommit(false);
-        for (TableDataEditQuery.TableDataDTO data : request.getData()) {
-            data.getType().rs(resultSet, data);
-        }
-        connection.commit();
-        tablePKDataQuery.setMsg("");
-        tablePKDataQuery.setIsPKCreate(false);
-        return tablePKDataQuery;
     }
 
     private Boolean tableDataEdit(TableDataEditQuery request, Connection connection) throws SQLException {
         log.info("tableDataEdit request is: {}", request);
-        log.info("winMap is: {}", winMap);
-        if (!winMap.containsKey(request.getWinId())) {
-            throw new CustomException(LocaleString.transLanguage("1009"));
-        }
-        String uuid = winMap.get(request.getWinId()).getUuid();
-        String schema = winMap.get(request.getWinId()).getSchema();
-        String tableName = winMap.get(request.getWinId()).getTableName();
-        String sql = tableColumnSQLService.get(conMap.get(uuid).getType()).tablePKConstraintSQL(schema, tableName);
+        String sql =
+                tableColumnSQLService.get(conMap.get(request.getUuid()).getType())
+                        .tablePKConstraintSQL(request.getSchema(), request.getTableName());
         try (
                 Statement statement = connection.createStatement();
                 ResultSet resultSetUnique = statement.executeQuery(sql)
@@ -470,5 +457,75 @@ public class TableDataServiceImpl implements TableDataService {
     public List<Map<String, Object>> tableAttribute(TableAttributeDTO request) throws SQLException {
         return tableObjectSQLService.get(conMap.get(request.getUuid())
                 .getType()).tableAttributeSQL(request.getUuid(), request.getOid(), request.getTableType());
+    }
+
+    public void tableAnalyze(TableNameDTO request) throws SQLException {
+        log.info("DatabaseCreateTableDTO request is: " + request);
+        try (Connection connection = connectionConfig.connectDatabase(request.getUuid());
+             Statement statement = connection.createStatement()) {
+            statement.execute(tableObjectSQLService.get(conMap.get(request.getUuid()).getType()).tableAnalyzeSQL(
+                    request.getSchema(), DebugUtils.needQuoteName(request.getTableName())));
+        }
+    }
+
+    public Map<String, Object> tableAttributePartition(TableNameDTO request) throws SQLException {
+        log.info("tableSequence request is: " + request);
+        try (Connection connection = connectionConfig.connectDatabase(request.getUuid());
+             Statement statement = connection.createStatement()) {
+            try (ResultSet resultSet = statement.executeQuery(tableObjectSQLService.get(conMap.get(request.getUuid())
+                    .getType()).tableAttributePartitionSQL(request.getOid()))) {
+                Map<String, Object> resultMap = DebugUtils.parseResultSet(resultSet);
+                log.info("tableSequence resultMap is: " + resultMap);
+                return resultMap;
+            }
+        }
+    }
+
+    @Override
+    public void exportData(TableDataQuery request, HttpServletResponse response) throws SQLException, IOException {
+        log.info("TableDataServiceImpl exportData request: " + request);
+        try (
+                XSSFWorkbook xssfWorkbook = new XSSFWorkbook();
+                OutputStream outputStream = response.getOutputStream();
+                Connection connection = connectionConfig.connectDatabase(request.getUuid());
+                Statement statement = connection.createStatement();
+                ResultSet resultSet = statement.executeQuery(tableObjectSQLService.get(
+                        conMap.get(request.getUuid()).getType()).exportTableData(request.getSchema(),
+                        request.getTableName(), request.getPageNum(), request.getPageSize(), request.getExpansion()))
+        ) {
+            ResultSetMetaData metaData = resultSet.getMetaData();
+            List<String> columnList = new ArrayList<>();
+            for (int i = 0; i < metaData.getColumnCount(); i++) {
+                columnList.add(metaData.getColumnName(i + 1));
+            }
+            log.info("TableDataServiceImpl exportData columnList: " + columnList);
+
+            String tableName = request.getTableName();
+            String fileName = tableName + ".xlsx";
+            if (request.getFileType().equals("Excel(xls)")) {
+                fileName = tableName + ".xls";
+            }
+
+            int index = 0;
+            XSSFSheet sheet = xssfWorkbook.createSheet(tableName);
+            XSSFRow row = sheet.createRow(index);
+            for (int i = 0; i < columnList.size(); i++) {
+                row.createCell(i).setCellValue(columnList.get(i));
+            }
+            while (resultSet.next()) {
+                row = sheet.createRow(++index);
+                for (int i = 0; i < columnList.size(); i++) {
+                    row.createCell(i).setCellValue(resultSet.getString(columnList.get(i)));
+                }
+            }
+            log.info("TableDataServiceImpl exportData hssfSheet: " + sheet.getLastRowNum());
+
+            response.reset();
+            response.setContentType("application/octet-stream");
+            response.setHeader("Content-Disposition", URLEncoder.encode(fileName, StandardCharsets.UTF_8));
+            response.addHeader("Response-Type", "blob");
+            xssfWorkbook.write(outputStream);
+            outputStream.flush();
+        }
     }
 }

@@ -6,6 +6,7 @@ package com.nctigba.datastudio.controller;
 
 import com.nctigba.datastudio.model.dto.DatabaseCreateViewDTO;
 import com.nctigba.datastudio.model.dto.DatabaseSelectViewDTO;
+import com.nctigba.datastudio.model.dto.DatabaseViewDTO;
 import com.nctigba.datastudio.model.dto.DatabaseViewDdlDTO;
 import com.nctigba.datastudio.service.DatabaseViewService;
 import io.swagger.annotations.Api;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -91,5 +93,52 @@ public class DatabaseViewController {
     @PostMapping(value = "/viewDdls", produces = MediaType.APPLICATION_JSON_VALUE)
     public String returnViewDDL(@RequestBody DatabaseViewDdlDTO request) throws SQLException {
         return databaseViewService.returnViewDDL(request);
+    }
+
+    /**
+     * edit view
+     *
+     * @param request request
+     * @throws SQLException SQLException
+     */
+    @PostMapping(value = "/view/edit", produces = MediaType.APPLICATION_JSON_VALUE)
+    public void editView(@RequestBody DatabaseViewDTO request) throws SQLException {
+        databaseViewService.editView(request);
+    }
+
+    /**
+     * show view attribute
+     *
+     * @param request request
+     * @return List
+     * @throws SQLException SQLException
+     */
+    @PostMapping(value = "/view/attribute", produces = MediaType.APPLICATION_JSON_VALUE)
+    public List<Map<String, String>> viewAttribute(@RequestBody DatabaseViewDdlDTO request) throws SQLException {
+        return databaseViewService.viewAttribute(request);
+    }
+
+    /**
+     * show view column
+     *
+     * @param request request
+     * @return Map
+     * @throws SQLException SQLException
+     */
+    @PostMapping(value = "/view/column", produces = MediaType.APPLICATION_JSON_VALUE)
+    public Map<String, Object> viewColumn(@RequestBody DatabaseViewDTO request) throws SQLException {
+        return databaseViewService.viewColumn(request);
+    }
+
+    /**
+     * query view
+     *
+     * @param request request
+     * @return Map
+     * @throws SQLException SQLException
+     */
+    @PostMapping(value = "/view/query", produces = MediaType.APPLICATION_JSON_VALUE)
+    public Map<String, Object> queryView(@RequestBody DatabaseViewDdlDTO request) throws SQLException {
+        return databaseViewService.queryView(request);
     }
 }

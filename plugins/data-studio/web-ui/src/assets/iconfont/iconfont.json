@@ -6,6 +6,146 @@
   "description": "",
   "glyphs": [
     {
+      "icon_id": "12380216",
+      "name": "图章 审批-6",
+      "font_class": "nologin",
+      "unicode": "e6ce",
+      "unicode_decimal": 59086
+    },
+    {
+      "icon_id": "18427651",
+      "name": "已审核",
+      "font_class": "login",
+      "unicode": "e64d",
+      "unicode_decimal": 58957
+    },
+    {
+      "icon_id": "12659577",
+      "name": "导出所有",
+      "font_class": "daochusuoyou",
+      "unicode": "e60c",
+      "unicode_decimal": 58892
+    },
+    {
+      "icon_id": "15838489",
+      "name": "import",
+      "font_class": "import1",
+      "unicode": "e676",
+      "unicode_decimal": 58998
+    },
+    {
+      "icon_id": "21400862",
+      "name": "line-parentheses（圆括号）",
+      "font_class": "line-parenthesesyuankuohao",
+      "unicode": "e6f3",
+      "unicode_decimal": 59123
+    },
+    {
+      "icon_id": "1586153",
+      "name": "降序",
+      "font_class": "jiangxu",
+      "unicode": "e6a1",
+      "unicode_decimal": 59041
+    },
+    {
+      "icon_id": "1586154",
+      "name": "升序",
+      "font_class": "shengxu",
+      "unicode": "e6a2",
+      "unicode_decimal": 59042
+    },
+    {
+      "icon_id": "1727556",
+      "name": "318表头-可排序",
+      "font_class": "biaotou-kepaixu",
+      "unicode": "e8f7",
+      "unicode_decimal": 59639
+    },
+    {
+      "icon_id": "659148",
+      "name": "ic_more",
+      "font_class": "icmore",
+      "unicode": "e62f",
+      "unicode_decimal": 58927
+    },
+    {
+      "icon_id": "3427885",
+      "name": "排序题",
+      "font_class": "sort",
+      "unicode": "e62e",
+      "unicode_decimal": 58926
+    },
+    {
+      "icon_id": "6537193",
+      "name": "筛选",
+      "font_class": "shaixuan",
+      "unicode": "e671",
+      "unicode_decimal": 58993
+    },
+    {
+      "icon_id": "15838468",
+      "name": "export",
+      "font_class": "export",
+      "unicode": "e66e",
+      "unicode_decimal": 58990
+    },
+    {
+      "icon_id": "24714411",
+      "name": "Import",
+      "font_class": "import",
+      "unicode": "e61b",
+      "unicode_decimal": 58907
+    },
+    {
+      "icon_id": "7450656",
+      "name": "预览",
+      "font_class": "yulan",
+      "unicode": "e668",
+      "unicode_decimal": 58984
+    },
+    {
+      "icon_id": "7577422",
+      "name": "24gl-unlock4",
+      "font_class": "unlock",
+      "unicode": "e9d6",
+      "unicode_decimal": 59862
+    },
+    {
+      "icon_id": "6061533",
+      "name": "删除",
+      "font_class": "shanchu",
+      "unicode": "ec7b",
+      "unicode_decimal": 60539
+    },
+    {
+      "icon_id": "7556177",
+      "name": "锁定",
+      "font_class": "lock",
+      "unicode": "e60b",
+      "unicode_decimal": 58891
+    },
+    {
+      "icon_id": "17228621",
+      "name": "历史记录",
+      "font_class": "lishijilu",
+      "unicode": "e642",
+      "unicode_decimal": 58946
+    },
+    {
+      "icon_id": "580060",
+      "name": "帮助中心",
+      "font_class": "bangzhuzhongxin",
+      "unicode": "e78f",
+      "unicode_decimal": 59279
+    },
+    {
+      "icon_id": "12600636",
+      "name": "cmd",
+      "font_class": "cmd",
+      "unicode": "e617",
+      "unicode_decimal": 58903
+    },
+    {
       "icon_id": "35321985",
       "name": "文件管理-copy",
       "font_class": "report-disabled",

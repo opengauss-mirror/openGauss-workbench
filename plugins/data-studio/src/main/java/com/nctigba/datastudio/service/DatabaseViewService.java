@@ -6,9 +6,11 @@ package com.nctigba.datastudio.service;
 
 import com.nctigba.datastudio.model.dto.DatabaseCreateViewDTO;
 import com.nctigba.datastudio.model.dto.DatabaseSelectViewDTO;
+import com.nctigba.datastudio.model.dto.DatabaseViewDTO;
 import com.nctigba.datastudio.model.dto.DatabaseViewDdlDTO;
 
 import java.sql.SQLException;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -56,4 +58,38 @@ public interface DatabaseViewService {
      */
     Map<String, Object> selectView(DatabaseSelectViewDTO request);
 
+    /**
+     * edit view
+     *
+     * @param request request
+     * @throws SQLException SQLException
+     */
+    void editView(DatabaseViewDTO request) throws SQLException;
+
+    /**
+     * show view attribute
+     *
+     * @param request request
+     * @return List
+     * @throws SQLException SQLException
+     */
+    List<Map<String, String>> viewAttribute(DatabaseViewDdlDTO request) throws SQLException;
+
+    /**
+     * show view column
+     *
+     * @param request request
+     * @return Map
+     * @throws SQLException SQLException
+     */
+    Map<String, Object> viewColumn(DatabaseViewDTO request) throws SQLException;
+
+    /**
+     * query view
+     *
+     * @param request request
+     * @return Map
+     * @throws SQLException SQLException
+     */
+    Map<String, Object> queryView(DatabaseViewDdlDTO request) throws SQLException;
 }

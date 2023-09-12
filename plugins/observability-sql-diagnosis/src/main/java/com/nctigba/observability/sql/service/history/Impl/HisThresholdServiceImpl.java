@@ -2,7 +2,7 @@
  * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
  */
 
-package com.nctigba.observability.sql.service.history.Impl;
+package com.nctigba.observability.sql.service.history.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.nctigba.observability.sql.mapper.history.HisThresholdMapper;
@@ -27,8 +27,9 @@ public class HisThresholdServiceImpl implements HisThresholdService {
     private HisThresholdMapper hisThresholdMapper;
 
     @Override
-    public List<HisDiagnosisThreshold> select() {
+    public List<HisDiagnosisThreshold> select(String diagnosisType) {
         LambdaQueryWrapper<HisDiagnosisThreshold> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(HisDiagnosisThreshold::getDiagnosisType, diagnosisType);
         queryWrapper.orderByDesc(HisDiagnosisThreshold::getThresholdType);
         return hisThresholdMapper.selectList(queryWrapper);
     }

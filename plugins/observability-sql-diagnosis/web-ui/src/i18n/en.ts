@@ -68,6 +68,12 @@ export default {
       createTime: 'Creation Time:',
       option: 'Options:',
       thresholdsRemark: 'Diagnosis Thresholds',
+      taskName: 'Task Name:',
+      dbName: 'Database Name:',
+      sqlId: 'Top SQL ID:',
+      taskType: 'Task Type:',
+      taskStartTime: 'Start Time:',
+      taskEndTime: 'End Time:',
     },
     topCPUTimeSQL: {
       normalizedSQLID: 'Normalized SQL ID',

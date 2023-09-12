@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia';
 
+import { userPersist } from '@/config';
 export const useUserStore = defineStore({
   id: 'userState',
   state: () => ({
@@ -8,7 +9,7 @@ export const useUserStore = defineStore({
   getters: {},
   actions: {},
   persist: {
-    key: 'DS_userState',
-    storage: localStorage,
+    key: userPersist.key,
+    storage: userPersist.storage,
   },
 });

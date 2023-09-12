@@ -4,9 +4,15 @@
 
 package com.nctigba.alert.monitor.service.impl;
 
+import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import co.elastic.clients.elasticsearch._types.ShardStatistics;
+import co.elastic.clients.elasticsearch.core.SearchResponse;
+import co.elastic.clients.elasticsearch.core.search.Hit;
+import co.elastic.clients.elasticsearch.core.search.HitsMetadata;
 import com.baomidou.mybatisplus.core.MybatisConfiguration;
 import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.nctigba.alert.monitor.config.ElasticsearchProvider;
 import com.nctigba.alert.monitor.constant.CommonConstants;
 import com.nctigba.alert.monitor.dto.AlertRecordDto;
 import com.nctigba.alert.monitor.dto.AlertRelationDto;
@@ -37,19 +43,27 @@ import org.opengauss.admin.system.plugin.facade.HostFacade;
 import org.opengauss.admin.system.service.ops.IOpsClusterNodeService;
 import org.opengauss.admin.system.service.ops.IOpsClusterService;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.thymeleaf.TemplateEngine;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -85,6 +99,12 @@ public class AlertRecordServiceImplTest {
 
     @Mock
     private AlertRecordMapper baseMapper;
+
+    @Mock
+    private ElasticsearchProvider clientProvider;
+
+    @Mock
+    private TemplateEngine templateEngine;
 
 
     @Before
@@ -370,6 +390,22 @@ public class AlertRecordServiceImplTest {
     }
 
     @Test
+    public void testGetEmptyRelationData1() {
+        AlertRecord alertRecord = new AlertRecord();
+        when(baseMapper.selectById(any())).thenReturn(alertRecord);
+        alertRecordService.getRelationData(any());
+        verify(baseMapper, times(1)).selectById(any());
+    }
+
+    @Test
+    public void testGetEmptyRelationData2() {
+        AlertRecord alertRecord = new AlertRecord().setTemplateRuleType(CommonConstants.LOG_RULE);
+        when(baseMapper.selectById(any())).thenReturn(alertRecord);
+        alertRecordService.getRelationData(any());
+        verify(baseMapper, times(1)).selectById(any());
+    }
+
+    @Test
     public void testGetRelationData() {
         try (MockedStatic<MessageSourceUtil> mockedStatic = mockStatic(MessageSourceUtil.class)) {
             AlertRecord alertRecord = new AlertRecord();
@@ -377,7 +413,8 @@ public class AlertRecordServiceImplTest {
                 .setStartTime(LocalDateTime.parse("2022-01-01 01:00:00",
                     DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")))
                 .setEndTime(LocalDateTime.parse("2022-01-01 02:00:00",
-                    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))).setTemplateId(1L);
+                    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))).setTemplateId(1L)
+                .setTemplateRuleType(CommonConstants.INDEX_RULE);
             when(baseMapper.selectById(any())).thenReturn(alertRecord);
             AlertTemplateRuleItem ruleItem = new AlertTemplateRuleItem();
             ruleItem.setRuleExpName("ruleExpName").setUnit("unit").setLimitValue("10").setRuleExp("ruleExp");
@@ -404,6 +441,346 @@ public class AlertRecordServiceImplTest {
             verify(hostFacade, times(1)).getById(any());
             verify(prometheusService, times(1)).queryRange(any(), any(), any(), any(), any());
             assertEquals(1, relationDataList.size());
+        }
+    }
+
+    @Test
+    public void testGetEmptyRelationLog1() {
+        AlertRecord alertRecord = new AlertRecord();
+        when(baseMapper.selectById(any())).thenReturn(alertRecord);
+        alertRecordService.getRelationLog(anyLong(), false, "");
+        verify(baseMapper, times(1)).selectById(any());
+    }
+
+    @Test
+    public void testGetEmptyRelationLog2() {
+        AlertRecord alertRecord = new AlertRecord().setTemplateRuleType(CommonConstants.INDEX_RULE);
+        when(baseMapper.selectById(any())).thenReturn(alertRecord);
+        alertRecordService.getRelationLog(anyLong(), false, "");
+        verify(baseMapper, times(1)).selectById(any());
+    }
+
+    @Test
+    public void testGetEmptyRelationLog3() {
+        AlertRecord alertRecord = new AlertRecord().setTemplateRuleType(CommonConstants.LOG_RULE);
+        when(baseMapper.selectById(any())).thenReturn(alertRecord);
+        List<AlertTemplateRuleItem> templateRuleItems = new ArrayList<>();
+        when(templateRuleItemMapper.selectList(any())).thenReturn(templateRuleItems);
+        alertRecordService.getRelationLog(anyLong(), false, "");
+        verify(baseMapper, times(1)).selectById(any());
+        verify(templateRuleItemMapper, times(1)).selectList(any());
+    }
+
+    @Test
+    public void testGetRelationLogWithShowAlertLog() throws IOException {
+        AlertRecord alertRecord = new AlertRecord();
+        alertRecord.setId(1L).setClusterNodeId("node123").setAlertStatus(0).setRecordStatus(0).setLevel("warn")
+            .setStartTime(LocalDateTime.parse("2022-01-01 01:00:02",
+                DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")))
+            .setEndTime(LocalDateTime.parse("2022-01-01 02:00:02",
+                DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))).setTemplateId(1L).setTemplateRuleId(1L)
+            .setTemplateRuleType(CommonConstants.LOG_RULE);
+        when(baseMapper.selectById(any())).thenReturn(alertRecord);
+        AlertTemplateRuleItem ruleItem1 = new AlertTemplateRuleItem().setKeyword("abc").setBlockWord("bcd");
+        AlertTemplateRuleItem ruleItem2 = new AlertTemplateRuleItem().setKeyword("abc,efg");
+        List<AlertTemplateRuleItem> templateRuleItems = new ArrayList<>();
+        templateRuleItems.add(ruleItem1);
+        templateRuleItems.add(ruleItem2);
+        when(templateRuleItemMapper.selectList(any())).thenReturn(templateRuleItems);
+        // Es
+        ElasticsearchClient client = mock(ElasticsearchClient.class);
+        when(clientProvider.client()).thenReturn(client);
+        SearchResponse<HashMap> response = mockRealResponse();
+        when(client.search(any(Function.class), eq(HashMap.class))).thenReturn(response);
+
+        alertRecordService.getRelationLog(1L, true, "");
+
+        verify(baseMapper, times(1)).selectById(any());
+        verify(templateRuleItemMapper, times(1)).selectList(any());
+        verify(clientProvider, times(1)).client();
+        verify(client, times(1)).search(any(Function.class), eq(HashMap.class));
+    }
+
+    @Test
+    public void testGetRelationLogWithoutShowAlertLog() throws IOException {
+        AlertRecord alertRecord = new AlertRecord();
+        alertRecord.setId(1L).setClusterNodeId("node123").setAlertStatus(0).setRecordStatus(0).setLevel("warn")
+            .setStartTime(LocalDateTime.parse("2022-01-01 01:00:02",
+                DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")))
+            .setEndTime(LocalDateTime.parse("2022-01-01 02:00:02",
+                DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))).setTemplateId(1L).setTemplateRuleId(1L)
+            .setTemplateRuleType(CommonConstants.LOG_RULE);
+        when(baseMapper.selectById(any())).thenReturn(alertRecord);
+        AlertTemplateRuleItem ruleItem1 = new AlertTemplateRuleItem().setKeyword("abc").setBlockWord("bcd");
+        AlertTemplateRuleItem ruleItem2 = new AlertTemplateRuleItem().setKeyword("abc,efg");
+        List<AlertTemplateRuleItem> templateRuleItems = new ArrayList<>();
+        templateRuleItems.add(ruleItem1);
+        templateRuleItems.add(ruleItem2);
+        when(templateRuleItemMapper.selectList(any())).thenReturn(templateRuleItems);
+        // Es
+        ElasticsearchClient client = mock(ElasticsearchClient.class);
+        when(clientProvider.client()).thenReturn(client);
+        SearchResponse<HashMap> response = mockRealResponse();
+        when(client.search(any(Function.class), eq(HashMap.class))).thenReturn(response);
+
+        alertRecordService.getRelationLog(1L, false, "123124");
+
+        verify(baseMapper, times(1)).selectById(any());
+        verify(templateRuleItemMapper, times(1)).selectList(any());
+        verify(clientProvider, times(1)).client();
+        verify(client, times(1)).search(any(Function.class), eq(HashMap.class));
+    }
+
+    @Test
+    public void testGetRelationLogWithShowAlertLogReturnEmptyHit() throws IOException {
+        AlertRecord alertRecord = new AlertRecord();
+        alertRecord.setId(1L).setClusterNodeId("node123").setAlertStatus(0).setRecordStatus(0).setLevel("warn")
+            .setStartTime(LocalDateTime.parse("2022-01-01 01:00:02",
+                DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")))
+            .setEndTime(LocalDateTime.parse("2022-01-01 02:00:02",
+                DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))).setTemplateId(1L).setTemplateRuleId(1L)
+            .setTemplateRuleType(CommonConstants.LOG_RULE);
+        when(baseMapper.selectById(any())).thenReturn(alertRecord);
+        AlertTemplateRuleItem ruleItem1 = new AlertTemplateRuleItem().setKeyword("abc").setBlockWord("bcd");
+        AlertTemplateRuleItem ruleItem2 = new AlertTemplateRuleItem().setKeyword("abc,efg");
+        List<AlertTemplateRuleItem> templateRuleItems = new ArrayList<>();
+        templateRuleItems.add(ruleItem1);
+        templateRuleItems.add(ruleItem2);
+        when(templateRuleItemMapper.selectList(any())).thenReturn(templateRuleItems);
+        // Es
+        ElasticsearchClient client = mock(ElasticsearchClient.class);
+        when(clientProvider.client()).thenReturn(client);
+        SearchResponse<HashMap> response = mockEmptyHisResponse();
+        when(client.search(any(Function.class), eq(HashMap.class))).thenReturn(response);
+
+        alertRecordService.getRelationLog(1L, true, "");
+
+        verify(baseMapper, times(1)).selectById(any());
+        verify(templateRuleItemMapper, times(1)).selectList(any());
+        verify(clientProvider, times(1)).client();
+        verify(client, times(1)).search(any(Function.class), eq(HashMap.class));
+    }
+
+    @Test
+    public void testGetRelationLogWithShowAlertLogReturnEmptySorts() throws IOException {
+        AlertRecord alertRecord = new AlertRecord();
+        alertRecord.setId(1L).setClusterNodeId("node123").setAlertStatus(0).setRecordStatus(0).setLevel("warn")
+            .setStartTime(LocalDateTime.parse("2022-01-01 01:00:02",
+                DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")))
+            .setEndTime(LocalDateTime.parse("2022-01-01 02:00:02",
+                DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))).setTemplateId(1L).setTemplateRuleId(1L)
+            .setTemplateRuleType(CommonConstants.LOG_RULE);
+        when(baseMapper.selectById(any())).thenReturn(alertRecord);
+        AlertTemplateRuleItem ruleItem1 = new AlertTemplateRuleItem().setKeyword("abc").setBlockWord("bcd");
+        AlertTemplateRuleItem ruleItem2 = new AlertTemplateRuleItem().setKeyword("abc,efg");
+        List<AlertTemplateRuleItem> templateRuleItems = new ArrayList<>();
+        templateRuleItems.add(ruleItem1);
+        templateRuleItems.add(ruleItem2);
+        when(templateRuleItemMapper.selectList(any())).thenReturn(templateRuleItems);
+        // Es
+        ElasticsearchClient client = mock(ElasticsearchClient.class);
+        when(clientProvider.client()).thenReturn(client);
+        SearchResponse<HashMap> response = mockEmptySortResponse();
+        when(client.search(any(Function.class), eq(HashMap.class))).thenReturn(response);
+
+        alertRecordService.getRelationLog(1L, true, "");
+
+        verify(baseMapper, times(1)).selectById(any());
+        verify(templateRuleItemMapper, times(1)).selectList(any());
+        verify(clientProvider, times(1)).client();
+        verify(client, times(1)).search(any(Function.class), eq(HashMap.class));
+    }
+
+    private SearchResponse<HashMap> mockRealResponse() {
+        Map logTypeMap = new HashMap<>();
+        logTypeMap.put(CommonConstants.LOG_TYPE, "os-run-log");
+        HashMap map = new HashMap<>();
+        map.put(CommonConstants.FIELDS, logTypeMap);
+        map.put(CommonConstants.LOG_LEVEL, "LOG");
+        map.put(CommonConstants.MESSAGE, "Starting session: command for root from 127.0.0.1 port 36252 id 0");
+        map.put(CommonConstants.CLUSTER_ID, "test");
+        map.put(CommonConstants.NODE_ID, "node123");
+        map.put(CommonConstants.TIMESTAMP, "2023-08-14T04:38:38.000+08:00");
+        Hit.Builder<HashMap> hitBuilder = new Hit.Builder<>();
+        hitBuilder.source(map);
+        List<String> sorts = Arrays.asList("2023-08-14T04:38:38.000+08:00", "12345");
+        hitBuilder.sort(sorts).index("ob-*-node123").id("abcd");
+        List<Hit<HashMap>> hitList = new ArrayList<>();
+        hitList.add(hitBuilder.build());
+        HitsMetadata.Builder<HashMap> hitsMetadataBuilder = new HitsMetadata.Builder<HashMap>();
+        hitsMetadataBuilder.hits(hitList);
+        SearchResponse.Builder<HashMap> hashMapBuilder = new SearchResponse.Builder<>();
+        hashMapBuilder.hits(hitsMetadataBuilder.build()).took(4028L).timedOut(false);
+        ShardStatistics.Builder statisticsBuilder = new ShardStatistics.Builder();
+        statisticsBuilder.failed(0).successful(14).total(14).skipped(0);
+        hashMapBuilder.shards(statisticsBuilder.build());
+        return hashMapBuilder.build();
+    }
+
+    private SearchResponse<HashMap> mockEmptyHisResponse() {
+        List<Hit<HashMap>> hitList = new ArrayList<>();
+        HitsMetadata.Builder<HashMap> hitsMetadataBuilder = new HitsMetadata.Builder<HashMap>();
+        hitsMetadataBuilder.hits(hitList);
+        SearchResponse.Builder<HashMap> hashMapBuilder = new SearchResponse.Builder<>();
+        hashMapBuilder.hits(hitsMetadataBuilder.build()).took(4028L).timedOut(false);
+        ShardStatistics.Builder statisticsBuilder = new ShardStatistics.Builder();
+        statisticsBuilder.failed(0).successful(14).total(14).skipped(0);
+        hashMapBuilder.shards(statisticsBuilder.build());
+        return hashMapBuilder.build();
+    }
+
+    private SearchResponse<HashMap> mockEmptySortResponse() {
+        Map logTypeMap = new HashMap<>();
+        logTypeMap.put(CommonConstants.LOG_TYPE, "os-run-log");
+        HashMap map = new HashMap<>();
+        map.put(CommonConstants.FIELDS, logTypeMap);
+        map.put(CommonConstants.LOG_LEVEL, "LOG");
+        map.put(CommonConstants.MESSAGE, "Starting session: command for root from 127.0.0.1 port 36252 id 0");
+        map.put(CommonConstants.CLUSTER_ID, "test");
+        map.put(CommonConstants.NODE_ID, "node123");
+        map.put(CommonConstants.TIMESTAMP, "2023-08-14T04:38:38.000+08:00");
+        Hit.Builder<HashMap> hitBuilder = new Hit.Builder<>();
+        hitBuilder.source(map);
+        hitBuilder.index("ob-*-node123").id("abcd");
+        List<Hit<HashMap>> hitList = new ArrayList<>();
+        hitList.add(hitBuilder.build());
+        HitsMetadata.Builder<HashMap> hitsMetadataBuilder = new HitsMetadata.Builder<HashMap>();
+        hitsMetadataBuilder.hits(hitList);
+        SearchResponse.Builder<HashMap> hashMapBuilder = new SearchResponse.Builder<>();
+        hashMapBuilder.hits(hitsMetadataBuilder.build()).took(4028L).timedOut(false);
+        ShardStatistics.Builder statisticsBuilder = new ShardStatistics.Builder();
+        statisticsBuilder.failed(0).successful(14).total(14).skipped(0);
+        hashMapBuilder.shards(statisticsBuilder.build());
+        return hashMapBuilder.build();
+    }
+
+    @Test
+    public void testExportWorkbookWithEmpty() {
+        try (MockedStatic<MessageSourceUtil> mockedStatic = mockStatic(MessageSourceUtil.class)) {
+            mockedStatic.when(() -> MessageSourceUtil.get(any())).thenReturn("alertRecord");
+            List<AlertRecord> alertRecords = new ArrayList<>();
+            when(baseMapper.selectList(any())).thenReturn(alertRecords);
+            AlertStatisticsReq alertStatisticsReq = new AlertStatisticsReq();
+            alertRecordService.exportWorkbook(alertStatisticsReq);
+            verify(baseMapper, times(1)).selectList(any());
+        }
+    }
+
+    @Test
+    public void testExportWorkbook() {
+        try (MockedStatic<MessageSourceUtil> mockedStatic = mockStatic(MessageSourceUtil.class)) {
+            mockedStatic.when(() -> MessageSourceUtil.get(any())).thenReturn("alertRecord");
+            List<AlertRecord> alertRecords = mockRealAlertRecords();
+            when(baseMapper.selectList(any())).thenReturn(alertRecords);
+            OpsClusterNodeEntity nodeEntity = new OpsClusterNodeEntity();
+            nodeEntity.setClusterNodeId("nodeId1");
+            nodeEntity.setHostId("1");
+            nodeEntity.setClusterRole(ClusterRoleEnum.MASTER);
+            nodeEntity.setClusterId("test");
+            List<OpsClusterNodeEntity> opsClusterNodeEntities = new ArrayList<>();
+            opsClusterNodeEntities.add(nodeEntity);
+            List<String> clusterNodeIdList = alertRecords.stream().map(item -> item.getClusterNodeId()).collect(
+                Collectors.toList());
+            when(clusterNodeService.listByIds(clusterNodeIdList)).thenReturn(opsClusterNodeEntities);
+            OpsHostEntity hostEntity = new OpsHostEntity();
+            hostEntity.setHostId("1");
+            hostEntity.setPublicIp("127.0.0.1");
+            List<OpsHostEntity> opsHostEntities = new ArrayList<>();
+            opsHostEntities.add(hostEntity);
+            List<String> hostIds = opsClusterNodeEntities.stream().map(item -> item.getHostId()).collect(
+                Collectors.toList());
+            when(hostFacade.listByIds(hostIds)).thenReturn(opsHostEntities);
+            OpsClusterEntity clusterEntity = new OpsClusterEntity();
+            clusterEntity.setPort(8080);
+            clusterEntity.setClusterId("test");
+            List<OpsClusterEntity> opsClusterEntities = new ArrayList<>();
+            opsClusterEntities.add(clusterEntity);
+            List<String> clusterIds = opsClusterNodeEntities.stream().map(item -> item.getClusterId()).collect(
+                Collectors.toList());
+            when(clusterService.listByIds(clusterIds)).thenReturn(opsClusterEntities);
+
+            AlertStatisticsReq alertStatisticsReq =
+                new AlertStatisticsReq().setStartTime("2023-08-24 10:13:11").setEndTime("2023-08-24 11:13:11");
+            alertRecordService.exportWorkbook(alertStatisticsReq);
+            verify(baseMapper, times(1)).selectList(any());
+            verify(clusterNodeService, times(1)).listByIds(clusterNodeIdList);
+            verify(hostFacade, times(1)).listByIds(hostIds);
+            verify(clusterService, times(1)).listByIds(clusterIds);
+        }
+    }
+
+    private List<AlertRecord> mockRealAlertRecords() {
+        List<AlertRecord> alertRecords = new ArrayList<>();
+        AlertRecord alertRecord1 =
+            new AlertRecord().setStartTime(LocalDateTime.now().minusHours(2)).setEndTime(LocalDateTime.now())
+                .setDuration(0L).setAlertStatus(CommonConstants.FIRING_STATUS)
+                .setRecordStatus(CommonConstants.READ_STATUS).setLevel("warn")
+                .setTemplateRuleType(CommonConstants.INDEX_RULE).setTemplateId(1L).setTemplateRuleId(1L)
+                .setClusterNodeId("nodeId1").setNotifyWayIds("1").setNotifyWayNames("a");
+        alertRecords.add(alertRecord1);
+        AlertRecord alertRecord2 =
+            new AlertRecord().setStartTime(LocalDateTime.now().minusHours(2)).setEndTime(LocalDateTime.now())
+                .setDuration(3661L).setAlertStatus(CommonConstants.FIRING_STATUS)
+                .setRecordStatus(CommonConstants.UNREAD_STATUS).setLevel("warn")
+                .setTemplateRuleType(CommonConstants.INDEX_RULE).setTemplateId(1L).setTemplateRuleId(1L)
+                .setClusterNodeId("nodeId1").setNotifyWayIds("1").setNotifyWayNames("a");
+        alertRecords.add(alertRecord2);
+        AlertRecord alertRecord3 =
+            new AlertRecord().setStartTime(LocalDateTime.now().minusHours(2)).setEndTime(LocalDateTime.now())
+                .setDuration(36610L).setAlertStatus(CommonConstants.RECOVER_STATUS)
+                .setRecordStatus(CommonConstants.UNREAD_STATUS).setLevel("warn")
+                .setTemplateRuleType(CommonConstants.LOG_RULE).setTemplateId(1L).setTemplateRuleId(1L)
+                .setClusterNodeId("nodeId1").setNotifyWayIds("1").setNotifyWayNames("a");
+        alertRecords.add(alertRecord3);
+        return alertRecords;
+    }
+
+    @Test
+    public void testExportReport() {
+        try (MockedStatic<MessageSourceUtil> mockedStatic = mockStatic(MessageSourceUtil.class)) {
+            mockedStatic.when(() -> MessageSourceUtil.get(any())).thenReturn("alertRecord");
+            AlertStatisticsDto alertStatisticsDto = new AlertStatisticsDto();
+            AlertRecordServiceImpl recordService = mock(AlertRecordServiceImpl.class);
+            when(recordService.alertRecordStatistics(any())).thenReturn(alertStatisticsDto);
+            List<AlertRecord> alertRecords = mockRealAlertRecords();
+            when(baseMapper.selectList(any())).thenReturn(alertRecords);
+            OpsClusterNodeEntity nodeEntity = new OpsClusterNodeEntity();
+            nodeEntity.setClusterNodeId("nodeId1");
+            nodeEntity.setHostId("1");
+            nodeEntity.setClusterRole(ClusterRoleEnum.MASTER);
+            nodeEntity.setClusterId("test");
+            List<OpsClusterNodeEntity> opsClusterNodeEntities = new ArrayList<>();
+            opsClusterNodeEntities.add(nodeEntity);
+            List<String> clusterNodeIdList = alertRecords.stream().map(item -> item.getClusterNodeId()).collect(
+                Collectors.toList());
+            when(clusterNodeService.listByIds(clusterNodeIdList)).thenReturn(opsClusterNodeEntities);
+            OpsHostEntity hostEntity = new OpsHostEntity();
+            hostEntity.setHostId("1");
+            hostEntity.setPublicIp("127.0.0.1");
+            List<OpsHostEntity> opsHostEntities = new ArrayList<>();
+            opsHostEntities.add(hostEntity);
+            List<String> hostIds = opsClusterNodeEntities.stream().map(item -> item.getHostId()).collect(
+                Collectors.toList());
+            when(hostFacade.listByIds(hostIds)).thenReturn(opsHostEntities);
+            OpsClusterEntity clusterEntity = new OpsClusterEntity();
+            clusterEntity.setPort(8080);
+            clusterEntity.setClusterId("test");
+            List<OpsClusterEntity> opsClusterEntities = new ArrayList<>();
+            opsClusterEntities.add(clusterEntity);
+            List<String> clusterIds = opsClusterNodeEntities.stream().map(item -> item.getClusterId()).collect(
+                Collectors.toList());
+            when(clusterService.listByIds(clusterIds)).thenReturn(opsClusterEntities);
+            String html = "html";
+            when(templateEngine.process(anyString(), any())).thenReturn(html);
+
+            AlertStatisticsReq alertStatisticsReq =
+                new AlertStatisticsReq().setStartTime("2023-08-24 10:13:11").setEndTime("2023-08-24 11:13:11");
+            String result = alertRecordService.exportReport(alertStatisticsReq);
+            verify(baseMapper, times(1)).selectList(any());
+            verify(clusterNodeService, times(1)).listByIds(clusterNodeIdList);
+            verify(hostFacade, times(1)).listByIds(hostIds);
+            verify(clusterService, times(1)).listByIds(clusterIds);
+            assertEquals(html, result);
         }
     }
 }

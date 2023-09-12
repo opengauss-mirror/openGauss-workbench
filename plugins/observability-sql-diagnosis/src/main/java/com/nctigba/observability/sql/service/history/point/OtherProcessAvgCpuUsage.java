@@ -75,29 +75,35 @@ public class OtherProcessAvgCpuUsage implements HisDiagnosisPointService<Prometh
             }
         }
         AnalysisDTO analysisDTO = new AnalysisDTO();
-        if (CollectionUtils.isEmpty(sysList) || CollectionUtils.isEmpty(proList)) {
+        if (CollectionUtils.isEmpty(sysList)) {
             analysisDTO.setIsHint(HisDiagnosisResult.ResultState.NO_ADVICE);
         } else {
             StringBuilder sb = new StringBuilder();
             List<Object> sysData = sysList.get(0).getValues();
-            List<Object> proData = proList.get(0).getValues();
-            for (Object sysObject : sysData) {
-                List<Object> sys = (List<Object>) sysObject;
-                for (Object proObject : proData) {
-                    List<Object> pro = (List<Object>) proObject;
-                    if (sys.get(0).toString().equals(pro.get(0).toString())) {
-                        float sub = Float.parseFloat(sys.get(1).toString()) - Float.parseFloat(pro.get(1).toString());
-                        if (sub > 0.0f) {
-                            sb.append(sub);
-                        }
-                        break;
-                    }
-                }
-            }
-            if (sb.length() > 0) {
+            List<Object> proData;
+            if (CollectionUtils.isEmpty(proList)) {
                 analysisDTO.setIsHint(HisDiagnosisResult.ResultState.SUGGESTIONS);
             } else {
-                analysisDTO.setIsHint(HisDiagnosisResult.ResultState.NO_ADVICE);
+                proData = proList.get(0).getValues();
+                for (Object sysObject : sysData) {
+                    List<Object> sys = (List<Object>) sysObject;
+                    for (Object proObject : proData) {
+                        List<Object> pro = (List<Object>) proObject;
+                        if (sys.get(0).toString().equals(pro.get(0).toString())) {
+                            float sub =
+                                    Float.parseFloat(sys.get(1).toString()) - Float.parseFloat(pro.get(1).toString());
+                            if (sub > 0.0f) {
+                                sb.append(sub);
+                            }
+                            break;
+                        }
+                    }
+                }
+                if (sb.length() > 0) {
+                    analysisDTO.setIsHint(HisDiagnosisResult.ResultState.SUGGESTIONS);
+                } else {
+                    analysisDTO.setIsHint(HisDiagnosisResult.ResultState.NO_ADVICE);
+                }
             }
         }
         analysisDTO.setPointType(HisDiagnosisResult.PointType.CENTER);

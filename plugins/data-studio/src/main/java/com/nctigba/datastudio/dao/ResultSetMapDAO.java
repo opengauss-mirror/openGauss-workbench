@@ -13,10 +13,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Repository;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -76,22 +73,6 @@ public class ResultSetMapDAO {
      */
     public void overtimeCloseWin(String winID) throws SQLException {
         log.info("socketSet is: " + winID);
-        Connection connection = tableDataServiceImpl.getConnectionMap(winID);
-        Statement statement = tableDataServiceImpl.getStatementMap(winID);
-        ResultSet resultSet = tableDataServiceImpl.getResultSetMap(winID);
-        if (resultSet != null) {
-            resultSet.close();
-            tableDataServiceImpl.removeResultSetMap(winID);
-        }
-        if (statement != null) {
-            statement.cancel();
-            statement.close();
-            tableDataServiceImpl.removeStatementMap(winID);
-        }
-        if (connection != null) {
-            connection.close();
-            tableDataServiceImpl.removeConnectionMap(winID);
-        }
         winMap.remove(winID);
     }
 }

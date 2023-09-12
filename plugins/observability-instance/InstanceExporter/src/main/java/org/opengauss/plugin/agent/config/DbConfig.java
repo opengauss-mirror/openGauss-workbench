@@ -4,6 +4,8 @@
 
 package org.opengauss.plugin.agent.config;
 
+import org.opengauss.plugin.agent.util.CmdUtil;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -13,11 +15,15 @@ import lombok.experimental.Accessors;
 @Component
 @Data
 @Accessors(chain = true)
-public class DbConfig {
+public class DbConfig implements InitializingBean {
     @Value("${exporter.port}")
     private Integer exporterPort;
     @Value("${conf.hostId:#{null}}")
     private String hostId;
+    @Value("${conf.user:#{null}}")
+    private String user;
+    @Value("${conf.pass:#{null}}")
+    private String pass;
     @Value("${conf.node.nodeId:#{null}}")
     private String nodeId;
     @Value("${conf.node.dbport:#{null}}")
@@ -26,4 +32,9 @@ public class DbConfig {
     private String dbUsername;
     @Value("${conf.node.dbPassword:#{null}}")
     private String dbPassword;
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        CmdUtil.init(user, pass);
+    }
 }

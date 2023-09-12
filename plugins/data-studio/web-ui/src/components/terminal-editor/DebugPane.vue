@@ -1,5 +1,5 @@
 <template>
-  <div class="DebugPane">
+  <div class="debug-pane">
     <div class="pane">
       <div class="title-wrapper">
         <div class="title">
@@ -246,9 +246,7 @@
       height: 20px;
     }
   }
-  .DebugPane {
-    width: 370px;
-    flex-shrink: 0;
+  .debug-pane {
     padding-left: 15px;
   }
   .pane {

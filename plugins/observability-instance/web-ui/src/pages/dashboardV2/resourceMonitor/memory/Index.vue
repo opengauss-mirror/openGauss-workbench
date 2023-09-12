@@ -7,6 +7,9 @@
             <el-link v-if="isManualRangeSelected" type="primary" @click="gotoSQLDiagnosis()">
               {{ $t('app.diagnosis') }}
             </el-link>
+            <el-link v-if="isManualRangeSelected" type="primary" @click="wdr(tabId)" v-loading="wdrLoading">
+              {{$t('instanceIndex.wdrAnalysis')}}
+            </el-link>
           </div>
         </template>
         <div style="height: 257px">
@@ -38,6 +41,7 @@
             <el-table-column prop="MEM_USED" :label="$t('resourceMonitor.memory.usedMemory')" />
             <el-table-column prop="MEM_FREE" :label="$t('resourceMonitor.memory.freeMemory')" />
             <el-table-column prop="MEM_CACHE" :label="$t('resourceMonitor.memory.cachedMemory')" />
+            <el-table-column prop="MEMORY_DB_USED_CURR" :label="$t('resourceMonitor.memory.dbMemory')" />
           </el-table>
         </div>
       </my-card>
@@ -92,7 +96,8 @@
     >
       <div style="margin-right: 12px">{{ $t('app.refreshOn') }} {{ innerRefreshDoneTime }}</div>
       <div>{{ $t('app.autoRefreshFor') }}</div>
-      <el-select v-model="innerRefreshTime" style="width: 60px; margin: 0 4px" @change="updateTimerInner">
+      <el-select v-model="innerRefreshTime" style="width: 100px; margin: 0 4px" @change="updateTimerInner">
+        <el-option :value="99999999" label="NO-AUTO" />
         <el-option :value="1" label="1s" />
         <el-option :value="15" label="15s" />
         <el-option :value="30" label="30s" />
@@ -118,10 +123,24 @@
               return 'grid-header'
             }
           "
+          :row-class-name="rowClassName"
         >
+          <el-table-column prop="%MEM" label="%MEM" width="70" />
           <el-table-column prop="%CPU" label="%CPU" width="60" />
-          <el-table-column prop="%MEM" label="%MEM" width="60" />
-          <el-table-column prop="COMMAND" label="COMMAND" />
+          <el-table-column label="COMMAND" width="260" show-overflow-tooltip>
+            <template #default="scope">
+              <el-link
+                v-if="scope.row.port && node.dbPort != scope.row.port"
+                type="primary"
+                class="top-sql-table-id"
+                @click="changeCluster(scope.row)"
+              >
+                {{ scope.row.COMMAND }}
+              </el-link>
+              <span v-else>{{ scope.row.COMMAND }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column prop="FullCommand" label="FULL COMMAND" show-overflow-tooltip />
           <el-table-column prop="NI" label="NI" width="40" />
           <el-table-column prop="PID" label="PID" width="90" />
           <el-table-column prop="PR" label="PR" width="40" />
@@ -145,9 +164,9 @@
             }
           "
         >
+          <el-table-column prop="%MEM" label="%MEM" width="70" />
           <el-table-column prop="%CPU" label="%CPU" width="60" />
-          <el-table-column prop="%MEM" label="%MEM" width="60" />
-          <el-table-column prop="COMMAND" label="COMMAND" />
+          <el-table-column prop="COMMAND" label="COMMAND" show-overflow-tooltip />
           <el-table-column prop="NI" label="NI" width="40" />
           <el-table-column prop="PID" label="PID" width="90" />
           <el-table-column prop="PR" label="PR" width="40" />
@@ -157,6 +176,20 @@
           <el-table-column prop="TIME+" label="TIME+" width="100" />
           <el-table-column prop="USER" label="USER" width="120" />
           <el-table-column prop="VIRT" label="VIRT" width="120" />
+          <el-table-column :label="$t('session.trans.sessionID')" width="130">
+            <template #default="scope">
+              <el-link type="primary" class="top-sql-table-id" @click="gotoSessionDetail(scope.row.sessionid)">
+                {{ scope.row.sessionid }}
+              </el-link>
+            </template>
+          </el-table-column>
+          <el-table-column label="SQLID" width="150">
+            <template #default="scope">
+              <el-link type="primary" @click="gotoTopsqlDetail(scope.row.query_id)">
+                {{ scope.row.query_id }}
+              </el-link>
+            </template>
+          </el-table-column>
         </el-table>
       </el-tab-pane>
     </el-tabs>
@@ -219,6 +252,8 @@ import { Refresh } from '@element-plus/icons-vue'
 import { hasSQLDiagnosisModule } from '@/api/sqlDiagnosis'
 import moment from 'moment'
 import { ElMessage } from 'element-plus'
+import router from '@/router'
+import { getWDRSnapshot } from '@/api/wdr'
 
 const { t } = useI18n()
 
@@ -249,11 +284,12 @@ const metricsData = ref<MetricsData>({
   time: [],
 })
 
+const emit = defineEmits(['changeCluster', 'goto'])
 const topMemoryProcessNowData = ref<void | TopMemoryProcessNow[]>([])
 const topMemoryDBThreadNowData = ref<void | TopMemoryProcessNow[]>([])
 const innerRefreshTime = ref<number>(30)
 const innerRefreshDoneTime = ref<string>('')
-const { updateCounter, sourceType, autoRefreshTime, tabNow, instanceId, isManualRangeSelected, timeRange } =
+const { updateCounter, sourceType, autoRefreshTime, tabNow, instanceId, isManualRangeSelected, timeRange, node } =
   storeToRefs(useMonitorStore(props.tabId))
 
 // same for every page in index
@@ -293,6 +329,12 @@ const load = (checkTab?: boolean, checkRange?: boolean) => {
   if (!instanceId.value) return
   requestData(props.tabId)
 }
+const rowClassName = ({ row }: { row: any }) => {
+  if (row.port) {
+    return 'highlight-row'
+  }
+  return ''
+}
 const { data: indexData, run: requestData } = useRequest(getMemoryMetrics, { manual: true })
 watch(
   indexData,
@@ -311,6 +353,7 @@ watch(
         MEM_FREE: byteToMB(baseData.MEM_FREE) + 'MB',
         MEM_TOTAL: byteToMB(baseData.MEM_TOTAL) + 'MB',
         MEM_USED: byteToMB(baseData.MEM_USED) + 'MB',
+        MEMORY_DB_USED_CURR: byteToMB(baseData.MEMORY_DB_USED_CURR) + 'MB',
       },
     ]
     metricsData.value.swapInfo = [
@@ -376,6 +419,16 @@ watch(
   () => {
     topMemoryProcessNowData.value = topMemoryProcessNowResult.value ? topMemoryProcessNowResult.value[0] : []
     topMemoryDBThreadNowData.value = topMemoryProcessNowResult.value ? topMemoryProcessNowResult.value[1] : []
+    topMemoryProcessNowData.value.forEach((item) => {
+      if (item.port) {
+        item.COMMAND += '(' + node.value.publicIp + ':' + item.port
+        if (node.value.dbPort.toString() === item.port.toString()) {
+          item.COMMAND += t('instanceMonitor.thisInstance')
+        }
+        item.COMMAND += ')'
+        item.publicIp = node.value.publicIp
+      }
+    })
     innerRefreshDoneTime.value = moment(new Date()).format('HH:mm:ss')
   },
   { deep: true }
@@ -390,6 +443,9 @@ const updateTimerInner = () => {
     },
     computed(() => timeInner * 1000)
   )
+}
+const changeCluster = (row: TopMemoryProcessNow) => {
+  emit('changeCluster', row.publicIp, row.port)
 }
 
 const gotoSQLDiagnosis = () => {
@@ -412,4 +468,66 @@ const gotoSQLDiagnosis = () => {
       ElMessage.error(t('app.needSQLDiagnosis'))
     })
 }
+
+const gotoSessionDetail = (id: string) => {
+  const curMode = localStorage.getItem('INSTANCE_CURRENT_MODE')
+  if (curMode === 'wujie') {
+    // @ts-ignore plug-in components
+    window.$wujie?.props.methods.jump({
+      name: `Static-pluginObservability-instanceVemSessionDetail`,
+      query: {
+        dbid: instanceId.value,
+        id,
+      },
+    })
+  } else {
+    // local
+    window.sessionStorage.setItem('sqlId', id)
+    router.push(`/vem/sessionDetail/${instanceId.value}/${id}`)
+  }
+}
+const gotoTopsqlDetail = (id: string) => {
+  const curMode = localStorage.getItem('INSTANCE_CURRENT_MODE')
+  if (curMode === 'wujie') {
+    // @ts-ignore plug-in components
+    window.$wujie?.props.methods.jump({
+      name: `Static-pluginObservability-instanceVemSql_detail`,
+      query: {
+        dbid: instanceId.value,
+        id,
+      },
+    })
+  } else {
+    // local
+    window.sessionStorage.setItem('sqlId', id)
+    router.push(`/vem/sql_detail/${instanceId.value}/${id}`)
+  }
+}
+
+const { data: wdrData, run: wdr, loading: wdrLoading } = useRequest(getWDRSnapshot, { manual: true })
+watch(
+  wdrData,
+  (res: any) => {
+    // goto wdr
+    if (res && res.wdrId && res.wdrId.length > 0) {
+      const { timeRange } = useMonitorStore(props.tabId)
+      let param = {
+        operation: 'search',
+        startTime: timeRange == null ? '' : moment(timeRange[0]).format("YYYY-MM-DD HH:mm:ss"),
+        endTime: timeRange == null ? '' : moment(timeRange[1]).format("YYYY-MM-DD HH:mm:ss"),
+      }
+      emit('goto', tabKeys.WDR, param)
+    } else if (res && res.start && res.end) {
+      let param = {
+        operation: 'edit',
+        startId: res.start,
+        endId: res.end
+      }
+      emit('goto', tabKeys.WDR, param)
+    } else {
+      ElMessage.error(t('wdrReports.wdrErrtip'))
+    }
+  },
+  { deep: true }
+)
 </script>

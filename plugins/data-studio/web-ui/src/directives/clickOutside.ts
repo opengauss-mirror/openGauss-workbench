@@ -1,3 +1,4 @@
+import { DirectiveBinding } from 'vue';
 function isBody(node) {
   return node && node.nodeType == 1 && node.tagName.toLowerCase() == 'body';
 }
@@ -10,7 +11,7 @@ function canFindParent(el, selectorClassName) {
 }
 
 export default {
-  mounted(el, binding) {
+  mounted(el, binding: DirectiveBinding) {
     function documentHandler(e: Event) {
       if (el.contains(e.target)) {
         return false;

@@ -28,11 +28,12 @@ public interface DataListByJdbcService {
      * @param schema_name schema_name
      * @return DataListDTO
      * @throws SQLException SQLException
+     * @throws InterruptedException InterruptedException
      */
     DataListDTO dataListQuerySQL(
             String jdbcUrl, String username, String password,
             String tableSql, String viewSql, String fun_prosSql, String sequenceSql,
-            String synonymSql, String schema_name) throws SQLException;
+            String synonymSql, String schema_name) throws SQLException, InterruptedException;
 
 
 }

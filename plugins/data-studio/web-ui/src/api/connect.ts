@@ -1,4 +1,12 @@
 import request from './request';
+import requestSystem from './requestSystem';
+
+export function getSystemUserProfile() {
+  return requestSystem({
+    url: '/system/user/profile',
+    method: 'get',
+  });
+}
 
 // heartbeat
 export function heartbeat() {

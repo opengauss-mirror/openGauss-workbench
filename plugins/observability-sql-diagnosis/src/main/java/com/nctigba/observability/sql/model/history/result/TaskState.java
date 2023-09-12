@@ -14,7 +14,15 @@ import com.nctigba.observability.sql.util.LocaleString;
  * @since 2023/6/9
  */
 public enum TaskState {
-    CREATE, WAITING, FINISH, DATA;
+    CREATE,
+    WAITING,
+    SQL_RUNNING,
+    RECEIVING,
+    DATABASE_CONNECT_ERROR,
+    SQL_PARSE_ERROR,
+    SQL_ERROR,
+    ERROR,
+    FINISH;
 
     @JsonValue
     public String getValue() {

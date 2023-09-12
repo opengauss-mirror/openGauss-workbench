@@ -8,8 +8,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import lombok.Generated;
 import lombok.NoArgsConstructor;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * ExportRequest
@@ -33,6 +35,8 @@ public class ExportRequest {
 
     private List<String> columnList;
 
+    private String columnString;
+
     private String fileType;
 
     @JsonProperty("titleFlag")
@@ -48,11 +52,15 @@ public class ExportRequest {
 
     private String encoding;
 
-    private List<Integer> functionMap;
+    private List<Map<String, Object>> functionMap;
 
     private List<String> viewList;
 
     private List<String> sequenceList;
 
     private List<String> schemaList;
+
+    private String timeFormat;
+
+    private MultipartFile file;
 }

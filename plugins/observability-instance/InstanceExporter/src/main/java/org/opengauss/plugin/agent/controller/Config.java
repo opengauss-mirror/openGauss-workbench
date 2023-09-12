@@ -1,6 +1,7 @@
 /*
  * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
  */
+
 package org.opengauss.plugin.agent.controller;
 
 import java.io.File;
@@ -36,7 +37,7 @@ public class Config {
             if (map == null)
                 map = new HashMap<>();
             map.put("conf", Map.of("hostId", hostId, "node",
-                    Map.of("nodeId", nodeId, "dbport", dbport, "username", username, "password", password)));
+                    Map.of("nodeId", nodeId, "dbport", dbport, "dbUsername", username, "dbPassword", password)));
             // refresh curr config
             dbConfig.setHostId(hostId).setNodeId(nodeId).setDbport(dbport).setDbUsername(username)
                     .setDbPassword(password);

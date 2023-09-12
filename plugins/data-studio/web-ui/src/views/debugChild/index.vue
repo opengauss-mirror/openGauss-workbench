@@ -18,7 +18,7 @@
 
   onMounted(() => {
     if (!AppStore.isMainViewMounted) {
-      const rootTagId = route.query.rootTagId;
+      const rootTagId = route.query.rootTagId as string;
       const rootDebugView = TagsViewStore.getViewById(rootTagId);
       if (rootDebugView?.fullPath) {
         loading.value = loadingInstance();

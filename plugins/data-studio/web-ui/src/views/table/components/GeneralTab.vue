@@ -1,5 +1,5 @@
 <template>
-  <el-table :data="props.data" stripe v-loading="props.loading" border>
+  <el-table :data="props.data" v-loading="props.loading" border>
     <el-table-column property="attr" :label="$t('common.attribute')" align="center" />
     <el-table-column prop="value" :label="$t('common.value')" align="center" />
   </el-table>

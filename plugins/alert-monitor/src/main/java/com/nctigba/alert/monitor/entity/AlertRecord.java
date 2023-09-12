@@ -45,6 +45,8 @@ public class AlertRecord {
     private Long duration;
     private String alertContent;
     private Integer recordStatus;
+    private Integer sendCount;
+    private LocalDateTime sendTime;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createTime;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")

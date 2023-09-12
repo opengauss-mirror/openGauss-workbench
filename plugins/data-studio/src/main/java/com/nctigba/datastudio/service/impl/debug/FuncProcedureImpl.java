@@ -15,7 +15,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.util.Strings;
 import org.opengauss.admin.common.exception.CustomException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -45,9 +44,6 @@ import static com.nctigba.datastudio.enums.MessageEnum.VIEW;
 @Slf4j
 @Service("funcProcedure")
 public class FuncProcedureImpl implements OperationInterface {
-    @Autowired
-    private StopDebugImpl stopDebug;
-
     @Override
     public void operate(WebSocketServer webSocketServer, Object obj) throws SQLException, IOException {
         PublicParamReq paramReq = DebugUtils.changeParamType(obj);
@@ -57,10 +53,14 @@ public class FuncProcedureImpl implements OperationInterface {
         String oldWindowName = paramReq.getOldWindowName();
         String windowName = paramReq.getWindowName();
         OperateStatusDO operateStatus = webSocketServer.getOperateStatus(windowName);
-        operateStatus.enableStartDebug();
+        if (paramReq.isInPackage()) {
+            operateStatus.enableStartAnonymous();
+        } else {
+            operateStatus.enableStartDebug();
+        }
         webSocketServer.setOperateStatus(windowName, operateStatus);
 
-        Statement statement = null;
+        Statement statement;
         if (StringUtils.isEmpty(oldWindowName)) {
             statement = webSocketServer.getStatement(rootWindowName);
             if (statement == null || statement.isClosed()) {

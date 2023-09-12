@@ -19,6 +19,8 @@ import com.nctigba.datastudio.model.query.TableDataEditQuery;
 import com.nctigba.datastudio.model.query.TableDataQuery;
 import com.nctigba.datastudio.model.query.TablePKDataQuery;
 
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
@@ -222,4 +224,31 @@ public interface TableDataService {
      * @throws SQLException SQLException
      */
     List<Map<String, Object>> tableAttribute(TableAttributeDTO request) throws SQLException;
+
+    /**
+     * table analyze
+     *
+     * @param request request
+     * @throws SQLException SQLException
+     */
+    void tableAnalyze(TableNameDTO request) throws SQLException;
+
+    /**
+     * table attribute partition
+     *
+     * @param request request
+     * @return Map
+     * @throws SQLException SQLException
+     */
+    Map<String, Object> tableAttributePartition(TableNameDTO request) throws SQLException;
+
+    /**
+     * export data
+     *
+     * @param request request
+     * @param response response
+     * @throws SQLException SQLException
+     * @throws IOException IOException
+     */
+    void exportData(TableDataQuery request, HttpServletResponse response) throws SQLException, IOException;
 }

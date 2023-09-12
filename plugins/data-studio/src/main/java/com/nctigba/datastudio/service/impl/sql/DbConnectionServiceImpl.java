@@ -16,6 +16,7 @@ import com.nctigba.datastudio.model.query.DatabaseMetaarrayIdSchemaQuery;
 import com.nctigba.datastudio.service.DataListByJdbcService;
 import com.nctigba.datastudio.service.DbConnectionService;
 import com.nctigba.datastudio.service.MetaDataByJdbcService;
+import com.nctigba.datastudio.util.DebugUtils;
 import com.nctigba.datastudio.util.LocaleString;
 import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.exception.CustomException;
@@ -152,14 +153,20 @@ public class DbConnectionServiceImpl implements DbConnectionService {
                     connectionDTO.getUrl(),
                     connectionDTO.getDbUser(),
                     connectionDTO.getDbPassword(),
-                    gainObjectSQLService.get(conMap.get(schema.getUuid()).getType()).tableSql(schema.getSchema()),
-                    gainObjectSQLService.get(conMap.get(schema.getUuid()).getType()).viewSql(schema.getSchema()),
-                    gainObjectSQLService.get(conMap.get(schema.getUuid()).getType()).fun_prosSql(schema.getSchema()),
-                    gainObjectSQLService.get(conMap.get(schema.getUuid()).getType()).sequenceSql(schema.getSchema()),
-                    gainObjectSQLService.get(conMap.get(schema.getUuid()).getType()).synonymSql(schema.getSchema()),
+                    gainObjectSQLService.get(conMap.get(schema.getUuid()).getType())
+                            .tableSql(DebugUtils.needQuoteName(schema.getSchema())),
+                    gainObjectSQLService.get(conMap.get(schema.getUuid()).getType())
+                            .viewSql(DebugUtils.needQuoteName(schema.getSchema())),
+                    gainObjectSQLService.get(conMap.get(schema.getUuid()).getType())
+                            .fun_prosSql(DebugUtils.needQuoteName(schema.getSchema())),
+                    gainObjectSQLService.get(conMap.get(schema.getUuid()).getType())
+                            .sequenceSql(DebugUtils.needQuoteName(schema.getSchema())),
+                    gainObjectSQLService.get(conMap.get(schema.getUuid()).getType())
+                            .synonymSql(DebugUtils.needQuoteName(schema.getSchema())),
                     schema.getSchema()
             );
-        } catch (SQLException e) {
+            log.info("77777 response is: " + dataList);
+        } catch (SQLException | InterruptedException e) {
             throw new CustomException(e.getMessage());
         }
         connectionDTO.updateConnectionDTO(connectionDTO);

@@ -148,6 +148,7 @@ public class WebSocketServer implements SocketExtract {
      * @throws IOException IOException
      */
     public void sendMessage(String sessionId, MessageEnum type, String message, Object obj) throws IOException {
+        log.info("sendMessage sessionId: " + sessionId + ",type:" + type);
         sendMessage(sessionId, type, TWO_HUNDRED, message, obj);
     }
 

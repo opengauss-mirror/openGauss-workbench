@@ -5,7 +5,6 @@
 package com.nctigba.alert.monitor.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.nctigba.alert.monitor.dto.AlertTemplateRuleDto;
 import com.nctigba.alert.monitor.entity.AlertTemplateRule;
 
 import java.util.List;
@@ -18,7 +17,21 @@ import java.util.List;
 public interface AlertTemplateRuleService extends IService<AlertTemplateRule> {
     AlertTemplateRule getTemplateRule(Long templateRuleId);
 
-    AlertTemplateRuleDto saveTemplateRule(AlertTemplateRule alertTemplateRule);
+    AlertTemplateRule saveTemplateRule(AlertTemplateRule alertTemplateRule);
 
-    List<AlertTemplateRuleDto> getDtoListByTemplateId(Long templateId);
+    List<AlertTemplateRule> getListByTemplateId(Long templateId);
+
+    /**
+     * enable rules
+     *
+     * @param templateRuleId Long
+     */
+    void enableTemplateRule(Long templateRuleId);
+
+    /**
+     * disable rules
+     *
+     * @param templateRuleId Long
+     */
+    void disableTemplateRule(Long templateRuleId);
 }

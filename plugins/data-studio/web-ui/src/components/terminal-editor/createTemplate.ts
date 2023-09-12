@@ -51,13 +51,40 @@ AS $$
 $$
 /
 `;
+      case 'package':
+        return `create package test_pkg_a
+IS
+  PROCEDURE p1;
+  PROCEDURE p2;
+end test_pkg_a;
+/
+
+create package body test_pkg_a
+IS
+  g number;
+  PROCEDURE p1
+  IS
+  BEGIN
+    g :=1;
+    g :=2;
+    p2;
+  end;
+  PROCEDURE p2
+  IS
+  BEGIN
+    g :=3;
+    g :=4;
+  end;
+end test_pkg_a;
+/
+`;
       case 'anonymous': //anoymous block
         return `DO
 $$
 DECLARE
-  /*declaration_section*/
+/*declaration_section*/
 BEGIN
-  /*executable_section*/
+/*executable_section*/
 END
 $$
 LANGUAGE plpgsql;

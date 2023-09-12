@@ -4,7 +4,7 @@
 
 package com.nctigba.observability.sql.history.point;
 
-import com.nctigba.observability.sql.constants.history.DiagnosisTypeCommon;
+import com.nctigba.observability.sql.constants.history.PointTypeCommon;
 import com.nctigba.observability.sql.constants.history.ThresholdCommon;
 import com.nctigba.observability.sql.model.history.DataStoreConfig;
 import com.nctigba.observability.sql.model.history.HisDiagnosisResult;
@@ -17,7 +17,9 @@ import com.nctigba.observability.sql.model.history.query.OptionQuery;
 import com.nctigba.observability.sql.service.history.DataStoreService;
 import com.nctigba.observability.sql.service.history.collection.CollectionItem;
 import com.nctigba.observability.sql.service.history.collection.agent.DbProcessCurrentCpuItem;
+import com.nctigba.observability.sql.service.history.collection.metric.CpuCoreNumItem;
 import com.nctigba.observability.sql.service.history.point.DbProcessCurrentCpuUsage;
+import com.nctigba.observability.sql.util.PointUtil;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.jupiter.api.Assertions;
@@ -32,6 +34,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -46,7 +49,11 @@ public class TestDbProcessCurrentCpuUsage {
     @Mock
     private DbProcessCurrentCpuItem item;
     @Mock
+    private CpuCoreNumItem cpuCoreNumItem;
+    @Mock
     private DataStoreService dataStoreService;
+    @Mock
+    private PointUtil util;
     @InjectMocks
     private DbProcessCurrentCpuUsage currentCpuUsage;
     private HisDiagnosisTask hisDiagnosisTask;
@@ -86,13 +93,13 @@ public class TestDbProcessCurrentCpuUsage {
     @Test
     public void testGetDiagnosisType() {
         String type = currentCpuUsage.getDiagnosisType();
-        Assertions.assertEquals(DiagnosisTypeCommon.CURRENT, type);
+        Assertions.assertEquals(PointTypeCommon.CURRENT, type);
     }
 
     @Test
     public void testGetSourceDataKeys() {
         List<CollectionItem<?>> result = currentCpuUsage.getSourceDataKeys();
-        Assertions.assertEquals(1, result.size());
+        Assertions.assertEquals(2, result.size());
         Assertions.assertEquals(item, result.get(0));
     }
 
@@ -111,6 +118,8 @@ public class TestDbProcessCurrentCpuUsage {
         config.setCollectionItem(item);
         config.setCount(1);
         when(dataStoreService.getData(item)).thenReturn(config);
+        DataStoreConfig proConfig = mock(DataStoreConfig.class);
+        when(dataStoreService.getData(cpuCoreNumItem)).thenReturn(proConfig);
         AgentData agentData = new AgentData();
         agentData.setParamName("test");
         List<AgentDTO> dbValue = new ArrayList<>();
@@ -120,6 +129,7 @@ public class TestDbProcessCurrentCpuUsage {
         agentData.setDbValue(dbValue);
         agentData.setSysValue(new ArrayList<>());
         when(config.getCollectionData()).thenReturn(agentData);
+        when(util.getCpuCoreNum(any())).thenReturn(8);
         AnalysisDTO result = currentCpuUsage.analysis(hisDiagnosisTask, dataStoreService);
         Assertions.assertEquals(HisDiagnosisResult.ResultState.NO_ADVICE, result.getIsHint());
         Assertions.assertEquals(HisDiagnosisResult.PointType.CENTER, result.getPointType());

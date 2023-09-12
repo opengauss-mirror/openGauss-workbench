@@ -1,13 +1,19 @@
 <!-- Copyright(c) vue-admin-perfect(zouzhibin). -->
 <template>
   <div class="main-container-wrapper">
-    <Sidebar class="sidebar-container" />
-    <div class="main-container">
-      <TagViews />
-      <div class="m-container-content" :class="{ 'app-main-hide-tag': !showTag }">
-        <UMain />
-      </div>
-    </div>
+    <Splitpanes class="default-theme" :dbl-click-splitter="false">
+      <Pane min-size="20" max-size="40" size="20">
+        <Sidebar class="sidebar-container" />
+      </Pane>
+      <Pane>
+        <div class="main-container">
+          <TagViews />
+          <div class="m-container-content" :class="{ 'app-main-hide-tag': !showTag }">
+            <UMain />
+          </div>
+        </div>
+      </Pane>
+    </Splitpanes>
   </div>
 </template>
 
@@ -27,10 +33,15 @@
     height: 100%;
     display: flex;
   }
+  .sidebar-container-wrapper {
+    display: flex;
+    height: 100%;
+  }
   .main-container {
+    height: 100%;
+    position: relative;
     overflow: hidden;
     display: flex;
-    flex: 1;
     box-sizing: border-box;
     flex-direction: column;
   }
@@ -50,5 +61,9 @@
     position: relative;
     box-sizing: border-box;
     background-color: #f6f8ff;
+  }
+  :deep(.el-divider--vertical) {
+    height: 100%;
+    margin: 0px 0px;
   }
 </style>

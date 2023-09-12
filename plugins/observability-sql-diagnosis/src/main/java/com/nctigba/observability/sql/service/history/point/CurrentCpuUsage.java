@@ -5,7 +5,7 @@
 package com.nctigba.observability.sql.service.history.point;
 
 import com.nctigba.common.web.exception.HisDiagnosisException;
-import com.nctigba.observability.sql.constants.history.DiagnosisTypeCommon;
+import com.nctigba.observability.sql.constants.history.PointTypeCommon;
 import com.nctigba.observability.sql.constants.history.ThresholdCommon;
 import com.nctigba.observability.sql.model.history.HisDiagnosisResult;
 import com.nctigba.observability.sql.model.history.HisDiagnosisTask;
@@ -18,6 +18,8 @@ import com.nctigba.observability.sql.service.history.DataStoreService;
 import com.nctigba.observability.sql.service.history.HisDiagnosisPointService;
 import com.nctigba.observability.sql.service.history.collection.CollectionItem;
 import com.nctigba.observability.sql.service.history.collection.agent.CurrentCpuUsageItem;
+import com.nctigba.observability.sql.service.history.collection.metric.CpuCoreNumItem;
+import com.nctigba.observability.sql.util.PointUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -38,6 +40,10 @@ import java.util.List;
 public class CurrentCpuUsage implements HisDiagnosisPointService<AgentDTO> {
     @Autowired
     private CurrentCpuUsageItem item;
+    @Autowired
+    private CpuCoreNumItem cpuCoreNumItem;
+    @Autowired
+    private PointUtil util;
 
     @Override
     public List<String> getOption() {
@@ -46,7 +52,7 @@ public class CurrentCpuUsage implements HisDiagnosisPointService<AgentDTO> {
 
     @Override
     public String getDiagnosisType() {
-        return DiagnosisTypeCommon.CURRENT;
+        return PointTypeCommon.CURRENT;
     }
 
 
@@ -54,6 +60,7 @@ public class CurrentCpuUsage implements HisDiagnosisPointService<AgentDTO> {
     public List<CollectionItem<?>> getSourceDataKeys() {
         List<CollectionItem<?>> list = new ArrayList<>();
         list.add(item);
+        list.add(cpuCoreNumItem);
         return list;
     }
 
@@ -82,7 +89,9 @@ public class CurrentCpuUsage implements HisDiagnosisPointService<AgentDTO> {
         for (AgentDTO dto : dtoList) {
             cpuNum += Float.parseFloat(dto.getCpu());
         }
-        BigDecimal avgCpu = new BigDecimal(cpuNum).divide(BigDecimal.valueOf(8), 2, RoundingMode.HALF_UP);
+        List<?> list = (List<?>) dataStoreService.getData(cpuCoreNumItem).getCollectionData();
+        int coreNum = util.getCpuCoreNum(list);
+        BigDecimal avgCpu = new BigDecimal(cpuNum).divide(BigDecimal.valueOf(coreNum), 2, RoundingMode.HALF_UP);
         AnalysisDTO analysisDTO = new AnalysisDTO();
         if (avgCpu.floatValue() > Float.parseFloat(map.get(ThresholdCommon.CPU_USAGE_RATE))) {
             analysisDTO.setIsHint(HisDiagnosisResult.ResultState.SUGGESTIONS);

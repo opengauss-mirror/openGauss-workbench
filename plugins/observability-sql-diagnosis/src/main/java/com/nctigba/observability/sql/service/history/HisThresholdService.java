@@ -17,7 +17,7 @@ import java.util.List;
  * @since 2023/6/9
  */
 public interface HisThresholdService {
-    List<HisDiagnosisThreshold> select();
+    List<HisDiagnosisThreshold> select(String diagnosisType);
     void insertOrUpdate(HisThresholdQuery hisThresholdQuery);
     void delete(int id);
     HashMap<String, String> getThresholdValue(List<String> list);

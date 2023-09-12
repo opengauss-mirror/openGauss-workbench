@@ -15,10 +15,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.nctigba.observability.instance.aop.Ds;
 import com.nctigba.observability.instance.constants.MetricsLine;
 import com.nctigba.observability.instance.constants.MetricsValue;
 import com.nctigba.observability.instance.mapper.DbConfigMapper;
-import com.nctigba.observability.instance.service.ClusterManager;
 import com.nctigba.observability.instance.service.MetricsService;
 import com.nctigba.observability.instance.util.Language;
 
@@ -102,41 +102,47 @@ public class PageController extends ControllerConfig {
 
     private final MetricsService metricsService;
     private final DbConfigMapper dbConfigMapper;
-    private final ClusterManager clusterManager;
     private final MessageSource messageSource;
     private final Language language;
 
     @GetMapping("memory")
+    @Ds
     public Map<String, Object> memory(String id, Long start, Long end, Integer step) {
-        HashMap<String, Object> batch = metricsService.listBatch(MEMORY, id, start, end, step);
-        try {
-            clusterManager.setCurrentDatasource(id, null);
-            // memory node detail
-            List<Map<String, Object>> memoryNodeDetail = dbConfigMapper.memoryNodeDetail();
-            memoryNodeDetail.forEach(map -> {
-                var str = map.get("memorytype").toString();
-                map.put("desc", messageSource.getMessage("memory.node." + str, null, str, language.getLocale()));
-            });
-            batch.put("memoryNodeDetail", memoryNodeDetail);
-            // memory config detail
-            List<Map<String, Object>> memoryConfig = dbConfigMapper.memoryConfig();
-            memoryConfig.forEach(map -> {
-                var str = map.get("name").toString();
-                map.put("desc", messageSource.getMessage("memory.config." + str, null, str, language.getLocale()));
-            });
-            batch.put("memoryConfig", memoryConfig);
-        } finally {
-            clusterManager.pool();
+        Map<String, Object> batch = metricsService.listBatch(MEMORY, id, start, end, step);
+        // memory node detail
+        List<Map<String, Object>> memoryNodeDetail = dbConfigMapper.memoryNodeDetail();
+        memoryNodeDetail.forEach(map -> {
+            var str = map.get("memorytype").toString();
+            map.put("desc", messageSource.getMessage("memory.node." + str, null, str, language.getLocale()));
+        });
+        batch.put("memoryNodeDetail", memoryNodeDetail);
+        // memory config detail
+        List<Map<String, Object>> memoryConfig = dbConfigMapper.memoryConfig();
+        memoryConfig.forEach(map -> {
+            var str = map.get("name").toString();
+            map.put("desc", messageSource.getMessage("memory.config." + str, null, str, language.getLocale()));
+        });
+        // db memory
+        var total = Long.parseLong(batch.get(MetricsValue.MEM_TOTAL.name()).toString());
+        var percents = batch.get(MetricsLine.MEMORY_DB_USED.name());
+        if (percents instanceof List) {
+            var listPercents = (List<?>) percents;
+            var percent = listPercents.get(listPercents.size() - 1);
+            if (percent instanceof Number) {
+                batch.put("MEMORY_DB_USED_CURR", total * ((Number) percent).doubleValue() / 100);
+            }
         }
+
+        batch.put("memoryConfig", memoryConfig);
         return AjaxResult.success(batch);
     }
 
     @SuppressWarnings("unchecked")
     @GetMapping("io")
     public Map<String, Object> io(String id, Long start, Long end, Integer step) {
-        HashMap<String, Object> io = metricsService.listBatch(IO, id, start, end, step);
-        HashMap<String, Object> table = metricsService.listBatch(IO_TABLE, id, start, end, step);
-        HashMap<String, Object> lines = new HashMap<>();
+        Map<String, Object> io = metricsService.listBatch(IO, id, start, end, step);
+        Map<String, Object> table = metricsService.listBatch(IO_TABLE, id, start, end, step);
+        Map<String, Object> lines = new HashMap<>();
         for (MetricsValue metric : IO_TABLE) {
             var map = (Map<String, Object>) table.get(metric.name());
             if (map == null) {
@@ -158,9 +164,9 @@ public class PageController extends ControllerConfig {
     @SuppressWarnings("unchecked")
     @GetMapping("network")
     public Map<String, Object> network(String id, Long start, Long end, Integer step) {
-        HashMap<String, Object> network = metricsService.listBatch(NETWORK, id, start, end, step);
-        HashMap<String, Object> table = metricsService.listBatch(NETWORK_TABLE, id, start, end, step);
-        HashMap<String, Object> lines = new HashMap<>();
+        Map<String, Object> network = metricsService.listBatch(NETWORK, id, start, end, step);
+        Map<String, Object> table = metricsService.listBatch(NETWORK_TABLE, id, start, end, step);
+        Map<String, Object> lines = new HashMap<>();
         for (MetricsValue metric : NETWORK_TABLE) {
             var map = (Map<String, Object>) table.get(metric.name());
             if (map == null) {

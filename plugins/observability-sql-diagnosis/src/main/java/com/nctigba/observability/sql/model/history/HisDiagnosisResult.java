@@ -13,6 +13,7 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.nctigba.common.mybatis.JacksonJsonWithClassTypeHandler;
+import com.nctigba.observability.sql.constants.history.DiagnosisTypeCommon;
 import com.nctigba.observability.sql.model.history.dto.AnalysisDTO;
 import com.nctigba.observability.sql.util.LocaleString;
 import lombok.Data;
@@ -78,10 +79,23 @@ public class HisDiagnosisResult {
         this.nodeId = task.getNodeId();
         this.taskId = task.getId();
         this.pointName = pointName;
-        this.pointTitle = LocaleString.format("history." + pointName + ".title");
-        this.pointSuggestion = LocaleString.format("history." + pointName + ".suggest");
+        if (DiagnosisTypeCommon.HISTORY.equals(task.getDiagnosisType())) {
+            this.pointTitle = LocaleString.format("history." + pointName + ".title");
+            this.pointSuggestion = LocaleString.format("history." + pointName + ".suggest");
+            this.pointDetail = LocaleString.format("history." + pointName + ".detail");
+        } else {
+            if ("BlockSession".equals(pointName) || "IndexAdvisor".equals(pointName)
+                    || "SmpParallelQuery".equals(pointName)) {
+                this.pointTitle = LocaleString.format("sql." + pointName + ".title");
+                this.pointSuggestion = LocaleString.format("sql." + pointName + ".suggest");
+                this.pointDetail = LocaleString.format("sql." + pointName + ".detail");
+            } else {
+                this.pointSuggestion = LocaleString.format(pointName + ".tip");
+                this.pointTitle = LocaleString.format("ResultType." + pointName);
+                this.pointDetail = LocaleString.format("ResultType." + pointName);
+            }
+        }
         this.isHint = isHint;
-        this.pointDetail = LocaleString.format("history." + pointName + ".detail");
         this.pointState = pointState;
     }
 
@@ -98,17 +112,43 @@ public class HisDiagnosisResult {
         this.nodeId = task.getNodeId();
         this.taskId = task.getId();
         this.pointName = pointName;
+        boolean isSqlDiagnosis = "BlockSession".equals(pointName) || "IndexAdvisor".equals(pointName)
+                || "SmpParallelQuery".equals(pointName);
         if (analysisDTO.getIsHint() != null && analysisDTO.getIsHint().equals(
                 ResultState.SUGGESTIONS)) {
-            this.pointSuggestion = LocaleString.format("history." + pointName + ".suggest.high");
-            this.pointTitle = LocaleString.format("history." + pointName + ".title.high");
+            if (DiagnosisTypeCommon.HISTORY.equals(task.getDiagnosisType())) {
+                this.pointSuggestion = LocaleString.format("history." + pointName + ".suggest.high");
+                this.pointTitle = LocaleString.format("history." + pointName + ".title.high");
+            } else {
+                if (isSqlDiagnosis) {
+                    this.pointTitle = LocaleString.format("sql." + pointName + ".title.high");
+                    this.pointSuggestion = LocaleString.format("sql." + pointName + ".suggest.high");
+                } else {
+                    this.pointSuggestion = LocaleString.format(pointName + ".tip");
+                    this.pointTitle = LocaleString.format("ResultType." + pointName);
+                }
+            }
         } else {
-            this.pointSuggestion = LocaleString.format("history." + pointName + ".suggest.normal");
-            this.pointTitle = LocaleString.format("history." + pointName + ".title.normal");
+            if (DiagnosisTypeCommon.HISTORY.equals(task.getDiagnosisType())) {
+                this.pointSuggestion = LocaleString.format("history." + pointName + ".suggest.normal");
+                this.pointTitle = LocaleString.format("history." + pointName + ".title.normal");
+            } else {
+                if (isSqlDiagnosis) {
+                    this.pointTitle = LocaleString.format("sql." + pointName + ".title.normal");
+                    this.pointSuggestion = LocaleString.format("sql." + pointName + ".suggest.normal");
+                } else {
+                    this.pointSuggestion = LocaleString.format(pointName + ".tip");
+                    this.pointTitle = LocaleString.format("ResultType." + pointName);
+                }
+            }
         }
         this.isHint = analysisDTO.getIsHint();
         this.pointType = analysisDTO.getPointType();
-        this.pointDetail = LocaleString.format("history." + pointName + ".detail");
+        if (DiagnosisTypeCommon.HISTORY.equals(task.getDiagnosisType())) {
+            this.pointDetail = LocaleString.format("history." + pointName + ".detail");
+        } else {
+            this.pointDetail = LocaleString.format("sql." + pointName + ".detail");
+        }
         this.pointState = pointState;
         Object jsonObject = JSONObject.toJSON(analysisDTO.getPointData());
         if (jsonObject instanceof JSON) {

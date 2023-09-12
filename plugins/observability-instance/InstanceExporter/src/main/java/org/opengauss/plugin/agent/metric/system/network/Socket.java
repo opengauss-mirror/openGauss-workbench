@@ -1,6 +1,7 @@
 /*
  * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
  */
+
 package org.opengauss.plugin.agent.metric.system.network;
 
 import java.io.FileNotFoundException;
@@ -10,11 +11,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.opengauss.plugin.agent.metric.Metric;
+import org.opengauss.plugin.agent.metric.OSmetric;
 import org.opengauss.plugin.agent.util.CmdUtil;
 import org.opengauss.plugin.agent.util.StringUtil;
 import org.springframework.stereotype.Service;
-
-import org.opengauss.plugin.agent.metric.OSmetric;
 
 import io.prometheus.client.Collector.Type;
 
@@ -24,14 +24,8 @@ public class Socket implements OSmetric {
 
     @Override
     public Map<String, Metric> getMetric(Integer dbPort) throws FileNotFoundException, IOException {
-        // TODO
-//		try {
-//			CmdUtil.readFromCmd(CmdUtil.cmd("ss -e"), line -> {
-//				
-//			});
-//		} catch (IOException e) {
         Map<String, Integer> counter = new HashMap<>();
-        CmdUtil.readFromCmd(CmdUtil.cmd("netstat"), (index, line) -> {
+        CmdUtil.readFromCmd("netstat", (index, line) -> {
             if (index < 2)
                 return;
             var part = StringUtil.splitByBlank(line);
@@ -43,7 +37,6 @@ public class Socket implements OSmetric {
                 counter.put(key, counter.getOrDefault(key, 0) + 1);
             }
         });
-//		}
         var metric = new Metric(Type.GAUGE, Arrays.asList("proto", "state"));
         counter.forEach((key, value) -> {
             var part = key.split(SPLIT);

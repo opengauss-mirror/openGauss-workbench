@@ -91,7 +91,7 @@ public class GainObjectSQLServiceImpl implements GainObjectSQLService {
             if (request.getObjectType().equals("ALL")) {
                 try (
                         ResultSet resultSet = statement.executeQuery(
-                                String.format(SELECT_FUNCTION_SQL, request.getSchema()))
+                                String.format(SELECT_FUNCTION_SQL, DebugUtils.needQuoteName(request.getSchema())))
                 ) {
                     while (resultSet.next()) {
                         objectList.add(resultSet.getString("proname"));
@@ -99,7 +99,7 @@ public class GainObjectSQLServiceImpl implements GainObjectSQLService {
                 }
                 try (
                         ResultSet resultSetView = statement.executeQuery(
-                                String.format(SELECT_VIEW_SQL, request.getSchema()))
+                                String.format(SELECT_VIEW_SQL, DebugUtils.needQuoteName(request.getSchema())))
                 ) {
                     while (resultSetView.next()) {
                         objectList.add(resultSetView.getString("viewname"));
@@ -107,7 +107,7 @@ public class GainObjectSQLServiceImpl implements GainObjectSQLService {
                 }
                 try (
                         ResultSet resultSetTable = statement.executeQuery(
-                                String.format(SELECT_TABLE_SQL, request.getSchema()))
+                                String.format(SELECT_TABLE_SQL, DebugUtils.needQuoteName(request.getSchema())))
                 ) {
                     while (resultSetTable.next()) {
                         objectList.add(resultSetTable.getString("relname"));
@@ -117,7 +117,7 @@ public class GainObjectSQLServiceImpl implements GainObjectSQLService {
             } else if (request.getObjectType().equals("FUN_PRO")) {
                 try (
                         ResultSet resultSet = statement.executeQuery(
-                                String.format(SELECT_FUNCTION_SQL, request.getSchema()))
+                                String.format(SELECT_FUNCTION_SQL, DebugUtils.needQuoteName(request.getSchema())))
                 ) {
                     while (resultSet.next()) {
                         objectList.add(resultSet.getString("proname"));
@@ -127,7 +127,7 @@ public class GainObjectSQLServiceImpl implements GainObjectSQLService {
             } else if (request.getObjectType().equals("VIEW")) {
                 try (
                         ResultSet resultSet = statement.executeQuery(
-                                String.format(SELECT_VIEW_SQL, request.getSchema()))
+                                String.format(SELECT_VIEW_SQL, DebugUtils.needQuoteName(request.getSchema())))
                 ) {
                     while (resultSet.next()) {
                         objectList.add(resultSet.getString("viewname"));
@@ -137,7 +137,8 @@ public class GainObjectSQLServiceImpl implements GainObjectSQLService {
             } else {
                 try (
                         ResultSet resultSet = statement.executeQuery(
-                                String.format(SELECT_OBJECT_SQL, request.getSchema(), request.getObjectType()))
+                                String.format(SELECT_OBJECT_SQL, DebugUtils.needQuoteName(request.getSchema()),
+                                        DebugUtils.needQuoteName(request.getObjectType())))
                 ) {
                     while (resultSet.next()) {
                         objectList.add(resultSet.getString("relname"));
@@ -157,7 +158,8 @@ public class GainObjectSQLServiceImpl implements GainObjectSQLService {
                 Connection connection = connectionConfig.connectDatabase(request.getUuid());
                 Statement statement = connection.createStatement();
                 ResultSet resultSet = statement.executeQuery(
-                        String.format(SELECT_COLUMN_SQL, request.getSchema(), request.getObjectName()))
+                        String.format(SELECT_COLUMN_SQL, DebugUtils.needQuoteName(request.getSchema()),
+                                DebugUtils.needQuoteName(request.getObjectName())))
         ) {
             while (resultSet.next()) {
                 columnList.add(resultSet.getString("column_name"));
@@ -184,7 +186,8 @@ public class GainObjectSQLServiceImpl implements GainObjectSQLService {
                 + "         from pg_class tbl" + LF
                 + "         inner join pg_namespace ns on tbl.relnamespace = ns.oid" + LF
                 + "         where tbl.relkind = 'r'" + LF
-                + "           and ns.nspname = '" + DebugUtils.containsSqlInjection(schema) + "' ) x" + LF
+                + "           and ns.nspname = '" + DebugUtils.containsSqlInjection(DebugUtils.needQuoteName(schema))
+                + "' ) x" + LF
                 + " where has_table_privilege(x.oid, 'SELECT')"
                 + " order by 1";
         log.info("splicingSequenceDDL response is: " + ddl);
@@ -195,7 +198,8 @@ public class GainObjectSQLServiceImpl implements GainObjectSQLService {
     public String viewSql(String schema) {
         String ddl;
         ddl = "select c.oid,c.relname as viewname from pg_class c INNER JOIN pg_namespace n "
-                + "ON n.oid = c.relnamespace and n.nspname = '" + DebugUtils.containsSqlInjection(schema)
+                + "ON n.oid = c.relnamespace and n.nspname = '"
+                + DebugUtils.containsSqlInjection(DebugUtils.needQuoteName(schema))
                 + "' where c.relkind in ('v','m" + "') order by 1;";
         log.info("splicingSequenceDDL response is: " + ddl);
         return ddl;
@@ -204,10 +208,10 @@ public class GainObjectSQLServiceImpl implements GainObjectSQLService {
     @Override
     public String fun_prosSql(String schema) {
         String ddl;
-        ddl = "SELECT oid,proname,proargtypes FROM pg_proc" + LF
-                + "WHERE pronamespace = (SELECT pg_namespace.oid FROM pg_namespace WHERE nspname = '"
-                + DebugUtils.containsSqlInjection(schema) + "')"
-                + " order by 1" + LF;
+        ddl = "SELECT pp.oid,pp.proname,pp.proargtypes,pp.propackageid,gp.pkgname FROM pg_proc pp "
+                + "left join gs_package gp on gp.oid = pp.propackageid WHERE pronamespace = "
+                + "(SELECT pg_namespace.oid FROM pg_namespace WHERE nspname = '"
+                + DebugUtils.containsSqlInjection(schema) + "') order by 1";
         log.info("splicingSequenceDDL response is: " + ddl);
         return ddl;
     }
@@ -217,7 +221,8 @@ public class GainObjectSQLServiceImpl implements GainObjectSQLService {
         String ddl;
         ddl = "select c.oid,c.relname as relname from" + LF
                 + "pg_class c INNER JOIN pg_namespace n ON n.oid = c.relnamespace " + LF
-                + "and n.nspname = '" + DebugUtils.containsSqlInjection(schema) + "' where c.relkind = 'S'" + LF
+                + "and n.nspname = '" + DebugUtils.containsSqlInjection(DebugUtils.needQuoteName(schema))
+                + "' where c.relkind = 'S'" + LF
                 + " order by 1";
         log.info("splicingSequenceDDL response is: " + ddl);
         return ddl;
@@ -228,7 +233,7 @@ public class GainObjectSQLServiceImpl implements GainObjectSQLService {
         String ddl;
         ddl = "select pgs.oid,synname from PG_SYNONYM pgs, pg_namespace pgn" + LF
                 + "   where pgn.oid = pgs.synnamespace" + LF
-                + "     and pgn.nspname  ='" + DebugUtils.containsSqlInjection(schema) + "'" + LF
+                + "     and pgn.nspname  ='" + DebugUtils.containsSqlInjection(DebugUtils.needQuoteName(schema)) + "'" + LF
                 + " order by 1";
         log.info("splicingSequenceDDL response is: " + ddl);
         return ddl;
@@ -254,5 +259,16 @@ public class GainObjectSQLServiceImpl implements GainObjectSQLService {
                 + "order by 1";
         log.info("splicingSequenceDDL response is: " + ddl);
         return ddl;
+    }
+
+    @Override
+    public String userSql() {
+        return "SELECT rolname,case when rolcanlogin = true then '1' ELSE '0' end as rolcanlogin,"
+                + "oid FROM pg_catalog.pg_roles WHERE rolsuper = false";
+    }
+
+    @Override
+    public String resourceListSQL() {
+        return "select respool_name from PG_RESOURCE_POOL";
     }
 }

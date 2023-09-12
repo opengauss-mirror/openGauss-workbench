@@ -46,6 +46,12 @@ public class NotifyMessage {
 
     private Integer status;
 
+    private String sign;
+
+    private String webhookInfo;
+
+    private String snmpInfo;
+
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createTime;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
