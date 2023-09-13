@@ -584,6 +584,7 @@
     tabList.value = [];
     debug.isDebugging = true;
     if (route.query.type == 'anonymous') {
+      editorRef.value.formatCode();
       ws.instance.send({
         operation: 'anonymousStartDebug',
         ...commonWsParams.value,
