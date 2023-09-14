@@ -36,7 +36,7 @@
                 <div class="item">
                   <el-input
                     v-model="searchText"
-                    :placeholder="$t('clusterMonitor.list.searchInstanceName')"
+                    :placeholder="$t('clusterMonitor.list.searchClusterName')"
                     :suffix-icon="Search"
                     style="width: 268px"
                   />

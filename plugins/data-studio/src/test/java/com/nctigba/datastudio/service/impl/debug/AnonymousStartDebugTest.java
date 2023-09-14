@@ -33,6 +33,7 @@ import static com.nctigba.datastudio.constants.CommonConstants.FUNC_OID;
 import static com.nctigba.datastudio.constants.CommonConstants.LINE_NO;
 import static com.nctigba.datastudio.constants.CommonConstants.NODE_NAME;
 import static com.nctigba.datastudio.constants.CommonConstants.PORT;
+import static com.nctigba.datastudio.constants.SqlConstants.LF;
 import static com.nctigba.datastudio.dao.ConnectionMapDAO.conMap;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
@@ -45,45 +46,45 @@ import static org.mockito.Mockito.when;
 @Slf4j
 @RunWith(MockitoJUnitRunner.class)
 public class AnonymousStartDebugTest {
-    private static final String STR = "{\n"
-            + "  \"operation\": \"inputParam\",\n"
-            + "  \"oid\":\"201839\",\n"
-            + "  \"uuid\": \"8359cbf1-9833-4998-a29c-245f24009ab1\",\n"
-            + "  \"rootWindowName\": \"postgres\",\n"
-            + "  \"oldWindowName\": \"\",\n"
-            + "  \"windowName\": \"postgres\",\n"
+    private static final String STR = "{" + LF
+            + "  \"operation\": \"inputParam\"," + LF
+            + "  \"oid\":\"201839\"," + LF
+            + "  \"uuid\": \"8359cbf1-9833-4998-a29c-245f24009ab1\"," + LF
+            + "  \"rootWindowName\": \"postgres\"," + LF
+            + "  \"oldWindowName\": \"\"," + LF
+            + "  \"windowName\": \"postgres\"," + LF
             + "  \"sql\": \"CREATE OR REPLACE FUNCTION scott.step_in(i integer, OUT result integer)\\n "
             + "RETURNS SETOF integer\\n LANGUAGE plpgsql\\n NOT FENCED NOT SHIPPABLE\\nAS $$\\nDECLARE\\n\\n\\n"
             + "BEGIN\\n  result = i + 1;\\n  result = result + 2;\\n  if result < 10\\n  then\\n    "
             + "result = test(result);\\n  else\\n    result = result + 3;\\n  end if;\\n  "
-            + "result = result + 4;\\n\\nRETURN NEXT;\\nEND;$$;\\n/\",\n"
-            + "  \"inputParams\": [\n"
-            + "    {\n"
-            + "      \"integer\": \"2\",\n"
-            + "      \"string\": \"a\"\n"
-            + "    }\n"
-            + "  ],\n"
-            + "  \"breakPoints\": [10]\n"
+            + "result = result + 4;\\n\\nRETURN NEXT;\\nEND;$$;\\n/\"," + LF
+            + "  \"inputParams\": [" + LF
+            + "    {" + LF
+            + "      \"integer\": \"2\"," + LF
+            + "      \"string\": \"a\"" + LF
+            + "    }" + LF
+            + "  ]," + LF
+            + "  \"breakPoints\": [10]" + LF
             + "}";
 
-    private static final String STR_2 = "{\n"
-            + "  \"operation\": \"inputParam\",\n"
-            + "  \"oid\":\"201839\",\n"
-            + "  \"uuid\": \"8359cbf1-9833-4998-a29c-245f24009ab1\",\n"
-            + "  \"rootWindowName\": \"postgres\",\n"
-            + "  \"oldWindowName\": \"\",\n"
-            + "  \"windowName\": \"postgres\",\n"
+    private static final String STR_2 = "{" + LF
+            + "  \"operation\": \"inputParam\"," + LF
+            + "  \"oid\":\"201839\"," + LF
+            + "  \"uuid\": \"8359cbf1-9833-4998-a29c-245f24009ab1\"," + LF
+            + "  \"rootWindowName\": \"postgres\"," + LF
+            + "  \"oldWindowName\": \"\"," + LF
+            + "  \"windowName\": \"postgres\"," + LF
             + "  \"sql\": \"CREATE OR REPLACE FUNCTION scott.step_in(i integer, OUT result integer)\\n "
             + "RETURNS SETOF integer\\n LANGUAGE plpgsql\\n NOT FENCED NOT SHIPPABLE\\nAS $$\\nDECLARE\\n\\n\\n"
             + "BEGIN\\n  result = i + 1;\\n  result = result + 2;\\n  if result < 10\\n  then\\n    "
             + "result = test(result);\\n  else\\n    result = result + 3;\\n  end if;\\n  "
-            + "result = result + 4;\\n\\nRETURN NEXT;\\nEND;$$;\\n/\",\n"
-            + "  \"inputParams\": [\n"
-            + "    {\n"
-            + "      \"integer\": \"2\",\n"
-            + "      \"string\": \"a\"\n"
-            + "    }\n"
-            + "  ]\n"
+            + "result = result + 4;\\n\\nRETURN NEXT;\\nEND;$$;\\n/\"," + LF
+            + "  \"inputParams\": [" + LF
+            + "    {" + LF
+            + "      \"integer\": \"2\"," + LF
+            + "      \"string\": \"a\"" + LF
+            + "    }" + LF
+            + "  ]" + LF
             + "}";
 
     @InjectMocks

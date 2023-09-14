@@ -7,6 +7,7 @@ package com.nctigba.datastudio.controller;
 import com.nctigba.datastudio.base.ClusterManager;
 import com.nctigba.datastudio.dao.ConnectionMapDAO;
 import com.nctigba.datastudio.model.dto.DbConnectionCreateDTO;
+import com.nctigba.datastudio.model.dto.GetConnectionAttributeDTO;
 import com.nctigba.datastudio.model.entity.DatabaseConnectionDO;
 import com.nctigba.datastudio.service.DbConnectionService;
 import io.swagger.annotations.Api;
@@ -75,13 +76,13 @@ public class DbConnectionController {
     /**
      * database attribute
      *
-     * @param id id
+     * @param request request
      * @return DatabaseConnectionDO
      */
     @ApiOperation(value = "Attribute")
-    @GetMapping(value = "/connections/{id}/attribute", produces = MediaType.APPLICATION_JSON_VALUE)
-    public DatabaseConnectionDO attribute(@PathVariable("id") String id) {
-        return dbConnectionService.databaseAttributeConnection(id);
+    @GetMapping(value = "/connections/attribute", produces = MediaType.APPLICATION_JSON_VALUE)
+    public DatabaseConnectionDO attribute(GetConnectionAttributeDTO request) {
+        return dbConnectionService.databaseAttributeConnection(request);
     }
 
     /**

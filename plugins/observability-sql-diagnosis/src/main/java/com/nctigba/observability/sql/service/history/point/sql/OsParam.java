@@ -42,6 +42,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -61,6 +62,7 @@ public class OsParam implements HisDiagnosisPointService<Object> {
     public List<String> getOption() {
         List<String> option = new ArrayList<>();
         option.add(String.valueOf(OptionCommon.IS_BCC));
+        option.add(String.valueOf(OptionCommon.IS_PARAM));
         return option;
     }
 
@@ -78,97 +80,102 @@ public class OsParam implements HisDiagnosisPointService<Object> {
         if (obj instanceof MultipartFile) {
             file = (MultipartFile) obj;
         }
-        Charset cs = StandardCharsets.UTF_8;
+        HashMap<String, String> paramMap = fileToMap(file);
+        String selectSql = "select * from param_info where paramType='OS';";
         try (Connection connect = connectSqlite(); Statement statement = connect.createStatement();
-             BufferedReader reader = new BufferedReader(new InputStreamReader(file.getInputStream(), cs))) {
+             ResultSet result = statement.executeQuery(selectSql)) {
+            while (result.next()) {
+                String paramName = result.getString("paramName");
+                OsParamData[] fields = OsParamData.values();
+                String nodeName = null;
+                for (OsParamData field : fields) {
+                    if (field.getParamName().equals(paramName)) {
+                        nodeName = field.toString();
+                    }
+                }
+                HisDiagnosisResult resultData;
+                AnalysisDTO analysisDTO = new AnalysisDTO();
+                analysisDTO.setPointType(HisDiagnosisResult.PointType.DIAGNOSIS);
+                if (paramMap.containsKey(paramName)) {
+                    String paramActualData = paramMap.get(paramName);
+                    String paramData = paramActualData.replace("\t", "");
+                    ParamDto paramDto = new ParamDto();
+                    paramDto.setParamName(result.getString("paramName"));
+                    paramDto.setCurrentValue(paramActualData);
+                    paramDto.setUnit(result.getString("unit"));
+                    paramDto.setParamDescription(result.getString("paramDetail"));
+                    paramDto.setSuggestValue(result.getString("suggestValue"));
+                    paramDto.setSuggestReason(result.getString("suggestExplain"));
+                    TaskResult taskResult = new TaskResult();
+                    if (result.getString(CommonConstants.DIAGNOSIS_RULE) != null || !"".equals(
+                            result.getString(CommonConstants.DIAGNOSIS_RULE))) {
+                        var manager = new ScriptEngineManager();
+                        var t = manager.getEngineByName("javascript");
+                        var bindings = t.createBindings();
+                        bindings.put("actualValue", paramData.trim());
+                        Object object = t.eval(result.getString(CommonConstants.DIAGNOSIS_RULE), bindings);
+                        if (object != null && "true".equals(object.toString())) {
+                            taskResult.setState(TaskResult.ResultState.NO_ADVICE);
+                            analysisDTO.setIsHint(HisDiagnosisResult.ResultState.NO_ADVICE);
+                        } else {
+                            paramDto.setTitle(
+                                    LocaleString.format("Param.revise") + LocaleString.format(nodeName + ".title")
+                                            + LocaleString.format("Param.define"));
+                            taskResult.setState(TaskResult.ResultState.SUGGESTION);
+                            analysisDTO.setIsHint(HisDiagnosisResult.ResultState.SUGGESTIONS);
+                        }
+                    } else {
+                        taskResult.setState(TaskResult.ResultState.NO_ADVICE);
+                        analysisDTO.setIsHint(HisDiagnosisResult.ResultState.NO_ADVICE);
+                    }
+                    taskResult.setTaskId(task.getId());
+                    taskResult.setResultType(ResultType.valueOf(nodeName));
+                    taskResult.setFrameType(FrameType.Param);
+                    taskResult.setData(paramDto);
+                    analysisDTO.setPointData(taskResult);
+                    resultData = new HisDiagnosisResult(
+                            task, analysisDTO, nodeName, HisDiagnosisResult.PointState.SUCCEED);
+                } else {
+                    analysisDTO.setIsHint(HisDiagnosisResult.ResultState.NO_ADVICE);
+                    resultData = new HisDiagnosisResult(
+                            task, analysisDTO, nodeName, HisDiagnosisResult.PointState.NOT_SATISFIED_DIAGNOSIS);
+                }
+                resultMapper.update(resultData, Wrappers.<HisDiagnosisResult>lambdaQuery().eq(
+                                HisDiagnosisResult::getTaskId, resultData.getTaskId())
+                        .eq(HisDiagnosisResult::getPointName, resultData.getPointName()));
+            }
+        } catch (SQLException | ScriptException e) {
+            throw new CustomException("sql error:", e);
+        }
+        AnalysisDTO analysisDTO = new AnalysisDTO();
+        analysisDTO.setPointType(HisDiagnosisResult.PointType.CENTER);
+        analysisDTO.setIsHint(HisDiagnosisResult.ResultState.SUGGESTIONS);
+        HisDiagnosisResult resultData = new HisDiagnosisResult(
+                task, analysisDTO, "OsParam", HisDiagnosisResult.PointState.SUCCEED);
+        resultMapper.update(resultData, Wrappers.<HisDiagnosisResult>lambdaQuery().eq(
+                        HisDiagnosisResult::getTaskId, resultData.getTaskId())
+                .eq(HisDiagnosisResult::getPointName, resultData.getPointName()));
+        analysisDTO.setPointData("osParam");
+        return analysisDTO;
+    }
+
+    private HashMap<String, String> fileToMap(MultipartFile file) {
+        HashMap<String, String> paramMap = new HashMap<>();
+        Charset cs = StandardCharsets.UTF_8;
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(file.getInputStream(), cs))) {
             while (reader.ready()) {
                 var line = reader.readLine();
                 if (StringUtils.isBlank(line)) {
                     continue;
                 }
                 String name = line.substring(0, line.indexOf(CommonConstants.EQUAL)).trim();
-                OsParamData[] fields = OsParamData.values();
-                String nodeName = null;
-                for (int j = 0; j < fields.length; j++) {
-                    if (fields[j].getParamName().equals(name)) {
-                        nodeName = fields[j].toString();
-                    }
-                }
-                if (nodeName == null) {
-                    continue;
-                }
                 String paramActualData = line.substring(line.indexOf(CommonConstants.EQUAL) + 1);
-                String paramData = paramActualData.replace("\t", "");
-                String selectSql = "select * from param_info where paramName='" + name + "';";
-                try (ResultSet result = statement.executeQuery(selectSql)) {
-                    if (result.next()) {
-                        ParamDto paramDto = new ParamDto();
-                        paramDto.setParamName(result.getString("paramName"));
-                        paramDto.setCurrentValue(paramActualData);
-                        paramDto.setUnit(result.getString("unit"));
-                        paramDto.setParamDescription(result.getString("paramDetail"));
-                        paramDto.setSuggestValue(result.getString("suggestValue"));
-                        paramDto.setSuggestReason(result.getString("suggestExplain"));
-                        TaskResult taskResult = new TaskResult();
-                        AnalysisDTO analysisDTO = new AnalysisDTO();
-                        if (result.getString(CommonConstants.DIAGNOSIS_RULE) != null || !"".equals(
-                                result.getString(CommonConstants.DIAGNOSIS_RULE))) {
-                            var manager = new ScriptEngineManager();
-                            var t = manager.getEngineByName("javascript");
-                            var bindings = t.createBindings();
-                            bindings.put("actualValue", paramData.trim());
-                            Object object = t.eval(result.getString(CommonConstants.DIAGNOSIS_RULE), bindings);
-                            if (object != null && "true".equals(object.toString())) {
-                                taskResult.setState(TaskResult.ResultState.NO_ADVICE);
-                                analysisDTO.setIsHint(HisDiagnosisResult.ResultState.NO_ADVICE);
-                            } else {
-                                paramDto.setTitle(
-                                        LocaleString.format("Param.revise") + LocaleString.format(nodeName + ".title")
-                                                + LocaleString.format("Param.define"));
-                                taskResult.setState(TaskResult.ResultState.SUGGESTION);
-                                analysisDTO.setIsHint(HisDiagnosisResult.ResultState.SUGGESTIONS);
-                            }
-                        } else {
-                            taskResult.setState(TaskResult.ResultState.NO_ADVICE);
-                            analysisDTO.setIsHint(HisDiagnosisResult.ResultState.NO_ADVICE);
-                        }
-                        taskResult.setTaskId(task.getId());
-                        taskResult.setResultType(ResultType.valueOf(nodeName));
-                        taskResult.setFrameType(FrameType.Param);
-                        taskResult.setData(paramDto);
-                        analysisDTO.setPointType(HisDiagnosisResult.PointType.DIAGNOSIS);
-                        analysisDTO.setPointData(taskResult);
-                        OsParamData[] osFields = OsParamData.values();
-                        String pointName = null;
-                        for (OsParamData osField : osFields) {
-                            if (osField.getParamName().equals(result.getString("paramName"))) {
-                                pointName = osField.toString();
-                            }
-                        }
-                        HisDiagnosisResult resultData = new HisDiagnosisResult(
-                                task, analysisDTO, pointName, HisDiagnosisResult.PointState.NORMAL);
-                        resultMapper.update(resultData, Wrappers.<HisDiagnosisResult>lambdaQuery().eq(
-                                        HisDiagnosisResult::getTaskId, resultData.getTaskId())
-                                .eq(HisDiagnosisResult::getPointName, resultData.getPointName()));
-                    }
-                }
-                AnalysisDTO analysisDTO = new AnalysisDTO();
-                analysisDTO.setPointType(HisDiagnosisResult.PointType.CENTER);
-                analysisDTO.setIsHint(HisDiagnosisResult.ResultState.SUGGESTIONS);
-                HisDiagnosisResult resultData = new HisDiagnosisResult(
-                        task, analysisDTO, "OsParam", HisDiagnosisResult.PointState.NORMAL);
-                resultMapper.update(resultData, Wrappers.<HisDiagnosisResult>lambdaQuery().eq(
-                                HisDiagnosisResult::getTaskId, resultData.getTaskId())
-                        .eq(HisDiagnosisResult::getPointName, resultData.getPointName()));
+                paramMap.put(name, paramActualData);
             }
-        } catch (SQLException e) {
-            throw new CustomException("osParam err", e);
-        } catch (ScriptException | IOException e) {
-            throw new HisDiagnosisException("error:", e);
+            return paramMap;
+        } catch (IOException e) {
+            throw new CustomException("file parse error:", e);
         }
-        AnalysisDTO analysisDTO = new AnalysisDTO();
-        analysisDTO.setPointData("osParam");
-        return analysisDTO;
     }
 
     @Override

@@ -51,6 +51,7 @@ public class ColdFunction implements HisDiagnosisPointService<Object> {
     public List<String> getOption() {
         List<String> option = new ArrayList<>();
         option.add(String.valueOf(OptionCommon.IS_BCC));
+        option.add(String.valueOf(OptionCommon.IS_OFF_CPU));
         return option;
     }
 
@@ -81,7 +82,7 @@ public class ColdFunction implements HisDiagnosisPointService<Object> {
         } else {
             analysisDTO.setIsHint(HisDiagnosisResult.ResultState.NO_ADVICE);
         }
-        analysisDTO.setPointType(HisDiagnosisResult.PointType.DIAGNOSIS);
+        analysisDTO.setPointType(HisDiagnosisResult.PointType.DISPLAY);
         return analysisDTO;
     }
 

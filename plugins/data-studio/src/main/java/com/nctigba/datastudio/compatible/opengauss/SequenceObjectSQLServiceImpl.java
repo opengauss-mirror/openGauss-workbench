@@ -125,7 +125,8 @@ public class SequenceObjectSQLServiceImpl implements SequenceObjectSQLService {
                     DebugUtils.needQuoteName(request.getSchema()), DebugUtils.needQuoteName(request.getSequenceName()));
             try (
                     ResultSet countResult = statement.executeQuery(String.format(SELECT_SEQUENCE_COUNT_SQL,
-                            DebugUtils.needQuoteName(request.getSchema()), DebugUtils.needQuoteName(request.getSequenceName())))
+                            DebugUtils.needQuoteName(request.getSchema()),
+                            DebugUtils.needQuoteName(request.getSequenceName())))
             ) {
                 countResult.next();
                 int count = countResult.getInt("count");

@@ -19,7 +19,6 @@ interface CurrentTerminalInfo {
 export const useAppStore = defineStore({
   id: 'appState',
   state: () => ({
-    // currentConnectNode: {}, //current choose's node
     connectListMap: [],
     currentTerminalInfo: {} as CurrentTerminalInfo, // the info of open new terminal
     isLoadEditor: false,
@@ -29,10 +28,6 @@ export const useAppStore = defineStore({
     isOpenSqlAssistant: false,
   }),
   getters: {
-    //current choose's connectInfo
-    // currentConnectInfo(state: any) {
-    //   return state.currentConnectNode.connectInfo;
-    // },
     connectedDatabase(state) {
       return state.connectListMap.reduce((prev, cur) => {
         return prev.concat(cur.connectedDatabase);
@@ -43,9 +38,6 @@ export const useAppStore = defineStore({
     },
   },
   actions: {
-    // updateCurrentNode(node) {
-    //   this.currentConnectNode = node;
-    // },
     updataLoadEditor(value: boolean) {
       this.isLoadEditor = value;
     },
@@ -82,7 +74,6 @@ export const useAppStore = defineStore({
   persist: {
     key: storePersist.appState.key,
     storage: storePersist.appState.storage,
-    // paths: ['currentConnectNode', 'connectListMap', 'language'],
     paths: ['connectListMap', 'language'],
   },
 });

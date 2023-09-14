@@ -334,6 +334,7 @@
     .toolbar-left,
     .toolbar-right {
       display: flex;
+      flex-wrap: wrap;
     }
     .tool-item-wrapper {
       display: flex;

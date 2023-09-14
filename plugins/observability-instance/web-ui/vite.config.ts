@@ -63,6 +63,7 @@ export default defineConfig(({ command, mode }) => {
       proxy: {
         '^/instanceMonitoring': 'http://192.168.110.31:9494/plugins/observability-instance',
         '^/observability': 'http://192.168.110.31:9494/plugins/observability-instance',
+        '^/historyDiagnosis': 'http://192.168.110.31:9494/plugins/observability-sql-diagnosis',
         '^/sqlDiagnosis': 'http://192.168.110.31:9494/plugins/observability-instance',
         '^/wdr': 'http://192.168.110.31:9494/plugins/observability-instance',
         '^/encryption': 'http://192.168.110.31:9494/plugins/observability-instance',

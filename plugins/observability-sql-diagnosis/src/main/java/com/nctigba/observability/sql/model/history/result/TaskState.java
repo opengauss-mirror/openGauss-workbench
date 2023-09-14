@@ -22,6 +22,7 @@ public enum TaskState {
     SQL_PARSE_ERROR,
     SQL_ERROR,
     ERROR,
+    TIMEOUT_ERROR,
     FINISH;
 
     @JsonValue

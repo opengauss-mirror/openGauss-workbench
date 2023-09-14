@@ -313,6 +313,21 @@
 				</configuration>
 				<executions>
 					<execution>
+						<id>exec-opengauss-ebpf</id>
+						<phase>generate-resources</phase>
+						<goals>
+							<goal>exec</goal>
+						</goals>
+						<configuration>
+							<executable>mvn</executable>
+							<workingDirectory>opengauss-ebpf</workingDirectory>
+							<arguments>
+								<argument>clean</argument>
+								<argument>package</argument>
+							</arguments>
+						</configuration>
+					</execution>
+					<execution>
 						<id>exec-npm-install</id>
 						<phase>generate-resources</phase>
 						<goals>
@@ -345,7 +360,19 @@
 					</execution>
 				</executions>
 			</plugin>
-
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.1</version>
+				<configuration>
+					<source>${java.version}</source>
+					<target>${java.version}</target>
+					<encoding>${project.build.sourceEncoding}</encoding>
+					<compilerArgs>
+						<arg>-parameters</arg>
+					</compilerArgs>
+				</configuration>
+			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-resources-plugin</artifactId>

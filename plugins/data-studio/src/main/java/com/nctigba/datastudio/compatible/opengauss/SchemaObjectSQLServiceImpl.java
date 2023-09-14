@@ -64,10 +64,9 @@ public class SchemaObjectSQLServiceImpl implements SchemaObjectSQLService {
         return ddl;
     }
 
-
     @Override
     public String updateSchemaNameSQL(String oldSchemaName, String schemaName) {
-        log.info("updateSchemaNameSQL request schemaName is :" + schemaName + ",description is:" + DebugUtils.needQuoteName(schemaName));
+        log.info("updateSchemaNameSQL request schemaName is :" + schemaName);
         String ddl = String.format(ALTER_SCHEMA_NAME_SQL, DebugUtils.needQuoteName(oldSchemaName),
                 DebugUtils.needQuoteName(schemaName));
         log.info("updateSchemaNameSQL DDL is :" + ddl);

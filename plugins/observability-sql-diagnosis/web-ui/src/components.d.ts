@@ -64,6 +64,7 @@ declare module '@vue/runtime-core' {
     MyMessage: typeof import('./components/MyMessage.vue')['default']
     MyOperator: typeof import('./components/MyOperator.vue')['default']
     MyPie: typeof import('./components/MyPie.vue')['default']
+    MyPlan: typeof import('./components/MyPlan.vue')['default']
     MyProgress: typeof import('./components/MyProgress.vue')['default']
     MyTable: typeof import('./components/MyTable.vue')['default']
     ObjectStructure: typeof import('./components/reportDetail/ObjectStructure.vue')['default']

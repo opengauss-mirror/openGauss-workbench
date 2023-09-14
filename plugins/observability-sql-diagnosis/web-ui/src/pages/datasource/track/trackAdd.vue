@@ -31,7 +31,7 @@
               v-if="props.sqlText"
               class="form-textarea"
               v-model="formData.sql"
-              disabled="true"
+              :disabled="true"
               type="textarea"
             />
             <el-input
@@ -43,26 +43,11 @@
             />
           </el-form-item>
           <el-form-item :label="$t('datasource.option')">
-            <div class="option-wrap">
-              <el-checkbox-group v-model="formData.onCpu">
-                <el-checkbox :label="$t('datasource.ebpfOnLable')" name="onCpu" />
-              </el-checkbox-group>
-            </div>
-            <div class="option-wrap">
-              <el-checkbox-group v-model="formData.offCpu">
-                <el-checkbox :label="$t('datasource.ebpfOffLable')" name="offCpu" />
-              </el-checkbox-group>
-            </div>
-            <div class="option-wrap">
-              <el-checkbox-group v-model="formData.analyze">
-                <el-checkbox label="explain analyze" name="analyze" />
-              </el-checkbox-group>
-            </div>
-            <div class="option-wrap">
-              <el-checkbox-group v-model="formData.paramAnalysis">
-                <el-checkbox :label="$t('datasource.paramAnalysis')" name="paramAnalysis" />
-              </el-checkbox-group>
-            </div>
+            <el-checkbox-group v-model="ruleForm.optionSelected">
+              <el-checkbox v-for="item in options" :key="item.option" :label="item.option">
+                {{ item.name }}
+              </el-checkbox>
+            </el-checkbox-group>
           </el-form-item>
         </el-form>
       </div>
@@ -84,6 +69,7 @@ import { useRequest } from 'vue-request'
 import { FormRules, FormInstance, ElMessage } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 import { parseSql } from '@/utils/commonUtils'
+import { getOptions, DiagnosisParamConfig } from '@/api/historyDiagnosis'
 const { t } = useI18n()
 
 type Rez =
@@ -94,6 +80,12 @@ type Rez =
 
 const visible = ref(false)
 const dbList = ref<Array<any>>([])
+const options = ref<Array<any>>([])
+const ruleForm = reactive<{
+  optionSelected: string[]
+}>({
+  optionSelected: [],
+})
 const props = withDefaults(
   defineProps<{
     show: boolean
@@ -109,6 +101,7 @@ const props = withDefaults(
 )
 onMounted(() => {
   if (props.clusterId && props.clusterId.length > 0) getClusterValue(props.clusterId)
+  initOptions()
 })
 const emit = defineEmits(['changeModal', 'conveyFlag'])
 const initFormData = {
@@ -135,20 +128,38 @@ const queryData = computed(() => {
     instanceId = props.clusterId && props.clusterId.length > 0 ? props.clusterId[1] : ''
     clusterId = props.clusterId && props.clusterId.length > 0 ? props.clusterId[0] : ''
   }
+  // set configs
+  let configs: DiagnosisParamConfig[] = []
+  ruleForm.optionSelected.forEach((element) => {
+    configs.push({
+      option: element,
+      isCheck: true,
+    })
+  })
+
   const queryObj = {
     dbName: props.dbName ? props.dbName : dbName,
     clusterId,
     nodeId: instanceId,
     taskName: name,
     sql: props.sqlText ? parseSql(props.sqlText) : sql,
-    onCpu: onCpu.length > 0,
-    offCpu: offCpu.length > 0,
-    paramAnalysis: paramAnalysis.length > 0,
-    explainAnalysis: analyze.length > 0,
     sqlId: props.type === 2 ? props.sqlId : '',
     diagnosisType: 'sql',
+    configs,
   }
+
   return queryObj
+})
+
+const { data: optionData, run: initOptions } = useRequest(
+  () => {
+    return getOptions('sql')
+  },
+  { manual: true }
+)
+watch(optionData, (ret: any) => {
+  options.value = []
+  options.value = ret
 })
 
 const taskClose = () => {

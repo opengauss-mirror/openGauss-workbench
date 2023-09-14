@@ -31,6 +31,7 @@ import static com.nctigba.datastudio.constants.CommonConstants.DIFFER;
 import static com.nctigba.datastudio.constants.CommonConstants.PRO_ARG_MODES;
 import static com.nctigba.datastudio.constants.CommonConstants.PRO_ARG_NAMES;
 import static com.nctigba.datastudio.constants.CommonConstants.STATEMENT;
+import static com.nctigba.datastudio.constants.SqlConstants.LF;
 import static com.nctigba.datastudio.dao.ConnectionMapDAO.conMap;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -44,18 +45,18 @@ import static org.mockito.Mockito.when;
 @Slf4j
 @RunWith(MockitoJUnitRunner.class)
 public class InitStepTest {
-    private final String str = "{\n"
-            + "  \"operation\": \"initStep\",\n"
-            + "  \"oid\":\"279436\",\n"
-            + "  \"uuid\": \"8359cbf1-9833-4998-a29c-245f24009ab1\",\n"
-            + "  \"rootWindowName\": \"postgres\",\n"
-            + "  \"oldWindowName\": \"postgres\",\n"
-            + "  \"windowName\": \"postgres1\",\n"
+    private final String str = "{" + LF
+            + "  \"operation\": \"initStep\"," + LF
+            + "  \"oid\":\"279436\"," + LF
+            + "  \"uuid\": \"8359cbf1-9833-4998-a29c-245f24009ab1\"," + LF
+            + "  \"rootWindowName\": \"postgres\"," + LF
+            + "  \"oldWindowName\": \"postgres\"," + LF
+            + "  \"windowName\": \"postgres1\"," + LF
             + "  \"sql\": \"CREATE OR REPLACE FUNCTION zwr.test(i integer, OUT result integer)\\n "
             + "RETURNS SETOF integer\\n LANGUAGE plpgsql\\n NOT FENCED NOT SHIPPABLE\\nAS $$\\r\\n"
             + "DECLARE\\r\\n\\r\\n\\r\\nBEGIN\\r\\n result = i + 1;\\r\\n result = result + 2;\\r\\n "
             + "result = result + 3;\\r\\n result = result + 4;\\r\\n result = result + 5;\\r\\n\\r\\n"
-            + "RETURN NEXT;\\r\\nEND;$$;\\n/\"\n"
+            + "RETURN NEXT;\\r\\nEND;$$;\\n/\"" + LF
             + "}";
     @InjectMocks
     private InitStepImpl initStep;

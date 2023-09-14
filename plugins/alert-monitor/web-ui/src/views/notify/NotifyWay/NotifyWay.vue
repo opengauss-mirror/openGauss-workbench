@@ -97,11 +97,15 @@ const page = reactive({
   total: 0,
 });
 const templateTypeList = ref<any[]>([{
-  name: t('notifyTemplate.email'), value: 'email'
+  name: t('notifyWay.email'), value: 'email'
 }, {
-  name: t('notifyTemplate.WeCom'), value: 'WeCom'
+  name: t('notifyWay.WeCom'), value: 'WeCom'
 }, {
-  name: t('notifyTemplate.DingTalk'), value: 'DingTalk'
+  name: t('notifyWay.DingTalk'), value: 'DingTalk'
+}, {
+  name: t('notifyWay.webhook'), value: 'webhook'
+}, {
+  name: t('notifyWay.SNMP'), value: 'SNMP'
 }])
 const curId = ref<number>()
 const state = ref<string>()

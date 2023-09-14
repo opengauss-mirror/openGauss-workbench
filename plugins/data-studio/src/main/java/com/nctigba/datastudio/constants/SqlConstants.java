@@ -56,6 +56,11 @@ public class SqlConstants {
     public static final String COMMA = ",";
 
     /**
+     * AND
+     */
+    public static final String AND = " and ";
+
+    /**
      * comma space
      */
     public static final String COMMA_SPACE = ", ";

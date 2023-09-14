@@ -16,7 +16,7 @@ public class CommonConstants {
     public static final String SLASH = "/";
     public static final String CONNECTION_ESTABLISHMENT_FAIL = "Connection establishment fail";
     public static final String INSERT_INTO_PARAM_INFO_SQL = "insert into param_info(paramType,paramName,"
-            + "paramDetail,suggestValue,defaultValue,unit,suggestExplain,diagnosisRule)\n";
+            + "parameterCategory,valueRange,paramDetail,suggestValue,defaultValue,unit,suggestExplain,diagnosisRule)";
     public static final String HASH_COND = "Hash Cond";
     public static final String COST = "(cost=";
     public static final String SUCCESS = "success";

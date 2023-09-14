@@ -36,7 +36,7 @@ public interface SessionMapper {
     @Select("select a.state, a.sessionid,  a.datname, a.usename, "
             + "a.resource_pool, b.lwtid , TO_CHAR(a.backend_start,'YYYY-MM-DD HH:MI:SS') as backend_start, "
             + "TO_CHAR((now()- a.backend_start),'HH24:MI:SS') as backend_runtime, "
-            + "a.client_addr, a.application_name, a.client_hostname, a.client_port, "
+            + "host(a.client_addr) as client_addr, a.application_name, a.client_hostname, a.client_port, "
             + "TO_CHAR(a.xact_start ,'YYYY-MM-DD HH:MI:SS') as xact_start, "
             + "TO_CHAR(a.query_start ,'YYYY-MM-DD HH:MI:SS') as query_start, " + "a.datname, a.query_id, a.query "
             + "from pg_stat_activity a left join pg_thread_wait_status b on a.sessionid=b.sessionid "

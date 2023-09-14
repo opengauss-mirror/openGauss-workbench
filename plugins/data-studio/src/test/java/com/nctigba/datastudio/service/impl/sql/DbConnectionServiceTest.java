@@ -10,6 +10,7 @@ import com.nctigba.datastudio.dao.ConnectionMapDAO;
 import com.nctigba.datastudio.dao.DatabaseConnectionDAO;
 import com.nctigba.datastudio.model.dto.ConnectionDTO;
 import com.nctigba.datastudio.model.dto.DbConnectionCreateDTO;
+import com.nctigba.datastudio.model.dto.GetConnectionAttributeDTO;
 import com.nctigba.datastudio.model.entity.DatabaseConnectionDO;
 import com.nctigba.datastudio.model.entity.DatabaseConnectionUrlDO;
 import com.nctigba.datastudio.model.query.DatabaseMetaarrayIdSchemaQuery;
@@ -131,7 +132,10 @@ public class DbConnectionServiceTest {
     @Test
     public void testDatabaseAttributeConnection() {
         when(databaseConnectionDAO.getAttributeById(anyString(), anyString())).thenReturn(new DatabaseConnectionDO());
-        connectionService.databaseAttributeConnection("1");
+        GetConnectionAttributeDTO request = new GetConnectionAttributeDTO();
+        request.setId("1");
+        request.setWebUser("2");
+        connectionService.databaseAttributeConnection(request);
     }
 
     @Test
@@ -165,19 +169,6 @@ public class DbConnectionServiceTest {
         dbConnectionCreateDTO.setWebUser("");
         connectionService.updateDatabaseConnection(dbConnectionCreateDTO);
         staticUtilsMockedStatic.close();
-    }
-
-    @Test
-    public void testSchemaObjectList() {
-        List<GainObjectSQLService> serviceArrayList = new ArrayList<>();
-        serviceArrayList.add(new GainObjectSQLServiceImpl());
-        connectionService.setGainObjectSQLService(serviceArrayList);
-        DatabaseMetaarrayIdSchemaQuery databaseMetaarrayIdSchemaQuery = new DatabaseMetaarrayIdSchemaQuery();
-        databaseMetaarrayIdSchemaQuery.setSchema("");
-        databaseMetaarrayIdSchemaQuery.setWebUser("");
-        databaseMetaarrayIdSchemaQuery.setUuid(UUID);
-        databaseMetaarrayIdSchemaQuery.setConnectionName("");
-        connectionService.schemaObjectList(databaseMetaarrayIdSchemaQuery);
     }
 
     @Test

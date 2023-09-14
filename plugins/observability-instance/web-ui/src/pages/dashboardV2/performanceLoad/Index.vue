@@ -373,6 +373,40 @@
         </el-table>
       </el-tab-pane>
       <el-tab-pane :label="$t('session.waitEventTab.title')" :name="3">
+        <div
+          style="
+            display: flex;
+            flex-direction: row;
+            justify-content: flex-end;
+            align-items: center;
+            font-size: 12px;
+            margin-bottom: 10px;
+          "
+        >
+          <div>{{ $t('session.waitEventTab.waitStatus') }}</div>
+          <el-select v-model="waitEventForm.waitStatus" style="width: 100px; margin: 0 4px" @change="changeWaitEventForm">
+            <el-option v-for="item in waitStatusList" :key="item" :value="item" :label="item" />
+          </el-select>
+          <div>{{ $t('session.waitEventTab.waitEvent') }}</div>
+          <el-select v-model="waitEventForm.waitEvent" style="width: 100px; margin: 0 4px" @change="changeWaitEventForm">
+            <el-option v-for="item in waitEventList" :key="item" :value="item" :label="item" />
+          </el-select>
+          <el-select v-model="waitEventForm.field" style="width: 100px; margin: 0 4px">
+            <el-option value="db_name" :label="$t('session.waitEventTab.dbName')" />
+            <el-option value="thread_name" :label="$t('session.waitEventTab.threadName')" />
+            <el-option value="tid" :label="$t('session.waitEventTab.tid')" />
+            <el-option value="sessionid" :label="$t('session.waitEventTab.sessionid')" />
+            <el-option value="block_sessionid" :label="$t('session.waitEventTab.blockSessionid')" />
+            <el-option value="query_id" :label="$t('session.waitEventTab.queryId')" />
+            <el-option value="lockmode" :label="$t('session.waitEventTab.lockmode')" />
+            <el-option value="tag" :label="$t('session.waitEventTab.locktag')" />
+          </el-select>
+          <el-input v-model="waitEventForm.fieldValue" style="width: 150px;">
+            <template #append>
+              <el-link :underline="false" :icon="Search" size="small" @click="changeWaitEventForm"/>
+            </template>
+          </el-input>
+        </div>
         <el-table
           :table-layout="'auto'"
           :data="waitEventTable"
@@ -451,7 +485,7 @@ import { useRequest } from 'vue-request'
 import { tabKeys } from '@/pages/dashboardV2/common'
 import moment from 'moment'
 import router from '@/router'
-import { Refresh } from '@element-plus/icons-vue'
+import { Refresh, Search } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 import { dateFormat } from '@/utils/date'
@@ -514,6 +548,16 @@ const topSQLData = ref<void | TopSQLNow[]>([])
 const transTable = ref<TransTable[]>([])
 const innerRefreshTime = ref<number>(30)
 const innerRefreshDoneTime = ref<string>('')
+const waitEventTableSrc = ref<WaitEvent[]>([])
+const waitEventForm = ref<any>({
+  waitStatus: '',
+  waitEvent: '',
+  field: '',
+  fieldValue: '',
+})
+const waitStatusList = ref<any[]>([])
+const waitEventList = ref<any[]>([])
+
 const cpuValue = computed(() => {
   return getMetricsValue(metricsData.value.cpu)
 })
@@ -716,6 +760,9 @@ watch(
     blockSessionTable.value = []
     transTable.value = []
     waitEventTable.value = []
+    waitEventTableSrc.value = []
+    waitStatusList.value = []
+    waitEventList.value = []
 
     if (!topSQLNowData.value) return
 
@@ -738,7 +785,10 @@ watch(
 
     // wait events
     if (topSQLNowData.value.waitEvents) {
-      waitEventTable.value = topSQLNowData.value.waitEvents
+      waitEventTableSrc.value = topSQLNowData.value.waitEvents
+      waitStatusList.value = [...new Set(waitEventTableSrc.value.map(item => item.wait_event))]
+      waitEventList.value = [...new Set(waitEventTableSrc.value.map(item => item.wait_event))]
+      changeWaitEventForm()
     }
 
     innerRefreshDoneTime.value = moment(new Date()).format('HH:mm:ss')
@@ -784,6 +834,31 @@ watch(
   },
   { immediate: true }
 )
+
+watch(instanceId, () => {
+  waitEventForm.value = {
+    waitStatus: '',
+    waitEvent: '',
+    field: '',
+    fieldValue: '',
+  }
+})
+
+const changeWaitEventForm = () => {
+  waitEventTable.value = waitEventTableSrc.value.filter(item => {
+    if (waitEventForm.value.waitStatus && item.wait_status !== waitEventForm.value.waitStatus) {
+      return false;
+    }
+    if (waitEventForm.value.waitEvent && item.wait_event !== waitEventForm.value.waitEvent) {
+      return false;
+    }
+    if (waitEventForm.value.field && waitEventForm.value.fieldValue && item[waitEventForm.value.field].toString().indexOf(waitEventForm.value.fieldValue) === -1) {
+      return false;
+    }
+    return true;
+  })
+}
+
 // same for every page in index
 const emit = defineEmits(['goto'])
 const goto = (key: string, param?: object) => {
@@ -834,7 +909,7 @@ watch(
       }
       emit('goto', tabKeys.WDR, param)
     } else {
-      ElMessage.error(t('wdrReports.wdrErrtip'))
+      ElMessage.error(t('dashboard.wdrReports.wdrErrtip'))
     }
   },
   { deep: true }

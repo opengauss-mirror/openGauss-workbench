@@ -138,7 +138,7 @@
             <div style="padding: 12px" v-loading="loading">
               <el-row :gutter="12">
                 <el-col :span="6">
-                  <my-card :title="'CPU'" height="200" :bodyPadding="false">
+                  <my-card :title="'CPU(%)'" height="200" :bodyPadding="false">
                     <LazyLine
                       :tabId="tabId"
                       :formatter="toFixed"
@@ -155,7 +155,7 @@
                   </my-card>
                 </el-col>
                 <el-col :span="6">
-                  <my-card :title="$t('clusterMonitor.detail.instance.memory')" height="200" :bodyPadding="false">
+                  <my-card :title="$t('clusterMonitor.detail.instance.memory') + '(%)'" height="200" :bodyPadding="false">
                     <LazyLine
                       :tabId="tabId"
                       :formatter="toFixed"
@@ -173,7 +173,7 @@
                 </el-col>
                 <el-col :span="6">
                   <my-card
-                    :title="$t('clusterMonitor.detail.instance.networkReceive')"
+                    :title="$t('clusterMonitor.detail.instance.networkReceive') + '(Mb/s)'"
                     height="200"
                     :bodyPadding="false"
                   >
@@ -190,7 +190,7 @@
                   </my-card>
                 </el-col>
                 <el-col :span="6">
-                  <my-card :title="$t('clusterMonitor.detail.instance.networkSend')" height="200" :bodyPadding="false">
+                  <my-card :title="$t('clusterMonitor.detail.instance.networkSend') + '(Mb/s)'" height="200" :bodyPadding="false">
                     <LazyLine
                       :tabId="tabId"
                       :formatter="toFixed"
@@ -208,7 +208,7 @@
               <div class="gap-row"></div>
               <el-row :gutter="12">
                 <el-col :span="6">
-                  <my-card :title="$t('clusterMonitor.detail.instance.diskRead')" height="200" :bodyPadding="false">
+                  <my-card :title="$t('clusterMonitor.detail.instance.diskRead') + '(B)'" height="200" :bodyPadding="false">
                     <LazyLine
                       :tabId="tabId"
                       :formatter="toFixed"
@@ -222,7 +222,7 @@
                   </my-card>
                 </el-col>
                 <el-col :span="6">
-                  <my-card :title="'QPS'" height="200" :bodyPadding="false">
+                  <my-card :title="'QPS(%)'" height="200" :bodyPadding="false">
                     <LazyLine
                       :tabId="tabId"
                       :formatter="toFixed"
@@ -236,7 +236,7 @@
                 </el-col>
                 <el-col :span="6">
                   <my-card
-                    :title="$t('clusterMonitor.detail.instance.sqlResponseTime80')"
+                    :title="$t('clusterMonitor.detail.instance.sqlResponseTime80') + '(ms)'"
                     height="200"
                     :bodyPadding="false"
                   >
@@ -254,7 +254,7 @@
                 </el-col>
                 <el-col :span="6">
                   <my-card
-                    :title="$t('clusterMonitor.detail.instance.sqlResponseTime95')"
+                    :title="$t('clusterMonitor.detail.instance.sqlResponseTime95') + '(ms)'"
                     height="200"
                     :bodyPadding="false"
                   >
@@ -500,7 +500,7 @@ const selectionChange = (selection: Array) => {
         metricsData.value[prop].forEach((element) => {
           if (
             selection.some((item: any) => {
-              return item.nodeId === element.name
+              return item.nodeName === element.name
             })
           ) {
             element.lineStyle = undefined
@@ -523,9 +523,6 @@ watch(
 
     if (!allClusters.value) return
 
-    // get sort
-    let nodeIds = clusterNodesData.value.map((node) => node.nodeId)
-
     let responseKeys = [
       ['CPU', 'cpu'], // cpu
       ['MEMORY', 'memory'], // memory
@@ -543,10 +540,10 @@ watch(
       ['CLUSTER_PRIMARY_WAL_WRITE_TOTAL', 'writeTotal'], // write total daily
     ]
     responseKeys.forEach((responseKeyArray) => {
-      for (let key in nodeIds) {
+      for (let node of clusterNodesData.value) {
         let tempData: string[] = []
-        if (allClusters.value[responseKeyArray[0]][nodeIds[key]]) {
-          allClusters.value[responseKeyArray[0]][nodeIds[key]].forEach((element) => {
+        if (allClusters.value[responseKeyArray[0]] && allClusters.value[responseKeyArray[0]][node.nodeId]) {
+          allClusters.value[responseKeyArray[0]][node.nodeId].forEach((element) => {
             if (responseKeyArray[0] === 'NETWORK_IN_TOTAL' || responseKeyArray[0] === 'NETWORK_OUT_TOTAL') {
               tempData.push(toFixed(element / 1024 / 1024, 1))
             } else if (
@@ -556,9 +553,9 @@ watch(
               tempData.push(toFixed(element / 1000, 1))
             } else tempData.push(toFixed(element))
           })
-          metricsData.value[responseKeyArray[1]].push({ data: tempData, name: nodeIds[key], key: nodeIds[key] })
+          metricsData.value[responseKeyArray[1]].push({ data: tempData, name: node.nodeName, key: node.nodeId })
         } else {
-          metricsData.value[responseKeyArray[1]].push({ data: [], name: nodeIds[key], key: nodeIds[key] })
+          metricsData.value[responseKeyArray[1]].push({ data: [], name: node.nodeName, key: node.nodeId })
         }
       }
     })

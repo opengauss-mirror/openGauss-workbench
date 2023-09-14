@@ -26,9 +26,9 @@ public class MessageSourceUtil {
 
     public static void set(String language) {
         Locale locale;
-        if (StrUtil.isBlank(language))
+        if (StrUtil.isBlank(language)) {
             locale = Locale.CHINA;
-        else {
+        } else {
             var str = language.split("_");
             locale = new Locale(str[0], str[1]);
         }
@@ -39,6 +39,16 @@ public class MessageSourceUtil {
         LOC.set(locale);
     }
 
+    public static String get(String key, String defaultMessage) {
+        return messageSource.getMessage(key, null, defaultMessage, getLocale());
+    }
+
+    /**
+     * Conversion between Chinese and English
+     *
+     * @param key Characters that need to be converted
+     * @return String
+     */
     public static String get(String key) {
         return messageSource.getMessage(key, null, key, getLocale());
     }
@@ -52,15 +62,16 @@ public class MessageSourceUtil {
     }
 
     private static Locale getLocale() {
-        if (LOC.get() != null)
+        if (LOC.get() != null) {
             return LOC.get();
+        }
         final HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes())
                 .getRequest();
         var language = request.getHeader(HttpHeaders.CONTENT_LANGUAGE);
         Locale locale;
-        if (language == null || language.isBlank())
+        if (language == null || language.isBlank()) {
             locale = Locale.CHINA;
-        else {
+        } else {
             var str = language.split("_");
             locale = new Locale(str[0], str[1]);
         }

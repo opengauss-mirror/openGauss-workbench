@@ -11,6 +11,7 @@ import lombok.experimental.Accessors;
 import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -41,7 +42,7 @@ public class HisTreeNode {
     }
 
     public HisTreeNode setState(HisDiagnosisResult.PointState state) {
-        if (this.state == HisDiagnosisResult.PointState.NORMAL) {
+        if (this.state == HisDiagnosisResult.PointState.SUCCEED) {
             return this;
         }
         this.state = state;
@@ -52,11 +53,17 @@ public class HisTreeNode {
         if (this.isHidden != null) {
             return this.isHidden;
         }
-        if (this.state == HisDiagnosisResult.PointState.NORMAL) {
+        if (this.state == HisDiagnosisResult.PointState.SUCCEED) {
             return this.isHidden = false;
         }
-        boolean isState = (state == HisDiagnosisResult.PointState.ABNORMAL || (state
-                == HisDiagnosisResult.PointState.NOT_ANALYZED));
+        List<HisDiagnosisResult.PointState> list = Arrays.asList(
+                HisDiagnosisResult.PointState.NOT_MATCH_OPTION,
+                HisDiagnosisResult.PointState.ANALYSIS_EXCEPTION,
+                HisDiagnosisResult.PointState.COLLECT_EXCEPTION,
+                HisDiagnosisResult.PointState.NOT_SATISFIED_DIAGNOSIS,
+                HisDiagnosisResult.PointState.NOT_HAVE_DATA
+        );
+        boolean isState = list.contains(state);
         if (CollectionUtils.isEmpty(child) && isState) {
             return this.isHidden = true;
         }

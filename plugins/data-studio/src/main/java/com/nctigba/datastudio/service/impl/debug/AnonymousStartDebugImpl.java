@@ -10,11 +10,9 @@ import com.nctigba.datastudio.model.PublicParamReq;
 import com.nctigba.datastudio.model.entity.OperateStatusDO;
 import com.nctigba.datastudio.service.OperationInterface;
 import com.nctigba.datastudio.util.DebugUtils;
-import com.nctigba.datastudio.util.LocaleString;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.util.Strings;
-import org.opengauss.admin.common.exception.CustomException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -25,7 +23,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -135,13 +132,15 @@ public class AnonymousStartDebugImpl implements OperationInterface {
 
         List<Integer> breakPoints = paramReq.getBreakPoints();
         int differ = DebugUtils.changeParamType(webSocketServer, windowName, DIFFER);
+        List<Integer> lineList = new ArrayList<>();
         if (!CollectionUtils.isEmpty(breakPoints)) {
             for (Integer i : breakPoints) {
                 if (list.contains(i - differ)) {
-                    paramReq.setLine(i);
-                    addBreakPoint.operate(webSocketServer, paramReq);
+                    lineList.add(i);
                 }
             }
+            paramReq.setBreakPoints(lineList);
+            addBreakPoint.operate(webSocketServer, paramReq);
         }
 
         ResultSet stackResult = statNew.executeQuery(BACKTRACE_SQL_PRE + differ + BACKTRACE_SQL);

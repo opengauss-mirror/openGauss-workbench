@@ -48,6 +48,7 @@ public class OffCpu implements HisDiagnosisPointService<Object> {
     public List<String> getOption() {
         List<String> option = new ArrayList<>();
         option.add(String.valueOf(OptionCommon.IS_BCC));
+        option.add(String.valueOf(OptionCommon.IS_OFF_CPU));
         return option;
     }
 

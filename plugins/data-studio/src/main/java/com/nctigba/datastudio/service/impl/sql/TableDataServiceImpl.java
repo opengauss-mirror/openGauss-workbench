@@ -153,7 +153,7 @@ public class TableDataServiceImpl implements TableDataService {
                 conMap.get(request.getUuid()).getType());
         String ddl = tableColumnSQLService1.tableColumnSQL(request.getOid(),
                 DebugUtils.needQuoteName(request.getSchema()),
-                DebugUtils.needQuoteName(request.getTableName()));
+                request.getTableName());
         try (
                 Connection connection = connectionConfig.connectDatabase(request.getUuid());
                 Statement statement = connection.createStatement();
@@ -275,7 +275,7 @@ public class TableDataServiceImpl implements TableDataService {
             try (
                     ResultSet resultSet = statement.executeQuery(tableColumnSQLService.get(conMap.get(request.getUuid())
                             .getType()).tableColumnSQL(request.getOid(), DebugUtils.needQuoteName(request.getSchema()),
-                            DebugUtils.needQuoteName(request.getTableName())))
+                            request.getTableName()))
             ) {
                 Map<String, Object> resultMap = DebugUtils.parseResultSet(resultSet);
                 log.info("tableColumn resultMap is: " + resultMap);

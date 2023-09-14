@@ -283,6 +283,9 @@ export default {
     mode: 'rename schema',
     table: 'rename table',
   },
+  import: {
+    tableData: 'import table data',
+  },
   export: {
     ddl: 'export DDL',
     ddlData: 'export DDL and data',
@@ -458,7 +461,6 @@ export default {
     data: {
       title: 'Data',
       importData: 'Import',
-      importTableData: 'Import Table Data',
       importFile: 'Import Data File',
       chooseFile: 'choose file',
       exportCurrentPage: 'Export Current Page',

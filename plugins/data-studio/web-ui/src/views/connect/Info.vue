@@ -18,8 +18,10 @@
 <script lang="ts" setup>
   import { getDatabaseAttr } from '@/api/connect';
   import { useI18n } from 'vue-i18n';
+  import { useUserStore } from '@/store/modules/user';
 
   const { t } = useI18n();
+  const UserStore = useUserStore();
   const props = withDefaults(
     defineProps<{
       modelValue: boolean;
@@ -51,7 +53,10 @@
 
   const handleOpen = async () => {
     gridData.value = [];
-    const data: any = await getDatabaseAttr(props.connectInfo.id);
+    const data: any = await getDatabaseAttr({
+      id: props.connectInfo.id,
+      webUser: UserStore.userId,
+    });
     data.host = data.ip;
     Object.keys(infoObj).forEach((item) => {
       gridData.value.push({ attr: infoObj[item], value: data[item] || '-' });

@@ -26,6 +26,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashMap;
 
+import static com.nctigba.datastudio.constants.SqlConstants.LF;
 import static com.nctigba.datastudio.dao.ConnectionMapDAO.conMap;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
@@ -62,14 +63,14 @@ public class FuncProcedureTest {
     @Spy
     private LocaleString localeString;
 
-    private String str = "{\n"
-            + "  \"operation\": \"funcProcedure\",\n"
-            + "  \"oid\":\"201839\",\n"
-            + "  \"uuid\": \"8359cbf1-9833-4998-a29c-245f24009ab1\",\n"
-            + "  \"isInPackage\": \"false\",\n"
-            + "  \"rootWindowName\": \"postgres\",\n"
-            + "  \"oldWindowName\": \"\",\n"
-            + "  \"windowName\": \"postgres\"\n"
+    private String str = "{" + LF
+            + "  \"operation\": \"funcProcedure\"," + LF
+            + "  \"oid\":\"201839\"," + LF
+            + "  \"uuid\": \"8359cbf1-9833-4998-a29c-245f24009ab1\"," + LF
+            + "  \"isInPackage\": \"false\"," + LF
+            + "  \"rootWindowName\": \"postgres\"," + LF
+            + "  \"oldWindowName\": \"\"," + LF
+            + "  \"windowName\": \"postgres\"" + LF
             + "}";
 
     @Before
@@ -83,13 +84,13 @@ public class FuncProcedureTest {
 
     @Test
     public void testOperate() throws SQLException, IOException {
-        str = "{\n"
-                + "  \"operation\": \"funcProcedure\",\n"
-                + "  \"oid\":\"279436\",\n"
-                + "  \"isInPackage\": \"true\",\n"
-                + "  \"rootWindowName\": \"postgres\",\n"
-                + "  \"oldWindowName\": \"postgres\",\n"
-                + "  \"windowName\": \"postgres\"\n"
+        str = "{" + LF
+                + "  \"operation\": \"funcProcedure\"," + LF
+                + "  \"oid\":\"279436\"," + LF
+                + "  \"isInPackage\": \"true\"," + LF
+                + "  \"rootWindowName\": \"postgres\"," + LF
+                + "  \"oldWindowName\": \"postgres\"," + LF
+                + "  \"windowName\": \"postgres\"" + LF
                 + "}";
         funcProcedure.operate(webSocketServer, str);
     }

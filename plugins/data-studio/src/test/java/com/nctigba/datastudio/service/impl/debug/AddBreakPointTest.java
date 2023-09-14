@@ -32,6 +32,7 @@ import static com.nctigba.datastudio.constants.CommonConstants.CAN_BREAK;
 import static com.nctigba.datastudio.constants.CommonConstants.DIFFER;
 import static com.nctigba.datastudio.constants.CommonConstants.OID;
 import static com.nctigba.datastudio.constants.CommonConstants.STATEMENT;
+import static com.nctigba.datastudio.constants.SqlConstants.LF;
 import static com.nctigba.datastudio.dao.ConnectionMapDAO.conMap;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -60,12 +61,12 @@ public class AddBreakPointTest {
     private MessageSource messageSource;
     @Spy
     private LocaleString localeString;
-    private String str = "{\n"
-            + "  \"operation\": \"addBreakPoint\",\n"
-            + "  \"line\":\"15\",\n"
-            + "  \"rootWindowName\": \"postgres\",\n"
-            + "  \"oldWindowName\": \"\",\n"
-            + "  \"windowName\": \"postgres\"\n"
+    private String str = "{" + LF
+            + "  \"operation\": \"addBreakPoint\"," + LF
+            + "  \"breakPoints\": [15]," + LF
+            + "  \"rootWindowName\": \"postgres\"," + LF
+            + "  \"oldWindowName\": \"\"," + LF
+            + "  \"windowName\": \"postgres\"" + LF
             + "}";
 
     @Before
@@ -98,12 +99,12 @@ public class AddBreakPointTest {
 
     @Test
     public void testOperate2() throws SQLException, IOException {
-        str = "{\n"
-                + "  \"operation\": \"addBreakPoint\",\n"
-                + "  \"line\":\"10\",\n"
-                + "  \"rootWindowName\": \"postgres\",\n"
-                + "  \"oldWindowName\": \"\",\n"
-                + "  \"windowName\": \"postgres\"\n"
+        str = "{" + LF
+                + "  \"operation\": \"addBreakPoint\"," + LF
+                + "  \"breakPoints\": [10]," + LF
+                + "  \"rootWindowName\": \"postgres\"," + LF
+                + "  \"oldWindowName\": \"\"," + LF
+                + "  \"windowName\": \"postgres\"" + LF
                 + "}";
 
         when(mockStatement.executeQuery(anyString())).thenReturn(mockResultSet);

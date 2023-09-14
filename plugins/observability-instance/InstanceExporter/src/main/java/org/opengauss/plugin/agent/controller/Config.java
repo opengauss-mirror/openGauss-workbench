@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.opengauss.plugin.agent.config.DbConfig;
+import org.opengauss.plugin.agent.util.CmdUtil;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -44,6 +45,7 @@ public class Config {
             try (var writer = new FileWriter(application)) {
                 writer.write(yaml.dumpAsMap(map));
             }
+            CmdUtil.init(username, password);
         } catch (IOException e) {
             throw e;
         }

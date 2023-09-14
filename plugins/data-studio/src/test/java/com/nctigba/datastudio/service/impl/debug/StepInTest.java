@@ -31,6 +31,7 @@ import static com.nctigba.datastudio.constants.CommonConstants.LINE_NO;
 import static com.nctigba.datastudio.constants.CommonConstants.OID;
 import static com.nctigba.datastudio.constants.CommonConstants.STATEMENT;
 import static com.nctigba.datastudio.constants.CommonConstants.TYPE;
+import static com.nctigba.datastudio.constants.SqlConstants.LF;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
@@ -44,13 +45,13 @@ import static org.mockito.Mockito.when;
 public class StepInTest {
 
     private final Map<String, Object> map = new HashMap<>();
-    private final String str = "{\n"
-            + "  \"operation\": \"stepIn\",\n"
-            + "  \"oid\":\"201839\",\n"
-            + "  \"uuid\": \"8359cbf1-9833-4998-a29c-245f24009ab1\",\n"
-            + "  \"rootWindowName\": \"postgres\",\n"
-            + "  \"oldWindowName\": \"\",\n"
-            + "  \"windowName\": \"postgres\"\n"
+    private final String str = "{" + LF
+            + "  \"operation\": \"stepIn\"," + LF
+            + "  \"oid\":\"201839\"," + LF
+            + "  \"uuid\": \"8359cbf1-9833-4998-a29c-245f24009ab1\"," + LF
+            + "  \"rootWindowName\": \"postgres\"," + LF
+            + "  \"oldWindowName\": \"\"," + LF
+            + "  \"windowName\": \"postgres\"" + LF
             + "}";
     @InjectMocks
     private StepInImpl stepIn;

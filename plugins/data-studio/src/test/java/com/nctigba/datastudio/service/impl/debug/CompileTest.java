@@ -28,6 +28,7 @@ import static com.nctigba.datastudio.constants.CommonConstants.NSP_NAME;
 import static com.nctigba.datastudio.constants.CommonConstants.OID;
 import static com.nctigba.datastudio.constants.CommonConstants.PRO_ARG_TYPES;
 import static com.nctigba.datastudio.constants.CommonConstants.PRO_NAME;
+import static com.nctigba.datastudio.constants.SqlConstants.LF;
 import static com.nctigba.datastudio.dao.ConnectionMapDAO.conMap;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
@@ -40,18 +41,18 @@ import static org.mockito.Mockito.when;
 @Slf4j
 @RunWith(MockitoJUnitRunner.class)
 public class CompileTest {
-    private final String str = "{\n"
-            + "  \"operation\": \"compile\",\n"
-            + "  \"schema\": \"zwr\",\n"
-            + "  \"uuid\": \"8359cbf1-9833-4998-a29c-245f24009ab1\",\n"
-            + "  \"rootWindowName\": \"postgres\",\n"
-            + "  \"oldWindowName\": \"\",\n"
-            + "  \"windowName\": \"postgres\",\n"
+    private final String str = "{" + LF
+            + "  \"operation\": \"compile\"," + LF
+            + "  \"schema\": \"zwr\"," + LF
+            + "  \"uuid\": \"8359cbf1-9833-4998-a29c-245f24009ab1\"," + LF
+            + "  \"rootWindowName\": \"postgres\"," + LF
+            + "  \"oldWindowName\": \"\"," + LF
+            + "  \"windowName\": \"postgres\"," + LF
             + "  \"sql\": \"CREATE OR REPLACE FUNCTION scott.step_in(i integer, OUT result integer)\\n "
             + "RETURNS SETOF integer\\n LANGUAGE plpgsql\\n NOT FENCED NOT SHIPPABLE\\nAS $$\\nDECLARE\\n\\n\\n"
             + "BEGIN\\n  result = i + 1;\\n  result = result + 2;\\n  if result < 10\\n  then\\n    "
             + "result = test(result);\\n  else\\n    result = result + 3;\\n  end if;\\n  "
-            + "result = result + 4;\\n\\nRETURN NEXT;\\nEND;$$;\\n/\"\n"
+            + "result = result + 4;\\n\\nRETURN NEXT;\\nEND;$$;\\n/\"" + LF
             + "}";
     @InjectMocks
     private CompileImpl compile;
@@ -84,20 +85,20 @@ public class CompileTest {
         when(mockResultSet.next()).thenReturn(true, false).thenReturn(true, false);
         when(mockResultSet.getString(anyString())).thenReturn("111").thenReturn("111");
 
-        String str = "{\n"
-                + "  \"operation\": \"compile\",\n"
-                + "  \"schema\": \"zwr\",\n"
-                + "  \"uuid\": \"8359cbf1-9833-4998-a29c-245f24009ab1\",\n"
-                + "  \"rootWindowName\": \"postgres\",\n"
-                + "  \"oldWindowName\": \"\",\n"
-                + "  \"windowName\": \"postgres\",\n"
+        String str1 = "{" + LF
+                + "  \"operation\": \"compile\"," + LF
+                + "  \"schema\": \"zwr\"," + LF
+                + "  \"uuid\": \"8359cbf1-9833-4998-a29c-245f24009ab1\"," + LF
+                + "  \"rootWindowName\": \"postgres\"," + LF
+                + "  \"oldWindowName\": \"\"," + LF
+                + "  \"windowName\": \"postgres\"," + LF
                 + "  \"sql\": \"CREATE OR REPLACE FUNCTION step_in(i integer, OUT result integer)\\n "
                 + "RETURNS SETOF integer\\n LANGUAGE plpgsql\\n NOT FENCED NOT SHIPPABLE\\nAS $$\\nDECLARE\\n\\n\\n"
                 + "BEGIN\\n  result = i + 1;\\n  result = result + 2;\\n  if result < 10\\n  then\\n    "
                 + "result = test(result);\\n  else\\n    result = result + 3;\\n  end if;\\n  "
-                + "result = result + 4;\\n\\nRETURN NEXT;\\nEND;$$;\\n/\"\n"
+                + "result = result + 4;\\n\\nRETURN NEXT;\\nEND;$$;\\n/\"" + LF
                 + "}";
-        compile.operate(webSocketServer, str);
+        compile.operate(webSocketServer, str1);
     }
 
     @Test
@@ -131,6 +132,27 @@ public class CompileTest {
         when((webSocketServer.getLanguage())).thenReturn("zh-CN");
 
         compile.operate(webSocketServer, str);
+    }
+
+    @Test
+    public void testOperate4() throws SQLException, IOException {
+        when(webSocketServer.getStatement(anyString())).thenReturn(mockStatement);
+
+        String str1 = "{" + LF
+                + "  \"operation\": \"compile\"," + LF
+                + "  \"schema\": \"zwr\"," + LF
+                + "  \"uuid\": \"8359cbf1-9833-4998-a29c-245f24009ab1\"," + LF
+                + "  \"rootWindowName\": \"postgres\"," + LF
+                + "  \"oldWindowName\": \"\"," + LF
+                + "  \"windowName\": \"postgres\"," + LF
+                + "  \"isPackage\": \"true\"," + LF
+                + "  \"sql\": \"CREATE OR REPLACE FUNCTION step_in(i integer, OUT result integer)\\n "
+                + "RETURNS SETOF integer\\n LANGUAGE plpgsql\\n NOT FENCED NOT SHIPPABLE\\nAS $$\\nDECLARE\\n\\n\\n"
+                + "BEGIN\\n  result = i + 1;\\n  result = result + 2;\\n  if result < 10\\n  then\\n    "
+                + "result = test(result);\\n  else\\n    result = result + 3;\\n  end if;\\n  "
+                + "result = result + 4;\\n\\nRETURN NEXT;\\nEND;$$;\\n/\"" + LF
+                + "}";
+        compile.operate(webSocketServer, str1);
     }
 
     @Test

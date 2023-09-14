@@ -1,6 +1,7 @@
 /*
  * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
  */
+
 package com.nctigba.observability.instance.listener;
 
 import org.opengauss.admin.common.core.vo.MenuVo;
@@ -32,7 +33,6 @@ public class PluginListener implements ApplicationListener<ApplicationEvent> {
                 MenuVo firstMenu = menuFacade.savePluginMenu(pluginId, "智能运维", "Intelligent OPS", 4, "monitor");
                 menuFacade.savePluginMenu(pluginId, "实例监控", "Instance Monitoring", 11, "vem/dashboard/instance",
                         firstMenu.getMenuId());
-                menuFacade.saveIndexInstanceRoute(pluginId, "实例监控", "vem/dashboard/instance");
                 menuFacade.savePluginRoute(pluginId, "实例监控详情", "Instance Monitoring Details", "vem/sql_detail",
                         firstMenu.getMenuId());
                 menuFacade.savePluginRoute(pluginId, "会话详情", "Session Details", "vem/sessionDetail",

@@ -35,7 +35,7 @@ public class SessionService {
             throw new InstanceException("session.detail.general.message");
         }
         res.putAll(generalMesList.get(0));
-        if (sessionMapper.sessionIsWaiting(sessionid) != 0) {
+        if (sessionMapper.sessionIsWaiting(sessionid) == 0) {
             return res;
         }
         List<Map<String, Object>> blockList = sessionMapper.blockList(sessionid);

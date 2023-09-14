@@ -10,7 +10,7 @@ public enum DatabaseParamData {
     WorkMem("work_mem"),
     PagewriterSleep("pagewriter_sleep"),
     BgwriterDelay("bgwriter_delay"),
-    BgwriterThreadNum("bgwriter_thread_num"),
+    BgwriterThreadNum("pagewriter_thread_num"),
     MaxIoCapacity("max_io_capacity"),
     LogMinDurationStatement("log_min_duration_statement"),
     LogDuration("log_duration"),

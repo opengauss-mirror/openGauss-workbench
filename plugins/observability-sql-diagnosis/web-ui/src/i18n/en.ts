@@ -26,6 +26,12 @@ export default {
     lastSixHour: 'Last 6 hour',
     cluterTitle: 'Cluster/Instance:',
   },
+  sqlDiagnosisPoints: {
+    referSQL: 'Optimized Reference SQL',
+    beforePlan: 'Current Execution Plan',
+    afterPlan: 'Optimized Execution Plan',
+    noPlan: 'Failed to retrieve execution plan',
+  },
   instanceIndex: {
     memory: 'Memory',
     networkInOut: 'Network(In/Out)',

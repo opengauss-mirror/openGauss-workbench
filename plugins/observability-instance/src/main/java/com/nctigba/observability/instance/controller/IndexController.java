@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.mybatis.spring.MyBatisSystemException;
 import org.opengauss.admin.common.core.domain.AjaxResult;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.exception.CustomException;
@@ -135,9 +136,17 @@ public class IndexController extends ControllerConfig {
     @GetMapping(value = "topSQLNow")
     @Ds
     public AjaxResult topSQLNow(String id) {
-        var blockAndLongTxc = sessionService.blockAndLongTxc(id);
-        blockAndLongTxc.put("topSQLNow", topSQLService.topSQLNow(id));
-        blockAndLongTxc.put("waitEvents", configMapper.waitEvents());
-        return AjaxResult.success(blockAndLongTxc);
+        if (StrUtil.isBlank(id)) {
+            return AjaxResult.success();
+        }
+        try {
+            var blockAndLongTxc = sessionService.blockAndLongTxc(id);
+            blockAndLongTxc.put("topSQLNow", topSQLService.topSQLNow(id));
+            blockAndLongTxc.put("waitEvents", configMapper.waitEvents());
+            return AjaxResult.success(blockAndLongTxc);
+        } catch (MyBatisSystemException e) {
+            log.error("connection fail");
+            return AjaxResult.error();
+        }
     }
 }

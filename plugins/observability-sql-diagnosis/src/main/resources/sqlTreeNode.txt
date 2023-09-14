@@ -1,39 +1,36 @@
--SqlTaskInfo
---ObjectInfoCheck
----ObjectRecommendedToUpdateStatistics
---ExecPlan
----IndexAdvisor
----SmpParallelQuery
----BlockSession
----PlanRecommendedToCreateIndex
----PlanChangedToPartitionTable
----PlanRecommendedToQueryBasedOnPartition
----PlanRecommendedToDoVacuumCleaning
----PlanRecommendedToOptimizeStatementsOrAddWorkMemSize
----CpuAnalysis
-----OnCpu
------HotFunction
-----UsrCpu
------RunQLat
------RunQLen
-----SysCpu
-----IdleCpu
------TcpLife
------TcpTop
-----IoWaitCpu
------OffCpu
-------ColdFunction
------BioLatency
------BioSnoop
------FileTop
------XfsDist
------XfsSlower
----Memory
-----MemLeak
-----CacheStat
-----CacheTop
----FileSystem
----NetWork
---ParamTuning
----OsParam
----DatabaseParam
+-SqlTaskInfo ROOT
+--ObjectInfoCheck DIAGNOSIS
+---ObjectRecommendedToUpdateStatistics DIAGNOSIS
+--ExecPlan CENTER
+---IndexAdvisor DIAGNOSIS
+---SmpParallelQuery DIAGNOSIS
+---BlockSession DIAGNOSIS
+---PlanRecommendedToCreateIndex DIAGNOSIS
+---PlanChangedToPartitionTable DIAGNOSIS
+---PlanRecommendedToQueryBasedOnPartition DIAGNOSIS
+---PlanRecommendedToDoVacuumCleaning DIAGNOSIS
+---PlanRecommendedToOptimizeStatementsOrAddWorkMemSize DIAGNOSIS
+---CpuAnalysis CENTER
+----OnCpu DIAGNOSIS
+-----HotFunction DISPLAY
+----UsrCpu DIAGNOSIS
+-----RunQLat DIAGNOSIS
+-----RunQLen DIAGNOSIS
+----SysCpu DIAGNOSIS
+----IdleCpu DIAGNOSIS
+-----TcpLife DIAGNOSIS
+-----TcpTop DIAGNOSIS
+----IoWaitCpu DIAGNOSIS
+-----OffCpu DIAGNOSIS
+------ColdFunction DISPLAY
+-----BioLatency DIAGNOSIS
+-----BioSnoop DIAGNOSIS
+-----FileTop DIAGNOSIS
+-----XfsDist DIAGNOSIS
+-----XfsSlower DIAGNOSIS
+---Memory CENTER
+----MemLeak DIAGNOSIS
+----CacheStat DIAGNOSIS
+--ParamTuning CENTER
+---OsParam CENTER
+---DatabaseParam CENTER

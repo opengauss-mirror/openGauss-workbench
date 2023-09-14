@@ -30,6 +30,7 @@ import java.util.Map;
 import static com.nctigba.datastudio.constants.CommonConstants.CAN_BREAK;
 import static com.nctigba.datastudio.constants.CommonConstants.DIFFER;
 import static com.nctigba.datastudio.constants.CommonConstants.LINE_NO;
+import static com.nctigba.datastudio.constants.SqlConstants.LF;
 import static com.nctigba.datastudio.dao.ConnectionMapDAO.conMap;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -43,62 +44,62 @@ import static org.mockito.Mockito.when;
 @Slf4j
 @RunWith(MockitoJUnitRunner.class)
 public class InputParamTest {
-    private final String str = "{\n"
-            + "  \"operation\": \"inputParam\",\n"
-            + "  \"oid\":\"201839\",\n"
-            + "  \"uuid\": \"8359cbf1-9833-4998-a29c-245f24009ab1\",\n"
-            + "  \"rootWindowName\": \"postgres\",\n"
-            + "  \"oldWindowName\": \"\",\n"
-            + "  \"windowName\": \"postgres\",\n"
+    private final String str = "{" + LF
+            + "  \"operation\": \"inputParam\"," + LF
+            + "  \"oid\":\"201839\"," + LF
+            + "  \"uuid\": \"8359cbf1-9833-4998-a29c-245f24009ab1\"," + LF
+            + "  \"rootWindowName\": \"postgres\"," + LF
+            + "  \"oldWindowName\": \"\"," + LF
+            + "  \"windowName\": \"postgres\"," + LF
             + "  \"sql\": \"CREATE OR REPLACE FUNCTION scott.step_in(i integer, OUT result integer)\\n "
             + "RETURNS SETOF integer\\n LANGUAGE plpgsql\\n NOT FENCED NOT SHIPPABLE\\nAS $$\\nDECLARE\\n\\n\\n"
             + "BEGIN\\n  result = i + 1;\\n  result = result + 2;\\n  if result < 10\\n  then\\n    "
             + "result = test(result);\\n  else\\n    result = result + 3;\\n  end if;\\n  "
-            + "result = result + 4;\\n\\nRETURN NEXT;\\nEND;$$;\\n/\",\n"
-            + "  \"inputParams\": [\n"
-            + "    {\n"
-            + "      \"integer\": \"1\"\n"
-            + "    },\n"
-            + "    {\n"
-            + "      \"number\": \"2\"\n"
-            + "    },\n"
-            + "    {\n"
-            + "      \"float\": \"3\"\n"
-            + "    },\n"
-            + "    {\n"
-            + "      \"double\": \"4\"\n"
-            + "    },\n"
-            + "    {\n"
-            + "      \"real\": \"5\"\n"
-            + "    },\n"
-            + "    {\n"
-            + "      \"serial\": \"6\"\n"
-            + "    },\n"
-            + "    {\n"
-            + "      \"string\": \"a\"\n"
-            + "    }\n"
-            + "  ],\n"
-            + "  \"breakPoints\": []\n"
+            + "result = result + 4;\\n\\nRETURN NEXT;\\nEND;$$;\\n/\"," + LF
+            + "  \"inputParams\": [" + LF
+            + "    {" + LF
+            + "      \"integer\": \"1\"" + LF
+            + "    }," + LF
+            + "    {" + LF
+            + "      \"number\": \"2\"" + LF
+            + "    }," + LF
+            + "    {" + LF
+            + "      \"float\": \"3\"" + LF
+            + "    }," + LF
+            + "    {" + LF
+            + "      \"double\": \"4\"" + LF
+            + "    }," + LF
+            + "    {" + LF
+            + "      \"real\": \"5\"" + LF
+            + "    }," + LF
+            + "    {" + LF
+            + "      \"serial\": \"6\"" + LF
+            + "    }," + LF
+            + "    {" + LF
+            + "      \"string\": \"a\"" + LF
+            + "    }" + LF
+            + "  ]," + LF
+            + "  \"breakPoints\": []" + LF
             + "}";
-    private final String str2 = "{\n"
-            + "  \"operation\": \"inputParam\",\n"
-            + "  \"oid\":\"201839\",\n"
-            + "  \"uuid\": \"8359cbf1-9833-4998-a29c-245f24009ab1\",\n"
-            + "  \"rootWindowName\": \"postgres\",\n"
-            + "  \"oldWindowName\": \"\",\n"
-            + "  \"windowName\": \"postgres\",\n"
+    private final String str2 = "{" + LF
+            + "  \"operation\": \"inputParam\"," + LF
+            + "  \"oid\":\"201839\"," + LF
+            + "  \"uuid\": \"8359cbf1-9833-4998-a29c-245f24009ab1\"," + LF
+            + "  \"rootWindowName\": \"postgres\"," + LF
+            + "  \"oldWindowName\": \"\"," + LF
+            + "  \"windowName\": \"postgres\"," + LF
             + "  \"sql\": \"CREATE OR REPLACE FUNCTION scott.step_in(i integer, OUT result integer)\\n "
             + "RETURNS SETOF integer\\n LANGUAGE plpgsql\\n NOT FENCED NOT SHIPPABLE\\nAS $$\\nDECLARE\\n\\n\\n"
             + "BEGIN\\n  result = i + 1;\\n  result = result + 2;\\n  if result < 10\\n  then\\n    "
             + "result = test(result);\\n  else\\n    result = result + 3;\\n  end if;\\n  "
-            + "result = result + 4;\\n\\nRETURN NEXT;\\nEND;$$;\\n/\",\n"
-            + "  \"inputParams\": [\n"
-            + "    {\n"
-            + "      \"integer\": \"2\",\n"
-            + "      \"string\": \"a\"\n"
-            + "    }\n"
-            + "  ],\n"
-            + "  \"breakPoints\": [10]\n"
+            + "result = result + 4;\\n\\nRETURN NEXT;\\nEND;$$;\\n/\"," + LF
+            + "  \"inputParams\": [" + LF
+            + "    {" + LF
+            + "      \"integer\": \"2\"," + LF
+            + "      \"string\": \"a\"" + LF
+            + "    }" + LF
+            + "  ]," + LF
+            + "  \"breakPoints\": [10]" + LF
             + "}";
     @InjectMocks
     private InputParamImpl inputParam;

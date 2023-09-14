@@ -1,23 +1,23 @@
--HisTaskInfo
---DatabaseHostPressure
----AvgCpuUsageRate
-----DbProcessAvgCpuUsage
------TopCpuTimeSql
------CpuTimeTopSql
-----WdrAnalysis
-----AspAnalysis
------BusinessConnCount
-----OtherProcessAvgCpuUsage
----CurrentCpuUsage
-----DbProcessCurrentCpuUsage
------TopDbProcess
-----OtherProcessCurrentCpuUsage
----PoorSql
-----CurrentSlowSql
----WaitEventAnalysis
-----CurrentWaitEvent
-----HistoryWaitEvent
----LockAnalysis
-----DeadlockAnalysis
-----LockTimeout
---DatabaseHostLowPressure
+-HisTaskInfo ROOT
+--DatabaseHostPressure CENTER
+---AvgCpuUsageRate CENTER
+----DbProcessAvgCpuUsage DIAGNOSIS
+-----TopCpuTimeSql DISPLAY
+-----CpuTimeTopSql DISPLAY
+----WdrAnalysis CENTER
+----AspAnalysis DIAGNOSIS
+-----BusinessConnCount DIAGNOSIS
+----OtherProcessAvgCpuUsage DIAGNOSIS
+---CurrentCpuUsage CENTER
+----DbProcessCurrentCpuUsage DIAGNOSIS
+-----TopDbProcess DIAGNOSIS
+----OtherProcessCurrentCpuUsage DIAGNOSIS
+---PoorSql CENTER
+----CurrentSlowSql DIAGNOSIS
+---WaitEventAnalysis CENTER
+----CurrentWaitEvent DIAGNOSIS
+----HistoryWaitEvent DIAGNOSIS
+---LockAnalysis CENTER
+----DeadlockAnalysis DIAGNOSIS
+----LockTimeout DIAGNOSIS
+--DatabaseHostLowPressure CENTER

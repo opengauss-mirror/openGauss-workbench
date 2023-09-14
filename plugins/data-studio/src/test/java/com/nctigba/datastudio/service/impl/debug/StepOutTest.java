@@ -27,6 +27,7 @@ import java.util.Map;
 import static com.nctigba.datastudio.constants.CommonConstants.FUNC_OID;
 import static com.nctigba.datastudio.constants.CommonConstants.OID;
 import static com.nctigba.datastudio.constants.CommonConstants.STATEMENT;
+import static com.nctigba.datastudio.constants.SqlConstants.LF;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
@@ -38,13 +39,13 @@ import static org.mockito.Mockito.when;
 @Slf4j
 @RunWith(MockitoJUnitRunner.class)
 public class StepOutTest {
-    private final String str = "{\n"
-            + "  \"operation\": \"stepOut\",\n"
-            + "  \"oid\":\"201839\",\n"
-            + "  \"uuid\": \"8359cbf1-9833-4998-a29c-245f24009ab1\",\n"
-            + "  \"rootWindowName\": \"postgres\",\n"
-            + "  \"oldWindowName\": \"\",\n"
-            + "  \"windowName\": \"postgres\"\n"
+    private final String str = "{" + LF
+            + "  \"operation\": \"stepOut\"," + LF
+            + "  \"oid\":\"201839\"," + LF
+            + "  \"uuid\": \"8359cbf1-9833-4998-a29c-245f24009ab1\"," + LF
+            + "  \"rootWindowName\": \"postgres\"," + LF
+            + "  \"oldWindowName\": \"\"," + LF
+            + "  \"windowName\": \"postgres\"" + LF
             + "}";
     private final Map<String, Object> map = new HashMap<>();
     @InjectMocks

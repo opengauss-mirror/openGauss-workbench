@@ -59,8 +59,8 @@ export default {
         replayDelay: '回放延迟',
         performanceMonitoring: '性能监控',
         memory: '内存',
-        networkReceive: '网络（接收）',
-        networkSend: '网络（发送）',
+        networkReceive: '网络接收',
+        networkSend: '网络发送',
         diskRead: '磁盘读',
         sqlResponseTime80: '80%的SQL响应时间',
         sqlResponseTime95: '95%的SQL响应时间',
@@ -82,7 +82,8 @@ export default {
       deploymentMethod: '架构',
       deploymentMethodN: '架构：',
       faildNodesNum: '故障节点数：',
-      searchInstanceName: '搜索实例名称',
+      searchClusterName: '搜索集群名称',
+      searchInstanceName: '搜索节点名称',
       version: '数据库版本',
       versionNum: '版本号',
       path: '环境分离文件路径',
@@ -400,9 +401,24 @@ export default {
     paramTuning: '参数调优',
     suggestValue: '推荐值：',
     suggestReason: '推荐原因：',
+    searchParamName: '搜索参数名称',
     rootPWDTitle: '请输入Root用户密码',
     rootPWD: 'Root用户密码',
     queryValidInfo: '请选择【集群/实例】',
+    list: {
+      parameterName: '参数名称',
+      parameterCategory: '参数类别',
+      currentValue: '当前值',
+      valueRange: '取值范围',
+      parameterDescription: '参数说明',
+      recommendedValue: '推荐值',
+      recommendation: '推荐意见',
+      defaultValue: '默认值',
+      unit: '单位',
+      displayRecommendedValue: '显示推荐值',
+      all: '全部',
+      allParameterCategories: '全部参数类别',
+    },
   },
   dashboard: {
     name: '实例概览',
@@ -948,4 +964,7 @@ export default {
     singleStepOperationCost: '单步运算cost',
     totalCost: '总cost',
   },
+  echart: {
+    selectDataErrTip: '选择的时间范围必须大于1秒'
+  }
 }

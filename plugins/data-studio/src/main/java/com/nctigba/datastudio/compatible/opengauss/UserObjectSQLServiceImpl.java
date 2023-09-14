@@ -72,12 +72,11 @@ public class UserObjectSQLServiceImpl implements UserObjectSQLService {
         }
         int size = request.getRole().size();
         if (size >= 1) {
-            ddlCondition.append(LF);
+            ddlCondition.append(" ROLE ").append(LF);
             for (int i = 0; i < request.getRole().size(); i++) {
+                ddlCondition.append(request.getRole().get(i));
                 if (i < size - 1) {
-                    ddlCondition.append(request.getRole().get(i)).append(COMMA);
-                } else {
-                    ddlCondition.append(request.getRole().get(i));
+                    ddlCondition.append(COMMA);
                 }
             }
         }

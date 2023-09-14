@@ -41,13 +41,13 @@
             <svg-icon v-if="!showLarge" name="expand" class="shrink-img" @click="showLargeWindow" />
             <svg-icon v-if="showLarge" name="expand" class="shrink-img" @click="hideLargeWindow" />
           </template>
-          <PointInfo @goto-large="showLarge = true" :nodesType="nodesType" :taskId="urlParam.dbId" />
+          <PointInfo @goto-large="showLarge = true" :large="showLarge" :nodesType="nodesType" :taskId="urlParam.dbId" />
         </my-card>
       </div>
     </div>
 
     <!-- fit old points before 930 -->
-    <div class="detail-right old" v-show="!showLarge && isOldOnes">
+    <div v-else class="detail-right old" v-show="!showLarge && isOldOnes">
       <div class="detail-info">
         <template v-if="requestType === 'NONE' || originalHiddenFlag">
           <my-card :title="$t('datasource.detailTitle')" :bodyPadding="false" style="position: relative">
@@ -165,7 +165,6 @@ const pologyType = ref('false')
 const oldKeys = [
   'ObjectInfoCheck',
   'ObjectRecommendedToUpdateStatistics',
-  'ExecPlan',
   'PlanRecommendedToCreateIndex',
   'PlanChangedToPartitionTable',
   'PlanRecommendedToQueryBasedOnPartition',

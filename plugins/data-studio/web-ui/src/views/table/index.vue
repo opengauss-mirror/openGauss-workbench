@@ -150,14 +150,15 @@
       @success="dialogUniqueKeySuccess"
     />
     <ImportTableDataDialog
+      v-if="visibleImportDialog"
       v-model="visibleImportDialog"
-      :winId="page.winId"
       :uuid="commonParams.uuid"
       :schema="commonParams.schema"
       :tableName="commonParams.tableName"
       :oid="commonParams.oid"
     />
     <ExportFilterDataDialog
+      v-if="visibleExportDialog"
       v-model="visibleExportDialog"
       :type="exportType"
       :winId="page.winId"
@@ -186,7 +187,7 @@
   import SetUniqueKeyDialog from './components/SetUniqueKeyDialog.vue';
   import SetSortData from './components/SetSortData.vue';
   import SetFilterData from './components/SetFilterData.vue';
-  import ImportTableDataDialog from './components/ImportTableDataDialog.vue';
+  import ImportTableDataDialog from '@/components/ImportTableDataDialog.vue';
   import ExportFilterDataDialog from './components/ExportFilterDataDialog.vue';
   import { eventQueue } from '@/hooks/saveData';
   import { useI18n } from 'vue-i18n';

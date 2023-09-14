@@ -104,6 +104,7 @@ public class AsyncHelperTest {
     @Test
     public void testOperateException() throws SQLException {
         paramReq.setOid("0");
+        paramReq.setInPackage(true);
         when(webSocketServer.getStatement(anyString())).thenReturn(mockStatement);
         when(mockStatement.executeUpdate(anyString())).thenThrow(new SQLException(""));
 
@@ -117,6 +118,7 @@ public class AsyncHelperTest {
     @Test
     public void testOperateException2() throws SQLException {
         paramReq.setOid("201839");
+        paramReq.setInPackage(false);
         when(webSocketServer.getStatement(anyString())).thenReturn(mockStatement);
         when(mockStatement.executeQuery(anyString())).thenThrow(new SQLException(""));
 
@@ -131,6 +133,7 @@ public class AsyncHelperTest {
     public void testOperate() throws SQLException, IOException {
         paramReq.setOid("0");
         paramReq.setCoverage(true);
+        paramReq.setInPackage(false);
         when(webSocketServer.getStatement(anyString())).thenReturn(mockStatement);
 
         asyncHelper.task(webSocketServer, paramReq);
@@ -140,6 +143,7 @@ public class AsyncHelperTest {
     public void testOperate2() throws SQLException, IOException {
         paramReq.setOid("201839");
         paramReq.setCoverage(false);
+        paramReq.setInPackage(true);
         when(webSocketServer.getStatement(anyString())).thenReturn(mockStatement);
         when(mockStatement.executeQuery(anyString())).thenReturn(mockResultSet);
         when(mockResultSet.next()).thenReturn(true, false);
