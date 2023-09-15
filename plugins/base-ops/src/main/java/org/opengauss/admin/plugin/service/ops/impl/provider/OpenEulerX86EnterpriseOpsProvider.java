@@ -159,7 +159,7 @@ public class OpenEulerX86EnterpriseOpsProvider extends AbstractOpsProvider {
         for (HostInfoHolder hostInfoHolder : installContext.getHostInfoHolders()) {
             OpsHostEntity hostEntity = hostInfoHolder.getHostEntity();
             Session currentRoot = loginWithUser(jschUtil, encryptionUtils, installContext.getHostInfoHolders(), true, hostEntity.getHostId(), null);
-            installDependency(jschUtil,currentRoot,retSession);
+            installDependency(jschUtil,currentRoot,retSession, installContext.getOs());
             currentRoot.disconnect();
         }
 

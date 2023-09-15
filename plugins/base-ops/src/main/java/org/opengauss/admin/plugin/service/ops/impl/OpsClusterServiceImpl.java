@@ -42,6 +42,7 @@ import org.opengauss.admin.common.core.domain.entity.SysSettingEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
 import org.opengauss.admin.common.exception.ops.OpsException;
+import org.opengauss.admin.common.utils.PermissionUtils;
 import org.opengauss.admin.plugin.domain.entity.ops.OpsCheckEntity;
 import org.opengauss.admin.plugin.domain.entity.ops.OpsClusterEntity;
 import org.opengauss.admin.plugin.domain.entity.ops.OpsClusterNodeEntity;
@@ -1931,13 +1932,12 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         if (CollUtil.isEmpty(hostUserEntities)) {
             throw new OpsException("Host user information does not exist");
         }
-
+        // use root check env
         OpsHostUserEntity userEntity = hostUserEntities
                 .stream()
-                .filter(hostUser -> !"root".equals(hostUser.getUsername()))
+                .filter(hostUser -> PermissionUtils.hasRootPermission(hostUser.getUsername()))
                 .findFirst()
                 .orElseThrow(() -> new OpsException("user information does not exist"));
-
         Session session = jschUtil.getSession(hostEntity.getPublicIp(), hostEntity.getPort(), userEntity.getUsername(), encryptionUtils.decrypt(userEntity.getPassword()))
                 .orElseThrow(() -> new OpsException("Failed to establish connection with host"));
 

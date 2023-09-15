@@ -155,7 +155,7 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
             OpsHostEntity hostEntity = hostInfoHolder.getHostEntity();
             Session currentRoot = loginWithUser(jschUtil, encryptionUtils,
                     installContext.getHostInfoHolders(), true, hostEntity.getHostId(), null);
-            installDependency( jschUtil, currentRoot, retSession );
+            installDependency( jschUtil, currentRoot, retSession, installContext.getOs());
             currentRoot.disconnect();
         }
 
