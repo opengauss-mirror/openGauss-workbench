@@ -8,19 +8,6 @@ import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.HttpStatus;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-import lombok.extern.slf4j.Slf4j;
 import com.tools.monitor.common.contant.ConmmonShare;
 import com.tools.monitor.common.contant.ScheduleCommon;
 import com.tools.monitor.config.NagiosConfig;
@@ -31,7 +18,6 @@ import com.tools.monitor.entity.SysConfig;
 import com.tools.monitor.entity.SysSourceTarget;
 import com.tools.monitor.entity.TargetSource;
 import com.tools.monitor.entity.zabbix.ZabbixMessge;
-import com.tools.monitor.exception.job.TaskException;
 import com.tools.monitor.manager.MonitorManager;
 import com.tools.monitor.manager.factory.AsyncFactory;
 import com.tools.monitor.mapper.SysConfigMapper;
@@ -46,6 +32,19 @@ import com.tools.monitor.util.AssertUtil;
 import com.tools.monitor.util.Base64;
 import com.tools.monitor.util.HandleUtils;
 import com.tools.monitor.util.SqlUtil;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 import org.quartz.JobDataMap;
 import org.quartz.JobKey;
 import org.quartz.Scheduler;
@@ -58,8 +57,6 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import javax.annotation.PostConstruct;
 
 /**
  * SysJobServiceImpl
@@ -107,22 +104,6 @@ public class SysJobServiceImpl implements ISysJobService {
     private MonitorFlake MonitorFlake = new MonitorFlake(11, 11);
 
     private JdbcTemplate jdbcTemplate;
-
-
-    /**
-     * init
-     *
-     * @throws SchedulerException SchedulerException
-     * @throws TaskException      TaskException
-     */
-    @PostConstruct
-    public void init() throws SchedulerException, TaskException {
-        scheduler.clear();
-        List<SysJob> jobList = jobMapper.selectJobAll();
-        for (SysJob job : jobList) {
-            MonitorTaskUtils.createMonitorJob(scheduler, job);
-        }
-    }
 
     /**
      * selectAllJob
@@ -713,8 +694,6 @@ public class SysJobServiceImpl implements ISysJobService {
      *
      * @param job job
      * @return MonitorResult MonitorResult
-     * @throws SchedulerException SchedulerException
-     * @throws TaskException      TaskException
      */
     @Override
     public MonitorResult insertTask(SysJob job) {
@@ -1106,8 +1085,6 @@ public class SysJobServiceImpl implements ISysJobService {
      *
      * @param job      job
      * @param jobGroup jobGroup
-     * @throws SchedulerException SchedulerException
-     * @throws TaskException      TaskException
      */
     public void updateSchedulerJob(SysJob job, String jobGroup) {
         Long jobId = job.getJobId();
