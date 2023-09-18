@@ -87,7 +87,7 @@
       <el-row>
         <el-col :span="14">
           <el-form-item :label="$t('alertRule.ruleContent')" prop="ruleContent" style="margin-bottom: 0px !important;">
-            <el-input v-model="formData.ruleContent" @blur="preview"></el-input>
+            <el-input type="textarea" v-model="formData.ruleContent" @blur="preview"></el-input>
           </el-form-item>
         </el-col>
         <el-col :span="2" style="padding-left: 5px;">
@@ -235,7 +235,7 @@ const durationUnitList = ref<any[]>([{
 const notifyWayIdArr = ref<string[]>([])
 const notifyWayList = ref<string[]>([])
 const logicSymbolList = ref<string[]>(['and', 'or'])
-const compareSymbolList = ref<string[]>(['>', '>=', '=', '<=', '<', '!='])
+const compareSymbolList = ref<string[]>(['>', '>=', '==', '<=', '<', '!='])
 const formData = ref<any>({
   ruleName: '',
   ruleType: '',

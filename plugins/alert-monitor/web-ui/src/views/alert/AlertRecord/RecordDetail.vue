@@ -245,6 +245,7 @@ const changeIsAlertLog = (val: boolean) => {
     searchAfter: '',
     keyAndBlockWords: []
   }
+  searchAfter.value = ''
   requestRelationLog(formData.value.id, isAlertLog.value, searchAfter.value)
 }
 

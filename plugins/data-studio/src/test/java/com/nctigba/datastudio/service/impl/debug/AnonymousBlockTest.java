@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.HashMap;
 
+import static com.nctigba.datastudio.constants.SqlConstants.LF;
 import static com.nctigba.datastudio.dao.ConnectionMapDAO.conMap;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
@@ -60,10 +61,10 @@ public class AnonymousBlockTest {
 
     @Test
     public void testOperate() throws SQLException, IOException {
-        String str = "{\n"
-                + "  \"operation\": \"changeLanguage\",\n"
-                + "  \"windowName\": \"postgres\",\n"
-                + "  \"rootWindowName\": \"postgres\"\n"
+        String str = "{" + LF
+                + "  \"operation\": \"changeLanguage\"," + LF
+                + "  \"windowName\": \"postgres\"," + LF
+                + "  \"rootWindowName\": \"postgres\"" + LF
                 + "}";
         anonymousBlock.operate(webSocketServer, str);
     }

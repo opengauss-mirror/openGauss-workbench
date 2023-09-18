@@ -27,6 +27,12 @@ export default {
     back: '返回',
     cluterTitle: '集群/实例：',
   },
+  sqlDiagnosisPoints: {
+    referSQL: '优化参考SQL',
+    beforePlan: '当前执行计划',
+    afterPlan: '优化后执行计划',
+    noPlan: '获取执行计划失败',
+  },
   instanceIndex: {
     memory: '内存',
     networkInOut: '网络（In/Out）',

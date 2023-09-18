@@ -813,7 +813,7 @@ insert into public.alert_rule_item_src(id,name,unit,params,params_explanation,cr
 'MB','{"name": ""}','{"name": {"tip": "tablespaceNameTip","required": true}}',now()) ON DUPLICATE KEY UPDATE NOTHING;
 insert into public.alert_rule_item_exp_src(id,rule_item_src_id,action,operate,limit_value,exp,show_limit_value,
 create_time) values(55,20,'normal','',null,
-'pg_tablespace_size{instance=~"$'||'{instances}"}',1,now()) ON DUPLICATE KEY UPDATE NOTHING;
+'pg_tablespace_size{name=~"$'||'{name}",instance=~"$'||'{instances}"}',1,now()) ON DUPLICATE KEY UPDATE NOTHING;
 
 insert into public.alert_rule_item_src(id,name,unit,params,create_time) values (21,'waitingCount',
 '','',now()) ON DUPLICATE KEY UPDATE NOTHING;
@@ -832,7 +832,7 @@ INSERT INTO public.alert_rule (id,rule_name,level,rule_type,rule_exp_comb,rule_c
  VALUES (6,'数据库状态监控','serious','index','A','$'||'{nodeName}处于离线状态',1,'m',1,0,null,null,'firing','1',
  '数据库状态监控，数据库状态为0表示数据库处于离线状态',0,'2023-08-07 15:45:20.02',null) ON DUPLICATE KEY UPDATE NOTHING;
 INSERT INTO public.alert_rule_item (id,rule_id,rule_mark,rule_exp_name,operate,limit_value,unit,rule_exp,rule_item_desc,is_deleted,create_time,update_time,action)
- VALUES (6,6,'A','pgDbStatus','=',0,'','pg_db_status{instance=~"$'||'{instances}"}','数据库处于离线状态',0,'2023-08-07 15:45:20.02',
+ VALUES (6,6,'A','pgDbStatus','==',0,'','pg_db_status{instance=~"$'||'{instances}"}','数据库处于离线状态',0,'2023-08-07 15:45:20.02',
  null,'normal') ON DUPLICATE KEY UPDATE NOTHING;
 
  INSERT INTO public.alert_rule (id,rule_name,level,rule_type,rule_exp_comb,rule_content,notify_duration,notify_duration_unit,is_repeat,is_silence,silence_start_time,silence_end_time,alert_notify,notify_way_ids,alert_desc,is_deleted,create_time,update_time)
@@ -846,9 +846,9 @@ INSERT INTO public.alert_rule_item (id,rule_id,rule_mark,rule_exp_name,operate,l
   VALUES (8,'表空间容量监控','warn','index','A','$'||'{nodeName}的表空间容量超过500MB',1,'m',1,0,null,null,'firing','1',
   '表空间容量监控',0,'2023-08-07 15:45:20.02',null) ON DUPLICATE KEY UPDATE NOTHING;
  INSERT INTO public.alert_rule_item (id,rule_id,rule_mark,rule_exp_name,operate,limit_value,unit,rule_exp,
- rule_item_desc,is_deleted,create_time,update_time,action, ,rule_exp_param)
+ rule_item_desc,is_deleted,create_time,update_time,action,rule_exp_param)
   VALUES (8,8,'A','tablespaceSize','>',500,'MB','pg_tablespace_size{name=~"$'||'{name}",instance=~"$'||'{instances}"}',
-  '表空间容量超过500MB',0,'2023-08-07 15:45:20.02',null,'normal','{"name":""}') ON DUPLICATE KEY UPDATE NOTHING;
+  '表空间容量超过500MB',0,'2023-08-07 15:45:20.02',null,'normal','{"name":"postgres"}') ON DUPLICATE KEY UPDATE NOTHING;
 
  INSERT INTO public.alert_rule (id,rule_name,level,rule_type,rule_exp_comb,rule_content,notify_duration,notify_duration_unit,is_repeat,is_silence,silence_start_time,silence_end_time,alert_notify,notify_way_ids,alert_desc,is_deleted,create_time,update_time)
   VALUES (9,'慢sql运行时间监控','serious','index','A','$'||'{nodeName}的一些sql运行时间超过10秒',0,'s',1,0,null,null,'firing','1',

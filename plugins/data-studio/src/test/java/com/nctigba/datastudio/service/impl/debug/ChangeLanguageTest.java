@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.HashMap;
 
+import static com.nctigba.datastudio.constants.SqlConstants.LF;
 import static com.nctigba.datastudio.dao.ConnectionMapDAO.conMap;
 
 /**
@@ -53,9 +54,9 @@ public class ChangeLanguageTest {
 
     @Test
     public void testOperate() throws SQLException, IOException {
-        String str = "{\n"
-                + "  \"operation\": \"changeLanguage\",\n"
-                + "  \"language\": \"zh-CN\",\n"
+        String str = "{" + LF
+                + "  \"operation\": \"changeLanguage\"," + LF
+                + "  \"language\": \"zh-CN\"," + LF
                 + "}";
         changeLanguage.operate(webSocketServer, str);
     }

@@ -98,17 +98,4 @@ public class HisDiagnosisTaskController {
         var result = localeToString.trapLanguage(taskService.selectById(taskId), ObjectNode.class);
         return AjaxResult.success(result);
     }
-
-    /**
-     * Query sql plan
-     *
-     * @param nodeId node id
-     * @param sqlId sql id
-     * @return AjaxResult
-     */
-    @GetMapping(value = "/v1/plan/{nodeId}/{sqlId}")
-    public AjaxResult plan(@PathVariable String nodeId, @PathVariable String sqlId) {
-        var result = taskService.plan(nodeId, sqlId);
-        return AjaxResult.success(result);
-    }
 }

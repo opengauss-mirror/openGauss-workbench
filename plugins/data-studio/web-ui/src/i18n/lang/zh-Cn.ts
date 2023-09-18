@@ -277,6 +277,9 @@ export default {
     mode: '重命名模式',
     table: '重命名表',
   },
+  import: {
+    tableData: '导入表数据',
+  },
   export: {
     ddl: '导出DDL',
     ddlData: '导出DDL和数据',
@@ -449,7 +452,6 @@ export default {
     data: {
       title: '数据',
       importData: '导入',
-      importTableData: '导入表数据',
       importFile: '导入数据文件',
       chooseFile: '选择文件',
       exportCurrentPage: '导出当前页',

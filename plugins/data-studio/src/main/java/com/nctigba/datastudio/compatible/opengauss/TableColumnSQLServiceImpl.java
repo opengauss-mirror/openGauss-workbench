@@ -40,6 +40,7 @@ import static com.nctigba.datastudio.constants.SqlConstants.ALTER_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.ALTER_TABLE_COLUMN_ADD_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.ALTER_TABLE_COLUMN_DROPQL;
 import static com.nctigba.datastudio.constants.SqlConstants.ALTER_TABLE_SQL;
+import static com.nctigba.datastudio.constants.SqlConstants.AND;
 import static com.nctigba.datastudio.constants.SqlConstants.CHECK_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.COLUMN_KEYWORD_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.COLUMN_SQL;
@@ -115,7 +116,7 @@ public class TableColumnSQLServiceImpl implements TableColumnSQLService {
     @Override
     public String tableConstraintSQL(SelectDataQuery request) {
         String ddl = String.format(SqlConstants.CONSTRAINT_TABLE_SQL, DebugUtils.needQuoteName(request.getSchema()),
-                DebugUtils.needQuoteName(request.getTableName()));
+                request.getTableName());
         log.info("tableConstraintSQL response is: " + ddl);
         return ddl;
     }
@@ -123,7 +124,7 @@ public class TableColumnSQLServiceImpl implements TableColumnSQLService {
     @Override
     public String tablePKConstraintSQL(String schema, String tableName) {
         String ddl = String.format(SqlConstants.UNIQUE_CONSTRAINT_TABLE_SQL, DebugUtils.needQuoteName(schema),
-                DebugUtils.needQuoteName(tableName));
+                tableName);
         log.info("tableConstraintSQL response is: " + ddl);
         return ddl;
     }
@@ -144,7 +145,8 @@ public class TableColumnSQLServiceImpl implements TableColumnSQLService {
                 } else if (obj.getType() == 2) {
                     statement.addBatch(String.format(SqlConstants.CONSTRAINT_DROP_SQL,
                             DebugUtils.needQuoteName(request.getSchema()),
-                            DebugUtils.needQuoteName(request.getTableName()), DebugUtils.needQuoteName(obj.getConName())));
+                            DebugUtils.needQuoteName(request.getTableName()),
+                            DebugUtils.needQuoteName(obj.getConName())));
                 } else if (obj.getType() == 3) {
                     this.updateConstraint(request, obj, statement);
                 }
@@ -174,7 +176,8 @@ public class TableColumnSQLServiceImpl implements TableColumnSQLService {
                 Connection connection = connectionConfig.connectDatabase(request.getUuid());
                 Statement statement = connection.createStatement()
         ) {
-            String sqlPk = String.format(SqlConstants.CONSTRAINT_PRIMARY_SQL, DebugUtils.needQuoteName(request.getSchema()),
+            String sqlPk = String.format(SqlConstants.CONSTRAINT_PRIMARY_SQL,
+                    DebugUtils.needQuoteName(request.getSchema()),
                     DebugUtils.needQuoteName(request.getTableName()),
                     attName, DebugUtils.needQuoteName(request.getColumn()));
             log.info("sqlPK request is: {}", sqlPk);
@@ -184,8 +187,8 @@ public class TableColumnSQLServiceImpl implements TableColumnSQLService {
 
     @Override
     public String tableIndexSQL(SelectDataQuery request) {
-        String ddl = String.format(SqlConstants.INDEX_TABLE_SQL, DebugUtils.needQuoteName(request.getTableName()),
-                DebugUtils.needQuoteName(request.getSchema()));
+        String ddl = String.format(SqlConstants.INDEX_TABLE_SQL, request.getTableName(),
+                request.getSchema());
         log.info("tableIndexSQL response is: " + ddl);
         return ddl;
     }
@@ -451,17 +454,18 @@ public class TableColumnSQLServiceImpl implements TableColumnSQLService {
     }
 
     private void updateConstraint(
-            DatabaseConstraintDTO request, ConstraintDTO obj,
-            Statement statement) throws SQLException {
-        statement.addBatch(String.format(SqlConstants.CONSTRAINT_DROP_SQL, DebugUtils.needQuoteName(request.getSchema()),
-                DebugUtils.needQuoteName(request.getTableName()),
-                DebugUtils.needQuoteName(obj.getOldConName())));
+            DatabaseConstraintDTO request, ConstraintDTO obj, Statement statement) throws SQLException {
+        statement.addBatch(
+                String.format(SqlConstants.CONSTRAINT_DROP_SQL, DebugUtils.needQuoteName(request.getSchema()),
+                        DebugUtils.needQuoteName(request.getTableName()),
+                        DebugUtils.needQuoteName(obj.getOldConName())));
         this.addConstraint(request, obj, statement);
     }
 
     private void addIndex(DatabaseIndexDTO request, IndexDTO obj, Statement statement) throws SQLException {
-        statement.addBatch(this.addIndexSQL(DebugUtils.containsSqlInjection(DebugUtils.needQuoteName(request.getSchema())),
-                DebugUtils.containsSqlInjection(DebugUtils.needQuoteName(request.getTableName())), obj));
+        statement.addBatch(
+                this.addIndexSQL(DebugUtils.containsSqlInjection(DebugUtils.needQuoteName(request.getSchema())),
+                        DebugUtils.containsSqlInjection(DebugUtils.needQuoteName(request.getTableName())), obj));
         if (!StringUtils.isEmpty(obj.getDescription())) {
             statement.addBatch(this.addIndexCommentSQL(DebugUtils.containsSqlInjection(
                     DebugUtils.needQuoteName(request.getSchema())), obj));
@@ -585,7 +589,7 @@ public class TableColumnSQLServiceImpl implements TableColumnSQLService {
         if (StringUtils.isNotEmpty(tableUnderlyingInfoQuery.getComment()) && !tableUnderlyingInfoQuery.getComment()
                 .equals("")) {
             cteate.append(String.format(COMMENT_TABLE_SQL, schema, tableName,
-                    tableUnderlyingInfoQuery.getComment()));
+                    tableUnderlyingInfoQuery.getComment())).append(SEMICOLON);
         }
         cteate.append(indexComment).append(olumnComment).append(constraintsComment);
         log.info("createTable response is: {}", cteate);
@@ -686,7 +690,7 @@ public class TableColumnSQLServiceImpl implements TableColumnSQLService {
                         typeChange(tableDataDTOColumn.getOldColumnData(), tableDataDTOColumn.getTypeNum(),
                                 tableDataDTOColumn.getTypeName())));
                 if (i != size - 1) {
-                    conditions.append(COMMA);
+                    conditions.append(AND);
                 }
             }
         }
@@ -727,7 +731,7 @@ public class TableColumnSQLServiceImpl implements TableColumnSQLService {
                     typeChange(tableDataDTOColumn.getOldColumnData(), tableDataDTOColumn.getTypeNum(),
                             tableDataDTOColumn.getTypeName())));
             if (i != size - 1) {
-                conditions.append(COMMA);
+                conditions.append(AND);
             }
         }
 

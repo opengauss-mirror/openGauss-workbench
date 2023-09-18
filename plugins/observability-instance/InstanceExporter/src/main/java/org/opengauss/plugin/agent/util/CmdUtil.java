@@ -29,12 +29,18 @@ public class CmdUtil {
     private static SshClient client;
     private static ClientSession session;
 
-    static {
+    /**
+     * init
+     *
+     * @param user dbuser
+     * @param pass dbpass
+     */
+    public static void init(String user, String pass) {
         try {
             client = SshClient.setUpDefaultClient();
             client.start();
-            session = client.connect("root", "127.0.0.1", 22).verify().getSession();
-            session.addPasswordIdentity("Ncti@001122");
+            session = client.connect(user, "127.0.0.1", 22).verify().getSession();
+            session.addPasswordIdentity(pass);
             session.auth().verify(SESSION_TIMEOUT);
             log.info("server init success");
         } catch (Exception e) {

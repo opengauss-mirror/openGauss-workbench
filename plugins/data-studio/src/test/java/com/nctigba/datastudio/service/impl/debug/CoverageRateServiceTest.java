@@ -39,6 +39,7 @@ import static com.nctigba.datastudio.constants.CommonConstants.PARAMS;
 import static com.nctigba.datastudio.constants.CommonConstants.PRO_NAME;
 import static com.nctigba.datastudio.constants.CommonConstants.REMARK_LINES;
 import static com.nctigba.datastudio.constants.CommonConstants.SOURCECODE;
+import static com.nctigba.datastudio.constants.SqlConstants.LF;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
@@ -95,27 +96,27 @@ public class CoverageRateServiceTest {
         when(mockResultSet.getString(REMARK_LINES)).thenReturn("10,11,12,14,16,18,20");
         when(mockResultSet.getLong(END_TIME)).thenReturn(1687663170027L);
         when(mockResultSet.getString(SOURCECODE)).thenReturn(
-                "CREATE OR REPLACE FUNCTION scott.step_in(i integer, OUT result integer)\n"
-                        + " RETURNS SETOF integer\n"
-                        + " LANGUAGE plpgsql\n"
-                        + " NOT FENCED NOT SHIPPABLE\n"
-                        + "AS $$\n"
-                        + "DECLARE\n"
-                        + "\n"
-                        + "\n"
-                        + "BEGIN\n"
-                        + "  result = i + 1;\n"
-                        + "  result = result + 2;\n"
-                        + "  if result < 10\n"
-                        + "  then\n"
-                        + "    result = test(result);\n"
-                        + "  else\n"
-                        + "    result = result + 3;\n"
-                        + "  end if;\n"
-                        + "  result = result + 4;\n"
-                        + "\n"
-                        + "RETURN NEXT;\n"
-                        + "END;$$;\n"
+                "CREATE OR REPLACE FUNCTION scott.step_in(i integer, OUT result integer)" + LF
+                        + " RETURNS SETOF integer" + LF
+                        + " LANGUAGE plpgsql" + LF
+                        + " NOT FENCED NOT SHIPPABLE" + LF
+                        + "AS $$" + LF
+                        + "DECLARE" + LF
+                        + "" + LF
+                        + "" + LF
+                        + "BEGIN" + LF
+                        + "  result = i + 1;" + LF
+                        + "  result = result + 2;" + LF
+                        + "  if result < 10" + LF
+                        + "  then" + LF
+                        + "    result = test(result);" + LF
+                        + "  else" + LF
+                        + "    result = result + 3;" + LF
+                        + "  end if;" + LF
+                        + "  result = result + 4;" + LF
+                        + "" + LF
+                        + "RETURN NEXT;" + LF
+                        + "END;$$;" + LF
                         + "/");
         when(mockResultSet.getString(PARAMS)).thenReturn("[5]");
         when(mockResultSet.getString(CAN_BREAK_LINE)).thenReturn("10,11,12,14,16,18,20");

@@ -18,11 +18,15 @@ import lombok.experimental.Accessors;
 public class BlockSessionDTO {
     private String startTime;
     private String endTime;
-    private String waitingQuery;
+    private String wSessionId;
     private String wPid;
-    private String wUser;
-    private String lockingQuery;
+    private String lSessionId;
     private String lPid;
     private String lUser;
+    private String lockingQuery;
     private String tableName;
+    private String applicationName;
+    private String clientAddress;
+    private String state;
+    private String mode;
 }

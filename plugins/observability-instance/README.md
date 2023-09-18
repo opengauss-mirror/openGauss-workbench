@@ -102,6 +102,7 @@
   - DB_TIME
   - CPU_TIME
   - EXEC_TIME
+  - IO_TIME
 
 ​	**WDR报告**
 

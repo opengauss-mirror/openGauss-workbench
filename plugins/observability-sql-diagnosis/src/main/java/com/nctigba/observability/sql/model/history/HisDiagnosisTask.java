@@ -21,7 +21,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.opengauss.admin.common.core.domain.model.ops.OpsClusterVO;
 
 import java.io.PrintWriter;
@@ -105,6 +104,7 @@ public class HisDiagnosisTask {
             List<HisDiagnosisThreshold> thresholdList) {
         this.clusterId = taskDTO.getClusterId();
         this.nodeId = taskDTO.getNodeId();
+        this.sqlId = taskDTO.getSqlId();
         this.dbName = taskDTO.getDbName();
         this.taskName = taskDTO.getTaskName();
         this.taskType = TaskType.MANUAL;
@@ -119,18 +119,6 @@ public class HisDiagnosisTask {
         this.taskStartTime = new Date();
     }
 
-    /**
-     * Explain analysis sql
-     *
-     * @return sql
-     */
-    public String analysisSql() {
-        if (getSessionId() != 0L) {
-            return StringUtils.isBlank(sql) ? "" : "explain analyze " + sql;
-        }
-        return sql;
-    }
-
     public static class TypeHander extends JacksonTypeHandler {
         public TypeHander(Class<?> type) {
             super(type);
@@ -143,9 +131,6 @@ public class HisDiagnosisTask {
     }
 
     public String getCost() {
-        if (this.span != null) {
-            return this.span;
-        }
         long costSec;
         if (taskEndTime != null) {
             costSec = taskEndTime.getTime() - taskStartTime.getTime();

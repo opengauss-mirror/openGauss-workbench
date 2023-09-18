@@ -159,7 +159,7 @@ public class GainObjectSQLServiceImpl implements GainObjectSQLService {
                 Statement statement = connection.createStatement();
                 ResultSet resultSet = statement.executeQuery(
                         String.format(SELECT_COLUMN_SQL, DebugUtils.needQuoteName(request.getSchema()),
-                                DebugUtils.needQuoteName(request.getObjectName())))
+                                request.getObjectName()))
         ) {
             while (resultSet.next()) {
                 columnList.add(resultSet.getString("column_name"));
@@ -233,7 +233,8 @@ public class GainObjectSQLServiceImpl implements GainObjectSQLService {
         String ddl;
         ddl = "select pgs.oid,synname from PG_SYNONYM pgs, pg_namespace pgn" + LF
                 + "   where pgn.oid = pgs.synnamespace" + LF
-                + "     and pgn.nspname  ='" + DebugUtils.containsSqlInjection(DebugUtils.needQuoteName(schema)) + "'" + LF
+                + "     and pgn.nspname  ='"
+                + DebugUtils.containsSqlInjection(DebugUtils.needQuoteName(schema)) + "'" + LF
                 + " order by 1";
         log.info("splicingSequenceDDL response is: " + ddl);
         return ddl;

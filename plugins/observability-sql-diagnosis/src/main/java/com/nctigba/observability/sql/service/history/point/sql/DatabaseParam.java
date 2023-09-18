@@ -7,6 +7,7 @@ package com.nctigba.observability.sql.service.history.point.sql;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.nctigba.common.web.exception.HisDiagnosisException;
 import com.nctigba.observability.sql.constants.CommonConstants;
+import com.nctigba.observability.sql.constants.history.OptionCommon;
 import com.nctigba.observability.sql.constants.history.SqlCommon;
 import com.nctigba.observability.sql.mapper.history.HisDiagnosisResultMapper;
 import com.nctigba.observability.sql.model.diagnosis.result.FrameType;
@@ -57,7 +58,9 @@ public class DatabaseParam implements HisDiagnosisPointService<Object> {
 
     @Override
     public List<String> getOption() {
-        return null;
+        List<String> option = new ArrayList<>();
+        option.add(String.valueOf(OptionCommon.IS_PARAM));
+        return option;
     }
 
     @Override
@@ -136,7 +139,7 @@ public class DatabaseParam implements HisDiagnosisPointService<Object> {
                         }
                     }
                     HisDiagnosisResult resultData = new HisDiagnosisResult(
-                            task, analysisDTO, pointName, HisDiagnosisResult.PointState.NORMAL);
+                            task, analysisDTO, pointName, HisDiagnosisResult.PointState.SUCCEED);
                     resultMapper.update(resultData, Wrappers.<HisDiagnosisResult>lambdaQuery().eq(
                                     HisDiagnosisResult::getTaskId, resultData.getTaskId())
                             .eq(HisDiagnosisResult::getPointName, resultData.getPointName()));
@@ -164,7 +167,7 @@ public class DatabaseParam implements HisDiagnosisPointService<Object> {
         analysisDTO.setPointType(HisDiagnosisResult.PointType.CENTER);
         analysisDTO.setIsHint(HisDiagnosisResult.ResultState.SUGGESTIONS);
         HisDiagnosisResult resultData = new HisDiagnosisResult(
-                task, analysisDTO, "DatabaseParam", HisDiagnosisResult.PointState.NORMAL);
+                task, analysisDTO, "DatabaseParam", HisDiagnosisResult.PointState.SUCCEED);
         resultMapper.update(resultData, Wrappers.<HisDiagnosisResult>lambdaQuery().eq(
                         HisDiagnosisResult::getTaskId, resultData.getTaskId())
                 .eq(HisDiagnosisResult::getPointName, resultData.getPointName()));

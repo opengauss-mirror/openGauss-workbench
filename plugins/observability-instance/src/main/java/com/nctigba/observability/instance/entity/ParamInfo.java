@@ -4,19 +4,18 @@
 
 package com.nctigba.observability.instance.entity;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
+
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 @Data
 @Accessors(chain = true)
@@ -38,10 +37,13 @@ public class ParamInfo {
     String suggestExplain;
     @TableField("diagnosisRule")
     String diagnosisRule;
+    String parameterCategory;
+    String valueRange;
 
     public enum ParamType {
         OS,
-        DB
+        DB,
+        CLUSTER
     }
 
     public static List<ParamInfo> parse(ResultSet rs) throws SQLException {
@@ -53,6 +55,12 @@ public class ParamInfo {
             info.setParamType(ParamType.valueOf(rs.getString("paramType")));
             info.setSuggestValue(rs.getString("suggestValue"));
             info.setDefaultValue(rs.getString("defaultValue"));
+            info.setParameterCategory(rs.getString("parameterCategory"));
+            info.setValueRange(rs.getString("valueRange"));
+            info.setParamDetail(rs.getString("paramDetail"));
+            info.setSuggestExplain(rs.getString("suggestExplain"));
+            info.setUnit(rs.getString("unit"));
+            info.setDiagnosisRule(rs.getString("diagnosisRule"));
             list.add(info);
         }
         return list;

@@ -195,7 +195,7 @@ public class ParamInfoInitConfig {
                     + "\"毫秒\",\"在数据写压力比较大的场景中可以尝试减小该值以降低checkpoint的压力\","
                     + "\"actualValue>=10 && actualValue<=10000\");",
             CommonConstants.INSERT_INTO_PARAM_INFO
-                    + " values(\"DB\",\"bgwriter_thread_num\",\"设置后端写进程数量\",\"\",\"\",\"个数\",\"\",\"\");",
+                    + " values(\"DB\",\"pagewriter_thread_num\",\"设置后端写进程数量\",\"\",\"\",\"个数\",\"\",\"\");",
             CommonConstants.INSERT_INTO_PARAM_INFO
                     + " values(\"DB\",\"max_io_capacity\",\"设置后端写进程批量刷页每秒的IO上限，"
                     + "需要根据具体业务场景和机器磁盘IO能力进行设置\",\"30720~10485760\",\"512000\",\"KB\",\"\","

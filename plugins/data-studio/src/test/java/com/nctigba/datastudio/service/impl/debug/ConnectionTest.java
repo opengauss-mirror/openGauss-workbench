@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.HashMap;
 
+import static com.nctigba.datastudio.constants.SqlConstants.LF;
 import static com.nctigba.datastudio.dao.ConnectionMapDAO.conMap;
 
 /**
@@ -54,24 +55,24 @@ public class ConnectionTest {
 
     @Test
     public void testOperate() throws SQLException, IOException {
-        String str = "{\n"
-                + "  \"operation\": \"connection\",\n"
-                + "  \"language\": \"zh-CN\",\n"
-                + "  \"webUser\": \"A\",\n"
-                + "  \"uuid\": \"8359cbf1-9833-4998-a29c-245f24009ab1\",\n"
-                + "  \"rootWindowName\": \"postgres\",\n"
-                + "  \"oldWindowName\": \"\",\n"
-                + "  \"windowName\": \"postgres\"\n"
+        String str = "{" + LF
+                + "  \"operation\": \"connection\"," + LF
+                + "  \"language\": \"zh-CN\"," + LF
+                + "  \"webUser\": \"A\"," + LF
+                + "  \"uuid\": \"8359cbf1-9833-4998-a29c-245f24009ab1\"," + LF
+                + "  \"rootWindowName\": \"postgres\"," + LF
+                + "  \"oldWindowName\": \"\"," + LF
+                + "  \"windowName\": \"postgres\"" + LF
                 + "}";
         connection.operate(webSocketServer, str);
-        str = "{\n"
-                + "  \"operation\": \"connection\",\n"
-                + "  \"language\": \"zh-CN\",\n"
-                + "  \"webUser\": \"A\",\n"
-                + "  \"uuid\": \"8359cbf1-9833-4998-a29c-245f2009ab1\",\n"
-                + "  \"rootWindowName\": \"postgres\",\n"
-                + "  \"oldWindowName\": \"\",\n"
-                + "  \"windowName\": \"postgres\"\n"
+        str = "{" + LF
+                + "  \"operation\": \"connection\"," + LF
+                + "  \"language\": \"zh-CN\"," + LF
+                + "  \"webUser\": \"A\"," + LF
+                + "  \"uuid\": \"8359cbf1-9833-4998-a29c-245f2009ab1\"," + LF
+                + "  \"rootWindowName\": \"postgres\"," + LF
+                + "  \"oldWindowName\": \"\"," + LF
+                + "  \"windowName\": \"postgres\"" + LF
                 + "}";
         try {
             connection.operate(webSocketServer, str);

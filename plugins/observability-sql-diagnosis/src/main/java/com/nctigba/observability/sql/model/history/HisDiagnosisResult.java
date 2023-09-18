@@ -100,6 +100,42 @@ public class HisDiagnosisResult {
     }
 
     /**
+     * Construction init method
+     *
+     * @param task Diagnosis task info
+     * @param pointName Diagnosis point name
+     * @param pointType Diagnosis point state
+     * @param pointState Diagnosis point state
+     * @param isHint Diagnosis point is or not hint
+     */
+    public HisDiagnosisResult(HisDiagnosisTask task, String pointName, PointType pointType, PointState pointState,
+            ResultState isHint) {
+        this.clusterId = task.getClusterId();
+        this.nodeId = task.getNodeId();
+        this.taskId = task.getId();
+        this.pointName = pointName;
+        this.pointType = pointType;
+        if (DiagnosisTypeCommon.HISTORY.equals(task.getDiagnosisType())) {
+            this.pointTitle = LocaleString.format("history." + pointName + ".title");
+            this.pointSuggestion = LocaleString.format("history." + pointName + ".suggest");
+            this.pointDetail = LocaleString.format("history." + pointName + ".detail");
+        } else {
+            if ("BlockSession".equals(pointName) || "IndexAdvisor".equals(pointName)
+                    || "SmpParallelQuery".equals(pointName)) {
+                this.pointTitle = LocaleString.format("sql." + pointName + ".title");
+                this.pointSuggestion = LocaleString.format("sql." + pointName + ".suggest");
+                this.pointDetail = LocaleString.format("sql." + pointName + ".detail");
+            } else {
+                this.pointSuggestion = LocaleString.format(pointName + ".tip");
+                this.pointTitle = LocaleString.format("ResultType." + pointName);
+                this.pointDetail = LocaleString.format("ResultType." + pointName);
+            }
+        }
+        this.isHint = isHint;
+        this.pointState = pointState;
+    }
+
+    /**
      * Construction method
      *
      * @param task Diagnosis task info
@@ -183,8 +219,12 @@ public class HisDiagnosisResult {
     }
 
     public enum PointState {
-        NOT_ANALYZED,
-        ABNORMAL,
-        NORMAL
+        INITIALIZE,
+        NOT_MATCH_OPTION,
+        COLLECT_EXCEPTION,
+        ANALYSIS_EXCEPTION,
+        SUCCEED,
+        NOT_SATISFIED_DIAGNOSIS,
+        NOT_HAVE_DATA
     }
 }

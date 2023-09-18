@@ -10,6 +10,7 @@ import com.nctigba.datastudio.dao.DatabaseConnectionDAO;
 import com.nctigba.datastudio.model.dto.ConnectionDTO;
 import com.nctigba.datastudio.model.dto.DataListDTO;
 import com.nctigba.datastudio.model.dto.DbConnectionCreateDTO;
+import com.nctigba.datastudio.model.dto.GetConnectionAttributeDTO;
 import com.nctigba.datastudio.model.entity.DatabaseConnectionDO;
 import com.nctigba.datastudio.model.entity.DatabaseConnectionUrlDO;
 import com.nctigba.datastudio.model.query.DatabaseMetaarrayIdSchemaQuery;
@@ -94,8 +95,9 @@ public class DbConnectionServiceImpl implements DbConnectionService {
     }
 
     @Override
-    public DatabaseConnectionDO databaseAttributeConnection(String id) {
-        DatabaseConnectionDO databaseConnectionEntity = databaseConnectionDAO.getAttributeById(id, "A");
+    public DatabaseConnectionDO databaseAttributeConnection(GetConnectionAttributeDTO request) {
+        DatabaseConnectionDO databaseConnectionEntity = databaseConnectionDAO.getAttributeById(request.getId(),
+                request.getWebUser());
         databaseConnectionEntity.setPassword("");
         return databaseConnectionEntity;
     }

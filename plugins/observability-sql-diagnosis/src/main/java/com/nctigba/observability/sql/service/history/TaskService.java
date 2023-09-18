@@ -4,7 +4,6 @@
 
 package com.nctigba.observability.sql.service.history;
 
-import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.nctigba.observability.sql.model.history.HisDiagnosisTask;
 import com.nctigba.observability.sql.model.history.dto.HisDiagnosisTaskDTO;
@@ -49,7 +48,7 @@ public interface TaskService {
      * @param task task info
      * @param rsList explain info
      */
-    void explainBeforeAfter(HisDiagnosisTask task, ArrayList<String> rsList);
+    void explainAfter(HisDiagnosisTask task, ArrayList<String> rsList);
 
     /**
      * Analysis ebpf
@@ -67,13 +66,4 @@ public interface TaskService {
      * @return task info
      */
     HisDiagnosisTask selectById(int taskId);
-
-    /**
-     * Query explain
-     *
-     * @param nodeId node id
-     * @param sqlId sql id
-     * @return IPage
-     */
-    JSONObject plan(String nodeId, String sqlId);
 }

@@ -9,8 +9,12 @@ import type { FetchNode } from './types';
 
 const t = i18n.global.t;
 
-const getDbOrRoleCollectLabel = (type: 'databaseCollect' | 'userRoleCollect', count = null) => {
-  const countText = !['', null, undefined].includes(count) ? ` (${count})` : '';
+const getDbOrRoleCollectLabel = (
+  type: 'databaseCollect' | 'userRoleCollect',
+  count = null,
+  showCount = true,
+) => {
+  const countText = showCount ? ` (${count || 0})` : '';
   return {
     databaseCollect: `${t('database.database')}${countText}`,
     userRoleCollect: `${t('userRole.name')}${countText}`,
@@ -178,7 +182,7 @@ const generateSchemaContentList = async (
         rootId,
         parentId,
         uuid,
-        label: `${label} (${obj[key].length})`,
+        label: `${label} (${obj[key]?.length || 0})`,
         name: label,
         type,
         key,
@@ -304,6 +308,7 @@ const generateFileList = (
   schemaName,
   connectInfo,
 ) => {
+  if (!Array.isArray(array)) return [];
   return array.map((item: FetchNode) => {
     return {
       id: `${parentId}_${item.oid}`,

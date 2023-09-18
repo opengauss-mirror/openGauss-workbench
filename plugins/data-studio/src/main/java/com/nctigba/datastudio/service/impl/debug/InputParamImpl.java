@@ -21,6 +21,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -126,13 +127,15 @@ public class InputParamImpl implements OperationInterface {
             List<Integer> list = DebugUtils.getAvailableBreakPoints(paramReq, webSocketServer);
             List<Integer> breakPoints = paramReq.getBreakPoints();
             int differ = DebugUtils.changeParamType(webSocketServer, windowName, DIFFER);
+            List<Integer> lineList = new ArrayList<>();
             if (!CollectionUtils.isEmpty(breakPoints)) {
                 for (Integer i : breakPoints) {
                     if (list.contains(i - differ)) {
-                        paramReq.setLine(i);
-                        addBreakPoint.operate(webSocketServer, paramReq);
+                        lineList.add(i);
                     }
                 }
+                paramReq.setBreakPoints(lineList);
+                addBreakPoint.operate(webSocketServer, paramReq);
             }
 
             ResultSet stackResult = statNew.executeQuery(BACKTRACE_SQL_PRE + differ + BACKTRACE_SQL);

@@ -11,6 +11,7 @@ import org.aspectj.lang.Signature;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
+import org.opengauss.admin.common.exception.CustomException;
 import org.springframework.stereotype.Component;
 
 import com.nctigba.observability.instance.service.ClusterManager;
@@ -60,6 +61,9 @@ public class DatasourceAspect {
             }
         } else {
             nodeId = obj;
+        }
+        if (StrUtil.isBlankIfStr(nodeId)) {
+            throw new CustomException("node not selected");
         }
         try {
             clusterManager.setCurrentDatasource(nodeId.toString());

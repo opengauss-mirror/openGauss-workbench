@@ -206,11 +206,12 @@ public class PrometheusService {
         alertmanagerNew.setTimeout("10s");
         alertmanagerNew.setIsEnableHttp2(true);
         List<PrometheusConfigDto.Alert.Alertmanager> alertmanagers = alerting.getAlertmanagers();
+        PrometheusConfigDto.Alert alertingNew = new PrometheusConfigDto.Alert();
         if (CollectionUtils.isEmpty(alertmanagers)) {
             alertmanagers = new ArrayList<PrometheusConfigDto.Alert.Alertmanager>();
             alertmanagers.add(alertmanagerNew);
-            alerting.setAlertmanagers(alertmanagers);
-            return alerting;
+            alertingNew.setAlertmanagers(alertmanagers);
+            return alertingNew;
         } else {
             PrometheusConfigDto.Alert.Alertmanager alertmanager = alertmanagers.get(0);
             if (!alertmanager.toString().equals(alertmanagerNew.toString())) {
@@ -225,9 +226,11 @@ public class PrometheusService {
                         item -> !delTargets.contains(item) && !targets.contains(item)).collect(Collectors.toList());
                     targets.addAll(targets0);
                 }
-                alertmanagers.set(0, alertmanagerNew);
-                alerting.setAlertmanagers(alertmanagers);
-                return alerting;
+                List<PrometheusConfigDto.Alert.Alertmanager> alertmanagersNew =
+                    new ArrayList<PrometheusConfigDto.Alert.Alertmanager>();
+                alertmanagersNew.add(alertmanagerNew);
+                alertingNew.setAlertmanagers(alertmanagersNew);
+                return alertingNew;
             }
         }
         return alerting;
@@ -637,7 +640,7 @@ public class PrometheusService {
             List<AlertRuleConfigDto.Group> groups = config.getGroups();
             int size = groups.size();
             List<AlertRuleConfigDto.Group> newGroups = groups.stream().filter(
-                item -> !item.getName().equals("rule_" + alertTemplateRule.getRuleId())).collect(
+                item -> !item.getName().equals("rule_" + alertTemplateRule.getId())).collect(
                 Collectors.toList());
             if (newGroups.size() == size) {
                 session.close();

@@ -50,6 +50,7 @@ public class HotFunction implements HisDiagnosisPointService<Object> {
     public List<String> getOption() {
         List<String> option = new ArrayList<>();
         option.add(String.valueOf(OptionCommon.IS_BCC));
+        option.add(String.valueOf(OptionCommon.IS_ON_CPU));
         return option;
     }
 
@@ -74,7 +75,7 @@ public class HotFunction implements HisDiagnosisPointService<Object> {
             f.addChild(taskResult.getBearing(), taskResult.toFrame());
         }
         AnalysisDTO analysisDTO = new AnalysisDTO();
-        analysisDTO.setPointType(HisDiagnosisResult.PointType.DIAGNOSIS);
+        analysisDTO.setPointType(HisDiagnosisResult.PointType.DISPLAY);
         analysisDTO.setIsHint(HisDiagnosisResult.ResultState.SUGGESTIONS);
         analysisDTO.setPointData(f);
         return analysisDTO;

@@ -133,4 +133,37 @@ public class SqlCommon {
             + " and l2.granted join pg_stat_activity l on l2.pid = l.pid join "
             + "pg_stat_user_tables t on l1.relation = t.relid"
             + " where w.waiting;";
+
+    /**
+     * ExecPlan sql statement
+     */
+    public static final String PLAN_DETAIL_SQL =
+            "select query, debug_query_id, unique_query_id, db_name, schema_name, substring(start_time, 0, 20) "
+                    + "start_time, substring(finish_time, 0, 20) finish_time, "
+                    + "user_name, application_name, client_addr || ':' "
+                    + "|| client_port socket, n_returned_rows, n_tuples_fetched, n_tuples_returned, n_tuples_inserted,"
+                    + " n_tuples_updated, n_tuples_deleted, lock_count, lock_wait_count, lock_max_count, (case when "
+                    + "n_blocks_fetched = 0 then '-' else "
+                    + "substring((n_blocks_hit / n_blocks_fetched)* 100, 0, 6)|| '%' end) "
+                    + "as blocks_hit_rate, "
+                    + "json_extract_path_text(net_send_info::json,'size') net_send_info_size, "
+                    + "json_extract_path_text(net_recv_info::json,'size') net_recv_info_size, "
+                    + "json_extract_path_text(net_stream_send_info::json,'size') net_stream_send_info_size, "
+                    + "json_extract_path_text(net_stream_recv_info::json,'size') net_stream_recv_info_size, "
+                    + "json_extract_path_text(net_send_info::json,'n_calls') net_send_info_calls, "
+                    + "json_extract_path_text(net_recv_info::json,'n_calls') net_recv_info_calls, "
+                    + "json_extract_path_text(net_stream_send_info::json,'n_calls') net_stream_send_info_calls, "
+                    + "json_extract_path_text(net_stream_recv_info::json,'n_calls') net_stream_recv_info_calls, "
+                    + "json_extract_path_text(net_send_info::json,'time') net_send_info_time, "
+                    + "json_extract_path_text(net_recv_info::json,'time') net_recv_info_time, "
+                    + "json_extract_path_text(net_stream_send_info::json,'time') net_stream_send_info_time, "
+                    + "json_extract_path_text(net_stream_recv_info::json,'time') net_stream_recv_info_time,"
+                    + " n_soft_parse, n_hard_parse, db_time/1000 db_time, "
+                    + "cpu_time/1000 cpu_time, (db_time-cpu_time)/1000 wait_time, lock_time/1000 lock_time, "
+                    + "lock_wait_time/1000 lock_wait_time, execution_time/1000 "
+                    + "execution_time, parse_time/1000 parse_time,"
+                    + " plan_time/1000 plan_time,rewrite_time/1000 rewrite_time, "
+                    + "pl_execution_time/ 1000 pl_execution_time, "
+                    + "pl_compilation_time/1000 pl_compilation_time, data_io_time/1000 data_io_time"
+                    + " from dbe_perf.statement_history where debug_query_id = ? limit 1";
 }

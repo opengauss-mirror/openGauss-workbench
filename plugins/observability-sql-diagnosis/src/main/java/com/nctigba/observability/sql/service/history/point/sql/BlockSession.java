@@ -65,28 +65,19 @@ public class BlockSession implements HisDiagnosisPointService<Object> {
                 rs = stmt.executeQuery(sql);
                 while (rs.next()) {
                     BlockSessionDTO sessionDTO = new BlockSessionDTO();
-                    String blockSql = rs.getString(2);
-                    sessionDTO.setWaitingQuery(blockSql);
+                    sessionDTO.setStartTime(rs.getString(1));
+                    sessionDTO.setWSessionId(rs.getString(2));
                     sessionDTO.setWPid(rs.getString(3));
-                    sessionDTO.setWUser(rs.getString(4));
-                    sessionDTO.setLockingQuery(rs.getString(5));
-                    sessionDTO.setLPid(rs.getString(6));
-                    sessionDTO.setLUser(rs.getString(7));
+                    sessionDTO.setLSessionId(rs.getString(4));
+                    sessionDTO.setLPid(rs.getString(5));
+                    sessionDTO.setLUser(rs.getString(6));
+                    sessionDTO.setLockingQuery(rs.getString(7));
                     sessionDTO.setTableName(rs.getString(8));
-                    String queryTime = rs.getString(1);
-                    if (CollectionUtils.isEmpty(list)) {
-                        sessionDTO.setStartTime(rs.getString(1));
-                        list.add(sessionDTO);
-                    } else {
-                        list.forEach(f -> {
-                            if (f.getWaitingQuery().equals(blockSql)) {
-                                f.setEndTime(queryTime);
-                            } else {
-                                sessionDTO.setStartTime(queryTime);
-                                list.add(sessionDTO);
-                            }
-                        });
-                    }
+                    sessionDTO.setApplicationName(rs.getString(9));
+                    sessionDTO.setClientAddress(rs.getString(10));
+                    sessionDTO.setState(rs.getString(11));
+                    sessionDTO.setMode(rs.getString(12));
+                    list.add(sessionDTO);
                 }
                 ThreadUtil.sleep(1000L);
             } while (currentTask != null && currentTask.getTaskEndTime() == null);
@@ -95,6 +86,8 @@ public class BlockSession implements HisDiagnosisPointService<Object> {
             if (CollectionUtils.isEmpty(list)) {
                 analysisDTO.setIsHint(HisDiagnosisResult.ResultState.NO_ADVICE);
             } else {
+                BlockSessionDTO blockData = list.get(0);
+                blockData.setEndTime(list.get(list.size() - 1).getStartTime());
                 analysisDTO.setIsHint(HisDiagnosisResult.ResultState.SUGGESTIONS);
             }
             analysisDTO.setPointData(list);

@@ -81,7 +81,7 @@ public class CpuAnalysis implements HisDiagnosisPointService<Object> {
         } else {
             analysisDTO.setIsHint(HisDiagnosisResult.ResultState.NO_ADVICE);
         }
-        analysisDTO.setPointType(HisDiagnosisResult.PointType.DIAGNOSIS);
+        analysisDTO.setPointType(HisDiagnosisResult.PointType.CENTER);
         return analysisDTO;
     }
 

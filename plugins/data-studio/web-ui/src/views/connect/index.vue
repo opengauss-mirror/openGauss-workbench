@@ -320,12 +320,8 @@
 
   const getUserId = async () => {
     if (!UserStore.userId) {
-      if (import.meta.env.MODE === 'production') {
-        const res = await getSystemUserProfile();
-        UserStore.userId = res.data.userId;
-      } else {
-        UserStore.userId = 'A';
-      }
+      const res = await getSystemUserProfile();
+      UserStore.userId = res.data.userId;
     }
   };
 
@@ -454,7 +450,10 @@
     handleClose();
   };
   const requestConnectInfo = async () => {
-    const data = await getDatabaseAttr(props.connectInfo.id);
+    const data = await getDatabaseAttr({
+      id: props.connectInfo.id,
+      webUser: UserStore.userId,
+    });
     return data;
   };
 

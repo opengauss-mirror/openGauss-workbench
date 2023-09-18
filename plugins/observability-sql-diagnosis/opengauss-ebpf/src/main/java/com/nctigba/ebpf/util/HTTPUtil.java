@@ -1,5 +1,5 @@
 /*
- * Copyright (c) GBA-NCTI-ISDC. 2022-2022. All rights reserved.
+ * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
  */
 
 package com.nctigba.ebpf.util;
@@ -30,9 +30,11 @@ public class HTTPUtil {
     /**
      * http httpUrlPost
      *
-     * @param url file taskid type send ebpf data
+     * @param url file url
+     * @param file file
+     * @param type file type
      */
-    public void httpUrlPost(String url, FileSystemResource file, String type) {
+    public boolean httpUrlPost(String url, FileSystemResource file, String type) {
         final RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
@@ -43,15 +45,19 @@ public class HTTPUtil {
         ResponseEntity<String> response = restTemplate.postForEntity(url, request, String.class);
         try {
             log.info(type + ":" + response.getStatusCode() + ":" + response.getBody() + ":" + file.contentLength());
+            return true;
         } catch (IOException e) {
             log.info(e.getMessage());
+            return true;
         }
     }
 
     /**
      * http httpUrlPost
      *
-     * @param url data type
+     * @param url data url
+     * @param data data
+     * @param type data type
      */
     public void httpsSendDate(String url, String data, String type) {
         final RestTemplate restTemplate = new RestTemplate();

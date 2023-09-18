@@ -26,7 +26,7 @@ export interface ConnectInfo {
   port: string;
   userName: string;
   uuid?: string;
-  type?: string;
+  type?: 'openGauss';
   driver?: '';
   password?: string;
   webUser: string;

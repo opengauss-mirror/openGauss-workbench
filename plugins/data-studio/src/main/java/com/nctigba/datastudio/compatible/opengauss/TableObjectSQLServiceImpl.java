@@ -8,7 +8,6 @@ import com.nctigba.datastudio.compatible.TableObjectSQLService;
 import com.nctigba.datastudio.config.ConnectionConfig;
 import com.nctigba.datastudio.model.query.SelectDataFiltrationQuery;
 import com.nctigba.datastudio.model.query.SelectDataQuery;
-import com.nctigba.datastudio.util.DebugUtils;
 import com.nctigba.datastudio.util.LocaleString;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -51,6 +50,7 @@ import static com.nctigba.datastudio.constants.SqlConstants.TABLE_SEQUENCE_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.TABLE_TRUNCATE_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.VACUUM_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.WHERE_SQL;
+import static com.nctigba.datastudio.util.DebugUtils.needQuoteName;
 
 /**
  * TableObjectSQLService achieve
@@ -119,7 +119,7 @@ public class TableObjectSQLServiceImpl implements TableObjectSQLService {
                 Connection connection = connectionConfig.connectDatabase(request.getUuid());
                 Statement statement = connection.createStatement()
         ) {
-            String sql = String.format(TABLE_DDL_SQL, request.getSchema(), request.getTableName());
+            String sql = String.format(TABLE_DDL_SQL, request.getSchema(), needQuoteName(request.getTableName()));
             try (
                     ResultSet resultSet = statement.executeQuery(sql)
             ) {
@@ -178,7 +178,7 @@ public class TableObjectSQLServiceImpl implements TableObjectSQLService {
 
     @Override
     public String tableDropSQL(String schema, String tableName) {
-        String ddl = String.format(DROP_TABLE_SQL, schema, DebugUtils.needQuoteName(tableName));
+        String ddl = String.format(DROP_TABLE_SQL, schema, needQuoteName(tableName));
         log.info("tableAnalyseSQL response is: " + ddl);
         return ddl;
     }
@@ -242,7 +242,8 @@ public class TableObjectSQLServiceImpl implements TableObjectSQLService {
             String schema, String tableName, Integer pageNum, Integer pageSize, SelectDataFiltrationQuery query) {
         log.info("TableObjectSQLServiceImpl exportTableData query: " + query);
         StringBuilder ddl = new StringBuilder();
-        ddl.append(String.format(TABLE_DATA_SQL, DebugUtils.needQuoteName(schema), DebugUtils.needQuoteName(tableName)));
+        ddl.append(String.format(TABLE_DATA_SQL,
+                needQuoteName(schema), needQuoteName(tableName)));
 
         if (query != null) {
             concatCondition(query, ddl);

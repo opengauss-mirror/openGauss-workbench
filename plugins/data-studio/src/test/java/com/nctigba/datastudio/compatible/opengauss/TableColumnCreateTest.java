@@ -233,7 +233,6 @@ public class TableColumnCreateTest {
         indexDTOTwo.setUnique(false);
         indexDTOTwo.setAttName("t7");
         indexDTOTwo.setExpression("i8");
-        TablePartitionInfoQuery tablePartitionInfoQuery = new TablePartitionInfoQuery();
         List<IndexDTO> indexDTOList = new ArrayList<>();
         indexDTOList.add(indexDTO);
         List<ConstraintDTO> constraintDTOList = new ArrayList<>();
@@ -246,7 +245,7 @@ public class TableColumnCreateTest {
         databaseCreateTableDTO.setTableInfo(tableUnderlyingInfoQuery);
         databaseCreateTableDTO.setColumn(creUpdColumnDataDTOList);
         databaseCreateTableDTO.setSchema("s1");
-        databaseCreateTableDTO.setPartitionInfo(tablePartitionInfoQuery);
+        databaseCreateTableDTO.setPartitionInfo(new TablePartitionInfoQuery());
         databaseCreateTableDTO.setIndexs(indexDTOList);
         databaseCreateTableDTO.setConstraints(constraintDTOList);
         databaseCreateTableDTO.setUuid(UUID);

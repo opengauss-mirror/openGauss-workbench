@@ -18,7 +18,7 @@
       </div>
       <el-form-item :label="$t('alertRule.ruleName')" prop="ruleName">
         <el-input v-model="formData.ruleName" :placeholder="$t('alertRule.ruleNamePlaceholder')"
-          :disabled="disabled"></el-input>
+          :disabled="disabled" maxlength="50" show-word-limit></el-input>
       </el-form-item>
       <el-form-item :label="$t('alertRule.ruleType')" prop="ruleType">
         <el-radio-group v-model="formData.ruleType" :disabled="disabled">
@@ -104,8 +104,8 @@
       </el-form-item>
       <el-row>
         <el-col :span="14">
-          <el-form-item :label="$t('alertRule.ruleContent')" prop="ruleContent" style="margin-bottom: 0px !important;">
-            <el-input v-model="formData.ruleContent" :placeholder="$t('alertRule.ruleContentPlaceholder')"
+          <el-form-item :label="$t('alertRule.ruleContent')" prop="ruleContent">
+            <el-input v-model="formData.ruleContent" type="textarea" :placeholder="$t('alertRule.ruleContentPlaceholder')"
               :disabled="disabled" @blur="preview"></el-input>
           </el-form-item>
         </el-col>
@@ -247,7 +247,7 @@ const loading = ref<boolean>(false)
 const disabled = ref<boolean>(true)
 const ruleItemSrcList = ref<any[]>()
 const logicSymbolList = ref<string[]>(['and', 'or'])
-const compareSymbolList = ref<string[]>(['>', '>=', '=', '<=', '<', '!='])
+const compareSymbolList = ref<string[]>(['>', '>=', '==', '<=', '<', '!='])
 const durationUnitList = ref<any[]>([{
   name: 'second',
   value: 's'
@@ -686,7 +686,7 @@ onMounted(() => {
   flex-direction: column;
   position: absolute;
   align-items: flex-start;
-  padding: 9px 16px;
+  padding: 15px 16px;
   gap: 6px;
   border: 1px solid #94BFFF;
   border-radius: 2px;

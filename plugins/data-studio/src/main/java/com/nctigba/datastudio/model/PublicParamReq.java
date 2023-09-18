@@ -30,8 +30,6 @@ public class PublicParamReq {
 
     private List<Map<String, Object>> inputParams;
 
-    private Integer line;
-
     private String fullName;
 
     private String schema;
@@ -66,7 +64,6 @@ public class PublicParamReq {
                 + ", webUser='" + webUser + '\''
                 + ", breakPoints=" + breakPoints
                 + ", inputParams=" + inputParams
-                + ", line=" + line
                 + ", fullName='" + fullName + '\''
                 + ", schema='" + schema + '\''
                 + ", windowName='" + windowName + '\''

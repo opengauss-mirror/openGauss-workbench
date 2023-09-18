@@ -33,10 +33,10 @@
                   :height="monacoHeight"
                   :readOnly="!isGlobalEnable || sqlData.readOnly || ws.isInPackage"
                   :openDebug="['debug', 'debugChild'].includes(props.editorType)"
-                  @addBreakPoint="(line) => handleBreakPoint(line, 'addBreakPoint')"
-                  @removeBreakPoint="(line) => handleBreakPoint(line, 'deleteBreakPoint')"
-                  @enableBreakPoint="(line) => handleBreakPoint(line, 'enableBreakPoint')"
-                  @disableBreakPoint="(line) => handleBreakPoint(line, 'disableBreakPoint')"
+                  @addBreakPoint="(line) => handleBreakPoint([line + 1], 'addBreakPoint')"
+                  @removeBreakPoint="(line) => handleBreakPoint([line + 1], 'deleteBreakPoint')"
+                  @enableBreakPoint="(line) => handleBreakPoint([line + 1], 'enableBreakPoint')"
+                  @disableBreakPoint="(line) => handleBreakPoint([line + 1], 'disableBreakPoint')"
                   style="width: 100%; margin-top: 4px; border: 1px solid #ddd"
                 />
               </Pane>
@@ -248,6 +248,7 @@
     ws.instance.send({
       operation: 'inputParam',
       ...commonWsParams.value,
+      isInPackage: ws.isInPackage,
       sql: editorRef.value.getValue(),
       inputParams: preInputParams.value,
       breakPoints: editorRef.value.getAllLineDecorations(),
@@ -269,8 +270,8 @@
     if (value.line.length == 0) return;
     value.line.forEach((line) => {
       editorRef.value.addBreakPoint(line - 1, value.type ? 2 : 1);
-      handleBreakPoint(line - 1, value.type ? 'enableBreakPoint' : 'disableBreakPoint');
     });
+    handleBreakPoint(value.line, value.type ? 'enableBreakPoint' : 'disableBreakPoint');
   };
 
   // watch 'stackList'，get CurrentBreakPoint
@@ -709,12 +710,12 @@
     | 'deleteBreakPoint'
     | 'enableBreakPoint'
     | 'disableBreakPoint';
-  const handleBreakPoint = (line: number, operation: BreakOperation) => {
+  const handleBreakPoint = (line: number[], operation: BreakOperation) => {
     debug.isDebugging &&
       ws.instance.send({
         operation: operation,
         ...commonWsParams.value,
-        line: line + 1,
+        breakPoints: line,
         oldWindowName: ws.parentWindowName,
       });
   };
@@ -723,6 +724,7 @@
     ws.instance.send({
       operation: 'createCoverageRate',
       ...commonWsParams.value,
+      isInPackage: ws.isInPackage,
       sql: editorRef.value.getValue(),
       inputParams: preInputParams.value,
       isCoverage: status,

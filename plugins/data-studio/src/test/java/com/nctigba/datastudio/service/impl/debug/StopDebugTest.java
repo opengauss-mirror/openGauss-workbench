@@ -27,6 +27,7 @@ import java.util.Map;
 
 import static com.nctigba.datastudio.constants.CommonConstants.CONNECTION;
 import static com.nctigba.datastudio.constants.CommonConstants.STATEMENT;
+import static com.nctigba.datastudio.constants.SqlConstants.LF;
 import static com.nctigba.datastudio.dao.ConnectionMapDAO.conMap;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
@@ -65,26 +66,26 @@ public class StopDebugTest {
 
     @Test
     public void testOperate() throws SQLException, IOException {
-        String str = "{\n"
-                + "  \"operation\": \"stopDebug\",\n"
-                + "  \"oid\": \"0\",\n"
-                + "  \"isInPackage\": \"false\",\n"
-                + "  \"rootWindowName\": \"postgres\",\n"
-                + "  \"oldWindowName\": \"\",\n"
-                + "  \"windowName\": \"postgres\"\n"
+        String str = "{" + LF
+                + "  \"operation\": \"stopDebug\"," + LF
+                + "  \"oid\": \"0\"," + LF
+                + "  \"isInPackage\": \"false\"," + LF
+                + "  \"rootWindowName\": \"postgres\"," + LF
+                + "  \"oldWindowName\": \"\"," + LF
+                + "  \"windowName\": \"postgres\"" + LF
                 + "}";
         stopDebug.operate(webSocketServer, str);
     }
 
     @Test
     public void testOperate2() throws SQLException, IOException {
-        String str = "{\n"
-                + "  \"operation\": \"stopDebug\",\n"
-                + "  \"oid\": \"201839\",\n"
-                + "  \"isInPackage\": \"false\",\n"
-                + "  \"rootWindowName\": \"postgres\",\n"
-                + "  \"oldWindowName\": \"\",\n"
-                + "  \"windowName\": \"postgres\"\n"
+        String str = "{" + LF
+                + "  \"operation\": \"stopDebug\"," + LF
+                + "  \"oid\": \"201839\"," + LF
+                + "  \"isInPackage\": \"false\"," + LF
+                + "  \"rootWindowName\": \"postgres\"," + LF
+                + "  \"oldWindowName\": \"\"," + LF
+                + "  \"windowName\": \"postgres\"" + LF
                 + "}";
         Map<String, Object> map = new HashMap<>();
         map.put(STATEMENT, mockStatement);
@@ -97,13 +98,13 @@ public class StopDebugTest {
 
     @Test
     public void testOperate3() throws SQLException, IOException {
-        String str = "{\n"
-                + "  \"operation\": \"stopDebug\",\n"
-                + "  \"oid\": \"0\",\n"
-                + "  \"isInPackage\": \"true\",\n"
-                + "  \"rootWindowName\": \"postgres\",\n"
-                + "  \"oldWindowName\": \"\",\n"
-                + "  \"windowName\": \"postgres\"\n"
+        String str = "{" + LF
+                + "  \"operation\": \"stopDebug\"," + LF
+                + "  \"oid\": \"0\"," + LF
+                + "  \"isInPackage\": \"true\"," + LF
+                + "  \"rootWindowName\": \"postgres\"," + LF
+                + "  \"oldWindowName\": \"\"," + LF
+                + "  \"windowName\": \"postgres\"" + LF
                 + "}";
         Map<String, Object> map = new HashMap<>();
         map.put(STATEMENT, mockStatement);
@@ -116,13 +117,13 @@ public class StopDebugTest {
 
     @Test
     public void testOperate34() throws SQLException, IOException {
-        String str = "{\n"
-                + "  \"operation\": \"stopDebug\",\n"
-                + "  \"oid\": \"201839\",\n"
-                + "  \"isInPackage\": \"true\",\n"
-                + "  \"rootWindowName\": \"postgres\",\n"
-                + "  \"oldWindowName\": \"\",\n"
-                + "  \"windowName\": \"postgres\"\n"
+        String str = "{" + LF
+                + "  \"operation\": \"stopDebug\"," + LF
+                + "  \"oid\": \"201839\"," + LF
+                + "  \"isInPackage\": \"true\"," + LF
+                + "  \"rootWindowName\": \"postgres\"," + LF
+                + "  \"oldWindowName\": \"\"," + LF
+                + "  \"windowName\": \"postgres\"" + LF
                 + "}";
         Map<String, Object> map = new HashMap<>();
         map.put(STATEMENT, mockStatement);

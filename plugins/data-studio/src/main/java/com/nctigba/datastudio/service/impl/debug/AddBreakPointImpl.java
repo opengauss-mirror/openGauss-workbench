@@ -59,18 +59,20 @@ public class AddBreakPointImpl implements OperationInterface {
             return;
         }
 
-        int line = paramReq.getLine();
+        List<Integer> breakPoints = paramReq.getBreakPoints();
         int differ = DebugUtils.changeParamType(webSocketServer, windowName, DIFFER);
         String oid = DebugUtils.changeParamType(webSocketServer, windowName, OID);
         List<Integer> list = DebugUtils.changeParamType(webSocketServer, windowName, CAN_BREAK);
         log.info("AddBreakPointImpl list: " + list);
-        if (list.contains(line - differ)) {
-            try (
-                    ResultSet resultSet = stat.executeQuery(String.format(ADD_BREAKPOINT_SQL, oid, (line - differ)))
-            ) {
-                while (resultSet.next()) {
-                    String no = resultSet.getString(BREAK_POINT_NO);
-                    breakPointMap.put(line, no);
+        for (Integer line : breakPoints) {
+            if (list.contains(line - differ)) {
+                try (
+                        ResultSet resultSet = stat.executeQuery(String.format(ADD_BREAKPOINT_SQL, oid, (line - differ)))
+                ) {
+                    while (resultSet.next()) {
+                        String no = resultSet.getString(BREAK_POINT_NO);
+                        breakPointMap.put(line, no);
+                    }
                 }
             }
         }

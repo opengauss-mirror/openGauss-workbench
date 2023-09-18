@@ -113,9 +113,9 @@ public class ThirdPartyService {
                 .filter(key -> StrUtil.isNotBlank(key) && StrUtil.isNotBlank(params.getStr(key)))
                 .map(key -> key + "=" + params.getStr(key)).collect(Collectors.joining("&"));
         }
-        String url = "";
+        String url = webhook;
         if (StrUtil.isNotBlank(paramStr)) {
-            url = webhook + (webhook.indexOf("?") > -1 ? "?" : "&") + paramStr;
+            url += (url.indexOf("?") > -1 ? "?" : "&") + paramStr;
         }
         HttpRequest post = HttpRequest.post(url);
         JSONObject header = paramsJson.getJSONObject("header");

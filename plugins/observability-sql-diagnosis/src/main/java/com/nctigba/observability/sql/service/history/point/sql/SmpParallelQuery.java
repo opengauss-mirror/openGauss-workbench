@@ -4,6 +4,8 @@
 
 package com.nctigba.observability.sql.service.history.point.sql;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nctigba.common.web.exception.HisDiagnosisException;
 import com.nctigba.observability.sql.constants.CommonConstants;
 import com.nctigba.observability.sql.model.history.HisDiagnosisResult;
@@ -11,12 +13,16 @@ import com.nctigba.observability.sql.model.history.HisDiagnosisTask;
 import com.nctigba.observability.sql.model.history.data.AgentData;
 import com.nctigba.observability.sql.model.history.dto.AgentDTO;
 import com.nctigba.observability.sql.model.history.dto.AnalysisDTO;
-import com.nctigba.observability.sql.model.history.point.IndexAdvisorDTO;
+import com.nctigba.observability.sql.model.history.point.OuterPlan;
+import com.nctigba.observability.sql.model.history.point.Plan;
+import com.nctigba.observability.sql.model.history.point.TuningAdvisorDTO;
 import com.nctigba.observability.sql.service.ClusterManager;
 import com.nctigba.observability.sql.service.history.DataStoreService;
 import com.nctigba.observability.sql.service.history.HisDiagnosisPointService;
 import com.nctigba.observability.sql.service.history.collection.CollectionItem;
 import com.nctigba.observability.sql.service.history.collection.agent.CurrentCpuUsageItem;
+import com.nctigba.observability.sql.util.LocaleString;
+import com.nctigba.observability.sql.util.PointUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -43,6 +49,8 @@ public class SmpParallelQuery implements HisDiagnosisPointService<Object> {
     private CurrentCpuUsageItem item;
     @Autowired
     private ClusterManager clusterManager;
+    @Autowired
+    private PointUtil util;
 
     @Override
     public List<String> getOption() {
@@ -65,7 +73,7 @@ public class SmpParallelQuery implements HisDiagnosisPointService<Object> {
         }
         List<AgentDTO> dtoList = agentData.getSysValue();
         float currentCpu = 0.0f;
-        if (CollectionUtils.isEmpty(dtoList)) {
+        if (!CollectionUtils.isEmpty(dtoList)) {
             float cpuNum = 0.0f;
             for (AgentDTO dto : dtoList) {
                 cpuNum += Float.parseFloat(dto.getCpu());
@@ -82,38 +90,54 @@ public class SmpParallelQuery implements HisDiagnosisPointService<Object> {
         ResultSet rs = null;
         try (var conn = clusterManager.getConnectionByNodeId(task.getNodeId());
              Statement stmt = conn.createStatement()) {
+            String preSql = "SET explain_perf_mode TO normal;";
+            stmt.execute(preSql);
             String diagnosisSql = task.getSql();
-            rs = stmt.executeQuery("explain " + diagnosisSql);
-            List<String> firstExplain = new ArrayList<>();
+            rs = stmt.executeQuery("explain (format json) " + diagnosisSql);
+            OuterPlan[] firstPlans = new OuterPlan[0];
             while (rs.next()) {
-                firstExplain.add(rs.getString(1));
+                String line = rs.getString(1);
+                ObjectMapper objectMapper = new ObjectMapper();
+                firstPlans = objectMapper.readValue(line, OuterPlan[].class);
             }
-            String regex = ".*(Scan|HashJoin|NestLoop|HashAgg|SortAgg|PlainAgg|WindowAgg|Local Redistribute"
-                    + "|Local Broadcast|Result|Subqueryscan|Unique|Material|Setop|Append|VectoRow).*";
-            boolean isExists = firstExplain.stream().anyMatch(f -> f.matches(regex));
-            List<String> afterExplain = new ArrayList<>();
-            if (isExists) {
+            OuterPlan firstExplain = firstPlans[0];
+            Plan firstPlan = firstExplain.getPlan();
+            OuterPlan[] afterPlans = new OuterPlan[0];
+            if (isMatch(firstPlan)) {
                 String tunOnParam = "set query_dop=4;";
                 stmt.execute(tunOnParam);
-                String afterExplainSql = "explain " + diagnosisSql;
+                String afterExplainSql = "explain (format json) " + diagnosisSql;
                 rs = stmt.executeQuery(afterExplainSql);
                 while (rs.next()) {
-                    afterExplain.add(rs.getString(1));
+                    String line = rs.getString(1);
+                    ObjectMapper objectMapper = new ObjectMapper();
+                    afterPlans = objectMapper.readValue(line, OuterPlan[].class);
                 }
-                String tunOffParam = "set query_dop=1;";
-                stmt.execute(tunOffParam);
             } else {
                 analysisDTO.setIsHint(HisDiagnosisResult.ResultState.NO_ADVICE);
                 return new AnalysisDTO();
             }
-            IndexAdvisorDTO advisorDTO = new IndexAdvisorDTO();
-            advisorDTO.setFirstExplain(firstExplain);
-            advisorDTO.setIndexAdvisor(null);
-            advisorDTO.setAfterExplain(afterExplain);
-            analysisDTO.setIsHint(HisDiagnosisResult.ResultState.SUGGESTIONS);
+            OuterPlan afterExplain = afterPlans[0];
+            Plan afterPlan = afterExplain.getPlan();
+            double afterCost = afterPlan.getTotalCost();
+            double firstCost = firstPlan.getTotalCost();
+            TuningAdvisorDTO advisorDTO = new TuningAdvisorDTO();
+            BigDecimal improvement = new BigDecimal(firstCost).subtract(BigDecimal.valueOf(afterCost)).divide(
+                    BigDecimal.valueOf(firstCost), 0, RoundingMode.HALF_UP).multiply(BigDecimal.valueOf(100));
+            advisorDTO.setImprovement(
+                    LocaleString.format(
+                            "sql.SmpParallelQuery.improvement", currentCpu, firstCost, afterCost, improvement));
+            if (afterCost < firstCost) {
+                analysisDTO.setIsHint(HisDiagnosisResult.ResultState.SUGGESTIONS);
+            } else {
+                analysisDTO.setIsHint(HisDiagnosisResult.ResultState.NO_ADVICE);
+            }
+            advisorDTO.setFirstExplain(util.getExecPlan(firstPlan));
+            advisorDTO.setAdvisor("set query_dop=4;");
+            advisorDTO.setAfterExplain(util.getExecPlan(afterPlan));
             analysisDTO.setPointData(advisorDTO);
             return analysisDTO;
-        } catch (SQLException e) {
+        } catch (SQLException | JsonProcessingException e) {
             throw new HisDiagnosisException("execute sql failed!");
         } finally {
             if (rs != null) {
@@ -124,6 +148,22 @@ public class SmpParallelQuery implements HisDiagnosisPointService<Object> {
                 }
             }
         }
+    }
+
+    private boolean isMatch(Plan plan) {
+        String regex = ".*(Scan|HashJoin|NestLoop|HashAgg|SortAgg|PlainAgg|WindowAgg|Local Redistribute"
+                + "|Local Broadcast|Result|Subqueryscan|Unique|Material|Setop|Append|VectoRow).*";
+        if (plan.getNodeType().matches(regex)) {
+            return true;
+        }
+        if (plan.getPlans() == null) {
+            return plan.getNodeType().matches(regex);
+        } else {
+            for (Plan chilePlan : plan.getPlans()) {
+                return isMatch(chilePlan);
+            }
+        }
+        return false;
     }
 
     @Override

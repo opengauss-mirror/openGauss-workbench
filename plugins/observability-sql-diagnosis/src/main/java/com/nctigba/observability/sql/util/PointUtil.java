@@ -1,6 +1,7 @@
 package com.nctigba.observability.sql.util;
 
 import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.nctigba.common.web.exception.HisDiagnosisException;
 import com.nctigba.observability.sql.constants.history.PrometheusConstants;
@@ -8,6 +9,8 @@ import com.nctigba.observability.sql.mapper.history.HisThresholdMapper;
 import com.nctigba.observability.sql.model.history.HisDiagnosisThreshold;
 import com.nctigba.observability.sql.model.history.data.PrometheusData;
 import com.nctigba.observability.sql.model.history.point.AspAnalysisDTO;
+import com.nctigba.observability.sql.model.history.point.ExecPlanDetailDTO;
+import com.nctigba.observability.sql.model.history.point.Plan;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -26,6 +29,10 @@ import java.util.List;
 @Component
 @Slf4j
 public class PointUtil {
+    private int totalPlanRows = 0;
+
+    private int totalPlanWidth = 0;
+
     @Autowired
     private HisThresholdMapper hisThresholdMapper;
 
@@ -155,5 +162,32 @@ public class PointUtil {
             }
         }
         return coreNum;
+    }
+
+    /**
+     * Get exec plan
+     *
+     * @param plan exec plan
+     * @return object
+     */
+    public ExecPlanDetailDTO getExecPlan(Plan plan) {
+        ExecPlanDetailDTO planDetailDTO = new ExecPlanDetailDTO();
+        planDetailDTO.setData(plan);
+        JSONObject total = new JSONObject();
+        sumTotalPlan(plan);
+        total.put("totalPlanRows", totalPlanRows);
+        total.put("totalPlanWidth", totalPlanWidth);
+        planDetailDTO.setTotal(total);
+        return planDetailDTO;
+    }
+
+    private void sumTotalPlan(Plan plan) {
+        totalPlanRows += plan.getPlanRows();
+        totalPlanWidth += plan.getPlanWidth();
+        if (plan.getPlans() != null) {
+            for (Plan chilePlan : plan.getPlans()) {
+                sumTotalPlan(chilePlan);
+            }
+        }
     }
 }

@@ -27,7 +27,7 @@ import java.util.Arrays;
 @Service
 public class AgentService extends AbstractInstaller {
     private static final String AGENT_USER = "root";
-    private static final String NAME = "opengauss-ebpf-1.0.0-SNAPSHOT.jar";
+    private static final String NAME = "opengauss-ebpf.jar";
     private static final String JDK = "https://mirrors.huaweicloud.com/kunpeng/archive/compiler/bisheng_jdk/";
     private static final String JDKPKG = "bisheng-jdk-11.0.17-linux-{0}.tar.gz";
     @Autowired

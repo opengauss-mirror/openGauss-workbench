@@ -6,6 +6,7 @@ package com.nctigba.datastudio.service;
 
 import com.nctigba.datastudio.model.dto.DataListDTO;
 import com.nctigba.datastudio.model.dto.DbConnectionCreateDTO;
+import com.nctigba.datastudio.model.dto.GetConnectionAttributeDTO;
 import com.nctigba.datastudio.model.entity.DatabaseConnectionDO;
 import com.nctigba.datastudio.model.query.DatabaseMetaarrayIdSchemaQuery;
 
@@ -36,10 +37,10 @@ public interface DbConnectionService {
     /**
      * database connection attribute
      *
-     * @param id id
+     * @param request request
      * @return DatabaseConnectionDO
      */
-    DatabaseConnectionDO databaseAttributeConnection(String id);
+    DatabaseConnectionDO databaseAttributeConnection(GetConnectionAttributeDTO request);
 
     /**
      * database connection list

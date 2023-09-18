@@ -358,6 +358,7 @@
                 <li @click="handleUpdateTableDescription">
                   {{ $t('siderbar.table.setDescription') }}
                 </li>
+                <li @click="handleImport('tableData')"> {{ $t('import.tableData') }}</li>
                 <li @click="handleExport('tableDDL')"> {{ $t('export.ddl') }}</li>
                 <li @click="handleExport('tableData')"> {{ $t('export.tableData') }}</li>
                 <li @click="handleExport('tableDDLData')"> {{ $t('export.ddlData') }}</li>
@@ -515,6 +516,14 @@
       v-model="setTableSchemaDialog"
       :nodeData="currentContextNodeData"
     />
+    <ImportTableDataDialog
+      v-if="visibleImportDialog"
+      v-model="visibleImportDialog"
+      :uuid="currentContextNodeData.uuid"
+      :schema="currentContextNodeData.schemaName"
+      :tableName="currentContextNodeData.name"
+      :oid="currentContextNodeData.oid"
+    />
   </div>
 </template>
 
@@ -532,6 +541,7 @@
   import UpdateTableDescription from './components/UpdateTableDescription.vue';
   import SetTablespace from './components/SetTablespace.vue';
   import SetTableSchema from './components/SetTableSchema.vue';
+  import ImportTableDataDialog from '@/components/ImportTableDataDialog.vue';
   import { useRoute, useRouter } from 'vue-router';
   import { useAppStore } from '@/store/modules/app';
   import { useUserStore } from '@/store/modules/user';
@@ -607,6 +617,7 @@
   const updateTableDescriptionDialog = ref(false);
   const setTablespaceDialog = ref(false);
   const setTableSchemaDialog = ref(false);
+  const visibleImportDialog = ref(false);
   const connectInfo: ConnectInfo = reactive({
     name: '',
     id: '',
@@ -1334,10 +1345,13 @@
     hideTreeContext();
     if (node.isLeaf) {
       const { schemaName, databaseName, uuid, isInPackage, packageName } = target;
-      const { name: connectInfoName, id: rootId } = target.connectInfo;
+      const { name: connectInfoName, id: rootId, type: platform } = target.connectInfo;
       const packagePreText = isInPackage ? `${packageName}.` : '';
       const commonParams = {
-        title: `${schemaName}.${packagePreText}${target.label}-${databaseName}@${connectInfoName}`,
+        platform,
+        title: `${schemaName ? schemaName + '.' : ''}${packagePreText}${target.label}${
+          databaseName ? '-' + databaseName : ''
+        }@${connectInfoName}`,
         rootId,
         connectInfoName,
         uuid,
@@ -1463,9 +1477,10 @@
     );
   });
   const treeContextFindAvailableUuid = computed(() => {
-    return AppStore.connectListMap.find(
+    const selectConnection = AppStore.connectListMap.find(
       (listItem) => listItem.id === currentContextNodeData.connectInfo.id,
-    )?.connectedDatabase[0]?.uuid;
+    );
+    return selectConnection?.connectedDatabase[0]?.uuid;
   });
   const hideTreeContext = () => {
     Object.keys(treeContext).forEach((key) => {
@@ -1503,6 +1518,13 @@
     };
     if (Object.prototype.hasOwnProperty.call(typeMap, type) && !data.isInPackage) {
       treeContext[typeMap[type]] = true;
+    }
+  };
+
+  const handleImport = (type: 'tableData') => {
+    hideTreeContext();
+    if (type == 'tableData') {
+      visibleImportDialog.value = true;
     }
   };
 

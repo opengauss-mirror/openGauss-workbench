@@ -6,7 +6,25 @@
       :nodesType="'SqlTaskInfo'"
       :taskId="props.taskId"
     />
-    
+
+    <!-- Plan -->
+    <IndexAdvisor
+      v-else-if="props.nodesType == 'IndexAdvisor' && props.taskId"
+      :nodesType="'IndexAdvisor'"
+      :taskId="props.taskId"
+    />
+    <SmpParallelQuery
+      v-else-if="props.nodesType == 'SmpParallelQuery' && props.taskId"
+      :nodesType="'SmpParallelQuery'"
+      :taskId="props.taskId"
+    />
+    <ExecPlan
+      v-else-if="props.nodesType == 'ExecPlan' && props.taskId"
+      :nodesType="'ExecPlan'"
+      :taskId="props.taskId"
+      :large="large"
+    />
+
     <OldSQLDiagnosis v-else :nodesType="props.nodesType" :taskId="props.taskId" />
   </div>
 </template>
@@ -15,15 +33,20 @@
 import TaskInfo from '@/pages/diagnosisTask/sqlDetail/pointInfos/TaskInfo/Index.vue'
 
 import OldSQLDiagnosis from '@/pages/diagnosisTask/sqlDetail/pointInfos/OldSQLDiagnosis/Index.vue'
+import IndexAdvisor from '@/pages/diagnosisTask/sqlDetail/pointInfos/Plan/IndexAdvisor/Index.vue'
+import SmpParallelQuery from '@/pages/diagnosisTask/sqlDetail/pointInfos/Plan/SmpParallelQuery/Index.vue'
+import ExecPlan from '@/pages/diagnosisTask/sqlDetail/pointInfos/Plan/ExecPlan/Index.vue'
 
 const props = withDefaults(
   defineProps<{
     nodesType: string
     taskId: string
+    large: boolean
   }>(),
   {
     nodesType: '',
     taskId: '',
+    large: false,
   }
 )
 

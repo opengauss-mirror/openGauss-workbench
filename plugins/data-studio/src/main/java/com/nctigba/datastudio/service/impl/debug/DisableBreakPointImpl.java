@@ -53,14 +53,16 @@ public class DisableBreakPointImpl implements OperationInterface {
             return;
         }
 
-        int line = paramReq.getLine();
+        List<Integer> breakPoints = paramReq.getBreakPoints();
         int differ = DebugUtils.changeParamType(webSocketServer, windowName, DIFFER);
         List<Integer> list = DebugUtils.changeParamType(webSocketServer, windowName, CAN_BREAK);
         log.info("disableBreakPoint list: " + list);
-        if (list.contains(line - differ)) {
-            String no = breakPointMap.get(line);
-            log.info("disableBreakPoint no: " + no);
-            stat.execute(String.format(DISABLE_BREAKPOINT_SQL, no));
+        for (Integer line : breakPoints) {
+            if (list.contains(line - differ)) {
+                String no = breakPointMap.get(line);
+                log.info("disableBreakPoint no: " + no);
+                stat.execute(String.format(DISABLE_BREAKPOINT_SQL, no));
+            }
         }
 
         ResultSet bpResult = stat.executeQuery(INFO_BREAKPOINT_PRE + differ + INFO_BREAKPOINT_SQL);

@@ -35,10 +35,11 @@ export function updateConnect(data) {
 }
 
 // get connection info
-export function getDatabaseAttr(id) {
+export function getDatabaseAttr(data) {
   return request({
-    url: `/dataStudio/web/v1/connections/${id}/attribute`,
+    url: `/dataStudio/web/v1/connections/attribute`,
     method: 'get',
+    params: data,
   });
 }
 

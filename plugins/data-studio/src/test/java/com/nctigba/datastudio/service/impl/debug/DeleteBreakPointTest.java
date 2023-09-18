@@ -32,6 +32,7 @@ import static com.nctigba.datastudio.constants.CommonConstants.CAN_BREAK;
 import static com.nctigba.datastudio.constants.CommonConstants.DIFFER;
 import static com.nctigba.datastudio.constants.CommonConstants.OID;
 import static com.nctigba.datastudio.constants.CommonConstants.STATEMENT;
+import static com.nctigba.datastudio.constants.SqlConstants.LF;
 import static com.nctigba.datastudio.dao.ConnectionMapDAO.conMap;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -60,12 +61,12 @@ public class DeleteBreakPointTest {
     private MessageSource messageSource;
     @Spy
     private LocaleString localeString;
-    private String str = "{\n"
-            + "  \"operation\": \"deleteBreakPoint\",\n"
-            + "  \"line\":\"15\",\n"
-            + "  \"rootWindowName\": \"postgres\",\n"
-            + "  \"oldWindowName\": \"\",\n"
-            + "  \"windowName\": \"postgres\"\n"
+    private String str = "{" + LF
+            + "  \"operation\": \"deleteBreakPoint\"," + LF
+            + "  \"breakPoints\": [15]," + LF
+            + "  \"rootWindowName\": \"postgres\"," + LF
+            + "  \"oldWindowName\": \"\"," + LF
+            + "  \"windowName\": \"postgres\"" + LF
             + "}";
 
     @Before
@@ -109,13 +110,13 @@ public class DeleteBreakPointTest {
 
     @Test
     public void testOperate2() throws SQLException, IOException {
-        str = "{\n"
-                + "  \"operation\": \"deleteBreakPoint\",\n"
-                + "  \"line\":\"14\",\n"
-                + "  \"isCloseWindow\":false,\n"
-                + "  \"rootWindowName\": \"postgres\",\n"
-                + "  \"oldWindowName\": \"\",\n"
-                + "  \"windowName\": \"postgres\"\n"
+        str = "{" + LF
+                + "  \"operation\": \"deleteBreakPoint\"," + LF
+                + "  \"breakPoints\": [14]," + LF
+                + "  \"isCloseWindow\":false," + LF
+                + "  \"rootWindowName\": \"postgres\"," + LF
+                + "  \"oldWindowName\": \"\"," + LF
+                + "  \"windowName\": \"postgres\"" + LF
                 + "}";
 
         deleteBreakPoint.operate(webSocketServer, str);
@@ -124,13 +125,13 @@ public class DeleteBreakPointTest {
 
     @Test
     public void testOperate4() throws SQLException, IOException {
-        str = "{\n"
-                + "  \"operation\": \"deleteBreakPoint\",\n"
-                + "  \"line\":\"18\",\n"
-                + "  \"isCloseWindow\":true,\n"
-                + "  \"rootWindowName\": \"postgres\",\n"
-                + "  \"oldWindowName\": \"\",\n"
-                + "  \"windowName\": \"postgres\"\n"
+        str = "{" + LF
+                + "  \"operation\": \"deleteBreakPoint\"," + LF
+                + "  \"breakPoints\": [18]," + LF
+                + "  \"isCloseWindow\":true," + LF
+                + "  \"rootWindowName\": \"postgres\"," + LF
+                + "  \"oldWindowName\": \"\"," + LF
+                + "  \"windowName\": \"postgres\"" + LF
                 + "}";
 
         deleteBreakPoint.operate(webSocketServer, str);

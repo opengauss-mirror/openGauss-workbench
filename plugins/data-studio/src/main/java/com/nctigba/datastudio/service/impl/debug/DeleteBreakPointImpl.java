@@ -54,27 +54,33 @@ public class DeleteBreakPointImpl implements OperationInterface {
             return;
         }
 
-        int line = paramReq.getLine();
+        List<Integer> breakPoints = paramReq.getBreakPoints();
         int differ = DebugUtils.changeParamType(webSocketServer, windowName, DIFFER);
         List<Integer> list = DebugUtils.changeParamType(webSocketServer, windowName, CAN_BREAK);
         log.info("deleteBreakPoint list: " + list);
-        if (list.contains(line - differ)) {
-            int no = Integer.parseInt(breakPointMap.get(line));
-            stat.execute(String.format(DELETE_BREAKPOINT_SQL, no));
-            Iterator<Integer> iterator = breakPointMap.keySet().iterator();
-            log.info("deleteBreakPoint iterator: " + iterator);
-            while (iterator.hasNext()) {
-                if (line == iterator.next()) {
-                    iterator.remove();
-                }
+        for (Integer line : breakPoints) {
+            if (list.contains(line - differ)) {
+                int no = Integer.parseInt(breakPointMap.get(line));
+                stat.execute(String.format(DELETE_BREAKPOINT_SQL, no));
+                deleteBreakPoint(breakPointMap, line);
+                webSocketServer.setParamMap(windowName, BREAK_POINT, breakPointMap);
             }
-            webSocketServer.setParamMap(windowName, BREAK_POINT, breakPointMap);
         }
 
         if (!paramReq.isCloseWindow()) {
             ResultSet bpResult = stat.executeQuery(INFO_BREAKPOINT_PRE + differ + INFO_BREAKPOINT_SQL);
             String oid = DebugUtils.changeParamType(webSocketServer, windowName, OID);
             webSocketServer.sendMessage(windowName, BREAKPOINT, SUCCESS, DebugUtils.parseBreakPoint(bpResult, oid));
+        }
+    }
+
+    private void deleteBreakPoint(Map<Integer, String> breakPointMap, Integer line) {
+        Iterator<Integer> iterator = breakPointMap.keySet().iterator();
+        log.info("deleteBreakPoint iterator: " + iterator);
+        while (iterator.hasNext()) {
+            if (line.equals(iterator.next())) {
+                iterator.remove();
+            }
         }
     }
 

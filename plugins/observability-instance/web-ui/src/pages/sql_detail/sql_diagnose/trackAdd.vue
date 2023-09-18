@@ -1,40 +1,45 @@
 <template>
   <div class="task-dialog">
-    <el-dialog width="800px" :title="$t('datasource.addTaTitle')" v-model="visible" :close-on-click-modal="false"
-      draggable @close="taskClose">
+    <el-dialog
+      width="800px"
+      :title="$t('datasource.addTaTitle')"
+      v-model="visible"
+      :close-on-click-modal="false"
+      draggable
+      @close="taskClose"
+    >
       <div class="dialog-content">
         <el-form :model="formData" :rules="connectionFormRules" ref="connectionFormRef">
           <el-form-item :label="$t('datasource.taskName')" prop="name">
-            <el-input class="form-input" v-model="formData.name" :placeholder="$t('datasource.selectTaskName')"
-              type="text" />
+            <el-input
+              class="form-input"
+              v-model="formData.name"
+              :placeholder="$t('datasource.selectTaskName')"
+              type="text"
+            />
           </el-form-item>
           <el-form-item label="SQL" prop="sql">
-            <el-input v-if="props.sqlText" class="form-textarea" v-model="formData.sql" :disabled="true"
-              type="textarea" />
-            <el-input v-if="!props.sqlText" class="form-textarea" v-model="formData.sql"
-              :placeholder="$t('datasource.selectSql')" type="textarea" />
+            <el-input
+              v-if="props.sqlText"
+              class="form-textarea"
+              v-model="formData.sql"
+              :disabled="true"
+              type="textarea"
+            />
+            <el-input
+              v-if="!props.sqlText"
+              class="form-textarea"
+              v-model="formData.sql"
+              :placeholder="$t('datasource.selectSql')"
+              type="textarea"
+            />
           </el-form-item>
           <el-form-item :label="$t('datasource.option')">
-            <div class="option-wrap">
-              <el-checkbox-group v-model="formData.onCpu">
-                <el-checkbox :label="$t('datasource.ebpfOnLable')" name="onCpu" />
-              </el-checkbox-group>
-            </div>
-            <div class="option-wrap">
-              <el-checkbox-group v-model="formData.offCpu">
-                <el-checkbox :label="$t('datasource.ebpfOffLable')" name="offCpu" />
-              </el-checkbox-group>
-            </div>
-            <div class="option-wrap">
-              <el-checkbox-group v-model="formData.analyze">
-                <el-checkbox label="explain analyze" name="analyze" />
-              </el-checkbox-group>
-            </div>
-            <div class="option-wrap">
-              <el-checkbox-group v-model="formData.paramAnalysis">
-                <el-checkbox :label="$t('datasource.paramAnalysis')" name="paramAnalysis" />
-              </el-checkbox-group>
-            </div>
+            <el-checkbox-group v-model="ruleForm.optionSelected">
+              <el-checkbox v-for="item in options" :key="item.option" :label="item.option">
+                {{ item.name }}
+              </el-checkbox>
+            </el-checkbox-group>
           </el-form-item>
         </el-form>
       </div>
@@ -56,15 +61,22 @@ import { useRequest } from 'vue-request'
 import { FormRules, FormInstance, ElMessage } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 import { parseSql } from '@/utils/commonUtils'
+import { getOptions, DiagnosisParamConfig } from '@/api/historyDiagnosis'
 const { t } = useI18n()
 
 type Rez =
   | {
-    data: string
-  }
+      data: string
+    }
   | undefined
 
 const visible = ref(false)
+const options = ref<Array<any>>([])
+const ruleForm = reactive<{
+  optionSelected: string[]
+}>({
+  optionSelected: [],
+})
 const props = withDefaults(
   defineProps<{
     show: boolean
@@ -78,6 +90,9 @@ const props = withDefaults(
   }>(),
   {}
 )
+onMounted(() => {
+  initOptions()
+})
 const emit = defineEmits(['changeModal', 'conveyFlag'])
 const initFormData = {
   name: '',
@@ -86,36 +101,47 @@ const initFormData = {
   offCpu: [],
   analyze: [],
   paramAnalysis: [],
-  cluster: props.clusterId,
   dbName: props.dbName,
 }
 const formData = reactive(cloneDeep(initFormData))
 const queryData = computed(() => {
-  const { name, sql, onCpu, offCpu, analyze, paramAnalysis, cluster, dbName } = formData
+  const { name, sql, dbName } = formData
   let instanceId, clusterId: any
   if (props.type === 2) {
     instanceId = props.clusterId
-    clusterId = cluster && cluster.length > 0 ? cluster[0] : ''
-  } else if (props.type === 1) {
-    instanceId = cluster && cluster.length > 0 ? cluster[1] : ''
-    clusterId = cluster && cluster.length > 0 ? cluster[0] : ''
-  } else if (props.type === 3) {
-    instanceId = props.clusterId && props.clusterId.length > 0 ? props.clusterId[1] : ''
-    clusterId = props.clusterId && props.clusterId.length > 0 ? props.clusterId[0] : ''
   }
+
+  // set configs
+  let configs: DiagnosisParamConfig[] = []
+  ruleForm.optionSelected.forEach((element) => {
+    configs.push({
+      option: element,
+      isCheck: true,
+    })
+  })
+
   const queryObj = {
     dbName: props.dbName ? props.dbName : dbName,
     clusterId,
     nodeId: instanceId,
-    name,
+    taskName: name,
     sql: props.sqlText ? parseSql(props.sqlText) : sql,
-    onCpu: onCpu.length > 0,
-    offCpu: offCpu.length > 0,
-    paramAnalysis: paramAnalysis.length > 0,
-    explainAnalysis: analyze.length > 0,
     sqlId: props.type === 2 ? props.sqlId : '',
+    diagnosisType: 'sql',
+    configs,
   }
   return queryObj
+})
+
+const { data: optionData, run: initOptions } = useRequest(
+  () => {
+    return getOptions('sql')
+  },
+  { manual: true }
+)
+watch(optionData, (ret: any) => {
+  options.value = []
+  options.value = ret.data
 })
 
 const taskClose = () => {
@@ -153,13 +179,6 @@ watch(
   { immediate: true }
 )
 watch(
-  () => props.clusterId,
-  (newValue) => {
-    formData.cluster = newValue
-  },
-  { immediate: true }
-)
-watch(
   () => props.dbName,
   (newValue) => {
     formData.dbName = newValue
@@ -174,7 +193,7 @@ const {
 } = useRequest(
   () => {
     const msg = t('datasource.diagnosisAddTaskSuccess')
-    return diagnosisRequest.post('/sqlDiagnosis/api/v1/diagnosisTasks', queryData.value).then(function (res) {
+    return diagnosisRequest.post('/historyDiagnosis/api/v2/tasks', queryData.value).then(function (res) {
       ElMessage({
         showClose: true,
         message: msg,

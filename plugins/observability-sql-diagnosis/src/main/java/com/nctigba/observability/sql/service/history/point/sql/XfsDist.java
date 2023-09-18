@@ -82,20 +82,22 @@ public class XfsDist implements HisDiagnosisPointService<Object> {
         heatMap.forEach(map -> map.setSource(null));
         center.setData(heatMap);
         list.add(center);
+        AnalysisDTO analysisDTO = new AnalysisDTO();
         if (!suggestions.isEmpty()) {
             TaskResult result = new TaskResult(task, TaskResult.ResultState.SUGGESTION, ResultType.Xfsdist,
                     FrameType.Suggestion,
                     Frame.bearing.top);
             result.setData(Map.of("title", LocaleString.format("XfsdistAnaly.title"), "suggestions", suggestions));
             list.add(result);
+            analysisDTO.setIsHint(HisDiagnosisResult.ResultState.SUGGESTIONS);
+        } else {
+            analysisDTO.setIsHint(HisDiagnosisResult.ResultState.NO_ADVICE);
         }
         Frame f = new Frame();
         for (TaskResult taskResult : list) {
             f.addChild(taskResult.getBearing(), taskResult.toFrame());
         }
-        AnalysisDTO analysisDTO = new AnalysisDTO();
         analysisDTO.setPointType(HisDiagnosisResult.PointType.DIAGNOSIS);
-        analysisDTO.setIsHint(HisDiagnosisResult.ResultState.SUGGESTIONS);
         analysisDTO.setPointData(f);
         return analysisDTO;
     }

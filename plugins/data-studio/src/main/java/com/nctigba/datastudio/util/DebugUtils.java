@@ -11,9 +11,11 @@ import com.nctigba.datastudio.model.PublicParamReq;
 import com.nctigba.datastudio.model.entity.OperateStatusDO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.BooleanUtils;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.util.Strings;
 import org.opengauss.admin.common.exception.CustomException;
+import org.opengauss.util.PGobject;
 import org.springframework.util.CollectionUtils;
 
 import javax.servlet.http.HttpServletResponse;
@@ -104,7 +106,7 @@ public class DebugUtils {
         String fullName = split[split.length - 1];
         log.info("DebugUtils getSchemaBySql fullName: " + fullName);
         if (!fullName.contains(POINT)) {
-            return null;
+            return "";
         }
         return fullName.split(TRANS_POINT)[0];
     }
@@ -319,7 +321,7 @@ public class DebugUtils {
             dataList.add(list);
         }
         map.put(RESULT, dataList);
-        log.info("DebugUtils parseResultSet map: " + map);
+        log.info("DebugUtils parseResultSet map: {}", map);
         return map;
     }
 
@@ -339,13 +341,26 @@ public class DebugUtils {
         while (resultSet.next()) {
             List<Object> list = new ArrayList<>();
             for (String column : columnList) {
-                list.add(resultSet.getObject(column));
+                Object columnValue = resultSet.getObject(column);
+                if (columnValue instanceof PGobject) {
+                    list.add(((PGobject) columnValue).getValue());
+                } else {
+                    list.add(objectToSting(columnValue));
+                }
             }
             dataList.add(list);
         }
         map.put(RESULT, dataList);
-        log.info("DebugUtils parseResultSet map: " + map);
+        log.info("DebugUtils parseResultSetType map: {}", map);
         return map;
+    }
+
+    private static Object objectToSting(Object obj) {
+        if (ObjectUtils.isNotEmpty(obj)) {
+            return obj.toString();
+        } else {
+            return obj;
+        }
     }
 
     /**
@@ -433,7 +448,7 @@ public class DebugUtils {
      * get column type list
      *
      * @param metaData metaData
-     * @param map map
+     * @param map      map
      * @throws SQLException SQLException
      */
     private static void getColumnTypeList(ResultSetMetaData metaData, Map<String, Object> map) throws SQLException {
@@ -449,7 +464,7 @@ public class DebugUtils {
      * get column type list
      *
      * @param metaData metaData
-     * @param map map
+     * @param map      map
      * @throws SQLException SQLException
      */
     private static void getColumnTypeNamwList(ResultSetMetaData metaData, Map<String, Object> map) throws SQLException {
@@ -706,7 +721,7 @@ public class DebugUtils {
     /**
      * change param type
      *
-     * @param obj             obj
+     * @param obj obj
      * @return T
      */
     public static <T> T changeParamType(Object obj) {
@@ -751,8 +766,11 @@ public class DebugUtils {
      * @return String
      */
     public static String needQuoteName(String name) {
+        if (StringUtils.isEmpty(name)) {
+            return null;
+        }
         String regex = "^([a-z_][a-z|0-9|_|$]*)|([a-z_][a-z|0-9|_|,| |.|$]*)$";
-        if (StringUtils.isNotEmpty(name) && name.matches(regex)) {
+        if (name.matches(regex)) {
             return name;
         }
 
@@ -777,8 +795,8 @@ public class DebugUtils {
     /**
      * change param type
      *
-     * @param value value
-     * @param columnType columnType
+     * @param value          value
+     * @param columnType     columnType
      * @param columnTypeName columnTypeName
      * @return String
      */

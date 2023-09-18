@@ -85,7 +85,7 @@ public class ViewObjectSQLServiceImpl implements ViewObjectSQLService {
         ) {
             String selectSql =
                     String.format(SELECT_VIEW_DDL_SQL, DebugUtils.needQuoteName(request.getSchema()),
-                            DebugUtils.needQuoteName(request.getViewName()));
+                            request.getViewName());
             try (
                     ResultSet count = statement.executeQuery(selectSql)
             ) {
@@ -184,8 +184,8 @@ public class ViewObjectSQLServiceImpl implements ViewObjectSQLService {
 
     @Override
     public String renameView(String schema, String viewName, String newName) {
-        String ddl = String.format(RENAME_VIEW_SQL, DebugUtils.needQuoteName(schema), DebugUtils.needQuoteName(viewName),
-                DebugUtils.needQuoteName(newName));
+        String ddl = String.format(RENAME_VIEW_SQL, DebugUtils.needQuoteName(schema),
+                DebugUtils.needQuoteName(viewName), DebugUtils.needQuoteName(newName));
         log.info("renameView ddl: " + ddl);
         return ddl;
     }
@@ -200,7 +200,7 @@ public class ViewObjectSQLServiceImpl implements ViewObjectSQLService {
 
     @Override
     public String getViewColumn(String schema, String viewName) {
-        String ddl = String.format(GET_VIEW_COLUMN_SQL, DebugUtils.needQuoteName(schema), DebugUtils.needQuoteName(viewName));
+        String ddl = String.format(GET_VIEW_COLUMN_SQL, DebugUtils.needQuoteName(schema), viewName);
         log.info("getViewColumn ddl: " + ddl);
         return ddl;
     }
