@@ -50,8 +50,48 @@ public class PortalHandle {
     private static final Pattern REPLACE_P = Pattern.compile(REPLACE_BLANK_ENTER);
 
     public static boolean checkInstallPortal(String host, Integer port, String user, String pass, String installPath) {
-        JschResult checkInstallPortalResult = ShellUtil.execCommandGetResult(host, port, user, pass, "[ -f " + installPath + "portal/logs/portal_.log ] && cat " + installPath + "portal/logs/portal_.log | grep 'Install all migration tools success'");
+        JschResult checkInstallPortalResult = ShellUtil.execCommandGetResult(host, port, user, pass,
+            "[ -f " + installPath + "portal/logs/portal_.log ] && cat " + installPath
+                + "portal/logs/portal_.log | grep 'Install all migration tools success'");
         return StringUtils.isNotBlank(checkInstallPortalResult.getResult().trim());
+    }
+
+    /**
+     * check Portal installed or not installed,update install status
+     *
+     * @param installParams install parameter
+     * @return boolean installed or not installed
+     */
+    public static boolean checkInstallStatusAndUpdate(MigrationHostPortalInstall installParams, String runPassword) {
+        String portalHome = installParams.getInstallPath() + "portal/";
+        JschResult existsPortalInstallFileResult = ShellUtil.execCommandGetResult(installParams.getHost(),
+            installParams.getPort(), installParams.getRunUser(), runPassword,
+            "[ -f " + portalHome + installParams.getJarName() + " ] && echo 1 || echo 0");
+        if (existsPortalInstallFileResult.isOk()
+                && Integer.parseInt(existsPortalInstallFileResult.getResult().trim()) == 0) {
+            // The installation package does not exist. Provide a prompt and write it to the log
+            String cmd = String.format("mkdir -p %s && echo '%s' >> %s", installParams.getInstallPath(),
+                installParams.getJarName() + " is not exist.", installParams.getDatakitLogPath());
+            JschResult result = ShellUtil.execCommandGetResult(installParams.getHost(), installParams.getPort(),
+                installParams.getRunUser(), runPassword, cmd);
+            if (!result.isOk()) {
+                log.error("write install error message failed: " + result.getResult());
+            }
+            return false;
+        }
+        // Execute the portal check, determine whether the installation was successful based on the return value
+        String checkInstallCommand = "java -Dpath=" + portalHome
+            + " -Dorder=check_portal_status -Dskip=true -jar " + portalHome + installParams.getJarName();
+        initPortalConfig(installParams.getHost(), installParams.getPort(), installParams.getRunUser(),
+            runPassword, portalHome);
+        log.info("portal install, command: {}", checkInstallCommand);
+        JschResult installToolResult = ShellUtil.execCommandGetResult(installParams.getHost(), installParams.getPort(),
+            installParams.getRunUser(), runPassword, checkInstallCommand);
+        if (!installToolResult.isOk()) {
+            log.error("portal exec checkInstall command failed.");
+        }
+        log.info("portal exec checkInstall command result {}", installToolResult.getResult());
+        return installToolResult.getResult().contains("check portal status:ok");
     }
 
     public static boolean installPortal(MigrationHostPortalInstall installParams) throws PortalInstallException {
@@ -103,7 +143,10 @@ public class PortalHandle {
     /**
      * Start the portal; pass in the task ID and task parameters
      *
-     * @param host
+     * @param host host info
+     * @param task task
+     * @param paramMap parameter
+     * @param portalJarName portalJarName
      */
     public static void startPortal(MigrationHostPortalInstall host, MigrationTask task, String portalJarName, Map<String, String> paramMap) {
         log.info("run host info: {}", JSON.toJSONString(host));

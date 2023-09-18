@@ -215,7 +215,8 @@
             "5q0aajl77lg11": "Delete confirm",
             "5q0aajl77lg12": "Are you sure to delete this file? Once deleted, it cannot be restored",
             "5q0aajl77lg13": "Please upload the migration kit installation package",
-            "5q0aajl77lg14": "Installation type"
+            "5q0aajl77lg14": "Installation type",
+            "5q0aajl77lg15": "Import install"
         },
         "ParamsConfig": {
             "5q0aazspots0": "Default parameter configuration",

@@ -51,6 +51,9 @@
             <a-radio :value="INSTALL_TYPE.OFFLINE">{{
               $t('components.PortalInstall.5q0aajl77lg2')
             }}</a-radio>
+            <a-radio :value="INSTALL_TYPE.IMPORTINSTALL">{{
+              $t('components.PortalInstall.5q0aajl77lg15')
+            }}</a-radio>
           </a-radio-group>
         </a-form-item>
         <template v-if="form.installType === INSTALL_TYPE.ONLINE">
@@ -79,6 +82,7 @@
             <a-input v-model="form.pkgName"></a-input>
           </a-form-item>
         </template>
+        <template v-if="form.installType != INSTALL_TYPE.IMPORTINSTALL">
         <a-form-item
           field="jarName"
           :label="$t('components.PortalInstall.5q0aajl77lg7')"
@@ -91,6 +95,7 @@
         >
           <a-input v-model="form.jarName"></a-input>
         </a-form-item>
+      </template>
         <template v-if="form.installType === INSTALL_TYPE.OFFLINE">
           <a-form-item
             field="packagePath"

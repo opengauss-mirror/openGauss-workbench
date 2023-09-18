@@ -1,6 +1,7 @@
 export const INSTALL_TYPE = {
   ONLINE: 0,
-  OFFLINE: 1
+  OFFLINE: 1,
+  IMPORTINSTALL: 2
 }
 
 export const PORTAL_INSTALL_STATUS = {
