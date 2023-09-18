@@ -1,6 +1,7 @@
 /*
  * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
  */
+
 package com.nctigba.observability.instance.controller;
 
 import java.io.File;
@@ -62,10 +63,12 @@ public class EnvironmentController {
 
     @GetMapping("/basePath")
     public String basePath() {
-        String path = System.getProperty("java.class.path");
-        int firstIndex = path.lastIndexOf(System.getProperty("path.separator")) + 1;
-        int lastIndex = path.lastIndexOf(File.separator) + 1;
-        return path.substring(firstIndex, lastIndex);
+        var full = EnvironmentController.class.getResource(EnvironmentController.class.getSimpleName() + ".class");
+        var path = full.getPath();
+        int jarIndex = path.indexOf(".jar");
+        int lastSlashIndex = path.lastIndexOf(File.separator, jarIndex);
+        int preSlashIndex = path.lastIndexOf(File.separator, lastSlashIndex - 1);
+        return path.substring("file:".length(), preSlashIndex + 1);
     }
 
     @GetMapping("/prometheus")
