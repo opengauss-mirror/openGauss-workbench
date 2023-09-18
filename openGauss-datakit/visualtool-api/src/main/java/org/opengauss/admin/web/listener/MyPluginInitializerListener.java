@@ -26,6 +26,8 @@ package org.opengauss.admin.web.listener;
 
 import com.gitee.starblues.integration.listener.PluginInitializerListener;
 import lombok.extern.slf4j.Slf4j;
+import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 /**
@@ -35,18 +37,22 @@ import org.springframework.stereotype.Component;
 @Component
 @Slf4j
 public class MyPluginInitializerListener implements PluginInitializerListener {
+    @Autowired
+    private EncryptionUtils encryptionUtils;
+
     @Override
     public void before() {
-        log.info("before init.");
+        log.info("My plugin init before.");
+        this.encryptionUtils.refreshKeyPair();
     }
 
     @Override
     public void complete() {
-        log.info("init complete.");
+        log.info("My plugin init complete.");
     }
 
     @Override
     public void failure(Throwable throwable) {
-        log.error("init error:" + throwable.getMessage());
+        log.error("My plugin init error: {}", throwable.getMessage());
     }
 }
