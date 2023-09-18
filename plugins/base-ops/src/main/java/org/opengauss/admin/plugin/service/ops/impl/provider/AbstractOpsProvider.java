@@ -29,7 +29,7 @@ import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
 import org.opengauss.admin.common.exception.ops.OpsException;
 import org.opengauss.admin.plugin.domain.model.ops.*;
 import org.opengauss.admin.plugin.domain.model.ops.node.EnterpriseInstallNodeConfig;
-import org.opengauss.admin.plugin.enums.ops.HostEnvStatusEnum;
+import org.opengauss.admin.plugin.enums.ops.OpenGaussSupportOSEnum;
 import org.opengauss.admin.plugin.service.ops.ClusterOpsProvider;
 import org.opengauss.admin.plugin.service.ops.impl.ClusterOpsProviderManager;
 import org.opengauss.admin.plugin.utils.JschUtil;
@@ -40,10 +40,13 @@ import org.springframework.beans.factory.InitializingBean;
 
 import java.io.IOException;
 import java.text.MessageFormat;
+import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * @author lhf
@@ -60,7 +63,7 @@ public abstract class AbstractOpsProvider implements ClusterOpsProvider, Initial
         Session rootSession = loginWithUser(jschUtil,encryptionUtils,installContext.getHostInfoHolders(), true, hostId, null);
         try {
 
-            installDependency(jschUtil,rootSession,retSession);
+            installDependency(jschUtil,rootSession,retSession, installContext.getOs());
             ensureDirExist(jschUtil,rootSession, pkgPath, retSession);
 
             ensureDirExist(jschUtil,rootSession, installPath, retSession);
@@ -156,27 +159,28 @@ public abstract class AbstractOpsProvider implements ClusterOpsProvider, Initial
         }
     }
 
-    protected void installDependency(JschUtil jschUtil, Session rootSession, WsSession retSession){
+    protected void installDependency(JschUtil jschUtil, Session rootSession, WsSession retSession,
+                                     OpenGaussSupportOSEnum expectedOs){
         boolean dependencyCorrect = false;
-
+        String[] dependencyPackageNames = {"libaio-devel", "flex", "bison", "ncurses-devel", "glibc-devel",
+                "patch", "redhat-lsb-core", "readline-devel"};
         try {
-            String dependency =  jschUtil.executeCommand(SshCommandConstants.DEPENDENCY, rootSession).getResult();
-            try {
-
-                int dependencyNum = Integer.parseInt(dependency);
-
-                int suggestedNum = 8;
-                if (dependencyNum>= suggestedNum){
-                    dependencyCorrect = true;
+            JschResult jschResult = jschUtil.executeCommand(SshCommandConstants.DEPENDENCY, rootSession);
+            List<String> dependencyPackages = Arrays.stream(dependencyPackageNames).map(
+                    dependency -> dependency + "." + expectedOs.getCpuArch()).collect(Collectors.toList());
+            String dependency = jschResult.getResult();
+            List<String> notInstalledPackages = new ArrayList<>();
+            for (String dependencyPackage : dependencyPackages) {
+                if (!dependency.contains(dependencyPackage)) {
+                    notInstalledPackages.add(dependencyPackage);
                 }
-
-            } catch (Exception e) {
-                log.error("Parse command response error", e);
+            }
+            if (notInstalledPackages.isEmpty()) {
+                dependencyCorrect = true;
             }
         } catch (Exception e) {
             log.error("Execute command exception：", e);
         }
-
         if (dependencyCorrect){
             log.info("dependencyCorrect，skip install dependency");
             return;
