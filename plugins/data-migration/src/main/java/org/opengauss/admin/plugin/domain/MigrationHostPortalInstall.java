@@ -63,7 +63,7 @@ public class MigrationHostPortalInstall {
     private Integer port;
     private String runUser;
     private String runPassword;
-    // 0: online 1: offline
+    // 0: online 1: offline 2:import install
     private Integer installType;
     private String pkgDownloadUrl;
     private String pkgName;

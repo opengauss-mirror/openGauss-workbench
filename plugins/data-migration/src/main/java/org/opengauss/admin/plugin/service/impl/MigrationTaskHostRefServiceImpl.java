@@ -521,9 +521,18 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
             physicalInstallParams.setPkgDownloadUrl(install.getPkgDownloadUrl());
             physicalInstallParams.setPkgUploadPath(null);
         }
-
+        if (PortalInstallType.IMPORT_INSTALL.getCode().equals(install.getInstallType())) {
+            //  offline or online mode remains unchanged
+            physicalInstallParams.setInstallType(
+                oldInstall == null ? PortalInstallType.ONLINE_INSTALL.getCode() : oldInstall.getInstallType());
+            boolean isInstallSuccess = PortalHandle.checkInstallStatusAndUpdate(physicalInstallParams,
+                encryptionUtils.decrypt(hostUser.getPassword()));
+            physicalInstallParams.setInstallStatus(isInstallSuccess
+                ? PortalInstallStatus.INSTALLED.getCode() : PortalInstallStatus.INSTALL_ERROR.getCode());
+            migrationHostPortalInstallHostService.saveRecord(physicalInstallParams);
+            return AjaxResult.success();
+        }
         syncInstallPortalHandler(physicalInstallParams);
-
         // if reinstall path changed, clear old package
         if (isReInstall && !realInstallPath.equals(oldInstall.getInstallPath())) {
             deletePortal(hostId, false);
