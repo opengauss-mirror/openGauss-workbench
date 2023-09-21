@@ -22,9 +22,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -50,10 +50,9 @@ import static com.nctigba.datastudio.enums.MessageEnum.WINDOW;
 @Service
 @Slf4j
 public class AsyncHelper {
+    private final Pattern pattern = Pattern.compile("[0-9]*");
     @Autowired
     private SqlHistoryManagerServiceImpl managerService;
-
-    private final Pattern pattern = Pattern.compile("[0-9]*");
 
     @Async
     public void task(WebSocketServer webSocketServer, PublicParamReq paramReq) throws SQLException, IOException {
@@ -80,7 +79,11 @@ public class AsyncHelper {
         if (isAnonymousOid(paramReq) || paramReq.isInPackage()) {
             operateStatusDO.enableStartAnonymous();
         } else {
-            operateStatusDO.enableStartDebug();
+            if (paramReq.isInPackage()) {
+                operateStatusDO.enableStartDebugPackage();
+            } else {
+                operateStatusDO.enableStartDebug();
+            }
         }
         webSocketServer.setOperateStatus(windowName, operateStatusDO);
         Map<String, Object> operateStatusMap = new HashMap<>();
@@ -105,11 +108,14 @@ public class AsyncHelper {
     private void closeWindow(WebSocketServer webSocketServer, String windowName) throws IOException {
         Map<String, Object> paramMap = webSocketServer.getParamMap(windowName);
         log.info("AsyncHelper paramMap: " + paramMap);
-        Set<String> keySet = paramMap.keySet();
-        for (String key : keySet) {
+        Iterator<Map.Entry<String, Object>> iterator = paramMap.entrySet().iterator();
+        while (iterator.hasNext()) {
+            Map.Entry<String, Object> entry = iterator.next();
+            String key = entry.getKey();
             Matcher isNum = pattern.matcher(key);
             if (isNum.matches()) {
                 webSocketServer.sendMessage(String.valueOf(paramMap.get(key)), CLOSE_WINDOW, SUCCESS, null);
+                iterator.remove();
             }
         }
     }

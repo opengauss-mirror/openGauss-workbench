@@ -29,5 +29,6 @@ public class DatabaseCreateUserDTO {
     private String resourcePool;
     private List<String> power;
     private String comment;
-    private List<String> role;
+    private List<String> role;;
+    private List<String> administrator;
 }

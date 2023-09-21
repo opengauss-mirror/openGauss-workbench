@@ -7,16 +7,32 @@
     label-position="left"
     :label-suffix="$t('common.colon')"
   >
-    <el-form-item prop="role" :label="$t('userRole.owner')">
-      <el-select v-model="form.role" clearable multiple collapse-tags>
-        <el-option
-          v-for="item in userRoleList"
-          :key="item.oid"
-          :label="item.name"
-          :value="item.name"
-        />
-      </el-select>
-    </el-form-item>
+    <el-row :gutter="50">
+      <el-col :span="12">
+        <el-form-item prop="role" :label="$t('userRole.roleGroup')">
+          <el-select v-model="form.role" clearable>
+            <el-option
+              v-for="item in userRoleList"
+              :key="item.oid"
+              :label="item.name"
+              :value="item.name"
+            />
+          </el-select>
+        </el-form-item>
+      </el-col>
+      <el-col :span="12">
+        <el-form-item prop="administrator" :label="$t('userRole.adminsGroup')">
+          <el-select v-model="form.administrator" clearable multiple collapse-tags>
+            <el-option
+              v-for="item in userRoleList"
+              :key="item.oid"
+              :label="item.name"
+              :value="item.name"
+            />
+          </el-select>
+        </el-form-item>
+      </el-col>
+    </el-row>
   </el-form>
 </template>
 <script lang="ts" setup>
@@ -56,7 +72,7 @@
 
   const fetchUserRoleList = async () => {
     const res = await getUserRoleList(props.uuid);
-    userRoleList.value = [].concat(res.role, res.user);
+    userRoleList.value = [].concat(res.role || [], res.user || []);
   };
 
   const validateForm = () => {

@@ -9,8 +9,6 @@ import com.nctigba.datastudio.model.dto.DatabaseSelectViewDTO;
 import com.nctigba.datastudio.model.dto.DatabaseViewDTO;
 import com.nctigba.datastudio.model.dto.DatabaseViewDdlDTO;
 import com.nctigba.datastudio.service.DatabaseViewService;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -29,7 +27,6 @@ import java.util.Map;
  *
  * @since 2023-6-26
  */
-@Api(tags = {"Metadata query interface"})
 @RestController
 @RequestMapping(value = "/dataStudio/web/v1")
 public class DatabaseViewController {
@@ -42,7 +39,6 @@ public class DatabaseViewController {
      * @param request request
      * @return String
      */
-    @ApiOperation(value = "CREATE VIEW DDL")
     @PostMapping(value = "/views/action", params = "action=createViewDdl", produces = MediaType.APPLICATION_JSON_VALUE)
     public String createViewDDL(@RequestBody DatabaseCreateViewDTO request) {
         return databaseViewService.createViewDDL(request);
@@ -53,7 +49,6 @@ public class DatabaseViewController {
      *
      * @param request request
      */
-    @ApiOperation(value = "CREATE VIEW")
     @PostMapping(value = "/views", produces = MediaType.APPLICATION_JSON_VALUE)
     public void createView(@RequestBody DatabaseCreateViewDTO request) {
         databaseViewService.createView(request);
@@ -64,7 +59,6 @@ public class DatabaseViewController {
      *
      * @param request request
      */
-    @ApiOperation(value = "DROP VIEW")
     @DeleteMapping(value = "/views", produces = MediaType.APPLICATION_JSON_VALUE)
     public void dropView(@RequestBody DatabaseViewDdlDTO request) {
         databaseViewService.dropView(request);
@@ -76,7 +70,6 @@ public class DatabaseViewController {
      * @param request request
      * @return Map
      */
-    @ApiOperation(value = "SELECT VIEW")
     @GetMapping(value = "/viewDatas", produces = MediaType.APPLICATION_JSON_VALUE)
     public Map<String, Object> selectView(DatabaseSelectViewDTO request) {
         return databaseViewService.selectView(request);
@@ -89,7 +82,6 @@ public class DatabaseViewController {
      * @return String
      * @throws SQLException SQLException
      */
-    @ApiOperation(value = "RETURN VIEW DDL")
     @PostMapping(value = "/viewDdls", produces = MediaType.APPLICATION_JSON_VALUE)
     public String returnViewDDL(@RequestBody DatabaseViewDdlDTO request) throws SQLException {
         return databaseViewService.returnViewDDL(request);

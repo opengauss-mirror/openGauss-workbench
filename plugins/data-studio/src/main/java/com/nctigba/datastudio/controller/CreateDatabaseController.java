@@ -9,7 +9,6 @@ import com.nctigba.datastudio.model.dto.DatabaseNameDTO;
 import com.nctigba.datastudio.model.dto.RenameDatabaseDTO;
 import com.nctigba.datastudio.model.entity.DatabaseConnectionDO;
 import com.nctigba.datastudio.service.CreateDatabaseService;
-import io.swagger.annotations.Api;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -27,7 +26,6 @@ import java.util.Map;
  *
  * @since 2023-6-26
  */
-@Api(tags = {"Metadata query interface"})
 @RestController
 @RequestMapping(value = "/dataStudio/web/v1")
 public class CreateDatabaseController {

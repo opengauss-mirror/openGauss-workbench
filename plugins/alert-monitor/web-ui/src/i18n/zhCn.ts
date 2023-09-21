@@ -122,7 +122,7 @@ export default {
     alertContentTip: '告警内容主用来通知用户，它支持配置参数，用$&#123;xxx&#125;来表示参数。比如：告警内容为“最近一分钟，$&#123;nodeName&#125;的CPU使用率一直大于90%”，其中$&#123;nodeName&#125;为参数。可配置参数如下：',
     cpuUsage: 'CPU使用率',
     memoryUsage: '内存使用率',
-    diskUsage: '磁盘使用量',
+    diskUsage: '磁盘使用率',
     diskWriteRate: '磁盘的写速率',
     diskReadRate: '磁盘的读速率',
     networkReceiveRate: '网络输入速率',

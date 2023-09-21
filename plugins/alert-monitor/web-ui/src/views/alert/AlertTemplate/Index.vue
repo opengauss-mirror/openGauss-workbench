@@ -4,8 +4,11 @@
       <div class="icon"></div>
       <div class="title">{{ t('alertTemplate.title') }}</div>
       <div class="seperator"></div>
-      <div class="alert-title">{{ t('alertTemplate.title') }} </div>
-      <div class="alert-seperator">&nbsp;/&nbsp;</div>
+      <el-breadcrumb separator="/" style="flex-grow: 1">
+        <el-breadcrumb-item>
+          {{ t('alertTemplate.title') }}
+        </el-breadcrumb-item>
+      </el-breadcrumb>
     </div>
     <el-row>
       <el-col :span="6">
@@ -113,7 +116,7 @@
               <template #default="scope">
                 <el-switch v-model="scope.row.enable" inline-prompt :active-value="1" :inactive-value="0"
                   :active-text="$t('app.enable')" :inactive-text="$t('app.disable')"
-                  @change="val => changeEnable(scope.row.templateRuleId, val)" />
+                  @change="val => changeEnable(scope.row.templateRuleId, val)" :loading="enableLoading"/>
               </template>
             </el-table-column>
           </el-table>
@@ -166,6 +169,7 @@ const rulePage = reactive({
 const currentId = ref<number>()
 const tableDatas = ref<any[]>([])
 const ruleTableDatas = ref<any[]>([])
+const enableLoading = ref<boolean>(false)
 const getCurrentRow = (id: number) => {
   if (id) {
     currentId.value = id
@@ -354,6 +358,7 @@ const delTemplate = (id: number) => {
 }
 
 const changeEnable = (ruleId: any, enable: any) => {
+  enableLoading.value = true
   if (enable === 0) {
     request.post(`/api/v1/alertTemplate/templateRule/${ruleId}/disable`).then((res: any) => {
       if (res.code !== 200) {
@@ -362,13 +367,15 @@ const changeEnable = (ruleId: any, enable: any) => {
           type: 'error'
         })
       }
-      search()
+      enableLoading.value = false
+      requestRuleData()
     }).catch(() => {
       ElMessage({
         message: t('app.disableFail'),
         type: 'error'
       })
-      search()
+      enableLoading.value = false
+      requestRuleData()
     })
   } else {
     request.post(`/api/v1/alertTemplate/templateRule/${ruleId}/enable`).then((res: any) => {
@@ -378,13 +385,15 @@ const changeEnable = (ruleId: any, enable: any) => {
           type: 'error'
         })
       }
-      search()
+      enableLoading.value = false
+      requestRuleData()
     }).catch(() => {
       ElMessage({
         message: t('app.enableFail'),
         type: 'error'
       })
-      search()
+      enableLoading.value = false
+      requestRuleData()
     })
   }
 }

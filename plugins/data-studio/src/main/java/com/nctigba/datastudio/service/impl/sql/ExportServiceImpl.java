@@ -24,6 +24,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.util.Strings;
 import org.apache.poi.hssf.usermodel.HSSFDateUtil;
 import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.xssf.streaming.SXSSFRow;
+import org.apache.poi.xssf.streaming.SXSSFSheet;
+import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.apache.poi.xssf.usermodel.XSSFCell;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
@@ -75,7 +78,10 @@ import static com.nctigba.datastudio.constants.CommonConstants.TABLE;
 import static com.nctigba.datastudio.constants.CommonConstants.UNDERLINE;
 import static com.nctigba.datastudio.constants.CommonConstants.VIEW;
 import static com.nctigba.datastudio.constants.SqlConstants.COMMA;
+import static com.nctigba.datastudio.constants.SqlConstants.COUNT_SQL;
+import static com.nctigba.datastudio.constants.SqlConstants.COURSE_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.CREATE_SCHEMA_SQL;
+import static com.nctigba.datastudio.constants.SqlConstants.FETCH_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.FROM_KEYWORD_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.LEFT_BRACKET;
 import static com.nctigba.datastudio.constants.SqlConstants.LF;
@@ -206,53 +212,80 @@ public class ExportServiceImpl implements ExportService {
 
     private void exportExcel(ExportRequest request, HttpServletResponse response) throws SQLException, IOException {
         log.info("ExportService exportExcel request: " + request);
+
+        StringBuilder columnSb = new StringBuilder();
+        List<String> columnList = request.getColumnList();
+        columnList.forEach(column -> columnSb.append(column).append(COMMA));
+        log.info("ExportService exportExcel columnSb: " + columnSb);
+
+        String tableName = request.getTableName();
+        String sql = SELECT_KEYWORD_SQL + columnSb.deleteCharAt(columnSb.length() - 1)
+                + FROM_KEYWORD_SQL + DebugUtils.needQuoteName(request.getSchema())
+                + POINT + DebugUtils.needQuoteName(tableName) + SEMICOLON;
+
+        String fileName = getDataFileName(tableName) + ".xlsx";
+        if (request.getFileType().equals("Excel(xls)")) {
+            fileName = getDataFileName(tableName) + ".xls";
+        }
+
+        exportExcelFile(request, sql, fileName, response);
+        log.info("ExportService exportExcel end: ");
+    }
+
+    private void exportExcelFile(ExportRequest request, String sql, String fileName, HttpServletResponse response)
+            throws SQLException, IOException {
+        log.info("ExportService getXssfWorkBook startTime: " + System.currentTimeMillis());
+
         try (
                 Connection connection = connectionConfig.connectDatabase(request.getUuid());
                 Statement statement = connection.createStatement();
-                XSSFWorkbook xssfWorkbook = new XSSFWorkbook();
-                OutputStream outputStream = response.getOutputStream()
+                SXSSFWorkbook sxssfWorkbook = new SXSSFWorkbook();
+                OutputStream outputStream = response.getOutputStream();
         ) {
-            StringBuilder columnSb = new StringBuilder();
-            List<String> columnList = request.getColumnList();
-            columnList.forEach(column -> columnSb.append(column).append(COMMA));
-            log.info("ExportService exportExcel columnSb: " + columnSb);
-
-            String tableName = request.getTableName();
-            String sql = SELECT_KEYWORD_SQL + columnSb.deleteCharAt(columnSb.length() - 1)
-                    + FROM_KEYWORD_SQL + DebugUtils.needQuoteName(request.getSchema())
-                    + POINT + DebugUtils.needQuoteName(tableName) + SEMICOLON;
-            ResultSet resultSet = statement.executeQuery(sql);
-            log.info("ExportService exportExcel sql: " + sql);
-
-            int index = 0;
-            XSSFSheet sheet = xssfWorkbook.createSheet(tableName);
-            XSSFRow row = sheet.createRow(index);
-            for (int i = 0; i < columnList.size(); i++) {
-                row.createCell(i).setCellValue(columnList.get(i));
-            }
-            while (resultSet.next()) {
-                row = sheet.createRow(++index);
-                for (int i = 0; i < columnList.size(); i++) {
-                    row.createCell(i).setCellValue(resultSet.getString(columnList.get(i)));
-                }
-            }
-            log.info("ExportService exportExcel hssfSheet: " + sheet.getLastRowNum());
-
-            String fileName = getDataFileName(tableName) + ".xlsx";
-            if (request.getFileType().equals("Excel(xls)")) {
-                fileName = getDataFileName(tableName) + ".xls";
-            }
-            log.info("ExportService exportExcel fileName: " + fileName);
-
             response.reset();
             response.setContentType("application/octet-stream");
             response.setHeader("Content-Disposition", URLEncoder.encode(fileName, StandardCharsets.UTF_8));
             response.addHeader("Response-Type", "blob");
             response.setCharacterEncoding(request.getEncoding());
-            xssfWorkbook.write(outputStream);
+
+            int count = 0;
+            String tableName = request.getTableName();
+            ResultSet countResult = statement.executeQuery(String.format(COUNT_SQL,
+                    DebugUtils.needQuoteName(request.getSchema()), DebugUtils.needQuoteName(tableName)));
+            while (countResult.next()) {
+                count = countResult.getInt("count");
+            }
+            log.info("ExportService getXssfWorkBook count: " + count);
+
+            String timeStamp = new SimpleDateFormat("HHmmssSSS").format(new Date());
+            connection.setAutoCommit(false);
+            statement.execute(String.format(COURSE_SQL, "DS_" + timeStamp, sql));
+            log.info("ExportService getXssfWorkBook timeStamp: " + "DS_" + timeStamp);
+
+            int index = 0;
+            List<String> columnList = request.getColumnList();
+            SXSSFSheet sheet = sxssfWorkbook.createSheet(tableName);
+            SXSSFRow row = sheet.createRow(index);
+            for (int i = 0; i < columnList.size(); i++) {
+                row.createCell(i).setCellValue(columnList.get(i));
+            }
+
+            int size = count % 1000 == 0 ? count / 1000 : count / 1000 + 1;
+            log.info("ExportService getXssfWorkBook size: " + size);
+            for (int s = 0; s < size; s++) {
+                ResultSet resultSet = statement.executeQuery(String.format(FETCH_SQL, 1000, "DS_" + timeStamp));
+                while (resultSet.next()) {
+                    row = sheet.createRow(++index);
+                    for (int i = 0; i < columnList.size(); i++) {
+                        row.createCell(i).setCellValue(resultSet.getString(columnList.get(i)));
+                    }
+                }
+            }
+
+            sxssfWorkbook.write(outputStream);
             outputStream.flush();
+            log.info("ExportService getXssfWorkBook endTime: " + System.currentTimeMillis());
         }
-        log.info("ExportService exportExcel end: ");
     }
 
     private void importExcel(ExportRequest request, File file) throws SQLException, IOException {

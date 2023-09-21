@@ -13,12 +13,14 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.opengauss.plugin.agent.config.DbConfig;
-import org.opengauss.plugin.agent.util.CmdUtil;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.yaml.snakeyaml.Yaml;
 
+import cn.hutool.core.bean.BeanUtil;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -27,27 +29,31 @@ import lombok.RequiredArgsConstructor;
 public class Config {
     private final DbConfig dbConfig;
 
-    @GetMapping("/set")
-    public void set(String hostId, String nodeId, Integer dbport, String username, String password) throws IOException {
+    @PostMapping("/set")
+    public void set(@RequestBody DbConfig config) throws IOException {
         File application = new File(".", "application.yml");
         if (!application.exists())
             application.createNewFile();
         try (InputStream is = new FileInputStream(application);) {
-            Yaml yaml = new Yaml();
-            Map<String, Object> map = yaml.load(is);
-            if (map == null)
-                map = new HashMap<>();
-            map.put("conf", Map.of("hostId", hostId, "node",
-                    Map.of("nodeId", nodeId, "dbport", dbport, "dbUsername", username, "dbPassword", password)));
             // refresh curr config
-            dbConfig.setHostId(hostId).setNodeId(nodeId).setDbport(dbport).setDbUsername(username)
-                    .setDbPassword(password);
+            BeanUtil.copyProperties(config, dbConfig);
+            var map = new HashMap<String, Object>();
+            map.put("conf",
+                    Map.of("hostId", config.getHostId(), "user", config.getUser(), "pass", config.getPass(), "node",
+                            Map.of("nodeId", config.getNodeId(), "dbport", config.getDbport(), "dbUsername",
+                                    config.getDbUsername(), "dbPassword", config.getDbPassword())));
+            Yaml yaml = new Yaml();
             try (var writer = new FileWriter(application)) {
                 writer.write(yaml.dumpAsMap(map));
             }
-            CmdUtil.init(username, password);
+            dbConfig.afterPropertiesSet();
         } catch (IOException e) {
             throw e;
         }
+    }
+
+    @GetMapping("list")
+    public DbConfig list() {
+        return dbConfig;
     }
 }

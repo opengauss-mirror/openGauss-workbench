@@ -52,6 +52,17 @@ public class UserObjectSQLServiceImpl implements UserObjectSQLService {
         } else {
             userRole.append(String.format(ROLE_SQL, request.getName()));
         }
+        StringBuilder ddl = new StringBuilder();
+        ddl.append(String.format(CREATE_USER_SQL, userRole, getDdlCondition(request), password));
+        String comment = "";
+        if (StringUtils.isNotEmpty(request.getComment())) {
+            comment = String.format(COMMENT_ROLE_SQL, request.getName(), request.getComment());
+        }
+        ddl.append(comment);
+        return String.valueOf(ddl);
+    }
+
+    private StringBuilder getDdlCondition(DatabaseCreateUserDTO request) {
         StringBuilder ddlCondition = new StringBuilder();
         if (request.getPower().size() >= 1) {
             for (int i = 0; i < request.getPower().size(); i++) {
@@ -80,14 +91,17 @@ public class UserObjectSQLServiceImpl implements UserObjectSQLService {
                 }
             }
         }
-        StringBuilder ddl = new StringBuilder();
-        ddl.append(String.format(CREATE_USER_SQL, userRole, ddlCondition, password));
-        String comment = "";
-        if (StringUtils.isNotEmpty(request.getComment())) {
-            comment = String.format(COMMENT_ROLE_SQL, request.getName(), request.getComment());
+        int adminSize = request.getAdministrator().size();
+        if (adminSize >= 1) {
+            ddlCondition.append(" ADMIN ").append(LF);
+            for (int i = 0; i < request.getRole().size(); i++) {
+                ddlCondition.append(request.getAdministrator().get(i));
+                if (i < size - 1) {
+                    ddlCondition.append(COMMA);
+                }
+            }
         }
-        ddl.append(comment);
-        return String.valueOf(ddl);
+        return ddlCondition;
     }
 
     @Override

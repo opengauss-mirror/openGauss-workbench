@@ -9,6 +9,7 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import cn.hutool.core.util.StrUtil;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
@@ -34,7 +35,10 @@ public class DbConfig implements InitializingBean {
     private String dbPassword;
 
     @Override
-    public void afterPropertiesSet() throws Exception {
+    public void afterPropertiesSet() {
+        if (StrUtil.isBlank(user) || StrUtil.isBlank(pass)) {
+            return;
+        }
         CmdUtil.init(user, pass);
     }
 }

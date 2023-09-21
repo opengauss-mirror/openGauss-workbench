@@ -6,7 +6,6 @@ package com.nctigba.datastudio.controller;
 
 import com.nctigba.datastudio.model.query.ExportRequest;
 import com.nctigba.datastudio.service.ExportService;
-import io.swagger.annotations.Api;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -24,7 +23,6 @@ import java.util.concurrent.ExecutionException;
  *
  * @since 2023-06-26
  */
-@Api(tags = {"Schema manager interface"})
 @RestController
 @RequestMapping(value = "/dataStudio/web/v1")
 public class ExportController {

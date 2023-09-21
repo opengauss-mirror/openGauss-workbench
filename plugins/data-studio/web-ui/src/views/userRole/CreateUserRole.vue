@@ -78,6 +78,7 @@
     MemberTab: {
       data: {
         role: [],
+        administrator: [],
       },
     },
     DDL: {
@@ -105,6 +106,7 @@
         power: dataMap.GeneralTab.data.power,
         comment: dataMap.GeneralTab.data.comment,
         role: dataMap.MemberTab.data.role,
+        administrator: dataMap.MemberTab.data.administrator,
       };
     } catch (tab) {
       currentTabName.value = tab;

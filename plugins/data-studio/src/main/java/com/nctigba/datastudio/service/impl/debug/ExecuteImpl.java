@@ -87,7 +87,9 @@ public class ExecuteImpl implements OperationInterface {
             return;
         }
 
-        statement.execute(paramReq.getSql());
+        if (!paramReq.isInPackage()) {
+            statement.execute(paramReq.getSql());
+        }
         Map<String, List<Map<String, Object>>> map = new HashMap<>();
         List<Map<String, Object>> paramList = DebugUtils.getParamMap(webSocketServer, windowName, oid);
         log.info("execute paramList: " + paramList);

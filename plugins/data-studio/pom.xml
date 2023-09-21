@@ -86,12 +86,6 @@
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
-			<groupId>io.springfox</groupId>
-			<artifactId>springfox-boot-starter</artifactId>
-			<version>3.0.0</version>
-			<scope>${swagger.scope}</scope>
-		</dependency>
-		<dependency>
 			<groupId>com.alibaba</groupId>
 			<artifactId>fastjson</artifactId>
 			<version>${fastjson.version}</version>
@@ -182,7 +176,6 @@
 			<id>dev</id>
 			<properties>
 				<profiles.active>dev</profiles.active>
-				<swagger.scope>compile</swagger.scope>
 			</properties>
 			<activation>
 				<activeByDefault>true</activeByDefault>
@@ -192,7 +185,6 @@
 			<id>prod</id>
 			<properties>
 				<profiles.active>prod</profiles.active>
-				<swagger.scope>provided</swagger.scope>
 			</properties>
 		</profile>
 	</profiles>

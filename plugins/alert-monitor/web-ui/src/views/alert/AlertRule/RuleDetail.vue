@@ -6,19 +6,26 @@
       <div class="title" v-if="state === 'edit'">{{ t('alertRule.editTitle') }}</div>
       <div class="title" v-if="state === 'detail'">{{ t('alertRule.detailTitle') }}</div>
       <div class="seperator"></div>
-      <div class="alert-title">{{ t('alertRule.title') }} </div>
-      <div class="alert-seperator">&nbsp;/&nbsp;</div>
-      <div class="alert-title" v-if="state === 'add'">{{ t('alertRule.addTitle') }} </div>
-      <div class="alert-title" v-if="state === 'edit'">{{ t('alertRule.editTitle') }} </div>
-      <div class="alert-title" v-if="state === 'detail'">{{ t('alertRule.detailTitle') }} </div>
+      <el-breadcrumb separator="/" style="flex-grow: 1">
+        <el-breadcrumb-item>
+          <div @click="cancel">
+            <a>{{ t('alertRule.title') }}</a>
+          </div>
+        </el-breadcrumb-item>
+        <el-breadcrumb-item>
+          <div v-if="state === 'add'">{{ t('alertRule.addTitle') }} </div>
+          <div v-if="state === 'edit'">{{ t('alertRule.editTitle') }} </div>
+          <div v-if="state === 'detail'">{{ t('alertRule.detailTitle') }} </div>
+        </el-breadcrumb-item>
+      </el-breadcrumb>
     </div>
     <el-form :model="formData" ref="formRef" :rules="formRules" label-position="left" label-width="120px" size="default">
       <div class="form-header">
         <el-descriptions :title="$t('alertRule.alertTitle')"></el-descriptions>
       </div>
       <el-form-item :label="$t('alertRule.ruleName')" prop="ruleName">
-        <el-input v-model="formData.ruleName" :placeholder="$t('alertRule.ruleNamePlaceholder')"
-          :disabled="disabled" maxlength="50" show-word-limit></el-input>
+        <el-input v-model="formData.ruleName" :placeholder="$t('alertRule.ruleNamePlaceholder')" :disabled="disabled"
+          maxlength="50" show-word-limit></el-input>
       </el-form-item>
       <el-form-item :label="$t('alertRule.ruleType')" prop="ruleType">
         <el-radio-group v-model="formData.ruleType" :disabled="disabled">
@@ -710,4 +717,5 @@ onMounted(() => {
   content: "*";
   color: var(--el-color-danger);
   // margin-right: 4px;
-}</style>
+}
+</style>

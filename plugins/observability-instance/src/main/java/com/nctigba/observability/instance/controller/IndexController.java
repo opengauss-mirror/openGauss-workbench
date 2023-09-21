@@ -89,7 +89,11 @@ public class IndexController extends ControllerConfig {
         result.put("time", configMapper.starttime());
         var env = configMapper.env();
         result.put("dbDataPath", env.get("datapath"));
-        result.put("dbLogPath", env.get("datapath") + StrUtil.SLASH + env.get("log_directory"));
+        String logDirectory = env.get("log_directory");
+        if (!logDirectory.startsWith(StrUtil.SLASH)) {
+            logDirectory = env.get("datapath") + StrUtil.SLASH + logDirectory;
+        }
+        result.put("dbLogPath", logDirectory);
         result.put("archiveMode", configMapper.archiveMode());
         OpsHostEntity hostEntity = hostFacade.getById(node.getHostId());
         var user = hostUserFacade.listHostUserByHostId(hostEntity.getHostId()).stream().filter(e -> {

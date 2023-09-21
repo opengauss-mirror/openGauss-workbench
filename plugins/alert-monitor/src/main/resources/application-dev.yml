@@ -9,7 +9,7 @@ spring:
       primary: master
       datasource:
         master:
-          url: jdbc:opengauss://192.168.110.32:7001/postgres?currentSchema=public
+          url: jdbc:opengauss://192.168.110.30:7001/postgres?currentSchema=public
 #          url: jdbc:opengauss://192.168.56.51:26000/postgres?currentSchema=public
           driverClassName: org.opengauss.Driver
           username: scott

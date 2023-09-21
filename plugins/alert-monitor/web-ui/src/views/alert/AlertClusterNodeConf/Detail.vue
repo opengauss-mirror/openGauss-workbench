@@ -4,9 +4,16 @@
       <div class="icon"></div>
       <div class="title">{{ t('AlertClusterNodeConf.detailTitle') }}</div>
       <div class="seperator"></div>
-      <div class="alert-title">{{ t('AlertClusterNodeConf.title') }} </div>
-      <div class="alert-seperator">&nbsp;/&nbsp;</div>
-      <div class="alert-title">{{ t('AlertClusterNodeConf.detailTitle') }} </div>
+      <el-breadcrumb separator="/" style="flex-grow: 1">
+        <el-breadcrumb-item>
+          <div @click="cancel">
+            <a>{{ t('AlertClusterNodeConf.title') }}</a>
+          </div>
+        </el-breadcrumb-item>
+        <el-breadcrumb-item>
+          <div>{{ t('AlertClusterNodeConf.detailTitle') }} </div>
+        </el-breadcrumb-item>
+      </el-breadcrumb>
     </div>
     <el-form label-position="left" label-width="140" size="default" style="margin-top: 8px;">
       <el-form-item :label="$t('AlertClusterNodeConf.selectedInstance') + ':'" style="margin-bottom: 10px !important;">
@@ -436,13 +443,16 @@ const updateTemplateRuleSuccess = (templateRule: any) => {
   })
 }
 
-const cancelUpdateTemplateRule = () => {
+const cancelUpdateTemplateRule = (num = 0) => {
   showMain.value = true
   nextTick(() => {
     for (let row of selectedRuleRows.value) {
       ruleTable.value.toggleRowSelection(row, true)
     }
   })
+  if (num > 0) {
+    cancel()
+  }
 }
 
 const saveTemplateAndConfig = () => {

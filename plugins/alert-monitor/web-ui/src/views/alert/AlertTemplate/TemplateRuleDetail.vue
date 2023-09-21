@@ -4,10 +4,14 @@
       <div class="icon"></div>
       <div class="title">{{ titleList[titleList.length - 1] }}</div>
       <div class="seperator"></div>
-      <span v-for="(item, index) in titleList" :key="item">
-        <span class="alert-title">{{ item }} </span>
-        <span class="alert-seperator" v-if="index === 0 || index !== titleList.length - 1">&nbsp;/&nbsp;</span>
-      </span>
+      <el-breadcrumb separator="/" style="flex-grow: 1">
+        <el-breadcrumb-item v-for="(item, index) in titleList" :key="item">
+          <div @click="cancel(titleList.length - 1 - index)" v-if="index < titleList.length - 1">
+            <a>{{ item }}</a>
+          </div>
+          <div v-else>{{ item }} </div>
+        </el-breadcrumb-item>
+      </el-breadcrumb>
     </div>
     <el-form :model="formData" ref="formRef" :rules="formRules" label-position="left" label-width="120px" size="default">
       <div class="form-header">
@@ -217,7 +221,6 @@ const props = withDefaults(
 const emit = defineEmits(["updateTemplateRuleSuccess", "cancelUpdateTemplateRule"]);
 
 const loading = ref<boolean>(false)
-const ruleItemExpList = ref<any[]>()
 const ruleItemSrcList = ref<any[]>()
 const durationUnitList = ref<any[]>([{
   name: 'second',
@@ -339,13 +342,6 @@ const requestNotifyWayData = () => {
   request.get(`/api/v1/notifyWay/list`).then((res: any) => {
     if (res && res.code === 200) {
       notifyWayList.value = res.data
-    }
-  })
-}
-const requestRuleItemList = () => {
-  request.get(`/api/v1/alertRule/ruleItem/properties`).then((res: any) => {
-    if (res && res.code === 200) {
-      ruleItemExpList.value = res.data
     }
   })
 }
@@ -502,8 +498,8 @@ const confirm = () => {
     loading.value = false
   })
 }
-const cancel = () => {
-  emit("cancelUpdateTemplateRule")
+const cancel = (num = 1) => {
+  emit("cancelUpdateTemplateRule", num - 1)
 }
 
 const requestAlertContentParam = () => {
@@ -536,7 +532,6 @@ const preview = () => {
 
 onMounted(() => {
   requestNotifyWayData()
-  requestRuleItemList()
   requestRuleItemSrcList()
   requestAlertContentParam();
   if (props.templateRuleId || props.ruleId) {

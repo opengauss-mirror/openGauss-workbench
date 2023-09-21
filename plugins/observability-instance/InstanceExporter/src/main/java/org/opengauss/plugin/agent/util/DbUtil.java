@@ -28,6 +28,9 @@ public class DbUtil {
     private final DbConfig dbConfig;
 
     public final List<Map<String, Object>> query(String sql) {
+        if (dbConfig.getDbport() == null) {
+            return Collections.emptyList();
+        }
         if (conn == null) {
             synchronized (this) {
                 try {
@@ -40,6 +43,7 @@ public class DbUtil {
                 } catch (SQLException e) {
                     log.error("db connection fail", e);
                     conn = null;
+                    return Collections.emptyList();
                 }
             }
         }
@@ -61,8 +65,21 @@ public class DbUtil {
             }
             return list;
         } catch (SQLException e) {
+            if (!test(conn)) {
+                conn = null;
+                return query(sql);
+            }
             log.error("sql error, cause :{} sql:{}", e.getMessage(), sql);
             return Collections.emptyList();
+        }
+    }
+
+    private static boolean test(Connection connection) {
+        try {
+            connection.createStatement().execute("SELECT 1");
+            return true;
+        } catch (SQLException e) {
+            return false;
         }
     }
 }

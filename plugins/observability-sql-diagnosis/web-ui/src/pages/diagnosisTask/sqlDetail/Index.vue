@@ -99,7 +99,13 @@
         </template>
       </div>
     </div>
-    <DetailLarge v-if="showLarge && isOldOnes" :id="urlParam.dbId" :reportId="nodesType" @hideModel="hideLargeWindow" />
+    <DetailLarge
+      :no-suggest="requestType === 'NONE' || originalHiddenFlag"
+      v-if="showLarge && isOldOnes"
+      :id="urlParam.dbId"
+      :reportId="nodesType"
+      @hideModel="hideLargeWindow"
+    />
   </div>
 </template>
 
