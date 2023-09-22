@@ -6,7 +6,6 @@ package com.nctigba.alert.monitor.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.nctigba.alert.monitor.constant.CommonConstants;
-import com.nctigba.alert.monitor.dto.RuleItemPropertyDto;
 import com.nctigba.alert.monitor.entity.AlertRule;
 import com.nctigba.alert.monitor.entity.AlertRuleItemExpSrc;
 import com.nctigba.alert.monitor.entity.AlertRuleItemSrc;
@@ -80,15 +79,6 @@ public class AlertRuleControllerTest {
         AjaxResult result = alertRuleController.getRuleById(id);
         verify(alertRuleService, times(1)).getRuleById(anyLong());
         assertEquals(alertRule, result.get("data"));
-    }
-
-    @Test
-    public void testGetRuleItemProperties() {
-        List<RuleItemPropertyDto> list = new ArrayList<>();
-        when(alertRuleService.getRuleItemProperties()).thenReturn(list);
-        AjaxResult result = alertRuleController.getRuleItemProperties();
-        verify(alertRuleService, times(1)).getRuleItemProperties();
-        assertEquals(list, result.get("data"));
     }
 
     @Test

@@ -4,9 +4,16 @@
       <div class="icon"></div>
       <div class="title">{{ t('alertTemplate.title') }}</div>
       <div class="seperator"></div>
-      <div class="alert-title">{{ t('alertTemplate.title') }} </div>
-      <div class="alert-seperator">&nbsp;/&nbsp;</div>
-      <div class="alert-title">{{ title }} </div>
+      <el-breadcrumb separator="/" style="flex-grow: 1">
+        <el-breadcrumb-item>
+          <div @click="cancel">
+            <a>{{ t('alertTemplate.title') }}</a>
+          </div>
+        </el-breadcrumb-item>
+        <el-breadcrumb-item>
+          <div>{{ title }} </div>
+        </el-breadcrumb-item>
+      </el-breadcrumb>
     </div>
     <el-form :model="formData" :rules="formRules" ref="formRef" size="" label-position="left" style="margin-top: 8px;"
       label-width="120px">
@@ -309,13 +316,16 @@ const updateTemplateRuleSuccess = (templateRule: any) => {
   })
 }
 
-const cancelUpdateTemplateRule = () => {
+const cancelUpdateTemplateRule = (num = 0) => {
   showMain.value = true
   nextTick(() => {
     for (let row of selectedRuleRows.value) {
       ruleTable.value.toggleRowSelection(row, true)
     }
   })
+  if (num > 0) {
+    cancel()
+  }
 }
 
 onMounted(() => {

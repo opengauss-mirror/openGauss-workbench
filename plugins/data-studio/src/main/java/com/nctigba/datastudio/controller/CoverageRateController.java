@@ -7,7 +7,6 @@ package com.nctigba.datastudio.controller;
 import com.nctigba.datastudio.model.entity.CoverageRateDO;
 import com.nctigba.datastudio.model.query.CoverageRateRequest;
 import com.nctigba.datastudio.service.CoverageRateService;
-import io.swagger.annotations.Api;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -25,7 +24,6 @@ import java.util.List;
  *
  * @since 2023-06-25
  */
-@Api(tags = {"Schema manager interface"})
 @RestController
 @RequestMapping(value = "/dataStudio/web/v1")
 public class CoverageRateController {

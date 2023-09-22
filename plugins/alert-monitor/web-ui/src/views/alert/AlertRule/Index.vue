@@ -4,8 +4,11 @@
       <div class="icon"></div>
       <div class="title">{{ t('alertRule.title') }}</div>
       <div class="seperator"></div>
-      <div class="alert-title">{{ t('alertRule.title') }} </div>
-      <div class="alert-seperator">&nbsp;/</div>
+      <el-breadcrumb separator="/" style="flex-grow: 1">
+        <el-breadcrumb-item>
+          {{ t('alertRule.title') }}
+        </el-breadcrumb-item>
+      </el-breadcrumb>
     </div>
     <div class="search-form">
       <div class="filter">

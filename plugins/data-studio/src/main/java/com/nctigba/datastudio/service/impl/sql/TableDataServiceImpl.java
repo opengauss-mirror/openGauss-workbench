@@ -26,9 +26,9 @@ import com.nctigba.datastudio.util.DebugUtils;
 import com.nctigba.datastudio.util.LocaleString;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.poi.xssf.usermodel.XSSFRow;
-import org.apache.poi.xssf.usermodel.XSSFSheet;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.poi.xssf.streaming.SXSSFRow;
+import org.apache.poi.xssf.streaming.SXSSFSheet;
+import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -43,11 +43,17 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.nctigba.datastudio.constants.SqlConstants.COUNT_SQL;
+import static com.nctigba.datastudio.constants.SqlConstants.COURSE_SQL;
+import static com.nctigba.datastudio.constants.SqlConstants.FETCH_SQL;
+import static com.nctigba.datastudio.constants.SqlConstants.TABLE_DATA_LIMIT_SQL;
 import static com.nctigba.datastudio.dao.ConnectionMapDAO.conMap;
 import static java.lang.Math.ceil;
 
@@ -484,14 +490,16 @@ public class TableDataServiceImpl implements TableDataService {
     @Override
     public void exportData(TableDataQuery request, HttpServletResponse response) throws SQLException, IOException {
         log.info("TableDataServiceImpl exportData request: " + request);
+        String sql = tableObjectSQLService.get(conMap.get(request.getUuid()).getType()).exportTableData(
+                request.getSchema(), request.getTableName(), request.getPageNum(), request.getPageSize(),
+                request.getExpansion());
+
         try (
-                XSSFWorkbook xssfWorkbook = new XSSFWorkbook();
-                OutputStream outputStream = response.getOutputStream();
                 Connection connection = connectionConfig.connectDatabase(request.getUuid());
                 Statement statement = connection.createStatement();
-                ResultSet resultSet = statement.executeQuery(tableObjectSQLService.get(
-                        conMap.get(request.getUuid()).getType()).exportTableData(request.getSchema(),
-                        request.getTableName(), request.getPageNum(), request.getPageSize(), request.getExpansion()))
+                ResultSet resultSet = statement.executeQuery(String.format(TABLE_DATA_LIMIT_SQL,
+                        DebugUtils.needQuoteName(request.getSchema()),
+                        DebugUtils.needQuoteName(request.getTableName()), 1, 1))
         ) {
             ResultSetMetaData metaData = resultSet.getMetaData();
             List<String> columnList = new ArrayList<>();
@@ -506,26 +514,63 @@ public class TableDataServiceImpl implements TableDataService {
                 fileName = tableName + ".xls";
             }
 
-            int index = 0;
-            XSSFSheet sheet = xssfWorkbook.createSheet(tableName);
-            XSSFRow row = sheet.createRow(index);
-            for (int i = 0; i < columnList.size(); i++) {
-                row.createCell(i).setCellValue(columnList.get(i));
-            }
-            while (resultSet.next()) {
-                row = sheet.createRow(++index);
-                for (int i = 0; i < columnList.size(); i++) {
-                    row.createCell(i).setCellValue(resultSet.getString(columnList.get(i)));
-                }
-            }
-            log.info("TableDataServiceImpl exportData hssfSheet: " + sheet.getLastRowNum());
+            exportDataFile(request, columnList, sql, fileName, response);
+            log.info("TableDataServiceImpl exportData end: ");
+        }
+    }
 
+    private void exportDataFile(
+            TableDataQuery request, List<String> columnList, String sql, String fileName,
+            HttpServletResponse response) throws SQLException, IOException {
+        log.info("TableDataServiceImpl exportDataFile startTime: " + System.currentTimeMillis());
+
+        try (
+                Connection connection = connectionConfig.connectDatabase(request.getUuid());
+                Statement statement = connection.createStatement();
+                SXSSFWorkbook sxssfWorkbook = new SXSSFWorkbook();
+                OutputStream outputStream = response.getOutputStream();
+        ) {
             response.reset();
             response.setContentType("application/octet-stream");
             response.setHeader("Content-Disposition", URLEncoder.encode(fileName, StandardCharsets.UTF_8));
             response.addHeader("Response-Type", "blob");
-            xssfWorkbook.write(outputStream);
+
+            int count = 0;
+            String tableName = request.getTableName();
+            ResultSet countResult = statement.executeQuery(String.format(COUNT_SQL,
+                    DebugUtils.needQuoteName(request.getSchema()), DebugUtils.needQuoteName(tableName)));
+            while (countResult.next()) {
+                count = countResult.getInt("count");
+            }
+            log.info("TableDataServiceImpl exportDataFile count: " + count);
+
+            String timeStamp = new SimpleDateFormat("HHmmssSSS").format(new Date());
+            connection.setAutoCommit(false);
+            statement.execute(String.format(COURSE_SQL, "DS_" + timeStamp, sql));
+            log.info("TableDataServiceImpl exportDataFile timeStamp: " + "DS_" + timeStamp);
+
+            int index = 0;
+            SXSSFSheet sheet = sxssfWorkbook.createSheet(tableName);
+            SXSSFRow row = sheet.createRow(index);
+            for (int i = 0; i < columnList.size(); i++) {
+                row.createCell(i).setCellValue(columnList.get(i));
+            }
+
+            int size = count % 1000 == 0 ? count / 1000 : count / 1000 + 1;
+            log.info("TableDataServiceImpl exportDataFile size: " + size);
+            for (int s = 0; s < size; s++) {
+                ResultSet resultSet = statement.executeQuery(String.format(FETCH_SQL, 1000, "DS_" + timeStamp));
+                while (resultSet.next()) {
+                    row = sheet.createRow(++index);
+                    for (int i = 0; i < columnList.size(); i++) {
+                        row.createCell(i).setCellValue(resultSet.getString(columnList.get(i)));
+                    }
+                }
+            }
+
+            sxssfWorkbook.write(outputStream);
             outputStream.flush();
+            log.info("TableDataServiceImpl exportDataFile endTime: " + System.currentTimeMillis());
         }
     }
 }

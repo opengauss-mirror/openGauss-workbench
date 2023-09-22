@@ -6,7 +6,6 @@ package com.nctigba.datastudio.controller;
 
 import com.nctigba.datastudio.model.entity.SqlHistoryDO;
 import com.nctigba.datastudio.service.SqlHistoryManagerService;
-import io.swagger.annotations.Api;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -21,7 +20,6 @@ import java.util.List;
  *
  * @since 2023-7-17
  */
-@Api(tags = {"Schema manager interface"})
 @RestController
 @RequestMapping(value = "/dataStudio/web/v1")
 public class SqlHistoryManagerController {

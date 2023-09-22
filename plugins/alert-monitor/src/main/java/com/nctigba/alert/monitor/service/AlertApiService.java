@@ -28,6 +28,7 @@ import com.nctigba.alert.monitor.mapper.NotifyWayMapper;
 import com.nctigba.alert.monitor.model.api.AlertApiReq;
 import com.nctigba.alert.monitor.model.api.AlertLabels;
 import com.nctigba.alert.monitor.utils.AlertContentParamUtil;
+import com.nctigba.alert.monitor.utils.MessageSourceUtil;
 import com.nctigba.alert.monitor.utils.TextParser;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -89,7 +90,13 @@ public class AlertApiService {
             if (optional.isEmpty()) {
                 continue;
             }
-            notify(alertTemplateRule, optional.get(), notifyWays, contentParamDto);
+            AlertRecord alertRecord = optional.get();
+            boolean isNotifySuccess = notify(alertTemplateRule, alertRecord, notifyWays, contentParamDto);
+            if (isNotifySuccess) {
+                Integer sendCount = alertRecord.getSendCount() != null ? alertRecord.getSendCount() : 0;
+                alertRecord.setSendCount(sendCount + 1).setSendTime(alertRecord.getEndTime());
+                recordService.updateById(alertRecord);
+            }
         }
     }
 
@@ -133,11 +140,11 @@ public class AlertApiService {
         return Optional.of(alertRecord);
     }
 
-    private void notify(
+    private boolean notify(
         AlertTemplateRule alertTemplateRule, AlertRecord alertRecord,
         List<NotifyWay> notifyWays, AlertContentParamDto contentParamDto) {
         if (!shouldNotify(alertTemplateRule, alertRecord)) {
-            return;
+            return false;
         }
         for (NotifyWay notifyWay : notifyWays) {
             NotifyMessage notifyMessage = new NotifyMessage();
@@ -146,6 +153,11 @@ public class AlertApiService {
             String notifyType = notifyWay.getNotifyType();
             notifyMessage.setMessageType(notifyType);
             notifyMessage.setTitle(notifyTemplate.getNotifyTitle());
+            if (alertRecord.getAlertStatus().equals(CommonConstants.FIRING_STATUS)) {
+                contentParamDto.setAlertStatus(MessageSourceUtil.get("alerting"));
+            } else {
+                contentParamDto.setAlertStatus(MessageSourceUtil.get("alerted"));
+            }
             String content = new TextParser().parse(notifyTemplate.getNotifyContent(), contentParamDto);
             notifyMessage.setContent(content);
             notifyMessage.setEmail(notifyWay.getEmail());
@@ -173,9 +185,7 @@ public class AlertApiService {
             notifyMessage.setRecordId(alertRecord.getId());
             notifyMessageMapper.insert(notifyMessage);
         }
-        Integer sendCount = alertRecord.getSendCount() != null ? alertRecord.getSendCount() : 0;
-        alertRecord.setSendCount(sendCount + 1).setSendTime(LocalDateTime.now());
-        recordService.updateById(alertRecord);
+        return true;
     }
 
     private String getWebhookInfo(NotifyWay notifyWay) {
@@ -234,7 +244,8 @@ public class AlertApiService {
                 : nextRepeatUnit.equals(CommonConstants.MINUTE) ? sendTime.plusMinutes(nextRepeat)
                 : nextRepeatUnit.equals(CommonConstants.HOUR) ? sendTime.plusHours(nextRepeat)
                 : sendTime.plusHours(nextRepeat);
-            if (nextTime.isAfter(LocalDateTime.now())) {
+            LocalDateTime now = LocalDateTime.now().withNano(0);
+            if (nextTime.withNano(0).isAfter(now)) {
                 return false;
             }
         }

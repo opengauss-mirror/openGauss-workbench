@@ -67,7 +67,7 @@ public class AlertContentParamUtil {
         contentParamDto.setHostname(opsHost.getHostname()).setNodeName(nodeName).setPort(
             opsClusterEntity.getPort() != null ? opsClusterEntity.getPort().toString() : "").setHostIp(
             opsHost.getPublicIp()).setAlertTime(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(alertTime))
-            .setLevel(level);
+            .setLevel(MessageSourceUtil.get("alertRecord." + level));
         if (StrUtil.isNotBlank(ruleContent)) {
             contentParamDto.setContent(new TextParser().parse(ruleContent, contentParamDto));
         }

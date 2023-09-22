@@ -37,6 +37,7 @@ import com.nctigba.alert.monitor.service.AlertTemplateRuleItemService;
 import com.nctigba.alert.monitor.service.AlertTemplateRuleService;
 import com.nctigba.alert.monitor.service.AlertTemplateService;
 import com.nctigba.alert.monitor.utils.AlertContentParamUtil;
+import com.nctigba.alert.monitor.utils.MessageSourceUtil;
 import com.nctigba.alert.monitor.utils.SpringContextUtils;
 import com.nctigba.alert.monitor.utils.TextParser;
 import lombok.extern.slf4j.Slf4j;
@@ -241,6 +242,9 @@ public class AlertLogSchedulingRunnable implements Runnable {
             String notifyType = notifyWay.getNotifyType();
             notifyMessage.setMessageType(notifyType);
             notifyMessage.setTitle(notifyTemplate.getNotifyTitle());
+            if (StrUtil.isBlank(contentParamDto.getAlertStatus())) {
+                contentParamDto.setAlertStatus(MessageSourceUtil.get("alerted"));
+            }
             String content = new TextParser().parse(notifyTemplate.getNotifyContent(), contentParamDto);
             notifyMessage.setContent(content);
             if (notifyType.equals(CommonConstants.EMAIL)) {

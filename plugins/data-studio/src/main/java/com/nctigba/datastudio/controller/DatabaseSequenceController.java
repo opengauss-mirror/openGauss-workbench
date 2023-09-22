@@ -9,8 +9,6 @@ import com.nctigba.datastudio.model.dto.DatabaseCreateSequenceDTO;
 import com.nctigba.datastudio.model.dto.DatabaseDropSequenceDTO;
 import com.nctigba.datastudio.model.dto.DatabaseSequenceDdlDTO;
 import com.nctigba.datastudio.service.DatabaseSequenceService;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -26,7 +24,6 @@ import java.sql.SQLException;
  *
  * @since 2023-6-26
  */
-@Api(tags = {"Metadata query interface"})
 @RestController
 @RequestMapping(value = "/dataStudio/web/v1")
 public class DatabaseSequenceController {
@@ -40,7 +37,6 @@ public class DatabaseSequenceController {
      * @param request request
      * @return String
      */
-    @ApiOperation(value = "CREATE SEQUENCE DDL")
     @PostMapping(value = "/sequences/action", params = "action=createSequenceDdl", produces = MediaType.APPLICATION_JSON_VALUE)
     public String createSequenceDDL(@RequestBody DatabaseCreateSequenceDTO request) {
         return databaseSequenceService.createSequenceDDL(request);
@@ -52,7 +48,6 @@ public class DatabaseSequenceController {
      * @param request request
      * @throws SQLException SQLException
      */
-    @ApiOperation(value = "CREATE SEQUENCE")
     @PostMapping(value = "/sequences", produces = MediaType.APPLICATION_JSON_VALUE)
     public void createSequence(@RequestBody DatabaseCreateSequenceDTO request) throws SQLException {
         databaseSequenceService.createSequence(request);
@@ -64,7 +59,6 @@ public class DatabaseSequenceController {
      * @param request request
      * @throws SQLException SQLException
      */
-    @ApiOperation(value = "DROP SEQUENCE")
     @DeleteMapping(value = "/sequences", produces = MediaType.APPLICATION_JSON_VALUE)
     public void dropSequence(@RequestBody DatabaseDropSequenceDTO request) throws SQLException {
         databaseSequenceService.dropSequence(request);
@@ -77,7 +71,6 @@ public class DatabaseSequenceController {
      * @return String
      * @throws SQLException SQLException
      */
-    @ApiOperation(value = "RETURN SEQUENCE DDL")
     @PostMapping(value = "/sequenceDdls", produces = MediaType.APPLICATION_JSON_VALUE)
     public String returnSequenceDDL(@RequestBody DatabaseSequenceDdlDTO request) throws SQLException {
         return databaseSequenceService.returnSequenceDDL(request);

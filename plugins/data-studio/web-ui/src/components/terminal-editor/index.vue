@@ -355,9 +355,9 @@
           sqlData.readOnly = result?.singleStep || result?.stopDebug;
           changeRunningTagStatus(tagId, result?.singleStep);
         }
-        // use 'singleStep' button = not isDebugging
+        // Use the button status to determine if it is in isDebugging
         if (props.editorType == 'debug') {
-          debug.isDebugging = result.singleStep;
+          debug.isDebugging = result?.singleStep || result?.stopDebug;
         }
       }
       if (res.type == 'MESSAGE') {
@@ -610,6 +610,7 @@
         operation: 'anonymousStartDebug',
         ...commonWsParams.value,
         sql: editorRef.value.getValue(),
+        breakPoints: editorRef.value.getAllLineDecorations(),
         oid: '0',
       });
     } else {
@@ -617,6 +618,7 @@
         operation: 'startDebug',
         ...commonWsParams.value,
         sql: editorRef.value.getValue(),
+        breakPoints: editorRef.value.getAllLineDecorations(),
       });
     }
   };

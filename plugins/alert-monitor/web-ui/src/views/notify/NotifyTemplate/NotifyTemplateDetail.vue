@@ -6,11 +6,18 @@
       <div class="title" v-if="state === 'edit'">{{ t('notifyTemplate.editTitle') }}</div>
       <div class="title" v-if="state === 'detail'">{{ t('notifyTemplate.detailTitle') }}</div>
       <div class="seperator"></div>
-      <div class="alert-title">{{ t('notifyTemplate.title') }} </div>
-      <div class="alert-seperator">&nbsp;/&nbsp;</div>
-      <div class="alert-title" v-if="state === 'add'">{{ t('notifyTemplate.addTitle') }}</div>
-      <div class="alert-title" v-if="state === 'edit'">{{ t('notifyTemplate.editTitle') }}</div>
-      <div class="alert-title" v-if="state === 'detail'">{{ t('notifyTemplate.detailTitle') }}</div>
+      <el-breadcrumb separator="/" style="flex-grow: 1">
+        <el-breadcrumb-item>
+          <div @click="cancel">
+            <a>{{ t('notifyTemplate.title') }}</a>
+          </div>
+        </el-breadcrumb-item>
+        <el-breadcrumb-item>
+          <div v-if="state === 'add'">{{ t('notifyTemplate.addTitle') }} </div>
+          <div v-if="state === 'edit'">{{ t('notifyTemplate.editTitle') }} </div>
+          <div v-if="state === 'detail'">{{ t('notifyTemplate.detailTitle') }} </div>
+        </el-breadcrumb-item>
+      </el-breadcrumb>
     </div>
     <el-form style="margin-top: 8px;" :model="formData" size="default" :rules="formRules" ref="formRef"
       label-position="left" label-width="120px">

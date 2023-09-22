@@ -207,6 +207,8 @@ const cancelNotifyWay = () => {
   showMain.value = true
 }
 
+defineExpose({ cancelNotifyWay })
+
 onMounted(() => {
   requestData()
 })

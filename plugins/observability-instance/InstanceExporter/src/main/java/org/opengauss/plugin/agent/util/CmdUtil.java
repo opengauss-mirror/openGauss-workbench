@@ -30,10 +30,10 @@ public class CmdUtil {
     private static ClientSession session;
 
     /**
-     * init
+     * init something
      *
-     * @param user dbuser
-     * @param pass dbpass
+     * @param user user
+     * @param pass pass
      */
     public static void init(String user, String pass) {
         try {
@@ -57,6 +57,9 @@ public class CmdUtil {
 
     public static final void readFromCmd(String cmd, BiConsumer<Integer, String> consumer)
             throws FileNotFoundException, IOException {
+        if (session == null) {
+            return;
+        }
         log.debug("exec:" + cmd);
         var channel = session.createExecChannel(cmd);
         channel.setPtyType("ansi");

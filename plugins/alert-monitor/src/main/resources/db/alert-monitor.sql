@@ -710,7 +710,7 @@ INSERT INTO public.alert_rule (id,rule_name,level,rule_type,rule_exp_comb,rule_c
  VALUES (3,'磁盘使用量过高','serious','index','A','$'||'{nodeName}的磁盘（/dev/vda1）使用量超过15GB',2,'m',1,0,null,null,'firing,recover','1','磁盘使用量过高',0,'2023-06-05 15:45:20.02',null) ON DUPLICATE KEY UPDATE NOTHING;
 INSERT INTO public.alert_rule_item (id,rule_id,rule_mark,rule_exp_name,operate,limit_value,unit,rule_exp,rule_item_desc,is_deleted,create_time,update_time,action)
  VALUES (3,3,'A','diskUsage','>=',15360,'MB','(agent_filesystem_size_bytes{device=~"/dev/vda1",instance=~"$' ||
- '{instances}"} - agent_filesystem_free_bytes) /1024/1024','内存使用率大于等于90%',0,'2023-06-05 15:45:20.02',null,'normal') ON DUPLICATE KEY UPDATE NOTHING;
+ '{instances}"} - agent_filesystem_free_bytes) /1024/1024','磁盘使用量大于等于90%',0,'2023-06-05 15:45:20.02',null,'normal') ON DUPLICATE KEY UPDATE NOTHING;
 insert into public.alert_rule_item_param(id,item_id,param_name,param_value,param_order,is_deleted,create_time) values(1,3,'filesystemPath','/dev/vda1',1,0,'2023-06-05 15:45:20.02');
 
 INSERT INTO public.alert_rule (id,rule_name,level,rule_type,rule_exp_comb,rule_content,notify_duration,notify_duration_unit,is_repeat,is_silence,silence_start_time,silence_end_time,alert_notify,notify_way_ids,alert_desc,is_deleted,create_time,update_time)
@@ -728,38 +728,37 @@ VALUES (1,'通用告警模板',null,'告警信息','告警时间：$'||'{alertTi
 INSERT INTO public.notify_way (id,name,notify_type,phone,email,person_id,dept_id,notify_template_id,is_deleted,create_time,update_time)
 VALUES (1,'通用告警方式','email',null,'xxxx@xxx.com',null,null,1,0,'2023-05-24 11:25:38.073319',null) ON DUPLICATE KEY UPDATE NOTHING;
 
+update public.alert_rule_item set rule_exp = '(avg(sum(irate(agent_cpu_seconds_total{mode!="idle",instance=~"$' ||
+'{instances}"}[5m])) by (instance,cpu))by (instance)) * 100' where id = 1;
+update public.alert_rule_item set rule_exp = '100 * (1 - agent_memory_MemAvailable_bytes{instance=~"$'||'{instances}"} / agent_memory_MemTotal_bytes{instance=~"$'||'{instances}"})' where id = 2;
+update public.alert_rule set rule_name = '磁盘使用率过高', rule_content = '$'||'{nodeName}的磁盘（/dev/vda1）使用率大于等于90%',alert_desc
+= '磁盘使用率过高' where id = 3;
+update public.alert_rule_item set rule_exp = 'agent_filesystem_used_size_kbytes{device=~"/dev/vda1",instance=~"$' ||
+'{instances}"}/agent_filesystem_size_kbytes{device=~"/dev/vda1",instance=~"$' || '{instances}"} * 100', limit_value =
+'90',unit = '%',rule_item_desc = '磁盘使用量大于等于90%' where id = 3;
+delete from alert_rule where id = 4;
+delete from alert_rule_item where id = 4;
+delete from alert_rule where id = 5;
+delete from alert_rule_item where id = 5;
+
 insert into public.alert_rule_item_src(id,name,unit,params,create_time) values (1,'cpuUsage','%','',now()) ON DUPLICATE KEY UPDATE NOTHING;
 insert into public.alert_rule_item_exp_src(id,rule_item_src_id,action,operate,limit_value,exp,show_limit_value,
-create_time) values(1,1,'normal','',null,'(1 - sum(increase(agent_cpu_seconds_total{mode=~"idle",instance=~"$'||'{instances}"}[5m])) by (instance) / sum(increase(agent_cpu_seconds_total{instance=~"$' || '{instances}"}[5m])) by (instance)) * 100',
-1,now()) ON DUPLICATE KEY UPDATE NOTHING;
+create_time) values(1,1,'normal','',null,'(avg(sum(irate(agent_cpu_seconds_total{mode!="idle",instance=~"$' ||
+'{instances}"}[5m])) by (instance,cpu))by (instance)) * 100',1,now()) ON DUPLICATE KEY UPDATE NOTHING;
 
 insert into public.alert_rule_item_src(id,name,unit,params,create_time) values (2,'memoryUsage','%','',now()) ON DUPLICATE KEY UPDATE NOTHING;
 insert into public.alert_rule_item_exp_src(id,rule_item_src_id,action,operate,limit_value,exp,show_limit_value,
 create_time) values(4,2,'normal','',null,
-'100 * (1 - (agent_memory_MemFree_bytes + agent_memory_Cached_bytes + agent_memory_Buffers_bytes) / agent_memory_MemTotal_bytes{instance=~"$'||'{instances}"})',
+'100 * (1 - agent_memory_MemAvailable_bytes{instance=~"$'||'{instances}"} / agent_memory_MemTotal_bytes{instance=~"$'||'{instances}"})',
 1,now()) ON DUPLICATE KEY UPDATE NOTHING;
 
 insert into public.alert_rule_item_src(id,name,unit,params,params_explanation,create_time) values (3,'diskUsage',
-'MB','{"filesystemPath":""}','{"filesystemPath":{"tip": "filesystemPathTip","required": false}}',now()) ON DUPLICATE KEY
+'%','{"filesystemPath":""}','{"filesystemPath":{"tip": "filesystemPathTip","required": false}}',now()) ON DUPLICATE KEY
  UPDATE NOTHING;
 insert into public.alert_rule_item_exp_src(id,rule_item_src_id,action,operate,limit_value,exp,show_limit_value,
 create_time) values(7,3,'normal','',null,
-'(agent_filesystem_size_bytes{device=~"$' || '{filesystemPath}",instance=~"$' ||
-'{instances}"} - agent_filesystem_free_bytes)/1024/1024',
-1,now()) ON DUPLICATE KEY UPDATE NOTHING;
-
-insert into public.alert_rule_item_src(id,name,unit,params,create_time) values (4,'diskWriteRate',
-'MB/s','',now()) ON DUPLICATE KEY UPDATE NOTHING;
-insert into public.alert_rule_item_exp_src(id,rule_item_src_id,action,operate,limit_value,exp,show_limit_value,
-create_time) values(10,4,'normal','',null,
-'sum(rate(agent_disk_written_bytes_total{instance=~"$' || '{instances}"}[2m])) by (instance)/1024/1024',
-1,now()) ON DUPLICATE KEY UPDATE NOTHING;
-
-insert into public.alert_rule_item_src(id,name,unit,params,create_time) values (5,'diskReadRate',
-'MB/s','',now()) ON DUPLICATE KEY UPDATE NOTHING;
-insert into public.alert_rule_item_exp_src(id,rule_item_src_id,action,operate,limit_value,exp,show_limit_value,
-create_time) values(13,5,'normal','',null,
-'sum(rate(agent_disk_read_bytes_total{instance=~"$'||'{instances}"}[2m])) by (instance)/1024/1024',
+'agent_filesystem_used_size_kbytes{device=~"$' || '{filesystemPath}",instance=~"$' ||
+'{instances}"}/agent_filesystem_size_kbytes{device=~"$' || '{filesystemPath}",instance=~"$' || '{instances}"} * 100',
 1,now()) ON DUPLICATE KEY UPDATE NOTHING;
 
 insert into public.alert_rule_item_src(id,name,unit,params,create_time) values (6,'networkReceiveRate',
@@ -898,11 +897,13 @@ INSERT INTO public.alert_rule (id,rule_name,level,rule_type,rule_exp_comb,rule_c
  '网络输入速率监控',0,'2023-08-07 15:45:20.02',null) ON DUPLICATE KEY UPDATE NOTHING;
 INSERT INTO public.alert_rule_item (id,rule_id,rule_mark,rule_exp_name,operate,limit_value,unit,rule_exp,rule_item_desc,is_deleted,create_time,update_time,action)
  VALUES (14,14,'A','networkReceiveRate','>=',100,'MB/s','max(rate(agent_network_receive_bytes_total{instance=~"$' ||
- '{instances}"}[2m])) by (instance) /1024/1024','网络输入速率大于等于100MB/s',0,'2023-06-05 15:45:20.02',null,'normal') ON DUPLICATE KEY UPDATE NOTHING;
+ '{instances}"}[2m])) by (instance) /8/1024/1024','网络输入速率大于等于100MB/s',0,'2023-06-05 15:45:20.02',null,'normal') ON
+ DUPLICATE KEY UPDATE NOTHING;
 
 INSERT INTO public.alert_rule (id,rule_name,level,rule_type,rule_exp_comb,rule_content,notify_duration,notify_duration_unit,is_repeat,is_silence,silence_start_time,silence_end_time,alert_notify,notify_way_ids,alert_desc,is_deleted,create_time,update_time)
  VALUES (15,'网络输出速率监控','warn','index','A','$'||'{nodeName}的网络输出速率大于等于100MB/s',1,'m',1,0,null,null,'firing','1',
  '网络输出速率监控',0,'2023-06-05 15:45:20.02',null) ON DUPLICATE KEY UPDATE NOTHING;
 INSERT INTO public.alert_rule_item (id,rule_id,rule_mark,rule_exp_name,operate,limit_value,unit,rule_exp,rule_item_desc,is_deleted,create_time,update_time,action)
- VALUES (15,15,'A','diskReadRate','>=',100,'MB/s',
- 'max(rate(agent_network_transmit_bytes_total{instance=~"$'||'{instances}"}[2m])) by (instance) /1024/1024','网络输出速率大于等于100MB/s',0,'2023-06-05 15:45:20.02',null,'normal') ON DUPLICATE KEY UPDATE NOTHING;
+ VALUES (15,15,'A','networkTransmitRate','>=',100,'MB/s',
+ 'max(rate(agent_network_transmit_bytes_total{instance=~"$'||'{instances}"}[2m])) by (instance) /8/1024/1024',
+ '网络输出速率大于等于100MB/s',0,'2023-06-05 15:45:20.02',null,'normal') ON DUPLICATE KEY UPDATE NOTHING;

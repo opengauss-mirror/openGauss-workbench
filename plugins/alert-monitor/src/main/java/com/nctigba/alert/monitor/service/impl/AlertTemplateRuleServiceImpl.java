@@ -127,6 +127,7 @@ public class AlertTemplateRuleServiceImpl extends ServiceImpl<AlertTemplateRuleM
      * @param templateRuleId Long
      */
     @Override
+    @Transactional
     public void disableTemplateRule(Long templateRuleId) {
         AlertTemplateRule alertTemplateRule = this.baseMapper.selectById(templateRuleId);
         alertTemplateRule.setEnable(CommonConstants.DISABLE).setUpdateTime(LocalDateTime.now());

@@ -57,11 +57,6 @@ public class AlertRuleController extends BaseController {
         return AjaxResult.success(alertRuleService.getRuleById(ruleId));
     }
 
-    @GetMapping("/ruleItem/properties")
-    public AjaxResult getRuleItemProperties() {
-        return AjaxResult.success(alertRuleService.getRuleItemProperties());
-    }
-
     /**
      * getRuleItemSrcList, for select
      *

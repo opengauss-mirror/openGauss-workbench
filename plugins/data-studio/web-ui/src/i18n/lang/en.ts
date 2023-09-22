@@ -194,6 +194,8 @@ export default {
     resourcePool: 'resource pool',
     privileges: 'privileges',
     owner: 'owner',
+    roleGroup: 'role group',
+    adminsGroup: 'administrators',
     create: {
       tabs: ['General', 'Member Properties', 'DDL Preview'],
     },
@@ -478,6 +480,7 @@ export default {
       delimiter: 'Delimiter',
       comma: 'Comma',
       tab: 'Tab',
+      fourSpaces: '4 Spaces',
       pipe: 'Pipe',
       semicolon: 'Semicolon',
       other: 'Other',

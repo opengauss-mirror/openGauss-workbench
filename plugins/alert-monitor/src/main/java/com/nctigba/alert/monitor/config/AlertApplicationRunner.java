@@ -28,7 +28,7 @@ public class AlertApplicationRunner implements ApplicationRunner {
         try {
             prometheusService.initPrometheusConfig();
         } catch (ServiceException e) {
-            log.error("init prometheus configuration fail: ", e);
+            log.warn("init prometheus configuration fail: ", e.getMessage());
         }
     }
 }

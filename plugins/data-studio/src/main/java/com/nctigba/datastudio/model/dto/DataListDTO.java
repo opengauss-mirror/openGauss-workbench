@@ -4,8 +4,6 @@
 
 package com.nctigba.datastudio.model.dto;
 
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.Generated;
 import lombok.NoArgsConstructor;
@@ -21,24 +19,17 @@ import java.util.Map;
 @NoArgsConstructor
 @Data
 @Generated
-@ApiModel("Database list content")
 public class DataListDTO {
-    @ApiModelProperty("schema_name")
     private String schema_name;
 
-    @ApiModelProperty("table")
     private List<Map<String, String>> table;
 
-    @ApiModelProperty("view")
     private List<Map<String, String>> view;
 
-    @ApiModelProperty("FUNCTION/PROCEDURE")
     private List<Map<String, Object>> fun_pro;
 
-    @ApiModelProperty("synonym")
     private List<Map<String, String>> synonym;
 
-    @ApiModelProperty("sequence")
     private List<Map<String, String>> sequence;
 
 }

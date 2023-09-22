@@ -54,7 +54,7 @@ public class FuncProcedureImpl implements OperationInterface {
         String windowName = paramReq.getWindowName();
         OperateStatusDO operateStatus = webSocketServer.getOperateStatus(windowName);
         if (paramReq.isInPackage()) {
-            operateStatus.enableStartAnonymous();
+            operateStatus.enableStartDebugPackage();
         } else {
             operateStatus.enableStartDebug();
         }
