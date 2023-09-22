@@ -103,12 +103,23 @@ public class TestHisDiagnosisServiceImpl {
 
     @Test
     public void testGetTopologyMap() {
-        boolean isAll = true;
-        String diagnosisType = "sql";
         HisDiagnosisResult result = mock(HisDiagnosisResult.class);
         List<HisDiagnosisResult> resultList = new ArrayList<>();
         resultList.add(result);
         when(resultMapper.selectList(any())).thenReturn(resultList);
+        HisDiagnosisTask task = new HisDiagnosisTask();
+        task.setDiagnosisType(DiagnosisTypeCommon.SQL);
+        String topologyMap = "-SqlTaskInfo ROOT"
+                + System.getProperty("line.separator")
+                + "--ParamTuning CENTER"
+                + System.getProperty("line.separator")
+                + "---OsParam CENTER"
+                + System.getProperty("line.separator")
+                + "---DatabaseParam CENTER";
+        task.setTopologyMap(topologyMap);
+        when(taskMapper.selectById(taskId)).thenReturn(task);
+        boolean isAll = true;
+        String diagnosisType = "sql";
         HisTreeNode treeNode = hisDiagnosisService.getTopologyMap(1, isAll, diagnosisType);
         assertNotNull(treeNode);
     }
@@ -126,7 +137,6 @@ public class TestHisDiagnosisServiceImpl {
 
     @Test
     public void testGetNodeDetail() {
-        String diagnosisType = "sql";
         HisDiagnosisTask task = new HisDiagnosisTask();
         List<LinkedHashMap<String, String>> thresholds = new ArrayList<>();
         LinkedHashMap<String, String> linkedHashMap = new LinkedHashMap<>();
@@ -137,6 +147,7 @@ public class TestHisDiagnosisServiceImpl {
         when(resultMapper.selectOne(any())).thenReturn(mock(HisDiagnosisResult.class));
         List<HisDiagnosisThreshold> thresholdList = new ArrayList<>();
         when(hisThresholdMapper.selectList(any())).thenReturn(thresholdList);
+        String diagnosisType = "sql";
         Object branch1 = hisDiagnosisService.getNodeDetail(taskId, pointName, diagnosisType);
         assertNull(branch1);
         HisDiagnosisResult result = new HisDiagnosisResult();

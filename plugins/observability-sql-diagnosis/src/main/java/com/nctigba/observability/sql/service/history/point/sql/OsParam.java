@@ -186,7 +186,7 @@ public class OsParam implements HisDiagnosisPointService<Object> {
     private static synchronized Connection connectSqlite() {
         Connection conn;
         try {
-            conn = DriverManager.getConnection(JDBC.PREFIX + "data/paramDiagnosisInfo.db");
+            conn = DriverManager.getConnection(JDBC.PREFIX + "data/" + CommonConstants.PARAM_DATABASE_NAME + ".db");
         } catch (SQLException e) {
             throw new HisDiagnosisException("error:", e);
         }

@@ -16,7 +16,7 @@ import java.sql.SQLException;
 @Component
 @Slf4j
 public class ParamInfoInitConfig {
-    @Value("${sqlitePath:data/paramDiagnosisInfo.db}")
+    @Value("${sqlitePath:data/" + CommonConstants.PARAM_DATABASE_NAME + ".db}")
     private String path;
     @Value("${sqliteinit:false}")
     private boolean refresh;
@@ -43,24 +43,12 @@ public class ParamInfoInitConfig {
                     + "\"0\",\"布尔值\",\"打开快速 TIME-WAIT sockets 回收。除非得到技术专家的建议或要求﹐请不要随意修改这个值。"
                     + "(做NAT的时候，建议打开它)\",\"actualValue==1\");",
             CommonConstants.INSERT_INTO_PARAM_INFO +
-                    " values(\"DB\",\"max_process_memory\",\"设置一个数据库节点可用的最大物理内存\",\"2*1024*1024～INT_MAX\","
+                    " values(\"DB\",\"max_process_memory\",\"设置一个数据库节点可用的最大物理内存\",\"5578424\","
                     + "\"12582912\",\"字节\",\"数据库节点上该数值需要根据系统物理内存及单节点部署主数据库节点个数决定。"
                     + "建议计算公式如下：(物理内存大小 - vm.min_free_kbytes) \\* 0.7 / (1 + 主节点个数)。"
                     + "该系数的目的是尽可能保证系统的可靠性，不会因数据库内存膨胀导致节点OOM。这个公式中提到vm.min_free_kbytes，"
                     + "其含义是预留操作系统内存供内核使用，通常用作操作系统内核中通信收发内存分配，至少为5%内存。"
-                    + "即，max_process_memory = 物理内存 * 0.665 / (1 + 主节点个数)\",\"actualValue>=2*1024*1024\");",
-            CommonConstants.INSERT_INTO_PARAM_INFO
-                    + " values(\"DB\",\"work_mem\",\"判断执行作业可下盘算子是否已使用内存量触发下盘点\",\"\",\"\",\"数目\","
-                    + "\"参数设置通常是一个权衡，即要保证并发的吞吐量，又要保证单查询作业的性能，故需要根据实际执行情况（结合Explain "
-                    + "Performance输出）进行调优\",\"\");",
-            CommonConstants.INSERT_INTO_PARAM_INFO
-                    + " values(\"DB\",\"pagewriter_sleep\",\"设置用于增量检查点打开后，pagewrite线程每隔pagewriter_sleep的"
-                    + "时间刷一批脏页下盘。当脏页占据shared_buffers的比例达到dirty_page_percent_max时，每批页面数量以设"
-                    + "定的max_io_capacity计算出的值刷页，其余情况每批页面数量按比例相对减少\",\"0～3600000\",\"2000\",\"ms\","
-                    + "\"\",\"actualValue>0 && actualValue<3600000\");",
-            CommonConstants.INSERT_INTO_PARAM_INFO
-                    + " values(\"OS\",\"net.ipv4.ip_local_port_range\",\"物理机可用临时端口范围\",\"26000-65535\","
-                    + "\"32768-61000\",\"数目\",\"表示用于向外连接的端口范围，默认比较小，这个范围同样会间接用于NAT表规模\",\"\");",
+                    + "即，max_process_memory = 物理内存 * 0.665 / (1 + 主节点个数)\",\"actualValue==5578424\");",
             CommonConstants.INSERT_INTO_PARAM_INFO
                     + " values(\"OS\",\"net.ipv4.tcp_keepalive_time\",\"表示当keepalive启用的时候，"
                     + "TCP发送keepalive消息的频度\",\"30\",\"7200\",\"秒\",\"TCP发送keepalive探测消息的间隔时间（秒），"
@@ -125,12 +113,6 @@ public class ParamInfoInitConfig {
                     + " values(\"OS\",\"net.core.rmem_default\",\"socket接收端缓冲区大小的默认值\",\"21299200\",\"129024\","
                     + "\"字节\",\"默认的接收窗口大小\",\"actualValue==21299200\");",
             CommonConstants.INSERT_INTO_PARAM_INFO
-                    + " values(\"OS\",\"kernel.sem\",\"内核信号量参数设置大小\",\"250 6400000 1000 25600\","
-                    + "\"250 32000 32 128\",\"字节\",\"\",\"actualValue==2506400000100025600\");",
-            CommonConstants.INSERT_INTO_PARAM_INFO
-                    + " values(\"OS\",\"vm.min_free_kbytes\",\"保证物理内存有足够空闲空间，防止突发性换页\",\"系统总内存的5%\","
-                    + "\"724\",\"字节\",\"\",\"\");",
-            CommonConstants.INSERT_INTO_PARAM_INFO
                     + " values(\"OS\",\"net.core.somaxconn\",\"定义了系统中每一个端口最大的监听队列的长度\",\"65535\",\"128\","
                     + "\"个数\",\"用来限制监听(LISTEN)队列最大数据包的数量，超过这个数量就会导致链接超时或者触发重传机制。"
                     + "web应用中listen函数的backlog默认会给我们内核参数的net.core.somaxconn限制到128，"
@@ -140,9 +122,6 @@ public class ParamInfoInitConfig {
                     + " values(\"OS\",\"net.ipv4.tcp_syncookies\",\"当出现SYN等待队列溢出时，启用cookies来处理，"
                     + "可防范少量SYN攻击\",\"1\",\"0\",\"布尔值\",\"只有在内核编译时选择了CONFIG_SYNCOOKIES时才会发生作用。"
                     + "当出现syn等候队列出现溢出时象对方发送syncookies。目的是为了防止syn flood攻击\",\"actualValue==1\");",
-            CommonConstants.INSERT_INTO_PARAM_INFO
-                    + " values(\"OS\",\"net.core.netdev_max_backlog\",\"在每个网络接口接收数据包的速率比内核处理这些包的速率快时，"
-                    + "允许送到队列的数据包的最大数目\",\"65535\",\"1000\",\"个数\",\"\",\"actualValue==65535\");",
             CommonConstants.INSERT_INTO_PARAM_INFO
                     + " values(\"OS\",\"net.ipv4.tcp_max_syn_backlog\",\"记录的那些尚未收到客户端确认信息的连接请求的最大值\","
                     + "\"65535\",\"1024\",\"个数\",\"对于那些依然还未获得客户端确认的连接请求﹐需要保存在队列中最大数目。"
@@ -159,12 +138,6 @@ public class ParamInfoInitConfig {
                     + "\"对于本端断开的socket连接，TCP保持在FIN-WAIT-2状态的时间。对方可能会断开连接或一直不结束连接"
                     + "或不可预料的进程死亡\",\"actualValue==60\");",
             CommonConstants.INSERT_INTO_PARAM_INFO
-                    + " values(\"OS\",\"kernel.shmall\",\"内核可用的共享内存总量\",\"1152921504606840000\",\"2097152\","
-                    + "\"字节\",\"\",\"actualValue==1152921504606840000\");",
-            CommonConstants.INSERT_INTO_PARAM_INFO
-                    + " values(\"OS\",\"kernel.shmmax\",\"内核参数定义单个共享内存段的最大值\",\"18446744073709500000\","
-                    + "\"33554432\",\"字节\",\"\",\"actualValue==18446744073709500000\");",
-            CommonConstants.INSERT_INTO_PARAM_INFO
                     + " values(\"OS\",\"net.ipv4.tcp_sack\",\"启用有选择的应答，通过有选择地应答乱序接受到的报文来提高性能，"
                     + "让发送者只发送丢失的报文段（对于广域网来说）这个选项应该启用，但是会增加对CPU的占用\",\"1\",\"1\",\"布尔值\","
                     + "\"使用 Selective ACK﹐它可以用来查找特定的遗失的数据报--- 因此有助于快速恢复状态。该文件表示是否启用有选择的应答"
@@ -179,77 +152,12 @@ public class ParamInfoInitConfig {
                     + "(该文件表示是否启用以一种比超时重发更精确的方法（RFC 1323）来启用对 RTT 的计算；"
                     + "为了实现更好的性能应该启用这个选项。)\",\"actualValue==1\");",
             CommonConstants.INSERT_INTO_PARAM_INFO
-                    + " values(\"OS\",\"vm.extfrag_threshold\",\"系统内存不够用时，linux会为当前系统内存碎片情况打分，"
-                    + "如果超过vm.extfrag_threshold的值，kswapd就会触发memory compaction。所以这个值设置的接近1000，"
-                    + "说明系统在内存碎片的处理倾向于把旧的页换出，以符合申请的需要，而设置接近0，表示系统在内存碎片的处理倾向做memory"
-                    + " compaction\",\"500\",\"500\",\"分值\",\"\",\"actualValue>=500\");",
-            CommonConstants.INSERT_INTO_PARAM_INFO
                     + " values(\"OS\",\"vm.overcommit_ratio\",\"系统使用绝不过量使用内存的算法时，"
                     + "系统整个内存地址空间不得超过swap+RAM值的此参数百分比，当vm.overcommit_memory=2时此参数生效\",\"90\","
                     + "\"50\",\"%\",\"这个参数值只有在vm.overcommit_memory=2的情况下，这个参数才会生效\",\"actualValue>50\");",
             CommonConstants.INSERT_INTO_PARAM_INFO
                     + " values(\"OS\",\"MTU\",\"节点网卡最大传输单元。OS默认值为1500，调整为8192可以提升SCTP协议数据收发的性能\","
-                    + "\"8192\",\"1500\",\"字节\",\"\",\"actualValue==8129\");",
-            CommonConstants.INSERT_INTO_PARAM_INFO
-                    + " values(\"DB\",\"bgwriter_delay\",\"设置后端写进程写“脏”共享缓冲区之间的时间间隔\",\"10~10000\",\"2\","
-                    + "\"毫秒\",\"在数据写压力比较大的场景中可以尝试减小该值以降低checkpoint的压力\","
-                    + "\"actualValue>=10 && actualValue<=10000\");",
-            CommonConstants.INSERT_INTO_PARAM_INFO
-                    + " values(\"DB\",\"pagewriter_thread_num\",\"设置后端写进程数量\",\"\",\"\",\"个数\",\"\",\"\");",
-            CommonConstants.INSERT_INTO_PARAM_INFO
-                    + " values(\"DB\",\"max_io_capacity\",\"设置后端写进程批量刷页每秒的IO上限，"
-                    + "需要根据具体业务场景和机器磁盘IO能力进行设置\",\"30720~10485760\",\"512000\",\"KB\",\"\","
-                    + "\"actualValue>=30720 && actualValue<=10485760\");",
-            CommonConstants.INSERT_INTO_PARAM_INFO
-                    + " values(\"DB\",\"log_min_duration_statement\",\"当某条语句的持续时间大于或者等于特定的毫秒数时，"
-                    + "log_min_duration_statement参数用于控制记录每条完成语句的持续时间\",\"-1 ~ INT_MAX\",\"1800000\","
-                    + "\"毫秒\",\"设置为250，所有运行时间不短于250ms的SQL语句都会被记录。"
-                    + "设置为0，输出所有语句的持续时间。"
-                    + "设置为-1，关闭此功能\",\"actualValue>=-1\");",
-            CommonConstants.INSERT_INTO_PARAM_INFO
-                    + " values(\"DB\",\"log_duration\",\"控制记录每个已完成SQL语句的执行时间。对使用扩展查询协议的客户端、"
-                    + "会记录语法分析、绑定和执行每一步所花费的时间\",\"off\",\"on\",\"布尔值\",\"设置为off，"
-                    + "该选项与log_min_duration_statement的不同之处在于log_min_duration_statement强制记录查询文本。"
-                    + "设置为on并且log_min_duration_statement大于零，记录所有持续时间，但是仅记录超过阈值的语句。"
-                    + "这可用于在高负载情况下搜集统计信息\",\"actualValue=='off'\");",
-            CommonConstants.INSERT_INTO_PARAM_INFO
-                    + " values(\"DB\",\"track_stmt_stat_level\",\"控制语句执行跟踪的级别,参数第一部分为非OFF情况下，"
-                    + "会记录所有SQL，第一部分为OFF，第二部分为非OFF情况下，仅记录慢SQL\",\"OFF,L0\",\"OFF,L0\",\"字符型\",\"\","
-                    + "\"actualValue=='OFF,L0'\");",
-            CommonConstants.INSERT_INTO_PARAM_INFO
-                    + " values(\"DB\",\"track_stmt_retention_time\",\"组合参数，控制全量/慢SQL记录的保留时间。"
-                    + "以60秒为周期读取该参数，并执行清理超过保留时间的记录，仅sysadmin用户可以访问\",\"3600,604800\","
-                    + "\"3600,604800\",\"字符型\",\"\",\"actualValue=='3600,604800'\");",
-            CommonConstants.INSERT_INTO_PARAM_INFO
-                    + " values(\"DB\",\"enable_thread_pool\",\"控制是否使用线程池功能\",\"off\",\"off\",\"布尔值\","
-                    + "\"on表示开启线程池功能。"
-                    + "off表示不开启线程池功能\",\"actualValue=='off'\");",
-            CommonConstants.INSERT_INTO_PARAM_INFO
-                    + " values(\"DB\",\"thread_pool_attr\",\"用于控制线程池功能的详细属性，"
-                    + "该参数仅在enable_thread_pool打开后生效。\",\"16, 2, (nobind)\",\"16, 2, (nobind)\","
-                    + "\"字符型\",\"\",\"actualValue='16, 2, (nobind)'\");",
-            CommonConstants.INSERT_INTO_PARAM_INFO
-                    + " values(\"DB\",\"log_statement\",\"控制记录SQL语句。对于使用扩展查询协议的客户端，"
-                    + "记录接收到执行消息的事件和绑定参数的值\",\"none\",\"none\",\"枚举型\",\"none表示不记录语句。"
-                    + "ddl表示记录所有的数据定义语句，比如CREATE、ALTER和DROP语句。"
-                    + "mod表示记录所有DDL语句，还包括数据修改语句INSERT、UPDATE、DELETE、TRUNCATE和COPY FROM 。"
-                    + "all表示记录所有语句，PREPARE、EXECUTE和EXPLAIN ANALYZE语句也同样被记录\",\"actualValue=='none'\");",
-            CommonConstants.INSERT_INTO_PARAM_INFO
-                    + " values(\"DB\",\"log_error_verbosity\",\"控制服务器日志中每条记录的消息写入的详细度\",\"default\","
-                    + "\"default\",\"枚举型\",\"terse代表输出不包括DETAIL、HINT、QUERY及CONTEXT错误信息的记录。"
-                    + "verbose代表输出包括SQLSTATE错误代码、源代码文件名、函数名及产生错误所在的行号。"
-                    + "default代表输出包括DETAIL、HINT、QUERY及CONTEXT错误信息的记录，不包括SQLSTATE错误代码 、源代码文件名、"
-                    + "函数名及产生错误所在的行号\",\"actualValue=='default'\");",
-            CommonConstants.INSERT_INTO_PARAM_INFO
-                    + " values(\"DB\",\"log_min_messages\",\"控制写到服务器日志文件中的消息级别。"
-                    + "每个级别都包含排在它后面的所有级别中的信息。级别越低，服务器运行日志中记录的消息就越少\","
-                    + "\"warning\",\"warning\",\"枚举型\","
-                    + "\"有效值有debug、debug5、debug4、debug3、debug2、debug1、info、"
-                    + "log、notice、warning、error、fatal、panic。\",\"actualValue=='warning'\");",
-            CommonConstants.INSERT_INTO_PARAM_INFO
-                    + " values(\"DB\",\"log_min_error_statement\",\"控制在服务器日志中记录错误的SQL语句。\",\"error\","
-                    + "\"error\",\"枚举型\",\"有效值有debug、debug5、debug4、debug3、debug2、debug1、info、log、"
-                    + "notice、warning、error、fatal、panic。\",\"actualValue=='error'\");"};
+                    + "\"8192\",\"1500\",\"字节\",\"\",\"actualValue==8129\");"};
 
     @PostConstruct
     public void init() throws IOException {
@@ -289,5 +197,4 @@ public class ParamInfoInitConfig {
             }
         }
     }
-
 }

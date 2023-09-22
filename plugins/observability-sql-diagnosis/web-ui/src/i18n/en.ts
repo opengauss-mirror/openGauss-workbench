@@ -378,6 +378,18 @@ export default {
     isHasData: 'No Data',
     failGetExecutionPlan: 'Failed to get the execution plan',
     failResolveExecutionPlan: 'The execution plan could not be resolved',
+    blockSession: {
+      waitLockMode: 'Wait Lock Mode',
+      tableName: 'Table Name',
+      userName: 'username',
+      clientIP: 'Client IP',
+      applicationName: 'App Name',
+      waitStatus: 'Wait Stauts',
+      sessionId: 'Session ID',
+      blockSessionID: 'Block Session ID',
+      startTime: 'Start Time',
+      endTime: 'End Time'
+    }
   },
   datasource: {
     paramAnalysis: 'Parameter diagnosis',

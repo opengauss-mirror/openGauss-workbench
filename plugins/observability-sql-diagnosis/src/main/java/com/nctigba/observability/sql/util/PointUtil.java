@@ -140,7 +140,7 @@ public class PointUtil {
      */
     public int getCpuCoreNum(List<?> list) {
         int coreNum = 8;
-        if (!CollectionUtils.isEmpty(list)) {
+        if (CollectionUtils.isEmpty(list)) {
             return coreNum;
         }
         List<Object> objects = new ArrayList<>();

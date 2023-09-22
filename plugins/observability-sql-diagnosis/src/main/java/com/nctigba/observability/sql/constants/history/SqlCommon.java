@@ -121,15 +121,17 @@ public class SqlCommon {
     /**
      * block session sql statement
      */
-    public static final String BLOCK_SESSION = "SELECT CURRENT_TIMESTAMP,w.query as waiting_query,"
+    public static final String BLOCK_SESSION = "SELECT CURRENT_TIMESTAMP,w.sessionid w_sessionid,"
             + "w.pid as w_pid,"
-            + "w.usename as w_user,"
-            + "l.query as locking_query,"
+            + "l.sessionid l_sessionid,"
             + "l.pid as l_pid,"
             + "l.usename as l_user,"
-            + "t.schemaname || '.' || t.relname as tablename"
+            + "l.query as locking_query,"
+            + "t.schemaname || '.' || t.relname as tablename,"
+            + "l.application_name,l.client_addr,l.state,l2.mode"
             + " from pg_stat_activity w join pg_locks l1 on w.pid = l1.pid"
             + " and not l1.granted join pg_locks l2 on l1.relation = l2.relation"
+            + " and l1.locktype = l2.locktype and l1.page = l2.page and l1.tuple = l2.tuple"
             + " and l2.granted join pg_stat_activity l on l2.pid = l.pid join "
             + "pg_stat_user_tables t on l1.relation = t.relid"
             + " where w.waiting;";

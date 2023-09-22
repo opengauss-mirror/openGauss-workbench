@@ -24,6 +24,11 @@
       :taskId="props.taskId"
       :large="large"
     />
+    <BlockSession
+      v-else-if="props.nodesType == 'BlockSession' && props.taskId"
+      :nodesType="'BlockSession'"
+      :taskId="props.taskId"
+    />
 
     <OldSQLDiagnosis v-else :nodesType="props.nodesType" :taskId="props.taskId" />
   </div>
@@ -36,6 +41,7 @@ import OldSQLDiagnosis from '@/pages/diagnosisTask/sqlDetail/pointInfos/OldSQLDi
 import IndexAdvisor from '@/pages/diagnosisTask/sqlDetail/pointInfos/Plan/IndexAdvisor/Index.vue'
 import SmpParallelQuery from '@/pages/diagnosisTask/sqlDetail/pointInfos/Plan/SmpParallelQuery/Index.vue'
 import ExecPlan from '@/pages/diagnosisTask/sqlDetail/pointInfos/Plan/ExecPlan/Index.vue'
+import BlockSession from '@/pages/diagnosisTask/sqlDetail/pointInfos/Plan/BlockSession/Index.vue'
 
 const props = withDefaults(
   defineProps<{

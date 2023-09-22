@@ -10,13 +10,16 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.nctigba.common.web.exception.HisDiagnosisException;
 import com.nctigba.observability.sql.constants.CollectionTypeCommon;
+import com.nctigba.observability.sql.constants.CommonConstants;
 import com.nctigba.observability.sql.constants.history.DiagnosisTypeCommon;
 import com.nctigba.observability.sql.constants.history.OptionCommon;
 import com.nctigba.observability.sql.constants.history.PointTypeCommon;
 import com.nctigba.observability.sql.constants.history.SqlCommon;
+import com.nctigba.observability.sql.mapper.NctigbaEnvMapper;
 import com.nctigba.observability.sql.mapper.history.HisDiagnosisResultMapper;
 import com.nctigba.observability.sql.mapper.history.HisDiagnosisTaskMapper;
 import com.nctigba.observability.sql.mapper.history.HisThresholdMapper;
+import com.nctigba.observability.sql.model.NctigbaEnv;
 import com.nctigba.observability.sql.model.history.DataStoreConfig;
 import com.nctigba.observability.sql.model.history.HisDiagnosisResult;
 import com.nctigba.observability.sql.model.history.HisDiagnosisTask;
@@ -78,6 +81,8 @@ public class TaskServiceImpl implements TaskService {
     @Autowired
     private HisDiagnosisTaskMapper taskMapper;
     @Autowired
+    private SqlValidator sqlValidator;
+    @Autowired
     private List<HisDiagnosisPointService<?>> pointServiceList;
     @Autowired
     private DataStoreService dataStoreService;
@@ -92,6 +97,8 @@ public class TaskServiceImpl implements TaskService {
     private SqlExecutor sqlExecutor;
     @Autowired
     private List<EbpfCollectionItem> ebpfItemList;
+    @Autowired
+    private NctigbaEnvMapper envMapper;
 
     @Override
     public Integer add(HisDiagnosisTaskDTO taskDTO) {
@@ -138,6 +145,71 @@ public class TaskServiceImpl implements TaskService {
             }
         }
         resultMapper.batchInert(resultList);
+        String topologyMap = initTopologyMap(task.getDiagnosisType());
+        task.setTopologyMap(topologyMap);
+        taskMapper.updateById(task);
+    }
+
+    private String initTopologyMap(String diagnosisType) {
+        String fileName = DiagnosisTypeCommon.HISTORY.equals(diagnosisType) ? "/hisTreeNode.txt" : "/sqlTreeNode.txt";
+        StringBuilder sb = new StringBuilder();
+        try (InputStream is = this.getClass().getResourceAsStream(fileName);
+             BufferedReader reader = new BufferedReader(new InputStreamReader(is, "UTF-8"))) {
+            while (reader.ready()) {
+                var lines = reader.readLine();
+                if (StringUtils.isBlank(lines)) {
+                    continue;
+                }
+                sb.append(lines);
+                sb.append(System.getProperty("line.separator"));
+                String[] line = lines.split(" ");
+                String lineValue = line[0];
+                int length = lineValue.split("-").length;
+                String value = lineValue.substring(0, length - 1);
+                if (lines.contains("OsParam")) {
+                    String selectSql = "select * from param_info where paramType='OS';";
+                    try (Connection connect = connectSqlite(); Statement statement = connect.createStatement();
+                         ResultSet result = statement.executeQuery(selectSql)) {
+                        while (result.next()) {
+                            String paramName = result.getString(3);
+                            OsParamData[] osFields = OsParamData.values();
+                            String pointName = "";
+                            for (OsParamData osField : osFields) {
+                                if (osField.getParamName().equals(paramName)) {
+                                    pointName = osField.toString();
+                                }
+                            }
+                            sb.append(value).append("-").append(pointName).append(" DIAGNOSIS");
+                            sb.append(System.getProperty("line.separator"));
+                        }
+                    } catch (SQLException e) {
+                        throw new HisDiagnosisException("error:", e);
+                    }
+                } else if (lines.contains("DatabaseParam")) {
+                    String selectSql = "select * from param_info where paramType='DB';";
+                    try (Connection connect = connectSqlite(); Statement statement = connect.createStatement();
+                         ResultSet result = statement.executeQuery(selectSql)) {
+                        while (result.next()) {
+                            String paramName = result.getString(3);
+                            DatabaseParamData[] dbFields = DatabaseParamData.values();
+                            String pointName = "";
+                            for (DatabaseParamData dbField : dbFields) {
+                                if (dbField.getParamName().equals(paramName)) {
+                                    pointName = dbField.toString();
+                                }
+                            }
+                            sb.append(value).append("-").append(pointName);
+                            sb.append(System.getProperty("line.separator"));
+                        }
+                    } catch (SQLException e) {
+                        throw new HisDiagnosisException("error:", e);
+                    }
+                }
+            }
+        } catch (IOException e) {
+            throw new HisDiagnosisException("error:", e);
+        }
+        return sb.toString();
     }
 
     private String initParamName(String paramName) {
@@ -162,13 +234,17 @@ public class TaskServiceImpl implements TaskService {
         HisDiagnosisTask task = taskMapper.selectById(taskId);
         task.setTaskStartTime(new Date());
         task.addRemarks("start running diagnosis");
-        task.setState(TaskState.WAITING);
         taskMapper.updateById(task);
         initDiagnosisData(task);
         List<OptionQuery> options = databaseOption(task);
         List<HisDiagnosisThreshold> thresholds = databaseThreshold(task);
         task.setThresholds(thresholds);
         if (DiagnosisTypeCommon.SQL.equals(task.getDiagnosisType())) {
+            try {
+                sqlValidator.beforeStart(task);
+            } catch (HisDiagnosisException e) {
+                throw new HisDiagnosisException("error:", e);
+            }
             boolean isBcc = bccBeforeStart(task);
             task.addRemarks("bcc diagnosis:" + isBcc);
             boolean isExist = options.stream().anyMatch(f -> OptionCommon.IS_BCC.toString().equals(f.getOption()));
@@ -220,7 +296,7 @@ public class TaskServiceImpl implements TaskService {
                         return false;
                     });
                     HisDiagnosisResult.PointState state;
-                    if (option.contains(OptionCommon.IS_BCC.toString()) && isBcc) {
+                    if (!CollectionUtils.isEmpty(option) && option.contains(OptionCommon.IS_BCC.toString()) && !isBcc) {
                         state = HisDiagnosisResult.PointState.NOT_SATISFIED_DIAGNOSIS;
                     } else {
                         state = HisDiagnosisResult.PointState.NOT_MATCH_OPTION;
@@ -263,28 +339,9 @@ public class TaskServiceImpl implements TaskService {
             String itemName = getClassName(item);
             executor.execute(() -> {
                 task.addRemarks("start check collection " + itemName);
-                Object isExistData = item.queryData(task);
-                task.addRemarks("stop check collection " + itemName);
-                taskMapper.updateById(task);
-                if (isExistData == null) {
-                    pointServiceList.forEach(f -> {
-                        if (!CollectionUtils.isEmpty(f.getSourceDataKeys())) {
-                            f.getSourceDataKeys().forEach(g -> {
-                                if (g == item && !sb.toString().contains(f.toString())) {
-                                    String pointName = getClassName(f);
-                                    sb.append(f).append(";");
-                                    HisDiagnosisResult result = new HisDiagnosisResult(task, pointName,
-                                            HisDiagnosisResult.PointState.NOT_HAVE_DATA,
-                                            HisDiagnosisResult.ResultState.NO_ADVICE);
-                                    resultMapper.update(result, Wrappers.<HisDiagnosisResult>lambdaQuery().eq(
-                                                    HisDiagnosisResult::getTaskId, result.getTaskId())
-                                            .eq(HisDiagnosisResult::getPointName, pointName));
-                                }
-                            });
-                        }
-                    });
-                } else {
-                    if (isExistData.toString().contains("error")) {
+                try {
+                    Object isExistData = item.queryData(task);
+                    if (isExistData == null) {
                         pointServiceList.forEach(f -> {
                             if (!CollectionUtils.isEmpty(f.getSourceDataKeys())) {
                                 f.getSourceDataKeys().forEach(g -> {
@@ -292,9 +349,8 @@ public class TaskServiceImpl implements TaskService {
                                         String pointName = getClassName(f);
                                         sb.append(f).append(";");
                                         HisDiagnosisResult result = new HisDiagnosisResult(task, pointName,
-                                                HisDiagnosisResult.PointState.COLLECT_EXCEPTION,
+                                                HisDiagnosisResult.PointState.NOT_HAVE_DATA,
                                                 HisDiagnosisResult.ResultState.NO_ADVICE);
-                                        result.setPointSuggestion(isExistData.toString());
                                         resultMapper.update(result, Wrappers.<HisDiagnosisResult>lambdaQuery().eq(
                                                         HisDiagnosisResult::getTaskId, result.getTaskId())
                                                 .eq(HisDiagnosisResult::getPointName, pointName));
@@ -302,12 +358,58 @@ public class TaskServiceImpl implements TaskService {
                                 });
                             }
                         });
+                    } else {
+                        if (isExistData.toString().contains("error")) {
+                            pointServiceList.forEach(f -> {
+                                if (!CollectionUtils.isEmpty(f.getSourceDataKeys())) {
+                                    f.getSourceDataKeys().forEach(g -> {
+                                        if (g == item && !sb.toString().contains(f.toString())) {
+                                            String pointName = getClassName(f);
+                                            sb.append(f).append(";");
+                                            HisDiagnosisResult result = new HisDiagnosisResult(task, pointName,
+                                                    HisDiagnosisResult.PointState.COLLECT_EXCEPTION,
+                                                    HisDiagnosisResult.ResultState.NO_ADVICE);
+                                            result.setPointSuggestion(isExistData.toString());
+                                            resultMapper.update(result, Wrappers.<HisDiagnosisResult>lambdaQuery().eq(
+                                                            HisDiagnosisResult::getTaskId, result.getTaskId())
+                                                    .eq(HisDiagnosisResult::getPointName, pointName));
+                                        }
+                                    });
+                                }
+                            });
+                        }
                     }
+                } catch (Exception e) {
+                    pointServiceList.forEach(f -> {
+                        if (!CollectionUtils.isEmpty(f.getSourceDataKeys())) {
+                            f.getSourceDataKeys().forEach(g -> {
+                                if (g == item && !sb.toString().contains(f.toString())) {
+                                    String pointName = getClassName(f);
+                                    sb.append(f).append(";");
+                                    HisDiagnosisResult result = new HisDiagnosisResult(task, pointName,
+                                            HisDiagnosisResult.PointState.COLLECT_EXCEPTION,
+                                            HisDiagnosisResult.ResultState.NO_ADVICE);
+                                    result.setPointSuggestion("Collection exception:" + e.getMessage());
+                                    resultMapper.update(result, Wrappers.<HisDiagnosisResult>lambdaQuery().eq(
+                                                    HisDiagnosisResult::getTaskId, result.getTaskId())
+                                            .eq(HisDiagnosisResult::getPointName, pointName));
+                                }
+                            });
+                        }
+                    });
                 }
+                task.addRemarks("stop check collection " + itemName);
+                taskMapper.updateById(task);
                 DataStoreConfig config = new DataStoreConfig();
                 config.setCollectionItem(item);
                 task.addRemarks("start collection " + itemName);
-                config.setCollectionData(item.collectData(task));
+                Object collectionData;
+                try {
+                    collectionData = item.collectData(task);
+                } catch (Exception e) {
+                    collectionData = "error:" + e.getMessage();
+                }
+                config.setCollectionData(collectionData);
                 task.addRemarks("stop collection " + itemName);
                 taskMapper.updateById(task);
                 config.setCount(hashMap.get(item));
@@ -530,9 +632,9 @@ public class TaskServiceImpl implements TaskService {
                         StringUtils.isNotBlank(query.getSqlId()), HisDiagnosisTask::getSqlId, query.getSqlId()).eq(
                         StringUtils.isNotBlank(query.getDiagnosisType()), HisDiagnosisTask::getDiagnosisType,
                         query.getDiagnosisType()).and(
-                        StringUtils.isNotBlank(query.getTaskName()),
-                        c -> c.like(HisDiagnosisTask::getTaskName, query.getTaskName()).or().like(
-                                HisDiagnosisTask::getSql, query.getTaskName().replaceAll(" ", "%"))).ge(
+                        StringUtils.isNotBlank(query.getName()),
+                        c -> c.like(HisDiagnosisTask::getTaskName, query.getName()).or().like(
+                                HisDiagnosisTask::getSql, query.getName().replaceAll(" ", "%"))).ge(
                         query.getStartTime() != null, HisDiagnosisTask::getCreateTime, query.getStartTime()).le(
                         query.getEndTime() != null, HisDiagnosisTask::getCreateTime, query.getEndTime()).orderByDesc(
                         HisDiagnosisTask::getId));
@@ -704,6 +806,10 @@ public class TaskServiceImpl implements TaskService {
     }
 
     private TaskState checkDiagnosisResult(HisDiagnosisTask task) {
+        HisDiagnosisTask newTask = taskMapper.selectById(task.getId());
+        if (TaskState.SQL_ERROR.equals(newTask.getState())) {
+            return TaskState.SQL_ERROR;
+        }
         String selectSql = "select count(*) from param_info;";
         int count = 0;
         try (Connection connect = connectSqlite(); Statement statement = connect.createStatement();
@@ -725,8 +831,14 @@ public class TaskServiceImpl implements TaskService {
         if (resultList.size() == count + pointList.size()) {
             return TaskState.FINISH;
         }
-        HisDiagnosisTask newTask = taskMapper.selectById(task.getId());
-        return TaskState.SQL_ERROR.equals(newTask.getState()) ? TaskState.SQL_ERROR : TaskState.RECEIVING;
+        List<HisDiagnosisResult> exceptionResult = resultMapper.selectList(
+                Wrappers.<HisDiagnosisResult>lambdaQuery().eq(HisDiagnosisResult::getTaskId, task.getId())
+                        .in(HisDiagnosisResult::getPointState, HisDiagnosisResult.PointState.COLLECT_EXCEPTION,
+                                HisDiagnosisResult.PointState.ANALYSIS_EXCEPTION));
+        if (exceptionResult.size() > 0) {
+            return TaskState.ERROR;
+        }
+        return TaskState.RECEIVING;
     }
 
     @Override
@@ -807,7 +919,11 @@ public class TaskServiceImpl implements TaskService {
             task.addRemarks("bcc check threads config failed", e);
             taskMapper.updateById(task);
         }
-        return true;
+        var env = envMapper.selectOne(
+                Wrappers.<NctigbaEnv>lambdaQuery().eq(NctigbaEnv::getNodeid, task.getNodeId()).eq(
+                        NctigbaEnv::getType,
+                        NctigbaEnv.envType.AGENT));
+        return env != null;
     }
 
     private void setDebugQueryId(HisDiagnosisTask task) {
@@ -904,7 +1020,7 @@ public class TaskServiceImpl implements TaskService {
     private static synchronized Connection connectSqlite() {
         Connection conn;
         try {
-            conn = DriverManager.getConnection(JDBC.PREFIX + "data/paramDiagnosisInfo.db");
+            conn = DriverManager.getConnection(JDBC.PREFIX + "data/" + CommonConstants.PARAM_DATABASE_NAME + ".db");
         } catch (SQLException e) {
             throw new HisDiagnosisException("error:", e);
         }

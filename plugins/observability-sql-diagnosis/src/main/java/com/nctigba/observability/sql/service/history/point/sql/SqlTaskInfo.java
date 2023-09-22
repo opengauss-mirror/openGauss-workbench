@@ -27,7 +27,7 @@ import java.util.List;
  * @since 2023/7/28
  */
 @Service
-public class SqlTaskInfo implements HisDiagnosisPointService<Object> {
+public class SqlTaskInfo implements HisDiagnosisPointService<HisDiagnosisTask> {
     @Autowired
     private HisDiagnosisTaskMapper taskMapper;
     @Autowired
@@ -52,7 +52,7 @@ public class SqlTaskInfo implements HisDiagnosisPointService<Object> {
     }
 
     @Override
-    public Object getShowData(int taskId) {
+    public HisDiagnosisTask getShowData(int taskId) {
         HisDiagnosisTask task = taskMapper.selectById(taskId);
         if (task == null) {
             throw new HisDiagnosisException("taskId is not exists!");
