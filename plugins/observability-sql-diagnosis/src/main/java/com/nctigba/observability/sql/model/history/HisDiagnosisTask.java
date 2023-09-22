@@ -51,6 +51,8 @@ public class HisDiagnosisTask {
     String dbName;
     @TableField("task_name")
     String taskName;
+    @TableField("topology_map")
+    String topologyMap;
     @TableField("sql_id")
     String sqlId;
     Integer pid;

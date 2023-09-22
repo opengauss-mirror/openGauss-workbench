@@ -12,7 +12,6 @@ import com.nctigba.observability.sql.model.NctigbaEnv;
 import com.nctigba.observability.sql.model.history.data.PrometheusData;
 import com.nctigba.observability.sql.model.history.dto.MetricToTableDTO;
 import com.nctigba.observability.sql.model.history.point.PrometheusDataDTO;
-import com.nctigba.observability.sql.util.HttpUtils;
 import com.nctigba.observability.sql.util.PrometheusUtil;
 import org.junit.Before;
 import org.junit.Test;
@@ -84,8 +83,7 @@ public class TestPrometheusUtil {
         OpsHostEntity entity = new OpsHostEntity();
         entity.setPublicIp("127.0.0.1");
         when(hostFacade.getById(env.getHostid())).thenReturn(entity);
-        try (MockedStatic<UriComponentsBuilder> mockStatic = mockStatic(UriComponentsBuilder.class);
-             MockedStatic<HttpUtils> mockHttpStatic = mockStatic(HttpUtils.class)) {
+        try (MockedStatic<UriComponentsBuilder> mockStatic = mockStatic(UriComponentsBuilder.class)) {
             UriComponentsBuilder builder = spy(UriComponentsBuilder.class);
             mockStatic.when(() -> UriComponentsBuilder.fromHttpUrl(anyString()))
                     .thenReturn(builder);
@@ -93,8 +91,6 @@ public class TestPrometheusUtil {
             when(builder.build()).thenReturn(uriComponents);
             when(uriComponents.encode()).thenReturn(uriComponents);
             when(uriComponents.toUriString()).thenReturn("http://127.0.0.1:8080");
-            mockHttpStatic.when(() -> HttpUtils.sendGet(anyString(), anyString()))
-                    .thenReturn("");
             String paramId = "";
             String item = MetricCommon.AVG_CPU_USAGE_RATE;
             String start = "";
