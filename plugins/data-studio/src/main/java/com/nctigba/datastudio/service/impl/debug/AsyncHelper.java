@@ -92,7 +92,7 @@ public class AsyncHelper {
         statement.execute(String.format(TURN_OFF_SQL, oid));
         log.info("AsyncHelper oid: " + oid);
 
-        if (!paramReq.isCoverage()) {
+        if (!paramReq.isCoverage() && !isAnonymousOid(paramReq)) {
             closeConnection(webSocketServer, windowName, statement);
             Map<String, String> map = new HashMap<>();
             map.put(RESULT, LocaleString.transLanguageWs("1010", webSocketServer));
