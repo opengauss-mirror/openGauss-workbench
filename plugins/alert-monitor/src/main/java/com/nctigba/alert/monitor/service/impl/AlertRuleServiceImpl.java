@@ -4,7 +4,6 @@
 
 package com.nctigba.alert.monitor.service.impl;
 
-import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
@@ -12,9 +11,7 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.nctigba.alert.monitor.config.properties.AlertProperty;
-import com.nctigba.alert.monitor.config.properties.RuleItemProperty;
 import com.nctigba.alert.monitor.constant.CommonConstants;
-import com.nctigba.alert.monitor.dto.RuleItemPropertyDto;
 import com.nctigba.alert.monitor.entity.AlertRule;
 import com.nctigba.alert.monitor.entity.AlertRuleItem;
 import com.nctigba.alert.monitor.entity.AlertRuleItemExpSrc;
@@ -27,14 +24,12 @@ import com.nctigba.alert.monitor.model.RuleReq;
 import com.nctigba.alert.monitor.service.AlertRuleItemParamService;
 import com.nctigba.alert.monitor.service.AlertRuleItemService;
 import com.nctigba.alert.monitor.service.AlertRuleService;
-import com.nctigba.alert.monitor.utils.MessageSourceUtil;
 import org.opengauss.admin.common.exception.ServiceException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -92,20 +87,6 @@ public class AlertRuleServiceImpl extends ServiceImpl<AlertRuleMapper, AlertRule
                 CommonConstants.IS_NOT_DELETE));
         alertRule.setAlertRuleItemList(alertRuleItems);
         return alertRule;
-    }
-
-    @Override
-    public List<RuleItemPropertyDto> getRuleItemProperties() {
-        List<RuleItemPropertyDto> ruleItemDtoList = new ArrayList<>();
-        List<RuleItemProperty> ruleItems = alertProperty.getRuleItems();
-        for (RuleItemProperty ruleItem : ruleItems) {
-            RuleItemPropertyDto ruleItemPropertyDto = new RuleItemPropertyDto();
-            BeanUtil.copyProperties(ruleItem, ruleItemPropertyDto);
-            String name = ruleItemPropertyDto.getName();
-            ruleItemPropertyDto.setI18nName(MessageSourceUtil.get(name));
-            ruleItemDtoList.add(ruleItemPropertyDto);
-        }
-        return ruleItemDtoList;
     }
 
     @Override

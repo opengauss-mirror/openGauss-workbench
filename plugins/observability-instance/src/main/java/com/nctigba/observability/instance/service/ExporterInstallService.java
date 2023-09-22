@@ -145,10 +145,12 @@ public class ExporterInstallService extends AbstractInstaller {
                     expEnv.setPath(path);
                     for (int i = 0; i < 11; i++) {
                         try {
-                            HttpUtil.get("http://" + hostEntity.getPublicIp() + ":" + expEnv.getPort() + "/config/set",
-                                    Map.of("hostId", hostId, "nodeId", nodeId, "dbport", node.getDbPort(), "username",
-                                            node.getDbUser(), "password", node.getDbUserPassword(), "pass",
-                                            encryptionUtils.decrypt(user.getPassword()), "user", user.getUsername()));
+                            Map<String, Object> param = Map.of("hostId", hostId, "nodeId", nodeId, "dbport",
+                                    node.getDbPort(), "dbUsername", node.getDbUser(), "dbPassword",
+                                    node.getDbUserPassword(), "pass", encryptionUtils.decrypt(user.getPassword()),
+                                    "user", user.getUsername());
+                            HttpUtil.post("http://" + hostEntity.getPublicIp() + ":" + expEnv.getPort() + "/config/set",
+                                    JSONUtil.toJsonStr(param));
                             break;
                         } catch (IORuntimeException e) {
                             if (i == 10)

@@ -7,9 +7,6 @@ package com.nctigba.alert.monitor.service.impl;
 import com.baomidou.mybatisplus.core.MybatisConfiguration;
 import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.nctigba.alert.monitor.config.properties.AlertProperty;
-import com.nctigba.alert.monitor.config.properties.RuleItemProperty;
-import com.nctigba.alert.monitor.dto.RuleItemPropertyDto;
 import com.nctigba.alert.monitor.entity.AlertRule;
 import com.nctigba.alert.monitor.entity.AlertRuleItem;
 import com.nctigba.alert.monitor.entity.AlertRuleItemExpSrc;
@@ -56,8 +53,6 @@ public class AlertRuleServiceImplTest {
     @InjectMocks
     @Spy
     private AlertRuleServiceImpl alertRuleService;
-    @Mock
-    private AlertProperty alertProperty;
     @Mock
     private AlertRuleItemMapper alertRuleItemMapper;
     @Mock
@@ -138,25 +133,6 @@ public class AlertRuleServiceImplTest {
         verify(baseMapper, times(1)).selectById(anyLong());
         verify(alertRuleItemMapper, times(1)).selectList(any());
         assertEquals(alertRule.getId(), result.getId());
-    }
-
-    @Test
-    public void testGetRuleItemProperties() {
-        try (MockedStatic<MessageSourceUtil> mockedStatic = mockStatic(MessageSourceUtil.class)) {
-            List<RuleItemProperty> ruleItems = new ArrayList<>();
-            RuleItemProperty ruleItemProperty = new RuleItemProperty();
-            ruleItemProperty.setName("name");
-            ruleItems.add(ruleItemProperty);
-            when(alertProperty.getRuleItems()).thenReturn(ruleItems);
-
-            mockedStatic.when(() -> MessageSourceUtil.get(any())).thenReturn("name");
-
-            List<RuleItemPropertyDto> ruleItemProperties = alertRuleService.getRuleItemProperties();
-
-            verify(alertProperty).getRuleItems();
-            assertEquals(ruleItems.size(), ruleItemProperties.size());
-            assertEquals("name", ruleItemProperties.get(0).getI18nName());
-        }
     }
 
     @Test

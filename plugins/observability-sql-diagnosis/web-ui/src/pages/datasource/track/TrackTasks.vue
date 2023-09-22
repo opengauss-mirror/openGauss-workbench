@@ -304,7 +304,8 @@ const treeTransform = (arr: any) => {
   if (arr instanceof Array) {
     arr.forEach((item) => {
       obj.push({
-        label: item.clusterId ? item.clusterId : item.azName + '_' + item.publicIp + '(' + item.nodeId + ')',
+        label: item.clusterId ? item.clusterId : ((item.azName ? item.azName + '_' : '') + item.publicIp + ':' +
+                                     item.dbPort + (item.clusterRole ? '(' + item.clusterRole + ')' : '')),
         value: item.clusterId ? item.clusterId : item.nodeId,
         children: treeTransform(item.clusterNodes),
       })

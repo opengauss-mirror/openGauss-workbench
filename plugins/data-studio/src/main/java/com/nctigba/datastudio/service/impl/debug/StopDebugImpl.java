@@ -59,13 +59,17 @@ public class StopDebugImpl implements OperationInterface {
             }
         }
 
-        OperateStatusDO operateStatus = webSocketServer.getOperateStatus(windowName);
-        if (paramReq.getOid().equals("0") || paramReq.isInPackage()) {
-            operateStatus.enableStartAnonymous();
+        OperateStatusDO operateStatusDO = webSocketServer.getOperateStatus(windowName);
+        if (paramReq.getOid().equals("0")) {
+            operateStatusDO.enableStartAnonymous();
         } else {
-            operateStatus.enableStartDebug();
+            if (paramReq.isInPackage()) {
+                operateStatusDO.enableStartDebugPackage();
+            } else {
+                operateStatusDO.enableStartDebug();
+            }
         }
-        webSocketServer.setOperateStatus(windowName, operateStatus);
+        webSocketServer.setOperateStatus(windowName, operateStatusDO);
         Map<String, String> map = new HashMap<>();
         map.put(RESULT, LocaleString.transLanguageWs("1003", webSocketServer));
         webSocketServer.sendMessage(windowName, TEXT, SUCCESS, map);

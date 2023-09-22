@@ -14,4 +14,5 @@ export interface Generateform {
 
 export interface Memberform {
   role: string[];
+  administrator: string[];
 }

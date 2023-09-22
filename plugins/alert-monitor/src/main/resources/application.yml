@@ -51,47 +51,6 @@ alert:
   alertmanager:  #The complete path for Prometheus push is /plugins/alert-monitor/api/v1/alerts. /plugins/alert-monitor
     path-prefix: /plugins/alert-monitor
     api-version: v1
-  ruleItems:
-    - name: cpuUsage
-      unit: "%"
-      ruleExps:
-      - type: normal
-        exp: (1- avg(rate(agent_cpu_seconds_total{mode=\"idle\",instance=~\"${instances}\"}[5m])) by(instance))  * 100
-      - type: trend
-        exp: avg by(instance) (rate(agent_cpu_seconds_total{mode=\"idle\",instance=~\"${instances}\"}[5m] offset 15s)) - avg by(instance) (rate(agent_cpu_seconds_total{mode=\"idle\",instance=~\"${instances}\"}[5m]))
-    - name: memoryUsage
-      unit: "%"
-      ruleExps:
-        - type: normal
-          exp: 100 * (1 - (agent_memory_MemFree_bytes + agent_memory_Cached_bytes + agent_memory_Buffers_bytes) / agent_memory_MemTotal_bytes{instance=~\"${instances}\"})
-        - type: trend
-          exp: (agent_memory_MemFree_bytes offset 15s + agent_memory_Cached_bytes offset 15s + agent_memory_Buffers_bytes offset 15s) / agent_memory_MemTotal_bytes{instance=~\"${instances}\"} - (agent_memory_MemFree_bytes + agent_memory_Cached_bytes + agent_memory_Buffers_bytes) / agent_memory_MemTotal_bytes{instance=~\"${instances}\"}
-    - name: diskUsage
-      unit: MB
-      ruleExps:
-        - type: normal
-          exp: (agent_filesystem_size_bytes{device=~\"${filesystemPath}\",instance=~\"${instances}\"} - agent_filesystem_free_bytes) /1024/1024
-        - type: trend
-          exp: agent_filesystem_free_bytes{device=~\"${filesystemPath}\",instance=~\"${instances}\"} offset 15s - agent_filesystem_free_bytes{device=~\"${filesystemPath}\",instance=~\"${instances}\"}
-      params:
-        paramName: filesystemPath
-        paramValue:
-        paramOrder: 1
-    - name: diskWriteRate
-      unit: MB/s
-      ruleExps:
-        - type: normal
-          exp: sum(rate(agent_disk_written_bytes_total{instance=~\"${instances}\"}[2m])) by (instance) /1024/1024
-        - type: trend
-          exp: sum(rate(agent_disk_written_bytes_total{instance=~\"${instances}\"}[2m])) by (instance) - sum(rate(agent_disk_written_bytes_total{instance=~\"${instances}\"}[5m] offset 15s)) by (instance)
-    - name: diskReadRate
-      unit: MB/s
-      ruleExps:
-        - type: normal
-          exp: sum(rate(agent_disk_read_bytes_total{instance=~\"${instances}\"}[2m])) by (instance) /1024/1024
-        - type: trend
-          exp: sum(rate(agent_disk_read_bytes_total{instance=~\"${instances}\"}[2m])) by (instance) - sum(rate(agent_disk_read_bytes_total{instance=~\"${instances}\"}[5m] offset 15s)) by (instance)
-
 notify:
   weCom:
     accessTokenUrl: https://qyapi.weixin.qq.com/cgi-bin/gettoken

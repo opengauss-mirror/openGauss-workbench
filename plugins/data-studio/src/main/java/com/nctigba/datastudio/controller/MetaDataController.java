@@ -12,8 +12,6 @@ import com.nctigba.datastudio.model.query.DatabaseMetaarraySchemaQuery;
 import com.nctigba.datastudio.model.query.UserQuery;
 import com.nctigba.datastudio.service.DbConnectionService;
 import com.nctigba.datastudio.service.QueryMetaArrayService;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -30,7 +28,6 @@ import java.util.Map;
  *
  * @since 2023-6-26
  */
-@Api(tags = {"Metadata query interface"})
 @RestController
 @RequestMapping(value = "/dataStudio/web/v1/metaData")
 public class MetaDataController {
@@ -45,7 +42,6 @@ public class MetaDataController {
      * @param uuid uuid
      * @return List
      */
-    @ApiOperation(value = "Database List")
     @GetMapping(value = "/databaseList/{uuid}", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<String> databaseList(@PathVariable("uuid") String uuid) {
         return queryMetaArrayService.databaseList(uuid);
@@ -58,7 +54,6 @@ public class MetaDataController {
      * @return List
      * @throws SQLException SQLException
      */
-    @ApiOperation(value = "Database List")
     @GetMapping(value = "/schemaObjectList", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<DataListDTO> schemaObjectList(DatabaseMetaarrayIdSchemaQuery schema) throws SQLException {
         return dbConnectionService.schemaObjectList(schema);
@@ -71,7 +66,6 @@ public class MetaDataController {
      * @return List
      * @throws SQLException SQLException
      */
-    @ApiOperation(value = "Schema List")
     @GetMapping(value = "/schemaList", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<Map<String, String>> schemaList(DatabaseMetaarraySchemaQuery request) throws SQLException {
         return queryMetaArrayService.schemaList(request);
@@ -84,7 +78,6 @@ public class MetaDataController {
      * @return List
      * @throws SQLException SQLException
      */
-    @ApiOperation(value = "Object List")
     @GetMapping(value = "/objectList", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<String> objectList(DatabaseMetaarrayQuery request) throws SQLException {
         return queryMetaArrayService.objectList(request);
@@ -97,7 +90,6 @@ public class MetaDataController {
      * @return List
      * @throws SQLException SQLException
      */
-    @ApiOperation(value = "Column List")
     @GetMapping(value = "/columnList", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<String> tableColumnList(DatabaseMetaarrayColumnQuery request) throws SQLException {
         return queryMetaArrayService.tableColumnList(request);
@@ -110,7 +102,6 @@ public class MetaDataController {
      * @return List
      * @throws SQLException SQLException
      */
-    @ApiOperation(value = "Column List")
     @GetMapping(value = "/typeList/{uuid}", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<String> typeList(@PathVariable("uuid") String uuid) throws SQLException {
         return queryMetaArrayService.baseTypeList(uuid);
@@ -123,7 +114,6 @@ public class MetaDataController {
      * @return List
      * @throws SQLException SQLException
      */
-    @ApiOperation(value = "Column List")
     @GetMapping(value = "/tablespace/{uuid}", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<String> tablespaceList(@PathVariable("uuid") String uuid) throws SQLException {
         return queryMetaArrayService.tablespaceList(uuid);
@@ -136,7 +126,6 @@ public class MetaDataController {
      * @return UserQuery
      * @throws SQLException SQLException
      */
-    @ApiOperation(value = "Column List")
     @GetMapping(value = "/user/{uuid}", produces = MediaType.APPLICATION_JSON_VALUE)
     public UserQuery userList(@PathVariable("uuid") String uuid) throws SQLException {
         return queryMetaArrayService.userList(uuid);
@@ -149,7 +138,6 @@ public class MetaDataController {
      * @return List<String>
      * @throws SQLException SQLException
      */
-    @ApiOperation(value = "Resource List")
     @GetMapping(value = "/resource/{uuid}", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<String> resourceList(@PathVariable("uuid") String uuid) throws SQLException {
         return queryMetaArrayService.resourceList(uuid);

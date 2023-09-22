@@ -384,14 +384,14 @@
           "
         >
           <div>{{ $t('session.waitEventTab.waitStatus') }}</div>
-          <el-select v-model="waitEventForm.waitStatus" style="width: 100px; margin: 0 4px" @change="changeWaitEventForm">
+          <el-select v-model="waitEventForm.waitStatus" style="width: 100px; margin: 0 4px" clearable @change="changeWaitEventForm">
             <el-option v-for="item in waitStatusList" :key="item" :value="item" :label="item" />
           </el-select>
           <div>{{ $t('session.waitEventTab.waitEvent') }}</div>
-          <el-select v-model="waitEventForm.waitEvent" style="width: 100px; margin: 0 4px" @change="changeWaitEventForm">
+          <el-select v-model="waitEventForm.waitEvent" style="width: 100px; margin: 0 4px" clearable @change="changeWaitEventForm">
             <el-option v-for="item in waitEventList" :key="item" :value="item" :label="item" />
           </el-select>
-          <el-select v-model="waitEventForm.field" style="width: 100px; margin: 0 4px">
+          <el-select v-model="waitEventForm.field" style="width: 100px; margin: 0 4px" clearable @change="changeWaitEventField">
             <el-option value="db_name" :label="$t('session.waitEventTab.dbName')" />
             <el-option value="thread_name" :label="$t('session.waitEventTab.threadName')" />
             <el-option value="tid" :label="$t('session.waitEventTab.tid')" />
@@ -401,7 +401,7 @@
             <el-option value="lockmode" :label="$t('session.waitEventTab.lockmode')" />
             <el-option value="tag" :label="$t('session.waitEventTab.locktag')" />
           </el-select>
-          <el-input v-model="waitEventForm.fieldValue" style="width: 150px;">
+          <el-input v-model="waitEventForm.fieldValue" style="width: 150px;" clearable>
             <template #append>
               <el-link :underline="false" :icon="Search" size="small" @click="changeWaitEventForm"/>
             </template>
@@ -857,6 +857,11 @@ const changeWaitEventForm = () => {
     }
     return true;
   })
+}
+
+const changeWaitEventField = () => {
+  waitEventForm.value.fieldValue = ''
+  changeWaitEventForm()
 }
 
 // same for every page in index

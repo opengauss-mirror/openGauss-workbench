@@ -1060,7 +1060,7 @@ public class SqlConstants {
             + " CASE WHEN pg_catalog.pg_get_expr(pi.indexprs, pi.indrelid, true) is null "
             + "THEN string_agg(att.attname, ',' order by att.attname) ELSE null END attname, "
             + " pg_catalog.pg_get_expr(pi.indexprs, pi.indrelid, true) expression,  pg_description.description "
-            + "from PG_INDEX pi inner join PG_CLASS pc on pi.indexrelid = pc.oid and pc.relkind = 'i' "
+            + "from PG_INDEX pi inner join PG_CLASS pc on pi.indexrelid = pc.oid and pc.relkind in ('i' ,'I') "
             + "inner join PG_ATTRIBUTE att on pc.oid = att.attrelid "
             + "LEFT JOIN pg_description  ON pi.indexrelid = pg_description.objoid JOIN pg_am am ON pc.relam = am.oid "
             + "inner join (select pc.oid from PG_CLASS pc inner join pg_namespace pn on pn.oid = pc.relnamespace "
@@ -1230,4 +1230,19 @@ public class SqlConstants {
      * next value sql
      */
     public static final String NEXT_VALUE_SQL = "SELECT pg_catalog.nextval('%s');";
+
+    /**
+     * count sql
+     */
+    public static final String COUNT_SQL = "select count(*) as count from %s.%s";
+
+    /**
+     * course sql
+     */
+    public static final String COURSE_SQL = "CURSOR %s NO SCROLL FOR %s";
+
+    /**
+     * fetch sql
+     */
+    public static final String FETCH_SQL = "FETCH FORWARD %d FROM %s";
 }

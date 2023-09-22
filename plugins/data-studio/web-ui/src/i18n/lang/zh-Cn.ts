@@ -188,6 +188,8 @@ export default {
     resourcePool: '资源池',
     privileges: '权限',
     owner: '所有者',
+    roleGroup: '角色组',
+    adminsGroup: '管理员组',
     create: {
       tabs: ['常规', '成员属性', 'DDL预览'],
     },
@@ -469,6 +471,7 @@ export default {
       delimiter: '分隔符',
       comma: '逗号',
       tab: 'Tab键',
+      fourSpaces: '4个空格',
       pipe: '竖线符号',
       semicolon: '分号',
       other: '其他',

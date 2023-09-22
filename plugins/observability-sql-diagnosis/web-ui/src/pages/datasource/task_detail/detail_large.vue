@@ -9,6 +9,7 @@
       <template #headerExtend>
         <svg-icon name="expand" class="shrink-img" @click="goToTask" />
       </template>
+
       <el-tabs class="tast-detail-tabs">
         <el-tab-pane label="诊断结果">
           <!-- Suggestions -->
@@ -172,8 +173,22 @@
       style="position: relative"
       v-if="reportNodeList.includes(urlParam.nodesType)"
     >
-      <ReportDetail :large="true" :id="urlParam.dbId" :reportId="urlParam.nodesType" />
-      <img src="@/assets/img/small.png" class="shrink-img" @click="goToTask" />
+      <template #headerExtend>
+        <svg-icon name="expand" class="shrink-img" @click="goToTask" />
+      </template>
+      <div class="detail-wrap" v-if="noSuggest">
+        <div class="main-suggestion">
+          <el-icon color="#0093FF" size="18px">
+            <WarningFilled />
+          </el-icon>
+          <span class="main-suggestion-text">{{ $t('datasource.notMeetingConditions') }}</span>
+        </div>
+        <div class="noresult-wrap">
+          <img src="@/assets/img/noresult.png" class="noresult-img" />
+          <p class="noresult-text">{{ $t('datasource.noResult') }}</p>
+        </div>
+      </div>
+      <ReportDetail v-else :large="true" :id="urlParam.dbId" :reportId="urlParam.nodesType" />
     </my-card>
   </div>
 </template>
@@ -215,6 +230,7 @@ const props = withDefaults(
     reportId: string
     id: string
     requestType?: string
+    noSuggest?: boolean
   }>(),
   {
     dbid: '',
@@ -325,7 +341,7 @@ onMounted(() => {
 const { data: res, run: requestData } = useRequest(
   () => {
     return ogRequest.get(
-      '/historyDiagnosis/api/tasks/' + queryData.value.id + '/points/' + queryData.value.type
+      '/historyDiagnosis/api/v2/tasks/' + queryData.value.id + '/points/' + queryData.value.type + '?diagnosisType=sql'
     )
   },
   { manual: true }
@@ -333,7 +349,7 @@ const { data: res, run: requestData } = useRequest(
 
 const { data: ret, run: requestSvg } = useRequest(
   (id: number) => {
-    return ogRequestSvg.get(`/historyDiagnosis/api/tasks/res/${id}.svg`)
+    return ogRequestSvg.get(`/historyDiagnosis/api/v1/res/${id}.svg`)
   },
   { manual: true }
 )
@@ -380,6 +396,7 @@ const handleRequestData = (val: Res, type: string, cases: number) => {
 }
 
 watch(res, (res: Res) => {
+  res = res.data.pointData[0]
   chartData.value = [] // clear data
   if (res && Object.keys(res).length) {
     requestType.value = res.type
@@ -630,6 +647,38 @@ watch(ret, (res: any) => {
   .noresult-text {
     text-align: center;
     color: #707070;
+  }
+}
+
+.detail-wrap {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 30px 20px;
+
+  .main-suggestion {
+    display: flex;
+    align-items: center;
+
+    .main-suggestion-text {
+      margin-left: 10px;
+      font-size: 14px;
+    }
+  }
+
+  .noresult-wrap {
+    width: 100%;
+    height: 500px;
+
+    .noresult-img {
+      width: 200px;
+      display: block;
+      margin: 100px auto 20px;
+    }
+
+    .noresult-text {
+      text-align: center;
+      color: #707070;
+    }
   }
 }
 </style>

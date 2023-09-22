@@ -185,7 +185,7 @@
                       :legendShown="false"
                       :tool-tips-sort="'desc'"
                       :tool-tips-exclude-zero="true"
-                      :unit="'M/S'"
+                      :unit="'Mb/S'"
                     />
                   </my-card>
                 </el-col>
@@ -199,7 +199,7 @@
                       :legendShown="false"
                       :tool-tips-sort="'desc'"
                       :tool-tips-exclude-zero="true"
-                      :unit="'M/S'"
+                      :unit="'Mb/S'"
                     />
                   </my-card>
                 </el-col>

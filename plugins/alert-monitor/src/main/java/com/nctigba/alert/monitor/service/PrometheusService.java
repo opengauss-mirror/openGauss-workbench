@@ -261,7 +261,7 @@ public class PrometheusService {
             PrometheusConfigDto config = getPromConfig();
             updatePromConfig(session, config);
         } catch (IOException | CryptoException | ServiceException | NullPointerException | BaseException e) {
-            log.error("init prometheus configuration fail: ", e);
+            log.warn("init prometheus configuration fail: {}", e.getMessage());
         }
     }
 
@@ -372,7 +372,8 @@ public class PrometheusService {
         List<AlertTemplateRule> alertTemplateRules = alertTemplateRuleMapper.selectList(
             Wrappers.<AlertTemplateRule>lambdaQuery().eq(AlertTemplateRule::getTemplateId, templateId)
                 .eq(AlertTemplateRule::getRuleType, CommonConstants.INDEX_RULE)
-                .eq(AlertTemplateRule::getIsDeleted, CommonConstants.IS_NOT_DELETE));
+                .eq(AlertTemplateRule::getIsDeleted, CommonConstants.IS_NOT_DELETE)
+                .eq(AlertTemplateRule::getEnable, CommonConstants.ENABLE));
         if (CollectionUtil.isEmpty(alertTemplateRules)) {
             return;
         }
@@ -585,7 +586,6 @@ public class PrometheusService {
             prometheusEnvDto.getPromUsername(), prometheusEnvDto.getPromPasswd())) {
             AlertRuleConfigDto config = getAlertRuleConfigDto(session, templateId, clusterNodeIds);
             if (config == null || config.getGroups() == null) {
-                session.close();
                 return;
             }
             List<AlertRuleConfigDto.Group> groups = config.getGroups();
@@ -634,7 +634,6 @@ public class PrometheusService {
             prometheusEnvDto.getPromUsername(), prometheusEnvDto.getPromPasswd())) {
             AlertRuleConfigDto config = getAlertRuleConfigDto(session, templateId, clusterNodeIds);
             if (config == null || CollectionUtil.isEmpty(config.getGroups())) {
-                session.close();
                 return;
             }
             List<AlertRuleConfigDto.Group> groups = config.getGroups();
@@ -643,7 +642,6 @@ public class PrometheusService {
                 item -> !item.getName().equals("rule_" + alertTemplateRule.getId())).collect(
                 Collectors.toList());
             if (newGroups.size() == size) {
-                session.close();
                 return;
             }
             config.setGroups(newGroups);

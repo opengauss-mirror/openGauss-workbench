@@ -9,6 +9,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsClusterEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsClusterNodeEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
@@ -22,6 +23,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import java.time.LocalDateTime;
 
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
 
 /**
@@ -77,39 +79,43 @@ public class AlertContentParamUtilTest {
 
     @Test
     public void testSetAndGetAlertContentParamDto() {
-        OpsClusterNodeEntity opsClusterNodeEntity = new OpsClusterNodeEntity();
-        opsClusterNodeEntity.setHostId("1");
-        opsClusterNodeEntity.setClusterNodeId("node1");
-        opsClusterNodeEntity.setClusterId("test");
-        opsClusterNodeEntity.setClusterRole(ClusterRoleEnum.MASTER);
-        when(clusterNodeService.getById(anyString())).thenReturn(opsClusterNodeEntity);
-        OpsHostEntity opsHost = new OpsHostEntity();
-        opsHost.setPublicIp("127.0.0.1");
-        when(hostFacade.getById(opsClusterNodeEntity.getHostId())).thenReturn(opsHost);
-        OpsClusterEntity opsClusterEntity = new OpsClusterEntity();
-        opsClusterEntity.setClusterId("test");
-        opsClusterEntity.setPort(8080);
-        when(clusterService.getById(opsClusterNodeEntity.getClusterId())).thenReturn(opsClusterEntity);
-        contentParamUtil.setAndGetAlertContentParamDto("node1", LocalDateTime.now(), CommonConstants.WARN,
-            "centent");
+        try (MockedStatic<MessageSourceUtil> mockedStatic = mockStatic(MessageSourceUtil.class)) {
+            OpsClusterNodeEntity opsClusterNodeEntity = new OpsClusterNodeEntity();
+            opsClusterNodeEntity.setHostId("1");
+            opsClusterNodeEntity.setClusterNodeId("node1");
+            opsClusterNodeEntity.setClusterId("test");
+            opsClusterNodeEntity.setClusterRole(ClusterRoleEnum.MASTER);
+            when(clusterNodeService.getById(anyString())).thenReturn(opsClusterNodeEntity);
+            OpsHostEntity opsHost = new OpsHostEntity();
+            opsHost.setPublicIp("127.0.0.1");
+            when(hostFacade.getById(opsClusterNodeEntity.getHostId())).thenReturn(opsHost);
+            OpsClusterEntity opsClusterEntity = new OpsClusterEntity();
+            opsClusterEntity.setClusterId("test");
+            opsClusterEntity.setPort(8080);
+            when(clusterService.getById(opsClusterNodeEntity.getClusterId())).thenReturn(opsClusterEntity);
+            contentParamUtil.setAndGetAlertContentParamDto("node1", LocalDateTime.now(), CommonConstants.WARN,
+                "centent");
+        }
     }
 
     @Test
     public void testSetAndGetAlertContentParamDtoWithEmptyContent() {
-        OpsClusterNodeEntity opsClusterNodeEntity = new OpsClusterNodeEntity();
-        opsClusterNodeEntity.setHostId("1");
-        opsClusterNodeEntity.setClusterNodeId("node1");
-        opsClusterNodeEntity.setClusterId("test");
-        opsClusterNodeEntity.setClusterRole(ClusterRoleEnum.MASTER);
-        when(clusterNodeService.getById(anyString())).thenReturn(opsClusterNodeEntity);
-        OpsHostEntity opsHost = new OpsHostEntity();
-        opsHost.setPublicIp("127.0.0.1");
-        when(hostFacade.getById(opsClusterNodeEntity.getHostId())).thenReturn(opsHost);
-        OpsClusterEntity opsClusterEntity = new OpsClusterEntity();
-        opsClusterEntity.setClusterId("test");
-        opsClusterEntity.setPort(8080);
-        when(clusterService.getById(opsClusterNodeEntity.getClusterId())).thenReturn(opsClusterEntity);
-        contentParamUtil.setAndGetAlertContentParamDto("node1", LocalDateTime.now(), CommonConstants.WARN,
-            "");
+        try (MockedStatic<MessageSourceUtil> mockedStatic = mockStatic(MessageSourceUtil.class)) {
+            OpsClusterNodeEntity opsClusterNodeEntity = new OpsClusterNodeEntity();
+            opsClusterNodeEntity.setHostId("1");
+            opsClusterNodeEntity.setClusterNodeId("node1");
+            opsClusterNodeEntity.setClusterId("test");
+            opsClusterNodeEntity.setClusterRole(ClusterRoleEnum.MASTER);
+            when(clusterNodeService.getById(anyString())).thenReturn(opsClusterNodeEntity);
+            OpsHostEntity opsHost = new OpsHostEntity();
+            opsHost.setPublicIp("127.0.0.1");
+            when(hostFacade.getById(opsClusterNodeEntity.getHostId())).thenReturn(opsHost);
+            OpsClusterEntity opsClusterEntity = new OpsClusterEntity();
+            opsClusterEntity.setClusterId("test");
+            opsClusterEntity.setPort(8080);
+            when(clusterService.getById(opsClusterNodeEntity.getClusterId())).thenReturn(opsClusterEntity);
+            contentParamUtil.setAndGetAlertContentParamDto("node1", LocalDateTime.now(), CommonConstants.WARN,
+                "");
+        }
     }
 }

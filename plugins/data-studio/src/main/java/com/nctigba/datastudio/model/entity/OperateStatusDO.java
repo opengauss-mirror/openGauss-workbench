@@ -81,6 +81,21 @@ public class OperateStatusDO {
     }
 
     /**
+     * enable start debug package
+     */
+    public void enableStartDebugPackage() {
+        this.isCompile = false;
+        this.isExecute = true;
+        this.isStartDebug = true;
+        this.isStopDebug = false;
+        this.isContinueStep = false;
+        this.isSingleStep = false;
+        this.isStepIn = false;
+        this.isStepOut = false;
+        this.isCoverageRate = true;
+    }
+
+    /**
      * enable start debug
      */
     public void enableStartDebug() {

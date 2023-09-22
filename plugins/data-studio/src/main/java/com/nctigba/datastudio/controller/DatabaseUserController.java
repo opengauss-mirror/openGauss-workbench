@@ -1,5 +1,3 @@
-
-
 /*
  * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
  */
@@ -9,8 +7,6 @@ package com.nctigba.datastudio.controller;
 import com.nctigba.datastudio.model.dto.DatabaseCreateUserDTO;
 import com.nctigba.datastudio.model.dto.DatabaseUsserCheckDTO;
 import com.nctigba.datastudio.service.DatabaseUserService;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -25,7 +21,6 @@ import javax.annotation.Resource;
  *
  * @since 2023-8-9
  */
-@Api(tags = {"Metadata query interface"})
 @RestController
 @RequestMapping(value = "/dataStudio/web/v1/user")
 public class DatabaseUserController {
@@ -38,7 +33,6 @@ public class DatabaseUserController {
      * @param request request
      * @return String
      */
-    @ApiOperation(value = "CREATE USER PREVIEW DDL")
     @PostMapping(value = "/creat/preview", produces = MediaType.APPLICATION_JSON_VALUE)
     public String createUserPreviewDDL(@RequestBody DatabaseCreateUserDTO request) {
         return databaseUserService.createUserPreviewDDL(request);
@@ -49,7 +43,6 @@ public class DatabaseUserController {
      *
      * @param request request
      */
-    @ApiOperation(value = "CREATE USER DDL")
     @PostMapping(value = "/creat", produces = MediaType.APPLICATION_JSON_VALUE)
     public void createUserDDL(@RequestBody DatabaseCreateUserDTO request) {
         databaseUserService.createUserDDL(request);
@@ -60,7 +53,6 @@ public class DatabaseUserController {
      *
      * @param request request
      */
-    @ApiOperation(value = "DROPTE USER DDL")
     @DeleteMapping(value = "/drop", produces = MediaType.APPLICATION_JSON_VALUE)
     public void dropUserDDL(@RequestBody DatabaseUsserCheckDTO request) {
         databaseUserService.dropUserDDL(request);
