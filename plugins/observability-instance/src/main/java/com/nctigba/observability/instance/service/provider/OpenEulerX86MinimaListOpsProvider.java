@@ -49,9 +49,7 @@ public class OpenEulerX86MinimaListOpsProvider extends AbstractOpsProvider {
     public void enableWdrSnapshot(Session session, OpsClusterEntity clusterEntity,
             List<OpsClusterNodeEntity> opsClusterNodeEntities, WdrScopeEnum scope, String dataPath) {
         if (StrUtil.isEmpty(dataPath)) {
-            dataPath = opsClusterNodeEntities.stream().filter(node -> node.getClusterRole() == ClusterRoleEnum.MASTER)
-                    .findFirst().orElseThrow(() -> new OpsException("Master node configuration not found"))
-                    .getDataPath();
+            dataPath = opsClusterNodeEntities.stream().filter(node -> node.getClusterRole() == ClusterRoleEnum.MASTER).findFirst().orElseThrow(() -> new OpsException("Master node configuration not found")).getDataPath();
 
             if (clusterEntity.getDeployType() == DeployTypeEnum.CLUSTER) {
                 dataPath = dataPath + "/master";
@@ -60,14 +58,27 @@ public class OpenEulerX86MinimaListOpsProvider extends AbstractOpsProvider {
             }
         }
 
+        String checkCommand = "gs_guc check -D " + dataPath + " -c \"enable_wdr_snapshot\"";
+        try {
+            JschResult jschResult = jschUtil.executeCommand(checkCommand, session, clusterEntity.getEnvPath());
+            if (jschResult.getResult().contains("enable_wdr_snapshot=on")){
+                return;
+            }
+        } catch (Exception e) {
+            String msg = "Failed to set the enable_wdr_snapshot parameter";
+            if (e instanceof OpsException) {
+                msg = e.getMessage();
+            }
+            log.error(msg, e);
+            throw new OpsException(msg);
+        }
+
         String command = "gs_guc reload -D " + dataPath + " -c \"enable_wdr_snapshot=on\"";
 
         try {
-            JschResult jschResult = jschUtil.executeCommand(command, session);
+            JschResult jschResult = jschUtil.executeCommand(command, session, clusterEntity.getEnvPath());
             if (0 != jschResult.getExitCode()) {
-                log.error("set enable_wdr_snapshot parameter failed, exit code: {}, error message: {}",
-                        jschResult.getExitCode(), jschResult.getResult());
-                Thread.currentThread().interrupt();
+                log.error("set enable_wdr_snapshot parameter failed, exit code: {}, error message: {}", jschResult.getExitCode(), jschResult.getResult());
                 throw new OpsException("Failed to query the enable_wdr_snapshot parameter");
             }
         } catch (Exception e) {
@@ -76,7 +87,6 @@ public class OpenEulerX86MinimaListOpsProvider extends AbstractOpsProvider {
                 msg = e.getMessage();
             }
             log.error(msg, e);
-            Thread.currentThread().interrupt();
             throw new OpsException(msg);
         }
     }

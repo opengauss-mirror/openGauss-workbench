@@ -22,7 +22,7 @@ import com.nctigba.observability.instance.entity.Snapshot;
 @Mapper
 public interface SnapshotMapper extends BaseMapper<Snapshot> {
     /**
-     * getIdByTime
+     * getIdByTime order by asc
      *
      * @param id     id
      * @param column column
@@ -31,8 +31,25 @@ public interface SnapshotMapper extends BaseMapper<Snapshot> {
      * @return Long
      */
     @Ds
-    default Long getIdByTime(String id, SFunction<Snapshot, ?> column, Date start, Date end) {
-        var snapshot = selectOne(Wrappers.<Snapshot>lambdaQuery().between(column, start, end).last(" limit 1"));
+    default Long getIdByTimeAsc(String id, SFunction<Snapshot, ?> column, Date start, Date end) {
+        var snapshot = selectOne(Wrappers.<Snapshot>lambdaQuery().between(column, start, end).orderByAsc(column)
+            .last(" limit 1"));
+        return snapshot == null ? 0 : snapshot.getSnapshotId();
+    }
+
+    /**
+     * getIdByTime order by desc
+     *
+     * @param id     id
+     * @param column column
+     * @param start  start
+     * @param end    end
+     * @return Long
+     */
+    @Ds
+    default Long getIdByTimeDesc(String id, SFunction<Snapshot, ?> column, Date start, Date end) {
+        var snapshot = selectOne(Wrappers.<Snapshot>lambdaQuery().between(column, start, end).orderByDesc(column)
+            .last(" limit 1"));
         return snapshot == null ? 0 : snapshot.getSnapshotId();
     }
 }

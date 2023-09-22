@@ -47,6 +47,23 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
     @Override
     public void enableWdrSnapshot(Session session, OpsClusterEntity clusterEntity,
             List<OpsClusterNodeEntity> opsClusterNodeEntities, WdrScopeEnum scope, String dataPath) {
+        String checkCommand;
+        if (StrUtil.isEmpty(dataPath)) {
+            checkCommand = "gs_guc check -I all -c \"enable_wdr_snapshot\"";
+        } else {
+            checkCommand = "gs_guc check -D " + dataPath + " -c \"enable_wdr_snapshot\"";
+        }
+        try {
+            JschResult jschResult = jschUtil.executeCommand(checkCommand, session, clusterEntity.getEnvPath());
+
+            if (jschResult.getResult().contains("enable_wdr_snapshot=on")) {
+                return;
+            }
+        } catch (Exception e) {
+            log.error("Failed to set the enable_wdr_snapshot parameter", e);
+            throw new OpsException("Failed to set the enable_wdr_snapshot parameter");
+        }
+
         String command;
         if (StrUtil.isEmpty(dataPath)) {
             command = "gs_guc reload -I all -c \"enable_wdr_snapshot=on\"";
@@ -63,7 +80,6 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
             }
 
         } catch (Exception e) {
-
             log.error(CommonConstants.FAILED_SET_ENABLE_WDR_SNAPSHOT_PARAMETER, e);
             Thread.currentThread().interrupt();
             throw new OpsException(CommonConstants.FAILED_SET_ENABLE_WDR_SNAPSHOT_PARAMETER);
