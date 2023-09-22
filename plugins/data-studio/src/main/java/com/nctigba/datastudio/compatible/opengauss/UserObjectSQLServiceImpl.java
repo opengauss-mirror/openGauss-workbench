@@ -28,7 +28,7 @@ import static com.nctigba.datastudio.constants.SqlConstants.VALID_UNTIL_SQL;
 /**
  * UserObjectSQLServiceImpl achieve
  *
- * @since 2023-06-26
+ * @since 2023-09-25
  */
 @Slf4j
 @Service
@@ -65,8 +65,9 @@ public class UserObjectSQLServiceImpl implements UserObjectSQLService {
     private StringBuilder getDdlCondition(DatabaseCreateUserDTO request) {
         StringBuilder ddlCondition = new StringBuilder();
         if (request.getPower().size() >= 1) {
+            ddlCondition.append(LF);
             for (int i = 0; i < request.getPower().size(); i++) {
-                ddlCondition.append(LF).append(request.getPower().get(i));
+                ddlCondition.append(request.getPower().get(i)).append(LF);
             }
         }
         if (StringUtils.isNotEmpty(request.getConnectionLimit()) && !request.getConnectionLimit().equals("-1")) {
@@ -84,7 +85,7 @@ public class UserObjectSQLServiceImpl implements UserObjectSQLService {
         int size = request.getRole().size();
         if (size >= 1) {
             ddlCondition.append(" ROLE ").append(LF);
-            for (int i = 0; i < request.getRole().size(); i++) {
+            for (int i = 0; i < size; i++) {
                 ddlCondition.append(request.getRole().get(i));
                 if (i < size - 1) {
                     ddlCondition.append(COMMA);
@@ -94,9 +95,9 @@ public class UserObjectSQLServiceImpl implements UserObjectSQLService {
         int adminSize = request.getAdministrator().size();
         if (adminSize >= 1) {
             ddlCondition.append(" ADMIN ").append(LF);
-            for (int i = 0; i < request.getRole().size(); i++) {
+            for (int i = 0; i < adminSize; i++) {
                 ddlCondition.append(request.getAdministrator().get(i));
-                if (i < size - 1) {
+                if (i < adminSize - 1) {
                     ddlCondition.append(COMMA);
                 }
             }

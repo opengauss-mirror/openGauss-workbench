@@ -1,19 +1,19 @@
 <template>
   <el-config-provider :locale="locale">
     <router-view></router-view>
+    <ConnectDialog
+      v-if="AppStore.isReloadRouter"
+      v-model="isConnectVisible"
+      :type="connectType"
+      :connectInfo="connectInfo"
+      :uuid="availableUuid"
+    />
+    <ConnectInfoDialog
+      v-if="AppStore.isReloadRouter"
+      v-model="isConnectInfoVisible"
+      :connectInfo="connectInfo"
+    />
   </el-config-provider>
-  <ConnectDialog
-    v-if="AppStore.isReloadRouter"
-    v-model="isConnectVisible"
-    :type="connectType"
-    :connectInfo="connectInfo"
-    :uuid="availableUuid"
-  />
-  <ConnectInfoDialog
-    v-if="AppStore.isReloadRouter"
-    v-model="isConnectInfoVisible"
-    :connectInfo="connectInfo"
-  />
 </template>
 
 <script lang="ts" setup>
@@ -79,7 +79,7 @@
       toggleDark(val == 'dark');
     });
     window.$wujie?.bus.$on('opengauss-locale-change', (val) => {
-      // 'zh-CN' | 'en-US'
+      // 'zh-CN' | 'en-US' 
       i18nLocale.value = val;
       AppStore.setLanguage(val);
     });

@@ -1137,7 +1137,7 @@
     showCreateDbDialog.value = false;
     if (createDbType.value == 'create') {
       insertDbItem(
-        currentContextNodeData.id,
+        currentContextNodeData.connectInfo.id,
         data.name,
         currentContextNodeData.connectInfo,
         data.isConnect,
@@ -1442,7 +1442,9 @@
 
   const visitedViews = computed(() => {
     return input2.value
-      ? TagsViewStore.visitedViews.filter((item) => item.title.includes(input2.value))
+      ? TagsViewStore.visitedViews.filter((item) =>
+          decodeURIComponent(item.fileName).includes(input2.value),
+        )
       : TagsViewStore.visitedViews;
   });
 
@@ -1721,7 +1723,7 @@
   });
 
   onMounted(async () => {
-    // maybe update database list, and schema, databaseName... so must close all tabs.
+    // maybe update  database list, and schema, databaseName... so must close all tabs.
     EventBus.listen(EventTypeName.GET_CONNECTION_LIST, async (connectData) => {
       connectData && Object.assign(connectInfo, connectData);
       const { connectionid, ...info } = connectData;

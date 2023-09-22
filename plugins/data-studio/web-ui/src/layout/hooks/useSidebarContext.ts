@@ -59,6 +59,7 @@ export const useSidebarContext = (
     });
   };
 
+  // handleVacuum
   const handleVacuum = () => {
     if (options.hideTreeContext) options.hideTreeContext();
     const params = getTableCommonParams();
@@ -78,7 +79,7 @@ export const useSidebarContext = (
     ).then(async () => {
       await dropTable(params);
       ElMessage.success(t('message.success'));
-      EventBus.notify(EventTypeName.REFRESH_ASIDER, 'mode', {
+      EventBus.notify(EventTypeName.REFRESH_ASIDER, 'schema', {
         rootId: options.currentContextNodeData.rootId,
         databaseId: options.currentContextNodeData.databaseId,
         schemaId: options.currentContextNodeData.schemaId,

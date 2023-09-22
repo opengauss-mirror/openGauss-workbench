@@ -32,7 +32,7 @@ import static com.nctigba.datastudio.dao.ConnectionMapDAO.conMap;
 /**
  * DatabaseSynonymServiceImpl
  *
- * @since 2023-6-26
+ * @since 2023-09-25
  */
 @Slf4j
 @Service
@@ -75,9 +75,10 @@ public class DatabaseSynonymServiceImpl implements DatabaseSynonymService {
             try (
                     ResultSet count = statement.executeQuery(ddl)
             ) {
-                count.next();
-                if (StringUtils.isBlank(String.valueOf(count.getString("synname")))) {
-                    throw new CustomException(LocaleString.transLanguage("2011"));
+                if (count.next()) {
+                    if (StringUtils.isBlank(String.valueOf(count.getString("synname")))) {
+                        throw new CustomException(LocaleString.transLanguage("2011"));
+                    }
                 }
             }
             Map<String, Object> resultMap;

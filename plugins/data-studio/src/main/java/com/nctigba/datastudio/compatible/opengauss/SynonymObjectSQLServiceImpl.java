@@ -22,7 +22,7 @@ import static com.nctigba.datastudio.constants.SqlConstants.SYNONYM_SQL;
 /**
  * SynonymObjectSQLService achieve
  *
- * @since 2023-06-26
+ * @since 2023-09-25
  */
 @Slf4j
 @Service
@@ -51,7 +51,7 @@ public class SynonymObjectSQLServiceImpl implements SynonymObjectSQLService {
     @Override
     public String synonymAttributeSQL(DatabaseSynonymAttributeDTO request) {
         log.info("synonymAttribute request is: " + request);
-        return String.format(SYNONYM_ATTRIBUTE_SQL, DebugUtils.needQuoteName(request.getSynonymName()));
+        return String.format(SYNONYM_ATTRIBUTE_SQL, request.getSynonymName());
     }
 
     @Override
