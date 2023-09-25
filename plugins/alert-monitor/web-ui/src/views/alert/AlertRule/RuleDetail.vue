@@ -28,7 +28,7 @@
           maxlength="50" show-word-limit></el-input>
       </el-form-item>
       <el-form-item :label="$t('alertRule.ruleType')" prop="ruleType">
-        <el-radio-group v-model="formData.ruleType" :disabled="disabled">
+        <el-radio-group v-model="formData.ruleType" :disabled="disabled || state === 'edit'">
           <el-radio v-for="item in ruleTypeList" :key="item" :label="item">{{ $t(`alertRule.${item}`)
           }}</el-radio>
         </el-radio-group>
@@ -147,7 +147,7 @@
           </template>
         </el-input>
       </el-form-item>
-      <el-form-item :label="$t('alertRule.checkFrequency')" prop="checkFrequency" :required="true"
+      <el-form-item :label="$t('alertRule.checkFrequency')" prop="checkFrequency"
         v-if="formData.ruleType === 'log'">
         <el-input v-model="formData.checkFrequency" style="width: 200px;margin-right: 5px;" :disabled="disabled">
           <template #append>
@@ -569,7 +569,7 @@ const formRules = reactive<FormRules>({
     { required: true, validator: checkNotifyDuration, trigger: 'blur' },
   ],
   checkFrequency: [
-    { validator: checkCheckFrequency, trigger: 'blur' },
+    { required: true, validator: checkCheckFrequency, trigger: 'blur' },
   ],
   alertNotify: [
     { required: true, validator: checkAlertNotify, trigger: 'blur' },

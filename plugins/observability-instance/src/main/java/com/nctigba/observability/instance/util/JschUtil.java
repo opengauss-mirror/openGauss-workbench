@@ -19,6 +19,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import javax.servlet.http.HttpServletResponse;
 
+import cn.hutool.core.util.StrUtil;
+import com.jcraft.jsch.SftpException;
 import org.opengauss.admin.common.core.domain.model.ops.HostFile;
 import org.opengauss.admin.common.core.domain.model.ops.JschResult;
 import org.opengauss.admin.common.core.domain.model.ops.WsSession;
@@ -51,13 +53,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Component
 public class JschUtil {
-    @Autowired
-    @AutowiredType(Type.PLUGIN_MAIN)
-    private WsUtil wsUtil;
-    @Autowired
-    @AutowiredType(Type.PLUGIN_MAIN)
-    private WsConnectorManager wsConnectorManager;
-
     /**
      * Session timeout duration
      */
@@ -72,6 +67,13 @@ public class JschUtil {
         autoResponseContext.put("yes/no", "yes");
     }
 
+    @Autowired
+    @AutowiredType(Type.PLUGIN_MAIN)
+    private WsUtil wsUtil;
+    @Autowired
+    @AutowiredType(Type.PLUGIN_MAIN)
+    private WsConnectorManager wsConnectorManager;
+
     /**
      * Acquiring a Session
      *
@@ -84,6 +86,27 @@ public class JschUtil {
     public Optional<Session> getSession(String host, Integer port, String username, String password) {
         log.info("host:{},port:{},username:{}", host, port, username);
         return createSession(host, port, username, password);
+    }
+
+    /**
+     * ChannelExec
+     *
+     * @param command Instructions to execute
+     * @param session session
+     * @param env     env path
+     * @return SSH Result
+     * @throws IOException IO Exception
+     * @throws InterruptedException Interrupted Exception
+     *
+     * @since 1.0
+     */
+    public JschResult executeCommand(String command, Session session, String env)
+        throws IOException, InterruptedException {
+        if (StrUtil.isNotEmpty(env)) {
+            command = "source " + env + " && " + command;
+        }
+
+        return executeCommand(command, session, null, null);
     }
 
     /**
@@ -115,6 +138,28 @@ public class JschUtil {
     /**
      * ChannelExec
      *
+     * @param command   Instructions to execute
+     * @param env       env
+     * @param session   session
+     * @param wsSession websocket session
+     * @return SSH Result
+     * @throws IOException IO Exception
+     * @throws InterruptedException Interrupted Exception
+     *
+     * @since 1.0
+     */
+    public JschResult executeCommand(String command, String env, Session session, WsSession wsSession)
+        throws IOException, InterruptedException {
+        if (StrUtil.isNotEmpty(env)) {
+            command = "source " + env + " && " + command;
+        }
+
+        return executeCommand(command, session, wsSession, null);
+    }
+
+    /**
+     * ChannelExec
+     *
      * @param command Instructions to execute
      * @param session session
      * @return SSH Result
@@ -122,6 +167,46 @@ public class JschUtil {
     public JschResult executeCommand(String command, Session session, Map<String, String> autoResponse)
             throws IOException, InterruptedException {
         return executeCommand(command, session, null, autoResponse);
+    }
+
+    /**
+     * executeCommand
+     *
+     * @param env env
+     * @param command command
+     * @param session session
+     * @param wsSession wsSession
+     * @param autoResponse  autoResponse
+     * @return result
+     * @throws IOException ioe
+     * @throws InterruptedException ie
+     */
+    public JschResult executeCommand(String env, String command, Session session,
+                                     WsSession wsSession, Map<String, String> autoResponse) throws IOException, InterruptedException {
+        if (StrUtil.isNotEmpty(env)) {
+            command = "source " + env + " && " + command;
+        }
+
+        return executeCommand(command, session, wsSession, autoResponse);
+    }
+
+    /**
+     * executeCommandWithSerialResponse
+     *
+     * @param env env
+     * @param command command
+     * @param session session
+     * @param autoResponse autoResponse
+     * @param retSession retSession
+     * @return result
+     * @throws Exception e
+     */
+    public JschResult executeCommandWithSerialResponse(String env, String command, Session session,
+                                                       Map<String, List<String>> autoResponse, WsSession retSession) throws Exception {
+        if (StrUtil.isNotEmpty(env)) {
+            command = "source " + env + " && " + command;
+        }
+        return executeCommandWithSerialResponse(command, session, autoResponse, retSession);
     }
 
     public JschResult executeCommandWithSerialResponse(String command, Session session,
@@ -222,7 +307,7 @@ public class JschUtil {
 
     /**
      * Send instructions to ChannelShell
-     * 
+     *
      * @param channelShell channelShell
      * @param command      command
      */
@@ -258,6 +343,40 @@ public class JschUtil {
         } catch (Exception e) {
             log.error("sftp upload Failure", e);
             throw new OpsException("sftp upload Failure");
+        }
+        log.info("Upload End");
+    }
+
+    /**
+     * File upload
+     *
+     * @param session        Host SSH Session
+     * @param wsSession      websocket session
+     * @param sourceStream   Source stream
+     * @param targetPath     The target path
+     */
+    public synchronized void upload(Session session, WsSession wsSession, InputStream sourceStream, String targetPath) {
+        log.info("Start uploading stream to {}", targetPath);
+        synchronized (session) {
+            try {
+                ChannelSftp channel = null;
+                Channel sftpChannel = session.openChannel("sftp");
+                if (sftpChannel instanceof ChannelSftp) {
+                    channel = (ChannelSftp) sftpChannel;
+                }
+                channel.connect();
+                JschProgressMonitor jschProgressMonitor = new JschProgressMonitor(wsSession);
+                channel.put(sourceStream, targetPath.trim(), jschProgressMonitor, ChannelSftp.OVERWRITE);
+            } catch (JSchException | SftpException e) {
+                log.error("sftp upload Failure", e);
+                throw new OpsException("sftp upload Failure: " + e.getMessage());
+            } finally {
+                try {
+                    sourceStream.close();
+                } catch (IOException e) {
+                    log.error("close input stream failed: " + e.getMessage());
+                }
+            }
         }
         log.info("Upload End");
     }

@@ -10,7 +10,7 @@
     <el-row :gutter="50">
       <el-col :span="12">
         <el-form-item prop="role" :label="$t('userRole.roleGroup')">
-          <el-select v-model="form.role" clearable>
+          <el-select v-model="form.role" clearable multiple collapse-tags>
             <el-option
               v-for="item in userRoleList"
               :key="item.oid"

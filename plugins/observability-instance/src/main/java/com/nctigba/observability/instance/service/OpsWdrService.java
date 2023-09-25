@@ -142,10 +142,10 @@ public class OpsWdrService extends ServiceImpl<OpsWdrMapper, OpsWdrEntity> {
      */
     public Map<String, Object> findSnapshot(String id, Date start, Date end) {
         Map<String, Object> map = new HashMap<>();
-        Long startSnapshot = snapshotMapper.getIdByTime(id, Snapshot::getStartTs, DateUtil.offsetHour(start, -1),
+        Long startSnapshot = snapshotMapper.getIdByTimeDesc(id, Snapshot::getStartTs, DateUtil.offsetHour(start, -1),
                 start);
         map.put("start", startSnapshot == 0 ? null : startSnapshot);
-        Long endSnapshot = snapshotMapper.getIdByTime(id, Snapshot::getEndTs, end, DateUtil.offsetHour(end, 1));
+        Long endSnapshot = snapshotMapper.getIdByTimeAsc(id, Snapshot::getEndTs, end, DateUtil.offsetHour(end, 1));
         map.put("end", endSnapshot == 0 ? null : endSnapshot);
         if (startSnapshot == null || endSnapshot == null) {
             return map;
@@ -217,8 +217,8 @@ public class OpsWdrService extends ServiceImpl<OpsWdrMapper, OpsWdrEntity> {
             responseList.add(sql);
 
             response.put("openGauss=#", responseList);
-            JschResult jschResult = jschUtil.executeCommandWithSerialResponse(clientLoginOpenGauss, session, response,
-                    null);
+            JschResult jschResult = jschUtil.executeCommandWithSerialResponse(clusterEntity.getEnvPath(),
+                clientLoginOpenGauss, session, response, null);
             if (0 != jschResult.getExitCode()) {
                 log.error("Generate wdr snapshot exception, exit code: {}, log: {}", jschResult.getExitCode(),
                         jschResult.getResult());
@@ -347,7 +347,8 @@ public class OpsWdrService extends ServiceImpl<OpsWdrMapper, OpsWdrEntity> {
 
             String wdrPath = "/home/" + userEntity.getUsername();
             String wdrName = "WDR-" + StrUtil.uuid() + ".html";
-            doGenerate(wdrPath, wdrName, startId, endId, WdrScopeEnum.NODE, type, session, clusterEntity.getPort());
+            doGenerate(wdrPath, wdrName, startId, endId, WdrScopeEnum.NODE, type, session, clusterEntity.getPort(),
+                clusterEntity.getEnvPath());
             OpsWdrEntity opsWdrEntity = new OpsWdrEntity();
             opsWdrEntity.setScope(WdrScopeEnum.NODE);
             opsWdrEntity.setReportAt(new Date());
@@ -397,7 +398,8 @@ public class OpsWdrService extends ServiceImpl<OpsWdrMapper, OpsWdrEntity> {
 
             String wdrPath = "/home/" + userEntity.getUsername();
             String wdrName = "WDR-" + StrUtil.uuid() + ".html";
-            doGenerate(wdrPath, wdrName, startId, endId, WdrScopeEnum.CLUSTER, type, session, clusterEntity.getPort());
+            doGenerate(wdrPath, wdrName, startId, endId, WdrScopeEnum.CLUSTER, type, session, clusterEntity.getPort()
+                , clusterEntity.getEnvPath());
 
             OpsWdrEntity opsWdrEntity = new OpsWdrEntity();
             opsWdrEntity.setScope(WdrScopeEnum.CLUSTER);
@@ -420,7 +422,7 @@ public class OpsWdrService extends ServiceImpl<OpsWdrMapper, OpsWdrEntity> {
     }
 
     private void doGenerate(String wdrPath, String wdrName, String startId, String endId, WdrScopeEnum scope,
-            WdrTypeEnum type, Session session, Integer port) {
+            WdrTypeEnum type, Session session, Integer port,  String envPath) {
         String clientLoginOpenGauss = MessageFormat.format(SshCommandConstants.LOGIN, String.valueOf(port));
         try {
             String nodeName = null;
@@ -439,8 +441,8 @@ public class OpsWdrService extends ServiceImpl<OpsWdrMapper, OpsWdrEntity> {
             responseList.add(endSql);
 
             response.put("openGauss=#", responseList);
-            JschResult jschResult = jschUtil.executeCommandWithSerialResponse(clientLoginOpenGauss, session, response,
-                    null);
+            JschResult jschResult = jschUtil.executeCommandWithSerialResponse(envPath, clientLoginOpenGauss, session,
+                response, null);
             if (0 != jschResult.getExitCode()) {
                 log.error("Generated wdr exception, exit code: {}, log: {}", jschResult.getExitCode(),
                         jschResult.getResult());
