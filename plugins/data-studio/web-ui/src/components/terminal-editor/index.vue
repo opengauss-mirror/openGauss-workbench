@@ -231,7 +231,7 @@
 
   interface TabType {
     id: number;
-    name: string; //tag's name
+    name: string; //tag's name 
     columns?: any[];
     data: any[];
   }

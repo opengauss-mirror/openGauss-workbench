@@ -136,7 +136,7 @@ public class ViewObjectSQLServiceImpl implements ViewObjectSQLService {
                 Connection connection = connectionConfig.connectDatabase(request.getUuid());
                 Statement statement = connection.createStatement()
         ) {
-            String selectSql = String.format(SELECT_VIEW_TYPE_SQL, DebugUtils.needQuoteName(request.getSchema()),
+            String selectSql = String.format(SELECT_VIEW_TYPE_SQL, request.getSchema(),
                     DebugUtils.needQuoteName(request.getViewName()));
             try (
                     ResultSet resultSet = statement.executeQuery(selectSql)
