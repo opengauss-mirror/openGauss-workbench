@@ -68,27 +68,30 @@ public class StepOutImpl implements OperationInterface {
                 log.info("stepOut newOid: " + newOid);
             }
         }
-
-        List<String> oidList = DebugUtils.getOidList(webSocketServer, rootWindowName);
-        if (oid.equals(newOid)) {
+        try {
+            List<String> oidList = DebugUtils.getOidList(webSocketServer, rootWindowName);
+            if (oid.equals(newOid)) {
+                singleStep.showDebugInfo(webSocketServer, stat, paramReq);
+                return;
+            }
+            if (oidList.contains(oid)) {
+                Map<String, String> map = new HashMap<>();
+                map.put(RESULT, newOid);
+                webSocketServer.sendMessage(windowName, SWITCH_WINDOW, SUCCESS, map);
+                DebugUtils.disableButton(webSocketServer, windowName);
+            } else {
+                webSocketServer.sendMessage(windowName, CLOSE_WINDOW, SUCCESS, null);
+                Map<String, Object> paramMap = webSocketServer.getParamMap(rootWindowName);
+                paramMap.keySet().removeIf(oid::equals);
+            }
+            String name = DebugUtils.getOldWindowName(webSocketServer, rootWindowName, newOid);
+            DebugUtils.enableButton(webSocketServer, name);
+            paramReq.setCloseWindow(true);
+            paramReq.setOldWindowName(name);
             singleStep.showDebugInfo(webSocketServer, stat, paramReq);
-            return;
+        } catch (SQLException | IOException e) {
+            log.info(e.getMessage());
         }
-        if (oidList.contains(oid)) {
-            Map<String, String> map = new HashMap<>();
-            map.put(RESULT, newOid);
-            webSocketServer.sendMessage(windowName, SWITCH_WINDOW, SUCCESS, map);
-            DebugUtils.disableButton(webSocketServer, windowName);
-        } else {
-            webSocketServer.sendMessage(windowName, CLOSE_WINDOW, SUCCESS, null);
-            Map<String, Object> paramMap = webSocketServer.getParamMap(rootWindowName);
-            paramMap.keySet().removeIf(oid::equals);
-        }
-        String name = DebugUtils.getOldWindowName(webSocketServer, rootWindowName, newOid);
-        DebugUtils.enableButton(webSocketServer, name);
-        paramReq.setCloseWindow(true);
-        paramReq.setOldWindowName(name);
-        singleStep.showDebugInfo(webSocketServer, stat, paramReq);
     }
 
     @Override
