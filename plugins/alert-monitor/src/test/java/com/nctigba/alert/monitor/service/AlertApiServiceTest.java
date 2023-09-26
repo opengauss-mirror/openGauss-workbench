@@ -188,6 +188,7 @@ public class AlertApiServiceTest {
         when(templateRuleMapper.selectById(anyLong())).thenReturn(alertTemplateRule);
         List<AlertApiReq> alertApiReqList = new ArrayList<>();
         AlertApiReq alertApiReq = getAlertApiReq();
+        alertApiReq.setAlertStatus(CommonConstants.RECOVER_STATUS);
         alertApiReqList.add(alertApiReq);
         AlertContentParamDto contentParamDto = new AlertContentParamDto().setNodeName("nodeName").setHostIp("ip")
             .setLevel(CommonConstants.WARN).setHostname("centos").setPort("8080")
@@ -456,6 +457,7 @@ public class AlertApiServiceTest {
         AlertApiReq alertApiReq = new AlertApiReq();
         alertApiReq.setStartsAt(LocalDateTime.now().minusHours(1));
         alertApiReq.setEndsAt(LocalDateTime.now());
+        alertApiReq.setAlertStatus(CommonConstants.FIRING_STATUS);
         AlertLabels labels = new AlertLabels();
         labels.setLevel("warn");
         labels.setTemplateId(1L);

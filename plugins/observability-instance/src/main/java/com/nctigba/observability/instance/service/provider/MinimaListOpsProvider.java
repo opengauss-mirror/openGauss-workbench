@@ -3,8 +3,13 @@
  */
 package com.nctigba.observability.instance.service.provider;
 
-import java.util.List;
-
+import cn.hutool.core.util.StrUtil;
+import com.gitee.starblues.bootstrap.annotation.AutowiredType;
+import com.jcraft.jsch.Session;
+import com.nctigba.observability.instance.entity.OpsWdrEntity.WdrScopeEnum;
+import com.nctigba.observability.instance.service.provider.ClusterOpsProviderManager.OpenGaussSupportOSEnum;
+import com.nctigba.observability.instance.util.JschUtil;
+import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsClusterEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsClusterNodeEntity;
 import org.opengauss.admin.common.core.domain.model.ops.JschResult;
@@ -12,17 +17,10 @@ import org.opengauss.admin.common.enums.ops.ClusterRoleEnum;
 import org.opengauss.admin.common.enums.ops.DeployTypeEnum;
 import org.opengauss.admin.common.enums.ops.OpenGaussVersionEnum;
 import org.opengauss.admin.common.exception.ops.OpsException;
-import com.nctigba.observability.instance.util.JschUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.gitee.starblues.bootstrap.annotation.AutowiredType;
-import com.jcraft.jsch.Session;
-import com.nctigba.observability.instance.entity.OpsWdrEntity.WdrScopeEnum;
-import com.nctigba.observability.instance.service.provider.ClusterOpsProviderManager.OpenGaussSupportOSEnum;
-
-import cn.hutool.core.util.StrUtil;
-import lombok.extern.slf4j.Slf4j;
+import java.util.List;
 
 /**
  * @author lhf
@@ -46,8 +44,9 @@ public class MinimaListOpsProvider extends AbstractOpsProvider {
     }
 
     @Override
-    public void enableWdrSnapshot(Session session, OpsClusterEntity clusterEntity,
-            List<OpsClusterNodeEntity> opsClusterNodeEntities, WdrScopeEnum scope, String dataPath) {
+    public void enableWdrSnapshot(
+        Session session, OpsClusterEntity clusterEntity,
+        List<OpsClusterNodeEntity> opsClusterNodeEntities, WdrScopeEnum scope, String dataPath) {
         if (StrUtil.isEmpty(dataPath)) {
             dataPath = opsClusterNodeEntities.stream().filter(node -> node.getClusterRole() == ClusterRoleEnum.MASTER)
                 .findFirst().orElseThrow(() -> new OpsException("Master node configuration not found")).getDataPath();
@@ -62,7 +61,7 @@ public class MinimaListOpsProvider extends AbstractOpsProvider {
         String checkCommand = "gs_guc check -D " + dataPath + " -c \"enable_wdr_snapshot\"";
         try {
             JschResult jschResult = jschUtil.executeCommand(checkCommand, session, clusterEntity.getEnvPath());
-            if (jschResult.getResult().contains("enable_wdr_snapshot=on")){
+            if (jschResult.getResult().contains("enable_wdr_snapshot=on")) {
                 return;
             }
         } catch (Exception e) {
@@ -79,7 +78,8 @@ public class MinimaListOpsProvider extends AbstractOpsProvider {
         try {
             JschResult jschResult = jschUtil.executeCommand(command, session, clusterEntity.getEnvPath());
             if (0 != jschResult.getExitCode()) {
-                log.error("set enable_wdr_snapshot parameter failed, exit code: {}, error message: {}", jschResult.getExitCode(), jschResult.getResult());
+                log.error("set enable_wdr_snapshot parameter failed, exit code: {}, error message: {}",
+                    jschResult.getExitCode(), jschResult.getResult());
                 throw new OpsException("Failed to query the enable_wdr_snapshot parameter");
             }
         } catch (Exception e) {
