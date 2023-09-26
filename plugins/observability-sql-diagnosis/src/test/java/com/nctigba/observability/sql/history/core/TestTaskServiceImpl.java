@@ -46,6 +46,7 @@ import com.nctigba.observability.sql.service.history.point.sql.IndexAdvisor;
 import com.nctigba.observability.sql.service.history.point.sql.ObjectInfoCheck;
 import com.nctigba.observability.sql.service.history.point.sql.OnCpu;
 import com.nctigba.observability.sql.service.history.point.sql.OsParam;
+import com.nctigba.observability.sql.util.ParamJDBCUtil;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -121,6 +122,8 @@ public class TestTaskServiceImpl {
     private HisThresholdMapper hisThresholdMapper;
     @Mock
     private HisDiagnosisResultMapper resultMapper;
+    @Mock
+    private ParamJDBCUtil paramJDBCUtil;
     @Mock
     private ClusterManager clusterManager;
     @Spy

@@ -31,6 +31,8 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class SqlValidator {
+
+    private final static int reconnectNum = 3;
     private final HisDiagnosisTaskMapper mapper;
     private final ClusterManager clusterManager;
 
@@ -39,7 +41,7 @@ public class SqlValidator {
      *
      * @param task task info
      */
-    public void beforeStart(HisDiagnosisTask task) {
+    public void beforeStart(HisDiagnosisTask task) throws ParserException {
         task.addRemarks("before:sql check");
         mapper.updateById(task);
         try {
@@ -55,7 +57,7 @@ public class SqlValidator {
         }
         task.addRemarks("sql check success");
         mapper.updateById(task);
-        for (int i = 0; i < 3; i++) {
+        for (int i = 0; i < reconnectNum; i++) {
             try (var conn = clusterManager.getConnectionByNodeId(task.getNodeId())) {
                 task.addRemarks("db conn check successes:" + conn.toString());
                 mapper.updateById(task);

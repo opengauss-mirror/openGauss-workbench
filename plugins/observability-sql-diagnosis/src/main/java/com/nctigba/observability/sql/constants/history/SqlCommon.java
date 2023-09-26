@@ -168,4 +168,24 @@ public class SqlCommon {
                     + "pl_execution_time/ 1000 pl_execution_time, "
                     + "pl_compilation_time/1000 pl_compilation_time, data_io_time/1000 data_io_time"
                     + " from dbe_perf.statement_history where debug_query_id = ? limit 1";
+
+    /**
+     * Param info sql statement
+     */
+    public static final String PARAM_INFO = "select * from param_info;";
+
+    /**
+     * Param info sql statement
+     */
+    public static final String PARAM_INFO_COUNT = "select count(*) from param_info;";
+
+    /**
+     * Param info sql statement
+     */
+    public static final String PARAM_INFO_DB = "select * from param_info where paramType='DB';";
+
+    /**
+     * Param info sql statement
+     */
+    public static final String PARAM_INFO_OS = "select * from param_info where paramType='OS';";
 }

@@ -10,7 +10,6 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.nctigba.common.web.exception.HisDiagnosisException;
 import com.nctigba.observability.sql.constants.CollectionTypeCommon;
-import com.nctigba.observability.sql.constants.CommonConstants;
 import com.nctigba.observability.sql.constants.history.DiagnosisTypeCommon;
 import com.nctigba.observability.sql.constants.history.OptionCommon;
 import com.nctigba.observability.sql.constants.history.PointTypeCommon;
@@ -20,6 +19,7 @@ import com.nctigba.observability.sql.mapper.history.HisDiagnosisResultMapper;
 import com.nctigba.observability.sql.mapper.history.HisDiagnosisTaskMapper;
 import com.nctigba.observability.sql.mapper.history.HisThresholdMapper;
 import com.nctigba.observability.sql.model.NctigbaEnv;
+import com.nctigba.observability.sql.model.ParamInfo;
 import com.nctigba.observability.sql.model.history.DataStoreConfig;
 import com.nctigba.observability.sql.model.history.HisDiagnosisResult;
 import com.nctigba.observability.sql.model.history.HisDiagnosisTask;
@@ -39,6 +39,7 @@ import com.nctigba.observability.sql.service.history.HisDiagnosisPointService;
 import com.nctigba.observability.sql.service.history.TaskService;
 import com.nctigba.observability.sql.service.history.collection.CollectionItem;
 import com.nctigba.observability.sql.service.history.collection.ebpf.EbpfCollectionItem;
+import com.nctigba.observability.sql.util.ParamJDBCUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,18 +47,13 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.multipart.MultipartFile;
-import org.sqlite.JDBC;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
@@ -99,6 +95,8 @@ public class TaskServiceImpl implements TaskService {
     private List<EbpfCollectionItem> ebpfItemList;
     @Autowired
     private NctigbaEnvMapper envMapper;
+    @Autowired
+    private ParamJDBCUtil paramJDBCUtil;
 
     @Override
     public Integer add(HisDiagnosisTaskDTO taskDTO) {
@@ -130,18 +128,13 @@ public class TaskServiceImpl implements TaskService {
             resultList.add(initData);
         }
         if (DiagnosisTypeCommon.SQL.equals(task.getDiagnosisType())) {
-            String selectSql = "select * from param_info;";
-            try (Connection connect = connectSqlite(); Statement statement = connect.createStatement();
-                 ResultSet result = statement.executeQuery(selectSql)) {
-                while (result.next()) {
-                    String paramName = result.getString(3);
-                    String nodeName = initParamName(paramName);
-                    HisDiagnosisResult initData = new HisDiagnosisResult(task, nodeName,
-                            HisDiagnosisResult.PointState.INITIALIZE, HisDiagnosisResult.ResultState.NO_ADVICE);
-                    resultList.add(initData);
-                }
-            } catch (SQLException e) {
-                throw new HisDiagnosisException("error:", e);
+            List<ParamInfo> paramInfoList = paramJDBCUtil.result(SqlCommon.PARAM_INFO);
+            for (ParamInfo info : paramInfoList) {
+                String paramName = info.getParamName();
+                String nodeName = initParamName(paramName);
+                HisDiagnosisResult initData = new HisDiagnosisResult(task, nodeName,
+                        HisDiagnosisResult.PointState.INITIALIZE, HisDiagnosisResult.ResultState.NO_ADVICE);
+                resultList.add(initData);
             }
         }
         resultMapper.batchInert(resultList);
@@ -167,42 +160,32 @@ public class TaskServiceImpl implements TaskService {
                 int length = lineValue.split("-").length;
                 String value = lineValue.substring(0, length - 1);
                 if (lines.contains("OsParam")) {
-                    String selectSql = "select * from param_info where paramType='OS';";
-                    try (Connection connect = connectSqlite(); Statement statement = connect.createStatement();
-                         ResultSet result = statement.executeQuery(selectSql)) {
-                        while (result.next()) {
-                            String paramName = result.getString(3);
-                            OsParamData[] osFields = OsParamData.values();
-                            String pointName = "";
-                            for (OsParamData osField : osFields) {
-                                if (osField.getParamName().equals(paramName)) {
-                                    pointName = osField.toString();
-                                }
+                    List<ParamInfo> paramInfoList = paramJDBCUtil.result(SqlCommon.PARAM_INFO_OS);
+                    for (ParamInfo info : paramInfoList) {
+                        String paramName = info.getParamName();
+                        OsParamData[] osFields = OsParamData.values();
+                        String pointName = "";
+                        for (OsParamData osField : osFields) {
+                            if (osField.getParamName().equals(paramName)) {
+                                pointName = osField.toString();
                             }
-                            sb.append(value).append("-").append(pointName).append(" DIAGNOSIS");
-                            sb.append(System.getProperty("line.separator"));
                         }
-                    } catch (SQLException e) {
-                        throw new HisDiagnosisException("error:", e);
+                        sb.append(value).append("-").append(pointName).append(" DIAGNOSIS");
+                        sb.append(System.getProperty("line.separator"));
                     }
                 } else if (lines.contains("DatabaseParam")) {
-                    String selectSql = "select * from param_info where paramType='DB';";
-                    try (Connection connect = connectSqlite(); Statement statement = connect.createStatement();
-                         ResultSet result = statement.executeQuery(selectSql)) {
-                        while (result.next()) {
-                            String paramName = result.getString(3);
-                            DatabaseParamData[] dbFields = DatabaseParamData.values();
-                            String pointName = "";
-                            for (DatabaseParamData dbField : dbFields) {
-                                if (dbField.getParamName().equals(paramName)) {
-                                    pointName = dbField.toString();
-                                }
+                    List<ParamInfo> paramInfoList = paramJDBCUtil.result(SqlCommon.PARAM_INFO_DB);
+                    for (ParamInfo info : paramInfoList) {
+                        String paramName = info.getParamName();
+                        DatabaseParamData[] dbFields = DatabaseParamData.values();
+                        String pointName = "";
+                        for (DatabaseParamData dbField : dbFields) {
+                            if (dbField.getParamName().equals(paramName)) {
+                                pointName = dbField.toString();
                             }
-                            sb.append(value).append("-").append(pointName);
-                            sb.append(System.getProperty("line.separator"));
                         }
-                    } catch (SQLException e) {
-                        throw new HisDiagnosisException("error:", e);
+                        sb.append(value).append("-").append(pointName);
+                        sb.append(System.getProperty("line.separator"));
                     }
                 }
             }
@@ -342,61 +325,14 @@ public class TaskServiceImpl implements TaskService {
                 try {
                     Object isExistData = item.queryData(task);
                     if (isExistData == null) {
-                        pointServiceList.forEach(f -> {
-                            if (!CollectionUtils.isEmpty(f.getSourceDataKeys())) {
-                                f.getSourceDataKeys().forEach(g -> {
-                                    if (g == item && !sb.toString().contains(f.toString())) {
-                                        String pointName = getClassName(f);
-                                        sb.append(f).append(";");
-                                        HisDiagnosisResult result = new HisDiagnosisResult(task, pointName,
-                                                HisDiagnosisResult.PointState.NOT_HAVE_DATA,
-                                                HisDiagnosisResult.ResultState.NO_ADVICE);
-                                        resultMapper.update(result, Wrappers.<HisDiagnosisResult>lambdaQuery().eq(
-                                                        HisDiagnosisResult::getTaskId, result.getTaskId())
-                                                .eq(HisDiagnosisResult::getPointName, pointName));
-                                    }
-                                });
-                            }
-                        });
+                        updateResult(item, sb, task, "no data");
                     } else {
                         if (isExistData.toString().contains("error")) {
-                            pointServiceList.forEach(f -> {
-                                if (!CollectionUtils.isEmpty(f.getSourceDataKeys())) {
-                                    f.getSourceDataKeys().forEach(g -> {
-                                        if (g == item && !sb.toString().contains(f.toString())) {
-                                            String pointName = getClassName(f);
-                                            sb.append(f).append(";");
-                                            HisDiagnosisResult result = new HisDiagnosisResult(task, pointName,
-                                                    HisDiagnosisResult.PointState.COLLECT_EXCEPTION,
-                                                    HisDiagnosisResult.ResultState.NO_ADVICE);
-                                            result.setPointSuggestion(isExistData.toString());
-                                            resultMapper.update(result, Wrappers.<HisDiagnosisResult>lambdaQuery().eq(
-                                                            HisDiagnosisResult::getTaskId, result.getTaskId())
-                                                    .eq(HisDiagnosisResult::getPointName, pointName));
-                                        }
-                                    });
-                                }
-                            });
+                            updateResult(item, sb, task, isExistData.toString());
                         }
                     }
                 } catch (Exception e) {
-                    pointServiceList.forEach(f -> {
-                        if (!CollectionUtils.isEmpty(f.getSourceDataKeys())) {
-                            f.getSourceDataKeys().forEach(g -> {
-                                if (g == item && !sb.toString().contains(f.toString())) {
-                                    String pointName = getClassName(f);
-                                    sb.append(f).append(";");
-                                    HisDiagnosisResult result = new HisDiagnosisResult(task, pointName,
-                                            HisDiagnosisResult.PointState.COLLECT_EXCEPTION,
-                                            HisDiagnosisResult.ResultState.NO_ADVICE);
-                                    result.setPointSuggestion("Collection exception:" + e.getMessage());
-                                    resultMapper.update(result, Wrappers.<HisDiagnosisResult>lambdaQuery().eq(
-                                                    HisDiagnosisResult::getTaskId, result.getTaskId())
-                                            .eq(HisDiagnosisResult::getPointName, pointName));
-                                }
-                            });
-                        }
-                    });
+                    updateResult(item, sb, task, e.getMessage());
                 }
                 task.addRemarks("stop check collection " + itemName);
                 taskMapper.updateById(task);
@@ -481,34 +417,54 @@ public class TaskServiceImpl implements TaskService {
         taskMapper.updateById(task);
     }
 
-    private void updateParamChildNode(HisDiagnosisTask task) {
-        String selectSql = "select * from param_info;";
-        List<String> list = new ArrayList<>();
-        try (Connection connect = connectSqlite(); Statement statement = connect.createStatement();
-             ResultSet result = statement.executeQuery(selectSql)) {
-            while (result.next()) {
-                String type = result.getString(2);
-                String paramName = result.getString(3);
-                String pointName = null;
-                if ("OS".equals(type)) {
-                    OsParamData[] osFields = OsParamData.values();
-                    for (OsParamData osField : osFields) {
-                        if (osField.getParamName().equals(paramName)) {
-                            pointName = osField.toString();
+    private void updateResult(CollectionItem<?> item, StringBuilder sb, HisDiagnosisTask task, String message) {
+        pointServiceList.forEach(f -> {
+            if (!CollectionUtils.isEmpty(f.getSourceDataKeys())) {
+                f.getSourceDataKeys().forEach(g -> {
+                    if (g == item && !sb.toString().contains(f.toString())) {
+                        String pointName = getClassName(f);
+                        sb.append(f).append(";");
+                        HisDiagnosisResult.PointState state;
+                        if ("no data".equals(message)) {
+                            state = HisDiagnosisResult.PointState.NOT_HAVE_DATA;
+                        } else {
+                            state = HisDiagnosisResult.PointState.COLLECT_EXCEPTION;
                         }
+                        HisDiagnosisResult result = new HisDiagnosisResult(task, pointName,
+                                state, HisDiagnosisResult.ResultState.NO_ADVICE);
+                        result.setPointSuggestion("Collection exception:" + message);
+                        resultMapper.update(result, Wrappers.<HisDiagnosisResult>lambdaQuery().eq(
+                                        HisDiagnosisResult::getTaskId, result.getTaskId())
+                                .eq(HisDiagnosisResult::getPointName, pointName));
                     }
-                } else {
-                    DatabaseParamData[] dbFields = DatabaseParamData.values();
-                    for (DatabaseParamData dbField : dbFields) {
-                        if (dbField.getParamName().equals(paramName)) {
-                            pointName = dbField.toString();
-                        }
+                });
+            }
+        });
+    }
+
+    private void updateParamChildNode(HisDiagnosisTask task) {
+        List<ParamInfo> paramInfoList = paramJDBCUtil.result(SqlCommon.PARAM_INFO);
+        List<String> list = new ArrayList<>();
+        for (ParamInfo info : paramInfoList) {
+            String type = String.valueOf(info.getParamType());
+            String paramName = info.getParamName();
+            String pointName = null;
+            if ("OS".equals(type)) {
+                OsParamData[] osFields = OsParamData.values();
+                for (OsParamData osField : osFields) {
+                    if (osField.getParamName().equals(paramName)) {
+                        pointName = osField.toString();
                     }
                 }
-                list.add(pointName);
+            } else {
+                DatabaseParamData[] dbFields = DatabaseParamData.values();
+                for (DatabaseParamData dbField : dbFields) {
+                    if (dbField.getParamName().equals(paramName)) {
+                        pointName = dbField.toString();
+                    }
+                }
             }
-        } catch (SQLException e) {
-            throw new HisDiagnosisException("error:", e);
+            list.add(pointName);
         }
         for (String pointName : list) {
             HisDiagnosisResult result = new HisDiagnosisResult(task, pointName,
@@ -754,23 +710,18 @@ public class TaskServiceImpl implements TaskService {
     }
 
     private void updateOsParamChildNode(HisDiagnosisTask task) {
-        String selectSql = "select * from param_info where paramType='OS';";
+        List<ParamInfo> paramInfoList = paramJDBCUtil.result(SqlCommon.PARAM_INFO_OS);
         List<String> list = new ArrayList<>();
-        try (Connection connect = connectSqlite(); Statement statement = connect.createStatement();
-             ResultSet result = statement.executeQuery(selectSql)) {
-            while (result.next()) {
-                String paramName = result.getString(3);
-                String pointName = null;
-                OsParamData[] osFields = OsParamData.values();
-                for (OsParamData osField : osFields) {
-                    if (osField.getParamName().equals(paramName)) {
-                        pointName = osField.toString();
-                    }
+        for (ParamInfo info : paramInfoList) {
+            String paramName = info.getParamName();
+            String pointName = null;
+            OsParamData[] osFields = OsParamData.values();
+            for (OsParamData osField : osFields) {
+                if (osField.getParamName().equals(paramName)) {
+                    pointName = osField.toString();
                 }
-                list.add(pointName);
             }
-        } catch (SQLException e) {
-            throw new HisDiagnosisException("error:", e);
+            list.add(pointName);
         }
         for (String pointName : list) {
             HisDiagnosisResult result = new HisDiagnosisResult(task, pointName,
@@ -810,16 +761,7 @@ public class TaskServiceImpl implements TaskService {
         if (TaskState.SQL_ERROR.equals(newTask.getState())) {
             return TaskState.SQL_ERROR;
         }
-        String selectSql = "select count(*) from param_info;";
-        int count = 0;
-        try (Connection connect = connectSqlite(); Statement statement = connect.createStatement();
-             ResultSet result = statement.executeQuery(selectSql)) {
-            if (result.next()) {
-                count = result.getInt(1);
-            }
-        } catch (SQLException e) {
-            throw new HisDiagnosisException("error:", e);
-        }
+        int count = paramJDBCUtil.selectCount(SqlCommon.PARAM_INFO_COUNT);
         HashMap<String, String> pointMap = obtainAllPoint(task.getDiagnosisType());
         List<String> pointList = new ArrayList<>(pointMap.keySet());
         List<HisDiagnosisResult> resultList = resultMapper.selectList(
@@ -1015,15 +957,5 @@ public class TaskServiceImpl implements TaskService {
             throw new HisDiagnosisException("error:" + e);
         }
         return lwpid;
-    }
-
-    private static synchronized Connection connectSqlite() {
-        Connection conn;
-        try {
-            conn = DriverManager.getConnection(JDBC.PREFIX + "data/" + CommonConstants.PARAM_DATABASE_NAME + ".db");
-        } catch (SQLException e) {
-            throw new HisDiagnosisException("error:", e);
-        }
-        return conn;
     }
 }
