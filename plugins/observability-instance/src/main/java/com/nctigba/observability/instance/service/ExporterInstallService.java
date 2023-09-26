@@ -14,7 +14,9 @@ import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.core.domain.model.ops.OpsClusterNodeVO;
@@ -178,8 +180,11 @@ public class ExporterInstallService extends AbstractInstaller {
                         var job = new job();
                         job.setStatic_configs(Arrays.asList(conexporter));
                         job.setJob_name(nodeId);
-                        conf.getScrape_configs().add(job);
-                        conf.setScrape_configs(new ArrayList<>(new LinkedHashSet<>(conf.getScrape_configs())));
+                        List<prometheusConfig.job> scrapeConfigs = conf.getScrape_configs().stream().filter(
+                            item -> StrUtil.isBlank(item.getJob_name()) || !item.getJob_name().equals(nodeId)).collect(
+                            Collectors.toList());
+                        scrapeConfigs.add(job);
+                        conf.setScrape_configs(new ArrayList<>(new LinkedHashSet<>(scrapeConfigs)));
 
                         var prometheusConfigFile = File.createTempFile("prom", ".tmp");
                         FileUtil.appendUtf8String(YamlUtil.dump(conf), prometheusConfigFile);
