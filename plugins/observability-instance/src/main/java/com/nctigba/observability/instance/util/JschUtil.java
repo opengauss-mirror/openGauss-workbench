@@ -3,6 +3,32 @@
  */
 package com.nctigba.observability.instance.util;
 
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.StrUtil;
+import com.gitee.starblues.bootstrap.annotation.AutowiredType;
+import com.gitee.starblues.bootstrap.annotation.AutowiredType.Type;
+import com.jcraft.jsch.Channel;
+import com.jcraft.jsch.ChannelExec;
+import com.jcraft.jsch.ChannelSftp;
+import com.jcraft.jsch.ChannelShell;
+import com.jcraft.jsch.JSch;
+import com.jcraft.jsch.JSchException;
+import com.jcraft.jsch.Session;
+import com.jcraft.jsch.SftpException;
+import com.jcraft.jsch.SftpProgressMonitor;
+import com.nctigba.observability.instance.constants.CommonConstants;
+import lombok.extern.slf4j.Slf4j;
+import org.opengauss.admin.common.core.domain.model.ops.HostFile;
+import org.opengauss.admin.common.core.domain.model.ops.JschResult;
+import org.opengauss.admin.common.core.domain.model.ops.WsSession;
+import org.opengauss.admin.common.core.handler.ops.cache.WsConnectorManager;
+import org.opengauss.admin.common.enums.ops.HostFileTypeEnum;
+import org.opengauss.admin.common.exception.ops.OpsException;
+import org.opengauss.admin.common.utils.ops.WsUtil;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import javax.servlet.http.HttpServletResponse;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -16,35 +42,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
-
-import javax.servlet.http.HttpServletResponse;
-
-import cn.hutool.core.util.StrUtil;
-import com.jcraft.jsch.SftpException;
-import org.opengauss.admin.common.core.domain.model.ops.HostFile;
-import org.opengauss.admin.common.core.domain.model.ops.JschResult;
-import org.opengauss.admin.common.core.domain.model.ops.WsSession;
-import org.opengauss.admin.common.core.handler.ops.cache.WsConnectorManager;
-import org.opengauss.admin.common.enums.ops.HostFileTypeEnum;
-import org.opengauss.admin.common.exception.ops.OpsException;
-import org.opengauss.admin.common.utils.ops.WsUtil;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-
-import com.gitee.starblues.bootstrap.annotation.AutowiredType;
-import com.gitee.starblues.bootstrap.annotation.AutowiredType.Type;
-import com.jcraft.jsch.Channel;
-import com.jcraft.jsch.ChannelExec;
-import com.jcraft.jsch.ChannelSftp;
-import com.jcraft.jsch.ChannelShell;
-import com.jcraft.jsch.JSch;
-import com.jcraft.jsch.JSchException;
-import com.jcraft.jsch.Session;
-import com.jcraft.jsch.SftpProgressMonitor;
-import com.nctigba.observability.instance.constants.CommonConstants;
-
-import cn.hutool.core.collection.CollUtil;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * @author lhf
@@ -63,6 +60,7 @@ public class JschUtil {
     private static final int CHANNEL_TIMEOUT = 50000;
 
     private static ConcurrentHashMap<String, String> autoResponseContext = new ConcurrentHashMap<>();
+
     static {
         autoResponseContext.put("yes/no", "yes");
     }
@@ -131,7 +129,7 @@ public class JschUtil {
      * @throws IOException IO Exception
      */
     public JschResult executeCommand(String command, Session session, WsSession wsSession)
-            throws IOException, InterruptedException {
+        throws IOException, InterruptedException {
         return executeCommand(command, session, wsSession, null);
     }
 
@@ -165,7 +163,7 @@ public class JschUtil {
      * @return SSH Result
      */
     public JschResult executeCommand(String command, Session session, Map<String, String> autoResponse)
-            throws IOException, InterruptedException {
+        throws IOException, InterruptedException {
         return executeCommand(command, session, null, autoResponse);
     }
 
@@ -181,8 +179,9 @@ public class JschUtil {
      * @throws IOException ioe
      * @throws InterruptedException ie
      */
-    public JschResult executeCommand(String env, String command, Session session,
-                                     WsSession wsSession, Map<String, String> autoResponse) throws IOException, InterruptedException {
+    public JschResult executeCommand(
+        String env, String command, Session session,
+        WsSession wsSession, Map<String, String> autoResponse) throws IOException, InterruptedException {
         if (StrUtil.isNotEmpty(env)) {
             command = "source " + env + " && " + command;
         }
@@ -201,16 +200,18 @@ public class JschUtil {
      * @return result
      * @throws Exception e
      */
-    public JschResult executeCommandWithSerialResponse(String env, String command, Session session,
-                                                       Map<String, List<String>> autoResponse, WsSession retSession) throws Exception {
+    public JschResult executeCommandWithSerialResponse(
+        String env, String command, Session session,
+        Map<String, List<String>> autoResponse, WsSession retSession) throws Exception {
         if (StrUtil.isNotEmpty(env)) {
             command = "source " + env + " && " + command;
         }
         return executeCommandWithSerialResponse(command, session, autoResponse, retSession);
     }
 
-    public JschResult executeCommandWithSerialResponse(String command, Session session,
-            Map<String, List<String>> autoResponse, WsSession retSession) throws Exception {
+    public JschResult executeCommandWithSerialResponse(
+        String command, Session session,
+        Map<String, List<String>> autoResponse, WsSession retSession) throws Exception {
         if (Objects.nonNull(retSession)) {
             wsUtil.sendText(retSession, command);
         }
@@ -253,8 +254,9 @@ public class JschUtil {
      * @param wsSession websocket session
      * @return SSH Result
      */
-    public JschResult executeCommand(String command, Session session, WsSession wsSession,
-            Map<String, String> autoResponse) throws IOException, InterruptedException {
+    public JschResult executeCommand(
+        String command, Session session, WsSession wsSession,
+        Map<String, String> autoResponse) throws IOException, InterruptedException {
         log.info("Execute an order：{}", command);
         wsUtil.sendText(wsSession, command);
 
@@ -412,7 +414,7 @@ public class JschUtil {
     }
 
     private JschResult buildJschResult(ChannelExec channelExec, WsSession wsSession, Map<String, String> autoResponse)
-            throws IOException, InterruptedException {
+        throws IOException, InterruptedException {
         JschResult jschResult = new JschResult();
         StringBuilder resultStrBuilder = new StringBuilder();
         // The output of the script execution is an input stream to the program
@@ -431,7 +433,7 @@ public class JschUtil {
                 String msg = new String(tmp, 0, i);
 
                 if (Objects.nonNull(wsSession) && Objects.nonNull(wsSession.getSession())
-                        && wsSession.getSession().isOpen()) {
+                    && wsSession.getSession().isOpen()) {
                     wsSession.getSession().getBasicRemote().sendText(new String(tmp, 0, i));
                 }
                 resultStrBuilder.append(msg);
@@ -478,8 +480,9 @@ public class JschUtil {
         return jschResult;
     }
 
-    private JschResult buildJschResultWithSerialResponse(ChannelExec channelExec, WsSession wsSession,
-            Map<String, List<String>> autoResponse) throws Exception {
+    private JschResult buildJschResultWithSerialResponse(
+        ChannelExec channelExec, WsSession wsSession,
+        Map<String, List<String>> autoResponse) throws Exception {
         JschResult jschResult = new JschResult();
         StringBuilder resultStrBuilder = new StringBuilder();
         // The output of the script execution is an input stream to the program
@@ -498,7 +501,7 @@ public class JschUtil {
                 String msg = new String(tmp, 0, i);
 
                 if (Objects.nonNull(wsSession) && Objects.nonNull(wsSession.getSession())
-                        && wsSession.getSession().isOpen()) {
+                    && wsSession.getSession().isOpen()) {
                     wsSession.getSession().getBasicRemote().sendText(new String(tmp, 0, i));
                 }
                 resultStrBuilder.append(msg);
@@ -563,8 +566,8 @@ public class JschUtil {
                 ChannelSftp.LsEntry file = (ChannelSftp.LsEntry) iterator.next();
 
                 res.add(HostFile.of(file.getFilename(),
-                        file.getAttrs().isDir() ? HostFileTypeEnum.DIRECTORY : HostFileTypeEnum.FILE,
-                        file.getAttrs().getSize()));
+                    file.getAttrs().isDir() ? HostFileTypeEnum.DIRECTORY : HostFileTypeEnum.FILE,
+                    file.getAttrs().getSize()));
 
             }
         } catch (Exception e) {
@@ -611,7 +614,7 @@ public class JschUtil {
         response.setHeader("Content-Disposition", "attachment;filename=" + filename);
 
         try (InputStream inputStream = sftp.get(path + "/" + filename);
-                BufferedInputStream bis = new BufferedInputStream(inputStream)) {
+             BufferedInputStream bis = new BufferedInputStream(inputStream)) {
             byte[] buff = new byte[1024];
             OutputStream os = response.getOutputStream();
             int i = 0;

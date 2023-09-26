@@ -172,4 +172,9 @@ public class CommonConstants {
      * datatime format
      */
     public static final String DATETIME_FORMAT_ISO8601 = "yyyy-MM-dd'T'HH:mm:ss'+08:00'";
+
+    /**
+     * prometheus evaluation_interval
+     */
+    public static final String EVALUATION_INTERVAL = "15s";
 }

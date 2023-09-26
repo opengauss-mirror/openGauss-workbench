@@ -26,4 +26,6 @@ public class AlertApiReq {
     private Map annotations;
 
     private String generatorURL;
+
+    private Integer alertStatus;
 }

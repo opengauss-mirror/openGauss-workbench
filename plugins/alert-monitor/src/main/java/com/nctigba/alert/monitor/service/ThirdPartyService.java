@@ -11,6 +11,7 @@ import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.HttpRequest;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
+import com.nctigba.alert.monitor.constant.CommonConstants;
 import com.nctigba.alert.monitor.dto.NotifySnmpDto;
 import com.nctigba.alert.monitor.entity.NotifyMessage;
 import com.nctigba.alert.monitor.entity.NotifyTemplate;
@@ -130,7 +131,7 @@ public class ThirdPartyService {
         if (StrUtil.isNotBlank(body)) {
             Map map = new HashMap();
             map.put("notifyTitle", notifyTitle);
-            map.put("notifyContent", notifyContent);
+            map.put("notifyContent", notifyContent.replaceAll(CommonConstants.LINE_SEPARATOR, "\\n"));
             post = post.body(new TextParser().parse(body, map));
         }
         String result = post.execute().body();
