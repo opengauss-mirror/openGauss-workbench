@@ -76,7 +76,7 @@ public class AsyncHelper {
         }
 
         OperateStatusDO operateStatusDO = webSocketServer.getOperateStatus(windowName);
-        if (isAnonymousOid(paramReq) || paramReq.isInPackage()) {
+        if (isAnonymousOid(paramReq)) {
             operateStatusDO.enableStartAnonymous();
         } else {
             if (paramReq.isInPackage()) {
