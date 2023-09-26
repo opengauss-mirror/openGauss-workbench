@@ -1032,6 +1032,113 @@ VALUES ('1606627277907599324', 'openEuler', 'aarch64', 'MINIMAL_LIST', '5.0.0',
         'admin', '2022-12-24 20:26:07.402', 'admin', '2022-12-24 20:26:07.402', 'openGauss', 'offical_5.0.0_mini_openEuler2203_aarch64') ON DUPLICATE KEY
 UPDATE NOTHING;
 
+INSERT INTO "public"."ops_package_manager"("package_id", "os", "cpu_arch", "package_version", "package_version_num",
+                                           "package_url", "remark", "create_by", "create_time", "update_by",
+                                           "update_time", "type", "name")
+VALUES ('1706224187103813634', 'centos', 'x86_64', 'ENTERPRISE', '5.1.0',
+        'https://opengauss.obs.cn-south-1.myhuaweicloud.com/5.1.0/x86/openGauss-5.1.0-CentOS-64bit-all.tar.gz', NULL,
+        'admin', '2023-09-25 17:41:38.992', 'admin', '2023-09-25 17:41:38.992', 'openGauss', 'offical_5.1.0_enterpirse_centos_x86_64') ON DUPLICATE KEY
+UPDATE NOTHING;
+INSERT INTO "public"."ops_package_manager"("package_id", "os", "cpu_arch", "package_version", "package_version_num",
+                                           "package_url", "remark", "create_by", "create_time", "update_by",
+                                           "update_time", "type", "name")
+VALUES ('1706224187103813635', 'centos', 'x86_64', 'LITE', '5.1.0',
+        'https://opengauss.obs.cn-south-1.myhuaweicloud.com/5.1.0/x86/openGauss-Lite-5.1.0-CentOS-x86_64.tar.gz', NULL,
+        'admin', '2023-09-25 17:41:57.21', 'admin', '2023-09-25 17:41:57.21', 'openGauss', 'offical_5.1.0_lite_centos_x86_64') ON DUPLICATE KEY
+UPDATE NOTHING;
+INSERT INTO "public"."ops_package_manager"("package_id", "os", "cpu_arch", "package_version", "package_version_num",
+                                           "package_url", "remark", "create_by", "create_time", "update_by",
+                                           "update_time", "type", "name")
+VALUES ('1706224187103813636', 'centos', 'x86_64', 'MINIMAL_LIST', '5.1.0',
+        'https://opengauss.obs.cn-south-1.myhuaweicloud.com/5.1.0/x86/openGauss-5.1.0-CentOS-64bit.tar.bz2', NULL,
+        'admin', '2023-09-25 15:07:04.749', 'admin', '2023-09-25 15:07:04.749', 'openGauss', 'offical_5.1.0_mini_centos_x86_64') ON DUPLICATE KEY
+UPDATE NOTHING;
+INSERT INTO "public"."ops_package_manager"("package_id", "os", "cpu_arch", "package_version", "package_version_num",
+                                           "package_url", "remark", "create_by", "create_time", "update_by",
+                                           "update_time", "type", "name")
+VALUES ('1706224187103813637', 'openEuler', 'x86_64', 'ENTERPRISE', '5.1.0',
+        'https://opengauss.obs.cn-south-1.myhuaweicloud.com/5.1.0/x86_openEuler/openGauss-5.1.0-openEuler-64bit-all.tar.gz',
+        NULL, 'admin', '2023-09-25 20:26:41.641', 'admin', '2023-09-25 20:26:41.641', 'openGauss', 'offical_5.1.0_enterprise_openEuler2003_x86_64') ON DUPLICATE KEY
+UPDATE NOTHING;
+INSERT INTO "public"."ops_package_manager"("package_id", "os", "cpu_arch", "package_version", "package_version_num",
+                                           "package_url", "remark", "create_by", "create_time", "update_by",
+                                           "update_time", "type", "name")
+VALUES ('1706224187103813638', 'openEuler', 'x86_64', 'MINIMAL_LIST', '5.1.0',
+        'https://opengauss.obs.cn-south-1.myhuaweicloud.com/5.1.0/x86_openEuler/openGauss-5.1.0-openEuler-64bit.tar.bz2',
+        NULL, 'admin', '2023-09-25 20:27:04.054', 'admin', '2023-09-25 20:27:04.054', 'openGauss', 'offical_5.1.0_mini_openEuler2003_x86_64') ON DUPLICATE KEY
+UPDATE NOTHING;
+INSERT INTO "public"."ops_package_manager"("package_id", "os", "cpu_arch", "package_version", "package_version_num",
+                                           "package_url", "remark", "create_by", "create_time", "update_by",
+                                           "update_time", "type", "name")
+VALUES ('1706224187103813639', 'openEuler', 'x86_64', 'LITE', '5.1.0',
+        'https://opengauss.obs.cn-south-1.myhuaweicloud.com/5.1.0/x86_openEuler/openGauss-Lite-5.1.0-openEuler-x86_64.tar.gz',
+        NULL, 'admin', '2023-09-25 20:27:20.832', 'admin', '2023-09-25 20:27:20.832', 'openGauss', 'offical_5.1.0_lite_openEuler2003_x86_64') ON DUPLICATE KEY
+UPDATE NOTHING;
+INSERT INTO "public"."ops_package_manager"("package_id", "os", "cpu_arch", "package_version", "package_version_num",
+                                           "package_url", "remark", "create_by", "create_time", "update_by",
+                                           "update_time", "type", "name")
+VALUES ('1706224187103813640', 'openEuler', 'aarch64', 'ENTERPRISE', '5.1.0',
+        'https://opengauss.obs.cn-south-1.myhuaweicloud.com/5.1.0/arm/openGauss-5.1.0-openEuler-64bit-all.tar.gz', NULL,
+        'admin', '2023-09-25 23:06:22.02', 'admin', '2023-09-25 23:06:22.02', 'openGauss', 'offical_5.1.0_enterprise_openEuler2003_aarch64') ON DUPLICATE KEY
+UPDATE NOTHING;
+INSERT INTO "public"."ops_package_manager"("package_id", "os", "cpu_arch", "package_version", "package_version_num",
+                                           "package_url", "remark", "create_by", "create_time", "update_by",
+                                           "update_time", "type", "name")
+VALUES ('1706224187103813641', 'openEuler', 'aarch64', 'LITE', '5.1.0',
+        'https://opengauss.obs.cn-south-1.myhuaweicloud.com/5.1.0/arm/openGauss-Lite-5.1.0-openEuler-aarch64.tar.gz',
+        NULL, 'admin', '2023-09-25 23:15:37.077', 'admin', '2023-09-25 23:15:37.077', 'openGauss', 'offical_5.1.0_lite_openEuler2003_aarch64') ON DUPLICATE KEY
+UPDATE NOTHING;
+INSERT INTO "public"."ops_package_manager"("package_id", "os", "cpu_arch", "package_version", "package_version_num",
+                                           "package_url", "remark", "create_by", "create_time", "update_by",
+                                           "update_time", "type", "name")
+VALUES ('1706224187103813642', 'openEuler', 'aarch64', 'MINIMAL_LIST', '5.1.0',
+        'https://opengauss.obs.cn-south-1.myhuaweicloud.com/5.1.0/arm/openGauss-5.1.0-openEuler-64bit.tar.bz2', NULL,
+        'admin', '2023-09-25 20:26:07.402', 'admin', '2023-09-25 20:26:07.402', 'openGauss', 'offical_5.1.0_mini_openEuler2003_aarch64') ON DUPLICATE KEY
+UPDATE NOTHING;
+
+INSERT INTO "public"."ops_package_manager"("package_id", "os", "cpu_arch", "package_version", "package_version_num",
+                                           "package_url", "remark", "create_by", "create_time", "update_by",
+                                           "update_time", "type", "name")
+VALUES ('1706224187103813643', 'openEuler', 'x86_64', 'ENTERPRISE', '5.1.0',
+        'https://opengauss.obs.cn-south-1.myhuaweicloud.com/5.1.0/x86_openEuler_2203/openGauss-5.1.0-openEuler-64bit-all.tar.gz',
+        NULL, 'admin', '2023-09-25 20:26:41.641', 'admin', '2023-09-25 20:26:41.641', 'openGauss', 'offical_5.1.0_enterprise_openEuler2203_x86_64') ON DUPLICATE KEY
+UPDATE NOTHING;
+INSERT INTO "public"."ops_package_manager"("package_id", "os", "cpu_arch", "package_version", "package_version_num",
+                                           "package_url", "remark", "create_by", "create_time", "update_by",
+                                           "update_time", "type", "name")
+VALUES ('1706224187103813644', 'openEuler', 'x86_64', 'MINIMAL_LIST', '5.1.0',
+        'https://opengauss.obs.cn-south-1.myhuaweicloud.com/5.1.0/x86_openEuler_2203/openGauss-5.1.0-openEuler-64bit.tar.bz2',
+        NULL, 'admin', '2023-09-25 20:27:04.054', 'admin', '2023-09-25 20:27:04.054', 'openGauss', 'offical_5.1.0_mini_openEuler2203_x86_64') ON DUPLICATE KEY
+UPDATE NOTHING;
+INSERT INTO "public"."ops_package_manager"("package_id", "os", "cpu_arch", "package_version", "package_version_num",
+                                           "package_url", "remark", "create_by", "create_time", "update_by",
+                                           "update_time", "type", "name")
+VALUES ('1706224187103813645', 'openEuler', 'x86_64', 'LITE', '5.1.0',
+        'https://opengauss.obs.cn-south-1.myhuaweicloud.com/5.1.0/x86_openEuler_2203/openGauss-Lite-5.1.0-openEuler-x86_64.tar.gz',
+        NULL, 'admin', '2023-09-25 20:27:20.832', 'admin', '2023-09-25 20:27:20.832', 'openGauss', 'offical_5.1.0_lite_openEuler2203_x86_64') ON DUPLICATE KEY
+UPDATE NOTHING;
+INSERT INTO "public"."ops_package_manager"("package_id", "os", "cpu_arch", "package_version", "package_version_num",
+                                           "package_url", "remark", "create_by", "create_time", "update_by",
+                                           "update_time", "type", "name")
+VALUES ('1706224187103813646', 'openEuler', 'aarch64', 'ENTERPRISE', '5.1.0',
+        'https://opengauss.obs.cn-south-1.myhuaweicloud.com/5.1.0/arm_2203/openGauss-5.1.0-openEuler-64bit-all.tar.gz', NULL,
+        'admin', '2023-09-25 23:06:22.02', 'admin', '2023-09-25 23:06:22.02', 'openGauss', 'offical_5.1.0_enterprise_openEuler2203_aarch64') ON DUPLICATE KEY
+UPDATE NOTHING;
+INSERT INTO "public"."ops_package_manager"("package_id", "os", "cpu_arch", "package_version", "package_version_num",
+                                           "package_url", "remark", "create_by", "create_time", "update_by",
+                                           "update_time", "type", "name")
+VALUES ('1706224187103813647', 'openEuler', 'aarch64', 'LITE', '5.1.0',
+        'https://opengauss.obs.cn-south-1.myhuaweicloud.com/5.1.0/arm_2203/openGauss-Lite-5.1.0-openEuler-aarch64.tar.gz',
+        NULL, 'admin', '2023-09-25 23:15:37.077', 'admin', '2023-09-25 23:15:37.077', 'openGauss', 'offical_5.1.0_lite_openEuler2203_aarch64') ON DUPLICATE KEY
+UPDATE NOTHING;
+INSERT INTO "public"."ops_package_manager"("package_id", "os", "cpu_arch", "package_version", "package_version_num",
+                                           "package_url", "remark", "create_by", "create_time", "update_by",
+                                           "update_time", "type", "name")
+VALUES ('1706224187103813648', 'openEuler', 'aarch64', 'MINIMAL_LIST', '5.1.0',
+        'https://opengauss.obs.cn-south-1.myhuaweicloud.com/5.1.0/arm_2203/openGauss-5.1.0-openEuler-64bit.tar.bz2', NULL,
+        'admin', '2023-09-25 20:26:07.402', 'admin', '2023-09-25 20:26:07.402', 'openGauss', 'offical_5.1.0_mini_openEuler2203_aarch64') ON DUPLICATE KEY
+UPDATE NOTHING;
+
 CREATE
 OR REPLACE FUNCTION init_data_fuc() RETURNS integer AS 'BEGIN
 
@@ -1148,7 +1255,7 @@ THEN
 ALTER TABLE sys_setting ADD COLUMN portal_jar_name text COLLATE "pg_catalog"."default";
 COMMENT ON COLUMN "public"."sys_setting"."portal_jar_name" IS ''portal的jar名称'';
 UPDATE "public"."sys_setting" SET portal_pkg_download_url = ''https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/'';
-UPDATE "public"."sys_setting" SET portal_pkg_name = ''PortalControl-5.0.0.tar.gz'';
+UPDATE "public"."sys_setting" SET portal_pkg_name = ''PortalControl-5.1.0.tar.gz'';
 UPDATE "public"."sys_setting" SET portal_jar_name = ''portalControl-1.0-SNAPSHOT-exec.jar'';
 END IF;
 RETURN 0;
@@ -1170,7 +1277,8 @@ ON COLUMN "public"."sys_setting"."upload_path" IS '文件上传目录';
 -- ----------------------------
 -- Records of sys_setting
 -- ----------------------------
-INSERT INTO "public"."sys_setting" VALUES (1, 1, '/ops/files/', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/', 'PortalControl-5.0.0.tar.gz', 'portalControl-1.0-SNAPSHOT-exec.jar') ON DUPLICATE KEY UPDATE NOTHING;
+DELETE FROM "public"."sys_setting" WHERE ID = 1;
+INSERT INTO "public"."sys_setting" VALUES (1, 1, '/ops/files/', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/', 'PortalControl-5.1.0.tar.gz', 'portalControl-1.0-SNAPSHOT-exec.jar') ON DUPLICATE KEY UPDATE NOTHING;
 
 CREATE OR REPLACE FUNCTION add_user_field_func() RETURNS integer AS 'BEGIN
 IF
