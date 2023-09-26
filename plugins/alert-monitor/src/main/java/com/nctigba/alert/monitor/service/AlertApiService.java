@@ -109,7 +109,6 @@ public class AlertApiService {
             .eq(AlertRecord::getClusterNodeId, clusterNodeId).eq(AlertRecord::getTemplateId, templateId)
             .eq(AlertRecord::getTemplateRuleId, alertTemplateRule.getId()).eq(AlertRecord::getStartTime,
                 alertApiReq.getStartsAt()).orderByDesc(AlertRecord::getUpdateTime));
-        LocalDateTime endsAt = alertApiReq.getEndsAt();
         AlertRecord alertRecord = null;
         if (CollectionUtil.isEmpty(alertRecords)) {
             alertRecord = new AlertRecord();
@@ -130,7 +129,7 @@ public class AlertApiService {
         String notifyWayNames = notifyWays.stream().map(item -> item.getName()).collect(
             Collectors.joining(CommonConstants.DELIMITER));
         alertRecord.setNotifyWayIds(alertTemplateRule.getNotifyWayIds()).setNotifyWayNames(notifyWayNames)
-            .setEndTime(endsAt).setStartTime(alertApiReq.getStartsAt()).setDuration(
+            .setEndTime(alertApiReq.getEndsAt()).setStartTime(alertApiReq.getStartsAt()).setDuration(
                 Duration.between(alertRecord.getStartTime(), alertRecord.getEndTime()).toSeconds());
         recordService.saveOrUpdate(alertRecord);
         return Optional.of(alertRecord);
