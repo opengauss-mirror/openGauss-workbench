@@ -45,7 +45,7 @@ import static com.nctigba.datastudio.enums.MessageEnum.WINDOW;
 /**
  * AsyncHelper
  *
- * @since 2023-6-26
+ * @since 2023-09-25
  */
 @Service
 @Slf4j
@@ -76,7 +76,7 @@ public class AsyncHelper {
         }
 
         OperateStatusDO operateStatusDO = webSocketServer.getOperateStatus(windowName);
-        if (isAnonymousOid(paramReq) || paramReq.isInPackage()) {
+        if (isAnonymousOid(paramReq)) {
             operateStatusDO.enableStartAnonymous();
         } else {
             if (paramReq.isInPackage()) {
@@ -95,7 +95,7 @@ public class AsyncHelper {
         statement.execute(String.format(TURN_OFF_SQL, oid));
         log.info("AsyncHelper oid: " + oid);
 
-        if (!paramReq.isCoverage()) {
+        if (!paramReq.isCoverage() && !isAnonymousOid(paramReq)) {
             closeConnection(webSocketServer, windowName, statement);
             Map<String, String> map = new HashMap<>();
             map.put(RESULT, LocaleString.transLanguageWs("1010", webSocketServer));

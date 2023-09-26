@@ -5,6 +5,7 @@
 package com.nctigba.alert.monitor.controller;
 
 import cn.hutool.json.JSONObject;
+import com.nctigba.alert.monitor.constant.CommonConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.core.domain.AjaxResult;
 import com.nctigba.alert.monitor.model.api.AlertApiReq;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -54,7 +56,14 @@ public class AlertApiController {
             jsonObject.put("endsAt", jsonObject.getStr("endsAt").replace("T", " ").substring(0, 19));
             AlertApiReq alertApiReq = jsonObject.toBean(AlertApiReq.class);
             alertApiReq.setStartsAt(alertApiReq.getStartsAt().plusHours(8));
-            alertApiReq.setEndsAt(alertApiReq.getEndsAt().plusHours(8));
+            LocalDateTime endAt = alertApiReq.getEndsAt().plusHours(8);
+            if (endAt.isAfter(LocalDateTime.now())) {
+                alertApiReq.setEndsAt(LocalDateTime.now());
+                alertApiReq.setAlertStatus(CommonConstants.FIRING_STATUS);
+            } else {
+                alertApiReq.setEndsAt(endAt);
+                alertApiReq.setAlertStatus(CommonConstants.RECOVER_STATUS);
+            }
             alertApiReqList.add(alertApiReq);
         }
         alertApiService.alerts(alertApiReqList);

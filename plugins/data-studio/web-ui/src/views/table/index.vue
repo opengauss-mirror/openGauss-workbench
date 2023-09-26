@@ -723,30 +723,15 @@
               const operationType = saveDataType[rowStatus];
               const equalOldDataRow = originData.find((e) => e[idKey] == row[idKey]);
               const dataLine = [];
-              if (['add', 'delete'].includes(rowStatus)) {
-                columns.forEach((col) => {
-                  dataLine.push({
-                    columnData: row[col.name],
-                    oldColumnData: equalOldDataRow?.[col.name],
-                    columnName: col.name,
-                    typeName: col.systemTypeName,
-                    typeNum: col.systemTypeNum,
-                  });
+              columns.forEach((col) => {
+                dataLine.push({
+                  columnData: row[col.name],
+                  oldColumnData: equalOldDataRow?.[col.name],
+                  columnName: col.name,
+                  typeName: col.systemTypeName,
+                  typeNum: col.systemTypeNum,
                 });
-              }
-              if (rowStatus == 'edit') {
-                columns.forEach((col) => {
-                  if (row[col.name + editedSuffix.value]) {
-                    dataLine.push({
-                      columnData: row[col.name],
-                      oldColumnData: equalOldDataRow?.[col.name],
-                      columnName: col.name,
-                      typeName: col.systemTypeName,
-                      typeNum: col.systemTypeNum,
-                    });
-                  }
-                });
-              }
+              });
               return {
                 operationType,
                 line: dataLine,

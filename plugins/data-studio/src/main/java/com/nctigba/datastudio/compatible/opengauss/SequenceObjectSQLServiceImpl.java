@@ -51,7 +51,7 @@ import static org.apache.commons.lang3.StringUtils.isNumeric;
 /**
  * SequenceObjectSQLService achieve
  *
- * @since 2023-06-26
+ * @since 2023-09-25
  */
 @Slf4j
 @Service
@@ -96,7 +96,7 @@ public class SequenceObjectSQLServiceImpl implements SequenceObjectSQLService {
             ddl =
                     ddl + LF + OWNED_KEYWORD_SQL + DebugUtils.containsSqlInjection(
                             DebugUtils.needQuoteName(request.getTableSchema())) + POINT
-                    + DebugUtils.containsSqlInjection(request.getTableName());
+                            + DebugUtils.containsSqlInjection(request.getTableName());
         }
         if (StringUtils.isNotEmpty(request.getTableColumn())) {
             ddl = ddl + POINT + DebugUtils.containsSqlInjection(DebugUtils.needQuoteName(request.getTableColumn()));
@@ -122,11 +122,10 @@ public class SequenceObjectSQLServiceImpl implements SequenceObjectSQLService {
                 Statement statement = connection.createStatement()
         ) {
             String selectSql = String.format(SELECT_SEQUENCE_DDL_SQL,
-                    DebugUtils.needQuoteName(request.getSchema()), DebugUtils.needQuoteName(request.getSequenceName()));
+                    request.getSchema(), request.getSequenceName());
             try (
                     ResultSet countResult = statement.executeQuery(String.format(SELECT_SEQUENCE_COUNT_SQL,
-                            DebugUtils.needQuoteName(request.getSchema()),
-                            DebugUtils.needQuoteName(request.getSequenceName())))
+                            request.getSchema(), request.getSequenceName()))
             ) {
                 countResult.next();
                 int count = countResult.getInt("count");

@@ -66,6 +66,7 @@ import static com.nctigba.datastudio.constants.SqlConstants.GET_COLUMN_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.HASH_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.INSERRT_TABLE_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.INTERVAL_SQL;
+import static com.nctigba.datastudio.constants.SqlConstants.IS_NULL_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.LEFT_BRACKET;
 import static com.nctigba.datastudio.constants.SqlConstants.LF;
 import static com.nctigba.datastudio.constants.SqlConstants.LIST_SQL;
@@ -702,34 +703,42 @@ public class TableColumnSQLServiceImpl implements TableColumnSQLService {
     @Override
     public String tableDataUpdateSQL(TableDataEditQuery.TableDataDTO data, String schema, String tableName) {
         int size = data.getLine().size();
-        if (size == 1) {
-            StringBuilder values = new StringBuilder();
-            StringBuilder conditions = new StringBuilder();
-            TableDataEditQuery.TableDataDTOColumn tableDataDTOColumn = data.getLine().get(0);
-            values.append(String.format(EQUAL_SQL, tableDataDTOColumn.getColumnName(),
-                    typeChange(tableDataDTOColumn.getColumnData(), tableDataDTOColumn.getTypeNum(),
-                            tableDataDTOColumn.getTypeName())));
-            conditions.append(String.format(EQUAL_SQL, tableDataDTOColumn.getColumnName(),
-                    typeChange(tableDataDTOColumn.getOldColumnData(), tableDataDTOColumn.getTypeNum(),
-                            tableDataDTOColumn.getTypeName())));
-            return String.format(UPDATE_TABLE_SQL, schema, tableName, values, conditions);
-        }
-
         StringBuilder values = new StringBuilder();
         StringBuilder conditions = new StringBuilder();
         for (int i = 0; i < size; i++) {
             TableDataEditQuery.TableDataDTOColumn tableDataDTOColumn = data.getLine().get(i);
-            if (!tableDataDTOColumn.getOldColumnData().equals(tableDataDTOColumn.getColumnData())) {
+            if (StringUtils.isNotEmpty(tableDataDTOColumn.getOldColumnData())
+                    && StringUtils.isNotEmpty(tableDataDTOColumn.getColumnData())) {
+                if (!tableDataDTOColumn.getOldColumnData().equals(tableDataDTOColumn.getColumnData())) {
+                    values.append(String.format(EQUAL_SQL, tableDataDTOColumn.getColumnName(),
+                            typeChange(tableDataDTOColumn.getColumnData(), tableDataDTOColumn.getTypeNum(),
+                                    tableDataDTOColumn.getTypeName())));
+                    if (i != size - 1) {
+                        values.append(COMMA);
+                    }
+                }
+            } else {
+                String value;
+                if (StringUtils.isEmpty(tableDataDTOColumn.getColumnData())) {
+                    value = null;
+                } else {
+                    value = tableDataDTOColumn.getColumnData();
+                }
                 values.append(String.format(EQUAL_SQL, tableDataDTOColumn.getColumnName(),
-                        typeChange(tableDataDTOColumn.getColumnData(), tableDataDTOColumn.getTypeNum(),
+                        typeChange(value, tableDataDTOColumn.getTypeNum(),
                                 tableDataDTOColumn.getTypeName())));
                 if (i != size - 1) {
                     values.append(COMMA);
                 }
             }
-            conditions.append(String.format(EQUAL_SQL, tableDataDTOColumn.getColumnName(),
-                    typeChange(tableDataDTOColumn.getOldColumnData(), tableDataDTOColumn.getTypeNum(),
-                            tableDataDTOColumn.getTypeName())));
+
+            if (StringUtils.isNotEmpty(tableDataDTOColumn.getOldColumnData())) {
+                conditions.append(String.format(EQUAL_SQL, tableDataDTOColumn.getColumnName(),
+                        typeChange(tableDataDTOColumn.getOldColumnData(), tableDataDTOColumn.getTypeNum(),
+                                tableDataDTOColumn.getTypeName())));
+            } else {
+                conditions.append(String.format(IS_NULL_SQL, tableDataDTOColumn.getColumnName()));
+            }
             if (i != size - 1) {
                 conditions.append(AND);
             }
@@ -739,4 +748,5 @@ public class TableColumnSQLServiceImpl implements TableColumnSQLService {
         log.info("tableDataDropSQL response is: " + ddl);
         return ddl;
     }
+
 }

@@ -162,6 +162,11 @@ public class PrometheusService {
         String ruleFilePath =
             prometheusEnvDto.getPath() + CommonConstants.SLASH + ruleFilePrefix + "*" + ruleFileSuffix;
         boolean isConfigChange = false;
+        if (StrUtil.isBlank(config.getGlobal().getEvaluationInterval())
+            || !config.getGlobal().getEvaluationInterval().equals(CommonConstants.EVALUATION_INTERVAL)) {
+            config.getGlobal().setEvaluationInterval(CommonConstants.EVALUATION_INTERVAL);
+            isConfigChange = true;
+        }
         if (CollectionUtils.isEmpty(ruleFilesConf)) {
             ruleFilesConf = new ArrayList<>();
             config.setRuleFiles(ruleFilesConf);

@@ -38,7 +38,7 @@
       <el-table-column align="center" :label="t('historyTable.column.sql')">
         <template #default="{ row }">
           <div class="single-line-omission">
-            {{ row.sql }}
+            {{ row.sql.slice(0, 200) }}
           </div>
         </template>
       </el-table-column>
@@ -97,6 +97,7 @@
   const sqlDetail = ref('');
   const tableData = ref<SqlTableRow[]>([]);
 
+  // getHistory
   const getHistory = async () => {
     loading.value = true;
     querySqlHistory({

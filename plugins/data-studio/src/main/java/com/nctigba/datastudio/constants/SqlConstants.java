@@ -422,6 +422,11 @@ public class SqlConstants {
     public static final String EQUAL_SQL = "%s = %s";
 
     /**
+     * is null sql
+     */
+    public static final String IS_NULL_SQL = "%s IS NULL";
+
+    /**
      * alter table column add sql
      */
     public static final String ALTER_TABLE_COLUMN_ADD_SQL = "ALTER TABLE %s.%s  ADD COLUMN %s ";

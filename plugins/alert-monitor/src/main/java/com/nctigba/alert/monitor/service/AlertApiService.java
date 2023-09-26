@@ -109,9 +109,6 @@ public class AlertApiService {
             .eq(AlertRecord::getClusterNodeId, clusterNodeId).eq(AlertRecord::getTemplateId, templateId)
             .eq(AlertRecord::getTemplateRuleId, alertTemplateRule.getId()).eq(AlertRecord::getStartTime,
                 alertApiReq.getStartsAt()).orderByDesc(AlertRecord::getUpdateTime));
-        LocalDateTime endsAt = alertApiReq.getEndsAt();
-        LocalDateTime now = LocalDateTime.now();
-        endsAt = endsAt.isAfter(now) ? now : endsAt;
         AlertRecord alertRecord = null;
         if (CollectionUtil.isEmpty(alertRecords)) {
             alertRecord = new AlertRecord();
@@ -119,7 +116,7 @@ public class AlertApiService {
             alertRecord.setClusterNodeId(clusterNodeId).setTemplateId(templateId).setTemplateRuleId(
                     alertTemplateRule.getId()).setCreateTime(LocalDateTime.now())
                 .setTemplateName(alertTemplate.getTemplateName()).setTemplateRuleName(
-                    alertTemplateRule.getRuleName()).setAlertStatus(CommonConstants.FIRING_STATUS)
+                    alertTemplateRule.getRuleName()).setAlertStatus(alertApiReq.getAlertStatus())
                 .setTemplateRuleType(alertTemplateRule.getRuleType()).setLevel(alertTemplateRule.getLevel())
                 .setAlertContent(contentParamDto.getContent()).setRecordStatus(CommonConstants.UNREAD_STATUS);
         } else {
@@ -127,14 +124,12 @@ public class AlertApiService {
             if (alertRecord.getAlertStatus() == CommonConstants.RECOVER_STATUS) {
                 return Optional.empty();
             }
-            alertRecord.setAlertStatus(alertRecord.getEndTime().equals(endsAt)
-                || alertRecord.getEndTime().isAfter(endsAt)
-                ? CommonConstants.RECOVER_STATUS : CommonConstants.FIRING_STATUS).setUpdateTime(LocalDateTime.now());
+            alertRecord.setAlertStatus(alertApiReq.getAlertStatus()).setUpdateTime(LocalDateTime.now());
         }
         String notifyWayNames = notifyWays.stream().map(item -> item.getName()).collect(
             Collectors.joining(CommonConstants.DELIMITER));
         alertRecord.setNotifyWayIds(alertTemplateRule.getNotifyWayIds()).setNotifyWayNames(notifyWayNames)
-            .setEndTime(endsAt).setStartTime(alertApiReq.getStartsAt()).setDuration(
+            .setEndTime(alertApiReq.getEndsAt()).setStartTime(alertApiReq.getStartsAt()).setDuration(
                 Duration.between(alertRecord.getStartTime(), alertRecord.getEndTime()).toSeconds());
         recordService.saveOrUpdate(alertRecord);
         return Optional.of(alertRecord);
