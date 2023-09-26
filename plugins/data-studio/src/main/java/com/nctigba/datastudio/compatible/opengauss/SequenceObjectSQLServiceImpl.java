@@ -122,7 +122,7 @@ public class SequenceObjectSQLServiceImpl implements SequenceObjectSQLService {
                 Statement statement = connection.createStatement()
         ) {
             String selectSql = String.format(SELECT_SEQUENCE_DDL_SQL,
-                    DebugUtils.needQuoteName(request.getSchema()), DebugUtils.needQuoteName(request.getSequenceName()));
+                    request.getSchema(), request.getSequenceName());
             try (
                     ResultSet countResult = statement.executeQuery(String.format(SELECT_SEQUENCE_COUNT_SQL,
                             request.getSchema(), request.getSequenceName()))
