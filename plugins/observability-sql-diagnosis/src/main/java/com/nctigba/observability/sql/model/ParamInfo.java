@@ -14,6 +14,7 @@ import lombok.experimental.Accessors;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * ParamInfo
@@ -43,17 +44,6 @@ public class ParamInfo {
     String diagnosisRule;
 
     /**
-     * ParamType
-     *
-     * @author luomeng
-     * @since 2023/9/26
-     */
-    public enum ParamType {
-        OS,
-        DB
-    }
-
-    /**
      * Construction method
      *
      * @param id param info
@@ -80,13 +70,32 @@ public class ParamInfo {
     }
 
     /**
+     * ParamType
+     *
+     * @author luomeng
+     * @since 2023/9/26
+     */
+    public enum ParamType {
+        OS,
+        DB
+    }
+
+    /**
      * toString method
      *
      * @return String
      */
     public String toString() {
-        return String.format("%d,'%s','%s','%s','%s','%s','%s','%s','%s'", id, paramType, paramName, paramDetail,
-                suggestValue, defaultValue, unit, suggestExplain, diagnosisRule);
+        return String.format(
+                Locale.ROOT, "%d,'%s','%s','%s','%s','%s','%s','%s','%s'", id,
+                paramType.toString().toLowerCase(Locale.ROOT),
+                paramName.toUpperCase(Locale.ROOT),
+                paramDetail.toLowerCase(Locale.ROOT),
+                suggestValue.toUpperCase(Locale.ROOT),
+                defaultValue.toLowerCase(Locale.ROOT),
+                unit.toUpperCase(Locale.ROOT),
+                suggestExplain.toLowerCase(Locale.ROOT),
+                diagnosisRule.toUpperCase(Locale.ROOT));
     }
 
     /**
@@ -174,8 +183,8 @@ public class ParamInfo {
                                 + "root可以分配比一般用户略多的内存n"
                                 + "1： 表示内核允许分配所有的物理内存，而不管当前的内存状态如何，"
                                 + "允许超过CommitLimit，直至内存用完为止。"
-                                + "在数据库服务器上不建议设置为1，从而尽量避免使用swap.n" +
-                                "2： 表示不允许超过CommitLimit值", "actualValue==0"));
+                                + "在数据库服务器上不建议设置为1，从而尽量避免使用swap.n"
+                                + "2： 表示不允许超过CommitLimit值", "actualValue==0"));
                 add(new ParamInfo(13, ParamType.OS, "net.ipv4.tcp_rmem",
                         "TCP协议接收端缓冲区的可用内存大小", "8192 250000 16777216",
                         "4096 87380 174760（4k）", "字节", "接收缓存设置同tcp_wmem",
