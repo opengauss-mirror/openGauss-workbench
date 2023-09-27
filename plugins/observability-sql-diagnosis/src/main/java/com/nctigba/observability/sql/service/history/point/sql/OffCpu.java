@@ -73,10 +73,11 @@ public class OffCpu implements HisDiagnosisPointService<Object> {
             throw new HisDiagnosisException("error:", e);
         }
         resourceMapper.insert(resource);
+        int resourceId = resource.getId() == null ? -1 : resource.getId();
         TaskResult resultSvg = new TaskResult(task,
                 TaskResult.ResultState.SUGGESTION, ResultType.OffCpu,
                 FrameType.Flamefigure, Frame.bearing.top).setData(
-                Map.of(CommonConstants.TITLE, LocaleString.format("OffCpuAnaly.title"), "id", resource.getId()));
+                Map.of(CommonConstants.TITLE, LocaleString.format("OffCpuAnaly.title"), "id", resourceId));
         List<TaskResult> list = new ArrayList<>();
         list.add(resultSvg);
         Frame f = new Frame();

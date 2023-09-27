@@ -35,12 +35,12 @@ import java.util.Map;
 @Slf4j
 @EnableScheduling
 public class HisDiagnosisInit {
-    private static final String HIS_DIAGNOSIS_TASK_DB = "data/newDiagnosisTask.db";
-    private static final String HIS_DIAGNOSIS_RESULT_DB = "data/newDiagnosisResult.db";
-    private static final String HIS_DIAGNOSIS_THRESHOLD_DB = "data/newDiagnosisThreshold.db";
+    private static final String HIS_DIAGNOSIS_TASK_DB = "data/diagnosisTaskV1.db";
+    private static final String HIS_DIAGNOSIS_RESULT_DB = "data/diagnosisResultV1.db";
+    private static final String HIS_DIAGNOSIS_THRESHOLD_DB = "data/diagnosisThresholdV1.db";
     private static final String[] TASK_SQL = {"CREATE TABLE \"his_diagnosis_task_info\" ("
             + "id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, cluster_id TEXT,"
-            + "node_id TEXT,db_name TEXT,task_name TEXT,sql_id TEXT,sql TEXT,"
+            + "node_id TEXT,db_name TEXT,task_name TEXT,sql_id TEXT,sql TEXT,topology_map TEXT,"
             + "pid INTEGER,debug_query_id INTEGER,session_id INTEGER,\"his_data_start_time\" DATETIME,"
             + "\"his_data_end_time\" DATETIME,\"task_start_time\" DATETIME,\"task_end_time\" DATETIME,"
             + "state TEXT,span TEXT,remarks TEXT,conf TEXT,threshold TEXT,task_type TEXT,"

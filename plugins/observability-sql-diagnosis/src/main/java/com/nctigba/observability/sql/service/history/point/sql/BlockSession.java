@@ -89,8 +89,8 @@ public class BlockSession implements HisDiagnosisPointService<Object> {
                 BlockSessionDTO blockData = list.get(0);
                 blockData.setEndTime(list.get(list.size() - 1).getStartTime());
                 analysisDTO.setIsHint(HisDiagnosisResult.ResultState.SUGGESTIONS);
+                analysisDTO.setPointData(blockData);
             }
-            analysisDTO.setPointData(list);
             return analysisDTO;
         } catch (SQLException e) {
             throw new HisDiagnosisException("execute sql failed!");

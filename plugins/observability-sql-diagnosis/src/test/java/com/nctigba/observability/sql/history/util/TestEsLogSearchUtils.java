@@ -35,6 +35,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -96,6 +97,9 @@ public class TestEsLogSearchUtils {
             String indexName = "";
             Optional<Set<String>> result = util.indexList(indexName);
             assertNotNull(result);
+            when(getIndexResponse.result()).thenThrow(HisDiagnosisException.class);
+            Optional<Set<String>> data = util.indexList(indexName);
+            assertEquals(Optional.empty(), data);
         } catch (IOException e) {
             throw new HisDiagnosisException("connect fail");
         }
@@ -114,6 +118,11 @@ public class TestEsLogSearchUtils {
         queryParam.setId("");
         String result = util.getIndexName(queryParam);
         assertNotNull(result);
+        EsSearchQuery query = new EsSearchQuery();
+        query.setStartDate(null);
+        query.setEndDate(null);
+        String data = util.getIndexName(query);
+        assertNotNull(data);
     }
 
     @Test

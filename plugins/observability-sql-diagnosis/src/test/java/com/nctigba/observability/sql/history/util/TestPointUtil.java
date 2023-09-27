@@ -10,6 +10,8 @@ import com.nctigba.observability.sql.mapper.history.HisThresholdMapper;
 import com.nctigba.observability.sql.model.history.HisDiagnosisThreshold;
 import com.nctigba.observability.sql.model.history.data.PrometheusData;
 import com.nctigba.observability.sql.model.history.point.AspAnalysisDTO;
+import com.nctigba.observability.sql.model.history.point.ExecPlanDetailDTO;
+import com.nctigba.observability.sql.model.history.point.Plan;
 import com.nctigba.observability.sql.util.PointUtil;
 import org.junit.Before;
 import org.junit.Test;
@@ -22,8 +24,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
@@ -84,6 +88,18 @@ public class TestPointUtil {
         thresholdList.add(threshold);
         when(hisThresholdMapper.selectList(any())).thenReturn(thresholdList);
         HashMap<String, String> result = util.thresholdMap(thresholds);
+        assertNotNull(result);
+    }
+
+    @Test
+    public void testGetCpuCoreNum() {
+        int result = util.getCpuCoreNum(list);
+        assertEquals(8, result);
+    }
+
+    @Test
+    public void testGetExecPlan() {
+        ExecPlanDetailDTO result = util.getExecPlan(mock(Plan.class));
         assertNotNull(result);
     }
 }

@@ -35,6 +35,7 @@ import com.nctigba.observability.sql.service.history.collection.elastic.LockTime
 import com.nctigba.observability.sql.service.history.collection.metric.DbAvgCpuItem;
 import com.nctigba.observability.sql.service.history.collection.table.DatabaseItem;
 import com.nctigba.observability.sql.service.history.collection.table.ExplainItem;
+import com.nctigba.observability.sql.service.history.core.SqlValidator;
 import com.nctigba.observability.sql.service.history.core.TaskServiceImpl;
 import com.nctigba.observability.sql.service.history.point.AspAnalysis;
 import com.nctigba.observability.sql.service.history.point.LockTimeout;
@@ -45,6 +46,7 @@ import com.nctigba.observability.sql.service.history.point.sql.IndexAdvisor;
 import com.nctigba.observability.sql.service.history.point.sql.ObjectInfoCheck;
 import com.nctigba.observability.sql.service.history.point.sql.OnCpu;
 import com.nctigba.observability.sql.service.history.point.sql.OsParam;
+import com.nctigba.observability.sql.util.ParamJDBCUtil;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -95,6 +97,8 @@ public class TestTaskServiceImpl {
     @Mock
     private HisDiagnosisTaskMapper taskMapper;
     @Mock
+    private SqlValidator sqlValidator;
+    @Mock
     private BioLatency bioLatency;
     @Mock
     private BioSnoop bioSnoop;
@@ -118,6 +122,8 @@ public class TestTaskServiceImpl {
     private HisThresholdMapper hisThresholdMapper;
     @Mock
     private HisDiagnosisResultMapper resultMapper;
+    @Mock
+    private ParamJDBCUtil paramJDBCUtil;
     @Mock
     private ClusterManager clusterManager;
     @Spy
@@ -371,6 +377,16 @@ public class TestTaskServiceImpl {
             options.add("IS_EXPLAIN");
             when(objectInfoCheck.getOption()).thenReturn(options);
             pointServiceList.add(objectInfoCheck);
+            taskService.explainAfter(sqlTask, mock(ArrayList.class));
+            List<LinkedHashMap<String, Object>> sqlOption = new ArrayList<>();
+            LinkedHashMap<String, Object> linkedHashMap2 = new LinkedHashMap<>();
+            linkedHashMap2.put("option", "IS_EXPLAIN");
+            linkedHashMap2.put("isCheck", true);
+            sqlOption.add(linkedHashMap2);
+            sqlTask.setConfigs((List<OptionQuery>) (List<?>) sqlOption);
+            List<CollectionItem<?>> list = new ArrayList<>();
+            list.add(explainItem);
+            when(objectInfoCheck.getSourceDataKeys()).thenReturn(list);
             taskService.explainAfter(sqlTask, mock(ArrayList.class));
         } catch (SQLException e) {
             throw new HisDiagnosisException("connect fail");

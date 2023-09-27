@@ -23,7 +23,7 @@ public class TaskQuery extends PageBaseQuery {
     private String nodeId;
     private String dbName;
     private String sqlId;
-    private String taskName;
+    private String name;
     private Date startTime;
     private Date endTime;
     private String diagnosisType;
