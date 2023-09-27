@@ -11,7 +11,6 @@ import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.HttpRequest;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
-import com.nctigba.alert.monitor.constant.CommonConstants;
 import com.nctigba.alert.monitor.dto.NotifySnmpDto;
 import com.nctigba.alert.monitor.entity.NotifyMessage;
 import com.nctigba.alert.monitor.entity.NotifyTemplate;
@@ -20,6 +19,7 @@ import com.nctigba.alert.monitor.mapper.NotifyMessageMapper;
 import com.nctigba.alert.monitor.mapper.NotifyTemplateMapper;
 import com.nctigba.alert.monitor.utils.TextParser;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.snmp4j.AbstractTarget;
 import org.snmp4j.CommunityTarget;
 import org.snmp4j.PDU;
@@ -131,7 +131,7 @@ public class ThirdPartyService {
         if (StrUtil.isNotBlank(body)) {
             Map map = new HashMap();
             map.put("notifyTitle", notifyTitle);
-            map.put("notifyContent", notifyContent.replaceAll(CommonConstants.LINE_SEPARATOR, "\\n"));
+            map.put("notifyContent", StringEscapeUtils.escapeJson(notifyContent));
             post = post.body(new TextParser().parse(body, map));
         }
         String result = post.execute().body();
