@@ -90,8 +90,8 @@ public class AsyncHelper {
         operateStatusMap.put(RESULT, operateStatusDO);
         webSocketServer.sendMessage(windowName, OPERATE_STATUS, SUCCESS, operateStatusMap);
 
-        closeWindow(webSocketServer, windowName);
         String oid = DebugUtils.changeParamType(webSocketServer, windowName, OID);
+        closeWindow(webSocketServer, windowName, oid);
         statement.execute(String.format(TURN_OFF_SQL, oid));
         log.info("AsyncHelper oid: " + oid);
 
@@ -105,7 +105,7 @@ public class AsyncHelper {
         closeConnection(webSocketServer, windowName, statement);
     }
 
-    private void closeWindow(WebSocketServer webSocketServer, String windowName) throws IOException {
+    private void closeWindow(WebSocketServer webSocketServer, String windowName, String oid) throws IOException {
         Map<String, Object> paramMap = webSocketServer.getParamMap(windowName);
         log.info("AsyncHelper paramMap: " + paramMap);
         Iterator<Map.Entry<String, Object>> iterator = paramMap.entrySet().iterator();
@@ -113,7 +113,7 @@ public class AsyncHelper {
             Map.Entry<String, Object> entry = iterator.next();
             String key = entry.getKey();
             Matcher isNum = pattern.matcher(key);
-            if (isNum.matches()) {
+            if (isNum.matches() && !oid.equals(key)) {
                 webSocketServer.sendMessage(String.valueOf(paramMap.get(key)), CLOSE_WINDOW, SUCCESS, null);
                 iterator.remove();
             }

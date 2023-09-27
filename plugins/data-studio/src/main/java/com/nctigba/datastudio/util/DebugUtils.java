@@ -832,7 +832,11 @@ public class DebugUtils {
                 break;
             }
             default: {
-                newValue = QUOTES + value + QUOTES;
+                if (StringUtils.isEmpty(value)) {
+                    newValue = value;
+                } else {
+                    newValue = QUOTES + value + QUOTES;
+                }
                 break;
             }
         }
