@@ -23,6 +23,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -116,7 +118,9 @@ public class RunQLat implements HisDiagnosisPointService<Object> {
         }
         float rate = 0.0f;
         if (ra != 0) {
-            rate = (float) (r10 / ra * 100);
+            BigDecimal improvement = new BigDecimal(r10).divide(
+                    BigDecimal.valueOf(ra), 2, RoundingMode.HALF_UP).multiply(BigDecimal.valueOf(100));
+            rate = improvement.floatValue();
         }
         return rate;
     }

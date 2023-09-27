@@ -397,6 +397,18 @@ export default {
     isHasData: '暂无数据',
     failGetExecutionPlan: '获取不到执行计划',
     failResolveExecutionPlan: '无法解析该执行计划',
+    blockSession: {
+      waitLockMode: '等待获取锁模式',
+      tableName: '表名称',
+      userName: '用户名称',
+      clientIP: '客户端IP',
+      applicationName: '应用名称',
+      waitStatus: '等待状态',
+      sessionId: '会话ID',
+      blockSessionID: '阻塞会话ID',
+      startTime: '开始时间',
+      endTime: '结束时间'
+    }
   },
   datasource: {
     paramAnalysis: '参数诊断',

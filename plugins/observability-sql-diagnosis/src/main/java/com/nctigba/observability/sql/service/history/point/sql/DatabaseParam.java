@@ -24,7 +24,6 @@ import com.nctigba.observability.sql.service.history.HisDiagnosisPointService;
 import com.nctigba.observability.sql.service.history.collection.CollectionItem;
 import com.nctigba.observability.sql.service.history.collection.table.DatabaseItem;
 import com.nctigba.observability.sql.util.LocaleString;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -48,11 +47,11 @@ import java.util.List;
  */
 @Service
 @Slf4j
-@RequiredArgsConstructor
 public class DatabaseParam implements HisDiagnosisPointService<Object> {
     @Autowired
     private DatabaseItem item;
-    private final ClusterManager clusterManager;
+    @Autowired
+    private ClusterManager clusterManager;
     @Autowired
     private HisDiagnosisResultMapper resultMapper;
 
@@ -182,7 +181,7 @@ public class DatabaseParam implements HisDiagnosisPointService<Object> {
     private static synchronized Connection connectSqlite() {
         Connection conn;
         try {
-            conn = DriverManager.getConnection(JDBC.PREFIX + "data/paramDiagnosisInfo.db");
+            conn = DriverManager.getConnection(JDBC.PREFIX + "data/" + CommonConstants.PARAM_DATABASE_NAME + ".db");
         } catch (SQLException e) {
             throw new HisDiagnosisException("error:", e);
         }
