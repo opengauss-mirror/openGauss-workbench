@@ -17,7 +17,7 @@
 
     <groupId>com.tools.monitor</groupId>
     <artifactId>openGauss-tools-monitor</artifactId>
-    <version>1.0.0</version>
+    <version>5.1.0</version>
 
     <name>openGauss-tools-monitor</name>
     <!-- FIXME change it to the project's website -->

@@ -26,6 +26,7 @@ package org.opengauss.admin.web.controller;
 
 import cn.hutool.core.codec.Base64;
 import cn.hutool.core.map.MapUtil;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.gitee.starblues.core.PluginInfo;
 import com.gitee.starblues.core.PluginState;
@@ -288,6 +289,15 @@ public class SystemPluginController extends BaseController {
                     .pluginType(pluginType).pluginVersion(pluginInfo.getPluginDescriptor().getPluginVersion())
                     .theme(theme).build();
             sysPluginService.save(plugin);
+        } else {
+            // update plugin version,desc,provider
+            plugin.setPluginVersion(pluginInfo.getPluginDescriptor().getPluginVersion());
+            plugin.setPluginDesc(pluginInfo.getPluginDescriptor().getDescription());
+            plugin.setPluginDescEn(descriptionEn);
+            plugin.setPluginProvider(pluginInfo.getPluginDescriptor().getProvider());
+            LambdaQueryWrapper<SysPlugin> queryWrapper = new LambdaQueryWrapper<>();
+            queryWrapper.eq(SysPlugin::getPluginId, pluginInfo.getPluginId());
+            sysPluginService.update(plugin, queryWrapper);
         }
         Map<String, Object> result = Maps.newHashMap();
         result.put("isNeedConfigured", isNeedConfigured);
