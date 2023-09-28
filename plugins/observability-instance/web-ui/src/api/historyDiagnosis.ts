@@ -1,4 +1,4 @@
-import restRequest from '@/request/restful'
+import restRequest from '@/request/diagnosis'
 
 export type Option = {
   option: string
