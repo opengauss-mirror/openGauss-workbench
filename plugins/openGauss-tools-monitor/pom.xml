@@ -17,7 +17,7 @@
 
     <groupId>com.tools.monitor</groupId>
     <artifactId>openGauss-tools-monitor</artifactId>
-    <version>5.1.0</version>
+    <version>5.1.1</version>
 
     <name>openGauss-tools-monitor</name>
     <!-- FIXME change it to the project's website -->
@@ -30,7 +30,7 @@
         <boot.version>2.6.3</boot.version>
         <spring-boot.version>2.5.6</spring-boot.version>
         <spring-brick.version>3.1.0</spring-brick.version>
-        <main.version>5.1.0</main.version>
+        <main.version>5.1.1</main.version>
         <plugin.build.mode>prod</plugin.build.mode>
         <build.frontend.skip>false</build.frontend.skip>
     </properties>

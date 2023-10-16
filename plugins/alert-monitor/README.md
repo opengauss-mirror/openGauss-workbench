@@ -231,7 +231,7 @@ git clone https://gitee.com/opengauss/openGauss-workbench
 mvn clean package -P prod
 ```
 
-3、在target目录下找到生成的alert-monitor-5.1.0-repackage.jar，安装到一体化平台
+3、在target目录下找到生成的alert-monitor-5.1.1-repackage.jar，安装到一体化平台
 
 ![](doc/2.png)
 

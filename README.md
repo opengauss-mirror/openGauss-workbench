@@ -23,7 +23,7 @@ openGauss的安装、运维场景对于初级用户或单纯想要测试openGaus
 ```
 ## 下载链接
 
-https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/Datakit-5.1.0.tar.gz
+https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/Datakit-5.1.1.tar.gz
 
 ## 说明
 1、插件需要安装在平台上运行，因此需要先将平台项目安装部署后，再将其他插件项目打包安装使用。
@@ -50,7 +50,7 @@ https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/Datakit-
    -rw-r--r-- 1 Administrator 197121       69  8月 29 15:37 datasync-mysql-README.md
    -rw-r--r-- 1 Administrator 197121    18837  8月 29 15:41 observability-instance-README.md
    -rw-r--r-- 1 Administrator 197121     8931  8月 29 15:44 observability-log-search-README.md
-   -rw-r--r-- 1 Administrator 197121 94425028  8月 29 15:22 openGauss-datakit-5.1.0.jar
+   -rw-r--r-- 1 Administrator 197121 94425028  8月 29 15:22 openGauss-datakit-5.1.1.jar
    drwxr-xr-x 1 Administrator 197121        0  8月 29 15:44 visualtool-plugin```
 2. 创建新的目录
  ```shell
@@ -75,7 +75,7 @@ mkdir config files ssl logs
    -storepass 123456```
    *注意*:这里的storepass与配置文件中的key-store-password应该保持一致。 keystore路径即为配置文件中的key-store路径
 5.启动
-nohup java -Xms2048m -Xmx4096m -jar openGauss-datakit-5.1.0.jar --spring.profiles.active=temp >datakit.out 2>&1 &
+nohup java -Xms2048m -Xmx4096m -jar openGauss-datakit-5.1.1.jar --spring.profiles.active=temp >datakit.out 2>&1 &
 
 ## 参与开发
 插件开发请参考 openGauss-datakit/doc 目录下的开发手册
