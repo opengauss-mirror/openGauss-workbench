@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.opengauss</groupId>
     <artifactId>datasync-mysql-plugin</artifactId>
-    <version>5.1.0</version>
+    <version>5.1.1</version>
     <packaging>jar</packaging>
     <properties>
         <maven.compiler.source>11</maven.compiler.source>
@@ -37,7 +37,7 @@
         <dependency>
             <groupId>org.opengauss</groupId>
             <artifactId>visualtool-framework</artifactId>
-            <version>5.1.0</version>
+            <version>5.1.1</version>
             <scope>provided</scope>
             <exclusions>
                 <exclusion>
@@ -116,7 +116,7 @@
                     <pluginInfo>
                         <id>datasync-mysql</id>
                         <bootstrapClass>org.opengauss.admin.plugin.DataSyncMysqlPluginApplication</bootstrapClass>
-                        <version>5.1.0</version>
+                        <version>5.1.1</version>
                         <provider>lita</provider>
                         <description>Mysql数据同步插件</description>
                     </pluginInfo>
