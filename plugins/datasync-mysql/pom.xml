@@ -5,16 +5,15 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.opengauss</groupId>
     <artifactId>datasync-mysql-plugin</artifactId>
-    <version>5.1.1</version>
+    <parent>
+        <groupId>org.opengauss</groupId>
+        <artifactId>visualtool-parent</artifactId>
+        <version>${admin.version}</version>
+        <relativePath>../../pom.xml</relativePath>
+    </parent>
     <packaging>jar</packaging>
     <properties>
-        <maven.compiler.source>11</maven.compiler.source>
-        <maven.compiler.target>11</maven.compiler.target>
-        <lombok.version>1.18.24</lombok.version>
         <junit.version>4.13</junit.version>
-        <spring-brick.version>3.1.0</spring-brick.version>
-        <spring-boot.version>2.5.6</spring-boot.version>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <build.frontend.skip>false</build.frontend.skip>
     </properties>
 
@@ -22,22 +21,18 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter</artifactId>
-            <version>${spring-boot.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-aop</artifactId>
-            <version>${spring-boot.version}</version>
         </dependency>
         <dependency>
             <groupId>com.gitee.starblues</groupId>
             <artifactId>spring-brick-bootstrap</artifactId>
-            <version>${spring-brick.version}</version>
         </dependency>
         <dependency>
             <groupId>org.opengauss</groupId>
             <artifactId>visualtool-framework</artifactId>
-            <version>5.1.1</version>
             <scope>provided</scope>
             <exclusions>
                 <exclusion>
@@ -57,7 +52,6 @@
         <dependency>
             <groupId>com.gitee.starblues</groupId>
             <artifactId>spring-brick-maven-packager</artifactId>
-            <version>${spring-brick.version}</version>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
@@ -80,19 +74,16 @@
         <dependency>
             <groupId>org.opengauss</groupId>
             <artifactId>opengauss-jdbc</artifactId>
-            <version>3.0.0</version>
         </dependency>
 
         <dependency>
             <groupId>com.alibaba</groupId>
             <artifactId>fastjson</artifactId>
-            <version>1.2.83</version>
         </dependency>
 
         <dependency>
             <groupId>cn.hutool</groupId>
             <artifactId>hutool-all</artifactId>
-            <version>5.3.5</version>
         </dependency>
     </dependencies>
 
@@ -116,7 +107,7 @@
                     <pluginInfo>
                         <id>datasync-mysql</id>
                         <bootstrapClass>org.opengauss.admin.plugin.DataSyncMysqlPluginApplication</bootstrapClass>
-                        <version>5.1.1</version>
+                        <version>${project.version}</version>
                         <provider>lita</provider>
                         <description>Mysql数据同步插件</description>
                     </pluginInfo>
@@ -128,16 +119,6 @@
                         </goals>
                     </execution>
                 </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.1</version>
-                <configuration>
-                    <source>${maven.compiler.source}</source>
-                    <target>${maven.compiler.target}</target>
-                    <encoding>${project.build.sourceEncoding}</encoding>
-                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
