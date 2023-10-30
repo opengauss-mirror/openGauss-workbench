@@ -191,7 +191,7 @@ public abstract class AbstractOpsProvider implements ClusterOpsProvider, Initial
         } catch (IOException e) {
             log.error("send websocket fail",e);
         }
-        String command = dependencyCommand();
+        String command = dependencyCommand(expectedOs);
         try {
             JschResult jschResult = null;
             try {
@@ -498,6 +498,6 @@ public abstract class AbstractOpsProvider implements ClusterOpsProvider, Initial
 
     @Override
     public void afterPropertiesSet() {
-        ClusterOpsProviderManager.registry(version(),os(), this);
+        ClusterOpsProviderManager.registry(version(), this);
     }
 }

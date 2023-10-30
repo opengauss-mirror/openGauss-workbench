@@ -191,7 +191,7 @@ public class OpsWdrServiceImpl extends ServiceImpl<OpsWdrMapper, OpsWdrEntity> i
         Session session = jschUtil.getSession(hostEntity.getPublicIp(), hostEntity.getPort(), userEntity.getUsername(), encryptionUtils.decrypt(userEntity.getPassword())).orElseThrow(() -> new OpsException("Failed to establish session with host"));
 
         try {
-            clusterOpsProviderManager.provider(clusterEntity.getVersion(),null).orElseThrow(() -> new OpsException("The current version does not support")).enableWdrSnapshot(session, clusterEntity, opsClusterNodeEntities, WdrScopeEnum.CLUSTER, null);
+            clusterOpsProviderManager.provider(clusterEntity.getVersion()).orElseThrow(() -> new OpsException("The current version does not support")).enableWdrSnapshot(session, clusterEntity, opsClusterNodeEntities, WdrScopeEnum.CLUSTER, null);
             String clientLoginOpenGauss = MessageFormat.format(SshCommandConstants.LOGIN, String.valueOf(clusterEntity.getPort()));
             Map<String, List<String>> response = new HashMap<>();
             List<String> responseList = new ArrayList<>();
@@ -306,7 +306,7 @@ public class OpsWdrServiceImpl extends ServiceImpl<OpsWdrMapper, OpsWdrEntity> i
 
         Session session = jschUtil.getSession(hostEntity.getPublicIp(), hostEntity.getPort(), userEntity.getUsername(), encryptionUtils.decrypt(userEntity.getPassword())).orElseThrow(() -> new OpsException("Failed to establish session with host"));
         try {
-            clusterOpsProviderManager.provider(clusterEntity.getVersion(),null).orElseThrow(() -> new OpsException("The current version does not support")).enableWdrSnapshot(session, clusterEntity, opsClusterNodeEntities, WdrScopeEnum.CLUSTER, null);
+            clusterOpsProviderManager.provider(clusterEntity.getVersion()).orElseThrow(() -> new OpsException("The current version does not support")).enableWdrSnapshot(session, clusterEntity, opsClusterNodeEntities, WdrScopeEnum.CLUSTER, null);
 
             String wdrPath = "/home/" + userEntity.getUsername();
             String wdrName = "WDR-" + StrUtil.uuid() + ".html";
@@ -348,7 +348,7 @@ public class OpsWdrServiceImpl extends ServiceImpl<OpsWdrMapper, OpsWdrEntity> i
         Session session = jschUtil.getSession(hostEntity.getPublicIp(), hostEntity.getPort(), userEntity.getUsername(), encryptionUtils.decrypt(userEntity.getPassword())).orElseThrow(() -> new OpsException("Failed to establish session with host"));
 
         try {
-            clusterOpsProviderManager.provider(clusterEntity.getVersion(),null).orElseThrow(() -> new OpsException("The current version does not support")).enableWdrSnapshot(session, clusterEntity, opsClusterNodeEntities, WdrScopeEnum.CLUSTER, null);
+            clusterOpsProviderManager.provider(clusterEntity.getVersion()).orElseThrow(() -> new OpsException("The current version does not support")).enableWdrSnapshot(session, clusterEntity, opsClusterNodeEntities, WdrScopeEnum.CLUSTER, null);
 
             String wdrPath = "/home/" + userEntity.getUsername();
             String wdrName = "WDR-" + StrUtil.uuid() + ".html";

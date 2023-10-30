@@ -26,7 +26,6 @@ import org.opengauss.admin.plugin.domain.entity.ops.OpsClusterEntity;
 import org.opengauss.admin.plugin.domain.entity.ops.OpsClusterNodeEntity;
 import org.opengauss.admin.plugin.domain.model.ops.InstallContext;
 import org.opengauss.admin.plugin.domain.model.ops.OpsClusterContext;
-import org.opengauss.admin.plugin.domain.model.ops.SshCommandConstants;
 import org.opengauss.admin.plugin.domain.model.ops.UnInstallContext;
 import org.opengauss.admin.plugin.enums.ops.OpenGaussSupportOSEnum;
 import org.opengauss.admin.plugin.enums.ops.OpenGaussVersionEnum;
@@ -49,10 +48,24 @@ public interface ClusterOpsProvider {
      */
     OpenGaussVersionEnum version();
 
-    OpenGaussSupportOSEnum os();
+    /**
+     * get Installation dependency
+     *
+     * @param os OpenGaussSupportOSEnum
+     * @return installation dependency
+     */
+    default String dependencyCommand(OpenGaussSupportOSEnum os){
+        return os.getDependencyCommand();
+    }
 
-    default String dependencyCommand(){
-        return SshCommandConstants.INSTALL_DEPENDENCY;
+    /**
+     * get om installation package postfix
+     *
+     * @param os OpenGaussSupportOSEnum
+     * @return om installation package postfix
+     */
+    default String omPackagePostfix(OpenGaussSupportOSEnum os) {
+        return os.getOmPackagePostfix();
     }
 
     /**

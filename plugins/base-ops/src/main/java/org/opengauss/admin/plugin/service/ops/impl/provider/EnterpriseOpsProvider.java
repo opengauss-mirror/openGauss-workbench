@@ -50,7 +50,6 @@ import org.opengauss.admin.plugin.domain.model.ops.UpgradeContext;
 import org.opengauss.admin.plugin.domain.model.ops.WsSession;
 import org.opengauss.admin.plugin.domain.model.ops.node.EnterpriseInstallNodeConfig;
 import org.opengauss.admin.plugin.enums.ops.ClusterRoleEnum;
-import org.opengauss.admin.plugin.enums.ops.OpenGaussSupportOSEnum;
 import org.opengauss.admin.plugin.enums.ops.OpenGaussVersionEnum;
 import org.opengauss.admin.plugin.enums.ops.UpgradeTypeEnum;
 import org.opengauss.admin.plugin.enums.ops.WdrScopeEnum;
@@ -114,11 +113,6 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
     }
 
     @Override
-    public OpenGaussSupportOSEnum os() {
-        return OpenGaussSupportOSEnum.CENTOS_X86_64;
-    }
-
-    @Override
     public void install(InstallContext installContext) {
         log.info("Start installing Enterprise Edition");
 
@@ -176,7 +170,7 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
         wsUtil.sendText(installContext.getRetSession(), "START_UNZIP_INSTALL_PACKAGE");
         decompress(jschUtil, rootSession, pkgPath, installPackageFullPath, retSession, "-xvf");
         // unzip CM
-        decompress(jschUtil, rootSession, pkgPath, pkgPath + "/openGauss-" + installContext.getOpenGaussVersionNum() + "-CentOS-64bit-om.tar.gz", retSession, "-zxvf");
+        decompress(jschUtil, rootSession, pkgPath, pkgPath + "/openGauss-" + installContext.getOpenGaussVersionNum() + omPackagePostfix(installContext.getOs()), retSession, "-zxvf");
         wsUtil.sendText(installContext.getRetSession(), "END_UNZIP_INSTALL_PACKAGE");
 
         // write xml
