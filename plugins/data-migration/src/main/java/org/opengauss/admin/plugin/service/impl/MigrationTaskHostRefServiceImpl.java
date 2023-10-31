@@ -147,14 +147,9 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
             h.setHostName(opsHost.getHostname());
             h.setHost(opsHost.getPublicIp());
             h.setPort(opsHost.getPort());
-            List<OpsHostUserEntity> opsHostUserEntities = hostUserFacade.listHostUserByHostId(h.getRunHostId());
-            if (opsHostUserEntities.size() > 0) {
-                OpsHostUserEntity notRoot = opsHostUserEntities.stream().filter(x -> !x.getUsername().equals("root")).findFirst().orElse(null);
-                if (notRoot != null) {
-                    h.setUser(notRoot.getUsername());
-                    h.setPassword(notRoot.getPassword());
-                }
-            }
+            MigrationHostPortalInstall installHost = migrationHostPortalInstallHostService.getOneByHostId(h.getRunHostId());
+            h.setUser(installHost.getRunUser());
+            h.setPassword(installHost.getRunPassword());
         });
         return hosts;
     }
