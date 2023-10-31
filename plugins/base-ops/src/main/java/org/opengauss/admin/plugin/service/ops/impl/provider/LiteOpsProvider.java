@@ -44,7 +44,6 @@ import org.opengauss.admin.plugin.domain.model.ops.WsSession;
 import org.opengauss.admin.plugin.domain.model.ops.node.LiteInstallNodeConfig;
 import org.opengauss.admin.plugin.enums.ops.ClusterRoleEnum;
 import org.opengauss.admin.plugin.enums.ops.DeployTypeEnum;
-import org.opengauss.admin.plugin.enums.ops.OpenGaussSupportOSEnum;
 import org.opengauss.admin.plugin.enums.ops.OpenGaussVersionEnum;
 import org.opengauss.admin.plugin.enums.ops.WdrScopeEnum;
 import org.opengauss.admin.plugin.service.ops.IOpsClusterNodeService;
@@ -94,11 +93,6 @@ public class LiteOpsProvider extends AbstractOpsProvider {
     @Override
     public OpenGaussVersionEnum version() {
         return OpenGaussVersionEnum.LITE;
-    }
-
-    @Override
-    public OpenGaussSupportOSEnum os() {
-        return OpenGaussSupportOSEnum.CENTOS_X86_64;
     }
 
     @Override

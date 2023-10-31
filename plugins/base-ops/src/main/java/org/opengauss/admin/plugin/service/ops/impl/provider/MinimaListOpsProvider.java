@@ -31,7 +31,6 @@ import org.opengauss.admin.common.exception.ops.OpsException;
 import org.opengauss.admin.plugin.domain.entity.ops.OpsClusterEntity;
 import org.opengauss.admin.plugin.domain.entity.ops.OpsClusterNodeEntity;
 import org.opengauss.admin.plugin.domain.model.ops.*;
-import org.opengauss.admin.plugin.domain.model.ops.*;
 import org.opengauss.admin.plugin.domain.model.ops.node.MinimalistInstallNodeConfig;
 import org.opengauss.admin.plugin.enums.ops.*;
 import org.opengauss.admin.plugin.service.ops.IOpsClusterNodeService;
@@ -80,11 +79,6 @@ public class MinimaListOpsProvider extends AbstractOpsProvider {
     @Override
     public OpenGaussVersionEnum version() {
         return OpenGaussVersionEnum.MINIMAL_LIST;
-    }
-
-    @Override
-    public OpenGaussSupportOSEnum os() {
-        return OpenGaussSupportOSEnum.CENTOS_X86_64;
     }
 
     @Override

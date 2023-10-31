@@ -587,7 +587,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
     private void doInstall(InstallContext installContext) {
         try {
             clusterOpsProviderManager
-                    .provider(installContext.getOpenGaussVersion(), installContext.getOs())
+                    .provider(installContext.getOpenGaussVersion())
                     .orElseThrow(() -> new OpsException("The current version does not support"))
                     .install(installContext);
             wsUtil.sendText(installContext.getRetSession(), "FINAL_EXECUTE_EXIT_CODE:0");
@@ -1122,7 +1122,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         try {
             OpsClusterContext clone = ObjectUtil.clone(opsClusterContext);
             clusterOpsProviderManager
-                    .provider(clone.getOpsClusterEntity().getVersion(), clone.getOs())
+                    .provider(clone.getOpsClusterEntity().getVersion())
                     .orElseThrow(() -> new OpsException("The current version does not support"))
                     .restart(clone);
 
@@ -1202,7 +1202,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         try {
             OpsClusterContext clone = ObjectUtil.clone(opsClusterContext);
             clusterOpsProviderManager
-                    .provider(clone.getOpsClusterEntity().getVersion(), clone.getOs())
+                    .provider(clone.getOpsClusterEntity().getVersion())
                     .orElseThrow(() -> new OpsException("The current version does not support"))
                     .start(clone);
             if (!sync) {
@@ -1281,7 +1281,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         try {
             OpsClusterContext clone = ObjectUtil.clone(opsClusterContext);
             clusterOpsProviderManager
-                    .provider(clone.getOpsClusterEntity().getVersion(), clone.getOs())
+                    .provider(clone.getOpsClusterEntity().getVersion())
                     .orElseThrow(() -> new OpsException("The current version does not support"))
                     .stop(clone);
 
@@ -2637,7 +2637,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         try {
             UnInstallContext clone = ObjectUtil.clone(unInstallContext);
             clusterOpsProviderManager
-                    .provider(clone.getOpsClusterEntity().getVersion(), clone.getOs())
+                    .provider(clone.getOpsClusterEntity().getVersion())
                     .orElseThrow(() -> new OpsException("The current version does not support"))
                     .uninstall(clone);
             wsUtil.sendText(unInstallContext.getRetSession(), "FINAL_EXECUTE_EXIT_CODE:0");

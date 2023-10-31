@@ -25,6 +25,7 @@ package org.opengauss.admin.plugin.enums.ops;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import org.opengauss.admin.plugin.domain.model.ops.SshCommandConstants;
 
 /**
  * @author lhf
@@ -33,12 +34,17 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public enum OpenGaussSupportOSEnum {
-    CENTOS_X86_64("centos","x86_64"),
-    OPENEULER_AARCH64("openEuler","aarch64"),
-    OPENEULER_X86_64("openEuler","x86_64");
+    CENTOS_X86_64("centos", "x86_64",
+            SshCommandConstants.INSTALL_DEPENDENCY, "-CentOS-64bit-om.tar.gz"),
+    OPENEULER_AARCH64("openEuler", "aarch64",
+            SshCommandConstants.INSTALL_DEPENDENCY_OPENEULER_ARCH64, "-openEuler-64bit-om.tar.gz"),
+    OPENEULER_X86_64("openEuler", "x86_64",
+            SshCommandConstants.INSTALL_DEPENDENCY_OPENEULER_X86, "-openEuler-64bit-om.tar.gz");
 
     private String osId;
     private String cpuArch;
+    private String dependencyCommand;
+    private String omPackagePostfix;
 
     public static OpenGaussSupportOSEnum of(String osInfo, String osVersionInfo, String cpuArchInfo) {
         if ("centos".equalsIgnoreCase(osInfo) && "x86_64".equalsIgnoreCase(cpuArchInfo)){

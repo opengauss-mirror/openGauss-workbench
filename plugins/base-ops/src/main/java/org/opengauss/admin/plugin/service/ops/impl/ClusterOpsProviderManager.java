@@ -23,7 +23,6 @@
 
 package org.opengauss.admin.plugin.service.ops.impl;
 
-import org.opengauss.admin.plugin.enums.ops.OpenGaussSupportOSEnum;
 import org.opengauss.admin.plugin.enums.ops.OpenGaussVersionEnum;
 import org.opengauss.admin.plugin.service.ops.ClusterOpsProvider;
 import org.springframework.stereotype.Component;
@@ -42,18 +41,11 @@ public class ClusterOpsProviderManager {
     private static final ConcurrentHashMap<String, ClusterOpsProvider> REGISTRY = new ConcurrentHashMap<>();
 
     public static void registry(OpenGaussVersionEnum version, ClusterOpsProvider provider) {
-        registry(version,OpenGaussSupportOSEnum.CENTOS_X86_64,provider);
-
+        REGISTRY.put(version.name(), provider);
     }
 
-    public static void registry(OpenGaussVersionEnum version, OpenGaussSupportOSEnum os, ClusterOpsProvider provider) {
-        REGISTRY.put(os.name() + version.name(), provider);
-    }
 
-    public Optional<ClusterOpsProvider> provider(OpenGaussVersionEnum version, OpenGaussSupportOSEnum os) {
-        if (os == null){
-            os = OpenGaussSupportOSEnum.CENTOS_X86_64;
-        }
-        return Optional.ofNullable(REGISTRY.get(os.name() + version.name()));
+    public Optional<ClusterOpsProvider> provider(OpenGaussVersionEnum version) {
+        return Optional.ofNullable(REGISTRY.get(version.name()));
     }
 }
