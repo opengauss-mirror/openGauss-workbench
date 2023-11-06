@@ -390,3 +390,13 @@ export const pageOlk = (query: any) => {
     params: query
   })
 }
+
+export const listGucSetting = (query: KeyValue) => {
+  return axios.get('/opsCluster/listGucSetting', {
+    params: query
+  })
+}
+
+export const batchSetGucSetting = (data: KeyValue) => {
+  return axios.post('/opsCluster/batchConfigGucSetting', data)
+}

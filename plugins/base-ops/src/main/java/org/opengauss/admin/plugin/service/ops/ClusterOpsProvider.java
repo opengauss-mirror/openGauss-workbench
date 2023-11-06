@@ -31,6 +31,8 @@ import org.opengauss.admin.plugin.enums.ops.OpenGaussSupportOSEnum;
 import org.opengauss.admin.plugin.enums.ops.OpenGaussVersionEnum;
 import org.opengauss.admin.plugin.enums.ops.WdrScopeEnum;
 import com.jcraft.jsch.Session;
+import org.opengauss.admin.plugin.utils.JschUtil;
+import org.opengauss.admin.plugin.vo.ops.GucSettingVO;
 
 import java.util.List;
 
@@ -113,4 +115,9 @@ public interface ClusterOpsProvider {
      * @param dataPath
      */
     void enableWdrSnapshot(Session session, OpsClusterEntity clusterEntity, List<OpsClusterNodeEntity> opsClusterNodeEntities, WdrScopeEnum scope, String dataPath);
+
+    /**
+     * set guc param to database nodes
+     */
+    void configGucSetting(JschUtil jschUtil, Session session, OpsClusterEntity clusterEntity, boolean isApplyToAllNode, String dataPath, GucSettingVO gucSettingVO);
 }

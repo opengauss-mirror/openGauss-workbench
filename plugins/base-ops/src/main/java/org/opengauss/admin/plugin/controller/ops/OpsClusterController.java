@@ -235,6 +235,18 @@ public class OpsClusterController extends BaseController {
         return AjaxResult.success(hostEnv);
     }
 
+    @GetMapping("/listGucSetting")
+    public AjaxResult listGucSetting(@RequestParam("clusterId") String clusterId, @RequestParam("hostId") String hostId) {
+        List<GucSettingVO> gucSettingList = opsClusterService.getGucSettingList(clusterId, hostId);
+        return AjaxResult.success(gucSettingList);
+    }
+
+    @PostMapping("/batchConfigGucSetting")
+    public AjaxResult batchConfigGucSetting(@RequestBody GucSettingDto gucBody) {
+        opsClusterService.batchConfigGucSetting(gucBody);
+        return AjaxResult.success();
+    }
+
     @GetMapping
     public AjaxResult threadPoolMonitor() {
         Map<String, Integer> res = opsClusterService.threadPoolMonitor();

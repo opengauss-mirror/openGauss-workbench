@@ -26,6 +26,7 @@ package org.opengauss.admin.plugin.service.ops;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
+import org.opengauss.admin.common.exception.ops.OpsException;
 import org.opengauss.admin.plugin.domain.entity.ops.OpsClusterEntity;
 import org.opengauss.admin.plugin.domain.model.ops.*;
 import org.opengauss.admin.plugin.domain.model.ops.env.HostEnv;
@@ -101,4 +102,8 @@ public interface IOpsClusterService extends IService<OpsClusterEntity> {
     Map<String, Integer> threadPoolMonitor();
 
     void removeCluster(String clusterId);
+
+    List<GucSettingVO> getGucSettingList(String clusterId, String hostId) throws OpsException;
+
+    void batchConfigGucSetting(GucSettingDto gucSettingDto);
 }
