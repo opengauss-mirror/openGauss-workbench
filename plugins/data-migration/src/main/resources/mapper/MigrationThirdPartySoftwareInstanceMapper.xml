@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.opengauss.admin.plugin.mapper.MigrationThirdPartySoftwareInstanceMapper">
+
+    <resultMap id="MigrationThirdPartySoftwareConfigResult" type="org.opengauss.admin.plugin.domain.MigrationThirdPartySoftwareConfig">
+        <id property="id" column="id"/>
+        <result property="zookeeperPort" column="zk_port"/>
+        <result property="kafkaPort" column="kafka_port"/>
+        <result property="schemaRegistryPort" column="schema_registry_port"/>
+        <result property="zkIp" column="zk_ip"/>
+        <result property="kafkaIp" column="kafka_ip"/>
+        <result property="schemaRegistryIp" column="schema_registry_ip"/>
+        <result property="installDir" column="install_dir"/>
+        <result property="bindPortalHost" column="bind_portal_host"/>
+        <result property="host" column="host"/>
+    </resultMap>
+
+    <sql id="selectThirdPartySoftwareVo">
+        SELECT
+        id,zk_port,kafka_port,schema_registry_port,zk_ip,kafka_ip,schema_registry_ip,install_dir,bind_portal_host,host
+        FROM tb_migration_third_party_software_config
+    </sql>
+
+    <select id="selectMQPage" parameterType="org.opengauss.admin.plugin.domain.MigrationThirdPartySoftwareConfig" resultMap="MigrationThirdPartySoftwareConfigResult">
+        <include refid="selectThirdPartySoftwareVo"/>
+        <where>
+            <if test="entity!= null and entity.kafkaIp != null  and entity.kafkaIp != ''">
+                and kafka_ip like concat('%', #{entity.kafkaIp}, '%')
+            </if>
+            <if test="entity!= null and entity.installDir != null and entity.installDir != ''">
+                and install_dir like concat('%', #{entity.installDir}, '%')
+            </if>
+        </where>
+        order by id desc
+    </select>
+
+
+
+</mapper>

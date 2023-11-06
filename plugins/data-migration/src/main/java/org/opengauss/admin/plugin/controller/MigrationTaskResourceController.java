@@ -35,6 +35,7 @@ import org.opengauss.admin.common.core.domain.model.ops.jdbc.JdbcDbClusterVO;
 import org.opengauss.admin.common.exception.ops.OpsException;
 import org.opengauss.admin.plugin.base.BaseController;
 import org.opengauss.admin.plugin.domain.MigrationHostPortalInstall;
+import org.opengauss.admin.plugin.domain.MigrationThirdPartySoftwareConfig;
 import org.opengauss.admin.plugin.dto.CustomDbResource;
 import org.opengauss.admin.plugin.exception.PortalInstallException;
 import org.opengauss.admin.plugin.service.MigrationTaskHostRefService;
@@ -199,13 +200,25 @@ public class MigrationTaskResourceController extends BaseController {
 
     private void addSplashToPath(MigrationHostPortalInstall install) {
         String installPath = install.getInstallPath();
+        installPath = formatPath(installPath);
+        install.setInstallPath(installPath);
+        if (install.getThirdPartySoftwareConfig() != null) {
+            MigrationThirdPartySoftwareConfig thirdPartySoftwareConfig = install.getThirdPartySoftwareConfig();
+            String thirdPartySoftwareInstallDir = formatPath(thirdPartySoftwareConfig.getInstallDir());
+            thirdPartySoftwareConfig.setInstallDir(thirdPartySoftwareInstallDir);
+            install.setThirdPartySoftwareConfig(thirdPartySoftwareConfig);
+        }
+    }
+
+    private static String formatPath(String installPath) {
+        String path = installPath;
         if (StrUtil.isNotEmpty(installPath) && !installPath.equals("~")) {
             String lastStr = installPath.substring(installPath.length() - 1);
             if (!lastStr.equals("/")) {
-                installPath += "/";
+                path = path + "/";
             }
         }
-        install.setInstallPath(installPath);
+        return path;
     }
 
     @Override

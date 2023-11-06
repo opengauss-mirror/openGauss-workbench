@@ -68,6 +68,14 @@ public class MigrationHostPortalInstall {
     private String pkgDownloadUrl;
     private String pkgName;
     private String jarName;
+
+    @TableField(exist = false)
+    @JSONField(name = "thirdPartySoftwareConfig", serialize = false, deserialize = false)
+    private MigrationThirdPartySoftwareConfig thirdPartySoftwareConfig;
+    @TableField(exist = false)
+    private Integer kafkaBindId;
+
+
     @TableField(typeHandler = FastjsonTypeHandler.class)
     private UploadInfo pkgUploadPath;
     @TableField(exist = false)

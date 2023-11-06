@@ -216,7 +216,53 @@
             "5q0aajl77lg12": "Are you sure to delete this file? Once deleted, it cannot be restored",
             "5q0aajl77lg13": "Please upload the migration kit installation package",
             "5q0aajl77lg14": "Installation type",
-            "5q0aajl77lg15": "Import install"
+            "5q0aajl77lg15": "Import install",
+            "5q0aajl77lg16": "zookeeper port",
+            "5q0aajl77lg17": "kafka port",
+            "5q0aajl77lg18": "2181",
+            "5q0aajl77lg19": "9092",
+            "5q0aajl77lg20": "Third party software config type",
+            "5q0aajl77lg21": "Binding exists",
+            "5q0aajl77lg22": "Native installation",
+            "5q0aajl77lg23": "Please select the third-party tool you want to bind",
+            "5q0aajl77lg24": "The bound thirdParty tool cannot be empty",
+            "5q0aajl77lg25": "Select the third-party tool instance that you want to bind",
+            "5q0aajl77lg26": "the name of the third party tool instance",
+            "5q0aajl77lg27": "The directory where the third-party tool is installed",
+            "5q0aajl77lg28": "Enter the name of the third party tool instance",
+            "5q0aajl77lg29": "Please enter the directory where the third-party tool is installed",
+            "5q0aajl77lg30": "schema_registry port",
+            "5q0aajl77lg31": "8081"
+        },
+        "ToolsParamsConfig": {
+            "5q0toolspar0": "configure parameters",
+            "5q0toolspar1": "Configure the parameters of the full migration tool（config.yml）",
+            "5q0toolspar2": "Configure the parameters of the data verification tool（application.yml）",
+            "5q0toolspar3": "Configure the parameters on the sink side of the data verification tool（application-sink.yml）",
+            "5q0toolspar4": "Set the parameters on the source side of the data verification tool（application-source.yml）",
+            "5q0toolspar5": "Configure the sink parameters of the forward migration tool（mysql-sink.properties）",
+            "5q0toolspar6": "Set the source parameters of the forward migration tool（mysql-source.properties）",
+            "5q0toolspar7": "Configure the sink parameters of the reverse migration tool（opengauss-sink.properties）",
+            "5q0toolspar8": "Set the source parameters of the reverse migration tool（opengauss-source.properties）",
+            "5q0toolspar9": "portal unified parameter configuration",
+            "5q0toolspa10": "save",
+            "5q0toolspa11": "default Value",
+            "5q0toolspa12": "Added New Parameters",
+            "5q0toolspa13": "Cancel",
+            "5q0toolspa14": "Confirm",
+            "5q0toolspa15": "the Name Of The Parameter",
+            "5q0toolspa16": "parameter Value",
+            "5q0toolspa17": "parameter Type",
+            "5q0toolspa18": "parameter Description",
+            "5q0toolspa19": "added Configurations",
+            "5q0toolspa20": "delete TheConfiguration",
+            "5q0toolspa21": "String",
+            "5q0toolspa24": "List (parameter values are comma-separated strings e.g. text, text2, text3)",
+            "5q0toolspa23": "Numeral",
+            "5q0toolspa22": "Boolean (true false)",
+            "5q0toolspa25": "please select",
+            "5q0toolspa26": "Has Been Modified ",
+            "5q0toolspa27": " line"
         },
         "ParamsConfig": {
             "5q0aazspots0": "Default parameter configuration",
@@ -286,7 +332,7 @@
     "step2": {
         "index": {
             "5q092waasqk0": "Tip: Each migration process requires parameter configuration, and DataKit has configured default parameters for each migration process (ie, subtask). You can also modify the parameter configuration of a certain migration process (subtask) in the table below to ensure the smooth execution of the migration process.",
-            "5q092waatio0": "Default parameter configuration (global configuration)",
+            "5q092waatio0": "Default task parameter configuration (global configuration)",
             "5q092waatnk0": "Source IP/port/name",
             "5q092waatqo0": "Destination IP/port/name",
             "5q092waau3o0": "Migration mode",
@@ -303,7 +349,7 @@
             "5q092waawk00": "Target library name",
             "5q092wab7280": "Migration Mode",
             "5q092wab7fo0": "Operate",
-            "5q092wab7k80": "Edit configuration"
+            "5q092wab7k80": "Edit task configuration"
         }
     },
     "step3": {
@@ -438,6 +484,25 @@
             "5qofqisf3jc0": "ssl not found",
             "5qofqisf68w0": "wal_level not found",
             "5qtkk99a2eo0": "The target data source does not support reverse migration, please select a data source imported or installed on the platform"
+        },
+        "third": {
+            "index": {
+                "5q08thptsw80": "Third party software name",
+                "5q08thptsw81": "ip Address",
+                "5q08thptsw82": "zookeeper ip Address",
+                "5q08thptsw83": "schema registry ip Address",
+                "5q08thptsw84": "kafka port",
+                "5q08thptsw85": "zookeeper port",
+                "5q08thptsw86": "schema registry port",
+                "5q08thptsw87": "The associated portal host",
+                "5q08thptsw88": "Please enter an iP address",
+                "5q08thptsw89": "installation path",
+                "5q08thptsw90": "Query",
+                "5q08thptsw91": "Reset",
+                "5q08thptsw92": "The install host",
+                "5q08thptsw93": "Flush",
+                "5q08thptsw94": "Batch delete"
+            }
         }
     }
 }

@@ -34,6 +34,7 @@ public enum TaskParamType {
     TYPE_STRING(1, "string"),
     TYPE_NUMBER(2, "number"),
     TYPE_BOOLEAN(3, "boolean"),
+    TYPE_LIST(4, "List"),
     TYPE_OBJECT_ARR(9, "object_arr");
     private final Integer code;
     private final String command;

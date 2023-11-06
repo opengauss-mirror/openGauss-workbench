@@ -215,6 +215,12 @@
                     $t('step3.index.5q093f8y9zg1')
                   }}</template>
                 </a-button>
+                <a-button size="mini" type="text" @click="handleToolsParams(record)">
+                <template #icon>
+                  <icon-edit />
+                </template>
+                <template #default>{{$t('components.ToolsParamsConfig.5q0toolspar0')}}</template>
+              </a-button>
               </a-popconfirm>
               <a-button
                 v-if="
@@ -314,6 +320,10 @@
       v-model:open="installBatchDlg.visible"
       :host-list="installBatchDlg.hostList"
     />
+    <tools-params-config
+      v-model:open="toolsParamsDlg.visible"
+      :host-id="toolsParamsDlg.curHostId"
+    />
   </div>
 </template>
 
@@ -333,6 +343,7 @@ import dayjs from 'dayjs'
 import PortalInstall from '../components/PortalInstall.vue'
 import uploadPortalDlg from './uploadPortalDlg.vue'
 import batchInstallDlg from './batchAddPortal.vue'
+import ToolsParamsConfig from '../components/ToolsParamsConfig.vue'
 import { useI18n } from 'vue-i18n'
 import { INSTALL_TYPE, PORTAL_INSTALL_STATUS } from '@/utils/constants'
 import { Message } from '@arco-design/web-vue'
@@ -388,6 +399,11 @@ const portalDlg = reactive({
   curHostId: '',
   installMode: 'install',
   installInfo: {}
+})
+
+const toolsParamsDlg = reactive({
+  visible: false,
+  curHostId: '',
 })
 
 const uploadDlg = reactive({
@@ -471,6 +487,12 @@ const findHostsFromTableByStatus = (keys, status) => {
 }
 
 let timer = null
+
+// start install
+const handleToolsParams = (row) => {
+  toolsParamsDlg.curHostId = row.hostInfo.hostId
+  toolsParamsDlg.visible = true
+}
 
 // start install
 const handleInstall = (row) => {

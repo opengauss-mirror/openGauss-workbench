@@ -45,46 +45,62 @@ import org.opengauss.admin.common.core.domain.model.ops.OpsClusterVO;
 import org.opengauss.admin.common.core.domain.model.ops.jdbc.JdbcDbClusterInputDto;
 import org.opengauss.admin.common.core.domain.model.ops.jdbc.JdbcDbClusterNodeInputDto;
 import org.opengauss.admin.common.core.domain.model.ops.jdbc.JdbcDbClusterVO;
-import org.opengauss.admin.common.exception.ops.OpsException;
 import org.opengauss.admin.common.utils.StringUtils;
 import org.opengauss.admin.common.utils.file.FileUploadUtils;
 import org.opengauss.admin.plugin.constants.TaskConstant;
 import org.opengauss.admin.plugin.domain.MigrationHostPortalInstall;
 import org.opengauss.admin.plugin.domain.MigrationTask;
 import org.opengauss.admin.plugin.domain.MigrationTaskHostRef;
+import org.opengauss.admin.plugin.domain.MigrationThirdPartySoftwareConfig;
+import org.opengauss.admin.plugin.domain.TbMigrationTaskGlobalToolsParam;
 import org.opengauss.admin.plugin.dto.CustomDbResource;
 import org.opengauss.admin.plugin.dto.MigrationHostDto;
 import org.opengauss.admin.plugin.enums.MigrationErrorCode;
 import org.opengauss.admin.plugin.enums.PortalInstallStatus;
 import org.opengauss.admin.plugin.enums.PortalInstallType;
+import org.opengauss.admin.plugin.enums.ThirdPartySoftwareConfigType;
+import org.opengauss.admin.plugin.enums.ToolsConfigEnum;
 import org.opengauss.admin.plugin.exception.PortalInstallException;
-import org.opengauss.admin.plugin.exception.ShellException;
 import org.opengauss.admin.plugin.handler.PortalHandle;
 import org.opengauss.admin.plugin.mapper.MigrationTaskHostRefMapper;
 import org.opengauss.admin.plugin.service.MigrationHostPortalInstallHostService;
+import org.opengauss.admin.plugin.service.MigrationMqInstanceService;
 import org.opengauss.admin.plugin.service.MigrationTaskHostRefService;
 import org.opengauss.admin.plugin.service.MigrationTaskService;
+import org.opengauss.admin.plugin.service.TbMigrationTaskGlobalToolsParamService;
 import org.opengauss.admin.plugin.utils.ShellUtil;
 import org.opengauss.admin.plugin.vo.TargetClusterNodeVO;
 import org.opengauss.admin.plugin.vo.TargetClusterVO;
-import org.opengauss.admin.system.plugin.facade.*;
+import org.opengauss.admin.system.plugin.facade.HostFacade;
+import org.opengauss.admin.system.plugin.facade.HostUserFacade;
+import org.opengauss.admin.system.plugin.facade.JdbcDbClusterFacade;
+import org.opengauss.admin.system.plugin.facade.OpsFacade;
+import org.opengauss.admin.system.plugin.facade.SysSettingFacade;
 import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.MediaType;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.multipart.commons.CommonsMultipartFile;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
 import java.nio.file.Path;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
+import java.util.Optional;
+import java.util.Properties;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -131,6 +147,18 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
     private MigrationHostPortalInstallHostService migrationHostPortalInstallHostService;
     @Autowired
     private ThreadPoolTaskExecutor threadPoolTaskExecutor;
+
+    @Autowired
+    private TbMigrationTaskGlobalToolsParamService toolsParamService;
+
+    @Autowired
+    private MigrationMqInstanceService migrationThirdPartySoftwareInstanceService;
+
+    @Autowired
+    private TbMigrationTaskGlobalToolsParamService taskGlobalToolsParamService;
+
+    @Autowired
+    private MigrationMqInstanceService mqConfigService;
 
     @Override
     public void deleteByMainTaskId(Integer mainTaskId) {
@@ -524,20 +552,60 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
         if (PortalInstallType.IMPORT_INSTALL.getCode().equals(install.getInstallType())) {
             //  offline or online mode remains unchanged
             physicalInstallParams.setInstallType(
-                oldInstall == null ? PortalInstallType.ONLINE_INSTALL.getCode() : oldInstall.getInstallType());
+                    oldInstall == null ? PortalInstallType.ONLINE_INSTALL.getCode() : oldInstall.getInstallType());
             boolean isInstallSuccess = PortalHandle.checkInstallStatusAndUpdate(physicalInstallParams,
-                encryptionUtils.decrypt(hostUser.getPassword()));
+                    encryptionUtils.decrypt(hostUser.getPassword()));
             physicalInstallParams.setInstallStatus(isInstallSuccess
-                ? PortalInstallStatus.INSTALLED.getCode() : PortalInstallStatus.INSTALL_ERROR.getCode());
+                    ? PortalInstallStatus.INSTALLED.getCode() : PortalInstallStatus.INSTALL_ERROR.getCode());
             migrationHostPortalInstallHostService.saveRecord(physicalInstallParams);
             return AjaxResult.success();
         }
+        MigrationThirdPartySoftwareConfig thirdPartySoftwareConfig = saveThirdPartySoftwareRecord(install,
+                physicalInstallParams);
+        physicalInstallParams.setThirdPartySoftwareConfig(thirdPartySoftwareConfig);
         syncInstallPortalHandler(physicalInstallParams);
         // if reinstall path changed, clear old package
         if (isReInstall && !realInstallPath.equals(oldInstall.getInstallPath())) {
             deletePortal(hostId, false);
         }
         return AjaxResult.success();
+    }
+
+    private MigrationThirdPartySoftwareConfig saveThirdPartySoftwareRecord(
+            MigrationHostPortalInstall install, MigrationHostPortalInstall physicalInstallParams) {
+        MigrationThirdPartySoftwareConfig thirdPartySoftwareConfig = null;
+        if (ThirdPartySoftwareConfigType.INSTALL.getCode().equals(install.getThirdPartySoftwareConfig()
+                .getThirdPartySoftwareConfigType())) {
+            thirdPartySoftwareConfig = MigrationThirdPartySoftwareConfig.builder()
+                    .zookeeperPort(install.getThirdPartySoftwareConfig().getZookeeperPort())
+                    .kafkaPort(install.getThirdPartySoftwareConfig().getKafkaPort())
+                    .schemaRegistryPort(install.getThirdPartySoftwareConfig().getSchemaRegistryPort())
+                    .installDir(install.getThirdPartySoftwareConfig().getInstallDir())
+                    .zkIp(physicalInstallParams.getHost())
+                    .kafkaIp(physicalInstallParams.getHost())
+                    .schemaRegistryIp(physicalInstallParams.getHost())
+                    .thirdPartySoftwareConfigType(ThirdPartySoftwareConfigType.INSTALL.getCode())
+                    .build();
+            thirdPartySoftwareConfig.replacePathHome(physicalInstallParams.getRunUser());
+            log.error("thirdPartySoftwareConfig = {}", thirdPartySoftwareConfig);
+            migrationThirdPartySoftwareInstanceService.save(thirdPartySoftwareConfig);
+        } else {
+            thirdPartySoftwareConfig = migrationThirdPartySoftwareInstanceService.getById(install.getKafkaBindId());
+            if (thirdPartySoftwareConfig == null) {
+                log.error("select third party software is null");
+                return MigrationThirdPartySoftwareConfig.builder().build();
+            }
+            thirdPartySoftwareConfig.setThirdPartySoftwareConfigType(ThirdPartySoftwareConfigType.BIND.getCode());
+            List<String> bindlist =
+                    new ArrayList<>(Arrays.asList(thirdPartySoftwareConfig.getBindPortalHost() == null
+                            ? new String[]{} : thirdPartySoftwareConfig.getBindPortalHost().split(",")));
+            if (!bindlist.contains(install.getHost())) {
+                bindlist.add(physicalInstallParams.getHost());
+                thirdPartySoftwareConfig.setBindPortalHost(StringUtils.join(bindlist, ","));
+                migrationThirdPartySoftwareInstanceService.saveOrUpdate(thirdPartySoftwareConfig);
+            }
+        }
+        return thirdPartySoftwareConfig;
     }
 
     private void syncInstallPortalHandler(MigrationHostPortalInstall installParams) {
@@ -562,10 +630,65 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
                 }
                 isInstallSuccess = false;
             }
+            if (!isInstallSuccess && ThirdPartySoftwareConfigType.INSTALL.getCode()
+                    .equals(installParams.getThirdPartySoftwareConfig().getThirdPartySoftwareConfigType())) {
+                log.info("install failed remove record");
+                migrationThirdPartySoftwareInstanceService.removeById(
+                        installParams.getThirdPartySoftwareConfig().getId());
+                mqConfigService.removeInstance(installParams.getHost());
+            }
+            loadTaskConfigParams(installParams);
             migrationHostPortalInstallHostService.updateStatus(installParams.getRunHostId(), isInstallSuccess ? PortalInstallStatus.INSTALLED.getCode() : PortalInstallStatus.INSTALL_ERROR.getCode());
         });
     }
 
+    /**
+     * 加载portal配置文件
+     *
+     * @author: www
+     * @date: 2023/11/28 10:41
+     * @description: msg
+     * @since: 1.1
+     * @version: 1.1
+     * @param installParams installParams
+     */
+    private void loadTaskConfigParams(MigrationHostPortalInstall installParams) {
+        Map<Integer, Map<String, Object>> toolsConfig = null;
+        Properties toolsParamsDesc = null;
+        try {
+            toolsConfig = PortalHandle.loadToolsConfig(installParams);
+            Optional<Properties> properties = PortalHandle.loadToolsParamsDesc(installParams.getHost(),
+                    installParams.getPort(), installParams.getRunUser(), installParams.getRunPassword(),
+                    installParams.getInstallPath());
+            if (properties.isPresent()) {
+                toolsParamsDesc = properties.get();
+            }
+        } catch (PortalInstallException e) {
+            log.error("loadTaskConfigParams failed", e);
+            return;
+        }
+        List<TbMigrationTaskGlobalToolsParam> globalToolsParams = new ArrayList<>();
+        for (ToolsConfigEnum configEnum : ToolsConfigEnum.values()) {
+            Map<String, Object> toolConfigs = toolsConfig.get(configEnum.getType());
+            for (Map.Entry<String, Object> toolConfig : toolConfigs.entrySet()) {
+                TbMigrationTaskGlobalToolsParam taskGlobalToolsParam = new TbMigrationTaskGlobalToolsParam();
+                taskGlobalToolsParam.setConfigId(configEnum.getType());
+                taskGlobalToolsParam.setParamKey(toolConfig.getKey());
+                Object value = toolConfig.getValue();
+                taskGlobalToolsParam.setParamValueAndType(value);
+                taskGlobalToolsParam.setPortalHostID(installParams.getRunHostId());
+                taskGlobalToolsParam.setDeleteFlag(
+                        TbMigrationTaskGlobalToolsParam.DeleteFlagEnum.USED.getDeleteFlag());
+                String paramDescKey =
+                        taskGlobalToolsParam.getConfigId() + "."
+                                + taskGlobalToolsParam.getParamValueType() + "." + taskGlobalToolsParam.getParamKey();
+                taskGlobalToolsParam.setParamDesc(toolsParamsDesc == null ? ""
+                        : String.valueOf(toolsParamsDesc.get(paramDescKey)));
+                globalToolsParams.add(taskGlobalToolsParam);
+            }
+        }
+        taskGlobalToolsParamService.saveBatch(globalToolsParams);
+    }
 
     @Override
     public String getPortalInstallLog(String hostId) {
@@ -644,16 +767,21 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
     @Transactional(rollbackFor = Exception.class)
     public AjaxResult deletePortal(String hostId, Boolean onlyPkg) {
         MigrationHostPortalInstall install = migrationHostPortalInstallHostService.getOneByHostId(hostId);
-        OpsHostEntity opsHost = hostFacade.getById(hostId);
-        OpsHostUserEntity hostUser = hostUserFacade.getById(install.getHostUserId());
-        String password = encryptionUtils.decrypt(hostUser.getPassword());
         List<MigrationTask> tasks = migrationTaskService.listRunningTaskByHostId(hostId);
         if (CollUtil.isNotEmpty(tasks)) {
             return AjaxResult.error(MigrationErrorCode.PORTAL_DELETE_ERROR.getCode(), MigrationErrorCode.PORTAL_DELETE_ERROR.getMsg());
         }
+        List<String> bindPortalKafkas = mqConfigService.listBindHostsByPortalHost(install.getHost());
+        if (!CollectionUtils.isEmpty(bindPortalKafkas)) {
+            return AjaxResult.error(MigrationErrorCode.PORTAL_DELETE_ERROR_FOR_KAFKA_USED.getCode(),
+                    MigrationErrorCode.PORTAL_DELETE_ERROR_FOR_KAFKA_USED.getMsg());
+        }
+        OpsHostUserEntity hostUser = hostUserFacade.getById(install.getHostUserId());
         String realInstallPath = getInstallPath(install.getInstallPath(), hostUser.getUsername());
         String portalHome = realInstallPath + "portal/";
         // stop kafka
+        OpsHostEntity opsHost = hostFacade.getById(hostId);
+        String password = encryptionUtils.decrypt(hostUser.getPassword());
         try {
             stopKafka(opsHost, hostUser, password, portalHome, install.getJarName(), 0);
         } catch (PortalInstallException ex) {
@@ -666,6 +794,12 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
         }
         migrationHostPortalInstallHostService.clearPkgUploadPath(hostId);
         ShellUtil.rmFile(opsHost.getPublicIp(), opsHost.getPort(), hostUser.getUsername(), password, realInstallPath + install.getPkgName());
+        String kafkaInstallPath = mqConfigService.removeInstance(install.getHost());
+        if (!StringUtils.isEmpty(kafkaInstallPath)) {
+            ShellUtil.execCommandGetResult(opsHost.getPublicIp(), opsHost.getPort(), hostUser.getUsername(), password,
+                    "rm -rf  " + kafkaInstallPath + "confluent-5.5.1");
+        }
+        toolsParamService.removeByHostId(install.getRunHostId());
         return AjaxResult.success();
     }
 

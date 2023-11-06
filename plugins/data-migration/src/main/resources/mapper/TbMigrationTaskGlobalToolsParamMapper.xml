@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.opengauss.admin.plugin.mapper.TbMigrationTaskGlobalToolsParamMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="org.opengauss.admin.plugin.domain.TbMigrationTaskGlobalToolsParam">
+        <id column="id" property="id" />
+        <result column="param_key" property="paramKey" />
+        <result column="param_value" property="paramValue" />
+        <result column="param_change_value" property="paramChangeValue" />
+        <result column="param_value_type" property="paramValueType" />
+        <result column="config_id" property="configId" />
+        <result column="portal_host_id" property="portalHostID" />
+        <result column="param_desc" property="paramDesc" />
+        <result column="delete_flag" property="deleteFlag" />
+        <result column="new_param_flag" property="newParamFlag" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, param_key, param_value, param_change_value, param_value_type, config_id, tools_desc, new_param_flag
+    </sql>
+
+</mapper>
