@@ -27,8 +27,9 @@
                     </div>
                 </div>
                 <div class="flex-row">
-                    <a-checkbox v-model="data.isApplyToAllNode" class="mr-s">{{ $t('operation.DailyOps.guc5cg6')
-                    }}</a-checkbox>
+                    <a-checkbox v-if="local.data.version === OpenGaussVersionEnum.ENTERPRISE"
+                        v-model="data.isApplyToAllNode" class="mr-s">{{ $t('operation.DailyOps.guc5cg6')
+                        }}</a-checkbox>
                     <a-button type="primary" @click="handleSave" :loading="data.loading">{{ $t('operation.DailyOps.guc5cg7')
                     }}</a-button>
                 </div>
@@ -81,9 +82,10 @@
     </a-modal>
 </template>
 <script setup lang="ts">
+import { OpenGaussVersionEnum } from '@/types/ops/install';
 import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
-import { reactive, ref } from 'vue'
+import { reactive, ref, computed } from 'vue'
 import { KeyValue } from '@/types/global'
 import { listGucSetting, batchSetGucSetting } from '@/api/ops'
 import { IconSearch } from '@arco-design/web-vue/es/icon'
@@ -142,7 +144,7 @@ const list = reactive<KeyValue>({
     }
 })
 
-const columns = [{
+const columns = computed(() => [{
     title: t('operation.DailyOps.guc5cg8'),
     dataIndex: 'name',
     slotName: 'name',
@@ -168,7 +170,7 @@ const columns = [{
 }, {
     title: t('operation.DailyOps.guc5ch2'),
     slotName: 'operation'
-}]
+}])
 
 
 const currentPage = (e: number) => {
@@ -185,7 +187,7 @@ const open = (clusterData: KeyValue, instance: KeyValue, clusterIndex: number) =
     data.clusterId = clusterData.clusterId
     data.hostId = instance.hostId
     data.dataPath = instance.dataPath
-    data.info = instance.info
+    data.info = instance.publicIp
     getGucSetting()
     data.visible = true
 }

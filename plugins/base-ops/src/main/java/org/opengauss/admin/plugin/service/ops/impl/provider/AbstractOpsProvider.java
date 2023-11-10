@@ -32,6 +32,7 @@ import org.opengauss.admin.plugin.domain.model.ops.*;
 import org.opengauss.admin.plugin.domain.model.ops.node.EnterpriseInstallNodeConfig;
 import org.opengauss.admin.plugin.enums.ops.GucSettingContextEnum;
 import org.opengauss.admin.plugin.enums.ops.OpenGaussSupportOSEnum;
+import org.opengauss.admin.plugin.enums.ops.OpenGaussVersionEnum;
 import org.opengauss.admin.plugin.service.ops.ClusterOpsProvider;
 import org.opengauss.admin.plugin.service.ops.impl.ClusterOpsProviderManager;
 import org.opengauss.admin.plugin.utils.JschUtil;
@@ -503,13 +504,13 @@ public abstract class AbstractOpsProvider implements ClusterOpsProvider, Initial
     public void configGucSetting(JschUtil jschUtil, Session session, OpsClusterEntity clusterEntity, boolean isApplyToAllNode, String dataPath, GucSettingVO gucSettingVO) {
         String command;
         if (gucSettingVO.getContext().equals(GucSettingContextEnum.POSTMASTER.getCode())) {
-            if (isApplyToAllNode) {
+            if (isApplyToAllNode && clusterEntity.getVersion().equals(OpenGaussVersionEnum.ENTERPRISE)) {
                 command = String.format("gs_guc set -N all -I all -c \"%s=%s\"", gucSettingVO.getName(), gucSettingVO.getValue());
             } else {
                 command = String.format("gs_guc set -D %s -c \"%s=%s\"", dataPath, gucSettingVO.getName(), gucSettingVO.getValue());
             }
         } else {
-            if (isApplyToAllNode) {
+            if (isApplyToAllNode && clusterEntity.getVersion().equals(OpenGaussVersionEnum.ENTERPRISE)) {
                 command = String.format("gs_guc reload -N all -I all -c \"%s=%s\"", gucSettingVO.getName(), gucSettingVO.getValue());
             } else {
                 command = String.format("gs_guc reload -D %s -c \"%s=%s\"", dataPath, gucSettingVO.getName(), gucSettingVO.getValue());
