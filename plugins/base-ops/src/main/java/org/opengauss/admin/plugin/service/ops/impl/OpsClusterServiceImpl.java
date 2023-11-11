@@ -58,11 +58,7 @@ import org.opengauss.admin.plugin.domain.model.ops.env.SoftwareEnv;
 import org.opengauss.admin.plugin.domain.model.ops.node.EnterpriseInstallNodeConfig;
 import org.opengauss.admin.plugin.domain.model.ops.node.LiteInstallNodeConfig;
 import org.opengauss.admin.plugin.domain.model.ops.node.MinimalistInstallNodeConfig;
-import org.opengauss.admin.plugin.enums.ops.ClusterRoleEnum;
-import org.opengauss.admin.plugin.enums.ops.DeployTypeEnum;
-import org.opengauss.admin.plugin.enums.ops.HostEnvStatusEnum;
-import org.opengauss.admin.plugin.enums.ops.OpenGaussSupportOSEnum;
-import org.opengauss.admin.plugin.enums.ops.OpenGaussVersionEnum;
+import org.opengauss.admin.plugin.enums.ops.*;
 import org.opengauss.admin.plugin.mapper.ops.OpsClusterMapper;
 import org.opengauss.admin.plugin.service.ops.IOpsCheckService;
 import org.opengauss.admin.plugin.service.ops.IOpsClusterNodeService;
@@ -73,15 +69,7 @@ import org.opengauss.admin.plugin.utils.DBUtil;
 import org.opengauss.admin.plugin.utils.DownloadUtil;
 import org.opengauss.admin.plugin.utils.JschUtil;
 import org.opengauss.admin.plugin.utils.WsUtil;
-import org.opengauss.admin.plugin.vo.ops.AuditLogVO;
-import org.opengauss.admin.plugin.vo.ops.CheckClusterVO;
-import org.opengauss.admin.plugin.vo.ops.CheckDbVO;
-import org.opengauss.admin.plugin.vo.ops.CheckDeviceVO;
-import org.opengauss.admin.plugin.vo.ops.CheckItemVO;
-import org.opengauss.admin.plugin.vo.ops.CheckNetworkVO;
-import org.opengauss.admin.plugin.vo.ops.CheckOSVO;
-import org.opengauss.admin.plugin.vo.ops.CheckVO;
-import org.opengauss.admin.plugin.vo.ops.OpsNodeLogVO;
+import org.opengauss.admin.plugin.vo.ops.*;
 import org.opengauss.admin.plugin.vo.ops.SessionVO;
 import org.opengauss.admin.plugin.vo.ops.SlowSqlVO;
 import org.opengauss.admin.system.plugin.facade.AzFacade;
@@ -1075,9 +1063,10 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         }
 
         opsClusterContext.setOpsClusterNodeEntityList(opsClusterNodeEntityList);
-
-        WsSession wsSession = wsConnectorManager.getSession(restartBody.getBusinessId()).orElseThrow(() -> new OpsException("websocket session not exist"));
-        opsClusterContext.setRetSession(wsSession);
+        if (StrUtil.isNotEmpty(restartBody.getBusinessId())) {
+            WsSession wsSession = wsConnectorManager.getSession(restartBody.getBusinessId()).orElseThrow(() -> new OpsException("websocket session not exist"));
+            opsClusterContext.setRetSession(wsSession);
+        }
 
         List<String> hostIdList = opsClusterNodeEntityList.stream().map(OpsClusterNodeEntity::getHostId).collect(Collectors.toList());
         if (CollUtil.isNotEmpty(hostIdList)) {
@@ -3100,5 +3089,129 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
             }
         }
         return fileList;
+    }
+
+    @Override
+    public void batchConfigGucSetting(GucSettingDto gucSettingDto) {
+        OpsClusterEntity clusterEntity = getById(gucSettingDto.getClusterId());
+        if (Objects.isNull(clusterEntity)) {
+            throw new OpsException("Cluster information does not exist");
+        }
+
+        OpsHostEntity hostEntity = hostFacade.getById(gucSettingDto.getHostId());
+        if (Objects.isNull(hostEntity)) {
+            throw new OpsException("host information does not exist");
+        }
+
+        List<OpsClusterNodeEntity> opsClusterNodeEntities = opsClusterNodeService.listClusterNodeByClusterId(clusterEntity.getClusterId());
+        if (CollUtil.isEmpty(opsClusterNodeEntities)) {
+            throw new OpsException("Cluster node information is empty");
+        }
+
+        OpsClusterNodeEntity nodeEntity = opsClusterNodeEntities.stream().filter(node -> node.getHostId().equals(hostEntity.getHostId())).findFirst().orElseThrow(() -> new OpsException("Cluster node configuration not found"));
+        String installUserId = nodeEntity.getInstallUserId();
+        OpsHostUserEntity userEntity = hostUserFacade.getById(installUserId);
+        if (Objects.isNull(userEntity)) {
+            throw new OpsException("Installation user information does not exist");
+        }
+        Session session = jschUtil.getSession(hostEntity.getPublicIp(), hostEntity.getPort(), userEntity.getUsername(), encryptionUtils.decrypt(userEntity.getPassword())).orElseThrow(() -> new OpsException("Failed to establish session with host"));
+
+        boolean needRestart = false;
+        for (GucSettingVO settingVO: gucSettingDto.getSettings()) {
+            if (!settingVO.getHasChanged()) {
+                continue;
+            }
+            if (settingVO.getContext().equals(GucSettingContextEnum.POSTMASTER.getCode())) {
+                needRestart = true;
+            }
+            String dataPath = gucSettingDto.getDataPath();
+            if (clusterEntity.getVersion().equals(OpenGaussVersionEnum.MINIMAL_LIST)) {
+                dataPath = opsClusterNodeEntities.stream().filter(node -> node.getClusterRole() == ClusterRoleEnum.MASTER).findFirst().orElseThrow(() -> new OpsException("Master node configuration not found")).getDataPath();
+                if (clusterEntity.getDeployType() == DeployTypeEnum.CLUSTER) {
+                    dataPath = dataPath + "/master";
+                } else {
+                    dataPath = dataPath + "/single_node";
+                }
+            }
+            clusterOpsProviderManager
+                    .provider(clusterEntity.getVersion())
+                    .orElseThrow(() -> new OpsException("The current version does not support"))
+                    .configGucSetting(jschUtil, session, clusterEntity, gucSettingDto.getIsApplyToAllNode(), dataPath, settingVO);
+        }
+        if (needRestart) {
+            OpsClusterBody clusterBody = new OpsClusterBody();
+            clusterBody.setClusterId(clusterEntity.getClusterId());
+            clusterBody.setSync(true);
+            List<String> nodeIds = new ArrayList<>();
+            opsClusterNodeEntities.forEach((item) -> {
+                nodeIds.add(item.getClusterNodeId());
+            });
+            clusterBody.setNodeIds(nodeIds);
+            try {
+                restart(clusterBody);
+            } catch (OpsException ex) {
+                String errMsg = "Restart cluster failed: " + ex.getMessage();
+                log.error(errMsg);
+                throw new OpsException(errMsg);
+            }
+        }
+    }
+
+    @Override
+    public List<GucSettingVO> getGucSettingList(String clusterId, String hostId) throws OpsException {
+        Connection connection = null;
+        OpsClusterEntity clusterEntity = getById(clusterId);
+        if (Objects.isNull(clusterEntity)) {
+            throw new OpsException("Cluster information does not exist");
+        }
+
+        OpsHostEntity hostEntity = hostFacade.getById(hostId);
+        if (Objects.isNull(hostEntity)) {
+            throw new OpsException("host information does not exist");
+        }
+        try {
+            connection = DBUtil.getSession(hostEntity.getPublicIp(), clusterEntity.getPort(), clusterEntity.getDatabaseUsername(), clusterEntity.getDatabasePassword()).orElseThrow(() -> new OpsException("Unable to connect to the database"));
+            return queryGucSettingList(connection);
+        } catch (SQLException | ClassNotFoundException e) {
+            String errMsg = "get connection fail: " + e.getMessage();
+            log.error(errMsg);
+            throw new OpsException(errMsg);
+        } finally {
+            if (Objects.nonNull(connection)) {
+                try {
+                    connection.close();
+                } catch (SQLException ex) {
+                    log.error("close connection failed: " + ex.getMessage());
+                }
+            }
+        }
+    }
+
+    private List<GucSettingVO> queryGucSettingList(Connection connection) throws OpsException {
+        List<GucSettingVO> res = new ArrayList<>();
+        String sql = "select * from pg_settings";
+        try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+            ResultSet resultSet = preparedStatement.executeQuery();
+            while (resultSet.next()) {
+                GucSettingVO gucSettingVO = new GucSettingVO();
+                gucSettingVO.setName(resultSet.getString("name"));
+                gucSettingVO.setValue(resultSet.getString("setting"));
+                gucSettingVO.setVarType(resultSet.getString("vartype"));
+                gucSettingVO.setUnit(resultSet.getString("unit"));
+                gucSettingVO.setMinVal(resultSet.getString("min_val"));
+                gucSettingVO.setMaxVal(resultSet.getString("max_val"));
+                gucSettingVO.setShortDesc(resultSet.getString("short_desc"));
+                gucSettingVO.setExtraDesc(resultSet.getString("extra_desc"));
+                gucSettingVO.setEnumVals(resultSet.getString("enumvals"));
+                gucSettingVO.setDefaultVal(resultSet.getString("boot_val"));
+                gucSettingVO.setContext(resultSet.getString("context"));
+                res.add(gucSettingVO);
+            }
+        } catch (SQLException ex) {
+            String errMsg = "Querying guc setting failed: " + ex.getMessage();
+            log.error(errMsg);
+            throw new OpsException(errMsg);
+        }
+        return res;
     }
 }

@@ -27,12 +27,16 @@ import cn.hutool.core.util.StrUtil;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
 import org.opengauss.admin.common.exception.ops.OpsException;
+import org.opengauss.admin.plugin.domain.entity.ops.OpsClusterEntity;
 import org.opengauss.admin.plugin.domain.model.ops.*;
 import org.opengauss.admin.plugin.domain.model.ops.node.EnterpriseInstallNodeConfig;
+import org.opengauss.admin.plugin.enums.ops.GucSettingContextEnum;
 import org.opengauss.admin.plugin.enums.ops.OpenGaussSupportOSEnum;
+import org.opengauss.admin.plugin.enums.ops.OpenGaussVersionEnum;
 import org.opengauss.admin.plugin.service.ops.ClusterOpsProvider;
 import org.opengauss.admin.plugin.service.ops.impl.ClusterOpsProviderManager;
 import org.opengauss.admin.plugin.utils.JschUtil;
+import org.opengauss.admin.plugin.vo.ops.GucSettingVO;
 import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
 import com.jcraft.jsch.Session;
 import lombok.extern.slf4j.Slf4j;
@@ -60,38 +64,38 @@ public abstract class AbstractOpsProvider implements ClusterOpsProvider, Initial
 
         log.info("The root user logs in to the host");
         // root session
-        Session rootSession = loginWithUser(jschUtil,encryptionUtils,installContext.getHostInfoHolders(), true, hostId, null);
+        Session rootSession = loginWithUser(jschUtil, encryptionUtils, installContext.getHostInfoHolders(), true, hostId, null);
         try {
 
-            installDependency(jschUtil,rootSession,retSession, installContext.getOs());
-            ensureDirExist(jschUtil,rootSession, pkgPath, retSession);
+            installDependency(jschUtil, rootSession, retSession, installContext.getOs());
+            ensureDirExist(jschUtil, rootSession, pkgPath, retSession);
 
-            ensureDirExist(jschUtil,rootSession, installPath, retSession);
+            ensureDirExist(jschUtil, rootSession, installPath, retSession);
 
-            ensureDirExist(jschUtil,rootSession, dataPath, retSession);
+            ensureDirExist(jschUtil, rootSession, dataPath, retSession);
 
 
-            ensureLimits(jschUtil,rootSession, retSession);
+            ensureLimits(jschUtil, rootSession, retSession);
 
             try {
                 retSession.getSession().getBasicRemote().sendText("START_SCP_INSTALL_PACKAGE");
             } catch (IOException e) {
-                log.error("send websocket text fail",e);
+                log.error("send websocket text fail", e);
             }
 
             log.info("Copy the installation package to the target host");
             // scp
-            String installPackageFullPath = scpInstallPackageToMasterNode(jschUtil,rootSession, installContext.getInstallPackagePath(), pkgPath, retSession);
+            String installPackageFullPath = scpInstallPackageToMasterNode(jschUtil, rootSession, installContext.getInstallPackagePath(), pkgPath, retSession);
 
             try {
                 retSession.getSession().getBasicRemote().sendText("END_SCP_INSTALL_PACKAGE");
             } catch (IOException e) {
-                log.error("send websocket text fail",e);
+                log.error("send websocket text fail", e);
             }
 
             log.info("set kernel.sem");
             // SEM
-            sem(jschUtil,rootSession, retSession);
+            sem(jschUtil, rootSession, retSession);
 
             log.info("Unzip the installation package");
 
@@ -99,45 +103,45 @@ public abstract class AbstractOpsProvider implements ClusterOpsProvider, Initial
             try {
                 retSession.getSession().getBasicRemote().sendText("START_UNZIP_INSTALL_PACKAGE");
             } catch (IOException e) {
-                log.error("send websocket text fail",e);
+                log.error("send websocket text fail", e);
             }
-            decompress(jschUtil,rootSession, installPath, installPackageFullPath, retSession, decompressArgs);
+            decompress(jschUtil, rootSession, installPath, installPackageFullPath, retSession, decompressArgs);
             try {
                 retSession.getSession().getBasicRemote().sendText("END_UNZIP_INSTALL_PACKAGE");
             } catch (IOException e) {
-                log.error("send websocket text fail",e);
+                log.error("send websocket text fail", e);
             }
 
-            ensureStrictPermission(jschUtil,rootSession, installUserName, pkgPath, retSession);
-            ensureStrictPermission(jschUtil,rootSession, installUserName, installPath, retSession);
-            ensureDataPathPermission(jschUtil,rootSession, installUserName, dataPath, retSession);
-            ensureEnvPathPermission(jschUtil,rootSession,installContext.getEnvPath(),retSession);
+            ensureStrictPermission(jschUtil, rootSession, installUserName, pkgPath, retSession);
+            ensureStrictPermission(jschUtil, rootSession, installUserName, installPath, retSession);
+            ensureDataPathPermission(jschUtil, rootSession, installUserName, dataPath, retSession);
+            ensureEnvPathPermission(jschUtil, rootSession, installContext.getEnvPath(), retSession);
             log.info("Login and install user");
-        }finally {
-            if (Objects.nonNull(rootSession) && rootSession.isConnected()){
+        } finally {
+            if (Objects.nonNull(rootSession) && rootSession.isConnected()) {
                 rootSession.disconnect();
             }
         }
 
-        return loginWithUser(jschUtil,encryptionUtils,installContext.getHostInfoHolders(), false, hostId, installUserId);
+        return loginWithUser(jschUtil, encryptionUtils, installContext.getHostInfoHolders(), false, hostId, installUserId);
     }
 
     protected String wrapperEnvSep(String command, String envPath) {
-        if (StrUtil.isNotEmpty(envPath)){
+        if (StrUtil.isNotEmpty(envPath)) {
             command = command + " --sep-env-file=" + envPath;
         }
         return command;
     }
 
     protected String wrapperLiteEnvSep(String command, String envPath) {
-        if (StrUtil.isNotEmpty(envPath)){
+        if (StrUtil.isNotEmpty(envPath)) {
             command = command + " --env-sep-file " + envPath;
         }
         return command;
     }
 
-    protected void ensureEnvPathPermission(JschUtil jschUtil, Session rootSession, String envPath, WsSession retSession){
-        if (StrUtil.isEmpty(envPath)){
+    protected void ensureEnvPathPermission(JschUtil jschUtil, Session rootSession, String envPath, WsSession retSession) {
+        if (StrUtil.isEmpty(envPath)) {
             return;
         }
 
@@ -160,7 +164,7 @@ public abstract class AbstractOpsProvider implements ClusterOpsProvider, Initial
     }
 
     protected void installDependency(JschUtil jschUtil, Session rootSession, WsSession retSession,
-                                     OpenGaussSupportOSEnum expectedOs){
+                                     OpenGaussSupportOSEnum expectedOs) {
         boolean dependencyCorrect = false;
         String[] dependencyPackageNames = {"libaio-devel", "flex", "bison", "ncurses-devel", "glibc-devel",
                 "patch", "redhat-lsb-core", "readline-devel"};
@@ -181,7 +185,7 @@ public abstract class AbstractOpsProvider implements ClusterOpsProvider, Initial
         } catch (Exception e) {
             log.error("Execute command exception：", e);
         }
-        if (dependencyCorrect){
+        if (dependencyCorrect) {
             log.info("dependencyCorrect，skip install dependency");
             return;
         }
@@ -189,7 +193,7 @@ public abstract class AbstractOpsProvider implements ClusterOpsProvider, Initial
         try {
             retSession.getSession().getBasicRemote().sendText("START_INSTALL_DEPENDENCY");
         } catch (IOException e) {
-            log.error("send websocket fail",e);
+            log.error("send websocket fail", e);
         }
         String command = dependencyCommand(expectedOs);
         try {
@@ -212,14 +216,14 @@ public abstract class AbstractOpsProvider implements ClusterOpsProvider, Initial
         try {
             retSession.getSession().getBasicRemote().sendText("END_INSTALL_DEPENDENCY");
         } catch (IOException e) {
-            log.error("send websocket fail",e);
+            log.error("send websocket fail", e);
         }
     }
 
-    protected void ensureLimits(JschUtil jschUtil,Session rootSession, WsSession retSession) {
+    protected void ensureLimits(JschUtil jschUtil, Session rootSession, WsSession retSession) {
         String limitsCheck = SshCommandConstants.LIMITS_CHECK;
         try {
-            JschResult jschResult = jschUtil.executeCommand(limitsCheck, rootSession, retSession);;
+            JschResult jschResult = jschUtil.executeCommand(limitsCheck, rootSession, retSession);
 
             if (0 != jschResult.getExitCode()) {
                 log.error("Detect ulimit exception, exit code: {}, error message: {}", jschResult.getExitCode(), jschResult.getResult());
@@ -241,14 +245,14 @@ public abstract class AbstractOpsProvider implements ClusterOpsProvider, Initial
         }
     }
 
-    protected String scpInstallPackageToMasterNode(JschUtil jschUtil,Session rootSession, String sourcePath, String targetPath, WsSession retSession) {
+    protected String scpInstallPackageToMasterNode(JschUtil jschUtil, Session rootSession, String sourcePath, String targetPath, WsSession retSession) {
         String installPackageFileName = sourcePath.substring(sourcePath.lastIndexOf("/") + 1);
         String installPackageFullPath = targetPath + "/" + installPackageFileName;
         jschUtil.upload(rootSession, retSession, sourcePath, installPackageFullPath);
         return installPackageFullPath;
     }
 
-    protected void sem(JschUtil jschUtil,Session rootSession, WsSession retSession) {
+    protected void sem(JschUtil jschUtil, Session rootSession, WsSession retSession) {
         String command = SshCommandConstants.SEM;
         try {
             jschUtil.executeCommand(command, rootSession, retSession);
@@ -257,7 +261,7 @@ public abstract class AbstractOpsProvider implements ClusterOpsProvider, Initial
         }
     }
 
-    protected void decompress(JschUtil jschUtil,Session rootSession, String targetPath, String installPackageFullPath, WsSession retSession, String decompressArgs) {
+    protected void decompress(JschUtil jschUtil, Session rootSession, String targetPath, String installPackageFullPath, WsSession retSession, String decompressArgs) {
         String command = MessageFormat.format(SshCommandConstants.DECOMPRESS, decompressArgs, installPackageFullPath, targetPath);
         try {
             jschUtil.executeCommand(command, rootSession, retSession);
@@ -291,15 +295,15 @@ public abstract class AbstractOpsProvider implements ClusterOpsProvider, Initial
             throw new OpsException("No installation user information found");
         }
 
-        return sshLogin(jschUtil,encryptionUtils,hostEntity, userEntity);
+        return sshLogin(jschUtil, encryptionUtils, hostEntity, userEntity);
     }
 
-    protected Session sshLogin(JschUtil jschUtil,EncryptionUtils encryptionUtils,OpsHostEntity hostEntity, OpsHostUserEntity userEntity) {
+    protected Session sshLogin(JschUtil jschUtil, EncryptionUtils encryptionUtils, OpsHostEntity hostEntity, OpsHostUserEntity userEntity) {
         return jschUtil.getSession(hostEntity.getPublicIp(), hostEntity.getPort(), userEntity.getUsername(), encryptionUtils.decrypt(userEntity.getPassword()))
                 .orElseThrow(() -> new OpsException("Session establishment exception with host[" + hostEntity.getPublicIp() + "]"));
     }
 
-    protected void chmodFullPath(JschUtil jschUtil,Session rootSession, String path, WsSession wsSession) {
+    protected void chmodFullPath(JschUtil jschUtil, Session rootSession, String path, WsSession wsSession) {
         String chmod = MessageFormat.format(SshCommandConstants.CHMOD, path);
 
         try {
@@ -313,7 +317,7 @@ public abstract class AbstractOpsProvider implements ClusterOpsProvider, Initial
         }
     }
 
-    protected void chmod(JschUtil jschUtil,Session rootSession, String path, WsSession wsSession) {
+    protected void chmod(JschUtil jschUtil, Session rootSession, String path, WsSession wsSession) {
         if (StrUtil.isNotEmpty(path) && path.indexOf("/", 1) > 0) {
             path = path.substring(0, path.indexOf("/", 1));
         }
@@ -330,7 +334,7 @@ public abstract class AbstractOpsProvider implements ClusterOpsProvider, Initial
         }
     }
 
-    protected void chmodDataPath(JschUtil jschUtil,Session rootSession, String path, WsSession wsSession) {
+    protected void chmodDataPath(JschUtil jschUtil, Session rootSession, String path, WsSession wsSession) {
         String chmod = MessageFormat.format(SshCommandConstants.CHMOD_DATA_PATH, path);
 
         try {
@@ -344,8 +348,8 @@ public abstract class AbstractOpsProvider implements ClusterOpsProvider, Initial
         }
     }
 
-    protected void ensurePermission(JschUtil jschUtil,Session rootSession, String installUserName, String targetPath, WsSession wsSession) {
-        chmod(jschUtil,rootSession, targetPath, wsSession);
+    protected void ensurePermission(JschUtil jschUtil, Session rootSession, String installUserName, String targetPath, WsSession wsSession) {
+        chmod(jschUtil, rootSession, targetPath, wsSession);
 
         String chown = MessageFormat.format(SshCommandConstants.CHOWN, installUserName, targetPath);
 
@@ -357,8 +361,8 @@ public abstract class AbstractOpsProvider implements ClusterOpsProvider, Initial
         }
     }
 
-    protected void ensureStrictPermission(JschUtil jschUtil,Session rootSession, String installUserName, String targetPath, WsSession wsSession) {
-        chmodFullPath(jschUtil,rootSession, targetPath, wsSession);
+    protected void ensureStrictPermission(JschUtil jschUtil, Session rootSession, String installUserName, String targetPath, WsSession wsSession) {
+        chmodFullPath(jschUtil, rootSession, targetPath, wsSession);
 
         String chown = MessageFormat.format(SshCommandConstants.CHOWN, installUserName, targetPath);
 
@@ -370,8 +374,8 @@ public abstract class AbstractOpsProvider implements ClusterOpsProvider, Initial
         }
     }
 
-    protected void ensureDataPathPermission(JschUtil jschUtil,Session rootSession, String installUserName, String targetPath, WsSession wsSession) {
-        chmodDataPath(jschUtil,rootSession, targetPath, wsSession);
+    protected void ensureDataPathPermission(JschUtil jschUtil, Session rootSession, String installUserName, String targetPath, WsSession wsSession) {
+        chmodDataPath(jschUtil, rootSession, targetPath, wsSession);
 
         String chown = MessageFormat.format(SshCommandConstants.CHOWN, installUserName, targetPath);
 
@@ -383,7 +387,7 @@ public abstract class AbstractOpsProvider implements ClusterOpsProvider, Initial
         }
     }
 
-    protected void ensureDirExist(JschUtil jschUtil,Session rootSession, String targetPath, WsSession retSession) {
+    protected void ensureDirExist(JschUtil jschUtil, Session rootSession, String targetPath, WsSession retSession) {
         String command = MessageFormat.format(SshCommandConstants.MK_DIR, targetPath);
         try {
             jschUtil.executeCommand(command, rootSession, retSession);
@@ -405,19 +409,19 @@ public abstract class AbstractOpsProvider implements ClusterOpsProvider, Initial
         OmStatusModel omStatusModel = new OmStatusModel();
         try {
             String statusCommand = "gs_om -t status --detail";
-            JschResult jschResult = jschUtil.executeCommand(statusCommand, ommUserSession,envPath);
+            JschResult jschResult = jschUtil.executeCommand(statusCommand, ommUserSession, envPath);
             if (0 != jschResult.getExitCode()) {
                 throw new OpsException("startup error,gs_om status fail,exit code " + jschResult.getExitCode());
             }
 
             String result = jschResult.getResult();
-            Map<String,String> nodeIdMapHostname = new HashMap<>();
-            Map<String,String> hostnameMapNodeId = new HashMap<>();
+            Map<String, String> nodeIdMapHostname = new HashMap<>();
+            Map<String, String> hostnameMapNodeId = new HashMap<>();
             omStatusModel.setInstallCm(result.contains("[  CMServer State   ]"));
             omStatusModel.setNodeIdMapHostname(nodeIdMapHostname);
             omStatusModel.setHostnameMapNodeId(hostnameMapNodeId);
 
-            if (omStatusModel.isInstallCm()){
+            if (omStatusModel.isInstallCm()) {
                 int datanodeStateIndex = result.indexOf("[  CMServer State   ]");
                 if (datanodeStateIndex < 0) {
 
@@ -426,7 +430,7 @@ public abstract class AbstractOpsProvider implements ClusterOpsProvider, Initial
                     String dataNodeStateStr = result.substring(splitIndex);
                     String[] dataNode = dataNodeStateStr.split("\n");
                     for (String s : dataNode) {
-                        if (StrUtil.isEmpty(s)){
+                        if (StrUtil.isEmpty(s)) {
                             break;
                         }
                         String[] s1 = s.replaceAll(" +", " ").split(" ");
@@ -437,7 +441,7 @@ public abstract class AbstractOpsProvider implements ClusterOpsProvider, Initial
                     }
                 }
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             log.error("An exception occurred during startup,gs_om status fail", e);
             throw new OpsException("An exception occurred during startup,gs_om status fail");
         }
@@ -445,7 +449,7 @@ public abstract class AbstractOpsProvider implements ClusterOpsProvider, Initial
         return omStatusModel;
     }
 
-    protected void createEnterpriseRemoteUser(InstallContext installContext, OpsClusterContext opsClusterContext,JschUtil jschUtil, EncryptionUtils encryptionUtils) {
+    protected void createEnterpriseRemoteUser(InstallContext installContext, OpsClusterContext opsClusterContext, JschUtil jschUtil, EncryptionUtils encryptionUtils) {
         WsSession retSession = installContext.getRetSession();
         opsClusterContext.setRetSession(retSession);
         opsClusterContext.setHostInfoHolders(installContext.getHostInfoHolders());
@@ -461,7 +465,7 @@ public abstract class AbstractOpsProvider implements ClusterOpsProvider, Initial
             String dataPath = enterpriseInstallNodeConfig.getDataPath();
 
 
-            Session session = loginWithUser(jschUtil,encryptionUtils,installContext.getHostInfoHolders(), false, hostId, installUserId);
+            Session session = loginWithUser(jschUtil, encryptionUtils, installContext.getHostInfoHolders(), false, hostId, installUserId);
             String listenerAddress = MessageFormat.format(SshCommandConstants.LISTENER, dataPath);
             try {
                 jschUtil.executeCommand(listenerAddress, installContext.getEnvPath(), session, retSession);
@@ -494,6 +498,36 @@ public abstract class AbstractOpsProvider implements ClusterOpsProvider, Initial
 
         opsClusterContext.setHostInfoHolders(installContext.getHostInfoHolders());
         restart(opsClusterContext);
+    }
+
+    @Override
+    public void configGucSetting(JschUtil jschUtil, Session session, OpsClusterEntity clusterEntity, boolean isApplyToAllNode, String dataPath, GucSettingVO gucSettingVO) {
+        String command;
+        if (gucSettingVO.getContext().equals(GucSettingContextEnum.POSTMASTER.getCode())) {
+            if (isApplyToAllNode && clusterEntity.getVersion().equals(OpenGaussVersionEnum.ENTERPRISE)) {
+                command = String.format("gs_guc set -N all -I all -c \"%s=%s\"", gucSettingVO.getName(), gucSettingVO.getValue());
+            } else {
+                command = String.format("gs_guc set -D %s -c \"%s=%s\"", dataPath, gucSettingVO.getName(), gucSettingVO.getValue());
+            }
+        } else {
+            if (isApplyToAllNode && clusterEntity.getVersion().equals(OpenGaussVersionEnum.ENTERPRISE)) {
+                command = String.format("gs_guc reload -N all -I all -c \"%s=%s\"", gucSettingVO.getName(), gucSettingVO.getValue());
+            } else {
+                command = String.format("gs_guc reload -D %s -c \"%s=%s\"", dataPath, gucSettingVO.getName(), gucSettingVO.getValue());
+            }
+        }
+
+        try {
+            JschResult jschResult = jschUtil.executeCommand(command, session, clusterEntity.getEnvPath());
+            if (0 != jschResult.getExitCode()) {
+                log.error("set guc parameter {} to {} failed, exit code: {}, error message: {}", gucSettingVO.getName(), gucSettingVO.getValue(), jschResult.getExitCode(), jschResult.getResult());
+                throw new OpsException(String.format("Failed to set guc parameter %s to %s failed: %s", gucSettingVO.getName(), gucSettingVO.getValue(), jschResult.getResult()));
+            }
+
+        } catch (Exception e) {
+            log.error("set guc parameter {} to {} failed, error message: {}", gucSettingVO.getName(), gucSettingVO.getValue(), e.getMessage());
+            throw new OpsException(String.format("Failed to set guc parameter %s to %s failed: %s", gucSettingVO.getName(), gucSettingVO.getValue(), e.getMessage()));
+        }
     }
 
     @Override

@@ -170,7 +170,7 @@
                       type="warning"
                       :ok-text="$t('operation.DailyOps.5mplp1xc1580')"
                       :cancel-text="$t('operation.DailyOps.5mplp1xc1b00')"
-                      @ok="handleDelCluster(clusterData, index, true)"
+                      @ok="handleDelCluster(clusterData, index)"
                     >
                       <a-button
                         type="outline"
@@ -245,10 +245,7 @@
                             <div class="label-color mr-s">{{ $t('operation.DailyOps.5mplp1xc2xs0') }}</div>
                             <div class="value-color">{{ instance.kernel ? instance.kernel : '-' }}{{
                               $t('operation.DailyOps.else1')
-                            }}{{
-  instance.memorySize ?
-  instance.memorySize : '-'
-}}G</div>
+                            }}{{ instance.memorySize ? instance.memorySize : '-' }}G</div>
                           </div>
                         </div>
                         <div class="flex-col-start mr">
@@ -280,9 +277,16 @@
                           getInstanceState(clusterData, instance)
                         }}</a-tag>
                       </div>
-                      <div class="flex-row">
+                      <div class="flex-row mr-s">
                         <div class="label-color mr-s">{{ $t('operation.DailyOps.else16') }}</div>
                         <div class="label-color">{{ instance.installUserName }}</div>
+                      </div>
+                      <div class="flex-row">
+                        <a-button
+                          type="text"
+                          class="label-color mr-s"
+                          @click="handleOpenGucSetting(clusterData, instance, index)"
+                        >{{ $t('operation.DailyOps.guc5cg0') }}</a-button>
                       </div>
                     </div>
 
@@ -395,6 +399,7 @@
       ref="hostPwdRef"
       @finish="handleAllNodesPwd"
     ></host-pwd-dlg>
+    <guc-setting-drawer ref="gucSettingRef" @finish="handleGucSettingComplete"></guc-setting-drawer>
   </div>
 </template>
 
@@ -412,6 +417,7 @@ import ClusterBackupDlg from '@/views/monitor/operation/ClusterBackupDlg.vue'
 import { ClusterRoleEnum, OpenGaussVersionEnum, CMStateEnum } from '@/types/ops/install'
 import OneCheck from '@/views/ops/home/components/OneCheck.vue'
 import HostPwdDlg from './HostPwdDlg.vue'
+import GucSettingDrawer from './GucSettingDrawer.vue'
 import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
 const data: {
@@ -573,7 +579,6 @@ const openHostWebSocket = (clusterData: KeyValue, nodeData: KeyValue, clusterInd
   websocket.onmessage((messageData: any) => {
     if (!data.clusterList[clusterIndex].loading) {
       const eventData = JSON.parse(messageData)
-      console.log('show message data', data.clusterList[clusterIndex].clusterId, data.clusterList[clusterIndex].clusterNodes[index].privateIp, eventData)
       data.clusterList[clusterIndex].clusterNodes[index].nodeState = eventData.state
       // reset instance nodeState and nodeRole
       setInstanceState(data.clusterList[clusterIndex], data.clusterList[clusterIndex].clusterNodes[index])
@@ -587,6 +592,10 @@ const openHostWebSocket = (clusterData: KeyValue, nodeData: KeyValue, clusterInd
         if (!isNaN(Number(eventData.memorySize))) {
           data.clusterList[clusterIndex].clusterNodes[index].memorySize = (Number(eventData.memorySize) / 1024 / 1024).toFixed(2)
         }
+      }
+      if (clusterData.version === 'MINIMAL_LIST' && clusterData.deployType === 'CLUSTER') {
+        // if cluster is minimal and cluster, node default is first
+        Object.assign(data.clusterList[clusterIndex].clusterNodes[index + 1], data.clusterList[clusterIndex].clusterNodes[index])
       }
     }
   })
@@ -1287,6 +1296,15 @@ const getDropdownList = (clusterData: KeyValue, nodeData: KeyValue) => {
     result.push({ label: t('operation.DailyOps.nodeBuild'), value: 'build' })
   }
   return result
+}
+
+
+const gucSettingRef = ref<null | InstanceType<typeof GucSettingDrawer>>(null)
+const handleOpenGucSetting = (clusterData: KeyValue, instance: KeyValue, index: number) => {
+  gucSettingRef.value?.open(clusterData, instance, index)
+}
+const handleGucSettingComplete = (clusterData: KeyValue, clusterIndex: number) => {
+  openWebSocket(clusterData, clusterIndex)
 }
 
 </script>
