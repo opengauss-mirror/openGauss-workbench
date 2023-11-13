@@ -158,6 +158,8 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                     opsClusterNodeVO.setDbName("postgres");
                     opsClusterNodeVO.setDbUser(opsClusterEntity.getDatabaseUsername());
                     opsClusterNodeVO.setDbUserPassword(opsClusterEntity.getDatabasePassword());
+                    opsClusterNodeVO.setHostOs(hostEntity.getOs());
+                    opsClusterNodeVO.setHostCpuArch(hostEntity.getCpuArch());
 
                     if (OpenGaussVersionEnum.ENTERPRISE == opsClusterEntity.getVersion()) {
                         opsClusterNodeVO.setInstallPath(opsClusterEntity.getInstallPath());

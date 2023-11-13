@@ -26,7 +26,9 @@ import org.opengauss.admin.plugin.domain.entity.ops.OpsClusterEntity;
 import org.opengauss.admin.plugin.domain.entity.ops.OpsClusterNodeEntity;
 import org.opengauss.admin.plugin.domain.model.ops.InstallContext;
 import org.opengauss.admin.plugin.domain.model.ops.OpsClusterContext;
+import org.opengauss.admin.plugin.domain.model.ops.SshCommandConstants;
 import org.opengauss.admin.plugin.domain.model.ops.UnInstallContext;
+import org.opengauss.admin.plugin.domain.model.ops.UpgradeContext;
 import org.opengauss.admin.plugin.enums.ops.OpenGaussSupportOSEnum;
 import org.opengauss.admin.plugin.enums.ops.OpenGaussVersionEnum;
 import org.opengauss.admin.plugin.enums.ops.WdrScopeEnum;
@@ -104,6 +106,14 @@ public interface ClusterOpsProvider {
      * @param opsClusterContext
      */
     void stop(OpsClusterContext opsClusterContext);
+
+    /**
+     * upgrade
+     * @param upgradeContext context
+     */
+    default void upgrade(UpgradeContext upgradeContext) {
+        // only enterprise version support
+    }
 
     /**
      * Whether to enable WdrSnapshot

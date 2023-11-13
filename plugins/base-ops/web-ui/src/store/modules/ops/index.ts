@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { OpenLookengInstallConfig, MinimalistInstallConfig, LiteInstallConfig, EnterpriseInstallConfig, OpenGaussVersionEnum, InstallModeEnum, DeployTypeEnum, WsConnectTypeEnum } from '@/types/ops/install'
 import { KeyValue } from '@antv/x6/lib/types'
 
-const installStore = defineStore('install', {
+export const installStore = defineStore('install', {
   state: () => {
     return {
       installContext: {

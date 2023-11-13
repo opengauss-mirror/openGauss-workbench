@@ -899,7 +899,68 @@
     },
     "upgrade": {
         "index": {
-            "5mpn9zse2vc0": "功能待建设"
+            "5uunxx6pdzg0": "升级配置",
+            "5uunxx6pf5w0": "环境检查",
+            "5uunxx6pfic0": "执行升级",
+            "5uunxx6pftc0": "上一步",
+            "5uunxx6pg380": "下一步"
+        },
+        "UpgradeConifg": {
+            "5uuo00svvrc0": "请选择要升级的企业版集群",
+            "5uuo00svwnk0": "请输入集群名称",
+            "5uuo00svwu80": "正在检索可用的企业版集群",
+            "5uuo00svwy40": "请输入root密码",
+            "5uuo00svx1g0": "未检索到企业版集群",
+            "5uuo00svx580": "集群安装",
+            "5uuo00svx8k0": "正在收集升级版本",
+            "5uuo00svxc00": "升级目标",
+            "5uuo00svxfo0": "单节点",
+            "5uuo00svxlo0": "请选择至少一个企业版集群进行升级",
+            "5uuo00svxpc0": "请选择一个要升级的目标版本",
+            "else1": "集群名称",
+            "else2": "节点数量",
+            "else3": "xml配置路径",
+            "else4": "安装系统",
+            "else5": "主节点服务器root密码",
+            "else6": "一主",
+            "else7": "备"
+        },
+        "EnvCheck": {
+            "5uuo4bwfpzg0": "升级到",
+            "5uuo4bwfr6k0": "重新检测",
+            "else1": "集群名称",
+            "else2": "硬盘使用率",
+            "5uuo4bwfr6k1": "集群{clusterId}主节点{ip}磁盘空间不足，无法进行升级"
+        },
+        "ExeUpgrade": {
+            "5uuo8zf4cfw0": "展开全部",
+            "5uuo8zf4dn40": "全部收起",
+            "5uuo8zf4dxo0": "批量提交升级",
+            "5uuo8zf4e4w0": "批量回滚",
+            "5uuo8zf4ebw0": "升级到",
+            "5uuo8zf4ej80": "升级中",
+            "5uuo8zf4eq40": "正在回滚",
+            "5uuo8zf4eww0": "正在提交升级",
+            "5uuo8zf4f480": "下载日志",
+            "5uuo8zf4fao0": "开始升级",
+            "5uuo8zf4fmg0": "提交升级",
+            "5uuo8zf4ftc0": "重试",
+            "5uuo8zf4fzg0": "升级回滚",
+            "5uuo8zf4g600": "准备升级包",
+            "5uuo8zf4gc40": "开启GUC参数",
+            "5uuo8zf4gi00": "检查集群状态",
+            "5uuo8zf4gs80": "执行PreInstall",
+            "5uuo8zf4gz40": "执行升级",
+            "5uuo8zf4h580": "升级验证",
+            "5uuo8zf4hbk0": "请点击开始升级按钮重新升级",
+            "5uuo8zf4hk40": "正在执行",
+            "5uuo8zf4hq00": "升级进度100%待提交",
+            "5uuo8zf4hvk0": "升级已完成",
+            "5uuo8zf4i0s0": "升级失败",
+            "else1": "集群名称"
+        },
+        "ClusterControlDlg": {
+            "5uuobb2rd640": "控制台"
         }
     },
     "packageManage": {

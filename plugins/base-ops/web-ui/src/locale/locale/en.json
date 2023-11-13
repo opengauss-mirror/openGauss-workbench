@@ -898,7 +898,68 @@
     },
     "upgrade": {
         "index": {
-            "5mpn9zse2vc0": "Feature Under Development"
+            "5uunxx6pdzg0": "Upgrade configuration",
+            "5uunxx6pf5w0": "Env check",
+            "5uunxx6pfic0": "Execute upgrade",
+            "5uunxx6pftc0": "back",
+            "5uunxx6pg380": "next"
+        },
+        "UpgradeConifg": {
+            "5uuo00svvrc0": "Select the enterprise cluster that you want to upgrade",
+            "5uuo00svwnk0": "Please enter a cluster name",
+            "5uuo00svwu80": "Searching for available Enterprise cluster",
+            "5uuo00svwy40": "Please enter the root password",
+            "5uuo00svx1g0": "Enterprise cluster not retrieved",
+            "5uuo00svx580": "Cluster installation",
+            "5uuo00svx8k0": "Collecting the upgrade version",
+            "5uuo00svxc00": "Upgrade target",
+            "5uuo00svxfo0": "Single node",
+            "5uuo00svxlo0": "Select at least one enterprise cluster to upgrade",
+            "5uuo00svxpc0": "Please select a target version to upgrade",
+            "else1": "ClusterName",
+            "else2": "NodeNumber",
+            "else3": "XmlPath",
+            "else4": "InstallOS",
+            "else5": "MasterRootPwd",
+            "else6": "One Master",
+            "else7": "slave"
+        },
+        "EnvCheck": {
+            "5uuo4bwfpzg0": "Upgrade to",
+            "5uuo4bwfr6k0": "retest",
+            "else1": "Cluster name",
+            "else2": "Hard disk usage",
+            "5uuo4bwfr6k1": "cluster {clusterId} master node {ip} has not enough disk space，Unable to upgrade"
+        },
+        "ExeUpgrade": {
+            "5uuo8zf4cfw0": "Expand all",
+            "5uuo8zf4dn40": "Put away all",
+            "5uuo8zf4dxo0": "Batch submit upgrade",
+            "5uuo8zf4e4w0": "Batch rollback",
+            "5uuo8zf4ebw0": "Upgrade to",
+            "5uuo8zf4ej80": "Upgrading",
+            "5uuo8zf4eq40": "Rolling back",
+            "5uuo8zf4eww0": "submitting",
+            "5uuo8zf4f480": "Download log",
+            "5uuo8zf4fao0": "Start upgrade",
+            "5uuo8zf4fmg0": "Submit upgrade",
+            "5uuo8zf4ftc0": "Reset",
+            "5uuo8zf4fzg0": "Upgrage rollback",
+            "5uuo8zf4g600": "Prepare Package",
+            "5uuo8zf4gc40": "Open GUC Parameter",
+            "5uuo8zf4gi00": "Check cluster status",
+            "5uuo8zf4gs80": "Execute PreInstall",
+            "5uuo8zf4gz40": "Execute Upgrade",
+            "5uuo8zf4h580": "Upgrade verification",
+            "5uuo8zf4hbk0": "Please click the Start Upgrade button to upgrade again",
+            "5uuo8zf4hk40": "Performing",
+            "5uuo8zf4hq00": "The upgrade progress is 100% to be submitted",
+            "5uuo8zf4hvk0": "Upgrade completed",
+            "5uuo8zf4i0s0": "Upgrade failure",
+            "else1": "Cluster name"
+        },
+        "ClusterControlDlg": {
+            "5uuobb2rd640": "Control console"
         }
     },
     "packageManage": {

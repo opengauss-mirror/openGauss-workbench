@@ -97,7 +97,7 @@ const disabledRight = computed(() => {
 
 const tagClose = (tag: TagProps, idx: number) => {
   if (localStorage.getItem(tag.name)) {
-    Message.warning('Performing installation, do not close')
+    Message.warning('Performing execution, do not close')
     return
   }
   tabBarStore.deleteTag(idx, tag)

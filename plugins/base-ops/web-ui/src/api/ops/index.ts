@@ -31,6 +31,26 @@ export const quickInstall = (data: KeyValue) => {
   return axios.post('opsCluster/quickInstall', data)
 }
 
+// upgrade
+
+export const upgradeOsCheck = (data: KeyValue) => {
+  return axios.get('opsCluster/upgradeOsCheck', {
+    params: data
+  })
+}
+
+export const upgrade = (data: KeyValue) => {
+  return axios.post('opsCluster/upgrade', data)
+}
+
+export const upgradeCommit = (data: KeyValue) => {
+  return axios.post('opsCluster/upgradeCommit', data)
+}
+
+export const upgradeRollback = (data: KeyValue) => {
+  return axios.post('opsCluster/upgradeRollback', data)
+}
+
 // one check
 export const clusterCheck = (data: KeyValue) => {
   return axios.get('opsCluster/check', {
@@ -399,4 +419,8 @@ export const listGucSetting = (query: KeyValue) => {
 
 export const batchSetGucSetting = (data: KeyValue) => {
   return axios.post('/opsCluster/batchConfigGucSetting', data)
+}
+
+export const listEnterpriseCluster = () => {
+  return axios.get('/opsCluster/listEnterpriseCluster')
 }

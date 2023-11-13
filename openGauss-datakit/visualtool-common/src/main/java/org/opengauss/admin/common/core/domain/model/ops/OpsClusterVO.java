@@ -54,6 +54,7 @@ public class OpsClusterVO {
 
     private List<OpsClusterNodeVO> clusterNodes;
     private String envPath;
+    private String clusterState;
 
     public static OpsClusterVO of(OpsClusterEntity opsClusterEntity) {
         OpsClusterVO opsClusterVO = new OpsClusterVO();

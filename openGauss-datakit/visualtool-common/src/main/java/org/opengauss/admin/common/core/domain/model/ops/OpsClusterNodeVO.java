@@ -51,6 +51,8 @@ public class OpsClusterNodeVO {
     private String installUserName;
     private String installPath;
     private String dataPath;
+    private String hostCpuArch;
+    private String hostOs;
 
     public static OpsClusterNodeVO of(OpsClusterNodeEntity opsClusterNodeEntity) {
         OpsClusterNodeVO opsClusterNodeVO = new OpsClusterNodeVO();

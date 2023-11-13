@@ -267,6 +267,7 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
         }
     }
 
+    @Override
     public void upgrade(UpgradeContext upgradeContext) {
         Session rootSession = null;
         Session ommSession = null;
@@ -278,13 +279,13 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
                     .orElseThrow(
                             () -> new OpsException("The root user failed to establish a connection"));
             ommSession = jschUtil.getSession(upgradeContext.getHostPublicIp(), upgradeContext.getHostPort(), upgradeContext.getInstallUsername(), encryptionUtils.decrypt(upgradeContext.getInstallUserPassword())).orElseThrow(() -> new OpsException("Install user connection connection failed"));
-            enableStreamReplication(rootSession, upgradeContext);
+            enableStreamReplication(ommSession, upgradeContext);
             checkClusterStatus(ommSession, upgradeContext);
             upgradePreinstall(rootSession, upgradeContext);
             doUpgrade(ommSession, upgradeContext);
             upgradeCheck(ommSession, upgradeContext);
-            upgradeCommit(ommSession, upgradeContext);
-            updateClusterVersion(upgradeContext);
+            // upgradeCommit(ommSession, upgradeContext);
+            // updateClusterVersion(upgradeContext);
         } finally {
             if (Objects.nonNull(rootSession) && rootSession.isConnected()) {
                 rootSession.disconnect();
@@ -298,7 +299,7 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
 
     private void updateClusterVersion(UpgradeContext upgradeContext) {
         LambdaUpdateWrapper<OpsClusterEntity> updateWrapper = Wrappers.lambdaUpdate(OpsClusterEntity.class)
-                .set(OpsClusterEntity::getVersionNum, "3.0.0")
+                .set(OpsClusterEntity::getVersionNum, upgradeContext.getVersionNum())
                 .eq(OpsClusterEntity::getClusterId, upgradeContext.getClusterEntity().getClusterId());
         opsClusterService.update(updateWrapper);
     }
@@ -322,7 +323,7 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
         wsUtil.sendText(upgradeContext.getRetSession(), "UPGRADE_CHECK_CLUSTER_STATUS");
         try {
             String command = "gs_om -t status";
-            JschResult jschResult = jschUtil.executeCommand(command, ommSession, upgradeContext.getRetSession());
+            JschResult jschResult = jschUtil.executeCommand(command,upgradeContext.getSepEnvFile(), ommSession, upgradeContext.getRetSession());
             if (0 != jschResult.getExitCode()) {
                 log.error("upgradeCheck failed, exit code: {}, error message: {}", jschResult.getExitCode(), jschResult.getResult());
                 throw new OpsException("upgradeCheck failed");
@@ -331,8 +332,8 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
             String result = jschResult.getResult();
             if (!result.contains("cluster_state")
                     || !result.substring(result.indexOf("cluster_state"),
-                    result.indexOf(System.getProperty("line.separator")))
-                            .contains("Normal")) {
+                    result.indexOf("\n",result.indexOf("cluster_state")))
+                    .contains("Normal")) {
                 log.error("cluster status:{}", result);
                 throw new OpsException("cluster status check fail");
             }
@@ -343,13 +344,14 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
     }
 
     private void doUpgrade(Session ommSession, UpgradeContext upgradeContext) {
+        wsUtil.sendText(upgradeContext.getRetSession(), "DO_UPGRADE");
         try {
             String command = "gs_upgradectl -t auto-upgrade -X " + upgradeContext.getClusterConfigXmlPath();
             if (upgradeContext.getUpgradeType() == UpgradeTypeEnum.GRAY_UPGRADE) {
                 command = command + " --grey";
             }
 
-            JschResult jschResult = jschUtil.executeCommand(command, ommSession, upgradeContext.getRetSession());
+            JschResult jschResult = jschUtil.executeCommand(command,upgradeContext.getSepEnvFile(), ommSession, upgradeContext.getRetSession());
             if (0 != jschResult.getExitCode()) {
                 log.error("gs_upgradectl failed, exit code: {}, error message: {}",
                         jschResult.getExitCode(), jschResult.getResult());
@@ -370,7 +372,7 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
         String userGroupCommand = "groups " + upgradeContext.getInstallUsername()
                 + " | awk -F ':' '{print $2}' | sed 's/\\\"//g'";
         try {
-            JschResult jschResult = jschUtil.executeCommand(userGroupCommand, rootSession, upgradeContext.getRetSession());
+            JschResult jschResult = jschUtil.executeCommand(userGroupCommand, upgradeContext.getSepEnvFile(), rootSession, upgradeContext.getRetSession());
             if (0 != jschResult.getExitCode()) {
                 log.error("Querying user group failed, exit code: {}, error message: {}", jschResult.getExitCode(), jschResult.getResult());
                 throw new OpsException("Failed to query user group");
@@ -384,7 +386,7 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
 
         try {
             String command = "mkdir -p " + targetPath;
-            JschResult jschResult = jschUtil.executeCommand(command, rootSession, upgradeContext.getRetSession());
+            JschResult jschResult = jschUtil.executeCommand(command,upgradeContext.getSepEnvFile(), rootSession, upgradeContext.getRetSession());
             if (0 != jschResult.getExitCode()) {
                 log.error("mkdir failed, exit code: {}, error message: {}",
                         jschResult.getExitCode(), jschResult.getResult());
@@ -396,10 +398,12 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
         }
 
         try {
+            wsUtil.sendText(upgradeContext.getRetSession(), "BEFORE_UPLOAD_PACKAGE");
             jschUtil.upload(rootSession, upgradeContext.getRetSession(),
                     upgradeContext.getUpgradePackagePath(), targetPath
                             + System.getProperty("file.separator")
                             + FileUtil.getName(upgradeContext.getUpgradePackagePath()));
+            wsUtil.sendText(upgradeContext.getRetSession(), "END_UPLOAD_PACKAGE");
         } catch (Exception e) {
             log.error("upload failed", e);
             throw new OpsException("upload failed");
@@ -407,7 +411,7 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
 
         try {
             String command = "chown -R " + upgradeContext.getInstallUsername() + " " + targetPath;
-            JschResult jschResult = jschUtil.executeCommand(command, rootSession, upgradeContext.getRetSession());
+            JschResult jschResult = jschUtil.executeCommand(command,upgradeContext.getSepEnvFile(), rootSession, upgradeContext.getRetSession());
             if (0 != jschResult.getExitCode()) {
                 log.error("chown failed, exit code: {}, error message: {}", jschResult.getExitCode(), jschResult.getResult());
                 throw new OpsException("chown failed");
@@ -423,15 +427,13 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
                 upgradeContext.getRetSession(), "-xvf");
         decompress(jschUtil, rootSession, targetPath,
                 targetPath
-                        + System.getProperty("line.separator")
-                        + "openGauss-3.0.0-CentOS-64bit-om.tar.gz",
+                        + "/openGauss-"+upgradeContext.getVersionNum()+"-CentOS-64bit-om.tar.gz",
                 upgradeContext.getRetSession(), "-zxvf");
 
         try {
             String command = "cd "
                     + targetPath
-                    + System.getProperty("line.separator")
-                    + "script && ./gs_preinstall -U "
+                    + "/script && ./gs_preinstall -U "
                     + upgradeContext.getInstallUsername()
                     + " -G "
                     + group + "  -X "
@@ -440,7 +442,7 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
                 command = command + " --sep-env-file=" + upgradeContext.getSepEnvFile();
             }
 
-            JschResult jschResult = jschUtil.executeCommand(command, rootSession, upgradeContext.getRetSession());
+            JschResult jschResult = jschUtil.executeCommand(command,upgradeContext.getSepEnvFile(), rootSession, upgradeContext.getRetSession());
             if (0 != jschResult.getExitCode()) {
                 log.error("gs_preinstall failed, exit code: {}, error message: {}", jschResult.getExitCode(), jschResult.getResult());
                 throw new OpsException("gs_preinstall failed");
@@ -455,14 +457,14 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
         wsUtil.sendText(upgradeContext.getRetSession(), "CHECK_CLUSTER_STATUS");
         try {
             String command = "gs_om -t status";
-            JschResult jschResult = jschUtil.executeCommand(command, ommSession, upgradeContext.getRetSession());
+            JschResult jschResult = jschUtil.executeCommand(command, upgradeContext.getSepEnvFile(), ommSession, upgradeContext.getRetSession());
             if (0 != jschResult.getExitCode()) {
                 log.error("checkClusterStatus failed, exit code: {}, error message: {}", jschResult.getExitCode(), jschResult.getResult());
                 throw new OpsException("checkClusterStatus failed");
             }
 
             String result = jschResult.getResult();
-            if (!result.contains("cluster_state") || !result.substring(result.indexOf("cluster_state"), result.indexOf("\n")).contains("Normal")) {
+            if (!result.contains("cluster_state") || !result.substring(result.indexOf("cluster_state"), result.indexOf("\n",result.indexOf("cluster_state"))).contains("Normal")) {
                 log.error("cluster status:{}", result);
                 throw new OpsException("cluster status check fail");
             }
@@ -483,7 +485,7 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
     private void gucReload(Session rootSession, UpgradeContext upgradeContext) {
         try {
             String command = "gs_guc reload -I all -c \"enable_stream_replication=on\"";
-            JschResult jschResult = jschUtil.executeCommand(command, rootSession, upgradeContext.getRetSession());
+            JschResult jschResult = jschUtil.executeCommand(command,upgradeContext.getSepEnvFile(), rootSession, upgradeContext.getRetSession());
             if (0 != jschResult.getExitCode()) {
                 log.error("enableStreamReplication failed, exit code: {}, error message: {}",
                         jschResult.getExitCode(), jschResult.getResult());
@@ -496,7 +498,7 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
 
         try {
             String command = "gs_guc check -I all -c \"enable_stream_replication\"";
-            JschResult jschResult = jschUtil.executeCommand(command, rootSession, upgradeContext.getRetSession());
+            JschResult jschResult = jschUtil.executeCommand(command,upgradeContext.getSepEnvFile(), rootSession, upgradeContext.getRetSession());
             if (0 != jschResult.getExitCode()) {
                 log.error("enableStreamReplication failed, exit code: {}, error message: {}",
                         jschResult.getExitCode(), jschResult.getResult());
@@ -511,7 +513,7 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
     private void gucCheck(OpsClusterNodeEntity opsClusterNodeEntity, Session rootSession, UpgradeContext upgradeContext) {
         try {
             String command = "gs_guc reload -D " + opsClusterNodeEntity.getDataPath() + " -c \"enable_stream_replication=on\"";
-            JschResult jschResult = jschUtil.executeCommand(command, rootSession, upgradeContext.getRetSession());
+            JschResult jschResult = jschUtil.executeCommand(command, upgradeContext.getSepEnvFile(), rootSession, upgradeContext.getRetSession());
             if (0 != jschResult.getExitCode()) {
                 log.error("enableStreamReplication failed, exit code: {}, error message: {}", jschResult.getExitCode(), jschResult.getResult());
                 throw new OpsException("enableStreamReplication failed");
@@ -525,7 +527,7 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
             String command = "gs_guc check -D "
                     + opsClusterNodeEntity.getDataPath()
                     + " -c \"enable_stream_replication\"";
-            JschResult jschResult = jschUtil.executeCommand(command, rootSession, upgradeContext.getRetSession());
+            JschResult jschResult = jschUtil.executeCommand(command, upgradeContext.getSepEnvFile(),rootSession, upgradeContext.getRetSession());
             if (0 != jschResult.getExitCode()) {
                 log.error("enableStreamReplication failed, exit code: {}, error message: {}",
                         jschResult.getExitCode(), jschResult.getResult());

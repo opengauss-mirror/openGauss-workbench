@@ -13,29 +13,24 @@
  * See the Mulan PSL v2 for more details.
  * -------------------------------------------------------------------------
  *
- * UpgradeBody.java
+ * SlowSqlVO.java
  *
  * IDENTIFICATION
- * base-ops/src/main/java/org/opengauss/admin/plugin/domain/model/ops/UpgradeBody.java
+ * base-ops/src/main/java/org/opengauss/admin/plugin/vo/ops/SlowSqlVO.java
  *
  * -------------------------------------------------------------------------
  */
 
-package org.opengauss.admin.plugin.domain.model.ops;
+package org.opengauss.admin.plugin.vo.ops;
 
 import lombok.Data;
-import org.opengauss.admin.plugin.enums.ops.UpgradeTypeEnum;
 
 /**
  * @author lhf
- * @date 2022/12/9 10:19
+ * @date 2023/11/4 19:57
  **/
 @Data
-public class UpgradeBody {
-    private String clusterId;
-    private UpgradeTypeEnum upgradeType;
-    private String upgradePackagePath;
-    private String versionNum;
-    private String businessId;
-    private String hostRootPassword;
+public class UpgradeOsCheckVO {
+    private String osInfo;
+    private Integer diskUsed;
 }
