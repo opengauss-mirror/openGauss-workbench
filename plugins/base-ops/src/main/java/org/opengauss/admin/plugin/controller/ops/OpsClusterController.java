@@ -230,8 +230,10 @@ public class OpsClusterController extends BaseController {
     }
 
     @GetMapping("/env/{hostId}")
-    public AjaxResult env(@PathVariable("hostId") String hostId, @RequestParam(value = "expectedOs", defaultValue = "CENTOS_X86_64") OpenGaussSupportOSEnum expectedOs) {
-        HostEnv hostEnv = opsClusterService.env(hostId, expectedOs);
+    public AjaxResult env(@PathVariable("hostId") String hostId,
+                          @RequestParam(value = "expectedOs", defaultValue = "CENTOS_X86_64") OpenGaussSupportOSEnum expectedOs,
+                          @RequestParam(required = false) String rootPassword) {
+        HostEnv hostEnv = opsClusterService.env(hostId, expectedOs, rootPassword);
         return AjaxResult.success(hostEnv);
     }
 

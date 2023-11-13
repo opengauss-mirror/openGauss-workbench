@@ -1911,7 +1911,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
     }
 
     @Override
-    public HostEnv env(String hostId, OpenGaussSupportOSEnum expectedOs) {
+    public HostEnv env(String hostId, OpenGaussSupportOSEnum expectedOs, String rootPassword) {
         OpsHostEntity hostEntity = hostFacade.getById(hostId);
         if (Objects.isNull(hostEntity)) {
             throw new OpsException("host information does not exist");
@@ -1927,7 +1927,16 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                 .filter(hostUser -> PermissionUtils.hasRootPermission(hostUser.getUsername()))
                 .findFirst()
                 .orElseThrow(() -> new OpsException("user information does not exist"));
-        Session session = jschUtil.getSession(hostEntity.getPublicIp(), hostEntity.getPort(), userEntity.getUsername(), encryptionUtils.decrypt(userEntity.getPassword()))
+        String encryptedRootPass = rootPassword;
+
+        if (StrUtil.isEmpty(userEntity.getPassword()) && StrUtil.isEmpty(encryptedRootPass)){
+            throw new OpsException("root password cannot be empty");
+        }
+
+        if (StrUtil.isNotEmpty(userEntity.getPassword())) {
+            encryptedRootPass = userEntity.getPassword();
+        }
+        Session session = jschUtil.getSession(hostEntity.getPublicIp(), hostEntity.getPort(), userEntity.getUsername(), encryptionUtils.decrypt(encryptedRootPass))
                 .orElseThrow(() -> new OpsException("Failed to establish connection with host"));
 
         HostEnv hostEnv = new HostEnv();
