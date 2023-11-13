@@ -1,22 +1,11 @@
 <template>
   <div class="env-monitor-c">
     <div class="flex-col">
-      <div
-        class="flex-row-center"
-        style="width: 50%"
-      >
-        <a-spin
-          class="label-color full-w"
-          :loading="envData.loading"
-          :tip="$t('simple.EnvMonitor.5mpmqpcxjpc0')"
-        >
+      <div class="flex-row-center" style="width: 50%">
+        <a-spin class="label-color full-w" :loading="envData.loading" :tip="$t('simple.EnvMonitor.5mpmqpcxjpc0')">
           <div class="flex-col-start">
-            <a-alert
-              class="mb"
-              style="width: fit-content;"
-              type="warning"
-              v-if="envData.result !== -1 && envData.noPassNum > 0"
-            >
+            <a-alert class="mb" style="width: fit-content;" type="warning"
+              v-if="envData.result !== -1 && envData.noPassNum > 0">
               <div class="flex-row">
                 {{ $t('simple.EnvMonitor.5mpmqpcxke40') }}
                 <a-badge :count="envData.noPassNum" />{{ $t('simple.EnvMonitor.else1') }}
@@ -24,92 +13,46 @@
             </a-alert>
             <div class="env-item-c flex-between full-w mb">
               <div class="flex-row">
-                <a-tag
-                  class="title-color mr"
-                  color="#86909C"
-                >{{ getRoleName(envData.clusterRole) }}</a-tag>
+                <a-tag class="title-color mr" color="#86909C">{{ getRoleName(envData.clusterRole) }}</a-tag>
                 <div class="label-color">{{ $t('simple.EnvMonitor.5mpmqpcxkq80') }} {{ envData.privateIp }}({{
                   envData.publicIp
                 }})</div>
               </div>
               <div class="flex-row">
-                <a-button
-                  class="mr"
-                  type="text"
-                  long
-                  @click="envRetest(envData)"
-                >
+                <a-button class="mr" type="text" long @click="envRetest(envData)">
                   <template #icon>
                     <icon-refresh />
                   </template>
                   {{ $t('simple.EnvMonitor.5mpmqpcxkzc0') }}
                 </a-button>
-                <icon-down
-                  style="cursor: pointer;"
-                  v-if="!envData.isShow"
-                  @click="envData.isShow = true"
-                />
-                <icon-up
-                  style="cursor: pointer;"
-                  v-else
-                  @click="envData.isShow = false"
-                />
+                <icon-down style="cursor: pointer;" v-if="!envData.isShow" @click="envData.isShow = true" />
+                <icon-up style="cursor: pointer;" v-else @click="envData.isShow = false" />
               </div>
             </div>
             <div v-if="envData.isShow">
               <div v-if="envData.result === 200">
                 <div class="flex-row mb">
-                  <icon-exclamation-circle-fill
-                    v-if="envData.noPassNumHard > 0"
-                    class="mr"
-                    style="color: orange"
-                    :size="30"
-                  ></icon-exclamation-circle-fill>
-                  <icon-check-circle-fill
-                    v-else
-                    style="color: green"
-                    class="mr"
-                    :size="30"
-                  ></icon-check-circle-fill>
+                  <icon-exclamation-circle-fill v-if="envData.noPassNumHard > 0" class="mr" style="color: orange"
+                    :size="30"></icon-exclamation-circle-fill>
+                  <icon-check-circle-fill v-else style="color: green" class="mr" :size="30"></icon-check-circle-fill>
                   <div class="ft-xlg">{{ $t('simple.EnvMonitor.5mpmqpcxlas0') }}</div>
                 </div>
                 <div class="hardware-env">
-                  <div
-                    class="flex-col"
-                    v-if="envData.hardwareEnv.envProperties.length"
-                  >
-                    <div
-                      class="flex-row mb"
-                      v-for="(item, index) in envData.hardwareEnv.envProperties"
-                      :key="index"
-                    >
-                      <div
-                        style="width: 250px;"
-                        class="flex-row"
-                      >
+                  <div class="flex-col" v-if="envData.hardwareEnv.envProperties.length">
+                    <div class="flex-row mb" v-for="(item, index) in envData.hardwareEnv.envProperties" :key="index">
+                      <div style="width: 250px;" class="flex-row">
                         <div class="label-color mr">{{ item.name }}:</div>
                         <div class="label-color">{{ item.value }}</div>
                       </div>
-                      <div
-                        style="min-width: 500px;"
-                        class="flex-row-start"
-                      >
+                      <div style="min-width: 500px;" class="flex-row-start">
                         <div class="mr">
-                          <icon-check-circle-fill
-                            v-if="item.status === hostEnvStatusEnum.NORMAL"
-                            style="color: green"
-                            :size="20"
-                          ></icon-check-circle-fill>
+                          <icon-check-circle-fill v-if="item.status === hostEnvStatusEnum.NORMAL" style="color: green"
+                            :size="20"></icon-check-circle-fill>
                           <icon-exclamation-circle-fill
                             v-if="item.status === hostEnvStatusEnum.WARMING || item.status === hostEnvStatusEnum.ERROR"
-                            style="color: orange"
-                            :size="20"
-                          />
-                          <icon-info-circle-fill
-                            v-if="item.status === hostEnvStatusEnum.INFO"
-                            style="color: gray"
-                            :size="20"
-                          />
+                            style="color: orange" :size="20" />
+                          <icon-info-circle-fill v-if="item.status === hostEnvStatusEnum.INFO" style="color: gray"
+                            :size="20" />
                         </div>
                         <div :style="`color: ` + getMsgColor('hard', item)">{{ item.statusMessage }}</div>
                       </div>
@@ -117,62 +60,28 @@
                   </div>
                 </div>
                 <div class="flex-row mb">
-                  <icon-exclamation-circle-fill
-                    v-if="envData.noPassNumSoft > 0"
-                    class="mr"
-                    style="color: orange"
-                    :size="30"
-                  ></icon-exclamation-circle-fill>
-                  <icon-check-circle-fill
-                    v-else
-                    style="color: green"
-                    class="mr"
-                    :size="30"
-                  ></icon-check-circle-fill>
+                  <icon-exclamation-circle-fill v-if="envData.noPassNumSoft > 0" class="mr" style="color: orange"
+                    :size="30"></icon-exclamation-circle-fill>
+                  <icon-check-circle-fill v-else style="color: green" class="mr" :size="30"></icon-check-circle-fill>
                   <div class="ft-xlg">{{ $t('simple.EnvMonitor.5mpmqpcxlk40') }}</div>
                 </div>
                 <div class="hardware-env">
-                  <div
-                    class="flex-col"
-                    v-if="envData.softwareEnv.envProperties.length"
-                  >
-                    <div
-                      class="flex-row mb"
-                      v-for="(item, index) in envData.softwareEnv.envProperties"
-                      :key="index"
-                    >
-                      <div
-                        style="width: 250px;"
-                        class="flex-row"
-                      >
+                  <div class="flex-col" v-if="envData.softwareEnv.envProperties.length">
+                    <div class="flex-row mb" v-for="(item, index) in envData.softwareEnv.envProperties" :key="index">
+                      <div style="width: 250px;" class="flex-row">
                         <div class="mr">{{ item.name }}:</div>
                         <div>{{ item.value }}</div>
                       </div>
-                      <div
-                        style="min-width: 500px;"
-                        class="flex-row-start"
-                      >
+                      <div style="min-width: 500px;" class="flex-row-start">
                         <div class="mr">
-                          <icon-close-circle-fill
-                            v-if="item.status === hostEnvStatusEnum.ERROR"
-                            style="color: red"
-                            :size="20"
-                          ></icon-close-circle-fill>
-                          <icon-check-circle-fill
-                            v-if="item.status === hostEnvStatusEnum.NORMAL"
-                            style="color: green"
-                            :size="20"
-                          ></icon-check-circle-fill>
-                          <icon-exclamation-circle-fill
-                            v-if="item.status === hostEnvStatusEnum.WARMING"
-                            style="color: orange"
-                            :size="20"
-                          />
-                          <icon-info-circle-fill
-                            v-if="item.status === hostEnvStatusEnum.INFO"
-                            style="color: gray"
-                            :size="20"
-                          />
+                          <icon-close-circle-fill v-if="item.status === hostEnvStatusEnum.ERROR" style="color: red"
+                            :size="20"></icon-close-circle-fill>
+                          <icon-check-circle-fill v-if="item.status === hostEnvStatusEnum.NORMAL" style="color: green"
+                            :size="20"></icon-check-circle-fill>
+                          <icon-exclamation-circle-fill v-if="item.status === hostEnvStatusEnum.WARMING"
+                            style="color: orange" :size="20" />
+                          <icon-info-circle-fill v-if="item.status === hostEnvStatusEnum.INFO" style="color: gray"
+                            :size="20" />
                         </div>
                         <div :style="`max-width: 300px; color: ` + getMsgColor('soft', item)">{{ item.statusMessage }}
                         </div>
@@ -206,6 +115,7 @@ import { KeyValue } from '@/types/global'
 import { ClusterRoleEnum } from '@/types/ops/install'
 import { Message } from '@arco-design/web-vue'
 import { useI18n } from 'vue-i18n'
+import { encryptPassword } from '@/utils/jsencrypt'
 const { t } = useI18n()
 const installStore = useOpsStore()
 
@@ -244,15 +154,18 @@ let envData = reactive<KeyValue>({
   },
   softwareEnv: {
     envProperties: []
-  }
+  },
+  rootPassword: ''
 })
 
-onMounted(() => {
+onMounted(async () => {
   loadingFunc.toLoading()
-  getHostInfo()
+  await getHostInfo()
   envData.loading = true
+  console.log(envData.rootPassword)
   const param = {
-    expectedOs: installStore.getInstallConfig.installOs
+    expectedOs: installStore.getInstallConfig.installOs,
+    rootPassword: envData.rootPassword
   }
   getEnvMonitorData(envData.hostId, param).then((res: KeyValue) => {
     if (Number(res.code) === 200) {
@@ -277,7 +190,8 @@ const envRetest = (envData: KeyValue) => {
   loadingFunc.toLoading()
   envData.loading = true
   const param = {
-    expectedOs: installStore.getInstallConfig.installOs
+    expectedOs: installStore.getInstallConfig.installOs,
+    rootPassword: envData.rootPassword
   }
   getEnvMonitorData(envData.hostId, param).then((res: KeyValue) => {
     if (Number(res.code) === 200) {
@@ -298,13 +212,15 @@ const envRetest = (envData: KeyValue) => {
   })
 }
 
-const getHostInfo = () => {
-  installStore.getMiniConfig.nodeConfigList.forEach(item => {
+const getHostInfo = async () => {
+  for (let i = 0; i < installStore.getMiniConfig.nodeConfigList.length; i++) {
+    const item = installStore.getMiniConfig.nodeConfigList[i]
     envData.hostId = item.hostId
     envData.privateIp = item.privateIp
     envData.publicIp = item.publicIp
-    envData.clusterRole = item.clusterRole
-  })
+    envData.clusterRole = item.clusterRole,
+    envData.rootPassword = item.rootPassword ? await encryptPassword(item.rootPassword) : ''
+  }
 }
 
 const getErrorNum = () => {
@@ -366,7 +282,8 @@ defineExpose({
 
 </script>
 
-<style lang="less" scoped>.title-color {
+<style lang="less" scoped>
+.title-color {
   color: var(--color-black);
 }
 
@@ -384,4 +301,5 @@ defineExpose({
 
 .hardware-env {
   margin-left: 40px;
-}</style>
+}
+</style>

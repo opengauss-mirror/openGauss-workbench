@@ -97,7 +97,7 @@ public interface IOpsClusterService extends IService<OpsClusterEntity> {
 
     ListDir listInstallPackage(OpenGaussVersionEnum openGaussVersionEnum, Integer userId);
 
-    HostEnv env(String hostId, OpenGaussSupportOSEnum expectedOs);
+    HostEnv env(String hostId, OpenGaussSupportOSEnum expectedOs, String rootPassword);
 
     Map<String, Integer> threadPoolMonitor();
 
