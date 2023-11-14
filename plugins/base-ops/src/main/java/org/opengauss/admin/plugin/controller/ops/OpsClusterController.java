@@ -26,6 +26,7 @@ package org.opengauss.admin.plugin.controller.ops;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 import org.opengauss.admin.common.core.domain.AjaxResult;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
+import org.opengauss.admin.common.core.domain.model.ops.OpsClusterVO;
 import org.opengauss.admin.common.core.domain.model.ops.check.CheckSummaryVO;
 import org.opengauss.admin.plugin.base.BaseController;
 import org.opengauss.admin.plugin.domain.model.ops.*;
@@ -81,9 +82,21 @@ public class OpsClusterController extends BaseController {
         return AjaxResult.success();
     }
 
+    @GetMapping("/upgradeOsCheck")
+    public AjaxResult upgradeOsCheck(@RequestParam String clusterId,@RequestParam(value = "rootPassword",required = false) String rootPassword) {
+        UpgradeOsCheckVO upgradeOsCheckVO = opsClusterService.upgradeOsCheck(clusterId,rootPassword);
+        return AjaxResult.success(upgradeOsCheckVO);
+    }
+
     @PostMapping("/upgrade")
     public AjaxResult upgrade(@RequestBody UpgradeBody upgradeBody) {
         opsClusterService.upgrade(upgradeBody);
+        return AjaxResult.success();
+    }
+
+    @PostMapping("/upgradeCommit")
+    public AjaxResult upgradeCommit(@RequestBody UpgradeBody upgradeBody) {
+        opsClusterService.upgradeCommit(upgradeBody);
         return AjaxResult.success();
     }
 
@@ -247,6 +260,12 @@ public class OpsClusterController extends BaseController {
     public AjaxResult batchConfigGucSetting(@RequestBody GucSettingDto gucBody) {
         opsClusterService.batchConfigGucSetting(gucBody);
         return AjaxResult.success();
+    }
+
+    @GetMapping("/listEnterpriseCluster")
+    public AjaxResult listEnterpriseCluster() {
+        List<OpsClusterVO> result = opsClusterService.listEnterpriseCluster();
+        return AjaxResult.success(result);
     }
 
     @GetMapping

@@ -285,6 +285,15 @@ public class JschUtil {
         return executeCommand(command, session, wsSession, autoResponse);
     }
 
+    public JschResult executeCommand(String env, String command, Session session,
+                                     WsSession wsSession, boolean handleErrorBeforeExit) throws IOException, InterruptedException {
+        if (StrUtil.isNotEmpty(env)) {
+            command = "source " + env + " && " + command;
+        }
+
+        return executeCommand(command, session, wsSession, null, handleErrorBeforeExit);
+    }
+
     /**
      * ChannelExec
      *
@@ -298,7 +307,25 @@ public class JschUtil {
      * @throws InterruptedException ie
      */
     public JschResult executeCommand(String command, Session session, WsSession wsSession,
-        Map<String, String> autoResponse) throws IOException, InterruptedException {
+                                     Map<String, String> autoResponse) throws IOException, InterruptedException {
+        return executeCommand(command, session, wsSession, autoResponse, true);
+    }
+
+    /**
+     * ChannelExec
+     *
+     * @param command   Instructions to execute
+     * @param session   session
+     * @param wsSession websocket session
+     * @param autoResponse  autoResponse
+     * @param handleErrorBeforeExit handleErrorBeforeExit
+     * @return SSH Result
+     *
+     * @throws IOException ioe
+     * @throws InterruptedException ie
+     */
+    public JschResult executeCommand(String command, Session session, WsSession wsSession,
+        Map<String, String> autoResponse, boolean handleErrorBeforeExit) throws IOException, InterruptedException {
         log.info("Execute an order:{}", command);
         wsUtil.sendText(wsSession, command);
 
@@ -333,7 +360,7 @@ public class JschUtil {
 
         JschResult jschResult = buildJschResult(channel, wsSession, autoResponse);
 
-        if (jschResult.getExitCode() != 0) {
+        if (handleErrorBeforeExit && jschResult.getExitCode() != 0) {
             log.error("execute command fail, command:{}, result:{}", command, jschResult);
             throw new OpsException("execute command fail with exit code:" + jschResult.getExitCode() + ",msg:"+ jschResult.getResult());
         }

@@ -26,6 +26,7 @@ package org.opengauss.admin.plugin.domain.model.ops;
 import lombok.Data;
 import org.opengauss.admin.plugin.domain.entity.ops.OpsClusterEntity;
 import org.opengauss.admin.plugin.domain.entity.ops.OpsClusterNodeEntity;
+import org.opengauss.admin.plugin.enums.ops.OpenGaussSupportOSEnum;
 import org.opengauss.admin.plugin.enums.ops.UpgradeTypeEnum;
 
 /**
@@ -40,6 +41,7 @@ public class UpgradeContext {
     private WsSession retSession;
     private String clusterConfigXmlPath;
     private UpgradeTypeEnum upgradeType;
+    private String versionNum;
     private String upgradePackagePath;
     private String sepEnvFile;
     private String installUsername;

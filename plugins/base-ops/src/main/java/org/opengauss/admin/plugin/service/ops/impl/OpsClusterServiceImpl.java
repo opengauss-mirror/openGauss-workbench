@@ -29,6 +29,7 @@ import cn.hutool.core.lang.Assert;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -37,10 +38,10 @@ import com.jcraft.jsch.ChannelShell;
 import com.jcraft.jsch.Session;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.opengauss.admin.common.core.domain.UploadInfo;
 import org.opengauss.admin.common.core.domain.entity.SysSettingEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
+import org.opengauss.admin.common.core.domain.model.ops.OpsClusterVO;
 import org.opengauss.admin.common.exception.ops.OpsException;
 import org.opengauss.admin.common.utils.PermissionUtils;
 import org.opengauss.admin.plugin.domain.entity.ops.OpsCheckEntity;
@@ -72,9 +73,9 @@ import org.opengauss.admin.plugin.utils.WsUtil;
 import org.opengauss.admin.plugin.vo.ops.*;
 import org.opengauss.admin.plugin.vo.ops.SessionVO;
 import org.opengauss.admin.plugin.vo.ops.SlowSqlVO;
-import org.opengauss.admin.system.plugin.facade.AzFacade;
 import org.opengauss.admin.system.plugin.facade.HostFacade;
 import org.opengauss.admin.system.plugin.facade.HostUserFacade;
+import org.opengauss.admin.system.plugin.facade.OpsFacade;
 import org.opengauss.admin.system.plugin.facade.SysSettingFacade;
 import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -102,10 +103,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -127,6 +125,9 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
     @Autowired
     @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
     private HostUserFacade hostUserFacade;
+    @Autowired
+    @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
+    private OpsFacade opsFacade;
     @Autowired
     private ThreadPoolTaskExecutor threadPoolTaskExecutor;
     @Autowired
@@ -190,6 +191,84 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
             doInstall(clone);
         });
         TaskManager.registry(installBody.getBusinessId(), future);
+    }
+
+    @Override
+    public UpgradeOsCheckVO upgradeOsCheck(String clusterId, String rootPassword) {
+        OpsClusterEntity clusterEntity = getById(clusterId);
+
+        List<OpsClusterNodeEntity> opsClusterNodeEntities = opsClusterNodeService.listClusterNodeByClusterId(clusterId);
+        if (CollUtil.isEmpty(opsClusterNodeEntities)) {
+            throw new OpsException("Cluster node information cannot be empty");
+        }
+
+        OpsClusterNodeEntity nodeEntity = opsClusterNodeEntities.stream().filter(node -> node.getClusterRole() == ClusterRoleEnum.MASTER).findFirst().orElseThrow(() -> new OpsException("Masternode information not found"));
+        String hostId = nodeEntity.getHostId();
+        String installUserId = nodeEntity.getInstallUserId();
+
+        OpsHostEntity hostEntity = hostFacade.getById(hostId);
+        if (Objects.isNull(hostEntity)) {
+            throw new OpsException("host information does not exist");
+        }
+
+        OpsHostUserEntity hostUserEntity = hostUserFacade.getById(installUserId);
+        if (Objects.isNull(hostUserEntity)) {
+            throw new OpsException("Installation user information does not exist");
+        }
+
+        OpsHostUserEntity rootUserEntity = hostUserFacade.getRootUserByHostId(hostId);
+        if (Objects.isNull(rootUserEntity)) {
+            throw new OpsException("User root was not found");
+        }
+
+        if (StrUtil.isEmpty(rootUserEntity.getPassword()) && StrUtil.isEmpty(rootPassword)){
+            throw new OpsException("root password cannot be empty");
+        }
+
+        if (StrUtil.isNotEmpty(rootUserEntity.getPassword())) {
+            rootPassword = rootUserEntity.getPassword();
+        }
+
+        Session rootSession = jschUtil.getSession(hostEntity.getPublicIp(), hostEntity.getPort(), "root", encryptionUtils.decrypt(rootPassword)).orElseThrow(() -> new OpsException("with the host[" + hostEntity.getPublicIp() + "]Failed to establish session"));
+        String checkOsRes = upgradeCheckOs(rootSession,hostUserEntity.getUsername());
+        String diskInfo = getDiskInfo(rootSession);
+
+        UpgradeOsCheckVO upgradeOsCheckVO = new UpgradeOsCheckVO();
+        upgradeOsCheckVO.setOsInfo(checkOsRes);
+        upgradeOsCheckVO.setDiskUsed(calcDiskUsed(diskInfo, clusterEntity.getInstallPath()));
+        return upgradeOsCheckVO;
+    }
+
+    private String getDiskInfo(Session session) {
+        String command = "df -h";
+        try {
+            JschResult jschResult = jschUtil.executeCommand(command, session);
+            if (0 != jschResult.getExitCode()) {
+                log.error("Query disk fail, exit code: {}, message: {}", jschResult.getExitCode(), jschResult.getResult());
+                throw new OpsException("Query disk size failed");
+            } else {
+                return jschResult.getResult();
+            }
+        } catch (Exception e) {
+            log.error("Failed to query disk size", e);
+            throw new OpsException("Failed to query disk size");
+        }
+    }
+
+    private String upgradeCheckOs(Session session, String installUsername) {
+        String command = "cd /root/gauss_om/"+installUsername+"/script/ && ./gs_checkos -i A";
+        try {
+            JschResult jschResult = jschUtil.executeCommand(command, session);
+            if (0 != jschResult.getExitCode()) {
+                log.error("checkos fail, exit code: {}, message: {}", jschResult.getExitCode(), jschResult.getResult());
+                throw new OpsException("checkos failed");
+            } else {
+                return jschResult.getResult();
+            }
+        } catch (Exception e) {
+            log.error("Failed to checkos", e);
+            return StrUtil.EMPTY;
+        }
     }
 
     private OpenGaussSupportOSEnum checkOS(List<HostInfoHolder> hostInfoHolderList, boolean root) {
@@ -333,14 +412,6 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
             throw new OpsException("Upgrade package not found");
         }
 
-        if (StrUtil.isEmpty(upgradeBody.getClusterConfigXmlPath())) {
-            throw new OpsException("No cluster configuration xml file found");
-        }
-
-        OpsHostEntity hostEntity = hostFacade.getById(upgradeBody.getHostId());
-        if (Objects.isNull(hostEntity)) {
-            throw new OpsException("host information not found");
-        }
 
         WsSession wsSession = wsConnectorManager.getSession(upgradeBody.getBusinessId()).orElseThrow(() -> new OpsException("websocket session not exist"));
         List<OpsClusterNodeEntity> opsClusterNodeEntities = opsClusterNodeService.listClusterNodeByClusterId(upgradeBody.getClusterId());
@@ -348,21 +419,40 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
             throw new OpsException("No cluster node information found");
         }
 
-        OpsClusterNodeEntity opsClusterNodeEntity = opsClusterNodeEntities.stream().filter(node -> node.getHostId().equals(upgradeBody.getHostId())).findFirst().orElseThrow(() -> new OpsException("The node information corresponding to the host is not found"));
+        OpsClusterNodeEntity opsClusterNodeEntity = opsClusterNodeEntities.stream().filter(node -> node.getClusterRole() == ClusterRoleEnum.MASTER).findFirst().orElseThrow(() -> new OpsException("The node information corresponding to the host is not found"));
         String installUserId = opsClusterNodeEntity.getInstallUserId();
         OpsHostUserEntity installUserEntity = hostUserFacade.getById(installUserId);
-        if (Objects.nonNull(installUserEntity)) {
+        if (Objects.isNull(installUserEntity)) {
             throw new OpsException("Installation user information not found");
         }
 
+        OpsHostEntity hostEntity = hostFacade.getById(opsClusterNodeEntity.getHostId());
+        if (Objects.isNull(hostEntity)) {
+            throw new OpsException("host information not found");
+        }
+
+        OpsHostUserEntity rootUserEntity = hostUserFacade.getRootUserByHostId(opsClusterNodeEntity.getHostId());
+        if (Objects.isNull(rootUserEntity)) {
+            throw new OpsException("User root was not found");
+        }
+
+        if (StrUtil.isEmpty(rootUserEntity.getPassword()) && StrUtil.isEmpty(upgradeBody.getHostRootPassword())){
+            throw new OpsException("root password cannot be empty");
+        }
+
+        if (StrUtil.isNotEmpty(rootUserEntity.getPassword())) {
+            upgradeBody.setHostRootPassword(rootUserEntity.getPassword());
+        }
+
         UpgradeContext upgradeContext = new UpgradeContext();
+        upgradeContext.setVersionNum(upgradeBody.getVersionNum());
         upgradeContext.setHostPublicIp(hostEntity.getPublicIp());
         upgradeContext.setRootPassword(upgradeBody.getHostRootPassword());
         upgradeContext.setRetSession(wsSession);
-        upgradeContext.setClusterConfigXmlPath(upgradeBody.getClusterConfigXmlPath());
+        upgradeContext.setClusterConfigXmlPath(clusterEntity.getXmlConfigPath());
         upgradeContext.setUpgradeType(upgradeBody.getUpgradeType());
         upgradeContext.setUpgradePackagePath(upgradeBody.getUpgradePackagePath());
-        upgradeContext.setSepEnvFile(upgradeBody.getSepEnvFile());
+        upgradeContext.setSepEnvFile(clusterEntity.getEnvPath());
         upgradeContext.setInstallUsername(installUserEntity.getUsername());
         upgradeContext.setInstallUserPassword(installUserEntity.getPassword());
         upgradeContext.setHostPort(hostEntity.getPort());
@@ -377,16 +467,11 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
     }
 
     @Override
-    public void upgradeRollback(UpgradeBody upgradeBody) {
-        log.info("upgradeRollback:{}", JSON.toJSONString(upgradeBody));
+    public void upgradeCommit(UpgradeBody upgradeBody) {
+        log.info("upgradeCommit:{}", JSON.toJSONString(upgradeBody));
         OpsClusterEntity clusterEntity = getById(upgradeBody.getClusterId());
         if (Objects.isNull(clusterEntity)) {
             throw new OpsException("Cluster information does not exist");
-        }
-
-        OpsHostEntity hostEntity = hostFacade.getById(upgradeBody.getHostId());
-        if (Objects.isNull(hostEntity)) {
-            throw new OpsException("host information not found");
         }
 
         WsSession wsSession = wsConnectorManager.getSession(upgradeBody.getBusinessId()).orElseThrow(() -> new OpsException("websocket session not exist"));
@@ -395,11 +480,29 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
             throw new OpsException("No cluster node information found");
         }
 
-        OpsClusterNodeEntity opsClusterNodeEntity = opsClusterNodeEntities.stream().filter(node -> node.getHostId().equals(upgradeBody.getHostId())).findFirst().orElseThrow(() -> new OpsException("The node information corresponding to the host is not found"));
+        OpsClusterNodeEntity opsClusterNodeEntity = opsClusterNodeEntities.stream().filter(node -> node.getClusterRole() == ClusterRoleEnum.MASTER).findFirst().orElseThrow(() -> new OpsException("The node information corresponding to the host is not found"));
         String installUserId = opsClusterNodeEntity.getInstallUserId();
         OpsHostUserEntity installUserEntity = hostUserFacade.getById(installUserId);
-        if (Objects.nonNull(installUserEntity)) {
+        if (Objects.isNull(installUserEntity)) {
             throw new OpsException("Installation user information not found");
+        }
+
+        OpsHostEntity hostEntity = hostFacade.getById(opsClusterNodeEntity.getHostId());
+        if (Objects.isNull(hostEntity)) {
+            throw new OpsException("host information not found");
+        }
+
+        OpsHostUserEntity rootUserEntity = hostUserFacade.getRootUserByHostId(opsClusterNodeEntity.getHostId());
+        if (Objects.isNull(rootUserEntity)) {
+            throw new OpsException("User root was not found");
+        }
+
+        if (StrUtil.isEmpty(rootUserEntity.getPassword()) && StrUtil.isEmpty(upgradeBody.getHostRootPassword())){
+            throw new OpsException("root password cannot be empty");
+        }
+
+        if (StrUtil.isNotEmpty(rootUserEntity.getPassword())) {
+            upgradeBody.setHostRootPassword(rootUserEntity.getPassword());
         }
 
         Session ommSession = jschUtil.getSession(hostEntity.getPublicIp(), hostEntity.getPort(), installUserEntity.getUsername(), encryptionUtils.decrypt(installUserEntity.getPassword())).orElseThrow(() -> new OpsException("Install user connection failed"));
@@ -407,7 +510,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         RequestAttributes context = RequestContextHolder.currentRequestAttributes();
         Future<?> future = threadPoolTaskExecutor.submit(() -> {
             RequestContextHolder.setRequestAttributes(context);
-            doUpgradeRollback(ommSession, wsSession, upgradeBody.getClusterConfigXmlPath());
+            doUpgradeCommit(ommSession, wsSession, clusterEntity.getEnvPath(), clusterEntity.getXmlConfigPath(),clusterEntity.getClusterId(),upgradeBody.getVersionNum());
 
             if (Objects.nonNull(ommSession) && ommSession.isConnected()) {
                 ommSession.disconnect();
@@ -416,11 +519,86 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         TaskManager.registry(upgradeBody.getBusinessId(), future);
     }
 
-    private void doUpgradeRollback(Session ommSession, WsSession wsSession, String clusterConfigXmlPath) {
+    private void doUpgradeCommit(Session ommSession, WsSession wsSession, String envPath, String clusterConfigXmlPath, String clusterId, String versionNum) {
+        wsUtil.sendText(wsSession, "COMMIT_UPGRADE");
         try {
-            String command = "auto-rollback  -X " + clusterConfigXmlPath + " --force";
-            JschResult jschResult = jschUtil.executeCommand(command, ommSession, wsSession);
-            if (0 != jschResult.getExitCode()) {
+            String command = "gs_upgradectl -t commit-upgrade  -X " + clusterConfigXmlPath;
+            JschResult jschResult = jschUtil.executeCommand(envPath, command, ommSession, wsSession, false);
+            if (5 != jschResult.getExitCode()) {
+                log.error("upgradeCommit failed, exit code: {}, error message: {}", jschResult.getExitCode(), jschResult.getResult());
+                throw new OpsException("upgradeCommit failed");
+            }
+
+            LambdaUpdateWrapper<OpsClusterEntity> updateWrapper = Wrappers.lambdaUpdate(OpsClusterEntity.class)
+                    .set(OpsClusterEntity::getVersionNum, versionNum)
+                    .eq(OpsClusterEntity::getClusterId, clusterId);
+            update(updateWrapper);
+            wsUtil.sendText(wsSession, "FINAL_EXECUTE_EXIT_CODE:0");
+        } catch (Exception e) {
+            log.error("upgradeCommit failed", e);
+            wsUtil.sendText(wsSession, "FINAL_EXECUTE_EXIT_CODE:-1");
+            throw new OpsException("upgradeCommit failed");
+        }
+    }
+
+    @Override
+    public void upgradeRollback(UpgradeBody upgradeBody) {
+        log.info("upgradeRollback:{}", JSON.toJSONString(upgradeBody));
+        OpsClusterEntity clusterEntity = getById(upgradeBody.getClusterId());
+        if (Objects.isNull(clusterEntity)) {
+            throw new OpsException("Cluster information does not exist");
+        }
+
+        WsSession wsSession = wsConnectorManager.getSession(upgradeBody.getBusinessId()).orElseThrow(() -> new OpsException("websocket session not exist"));
+        List<OpsClusterNodeEntity> opsClusterNodeEntities = opsClusterNodeService.listClusterNodeByClusterId(upgradeBody.getClusterId());
+        if (CollUtil.isEmpty(opsClusterNodeEntities)) {
+            throw new OpsException("No cluster node information found");
+        }
+
+        OpsClusterNodeEntity opsClusterNodeEntity = opsClusterNodeEntities.stream().filter(node -> node.getClusterRole() == ClusterRoleEnum.MASTER).findFirst().orElseThrow(() -> new OpsException("The node information corresponding to the host is not found"));
+        String installUserId = opsClusterNodeEntity.getInstallUserId();
+        OpsHostUserEntity installUserEntity = hostUserFacade.getById(installUserId);
+        if (Objects.isNull(installUserEntity)) {
+            throw new OpsException("Installation user information not found");
+        }
+
+        OpsHostEntity hostEntity = hostFacade.getById(opsClusterNodeEntity.getHostId());
+        if (Objects.isNull(hostEntity)) {
+            throw new OpsException("host information not found");
+        }
+
+        OpsHostUserEntity rootUserEntity = hostUserFacade.getRootUserByHostId(opsClusterNodeEntity.getHostId());
+        if (Objects.isNull(rootUserEntity)) {
+            throw new OpsException("User root was not found");
+        }
+
+        if (StrUtil.isEmpty(rootUserEntity.getPassword()) && StrUtil.isEmpty(upgradeBody.getHostRootPassword())){
+            throw new OpsException("root password cannot be empty");
+        }
+
+        if (StrUtil.isNotEmpty(rootUserEntity.getPassword())) {
+            upgradeBody.setHostRootPassword(rootUserEntity.getPassword());
+        }
+
+        Session ommSession = jschUtil.getSession(hostEntity.getPublicIp(), hostEntity.getPort(), installUserEntity.getUsername(), encryptionUtils.decrypt(installUserEntity.getPassword())).orElseThrow(() -> new OpsException("Install user connection failed"));
+
+        RequestAttributes context = RequestContextHolder.currentRequestAttributes();
+        Future<?> future = threadPoolTaskExecutor.submit(() -> {
+            RequestContextHolder.setRequestAttributes(context);
+            doUpgradeRollback(ommSession, wsSession,clusterEntity.getEnvPath(), clusterEntity.getXmlConfigPath());
+
+            if (Objects.nonNull(ommSession) && ommSession.isConnected()) {
+                ommSession.disconnect();
+            }
+        });
+        TaskManager.registry(upgradeBody.getBusinessId(), future);
+    }
+
+    private void doUpgradeRollback(Session ommSession, WsSession wsSession, String envPath, String clusterConfigXmlPath) {
+        try {
+            String command = "gs_upgradectl -t auto-rollback  -X " + clusterConfigXmlPath + " --force";
+            JschResult jschResult = jschUtil.executeCommand(envPath, command, ommSession, wsSession, false);
+            if (2 != jschResult.getExitCode()) {
                 log.error("Failed to create xml configuration file, exit code: {}, error message: {}", jschResult.getExitCode(), jschResult.getResult());
                 throw new OpsException("Failed to create xml configuration file");
             }
@@ -437,7 +615,10 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
 
     private void doUpgrade(UpgradeContext upgradeContext) {
         try {
-            enterpriseOpsProvider.upgrade(upgradeContext);
+            clusterOpsProviderManager
+                    .provider(OpenGaussVersionEnum.ENTERPRISE)
+                    .orElseThrow(() -> new OpsException("The current version does not support"))
+                    .upgrade(upgradeContext);
             wsUtil.sendText(upgradeContext.getRetSession(), "FINAL_EXECUTE_EXIT_CODE:0");
         } catch (Exception e) {
             log.error("Upgrade fail：", e);
@@ -1288,62 +1469,60 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
     }
 
     @Override
-    public List<OpsClusterVO> listCluster() {
-        List<OpsClusterVO> res = new ArrayList<>();
-        List<OpsClusterEntity> opsClusterEntities = list(Wrappers.lambdaQuery(OpsClusterEntity.class).orderByDesc(OpsClusterEntity::getCreateTime));
-        for (OpsClusterEntity opsClusterEntity : opsClusterEntities) {
-            OpsClusterVO opsClusterVO = OpsClusterVO.of(opsClusterEntity);
-            String clusterId = opsClusterEntity.getClusterId();
-
-            OpsCheckEntity checkRes = opsCheckService.getLastResByClusterId(clusterId);
-            if (Objects.nonNull(checkRes)) {
-                HashMap<String, Integer> checkSummary = new HashMap<>();
-                CheckVO checkVO = parseCheckResToCheckVO(checkRes.getCheckRes());
-                if (Objects.nonNull(checkVO)) {
-                    Map<String, List<CheckItemVO>> summary = checkVO.summary();
-                    if (CollUtil.isNotEmpty(summary)) {
-
-                        summary.forEach((k, v) -> {
-                            checkSummary.put(k, v.size());
-                        });
-                    }
-                }
-                opsClusterVO.setCheckSummary(checkSummary);
-                opsClusterVO.setLastCheckAt(checkRes.getCreateTime());
+    public List<OpsClusterVO> listEnterpriseCluster() {
+        List<OpsClusterVO> allCluster = opsFacade.listCluster();
+        if (CollUtil.isEmpty(allCluster)) {
+            return allCluster;
+        }
+        List<OpsClusterVO> enterpriseClusterList = new ArrayList<>();
+        allCluster.forEach(item -> {
+            if (item.getVersion().equals(OpenGaussVersionEnum.ENTERPRISE.name())) {
+                enterpriseClusterList.add(item);
             }
-            res.add(opsClusterVO);
+        });
+        List<Future<?>> taskResult = new ArrayList<>();
+        for (OpsClusterVO cluster: enterpriseClusterList) {
+            OpsClusterEntity clusterEntity = getById(cluster.getClusterId());
+            if (Objects.isNull(clusterEntity)) {
+                throw new OpsException("Cluster information does not exist");
+            }
 
-            List<OpsClusterNodeVO> clusterNodeVOS = new ArrayList<>();
-            opsClusterVO.setClusterNodes(clusterNodeVOS);
+            List<OpsClusterNodeEntity> opsClusterNodeEntities = opsClusterNodeService.listClusterNodeByClusterId(cluster.getClusterId());
+            if (CollUtil.isEmpty(opsClusterNodeEntities)) {
+                throw new OpsException("The current cluster node was not found on the host");
+            }
 
-            List<OpsClusterNodeEntity> opsClusterNodeEntities = opsClusterNodeService.listClusterNodeByClusterId(opsClusterEntity.getClusterId());
-            for (OpsClusterNodeEntity opsClusterNodeEntity : opsClusterNodeEntities) {
-                OpsClusterNodeVO opsClusterNodeVO = OpsClusterNodeVO.of(opsClusterNodeEntity);
-                String hostId = opsClusterNodeEntity.getHostId();
-                OpsHostEntity hostEntity = hostFacade.getById(hostId);
-                if (Objects.nonNull(hostEntity)) {
-                    OpsHostUserEntity rootUser = hostUserFacade.getRootUserByHostId(hostEntity.getHostId());
-                    OpsHostUserEntity installUser = hostUserFacade.getById(opsClusterNodeEntity.getInstallUserId());
-                    opsClusterNodeVO.setPublicIp(hostEntity.getPublicIp());
-                    opsClusterNodeVO.setPrivateIp(hostEntity.getPrivateIp());
-                    opsClusterNodeVO.setHostPort(hostEntity.getPort());
-                    opsClusterNodeVO.setIsRemember(StrUtil.isNotEmpty(rootUser.getPassword()));
-                    opsClusterNodeVO.setHostname(hostEntity.getHostname());
-                    opsClusterNodeVO.setHostId(hostEntity.getHostId());
-                    opsClusterNodeVO.setDbPort(opsClusterEntity.getPort());
-                    opsClusterNodeVO.setDbName("postgres");
-                    opsClusterNodeVO.setDbUser(opsClusterEntity.getDatabaseUsername());
-                    opsClusterNodeVO.setDbUserPassword(opsClusterEntity.getDatabasePassword());
+            OpsClusterNodeEntity clusterNode = opsClusterNodeEntities.stream().filter(opsClusterNodeEntity -> opsClusterNodeEntity.getClusterRole().equals(ClusterRoleEnum.MASTER)).findFirst().orElseThrow(() -> new OpsException("The master cluster node was not found in the cluster"));
+            String installUserId = clusterNode.getInstallUserId();
 
-                    if (Objects.nonNull(installUser)) {
-                        opsClusterNodeVO.setInstallUserName(installUser.getUsername());
-                    }
-                }
+            OpsHostEntity hostEntity = hostFacade.getById(clusterNode.getHostId());
+            if (Objects.isNull(hostEntity)) {
+                throw new OpsException("Node host information does not exist");
+            }
 
-                clusterNodeVOS.add(opsClusterNodeVO);
+            OpsHostUserEntity hostUserEntity = hostUserFacade.getById(installUserId);
+            if (Objects.isNull(hostUserEntity)) {
+                throw new OpsException("Installation user information does not exist");
+            }
+
+            Future<?> future = threadPoolTaskExecutor.submit(() -> {
+                Session ommSession = jschUtil.getSession(hostEntity.getPublicIp(), hostEntity.getPort(), hostUserEntity.getUsername(), encryptionUtils.decrypt(hostUserEntity.getPassword())).orElseThrow(() -> new OpsException("Install user connection failed"));
+                String stateResultStr = state(ommSession, OpenGaussVersionEnum.ENTERPRISE, clusterNode.getDataPath(), clusterEntity.getEnvPath());
+                Map<String, Object> stateResult = JSON.parseObject(stateResultStr, Map.class);
+                cluster.setClusterState((String) stateResult.get("cluster_state"));
+            });
+            taskResult.add(future);
+        }
+        for (Future<?> future: taskResult) {
+            try {
+                future.get();
+            } catch (InterruptedException | ExecutionException e) {
+                String errMsg = "get cluster state from task failed: " + e.getMessage();
+                log.error(errMsg);
+                throw new OpsException(errMsg);
             }
         }
-        return res;
+        return enterpriseClusterList;
     }
 
     @Override
@@ -2875,6 +3054,34 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
             freeHardDiskProperty.setStatusMessage("min 2.0GB");
         }
         return freeHardDiskProperty;
+    }
+
+    private Integer calcDiskUsed(String diskInfo, String path) {
+        Integer res = 0;
+        String[] split = diskInfo.split("\n");
+
+        for (String s : split) {
+            String[] s1 = s.replaceAll( "\\s+", " " ).split(" ");
+            if ("/".equals(s1[5])) {
+                return Integer.parseInt(s1[4].substring(0, s1[4].length()-1));
+            }
+
+            if (path.contains(s1[5])) {
+                return Integer.parseInt(s1[4].substring(0, s1[4].length() - 1));
+            }
+        }
+
+        if (res == 0) {
+            for (String s : split) {
+                String[] s1 = s.replaceAll( "\\s+", " " ).split(" ");
+                int used = Integer.parseInt(s1[4].substring(0, s1[4].length() - 1));
+                if (used > res) {
+                    res = used;
+                }
+            }
+        }
+
+        return res;
     }
 
     private int calcDisk(String freeHardDisk) {

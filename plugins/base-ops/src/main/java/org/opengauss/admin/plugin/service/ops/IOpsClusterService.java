@@ -26,6 +26,7 @@ package org.opengauss.admin.plugin.service.ops;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
+import org.opengauss.admin.common.core.domain.model.ops.OpsClusterVO;
 import org.opengauss.admin.common.exception.ops.OpsException;
 import org.opengauss.admin.plugin.domain.entity.ops.OpsClusterEntity;
 import org.opengauss.admin.plugin.domain.model.ops.*;
@@ -49,7 +50,11 @@ public interface IOpsClusterService extends IService<OpsClusterEntity> {
 
     void install(InstallBody installBody);
 
+    UpgradeOsCheckVO upgradeOsCheck(String clusterId, String rootPassword);
+
     void upgrade(UpgradeBody upgradeBody);
+
+    void upgradeCommit(UpgradeBody upgradeBody);
 
     void upgradeRollback(UpgradeBody upgradeBody);
 
@@ -77,7 +82,7 @@ public interface IOpsClusterService extends IService<OpsClusterEntity> {
 
     void stop(OpsClusterBody stopBody);
 
-    List<OpsClusterVO> listCluster();
+    List<OpsClusterVO> listEnterpriseCluster();
 
     ClusterSummaryVO summary();
 
