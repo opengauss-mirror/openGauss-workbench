@@ -29,6 +29,8 @@ import org.opengauss.admin.plugin.service.ops.IHostService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 /**
  * @author lhf
  * @date 2023/2/14 13:58
@@ -53,5 +55,19 @@ public class HostController extends BaseController {
     @GetMapping("/fileExist/{id}")
     public AjaxResult fileExist(@PathVariable("id") String id,@RequestParam("file") String file,@RequestParam(value = "rootPassword",required = false) String rootPassword){
         return AjaxResult.success(hostService.fileExist(id,file,rootPassword));
+    }
+
+    /**
+     * query disk path
+     *
+     * @param id the host id
+     * @param rootPassword root user password
+     * @return list of disk path
+     */
+    @GetMapping("/multiPathQuery/{id}")
+    public AjaxResult multiPathQuery(@PathVariable("id") String id, @RequestParam(value = "rootPassword", required =
+            false) String rootPassword) {
+        List<String> lunPathList = hostService.multiPathQuery(id, rootPassword);
+        return AjaxResult.success(lunPathList);
     }
 }

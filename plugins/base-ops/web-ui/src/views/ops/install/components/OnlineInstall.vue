@@ -207,11 +207,16 @@ const getPackageList = () => {
               hasDownloadPackage.hasDownload = true
             }
           }
+          console.log('get item name')
         }
       })
       .finally(() => {
         data.loading = false
+        console.log('get item name111')
+      }).catch(e => {
+        console.log('catch error:', e)
       })
+      console.log('finish')
   }
 }
 

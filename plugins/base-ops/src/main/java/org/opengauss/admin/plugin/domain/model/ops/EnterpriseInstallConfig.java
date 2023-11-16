@@ -29,6 +29,7 @@ import org.opengauss.admin.common.exception.ops.OpsException;
 import org.opengauss.admin.plugin.domain.entity.ops.OpsClusterNodeEntity;
 import org.opengauss.admin.plugin.domain.model.ops.node.EnterpriseInstallNodeConfig;
 import lombok.Data;
+import org.opengauss.admin.plugin.enums.ops.DatabaseKernelArch;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -62,7 +63,11 @@ public class EnterpriseInstallConfig implements ClusterInstallConfig {
 
     private String databasePassword;
 
+    private DatabaseKernelArch databaseKernelArch = DatabaseKernelArch.MASTER_SLAVE;
+
     private Boolean isInstallCM;
+
+    private SharingStorageInstallConfig sharingStorageInstallConfig;
 
     private List<EnterpriseInstallNodeConfig> nodeConfigList;
 
@@ -101,12 +106,25 @@ public class EnterpriseInstallConfig implements ClusterInstallConfig {
             enableDCF = false;
         }
 
+        if (Objects.isNull(databaseKernelArch)) {
+            throw new OpsException("database Kernel Arch error");
+        }
+
         if (Objects.isNull(isInstallCM)) {
             throw new OpsException("Is it wrong to install CM");
         }
 
         if (CollUtil.isEmpty(nodeConfigList)) {
             throw new OpsException("The cluster node is incorrectly configured");
+        }
+
+        if (databaseKernelArch == DatabaseKernelArch.SHARING_STORAGE) {
+            isInstallCM = true;
+            if (Objects.isNull(sharingStorageInstallConfig)) {
+                throw new OpsException("sharing storage configuration is null");
+            }
+            sharingStorageInstallConfig.setEnableDss(true);
+            sharingStorageInstallConfig.checkConfig();
         }
 
         for (EnterpriseInstallNodeConfig enterpriseInstallNodeConfig : nodeConfigList) {
@@ -118,9 +136,10 @@ public class EnterpriseInstallConfig implements ClusterInstallConfig {
         List<OpsClusterNodeEntity> list = new ArrayList<>();
 
         for (EnterpriseInstallNodeConfig enterpriseInstallNodeConfig : nodeConfigList) {
-            list.add(enterpriseInstallNodeConfig.toOpsClusterNodeEntity());
+            OpsClusterNodeEntity opsClusterNodeEntity = enterpriseInstallNodeConfig.toOpsClusterNodeEntity();
+            sharingStorageInstallConfig.appendtoOpsClusterNodeEntity(opsClusterNodeEntity);
+            list.add(opsClusterNodeEntity);
         }
-
         return list;
     }
 }

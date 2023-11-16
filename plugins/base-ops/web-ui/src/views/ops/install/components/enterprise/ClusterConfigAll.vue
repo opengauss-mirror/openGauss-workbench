@@ -30,7 +30,7 @@
           <a-tab-pane
             v-for="(item, index) in data.form.nodes"
             :key="item.id"
-            :closable="data.form.nodes.length > (data.form.cluster.isInstallCM ? 3 : 1) && item.clusterRole !== ClusterRoleEnum.MASTER"
+            :closable="data.form.nodes.length > (data.form.cluster.databaseKernelArch === DatabaseKernelArch.SHARING_STORAGE ? 2 : (data.form.cluster.isInstallCM ? 3 : 1)) && item.clusterRole !== ClusterRoleEnum.MASTER"
           >
             <template #title>
               {{ item.clusterRole === ClusterRoleEnum.MASTER ? $t('enterprise.ClusterConfig.else3') :
@@ -43,6 +43,18 @@
               @install-user="installUserChange"
             ></node-info>
           </a-tab-pane>
+          <a-tab-pane
+            :title="$t('enterprise.ClusterConfig.5mpm3ku3jpo0')"
+            key="sharingStorage"
+            :closable="false"
+            v-if="data.form.cluster.databaseKernelArch === DatabaseKernelArch.SHARING_STORAGE"
+          >
+            <sharing-storage
+              :form-data="data.form.cluster.sharingStorageInstallConfig"
+              :cluster-data="data.form"
+              ref="sharingStorageFormRef"
+            ></sharing-storage>
+          </a-tab-pane>
         </a-tabs>
       </div>
     </div>
@@ -54,12 +66,16 @@ import { ref, reactive, onMounted, watch, nextTick, computed, inject, provide } 
 import { KeyValue } from '@/types/global';
 import ClusterForm from './components/ClusterForm.vue';
 import NodeInfo from './components/NodeInfo.vue';
-import { ClusterRoleEnum, DeployTypeEnum, EnterpriseInstallConfig } from '@/types/ops/install'
+import SharingStorage from './components/SharingStorage.vue';
+import { ClusterRoleEnum, DeployTypeEnum, DatabaseKernelArch, ConnectTypeEnum, EnterpriseInstallConfig } from '@/types/ops/install'
 import { Message } from '@arco-design/web-vue'
 import { FormInstance } from '@arco-design/web-vue/es/form'
 import { useOpsStore } from '@/store'
 import { useI18n } from 'vue-i18n'
 import dayjs from 'dayjs'
+import { arrayExpression, stringLiteral } from '@babel/types';
+import { nodeCenter } from '@antv/x6/lib/registry/node-anchor/node-center';
+import { hostListAll, hostUserListWithoutRoot, portUsed, pathEmpty, fileExist, multiPathQuery, hostPingById } from '@/api/ops'
 const { t } = useI18n()
 const installStore = useOpsStore()
 
@@ -69,6 +85,7 @@ const data = reactive<KeyValue>({
     cluster: {
       clusterId: '',
       clusterName: '',
+      databaseKernelArch: 'MASTER_SLAVE',
       installPath: '/opt/openGauss/install/app',
       installPackagePath: '/opt/software/openGauss',
       logPath: '/opt/openGauss/log/omm',
@@ -83,7 +100,18 @@ const data = reactive<KeyValue>({
       isEnvSeparate: true,
       envPath: '',
       azId: '',
-      azName: ''
+      azName: '',
+      sharingStorageInstallConfig: {
+        dssHome: '',
+        dssVgName: 'data',
+        dssDataLunPath: '',
+        xlogVgName: 'xlog',
+        xlogLunPath: [],
+        cmSharingLunPath: '',
+        cmVotingLunPath: '',
+        interconnectType: ConnectTypeEnum.TCP,
+        rdmaConfig: '',
+      }
     },
     nodes: []
   },
@@ -98,16 +126,54 @@ onMounted(() => {
 })
 
 const installType = computed(() => installStore.getInstallConfig.installType)
+const isInstallCM = computed(() => installStore.getEnterpriseConfig.isInstallCM)
 
-watch(() => data.form.cluster.isInstallCM, (val) => {
-  if (val) {
-    if (data.form.nodes.length < 3) {
-      for (let i = 0; i <= (3 - data.form.nodes.length); i++) {
+watch([() => data.form.cluster.databaseKernelArch, () => data.form.cluster.isInstallCM], (val) => {
+  if (val[0] === DatabaseKernelArch.SHARING_STORAGE) {
+    data.form.cluster.isInstallCM = true;
+    data.form.cluster.enableDCF = false;
+    if (data.form.nodes.length < 2) {
+      for (let i = 0; i <= (2 - data.form.nodes.length); i++) {
         addNode(data.form.nodes.length - 1)
+      }
+    }
+  } else {
+    if (val[1]) {
+      if (data.form.nodes.length < 3) {
+        for (let i = 0; i <= (3 - data.form.nodes.length); i++) {
+          addNode(data.form.nodes.length - 1)
+        }
       }
     }
   }
 })
+
+watch(() => data.form.cluster.installPath, (newValue) => {
+  if (newValue) {
+    if (newValue.endsWith('app') || newValue.endsWith('app/')) {
+      newValue = newValue.replace(/app$/, '');
+    }
+    const logPath = newValue.endsWith('/') ? newValue + 'log' : newValue + '/log';
+    data.form.cluster.logPath = logPath;
+    const tempPath = newValue.endsWith('/') ? newValue + 'tmp' : newValue + '/tmp';
+    data.form.cluster.tmpPath = tempPath;
+    const omToolsPath = newValue.endsWith('/') ? newValue + 'om' : newValue + '/om';
+    data.form.cluster.omToolsPath = omToolsPath;
+
+    const dataPath = newValue.endsWith('/') ? newValue + 'data/dn' : newValue + '/data/dn';
+    data.form.nodes.forEach((node) => {
+      node.dataPath = dataPath;
+      if (isInstallCM) {
+      const cmDataPath = newValue.endsWith('/') ? newValue + 'cm' : newValue + '/cm';
+      node.cmDataPath = cmDataPath;
+    }
+    });
+
+    const dssHome = newValue.endsWith('/') ? newValue + 'dss_home' : newValue + '/dss_home';
+    data.form.cluster.sharingStorageInstallConfig.dssHome = dssHome;
+  }
+});
+
 
 const initData = () => {
   if (Object.keys(installStore.getEnterpriseConfig).length) {
@@ -223,6 +289,7 @@ const saveStore = () => {
 
 const azFormRef = ref<FormInstance>()
 const clusterFormRef = ref<null | InstanceType<typeof ClusterForm>>(null)
+const sharingStorageFormRef = ref<null | InstanceType<typeof SharingStorage>>(null)
 const beforeConfirm = async (): Promise<boolean> => {
   let validRes = true
   if (installType.value !== 'import') {
@@ -238,7 +305,52 @@ const beforeConfirm = async (): Promise<boolean> => {
       validRes = false
       data.activeTab = 'clusterPane'
     }
+
+    if (data.form.cluster.installPath === data.form.cluster.installPackagePath) {
+      clusterFormRef.value?.pathValidate("installPackagePath", t('enterprise.ClusterConfig.5mpm3ku3joo0'))
+      validRes = false
+      data.activeTab = 'clusterPane'
+    }
   }
+
+  if (validRes) {
+    if (data.form.cluster.databaseKernelArch === DatabaseKernelArch.SHARING_STORAGE) {
+      const sharingStorageFormValidRes: any = await sharingStorageFormRef.value?.formValidate()
+      if (!sharingStorageFormValidRes.res) {
+        validRes = false
+        data.activeTab = 'sharingStorage'
+      }
+
+      const sharingStorageFormLunValidRes: any = await sharingStorageFormRef.value?.lunValidate()
+      if (!sharingStorageFormLunValidRes.res) {
+        validRes = false
+        data.activeTab = 'sharingStorage'
+      }
+    }
+  }
+
+  if (validRes) {
+    if (data.form.cluster.databaseKernelArch === DatabaseKernelArch.SHARING_STORAGE) {
+      loadingFunc.toLoading()
+
+      if (refList.value.length > 1 && data.form.nodes.length === refList.value.length) {
+        for (let i = 1; i < refList.value.length; i++) {
+          if (data.form.nodes[i].hostId === data.form.nodes[0].hostId) {
+            refList.value[i].userDefineValidate("hostId", t('enterprise.ClusterConfig.5mpm3ku3jso0'))
+            data.activeTab = data.form.nodes[i].id;
+            validRes = false
+          }
+
+          if (data.form.nodes[i].installUsername !== data.form.nodes[0].installUsername) {
+            refList.value[i].userDefineValidate("installUserId", t('enterprise.ClusterConfig.5mpm3ku3jto0'))
+            data.activeTab = data.form.nodes[i].id;
+            validRes = false
+          }
+        }
+      }
+    }
+  }
+
   // valid nodes form
   if (validRes) {
     const methodArr = []
@@ -257,6 +369,7 @@ const beforeConfirm = async (): Promise<boolean> => {
       validRes = false
     }
   }
+
   if (validRes) {
     loadingFunc.toLoading()
     const methodArr = []
@@ -296,6 +409,7 @@ const saveClusterData = () => {
   })
   installStore.setEnterpriseConfig(param as EnterpriseInstallConfig)
   console.log('show store info', installStore.getInstallConfig, installStore.getEnterpriseConfig);
+  console.log("sharing storage info = ", data.form.cluster.sharingStorageInstallConfig)
 
 }
 

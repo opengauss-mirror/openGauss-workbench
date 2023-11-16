@@ -67,7 +67,8 @@ public interface SshCommandConstants {
     /**
      * rely
      */
-    String DEPENDENCY = "yum list installed | egrep 'libaio-devel|flex|bison|ncurses-devel|glibc-devel|patch|redhat-lsb-core|readline-devel'";
+    String DEPENDENCY = "yum list installed | egrep 'libaio-devel|flex|bison|ncurses-devel|glibc-devel|patch|redhat" +
+            "-lsb-core|readline-devel|lsscsi'";
     /**
      * firewall
      */
@@ -243,5 +244,35 @@ public interface SshCommandConstants {
     String INSTALL_DEPENDENCY_OPENEULER_X86 = "yum install -y wget net-tools python3 bzip2 expect libaio-devel flex bison ncurses-devel glibc-devel patch readline-devel libnsl tar";
 
     String INSTALL_DEPENDENCY_OPENEULER_ARCH64 = "yum install -y wget net-tools python3 bzip2 expect libaio-devel flex bison ncurses-devel glibc-devel patch readline-devel tar";
+
+    /**
+     * upadmin command for lun path
+     */
+    String UPADMIN = "upadmin show vlun | awk 'NR>2 {print $2, $4, $6, $3}'";
+
+    /**
+     * upadmin_plus command for lun path
+     */
+    String UPADMIN_PLUS = "upadmin_plus show vlun | awk 'NR>2 {print $2, $4, $6, $3}'";
+
+    /**
+     * lsscsi command for lun path
+     */
+    String LS_SCSI = "lsscsi -i -s | awk '{print $6, $7, $8}'";
+
+    /**
+     * command to find wwn by lsscsi
+     */
+    String FIND_DISK_BY_SCSI = "lsscsi -i -s | grep %s | awk '{print $6}'";
+
+    /**
+     * command to find wwn by upadmin
+     */
+    String FIND_DISK_BY_UPADMIN = "upadmin show vlun | grep %s | awk '{print $2}'";
+
+    /**
+     * command to find wwn by upadmin_plus
+     */
+    String FIND_DISK_BY_UPADMIN_PLUS = "upadmin_plus show vlun | grep %s | awk '{print $2}'";
 
 }

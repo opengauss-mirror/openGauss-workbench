@@ -32,6 +32,7 @@ import org.opengauss.admin.plugin.enums.ops.DeployTypeEnum;
 import org.opengauss.admin.plugin.enums.ops.InstallModeEnum;
 import org.opengauss.admin.plugin.enums.ops.OpenGaussSupportOSEnum;
 import org.opengauss.admin.plugin.enums.ops.OpenGaussVersionEnum;
+import org.opengauss.admin.plugin.enums.ops.DatabaseKernelArch;
 
 import java.util.Date;
 import java.util.List;
@@ -107,8 +108,11 @@ public class InstallContext implements Cloneable {
             }
 
             int nodeSize = CollUtil.isEmpty(enterpriseInstallConfig.getNodeConfigList()) ? 0 : enterpriseInstallConfig.getNodeConfigList().size();
-            if (clusterDeploy && enterpriseInstallConfig.getIsInstallCM() && nodeSize < 3) {
-                throw new OpsException("In cluster mode, a maximum of three nodes can be installed");
+            if (enterpriseInstallConfig.getDatabaseKernelArch() == DatabaseKernelArch.MASTER_SLAVE) {
+                if (clusterDeploy && enterpriseInstallConfig.getIsInstallCM() && nodeSize < 3) {
+                    throw new OpsException("In traditional master_slave cluster mode, at least three nodes needed to " +
+                            "be installed");
+                }
             }
 
             enterpriseInstallConfig.checkConfig();
