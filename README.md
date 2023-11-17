@@ -65,15 +65,19 @@ mkdir config files ssl logs
 4. 生成密钥信息
    ```shell
    keytool -genkey -noprompt \
-   -dname "CN=opengauss, OU=opengauss, O=opengauss, L=Beijing, S=Beijing, C=CN"\
-   -alias opengauss\
+   -dname "CN=opengauss, OU=opengauss, O=opengauss, L=Beijing, S=Beijing, C=CN" \
+   -alias opengauss \
    -storetype PKCS12 \
    -keyalg RSA \
    -keysize 2048 \
    -keystore /ops/ssl/keystore.p12 \
    -validity 3650 \
-   -storepass 123456```
-   *注意*:这里的storepass与配置文件中的key-store-password应该保持一致。 keystore路径即为配置文件中的key-store路径
+   -storepass 123456
+   ```
+
+
+     **注意: 这里的storepass与配置文件中的key-store-password应该保持一致。keystore路径即为配置文件中的key-store路径** 
+
 5.启动
 nohup java -Xms2048m -Xmx4096m -jar openGauss-datakit-5.1.1.jar --spring.profiles.active=temp >datakit.out 2>&1 &
 
