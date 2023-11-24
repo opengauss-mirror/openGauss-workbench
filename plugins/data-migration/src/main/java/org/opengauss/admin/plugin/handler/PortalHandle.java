@@ -214,6 +214,47 @@ public class PortalHandle {
     }
 
     /**
+     * verify before migration; pass in the task ID and task parameters
+     *
+     * @param host host info
+     * @param task task
+     * @param paramMap parameter
+     * @param portalJarName portalJarName
+     * @param command  command
+     * @return check result
+     */
+    public static boolean checkBeforeMigration(MigrationHostPortalInstall host, MigrationTask task,
+        String portalJarName, Map<String, String> paramMap, String command) {
+        log.info("run host info: {}", JSON.toJSONString(host));
+        String portalHome = host.getInstallPath() + "portal/";
+        String params = paramMap.entrySet().stream().map(p -> {
+            return " -D" + p.getKey() + "=" + p.getValue();
+        }).collect(Collectors.joining());
+        StringBuilder commandSb = new StringBuilder();
+        commandSb.append("java -Dpath=").append(portalHome);
+        commandSb.append(" -Dworkspace.id=").append(task.getId());
+        commandSb.append(params);
+        commandSb.append(" -Dorder=").append(command);
+        commandSb.append(" -Dskip=true -jar ").append(portalHome).append(portalJarName);
+        log.info("check before migration,host: {}, command: {}", host.getHost(), commandSb);
+        JschResult checkResult = ShellUtil.execCommandGetResult(host.getHost(), host.getPort(), host.getRunUser(),
+            host.getRunPassword(), commandSb.toString());
+        if (!checkResult.isOk()) {
+            log.error("exec checkBeforeMigration command failed.");
+        } else {
+            log.info("exec checkBeforeMigration command result {}", checkResult.getResult());
+            if (checkResult.getResult().contains("verify migration success.")) {
+                return true;
+            } else if (checkResult.getResult().contains("verify migration failed.")) {
+                return false;
+            } else {
+                log.error("verify exception.");
+            }
+        }
+        return false;
+    }
+
+    /**
      * Start the portal; pass in the task ID and task parameters
      *
      * @param host host info
@@ -286,6 +327,20 @@ public class PortalHandle {
             }
         }
         return new ArrayList<>();
+    }
+
+    /**
+     *  get check result from file checkResult
+     *
+     * @param installHost host information
+     * @param taskId task id
+     * @return file content
+     */
+    public static String getPortalCheckResult(MigrationHostPortalInstall installHost, Integer taskId) {
+        JschResult result = ShellUtil.execCommandGetResult(installHost.getHost(), installHost.getPort(),
+            installHost.getRunUser(), installHost.getRunPassword(),
+            "cat " + installHost.getInstallPath() + "portal/workspace/" + taskId + "/checkResult.json");
+        return result.isOk() ? replaceAllBlank(result.getResult().trim()) : "";
     }
 
     public static String getTaskLogs(String host, Integer port, String user, String pass, String logPath) {

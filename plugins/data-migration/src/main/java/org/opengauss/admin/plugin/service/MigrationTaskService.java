@@ -26,6 +26,7 @@ package org.opengauss.admin.plugin.service;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.IService;
+import org.opengauss.admin.plugin.domain.MigrationHostPortalInstall;
 import org.opengauss.admin.plugin.domain.MigrationTask;
 import org.opengauss.admin.plugin.domain.MigrationTaskGlobalParam;
 import org.opengauss.admin.plugin.domain.MigrationTaskHostRef;
@@ -128,4 +129,16 @@ public interface MigrationTaskService extends IService<MigrationTask> {
      * subtask Execution Offline Scheduler
      */
     void doOfflineTaskRunScheduler();
+
+    /**
+     * check before migration
+     *
+     * @param installHost installHost
+     * @param t task
+     * @param globalParams globalParams
+     * @param command command
+     * @return check result
+     */
+    boolean execMigrationCheck(MigrationHostPortalInstall installHost, MigrationTask t,
+        List<MigrationTaskGlobalParam> globalParams, String command);
 }

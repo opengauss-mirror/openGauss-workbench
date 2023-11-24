@@ -132,14 +132,22 @@
           >
             <template #cell="{ record }">
               <span>{{ execSubStatusMap(record.execStatus) }}</span>
-              <a-popover :title="$t('detail.index.5q09asiwk6k0')">
+              <a-popover :title="titleMap(record.execStatus)">
                 <icon-close-circle-fill
-                  v-if="record.execStatus === SUB_TASK_STATUS.MIGRATION_ERROR"
+                  v-if="record.execStatus === SUB_TASK_STATUS.MIGRATION_ERROR || record.execStatus === SUB_TASK_STATUS.CHECK_FAILED"
                   size="14"
                   style="color: #ff7d01; margin-left: 3px; cursor: pointer"
                 />
                 <template #content>
-                  <div class="error-tips">{{ record.statusDesc }}</div>
+                  <div v-if="record.execStatus === SUB_TASK_STATUS.MIGRATION_ERROR" class="error-tips">{{ record.statusDesc }}</div>
+                  <div v-if="record.execStatus === SUB_TASK_STATUS.CHECK_FAILED" class="error-tips">
+                    <p v-if="judgeKeyExist(record.statusDesc,'service_availability') === true">{{ parseServiceAvailability(record.statusDesc) }}</p>
+                    <p v-if="judgeKeyExist(record.statusDesc,'database_connect') === true">{{ parseDatabaseConnect(record.statusDesc) }}</p>
+                    <p>{{ parseDatabasePermission(record.statusDesc) }}</p>
+                    <p v-if="judgeKeyExist(record.statusDesc,'increment_param') === true || judgeKeyExist(record.statusDesc,'reverse_param') === true">{{ parselogParameter(record.statusDesc) }}</p>
+                    <p v-if="judgeKeyExist(record.statusDesc,'lower_param') === true">{{ parseLowerParameter(record.statusDesc) }}</p>
+                    <p v-if="judgeKeyExist(record.statusDesc,'disk_space') === true">{{ parseDiskSpace(record.statusDesc) }}</p>
+                  </div>
                 </template>
               </a-popover>
             </template>
@@ -158,7 +166,9 @@
                 <template #default>{{
                   $t('detail.index.5q09asiwkds0')
                 }}</template>
-              </a-button>
+              </a-button>             
+              <a-popconfirm 
+              :content="tooltipMap(record.checkDataLevelingAndIncrementFinish)" @ok="stopSubIncrease(record)">
               <a-button
                 v-if="
                   (record.migrationModelId === TaskMode.Online &&
@@ -171,7 +181,6 @@
                 :loading="
                   record.execStatus === SUB_TASK_STATUS.INCREMENTAL_FINISHED
                 "
-                @click="stopSubIncrease(record)"
               >
                 <template #icon>
                   <icon-pause />
@@ -180,6 +189,7 @@
                   $t('detail.index.5q09asiwkkw0')
                 }}</template>
               </a-button>
+              </a-popconfirm>
               <a-button
                 v-if="
                   record.migrationModelId === TaskMode.Online &&
@@ -404,7 +414,8 @@ const execStatusMap = (status) => {
   const maps = {
     0: t('detail.index.5q09asiwlcg0'),
     1: t('detail.index.5q09asiwlew0'),
-    2: t('detail.index.5q09asiwltg0')
+    2: t('detail.index.5q09asiwltg0'),
+    3000: t('list.index.5q08sf2dha81')
   }
   return maps[status]
 }
@@ -439,9 +450,27 @@ const execSubStatusMap = (status) => {
     13: t('detail.index.5q09asiwncc0'),
     100: t('detail.index.5q09asiwne80'),
     500: t('detail.index.5q09asiwngg0'),
-    1000: t('detail.index.5q09asiwnik0')
+    1000: t('detail.index.5q09asiwnik0'),
+    3000: t('detail.index.5q09asiwlca0')
   }
   return maps[status]
+}
+
+const titleMap = (status) => {
+  const maps = {
+    500: t('detail.index.5q09asiwk6k0'),
+    3000: t('detail.index.5q09asiwk6a0')
+  }
+  return maps[status]
+}
+
+const tooltipMap = (checkDataLevelingAndIncrementFinish) => {
+  const maps = {
+    0: t('detail.index.5qtkk88a2eo0'),
+    1: t('detail.index.5qtkk98a2eo0'),
+    2: t('detail.index.5qtkk97a2eo0')
+  }
+  return maps[checkDataLevelingAndIncrementFinish]
 }
 
 const pageChange = (current) => {
@@ -466,6 +495,156 @@ const handleDetail = (row) => {
   subTaskDetailVisible.value = true
   subTaskId.value = row.id
   tabIndex.value = 1
+}
+
+const judgeKeyExist = (content,key) => {
+  console.log('key', key)
+  var result=ref(false)
+  var obj = JSON.parse(content)
+  if(key in obj){
+      result = true
+  } 
+  return result
+}
+
+const parseServiceAvailability = (content) => {
+  var result=t('detail.index.5qtkk97a2eo1')
+  console.log('content', content)
+  var obj = JSON.parse(content)
+  console.log('obj.service_availability', obj.service_availability)
+  if(obj.service_availability === 0){
+      result = result + t('detail.index.5qtkk97a2eo2')
+  } else{
+    result = result + t('detail.index.5qtkk97a2eo3')
+  }
+  return result
+}
+
+const parseDatabaseConnect = (content) => {
+  var result=t('detail.index.5qtkk97a2eo4')
+  var obj = JSON.parse(content)
+  console.log('obj.database_connect', obj.database_connect)
+  if(obj.database_connect.mysql === 0){
+      result = result + t('detail.index.5qtkk97a2eo5')
+  } else{
+    result = result + t('detail.index.5qtkk97a2eo6')
+  }
+  if(obj.database_connect.opengauss === 0){
+      result = result + t('detail.index.5qtkk97a2eo7')
+  } else{
+    result = result + t('detail.index.5qtkk97a2eo8')
+  }
+  return result
+}
+
+const parseDatabasePermission = (content) => {
+  var result=t('detail.index.5qtkk97a2eo9')
+  var obj = JSON.parse(content)
+  if ("full_permission" in obj) {
+    console.log('obj.full_permission', obj.full_permission)
+    if(obj.full_permission.mysql === 0){
+      result = result + t('detail.index.5qtkk97a2e10')
+    } else if(obj.full_permission.mysql === 1){
+    result = result + t('detail.index.5qtkk97a2e11')
+    } else{
+        result = result + t('detail.index.5qtkk97a2e12')
+    }
+    if(obj.full_permission.opengauss === 0){
+        result = result + t('detail.index.5qtkk97a2e13')
+    }else if(obj.full_permission.opengauss === 1){ 
+        result = result + t('detail.index.5qtkk97a2e14')
+    }else{
+        result = result + t('detail.index.5qtkk97a2e15')
+    }
+  }
+  
+  if ("increment_permission" in obj) { 
+    console.log('obj.increment_permission', obj.increment_permission)
+    if(obj.increment_permission.mysql === 0){
+        result = result + t('detail.index.5qtkk97a2e16')
+    } else if(obj.increment_permission.mysql === 1){
+        result = result + t('detail.index.5qtkk97a2e17')
+    } else{
+        result = result + t('detail.index.5qtkk97a2e19')
+    }
+    if(obj.increment_permission.opengauss === 0){
+        result = result + t('detail.index.5qtkk97a2e19')
+    }else if(obj.increment_permission.opengauss === 1){ 
+        result = result + t('detail.index.5qtkk97a2e20')
+    }else{
+        result = result + t('detail.index.5qtkk97a2e21')
+    }
+  }
+  
+  if ("reverse_permission" in obj) { 
+    console.log('content.reverse_permission', obj.reverse_permission)
+    if(obj.reverse_permission.mysql === 0){
+        result = result + t('detail.index.5qtkk97a2e22')
+    } else if(obj.reverse_permission.mysql === 1){
+        result = result + t('detail.index.5qtkk97a2e23')
+    } else{
+        result = result + t('detail.index.5qtkk97a2e24')
+    }
+    if(obj.reverse_permission.opengauss === 0){
+        result = result + t('detail.index.5qtkk97a2e25')
+    }else if(obj.reverse_permission.opengauss === 1){ 
+        result = result + t('detail.index.5qtkk97a2e26')
+    }else{
+        result = result + t('detail.index.5qtkk97a2e27')
+    }
+  }
+  return result
+}
+
+const parselogParameter = (content) => {
+  var obj = JSON.parse(content)
+  var result=t('detail.index.5qtkk97a2e28')
+  if ("increment_param" in obj) {
+    if(obj.increment_param.mysql.result === 0){
+        result = result + t('detail.index.5qtkk97a2e29')
+    } else if(obj.increment_param.mysql.result === 1){
+      result = result + t('detail.index.5qtkk97a2e30') + obj.increment_param.mysql.binlog_error + t('detail.index.5qtkk97a2e35')
+    }else{
+      result = result + t('detail.index.5qtkk97a2e31')
+   }
+  }
+  if ("reverse_param" in obj) {
+    if(obj.reverse_param.opengauss.result === 0){
+      result = result + t('detail.index.5qtkk97a2e32')
+    } else if(obj.reverse_param.opengauss.result === 1){
+      result = result + t('detail.index.5qtkk97a2e33') + obj.reverse_param.opengauss.binlog_error + t('detail.index.5qtkk97a2e35')
+    }else{
+      result = result + t('detail.index.5qtkk97a2e34')
+    }
+  }
+ 
+  return result
+}
+
+const parseLowerParameter = (content) => {
+  var obj = JSON.parse(content)
+  var result=t('detail.index.5qtkk97a2e41')
+  console.log('obj.disk_space', obj.lower_param)
+  if(obj.lower_param.result === 0){
+      result = result + t('detail.index.5qtkk97a2e42')
+  }else if(obj.lower_param.result === 1){
+    result = result + t('detail.index.5qtkk97a2e43') + obj.lower_param.mysql + t('detail.index.5qtkk97a2e45') + t('detail.index.5qtkk97a2e44') + obj.lower_param.opengauss + t('detail.index.5qtkk97a2e35')
+  }
+  return result
+}
+
+const parseDiskSpace = (content) => {
+  var obj = JSON.parse(content)
+  var result=t('detail.index.5qtkk97a2e36')
+  console.log('obj.disk_space', obj.disk_space)
+  if(obj.disk_space.result === 0){
+      result = result + t('detail.index.5qtkk97a2e37')
+  }else if(obj.disk_space.result === 1){
+    result = result + t('detail.index.5qtkk97a2e38') + obj.disk_space.disk_error.need + t('detail.index.5qtkk97a2e39') + obj.disk_space.disk_error.remain + t('detail.index.5qtkk97a2e35')
+  }else{
+    result = result + t('detail.index.5qtkk97a2e40')
+  }
+  return result
 }
 
 const handleLog = (row) => {
@@ -605,7 +784,8 @@ const getTaskDetail = () => {
               notRunCount: offlineCounts['notRunCount'],
               runningCount: offlineCounts['runningCount'],
               finishCount: offlineCounts['finishCount'],
-              errorCount: offlineCounts['errorCount']
+              errorCount: offlineCounts['errorCount'],
+              checkErrorCount: offlineCounts['checkErrorCount']
             }),
           span: 2
         },
@@ -621,7 +801,8 @@ const getTaskDetail = () => {
               notRunCount: onlineCounts['notRunCount'],
               runningCount: onlineCounts['runningCount'],
               finishCount: onlineCounts['finishCount'],
-              errorCount: onlineCounts['errorCount']
+              errorCount: onlineCounts['errorCount'],
+              checkErrorCount: onlineCounts['checkErrorCount']
             }),
           span: 2
         }

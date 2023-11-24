@@ -12,6 +12,7 @@
         </a-form-item>
         <a-form-item field="execStatus" style="margin-left: -17px;">
           <a-select v-model="form.execStatus" :placeholder="$t('list.index.5q08sf2dh5g0')" allow-clear style="width: 150px;" @change="getList">
+            <a-option :value="3000">{{$t('list.index.5q08sf2dha81')}}</a-option>
             <a-option :value="0">{{$t('list.index.5q08sf2dha80')}}</a-option>
             <a-option :value="1">{{$t('list.index.5q08sf2dhek0')}}</a-option>
             <a-option :value="2">{{$t('list.index.5q08sf2dhj00')}}</a-option>
@@ -97,7 +98,7 @@
                 <template #default>{{$t('list.index.5q08sf2dk0o0')}}</template>
               </a-button>
               <a-button
-                v-if="record.execStatus === 1"
+                v-if="record.execStatus === 1 || record.execStatus === 3000"
                 size="mini"
                 type="text"
                 @click="stopTask(record)"
@@ -198,7 +199,8 @@ const execStatusMap = (status) => {
   const maps = {
     0: t('list.index.5q08sf2dha80'),
     1: t('list.index.5q08sf2dhek0'),
-    2: t('list.index.5q08sf2dhj00')
+    2: t('list.index.5q08sf2dhj00'),
+    3000: t('list.index.5q08sf2dha81')
   }
   return maps[status]
 }
