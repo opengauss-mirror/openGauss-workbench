@@ -2,12 +2,12 @@
   <div class="upgrade-config-c">
     <div class="cluster-select-c">
       <div class="flex-between mb">
-        <div>
+        <div class="select-cluster-top-left">
           <span class="label-color sec-title mr-s">{{ $t('upgrade.UpgradeConifg.5uuo00svvrc0') }}</span>
           <icon-refresh @click="getClusterList" class="refresh-button mr" />
         </div>
         <a-input-search class="mr-s" v-model="filter.keyword" :style="{ width: '320px' }"
-          :placeholder="$t('upgrade.UpgradeConifg.5uuo00svwnk0')" @click="handleSearchClusterName" />
+          :placeholder="$t('upgrade.UpgradeConifg.5uuo00svwnk0')" @input="handleSearchClusterName" />
       </div>
       <div class="cluster-list-c">
         <a-spin :loading="data.clusterLoading" class="list-spin" :tip="$t('upgrade.UpgradeConifg.5uuo00svwu80')">
@@ -37,7 +37,7 @@
                 <div class="flex-row" v-if="!item.isRemember">
                   <div>{{ $t('upgrade.UpgradeConifg.else5') }}：({{ getMainNodeIp(item) }})</div>
                   <a-form-item hide-asterisk :field="`clusterList.${index}.rootPassword`"
-                    :rules="{ required: true, message: $t('upgrade.UpgradeConifg.5uuo00svwy40') }">
+                    :rules="item.clusterState === ClusterState.normal && item.isChecked ? { required: true, message: $t('upgrade.UpgradeConifg.5uuo00svwy40')} : {}">
                     <a-input-password :placeholder="$t('upgrade.UpgradeConifg.5uuo00svwy40')" allow-clear @click.stop=""
                       v-model="item.rootPassword" />
                   </a-form-item>
@@ -62,7 +62,7 @@
         </div>
         <div class="target-select">
           <a-collapse :default-active-key="targetSelData.activeKey">
-            <a-collapse-item v-for=" item  in  targetSelData.versionList " :key="item.versionKey"
+            <a-collapse-item v-for=" item  in  targetSelData.versionList" :key="item.versionKey"
               :header="item.versionKey">
               <div class="version-item mb" v-for=" info  in  item.versionInfo " :key="info.packageId"
                 @click.prevent="handleClickVersionItem(info)">
@@ -78,6 +78,11 @@
               </div>
             </a-collapse-item>
           </a-collapse>
+          <div v-if="targetSelData.versionList.length <= 0 && !targetSelData.loading" class="empty-c">
+            <svg-icon icon-class="ops-empty" class="icon-size"></svg-icon>
+            <div class="tip-content mb-s">{{ $t('upgrade.UpgradeConifg.5uuo00svx1g1') }}</div>
+            <a-button @click="goToPackage">{{ $t('upgrade.UpgradeConifg.5uuo00svx1g2') }}</a-button>
+          </div>
         </div>
       </a-spin>
     </div>
@@ -87,13 +92,15 @@
 <script lang="ts" setup>
 import { onMounted, reactive, ref, defineExpose } from 'vue'
 import { KeyValue } from '@/types/global'
-import { listEnterpriseCluster } from '@/api/ops'
+import { build, listEnterpriseCluster } from '@/api/ops'
 import { packageListAll } from '@/api/ops'
 import { PackageType } from '@/types/resource/package'
 import { ClusterRoleEnum, OpenGaussVersionEnum } from '@/types/ops/install'
 import router from '@/router'
 import { Message } from '@arco-design/web-vue'
 import { useI18n } from 'vue-i18n'
+import { number } from '@intlify/core-base'
+import { dataTool } from 'echarts'
 const { t } = useI18n()
 import { useUpgradeStore, upClusterInfo, targetVersion, hostInfo } from '@/store/modules/ops/upgrade'
 const upgradeStore = useUpgradeStore()
@@ -110,7 +117,7 @@ const data = reactive<KeyValue>({
   clusterLoading: false,
   selectedOs: '',
   selectedCpuArch: '',
-  selectedSourceVersion: 0,
+  selectedSourceVersion: [],
   selectedTargetVersion: 0
 })
 const filter = reactive({
@@ -130,19 +137,22 @@ const clusterFormRef = ref()
 const getClusterList = () => {
   data.clusterLoading = true
   listEnterpriseCluster().then((res: KeyValue) => {
-    data.clusterList = res.data
-    data.clusterList.map((cluster: KeyValue) => {
-      // any of server is not remember, the cluster needs to input password
-      const hasNoRemember = cluster.clusterNodes.some((item: KeyValue) => !item.isRemember)
-      cluster.isRemember = !hasNoRemember
-      cluster.vNum = Number(cluster.versionNum.replaceAll('.', ''))
-      cluster.rootPassword = ''
-    })
-    data.oldData = res.data
-    restoreSelectedClusterList()
+    buildClusterData(res)
   }).finally(() => {
     data.clusterLoading = false
   })
+}
+
+const buildClusterData = (res: KeyValue) => {
+  data.clusterList = res.data
+  data.clusterList.map((cluster: KeyValue) => {
+    // any of server is not remember, the cluster needs to input password
+    const hasNoRemember = cluster.clusterNodes.some((item: KeyValue) => !item.isRemember)
+    cluster.isRemember = !hasNoRemember
+    cluster.vNum = Number(cluster.versionNum.replaceAll('.', ''))
+    cluster.rootPassword = ''
+  })
+  data.oldData = res.data
 }
 
 const getUpgradeTargetVersion = () => {
@@ -152,7 +162,14 @@ const getUpgradeTargetVersion = () => {
     packageVersion: OpenGaussVersionEnum.ENTERPRISE
   }
   packageListAll(param).then((res: KeyValue) => {
-    const majorVersionSet = new Set<string>()
+    buildVersionData(res)
+  }).finally(() => {
+    targetSelData.loading = false
+  })
+}
+
+const buildVersionData = (res: KeyValue) => {
+  const majorVersionSet = new Set<string>()
     res.data.map((item: KeyValue) => {
       majorVersionSet.add(item.packageVersionNum)
       const versionNumStr = item.packageVersionNum.replaceAll('.', '')
@@ -178,10 +195,6 @@ const getUpgradeTargetVersion = () => {
       return xKey < yKey ? 1 : -1
     })
     targetSelData.versionList = result
-    restoreSelectedTargetVersion()
-  }).finally(() => {
-    targetSelData.loading = false
-  })
 }
 
 const handleClickCluster = (item: KeyValue) => {
@@ -196,7 +209,11 @@ const handleClickCluster = (item: KeyValue) => {
     const sysInfo = getSysInfo(item.clusterId).split(' ')
     data.selectedOs = sysInfo[0]
     data.selectedCpuArch = sysInfo[1]
-    data.selectedSourceVersion = item.vNum
+    const selectedClusters = data.clusterList.filter((cluster: KeyValue) => cluster.isChecked)
+    const sourceVersion:number[] = []
+    selectedClusters.map((item:KeyValue) => sourceVersion.push(item.vNum))
+    data.selectedSourceVersion = sourceVersion
+    filterCluster()
     filterTargetVersion()
   }
 }
@@ -206,8 +223,11 @@ const filterTargetVersion = () => {
   targetSelData.versionList.map(item => {
     versionInfoList.push(...item.versionInfo)
   })
+  const maxVersion = Math.max.apply(null, data.selectedSourceVersion)
   versionInfoList.map(version => {
-    if ((version.os !== data.selectedOs || version.cpuArch !== data.selectedCpuArch) || version.vNum <= data.selectedSourceVersion) {
+    if ((data.selectedOs && (version.os !== data.selectedOs)) || 
+        (data.selectedCpuArch && (version.cpuArch !== data.selectedCpuArch)) || 
+        (version.vNum && data.selectedSourceVersion.length > 0 && (version.vNum <= maxVersion))) {
       version.disabled = true
       version.isChecked = false
     } else {
@@ -219,9 +239,10 @@ const filterTargetVersion = () => {
 const filterCluster = () => {
   data.clusterList.map((cluster: KeyValue) => {
     const masterNode = cluster.clusterNodes.find((item: KeyValue) => item.clusterRole === ClusterRoleEnum.MASTER)
-    if ((masterNode.hostOs !== data.selectedOs || masterNode.hostCpuArch !== data.selectedCpuArch) 
-        || cluster.vNum >= data.selectedTargetVersion
-        || cluster.clusterState !== ClusterState.normal) {
+    if ((data.selectedOs && (masterNode.hostOs !== data.selectedOs)) || 
+        (data.selectedCpuArch && (masterNode.hostCpuArch !== data.selectedCpuArch)) || 
+        (cluster.vNum && data.selectedTargetVersion && (cluster.vNum >= data.selectedTargetVersion)) ||
+        cluster.clusterState !== ClusterState.normal) {
       cluster.disabled = true
       cluster.isChecked = false
     } else {
@@ -233,6 +254,13 @@ const filterCluster = () => {
 const goToInstall = () => {
   router.push({
     path: '/ops/install'
+  })
+}
+
+const goToPackage = () => {
+  router.push({
+    name: 'PackageManage',
+    params: { backUrl: '/ops/upgrade' }
   })
 }
 
@@ -319,14 +347,18 @@ const saveStore = () => {
 
 const restoreSelectedClusterList = () => {
   if (upgradeStore.getUpClusterList.length > 0) {
+    data.selectedSourceVersion = []
     upgradeStore.getUpClusterList.map((cluster: KeyValue) => {
       const result = data.clusterList.find((item: KeyValue) => item.clusterId === cluster.id)
+      const masterNode = result.clusterNodes.find((item: KeyValue) => item.clusterRole === ClusterRoleEnum.MASTER)
+      result.isChecked = true
+      result.rootPassword = cluster.rootPassword
       if (result) {
-        result.isChecked = true
-        result.rootPassword = cluster.rootPassword
+        data.selectedOs = masterNode.hostOs
+        data.selectedCpuArch = masterNode.hostCpuArch
+        data.selectedSourceVersion.push(result.vNum)
       }
     })
-    filterTargetVersion()
   }
 }
 
@@ -339,8 +371,8 @@ const restoreSelectedTargetVersion = () => {
     const result = versionInfoList.find(item => item.packageId === upgradeStore.getUpTargetVersion.packageId)
     if (result) {
       result.isChecked = true
+      data.selectedTargetVersion = result.vNum
     }
-    filterCluster()
   }
 }
 
@@ -427,8 +459,25 @@ const beforeConfirm = async () => {
 }
 
 onMounted(() => {
-  getClusterList()
-  getUpgradeTargetVersion()
+  data.clusterLoading = true
+  targetSelData.loading = true
+  const param = {
+    type: PackageType.OPENGAUSS,
+    packageVersion: OpenGaussVersionEnum.ENTERPRISE
+  }
+  Promise.all([listEnterpriseCluster(), packageListAll(param)]).then(res => {
+    buildClusterData(res[0])
+    buildVersionData(res[1])
+    restoreSelectedClusterList()
+    restoreSelectedTargetVersion()
+    filterCluster()
+    filterTargetVersion()
+    console.log(data)
+    console.log(targetSelData)
+  }).finally(() => {
+    data.clusterLoading = false
+    targetSelData.loading = false
+  })
 })
 
 defineExpose({ saveStore, beforeConfirm })
@@ -496,7 +545,7 @@ defineExpose({ saveStore, beforeConfirm })
 }
 
 .target-version-c {
-  flex-grow: 0.4;
+  width: 50%;
 
   .target-select {
     height: 60vh;
@@ -514,12 +563,18 @@ defineExpose({ saveStore, beforeConfirm })
   cursor: pointer;
 }
 
-.cluster-select-c {
-  flex-grow: 0.4;
+.icon-size {
+  width: 130px;
+  height: 130px;
+}
 
-  .icon-size {
-    width: 130px;
-    height: 130px;
+.cluster-select-c {
+  width: 50%;
+
+  .select-cluster-top-left {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
   }
 
   .cluster-list-c {

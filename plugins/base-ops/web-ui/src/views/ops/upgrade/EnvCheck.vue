@@ -81,9 +81,32 @@ const data = reactive({
   upVersion: ''
 })
 
-const checkUpgradeOs = () => {
-  data.list.map(cluster => {
-    checkCluster(cluster)
+const checkUpgradeOs = async () => {
+  const method = []
+  for (let index = 0; index < data.list.length; index++) {
+    const cluster = data.list[index];
+    let rootPassword = ''
+    if (cluster.rootPassword) {
+      rootPassword = await encryptPassword(cluster.rootPassword)
+    }
+    const params = {
+      clusterId: cluster.id,
+      rootPassword: rootPassword
+    }
+    method.push(upgradeOsCheck(params))
+    data.list[index].checkLoading = true
+  }
+  loadingFunc.startLoading()
+  Promise.all(method).then((res:KeyValue) => {
+    for (let index = 0; index < data.list.length; index++) {
+      data.list[index].osCheckResult = res[index].data.osInfo
+      data.list[index].diskUsed = res[index].data.diskUsed
+    }
+  }).finally(() => {
+    data.list.map(item => {
+      item.checkLoading = false
+    })
+    loadingFunc.cancelLoading()
   })
 }
 
@@ -149,6 +172,7 @@ defineExpose({ saveStore, beforeConfirm })
 <style lang="less" scoped>
 .env-check-c {
   height: 100%;
+  overflow-y: auto;
 }
 
 .result-area {

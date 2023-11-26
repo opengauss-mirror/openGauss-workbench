@@ -89,7 +89,9 @@ public class InstallPackageManagerController extends BaseController {
 
     @GetMapping("/page")
     public TableDataInfo page(@RequestParam(value = "name", required = false) String name, @RequestParam(value = "packageVersion", required = false) OpenGaussVersionEnum packageVersion) {
-        LambdaQueryWrapper<OpsPackageManagerEntity> queryWrapper = Wrappers.lambdaQuery(OpsPackageManagerEntity.class).eq(Objects.nonNull(packageVersion), OpsPackageManagerEntity::getPackageVersion, packageVersion);
+        LambdaQueryWrapper<OpsPackageManagerEntity> queryWrapper = Wrappers.lambdaQuery(OpsPackageManagerEntity.class)
+                .eq(Objects.nonNull(packageVersion), OpsPackageManagerEntity::getPackageVersion, packageVersion)
+                .orderByDesc(OpsPackageManagerEntity::getUpdateTime);
 
         if (StrUtil.isNotEmpty(name)) {
             queryWrapper.and(orWrapper -> orWrapper

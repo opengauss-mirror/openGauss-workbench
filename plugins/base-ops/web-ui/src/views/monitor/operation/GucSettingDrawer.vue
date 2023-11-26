@@ -66,10 +66,10 @@
                     </div>
                 </template>
                 <template #operation="{ record }">
-                    <a-link status="danger" @click="handleRestoreRowDefaultValue($event, record)">{{
-                        $t('operation.DailyOps.guc5ch3') }}</a-link>
-                    <a-link status="danger" v-if="record.hasChanged" @click="handleRestoreRowOldValue($event, record)">{{
-                        $t('operation.DailyOps.guc5ch4') }}</a-link>
+                    <a-button type="text" class="label-color" @click="handleRestoreRowDefaultValue($event, record)">{{
+                        $t('operation.DailyOps.guc5ch3') }}</a-button>
+                    <a-button type="text" class="label-color" v-if="record.hasChanged" @click="handleRestoreRowOldValue($event, record)">{{
+                        $t('operation.DailyOps.guc5ch4') }}</a-button>
                 </template>
             </a-table>
         </a-spin>

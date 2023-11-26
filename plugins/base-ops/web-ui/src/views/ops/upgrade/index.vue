@@ -108,7 +108,7 @@ provide('loading', {
 .upgrade-container {
   padding: 16px;
   box-sizing: border-box;
-  height: calc(100vh - 130px);
+  height: calc(100vh - 120px);
   position: relative;
 
   .center-c {
