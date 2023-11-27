@@ -341,13 +341,6 @@
                         <div class="value-color mr-s">{{ instance.lock ? instance.lock : '--' }}</div>
                         <div class="label-color">{{ $t('operation.DailyOps.else3') }}</div>
                       </div>
-                      <div
-                        class="flex-row mb"
-                        v-if="clusterData.version === 'ENTERPRISE'"
-                      >
-                        <div class="label-color mr-s">{{ $t('operation.DailyOps.5mplp1xc3no0') }}</div>
-                        <div class="value-color">{{ instance.azName ? instance.azName : '--' }}</div>
-                      </div>
                     </div>
                   </div>
                 </div>
@@ -596,6 +589,7 @@ const openHostWebSocket = (clusterData: KeyValue, nodeData: KeyValue, clusterInd
       if (clusterData.version === 'MINIMAL_LIST' && clusterData.deployType === 'CLUSTER') {
         // if cluster is minimal and cluster, node default is first
         Object.assign(data.clusterList[clusterIndex].clusterNodes[index + 1], data.clusterList[clusterIndex].clusterNodes[index])
+        data.clusterList[clusterIndex].clusterNodes[index + 1].clusterRole = ClusterRoleEnum.SLAVE
       }
     }
   })

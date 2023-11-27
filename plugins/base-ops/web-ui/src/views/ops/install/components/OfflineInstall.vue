@@ -272,7 +272,7 @@ const getInstallOs = (name: string) => {
 }
 
 const handleGoToPkgList = (name: string) => {
-  router.push({ name: 'PackageManage', query: { name: name } })
+  router.push({ name: 'PackageManage', query: { name: name }, params: { backUrl: '/ops/install' } })
 }
 
 const storeData = computed(() => installStore.getInstallConfig)

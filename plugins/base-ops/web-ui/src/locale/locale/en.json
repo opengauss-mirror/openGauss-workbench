@@ -922,7 +922,9 @@
             "else4": "InstallOS",
             "else5": "MasterRootPwd",
             "else6": "One Master",
-            "else7": "slave"
+            "else7": "slave",
+            "5uuo00svx1g1": "upgrade package not found",
+            "5uuo00svx1g2": "upgrade package"
         },
         "EnvCheck": {
             "5uuo4bwfpzg0": "Upgrade to",
@@ -985,7 +987,8 @@
             "5myq5c8zq380": "Operation",
             "5myq5c8zu5w0": "Enterprise",
             "5myq5c8zuxc0": "Lite",
-            "5myq5c8zw680": "Mini"
+            "5myq5c8zw680": "Mini",
+            "5myq5c8zw681": "Back"
         },
         "AddPackageDlg": {
             "else1": "CPU Arch",

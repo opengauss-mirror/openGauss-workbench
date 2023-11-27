@@ -37,7 +37,14 @@
           @clear="isFilter"
           :placeholder="$t('packageManage.index.5myq5c8z8540')"
           search-button
+          class="mr-s"
         />
+        <a-button v-if="route.params.backUrl" @click="handleBackToInstall">
+          <template #icon>
+            <icon-undo />
+          </template>
+          {{ $t('packageManage.index.5myq5c8zw681') }}
+        </a-button>
       </div>
     </div>
     <a-table
@@ -88,6 +95,7 @@ import { packagePage, packageDel } from '@/api/ops' // eslint-disable-line
 import AddPackageDlg from './AddPackageDlg.vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
+import router from '@/router'
 const { t } = useI18n()
 const route = useRoute()
 const filter = reactive({
@@ -223,6 +231,10 @@ const getPackagePath = (value: KeyValue) => {
     return value.name
   }
   return ''
+}
+
+const handleBackToInstall = () => {
+  router.push({ path: route.params.backUrl })
 }
 </script>
 <style lang="less" scoped>

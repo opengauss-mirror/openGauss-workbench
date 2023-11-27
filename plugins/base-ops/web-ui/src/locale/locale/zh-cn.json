@@ -923,7 +923,9 @@
             "else4": "安装系统",
             "else5": "主节点服务器root密码",
             "else6": "一主",
-            "else7": "备"
+            "else7": "备",
+            "5uuo00svx1g1": "未检索到目标版本",
+            "5uuo00svx1g2": "升级包管理"
         },
         "EnvCheck": {
             "5uuo4bwfpzg0": "升级到",
@@ -986,7 +988,8 @@
             "5myq5c8zq380": "操作",
             "5myq5c8zu5w0": "企业版",
             "5myq5c8zuxc0": "极简版",
-            "5myq5c8zw680": "轻量版"
+            "5myq5c8zw680": "轻量版",
+            "5myq5c8zw681": "返回"
         },
         "AddPackageDlg": {
             "else1": "CPU架构",
