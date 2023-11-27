@@ -88,6 +88,10 @@ public class SysProfileController extends BaseController {
     @ApiImplicitParams({
     })
     public AjaxResult updateProfile(@RequestBody SysUser user) {
+        LoginUser loginUser = tokenService.getLoginUser(ServletUtils.getRequest());
+        if (!loginUser.getUser().getUserId().equals(user.getUserId())) {
+            return AjaxResult.error(ResponseCode.UNAUTHORIZED.code());
+        }
         if (StringUtils.isNotEmpty(user.getPhonenumber())
                 && UserConstants.NOT_UNIQUE.equals(userService.checkPhoneUnique(user))) {
             return AjaxResult.error(ResponseCode.USER_PHONE_EXISTS_ERROR.code());
@@ -97,7 +101,6 @@ public class SysProfileController extends BaseController {
             return AjaxResult.error(ResponseCode.USER_EMAIL_EXISTS_ERROR.code());
         }
         if (userService.updateUserProfile(user) > 0) {
-            LoginUser loginUser = tokenService.getLoginUser(ServletUtils.getRequest());
             loginUser.getUser().setNickName(user.getNickName());
             loginUser.getUser().setPhonenumber(user.getPhonenumber());
             loginUser.getUser().setEmail(user.getEmail());
