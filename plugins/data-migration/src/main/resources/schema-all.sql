@@ -70,6 +70,26 @@ START 1
 CACHE 1;
 END IF;
 
+IF NOT EXISTS (SELECT 1 FROM information_schema.sequences WHERE sequence_schema=''public'' AND sequence_name=''sq_tb_migration_third_party_software_config_id'' )
+THEN
+CREATE SEQUENCE "public"."sq_tb_migration_third_party_software_config_id"
+INCREMENT 1
+MINVALUE  1
+MAXVALUE 9223372036854775807
+START 1
+CACHE 1;
+END IF;
+
+IF NOT EXISTS (SELECT 1 FROM information_schema.sequences WHERE sequence_schema=''public'' AND sequence_name=''sq_tb_migration_task_global_tools_param_id'' )
+THEN
+CREATE SEQUENCE "public"."sq_tb_migration_task_global_tools_param_id"
+INCREMENT 1
+MINVALUE  1
+MAXVALUE 9223372036854775807
+START 1
+CACHE 1;
+END IF;
+
 IF NOT EXISTS (SELECT 1 FROM information_schema.sequences WHERE sequence_schema=''public'' AND sequence_name=''sq_tb_task_operate_record_id'' )
 THEN
 CREATE SEQUENCE "public"."sq_tb_task_operate_record_id"
@@ -258,7 +278,6 @@ COMMENT ON COLUMN "public"."tb_migration_task_exec_result_detail"."process_type"
 
 COMMENT ON TABLE "public"."tb_migration_task_exec_result_detail" IS '任务执行结果进度详情';
 
-
 CREATE TABLE IF NOT EXISTS "public"."tb_migration_task_global_param" (
   "id" int8 NOT NULL DEFAULT nextval('sq_tb_task_global_param_id'::regclass),
   "param_key" varchar(255) COLLATE "pg_catalog"."default",
@@ -280,6 +299,42 @@ COMMENT ON COLUMN "public"."tb_migration_task_global_param"."main_task_id" IS '�
 
 COMMENT ON TABLE "public"."tb_migration_task_global_param" IS '任务全局参数配置表';
 
+
+CREATE TABLE IF NOT EXISTS "public"."tb_migration_task_global_tools_param" (
+  "id" int8 NOT NULL DEFAULT nextval('sq_tb_migration_task_global_tools_param_id'::regclass),
+  "param_key" varchar(255) COLLATE "pg_catalog"."default",
+  "param_value" varchar(255) COLLATE "pg_catalog"."default",
+  "param_value_type" int2,
+  "param_change_value" varchar(512) COLLATE "pg_catalog"."default",
+  "config_id" int2,
+  "portal_host_id" varchar(255) COLLATE "pg_catalog"."default",
+  "param_desc" varchar(1024) COLLATE "pg_catalog"."default",
+  "delete_flag" int2,
+  "new_param_flag" int2,
+  CONSTRAINT "tb_task_global_tools_param_pkey" PRIMARY KEY ("id")
+);
+
+COMMENT ON COLUMN "public"."tb_migration_task_global_tools_param"."id" IS '主键ID';
+
+COMMENT ON COLUMN "public"."tb_migration_task_global_tools_param"."param_key" IS '参数key';
+
+COMMENT ON COLUMN "public"."tb_migration_task_global_tools_param"."param_value" IS '参数值';
+
+COMMENT ON COLUMN "public"."tb_migration_task_global_tools_param"."param_value_type" IS '参数类型';
+
+COMMENT ON COLUMN "public"."tb_migration_task_global_tools_param"."param_change_value" IS '参数修改值';
+
+COMMENT ON COLUMN "public"."tb_migration_task_global_tools_param"."config_id" IS '工具ID';
+
+COMMENT ON COLUMN "public"."tb_migration_task_global_tools_param"."portal_host_id" IS 'portal主机id';
+
+COMMENT ON COLUMN "public"."tb_migration_task_global_tools_param"."param_desc" IS '参数描述';
+
+COMMENT ON COLUMN "public"."tb_migration_task_global_tools_param"."delete_flag" IS '是否删除标识 0 未删除 1删除';
+
+COMMENT ON COLUMN "public"."tb_migration_task_global_tools_param"."new_param_flag" IS '是否新增参数 0 不是新增参数 1是新增参数';
+
+COMMENT ON TABLE "public"."tb_migration_task_global_tools_param" IS '工具全局参数配置表';
 
 CREATE TABLE IF NOT EXISTS "public"."tb_migration_task_host_ref" (
   "id" int8 NOT NULL DEFAULT nextval('sq_tb_task_run_host_id'::regclass),
@@ -332,7 +387,6 @@ COMMENT ON COLUMN "public"."tb_migration_task_model"."migration_operations" IS '
 
 COMMENT ON TABLE "public"."tb_migration_task_model" IS '迁移模式表';
 
-
 CREATE TABLE IF NOT EXISTS "public"."tb_migration_task_param" (
   "id" int8 NOT NULL DEFAULT nextval('sq_tb_task_param_id'::regclass),
   "main_task_id" int8,
@@ -359,6 +413,43 @@ COMMENT ON COLUMN "public"."tb_migration_task_param"."param_desc" IS '参数说�
 COMMENT ON COLUMN "public"."tb_migration_task_param"."param_type" IS '参数类型；1：全局；2：个性化';
 
 COMMENT ON TABLE "public"."tb_migration_task_param" IS '任务参数配置表';
+
+
+CREATE TABLE IF NOT EXISTS "public"."tb_migration_third_party_software_config" (
+  "id" int8 NOT NULL DEFAULT nextval('sq_tb_migration_third_party_software_config_id'::regclass),
+  "zk_port" varchar(50) COLLATE "pg_catalog"."default",
+  "kafka_port" varchar(50) COLLATE "pg_catalog"."default",
+  "schema_registry_port" varchar(50) COLLATE "pg_catalog"."default",
+  "zk_ip" varchar(255) COLLATE "pg_catalog"."default",
+  "kafka_ip" varchar(255) COLLATE "pg_catalog"."default",
+  "schema_registry_ip" varchar(255) COLLATE "pg_catalog"."default",
+  "install_dir" varchar(255) COLLATE "pg_catalog"."default",
+  "bind_portal_host" varchar(512) COLLATE "pg_catalog"."default",
+  "host" varchar(512) COLLATE "pg_catalog"."default",
+  CONSTRAINT "tb_migration_third_party_software_pkey" PRIMARY KEY ("id")
+);
+
+COMMENT ON COLUMN "public"."tb_migration_third_party_software_config"."id" IS '主键ID';
+
+COMMENT ON COLUMN "public"."tb_migration_third_party_software_config"."zk_port" IS 'zk端口';
+
+COMMENT ON COLUMN "public"."tb_migration_third_party_software_config"."kafka_port" IS 'kafka端口';
+
+COMMENT ON COLUMN "public"."tb_migration_third_party_software_config"."schema_registry_port" IS 'schema registry 端口';
+
+COMMENT ON COLUMN "public"."tb_migration_third_party_software_config"."zk_ip" IS 'zk ip地址';
+
+COMMENT ON COLUMN "public"."tb_migration_third_party_software_config"."kafka_ip" IS 'kafka ip地址';
+
+COMMENT ON COLUMN "public"."tb_migration_third_party_software_config"."schema_registry_ip" IS 'schema registry ip';
+
+COMMENT ON COLUMN "public"."tb_migration_third_party_software_config"."install_dir" IS 'kafka 安装目录';
+
+COMMENT ON COLUMN "public"."tb_migration_third_party_software_config"."bind_portal_host" IS '绑定的portal实例id';
+
+COMMENT ON COLUMN "public"."tb_migration_third_party_software_config"."host" IS '安装的主机地址';
+
+COMMENT ON TABLE "public"."tb_migration_third_party_software_config" IS 'kafka实例配置表';
 
 
 

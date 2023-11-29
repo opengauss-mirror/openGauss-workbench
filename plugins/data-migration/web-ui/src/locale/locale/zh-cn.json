@@ -216,7 +216,23 @@
             "5q0aajl77lg12": "确定删除此文件？一旦删除将无法恢复",
             "5q0aajl77lg13": "请上传迁移套件安装包",
             "5q0aajl77lg14": "安装类型",
-            "5q0aajl77lg15": "导入安装"
+            "5q0aajl77lg15": "导入安装",
+            "5q0aajl77lg16": "zookeeper 端口",
+            "5q0aajl77lg17": "kafka 端口",
+            "5q0aajl77lg18": "2181",
+            "5q0aajl77lg19": "9092",
+            "5q0aajl77lg20": "第三方工具配置方式",
+            "5q0aajl77lg21": "绑定已有",
+            "5q0aajl77lg22": "本机安装",
+            "5q0aajl77lg23": "请选择要绑定的第三方工具",
+            "5q0aajl77lg24": "绑定的第三方工具不能为空",
+            "5q0aajl77lg25": "请选择要绑定的第三方工具实例",
+            "5q0aajl77lg26": "第三方工具实例名称",
+            "5q0aajl77lg27": "第三方工具安装目录",
+            "5q0aajl77lg28": "请输入第三方工具实例名称",
+            "5q0aajl77lg29": "请输入第三方工具安装目录",
+            "5q0aajl77lg30": "schema_registry 端口",
+            "5q0aajl77lg31": "8081"
         },
         "ParamsConfig": {
             "5q0aazspots0": "默认参数配置（全局配置）",
@@ -241,6 +257,36 @@
             "5q0aazspqfs5": "必须输入两个数字，并且以,分割",
             "5q0aazspqfs6": "offset(前一个数字)必须大于{min}小于{max}",
             "5q0aazspqfs7": "count(后一个数字)必须大于{min}小于{max}"
+        },
+        "ToolsParamsConfig": {
+            "5q0toolspar0": "迁移工具参数配置",
+            "5q0toolspar1": "全量迁移工具参数配置（config.yml）",
+            "5q0toolspar2": "数据校验工具参数配置（application.yml）",
+            "5q0toolspar3": "数据校验工具sink端参数配置（application-sink.yml）",
+            "5q0toolspar4": "数据校验工具source端参数配置（application-source.yml）",
+            "5q0toolspar5": "正向迁移工具sink端参数配置（mysql-sink.properties）",
+            "5q0toolspar6": "正向迁移工具source端参数配置（mysql-source.properties）",
+            "5q0toolspar7": "反向迁移工具sink端参数配置（opengauss-sink.properties）",
+            "5q0toolspar8": "反向迁移工具source端参数配置（opengauss-source.properties）",
+            "5q0toolspar9": "portal统一参数配置",
+            "5q0toolspa10": "保存",
+            "5q0toolspa11": "默认值",
+            "5q0toolspa12": "新增参数",
+            "5q0toolspa13": "取消",
+            "5q0toolspa14": "确定",
+            "5q0toolspa15": "参数名称",
+            "5q0toolspa16": "参数值",
+            "5q0toolspa17": "参数类型",
+            "5q0toolspa18": "参数描述",
+            "5q0toolspa19": "新增配置",
+            "5q0toolspa20": "删除配置",
+            "5q0toolspa21": "字符串",
+            "5q0toolspa24": "列表(参数值为逗号隔开的字符串 例如: text,text2,text3)",
+            "5q0toolspa23": "数字",
+            "5q0toolspa22": "布尔(true false)",
+            "5q0toolspa25": "请选择",
+            "5q0toolspa26": "已修改参数配置 ",
+            "5q0toolspa27": " 条"
         }
     },
     "task": {
@@ -286,7 +332,7 @@
     "step2": {
         "index": {
             "5q092waasqk0": "提示：每个迁移过程都需要有参数配置，DataKit已经为每一个迁移过程（即子任务）配置了默认参数。您也可以在下表中修改某个迁移过程（即子任务）的参数配置，来确保迁移过程顺利执行。",
-            "5q092waatio0": "默认参数配置(全局配置)",
+            "5q092waatio0": "默认任务参数配置(全局配置)",
             "5q092waatnk0": "请输入源IP/端口/库名",
             "5q092waatqo0": "请输入目的IP/端口/库名",
             "5q092waau3o0": "请选择迁移模式",
@@ -303,7 +349,7 @@
             "5q092waawk00": "目的库名",
             "5q092wab7280": "迁移过程模式",
             "5q092wab7fo0": "操作",
-            "5q092wab7k80": "编辑配置参数"
+            "5q092wab7k80": "编辑任务配置参数"
         }
     },
     "step3": {
@@ -438,6 +484,26 @@
             "5qofqisf3jc0": "ssl未找到",
             "5qofqisf68w0": "wal_level未找到",
             "5qtkk99a2eo0": "该目标数据源不支持反向迁移，请选择导入或者在平台上安装的数据源"
+        }
+        
+    },
+    "third": {
+        "index": {
+            "5q08thptsw80": "第三方软件名称",
+            "5q08thptsw81": "ip地址",
+            "5q08thptsw82": "zookeeper ip地址",
+            "5q08thptsw83": "schema registry ip地址",
+            "5q08thptsw84": "kafka 端口",
+            "5q08thptsw85": "zookeeper 端口",
+            "5q08thptsw86": "schema registry 端口",
+            "5q08thptsw87": "关联使用的portal主机",
+            "5q08thptsw88": "请输入ip地址",
+            "5q08thptsw89": "安装路径",
+            "5q08thptsw90": "查询",
+            "5q08thptsw91": "重置",
+            "5q08thptsw92": "安装主机",
+            "5q08thptsw93": "刷新",
+            "5q08thptsw94": "批量删除"
         }
     }
 }

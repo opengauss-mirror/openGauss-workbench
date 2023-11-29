@@ -60,6 +60,9 @@ public class DataMigrationPluginListener implements ApplicationListener<Applicat
                 String pluginId = "data-migration";
                 MenuVo parentMenu = menuFacade.savePluginMenu(pluginId, "数据迁移", "data migration tool", 8, "migration");
                 menuFacade.savePluginMenu(pluginId,"迁移任务中心","task center",1, "index",parentMenu.getMenuId());
+                menuFacade.savePluginMenu(pluginId, "消息队列配置中心",
+                        "Message Queue Software config center", 2, "thirdPartySoftwareConfig",
+                        parentMenu.getMenuId());
                 menuFacade.savePluginRoute(pluginId, "创建迁移任务", "taskConfig", parentMenu.getMenuId());
                 menuFacade.savePluginRoute(pluginId, "任务详情", "taskDetail", parentMenu.getMenuId());
             }

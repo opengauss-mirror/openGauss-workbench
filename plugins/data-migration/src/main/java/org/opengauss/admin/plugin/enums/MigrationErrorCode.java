@@ -46,7 +46,10 @@ public enum MigrationErrorCode {
 
     PORTAL_DELETE_ERROR(50122, "cannot delete portal while task is running on it"),
     PORTAL_CREATE_INSTALL_PATH_FAILED(50123, "create portal installPath failed: permission denied"),
-    STOP_KAFKA_ERROR(50124, "stop kafka failed: ");
+    STOP_KAFKA_ERROR(50124, "stop kafka failed: "),
+    PORTAL_DELETE_ERROR_FOR_KAFKA_USED(50125, "cannot delete portal while this kafka is be used"),
+
+    TOOLS_PARAMS_CAN_NOT_DELETE_ERROR(50126, "this param can not delete, only new add param can delete");
 
     private final Integer code;
     private final String msg;

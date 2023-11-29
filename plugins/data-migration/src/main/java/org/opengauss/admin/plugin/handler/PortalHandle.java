@@ -25,14 +25,19 @@
 package org.opengauss.admin.plugin.handler;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.opengauss.admin.common.core.domain.model.ops.JschResult;
 import org.opengauss.admin.plugin.domain.MigrationHostPortalInstall;
 import org.opengauss.admin.plugin.domain.MigrationTask;
+import org.opengauss.admin.plugin.domain.MigrationThirdPartySoftwareConfig;
+import org.opengauss.admin.plugin.enums.ToolsConfigEnum;
 import org.opengauss.admin.plugin.exception.PortalInstallException;
 import org.opengauss.admin.plugin.utils.ShellUtil;
 
+import java.io.IOException;
+import java.io.StringReader;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -57,23 +62,29 @@ public class PortalHandle {
     }
 
     /**
-     * check Portal installed or not installed,update install status
+     * checkInstallStatusAndUpdate
      *
-     * @param installParams install parameter
-     * @return boolean installed or not installed
+     * @param installParams installParams
+     * @param runPassword   runPassword
+     * @return boolean
+     * @author: www
+     * @date: 2023/11/28 15:21
+     * @description: msg
+     * @since: 1.1
+     * @version: 1.1
      */
     public static boolean checkInstallStatusAndUpdate(MigrationHostPortalInstall installParams, String runPassword) {
         String portalHome = installParams.getInstallPath() + "portal/";
         JschResult existsPortalInstallFileResult = ShellUtil.execCommandGetResult(installParams.getHost(),
-            installParams.getPort(), installParams.getRunUser(), runPassword,
-            "[ -f " + portalHome + installParams.getJarName() + " ] && echo 1 || echo 0");
+                installParams.getPort(), installParams.getRunUser(), runPassword,
+                "[ -f " + portalHome + installParams.getJarName() + " ] && echo 1 || echo 0");
         if (existsPortalInstallFileResult.isOk()
                 && Integer.parseInt(existsPortalInstallFileResult.getResult().trim()) == 0) {
             // The installation package does not exist. Provide a prompt and write it to the log
             String cmd = String.format("mkdir -p %s && echo '%s' >> %s", installParams.getInstallPath(),
-                installParams.getJarName() + " is not exist.", installParams.getDatakitLogPath());
+                    installParams.getJarName() + " is not exist.", installParams.getDatakitLogPath());
             JschResult result = ShellUtil.execCommandGetResult(installParams.getHost(), installParams.getPort(),
-                installParams.getRunUser(), runPassword, cmd);
+                    installParams.getRunUser(), runPassword, cmd);
             if (!result.isOk()) {
                 log.error("write install error message failed: " + result.getResult());
             }
@@ -81,12 +92,12 @@ public class PortalHandle {
         }
         // Execute the portal check, determine whether the installation was successful based on the return value
         String checkInstallCommand = "java -Dpath=" + portalHome
-            + " -Dorder=check_portal_status -Dskip=true -jar " + portalHome + installParams.getJarName();
+                + " -Dorder=check_portal_status -Dskip=true -jar " + portalHome + installParams.getJarName();
         initPortalConfig(installParams.getHost(), installParams.getPort(), installParams.getRunUser(),
-            runPassword, portalHome);
+                runPassword, portalHome);
         log.info("portal install, command: {}", checkInstallCommand);
         JschResult installToolResult = ShellUtil.execCommandGetResult(installParams.getHost(), installParams.getPort(),
-            installParams.getRunUser(), runPassword, checkInstallCommand);
+                installParams.getRunUser(), runPassword, checkInstallCommand);
         if (!installToolResult.isOk()) {
             log.error("portal exec checkInstall command failed.");
         }
@@ -105,6 +116,7 @@ public class PortalHandle {
             JschResult wgetResult = ShellUtil.execCommandGetResult(installParams.getHost(), installParams.getPort(),
                     installParams.getRunUser(), installParams.getRunPassword(), downloadCommand);
             if (!wgetResult.isOk()) {
+                log.error("download pkg failed...");
                 throw new PortalInstallException("download portal package failed: " + wgetResult.getResult());
             }
         }
@@ -117,7 +129,10 @@ public class PortalHandle {
         }
 
         String portalHome = installParams.getInstallPath() + "portal/";
-        String installCommand = "java -Dpath=" + portalHome + " -Dorder=install_mysql_all_migration_tools -Dskip=true -jar " + portalHome + installParams.getJarName();
+        String thirdPartySoftwareParams =
+                buildPortalThirdPartySoftwareParams(installParams.getThirdPartySoftwareConfig());
+        String installCommand = "java -Dpath=" + portalHome + thirdPartySoftwareParams + " -Dorder"
+                + "=install_mysql_all_migration_tools -Dskip=true -jar " + portalHome + installParams.getJarName();
         initPortalConfig(installParams.getHost(), installParams.getPort(), installParams.getRunUser(), installParams.getRunPassword(), portalHome);
         log.info("portal install, command: {}", installCommand);
         JschResult installToolResult = ShellUtil.execCommandGetResult(installParams.getHost(), installParams.getPort(), installParams.getRunUser(), installParams.getRunPassword(), installCommand);
@@ -134,10 +149,68 @@ public class PortalHandle {
         return false;
     }
 
+    private static String buildPortalThirdPartySoftwareParams(
+            MigrationThirdPartySoftwareConfig thirdPartySoftwareConfig) {
+        if (thirdPartySoftwareConfig == null) {
+            return "";
+        }
+        return " -D"
+                + "zookeeperPort=" + thirdPartySoftwareConfig.getZookeeperPort()
+                + " -D"
+                + "kafkaPort=" + thirdPartySoftwareConfig.getKafkaPort()
+                + " -D"
+                + "schemaRegistryPort=" + thirdPartySoftwareConfig.getSchemaRegistryPort()
+                + " -D"
+                + "zkIp=" + thirdPartySoftwareConfig.getZkIp()
+                + " -D"
+                + "kafkaIp=" + thirdPartySoftwareConfig.getKafkaIp()
+                + " -D"
+                + "schemaRegistryIp=" + thirdPartySoftwareConfig.getSchemaRegistryIp()
+                + " -D"
+                + "thirdPartySoftwareConfigType=" + thirdPartySoftwareConfig.getThirdPartySoftwareConfigType()
+                + " -D"
+                + "installDir=" + thirdPartySoftwareConfig.getInstallDir();
+    }
+
     public static void initPortalConfig(String host, Integer port, String user, String pass, String portalHome) {
         String command = "sed -i 's#/ops/portal/#" + portalHome + "#g' " + portalHome + "config/toolspath.properties";
         log.info("init config , command: {}", command);
         ShellUtil.execCommand(host, port, user, pass, command);
+    }
+
+    /**
+     * 加载工具配置文件
+     *
+     * @author: www
+     * @date: 2023/11/28 10:54
+     * @description: msg
+     * @since: 1.1
+     * @version: 1.1
+     * @param installParams installParams
+     * @return Map<Map<Object>>
+     */
+    public static Map<Integer, Map<String, Object>> loadToolsConfig(MigrationHostPortalInstall installParams)
+            throws PortalInstallException {
+        String portalHome = installParams.getInstallPath() + "portal/";
+        String loadToolsConfigCommand =
+                "java -Dpath=" + portalHome + " -Dorder=load_tools_config -Dskip=true -jar "
+                        + portalHome + installParams.getJarName();
+        JschResult loadToolsConfigRes = ShellUtil.execCommandGetResult(installParams.getHost(),
+                installParams.getPort(), installParams.getRunUser(), installParams.getRunPassword(),
+                loadToolsConfigCommand);
+        if (!loadToolsConfigRes.isOk()) {
+            throw new PortalInstallException("load tools config failed: " + loadToolsConfigRes.getResult());
+        }
+        Map<Integer, Map<String, Object>> toolsConfig = new HashMap<>();
+        String result = loadToolsConfigRes.getResult();
+        for (ToolsConfigEnum configEnum : ToolsConfigEnum.values()) {
+            String toolConfig =
+                    result.substring(result.indexOf(configEnum.getStartFromLog())
+                            + configEnum.getStartFromLog().length(), result.indexOf(configEnum.getEndStrFromLog()));
+            Map configMap = JSONObject.parseObject(toolConfig, Map.class);
+            toolsConfig.put(configEnum.getType(), configMap);
+        }
+        return toolsConfig;
     }
 
     /**
@@ -341,5 +414,41 @@ public class PortalHandle {
             String lastSslValue = allSslValues.get(allSslValues.size() - 1);
             return lastSslValue;
         }
+    }
+
+    /**
+     * 获取portal toolsParamsDesc.properties文件配置信息
+     *
+     * @author: www
+     * @date: 2023/11/28 10:38
+     * @description: msg
+     * @since: 1.1
+     * @version: 1.1
+     * @param host  host
+     * @param port port
+     * @param user user
+     * @param pass pass
+     * @param installPath installPath
+     * @return Optional<Properties>
+     */
+    public static Optional<Properties> loadToolsParamsDesc(String host, Integer port, String user, String pass,
+                                                           String installPath) {
+        JschResult result = ShellUtil.execCommandGetResult(host, port, user, pass, "cat "
+                + installPath + "portal"
+                + "/config/toolsParamsDesc.properties");
+        if (result.isOk()) {
+            String paramDesc = result.getResult();
+            if (paramDesc == null) {
+                log.error("can not get param desc...");
+            }
+            Properties pps = new Properties();
+            try {
+                pps.load(new StringReader(paramDesc));
+            } catch (IOException e) {
+                log.error("load params exception :", e);
+            }
+            return Optional.of(pps);
+        }
+        return Optional.empty();
     }
 }

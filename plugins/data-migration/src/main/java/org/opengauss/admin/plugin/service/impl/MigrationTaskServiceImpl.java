@@ -1,26 +1,15 @@
 /*
- * Copyright (c) 2022 Huawei Technologies Co.,Ltd.
+ * Copyright (c) 2022-2022 Huawei Technologies Co.,Ltd.
  *
  * openGauss is licensed under Mulan PSL v2.
  * You can use this software according to the terms and conditions of the Mulan PSL v2.
  * You may obtain a copy of Mulan PSL v2 at:
  *
- * http://license.coscl.org.cn/MulanPSL2
- *
  * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
  * EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
- * MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ * MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
  * See the Mulan PSL v2 for more details.
- * -------------------------------------------------------------------------
- *
- * MigrationTaskServiceImpl.java
- *
- * IDENTIFICATION
- * data-migration/src/main/java/org/opengauss/admin/plugin/service/impl/MigrationTaskServiceImpl.java
- *
- * -------------------------------------------------------------------------
  */
-
 
 package org.opengauss.admin.plugin.service.impl;
 
@@ -39,6 +28,7 @@ import org.opengauss.admin.plugin.enums.MigrationMode;
 import org.opengauss.admin.plugin.enums.ProcessType;
 import org.opengauss.admin.plugin.enums.TaskOperate;
 import org.opengauss.admin.plugin.enums.TaskStatus;
+import org.opengauss.admin.plugin.enums.ToolsConfigEnum;
 import org.opengauss.admin.plugin.handler.PortalHandle;
 import org.opengauss.admin.plugin.mapper.MigrationTaskMapper;
 import org.opengauss.admin.plugin.service.*;
@@ -55,6 +45,8 @@ import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import static org.opengauss.admin.plugin.constants.ToolsParamsLog.NEW_PARAM_PREFIX;
+
 /**
  * @author xielibo
  * @date 2023/01/14 09:01
@@ -62,7 +54,6 @@ import java.util.stream.Collectors;
 @Service
 @Slf4j
 public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, MigrationTask> implements MigrationTaskService {
-
     /**
      * special chars
      */
@@ -106,6 +97,9 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
     private ThreadPoolTaskExecutor threadPoolTaskExecutor;
     @Autowired
     private MigrationHostPortalInstallHostService migrationHostPortalInstallHostService;
+
+    @Autowired
+    private TbMigrationTaskGlobalToolsParamService toolsParamService;
 
     /**
      * Query the sub task page list by mainTaskId
@@ -464,6 +458,7 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
         LoginUser loginUser = SecurityUtils.getLoginUser();
         MigrationHostPortalInstall installHost = migrationHostPortalInstallHostService.getOneByHostId(h.getRunHostId());
         installHost.setRunPassword(encryptionUtils.decrypt(installHost.getRunPassword()));
+        t.setRunHostId(h.getRunHostId());
         PortalHandle.startPortal(installHost, t, installHost.getJarName(), getTaskParam(globalParams, t));
         MigrationTask update = MigrationTask.builder().id(t.getId()).runHostId(h.getRunHostId()).runHost(h.getHost()).runHostname(h.getHostName())
                 .runPort(h.getPort()).runUser(h.getUser()).runPass(h.getPassword()).execStatus(TaskStatus.FULL_START.getCode()).execTime(new Date()).build();
@@ -544,7 +539,101 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
         if (globalParamMap.keySet().size() > 0) {
             resultMap.putAll(globalParamMap);
         }
+        setToolsParams(task, resultMap);
         return resultMap;
+    }
+
+    /**
+     * 组装从页面传入的参数 修改的参数 configId.typeId.parma=parmaValue 删除的参数 删除的配置文件名称=删除的key，删除的key 新增的参数
+     *
+     * @author: www
+     * @date: 2023/11/27 11:36
+     * @description: msg
+     * @since: 1.1
+     * @version: 1.1
+     * @param task task
+     * @param resultMap result
+     */
+    private void setToolsParams(MigrationTask task, Map<String, String> resultMap) {
+        HashMap<String, String> toolsParamsMap = new HashMap<>();
+        setModParam(task, toolsParamsMap);
+        // 删除的参数
+        setDeleteParam(toolsParamsMap);
+        // 新增的参数
+        setNewAddParam(toolsParamsMap);
+        if (!toolsParamsMap.isEmpty()) {
+            resultMap.putAll(toolsParamsMap);
+        }
+    }
+
+    private void setModParam(MigrationTask task, HashMap<String, String> toolsParamsMap) {
+        // 修改的参数
+        LambdaQueryWrapper<TbMigrationTaskGlobalToolsParam> toolsParamQueryWrapper = new LambdaQueryWrapper<>();
+        toolsParamQueryWrapper.isNotNull(TbMigrationTaskGlobalToolsParam::getParamChangeValue);
+        toolsParamQueryWrapper.eq(TbMigrationTaskGlobalToolsParam::getPortalHostID, task.getRunHostId());
+        toolsParamQueryWrapper.eq(TbMigrationTaskGlobalToolsParam::getDeleteFlag,
+                TbMigrationTaskGlobalToolsParam.DeleteFlagEnum.USED.getDeleteFlag());
+        List<TbMigrationTaskGlobalToolsParam> toolsParams = toolsParamService.list(toolsParamQueryWrapper);
+
+        toolsParams.forEach(toolsParam -> {
+            if (toolsParam.getConfigId().equals(ToolsConfigEnum.PORTAL_MIGRATION.getType())) {
+                toolsParamsMap.put(toolsParam.getParamKey(),
+                        toolsParam.getParamChangeValue().replaceAll(" ", "&&&"));
+            } else {
+                toolsParamsMap.put(toolsParam.getConfigId() + "." + toolsParam.getParamValueType() + "."
+                        + toolsParam.getParamKey(),
+                        toolsParam.getParamChangeValue().replaceAll(" ", "&&&"));
+            }
+        });
+    }
+
+    private void setNewAddParam(HashMap<String, String> toolsParamsMap) {
+        LambdaQueryWrapper<TbMigrationTaskGlobalToolsParam> toolsParamQueryWrapper = new LambdaQueryWrapper<>();
+        toolsParamQueryWrapper.clear();
+        toolsParamQueryWrapper.eq(TbMigrationTaskGlobalToolsParam::getNewParamFlag,
+                        TbMigrationTaskGlobalToolsParam.NewParamFlagEnum.NEW_PARAM.getNewParamFlag())
+                .eq(TbMigrationTaskGlobalToolsParam::getDeleteFlag,
+                        TbMigrationTaskGlobalToolsParam.DeleteFlagEnum.USED.getDeleteFlag());
+        List<TbMigrationTaskGlobalToolsParam> newParam = toolsParamService.list(toolsParamQueryWrapper);
+        newParam.forEach(toolsParam -> {
+            if (toolsParam.getParamChangeValue() != null) {
+                return;
+            }
+            toolsParamsMap.put(NEW_PARAM_PREFIX + toolsParam.getConfigId() + "." + toolsParam.getParamValueType()
+                            + "." + toolsParam.getParamKey(),
+                    toolsParam.getParamValue().replace(" ", "&&&"));
+        });
+    }
+
+    private void setDeleteParam(HashMap<String, String> toolsParamsMap) {
+        LambdaQueryWrapper<TbMigrationTaskGlobalToolsParam> toolsParamQueryWrapper = new LambdaQueryWrapper<>();
+        toolsParamQueryWrapper.eq(TbMigrationTaskGlobalToolsParam::getDeleteFlag,
+                TbMigrationTaskGlobalToolsParam.DeleteFlagEnum.DELETE.getDeleteFlag());
+        List<TbMigrationTaskGlobalToolsParam> deleteParams = toolsParamService.list(toolsParamQueryWrapper);
+        if (Objects.nonNull(deleteParams)) {
+            setDeleteToolsParams(deleteParams, ToolsConfigEnum.CHAMELEON_CONFIG, toolsParamsMap);
+            setDeleteToolsParams(deleteParams, ToolsConfigEnum.DATA_CHECK_APPLICATION, toolsParamsMap);
+            setDeleteToolsParams(deleteParams, ToolsConfigEnum.DATA_CHECK_APPLICATION_SINK, toolsParamsMap);
+            setDeleteToolsParams(deleteParams, ToolsConfigEnum.DATA_CHECK_APPLICATION_SOURCE, toolsParamsMap);
+            setDeleteToolsParams(deleteParams, ToolsConfigEnum.DEBEZIUM_MYSQL_SINK, toolsParamsMap);
+            setDeleteToolsParams(deleteParams, ToolsConfigEnum.DEBEZIUM_MYSQL_SOURCE, toolsParamsMap);
+            setDeleteToolsParams(deleteParams, ToolsConfigEnum.DEBEZIUM_OPENGAUSS_SINK, toolsParamsMap);
+            setDeleteToolsParams(deleteParams, ToolsConfigEnum.DEBEZIUM_OPENGAUSS_SOURCE, toolsParamsMap);
+            setDeleteToolsParams(deleteParams, ToolsConfigEnum.PORTAL_MIGRATION, toolsParamsMap);
+        }
+    }
+
+    private void setDeleteToolsParams(List<TbMigrationTaskGlobalToolsParam> deleteParams,
+                                      ToolsConfigEnum toolsConfigEnum, HashMap<String, String> toolsParamsMap) {
+        List<String> deleteKeys = deleteParams.stream().filter(globalToolsParam ->
+                        globalToolsParam.getConfigId().equals(toolsConfigEnum.getType()))
+                .map(TbMigrationTaskGlobalToolsParam::getParamKey).collect(Collectors.toList());
+        if (deleteKeys.isEmpty()) {
+            log.info("{} delete keys is empty", toolsConfigEnum.getConfigName());
+            return;
+        }
+        String deleteKeysStr = String.join(",", deleteKeys);
+        toolsParamsMap.put(toolsConfigEnum.getConfigName(), deleteKeysStr.replaceAll(" ", "_"));
     }
 
     /**

@@ -29,6 +29,15 @@ const routes = [
       title: '迁移任务详情',
       keepAlive: false
     }
+  },
+  {
+    path: '/thirdPartySoftwareConfig',
+    name: 'ThirdPartySoftwareConfig',
+    component: () => import('@/views/third/index'),
+    meta: {
+      title: '第三方软件配置中心',
+      keepAlive: false
+    }
   }
 ]
 

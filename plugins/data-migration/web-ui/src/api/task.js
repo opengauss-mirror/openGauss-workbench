@@ -72,3 +72,22 @@ export function listHostUserByHostIds (hostIds) {
   return axios.get('/plugins/data-migration/resource/listAllHostUser', { params: { hostIds: hostIds }})
 }
 
+export function listKafkaInstance (data) {
+  return axios.post('/plugins/data-migration/MQConfig/list', data)
+}
+
+export function listToolsParams (hostId) {
+  return axios.get(`/plugins/data-migration/toolsParam/list/${hostId}`)
+}
+
+export function modToolsParams (globalToolsParams) {
+  return axios.post('/plugins/data-migration/toolsParam/modify', globalToolsParams)
+}
+
+export function removeToolsParams (toolsParmaId) {
+  return axios.get(`/plugins/data-migration/toolsParam/delete/${toolsParmaId}`)
+}
+
+export function saveToolsParams (globalToolsParam) {
+  return axios.post('/plugins/data-migration/toolsParam/save', globalToolsParam)
+}
