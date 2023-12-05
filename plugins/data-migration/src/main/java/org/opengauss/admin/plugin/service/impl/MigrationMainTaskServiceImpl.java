@@ -26,6 +26,7 @@ package org.opengauss.admin.plugin.service.impl;
 
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.map.MapUtil;
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -41,6 +42,7 @@ import org.opengauss.admin.plugin.dto.MigrationMainTaskDto;
 import org.opengauss.admin.plugin.dto.MigrationTaskDto;
 import org.opengauss.admin.plugin.enums.MainTaskStatus;
 import org.opengauss.admin.plugin.enums.MigrationErrorCode;
+import org.opengauss.admin.plugin.enums.ProcessType;
 import org.opengauss.admin.plugin.enums.TaskOperate;
 import org.opengauss.admin.plugin.enums.TaskStatus;
 import org.opengauss.admin.plugin.handler.PortalHandle;
@@ -171,21 +173,21 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
             };
         }
         long runningCount = tasks.stream().filter(runningFilter).count();
-        Predicate<MigrationTask> finishFilter = t -> {
-            return t.getExecStatus().equals(TaskStatus.MIGRATION_FINISH.getCode());
-        };
+        Predicate<MigrationTask> finishFilter = t -> t.getExecStatus().equals(TaskStatus.MIGRATION_FINISH.getCode());
         if (modelId.equals(1)) {
-            finishFilter = t -> {
-                return t.getExecStatus().equals(TaskStatus.MIGRATION_FINISH.getCode()) ||
-                        t.getExecStatus().equals(TaskStatus.FULL_CHECK_FINISH.getCode());
-            };
+            finishFilter = t -> t.getExecStatus().equals(TaskStatus.MIGRATION_FINISH.getCode()) ||
+                    t.getExecStatus().equals(TaskStatus.FULL_CHECK_FINISH.getCode());
         }
         long finishCount = tasks.stream().filter(finishFilter).count();
-        long errorCount = tasks.stream().filter(t -> t.getExecStatus().equals(TaskStatus.MIGRATION_ERROR.getCode())).count();
+        long errorCount = tasks.stream().filter(t -> t.getExecStatus().equals(TaskStatus.MIGRATION_ERROR.getCode()))
+            .count();
+        long checkErrorCount = tasks.stream().filter(t -> t.getExecStatus().equals(TaskStatus.CHECK_ERROR.getCode()))
+            .count();
         countMap.put("notRunCount", Math.toIntExact(notRunCount));
         countMap.put("runningCount", Math.toIntExact(runningCount));
         countMap.put("finishCount", Math.toIntExact(finishCount));
         countMap.put("errorCount", Math.toIntExact(errorCount));
+        countMap.put("checkErrorCount", Math.toIntExact(checkErrorCount));
         return countMap;
     }
 
@@ -291,9 +293,8 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
             return AjaxResult.error(MigrationErrorCode.MAIN_TASK_IS_RUNNING_ERROR.getCode(), MigrationErrorCode.MAIN_TASK_IS_RUNNING_ERROR.getMsg());
         }
 
-        MigrationMainTask update = new MigrationMainTask();
+        MigrationMainTask update = getById(taskDto.getTaskId());
         update.setTaskName(taskDto.getTaskName());
-        update.setId(taskDto.getTaskId());
         updateById(update);
 
         migrationTaskParamService.deleteByMainTaskId(taskDto.getTaskId());
@@ -347,8 +348,7 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
 
     @Override
     public void updateStatus(Integer id, MainTaskStatus taskStatus) {
-        MigrationMainTask task = new MigrationMainTask();
-        task.setId(id);
+        MigrationMainTask task = getById(id);
         task.setExecStatus(taskStatus.getCode());
         if (taskStatus.getCode().equals(MainTaskStatus.RUNNING.getCode())) {
             task.setExecTime(new Date());
@@ -385,10 +385,10 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
         if (mainTask.getExecStatus().equals(MainTaskStatus.RUNNING.getCode()) || mainTask.getExecStatus().equals(MainTaskStatus.FINISH.getCode())) {
             return AjaxResult.error(MigrationErrorCode.MAIN_TASK_IS_RUNNING_ERROR.getCode(), MigrationErrorCode.MAIN_TASK_IS_RUNNING_ERROR.getMsg());
         }
+        updateStatus(id, MainTaskStatus.RUNNING);
         List<MigrationTask> tasks = migrationTaskService.listByMainTaskId(id);
         List<MigrationTaskHostRef> hosts = migrationTaskHostRefService.listByMainTaskId(id);
         List<MigrationTaskGlobalParam> globalParams = migrationTaskGlobalParamService.selectByMainTaskId(id);
-
         Integer totalRunnableCount = hosts.stream().mapToInt(MigrationTaskHostRef::getRunnableCount).sum();
         if (totalRunnableCount > tasks.size()) { //The number of host executable tasks is greater than the total number of tasks
             for (int x = 0; x < tasks.size(); x++) {
@@ -397,14 +397,14 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
                 MigrationTask t = tasks.get(x);
                 MigrationTaskHostRef h = hosts.get(curHostIndex);
                 h.addPlaceHolderCount();
-                migrationTaskService.runTask(h, t, globalParams);
+                threadPoolTaskExecutor.submit(() -> migrationTaskService.runTask(h, t, globalParams));
             }
         } else { //The number of tasks that the host can perform is less than the total number of tasks
             hosts.stream().forEach(h -> {
                 Integer runnableCount = h.getRunnableCount();
                 for (int i = tasks.size() - 1; i >= tasks.size() - runnableCount; i--) {
                     MigrationTask t = tasks.get(i);
-                    migrationTaskService.runTask(h, t, globalParams);
+                    threadPoolTaskExecutor.submit(() -> migrationTaskService.runTask(h, t, globalParams));
                     tasks.remove(i);
                 }
             });
@@ -414,7 +414,6 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
                 migrationTaskService.updateStatus(t.getId(), TaskStatus.WAIT_RESOURCE);
             });
         }
-        updateStatus(id, MainTaskStatus.RUNNING);
         return AjaxResult.success();
     }
     
@@ -559,26 +558,32 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
         MigrationTask subTask = migrationTaskService.getById(id);
         if (subTask == null) {
             return AjaxResult.error(MigrationErrorCode.SUB_TASK_NOT_EXISTS_ERROR.getCode(),
-                    MigrationErrorCode.SUB_TASK_NOT_EXISTS_ERROR.getMsg());
+                MigrationErrorCode.SUB_TASK_NOT_EXISTS_ERROR.getMsg());
         }
         if (!subTask.getExecStatus().equals(TaskStatus.INCREMENTAL_STOPPED.getCode())) {
             return AjaxResult.error(MigrationErrorCode.SUB_TASK_NOT_IN_INCREMENTAL_STOP_ERROR.getCode(),
-                    MigrationErrorCode.SUB_TASK_NOT_IN_INCREMENTAL_STOP_ERROR.getMsg());
+                MigrationErrorCode.SUB_TASK_NOT_IN_INCREMENTAL_STOP_ERROR.getMsg());
         }
-//        Optional<AjaxResult> ajaxResult = checkReverseCondition(subTask);
-//        if (!ajaxResult.isEmpty()) {
-//            return ajaxResult.get();
-//        }
-        MigrationHostPortalInstall installHost = migrationHostPortalInstallHostService
-                .getOneByHostId(subTask.getRunHostId());
-        PortalHandle.startReversePortal(subTask.getRunHost(), subTask.getRunPort(),
-                subTask.getRunUser(), encryptionUtils.decrypt(subTask.getRunPass()), installHost.getInstallPath(), installHost.getJarName(), subTask);
-        MigrationTask update = MigrationTask.builder().id(subTask.getId())
-                .execStatus(TaskStatus.REVERSE_START.getCode()).execTime(new Date()).build();
+        MigrationHostPortalInstall installHost = migrationHostPortalInstallHostService.getOneByHostId(
+            subTask.getRunHostId());
+        installHost.setRunPassword(encryptionUtils.decrypt(installHost.getRunPassword()));
+        List<MigrationTaskGlobalParam> globalParams = migrationTaskGlobalParamService.selectByMainTaskId(
+            subTask.getMainTaskId());
+        if (!migrationTaskService.execMigrationCheck(installHost, subTask, globalParams, "verify_reverse_migration")) {
+            return AjaxResult.success();
+        }
+        PortalHandle.startReversePortal(subTask.getRunHost(), subTask.getRunPort(), subTask.getRunUser(),
+            encryptionUtils.decrypt(subTask.getRunPass()), installHost.getInstallPath(), installHost.getJarName(),
+            subTask);
+        MigrationTask update = MigrationTask.builder()
+            .id(subTask.getId())
+            .execStatus(TaskStatus.REVERSE_START.getCode())
+            .execTime(new Date())
+            .build();
         migrationTaskService.updateById(update);
         LoginUser loginUser = SecurityUtils.getLoginUser();
         migrationTaskOperateRecordService.saveRecord(subTask.getId(), TaskOperate.START_REVERSE,
-                loginUser.getUsername());
+            loginUser.getUsername());
         return AjaxResult.success();
     }
 
@@ -657,6 +662,29 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
         }
     }
 
+    @Override
+    public int checkDataLevelingAndIncrementFinish(Integer id) {
+        MigrationTaskExecResultDetail detail = migrationTaskExecResultDetailService.getByTaskIdAndProcessType(id,
+            ProcessType.INCREMENTAL.getCode());
+        int data = 1;
+        if (detail == null) {
+            return data;
+        }
+        JSONObject execResultDetailJson = JSONObject.parseObject(detail.getExecResultDetail());
+        String rest = execResultDetailJson.getString("rest");
+        String failCount = execResultDetailJson.getString("failCount");
+        if ("0".equals(rest)) {
+            if ("0".equals(failCount)) {
+                data = 0;
+            } else {
+                data = 1;
+            }
+        } else {
+            data = 2;
+        }
+        return data;
+    }
+
     private void doRefreshSingleMainTask(MigrationMainTask mt) {
         List<MigrationTask> tasks = migrationTaskService.listByMainTaskId(mt.getId());
         if (tasks.size() > 0) {
@@ -691,8 +719,7 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
                     + incrementalAndReverseRunningCount3 * 3 + finishCount4 * 4;
             String migrationProcess = new BigDecimal((float) process / totalProcess).setScale(2, RoundingMode.UP).toPlainString();
             if (mt.getExecProgress() == null || !mt.getExecProgress().equals(migrationProcess)) {
-                MigrationMainTask mainTask = new MigrationMainTask();
-                mainTask.setId(mt.getId());
+                MigrationMainTask mainTask = getById(mt.getId());
                 mainTask.setExecProgress(migrationProcess);
                 if (process.equals(totalProcess)) {
                     mainTask.setExecStatus(MainTaskStatus.FINISH.getCode());

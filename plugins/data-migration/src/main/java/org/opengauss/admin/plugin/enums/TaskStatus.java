@@ -53,7 +53,8 @@ public enum TaskStatus {
     MIGRATION_FINISH(100, "migration_finish"),
     MIGRATION_ERROR(500, "error"),
     WAIT_RESOURCE(1000, "wait_resource"),
-    INSTALL_PORTAL(2000, "install portal")
+    INSTALL_PORTAL(2000, "install portal"),
+    CHECK_ERROR(3000, "check_error"),
     ;
 
     private final Integer code;

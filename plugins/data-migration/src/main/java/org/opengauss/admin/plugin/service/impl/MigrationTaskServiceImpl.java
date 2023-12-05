@@ -21,9 +21,9 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.opengauss.admin.common.core.domain.model.LoginUser;
 import org.opengauss.admin.common.utils.SecurityUtils;
 import org.opengauss.admin.plugin.domain.*;
+import org.opengauss.admin.plugin.enums.MainTaskStatus;
 import org.opengauss.admin.plugin.enums.MigrationMode;
 import org.opengauss.admin.plugin.enums.ProcessType;
 import org.opengauss.admin.plugin.enums.TaskOperate;
@@ -101,15 +101,22 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
     @Autowired
     private TbMigrationTaskGlobalToolsParamService toolsParamService;
 
+    @Autowired
+    private MigrationMainTaskService migrationMainTaskService;
+
     /**
      * Query the sub task page list by mainTaskId
      *
-     * @param mainTaskId
+     * @param mainTaskId mainTaskId
      * @return MigrationTask
      */
     @Override
     public IPage<MigrationTask> selectList(IPage<MigrationTask> page, Integer mainTaskId) {
-        return migrationTaskMapper.selectTaskPage(page, mainTaskId);
+        IPage<MigrationTask> taskPage = migrationTaskMapper.selectTaskPage(page, mainTaskId);
+        List<MigrationTask> tasks = taskPage.getRecords();
+        tasks.forEach(task -> task.setCheckDataLevelingAndIncrementFinish(
+            migrationMainTaskService.checkDataLevelingAndIncrementFinish(task.getId())));
+        return taskPage;
     }
 
     @Override
@@ -319,7 +326,10 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
                 String msg = MapUtil.getStr(lastStatus, "msg");
                 update.setStatusDesc(msg);
             } else {
-                update.setStatusDesc("");
+                // not check failure
+                if (!TaskStatus.CHECK_ERROR.getCode().equals(t.getExecStatus())) {
+                    update.setStatusDesc("");
+                }
             }
             updateById(update);
         }
@@ -455,15 +465,54 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
 
     @Override
     public void runTask(MigrationTaskHostRef h, MigrationTask t, List<MigrationTaskGlobalParam> globalParams) {
-        LoginUser loginUser = SecurityUtils.getLoginUser();
         MigrationHostPortalInstall installHost = migrationHostPortalInstallHostService.getOneByHostId(h.getRunHostId());
         installHost.setRunPassword(encryptionUtils.decrypt(installHost.getRunPassword()));
-        t.setRunHostId(h.getRunHostId());
-        PortalHandle.startPortal(installHost, t, installHost.getJarName(), getTaskParam(globalParams, t));
-        MigrationTask update = MigrationTask.builder().id(t.getId()).runHostId(h.getRunHostId()).runHost(h.getHost()).runHostname(h.getHostName())
-                .runPort(h.getPort()).runUser(h.getUser()).runPass(h.getPassword()).execStatus(TaskStatus.FULL_START.getCode()).execTime(new Date()).build();
-        migrationTaskOperateRecordService.saveRecord(t.getId(), TaskOperate.RUN, loginUser.getUsername());
+        MigrationTask update = MigrationTask.builder()
+            .id(t.getId())
+            .runHostId(h.getRunHostId())
+            .runHost(h.getHost())
+            .runHostname(h.getHostName())
+            .runPort(h.getPort())
+            .runUser(h.getUser())
+            .runPass(h.getPassword())
+            .build();
         updateById(update);
+        if (!execMigrationCheck(installHost, t, globalParams, "verify_pre_migration")) {
+            return;
+        }
+        PortalHandle.startPortal(installHost, t, installHost.getJarName(), getTaskParam(globalParams, t));
+        update = MigrationTask.builder()
+            .id(t.getId())
+            .execStatus(TaskStatus.FULL_START.getCode())
+            .execTime(new Date())
+            .build();
+        migrationTaskOperateRecordService.saveRecord(t.getId(), TaskOperate.RUN, SecurityUtils.getUsername());
+        updateById(update);
+    }
+
+    /**
+     * send command and return result by check result
+     *
+     * @param installHost installHost
+     * @param t task
+     * @param globalParams globalParams
+     * @param command command
+     * @return check result
+     */
+    public boolean execMigrationCheck(MigrationHostPortalInstall installHost, MigrationTask t,
+        List<MigrationTaskGlobalParam> globalParams, String command) {
+        if (!PortalHandle.checkBeforeMigration(installHost, t, installHost.getJarName(), getTaskParam(globalParams, t),
+            command)) {
+            log.error("taskId={} check before migration failed, command is {}.", t.getId(), command);
+            String checkResult = PortalHandle.getPortalCheckResult(installHost, t.getId());
+            MigrationTask update = MigrationTask.builder().id(t.getId()).build();
+            update.setStatusDesc(checkResult);
+            update.setExecStatus(TaskStatus.CHECK_ERROR.getCode());
+            updateById(update);
+            migrationMainTaskService.updateStatus(t.getMainTaskId(), MainTaskStatus.CHECK_MIGRATION);
+            return false;
+        }
+        return true;
     }
 
     /**
@@ -536,6 +585,7 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
         resultMap.put("opengauss.database.port", task.getTargetDbPort());
         resultMap.put("opengauss.database.name", task.getTargetDb());
         resultMap.put("opengauss.database.schema", task.getSourceDb());
+        resultMap.put("migration_mode", task.getMigrationModelId() + "");
         if (globalParamMap.keySet().size() > 0) {
             resultMap.putAll(globalParamMap);
         }

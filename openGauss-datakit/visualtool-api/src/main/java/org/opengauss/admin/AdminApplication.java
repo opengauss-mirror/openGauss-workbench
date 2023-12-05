@@ -30,6 +30,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.context.annotation.Bean;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.context.request.RequestContextListener;
 import org.springframework.web.socket.server.standard.ServerEndpointExporter;
 
@@ -47,6 +48,7 @@ public class AdminApplication implements SpringBootstrap {
 
     @Override
     public void run(String[] args) throws Exception {
+        SecurityContextHolder.setStrategyName("MODE_INHERITABLETHREADLOCAL");
         SpringApplication.run(AdminApplication.class, args);
     }
 

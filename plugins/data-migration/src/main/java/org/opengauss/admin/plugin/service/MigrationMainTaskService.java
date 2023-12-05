@@ -75,4 +75,12 @@ public interface MigrationMainTaskService extends IService<MigrationMainTask> {
     void refreshTaskStatusByPortal(Integer taskId);
 
     void doRefreshMainTaskStatus();
+
+    /**
+     * check data leveing and increment migration same
+     *
+     * @param id taskid
+     * @return result
+     */
+    int checkDataLevelingAndIncrementFinish(Integer id);
 }

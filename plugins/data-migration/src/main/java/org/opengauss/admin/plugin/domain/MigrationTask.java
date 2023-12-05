@@ -101,6 +101,9 @@ public class MigrationTask {
 
     private String statusDesc;
 
+    @TableField(exist = false)
+    private Integer checkDataLevelingAndIncrementFinish;
+
     @Tolerate
     public MigrationTask(){
 
