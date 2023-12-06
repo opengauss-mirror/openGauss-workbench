@@ -96,6 +96,39 @@
             <a-input v-model="form.tableData[rowIndex].pkgName"></a-input>
           </a-form-item>
         </template>
+        <template #kafkaPort="{ rowIndex }">
+          <a-form-item
+            hide-asterisk
+            :field="`tableData.${rowIndex}.kafkaPort`"
+            :rules="{
+              required: true,
+            }"
+          >
+            <a-input v-model="form.tableData[rowIndex].kafkaPort"></a-input>
+          </a-form-item>
+        </template>
+        <template #zookeeperPort="{ rowIndex }">
+          <a-form-item
+            hide-asterisk
+            :field="`tableData.${rowIndex}.zookeeperPort`"
+            :rules="{
+              required: true,
+            }"
+          >
+            <a-input v-model="form.tableData[rowIndex].zookeeperPort"></a-input>
+          </a-form-item>
+        </template>
+        <template #schemaRegistryPort="{ rowIndex }">
+          <a-form-item
+            hide-asterisk
+            :field="`tableData.${rowIndex}.schemaRegistryPort`"
+            :rules="{
+              required: true,
+            }"
+          >
+            <a-input v-model="form.tableData[rowIndex].schemaRegistryPort"></a-input>
+          </a-form-item>
+        </template>
         <template #op="{ rowIndex }">
           <icon-delete class="del-icon" @click="handleDeleteRow(rowIndex)" />
         </template>
@@ -119,12 +152,12 @@
   </a-modal>
 </template>
   
-  <script setup>
+<script setup>
 import { reactive, ref, watch, onMounted } from 'vue'
 // import { Message } from '@arco-design/web-vue'
 import { listHostUserByHostIds, installPortalFromDatakit } from '@/api/task'
 import { getSysSetting } from '@/api/common'
-import { INSTALL_TYPE } from '@/utils/constants'
+import { INSTALL_TYPE, KAFKA_CONFIG_TYPE } from '@/utils/constants'
 import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
@@ -175,10 +208,26 @@ const columns = [
     slotName: 'pkgName'
   },
   {
+    title: 'kafka Port',
+    dataIndex: 'kafkaPort',
+    slotName: 'kafkaPort'
+  },
+  {
+    title: 'Zookeeper Port',
+    dataIndex: 'zookeeperPort',
+    slotName: 'zookeeperPort'
+  },
+  {
+    title: 'schema Registry Port',
+    dataIndex: 'schemaRegistryPort',
+    slotName: 'schemaRegistryPort'
+  },
+  {
     title: t('step3.batchAddPortal.5q097pi0r551'),
     slotName: 'op'
   }
 ]
+
 
 watch(visible, (v) => {
   emits('update:open', v)
@@ -189,10 +238,13 @@ watch(
   async (v) => {
     if (v) {
       const data = [...props.hostList]
+      
       await buildTableData(data)
+      console.log("======"+visible.value)
       form.tableData = data
     }
     visible.value = v
+    console.log("======"+visible.value)
   }
 )
 
@@ -209,6 +261,11 @@ const buildTableData = async (data) => {
     item.pkgName = sysSetting.data.portalPkgName
     item.jarName = sysSetting.data.portalJarName
     item.installPath = '~'
+    item.zookeeperPort = '2181'
+    item.kafkaPort = '9092'
+    item.schemaRegistryPort = '8081'
+    item.kafkaInstallType = KAFKA_CONFIG_TYPE.INSTALL
+    item.kafkaInstallDir = item.installPath+KAFKA_CONFIG_TYPE.INSTALL_DIR_DEFAULT
   })
   globalData.pkgName = sysSetting.data.portalPkgName
   globalData.jarName = sysSetting.data.portalJarName
@@ -278,6 +335,12 @@ const buildReqData = (data) => {
   // params.append('pkgDownloadUrl', form.pkgDownloadUrl)
   params.append('jarName', data.jarName)
   params.append('pkgName', data.pkgName)
+
+  params.append('thirdPartySoftwareConfig.thirdPartySoftwareConfigType', KAFKA_CONFIG_TYPE.INSTALL)
+  params.append('thirdPartySoftwareConfig.zookeeperPort', data.zookeeperPort)
+  params.append('thirdPartySoftwareConfig.kafkaPort', data.kafkaPort)
+  params.append('thirdPartySoftwareConfig.installDir', data.installPath+KAFKA_CONFIG_TYPE.INSTALL_DIR_DEFAULT)
+  params.append('thirdPartySoftwareConfig.schemaRegistryPort', data.schemaRegistryPort)
   return params
 }
 

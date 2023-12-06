@@ -37,13 +37,14 @@
                     </a-button>
                   </div>
                 </template>
-                <a-form :model="form.portalData">
+                <a-form :model="form.portalData" style="overflow-x: auto;">
                   <a-table
                     :data="form.portalData"
                     :hoverable="false"
                     :bordered="true"
                     :pagination="false"
                     :row-class="basicRowClass"
+                    class="tableClass"
                   >
                     <template #columns>
                       <a-table-column
@@ -92,15 +93,22 @@
                       >
                         <template #cell="{ record }">
                           <a-form-item hide-asterisk>
+                            <a-popconfirm 
+                            :content="$t('components.ToolsParamsConfig.5q0toolspa28')"
+                             type="warning"
+                            :ok-text="$t('step3.index.5q093f8y9zg4')"
+                            :cancel-text="$t('step3.index.5q093f8y9zg5')"
+                            @ok="deleteToolsParams(record)"
+                            >
                             <a-button
                               size="mini"
-                              type="danger"
-                              @click="deleteToolsParams(record)"
+                             type="text"
                             >
                               <template #icon>
-                                <icon-minus />
+                                <icon-delete />
                               </template>
                             </a-button>
+                          </a-popconfirm> 
                           </a-form-item>
                         </template>
                       </a-table-column>
@@ -130,13 +138,14 @@
                     </a-button>
                   </div>
                 </template>
-                <a-form :model="form" ref="basicFormRef">
+                <a-form :model="form" ref="basicFormRef" class="tableClass">
                   <a-table
                     :data="form.chameleonData"
                     :hoverable="false"
                     :bordered="true"
                     :pagination="false"
                     :row-class="basicRowClass"
+                    
                   >
                     <template #columns>
                       <a-table-column
@@ -182,15 +191,22 @@
                       >
                         <template #cell="{ record }">
                           <a-form-item hide-asterisk>
+                            <a-popconfirm 
+                            :content="$t('components.ToolsParamsConfig.5q0toolspa28')"
+                             type="warning"
+                            :ok-text="$t('step3.index.5q093f8y9zg4')"
+                            :cancel-text="$t('step3.index.5q093f8y9zg5')"
+                            @ok="deleteToolsParams(record)"
+                            >
                             <a-button
                               size="mini"
-                              type="danger"
-                              @click="deleteToolsParams(record)"
+                             type="text"
                             >
                               <template #icon>
-                                <icon-minus />
+                                <icon-delete />
                               </template>
                             </a-button>
+                          </a-popconfirm> 
                           </a-form-item>
                         </template>
                       </a-table-column>
@@ -229,6 +245,7 @@
                     :bordered="true"
                     :pagination="false"
                     :row-class="basicRowClass"
+                    class="tableClass"
                   >
                     <template #columns>
                       <a-table-column
@@ -274,15 +291,22 @@
                       >
                         <template #cell="{ record }">
                           <a-form-item hide-asterisk>
+                            <a-popconfirm 
+                            :content="$t('components.ToolsParamsConfig.5q0toolspa28')"
+                             type="warning"
+                            :ok-text="$t('step3.index.5q093f8y9zg4')"
+                            :cancel-text="$t('step3.index.5q093f8y9zg5')"
+                            @ok="deleteToolsParams(record)"
+                            >
                             <a-button
                               size="mini"
-                              type="danger"
-                              @click="deleteToolsParams(record)"
+                             type="text"
                             >
                               <template #icon>
-                                <icon-minus />
+                                <icon-delete />
                               </template>
                             </a-button>
+                          </a-popconfirm> 
                           </a-form-item>
                         </template>
                       </a-table-column>
@@ -322,6 +346,7 @@
                     :bordered="true"
                     :pagination="false"
                     :row-class="basicRowClass"
+                    class="tableClass"
                   >
                     <template #columns>
                       <a-table-column
@@ -367,15 +392,22 @@
                       >
                         <template #cell="{ record }">
                           <a-form-item hide-asterisk>
+                            <a-popconfirm 
+                            :content="$t('components.ToolsParamsConfig.5q0toolspa28')"
+                             type="warning"
+                            :ok-text="$t('step3.index.5q093f8y9zg4')"
+                            :cancel-text="$t('step3.index.5q093f8y9zg5')"
+                            @ok="deleteToolsParams(record)"
+                            >
                             <a-button
                               size="mini"
-                              type="danger"
-                              @click="deleteToolsParams(record)"
+                             type="text"
                             >
                               <template #icon>
-                                <icon-minus />
+                                <icon-delete />
                               </template>
                             </a-button>
+                          </a-popconfirm> 
                           </a-form-item>
                         </template>
                       </a-table-column>
@@ -415,6 +447,7 @@
                     :bordered="true"
                     :pagination="false"
                     :row-class="basicRowClass"
+                    class="tableClass"
                   >
                     <template #columns>
                       <a-table-column
@@ -460,15 +493,22 @@
                       >
                         <template #cell="{ record }">
                           <a-form-item hide-asterisk>
+                            <a-popconfirm 
+                            :content="$t('components.ToolsParamsConfig.5q0toolspa28')"
+                             type="warning"
+                            :ok-text="$t('step3.index.5q093f8y9zg4')"
+                            :cancel-text="$t('step3.index.5q093f8y9zg5')"
+                            @ok="deleteToolsParams(record)"
+                            >
                             <a-button
                               size="mini"
-                              type="danger"
-                              @click="deleteToolsParams(record)"
+                             type="text"
                             >
                               <template #icon>
-                                <icon-minus />
+                                <icon-delete />
                               </template>
                             </a-button>
+                          </a-popconfirm> 
                           </a-form-item>
                         </template>
                       </a-table-column>
@@ -509,6 +549,7 @@
                     :bordered="true"
                     :pagination="false"
                     :row-class="basicRowClass"
+                    class="tableClass"
                   >
                     <template #columns>
                       <a-table-column
@@ -553,15 +594,22 @@
                       >
                         <template #cell="{ record }">
                           <a-form-item hide-asterisk>
+                            <a-popconfirm 
+                            :content="$t('components.ToolsParamsConfig.5q0toolspa28')"
+                             type="warning"
+                            :ok-text="$t('step3.index.5q093f8y9zg4')"
+                            :cancel-text="$t('step3.index.5q093f8y9zg5')"
+                            @ok="deleteToolsParams(record)"
+                            >
                             <a-button
                               size="mini"
-                              type="danger"
-                              @click="deleteToolsParams(record)"
+                             type="text"
                             >
                               <template #icon>
-                                <icon-minus />
+                                <icon-delete />
                               </template>
                             </a-button>
+                          </a-popconfirm> 
                           </a-form-item>
                         </template>
                       </a-table-column>
@@ -602,6 +650,7 @@
                     :bordered="true"
                     :pagination="false"
                     :row-class="basicRowClass"
+                    class="tableClass"
                   >
                     <template #columns>
                       <a-table-column
@@ -647,15 +696,22 @@
                       >
                         <template #cell="{ record }">
                           <a-form-item hide-asterisk>
+                            <a-popconfirm 
+                            :content="$t('components.ToolsParamsConfig.5q0toolspa28')"
+                             type="warning"
+                            :ok-text="$t('step3.index.5q093f8y9zg4')"
+                            :cancel-text="$t('step3.index.5q093f8y9zg5')"
+                            @ok="deleteToolsParams(record)"
+                            >
                             <a-button
                               size="mini"
-                              type="danger"
-                              @click="deleteToolsParams(record)"
+                             type="text"
                             >
                               <template #icon>
-                                <icon-minus />
+                                <icon-delete />
                               </template>
                             </a-button>
+                          </a-popconfirm> 
                           </a-form-item>
                         </template>
                       </a-table-column>
@@ -696,6 +752,7 @@
                     :bordered="true"
                     :pagination="false"
                     :row-class="basicRowClass"
+                    class="tableClass"
                   >
                     <template #columns>
                       <a-table-column
@@ -741,15 +798,22 @@
                       >
                         <template #cell="{ record }">
                           <a-form-item hide-asterisk>
+                            <a-popconfirm 
+                            :content="$t('components.ToolsParamsConfig.5q0toolspa28')"
+                             type="warning"
+                            :ok-text="$t('step3.index.5q093f8y9zg4')"
+                            :cancel-text="$t('step3.index.5q093f8y9zg5')"
+                            @ok="deleteToolsParams(record)"
+                            >
                             <a-button
                               size="mini"
-                              type="danger"
-                              @click="deleteToolsParams(record)"
+                             type="text"
                             >
                               <template #icon>
-                                <icon-minus />
+                                <icon-delete />
                               </template>
                             </a-button>
+                          </a-popconfirm> 
                           </a-form-item>
                         </template>
                       </a-table-column>
@@ -790,6 +854,7 @@
                     :bordered="true"
                     :pagination="false"
                     :row-class="basicRowClass"
+                    class="tableClass"
                   >
                     <template #columns>
                       <a-table-column
@@ -835,15 +900,22 @@
                       >
                         <template #cell="{ record }">
                           <a-form-item hide-asterisk>
+                            <a-popconfirm 
+                            :content="$t('components.ToolsParamsConfig.5q0toolspa28')"
+                             type="warning"
+                            :ok-text="$t('step3.index.5q093f8y9zg4')"
+                            :cancel-text="$t('step3.index.5q093f8y9zg5')"
+                            @ok="deleteToolsParams(record)"
+                            >
                             <a-button
                               size="mini"
-                              type="danger"
-                              @click="deleteToolsParams(record)"
+                             type="text"
                             >
                               <template #icon>
-                                <icon-minus />
+                                <icon-delete />
                               </template>
                             </a-button>
+                          </a-popconfirm> 
                           </a-form-item>
                         </template>
                       </a-table-column>
@@ -887,7 +959,6 @@ const addToolsParamsDlg = reactive({
 
 const basicRowClass = (row) => {
   if(data.has(row.raw.id)){
-    console.log("=============");
     return 'row-changed'
   }
   return ''  
@@ -895,7 +966,6 @@ const basicRowClass = (row) => {
 
 
 const handleToolsParams = (configId) => {
-  console.log("==================" + configId);
   addToolsParamsDlg.configId = configId;
   addToolsParamsDlg.visible = true;
 };
@@ -930,8 +1000,9 @@ const customStyle = ref({
   borderRadius: '6px',
   marginBottom: '18px',
   border: 'none',
-  overflow: 'hidden'
+  overflow: 'hidden',
 })
+
 
 const changeToolsParams = ref([]);
 
@@ -946,7 +1017,6 @@ const saveParams = () => {
 };
 
 const deleteToolsParams = (record) => {
-  console.log("============delete params=====" + record.id);
   removeToolsParams(record.id).then(()=>{
     getToolsParams();
   }) .catch(() => {
@@ -1072,5 +1142,11 @@ watch(
 :deep(.arco-col-5) {
   flex: none;
   width: auto;
+}
+
+.tableClass {
+  width: 100%;  /* 设置宽度 */
+  max-height: 800px;  /* 设置最大高度 */
+  overflow: scroll; 
 }
 </style>
