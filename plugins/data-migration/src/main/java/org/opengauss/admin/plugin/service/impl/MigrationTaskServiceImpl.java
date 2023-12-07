@@ -616,6 +616,10 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
         }
     }
 
+    private static String aroundApostrophe(String source) {
+        return "'" + source + "'";
+    }
+
     private void setModParam(MigrationTask task, HashMap<String, String> toolsParamsMap) {
         // 修改的参数
         LambdaQueryWrapper<TbMigrationTaskGlobalToolsParam> toolsParamQueryWrapper = new LambdaQueryWrapper<>();
@@ -627,12 +631,11 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
 
         toolsParams.forEach(toolsParam -> {
             if (toolsParam.getConfigId().equals(ToolsConfigEnum.PORTAL_MIGRATION.getType())) {
-                toolsParamsMap.put(toolsParam.getParamKey(),
-                        toolsParam.getParamChangeValue().replaceAll(" ", "&&&"));
+                toolsParamsMap.put(toolsParam.getParamKey(), aroundApostrophe(toolsParam.getParamChangeValue()));
             } else {
                 toolsParamsMap.put(toolsParam.getConfigId() + "." + toolsParam.getParamValueType() + "."
-                        + toolsParam.getParamKey(),
-                        toolsParam.getParamChangeValue().replaceAll(" ", "&&&"));
+                                + toolsParam.getParamKey(),
+                        aroundApostrophe(toolsParam.getParamChangeValue()));
             }
         });
     }
@@ -651,7 +654,7 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
             }
             toolsParamsMap.put(NEW_PARAM_PREFIX + toolsParam.getConfigId() + "." + toolsParam.getParamValueType()
                             + "." + toolsParam.getParamKey(),
-                    toolsParam.getParamValue().replace(" ", "&&&"));
+                    aroundApostrophe(toolsParam.getParamValue()));
         });
     }
 

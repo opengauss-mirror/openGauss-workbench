@@ -44,6 +44,8 @@
           field="kafkaInstallType"
           :label="$t('components.PortalInstall.5q0aajl77lg20')"
         >
+    
+       
           <a-radio-group type="button" v-model="thirdPartyParam.kafkaInstallType">
             <a-radio :value="KAFKA_CONFIG_TYPE.BIND">{{
               $t('components.PortalInstall.5q0aajl77lg21')
@@ -52,6 +54,15 @@
               $t('components.PortalInstall.5q0aajl77lg22')
             }}</a-radio>
           </a-radio-group>
+          <a-popover>
+                <span class="tips"><icon-info-circle size="15" /></span>
+                <template #content>
+                  <p>
+                    {{ $t('components.PortalInstall.5q0aajl77lg32') }}:
+                  </p>
+                </template>
+         </a-popover>
+         
         </a-form-item>
         <template v-if="thirdPartyParam.kafkaInstallType == KAFKA_CONFIG_TYPE.INSTALL">
           <a-form-item

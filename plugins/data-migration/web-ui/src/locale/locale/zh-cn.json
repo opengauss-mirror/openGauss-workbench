@@ -223,8 +223,8 @@
             "5q0aajl77lg18": "2181",
             "5q0aajl77lg19": "9092",
             "5q0aajl77lg20": "第三方工具配置方式",
-            "5q0aajl77lg21": "绑定已有",
-            "5q0aajl77lg22": "本机安装",
+            "5q0aajl77lg21": "绑定已安装",
+            "5q0aajl77lg22": "本机新安装",
             "5q0aajl77lg23": "请选择要绑定的第三方工具",
             "5q0aajl77lg24": "绑定的第三方工具不能为空",
             "5q0aajl77lg25": "请选择要绑定的第三方工具实例",
@@ -233,7 +233,8 @@
             "5q0aajl77lg28": "请输入第三方工具实例名称",
             "5q0aajl77lg29": "请输入第三方工具安装目录",
             "5q0aajl77lg30": "schema_registry 端口",
-            "5q0aajl77lg31": "8081"
+            "5q0aajl77lg31": "8081",
+            "5q0aajl77lg32": "说明：第三方工具指的是portal中的confluent工具(包含kafka zookeeper schemaRegistry), 支持绑定其他portal已安装的confluent工具进行数据迁移，支持当前portal重新安装confluent工具进行数据迁移"
         },
         "ParamsConfig": {
             "5q0aazspots0": "默认参数配置（全局配置）",
@@ -287,7 +288,8 @@
             "5q0toolspa22": "布尔(true false)",
             "5q0toolspa25": "请选择",
             "5q0toolspa26": "已修改参数配置 ",
-            "5q0toolspa27": " 条"
+            "5q0toolspa27": " 条",
+            "5q0toolspa28": " 确认删除此参数？"
         }
     },
     "task": {
