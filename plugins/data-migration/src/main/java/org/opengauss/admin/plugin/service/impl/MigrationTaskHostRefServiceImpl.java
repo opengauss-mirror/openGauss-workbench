@@ -157,9 +157,6 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
     @Autowired
     private TbMigrationTaskGlobalToolsParamService taskGlobalToolsParamService;
 
-    @Autowired
-    private MigrationMqInstanceService mqConfigService;
-
     @Override
     public void deleteByMainTaskId(Integer mainTaskId) {
         LambdaQueryWrapper<MigrationTaskHostRef> query = new LambdaQueryWrapper<>();
@@ -628,11 +625,11 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
             if (!isInstallSuccess && ThirdPartySoftwareConfigType.INSTALL.getCode()
                     .equals(installParams.getThirdPartySoftwareConfig().getThirdPartySoftwareConfigType())) {
                 log.info("install failed remove record");
-                migrationThirdPartySoftwareInstanceService.removeById(
-                        installParams.getThirdPartySoftwareConfig().getId());
-                mqConfigService.removeInstance(installParams.getHost());
+                migrationThirdPartySoftwareInstanceService.removeInstance(installParams.getHost());
             }
-            loadTaskConfigParams(installParams);
+            if (isInstallSuccess) {
+                loadTaskConfigParams(installParams);
+            }
             migrationHostPortalInstallHostService.updateStatus(installParams.getRunHostId(), isInstallSuccess ? PortalInstallStatus.INSTALLED.getCode() : PortalInstallStatus.INSTALL_ERROR.getCode());
         });
     }
@@ -766,7 +763,8 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
         if (CollUtil.isNotEmpty(tasks)) {
             return AjaxResult.error(MigrationErrorCode.PORTAL_DELETE_ERROR.getCode(), MigrationErrorCode.PORTAL_DELETE_ERROR.getMsg());
         }
-        List<String> bindPortalKafkas = mqConfigService.listBindHostsByPortalHost(install.getHost());
+        List<String> bindPortalKafkas =
+                migrationThirdPartySoftwareInstanceService.listBindHostsByPortalHost(install.getHost());
         if (!CollectionUtils.isEmpty(bindPortalKafkas)) {
             return AjaxResult.error(MigrationErrorCode.PORTAL_DELETE_ERROR_FOR_KAFKA_USED.getCode(),
                     MigrationErrorCode.PORTAL_DELETE_ERROR_FOR_KAFKA_USED.getMsg());
@@ -789,7 +787,7 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
         }
         migrationHostPortalInstallHostService.clearPkgUploadPath(hostId);
         ShellUtil.rmFile(opsHost.getPublicIp(), opsHost.getPort(), hostUser.getUsername(), password, realInstallPath + install.getPkgName());
-        String kafkaInstallPath = mqConfigService.removeInstance(install.getHost());
+        String kafkaInstallPath = migrationThirdPartySoftwareInstanceService.removeInstance(install.getHost());
         if (!StringUtils.isEmpty(kafkaInstallPath)) {
             ShellUtil.execCommandGetResult(opsHost.getPublicIp(), opsHost.getPort(), hostUser.getUsername(), password,
                     "rm -rf  " + kafkaInstallPath + "confluent-5.5.1");
