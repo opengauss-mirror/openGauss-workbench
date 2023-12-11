@@ -37,6 +37,7 @@ import org.opengauss.admin.common.core.domain.AjaxResult;
 import org.opengauss.admin.common.core.domain.model.LoginUser;
 import org.opengauss.admin.common.core.dto.ops.ClusterNodeDto;
 import org.opengauss.admin.common.utils.SecurityUtils;
+import org.opengauss.admin.common.utils.ops.JdbcUtil;
 import org.opengauss.admin.plugin.domain.*;
 import org.opengauss.admin.plugin.dto.MigrationMainTaskDto;
 import org.opengauss.admin.plugin.dto.MigrationTaskDto;
@@ -233,6 +234,8 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
         List<MigrationTask> tasks = migrationTaskService.listByMainTaskId(taskId);
         tasks.stream().forEach(t -> {
             t.setTaskParams(migrationTaskParamService.selectByTaskId(t.getId()));
+            t.setIsSystemAdmin(JdbcUtil.judgeSystemAdmin(t.getTargetDbHost(), t.getTargetDbPort(), t.getTargetDbUser(),
+                t.getTargetDbPass()));
         });
         dto.setTasks(tasks);
         List<MigrationTaskHostRef> hosts = migrationTaskHostRefService.listByMainTaskId(taskId);

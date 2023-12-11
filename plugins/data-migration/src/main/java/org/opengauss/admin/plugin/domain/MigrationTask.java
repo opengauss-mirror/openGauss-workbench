@@ -78,6 +78,11 @@ public class MigrationTask {
     private String targetDbVersion;
 
     /**
+     * true: adjust false: no adjust
+     */
+    private Boolean isAdjustKernelParam;
+
+    /**
      * execStatus（0：not_run；1：full_run；2：full_finish；3：incremental_run；4：reverse_run; 5: fail; 6: finish 1000: wait_resource）
      */
     private Integer execStatus;
@@ -103,6 +108,9 @@ public class MigrationTask {
 
     @TableField(exist = false)
     private Integer checkDataLevelingAndIncrementFinish;
+
+    @TableField(exist = false)
+    private Boolean isSystemAdmin;
 
     @Tolerate
     public MigrationTask(){

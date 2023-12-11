@@ -129,6 +129,22 @@
               </a-select>
             </template>
           </a-table-column>
+          <a-table-column data-index="isAdjustKernelParam" :width="200" >
+            <template #title>
+              <div>
+                <span style="margin-left: 60px">{{$t('step1.index.5q091ixih1g0')}}</span>
+                <a-popover position="top">
+                  <icon-question-circle style="cursor: pointer;margin-left: 3px;" size="15" />
+                  <template #content>
+                    <p>{{$t('step1.index.5q091ixih2g0')}}</p>
+                  </template>
+                </a-popover>
+              </div>
+            </template>
+            <template #cell="{ record }">
+              <input style="position: center; margin-left: 100px" v-model="record.isAdjustKernelParam" calss="checkbox" type = "checkbox" :disabled="isDisable(record.isSystemAdmin)"/>
+            </template>
+          </a-table-column>
           <a-table-column :title="$t('step1.index.5q091ixiibk0')" align="center" :width="100" fixed="right">
             <template #cell="{ rowIndex }">
               <a-popconfirm :content="$t('step1.index.5q091ixiieo0')" @ok="deleteSubTask(rowIndex)">
@@ -354,7 +370,8 @@ const getTargetClusterDbsData = (nodeData) => {
           nodeId: nodeData.nodeId
         },
         isSelect: item.isSelect,
-        isLeaf: true
+        isLeaf: true,
+        isSystemAdmin: nodeData.isSystemAdmin
       }
     })
   })
@@ -416,6 +433,8 @@ const addSubTask = (targetDB) => {
     targetNodeInfo: targetDB.parentInfo,
     targetDBName: targetDB.title,
     configType: 1,
+    isAdjustKernelParam: false,
+    isSystemAdmin: targetDB.isSystemAdmin,
     taskParamsObject: {
       basic: [],
       more: []
@@ -426,6 +445,14 @@ const addSubTask = (targetDB) => {
   selectSourceDB.sourceDBName = ''
   selectedSourceKey.value = []
   selectedTargetKey.value = []
+}
+
+const isDisable = (val) => {
+  if(val === true) {
+    return false
+  } else {
+    return true
+  }
 }
 
 // remove sub task

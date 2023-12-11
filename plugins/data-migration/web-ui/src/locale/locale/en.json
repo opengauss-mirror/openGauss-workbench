@@ -328,7 +328,9 @@
             "5q091ixiibk0": "Operate",
             "5q091ixiieo0": "Are you sure to delete this task?",
             "5q091ixiihc0": "Delete",
-            "5q091ixiikk0": "Default"
+            "5q091ixiikk0": "Default",
+            "5q091ixih1g0": "Adjusting kernel parameters",
+            "5q091ixih2g0": "Adjusting kernel parameters with the aim of improving migration efficiency; Only when the database migration user is an administrator can this be checked."
         }
     },
     "step2": {
