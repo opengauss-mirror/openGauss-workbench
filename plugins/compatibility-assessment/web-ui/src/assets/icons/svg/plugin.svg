@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="16px" height="16px" viewBox="0 0 16 16" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>插件-未</title>
+    <g id="控件" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="插件-未" stroke="currentColor">
+            <path d="M5.3636255,10.8456411 C4.56602461,10.8456411 3.98448461,10.8456411 3.61900552,10.8456411 C3.07078688,10.8456411 1.5,9.890625 1.5,7.68042291 C1.5,6.20695485 2.31183269,5.24056389 3.93549806,4.78125001 C4.85234823,2.64166252 6.25202179,1.57186878 8.13451873,1.57186878 C10.0170157,1.57186878 11.3406747,2.64166252 12.1054958,4.78125001 C13.7332194,5.24056389 14.5470811,6.20695485 14.5470811,7.68042291 C14.5470811,9.890625 12.7007975,10.8456411 12.1054958,10.8456411 C11.708628,10.8456411 11.2135197,10.8456411 10.6201708,10.8456411" id="路径-15" stroke-linecap="round" stroke-linejoin="round"></path>
+            <circle id="椭圆形" fill-rule="nonzero" cx="8" cy="13" r="1.5"></circle>
+            <line x1="4.5" y1="7.5" x2="11.5" y2="7.5" id="直线" stroke-linecap="round" stroke-linejoin="round"></line>
+            <line x1="2.5" y1="13" x2="6.1607762" y2="13" id="直线备份" stroke-linecap="round" stroke-linejoin="round"></line>
+            <line x1="9.76152092" y1="13" x2="13.5" y2="13" id="直线备份-2" stroke-linecap="round" stroke-linejoin="round"></line>
+            <line x1="8" y1="4.5" x2="8" y2="11" id="直线-2" stroke-linecap="round" stroke-linejoin="round"></line>
+            <circle id="椭圆形" fill="#D8D8D8" cx="2" cy="13" r="1"></circle>
+            <circle id="椭圆形备份" fill="#D8D8D8" cx="14" cy="13" r="1"></circle>
+        </g>
+    </g>
+</svg>

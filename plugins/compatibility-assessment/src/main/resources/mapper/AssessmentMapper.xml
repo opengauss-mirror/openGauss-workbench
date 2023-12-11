@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.opengauss.collect.mapper.AssessmentMapper">
+
+    <resultMap id="AssessmentResultMap" type="org.opengauss.collect.domain.Assessment">
+        <id column="assessment_id" property="assessmentId"/>
+        <result column="sql_input_type" property="sqlInputType"/>
+        <result column="proccess_pid" property="proccessPid"/>
+        <result column="assessmenttype" property="assessmenttype"/>
+        <result column="filedir" property="filedir"/>
+        <result column="sqltype" property="sqltype"/>
+        <result column="mysql_password" property="mysqlPassword"/>
+        <result column="mysql_user" property="mysqlUser"/>
+        <result column="mysql_port" property="mysqlPort"/>
+        <result column="mysql_host" property="mysqlHost"/>
+        <result column="mysql_dbname" property="mysqlDbname"/>
+        <result column="opengauss_user" property="opengaussUser"/>
+        <result column="opengauss_password" property="opengaussPassword"/>
+        <result column="opengauss_port" property="opengaussPort"/>
+        <result column="opengauss_host" property="opengaussHost"/>
+        <result column="opengauss_dbname" property="opengaussDbname"/>
+        <result column="start_time" property="startTime"/>
+        <result column="report_file_name" property="reportFileName"/>
+    </resultMap>
+
+    <select id="selectAllOrderByStartTimeDesc" resultMap="AssessmentResultMap">
+        SELECT assessment_id, sql_input_type, proccess_pid, assessmenttype, filedir, sqltype, mysql_password, mysql_user, mysql_port, mysql_host, mysql_dbname, opengauss_user, opengauss_password, opengauss_port, opengauss_host, opengauss_dbname, start_time, report_file_name
+        FROM assessment
+        ORDER BY start_time DESC
+    </select>
+
+</mapper>

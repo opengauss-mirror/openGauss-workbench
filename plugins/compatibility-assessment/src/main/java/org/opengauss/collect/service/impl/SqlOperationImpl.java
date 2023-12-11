@@ -1,0 +1,468 @@
+/*
+ * Copyright (c) Huawei Technologies Co., Ltd. 2012-2022. All rights reserved.
+ *
+ * openGauss is licensed under Mulan PSL v2.
+ * You can use this software according to the terms and conditions of the Mulan PSL v2.
+ * You may obtain a copy of Mulan PSL v2 at:
+ *
+ * http://license.coscl.org.cn/MulanPSL2
+ *
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ * EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ * MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ * See the Mulan PSL v2 for more details.
+ * -------------------------------------------------------------------------
+ *
+ *
+ * -------------------------------------------------------------------------
+ */
+
+package org.opengauss.collect.service.impl;
+
+import cn.hutool.core.collection.CollectionUtil;
+import cn.hutool.core.util.StrUtil;
+import com.gitee.starblues.bootstrap.annotation.AutowiredType;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.jcraft.jsch.Session;
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import org.opengauss.collect.config.common.Constant;
+import org.opengauss.collect.domain.Assessment;
+import org.opengauss.collect.domain.CollectPeriod;
+import org.opengauss.collect.domain.LinuxConfig;
+import org.opengauss.collect.domain.SysConfig;
+import org.opengauss.collect.domain.builder.AssessmentBuilder;
+import org.opengauss.collect.enums.AssessEnum;
+import org.opengauss.collect.manager.MonitorManager;
+import org.opengauss.collect.mapper.AssessmentMapper;
+import org.opengauss.collect.mapper.CollectPeriodMapper;
+import org.opengauss.collect.quartz.HeartbeatJob;
+import org.opengauss.collect.quartz.ModifyStateJob;
+import org.opengauss.collect.quartz.PileInsertionJob;
+import org.opengauss.collect.service.SqlOperation;
+import org.opengauss.collect.utils.AssertUtil;
+import org.opengauss.collect.utils.CommandLineRunner;
+import org.opengauss.collect.utils.ConnectionUtils;
+import org.opengauss.collect.utils.DateUtil;
+import org.opengauss.collect.utils.FileCopy;
+import org.opengauss.collect.utils.IdUtils;
+import org.opengauss.collect.utils.JschUtil;
+import org.opengauss.collect.utils.StringUtil;
+import org.opengauss.collect.utils.file.FileUploadUtil;
+import org.opengauss.collect.utils.response.RespBean;
+import org.opengauss.collect.utils.scheduler.SchedulerUtil;
+import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
+import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
+import org.opengauss.admin.common.enums.ops.DbTypeEnum;
+import org.opengauss.admin.common.exception.ServiceException;
+import org.opengauss.admin.system.plugin.facade.SysSettingFacade;
+import org.opengauss.admin.system.service.ops.IHostService;
+import org.opengauss.admin.system.service.ops.IHostUserService;
+import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
+import org.quartz.JobDetail;
+import org.quartz.Scheduler;
+import org.quartz.SchedulerException;
+import org.quartz.SchedulerFactory;
+import org.quartz.Trigger;
+import org.quartz.impl.StdSchedulerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.AsyncResult;
+import org.springframework.stereotype.Service;
+
+import javax.annotation.PreDestroy;
+import javax.servlet.http.HttpServletResponse;
+
+/**
+ * SqlOperationImpl
+ *
+ * @author liu
+ * @since 2023-09-17
+ */
+@Slf4j
+@Service
+public class SqlOperationImpl implements SqlOperation {
+    @Autowired
+    private Cache<String, Assessment> assessmentCache;
+
+    @Autowired
+    private CollectPeriodMapper periodMapper;
+
+    private Scheduler scheduler;
+
+    @Autowired
+    @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
+    private IHostService hostService;
+
+    @Autowired
+    @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
+    private IHostUserService hostUserService;
+
+    @Autowired
+    @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
+    private EncryptionUtils encryptionUtils;
+
+    @Autowired
+    @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
+    private SysSettingFacade sysSettingFacade;
+
+    @Autowired
+    private AssessmentMapper assessmentMapper;
+
+
+    @Override
+    public RespBean getAllPids(String host) {
+        Optional<LinuxConfig> config = getLinuxConfig(host);
+        AssertUtil.isTrue(!config.isPresent(), "Host does not exist");
+        Session session = JschUtil.obtainSession(config.get());
+        String mes = JschUtil.executeCommand(session, Constant.FIND_ALL_JAVA);
+        List<String> list = mes.lines().collect(Collectors.toList());
+        AssertUtil.isTrue(CollectionUtil.isEmpty(list), "The server has no Java process");
+        return RespBean.success("success", list);
+    }
+
+    @Override
+    public RespBean getUploadPath(Integer userId) {
+        return RespBean.success("success", getSystemPath(userId));
+    }
+
+
+    @Override
+    public void downloadChrome(String host, String filePath, HttpServletResponse response) {
+        Optional<LinuxConfig> config = getLinuxConfig(host);
+        AssertUtil.isTrue(!config.isPresent(), "Host does not exist");
+        Session session = JschUtil.obtainSession(config.get());
+        // 获得文件路径
+        List<String> fileNames = JschUtil.getFileNamesByPath(session, filePath, false);
+        List<File> files = new ArrayList<>();
+        response.setHeader("Content-Disposition", "attachment; filename*=UTF-8''" + "sql_stack.zip");
+        try (ZipOutputStream zipOut = new ZipOutputStream(response.getOutputStream())) {
+            for (String name : fileNames) {
+                Future<File> future = MonitorManager.mine().workExecute(new Callable<File>() {
+                    @SneakyThrows
+                    @Override
+                    public File call() {
+                        try (OutputStream out = new FileOutputStream(name)) {
+                            JschUtil.downLoad(session, filePath + name, out);
+                        }
+                        return new File(name);
+                    }
+                });
+                files.add(future.get());
+            }
+            addToZipFile(files, zipOut);
+        } catch (IOException | ExecutionException | InterruptedException exception) {
+            log.error(exception.getMessage());
+        }
+        deleteFile(fileNames);
+        // close session
+        JschUtil.closeSession(session);
+    }
+
+    private void addToZipFile(List<File> files, ZipOutputStream zipOut) throws IOException {
+        for (File file : files) {
+            FileInputStream fileInputStream = new FileInputStream(file);
+            ZipEntry zipEntry = new ZipEntry(file.getName());
+            zipOut.putNextEntry(zipEntry);
+            byte[] bytes = new byte[2048];
+            int length;
+            while ((length = fileInputStream.read(bytes)) >= 0) {
+                zipOut.write(bytes, 0, length);
+            }
+            fileInputStream.close();
+        }
+    }
+
+    private void deleteFile(List<String> fileNames) {
+        fileNames.forEach(item -> {
+            File file = new File(item);
+            if (file.exists() && file.delete()) {
+                log.info("Deleted file: " + item);
+            }
+        });
+    }
+
+    /**
+     * getLinuxConfig
+     *
+     * @param host host
+     * @return Optional<LinuxConfig>  Optional
+     */
+    public Optional<LinuxConfig> getLinuxConfig(String host) {
+        List<OpsHostEntity> entities = hostService.list();
+        List<OpsHostUserEntity> userEntities = hostUserService.list();
+        Map<String, OpsHostUserEntity> userMap = userEntities.stream().filter(item -> item.getUsername().equals("root"))
+                .collect(Collectors.toMap(OpsHostUserEntity::getHostId, Function.identity()));
+        return entities.stream()
+                .filter(entity -> entity.getPublicIp().equals(host))
+                .findFirst()
+                .flatMap(entity -> {
+                    LinuxConfig config = new LinuxConfig();
+                    config.setHost(host);
+                    config.setPort(entity.getPort());
+                    OpsHostUserEntity userEntity = userMap.get(entity.getHostId());
+                    if (userEntity != null) {
+                        config.setUserName(userEntity.getUsername());
+                        config.setPassword(encryptionUtils.decrypt(userEntity.getPassword()));
+                    }
+                    return Optional.of(config);
+                });
+    }
+
+    @Override
+    public RespBean startAssessmentSql(Assessment assessment, String sqlInputType, Integer userId) {
+        checkAssessment(assessment, sqlInputType);
+        // 创建一个执行环境 data/assess/fileName  目前是这个
+        String envPath = Constant.ENV_PATH;
+        // 推送评估文件到envPath
+        FileCopy.copyFilesToDirectory(Constant.FILE_NAMES, envPath);
+        // 获得系统上传文件路径
+        String dataKitPath = getSystemPath(userId);
+        AssertUtil.isTrue(StrUtil.isEmpty(dataKitPath), "Failed to obtain system path");
+        AssessEnum.valueOf(Constant.ASSESS_MAP.get(sqlInputType)).startAssessment(assessment, userId, dataKitPath);
+        // 判断sql输入类型. file类型，文件上传,解压,上传文件到系统设置的路径加上/assess, 采集和文件上传都放到系统路劲下加/assess目录下
+        // proccessId下载文件传到datakit目录  当前是uploadPath = /ops/files/assess/
+        // 用户上传的文件，上传到datakit目录
+        if (sqlInputType.equals(Constant.ASSESS_FILE) || sqlInputType.equals(Constant.ASSESS_PID)) {
+            assessment.setFiledir(dataKitPath);
+        }
+        // 写assessment.properties path = assess/assessment.properties
+        writeAssess(assessment, envPath + Constant.ACT_PATH + Constant.ASSESS_PROPERTIES);
+        String command = getAssessCommand(sqlInputType);
+        // 执行command  在真实路径下执行
+        String actPath = envPath + Constant.ACT_PATH;
+        String comRes = CommandLineRunner.runCommand(command, actPath);
+        log.info(comRes);
+        // 评估结束后，删除assess目录下的缓存文件
+        FileUploadUtil.deleteFilesInDirectory(dataKitPath);
+        long id = IdUtils.SNOWFLAKE.nextId();
+        String reportFileName = id + "_" + Constant.ASSESS_REPORT;
+        // 保存评估信息到数据库,复制此时的report.html文件到 目录库便于下载
+        FileCopy.copyFile(Constant.ASSESS_DOWNLOAD, Constant.TEMPORARY_SAVE + reportFileName);
+        assessment.setAssessmentId(id);
+        assessment.setStartTime(DateUtil.getTimeNow());
+        assessment.setReportFileName(reportFileName);
+        AssertUtil.save(1, assessmentMapper.insert(assessment), "Evaluation record save failed");
+        return RespBean.success("success");
+    }
+
+    private String getSystemPath(Integer userId) {
+        return Optional.ofNullable(sysSettingFacade.getSysSetting(userId))
+                .map(sysSetting -> sysSetting.getUploadPath() + Constant.ACT_PATH)
+                .orElse("");
+    }
+
+    /**
+     * runCommand
+     *
+     * @param session session
+     * @param command command
+     * @return String
+     */
+    public Future<String> runCommand(Session session, String command) {
+        String message = JschUtil.executeCommand(session, command);
+        JschUtil.closeSession(session);
+        log.info("Execution Command Result {}", message);
+        return new AsyncResult<>(message);
+    }
+
+    private void checkAssessment(Assessment assessment, String sqlInputType) {
+        // 校验opengauss数据库
+        String gaussUrl = "jdbc:opengauss://" + assessment.getOpengaussHost()
+                + ":" + assessment.getOpengaussPort() + "/" + assessment.getOpengaussDbname() + "?batchMode=off";
+        SysConfig gaussConfig = buildSysConfig(DbTypeEnum.OPENGAUSS, gaussUrl,
+                assessment.getOpengaussUser(), assessment.getOpengaussPassword());
+        ConnectionUtils.getConnection(gaussConfig);
+        if (sqlInputType.equals(Constant.ASSESS_COLLECT)) {
+            // 校验mysql数据库
+            String mysqlUrl = "jdbc:mysql://" + assessment.getMysqlHost()
+                    + ":" + assessment.getMysqlPort() + "/" + assessment.getMysqlDbname()
+                    + "?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/"
+                    + "Shanghai&useSSL=false&allowPublicKeyRetrieval=true";
+            SysConfig mysqlConfig = buildSysConfig(DbTypeEnum.MYSQL, mysqlUrl,
+                    assessment.getMysqlUser(), assessment.getMysqlPassword());
+            ConnectionUtils.getConnection(mysqlConfig);
+        }
+    }
+
+    private SysConfig buildSysConfig(DbTypeEnum dbType, String url, String username, String password) {
+        return SysConfig.builder()
+                .userName(username)
+                .password(password)
+                .driver(dbType.getDriverClass())
+                .url(url)
+                .build();
+    }
+
+    private String getAssessCommand(String sqlInputType) {
+        String command = "";
+        if (sqlInputType.equals(Constant.ASSESS_FILE) || sqlInputType.equals(Constant.ASSESS_PID)) {
+            command = "sh start.sh -d file -c assessment.properties -o report.html";
+        }
+        if (sqlInputType.equals(Constant.ASSESS_COLLECT)) {
+            command = "sh start.sh -d collect -c assessment.properties -o report.html";
+        }
+        return command;
+    }
+
+    private void writeAssess(Assessment assessment, String filePath) {
+        try (PrintWriter writer = new PrintWriter(filePath)) {
+            AssessmentBuilder builder = new AssessmentBuilder();
+            builder.appendProperty("assessmenttype", assessment.getAssessmenttype())
+                    .appendProperty("filedir", assessment.getFiledir())
+                    .appendProperty("sqltype", assessment.getSqltype())
+                    .appendSectionBreak()
+                    .appendProperty("mysql.password", assessment.getMysqlPassword())
+                    .appendProperty("mysql.user", assessment.getMysqlUser())
+                    .appendProperty("mysql.port", assessment.getMysqlPort())
+                    .appendProperty("mysql.host", assessment.getMysqlHost())
+                    .appendProperty("mysql.dbname", assessment.getMysqlDbname())
+                    .appendSectionBreak()
+                    .appendProperty("opengauss.user", assessment.getOpengaussUser())
+                    .appendProperty("opengauss.password", assessment.getOpengaussPassword())
+                    .appendProperty("opengauss.port", assessment.getOpengaussPort())
+                    .appendProperty("opengauss.host", assessment.getOpengaussHost())
+                    .appendProperty("opengauss.dbname", assessment.getOpengaussDbname());
+            writer.write(builder.build());
+        } catch (IOException e) {
+            throw new ServiceException(e.getMessage());
+        }
+    }
+
+    @Override
+    public void downloadAssessmentSql(String reportFileName, HttpServletResponse response) {
+        try {
+            response.setHeader("Content-Disposition", "attachment; filename*=UTF-8''" + "report.html");
+            File file = new File(Constant.TEMPORARY_SAVE + reportFileName);
+            BufferedInputStream in = new BufferedInputStream(new FileInputStream(file));
+            OutputStream out = response.getOutputStream();
+            byte[] buffer = new byte[1024];
+            int len;
+            while ((len = in.read(buffer)) > 0) {
+                out.write(buffer, 0, len);
+            }
+            in.close();
+            out.flush();
+            out.close();
+        } catch (IOException exception) {
+            throw new ServiceException("The download failed because of an abnormal IO stream.");
+        }
+    }
+
+    @Override
+    public RespBean sqlAssessInit() {
+        Optional<Assessment> optionalAssessment = Optional.ofNullable(assessmentCache.getIfPresent("assess"));
+        optionalAssessment.ifPresent(assessment -> {
+            assessment.setMysqlPassword("");
+            assessment.setOpengaussPassword("");
+            assessment.setFiledir("");
+            assessment.setSqltype("");
+        });
+        return optionalAssessment.map(assessment -> RespBean.success("success", assessment))
+                .orElse(RespBean.success("success"));
+    }
+
+    @Override
+    public RespBean startCollectingSql(CollectPeriod task) {
+        CollectPeriod period = periodMapper.selectById(task.getTaskId());
+        AssertUtil.isTrue(Constant.TASK_RUN.equals(period.getCurrentStatus()),
+                "The task is running, you cannot do this");
+        AssertUtil.isTrue(Constant.TASK_COMPLETED.equals(period.getCurrentStatus()),
+                "The task is completed, you cannot do this");
+        String host = task.getHost();
+        Optional<LinuxConfig> config = getLinuxConfig(host);
+        AssertUtil.isTrue(!config.isPresent(), "host is not exists");
+        try {
+            createAndStartScheduler(task, config.get());
+        } catch (SchedulerException exception) {
+            return RespBean.error("createAndStartScheduler occus error");
+        }
+        task.setSwitchStatus(true);
+        updateCurrentStatus(task);
+        return RespBean.success("start collect sql");
+    }
+
+    private Scheduler createAndStartScheduler(CollectPeriod task, LinuxConfig config) throws SchedulerException {
+        SchedulerFactory schedulerFactory = new StdSchedulerFactory();
+        scheduler = schedulerFactory.getScheduler();
+        // 获得时间的map 然后遍历
+        Map<String, String> timeMap = StringUtil.handleString(task.getTimeInterval());
+        for (Map.Entry<String, String> entry : timeMap.entrySet()) {
+            String startTime = entry.getKey();
+            String endTime = entry.getValue();
+            String executionTime = DateUtil.calculateMinutes(startTime, endTime);
+            Map<String, Object> jobDataMap = new HashMap<>();
+            jobDataMap.put(Constant.EXECUTE_TIME, executionTime);
+            jobDataMap.put(Constant.TASK, task);
+            jobDataMap.put(Constant.CONFIG, config);
+            JobDetail detail = SchedulerUtil.getJobDetail(startTime,
+                    Constant.SCHEDULER_GROUP, jobDataMap, PileInsertionJob.class);
+            Trigger trigger = SchedulerUtil.getTrigger(startTime,
+                    Constant.SCHEDULER_GROUP, startTime, "", 0);
+            checkDetail(detail);
+            scheduler.scheduleJob(detail, trigger);
+            // Heartbeat detection scheduler
+            JobDetail beatDetail = SchedulerUtil.getJobDetail(startTime
+                    + "Heartbeat", Constant.SCHEDULER_GROUP, jobDataMap, HeartbeatJob.class);
+            Trigger beatTrigger = SchedulerUtil.getTrigger(startTime
+                            + "Heartbeat", Constant.SCHEDULER_GROUP, startTime,
+                    endTime, DateUtil.getInterval(executionTime));
+            checkDetail(beatDetail);
+            scheduler.scheduleJob(beatDetail, beatTrigger);
+            // Task completion change status
+            JobDetail statusDetail = SchedulerUtil.getJobDetail(startTime + "status",
+                    Constant.SCHEDULER_GROUP, jobDataMap, ModifyStateJob.class);
+            Trigger statustrigger = SchedulerUtil.getTrigger(startTime + "status",
+                    Constant.SCHEDULER_GROUP, endTime, "", 0);
+            checkDetail(statusDetail);
+            scheduler.scheduleJob(statusDetail, statustrigger);
+        }
+        scheduler.start();
+        return scheduler;
+    }
+
+    private void checkDetail(JobDetail detail) throws SchedulerException {
+        if (scheduler.checkExists(detail.getKey())) {
+            scheduler.deleteJob(detail.getKey());
+        }
+    }
+
+    /**
+     * updateCurrentStatus
+     *
+     * @param period period
+     */
+    public void updateCurrentStatus(CollectPeriod period) {
+        periodMapper.updateById(period);
+    }
+
+    /**
+     * stopScheduler
+     *
+     * @throws SchedulerException SchedulerException
+     */
+    @PreDestroy
+    public void stopScheduler() throws SchedulerException {
+        if (scheduler != null) {
+            scheduler.shutdown();
+        }
+    }
+}
