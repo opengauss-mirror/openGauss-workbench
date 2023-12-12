@@ -76,31 +76,18 @@
 
 普通用户
 
-## **注意事项**
-1、源数据库mysql需要开启复制功能，在配置中增加以下配置参数，并重启：
-> binlog_format= ROW
-> 
-> binlog_row_image=FULL
-> 
-> enforce_gtid_consistency=ON
-> 
-> gtid_mode=ON
+## **迁移前置检查**
+1、Kafka服务可用性检查：
+>使用jps在portal执行机上执行查看，保证红框中的三个服务进程存在
+![img_1.png](_resources/019.png)
 
-2、反向迁移功能需要在openGauss数据库增加如下配置，并重启：
-> 调整pg_hba.conf以允许复制（这里的值取决于实际的网络配置以及用于连接的用户）
-> 
-> host replication repuser 0.0.0.0/0 sha256
-> 
-> 调整guc参数：
-> + alter system set ssl to on;
-> + alter system set wal_level to logical;
-> + alter system set enable_thread_pool to off;
+2、源端和目标端数据库是否可以连接：
+>MySQL: mysql -h ip -P port -u user -ppassword -S /~/mysql.sock
+>OpenGauss: gsql -r -d database -p port -U user -W password
 
-3、迁移过程中，请勿关闭源数据库或目标数据库；
+3、权限检查
 
-4、执行迁移任务的服务器应具备一定的性能和配置，以保证迁移过程的顺利执行；
-
-5、为确认数据的顺利迁移，源端数据库（Mysql）的数据源添加时，请按照迁移需要添加需要的权限，也可以直接给all权限；
+为确认数据的顺利迁移，源端数据库（Mysql）的数据源添加时，请按照迁移需要添加需要的权限，也可以直接给all权限；
 
 1）全量迁移： select 、reload、 lock tables 、replication client
 
@@ -108,7 +95,7 @@
 
 3）反向迁移： select 、update 、insert 、delete
 
-6、通过Datakit平台安装的源端数据库（openGauss）可以直接迁移，导入的数据库以及在创建任务时添加的自定义openGauss数据源，需要提前将用户权限改为SYSADMIN角色；
+通过Datakit平台安装的源端数据库（openGauss）可以直接迁移，导入的数据库以及在创建任务时添加的自定义openGauss数据源，需要提前将用户权限改为SYSADMIN角色；
 
 
 >反向迁移需要将rolreplication设置为true
@@ -134,8 +121,34 @@ select rolsystemadmin from PG_ROLES where rolname='用户名';
 >无sysadmin角色权限
 >![img.png](_resources/014.png)
 
+4、日志参数检查
+
+##### *源数据库mysql需要开启复制功能，在配置中增加以下配置参数，并重启*
+> log_bin=ON
+> 
+> binlog_format= ROW
+>
+> binlog_row_image=FULL
+
+##### *反向迁移功能需要在openGauss数据库增加如下配置，并重启*
+> 调整pg_hba.conf以允许复制（这里的值取决于实际的网络配置以及用于连接的用户）
+>
+> host replication repuser 0.0.0.0/0 sha256
+>
+> 调整guc参数：
+> + alter system set wal_level to logical;
+
+5、迁移过程中，请勿关闭源数据库或目标数据库；
+
+6、执行迁移任务的服务器应具备一定的性能和配置，以保证迁移过程的顺利执行；
+
 7、迁移任务是在非root用户下执行，任务的执行机器来源于平台资源中心的设备管理，因此需要在设备管理的用户管理中添加非root用户；
 
+## 内核参数调整说明
+
+1、 数据库用户为管理员时才能勾选“调整内核参数”；
+
+2、 目前支持调整的内核参数仅为fsync=off，后续如需增加可以在portal/config/databaseAdjustParams.properties中增加；
 ## 功能说明
 
 ### 迁移任务中心

@@ -44,4 +44,5 @@ public class TargetClusterNodeVO {
     private String dbUser;
     private String dbUserPassword;
     private Integer hostPort;
+    private Boolean isSystemAdmin;
 }

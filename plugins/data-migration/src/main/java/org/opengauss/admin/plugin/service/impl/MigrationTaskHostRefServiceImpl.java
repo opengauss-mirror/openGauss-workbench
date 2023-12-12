@@ -47,6 +47,7 @@ import org.opengauss.admin.common.core.domain.model.ops.jdbc.JdbcDbClusterNodeIn
 import org.opengauss.admin.common.core.domain.model.ops.jdbc.JdbcDbClusterVO;
 import org.opengauss.admin.common.utils.StringUtils;
 import org.opengauss.admin.common.utils.file.FileUploadUtils;
+import org.opengauss.admin.common.utils.ops.JdbcUtil;
 import org.opengauss.admin.plugin.constants.TaskConstant;
 import org.opengauss.admin.plugin.domain.MigrationHostPortalInstall;
 import org.opengauss.admin.plugin.domain.MigrationTask;
@@ -284,13 +285,21 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
                 clusterNodeVO.setDbUser(on.getDbUser());
                 clusterNodeVO.setDbUserPassword(on.getDbUserPassword());
                 clusterNodeVO.setHostPort(on.getHostPort());
+                clusterNodeVO.setIsSystemAdmin(
+                    JdbcUtil.judgeSystemAdmin(on.getPublicIp(), String.valueOf(on.getDbPort()), on.getDbUser(),
+                        on.getDbUserPassword()));
                 return clusterNodeVO;
             }).collect(Collectors.toList());
             clusterVO.setClusterNodes(nodes);
             return clusterVO;
         }).collect(Collectors.toList());
+        targetClusters.addAll(getJdbcTargetClusters());
+        return targetClusters;
+    }
+
+    private List<TargetClusterVO> getJdbcTargetClusters() {
         List<JdbcDbClusterVO> jdbcTargetCluster = jdbcDbClusterFacade.listAll("openGauss");
-        List<TargetClusterVO> jdbcTargetClusters = jdbcTargetCluster.stream().map(jc -> {
+        return jdbcTargetCluster.stream().map(jc -> {
             TargetClusterVO clusterVO = new TargetClusterVO();
             clusterVO.setClusterId(jc.getName());
             clusterVO.setClusterName(jc.getName());
@@ -306,13 +315,13 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
                 clusterNodeVO.setDbUserPassword(on.getPassword());
                 clusterNodeVO.setHostname(on.getName());
                 clusterNodeVO.setHostPort(22);
+                clusterNodeVO.setIsSystemAdmin(
+                    JdbcUtil.judgeSystemAdmin(on.getIp(), on.getPort(), on.getUsername(), on.getPassword()));
                 return clusterNodeVO;
             }).collect(Collectors.toList());
             clusterVO.setClusterNodes(nodes);
             return clusterVO;
         }).collect(Collectors.toList());
-        targetClusters.addAll(jdbcTargetClusters);
-        return targetClusters;
     }
 
     @Override

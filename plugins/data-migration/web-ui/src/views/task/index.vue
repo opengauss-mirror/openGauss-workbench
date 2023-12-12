@@ -112,6 +112,7 @@ const saveConfig = () => {
         more: mergeObjectArray(globalParamsObject.more, item.taskParamsObject.more, 'paramKey')
       }
       return {
+        isAdjustKernelParam: item.isAdjustKernelParam,
         migrationModelId: item.mode,
         sourceDb: item.sourceDBName,
         sourceDbHost: item.sourceNodeInfo.host,
@@ -126,6 +127,7 @@ const saveConfig = () => {
         targetDbUser: item.targetNodeInfo.username,
         targetDbVersion: item.targetNodeInfo.versionNum,
         targetNodeId: item.targetNodeInfo.nodeId,
+        isSystemAdmin: item.isSystemAdmin,
         taskParams: [...taskParamsObject.basic.map(item => ({ paramKey: item.paramKey, paramValue: item.paramValue, paramDesc: item.paramDesc })), ...taskParamsObject.more.map(item => ({ paramKey: item.paramKey, paramValue: item.paramValue, paramDesc: item.paramDesc }))]
       }
     })
@@ -170,6 +172,8 @@ const getTaskDetail = id => {
     globalParamsObject.more = data.globalParams.filter(child => !~defaultBasicData.value.indexOf(child.paramKey))
     subTaskConfig.value = data.tasks.map(item => {
       return {
+        isSystemAdmin: item.isSystemAdmin,
+        isAdjustKernelParam: item.isAdjustKernelParam,
         mode: item.migrationModelId,
         configType: !item.taskParams.length ? 1 : 2,
         sourceDBName: item.sourceDb,
