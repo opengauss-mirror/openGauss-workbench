@@ -103,5 +103,10 @@ public enum MessageEnum {
     /**
      * other
      */
-    OTHER
+    OTHER,
+
+    /**
+     * disconnection
+     */
+    DISCONNECTION
 }

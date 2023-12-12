@@ -5,8 +5,8 @@
 package com.nctigba.datastudio.service.impl.debug;
 
 import com.nctigba.datastudio.config.ConnectionConfig;
-import com.nctigba.datastudio.model.query.CoverageRateRequest;
-import com.nctigba.datastudio.util.LocaleString;
+import com.nctigba.datastudio.model.query.CoverageRateQuery;
+import com.nctigba.datastudio.utils.LocaleStringUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Test;
@@ -76,14 +76,14 @@ public class CoverageRateServiceTest {
     private MessageSource messageSource;
 
     @Spy
-    private LocaleString localeString;
+    private LocaleStringUtils localeStringUtils;
 
     @Mock
     private ServletRequestAttributes requestAttributes;
 
     @Before
     public void setUp() throws SQLException {
-        localeString.setMessageSource(messageSource);
+        localeStringUtils.setMessageSource(messageSource);
 
         when(connectionConfig.connectDatabase(anyString())).thenReturn(mockConnection);
         when(mockConnection.createStatement()).thenReturn(mockStatement);
@@ -124,7 +124,7 @@ public class CoverageRateServiceTest {
 
     @Test
     public void testQueryCoverageRate() throws SQLException {
-        CoverageRateRequest request = new CoverageRateRequest();
+        CoverageRateQuery request = new CoverageRateQuery();
         request.setOid(201839L);
         request.setUuid("8359cbf1-9833-4998-a29c-245f24009ab1");
 
@@ -134,7 +134,7 @@ public class CoverageRateServiceTest {
     @Test
     public void testDelete() throws SQLException {
         List<Long> list = new ArrayList<>();
-        CoverageRateRequest request = new CoverageRateRequest();
+        CoverageRateQuery request = new CoverageRateQuery();
         request.setOid(201839L);
         request.setCidList(list);
         request.setUuid("8359cbf1-9833-4998-a29c-245f24009ab1");
@@ -153,13 +153,13 @@ public class CoverageRateServiceTest {
         List<Long> list = new ArrayList<>();
         list.add(1687663170027L);
 
-        CoverageRateRequest request = new CoverageRateRequest();
+        CoverageRateQuery request = new CoverageRateQuery();
         request.setOid(201839L);
         request.setCidList(list);
         request.setUuid("8359cbf1-9833-4998-a29c-245f24009ab1");
 
-        MockedStatic<LocaleString> mockStatic = Mockito.mockStatic(LocaleString.class);
-        mockStatic.when(() -> LocaleString.transLanguage(anyString())).thenReturn("123");
+        MockedStatic<LocaleStringUtils> mockStatic = Mockito.mockStatic(LocaleStringUtils.class);
+        mockStatic.when(() -> LocaleStringUtils.transLanguage(anyString())).thenReturn("123");
         when(response.getOutputStream()).thenReturn(outputStream);
         when(response.getOutputStream()).thenReturn(outputStream);
 
@@ -172,13 +172,13 @@ public class CoverageRateServiceTest {
         List<Long> list = new ArrayList<>();
         list.add(1687663170020L);
 
-        CoverageRateRequest request = new CoverageRateRequest();
+        CoverageRateQuery request = new CoverageRateQuery();
         request.setOid(201839L);
         request.setCidList(list);
         request.setUuid("8359cbf1-9833-4998-a29c-245f24009ab1");
 
-        MockedStatic<LocaleString> mockStatic = Mockito.mockStatic(LocaleString.class);
-        mockStatic.when(() -> LocaleString.transLanguage(anyString())).thenReturn("123");
+        MockedStatic<LocaleStringUtils> mockStatic = Mockito.mockStatic(LocaleStringUtils.class);
+        mockStatic.when(() -> LocaleStringUtils.transLanguage(anyString())).thenReturn("123");
         when(response.getOutputStream()).thenReturn(outputStream);
 
         coverageRateService.export(request, response);

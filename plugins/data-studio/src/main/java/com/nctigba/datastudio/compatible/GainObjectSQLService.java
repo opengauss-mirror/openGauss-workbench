@@ -4,10 +4,10 @@
 
 package com.nctigba.datastudio.compatible;
 
-import com.nctigba.datastudio.model.query.DatabaseMetaarrayColumnQuery;
-import com.nctigba.datastudio.model.query.DatabaseMetaarrayQuery;
-import com.nctigba.datastudio.model.query.DatabaseMetaarraySchemaQuery;
-import com.nctigba.datastudio.util.DebugUtils;
+import com.nctigba.datastudio.model.query.DatabaseMetaArrayColumnQuery;
+import com.nctigba.datastudio.model.query.DatabaseMetaArrayQuery;
+import com.nctigba.datastudio.model.query.DatabaseMetaArraySchemaQuery;
+import com.nctigba.datastudio.utils.DebugUtils;
 import org.opengauss.admin.common.exception.CustomException;
 
 import java.sql.SQLException;
@@ -43,7 +43,7 @@ public interface GainObjectSQLService {
      * @return List
      * @throws SQLException SQLException
      */
-    default List<Map<String, String>> schemaList(DatabaseMetaarraySchemaQuery request) throws SQLException {
+    default List<Map<String, String>> schemaList(DatabaseMetaArraySchemaQuery request) throws SQLException {
         throw new CustomException(DebugUtils.getMessage());
     }
 
@@ -54,7 +54,7 @@ public interface GainObjectSQLService {
      * @return List
      * @throws SQLException SQLException
      */
-    default List<String> objectList(DatabaseMetaarrayQuery request) throws SQLException {
+    default List<String> objectList(DatabaseMetaArrayQuery request) throws SQLException {
         throw new CustomException(DebugUtils.getMessage());
     }
 
@@ -65,7 +65,7 @@ public interface GainObjectSQLService {
      * @return List
      * @throws SQLException SQLException
      */
-    default List<String> tableColumnList(DatabaseMetaarrayColumnQuery request) throws SQLException {
+    default List<String> tableColumnList(DatabaseMetaArrayColumnQuery request) throws SQLException {
         throw new CustomException(DebugUtils.getMessage());
     }
 
@@ -85,6 +85,26 @@ public interface GainObjectSQLService {
      * @return List
      */
     default String tableSql(String schema) {
+        throw new CustomException(DebugUtils.getMessage());
+    }
+
+    /**
+     * foreign table sql
+     *
+     * @param schema schema
+     * @return List
+     */
+    default String foreignTableSql(String schema) {
+        throw new CustomException(DebugUtils.getMessage());
+    }
+
+    /**
+     * trigger sql
+     *
+     * @param schema schema
+     * @return List
+     */
+    default String triggerSql(String schema) {
         throw new CustomException(DebugUtils.getMessage());
     }
 
@@ -143,6 +163,15 @@ public interface GainObjectSQLService {
      * @return String
      */
     default String tablespaceListSQL() {
+        throw new CustomException(DebugUtils.getMessage());
+    }
+
+    /**
+     * table space list sql
+     *
+     * @return String
+     */
+    default String tablespaceOidListSQL() {
         throw new CustomException(DebugUtils.getMessage());
     }
 

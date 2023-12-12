@@ -72,7 +72,7 @@
   });
   const rules = reactive<FormRules>({
     description: [
-      { required: true, message: t('rules.empty', [t('table.description')]), trigger: 'blur' },
+      { required: true, message: t('rules.empty', [t('common.description')]), trigger: 'blur' },
     ],
   });
 

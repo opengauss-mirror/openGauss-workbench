@@ -6,7 +6,7 @@ package com.nctigba.datastudio.service.impl.debug;
 
 import com.nctigba.datastudio.base.WebSocketServer;
 import com.nctigba.datastudio.model.dto.ConnectionDTO;
-import com.nctigba.datastudio.util.LocaleString;
+import com.nctigba.datastudio.utils.LocaleStringUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Test;
@@ -57,7 +57,7 @@ public class ShowPackageTest {
     private MessageSource messageSource;
 
     @Spy
-    private LocaleString localeString;
+    private LocaleStringUtils localeStringUtils;
 
     private String str = "{" + LF
             + "  \"operation\": \"showPackage\"," + LF
@@ -72,7 +72,7 @@ public class ShowPackageTest {
         conMap = new HashMap<>();
         conMap.put("8359cbf1-9833-4998-a29c-245f24009ab1", new ConnectionDTO());
 
-        localeString.setMessageSource(messageSource);
+        localeStringUtils.setMessageSource(messageSource);
     }
 
     @Test
@@ -146,8 +146,7 @@ public class ShowPackageTest {
     @Test
     public void testOperate5() throws SQLException, IOException {
         when(webSocketServer.getConnection(anyString())).thenReturn(mockConnection);
-        when(mockConnection.isClosed()).thenReturn(true);
-        when(webSocketServer.createConnection(anyString(), anyString())).thenReturn(mockConnection);
+        when(mockConnection.isClosed()).thenReturn(false);
         when(mockConnection.createStatement()).thenReturn(mockStatement);
         when(mockStatement.executeQuery(anyString())).thenReturn(mockResultSet);
         when(mockResultSet.next()).thenReturn(true, false);

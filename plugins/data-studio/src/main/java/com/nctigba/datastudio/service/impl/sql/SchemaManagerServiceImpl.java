@@ -6,7 +6,7 @@ package com.nctigba.datastudio.service.impl.sql;
 
 import com.nctigba.datastudio.compatible.SchemaObjectSQLService;
 import com.nctigba.datastudio.config.ConnectionConfig;
-import com.nctigba.datastudio.model.query.SchemaManagerRequest;
+import com.nctigba.datastudio.model.query.SchemaManagerQuery;
 import com.nctigba.datastudio.service.SchemaManagerService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -30,6 +30,7 @@ import static com.nctigba.datastudio.constants.CommonConstants.OWNER;
 import static com.nctigba.datastudio.constants.CommonConstants.ROL_NAME;
 import static com.nctigba.datastudio.constants.CommonConstants.SCHEMA_NAME;
 import static com.nctigba.datastudio.dao.ConnectionMapDAO.conMap;
+import static com.nctigba.datastudio.utils.DebugUtils.comGetUuidType;
 
 /**
  * SchemaManagerServiceImpl
@@ -58,13 +59,13 @@ public class SchemaManagerServiceImpl implements SchemaManagerService {
     }
 
     @Override
-    public List<String> queryAllUsers(SchemaManagerRequest request) throws SQLException {
+    public List<String> queryAllUsers(SchemaManagerQuery request) throws SQLException {
         log.info("SchemaManagerService queryAllUsers request: " + request);
         try (
                 Connection connection = connectionConfig.connectDatabase(request.getUuid());
                 Statement statement = connection.createStatement();
-                ResultSet resultSet = statement.executeQuery(schemaObjectSQLService.get(conMap.get(request.getUuid())
-                        .getType()).queryAllUsersDDL())
+                ResultSet resultSet = statement.executeQuery(schemaObjectSQLService.get(
+                        comGetUuidType(request.getUuid())).queryAllUsersDDL())
         ) {
             List<String> list = new ArrayList<>();
             while (resultSet.next()) {
@@ -76,13 +77,13 @@ public class SchemaManagerServiceImpl implements SchemaManagerService {
     }
 
     @Override
-    public Map<String, String> querySchema(SchemaManagerRequest request) throws SQLException {
+    public Map<String, String> querySchema(SchemaManagerQuery request) throws SQLException {
         log.info("SchemaManagerService querySchema request: " + request);
         try (
                 Connection connection = connectionConfig.connectDatabase(request.getUuid());
                 Statement statement = connection.createStatement();
-                ResultSet resultSet = statement.executeQuery(schemaObjectSQLService.get(conMap.get(request.getUuid())
-                        .getType()).querySchemaDDL(request.getOid()))
+                ResultSet resultSet = statement.executeQuery(schemaObjectSQLService.get(
+                        comGetUuidType(request.getUuid())).querySchemaDDL(request.getOid()))
         ) {
             Map<String, String> map = new HashMap<>();
             while (resultSet.next()) {
@@ -97,7 +98,7 @@ public class SchemaManagerServiceImpl implements SchemaManagerService {
     }
 
     @Override
-    public void createSchema(SchemaManagerRequest request) throws SQLException {
+    public void createSchema(SchemaManagerQuery request) throws SQLException {
         log.info("SchemaManagerService createSchema request: " + request);
         try (
                 Connection connection = connectionConfig.connectDatabase(request.getUuid());
@@ -105,11 +106,11 @@ public class SchemaManagerServiceImpl implements SchemaManagerService {
         ) {
             String schemaName = request.getSchemaName();
             String owner = request.getOwner();
-            statement.execute(schemaObjectSQLService.get(conMap.get(request.getUuid()).getType())
+            statement.execute(schemaObjectSQLService.get(comGetUuidType(request.getUuid()))
                     .createSchemaSQL(schemaName, owner));
             String description = request.getDescription();
             if (StringUtils.isNotEmpty(description)) {
-                statement.execute(schemaObjectSQLService.get(conMap.get(request.getUuid()).getType())
+                statement.execute(schemaObjectSQLService.get(comGetUuidType(request.getUuid()))
                         .createCommentSchemaSQL(schemaName, description));
             }
         }
@@ -117,13 +118,13 @@ public class SchemaManagerServiceImpl implements SchemaManagerService {
     }
 
     @Override
-    public void updateSchema(SchemaManagerRequest request) throws SQLException {
+    public void updateSchema(SchemaManagerQuery request) throws SQLException {
         log.info("SchemaManagerService updateSchema request: " + request);
         try (
                 Connection connection = connectionConfig.connectDatabase(request.getUuid());
                 Statement statement = connection.createStatement();
-                ResultSet resultSet = statement.executeQuery(schemaObjectSQLService.get(conMap.get(request.getUuid())
-                        .getType()).querySchemaDDL(request.getOid()))
+                ResultSet resultSet = statement.executeQuery(schemaObjectSQLService.get(
+                        comGetUuidType(request.getUuid())).querySchemaDDL(request.getOid()))
         ) {
             String oldSchemaName = request.getSchemaName();
             String oldOwner = request.getOwner();
@@ -133,28 +134,28 @@ public class SchemaManagerServiceImpl implements SchemaManagerService {
             }
             String schemaName = request.getSchemaName();
             if (!oldSchemaName.equals(schemaName)) {
-                statement.execute(schemaObjectSQLService.get(conMap.get(request.getUuid()).getType())
+                statement.execute(schemaObjectSQLService.get(comGetUuidType(request.getUuid()))
                         .updateSchemaNameSQL(oldSchemaName, schemaName));
             }
             String owner = request.getOwner();
             if (!oldOwner.equals(owner)) {
-                statement.execute(schemaObjectSQLService.get(conMap.get(request.getUuid()).getType())
+                statement.execute(schemaObjectSQLService.get(comGetUuidType(request.getUuid()))
                         .updateSchemaOwnerSQL(oldSchemaName, owner));
             }
-            statement.execute(schemaObjectSQLService.get(conMap.get(request.getUuid()).getType())
+            statement.execute(schemaObjectSQLService.get(comGetUuidType(request.getUuid()))
                     .updateSchemaCommentSQL(schemaName, request.getDescription()));
         }
         log.info("SchemaManagerService updateSchema end ");
     }
 
     @Override
-    public void deleteSchema(SchemaManagerRequest request) throws SQLException {
+    public void deleteSchema(SchemaManagerQuery request) throws SQLException {
         log.info("SchemaManagerService deleteSchema request: " + request);
         try (
                 Connection connection = connectionConfig.connectDatabase(request.getUuid());
                 Statement statement = connection.createStatement()
         ) {
-            statement.execute(schemaObjectSQLService.get(conMap.get(request.getUuid()).getType())
+            statement.execute(schemaObjectSQLService.get(comGetUuidType(request.getUuid()))
                     .deleteSchemaSQL(request.getSchemaName()));
         }
         log.info("SchemaManagerService deleteSchema end ");

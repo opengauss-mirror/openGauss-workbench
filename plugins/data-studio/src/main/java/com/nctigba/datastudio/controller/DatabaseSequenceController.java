@@ -37,7 +37,7 @@ public class DatabaseSequenceController {
      * @param request request
      * @return String
      */
-    @PostMapping(value = "/sequences/action", params = "action=createSequenceDdl", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(value = "/sequences/action", produces = MediaType.APPLICATION_JSON_VALUE)
     public String createSequenceDDL(@RequestBody DatabaseCreateSequenceDTO request) {
         return databaseSequenceService.createSequenceDDL(request);
     }

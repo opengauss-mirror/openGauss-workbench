@@ -4,7 +4,7 @@ export interface EditTableColumn {
   label: string;
   name: string;
   isI18nLabel?: boolean;
-  type: 'input' | 'inputNumber' | 'select' | 'checkbox' | 'cascader';
+  element: 'input' | 'inputNumber' | 'select' | 'checkbox' | 'cascader';
   show?: boolean;
   attributes?: Record<string, any>;
   multipleOrder?: null | 'ASC' | 'DESC';
@@ -23,10 +23,9 @@ export interface TableDataHooksOptions {
 }
 export interface RowInfo {
   data: any[];
-  currentRow: any;
+  selectionRows: any[];
   idKey: string;
   rowStatusKey: string;
-  rowIndex: number;
 }
 
 export interface EditDataResponse {

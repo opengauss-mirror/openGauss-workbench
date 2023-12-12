@@ -1,6 +1,6 @@
 <template>
   <div class="table-page">
-    <el-table :data="gridData" stripe v-loading="loading">
+    <el-table :data="gridData" stripe v-loading="loading" border>
       <el-table-column property="attr" :label="$t('synonym.attribute.serialNo')" />
       <el-table-column property="value" :label="$t('synonym.attribute.attr')" />
     </el-table>

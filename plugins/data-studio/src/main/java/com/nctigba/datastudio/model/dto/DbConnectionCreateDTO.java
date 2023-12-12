@@ -30,6 +30,7 @@ public class DbConnectionCreateDTO {
     private String userName;
     private String password;
     private String webUser;
+    private String isRememberPassword;
 
     /**
      * set database connection

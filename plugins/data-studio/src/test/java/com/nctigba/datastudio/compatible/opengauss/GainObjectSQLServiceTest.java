@@ -6,9 +6,9 @@ package com.nctigba.datastudio.compatible.opengauss;
 
 import com.nctigba.datastudio.config.ConnectionConfig;
 import com.nctigba.datastudio.model.dto.ConnectionDTO;
-import com.nctigba.datastudio.model.query.DatabaseMetaarrayColumnQuery;
-import com.nctigba.datastudio.model.query.DatabaseMetaarrayQuery;
-import com.nctigba.datastudio.model.query.DatabaseMetaarraySchemaQuery;
+import com.nctigba.datastudio.model.query.DatabaseMetaArrayColumnQuery;
+import com.nctigba.datastudio.model.query.DatabaseMetaArrayQuery;
+import com.nctigba.datastudio.model.query.DatabaseMetaArraySchemaQuery;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -62,7 +62,7 @@ public class GainObjectSQLServiceTest {
 
     @Test
     public void testSchemaList() throws SQLException {
-        DatabaseMetaarraySchemaQuery databaseMetaarraySchemaQuery = new DatabaseMetaarraySchemaQuery();
+        DatabaseMetaArraySchemaQuery databaseMetaarraySchemaQuery = new DatabaseMetaArraySchemaQuery();
         databaseMetaarraySchemaQuery.setUuid(UUID);
         databaseMetaarraySchemaQuery.setConnectionName("a");
         databaseMetaarraySchemaQuery.setWebUser("s");
@@ -74,7 +74,7 @@ public class GainObjectSQLServiceTest {
     public void testObjectListAll() throws SQLException {
         when(mockResultSet.next()).thenReturn(true, false).thenReturn(true, false)
                 .thenReturn(true, false).thenReturn(true, false);
-        DatabaseMetaarrayQuery databaseMetaarrayQuery = new DatabaseMetaarrayQuery();
+        DatabaseMetaArrayQuery databaseMetaarrayQuery = new DatabaseMetaArrayQuery();
         databaseMetaarrayQuery.setUuid(UUID);
         databaseMetaarrayQuery.setConnectionName("a");
         databaseMetaarrayQuery.setWebUser("s");
@@ -85,7 +85,7 @@ public class GainObjectSQLServiceTest {
 
     @Test
     public void testObjectListFunPro() throws SQLException {
-        DatabaseMetaarrayQuery databaseMetaarrayQuery = new DatabaseMetaarrayQuery();
+        DatabaseMetaArrayQuery databaseMetaarrayQuery = new DatabaseMetaArrayQuery();
         databaseMetaarrayQuery.setUuid(UUID);
         databaseMetaarrayQuery.setConnectionName("a");
         databaseMetaarrayQuery.setWebUser("s");
@@ -96,7 +96,7 @@ public class GainObjectSQLServiceTest {
 
     @Test
     public void testObjectListView() throws SQLException {
-        DatabaseMetaarrayQuery databaseMetaarrayQuery = new DatabaseMetaarrayQuery();
+        DatabaseMetaArrayQuery databaseMetaarrayQuery = new DatabaseMetaArrayQuery();
         databaseMetaarrayQuery.setUuid(UUID);
         databaseMetaarrayQuery.setConnectionName("a");
         databaseMetaarrayQuery.setWebUser("s");
@@ -107,7 +107,7 @@ public class GainObjectSQLServiceTest {
 
     @Test
     public void testObjectListOther() throws SQLException {
-        DatabaseMetaarrayQuery databaseMetaarrayQuery = new DatabaseMetaarrayQuery();
+        DatabaseMetaArrayQuery databaseMetaarrayQuery = new DatabaseMetaArrayQuery();
         databaseMetaarrayQuery.setUuid(UUID);
         databaseMetaarrayQuery.setConnectionName("a");
         databaseMetaarrayQuery.setWebUser("s");
@@ -118,7 +118,7 @@ public class GainObjectSQLServiceTest {
 
     @Test
     public void testTableColumnList() throws SQLException {
-        DatabaseMetaarrayColumnQuery databaseMetaarrayColumnQuery = new DatabaseMetaarrayColumnQuery();
+        DatabaseMetaArrayColumnQuery databaseMetaarrayColumnQuery = new DatabaseMetaArrayColumnQuery();
         databaseMetaarrayColumnQuery.setUuid(UUID);
         databaseMetaarrayColumnQuery.setConnectionName("a");
         databaseMetaarrayColumnQuery.setWebUser("s");

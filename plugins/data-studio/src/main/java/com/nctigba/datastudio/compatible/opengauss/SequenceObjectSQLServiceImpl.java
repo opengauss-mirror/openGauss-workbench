@@ -9,8 +9,8 @@ import com.nctigba.datastudio.config.ConnectionConfig;
 import com.nctigba.datastudio.model.dto.DatabaseCreateSequenceDTO;
 import com.nctigba.datastudio.model.dto.DatabaseDropSequenceDTO;
 import com.nctigba.datastudio.model.dto.DatabaseSequenceDdlDTO;
-import com.nctigba.datastudio.util.DebugUtils;
-import com.nctigba.datastudio.util.LocaleString;
+import com.nctigba.datastudio.utils.DebugUtils;
+import com.nctigba.datastudio.utils.LocaleStringUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.opengauss.admin.common.exception.CustomException;
@@ -111,6 +111,7 @@ public class SequenceObjectSQLServiceImpl implements SequenceObjectSQLService {
         log.info("dropSequenceDDL request is: " + request);
         String sql = String.format(DROP_SEQUENCE_SQL, DebugUtils.needQuoteName(request.getSchema()),
                 DebugUtils.needQuoteName(request.getSequenceName()));
+        log.info("dropSequenceDDL request is: {}", sql);
         return sql;
     }
 
@@ -130,7 +131,7 @@ public class SequenceObjectSQLServiceImpl implements SequenceObjectSQLService {
                 countResult.next();
                 int count = countResult.getInt("count");
                 if (count == 0) {
-                    throw new CustomException(LocaleString.transLanguage("2012"));
+                    throw new CustomException(LocaleStringUtils.transLanguage("2012"));
                 }
             }
             String ddl = "";

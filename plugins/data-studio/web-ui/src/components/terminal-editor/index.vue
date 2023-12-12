@@ -24,20 +24,20 @@
             @importFile="handleImportFile"
             @exportFile="handleExportFile"
           />
-          <div class="monaco-wrapper" ref="monacoWrapper">
+          <div class="monaco-wrapper" ref="editorWrapper">
             <Splitpanes class="default-theme" :dbl-click-splitter="false">
               <Pane>
                 <AceEditor
                   ref="editorRef"
                   :value="sqlData.sqlText"
-                  :height="monacoHeight"
+                  :height="editorHeight"
                   :readOnly="!isGlobalEnable || sqlData.readOnly || ws.isInPackage"
                   :openDebug="['debug', 'debugChild'].includes(props.editorType)"
                   @addBreakPoint="(line) => handleBreakPoint([line + 1], 'addBreakPoint')"
                   @removeBreakPoint="(line) => handleBreakPoint([line + 1], 'deleteBreakPoint')"
                   @enableBreakPoint="(line) => handleBreakPoint([line + 1], 'enableBreakPoint')"
                   @disableBreakPoint="(line) => handleBreakPoint([line + 1], 'disableBreakPoint')"
-                  style="width: 100%; margin-top: 4px; border: 1px solid #ddd"
+                  style="width: 100%; margin-top: 4px"
                 />
               </Pane>
               <Pane v-if="debug.isDebugging" min-size="30" max-size="70" size="30">
@@ -110,6 +110,7 @@
   import { useTagsViewStore } from '@/store/modules/tagsView';
   import { useI18n } from 'vue-i18n';
   import { changeRunningTagStatus } from '@/hooks/tagRunning';
+  import { interceptHttpDisconnection } from '@/utils/activateDisconnection';
 
   const route = useRoute();
   const router = useRouter();
@@ -165,8 +166,8 @@
 
   const showResult = ref(false);
   const id = 'terminal_' + uuid();
-  const monacoWrapper = ref<HTMLElement>();
-  const monacoHeight = ref('calc(100% - 4px)');
+  const editorWrapper = ref<HTMLElement>();
+  const editorHeight = ref('calc(100% - 4px)');
   const editorRef = ref();
   const ws = reactive({
     name: '',
@@ -231,12 +232,23 @@
 
   interface TabType {
     id: number;
-    name: string; //tag's name 
+    name: string; //tag's name
     columns?: any[];
     data: any[];
   }
   const tabList = ref<Array<TabType>>([]);
   const tabValue = ref('home');
+
+  const buildConnection = () => {
+    ws.instance.send({
+      operation: 'connection',
+      language: AppStore.language,
+      ...commonWsParams.value,
+    });
+    if (props.editorType == 'sql') {
+      changeSqlBarStatus('init');
+    }
+  };
 
   // enterparams's dialog
   const enterParams = reactive({
@@ -315,9 +327,8 @@
     msg: string;
     type: string;
   }
-  const onWebSocketMessage = (data: string) => {
+  const onWebSocketMessage = (res: Message) => {
     if (!isGlobalEnable.value) return loading.value?.close();
-    let res: Message = JSON.parse(data);
     if (res.code == '200') {
       if (['debug', 'debugChild'].includes(props.editorType) && res.type != 'OPERATE_STATUS') {
         getButtonStatus();
@@ -516,6 +527,12 @@
           loading.value.close();
         }
       }
+      if (res.type == 'DISCONNECTION') {
+        interceptHttpDisconnection(ws.uuid);
+        if (props.editorType == 'sql') {
+          changeSqlBarStatus('init');
+        }
+      }
       if (res.type == 'OTHER') {
         loading.value?.close();
       }
@@ -703,7 +720,7 @@
   };
 
   const handleExportFile = () => {
-    const data = editorRef.value.getValue();
+    const data = editorRef.value.getAllSelectionValue() || editorRef.value.getValue();
     downLoadMyBlobType(`${ws.connectionName}_${Date.now()}.sql`, data);
   };
 
@@ -770,11 +787,7 @@
     });
     ws.instance = new WebSocketClass(ws.name, ws.sessionId, onWebSocketMessage);
 
-    ws.instance.send({
-      operation: 'connection',
-      language: AppStore.language,
-      ...commonWsParams.value,
-    });
+    buildConnection();
 
     if (['debug', 'debugChild'].includes(route.name as string)) {
       loading.value = loadingInstance();
@@ -837,7 +850,7 @@
     height: 100%;
     display: flex;
     flex-direction: column;
-    padding: 10px 10px 8px 0;
+    padding: 5px 10px 8px 0;
   }
   .monaco-wrapper {
     flex: 1;

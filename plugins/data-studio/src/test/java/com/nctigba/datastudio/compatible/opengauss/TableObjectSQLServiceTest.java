@@ -8,7 +8,7 @@ import com.nctigba.datastudio.config.ConnectionConfig;
 import com.nctigba.datastudio.model.dto.ConnectionDTO;
 import com.nctigba.datastudio.model.query.SelectDataFiltrationQuery;
 import com.nctigba.datastudio.model.query.SelectDataQuery;
-import com.nctigba.datastudio.util.LocaleString;
+import com.nctigba.datastudio.utils.LocaleStringUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -65,8 +65,8 @@ public class TableObjectSQLServiceTest {
 
     @Test
     public void testTableAttributeSQL() throws SQLException {
-        MockedStatic<LocaleString> staticUtilsMockedStatic = Mockito.mockStatic(LocaleString.class);
-        staticUtilsMockedStatic.when(() -> LocaleString.transLanguage(anyString()))
+        MockedStatic<LocaleStringUtils> staticUtilsMockedStatic = Mockito.mockStatic(LocaleStringUtils.class);
+        staticUtilsMockedStatic.when(() -> LocaleStringUtils.transLanguage(anyString()))
                 .thenReturn("123");
         when(mockResultSet.next()).thenReturn(true, false);
         tableObjectSQLService.tableAttributeSQL(UUID, "", "n");
@@ -76,8 +76,8 @@ public class TableObjectSQLServiceTest {
 
     @Test
     public void testTableDdlErro() throws SQLException {
-        MockedStatic<LocaleString> staticUtilsMockedStatic = Mockito.mockStatic(LocaleString.class);
-        staticUtilsMockedStatic.when(() -> LocaleString.transLanguage(anyString()))
+        MockedStatic<LocaleStringUtils> staticUtilsMockedStatic = Mockito.mockStatic(LocaleStringUtils.class);
+        staticUtilsMockedStatic.when(() -> LocaleStringUtils.transLanguage(anyString()))
                 .thenReturn("123");
         when(mockResultSet.next()).thenReturn(true, false);
         when(mockResultSet.getString("pg_get_tabledef")).thenReturn("");

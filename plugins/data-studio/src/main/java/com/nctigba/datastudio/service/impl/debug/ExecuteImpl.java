@@ -6,11 +6,11 @@ package com.nctigba.datastudio.service.impl.debug;
 
 import com.alibaba.fastjson.JSON;
 import com.nctigba.datastudio.base.WebSocketServer;
-import com.nctigba.datastudio.model.PublicParamReq;
+import com.nctigba.datastudio.model.query.PublicParamQuery;
 import com.nctigba.datastudio.model.entity.OperateStatusDO;
 import com.nctigba.datastudio.service.OperationInterface;
-import com.nctigba.datastudio.util.DebugUtils;
-import com.nctigba.datastudio.util.LocaleString;
+import com.nctigba.datastudio.utils.DebugUtils;
+import com.nctigba.datastudio.utils.LocaleStringUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.util.Strings;
@@ -31,7 +31,6 @@ import static com.nctigba.datastudio.constants.CommonConstants.DEFINITION;
 import static com.nctigba.datastudio.constants.CommonConstants.RESULT;
 import static com.nctigba.datastudio.constants.CommonConstants.SUCCESS;
 import static com.nctigba.datastudio.constants.SqlConstants.QUERY_DEF_SQL;
-import static com.nctigba.datastudio.constants.SqlConstants.SPACE;
 import static com.nctigba.datastudio.enums.MessageEnum.CONFIRM;
 import static com.nctigba.datastudio.enums.MessageEnum.PARAM_WINDOW;
 
@@ -48,7 +47,7 @@ public class ExecuteImpl implements OperationInterface {
 
     @Override
     public void operate(WebSocketServer webSocketServer, Object obj) throws SQLException, IOException {
-        PublicParamReq paramReq = DebugUtils.changeParamType(obj);
+        PublicParamQuery paramReq = DebugUtils.changeParamType(obj);
         log.info("execute paramReq: " + paramReq);
 
         String rootWindowName = paramReq.getRootWindowName();
@@ -71,7 +70,7 @@ public class ExecuteImpl implements OperationInterface {
             while (defResultSet.next()) {
                 definition = defResultSet.getString(DEFINITION);
                 if (StringUtils.isEmpty(definition)) {
-                    throw new CustomException(LocaleString.transLanguageWs("2015", webSocketServer));
+                    throw new CustomException(LocaleStringUtils.transLanguageWs("2015", webSocketServer));
                 } else {
                     definition = DebugUtils.sqlHandleAfter(definition);
                 }
@@ -82,7 +81,7 @@ public class ExecuteImpl implements OperationInterface {
         if (!DebugUtils.replaceLine(paramReq.getSql()).equals(DebugUtils.replaceLine(definition))
                 && !paramReq.isContinue()) {
             Map<String, String> map = new HashMap<>();
-            map.put(RESULT, LocaleString.transLanguageWs("1006", webSocketServer));
+            map.put(RESULT, LocaleStringUtils.transLanguageWs("1006", webSocketServer));
             webSocketServer.sendMessage(windowName, CONFIRM, SUCCESS, map);
             return;
         }
@@ -103,6 +102,6 @@ public class ExecuteImpl implements OperationInterface {
 
     @Override
     public Object formatJson(String str) {
-        return JSON.parseObject(str, PublicParamReq.class);
+        return JSON.parseObject(str, PublicParamQuery.class);
     }
 }

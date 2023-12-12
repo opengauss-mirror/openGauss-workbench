@@ -8,7 +8,7 @@ import com.nctigba.datastudio.compatible.SchemaObjectSQLService;
 import com.nctigba.datastudio.compatible.opengauss.SchemaObjectSQLServiceImpl;
 import com.nctigba.datastudio.config.ConnectionConfig;
 import com.nctigba.datastudio.model.dto.ConnectionDTO;
-import com.nctigba.datastudio.model.query.SchemaManagerRequest;
+import com.nctigba.datastudio.model.query.SchemaManagerQuery;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -80,7 +80,7 @@ public class SchemaManagerServiceTest {
         serviceArrayList.add(new SchemaObjectSQLServiceImpl());
         schemaManagerService.setSchemaObjectSQLService(serviceArrayList);
 
-        SchemaManagerRequest request = new SchemaManagerRequest();
+        SchemaManagerQuery request = new SchemaManagerQuery();
         request.setUuid("111");
         schemaManagerService.queryAllUsers(request);
     }
@@ -91,7 +91,7 @@ public class SchemaManagerServiceTest {
         serviceArrayList.add(new SchemaObjectSQLServiceImpl());
         schemaManagerService.setSchemaObjectSQLService(serviceArrayList);
 
-        SchemaManagerRequest request = new SchemaManagerRequest();
+        SchemaManagerQuery request = new SchemaManagerQuery();
         request.setUuid("111");
         request.setOid("123");
         schemaManagerService.querySchema(request);
@@ -103,7 +103,7 @@ public class SchemaManagerServiceTest {
         serviceArrayList.add(new SchemaObjectSQLServiceImpl());
         schemaManagerService.setSchemaObjectSQLService(serviceArrayList);
 
-        SchemaManagerRequest request = new SchemaManagerRequest();
+        SchemaManagerQuery request = new SchemaManagerQuery();
         request.setUuid("111");
         request.setSchemaName("ss");
         request.setOwner("scott");
@@ -118,7 +118,7 @@ public class SchemaManagerServiceTest {
         serviceArrayList.add(new SchemaObjectSQLServiceImpl());
         schemaManagerService.setSchemaObjectSQLService(serviceArrayList);
 
-        SchemaManagerRequest request = new SchemaManagerRequest();
+        SchemaManagerQuery request = new SchemaManagerQuery();
         request.setUuid("111");
         request.setSchemaName("ss");
         request.setOwner("scott");
@@ -132,7 +132,7 @@ public class SchemaManagerServiceTest {
         serviceArrayList.add(new SchemaObjectSQLServiceImpl());
         schemaManagerService.setSchemaObjectSQLService(serviceArrayList);
 
-        SchemaManagerRequest request = new SchemaManagerRequest();
+        SchemaManagerQuery request = new SchemaManagerQuery();
         request.setUuid("111");
         request.setSchemaName("value1");
         request.setOwner("value2");
@@ -146,7 +146,7 @@ public class SchemaManagerServiceTest {
         serviceArrayList.add(new SchemaObjectSQLServiceImpl());
         schemaManagerService.setSchemaObjectSQLService(serviceArrayList);
 
-        SchemaManagerRequest request = new SchemaManagerRequest();
+        SchemaManagerQuery request = new SchemaManagerQuery();
         request.setUuid("111");
         request.setSchemaName("ss");
         schemaManagerService.deleteSchema(request);

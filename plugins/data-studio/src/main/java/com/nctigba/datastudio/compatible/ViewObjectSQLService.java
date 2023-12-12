@@ -7,7 +7,7 @@ package com.nctigba.datastudio.compatible;
 import com.nctigba.datastudio.model.dto.DatabaseCreateViewDTO;
 import com.nctigba.datastudio.model.dto.DatabaseSelectViewDTO;
 import com.nctigba.datastudio.model.dto.DatabaseViewDdlDTO;
-import com.nctigba.datastudio.util.DebugUtils;
+import com.nctigba.datastudio.utils.DebugUtils;
 import org.opengauss.admin.common.exception.CustomException;
 
 import java.sql.SQLException;
@@ -73,9 +73,21 @@ public interface ViewObjectSQLService {
      * return select view sql
      *
      * @param request request
+     * @param star star
+     * @param end end
      * @return String
      */
-    default String returnSelectViewSQL(DatabaseSelectViewDTO request) {
+    default String returnSelectViewSQL(DatabaseSelectViewDTO request, Integer star, Integer end) {
+        throw new CustomException(DebugUtils.getMessage());
+    }
+
+    /**
+     * return select count view sql
+     *
+     * @param request request
+     * @return String
+     */
+    default String viewDataCountSQL(DatabaseSelectViewDTO request) {
         throw new CustomException(DebugUtils.getMessage());
     }
 
@@ -94,8 +106,8 @@ public interface ViewObjectSQLService {
     /**
      * set view schema
      *
-     * @param schema schema
-     * @param viewName viewName
+     * @param schema        schema
+     * @param viewName      viewName
      * @param newSchemaName newSchemaName
      * @return String
      */
@@ -106,7 +118,7 @@ public interface ViewObjectSQLService {
     /**
      * get view column
      *
-     * @param schema schema
+     * @param schema   schema
      * @param viewName viewName
      * @return String
      */

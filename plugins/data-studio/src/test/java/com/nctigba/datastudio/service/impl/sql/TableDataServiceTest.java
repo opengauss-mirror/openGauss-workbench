@@ -26,8 +26,8 @@ import com.nctigba.datastudio.model.query.TableDataEditQuery;
 import com.nctigba.datastudio.model.query.TableDataQuery;
 import com.nctigba.datastudio.model.query.TablePartitionInfoQuery;
 import com.nctigba.datastudio.model.query.TableUnderlyingInfoQuery;
-import com.nctigba.datastudio.util.DebugUtils;
-import com.nctigba.datastudio.util.LocaleString;
+import com.nctigba.datastudio.utils.DebugUtils;
+import com.nctigba.datastudio.utils.LocaleStringUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -471,8 +471,8 @@ public class TableDataServiceTest {
         List<TableColumnSQLService> serviceArrayList = new ArrayList<>();
         serviceArrayList.add(new TableColumnSQLServiceImpl());
         tableDataService.setTableColumnSQLService(serviceArrayList);
-        MockedStatic<LocaleString> staticUtilsMockedStatic = Mockito.mockStatic(LocaleString.class);
-        staticUtilsMockedStatic.when(() -> LocaleString.transLanguage(anyString()))
+        MockedStatic<LocaleStringUtils> staticUtilsMockedStatic = Mockito.mockStatic(LocaleStringUtils.class);
+        staticUtilsMockedStatic.when(() -> LocaleStringUtils.transLanguage(anyString()))
                 .thenReturn("123");
 
         when(mockConnection.createStatement()).thenReturn(mockStatement);

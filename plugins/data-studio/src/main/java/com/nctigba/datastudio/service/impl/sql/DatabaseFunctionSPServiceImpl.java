@@ -7,7 +7,7 @@ package com.nctigba.datastudio.service.impl.sql;
 import com.nctigba.datastudio.compatible.FunctionSPObjectSQLService;
 import com.nctigba.datastudio.config.ConnectionConfig;
 import com.nctigba.datastudio.model.dto.DatabaseFunctionSPDTO;
-import com.nctigba.datastudio.model.query.PackageRequest;
+import com.nctigba.datastudio.model.query.PackageQuery;
 import com.nctigba.datastudio.service.DatabaseFunctionSPService;
 import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.exception.CustomException;
@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 import static com.nctigba.datastudio.dao.ConnectionMapDAO.conMap;
+import static com.nctigba.datastudio.utils.DebugUtils.comGetUuidType;
 
 /**
  * DatabaseFunctionSPServiceImpl
@@ -53,7 +54,7 @@ public class DatabaseFunctionSPServiceImpl implements DatabaseFunctionSPService 
     @Override
     public String functionDdl(DatabaseFunctionSPDTO request) throws SQLException {
         log.info("functionDdl request is: " + request);
-        return functionSPObjectSQLService.get(conMap.get(request.getUuid()).getType()).functionDdl(request);
+        return functionSPObjectSQLService.get(comGetUuidType(request.getUuid())).functionDdl(request);
     }
 
     @Override
@@ -63,7 +64,7 @@ public class DatabaseFunctionSPServiceImpl implements DatabaseFunctionSPService 
                 Connection connection = connectionConfig.connectDatabase(request.getUuid());
                 Statement statement = connection.createStatement()
         ) {
-            String sql = functionSPObjectSQLService.get(conMap.get(request.getUuid()).getType()).dropFunctionSP(
+            String sql = functionSPObjectSQLService.get(comGetUuidType(request.getUuid())).dropFunctionSP(
                     request);
             statement.execute(sql);
             log.info("dropFunctionSP sql is: " + sql);
@@ -74,13 +75,13 @@ public class DatabaseFunctionSPServiceImpl implements DatabaseFunctionSPService 
     }
 
     @Override
-    public void dropPackage(PackageRequest request) {
+    public void dropPackage(PackageQuery request) {
         log.info("DatabaseFunctionSPServiceImpl dropPackage request: " + request);
         try (
                 Connection connection = connectionConfig.connectDatabase(request.getUuid());
                 Statement statement = connection.createStatement()
         ) {
-            String sql = functionSPObjectSQLService.get(conMap.get(request.getUuid()).getType()).dropPackage(request);
+            String sql = functionSPObjectSQLService.get(comGetUuidType(request.getUuid())).dropPackage(request);
             log.info("DatabaseFunctionSPServiceImpl dropPackage sql: " + sql);
             statement.execute(sql);
         } catch (SQLException e) {

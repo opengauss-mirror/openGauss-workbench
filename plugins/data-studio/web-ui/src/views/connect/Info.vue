@@ -7,7 +7,7 @@
       @open="handleOpen"
       @close="myEmit('update:modelValue', false)"
     >
-      <el-table :data="gridData" stripe>
+      <el-table :data="gridData" stripe border>
         <el-table-column property="attr" :label="$t('connection.attribute')" />
         <el-table-column property="value" :label="$t('connection.value')" />
       </el-table>

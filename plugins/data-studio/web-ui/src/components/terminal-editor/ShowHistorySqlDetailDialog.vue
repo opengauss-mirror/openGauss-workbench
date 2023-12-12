@@ -10,11 +10,7 @@
       @closed="resetForm"
     >
       <div class="dialog_body">
-        <AceEditor
-          ref="editorPreRef"
-          height="400px"
-          style="margin: 4px 0; border: 1px solid #ddd"
-        />
+        <AceEditor ref="editorPreRef" height="400px" />
       </div>
       <template #footer>
         <el-button type="primary" @click="handleLoadToTerminal">

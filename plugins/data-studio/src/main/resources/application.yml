@@ -5,8 +5,8 @@ context:
 
 spring:
   datasource:
-    driver-class-name: org.sqlite.JDBC
-    url: 'jdbc:sqlite:databaseLink.db'
+    driver-class-name: org.intarkdb.IntarkDBJDBC
+    url: 'jdbc:intarkdb:./data/ds'
   resources:
     static-locations: classpath:resources
   jackson:

@@ -8,8 +8,8 @@ import cn.hutool.core.thread.ThreadUtil;
 import com.nctigba.datastudio.enums.ParamTypeEnum;
 import com.nctigba.datastudio.model.dto.DataListDTO;
 import com.nctigba.datastudio.service.DataListByJdbcService;
-import com.nctigba.datastudio.util.ConnectionUtils;
-import com.nctigba.datastudio.util.DebugUtils;
+import com.nctigba.datastudio.utils.ConnectionUtils;
+import com.nctigba.datastudio.utils.DebugUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.opengauss.admin.common.exception.CustomException;
 import org.springframework.stereotype.Service;
@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import static com.nctigba.datastudio.constants.CommonConstants.FDW_NAME;
 import static com.nctigba.datastudio.constants.CommonConstants.NAME;
 import static com.nctigba.datastudio.constants.CommonConstants.OID;
 import static com.nctigba.datastudio.constants.CommonConstants.PARTTYPE;
@@ -32,6 +33,7 @@ import static com.nctigba.datastudio.constants.CommonConstants.PKG_NAME;
 import static com.nctigba.datastudio.constants.CommonConstants.PRO_ARG_TYPES;
 import static com.nctigba.datastudio.constants.CommonConstants.PRO_NAME;
 import static com.nctigba.datastudio.constants.CommonConstants.PRO_PACKAGE_ID;
+import static com.nctigba.datastudio.constants.CommonConstants.REL_NAME;
 import static com.nctigba.datastudio.constants.CommonConstants.SPACE;
 import static com.nctigba.datastudio.constants.SqlConstants.GET_TYPENAME_SQL;
 
@@ -45,8 +47,8 @@ public class DataListByJdbcServiceImpl implements DataListByJdbcService {
 
     @Override
     public DataListDTO dataListQuerySQL(
-            String jdbcUrl, String username, String password, String tableSql,
-            String viewSql, String fun_prosSql, String sequenceSql, String synonymSql,
+            String jdbcUrl, String username, String password, String tableSql, String viewSql, String fun_prosSql,
+            String sequenceSql, String synonymSql, String foreignTableSql, String triggerSql,
             String schema_name) throws SQLException, InterruptedException {
         DataListDTO dataList = new DataListDTO();
         List<Map<String, String>> table = new ArrayList<>();
@@ -54,15 +56,17 @@ public class DataListByJdbcServiceImpl implements DataListByJdbcService {
         List<Map<String, String>> sequence = new ArrayList<>();
         List<Map<String, String>> synonym = new ArrayList<>();
         List<Map<String, Object>> fun_pro = new ArrayList<>();
+        List<Map<String, String>> foreignTable = new ArrayList<>();
+        List<Map<String, Object>> trigger = new ArrayList<>();
         Map<String, String> funTypeMap = new HashMap<>();
         try (
-                Connection connection = ConnectionUtils.connectGet(jdbcUrl, username, password);
+                Connection connection = ConnectionUtils.connectGet(jdbcUrl, username, password)
         ) {
-            CountDownLatch countDownLatch = new CountDownLatch(5);
+            CountDownLatch countDownLatch = new CountDownLatch(7);
             ThreadUtil.execute(() -> {
                 try (
                         PreparedStatement tableValue = connection.prepareStatement(tableSql);
-                        ResultSet rs1 = tableValue.executeQuery();) {
+                        ResultSet rs1 = tableValue.executeQuery()) {
                     while (rs1.next()) {
                         Map<String, String> map = new HashMap<>();
                         map.put(OID, rs1.getString(OID));
@@ -79,7 +83,7 @@ public class DataListByJdbcServiceImpl implements DataListByJdbcService {
             });
             ThreadUtil.execute(() -> {
                 try (PreparedStatement viewValue = connection.prepareStatement(viewSql);
-                     ResultSet rs2 = viewValue.executeQuery();) {
+                     ResultSet rs2 = viewValue.executeQuery()) {
                     while (rs2.next()) {
                         Map<String, String> map = new HashMap<>();
                         map.put(OID, rs2.getString(OID));
@@ -98,7 +102,7 @@ public class DataListByJdbcServiceImpl implements DataListByJdbcService {
                         PreparedStatement fun_type = connection.prepareStatement(GET_TYPENAME_SQL);
                         PreparedStatement fun_proValue = connection.prepareStatement(fun_prosSql);
                         ResultSet rs3 = fun_proValue.executeQuery();
-                        ResultSet rs4 = fun_type.executeQuery();) {
+                        ResultSet rs4 = fun_type.executeQuery()) {
                     while (rs4.next()) {
                         funTypeMap.put(rs4.getString(OID), rs4.getString("typname"));
                     }
@@ -158,11 +162,11 @@ public class DataListByJdbcServiceImpl implements DataListByJdbcService {
             });
             ThreadUtil.execute(() -> {
                 try (PreparedStatement sequenceValue = connection.prepareStatement(sequenceSql);
-                     ResultSet rs5 = sequenceValue.executeQuery();) {
+                     ResultSet rs5 = sequenceValue.executeQuery()) {
                     while (rs5.next()) {
                         Map<String, String> map = new HashMap<>();
                         map.put(OID, rs5.getString(OID));
-                        map.put(NAME, rs5.getString("relname"));
+                        map.put(NAME, rs5.getString(REL_NAME));
                         sequence.add(map);
                     }
                     dataList.setSequence(sequence);
@@ -182,6 +186,49 @@ public class DataListByJdbcServiceImpl implements DataListByJdbcService {
                         synonym.add(map);
                     }
                     dataList.setSynonym(synonym);
+                } catch (SQLException e) {
+                    throw new CustomException(e.getMessage());
+                } finally {
+                    countDownLatch.countDown();
+                }
+            });
+            ThreadUtil.execute(() -> {
+                try (PreparedStatement statement = connection.prepareStatement(foreignTableSql);
+                     ResultSet resultSet = statement.executeQuery()) {
+                    while (resultSet.next()) {
+                        Map<String, String> map = new HashMap<>();
+                        map.put(OID, resultSet.getString(OID));
+                        map.put(NAME, resultSet.getString("tablename"));
+                        map.put(PARTTYPE, resultSet.getString(PARTTYPE));
+                        map.put(FDW_NAME, resultSet.getString(FDW_NAME));
+                        foreignTable.add(map);
+                    }
+                    dataList.setForeignTable(foreignTable);
+                } catch (SQLException e) {
+                    throw new CustomException(e.getMessage());
+                } finally {
+                    countDownLatch.countDown();
+                }
+            });
+            ThreadUtil.execute(() -> {
+                try (PreparedStatement statement = connection.prepareStatement(triggerSql);
+                     ResultSet resultSet = statement.executeQuery()) {
+                    while (resultSet.next()) {
+                        Map<String, Object> map = new HashMap<>();
+                        map.put(OID, resultSet.getString(OID));
+                        map.put(NAME, resultSet.getString("tgname"));
+                        map.put("tableName", resultSet.getString(REL_NAME));
+                        map.put("isTableTrigger", "r".equals(resultSet.getString("relkind")));
+
+                        String tgEnabled = resultSet.getString("tgenabled");
+                        if (tgEnabled.equals("D")) {
+                            map.put("enabled", false);
+                        } else {
+                            map.put("enabled", true);
+                        }
+                        trigger.add(map);
+                    }
+                    dataList.setTrigger(trigger);
                 } catch (SQLException e) {
                     throw new CustomException(e.getMessage());
                 } finally {

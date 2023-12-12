@@ -16,10 +16,11 @@ import com.nctigba.datastudio.model.entity.DatabaseConnectionDO;
 import com.nctigba.datastudio.model.entity.DatabaseConnectionUrlDO;
 import com.nctigba.datastudio.service.CreateDatabaseService;
 import com.nctigba.datastudio.service.MetaDataByJdbcService;
-import com.nctigba.datastudio.util.DebugUtils;
-import com.nctigba.datastudio.util.LocaleString;
+import com.nctigba.datastudio.utils.DebugUtils;
+import com.nctigba.datastudio.utils.LocaleStringUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.exception.CustomException;
+import org.opengauss.admin.common.utils.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -36,6 +37,7 @@ import java.util.UUID;
 import static com.nctigba.datastudio.constants.SqlConstants.CONFIGURE_TIME;
 import static com.nctigba.datastudio.constants.SqlConstants.GET_URL_JDBC;
 import static com.nctigba.datastudio.dao.ConnectionMapDAO.conMap;
+import static com.nctigba.datastudio.utils.DebugUtils.comGetUuidType;
 
 /**
  * CreateDatabaseServiceImpl
@@ -77,7 +79,7 @@ public class CreateDatabaseServiceImpl implements CreateDatabaseService {
                 Connection connection = connectionConfig.connectDatabase(request.getUuid());
                 Statement statement = connection.createStatement()
         ) {
-            String ddl = databaseObjectSQLService.get(conMap.get(request.getUuid()).getType()).createDatabase(request);
+            String ddl = databaseObjectSQLService.get(comGetUuidType(request.getUuid())).createDatabase(request);
             statement.execute(ddl);
             log.info("createDatabase sql is: " + ddl);
         }
@@ -90,7 +92,12 @@ public class CreateDatabaseServiceImpl implements CreateDatabaseService {
         DatabaseConnectionUrlDO databaseConnectionUrlDO = new DatabaseConnectionUrlDO();
         DatabaseConnectionDO databaseConnectionDO = databaseConnectionDAO.getByIdDatabase(
                 Integer.parseInt(database.getId()), database.getWebUser());
-        String uuid = UUID.randomUUID().toString();
+        String uuid;
+        if (StringUtils.isNotEmpty(database.getConnectionid())) {
+            uuid = database.getConnectionid();
+        } else {
+            uuid = UUID.randomUUID().toString();
+        }
         databaseConnectionDO.setConnectionid(uuid);
         databaseConnectionDO.setDataName(database.getDataName());
         databaseConnectionUrlDO.setUrl(
@@ -104,13 +111,15 @@ public class CreateDatabaseServiceImpl implements CreateDatabaseService {
                 databaseObjectSQLService.get(databaseConnectionDO.getType()).connectionDatabaseTest());
         connectionDTO.setConnectionDTO(databaseConnectionUrlDO);
         ConnectionMapDAO.setConMap(uuid, connectionDTO);
+        databaseConnectionDO.setIsRememberPassword(database.getIsRememberPassword());
+        log.info("connectionDatabase response is: {}", databaseConnectionDO);
         return databaseConnectionDO;
     }
 
     @Override
     public void deleteDatabase(DatabaseNameDTO request) throws SQLException {
         log.info("deleteDatabase request is: {}", request);
-        String ddl = databaseObjectSQLService.get(conMap.get(request.getUuid()).getType()).deleteDatabaseSQL(request);
+        String ddl = databaseObjectSQLService.get(comGetUuidType(request.getUuid())).deleteDatabaseSQL(request);
         try (
                 Connection connection = connectionConfig.connectDatabase(request.getUuid());
                 Statement statement = connection.createStatement()
@@ -128,7 +137,7 @@ public class CreateDatabaseServiceImpl implements CreateDatabaseService {
                 Connection connection = connectionConfig.connectDatabase(request.getUuid())
         ) {
             if (!request.getOldDatabaseName().equals(request.getDatabaseName())) {
-                ddl = databaseObjectSQLService.get(conMap.get(request.getUuid()).getType()).renameDatabaseSQL(request);
+                ddl = databaseObjectSQLService.get(comGetUuidType(request.getUuid())).renameDatabaseSQL(request);
                 try (
                         Statement statement = connection.createStatement()
                 ) {
@@ -137,7 +146,7 @@ public class CreateDatabaseServiceImpl implements CreateDatabaseService {
                 }
             }
             if (Integer.parseInt(request.getConRestrictions()) >= -1) {
-                ddl = databaseObjectSQLService.get(conMap.get(request.getUuid()).getType()).conRestrictionsSQL(request);
+                ddl = databaseObjectSQLService.get(comGetUuidType(request.getUuid())).conRestrictionsSQL(request);
                 try (
                         Statement statement = connection.createStatement()
                 ) {
@@ -145,7 +154,7 @@ public class CreateDatabaseServiceImpl implements CreateDatabaseService {
                     log.info("deleteDatabase sql is: " + ddl);
                 }
             } else {
-                throw new CustomException(LocaleString.transLanguage("2013"));
+                throw new CustomException(LocaleStringUtils.transLanguage("2013"));
             }
         }
     }
@@ -158,7 +167,7 @@ public class CreateDatabaseServiceImpl implements CreateDatabaseService {
                 Connection connection = connectionConfig.connectDatabase(request.getUuid());
                 Statement statement = connection.createStatement()
         ) {
-            String ddl = databaseObjectSQLService.get(conMap.get(request.getUuid()).getType()).databaseAttributeSQL(
+            String ddl = databaseObjectSQLService.get(comGetUuidType(request.getUuid())).databaseAttributeSQL(
                     request);
             try (
                     ResultSet resultSet = statement.executeQuery(ddl)
@@ -180,7 +189,7 @@ public class CreateDatabaseServiceImpl implements CreateDatabaseService {
                 Statement statement = connection.createStatement()
         ) {
             String ddl = databaseObjectSQLService.get(
-                    conMap.get(request.getUuid()).getType()).databaseAttributeUpdateSQL(request);
+                    comGetUuidType(request.getUuid())).databaseAttributeUpdateSQL(request);
             try (
                     ResultSet resultSet = statement.executeQuery(ddl)
             ) {

@@ -55,6 +55,7 @@ public class WebSocketServer implements SocketExtract {
     private final Map<String, Map<String, Object>> paramMap = new HashMap<>();
     private final Map<String, Connection> connectionMap = new HashMap<>();
     private final Map<String, Statement> statementMap = new HashMap<>();
+    private final Map<String, String> uuidMap = new HashMap<>();
     private final Map<String, OperateStatusDO> operationStatusMap = new HashMap<>();
     @Autowired
     private ObjectMapper objectMapper;
@@ -84,11 +85,11 @@ public class WebSocketServer implements SocketExtract {
         if (StringUtils.isEmpty(operation)) {
             return;
         }
-        OperationInterface<T> aa = SpringApplicationContext.getApplicationContext().getBean(operation,
+        OperationInterface<T> messageWebs = SpringApplicationContext.getApplicationContext().getBean(operation,
                 OperationInterface.class);
         ThreadUtil.execAsync(() -> {
             try {
-                aa.operate(this, message);
+                messageWebs.operate(this, message);
             } catch (IOException | SQLException e) {
                 try {
                     sendMessage(sessionId, WINDOW, FIVE_HUNDRED, e.getMessage(), e.getStackTrace());
@@ -119,6 +120,10 @@ public class WebSocketServer implements SocketExtract {
         } catch (SQLException e) {
             log.info(e.getMessage());
         }
+        paramMap.remove(sessionId);
+        statementMap.remove(sessionId);
+        connectionMap.remove(sessionId);
+        operationStatusMap.remove(sessionId);
     }
 
     /**
@@ -152,12 +157,39 @@ public class WebSocketServer implements SocketExtract {
         sendMessage(sessionId, type, TWO_HUNDRED, message, obj);
     }
 
-    public Connection getConnection(String sessionId) {
-        return this.connectionMap.get(sessionId);
+    public Connection getConnection(String sessionId) throws SQLException {
+        log.info("connectionMap: {}", connectionMap);
+        if (connectionMap.get(sessionId) != null && !connectionMap.get(sessionId).isClosed()) {
+            return this.connectionMap.get(sessionId);
+        } else {
+            Connection connection = createConnection(getUuid(sessionId), sessionId);
+            setConnection(sessionId, connection);
+            return connection;
+        }
     }
 
     public void setConnection(String sessionId, Connection connection) {
         this.connectionMap.put(sessionId, connection);
+    }
+
+    /**
+     * set uuid
+     *
+     * @param sessionId sessionId
+     * @param uuid      uuid
+     */
+    public void setUuid(String sessionId, String uuid) {
+        this.uuidMap.put(sessionId, uuid);
+    }
+
+    /**
+     * create connection
+     *
+     * @param sessionId sessionId
+     * @return Connection
+     */
+    public String getUuid(String sessionId) {
+        return this.uuidMap.get(sessionId);
     }
 
     /**

@@ -1,21 +1,22 @@
 <template>
   <div class="table-container">
     <Toolbar :status="barStatus" @addLine="toAddLine" @removeLine="handleRemoveLine(data)" />
-    <EditTable2
+    <EditTable
       :data="props.data"
       :columns="tableColumns"
       :idKey="idKey"
       :rowStatusKey="rowStatusKey"
       :editingSuffix="editingSuffix"
       :editedSuffix="editedSuffix"
+      :menuList="['advancedCopy']"
       v-model:globalEditing="globalEditing"
-      @currentChange="handleCurrentChange"
+      @selectionChange="handleSelectionChange"
     >
       <template v-for="item in tableColumns" :key="item.prop" v-slot:[item.prop]="scope">
         <el-input
           v-if="globalEditing && scope.row[item.prop + editingSuffix] && item.element == 'input'"
           v-model="scope.row[item.prop]"
-          v-bind="item.attribute"
+          v-bind="item.attributes"
           @change="handleChangeValue(scope.row, scope.column)"
         />
         <el-input-number
@@ -23,7 +24,7 @@
             globalEditing && scope.row[item.prop + editingSuffix] && item.element == 'inputNumber'
           "
           v-model="scope.row[item.prop]"
-          v-bind="item.attribute"
+          v-bind="item.attributes"
           :controls="false"
           @change="handleChangeValue(scope.row, scope.column)"
           style="width: 100%"
@@ -33,7 +34,7 @@
             globalEditing && scope.row[item.prop + editingSuffix] && item.prop == 'columnName'
           "
           v-model="scope.row[item.prop]"
-          v-bind="item.attribute"
+          v-bind="item.attributes"
           @change="handleChangeValue(scope.row, scope.column)"
         >
           <el-option
@@ -48,7 +49,7 @@
             globalEditing && scope.row[item.prop + editingSuffix] && item.element == 'select'
           "
           v-model="scope.row[item.prop]"
-          v-bind="item.attribute"
+          v-bind="item.attributes"
           @change="handleChangeValue(scope.row, scope.column)"
         >
           <el-option
@@ -65,12 +66,12 @@
         />
         <span v-else>{{ formatTextCell(scope.row[item.prop], item.element) }}</span>
       </template>
-    </EditTable2>
+    </EditTable>
   </div>
 </template>
 
 <script lang="ts" setup>
-  import EditTable2 from './EditTable2.vue';
+  import EditTable from './EditTable2.vue';
   import Toolbar from './Toolbar.vue';
   import { useEditTabHooks } from './useEditTabHooks';
   import type { CommonParams, TableColumn, AvailColumnList } from '../types';
@@ -110,21 +111,21 @@
       label: 'table.indexes.indexName',
       prop: 'indexName',
       slot: true,
-      isI18n: true,
+      isI18nLabel: true,
       element: 'input',
     },
     {
       label: 'table.indexes.isUnique',
       prop: 'isUnique',
       slot: true,
-      isI18n: true,
+      isI18nLabel: true,
       element: 'checkbox',
     },
     {
       label: 'table.indexes.accessMethod',
       prop: 'accessMethod',
       slot: true,
-      isI18n: true,
+      isI18nLabel: true,
       element: 'select',
       options: [
         {
@@ -169,9 +170,9 @@
       label: 'table.indexes.columnName',
       prop: 'columnName',
       slot: true,
-      isI18n: true,
+      isI18nLabel: true,
       element: 'select',
-      attribute: {
+      attributes: {
         multiple: true,
       },
       options: [],
@@ -180,16 +181,16 @@
       label: 'table.indexes.expression',
       prop: 'expression',
       slot: true,
-      isI18n: true,
+      isI18nLabel: true,
       element: 'input',
     },
     {
-      label: 'table.description',
+      label: 'common.description',
       prop: 'description',
       slot: true,
-      isI18n: true,
+      isI18nLabel: true,
       element: 'input',
-      attribute: {
+      attributes: {
         maxlength: 5000,
       },
     },
@@ -203,7 +204,7 @@
       isUnique: true,
     });
   };
-  const { handleChangeValue, handleCurrentChange, handleAddLine, handleRemoveLine } =
+  const { handleChangeValue, handleSelectionChange, handleAddLine, handleRemoveLine } =
     useEditTabHooks({
       idKey: idKey.value,
       rowStatusKey: rowStatusKey.value,

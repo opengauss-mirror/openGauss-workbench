@@ -26,7 +26,11 @@ const checkAvailableTag = (tag) => {
 
 export const handleEventQueueProcedure = async (tag) => {
   const key = tag.id;
-  if (['createTable', 'table'].includes(tag.name) && eventQueue[key] && checkAvailableTag(tag)) {
+  if (
+    ['createTable', 'table', 'createForeignTable', 'foreignTable'].includes(tag.name) &&
+    eventQueue[key] &&
+    checkAvailableTag(tag)
+  ) {
     router.push(tag.fullPath);
     return await ElMessageBox.confirm(
       t('message.saveData', { name: tag.query.fileName }),

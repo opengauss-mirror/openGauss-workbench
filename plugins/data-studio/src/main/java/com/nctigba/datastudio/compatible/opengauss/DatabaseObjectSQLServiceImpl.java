@@ -9,8 +9,8 @@ import com.nctigba.datastudio.compatible.DatabaseObjectSQLService;
 import com.nctigba.datastudio.model.dto.CreateDatabaseDTO;
 import com.nctigba.datastudio.model.dto.DatabaseNameDTO;
 import com.nctigba.datastudio.model.dto.RenameDatabaseDTO;
-import com.nctigba.datastudio.util.DebugUtils;
-import com.nctigba.datastudio.util.LocaleString;
+import com.nctigba.datastudio.utils.DebugUtils;
+import com.nctigba.datastudio.utils.LocaleStringUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.exception.CustomException;
 import org.springframework.stereotype.Service;
@@ -58,7 +58,7 @@ public class DatabaseObjectSQLServiceImpl implements DatabaseObjectSQLService {
         if (Integer.parseInt(request.getConRestrictions()) >= -1) {
             ddl = ddl + QUOTES + CONNECTION_LIMIT_SQL + request.getConRestrictions() + SEMICOLON;
         } else {
-            throw new CustomException(LocaleString.transLanguage("2013"));
+            throw new CustomException(LocaleStringUtils.transLanguage("2013"));
         }
         log.info("createDatabaseDDL is: " + ddl);
         return ddl;

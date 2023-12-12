@@ -5,17 +5,17 @@
 package com.nctigba.datastudio.controller;
 
 import com.nctigba.datastudio.model.dto.DataListDTO;
-import com.nctigba.datastudio.model.query.DatabaseMetaarrayColumnQuery;
-import com.nctigba.datastudio.model.query.DatabaseMetaarrayIdSchemaQuery;
-import com.nctigba.datastudio.model.query.DatabaseMetaarrayQuery;
-import com.nctigba.datastudio.model.query.DatabaseMetaarraySchemaQuery;
+import com.nctigba.datastudio.model.query.DatabaseMetaArrayColumnQuery;
+import com.nctigba.datastudio.model.query.DatabaseMetaArrayIdSchemaQuery;
+import com.nctigba.datastudio.model.query.DatabaseMetaArrayQuery;
+import com.nctigba.datastudio.model.query.DatabaseMetaArraySchemaQuery;
 import com.nctigba.datastudio.model.query.UserQuery;
 import com.nctigba.datastudio.service.DbConnectionService;
 import com.nctigba.datastudio.service.QueryMetaArrayService;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
@@ -42,8 +42,8 @@ public class MetaDataController {
      * @param uuid uuid
      * @return List
      */
-    @GetMapping(value = "/databaseList/{uuid}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public List<String> databaseList(@PathVariable("uuid") String uuid) {
+    @GetMapping(value = "/databaseList", produces = MediaType.APPLICATION_JSON_VALUE)
+    public List<String> databaseList(@RequestParam("uuid") String uuid) {
         return queryMetaArrayService.databaseList(uuid);
     }
 
@@ -52,11 +52,22 @@ public class MetaDataController {
      *
      * @param schema schema
      * @return List
-     * @throws SQLException SQLException
      */
     @GetMapping(value = "/schemaObjectList", produces = MediaType.APPLICATION_JSON_VALUE)
-    public List<DataListDTO> schemaObjectList(DatabaseMetaarrayIdSchemaQuery schema) throws SQLException {
+    public List<DataListDTO> schemaObjectList(DatabaseMetaArrayIdSchemaQuery schema) {
         return dbConnectionService.schemaObjectList(schema);
+    }
+
+    /**
+     * get schema object list
+     *
+     * @param query query
+     * @return List
+     * @throws SQLException SQLException
+     */
+    @GetMapping(value = "/schemaObjects", produces = MediaType.APPLICATION_JSON_VALUE)
+    public List<Map<String, Object>> schemaObjects(DatabaseMetaArrayIdSchemaQuery query) throws SQLException {
+        return dbConnectionService.schemaObjects(query);
     }
 
     /**
@@ -67,7 +78,7 @@ public class MetaDataController {
      * @throws SQLException SQLException
      */
     @GetMapping(value = "/schemaList", produces = MediaType.APPLICATION_JSON_VALUE)
-    public List<Map<String, String>> schemaList(DatabaseMetaarraySchemaQuery request) throws SQLException {
+    public List<Map<String, String>> schemaList(DatabaseMetaArraySchemaQuery request) throws SQLException {
         return queryMetaArrayService.schemaList(request);
     }
 
@@ -79,7 +90,7 @@ public class MetaDataController {
      * @throws SQLException SQLException
      */
     @GetMapping(value = "/objectList", produces = MediaType.APPLICATION_JSON_VALUE)
-    public List<String> objectList(DatabaseMetaarrayQuery request) throws SQLException {
+    public List<String> objectList(DatabaseMetaArrayQuery request) throws SQLException {
         return queryMetaArrayService.objectList(request);
     }
 
@@ -91,7 +102,7 @@ public class MetaDataController {
      * @throws SQLException SQLException
      */
     @GetMapping(value = "/columnList", produces = MediaType.APPLICATION_JSON_VALUE)
-    public List<String> tableColumnList(DatabaseMetaarrayColumnQuery request) throws SQLException {
+    public List<String> tableColumnList(DatabaseMetaArrayColumnQuery request) throws SQLException {
         return queryMetaArrayService.tableColumnList(request);
     }
 
@@ -102,8 +113,8 @@ public class MetaDataController {
      * @return List
      * @throws SQLException SQLException
      */
-    @GetMapping(value = "/typeList/{uuid}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public List<String> typeList(@PathVariable("uuid") String uuid) throws SQLException {
+    @GetMapping(value = "/typeList", produces = MediaType.APPLICATION_JSON_VALUE)
+    public List<String> typeList(@RequestParam("uuid") String uuid) throws SQLException {
         return queryMetaArrayService.baseTypeList(uuid);
     }
 
@@ -114,9 +125,21 @@ public class MetaDataController {
      * @return List
      * @throws SQLException SQLException
      */
-    @GetMapping(value = "/tablespace/{uuid}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public List<String> tablespaceList(@PathVariable("uuid") String uuid) throws SQLException {
+    @GetMapping(value = "/tablespace", produces = MediaType.APPLICATION_JSON_VALUE)
+    public List<String> tablespaceList(@RequestParam("uuid") String uuid) throws SQLException {
         return queryMetaArrayService.tablespaceList(uuid);
+    }
+
+    /**
+     * table space list
+     *
+     * @param uuid uuid
+     * @return List
+     * @throws SQLException SQLException
+     */
+    @GetMapping(value = "/tablespace/list", produces = MediaType.APPLICATION_JSON_VALUE)
+    public List<Map<String, String>> tablespaceOidList(@RequestParam("uuid") String uuid) throws SQLException {
+        return queryMetaArrayService.tablespaceOidList(uuid);
     }
 
     /**
@@ -126,8 +149,8 @@ public class MetaDataController {
      * @return UserQuery
      * @throws SQLException SQLException
      */
-    @GetMapping(value = "/user/{uuid}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public UserQuery userList(@PathVariable("uuid") String uuid) throws SQLException {
+    @GetMapping(value = "/user", produces = MediaType.APPLICATION_JSON_VALUE)
+    public UserQuery userList(@RequestParam("uuid") String uuid) throws SQLException {
         return queryMetaArrayService.userList(uuid);
     }
 
@@ -138,8 +161,8 @@ public class MetaDataController {
      * @return List<String>
      * @throws SQLException SQLException
      */
-    @GetMapping(value = "/resource/{uuid}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public List<String> resourceList(@PathVariable("uuid") String uuid) throws SQLException {
+    @GetMapping(value = "/resource", produces = MediaType.APPLICATION_JSON_VALUE)
+    public List<String> resourceList(@RequestParam("uuid") String uuid) throws SQLException {
         return queryMetaArrayService.resourceList(uuid);
     }
 }

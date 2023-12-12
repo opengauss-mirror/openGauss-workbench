@@ -10,7 +10,7 @@ export interface TableDataHooksOptions {
 }
 export interface RowInfo {
   data: any[];
-  currentRow: any;
+  selectionRows: any[];
   idKey: string;
   rowStatusKey: string;
   rowIndex: number;
@@ -31,9 +31,9 @@ export interface TableColumn {
   name?: string;
   prop: string;
   slot?: boolean;
-  isI18n?: boolean;
+  isI18nLabel?: boolean;
   element: 'input' | 'inputNumber' | 'select' | 'checkbox' | 'cascader';
-  attribute?: Record<string, any>;
+  attributes?: Record<string, any>;
   options?: any[];
 }
 

@@ -2,7 +2,7 @@ package com.nctigba.datastudio.service.impl.debug;
 
 import com.alibaba.fastjson.JSON;
 import com.nctigba.datastudio.base.WebSocketServer;
-import com.nctigba.datastudio.model.PublicParamReq;
+import com.nctigba.datastudio.model.query.PublicParamQuery;
 import com.nctigba.datastudio.model.entity.OperateStatusDO;
 import com.nctigba.datastudio.service.OperationInterface;
 import lombok.extern.slf4j.Slf4j;
@@ -23,7 +23,7 @@ import static com.nctigba.datastudio.enums.MessageEnum.OTHER;
 public class AnonymousBlockImpl implements OperationInterface {
     @Override
     public void operate(WebSocketServer webSocketServer, Object obj) throws IOException {
-        PublicParamReq paramReq = (PublicParamReq) obj;
+        PublicParamQuery paramReq = (PublicParamQuery) obj;
         log.info("funcProcedure paramReq: " + paramReq);
 
         String rootWindowName = paramReq.getRootWindowName();
@@ -37,6 +37,6 @@ public class AnonymousBlockImpl implements OperationInterface {
 
     @Override
     public Object formatJson(String str) {
-        return JSON.parseObject(str, PublicParamReq.class);
+        return JSON.parseObject(str, PublicParamQuery.class);
     }
 }

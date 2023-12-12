@@ -3,7 +3,7 @@
     <el-tabs v-model="currentTabName" class="tabs" @tab-click="handleTabClick">
       <el-tab-pane label="DDL" name="DDL" />
       <el-tab-pane :label="$t('table.general.title')" name="GeneralTab" />
-      <el-tab-pane :label="$t('table.column.title')" name="ColumnTab" />
+      <el-tab-pane :label="$t('table.column.title')" name="ColumnsTab" />
       <el-tab-pane :label="$t('table.constraint.title')" name="ConstraintTab" />
       <el-tab-pane :label="$t('table.indexes.title')" name="IndexesTab" />
       <el-tab-pane :label="$t('table.data.title')" name="DataTab" />
@@ -37,7 +37,6 @@
               ref="dataTabEditTable"
               :tabName="item"
               :canEdit="dataMap.DataTab.canEdit"
-              :databaseName="databaseName"
               :data="dataMap.DataTab.data"
               :allData="dataMap"
               :columnNameList="columnNameList"
@@ -52,7 +51,8 @@
               :dataTypeList="dataTypeList"
               :barStatus="dataMap.DataTab.barStatus"
               sortable="custom"
-              @currentChange="handleCurrentChange"
+              :menuList="['copy', 'advancedCopy']"
+              @selectionChange="handleSelectionChange"
               @cellDataChange="handleCellDataChange"
               @cellDblclick="handleCellDbClick"
               @sortChange="handleSortChange"
@@ -94,8 +94,8 @@
             @lastPage="handleLastPage"
             @previousPage="handlePreviousPage"
             @nextPage="handleNextPage"
-            @page="handlePage"
-            @update:pageSize="handlePageSize"
+            @changePageNum="handlePage"
+            @update:pageSize="changePageSize"
           />
           <div v-if="dataMap.DataTab.querySql" class="sql-exhibition">
             {{ dataMap.DataTab.querySql }}
@@ -105,7 +105,6 @@
           <EditTable
             :tabName="item"
             :canEdit="dataMap[item].canEdit"
-            :databaseName="databaseName"
             :data="dataMap[item].data"
             :allData="dataMap"
             :columnNameList="columnNameList"
@@ -119,7 +118,8 @@
             v-model:edited="dataMap[item].edited"
             :dataTypeList="dataTypeList"
             :barStatus="dataMap[item].barStatus"
-            @currentChange="handleCurrentChange"
+            :menuList="['advancedCopy']"
+            @selectionChange="handleSelectionChange"
             @cellDataChange="handleCellDataChange"
             @cellDblclick="handleCellDbClick"
           />
@@ -222,12 +222,11 @@
   const { t } = useI18n();
   const loading = ref(null);
 
-  const currentTabName = ref('DataTab');
-  const editTabs = ref(['ColumnTab', 'ConstraintTab', 'IndexesTab', 'DataTab']);
+  const currentTabName = ref('DDL');
+  const editTabs = ref(['ColumnsTab', 'ConstraintTab', 'IndexesTab', 'DataTab']);
   const dataTabEditTable = ref<Array<InstanceType<typeof EditTable>>>([null]);
   const setSortRef = ref(null);
   const showUniqueDialog = ref(false);
-  const databaseName = ref('');
   const commonParams = reactive({
     tableName: '',
     schema: '',
@@ -255,14 +254,14 @@
       hasLoad: false,
       loading: false,
     },
-    ColumnTab: {
+    ColumnsTab: {
       data: [],
       originData: [],
       canEdit: true,
-      columns: getColumn('ColumnTab'),
+      columns: getColumn('ColumnsTab'),
       idKey: '_id',
       rowStatusKey: '_rowStatus',
-      currentRow: undefined,
+      selectionRows: [],
       edited: false,
       hasLoad: false,
       loading: false,
@@ -280,7 +279,7 @@
       columns: getColumn('ConstraintTab'),
       idKey: '_id',
       rowStatusKey: '_rowStatus',
-      currentRow: undefined,
+      selectionRows: [],
       edited: false,
       hasLoad: false,
       loading: false,
@@ -298,7 +297,7 @@
       columns: getColumn('IndexesTab'),
       idKey: '_id',
       rowStatusKey: '_rowStatus',
-      currentRow: undefined,
+      selectionRows: [],
       edited: false,
       hasLoad: false,
       loading: false,
@@ -317,7 +316,7 @@
       querySql: '',
       idKey: '',
       rowStatusKey: '',
-      currentRow: undefined,
+      selectionRows: [],
       edited: false,
       hasLoad: false,
       loading: false,
@@ -357,14 +356,14 @@
 
   const globalIsEdit = computed(() => {
     return (
-      dataMap.ColumnTab.edited ||
+      dataMap.ColumnsTab.edited ||
       dataMap.ConstraintTab.edited ||
       dataMap.IndexesTab.edited ||
       dataMap.DataTab.edited
     );
   });
   const columnNameList = computed(() => {
-    return [...new Set(dataMap.ColumnTab.originData.map((item) => item.columnName))];
+    return [...new Set(dataMap.ColumnsTab.originData.map((item) => item.columnName))];
   });
 
   watch(
@@ -403,14 +402,16 @@
   };
 
   const fetchDataTypeList = async () => {
-    dataTypeList.value = (await getDataTypeList(commonParams.uuid)) as unknown as string[];
+    dataTypeList.value = (await getDataTypeList({
+      uuid: commonParams.uuid,
+    })) as unknown as string[];
   };
 
   const getData = async (type) => {
     const api = {
       DDL: getTableDdl,
       GeneralTab: getTableAttribute,
-      ColumnTab: getTableColumn,
+      ColumnsTab: getTableColumn,
       ConstraintTab: getTableConstraint,
       IndexesTab: getTableIndex,
       DataTab: getTableData,
@@ -465,9 +466,10 @@
             columns = column.map((item, index) => {
               const order = dataTabExpansion.order.find((sc) => sc.name == item)?.multipleOrder;
               return {
-                name: item,
                 label: item,
-                type: 'input',
+                name: item,
+                prop: item,
+                element: 'input',
                 show: !dataTabHideColumns.includes(item),
                 multipleOrder: order || null,
                 systemTypeNum: res.data.typeNum[index],
@@ -505,7 +507,7 @@
             columns,
             idKey,
             rowStatusKey,
-            currentRow: undefined,
+            selectionRows: [],
             edited: false,
           });
         }
@@ -532,8 +534,8 @@
     doFreshDebounce();
   };
 
-  const handleCurrentChange = (currentRow) => {
-    dataMap[currentTabName.value].currentRow = currentRow;
+  const handleSelectionChange = (rows) => {
+    dataMap[currentTabName.value].selectionRows = rows;
   };
   const handleCellDataChange = () => {
     if (!dataMap[currentTabName.value].edited) dataMap[currentTabName.value].edited = true;
@@ -566,13 +568,10 @@
 
   const getRowInfo = () => {
     const data = dataMap[currentTabName.value].data;
-    const currentRow = dataMap[currentTabName.value].currentRow;
+    const selectionRows = dataMap[currentTabName.value].selectionRows;
     const idKey = dataMap[currentTabName.value].idKey;
     const rowStatusKey = dataMap[currentTabName.value].rowStatusKey;
-    const rowIndex = data.findIndex(
-      (item) => currentRow && item[idKey] == dataMap[currentTabName.value].currentRow[idKey],
-    );
-    return { data, idKey, rowStatusKey, currentRow, rowIndex };
+    return { data, idKey, rowStatusKey, selectionRows };
   };
 
   const waitSetUniqueKey = () => {
@@ -620,7 +619,7 @@
     if (!currentTabInfo.edited) return;
     loading.value = loadingInstance();
     try {
-      if (tabName == 'ColumnTab') {
+      if (tabName == 'ColumnsTab') {
         const columnParam = {
           ...commonParams,
           data: currentTabInfo.data
@@ -768,30 +767,55 @@
       dataMap[type].edited = false;
     }
   };
+
+  function generateRandomNumber() {
+    return Math.floor(Math.random() * (9999 - 1000 + 1)) + 1000;
+  }
+  const getTableRowIndex = (tableData, targetRow, targetIdKey) => {
+    return tableData.findIndex((item) => targetRow && item[targetIdKey] == targetRow[targetIdKey]);
+  };
+
   const handleAddLine = () => {
-    const { data, idKey, rowStatusKey, rowIndex } = getRowInfo();
-    let addRowData: Record<string, any> = { [idKey]: Date.now(), [rowStatusKey]: 'add' };
-    if (currentTabName.value == 'ColumnTab') {
-      addRowData = {
-        ...addRowData,
-        dataType: dataTypeList.value[0],
+    const { data, idKey, rowStatusKey, selectionRows } = getRowInfo();
+    const getNewRow = () => {
+      let addRowData: Record<string, any> = {
+        [idKey]: Date.now() * 1000 + generateRandomNumber(),
+        [rowStatusKey]: 'add',
       };
+      if (currentTabName.value == 'ColumnsTab') {
+        addRowData = {
+          ...addRowData,
+          dataType: dataTypeList.value[0],
+        };
+      }
+      if (currentTabName.value == 'IndexesTab') {
+        addRowData = {
+          ...addRowData,
+          isUnique: true,
+        };
+      }
+      return addRowData;
+    };
+    if (selectionRows.length) {
+      selectionRows.forEach((item) => {
+        const addRowData = getNewRow();
+        const rowIndex = getTableRowIndex(data, item, idKey);
+        data.splice(rowIndex + 1, 0, addRowData);
+      });
+    } else {
+      const addRowData = getNewRow();
+      data.splice(0, 0, addRowData);
     }
-    if (currentTabName.value == 'IndexesTab') {
-      addRowData = {
-        ...addRowData,
-        isUnique: true,
-      };
-    }
-    data.splice(rowIndex + 1, 0, addRowData);
     handleCellDataChange();
   };
+
   const handleRemoveLine = () => {
-    const { data, rowStatusKey, currentRow, rowIndex } = getRowInfo();
-    if (currentRow) {
-      currentRow[rowStatusKey] == 'add'
-        ? data.splice(rowIndex, 1)
-        : (currentRow[rowStatusKey] = 'delete');
+    const { data, idKey, rowStatusKey, selectionRows } = getRowInfo();
+    if (selectionRows?.length) {
+      selectionRows.forEach((item) => {
+        const rowIndex = getTableRowIndex(data, item, idKey);
+        item[rowStatusKey] == 'add' ? data.splice(rowIndex, 1) : (item[rowStatusKey] = 'delete');
+      });
       handleCellDataChange();
     } else {
       ElMessage.info(t('message.selectedData'));
@@ -818,7 +842,7 @@
     handleLastPage,
     handleFirstPage,
     handlePage,
-    handlePageSize,
+    changePageSize,
   } = useTableDataHooks(
     {
       idKey: dataMap.DataTab.idKey,
@@ -828,6 +852,7 @@
       barStatus: dataMap.DataTab.barStatus,
     },
     getRowInfo,
+    getTableRowIndex,
     handleCellDataChange,
     getData,
   );
@@ -866,8 +891,7 @@
     dataMap.PartitionTab.isPartition = parttype == 'y';
     page.value.winId = time as string;
     closeTableDatas(page.value.winId);
-    databaseName.value = route.query.dbname as string;
-    const loadTab = new Set([currentTabName.value, 'ColumnTab']);
+    const loadTab = new Set([currentTabName.value, 'ColumnsTab']);
     loadTab.forEach((item) => getData(item));
   });
   onBeforeUnmount(() => {

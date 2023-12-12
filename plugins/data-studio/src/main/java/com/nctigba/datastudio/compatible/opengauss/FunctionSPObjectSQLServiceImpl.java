@@ -7,9 +7,9 @@ package com.nctigba.datastudio.compatible.opengauss;
 import com.nctigba.datastudio.compatible.FunctionSPObjectSQLService;
 import com.nctigba.datastudio.config.ConnectionConfig;
 import com.nctigba.datastudio.model.dto.DatabaseFunctionSPDTO;
-import com.nctigba.datastudio.model.query.PackageRequest;
-import com.nctigba.datastudio.util.DebugUtils;
-import com.nctigba.datastudio.util.LocaleString;
+import com.nctigba.datastudio.model.query.PackageQuery;
+import com.nctigba.datastudio.utils.DebugUtils;
+import com.nctigba.datastudio.utils.LocaleStringUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.util.Strings;
@@ -61,7 +61,7 @@ public class FunctionSPObjectSQLServiceImpl implements FunctionSPObjectSQLServic
                 if (resultSet.next()) {
                     definition = resultSet.getString(DEFINITION);
                     if (StringUtils.isEmpty(definition)) {
-                        throw new CustomException(LocaleString.transLanguage("2015"));
+                        throw new CustomException(LocaleStringUtils.transLanguage("2015"));
                     }
                 }
 
@@ -81,11 +81,11 @@ public class FunctionSPObjectSQLServiceImpl implements FunctionSPObjectSQLServic
             try (
                     ResultSet funcResult = statement.executeQuery(String.format(PROC_SQL, request.getOid()))
             ) {
-                String proKind = "";
+                String proKind;
                 if (funcResult.next()) {
                     proKind = funcResult.getString(PRO_KIND);
                 } else {
-                    throw new CustomException(LocaleString.transLanguage("2015"));
+                    throw new CustomException(LocaleStringUtils.transLanguage("2015"));
                 }
                 String sql = "";
                 if ("f".equals(proKind)) {
@@ -102,7 +102,7 @@ public class FunctionSPObjectSQLServiceImpl implements FunctionSPObjectSQLServic
     }
 
     @Override
-    public String dropPackage(PackageRequest request) {
+    public String dropPackage(PackageQuery request) {
         return String.format(DROP_PACKAGE_SQL, DebugUtils.needQuoteName(request.getSchema()), request.getPackageName());
     }
 }

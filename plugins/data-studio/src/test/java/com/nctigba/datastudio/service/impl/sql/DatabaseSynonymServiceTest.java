@@ -13,7 +13,7 @@ import com.nctigba.datastudio.model.dto.ConnectionDTO;
 import com.nctigba.datastudio.model.dto.DatabaseCreateSynonymDTO;
 import com.nctigba.datastudio.model.dto.DatabaseDropSynonymDTO;
 import com.nctigba.datastudio.model.dto.DatabaseSynonymAttributeDTO;
-import com.nctigba.datastudio.util.LocaleString;
+import com.nctigba.datastudio.utils.LocaleStringUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -130,8 +130,8 @@ public class DatabaseSynonymServiceTest {
 
     @Test
     public void testSynonymAttributeErro() throws SQLException {
-        MockedStatic<LocaleString> staticUtilsMockedStatic = Mockito.mockStatic(LocaleString.class);
-        staticUtilsMockedStatic.when(() -> LocaleString.transLanguage(anyString()))
+        MockedStatic<LocaleStringUtils> staticUtilsMockedStatic = Mockito.mockStatic(LocaleStringUtils.class);
+        staticUtilsMockedStatic.when(() -> LocaleStringUtils.transLanguage(anyString()))
                 .thenReturn("123");
         List<SynonymObjectSQLService> serviceArrayList = new ArrayList<>();
         serviceArrayList.add(new SynonymObjectSQLServiceImpl());

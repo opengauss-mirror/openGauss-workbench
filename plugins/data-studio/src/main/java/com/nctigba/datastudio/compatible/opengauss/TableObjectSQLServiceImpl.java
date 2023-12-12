@@ -8,7 +8,7 @@ import com.nctigba.datastudio.compatible.TableObjectSQLService;
 import com.nctigba.datastudio.config.ConnectionConfig;
 import com.nctigba.datastudio.model.query.SelectDataFiltrationQuery;
 import com.nctigba.datastudio.model.query.SelectDataQuery;
-import com.nctigba.datastudio.util.LocaleString;
+import com.nctigba.datastudio.utils.LocaleStringUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.opengauss.admin.common.exception.CustomException;
@@ -24,6 +24,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.nctigba.datastudio.constants.CommonConstants.NUM_PARTITION_TABLE_ATTR_ROWS;
+import static com.nctigba.datastudio.constants.CommonConstants.NUM_TABLE_ATTR_ROWS;
 import static com.nctigba.datastudio.constants.CommonConstants.OPENGAUSS;
 import static com.nctigba.datastudio.constants.CommonConstants.PG_GET_TABLEDEF;
 import static com.nctigba.datastudio.constants.CommonConstants.RESULT;
@@ -50,7 +52,7 @@ import static com.nctigba.datastudio.constants.SqlConstants.TABLE_SEQUENCE_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.TABLE_TRUNCATE_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.VACUUM_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.WHERE_SQL;
-import static com.nctigba.datastudio.util.DebugUtils.needQuoteName;
+import static com.nctigba.datastudio.utils.DebugUtils.needQuoteName;
 
 /**
  * TableObjectSQLService achieve
@@ -68,7 +70,7 @@ public class TableObjectSQLServiceImpl implements TableObjectSQLService {
         resultSet.next();
         for (int i = 1; i <= num; i++) {
             Map<String, Object> map = new HashMap<>();
-            map.put(LocaleString.transLanguage(String.valueOf(i)), resultSet.getObject(i));
+            map.put(LocaleStringUtils.transLanguage(String.valueOf(i)), resultSet.getObject(i));
             list.add(map);
         }
         log.info("tableAttributeResultSet List {}", list);
@@ -125,7 +127,7 @@ public class TableObjectSQLServiceImpl implements TableObjectSQLService {
             ) {
                 resultSet.next();
                 if (StringUtils.isBlank(String.valueOf(resultSet.getString("pg_get_tabledef")))) {
-                    throw new CustomException(LocaleString.transLanguage("2010"));
+                    throw new CustomException(LocaleStringUtils.transLanguage("2010"));
                 }
                 resultMap.put(RESULT, resultSet.getString(PG_GET_TABLEDEF));
             }
@@ -213,9 +215,9 @@ public class TableObjectSQLServiceImpl implements TableObjectSQLService {
             try (ResultSet resultSet = statement.executeQuery(ddl)) {
                 List<Map<String, Object>> list;
                 if (tableType.equals("y")) {
-                    list = tableAttributeResultSet(resultSet, 16);
+                    list = tableAttributeResultSet(resultSet, NUM_PARTITION_TABLE_ATTR_ROWS);
                 } else {
-                    list = tableAttributeResultSet(resultSet, 14);
+                    list = tableAttributeResultSet(resultSet, NUM_TABLE_ATTR_ROWS);
                 }
                 log.info("tableColumn list is: " + list);
                 return list;

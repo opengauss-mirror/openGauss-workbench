@@ -7,11 +7,11 @@ package com.nctigba.datastudio.service.impl.sql;
 import com.alibaba.fastjson.JSON;
 import com.nctigba.datastudio.base.WebSocketServer;
 import com.nctigba.datastudio.dao.ConnectionMapDAO;
-import com.nctigba.datastudio.model.PublicParamReq;
+import com.nctigba.datastudio.model.query.PublicParamQuery;
 import com.nctigba.datastudio.model.dto.ConnectionDTO;
 import com.nctigba.datastudio.service.OperationInterface;
-import com.nctigba.datastudio.util.DebugUtils;
-import com.nctigba.datastudio.util.LocaleString;
+import com.nctigba.datastudio.utils.DebugUtils;
+import com.nctigba.datastudio.utils.LocaleStringUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -35,7 +35,7 @@ public class CloseSqlImpl implements OperationInterface {
     @Override
     public void operate(WebSocketServer webSocketServer, Object obj) throws SQLException, IOException {
         try {
-            PublicParamReq paramReq = DebugUtils.changeParamType(obj);
+            PublicParamQuery paramReq = DebugUtils.changeParamType(obj);
             ConnectionDTO connectionDTO = conMap.get(paramReq.getUuid());
             String windowName = paramReq.getWindowName();
             Statement statement = webSocketServer.getStatement(windowName);
@@ -48,7 +48,8 @@ public class CloseSqlImpl implements OperationInterface {
                 connection.close();
                 webSocketServer.setStatement(windowName, null);
             }
-            webSocketServer.sendMessage(windowName, TEXT, LocaleString.transLanguageWs("2004", webSocketServer), null);
+            webSocketServer.sendMessage(windowName, TEXT,
+                    LocaleStringUtils.transLanguageWs("2004", webSocketServer), null);
         } catch (SQLException | IOException e) {
             throw new RuntimeException(e);
         }
@@ -56,6 +57,6 @@ public class CloseSqlImpl implements OperationInterface {
 
     @Override
     public Object formatJson(String str) {
-        return JSON.parseObject(str, PublicParamReq.class);
+        return JSON.parseObject(str, PublicParamQuery.class);
     }
 }

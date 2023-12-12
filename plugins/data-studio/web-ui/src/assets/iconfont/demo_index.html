@@ -35,7 +35,7 @@
 </head>
 <body>
   <div class="main">
-    <h1 class="logo"><a href="https://www.iconfont.cn/" title="iconfont" target="_blank">
+    <h1 class="logo"><a href="https://www.iconfont.cn/" title="iconfont 首页" target="_blank">
       <img width="200" src="https://img.alicdn.com/imgextra/i3/O1CN01Mn65HV1FfSEzR6DKv_!!6000000000514-55-tps-228-59.svg">
       
     </a></h1>
@@ -49,6 +49,84 @@
     <div class="tab-container">
       <div class="content unicode" style="display: block;">
           <ul class="icon_lists dib-box">
+          
+            <li class="dib">
+              <span class="icon iconfont">&#xe74f;</span>
+                <div class="name">refresh</div>
+                <div class="code-name">&amp;#xe74f;</div>
+              </li>
+          
+            <li class="dib">
+              <span class="icon iconfont">&#xe619;</span>
+                <div class="name">trigger</div>
+                <div class="code-name">&amp;#xe619;</div>
+              </li>
+          
+            <li class="dib">
+              <span class="icon iconfont">&#xe618;</span>
+                <div class="name">禁用</div>
+                <div class="code-name">&amp;#xe618;</div>
+              </li>
+          
+            <li class="dib">
+              <span class="icon iconfont">&#xe614;</span>
+                <div class="name">icon_task</div>
+                <div class="code-name">&amp;#xe614;</div>
+              </li>
+          
+            <li class="dib">
+              <span class="icon iconfont">&#xe610;</span>
+                <div class="name">icon_newlink</div>
+                <div class="code-name">&amp;#xe610;</div>
+              </li>
+          
+            <li class="dib">
+              <span class="icon iconfont">&#xe612;</span>
+                <div class="name">icon_SQL</div>
+                <div class="code-name">&amp;#xe612;</div>
+              </li>
+          
+            <li class="dib">
+              <span class="icon iconfont">&#xe613;</span>
+                <div class="name">icon_newserve</div>
+                <div class="code-name">&amp;#xe613;</div>
+              </li>
+          
+            <li class="dib">
+              <span class="icon iconfont">&#xe616;</span>
+                <div class="name">icon_search</div>
+                <div class="code-name">&amp;#xe616;</div>
+              </li>
+          
+            <li class="dib">
+              <span class="icon iconfont">&#xe60f;</span>
+                <div class="name">trigger-enabled</div>
+                <div class="code-name">&amp;#xe60f;</div>
+              </li>
+          
+            <li class="dib">
+              <span class="icon iconfont">&#xe60e;</span>
+                <div class="name">trigger-disabled</div>
+                <div class="code-name">&amp;#xe60e;</div>
+              </li>
+          
+            <li class="dib">
+              <span class="icon iconfont">&#xe6f4;</span>
+                <div class="name">Warning</div>
+                <div class="code-name">&amp;#xe6f4;</div>
+              </li>
+          
+            <li class="dib">
+              <span class="icon iconfont">&#xe60d;</span>
+                <div class="name">database (1)</div>
+                <div class="code-name">&amp;#xe60d;</div>
+              </li>
+          
+            <li class="dib">
+              <span class="icon iconfont">&#xe64e;</span>
+                <div class="name">icon_package</div>
+                <div class="code-name">&amp;#xe64e;</div>
+              </li>
           
             <li class="dib">
               <span class="icon iconfont">&#xe6ce;</span>
@@ -327,18 +405,6 @@
               </li>
           
             <li class="dib">
-              <span class="icon iconfont">&#xe602;</span>
-                <div class="name">database-connected</div>
-                <div class="code-name">&amp;#xe602;</div>
-              </li>
-          
-            <li class="dib">
-              <span class="icon iconfont">&#xe604;</span>
-                <div class="name">database-disconnect</div>
-                <div class="code-name">&amp;#xe604;</div>
-              </li>
-          
-            <li class="dib">
               <span class="icon iconfont">&#xe603;</span>
                 <div class="name">数据库</div>
                 <div class="code-name">&amp;#xe603;</div>
@@ -490,19 +556,28 @@
           
           </ul>
           <div class="article markdown">
-          <h2 id="unicode-">Unicode</h2>
+          <h2 id="unicode-">Unicode 引用</h2>
           <hr>
-          <p>Unicode</p>
-          <h3 id="-font-face">Step 1: Copy the generated files under the project <code>@font-face</code></h3>
+
+          <p>Unicode 是字体在网页端最原始的应用方式，特点是：</p>
+          <ul>
+            <li>支持按字体的方式去动态调整图标大小，颜色等等。</li>
+            <li>默认情况下不支持多色，直接添加多色图标会自动去色。</li>
+          </ul>
+          <blockquote>
+            <p>注意：新版 iconfont 支持两种方式引用多色图标：SVG symbol 引用方式和彩色字体图标模式。（使用彩色字体图标需要在「编辑项目」中开启「彩色」选项后并重新生成。）</p>
+          </blockquote>
+          <p>Unicode 使用步骤如下：</p>
+          <h3 id="-font-face">第一步：拷贝项目下面生成的 <code>@font-face</code></h3>
 <pre><code class="language-css"
 >@font-face {
   font-family: 'iconfont';
-  src: url('iconfont.woff2?t=1691484954509') format('woff2'),
-       url('iconfont.woff?t=1691484954509') format('woff'),
-       url('iconfont.ttf?t=1691484954509') format('truetype');
+  src: url('iconfont.woff2?t=1700118963984') format('woff2'),
+       url('iconfont.woff?t=1700118963984') format('woff'),
+       url('iconfont.ttf?t=1700118963984') format('truetype');
 }
 </code></pre>
-          <h3 id="-iconfont-">Step 2: Define the style of using iconfont</h3>
+          <h3 id="-iconfont-">第二步：定义使用 iconfont 的样式</h3>
 <pre><code class="language-css"
 >.iconfont {
   font-family: "iconfont" !important;
@@ -521,6 +596,123 @@
       </div>
       <div class="content font-class">
         <ul class="icon_lists dib-box">
+          
+          <li class="dib">
+            <span class="icon iconfont icon-refresh"></span>
+            <div class="name">
+              refresh
+            </div>
+            <div class="code-name">.icon-refresh
+            </div>
+          </li>
+          
+          <li class="dib">
+            <span class="icon iconfont icon-trigger"></span>
+            <div class="name">
+              trigger
+            </div>
+            <div class="code-name">.icon-trigger
+            </div>
+          </li>
+          
+          <li class="dib">
+            <span class="icon iconfont icon-jinyong"></span>
+            <div class="name">
+              禁用
+            </div>
+            <div class="code-name">.icon-jinyong
+            </div>
+          </li>
+          
+          <li class="dib">
+            <span class="icon iconfont icon-a-icon_task2"></span>
+            <div class="name">
+              icon_task
+            </div>
+            <div class="code-name">.icon-a-icon_task2
+            </div>
+          </li>
+          
+          <li class="dib">
+            <span class="icon iconfont icon-icon_newlink"></span>
+            <div class="name">
+              icon_newlink
+            </div>
+            <div class="code-name">.icon-icon_newlink
+            </div>
+          </li>
+          
+          <li class="dib">
+            <span class="icon iconfont icon-icon_SQL"></span>
+            <div class="name">
+              icon_SQL
+            </div>
+            <div class="code-name">.icon-icon_SQL
+            </div>
+          </li>
+          
+          <li class="dib">
+            <span class="icon iconfont icon-icon_newserve"></span>
+            <div class="name">
+              icon_newserve
+            </div>
+            <div class="code-name">.icon-icon_newserve
+            </div>
+          </li>
+          
+          <li class="dib">
+            <span class="icon iconfont icon-icon_search"></span>
+            <div class="name">
+              icon_search
+            </div>
+            <div class="code-name">.icon-icon_search
+            </div>
+          </li>
+          
+          <li class="dib">
+            <span class="icon iconfont icon-trigger-enable"></span>
+            <div class="name">
+              trigger-enabled
+            </div>
+            <div class="code-name">.icon-trigger-enable
+            </div>
+          </li>
+          
+          <li class="dib">
+            <span class="icon iconfont icon-trigger-disable"></span>
+            <div class="name">
+              trigger-disabled
+            </div>
+            <div class="code-name">.icon-trigger-disable
+            </div>
+          </li>
+          
+          <li class="dib">
+            <span class="icon iconfont icon-Warning"></span>
+            <div class="name">
+              Warning
+            </div>
+            <div class="code-name">.icon-Warning
+            </div>
+          </li>
+          
+          <li class="dib">
+            <span class="icon iconfont icon-database"></span>
+            <div class="name">
+              database (1)
+            </div>
+            <div class="code-name">.icon-database
+            </div>
+          </li>
+          
+          <li class="dib">
+            <span class="icon iconfont icon-package"></span>
+            <div class="name">
+              icon_package
+            </div>
+            <div class="code-name">.icon-package
+            </div>
+          </li>
           
           <li class="dib">
             <span class="icon iconfont icon-nologin"></span>
@@ -937,24 +1129,6 @@
           </li>
           
           <li class="dib">
-            <span class="icon iconfont icon-database-connected"></span>
-            <div class="name">
-              database-connected
-            </div>
-            <div class="code-name">.icon-database-connected
-            </div>
-          </li>
-          
-          <li class="dib">
-            <span class="icon iconfont icon-database-disconnect"></span>
-            <div class="name">
-              database-disconnect
-            </div>
-            <div class="code-name">.icon-database-disconnect
-            </div>
-          </li>
-          
-          <li class="dib">
             <span class="icon iconfont icon-shujuku"></span>
             <div class="name">
               数据库
@@ -1193,6 +1367,110 @@
       </div>
       <div class="content symbol">
           <ul class="icon_lists dib-box">
+          
+            <li class="dib">
+                <svg class="icon svg-icon" aria-hidden="true">
+                  <use xlink:href="#icon-refresh"></use>
+                </svg>
+                <div class="name">refresh</div>
+                <div class="code-name">#icon-refresh</div>
+            </li>
+          
+            <li class="dib">
+                <svg class="icon svg-icon" aria-hidden="true">
+                  <use xlink:href="#icon-trigger"></use>
+                </svg>
+                <div class="name">trigger</div>
+                <div class="code-name">#icon-trigger</div>
+            </li>
+          
+            <li class="dib">
+                <svg class="icon svg-icon" aria-hidden="true">
+                  <use xlink:href="#icon-jinyong"></use>
+                </svg>
+                <div class="name">禁用</div>
+                <div class="code-name">#icon-jinyong</div>
+            </li>
+          
+            <li class="dib">
+                <svg class="icon svg-icon" aria-hidden="true">
+                  <use xlink:href="#icon-a-icon_task2"></use>
+                </svg>
+                <div class="name">icon_task</div>
+                <div class="code-name">#icon-a-icon_task2</div>
+            </li>
+          
+            <li class="dib">
+                <svg class="icon svg-icon" aria-hidden="true">
+                  <use xlink:href="#icon-icon_newlink"></use>
+                </svg>
+                <div class="name">icon_newlink</div>
+                <div class="code-name">#icon-icon_newlink</div>
+            </li>
+          
+            <li class="dib">
+                <svg class="icon svg-icon" aria-hidden="true">
+                  <use xlink:href="#icon-icon_SQL"></use>
+                </svg>
+                <div class="name">icon_SQL</div>
+                <div class="code-name">#icon-icon_SQL</div>
+            </li>
+          
+            <li class="dib">
+                <svg class="icon svg-icon" aria-hidden="true">
+                  <use xlink:href="#icon-icon_newserve"></use>
+                </svg>
+                <div class="name">icon_newserve</div>
+                <div class="code-name">#icon-icon_newserve</div>
+            </li>
+          
+            <li class="dib">
+                <svg class="icon svg-icon" aria-hidden="true">
+                  <use xlink:href="#icon-icon_search"></use>
+                </svg>
+                <div class="name">icon_search</div>
+                <div class="code-name">#icon-icon_search</div>
+            </li>
+          
+            <li class="dib">
+                <svg class="icon svg-icon" aria-hidden="true">
+                  <use xlink:href="#icon-trigger-enable"></use>
+                </svg>
+                <div class="name">trigger-enabled</div>
+                <div class="code-name">#icon-trigger-enable</div>
+            </li>
+          
+            <li class="dib">
+                <svg class="icon svg-icon" aria-hidden="true">
+                  <use xlink:href="#icon-trigger-disable"></use>
+                </svg>
+                <div class="name">trigger-disabled</div>
+                <div class="code-name">#icon-trigger-disable</div>
+            </li>
+          
+            <li class="dib">
+                <svg class="icon svg-icon" aria-hidden="true">
+                  <use xlink:href="#icon-Warning"></use>
+                </svg>
+                <div class="name">Warning</div>
+                <div class="code-name">#icon-Warning</div>
+            </li>
+          
+            <li class="dib">
+                <svg class="icon svg-icon" aria-hidden="true">
+                  <use xlink:href="#icon-database"></use>
+                </svg>
+                <div class="name">database (1)</div>
+                <div class="code-name">#icon-database</div>
+            </li>
+          
+            <li class="dib">
+                <svg class="icon svg-icon" aria-hidden="true">
+                  <use xlink:href="#icon-package"></use>
+                </svg>
+                <div class="name">icon_package</div>
+                <div class="code-name">#icon-package</div>
+            </li>
           
             <li class="dib">
                 <svg class="icon svg-icon" aria-hidden="true">
@@ -1560,22 +1838,6 @@
                 </svg>
                 <div class="name">database-disconnect-copy</div>
                 <div class="code-name">#icon-database-disconnect-copy</div>
-            </li>
-          
-            <li class="dib">
-                <svg class="icon svg-icon" aria-hidden="true">
-                  <use xlink:href="#icon-database-connected"></use>
-                </svg>
-                <div class="name">database-connected</div>
-                <div class="code-name">#icon-database-connected</div>
-            </li>
-          
-            <li class="dib">
-                <svg class="icon svg-icon" aria-hidden="true">
-                  <use xlink:href="#icon-database-disconnect"></use>
-                </svg>
-                <div class="name">database-disconnect</div>
-                <div class="code-name">#icon-database-disconnect</div>
             </li>
           
             <li class="dib">

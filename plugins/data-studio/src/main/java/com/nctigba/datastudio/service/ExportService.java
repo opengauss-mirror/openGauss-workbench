@@ -4,7 +4,7 @@
 
 package com.nctigba.datastudio.service;
 
-import com.nctigba.datastudio.model.query.ExportRequest;
+import com.nctigba.datastudio.model.query.ExportQuery;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -25,7 +25,7 @@ public interface ExportService {
      * @throws SQLException SQLException
      * @throws IOException IOException
      */
-    void exportTableDdl(ExportRequest request, HttpServletResponse response) throws SQLException, IOException;
+    void exportTableDdl(ExportQuery request, HttpServletResponse response) throws SQLException, IOException;
 
     /**
      * export table data
@@ -35,7 +35,7 @@ public interface ExportService {
      * @throws SQLException SQLException
      * @throws IOException IOException
      */
-    void exportTableData(ExportRequest request, HttpServletResponse response) throws SQLException, IOException;
+    void exportTableData(ExportQuery request, HttpServletResponse response) throws SQLException, IOException;
 
     /**
      * import table data
@@ -44,7 +44,7 @@ public interface ExportService {
      * @throws SQLException SQLException
      * @throws IOException IOException
      */
-    void importTableData(ExportRequest request) throws SQLException, IOException;
+    void importTableData(ExportQuery request) throws SQLException, IOException;
 
 
     /**
@@ -55,7 +55,7 @@ public interface ExportService {
      * @throws SQLException SQLException
      * @throws IOException IOException
      */
-    void exportFunctionDdl(ExportRequest request, HttpServletResponse response) throws SQLException, IOException;
+    void exportFunctionDdl(ExportQuery request, HttpServletResponse response) throws SQLException, IOException;
 
     /**
      * export view ddl
@@ -65,7 +65,7 @@ public interface ExportService {
      * @throws SQLException SQLException
      * @throws IOException IOException
      */
-    void exportViewDdl(ExportRequest request, HttpServletResponse response) throws SQLException, IOException;
+    void exportViewDdl(ExportQuery request, HttpServletResponse response) throws SQLException, IOException;
 
     /**
      * export sequence ddl
@@ -75,19 +75,17 @@ public interface ExportService {
      * @throws SQLException SQLException
      * @throws IOException IOException
      */
-    void exportSequenceDdl(ExportRequest request, HttpServletResponse response) throws SQLException, IOException;
+    void exportSequenceDdl(ExportQuery request, HttpServletResponse response) throws SQLException, IOException;
 
     /**
      * export schema ddl
      *
      * @param request request
      * @param response response
-     * @throws SQLException SQLException
      * @throws IOException IOException
      * @throws ExecutionException ExecutionException
      * @throws InterruptedException InterruptedException
      */
-    void exportSchemaDdl(
-            ExportRequest request,
-            HttpServletResponse response) throws SQLException, IOException, ExecutionException, InterruptedException;
+    void exportSchemaDdl(ExportQuery request, HttpServletResponse response)
+            throws IOException, ExecutionException, InterruptedException;
 }

@@ -13,6 +13,7 @@ import SvgIcon from '@/components/SvgIcon/index.vue'; // svg component
 import FontIcon from '@/components/FontIcon.vue';
 import { Splitpanes, Pane } from 'splitpanes';
 import 'splitpanes/dist/splitpanes.css';
+import AdvancedTable from '@/components/AdvancedTable/index.vue';
 import ElementPlus from 'element-plus';
 import 'element-plus/dist/index.css';
 // dark mode: element-plus 2.2 has dark mode
@@ -27,6 +28,7 @@ import '@/assets/iconfont/iconfont.js';
 
 // globle layout component
 import UContainerLayout from '@/components/u-container-layout/index.vue';
+import ThreeSectionTabsPage from '@/components/ThreeSectionTabsPage.vue';
 
 import { i18n } from '@/i18n/index';
 import { dispatchEventStorage } from '@/utils';
@@ -47,8 +49,10 @@ const app = createApp(App);
 app.component('svg-icon', SvgIcon);
 app.component('font-icon', FontIcon);
 app.component('u-container-layout', UContainerLayout);
+app.component('ThreeSectionTabsPage', ThreeSectionTabsPage);
 app.component('Splitpanes', Splitpanes);
 app.component('Pane', Pane);
+app.component('AdvancedTable', AdvancedTable);
 
 // icon
 import * as ElIconsModules from '@element-plus/icons-vue';

@@ -6,6 +6,7 @@ package com.nctigba.datastudio.dao;
 
 import com.nctigba.datastudio.model.entity.DatabaseConnectionDO;
 import com.nctigba.datastudio.model.entity.DatabaseConnectionUrlDO;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
@@ -14,6 +15,7 @@ import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -28,6 +30,7 @@ import static com.nctigba.datastudio.constants.SqlConstants.GET_URL_JDBC;
  *
  * @since 2023-6-26
  */
+@Slf4j
 @Repository
 public class DatabaseConnectionDAO implements ApplicationRunner {
     @Autowired
@@ -75,14 +78,16 @@ public class DatabaseConnectionDAO implements ApplicationRunner {
      * @return List
      */
     public List<DatabaseConnectionDO> selectTable(String webUser) {
-        List<DatabaseConnectionDO> list;
+        List<DatabaseConnectionDO> list = new ArrayList<>();
         Map<String, Object> count = jdbcTemplate.queryForMap(
                 GET_DATABASELINK_COUNT_SQL + " webuser = '" + webUser + "';");
-        if ((int) count.get("count") == 0) {
-            return null;
-        } else {
-            list = jdbcTemplate.query(GET_DATA_CONNECTION_NOT_P_SQL + " webuser = '" + webUser + "';",
-                    new BeanPropertyRowMapper<>(DatabaseConnectionDO.class));
+        if (count.get("count") instanceof Integer) {
+            if ((Integer) count.get("count") == 0) {
+                return null;
+            } else {
+                list = jdbcTemplate.query(GET_DATA_CONNECTION_NOT_P_SQL + " webuser = '" + webUser + "';",
+                        new BeanPropertyRowMapper<>(DatabaseConnectionDO.class));
+            }
         }
         return list;
     }
@@ -125,7 +130,7 @@ public class DatabaseConnectionDAO implements ApplicationRunner {
     public Integer getJudgeName(String name, String webUser) {
         Map<String, Object> count = jdbcTemplate.queryForMap(
                 GET_DATABASELINK_COUNT_SQL + " name ='" + name + "' and webUser = '" + webUser + "'");
-        return (Integer) (int) count.get("count");
+        return (Integer) count.get("count");
     }
 
     /**
@@ -230,8 +235,8 @@ public class DatabaseConnectionDAO implements ApplicationRunner {
     @Override
     public void run(ApplicationArguments args) {
         jdbcTemplate.execute(
-                "create table if not exists DATABASELINK(id INTEGER PRIMARY KEY,type varchar(20),"
-                        + "name text,driver varchar(100),ip varchar(30),port varchar(10),"
+                "create table if not exists DATABASELINK(id INTEGER PRIMARY KEY AUTOINCREMENT,type varchar(20),"
+                        + "name text ,driver varchar(100),ip varchar(30),port varchar(10),"
                         + "dataName varchar(40),username varchar(40),userpassword varchar(40) ,"
                         + "webuser varchar(40),edition  varchar(300), UNIQUE(name));");
     }

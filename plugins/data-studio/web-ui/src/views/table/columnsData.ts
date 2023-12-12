@@ -1,45 +1,49 @@
-import { i18n } from '@/i18n/index';
-const t = i18n.global.t;
-type EditColumnType = 'ColumnTab' | 'ConstraintTab' | 'IndexesTab';
+type EditColumnType = 'ColumnsTab' | 'ConstraintTab' | 'IndexesTab';
 const getColumn = (type: EditColumnType) => {
   const columnMap = {
-    ColumnTab: [
+    ColumnsTab: [
       {
         label: 'table.column.columnName',
         name: 'columnName',
+        prop: 'columnName',
         isI18nLabel: true,
-        type: 'input',
+        element: 'input',
       },
       {
         label: 'table.column.dataType',
         name: 'dataType',
+        prop: 'dataType',
         isI18nLabel: true,
-        type: 'select',
+        element: 'select',
         options: [],
       },
       {
         label: 'table.column.canBeNotNull',
         name: 'canBeNull',
+        prop: 'canBeNull',
         isI18nLabel: true,
-        type: 'checkbox',
+        element: 'checkbox',
       },
       {
         label: 'table.column.defaultValue',
         name: 'defaultValue',
+        prop: 'defaultValue',
         isI18nLabel: true,
-        type: 'input',
+        element: 'input',
       },
       {
         label: 'table.column.isUnique',
         name: 'isUnique',
+        prop: 'isUnique',
         isI18nLabel: true,
-        type: 'checkbox',
+        element: 'checkbox',
       },
       {
         label: 'table.column.precisionSize',
         name: 'precisionSize',
+        prop: 'precisionSize',
         isI18nLabel: true,
-        type: 'inputNumber',
+        element: 'inputNumber',
         attributes: {
           min: 0,
           step: 0,
@@ -49,8 +53,9 @@ const getColumn = (type: EditColumnType) => {
       {
         label: 'table.column.range',
         name: 'range',
+        prop: 'range',
         isI18nLabel: true,
-        type: 'inputNumber',
+        element: 'inputNumber',
         attributes: {
           min: 0,
           step: 0,
@@ -58,10 +63,11 @@ const getColumn = (type: EditColumnType) => {
         },
       },
       {
-        label: 'table.description',
+        label: 'common.description',
         name: 'description',
+        prop: 'description',
         isI18nLabel: true,
-        type: 'input',
+        element: 'input',
         attributes: {
           maxlength: 5000,
         },
@@ -71,14 +77,16 @@ const getColumn = (type: EditColumnType) => {
       {
         label: 'table.constraint.constrainName',
         name: 'constrainName',
+        prop: 'constrainName',
         isI18nLabel: true,
-        type: 'input',
+        element: 'input',
       },
       {
         label: 'table.constraint.columnName',
         name: 'columnName',
+        prop: 'columnName',
         isI18nLabel: true,
-        type: 'select',
+        element: 'select',
         attributes: {
           multiple: true,
           collapseTags: true,
@@ -88,8 +96,9 @@ const getColumn = (type: EditColumnType) => {
       {
         label: 'table.constraint.constrainType',
         name: 'constrainType',
+        prop: 'constrainType',
         isI18nLabel: true,
-        type: 'cascader',
+        element: 'cascader',
         options: [
           {
             value: 'c',
@@ -126,20 +135,23 @@ const getColumn = (type: EditColumnType) => {
       {
         label: 'table.constraint.expression',
         name: 'expression',
+        prop: 'expression',
         isI18nLabel: true,
-        type: 'input',
+        element: 'input',
       },
       {
         label: 'table.constraint.isDeffered',
         name: 'isDeffered',
+        prop: 'isDeffered',
         isI18nLabel: true,
-        type: 'checkbox',
+        element: 'checkbox',
       },
       {
-        label: 'table.description',
+        label: 'common.description',
         name: 'description',
+        prop: 'description',
         isI18nLabel: true,
-        type: 'input',
+        element: 'input',
         attributes: {
           maxlength: 5000,
         },
@@ -149,21 +161,24 @@ const getColumn = (type: EditColumnType) => {
       {
         label: 'table.indexes.indexName',
         name: 'indexName',
+        prop: 'indexName',
         isI18nLabel: true,
-        type: 'input',
+        element: 'input',
       },
       {
         label: 'table.indexes.isUnique',
         name: 'isUnique',
+        prop: 'isUnique',
         isI18nLabel: true,
-        type: 'checkbox',
+        element: 'checkbox',
         attributes: {},
       },
       {
         label: 'table.indexes.accessMethod',
         name: 'accessMethod',
+        prop: 'accessMethod',
         isI18nLabel: true,
-        type: 'select',
+        element: 'select',
         attributes: {},
         options: [
           {
@@ -207,8 +222,9 @@ const getColumn = (type: EditColumnType) => {
       {
         label: 'table.indexes.columnName',
         name: 'columnName',
+        prop: 'columnName',
         isI18nLabel: true,
-        type: 'select',
+        element: 'select',
         attributes: {
           multiple: true,
         },
@@ -217,14 +233,16 @@ const getColumn = (type: EditColumnType) => {
       {
         label: 'table.indexes.expression',
         name: 'expression',
+        prop: 'expression',
         isI18nLabel: true,
-        type: 'input',
+        element: 'input',
       },
       {
-        label: 'table.description',
+        label: 'common.description',
         name: 'description',
+        prop: 'description',
         isI18nLabel: true,
-        type: 'input',
+        element: 'input',
         attributes: {
           maxlength: 5000,
         },

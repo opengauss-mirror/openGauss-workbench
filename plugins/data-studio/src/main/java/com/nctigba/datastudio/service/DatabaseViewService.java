@@ -8,6 +8,7 @@ import com.nctigba.datastudio.model.dto.DatabaseCreateViewDTO;
 import com.nctigba.datastudio.model.dto.DatabaseSelectViewDTO;
 import com.nctigba.datastudio.model.dto.DatabaseViewDTO;
 import com.nctigba.datastudio.model.dto.DatabaseViewDdlDTO;
+import com.nctigba.datastudio.model.dto.ViewDataDTO;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -56,7 +57,7 @@ public interface DatabaseViewService {
      * @param request request
      * @return Map
      */
-    Map<String, Object> selectView(DatabaseSelectViewDTO request);
+    ViewDataDTO selectView(DatabaseSelectViewDTO request);
 
     /**
      * edit view

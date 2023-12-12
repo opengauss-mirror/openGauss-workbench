@@ -4,35 +4,36 @@
     class="rule-form"
     ref="ruleFormRef"
     :rules="rules"
-    label-width="130px"
+    label-width="110px"
     label-position="left"
     :label-suffix="$t('common.colon')"
   >
     <el-row :gutter="50">
       <el-col :span="12">
         <el-form-item prop="name" :label="$t('common.name')">
-          <el-input v-model="form.name" :disabled="props.type == 'edit'" />
+          <el-input v-model="form.name" />
         </el-form-item>
       </el-col>
       <el-col :span="12">
         <el-form-item prop="type" :label="$t('common.type')">
-          <el-radio-group v-model="form.type" :disabled="props.type == 'edit'" @change="roleChange">
+          <el-radio-group v-if="props.type == 'create'" v-model="form.type" @change="roleChange">
             <el-radio label="user">{{ $t('userRole.user') }}</el-radio>
             <el-radio label="role">{{ $t('userRole.role') }}</el-radio>
           </el-radio-group>
+          <span v-else>{{ form.type == 'user' ? $t('userRole.user') : $t('userRole.role') }}</span>
         </el-form-item>
       </el-col>
       <el-col :span="12" v-if="props.type == 'create'">
         <el-form-item prop="password" :label="$t('common.password')">
-          <el-input v-model="form.password" show-password autocomplete="new-password" />
+          <el-input v-model="form.password" type="password" autocomplete="new-password" />
         </el-form-item>
       </el-col>
       <el-col :span="12" v-if="props.type == 'create'">
         <el-form-item prop="confirmPassword" :label="$t('common.confirmPassword')">
-          <el-input v-model="form.confirmPassword" show-password />
+          <el-input v-model="form.confirmPassword" type="password" />
         </el-form-item>
       </el-col>
-      <el-col :span="12" v-if="props.type == 'edit'">
+      <el-col :span="24" v-if="props.type == 'edit'">
         <el-form-item label="OID">
           {{ form.oid }}
         </el-form-item>
@@ -82,9 +83,9 @@
             :indeterminate="isIndeterminate"
             @change="handleCheckAllChange"
           >
-            {{ $t('common.all2') }}
+            {{ $t('common.all') }}
           </el-checkbox>
-          <el-checkbox-group v-model="form.power" @change="handleCheckedCitiesChange">
+          <el-checkbox-group v-model="form.power">
             <el-checkbox label="LOGIN" :disabled="form.type === 'role'">
               {{ $t('userRole.privilegeItem.login') }}
             </el-checkbox>
@@ -166,19 +167,23 @@
     },
   });
 
+  watch(
+    () => form.value.power,
+    (value: string[]) => {
+      const checkedCount = value.length;
+      checkAll.value = checkedCount === powerList.value.length;
+      isIndeterminate.value = checkedCount > 0 && checkedCount < powerList.value.length;
+    },
+  );
+
   const fetchTablespaceList = async () => {
-    const res = (await getResource(props.uuid)) as unknown as string[];
+    const res = (await getResource({ uuid: props.uuid })) as unknown as string[];
     resourcePoolList.value = res;
   };
 
   const handleCheckAllChange = (val: boolean) => {
     form.value.power = val ? powerList.value.map((item) => item) : [];
     isIndeterminate.value = false;
-  };
-  const handleCheckedCitiesChange = (value: string[]) => {
-    const checkedCount = value.length;
-    checkAll.value = checkedCount === powerList.value.length;
-    isIndeterminate.value = checkedCount > 0 && checkedCount < powerList.value.length;
   };
   const validatePassword2 = (rule: any, value: any, callback: any) => {
     if (value === '') {

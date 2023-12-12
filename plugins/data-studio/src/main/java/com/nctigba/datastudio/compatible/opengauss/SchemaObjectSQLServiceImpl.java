@@ -5,7 +5,7 @@
 package com.nctigba.datastudio.compatible.opengauss;
 
 import com.nctigba.datastudio.compatible.SchemaObjectSQLService;
-import com.nctigba.datastudio.util.DebugUtils;
+import com.nctigba.datastudio.utils.DebugUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;

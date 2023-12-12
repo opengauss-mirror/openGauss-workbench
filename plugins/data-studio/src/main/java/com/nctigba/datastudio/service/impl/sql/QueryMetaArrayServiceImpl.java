@@ -6,9 +6,9 @@ package com.nctigba.datastudio.service.impl.sql;
 
 import com.nctigba.datastudio.compatible.GainObjectSQLService;
 import com.nctigba.datastudio.config.ConnectionConfig;
-import com.nctigba.datastudio.model.query.DatabaseMetaarrayColumnQuery;
-import com.nctigba.datastudio.model.query.DatabaseMetaarrayQuery;
-import com.nctigba.datastudio.model.query.DatabaseMetaarraySchemaQuery;
+import com.nctigba.datastudio.model.query.DatabaseMetaArrayColumnQuery;
+import com.nctigba.datastudio.model.query.DatabaseMetaArrayQuery;
+import com.nctigba.datastudio.model.query.DatabaseMetaArraySchemaQuery;
 import com.nctigba.datastudio.model.query.UserQuery;
 import com.nctigba.datastudio.service.QueryMetaArrayService;
 import lombok.extern.slf4j.Slf4j;
@@ -28,7 +28,7 @@ import java.util.Map;
 
 import static com.nctigba.datastudio.constants.CommonConstants.NAME;
 import static com.nctigba.datastudio.constants.CommonConstants.OID;
-import static com.nctigba.datastudio.dao.ConnectionMapDAO.conMap;
+import static com.nctigba.datastudio.utils.DebugUtils.comGetUuidType;
 
 /**
  * QueryMetaArrayServiceImpl
@@ -65,7 +65,7 @@ public class QueryMetaArrayServiceImpl implements QueryMetaArrayService {
                 Connection connection = connectionConfig.connectDatabase(uuid);
                 Statement statement = connection.createStatement()
         ) {
-            sql = gainObjectSQLService.get(conMap.get(uuid).getType()).databaseList();
+            sql = gainObjectSQLService.get(comGetUuidType(uuid)).databaseList();
             try (
                     ResultSet resultSet = statement.executeQuery(sql)
             ) {
@@ -86,21 +86,21 @@ public class QueryMetaArrayServiceImpl implements QueryMetaArrayService {
     }
 
     @Override
-    public List<Map<String, String>> schemaList(DatabaseMetaarraySchemaQuery request) throws SQLException {
+    public List<Map<String, String>> schemaList(DatabaseMetaArraySchemaQuery request) throws SQLException {
         log.info("schemaList request is: " + request);
-        return gainObjectSQLService.get(conMap.get(request.getUuid()).getType()).schemaList(request);
+        return gainObjectSQLService.get(comGetUuidType(request.getUuid())).schemaList(request);
     }
 
     @Override
-    public List<String> objectList(DatabaseMetaarrayQuery request) throws SQLException {
+    public List<String> objectList(DatabaseMetaArrayQuery request) throws SQLException {
         log.info("objectList request is: " + request);
-        return gainObjectSQLService.get(conMap.get(request.getUuid()).getType()).objectList(request);
+        return gainObjectSQLService.get(comGetUuidType(request.getUuid())).objectList(request);
     }
 
     @Override
-    public List<String> tableColumnList(DatabaseMetaarrayColumnQuery request) throws SQLException {
+    public List<String> tableColumnList(DatabaseMetaArrayColumnQuery request) throws SQLException {
         log.info("tableColumnList request is: " + request);
-        return gainObjectSQLService.get(conMap.get(request.getUuid()).getType()).tableColumnList(request);
+        return gainObjectSQLService.get(comGetUuidType(request.getUuid())).tableColumnList(request);
     }
 
     @Override
@@ -109,7 +109,7 @@ public class QueryMetaArrayServiceImpl implements QueryMetaArrayService {
                 Connection connection = connectionConfig.connectDatabase(uuid);
                 Statement statement = connection.createStatement();
                 ResultSet resultSet = statement.executeQuery(
-                        gainObjectSQLService.get(conMap.get(uuid).getType()).baseTypeListSQL())
+                        gainObjectSQLService.get(comGetUuidType(uuid)).baseTypeListSQL())
         ) {
             List<String> columnList = new ArrayList<>();
             while (resultSet.next()) {
@@ -125,7 +125,7 @@ public class QueryMetaArrayServiceImpl implements QueryMetaArrayService {
                 Connection connection = connectionConfig.connectDatabase(uuid);
                 Statement statement = connection.createStatement();
                 ResultSet resultSet = statement.executeQuery(
-                        gainObjectSQLService.get(conMap.get(uuid).getType()).tablespaceListSQL())
+                        gainObjectSQLService.get(comGetUuidType(uuid)).tablespaceListSQL())
         ) {
             List<String> columnList = new ArrayList<>();
             while (resultSet.next()) {
@@ -136,12 +136,31 @@ public class QueryMetaArrayServiceImpl implements QueryMetaArrayService {
     }
 
     @Override
+    public List<Map<String, String>> tablespaceOidList(String uuid) throws SQLException {
+        try (
+                Connection connection = connectionConfig.connectDatabase(uuid);
+                Statement statement = connection.createStatement();
+                ResultSet resultSet = statement.executeQuery(
+                        gainObjectSQLService.get(comGetUuidType(uuid)).tablespaceOidListSQL())
+        ) {
+            List<Map<String, String>> tableSpaceList = new ArrayList<>();
+            while (resultSet.next()) {
+                Map<String, String> tableSpaceMap = new HashMap<>();
+                tableSpaceMap.put(OID, resultSet.getString(1));
+                tableSpaceMap.put(NAME, resultSet.getString(2));
+                tableSpaceList.add(tableSpaceMap);
+            }
+            return tableSpaceList;
+        }
+    }
+
+    @Override
     public UserQuery userList(String uuid) throws SQLException {
         try (
                 Connection connection = connectionConfig.connectDatabase(uuid);
                 Statement statement = connection.createStatement();
                 ResultSet resultSet = statement.executeQuery(
-                        gainObjectSQLService.get(conMap.get(uuid).getType()).userSql())
+                        gainObjectSQLService.get(comGetUuidType(uuid)).userSql())
         ) {
             List<Map<String, String>> userList = new ArrayList<>();
             List<Map<String, String>> roleList = new ArrayList<>();
@@ -171,7 +190,7 @@ public class QueryMetaArrayServiceImpl implements QueryMetaArrayService {
                 Connection connection = connectionConfig.connectDatabase(uuid);
                 Statement statement = connection.createStatement();
                 ResultSet resultSet = statement.executeQuery(
-                        gainObjectSQLService.get(conMap.get(uuid).getType()).resourceListSQL())
+                        gainObjectSQLService.get(comGetUuidType(uuid)).resourceListSQL())
         ) {
             List<String> resourceList = new ArrayList<>();
             while (resultSet.next()) {

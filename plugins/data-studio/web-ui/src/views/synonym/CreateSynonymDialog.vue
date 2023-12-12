@@ -55,11 +55,7 @@
           </el-form-item>
         </div>
         <div v-show="activeName == 'Sql'">
-          <AceEditor
-            ref="editorPreRef"
-            height="450px"
-            style="margin: 4px 0; border: 1px solid #ddd"
-          />
+          <AceEditor ref="editorPreRef" height="450px" />
         </div>
       </div>
       <template #footer>
@@ -109,7 +105,7 @@
   const ruleFormRef = ref<FormInstance>();
   const UserStore = useUserStore();
   const editorPreRef = ref();
-  const activeName: Ref<string | number> = ref('Base');
+  const activeName = ref<string | number>('Base');
   const connectData = computed(() => props.connectData);
   const form = reactive({
     synonymName: '',

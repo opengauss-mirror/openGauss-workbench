@@ -37,6 +37,24 @@ export const constantRoutes: Array<RouteRecordRaw> = [
         meta: { title: '', icon: 'user', keepAlive: true },
       },
       {
+        path: '/editUserRole/:id',
+        component: () => import('@/views/userRole/EditUserRole.vue'),
+        name: 'editUserRole',
+        meta: { title: '', icon: 'user', keepAlive: true },
+      },
+      {
+        path: '/createTablespace/:id(\\d+)?',
+        component: () => import('@/views/tablespace/CreateTablespace.vue'),
+        name: 'createTablespace',
+        meta: { title: '', icon: 'tablespace', keepAlive: true },
+      },
+      {
+        path: '/editTablespace/:id',
+        component: () => import('@/views/tablespace/EditTablespace.vue'),
+        name: 'editTablespace',
+        meta: { title: '', icon: 'tablespace', keepAlive: true },
+      },
+      {
         path: '/createTable/:id(\\d+)?',
         component: () => import('@/views/createTable/index.vue'),
         name: 'createTable',
@@ -53,6 +71,30 @@ export const constantRoutes: Array<RouteRecordRaw> = [
         component: () => import('@/views/table/tableRelatedSequence.vue'),
         name: 'tableRelatedSequence',
         meta: { title: '', icon: 'table', keepAlive: true },
+      },
+      {
+        path: '/createForeignTable/:id(\\d+)?',
+        component: () => import('@/views/createForeignTable/index.vue'),
+        name: 'createForeignTable',
+        meta: { title: '', icon: 'table', keepAlive: true },
+      },
+      {
+        path: '/foreignTable/:id',
+        component: () => import('@/views/foreignTable/EditForeignTable.vue'),
+        name: 'foreignTable',
+        meta: { title: '', icon: 'table', keepAlive: true },
+      },
+      {
+        path: '/createTrigger/:id(\\d+)?',
+        component: () => import('@/views/trigger/CreateTrigger.vue'),
+        name: 'createTrigger',
+        meta: { title: '', icon: 'trigger', keepAlive: true },
+      },
+      {
+        path: '/trigger/:id',
+        component: () => import('@/views/trigger/EditTrigger.vue'),
+        name: 'trigger',
+        meta: { title: '', icon: 'trigger', keepAlive: true },
       },
       {
         path: '/createTerminal/:id(\\d+)?',
@@ -101,6 +143,17 @@ export const constantRoutes: Array<RouteRecordRaw> = [
         component: () => import('@/views/sequence/index.vue'),
         name: 'sequence',
         meta: { title: '', icon: 'terminal', keepAlive: true },
+      },
+      {
+        path: '/jobs/:rootId',
+        component: () => import('@/views/jobs/index.vue'),
+        name: 'jobs',
+        meta: {
+          title: 'scheduled task',
+          fileName: 'scheduled task',
+          icon: 'task',
+          keepAlive: true,
+        },
       },
     ],
   },

@@ -13,7 +13,7 @@
         ref="tableRef"
         :data="tableList"
         border
-        :height="360"
+        :height="410"
         highlight-current-row
         @current-change="handleCurrentChange"
       >
@@ -155,6 +155,12 @@
             </template>
           </el-input>
         </el-form-item>
+        <el-form-item prop="isRememberPassword" :label="$t('connection.savePassword')">
+          <el-radio-group v-model="form.isRememberPassword">
+            <el-radio label="y">{{ $t('connection.currentSessionOnly') }}</el-radio>
+            <el-radio label="n">{{ $t('connection.doNotSave') }}</el-radio>
+          </el-radio-group>
+        </el-form-item>
       </el-form>
     </div>
     <template #footer>
@@ -208,6 +214,7 @@
       type: 'create' | 'edit';
       connectInfo: {
         id: string | number;
+        isRememberPassword: 'y' | 'n';
         [props: string]: any;
       };
       uuid?: string;
@@ -243,6 +250,7 @@
     dataName: 'postgres', // default
     userName: '',
     password: '',
+    isRememberPassword: 'y',
     id: null,
     webUser: '',
   });
@@ -374,6 +382,7 @@
         if (key === 'port') form[key] = Number(infoData[key]) || null;
       });
       const currentConnectInfo = props.connectInfo;
+      form.isRememberPassword = currentConnectInfo.isRememberPassword;
       connectListInfo.list = [
         {
           name: currentConnectInfo.name,
@@ -425,6 +434,8 @@
       const excludeKeys = props.type === 'create' ? ['type'] : ['type', 'name'];
       if (key == 'port') {
         form[key] = null;
+      } else if (key == 'isRememberPassword') {
+        form[key] = 'y';
       } else if (!excludeKeys.includes(key)) {
         form[key] = '';
       }

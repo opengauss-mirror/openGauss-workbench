@@ -6,9 +6,9 @@ package com.nctigba.datastudio.service.impl.debug;
 
 import com.alibaba.fastjson.JSON;
 import com.nctigba.datastudio.base.WebSocketServer;
-import com.nctigba.datastudio.model.PublicParamReq;
+import com.nctigba.datastudio.model.query.PublicParamQuery;
 import com.nctigba.datastudio.service.OperationInterface;
-import com.nctigba.datastudio.util.DebugUtils;
+import com.nctigba.datastudio.utils.DebugUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -54,7 +54,7 @@ public class CreateCoverageRateImpl implements OperationInterface {
 
     @Override
     public void operate(WebSocketServer webSocketServer, Object obj) throws SQLException, IOException {
-        PublicParamReq paramReq = DebugUtils.changeParamType(obj);
+        PublicParamQuery paramReq = DebugUtils.changeParamType(obj);
         log.info("createCoverage paramReq: " + paramReq);
         String windowName = paramReq.getWindowName();
         Connection connection = webSocketServer.getConnection(windowName);
@@ -97,7 +97,7 @@ public class CreateCoverageRateImpl implements OperationInterface {
     }
 
     private void assembleParam(
-            PublicParamReq paramReq, Connection connection, String sql, Statement statNew,
+            PublicParamQuery paramReq, Connection connection, String sql, Statement statNew,
             int differ) throws SQLException {
         StringBuilder runLines = new StringBuilder();
         try (
@@ -140,7 +140,7 @@ public class CreateCoverageRateImpl implements OperationInterface {
     }
 
     private void insertTable(
-            Connection connection, PublicParamReq paramReq, String runLines,
+            Connection connection, PublicParamQuery paramReq, String runLines,
             String allLines) throws SQLException {
         List<Object> list = new ArrayList<>();
         List<Map<String, Object>> inputParamsList = paramReq.getInputParams();
@@ -168,6 +168,6 @@ public class CreateCoverageRateImpl implements OperationInterface {
 
     @Override
     public Object formatJson(String str) {
-        return JSON.parseObject(str, PublicParamReq.class);
+        return JSON.parseObject(str, PublicParamQuery.class);
     }
 }

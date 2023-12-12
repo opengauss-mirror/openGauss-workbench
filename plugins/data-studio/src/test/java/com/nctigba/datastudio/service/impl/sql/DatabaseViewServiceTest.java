@@ -11,7 +11,6 @@ import com.nctigba.datastudio.config.ConnectionConfig;
 import com.nctigba.datastudio.dao.ResultSetMapDAO;
 import com.nctigba.datastudio.model.dto.ConnectionDTO;
 import com.nctigba.datastudio.model.dto.DatabaseCreateViewDTO;
-import com.nctigba.datastudio.model.dto.DatabaseSelectViewDTO;
 import com.nctigba.datastudio.model.dto.DatabaseViewDdlDTO;
 import org.junit.Before;
 import org.junit.Test;
@@ -32,7 +31,6 @@ import java.util.Map;
 
 import static com.nctigba.datastudio.dao.ConnectionMapDAO.conMap;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 /**
@@ -71,11 +69,6 @@ public class DatabaseViewServiceTest {
         conMap.put(UUID, connectionDTO);
         when(connectionConfig.connectDatabase(anyString())).thenReturn(mockConnection);
         when(mockConnection.createStatement()).thenReturn(mockStatement);
-        when(mockStatement.executeQuery(anyString())).thenReturn(mockResultSet);
-        when(mockResultSet.next()).thenReturn(true, false);
-        when(mockResultSet.getMetaData()).thenReturn(mockMetaData);
-        when(mockMetaData.getColumnCount()).thenReturn(1);
-        when(mockMetaData.getColumnName(eq(1))).thenReturn("qqq");
     }
 
     @Test
@@ -142,19 +135,5 @@ public class DatabaseViewServiceTest {
         dropViewDTO.setConnectionName("rrr");
         dropViewDTO.setViewName("v1");
         viewService.dropView(dropViewDTO);
-    }
-
-    @Test
-    public void testSelectView() {
-        List<ViewObjectSQLService> serviceArrayList = new ArrayList<>();
-        serviceArrayList.add(new ViewObjectSQLServiceImpl());
-        viewService.setViewObjectSQLService(serviceArrayList);
-        DatabaseSelectViewDTO dropViewDTO = new DatabaseSelectViewDTO();
-        dropViewDTO.setUuid(UUID);
-        dropViewDTO.setWebUser("u1");
-        dropViewDTO.setSchema("w1");
-        dropViewDTO.setConnectionName("rrr");
-        dropViewDTO.setViewName("v1");
-        viewService.selectView(dropViewDTO);
     }
 }

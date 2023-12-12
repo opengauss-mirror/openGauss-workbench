@@ -6,13 +6,12 @@ package com.nctigba.datastudio.config;
 
 import com.nctigba.datastudio.dao.ConnectionMapDAO;
 import com.nctigba.datastudio.model.dto.ConnectionDTO;
-import com.nctigba.datastudio.service.impl.sql.DbConnectionServiceImpl;
-import com.nctigba.datastudio.util.ConnectionUtils;
-import com.nctigba.datastudio.util.LocaleString;
+import com.nctigba.datastudio.utils.ConnectionUtils;
+import com.nctigba.datastudio.utils.LocaleStringUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.exception.CustomException;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.Resource;
 import java.sql.Connection;
 import java.sql.SQLException;
 
@@ -23,11 +22,9 @@ import static com.nctigba.datastudio.dao.ConnectionMapDAO.conMap;
  *
  * @since 2023-06-26
  */
+@Slf4j
 @Service("connectionConfig")
 public class ConnectionConfig {
-    @Resource
-    private DbConnectionServiceImpl dbConnectionServiceImpl;
-
     /**
      * connect database
      *
@@ -37,7 +34,7 @@ public class ConnectionConfig {
      */
     public Connection connectDatabase(String uuid) throws SQLException {
         if (!conMap.containsKey(uuid)) {
-            throw new CustomException(LocaleString.transLanguage("1004"));
+            throw new CustomException(LocaleStringUtils.transLanguage("1004"), 555);
         }
         ConnectionDTO connectionDTO = conMap.get(uuid);
         Connection connection = ConnectionUtils.connectGet(
@@ -59,7 +56,7 @@ public class ConnectionConfig {
      */
     public Connection connectDatabaseMap(String uuid, String winName) throws SQLException {
         if (!conMap.containsKey(uuid)) {
-            throw new CustomException(LocaleString.transLanguage("1004"));
+            throw new CustomException(LocaleStringUtils.transLanguage("1004"), 555);
         }
         ConnectionDTO connectionDTO = conMap.get(uuid);
         Connection connection = ConnectionUtils.connectGet(
@@ -68,6 +65,7 @@ public class ConnectionConfig {
                 connectionDTO.getDbPassword());
         connectionDTO.updateConnectionDTO(connectionDTO, winName);
         ConnectionMapDAO.setConMap(uuid, connectionDTO);
+        log.error("connectionDTO SQLException is: {}", connectionDTO);
         return connection;
     }
 }

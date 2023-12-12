@@ -6,11 +6,11 @@ package com.nctigba.datastudio.service.impl.debug;
 
 import com.alibaba.fastjson.JSON;
 import com.nctigba.datastudio.base.WebSocketServer;
-import com.nctigba.datastudio.model.PublicParamReq;
+import com.nctigba.datastudio.model.query.PublicParamQuery;
 import com.nctigba.datastudio.model.entity.OperateStatusDO;
 import com.nctigba.datastudio.service.OperationInterface;
-import com.nctigba.datastudio.util.DebugUtils;
-import com.nctigba.datastudio.util.LocaleString;
+import com.nctigba.datastudio.utils.DebugUtils;
+import com.nctigba.datastudio.utils.LocaleStringUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -38,7 +38,7 @@ import static com.nctigba.datastudio.enums.MessageEnum.TEXT;
 public class StopDebugImpl implements OperationInterface {
     @Override
     public void operate(WebSocketServer webSocketServer, Object obj) throws SQLException, IOException {
-        PublicParamReq paramReq = DebugUtils.changeParamType(obj);
+        PublicParamQuery paramReq = DebugUtils.changeParamType(obj);
         log.info("stopDebug paramReq: " + paramReq);
         String windowName = paramReq.getWindowName();
         Connection conn = DebugUtils.changeParamType(webSocketServer, windowName, CONNECTION);
@@ -71,7 +71,7 @@ public class StopDebugImpl implements OperationInterface {
         }
         webSocketServer.setOperateStatus(windowName, operateStatusDO);
         Map<String, String> map = new HashMap<>();
-        map.put(RESULT, LocaleString.transLanguageWs("1003", webSocketServer));
+        map.put(RESULT, LocaleStringUtils.transLanguageWs("1003", webSocketServer));
         webSocketServer.sendMessage(windowName, TEXT, SUCCESS, map);
 
         Statement statement = webSocketServer.getStatement(windowName);
@@ -84,6 +84,6 @@ public class StopDebugImpl implements OperationInterface {
 
     @Override
     public Object formatJson(String str) {
-        return JSON.parseObject(str, PublicParamReq.class);
+        return JSON.parseObject(str, PublicParamQuery.class);
     }
 }

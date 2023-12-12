@@ -3,6 +3,7 @@ import { ElMessage, ElMessageBox } from 'element-plus';
 import { i18n } from '@/i18n/index';
 import { userPersist } from '@/config';
 import { sidebarForage } from '@/utils/localforage';
+import { interceptHttpDisconnection } from '@/utils/activateDisconnection';
 
 declare module 'axios' {
   interface AxiosResponse {
@@ -36,7 +37,7 @@ service.interceptors.request.use(
 );
 
 service.interceptors.response.use(
-  (response: AxiosResponse) => {
+  async (response: AxiosResponse) => {
     if (response.data?.code == 401) {
       !showExpired &&
         ElMessageBox({
@@ -56,16 +57,28 @@ service.interceptors.response.use(
           return Promise.reject(response.data.msg);
         });
       showExpired = true;
+    } else if (response.data?.code) {
+      // If has code, it has problem in backend.
+      if (response.data.code == 500 && response.data.msg === 'disconnection') {
+        let uuid = '';
+        if (response.config.method == 'get') {
+          uuid = response.config.params.uuid;
+        }
+        if (response.config.method == 'post') {
+          uuid = JSON.parse(response.config.data).uuid;
+        }
+        if (response.config.method == 'delete') {
+          uuid = response.config.params?.uuid || JSON.parse(response.config.data).uuid;
+        }
+        await interceptHttpDisconnection(uuid);
+        return Promise.reject();
+      } else {
+        showErrMessage(response.data.msg);
+        return Promise.reject(response.data.msg);
+      }
+    } else {
+      return response.data;
     }
-    if (response.data?.code == 500) {
-      ElMessage({
-        message: response.data.msg,
-        type: 'error',
-        duration: 5000,
-      });
-      return Promise.reject(response.data.msg);
-    }
-    return response.data;
   },
   (error: AxiosError) => {
     showErrMessage(error.message);
@@ -81,9 +94,9 @@ service.interceptors.response.use(
  */
 function showErrMessage(message: string, type: any = 'error', duration = 5000) {
   ElMessage({
-    message: message,
-    type: type,
-    duration: duration,
+    message,
+    type,
+    duration,
   });
 }
 

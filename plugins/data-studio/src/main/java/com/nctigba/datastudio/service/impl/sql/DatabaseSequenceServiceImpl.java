@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 import static com.nctigba.datastudio.dao.ConnectionMapDAO.conMap;
+import static com.nctigba.datastudio.utils.DebugUtils.comGetUuidType;
 
 /**
  * DatabaseSequenceServiceImpl
@@ -53,7 +54,7 @@ public class DatabaseSequenceServiceImpl implements DatabaseSequenceService {
     @Override
     public String createSequenceDDL(DatabaseCreateSequenceDTO request) {
         log.info("createSequenceDDL request is: " + request);
-        String ddl = sequenceObjectSQLService.get(conMap.get(request.getUuid()).getType()).splicingSequenceDDL(request);
+        String ddl = sequenceObjectSQLService.get(comGetUuidType(request.getUuid())).splicingSequenceDDL(request);
         log.info("createSequenceDDL response is: " + ddl);
         return ddl;
     }
@@ -65,7 +66,7 @@ public class DatabaseSequenceServiceImpl implements DatabaseSequenceService {
                 Connection connection = connectionConfig.connectDatabase(request.getUuid());
                 Statement statement = connection.createStatement()
         ) {
-            String ddl = sequenceObjectSQLService.get(conMap.get(request.getUuid()).getType()).splicingSequenceDDL(
+            String ddl = sequenceObjectSQLService.get(comGetUuidType(request.getUuid())).splicingSequenceDDL(
                     request);
             statement.execute(ddl);
             log.info("createSequence sql is: " + ddl);
@@ -79,7 +80,7 @@ public class DatabaseSequenceServiceImpl implements DatabaseSequenceService {
                 Connection connection = connectionConfig.connectDatabase(request.getUuid());
                 Statement statement = connection.createStatement()
         ) {
-            String sql = sequenceObjectSQLService.get(conMap.get(request.getUuid()).getType()).dropSequenceDDL(request);
+            String sql = sequenceObjectSQLService.get(comGetUuidType(request.getUuid())).dropSequenceDDL(request);
             statement.execute(sql);
             log.info("dropSequence sql is: " + sql);
         }
@@ -88,6 +89,6 @@ public class DatabaseSequenceServiceImpl implements DatabaseSequenceService {
     @Override
     public String returnSequenceDDL(DatabaseSequenceDdlDTO request) throws SQLException {
         log.info("returnSequenceDDL request is: " + request);
-        return sequenceObjectSQLService.get(conMap.get(request.getUuid()).getType()).returnSequenceDDL(request);
+        return sequenceObjectSQLService.get(comGetUuidType(request.getUuid())).returnSequenceDDL(request);
     }
 }

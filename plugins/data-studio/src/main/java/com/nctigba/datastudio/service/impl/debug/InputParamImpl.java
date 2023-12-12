@@ -6,11 +6,11 @@ package com.nctigba.datastudio.service.impl.debug;
 
 import com.alibaba.fastjson.JSON;
 import com.nctigba.datastudio.base.WebSocketServer;
-import com.nctigba.datastudio.model.PublicParamReq;
+import com.nctigba.datastudio.model.query.PublicParamQuery;
 import com.nctigba.datastudio.model.entity.OperateStatusDO;
 import com.nctigba.datastudio.service.OperationInterface;
-import com.nctigba.datastudio.util.DebugUtils;
-import com.nctigba.datastudio.util.LocaleString;
+import com.nctigba.datastudio.utils.DebugUtils;
+import com.nctigba.datastudio.utils.LocaleStringUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -63,7 +63,7 @@ public class InputParamImpl implements OperationInterface {
 
     @Override
     public void operate(WebSocketServer webSocketServer, Object obj) throws SQLException, IOException {
-        PublicParamReq paramReq = DebugUtils.changeParamType(obj);
+        PublicParamQuery paramReq = DebugUtils.changeParamType(obj);
         log.info("inputParam paramReq: " + paramReq);
         String windowName = paramReq.getWindowName();
 
@@ -80,7 +80,7 @@ public class InputParamImpl implements OperationInterface {
                     webSocketServer.sendMessage(windowName, TEXT, SUCCESS, map);
                 } else {
                     Map<String, String> messageMap = new HashMap<>();
-                    messageMap.put(RESULT, LocaleString.transLanguageWs("1008", webSocketServer));
+                    messageMap.put(RESULT, LocaleStringUtils.transLanguageWs("1008", webSocketServer));
                     webSocketServer.sendMessage(windowName, TEXT, SUCCESS, messageMap);
                     webSocketServer.sendMessage(windowName, TABLE, SUCCESS, map);
                 }
@@ -95,7 +95,7 @@ public class InputParamImpl implements OperationInterface {
     }
 
     private void debugOperate(
-            WebSocketServer webSocketServer, PublicParamReq paramReq) throws SQLException, IOException {
+            WebSocketServer webSocketServer, PublicParamQuery paramReq) throws SQLException, IOException {
         String windowName = paramReq.getWindowName();
         Statement statement = webSocketServer.getStatement(windowName);
 
@@ -152,6 +152,6 @@ public class InputParamImpl implements OperationInterface {
 
     @Override
     public Object formatJson(String str) {
-        return JSON.parseObject(str, PublicParamReq.class);
+        return JSON.parseObject(str, PublicParamQuery.class);
     }
 }

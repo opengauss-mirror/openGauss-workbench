@@ -79,24 +79,38 @@ body {
   }
 }
 
-.el-table .el-table__cell.add {
-  background-color: #e4ffb591 !important;
-  color: #606266;
-  .el-input__inner {
-    color: #606266 !important;
+.el-table  {
+  .el-table__cell.add {
+    background-color: #e2f7e6 !important;
+    color: #606266;
+    .el-input__inner {
+      color: #606266 !important;
+    }
   }
-}
-.el-table .el-table__cell.delete {
-  background-color: #ff6347 !important;
-}
-.el-table .el-table__cell.edited {
-  background-color: #f1d4d8 !important;
+  .el-table__cell.delete {
+    background-color: #fdeae9 !important;
+    color: #606266;
+  }
+  .el-table__cell.edited {
+    background-color: #f1d4d8 !important;
+    color: #606266;
+  }
+  .el-table-selection-row {
+    background-color: #f2f3f4;
+    color: #606266;
+    .el-table__cell.add {
+      background-color: #d0e2d8 !important;
+    }
+    .el-table__cell.delete {
+      background-color: #e5d7d9 !important;
+    }
+  }
 }
 
 .common-dialog-wrapper {
   .el-dialog__body {
     padding-top: 5px;
-    padding-bottom: 5px;
+    padding-bottom: 10px;
   }
 }
 
@@ -113,4 +127,8 @@ body {
       background-color: var(--el-color-primary);
     }
   }
+}
+
+.form-item-tooltip {
+  max-width: 350px;
 }

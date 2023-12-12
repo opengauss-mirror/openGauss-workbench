@@ -19,7 +19,7 @@ import com.nctigba.datastudio.model.query.SelectDataQuery;
 import com.nctigba.datastudio.model.query.TableDataEditQuery;
 import com.nctigba.datastudio.model.query.TablePartitionInfoQuery;
 import com.nctigba.datastudio.model.query.TableUnderlyingInfoQuery;
-import com.nctigba.datastudio.util.DebugUtils;
+import com.nctigba.datastudio.utils.DebugUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.exception.CustomException;
 import org.opengauss.admin.common.utils.StringUtils;
@@ -94,7 +94,7 @@ import static com.nctigba.datastudio.constants.SqlConstants.UNIQUE_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.UPDATE_TABLE_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.WITH_DOUBLE_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.WITH_SQL;
-import static com.nctigba.datastudio.util.DebugUtils.typeChange;
+import static com.nctigba.datastudio.utils.DebugUtils.typeChange;
 
 /**
  * TableColumnSQLService achieve
@@ -172,7 +172,7 @@ public class TableColumnSQLServiceImpl implements TableColumnSQLService {
     @Override
     public void editPkConstraint(DatabaseConstraintPkDTO request) throws SQLException {
         log.info("DatabaseConstraintPkDTO request is: {}", request);
-        String attName = request.getTableName() + "_PK";
+        String attName = DebugUtils.needQuoteName(request.getTableName() + "_PK");
         try (
                 Connection connection = connectionConfig.connectDatabase(request.getUuid());
                 Statement statement = connection.createStatement()
@@ -210,7 +210,7 @@ public class TableColumnSQLServiceImpl implements TableColumnSQLService {
                 } else if (obj.getType() == 2) {
                     statement.addBatch(
                             String.format(SqlConstants.INDEX_DROP_SQL, DebugUtils.needQuoteName(request.getSchema()),
-                                    obj.getIndexName()));
+                                    DebugUtils.needQuoteName(obj.getIndexName())));
                 } else if (obj.getType() == 3) {
                     this.updateIndex(request, obj, statement);
                 }
@@ -486,20 +486,21 @@ public class TableColumnSQLServiceImpl implements TableColumnSQLService {
         if (StringUtils.isEmpty(att) && !StringUtils.isEmpty(obj.getExpression())) {
             att = obj.getExpression();
         }
-        return String.format(SqlConstants.INDEX_CREATE_SQL, unique, obj.getIndexName(), schema,
-                tableName, amname, att);
+        return String.format(SqlConstants.INDEX_CREATE_SQL, unique, DebugUtils.needQuoteName(obj.getIndexName()),
+                schema, tableName, amname, att);
     }
 
     private String addIndexCommentSQL(String schema, IndexDTO obj) {
         if (!StringUtils.isEmpty(obj.getDescription())) {
-            return String.format(SqlConstants.INDEX_COMMENT_SQL, schema, obj.getIndexName(), obj.getDescription());
+            return String.format(SqlConstants.INDEX_COMMENT_SQL, schema, DebugUtils.needQuoteName(obj.getIndexName()),
+                    obj.getDescription());
         }
         return null;
     }
 
     private void updateIndex(DatabaseIndexDTO request, IndexDTO obj, Statement statement) throws SQLException {
         statement.addBatch(String.format(SqlConstants.INDEX_DROP_SQL, DebugUtils.needQuoteName(request.getSchema()),
-                obj.getOldIndexName()));
+                DebugUtils.needQuoteName(obj.getOldIndexName())));
         this.addIndex(request, obj, statement);
     }
 
@@ -712,10 +713,7 @@ public class TableColumnSQLServiceImpl implements TableColumnSQLService {
                 if (!tableDataDTOColumn.getOldColumnData().equals(tableDataDTOColumn.getColumnData())) {
                     values.append(String.format(EQUAL_SQL, tableDataDTOColumn.getColumnName(),
                             typeChange(tableDataDTOColumn.getColumnData(), tableDataDTOColumn.getTypeNum(),
-                                    tableDataDTOColumn.getTypeName())));
-                    if (i != size - 1) {
-                        values.append(COMMA);
-                    }
+                                    tableDataDTOColumn.getTypeName()))).append(COMMA);
                 }
             } else {
                 String value;
@@ -726,10 +724,7 @@ public class TableColumnSQLServiceImpl implements TableColumnSQLService {
                 }
                 values.append(String.format(EQUAL_SQL, tableDataDTOColumn.getColumnName(),
                         typeChange(value, tableDataDTOColumn.getTypeNum(),
-                                tableDataDTOColumn.getTypeName())));
-                if (i != size - 1) {
-                    values.append(COMMA);
-                }
+                                tableDataDTOColumn.getTypeName()))).append(COMMA);
             }
 
             if (StringUtils.isNotEmpty(tableDataDTOColumn.getOldColumnData())) {
@@ -744,7 +739,8 @@ public class TableColumnSQLServiceImpl implements TableColumnSQLService {
             }
         }
 
-        String ddl = String.format(UPDATE_TABLE_SQL, schema, tableName, values, conditions);
+        String ddl = String.format(UPDATE_TABLE_SQL, schema, tableName, values.deleteCharAt(values.length() - 1),
+                conditions);
         log.info("tableDataDropSQL response is: " + ddl);
         return ddl;
     }

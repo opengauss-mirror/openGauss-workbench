@@ -1,10 +1,18 @@
 <!-- this component line number start with 0. -->
 <template>
-  <div class="ace-editor" :id="id" ref="aceRef" :style="{ height: $props.height }"></div>
+  <div class="ace-wrapper" :style="{ width: $props.width, height: $props.height }">
+    <div class="ace-editor" :id="id" ref="aceRef" style="height: 100%"></div>
+    <ContextMenu
+      v-model:show="contextMenuVisible"
+      :offset="contextMenuOffset"
+      :list="contextMenuList"
+    />
+  </div>
 </template>
 
 <script lang="ts" setup>
   import ace from 'ace-builds';
+  import { Ace } from 'ace-builds';
   import 'ace-builds/src-noconflict/theme-chrome';
   import 'ace-builds/src-noconflict/theme-monokai';
   import 'ace-builds/src-noconflict/mode-sql';
@@ -12,8 +20,10 @@
   import 'ace-builds/src-noconflict/ext-language_tools';
   import { format as sqlFormatter } from 'sql-formatter';
   import type { FormatOptions } from 'sql-formatter';
-  import { uuid } from '@/utils';
+  import { uuid, copyToClickBoard } from '@/utils';
   import { isDark } from '@/hooks/dark';
+  import ContextMenu from './ContextMenu/index.vue';
+  import { useI18n } from 'vue-i18n';
 
   interface Annotations {
     row: number;
@@ -22,10 +32,12 @@
     type?: string;
   }
 
+  const { t } = useI18n();
   const props = withDefaults(
     defineProps<{
       modelValue?: string;
       value?: string;
+      width?: string;
       height?: string;
       readOnly?: boolean;
       minLines?: number;
@@ -69,10 +81,43 @@
     lineMarkerId: null,
   };
 
+  const contextMenuVisible = ref(false);
+  const contextMenuOffset = ref({
+    left: 0,
+    top: 0,
+  });
+  const contextMenuList = ref([
+    {
+      label: computed(() => t('button.copy')),
+      click: () => handleCopy(),
+    },
+  ]);
+
+  const hideContextMenu = () => {
+    contextMenuVisible.value = false;
+  };
+
+  const showContextMenu = (e) => {
+    e.preventDefault();
+    // Execute different custom commands based on the clicked location
+    if (e.target.classList.contains('ace_text-input')) {
+      // aceEditor.execCommand('customCommand');
+      contextMenuOffset.value = {
+        left: e.clientX,
+        top: e.clientY,
+      };
+      contextMenuVisible.value = true;
+      setEditorBlur();
+    }
+  };
+
   watch(
     () => props.modelValue,
-    (newProps) => {
-      aceEditor.setValue(newProps, 1);
+    (value) => {
+      const position = aceEditor.getCursorPosition();
+      aceEditor.getSession().setValue(value);
+      aceEditor.clearSelection();
+      aceEditor.moveCursorToPosition(position);
     },
   );
   watch(
@@ -112,6 +157,7 @@
       enableBasicAutocompletion: true,
       enableSnippets: true,
       enableLiveAutocompletion: true,
+      enableMultiselect: false,
     });
     aceEditor.on('change', (delta) => {
       aceEditor.renderer.updateBreakpoints();
@@ -148,6 +194,12 @@
     }
 
     props.openDebug && registerDebug();
+
+    /* aceEditor.commands.addCommand({
+      name: 'customCommand',
+      bindKey: { win: 'Ctrl-C', mac: 'Command-C' },
+      exec: function (editor) {},
+    }); */
   };
 
   const changeTheme = (theme: string) => {
@@ -234,6 +286,27 @@
 
   const getSelectionValue = () => {
     return aceEditor.session.getTextRange(aceEditor.getSelectionRange());
+  };
+
+  const getAllSelectionValue = () => {
+    return aceEditor.getSelectedText();
+  };
+
+  const getLineValue = (row) => {
+    return aceEditor.session.getLine(row);
+  };
+
+  const getCursorPostion = (): Ace.Position => {
+    // or: aceEditor.getCursorPosition()
+    return aceEditor.selection.getCursor();
+  };
+
+  const getCursorRowValue = () => {
+    return getLineValue(getCursorPostion().row);
+  };
+
+  const setEditorBlur = () => {
+    return aceEditor.blur();
   };
 
   const hasBreakPoint = (line: number, type: keyof typeof breakPointType) => {
@@ -329,12 +402,21 @@
     aceEditor.getSession().clearAnnotations();
   };
 
+  const handleCopy = () => {
+    const str = getAllSelectionValue() || getValue();
+    copyToClickBoard(str);
+  };
+
   onMounted(() => {
     initEditor();
     window.addEventListener('resize', resize);
+    aceEditor.container.addEventListener('contextmenu', (e) => showContextMenu(e));
+    aceEditor.on('mousewheel', hideContextMenu);
   });
   onUnmounted(() => {
     window.removeEventListener('resize', resize);
+    aceEditor.container.removeEventListener('contextmenu', (e) => showContextMenu(e));
+    aceEditor.off('mousewheel', hideContextMenu);
     if (aceEditor) {
       aceEditor.destroy();
       aceEditor.container.remove();
@@ -344,6 +426,7 @@
     getValue,
     setValue,
     getSelectionValue,
+    getAllSelectionValue,
     getAllLineDecorations,
     addBreakPoint,
     removeBreakPoint,
@@ -409,8 +492,11 @@
   }
 </style>
 <style lang="scss">
+  .ace-wrapper {
+    position: relative;
+    border: 1px solid #ddd;
+  }
   .ace-editor.ace-chrome {
-    border: 1px solid #ccc;
     .ace_gutter {
       background-color: #fff;
       border-right: 1px solid #ccc;

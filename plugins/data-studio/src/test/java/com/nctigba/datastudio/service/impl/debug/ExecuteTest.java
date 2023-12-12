@@ -7,7 +7,7 @@ package com.nctigba.datastudio.service.impl.debug;
 import com.nctigba.datastudio.base.WebSocketServer;
 import com.nctigba.datastudio.model.dto.ConnectionDTO;
 import com.nctigba.datastudio.model.entity.OperateStatusDO;
-import com.nctigba.datastudio.util.LocaleString;
+import com.nctigba.datastudio.utils.LocaleStringUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Test;
@@ -81,7 +81,7 @@ public class ExecuteTest {
     @Mock
     private MessageSource messageSource;
     @Spy
-    private LocaleString localeString;
+    private LocaleStringUtils localeStringUtils;
     private String str = "{" + LF
             + "  \"operation\": \"execute\"," + LF
             + "  \"isContinue\": false," + LF
@@ -101,7 +101,7 @@ public class ExecuteTest {
         conMap = new HashMap<>();
         conMap.put("8359cbf1-9833-4998-a29c-245f24009ab1", new ConnectionDTO());
 
-        localeString.setMessageSource(messageSource);
+        localeStringUtils.setMessageSource(messageSource);
         when(webSocketServer.getOperateStatus(anyString())).thenReturn(operateStatusDO);
     }
 
@@ -164,6 +164,7 @@ public class ExecuteTest {
                 + "  \"rootWindowName\": \"postgres\"," + LF
                 + "  \"oldWindowName\": \"\"," + LF
                 + "  \"windowName\": \"postgres\"," + LF
+                + "  \"isInPackage\": \"true\"," + LF
                 + "  \"sql\": \"CREATE OR REPLACE FUNCTION scott.step_in(i integer, OUT result integer)\\n "
                 + "RETURNS SETOF integer\\n LANGUAGE plpgsql\\n NOT FENCED NOT SHIPPABLE\\nAS $$\\nDECLARE\\n\\n\\n"
                 + "BEGIN\\n  result = i + 1;\\n  result = result + 2;\\n  if result < 10\\n  then\\n    "

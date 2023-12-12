@@ -4,7 +4,7 @@
 
 package com.nctigba.datastudio.service;
 
-import com.nctigba.datastudio.model.query.SchemaManagerRequest;
+import com.nctigba.datastudio.model.query.SchemaManagerQuery;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -23,7 +23,7 @@ public interface SchemaManagerService {
      * @return List
      * @throws SQLException SQLException
      */
-    List<String> queryAllUsers(SchemaManagerRequest request) throws SQLException;
+    List<String> queryAllUsers(SchemaManagerQuery request) throws SQLException;
 
     /**
      * query schema
@@ -32,7 +32,7 @@ public interface SchemaManagerService {
      * @return Map
      * @throws SQLException SQLException
      */
-    Map<String, String> querySchema(SchemaManagerRequest request) throws SQLException;
+    Map<String, String> querySchema(SchemaManagerQuery request) throws SQLException;
 
     /**
      * create schema
@@ -40,7 +40,7 @@ public interface SchemaManagerService {
      * @param request request
      * @throws SQLException SQLException
      */
-    void createSchema(SchemaManagerRequest request) throws SQLException;
+    void createSchema(SchemaManagerQuery request) throws SQLException;
 
     /**
      * update schema
@@ -48,7 +48,7 @@ public interface SchemaManagerService {
      * @param request request
      * @throws SQLException SQLException
      */
-    void updateSchema(SchemaManagerRequest request) throws SQLException;
+    void updateSchema(SchemaManagerQuery request) throws SQLException;
 
     /**
      * delete schema
@@ -56,5 +56,5 @@ public interface SchemaManagerService {
      * @param request request
      * @throws SQLException SQLException
      */
-    void deleteSchema(SchemaManagerRequest request) throws SQLException;
+    void deleteSchema(SchemaManagerQuery request) throws SQLException;
 }

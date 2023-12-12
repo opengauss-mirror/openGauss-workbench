@@ -8,6 +8,7 @@ import com.nctigba.datastudio.model.dto.DatabaseCreateViewDTO;
 import com.nctigba.datastudio.model.dto.DatabaseSelectViewDTO;
 import com.nctigba.datastudio.model.dto.DatabaseViewDTO;
 import com.nctigba.datastudio.model.dto.DatabaseViewDdlDTO;
+import com.nctigba.datastudio.model.dto.ViewDataDTO;
 import com.nctigba.datastudio.service.DatabaseViewService;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -39,7 +40,7 @@ public class DatabaseViewController {
      * @param request request
      * @return String
      */
-    @PostMapping(value = "/views/action", params = "action=createViewDdl", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(value = "/views/action", produces = MediaType.APPLICATION_JSON_VALUE)
     public String createViewDDL(@RequestBody DatabaseCreateViewDTO request) {
         return databaseViewService.createViewDDL(request);
     }
@@ -71,7 +72,7 @@ public class DatabaseViewController {
      * @return Map
      */
     @GetMapping(value = "/viewDatas", produces = MediaType.APPLICATION_JSON_VALUE)
-    public Map<String, Object> selectView(DatabaseSelectViewDTO request) {
+    public ViewDataDTO selectView(DatabaseSelectViewDTO request) {
         return databaseViewService.selectView(request);
     }
 

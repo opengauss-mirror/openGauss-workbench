@@ -5,12 +5,12 @@
 package com.nctigba.datastudio.service.impl.debug;
 
 import com.nctigba.datastudio.base.WebSocketServer;
-import com.nctigba.datastudio.model.PublicParamReq;
+import com.nctigba.datastudio.model.query.PublicParamQuery;
 import com.nctigba.datastudio.model.entity.OperateStatusDO;
 import com.nctigba.datastudio.model.entity.SqlHistoryDO;
 import com.nctigba.datastudio.service.impl.sql.SqlHistoryManagerServiceImpl;
-import com.nctigba.datastudio.util.DebugUtils;
-import com.nctigba.datastudio.util.LocaleString;
+import com.nctigba.datastudio.utils.DebugUtils;
+import com.nctigba.datastudio.utils.LocaleStringUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
@@ -55,7 +55,7 @@ public class AsyncHelper {
     private SqlHistoryManagerServiceImpl managerService;
 
     @Async
-    public void task(WebSocketServer webSocketServer, PublicParamReq paramReq) throws SQLException, IOException {
+    public void task(WebSocketServer webSocketServer, PublicParamQuery paramReq) throws SQLException, IOException {
         log.info("AsyncHelper paramReq: " + paramReq);
         String windowName = paramReq.getWindowName();
         Statement statement = webSocketServer.getStatement(windowName);
@@ -69,7 +69,9 @@ public class AsyncHelper {
             try (
                     ResultSet resultSet = statement.executeQuery(DebugUtils.prepareSql(paramReq))
             ) {
-                funcTask(webSocketServer, paramReq, resultSet);
+                if (!paramReq.isCoverage()) {
+                    funcTask(webSocketServer, paramReq, resultSet);
+                }
             } catch (SQLException | IOException e) {
                 webSocketServer.sendMessage(windowName, WINDOW, FIVE_HUNDRED, e.getMessage(), e.getStackTrace());
             }
@@ -98,7 +100,7 @@ public class AsyncHelper {
         if (!paramReq.isCoverage() && !isAnonymousOid(paramReq)) {
             closeConnection(webSocketServer, windowName, statement);
             Map<String, String> map = new HashMap<>();
-            map.put(RESULT, LocaleString.transLanguageWs("1010", webSocketServer));
+            map.put(RESULT, LocaleStringUtils.transLanguageWs("1010", webSocketServer));
             webSocketServer.sendMessage(windowName, CREATE_COVERAGE_RATE, SUCCESS, map);
             return;
         }
@@ -120,7 +122,7 @@ public class AsyncHelper {
         }
     }
 
-    private void funcTask(WebSocketServer webSocketServer, PublicParamReq paramReq, ResultSet resultSet)
+    private void funcTask(WebSocketServer webSocketServer, PublicParamQuery paramReq, ResultSet resultSet)
             throws SQLException, IOException {
         String windowName = paramReq.getWindowName();
         Map<String, Object> map = DebugUtils.parseResultSet(resultSet);
@@ -132,7 +134,7 @@ public class AsyncHelper {
                 webSocketServer.sendMessage(windowName, TEXT, SUCCESS, map);
             } else {
                 Map<String, String> messageMap = new HashMap<>();
-                messageMap.put(RESULT, LocaleString.transLanguageWs("1008", webSocketServer));
+                messageMap.put(RESULT, LocaleStringUtils.transLanguageWs("1008", webSocketServer));
                 webSocketServer.sendMessage(windowName, TEXT, SUCCESS, messageMap);
                 webSocketServer.sendMessage(windowName, TABLE, SUCCESS, map);
             }
@@ -141,7 +143,7 @@ public class AsyncHelper {
         }
     }
 
-    private boolean isAnonymousOid(PublicParamReq paramReq) {
+    private boolean isAnonymousOid(PublicParamQuery paramReq) {
         String funcOid = paramReq.getOid();
         return funcOid.equals("0");
     }

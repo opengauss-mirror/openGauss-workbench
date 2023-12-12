@@ -4,9 +4,9 @@
 
 package com.nctigba.datastudio.service;
 
-import com.nctigba.datastudio.model.query.DatabaseMetaarrayColumnQuery;
-import com.nctigba.datastudio.model.query.DatabaseMetaarrayQuery;
-import com.nctigba.datastudio.model.query.DatabaseMetaarraySchemaQuery;
+import com.nctigba.datastudio.model.query.DatabaseMetaArrayColumnQuery;
+import com.nctigba.datastudio.model.query.DatabaseMetaArrayQuery;
+import com.nctigba.datastudio.model.query.DatabaseMetaArraySchemaQuery;
 import com.nctigba.datastudio.model.query.UserQuery;
 
 import java.sql.SQLException;
@@ -34,7 +34,7 @@ public interface QueryMetaArrayService {
      * @return List
      * @throws SQLException SQLException
      */
-    List<String> objectList(DatabaseMetaarrayQuery request) throws SQLException;
+    List<String> objectList(DatabaseMetaArrayQuery request) throws SQLException;
 
     /**
      * table column list
@@ -43,7 +43,7 @@ public interface QueryMetaArrayService {
      * @return List
      * @throws SQLException SQLException
      */
-    List<String> tableColumnList(DatabaseMetaarrayColumnQuery request) throws SQLException;
+    List<String> tableColumnList(DatabaseMetaArrayColumnQuery request) throws SQLException;
 
     /**
      * schema list
@@ -52,7 +52,7 @@ public interface QueryMetaArrayService {
      * @return List
      * @throws SQLException SQLException
      */
-    List<Map<String, String>> schemaList(DatabaseMetaarraySchemaQuery request) throws SQLException;
+    List<Map<String, String>> schemaList(DatabaseMetaArraySchemaQuery request) throws SQLException;
 
     /**
      * base type list
@@ -71,6 +71,16 @@ public interface QueryMetaArrayService {
      * @throws SQLException SQLException
      */
     List<String> tablespaceList(String uuid) throws SQLException;
+
+
+    /**
+     * table space list
+     *
+     * @param uuid uuid
+     * @return List
+     * @throws SQLException SQLException
+     */
+    List<Map<String, String>> tablespaceOidList(String uuid) throws SQLException;
 
     /**
      * user list

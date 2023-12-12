@@ -101,6 +101,16 @@ public class CommonConstants {
     public static final String OPENGAUSS = "openGauss";
 
     /**
+     * mysql
+     */
+    public static final String MYSQL = "MySQL";
+
+    /**
+     * oracle
+     */
+    public static final String ORACLE = "Oracle";
+
+    /**
      * port
      */
     public static final String PORT = "port";
@@ -394,4 +404,49 @@ public class CommonConstants {
      * is package
      */
     public static final String IS_PACKAGE = "isPackage";
+
+    /**
+     * postgres fdw
+     */
+    public static final String POSTGRES_FDW = "postgres_fdw";
+
+    /**
+     * mysql fdw
+     */
+    public static final String MYSQL_FDW = "mysql_fdw";
+
+    /**
+     * oracle fdw
+     */
+    public static final String ORACLE_FDW = "oracle_fdw";
+
+    /**
+     * file fdw
+     */
+    public static final String FILE_FDW = "file_fdw";
+
+    /**
+     * srv name
+     */
+    public static final String SRV_NAME = "srvname";
+
+    /**
+     * fdw name
+     */
+    public static final String FDW_NAME = "fdwname";
+
+    /**
+     * rel name
+     */
+    public static final String REL_NAME = "relname";
+
+    /**
+     * number of partition table attribute rows
+     */
+    public static final int NUM_PARTITION_TABLE_ATTR_ROWS = 16;
+
+    /**
+     * number of table attribute rows
+     */
+    public static final int NUM_TABLE_ATTR_ROWS = 14;
 }

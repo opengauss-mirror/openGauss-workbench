@@ -32,4 +32,8 @@ public class DataListDTO {
 
     private List<Map<String, String>> sequence;
 
+    private List<Map<String, String>> foreignTable;
+
+    private List<Map<String, Object>> trigger;
+
 }

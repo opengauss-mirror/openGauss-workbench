@@ -7,7 +7,7 @@ package com.nctigba.datastudio.compatible.opengauss;
 import com.nctigba.datastudio.config.ConnectionConfig;
 import com.nctigba.datastudio.model.dto.ConnectionDTO;
 import com.nctigba.datastudio.model.dto.DatabaseViewDdlDTO;
-import com.nctigba.datastudio.util.LocaleString;
+import com.nctigba.datastudio.utils.LocaleStringUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -103,8 +103,8 @@ public class ViewObjectSQLServiceTest {
 
     @Test
     public void testrReturnViewDDLData() throws SQLException {
-        MockedStatic<LocaleString> staticUtilsMockedStatic = Mockito.mockStatic(LocaleString.class);
-        staticUtilsMockedStatic.when(() -> LocaleString.transLanguage(anyString()))
+        MockedStatic<LocaleStringUtils> staticUtilsMockedStatic = Mockito.mockStatic(LocaleStringUtils.class);
+        staticUtilsMockedStatic.when(() -> LocaleStringUtils.transLanguage(anyString()))
                 .thenReturn("123");
         when(mockResultSet.getString("relkind")).thenReturn("");
         DatabaseViewDdlDTO databaseViewDdlDTO = new DatabaseViewDdlDTO();
@@ -121,8 +121,8 @@ public class ViewObjectSQLServiceTest {
 
     @Test
     public void testViewTypeData() {
-        MockedStatic<LocaleString> staticUtilsMockedStatic = Mockito.mockStatic(LocaleString.class);
-        staticUtilsMockedStatic.when(() -> LocaleString.transLanguage(anyString()))
+        MockedStatic<LocaleStringUtils> staticUtilsMockedStatic = Mockito.mockStatic(LocaleStringUtils.class);
+        staticUtilsMockedStatic.when(() -> LocaleStringUtils.transLanguage(anyString()))
                 .thenReturn("123");
         DatabaseViewDdlDTO databaseViewDdlDTO = new DatabaseViewDdlDTO();
         databaseViewDdlDTO.setViewName("false");

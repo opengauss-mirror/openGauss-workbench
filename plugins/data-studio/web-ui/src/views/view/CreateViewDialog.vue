@@ -21,7 +21,7 @@
             </el-form-item>
             <el-form-item prop="viewType" :label="$t('view.type')">
               <el-select v-model="form.viewType" :disabled="props.type === 'edit'">
-                <el-option :label="$t('view.view')" value="VIEW" />
+                <el-option :label="$t('view.title')" value="VIEW" />
                 <el-option :label="$t('view.materializedView')" value="MATERIALIZED" />
               </el-select>
             </el-form-item>
@@ -34,18 +34,14 @@
               <AceEditor
                 ref="editorRef"
                 :readOnly="props.type === 'edit'"
+                width="100%"
                 height="400px"
-                style="margin: 4px 0; border: 1px solid #ddd; width: 100%"
               />
             </el-form-item>
           </el-form>
         </div>
         <div v-show="activeName == 'Sql'">
-          <AceEditor
-            ref="editorPreRef"
-            height="450px"
-            style="margin: 4px 0; border: 1px solid #ddd"
-          />
+          <AceEditor ref="editorPreRef" height="450px" />
         </div>
       </div>
       <template #footer>

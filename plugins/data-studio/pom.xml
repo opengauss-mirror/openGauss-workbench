@@ -33,6 +33,13 @@
 			<version>3.39.3.0</version>
 		</dependency>
 		<dependency>
+			<groupId>org.intarkDB</groupId>
+			<artifactId>intarkDB-jdbc</artifactId>
+			<version>1.0</version>
+			<scope>system</scope>
+			<systemPath>${project.basedir}/src/main/resources/lib/IntarkDB-jdbc-1.0.0.1.jar</systemPath>
+		</dependency>
+		<dependency>
 			<groupId>org.opengauss</groupId>
 			<artifactId>opengauss-jdbc</artifactId>
 			<version>3.0.0</version>

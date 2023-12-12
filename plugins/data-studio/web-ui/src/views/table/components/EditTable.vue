@@ -1,22 +1,20 @@
 <template>
-  <el-table
+  <AdvancedTable
     ref="editTableRef"
     :data="props.data || []"
-    v-loading="props.loading"
-    border
-    highlight-current-row
+    :loading="props.loading"
+    :row-key="idKey"
+    :columns="columns"
+    :menuList="props.menuList"
     :cell-class-name="cellClassFn"
     :header-cell-class-name="handleHeaderClass"
     @click="handleTableClick"
     @cell-dblclick="handleCellDbClick"
-    @current-change="handleCurrentChange"
+    @selection-change="handleSelectionChange"
     @sort-change="handleSortChange"
-    style="width: 100%; height: 100%"
     v-click-outside.el-select__popper.el-cascader__dropdown="clickOutsideTable"
     flexible
-    :row-key="idKey"
   >
-    <el-table-column type="index" width="50" align="center" />
     <template v-for="(item, index) in props.columns || []">
       <el-table-column
         :key="index"
@@ -27,7 +25,7 @@
         :max-width="200"
         align="center"
         header-align="center"
-        :min-width="item.type == 'select' ? 120 : tableColumnWidth[item.name]"
+        :min-width="item.element == 'select' ? 120 : tableColumnWidth[item.name]"
       >
         <template #default="scope">
           <el-input
@@ -35,7 +33,7 @@
               props.canEdit &&
               globalEditing &&
               scope.row[item.name + props.editingSuffix] &&
-              item.type == 'input'
+              item.element == 'input'
             "
             v-model="scope.row[item.name]"
             v-bind="item.attributes"
@@ -46,7 +44,7 @@
               props.canEdit &&
               globalEditing &&
               scope.row[item.name + props.editingSuffix] &&
-              item.type == 'inputNumber'
+              item.element == 'inputNumber'
             "
             v-model="scope.row[item.name]"
             v-bind="item.attributes"
@@ -59,7 +57,7 @@
               props.canEdit &&
               globalEditing &&
               scope.row[item.name + props.editingSuffix] &&
-              item.type == 'select' &&
+              item.element == 'select' &&
               item.name == 'columnName'
             "
             v-model="scope.row[item.name]"
@@ -73,7 +71,7 @@
               props.canEdit &&
               globalEditing &&
               scope.row[item.name + props.editingSuffix] &&
-              props.tabName == 'ColumnTab' &&
+              props.tabName == 'ColumnsTab' &&
               item.name == 'dataType'
             "
             v-model="scope.row[item.name]"
@@ -87,7 +85,7 @@
               props.canEdit &&
               globalEditing &&
               scope.row[item.name + props.editingSuffix] &&
-              item.type == 'select'
+              item.element == 'select'
             "
             v-model="scope.row[item.name]"
             v-bind="item.attributes"
@@ -105,7 +103,7 @@
               props.canEdit &&
               globalEditing &&
               scope.row[item.name + props.editingSuffix] &&
-              item.type == 'cascader' &&
+              item.element == 'cascader' &&
               item.name == 'constrainType'
             "
             v-model="scope.row[item.name]"
@@ -114,16 +112,16 @@
             @change="handleChangeValue(scope.row, scope.column)"
           />
           <el-checkbox
-            v-else-if="item.type == 'checkbox'"
+            v-else-if="item.element == 'checkbox'"
             v-model="scope.row[item.name]"
             :disabled="!props.canEdit"
             @change="handleChangeValue(scope.row, scope.column)"
           />
-          <span v-else>{{ formatTextCell(scope.row[item.name], item.type) }}</span>
+          <span v-else>{{ formatTextCell(scope.row[item.name], item.element) }}</span>
         </template>
       </el-table-column>
     </template>
-  </el-table>
+  </AdvancedTable>
 </template>
 
 <script lang="ts" setup>
@@ -149,7 +147,7 @@
   const props = withDefaults(
     defineProps<{
       canEdit?: boolean;
-      tabName: string; //'ColumnTab' |'ConstraintTab' | 'IndexesTab' | 'DataTab';
+      tabName: string; //'ColumnsTab' |'ConstraintTab' | 'IndexesTab' | 'DataTab';
       data: any[];
       allData: any;
       columnNameList: string[];
@@ -164,6 +162,7 @@
       dataTypeList: string[];
       barStatus: any;
       sortable?: boolean | string;
+      menuList?: string[];
     }>(),
     {
       canEdit: true,
@@ -174,11 +173,12 @@
       dataTypeList: () => [],
       barStatus: () => ({}),
       sortable: false,
+      menuList: () => [],
     },
   );
 
   const emit = defineEmits<{
-    (e: 'currentChange', data: any): void;
+    (e: 'selectionChange', data: any): void;
     (e: 'cellDataChange', data?: any): void;
     (e: 'cellDblclick', row, column, cell, event): void;
     (e: 'sortChange', { column, prop, order }): void;
@@ -249,6 +249,12 @@
     });
   };
 
+  const clearSelection = () => {
+    nextTick(() => {
+      editTableRef.value.clearSelection();
+    });
+  };
+
   const formatTextCell = (value: string[] | string, type) => {
     if (type == 'cascader' && Array.isArray(value)) {
       enum ConstrainType {
@@ -305,8 +311,9 @@
     if (!row[props.rowStatusKey]) row[props.rowStatusKey] = 'edit';
     emit('cellDataChange', row);
   };
-  const handleCurrentChange = (currentRow) => {
-    emit('currentChange', currentRow);
+
+  const handleSelectionChange = (value) => {
+    emit('selectionChange', value);
   };
 
   const handleHeaderClass = ({ column }) => {
@@ -368,15 +375,14 @@
   defineExpose({
     tableRef: toRef(() => editTableRef),
     doLayout,
+    clearSelection,
   });
 </script>
 
 <style lang="scss" scoped>
-  .el-table {
-    :deep(.el-table__body) {
-      .el-table__cell .cell {
-        min-height: 2em;
-      }
+  :deep(.el-table__body) {
+    .el-table__cell .cell {
+      min-height: 2em;
     }
   }
 </style>

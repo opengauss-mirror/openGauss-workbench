@@ -1,6 +1,49 @@
 <!-- Copyright(c) vue-admin-perfect(zouzhibin). -->
 <template>
   <div class="tags-wrap-container">
+    <div class="function-div">
+      <div class="left">
+        <el-select
+          v-model="AppStore.currentTerminalInfo"
+          value-key="uuid"
+          size="small"
+          style="width: 150px"
+          :placeholder="t('message.noConnectionSelectorTips')"
+          placement="bottom"
+        >
+          <el-option
+            v-for="item in terminalDbOptions"
+            :key="item.label"
+            :value="item"
+            :label="item.label"
+          ></el-option>
+        </el-select>
+        <div class="operation-icon-wrapper" :title="t('connection.new')">
+          <svg class="operation-icon" aria-hidden="true" @click="openConnectDialog">
+            <use xlink:href="#icon-icon_newlink"></use>
+          </svg>
+        </div>
+        <div class="operation-icon-wrapper" :title="t('create.terminal')">
+          <svg class="operation-icon" aria-hidden="true" @click="createTerminal">
+            <use xlink:href="#icon-icon_newserve"></use>
+          </svg>
+        </div>
+        <div class="operation-icon-wrapper" :title="t('job.name')">
+          <svg class="operation-icon" aria-hidden="true" @click="gotoJobs">
+            <use xlink:href="#icon-a-icon_task2"></use>
+          </svg>
+        </div>
+      </div>
+      <div class="right">
+        <div class="operation-icon-wrapper" :title="t('terminal.SQLAssistant')">
+          <svg class="operation-icon" aria-hidden="true" @click="toggleSqlAssistant">
+            <use xlink:href="#icon-icon_SQL"></use>
+          </svg>
+        </div>
+        <LangButton v-if="!isInFrame" />
+        <SwitchDark v-if="!isInFrame" />
+      </div>
+    </div>
     <div class="tags-view" ref="scrollContainer">
       <better-scroll :options="{ scrollX: true, scrollY: false }" ref="bsScroll">
         <div class="tags-scroll-inner" ref="tabsWrap">
@@ -45,33 +88,6 @@
         </div>
       </better-scroll>
     </div>
-    <el-select
-      v-model="AppStore.currentTerminalInfo"
-      value-key="uuid"
-      size="small"
-      style="width: 150px"
-      :placeholder="t('message.noConnectionSelectorTips')"
-      placement="bottom"
-    >
-      <el-option
-        v-for="item in terminalDbOptions"
-        :key="item.label"
-        :value="item"
-        :label="item.label"
-      ></el-option>
-    </el-select>
-    <div class="operation-icon-wrapper" :title="t('terminal.SQLAssistant')">
-      <svg class="operation-icon" aria-hidden="true" @click="toggleSqlAssistant">
-        <use xlink:href="#icon-bangzhuzhongxin"></use>
-      </svg>
-    </div>
-    <div class="operation-icon-wrapper" :title="t('create.terminal')">
-      <svg class="operation-icon" aria-hidden="true" @click="createTerminal">
-        <use xlink:href="#icon-cmd"></use>
-      </svg>
-    </div>
-    <LangButton v-if="!isInFrame" />
-    <SwitchDark v-if="!isInFrame" />
     <div class="context-menu" :style="contextMenu.menuStyles">
       <ul v-if="contextMenu.visible" v-click-outside="handleClickContextMenuOutside">
         <li @click="refresh(contextTag)" v-if="isActive(contextTag) && contextTag.name == 'table'">
@@ -363,7 +379,7 @@
       contextTag.value = tag;
       event.preventDefault();
       const position = {
-        top: '30px',
+        top: '50px',
         left: event.x + 2 + 'px',
       };
       contextMenu.menuStyles = position;
@@ -375,9 +391,18 @@
     AppStore.isOpenSqlAssistant = !AppStore.isOpenSqlAssistant;
   };
 
+  const openConnectDialog = () => {
+    EventBus.notify(EventTypeName.OPEN_CONNECT_DIALOG, {
+      dialogType: 'create',
+      connectInfo: { id: '', name: '' },
+      uuid: '',
+    });
+  };
+
   const createTerminal = () => {
     const { dbname, rootId, uuid } = AppStore.currentTerminalInfo;
-    const connectInfoName = AppStore.connectListMap.find((item) => item.id == rootId)?.info.name;
+    const connectInfoName = AppStore.connectListMap.find((item) => item.id == rootId)?.connectInfo
+      .name;
     if (!(uuid && connectInfoName)) return ElMessage.warning(t('message.noConnectionAvailable'));
 
     const terminalNum = TagsViewStore.maxTerminalNum + 1;
@@ -401,6 +426,16 @@
   const renameTerminal = () => {
     contextMenu.visible = false;
     visibleRenameDialog.value = true;
+  };
+
+  const gotoJobs = () => {
+    const { rootId, uuid } = AppStore.currentTerminalInfo;
+    const connectInfoName = AppStore.connectListMap.find((item) => item.id == rootId)?.connectInfo
+      .name;
+    if (!(uuid && connectInfoName)) return ElMessage.warning(t('message.noConnectionAvailable'));
+    router.push({
+      path: `/jobs/${rootId}`,
+    });
   };
 
   onMounted(() => {
@@ -447,10 +482,19 @@
 
 <style lang="scss" scoped>
   .tags-wrap-container {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
     position: relative;
+    .function-div {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--el-bg-color-bar);
+      padding: 0 5px;
+      .left,
+      .right {
+        display: flex;
+        align-items: center;
+      }
+    }
     .tags-view {
       height: 30px;
       background: white;
@@ -532,8 +576,8 @@
     }
   }
   .operation-icon-wrapper {
-    width: 20px;
-    height: 20px;
+    width: 23px;
+    height: 23px;
     margin: 0 2px;
   }
   .operation-icon {

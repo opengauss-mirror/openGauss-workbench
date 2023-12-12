@@ -6,10 +6,10 @@ package com.nctigba.datastudio.service.impl.debug;
 
 import com.alibaba.fastjson.JSON;
 import com.nctigba.datastudio.base.WebSocketServer;
-import com.nctigba.datastudio.model.PublicParamReq;
+import com.nctigba.datastudio.model.query.PublicParamQuery;
 import com.nctigba.datastudio.model.entity.OperateStatusDO;
 import com.nctigba.datastudio.service.OperationInterface;
-import com.nctigba.datastudio.util.DebugUtils;
+import com.nctigba.datastudio.utils.DebugUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -32,7 +32,7 @@ public class OperateStatusImpl implements OperationInterface {
     @Override
     public void operate(WebSocketServer webSocketServer, Object obj) throws IOException {
         log.info("operateStatus obj is: " + obj);
-        PublicParamReq paramReq = DebugUtils.changeParamType(obj);
+        PublicParamQuery paramReq = DebugUtils.changeParamType(obj);
         String windowName = paramReq.getWindowName();
         OperateStatusDO operateStatusDO = webSocketServer.getOperateStatus(windowName);
         Map<String, Object> map = new HashMap<>();
@@ -42,6 +42,6 @@ public class OperateStatusImpl implements OperationInterface {
 
     @Override
     public Object formatJson(String str) {
-        return JSON.parseObject(str, PublicParamReq.class);
+        return JSON.parseObject(str, PublicParamQuery.class);
     }
 }

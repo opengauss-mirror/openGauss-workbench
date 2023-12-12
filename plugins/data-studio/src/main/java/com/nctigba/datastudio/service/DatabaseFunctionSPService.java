@@ -5,7 +5,7 @@
 package com.nctigba.datastudio.service;
 
 import com.nctigba.datastudio.model.dto.DatabaseFunctionSPDTO;
-import com.nctigba.datastudio.model.query.PackageRequest;
+import com.nctigba.datastudio.model.query.PackageQuery;
 
 import java.sql.SQLException;
 
@@ -36,5 +36,5 @@ public interface DatabaseFunctionSPService {
      *
      * @param request request
      */
-    void dropPackage(PackageRequest request);
+    void dropPackage(PackageQuery request);
 }

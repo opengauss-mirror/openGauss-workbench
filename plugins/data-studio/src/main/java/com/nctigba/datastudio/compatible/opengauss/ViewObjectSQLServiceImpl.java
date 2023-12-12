@@ -9,8 +9,8 @@ import com.nctigba.datastudio.config.ConnectionConfig;
 import com.nctigba.datastudio.model.dto.DatabaseCreateViewDTO;
 import com.nctigba.datastudio.model.dto.DatabaseSelectViewDTO;
 import com.nctigba.datastudio.model.dto.DatabaseViewDdlDTO;
-import com.nctigba.datastudio.util.DebugUtils;
-import com.nctigba.datastudio.util.LocaleString;
+import com.nctigba.datastudio.utils.DebugUtils;
+import com.nctigba.datastudio.utils.LocaleStringUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.opengauss.admin.common.exception.CustomException;
@@ -27,6 +27,7 @@ import java.util.Map;
 
 import static com.nctigba.datastudio.constants.CommonConstants.OPENGAUSS;
 import static com.nctigba.datastudio.constants.SqlConstants.COMMON_VIEW_SQL;
+import static com.nctigba.datastudio.constants.SqlConstants.COUNT_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.CREATE_VIEW_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.DROP_MATERIALIZED_VIEW_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.DROP_VIEW_SQL;
@@ -91,7 +92,7 @@ public class ViewObjectSQLServiceImpl implements ViewObjectSQLService {
             ) {
                 count.next();
                 if (StringUtils.isBlank(String.valueOf(count.getString("relkind")))) {
-                    throw new CustomException(LocaleString.transLanguage("2010"));
+                    throw new CustomException(LocaleStringUtils.transLanguage("2010"));
                 }
             }
             try (
@@ -146,7 +147,7 @@ public class ViewObjectSQLServiceImpl implements ViewObjectSQLService {
                 if (resultSet.next()) {
                     type = resultSet.getString("relkind");
                 } else {
-                    throw new CustomException(LocaleString.transLanguage("2010"));
+                    throw new CustomException(LocaleStringUtils.transLanguage("2010"));
                 }
                 log.info("resultMap response is: " + type);
                 return type;
@@ -173,11 +174,19 @@ public class ViewObjectSQLServiceImpl implements ViewObjectSQLService {
     }
 
     @Override
-    public String returnSelectViewSQL(DatabaseSelectViewDTO request) {
+    public String returnSelectViewSQL(DatabaseSelectViewDTO request, Integer star, Integer end) {
         log.info("selectView request is: " + request);
         String ddl = String.format(VIEW_DATA_SQL, DebugUtils.needQuoteName(request.getSchema()),
-                DebugUtils.needQuoteName(request.getViewName()));
+                DebugUtils.needQuoteName(request.getViewName()), star, end);
         log.info("selectViewddl is: " + ddl);
+        return ddl;
+    }
+
+    @Override
+    public String viewDataCountSQL(DatabaseSelectViewDTO request) {
+        String ddl = String.format(COUNT_SQL, DebugUtils.needQuoteName(request.getSchema()),
+                DebugUtils.needQuoteName(request.getViewName()));
+        log.info("renameView ddl: " + ddl);
         return ddl;
     }
 

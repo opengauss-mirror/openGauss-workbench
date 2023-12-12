@@ -4,7 +4,7 @@
 
 package com.nctigba.datastudio.controller;
 
-import com.nctigba.datastudio.model.query.ExportRequest;
+import com.nctigba.datastudio.model.query.ExportQuery;
 import com.nctigba.datastudio.service.ExportService;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -38,7 +38,7 @@ public class ExportController {
      * @throws IOException IOException
      */
     @PostMapping(value = "/export/table/ddl", produces = MediaType.APPLICATION_JSON_VALUE)
-    public void exportTableDdl(@RequestBody ExportRequest request, HttpServletResponse response)
+    public void exportTableDdl(@RequestBody ExportQuery request, HttpServletResponse response)
             throws SQLException, IOException {
         exportService.exportTableDdl(request, response);
     }
@@ -52,7 +52,7 @@ public class ExportController {
      * @throws IOException IOException
      */
     @PostMapping(value = "/export/table/data", produces = MediaType.APPLICATION_JSON_VALUE)
-    public void exportTableData(@RequestBody ExportRequest request, HttpServletResponse response)
+    public void exportTableData(@RequestBody ExportQuery request, HttpServletResponse response)
             throws SQLException, IOException {
         exportService.exportTableData(request, response);
     }
@@ -65,7 +65,7 @@ public class ExportController {
      * @throws IOException IOException
      */
     @PostMapping(value = "/import/table/data", produces = MediaType.APPLICATION_JSON_VALUE)
-    public void importTableData(ExportRequest request) throws SQLException, IOException {
+    public void importTableData(ExportQuery request) throws SQLException, IOException {
         exportService.importTableData(request);
     }
 
@@ -78,7 +78,7 @@ public class ExportController {
      * @throws IOException IOException
      */
     @PostMapping(value = "/export/function/ddl", produces = MediaType.APPLICATION_JSON_VALUE)
-    public void exportFunctionDdl(@RequestBody ExportRequest request, HttpServletResponse response)
+    public void exportFunctionDdl(@RequestBody ExportQuery request, HttpServletResponse response)
             throws SQLException, IOException {
         exportService.exportFunctionDdl(request, response);
     }
@@ -92,7 +92,7 @@ public class ExportController {
      * @throws IOException IOException
      */
     @PostMapping(value = "/export/view/ddl", produces = MediaType.APPLICATION_JSON_VALUE)
-    public void exportViewDdl(@RequestBody ExportRequest request, HttpServletResponse response)
+    public void exportViewDdl(@RequestBody ExportQuery request, HttpServletResponse response)
             throws SQLException, IOException {
         exportService.exportViewDdl(request, response);
     }
@@ -106,7 +106,7 @@ public class ExportController {
      * @throws IOException IOException
      */
     @PostMapping(value = "/export/sequence/ddl", produces = MediaType.APPLICATION_JSON_VALUE)
-    public void exportSequenceDdl(@RequestBody ExportRequest request, HttpServletResponse response)
+    public void exportSequenceDdl(@RequestBody ExportQuery request, HttpServletResponse response)
             throws SQLException, IOException {
         exportService.exportSequenceDdl(request, response);
     }
@@ -122,7 +122,7 @@ public class ExportController {
      * @throws InterruptedException InterruptedException
      */
     @PostMapping(value = "/export/schema/ddl", produces = MediaType.APPLICATION_JSON_VALUE)
-    public void exportSchemaDdl(@RequestBody ExportRequest request, HttpServletResponse response)
+    public void exportSchemaDdl(@RequestBody ExportQuery request, HttpServletResponse response)
             throws SQLException, IOException, ExecutionException, InterruptedException {
         exportService.exportSchemaDdl(request, response);
     }

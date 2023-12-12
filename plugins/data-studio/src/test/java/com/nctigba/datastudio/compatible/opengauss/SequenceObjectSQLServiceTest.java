@@ -8,7 +8,7 @@ import com.nctigba.datastudio.config.ConnectionConfig;
 import com.nctigba.datastudio.model.dto.ConnectionDTO;
 import com.nctigba.datastudio.model.dto.DatabaseCreateSequenceDTO;
 import com.nctigba.datastudio.model.dto.DatabaseSequenceDdlDTO;
-import com.nctigba.datastudio.util.LocaleString;
+import com.nctigba.datastudio.utils.LocaleStringUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -64,8 +64,8 @@ public class SequenceObjectSQLServiceTest {
     public void testUpdateSchemaCommentSQLErro() throws SQLException {
         when(mockStatement.executeQuery(anyString())).thenReturn(mockResultSet);
         when(mockResultSet.next()).thenReturn(true, false);
-        MockedStatic<LocaleString> staticUtilsMockedStatic = Mockito.mockStatic(LocaleString.class);
-        staticUtilsMockedStatic.when(() -> LocaleString.transLanguage(anyString()))
+        MockedStatic<LocaleStringUtils> staticUtilsMockedStatic = Mockito.mockStatic(LocaleStringUtils.class);
+        staticUtilsMockedStatic.when(() -> LocaleStringUtils.transLanguage(anyString()))
                 .thenReturn("123");
         when(mockResultSet.getInt(anyString())).thenReturn(0);
         DatabaseSequenceDdlDTO databaseCreateSynonymDTO = new DatabaseSequenceDdlDTO();

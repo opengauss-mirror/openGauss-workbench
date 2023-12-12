@@ -26,7 +26,7 @@ export function getObjectList(data) {
   });
 }
 
-// getSchemaObjectList
+// getSchemaObjectList.includes: [foreignTable, fun_pro, sequence, synonym, table, trigger...]
 export function getSchemaObjectList(data) {
   return request({
     url: '/dataStudio/web/v1/metaData/schemaObjectList',
@@ -35,18 +35,29 @@ export function getSchemaObjectList(data) {
   });
 }
 
-// get tablespace list
-export function getTablespaceList(uuid) {
+// getSchemaObjects. query the one type of [foreignTable, fun_pro, sequence, synonym, table, trigger...]
+export function getSchemaObjects(data) {
   return request({
-    url: `/dataStudio/web/v1/metaData/tablespace/${uuid}`,
+    url: '/dataStudio/web/v1/metaData/schemaObjects',
     method: 'get',
+    params: data,
+  });
+}
+
+// get tablespace list
+export function getTablespaceList(data) {
+  return request({
+    url: `/dataStudio/web/v1/metaData/tablespace`,
+    method: 'get',
+    params: data,
   });
 }
 
 // get dataType list
-export function getDataTypeList(uuid) {
+export function getDataTypeList(data) {
   return request({
-    url: `/dataStudio/web/v1/metaData/typeList/${uuid}`,
+    url: `/dataStudio/web/v1/metaData/typeList`,
     method: 'get',
+    params: data,
   });
 }

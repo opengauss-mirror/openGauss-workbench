@@ -13,11 +13,11 @@ import com.nctigba.datastudio.model.dto.DbConnectionCreateDTO;
 import com.nctigba.datastudio.model.dto.GetConnectionAttributeDTO;
 import com.nctigba.datastudio.model.entity.DatabaseConnectionDO;
 import com.nctigba.datastudio.model.entity.DatabaseConnectionUrlDO;
-import com.nctigba.datastudio.model.query.DatabaseMetaarrayIdSchemaQuery;
+import com.nctigba.datastudio.model.query.DatabaseMetaArrayIdSchemaQuery;
 import com.nctigba.datastudio.service.DataListByJdbcService;
 import com.nctigba.datastudio.service.MetaDataByJdbcService;
-import com.nctigba.datastudio.util.ConnectionUtils;
-import com.nctigba.datastudio.util.LocaleString;
+import com.nctigba.datastudio.utils.ConnectionUtils;
+import com.nctigba.datastudio.utils.LocaleStringUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -173,13 +173,13 @@ public class DbConnectionServiceTest {
 
     @Test
     public void testSchemaObjectListFalse() {
-        MockedStatic<LocaleString> staticUtilsMockedStatic = Mockito.mockStatic(LocaleString.class);
-        staticUtilsMockedStatic.when(() -> LocaleString.transLanguage(anyString()))
+        MockedStatic<LocaleStringUtils> staticUtilsMockedStatic = Mockito.mockStatic(LocaleStringUtils.class);
+        staticUtilsMockedStatic.when(() -> LocaleStringUtils.transLanguage(anyString()))
                 .thenReturn("123");
         List<GainObjectSQLService> serviceArrayList = new ArrayList<>();
         serviceArrayList.add(new GainObjectSQLServiceImpl());
         connectionService.setGainObjectSQLService(serviceArrayList);
-        DatabaseMetaarrayIdSchemaQuery databaseMetaarrayIdSchemaQuery = new DatabaseMetaarrayIdSchemaQuery();
+        DatabaseMetaArrayIdSchemaQuery databaseMetaarrayIdSchemaQuery = new DatabaseMetaArrayIdSchemaQuery();
         databaseMetaarrayIdSchemaQuery.setSchema("");
         databaseMetaarrayIdSchemaQuery.setWebUser("");
         databaseMetaarrayIdSchemaQuery.setUuid("222");

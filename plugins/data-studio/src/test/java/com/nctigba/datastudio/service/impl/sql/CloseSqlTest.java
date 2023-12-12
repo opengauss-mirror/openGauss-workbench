@@ -7,7 +7,7 @@ package com.nctigba.datastudio.service.impl.sql;
 import com.nctigba.datastudio.base.WebSocketServer;
 import com.nctigba.datastudio.model.dto.ConnectionDTO;
 import com.nctigba.datastudio.model.entity.OperateStatusDO;
-import com.nctigba.datastudio.util.LocaleString;
+import com.nctigba.datastudio.utils.LocaleStringUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Test;
@@ -60,13 +60,13 @@ public class CloseSqlTest {
     @Mock
     private MessageSource messageSource;
     @Spy
-    private LocaleString localeString;
+    private LocaleStringUtils localeStringUtils;
 
     @Before
     public void setUp() {
         conMap = new HashMap<>();
         conMap.put("111", new ConnectionDTO());
-        localeString.setMessageSource(messageSource);
+        localeStringUtils.setMessageSource(messageSource);
     }
 
     @Test

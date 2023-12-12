@@ -1,6 +1,6 @@
 <template>
-  <div class="ace-wrapper" v-loading="props.loading">
-    <AceEditor ref="editorRef" style="margin: 4px 0; border: 1px solid #ddd" />
+  <div class="ddl-wrapper" v-loading="props.loading">
+    <AceEditor ref="editorRef" />
   </div>
 </template>
 
@@ -28,9 +28,8 @@
 </script>
 
 <style>
-  .ace-wrapper {
+  .ddl-wrapper {
     flex: 1;
-    padding: 10px;
     height: 100%;
   }
 </style>

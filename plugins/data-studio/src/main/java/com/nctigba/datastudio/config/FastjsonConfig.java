@@ -23,10 +23,15 @@ import java.io.IOException;
  */
 @Configuration
 public class FastjsonConfig {
+    /**
+     * database other to json
+     *
+     * @return ObjectMapper
+     */
     @Bean
     public ObjectMapper fastJsonHttpMessageConverters() {
-        var objectMapper = new ObjectMapper();
-        var module = new SimpleModule();
+        ObjectMapper objectMapper = new ObjectMapper();
+        SimpleModule module = new SimpleModule();
         module.addSerializer(PgArray.class, new JsonSerializer<>() {
             @Override
             public void serialize(PgArray value, JsonGenerator gen, SerializerProvider serializers) throws IOException {

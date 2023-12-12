@@ -7,7 +7,7 @@ package com.nctigba.datastudio.compatible;
 import com.nctigba.datastudio.model.dto.DatabaseCreateSynonymDTO;
 import com.nctigba.datastudio.model.dto.DatabaseDropSynonymDTO;
 import com.nctigba.datastudio.model.dto.DatabaseSynonymAttributeDTO;
-import com.nctigba.datastudio.util.DebugUtils;
+import com.nctigba.datastudio.utils.DebugUtils;
 import org.opengauss.admin.common.exception.CustomException;
 
 /**
