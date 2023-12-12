@@ -32,6 +32,9 @@ import org.opengauss.admin.common.exception.ops.OpsException;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -86,5 +89,69 @@ public class JdbcUtil {
             throw new OpsException("jdbc failed to get connection");
         }
         return connection;
+    }
+
+    /**
+     * Select string value string.
+     *
+     * @param connection the connection
+     * @param selectSql  the select sql
+     * @param key        the key
+     * @return the string
+     * @throws SQLException the sql exception
+     */
+    public static String selectStringValue(Connection connection, String selectSql, String key) throws SQLException {
+        String value = "";
+        if (connection != null) {
+            try (Statement statement = connection.createStatement(); ResultSet rs = statement.executeQuery(selectSql)) {
+                if (rs.next()) {
+                    value = rs.getString(key);
+                }
+            } catch (SQLException e) {
+                throw e;
+            }
+        }
+        return value;
+    }
+
+    /**
+     * judge database user is admin
+     *
+     * @param ip ip
+     * @param port port
+     * @param user user
+     * @param password password
+     * @return result boolean
+     */
+    public static boolean judgeSystemAdmin(String ip, String port, String user, String password) {
+        boolean isAdmin = false;
+        Connection pgConnection = null;
+        try {
+            String opengaussUrl = "jdbc:opengauss://" + ip + ":" + port + "/postgres";
+            pgConnection = JdbcUtil.getConnection(opengaussUrl, user, password);
+            String permissionStr = JdbcUtil.selectStringValue(pgConnection,
+                "select rolsystemadmin from pg_roles where rolname= '" + user + "'", "rolsystemadmin");
+            isAdmin = permissionStr.equals("t") || permissionStr.equals("1");
+        } catch (SQLException e) {
+            log.error("sql execute failed.");
+        } finally {
+            closeConnection(pgConnection);
+        }
+        return isAdmin;
+    }
+
+    /**
+     * close connection
+     *
+     * @param connection connection
+     */
+    public static void closeConnection(Connection connection) {
+        try {
+            if (connection != null) {
+                connection.close();
+            }
+        } catch (SQLException e) {
+            log.error("close connection fail.");
+        }
     }
 }
