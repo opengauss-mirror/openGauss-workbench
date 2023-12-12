@@ -1145,8 +1145,8 @@ watch(
 }
 
 .tableClass {
-  width: 100%;  /* 设置宽度 */
+  max-width: 100%;  /* 设置宽度 */
   max-height: 800px;  /* 设置最大高度 */
-  overflow: scroll; 
+  overflow-y: auto; 
 }
 </style>
