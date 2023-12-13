@@ -55,9 +55,9 @@ https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/Datakit-
 2. 创建新的目录
  ```shell
 mkdir config files ssl logs
-```
+ ```
 3. 更改配置文件
-解压的文件中`application-temp.yml`内容需要移动到第二步的config目录下,同时需要正确编辑, /ops路径统一修改为实际路径，而第二步的目录就是为了此处统一使用的:
+   解压的文件中`application-temp.yml`内容需要移动到第二步的config目录下,同时需要正确编辑, /ops路径统一修改为实际路径，而第二步的目录就是为了此处统一使用的:
    system.defaultStoragePath: /ops/files  
    server.ssl.key-store: /ops/ssl/keystore.p12
    logging.file.path: /ops/logs
@@ -78,8 +78,23 @@ mkdir config files ssl logs
 
      **注意: 这里的storepass与配置文件中的key-store-password应该保持一致。keystore路径即为配置文件中的key-store路径** 
 
-5.启动
-nohup java -Xms2048m -Xmx4096m -jar openGauss-datakit-5.1.1.jar --spring.profiles.active=temp >datakit.out 2>&1 &
+5.启动与日常运维
+
+启动应用：
+
+`sh ./run.sh start`
+
+停止应用：
+
+`sh ./script.sh stop`
+
+重启应用：
+
+`sh ./run.sh restart`
+
+检查应用状态：
+
+`sh ./run.sh status`
 
 ## 参与开发
 插件开发请参考 openGauss-datakit/doc 目录下的开发手册
