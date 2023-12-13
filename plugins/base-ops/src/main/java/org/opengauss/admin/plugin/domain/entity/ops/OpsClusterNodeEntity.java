@@ -31,6 +31,7 @@ import org.opengauss.admin.plugin.enums.ops.ClusterRoleEnum;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+
 /**
  * @author lhf
  * @date 2022/8/18 09:12
@@ -73,4 +74,14 @@ public class OpsClusterNodeEntity extends BaseEntity {
      * data node xlog path
      */
     private String xlogPath;
+
+    private Boolean isEnableDss;
+
+    private String dssDataLunLinkPath;
+
+    private String xlogLunLinkPath;
+
+    private String cmVotingLunLinkPath;
+
+    private String cmSharingLunLinkPath;
 }

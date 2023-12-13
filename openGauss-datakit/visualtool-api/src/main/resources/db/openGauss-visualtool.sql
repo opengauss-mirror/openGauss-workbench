@@ -243,6 +243,11 @@ CREATE TABLE IF NOT EXISTS "public"."ops_cluster_node" (
     "cm_data_path" varchar(255) COLLATE "pg_catalog"."default",
     "cm_port" varchar(255) COLLATE "pg_catalog"."default",
     "xlog_path" varchar(255) COLLATE "pg_catalog"."default",
+    "is_enable_dss" int2,
+    "dss_data_lun_link_path" varchar(255) COLLATE "pg_catalog"."default",
+    "xlog_lun_link_path" varchar(255) COLLATE "pg_catalog"."default",
+    "cm_voting_lun_link_path" varchar(255) COLLATE "pg_catalog"."default",
+    "cm_sharing_lun_link_path" varchar(255) COLLATE "pg_catalog"."default",
     "remark" varchar(255) COLLATE "pg_catalog"."default",
     "create_by" varchar(64) COLLATE "pg_catalog"."default",
     "create_time" timestamp(6),
@@ -250,6 +255,27 @@ CREATE TABLE IF NOT EXISTS "public"."ops_cluster_node" (
     "update_time" timestamp(6)
     )
 ;
+
+CREATE OR REPLACE FUNCTION add_lun_link_path() RETURNS integer AS '
+BEGIN
+IF
+( SELECT COUNT ( * ) AS ct1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ''ops_cluster_node'' AND COLUMN_NAME =
+''is_enable_dss'' ) = 0
+THEN
+ALTER TABLE ops_cluster_node ADD COLUMN is_enable_dss int2;
+ALTER TABLE ops_cluster_node ADD COLUMN dss_data_lun_link_path VARCHAR(255);
+ALTER TABLE ops_cluster_node ADD COLUMN xlog_lun_link_path VARCHAR(255);
+ALTER TABLE ops_cluster_node ADD COLUMN cm_voting_lun_link_path VARCHAR(255);
+ALTER TABLE ops_cluster_node ADD COLUMN cm_sharing_lun_link_path VARCHAR(255);
+END IF;
+RETURN 0;
+ END;'
+ LANGUAGE plpgsql;
+
+SELECT add_lun_link_path();
+
+DROP FUNCTION add_lun_link_path;
+
 COMMENT ON COLUMN "public"."ops_cluster_node"."cluster_role" IS '集群角色';
 COMMENT ON COLUMN "public"."ops_cluster_node"."host_id" IS '主机ID';
 COMMENT ON COLUMN "public"."ops_cluster_node"."install_user_id" IS '安装用户ID';
@@ -268,6 +294,16 @@ COMMENT
 ON COLUMN "public"."ops_cluster_node"."cm_port" IS 'cm端口';
 COMMENT
 ON COLUMN "public"."ops_cluster_node"."xlog_path" IS 'xlog路径';
+COMMENT
+ON COLUMN "public"."ops_cluster_node"."is_enable_dss" IS '是否开启Dss';
+COMMENT
+ON COLUMN "public"."ops_cluster_node"."dss_data_lun_link_path" IS 'data卷软链接';
+COMMENT
+ON COLUMN "public"."ops_cluster_node"."xlog_lun_link_path" IS 'xlog卷软链接';
+COMMENT
+ON COLUMN "public"."ops_cluster_node"."cm_voting_lun_link_path" IS 'cm投票卷软链接';
+COMMENT
+ON COLUMN "public"."ops_cluster_node"."cm_sharing_lun_link_path" IS 'cm共享卷软链接';
 COMMENT
 ON COLUMN "public"."ops_cluster_node"."remark" IS '描述';
 COMMENT

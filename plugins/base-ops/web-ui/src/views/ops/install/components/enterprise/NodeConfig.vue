@@ -208,7 +208,7 @@
 import { onMounted, reactive, ref, computed, inject } from 'vue'
 import { KeyValue } from '@/types/global'
 import { ClusterRoleEnum, EnterpriseInstallConfig } from '@/types/ops/install' // eslint-disable-line
-import { hostListAll, hostUserListWithoutRoot, azListAll, portUsed, pathEmpty, fileExist, hostPingById } from '@/api/ops'
+import { hostListAll, hostUserListWithoutRoot, azListAll, portUsed, pathEmpty, fileExist, multiPathQuery, hostPingById } from '@/api/ops'
 import { Message } from '@arco-design/web-vue'
 import { useOpsStore } from '@/store'
 import { encryptPassword } from '@/utils/jsencrypt'
@@ -541,6 +541,7 @@ const saveStore = () => {
     nodeConfigList: nodes
   }
   installStore.setEnterpriseConfig(param as EnterpriseInstallConfig)
+  console.log("enterprise config: ", installStore.getEnterpriseConfig)
 }
 
 const beforeConfirm = async (): Promise<boolean> => {

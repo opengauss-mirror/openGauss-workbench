@@ -38,21 +38,9 @@ import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
 import org.opengauss.admin.common.exception.ops.OpsException;
 import org.opengauss.admin.plugin.domain.entity.ops.OpsClusterEntity;
 import org.opengauss.admin.plugin.domain.entity.ops.OpsClusterNodeEntity;
-import org.opengauss.admin.plugin.domain.model.ops.EnterpriseInstallConfig;
-import org.opengauss.admin.plugin.domain.model.ops.HostInfoHolder;
-import org.opengauss.admin.plugin.domain.model.ops.InstallContext;
-import org.opengauss.admin.plugin.domain.model.ops.JschResult;
-import org.opengauss.admin.plugin.domain.model.ops.OmStatusModel;
-import org.opengauss.admin.plugin.domain.model.ops.OpsClusterContext;
-import org.opengauss.admin.plugin.domain.model.ops.SshCommandConstants;
-import org.opengauss.admin.plugin.domain.model.ops.UnInstallContext;
-import org.opengauss.admin.plugin.domain.model.ops.UpgradeContext;
-import org.opengauss.admin.plugin.domain.model.ops.WsSession;
+import org.opengauss.admin.plugin.domain.model.ops.*;
 import org.opengauss.admin.plugin.domain.model.ops.node.EnterpriseInstallNodeConfig;
-import org.opengauss.admin.plugin.enums.ops.ClusterRoleEnum;
-import org.opengauss.admin.plugin.enums.ops.OpenGaussVersionEnum;
-import org.opengauss.admin.plugin.enums.ops.UpgradeTypeEnum;
-import org.opengauss.admin.plugin.enums.ops.WdrScopeEnum;
+import org.opengauss.admin.plugin.enums.ops.*;
 import org.opengauss.admin.plugin.service.ops.IOpsClusterNodeService;
 import org.opengauss.admin.plugin.service.ops.IOpsClusterService;
 import org.opengauss.admin.plugin.utils.JschUtil;
@@ -76,13 +64,10 @@ import javax.xml.transform.stream.StreamResult;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.text.MessageFormat;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
+
+import static java.lang.Math.min;
 
 /**
  * @author lhf
@@ -120,7 +105,8 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
 
         OpsClusterContext opsClusterContext = new OpsClusterContext();
         OpsClusterEntity opsClusterEntity = installContext.toOpsClusterEntity();
-        List<OpsClusterNodeEntity> opsClusterNodeEntities = installContext.getEnterpriseInstallConfig().toOpsClusterNodeEntityList();
+        List<OpsClusterNodeEntity> opsClusterNodeEntities =
+                installContext.getEnterpriseInstallConfig().toOpsClusterNodeEntityList();
         opsClusterContext.setOpsClusterEntity(opsClusterEntity);
         opsClusterContext.setOpsClusterNodeEntityList(opsClusterNodeEntities);
 
@@ -133,8 +119,145 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
         log.info("The installation is complete");
     }
 
+    private void removeSoftLinkAll(UnInstallContext unInstallContext) {
+        OpsClusterNodeEntity opsClusterNodeEntity = unInstallContext.getOpsClusterNodeEntityList()
+                .stream()
+                .filter(opsClusterNodeEntity1 -> opsClusterNodeEntity1.getClusterRole() == ClusterRoleEnum.MASTER)
+                .findFirst().orElseThrow(() -> new OpsException("master node not found"));
+        if (!opsClusterNodeEntity.getIsEnableDss()) {
+            log.info("enableDss is false.");
+            return;
+        }
+        try {
+            for (HostInfoHolder hostInfoHolder : unInstallContext.getHostInfoHolders()) {
+                OpsHostEntity hostEntity = hostInfoHolder.getHostEntity();
+
+                Session rootSession = loginWithUser(jschUtil, encryptionUtils,
+                        unInstallContext.getHostInfoHolders(), true, hostEntity.getHostId(), null);
+                removeSoftLink(opsClusterNodeEntity.getDssDataLunLinkPath(), rootSession);
+
+                String xlogLinkPaths = opsClusterNodeEntity.getXlogLunLinkPath();
+                String[] xlogPaths = xlogLinkPaths.split(",");
+                for (String xlogPath : xlogPaths) {
+                    removeSoftLink(xlogPath, rootSession);
+                }
+
+                removeSoftLink(opsClusterNodeEntity.getCmSharingLunLinkPath(), rootSession);
+                removeSoftLink(opsClusterNodeEntity.getCmVotingLunLinkPath(), rootSession);
+
+                if (Objects.nonNull(rootSession) && rootSession.isConnected()) {
+                    rootSession.disconnect();
+                }
+            }
+        } catch (Exception e) {
+            log.error("remove soft link failed", e);
+        }
+        log.info("remove soft links success");
+    }
+
+    private void removeSoftLink(String link, Session rootSession) {
+        try {
+            String command = MessageFormat.format(SshCommandConstants.DEL_FILE, link);
+            JschResult jschResult = jschUtil.executeCommand(command, rootSession);
+            if (0 != jschResult.getExitCode()) {
+                log.warn("remove soft link failed {}", link);
+                throw new OpsException("remove soft link failed");
+            }
+        } catch (Exception e) {
+            log.warn("remove soft link failed {}", link);
+            throw new OpsException("remove soft link failed");
+        }
+    }
+
+    private String createSoftLink(LunPathManager path, String prefix, Session rootSession) {
+        try {
+            String exec = getDiskQueryCmd(path);
+            JschResult jschResult = jschUtil.executeCommand(exec, rootSession);
+            if (0 != jschResult.getExitCode()) {
+                log.error("can not find path with wwn {}, exit code: {}, error message: {}", path.getWwn(),
+                        jschResult.getExitCode(), jschResult.getResult());
+                throw new OpsException("can not find path with wwn");
+            }
+
+            String disk = LunPathManager.getLunDiskName(jschResult.getResult());
+            String linkPath = LunPathManager.getLunLinkPath(path, prefix);
+            String command = "ls -l " + linkPath;
+            try {
+                if (jschUtil.executeCommand(command, rootSession).getExitCode() == 0) {
+                    jschResult = jschUtil.executeCommand(
+                            MessageFormat.format(SshCommandConstants.DEL_FILE, linkPath), rootSession);
+                    if (jschResult.getExitCode() != 0) {
+                        log.error("remove exist soft link failed, exit code: {}, error message: {}",
+                                jschResult.getExitCode(), jschResult.getResult());
+                        throw new OpsException("remove exist soft link failed");
+                    }
+                }
+            } catch (Exception e) {
+                log.info("command not exist : {}", command);
+            }
+
+            command = "ln -s " + disk.trim() + " " + linkPath;
+            jschResult = jschUtil.executeCommand(command, rootSession);
+            if (0 != jschResult.getExitCode()) {
+                log.error("create soft link failed, exit code: {}, error message: {}",
+                        jschResult.getExitCode(), jschResult.getResult());
+                throw new OpsException("create soft link failed");
+            }
+            log.info("create soft link {} success with host {}", command, rootSession.getHost());
+            return linkPath;
+        } catch (Exception e) {
+            log.error("create soft link failed", e);
+            throw new OpsException("create soft link failed");
+        }
+    }
+
+    private static String getDiskQueryCmd(LunPathManager path) {
+        String queryCommand = LunPathManager.lunQueryMethod.getQueryDiskVolumeCmd();
+        return String.format(queryCommand, path.getWwn());
+    }
+
+    private void createSoftLink(InstallContext installContext) {
+        if (installContext.getEnterpriseInstallConfig().getDatabaseKernelArch()
+                .equals(DatabaseKernelArch.MASTER_SLAVE)) {
+            return;
+        }
+        try {
+            for (HostInfoHolder hostInfoHolder : installContext.getHostInfoHolders()) {
+                OpsHostEntity hostEntity = hostInfoHolder.getHostEntity();
+
+                Session rootSession = loginWithUser(jschUtil, encryptionUtils,
+                        installContext.getHostInfoHolders(), true, hostEntity.getHostId(), null);
+
+                SharingStorageInstallConfig config =
+                        installContext.getEnterpriseInstallConfig().getSharingStorageInstallConfig();
+                config.setDssDataLunLinkPath(createSoftLink(new LunPathManager(config.getDssDataLunPath()),
+                        "data", rootSession));
+
+                List<String> xlogPaths = config.getXlogLunPath();
+                List<String> linkXlogPaths = new ArrayList<>();
+                for (String xlogPath : xlogPaths) {
+                    linkXlogPaths.add(createSoftLink(new LunPathManager(xlogPath.trim()), "xlog", rootSession));
+                }
+                config.setXlogLunLinkPath(linkXlogPaths);
+                config.setCmSharingLunLinkPath(createSoftLink(new LunPathManager(
+                        config.getCmSharingLunPath()), "cm_sharing", rootSession));
+
+                config.setCmVotingLunLinkPath(createSoftLink(new LunPathManager(
+                        config.getCmVotingLunPath()), "cm_voting", rootSession));
+
+                if (Objects.nonNull(rootSession) && rootSession.isConnected()) {
+                    rootSession.disconnect();
+                }
+            }
+        } catch (Exception e) {
+            log.error("create soft link failed", e);
+            throw new OpsException("create soft link failed");
+        }
+    }
+
     private void doInstall(InstallContext installContext) {
         wsUtil.sendText(installContext.getRetSession(), "START_GEN_XML_CONFIG");
+        createSoftLink(installContext);
         String xml = generateClusterConfigXml(installContext);
         log.info("Generated xml information：{}", xml);
         wsUtil.sendText(installContext.getRetSession(), "END_GEN_XML_CONFIG");
@@ -750,6 +873,77 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
         }
     }
 
+
+    private void appendSharingStorageClusterParam(Document document, Element cluster, InstallContext installContext) {
+        SharingStorageInstallConfig sharingStorageInstallConfig = installContext.getEnterpriseInstallConfig().getSharingStorageInstallConfig();
+        Element isEnableDss = document.createElement("PARAM");
+        isEnableDss.setAttribute("name", "enable_dss");
+        isEnableDss.setAttribute("value", "on");
+        cluster.appendChild(isEnableDss);
+
+        Element dssHome = document.createElement("PARAM");
+        dssHome.setAttribute("name", "dss_home");
+        dssHome.setAttribute("value", sharingStorageInstallConfig.getDssHome());
+        cluster.appendChild(dssHome);
+
+        Element dssVgName = document.createElement("PARAM");
+        dssVgName.setAttribute("name", "ss_dss_vg_name");
+        dssVgName.setAttribute("value", sharingStorageInstallConfig.getDssVgName());
+        cluster.appendChild(dssVgName);
+
+        Element dssVgInfo = document.createElement("PARAM");
+        dssVgInfo.setAttribute("name", "dss_vg_info");
+        List<String> xlogVgName = Arrays.asList(sharingStorageInstallConfig.getXlogVgName().split(","));
+        List<String> xlogLunPath = sharingStorageInstallConfig.getXlogLunLinkPath();
+        if (xlogVgName.size() != xlogLunPath.size()) {
+            log.warn("xlog vg name size {} is not corresponding to xlog lun path size {}", xlogVgName.size(),
+                    xlogLunPath.size());
+        }
+
+        List<String> combine = new ArrayList<>();
+        for (int i = 0; i < min(xlogVgName.size(), xlogLunPath.size()); ++i) {
+            combine.add(xlogVgName.get(i).trim() + ":" + xlogLunPath.get(i).trim());
+        }
+        String finalStr = StringUtils.collectionToCommaDelimitedString(combine);
+        Object[] vgInfo =
+                new String[]{sharingStorageInstallConfig.getDssVgName().trim() + ":"
+                        + sharingStorageInstallConfig.getDssDataLunLinkPath().trim(), finalStr};
+        dssVgInfo.setAttribute("value", StringUtils.arrayToCommaDelimitedString(vgInfo));
+        cluster.appendChild(dssVgInfo);
+
+        Element votingLun = document.createElement("PARAM");
+        votingLun.setAttribute("name", "votingDiskPath");
+        votingLun.setAttribute("value", sharingStorageInstallConfig.getCmVotingLunLinkPath());
+        cluster.appendChild(votingLun);
+
+        Element sharingLun = document.createElement("PARAM");
+        sharingLun.setAttribute("name", "shareDiskDir");
+        sharingLun.setAttribute("value", sharingStorageInstallConfig.getCmSharingLunLinkPath());
+        cluster.appendChild(sharingLun);
+
+        Element enableSsl = document.createElement("PARAM");
+        enableSsl.setAttribute("name", "dss_ssl_enable");
+        String ssl = sharingStorageInstallConfig.isEnableSsl() ? "on" : "off";
+        enableSsl.setAttribute("value", ssl);
+        cluster.appendChild(enableSsl);
+
+        if (sharingStorageInstallConfig.getInterconnectType() == ConnectTypeEnum.RDMA) {
+            Element interconnectType = document.createElement("PARAM");
+            interconnectType.setAttribute("name", "ss_interconnect_type");
+            interconnectType.setAttribute("value", String.valueOf(sharingStorageInstallConfig.getInterconnectType()));
+            cluster.appendChild(interconnectType);
+
+            Element rdmaConfig = document.createElement("PARAM");
+            rdmaConfig.setAttribute("name", "ss_rdma_work_config");
+            rdmaConfig.setAttribute("value", sharingStorageInstallConfig.getRdamConfig());
+            cluster.appendChild(rdmaConfig);
+
+            Element rdmaLogPath = document.createElement("PARAM");
+            rdmaLogPath.setAttribute("name", "ss_ock_log_path");
+            rdmaLogPath.setAttribute("value", sharingStorageInstallConfig.getRdamLogPath());
+            cluster.appendChild(rdmaLogPath);
+        }
+    }
     private void appendClusterParam(Document document, Element cluster, InstallContext installContext) {
         Element clusterName = document.createElement("PARAM");
         clusterName.setAttribute("name", "clusterName");
@@ -758,9 +952,9 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
 
         Element nodeNames = document.createElement("PARAM");
         nodeNames.setAttribute("name", "nodeNames");
-        Set<String> hostNames = installContext.getEnterpriseInstallConfig()
+        List<String> hostNames = installContext.getEnterpriseInstallConfig()
                 .getNodeConfigList().stream()
-                .map(EnterpriseInstallNodeConfig::getHostname).collect(Collectors.toSet());
+                .map(EnterpriseInstallNodeConfig::getHostname).collect(Collectors.toList());
         nodeNames.setAttribute("value", StringUtils.collectionToCommaDelimitedString(hostNames));
         cluster.appendChild(nodeNames);
 
@@ -824,6 +1018,10 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
             dcfConfig.setAttribute("value", res.toString());
             cluster.appendChild(dcfConfig);
         }
+
+        if (installContext.getEnterpriseInstallConfig().getDatabaseKernelArch() == DatabaseKernelArch.SHARING_STORAGE) {
+            appendSharingStorageClusterParam(document, cluster, installContext);
+        }
     }
 
     @Override
@@ -860,8 +1058,6 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
             throw new OpsException("Uninstall error");
         }
 
-        removeContext(unInstallContext);
-
         try {
             Optional<OpsHostUserEntity> rootUserEntity = hostInfoHolder.getHostUserEntities()
                     .stream()
@@ -885,6 +1081,9 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
             log.error("env clean fail:", e);
             wsUtil.sendText(retSession, "\nENV_CLEAN_FAIL\n");
         }
+
+        removeSoftLinkAll(unInstallContext);
+        removeContext(unInstallContext);
     }
 
     @Data

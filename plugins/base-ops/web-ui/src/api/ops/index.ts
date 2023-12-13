@@ -188,6 +188,12 @@ export const fileExist = (hostId: string, data: KeyValue) => {
   })
 }
 
+export const multiPathQuery = (hostId: string, data: KeyValue) => {
+  return axios.get(`host/multiPathQuery/${hostId}`, {
+    params: data
+  })
+}
+
 export const hostUserPage = (hostId: string) => {
   return axios.get(`hostUser/page/${hostId}`)
 }

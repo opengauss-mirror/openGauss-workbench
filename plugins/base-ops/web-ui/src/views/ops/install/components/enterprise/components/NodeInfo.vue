@@ -138,11 +138,11 @@ import { useOpsStore } from '@/store'
 import { FormInstance } from '@arco-design/web-vue/es/form'
 import { PropType, ref, computed, defineProps, inject, reactive, onMounted } from 'vue'
 import { Message } from '@arco-design/web-vue'
-import { hostListAll, hostUserListWithoutRoot, portUsed, pathEmpty, fileExist, hostPingById } from '@/api/ops'
+import { hostListAll, hostUserListWithoutRoot, portUsed, pathEmpty, fileExist, multiPathQuery, hostPingById } from '@/api/ops'
 import HostTerminal from "@/views/ops/install/components/hostTerminal/HostTerminal.vue";
 import { encryptPassword } from '@/utils/jsencrypt'
 import { useI18n } from 'vue-i18n'
-import { ClusterRoleEnum } from '@/types/ops/install'
+import { ClusterRoleEnum, DatabaseKernelArch } from '@/types/ops/install'
 const { t } = useI18n()
 
 const installStore = useOpsStore()
@@ -358,6 +358,16 @@ const changeInstallUserId = (installUserId: any) => {
   if (form.value.clusterRole === ClusterRoleEnum.MASTER) {
     emits('installUser', form.value.installUsername)
   }
+}
+
+
+const userDefineValidate = (fieldName:string, message: string) => {
+  formRef.value?.setFields({
+    [fieldName]: {
+      status: 'error',
+      message: message
+    }
+  })
 }
 
 const handleNodeCMChange = (val: any) => {
@@ -586,9 +596,11 @@ const dataValidate = async (): Promise<KeyValue> => {
   return result
 }
 
+
 defineExpose({
   formValidate,
-  dataValidate
+  dataValidate,
+  userDefineValidate,
 })
 
 

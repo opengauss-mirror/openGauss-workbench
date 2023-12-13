@@ -31,6 +31,7 @@ import org.opengauss.admin.plugin.domain.entity.ops.OpsClusterEntity;
 import org.opengauss.admin.plugin.domain.model.ops.*;
 import org.opengauss.admin.plugin.domain.model.ops.node.EnterpriseInstallNodeConfig;
 import org.opengauss.admin.plugin.enums.ops.GucSettingContextEnum;
+import org.opengauss.admin.plugin.enums.ops.DatabaseKernelArch;
 import org.opengauss.admin.plugin.enums.ops.OpenGaussSupportOSEnum;
 import org.opengauss.admin.plugin.enums.ops.OpenGaussVersionEnum;
 import org.opengauss.admin.plugin.service.ops.ClusterOpsProvider;
@@ -167,7 +168,7 @@ public abstract class AbstractOpsProvider implements ClusterOpsProvider, Initial
                                      OpenGaussSupportOSEnum expectedOs) {
         boolean dependencyCorrect = false;
         String[] dependencyPackageNames = {"libaio-devel", "flex", "bison", "ncurses-devel", "glibc-devel",
-                "patch", "redhat-lsb-core", "readline-devel"};
+                "patch", "redhat-lsb-core", "readline-devel", "lsscsi"};
         try {
             JschResult jschResult = jschUtil.executeCommand(SshCommandConstants.DEPENDENCY, rootSession);
             List<String> dependencyPackages = Arrays.stream(dependencyPackageNames).map(
@@ -488,7 +489,10 @@ public abstract class AbstractOpsProvider implements ClusterOpsProvider, Initial
                 Map<String, String> response = new HashMap<>();
                 String createUser = MessageFormat.format("CREATE USER gaussdb WITH MONADMIN AUDITADMIN SYSADMIN PASSWORD \"{0}\";\\q", databasePassword);
                 response.put("openGauss=#", createUser);
-                jschUtil.executeCommand(installContext.getEnvPath(), clientLoginOpenGauss, session, retSession, response);
+                if (enterpriseInstallConfig.getDatabaseKernelArch().equals(DatabaseKernelArch.MASTER_SLAVE)
+                        || enterpriseInstallNodeConfig.getIsCMMaster()) {
+                    jschUtil.executeCommand(installContext.getEnvPath(), clientLoginOpenGauss, session, retSession, response);
+                }
 
             } catch (Exception e) {
                 log.error("Failed to create user", e);

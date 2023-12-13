@@ -17,6 +17,19 @@
         />
       </a-form-item>
       <a-form-item
+            field="databaseKernelArch"
+            :label="$t('enterprise.ClusterConfig.test0')"
+            validate-trigger="change"
+          >
+            <a-select
+              v-model="data.databaseKernelArch"
+              :placeholder="$t('enterprise.ClusterConfig.test00')"
+            >
+              <a-option value="MASTER_SLAVE">{{$t('enterprise.ClusterConfig.option1')}}</a-option>
+              <a-option value="SHARING_STORAGE">{{$t('enterprise.ClusterConfig.option2')}}</a-option>
+            </a-select>
+      </a-form-item>
+      <a-form-item
         field="installPath"
         :label="$t('enterprise.ClusterConfig.5mpm3ku3hv40')"
         validate-trigger="blur"
@@ -93,7 +106,7 @@
         </a-col>
         <a-col :span="12">
           <a-form-item
-            v-if="data.isInstallCM"
+            v-if="data.isInstallCM && data.databaseKernelArch === DatabaseKernelArch.MASTER_SLAVE"
             field="enableDCF"
             :label="$t('enterprise.ClusterConfig.5mpm3ku3jkw0')"
           >
@@ -107,7 +120,8 @@
         :label="$t('simple.InstallConfig.else11')"
         validate-trigger="blur"
       >
-        <a-switch v-model="data.isEnvSeparate" />
+        <a-switch v-model="data.isEnvSeparate" style="margin-right: 20px;"/>
+        <div v-if="!data.isEnvSeparate" class="label-color">{{ $t('simple.InstallConfig.else14') }}</div>
       </a-form-item>
       <a-form-item
         v-if="data.isEnvSeparate"
@@ -202,6 +216,7 @@ import { useI18n } from 'vue-i18n'
 import { onMounted } from 'vue'
 import { reactive } from 'vue'
 import { Message } from '@arco-design/web-vue'
+import { DatabaseKernelArch, ConnectTypeEnum } from '@/types/ops/install'
 const { t } = useI18n()
 
 const installStore = useOpsStore()
@@ -263,6 +278,9 @@ const formRules = computed(() => {
           })
         }
       }
+    ],
+    databaseKernelArch: [
+      { required: true, 'validate-trigger': 'change', message: t('enterprise.ClusterConfig.test00') }
     ],
     installPath: [
       { required: true, 'validate-trigger': 'blur', message: t('enterprise.ClusterConfig.5mpm3ku3i340') },
@@ -418,7 +436,121 @@ const formRules = computed(() => {
         }
       }
     ],
-    azId: [{ required: true, 'validate-trigger': 'change', message: t('enterprise.NodeConfig.5mpme7w6ap00') }]
+    azId: [{ required: true, 'validate-trigger': 'change', message: t('enterprise.NodeConfig.5mpme7w6ap00') }],
+    "sharingStorageInstallConfig.dssHome": [
+      { required: true, 'validate-trigger': 'blur', message: t('enterprise.ClusterConfig.test1') },
+      {
+        validator: (value: any, cb: any) => {
+          return new Promise(resolve => {
+            if (!value.trim()) {
+              cb(t('enterprise.ClusterConfig.test1'))
+              resolve(false)
+            } else {
+              resolve(true)
+            }
+          })
+        }
+      }
+    ],
+    "sharingStorageInstallConfig.dssVgName": [
+      { required: true, 'validate-trigger': 'blur', message: t('enterprise.ClusterConfig.test3') },
+      {
+        validator: (value: any, cb: any) => {
+          return new Promise(resolve => {
+            if (!value.trim()) {
+              cb(t('enterprise.ClusterConfig.test3'))
+              resolve(false)
+            } else {
+              resolve(true)
+            }
+          })
+        }
+      }
+    ],
+    'sharingStorageInstallConfig.dssDataLunPath': [
+      { required: true, 'validate-trigger': 'blur', message: t('enterprise.ClusterConfig.test5') },
+      {
+        validator: (value: any, cb: any) => {
+          return new Promise(resolve => {
+            if (!value.trim()) {
+              cb(t('enterprise.ClusterConfig.test5'))
+              resolve(false)
+            } else {
+              resolve(true)
+            }
+          })
+        }
+      }
+    ],
+    'sharingStorageInstallConfig.xlogVgName': [
+      { required: true, 'validate-trigger': 'blur', message: t('enterprise.ClusterConfig.test7') },
+      {
+        validator: (value: any, cb: any) => {
+          return new Promise(resolve => {
+            if (!value.trim()) {
+              cb(t('enterprise.ClusterConfig.test7'))
+              resolve(false)
+            } else {
+              resolve(true)
+            }
+          })
+        }
+      }
+    ],
+    'sharingStorageInstallConfig.xlogLunPath': [
+      { required: true, 'validate-trigger': 'blur', message: t('enterprise.ClusterConfig.test9') },
+      {
+        validator: (value: any, cb: any) => {
+          return new Promise(resolve => {
+            if (!value.trim()) {
+              cb(t('enterprise.ClusterConfig.test9'))
+              resolve(false)
+            } else {
+              resolve(true)
+            }
+          })
+        }
+      }
+    ],
+    'sharingStorageInstallConfig.cmSharingLunPath': [
+      { required: true, 'validate-trigger': 'blur', message: t('enterprise.ClusterConfig.test11') },
+      {
+        validator: (value: any, cb: any) => {
+          return new Promise(resolve => {
+            if (!value.trim()) {
+              cb(t('enterprise.ClusterConfig.test11'))
+              resolve(false)
+            } else {
+              resolve(true)
+            }
+          })
+        }
+      }
+    ],
+    'sharingStorageInstallConfig.cmVotingLunPath': [
+      { required: true, 'validate-trigger': 'blur', message: t('enterprise.ClusterConfig.test13') },
+      {
+        validator: (value: any, cb: any) => {
+          return new Promise(resolve => {
+            if (!value.trim()) {
+              cb(t('enterprise.ClusterConfig.test13'))
+              resolve(false)
+            } else {
+              resolve(true)
+            }
+          })
+        }
+      }
+    ],
+    'sharingStorageInstallConfig.interconnectType': [
+      { required: true, 'validate-trigger': 'change', message: t('enterprise.ClusterConfig.test13') },
+    ],
+    'sharingStorageInstallConfig.rdmaConfig': [
+      { required: function() {
+          return data.sharingStorageInstallConfig.interconnectType === 'RDMA'
+        }, 'validate-trigger': 'blur', message: t('enterprise.ClusterConfig.test17')
+      }
+    ],
   }
 })
 
@@ -469,11 +601,24 @@ const formValidate = async (): Promise<KeyValue> => {
   const result = {
     res: !validRes
   }
+
   return result
 }
 
+const pathValidate = (fieldName:string, message: string) => {
+  formRef.value?.setFields({
+    [fieldName]: {
+      status: 'error',
+      message: message
+    }
+  })
+}
+
+
+
 defineExpose({
-  formValidate
+  formValidate,
+  pathValidate
 })
 
 </script>

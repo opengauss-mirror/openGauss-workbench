@@ -72,4 +72,12 @@ public class OpsClusterNodeEntity extends BaseEntity {
      * data node xlog path
      */
     private String xlogPath;
+
+    private String dssDataLunLinkPath;
+
+    private String xlogLunLinkPath;
+
+    private String cmVotingLunLinkPath;
+
+    private String cmSharingLunLinkPath;
 }

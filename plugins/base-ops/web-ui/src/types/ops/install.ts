@@ -39,6 +39,16 @@ export enum WsConnectTypeEnum {
   COMMAND_EXEC = 'COMMAND_EXEC'
 }
 
+export enum DatabaseKernelArch {
+  MASTER_SLAVE = 'MASTER_SLAVE',
+  SHARING_STORAGE = 'SHARING_STORAGE'
+}
+
+export enum ConnectTypeEnum {
+  TCP = 'TCP',
+  RDMA = 'RDMA'
+}
+
 export interface InstallContext {
   // version
   openGaussVersion?: OpenGaussVersionEnum;
@@ -123,6 +133,18 @@ export interface EnterpriseInstallNodeConfig {
   azPriority: number;
 }
 
+export interface SharingStorageInstallConfig {
+  dssHome: string;
+  dssVgName: string;
+  dssDataLunPath: string;
+  xlogVgName: string;
+  xlogLunPath: string;
+  cmSharingLunPath: string;
+  cmVotingLunPath: string;
+  interconnectType: ConnectTypeEnum;
+  rdmaConfig: string;
+}
+
 export interface EnterpriseInstallConfig { // eslint-disable-line
   installPath: string;
   installPackagePath: string;
@@ -137,6 +159,8 @@ export interface EnterpriseInstallConfig { // eslint-disable-line
   isInstallCM: boolean,
   azId: string;
   azName: string;
+  databaseKernelArch: DatabaseKernelArch;
+  sharingStorageInstallConfig: SharingStorageInstallConfig;
   nodeConfigList: EnterpriseInstallNodeConfig[];
 }
 

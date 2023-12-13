@@ -30,6 +30,36 @@
           <a-form-item field="port" :label="$t('enterprise.ClusterConfig.5mpm3ku3iz80')" validate-trigger="blur">
             <a-input v-model="data.form.port" :placeholder="$t('enterprise.ClusterConfig.5mpm3ku3j300')" />
           </a-form-item>
+          <!-- <a-form-item field="databaseKernelArch" :label="$t('enterprise.ClusterConfig.test0')" validate-trigger="blur">
+            <a-select v-model="data.form.databaseKernelArch" :placeholder="$t('enterprise.ClusterConfig.test00')">
+              <a-select-option value="MASTER_SLAVE">{{ $t('enterprise.ClusterConfig.option1') }}</a-select-option>
+              <a-select-option value="SHARING_STORAGE">{{ $t('enterprise.ClusterConfig.option2') }}</a-select-option>
+            </a-select>
+          </a-form-item> -->
+          <a-form-item field="databaseKernelArch" :label="$t('enterprise.ClusterConfig.test0')" validate-trigger="blur">
+            <a-input v-model="data.form.databaseKernelArch" :placeholder="$t('enterprise.ClusterConfig.test00')" />
+          </a-form-item>
+          <a-form-item field="dssHome" :label="$t('enterprise.ClusterConfig.test2')" validate-trigger="blur">
+            <a-input v-model="data.form.dssHome" :placeholder="$t('enterprise.ClusterConfig.test1')" />
+          </a-form-item>
+          <a-form-item field="dssVgName" :label="$t('enterprise.ClusterConfig.test4')" validate-trigger="blur">
+            <a-input v-model="data.form.dssVgName" :placeholder="$t('enterprise.ClusterConfig.test3')" />
+          </a-form-item>
+          <a-form-item field="dssDataLunPath" :label="$t('enterprise.ClusterConfig.test6')" validate-trigger="blur">
+            <a-input v-model="data.form.dssDataLunPath" :placeholder="$t('enterprise.ClusterConfig.test5')" />
+          </a-form-item>
+          <a-form-item field="xlogVgName" :label="$t('enterprise.ClusterConfig.test8')" validate-trigger="blur">
+            <a-input v-model="data.form.xlogVgName" :placeholder="$t('enterprise.ClusterConfig.test7')" />
+          </a-form-item>
+          <a-form-item field="xlogLunPath" :label="$t('enterprise.ClusterConfig.test10')" validate-trigger="blur">
+            <a-input v-model="data.form.xlogLunPath" :placeholder="$t('enterprise.ClusterConfig.test9')" />
+          </a-form-item>
+          <a-form-item field="cmSharingLunPath" :label="$t('enterprise.ClusterConfig.test12')" validate-trigger="blur">
+            <a-input v-model="data.form.cmSharingLunPath" :placeholder="$t('enterprise.ClusterConfig.test11')" />
+          </a-form-item>
+          <a-form-item field="cmVotingLunPath" :label="$t('enterprise.ClusterConfig.test14')" validate-trigger="blur">
+            <a-input v-model="data.form.cmVotingLunPath" :placeholder="$t('enterprise.ClusterConfig.test13')" />
+          </a-form-item>
           <a-form-item field="databaseUsername" :label="$t('enterprise.ClusterConfig.5mpm3ku3j6k0')"
             validate-trigger="blur" v-if="installType === 'import'">
             <a-input v-model="data.form.databaseUsername" :placeholder="$t('enterprise.ClusterConfig.5mpm3ku3j9s0')"
@@ -76,6 +106,7 @@ import { useOpsStore } from '@/store'
 import { DeployTypeEnum, EnterpriseInstallConfig } from '@/types/ops/install'
 import { hasName } from '@/api/ops'
 import { useI18n } from 'vue-i18n'
+import { Select, Option } from '@arco-design/web-vue'
 const { t } = useI18n()
 const installStore = useOpsStore()
 
@@ -86,6 +117,7 @@ const data: {
   form: {
     clusterId: '',
     clusterName: '',
+    // databaseKernelArch: DatabaseKernelArch.SHARING_STORAGE,
     installPath: '/opt/openGauss/install/app',
     installPackagePath: '/opt/software/openGauss',
     logPath: '/opt/openGauss/log/omm',
@@ -98,7 +130,14 @@ const data: {
     databasePassword: '',
     isInstallCM: false,
     isEnvSeparate: false,
-    envPath: ''
+    envPath: '',
+    dssHome: '',
+    dssVgName: 'data',
+    dssDataLunPath: '/dev/sda',
+    xlogVgName: 'xlog0',
+    xlogLunPath: '/dev/sdb',
+    cmSharingLunPath: '/dev/sdc',
+    cmVotingLunPath: '/dev/sdd'
   },
   rules: {}
 })
@@ -287,6 +326,111 @@ const initData = () => {
           return new Promise(resolve => {
             if (!value.trim()) {
               cb(t('enterprise.ClusterConfig.else2'))
+              resolve(false)
+            } else {
+              resolve(true)
+            }
+          })
+        }
+      }
+    ],
+    dssHome: [
+      { required: true, 'validate-trigger': 'blur', message: t('enterprise.ClusterConfig.test1') },
+      {
+        validator: (value: any, cb: any) => {
+          return new Promise(resolve => {
+            if (!value.trim()) {
+              cb(t('enterprise.ClusterConfig.error1'))
+              resolve(false)
+            } else {
+              resolve(true)
+            }
+          })
+        }
+      }
+    ],
+    dssVgName: [
+      { required: true, 'validate-trigger': 'blur', message: t('enterprise.ClusterConfig.test3') },
+      {
+        validator: (value: any, cb: any) => {
+          return new Promise(resolve => {
+            if (!value.trim()) {
+              cb(t('enterprise.ClusterConfig.error2'))
+              resolve(false)
+            } else {
+              resolve(true)
+            }
+          })
+        }
+      }
+    ],
+    dssDataLunPath: [
+      { required: true, 'validate-trigger': 'blur', message: t('enterprise.ClusterConfig.test5') },
+      {
+        validator: (value: any, cb: any) => {
+          return new Promise(resolve => {
+            if (!value.trim()) {
+              cb(t('enterprise.ClusterConfig.error3'))
+              resolve(false)
+            } else {
+              resolve(true)
+            }
+          })
+        }
+      }
+    ],
+    xlogVgName: [
+      { required: true, 'validate-trigger': 'blur', message: t('enterprise.ClusterConfig.test7') },
+      {
+        validator: (value: any, cb: any) => {
+          return new Promise(resolve => {
+            if (!value.trim()) {
+              cb(t('enterprise.ClusterConfig.error4'))
+              resolve(false)
+            } else {
+              resolve(true)
+            }
+          })
+        }
+      }
+    ],
+    xlogLunPath: [
+      { required: true, 'validate-trigger': 'blur', message: t('enterprise.ClusterConfig.test9') },
+      {
+        validator: (value: any, cb: any) => {
+          return new Promise(resolve => {
+            if (!value.trim()) {
+              cb(t('enterprise.ClusterConfig.error5'))
+              resolve(false)
+            } else {
+              resolve(true)
+            }
+          })
+        }
+      }
+    ],
+    cmSharingLunPath: [
+      { required: true, 'validate-trigger': 'blur', message: t('enterprise.ClusterConfig.test11') },
+      {
+        validator: (value: any, cb: any) => {
+          return new Promise(resolve => {
+            if (!value.trim()) {
+              cb(t('enterprise.ClusterConfig.error6'))
+              resolve(false)
+            } else {
+              resolve(true)
+            }
+          })
+        }
+      }
+    ],
+    cmVotingLunPath: [
+      { required: true, 'validate-trigger': 'blur', message: t('enterprise.ClusterConfig.test13') },
+      {
+        validator: (value: any, cb: any) => {
+          return new Promise(resolve => {
+            if (!value.trim()) {
+              cb(t('enterprise.ClusterConfig.error7'))
               resolve(false)
             } else {
               resolve(true)

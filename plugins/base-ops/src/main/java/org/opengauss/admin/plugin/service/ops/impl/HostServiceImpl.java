@@ -30,7 +30,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
 import org.opengauss.admin.common.exception.ops.OpsException;
+import org.opengauss.admin.plugin.enums.ops.DiskQueryMethodEnum;
 import org.opengauss.admin.plugin.domain.model.ops.JschResult;
+import org.opengauss.admin.plugin.domain.model.ops.LunPathManager;
+import org.opengauss.admin.plugin.domain.model.ops.SshCommandConstants;
 import org.opengauss.admin.plugin.service.ops.IHostService;
 import org.opengauss.admin.plugin.utils.JschUtil;
 import org.opengauss.admin.system.plugin.facade.HostFacade;
@@ -39,6 +42,9 @@ import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -59,6 +65,8 @@ public class HostServiceImpl implements IHostService {
     @Autowired
     @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
     private EncryptionUtils encryptionUtils;
+
+
     @Override
     public boolean pathEmpty(String id, String path, String rootPassword) {
         OpsHostEntity hostEntity = hostFacade.getById(id);
@@ -139,13 +147,144 @@ public class HostServiceImpl implements IHostService {
             throw new OpsException("root password does not exist");
         }
 
-        Session rootSession = jschUtil.getSession(hostEntity.getPublicIp(), hostEntity.getPort(), "root", encryptionUtils.decrypt(rootPassword)).orElseThrow(() -> new OpsException("Failed to establish connection with host"));
+        Session rootSession = jschUtil.getSession(hostEntity.getPublicIp(), hostEntity.getPort(),
+                "root", encryptionUtils.decrypt(rootPassword)).orElseThrow(() ->
+                new OpsException("Failed to establish connection with host"));
         try {
             return fileExist(rootSession,file);
-        }finally {
+        } finally {
             if (Objects.nonNull(rootSession) && rootSession.isConnected()){
                 rootSession.disconnect();
             }
+        }
+    }
+
+    private List<String> nvmeLunQuery(Session rootSession, String command) {
+        List<String> res = new ArrayList<>();
+        try {
+            JschResult result = jschUtil.executeCommand(command, rootSession);
+            if (result.getExitCode() != 0 || result.getResult().contains("command not found")) {
+                log.warn(result.getResult());
+                return res;
+            }
+
+            String[] parts = result.getResult().split(System.lineSeparator());
+            res = Arrays.asList(parts);
+            return res;
+        } catch (Exception e) {
+            log.warn("Can't execute command ", e);
+        }
+        return res;
+    }
+
+    private List<String> nvmeLunQuery(Session rootSession) {
+        List<String> res = nvmeLunQuery(rootSession, SshCommandConstants.UPADMIN);
+        if (!res.isEmpty()) {
+            LunPathManager.lunQueryMethod = DiskQueryMethodEnum.UPADMIN;
+            return res;
+        }
+        res = nvmeLunQuery(rootSession, SshCommandConstants.UPADMIN_PLUS);
+        if (!res.isEmpty()) {
+            LunPathManager.lunQueryMethod = DiskQueryMethodEnum.UPADMIN_PLUS;
+            return res;
+
+        }
+        return res;
+    }
+
+    private List<String> scsiLunQuery(Session rootSession) {
+        List<String> res = new ArrayList<>();
+        try {
+            JschResult result = jschUtil.executeCommand(SshCommandConstants.LS_SCSI, rootSession);
+            if (result.getExitCode() != 0 || result.getResult().contains("command not found")) {
+                log.error(result.getResult());
+                return res;
+            }
+            String[] parts = result.getResult().split(System.lineSeparator());
+            for (String part : parts) {
+                if (part.split(" ")[1].length() == LunPathManager.WWN_LEN_IN_HEX + 1) {
+                    res.add(part);
+                }
+            }
+            return res;
+        } catch (Exception e) {
+            log.error("Can't execute command ", e);
+            return res;
+        }
+    }
+
+    @Override
+    public List<String> scsiLunQuery(String id, String rootPassword) {
+        OpsHostEntity hostEntity = hostFacade.getById(id);
+        if (Objects.isNull(hostEntity)){
+            throw new OpsException("host information not found");
+        }
+
+        OpsHostUserEntity rootUserEntity = hostUserFacade.getRootUserByHostId(id);
+        if (Objects.nonNull(rootUserEntity) && StrUtil.isNotEmpty(rootUserEntity.getPassword())){
+            rootPassword = rootUserEntity.getPassword();
+        }
+
+        if (StrUtil.isEmpty(rootPassword)){
+            throw new OpsException("root password does not exist");
+        }
+
+        Session rootSession = jschUtil.getSession(hostEntity.getPublicIp(), hostEntity.getPort(), "root",
+                encryptionUtils.decrypt(rootPassword)).orElseThrow(() -> new OpsException("Failed to establish connection with host"));
+        try {
+            return scsiLunQuery(rootSession);
+        } finally {
+            if (Objects.nonNull(rootSession) && rootSession.isConnected()){
+                rootSession.disconnect();
+            }
+        }
+    }
+
+    @Override
+    public List<String> nvmeLunQuery(String id, String rootPassword) {
+        OpsHostEntity hostEntity = hostFacade.getById(id);
+        if (Objects.isNull(hostEntity)){
+            throw new OpsException("host information not found");
+        }
+
+        OpsHostUserEntity rootUserEntity = hostUserFacade.getRootUserByHostId(id);
+        if (Objects.nonNull(rootUserEntity) && StrUtil.isNotEmpty(rootUserEntity.getPassword())){
+            rootPassword = rootUserEntity.getPassword();
+        }
+
+        if (StrUtil.isEmpty(rootPassword)){
+            throw new OpsException("root password does not exist");
+        }
+
+        Session rootSession = jschUtil.getSession(hostEntity.getPublicIp(), hostEntity.getPort(), "root", encryptionUtils.decrypt(rootPassword)).orElseThrow(() -> new OpsException("Failed to establish connection with host"));
+        try {
+            return nvmeLunQuery(rootSession);
+        } finally {
+            if (Objects.nonNull(rootSession) && rootSession.isConnected()){
+                rootSession.disconnect();
+            }
+        }
+    }
+
+    @Override
+    public List<String> multiPathQuery(String id, String rootPassword) {
+        try {
+            List<String> res = nvmeLunQuery(id, rootPassword);
+            if (!res.isEmpty()) {
+                return res;
+            } else {
+                res = scsiLunQuery(id, rootPassword);
+                if (!res.isEmpty()) {
+                    LunPathManager.lunQueryMethod = DiskQueryMethodEnum.SCSI;
+                    return res;
+                }
+            }
+            log.error("Can't obtain the disk info by {}, {} and {} ", SshCommandConstants.UPADMIN,
+                    SshCommandConstants.UPADMIN_PLUS, SshCommandConstants.LS_SCSI);
+            throw new OpsException("Failed to obtain the disk info");
+        } catch (Exception e) {
+            log.error("Can't execute command ", e);
+            throw new OpsException("Failed to obtain the disk info");
         }
     }
 

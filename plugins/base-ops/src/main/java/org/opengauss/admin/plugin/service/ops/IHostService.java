@@ -23,6 +23,8 @@
 
 package org.opengauss.admin.plugin.service.ops;
 
+import java.util.List;
+
 /**
  * @author lhf
  * @date 2023/2/14 14:28
@@ -33,4 +35,30 @@ public interface IHostService {
     boolean portUsed(String id, Integer port, String rootPassword);
 
     boolean fileExist(String id, String file, String rootPassword);
+
+    /**
+     * query lun path by nvme protocol
+     *
+     * @param id host id
+     * @param rootPassword root password
+     * @return list of query result
+     */
+    List<String> nvmeLunQuery(String id, String rootPassword);
+
+    /**
+     * query lun path by scsi protocol
+     *
+     * @param id host id
+     * @param rootPassword root password
+     * @return list of query result
+     */
+    List<String> scsiLunQuery(String id, String rootPassword);
+    /**
+     * query lun path
+     *
+     * @param id host id
+     * @param rootPassword root password
+     * @return list of query result
+     */
+    List<String> multiPathQuery(String id, String rootPassword);
 }

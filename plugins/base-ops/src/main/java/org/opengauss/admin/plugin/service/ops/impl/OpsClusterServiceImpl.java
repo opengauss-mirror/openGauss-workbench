@@ -44,7 +44,6 @@ import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
 import org.opengauss.admin.common.core.domain.model.ops.OpsClusterVO;
 import org.opengauss.admin.common.exception.ops.OpsException;
 import org.opengauss.admin.common.utils.PermissionUtils;
-import org.opengauss.admin.plugin.domain.entity.ops.OpsCheckEntity;
 import org.opengauss.admin.plugin.domain.entity.ops.OpsClusterEntity;
 import org.opengauss.admin.plugin.domain.entity.ops.OpsClusterNodeEntity;
 import org.opengauss.admin.plugin.domain.entity.ops.OpsPackageManagerEntity;
