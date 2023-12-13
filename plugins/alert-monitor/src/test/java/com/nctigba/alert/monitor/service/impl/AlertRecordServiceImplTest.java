@@ -1,5 +1,24 @@
 /*
- * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ *  Copyright (c) GBA-NCTI-ISDC. 2022-2024.
+ *
+ *  openGauss DataKit is licensed under Mulan PSL v2.
+ *  You can use this software according to the terms and conditions of the Mulan PSL v2.
+ *  You may obtain a copy of Mulan PSL v2 at:
+ *
+ *  http://license.coscl.org.cn/MulanPSL2
+ *
+ *  THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ *  EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ *  MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ *  See the Mulan PSL v2 for more details.
+ *  -------------------------------------------------------------------------
+ *
+ *  AlertRecordServiceImplTest.java
+ *
+ *  IDENTIFICATION
+ *  plugins/alert-monitor/src/test/java/com/nctigba/alert/monitor/service/impl/AlertRecordServiceImplTest.java
+ *
+ *  -------------------------------------------------------------------------
  */
 
 package com.nctigba.alert.monitor.service.impl;
@@ -12,21 +31,20 @@ import co.elastic.clients.elasticsearch.core.search.HitsMetadata;
 import com.baomidou.mybatisplus.core.MybatisConfiguration;
 import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.nctigba.alert.monitor.config.ElasticsearchProvider;
+import com.nctigba.alert.monitor.config.ElasticsearchProviderConfig;
 import com.nctigba.alert.monitor.constant.CommonConstants;
-import com.nctigba.alert.monitor.dto.AlertRecordDto;
-import com.nctigba.alert.monitor.dto.AlertRelationDto;
-import com.nctigba.alert.monitor.dto.AlertStatisticsDto;
-import com.nctigba.alert.monitor.entity.AlertRecord;
-import com.nctigba.alert.monitor.entity.AlertTemplateRuleItem;
-import com.nctigba.alert.monitor.entity.NctigbaEnv;
+import com.nctigba.alert.monitor.model.dto.AlertRecordDTO;
+import com.nctigba.alert.monitor.model.dto.AlertRelationDTO;
+import com.nctigba.alert.monitor.model.dto.AlertStatisticsDTO;
+import com.nctigba.alert.monitor.model.entity.AlertRecordDO;
+import com.nctigba.alert.monitor.model.entity.AlertTemplateRuleItemDO;
+import com.nctigba.alert.monitor.model.entity.NctigbaEnvDO;
 import com.nctigba.alert.monitor.mapper.AlertRecordMapper;
 import com.nctigba.alert.monitor.mapper.AlertTemplateRuleItemMapper;
 import com.nctigba.alert.monitor.mapper.NctigbaEnvMapper;
-import com.nctigba.alert.monitor.model.AlertRecordReq;
-import com.nctigba.alert.monitor.model.AlertStatisticsReq;
-import com.nctigba.alert.monitor.service.PrometheusService;
-import com.nctigba.alert.monitor.utils.MessageSourceUtil;
+import com.nctigba.alert.monitor.model.query.AlertRecordQuery;
+import com.nctigba.alert.monitor.model.query.AlertStatisticsQuery;
+import com.nctigba.alert.monitor.util.MessageSourceUtils;
 import org.apache.ibatis.builder.MapperBuilderAssistant;
 import org.junit.Before;
 import org.junit.Test;
@@ -89,7 +107,7 @@ public class AlertRecordServiceImplTest {
     private AlertTemplateRuleItemMapper templateRuleItemMapper;
 
     @Mock
-    private PrometheusService prometheusService;
+    private PrometheusServiceImpl prometheusService;
 
     @Mock
     private NctigbaEnvMapper envMapper;
@@ -101,7 +119,7 @@ public class AlertRecordServiceImplTest {
     private AlertRecordMapper baseMapper;
 
     @Mock
-    private ElasticsearchProvider clientProvider;
+    private ElasticsearchProviderConfig clientProvider;
 
     @Mock
     private TemplateEngine templateEngine;
@@ -110,16 +128,16 @@ public class AlertRecordServiceImplTest {
     @Before
     public void before() {
         MockitoAnnotations.initMocks(this);
-        TableInfoHelper.initTableInfo(new MapperBuilderAssistant(new MybatisConfiguration(), ""), AlertRecord.class);
+        TableInfoHelper.initTableInfo(new MapperBuilderAssistant(new MybatisConfiguration(), ""), AlertRecordDO.class);
     }
 
     @Test
     public void testGetListPageNull() {
-        AlertRecordReq alertRecordReq = new AlertRecordReq();
-        alertRecordReq.setClusterNodeId("node123");
-        Page<AlertRecord> page = new Page<>(1, 10);
+        AlertRecordQuery alertRecordQuery = new AlertRecordQuery();
+        alertRecordQuery.setClusterNodeId("node123");
+        Page<AlertRecordDO> page = new Page<>(1, 10);
         when(baseMapper.selectPage(any(Page.class), any())).thenReturn(page);
-        Page<AlertRecordDto> listPage = alertRecordService.getListPage(alertRecordReq, page);
+        Page<AlertRecordDTO> listPage = alertRecordService.getListPage(alertRecordQuery, page);
         assertEquals(0, listPage.getTotal());
         assertEquals(page.getRecords(), listPage.getRecords());
     }
@@ -148,26 +166,26 @@ public class AlertRecordServiceImplTest {
         when(hostFacade.listByIds(anyList())).thenReturn(opsHostEntities);
         when(clusterService.listByIds(anyList())).thenReturn(opsClusterEntities);
         // Mock database query result
-        List<AlertRecord> records = new ArrayList<>();
-        AlertRecord alertRecord = new AlertRecord();
-        alertRecord.setId(1L).setClusterNodeId("node123").setAlertStatus(0).setRecordStatus(0).setLevel("warn")
+        List<AlertRecordDO> records = new ArrayList<>();
+        AlertRecordDO alertRecordDO = new AlertRecordDO();
+        alertRecordDO.setId(1L).setClusterNodeId("node123").setAlertStatus(0).setRecordStatus(0).setLevel("warn")
             .setStartTime(LocalDateTime.parse("2022-01-01 01:00:00",
                 DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")))
             .setEndTime(LocalDateTime.parse("2022-01-01 02:00:00",
                 DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
-        records.add(alertRecord);
-        Page<AlertRecord> page = new Page<>(1, 10);
+        records.add(alertRecordDO);
+        Page<AlertRecordDO> page = new Page<>(1, 10);
         page.setRecords(records);
         page.setTotal(1);
         when(baseMapper.selectPage(any(Page.class), any())).thenReturn(page);
         // Act
-        AlertRecordReq alertRecordReq = new AlertRecordReq();
+        AlertRecordQuery alertRecordQuery = new AlertRecordQuery();
         Page pageReq = new Page(1, 10);
-        Page<AlertRecordDto> result = alertRecordService.getListPage(alertRecordReq, pageReq);
+        Page<AlertRecordDTO> result = alertRecordService.getListPage(alertRecordQuery, pageReq);
         // Assert
         assertEquals(1, result.getTotal());
-        AlertRecordDto dto = result.getRecords().get(0);
-        assertEquals(alertRecord.getId(), dto.getId());
+        AlertRecordDTO dto = result.getRecords().get(0);
+        assertEquals(alertRecordDO.getId(), dto.getId());
         assertEquals("node123", dto.getClusterNodeId());
         assertEquals("test", dto.getClusterId());
         assertEquals("127.0.0.1:80", dto.getHostIpAndPort());
@@ -199,28 +217,28 @@ public class AlertRecordServiceImplTest {
         when(hostFacade.listByIds(anyList())).thenReturn(opsHostEntities);
         when(clusterService.listByIds(anyList())).thenReturn(opsClusterEntities);
         // Mock database query result
-        List<AlertRecord> records = new ArrayList<>();
-        AlertRecord alertRecord = new AlertRecord();
-        alertRecord.setId(1L).setClusterNodeId("node123").setAlertStatus(0).setRecordStatus(0).setLevel("warn")
+        List<AlertRecordDO> records = new ArrayList<>();
+        AlertRecordDO alertRecordDO = new AlertRecordDO();
+        alertRecordDO.setId(1L).setClusterNodeId("node123").setAlertStatus(0).setRecordStatus(0).setLevel("warn")
             .setStartTime(LocalDateTime.parse("2022-01-01 01:00:00",
                 DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")))
             .setEndTime(LocalDateTime.parse("2022-01-01 02:00:00",
                 DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
-        records.add(alertRecord);
-        Page<AlertRecord> page = new Page<>(1, 10);
+        records.add(alertRecordDO);
+        Page<AlertRecordDO> page = new Page<>(1, 10);
         page.setRecords(records);
         page.setTotal(1);
         when(baseMapper.selectPage(any(Page.class), any())).thenReturn(page);
         // Act
-        AlertRecordReq alertRecordReq = new AlertRecordReq();
-        alertRecordReq.setStartTime("2022-01-01 01:00:00").setClusterNodeId("node123")
+        AlertRecordQuery alertRecordQuery = new AlertRecordQuery();
+        alertRecordQuery.setStartTime("2022-01-01 01:00:00").setClusterNodeId("node123")
             .setEndTime("2022-01-01 02:00:00").setAlertLevel("warn").setAlertStatus("0").setRecordStatus("0");
         Page pageReq = new Page(1, 10);
-        Page<AlertRecordDto> result = alertRecordService.getListPage(alertRecordReq, pageReq);
+        Page<AlertRecordDTO> result = alertRecordService.getListPage(alertRecordQuery, pageReq);
         // Assert
         assertEquals(1, result.getTotal());
-        AlertRecordDto dto = result.getRecords().get(0);
-        assertEquals(alertRecord.getId(), dto.getId());
+        AlertRecordDTO dto = result.getRecords().get(0);
+        assertEquals(alertRecordDO.getId(), dto.getId());
         assertEquals("test/127.0.0.1:80(MASTER)", dto.getClusterNodeName());
     }
 
@@ -228,8 +246,8 @@ public class AlertRecordServiceImplTest {
     public void testAlertRecordStatistics() {
         Long total = 3L;
         when(baseMapper.selectCount(any())).thenReturn(total);
-        AlertStatisticsReq alertStatisticsReq = new AlertStatisticsReq();
-        AlertStatisticsDto alertStatisticsDto = alertRecordService.alertRecordStatistics(alertStatisticsReq);
+        AlertStatisticsQuery alertStatisticsQuery = new AlertStatisticsQuery();
+        AlertStatisticsDTO alertStatisticsDto = alertRecordService.alertRecordStatistics(alertStatisticsQuery);
 
         Integer totalNum = total.intValue();
         assertEquals(totalNum, alertStatisticsDto.getTotalNum());
@@ -272,10 +290,10 @@ public class AlertRecordServiceImplTest {
 
         when(baseMapper.selectMaps(any())).thenReturn(mapList);
 
-        AlertStatisticsReq alertStatisticsReq = new AlertStatisticsReq();
-        alertStatisticsReq.setStartTime("2022-01-01 01:00:00").setClusterNodeId("node123")
+        AlertStatisticsQuery alertStatisticsQuery = new AlertStatisticsQuery();
+        alertStatisticsQuery.setStartTime("2022-01-01 01:00:00").setClusterNodeId("node123")
             .setEndTime("2022-01-01 02:00:00");
-        AlertStatisticsDto alertStatisticsDto = alertRecordService.alertRecordStatistics(alertStatisticsReq);
+        AlertStatisticsDTO alertStatisticsDto = alertRecordService.alertRecordStatistics(alertStatisticsQuery);
 
         Integer totalNum = total.intValue();
         assertEquals(totalNum, alertStatisticsDto.getTotalNum());
@@ -299,29 +317,29 @@ public class AlertRecordServiceImplTest {
 
     @Test
     public void testGetByIdNull() {
-        AlertRecord alertRecord = null;
-        when(baseMapper.selectById(any())).thenReturn(alertRecord);
-        AlertRecordDto alertRecordDto = alertRecordService.getById(any());
+        AlertRecordDO alertRecordDO = null;
+        when(baseMapper.selectById(any())).thenReturn(alertRecordDO);
+        AlertRecordDTO alertRecordDto = alertRecordService.getById(any());
         verify(baseMapper, times(1)).selectById(any());
         assertNull(alertRecordDto.getId());
     }
 
     @Test
     public void testGetById() {
-        AlertRecord alertRecord = new AlertRecord();
-        alertRecord.setId(1L).setClusterNodeId("node123").setAlertStatus(0).setRecordStatus(0).setLevel("warn")
+        AlertRecordDO alertRecordDO = new AlertRecordDO();
+        alertRecordDO.setId(1L).setClusterNodeId("node123").setAlertStatus(0).setRecordStatus(0).setLevel("warn")
             .setStartTime(LocalDateTime.parse("2022-01-01 01:00:00",
                 DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")))
             .setEndTime(LocalDateTime.parse("2022-01-01 02:00:00",
                 DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
-        when(baseMapper.selectById(any())).thenReturn(alertRecord);
+        when(baseMapper.selectById(any())).thenReturn(alertRecordDO);
 
         OpsClusterNodeEntity opsClusterNode = new OpsClusterNodeEntity();
         opsClusterNode.setClusterNodeId("node123");
         opsClusterNode.setClusterId("test");
         opsClusterNode.setHostId("1");
         opsClusterNode.setClusterRole(ClusterRoleEnum.MASTER);
-        when(clusterNodeService.getById(alertRecord.getClusterNodeId())).thenReturn(opsClusterNode);
+        when(clusterNodeService.getById(alertRecordDO.getClusterNodeId())).thenReturn(opsClusterNode);
 
         OpsHostEntity opsHostEntity = new OpsHostEntity();
         opsHostEntity.setHostId("1");
@@ -333,13 +351,13 @@ public class AlertRecordServiceImplTest {
         opsClusterEntity.setPort(80);
         when(clusterService.getById(opsClusterNode.getClusterId())).thenReturn(opsClusterEntity);
 
-        AlertRecordDto dto = alertRecordService.getById(any());
+        AlertRecordDTO dto = alertRecordService.getById(any());
 
         verify(baseMapper, times(1)).selectById(any());
-        verify(clusterNodeService, times(1)).getById(alertRecord.getClusterNodeId());
+        verify(clusterNodeService, times(1)).getById(alertRecordDO.getClusterNodeId());
         verify(hostFacade, times(1)).getById(opsClusterNode.getHostId());
         verify(clusterService, times(1)).getById(opsClusterNode.getClusterId());
-        assertEquals(alertRecord.getId(), dto.getId());
+        assertEquals(alertRecordDO.getId(), dto.getId());
         assertEquals("node123", dto.getClusterNodeId());
         assertEquals("test", dto.getClusterId());
         assertEquals("127.0.0.1:80", dto.getHostIpAndPort());
@@ -349,79 +367,79 @@ public class AlertRecordServiceImplTest {
 
     @Test
     public void testGetById2() {
-        AlertRecord alertRecord = new AlertRecord();
-        alertRecord.setId(1L).setClusterNodeId("node123").setAlertStatus(0).setRecordStatus(0).setLevel("warn")
+        AlertRecordDO alertRecordDO = new AlertRecordDO();
+        alertRecordDO.setId(1L).setClusterNodeId("node123").setAlertStatus(0).setRecordStatus(0).setLevel("warn")
             .setStartTime(LocalDateTime.parse("2022-01-01 01:00:00",
                 DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")))
             .setEndTime(LocalDateTime.parse("2022-01-01 02:00:00",
                 DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
-        when(baseMapper.selectById(any())).thenReturn(alertRecord);
+        when(baseMapper.selectById(any())).thenReturn(alertRecordDO);
 
         OpsClusterNodeEntity opsClusterNode = new OpsClusterNodeEntity();
-        when(clusterNodeService.getById(alertRecord.getClusterNodeId())).thenReturn(opsClusterNode);
+        when(clusterNodeService.getById(alertRecordDO.getClusterNodeId())).thenReturn(opsClusterNode);
 
-        AlertRecordDto dto = alertRecordService.getById(any());
+        AlertRecordDTO dto = alertRecordService.getById(any());
 
         verify(baseMapper, times(1)).selectById(any());
-        verify(clusterNodeService, times(1)).getById(alertRecord.getClusterNodeId());
-        assertEquals(alertRecord.getId(), dto.getId());
+        verify(clusterNodeService, times(1)).getById(alertRecordDO.getClusterNodeId());
+        assertEquals(alertRecordDO.getId(), dto.getId());
         assertEquals("node123", dto.getClusterNodeId());
     }
 
     @Test
     public void testGetById3() {
-        AlertRecord alertRecord = new AlertRecord();
-        alertRecord.setId(1L).setClusterNodeId("node123").setAlertStatus(0).setRecordStatus(0).setLevel("warn")
+        AlertRecordDO alertRecordDO = new AlertRecordDO();
+        alertRecordDO.setId(1L).setClusterNodeId("node123").setAlertStatus(0).setRecordStatus(0).setLevel("warn")
             .setStartTime(LocalDateTime.parse("2022-01-01 01:00:00",
                 DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")))
             .setEndTime(LocalDateTime.parse("2022-01-01 02:00:00",
                 DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
-        when(baseMapper.selectById(any())).thenReturn(alertRecord);
+        when(baseMapper.selectById(any())).thenReturn(alertRecordDO);
 
         OpsClusterNodeEntity opsClusterNode = null;
-        when(clusterNodeService.getById(alertRecord.getClusterNodeId())).thenReturn(opsClusterNode);
+        when(clusterNodeService.getById(alertRecordDO.getClusterNodeId())).thenReturn(opsClusterNode);
 
-        AlertRecordDto dto = alertRecordService.getById(any());
+        AlertRecordDTO dto = alertRecordService.getById(any());
 
         verify(baseMapper, times(1)).selectById(any());
-        verify(clusterNodeService, times(1)).getById(alertRecord.getClusterNodeId());
-        assertEquals(alertRecord.getId(), dto.getId());
+        verify(clusterNodeService, times(1)).getById(alertRecordDO.getClusterNodeId());
+        assertEquals(alertRecordDO.getId(), dto.getId());
         assertEquals("node123", dto.getClusterNodeId());
     }
 
     @Test
     public void testGetEmptyRelationData1() {
-        AlertRecord alertRecord = new AlertRecord();
-        when(baseMapper.selectById(any())).thenReturn(alertRecord);
+        AlertRecordDO alertRecordDO = new AlertRecordDO();
+        when(baseMapper.selectById(any())).thenReturn(alertRecordDO);
         alertRecordService.getRelationData(any());
         verify(baseMapper, times(1)).selectById(any());
     }
 
     @Test
     public void testGetEmptyRelationData2() {
-        AlertRecord alertRecord = new AlertRecord().setTemplateRuleType(CommonConstants.LOG_RULE);
-        when(baseMapper.selectById(any())).thenReturn(alertRecord);
+        AlertRecordDO alertRecordDO = new AlertRecordDO().setTemplateRuleType(CommonConstants.LOG_RULE);
+        when(baseMapper.selectById(any())).thenReturn(alertRecordDO);
         alertRecordService.getRelationData(any());
         verify(baseMapper, times(1)).selectById(any());
     }
 
     @Test
     public void testGetRelationData() {
-        try (MockedStatic<MessageSourceUtil> mockedStatic = mockStatic(MessageSourceUtil.class)) {
-            AlertRecord alertRecord = new AlertRecord();
-            alertRecord.setId(1L).setClusterNodeId("node123").setAlertStatus(0).setRecordStatus(0).setLevel("warn")
+        try (MockedStatic<MessageSourceUtils> mockedStatic = mockStatic(MessageSourceUtils.class)) {
+            AlertRecordDO alertRecordDO = new AlertRecordDO();
+            alertRecordDO.setId(1L).setClusterNodeId("node123").setAlertStatus(0).setRecordStatus(0).setLevel("warn")
                 .setStartTime(LocalDateTime.parse("2022-01-01 01:00:00",
                     DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")))
                 .setEndTime(LocalDateTime.parse("2022-01-01 02:00:00",
                     DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))).setTemplateId(1L)
                 .setTemplateRuleType(CommonConstants.INDEX_RULE);
-            when(baseMapper.selectById(any())).thenReturn(alertRecord);
-            AlertTemplateRuleItem ruleItem = new AlertTemplateRuleItem();
+            when(baseMapper.selectById(any())).thenReturn(alertRecordDO);
+            AlertTemplateRuleItemDO ruleItem = new AlertTemplateRuleItemDO();
             ruleItem.setRuleExpName("ruleExpName").setUnit("unit").setLimitValue("10").setRuleExp("ruleExp");
-            List<AlertTemplateRuleItem> ruleItemList = new ArrayList<>();
+            List<AlertTemplateRuleItemDO> ruleItemList = new ArrayList<>();
             ruleItemList.add(ruleItem);
             when(templateRuleItemMapper.selectList(any())).thenReturn(ruleItemList);
-            NctigbaEnv promEnv = new NctigbaEnv();
+            NctigbaEnvDO promEnv = new NctigbaEnvDO();
             promEnv.setHostid("1").setPort(9090);
             when(envMapper.selectOne(any())).thenReturn(promEnv);
             OpsHostEntity opsHostEntity = new OpsHostEntity();
@@ -430,11 +448,11 @@ public class AlertRecordServiceImplTest {
             when(hostFacade.getById(promEnv.getHostid())).thenReturn(opsHostEntity);
 
             String name = "ruleExpName";
-            mockedStatic.when(() -> MessageSourceUtil.get(any())).thenReturn(name);
+            mockedStatic.when(() -> MessageSourceUtils.get(any())).thenReturn(name);
 
             Number[][] datas = new Number[0][0];
             when(prometheusService.queryRange(any(), any(), any(), any(), any())).thenReturn(datas);
-            List<AlertRelationDto> relationDataList = alertRecordService.getRelationData(any());
+            List<AlertRelationDTO> relationDataList = alertRecordService.getRelationData(any());
             verify(baseMapper, times(1)).selectById(any());
             verify(templateRuleItemMapper, times(1)).selectList(any());
             verify(envMapper, times(1)).selectOne(any());
@@ -446,25 +464,25 @@ public class AlertRecordServiceImplTest {
 
     @Test
     public void testGetEmptyRelationLog1() {
-        AlertRecord alertRecord = new AlertRecord();
-        when(baseMapper.selectById(any())).thenReturn(alertRecord);
+        AlertRecordDO alertRecordDO = new AlertRecordDO();
+        when(baseMapper.selectById(any())).thenReturn(alertRecordDO);
         alertRecordService.getRelationLog(anyLong(), false, "");
         verify(baseMapper, times(1)).selectById(any());
     }
 
     @Test
     public void testGetEmptyRelationLog2() {
-        AlertRecord alertRecord = new AlertRecord().setTemplateRuleType(CommonConstants.INDEX_RULE);
-        when(baseMapper.selectById(any())).thenReturn(alertRecord);
+        AlertRecordDO alertRecordDO = new AlertRecordDO().setTemplateRuleType(CommonConstants.INDEX_RULE);
+        when(baseMapper.selectById(any())).thenReturn(alertRecordDO);
         alertRecordService.getRelationLog(anyLong(), false, "");
         verify(baseMapper, times(1)).selectById(any());
     }
 
     @Test
     public void testGetEmptyRelationLog3() {
-        AlertRecord alertRecord = new AlertRecord().setTemplateRuleType(CommonConstants.LOG_RULE);
-        when(baseMapper.selectById(any())).thenReturn(alertRecord);
-        List<AlertTemplateRuleItem> templateRuleItems = new ArrayList<>();
+        AlertRecordDO alertRecordDO = new AlertRecordDO().setTemplateRuleType(CommonConstants.LOG_RULE);
+        when(baseMapper.selectById(any())).thenReturn(alertRecordDO);
+        List<AlertTemplateRuleItemDO> templateRuleItems = new ArrayList<>();
         when(templateRuleItemMapper.selectList(any())).thenReturn(templateRuleItems);
         alertRecordService.getRelationLog(anyLong(), false, "");
         verify(baseMapper, times(1)).selectById(any());
@@ -473,17 +491,17 @@ public class AlertRecordServiceImplTest {
 
     @Test
     public void testGetRelationLogWithShowAlertLog() throws IOException {
-        AlertRecord alertRecord = new AlertRecord();
-        alertRecord.setId(1L).setClusterNodeId("node123").setAlertStatus(0).setRecordStatus(0).setLevel("warn")
+        AlertRecordDO alertRecordDO = new AlertRecordDO();
+        alertRecordDO.setId(1L).setClusterNodeId("node123").setAlertStatus(0).setRecordStatus(0).setLevel("warn")
             .setStartTime(LocalDateTime.parse("2022-01-01 01:00:02",
                 DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")))
             .setEndTime(LocalDateTime.parse("2022-01-01 02:00:02",
                 DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))).setTemplateId(1L).setTemplateRuleId(1L)
             .setTemplateRuleType(CommonConstants.LOG_RULE);
-        when(baseMapper.selectById(any())).thenReturn(alertRecord);
-        AlertTemplateRuleItem ruleItem1 = new AlertTemplateRuleItem().setKeyword("abc").setBlockWord("bcd");
-        AlertTemplateRuleItem ruleItem2 = new AlertTemplateRuleItem().setKeyword("abc,efg");
-        List<AlertTemplateRuleItem> templateRuleItems = new ArrayList<>();
+        when(baseMapper.selectById(any())).thenReturn(alertRecordDO);
+        AlertTemplateRuleItemDO ruleItem1 = new AlertTemplateRuleItemDO().setKeyword("abc").setBlockWord("bcd");
+        AlertTemplateRuleItemDO ruleItem2 = new AlertTemplateRuleItemDO().setKeyword("abc,efg");
+        List<AlertTemplateRuleItemDO> templateRuleItems = new ArrayList<>();
         templateRuleItems.add(ruleItem1);
         templateRuleItems.add(ruleItem2);
         when(templateRuleItemMapper.selectList(any())).thenReturn(templateRuleItems);
@@ -503,17 +521,17 @@ public class AlertRecordServiceImplTest {
 
     @Test
     public void testGetRelationLogWithoutShowAlertLog() throws IOException {
-        AlertRecord alertRecord = new AlertRecord();
-        alertRecord.setId(1L).setClusterNodeId("node123").setAlertStatus(0).setRecordStatus(0).setLevel("warn")
+        AlertRecordDO alertRecordDO = new AlertRecordDO();
+        alertRecordDO.setId(1L).setClusterNodeId("node123").setAlertStatus(0).setRecordStatus(0).setLevel("warn")
             .setStartTime(LocalDateTime.parse("2022-01-01 01:00:02",
                 DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")))
             .setEndTime(LocalDateTime.parse("2022-01-01 02:00:02",
                 DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))).setTemplateId(1L).setTemplateRuleId(1L)
             .setTemplateRuleType(CommonConstants.LOG_RULE);
-        when(baseMapper.selectById(any())).thenReturn(alertRecord);
-        AlertTemplateRuleItem ruleItem1 = new AlertTemplateRuleItem().setKeyword("abc").setBlockWord("bcd");
-        AlertTemplateRuleItem ruleItem2 = new AlertTemplateRuleItem().setKeyword("abc,efg");
-        List<AlertTemplateRuleItem> templateRuleItems = new ArrayList<>();
+        when(baseMapper.selectById(any())).thenReturn(alertRecordDO);
+        AlertTemplateRuleItemDO ruleItem1 = new AlertTemplateRuleItemDO().setKeyword("abc").setBlockWord("bcd");
+        AlertTemplateRuleItemDO ruleItem2 = new AlertTemplateRuleItemDO().setKeyword("abc,efg");
+        List<AlertTemplateRuleItemDO> templateRuleItems = new ArrayList<>();
         templateRuleItems.add(ruleItem1);
         templateRuleItems.add(ruleItem2);
         when(templateRuleItemMapper.selectList(any())).thenReturn(templateRuleItems);
@@ -533,17 +551,17 @@ public class AlertRecordServiceImplTest {
 
     @Test
     public void testGetRelationLogWithShowAlertLogReturnEmptyHit() throws IOException {
-        AlertRecord alertRecord = new AlertRecord();
-        alertRecord.setId(1L).setClusterNodeId("node123").setAlertStatus(0).setRecordStatus(0).setLevel("warn")
+        AlertRecordDO alertRecordDO = new AlertRecordDO();
+        alertRecordDO.setId(1L).setClusterNodeId("node123").setAlertStatus(0).setRecordStatus(0).setLevel("warn")
             .setStartTime(LocalDateTime.parse("2022-01-01 01:00:02",
                 DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")))
             .setEndTime(LocalDateTime.parse("2022-01-01 02:00:02",
                 DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))).setTemplateId(1L).setTemplateRuleId(1L)
             .setTemplateRuleType(CommonConstants.LOG_RULE);
-        when(baseMapper.selectById(any())).thenReturn(alertRecord);
-        AlertTemplateRuleItem ruleItem1 = new AlertTemplateRuleItem().setKeyword("abc").setBlockWord("bcd");
-        AlertTemplateRuleItem ruleItem2 = new AlertTemplateRuleItem().setKeyword("abc,efg");
-        List<AlertTemplateRuleItem> templateRuleItems = new ArrayList<>();
+        when(baseMapper.selectById(any())).thenReturn(alertRecordDO);
+        AlertTemplateRuleItemDO ruleItem1 = new AlertTemplateRuleItemDO().setKeyword("abc").setBlockWord("bcd");
+        AlertTemplateRuleItemDO ruleItem2 = new AlertTemplateRuleItemDO().setKeyword("abc,efg");
+        List<AlertTemplateRuleItemDO> templateRuleItems = new ArrayList<>();
         templateRuleItems.add(ruleItem1);
         templateRuleItems.add(ruleItem2);
         when(templateRuleItemMapper.selectList(any())).thenReturn(templateRuleItems);
@@ -563,17 +581,17 @@ public class AlertRecordServiceImplTest {
 
     @Test
     public void testGetRelationLogWithShowAlertLogReturnEmptySorts() throws IOException {
-        AlertRecord alertRecord = new AlertRecord();
-        alertRecord.setId(1L).setClusterNodeId("node123").setAlertStatus(0).setRecordStatus(0).setLevel("warn")
+        AlertRecordDO alertRecordDO = new AlertRecordDO();
+        alertRecordDO.setId(1L).setClusterNodeId("node123").setAlertStatus(0).setRecordStatus(0).setLevel("warn")
             .setStartTime(LocalDateTime.parse("2022-01-01 01:00:02",
                 DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")))
             .setEndTime(LocalDateTime.parse("2022-01-01 02:00:02",
                 DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))).setTemplateId(1L).setTemplateRuleId(1L)
             .setTemplateRuleType(CommonConstants.LOG_RULE);
-        when(baseMapper.selectById(any())).thenReturn(alertRecord);
-        AlertTemplateRuleItem ruleItem1 = new AlertTemplateRuleItem().setKeyword("abc").setBlockWord("bcd");
-        AlertTemplateRuleItem ruleItem2 = new AlertTemplateRuleItem().setKeyword("abc,efg");
-        List<AlertTemplateRuleItem> templateRuleItems = new ArrayList<>();
+        when(baseMapper.selectById(any())).thenReturn(alertRecordDO);
+        AlertTemplateRuleItemDO ruleItem1 = new AlertTemplateRuleItemDO().setKeyword("abc").setBlockWord("bcd");
+        AlertTemplateRuleItemDO ruleItem2 = new AlertTemplateRuleItemDO().setKeyword("abc,efg");
+        List<AlertTemplateRuleItemDO> templateRuleItems = new ArrayList<>();
         templateRuleItems.add(ruleItem1);
         templateRuleItems.add(ruleItem2);
         when(templateRuleItemMapper.selectList(any())).thenReturn(templateRuleItems);
@@ -656,22 +674,22 @@ public class AlertRecordServiceImplTest {
 
     @Test
     public void testExportWorkbookWithEmpty() {
-        try (MockedStatic<MessageSourceUtil> mockedStatic = mockStatic(MessageSourceUtil.class)) {
-            mockedStatic.when(() -> MessageSourceUtil.get(any())).thenReturn("alertRecord");
-            List<AlertRecord> alertRecords = new ArrayList<>();
-            when(baseMapper.selectList(any())).thenReturn(alertRecords);
-            AlertStatisticsReq alertStatisticsReq = new AlertStatisticsReq();
-            alertRecordService.exportWorkbook(alertStatisticsReq);
+        try (MockedStatic<MessageSourceUtils> mockedStatic = mockStatic(MessageSourceUtils.class)) {
+            mockedStatic.when(() -> MessageSourceUtils.get(any())).thenReturn("alertRecord");
+            List<AlertRecordDO> alertRecordDOS = new ArrayList<>();
+            when(baseMapper.selectList(any())).thenReturn(alertRecordDOS);
+            AlertStatisticsQuery alertStatisticsQuery = new AlertStatisticsQuery();
+            alertRecordService.exportWorkbook(alertStatisticsQuery);
             verify(baseMapper, times(1)).selectList(any());
         }
     }
 
     @Test
     public void testExportWorkbook() {
-        try (MockedStatic<MessageSourceUtil> mockedStatic = mockStatic(MessageSourceUtil.class)) {
-            mockedStatic.when(() -> MessageSourceUtil.get(any())).thenReturn("alertRecord");
-            List<AlertRecord> alertRecords = mockRealAlertRecords();
-            when(baseMapper.selectList(any())).thenReturn(alertRecords);
+        try (MockedStatic<MessageSourceUtils> mockedStatic = mockStatic(MessageSourceUtils.class)) {
+            mockedStatic.when(() -> MessageSourceUtils.get(any())).thenReturn("alertRecord");
+            List<AlertRecordDO> alertRecordDOS = mockRealAlertRecords();
+            when(baseMapper.selectList(any())).thenReturn(alertRecordDOS);
             OpsClusterNodeEntity nodeEntity = new OpsClusterNodeEntity();
             nodeEntity.setClusterNodeId("nodeId1");
             nodeEntity.setHostId("1");
@@ -679,7 +697,7 @@ public class AlertRecordServiceImplTest {
             nodeEntity.setClusterId("test");
             List<OpsClusterNodeEntity> opsClusterNodeEntities = new ArrayList<>();
             opsClusterNodeEntities.add(nodeEntity);
-            List<String> clusterNodeIdList = alertRecords.stream().map(item -> item.getClusterNodeId()).collect(
+            List<String> clusterNodeIdList = alertRecordDOS.stream().map(item -> item.getClusterNodeId()).collect(
                 Collectors.toList());
             when(clusterNodeService.listByIds(clusterNodeIdList)).thenReturn(opsClusterNodeEntities);
             OpsHostEntity hostEntity = new OpsHostEntity();
@@ -699,9 +717,9 @@ public class AlertRecordServiceImplTest {
                 Collectors.toList());
             when(clusterService.listByIds(clusterIds)).thenReturn(opsClusterEntities);
 
-            AlertStatisticsReq alertStatisticsReq =
-                new AlertStatisticsReq().setStartTime("2023-08-24 10:13:11").setEndTime("2023-08-24 11:13:11");
-            alertRecordService.exportWorkbook(alertStatisticsReq);
+            AlertStatisticsQuery alertStatisticsQuery =
+                new AlertStatisticsQuery().setStartTime("2023-08-24 10:13:11").setEndTime("2023-08-24 11:13:11");
+            alertRecordService.exportWorkbook(alertStatisticsQuery);
             verify(baseMapper, times(1)).selectList(any());
             verify(clusterNodeService, times(1)).listByIds(clusterNodeIdList);
             verify(hostFacade, times(1)).listByIds(hostIds);
@@ -709,41 +727,41 @@ public class AlertRecordServiceImplTest {
         }
     }
 
-    private List<AlertRecord> mockRealAlertRecords() {
-        List<AlertRecord> alertRecords = new ArrayList<>();
-        AlertRecord alertRecord1 =
-            new AlertRecord().setStartTime(LocalDateTime.now().minusHours(2)).setEndTime(LocalDateTime.now())
+    private List<AlertRecordDO> mockRealAlertRecords() {
+        List<AlertRecordDO> alertRecordDOS = new ArrayList<>();
+        AlertRecordDO alertRecordDO1 =
+            new AlertRecordDO().setStartTime(LocalDateTime.now().minusHours(2)).setEndTime(LocalDateTime.now())
                 .setDuration(0L).setAlertStatus(CommonConstants.FIRING_STATUS)
                 .setRecordStatus(CommonConstants.READ_STATUS).setLevel("warn")
                 .setTemplateRuleType(CommonConstants.INDEX_RULE).setTemplateId(1L).setTemplateRuleId(1L)
                 .setClusterNodeId("nodeId1").setNotifyWayIds("1").setNotifyWayNames("a");
-        alertRecords.add(alertRecord1);
-        AlertRecord alertRecord2 =
-            new AlertRecord().setStartTime(LocalDateTime.now().minusHours(2)).setEndTime(LocalDateTime.now())
+        alertRecordDOS.add(alertRecordDO1);
+        AlertRecordDO alertRecordDO2 =
+            new AlertRecordDO().setStartTime(LocalDateTime.now().minusHours(2)).setEndTime(LocalDateTime.now())
                 .setDuration(3661L).setAlertStatus(CommonConstants.FIRING_STATUS)
                 .setRecordStatus(CommonConstants.UNREAD_STATUS).setLevel("warn")
                 .setTemplateRuleType(CommonConstants.INDEX_RULE).setTemplateId(1L).setTemplateRuleId(1L)
                 .setClusterNodeId("nodeId1").setNotifyWayIds("1").setNotifyWayNames("a");
-        alertRecords.add(alertRecord2);
-        AlertRecord alertRecord3 =
-            new AlertRecord().setStartTime(LocalDateTime.now().minusHours(2)).setEndTime(LocalDateTime.now())
+        alertRecordDOS.add(alertRecordDO2);
+        AlertRecordDO alertRecordDO3 =
+            new AlertRecordDO().setStartTime(LocalDateTime.now().minusHours(2)).setEndTime(LocalDateTime.now())
                 .setDuration(36610L).setAlertStatus(CommonConstants.RECOVER_STATUS)
                 .setRecordStatus(CommonConstants.UNREAD_STATUS).setLevel("warn")
                 .setTemplateRuleType(CommonConstants.LOG_RULE).setTemplateId(1L).setTemplateRuleId(1L)
                 .setClusterNodeId("nodeId1").setNotifyWayIds("1").setNotifyWayNames("a");
-        alertRecords.add(alertRecord3);
-        return alertRecords;
+        alertRecordDOS.add(alertRecordDO3);
+        return alertRecordDOS;
     }
 
     @Test
     public void testExportReport() {
-        try (MockedStatic<MessageSourceUtil> mockedStatic = mockStatic(MessageSourceUtil.class)) {
-            mockedStatic.when(() -> MessageSourceUtil.get(any())).thenReturn("alertRecord");
-            AlertStatisticsDto alertStatisticsDto = new AlertStatisticsDto();
+        try (MockedStatic<MessageSourceUtils> mockedStatic = mockStatic(MessageSourceUtils.class)) {
+            mockedStatic.when(() -> MessageSourceUtils.get(any())).thenReturn("alertRecord");
+            AlertStatisticsDTO alertStatisticsDto = new AlertStatisticsDTO();
             AlertRecordServiceImpl recordService = mock(AlertRecordServiceImpl.class);
             when(recordService.alertRecordStatistics(any())).thenReturn(alertStatisticsDto);
-            List<AlertRecord> alertRecords = mockRealAlertRecords();
-            when(baseMapper.selectList(any())).thenReturn(alertRecords);
+            List<AlertRecordDO> alertRecordDOS = mockRealAlertRecords();
+            when(baseMapper.selectList(any())).thenReturn(alertRecordDOS);
             OpsClusterNodeEntity nodeEntity = new OpsClusterNodeEntity();
             nodeEntity.setClusterNodeId("nodeId1");
             nodeEntity.setHostId("1");
@@ -751,7 +769,7 @@ public class AlertRecordServiceImplTest {
             nodeEntity.setClusterId("test");
             List<OpsClusterNodeEntity> opsClusterNodeEntities = new ArrayList<>();
             opsClusterNodeEntities.add(nodeEntity);
-            List<String> clusterNodeIdList = alertRecords.stream().map(item -> item.getClusterNodeId()).collect(
+            List<String> clusterNodeIdList = alertRecordDOS.stream().map(item -> item.getClusterNodeId()).collect(
                 Collectors.toList());
             when(clusterNodeService.listByIds(clusterNodeIdList)).thenReturn(opsClusterNodeEntities);
             OpsHostEntity hostEntity = new OpsHostEntity();
@@ -773,9 +791,9 @@ public class AlertRecordServiceImplTest {
             String html = "html";
             when(templateEngine.process(anyString(), any())).thenReturn(html);
 
-            AlertStatisticsReq alertStatisticsReq =
-                new AlertStatisticsReq().setStartTime("2023-08-24 10:13:11").setEndTime("2023-08-24 11:13:11");
-            String result = alertRecordService.exportReport(alertStatisticsReq);
+            AlertStatisticsQuery alertStatisticsQuery =
+                new AlertStatisticsQuery().setStartTime("2023-08-24 10:13:11").setEndTime("2023-08-24 11:13:11");
+            String result = alertRecordService.exportReport(alertStatisticsQuery);
             verify(baseMapper, times(1)).selectList(any());
             verify(clusterNodeService, times(1)).listByIds(clusterNodeIdList);
             verify(hostFacade, times(1)).listByIds(hostIds);

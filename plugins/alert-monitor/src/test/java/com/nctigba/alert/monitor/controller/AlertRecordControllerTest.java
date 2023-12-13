@@ -1,18 +1,37 @@
 /*
- * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ *  Copyright (c) GBA-NCTI-ISDC. 2022-2024.
+ *
+ *  openGauss DataKit is licensed under Mulan PSL v2.
+ *  You can use this software according to the terms and conditions of the Mulan PSL v2.
+ *  You may obtain a copy of Mulan PSL v2 at:
+ *
+ *  http://license.coscl.org.cn/MulanPSL2
+ *
+ *  THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ *  EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ *  MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ *  See the Mulan PSL v2 for more details.
+ *  -------------------------------------------------------------------------
+ *
+ *  AlertRecordControllerTest.java
+ *
+ *  IDENTIFICATION
+ *  plugins/alert-monitor/src/test/java/com/nctigba/alert/monitor/controller/AlertRecordControllerTest.java
+ *
+ *  -------------------------------------------------------------------------
  */
 
 package com.nctigba.alert.monitor.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.nctigba.alert.monitor.dto.AlertRecordDto;
-import com.nctigba.alert.monitor.dto.AlertRelationDto;
-import com.nctigba.alert.monitor.dto.AlertStatisticsDto;
-import com.nctigba.alert.monitor.dto.LogInfoDTO;
-import com.nctigba.alert.monitor.model.AlertRecordReq;
-import com.nctigba.alert.monitor.model.AlertStatisticsReq;
+import com.nctigba.alert.monitor.model.dto.AlertRecordDTO;
+import com.nctigba.alert.monitor.model.dto.AlertRelationDTO;
+import com.nctigba.alert.monitor.model.dto.AlertStatisticsDTO;
+import com.nctigba.alert.monitor.model.dto.LogInfoDTO;
+import com.nctigba.alert.monitor.model.query.AlertRecordQuery;
+import com.nctigba.alert.monitor.model.query.AlertStatisticsQuery;
 import com.nctigba.alert.monitor.service.AlertRecordService;
-import com.nctigba.alert.monitor.utils.MessageSourceUtil;
+import com.nctigba.alert.monitor.util.MessageSourceUtils;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -62,11 +81,11 @@ public class AlertRecordControllerTest {
         try (MockedStatic<ServletUtils> mockedStatic = mockStatic(ServletUtils.class)) {
             mockedStatic.when(() -> ServletUtils.getParameterToInt("pageNum")).thenReturn(1);
             mockedStatic.when(() -> ServletUtils.getParameterToInt("pageSize")).thenReturn(10);
-            Page<AlertRecordDto> page = new Page<>(1, 10);
-            when(alertRecordService.getListPage(any(AlertRecordReq.class), any(Page.class))).thenReturn(page);
-            AlertRecordReq recordReq = new AlertRecordReq();
+            Page<AlertRecordDTO> page = new Page<>(1, 10);
+            when(alertRecordService.getListPage(any(AlertRecordQuery.class), any(Page.class))).thenReturn(page);
+            AlertRecordQuery recordReq = new AlertRecordQuery();
             TableDataInfo result = alertRecordController.alertRecordListPage(recordReq);
-            verify(alertRecordService, times(1)).getListPage(any(AlertRecordReq.class), any(Page.class));
+            verify(alertRecordService, times(1)).getListPage(any(AlertRecordQuery.class), any(Page.class));
             assertEquals(page.getRecords(), result.getRows());
             assertEquals(page.getTotal(), result.getTotal());
         }
@@ -74,18 +93,18 @@ public class AlertRecordControllerTest {
 
     @Test
     public void testAlertRecordStatistics() {
-        AlertStatisticsDto statisticsDto = new AlertStatisticsDto();
-        when(alertRecordService.alertRecordStatistics(any(AlertStatisticsReq.class))).thenReturn(statisticsDto);
-        AlertStatisticsReq alertStatisticsReq = new AlertStatisticsReq();
-        AjaxResult result = alertRecordController.alertRecordStatistics(alertStatisticsReq);
+        AlertStatisticsDTO statisticsDto = new AlertStatisticsDTO();
+        when(alertRecordService.alertRecordStatistics(any(AlertStatisticsQuery.class))).thenReturn(statisticsDto);
+        AlertStatisticsQuery alertStatisticsQuery = new AlertStatisticsQuery();
+        AjaxResult result = alertRecordController.alertRecordStatistics(alertStatisticsQuery);
         verify(alertRecordService, times(1))
-            .alertRecordStatistics(any(AlertStatisticsReq.class));
+            .alertRecordStatistics(any(AlertStatisticsQuery.class));
         assertEquals(statisticsDto, result.get("data"));
     }
 
     @Test
     public void testGetById() {
-        AlertRecordDto alertRecordDto = new AlertRecordDto();
+        AlertRecordDTO alertRecordDto = new AlertRecordDTO();
         when(alertRecordService.getById(anyLong())).thenReturn(alertRecordDto);
         Long id = 1L;
         AjaxResult result = alertRecordController.getById(id);
@@ -111,7 +130,7 @@ public class AlertRecordControllerTest {
 
     @Test
     public void testGetRelationData() {
-        List<AlertRelationDto> relationData = new ArrayList<>();
+        List<AlertRelationDTO> relationData = new ArrayList<>();
         when(alertRecordService.getRelationData(anyLong())).thenReturn(relationData);
         AjaxResult result = alertRecordController.getRelationData(1L);
         verify(alertRecordService, times(1)).getRelationData(anyLong());
@@ -129,17 +148,17 @@ public class AlertRecordControllerTest {
 
     @Test
     public void testExport() throws IOException {
-        try (MockedStatic<MessageSourceUtil> mockedStatic = mockStatic(MessageSourceUtil.class)) {
+        try (MockedStatic<MessageSourceUtils> mockedStatic = mockStatic(MessageSourceUtils.class)) {
             Workbook workbook = mock(Workbook.class);
-            when(alertRecordService.exportWorkbook(any(AlertStatisticsReq.class))).thenReturn(workbook);
+            when(alertRecordService.exportWorkbook(any(AlertStatisticsQuery.class))).thenReturn(workbook);
             HttpServletResponse response = mock(HttpServletResponse.class);
             ServletOutputStream outputStream = mock(ServletOutputStream.class);
             when(response.getOutputStream()).thenReturn(outputStream);
-            mockedStatic.when(() -> MessageSourceUtil.get("alertRecord")).thenReturn("alertRecord");
-            alertRecordController.export(new AlertStatisticsReq(), response);
+            mockedStatic.when(() -> MessageSourceUtils.get("alertRecord")).thenReturn("alertRecord");
+            alertRecordController.export(new AlertStatisticsQuery(), response);
             verify(response).setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
             verify(response).setHeader(eq("Content-Disposition"), contains("alertRecord.xlsx"));
-            verify(alertRecordService).exportWorkbook(any(AlertStatisticsReq.class));
+            verify(alertRecordService).exportWorkbook(any(AlertStatisticsQuery.class));
             verify(workbook).write(outputStream);
             verify(workbook).close();
         }
@@ -147,14 +166,14 @@ public class AlertRecordControllerTest {
 
     @Test
     public void testExportReport() throws IOException {
-        try (MockedStatic<MessageSourceUtil> mockedStatic = mockStatic(MessageSourceUtil.class)) {
+        try (MockedStatic<MessageSourceUtils> mockedStatic = mockStatic(MessageSourceUtils.class)) {
             HttpServletResponse response = mock(HttpServletResponse.class);
             ServletOutputStream outputStream = mock(ServletOutputStream.class);
             when(response.getOutputStream()).thenReturn(outputStream);
-            mockedStatic.when(() -> MessageSourceUtil.get("alertRecord")).thenReturn("alertRecord");
-            when(alertRecordService.exportReport(any(AlertStatisticsReq.class))).thenReturn("html");
-            alertRecordController.exportReport(new AlertStatisticsReq(), response);
-            verify(alertRecordService).exportReport(any(AlertStatisticsReq.class));
+            mockedStatic.when(() -> MessageSourceUtils.get("alertRecord")).thenReturn("alertRecord");
+            when(alertRecordService.exportReport(any(AlertStatisticsQuery.class))).thenReturn("html");
+            alertRecordController.exportReport(new AlertStatisticsQuery(), response);
+            verify(alertRecordService).exportReport(any(AlertStatisticsQuery.class));
         }
     }
 }

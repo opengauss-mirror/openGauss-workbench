@@ -1,12 +1,31 @@
 /*
- * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ *  Copyright (c) GBA-NCTI-ISDC. 2022-2024.
+ *
+ *  openGauss DataKit is licensed under Mulan PSL v2.
+ *  You can use this software according to the terms and conditions of the Mulan PSL v2.
+ *  You may obtain a copy of Mulan PSL v2 at:
+ *
+ *  http://license.coscl.org.cn/MulanPSL2
+ *
+ *  THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ *  EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ *  MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ *  See the Mulan PSL v2 for more details.
+ *  -------------------------------------------------------------------------
+ *
+ *  AlertConfigController.java
+ *
+ *  IDENTIFICATION
+ *  plugins/alert-monitor/src/main/java/com/nctigba/alert/monitor/controller/AlertConfigController.java
+ *
+ *  -------------------------------------------------------------------------
  */
 
 package com.nctigba.alert.monitor.controller;
 
 import cn.hutool.core.collection.CollectionUtil;
 import org.opengauss.admin.common.core.domain.AjaxResult;
-import com.nctigba.alert.monitor.entity.AlertConfig;
+import com.nctigba.alert.monitor.model.entity.AlertConfigDO;
 import com.nctigba.alert.monitor.service.AlertConfigService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -31,16 +50,16 @@ public class AlertConfigController {
 
     @GetMapping
     public AjaxResult getAlertConf() {
-        List<AlertConfig> list = alertConfigService.list();
+        List<AlertConfigDO> list = alertConfigService.list();
         if (CollectionUtil.isEmpty(list)) {
-            return AjaxResult.success(new AlertConfig());
+            return AjaxResult.success(new AlertConfigDO());
         }
         return AjaxResult.success(list.get(0));
     }
 
     @PostMapping
-    public AjaxResult saveAlertConf(@Valid @RequestBody AlertConfig alertConfig) {
-        alertConfigService.saveAlertConf(alertConfig);
+    public AjaxResult saveAlertConf(@Valid @RequestBody AlertConfigDO alertConfigDO) {
+        alertConfigService.saveAlertConf(alertConfigDO);
         return AjaxResult.success();
     }
 }

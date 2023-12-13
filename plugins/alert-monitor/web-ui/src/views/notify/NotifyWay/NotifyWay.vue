@@ -12,7 +12,7 @@
         </el-select>
       </div>
       <div class="filter search">
-        <el-input v-model="formData.name" style="width: 200px" :placeholder="$t('notifyWay.namePlaceholder')">
+        <el-input v-model="formData.name" style="width: 200px" :placeholder="$t('notifyWay.namePlaceholder')" @keyup.enter="search">
           <template #suffix>
             <el-button :icon="Search" @click="search" />
           </template>

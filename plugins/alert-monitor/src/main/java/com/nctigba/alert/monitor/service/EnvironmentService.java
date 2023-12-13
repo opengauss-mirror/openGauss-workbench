@@ -1,72 +1,46 @@
 /*
- * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ *  Copyright (c) GBA-NCTI-ISDC. 2022-2024.
+ *
+ *  openGauss DataKit is licensed under Mulan PSL v2.
+ *  You can use this software according to the terms and conditions of the Mulan PSL v2.
+ *  You may obtain a copy of Mulan PSL v2 at:
+ *
+ *  http://license.coscl.org.cn/MulanPSL2
+ *
+ *  THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ *  EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ *  MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ *  See the Mulan PSL v2 for more details.
+ *  -------------------------------------------------------------------------
+ *
+ *  EnvironmentService.java
+ *
+ *  IDENTIFICATION
+ *  plugins/alert-monitor/src/main/java/com/nctigba/alert/monitor/service/EnvironmentService.java
+ *
+ *  -------------------------------------------------------------------------
  */
 
 package com.nctigba.alert.monitor.service;
 
-import cn.hutool.core.collection.CollectionUtil;
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.gitee.starblues.bootstrap.annotation.AutowiredType;
-import org.opengauss.admin.common.exception.ServiceException;
-import org.opengauss.admin.system.plugin.facade.OpsFacade;
-import com.nctigba.alert.monitor.config.annotation.AlertContentParam;
-import com.nctigba.alert.monitor.dto.AlertContentParamDto;
-import com.nctigba.alert.monitor.entity.NctigbaEnv;
-import com.nctigba.alert.monitor.mapper.NctigbaEnvMapper;
-import com.nctigba.alert.monitor.utils.MessageSourceUtil;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
-import java.lang.reflect.Field;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
+ * EnvironmentService
+ *
  * @author wuyuebin
- * @date 2023/6/16 15:42
- * @description
+ * @since  2023/6/16 15:42
  */
-@Service
-public class EnvironmentService {
-    @Autowired
-    private NctigbaEnvMapper envMapper;
+public interface EnvironmentService {
+    /**
+     * get clusters
+     *
+     * @return List
+     */
+    List cluster();
 
-    @Autowired
-    @AutowiredType(AutowiredType.Type.MAIN_PLUGIN)
-    private OpsFacade opsFacade;
-
-    public List cluster() {
-        return opsFacade.listCluster();
-    }
-
-    public void checkPrometheus() {
-        List<NctigbaEnv> env = envMapper
-                .selectList(Wrappers.<NctigbaEnv>lambdaQuery().eq(NctigbaEnv::getType, NctigbaEnv.Type.PROMETHEUS));
-        if (CollectionUtil.isEmpty(env)) {
-            throw new ServiceException("the promethues is uninstall");
-        }
-    }
-
-    public Map<String, Map<String, String>> getAlertContentParam(String type) {
-        Map<String, Map<String, String>> map = new HashMap<>();
-        Class<AlertContentParamDto> clazz = AlertContentParamDto.class;
-        Field[] declaredFields = clazz.getDeclaredFields();
-        for (Field field : declaredFields) {
-            if (field.isAnnotationPresent(AlertContentParam.class)) {
-                Map<String, String> param = new HashMap<>();
-                AlertContentParam annotation = field.getAnnotation(AlertContentParam.class);
-                List<String> groups = Arrays.asList(annotation.group());
-                if (!groups.contains(type)) {
-                    continue;
-                }
-                boolean isI18nPreVal = annotation.isI18nPreVal();
-                param.put("name", MessageSourceUtil.get(annotation.name()));
-                param.put("preVal", isI18nPreVal ? MessageSourceUtil.get(annotation.preVal()) : annotation.preVal());
-                map.put(field.getName(), param);
-            }
-        }
-        return map;
-    }
+    /**
+     * checkPrometheus
+     */
+    void checkPrometheus();
 }

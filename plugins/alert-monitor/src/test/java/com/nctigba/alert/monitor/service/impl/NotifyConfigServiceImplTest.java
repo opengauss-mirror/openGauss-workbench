@@ -1,5 +1,24 @@
 /*
- * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ *  Copyright (c) GBA-NCTI-ISDC. 2022-2024.
+ *
+ *  openGauss DataKit is licensed under Mulan PSL v2.
+ *  You can use this software according to the terms and conditions of the Mulan PSL v2.
+ *  You may obtain a copy of Mulan PSL v2 at:
+ *
+ *  http://license.coscl.org.cn/MulanPSL2
+ *
+ *  THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ *  EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ *  MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ *  See the Mulan PSL v2 for more details.
+ *  -------------------------------------------------------------------------
+ *
+ *  NotifyConfigServiceImplTest.java
+ *
+ *  IDENTIFICATION
+ *  plugins/alert-monitor/src/test/java/com/nctigba/alert/monitor/service/impl/NotifyConfigServiceImplTest.java
+ *
+ *  -------------------------------------------------------------------------
  */
 
 package com.nctigba.alert.monitor.service.impl;
@@ -7,16 +26,14 @@ package com.nctigba.alert.monitor.service.impl;
 import com.baomidou.mybatisplus.core.MybatisConfiguration;
 import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
 import com.nctigba.alert.monitor.constant.CommonConstants;
-import com.nctigba.alert.monitor.entity.NotifyConfig;
-import com.nctigba.alert.monitor.entity.NotifyTemplate;
-import com.nctigba.alert.monitor.entity.NotifyWay;
+import com.nctigba.alert.monitor.model.entity.NotifyConfigDO;
+import com.nctigba.alert.monitor.model.entity.NotifyTemplateDO;
+import com.nctigba.alert.monitor.model.entity.NotifyWayDO;
 import com.nctigba.alert.monitor.mapper.NotifyConfigMapper;
 import com.nctigba.alert.monitor.mapper.NotifyTemplateMapper;
 import com.nctigba.alert.monitor.mapper.NotifyWayMapper;
-import com.nctigba.alert.monitor.model.NotifyConfigReq;
-import com.nctigba.alert.monitor.service.DingTalkService;
-import com.nctigba.alert.monitor.service.EmailService;
-import com.nctigba.alert.monitor.service.WeComService;
+import com.nctigba.alert.monitor.model.query.NotifyConfigQuery;
+import com.nctigba.alert.monitor.service.impl.communication.WeComServiceImpl;
 import org.apache.ibatis.builder.MapperBuilderAssistant;
 import org.junit.Before;
 import org.junit.Test;
@@ -54,73 +71,69 @@ public class NotifyConfigServiceImplTest {
     @Mock
     private NotifyConfigMapper baseMapper;
     @Mock
-    private EmailService emailService;
-    @Mock
     private NotifyWayMapper notifyWayMapper;
     @Mock
     private NotifyTemplateMapper notifyTemplateMapper;
     @Mock
     private SmartValidator smartValidator;
     @Mock
-    private WeComService weComService;
-    @Mock
-    private DingTalkService dingTalkService;
+    private WeComServiceImpl weComServiceImpl;
 
     @Before
     public void before() {
         MockitoAnnotations.initMocks(this);
         TableInfoHelper.initTableInfo(new MapperBuilderAssistant(new MybatisConfiguration(), ""),
-            NotifyConfig.class);
+            NotifyConfigDO.class);
     }
 
     @Test
     public void testGetAllListNull() {
-        List<NotifyConfig> list = new ArrayList<>();
+        List<NotifyConfigDO> list = new ArrayList<>();
         when(baseMapper.selectList(any())).thenReturn(list);
-        List<NotifyConfig> result = notifyConfigService.getAllList();
+        List<NotifyConfigDO> result = notifyConfigService.getAllList();
         verify(baseMapper, times(1)).selectList(any());
         assertEquals(list.size(), result.size());
     }
 
     @Test
     public void testGetAllList() {
-        NotifyConfig notifyConfig = new NotifyConfig();
-        notifyConfig.setType("email");
-        List<NotifyConfig> list = new ArrayList<>();
-        list.add(notifyConfig);
+        NotifyConfigDO notifyConfigDO = new NotifyConfigDO();
+        notifyConfigDO.setType("email");
+        List<NotifyConfigDO> list = new ArrayList<>();
+        list.add(notifyConfigDO);
         when(baseMapper.selectList(any())).thenReturn(list);
 
-        List<NotifyConfig> notifyConfigList = notifyConfigService.getAllList();
+        List<NotifyConfigDO> notifyConfigDOList = notifyConfigService.getAllList();
 
         verify(baseMapper, times(1)).selectList(any());
-        assertEquals(list, notifyConfigList);
+        assertEquals(list, notifyConfigDOList);
     }
 
     @Test(expected = ServiceException.class)
     public void testSaveListThrowException() {
-        List<NotifyConfig> list = new ArrayList<>();
+        List<NotifyConfigDO> list = new ArrayList<>();
         notifyConfigService.saveList(list);
     }
 
     @Test
     public void testSaveList1() {
-        List<NotifyConfig> list = new ArrayList<>();
-        NotifyConfig notifyConfig1 = new NotifyConfig();
-        notifyConfig1.setType(CommonConstants.EMAIL).setId(1L).setEnable(CommonConstants.ENABLE);
-        list.add(notifyConfig1);
-        NotifyConfig notifyConfig2 = new NotifyConfig();
-        notifyConfig2.setType(CommonConstants.WE_COM).setId(2L).setEnable(CommonConstants.ENABLE);
-        list.add(notifyConfig2);
-        NotifyConfig notifyConfig3 = new NotifyConfig();
-        notifyConfig3.setType(CommonConstants.DING_TALK).setId(3L).setEnable(CommonConstants.ENABLE);
-        list.add(notifyConfig3);
+        List<NotifyConfigDO> list = new ArrayList<>();
+        NotifyConfigDO notifyConfigDO1 = new NotifyConfigDO();
+        notifyConfigDO1.setType(CommonConstants.EMAIL).setId(1L).setEnable(CommonConstants.ENABLE);
+        list.add(notifyConfigDO1);
+        NotifyConfigDO notifyConfigDO2 = new NotifyConfigDO();
+        notifyConfigDO2.setType(CommonConstants.WE_COM).setId(2L).setEnable(CommonConstants.ENABLE);
+        list.add(notifyConfigDO2);
+        NotifyConfigDO notifyConfigDO3 = new NotifyConfigDO();
+        notifyConfigDO3.setType(CommonConstants.DING_TALK).setId(3L).setEnable(CommonConstants.ENABLE);
+        list.add(notifyConfigDO3);
 
         doNothing().when(smartValidator).validate(any(), any());
 
-        List<NotifyConfig> oldList = new ArrayList<>();
-        NotifyConfig notifyConfig = new NotifyConfig().setType(CommonConstants.EMAIL).setId(1L)
+        List<NotifyConfigDO> oldList = new ArrayList<>();
+        NotifyConfigDO notifyConfigDO = new NotifyConfigDO().setType(CommonConstants.EMAIL).setId(1L)
             .setEnable(CommonConstants.ENABLE);
-        oldList.add(notifyConfig);
+        oldList.add(notifyConfigDO);
         when(baseMapper.selectList(any())).thenReturn(oldList);
         when(notifyConfigService.saveOrUpdateBatch(anyList())).thenReturn(true);
 
@@ -131,23 +144,23 @@ public class NotifyConfigServiceImplTest {
 
     @Test
     public void testSaveList2() {
-        List<NotifyConfig> list = new ArrayList<>();
-        NotifyConfig notifyConfig1 = new NotifyConfig();
-        notifyConfig1.setType(CommonConstants.EMAIL).setId(1L).setEnable(CommonConstants.DISABLE);
-        list.add(notifyConfig1);
-        NotifyConfig notifyConfig2 = new NotifyConfig();
-        notifyConfig2.setType(CommonConstants.WE_COM).setId(2L).setEnable(CommonConstants.DISABLE);
-        list.add(notifyConfig2);
-        NotifyConfig notifyConfig3 = new NotifyConfig();
-        notifyConfig3.setType(CommonConstants.DING_TALK).setId(3L).setEnable(CommonConstants.DISABLE);
-        list.add(notifyConfig3);
+        List<NotifyConfigDO> list = new ArrayList<>();
+        NotifyConfigDO notifyConfigDO1 = new NotifyConfigDO();
+        notifyConfigDO1.setType(CommonConstants.EMAIL).setId(1L).setEnable(CommonConstants.DISABLE);
+        list.add(notifyConfigDO1);
+        NotifyConfigDO notifyConfigDO2 = new NotifyConfigDO();
+        notifyConfigDO2.setType(CommonConstants.WE_COM).setId(2L).setEnable(CommonConstants.DISABLE);
+        list.add(notifyConfigDO2);
+        NotifyConfigDO notifyConfigDO3 = new NotifyConfigDO();
+        notifyConfigDO3.setType(CommonConstants.DING_TALK).setId(3L).setEnable(CommonConstants.DISABLE);
+        list.add(notifyConfigDO3);
 
         doNothing().when(smartValidator).validate(any(), any());
 
-        List<NotifyConfig> oldList = new ArrayList<>();
-        NotifyConfig notifyConfig = new NotifyConfig().setType(CommonConstants.EMAIL).setId(1L)
+        List<NotifyConfigDO> oldList = new ArrayList<>();
+        NotifyConfigDO notifyConfigDO = new NotifyConfigDO().setType(CommonConstants.EMAIL).setId(1L)
             .setEnable(CommonConstants.ENABLE);
-        oldList.add(notifyConfig);
+        oldList.add(notifyConfigDO);
         when(baseMapper.selectList(any())).thenReturn(oldList);
         when(notifyConfigService.saveOrUpdateBatch(anyList())).thenReturn(true);
 
@@ -157,71 +170,34 @@ public class NotifyConfigServiceImplTest {
     }
 
     @Test
-    public void testTestEmailConfig() {
-        NotifyConfigReq notifyConfigReq = new NotifyConfigReq();
-        notifyConfigReq.setType(CommonConstants.EMAIL);
-        notifyConfigReq.setNotifyWayId(1L);
-        NotifyWay notifyWay = new NotifyWay().setNotifyTemplateId(1L);
-        when(notifyWayMapper.selectById(anyLong())).thenReturn(notifyWay);
-        NotifyTemplate notifyTemplate = new NotifyTemplate().setId(1L);
-        when(notifyTemplateMapper.selectById(anyLong())).thenReturn(notifyTemplate);
-        doNothing().when(emailService).sendTest(notifyConfigReq, notifyWay.getEmail(), notifyTemplate.getNotifyTitle(),
-            notifyTemplate.getNotifyContent());
-
-        notifyConfigService.testConfig(notifyConfigReq);
-
-        verify(notifyWayMapper, times(1)).selectById(anyLong());
-        verify(notifyTemplateMapper, times(1)).selectById(anyLong());
-        verify(emailService, times(1)).sendTest(notifyConfigReq, notifyWay.getEmail(), notifyTemplate.getNotifyTitle(),
-            notifyTemplate.getNotifyContent());
-    }
-
-    @Test
     public void testTestWeComConfig() {
-        NotifyConfigReq notifyConfigReq = new NotifyConfigReq();
+        NotifyConfigQuery notifyConfigReq = new NotifyConfigQuery();
         notifyConfigReq.setType(CommonConstants.WE_COM);
         notifyConfigReq.setNotifyWayId(1L);
-        NotifyWay notifyWay = new NotifyWay().setNotifyTemplateId(1L);
-        when(notifyWayMapper.selectById(anyLong())).thenReturn(notifyWay);
-        NotifyTemplate notifyTemplate = new NotifyTemplate().setId(1L);
-        when(notifyTemplateMapper.selectById(anyLong())).thenReturn(notifyTemplate);
-        when(weComService.sendTest(notifyConfigReq, notifyWay, notifyTemplate.getNotifyContent())).thenReturn(true);
+        NotifyWayDO notifyWayDO = new NotifyWayDO().setNotifyTemplateId(1L);
+        when(notifyWayMapper.selectById(anyLong())).thenReturn(notifyWayDO);
+        NotifyTemplateDO notifyTemplateDO = new NotifyTemplateDO().setId(1L);
+        when(notifyTemplateMapper.selectById(anyLong())).thenReturn(notifyTemplateDO);
+        when(weComServiceImpl.sendTest(notifyConfigReq, notifyWayDO, notifyTemplateDO.getNotifyContent()))
+            .thenReturn(true);
 
         notifyConfigService.testConfig(notifyConfigReq);
 
         verify(notifyWayMapper, times(1)).selectById(anyLong());
         verify(notifyTemplateMapper, times(1)).selectById(anyLong());
-        verify(weComService, times(1)).sendTest(notifyConfigReq, notifyWay, notifyTemplate.getNotifyContent());
-    }
-
-    @Test
-    public void testTestDingTalkConfig() {
-        NotifyConfigReq notifyConfigReq = new NotifyConfigReq();
-        notifyConfigReq.setType(CommonConstants.DING_TALK);
-        notifyConfigReq.setNotifyWayId(1L);
-        NotifyWay notifyWay = new NotifyWay().setNotifyTemplateId(1L);
-        when(notifyWayMapper.selectById(anyLong())).thenReturn(notifyWay);
-        NotifyTemplate notifyTemplate = new NotifyTemplate().setId(1L);
-        when(notifyTemplateMapper.selectById(anyLong())).thenReturn(notifyTemplate);
-        when(dingTalkService.sendTest(notifyConfigReq, notifyWay, notifyTemplate.getNotifyContent())).thenReturn(true);
-
-        notifyConfigService.testConfig(notifyConfigReq);
-
-        verify(notifyWayMapper, times(1)).selectById(anyLong());
-        verify(notifyTemplateMapper, times(1)).selectById(anyLong());
-        verify(dingTalkService, times(1)).sendTest(notifyConfigReq, notifyWay, notifyTemplate.getNotifyContent());
+        verify(weComServiceImpl, times(1)).sendTest(notifyConfigReq, notifyWayDO, notifyTemplateDO.getNotifyContent());
     }
 
     @Test(expected = ServiceException.class)
     public void testTestConfigThrowException() {
-        NotifyConfigReq notifyConfigReq = new NotifyConfigReq();
+        NotifyConfigQuery notifyConfigReq = new NotifyConfigQuery();
         notifyConfigReq.setNotifyWayId(1L);
         notifyConfigReq.setType("other");
-        NotifyWay notifyWay = new NotifyWay().setNotifyTemplateId(1L);
-        when(notifyWayMapper.selectById(anyLong())).thenReturn(notifyWay);
+        NotifyWayDO notifyWayDO = new NotifyWayDO().setNotifyTemplateId(1L);
+        when(notifyWayMapper.selectById(anyLong())).thenReturn(notifyWayDO);
 
-        NotifyTemplate notifyTemplate = new NotifyTemplate().setId(1L);
-        when(notifyTemplateMapper.selectById(anyLong())).thenReturn(notifyTemplate);
+        NotifyTemplateDO notifyTemplateDO = new NotifyTemplateDO().setId(1L);
+        when(notifyTemplateMapper.selectById(anyLong())).thenReturn(notifyTemplateDO);
 
         notifyConfigService.testConfig(notifyConfigReq);
 

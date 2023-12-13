@@ -90,7 +90,7 @@ import { useI18n } from "vue-i18n";
 import { cloneDeep } from 'lodash-es';
 import type { FormInstance, FormRules } from 'element-plus'
 import SvgIcon from "@/components/SvgIcon.vue";
-import { parseContent } from "@/utils/commonUtil"
+import { parseContent, getNotifyContentParam } from "@/utils/commonUtil"
 
 const alertContentParam = ref<any>()
 const paramNameList = ref<any>()
@@ -214,27 +214,6 @@ const cancel = () => {
   formData.value = cloneDeep(initFormData)
   emit("cancelTemplate")
 }
-const requestNotifyContentParam = () => {
-  request.get(`/api/v1/environment/alertContentParam`, { type: 'notify' }).then((res: any) => {
-    if (res && res.code === 200) {
-      alertContentParam.value = res.data
-      paramNameList.value = Object.keys(alertContentParam.value)
-      if (alertContentParam.value && formData.value.notifyContent) {
-        let param = {}
-        let keys = Object.keys(alertContentParam.value);
-        for (let key of keys) {
-          Object.defineProperty(param, key, {
-            value: alertContentParam.value[key]['preVal'],
-            writable: true,
-            enumerable: true,
-            configurable: true
-          });
-        }
-        previewContent.value = parseContent(formData.value.notifyContent, param)
-      }
-    }
-  })
-}
 const reset = () => {
   formData.value.notifyContent = notifyContent.value
   preview()
@@ -258,7 +237,22 @@ const preview = () => {
 }
 
 onMounted(() => {
-  requestNotifyContentParam()
+  alertContentParam.value = getNotifyContentParam()
+  paramNameList.value = Object.keys(alertContentParam.value)
+  if (alertContentParam.value && formData.value.notifyContent) {
+    let param = {}
+    let keys = Object.keys(alertContentParam.value);
+    for (let key of keys) {
+      Object.defineProperty(param, key, {
+        value: alertContentParam.value[key]['preVal'],
+        writable: true,
+        enumerable: true,
+        configurable: true
+      });
+    }
+    previewContent.value = parseContent(formData.value.notifyContent, param)
+  }
+
   if (props.id) {
     requestData(props.id)
   }

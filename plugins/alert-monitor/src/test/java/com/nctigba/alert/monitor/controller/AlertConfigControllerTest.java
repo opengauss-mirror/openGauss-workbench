@@ -1,10 +1,29 @@
 /*
- * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ *  Copyright (c) GBA-NCTI-ISDC. 2022-2024.
+ *
+ *  openGauss DataKit is licensed under Mulan PSL v2.
+ *  You can use this software according to the terms and conditions of the Mulan PSL v2.
+ *  You may obtain a copy of Mulan PSL v2 at:
+ *
+ *  http://license.coscl.org.cn/MulanPSL2
+ *
+ *  THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ *  EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ *  MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ *  See the Mulan PSL v2 for more details.
+ *  -------------------------------------------------------------------------
+ *
+ *  AlertConfigControllerTest.java
+ *
+ *  IDENTIFICATION
+ *  plugins/alert-monitor/src/test/java/com/nctigba/alert/monitor/controller/AlertConfigControllerTest.java
+ *
+ *  -------------------------------------------------------------------------
  */
 
 package com.nctigba.alert.monitor.controller;
 
-import com.nctigba.alert.monitor.entity.AlertConfig;
+import com.nctigba.alert.monitor.model.entity.AlertConfigDO;
 import com.nctigba.alert.monitor.service.AlertConfigService;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -37,17 +56,17 @@ public class AlertConfigControllerTest {
 
     @Test
     public void testGetAlertConfWithNull() {
-        List<AlertConfig> list = new ArrayList<>();
+        List<AlertConfigDO> list = new ArrayList<>();
         when(alertConfigService.list()).thenReturn(list);
         AjaxResult result = alertConfigController.getAlertConf();
         verify(alertConfigService, times(1)).list();
-        assertEquals(new AlertConfig(), result.get("data"));
+        assertEquals(new AlertConfigDO(), result.get("data"));
     }
     @Test
     public void testGetAlertConf() {
-        List<AlertConfig> list = new ArrayList<>();
-        AlertConfig alertConfig = new AlertConfig();
-        list.add(alertConfig);
+        List<AlertConfigDO> list = new ArrayList<>();
+        AlertConfigDO alertConfigDO = new AlertConfigDO();
+        list.add(alertConfigDO);
         when(alertConfigService.list()).thenReturn(list);
         AjaxResult result = alertConfigController.getAlertConf();
         verify(alertConfigService, times(1)).list();
@@ -56,9 +75,9 @@ public class AlertConfigControllerTest {
 
     @Test
     public void testSaveAlertConf() {
-        doNothing().when(alertConfigService).saveAlertConf(any(AlertConfig.class));
-        AlertConfig alertConfig = new AlertConfig();
-        AjaxResult result = alertConfigController.saveAlertConf(alertConfig);
+        doNothing().when(alertConfigService).saveAlertConf(any(AlertConfigDO.class));
+        AlertConfigDO alertConfigDO = new AlertConfigDO();
+        AjaxResult result = alertConfigController.saveAlertConf(alertConfigDO);
         assertEquals(AjaxResult.success(), result);
     }
 }

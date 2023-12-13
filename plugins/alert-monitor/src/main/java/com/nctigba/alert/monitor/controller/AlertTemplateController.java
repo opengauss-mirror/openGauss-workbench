@@ -1,5 +1,24 @@
 /*
- * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ *  Copyright (c) GBA-NCTI-ISDC. 2022-2024.
+ *
+ *  openGauss DataKit is licensed under Mulan PSL v2.
+ *  You can use this software according to the terms and conditions of the Mulan PSL v2.
+ *  You may obtain a copy of Mulan PSL v2 at:
+ *
+ *  http://license.coscl.org.cn/MulanPSL2
+ *
+ *  THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ *  EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ *  MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ *  See the Mulan PSL v2 for more details.
+ *  -------------------------------------------------------------------------
+ *
+ *  AlertTemplateController.java
+ *
+ *  IDENTIFICATION
+ *  plugins/alert-monitor/src/main/java/com/nctigba/alert/monitor/controller/AlertTemplateController.java
+ *
+ *  -------------------------------------------------------------------------
  */
 
 package com.nctigba.alert.monitor.controller;
@@ -7,13 +26,14 @@ package com.nctigba.alert.monitor.controller;
 import cn.hutool.core.collection.CollectionUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.nctigba.alert.monitor.constant.CommonConstants;
-import com.nctigba.alert.monitor.dto.AlertTemplateDto;
-import com.nctigba.alert.monitor.entity.AlertTemplate;
-import com.nctigba.alert.monitor.entity.AlertTemplateRule;
-import com.nctigba.alert.monitor.model.AlertTemplateReq;
+import com.nctigba.alert.monitor.model.dto.AlertTemplateDTO;
+import com.nctigba.alert.monitor.model.dto.AlertTemplateRuleDTO;
+import com.nctigba.alert.monitor.model.entity.AlertTemplateDO;
+import com.nctigba.alert.monitor.model.entity.AlertTemplateRuleDO;
+import com.nctigba.alert.monitor.model.query.AlertTemplateQuery;
 import com.nctigba.alert.monitor.service.AlertTemplateRuleService;
 import com.nctigba.alert.monitor.service.AlertTemplateService;
-import com.nctigba.alert.monitor.utils.MessageSourceUtil;
+import com.nctigba.alert.monitor.util.MessageSourceUtils;
 import org.opengauss.admin.common.core.domain.AjaxResult;
 import org.opengauss.admin.common.core.page.TableDataInfo;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,44 +70,44 @@ public class AlertTemplateController extends BaseController {
 
     @GetMapping("")
     public TableDataInfo getTemplatePage(String templateName) {
-        Page<AlertTemplate> page = templateService.getTemplatePage(templateName, startPage());
+        Page<AlertTemplateDO> page = templateService.getTemplatePage(templateName, startPage());
         return getDataTable(page);
     }
 
     @GetMapping("/list")
     public AjaxResult getTemplateList() {
-        List<AlertTemplate> list = templateService.getTemplateList();
+        List<AlertTemplateDO> list = templateService.getTemplateList();
         return AjaxResult.success(list);
     }
 
     @GetMapping("/{id}")
     public AjaxResult getTemplateDto(@PathVariable Long id) {
-        AlertTemplateDto templateDto = templateService.getTemplate(id);
+        AlertTemplateDTO templateDto = templateService.getTemplate(id);
         return AjaxResult.success(templateDto);
     }
 
     @GetMapping("/{id}/rule")
     public TableDataInfo getTemplateRulePage(@PathVariable Long id, String ruleName) {
-        Page<AlertTemplateRule> page = templateService.getTemplateRulePage(id, ruleName, startPage());
+        Page<AlertTemplateRuleDO> page = templateService.getTemplateRulePage(id, ruleName, startPage());
         return getDataTable(page);
     }
 
     @GetMapping("/{id}/rule/list")
     public AjaxResult getTemplateRuleListById(@PathVariable Long id) {
-        List<AlertTemplateRule> list = templateService.getTemplateRuleListById(id);
+        List<AlertTemplateRuleDO> list = templateService.getTemplateRuleListById(id);
         return AjaxResult.success(list);
     }
 
     @GetMapping("/ruleList/{templateRuleId}")
     public AjaxResult getTemplateRule(@PathVariable Long templateRuleId) {
-        AlertTemplateRule alertTemplateRule = templateRuleService.getTemplateRule(templateRuleId);
-        return AjaxResult.success(alertTemplateRule);
+        AlertTemplateRuleDO alertTemplateRuleDO = templateRuleService.getTemplateRule(templateRuleId);
+        return AjaxResult.success(alertTemplateRuleDO);
     }
 
     @PostMapping("")
-    public AjaxResult saveTemplate(@RequestBody @Valid AlertTemplateReq templateReq) {
-        AlertTemplate alertTemplate = templateService.saveTemplate(templateReq);
-        return AjaxResult.success(alertTemplate);
+    public AjaxResult saveTemplate(@RequestBody @Valid AlertTemplateQuery templateReq) {
+        AlertTemplateDO alertTemplateDO = templateService.saveTemplate(templateReq);
+        return AjaxResult.success(alertTemplateDO);
     }
 
     @DeleteMapping
@@ -97,19 +117,19 @@ public class AlertTemplateController extends BaseController {
     }
 
     @PostMapping("/templateRule")
-    public AjaxResult saveTemplateRule(@RequestBody @Validated AlertTemplateRule alertTemplateRule) {
+    public AjaxResult saveTemplateRule(@RequestBody @Validated AlertTemplateRuleDO alertTemplateRuleDO) {
         Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
-        String errorMsg = MessageSourceUtil.get("validateFail");
-        if (alertTemplateRule.getRuleType().equals(CommonConstants.INDEX_RULE)) {
-            Set<ConstraintViolation<AlertTemplateRule>> error = validator.validate(alertTemplateRule,
-                AlertTemplateRule.IndexRuleGroup.class);
+        String errorMsg = MessageSourceUtils.get("validateFail");
+        if (alertTemplateRuleDO.getRuleType().equals(CommonConstants.INDEX_RULE)) {
+            Set<ConstraintViolation<AlertTemplateRuleDO>> error = validator.validate(alertTemplateRuleDO,
+                AlertTemplateRuleDO.IndexRuleGroup.class);
             if (CollectionUtil.isNotEmpty(error)) {
                 String messages = error.stream().map(item -> item.getPropertyPath() + item.getMessage())
                     .collect(Collectors.joining(CommonConstants.DELIMITER));
                 return AjaxResult.error(errorMsg + ":" + messages);
             }
-            if (alertTemplateRule.getIsSilence().equals(CommonConstants.IS_SILENCE)) {
-                error = validator.validate(alertTemplateRule, AlertTemplateRule.SilenceGroup.class);
+            if (alertTemplateRuleDO.getIsSilence().equals(CommonConstants.IS_SILENCE)) {
+                error = validator.validate(alertTemplateRuleDO, AlertTemplateRuleDO.SilenceGroup.class);
                 if (CollectionUtil.isNotEmpty(error)) {
                     String messages = error.stream().map(item -> item.getPropertyPath() + item.getMessage())
                         .collect(Collectors.joining(CommonConstants.DELIMITER));
@@ -117,15 +137,15 @@ public class AlertTemplateController extends BaseController {
                 }
             }
         } else {
-            Set<ConstraintViolation<AlertTemplateRule>> error = validator.validate(alertTemplateRule,
-                AlertTemplateRule.LogRuleGroup.class);
+            Set<ConstraintViolation<AlertTemplateRuleDO>> error = validator.validate(alertTemplateRuleDO,
+                AlertTemplateRuleDO.LogRuleGroup.class);
             if (CollectionUtil.isNotEmpty(error)) {
                 String messages = error.stream().map(item -> item.getPropertyPath() + item.getMessage())
                     .collect(Collectors.joining(CommonConstants.DELIMITER));
                 return AjaxResult.error(errorMsg + ":" + messages);
             }
         }
-        return AjaxResult.success(templateRuleService.saveTemplateRule(alertTemplateRule));
+        return AjaxResult.success(templateRuleService.saveTemplateRule(alertTemplateRuleDO));
     }
 
     /**
@@ -150,5 +170,10 @@ public class AlertTemplateController extends BaseController {
     public AjaxResult disableTemplateRule(@PathVariable Long templateRuleId) {
         templateRuleService.disableTemplateRule(templateRuleId);
         return AjaxResult.success();
+    }
+
+    @GetMapping("/templateRule")
+    public AjaxResult getTemplateRuleByRuleId(@RequestParam Long ruleId) {
+        return AjaxResult.success(templateRuleService.getDtoListByRuleId(ruleId));
     }
 }

@@ -1,15 +1,35 @@
 /*
- * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ *  Copyright (c) GBA-NCTI-ISDC. 2022-2024.
+ *
+ *  openGauss DataKit is licensed under Mulan PSL v2.
+ *  You can use this software according to the terms and conditions of the Mulan PSL v2.
+ *  You may obtain a copy of Mulan PSL v2 at:
+ *
+ *  http://license.coscl.org.cn/MulanPSL2
+ *
+ *  THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ *  EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ *  MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ *  See the Mulan PSL v2 for more details.
+ *  -------------------------------------------------------------------------
+ *
+ *  AlertRuleService.java
+ *
+ *  IDENTIFICATION
+ *  plugins/alert-monitor/src/main/java/com/nctigba/alert/monitor/service/AlertRuleService.java
+ *
+ *  -------------------------------------------------------------------------
  */
 
 package com.nctigba.alert.monitor.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.nctigba.alert.monitor.entity.AlertRule;
-import com.nctigba.alert.monitor.entity.AlertRuleItemExpSrc;
-import com.nctigba.alert.monitor.entity.AlertRuleItemSrc;
-import com.nctigba.alert.monitor.model.RuleReq;
+import com.nctigba.alert.monitor.model.entity.AlertRuleDO;
+import com.nctigba.alert.monitor.model.entity.AlertRuleItemExpSrcDO;
+import com.nctigba.alert.monitor.model.entity.AlertRuleItemSrcDO;
+import com.nctigba.alert.monitor.model.dto.AlertRuleParamDTO;
+import com.nctigba.alert.monitor.model.query.RuleQuery;
 
 import java.util.List;
 
@@ -18,19 +38,19 @@ import java.util.List;
  * @date 2023/5/9 10:08
  * @description
  */
-public interface AlertRuleService extends IService<AlertRule> {
-    Page<AlertRule> getRulePage(RuleReq ruleReq, Page page);
+public interface AlertRuleService extends IService<AlertRuleDO> {
+    Page<AlertRuleDO> getRulePage(RuleQuery ruleQuery, Page page);
 
-    AlertRule getRuleById(Long id);
+    AlertRuleDO getRuleById(Long id);
 
-    List<AlertRule> getRuleList();
+    List<AlertRuleDO> getRuleList();
 
     /**
      * getRuleItemSrcList
      *
      * @return List<AlertRuleItemSrc>
      */
-    List<AlertRuleItemSrc> getRuleItemSrcList();
+    List<AlertRuleItemSrcDO> getRuleItemSrcList();
 
     /**
      * getRuleItemExpSrcListByRuleItemSrcId
@@ -38,14 +58,14 @@ public interface AlertRuleService extends IService<AlertRule> {
      * @param ruleItemSrcId Long
      * @return List<AlertRuleItemExpSrc>
      */
-    List<AlertRuleItemExpSrc> getRuleItemExpSrcListByRuleItemSrcId(Long ruleItemSrcId);
+    List<AlertRuleItemExpSrcDO> getRuleItemExpSrcListByRuleItemSrcId(Long ruleItemSrcId);
 
     /**
      * saveRule
      *
      * @param alertRule AlertRule
      */
-    void saveRule(AlertRule alertRule);
+    void saveRule(AlertRuleParamDTO alertRule);
 
     /**
      * delete rule by ID

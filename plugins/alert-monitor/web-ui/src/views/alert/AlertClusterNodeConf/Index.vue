@@ -13,10 +13,11 @@
     <div class="search-form">
       <div class="filter">
         <el-button type="primary" @click="addClusterNodeConf">{{ t('AlertClusterNodeConf.confBtn') }}</el-button>
+        <el-button type="primary" @click="unbindClusterNodeConfs">{{ t('AlertClusterNodeConf.unbindConfBtn') }}</el-button>
       </div>
       <div class="seperator"></div>
       <div class="filter">
-        <el-input v-model="formData.nodeName" style="width: 200px"
+        <el-input v-model="formData.nodeName" style="width: 200px" @keyup.enter="search"
           :placeholder="t('AlertClusterNodeConf.nodeNamePlaceholder')">
           <template #suffix>
             <el-button :icon="Search" @click="search" />
@@ -34,6 +35,8 @@
           <template #default="scope">
             <el-button link type="primary" size="small" @click="editClusterNodeConf(scope.row)">{{
               t('AlertClusterNodeConf.confBtn') }}</el-button>
+              <el-button link type="primary" size="small" @click="unbindClusterNodeConf(scope.row)">{{
+              t('AlertClusterNodeConf.unbindConfBtn') }}</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -49,7 +52,7 @@ import { Search } from "@element-plus/icons-vue";
 import "element-plus/es/components/message-box/style/index";
 import { useRequest } from "vue-request";
 import request from "@/request";
-import { ElMessage } from "element-plus";
+import { ElMessage, ElMessageBox } from "element-plus";
 import { useI18n } from "vue-i18n";
 import { ref, onMounted } from 'vue'
 import Detail from "@/views/alert/AlertClusterNodeConf/Detail.vue"
@@ -69,7 +72,7 @@ const addClusterNodeConf = () => {
   const rows = table.value.getSelectionRows()
   if (rows.length === 0) {
     ElMessage({
-      message: t('alertRecord.tableDataSelectTip'),
+      message: t('AlertClusterNodeConf.tableDataSelectTip'),
       type: 'warning',
     })
   } else {
@@ -81,6 +84,77 @@ const editClusterNodeConf = (row: any) => {
   selectedDatas.value = []
   selectedDatas.value.push(row)
   showMain.value = false
+}
+const unbindClusterNodeConf = (row: any) => {
+  if (!row.templateId) {
+    ElMessage({
+      message: t('AlertClusterNodeConf.tableDataTip'),
+      type: 'warning',
+    })
+    return;
+  }
+  ElMessageBox.confirm(
+    t('AlertClusterNodeConf.unbindTip'),
+    t('app.tip'),
+    {
+      confirmButtonText: t('app.confirm'),
+      cancelButtonText: t('app.cancel'),
+      type: 'warning',
+    }
+  ).then(() => {
+    let clusterNodeIds = row.clusterNodeId
+    request.delete(`/api/v1/alertClusterNodeConf/unbind?clusterNodeIds=${clusterNodeIds}`).then((res: any) => {
+      if (res && res.code === 200) {
+        ElMessage({
+          type: 'success',
+          message: t('AlertClusterNodeConf.unbindSuccess'),
+        })
+        requestData()
+      } else {
+        ElMessage({
+          type: 'error',
+          message: t('AlertClusterNodeConf.unbindFail') + (res && res.msg ? "," + res.msg : ""),
+        })
+      }
+    })
+  }).catch(() => {})
+}
+
+const unbindClusterNodeConfs = () => {
+  let rows = table.value.getSelectionRows() || []
+  rows = rows.filter(item => item.templateId)
+  if (rows.length === 0) {
+    ElMessage({
+      message: t('AlertClusterNodeConf.tableDataSelectTip2'),
+      type: 'warning',
+    })
+    return;
+  } 
+  ElMessageBox.confirm(
+    t('AlertClusterNodeConf.unbindTip'),
+    t('app.tip'),
+    {
+      confirmButtonText: t('app.confirm'),
+      cancelButtonText: t('app.cancel'),
+      type: 'warning',
+    }
+  ).then(() => {
+    let clusterNodeIds = rows.map(item => item.clusterNodeId).join(",")
+    request.delete(`/api/v1/alertClusterNodeConf/unbind?clusterNodeIds=${clusterNodeIds}`).then((res: any) => {
+      if (res && res.code === 200) {
+        ElMessage({
+          type: 'success',
+          message: t('AlertClusterNodeConf.unbindSuccess'),
+        })
+        requestData()
+      } else {
+        ElMessage({
+          type: 'error',
+          message: t('AlertClusterNodeConf.unbindFail') + (res && res.msg ? "," + res.msg : ""),
+        })
+      }
+    })
+  }).catch(() => {})
 }
 
 const updateConfigSuccess = () => {

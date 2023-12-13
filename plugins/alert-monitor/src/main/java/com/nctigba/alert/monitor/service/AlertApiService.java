@@ -1,255 +1,37 @@
 /*
- * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ *  Copyright (c) GBA-NCTI-ISDC. 2022-2024.
+ *
+ *  openGauss DataKit is licensed under Mulan PSL v2.
+ *  You can use this software according to the terms and conditions of the Mulan PSL v2.
+ *  You may obtain a copy of Mulan PSL v2 at:
+ *
+ *  http://license.coscl.org.cn/MulanPSL2
+ *
+ *  THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ *  EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ *  MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ *  See the Mulan PSL v2 for more details.
+ *  -------------------------------------------------------------------------
+ *
+ *  AlertApiService.java
+ *
+ *  IDENTIFICATION
+ *  plugins/alert-monitor/src/main/java/com/nctigba/alert/monitor/service/AlertApiService.java
+ *
+ *  -------------------------------------------------------------------------
  */
 
 package com.nctigba.alert.monitor.service;
 
-import cn.hutool.core.bean.BeanUtil;
-import cn.hutool.core.collection.CollectionUtil;
-import cn.hutool.core.util.StrUtil;
-import cn.hutool.json.JSONObject;
-import cn.hutool.json.JSONUtil;
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.nctigba.alert.monitor.constant.CommonConstants;
-import com.nctigba.alert.monitor.dto.AlertContentParamDto;
-import com.nctigba.alert.monitor.dto.NotifySnmpDto;
-import com.nctigba.alert.monitor.entity.AlertRecord;
-import com.nctigba.alert.monitor.entity.AlertTemplate;
-import com.nctigba.alert.monitor.entity.AlertTemplateRule;
-import com.nctigba.alert.monitor.entity.NotifyMessage;
-import com.nctigba.alert.monitor.entity.NotifyTemplate;
-import com.nctigba.alert.monitor.entity.NotifyWay;
-import com.nctigba.alert.monitor.mapper.AlertRecordMapper;
-import com.nctigba.alert.monitor.mapper.AlertTemplateMapper;
-import com.nctigba.alert.monitor.mapper.AlertTemplateRuleMapper;
-import com.nctigba.alert.monitor.mapper.NotifyMessageMapper;
-import com.nctigba.alert.monitor.mapper.NotifyTemplateMapper;
-import com.nctigba.alert.monitor.mapper.NotifyWayMapper;
-import com.nctigba.alert.monitor.model.api.AlertApiReq;
-import com.nctigba.alert.monitor.model.api.AlertLabels;
-import com.nctigba.alert.monitor.utils.AlertContentParamUtil;
-import com.nctigba.alert.monitor.utils.MessageSourceUtil;
-import com.nctigba.alert.monitor.utils.TextParser;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import com.nctigba.alert.monitor.model.query.api.AlertApiReq;
 
-import java.time.Duration;
-import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
- * @author wuyuebin
- * @date 2023/5/2 10:05
- * @description
+ * AlertApiService
+ *
+ * @since 2023/11/23 16:26
  */
-@Service
-@Slf4j
-public class AlertApiService {
-    @Autowired
-    private AlertRecordMapper alertRecordMapper;
-    @Autowired
-    private AlertTemplateMapper templateMapper;
-    @Autowired
-    private AlertTemplateRuleMapper templateRuleMapper;
-    @Autowired
-    private NotifyWayMapper notifyWayMapper;
-    @Autowired
-    private NotifyTemplateMapper notifyTemplateMapper;
-    @Autowired
-    private NotifyMessageMapper notifyMessageMapper;
-    @Autowired
-    private AlertContentParamUtil contentParamUtil;
-    @Autowired
-    private AlertRecordService recordService;
-
-    @Transactional
-    public void alerts(List<AlertApiReq> alertApiReqList) {
-        for (AlertApiReq alertApiReq : alertApiReqList) {
-            AlertLabels labels = alertApiReq.getLabels();
-            Long templateRuleId = labels.getTemplateRuleId();
-            AlertTemplateRule alertTemplateRule = templateRuleMapper.selectById(templateRuleId);
-            if (alertTemplateRule == null) {
-                continue;
-            }
-            String notifyWayIds = alertTemplateRule.getNotifyWayIds();
-            if (StrUtil.isBlank(notifyWayIds)) {
-                continue;
-            }
-            String clusterNodeId = labels.getInstance();
-            AlertContentParamDto contentParamDto = contentParamUtil.setAndGetAlertContentParamDto(clusterNodeId,
-                alertApiReq.getStartsAt(), labels.getLevel(), alertTemplateRule.getRuleContent());
-            List<NotifyWay> notifyWays = notifyWayMapper.selectBatchIds(
-                Arrays.asList(notifyWayIds.split(CommonConstants.DELIMITER)));
-
-            Optional<AlertRecord> optional = record(alertApiReq, alertTemplateRule, contentParamDto, notifyWays);
-            if (optional.isEmpty()) {
-                continue;
-            }
-            AlertRecord alertRecord = optional.get();
-            boolean isNotifySuccess = notify(alertTemplateRule, alertRecord, notifyWays, contentParamDto);
-            if (isNotifySuccess) {
-                Integer sendCount = alertRecord.getSendCount() != null ? alertRecord.getSendCount() : 0;
-                alertRecord.setSendCount(sendCount + 1).setSendTime(alertRecord.getEndTime());
-                recordService.updateById(alertRecord);
-            }
-        }
-    }
-
-    private Optional<AlertRecord> record(
-        AlertApiReq alertApiReq, AlertTemplateRule alertTemplateRule,
-        AlertContentParamDto contentParamDto, List<NotifyWay> notifyWays) {
-        String clusterNodeId = alertApiReq.getLabels().getInstance();
-        Long templateId = alertApiReq.getLabels().getTemplateId();
-        List<AlertRecord> alertRecords = alertRecordMapper.selectList(Wrappers.<AlertRecord>lambdaQuery()
-            .eq(AlertRecord::getClusterNodeId, clusterNodeId).eq(AlertRecord::getTemplateId, templateId)
-            .eq(AlertRecord::getTemplateRuleId, alertTemplateRule.getId()).eq(AlertRecord::getStartTime,
-                alertApiReq.getStartsAt()).orderByDesc(AlertRecord::getUpdateTime));
-        AlertRecord alertRecord = null;
-        if (CollectionUtil.isEmpty(alertRecords)) {
-            alertRecord = new AlertRecord();
-            AlertTemplate alertTemplate = templateMapper.selectById(templateId);
-            alertRecord.setClusterNodeId(clusterNodeId).setTemplateId(templateId).setTemplateRuleId(
-                    alertTemplateRule.getId()).setCreateTime(LocalDateTime.now())
-                .setTemplateName(alertTemplate.getTemplateName()).setTemplateRuleName(
-                    alertTemplateRule.getRuleName()).setAlertStatus(alertApiReq.getAlertStatus())
-                .setTemplateRuleType(alertTemplateRule.getRuleType()).setLevel(alertTemplateRule.getLevel())
-                .setAlertContent(contentParamDto.getContent()).setRecordStatus(CommonConstants.UNREAD_STATUS);
-        } else {
-            alertRecord = alertRecords.get(0);
-            if (alertRecord.getAlertStatus() == CommonConstants.RECOVER_STATUS) {
-                return Optional.empty();
-            }
-            alertRecord.setAlertStatus(alertApiReq.getAlertStatus()).setUpdateTime(LocalDateTime.now());
-        }
-        String notifyWayNames = notifyWays.stream().map(item -> item.getName()).collect(
-            Collectors.joining(CommonConstants.DELIMITER));
-        alertRecord.setNotifyWayIds(alertTemplateRule.getNotifyWayIds()).setNotifyWayNames(notifyWayNames)
-            .setEndTime(alertApiReq.getEndsAt()).setStartTime(alertApiReq.getStartsAt()).setDuration(
-                Duration.between(alertRecord.getStartTime(), alertRecord.getEndTime()).toSeconds());
-        recordService.saveOrUpdate(alertRecord);
-        return Optional.of(alertRecord);
-    }
-
-    private boolean notify(
-        AlertTemplateRule alertTemplateRule, AlertRecord alertRecord,
-        List<NotifyWay> notifyWays, AlertContentParamDto contentParamDto) {
-        if (!shouldNotify(alertTemplateRule, alertRecord)) {
-            return false;
-        }
-        for (NotifyWay notifyWay : notifyWays) {
-            NotifyMessage notifyMessage = new NotifyMessage();
-            Long notifyTemplateId = notifyWay.getNotifyTemplateId();
-            NotifyTemplate notifyTemplate = notifyTemplateMapper.selectById(notifyTemplateId);
-            String notifyType = notifyWay.getNotifyType();
-            notifyMessage.setMessageType(notifyType);
-            notifyMessage.setTitle(notifyTemplate.getNotifyTitle());
-            if (alertRecord.getAlertStatus().equals(CommonConstants.FIRING_STATUS)) {
-                contentParamDto.setAlertStatus(MessageSourceUtil.get("alerting"));
-            } else {
-                contentParamDto.setAlertStatus(MessageSourceUtil.get("alerted"));
-            }
-            String content = new TextParser().parse(notifyTemplate.getNotifyContent(), contentParamDto);
-            notifyMessage.setContent(content);
-            notifyMessage.setEmail(notifyWay.getEmail());
-            if (notifyType.equals(CommonConstants.EMAIL)) {
-                notifyMessage.setEmail(notifyWay.getEmail());
-            } else if (notifyType.equals(CommonConstants.WE_COM) || notifyType.equals(CommonConstants.DING_TALK)) {
-                Integer sendWay = notifyWay.getSendWay();
-                if (sendWay != null && sendWay == 1) {
-                    notifyMessage.setWebhook(notifyWay.getWebhook());
-                    notifyMessage.setSign(notifyType.equals(CommonConstants.DING_TALK) ? notifyWay.getSign() : "");
-                } else {
-                    notifyMessage.setPersonId(notifyWay.getPersonId());
-                    notifyMessage.setDeptId(notifyWay.getDeptId());
-                }
-            } else if (notifyType.equals(CommonConstants.WEBHOOK)) {
-                notifyMessage.setWebhook(notifyWay.getWebhook());
-                notifyMessage.setWebhookInfo(getWebhookInfo(notifyWay));
-            } else {
-                NotifySnmpDto notifySnmpDto = new NotifySnmpDto();
-                BeanUtil.copyProperties(notifyWay, notifySnmpDto);
-                JSONObject snmpJson = JSONUtil.parseObj(notifySnmpDto);
-                notifyMessage.setSnmpInfo(snmpJson.toString());
-            }
-            notifyMessage.setCreateTime(LocalDateTime.now());
-            notifyMessage.setRecordId(alertRecord.getId());
-            notifyMessageMapper.insert(notifyMessage);
-        }
-        return true;
-    }
-
-    private String getWebhookInfo(NotifyWay notifyWay) {
-        JSONObject webhookInfo = new JSONObject();
-        String header = notifyWay.getHeader();
-        if (StrUtil.isNotBlank(header)) {
-            webhookInfo.put("header", new JSONObject(header));
-        }
-        String params = notifyWay.getParams();
-        if (StrUtil.isNotBlank(params)) {
-            webhookInfo.put("params", new JSONObject(params));
-        }
-        String body = notifyWay.getBody();
-        if (StrUtil.isNotBlank(body)) {
-            webhookInfo.put("body", body);
-        }
-        String resultCode = notifyWay.getResultCode();
-        if (StrUtil.isNotBlank(resultCode)) {
-            webhookInfo.put("resultCode", new JSONObject(resultCode));
-        }
-        return webhookInfo.toString();
-    }
-
-    private boolean shouldNotify(AlertTemplateRule alertTemplateRule, AlertRecord alertRecord) {
-        if (alertRecord.getRecordStatus().equals(CommonConstants.READ_STATUS)) {
-            return false;
-        }
-        if (StrUtil.isBlank(alertTemplateRule.getAlertNotify())) {
-            return false;
-        }
-        List<String> alertNotifyList = Arrays.asList(alertTemplateRule.getAlertNotify()
-            .split(CommonConstants.DELIMITER));
-        String alertStatus = alertRecord.getAlertStatus().equals(CommonConstants.FIRING_STATUS)
-            ? "firing" : "recover";
-        if (!alertNotifyList.contains(alertStatus)) {
-            return false;
-        }
-        Integer isRepeat = alertTemplateRule.getIsRepeat();
-        if (isRepeat == CommonConstants.IS_NOT_REPEAT) {
-            Long count = notifyMessageMapper.selectCount(
-                Wrappers.<NotifyMessage>lambdaQuery().eq(NotifyMessage::getRecordId, alertRecord.getId()));
-            if (count > 0) {
-                return false;
-            }
-        }
-        Integer maxRepeatCount = alertTemplateRule.getMaxRepeatCount();
-        Integer sendCount = alertRecord.getSendCount() != null ? alertRecord.getSendCount() : 0;
-        if (maxRepeatCount != null && maxRepeatCount <= sendCount) {
-            return false;
-        }
-        Integer nextRepeat = alertTemplateRule.getNextRepeat();
-        String nextRepeatUnit = alertTemplateRule.getNextRepeatUnit();
-        LocalDateTime sendTime = alertRecord.getSendTime();
-        if (sendTime != null && nextRepeat != null && StrUtil.isNotBlank(nextRepeatUnit)) {
-            LocalDateTime nextTime = nextRepeatUnit.equals(CommonConstants.SECOND) ? sendTime.plusSeconds(nextRepeat)
-                : nextRepeatUnit.equals(CommonConstants.MINUTE) ? sendTime.plusMinutes(nextRepeat)
-                : nextRepeatUnit.equals(CommonConstants.HOUR) ? sendTime.plusHours(nextRepeat)
-                : sendTime.plusHours(nextRepeat);
-            LocalDateTime now = LocalDateTime.now().withNano(0);
-            if (nextTime.withNano(0).isAfter(now)) {
-                return false;
-            }
-        }
-        Integer isSilence = alertTemplateRule.getIsSilence();
-        LocalDateTime now = LocalDateTime.now();
-        if (isSilence == CommonConstants.IS_SILENCE && now.isAfter(alertTemplateRule.getSilenceStartTime())
-            && now.isBefore(alertTemplateRule.getSilenceEndTime())) {
-            return false;
-        }
-        return true;
-    }
+public interface AlertApiService {
+    void alerts(List<AlertApiReq> alertApiReqList);
 }

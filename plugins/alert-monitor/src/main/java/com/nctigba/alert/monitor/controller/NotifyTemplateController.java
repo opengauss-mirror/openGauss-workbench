@@ -1,13 +1,32 @@
 /*
- * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ *  Copyright (c) GBA-NCTI-ISDC. 2022-2024.
+ *
+ *  openGauss DataKit is licensed under Mulan PSL v2.
+ *  You can use this software according to the terms and conditions of the Mulan PSL v2.
+ *  You may obtain a copy of Mulan PSL v2 at:
+ *
+ *  http://license.coscl.org.cn/MulanPSL2
+ *
+ *  THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ *  EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ *  MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ *  See the Mulan PSL v2 for more details.
+ *  -------------------------------------------------------------------------
+ *
+ *  NotifyTemplateController.java
+ *
+ *  IDENTIFICATION
+ *  plugins/alert-monitor/src/main/java/com/nctigba/alert/monitor/controller/NotifyTemplateController.java
+ *
+ *  -------------------------------------------------------------------------
  */
 
 package com.nctigba.alert.monitor.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.nctigba.alert.monitor.model.entity.NotifyTemplateDO;
 import org.opengauss.admin.common.core.domain.AjaxResult;
 import org.opengauss.admin.common.core.page.TableDataInfo;
-import com.nctigba.alert.monitor.entity.NotifyTemplate;
 import com.nctigba.alert.monitor.service.NotifyTemplateService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
@@ -39,19 +58,19 @@ public class NotifyTemplateController extends BaseController {
 
     @GetMapping("/list")
     public AjaxResult getList(String notifyTemplateType) {
-        List<NotifyTemplate> list = notifyTemplateService.getList(notifyTemplateType);
+        List<NotifyTemplateDO> list = notifyTemplateService.getList(notifyTemplateType);
         return AjaxResult.success(list);
     }
 
     @GetMapping("/{id}")
     public AjaxResult getById(@PathVariable Long id) {
-        NotifyTemplate notifyTemplate = notifyTemplateService.getById(id);
-        return AjaxResult.success(notifyTemplate);
+        NotifyTemplateDO notifyTemplateDO = notifyTemplateService.getById(id);
+        return AjaxResult.success(notifyTemplateDO);
     }
 
     @PostMapping
-    public AjaxResult saveTemplate(@Validated @RequestBody NotifyTemplate notifyTemplate) {
-        notifyTemplateService.saveTemplate(notifyTemplate);
+    public AjaxResult saveTemplate(@Validated @RequestBody NotifyTemplateDO notifyTemplateDO) {
+        notifyTemplateService.saveTemplate(notifyTemplateDO);
         return AjaxResult.success();
     }
 

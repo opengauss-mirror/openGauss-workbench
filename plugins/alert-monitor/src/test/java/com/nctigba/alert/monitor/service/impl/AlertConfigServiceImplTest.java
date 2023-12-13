@@ -1,14 +1,32 @@
 /*
- * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ *  Copyright (c) GBA-NCTI-ISDC. 2022-2024.
+ *
+ *  openGauss DataKit is licensed under Mulan PSL v2.
+ *  You can use this software according to the terms and conditions of the Mulan PSL v2.
+ *  You may obtain a copy of Mulan PSL v2 at:
+ *
+ *  http://license.coscl.org.cn/MulanPSL2
+ *
+ *  THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ *  EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ *  MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ *  See the Mulan PSL v2 for more details.
+ *  -------------------------------------------------------------------------
+ *
+ *  AlertConfigServiceImplTest.java
+ *
+ *  IDENTIFICATION
+ *  plugins/alert-monitor/src/test/java/com/nctigba/alert/monitor/service/impl/AlertConfigServiceImplTest.java
+ *
+ *  -------------------------------------------------------------------------
  */
 
 package com.nctigba.alert.monitor.service.impl;
 
 import com.baomidou.mybatisplus.core.MybatisConfiguration;
 import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
-import com.nctigba.alert.monitor.entity.AlertConfig;
+import com.nctigba.alert.monitor.model.entity.AlertConfigDO;
 import com.nctigba.alert.monitor.mapper.AlertConfigMapper;
-import com.nctigba.alert.monitor.service.PrometheusService;
 import org.apache.ibatis.builder.MapperBuilderAssistant;
 import org.junit.Before;
 import org.junit.Test;
@@ -40,7 +58,7 @@ public class AlertConfigServiceImplTest {
     @Spy
     private AlertConfigServiceImpl alertConfigService;
     @Mock
-    private PrometheusService prometheusService;
+    private PrometheusServiceImpl prometheusService;
 
     @Mock
     private AlertConfigMapper baseMapper;
@@ -50,42 +68,42 @@ public class AlertConfigServiceImplTest {
     public void before() {
         MockitoAnnotations.initMocks(this);
         TableInfoHelper.initTableInfo(new MapperBuilderAssistant(new MybatisConfiguration(), ""),
-            AlertConfig.class);
+            AlertConfigDO.class);
     }
 
     @Test
     public void testSaveAlertConf1() {
-        AlertConfig alertConfig = new AlertConfig().setId(1L).setAlertIp("127.0.0.1").setAlertPort("80");
-        List<AlertConfig> list = new ArrayList<>();
-        list.add(alertConfig);
+        AlertConfigDO alertConfigDO = new AlertConfigDO().setId(1L).setAlertIp("127.0.0.1").setAlertPort("80");
+        List<AlertConfigDO> list = new ArrayList<>();
+        list.add(alertConfigDO);
         when(baseMapper.selectList(any())).thenReturn(list);
 
         List<Long> ids = anyList();
         when(alertConfigService.removeBatchByIds(ids)).thenReturn(true);
 
-        AlertConfig param = new AlertConfig().setAlertIp("127.0.0.1").setAlertPort("8080");
-        doNothing().when(prometheusService).updateAlertConfig(param, list);
+        AlertConfigDO param = new AlertConfigDO().setAlertIp("127.0.0.1").setAlertPort("8080");
+        doNothing().when(prometheusService).updatePrometheusConfig(param);
 
         alertConfigService.saveAlertConf(param);
 
         verify(alertConfigService, times(1)).list();
         verify(alertConfigService, times(1)).removeBatchByIds(ids);
         verify(alertConfigService, times(1)).saveOrUpdate(any());
-        verify(prometheusService, times(1)).updateAlertConfig(param, list);
+        verify(prometheusService, times(1)).updatePrometheusConfig(param);
     }
 
     @Test
     public void testSaveAlertConf2() {
-        List<AlertConfig> list = new ArrayList<>();
+        List<AlertConfigDO> list = new ArrayList<>();
         when(baseMapper.selectList(any())).thenReturn(list);
 
-        AlertConfig param = new AlertConfig().setAlertIp("127.0.0.1").setAlertPort("8080");
-        doNothing().when(prometheusService).updateAlertConfig(param, list);
+        AlertConfigDO param = new AlertConfigDO().setAlertIp("127.0.0.1").setAlertPort("8080");
+        doNothing().when(prometheusService).updatePrometheusConfig(param);
 
         alertConfigService.saveAlertConf(param);
 
         verify(alertConfigService, times(1)).list();
         verify(alertConfigService, times(1)).saveOrUpdate(any());
-        verify(prometheusService, times(1)).updateAlertConfig(param, list);
+        verify(prometheusService, times(1)).updatePrometheusConfig(param);
     }
 }

@@ -1,5 +1,24 @@
 /*
- * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ *  Copyright (c) GBA-NCTI-ISDC. 2022-2024.
+ *
+ *  openGauss DataKit is licensed under Mulan PSL v2.
+ *  You can use this software according to the terms and conditions of the Mulan PSL v2.
+ *  You may obtain a copy of Mulan PSL v2 at:
+ *
+ *  http://license.coscl.org.cn/MulanPSL2
+ *
+ *  THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ *  EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ *  MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ *  See the Mulan PSL v2 for more details.
+ *  -------------------------------------------------------------------------
+ *
+ *  AlertRuleServiceImplTest.java
+ *
+ *  IDENTIFICATION
+ *  plugins/alert-monitor/src/test/java/com/nctigba/alert/monitor/service/impl/AlertRuleServiceImplTest.java
+ *
+ *  -------------------------------------------------------------------------
  */
 
 package com.nctigba.alert.monitor.service.impl;
@@ -7,17 +26,18 @@ package com.nctigba.alert.monitor.service.impl;
 import com.baomidou.mybatisplus.core.MybatisConfiguration;
 import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.nctigba.alert.monitor.entity.AlertRule;
-import com.nctigba.alert.monitor.entity.AlertRuleItem;
-import com.nctigba.alert.monitor.entity.AlertRuleItemExpSrc;
-import com.nctigba.alert.monitor.entity.AlertRuleItemSrc;
+import com.nctigba.alert.monitor.model.entity.AlertRuleDO;
+import com.nctigba.alert.monitor.model.entity.AlertRuleItemDO;
+import com.nctigba.alert.monitor.model.entity.AlertRuleItemExpSrcDO;
+import com.nctigba.alert.monitor.model.entity.AlertRuleItemSrcDO;
 import com.nctigba.alert.monitor.mapper.AlertRuleItemExpSrcMapper;
 import com.nctigba.alert.monitor.mapper.AlertRuleItemMapper;
 import com.nctigba.alert.monitor.mapper.AlertRuleItemSrcMapper;
 import com.nctigba.alert.monitor.mapper.AlertRuleMapper;
-import com.nctigba.alert.monitor.model.RuleReq;
+import com.nctigba.alert.monitor.model.dto.AlertRuleParamDTO;
+import com.nctigba.alert.monitor.model.query.RuleQuery;
 import com.nctigba.alert.monitor.service.AlertRuleItemService;
-import com.nctigba.alert.monitor.utils.MessageSourceUtil;
+import com.nctigba.alert.monitor.util.MessageSourceUtils;
 import org.apache.ibatis.builder.MapperBuilderAssistant;
 import org.junit.Before;
 import org.junit.Test;
@@ -69,42 +89,42 @@ public class AlertRuleServiceImplTest {
     public void before() {
         MockitoAnnotations.initMocks(this);
         TableInfoHelper.initTableInfo(new MapperBuilderAssistant(new MybatisConfiguration(), ""),
-            AlertRule.class);
+            AlertRuleDO.class);
         TableInfoHelper.initTableInfo(new MapperBuilderAssistant(new MybatisConfiguration(), ""),
-            AlertRuleItem.class);
+            AlertRuleItemDO.class);
     }
 
     @Test
     public void testGetRulePageNull() {
         Page page = new Page(1, 10);
-        Page<AlertRule> alertRulePage = new Page<>(1, 10);
+        Page<AlertRuleDO> alertRulePage = new Page<>(1, 10);
         when(baseMapper.selectPage(eq(page), any())).thenReturn(alertRulePage);
 
-        RuleReq ruleReq = new RuleReq();
-        Page<AlertRule> ruleDtoPage = alertRuleService.getRulePage(ruleReq, page);
+        RuleQuery ruleQuery = new RuleQuery();
+        Page<AlertRuleDO> ruleDtoPage = alertRuleService.getRulePage(ruleQuery, page);
         verify(baseMapper, times(1)).selectPage(eq(page), any());
         assertEquals(0L, ruleDtoPage.getTotal());
     }
 
     @Test
     public void testGetRulePage() {
-        try (MockedStatic<MessageSourceUtil> mockedStatic = mockStatic(MessageSourceUtil.class)) {
+        try (MockedStatic<MessageSourceUtils> mockedStatic = mockStatic(MessageSourceUtils.class)) {
             Page page = new Page(1, 10);
-            AlertRule alertRule = new AlertRule().setId(1L);
-            List<AlertRule> alertRuleList = new ArrayList<>();
-            alertRuleList.add(alertRule);
-            Page<AlertRule> alertRulePage = new Page<>(1, 10);
-            alertRulePage.setRecords(alertRuleList).setTotal(1);
+            AlertRuleDO alertRuleDO = new AlertRuleDO().setId(1L);
+            List<AlertRuleDO> alertRuleDOList = new ArrayList<>();
+            alertRuleDOList.add(alertRuleDO);
+            Page<AlertRuleDO> alertRulePage = new Page<>(1, 10);
+            alertRulePage.setRecords(alertRuleDOList).setTotal(1);
             when(baseMapper.selectPage(eq(page), any())).thenReturn(alertRulePage);
 
-            AlertRuleItem ruleItem = new AlertRuleItem().setId(1L).setRuleId(1L).setAction("normal")
+            AlertRuleItemDO ruleItem = new AlertRuleItemDO().setId(1L).setRuleId(1L).setAction("normal")
                 .setOperate(">=").setLimitValue("50").setRuleMark("A").setRuleExpName("cpu").setUnit("%");
-            List<AlertRuleItem> alertRuleItems = new ArrayList<>();
-            alertRuleItems.add(ruleItem);
-            when(alertRuleItemMapper.selectList(any())).thenReturn(alertRuleItems);
+            List<AlertRuleItemDO> alertRuleItemDOS = new ArrayList<>();
+            alertRuleItemDOS.add(ruleItem);
+            when(alertRuleItemMapper.selectList(any())).thenReturn(alertRuleItemDOS);
 
-            RuleReq ruleReq = new RuleReq();
-            Page<AlertRule> ruleDtoPage = alertRuleService.getRulePage(ruleReq, page);
+            RuleQuery ruleQuery = new RuleQuery();
+            Page<AlertRuleDO> ruleDtoPage = alertRuleService.getRulePage(ruleQuery, page);
 
             verify(baseMapper, times(1)).selectPage(eq(page), any());
             verify(alertRuleItemMapper, times(1)).selectList(any());
@@ -114,61 +134,61 @@ public class AlertRuleServiceImplTest {
 
     @Test(expected = ServiceException.class)
     public void testGetRuleByIdThrowException() {
-        AlertRule alertRule = null;
-        when(baseMapper.selectById(anyLong())).thenReturn(alertRule);
+        AlertRuleDO alertRuleDO = null;
+        when(baseMapper.selectById(anyLong())).thenReturn(alertRuleDO);
         alertRuleService.getRuleById(anyLong());
     }
 
     @Test
     public void testGetRuleById() {
-        AlertRule alertRule = new AlertRule().setId(1L).setRuleName("ruleName");
-        when(baseMapper.selectById(anyLong())).thenReturn(alertRule);
-        List<AlertRuleItem> alertRuleItems = new ArrayList<>();
-        AlertRuleItem alertRuleItem = new AlertRuleItem().setId(1L).setRuleId(1L);
-        alertRuleItems.add(alertRuleItem);
-        when(alertRuleItemMapper.selectList(any())).thenReturn(alertRuleItems);
+        AlertRuleDO alertRuleDO = new AlertRuleDO().setId(1L).setRuleName("ruleName");
+        when(baseMapper.selectById(anyLong())).thenReturn(alertRuleDO);
+        List<AlertRuleItemDO> alertRuleItemDOS = new ArrayList<>();
+        AlertRuleItemDO alertRuleItemDO = new AlertRuleItemDO().setId(1L).setRuleId(1L);
+        alertRuleItemDOS.add(alertRuleItemDO);
+        when(alertRuleItemMapper.selectList(any())).thenReturn(alertRuleItemDOS);
 
-        AlertRule result = alertRuleService.getRuleById(anyLong());
+        AlertRuleDO result = alertRuleService.getRuleById(anyLong());
 
         verify(baseMapper, times(1)).selectById(anyLong());
         verify(alertRuleItemMapper, times(1)).selectList(any());
-        assertEquals(alertRule.getId(), result.getId());
+        assertEquals(alertRuleDO.getId(), result.getId());
     }
 
     @Test
     public void testGetRuleList() {
-        List<AlertRule> alertRules = new ArrayList<>();
-        AlertRule alertRule = new AlertRule().setId(1L);
-        alertRules.add(alertRule);
-        when(baseMapper.selectList(any())).thenReturn(alertRules);
+        List<AlertRuleDO> alertRuleDOS = new ArrayList<>();
+        AlertRuleDO alertRuleDO = new AlertRuleDO().setId(1L);
+        alertRuleDOS.add(alertRuleDO);
+        when(baseMapper.selectList(any())).thenReturn(alertRuleDOS);
 
-        AlertRuleItem ruleItem1 = new AlertRuleItem().setId(1L).setRuleId(1L).setAction("normal")
+        AlertRuleItemDO ruleItem1 = new AlertRuleItemDO().setId(1L).setRuleId(1L).setAction("normal")
             .setOperate(">=").setLimitValue("50").setRuleMark("A").setRuleExpName("cpu").setUnit("%");
-        List<AlertRuleItem> alertRuleItems = new ArrayList<>();
-        alertRuleItems.add(ruleItem1);
-        when(alertRuleItemMapper.selectList(any())).thenReturn(alertRuleItems);
+        List<AlertRuleItemDO> alertRuleItemDOS = new ArrayList<>();
+        alertRuleItemDOS.add(ruleItem1);
+        when(alertRuleItemMapper.selectList(any())).thenReturn(alertRuleItemDOS);
 
-        List<AlertRule> ruleList = alertRuleService.getRuleList();
+        List<AlertRuleDO> ruleList = alertRuleService.getRuleList();
 
         verify(baseMapper, times(1)).selectList(any());
         verify(alertRuleItemMapper, times(1)).selectList(any());
-        assertEquals(alertRules.size(), ruleList.size());
+        assertEquals(alertRuleDOS.size(), ruleList.size());
     }
 
     @Test
     public void testGetRuleItemSrcList() {
-        List<AlertRuleItemSrc> list = new ArrayList<>();
+        List<AlertRuleItemSrcDO> list = new ArrayList<>();
         when(ruleItemSrcMapper.selectList(any())).thenReturn(list);
-        List<AlertRuleItemSrc> ruleItemSrcList = alertRuleService.getRuleItemSrcList();
+        List<AlertRuleItemSrcDO> ruleItemSrcList = alertRuleService.getRuleItemSrcList();
         verify(ruleItemSrcMapper, times(1)).selectList(any());
         assertEquals(list, ruleItemSrcList);
     }
 
     @Test
     public void testGetRuleItemExpSrcListByRuleItemSrcId() {
-        List<AlertRuleItemExpSrc> list = new ArrayList<>();
+        List<AlertRuleItemExpSrcDO> list = new ArrayList<>();
         when(ruleItemExpSrcMapper.selectList(any())).thenReturn(list);
-        List<AlertRuleItemExpSrc> result = alertRuleService.getRuleItemExpSrcListByRuleItemSrcId(anyLong());
+        List<AlertRuleItemExpSrcDO> result = alertRuleService.getRuleItemExpSrcListByRuleItemSrcId(anyLong());
         verify(ruleItemExpSrcMapper, times(1)).selectList(any());
         assertEquals(list, result);
     }
@@ -176,14 +196,14 @@ public class AlertRuleServiceImplTest {
     @Test
     public void testSaveRuleWithoutDel() {
         when(baseMapper.insert(any())).thenReturn(1);
-        List<AlertRuleItem> delItemList = new ArrayList<>();
+        List<AlertRuleItemDO> delItemList = new ArrayList<>();
         when(ruleItemService.list(any())).thenReturn(delItemList);
         when(ruleItemService.saveOrUpdateBatch(anyList())).thenReturn(true);
 
-        AlertRuleItem ruleItem = new AlertRuleItem();
-        List<AlertRuleItem> ruleItemList = new ArrayList<>();
+        AlertRuleItemDO ruleItem = new AlertRuleItemDO();
+        List<AlertRuleItemDO> ruleItemList = new ArrayList<>();
         ruleItemList.add(ruleItem);
-        AlertRule alertRule = new AlertRule().setAlertRuleItemList(ruleItemList);
+        AlertRuleParamDTO alertRule = new AlertRuleParamDTO().setAlertRuleItemList(ruleItemList);
         alertRuleService.saveRule(alertRule);
 
         verify(baseMapper, times(1)).insert(any());
@@ -193,17 +213,17 @@ public class AlertRuleServiceImplTest {
 
     @Test
     public void testSaveRuleWithDel() {
-        AlertRuleItem alertRuleItem = new AlertRuleItem();
-        List<AlertRuleItem> delItemList = new ArrayList<>();
-        delItemList.add(alertRuleItem);
+        AlertRuleItemDO alertRuleItemDO = new AlertRuleItemDO();
+        List<AlertRuleItemDO> delItemList = new ArrayList<>();
+        delItemList.add(alertRuleItemDO);
         when(ruleItemService.list(any())).thenReturn(delItemList);
         when(ruleItemService.update(any())).thenReturn(true);
         when(ruleItemService.saveOrUpdateBatch(anyList())).thenReturn(true);
 
-        AlertRuleItem ruleItem = new AlertRuleItem();
-        List<AlertRuleItem> ruleItemList = new ArrayList<>();
+        AlertRuleItemDO ruleItem = new AlertRuleItemDO();
+        List<AlertRuleItemDO> ruleItemList = new ArrayList<>();
         ruleItemList.add(ruleItem);
-        AlertRule alertRule = new AlertRule().setAlertRuleItemList(ruleItemList).setId(1L);
+        AlertRuleParamDTO alertRule = new AlertRuleParamDTO().setAlertRuleItemList(ruleItemList).setId(1L);
         alertRuleService.saveRule(alertRule);
 
         verify(ruleItemService, times(1)).list(any());

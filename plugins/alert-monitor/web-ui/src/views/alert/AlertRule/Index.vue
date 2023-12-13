@@ -29,7 +29,7 @@
         </el-select>
       </div>
       <div class="filter">
-        <el-input v-model="formData.ruleName" style="width: 150px" :placeholder="$t('alertRule.ruleNamePlaceholder')">
+        <el-input v-model="formData.ruleName" style="width: 150px" :placeholder="$t('alertRule.ruleNamePlaceholder')" @keyup.enter="search">
           <template #suffix>
             <el-button :icon="Search" @click="search" />
           </template>
@@ -111,6 +111,7 @@ import { useRequest } from "vue-request";
 import request from "@/request";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { useI18n } from "vue-i18n";
+import { i18n } from '@/i18n'
 import RuleDetail from "@/views/alert/AlertRule/RuleDetail.vue";
 const { t } = useI18n();
 
@@ -163,13 +164,18 @@ const showRuleExpDesc = (rule: any) => {
 
   if (rule.ruleType === 'index') {
     return alertRuleItemList.map((item: any) => {
+      let ruleItemSrc = ruleItemSrcList.value.filter(item0 => item0.name === item.ruleExpName)[0]
       let paramStr = "";
       const ruleExpParam = item.ruleExpParam
       if (ruleExpParam) {
         let param = JSON.parse(ruleExpParam)
         paramStr = '(' + Object.keys(param).map((key: any) => param[key]).join(',') + ')'
       }
-      return `[${item.ruleMark}]: ${t(`alertRule.${item.ruleExpName}`) + paramStr + ' ' + (item.action === 'normal' ? (t(`alertRule.${item.action}Action`) + ' ' + item.operate + item.limitValue + item.unit) : t(`alertRule.${item.action}Action`))}`
+      let name = i18n.global.locale.value === 'zhCn' && ruleItemSrc && ruleItemSrc.nameZh ? ruleItemSrc.nameZh : (ruleItemSrc && ruleItemSrc.nameEn) ? ruleItemSrc.nameEn : ruleItemSrc ? t(`alertRule.${ruleItemSrc.name}`) : ''
+      if (!item.operate || !item.limitValue) {
+        return `[${item.ruleMark}]: ${name}`
+      }
+      return `[${item.ruleMark}]: ${name + paramStr + ' ' + (item.action === 'normal' ? (item.operate + item.limitValue + item.unit) : t(`alertRule.${item.action}Action`))}`
     }).join('<br />')
   } else {
     return alertRuleItemList.map((item: any) => {
@@ -272,8 +278,17 @@ const cancelRule = () => {
   curId.value = undefined
   showMain.value = true
 }
+const ruleItemSrcList = ref<any[]>([])
+const requestRuleItemSrcList = () => {
+  request.get(`/api/v1/alertRule/ruleItemSrc/list`).then((res: any) => {
+    if (res && res.code === 200) {
+      ruleItemSrcList.value = res.data
+    }
+  })
+}
 onMounted(() => {
   requestData()
+  requestRuleItemSrcList()
 })
 
 </script>

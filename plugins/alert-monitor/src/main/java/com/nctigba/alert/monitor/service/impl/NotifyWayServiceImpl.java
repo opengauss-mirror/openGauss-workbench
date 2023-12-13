@@ -1,5 +1,24 @@
 /*
- * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ *  Copyright (c) GBA-NCTI-ISDC. 2022-2024.
+ *
+ *  openGauss DataKit is licensed under Mulan PSL v2.
+ *  You can use this software according to the terms and conditions of the Mulan PSL v2.
+ *  You may obtain a copy of Mulan PSL v2 at:
+ *
+ *  http://license.coscl.org.cn/MulanPSL2
+ *
+ *  THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ *  EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ *  MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ *  See the Mulan PSL v2 for more details.
+ *  -------------------------------------------------------------------------
+ *
+ *  NotifyWayServiceImpl.java
+ *
+ *  IDENTIFICATION
+ *  plugins/alert-monitor/src/main/java/com/nctigba/alert/monitor/service/impl/NotifyWayServiceImpl.java
+ *
+ *  -------------------------------------------------------------------------
  */
 
 package com.nctigba.alert.monitor.service.impl;
@@ -12,17 +31,17 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.nctigba.alert.monitor.constant.CommonConstants;
-import com.nctigba.alert.monitor.dto.NotifyWayDto;
-import com.nctigba.alert.monitor.entity.AlertRule;
-import com.nctigba.alert.monitor.entity.AlertTemplateRule;
-import com.nctigba.alert.monitor.entity.NotifyWay;
+import com.nctigba.alert.monitor.model.dto.NotifyWayDTO;
+import com.nctigba.alert.monitor.model.entity.AlertRuleDO;
+import com.nctigba.alert.monitor.model.entity.AlertTemplateRuleDO;
+import com.nctigba.alert.monitor.model.entity.NotifyWayDO;
 import com.nctigba.alert.monitor.mapper.NotifyWayMapper;
 import com.nctigba.alert.monitor.service.AlertRuleService;
 import com.nctigba.alert.monitor.service.AlertTemplateRuleService;
+import com.nctigba.alert.monitor.service.CommunicationService;
 import com.nctigba.alert.monitor.service.NotifyTemplateService;
 import com.nctigba.alert.monitor.service.NotifyWayService;
-import com.nctigba.alert.monitor.service.ThirdPartyService;
-import com.nctigba.alert.monitor.utils.MessageSourceUtil;
+import com.nctigba.alert.monitor.util.MessageSourceUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.exception.ServiceException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,7 +57,7 @@ import java.util.List;
  */
 @Service
 @Slf4j
-public class NotifyWayServiceImpl extends ServiceImpl<NotifyWayMapper, NotifyWay>
+public class NotifyWayServiceImpl extends ServiceImpl<NotifyWayMapper, NotifyWayDO>
     implements NotifyWayService {
     @Autowired
     private AlertRuleService ruleService;
@@ -47,65 +66,69 @@ public class NotifyWayServiceImpl extends ServiceImpl<NotifyWayMapper, NotifyWay
     @Autowired
     private NotifyTemplateService notifyTemplateService;
     @Autowired
-    private ThirdPartyService thirdPartyService;
+    private List<CommunicationService> communicationServices;
 
     @Override
-    public Page<NotifyWayDto> getListPage(String name, String notifyType, Page page) {
-        QueryWrapper<NotifyWay> ew =
-            Wrappers.<NotifyWay>query().like(StrUtil.isNotBlank(name), "t1.name", name).eq(
+    public Page<NotifyWayDTO> getListPage(String name, String notifyType, Page page) {
+        QueryWrapper<NotifyWayDO> ew =
+            Wrappers.<NotifyWayDO>query().like(StrUtil.isNotBlank(name), "t1.name", name).eq(
                 StrUtil.isNotBlank(notifyType), "t1.notify_type", notifyType).eq("t1.is_deleted",
                 CommonConstants.IS_NOT_DELETE).orderByDesc("t1.id");
         return this.baseMapper.selectDtoPage(page, ew);
     }
 
     @Override
-    public List<NotifyWay> getList(String notifyType) {
-        return this.baseMapper.selectList(Wrappers.<NotifyWay>lambdaQuery().eq(NotifyWay::getIsDeleted,
-            CommonConstants.IS_NOT_DELETE).eq(StrUtil.isNotBlank(notifyType), NotifyWay::getNotifyType,
-            notifyType).orderByDesc(NotifyWay::getId));
+    public List<NotifyWayDO> getList(String notifyType) {
+        return this.baseMapper.selectList(Wrappers.<NotifyWayDO>lambdaQuery().eq(NotifyWayDO::getIsDeleted,
+            CommonConstants.IS_NOT_DELETE).eq(StrUtil.isNotBlank(notifyType), NotifyWayDO::getNotifyType,
+            notifyType).orderByDesc(NotifyWayDO::getId));
     }
 
     @Override
-    public void saveNotifyWay(NotifyWay notifyWay) {
-        if (notifyWay.getId() == null) {
-            notifyWay.setCreateTime(LocalDateTime.now());
+    public void saveNotifyWay(NotifyWayDO notifyWayDO) {
+        if (notifyWayDO.getId() == null) {
+            notifyWayDO.setCreateTime(LocalDateTime.now());
         } else {
-            notifyWay.setUpdateTime(LocalDateTime.now());
+            notifyWayDO.setUpdateTime(LocalDateTime.now());
         }
-        this.saveOrUpdate(notifyWay);
+        this.saveOrUpdate(notifyWayDO);
     }
 
     @Override
     public void delById(Long id) {
-        List<AlertRule> ruleList = ruleService.list(
-            Wrappers.<AlertRule>query().eq("is_deleted", CommonConstants.IS_NOT_DELETE).and(
+        List<AlertRuleDO> ruleList = ruleService.list(
+            Wrappers.<AlertRuleDO>query().eq("is_deleted", CommonConstants.IS_NOT_DELETE).and(
                 wrapper -> wrapper.gt("position('" + id + ",' in notify_way_ids)", 0).or().gt(
                     "position('," + id + "' in notify_way_ids)", 0)));
-        List<AlertTemplateRule> templateRuleList = templateRuleService.list(
-            Wrappers.<AlertTemplateRule>query().eq("is_deleted", CommonConstants.IS_NOT_DELETE).and(
+        List<AlertTemplateRuleDO> templateRuleList = templateRuleService.list(
+            Wrappers.<AlertTemplateRuleDO>query().eq("is_deleted", CommonConstants.IS_NOT_DELETE).and(
                 wrapper -> wrapper.gt("position('" + id + ",' in notify_way_ids)", 0).or().gt(
                     "position('," + id + "' in notify_way_ids)", 0)));
         if (CollectionUtil.isNotEmpty(ruleList) || CollectionUtil.isNotEmpty(templateRuleList)) {
-            throw new ServiceException(MessageSourceUtil.get("notifyWayIsUsed"));
+            throw new ServiceException(MessageSourceUtils.get("notifyWayIsUsed"));
         }
-        LambdaUpdateWrapper<NotifyWay> queryWrapper = new LambdaUpdateWrapper<>();
-        queryWrapper.set(NotifyWay::getIsDeleted, CommonConstants.IS_DELETE).eq(NotifyWay::getId, id).eq(
-            NotifyWay::getIsDeleted, CommonConstants.IS_NOT_DELETE);
+        LambdaUpdateWrapper<NotifyWayDO> queryWrapper = new LambdaUpdateWrapper<>();
+        queryWrapper.set(NotifyWayDO::getIsDeleted, CommonConstants.IS_DELETE).eq(NotifyWayDO::getId, id).eq(
+            NotifyWayDO::getIsDeleted, CommonConstants.IS_NOT_DELETE);
         this.update(queryWrapper);
     }
 
     /**
      * test notify way
      *
-     * @param notifyWay NotifyWay
+     * @param notifyWayDO NotifyWay
      * @return boolean
      */
     @Override
-    public boolean testNotifyWay(NotifyWay notifyWay) {
-        if (notifyWay.getNotifyType().equals(CommonConstants.WEBHOOK)) {
-            return thirdPartyService.testWebhookByNotifyWay(notifyWay);
-        } else if (notifyWay.getNotifyType().equals(CommonConstants.SNMP)) {
-            return thirdPartyService.testSnmpByNotifyWay(notifyWay);
+    public boolean testNotifyWay(NotifyWayDO notifyWayDO) {
+        CommunicationService communicationService = communicationServices.stream().filter(
+                item -> item.getType().equals(notifyWayDO.getNotifyType())).findFirst().orElse(null);
+        if (communicationService == null) {
+            throw new ServiceException("Testing for this type of notifyWay is not exist");
+        }
+        if (notifyWayDO.getNotifyType().equals(CommonConstants.WEBHOOK)
+            || notifyWayDO.getNotifyType().equals(CommonConstants.SNMP)) {
+            return communicationService.sendTest(null, notifyWayDO);
         } else {
             throw new ServiceException("Testing for this type of notifyWay is not supported");
         }

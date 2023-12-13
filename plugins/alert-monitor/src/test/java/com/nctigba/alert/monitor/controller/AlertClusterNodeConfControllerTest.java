@@ -1,13 +1,32 @@
 /*
- * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ *  Copyright (c) GBA-NCTI-ISDC. 2022-2024.
+ *
+ *  openGauss DataKit is licensed under Mulan PSL v2.
+ *  You can use this software according to the terms and conditions of the Mulan PSL v2.
+ *  You may obtain a copy of Mulan PSL v2 at:
+ *
+ *  http://license.coscl.org.cn/MulanPSL2
+ *
+ *  THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ *  EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ *  MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ *  See the Mulan PSL v2 for more details.
+ *  -------------------------------------------------------------------------
+ *
+ *  AlertClusterNodeConfControllerTest.java
+ *
+ *  IDENTIFICATION
+ *  plugins/alert-monitor/src/test/java/com/nctigba/alert/monitor/controller/AlertClusterNodeConfControllerTest.java
+ *
+ *  -------------------------------------------------------------------------
  */
 
 package com.nctigba.alert.monitor.controller;
 
-import com.nctigba.alert.monitor.dto.AlertClusterNodeConfDto;
-import com.nctigba.alert.monitor.entity.AlertClusterNodeConf;
-import com.nctigba.alert.monitor.model.AlertClusterNodeAndTemplateReq;
-import com.nctigba.alert.monitor.model.AlertClusterNodeConfReq;
+import com.nctigba.alert.monitor.model.dto.AlertClusterNodeConfDTO;
+import com.nctigba.alert.monitor.model.entity.AlertClusterNodeConfDO;
+import com.nctigba.alert.monitor.model.query.AlertClusterNodeAndTemplateQuery;
+import com.nctigba.alert.monitor.model.query.AlertClusterNodeConfQuery;
 import com.nctigba.alert.monitor.service.AlertClusterNodeConfService;
 import org.junit.Before;
 import org.junit.Test;
@@ -48,7 +67,7 @@ public class AlertClusterNodeConfControllerTest {
 
     @Test
     public void testGetList() {
-        List<AlertClusterNodeConfDto> list = new ArrayList<>();
+        List<AlertClusterNodeConfDTO> list = new ArrayList<>();
         when(alertClusterNodeConfService.getList()).thenReturn(list);
         AjaxResult result = alertClusterNodeConfController.getList();
         verify(alertClusterNodeConfService, times(1)).getList();
@@ -57,32 +76,32 @@ public class AlertClusterNodeConfControllerTest {
 
     @Test
     public void testGetByClusterNodeId() {
-        AlertClusterNodeConf alertClusterNodeConf = new AlertClusterNodeConf();
-        when(alertClusterNodeConfService.getByClusterNodeId(anyString())).thenReturn(alertClusterNodeConf);
+        AlertClusterNodeConfDO alertClusterNodeConfDO = new AlertClusterNodeConfDO();
+        when(alertClusterNodeConfService.getByClusterNodeId(anyString())).thenReturn(alertClusterNodeConfDO);
         String clusterNodeId = "node1";
         AjaxResult result = alertClusterNodeConfController.getByClusterNodeId(clusterNodeId);
         verify(alertClusterNodeConfService, times(1)).getByClusterNodeId(anyString());
-        assertEquals(alertClusterNodeConf, result.get("data"));
+        assertEquals(alertClusterNodeConfDO, result.get("data"));
     }
 
     @Test
     public void testSaveClusterNodeConf() {
-        doNothing().when(alertClusterNodeConfService).saveClusterNodeConf(any(AlertClusterNodeConfReq.class));
-        AlertClusterNodeConfReq alertClusterNodeConfReq = new AlertClusterNodeConfReq();
-        AjaxResult result = alertClusterNodeConfController.saveClusterNodeConf(alertClusterNodeConfReq);
+        doNothing().when(alertClusterNodeConfService).saveClusterNodeConf(any(AlertClusterNodeConfQuery.class));
+        AlertClusterNodeConfQuery alertClusterNodeConfQuery = new AlertClusterNodeConfQuery();
+        AjaxResult result = alertClusterNodeConfController.saveClusterNodeConf(alertClusterNodeConfQuery);
         verify(alertClusterNodeConfService, times(1))
-            .saveClusterNodeConf(any(AlertClusterNodeConfReq.class));
+            .saveClusterNodeConf(any(AlertClusterNodeConfQuery.class));
         assertEquals(AjaxResult.success(), result);
     }
 
     @Test
     public void testSaveAlertTemplateAndConfig() {
         doNothing().when(alertClusterNodeConfService)
-            .saveAlertTemplateAndConfig(any(AlertClusterNodeAndTemplateReq.class));
-        AlertClusterNodeAndTemplateReq clusterNodeAndTemplateReq = new AlertClusterNodeAndTemplateReq();
+            .saveAlertTemplateAndConfig(any(AlertClusterNodeAndTemplateQuery.class));
+        AlertClusterNodeAndTemplateQuery clusterNodeAndTemplateReq = new AlertClusterNodeAndTemplateQuery();
         AjaxResult result = alertClusterNodeConfController.saveAlertTemplateAndConfig(clusterNodeAndTemplateReq);
         verify(alertClusterNodeConfService, times(1))
-            .saveAlertTemplateAndConfig(any(AlertClusterNodeAndTemplateReq.class));
+            .saveAlertTemplateAndConfig(any(AlertClusterNodeAndTemplateQuery.class));
         assertEquals(AjaxResult.success(), result);
     }
 }

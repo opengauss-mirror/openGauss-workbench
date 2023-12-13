@@ -72,17 +72,17 @@
             <el-select v-model="item.ruleExpName" :disabled="disabled" style="width: 130px;margin: 5px 0 5px 5px;"
               @change="(val) => changeRuleExpName(val, index)">
               <el-option v-for="item0 in ruleItemSrcList" :key="item0.name" :value="item0.name"
-                :label="$t(`alertRule.${item0.name}`)" />
+                :label="i18n.global.locale.value === 'zhCn' && item0.nameZh ? item0.nameZh : item0.nameEn ? item0.nameEn : $t(`alertRule.${item0.name}`)" />
             </el-select>
             <el-input :class="!disabled && item.paramsExplanation[key].required ? 'request' : ''"
               v-for="(val, key) in item.params" v-model="item.params[key]"
               :placeholder="item.paramsExplanation[key] && item.paramsExplanation[key].tip ? t(`alertRule.${item.paramsExplanation[key].tip}`) : ''"
               style="width: 120px;margin: 5px 5px 5px 2px;height: 32px;" :disabled="disabled" :key="key"></el-input>
-            <span :class="disabled ? '' : 'request'"></span><el-select v-model="item.action" :disabled="disabled"
+            <!-- <span :class="disabled ? '' : 'request'"></span><el-select v-model="item.action" :disabled="disabled"
               style="width: 150px;margin: 5px;" @change="(val) => changeAction(val, index)">
               <el-option v-for="item0 in item.ruleItemExpSrcList" :key="item0.id" :value="item0.action"
                 :label="$t(`alertRule.${item0.action}Action`)" />
-            </el-select>
+            </el-select> -->
             <span :class="disabled ? '' : 'request'"></span><el-select v-if="item.showLimitValue !== 0"
               v-model="item.operate" :disabled="disabled" style="width: 70px;margin: 5px;">
               <el-option v-for="item0 in compareSymbolList" :key="item0" :value="item0" :label="item0" />
@@ -116,7 +116,7 @@
               :disabled="disabled" @blur="preview"></el-input>
           </el-form-item>
         </el-col>
-        <el-col :span="2" style="padding-left: 5px;">
+        <el-col :span="2" style="padding-left: 8px;">
           <el-button @click="reset" style="display: flex;">{{ t('app.reset') }}</el-button>
         </el-col>
         <el-col :span="8" style="margin-bottom: 0px;">
@@ -133,7 +133,7 @@
         </el-col>
         <el-col :span="14">
           <el-form-item>
-            <span>{{ previewContent }}</span>
+            <span style="white-space: pre-wrap">{{ previewContent }}</span>
           </el-form-item>
         </el-col>
       </el-row>
@@ -218,6 +218,40 @@
         t('app.confirm') }}</el-button>
       <el-button @click="cancel" :loading="loading">{{ t('app.cancel') }}</el-button>
     </el-row>
+    <el-dialog v-model="dialogVisible" :title="t('alertRule.updateTemplateRuleTip')" :show-close="false">
+      <div><el-radio v-model="updateStatus" size="default" :label="1">{{t('alertRule.updateTemplateRuleRadios[0]')}}</el-radio></div>
+      <div>
+        <el-radio v-model="updateStatus" size="default" :label="2">{{t('alertRule.updateTemplateRuleRadios[1]')}}</el-radio>
+        <span style="margin-left: 10px">
+          {{t('alertRule.chooseTemplateTip')}}
+          <el-select
+            v-model="updateTemplateRuleIds"
+            multiple
+            :placeholder="t('app.selectDatasTip')"
+            style="width: 300px"
+            size="default"
+          >
+            <el-option
+              v-for="item in templateRuleList"
+              :key="item.templateRuleId"
+              :label="item.templateName"
+              :value="item.templateRuleId"
+            />
+          </el-select>
+        </span>
+      </div>
+      <div><el-radio v-model="updateStatus" size="default" :label="3">{{t('alertRule.updateTemplateRuleRadios[2]')}}</el-radio></div>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="closeDialog" :loading="loading">
+            {{ t('app.cancel') }}
+          </el-button>
+          <el-button type="primary" @click="updateRule" :loading="loading">
+            {{ t('app.confirm') }}
+          </el-button>
+        </span>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -228,8 +262,9 @@ import { useRequest } from "vue-request";
 import request from "@/request";
 import { ElMessage } from "element-plus";
 import { useI18n } from "vue-i18n";
-import { parseContent } from "@/utils/commonUtil"
+import { parseContent, getAlertContentParam } from "@/utils/commonUtil"
 import type { FormInstance, FormRules } from 'element-plus'
+import { i18n } from '@/i18n'
 const { t } = useI18n();
 
 const alertContentParam = ref<any>()
@@ -302,6 +337,10 @@ const ruleExpComb = ref<string[]>(['A'])
 const ruleMarkList = ref<string[]>(['A'])
 const alertNotifyList = ref<string[]>([])
 const silenceTimes = ref<any[]>([])
+const templateRuleList = ref<any[]>([])
+const dialogVisible = ref<boolean>(false)
+const updateStatus = ref<number>()
+const updateTemplateRuleIds = ref<any[]>([])
 
 const { data: ruleDetail, run: requestData } = useRequest(
   (id) => {
@@ -406,6 +445,9 @@ const changeRuleExpName = (val: any, index: number) => {
     } else {
       formData.value.alertRuleItemList[index].params = {}
     }
+    formData.value.alertRuleItemList[index].operate = ''
+    formData.value.alertRuleItemList[index].limitValue = ''
+    formData.value.alertRuleItemList[index].ruleExp = ''
     let itemSrcIdList = itemSrcList.map(item => item.id) as any[]
     requestRuleItemExpSrcList(itemSrcIdList[0], index)
   }
@@ -417,23 +459,6 @@ const changeAction = (val: any, index: number) => {
   ruleItem.limitValue = itemExpSrcList[0].limitValue
   ruleItem.ruleExp = itemExpSrcList[0].exp
   ruleItem.showLimitValue = itemExpSrcList[0].showLimitValue
-}
-
-const requestAlertContentParam = () => {
-  request.get(`/api/v1/environment/alertContentParam`, { type: 'alert' }).then((res: any) => {
-    if (res && res.code === 200) {
-      alertContentParam.value = res.data
-      paramNameList.value = Object.keys(alertContentParam.value)
-      if (alertContentParam.value && formData.value.ruleContent) {
-        let param = {}
-        let keys = Object.keys(alertContentParam.value);
-        for (let key of keys) {
-          param[key] = alertContentParam.value[key]['preVal']
-        }
-        previewContent.value = parseContent(formData.value.ruleContent, param)
-      }
-    }
-  })
 }
 const preview = () => {
   if (alertContentParam.value && formData.value.ruleContent) {
@@ -585,56 +610,102 @@ const formRules = reactive<FormRules>({
   ]
 })
 
-const confirm = () => {
+const confirm = async () => {
   if (!formRef) return
-  formRef.value?.validate((valid, fields) => {
+  formRef.value?.validate(async (valid, fields) => {
     if (valid) {
-      for (let ruleItem of formData.value.alertRuleItemList) {
-        let params = ruleItem.params
-        if (params && Object.keys(params).length > 0) {
-          ruleItem.ruleExpParam = JSON.stringify(params)
-          parseContent(ruleItem.ruleExp, params)
-        } else {
-          ruleItem.ruleExpParam = ''
-        }
+      if (formData.value.ruleId) {
+        await getTemplateRule(formData.value.ruleId)
       }
-      formData.value.ruleExpComb = ruleExpComb.value.join(' ')
-      formData.value.alertNotify = alertNotifyList.value.join(',')
-      formData.value.notifyWayIds = notifyWayIdArr.value.join(',')
-      if (silenceTimes.value.length > 0) {
-        formData.value.silenceStartTime = silenceTimes.value[0]
-        formData.value.silenceEndTime = silenceTimes.value[1]
+      if (templateRuleList.value.length > 0) {
+        dialogVisible.value = true
+      } else {
+        save()
       }
-      loading.value = true
-      request.post(`/api/v1/alertRule`, formData.value).then((res: any) => {
-        loading.value = false
-        if (res && res.code === 200) {
-          ElMessage({
-            showClose: true,
-            message: t("app.saveSuccess"),
-            type: "success",
-          });
-          emit("updateRule")
-        } else {
-          ElMessage({
-            showClose: true,
-            message: t("app.saveFail"),
-            type: "error",
-          });
-        }
-      }).catch(() => {
-        ElMessage({
-          showClose: true,
-          message: t("app.saveFail"),
-          type: "error",
-        });
-        loading.value = false
-      })
     }
   })
 }
 const cancel = () => {
   emit("cancelRule")
+}
+
+const getTemplateRule = async (ruleId: any) => {
+  let res = await request.get(`/api/v1/alertTemplate/templateRule`, { ruleId })
+  if (res && res.code === 200) {
+    templateRuleList.value = res.data
+  } else {
+    templateRuleList.value = []
+  }
+}
+
+const save = () => {
+  for (let ruleItem of formData.value.alertRuleItemList) {
+    let params = ruleItem.params
+    if (params && Object.keys(params).length > 0) {
+      ruleItem.ruleExpParam = JSON.stringify(params)
+      parseContent(ruleItem.ruleExp, params)
+    } else {
+      ruleItem.ruleExpParam = ''
+    }
+  }
+  formData.value.ruleExpComb = ruleExpComb.value.join(' ')
+  formData.value.alertNotify = alertNotifyList.value.join(',')
+  formData.value.notifyWayIds = notifyWayIdArr.value.join(',')
+  if (silenceTimes.value.length > 0) {
+    formData.value.silenceStartTime = silenceTimes.value[0]
+    formData.value.silenceEndTime = silenceTimes.value[1]
+  }
+  loading.value = true
+  request.post(`/api/v1/alertRule`, formData.value).then((res: any) => {
+    loading.value = false
+    if (res && res.code === 200) {
+      ElMessage({
+        showClose: true,
+        message: t("app.saveSuccess"),
+        type: "success",
+      });
+      emit("updateRule")
+    } else {
+      ElMessage({
+        showClose: true,
+        message: t("app.saveFail"),
+        type: "error",
+      });
+    }
+  }).catch(() => {
+    ElMessage({
+      showClose: true,
+      message: t("app.saveFail"),
+      type: "error",
+    });
+    loading.value = false
+  })
+}
+
+const updateRule = () => {
+  if (!updateStatus.value || (updateStatus.value === 2 && updateTemplateRuleIds.value.length === 0)) {
+    ElMessage({
+      showClose: true,
+      message: t('app.selectDatasTip'),
+      type: "error",
+    });
+    return
+  }
+  if (updateStatus.value === 2) {
+    formData.value.templateRuleIds = updateTemplateRuleIds.value
+  } else if (updateStatus.value === 3) {
+    formData.value.templateRuleIds = templateRuleList.value.map(item => item.templateRuleId)
+  } else {
+    formData.value.templateRuleIds = []
+  }
+  save()
+}
+
+const closeDialog = () => {
+  dialogVisible.value = false
+  templateRuleList.value = []
+  updateStatus.value = null
+  updateTemplateRuleIds.value = []
 }
 
 const requestNotifyWayData = () => {
@@ -664,9 +735,20 @@ const requestRuleItemExpSrcList = (ruleItemSrcId: number, index: number) => {
     if (res && res.code === 200) {
       formData.value.alertRuleItemList[index].ruleItemExpSrcList = res.data
       let action = formData.value.alertRuleItemList[index].action
-      if (action) {
-        let itemExpSrcList = res.data.filter((item: any) => item.action === action) as any[]
-        formData.value.alertRuleItemList[index].showLimitValue = itemExpSrcList[0].showLimitValue
+      if (!action) {
+        formData.value.alertRuleItemList[index].action = 'normal' 
+        action = 'normal'
+      } 
+      let itemExpSrcList = res.data.filter((item: any) => item.action === action) as any[]
+      formData.value.alertRuleItemList[index].showLimitValue = itemExpSrcList[0].showLimitValue
+      if (!formData.value.alertRuleItemList[index].operate) {
+        formData.value.alertRuleItemList[index].operate = itemExpSrcList[0].operate
+      }
+      if (!formData.value.alertRuleItemList[index].limitValue) {
+        formData.value.alertRuleItemList[index].limitValue = itemExpSrcList[0].limitValue
+      }
+      if (!formData.value.alertRuleItemList[index].ruleExp) {
+        formData.value.alertRuleItemList[index].ruleExp = itemExpSrcList[0].exp
       }
     }
   })
@@ -674,7 +756,17 @@ const requestRuleItemExpSrcList = (ruleItemSrcId: number, index: number) => {
 onMounted(() => {
   requestNotifyWayData()
   requestRuleItemSrcList()
-  requestAlertContentParam();
+  
+  alertContentParam.value = getAlertContentParam()
+  paramNameList.value = Object.keys(alertContentParam.value)
+  if (alertContentParam.value && formData.value.ruleContent) {
+    let param = {}
+    let keys = Object.keys(alertContentParam.value);
+    for (let key of keys) {
+      param[key] = alertContentParam.value[key]['preVal']
+    }
+    previewContent.value = parseContent(formData.value.ruleContent, param)
+  }
   if (props.ruleId) {
     requestData(props.ruleId)
   }

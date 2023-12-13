@@ -1,5 +1,24 @@
 /*
- * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ *  Copyright (c) GBA-NCTI-ISDC. 2022-2024.
+ *
+ *  openGauss DataKit is licensed under Mulan PSL v2.
+ *  You can use this software according to the terms and conditions of the Mulan PSL v2.
+ *  You may obtain a copy of Mulan PSL v2 at:
+ *
+ *  http://license.coscl.org.cn/MulanPSL2
+ *
+ *  THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ *  EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ *  MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ *  See the Mulan PSL v2 for more details.
+ *  -------------------------------------------------------------------------
+ *
+ *  AlertTemplateRuleServiceImplTest.java
+ *
+ *  IDENTIFICATION
+ *  plugins/alert-monitor/src/test/java/com/nctigba/alert/monitor/service/impl/AlertTemplateRuleServiceImplTest.java
+ *
+ *  -------------------------------------------------------------------------
  */
 
 package com.nctigba.alert.monitor.service.impl;
@@ -7,12 +26,11 @@ package com.nctigba.alert.monitor.service.impl;
 import com.baomidou.mybatisplus.core.MybatisConfiguration;
 import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
 import com.nctigba.alert.monitor.constant.CommonConstants;
-import com.nctigba.alert.monitor.entity.AlertTemplateRule;
-import com.nctigba.alert.monitor.entity.AlertTemplateRuleItem;
+import com.nctigba.alert.monitor.model.entity.AlertTemplateRuleDO;
+import com.nctigba.alert.monitor.model.entity.AlertTemplateRuleItemDO;
 import com.nctigba.alert.monitor.mapper.AlertTemplateRuleItemMapper;
 import com.nctigba.alert.monitor.mapper.AlertTemplateRuleMapper;
 import com.nctigba.alert.monitor.service.AlertTemplateRuleItemService;
-import com.nctigba.alert.monitor.service.PrometheusService;
 import org.apache.ibatis.builder.MapperBuilderAssistant;
 import org.junit.Before;
 import org.junit.Test;
@@ -52,140 +70,141 @@ public class AlertTemplateRuleServiceImplTest {
     @Mock
     private AlertTemplateRuleMapper baseMapper;
     @Mock
-    private PrometheusService prometheusService;
+    private PrometheusServiceImpl prometheusService;
 
     @Before
     public void before() {
         MockitoAnnotations.initMocks(this);
         TableInfoHelper.initTableInfo(new MapperBuilderAssistant(new MybatisConfiguration(), ""),
-            AlertTemplateRule.class);
+            AlertTemplateRuleDO.class);
     }
 
     @Test(expected = ServiceException.class)
     public void testGetTemplateRuleThrowException() {
-        AlertTemplateRule alertTemplateRule = null;
-        when(baseMapper.selectById(anyLong())).thenReturn(alertTemplateRule);
+        AlertTemplateRuleDO alertTemplateRuleDO = null;
+        when(baseMapper.selectById(anyLong())).thenReturn(alertTemplateRuleDO);
         alertTemplateRuleService.getTemplateRule(anyLong());
         verify(baseMapper, times(1)).selectById(anyLong());
     }
 
     @Test
     public void testGetTemplateRule() {
-        AlertTemplateRule alertTemplateRule = new AlertTemplateRule().setTemplateId(1L).setId(1L).setRuleId(1L);
-        when(baseMapper.selectById(anyLong())).thenReturn(alertTemplateRule);
+        AlertTemplateRuleDO alertTemplateRuleDO = new AlertTemplateRuleDO().setTemplateId(1L).setId(1L).setRuleId(1L);
+        when(baseMapper.selectById(anyLong())).thenReturn(alertTemplateRuleDO);
 
-        List<AlertTemplateRuleItem> alertTemplateRuleItems = new ArrayList<>();
-        AlertTemplateRuleItem ruleItem = new AlertTemplateRuleItem().setId(1L).setTemplateRuleId(1L);
-        alertTemplateRuleItems.add(ruleItem);
-        when(alertTemplateRuleItemMapper.selectList(any())).thenReturn(alertTemplateRuleItems);
+        List<AlertTemplateRuleItemDO> alertTemplateRuleItemDOS = new ArrayList<>();
+        AlertTemplateRuleItemDO ruleItem = new AlertTemplateRuleItemDO().setId(1L).setTemplateRuleId(1L);
+        alertTemplateRuleItemDOS.add(ruleItem);
+        when(alertTemplateRuleItemMapper.selectList(any())).thenReturn(alertTemplateRuleItemDOS);
 
-        AlertTemplateRule templateRule = alertTemplateRuleService.getTemplateRule(anyLong());
+        AlertTemplateRuleDO templateRule = alertTemplateRuleService.getTemplateRule(anyLong());
 
         verify(baseMapper, times(1)).selectById(anyLong());
         verify(alertTemplateRuleItemMapper, times(1)).selectList(any());
-        assertEquals(alertTemplateRule.getId(), templateRule.getId());
+        assertEquals(alertTemplateRuleDO.getId(), templateRule.getId());
     }
 
     @Test
     public void testSaveIndexTemplateRule() {
-        AlertTemplateRuleItem ruleItem = new AlertTemplateRuleItem().setId(1L).setTemplateRuleId(1L)
+        AlertTemplateRuleItemDO ruleItem = new AlertTemplateRuleItemDO().setId(1L).setTemplateRuleId(1L)
             .setAction("normal").setOperate(">=").setLimitValue("50").setRuleMark("A").setRuleExpName("cpu")
             .setUnit("%");
-        AlertTemplateRuleItem ruleItem2 = new AlertTemplateRuleItem().setTemplateRuleId(1L).setAction(
+        AlertTemplateRuleItemDO ruleItem2 = new AlertTemplateRuleItemDO().setTemplateRuleId(1L).setAction(
             "normal").setOperate(">=").setLimitValue("50").setRuleMark("B").setRuleExpName("cpu").setUnit("");
-        AlertTemplateRuleItem ruleItem3 = new AlertTemplateRuleItem().setId(3L).setTemplateRuleId(1L).setAction(
+        AlertTemplateRuleItemDO ruleItem3 = new AlertTemplateRuleItemDO().setId(3L).setTemplateRuleId(1L).setAction(
             "normal").setOperate(">=").setLimitValue("50").setRuleMark("C").setRuleExpName("cpu").setUnit("");
-        List<AlertTemplateRuleItem> templateRuleItemList = new ArrayList<>();
+        List<AlertTemplateRuleItemDO> templateRuleItemList = new ArrayList<>();
         templateRuleItemList.add(ruleItem);
         templateRuleItemList.add(ruleItem2);
         templateRuleItemList.add(ruleItem3);
-        AlertTemplateRule alertTemplateRule = new AlertTemplateRule().setRuleType(CommonConstants.INDEX_RULE)
+        AlertTemplateRuleDO alertTemplateRuleDO = new AlertTemplateRuleDO().setRuleType(CommonConstants.INDEX_RULE)
             .setTemplateId(1L);
-        alertTemplateRule.setAlertRuleItemList(templateRuleItemList);
+        alertTemplateRuleDO.setAlertRuleItemList(templateRuleItemList);
 
-        when(baseMapper.insert(alertTemplateRule)).thenReturn(1);
+        when(baseMapper.insert(alertTemplateRuleDO)).thenReturn(1);
         when(templateRuleItemService.saveOrUpdateBatch(templateRuleItemList)).thenReturn(true);
-        doNothing().when(prometheusService).updateRuleByTemplateRule(alertTemplateRule);
+        doNothing().when(prometheusService).updateRuleByTemplateRule(alertTemplateRuleDO);
 
-        AlertTemplateRule alertTemplateRule0 = alertTemplateRuleService.saveTemplateRule(alertTemplateRule);
+        AlertTemplateRuleDO alertTemplateRuleDO0 = alertTemplateRuleService.saveTemplateRule(alertTemplateRuleDO);
 
-        verify(baseMapper, times(1)).insert(alertTemplateRule);
+        verify(baseMapper, times(1)).insert(alertTemplateRuleDO);
         verify(templateRuleItemService, times(1)).saveOrUpdateBatch(templateRuleItemList);
         verify(prometheusService, times(1)).updateRuleByTemplateRule(any());
-        assertEquals(3, alertTemplateRule0.getAlertRuleItemList().size());
+        assertEquals(3, alertTemplateRuleDO0.getAlertRuleItemList().size());
     }
 
     @Test
     public void testSaveIndexTemplateRuleWithoutTemplateId() {
-        AlertTemplateRuleItem ruleItem = new AlertTemplateRuleItem().setId(1L).setTemplateRuleId(1L)
+        AlertTemplateRuleItemDO ruleItem = new AlertTemplateRuleItemDO().setId(1L).setTemplateRuleId(1L)
             .setAction("normal").setOperate(">=").setLimitValue("50").setRuleMark("A").setRuleExpName("cpu")
             .setUnit("%");
-        AlertTemplateRuleItem ruleItem2 = new AlertTemplateRuleItem().setTemplateRuleId(1L).setAction(
+        AlertTemplateRuleItemDO ruleItem2 = new AlertTemplateRuleItemDO().setTemplateRuleId(1L).setAction(
             "normal").setOperate(">=").setLimitValue("50").setRuleMark("B").setRuleExpName("cpu").setUnit("");
-        AlertTemplateRuleItem ruleItem3 = new AlertTemplateRuleItem().setId(3L).setTemplateRuleId(1L).setAction(
+        AlertTemplateRuleItemDO ruleItem3 = new AlertTemplateRuleItemDO().setId(3L).setTemplateRuleId(1L).setAction(
             "normal").setOperate(">=").setLimitValue("50").setRuleMark("C").setRuleExpName("cpu").setUnit("");
-        List<AlertTemplateRuleItem> templateRuleItemList = new ArrayList<>();
+        List<AlertTemplateRuleItemDO> templateRuleItemList = new ArrayList<>();
         templateRuleItemList.add(ruleItem);
         templateRuleItemList.add(ruleItem2);
         templateRuleItemList.add(ruleItem3);
-        AlertTemplateRule alertTemplateRule = new AlertTemplateRule().setRuleType(CommonConstants.INDEX_RULE)
+        AlertTemplateRuleDO alertTemplateRuleDO = new AlertTemplateRuleDO().setRuleType(CommonConstants.INDEX_RULE)
             .setId(1L);
-        alertTemplateRule.setAlertRuleItemList(templateRuleItemList);
+        alertTemplateRuleDO.setAlertRuleItemList(templateRuleItemList);
 
-        when(baseMapper.selectById(alertTemplateRule.getId())).thenReturn(alertTemplateRule);
-        when(baseMapper.updateById(alertTemplateRule)).thenReturn(1);
+        when(baseMapper.selectById(alertTemplateRuleDO.getId())).thenReturn(alertTemplateRuleDO);
+        when(baseMapper.updateById(alertTemplateRuleDO)).thenReturn(1);
         when(templateRuleItemService.saveOrUpdateBatch(templateRuleItemList)).thenReturn(true);
 
-        AlertTemplateRule alertTemplateRule0 = alertTemplateRuleService.saveTemplateRule(alertTemplateRule);
+        AlertTemplateRuleDO alertTemplateRuleDO0 = alertTemplateRuleService.saveTemplateRule(alertTemplateRuleDO);
 
-        verify(baseMapper, times(1)).selectById(alertTemplateRule.getId());
-        verify(baseMapper, times(1)).updateById(alertTemplateRule);
+        verify(baseMapper, times(1)).selectById(alertTemplateRuleDO.getId());
+        verify(baseMapper, times(1)).updateById(alertTemplateRuleDO);
         verify(templateRuleItemService, times(1)).saveOrUpdateBatch(templateRuleItemList);
-        assertEquals(3, alertTemplateRule0.getAlertRuleItemList().size());
+        assertEquals(3, alertTemplateRuleDO0.getAlertRuleItemList().size());
     }
 
     @Test
     public void testSaveLogTemplateRule() {
-        AlertTemplateRuleItem ruleItem = new AlertTemplateRuleItem().setId(1L).setTemplateRuleId(1L);
-        AlertTemplateRuleItem ruleItem2 = new AlertTemplateRuleItem().setTemplateRuleId(1L).setAction("normal");
-        AlertTemplateRuleItem ruleItem3 = new AlertTemplateRuleItem().setId(3L).setTemplateRuleId(1L).setRuleMark("C");
-        List<AlertTemplateRuleItem> templateRuleItemList = new ArrayList<>();
+        AlertTemplateRuleItemDO ruleItem = new AlertTemplateRuleItemDO().setId(1L).setTemplateRuleId(1L);
+        AlertTemplateRuleItemDO ruleItem2 = new AlertTemplateRuleItemDO().setTemplateRuleId(1L).setAction("normal");
+        AlertTemplateRuleItemDO ruleItem3 =
+            new AlertTemplateRuleItemDO().setId(3L).setTemplateRuleId(1L).setRuleMark("C");
+        List<AlertTemplateRuleItemDO> templateRuleItemList = new ArrayList<>();
         templateRuleItemList.add(ruleItem);
         templateRuleItemList.add(ruleItem2);
         templateRuleItemList.add(ruleItem3);
-        AlertTemplateRule alertTemplateRule = new AlertTemplateRule().setRuleType(CommonConstants.LOG_RULE)
+        AlertTemplateRuleDO alertTemplateRuleDO = new AlertTemplateRuleDO().setRuleType(CommonConstants.LOG_RULE)
             .setTemplateId(1L);
-        alertTemplateRule.setAlertRuleItemList(templateRuleItemList);
+        alertTemplateRuleDO.setAlertRuleItemList(templateRuleItemList);
 
-        when(baseMapper.insert(alertTemplateRule)).thenReturn(1);
+        when(baseMapper.insert(alertTemplateRuleDO)).thenReturn(1);
         when(templateRuleItemService.saveOrUpdateBatch(templateRuleItemList)).thenReturn(true);
 
-        AlertTemplateRule alertTemplateRule0 = alertTemplateRuleService.saveTemplateRule(alertTemplateRule);
+        AlertTemplateRuleDO alertTemplateRuleDO0 = alertTemplateRuleService.saveTemplateRule(alertTemplateRuleDO);
 
-        verify(baseMapper, times(1)).insert(alertTemplateRule);
+        verify(baseMapper, times(1)).insert(alertTemplateRuleDO);
         verify(templateRuleItemService, times(1)).saveOrUpdateBatch(templateRuleItemList);
-        assertEquals(3, alertTemplateRule0.getAlertRuleItemList().size());
+        assertEquals(3, alertTemplateRuleDO0.getAlertRuleItemList().size());
     }
 
     @Test
     public void testGetListByTemplateId() {
-        List<AlertTemplateRule> alertRules = new ArrayList<>();
-        AlertTemplateRule alertTemplateRule = new AlertTemplateRule().setId(1L);
-        alertRules.add(alertTemplateRule);
+        List<AlertTemplateRuleDO> alertRules = new ArrayList<>();
+        AlertTemplateRuleDO alertTemplateRuleDO = new AlertTemplateRuleDO().setId(1L);
+        alertRules.add(alertTemplateRuleDO);
         when(baseMapper.selectList(any())).thenReturn(alertRules);
 
-        List<AlertTemplateRuleItem> alertRuleItems = new ArrayList<>();
-        AlertTemplateRuleItem ruleItem1 = new AlertTemplateRuleItem().setId(1L).setTemplateRuleId(1L);
-        AlertTemplateRuleItem ruleItem2 = new AlertTemplateRuleItem().setId(2L).setTemplateRuleId(1L);
-        AlertTemplateRuleItem ruleItem3 = new AlertTemplateRuleItem().setId(3L).setTemplateRuleId(1L);
-        AlertTemplateRuleItem ruleItem4 = new AlertTemplateRuleItem().setId(4L).setTemplateRuleId(1L);
+        List<AlertTemplateRuleItemDO> alertRuleItems = new ArrayList<>();
+        AlertTemplateRuleItemDO ruleItem1 = new AlertTemplateRuleItemDO().setId(1L).setTemplateRuleId(1L);
+        AlertTemplateRuleItemDO ruleItem2 = new AlertTemplateRuleItemDO().setId(2L).setTemplateRuleId(1L);
+        AlertTemplateRuleItemDO ruleItem3 = new AlertTemplateRuleItemDO().setId(3L).setTemplateRuleId(1L);
+        AlertTemplateRuleItemDO ruleItem4 = new AlertTemplateRuleItemDO().setId(4L).setTemplateRuleId(1L);
         alertRuleItems.add(ruleItem1);
         alertRuleItems.add(ruleItem2);
         alertRuleItems.add(ruleItem3);
         alertRuleItems.add(ruleItem4);
         when(alertTemplateRuleItemMapper.selectList(any())).thenReturn(alertRuleItems);
 
-        List<AlertTemplateRule> list = alertTemplateRuleService.getListByTemplateId(anyLong());
+        List<AlertTemplateRuleDO> list = alertTemplateRuleService.getListByTemplateId(anyLong());
 
         verify(baseMapper, times(1)).selectList(any());
         verify(alertTemplateRuleItemMapper, times(1)).selectList(any());
@@ -194,10 +213,11 @@ public class AlertTemplateRuleServiceImplTest {
 
     @Test
     public void testEnableIndexTemplateRule() {
-        AlertTemplateRule alertTemplateRule = new AlertTemplateRule().setId(1L).setRuleType(CommonConstants.INDEX_RULE);
-        when(baseMapper.selectById(anyLong())).thenReturn(alertTemplateRule);
-        when(baseMapper.updateById(alertTemplateRule)).thenReturn(1);
-        doNothing().when(prometheusService).updateRuleByTemplateRule(alertTemplateRule);
+        AlertTemplateRuleDO alertTemplateRuleDO =
+            new AlertTemplateRuleDO().setId(1L).setRuleType(CommonConstants.INDEX_RULE);
+        when(baseMapper.selectById(anyLong())).thenReturn(alertTemplateRuleDO);
+        when(baseMapper.updateById(alertTemplateRuleDO)).thenReturn(1);
+        doNothing().when(prometheusService).updateRuleByTemplateRule(alertTemplateRuleDO);
 
         alertTemplateRuleService.enableTemplateRule(anyLong());
 
@@ -208,9 +228,10 @@ public class AlertTemplateRuleServiceImplTest {
 
     @Test
     public void testEnableLogTemplateRule() {
-        AlertTemplateRule alertTemplateRule = new AlertTemplateRule().setId(1L).setRuleType(CommonConstants.LOG_RULE);
-        when(baseMapper.selectById(anyLong())).thenReturn(alertTemplateRule);
-        when(baseMapper.updateById(alertTemplateRule)).thenReturn(1);
+        AlertTemplateRuleDO alertTemplateRuleDO =
+            new AlertTemplateRuleDO().setId(1L).setRuleType(CommonConstants.LOG_RULE);
+        when(baseMapper.selectById(anyLong())).thenReturn(alertTemplateRuleDO);
+        when(baseMapper.updateById(alertTemplateRuleDO)).thenReturn(1);
 
         alertTemplateRuleService.enableTemplateRule(anyLong());
 
@@ -220,10 +241,11 @@ public class AlertTemplateRuleServiceImplTest {
 
     @Test
     public void testDisableIndexTemplateRule() {
-        AlertTemplateRule alertTemplateRule = new AlertTemplateRule().setId(1L).setRuleType(CommonConstants.INDEX_RULE);
-        when(baseMapper.selectById(anyLong())).thenReturn(alertTemplateRule);
-        when(baseMapper.updateById(alertTemplateRule)).thenReturn(1);
-        doNothing().when(prometheusService).updateRuleByTemplateRule(alertTemplateRule);
+        AlertTemplateRuleDO alertTemplateRuleDO =
+            new AlertTemplateRuleDO().setId(1L).setRuleType(CommonConstants.INDEX_RULE);
+        when(baseMapper.selectById(anyLong())).thenReturn(alertTemplateRuleDO);
+        when(baseMapper.updateById(alertTemplateRuleDO)).thenReturn(1);
+        doNothing().when(prometheusService).updateRuleByTemplateRule(alertTemplateRuleDO);
 
         alertTemplateRuleService.disableTemplateRule(anyLong());
 
@@ -234,9 +256,10 @@ public class AlertTemplateRuleServiceImplTest {
 
     @Test
     public void testDisableLogTemplateRule() {
-        AlertTemplateRule alertTemplateRule = new AlertTemplateRule().setId(1L).setRuleType(CommonConstants.LOG_RULE);
-        when(baseMapper.selectById(anyLong())).thenReturn(alertTemplateRule);
-        when(baseMapper.updateById(alertTemplateRule)).thenReturn(1);
+        AlertTemplateRuleDO alertTemplateRuleDO =
+            new AlertTemplateRuleDO().setId(1L).setRuleType(CommonConstants.LOG_RULE);
+        when(baseMapper.selectById(anyLong())).thenReturn(alertTemplateRuleDO);
+        when(baseMapper.updateById(alertTemplateRuleDO)).thenReturn(1);
 
         alertTemplateRuleService.disableTemplateRule(anyLong());
 

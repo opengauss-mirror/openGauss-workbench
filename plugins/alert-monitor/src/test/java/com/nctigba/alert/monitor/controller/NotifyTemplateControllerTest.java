@@ -1,11 +1,30 @@
 /*
- * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ *  Copyright (c) GBA-NCTI-ISDC. 2022-2024.
+ *
+ *  openGauss DataKit is licensed under Mulan PSL v2.
+ *  You can use this software according to the terms and conditions of the Mulan PSL v2.
+ *  You may obtain a copy of Mulan PSL v2 at:
+ *
+ *  http://license.coscl.org.cn/MulanPSL2
+ *
+ *  THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ *  EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ *  MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ *  See the Mulan PSL v2 for more details.
+ *  -------------------------------------------------------------------------
+ *
+ *  NotifyTemplateControllerTest.java
+ *
+ *  IDENTIFICATION
+ *  plugins/alert-monitor/src/test/java/com/nctigba/alert/monitor/controller/NotifyTemplateControllerTest.java
+ *
+ *  -------------------------------------------------------------------------
  */
 
 package com.nctigba.alert.monitor.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.nctigba.alert.monitor.entity.NotifyTemplate;
+import com.nctigba.alert.monitor.model.entity.NotifyTemplateDO;
 import com.nctigba.alert.monitor.service.NotifyTemplateService;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -59,7 +78,7 @@ public class NotifyTemplateControllerTest {
 
     @Test
     public void testGetList() {
-        List<NotifyTemplate> list = new ArrayList<>();
+        List<NotifyTemplateDO> list = new ArrayList<>();
         when(notifyTemplateService.getList(anyString())).thenReturn(list);
         AjaxResult result = notifyTemplateController.getList("");
         verify(notifyTemplateService, times(1)).getList(anyString());
@@ -68,19 +87,19 @@ public class NotifyTemplateControllerTest {
 
     @Test
     public void testGetById() {
-        NotifyTemplate notifyTemplate = new NotifyTemplate();
-        when(notifyTemplateService.getById(anyLong())).thenReturn(notifyTemplate);
+        NotifyTemplateDO notifyTemplateDO = new NotifyTemplateDO();
+        when(notifyTemplateService.getById(anyLong())).thenReturn(notifyTemplateDO);
         AjaxResult result = notifyTemplateController.getById(1L);
         verify(notifyTemplateService, times(1)).getById(anyLong());
-        assertEquals(notifyTemplate, result.get("data"));
+        assertEquals(notifyTemplateDO, result.get("data"));
     }
 
     @Test
     public void testSaveTemplate() {
-        doNothing().when(notifyTemplateService).saveTemplate(any(NotifyTemplate.class));
-        NotifyTemplate notifyTemplate = new NotifyTemplate();
-        AjaxResult result = notifyTemplateController.saveTemplate(notifyTemplate);
-        verify(notifyTemplateService, times(1)).saveTemplate(any(NotifyTemplate.class));
+        doNothing().when(notifyTemplateService).saveTemplate(any(NotifyTemplateDO.class));
+        NotifyTemplateDO notifyTemplateDO = new NotifyTemplateDO();
+        AjaxResult result = notifyTemplateController.saveTemplate(notifyTemplateDO);
+        verify(notifyTemplateService, times(1)).saveTemplate(any(NotifyTemplateDO.class));
         assertEquals(AjaxResult.success(), result);
     }
     @Test
