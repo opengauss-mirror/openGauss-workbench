@@ -200,7 +200,7 @@ CREATE TABLE IF NOT EXISTS "public"."tb_migration_task" (
   "migration_process" varchar(10) COLLATE "pg_catalog"."default",
   "run_hostname" varchar(255) COLLATE "pg_catalog"."default",
   "target_db_version" varchar(20) COLLATE "pg_catalog"."default",
-  "is_adjust_kernel_param" boolean COLLATE "pg_catalog"."default",
+  "is_adjust_kernel_param" boolean,
   CONSTRAINT "tb_migration_task_pkey" PRIMARY KEY ("id")
 );
 
