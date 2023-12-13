@@ -1,0 +1,32 @@
+context:
+  listener:
+    classes: org.opengauss.collect.listener.PluginListener
+spring:
+  # 文件上传
+  servlet:
+    multipart:
+      # 单个文件大小
+      max-file-size: 100MB
+      # 设置总上传的文件大小
+      max-request-size: 200MB
+  resources:
+    static-locations: classpath:resources
+  datasource:
+    type: com.alibaba.druid.pool.DruidDataSource
+    druid:
+      test-while-idle: false
+      test-on-borrow: true
+      validation-query: "select 1"
+      validation-query-timeout: 30000
+
+mybatis-plus:
+  # Search for the specified package alias
+  typeAliasesPackage: org.kit.collect
+  mapperLocations: classpath*:mapper/*.xml
+  # Load the global configuration file
+  configuration:
+    mapUnderscoreToCamelCase: true
+    cache-enabled: false
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+

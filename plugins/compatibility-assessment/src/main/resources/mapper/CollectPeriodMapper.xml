@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.opengauss.collect.mapper.CollectPeriodMapper">
+    <select id="selectListPid" resultType="String">
+        SELECT DISTINCT pid FROM collect_period
+    </select>
+    <select id="findDistinctHostByPid" resultType="java.lang.String">
+        SELECT DISTINCT host
+        FROM collect_period
+        WHERE pid = #{pid}
+            LIMIT 1
+    </select>
+
+    <select id="checkTime" resultType="boolean">
+        SELECT CASE
+                   WHEN COUNT(*) = 0 OR #{time} > (SELECT MAX(end_time) FROM collect_period WHERE pid = #{pid}) THEN 1
+                   ELSE 0
+                   END AS result
+        FROM collect_period
+        WHERE pid = #{pid}
+    </select>
+
+</mapper>
