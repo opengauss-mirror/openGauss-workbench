@@ -37,7 +37,7 @@ public class DatabaseSynonymController {
      * @param request request
      * @return String
      */
-    @PostMapping(value = "/synonyms/action", params = "action=createSynonymDdl", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(value = "/synonyms/action", produces = MediaType.APPLICATION_JSON_VALUE)
     public String createSynonymDDL(@RequestBody DatabaseCreateSynonymDTO request) {
         return databaseSynonymService.createSynonymDDL(request);
     }

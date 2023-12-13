@@ -218,13 +218,13 @@ public class SqlConstants {
     /**
      * get database sql
      */
-    public static final String GET_DATABASE_SQL = "select datname from pg_database;";
+    public static final String GET_DATABASE_SQL = "select datname from pg_database order by datname;";
 
     /**
      * get schema name sql
      */
     public static final String GET_SCHEMA_NAME_SQL = "SELECT oid, nspname FROM pg_namespace where nspname not in "
-            + "('blockchain','snapshot','dbe_perf','pkg_service','cstore','pg_toast');";
+            + "('blockchain','snapshot','dbe_perf','pkg_service','cstore','pg_toast') order by nspname;";
 
     /**
      * get data connection sql
@@ -281,7 +281,7 @@ public class SqlConstants {
     /**
      * view data sql
      */
-    public static final String VIEW_DATA_SQL = "select * from %s.%s LIMIT 300";
+    public static final String VIEW_DATA_SQL = "select * from %s.%s LIMIT %s,%s";
 
     /**
      * table analyse sql
@@ -534,6 +534,95 @@ public class SqlConstants {
     public static final String COMMENT_ROLE_SQL = LF + "COMMENT ON ROLE %s IS '%s';";
 
     /**
+     * comment tablespace sql
+     */
+    public static final String COMMENT_TABLESPACE_SQL = LF + "COMMENT ON TABLESPACE %s IS '%s';";
+
+    /**
+     * create tablespace sql
+     */
+    public static final String CREATE_TABLESPACE_SQL = "CREATE TABLESPACE %s ";
+
+    /**
+     * cowner tablespace sql
+     */
+    public static final String OWNER_TABLESPACE_SQL = LF + " OWNER %s ";
+
+    /**
+     * cowner tablespace sql
+     */
+    public static final String ALTER_OWNER_TABLESPACE_SQL = "ALTER TABLESPACE %s OWNER TO %s; ";
+
+    /**
+     * maxsize
+     */
+    public static final String ALTER_MAXSIZE_TABLESPACE_SQL = LF + "ALTER TABLESPACE %s RESIZE MAXSIZE '%s';";
+
+    /**
+     * seq_page_cost
+     */
+    public static final String ALTER_SEQ_PAGE_COST_SQL = LF + "ALTER TABLESPACE %s SET (%s = '%s');";
+
+    /**
+     * random_page_cost
+     */
+    public static final String ALTER_RANDOM_PAGE_COST_SQL = LF + "ALTER TABLESPACE %s SET (%s = '%s');";
+
+    /**
+     * cowner tablespace sql
+     */
+    public static final String ALTER_NAME_TABLESPACE_SQL = "ALTER TABLESPACE %s RENAME TO %s; ";
+
+    /**
+     * relative
+     */
+    public static final String RELATIVE_TABLESPACE_SQL = LF + " RELATIVE ";
+
+    /**
+     * location
+     */
+    public static final String LOCAL_TABLESPACE_SQL = LF + " LOCATION '%s' ";
+
+    /**
+     * maxsize
+     */
+    public static final String MAXSIZE_TABLESPACE_SQL = LF + " MAXSIZE '%s'";
+
+    /**
+     * with tablespace sql
+     */
+    public static final String WITH_TABLESPACE_SQL = LF + " WITH ( %s )";
+
+    /**
+     * random page cost tablespace sql
+     */
+    public static final String RANDOM_PAGE_COST_TABLESPACE_SQL = LF + " random_page_cost = '%s' ";
+
+    /**
+     * seq page cost tablespace sql
+     */
+    public static final String SEQ_PAGE_COST_TABLESPACE_SQL = LF + " seq_page_cost  = '%s' ";
+
+    /**
+     * drop tablespace sql
+     */
+    public static final String DROP_TABLESPACE_SQL = "DROP TABLESPACE %s ";
+
+    /**
+     * path tablespace sql
+     */
+    public static final String PATH_TABLESPACE_SQL = "SELECT * from pg_tablespace_location(%s);";
+
+    /**
+     * attribute tablespace sql
+     */
+    public static final String ATTRIBUTE_TABLESPACE_SQL = "SELECT  " + LF
+            + "pt.spcname,pt.spcoptions,pt.spcmaxsize,pt.relative,pa.rolname,pd.Description " + LF
+            + "FROM PG_TABLESPACE pt LEFT JOIN PG_SHDescription pd on pd.objoid = pt.oid " + LF
+            + "LEFT JOIN PG_AUTHID pa on pa.oid = pt.spcowner" + LF
+            + "where pt.oid = %s ;";
+
+    /**
      * create view sql
      */
     public static final String CREATE_VIEW_SQL = "CREATE %s VIEW %s.%s AS %s";
@@ -563,9 +652,54 @@ public class SqlConstants {
     public static final String DROP_USER_SQL = LF + "DROP USER %s;";
 
     /**
+     * update user password
+     */
+    public static final String UPDAT_USER_PASSWORD_SQL = "alter %s %s identified by '%s' replace '%s';";
+
+    /**
      * drop role sql
      */
     public static final String DROP_ROLE_SQL = LF + "DROP ROLE %s;";
+
+    /**
+     * alter user date sql
+     */
+    public static final String ALTER_DATE_SQL = LF + "ALTER %s %s VALID %s '%s';";
+
+    /**
+     * alter connection user sql
+     */
+    public static final String ALTER_CONNECTION_SQL = LF + "ALTER %s %s CONNECTION LIMIT %s;";
+
+    /**
+     * alter name user sql
+     */
+    public static final String ALTER_NAME_SQL = LF + "ALTER %s %s RENAME TO %s;";
+
+    /**
+     * alter comment user sql
+     */
+    public static final String ALTER_COMMENT_SQL = LF + "COMMENT ON %s %s IS '%s';";
+
+    /**
+     * alter comment user sql
+     */
+    public static final String ALTER_POOL_SQL = LF + "ALTER %s %s RESOURCE POOL '%s';";
+
+    /**
+     * alter grant user sql
+     */
+    public static final String GRANT_SQL = LF + "GRANT %s TO %s;";
+
+    /**
+     * alter revoke user sql
+     */
+    public static final String REVOKE_SQL = LF + "REVOKE %s FROM %s;";
+
+    /**
+     * alter user power sql
+     */
+    public static final String ALTER_POWER_SQL = LF + "ALTER %s %s %s;";
 
     /**
      * synonym sql
@@ -1066,7 +1200,7 @@ public class SqlConstants {
             + "THEN string_agg(att.attname, ',' order by att.attname) ELSE null END attname, "
             + " pg_catalog.pg_get_expr(pi.indexprs, pi.indrelid, true) expression,  pg_description.description "
             + "from PG_INDEX pi inner join PG_CLASS pc on pi.indexrelid = pc.oid and pc.relkind in ('i' ,'I') "
-            + "inner join PG_ATTRIBUTE att on pc.oid = att.attrelid "
+            + "inner join PG_ATTRIBUTE att on pc.oid = att.attrelid and att.attname != 'tableoid' "
             + "LEFT JOIN pg_description  ON pi.indexrelid = pg_description.objoid JOIN pg_am am ON pc.relam = am.oid "
             + "inner join (select pc.oid from PG_CLASS pc inner join pg_namespace pn on pn.oid = pc.relnamespace "
             + "where pc.relname = '%s' and pn.nspname = '%s' ) tt on pi.indrelid = tt.oid "
@@ -1094,6 +1228,73 @@ public class SqlConstants {
     public static final String SELECT_VIEW_TYPE_SQL = " SELECT c.relkind as relkind FROM pg_class c LEFT JOIN "
             + "pg_namespace n ON n.oid = c.relnamespace and n.nspname = '%s' where c.relname = '%s' and c.relkind in "
             + "('m','v')";
+
+    /**
+     * select user sql
+     */
+    public static final String SELECT_USER_SQL = "SELECT a.oid,a.rolname," + LF
+            + "case when a.rolcanlogin = true then 'LOGIN' ELSE '' end rolcanlogin," + LF
+            + "case when a.rolinherit = true then 'INHERIT' ELSE '' end rolinherit," + LF
+            + "case when a.rolreplication = true then 'REPLICATION' ELSE '' end rolreplication," + LF
+            + "case when a.rolcreaterole = true then 'CREATEROLE' ELSE '' end rolcreaterole," + LF
+            + "case when a.rolcreatedb = true then 'CREATEDB' ELSE '' end rolcreatedb," + LF
+            + "case when a.rolauditadmin = true then 'AUDITADMIN' ELSE '' end rolauditadmin," + LF
+            + "case when a.rolsystemadmin = true then 'SYSADMIN' ELSE '' end rolsystemadmin," + LF
+            + "a.rolvalidbegin,a.rolvaliduntil,a.rolconnlimit," + LF
+            + "a.rolrespool,t1.merolname,t1.grrolname,t2.belong,pd.Description  from PG_ROLES a LEFT join " + LF
+            + "(SELECT t2.roleid ,grrolname," + LF
+            + " merolname from " + LF
+            + "(SELECT b.roleid ,array_agg(c.rolname) grrolname " + LF
+            + "from PG_AUTH_MEMBERS b INNER JOIN PG_ROLES c on c.oid = b.member " + LF
+            + "where admin_option =false" + LF
+            + "GROUP BY b.roleid) t2" + LF
+            + "left join (SELECT b.roleid,array_agg(c.rolname) merolname " + LF
+            + "from PG_AUTH_MEMBERS b INNER JOIN PG_ROLES c on c.oid = b.member " + LF
+            + "where admin_option =true" + LF
+            + "GROUP BY b.roleid) t3" + LF
+            + "on t2.roleid = t3.roleid) t1" + LF
+            + "on a.oid = t1.roleid" + LF
+            + "left join PG_SHDescription pd on a.oid = pd.objoid" + LF
+            + "LEFT join (SELECT pg_authid.oid AS oid, array_agg(parent.rolname) AS belong" + LF
+            + "FROM PG_AUTHID" + LF
+            + "INNER JOIN pg_auth_members ON pg_authid.oid = pg_auth_members.member" + LF
+            + "INNER JOIN pg_authid AS parent ON pg_auth_members.roleid = parent.oid" + LF
+            + "WHERE pg_authid.rolname = '%s'" + LF
+            + "GROUP BY 1)t2 on a.oid = t2.oid" + LF
+            + "where a.rolname = '%s';";
+
+    /**
+     * select user sql
+     */
+    public static final String SELECT_ROLES_SQL = "SELECT a.oid,a.rolname," + LF
+            + "case when a.rolinherit = true then 'INHERIT' ELSE '' end rolinherit," + LF
+            + "case when a.rolreplication = true then 'REPLICATION' ELSE '' end rolreplication," + LF
+            + "case when a.rolcreaterole = true then 'CREATEROLE' ELSE '' end rolcreaterole," + LF
+            + "case when a.rolcreatedb = true then 'CREATEDB' ELSE '' end rolcreatedb," + LF
+            + "case when a.rolauditadmin = true then 'AUDITADMIN' ELSE '' end rolauditadmin," + LF
+            + "case when a.rolsystemadmin = true then 'SYSADMIN' ELSE '' end rolsystemadmin," + LF
+            + "a.rolvalidbegin,a.rolvaliduntil,a.rolconnlimit," + LF
+            + "a.rolrespool,t1.merolname,t1.grrolname,t2.belong,pd.Description  from PG_ROLES a LEFT join " + LF
+            + "(SELECT t2.roleid ,grrolname," + LF
+            + " merolname from " + LF
+            + "(SELECT b.roleid ,array_agg(c.rolname) grrolname " + LF
+            + "from PG_AUTH_MEMBERS b INNER JOIN PG_ROLES c on c.oid = b.member " + LF
+            + "where admin_option =false" + LF
+            + "GROUP BY b.roleid) t2" + LF
+            + "left join (SELECT b.roleid,array_agg(c.rolname) merolname " + LF
+            + "from PG_AUTH_MEMBERS b INNER JOIN PG_ROLES c on c.oid = b.member " + LF
+            + "where admin_option =true" + LF
+            + "GROUP BY b.roleid) t3" + LF
+            + "on t2.roleid = t3.roleid) t1" + LF
+            + "on a.oid = t1.roleid" + LF
+            + "left join PG_SHDescription pd on a.oid = pd.objoid" + LF
+            + "LEFT join (SELECT pg_authid.oid AS oid, array_agg(parent.rolname) AS belong" + LF
+            + "FROM PG_AUTHID" + LF
+            + "INNER JOIN pg_auth_members ON pg_authid.oid = pg_auth_members.member" + LF
+            + "INNER JOIN pg_authid AS parent ON pg_auth_members.roleid = parent.oid" + LF
+            + "WHERE pg_authid.rolname = '%s'" + LF
+            + "GROUP BY 1)t2 on a.oid = t2.oid" + LF
+            + "where a.rolname = '%s';";
 
     /**
      * select object select
@@ -1250,4 +1451,174 @@ public class SqlConstants {
      * fetch sql
      */
     public static final String FETCH_SQL = "FETCH FORWARD %d FROM %s";
+
+    /**
+     * query foreign server sql
+     */
+    public static final String QUERY_FOREIGN_SERVER_SQL = "select srvname, fdwname from pg_foreign_server pfs "
+            + "left join pg_namespace pn on pfs.srvowner = pn.nspowner "
+            + "left join pg_foreign_data_wrapper pfdw on pfdw.oid = pfs.srvfdw "
+            + "where pn.nspname = '%s';";
+
+    /**
+     * query extension sql
+     */
+    public static final String QUERY_EXTENSION_SQL = "select * from pg_foreign_data_wrapper;";
+
+    /**
+     * create extension sql
+     */
+    public static final String CREATE_EXTENSION_SQL = "CREATE EXTENSION IF NOT EXISTS ";
+
+    /**
+     * create foreign server sql
+     */
+    public static final String CREATE_FOREIGN_SERVER_SQL = "CREATE SERVER %s FOREIGN DATA WRAPPER %s "
+            + "OPTIONS (host '%s', port '%s', dbname '%s');";
+
+    /**
+     * mapping name sql
+     */
+    public static final String MAPPING_NAME_SQL = "select usename from pg_user_mappings where srvname = '%s';";
+
+    /**
+     * create mapping sql
+     */
+    public static final String CREATE_MAPPING_SQL = "CREATE USER MAPPING FOR %s SERVER %s "
+            + "OPTIONS (user '%s', password '%s');";
+
+    /**
+     * far option sql
+     */
+    public static final String FAR_OPTION_SQL = "OPTIONS (schema_name '%s', table_name '%s');" + LF;
+
+    /**
+     * delete foreign table
+     */
+    public static final String DELETE_FOREIGN_TABLE_SQL = "DROP FOREIGN TABLE %s.%s;";
+
+    /**
+     * delete foreign mapping
+     */
+    public static final String DELETE_FOREIGN_MAPPING_SQL = "DROP USER MAPPING for %s SERVER %s;";
+
+    /**
+     * delete foreign server
+     */
+    public static final String DELETE_FOREIGN_SERVER_SQL = "DROP SERVER %s;";
+
+    /**
+     * foreign table attribute sql
+     */
+    public static final String FOREIGN_TABLE_ATTRIBUTE_SQL = "select pc.relname, pfdw.fdwname, pfs.srvname, "
+            + "pn.nspname, pfs.srvoptions, pft.ftoptions, pd.description "
+            + "from pg_class pc "
+            + "left join pg_namespace pn on pn.oid = pc.relnamespace "
+            + "left join pg_foreign_table pft on pft.ftrelid = pc.relfilenode "
+            + "left join pg_foreign_server pfs on pfs.oid = pft.ftserver "
+            + "left join pg_foreign_data_wrapper pfdw on pfdw.oid = pfs.srvfdw "
+            + "left join pg_description pd on pd.objoid = pc.relfilenode and objsubid = 0 "
+            + "where pc.relname = '%s' and pc.relkind = 'f' and pn.nspname = '%s';";
+
+    /**
+     * foreign table description
+     */
+    public static final String TABLE_DESCRIPTION_SQL = "COMMENT ON FOREIGN TABLE %s.%s IS '%s';";
+
+    /**
+     * query trigger sql
+     */
+    public static final String QUERY_TRIGGER_SQL = "select pc.oid, pt.tgname, pt.tgenabled, pc.relkind, "
+            + "pc.relname,pt.tgtype, pt.tgattr, pp.proname, pt.tgqual, pd.description "
+            + "from pg_trigger pt "
+            + "left join pg_class pc on pc.oid = pt.tgrelid "
+            + "left join pg_proc pp on pp.oid = pt.tgfoid "
+            + "left join pg_description pd on pd.objoid = pt.oid "
+            + "where pt.tgname = '%s' and pc.relname = '%s';";
+
+    /**
+     * query column name sql
+     */
+    public static final String QUERY_COLUMN_NAME_SQL = "select attname from pg_attribute "
+            + "where attrelid = %s and attnum in (%s);";
+
+    /**
+     * rename trigger sql
+     */
+    public static final String RENAME_TRIGGER_SQL = "ALTER TRIGGER %s ON %s.%s RENAME TO %s;";
+
+    /**
+     * query trigger function sql
+     */
+    public static final String QUERY_TRIGGER_FUNCTION_SQL = "select pg.proname from pg_proc pg "
+            + "left join pg_type pt on pt.oid = pg.prorettype "
+            + "left join pg_namespace pn on pn.oid = pg.pronamespace "
+            + "where pt.typname = 'trigger' and pn.nspname = '%s' order by pg.proname;";
+
+    /**
+     * drop trigger sql
+     */
+    public static final String DROP_TRIGGER_SQL = "DROP TRIGGER %s ON %s.%s;";
+
+    /**
+     * enable trigger sql
+     */
+    public static final String ENABLE_TRIGGER_SQL = "ALTER TABLE %s.%s ENABLE TRIGGER %s;";
+
+    /**
+     * disable trigger sql
+     */
+    public static final String DISABLE_TRIGGER_SQL = "ALTER TABLE %s.%s DISABLE TRIGGER %s;";
+
+    /**
+     * trigger ddl sql
+     */
+    public static final String TRIGGER_DDL_SQL = "select * from pg_get_triggerdef(%s);";
+
+    /**
+     * query job list sql
+     */
+    public static final String QUERY_JOB_LIST_SQL = "select pj.job_id, what as job_content, dbname as database_name, "
+            + "job_status, interval, start_date, next_run_date, failure_count, failure_msg, last_end_date, "
+            + "last_suc_date, log_user as creator, priv_user as executor "
+            + "from pg_job pj left join pg_job_proc pjp on pj.job_id = pjp.job_id "
+            + "order by what desc limit %s, %s;";
+
+    /**
+     * query job count sql
+     */
+    public static final String QUERY_JOB_COUNT_SQL = "select count(1) from pg_job;";
+
+    /**
+     * query job sql
+     */
+    public static final String QUERY_JOB_SQL = "select pj.job_id, what as job_content, next_run_date, interval "
+            + "from pg_job pj left join pg_job_proc pjp on pj.job_id = pjp.job_id where pj.job_id = %s;";
+
+    /**
+     * create job sql
+     */
+    public static final String CREATE_JOB_SQL = "select pkg_service.job_submit(null, '%s', "
+            + "to_timestamp('%s', 'yyyy-MM-dd HH24:mi:ss'), '%s');";
+
+    /**
+     * update job sql
+     */
+    public static final String UPDATE_JOB_SQL = "select pkg_service.job_update(%s, "
+            + "to_timestamp('%s', 'yyyy-MM-dd HH24:mi:ss'), '%s', '%s');";
+
+    /**
+     * delete job sql
+     */
+    public static final String DELETE_JOB_SQL = "select pkg_service.job_cancel(%s);";
+
+    /**
+     * enable job sql
+     */
+    public static final String ENABLE_JOB_SQL = "select pkg_service.job_finish(%s, false, sysdate);";
+
+    /**
+     * delete job sql
+     */
+    public static final String DISABLE_JOB_SQL = "select pkg_service.job_finish(%s, true, sysdate);";
 }

@@ -87,7 +87,7 @@
   });
 
   const fetchTablespaceList = async () => {
-    const res = (await getTablespaceList(commonParams.value.uuid)) as unknown as string[];
+    const res = (await getTablespaceList({ uuid: commonParams.value.uuid })) as unknown as string[];
     optionList.value = res;
   };
 

@@ -5,7 +5,7 @@
 package com.nctigba.datastudio.service;
 
 import com.nctigba.datastudio.model.entity.CoverageRateDO;
-import com.nctigba.datastudio.model.query.CoverageRateRequest;
+import com.nctigba.datastudio.model.query.CoverageRateQuery;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -25,7 +25,7 @@ public interface CoverageRateService {
      * @return List
      * @throws SQLException SQLException
      */
-    List<CoverageRateDO> queryCoverageRate(CoverageRateRequest request) throws SQLException;
+    List<CoverageRateDO> queryCoverageRate(CoverageRateQuery request) throws SQLException;
 
     /**
      * delete coverage rate
@@ -33,7 +33,7 @@ public interface CoverageRateService {
      * @param request request
      * @throws SQLException SQLException
      */
-    void delete(CoverageRateRequest request) throws SQLException;
+    void delete(CoverageRateQuery request) throws SQLException;
 
     /**
      * export coverage rate
@@ -45,6 +45,6 @@ public interface CoverageRateService {
      * @throws NoSuchFieldException NoSuchFieldException
      * @throws IllegalAccessException IllegalAccessException
      */
-    void export(CoverageRateRequest request, HttpServletResponse response)
+    void export(CoverageRateQuery request, HttpServletResponse response)
             throws SQLException, IOException, NoSuchFieldException, IllegalAccessException;
 }

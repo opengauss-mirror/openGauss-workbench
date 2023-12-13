@@ -10,9 +10,10 @@ import com.nctigba.datastudio.model.dto.DatabaseCreateViewDTO;
 import com.nctigba.datastudio.model.dto.DatabaseSelectViewDTO;
 import com.nctigba.datastudio.model.dto.DatabaseViewDTO;
 import com.nctigba.datastudio.model.dto.DatabaseViewDdlDTO;
+import com.nctigba.datastudio.model.dto.ViewDataDTO;
 import com.nctigba.datastudio.service.DatabaseViewService;
-import com.nctigba.datastudio.util.DebugUtils;
-import com.nctigba.datastudio.util.LocaleString;
+import com.nctigba.datastudio.utils.DebugUtils;
+import com.nctigba.datastudio.utils.LocaleStringUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.opengauss.admin.common.exception.CustomException;
@@ -29,12 +30,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.nctigba.datastudio.constants.CommonConstants.DEFINITION;
 import static com.nctigba.datastudio.constants.CommonConstants.NAME;
 import static com.nctigba.datastudio.constants.CommonConstants.SCHEMA;
 import static com.nctigba.datastudio.constants.CommonConstants.SOURCECODE;
 import static com.nctigba.datastudio.constants.CommonConstants.TYPE;
 import static com.nctigba.datastudio.dao.ConnectionMapDAO.conMap;
+import static com.nctigba.datastudio.utils.DebugUtils.comGetUuidType;
+import static java.lang.Math.ceil;
 
 /**
  * DatabaseViewServiceImpl
@@ -64,7 +66,7 @@ public class DatabaseViewServiceImpl implements DatabaseViewService {
     @Override
     public String createViewDDL(DatabaseCreateViewDTO request) {
         log.info("createViewDDL request is: " + request);
-        String ddl = viewObjectSQLService.get(conMap.get(request.getUuid()).getType()).splicingViewDDL(request);
+        String ddl = viewObjectSQLService.get(comGetUuidType(request.getUuid())).splicingViewDDL(request);
         log.info("createViewDDL response is: " + ddl);
         return ddl;
     }
@@ -72,7 +74,7 @@ public class DatabaseViewServiceImpl implements DatabaseViewService {
     @Override
     public String returnViewDDL(DatabaseViewDdlDTO request) throws SQLException {
         log.info("returnViewDDL request is: " + request);
-        return viewObjectSQLService.get(conMap.get(request.getUuid()).getType()).returnDatabaseViewDDL(request);
+        return viewObjectSQLService.get(comGetUuidType(request.getUuid())).returnDatabaseViewDDL(request);
 
     }
 
@@ -83,7 +85,7 @@ public class DatabaseViewServiceImpl implements DatabaseViewService {
                 Connection connection = connectionConfig.connectDatabase(request.getUuid());
                 Statement statement = connection.createStatement()
         ) {
-            String ddl = viewObjectSQLService.get(conMap.get(request.getUuid()).getType()).splicingViewDDL(request);
+            String ddl = viewObjectSQLService.get(comGetUuidType(request.getUuid())).splicingViewDDL(request);
             statement.execute(ddl);
             log.info("createView response is: " + ddl);
         } catch (SQLException e) {
@@ -101,26 +103,44 @@ public class DatabaseViewServiceImpl implements DatabaseViewService {
                 Statement statement = connection.createStatement()
         ) {
             statement.execute(
-                    viewObjectSQLService.get(conMap.get(request.getUuid()).getType()).returnDropViewSQL(request));
+                    viewObjectSQLService.get(comGetUuidType(request.getUuid())).returnDropViewSQL(request));
         } catch (SQLException e) {
             throw new CustomException(e.getMessage());
         }
     }
 
     @Override
-    public Map<String, Object> selectView(DatabaseSelectViewDTO request) {
+    public ViewDataDTO selectView(DatabaseSelectViewDTO request) {
         log.info("selectView request is: " + request);
         try (
                 Connection connection = connectionConfig.connectDatabase(request.getUuid());
                 Statement statement = connection.createStatement();
-                ResultSet resultSet = statement.executeQuery(viewObjectSQLService.get(
-                        conMap.get(request.getUuid()).getType()).returnSelectViewSQL(request))
+                Statement statementCount = connection.createStatement();
+                ResultSet resultSetCount = statementCount.executeQuery(
+                        viewObjectSQLService.get(comGetUuidType(request.getUuid())).viewDataCountSQL(request))
         ) {
-            Map<String, Object> resultMap = DebugUtils.parseResultSet(resultSet);
-            log.info("selectView sql is: " + viewObjectSQLService.get(
-                    conMap.get(request.getUuid()).getType()).returnSelectViewSQL(request));
-            log.info("selectView response is: " + resultMap);
-            return resultMap;
+            resultSetCount.next();
+            Integer count = resultSetCount.getInt(1);
+            ViewDataDTO viewDataDTO = new ViewDataDTO();
+            viewDataDTO.setViewDataDTO(request);
+            viewDataDTO.setDataSize(count);
+            viewDataDTO.setPageTotal((int) ceil((double) count / request.getPageSize()));
+            int start;
+            if (request.getPageNum() != 1) {
+                start = request.getPageSize() * (request.getPageNum() - 1);
+            } else {
+                start = 0;
+            }
+            String sql = viewObjectSQLService.get(
+                    comGetUuidType(request.getUuid())).returnSelectViewSQL(request, start, request.getPageSize());
+            try (
+                    ResultSet resultSet = statement.executeQuery(sql)
+            ) {
+                Map<String, Object> resultMap = DebugUtils.parseResultSet(resultSet);
+                log.info("selectView response is: " + resultMap);
+                viewDataDTO.setData(resultMap);
+                return viewDataDTO;
+            }
         } catch (SQLException e) {
             log.info(e.toString());
             throw new CustomException(e.getMessage());
@@ -137,7 +157,7 @@ public class DatabaseViewServiceImpl implements DatabaseViewService {
             String schema = request.getSchema();
             String newSchema = request.getNewSchema();
             if (StringUtils.isNotEmpty(newSchema) && !newSchema.equals(schema)) {
-                statement.execute(viewObjectSQLService.get(conMap.get(request.getUuid()).getType())
+                statement.execute(viewObjectSQLService.get(comGetUuidType(request.getUuid()))
                         .setViewSchema(schema, request.getViewName(), newSchema));
                 schema = newSchema;
             }
@@ -145,7 +165,7 @@ public class DatabaseViewServiceImpl implements DatabaseViewService {
             String viewName = request.getViewName();
             String newViewName = request.getNewViewName();
             if (StringUtils.isNotEmpty(newViewName) && !newViewName.equals(viewName)) {
-                statement.execute(viewObjectSQLService.get(conMap.get(request.getUuid()).getType())
+                statement.execute(viewObjectSQLService.get(comGetUuidType(request.getUuid()))
                         .renameView(schema, viewName, newViewName));
             }
             log.info("DatabaseViewServiceImpl renameView end: ");
@@ -155,14 +175,14 @@ public class DatabaseViewServiceImpl implements DatabaseViewService {
     @Override
     public List<Map<String, String>> viewAttribute(DatabaseViewDdlDTO request) throws SQLException {
         log.info("DatabaseViewServiceImpl viewAttribute request: " + request);
-        String ddl = viewObjectSQLService.get(conMap.get(request.getUuid()).getType()).returnDatabaseViewDDL(request);
+        String ddl = viewObjectSQLService.get(comGetUuidType(request.getUuid())).returnDatabaseViewDDL(request);
 
         Map<String, String> map1 = new HashMap<>();
         Map<String, String> map2 = new HashMap<>();
         Map<String, String> map3 = new HashMap<>();
-        map1.put(LocaleString.transLanguage("17"), request.getViewName());
-        map2.put(LocaleString.transLanguage("18"), request.getSchema());
-        map3.put(LocaleString.transLanguage("19"), ddl);
+        map1.put(LocaleStringUtils.transLanguage("17"), request.getViewName());
+        map2.put(LocaleStringUtils.transLanguage("18"), request.getSchema());
+        map3.put(LocaleStringUtils.transLanguage("19"), ddl);
 
         List<Map<String, String>> list = new ArrayList<>();
         list.add(map1);
@@ -178,8 +198,9 @@ public class DatabaseViewServiceImpl implements DatabaseViewService {
         try (
                 Connection connection = connectionConfig.connectDatabase(request.getUuid());
                 Statement statement = connection.createStatement();
-                ResultSet resultSet = statement.executeQuery(viewObjectSQLService.get(conMap.get(request.getUuid())
-                        .getType()).getViewColumn(request.getSchema(), request.getViewName()))
+                ResultSet resultSet = statement.executeQuery(viewObjectSQLService.get(
+                        comGetUuidType(request.getUuid()))
+                        .getViewColumn(request.getSchema(), request.getViewName()))
         ) {
             Map<String, Object> map = DebugUtils.parseResultSet(resultSet);
             log.info("DatabaseViewServiceImpl renameView map: " + map);
@@ -191,7 +212,7 @@ public class DatabaseViewServiceImpl implements DatabaseViewService {
     public Map<String, Object> queryView(DatabaseViewDdlDTO request) throws SQLException {
         log.info("DatabaseViewServiceImpl queryView request: " + request);
         Map<String, Object> returnMap =
-                viewObjectSQLService.get(conMap.get(request.getUuid()).getType()).returnViewDDLData(request);
+                viewObjectSQLService.get(comGetUuidType(request.getUuid())).returnViewDDLData(request);
 
         Map<String, Object> map = new HashMap<>();
         map.put(NAME, returnMap.get("matviewname"));

@@ -583,6 +583,55 @@ export const formatTableData = (columns: string[], data: (string | number)[][]) 
   });
 };
 
+/**
+ * format el-table data & width of columns
+ * @param columns example: ['col1', 'col2', 'col3']
+ * @param data example: [[1,2,3],[4,5,6]] => 2row,3col
+ * @returns Processed { columns: [{label: 'col1', columnKey: 'col1', minWidth: 150}...], data：[{col1: 1, col2: 2}...]}
+ */
+interface FormatTableData2Option {
+  indexName?: string;
+  columnWidth?: number;
+}
+export const formatTableDataAndColumns = (
+  columns: string[],
+  data: (string | number)[][],
+  config: FormatTableData2Option = {},
+) => {
+  let columnWidth;
+  if (config.columnWidth) {
+    columnWidth = config.columnWidth;
+  } else if (columns.length == 1) {
+    columnWidth = 300;
+  } else if (columns.length == 2) {
+    columnWidth = 230;
+  } else if (columns.length == 3) {
+    columnWidth = 180;
+  } else {
+    columnWidth = 150;
+  }
+  const myColumns = columns.map((col) => {
+    return {
+      label: col,
+      prop: col,
+      columnKey: col,
+      minWidth: columnWidth,
+    };
+  });
+  const myData = data.map((rowData, rowIndex) => {
+    const obj = {};
+    columns.forEach((col, colIndex) => {
+      config.indexName && (obj[config.indexName] = rowIndex + 1);
+      obj[col] = rowData[colIndex];
+    });
+    return obj;
+  });
+  return {
+    columns: myColumns,
+    data: myData,
+  };
+};
+
 export const formatEditTableData = (config: {
   columns: any[];
   data: (string | number)[][];
@@ -686,7 +735,7 @@ export const manualStringify = (value) => {
       if (cache.indexOf(value) !== -1) {
         return;
       }
-      // 收集所有的值
+      // Collect all values
       cache.push(value);
     }
     return value;
@@ -758,7 +807,7 @@ export const simpleDownloadUrl = async (url: string, fileName?: string): Promise
   link.click();
 };
 
-export const downLoadURL = (url, fileName) => {
+export const downLoadURL = (url: string | Blob, fileName: string): void => {
   const elink = document.createElement('a');
   elink.download = fileName;
   elink.style.display = 'none';
@@ -789,7 +838,7 @@ export const downLoadURLBlob = async (url: string, fileName?: string): Promise<v
   URL.revokeObjectURL(eleA.href);
 };
 
-export const downLoadMyBlobType = async (fileName: string, data: any): Promise<void> => {
+export const downLoadMyBlobType = (fileName: string, data: any): void => {
   const blob = new Blob([data]);
   const tag = document.createElement('a');
   tag.href = window.URL.createObjectURL(blob);
@@ -798,9 +847,9 @@ export const downLoadMyBlobType = async (fileName: string, data: any): Promise<v
   URL.revokeObjectURL(tag.href);
 };
 
-export const copyToClickBoard = (text: string) => {
-  const el = document.createElement('input');
-  el.setAttribute('value', text);
+export const copyToClickBoard = (text: string): void => {
+  const el = document.createElement('textarea');
+  el.value = text;
   document.body.appendChild(el);
   el.select();
   document.execCommand('copy');

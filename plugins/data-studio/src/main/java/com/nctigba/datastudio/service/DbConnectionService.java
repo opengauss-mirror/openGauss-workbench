@@ -4,14 +4,16 @@
 
 package com.nctigba.datastudio.service;
 
+import com.nctigba.datastudio.model.dto.ConnectionTimeLengthDTO;
 import com.nctigba.datastudio.model.dto.DataListDTO;
 import com.nctigba.datastudio.model.dto.DbConnectionCreateDTO;
 import com.nctigba.datastudio.model.dto.GetConnectionAttributeDTO;
 import com.nctigba.datastudio.model.entity.DatabaseConnectionDO;
-import com.nctigba.datastudio.model.query.DatabaseMetaarrayIdSchemaQuery;
+import com.nctigba.datastudio.model.query.DatabaseMetaArrayIdSchemaQuery;
 
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Map;
 
 /**
  * DataListByJdbcService
@@ -65,7 +67,16 @@ public interface DbConnectionService {
      * @param schema schema
      * @return List
      */
-    List<DataListDTO> schemaObjectList(DatabaseMetaarrayIdSchemaQuery schema);
+    List<DataListDTO> schemaObjectList(DatabaseMetaArrayIdSchemaQuery schema);
+
+    /**
+     * get schema object list
+     *
+     * @param query query
+     * @return List
+     * @throws SQLException SQLException
+     */
+    List<Map<String, Object>> schemaObjects(DatabaseMetaArrayIdSchemaQuery query) throws SQLException;
 
     /**
      * add database connection
@@ -83,4 +94,26 @@ public interface DbConnectionService {
      */
     DatabaseConnectionDO loginDatabaseConnection(DbConnectionCreateDTO request);
 
+    /**
+     * login database connection
+     *
+     * @param request request
+     * @return DatabaseConnectionDO
+     */
+    DatabaseConnectionDO loginConnection(DbConnectionCreateDTO request);
+
+    /**
+     * update time length
+     *
+     * @param request request
+     */
+    void timeLength(ConnectionTimeLengthDTO request);
+
+    /**
+     * get connection time length
+     *
+     * @param uuid uuid
+     * @return Integer
+     */
+    Integer getTimeLength(String uuid);
 }

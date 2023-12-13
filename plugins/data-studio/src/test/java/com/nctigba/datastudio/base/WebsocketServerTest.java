@@ -101,11 +101,6 @@ public class WebsocketServerTest {
     }
 
     @Test
-    public void testGetConnection() {
-        webSocketServer.getConnection("webds-plugin");
-    }
-
-    @Test
     public void testSetConnection() {
         webSocketServer.setConnection("webds-plugin", connection);
     }

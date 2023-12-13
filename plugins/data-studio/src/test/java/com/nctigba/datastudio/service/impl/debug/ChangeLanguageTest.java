@@ -6,7 +6,7 @@ package com.nctigba.datastudio.service.impl.debug;
 
 import com.nctigba.datastudio.base.WebSocketServer;
 import com.nctigba.datastudio.model.dto.ConnectionDTO;
-import com.nctigba.datastudio.util.LocaleString;
+import com.nctigba.datastudio.utils.LocaleStringUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Test;
@@ -42,14 +42,14 @@ public class ChangeLanguageTest {
     private MessageSource messageSource;
 
     @Spy
-    private LocaleString localeString;
+    private LocaleStringUtils localeStringUtils;
 
     @Before
     public void setUp() {
         conMap = new HashMap<>();
         conMap.put("8359cbf1-9833-4998-a29c-245f24009ab1", new ConnectionDTO());
 
-        localeString.setMessageSource(messageSource);
+        localeStringUtils.setMessageSource(messageSource);
     }
 
     @Test

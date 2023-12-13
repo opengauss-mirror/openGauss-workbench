@@ -13,7 +13,6 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Repository;
 
-import java.sql.SQLException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -39,18 +38,13 @@ public class ResultSetMapDAO {
     @Lazy
     private TableDataServiceImpl tableDataServiceImpl;
 
-    public static void setWinMap(String winid, WinInfoDTO winInfoDTO) {
-        winMap.put(winid, winInfoDTO);
-        log.info("winMap is: " + winMap);
-    }
 
     /**
      * over time
      *
-     * @throws SQLException SQLException
      */
     @Scheduled(fixedRate = 10, timeUnit = MINUTES)
-    public void overtime() throws SQLException {
+    public void overtime() {
         Date nowData = new Date();
         Set<String> set = winMap.keySet();
         Date date;
@@ -69,9 +63,8 @@ public class ResultSetMapDAO {
      * over time close win
      *
      * @param winID winID
-     * @throws SQLException SQLException
      */
-    public void overtimeCloseWin(String winID) throws SQLException {
+    public void overtimeCloseWin(String winID) {
         log.info("socketSet is: " + winID);
         winMap.remove(winID);
     }

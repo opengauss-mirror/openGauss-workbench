@@ -37,21 +37,6 @@ public enum ParamTypeEnum {
     }
 
     /**
-     * get name
-     *
-     * @param type type
-     * @return String
-     */
-    public static String getName(String type) {
-        for (ParamTypeEnum paramType : ParamTypeEnum.values()) {
-            if (paramType.type.equalsIgnoreCase(type)) {
-                return paramType.name();
-            }
-        }
-        return type;
-    }
-
-    /**
      * parse type
      *
      * @param name name

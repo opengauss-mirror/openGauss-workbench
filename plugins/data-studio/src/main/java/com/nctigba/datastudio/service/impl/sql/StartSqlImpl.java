@@ -7,13 +7,13 @@ package com.nctigba.datastudio.service.impl.sql;
 import cn.hutool.core.thread.ThreadUtil;
 import com.alibaba.fastjson.JSON;
 import com.nctigba.datastudio.base.WebSocketServer;
-import com.nctigba.datastudio.model.PublicParamReq;
 import com.nctigba.datastudio.model.entity.OperateStatusDO;
 import com.nctigba.datastudio.model.entity.SqlHistoryDO;
+import com.nctigba.datastudio.model.query.PublicParamQuery;
 import com.nctigba.datastudio.service.OperationInterface;
 import com.nctigba.datastudio.service.impl.debug.AsyncHelper;
-import com.nctigba.datastudio.util.DebugUtils;
-import com.nctigba.datastudio.util.LocaleString;
+import com.nctigba.datastudio.utils.DebugUtils;
+import com.nctigba.datastudio.utils.LocaleStringUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
@@ -30,7 +30,9 @@ import java.util.Date;
 import java.util.List;
 
 import static com.nctigba.datastudio.constants.CommonConstants.FIVE_HUNDRED;
+import static com.nctigba.datastudio.dao.ConnectionMapDAO.conMap;
 import static com.nctigba.datastudio.enums.MessageEnum.BUTTON;
+import static com.nctigba.datastudio.enums.MessageEnum.DISCONNECTION;
 import static com.nctigba.datastudio.enums.MessageEnum.TABLE;
 import static com.nctigba.datastudio.enums.MessageEnum.TEXT;
 import static com.nctigba.datastudio.enums.MessageEnum.WINDOW;
@@ -48,14 +50,17 @@ public class StartSqlImpl implements OperationInterface {
 
     @Override
     @Async
-    public void operate(WebSocketServer webSocketServer, Object obj) throws SQLException {
-        PublicParamReq paramReq = DebugUtils.changeParamType(obj);
+    public void operate(WebSocketServer webSocketServer, Object obj) throws SQLException, IOException {
+        log.info("StartSqlImpl operate obj: " + obj);
+        PublicParamQuery paramReq = DebugUtils.changeParamType(obj);
         String windowName = paramReq.getWindowName();
+        if (!conMap.containsKey(paramReq.getUuid())) {
+            webSocketServer.sendMessage(windowName, DISCONNECTION,
+                    LocaleStringUtils.transLanguageWs("1004", webSocketServer), paramReq.getUuid());
+        }
         Connection connection = webSocketServer.getConnection(windowName);
         Statement stat = connection.createStatement();
         webSocketServer.setStatement(windowName, stat);
-
-        log.info("tableColumnList request is: " + paramReq);
         ThreadUtil.execAsync(() -> {
             List<SqlHistoryDO> list = new ArrayList<>();
             DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -66,25 +71,25 @@ public class StartSqlImpl implements OperationInterface {
 
             try {
                 webSocketServer.sendMessage(windowName, TEXT,
-                        LocaleString.transLanguageWs("2001", webSocketServer), null);
+                        LocaleStringUtils.transLanguageWs("2001", webSocketServer), null);
                 startTime = new Date();
                 boolean result = stat.execute(paramReq.getSql());
                 endTime = new Date();
                 webSocketServer.sendMessage(windowName, BUTTON,
-                        LocaleString.transLanguageWs("2006", webSocketServer), null);
+                        LocaleStringUtils.transLanguageWs("2006", webSocketServer), null);
                 OperateStatusDO operateStatus = webSocketServer.getOperateStatus(windowName);
                 operateStatus.enableStopRun();
                 webSocketServer.setOperateStatus(windowName, operateStatus);
                 while (true) {
                     if (result) {
                         webSocketServer.sendMessage(windowName, TABLE,
-                                LocaleString.transLanguageWs("2002", webSocketServer),
+                                LocaleStringUtils.transLanguageWs("2002", webSocketServer),
                                 DebugUtils.parseResultSetType(stat.getResultSet()));
                         webSocketServer.sendMessage(windowName, TEXT,
-                                LocaleString.transLanguageWs("2002", webSocketServer), null);
+                                LocaleStringUtils.transLanguageWs("2002", webSocketServer), null);
                     } else {
                         if (stat.getUpdateCount() != -1) {
-                            webSocketServer.sendMessage(windowName, TEXT, LocaleString.transLanguageWs(
+                            webSocketServer.sendMessage(windowName, TEXT, LocaleStringUtils.transLanguageWs(
                                     "2005", webSocketServer) + stat.getUpdateCount(), null);
                         } else {
                             break;
@@ -93,15 +98,15 @@ public class StartSqlImpl implements OperationInterface {
                     result = stat.getMoreResults();
                 }
                 webSocketServer.sendMessage(windowName, TEXT,
-                        LocaleString.transLanguageWs("2003", webSocketServer), null);
+                        LocaleStringUtils.transLanguageWs("2003", webSocketServer), null);
             } catch (IOException | SQLException e) {
+                log.info("StartSqlImpl operate catch: " + e);
                 isSuccess = false;
                 endTime = new Date();
-                log.info(e.toString());
                 try {
                     webSocketServer.sendMessage(windowName, WINDOW, FIVE_HUNDRED, e.getMessage(), e.getStackTrace());
                     webSocketServer.sendMessage(windowName, BUTTON,
-                            LocaleString.transLanguageWs("2006", webSocketServer), null);
+                            LocaleStringUtils.transLanguageWs("2006", webSocketServer), null);
                     OperateStatusDO operateStatus = webSocketServer.getOperateStatus(windowName);
                     operateStatus.enableStopRun();
                     webSocketServer.setOperateStatus(windowName, operateStatus);
@@ -116,14 +121,14 @@ public class StartSqlImpl implements OperationInterface {
                 sqlHistoryDO.setWebUser(paramReq.getWebUser());
                 list.add(sqlHistoryDO);
                 asyncHelper.insertSqlHistory(list);
+                log.info("StartSqlImpl operate finally: " + list);
 
                 try {
                     stat.close();
                     stat.cancel();
                     webSocketServer.setStatement(windowName, null);
                 } catch (SQLException e) {
-                    log.info(e.toString());
-                    log.error("tableColumnList SQLException is: " + e.getMessage());
+                    log.info("StartSqlImpl operate Exception: " + e);
                 }
             }
         });
@@ -131,6 +136,6 @@ public class StartSqlImpl implements OperationInterface {
 
     @Override
     public Object formatJson(String str) {
-        return JSON.parseObject(str, PublicParamReq.class);
+        return JSON.parseObject(str, PublicParamQuery.class);
     }
 }

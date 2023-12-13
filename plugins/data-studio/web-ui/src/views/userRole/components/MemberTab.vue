@@ -3,14 +3,21 @@
     :model="form"
     class="rule-form"
     ref="ruleFormRef"
-    label-width="130px"
+    label-width="110px"
     label-position="left"
     :label-suffix="$t('common.colon')"
   >
     <el-row :gutter="50">
       <el-col :span="12">
         <el-form-item prop="role" :label="$t('userRole.roleGroup')">
-          <el-select v-model="form.role" clearable multiple collapse-tags>
+          <el-select
+            v-if="props.type == 'create'"
+            v-model="form.role"
+            clearable
+            multiple
+            collapse-tags
+            :disabled="props.type != 'create'"
+          >
             <el-option
               v-for="item in userRoleList"
               :key="item.oid"
@@ -18,11 +25,57 @@
               :value="item.name"
             />
           </el-select>
+          <el-tooltip v-else effect="light">
+            <template #content>
+              <div v-for="(item, key) in form.role" :key="key"> {{ item }} <br /> </div>
+            </template>
+            <el-text truncated>
+              {{ form.role?.join(', ') || '-' }}
+            </el-text>
+          </el-tooltip>
         </el-form-item>
       </el-col>
       <el-col :span="12">
         <el-form-item prop="administrator" :label="$t('userRole.adminsGroup')">
-          <el-select v-model="form.administrator" clearable multiple collapse-tags>
+          <el-select
+            v-if="props.type == 'create'"
+            v-model="form.administrator"
+            clearable
+            multiple
+            collapse-tags
+            :disabled="props.type != 'create'"
+          >
+            <el-option
+              v-for="item in userRoleList"
+              :key="item.oid"
+              :label="item.name"
+              :value="item.name"
+            />
+          </el-select>
+          <el-tooltip v-else effect="light">
+            <template #content>
+              <div v-for="(item, key) in form.administrator" :key="key"> {{ item }} <br /> </div>
+            </template>
+            <el-text truncated>
+              {{ form.administrator?.join(', ') || '-' }}
+            </el-text>
+          </el-tooltip>
+        </el-form-item>
+      </el-col>
+      <el-col :span="12" v-if="props.type != 'create'">
+        <el-form-item prop="belong">
+          <template #label>
+            {{ $t('userRole.belong') }}
+            <el-tooltip
+              popper-class="form-item-tooltip"
+              effect="light"
+              :content="t('userRole.belongTips')"
+              placement="top"
+            >
+              <el-icon><QuestionFilled /></el-icon>
+            </el-tooltip>
+          </template>
+          <el-select v-model="form.belong" clearable multiple collapse-tags>
             <el-option
               v-for="item in userRoleList"
               :key="item.oid"
@@ -71,7 +124,7 @@
   };
 
   const fetchUserRoleList = async () => {
-    const res = await getUserRoleList(props.uuid);
+    const res = await getUserRoleList({ uuid: props.uuid });
     userRoleList.value = [].concat(res.role || [], res.user || []);
   };
 

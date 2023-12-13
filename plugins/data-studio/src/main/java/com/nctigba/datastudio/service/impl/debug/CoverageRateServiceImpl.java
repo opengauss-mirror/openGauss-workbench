@@ -6,10 +6,10 @@ package com.nctigba.datastudio.service.impl.debug;
 
 import com.nctigba.datastudio.config.ConnectionConfig;
 import com.nctigba.datastudio.model.entity.CoverageRateDO;
-import com.nctigba.datastudio.model.query.CoverageRateRequest;
+import com.nctigba.datastudio.model.query.CoverageRateQuery;
 import com.nctigba.datastudio.service.CoverageRateService;
-import com.nctigba.datastudio.util.DebugUtils;
-import com.nctigba.datastudio.util.LocaleString;
+import com.nctigba.datastudio.utils.DebugUtils;
+import com.nctigba.datastudio.utils.LocaleStringUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -136,7 +136,7 @@ public class CoverageRateServiceImpl implements CoverageRateService {
     private ConnectionConfig connectionConfig;
 
     @Override
-    public List<CoverageRateDO> queryCoverageRate(CoverageRateRequest request) throws SQLException {
+    public List<CoverageRateDO> queryCoverageRate(CoverageRateQuery request) throws SQLException {
         log.info("CoverageRateServiceImpl queryCoverageRate request: " + request);
         try (
                 Connection connection = connectionConfig.connectDatabase(request.getUuid());
@@ -150,27 +150,21 @@ public class CoverageRateServiceImpl implements CoverageRateService {
     }
 
     @Override
-    public void delete(CoverageRateRequest request) throws SQLException {
+    public void delete(CoverageRateQuery request) throws SQLException {
         log.info("CoverageRateServiceImpl delete request: " + request);
         try (
                 Connection connection = connectionConfig.connectDatabase(request.getUuid());
                 Statement statement = connection.createStatement()
         ) {
-            StringBuilder sb = new StringBuilder();
             List<Long> cidList = request.getCidList();
-            for (int i = 0; i < cidList.size(); i++) {
-                sb.append(cidList.get(i));
-                if (i != cidList.size() - 1) {
-                    sb.append(",");
-                }
-            }
-            statement.execute(String.format(DELETE_BY_ID_SQL, sb));
+            String str = DebugUtils.listToString(cidList, COMMA);
+            statement.execute(String.format(DELETE_BY_ID_SQL, str));
             log.info("CoverageRateServiceImpl delete end ");
         }
     }
 
     @Override
-    public void export(CoverageRateRequest request, HttpServletResponse response)
+    public void export(CoverageRateQuery request, HttpServletResponse response)
             throws SQLException, IOException, NoSuchFieldException, IllegalAccessException {
         log.info("CoverageRateServiceImpl export request: " + request);
         List<CoverageRateDO> list;
@@ -290,25 +284,25 @@ public class CoverageRateServiceImpl implements CoverageRateService {
 
     private void convert(Document document) {
         Element execStatement = document.getElementById("EXECUTE_STATEMENT");
-        execStatement.text(LocaleString.transLanguage("3001"));
+        execStatement.text(LocaleStringUtils.transLanguage("3001"));
         Element serial = document.getElementById("SERIAL_NUMBER");
-        serial.text(LocaleString.transLanguage("3002"));
+        serial.text(LocaleStringUtils.transLanguage("3002"));
         Element totalRows = document.getElementById("TOTAL_ROWS");
-        totalRows.text(LocaleString.transLanguage("3003"));
+        totalRows.text(LocaleStringUtils.transLanguage("3003"));
         Element totalExecLines = document.getElementById("EXECUTION_ROWS");
-        totalExecLines.text(LocaleString.transLanguage("3004"));
+        totalExecLines.text(LocaleStringUtils.transLanguage("3004"));
         Element totalCoverage = document.getElementById("TOTAL_COVERAGE");
-        totalCoverage.text(LocaleString.transLanguage("3005"));
+        totalCoverage.text(LocaleStringUtils.transLanguage("3005"));
         Element markRows = document.getElementById("ALL_LINE_NUMBER");
-        markRows.text(LocaleString.transLanguage("3006"));
+        markRows.text(LocaleStringUtils.transLanguage("3006"));
         Element markExecLines = document.getElementById("EXECUTION_LINE_NUMBER");
-        markExecLines.text(LocaleString.transLanguage("3007"));
+        markExecLines.text(LocaleStringUtils.transLanguage("3007"));
         Element markCoverage = document.getElementById("EXECUTION_COVERAGE");
-        markCoverage.text(LocaleString.transLanguage("3008"));
+        markCoverage.text(LocaleStringUtils.transLanguage("3008"));
         Element inputParams = document.getElementById("INPUT_PARAMS");
-        inputParams.text(LocaleString.transLanguage("3009"));
+        inputParams.text(LocaleStringUtils.transLanguage("3009"));
         Element updateTime = document.getElementById("UPDATE_TIME");
-        updateTime.text(LocaleString.transLanguage("3010"));
+        updateTime.text(LocaleStringUtils.transLanguage("3010"));
     }
 
     private List<String> beanToList(CoverageRateDO coverageRateDO) throws NoSuchFieldException, IllegalAccessException {

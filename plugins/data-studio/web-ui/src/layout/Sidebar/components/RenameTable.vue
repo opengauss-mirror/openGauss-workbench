@@ -2,7 +2,7 @@
   <div class="dialog">
     <el-dialog
       v-model="visible"
-      :title="toSpacePascalCase($t('rename.table'))"
+      :title="title"
       :width="500"
       align-center
       :close-on-click-modal="false"
@@ -11,7 +11,8 @@
       <div class="dialog_body">
         <div class="tips">{{
           $t('message.renameTableTips', {
-            name: `${commonParams.schema}.${commonParams.tableName}`,
+            name: `${commonParams.schema}.${commonParams.oldName}`,
+            type: typeName,
           })
         }}</div>
         <el-form :model="form" ref="ruleFormRef" :rules="rules" label-width="0px">
@@ -35,14 +36,16 @@
   import { ElMessage, FormInstance, FormRules } from 'element-plus';
   import { useI18n } from 'vue-i18n';
   import { renameTable } from '@/api/table';
-  import { toSpacePascalCase } from '@/utils';
+  import { renameTriggerApi } from '@/api/trigger';
   import EventBus, { EventTypeName } from '@/utils/event-bus';
   import type { NodeData } from '../types';
 
+  type supportType = 'table' | 'trigger';
   const props = withDefaults(
     defineProps<{
       modelValue: boolean;
       nodeData: Partial<NodeData>;
+      type: supportType;
     }>(),
     {
       modelValue: false,
@@ -60,13 +63,28 @@
     return {
       uuid: props.nodeData?.uuid,
       schema: props.nodeData?.schemaName,
-      tableName: props.nodeData?.name,
+      oldName: props.nodeData?.name,
+      tableName: props.nodeData?.tableName,
     };
   });
 
   const { t } = useI18n();
   const loading = ref(false);
   const ruleFormRef = ref<FormInstance>();
+
+  const title = computed(() => {
+    return {
+      table: t('rename.table'),
+      trigger: t('rename.trigger'),
+    }[props.type];
+  });
+  const typeName = computed(() => {
+    return {
+      table: t('table.title'),
+      trigger: t('trigger.name'),
+    }[props.type];
+  });
+
   const form = reactive({
     name: '',
   });
@@ -78,14 +96,35 @@
     myEmit('update:modelValue', false);
     resetForm();
   };
-  const confirmForm = () => {
-    ruleFormRef.value.validate(async (valid) => {
-      if (valid) {
-        loading.value = true;
+
+  const getFinallyApi = (type) => {
+    return {
+      table: () =>
         renameTable({
           generalPurpose: form.name,
           ...commonParams.value,
-        })
+          uuid: commonParams.value.uuid,
+          schema: commonParams.value.schema,
+          tableName: commonParams.value.oldName,
+        }),
+      trigger: () =>
+        renameTriggerApi({
+          newName: form.name,
+          name: commonParams.value.oldName,
+          uuid: commonParams.value.uuid,
+          schema: commonParams.value.schema,
+          tableName: commonParams.value.tableName,
+        }),
+    }[type];
+  };
+
+  const confirmForm = () => {
+    ruleFormRef.value.validate(async (valid) => {
+      if (valid) {
+        let api = getFinallyApi(props.type);
+        if (!api) return;
+        loading.value = true;
+        api()
           .then(() => {
             ElMessage.success(`${t('message.editSuccess')}`);
             EventBus.notify(EventTypeName.REFRESH_ASIDER, 'schema', {

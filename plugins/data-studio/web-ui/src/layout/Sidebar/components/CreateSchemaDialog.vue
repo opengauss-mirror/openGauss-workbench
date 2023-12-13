@@ -22,7 +22,7 @@
               <el-option v-for="item in ownerList" :key="item" :label="item" :value="item" />
             </el-select>
           </el-form-item>
-          <el-form-item prop="description" :label="$t('mode.description')">
+          <el-form-item prop="description" :label="$t('common.description')">
             <el-input v-model="form.description" type="textarea" :rows="2" resize="none" />
           </el-form-item>
         </el-form>

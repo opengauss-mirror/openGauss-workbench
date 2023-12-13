@@ -6,7 +6,7 @@ package com.nctigba.datastudio.controller;
 
 
 import com.nctigba.datastudio.model.dto.DatabaseFunctionSPDTO;
-import com.nctigba.datastudio.model.query.PackageRequest;
+import com.nctigba.datastudio.model.query.PackageQuery;
 import com.nctigba.datastudio.service.DatabaseFunctionSPService;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -44,7 +44,7 @@ public class DatabaseFunctionSPController {
      * @param request request
      */
     @DeleteMapping(value = "/drop/package", produces = MediaType.APPLICATION_JSON_VALUE)
-    public void dropPackage(@RequestBody PackageRequest request) {
+    public void dropPackage(@RequestBody PackageQuery request) {
         databaseFunctionSPService.dropPackage(request);
     }
 }

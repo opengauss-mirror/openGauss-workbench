@@ -1,29 +1,31 @@
 <template>
-  <div class="table-page">
-    <el-tabs v-model="currentTabName" class="tabs" @tab-click="handleTabClick">
-      <el-tab-pane :label="$t('createTable.tabs[0]')" name="GeneralTab" />
-      <el-tab-pane :label="$t('createTable.tabs[1]')" name="ColumnTab" />
-      <el-tab-pane :label="$t('createTable.tabs[2]')" name="ConstraintTab" />
-      <el-tab-pane :label="$t('createTable.tabs[3]')" name="IndexesTab" />
-      <el-tab-pane
-        :label="$t('createTable.tabs[4]')"
-        name="PartitionTab"
-        :disabled="!dataMap.GeneralTab.isPartition"
-      />
-      <el-tab-pane :label="$t('createTable.tabs[5]')" name="DDL" />
-    </el-tabs>
-    <div class="tabs-container">
+  <ThreeSectionTabsPage>
+    <template #tabs>
+      <el-tabs v-model="currentTabName" @tab-click="handleTabClick">
+        <el-tab-pane :label="$t('createTable.tabs[0]')" name="GeneralTab" />
+        <el-tab-pane :label="$t('createTable.tabs[1]')" name="ColumnsTab" />
+        <el-tab-pane :label="$t('createTable.tabs[2]')" name="ConstraintTab" />
+        <el-tab-pane :label="$t('createTable.tabs[3]')" name="IndexesTab" />
+        <el-tab-pane
+          :label="$t('createTable.tabs[4]')"
+          name="PartitionTab"
+          :disabled="!dataMap.GeneralTab.isPartition"
+        />
+        <el-tab-pane :label="$t('createTable.tabs[5]')" name="DDL" />
+      </el-tabs>
+    </template>
+    <template #tabs-container>
       <GeneralTab
         ref="generalref"
         v-show="currentTabName == 'GeneralTab'"
         v-model:isPartition="dataMap.GeneralTab.isPartition"
         :commonParams="commonParams"
       />
-      <ColumnTab
-        ref="columnRef"
-        v-show="currentTabName == 'ColumnTab'"
+      <ColumnsTab
+        ref="columnsRef"
+        v-show="currentTabName == 'ColumnsTab'"
         :commonParams="commonParams"
-        v-model:data="dataMap.ColumnTab.data"
+        v-model:data="dataMap.ColumnsTab.data"
       />
       <ConstraintTab
         ref="constraintRef"
@@ -45,12 +47,12 @@
         :columns="availColumns"
       />
       <DDL v-show="currentTabName == 'DDL'" :data="dataMap.DDL.data" />
-    </div>
-    <div class="page-button">
+    </template>
+    <template #page-bottom-button>
       <el-button type="primary" @click="handleSave">{{ $t('button.create') }}</el-button>
       <el-button @click="handleReset">{{ $t('button.reset') }}</el-button>
-    </div>
-  </div>
+    </template>
+  </ThreeSectionTabsPage>
 </template>
 
 <script lang="ts" setup>
@@ -60,7 +62,7 @@
   import { useTagsViewStore } from '@/store/modules/tagsView';
   import GeneralTab from './components/GeneralTab.vue';
   import PartitionTab from './components/PartitionTab.vue';
-  import ColumnTab from './components/ColumnTab.vue';
+  import ColumnsTab from './components/ColumnsTab.vue';
   import ConstraintTab from './components/ConstraintTab.vue';
   import IndexesTab from './components/IndexesTab.vue';
   import DDL from './components/DDL.vue';
@@ -91,7 +93,7 @@
   const tablespaceList = ref<string[]>([]);
   provide('tablespaceList', tablespaceList);
   const generalref = ref<InstanceType<typeof GeneralTab>>(null);
-  const columnRef = ref<InstanceType<typeof ColumnTab>>(null);
+  const columnsRef = ref<InstanceType<typeof ColumnsTab>>(null);
   const constraintRef = ref<InstanceType<typeof ConstraintTab>>(null);
   const indexesRef = ref<InstanceType<typeof IndexesTab>>(null);
   const partitionRef = ref<InstanceType<typeof PartitionTab>>(null);
@@ -99,7 +101,7 @@
     GeneralTab: {
       isPartition: false,
     },
-    ColumnTab: {
+    ColumnsTab: {
       data: [],
     },
     ConstraintTab: {
@@ -114,7 +116,7 @@
     },
   });
   const availColumns = computed(() => {
-    return dataMap.ColumnTab.data
+    return dataMap.ColumnsTab.data
       .filter((item) => !!item.columnName?.trim())
       .map((item) => {
         return {
@@ -146,7 +148,7 @@
         storage: generalValue.storage,
         comment: generalValue.comment,
       },
-      column: dataMap.ColumnTab.data
+      column: dataMap.ColumnsTab.data
         .filter((item) => item.columnName)
         .map((item) => {
           return {
@@ -217,9 +219,9 @@
       currentTabName.value = error;
       return Promise.reject();
     }
-    const actualColumns = dataMap.ColumnTab.data.filter((item) => item.columnName?.trim());
+    const actualColumns = dataMap.ColumnsTab.data.filter((item) => item.columnName?.trim());
     if (actualColumns.length == 0) {
-      currentTabName.value = 'ColumnTab';
+      currentTabName.value = 'ColumnsTab';
       ElMessage.error(t('message.leastOneColumn'));
       return Promise.reject();
     }
@@ -243,7 +245,7 @@
     generalref.value.resetFields();
     partitionRef.value.resetFields();
     dataMap.GeneralTab.isPartition = false;
-    dataMap.ColumnTab.data = [];
+    dataMap.ColumnsTab.data = [];
     dataMap.ConstraintTab.data = [];
     dataMap.IndexesTab.data = [];
     dataMap.DDL.data = '';
@@ -252,7 +254,7 @@
     }
   };
   const fetchTablespaceList = async () => {
-    const res = (await getTablespaceList(commonParams.uuid)) as unknown as string[];
+    const res = (await getTablespaceList({ uuid: commonParams.uuid })) as unknown as string[];
     tablespaceList.value = res;
   };
 
@@ -271,37 +273,3 @@
     eventQueue[tagId] = () => handleSave();
   });
 </script>
-<style lang="scss" scoped>
-  .table-page {
-    height: 100%;
-    padding: 10px 20px;
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-  }
-  .tabs {
-    position: relative;
-    :deep(.el-tabs__content) {
-      padding: 0;
-      color: #6b778c;
-      font-size: 32px;
-      font-weight: normal;
-    }
-  }
-  .tabs-container {
-    flex: 1;
-    display: flex;
-    flex-basis: auto;
-    overflow: auto;
-  }
-  .table-container {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-  }
-  .page-button {
-    text-align: center;
-    margin-top: 10px;
-  }
-</style>

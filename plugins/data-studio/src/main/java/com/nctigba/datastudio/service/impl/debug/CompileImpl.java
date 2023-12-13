@@ -6,10 +6,10 @@ package com.nctigba.datastudio.service.impl.debug;
 
 import com.alibaba.fastjson.JSON;
 import com.nctigba.datastudio.base.WebSocketServer;
-import com.nctigba.datastudio.model.PublicParamReq;
+import com.nctigba.datastudio.model.query.PublicParamQuery;
 import com.nctigba.datastudio.service.OperationInterface;
-import com.nctigba.datastudio.util.DebugUtils;
-import com.nctigba.datastudio.util.LocaleString;
+import com.nctigba.datastudio.utils.DebugUtils;
+import com.nctigba.datastudio.utils.LocaleStringUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.util.Strings;
@@ -42,7 +42,7 @@ import static com.nctigba.datastudio.enums.MessageEnum.TEXT;
 public class CompileImpl implements OperationInterface {
     @Override
     public void operate(WebSocketServer webSocketServer, Object obj) throws SQLException, IOException {
-        PublicParamReq paramReq = DebugUtils.changeParamType(obj);
+        PublicParamQuery paramReq = DebugUtils.changeParamType(obj);
         log.info("compile paramReq: " + paramReq);
 
         String rootWindowName = paramReq.getRootWindowName();
@@ -57,7 +57,7 @@ public class CompileImpl implements OperationInterface {
         if (paramReq.isPackage()) {
             statement.execute(sql);
             Map<String, String> messageMap = new HashMap<>();
-            messageMap.put(RESULT, LocaleString.transLanguageWs("1002", webSocketServer));
+            messageMap.put(RESULT, LocaleStringUtils.transLanguageWs("1002", webSocketServer));
             webSocketServer.sendMessage(windowName, MESSAGE, SUCCESS, messageMap);
             return;
         }
@@ -97,12 +97,13 @@ public class CompileImpl implements OperationInterface {
         }
         log.info("compile newOid: " + newOid);
         if (StringUtils.isEmpty(newOid)) {
-            webSocketServer.sendMessage(windowName, TEXT, LocaleString.transLanguageWs("1002", webSocketServer), null);
+            webSocketServer.sendMessage(windowName, TEXT,
+                    LocaleStringUtils.transLanguageWs("1002", webSocketServer), null);
             return;
         }
 
         Map<String, String> messageMap = new HashMap<>();
-        messageMap.put(RESULT, LocaleString.transLanguageWs("1005", webSocketServer));
+        messageMap.put(RESULT, LocaleStringUtils.transLanguageWs("1005", webSocketServer));
         webSocketServer.sendMessage(windowName, MESSAGE, SUCCESS, messageMap);
         paramReq.setOid(newOid);
         Map<String, Map<String, String>> map = DebugUtils.getResultMap(webSocketServer, paramReq);
@@ -111,6 +112,6 @@ public class CompileImpl implements OperationInterface {
 
     @Override
     public Object formatJson(String str) {
-        return JSON.parseObject(str, PublicParamReq.class);
+        return JSON.parseObject(str, PublicParamQuery.class);
     }
 }

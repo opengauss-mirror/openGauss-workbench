@@ -1,6 +1,6 @@
 <template>
-  <div class="monaco-wrapper" v-loading="props.loading">
-    <AceEditor ref="editorRef" readOnly style="margin: 4px 0; border: 1px solid #ddd" />
+  <div class="ddl-wrapper" v-loading="props.loading">
+    <AceEditor ref="editorRef" readOnly />
   </div>
 </template>
 
@@ -32,10 +32,7 @@
 </script>
 
 <style lang="scss" scoped>
-  .monaco-wrapper {
+  .ddl-wrapper {
     flex: 1;
-    :deep(.ace-editor) {
-      margin: 0 !important;
-    }
   }
 </style>

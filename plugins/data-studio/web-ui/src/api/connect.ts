@@ -8,7 +8,6 @@ export function getSystemUserProfile() {
   });
 }
 
-// heartbeat
 export function heartbeat() {
   return request({
     url: '/dataStudio/web/v1/functionality/heartbeat',
@@ -16,7 +15,6 @@ export function heartbeat() {
   });
 }
 
-// createConnect
 export function createConnect(data) {
   return request({
     url: '/dataStudio/web/v1/connections',
@@ -25,7 +23,6 @@ export function createConnect(data) {
   });
 }
 
-// updateConnect
 export function updateConnect(data) {
   return request({
     url: '/dataStudio/web/v1/connections',
@@ -67,9 +64,35 @@ export const deleteDataLinkList = async (id: string) => {
   });
 };
 
-export const closeConnections = async (uuid: string) => {
+export const closeConnections = async (data) => {
   return request({
-    url: `/dataStudio/web/v1/connections/close/${uuid}`,
+    url: `/dataStudio/web/v1/connections/close`,
     method: 'delete',
+    params: data,
+  });
+};
+
+export const reconnection = async (data) => {
+  return request({
+    url: '/dataStudio/web/v1/reconnection',
+    method: 'post',
+    data,
+  });
+};
+
+export const getConnectionTime = async (data) => {
+  return request({
+    url: '/dataStudio/web/v1/connection/getTime',
+    method: 'get',
+    params: data,
+  });
+};
+
+// HTTP request for connection failure and no password
+export const reLogin = async (data) => {
+  return request({
+    url: '/dataStudio/web/v1/login',
+    method: 'post',
+    data,
   });
 };

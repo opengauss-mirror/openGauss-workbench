@@ -13,6 +13,12 @@
       v-model="isConnectInfoVisible"
       :connectInfo="connectInfo"
     />
+    <EnterPasswordDialog
+      v-if="enterPasswordVisible"
+      v-model="enterPasswordVisible"
+      :uuid="enterPasswordProps.uuid"
+      :connectInfo="enterPasswordProps.connectInfo"
+    />
   </el-config-provider>
 </template>
 
@@ -21,6 +27,7 @@
   import en from 'element-plus/dist/locale/en.mjs';
   import ConnectDialog from '@/views/connect/index.vue';
   import ConnectInfoDialog from '@/views/connect/Info.vue';
+  import EnterPasswordDialog from '@/views/connect/EnterPasswordDialog.vue';
   import EventBus, { EventTypeName } from '@/utils/event-bus';
   import { useAppStore } from '@/store/modules/app';
   import { useTagsViewStore } from '@/store/modules/tagsView';
@@ -39,10 +46,15 @@
 
   const isConnectVisible = ref(false);
   const isConnectInfoVisible = ref(false);
+  const enterPasswordVisible = ref(false);
   const connectType = ref<'create' | 'edit'>('create');
   const connectInfo = reactive<any>({});
   const availableUuid = ref('');
   const heartbeatTimer = ref(null);
+  const enterPasswordProps = reactive({
+    uuid: '',
+    connectInfo: {} as any,
+  });
 
   onMounted(async () => {
     // set init language(from platform)
@@ -70,6 +82,10 @@
       Object.assign(connectInfo, data);
       isConnectInfoVisible.value = true;
     });
+    EventBus.listen(EventTypeName.OPEN_ENTERPASSWORD, (data) => {
+      Object.assign(enterPasswordProps, data);
+      enterPasswordVisible.value = true;
+    });
     document.getElementById('app').style.height =
       import.meta.env.MODE === 'production' ? 'calc(100vh - 115px)' : '100%';
 
@@ -79,7 +95,7 @@
       toggleDark(val == 'dark');
     });
     window.$wujie?.bus.$on('opengauss-locale-change', (val) => {
-      // 'zh-CN' | 'en-US' 
+      // 'zh-CN' | 'en-US'
       i18nLocale.value = val;
       AppStore.setLanguage(val);
     });
@@ -89,6 +105,7 @@
   onUnmounted(() => {
     EventBus.unListen(EventTypeName.OPEN_CONNECT_DIALOG);
     EventBus.unListen(EventTypeName.OPEN_CONNECT_INFO_DIALOG);
+    EventBus.unListen(EventTypeName.OPEN_ENTERPASSWORD);
     clearInterval(heartbeatTimer.value);
     heartbeatTimer.value = null;
     sessionStorage.clear();

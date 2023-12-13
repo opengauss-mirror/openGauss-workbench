@@ -1,38 +1,49 @@
 <template>
-  <div style="height: 100%">
-    <el-auto-resizer>
-      <template #default="{ height, width }">
-        <el-table-v2
-          stripe
-          :columns="props.data?.columns || []"
-          :data="props.data?.data || []"
-          :width="width"
-          :height="height"
-          fixed
-          :header-height="30"
-          :row-height="30"
-        >
-          <template #overlay v-if="props.loading">
-            <div
-              class="el-loading-mask"
-              style="display: flex; align-items: center; justify-content: center"
-            >
-              <el-icon class="is-loading" color="var(--el-color-primary)" :size="26">
-                <loading-icon />
-              </el-icon>
-            </div>
-          </template>
-        </el-table-v2>
-      </template>
-    </el-auto-resizer>
+  <div class="table-container">
+    <AdvancedTable
+      :data="props.data.data"
+      :loading="props.loading"
+      :row-key="props.rowKey"
+      :columns="props.data.columns"
+    >
+      <el-table-column
+        v-for="item in props.data.columns"
+        :key="item.label"
+        :prop="item.label"
+        :label="item.label"
+        :min-width="item.minWidth"
+        align="center"
+      />
+    </AdvancedTable>
+    <Toolbar
+      type="table"
+      :status="barStatus"
+      v-model:pageNum="page.pageNum"
+      v-model:pageSize="page.pageSize"
+      v-model:pageTotal="page.pageTotal"
+      @firstPage="handleFirstPage"
+      @lastPage="handleLastPage"
+      @previousPage="handlePreviousPage"
+      @nextPage="handleNextPage"
+      @changePageNum="handlePage"
+      @update:pageSize="changePageSize"
+    />
   </div>
 </template>
 
 <script lang="ts" setup>
-  import { Loading as LoadingIcon } from '@element-plus/icons-vue';
+  import Toolbar from './Toolbar.vue';
+
+  interface Page {
+    pageNum: number;
+    pageSize: number;
+    pageTotal: number;
+  }
   const props = withDefaults(
     defineProps<{
       data: any;
+      page: Page;
+      rowKey: string;
       loading?: boolean;
     }>(),
     {
@@ -40,16 +51,71 @@
         columns: [],
         data: [],
       }),
+      page: () => ({
+        pageNum: 1,
+        pageSize: 100,
+        pageTotal: 0,
+      }),
+      rowKey: '',
       loading: false,
     },
   );
+
+  const emit = defineEmits<{
+    (e: 'getData'): void;
+    (e: 'update:page', value: Page): void;
+  }>();
+
+  const page = computed({
+    get: () => props.page,
+    set: (val) => emit('update:page', val),
+  });
+
+  const barStatus = {
+    save: true,
+    cancel: true,
+    addLine: true,
+    copyLine: true,
+    removeLine: true,
+    firstPage: true,
+    previousPage: true,
+    pageNum: true,
+    nextPage: true,
+    lastPage: true,
+    pageSize: true,
+  };
+
+  const handleFirstPage = () => {
+    page.value.pageNum = 1;
+    emit('getData');
+  };
+  const handlePreviousPage = () => {
+    page.value.pageNum--;
+    emit('getData');
+  };
+  const handleNextPage = () => {
+    page.value.pageNum++;
+    emit('getData');
+  };
+  const handleLastPage = () => {
+    page.value.pageNum = page.value.pageTotal;
+    emit('getData');
+  };
+  const handlePage = (pageNum) => {
+    page.value.pageNum = Number(pageNum || 1);
+    emit('getData');
+  };
+  const changePageSize = () => {
+    page.value.pageNum = 1;
+    emit('getData');
+  };
 </script>
 
 <style lang="scss" scoped>
-  .el-table-v2 {
-    font-size: 12px;
-  }
-  :deep(.el-table-v2__overlay) {
-    z-index: 9;
+  .table-container {
+    width: 100%;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
   }
 </style>

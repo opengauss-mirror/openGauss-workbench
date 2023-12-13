@@ -7,7 +7,7 @@ package com.nctigba.datastudio.compatible.opengauss;
 import com.nctigba.datastudio.config.ConnectionConfig;
 import com.nctigba.datastudio.model.dto.ConnectionDTO;
 import com.nctigba.datastudio.model.dto.DatabaseFunctionSPDTO;
-import com.nctigba.datastudio.util.LocaleString;
+import com.nctigba.datastudio.utils.LocaleStringUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -95,8 +95,8 @@ public class FunctionSPObjectSQLServiceTest {
 
     @Test
     public void testFunctionDdlElseFalse() throws SQLException {
-        MockedStatic<LocaleString> staticUtilsMockedStatic = Mockito.mockStatic(LocaleString.class);
-        staticUtilsMockedStatic.when(() -> LocaleString.transLanguage(anyString()))
+        MockedStatic<LocaleStringUtils> staticUtilsMockedStatic = Mockito.mockStatic(LocaleStringUtils.class);
+        staticUtilsMockedStatic.when(() -> LocaleStringUtils.transLanguage(anyString()))
                 .thenReturn("123");
         when(mockResultSet.getString(anyString())).thenReturn("");
         DatabaseFunctionSPDTO databaseFunctionSPDTO = new DatabaseFunctionSPDTO();
@@ -140,8 +140,8 @@ public class FunctionSPObjectSQLServiceTest {
 
     @Test
     public void testDropFunctionSPFalse() throws SQLException {
-        MockedStatic<LocaleString> staticUtilsMockedStatic = Mockito.mockStatic(LocaleString.class);
-        staticUtilsMockedStatic.when(() -> LocaleString.transLanguage(anyString()))
+        MockedStatic<LocaleStringUtils> staticUtilsMockedStatic = Mockito.mockStatic(LocaleStringUtils.class);
+        staticUtilsMockedStatic.when(() -> LocaleStringUtils.transLanguage(anyString()))
                 .thenReturn("123");
         when(mockResultSet.next()).thenReturn(false);
         DatabaseFunctionSPDTO databaseFunctionSPDTO = new DatabaseFunctionSPDTO();

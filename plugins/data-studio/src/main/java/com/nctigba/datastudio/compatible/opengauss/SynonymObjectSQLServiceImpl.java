@@ -8,7 +8,7 @@ import com.nctigba.datastudio.compatible.SynonymObjectSQLService;
 import com.nctigba.datastudio.model.dto.DatabaseCreateSynonymDTO;
 import com.nctigba.datastudio.model.dto.DatabaseDropSynonymDTO;
 import com.nctigba.datastudio.model.dto.DatabaseSynonymAttributeDTO;
-import com.nctigba.datastudio.util.DebugUtils;
+import com.nctigba.datastudio.utils.DebugUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -34,7 +34,7 @@ public class SynonymObjectSQLServiceImpl implements SynonymObjectSQLService {
 
     @Override
     public String splicingSynonymDDL(DatabaseCreateSynonymDTO request) {
-        log.info("splicingSequenceDDL request is: " + request);
+        log.info("splicingSynonymDDL request is: " + request);
         StringBuilder ddl = new StringBuilder();
         if (request.isReplace()) {
             ddl.append(CREATE_OR_REPLACE_SQL);
@@ -44,7 +44,7 @@ public class SynonymObjectSQLServiceImpl implements SynonymObjectSQLService {
         ddl.append(String.format(SYNONYM_SQL, DebugUtils.needQuoteName(request.getSchema()),
                 DebugUtils.needQuoteName(request.getSynonymName()), DebugUtils.needQuoteName(request.getSchema()),
                 DebugUtils.needQuoteName(request.getObjectName())));
-        log.info("splicingSequenceDDL response is: " + ddl);
+        log.info("splicingSynonymDDL response is: " + ddl);
         return ddl.toString();
     }
 

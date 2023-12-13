@@ -69,7 +69,7 @@ public class DatabaseTableController {
      * @return TablePKDataQuery
      * @throws SQLException SQLException
      */
-    @PostMapping(value = "/tableDatas/edit")
+    @PostMapping(value = "/tableDatas/edit", produces = MediaType.APPLICATION_JSON_VALUE)
     public TablePKDataQuery tableDataEdit(@RequestBody TableDataEditQuery request) throws SQLException {
         log.info("tableDataEditController request is: {}", request);
         return tableDataService.tableDataEdit(request);
@@ -340,10 +340,10 @@ public class DatabaseTableController {
     /**
      * export table data by page
      *
-     * @param request request
+     * @param request  request
      * @param response response
      * @throws SQLException SQLException
-     * @throws IOException IOException
+     * @throws IOException  IOException
      */
     @PostMapping(value = "/table/exportData", produces = MediaType.APPLICATION_JSON_VALUE)
     public void exportData(

@@ -31,6 +31,7 @@ public class ConnectionDTO {
     private String dbUser;
     private String dbPassword;
     private String type;
+    private Integer timeLength;
 
     /**
      * set connection dto
@@ -43,6 +44,7 @@ public class ConnectionDTO {
         this.dbUser = databaseConnectionUrlDO.getUserName();
         this.dbPassword = databaseConnectionUrlDO.getPassword();
         this.type = databaseConnectionUrlDO.getType();
+        this.timeLength = 2;
     }
 
     /**
@@ -57,6 +59,7 @@ public class ConnectionDTO {
         this.dbUser = databaseConnectionDO.getUserName();
         this.dbPassword = databaseConnectionDO.getPassword();
         this.type = databaseConnectionDO.getType();
+        this.timeLength = 2;
     }
 
     /**
@@ -85,6 +88,7 @@ public class ConnectionDTO {
         this.dbUser = aon.getDbUser();
         this.dbPassword = aon.getDbPassword();
         this.type = aon.getType();
+        this.timeLength = aon.timeLength;
     }
 
     /**

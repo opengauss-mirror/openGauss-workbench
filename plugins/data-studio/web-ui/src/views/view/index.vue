@@ -1,22 +1,27 @@
 <template>
-  <div class="table-page">
-    <el-tabs v-model="currentTabName" class="tabs" @tab-click="handleClick">
-      <el-tab-pane label="DDL" name="DDL" />
-      <el-tab-pane :label="$t('table.general.title')" name="General" />
-      <el-tab-pane :label="$t('table.column.title')" name="Column" />
-      <el-tab-pane :label="$t('table.data.title')" name="Data" />
-    </el-tabs>
-    <el-icon class="refresh" @click="handleRefresh"><Refresh /></el-icon>
-    <div class="table-container">
+  <ThreeSectionTabsPage>
+    <template #tabs>
+      <el-tabs v-model="currentTabName" @tab-click="handleClick">
+        <el-tab-pane label="DDL" name="DDL" />
+        <el-tab-pane :label="$t('table.general.title')" name="General" />
+        <el-tab-pane :label="$t('table.column.title')" name="Column" />
+        <el-tab-pane :label="$t('table.data.title')" name="Data" />
+      </el-tabs>
+      <el-icon class="refresh" @click="handleRefresh"><Refresh /></el-icon>
+    </template>
+    <template #tabs-container>
       <KeepAlive>
         <component
           :is="dataMap[currentTabName].component"
           :data="dataMap[currentTabName].data"
+          v-model:page="dataMap[currentTabName].page"
+          :rowKey="dataMap[currentTabName].rowKey"
           :loading="dataMap[currentTabName].loading"
+          @getData="getData(currentTabName)"
         ></component>
       </KeepAlive>
-    </div>
-  </div>
+    </template>
+  </ThreeSectionTabsPage>
 </template>
 
 <script lang="ts" setup>
@@ -28,8 +33,7 @@
   import Column from './components/Column.vue';
   import Data from './components/Data.vue';
   import { getViewDdls, getViewDatas, getViewAttribute, getViewColumn } from '@/api/view';
-  import { debounce, formatTableV2Data, formatTableData } from '@/utils';
-  import { useI18n } from 'vue-i18n';
+  import { debounce, formatTableDataAndColumns } from '@/utils';
 
   type TabName = 'DDL' | 'General' | 'Column' | 'Data';
   type MyTabsPaneContext = TabsPaneContext & {
@@ -38,7 +42,6 @@
 
   const route = useRoute();
   const UserStore = useUserStore();
-  const { t } = useI18n();
   const commonParams = reactive({
     connectionName: '',
     schema: '',
@@ -49,24 +52,39 @@
   const dataMap = reactive({
     DDL: {
       data: '',
+      page: undefined,
+      rowKey: '',
       component: markRaw(DDL),
       hasLoad: false,
       loading: false,
     },
     General: {
       data: [],
+      page: undefined,
+      rowKey: '',
       component: markRaw(General),
       hasLoad: false,
       loading: false,
     },
     Column: {
       data: [],
+      page: undefined,
+      rowKey: '',
       component: markRaw(Column),
       hasLoad: false,
       loading: false,
     },
     Data: {
-      data: {},
+      data: {
+        columns: [],
+        data: [],
+      },
+      page: {
+        pageNum: 1,
+        pageSize: 100,
+        pageTotal: 0,
+      },
+      rowKey: '',
       component: markRaw(Data),
       hasLoad: false,
       loading: false,
@@ -80,7 +98,7 @@
     getData(tab.paneName);
   };
 
-  const getData = async (type: 'DDL' | 'General' | 'Column' | 'Data') => {
+  const getData = async (type: TabName) => {
     const api = {
       DDL: getViewDdls,
       General: getViewAttribute,
@@ -89,7 +107,14 @@
     };
     if (!Object.keys(api).includes(type)) return;
     dataMap[type].loading = true;
-    api[type](commonParams)
+    const params = { ...commonParams };
+    if (type == 'Data') {
+      Object.assign(params, {
+        pageNum: dataMap.Data.page.pageNum,
+        pageSize: dataMap.Data.page.pageSize,
+      });
+    }
+    api[type](params)
       .then((res: any) => {
         if (type == 'DDL') {
           dataMap.DDL.data = res;
@@ -103,10 +128,23 @@
           });
         } else if (type == 'Column') {
           const { column, result } = res;
-          dataMap.Column.data = formatTableData(column, result);
+          const rowKey = `_id`;
+          dataMap.Column.rowKey = rowKey;
+          dataMap.Column.data = formatTableDataAndColumns(column, result, {
+            indexName: rowKey,
+          }).data;
         } else {
-          const { column, result } = res as unknown as { column: string[]; result: any[] };
-          dataMap.Data.data = formatTableV2Data(column, result);
+          const { column, result } = res.data as unknown as { column: string[]; result: any[] };
+          const rowKey = `${column[0]}_id`;
+          dataMap.Data.rowKey = rowKey;
+          dataMap.Data.data = shallowReadonly(
+            formatTableDataAndColumns(column, result, { indexName: rowKey }),
+          );
+          Object.assign(dataMap.Data.page, {
+            pageNum: res.pageNum || 0,
+            pageSize: res.pageSize || 0,
+            pageTotal: res.pageTotal || 0,
+          });
         }
       })
       .finally(() => {
@@ -139,33 +177,13 @@
   });
 </script>
 <style lang="scss" scoped>
-  .table-page {
-    height: 100%;
-    padding: 10px 20px;
-    position: relative;
-  }
-  .tabs {
-    position: relative;
-    :deep(.el-tabs__content) {
-      padding: 0;
-      color: #6b778c;
-      font-size: 32px;
-      font-weight: normal;
-    }
-  }
   .refresh {
     position: absolute;
     right: 18px;
-    top: 15px;
+    top: 10px;
     cursor: pointer;
     &:hover {
       color: var(--hover-color);
     }
-  }
-  .table-container {
-    height: calc(100% - 40px);
-  }
-  :deep(.el-table) {
-    height: 100%;
   }
 </style>

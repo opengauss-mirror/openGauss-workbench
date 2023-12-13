@@ -4,7 +4,7 @@
 
 package com.nctigba.datastudio.service.impl.sql;
 
-import com.nctigba.datastudio.util.ConnectionUtils;
+import com.nctigba.datastudio.utils.ConnectionUtils;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
@@ -42,7 +42,7 @@ public class DataListByJdbcServiceTest {
         staticUtilsMockedStatic.when(() -> ConnectionUtils.connectGet(anyString(), anyString(), anyString()))
                 .thenReturn(mockConnection);
         dataListByJdbcService.dataListQuerySQL("", "", "", "", "",
-                "", "", "", "");
+                "", "", "", "", "", "");
         staticUtilsMockedStatic.close();
     }
 
@@ -52,7 +52,7 @@ public class DataListByJdbcServiceTest {
         staticUtilsMockedStatic.when(() -> ConnectionUtils.connectGet(anyString(), anyString(), anyString()))
                 .thenReturn(mockConnection);
         dataListByJdbcService.dataListQuerySQL("", "", "", "", "",
-                "", "", "", "");
+                "", "", "", "", "", "");
         staticUtilsMockedStatic.close();
     }
 
@@ -62,7 +62,7 @@ public class DataListByJdbcServiceTest {
         staticUtilsMockedStatic.when(() -> ConnectionUtils.connectGet(anyString(), anyString(), anyString()))
                 .thenReturn(mockConnection);
         dataListByJdbcService.dataListQuerySQL("", "", "", "", "",
-                "", "", "", "");
+                "", "", "", "", "", "");
         staticUtilsMockedStatic.close();
     }
 }

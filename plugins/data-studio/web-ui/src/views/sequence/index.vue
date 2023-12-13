@@ -1,7 +1,7 @@
 <template>
   <div class="table-page">
-    <div class="ace-wrapper" v-loading="loading">
-      <AceEditor ref="editorRef" style="margin: 4px 0; border: 1px solid #ddd" />
+    <div class="wrapper" v-loading="loading">
+      <AceEditor ref="editorRef" />
     </div>
   </div>
 </template>
@@ -49,12 +49,12 @@
 <style lang="scss" scoped>
   .table-page {
     height: 100%;
-    padding: 10px 20px;
+    padding: 10px;
+    padding-left: 0;
     position: relative;
   }
-  .ace-wrapper {
+  .wrapper {
     flex: 1;
-    padding: 10px;
     height: 100%;
   }
 </style>

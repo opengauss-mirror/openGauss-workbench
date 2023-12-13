@@ -22,6 +22,12 @@
   --color-bg-2: #fff;
   --table-current-row-bg-color: #e1e1e1;
 }
+
+html {
+  --el-bg-color-container: #fff;
+  --el-bg-color-bar: #f2f2f2;
+}
+
 .el-tabs {
   --el-tabs-header-height: 28px;
   .el-tabs__header .el-tabs__item {
@@ -90,11 +96,6 @@
   color: var(--normal-color);
 }
 
-html {
-  --el-bg-color-container: #fff;
-  --el-bg-color-bar: #f2f2f2;
-}
-
 .el-dialog__headerbtn:focus .el-dialog__close, .el-dialog__headerbtn:hover .el-dialog__close {
   color: var(--normal-color);
 }
@@ -104,6 +105,10 @@ html {
 }
 .el-table--striped .el-table__body tr.el-table__row--striped.current-row td.el-table__cell {
   background-color: var(--table-current-row-bg-color);
+}
+
+.el-table--enable-row-hover .el-table__body tr:hover>td.el-table__cell {
+  background-color: unset;
 }
 
 .el-dropdown__popper {
@@ -116,4 +121,10 @@ html {
   .el-input-number__increase {
     top: 2px;
   }
+}
+
+.el-form-item__label {
+  align-items: center;
+  word-break: break-all;
+  line-height: normal;
 }

@@ -7,11 +7,6 @@
             <div class="left">
               <svg-icon icon-class="database" class-name="icon" /> {{ $t('database.list') }}
             </div>
-            <div class="right">
-              <el-button @click="openConnectDialog('create')" plain>
-                {{ $t('connection.new') }}
-              </el-button>
-            </div>
           </div>
           <div class="group-search-contain">
             <el-input
@@ -49,7 +44,18 @@
                   class-name="icon"
                 />
                 <svg-icon v-if="data.type == 'package'" icon-class="package" class-name="icon" />
-                <svg-icon v-if="data.type == 'tableCollect'" icon-class="table" class-name="icon" />
+                <svg-icon
+                  v-if="data.type == 'tableCollect' || data.type == 'foreignTableCollect'"
+                  icon-class="table"
+                  class-name="icon"
+                />
+                <svg v-if="data.type == 'triggerCollect'" class="tree-node-icon" aria-hidden="true">
+                  <use xlink:href="#icon-trigger"></use>
+                </svg>
+                <svg v-if="data.type == 'trigger'" class="tree-node-icon" aria-hidden="true">
+                  <use v-if="data.enabled" xlink:href="#icon-trigger-enable"></use>
+                  <use v-else xlink:href="#icon-trigger-disable"></use>
+                </svg>
                 <svg-icon v-if="data.type == 'viewCollect'" icon-class="view" class-name="icon" />
                 <svg-icon
                   v-if="data.type == 'synonymCollect'"
@@ -67,18 +73,18 @@
                 <svg v-if="data.type == 'role'" class="tree-node-icon" aria-hidden="true">
                   <use xlink:href="#icon-nologin"></use>
                 </svg>
+                <svg v-if="data.type == 'tablespace'" class="tree-node-icon" aria-hidden="true">
+                  <use xlink:href="#icon-database"></use>
+                </svg>
                 <span>{{ data.label }}</span>
               </template>
             </el-tree>
-            <div class="context-menu" :style="treeContext.MenuStyles">
-              <ul
-                v-if="treeContext.rootVisible"
-                v-click-outside="
-                  () => {
-                    treeContext.rootVisible = false;
-                  }
-                "
-              >
+            <div
+              class="context-menu"
+              :style="treeContext.MenuStyles"
+              v-click-outside="hideTreeContext"
+            >
+              <ul v-if="treeContext.rootVisible">
                 <li @click="openConnectInfo()"> {{ $t('connection.props') }} </li>
                 <li @click="openConnectDialog('edit')"> {{ $t('connection.edit') }} </li>
                 <li @click="handleDeleteConnect">{{ $t('connection.delete') }}</li>
@@ -98,14 +104,7 @@
                   {{ $t('connection.refresh') }}
                 </li>
               </ul>
-              <ul
-                v-if="treeContext.databaseCollectVisible"
-                v-click-outside="
-                  () => {
-                    treeContext.databaseCollectVisible = false;
-                  }
-                "
-              >
+              <ul v-if="treeContext.databaseCollectVisible">
                 <li
                   :class="{ disabled: !treeContextFindAvailableUuid }"
                   @click="!!treeContextFindAvailableUuid && handleCreateDb()"
@@ -124,14 +123,7 @@
                   {{ $t('connection.refresh') }}
                 </li>
               </ul>
-              <ul
-                v-if="treeContext.userRoleCollectVisible"
-                v-click-outside="
-                  () => {
-                    treeContext.userRoleCollectVisible = false;
-                  }
-                "
-              >
+              <ul v-if="treeContext.userRoleCollectVisible">
                 <li @click="handleCreateUserRole"> {{ $t('create.userRole') }}</li>
                 <li
                   @click="
@@ -145,14 +137,21 @@
                   {{ $t('connection.refresh') }}
                 </li>
               </ul>
-              <ul
-                v-if="treeContext.databaseVisible"
-                v-click-outside="
-                  () => {
-                    treeContext.databaseVisible = false;
-                  }
-                "
-              >
+              <ul v-if="treeContext.tablespaceCollectVisible">
+                <li @click="handleCreateTablespace"> {{ $t('create.tablespace') }}</li>
+                <li
+                  @click="
+                    refresh('tablespaceCollect', {
+                      rootId: currentContextNodeData.connectInfo.id,
+                      parentId: currentContextNodeData.id,
+                      uuid: treeContextFindAvailableUuid,
+                    })
+                  "
+                >
+                  {{ $t('connection.refresh') }}
+                </li>
+              </ul>
+              <ul v-if="treeContext.databaseVisible">
                 <li
                   :class="{ disabled: treeContextDbStatus }"
                   @click="
@@ -160,6 +159,7 @@
                       handleDbConnect(
                         currentContextNodeData.connectInfo.id,
                         currentContextNodeData.id,
+                        currentContextNodeData.uuid,
                         true,
                       )
                   "
@@ -173,11 +173,18 @@
                       handleDbConnect(
                         currentContextNodeData.connectInfo.id,
                         currentContextNodeData.id,
+                        currentContextNodeData.uuid,
                         false,
                       )
                   "
                 >
                   {{ $t('database.close') }}
+                </li>
+                <li
+                  :class="{ disabled: !treeContextDbStatus }"
+                  @click="treeContextDbStatus && handleSetDisconnectionTime()"
+                >
+                  {{ $t('siderbar.setDisconnectionTime.name') }}
                 </li>
                 <li
                   :class="{ disabled: !treeContextDbStatus }"
@@ -222,14 +229,7 @@
                   {{ $t('connection.refresh') }}
                 </li>
               </ul>
-              <ul
-                v-if="treeContext.modeVisible"
-                v-click-outside="
-                  () => {
-                    treeContext.modeVisible = false;
-                  }
-                "
-              >
+              <ul v-if="treeContext.modeVisible">
                 <li
                   @click="
                     refresh('schema', {
@@ -260,92 +260,42 @@
                 <li @click="handleExport('modeDDL')"> {{ $t('export.ddl') }}</li>
                 <li @click="handleExport('modeDDLData')"> {{ $t('export.ddlData') }}</li>
               </ul>
-              <ul
-                v-if="treeContext.terminalCollectVisible"
-                v-click-outside="
-                  () => {
-                    treeContext.terminalCollectVisible = false;
-                  }
-                "
-              >
+              <ul v-if="treeContext.terminalCollectVisible">
                 <li @click="hanldeCreate('function')"> {{ $t('create.function') }}</li>
                 <li @click="hanldeCreate('procedure')"> {{ $t('create.process') }}</li>
                 <li @click="hanldeCreate('sql')"> {{ $t('create.sql') }}</li>
                 <li @click="hanldeCreate('anonymous')"> {{ $t('create.anonymous') }}</li>
               </ul>
-              <ul
-                v-if="treeContext.tableCollectVisible"
-                v-click-outside="
-                  () => {
-                    treeContext.tableCollectVisible = false;
-                  }
-                "
-              >
+              <ul v-if="treeContext.tableCollectVisible">
                 <li @click="hanldeCreateTable"> {{ $t('create.table') }}</li>
               </ul>
-              <ul
-                v-if="treeContext.viewCollectVisible"
-                v-click-outside="
-                  () => {
-                    treeContext.viewCollectVisible = false;
-                  }
-                "
-              >
+              <ul v-if="treeContext.foreignTableCollectVisible">
+                <li @click="hanldeCreateForeignTable"> {{ $t('create.foreignTable') }}</li>
+              </ul>
+              <ul v-if="treeContext.triggerCollectVisible">
+                <li @click="hanldeCreateTrigger"> {{ $t('create.trigger') }}</li>
+              </ul>
+              <ul v-if="treeContext.viewCollectVisible">
                 <li @click="showCreatDialog('view')"> {{ $t('create.view') }}</li>
               </ul>
-              <ul
-                v-if="treeContext.sequenceCollectVisible"
-                v-click-outside="
-                  () => {
-                    treeContext.sequenceCollectVisible = false;
-                  }
-                "
-              >
+              <ul v-if="treeContext.sequenceCollectVisible">
                 <li @click="showCreatDialog('sequence')"> {{ $t('create.sequence') }}</li>
               </ul>
-              <ul
-                v-if="treeContext.synonymCollectVisible"
-                v-click-outside="
-                  () => {
-                    treeContext.synonymCollectVisible = false;
-                  }
-                "
-              >
+              <ul v-if="treeContext.synonymCollectVisible">
                 <li @click="showCreatDialog('synonym')"> {{ $t('create.synonym') }}</li>
               </ul>
-              <ul
-                v-if="treeContext.packageVisible"
-                v-click-outside="
-                  () => {
-                    treeContext.packageVisible = false;
-                  }
-                "
-              >
+              <ul v-if="treeContext.packageVisible">
                 <li @click="handleViewPackage(currentContextNodeData)">
                   {{ $t('siderbar.viewSource') }}
                 </li>
                 <li @click="deleteConfirm('package')"> {{ $t('delete.package') }}</li>
                 <li @click="handleExport('functionDDL')"> {{ $t('export.ddl') }}</li>
               </ul>
-              <ul
-                v-if="treeContext.functionSPVisible"
-                v-click-outside="
-                  () => {
-                    treeContext.functionSPVisible = false;
-                  }
-                "
-              >
+              <ul v-if="treeContext.functionSPVisible">
                 <li @click="deleteConfirm('functionSP')"> {{ $t('delete.functionSP') }}</li>
                 <li @click="handleExport('functionDDL')"> {{ $t('export.ddl') }}</li>
               </ul>
-              <ul
-                v-if="treeContext.tableVisible"
-                v-click-outside="
-                  () => {
-                    treeContext.tableVisible = false;
-                  }
-                "
-              >
+              <ul v-if="treeContext.tableVisible">
                 <li @click="handleRelatedSequence">
                   {{ $t('siderbar.table.showRelatedSequence') }}
                 </li>
@@ -365,49 +315,60 @@
                 <li @click="handleTableRename"> {{ $t('rename.table') }}</li>
                 <li @click="handleDropTable"> {{ $t('delete.table') }}</li>
               </ul>
-              <ul
-                v-if="treeContext.viewVisible"
-                v-click-outside="
-                  () => {
-                    treeContext.viewVisible = false;
-                  }
-                "
-              >
+              <ul v-if="treeContext.foreignTableVisible">
+                <li @click="deleteConfirm('foreignTable')"> {{ $t('delete.table') }}</li>
+              </ul>
+              <ul v-if="treeContext.triggerVisible">
+                <li @click="handleTriggerRename"> {{ $t('rename.trigger') }}</li>
+                <li
+                  v-if="!currentContextNodeData.enabled && currentContextNodeData.isTableTrigger"
+                  @click="
+                    handleTrigger(
+                      currentContextNodeData.connectInfo.id,
+                      currentContextNodeData.databaseId,
+                      currentContextNodeData.schemaId,
+                      currentContextNodeData.parentId,
+                      true,
+                    )
+                  "
+                >
+                  {{ $t('trigger.enableTrigger') }}
+                </li>
+                <li
+                  v-if="currentContextNodeData.enabled && currentContextNodeData.isTableTrigger"
+                  @click="
+                    handleTrigger(
+                      currentContextNodeData.connectInfo.id,
+                      currentContextNodeData.databaseId,
+                      currentContextNodeData.schemaId,
+                      currentContextNodeData.parentId,
+                      false,
+                    )
+                  "
+                >
+                  {{ $t('trigger.disableTrigger') }}
+                </li>
+                <li @click="deleteConfirm('trigger')"> {{ $t('delete.trigger') }}</li>
+              </ul>
+              <ul v-if="treeContext.viewVisible">
                 <li @click="handleEdit('view')"> {{ $t('edit.view') }}</li>
                 <li @click="deleteConfirm('view')"> {{ $t('delete.view') }}</li>
                 <li @click="handleExport('viewDDL')"> {{ $t('export.ddl') }}</li>
               </ul>
-              <ul
-                v-if="treeContext.sequenceVisible"
-                v-click-outside="
-                  () => {
-                    treeContext.sequenceVisible = false;
-                  }
-                "
-              >
+              <ul v-if="treeContext.sequenceVisible">
                 <li @click="deleteConfirm('sequence')"> {{ $t('delete.sequence') }}</li>
                 <li @click="handleExport('sequenceDDL')"> {{ $t('export.ddl') }}</li>
                 <li @click="handleExport('sequenceDDLData')"> {{ $t('export.ddlData') }}</li>
               </ul>
-              <ul
-                v-if="treeContext.synonymVisible"
-                v-click-outside="
-                  () => {
-                    treeContext.synonymVisible = false;
-                  }
-                "
-              >
+              <ul v-if="treeContext.synonymVisible">
                 <li @click="deleteConfirm('synonym')"> {{ $t('delete.synonym') }}</li>
               </ul>
-              <ul
-                v-if="treeContext.userRoleVisible"
-                v-click-outside="
-                  () => {
-                    treeContext.userRoleVisible = false;
-                  }
-                "
-              >
+              <ul v-if="treeContext.userRoleVisible">
+                <li @click="changePassword"> {{ $t('common.changePassword') }}</li>
                 <li @click="deleteConfirm('userRole')"> {{ $t('delete.userRole') }}</li>
+              </ul>
+              <ul v-if="treeContext.tablespaceVisible">
+                <li @click="deleteConfirm('tablespace')"> {{ $t('delete.tablespace') }}</li>
               </ul>
             </div>
           </div>
@@ -475,21 +436,21 @@
       v-model="viewDialog"
       :type="createViewType"
       :nodeData="currentContextNodeData"
-      @success="refreshModeByContext"
+      @success="refreshSchemaByContext"
     />
     <CreateSynonymDialog
       v-if="synonymDialog"
       v-model="synonymDialog"
       type="create"
       :connectData="currentContextNodeData"
-      @success="refreshModeByContext"
+      @success="refreshSchemaByContext"
     />
     <CreateSequenceDialog
       v-if="sequenceDialog"
       v-model="sequenceDialog"
       type="create"
       :connectData="currentContextNodeData"
-      @success="refreshModeByContext"
+      @success="refreshSchemaByContext"
     />
     <ExportTableDataDialog
       v-if="exportTableDialog"
@@ -500,6 +461,7 @@
       v-if="renameTableDialog"
       v-model="renameTableDialog"
       :nodeData="currentContextNodeData"
+      :type="renameType"
     />
     <UpdateTableDescription
       v-if="updateTableDescriptionDialog"
@@ -524,6 +486,21 @@
       :tableName="currentContextNodeData.name"
       :oid="currentContextNodeData.oid"
     />
+    <ChangeUserPasswordDialog
+      v-if="
+        visibleChangePasswordDialog &&
+        (currentContextNodeData.type == 'user' || currentContextNodeData.type == 'role')
+      "
+      v-model="visibleChangePasswordDialog"
+      :uuid="treeContextFindAvailableUuid"
+      :userName="currentContextNodeData.label"
+      :type="currentContextNodeData.type"
+    />
+    <SetDisconnectionDialog
+      v-if="visibleSetDisconnectionDialog"
+      v-model="visibleSetDisconnectionDialog"
+      :uuid="treeContextFindAvailableUuid"
+    />
   </div>
 </template>
 
@@ -542,8 +519,10 @@
   import SetTablespace from './components/SetTablespace.vue';
   import SetTableSchema from './components/SetTableSchema.vue';
   import ImportTableDataDialog from '@/components/ImportTableDataDialog.vue';
+  import ChangeUserPasswordDialog from './components/ChangeUserPasswordDialog.vue';
+  import SetDisconnectionDialog from './components/SetDisconnectionDialog.vue';
   import { useRoute, useRouter } from 'vue-router';
-  import { useAppStore } from '@/store/modules/app';
+  import { useAppStore, ConnectedDatabase } from '@/store/modules/app';
   import { useUserStore } from '@/store/modules/user';
   import { useTagsViewStore } from '@/store/modules/tagsView';
   import vClickOutside from '@/directives/clickOutside';
@@ -554,25 +533,30 @@
   import { openDatabaseConnection, deleteDatabase } from '@/api/database';
   import { deleteSchema, exportSchemaDdl } from '@/api/schema';
   import { exportTableDdl } from '@/api/table';
+  import { dropForeignTableApi } from '@/api/foreignTable';
   import { dropFunctionSP, exportFunctionDdl } from '@/api/functionSP';
   import { dropPackage } from '@/api/functionSP';
   import { dropView, exportViewDdl } from '@/api/view';
   import { dropSequence, exportSequenceDdl } from '@/api/sequence';
   import { dropSynonym } from '@/api/synonym';
   import { dropUser } from '@/api/userRole';
+  import { dropTablespaceApi } from '@/api/tablespace';
+  import { updateTriggerEnableApi, updateTriggerDisableApi, deleteTriggerApi } from '@/api/trigger';
   import { connectListPersist, hasConnectListPersist } from '@/config';
   import { sidebarForage } from '@/utils/localforage';
   import { useSidebarContext } from '../hooks/useSidebarContext';
   import {
     generateRoot,
     generateUserRoleList,
+    generateTablespaceList,
     generateDBList,
     generateSchemaList,
     generateSchemaContentList,
     getLocalType,
-    getDbOrRoleCollectLabel,
+    getRootChildCollectLabel,
   } from './getSideData';
-  import type { Tree, ConnectInfo, RefreshOptions, NodeData } from './types';
+  import { Tree, ConnectInfo, RefreshOptions, NodeData } from './types';
+  import { updateConnectInfo } from './sidebarUtils';
 
   const AppStore = useAppStore();
   const UserStore = useUserStore();
@@ -586,23 +570,27 @@
 
   /* There are the following types of nodeType:
   {
-    root = 'root',
-    databaseCollect = 'databaseCollect',
-    userRoleCollect = 'userRoleCollect',
-    database = 'database',
-    role = 'role',
-    public = 'public', // schema
-    person = 'person', // schema
-    tableCollect = 'tableCollect',
-    table = 'table',
-    terminalCollect = 'terminalCollect',
-    terminal = 'terminal',
-    viewCollect = 'viewCollect',
-    view = 'view',
-    synonymCollect = 'synonymCollect',
-    synonym = 'synonym',
-    sequenceCollect = 'sequenceCollect',
-    sequence = 'sequence',
+    root: 'root',
+    databaseCollect: 'databaseCollect',
+    userRoleCollect: 'userRoleCollect',
+    database: 'database',
+    role: 'role',
+    tablespaceCollect: 'tablespaceCollect',
+    tablespace: 'tablespace',
+    public: 'public', // schema
+    person: 'person', // schema
+    tableCollect: 'tableCollect',
+    table: 'table',
+    foreignTableCollect: 'foreignTableCollect',
+    foreignTable: 'foreignTable',
+    terminalCollect: 'terminalCollect',
+    terminal: 'terminal',
+    viewCollect: 'viewCollect',
+    view: 'view',
+    synonymCollect: 'synonymCollect',
+    synonym: 'synonym',
+    sequenceCollect: 'sequenceCollect',
+    sequence: 'sequence',
   } */
 
   const treeClass = ref('no-tree');
@@ -618,7 +606,9 @@
   const setTablespaceDialog = ref(false);
   const setTableSchemaDialog = ref(false);
   const visibleImportDialog = ref(false);
-  const connectInfo: ConnectInfo = reactive({
+  const visibleChangePasswordDialog = ref(false);
+  const visibleSetDisconnectionDialog = ref(false);
+  const tempConnectInfo: ConnectInfo = reactive({
     name: '',
     id: '',
     ip: '',
@@ -676,6 +666,8 @@
     'db4ai',
   ]);
 
+  const renameType = ref<'table' | 'trigger'>('table');
+
   const isActive = (rou) => {
     return rou.path === route.path;
   };
@@ -690,11 +682,13 @@
     databaseId,
     schemaId,
     roleId,
+    tablespaceId,
   }: {
     rootId: string;
     databaseId?: string;
     schemaId?: string;
     roleId?: string;
+    tablespaceId?: string;
   }) => {
     for (let i = 0; i < connectionList.value.length; i++) {
       const cListItem = connectionList.value[i];
@@ -715,28 +709,41 @@
             }
           }
         }
-        if (roleId) {
-          const roleCollectNode = cListItem.children.find(
-            (item) => item.type === 'userRoleCollect',
-          );
-          for (let j = 0; j < roleCollectNode.children.length; j++) {
-            const roleItem = roleCollectNode.children[j];
-            if (roleItem.id == roleId) return roleItem;
+        if (roleId || tablespaceId) {
+          const id = roleId || tablespaceId;
+          const type = {
+            roleId: 'userRoleCollect',
+            tablespaceId: 'tablespaceCollect',
+          }[roleId || tablespaceId];
+          const collectNode = cListItem.children.find((item) => item.type === type);
+          for (let j = 0; j < collectNode.children.length; j++) {
+            const roleItem = collectNode.children[j];
+            if (roleItem.id == id) return roleItem;
           }
         }
       }
     }
   };
-  const findRoleOrDbCollectByType = (rootId, type: 'databaseCollect' | 'userRoleCollect') => {
+  const findRootChildCollectByType = (
+    rootId,
+    type: 'databaseCollect' | 'userRoleCollect' | 'tablespaceCollect',
+  ) => {
     return connectionList.value
       .find((item) => item.id === rootId)
       ?.children.find((item) => item.type === type);
   };
 
-  const findRoleOrDbCollectById = (rootId, id) => {
+  const findRootChildCollectById = (rootId, id) => {
     return connectionList.value
       .find((item) => item.id === rootId)
       ?.children.find((item) => item.id === id);
+  };
+
+  const findSchemaChildCollectById = (rootId, databaseId, schemaId, id) => {
+    return findRootChildCollectByType(rootId, 'databaseCollect')
+      ?.children.find((db) => db.id === databaseId)
+      ?.children.find((schema) => schema.id === schemaId)
+      ?.children.find((childCollect) => childCollect.id === id);
   };
 
   const loadNode = async (node, resolve) => {
@@ -796,17 +803,31 @@
     return true;
   };
   const fetchDBList = async (rootId, parentId, uuid, connectInfo) => {
-    const collect = findRoleOrDbCollectById(rootId, parentId);
+    const collect = findRootChildCollectById(rootId, parentId);
     const list = await generateDBList(rootId, parentId, uuid, connectInfo);
     collect.children = list;
-    collect.label = getDbOrRoleCollectLabel('databaseCollect', list.length);
+    collect.label = getRootChildCollectLabel('databaseCollect', list.length);
     updateConnectListPersist();
   };
   const fetchUserRoleList = async (rootId, parentId, uuid, connectInfo) => {
-    const collect = findRoleOrDbCollectById(rootId, parentId);
+    const collect = findRootChildCollectById(rootId, parentId);
     const list = await generateUserRoleList(rootId, parentId, uuid, connectInfo);
     collect.children = list;
-    collect.label = getDbOrRoleCollectLabel('userRoleCollect', list.length);
+    collect.label = getRootChildCollectLabel('userRoleCollect', list.length);
+    updateConnectListPersist();
+  };
+
+  const fetchTablespaceList = async (rootId, uuid, connectInfo) => {
+    const collect = findRootChildCollectByType(rootId, 'tablespaceCollect');
+    if (!collect) return;
+    const list = await generateTablespaceList(
+      rootId,
+      `${rootId}_tablespaceCollect`,
+      uuid,
+      connectInfo,
+    );
+    collect.children = list as unknown as NodeData[];
+    collect.label = getRootChildCollectLabel('tablespaceCollect', list.length);
     updateConnectListPersist();
   };
 
@@ -834,12 +855,12 @@
     updateConnectListPersist();
     isConnect &&
       nextTick(() => {
-        handleDbConnect(rootId, databaseId, isConnect);
+        handleDbConnect(rootId, databaseId, undefined, isConnect);
       });
   };
   const deleteDbItem = (rootId, databaseId) => {
     treeRef.value.remove(databaseId);
-    const dbCollect = findRoleOrDbCollectByType(rootId, 'databaseCollect');
+    const dbCollect = findRootChildCollectByType(rootId, 'databaseCollect');
     for (let j = 0; j < dbCollect.children.length; j++) {
       const db = dbCollect.children[j];
       if (db.id == databaseId) {
@@ -847,7 +868,7 @@
         break;
       }
     }
-    dbCollect.label = getDbOrRoleCollectLabel('databaseCollect', dbCollect.children.length);
+    dbCollect.label = getRootChildCollectLabel('databaseCollect', dbCollect.children.length);
     updateConnectListPersist();
     refreshConnectListMap();
   };
@@ -906,30 +927,43 @@
       const rootId = listItem.connectInfo.id;
       const dbList =
         listItem.children.find((item) => item.type === 'databaseCollect')?.children || [];
+      let connectedDatabase = dbList
+        .filter((item) => item.isConnect)
+        .map((item) => ({
+          rootId,
+          connectInfoName: listItem.connectInfo.name,
+          name: item.label,
+          uuid: item.uuid,
+          isConnect: item.isConnect,
+          connectTime: item.connectTime,
+        }));
       return {
         id: rootId,
-        info: { ...listItem.connectInfo },
-        connectedDatabase: dbList
-          .filter((item) => item.isConnect)
-          .map((item) => ({
-            rootId,
-            connectInfoName: listItem.connectInfo.name,
-            name: item.label,
-            uuid: item.uuid,
-            connectTime: item.connectTime,
-          })),
+        connectInfo: { ...listItem.connectInfo },
+        connectedDatabase,
       };
     });
     AppStore.updateCurrentTerminalInfo();
+    AppStore.updateHistoryConnectedDatabase();
   };
   const handleDeleteConnect = () => {
     treeContext.rootVisible = false;
     ElMessageBox.confirm(
       t('message.deleteConnect', { name: currentContextNodeData.connectInfo.name }),
     ).then(async () => {
-      for (let i = 0; i < currentContextNodeData.children.length; i++) {
-        const db = currentContextNodeData.children[i];
-        db.isConnect && (await closeConnections(db.uuid));
+      const databaseCollect = findRootChildCollectByType(
+        currentContextNodeData.id,
+        'databaseCollect',
+      );
+      for (let i = 0; i < databaseCollect.children.length; i++) {
+        const db = databaseCollect.children[i];
+        if (import.meta.env.MODE !== 'development') {
+          try {
+            db.isConnect && (await closeConnections({ uuid: db.uuid }));
+          } catch {
+            throw new Error(`fail to close connection: ${db.name}, ${db.uuid}`);
+          }
+        }
       }
       treeRef.value.remove(treeRef.value.getNode(currentContextNodeData.id));
       ElMessage.success(t('message.deleteSuccess'));
@@ -952,9 +986,8 @@
           for (let j = 0; j < dbCollect.children.length; j++) {
             const db = dbCollect.children[j];
             if (db.isConnect) {
-              await closeConnections(db.uuid);
+              await closeConnections({ uuid: db.uuid });
               db.children = [];
-              db.uuid = '';
               db.isConnect = false;
               db.connectTime = null;
             }
@@ -965,7 +998,7 @@
       refreshConnectListMap();
     });
   };
-  const handleDbConnect = async (rootId, databaseId, willOpen) => {
+  const handleDbConnect = async (rootId, databaseId, uuid, willOpen) => {
     treeContext.databaseVisible = false;
     const rootData = findNode({ rootId });
     const dbData = findNode({ rootId, databaseId });
@@ -976,15 +1009,16 @@
         id: rootData.connectInfo.id,
         dataName: dbData.name,
         webUser: UserStore.userId,
+        connectionid: uuid,
       };
       const res: any = await openDatabaseConnection(params);
       ElMessage.success(t('message.connectSuccess'));
       mergeObj = { uuid: res.connectionid, connectTime: Date.now() };
     } else {
       await ElMessageBox.confirm(t('message.disConnect', { name: currentContextNodeData.name }));
-      await closeConnections(dbData.uuid);
+      await closeConnections({ uuid: dbData.uuid });
       ElMessage.success(t('message.disconnectSuccess'));
-      mergeObj = { uuid: '', connectTime: null };
+      mergeObj = { connectTime: null };
     }
     Object.assign(dbData, {
       isConnect: willOpen,
@@ -1063,7 +1097,13 @@
   };
 
   const refresh = async (
-    mode: 'connection' | 'userRoleCollect' | 'databaseCollect' | 'database' | 'schema',
+    mode:
+      | 'connection'
+      | 'userRoleCollect'
+      | 'tablespaceCollect'
+      | 'databaseCollect'
+      | 'database'
+      | 'schema',
     options: Partial<RefreshOptions> = {
       connectInfo: undefined,
       rootId: '',
@@ -1082,18 +1122,26 @@
         options.uuid || currentContextNodeData.uuid,
       );
       nodeId = options.connectInfo?.id || currentContextNodeData.connectInfo?.id || options.rootId;
-    } else if (mode == 'databaseCollect') {
-      const collectNode = findRoleOrDbCollectByType(options.rootId, 'databaseCollect');
-      await fetchDBList(
+    } else if (mode == 'userRoleCollect') {
+      const collectNode = findRootChildCollectByType(options.rootId, 'userRoleCollect');
+      await fetchUserRoleList(
         options.rootId,
         options.parentId || collectNode.id,
         options.uuid || currentContextNodeData.uuid,
         options.connectInfo || collectNode.connectInfo,
       );
       nodeId = collectNode.id;
-    } else if (mode == 'userRoleCollect') {
-      const collectNode = findRoleOrDbCollectByType(options.rootId, 'userRoleCollect');
-      await fetchUserRoleList(
+    } else if (mode == 'tablespaceCollect') {
+      const collectNode = findRootChildCollectByType(options.rootId, 'tablespaceCollect');
+      await fetchTablespaceList(
+        options.rootId,
+        options.uuid || currentContextNodeData.uuid,
+        options.connectInfo || collectNode.connectInfo,
+      );
+      nodeId = collectNode.id;
+    } else if (mode == 'databaseCollect') {
+      const collectNode = findRootChildCollectByType(options.rootId, 'databaseCollect');
+      await fetchDBList(
         options.rootId,
         options.parentId || collectNode.id,
         options.uuid || currentContextNodeData.uuid,
@@ -1120,7 +1168,7 @@
     }
   };
 
-  const refreshModeByContext = () => {
+  const refreshSchemaByContext = () => {
     refresh('schema', {
       rootId: currentContextNodeData.connectInfo.id,
       databaseId: currentContextNodeData.databaseId,
@@ -1161,7 +1209,7 @@
       updateConnectListPersist();
       if (data.isConnect) {
         nextTick(() => {
-          handleDbConnect(rootId, newId, true);
+          handleDbConnect(rootId, newId, undefined, true);
         });
       }
     }
@@ -1182,6 +1230,23 @@
       },
     });
     treeContext.userRoleCollectVisible = false;
+  };
+
+  const handleCreateTablespace = () => {
+    const time = Date.now();
+    const connectInfo: any = currentContextNodeData.connectInfo;
+    router.push({
+      path: '/createTablespace/' + time,
+      query: {
+        title: 'create_tablespace',
+        fileName: 'create_tablespace',
+        rootId: connectInfo.id,
+        connectInfoName: connectInfo.name,
+        connectInfoId: connectInfo.id,
+        uuid: treeContextFindAvailableUuid.value,
+      },
+    });
+    treeContext.tablespaceCollectVisible = false;
   };
 
   const createSchemaSuccess = () => {
@@ -1211,6 +1276,47 @@
     });
     treeContext.tableCollectVisible = false;
   };
+  const hanldeCreateForeignTable = () => {
+    const time = Date.now();
+    const connectInfo: any = currentContextNodeData.connectInfo;
+    router.push({
+      path: '/createForeignTable/' + time,
+      query: {
+        title: 'create_foreign_table',
+        fileName: 'create_foreign_table',
+        rootId: connectInfo.id,
+        connectInfoName: connectInfo.name,
+        connectInfoId: connectInfo.id,
+        uuid: currentContextNodeData.uuid,
+        databaseName: currentContextNodeData.databaseName,
+        databaseId: currentContextNodeData.databaseId,
+        schema: currentContextNodeData.schemaName,
+        schemaId: currentContextNodeData.schemaId,
+        time,
+      },
+    });
+    treeContext.foreignTableCollectVisible = false;
+  };
+
+  const hanldeCreateTrigger = () => {
+    const time = Date.now();
+    const connectInfo: any = currentContextNodeData.connectInfo;
+    router.push({
+      path: '/createTrigger/' + time,
+      query: {
+        title: 'create_trigger',
+        fileName: 'create_trigger',
+        rootId: connectInfo.id,
+        userName: connectInfo.userName,
+        databaseId: currentContextNodeData.databaseId,
+        schemaId: currentContextNodeData.schemaId,
+        uuid: currentContextNodeData.uuid,
+        schema: currentContextNodeData.schemaName,
+      },
+    });
+    treeContext.triggerCollectVisible = false;
+  };
+
   const hanldeCreate = (type: 'function' | 'procedure' | 'sql' | 'anonymous') => {
     enum titleMap {
       function = 'create_F',
@@ -1286,37 +1392,37 @@
   };
 
   const deleteConfirm = async (
-    type: 'functionSP' | 'package' | 'view' | 'synonym' | 'sequence' | 'userRole',
+    type:
+      | 'userRole'
+      | 'tablespace'
+      | 'foreignTable'
+      | 'trigger'
+      | 'functionSP'
+      | 'package'
+      | 'view'
+      | 'synonym'
+      | 'sequence',
   ) => {
     const apiMap = {
+      userRole: dropUser,
+      tablespace: dropTablespaceApi,
+      foreignTable: dropForeignTableApi,
+      trigger: deleteTriggerApi,
       functionSP: dropFunctionSP,
       package: dropPackage,
       view: dropView,
       sequence: dropSequence,
       synonym: dropSynonym,
-      userRole: dropUser,
     };
     const api = apiMap[type];
     hideTreeContext();
     ElMessageBox.confirm(
-      `${t('common.confirm')}
-      ${t(`delete.${type}`)}${t('common.colon')}
+      `${t('common.confirm')}${t(`delete.${type}`)}${t('common.colon')}
       ${currentContextNodeData.label}
       ${t('common.if')}`,
     ).then(async () => {
       let params = {};
       let callback;
-      if (['functionSP', 'package', 'view', 'synonym', 'sequence'].includes(type)) {
-        params = {
-          connectionName: currentContextNodeData.connectInfo.name,
-          schema: currentContextNodeData.schemaName,
-          [type + 'Name']: currentContextNodeData.label,
-          webUser: UserStore.userId,
-          uuid: currentContextNodeData.uuid,
-          oid: currentContextNodeData.oid,
-        };
-        callback = refreshModeByContext;
-      }
       if (type === 'userRole') {
         params = {
           uuid: treeContextFindAvailableUuid.value,
@@ -1329,10 +1435,59 @@
             uuid: treeContextFindAvailableUuid.value,
           });
       }
+      if (type === 'tablespace') {
+        params = {
+          uuid: treeContextFindAvailableUuid.value,
+          tablespaceName: currentContextNodeData.name,
+        };
+        callback = () =>
+          refresh('tablespaceCollect', {
+            rootId: currentContextNodeData.rootId,
+            uuid: treeContextFindAvailableUuid.value,
+          });
+      }
+      if (type === 'foreignTable') {
+        params = {
+          uuid: currentContextNodeData.uuid,
+          schema: currentContextNodeData.schemaName,
+          foreignTable: currentContextNodeData.name,
+        };
+        callback = refreshSchemaByContext;
+      }
+      if (type === 'trigger') {
+        params = {
+          uuid: currentContextNodeData.uuid,
+          schema: currentContextNodeData.schemaName,
+          name: currentContextNodeData.name,
+          tableName: currentContextNodeData.tableName,
+        };
+        callback = refreshSchemaByContext;
+      }
+      if (['functionSP', 'package', 'view', 'synonym', 'sequence'].includes(type)) {
+        params = {
+          connectionName: currentContextNodeData.connectInfo.name,
+          schema: currentContextNodeData.schemaName,
+          [type + 'Name']: currentContextNodeData.label,
+          webUser: UserStore.userId,
+          uuid: currentContextNodeData.uuid,
+          oid: currentContextNodeData.oid,
+        };
+        callback = refreshSchemaByContext;
+      }
       await api(params);
       ElMessage.success(t('message.deleteSuccess'));
       callback && callback();
     });
+  };
+
+  const changePassword = () => {
+    hideTreeContext();
+    visibleChangePasswordDialog.value = true;
+  };
+
+  const handleSetDisconnectionTime = () => {
+    hideTreeContext();
+    visibleSetDisconnectionDialog.value = true;
   };
 
   const filterNode = (value: string, data: Tree) => {
@@ -1345,7 +1500,7 @@
     hideTreeContext();
     if (node.isLeaf) {
       const { schemaName, databaseName, uuid, isInPackage, packageName } = target;
-      const { name: connectInfoName, id: rootId, type: platform } = target.connectInfo;
+      const { name: connectInfoName, id: rootId, type: platform, userName } = target.connectInfo;
       const packagePreText = isInPackage ? `${packageName}.` : '';
       const commonParams = {
         platform,
@@ -1365,13 +1520,43 @@
           ),
         oid: target.oid,
       };
-      if (target.type == 'table') {
+      if (target.type == 'tablespace') {
+        const availableUuid = AppStore.getConnectionOneAvailableUuid(rootId);
+        if (!availableUuid) return ElMessage.error(t('message.noConnectionAvailable'));
+        router.push({
+          path: `/editTablespace/${target.id}`,
+          query: {
+            ...commonParams,
+            name: target.label,
+            uuid: availableUuid,
+          },
+        });
+      } else if (target.type == 'table') {
         router.push({
           path: `/table/${target.id}`,
           query: {
             ...commonParams,
             parttype: target.parttype,
             time: String(Date.now()),
+          },
+        });
+      } else if (target.type == 'foreignTable') {
+        router.push({
+          path: `/foreignTable/${target.id}`,
+          query: {
+            ...commonParams,
+            parttype: target.parttype,
+            time: String(Date.now()),
+          },
+        });
+      } else if (target.type == 'trigger') {
+        router.push({
+          path: `/trigger/${target.id}`,
+          query: {
+            ...commonParams,
+            name: target.label,
+            tableName: target.tableName,
+            userName,
           },
         });
       } else if (target.type == 'terminal') {
@@ -1410,6 +1595,18 @@
           query: {
             synonymName: target.label,
             ...commonParams,
+          },
+        });
+      } else if (target.type == 'user' || target.type == 'role') {
+        const availableUuid = AppStore.getConnectionOneAvailableUuid(rootId);
+        if (!availableUuid) return ElMessage.error(t('message.noConnectionAvailable'));
+        router.push({
+          path: `/editUserRole/${target.id}`,
+          query: {
+            name: target.label,
+            type: target.type,
+            ...commonParams,
+            uuid: availableUuid,
           },
         });
       }
@@ -1455,10 +1652,13 @@
     },
     rootVisible: false,
     userRoleCollectVisible: false,
+    tablespaceCollectVisible: false,
     databaseCollectVisible: false,
     databaseVisible: false,
     modeVisible: false,
     tableCollectVisible: false,
+    foreignTableCollectVisible: false,
+    triggerCollectVisible: false,
     terminalCollectVisible: false,
     packageVisible: false,
     functionSPVisible: false,
@@ -1467,22 +1667,25 @@
     sequenceCollectVisible: false,
     tableVisible: false,
     viewVisible: false,
+    foreignTableVisible: false,
+    triggerVisible: false,
     sequenceVisible: false,
     synonymVisible: false,
     userRoleVisible: false,
+    tablespaceVisible: false,
   });
   const treeContextDbStatus = computed(() => {
-    return Boolean(
-      AppStore.connectListMap
-        .find((listItem) => listItem.id === currentContextNodeData.connectInfo.id)
-        ?.connectedDatabase.findIndex((item) => item.name == currentContextNodeData.label) > -1,
+    return !!AppStore.connectedDatabase.find(
+      (item) =>
+        currentContextNodeData.connectInfo.id === item.rootId &&
+        currentContextNodeData.label == item.name,
     );
   });
   const treeContextFindAvailableUuid = computed(() => {
     const selectConnection = AppStore.connectListMap.find(
       (listItem) => listItem.id === currentContextNodeData.connectInfo.id,
     );
-    return selectConnection?.connectedDatabase[0]?.uuid;
+    return selectConnection?.connectedDatabase.filter((item) => item.isConnect)[0]?.uuid;
   });
   const hideTreeContext = () => {
     Object.keys(treeContext).forEach((key) => {
@@ -1500,12 +1703,17 @@
     const typeMap = {
       root: 'rootVisible',
       userRoleCollect: 'userRoleCollectVisible',
+      tablespaceCollect: 'tablespaceCollectVisible',
       databaseCollect: 'databaseCollectVisible',
       database: 'databaseVisible',
       public: 'modeVisible',
       person: 'modeVisible',
       tableCollect: 'tableCollectVisible',
       table: 'tableVisible',
+      foreignTableCollect: 'foreignTableCollectVisible',
+      foreignTable: 'foreignTableVisible',
+      triggerCollect: 'triggerCollectVisible',
+      trigger: 'triggerVisible',
       terminalCollect: 'terminalCollectVisible',
       package: 'packageVisible',
       terminal: 'functionSPVisible',
@@ -1517,10 +1725,37 @@
       synonym: 'synonymVisible',
       user: 'userRoleVisible',
       role: 'userRoleVisible',
+      tablespace: 'tablespaceVisible',
     };
     if (Object.prototype.hasOwnProperty.call(typeMap, type) && !data.isInPackage) {
       treeContext[typeMap[type]] = true;
     }
+  };
+
+  const handleTrigger = async (rootId, databaseId, schemaId, parentId, isWillEnabled) => {
+    treeContext.triggerVisible = false;
+    const triggerCollect = findSchemaChildCollectById(rootId, databaseId, schemaId, parentId);
+    if (!triggerCollect) return;
+    const trigger = triggerCollect.children.find(
+      (trigger) => trigger.id === currentContextNodeData.id,
+    );
+    const msgPrefix = isWillEnabled
+      ? t('message.willEnable', { name: currentContextNodeData.name })
+      : t('message.willDisable', { name: currentContextNodeData.name });
+    await ElMessageBox.confirm(msgPrefix);
+    let api = isWillEnabled ? updateTriggerEnableApi : updateTriggerDisableApi;
+    const params = {
+      uuid: currentContextNodeData.uuid,
+      schema: trigger.schemaName,
+      name: trigger.name,
+      tableName: trigger.tableName,
+    };
+    await api(params);
+    ElMessage.success(t('message.setSuccess'));
+    Object.assign(trigger, {
+      enabled: isWillEnabled,
+    });
+    updateConnectListPersist();
   };
 
   const handleImport = (type: 'tableData') => {
@@ -1635,6 +1870,12 @@
 
   const handleTableRename = () => {
     treeContext.tableVisible = false;
+    renameType.value = 'table';
+    renameTableDialog.value = true;
+  };
+  const handleTriggerRename = () => {
+    treeContext.triggerVisible = false;
+    renameType.value = 'trigger';
     renameTableDialog.value = true;
   };
   const handleUpdateTableDescription = () => {
@@ -1684,13 +1925,13 @@
         const list = await getAllConnectList();
         list.forEach((listItem) => {
           if (listItem.children) {
-            listItem.children.forEach((dbOrRoleCollect) => {
-              dbOrRoleCollect.label = getDbOrRoleCollectLabel(
-                dbOrRoleCollect.type,
-                dbOrRoleCollect.children?.length || 0,
+            listItem.children.forEach((childCollect) => {
+              childCollect.label = getRootChildCollectLabel(
+                childCollect.type,
+                childCollect.children?.length || 0,
               );
-              if (dbOrRoleCollect.type == 'databaseCollect' && dbOrRoleCollect.children?.length) {
-                dbOrRoleCollect.children.forEach((dbItem) => {
+              if (childCollect.type == 'databaseCollect' && childCollect.children?.length) {
+                childCollect.children.forEach((dbItem) => {
                   dbItem.children.forEach((schemaItem) => {
                     schemaItem.children.forEach((type) => {
                       type.label = `${getLocalType(type.key).label} (${type.children.length})`;
@@ -1725,18 +1966,19 @@
   onMounted(async () => {
     // maybe update  database list, and schema, databaseName... so must close all tabs.
     EventBus.listen(EventTypeName.GET_CONNECTION_LIST, async (connectData) => {
-      connectData && Object.assign(connectInfo, connectData);
-      const { connectionid, ...info } = connectData;
+      connectData && Object.assign(tempConnectInfo, connectData);
+      const { connectionid, ...connectInfo } = connectData;
       const isRepeatIndex = AppStore.connectListMap.findIndex((item) => item.id == connectData.id);
       const connectListMapItem = {
         id: connectData.id,
-        info,
+        connectInfo,
         connectedDatabase: [
           {
             rootId: connectData.id,
-            connectInfoName: info.name,
+            connectInfoName: connectInfo.name,
             name: connectData.dataName,
             uuid: connectionid,
+            isConnect: true,
             connectTime: Date.now(),
           },
         ],
@@ -1744,12 +1986,13 @@
       isRepeatIndex > -1
         ? AppStore.connectListMap.splice(isRepeatIndex, 1, connectListMapItem)
         : AppStore.connectListMap.unshift(connectListMapItem);
-      await fetchRoot(info, connectionid);
+      await fetchRoot(connectInfo, connectionid);
       refreshConnectListMap();
       if (!TagsViewStore.visitedViews.find((item) => item.name == 'home' && item.query?.rootId)) {
-        const connectInfoName = AppStore.connectListMap[0].info.name;
-        const uuid = AppStore.connectListMap[0].connectedDatabase[0]?.uuid;
-        const dbname = AppStore.connectListMap[0].connectedDatabase[0]?.name;
+        const connectInfoName = AppStore.connectListMap[0].connectInfo.name;
+        const { uuid, name: dbname } = (
+          AppStore.connectListMap[0]?.connectedDatabase as ConnectedDatabase[]
+        ).filter((item) => item.isConnect)[0];
         router.replace({
           path: '/home',
           query: {
@@ -1763,18 +2006,19 @@
       }
     });
     EventBus.listen(EventTypeName.UPDATE_CONNECTION_LIST, async (connectData) => {
-      connectData && Object.assign(connectInfo, connectData);
-      const { connectionid, ...info } = connectData;
+      connectData && Object.assign(tempConnectInfo, connectData);
+      const { connectionid, ...connectInfo } = connectData;
       const isRepeatIndex = AppStore.connectListMap.findIndex((item) => item.id == connectData.id);
       const connectListMapItem = {
         id: connectData.id,
-        info,
+        connectInfo,
         connectedDatabase: [
           {
             rootId: connectData.id,
-            connectInfoName: info.name,
+            connectInfoName: connectInfo.name,
             name: connectData.dataName,
             uuid: connectionid,
+            isConnect: true,
             connectTime: Date.now(),
           },
         ],
@@ -1782,11 +2026,15 @@
       isRepeatIndex > -1
         ? AppStore.connectListMap.splice(isRepeatIndex, 1, connectListMapItem)
         : AppStore.connectListMap.unshift(connectListMapItem);
-      await fetchRoot(info, connectionid);
+      await fetchRoot(connectInfo, connectionid);
       refreshConnectListMap();
     });
     EventBus.listen(EventTypeName.REFRESH_ASIDER, async (mode, options) => {
       refresh(mode, options);
+    });
+    EventBus.listen(EventTypeName.UPDATE_CONNECTINFO, async (newConnectInfo) => {
+      updateConnectInfo(connectionList.value, newConnectInfo);
+      refreshConnectListMap();
     });
     connectionList.value = await getAllConnectList();
     refreshConnectListMap(); // If both connectListMap and currentTerminalInfo have persistence processing, then this line of code may not require
@@ -1795,6 +2043,7 @@
     EventBus.unListen(EventTypeName.GET_CONNECTION_LIST);
     EventBus.unListen(EventTypeName.UPDATE_CONNECTION_LIST);
     EventBus.unListen(EventTypeName.REFRESH_ASIDER);
+    EventBus.unListen(EventTypeName.UPDATE_CONNECTINFO);
   });
 </script>
 

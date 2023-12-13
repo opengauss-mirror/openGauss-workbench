@@ -6,6 +6,7 @@ package com.nctigba.datastudio.controller;
 
 import com.nctigba.datastudio.base.ClusterManager;
 import com.nctigba.datastudio.dao.ConnectionMapDAO;
+import com.nctigba.datastudio.model.dto.ConnectionTimeLengthDTO;
 import com.nctigba.datastudio.model.dto.DbConnectionCreateDTO;
 import com.nctigba.datastudio.model.dto.GetConnectionAttributeDTO;
 import com.nctigba.datastudio.model.entity.DatabaseConnectionDO;
@@ -96,8 +97,8 @@ public class DbConnectionController {
      * @param uuid uuid
      * @throws SQLException SQLException
      */
-    @DeleteMapping(value = "/connections/close/{uuid}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public void delete(@PathVariable("uuid") String uuid) throws SQLException {
+    @DeleteMapping(value = "/connections/close", produces = MediaType.APPLICATION_JSON_VALUE)
+    public void delete(@RequestParam("uuid") String uuid) throws SQLException {
         connectionMapDAO.deleteConnection(uuid);
     }
 
@@ -124,4 +125,36 @@ public class DbConnectionController {
         return dbConnectionService.updateDatabaseConnection(request);
     }
 
+
+    /**
+     * connection reconnection
+     *
+     * @param request request
+     * @return DatabaseConnectionDO
+     */
+    @PostMapping(value = "/login", produces = MediaType.APPLICATION_JSON_VALUE)
+    public DatabaseConnectionDO reconnection(@RequestBody DbConnectionCreateDTO request) {
+        return dbConnectionService.loginConnection(request);
+    }
+
+    /**
+     * connection database
+     *
+     * @param request request
+     */
+    @PostMapping(value = "/reconnection", produces = MediaType.APPLICATION_JSON_VALUE)
+    public void timeLength(@RequestBody ConnectionTimeLengthDTO request) {
+        dbConnectionService.timeLength(request);
+    }
+
+    /**
+     * get connection time length
+     *
+     * @param uuid uuid
+     * @return Integer
+     */
+    @GetMapping(value = "/connection/getTime", produces = MediaType.APPLICATION_JSON_VALUE)
+    public Integer getTimeLength(@RequestParam(value = "uuid") String uuid) {
+        return dbConnectionService.getTimeLength(uuid);
+    }
 }

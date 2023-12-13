@@ -5,7 +5,7 @@
 package com.nctigba.datastudio.service.impl.sql;
 
 import com.nctigba.datastudio.config.ConnectionConfig;
-import com.nctigba.datastudio.util.ConnectionUtils;
+import com.nctigba.datastudio.utils.ConnectionUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;

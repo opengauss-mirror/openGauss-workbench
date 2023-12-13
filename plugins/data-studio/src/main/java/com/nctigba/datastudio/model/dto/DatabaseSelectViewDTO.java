@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 /**
  * DatabaseSelectViewDTO
  *
- * @since 2023-6-26
+ * @since 2023-9-26
  */
 @NoArgsConstructor
 @Data
@@ -22,4 +22,6 @@ public class DatabaseSelectViewDTO {
     private String connectionName;
     private String viewName;
     private String schema;
+    private Integer pageNum;
+    private Integer pageSize;
 }

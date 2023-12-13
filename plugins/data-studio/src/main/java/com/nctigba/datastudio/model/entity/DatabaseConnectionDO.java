@@ -40,4 +40,5 @@ public class DatabaseConnectionDO {
     private String webUser;
 
     private String edition;
+    private String isRememberPassword;
 }

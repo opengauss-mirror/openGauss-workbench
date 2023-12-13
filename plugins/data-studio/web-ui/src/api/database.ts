@@ -3,8 +3,9 @@ import request from './request';
 // getDatabaseList
 export function getDatabaseList(uuid) {
   return request({
-    url: `/dataStudio/web/v1/metaData/databaseList/${uuid}`,
+    url: `/dataStudio/web/v1/metaData/databaseList`,
     method: 'get',
+    params: { uuid },
   });
 }
 

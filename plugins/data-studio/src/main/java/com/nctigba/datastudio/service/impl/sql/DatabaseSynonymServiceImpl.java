@@ -10,8 +10,8 @@ import com.nctigba.datastudio.model.dto.DatabaseCreateSynonymDTO;
 import com.nctigba.datastudio.model.dto.DatabaseDropSynonymDTO;
 import com.nctigba.datastudio.model.dto.DatabaseSynonymAttributeDTO;
 import com.nctigba.datastudio.service.DatabaseSynonymService;
-import com.nctigba.datastudio.util.DebugUtils;
-import com.nctigba.datastudio.util.LocaleString;
+import com.nctigba.datastudio.utils.DebugUtils;
+import com.nctigba.datastudio.utils.LocaleStringUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.opengauss.admin.common.exception.CustomException;
@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 
 import static com.nctigba.datastudio.dao.ConnectionMapDAO.conMap;
+import static com.nctigba.datastudio.utils.DebugUtils.comGetUuidType;
 
 /**
  * DatabaseSynonymServiceImpl
@@ -58,7 +59,7 @@ public class DatabaseSynonymServiceImpl implements DatabaseSynonymService {
     @Override
     public String createSynonymDDL(DatabaseCreateSynonymDTO request) {
         log.info("createSynonymDDL request is: " + request);
-        String ddl = synonymObjectSQLService.get(conMap.get(request.getUuid()).getType()).splicingSynonymDDL(request);
+        String ddl = synonymObjectSQLService.get(comGetUuidType(request.getUuid())).splicingSynonymDDL(request);
         log.info("createSynonymDDL response is: " + ddl);
         return ddl;
     }
@@ -70,14 +71,14 @@ public class DatabaseSynonymServiceImpl implements DatabaseSynonymService {
                 Connection connection = connectionConfig.connectDatabase(request.getUuid());
                 Statement statement = connection.createStatement()
         ) {
-            String ddl = synonymObjectSQLService.get(conMap.get(request.getUuid()).getType()).synonymAttributeSQL(
+            String ddl = synonymObjectSQLService.get(comGetUuidType(request.getUuid())).synonymAttributeSQL(
                     request);
             try (
                     ResultSet count = statement.executeQuery(ddl)
             ) {
                 if (count.next()) {
                     if (StringUtils.isBlank(String.valueOf(count.getString("synname")))) {
-                        throw new CustomException(LocaleString.transLanguage("2011"));
+                        throw new CustomException(LocaleStringUtils.transLanguage("2011"));
                     }
                 }
             }
@@ -100,7 +101,7 @@ public class DatabaseSynonymServiceImpl implements DatabaseSynonymService {
                 Connection connection = connectionConfig.connectDatabase(request.getUuid());
                 Statement statement = connection.createStatement()
         ) {
-            String ddl = synonymObjectSQLService.get(conMap.get(request.getUuid()).getType()).splicingSynonymDDL(
+            String ddl = synonymObjectSQLService.get(comGetUuidType(request.getUuid())).splicingSynonymDDL(
                     request);
             statement.execute(ddl);
             log.info("createSynonym sql is: " + ddl);
@@ -114,7 +115,7 @@ public class DatabaseSynonymServiceImpl implements DatabaseSynonymService {
                 Connection connection = connectionConfig.connectDatabase(request.getUuid());
                 Statement statement = connection.createStatement()
         ) {
-            String sql = synonymObjectSQLService.get(conMap.get(request.getUuid()).getType()).dropSynonymSQL(request);
+            String sql = synonymObjectSQLService.get(comGetUuidType(request.getUuid())).dropSynonymSQL(request);
             statement.execute(sql);
             log.info("dropSynonym sql is: " + sql);
         }

@@ -19,7 +19,6 @@
 }
 .tree-node-icon {
   margin-right: 6px;
-  color: #75757e;
   width: 1em;
   height: 1em;
   vertical-align: -0.15em;
@@ -51,6 +50,7 @@
   .left {
     display: flex;
     align-items: center;
+    flex-shrink: 0;
   }
   .icon {
     font-size: 19px;

@@ -5,21 +5,22 @@
       @addLine="handleAddLine(data)"
       @removeLine="handleRemoveLine(data)"
     />
-    <EditTable2
+    <EditTable
       :data="props.data"
       :columns="tableColumns"
       :idKey="idKey"
       :rowStatusKey="rowStatusKey"
       :editingSuffix="editingSuffix"
       :editedSuffix="editedSuffix"
+      :menuList="['advancedCopy']"
       v-model:globalEditing="globalEditing"
-      @currentChange="handleCurrentChange"
+      @selectionChange="handleSelectionChange"
     >
       <template v-for="item in tableColumns" :key="item.prop" v-slot:[item.prop]="scope">
         <el-input
           v-if="globalEditing && scope.row[item.prop + editingSuffix] && item.element == 'input'"
           v-model="scope.row[item.prop]"
-          v-bind="item.attribute"
+          v-bind="item.attributes"
           @change="handleChangeValue(scope.row, scope.column)"
         />
         <el-input-number
@@ -27,7 +28,7 @@
             globalEditing && scope.row[item.prop + editingSuffix] && item.element == 'inputNumber'
           "
           v-model="scope.row[item.prop]"
-          v-bind="item.attribute"
+          v-bind="item.attributes"
           :controls="false"
           @change="handleChangeValue(scope.row, scope.column)"
           style="width: 100%"
@@ -37,7 +38,7 @@
             globalEditing && scope.row[item.prop + editingSuffix] && item.prop == 'dataType'
           "
           v-model="scope.row[item.prop]"
-          v-bind="item.attribute"
+          v-bind="item.attributes"
           @change="handleChangeValue(scope.row, scope.column)"
         >
           <el-option
@@ -52,7 +53,7 @@
             globalEditing && scope.row[item.prop + editingSuffix] && item.prop == 'columnName'
           "
           v-model="scope.row[item.prop]"
-          v-bind="item.attribute"
+          v-bind="item.attributes"
           @change="handleChangeValue(scope.row, scope.column)"
         >
           <el-option
@@ -78,13 +79,13 @@
         />
         <span v-else>{{ formatTextCell(scope.row[item.prop], item.element) }}</span>
       </template>
-    </EditTable2>
+    </EditTable>
   </div>
 </template>
 
 <script lang="ts" setup>
   import type { CascaderProps } from 'element-plus';
-  import EditTable2 from './EditTable2.vue';
+  import EditTable from './EditTable2.vue';
   import Toolbar from './Toolbar.vue';
   import { getSchemaList, getSchemaObjectList } from '@/api/metaData';
   import { getTableColumn } from '@/api/table';
@@ -130,16 +131,16 @@
       label: 'table.constraint.constrainName',
       prop: 'constrainName',
       slot: true,
-      isI18n: true,
+      isI18nLabel: true,
       element: 'input',
     },
     {
       label: 'table.constraint.columnName',
       prop: 'columnName',
       slot: true,
-      isI18n: true,
+      isI18nLabel: true,
       element: 'select',
-      attribute: {
+      attributes: {
         multiple: true,
         collapseTags: true,
       },
@@ -149,7 +150,7 @@
       label: 'table.constraint.constrainType',
       prop: 'constrainType',
       slot: true,
-      isI18n: true,
+      isI18nLabel: true,
       element: 'cascader',
       options: [
         {
@@ -188,23 +189,23 @@
       label: 'table.constraint.expression',
       prop: 'expression',
       slot: true,
-      isI18n: true,
+      isI18nLabel: true,
       element: 'input',
     },
     {
       label: 'table.constraint.isDeffered',
       prop: 'isDeffered',
       slot: true,
-      isI18n: true,
+      isI18nLabel: true,
       element: 'checkbox',
     },
     {
-      label: 'table.description',
+      label: 'common.description',
       prop: 'description',
       slot: true,
-      isI18n: true,
+      isI18nLabel: true,
       element: 'input',
-      attribute: {
+      attributes: {
         maxlength: 5000,
       },
     },
@@ -266,7 +267,7 @@
     })) as unknown as any;
     return res.result.map((item) => ({ value: item[0], label: item[0], leaf: true }));
   };
-  const { handleChangeValue, handleCurrentChange, handleAddLine, handleRemoveLine } =
+  const { handleChangeValue, handleSelectionChange, handleAddLine, handleRemoveLine } =
     useEditTabHooks({
       idKey: idKey.value,
       rowStatusKey: rowStatusKey.value,

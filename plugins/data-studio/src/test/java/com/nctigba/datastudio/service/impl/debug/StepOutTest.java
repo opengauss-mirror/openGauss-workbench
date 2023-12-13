@@ -6,7 +6,7 @@ package com.nctigba.datastudio.service.impl.debug;
 
 import com.nctigba.datastudio.base.WebSocketServer;
 import com.nctigba.datastudio.model.entity.OperateStatusDO;
-import com.nctigba.datastudio.util.LocaleString;
+import com.nctigba.datastudio.utils.LocaleStringUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Test;
@@ -63,7 +63,7 @@ public class StepOutTest {
     @Mock
     private MessageSource messageSource;
     @Spy
-    private LocaleString localeString;
+    private LocaleStringUtils localeStringUtils;
 
     @Before
     public void setUp() {
@@ -71,7 +71,7 @@ public class StepOutTest {
         map.put(OID, "201839");
         when(webSocketServer.getParamMap(anyString())).thenReturn(map);
 
-        localeString.setMessageSource(messageSource);
+        localeStringUtils.setMessageSource(messageSource);
         when(webSocketServer.getOperateStatus(anyString())).thenReturn(operateStatusDO);
     }
 

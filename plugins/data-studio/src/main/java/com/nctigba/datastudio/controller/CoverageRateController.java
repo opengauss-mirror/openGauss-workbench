@@ -5,7 +5,7 @@
 package com.nctigba.datastudio.controller;
 
 import com.nctigba.datastudio.model.entity.CoverageRateDO;
-import com.nctigba.datastudio.model.query.CoverageRateRequest;
+import com.nctigba.datastudio.model.query.CoverageRateQuery;
 import com.nctigba.datastudio.service.CoverageRateService;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -38,7 +38,7 @@ public class CoverageRateController {
      * @throws SQLException SQLException
      */
     @PostMapping(value = "/coverageRate/query", produces = MediaType.APPLICATION_JSON_VALUE)
-    public List<CoverageRateDO> queryByOid(@RequestBody CoverageRateRequest request) throws SQLException {
+    public List<CoverageRateDO> queryByOid(@RequestBody CoverageRateQuery request) throws SQLException {
         return coverageRateService.queryCoverageRate(request);
     }
 
@@ -49,7 +49,7 @@ public class CoverageRateController {
      * @throws SQLException SQLException
      */
     @PostMapping(value = "/coverageRate/delete", produces = MediaType.APPLICATION_JSON_VALUE)
-    public void delete(@RequestBody CoverageRateRequest request) throws SQLException {
+    public void delete(@RequestBody CoverageRateQuery request) throws SQLException {
         coverageRateService.delete(request);
     }
 
@@ -64,7 +64,7 @@ public class CoverageRateController {
      * @throws IllegalAccessException IllegalAccessException
      */
     @PostMapping(value = "/coverageRate/export", produces = MediaType.APPLICATION_JSON_VALUE)
-    public void export(@RequestBody CoverageRateRequest request, HttpServletResponse response)
+    public void export(@RequestBody CoverageRateQuery request, HttpServletResponse response)
             throws SQLException, IOException, NoSuchFieldException, IllegalAccessException {
         coverageRateService.export(request, response);
     }

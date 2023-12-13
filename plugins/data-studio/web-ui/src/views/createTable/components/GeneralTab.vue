@@ -69,7 +69,7 @@
         </el-form-item>
       </el-col>
       <el-col :span="24">
-        <el-form-item prop="comment" :label="$t('createTable.general.description')">
+        <el-form-item prop="comment" :label="$t('common.description')">
           <el-input
             v-model="form.comment"
             type="textarea"

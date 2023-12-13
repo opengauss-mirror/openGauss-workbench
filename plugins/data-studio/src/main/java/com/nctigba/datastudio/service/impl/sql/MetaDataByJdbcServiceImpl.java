@@ -5,7 +5,7 @@
 package com.nctigba.datastudio.service.impl.sql;
 
 import com.nctigba.datastudio.service.MetaDataByJdbcService;
-import com.nctigba.datastudio.util.ConnectionUtils;
+import com.nctigba.datastudio.utils.ConnectionUtils;
 import org.opengauss.admin.common.exception.CustomException;
 import org.springframework.stereotype.Service;
 

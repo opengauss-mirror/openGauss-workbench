@@ -4,7 +4,7 @@
 
 package com.nctigba.datastudio.controller;
 
-import com.nctigba.datastudio.model.query.SchemaManagerRequest;
+import com.nctigba.datastudio.model.query.SchemaManagerQuery;
 import com.nctigba.datastudio.service.SchemaManagerService;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -36,7 +36,7 @@ public class SchemaManagerController {
      * @throws SQLException SQLException
      */
     @PostMapping(value = "/schema/query/users", produces = MediaType.APPLICATION_JSON_VALUE)
-    public List<String> queryAllUsers(@RequestBody SchemaManagerRequest request) throws SQLException {
+    public List<String> queryAllUsers(@RequestBody SchemaManagerQuery request) throws SQLException {
         return schemaManagerService.queryAllUsers(request);
     }
 
@@ -48,7 +48,7 @@ public class SchemaManagerController {
      * @throws SQLException SQLException
      */
     @PostMapping(value = "/schema/query", produces = MediaType.APPLICATION_JSON_VALUE)
-    public Map<String, String> querySchema(@RequestBody SchemaManagerRequest request) throws SQLException {
+    public Map<String, String> querySchema(@RequestBody SchemaManagerQuery request) throws SQLException {
         return schemaManagerService.querySchema(request);
     }
 
@@ -59,7 +59,7 @@ public class SchemaManagerController {
      * @throws SQLException SQLException
      */
     @PostMapping(value = "/schema/create", produces = MediaType.APPLICATION_JSON_VALUE)
-    public void createSchema(@RequestBody SchemaManagerRequest request) throws SQLException {
+    public void createSchema(@RequestBody SchemaManagerQuery request) throws SQLException {
         schemaManagerService.createSchema(request);
     }
 
@@ -70,7 +70,7 @@ public class SchemaManagerController {
      * @throws SQLException SQLException
      */
     @PostMapping(value = "/schema/update", produces = MediaType.APPLICATION_JSON_VALUE)
-    public void updateSchema(@RequestBody SchemaManagerRequest request) throws SQLException {
+    public void updateSchema(@RequestBody SchemaManagerQuery request) throws SQLException {
         schemaManagerService.updateSchema(request);
     }
 
@@ -81,7 +81,7 @@ public class SchemaManagerController {
      * @throws SQLException SQLException
      */
     @PostMapping(value = "/schema/delete", produces = MediaType.APPLICATION_JSON_VALUE)
-    public void deleteSchema(@RequestBody SchemaManagerRequest request) throws SQLException {
+    public void deleteSchema(@RequestBody SchemaManagerQuery request) throws SQLException {
         schemaManagerService.deleteSchema(request);
     }
 }

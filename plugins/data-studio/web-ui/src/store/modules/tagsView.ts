@@ -5,7 +5,7 @@ import { defineStore } from 'pinia';
 import { storePersist } from '@/config';
 import { manualStringify, loadingInstance } from '@/utils';
 import { VisitedView } from '@/types/tagsView';
-import { RouteLocationNormalized } from 'vue-router';
+import { Router, RouteLocationNormalized } from 'vue-router';
 
 let loading = null;
 export const useTagsViewStore = defineStore({
@@ -70,7 +70,7 @@ export const useTagsViewStore = defineStore({
         Object.assign({}, route, {
           id: ++this.maxTagsId,
           title: route.meta?.title || route.query?.title || 'no-name',
-          fileName: route.query?.fileName || 'no-name',
+          fileName: route.meta?.fileName || route.query?.fileName || 'no-name',
           connectInfoName: route.query?.connectInfoName,
           dbname: route.query?.dbname,
           terminalNum: route.query?.terminalNum,
@@ -187,6 +187,10 @@ export const useTagsViewStore = defineStore({
       this.delViewByIds(allChildDebugViewIds);
       loading.close();
       loading = null;
+    },
+    closeCurrentTabToLatest(router: Router, route: RouteLocationNormalized) {
+      this.delCurrentView(route);
+      router.push(this.visitedViews.slice(-1)[0].fullPath);
     },
   },
 });

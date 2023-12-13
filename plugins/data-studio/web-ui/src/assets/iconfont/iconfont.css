@@ -1,8 +1,8 @@
 @font-face {
   font-family: "iconfont"; /* Project id 3692346 */
-  src: url('iconfont.woff2?t=1691484954509') format('woff2'),
-       url('iconfont.woff?t=1691484954509') format('woff'),
-       url('iconfont.ttf?t=1691484954509') format('truetype');
+  src: url('iconfont.woff2?t=1700118963984') format('woff2'),
+       url('iconfont.woff?t=1700118963984') format('woff'),
+       url('iconfont.ttf?t=1700118963984') format('truetype');
 }
 
 .iconfont {
@@ -11,6 +11,58 @@
   font-style: normal;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+.icon-refresh:before {
+  content: "\e74f";
+}
+
+.icon-trigger:before {
+  content: "\e619";
+}
+
+.icon-jinyong:before {
+  content: "\e618";
+}
+
+.icon-a-icon_task2:before {
+  content: "\e614";
+}
+
+.icon-icon_newlink:before {
+  content: "\e610";
+}
+
+.icon-icon_SQL:before {
+  content: "\e612";
+}
+
+.icon-icon_newserve:before {
+  content: "\e613";
+}
+
+.icon-icon_search:before {
+  content: "\e616";
+}
+
+.icon-trigger-enable:before {
+  content: "\e60f";
+}
+
+.icon-trigger-disable:before {
+  content: "\e60e";
+}
+
+.icon-Warning:before {
+  content: "\e6f4";
+}
+
+.icon-database:before {
+  content: "\e60d";
+}
+
+.icon-package:before {
+  content: "\e64e";
 }
 
 .icon-nologin:before {
@@ -195,14 +247,6 @@
 
 .icon-database-disconnect-copy:before {
   content: "\e885";
-}
-
-.icon-database-connected:before {
-  content: "\e602";
-}
-
-.icon-database-disconnect:before {
-  content: "\e604";
 }
 
 .icon-shujuku:before {

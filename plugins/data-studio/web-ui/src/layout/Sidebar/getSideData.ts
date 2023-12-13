@@ -4,13 +4,14 @@ import { i18n } from '@/i18n/index';
 import { getDatabaseList } from '@/api/database';
 import { getSchemaList, getSchemaObjectList } from '@/api/metaData';
 import { getUserRoleList } from '@/api/userRole';
+import { getTablespaceListApi } from '@/api/tablespace';
 
-import type { FetchNode } from './types';
+import { NodeEnum, FetchNode, ConnectInfo } from './types';
 
 const t = i18n.global.t;
 
-const getDbOrRoleCollectLabel = (
-  type: 'databaseCollect' | 'userRoleCollect',
+const getRootChildCollectLabel = (
+  type: 'databaseCollect' | 'userRoleCollect' | 'tablespaceCollect',
   count = null,
   showCount = true,
 ) => {
@@ -18,17 +19,24 @@ const getDbOrRoleCollectLabel = (
   return {
     databaseCollect: `${t('database.database')}${countText}`,
     userRoleCollect: `${t('userRole.name')}${countText}`,
+    tablespaceCollect: `${t('tablespace.name')}${countText}`,
   }[type];
 };
 
-const generateRoot = async (connectInfo, uuid) => {
+const generateRoot = async (connectInfo, uuid: string) => {
   const cloneConnectInfo = JSON.parse(JSON.stringify(connectInfo));
   const { id, name, ip, port } = connectInfo;
-  const rootChildrenType = ['databaseCollect', 'userRoleCollect'];
+  const rootChildrenType = ['databaseCollect', 'userRoleCollect', 'tablespaceCollect'];
   const dbList = await generateDBList(id, `${id}_databaseCollect`, uuid, cloneConnectInfo);
   const userRoleList = await generateUserRoleList(
     id,
     `${id}_userRoleCollect`,
+    uuid,
+    cloneConnectInfo,
+  );
+  const tablespaceList = await generateTablespaceList(
+    id,
+    `${id}_tablespaceCollect`,
     uuid,
     cloneConnectInfo,
   );
@@ -37,7 +45,7 @@ const generateRoot = async (connectInfo, uuid) => {
     parentId: null,
     label: `${name} (${ip}:${port})`,
     name,
-    type: 'root',
+    type: NodeEnum.ROOT,
     connectInfo: cloneConnectInfo,
     isLeaf: false,
     children: rootChildrenType.map((childType) => {
@@ -46,11 +54,15 @@ const generateRoot = async (connectInfo, uuid) => {
       let dbOrRoleList = [];
       if (childType === 'databaseCollect') {
         dbOrRoleList = dbList;
-        dbOrRoleLabel = getDbOrRoleCollectLabel('databaseCollect', dbOrRoleList.length);
+        dbOrRoleLabel = getRootChildCollectLabel('databaseCollect', dbOrRoleList.length);
       }
       if (childType === 'userRoleCollect') {
         dbOrRoleList = userRoleList;
-        dbOrRoleLabel = getDbOrRoleCollectLabel('userRoleCollect', dbOrRoleList.length);
+        dbOrRoleLabel = getRootChildCollectLabel('userRoleCollect', dbOrRoleList.length);
+      }
+      if (childType === 'tablespaceCollect') {
+        dbOrRoleList = tablespaceList;
+        dbOrRoleLabel = getRootChildCollectLabel('tablespaceCollect', dbOrRoleList.length);
       }
       return {
         id: thisId,
@@ -68,7 +80,7 @@ const generateRoot = async (connectInfo, uuid) => {
 };
 
 const generateUserRoleList = async (rootId, parentId, uuid, connectInfo) => {
-  const res = await getUserRoleList(uuid);
+  const res = await getUserRoleList({ uuid });
   const data: { name: string; oid: string; type: 'user' | 'role' }[] = [].concat(
     res.user.map((item: { name: string; oid: string }) => ({ ...item, type: 'user' })),
     res.role.map((item: { name: string; oid: string }) => ({ ...item, type: 'role' })),
@@ -85,7 +97,32 @@ const generateUserRoleList = async (rootId, parentId, uuid, connectInfo) => {
   }));
 };
 
-const generateDBList = async (rootId, parentId, uuid, connectInfo) => {
+const generateTablespaceList = async (
+  rootId: string,
+  parentId: string,
+  uuid: string,
+  connectInfo,
+) => {
+  const data = (await getTablespaceListApi({ uuid })) as unknown as { name: string; oid: string }[];
+  return data.map((item) => ({
+    id: `${parentId}_${item.oid}`,
+    oid: item.oid,
+    rootId,
+    parentId,
+    label: item.name,
+    name: item.name,
+    connectInfo,
+    type: 'tablespace',
+    isLeaf: true,
+  }));
+};
+
+const generateDBList = async (
+  rootId: string,
+  parentId: string,
+  uuid: string,
+  connectInfo: ConnectInfo,
+) => {
   const AppStore = useAppStore();
   const data = (await getDatabaseList(uuid)) as unknown as string[];
   return data.map((dbName) => {
@@ -101,11 +138,11 @@ const generateDBList = async (rootId, parentId, uuid, connectInfo) => {
       label: dbName,
       name: dbName,
       connectInfo,
-      type: 'database',
+      type: NodeEnum.DATABASE,
       isLeaf: false,
       children: [],
       isConnect,
-      connectTime: hasConnectDb?.connectTime || null,
+      connectTime: (hasConnectDb?.connectTime as number) || null,
     };
   });
 };
@@ -166,13 +203,12 @@ const generateSchemaContentList = async (
   const array = [];
   if (data.length) {
     const obj = data[0];
-    const order = ['table', 'fun_pro', 'sequence', 'view', 'synonym'];
+    const order = ['table', 'foreignTable', 'trigger', 'fun_pro', 'sequence', 'view', 'synonym'];
     let keys = Object.keys(obj);
-    // Running results 'keys' such as: ['schema_name', 'table', 'view', 'fun_pro', 'synonym', 'sequence']
     keys = keys.sort((a, b) => {
       return order.indexOf(a) - order.indexOf(b);
     });
-    // Running results 'keys' such as: ['schema_name', 'table', 'fun_pro', 'sequence', 'view', 'synonym']
+    // Running results 'keys' such as: ['schema_name', 'table', 'foreignTable', 'trigger', 'fun_pro', 'sequence', 'view', 'synonym']
     keys.forEach((key) => {
       if (!order.includes(key)) return;
       const { label, type, childType } = getLocalType(key);
@@ -210,59 +246,6 @@ const generateSchemaContentList = async (
   return array;
 };
 
-const generateSchemaContent = (
-  obj,
-  rootId,
-  parentId,
-  uuid,
-  databaseId,
-  databaseName,
-  schemaId,
-  schemaName,
-  connectInfo,
-) => {
-  const array = [];
-  const order = ['table', 'fun_pro', 'sequence', 'view', 'synonym'];
-  let keys = Object.keys(obj);
-  keys = keys.sort((a, b) => {
-    return order.indexOf(a) - order.indexOf(b);
-  });
-  keys.forEach((key) => {
-    if (!order.includes(key)) return;
-    const { label, type, childType } = getLocalType(key);
-    const keyId = `${parentId}_${key}`;
-    array.push({
-      id: keyId,
-      rootId,
-      parentId,
-      uuid,
-      label: `${label} (${obj[key].length})`,
-      name: label,
-      type,
-      key,
-      connectInfo,
-      databaseId,
-      databaseName,
-      schemaId,
-      schemaName,
-      children: generateFileList(
-        obj[key],
-        childType,
-        rootId,
-        keyId,
-        uuid,
-        databaseId,
-        databaseName,
-        schemaId,
-        schemaName,
-        connectInfo,
-      ),
-      isLeaf: false,
-    });
-  });
-  return array;
-};
-
 const getLocalType = (key) => {
   // Transform the type of the api to a local type
   const obj = { label: '', type: '', childType: '' };
@@ -271,6 +254,16 @@ const getLocalType = (key) => {
       obj.label = t('database.regular_table');
       obj.type = 'tableCollect';
       obj.childType = 'table';
+      break;
+    case 'foreignTable':
+      obj.label = t('database.foreign_table');
+      obj.type = 'foreignTableCollect';
+      obj.childType = 'foreignTable';
+      break;
+    case 'trigger':
+      obj.label = t('database.trigger');
+      obj.type = 'triggerCollect';
+      obj.childType = 'trigger';
       break;
     case 'fun_pro':
       obj.label = t('database.function_process');
@@ -314,6 +307,9 @@ const generateFileList = (
       id: `${parentId}_${item.oid}`,
       oid: item.oid,
       parttype: item.parttype,
+      tableName: item.tableName,
+      isTableTrigger: item.isTableTrigger,
+      enabled: !!item.enabled,
       rootId,
       parentId,
       uuid,
@@ -385,9 +381,10 @@ const generatePackageContent = (
 export {
   generateRoot,
   generateUserRoleList,
+  generateTablespaceList,
   generateDBList,
   generateSchemaList,
   generateSchemaContentList,
   getLocalType,
-  getDbOrRoleCollectLabel,
+  getRootChildCollectLabel,
 };

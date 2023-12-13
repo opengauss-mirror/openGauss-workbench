@@ -6,10 +6,10 @@ package com.nctigba.datastudio.service.impl.debug;
 
 import com.alibaba.fastjson.JSON;
 import com.nctigba.datastudio.base.WebSocketServer;
-import com.nctigba.datastudio.model.PublicParamReq;
+import com.nctigba.datastudio.model.query.PublicParamQuery;
 import com.nctigba.datastudio.service.OperationInterface;
-import com.nctigba.datastudio.util.DebugUtils;
-import com.nctigba.datastudio.util.LocaleString;
+import com.nctigba.datastudio.utils.DebugUtils;
+import com.nctigba.datastudio.utils.LocaleStringUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.opengauss.admin.common.exception.CustomException;
@@ -39,7 +39,7 @@ import static com.nctigba.datastudio.enums.MessageEnum.VIEW;
 public class ShowPackageImpl implements OperationInterface {
     @Override
     public void operate(WebSocketServer webSocketServer, Object obj) throws SQLException, IOException {
-        PublicParamReq paramReq = DebugUtils.changeParamType(obj);
+        PublicParamQuery paramReq = DebugUtils.changeParamType(obj);
         log.info("showPackage paramReq: " + paramReq);
 
         String windowName = paramReq.getWindowName();
@@ -66,7 +66,7 @@ public class ShowPackageImpl implements OperationInterface {
                 String pkgSrc = resultSet.getString("pkgspecsrc").trim();
                 String pkgBodySrc = resultSet.getString("pkgbodydeclsrc").trim();
                 if (StringUtils.isEmpty(pkgName)) {
-                    throw new CustomException(LocaleString.transLanguageWs("2015", webSocketServer));
+                    throw new CustomException(LocaleStringUtils.transLanguageWs("2015", webSocketServer));
                 }
 
                 String str = "PACKAGE  DECLARE";
@@ -85,6 +85,6 @@ public class ShowPackageImpl implements OperationInterface {
 
     @Override
     public Object formatJson(String str) {
-        return JSON.parseObject(str, PublicParamReq.class);
+        return JSON.parseObject(str, PublicParamQuery.class);
     }
 }

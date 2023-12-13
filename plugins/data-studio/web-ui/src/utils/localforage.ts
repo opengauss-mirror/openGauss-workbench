@@ -1,5 +1,4 @@
 import localforage from 'localforage';
-// import { connectListPersist } from '@/config';
 localforage.config({
   name: 'dataStudio',
 });

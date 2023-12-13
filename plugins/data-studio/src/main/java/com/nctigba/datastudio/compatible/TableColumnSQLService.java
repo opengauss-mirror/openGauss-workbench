@@ -11,7 +11,7 @@ import com.nctigba.datastudio.model.dto.DatabaseCreateTableDTO;
 import com.nctigba.datastudio.model.dto.DatabaseIndexDTO;
 import com.nctigba.datastudio.model.query.SelectDataQuery;
 import com.nctigba.datastudio.model.query.TableDataEditQuery;
-import com.nctigba.datastudio.util.DebugUtils;
+import com.nctigba.datastudio.utils.DebugUtils;
 import org.opengauss.admin.common.exception.CustomException;
 
 import java.sql.SQLException;

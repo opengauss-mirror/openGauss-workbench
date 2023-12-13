@@ -5,12 +5,12 @@
 package com.nctigba.datastudio.service.impl.debug;
 
 import com.nctigba.datastudio.base.WebSocketServer;
-import com.nctigba.datastudio.model.PublicParamReq;
+import com.nctigba.datastudio.model.query.PublicParamQuery;
 import com.nctigba.datastudio.model.dto.ConnectionDTO;
 import com.nctigba.datastudio.model.entity.OperateStatusDO;
 import com.nctigba.datastudio.model.entity.SqlHistoryDO;
 import com.nctigba.datastudio.service.impl.sql.SqlHistoryManagerServiceImpl;
-import com.nctigba.datastudio.util.LocaleString;
+import com.nctigba.datastudio.utils.LocaleStringUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Test;
@@ -67,7 +67,7 @@ public class AsyncHelperTest {
     private WebSocketServer webSocketServer;
 
     @Spy
-    private PublicParamReq paramReq;
+    private PublicParamQuery paramReq;
 
     @Mock
     private OperateStatusDO operateStatusDO;
@@ -76,7 +76,7 @@ public class AsyncHelperTest {
     private MessageSource messageSource;
 
     @Spy
-    private LocaleString localeString;
+    private LocaleStringUtils localeStringUtils;
 
     @Mock
     private SqlHistoryManagerServiceImpl managerService;
@@ -86,7 +86,7 @@ public class AsyncHelperTest {
         conMap = new HashMap<>();
         conMap.put("8359cbf1-9833-4998-a29c-245f24009ab1", new ConnectionDTO());
 
-        localeString.setMessageSource(messageSource);
+        localeStringUtils.setMessageSource(messageSource);
         Map<String, Object> map = new HashMap<>();
         map.put(OID, "201839");
         map.put("201839", "window_name");
@@ -191,7 +191,25 @@ public class AsyncHelperTest {
         when(mockMetaData.getColumnName(eq(1))).thenReturn("key1");
         when(mockResultSet.getObject("key1")).thenReturn("111");
 
+        paramReq.setCoverage(false);
+        asyncHelper.task(webSocketServer, paramReq);
+    }
+
+    @Test
+    public void testOperate5() throws SQLException, IOException {
+        paramReq.setOid("201839");
         paramReq.setCoverage(true);
+        Map<String, Object> map = new HashMap<>();
+        map.put(STATEMENT, mockStatement);
+        map.put(CONNECTION, mockConnection);
+        map.put(OID, "201800");
+        map.put("201839", "postgres");
+        when(webSocketServer.getParamMap(anyString())).thenReturn(map);
+        when(webSocketServer.getStatement(anyString())).thenReturn(mockStatement);
+
+        when(webSocketServer.getStatement(anyString())).thenReturn(mockStatement);
+        when(mockStatement.executeQuery(anyString())).thenReturn(mockResultSet);
+
         asyncHelper.task(webSocketServer, paramReq);
     }
 

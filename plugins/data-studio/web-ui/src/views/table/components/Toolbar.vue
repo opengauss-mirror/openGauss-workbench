@@ -1,5 +1,5 @@
 <template>
-  <div class="toolbar">
+  <div class="table-toolbar">
     <div class="toolbar-left">
       <template v-for="(item, key) in commonButton" :key="key">
         <div class="tool-item-wrapper" v-if="item.position == 'left' && item.show">
@@ -106,7 +106,7 @@
     (e: 'lastPage'): void;
     (e: 'previousPage'): void;
     (e: 'nextPage'): void;
-    (e: 'page', value: number): void;
+    (e: 'changePageNum', value: number): void;
     (e: 'update:pageNum', value: number): void;
     (e: 'update:pageSize', value: number): void;
     (e: 'update:pageTotal', value: number): void;
@@ -309,14 +309,16 @@
     ];
   });
 
+  // Trigger in input. Maybe many times
   const handlePageNumInput = (value) => {
     const result = value.replace(/[^0-9]/g, '');
     const page = result == 0 ? props.pageNum : Math.min(props.pageTotal, Number(value));
     emit('update:pageNum', page);
   };
+  // Trigger in onBlur
   const handlePageNumChange = (value) => {
     handlePageNumInput(value);
-    emit('page', props.pageNum);
+    emit('changePageNum', props.pageNum);
   };
   const changePageSize = (value) => {
     emit('update:pageSize', value);
@@ -324,56 +326,5 @@
 </script>
 
 <style lang="scss" scoped>
-  .toolbar {
-    display: flex;
-    justify-content: space-between;
-    flex-shrink: 0;
-    flex-wrap: wrap;
-    padding: 5px 0;
-    background: var(--el-bg-color-bar);
-    .toolbar-left,
-    .toolbar-right {
-      display: flex;
-      flex-wrap: wrap;
-    }
-    .tool-item-wrapper {
-      display: flex;
-      align-items: center;
-      padding: 0 5px;
-    }
-    .tool-item {
-      cursor: pointer;
-      position: relative;
-      user-select: none;
-      line-height: 24px;
-      .font-icon {
-        font-size: 15px;
-        margin-right: 4px;
-      }
-      &:hover {
-        .tool-name {
-          background: var(--el-fill-color-light);
-        }
-      }
-      &.disabled {
-        cursor: not-allowed;
-        color: #b5b8bd;
-        &:hover {
-          .tool-name {
-            background: inherit;
-          }
-        }
-      }
-    }
-  }
-  .divider {
-    width: 1px;
-    height: 19px;
-    border-left: 1px solid #d4cfcf;
-  }
-  :deep(.el-select) {
-    .el-input__inner {
-      text-align: center;
-    }
-  }
+  @import url('@/styles/table-toolbar.scss');
 </style>

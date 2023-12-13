@@ -6,6 +6,97 @@
   "description": "",
   "glyphs": [
     {
+      "icon_id": "928115",
+      "name": "refresh",
+      "font_class": "refresh",
+      "unicode": "e74f",
+      "unicode_decimal": 59215
+    },
+    {
+      "icon_id": "38146772",
+      "name": "trigger",
+      "font_class": "trigger",
+      "unicode": "e619",
+      "unicode_decimal": 58905
+    },
+    {
+      "icon_id": "4942647",
+      "name": "禁用",
+      "font_class": "jinyong",
+      "unicode": "e618",
+      "unicode_decimal": 58904
+    },
+    {
+      "icon_id": "37945077",
+      "name": "icon_task",
+      "font_class": "a-icon_task2",
+      "unicode": "e614",
+      "unicode_decimal": 58900
+    },
+    {
+      "icon_id": "37944924",
+      "name": "icon_newlink",
+      "font_class": "icon_newlink",
+      "unicode": "e610",
+      "unicode_decimal": 58896
+    },
+    {
+      "icon_id": "37944925",
+      "name": "icon_SQL",
+      "font_class": "icon_SQL",
+      "unicode": "e612",
+      "unicode_decimal": 58898
+    },
+    {
+      "icon_id": "37944923",
+      "name": "icon_newserve",
+      "font_class": "icon_newserve",
+      "unicode": "e613",
+      "unicode_decimal": 58899
+    },
+    {
+      "icon_id": "37944922",
+      "name": "icon_search",
+      "font_class": "icon_search",
+      "unicode": "e616",
+      "unicode_decimal": 58902
+    },
+    {
+      "icon_id": "37943186",
+      "name": "trigger-enabled",
+      "font_class": "trigger-enable",
+      "unicode": "e60f",
+      "unicode_decimal": 58895
+    },
+    {
+      "icon_id": "37943147",
+      "name": "trigger-disabled",
+      "font_class": "trigger-disable",
+      "unicode": "e60e",
+      "unicode_decimal": 58894
+    },
+    {
+      "icon_id": "5402904",
+      "name": "Warning",
+      "font_class": "Warning",
+      "unicode": "e6f4",
+      "unicode_decimal": 59124
+    },
+    {
+      "icon_id": "7068051",
+      "name": "database (1)",
+      "font_class": "database",
+      "unicode": "e60d",
+      "unicode_decimal": 58893
+    },
+    {
+      "icon_id": "1271950",
+      "name": "icon_package",
+      "font_class": "package",
+      "unicode": "e64e",
+      "unicode_decimal": 58958
+    },
+    {
       "icon_id": "12380216",
       "name": "图章 审批-6",
       "font_class": "nologin",
@@ -326,20 +417,6 @@
       "font_class": "database-disconnect-copy",
       "unicode": "e885",
       "unicode_decimal": 59525
-    },
-    {
-      "icon_id": "33846229",
-      "name": "database-connected",
-      "font_class": "database-connected",
-      "unicode": "e602",
-      "unicode_decimal": 58882
-    },
-    {
-      "icon_id": "33846230",
-      "name": "database-disconnect",
-      "font_class": "database-disconnect",
-      "unicode": "e604",
-      "unicode_decimal": 58884
     },
     {
       "icon_id": "1817682",

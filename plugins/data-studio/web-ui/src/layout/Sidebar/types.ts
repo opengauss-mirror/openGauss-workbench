@@ -1,3 +1,28 @@
+export enum NodeEnum {
+  ROOT = 'root',
+  DATABASECOLLECT = 'databaseCollect',
+  USERROLECOLLECT = 'userRoleCollect',
+  TABLESPACECOLLECT = 'tablespaceCollect',
+  DATABASE = 'database',
+  USER = 'user',
+  ROLE = 'role',
+  TABLESPACE = 'tablespace',
+  PUBLIC = 'public',
+  PERSON = 'person',
+  TABLECOLLECT = 'tableCollect',
+  VIEWCOLLECT = 'viewCollect',
+  SYNONYMCOLLECT = 'synonymCollect',
+  SEQUENCECOLLECT = 'sequenceCollect',
+  TABLE = 'table',
+  TERMINAL = 'terminal',
+  PACKAGE = 'package',
+  VIEW = 'view',
+  SYNONYM = 'synonym',
+  SEQUENCE = 'sequence',
+}
+
+type NodeType = `${NodeEnum}` | '';
+
 export interface Tree {
   id: string;
   rootId: string;
@@ -6,17 +31,26 @@ export interface Tree {
   name: string;
   isLeaf?: boolean;
   children?: Tree[];
-  type?: string;
+  type?: NodeType;
   isConnect?: boolean;
   connectTime?: null | number;
   uuid?: string;
+  schemaName?: string;
+  parttype?: 'n' | 'y' | ''; // only in table
+  tableName?: string; // only in trigger
+  isTableTrigger?: boolean; // only in trigger
+  isPackage?: boolean;
+  enabled?: boolean;
   connectInfo: ConnectInfo;
 }
 export interface FetchNode {
   name: string;
   oid: string;
   parttype?: 'n' | 'y' | '';
+  tableName?: string;
+  isTableTrigger?: boolean;
   isPackage?: boolean;
+  enabled?: boolean;
   children?: FetchNode;
 }
 export interface ConnectInfo {
@@ -34,7 +68,7 @@ export interface ConnectInfo {
 
 export interface NodeData {
   id: string;
-  type: string;
+  type: NodeType;
   connectInfo: ConnectInfo;
   rootId: string;
   parentId: string | null;

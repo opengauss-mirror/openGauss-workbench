@@ -28,7 +28,7 @@
           );
           showHome.value = false;
           if (isDSConnect && hasConnectList) {
-            const connectInfoName = AppStore.connectListMap[0].info.name;
+            const connectInfoName = AppStore.connectListMap[0].connectInfo.name;
             const uuid = AppStore.connectListMap[0].connectedDatabase[0]?.uuid;
             const dbname = AppStore.connectListMap[0].connectedDatabase[0]?.name;
             router.replace({

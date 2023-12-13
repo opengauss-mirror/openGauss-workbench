@@ -15,7 +15,7 @@ import com.nctigba.datastudio.model.dto.DatabaseNameDTO;
 import com.nctigba.datastudio.model.dto.RenameDatabaseDTO;
 import com.nctigba.datastudio.model.entity.DatabaseConnectionDO;
 import com.nctigba.datastudio.service.MetaDataByJdbcService;
-import com.nctigba.datastudio.util.LocaleString;
+import com.nctigba.datastudio.utils.LocaleStringUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Test;
@@ -176,8 +176,8 @@ public class CreateDatabaseServiceTest {
 
     @Test
     public void testRenameDatabaseFalse() {
-        MockedStatic<LocaleString> staticUtilsMockedStatic = Mockito.mockStatic(LocaleString.class);
-        staticUtilsMockedStatic.when(() -> LocaleString.transLanguage(anyString()))
+        MockedStatic<LocaleStringUtils> staticUtilsMockedStatic = Mockito.mockStatic(LocaleStringUtils.class);
+        staticUtilsMockedStatic.when(() -> LocaleStringUtils.transLanguage(anyString()))
                 .thenReturn("123");
         RenameDatabaseDTO renameDatabaseDTO = new RenameDatabaseDTO();
         renameDatabaseDTO.setUuid(UUID);

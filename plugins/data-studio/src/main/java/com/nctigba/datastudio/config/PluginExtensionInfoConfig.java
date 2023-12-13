@@ -17,7 +17,11 @@ import java.util.Map;
  */
 @Component
 public class PluginExtensionInfoConfig implements PluginExtensionInfo {
-
+    /**
+     * plug-in
+     *
+     * @return Map
+     */
     @Override
     public Map<String, Object> extensionInfo() {
         Map<String, Object> map = new HashMap<>();
