@@ -485,6 +485,8 @@
     },
     "wdr": {
         "GenerateWdrDlg": {
+            "else1": "The start snapshot cannot be later than or equal to the end snapshot",
+            "else2": "The end snapshot cannot be earlier than or equal to the start snapshot",
             "5mpm0eufx3g0": "Generate",
             "5mpm0eufxww0": "Cluster name",
             "5mpm0eufy340": "Please select the cluster",

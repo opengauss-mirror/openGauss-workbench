@@ -24,6 +24,7 @@
 package org.opengauss.admin.plugin.domain.model.ops;
 
 import lombok.Data;
+import org.opengauss.admin.plugin.enums.ops.ClusterRoleEnum;
 
 import java.util.List;
 
@@ -40,4 +41,6 @@ public class OpsClusterBody {
     private String businessId;
 
     private Boolean sync;
+
+    private ClusterRoleEnum role;
 }

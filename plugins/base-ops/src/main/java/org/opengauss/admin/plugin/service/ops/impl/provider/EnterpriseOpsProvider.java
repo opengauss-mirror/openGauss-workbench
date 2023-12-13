@@ -550,7 +550,7 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
                 upgradeContext.getRetSession(), "-xvf");
         decompress(jschUtil, rootSession, targetPath,
                 targetPath
-                        + "/openGauss-"+upgradeContext.getVersionNum()+"-CentOS-64bit-om.tar.gz",
+                        + "/openGauss-"+upgradeContext.getVersionNum()+upgradeContext.getOs().getOmPackagePostfix(),
                 upgradeContext.getRetSession(), "-zxvf");
 
         try {

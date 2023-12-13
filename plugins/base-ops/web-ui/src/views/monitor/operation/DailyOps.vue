@@ -392,7 +392,10 @@
       ref="hostPwdRef"
       @finish="handleAllNodesPwd"
     ></host-pwd-dlg>
-    <guc-setting-drawer ref="gucSettingRef" @finish="handleGucSettingComplete"></guc-setting-drawer>
+    <guc-setting-drawer
+      ref="gucSettingRef"
+      @finish="handleGucSettingComplete"
+    ></guc-setting-drawer>
   </div>
 </template>
 
@@ -530,8 +533,15 @@ const getRoleName = (type: ClusterRoleEnum) => {
 const openWebSocket = (data: KeyValue, clusterIndex: number) => {
   if (data.version === 'MINIMAL_LIST' && data.deployType === 'CLUSTER') {
     // mini cluster
-    data.clusterNodes[0].state = -1
-    openHostWebSocket(data, data.clusterNodes[0], clusterIndex, 0)
+    // data.clusterNodes[0].state = -1
+    // openHostWebSocket(data, data.clusterNodes[0], clusterIndex, 0)
+    data.clusterNodes.forEach((item: KeyValue, index: number) => {
+      item.state = 'false'
+      item.nodeState = -1
+      item.cmState = ''
+      // open websocket
+      openHostWebSocket(data, item, clusterIndex, index, item.clusterRole)
+    })
   } else {
     data.clusterNodes.forEach((item: KeyValue, index: number) => {
       item.state = 'false'
@@ -543,19 +553,23 @@ const openWebSocket = (data: KeyValue, clusterIndex: number) => {
   }
 }
 
-const openHostWebSocket = (clusterData: KeyValue, nodeData: KeyValue, clusterIndex: number, index: number) => {
+const openHostWebSocket = (clusterData: KeyValue, nodeData: KeyValue, clusterIndex: number, index: number, clusterRole: ClusterRoleEnum = ClusterRoleEnum.MASTER) => {
   const socketKey = new Date().getTime()
   const param = {
     clusterId: clusterData.clusterId,
     hostId: nodeData.hostId,
     privateIp: nodeData.privateIp,
-    businessId: 'monitor_ops_' + clusterData.clusterId + '_' + nodeData.hostId + '_' + socketKey
+    role: clusterRole,
+    businessId: 'monitor_ops_' + clusterData.clusterId + '_' + nodeData.hostId + '_' + clusterRole + '_' + socketKey
   }
   const websocket = new Socket({ url: `${param.businessId}` })
   websocket.onopen(() => {
     clusterMonitor(param).then((res: KeyValue) => {
       if (Number(res.code) !== 200) {
         data.clusterList[clusterIndex].clusterNodes[index].state = 'false'
+        if (clusterData.version !== OpenGaussVersionEnum.ENTERPRISE) {
+          data.clusterList[clusterIndex].clusterNodes[index].nodeState = 'false'
+        }
         websocket.destroy()
       } else {
         // websocket push socketArr
@@ -563,11 +577,17 @@ const openHostWebSocket = (clusterData: KeyValue, nodeData: KeyValue, clusterInd
       }
     }).catch(() => {
       data.clusterList[clusterIndex].clusterNodes[index].state = 'false'
+      if (clusterData.version !== OpenGaussVersionEnum.ENTERPRISE) {
+        data.clusterList[clusterIndex].clusterNodes[index].nodeState = 'false'
+      }
       websocket.destroy()
     })
   })
   websocket.onclose(() => {
     data.clusterList[clusterIndex].clusterNodes[index].state = 'false'
+    if (clusterData.version !== OpenGaussVersionEnum.ENTERPRISE) {
+      data.clusterList[clusterIndex].clusterNodes[index].nodeState = 'false'
+    }
   })
   websocket.onmessage((messageData: any) => {
     if (!data.clusterList[clusterIndex].loading) {
@@ -586,11 +606,11 @@ const openHostWebSocket = (clusterData: KeyValue, nodeData: KeyValue, clusterInd
           data.clusterList[clusterIndex].clusterNodes[index].memorySize = (Number(eventData.memorySize) / 1024 / 1024).toFixed(2)
         }
       }
-      if (clusterData.version === 'MINIMAL_LIST' && clusterData.deployType === 'CLUSTER') {
-        // if cluster is minimal and cluster, node default is first
-        Object.assign(data.clusterList[clusterIndex].clusterNodes[index + 1], data.clusterList[clusterIndex].clusterNodes[index])
-        data.clusterList[clusterIndex].clusterNodes[index + 1].clusterRole = ClusterRoleEnum.SLAVE
-      }
+      // if (clusterData.version === 'MINIMAL_LIST' && clusterData.deployType === 'CLUSTER') {
+      //   // if cluster is minimal and cluster, node default is first
+      //   Object.assign(data.clusterList[clusterIndex].clusterNodes[index + 1], data.clusterList[clusterIndex].clusterNodes[index])
+      //   data.clusterList[clusterIndex].clusterNodes[index + 1].clusterRole = ClusterRoleEnum.SLAVE
+      // }
     }
   })
 }
@@ -1037,6 +1057,7 @@ const handleInstanceOper = (type: any, clusterIndex: number, nodeIndex: number, 
       clusterId: data.clusterList[clusterIndex].clusterId,
       nodeIds: [data.clusterList[clusterIndex].clusterNodes[nodeIndex].nodeId],
       hostId: data.clusterList[clusterIndex].clusterNodes[nodeIndex].hostId,
+      role: data.clusterList[clusterIndex].clusterNodes[nodeIndex].clusterRole,
       businessId: `${type}_instance_${data.clusterList[clusterIndex].clusterId}_${socketKey}`
     }
     const method = getInstanceMethod(type, param)
@@ -1078,7 +1099,7 @@ const handleInstanceOper = (type: any, clusterIndex: number, nodeIndex: number, 
         // success
         term.writeln(type + ' success')
         if (type === 'restart' || type === 'start' || type === 'build') {
-          openHostWebSocket(data.clusterList[clusterIndex], data.clusterList[clusterIndex].clusterNodes[nodeIndex], clusterIndex, nodeIndex)
+          openHostWebSocket(data.clusterList[clusterIndex], data.clusterList[clusterIndex].clusterNodes[nodeIndex], clusterIndex, nodeIndex, data.clusterList[clusterIndex].clusterNodes[nodeIndex].clusterRole)
         }
       } else {
         if (isSwitch) {
@@ -1098,6 +1119,7 @@ const getInstanceMethod = (type: string, param: KeyValue) => {
   const reqParam = {
     clusterId: param.clusterId,
     nodeIds: param.nodeIds,
+    role: param.role,
     businessId: param.businessId
   }
   const enterpriseParam = {

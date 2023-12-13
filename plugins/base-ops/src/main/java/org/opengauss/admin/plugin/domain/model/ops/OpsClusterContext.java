@@ -26,6 +26,7 @@ package org.opengauss.admin.plugin.domain.model.ops;
 import org.opengauss.admin.plugin.domain.entity.ops.OpsClusterEntity;
 import org.opengauss.admin.plugin.domain.entity.ops.OpsClusterNodeEntity;
 import lombok.Data;
+import org.opengauss.admin.plugin.enums.ops.ClusterRoleEnum;
 import org.opengauss.admin.plugin.enums.ops.OpenGaussSupportOSEnum;
 
 import java.util.List;
@@ -47,4 +48,6 @@ public class OpsClusterContext implements Cloneable {
     private OpenGaussSupportOSEnum os;
 
     private List<OpsClusterNodeEntity> opsClusterNodeEntityList;
+
+    private ClusterRoleEnum role;
 }

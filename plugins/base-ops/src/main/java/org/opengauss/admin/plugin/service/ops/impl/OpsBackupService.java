@@ -271,7 +271,7 @@ public class OpsBackupService extends ServiceImpl<OpsBackupMapper, OpsBackupEnti
         Session installUserSession = jschUtil.getSession(hostEntity.getPublicIp(), hostEntity.getPort(), installUserEntity.getUsername(), encryptionUtils.decrypt(installUserEntity.getPassword())).orElseThrow(() -> new OpsException("Failed to establish connection with host"));
         try {
             String chmodNewDataPath = "gsql -d postgres -p " + clusterEntity.getPort() + " -W " + clusterEntity.getDatabasePassword() + " -f " + backupEntity.getBackupPath();
-            JschResult jschResult = jschUtil.executeCommand(chmodNewDataPath, installUserSession, retWsSession);
+            JschResult jschResult = jschUtil.executeCommand(chmodNewDataPath, clusterEntity.getEnvPath(), installUserSession, retWsSession);
             if (0 != jschResult.getExitCode()) {
                 log.error("Recovery failed，exitCode:{},msg:{}", jschResult.getExitCode(), jschResult.getResult());
                 throw new OpsException("Recovery failed");

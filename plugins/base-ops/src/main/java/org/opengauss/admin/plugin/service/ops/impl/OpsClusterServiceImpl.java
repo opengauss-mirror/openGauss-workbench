@@ -457,6 +457,11 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         upgradeContext.setHostPort(hostEntity.getPort());
         upgradeContext.setClusterEntity(clusterEntity);
         upgradeContext.setOpsClusterNodeEntity(opsClusterNodeEntity);
+
+        HostInfoHolder hostInfoHolder = new HostInfoHolder();
+        hostInfoHolder.setHostEntity(hostEntity);
+        hostInfoHolder.setHostUserEntities(Arrays.asList(rootUserEntity));
+        upgradeContext.setOs(checkOS(Arrays.asList(hostInfoHolder), true));
         RequestAttributes context = RequestContextHolder.currentRequestAttributes();
         Future<?> future = threadPoolTaskExecutor.submit(() -> {
             RequestContextHolder.setRequestAttributes(context);
@@ -1229,6 +1234,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
     @Override
     public void restart(OpsClusterBody restartBody) {
         OpsClusterContext opsClusterContext = new OpsClusterContext();
+        opsClusterContext.setRole(restartBody.getRole());
         opsClusterContext.setOpNodeIds(restartBody.getNodeIds());
 
         OpsClusterEntity clusterEntity = getById(restartBody.getClusterId());
@@ -1311,6 +1317,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
     @Override
     public void start(OpsClusterBody startBody) {
         OpsClusterContext opsClusterContext = new OpsClusterContext();
+        opsClusterContext.setRole(startBody.getRole());
         opsClusterContext.setOpNodeIds(startBody.getNodeIds());
 
         OpsClusterEntity clusterEntity = getById(startBody.getClusterId());
@@ -1390,6 +1397,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
     @Override
     public void stop(OpsClusterBody stopBody) {
         OpsClusterContext opsClusterContext = new OpsClusterContext();
+        opsClusterContext.setRole(stopBody.getRole());
         opsClusterContext.setOpNodeIds(Objects.isNull(stopBody.getNodeIds()) ? new ArrayList<>() : stopBody.getNodeIds());
 
         OpsClusterEntity clusterEntity = getById(stopBody.getClusterId());
@@ -1752,7 +1760,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
 
 
     @Override
-    public void monitor(String clusterId, String hostId, String businessId) {
+    public void monitor(String clusterId, String hostId, String businessId, ClusterRoleEnum role) {
         OpsClusterEntity clusterEntity = getById(clusterId);
         if (Objects.isNull(clusterEntity)) {
             throw new OpsException("Cluster information does not exist");
@@ -1787,7 +1795,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         String dataPath = nodeEntity.getDataPath();
         if (OpenGaussVersionEnum.MINIMAL_LIST == clusterEntity.getVersion()) {
             if (clusterEntity.getDeployType() == DeployTypeEnum.CLUSTER) {
-                if (nodeEntity.getClusterRole() == ClusterRoleEnum.MASTER) {
+                if (role == ClusterRoleEnum.MASTER) {
                     dataPath = dataPath + "/master";
                 } else {
                     dataPath = dataPath + "/slave";

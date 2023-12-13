@@ -31,6 +31,7 @@ import org.opengauss.admin.common.exception.ops.OpsException;
 import org.opengauss.admin.plugin.domain.entity.ops.OpsClusterEntity;
 import org.opengauss.admin.plugin.domain.model.ops.*;
 import org.opengauss.admin.plugin.domain.model.ops.env.HostEnv;
+import org.opengauss.admin.plugin.enums.ops.ClusterRoleEnum;
 import org.opengauss.admin.plugin.enums.ops.OpenGaussSupportOSEnum;
 import org.opengauss.admin.plugin.enums.ops.OpenGaussVersionEnum;
 import org.opengauss.admin.plugin.vo.ops.SessionVO;
@@ -88,7 +89,7 @@ public interface IOpsClusterService extends IService<OpsClusterEntity> {
 
     void importCluster(ImportClusterBody importClusterBody);
 
-    void monitor(String clusterId, String hostId, String businessId);
+    void monitor(String clusterId, String hostId, String businessId, ClusterRoleEnum role);
 
     List<OpsHostEntity> listClusterHost(String clusterId);
 
