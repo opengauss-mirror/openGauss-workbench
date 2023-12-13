@@ -467,6 +467,7 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
     public void runTask(MigrationTaskHostRef h, MigrationTask t, List<MigrationTaskGlobalParam> globalParams) {
         MigrationHostPortalInstall installHost = migrationHostPortalInstallHostService.getOneByHostId(h.getRunHostId());
         installHost.setRunPassword(encryptionUtils.decrypt(installHost.getRunPassword()));
+        t.setRunHostId(h.getRunHostId());
         MigrationTask update = MigrationTask.builder()
             .id(t.getId())
             .runHostId(h.getRunHostId())
