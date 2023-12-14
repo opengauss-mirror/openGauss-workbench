@@ -200,7 +200,6 @@ CREATE TABLE IF NOT EXISTS "public"."tb_migration_task" (
   "migration_process" varchar(10) COLLATE "pg_catalog"."default",
   "run_hostname" varchar(255) COLLATE "pg_catalog"."default",
   "target_db_version" varchar(20) COLLATE "pg_catalog"."default",
-  "is_adjust_kernel_param" boolean,
   CONSTRAINT "tb_migration_task_pkey" PRIMARY KEY ("id")
 );
 
@@ -256,7 +255,6 @@ COMMENT ON COLUMN "public"."tb_migration_task"."migration_model_id" IS '操作�
 COMMENT ON COLUMN "public"."tb_migration_task"."migration_process" IS '迁移进度';
 COMMENT ON COLUMN "public"."tb_migration_task"."run_hostname" IS '运行环境hostname';
 COMMENT ON COLUMN "public"."tb_migration_task"."target_db_version" IS '目标数据库版本';
-COMMENT ON COLUMN "public"."tb_migration_task"."is_adjust_kernel_param" IS '是否调整内核参数';
 COMMENT ON TABLE "public"."tb_migration_task" IS '迁移子任务表';
 
 CREATE OR REPLACE FUNCTION add_migration_task_is_adjust_kernel_param_field_func() RETURNS integer AS 'BEGIN
