@@ -486,6 +486,8 @@
     },
     "wdr": {
         "GenerateWdrDlg": {
+            "else1": "开始快照不能晚于或等于结束快照",
+            "else2": "结束快照不能早于或等于开始快照",
             "5mpm0eufx3g0": "生成",
             "5mpm0eufxww0": "集群名称",
             "5mpm0eufy340": "请选择集群",

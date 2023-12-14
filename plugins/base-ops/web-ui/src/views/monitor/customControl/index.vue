@@ -238,6 +238,20 @@ const initTerm = (term: Terminal, ws: WebSocket | undefined, index: number) => {
     term.clear()
     term.focus()
     term.write('\r\n\x1b[33m$\x1b[0m ')
+    let commandBuffer = '';
+    term.onData((data) => {
+      if (data === '\r') {
+        if (commandBuffer.indexOf('vi') > -1) {
+          term.clear()
+          setTimeout(() => {
+            term.scrollToTop()
+          }, 500)
+        }
+        commandBuffer = '';
+      } else {
+        commandBuffer += data;
+      }
+    })
     termTerminal.value = term
   }
 }

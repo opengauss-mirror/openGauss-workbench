@@ -200,11 +200,11 @@ public interface SshCommandConstants {
     /**
      * Lite masternode installation
      */
-    String LITE_MASTER_INSTALL = "echo {0} | sh {1}/install.sh --mode primary -D {2} -R {3} -C \"replconninfo1=''localhost={4} localport={5} remotehost={6} remoteport={7}''\"  --start";
+    String LITE_MASTER_INSTALL = "echo {0} | sh {1}/install.sh --mode primary -D {2} -R {3} -C \"replconninfo1=''localhost={4} localport={5} remotehost={6} remoteport={7}''\" -C port={8}  --start";
     /**
      * Lite install from node
      */
-    String LITE_SLAVE_INSTALL = "echo {0} | sh {1}/install.sh --mode standby -D {2} -R {3} -C \"replconninfo1=''localhost={4} localport={5} remotehost={6} remoteport={7}''\"  --start";
+    String LITE_SLAVE_INSTALL = "echo {0} | sh {1}/install.sh --mode standby -D {2} -R {3} -C \"replconninfo1=''localhost={4} localport={5} remotehost={6} remoteport={7}''\" -C port={8}  --start";
     /**
      * light version uninstall
      */

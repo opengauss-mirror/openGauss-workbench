@@ -447,26 +447,13 @@ public class MinimaListOpsProvider extends AbstractOpsProvider {
 
         String dataPath = opsClusterNodeEntity.getDataPath();
         if (DeployTypeEnum.CLUSTER == deployType) {
-            String masterStartCommand = MessageFormat.format(SshCommandConstants.MINIMAL_LIST_MASTER_START, dataPath);
-            try {
-                JschResult jschResult = jschUtil.executeCommand(masterStartCommand, opsClusterEntity.getEnvPath(),startUserSession, retSession);
-                if (0 != jschResult.getExitCode()) {
-                    throw new OpsException("startup error，exit code " + jschResult.getExitCode());
-                }
-            } catch (Exception e) {
-                log.error("startup error", e);
-                throw new OpsException("startup error");
-            }
-
-            String slaveStartCommand = MessageFormat.format(SshCommandConstants.MINIMAL_LIST_SLAVE_START, dataPath);
-            try {
-                JschResult jschResult = jschUtil.executeCommand(slaveStartCommand,opsClusterEntity.getEnvPath(), startUserSession, retSession);
-                if (0 != jschResult.getExitCode()) {
-                    throw new OpsException("startup error，exit code " + jschResult.getExitCode());
-                }
-            } catch (Exception e) {
-                log.error("startup error", e);
-                throw new OpsException("startup error");
+            if (ClusterRoleEnum.MASTER == opsClusterContext.getRole()) {
+                startMaster(dataPath, opsClusterEntity, startUserSession, retSession);
+            }else if (ClusterRoleEnum.SLAVE == opsClusterContext.getRole()) {
+                startSlave(dataPath, opsClusterEntity, startUserSession, retSession);
+            }else {
+                startMaster(dataPath, opsClusterEntity, startUserSession, retSession);
+                startSlave(dataPath, opsClusterEntity, startUserSession, retSession);
             }
         } else {
             String startCommand = MessageFormat.format(SshCommandConstants.MINIMAL_LIST_SINGLE_START, dataPath);
@@ -479,6 +466,32 @@ public class MinimaListOpsProvider extends AbstractOpsProvider {
                 log.error("startup error", e);
                 throw new OpsException("startup error");
             }
+        }
+    }
+
+    private void startSlave(String dataPath, OpsClusterEntity opsClusterEntity, Session startUserSession, WsSession retSession) {
+        String slaveStartCommand = MessageFormat.format(SshCommandConstants.MINIMAL_LIST_SLAVE_START, dataPath);
+        try {
+            JschResult jschResult = jschUtil.executeCommand(slaveStartCommand,opsClusterEntity.getEnvPath(), startUserSession, retSession);
+            if (0 != jschResult.getExitCode()) {
+                throw new OpsException("startup error，exit code " + jschResult.getExitCode());
+            }
+        } catch (Exception e) {
+            log.error("startup error", e);
+            throw new OpsException("startup error");
+        }
+    }
+
+    private void startMaster(String dataPath, OpsClusterEntity opsClusterEntity, Session startUserSession, WsSession retSession) {
+        String masterStartCommand = MessageFormat.format(SshCommandConstants.MINIMAL_LIST_MASTER_START, dataPath);
+        try {
+            JschResult jschResult = jschUtil.executeCommand(masterStartCommand, opsClusterEntity.getEnvPath(),startUserSession, retSession);
+            if (0 != jschResult.getExitCode()) {
+                throw new OpsException("startup error，exit code " + jschResult.getExitCode());
+            }
+        } catch (Exception e) {
+            log.error("startup error", e);
+            throw new OpsException("startup error");
         }
     }
 
@@ -556,26 +569,13 @@ public class MinimaListOpsProvider extends AbstractOpsProvider {
 
         String dataPath = opsClusterNodeEntity.getDataPath();
         if (DeployTypeEnum.CLUSTER == deployType) {
-            String masterStopCommand = MessageFormat.format(SshCommandConstants.MINIMAL_LIST_MASTER_STOP, dataPath);
-            try {
-                JschResult jschResult = jschUtil.executeCommand(masterStopCommand, opsClusterEntity.getEnvPath(), stopUserSession, retSession);
-                if (0 != jschResult.getExitCode()) {
-                    throw new OpsException("stop error，exit code " + jschResult.getExitCode());
-                }
-            } catch (Exception e) {
-                log.error("stop error", e);
-                throw new OpsException("stop error");
-            }
-
-            String slaveStopCommand = MessageFormat.format(SshCommandConstants.MINIMAL_LIST_SLAVE_STOP, dataPath);
-            try {
-                JschResult jschResult = jschUtil.executeCommand(slaveStopCommand,opsClusterEntity.getEnvPath(), stopUserSession, retSession);
-                if (0 != jschResult.getExitCode()) {
-                    throw new OpsException("stop error，exit code " + jschResult.getExitCode());
-                }
-            } catch (Exception e) {
-                log.error("stop error", e);
-                throw new OpsException("stop error");
+            if (ClusterRoleEnum.MASTER == opsClusterContext.getRole()) {
+                stopMaster(dataPath, opsClusterEntity, stopUserSession, retSession);
+            }else if (ClusterRoleEnum.SLAVE == opsClusterContext.getRole()) {
+                stopSlave(dataPath, opsClusterEntity, stopUserSession, retSession);
+            }else {
+                stopMaster(dataPath, opsClusterEntity, stopUserSession, retSession);
+                stopSlave(dataPath, opsClusterEntity, stopUserSession, retSession);
             }
         } else {
             String stopCommand = MessageFormat.format(SshCommandConstants.MINIMAL_LIST_SINGLE_STOP, dataPath);
@@ -591,6 +591,32 @@ public class MinimaListOpsProvider extends AbstractOpsProvider {
         }
     }
 
+    private void stopSlave(String dataPath, OpsClusterEntity opsClusterEntity, Session stopUserSession, WsSession retSession) {
+        String slaveStopCommand = MessageFormat.format(SshCommandConstants.MINIMAL_LIST_SLAVE_STOP, dataPath);
+        try {
+            JschResult jschResult = jschUtil.executeCommand(slaveStopCommand,opsClusterEntity.getEnvPath(), stopUserSession, retSession);
+            if (0 != jschResult.getExitCode()) {
+                throw new OpsException("stop error，exit code " + jschResult.getExitCode());
+            }
+        } catch (Exception e) {
+            log.error("stop error", e);
+            throw new OpsException("stop error");
+        }
+    }
+
+    private void stopMaster(String dataPath, OpsClusterEntity opsClusterEntity, Session stopUserSession, WsSession retSession) {
+        String masterStopCommand = MessageFormat.format(SshCommandConstants.MINIMAL_LIST_MASTER_STOP, dataPath);
+        try {
+            JschResult jschResult = jschUtil.executeCommand(masterStopCommand, opsClusterEntity.getEnvPath(), stopUserSession, retSession);
+            if (0 != jschResult.getExitCode()) {
+                throw new OpsException("stop error，exit code " + jschResult.getExitCode());
+            }
+        } catch (Exception e) {
+            log.error("stop error", e);
+            throw new OpsException("stop error");
+        }
+    }
+
     private void doRestart(Session restartUserSession, WsSession retSession, OpsClusterContext opsClusterContext) {
         OpsClusterEntity opsClusterEntity = opsClusterContext.getOpsClusterEntity();
         DeployTypeEnum deployType = opsClusterEntity.getDeployType();
@@ -598,26 +624,13 @@ public class MinimaListOpsProvider extends AbstractOpsProvider {
 
         String dataPath = opsClusterNodeEntity.getDataPath();
         if (DeployTypeEnum.CLUSTER == deployType) {
-            String masterRestartCommand = MessageFormat.format(SshCommandConstants.MINIMAL_LIST_MASTER_RESTART, dataPath);
-            try {
-                JschResult jschResult = jschUtil.executeCommand(masterRestartCommand, opsClusterEntity.getEnvPath(), restartUserSession, retSession);
-                if (0 != jschResult.getExitCode()) {
-                    throw new OpsException("restart error，exit code " + jschResult.getExitCode());
-                }
-            } catch (Exception e) {
-                log.error("restart error", e);
-                throw new OpsException("restart error");
-            }
-
-            String slaveRestartCommand = MessageFormat.format(SshCommandConstants.MINIMAL_LIST_SLAVE_RESTART, dataPath);
-            try {
-                JschResult jschResult = jschUtil.executeCommand(slaveRestartCommand, opsClusterEntity.getEnvPath(), restartUserSession, retSession);
-                if (0 != jschResult.getExitCode()) {
-                    throw new OpsException("restart error，exit code " + jschResult.getExitCode());
-                }
-            } catch (Exception e) {
-                log.error("restart error", e);
-                throw new OpsException("restart error");
+            if (ClusterRoleEnum.MASTER == opsClusterContext.getRole()) {
+                restartMaster(dataPath, opsClusterEntity, restartUserSession, retSession);
+            }else if (ClusterRoleEnum.SLAVE == opsClusterContext.getRole()) {
+                restartSlave(dataPath, opsClusterEntity, restartUserSession, retSession);
+            }else {
+                restartMaster(dataPath, opsClusterEntity, restartUserSession, retSession);
+                restartSlave(dataPath, opsClusterEntity, restartUserSession, retSession);
             }
         } else {
             String restartCommand = MessageFormat.format(SshCommandConstants.MINIMAL_LIST_SINGLE_RESTART, dataPath);
@@ -630,6 +643,32 @@ public class MinimaListOpsProvider extends AbstractOpsProvider {
                 log.error("restart error", e);
                 throw new OpsException("restart error");
             }
+        }
+    }
+
+    private void restartSlave(String dataPath, OpsClusterEntity opsClusterEntity, Session restartUserSession, WsSession retSession) {
+        String slaveRestartCommand = MessageFormat.format(SshCommandConstants.MINIMAL_LIST_SLAVE_RESTART, dataPath);
+        try {
+            JschResult jschResult = jschUtil.executeCommand(slaveRestartCommand, opsClusterEntity.getEnvPath(), restartUserSession, retSession);
+            if (0 != jschResult.getExitCode()) {
+                throw new OpsException("restart error，exit code " + jschResult.getExitCode());
+            }
+        } catch (Exception e) {
+            log.error("restart error", e);
+            throw new OpsException("restart error");
+        }
+    }
+
+    private void restartMaster(String dataPath, OpsClusterEntity opsClusterEntity, Session restartUserSession, WsSession retSession) {
+        String masterRestartCommand = MessageFormat.format(SshCommandConstants.MINIMAL_LIST_MASTER_RESTART, dataPath);
+        try {
+            JschResult jschResult = jschUtil.executeCommand(masterRestartCommand, opsClusterEntity.getEnvPath(), restartUserSession, retSession);
+            if (0 != jschResult.getExitCode()) {
+                throw new OpsException("restart error，exit code " + jschResult.getExitCode());
+            }
+        } catch (Exception e) {
+            log.error("restart error", e);
+            throw new OpsException("restart error");
         }
     }
 

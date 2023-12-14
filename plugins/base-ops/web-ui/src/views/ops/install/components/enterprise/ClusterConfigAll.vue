@@ -24,6 +24,7 @@
           >
             <cluster-form
               :form-data="data.form.cluster"
+              @isEnvSeparateChange="isEnvChange"
               ref="clusterFormRef"
             ></cluster-form>
           </a-tab-pane>
@@ -250,6 +251,16 @@ const isHasCMMaster = (id: string, isMaster: boolean) => {
     if (!findTrueNode.length) {
       currentNode.isCMMaster = true
       Message.warning('One node must be the primary node')
+    }
+  }
+}
+
+const isEnvChange = (val: boolean) => {
+  if (!val) {
+    data.form.cluster.envPath = ''
+  } else {
+    if (data.form.nodes[0].installUsername) {
+      installUserChange(data.form.nodes[0].installUsername)
     }
   }
 }

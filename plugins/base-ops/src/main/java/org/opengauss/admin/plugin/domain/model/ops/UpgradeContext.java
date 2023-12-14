@@ -48,4 +48,5 @@ public class UpgradeContext {
     private String installUserPassword;
     private OpsClusterEntity clusterEntity;
     private OpsClusterNodeEntity opsClusterNodeEntity;
+    private OpenGaussSupportOSEnum os;
 }

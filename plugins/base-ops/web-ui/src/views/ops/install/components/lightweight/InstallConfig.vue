@@ -178,7 +178,10 @@
               :label="$t('simple.InstallConfig.else11')"
               validate-trigger="blur"
             >
-              <a-switch v-model="formItem.isEnvSeparate" />
+              <a-switch
+                v-model="formItem.isEnvSeparate"
+                @change="isEnvSeparateChange(formItem)"
+              />
             </a-form-item>
             <a-form-item
               v-if="formItem.isEnvSeparate && index === 0"
@@ -556,6 +559,14 @@ const handleInstallPackageBlur = (index: number) => {
   })
 }
 
+const isEnvSeparateChange = (formItem: any) => {
+  if (!formItem.isEnvSeparate) {
+    formItem.envPath = ''
+  } else {
+    calEnvPath(0)
+  }
+}
+
 const setRefMap = (el: any) => {
   if (el) {
     refList.value.push(el)
@@ -658,30 +669,32 @@ const validateSpecialFields = async () => {
         encryptPwd = await encryptPassword(data.nodeData[i].rootPassword)
       }
       // password validate
-      try {
-        const param = {
-          rootPassword: encryptPwd
-        }
-        const passwordValid: KeyValue = await hostPingById(data.nodeData[i].hostId, param)
-        if (Number(passwordValid.code) !== 200) {
+      if (encryptPwd) {
+        try {
+          const param = {
+            rootPassword: encryptPwd
+          }
+          const passwordValid: KeyValue = await hostPingById(data.nodeData[i].hostId, param)
+          if (Number(passwordValid.code) !== 200) {
+            refList.value[i].setFields({
+              rootPassword: {
+                status: 'error',
+                message: t('enterprise.NodeConfig.else8')
+              }
+            })
+            result = false
+            isOkPwd = false
+          }
+        } catch (err: any) {
           refList.value[i].setFields({
             rootPassword: {
               status: 'error',
-              message: t('enterprise.NodeConfig.else8')
+              message: t('enterprise.NodeConfig.else9')
             }
           })
           result = false
           isOkPwd = false
         }
-      } catch (err: any) {
-        refList.value[i].setFields({
-          rootPassword: {
-            status: 'error',
-            message: t('enterprise.NodeConfig.else9')
-          }
-        })
-        result = false
-        isOkPwd = false
       }
       if (!isOkPwd) {
         continue
@@ -690,7 +703,7 @@ const validateSpecialFields = async () => {
       validMethodArr.push(validatePort(data.nodeData[i].port, encryptPwd, data.nodeData[i].hostId))
       validMethodArr.push(validatePath(data.nodeData[i].dataPath, encryptPwd, data.nodeData[i].hostId))
       validMethodArr.push(validatePath(data.nodeData[i].installPackagePath, encryptPwd, data.nodeData[i].hostId))
-      if (data.nodeData[i].isEnvSeparate && installType.value === 'import') {
+      if (data.nodeData[i].isEnvSeparate && installType.value === 'import' && i === 0) {
         validMethodArr.push(validateFile(data.nodeData[i].envPath, encryptPwd, data.nodeData[i].hostId))
       }
       if (validMethodArr.length) {
@@ -727,7 +740,7 @@ const validateSpecialFields = async () => {
           })
           result = false
         }
-        if (installType.value == 'import' && data.nodeData[i].isEnvSeparate && !validResult[3]) {
+        if (installType.value == 'import' && data.nodeData[i].isEnvSeparate && !validResult[3] && i === 0) {
           // dataPath Valid
           refList.value[i].setFields({
             envPath: {

@@ -31,6 +31,7 @@ import org.opengauss.admin.common.core.domain.model.ops.check.CheckSummaryVO;
 import org.opengauss.admin.plugin.base.BaseController;
 import org.opengauss.admin.plugin.domain.model.ops.*;
 import org.opengauss.admin.plugin.domain.model.ops.env.HostEnv;
+import org.opengauss.admin.plugin.enums.ops.ClusterRoleEnum;
 import org.opengauss.admin.plugin.enums.ops.OpenGaussSupportOSEnum;
 import org.opengauss.admin.plugin.enums.ops.OpenGaussVersionEnum;
 import org.opengauss.admin.plugin.service.ops.IOpsClusterService;
@@ -201,8 +202,8 @@ public class OpsClusterController extends BaseController {
     }
 
     @GetMapping("/monitor")
-    public AjaxResult monitor(@RequestParam String clusterId, @RequestParam String hostId, @RequestParam String businessId) {
-        opsClusterService.monitor(clusterId, hostId, businessId);
+    public AjaxResult monitor(@RequestParam String clusterId, @RequestParam String hostId, @RequestParam String businessId, @RequestParam(required = false, defaultValue = "MASTER")ClusterRoleEnum role) {
+        opsClusterService.monitor(clusterId, hostId, businessId, role);
         return AjaxResult.success();
     }
 

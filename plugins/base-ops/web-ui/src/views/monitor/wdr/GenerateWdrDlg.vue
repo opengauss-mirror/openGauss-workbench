@@ -92,8 +92,6 @@
       <a-form-item
         field="startId"
         :label="$t('wdr.GenerateWdrDlg.5mpm0eufzbk0')"
-        validate-trigger="change"
-        :rules="[{ required: true, message: t('wdr.GenerateWdrDlg.5mpm0eufzg00') }]"
       >
         <a-select
           :loading="data.getSnapshotLoading"
@@ -111,8 +109,6 @@
       <a-form-item
         field="endId"
         :label="$t('wdr.GenerateWdrDlg.5mpm0eufzk80')"
-        validate-trigger="change"
-        :rules="[{ required: true, message: t('wdr.GenerateWdrDlg.5mpm0eufzo40') }]"
       >
         <a-select
           :loading="data.getSnapshotLoading"
@@ -133,13 +129,14 @@
 
 <script setup lang="ts">
 
-import { nextTick, reactive, ref } from 'vue'
+import { nextTick, reactive, ref, resolve } from 'vue'
 import { KeyValue } from '@/types/global'
 import { FormInstance } from '@arco-design/web-vue/es/form'
 import { clusterList, getHostByClusterId, wdrGenerate, listSnapshot } from '@/api/ops'
 import { Message } from '@arco-design/web-vue'
 import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
+
 const data: {
   show: boolean,
   title: string,
@@ -175,7 +172,37 @@ const data: {
   snapshotList: [],
   wdrTypeList: [],
   rules: {
-    clusterId: [{ required: true, 'validate-trigger': 'blur', message: t('wdr.GenerateWdrDlg.5mpm0eufy340') }]
+    clusterId: [{ required: true, 'validate-trigger': 'blur', message: t('wdr.GenerateWdrDlg.5mpm0eufy340') }],
+    startId: [
+      { required: true, 'validate-trigger': 'change', message: t('wdr.GenerateWdrDlg.5mpm0eufzg00') },
+      {
+        validator: (value: any, cb: any) => {
+          return new Promise(resolve => {
+            if (value >= data.formData.endId) {
+              cb(t('wdr.GenerateWdrDlg.else1'))
+              resolve(false)
+            }
+            formRef.value?.clearValidate('endId')
+            resolve(true)
+          })
+        }
+      }
+    ],
+    endId: [
+      { required: true, 'validate-trigger': 'change', message: t('wdr.GenerateWdrDlg.5mpm0eufzo40') },
+      {
+        validator: (value: any, cb: any) => {
+          return new Promise(resolve => {
+            if (value <= data.formData.startId) {
+              cb(t('wdr.GenerateWdrDlg.else2'))
+              resolve(false)
+            }
+            formRef.value?.clearValidate('startId')
+            resolve(true)
+          })
+        }
+      }
+    ]
   }
 })
 
@@ -273,8 +300,10 @@ const getSnapshotList = () => {
             value: item.snapshot_id
           })
         })
-        data.formData.startId = data.snapshotList[0].value
-        data.formData.endId = data.snapshotList[data.snapshotList.length - 1].value
+        if (data.snapshotList.length) {
+          data.formData.startId = data.snapshotList[0].value
+          data.formData.endId = data.snapshotList[data.snapshotList.length - 1].value
+        }
       } else {
         Message.error('Failed to obtain host information')
       }

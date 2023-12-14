@@ -120,8 +120,10 @@
         :label="$t('simple.InstallConfig.else11')"
         validate-trigger="blur"
       >
-        <a-switch v-model="data.isEnvSeparate" style="margin-right: 20px;"/>
-        <div v-if="!data.isEnvSeparate" class="label-color">{{ $t('simple.InstallConfig.else14') }}</div>
+        <a-switch
+          v-model="data.isEnvSeparate"
+          @change="isEnvSeparateChange"
+        />
       </a-form-item>
       <a-form-item
         v-if="data.isEnvSeparate"
@@ -230,7 +232,7 @@ const props = defineProps({
 
 const installType = computed(() => installStore.getInstallConfig.installType)
 
-const emits = defineEmits([`update:formData`])
+const emits = defineEmits([`update:formData`, `isEnvSeparateChange`])
 const data = computed({
   get: () => props.formData,
   set: (val) => {
@@ -595,6 +597,10 @@ const isInstallCMChange = (val: boolean) => {
   }
 }
 
+const isEnvSeparateChange = (val: any) => {
+  emits('isEnvSeparateChange', val)
+}
+
 const formRef = ref<null | FormInstance>(null)
 const formValidate = async (): Promise<KeyValue> => {
   const validRes = await formRef.value?.validate()
@@ -625,5 +631,4 @@ defineExpose({
 <style lang="less" scoped>
 .cluster-form-c {
   padding: 20px;
-}
-</style>
+}</style>
