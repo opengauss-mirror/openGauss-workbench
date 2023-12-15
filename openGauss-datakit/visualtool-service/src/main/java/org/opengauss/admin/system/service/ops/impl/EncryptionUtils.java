@@ -26,6 +26,7 @@ package org.opengauss.admin.system.service.ops.impl;
 
 import cn.hutool.core.util.CharsetUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.crypto.CryptoException;
 import cn.hutool.crypto.asymmetric.KeyType;
 import cn.hutool.crypto.asymmetric.RSA;
 import lombok.extern.slf4j.Slf4j;
@@ -81,9 +82,14 @@ public class EncryptionUtils {
     }
 
     public String decrypt(String cipherText) {
-        RSA rsa = new RSA(privateKey, null);
-        byte[] decrypt = rsa.decrypt(Base64.decodeBase64(cipherText), KeyType.PrivateKey);
-        return StrUtil.str(decrypt, CharsetUtil.CHARSET_UTF_8);
+        try {
+            RSA rsa = new RSA(privateKey, null);
+            byte[] decrypt = rsa.decrypt(Base64.decodeBase64(cipherText), KeyType.PrivateKey);
+            return StrUtil.str(decrypt, CharsetUtil.CHARSET_UTF_8);
+        } catch (CryptoException e) {
+            log.error("decrypt failed, return cipherText.");
+        }
+        return cipherText;
     }
 
     public String decrypt(String cipherText, String keyStr) {
