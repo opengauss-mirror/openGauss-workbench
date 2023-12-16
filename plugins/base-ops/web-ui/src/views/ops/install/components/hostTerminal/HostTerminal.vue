@@ -35,8 +35,8 @@ import { reactive, ref, nextTick } from 'vue'
 import { openSSH } from '@/api/ops'
 import { WsConnectType } from '@/types/ops/install'
 import { Terminal } from 'xterm'
-import { FitAddon } from 'xterm-addon-fit'
-import { AttachAddon } from 'xterm-addon-attach'
+import { FitAddon } from '@xterm/addon-fit'
+import { AttachAddon } from '@xterm/addon-attach'
 import 'xterm/css/xterm.css'
 import { useI18n } from 'vue-i18n'
 import { encryptPassword } from "@/utils/jsencrypt";
@@ -116,7 +116,7 @@ const getTermObj = (): Terminal => {
     // rendererType: 'dom',
     fontSize: 14,
     rows: 40,
-    cols: 120,
+    cols: 200,
     cursorBlink: true,
     convertEol: true,
     disableStdin: false,

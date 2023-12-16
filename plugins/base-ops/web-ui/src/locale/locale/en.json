@@ -449,24 +449,18 @@
     },
     "slowSql": {
         "index": {
+            "else1": "DB Name",
+            "else2": "Node Name",
             "5mplw69rv000": "Cluster name",
             "5mplw69rvmo0": "Please select the cluster name",
             "5mplw69rvt40": "Host IP address",
             "5mplw69rvz80": "Please select the host IP address",
-            "5mplw69rw300": "Time",
+            "5mplw69rw300": "Start Time",
             "5mplw69rw900": "Query",
-            "5mplw69rwcw0": "Type",
-            "5mplw69rwgs0": "Result",
-            "5mplw69rwks0": "User ID",
-            "5mplw69rwog0": "User name",
-            "5mplw69rwrw0": "Database",
-            "5mplw69rwvw0": "Client information",
-            "5mplw69rwzc0": "Object information",
-            "5mplw69rx3c0": "Details",
-            "5mplw69rx740": "Node information",
-            "5mplw69rxak0": "Thread ID",
-            "5mplw69rxe80": "local port ",
-            "5mplw69rxmc0": "Remote port"
+            "5mplw69rwcw0": "Finish Time",
+            "5mplw69rwgs0": "Slow Sql Threshold",
+            "5mplw69rwks0": "Query",
+            "5mplw69rwog0": "Query Plan"
         }
     },
     "snapshot": {
@@ -612,7 +606,6 @@
             "collapse1": "sharing storage configuration",
             "option1": "Master Slave Arch",
             "option2": "Sharing Storage Arch"
-
         },
         "EnterpriseInstall": {
             "else2": "prompt",

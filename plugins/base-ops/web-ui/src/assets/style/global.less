@@ -297,3 +297,12 @@ body[arco-theme="dark"] .arco-link.arco-link-loading {}
 .arco-progress-line-bar {
   background-color: rgb(var(--primary-5)) !important;
 }
+
+.terminal-container{
+  /* this is important */
+  overflow: hidden;
+}
+.xterm .xterm-viewport {
+  /* see : https://github.com/xtermjs/xterm.js/issues/3564#issuecomment-1004417440 */
+  width: initial !important;
+}

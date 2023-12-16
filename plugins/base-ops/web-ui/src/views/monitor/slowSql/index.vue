@@ -3,28 +3,64 @@
     <div class="flex-row mb">
       <div class="flex-row mr">
         <div class="label-color top-label mr-s">{{ $t('slowSql.index.5mplw69rv000') }}</div>
-        <a-select class="select-w" :loading="filter.clusterListLoading" v-model="filter.clusterId"
-          :placeholder="$t('slowSql.index.5mplw69rvmo0')" @change="getHostList">
-          <a-option v-for="(item, index) in filter.clusterList" :key="index" :label="item.label" :value="item.value" />
+        <a-select
+          class="select-w"
+          :loading="filter.clusterListLoading"
+          v-model="filter.clusterId"
+          :placeholder="$t('slowSql.index.5mplw69rvmo0')"
+          @change="getHostList"
+        >
+          <a-option
+            v-for="(item, index) in filter.clusterList"
+            :key="index"
+            :label="item.label"
+            :value="item.value"
+          />
         </a-select>
       </div>
       <div class="flex-row mr">
         <div class="label-color top-label mr-s">{{ $t('slowSql.index.5mplw69rvt40') }}</div>
-        <a-select class="select-w" :loading="filter.hostListLoading" v-model="filter.hostId"
-          :placeholder="$t('slowSql.index.5mplw69rvz80')">
-          <a-option v-for="(item, index) in filter.hostList" :key="index" :label="item.label" :value="item.value" />
+        <a-select
+          class="select-w"
+          :loading="filter.hostListLoading"
+          v-model="filter.hostId"
+          :placeholder="$t('slowSql.index.5mplw69rvz80')"
+        >
+          <a-option
+            v-for="(item, index) in filter.hostList"
+            :key="index"
+            :label="item.label"
+            :value="item.value"
+          />
         </a-select>
       </div>
       <div class="flex-row mr">
         <div class="label-color query-label mr-s">{{ $t('slowSql.index.5mplw69rw300') }}</div>
-        <a-range-picker style="width: 360px; margin: 0 24px 0 0;" show-time :default-value="getCurrentTime"
-          :allow-clear="false" :time-picker-props="{ defaultValue: ['00:00:00', '23:59:59'] }"
-          format="YYYY-MM-DD HH:mm:ss" @ok="dateOnOk" />
+        <a-range-picker
+          style="width: 360px; margin: 0 24px 0 0;"
+          show-time
+          :default-value="getCurrentTime"
+          :allow-clear="false"
+          :time-picker-props="{ defaultValue: ['00:00:00', '23:59:59'] }"
+          format="YYYY-MM-DD HH:mm:ss"
+          @ok="dateOnOk"
+        />
       </div>
-      <a-button type="primary" @click="query">{{ $t('slowSql.index.5mplw69rw900') }}</a-button>
+      <a-button
+        type="primary"
+        @click="query"
+      >{{ $t('slowSql.index.5mplw69rw900') }}</a-button>
     </div>
-    <a-table class="d-a-table-row full-h" :data="list.data" :columns="columns" :pagination="list.page"
-      :loading="list.loading">
+    <a-table
+      class="d-a-table-row full-h"
+      :data="list.data"
+      :columns="columns"
+      :pagination="list.page"
+      :loading="list.loading"
+    >
+      <template #query_plan="{ record }">
+        {{ record.query_plan ? record.query_plan : '--' }}
+      </template>
     </a-table>
   </div>
 </template>
@@ -58,19 +94,13 @@ const filter: {
 })
 
 const columns = computed(() => [
-  { title: t('slowSql.index.5mplw69rw300'), dataIndex: 'time' },
-  { title: t('slowSql.index.5mplw69rwcw0'), dataIndex: 'type' },
-  { title: t('slowSql.index.5mplw69rwgs0'), dataIndex: 'result' },
-  { title: t('slowSql.index.5mplw69rwks0'), dataIndex: 'userid' },
-  { title: t('slowSql.index.5mplw69rwog0'), dataIndex: 'username' },
-  { title: t('slowSql.index.5mplw69rwrw0'), dataIndex: 'database' },
-  { title: t('slowSql.index.5mplw69rwvw0'), dataIndex: 'client_conninfo' },
-  { title: t('slowSql.index.5mplw69rwzc0'), dataIndex: 'object_name' },
-  { title: t('slowSql.index.5mplw69rx3c0'), dataIndex: 'detail_info' },
-  { title: t('slowSql.index.5mplw69rx740'), dataIndex: 'node_name' },
-  { title: t('slowSql.index.5mplw69rxak0'), dataIndex: 'thread_id' },
-  { title: t('slowSql.index.5mplw69rxe80'), dataIndex: 'local_port' },
-  { title: t('slowSql.index.5mplw69rxmc0'), dataIndex: 'remote_port' }
+  { title: t('slowSql.index.else1'), dataIndex: 'db_name' },
+  { title: t('slowSql.index.else2'), dataIndex: 'node_name' },
+  { title: t('slowSql.index.5mplw69rw300'), dataIndex: 'start_time', width: 250 },
+  { title: t('slowSql.index.5mplw69rwcw0'), dataIndex: 'finish_time', width: 250 },
+  { title: t('slowSql.index.5mplw69rwgs0'), dataIndex: 'slow_sql_threshold', width: 100 },
+  { title: t('slowSql.index.5mplw69rwks0'), dataIndex: 'query', ellipsis: true, tooltip: true },
+  { title: t('slowSql.index.5mplw69rwog0'), dataIndex: 'query_plan', ellipsis: true, tooltip: true }
 ])
 
 const list: {

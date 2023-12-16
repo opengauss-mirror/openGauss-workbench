@@ -117,7 +117,7 @@ const getTermObj = (): Terminal => {
     // rendererType: 'dom',
     fontSize: 14,
     rows: 40,
-    cols: 90,
+    cols: 200,
     cursorBlink: true,
     convertEol: true,
     disableStdin: false,

@@ -139,8 +139,8 @@
 import { computed, inject, nextTick, onBeforeUnmount, onMounted, ref, reactive } from 'vue'
 import 'xterm/css/xterm.css'
 import { Terminal } from 'xterm'
-import { FitAddon } from 'xterm-addon-fit'
-import { AttachAddon } from 'xterm-addon-attach'
+import { FitAddon } from '@xterm/addon-fit'
+import { AttachAddon } from '@xterm/addon-attach'
 import { openSSH, installOpenGauss } from '@/api/ops'
 import { ClusterRoleEnum, WsConnectType } from '@/types/ops/install'
 import { useOpsStore } from '@/store'
@@ -231,8 +231,8 @@ const hostChange = () => {
 const getTermObj = (): Terminal => {
   return new Terminal({
     fontSize: 14,
-    rows: 30,
-    cols: 100,
+    rows: 40,
+    cols: 200,
     cursorBlink: true,
     convertEol: true,
     disableStdin: false,

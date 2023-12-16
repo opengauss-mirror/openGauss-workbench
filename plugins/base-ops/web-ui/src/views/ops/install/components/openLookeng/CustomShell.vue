@@ -21,8 +21,8 @@ import {reactive, ref, onMounted, onBeforeUnmount, nextTick} from 'vue'
 import {hostListAll, openSSH} from '@/api/ops'
 import {WsConnectType} from '@/types/ops/install'
 import {Terminal} from 'xterm'
-import {FitAddon} from 'xterm-addon-fit'
-import {AttachAddon} from 'xterm-addon-attach'
+import { FitAddon } from '@xterm/addon-fit'
+import {AttachAddon} from '@xterm/addon-attach'
 import 'xterm/css/xterm.css'
 import HostPwdDlg from '@/views/monitor/customControl/HostPwdDlg.vue'
 import {debounce} from '@antv/x6/lib/util/function/function'
@@ -184,7 +184,7 @@ const initTerm = (term: Terminal, ws: WebSocket | undefined, hostId: string) => 
     term.loadAddon(attachAddon)
     term.loadAddon(fitAddon.value)
     term.open(document.getElementById(`xterm_${hostId}`) as HTMLElement)
-    // fitAddon.value.fit()
+    fitAddon.value.fit()
     term.clear()
     term.focus()
     term.write('\r\n\x1b[33m$\x1b[0m ')
@@ -196,7 +196,7 @@ const getTermObj = (): Terminal => {
   return new Terminal({
     fontSize: 14,
     rows: 40,
-    cols: 100,
+    cols: 200,
     cursorBlink: true,
     convertEol: true,
     disableStdin: false,

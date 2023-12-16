@@ -105,7 +105,7 @@ const getTerminalInstance = () =>
   new Terminal({
     fontSize: 14,
     rows: 40,
-    cols: 100,
+    cols: 200,
     cursorBlink: true,
     convertEol: true,
     disableStdin: false,

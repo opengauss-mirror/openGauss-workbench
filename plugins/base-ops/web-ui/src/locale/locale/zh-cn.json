@@ -450,24 +450,18 @@
     },
     "slowSql": {
         "index": {
+            "else1": "数据库名称",
+            "else2": "节点名称",
             "5mplw69rv000": "集群名称",
             "5mplw69rvmo0": "请选择集群名称",
             "5mplw69rvt40": "主机IP",
             "5mplw69rvz80": "请选择主机IP",
-            "5mplw69rw300": "时间",
+            "5mplw69rw300": "开始时间",
             "5mplw69rw900": "查询",
-            "5mplw69rwcw0": "类型",
-            "5mplw69rwgs0": "结果",
-            "5mplw69rwks0": "用户ID",
-            "5mplw69rwog0": "用户名称",
-            "5mplw69rwrw0": "数据库",
-            "5mplw69rwvw0": "客户端信息",
-            "5mplw69rwzc0": "对象信息",
-            "5mplw69rx3c0": "详细信息",
-            "5mplw69rx740": "节点信息",
-            "5mplw69rxak0": "线程ID",
-            "5mplw69rxe80": "本地端口",
-            "5mplw69rxmc0": "远程端口"
+            "5mplw69rwcw0": "结束时间",
+            "5mplw69rwgs0": "时间阈值",
+            "5mplw69rwks0": "SQL语句",
+            "5mplw69rwog0": "执行计划"
         }
     },
     "snapshot": {
@@ -632,7 +626,6 @@
             "error8": "LUN路径不能相同",
             "error9": "Xlog卷名和Xlog LUN路径不对应",
             "error10": "Xlog卷名数量要等于1或者等于节点数"
-
         },
         "EnvMonitor": {
             "else1": "个环境检测未通过，建议处理后重试",
