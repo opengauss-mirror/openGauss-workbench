@@ -27,7 +27,7 @@
                     </div>
                 </div>
                 <div class="flex-row">
-                    <a-checkbox v-if="local.data.version === OpenGaussVersionEnum.ENTERPRISE"
+                    <a-checkbox v-if="local.data.version === OpenGaussVersionEnum.ENTERPRISE && data.role === ClusterRoleEnum.SLAVE"
                         v-model="data.isApplyToAllNode" class="mr-s">{{ $t('operation.DailyOps.guc5cg6')
                         }}</a-checkbox>
                     <a-button type="primary" @click="handleSave" :loading="data.loading">{{ $t('operation.DailyOps.guc5cg7')
@@ -82,7 +82,7 @@
     </a-modal>
 </template>
 <script setup lang="ts">
-import { OpenGaussVersionEnum } from '@/types/ops/install';
+import { ClusterRoleEnum, OpenGaussVersionEnum } from '@/types/ops/install';
 import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
 import { reactive, ref, computed } from 'vue'
@@ -127,9 +127,9 @@ const data = reactive<KeyValue>({
 })
 
 const filter = reactive({
-    pageNum: 1,
-    pageSize: 20,
     keyword: '',
+    pageSize: 20,
+    pageNum: 0
 })
 
 const list = reactive<KeyValue>({
@@ -137,7 +137,7 @@ const list = reactive<KeyValue>({
     oldData: [],
     page: {
         total: 0,
-        pageSize: 20,
+        defaultPageSize: 20,
         'show-total': true,
         'show-jumper': true,
         'show-page-size': true
@@ -175,10 +175,12 @@ const columns = computed(() => [{
 
 const currentPage = (e: number) => {
     filter.pageNum = e
+    handleSearchSetting()
 }
 
 const pageSizeChange = (e: number) => {
     filter.pageSize = e
+    handleSearchSetting()
 }
 
 const open = (clusterData: KeyValue, instance: KeyValue, clusterIndex: number) => {
@@ -188,6 +190,7 @@ const open = (clusterData: KeyValue, instance: KeyValue, clusterIndex: number) =
     data.hostId = instance.hostId
     data.dataPath = instance.dataPath
     data.info = instance.publicIp
+    data.role = instance.clusterRole
     getGucSetting()
     data.visible = true
 }
@@ -197,6 +200,7 @@ const handleClose = () => {
     data.hostId = ''
     data.dataPath = ''
     data.info = ''
+    data.role = ''
     list.data = []
     list.oldData = []
     filter.keyword = ''
