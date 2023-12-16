@@ -31,6 +31,8 @@ import lombok.Data;
  **/
 @Data
 public class SlowSqlVO {
+    private String node_name;
+    private String db_name;
     private String start_time;
     private String finish_time;
     private String slow_sql_threshold;

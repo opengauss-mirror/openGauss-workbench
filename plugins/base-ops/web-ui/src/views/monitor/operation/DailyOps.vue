@@ -406,8 +406,8 @@ import { clusterMonitor, delCluster, uninstallOpenGauss, clusterList, start, sto
 import { useWinBox } from 'vue-winbox'
 import 'xterm/css/xterm.css'
 import { Terminal } from 'xterm'
-import { FitAddon } from 'xterm-addon-fit'
-import { AttachAddon } from 'xterm-addon-attach'
+import { FitAddon } from '@xterm/addon-fit'
+import { AttachAddon } from '@xterm/addon-attach'
 import Socket from '@/utils/websocket'
 import ClusterBackupDlg from '@/views/monitor/operation/ClusterBackupDlg.vue'
 import { ClusterRoleEnum, OpenGaussVersionEnum, CMStateEnum } from '@/types/ops/install'
@@ -966,8 +966,8 @@ const createXterm = (idName: string) => {
 const getTermObj = (): Terminal => {
   return new Terminal({
     fontSize: 14,
-    rows: 20,
-    cols: 100,
+    rows: 40,
+    cols: 200,
     cursorBlink: true,
     convertEol: true,
     disableStdin: false,

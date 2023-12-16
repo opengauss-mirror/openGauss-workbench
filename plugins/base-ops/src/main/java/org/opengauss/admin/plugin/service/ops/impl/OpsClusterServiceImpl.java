@@ -1086,15 +1086,14 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
 
     private List<SlowSqlVO> querySlowSql(Connection connection, String start, String end) {
         List<SlowSqlVO> res = new ArrayList<>();
-        String sql = "select * from DBE_PERF.get_global_full_sql_by_timestamp(?, ?)";
+        String sql = "select * from DBE_PERF.get_global_full_sql_by_timestamp('"+start+"', '"+end+"')";
         try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-
-            preparedStatement.setString(1, start);
-            preparedStatement.setString(2, end);
 
             ResultSet resultSet = preparedStatement.executeQuery();
             while (resultSet.next()) {
                 SlowSqlVO slowSqlVO = new SlowSqlVO();
+                slowSqlVO.setNode_name(resultSet.getString("node_name"));
+                slowSqlVO.setDb_name(resultSet.getString("db_name"));
                 slowSqlVO.setStart_time(resultSet.getString("start_time"));
                 slowSqlVO.setFinish_time(resultSet.getString("finish_time"));
                 slowSqlVO.setSlow_sql_threshold(resultSet.getString("slow_sql_threshold"));

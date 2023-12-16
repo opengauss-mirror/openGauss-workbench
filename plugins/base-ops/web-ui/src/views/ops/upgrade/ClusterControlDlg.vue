@@ -46,8 +46,8 @@ import { reactive, ref, nextTick } from 'vue'
 import { openSSH } from '@/api/ops'
 import { WsConnectType } from '@/types/ops/install'
 import { Terminal } from 'xterm'
-import { FitAddon } from 'xterm-addon-fit'
-import { AttachAddon } from 'xterm-addon-attach'
+import { FitAddon } from '@xterm/addon-fit'
+import { AttachAddon } from '@xterm/addon-attach'
 import 'xterm/css/xterm.css'
 import { useI18n } from 'vue-i18n'
 import { encryptPassword } from "@/utils/jsencrypt";
@@ -105,8 +105,8 @@ const initTerm = (term: Terminal, ws: WebSocket | undefined, item: KeyValue) => 
   if (ws) {
     const attachAddon = new AttachAddon(ws)
     const fitAddon = new FitAddon()
-    attachAddon.activate(term)
-    fitAddon.activate(term)
+    term.loadAddon(fitAddon)
+    term.loadAddon(attachAddon)
     term.open(document.getElementById('xterm_' + item.hostId) as HTMLElement)
     fitAddon.fit()
     term.clear()
@@ -121,7 +121,7 @@ const getTermObj = (): Terminal => {
     // rendererType: 'dom',
     fontSize: 14,
     rows: 40,
-    cols: 90,
+    cols: 200,
     cursorBlink: true,
     convertEol: true,
     disableStdin: false,

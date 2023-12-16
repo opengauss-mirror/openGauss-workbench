@@ -80,8 +80,8 @@ import { reactive, ref, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { hostListAll, openSSH } from '@/api/ops'
 import { WsConnectType } from '@/types/ops/install'
 import { Terminal } from 'xterm'
-import { FitAddon } from 'xterm-addon-fit'
-import { AttachAddon } from 'xterm-addon-attach'
+import { FitAddon } from '@xterm/addon-fit'
+import { AttachAddon } from '@xterm/addon-attach'
 import 'xterm/css/xterm.css'
 import HostPwdDlg from './HostPwdDlg.vue'
 import { debounce } from '@antv/x6/lib/util/function/function'
@@ -234,24 +234,10 @@ const initTerm = (term: Terminal, ws: WebSocket | undefined, index: number) => {
     term.loadAddon(attachAddon)
     term.loadAddon(fitAddon.value)
     term.open(document.getElementById(`xterm_${index}`) as HTMLElement)
-    // fitAddon.value.fit()
+    fitAddon.value.fit()
     term.clear()
     term.focus()
     term.write('\r\n\x1b[33m$\x1b[0m ')
-    let commandBuffer = '';
-    term.onData((data) => {
-      if (data === '\r') {
-        if (commandBuffer.indexOf('vi') > -1) {
-          term.clear()
-          setTimeout(() => {
-            term.scrollToTop()
-          }, 500)
-        }
-        commandBuffer = '';
-      } else {
-        commandBuffer += data;
-      }
-    })
     termTerminal.value = term
   }
 }
@@ -260,7 +246,7 @@ const getTermObj = (): Terminal => {
   const termConfig: any = {
     // rendererType: 'dom',
     fontSize: 14,
-    rows: 43,
+    rows: 40,
     cols: 200,
     cursorBlink: true,
     convertEol: true,

@@ -381,7 +381,7 @@ public class JschUtil {
             if (channelShell instanceof ChannelShell) {
                 channel = (ChannelShell) channelShell;
             }
-            channel.setPtySize(1000, 5000, 3000, 3000);
+            channel.setPtySize(200, 40, 200 * 8, 40 * 8);
             channel.connect(CHANNEL_TIMEOUT);
         } catch (JSchException e) {
             log.error("Channel establishment Exception", e);

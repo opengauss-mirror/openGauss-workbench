@@ -62,7 +62,7 @@ import { Terminal } from 'xterm'
 import Socket from '@/utils/websocket'
 import { installOlk } from '@/api/ops'
 import { useOpsStore } from '@/store'
-import { FitAddon } from 'xterm-addon-fit'
+import { FitAddon } from '@xterm/addon-fit'
 import { dataSourceDbList } from '@/api/modeling'
 import { ShardingDsConfig } from '@/types/ops/install'
 import { Message } from '@arco-design/web-vue'
@@ -97,8 +97,8 @@ const data = reactive<KeyValue>({
 const getTermObj = (): Terminal => {
   return new Terminal({
     fontSize: 14,
-    rows: 28,
-    cols: 100,
+    rows: 40,
+    cols: 200,
     cursorBlink: true,
     convertEol: true,
     disableStdin: false,

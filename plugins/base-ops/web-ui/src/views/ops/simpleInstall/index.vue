@@ -265,8 +265,8 @@ import {
 import Socket from '@/utils/websocket'
 import 'xterm/css/xterm.css'
 import { Terminal } from 'xterm'
-import { AttachAddon } from 'xterm-addon-attach'
-import { FitAddon } from 'xterm-addon-fit'
+import { FitAddon } from '@xterm/addon-fit'
+import { AttachAddon } from '@xterm/addon-attach'
 import { FormInstance } from '@arco-design/web-vue/es/form'
 import { encryptPassword } from '@/utils/jsencrypt'
 import { useI18n } from 'vue-i18n'
@@ -595,7 +595,7 @@ const getTermObj = (): Terminal => {
   return new Terminal({
     fontSize: 14,
     rows: 40,
-    cols: 100,
+    cols: 200,
     cursorBlink: true,
     convertEol: true,
     disableStdin: false,

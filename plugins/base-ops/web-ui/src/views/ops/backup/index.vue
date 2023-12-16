@@ -71,8 +71,8 @@ import { onMounted, reactive, computed } from 'vue'
 import { useWinBox } from 'vue-winbox'
 import 'xterm/css/xterm.css'
 import { Terminal } from 'xterm'
-import { FitAddon } from 'xterm-addon-fit'
-import { AttachAddon } from 'xterm-addon-attach'
+import { FitAddon } from '@xterm/addon-fit'
+import { AttachAddon } from '@xterm/addon-attach'
 import Socket from '@/utils/websocket'
 import { clusterList, backupPage, backupDel, clusterRecover } from '@/api/ops'
 import { useI18n } from 'vue-i18n'
@@ -223,7 +223,7 @@ const getTermObj = (): Terminal => {
   return new Terminal({
     fontSize: 14,
     rows: 40,
-    cols: 100,
+    cols: 200,
     cursorBlink: true,
     convertEol: true,
     disableStdin: false,

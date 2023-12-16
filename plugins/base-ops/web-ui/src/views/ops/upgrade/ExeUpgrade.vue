@@ -154,8 +154,8 @@
 <script lang="ts" setup>
 import 'xterm/css/xterm.css'
 import { Terminal } from 'xterm'
-import { FitAddon } from 'xterm-addon-fit'
-import { KeyValue } from '@/types/global';
+import { FitAddon } from '@xterm/addon-fit'
+import { KeyValue } from '@/types/global'
 import { reactive, onMounted, ref, nextTick, computed, inject, watch } from 'vue'
 import Socket from '@/utils/websocket'
 import { upgrade, upgradeCommit, upgradeRollback, getSysUploadPath, download } from '@/api/ops'
@@ -463,7 +463,7 @@ const getTermObj = (): Terminal => {
   return new Terminal({
     fontSize: 14,
     rows: 40,
-    cols: 100,
+    cols: 200,
     cursorBlink: true,
     convertEol: true,
     disableStdin: false,
@@ -476,7 +476,7 @@ const getTermObj = (): Terminal => {
 
 const initPackageTerm = (term: Terminal, cluster: KeyValue) => {
   const fitAddon = new FitAddon()
-  fitAddon.activate(term)
+  term.loadAddon(fitAddon)
   term.open(document.getElementById(`xterm${cluster.name}`) as HTMLElement)
   fitAddon.fit()
   term.clear()
@@ -487,7 +487,7 @@ const initPackageTerm = (term: Terminal, cluster: KeyValue) => {
 const initTermLog = (term: Terminal, ws: WebSocket | undefined, cluster: KeyValue) => {
   if (ws) {
     const fitAddon = new FitAddon()
-    fitAddon.activate(term)
+    term.loadAddon(fitAddon)
     term.open(document.getElementById(`xterm${cluster.name}`) as HTMLElement)
     fitAddon.fit()
     term.clear()
