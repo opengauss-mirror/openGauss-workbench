@@ -1,3 +1,26 @@
+/*
+ *  Copyright (c) GBA-NCTI-ISDC. 2022-2024.
+ *
+ *  openGauss DataKit is licensed under Mulan PSL v2.
+ *  You can use this software according to the terms and conditions of the Mulan PSL v2.
+ *  You may obtain a copy of Mulan PSL v2 at:
+ *
+ *  http://license.coscl.org.cn/MulanPSL2
+ *
+ *  THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ *  EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ *  MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ *  See the Mulan PSL v2 for more details.
+ *  -------------------------------------------------------------------------
+ *
+ *  ElasticsearchProvider.java
+ *
+ *  IDENTIFICATION
+ *  plugins/observability-log-search/src/main/java/com/nctigba/observability/log/config/ElasticsearchProvider.java
+ *
+ *  -------------------------------------------------------------------------
+ */
+
 package com.nctigba.observability.log.config;
 
 import org.apache.http.HttpHost;
@@ -16,9 +39,9 @@ import org.springframework.stereotype.Component;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType.Type;
-import com.nctigba.observability.log.env.NctigbaEnv;
-import com.nctigba.observability.log.env.NctigbaEnv.type;
-import com.nctigba.observability.log.env.NctigbaEnvMapper;
+import com.nctigba.observability.log.model.entity.NctigbaEnvDO;
+import com.nctigba.observability.log.model.entity.NctigbaEnvDO.type;
+import com.nctigba.observability.log.mapper.NctigbaEnvMapper;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.json.jackson.JacksonJsonpMapper;
@@ -36,7 +59,7 @@ public class ElasticsearchProvider {
 
 	@Cacheable(cacheNames = "elastic-clients")
 	public ElasticsearchClient client() {
-		var env = envMapper.selectOne(Wrappers.<NctigbaEnv>lambdaQuery().eq(NctigbaEnv::getType, type.ELASTICSEARCH));
+		var env = envMapper.selectOne(Wrappers.<NctigbaEnvDO>lambdaQuery().eq(NctigbaEnvDO::getType, type.ELASTICSEARCH));
 		var host = hostFacade.getById(env.getHostid());
 		// Split ip when clustering
 		HttpHost[] httpHosts = { new HttpHost(host.getPublicIp(), env.getPort()) };

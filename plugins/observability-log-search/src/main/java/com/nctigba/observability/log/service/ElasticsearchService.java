@@ -1,4 +1,27 @@
 
+/*
+ *  Copyright (c) GBA-NCTI-ISDC. 2022-2024.
+ *
+ *  openGauss DataKit is licensed under Mulan PSL v2.
+ *  You can use this software according to the terms and conditions of the Mulan PSL v2.
+ *  You may obtain a copy of Mulan PSL v2 at:
+ *
+ *  http://license.coscl.org.cn/MulanPSL2
+ *
+ *  THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ *  EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ *  MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ *  See the Mulan PSL v2 for more details.
+ *  -------------------------------------------------------------------------
+ *
+ *  ElasticsearchService.java
+ *
+ *  IDENTIFICATION
+ *  plugins/observability-log-search/src/main/java/com/nctigba/observability/log/service/ElasticsearchService.java
+ *
+ *  -------------------------------------------------------------------------
+ */
+
 package com.nctigba.observability.log.service;
 
 import java.io.File;
@@ -15,8 +38,8 @@ import org.springframework.stereotype.Service;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.nctigba.observability.log.config.ElasticsearchProvider;
-import com.nctigba.observability.log.env.NctigbaEnv;
-import com.nctigba.observability.log.env.NctigbaEnv.type;
+import com.nctigba.observability.log.model.entity.NctigbaEnvDO;
+import com.nctigba.observability.log.model.entity.NctigbaEnvDO.type;
 import com.nctigba.observability.log.service.AbstractInstaller.Step.status;
 import com.nctigba.observability.log.util.Download;
 import com.nctigba.observability.log.util.SshSession;
@@ -60,10 +83,10 @@ public class ElasticsearchService extends AbstractInstaller {
         try {
             curr = nextStep(wsSession, steps, curr);
             var env = envMapper
-                    .selectOne(Wrappers.<NctigbaEnv>lambdaQuery().eq(NctigbaEnv::getType, type.ELASTICSEARCH));
+                    .selectOne(Wrappers.<NctigbaEnvDO>lambdaQuery().eq(NctigbaEnvDO::getType, type.ELASTICSEARCH));
             if (env != null)
                 throw new RuntimeException("elasticsearch exists");
-            env = new NctigbaEnv().setHostid(hostId).setPort(port).setPath(path).setType(type.ELASTICSEARCH)
+            env = new NctigbaEnvDO().setHostid(hostId).setPort(port).setPath(path).setType(type.ELASTICSEARCH)
                     .setPath(SRC);
             // 生成数据库记录,入库
             envMapper.insert(env);
@@ -101,11 +124,11 @@ public class ElasticsearchService extends AbstractInstaller {
                     String tar = name + TAR;
                     if (!session.test(command.STAT.parse(SRC))) {
                         if (!session.test(command.STAT.parse(tar))) {
-                            var pkg = envMapper.selectOne(Wrappers.<NctigbaEnv>lambdaQuery()
-                                    .eq(NctigbaEnv::getType, type.ELASTICSEARCH_PKG).like(NctigbaEnv::getPath, tar));
+                            var pkg = envMapper.selectOne(Wrappers.<NctigbaEnvDO>lambdaQuery()
+                                    .eq(NctigbaEnvDO::getType, type.ELASTICSEARCH_PKG).like(NctigbaEnvDO::getPath, tar));
                             if (pkg == null) {
                                 var f = Download.download(PATH + tar, "pkg/" + tar);
-                                pkg = new NctigbaEnv().setPath(f.getCanonicalPath()).setType(type.ELASTICSEARCH_PKG);
+                                pkg = new NctigbaEnvDO().setPath(f.getCanonicalPath()).setType(type.ELASTICSEARCH_PKG);
                                 addMsg(wsSession, steps, curr, "elastic.install.download.success");
                                 save(pkg);
                             }

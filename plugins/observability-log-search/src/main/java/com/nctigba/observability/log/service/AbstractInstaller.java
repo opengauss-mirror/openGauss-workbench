@@ -1,3 +1,26 @@
+/*
+ *  Copyright (c) GBA-NCTI-ISDC. 2022-2024.
+ *
+ *  openGauss DataKit is licensed under Mulan PSL v2.
+ *  You can use this software according to the terms and conditions of the Mulan PSL v2.
+ *  You may obtain a copy of Mulan PSL v2 at:
+ *
+ *  http://license.coscl.org.cn/MulanPSL2
+ *
+ *  THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ *  EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ *  MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ *  See the Mulan PSL v2 for more details.
+ *  -------------------------------------------------------------------------
+ *
+ *  AbstractInstaller.java
+ *
+ *  IDENTIFICATION
+ *  plugins/observability-log-search/src/main/java/com/nctigba/observability/log/service/AbstractInstaller.java
+ *
+ *  -------------------------------------------------------------------------
+ */
+
 package com.nctigba.observability.log.service;
 
 import java.net.http.WebSocket;
@@ -17,8 +40,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType.Type;
-import com.nctigba.observability.log.env.NctigbaEnv;
-import com.nctigba.observability.log.env.NctigbaEnvMapper;
+import com.nctigba.observability.log.model.entity.NctigbaEnvDO;
+import com.nctigba.observability.log.mapper.NctigbaEnvMapper;
 import com.nctigba.observability.log.service.AbstractInstaller.Step.status;
 import com.nctigba.observability.log.util.MessageSourceUtil;
 
@@ -100,9 +123,9 @@ public abstract class AbstractInstaller {
 		wsUtil.sendText(wsSession, JSONUtil.toJsonStr(steps));
 	}
 
-	public void save(NctigbaEnv env) {
-		if (envMapper.selectOne(Wrappers.<NctigbaEnv>lambdaQuery().eq(NctigbaEnv::getType, env.getType())
-				.eq(NctigbaEnv::getPath, env.getPath())) == null)
+	public void save(NctigbaEnvDO env) {
+		if (envMapper.selectOne(Wrappers.<NctigbaEnvDO>lambdaQuery().eq(NctigbaEnvDO::getType, env.getType())
+				.eq(NctigbaEnvDO::getPath, env.getPath())) == null)
 			envMapper.insert(env);
 	}
 

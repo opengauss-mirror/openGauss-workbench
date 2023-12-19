@@ -40,6 +40,8 @@ export default {
         logSearchTable: ['Time', 'Type', 'level', 'Log', 'Cluster ID', 'Instance ID'],
         logContext: 'Log Context',
         logContextPlaceholder: 'select please',
+        showInfoTitleTip: 'Support for Lucene syntax',
+        showInfoContextTip: "Lucene syntax:\n(1) Single word query: word\n(2) Multiple word query: word1 word2 or word1,word2 (support comma and space as separators)\n(3) Field query: field:word\n(4) Wildcard query: wo?d or wo* (? matches a single character, * matches zero or more characters)\n(5) Fuzzy query: wo~0.1 (fuzziness factor [0-1])\n(6) Proximity query: &#34keyword word&#34~1 (maximum edit distance allowed)\n(7) Range query: field:&#91 10 TO 20 &#125 (&#91&#93 includes the boundary values, &#123&#125 excludes the boundary values)\n(8) Boosted query: word1 word2^2 (relevance score, default is 1)\n(9) Logical operation query: word1 AND word2 OR word3 NOT word4 +word5 -word6 (AND, OR, NOT, +, -)\n(10) Nested query: word1 OR (word2 AND word3) (grouping with parentheses)\n(11) Escaping special characters: &#47 (supports escaping + - &#38&#38 &#124&#124 &#33 ( ) &#123 &#125 &#91 &#93 &#94 &#34 &#126 * &#63 : &#47)",
     },
     install: {
         pkg: 'node exporter',
