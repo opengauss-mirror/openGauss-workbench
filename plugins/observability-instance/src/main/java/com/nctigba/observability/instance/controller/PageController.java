@@ -1,5 +1,24 @@
 /*
- * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ *  Copyright (c) GBA-NCTI-ISDC. 2022-2024.
+ *
+ *  openGauss DataKit is licensed under Mulan PSL v2.
+ *  You can use this software according to the terms and conditions of the Mulan PSL v2.
+ *  You may obtain a copy of Mulan PSL v2 at:
+ *
+ *  http://license.coscl.org.cn/MulanPSL2
+ *
+ *  THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ *  EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ *  MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ *  See the Mulan PSL v2 for more details.
+ *  -------------------------------------------------------------------------
+ *
+ *  PageController.java
+ *
+ *  IDENTIFICATION
+ *  plugins/observability-instance/src/main/java/com/nctigba/observability/instance/controller/PageController.java
+ *
+ *  -------------------------------------------------------------------------
  */
 
 package com.nctigba.observability.instance.controller;
@@ -9,18 +28,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.nctigba.observability.instance.service.DbConfigService;
 import org.opengauss.admin.common.core.domain.AjaxResult;
 import org.springframework.context.MessageSource;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.nctigba.observability.instance.aop.Ds;
-import com.nctigba.observability.instance.constants.MetricsLine;
-import com.nctigba.observability.instance.constants.MetricsValue;
+import com.nctigba.observability.instance.enums.MetricsLine;
+import com.nctigba.observability.instance.enums.MetricsValue;
 import com.nctigba.observability.instance.mapper.DbConfigMapper;
 import com.nctigba.observability.instance.service.MetricsService;
-import com.nctigba.observability.instance.util.Language;
+import com.nctigba.observability.instance.util.LanguageUtils;
 
 import lombok.RequiredArgsConstructor;
 
@@ -49,7 +68,9 @@ public class PageController extends ControllerConfig {
             MetricsLine.IO_UTIL,
             MetricsLine.IO_AVG_REPONSE_TIME_READ,
             MetricsLine.IO_AVG_REPONSE_TIME_WRITE,
-            MetricsLine.IO_AVG_REPONSE_TIME_RW
+            MetricsLine.IO_AVG_REPONSE_TIME_RW,
+            MetricsLine.IO_DISK_USAGE,
+            MetricsLine.IO_DISK_INODE_USAGE
     };
 
     private static final MetricsValue[] IO_TABLE = {
@@ -70,7 +91,11 @@ public class PageController extends ControllerConfig {
             MetricsLine.NETWORK_TCP_INSEGS,
             MetricsLine.NETWORK_TCP_OUTSEGS,
             MetricsLine.NETWORK_TCP_SOCKET,
-            MetricsLine.NETWORK_UDP_SOCKET
+            MetricsLine.NETWORK_UDP_SOCKET,
+            MetricsLine.NETWORK_LOST_PACKAGE_IN,
+            MetricsLine.NETWORK_LOST_PACKAGE_OUT,
+            MetricsLine.NETWORK_ERR_PACKAGE_IN,
+            MetricsLine.NETWORK_ERR_PACKAGE_OUT
     };
 
     private static final MetricsValue[] NETWORK_TABLE = {
@@ -86,15 +111,32 @@ public class PageController extends ControllerConfig {
             MetricsValue.NETWORK_TXFIFO
     };
     private static final MetricsLine[] INSTANCE = {
-            MetricsLine.INSTANCE_TPS_COMMIT,
-            MetricsLine.INSTANCE_TPS_ROLLBACK,
-            MetricsLine.INSTANCE_TPS_CR,
-            MetricsLine.INSTANCE_QPS,
-            MetricsLine.INSTANCE_DB_CONNECTION_ACTIVE,
-            MetricsLine.INSTANCE_DB_CONNECTION_IDLE,
-            MetricsLine.INSTANCE_DB_CONNECTION_CURR,
-            MetricsLine.INSTANCE_DB_CONNECTION_TOTAL,
-            MetricsLine.INSTANCE_DB_SLOWSQL
+        MetricsLine.INSTANCE_DB_CONNECTION_ACTIVE,
+        MetricsLine.INSTANCE_DB_CONNECTION_IDLE,
+        MetricsLine.INSTANCE_DB_CONNECTION_CURR,
+        MetricsLine.INSTANCE_DB_CONNECTION_TOTAL,
+        MetricsLine.INSTANCE_DB_SLOWSQL,
+        MetricsLine.INSTANCE_DB_RESPONSETIME_P80,
+        MetricsLine.INSTANCE_DB_RESPONSETIME_P95,
+        MetricsLine.INSTANCE_DB_DATABASE_BLK
+    };
+
+    private static final MetricsLine[] INSTANCE_OVERLOAD = {
+        MetricsLine.INSTANCE_TPS_COMMIT,
+        MetricsLine.INSTANCE_TPS_ROLLBACK,
+        MetricsLine.INSTANCE_TPS_CR,
+        MetricsLine.INSTANCE_QPS,
+        MetricsLine.INSTANCE_DB_DATABASE_INS,
+        MetricsLine.INSTANCE_DB_DATABASE_UPD,
+        MetricsLine.INSTANCE_DB_DATABASE_DEL,
+        MetricsLine.INSTANCE_DB_DATABASE_RETURN,
+        MetricsLine.INSTANCE_DB_DATABASE_FECTH,
+        MetricsLine.INSTANCE_DB_BGWRITER_CHECKPOINT,
+        MetricsLine.INSTANCE_DB_BGWRITER_CLEAN,
+        MetricsLine.INSTANCE_DB_BGWRITER_BACKEND
+    };
+    private static final MetricsLine[] INSTANCE_TABLESPACE = {
+        MetricsLine.PG_TABLESPACE_SIZE
     };
     private static final MetricsLine[] WAIT_EVENT = {
             MetricsLine.WAIT_EVENT_COUNT
@@ -103,27 +145,27 @@ public class PageController extends ControllerConfig {
     private final MetricsService metricsService;
     private final DbConfigMapper dbConfigMapper;
     private final MessageSource messageSource;
-    private final Language language;
+    private final LanguageUtils language;
+    private final DbConfigService dbConfigService;
 
+    /**
+     * get memory index data
+     *
+     * @param id nodeId
+     * @param start start time
+     * @param end end time
+     * @param step step
+     * @return Map<String, Object>
+     */
     @GetMapping("memory")
-    @Ds
     public Map<String, Object> memory(String id, Long start, Long end, Integer step) {
         Map<String, Object> batch = metricsService.listBatch(MEMORY, id, start, end, step);
-        // memory node detail
-        List<Map<String, Object>> memoryNodeDetail = dbConfigMapper.memoryNodeDetail();
-        memoryNodeDetail.forEach(map -> {
-            var str = map.get("memorytype").toString();
-            map.put("desc", messageSource.getMessage("memory.node." + str, null, str, language.getLocale()));
-        });
-        batch.put("memoryNodeDetail", memoryNodeDetail);
-        // memory config detail
-        List<Map<String, Object>> memoryConfig = dbConfigMapper.memoryConfig();
-        memoryConfig.forEach(map -> {
-            var str = map.get("name").toString();
-            map.put("desc", messageSource.getMessage("memory.config." + str, null, str, language.getLocale()));
-        });
+        batch.putAll(dbConfigService.getMemoryDetail(id));
         // db memory
-        var total = Long.parseLong(batch.get(MetricsValue.MEM_TOTAL.name()).toString());
+        if (batch.get(MetricsValue.MEM_TOTAL.name()) == null) {
+            return AjaxResult.success(batch);
+        }
+        Long total = Long.parseLong(batch.get(MetricsValue.MEM_TOTAL.name()).toString());
         var percents = batch.get(MetricsLine.MEMORY_DB_USED.name());
         if (percents instanceof List) {
             var listPercents = (List<?>) percents;
@@ -132,11 +174,18 @@ public class PageController extends ControllerConfig {
                 batch.put("MEMORY_DB_USED_CURR", total * ((Number) percent).doubleValue() / 100);
             }
         }
-
-        batch.put("memoryConfig", memoryConfig);
         return AjaxResult.success(batch);
     }
 
+    /**
+     * get IO index data
+     *
+     * @param id nodeId
+     * @param start start time
+     * @param end end time
+     * @param step step
+     * @return Map<String, Object>
+     */
     @SuppressWarnings("unchecked")
     @GetMapping("io")
     public Map<String, Object> io(String id, Long start, Long end, Integer step) {
@@ -161,6 +210,15 @@ public class PageController extends ControllerConfig {
         return AjaxResult.success(io);
     }
 
+    /**
+     * get network index data
+     *
+     * @param id nodeId
+     * @param start start time
+     * @param end end time
+     * @param step step
+     * @return Map<String, Object>
+     */
     @SuppressWarnings("unchecked")
     @GetMapping("network")
     public Map<String, Object> network(String id, Long start, Long end, Integer step) {
@@ -185,11 +243,63 @@ public class PageController extends ControllerConfig {
         return AjaxResult.success(network);
     }
 
+    /**
+     * get instance data
+     *
+     * @param id nodeId
+     * @param start start time
+     * @param end end time
+     * @param step step
+     * @return Map<String, Object>
+     */
     @GetMapping("instance")
     public Map<String, Object> instance(String id, Long start, Long end, Integer step) {
-        return AjaxResult.success(metricsService.listBatch(INSTANCE, id, start, end, step));
+        Map<String, Object> result = metricsService.listBatch(INSTANCE, id, start, end, step);
+        List<Map<String, Object>> cacheHitList = dbConfigService.cacheHit(id);
+        result.put("cacheHit", cacheHitList);
+        return AjaxResult.success(result);
     }
 
+    /**
+     * get instance overload data
+     *
+     * @param id nodeId
+     * @param start start time
+     * @param end end time
+     * @param step step
+     * @return Map<String, Object>
+     */
+    @GetMapping("instanceOverload")
+    public Map<String, Object> instanceInfo(String id, Long start, Long end, Integer step) {
+        return AjaxResult.success(metricsService.listBatch(INSTANCE_OVERLOAD, id, start, end, step));
+    }
+
+    /**
+     * get instance tablespace data
+     *
+     * @param id nodeId
+     * @param start start time
+     * @param end end time
+     * @param step step
+     * @return Map<String, Object>
+     */
+    @GetMapping("instanceTablespace")
+    public Map<String, Object> instanceTablespace(String id, Long start, Long end, Integer step) {
+        Map<String, Object> result = metricsService.listBatch(INSTANCE_TABLESPACE, id, start, end, step);
+        Map<String, Object> tablespaceData = dbConfigService.tablespaceData(id);
+        result.putAll(tablespaceData);
+        return AjaxResult.success(result);
+    }
+
+    /**
+     * get wait event data
+     *
+     * @param id nodeId
+     * @param start start time
+     * @param end end time
+     * @param step step
+     * @return Map<String, Object>
+     */
     @GetMapping("wait_event")
     public Map<String, Object> waitEvent(String id, Long start, Long end, Integer step) {
         return AjaxResult.success(metricsService.listBatch(WAIT_EVENT, id, start, end, step));

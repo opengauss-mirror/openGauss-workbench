@@ -1,5 +1,24 @@
 /*
- * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ *  Copyright (c) GBA-NCTI-ISDC. 2022-2024.
+ *
+ *  openGauss DataKit is licensed under Mulan PSL v2.
+ *  You can use this software according to the terms and conditions of the Mulan PSL v2.
+ *  You may obtain a copy of Mulan PSL v2 at:
+ *
+ *  http://license.coscl.org.cn/MulanPSL2
+ *
+ *  THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ *  EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ *  MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ *  See the Mulan PSL v2 for more details.
+ *  -------------------------------------------------------------------------
+ *
+ *  IndexController.java
+ *
+ *  IDENTIFICATION
+ *  plugins/observability-instance/src/main/java/com/nctigba/observability/instance/controller/IndexController.java
+ *
+ *  -------------------------------------------------------------------------
  */
 
 package com.nctigba.observability.instance.controller;
@@ -23,14 +42,14 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType.Type;
-import com.nctigba.observability.instance.aop.Ds;
-import com.nctigba.observability.instance.constants.MetricsLine;
+import com.nctigba.observability.instance.aspectj.annotation.Ds;
+import com.nctigba.observability.instance.enums.MetricsLine;
 import com.nctigba.observability.instance.mapper.DbConfigMapper;
 import com.nctigba.observability.instance.service.ClusterManager;
 import com.nctigba.observability.instance.service.MetricsService;
 import com.nctigba.observability.instance.service.SessionService;
 import com.nctigba.observability.instance.service.TopSQLService;
-import com.nctigba.observability.instance.util.SshSession;
+import com.nctigba.observability.instance.util.SshSessionUtils;
 
 import cn.hutool.core.util.StrUtil;
 import lombok.extern.log4j.Log4j2;
@@ -99,7 +118,7 @@ public class IndexController extends ControllerConfig {
         var user = hostUserFacade.listHostUserByHostId(hostEntity.getHostId()).stream().filter(e -> {
             return node.getInstallUserName().equals(e.getUsername());
         }).findFirst().orElse(null);
-        try (var session = SshSession.connect(hostEntity.getPublicIp(), hostEntity.getPort(), node.getInstallUserName(),
+        try (var session = SshSessionUtils.connect(hostEntity.getPublicIp(), hostEntity.getPort(), node.getInstallUserName(),
                 encryptionUtils.decrypt(user.getPassword()));) {
             result.put("osVersion", session.execute("cat /etc/system-release"));
             result.put("CPUmanufacturer", session.execute("cat /proc/cpuinfo | grep 'vendor_id' | head -n 1 | "
@@ -144,9 +163,10 @@ public class IndexController extends ControllerConfig {
             return AjaxResult.success();
         }
         try {
-            var blockAndLongTxc = sessionService.blockAndLongTxc(id);
+            Map<String, Object> blockAndLongTxc = sessionService.blockAndLongTxc(id);
             blockAndLongTxc.put("topSQLNow", topSQLService.topSQLNow(id));
             blockAndLongTxc.put("waitEvents", configMapper.waitEvents());
+            blockAndLongTxc.put("waitEventTotal", configMapper.waitEventTotal());
             return AjaxResult.success(blockAndLongTxc);
         } catch (MyBatisSystemException e) {
             log.error("connection fail");

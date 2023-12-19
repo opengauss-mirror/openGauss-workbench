@@ -1,5 +1,24 @@
 /*
- * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ *  Copyright (c) GBA-NCTI-ISDC. 2022-2024.
+ *
+ *  openGauss DataKit is licensed under Mulan PSL v2.
+ *  You can use this software according to the terms and conditions of the Mulan PSL v2.
+ *  You may obtain a copy of Mulan PSL v2 at:
+ *
+ *  http://license.coscl.org.cn/MulanPSL2
+ *
+ *  THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ *  EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ *  MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ *  See the Mulan PSL v2 for more details.
+ *  -------------------------------------------------------------------------
+ *
+ *  IndexControllerTest.java
+ *
+ *  IDENTIFICATION
+ *  plugins/observability-instance/src/test/java/com/nctigba/observability/instance/controller/IndexControllerTest.java
+ *
+ *  -------------------------------------------------------------------------
  */
 
 package com.nctigba.observability.instance.controller;
@@ -32,7 +51,7 @@ import com.nctigba.observability.instance.service.ClusterManager.OpsClusterNodeV
 import com.nctigba.observability.instance.service.MetricsService;
 import com.nctigba.observability.instance.service.SessionService;
 import com.nctigba.observability.instance.service.TopSQLService;
-import com.nctigba.observability.instance.util.SshSession;
+import com.nctigba.observability.instance.util.SshSessionUtils;
 
 /**
  * IndexControllerTest.java
@@ -50,7 +69,7 @@ class IndexControllerTest {
     @Mock
     private SessionService sessionService;
     @Mock
-    private SshSession sshSession;
+    private SshSessionUtils sshSession;
     @Mock
     private DbConfigMapper configMapper;
     @Mock
@@ -86,8 +105,8 @@ class IndexControllerTest {
     void test() {
         indexController.mainMetrics("id", null, null, null);
         indexController.topSQLNow("id");
-        try (MockedStatic<SshSession> mockStatic = mockStatic(SshSession.class);) {
-            mockStatic.when(() -> SshSession.connect(anyString(), anyInt(), anyString(), anyString()))
+        try (MockedStatic<SshSessionUtils> mockStatic = mockStatic(SshSessionUtils.class);) {
+            mockStatic.when(() -> SshSessionUtils.connect(anyString(), anyInt(), anyString(), anyString()))
                     .thenReturn(sshSession);
             indexController.nodeInfo("id");
         }

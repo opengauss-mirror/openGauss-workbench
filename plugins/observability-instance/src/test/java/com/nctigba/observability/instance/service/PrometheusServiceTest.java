@@ -1,5 +1,24 @@
 /*
- * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ *  Copyright (c) GBA-NCTI-ISDC. 2022-2024.
+ *
+ *  openGauss DataKit is licensed under Mulan PSL v2.
+ *  You can use this software according to the terms and conditions of the Mulan PSL v2.
+ *  You may obtain a copy of Mulan PSL v2 at:
+ *
+ *  http://license.coscl.org.cn/MulanPSL2
+ *
+ *  THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ *  EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ *  MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ *  See the Mulan PSL v2 for more details.
+ *  -------------------------------------------------------------------------
+ *
+ *  PrometheusServiceTest.java
+ *
+ *  IDENTIFICATION
+ *  plugins/observability-instance/src/test/java/com/nctigba/observability/instance/service/PrometheusServiceTest.java
+ *
+ *  -------------------------------------------------------------------------
  */
 
 package com.nctigba.observability.instance.service;
@@ -29,11 +48,11 @@ import org.opengauss.admin.system.plugin.facade.HostFacade;
 import org.opengauss.admin.system.plugin.facade.HostUserFacade;
 import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
 
-import com.nctigba.observability.instance.entity.NctigbaEnv;
+import com.nctigba.observability.instance.model.entity.NctigbaEnvDO;
 import com.nctigba.observability.instance.mapper.NctigbaEnvMapper;
-import com.nctigba.observability.instance.util.Download;
-import com.nctigba.observability.instance.util.MessageSourceUtil;
-import com.nctigba.observability.instance.util.SshSession;
+import com.nctigba.observability.instance.util.DownloadUtils;
+import com.nctigba.observability.instance.util.MessageSourceUtils;
+import com.nctigba.observability.instance.util.SshSessionUtils;
 
 import cn.hutool.http.HttpUtil;
 
@@ -57,7 +76,7 @@ class PrometheusServiceTest {
     @Mock
     private WsUtil wsUtil;
     @Mock
-    private SshSession sshSession;
+    private SshSessionUtils sshSession;
 
     @BeforeEach
     void setup() throws IOException {
@@ -67,7 +86,7 @@ class PrometheusServiceTest {
         host.setPort(123);
         when(hostFacade.getById(any())).thenReturn(host);
         when(envMapper.selectById(any()))
-                .thenReturn(new NctigbaEnv().setHostid("id").setUsername("name").setPort(9999));
+                .thenReturn(new NctigbaEnvDO().setHostid("id").setUsername("name").setPort(9999));
 
         OpsHostUserEntity user = new OpsHostUserEntity();
         user.setUsername("name");
@@ -79,20 +98,22 @@ class PrometheusServiceTest {
 
     @Test
     void test() throws IOException {
-        try (MockedStatic<SshSession> mockStatic = mockStatic(SshSession.class);
-                MockedStatic<MessageSourceUtil> msg = mockStatic(MessageSourceUtil.class);
-                MockedStatic<HttpUtil> util = mockStatic(HttpUtil.class);
-                MockedStatic<Download> down = mockStatic(Download.class);) {
+        try (MockedStatic<SshSessionUtils> mockStatic = mockStatic(SshSessionUtils.class);
+             MockedStatic<MessageSourceUtils> msg = mockStatic(MessageSourceUtils.class);
+             MockedStatic<HttpUtil> util = mockStatic(HttpUtil.class);
+             MockedStatic<DownloadUtils> down = mockStatic(DownloadUtils.class);) {
             when(sshSession.execute(anyString())).thenReturn("scrape_configs:" + System.lineSeparator()
                     + "- scheme: http" + System.lineSeparator() + "  job_name: prometheus" + System.lineSeparator()
                     + "  static_configs:" + System.lineSeparator() + "  - targets:" + System.lineSeparator()
                     + "    - localhost:9090");
-            mockStatic.when(() -> SshSession.connect(anyString(), anyInt(), anyString(), anyString()))
+            mockStatic.when(() -> SshSessionUtils.connect(anyString(), anyInt(), anyString(), anyString()))
                     .thenReturn(sshSession);
-            msg.when(() -> MessageSourceUtil.get(anyString())).thenReturn("");
+            msg.when(() -> MessageSourceUtils.get(anyString())).thenReturn("");
             util.when(() -> HttpUtil.get(anyString())).thenReturn("succ");
-            down.when(() -> Download.download(anyString(), anyString())).thenReturn(File.createTempFile("test", "tmp"));
-            prometheusService.install(new WsSession(null, "id"), "id", "", "name", "password", 9998);
+            down.when(() -> DownloadUtils.download(anyString(), anyString()))
+                    .thenReturn(File.createTempFile("test", "tmp"));
+            prometheusService.install(new WsSession(null, "id"), "id", "",
+                    "name", "password", 9998, "storageDays");
             prometheusService.uninstall(new WsSession(null, "id"), "id");
         }
     }

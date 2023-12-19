@@ -1,7 +1,3 @@
-#
-# Copyright (c) 2023 Huawei Technologies Co.,Ltd.
-#
-
 ## Spring配置
 context:
   listener:
@@ -32,9 +28,24 @@ spring:
         connection-error-retry-attempts: 3
         break-after-acquire-failure: false
         time-between-connect-error-millis: 60000
-        max-wait: 3000
+        max-wait: 300000
         connection-properties:
           ApplicationName: DataKit Instance Monitoring
+        remove-abandoned: true
+        remove-abandoned-timeout-millis: 300000
+        log-abandoned: true
+        max-active: 20
+      datasource:
+        embedded:
+#          url: jdbc:intarkdb:data/observability-instance-data
+#          driverClassName: org.intarkdb.IntarkDBJDBC
+          url: jdbc:sqlite:data/observability-instance-data.db
+          driverClassName: org.sqlite.JDBC
+          init:
+            schema: db/schema.sql
+            data: db/data.sql
+            continue-on-error: true
+            separator: ";"
   jackson:
     time-zone: GMT+8
     date-format: yyyy-MM-dd HH:mm:ss

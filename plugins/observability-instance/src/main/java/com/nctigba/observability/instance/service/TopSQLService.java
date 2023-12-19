@@ -1,5 +1,24 @@
 /*
- * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ *  Copyright (c) GBA-NCTI-ISDC. 2022-2024.
+ *
+ *  openGauss DataKit is licensed under Mulan PSL v2.
+ *  You can use this software according to the terms and conditions of the Mulan PSL v2.
+ *  You may obtain a copy of Mulan PSL v2 at:
+ *
+ *  http://license.coscl.org.cn/MulanPSL2
+ *
+ *  THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ *  EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ *  MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ *  See the Mulan PSL v2 for more details.
+ *  -------------------------------------------------------------------------
+ *
+ *  TopSQLService.java
+ *
+ *  IDENTIFICATION
+ *  plugins/observability-instance/src/main/java/com/nctigba/observability/instance/service/TopSQLService.java
+ *
+ *  -------------------------------------------------------------------------
  */
 
 package com.nctigba.observability.instance.service;
@@ -20,13 +39,13 @@ import org.opengauss.admin.common.exception.CustomException;
 import org.springframework.stereotype.Service;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.nctigba.observability.instance.aop.Ds;
-import com.nctigba.observability.instance.dto.topsql.TopSQLListReq;
-import com.nctigba.observability.instance.entity.PgSettings;
+import com.nctigba.observability.instance.aspectj.annotation.Ds;
+import com.nctigba.observability.instance.model.query.TopSQLListQuery;
+import com.nctigba.observability.instance.model.entity.PgSettingsDO;
 import com.nctigba.observability.instance.mapper.PgSettingMapper;
 import com.nctigba.observability.instance.mapper.TopSqlMapper;
-import com.nctigba.observability.instance.model.ExecutionPlan;
-import com.nctigba.observability.instance.model.IndexAdvice;
+import com.nctigba.observability.instance.model.dto.ExecutionPlanDTO;
+import com.nctigba.observability.instance.model.dto.IndexAdviceDTO;
 import com.nctigba.observability.instance.service.TopSQLService.WaitEvent.Event;
 
 import cn.hutool.core.collection.CollUtil;
@@ -55,7 +74,7 @@ public class TopSQLService {
      * @return TopSQL list
      */
     @Ds("id")
-    public List<Map<String, Object>> topSQLList(TopSQLListReq topSQLListReq) {
+    public List<Map<String, Object>> topSQLList(TopSQLListQuery topSQLListReq) {
         topSqlListPreCheck();
         return topSqlMapper.historyTopsqlList(topSQLListReq);
     }
@@ -95,14 +114,14 @@ public class TopSQLService {
      * @return TopSQL execution plan
      */
     @Ds
-    public ExecutionPlan executionPlan(String nodeId, String sqlId) {
+    public ExecutionPlanDTO executionPlan(String nodeId, String sqlId) {
         String plan = topSqlMapper.currentPlan(sqlId);
         if (StrUtil.isNotBlank(plan)) {
-            return new ExecutionPlan(plan);
+            return new ExecutionPlanDTO(plan);
         }
         // pre-check track_stmt_stat_leve full sql level at least L1
         var settings = pgSettingMapper
-                .selectOne(Wrappers.<PgSettings>lambdaQuery().eq(PgSettings::getName, "track_stmt_stat_level"));
+                .selectOne(Wrappers.<PgSettingsDO>lambdaQuery().eq(PgSettingsDO::getName, "track_stmt_stat_level"));
         var setting = settings.getSetting();
         if (StringUtils.startsWith(setting, "OFF") || StringUtils.startsWith(setting, "L0")) {
             throw new CustomException("failGetExecutionPlan");
@@ -110,7 +129,7 @@ public class TopSQLService {
         // get prepared statement
         plan = topSqlMapper.historyPlan(sqlId);
         // get base execution plan object
-        return new ExecutionPlan(plan);
+        return new ExecutionPlanDTO(plan);
     }
 
     /**
@@ -161,7 +180,7 @@ public class TopSQLService {
             return results;
         }
         // process index advice for every returned line
-        for (IndexAdvice advice : advises) {
+        for (IndexAdviceDTO advice : advises) {
             String column = advice.getColumn();
             if (StringUtils.isNotEmpty(column)) {
                 String result = column.contains(",") ? multiColumnIndexTemplate : indexTemplate;
@@ -202,18 +221,18 @@ public class TopSQLService {
      * true when not log; false when can search log
      */
     private void topSqlListPreCheck() {
-        var list = pgSettingMapper.selectList(Wrappers.<PgSettings>lambdaQuery().in(PgSettings::getName,
+        var list = pgSettingMapper.selectList(Wrappers.<PgSettingsDO>lambdaQuery().in(PgSettingsDO::getName,
                 "enable_stmt_track", "enable_resource_track", "track_stmt_stat_level'"));
-        for (PgSettings pgSettings : list) {
-            switch (pgSettings.getName()) {
+        for (PgSettingsDO pgSettingsDO : list) {
+            switch (pgSettingsDO.getName()) {
             case "enable_resource_track":
             case "enable_stmt_track":
-                if ("off".equals(pgSettings.getSetting())) {
+                if ("off".equals(pgSettingsDO.getSetting())) {
                     throw new CustomException("top sql pre check fail", 602);
                 }
                 break;
             case "track_stmt_stat_level":
-                var setting = pgSettings.getSetting();
+                var setting = pgSettingsDO.getSetting();
                 if (StringUtils.isEmpty(setting) || !setting.contains(",")) {
                     throw new CustomException("top sql pre check fail", 602);
                 }

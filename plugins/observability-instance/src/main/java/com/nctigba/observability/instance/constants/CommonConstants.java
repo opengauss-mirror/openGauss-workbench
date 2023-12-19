@@ -1,5 +1,24 @@
 /*
- * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ *  Copyright (c) GBA-NCTI-ISDC. 2022-2024.
+ *
+ *  openGauss DataKit is licensed under Mulan PSL v2.
+ *  You can use this software according to the terms and conditions of the Mulan PSL v2.
+ *  You may obtain a copy of Mulan PSL v2 at:
+ *
+ *  http://license.coscl.org.cn/MulanPSL2
+ *
+ *  THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ *  EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ *  MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ *  See the Mulan PSL v2 for more details.
+ *  -------------------------------------------------------------------------
+ *
+ *  CommonConstants.java
+ *
+ *  IDENTIFICATION
+ *  plugins/observability-instance/src/main/java/com/nctigba/observability/instance/constants/CommonConstants.java
+ *
+ *  -------------------------------------------------------------------------
  */
 package com.nctigba.observability.instance.constants;
 
@@ -12,10 +31,11 @@ public class CommonConstants {
     public static final String SET_LIMIT_EXCEPTION = "set ulimit exception";
     public static final String FAILED_TO_GRANT_PERMISSION = "Failed to grant permission";
     public static final String EQUAL_SYMBOL = "=";
+    public static final String UNDERLINE = "_";
     public static final String BLANK = " ";
     public static final String SLASH = "/";
     public static final String CONNECTION_ESTABLISHMENT_FAIL = "Connection establishment fail";
-    public static final String INSERT_INTO_PARAM_INFO_SQL = "insert into param_info(paramType,paramName,"
+    public static final String INSERT_INTO_PARAM_INFO_SQL = "insert into param_info(id,paramType,paramName,"
             + "parameterCategory,valueRange,paramDetail,suggestValue,defaultValue,unit,suggestExplain,diagnosisRule)";
     public static final String HASH_COND = "Hash Cond";
     public static final String COST = "(cost=";
@@ -38,4 +58,9 @@ public class CommonConstants {
     public static final String NUM_21299200 = "21299200";
     public static final String NUM_129024 = "129024";
     public static final String NUM_65535 = "65535";
+
+    /**
+     * Metric scrape default time
+     */
+    public static final String DEFAULT_SCRAPE_TIME = "15s";
 }

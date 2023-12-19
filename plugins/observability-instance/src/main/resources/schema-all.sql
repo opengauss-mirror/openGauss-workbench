@@ -1,7 +1,3 @@
---
--- Copyright (c) 2023 Huawei Technologies Co.,Ltd.
---
-
 CREATE TABLE public.nctigba_env (
 	id varchar NULL,
 	hostid varchar NULL,

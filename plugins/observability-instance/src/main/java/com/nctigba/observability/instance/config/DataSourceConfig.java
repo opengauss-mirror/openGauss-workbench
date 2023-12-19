@@ -1,6 +1,26 @@
 /*
- * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ *  Copyright (c) GBA-NCTI-ISDC. 2022-2024.
+ *
+ *  openGauss DataKit is licensed under Mulan PSL v2.
+ *  You can use this software according to the terms and conditions of the Mulan PSL v2.
+ *  You may obtain a copy of Mulan PSL v2 at:
+ *
+ *  http://license.coscl.org.cn/MulanPSL2
+ *
+ *  THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ *  EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ *  MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ *  See the Mulan PSL v2 for more details.
+ *  -------------------------------------------------------------------------
+ *
+ *  DataSourceConfig.java
+ *
+ *  IDENTIFICATION
+ *  plugins/observability-instance/src/main/java/com/nctigba/observability/instance/config/DataSourceConfig.java
+ *
+ *  -------------------------------------------------------------------------
  */
+
 package com.nctigba.observability.instance.config;
 
 import com.baomidou.dynamic.datasource.DynamicRoutingDataSource;
@@ -10,6 +30,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 
 import javax.sql.DataSource;
 
@@ -21,6 +42,7 @@ import javax.sql.DataSource;
 public class DataSourceConfig {
     @Bean
     @ConfigurationProperties(prefix = "spring.datasource")
+    @Profile("!dev")
     public DataSource dataSource() {
         EnvironmentProvider environmentProvider = PluginContextHolder.getEnvironmentProvider();
         // read config from dataKit platform

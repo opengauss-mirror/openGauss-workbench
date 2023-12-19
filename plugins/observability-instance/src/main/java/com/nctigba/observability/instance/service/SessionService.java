@@ -1,5 +1,24 @@
 /*
- * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ *  Copyright (c) GBA-NCTI-ISDC. 2022-2024.
+ *
+ *  openGauss DataKit is licensed under Mulan PSL v2.
+ *  You can use this software according to the terms and conditions of the Mulan PSL v2.
+ *  You may obtain a copy of Mulan PSL v2 at:
+ *
+ *  http://license.coscl.org.cn/MulanPSL2
+ *
+ *  THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ *  EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ *  MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ *  See the Mulan PSL v2 for more details.
+ *  -------------------------------------------------------------------------
+ *
+ *  SessionService.java
+ *
+ *  IDENTIFICATION
+ *  plugins/observability-instance/src/main/java/com/nctigba/observability/instance/service/SessionService.java
+ *
+ *  -------------------------------------------------------------------------
  */
 
 package com.nctigba.observability.instance.service;
@@ -15,8 +34,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import com.alibaba.fastjson.JSONObject;
-import com.nctigba.observability.instance.aop.Ds;
-import com.nctigba.observability.instance.dto.session.DetailStatisticDto;
+import com.nctigba.observability.instance.aspectj.annotation.Ds;
+import com.nctigba.observability.instance.model.dto.session.DetailStatisticDTO;
 import com.nctigba.observability.instance.exception.InstanceException;
 import com.nctigba.observability.instance.mapper.SessionMapper;
 
@@ -46,16 +65,16 @@ public class SessionService {
     }
 
     @Ds
-    public List<DetailStatisticDto> detailStatistic(String id, String sessionid) {
-        ArrayList<DetailStatisticDto> list = new ArrayList<>();
+    public List<DetailStatisticDTO> detailStatistic(String id, String sessionid) {
+        ArrayList<DetailStatisticDTO> list = new ArrayList<>();
         list.addAll(
                 sessionMapper.statistic(sessionid).stream()
-                        .map(ob -> new DetailStatisticDto(DetailStatisticDto.Type.STATUS,
+                        .map(ob -> new DetailStatisticDTO(DetailStatisticDTO.Type.STATUS,
                                 ob.get("stat_name").toString(), ob.get("value").toString()))
                         .collect(Collectors.toList()));
         list.addAll(
                 sessionMapper.runtime(sessionid).stream()
-                        .map(ob -> new DetailStatisticDto(DetailStatisticDto.Type.RUNTIME,
+                        .map(ob -> new DetailStatisticDTO(DetailStatisticDTO.Type.RUNTIME,
                                 ob.get("statname").toString(), ob.get("value").toString()))
                         .collect(Collectors.toList()));
         return list;
@@ -89,10 +108,11 @@ public class SessionService {
     }
 
     @Ds
-    public HashMap<String, List<Map<String, Object>>> blockAndLongTxc(String id) {
-        HashMap<String, List<Map<String, Object>>> res = new HashMap<>();
+    public HashMap<String, Object> blockAndLongTxc(String id) {
+        HashMap<String, Object> res = new HashMap<>();
         res.put("blockTree", detailBlockTree(id, null));
         res.put("longTxc", longTxc(id));
+        res.put("longTxcTotal", sessionMapper.longTxcTotal());
         return res;
     }
 

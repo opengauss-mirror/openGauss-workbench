@@ -1,14 +1,35 @@
 /*
- * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ *  Copyright (c) GBA-NCTI-ISDC. 2022-2024.
+ *
+ *  openGauss DataKit is licensed under Mulan PSL v2.
+ *  You can use this software according to the terms and conditions of the Mulan PSL v2.
+ *  You may obtain a copy of Mulan PSL v2 at:
+ *
+ *  http://license.coscl.org.cn/MulanPSL2
+ *
+ *  THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ *  EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ *  MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ *  See the Mulan PSL v2 for more details.
+ *  -------------------------------------------------------------------------
+ *
+ *  MinimaListOpsProvider.java
+ *
+ *  IDENTIFICATION
+ *  plugins/observability-instance/
+ *  src/main/java/com/nctigba/observability/instance/service/provider/MinimaListOpsProvider.java
+ *
+ *  -------------------------------------------------------------------------
  */
+
 package com.nctigba.observability.instance.service.provider;
 
 import cn.hutool.core.util.StrUtil;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 import com.jcraft.jsch.Session;
-import com.nctigba.observability.instance.entity.OpsWdrEntity.WdrScopeEnum;
+import com.nctigba.observability.instance.model.entity.OpsWdrDO.WdrScopeEnum;
 import com.nctigba.observability.instance.service.provider.ClusterOpsProviderManager.OpenGaussSupportOSEnum;
-import com.nctigba.observability.instance.util.JschUtil;
+import com.nctigba.observability.instance.util.JschUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsClusterEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsClusterNodeEntity;
@@ -31,7 +52,7 @@ import java.util.List;
 public class MinimaListOpsProvider extends AbstractOpsProvider {
     @Autowired
     @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
-    private JschUtil jschUtil;
+    private JschUtils jschUtil;
 
     @Override
     public OpenGaussVersionEnum version() {

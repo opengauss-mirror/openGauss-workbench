@@ -1,0 +1,21 @@
+server:
+  port: 9596
+logging:
+  level:
+    root: INFO
+    com.nctigba.observability.instance.agent: DEBUG
+    com.nctigba.observability.instance.agent.metric.db: INFO
+targets:
+  - nodeId: nodeId
+    hostId: hostId
+    exporterPort: 9400
+    machineIP: 127.0.0.7
+    machinePort: 22
+    machineUser: omm
+    machinePassword: omm
+    dbIp: 127.0.0.7
+    dbPort: 5432
+    dbDatabase: postgres
+    dbUserName: gaussdb
+    dbUserPassword: dbUserPassword
+    dbType: OPENGAUSS

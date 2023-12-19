@@ -1,5 +1,24 @@
 /*
- * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ *  Copyright (c) GBA-NCTI-ISDC. 2022-2024.
+ *
+ *  openGauss DataKit is licensed under Mulan PSL v2.
+ *  You can use this software according to the terms and conditions of the Mulan PSL v2.
+ *  You may obtain a copy of Mulan PSL v2 at:
+ *
+ *  http://license.coscl.org.cn/MulanPSL2
+ *
+ *  THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ *  EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ *  MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ *  See the Mulan PSL v2 for more details.
+ *  -------------------------------------------------------------------------
+ *
+ *  ClusterManager.java
+ *
+ *  IDENTIFICATION
+ *  plugins/observability-instance/src/main/java/com/nctigba/observability/instance/service/ClusterManager.java
+ *
+ *  -------------------------------------------------------------------------
  */
 
 package com.nctigba.observability.instance.service;
@@ -9,10 +28,12 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.Properties;
 
 import javax.sql.DataSource;
 
+import com.nctigba.observability.instance.exception.InstanceException;
 import org.apache.commons.lang3.StringUtils;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsClusterEntity;
 import org.opengauss.admin.common.core.domain.model.ops.OpsClusterNodeVO;
@@ -196,5 +217,20 @@ public class ClusterManager {
             }
         }
         throw new CustomException(CommonConstants.NODE_NOT_FOUND);
+    }
+
+    /**
+     * getOpsClusterVOById
+     *
+     * @param clusterId clusterId
+     * @return OpsClusterVO
+     */
+    public OpsClusterVO getOpsClusterVOById(String clusterId) {
+        Optional<OpsClusterVO> clusterVOOptional = getAllOpsCluster().stream()
+                .filter(clusterVO -> clusterVO.getClusterId().equals(clusterId)).findFirst();
+        if (clusterVOOptional.isEmpty()) {
+            throw new InstanceException("The cluster does not exist");
+        }
+        return clusterVOOptional.get();
     }
 }

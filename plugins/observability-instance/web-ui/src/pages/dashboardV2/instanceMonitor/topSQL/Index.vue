@@ -17,8 +17,18 @@
             </el-link>
           </template>
         </el-table-column>
-        <el-table-column :label="$t('sql.dbName')" prop="db_name" width="90" show-overflow-tooltip></el-table-column>
-        <el-table-column :label="$t('sql.schemaName')" prop="schema_name" width="100" show-overflow-tooltip>
+        <el-table-column
+          :label="$t('sql.dbName')"
+          prop="db_name"
+          width="90"
+          show-overflow-tooltip
+        ></el-table-column>
+        <el-table-column
+          :label="$t('sql.schemaName')"
+          prop="schema_name"
+          width="100"
+          show-overflow-tooltip
+        >
         </el-table-column>
         <el-table-column
           :label="$t('sql.userName')"
@@ -26,7 +36,12 @@
           width="80"
           show-overflow-tooltip
         ></el-table-column>
-        <el-table-column :label="$t('sql.applicationName')" prop="application_name" width="100" show-overflow-tooltip>
+        <el-table-column
+          :label="$t('sql.applicationName')"
+          prop="application_name"
+          width="100"
+          show-overflow-tooltip
+        >
         </el-table-column>
         <el-table-column prop="query" label="SQL" show-overflow-tooltip />
         <el-table-column
@@ -41,10 +56,26 @@
           width="140"
         >
         </el-table-column>
-        <el-table-column :label="$t('sql.dbTime')" prop="db_time" width="80"></el-table-column>
-        <el-table-column :label="$t('sql.cpuTime')" prop="cpu_time" width="90"></el-table-column>
-        <el-table-column :label="$t('sql.excutionTime')" prop="execution_time" width="90"></el-table-column>
-        <el-table-column label="IO_TIME(ms)" prop="data_io_time" width="80"></el-table-column>
+        <el-table-column
+          :label="$t('sql.dbTime')"
+          prop="db_time"
+          width="80"
+        ></el-table-column>
+        <el-table-column
+          :label="$t('sql.cpuTime')"
+          prop="cpu_time"
+          width="90"
+        ></el-table-column>
+        <el-table-column
+          :label="$t('sql.excutionTime')"
+          prop="execution_time"
+          width="90"
+        ></el-table-column>
+        <el-table-column
+          label="IO_TIME(ms)"
+          prop="data_io_time"
+          width="80"
+        ></el-table-column>
       </el-table>
     </div>
     <my-message v-if="errorInfo" type="error" :tip="errorInfo" defaultTip="" />
@@ -52,110 +83,109 @@
 </template>
 
 <script setup lang="ts">
-import { useRequest } from 'vue-request'
-import moment from 'moment'
-import { useIntervalTime } from '@/hooks/time'
-import { useMonitorStore } from '@/store/monitor'
-import { storeToRefs } from 'pinia'
-import ogRequest from '@/request'
-import router from '@/router'
-import { useI18n } from 'vue-i18n'
-import { tabKeys } from '@/pages/dashboardV2/common'
-import { dateFormat } from '@/utils/date'
+import { useRequest } from "vue-request";
+import moment from "moment";
+import { useIntervalTime } from "@/hooks/time";
+import { useMonitorStore } from "@/store/monitor";
+import { storeToRefs } from "pinia";
+import ogRequest from "@/request";
+import router from "@/router";
+import { useI18n } from "vue-i18n";
+import { tabKeys } from "@/pages/dashboardV2/common";
+import { dateFormat } from "@/utils/date";
 
-const { t } = useI18n()
+const { t } = useI18n();
 
-const typeTab = ref('db_time')
-const errorInfo = ref<string | Error>()
+const typeTab = ref("db_time");
+const errorInfo = ref<string | Error>();
 
-const props = withDefaults(defineProps<{ tabId: string }>(), {})
-const monitorStore = useMonitorStore(props.tabId)
-const { updateCounter, sourceType, autoRefreshTime, tabNow, instanceId } = storeToRefs(monitorStore)
-const { culRangeTimeAndStep } = monitorStore
+const props = withDefaults(defineProps<{ tabId: string }>(), {});
+const monitorStore = useMonitorStore(props.tabId);
+const { updateCounter, sourceType, autoRefreshTime, tabNow, instanceId } = storeToRefs(
+  monitorStore
+);
+const { culRangeTimeAndStep } = monitorStore;
 
 const data = reactive<{
-  tableData: Array<Record<string, string>>
+  tableData: Array<Record<string, string>>;
 }>({
   tableData: [],
-})
+});
 
 const getParam = () => {
   return {
     dbid: instanceId,
     startTime: dateFormat(new Date(culRangeTimeAndStep()[0] * 1000)),
     finishTime: dateFormat(new Date(culRangeTimeAndStep()[1] * 1000)),
-  }
-}
+  };
+};
 
 const outsideGoto = (key: string, param: any) => {
-  if (param && param.key === tabKeys.InstanceMonitorTOPSQLCPUTime) typeTab.value = 'cpu_time'
-  if (param && param.key === tabKeys.InstanceMonitorTOPSQLIOTime) typeTab.value = 'data_io_time'
-}
-defineExpose({ outsideGoto })
+  if (param && param.key === tabKeys.InstanceMonitorTOPSQLCPUTime)
+    typeTab.value = "cpu_time";
+  if (param && param.key === tabKeys.InstanceMonitorTOPSQLIOTime)
+    typeTab.value = "data_io_time";
+};
+defineExpose({ outsideGoto });
 
 // same for every page in index
-const timer = ref<number>()
+const timer = ref<number>();
 onMounted(() => {
-  load()
-})
+  load();
+});
 watch(
   updateCounter,
   () => {
-    clearInterval(timer.value)
+    clearInterval(timer.value);
     if (tabNow.value === tabKeys.InstanceMonitorTOPSQL) {
-      if (updateCounter.value.source === sourceType.value.INSTANCE) load()
-      if (updateCounter.value.source === sourceType.value.MANUALREFRESH) load()
-      if (updateCounter.value.source === sourceType.value.TIMETYPE) load()
-      if (updateCounter.value.source === sourceType.value.TIMERANGE) load()
-      if (updateCounter.value.source === sourceType.value.TABCHANGE) load()
-      const time = autoRefreshTime.value
+      if (updateCounter.value.source === sourceType.value.INSTANCE) load();
+      if (updateCounter.value.source === sourceType.value.MANUALREFRESH) load();
+      if (updateCounter.value.source === sourceType.value.TIMETYPE) load();
+      if (updateCounter.value.source === sourceType.value.TIMERANGE) load();
+      if (updateCounter.value.source === sourceType.value.TABCHANGE) load();
+      const time = autoRefreshTime.value;
       timer.value = useIntervalTime(
         () => {
-          load()
+          load();
         },
         computed(() => time * 1000)
-      )
+      );
     }
   },
   { immediate: false }
-)
+);
 
 watch(typeTab, () => {
-  load()
-})
+  load();
+});
 const load = () => {
-  data.tableData = []
-  requestData(getParam())
-}
+  data.tableData = [];
+  requestData(getParam());
+};
 const { run: requestData, loading } = useRequest(
   (query) => {
-    const res = new Promise((resolve, reject) => {
-      const result = ogRequest.getNative(
+    ogRequest
+      .get(
         `/observability/v1/topsql/list?id=${query.dbid}&startTime=${query.startTime}&finishTime=${query.finishTime}&orderField=${typeTab.value}`
       )
-      result ? resolve(result) : reject(result)
-    })
       .then((r: any) => {
-        const code = r?.data.code
-        const list = r?.data.data
-        if (code === 602) {
-          errorInfo.value = t('dashboard.topsqlListTip')
-        } else if (code === 200 && Array.isArray(list)) {
-          errorInfo.value = ''
-          data.tableData = list
+        data.tableData = r
+      }).catch((e: any) => {
+        if (typeof(e) === 'string') {
+          errorInfo.value = e;
         }
-      })
-      .catch((e) => {
-        errorInfo.value = e
-      })
-    return res
+        const code = e?.data.code;
+        if (code === 602) {
+          errorInfo.value = t("dashboard.topsqlListTip");
+        }
+      });
   },
   { manual: true }
-)
+);
 
 const gotoTopsqlDetail = (id: string) => {
-  const curMode = localStorage.getItem('INSTANCE_CURRENT_MODE')
-  if (curMode === 'wujie') {
+  const curMode = localStorage.getItem("INSTANCE_CURRENT_MODE");
+  if (curMode === "wujie") {
     // @ts-ignore plug-in components
     window.$wujie?.props.methods.jump({
       name: `Static-pluginObservability-instanceVemSql_detail`,
@@ -163,13 +193,13 @@ const gotoTopsqlDetail = (id: string) => {
         dbid: getParam().dbid.value,
         id,
       },
-    })
+    });
   } else {
     // local
-    window.sessionStorage.setItem('sqlId', id)
-    router.push(`/vem/sql_detail/${getParam().dbid.value}/${id}`)
+    window.sessionStorage.setItem("sqlId", id);
+    router.push(`/vem/sql_detail/${getParam().dbid.value}/${id}`);
   }
-}
+};
 </script>
 
 <style scoped lang="scss">

@@ -1,15 +1,42 @@
 /*
- * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ *  Copyright (c) GBA-NCTI-ISDC. 2022-2024.
+ *
+ *  openGauss DataKit is licensed under Mulan PSL v2.
+ *  You can use this software according to the terms and conditions of the Mulan PSL v2.
+ *  You may obtain a copy of Mulan PSL v2 at:
+ *
+ *  http://license.coscl.org.cn/MulanPSL2
+ *
+ *  THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ *  EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ *  MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ *  See the Mulan PSL v2 for more details.
+ *  -------------------------------------------------------------------------
+ *
+ *  ResourceCPUController.java
+ *
+ *  IDENTIFICATION
+ *  plugins/observability-instance/
+ *  src/main/java/com/nctigba/observability/instance/controller/ResourceCPUController.java
+ *
+ *  -------------------------------------------------------------------------
  */
 
 package com.nctigba.observability.instance.controller;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
+import cn.hutool.core.util.StrUtil;
+import cn.hutool.http.HttpUtil;
+import cn.hutool.json.JSONArray;
+import cn.hutool.json.JSONUtil;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.gitee.starblues.bootstrap.annotation.AutowiredType;
+import com.nctigba.observability.instance.enums.MetricsLine;
+import com.nctigba.observability.instance.model.entity.AgentNodeRelationDO;
+import com.nctigba.observability.instance.model.entity.NctigbaEnvDO;
+import com.nctigba.observability.instance.model.entity.NctigbaEnvDO.envType;
+import com.nctigba.observability.instance.mapper.AgentNodeRelationMapper;
+import com.nctigba.observability.instance.mapper.NctigbaEnvMapper;
+import com.nctigba.observability.instance.service.MetricsService;
 import org.opengauss.admin.common.core.domain.AjaxResult;
 import org.opengauss.admin.common.exception.CustomException;
 import org.opengauss.admin.system.plugin.facade.HostFacade;
@@ -18,18 +45,11 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.gitee.starblues.bootstrap.annotation.AutowiredType;
-import com.nctigba.observability.instance.constants.MetricsLine;
-import com.nctigba.observability.instance.entity.NctigbaEnv;
-import com.nctigba.observability.instance.entity.NctigbaEnv.envType;
-import com.nctigba.observability.instance.mapper.NctigbaEnvMapper;
-import com.nctigba.observability.instance.service.MetricsService;
-
-import cn.hutool.core.util.StrUtil;
-import cn.hutool.http.HttpUtil;
-import cn.hutool.json.JSONArray;
-import cn.hutool.json.JSONUtil;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/instanceMonitoring/api/v1/")
@@ -41,6 +61,8 @@ public class ResourceCPUController extends ControllerConfig {
     private HostFacade hostFacade;
     @Autowired
     private NctigbaEnvMapper envMapper;
+    @Autowired
+    private AgentNodeRelationMapper agentMapper;
 
     private static final MetricsLine[] CPU = {
             MetricsLine.CPU_TOTAL,
@@ -53,7 +75,9 @@ public class ResourceCPUController extends ControllerConfig {
             MetricsLine.CPU_STEAL,
             MetricsLine.CPU_IDLE,
             MetricsLine.CPU_DB,
+            MetricsLine.CPU_TOTAL_1M_LOAD,
             MetricsLine.CPU_TOTAL_5M_LOAD,
+            MetricsLine.CPU_TOTAL_15M_LOAD,
             MetricsLine.CPU_TOTAL_CORE_NUM,
     };
 
@@ -81,12 +105,19 @@ public class ResourceCPUController extends ControllerConfig {
 
     @GetMapping("topOSProcessAndDBThread")
     public AjaxResult topOSProcessAndDBThread(String id, String sort) throws IOException, InterruptedException {
-        var env = envMapper.selectOne(Wrappers.<NctigbaEnv>lambdaQuery().eq(NctigbaEnv::getNodeid, id)
-                .eq(NctigbaEnv::getType, envType.EXPORTER));
+        AgentNodeRelationDO relationEntity = agentMapper.selectOne(
+                Wrappers.<AgentNodeRelationDO>lambdaQuery().eq(AgentNodeRelationDO::getNodeId, id));
+        if (relationEntity == null) {
+            throw new CustomException("agent not installed");
+        }
+        var env = envMapper.selectOne(
+                Wrappers.<NctigbaEnvDO>lambdaQuery().eq(NctigbaEnvDO::getId, relationEntity.getEnvId())
+                        .eq(NctigbaEnvDO::getType, envType.EXPORTER));
         if (env == null) {
             throw new CustomException("agent not installed");
         }
         var param = new HashMap<String, Object>();
+        param.put("nodeId", id);
         if (StrUtil.isNotBlank(sort)) {
             param.put("sort", sort);
         }

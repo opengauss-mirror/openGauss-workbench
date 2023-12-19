@@ -190,7 +190,7 @@
           {{ $t('app.diagnosis') }}
         </el-link>
         <el-link v-if="isManualRangeSelected" type="primary" @click="wdr(tabId)" v-loading="wdrLoading">
-          {{$t('instanceIndex.wdrAnalysis')}}
+          {{ $t('instanceIndex.wdrAnalysis') }}
         </el-link>
       </div>
     </template>
@@ -338,6 +338,16 @@
         </el-table>
       </el-tab-pane>
       <el-tab-pane :label="$t('session.trans.longTransaction')" :name="2">
+        <div style="
+            display: flex;
+            flex-direction: row;
+            justify-content: flex-start;
+            align-items: center;
+            font-size: 12px;
+            margin-bottom: 10px;
+          ">
+          <div>{{ $t('session.trans.transEventTotal') }}: {{transTotal}}</div>
+        </div>
         <el-table
           :table-layout="'auto'"
           :data="transTable"
@@ -373,40 +383,47 @@
         </el-table>
       </el-tab-pane>
       <el-tab-pane :label="$t('session.waitEventTab.title')" :name="3">
-        <div
-          style="
-            display: flex;
-            flex-direction: row;
-            justify-content: flex-end;
-            align-items: center;
-            font-size: 12px;
-            margin-bottom: 10px;
-          "
-        >
-          <div>{{ $t('session.waitEventTab.waitStatus') }}</div>
-          <el-select v-model="waitEventForm.waitStatus" style="width: 100px; margin: 0 4px" clearable @change="changeWaitEventForm">
-            <el-option v-for="item in waitStatusList" :key="item" :value="item" :label="item" />
-          </el-select>
-          <div>{{ $t('session.waitEventTab.waitEvent') }}</div>
-          <el-select v-model="waitEventForm.waitEvent" style="width: 100px; margin: 0 4px" clearable @change="changeWaitEventForm">
-            <el-option v-for="item in waitEventList" :key="item" :value="item" :label="item" />
-          </el-select>
-          <el-select v-model="waitEventForm.field" style="width: 100px; margin: 0 4px" clearable @change="changeWaitEventField">
-            <el-option value="db_name" :label="$t('session.waitEventTab.dbName')" />
-            <el-option value="thread_name" :label="$t('session.waitEventTab.threadName')" />
-            <el-option value="tid" :label="$t('session.waitEventTab.tid')" />
-            <el-option value="sessionid" :label="$t('session.waitEventTab.sessionid')" />
-            <el-option value="block_sessionid" :label="$t('session.waitEventTab.blockSessionid')" />
-            <el-option value="query_id" :label="$t('session.waitEventTab.queryId')" />
-            <el-option value="lockmode" :label="$t('session.waitEventTab.lockmode')" />
-            <el-option value="tag" :label="$t('session.waitEventTab.locktag')" />
-          </el-select>
-          <el-input v-model="waitEventForm.fieldValue" style="width: 150px;" clearable>
-            <template #append>
-              <el-link :underline="false" :icon="Search" size="small" @click="changeWaitEventForm"/>
-            </template>
-          </el-input>
-        </div>
+        <el-row>
+          <el-col :span="4">
+            <div>{{ $t('session.waitEventTab.waitEventTotal') }}: {{ waitEventTotal }}</div>
+          </el-col>
+          <el-col :span="20">
+            <div
+              style="
+                display: flex;
+                flex-direction: row;
+                justify-content: flex-end;
+                align-items: center;
+                font-size: 12px;
+                margin-bottom: 10px;
+              "
+            >
+              <div>{{ $t('session.waitEventTab.waitStatus') }}</div>
+              <el-select v-model="waitEventForm.waitStatus" style="width: 100px; margin: 0 4px" clearable @change="changeWaitEventForm">
+                <el-option v-for="item in waitStatusList" :key="item" :value="item" :label="item" />
+              </el-select>
+              <div>{{ $t('session.waitEventTab.waitEvent') }}</div>
+              <el-select v-model="waitEventForm.waitEvent" style="width: 100px; margin: 0 4px" clearable @change="changeWaitEventForm">
+                <el-option v-for="item in waitEventList" :key="item" :value="item" :label="item" />
+              </el-select>
+              <el-select v-model="waitEventForm.field" style="width: 100px; margin: 0 4px" clearable @change="changeWaitEventField">
+                <el-option value="db_name" :label="$t('session.waitEventTab.dbName')" />
+                <el-option value="thread_name" :label="$t('session.waitEventTab.threadName')" />
+                <el-option value="tid" :label="$t('session.waitEventTab.tid')" />
+                <el-option value="sessionid" :label="$t('session.waitEventTab.sessionid')" />
+                <el-option value="block_sessionid" :label="$t('session.waitEventTab.blockSessionid')" />
+                <el-option value="query_id" :label="$t('session.waitEventTab.queryId')" />
+                <el-option value="lockmode" :label="$t('session.waitEventTab.lockmode')" />
+                <el-option value="tag" :label="$t('session.waitEventTab.locktag')" />
+              </el-select>
+              <el-input v-model="waitEventForm.fieldValue" style="width: 150px;" clearable>
+                <template #append>
+                  <el-link :underline="false" :icon="Search" size="small" @click="changeWaitEventForm"/>
+                </template>
+              </el-input>
+            </div>
+          </el-col>
+        </el-row>
         <el-table
           :table-layout="'auto'"
           :data="waitEventTable"
@@ -544,8 +561,10 @@ const metricsData = ref<MetricsData>({
 const expandRowKeys = ref<string[]>([])
 const blockSessionTable = ref<BlockTable[]>([])
 const waitEventTable = ref<WaitEvent[]>([])
+const waitEventTotal = ref<number>(0)
 const topSQLData = ref<void | TopSQLNow[]>([])
 const transTable = ref<TransTable[]>([])
+const transTotal = ref<number>(0)
 const innerRefreshTime = ref<number>(30)
 const innerRefreshDoneTime = ref<string>('')
 const waitEventTableSrc = ref<WaitEvent[]>([])
@@ -759,7 +778,9 @@ watch(
     topSQLData.value = []
     blockSessionTable.value = []
     transTable.value = []
+    transTotal.value = 0
     waitEventTable.value = []
+    waitEventTotal.value = 0
     waitEventTableSrc.value = []
     waitStatusList.value = []
     waitEventList.value = []
@@ -778,15 +799,17 @@ watch(
 
     // trans
     transTable.value = topSQLNowData.value.longTxc ? topSQLNowData.value.longTxc : []
+    transTotal.value = topSQLNowData.value.longTxcTotal
     transTable.value.forEach((element) => {
       element.xact_start = element.xact_start.substring(0, 19)
       element.xact_duration = element.xact_duration.substring(0, 8)
     })
 
     // wait events
+    waitEventTotal.value = topSQLNowData.value.waitEventTotal
     if (topSQLNowData.value.waitEvents) {
       waitEventTableSrc.value = topSQLNowData.value.waitEvents
-      waitStatusList.value = [...new Set(waitEventTableSrc.value.map(item => item.wait_event))]
+      waitStatusList.value = [...new Set(waitEventTableSrc.value.map(item => item.wait_status))]
       waitEventList.value = [...new Set(waitEventTableSrc.value.map(item => item.wait_event))]
       changeWaitEventForm()
     }
@@ -801,6 +824,7 @@ const updateTimerInner = () => {
   const timeInner = innerRefreshTime.value
   timerInner.value = useIntervalTime(
     () => {
+      if (!instanceId.value) return
       loadTopSQL(props.tabId)
     },
     computed(() => timeInner * 1000)

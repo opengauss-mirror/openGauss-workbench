@@ -128,6 +128,15 @@
               :instanceId="instanceId"
             />
           </el-tab-pane>
+          <el-tab-pane class="min-height" :label="$t('collectConfig.tabName')" :name="tabKeys.CollectConfig">
+            <CollectionConfig
+              :tabId="tabId"
+              @goto="goto"
+              ref="collectConfigComponent"
+              v-if="tabKeyLoaded.indexOf(tabKeys.CollectConfig) >= 0 || dashboardTabKey === tabKeys.CollectConfig"
+              :instanceId="instanceId"
+            />
+          </el-tab-pane>
         </el-tabs>
       </el-main>
     </el-container>
@@ -149,6 +158,7 @@ import ogRequest from '@/request'
 import { useRequest } from 'vue-request'
 import Install from '@/pages/dashboard/install/Index.vue'
 import SystemConfiguration from '@/pages/dashboardV2/systemConfiguration/Index.vue'
+import CollectionConfig from '@/pages/dashboardV2/collectConfig/Index.vue'
 import { tabKeys } from '@/pages/dashboardV2/common'
 import { uuid } from '@/shared'
 import { getNodeInfo } from '@/api/observability'

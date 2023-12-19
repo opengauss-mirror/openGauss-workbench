@@ -1,5 +1,24 @@
 /*
- * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ *  Copyright (c) GBA-NCTI-ISDC. 2022-2024.
+ *
+ *  openGauss DataKit is licensed under Mulan PSL v2.
+ *  You can use this software according to the terms and conditions of the Mulan PSL v2.
+ *  You may obtain a copy of Mulan PSL v2 at:
+ *
+ *  http://license.coscl.org.cn/MulanPSL2
+ *
+ *  THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ *  EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ *  MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ *  See the Mulan PSL v2 for more details.
+ *  -------------------------------------------------------------------------
+ *
+ *  TopSQLController.java
+ *
+ *  IDENTIFICATION
+ *  plugins/observability-instance/src/main/java/com/nctigba/observability/instance/controller/TopSQLController.java
+ *
+ *  -------------------------------------------------------------------------
  */
 
 package com.nctigba.observability.instance.controller;
@@ -14,8 +33,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.nctigba.observability.instance.constants.MetricsLine;
-import com.nctigba.observability.instance.dto.topsql.TopSQLListReq;
+import com.nctigba.observability.instance.enums.MetricsLine;
+import com.nctigba.observability.instance.model.query.TopSQLListQuery;
 import com.nctigba.observability.instance.service.ClusterManager;
 import com.nctigba.observability.instance.service.MetricsService;
 import com.nctigba.observability.instance.service.TopSQLService;
@@ -39,7 +58,7 @@ public class TopSQLController {
     private final MetricsService metricsService;
 
     @GetMapping(value = "/list")
-    public AjaxResult top10(TopSQLListReq topSQLListReq) {
+    public AjaxResult top10(TopSQLListQuery topSQLListReq) {
         var list = topSQLService.topSQLList(topSQLListReq);
         if (list == null) {
             return AjaxResult.error("602", "top sql pre check fail");

@@ -170,29 +170,33 @@ const maxRowData = reactive({
 
 const { run: requesPlanDataRes, loading: planDataLoading } = useRequest(
   (sqlId: string | string[], dbid: string | string[]) => {
-    const res = new Promise((resolve, reject) => {
-      const result = ogRequest.getNative(`/observability/v1/topsql/plan?id=${dbid}&sqlId=${sqlId}`)
-      result ? resolve(result) : reject(result)
-    })
+    ogRequest
+      .get(
+        `/observability/v1/topsql/plan?id=${dbid}&sqlId=${sqlId}`
+      )
       .then((r: any) => {
-        const code = r?.data?.code
-        const list = r?.data?.data?.data
-        const total = r?.data?.data?.total
-        if (code === 602) {
-          errorInfo.value = 'executionParamTip'
-        } else if (code === 200 && Array.isArray(list) && list.length > 0) {
+        const list = r.data
+        const total = r.total
+        if (Array.isArray(list) && list.length > 0) {
           calc(list)
           totalCost.value = list[0].totalCost
           data.planData = list
           data.total = total
-        } else if (code === 500) {
-          errorInfo.value = r?.data?.msg || 'failGetExecutionPlan'
         }
-      })
-      .catch((e) => {
-        errorInfo.value = e
-      })
-    return res
+      }).catch((e: any) => {
+        if (!e) {
+          errorInfo.value = 'failGetExecutionPlan'
+          return
+        }
+        if (typeof(e) === 'string') {
+          errorInfo.value = e;
+          return
+        }
+        const code = e?.data.code;
+        if (code === 602) {
+          errorInfo.value = 'executionParamTip';
+        }
+      });
   },
   { manual: true }
 )

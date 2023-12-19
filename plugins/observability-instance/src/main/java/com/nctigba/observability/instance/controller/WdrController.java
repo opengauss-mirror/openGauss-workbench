@@ -1,5 +1,24 @@
 /*
- * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ *  Copyright (c) GBA-NCTI-ISDC. 2022-2024.
+ *
+ *  openGauss DataKit is licensed under Mulan PSL v2.
+ *  You can use this software according to the terms and conditions of the Mulan PSL v2.
+ *  You may obtain a copy of Mulan PSL v2 at:
+ *
+ *  http://license.coscl.org.cn/MulanPSL2
+ *
+ *  THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ *  EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ *  MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ *  See the Mulan PSL v2 for more details.
+ *  -------------------------------------------------------------------------
+ *
+ *  WdrController.java
+ *
+ *  IDENTIFICATION
+ *  plugins/observability-instance/src/main/java/com/nctigba/observability/instance/controller/WdrController.java
+ *
+ *  -------------------------------------------------------------------------
  */
 
 package com.nctigba.observability.instance.controller;
@@ -28,10 +47,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.nctigba.observability.instance.entity.OpsWdrEntity;
-import com.nctigba.observability.instance.entity.OpsWdrEntity.WdrScopeEnum;
-import com.nctigba.observability.instance.entity.OpsWdrEntity.WdrTypeEnum;
-import com.nctigba.observability.instance.model.WdrGeneratorBody;
+import com.nctigba.observability.instance.model.entity.OpsWdrDO;
+import com.nctigba.observability.instance.model.entity.OpsWdrDO.WdrScopeEnum;
+import com.nctigba.observability.instance.model.entity.OpsWdrDO.WdrTypeEnum;
+import com.nctigba.observability.instance.model.dto.WdrGeneratorDTO;
 import com.nctigba.observability.instance.service.ClusterManager;
 import com.nctigba.observability.instance.service.OpsWdrService;
 
@@ -71,12 +90,12 @@ public class WdrController {
     }
 
     @GetMapping("/list")
-    public Page<OpsWdrEntity> list(@RequestParam String clusterId,
-            @RequestParam(required = false, name = "wdrScope") WdrScopeEnum wdrScope,
-            @RequestParam(required = false, name = "wdrType") WdrTypeEnum wdrType,
-            @RequestParam(required = false, name = "hostId") String hostId,
-            @RequestParam(required = false, name = "start") @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date start,
-            @RequestParam(required = false, name = "end") @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date end) {
+    public Page<OpsWdrDO> list(@RequestParam String clusterId,
+                               @RequestParam(required = false, name = "wdrScope") WdrScopeEnum wdrScope,
+                               @RequestParam(required = false, name = "wdrType") WdrTypeEnum wdrType,
+                               @RequestParam(required = false, name = "hostId") String hostId,
+                               @RequestParam(required = false, name = "start") @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date start,
+                               @RequestParam(required = false, name = "end") @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date end) {
         return wdrService.listWdr(startPage(), clusterId, wdrScope, wdrType, hostId, start, end);
     }
 
@@ -87,7 +106,7 @@ public class WdrController {
     }
 
     @PostMapping("/generate")
-    public AjaxResult generate(@RequestBody @Validated WdrGeneratorBody wdrGeneratorBody) {
+    public AjaxResult generate(@RequestBody @Validated WdrGeneratorDTO wdrGeneratorBody) {
         wdrService.generate(wdrGeneratorBody);
         return AjaxResult.success();
     }
