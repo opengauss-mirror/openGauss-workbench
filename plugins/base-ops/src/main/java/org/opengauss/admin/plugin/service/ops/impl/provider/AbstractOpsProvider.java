@@ -196,6 +196,7 @@ public abstract class AbstractOpsProvider implements ClusterOpsProvider, Initial
         } catch (IOException e) {
             log.error("send websocket fail", e);
         }
+        boolean errorFlag = false;
         String command = dependencyCommand(expectedOs);
         try {
             JschResult jschResult = null;
@@ -211,10 +212,13 @@ public abstract class AbstractOpsProvider implements ClusterOpsProvider, Initial
 
         } catch (IOException e) {
             log.error("install depencency fail", e);
-            throw new OpsException("install depencency fail");
+            errorFlag = true;
         }
 
         try {
+            if (errorFlag) {
+                retSession.getSession().getBasicRemote().sendText("error occurred, skip install dependency");
+            }
             retSession.getSession().getBasicRemote().sendText("END_INSTALL_DEPENDENCY");
         } catch (IOException e) {
             log.error("send websocket fail", e);
