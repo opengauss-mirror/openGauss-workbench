@@ -1,5 +1,24 @@
 /*
- * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ *  Copyright (c) GBA-NCTI-ISDC. 2022-2024.
+ *
+ *  openGauss DataKit is licensed under Mulan PSL v2.
+ *  You can use this software according to the terms and conditions of the Mulan PSL v2.
+ *  You may obtain a copy of Mulan PSL v2 at:
+ *
+ *  http://license.coscl.org.cn/MulanPSL2
+ *
+ *  THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ *  EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ *  MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ *  See the Mulan PSL v2 for more details.
+ *  -------------------------------------------------------------------------
+ *
+ *  ClusterOpsController.java
+ *
+ *  IDENTIFICATION
+ *  plugins/observability-instance/src/main/java/com/nctigba/observability/instance/controller/ClusterOpsController.java
+ *
+ *  -------------------------------------------------------------------------
  */
 
 package com.nctigba.observability.instance.controller;
@@ -47,17 +66,6 @@ public class ClusterOpsController {
     }
 
     /**
-     * relation
-     *
-     * @param clusterId clusterId
-     * @return AjaxResult
-     */
-    @GetMapping(value = "/{clusterId}/relation")
-    public AjaxResult relation(@PathVariable("clusterId") String clusterId) {
-        return AjaxResult.success(clusterOpsService.relation(clusterId));
-    }
-
-    /**
      * allClusterState
      *
      * @return AjaxResult
@@ -89,5 +97,29 @@ public class ClusterOpsController {
     @GetMapping(value = "/{clusterId}/metrics")
     public AjaxResult clusterMetrics(@PathVariable("clusterId") String clusterId, Long start, Long end, Integer step) {
         return AjaxResult.success(clusterOpsService.clusterMetrics(clusterId, start, end, step));
+    }
+
+    /**
+     * statistics
+     *
+     * @return AjaxResult
+     */
+    @GetMapping(value = "/statistics")
+    public AjaxResult statistics() {
+        return AjaxResult.success(clusterOpsService.statistics());
+    }
+
+    /**
+     * switchRecord
+     *
+     * @param clusterId clusterId
+     * @param start start
+     * @param end end
+     * @return AjaxResult
+     */
+    @GetMapping(value = "/{clusterId}/switchRecord")
+    public AjaxResult switchRecord(@PathVariable("clusterId") String clusterId, Long start, Long end,
+            Integer pageSize, Integer pageNum) {
+        return AjaxResult.success(clusterOpsService.switchRecord(clusterId, start, end, pageSize, pageNum));
     }
 }

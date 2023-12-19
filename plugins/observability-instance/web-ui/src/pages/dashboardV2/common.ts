@@ -20,6 +20,10 @@ export type keyObject = {
   InstanceMonitorTOPSQLCPUTime: string
   InstanceMonitorTOPSQLEXECTime: string
   InstanceMonitorTOPSQLIOTime: string
+  CollectConfig: string
+  InstanceMonitorInstanceOverload: string
+  InstanceMonitorInstanceTablespace: string
+  InstanceMonitorInstanceInfo: string
 }
 
 export const tabKeys: keyObject = {
@@ -40,4 +44,8 @@ export const tabKeys: keyObject = {
   InstanceMonitorTOPSQLCPUTime: 'InstanceMonitorTOPSQLCPUTime',
   InstanceMonitorTOPSQLEXECTime: 'InstanceMonitorTOPSQLEXECTime',
   InstanceMonitorTOPSQLIOTime: 'InstanceMonitorTOPSQLIOTime',
+  CollectConfig: 'CollectConfig',
+  InstanceMonitorInstanceOverload: 'InstanceMonitorInstanceOverload',
+  InstanceMonitorInstanceInfo: 'InstanceMonitorInstanceInfo',
+  InstanceMonitorInstanceTablespace: 'InstanceMonitorInstanceTablespace',
 }

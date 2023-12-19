@@ -61,14 +61,15 @@ export default defineConfig(({ command, mode }) => {
     },
     server: {
       proxy: {
-        '^/instanceMonitoring': 'http://192.168.110.31:9494/plugins/observability-instance',
-        '^/observability': 'http://192.168.110.31:9494/plugins/observability-instance',
-        '^/historyDiagnosis': 'http://192.168.110.31:9494/plugins/observability-sql-diagnosis',
-        '^/sqlDiagnosis': 'http://192.168.110.31:9494/plugins/observability-instance',
-        '^/wdr': 'http://192.168.110.31:9494/plugins/observability-instance',
-        '^/encryption': 'http://192.168.110.31:9494/plugins/observability-instance',
-        '^/host': 'http://192.168.110.31:9494/',
-        '^/hostUser': 'http://192.168.110.31:9494/',
+        '^/instanceMonitoring': 'http://localhost:8080',
+        '^/collectConfig': 'http://localhost:8080',
+        '^/observability': 'http://localhost:8080',
+        '^/historyDiagnosis': 'http://localhost:8080',
+        '^/sqlDiagnosis': 'http://localhost:8080',
+        '^/wdr': 'http://localhost:8080',
+        '^/encryption': 'http://localhost:8080',
+        '^/host': 'http://localhost:8080/',
+        '^/hostUser': 'http://localhost:8080/',
       },
     },
   }

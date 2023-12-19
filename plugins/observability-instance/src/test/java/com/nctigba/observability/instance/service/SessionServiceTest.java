@@ -1,5 +1,24 @@
 /*
- * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ *  Copyright (c) GBA-NCTI-ISDC. 2022-2024.
+ *
+ *  openGauss DataKit is licensed under Mulan PSL v2.
+ *  You can use this software according to the terms and conditions of the Mulan PSL v2.
+ *  You may obtain a copy of Mulan PSL v2 at:
+ *
+ *  http://license.coscl.org.cn/MulanPSL2
+ *
+ *  THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ *  EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ *  MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ *  See the Mulan PSL v2 for more details.
+ *  -------------------------------------------------------------------------
+ *
+ *  SessionServiceTest.java
+ *
+ *  IDENTIFICATION
+ *  plugins/observability-instance/src/test/java/com/nctigba/observability/instance/service/SessionServiceTest.java
+ *
+ *  -------------------------------------------------------------------------
  */
 
 package com.nctigba.observability.instance.service;
@@ -18,7 +37,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.nctigba.observability.instance.dto.session.DetailStatisticDto;
+import com.nctigba.observability.instance.model.dto.session.DetailStatisticDTO;
 import com.nctigba.observability.instance.mapper.SessionMapper;
 
 /**
@@ -48,7 +67,7 @@ class SessionServiceTest {
     public void testDetailStatistic() {
         when(sessionMapper.statistic(anyString())).thenReturn(Collections.emptyList());
         // Act
-        List<DetailStatisticDto> result = sessionService.detailStatistic(getId(), getId());
+        List<DetailStatisticDTO> result = sessionService.detailStatistic(getId(), getId());
         // Assert
         assertNotNull(result);
     }

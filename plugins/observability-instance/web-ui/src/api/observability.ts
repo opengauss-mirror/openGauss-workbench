@@ -322,12 +322,39 @@ export async function getTOPMemoryProcessNow(tabId: string): Promise<void | TopM
   })
 }
 
-export async function getInstanceMetrics(tabId: string): Promise<void | {
+export async function getInstanceInfo(tabId: string): Promise<void | {
   INSTANCE_DB_CONNECTION_ACTIVE: number[]
   INSTANCE_DB_CONNECTION_CURR: number[]
   INSTANCE_DB_CONNECTION_IDLE: number[]
   INSTANCE_DB_CONNECTION_TOTAL: number[]
   INSTANCE_DB_SLOWSQL: number[]
+  INSTANCE_DB_RESPONSETIME_P80: number[]
+  INSTANCE_DB_RESPONSETIME_P95: number[]
+  INSTANCE_DB_DATABASE_BLK: Record<string, number[]>
+  cacheHit: any[],
+  time: string[]
+}> {
+  const monitorStore = useMonitorStore(tabId)
+  const { instanceId, culRangeTimeAndStep } = monitorStore
+  let timeRange = culRangeTimeAndStep()
+  return ogRequest.get('/instanceMonitoring/api/v1/instance', {
+    id: instanceId,
+    start: timeRange[0],
+    end: timeRange[1],
+    step: timeRange[2],
+    type: 'LINE',
+  })
+}
+
+export async function getInstanceOverload(tabId: string): Promise<void | {
+  INSTANCE_DB_DATABASE_INS: Record<string, number[]>
+  INSTANCE_DB_DATABASE_UPD: Record<string, number[]>
+  INSTANCE_DB_DATABASE_DEL: Record<string, number[]>
+  INSTANCE_DB_DATABASE_RETURN: Record<string, number[]>
+  INSTANCE_DB_DATABASE_FECTH: Record<string, number[]>
+  INSTANCE_DB_BGWRITER_CHECKPOINT: number[]
+  INSTANCE_DB_BGWRITER_CLEAN: number[]
+  INSTANCE_DB_BGWRITER_BACKEND: number[]
   INSTANCE_QPS: number[]
   INSTANCE_TPS_COMMIT: number[]
   INSTANCE_TPS_CR: number[]
@@ -337,7 +364,28 @@ export async function getInstanceMetrics(tabId: string): Promise<void | {
   const monitorStore = useMonitorStore(tabId)
   const { instanceId, culRangeTimeAndStep } = monitorStore
   let timeRange = culRangeTimeAndStep()
-  return ogRequest.get('/instanceMonitoring/api/v1/instance', {
+  return ogRequest.get('/instanceMonitoring/api/v1/instanceOverload', {
+    id: instanceId,
+    start: timeRange[0],
+    end: timeRange[1],
+    step: timeRange[2],
+    type: 'LINE',
+  })
+}
+
+export async function getInstanceTablespace(tabId: string): Promise<void | {
+  PG_TABLESPACE_SIZE: Record<string, number[]>
+  tablespaceInfo: any[],
+  tablesTop10: any[],
+  indexsTop10: any[],
+  deadTableTop10: any[],
+  vacuumTop10: any[],
+  time: string[]
+}> {
+  const monitorStore = useMonitorStore(tabId)
+  const { instanceId, culRangeTimeAndStep } = monitorStore
+  let timeRange = culRangeTimeAndStep()
+  return ogRequest.get('/instanceMonitoring/api/v1/instanceTablespace', {
     id: instanceId,
     start: timeRange[0],
     end: timeRange[1],

@@ -1,7 +1,10 @@
 <template>
+  <div class="chart-link">
+    <span>{{$t('echart.linkage')}}:&nbsp;&nbsp;</span> <span><el-switch v-model="isLinkage" @change="changeChartLinkage"/></span>
+  </div>
   <el-row :gutter="12">
     <el-col :span="12">
-      <my-card :title="$t('resourceMonitor.memory.memoryUse')" height="377" :bodyPadding="false">
+      <my-card :title="$t('resourceMonitor.memory.memoryUse')" height="377" :bodyPadding="false" :showBtns="true" @download="title => download(title,memoryUse)" :info="memoryUseInfo">
         <template #headerExtend>
           <div class="card-links">
             <el-link v-if="isManualRangeSelected" type="primary" @click="gotoSQLDiagnosis()">
@@ -14,6 +17,7 @@
         </template>
         <div style="height: 257px">
           <LazyLine
+            ref="memoryUse"
             :tips="$t('instanceIndex.activeSessionQtyTips')"
             :tabId="props.tabId"
             :formatter="toFixed"
@@ -24,6 +28,7 @@
             :interval="25"
             :unit="'%'"
             :rangeSelect="true"
+            :isLinkage="isLinkage"
           />
         </div>
         <div class="table-in-card">
@@ -47,9 +52,10 @@
       </my-card>
     </el-col>
     <el-col :span="12">
-      <my-card :title="$t('resourceMonitor.memory.interactiveAreaUsage')" height="377" :bodyPadding="false">
+      <my-card :title="$t('resourceMonitor.memory.interactiveAreaUsage')" height="377" :bodyPadding="false" :showBtns="true" @download="title => download(title,interactiveAreaUsage)" :info="memorySwapInfo">
         <div style="height: 257px">
           <LazyLine
+            ref="interactiveAreaUsage"
             :tabId="props.tabId"
             :formatter="toFixed"
             :data="metricsData.swap"
@@ -58,6 +64,7 @@
             :min="0"
             :interval="25"
             :unit="'%'"
+            :isLinkage="isLinkage"
           />
         </div>
         <div class="table-in-card">
@@ -113,6 +120,9 @@
     </div>
     <el-tabs v-model="tab" class="tab2">
       <el-tab-pane :label="$t('resourceMonitor.memory.topProcess')" :name="0">
+        <template #label>
+          <span>{{ $t('resourceMonitor.memory.topProcess') }} <show-info :info="topProcessInfo"/></span>
+        </template>
         <el-table
           :table-layout="'auto'"
           :data="topMemoryProcessNowData == null ? [] : topMemoryProcessNowData"
@@ -153,6 +163,9 @@
         </el-table>
       </el-tab-pane>
       <el-tab-pane :label="$t('resourceMonitor.memory.topThread')" :name="1">
+        <template #label>
+          <span>{{ $t('resourceMonitor.memory.topThread') }} <show-info :info="topThreadInfo"/> </span>
+        </template>
         <el-table
           :table-layout="'auto'"
           :data="topMemoryDBThreadNowData == null ? [] : topMemoryDBThreadNowData"
@@ -235,6 +248,12 @@
       </my-card>
     </el-col>
   </el-row>
+  <ShowInfo
+      :info="topInfo"
+      v-if="topInfoShow"
+      @close="closeInfo"
+      :tranform="tranform"
+    />
 </template>
 
 <!-- eslint-disable camelcase -->
@@ -254,6 +273,8 @@ import moment from 'moment'
 import { ElMessage } from 'element-plus'
 import router from '@/router'
 import { getWDRSnapshot } from '@/api/wdr'
+import ShowInfo from "@/components/ShowInfo.vue";
+import { useParamsStore } from "@/store/params";
 
 const { t } = useI18n()
 
@@ -295,12 +316,14 @@ const { updateCounter, sourceType, autoRefreshTime, tabNow, instanceId, isManual
 // same for every page in index
 const timer = ref<number>()
 onMounted(() => {
+  isLinkage.value = isChartLinkage.value
   load()
   loadTOPMemoryProcessNow(props.tabId)
 })
 watch(
   updateCounter,
   () => {
+    isLinkage.value = isChartLinkage.value
     clearInterval(timer.value)
     if (tabNow.value === tabKeys.ResourceMonitorMemory) {
       if (updateCounter.value.source === sourceType.value.INSTANCE) {
@@ -342,6 +365,8 @@ watch(
     // clear data
     metricsData.value.memoryUsed = []
     metricsData.value.swap = []
+    memoryUseInfo.value.option = []
+    memorySwapInfo.value.option = []
 
     const baseData = indexData.value
     if (!baseData) return
@@ -349,18 +374,18 @@ watch(
     // info
     metricsData.value.memoryInfo = [
       {
-        MEM_CACHE: byteToMB(baseData.MEM_CACHE) + 'MB',
-        MEM_FREE: byteToMB(baseData.MEM_FREE) + 'MB',
-        MEM_TOTAL: byteToMB(baseData.MEM_TOTAL) + 'MB',
-        MEM_USED: byteToMB(baseData.MEM_USED) + 'MB',
-        MEMORY_DB_USED_CURR: byteToMB(baseData.MEMORY_DB_USED_CURR) + 'MB',
+        MEM_CACHE: baseData.MEM_CACHE ? byteToMB(baseData.MEM_CACHE) + 'MB' : '',
+        MEM_FREE: baseData.MEM_FREE ? byteToMB(baseData.MEM_FREE) + 'MB' : '',
+        MEM_TOTAL: baseData.MEM_TOTAL ? byteToMB(baseData.MEM_TOTAL) + 'MB' : '',
+        MEM_USED: baseData.MEM_USED ? byteToMB(baseData.MEM_USED) + 'MB' : '',
+        MEMORY_DB_USED_CURR: baseData.MEMORY_DB_USED_CURR ? byteToMB(baseData.MEMORY_DB_USED_CURR) + 'MB' : '',
       },
     ]
     metricsData.value.swapInfo = [
       {
-        SWAP_FREE: byteToMB(baseData.SWAP_FREE) + 'MB',
-        SWAP_TOTAL: byteToMB(baseData.SWAP_TOTAL) + 'MB',
-        SWAP_USED: byteToMB(baseData.SWAP_USED) + 'MB',
+        SWAP_FREE: baseData.SWAP_FREE ? byteToMB(baseData.SWAP_FREE) + 'MB' : '',
+        SWAP_TOTAL: baseData.SWAP_TOTAL ? byteToMB(baseData.SWAP_TOTAL) + 'MB' : '',
+        SWAP_USED: baseData.SWAP_USED ? byteToMB(baseData.SWAP_USED) + 'MB' : '',
       },
     ]
 
@@ -375,6 +400,7 @@ watch(
         areaStyle: {},
         name: t('resourceMonitor.memory.memoryUse'),
       })
+      memoryUseInfo.value.option.push({ name: t('resourceMonitor.memory.memoryUse'), value: t('resourceMonitor.memory.memoryUseContent')})
     }
     if (baseData.MEMORY_DB_USED) {
       let tempData: string[] = []
@@ -386,15 +412,17 @@ watch(
         areaStyle: {},
         name: t('resourceMonitor.memory.memoryDBUse'),
       })
+      memoryUseInfo.value.option.push({ name: t('resourceMonitor.memory.memoryDBUse'), value: t('resourceMonitor.memory.memoryDBUseContent') })
     }
 
     // swap
-    {
+    if (baseData.MEMORY_SWAP) {
       let tempData: string[] = []
       baseData.MEMORY_SWAP.forEach((d: number) => {
         tempData.push(toFixed(d))
       })
       metricsData.value.swap.push({ data: tempData, areaStyle: {}, stack: 'Total', name: 'swap' })
+      memoryUseInfo.value.option.push({ name: 'swap', value: t('resourceMonitor.memory.swapContent') })
     }
 
     // dbMemoryConfig
@@ -530,4 +558,71 @@ watch(
   },
   { deep: true }
 )
+
+const memoryUse = ref();
+const interactiveAreaUsage = ref();
+const download = (title: string, ref: any) => {
+  ref.download(title)
+}
+
+const memoryUseInfo = ref<any>({
+  title: t("app.fieldOverview"),
+  option: []
+})
+
+const memorySwapInfo = ref<any>({
+  title: t("app.fieldOverview"),
+  option: []
+})
+
+const topThreadInfo = ref<any>({
+  title: t("app.fieldOverview"),
+  option: [
+    { name: "%CPU", value: t("resourceMonitor.topThread.cpuContent") },
+    { name: "%MEM", value: t("resourceMonitor.topThread.memContent") },
+    { name: "COMMAND", value: t("resourceMonitor.topThread.commandContent") },
+    { name: "NI", value: t("resourceMonitor.topThread.niContent") },
+    { name: "PID", value: t("resourceMonitor.topThread.pidContent") },
+    { name: "PR", value: t("resourceMonitor.topThread.prContent") },
+    { name: "RES", value: t("resourceMonitor.topThread.resContent") },
+    { name: "S", value: t("resourceMonitor.topThread.sContent") },
+    { name: "SHR", value: t("resourceMonitor.topThread.shrContent") },
+    { name: "TIME+", value: t("resourceMonitor.topThread.timeContent") },
+    { name: "USER", value: t("resourceMonitor.topThread.userContent") },
+    { name: "VIRT", value: t("resourceMonitor.topThread.virtContent") },
+    { name: t('session.trans.sessionID'), value: t("resourceMonitor.topThread.sessionIDContent") },
+    { name: 'SQLID', value: t("resourceMonitor.topThread.sqlIDContent") },
+  ],
+});
+const topProcessInfo = ref<any>({
+  title: t("app.fieldOverview"),
+  option: [
+    { name: "%CPU", value: t("resourceMonitor.topProcess.cpuContent") },
+    { name: "%MEM", value: t("resourceMonitor.topProcess.memContent") },
+    { name: "COMMAND", value: t("resourceMonitor.topProcess.commandContent") },
+    { name: "FullCommand", value: t("resourceMonitor.topProcess.fullCommandContent") },
+    { name: "NI", value: t("resourceMonitor.topProcess.niContent") },
+    { name: "PID", value: t("resourceMonitor.topProcess.pidContent") },
+    { name: "PR", value: t("resourceMonitor.topProcess.prContent") },
+    { name: "RES", value: t("resourceMonitor.topProcess.resContent") },
+    { name: "S", value: t("resourceMonitor.topProcess.sContent") },
+    { name: "SHR", value: t("resourceMonitor.topProcess.shrContent") },
+    { name: "TIME+", value: t("resourceMonitor.topProcess.timeContent") },
+    { name: "USER", value: t("resourceMonitor.topProcess.userContent") },
+    { name: "VIRT", value: t("resourceMonitor.topProcess.virtContent") }
+  ]
+})
+
+const { isChartLinkage } = storeToRefs(useParamsStore());
+const paramsStore = useParamsStore();
+const isLinkage = ref<boolean>(false)
+const changeChartLinkage = () => {
+  paramsStore.setChartLinkage(isLinkage.value)
+}
 </script>
+<style scoped lang="scss">
+.chart-link {
+  display: flex;
+  justify-content: flex-end;
+}
+</style>

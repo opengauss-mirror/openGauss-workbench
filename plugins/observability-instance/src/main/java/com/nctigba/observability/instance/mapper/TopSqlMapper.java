@@ -1,5 +1,24 @@
 /*
- * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ *  Copyright (c) GBA-NCTI-ISDC. 2022-2024.
+ *
+ *  openGauss DataKit is licensed under Mulan PSL v2.
+ *  You can use this software according to the terms and conditions of the Mulan PSL v2.
+ *  You may obtain a copy of Mulan PSL v2 at:
+ *
+ *  http://license.coscl.org.cn/MulanPSL2
+ *
+ *  THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ *  EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ *  MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ *  See the Mulan PSL v2 for more details.
+ *  -------------------------------------------------------------------------
+ *
+ *  TopSqlMapper.java
+ *
+ *  IDENTIFICATION
+ *  plugins/observability-instance/src/main/java/com/nctigba/observability/instance/mapper/TopSqlMapper.java
+ *
+ *  -------------------------------------------------------------------------
  */
 
 package com.nctigba.observability.instance.mapper;
@@ -13,8 +32,8 @@ import org.apache.ibatis.annotations.Select;
 import org.opengauss.util.PSQLException;
 
 import com.nctigba.observability.instance.constants.CommonConstants;
-import com.nctigba.observability.instance.dto.topsql.TopSQLListReq;
-import com.nctigba.observability.instance.model.IndexAdvice;
+import com.nctigba.observability.instance.model.query.TopSQLListQuery;
+import com.nctigba.observability.instance.model.dto.IndexAdviceDTO;
 
 import cn.hutool.core.util.StrUtil;
 
@@ -43,7 +62,7 @@ public interface TopSqlMapper {
             + "from dbe_perf.statement_history where debug_query_id != 0 "
             + "and finish_time >= #{startTimeTime} and finish_time <= #{finishTimeTime} order by ${orderField} desc,"
             + "execution_time desc,cpu_time desc,db_time desc limit 10")
-    List<Map<String, Object>> historyTopsqlList(TopSQLListReq topSQLListReq);
+    List<Map<String, Object>> historyTopsqlList(TopSQLListQuery topSQLListReq);
 
     /**
      * sql detail
@@ -120,7 +139,7 @@ public interface TopSqlMapper {
      * @param sql sql string
      * @return advises
      */
-    default List<IndexAdvice> advise(String sql) {
+    default List<IndexAdviceDTO> advise(String sql) {
         try {
             return defAdvise(sql.replace(StrUtil.LF, CommonConstants.BLANK).replace("'", "''"));
         } catch (PSQLException e) {
@@ -137,7 +156,7 @@ public interface TopSqlMapper {
      * @throws PSQLException when sql error
      */
     @Select("select * from gs_index_advise('${sql}')")
-    List<IndexAdvice> defAdvise(String sql) throws PSQLException;
+    List<IndexAdviceDTO> defAdvise(String sql) throws PSQLException;
 
     /**
      * current wait event

@@ -1,5 +1,24 @@
 /*
- * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ *  Copyright (c) GBA-NCTI-ISDC. 2022-2024.
+ *
+ *  openGauss DataKit is licensed under Mulan PSL v2.
+ *  You can use this software according to the terms and conditions of the Mulan PSL v2.
+ *  You may obtain a copy of Mulan PSL v2 at:
+ *
+ *  http://license.coscl.org.cn/MulanPSL2
+ *
+ *  THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ *  EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ *  MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ *  See the Mulan PSL v2 for more details.
+ *  -------------------------------------------------------------------------
+ *
+ *  PrometheusService.java
+ *
+ *  IDENTIFICATION
+ *  plugins/observability-instance/src/main/java/com/nctigba/observability/instance/service/PrometheusService.java
+ *
+ *  -------------------------------------------------------------------------
  */
 
 package com.nctigba.observability.instance.service;
@@ -12,6 +31,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.core.domain.model.ops.WsSession;
@@ -19,12 +39,12 @@ import org.springframework.stereotype.Service;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.nctigba.observability.instance.constants.CommonConstants;
-import com.nctigba.observability.instance.entity.NctigbaEnv;
-import com.nctigba.observability.instance.entity.NctigbaEnv.envType;
+import com.nctigba.observability.instance.model.entity.NctigbaEnvDO;
+import com.nctigba.observability.instance.model.entity.NctigbaEnvDO.envType;
 import com.nctigba.observability.instance.service.AbstractInstaller.Step.status;
-import com.nctigba.observability.instance.util.Download;
-import com.nctigba.observability.instance.util.SshSession;
-import com.nctigba.observability.instance.util.SshSession.command;
+import com.nctigba.observability.instance.util.DownloadUtils;
+import com.nctigba.observability.instance.util.SshSessionUtils;
+import com.nctigba.observability.instance.util.SshSessionUtils.command;
 
 import cn.hutool.core.thread.ThreadUtil;
 import cn.hutool.core.util.StrUtil;
@@ -33,34 +53,36 @@ import cn.hutool.json.JSONUtil;
 import lombok.Data;
 
 @Service
+@Slf4j
 public class PrometheusService extends AbstractInstaller {
     public static final String PATH = "https://github.com/prometheus/prometheus/releases/download/v2.42.0/";
     public static final String NAME = "prometheus-2.42.0.linux-";
 
-    public void install(WsSession wsSession, String hostId, String path, String userName, String rootPassword,
-            Integer promport) {
+    public void install(
+            WsSession wsSession, String hostId, String path, String userName, String rootPassword,
+            Integer promport, String storageDays) {
         // @formatter:off
-		var steps = Arrays.asList(
-				new Step("prominstall.step1"),
-				new Step("prominstall.step2"),
-				new Step("prominstall.step3"),
-				new Step("prominstall.step4"),
-				new Step("prominstall.step5"),
-				new Step("prominstall.step6"),
-				new Step("prominstall.step7"));
-		// @formatter:on
+        var steps = Arrays.asList(
+                new Step("prominstall.step1"),
+                new Step("prominstall.step2"),
+                new Step("prominstall.step3"),
+                new Step("prominstall.step4"),
+                new Step("prominstall.step5"),
+                new Step("prominstall.step6"),
+                new Step("prominstall.step7"));
+        // @formatter:on
         var curr = 0;
         if (!path.endsWith(File.separator)) {
             path += File.separator;
         }
-        var env = new NctigbaEnv().setHostid(hostId).setPort(promport).setUsername(userName)
+        var env = new NctigbaEnvDO().setHostid(hostId).setPort(promport).setUsername(userName)
                 .setType(envType.PROMETHEUS);
 
         try {
             curr = nextStep(wsSession, steps, curr);
 
             if (envMapper
-                    .selectOne(Wrappers.<NctigbaEnv>lambdaQuery().eq(NctigbaEnv::getType, envType.PROMETHEUS)) != null)
+                    .selectOne(Wrappers.<NctigbaEnvDO>lambdaQuery().eq(NctigbaEnvDO::getType, envType.PROMETHEUS)) != null)
                 throw new RuntimeException("prominstall.limit");
             envMapper.insert(env);
 
@@ -71,12 +93,14 @@ public class PrometheusService extends AbstractInstaller {
                     throw new RuntimeException(CommonConstants.HOST_NOT_FOUND);
                 env.setHost(hostEntity);
                 if (rootPassword != null)
-                    try (var session = SshSession.connect(hostEntity.getPublicIp(), hostEntity.getPort(), "root",
-                            encryptionUtils.decrypt(rootPassword));) {
+                    try (var session = SshSessionUtils.connect(hostEntity.getPublicIp(), hostEntity.getPort(), "root",
+                                                          encryptionUtils.decrypt(rootPassword));) {
                     } catch (Exception e) {
                         throw new RuntimeException("root password error");
                     }
                 try (var sshsession = connect(env, rootPassword, steps, curr);) {
+                    sshsession.testPortCanUse(promport);
+
                     curr = nextStep(wsSession, steps, curr);
                     sshsession.execute("mkdir -p " + path);
                     sshsession.execute("ls " + path);
@@ -86,10 +110,10 @@ public class PrometheusService extends AbstractInstaller {
                     if (!sshsession.test(command.STAT.parse(path + name))) {
                         if (!sshsession.test(command.STAT.parse(path + tar))) {
                             var pkg = envMapper
-                                    .selectOne(Wrappers.<NctigbaEnv>lambdaQuery().like(NctigbaEnv::getPath, tar));
+                                    .selectOne(Wrappers.<NctigbaEnvDO>lambdaQuery().like(NctigbaEnvDO::getPath, tar));
                             if (pkg == null) {
-                                var f = Download.download(PATH + tar, "pkg/" + tar);
-                                pkg = new NctigbaEnv().setPath(f.getCanonicalPath()).setType(envType.PROMETHEUS_PKG);
+                                var f = DownloadUtils.download(PATH + tar, "pkg/" + tar);
+                                pkg = new NctigbaEnvDO().setPath(f.getCanonicalPath()).setType(envType.PROMETHEUS_PKG);
                                 addMsg(wsSession, steps, curr, "prominstall.downloadsuccess");
                                 save(pkg);
                             }
@@ -103,15 +127,19 @@ public class PrometheusService extends AbstractInstaller {
                     env.setPath(path + name);
 
                     curr = nextStep(wsSession, steps, curr);
-                    sshsession.executeNoWait(
+                    String startCmd =
                             "cd " + env.getPath() + " && ./prometheus --web.enable-lifecycle --web.listen-address=:"
-                                    + promport + " --config.file=prometheus.yml &");
+                                    + promport + " --config.file=prometheus.yml"
+                                    + " --storage.tsdb.retention.time=" + storageDays
+                                    + " &";
+                    log.error("startCmd:{}", startCmd);
+                    sshsession.executeNoWait(startCmd);
 
                     curr = nextStep(wsSession, steps, curr);
                     for (int i = 0; i < 11; i++) {
                         try {
                             String str = HttpUtil.get("http://" + env.getHost().getPublicIp() + ":" + env.getPort()
-                                    + "/api/v1/status/runtimeinfo");
+                                                              + "/api/v1/status/runtimeinfo");
                             if (StringUtils.isBlank(str))
                                 throw new Exception();
                         } catch (Exception e) {
@@ -140,35 +168,35 @@ public class PrometheusService extends AbstractInstaller {
         }
     }
 
-    private SshSession connect(NctigbaEnv env, String rootPassword, List<Step> steps, int curr) throws IOException {
+    private SshSessionUtils connect(NctigbaEnvDO env, String rootPassword, List<Step> steps, int curr) throws IOException {
         OpsHostEntity hostEntity = hostFacade.getById(env.getHostid());
         if (hostEntity == null)
             throw new RuntimeException(CommonConstants.HOST_NOT_FOUND);
         env.setHost(hostEntity);
         var user = getUser(hostEntity, env.getUsername(), rootPassword, steps, curr);
-        return SshSession.connect(hostEntity.getPublicIp(), hostEntity.getPort(), env.getUsername(),
-                encryptionUtils.decrypt(user.getPassword()));
+        return SshSessionUtils.connect(hostEntity.getPublicIp(), hostEntity.getPort(), env.getUsername(),
+                                  encryptionUtils.decrypt(user.getPassword()));
     }
 
     /**
-	 * default prometheus config
-	 * @formatter:off
-alerting:
-  alertmanagers:
-  - static_configs:
-    - targets:
-      - alertmanager: 9093
-global:
-  evaluation_interval: 15s
-  scrape_interval: 15s
-rule_files: null
-scrape_configs:
-- job_name: prometheus
-  static_configs:
-  - targets:
-    - localhost:9090
-	 * @formatter:on
-	 */
+     * default prometheus config
+     *
+     * @formatter:off alerting:
+     * alertmanagers:
+     * - static_configs:
+     * - targets:
+     * - alertmanager: 9093
+     * global:
+     * evaluation_interval: 15s
+     * scrape_interval: 15s
+     * rule_files: null
+     * scrape_configs:
+     * - job_name: prometheus
+     * static_configs:
+     * - targets:
+     * - localhost:9090
+     * @formatter:on
+     */
     @Data
     public static class prometheusConfig {
         private global global;
@@ -222,6 +250,7 @@ scrape_configs:
             private String scheme;
             private Boolean follow_redirects;
             private Boolean enable_http2;
+            private Map<String, String[]> params;
 
             @Data
             public static class conf {
@@ -246,13 +275,13 @@ scrape_configs:
 
     public void uninstall(WsSession wsSession, String id) {
         // @formatter:off
-		var steps = Arrays.asList(
-				new Step("promuninstall.step1"),
-				new Step("promuninstall.step2"),
-				new Step("promuninstall.step3"),
-				new Step("promuninstall.step4"),
-				new Step("promuninstall.step5"));
-		// @formatter:on
+        var steps = Arrays.asList(
+                new Step("promuninstall.step1"),
+                new Step("promuninstall.step2"),
+                new Step("promuninstall.step3"),
+                new Step("promuninstall.step4"),
+                new Step("promuninstall.step5"));
+        // @formatter:on
         var curr = 0;
 
         try {
@@ -270,8 +299,8 @@ scrape_configs:
             var user = hostUserFacade.listHostUserByHostId(hostEntity.getHostId()).stream().filter(e -> {
                 return env.getUsername().equals(e.getUsername());
             }).findFirst().orElse(null);
-            try (var sshsession = SshSession.connect(hostEntity.getPublicIp(), hostEntity.getPort(), user.getUsername(),
-                    encryptionUtils.decrypt(user.getPassword()));) {
+            try (var sshsession = SshSessionUtils.connect(hostEntity.getPublicIp(), hostEntity.getPort(), user.getUsername(),
+                                                     encryptionUtils.decrypt(user.getPassword()));) {
                 curr = nextStep(wsSession, steps, curr);
                 var pid = sshsession.execute(command.PS.parse("prometheus", env.getPort()));
                 if (StrUtil.isNotBlank(pid)) {

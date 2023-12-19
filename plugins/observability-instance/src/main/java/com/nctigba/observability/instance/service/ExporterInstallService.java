@@ -1,8 +1,58 @@
 /*
- * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ *  Copyright (c) GBA-NCTI-ISDC. 2022-2024.
+ *
+ *  openGauss DataKit is licensed under Mulan PSL v2.
+ *  You can use this software according to the terms and conditions of the Mulan PSL v2.
+ *  You may obtain a copy of Mulan PSL v2 at:
+ *
+ *  http://license.coscl.org.cn/MulanPSL2
+ *
+ *  THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ *  EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ *  MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ *  See the Mulan PSL v2 for more details.
+ *  -------------------------------------------------------------------------
+ *
+ *  ExporterInstallService.java
+ *
+ *  IDENTIFICATION
+ *  plugins/observability-instance/src/main/java/com/nctigba/observability/instance/service/ExporterInstallService.java
+ *
+ *  -------------------------------------------------------------------------
  */
 
 package com.nctigba.observability.instance.service;
+
+import cn.hutool.core.io.IORuntimeException;
+import cn.hutool.core.io.IoUtil;
+import cn.hutool.core.thread.ThreadUtil;
+import cn.hutool.core.util.StrUtil;
+import cn.hutool.http.HttpUtil;
+import cn.hutool.json.JSONUtil;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.nctigba.observability.instance.constants.CommonConstants;
+import com.nctigba.observability.instance.model.dto.ExporterInstallDTO;
+import com.nctigba.observability.instance.model.dto.PrometheusConfigNodeDTO;
+import com.nctigba.observability.instance.model.entity.AgentNodeRelationDO;
+import com.nctigba.observability.instance.model.entity.CollectTemplateNodeDO;
+import com.nctigba.observability.instance.model.entity.NctigbaEnvDO;
+import com.nctigba.observability.instance.model.entity.NctigbaEnvDO.envType;
+import com.nctigba.observability.instance.exception.TipsException;
+import com.nctigba.observability.instance.mapper.CollectTemplateNodeMapper;
+import com.nctigba.observability.instance.service.AbstractInstaller.Step.status;
+import com.nctigba.observability.instance.util.DownloadUtils;
+import com.nctigba.observability.instance.util.SshSessionUtils;
+import com.nctigba.observability.instance.util.SshSessionUtils.command;
+import lombok.extern.slf4j.Slf4j;
+import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
+import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
+import org.opengauss.admin.common.core.domain.model.ops.OpsClusterNodeVO;
+import org.opengauss.admin.common.core.domain.model.ops.WsSession;
+import org.opengauss.admin.common.exception.CustomException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ResourceLoader;
+import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -13,100 +63,104 @@ import java.nio.file.Files;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.LinkedHashSet;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
-
-import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
-import org.opengauss.admin.common.core.domain.model.ops.OpsClusterNodeVO;
-import org.opengauss.admin.common.core.domain.model.ops.WsSession;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ResourceLoader;
-import org.springframework.stereotype.Service;
-
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.nctigba.observability.instance.constants.CommonConstants;
-import com.nctigba.observability.instance.entity.NctigbaEnv;
-import com.nctigba.observability.instance.entity.NctigbaEnv.envType;
-import com.nctigba.observability.instance.service.AbstractInstaller.Step.status;
-import com.nctigba.observability.instance.service.PrometheusService.prometheusConfig;
-import com.nctigba.observability.instance.service.PrometheusService.prometheusConfig.job;
-import com.nctigba.observability.instance.util.Download;
-import com.nctigba.observability.instance.util.SshSession;
-import com.nctigba.observability.instance.util.SshSession.command;
-import com.nctigba.observability.instance.util.YamlUtil;
-
-import cn.hutool.core.io.FileUtil;
-import cn.hutool.core.io.IORuntimeException;
-import cn.hutool.core.io.IoUtil;
-import cn.hutool.core.thread.ThreadUtil;
-import cn.hutool.core.util.StrUtil;
-import cn.hutool.http.HttpUtil;
-import cn.hutool.json.JSONUtil;
 
 @Service
+@Slf4j
 public class ExporterInstallService extends AbstractInstaller {
     private static final String EXPORTER_NAME = "instance-exporter.jar";
     private static final String JDK = "https://mirrors.huaweicloud.com/kunpeng/archive/compiler/bisheng_jdk/";
     private static final String JDKPKG = "bisheng-jdk-11.0.17-linux-{0}.tar.gz";
 
     @Autowired
-    private ClusterManager clusterManager;
+    ClusterManager clusterManager;
     @Autowired
-    private ResourceLoader loader;
+    ResourceLoader loader;
+    @Autowired
+    CollectTemplateNodeMapper collectTemplateNodeMapper;
+    @Autowired
+    CollectTemplateNodeService collectTemplateNodeService;
+    @Autowired
+    AgentNodeRelationService agentNodeRelationService;
+    @Autowired
+    AgentService agentService;
 
-    public void install(WsSession wsSession, String nodeId, String path, Integer exporterPort, Integer httpPort) {
-        // @formatter:off
-		var steps = Arrays.asList(
-				new Step("exporterinstall.step1"),
-				new Step("exporterinstall.step2"),
-				new Step("exporterinstall.step3"),
-				new Step("exporterinstall.step4"),
-				new Step("exporterinstall.step5"),
-				new Step("exporterinstall.step6"),
-				new Step("exporterinstall.step7"));
-		// @formatter:on
+    public void install(WsSession wsSession, ExporterInstallDTO exporterInstallDTO) {
+        var steps = Arrays.asList(new Step("exporterinstall.step1"), new Step("exporterinstall.step2"),
+                new Step("exporterinstall.step3"), new Step("exporterinstall.step4"),
+                new Step("exporterinstall.step5"), new Step("exporterinstall.step6"),
+                new Step("exporterinstall.step7"));
         int curr = 0;
 
         curr = nextStep(wsSession, steps, curr);
+        String path = exporterInstallDTO.getPath();
         if (!path.endsWith(File.separator)) {
             path += File.separator;
         }
-        NctigbaEnv expEnv = null;
+        NctigbaEnvDO expEnv = null;
         try {
-            var promEnv = envMapper
-                    .selectOne(Wrappers.<NctigbaEnv>lambdaQuery().eq(NctigbaEnv::getType, envType.PROMETHEUS));
-            if (promEnv == null)
-                throw new RuntimeException("prometheus not exists");
-            if (StrUtil.isBlank(promEnv.getPath()))
-                throw new RuntimeException("prometheus installing");
+            // tod: check nodeId,check node db install user
+            // check prometheus
+            var promEnv =
+                    envMapper.selectOne(Wrappers.<NctigbaEnvDO>lambdaQuery().eq(NctigbaEnvDO::getType, envType.PROMETHEUS));
+            if (promEnv == null) throw new RuntimeException("prometheus not exists");
+            if (StrUtil.isBlank(promEnv.getPath())) throw new RuntimeException("prometheus installing");
 
             curr = nextStep(wsSession, steps, curr);
-            var node = clusterManager.getOpsNodeById(nodeId);
-            if (node == null)
-                throw new RuntimeException("node not found");
-            var hostId = node.getHostId();
-            OpsHostEntity hostEntity = hostFacade.getById(hostId);
-            if (hostEntity == null)
-                throw new RuntimeException(CommonConstants.HOST_NOT_FOUND);
-            var user = hostUserFacade.listHostUserByHostId(hostEntity.getHostId()).stream().filter(e -> {
-                return node.getInstallUserName().equals(e.getUsername());
-            }).findFirst().orElse(null);
-            try (var session = SshSession.connect(hostEntity.getPublicIp(), hostEntity.getPort(), user.getUsername(),
-                    encryptionUtils.decrypt(user.getPassword()));) {
-                // check port
-                session.testPortCanUse(httpPort);
-                session.testPortCanUse(exporterPort);
 
-                expEnv = envMapper.selectOne(Wrappers.<NctigbaEnv>lambdaQuery().eq(NctigbaEnv::getHostid, hostId)
-                        .eq(NctigbaEnv::getType, envType.EXPORTER).eq(NctigbaEnv::getNodeid, nodeId));
+            // get host data
+            OpsHostEntity hostEntity = hostFacade.getById(exporterInstallDTO.getHostId());
+            if (hostEntity == null) throw new RuntimeException(CommonConstants.HOST_NOT_FOUND);
+
+            // get user data
+            OpsHostUserEntity user = hostUserFacade.listHostUserByHostId(hostEntity.getHostId()).stream()
+                    .filter(e -> exporterInstallDTO.getUsername().equals(e.getUsername())).findFirst()
+                    .orElseThrow(() -> new CustomException("user not found"));
+
+            try (SshSessionUtils session = SshSessionUtils.connect(hostEntity.getPublicIp(), hostEntity.getPort(),
+                    user.getUsername(),
+                    encryptionUtils.decrypt(user.getPassword()))) {
+                // check agent port
+                Integer httpPort = exporterInstallDTO.getHttpPort();
+                Boolean isNewInstall = StrUtil.isBlank(exporterInstallDTO.getEnvId());
+                if (isNewInstall) {
+                    session.testPortCanUse(httpPort);
+                } else {
+                    Boolean isAgentAlive =
+                            agentService.isAgentAlive(hostEntity.getPublicIp(),
+                                    String.valueOf(exporterInstallDTO.getHttpPort()));
+                    if (!isAgentAlive) {
+                        throw new TipsException("agentNotAlive");
+                    }
+                }
+
                 curr = nextStep(wsSession, steps, curr);
-                if (expEnv == null) {
+
+                if (isNewInstall) {
+                    // check existed,get installed data (same host id and same port)
+                    List<NctigbaEnvDO> expEnvs = envMapper.selectList(
+                            Wrappers.<NctigbaEnvDO>lambdaQuery().eq(NctigbaEnvDO::getHostid, exporterInstallDTO.getHostId())
+                                    .eq(NctigbaEnvDO::getType, envType.EXPORTER).eq(NctigbaEnvDO::getPort, httpPort));
+                    if (expEnvs.size() > 0) {
+                        addMsg(wsSession, steps, curr, "exporter exists");
+                        return;
+                    }
+                    expEnv =
+                            new NctigbaEnvDO().setHostid(exporterInstallDTO.getHostId()).setNodeid(null).setPort(httpPort)
+                                    .setUsername(exporterInstallDTO.getUsername()).setType(envType.EXPORTER)
+                                    .setPath(path);
+                } else {
+                    expEnv = envMapper.selectById(exporterInstallDTO.getEnvId());
+                    if (expEnv == null) {
+                        throw new TipsException("envIdError");
+                    }
+                }
+
+                // install exporter java programe
+                if (isNewInstall) {
                     session.execute("mkdir -p " + path);
-                    expEnv = new NctigbaEnv().setHostid(hostId).setNodeid(nodeId).setPort(httpPort)
-                            .setUsername(node.getInstallUserName()).setType(envType.EXPORTER);
-                    // install new exporter
                     var java = "java";
                     try {
                         if (!session.test(java + " --version")) {
@@ -119,11 +173,11 @@ public class ExporterInstallService extends AbstractInstaller {
                         var arch = session.execute(command.ARCH);
                         var v = "aarch64".equals(arch) ? "aarch64" : "x64";
                         var tar = MessageFormat.format(JDKPKG, v);
-                        var pkg = envMapper
-                                .selectOne(Wrappers.<NctigbaEnv>lambdaQuery().like(NctigbaEnv::getPath, tar));
+                        var pkg =
+                                envMapper.selectOne(Wrappers.<NctigbaEnvDO>lambdaQuery().like(NctigbaEnvDO::getPath, tar));
                         if (pkg == null) {
-                            var f = Download.download(JDK + tar, "pkg/" + tar);
-                            pkg = new NctigbaEnv().setPath(f.getCanonicalPath()).setType("JDK");
+                            var f = DownloadUtils.download(JDK + tar, "pkg/" + tar);
+                            pkg = new NctigbaEnvDO().setPath(f.getCanonicalPath()).setType("JDK");
                             addMsg(wsSession, steps, curr, "agent.install.downloadsuccess");
                             save(pkg);
                         }
@@ -134,83 +188,104 @@ public class ExporterInstallService extends AbstractInstaller {
                     }
                     // upload
                     File f = File.createTempFile("instance-exporter", ".jar");
-                    try (var in = loader.getResource(EXPORTER_NAME).getInputStream();
-                            var out = new FileOutputStream(f);) {
+                    try (var in = loader.getResource(EXPORTER_NAME).getInputStream(); var out = new FileOutputStream(
+                            f);) {
                         IoUtil.copy(in, out);
                     }
                     session.upload(f.getCanonicalPath(), path + EXPORTER_NAME);
                     Files.delete(f.toPath());
                     curr = nextStep(wsSession, steps, curr);
                     // exec
-                    session.executeNoWait("cd " + path + " && " + java + " -jar " + EXPORTER_NAME + " --server.port="
-                            + httpPort + " --exporter.port=" + exporterPort + " &");
-                    expEnv.setPath(path);
-                    for (int i = 0; i < 11; i++) {
-                        try {
-                            Map<String, Object> param = Map.of("hostId", hostId, "nodeId", nodeId, "dbport",
-                                    node.getDbPort(), "dbUsername", node.getDbUser(), "dbPassword",
-                                    node.getDbUserPassword(), "pass", encryptionUtils.decrypt(user.getPassword()),
-                                    "user", user.getUsername());
-                            HttpUtil.post("http://" + hostEntity.getPublicIp() + ":" + expEnv.getPort() + "/config/set",
-                                    JSONUtil.toJsonStr(param));
-                            break;
-                        } catch (IORuntimeException e) {
-                            if (i == 10)
-                                throw e;
-                        }
-                        ThreadUtil.sleep(5000L);
-                    }
-                    curr = nextStep(wsSession, steps, curr);
-                    envMapper.insert(expEnv);
-                    // reload prometheus
-                    var promeHost = hostFacade.getById(promEnv.getHostid());
-                    var promUser = hostUserFacade.listHostUserByHostId(promEnv.getHostid()).stream()
-                            .filter(p -> p.getUsername().equals(promEnv.getUsername())).findFirst()
-                            .orElseThrow(() -> new RuntimeException(
-                                    "The node information corresponding to the host is not found"));
-                    try (var promSession = SshSession.connect(promeHost.getPublicIp(), promeHost.getPort(),
-                            promEnv.getUsername(), encryptionUtils.decrypt(promUser.getPassword()));) {
-                        var promYmlStr = promSession
-                                .execute("cat " + promEnv.getPath() + CommonConstants.PROMETHEUS_YML);
-                        var conf = YamlUtil.loadAs(promYmlStr, prometheusConfig.class);
-
-                        var conexporter = new job.conf();
-                        conexporter.setLabels(Map.of("instance", nodeId, "type", "exporter"));
-                        conexporter.setTargets(Arrays.asList(node.getPublicIp() + ":" + exporterPort));
-                        var job = new job();
-                        job.setStatic_configs(Arrays.asList(conexporter));
-                        job.setJob_name(nodeId);
-                        List<prometheusConfig.job> scrapeConfigs = conf.getScrape_configs().stream().filter(
-                            item -> StrUtil.isBlank(item.getJob_name()) || !item.getJob_name().equals(nodeId)).collect(
-                            Collectors.toList());
-                        scrapeConfigs.add(job);
-                        conf.setScrape_configs(new ArrayList<>(new LinkedHashSet<>(scrapeConfigs)));
-
-                        var prometheusConfigFile = File.createTempFile("prom", ".tmp");
-                        FileUtil.appendUtf8String(YamlUtil.dump(conf), prometheusConfigFile);
-                        promSession.execute("rm " + promEnv.getPath() + CommonConstants.PROMETHEUS_YML);
-                        promSession.upload(prometheusConfigFile.getAbsolutePath(),
-                                promEnv.getPath() + CommonConstants.PROMETHEUS_YML);
-                        Files.delete(prometheusConfigFile.toPath());
-                    }
-
-                    // curl -X POST http://IP/-/reload
-                    var res = HttpUtil.post("http://" + promeHost.getPublicIp() + ":" + promEnv.getPort() + "/-/reload",
-                            "");
-                    if ("Lifecycle API is not enabled.".equals(res)) {
-                        // TODO reload fail
-                    }
-                    curr = nextStep(wsSession, steps, curr);
-                    sendMsg(wsSession, steps, curr, status.DONE);
-                } else {
-                    // use old exporter
-                    addMsg(wsSession, steps, curr, "exporter exists");
+                    session.executeNoWait(
+                            "cd " + path + " && " + java + " -jar " + EXPORTER_NAME
+                                    + " --server.port=" + httpPort + " &");
+                    session.execute("cd " + path + " && " + "rm -rf application.yml");
                 }
+
+                // set agent collect config
+                // build param
+                List<Map<String, Object>> param = new ArrayList<>();
+                exporterInstallDTO.getNodeIds().forEach(nodeId -> {
+                    ClusterManager.OpsClusterNodeVOSub nodeTemp = clusterManager.getOpsNodeById(nodeId);
+                    if (nodeTemp == null) throw new RuntimeException("node not found:" + nodeId);
+
+                    OpsHostEntity targetHostEntity = hostFacade.getById(nodeTemp.getHostId());
+                    String targetSSHUser = nodeTemp.getInstallUserName();
+                    OpsHostUserEntity targetUser =
+                            hostUserFacade.listHostUserByHostId(targetHostEntity.getHostId()).stream()
+                                    .filter(e -> targetSSHUser.equals(e.getUsername())).findFirst()
+                                    .orElseThrow(() -> new CustomException("user not found"));
+
+                    Map<String, Object> paramItem = new HashMap<>();
+                    paramItem.put("nodeId", nodeId);
+                    paramItem.put("hostId", nodeTemp.getHostId());
+                    paramItem.put("dbport", nodeTemp.getDbPort());
+                    paramItem.put("dbUsername", nodeTemp.getDbUser());
+                    paramItem.put("dbPassword", nodeTemp.getDbUserPassword());
+                    paramItem.put("pass", encryptionUtils.decrypt(targetUser.getPassword()));
+                    paramItem.put("user", nodeTemp.getInstallUserName());
+                    paramItem.put("machineIP", targetHostEntity.getPublicIp());
+                    paramItem.put("dbIp", targetHostEntity.getPublicIp());
+                    paramItem.put("machinePort", targetHostEntity.getPort());
+                    param.add(paramItem);
+                });
+                log.info("agent set config param:{}", JSONUtil.toJsonStr(param));
+                for (int i = 0; i < 11; i++) {
+                    try {
+                        String url = "http://" + hostEntity.getPublicIp() + ":" + expEnv.getPort() + "/config/set";
+                        log.info("agent set config URl:{}", url);
+                        String result = HttpUtil.post(url, JSONUtil.toJsonStr(param));
+                        log.info("agent set config result:{}", result);
+                        break;
+                    } catch (IORuntimeException e) {
+                        if (i == 10) throw e;
+                    }
+                    ThreadUtil.sleep(5000L);
+                }
+
+                // set success,insert data
+                curr = nextStep(wsSession, steps, curr);
+                if (isNewInstall) {
+                    envMapper.insert(expEnv);
+                }
+
+                String envId = expEnv.getId();
+                // todo just fresh once for multi nodes
+                // 1、clear all relation data
+                agentNodeRelationService.remove(
+                        new LambdaQueryWrapper<AgentNodeRelationDO>()
+                                .eq(AgentNodeRelationDO::getEnvId, envId));
+                // refresh prometheus by setting template
+                exporterInstallDTO.getNodeIds().forEach(nodeId -> {
+                    AgentNodeRelationDO agentNodeRelationDO = new AgentNodeRelationDO();
+                    agentNodeRelationDO.setEnvId(envId);
+                    agentNodeRelationDO.setNodeId(nodeId);
+                    agentNodeRelationService.saveOrUpdate(
+                        agentNodeRelationDO,
+                            new LambdaQueryWrapper<AgentNodeRelationDO>()
+                                    .eq(AgentNodeRelationDO::getNodeId, nodeId));
+
+                    // find node template
+                    CollectTemplateNodeDO collectTemplateNodeDO =
+                            collectTemplateNodeMapper.selectOne(
+                                    new LambdaQueryWrapper<CollectTemplateNodeDO>()
+                                            .eq(CollectTemplateNodeDO::getNodeId, nodeId)
+                                            .last("limit 1"));
+
+                    Integer templateId =
+                            collectTemplateNodeDO == null ? null : collectTemplateNodeDO.getTemplateId();
+
+                    List<PrometheusConfigNodeDTO> configNodes =
+                            collectTemplateNodeService.getNodePrometheusConfigParam(templateId, Arrays.asList(nodeId));
+                    collectTemplateNodeService.setPrometheusConfig(configNodes);
+                });
+
+                curr = nextStep(wsSession, steps, curr);
+                sendMsg(wsSession, steps, curr, status.DONE);
             }
         } catch (Exception e) {
             e.printStackTrace();
-            if (expEnv != null)
-                envMapper.deleteById(expEnv);
+            if (expEnv != null) envMapper.deleteById(expEnv);
             steps.get(curr).setState(status.ERROR).add(e.getMessage());
             wsUtil.sendText(wsSession, JSONUtil.toJsonStr(steps));
             var sw = new StringWriter();
@@ -221,17 +296,14 @@ public class ExporterInstallService extends AbstractInstaller {
         }
     }
 
-    public void uninstall(WsSession wsSession, String nodeId) {
+    public void uninstall(WsSession wsSession, String envId) {
         var steps = new ArrayList<Step>();
         steps.add(new Step("exporteruninstall.step1"));
         steps.add(new Step("exporteruninstall.step10"));
         var curr = 0;
 
         try {
-            var node = clusterManager.getOpsNodeById(nodeId);
-            uninstallExporter(wsSession, steps, curr, node);
-            curr = steps.size() - 1;
-            uninstallNodeAndGaussExporter(wsSession, steps, curr, node);
+            uninstallExporter(wsSession, steps, curr, envId);
             curr = steps.size() - 1;
             sendMsg(wsSession, steps, curr, status.DONE);
         } catch (Exception e) {
@@ -245,66 +317,19 @@ public class ExporterInstallService extends AbstractInstaller {
         }
     }
 
-    private void uninstallExporter(WsSession wsSession, ArrayList<Step> steps, int curr, OpsClusterNodeVO node) {
-        var exporterList = envMapper.selectList(Wrappers.<NctigbaEnv>lambdaQuery()
-                .eq(NctigbaEnv::getType, envType.EXPORTER).eq(NctigbaEnv::getHostid, node.getHostId()));
-        var exporterenv = exporterList.isEmpty() ? null : exporterList.get(0);
-        if (exporterenv == null) {
-            return;
-        }
-        OpsHostEntity expHostEntity = hostFacade.getById(node.getHostId());
-        if (expHostEntity == null)
-            throw new RuntimeException(CommonConstants.HOST_NOT_FOUND);
-        steps.add(steps.size() - 1, new Step("exporteruninstall.step2"));
-        steps.add(steps.size() - 1, new Step("exporteruninstall.step3"));
-        steps.add(steps.size() - 1, new Step("exporteruninstall.step4"));
-        curr = nextStep(wsSession, steps, curr);
-        var expuser = hostUserFacade.listHostUserByHostId(expHostEntity.getHostId()).stream().filter(e -> {
-            return exporterenv == null ? false : exporterenv.getUsername().equals(e.getUsername());
-        }).findFirst().orElse(null);
-        // exporter user
-        if (expuser == null) {
-            curr = skipStep(wsSession, steps, curr);
-            return;
-        }
-        try (var sshsession = SshSession.connect(expHostEntity.getPublicIp(), expHostEntity.getPort(),
-                expuser.getUsername(), encryptionUtils.decrypt(expuser.getPassword()));) {
-            curr = nextStep(wsSession, steps, curr);
-            // ps
-            var nodePid = sshsession.execute(command.PS.parse(EXPORTER_NAME, exporterenv.getPort()));
-            if (StrUtil.isNotBlank(nodePid)) {
-                curr = nextStep(wsSession, steps, curr);
-                // kill
-                sshsession.execute(command.KILL.parse(nodePid));
-            } else {
-                curr = skipStep(wsSession, steps, curr);
-            }
-            curr = nextStep(wsSession, steps, curr);
-            envMapper.deleteById(exporterenv);
-        } catch (Exception e) {
-            steps.get(curr).setState(status.ERROR).add(e.getMessage());
-            wsUtil.sendText(wsSession, JSONUtil.toJsonStr(steps));
-            var sw = new StringWriter();
-            try (var pw = new PrintWriter(sw);) {
-                e.printStackTrace(pw);
-            }
-            wsUtil.sendText(wsSession, sw.toString());
-        }
-        return;
-    }
-
-    private void uninstallNodeAndGaussExporter(WsSession wsSession, ArrayList<Step> steps, int curr,
-            OpsClusterNodeVO node) throws IOException {
-        var nodeenvList = envMapper.selectList(Wrappers.<NctigbaEnv>lambdaQuery()
-                .eq(NctigbaEnv::getType, envType.NODE_EXPORTER).eq(NctigbaEnv::getHostid, node.getHostId()));
+    private void uninstallNodeAndGaussExporter(
+            WsSession wsSession, ArrayList<Step> steps, int curr, OpsClusterNodeVO node) throws IOException {
+        var nodeenvList = envMapper.selectList(
+                Wrappers.<NctigbaEnvDO>lambdaQuery().eq(NctigbaEnvDO::getType, envType.NODE_EXPORTER)
+                        .eq(NctigbaEnvDO::getHostid, node.getHostId()));
         var nodeenv = nodeenvList.isEmpty() ? null : nodeenvList.get(0);
-        var gaussExporterEnvList = envMapper.selectList(Wrappers.<NctigbaEnv>lambdaQuery()
-                .eq(NctigbaEnv::getType, envType.OPENGAUSS_EXPORTER).eq(NctigbaEnv::getHostid, node.getHostId()));
+        var gaussExporterEnvList = envMapper.selectList(
+                Wrappers.<NctigbaEnvDO>lambdaQuery().eq(NctigbaEnvDO::getType, envType.OPENGAUSS_EXPORTER)
+                        .eq(NctigbaEnvDO::getHostid, node.getHostId()));
         var gaussExporterEnv = gaussExporterEnvList.isEmpty() ? null : gaussExporterEnvList.get(0);
 
         OpsHostEntity hostEntity = hostFacade.getById(node.getHostId());
-        if (hostEntity == null)
-            throw new RuntimeException(CommonConstants.HOST_NOT_FOUND);
+        if (hostEntity == null) throw new RuntimeException(CommonConstants.HOST_NOT_FOUND);
 
         // installed user
         var user = hostUserFacade.listHostUserByHostId(hostEntity.getHostId()).stream().filter(e -> {
@@ -323,7 +348,7 @@ public class ExporterInstallService extends AbstractInstaller {
         steps.add(steps.size() - 1, new Step("exporteruninstall.step8"));
         steps.add(steps.size() - 1, new Step("exporteruninstall.step9"));
         curr = nextStep(wsSession, steps, curr);
-        try (var sshsession = SshSession.connect(hostEntity.getPublicIp(), hostEntity.getPort(), user.getUsername(),
+        try (var sshsession = SshSessionUtils.connect(hostEntity.getPublicIp(), hostEntity.getPort(), user.getUsername(),
                 encryptionUtils.decrypt(user.getPassword()));) {
             curr = nextStep(wsSession, steps, curr);
             if (nodeenv != null) {
@@ -335,8 +360,7 @@ public class ExporterInstallService extends AbstractInstaller {
                     curr = skipStep(wsSession, steps, curr);
                 }
                 envMapper.deleteById(nodeenv);
-            } else
-                curr = skipStep(wsSession, steps, curr);
+            } else curr = skipStep(wsSession, steps, curr);
 
             curr = nextStep(wsSession, steps, curr);
             var gaussPid = sshsession.execute(command.PS.parse("opengauss_exporter", gaussExporterEnv.getPort()));
@@ -347,6 +371,69 @@ public class ExporterInstallService extends AbstractInstaller {
                 curr = skipStep(wsSession, steps, curr);
             }
             envMapper.deleteById(gaussExporterEnv);
+        }
+        return;
+    }
+
+    private void uninstallExporter(WsSession wsSession, ArrayList<Step> steps, int curr, String envId) {
+        // get exporter info
+        var exporterList = envMapper.selectList(
+                Wrappers.<NctigbaEnvDO>lambdaQuery().eq(NctigbaEnvDO::getType, envType.EXPORTER)
+                        .eq(NctigbaEnvDO::getId, envId));
+        var exporterEnv = exporterList.isEmpty() ? null : exporterList.get(0);
+        if (exporterEnv == null) {
+            return;
+        }
+
+        // check host
+        OpsHostEntity expHostEntity = hostFacade.getById(exporterEnv.getHostid());
+        if (expHostEntity == null) throw new RuntimeException(CommonConstants.HOST_NOT_FOUND);
+
+        steps.add(steps.size() - 1, new Step("exporteruninstall.step2"));
+        steps.add(steps.size() - 1, new Step("exporteruninstall.step3"));
+        steps.add(steps.size() - 1, new Step("exporteruninstall.step4"));
+        curr = nextStep(wsSession, steps, curr);
+
+        // check exporter install user
+        var expuser = hostUserFacade.listHostUserByHostId(expHostEntity.getHostId()).stream().filter(e -> {
+            return exporterEnv == null ? false : exporterEnv.getUsername().equals(e.getUsername());
+        }).findFirst().orElse(null);
+        // exporter user
+        if (expuser == null) {
+            curr = skipStep(wsSession, steps, curr);
+            return;
+        }
+
+        // 1.kill exporter process
+        // 2.delete evn info
+        // 3.delete relation info
+        try (var sshsession = SshSessionUtils.connect(expHostEntity.getPublicIp(), expHostEntity.getPort(),
+                expuser.getUsername(),
+                encryptionUtils.decrypt(expuser.getPassword()));) {
+            curr = nextStep(wsSession, steps, curr);
+            // ps
+            var nodePid = sshsession.execute(command.PS.parse(EXPORTER_NAME, exporterEnv.getPort()));
+            if (StrUtil.isNotBlank(nodePid)) {
+                curr = nextStep(wsSession, steps, curr);
+                // kill
+                sshsession.execute(command.KILL.parse(nodePid));
+            } else {
+                curr = skipStep(wsSession, steps, curr);
+            }
+            curr = nextStep(wsSession, steps, curr);
+            envMapper.deleteById(exporterEnv);
+            agentNodeRelationService.remove(
+                    new LambdaQueryWrapper<AgentNodeRelationDO>()
+                            .eq(AgentNodeRelationDO::getEnvId, exporterEnv.getId())
+            );
+        } catch (Exception e) {
+            steps.get(curr).setState(status.ERROR).add(e.getMessage());
+            wsUtil.sendText(wsSession, JSONUtil.toJsonStr(steps));
+            var sw = new StringWriter();
+            try (var pw = new PrintWriter(sw);) {
+                e.printStackTrace(pw);
+            }
+            wsUtil.sendText(wsSession, sw.toString());
         }
         return;
     }

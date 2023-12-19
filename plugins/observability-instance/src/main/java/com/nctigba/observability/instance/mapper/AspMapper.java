@@ -1,5 +1,24 @@
 /*
- * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ *  Copyright (c) GBA-NCTI-ISDC. 2022-2024.
+ *
+ *  openGauss DataKit is licensed under Mulan PSL v2.
+ *  You can use this software according to the terms and conditions of the Mulan PSL v2.
+ *  You may obtain a copy of Mulan PSL v2 at:
+ *
+ *  http://license.coscl.org.cn/MulanPSL2
+ *
+ *  THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ *  EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ *  MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ *  See the Mulan PSL v2 for more details.
+ *  -------------------------------------------------------------------------
+ *
+ *  AspMapper.java
+ *
+ *  IDENTIFICATION
+ *  plugins/observability-instance/src/main/java/com/nctigba/observability/instance/mapper/AspMapper.java
+ *
+ *  -------------------------------------------------------------------------
  */
 
 package com.nctigba.observability.instance.mapper;
@@ -10,8 +29,8 @@ import java.util.Map;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
 
-import com.nctigba.observability.instance.dto.asp.AnalysisDto;
-import com.nctigba.observability.instance.dto.asp.AspCountReq;
+import com.nctigba.observability.instance.model.dto.asp.AnalysisDTO;
+import com.nctigba.observability.instance.model.query.AspCountQuery;
 
 /**
  * AspMapper.java
@@ -38,7 +57,7 @@ public interface AspMapper {
             + "left join ( " + "SELECT sampleid, MIN(sample_time) AS sample_time FROM gs_asp " + "GROUP BY sampleid "
             + ")gs_asp2 on gs_asp1.sampleid  = gs_asp2.sampleid " + ")a "
             + "where a.sample_time >= #{startTime} and a.sample_time <= #{finishTime} " + "order by a.sample_time ")
-    List<Map<String, Object>> count(AspCountReq req);
+    List<Map<String, Object>> count(AspCountQuery req);
 
     /**
      * analysis
@@ -62,5 +81,5 @@ public interface AspMapper {
             + "left join ( " + "SELECT sampleid, MIN(sample_time) AS sample_time FROM dbe_perf.LOCAL_ACTIVE_SESSION "
             + "GROUP BY sampleid) s2 on s1.sampleid  = s2.sampleid "
             + "where s2.sample_time >= #{startTime} and s2.sample_time <= #{finishTime}) " + "order by sample_time; ")
-    List<AnalysisDto> analysis(AspCountReq req);
+    List<AnalysisDTO> analysis(AspCountQuery req);
 }

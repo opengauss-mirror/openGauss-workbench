@@ -56,6 +56,50 @@ export async function getClusterDetails(clusterId: string): Promise<void | Clust
 }
 
 export type ClusterNode = {}
-export async function getClusterNodes(clusterId: string): Promise<void | ClusterNode[]> {
+export type ClusterRelation = {}
+export type ClusterNodesResult = {
+  nodeList: ClusterNode[]
+  relation: ClusterRelation[]
+}
+export async function getClusterNodes(clusterId: string): Promise<void | ClusterNodesResult> {
   return ogRequest.get('/instanceMonitoring/api/v1/clusters/' + clusterId + '/nodes')
+}
+
+export type ClusterProportion = {
+  value: string
+  color: string
+  num: number
+}
+export type Top5 = {
+  nodeName: string
+  value: string
+  ratio: number
+}
+export type Statistics = {
+  cluster: {
+    total: number
+    proportion: ClusterProportion[]
+  }
+  nodeStat: {
+    total: number
+    proportion: ClusterProportion[]
+  }
+  nodeSyncStat: {
+    total: number
+    proportion: ClusterProportion[]
+  }
+  top5: Top5[]
+}
+export async function getStatistics(): Promise<void | Statistics> {
+  return ogRequest.get('/instanceMonitoring/api/v1/clusters/statistics')
+}
+
+export type switchRecord = {}
+export async function getSwitchRecords(clusterId: String, pageSize: number, pageNum: number, start: String, end: String): Promise<void | switchRecord[]> {
+  return ogRequest.get('/instanceMonitoring/api/v1/clusters/' + clusterId + '/switchRecord', {
+    start,
+    end,
+    pageSize,
+    pageNum
+  })
 }

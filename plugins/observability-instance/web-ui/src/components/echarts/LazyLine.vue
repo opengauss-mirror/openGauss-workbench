@@ -3,7 +3,7 @@
     <div class="line-tips" v-if="tips">
       <div class=""><svg-icon name="info" />{{ tips }}</div>
     </div>
-    <div :key="`${i18n.global.locale.value}`" :id="domId" ref="loadRef" style="width: 100%; height: 100%"></div>
+    <div :key="`${i18n.global.locale.value}`" @mouseout="divMouseout" :id="domId" ref="loadRef" style="width: 100%; height: 100%"></div>
   </div>
 </template>
 
@@ -45,6 +45,13 @@ import { i18n } from '@/i18n'
 import { useWindowStore } from '@/store/window'
 import colorCharts from '@/assets/style/color.module.scss'
 import { useIntervalTime } from '@/hooks/time'
+import { useParamsStore } from "@/store/params";
+
+const paramsStore = useParamsStore();
+const {
+  dataIndex,
+  chartId
+} = storeToRefs(useParamsStore());
 
 export interface LineData {
   name: string
@@ -120,6 +127,7 @@ const props = withDefaults(
     translate?: boolean
     countByDataTimePicker: boolean
     xFormater?: string
+    isLinkage: boolean
   }>(),
   {
     xData: () => [],
@@ -133,6 +141,7 @@ const props = withDefaults(
     isTooltipsFormatDate: true,
     enterable: true,
     countByDataTimePicker: true,
+    isLinkage: false
   }
 )
 const timer = ref<number>()
@@ -151,7 +160,7 @@ onMounted(() => {
       }
       if (divWidth !== 0 && notMatch.value) {
         notMatch.value = false
-        myChart.resize()
+        myChart?.resize()
       }
       lastWidth.value = divWidth
     },
@@ -244,6 +253,7 @@ const renderChart = () => {
       backgroundColor: 'rgba(0, 0, 0, 0.64)',
       borderWidth: 0,
       formatter: (params) => {
+        let dataIndex = 0;
         let htmlStr = '<div style="height: auto;max-height: 180px;overflow-y: scroll;border-radius: 4px;color:#fff">'
         if (Array.isArray(params)) {
           if (props.isTooltipsFormatDate) {
@@ -282,11 +292,17 @@ const renderChart = () => {
               '</div>' +
               '</div>'
           }
+          dataIndex = params[0].dataIndex
         } else {
           const seriesName = props.translate ? t(`${params.seriesName}`) : params.seriesName
           htmlStr += `${params.name}<div style="display: flex;justify-content: space-between;"><div style="margin-right: 24px;">${params.marker} ${seriesName}</div>${params.data}</div>`
+          dataIndex = params.dataIndex
         }
         htmlStr += '</div>'
+        if (props.isLinkage) {
+          paramsStore.setDataIndex(dataIndex)
+          paramsStore.setChartId(domId)
+        }
         return htmlStr
       },
     },
@@ -376,6 +392,13 @@ const renderChart = () => {
   })
 
   myChart.setOption(option, true)
+
+  myChart.getZr().on('mouseout', () => {
+    if (!props.isLinkage) {
+      return
+    }
+    paramsStore.setDataIndex(null)
+  });
   if (
     !props.countByDataTimePicker &&
     Array.isArray(props.defaultBrushArea) &&
@@ -431,6 +454,59 @@ watch(
   },
   { deep: true }
 )
+
+const download = (title) => {
+  let pic = myChart.getDataURL()
+  const elink = document.createElement("a")
+  elink.download = title
+  elink.style.display = "none"
+  elink.href = pic
+  document.body.appendChild(elink)
+  elink.click()
+  document.body.removeChild(elink);
+}
+defineExpose({ download })
+
+const divMouseout = () => {
+  if (!props.isLinkage) {
+    return
+  }
+  paramsStore.setDataIndex(null)
+  paramsStore.setChartId(null)
+}
+
+watch(dataIndex, (index) => {
+  if (!props.isLinkage) {
+    return
+  }
+  if (chartId.value === domId) {
+    return;
+  }
+  myChart.dispatchAction({
+      type: 'hideTip'
+  });
+  if (index == null) {
+    return;
+  }
+  for (let i = 0; i < props.data.length; i++) {
+    myChart.dispatchAction({
+      type: 'showTip',
+      seriesIndex: i,
+      dataIndex: index
+    });
+  }
+})
+
+watch(chartId, (chartId) => {
+  if (!props.isLinkage) {
+    return
+  }
+  if (!chartId) {
+    myChart.dispatchAction({
+        type: 'hideTip'
+    });
+  }
+})
 </script>
 
 <style scoped lang="scss"></style>

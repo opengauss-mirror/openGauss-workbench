@@ -1,16 +1,17 @@
 <template>
   <IndexBar :tabId="props.tabId"></IndexBar>
   <div style="margin-bottom: 38px"></div>
-  <my-card :title="$t('instanceMonitor.asp.sampleActiveSessionCount')" height="200" :bodyPadding="false">
+  <my-card :title="$t('instanceMonitor.asp.sampleActiveSessionCount')" height="200" :bodyPadding="false" showExpand showDownload @download="(title) => download(title, activeSessionCountLine)">
     <LazyLine
       :rangeSelect="true"
       :tabId="props.tabId"
       :formatter="toFixed"
       :data="metricsData.sessionCount"
       :xData="metricsData.time"
+      ref="activeSessionCountLine"
     />
   </my-card>
-
+  
   <div class="gap-row"></div>
 
   <my-card :title="$t('instanceMonitor.asp.aspAnalysis')" height="300" :bodyPadding="false">
@@ -207,6 +208,7 @@ const filter = ref<any[]>([])
 const filterValue = ref<string[]>([])
 const table1 = ref<any[]>([])
 const table2 = ref<any[]>([])
+const activeSessionCountLine = ref()
 
 const { updateCounter, sourceType, autoRefreshTime, tabNow, instanceId } = storeToRefs(useMonitorStore(props.tabId))
 
@@ -443,6 +445,10 @@ const gotoSessionDetail = (id: string) => {
     router.push(`/vem/sessionDetail/${instanceId.value}/${id}`)
   }
 }
+
+const download = (title: string, ref: any) => {
+  ref.download(title);
+};
 </script>
 
 <style scoped lang="scss">

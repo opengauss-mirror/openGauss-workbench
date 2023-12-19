@@ -599,7 +599,7 @@ WDR是一个监控openGauss数据库特性的衍生品，通过分析时间范�
 #### 5.9.1 采样活跃会话数量
 
 ​               点击【ASP】tab,选择【集群/实例】
-![img.png](E:/devCloud/master/openGauss-workbench/plugins/observability-instance/doc/ASP_count.png)
+![img.png](doc/ASP_count.png)
 
 <center>图5.33 采样活跃会话数量
 
@@ -607,7 +607,7 @@ WDR是一个监控openGauss数据库特性的衍生品，通过分析时间范�
 #### 5.9.2 ASP分析
 
 ​               点击【ASP】tab,选择【集群/实例】，选择【分析指标】
-![img.png](E:/devCloud/master/openGauss-workbench/plugins/observability-instance/doc/ASP.png)
+![img.png](doc/ASP.png)
 
 <center>图5.34 ASP分析
 
@@ -620,7 +620,7 @@ WDR是一个监控openGauss数据库特性的衍生品，通过分析时间范�
 #### 5.10.1 集群列表
 
 ​               点击菜单【集群监控】,选择【集群列表】tab
-![img.png](E:/devCloud/master/openGauss-workbench/plugins/observability-instance/doc/cluster_list.png)
+![img.png](doc/cluster_list.png)
 
 <center>图5.35 集群列表
 
@@ -630,7 +630,7 @@ WDR是一个监控openGauss数据库特性的衍生品，通过分析时间范�
 #### 5.10.2 主备延迟列表
 
 ​               点击菜单【集群监控】,选择【主备延迟列表】tab
-![img.png](E:/devCloud/master/openGauss-workbench/plugins/observability-instance/doc/cluster_delay.png)
+![img.png](doc/cluster_delay.png)
 
 <center>图5.36 主备延迟列表
 
@@ -641,17 +641,38 @@ WDR是一个监控openGauss数据库特性的衍生品，通过分析时间范�
 #### 5.10.3 集群详情
 
 ​               点击菜单【集群监控】,选择【集群列表】tab，点击任一集群名称
-![img.png](E:/devCloud/master/openGauss-workbench/plugins/observability-instance/doc/cluster_detail1.png)
+![img.png](doc/cluster_detail1.png)
 
 <center>图5.37 集群详情1
 
 
-![img.png](E:/devCloud/master/openGauss-workbench/plugins/observability-instance/doc/cluster_detail2.png)
+![img.png](doc/cluster_detail2.png)
 
 <center>图5.38 集群详情2
 
 
 点击操作中的【性能监控】，可跳转到对应节点的实例监控
+
+#### 5.10.4 集群统计
+
+​               点击菜单【集群监控】
+![img.png](doc/cluster_stat.png)
+
+<center>图5.39 集群统计
+
+#### 5.10.5 集群拓扑
+
+​               点击菜单【集群监控】,选择【集群列表】tab，点击任一集群名称，进入到集群详情，点击右上角“拓扑”
+![img.png](doc/cluster_relation.png)
+
+<center>图5.40 集群拓扑
+
+#### 5.10.6 集群切换记录
+
+​               点击菜单【集群监控】,选择【集群列表】tab，点击任一集群名称，进入到集群详情，页面最下方
+![img.png](doc/cluster_switch_record.png)
+
+<center>图5.41 集群切换记录
 
 ## 6 FAQS
 

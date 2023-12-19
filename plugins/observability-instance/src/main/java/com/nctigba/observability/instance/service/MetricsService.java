@@ -1,39 +1,63 @@
 /*
- * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ *  Copyright (c) GBA-NCTI-ISDC. 2022-2024.
+ *
+ *  openGauss DataKit is licensed under Mulan PSL v2.
+ *  You can use this software according to the terms and conditions of the Mulan PSL v2.
+ *  You may obtain a copy of Mulan PSL v2 at:
+ *
+ *  http://license.coscl.org.cn/MulanPSL2
+ *
+ *  THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ *  EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ *  MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ *  See the Mulan PSL v2 for more details.
+ *  -------------------------------------------------------------------------
+ *
+ *  MetricsService.java
+ *
+ *  IDENTIFICATION
+ *  plugins/observability-instance/src/main/java/com/nctigba/observability/instance/service/MetricsService.java
+ *
+ *  -------------------------------------------------------------------------
  */
 
 package com.nctigba.observability.instance.service;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
-
+import cn.hutool.core.thread.ThreadUtil;
+import cn.hutool.core.util.StrUtil;
+import cn.hutool.http.HttpUtil;
+import cn.hutool.json.JSONUtil;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.gitee.starblues.bootstrap.annotation.AutowiredType;
+import com.nctigba.observability.instance.enums.MetricsLine;
+import com.nctigba.observability.instance.enums.MetricsValue;
+import com.nctigba.observability.instance.model.entity.NctigbaEnvDO;
+import com.nctigba.observability.instance.mapper.NctigbaEnvMapper;
+import com.nctigba.observability.instance.service.MetricsService.PrometheusResult.PromData.MonitoringMetric;
+import com.nctigba.observability.instance.util.ListUtils;
+import lombok.Data;
+import lombok.extern.log4j.Log4j2;
 import org.opengauss.admin.common.core.domain.model.ops.OpsClusterNodeVO;
 import org.opengauss.admin.common.exception.CustomException;
 import org.opengauss.admin.system.plugin.facade.HostFacade;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.gitee.starblues.bootstrap.annotation.AutowiredType;
-import com.nctigba.observability.instance.constants.MetricsLine;
-import com.nctigba.observability.instance.constants.MetricsValue;
-import com.nctigba.observability.instance.entity.NctigbaEnv;
-import com.nctigba.observability.instance.mapper.NctigbaEnvMapper;
-import com.nctigba.observability.instance.service.MetricsService.PrometheusResult.PromData.MonitoringMetric;
-import com.nctigba.observability.instance.util.ListUtil;
-
-import cn.hutool.core.thread.ThreadUtil;
-import cn.hutool.core.util.StrUtil;
-import cn.hutool.http.HttpUtil;
-import cn.hutool.json.JSONUtil;
-import lombok.Data;
-import lombok.extern.log4j.Log4j2;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @Service
 @Log4j2
@@ -46,6 +70,7 @@ public class MetricsService {
     private static final String TIME = "time";
     private static final Map<String, String> PROM = new HashMap<>();
     private static final String DEFAULT = "DEFAULT";
+    private static final Pattern PATTERN = Pattern.compile("metrics\\.([^\\.]+)\\.name");
     @Autowired
     private NctigbaEnvMapper envMapper;
     @Autowired
@@ -59,7 +84,7 @@ public class MetricsService {
             return PROM.get(DEFAULT);
         }
         var env = envMapper
-                .selectOne(Wrappers.<NctigbaEnv>lambdaQuery().eq(NctigbaEnv::getType, NctigbaEnv.envType.PROMETHEUS));
+                .selectOne(Wrappers.<NctigbaEnvDO>lambdaQuery().eq(NctigbaEnvDO::getType, NctigbaEnvDO.envType.PROMETHEUS));
         if (env == null) {
             throw new CustomException("Prometheus not found");
         }
@@ -178,20 +203,45 @@ public class MetricsService {
     private Object parseLine(String promQl, List<MonitoringMetric> metric, List<Long> timeline, String template) {
         if (metric.size() == 0) {
             return null;
-        } else if (metric.size() == 1) {
-            return ListUtil.collect(metric.get(0).getValues(), timeline);
+        } else if (StrUtil.isBlank(template)) {
+            return ListUtils.collect(metric.get(0).getValues(), timeline);
         } else {
             var map = new HashMap<String, Object>();
             for (var monitoringMetric : metric) {
-                if (template == null) {
-                    return ListUtil.collect(metric.get(0).getValues(), timeline);
-                }
                 String key = StrUtil.format(template, monitoringMetric.getMetric());
-                var lineNumber = ListUtil.collect(monitoringMetric.getValues(), timeline);
+                var lineNumber = ListUtils.collect(monitoringMetric.getValues(), timeline);
                 map.put(key, lineNumber);
             }
             return map;
         }
+    }
+
+    /**
+     * Get all metrics keys
+     *
+     * @return java.util.List<java.lang.String>
+     * @throws IOException Read messages.properties error
+     * @since 2023/12/1
+     */
+    public List<String> getAllMetricKeys() throws IOException {
+        Properties properties = new Properties();
+        InputStream fis = this.getClass().getClassLoader().getResourceAsStream("messages.properties");
+        properties.load(fis);
+        fis.close();
+
+        Set<Object> keySet = properties.keySet();
+        Iterator<Object> iterator = keySet.iterator();
+        List<String> metricNames = new ArrayList<>();
+        while (iterator.hasNext()) {
+            Object key = iterator.next();
+            Matcher matcher = PATTERN.matcher(key.toString());
+            if (matcher.matches()) {
+                String name = matcher.group(1);
+                metricNames.add(name);
+            }
+        }
+
+        return metricNames;
     }
 
     @Data

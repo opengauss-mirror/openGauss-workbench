@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.opengauss</groupId>
     <artifactId>observability-instance</artifactId>
@@ -10,6 +10,7 @@
         <!--config-->
         <plugin-id>observability-instance</plugin-id>
         <npm.run.script>buildNoTest</npm.run.script>
+        <test.skip>false</test.skip>
         <web.build.skip>false</web.build.skip>
         <build.frontend.skip>false</build.frontend.skip>
         <!--project-->
@@ -90,12 +91,22 @@
         <dependency>
             <groupId>com.alibaba</groupId>
             <artifactId>druid-spring-boot-starter</artifactId>
-            <version>1.2.8</version>
+            <version>1.2.16</version>
         </dependency>
         <dependency>
             <groupId>com.baomidou</groupId>
             <artifactId>dynamic-datasource-spring-boot-starter</artifactId>
             <version>${mybatis-plus.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus-generator</artifactId>
+            <version>3.5.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.velocity</groupId>
+            <artifactId>velocity-engine-core</artifactId>
+            <version>2.0</version>
         </dependency>
         <dependency>
             <groupId>org.postgresql</groupId>
@@ -111,11 +122,6 @@
             <artifactId>jsch</artifactId>
             <version>0.1.55</version>
         </dependency>
-        <!-- https://mvnrepository.com/artifact/org.xerial/sqlite-jdbc -->
-        <dependency>
-            <groupId>org.xerial</groupId>
-            <artifactId>sqlite-jdbc</artifactId>
-        </dependency>
         <!-- https://mvnrepository.com/artifact/org.apache.sshd/sshd-scp -->
         <dependency>
             <groupId>org.apache.sshd</groupId>
@@ -126,6 +132,17 @@
             <groupId>org.openjdk.nashorn</groupId>
             <artifactId>nashorn-core</artifactId>
             <version>15.3</version>
+        </dependency>
+        <dependency>
+            <groupId>io.springfox</groupId>
+            <artifactId>springfox-boot-starter</artifactId>
+            <version>3.0.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.xerial</groupId>
+            <artifactId>sqlite-jdbc</artifactId>
+            <version>3.39.3.0</version>
         </dependency>
     </dependencies>
     <dependencyManagement>
@@ -145,7 +162,8 @@
             <id>gitee-eb-repo</id>
             <name>The Maven Repository on Gitee</name>
             <url>
-                https://gitee.com/agile-adept-team/spring-brick-eb/tree/master/maven-repo</url>
+                https://gitee.com/agile-adept-team/spring-brick-eb/tree/master/maven-repo
+            </url>
         </repository>
     </repositories>
     <pluginRepositories>
@@ -153,9 +171,38 @@
             <id>gitee-eb-repo</id>
             <name>The Maven Repository on Gitee</name>
             <url>
-                https://gitee.com/agile-adept-team/spring-brick-eb/tree/master/maven-repo</url>
+                https://gitee.com/agile-adept-team/spring-brick-eb/tree/master/maven-repo
+            </url>
         </pluginRepository>
     </pluginRepositories>
+    <profiles>
+        <profile>
+            <id>dev</id>
+            <properties>
+                <spring.profiles.active>dev</spring.profiles.active>
+            </properties>
+            <dependencies>
+                <dependency>
+                    <groupId>org.opengauss</groupId>
+                    <artifactId>visualtool-framework</artifactId>
+                    <version>5.1.0</version>
+                    <exclusions>
+                        <!--druid-spring-boot-starter removed-->
+                        <exclusion>
+                            <groupId>org.springframework.boot</groupId>
+                            <artifactId>spring-boot-starter-data-redis</artifactId>
+                        </exclusion>
+                    </exclusions>
+                </dependency>
+                <dependency>
+                    <groupId>io.springfox</groupId>
+                    <artifactId>springfox-boot-starter</artifactId>
+                    <version>3.0.0</version>
+                    <scope>compile</scope>
+                </dependency>
+            </dependencies>
+        </profile>
+    </profiles>
     <build>
         <plugins>
             <plugin>
@@ -198,6 +245,7 @@
                             <goal>exec</goal>
                         </goals>
                         <configuration>
+                            <skip>false</skip>
                             <executable>mvn</executable>
                             <workingDirectory>InstanceExporter</workingDirectory>
                             <arguments>
@@ -261,6 +309,24 @@
                 <version>2.5</version>
                 <executions>
                     <execution>
+                        <id>copy-file-to-classes</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${basedir}/target/classes</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>InstanceExporter/target</directory>
+                                    <includes>
+                                        <include>*.jar</include>
+                                    </includes>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                    <execution>
                         <id>copy-web</id>
                         <phase>generate-resources</phase>
                         <goals>
@@ -311,7 +377,8 @@
                     <pluginInfo>
                         <id>${plugin-id}</id>
                         <bootstrapClass>
-                            com.nctigba.observability.instance.ObservabilityPluginApplication</bootstrapClass>
+                            com.nctigba.observability.instance.ObservabilityPluginApplication
+                        </bootstrapClass>
                         <version>${project.version}</version>
                         <provider>ncti-gba</provider>
                         <description>Intelligent OPS</description>
@@ -330,7 +397,7 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>2.22.0</version>
                 <configuration>
-                    <skipTests>false</skipTests>
+                    <skipTests>${test.skip}</skipTests>
                 </configuration>
             </plugin>
             <plugin>
@@ -353,7 +420,8 @@
                         <configuration>
                             <dataFile>target/jacoco.exec</dataFile>
                             <outputDirectory>
-                                ${project.reporting.outputDirectory}/jacoco</outputDirectory>
+                                ${project.reporting.outputDirectory}/jacoco
+                            </outputDirectory>
                             <excludes>**/*.jar</excludes>
                         </configuration>
                     </execution>

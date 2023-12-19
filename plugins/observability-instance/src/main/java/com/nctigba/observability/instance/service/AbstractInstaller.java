@@ -1,5 +1,24 @@
 /*
- * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ *  Copyright (c) GBA-NCTI-ISDC. 2022-2024.
+ *
+ *  openGauss DataKit is licensed under Mulan PSL v2.
+ *  You can use this software according to the terms and conditions of the Mulan PSL v2.
+ *  You may obtain a copy of Mulan PSL v2 at:
+ *
+ *  http://license.coscl.org.cn/MulanPSL2
+ *
+ *  THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ *  EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ *  MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ *  See the Mulan PSL v2 for more details.
+ *  -------------------------------------------------------------------------
+ *
+ *  AbstractInstaller.java
+ *
+ *  IDENTIFICATION
+ *  plugins/observability-instance/src/main/java/com/nctigba/observability/instance/service/AbstractInstaller.java
+ *
+ *  -------------------------------------------------------------------------
  */
 
 package com.nctigba.observability.instance.service;
@@ -20,10 +39,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType.Type;
-import com.nctigba.observability.instance.entity.NctigbaEnv;
+import com.nctigba.observability.instance.model.entity.NctigbaEnvDO;
 import com.nctigba.observability.instance.mapper.NctigbaEnvMapper;
 import com.nctigba.observability.instance.service.AbstractInstaller.Step.status;
-import com.nctigba.observability.instance.util.MessageSourceUtil;
+import com.nctigba.observability.instance.util.MessageSourceUtils;
 
 import cn.hutool.json.JSONUtil;
 import lombok.Data;
@@ -94,9 +113,9 @@ public abstract class AbstractInstaller {
         wsUtil.sendText(wsSession, JSONUtil.toJsonStr(steps));
     }
 
-    public void save(NctigbaEnv env) {
-        if (envMapper.selectOne(Wrappers.<NctigbaEnv>lambdaQuery().eq(NctigbaEnv::getType, env.getType())
-                .eq(NctigbaEnv::getPath, env.getPath())) == null)
+    public void save(NctigbaEnvDO env) {
+        if (envMapper.selectOne(Wrappers.<NctigbaEnvDO>lambdaQuery().eq(NctigbaEnvDO::getType, env.getType())
+                .eq(NctigbaEnvDO::getPath, env.getPath())) == null)
             envMapper.insert(env);
     }
 
@@ -109,11 +128,11 @@ public abstract class AbstractInstaller {
         List<String> msg = new ArrayList<>();
 
         public Step(String name) {
-            this.name = MessageSourceUtil.get(name);
+            this.name = MessageSourceUtils.get(name);
         }
 
         public void add(String e, Object... objs) {
-            e = MessageSourceUtil.get(e, objs);
+            e = MessageSourceUtils.get(e, objs);
             msg.add(e);
         }
 

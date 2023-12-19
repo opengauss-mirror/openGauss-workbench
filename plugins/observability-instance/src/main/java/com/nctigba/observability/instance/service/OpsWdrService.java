@@ -1,5 +1,24 @@
 /*
- * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ *  Copyright (c) GBA-NCTI-ISDC. 2022-2024.
+ *
+ *  openGauss DataKit is licensed under Mulan PSL v2.
+ *  You can use this software according to the terms and conditions of the Mulan PSL v2.
+ *  You may obtain a copy of Mulan PSL v2 at:
+ *
+ *  http://license.coscl.org.cn/MulanPSL2
+ *
+ *  THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ *  EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ *  MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ *  See the Mulan PSL v2 for more details.
+ *  -------------------------------------------------------------------------
+ *
+ *  OpsWdrService.java
+ *
+ *  IDENTIFICATION
+ *  plugins/observability-instance/src/main/java/com/nctigba/observability/instance/service/OpsWdrService.java
+ *
+ *  -------------------------------------------------------------------------
  */
 
 package com.nctigba.observability.instance.service;
@@ -13,17 +32,17 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType.Type;
 import com.jcraft.jsch.Session;
-import com.nctigba.observability.instance.aop.Ds;
+import com.nctigba.observability.instance.aspectj.annotation.Ds;
 import com.nctigba.observability.instance.constants.CommonConstants;
-import com.nctigba.observability.instance.entity.OpsWdrEntity;
-import com.nctigba.observability.instance.entity.OpsWdrEntity.WdrScopeEnum;
-import com.nctigba.observability.instance.entity.OpsWdrEntity.WdrTypeEnum;
-import com.nctigba.observability.instance.entity.Snapshot;
+import com.nctigba.observability.instance.model.entity.OpsWdrDO;
+import com.nctigba.observability.instance.model.entity.OpsWdrDO.WdrScopeEnum;
+import com.nctigba.observability.instance.model.entity.OpsWdrDO.WdrTypeEnum;
+import com.nctigba.observability.instance.model.entity.SnapshotDO;
 import com.nctigba.observability.instance.mapper.OpsWdrMapper;
 import com.nctigba.observability.instance.mapper.SnapshotMapper;
-import com.nctigba.observability.instance.model.WdrGeneratorBody;
+import com.nctigba.observability.instance.model.dto.WdrGeneratorDTO;
 import com.nctigba.observability.instance.service.provider.ClusterOpsProviderManager;
-import com.nctigba.observability.instance.util.JschUtil;
+import com.nctigba.observability.instance.util.JschUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.opengauss.admin.common.constant.ops.SshCommandConstants;
@@ -60,7 +79,7 @@ import java.util.stream.Collectors;
  **/
 @Slf4j
 @Service
-public class OpsWdrService extends ServiceImpl<OpsWdrMapper, OpsWdrEntity> {
+public class OpsWdrService extends ServiceImpl<OpsWdrMapper, OpsWdrDO> {
     @Autowired
     @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
     private IOpsClusterService opsClusterService;
@@ -74,7 +93,7 @@ public class OpsWdrService extends ServiceImpl<OpsWdrMapper, OpsWdrEntity> {
     @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
     private HostUserFacade hostUserFacade;
     @Autowired
-    private JschUtil jschUtil;
+    private JschUtils jschUtil;
     @Autowired
     private ClusterOpsProviderManager clusterOpsProviderManager;
     @Autowired
@@ -89,25 +108,25 @@ public class OpsWdrService extends ServiceImpl<OpsWdrMapper, OpsWdrEntity> {
         "unchecked",
         "rawtypes"
     })
-    public Page<OpsWdrEntity> listWdr(
+    public Page<OpsWdrDO> listWdr(
         Page page, String clusterId, WdrScopeEnum wdrScope, WdrTypeEnum wdrType,
         String hostId, Date start, Date end) {
-        var wrapper = Wrappers.lambdaQuery(OpsWdrEntity.class).eq(OpsWdrEntity::getClusterId, clusterId)
-            .eq(Objects.nonNull(wdrScope), OpsWdrEntity::getScope,
+        var wrapper = Wrappers.lambdaQuery(OpsWdrDO.class).eq(OpsWdrDO::getClusterId, clusterId)
+            .eq(Objects.nonNull(wdrScope), OpsWdrDO::getScope,
                 Objects.nonNull(wdrScope) ? wdrScope.name() : StrUtil.EMPTY)
-            .eq(Objects.nonNull(wdrType), OpsWdrEntity::getReportType,
+            .eq(Objects.nonNull(wdrType), OpsWdrDO::getReportType,
                 Objects.nonNull(wdrType) ? wdrType.name() : StrUtil.EMPTY)
-            .eq(StrUtil.isNotEmpty(hostId), OpsWdrEntity::getHostId, hostId)
-            .ge(Objects.nonNull(start), OpsWdrEntity::getReportAt, start)
-            .le(Objects.nonNull(end), OpsWdrEntity::getReportAt, end);
+            .eq(StrUtil.isNotEmpty(hostId), OpsWdrDO::getHostId, hostId)
+            .ge(Objects.nonNull(start), OpsWdrDO::getReportAt, start)
+            .le(Objects.nonNull(end), OpsWdrDO::getReportAt, end);
         page.setTotal(getBaseMapper().selectCount(wrapper));
-        page.setRecords(getBaseMapper().selectList(wrapper.orderByDesc(OpsWdrEntity::getCreateTime)
+        page.setRecords(getBaseMapper().selectList(wrapper.orderByDesc(OpsWdrDO::getCreateTime)
             .last(" limit " + (page.getCurrent() - 1) * page.getSize() + "," + page.getSize())));
         return page;
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public void generate(WdrGeneratorBody wdrGeneratorBody) {
+    public void generate(WdrGeneratorDTO wdrGeneratorBody) {
         String clusterId = wdrGeneratorBody.getClusterId();
         OpsClusterEntity clusterEntity = opsClusterService.getById(clusterId);
 
@@ -140,17 +159,17 @@ public class OpsWdrService extends ServiceImpl<OpsWdrMapper, OpsWdrEntity> {
      */
     public Map<String, Object> findSnapshot(String id, Date start, Date end) {
         Map<String, Object> map = new HashMap<>();
-        Long startSnapshot = snapshotMapper.getIdByTimeDesc(id, Snapshot::getStartTs, DateUtil.offsetHour(start, -1),
+        Long startSnapshot = snapshotMapper.getIdByTimeDesc(id, SnapshotDO::getStartTs, DateUtil.offsetHour(start, -1),
             start);
         map.put("start", startSnapshot == 0 ? null : startSnapshot);
-        Long endSnapshot = snapshotMapper.getIdByTimeAsc(id, Snapshot::getEndTs, end, DateUtil.offsetHour(end, 1));
+        Long endSnapshot = snapshotMapper.getIdByTimeAsc(id, SnapshotDO::getEndTs, end, DateUtil.offsetHour(end, 1));
         map.put("end", endSnapshot == 0 ? null : endSnapshot);
         if (startSnapshot == null || endSnapshot == null) {
             return map;
         }
-        var listWdr = getBaseMapper().selectList(Wrappers.<OpsWdrEntity>lambdaQuery()
-            .eq(OpsWdrEntity::getStartSnapshotId, startSnapshot).eq(OpsWdrEntity::getEndSnapshotId, endSnapshot));
-        map.put("wdrId", listWdr.stream().map(OpsWdrEntity::getWdrId).collect(Collectors.toList()));
+        var listWdr = getBaseMapper().selectList(Wrappers.<OpsWdrDO>lambdaQuery()
+            .eq(OpsWdrDO::getStartSnapshotId, startSnapshot).eq(OpsWdrDO::getEndSnapshotId, endSnapshot));
+        map.put("wdrId", listWdr.stream().map(OpsWdrDO::getWdrId).collect(Collectors.toList()));
         return map;
     }
 
@@ -167,7 +186,7 @@ public class OpsWdrService extends ServiceImpl<OpsWdrMapper, OpsWdrEntity> {
             last += " order by " + orderBy;
         }
         last += " limit " + (page.getCurrent() - 1) * page.getSize() + "," + page.getSize();
-        page.setRecords(snapshotMapper.selectList(Wrappers.<Snapshot>lambdaQuery().last(last)));
+        page.setRecords(snapshotMapper.selectList(Wrappers.<SnapshotDO>lambdaQuery().last(last)));
         return page;
     }
 
@@ -239,7 +258,7 @@ public class OpsWdrService extends ServiceImpl<OpsWdrMapper, OpsWdrEntity> {
 
     @Transactional(rollbackFor = Exception.class)
     public void del(String id) {
-        OpsWdrEntity wdrEntity = getById(id);
+        OpsWdrDO wdrEntity = getById(id);
         if (Objects.isNull(wdrEntity)) {
             throw new OpsException("The record to delete does not exist");
         }
@@ -276,7 +295,7 @@ public class OpsWdrService extends ServiceImpl<OpsWdrMapper, OpsWdrEntity> {
     }
 
     public void downloadWdr(String wdrId, HttpServletResponse response) {
-        OpsWdrEntity wdrEntity = getById(wdrId);
+        OpsWdrDO wdrEntity = getById(wdrId);
         if (Objects.isNull(wdrEntity)) {
             throw new OpsException("wdr information not found");
         }
@@ -348,19 +367,19 @@ public class OpsWdrService extends ServiceImpl<OpsWdrMapper, OpsWdrEntity> {
             String wdrName = "WDR-" + StrUtil.uuid() + ".html";
             doGenerate(wdrPath, wdrName, startId, endId, WdrScopeEnum.NODE, type, session, clusterEntity.getPort(),
                 clusterEntity.getEnvPath());
-            OpsWdrEntity opsWdrEntity = new OpsWdrEntity();
-            opsWdrEntity.setScope(WdrScopeEnum.NODE);
-            opsWdrEntity.setReportAt(new Date());
-            opsWdrEntity.setReportType(type);
-            opsWdrEntity.setReportName(wdrName);
-            opsWdrEntity.setReportPath(wdrPath);
-            opsWdrEntity.setStartSnapshotId(startId);
-            opsWdrEntity.setEndSnapshotId(endId);
-            opsWdrEntity.setClusterId(clusterEntity.getClusterId());
-            opsWdrEntity.setUserId(userEntity.getHostUserId());
-            opsWdrEntity.setHostId(hostId);
-            opsWdrEntity.setNodeId(nodeEntity.getClusterNodeId());
-            save(opsWdrEntity);
+            OpsWdrDO opsWdrDO = new OpsWdrDO();
+            opsWdrDO.setScope(WdrScopeEnum.NODE);
+            opsWdrDO.setReportAt(new Date());
+            opsWdrDO.setReportType(type);
+            opsWdrDO.setReportName(wdrName);
+            opsWdrDO.setReportPath(wdrPath);
+            opsWdrDO.setStartSnapshotId(startId);
+            opsWdrDO.setEndSnapshotId(endId);
+            opsWdrDO.setClusterId(clusterEntity.getClusterId());
+            opsWdrDO.setUserId(userEntity.getHostUserId());
+            opsWdrDO.setHostId(hostId);
+            opsWdrDO.setNodeId(nodeEntity.getClusterNodeId());
+            save(opsWdrDO);
         } finally {
             if (Objects.nonNull(session) && session.isConnected()) {
                 session.disconnect();
@@ -401,19 +420,19 @@ public class OpsWdrService extends ServiceImpl<OpsWdrMapper, OpsWdrEntity> {
             doGenerate(wdrPath, wdrName, startId, endId, WdrScopeEnum.CLUSTER, type, session, clusterEntity.getPort(),
                 clusterEntity.getEnvPath());
 
-            OpsWdrEntity opsWdrEntity = new OpsWdrEntity();
-            opsWdrEntity.setScope(WdrScopeEnum.CLUSTER);
-            opsWdrEntity.setHostId(masterNodeEntity.getHostId());
-            opsWdrEntity.setReportAt(new Date());
-            opsWdrEntity.setReportType(type);
-            opsWdrEntity.setReportName(wdrName);
-            opsWdrEntity.setReportPath(wdrPath);
-            opsWdrEntity.setStartSnapshotId(startId);
-            opsWdrEntity.setEndSnapshotId(endId);
-            opsWdrEntity.setClusterId(clusterEntity.getClusterId());
-            opsWdrEntity.setUserId(userEntity.getHostUserId());
-            opsWdrEntity.setNodeId(masterNodeEntity.getClusterNodeId());
-            save(opsWdrEntity);
+            OpsWdrDO opsWdrDO = new OpsWdrDO();
+            opsWdrDO.setScope(WdrScopeEnum.CLUSTER);
+            opsWdrDO.setHostId(masterNodeEntity.getHostId());
+            opsWdrDO.setReportAt(new Date());
+            opsWdrDO.setReportType(type);
+            opsWdrDO.setReportName(wdrName);
+            opsWdrDO.setReportPath(wdrPath);
+            opsWdrDO.setStartSnapshotId(startId);
+            opsWdrDO.setEndSnapshotId(endId);
+            opsWdrDO.setClusterId(clusterEntity.getClusterId());
+            opsWdrDO.setUserId(userEntity.getHostUserId());
+            opsWdrDO.setNodeId(masterNodeEntity.getClusterNodeId());
+            save(opsWdrDO);
         } finally {
             if (Objects.nonNull(session) && session.isConnected()) {
                 session.disconnect();

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration scan="false" scanPeriod="60 seconds" debug="false">
+
+    <appender name="stdout" class="ch.qos.logback.core.ConsoleAppender">
+        <layout class="ch.qos.logback.classic.PatternLayout">
+            <pattern>%green([%d{yyyy-MM-dd HH:mm:ss.SSS}]) %cyan(%thread) %highlight(%-5level) %magenta(%logger{36}) %yellow(%L) - %white(%msg%n)</pattern>
+        </layout>
+    </appender>
+
+    <root level="INFO">
+        <appender-ref ref="stdout" />
+    </root>
+</configuration>

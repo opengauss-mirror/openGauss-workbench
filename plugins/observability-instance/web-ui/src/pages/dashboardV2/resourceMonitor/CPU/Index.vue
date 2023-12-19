@@ -1,25 +1,49 @@
 <template>
+  <div class="chart-link">
+    <span>{{$t('echart.linkage')}}:&nbsp;&nbsp;</span> <span><el-switch v-model="isLinkage" @change="changeChartLinkage"/></span>
+  </div>
   <el-row :gutter="12">
     <el-col :span="12">
-      <my-card :title="$t('resourceMonitor.cpu.cpuUse')" height="300" :bodyPadding="false">
+      <my-card
+        :title="$t('resourceMonitor.cpu.cpuUse')"
+        height="300"
+        :bodyPadding="false"
+        :showBtns="true"
+        @download="(title) => download(title, cpuUse)"
+        :info="cpuUseInfo"
+      >
         <template #headerExtend>
           <div class="card-links">
             <el-link
               v-if="isManualRangeSelected"
               type="primary"
-              @click="goto(tabKeys.InstanceMonitorTOPSQL, { key: tabKeys.InstanceMonitorTOPSQLCPUTime })"
+              @click="
+                goto(tabKeys.InstanceMonitorTOPSQL, {
+                  key: tabKeys.InstanceMonitorTOPSQLCPUTime,
+                })
+              "
             >
               TOP CPU SQL
             </el-link>
-            <el-link v-if="isManualRangeSelected" type="primary" @click="gotoSQLDiagnosis()">
-              {{ $t('app.diagnosis') }}
+            <el-link
+              v-if="isManualRangeSelected"
+              type="primary"
+              @click="gotoSQLDiagnosis()"
+            >
+              {{ $t("app.diagnosis") }}
             </el-link>
-            <el-link v-if="isManualRangeSelected" type="primary" @click="wdr(tabId)" v-loading="wdrLoading">
-              {{$t('instanceIndex.wdrAnalysis')}}
+            <el-link
+              v-if="isManualRangeSelected"
+              type="primary"
+              @click="wdr(tabId)"
+              v-loading="wdrLoading"
+            >
+              {{ $t("instanceIndex.wdrAnalysis") }}
             </el-link>
           </div>
         </template>
         <LazyLine
+          ref="cpuUse"
           :tips="$t('instanceIndex.activeSessionQtyTips')"
           :rangeSelect="true"
           :tabId="props.tabId"
@@ -30,12 +54,27 @@
           :min="0"
           :interval="25"
           :unit="'%'"
+          :isLinkage="isLinkage"
         />
       </my-card>
     </el-col>
     <el-col :span="12">
-      <my-card :title="$t('resourceMonitor.cpu.cpuLoad')" height="300" :bodyPadding="false">
-        <LazyLine :tabId="props.tabId" :formatter="toFixed" :data="metricsData.cpuPayload" :xData="metricsData.time" />
+      <my-card
+        :title="$t('resourceMonitor.cpu.cpuLoad')"
+        height="300"
+        :bodyPadding="false"
+        :showBtns="true"
+        @download="(title) => download(title, cpuLoad)"
+        :info="cpuLoadInfo"
+      >
+        <LazyLine
+          :tabId="props.tabId"
+          :formatter="toFixed"
+          :data="metricsData.cpuPayload"
+          :xData="metricsData.time"
+          ref="cpuLoad"
+          :isLinkage="isLinkage"
+        />
       </my-card>
     </el-col>
   </el-row>
@@ -54,9 +93,15 @@
         font-size: 12px;
       "
     >
-      <div style="margin-right: 12px">{{ $t('app.refreshOn') }} {{ innerRefreshDoneTime }}</div>
-      <div>{{ $t('app.autoRefreshFor') }}</div>
-      <el-select v-model="innerRefreshTime" style="width: 100px; margin: 0 4px" @change="updateTimerInner">
+      <div style="margin-right: 12px">
+        {{ $t("app.refreshOn") }} {{ innerRefreshDoneTime }}
+      </div>
+      <div>{{ $t("app.autoRefreshFor") }}</div>
+      <el-select
+        v-model="innerRefreshTime"
+        style="width: 100px; margin: 0 4px"
+        @change="updateTimerInner"
+      >
         <el-option :value="99999999" label="NO-AUTO" />
         <el-option :value="1" label="1s" />
         <el-option :value="15" label="15s" />
@@ -72,7 +117,12 @@
       />
     </div>
     <el-tabs v-model="tab" class="tab2">
-      <el-tab-pane :label="$t('resourceMonitor.cpu.topProcess')" :name="0">
+      <el-tab-pane :name="0">
+        <template #label>
+          <span>{{ $t("resourceMonitor.cpu.topProcess") }}
+            <show-info :info="topProcessInfo"/>
+          </span>
+        </template>
         <el-table
           :table-layout="'auto'"
           :data="topCPUProcessNowData == null ? [] : topCPUProcessNowData"
@@ -80,7 +130,7 @@
           :border="true"
           :header-cell-class-name="
             () => {
-              return 'grid-header'
+              return 'grid-header';
             }
           "
           :row-class-name="rowClassName"
@@ -100,7 +150,11 @@
               <span v-else>{{ scope.row.COMMAND }}</span>
             </template>
           </el-table-column>
-          <el-table-column prop="FullCommand" label="FULL COMMAND" show-overflow-tooltip />
+          <el-table-column
+            prop="FullCommand"
+            label="FULL COMMAND"
+            show-overflow-tooltip
+          />
           <el-table-column prop="NI" label="NI" width="40" />
           <el-table-column prop="PID" label="PID" width="90" />
           <el-table-column prop="PR" label="PR" width="40" />
@@ -113,6 +167,12 @@
         </el-table>
       </el-tab-pane>
       <el-tab-pane :label="$t('resourceMonitor.cpu.topThread')" :name="1">
+        <template #label>
+          <span
+            >{{ $t("resourceMonitor.cpu.topThread") }}
+            <show-info :info="topThreadInfo"/>
+          </span>
+        </template>
         <el-table
           :table-layout="'auto'"
           :data="topCPUDBThreadNowData == null ? [] : topCPUDBThreadNowData"
@@ -120,7 +180,7 @@
           :border="true"
           :header-cell-class-name="
             () => {
-              return 'grid-header'
+              return 'grid-header';
             }
           "
         >
@@ -138,7 +198,11 @@
           <el-table-column prop="VIRT" label="VIRT" width="120" />
           <el-table-column :label="$t('session.trans.sessionID')" width="130">
             <template #default="scope">
-              <el-link type="primary" class="top-sql-table-id" @click="gotoSessionDetail(scope.row.sessionid)">
+              <el-link
+                type="primary"
+                class="top-sql-table-id"
+                @click="gotoSessionDetail(scope.row.sessionid)"
+              >
                 {{ scope.row.sessionid }}
               </el-link>
             </template>
@@ -157,246 +221,396 @@
 </template>
 
 <script setup lang="ts">
-import { useI18n } from 'vue-i18n'
-import LazyLine from '@/components/echarts/LazyLine.vue'
-import { useMonitorStore } from '@/store/monitor'
-import { toFixed } from '@/shared'
-import { storeToRefs } from 'pinia'
-import { getCPUMetrics, getTOPCPUProcessNow, TopCPUProcessNow } from '@/api/observability'
-import { useIntervalTime } from '@/hooks/time'
-import { tabKeys } from '@/pages/dashboardV2/common'
-import { useRequest } from 'vue-request'
-import { Refresh } from '@element-plus/icons-vue'
-import moment from 'moment'
-import { hasSQLDiagnosisModule } from '@/api/sqlDiagnosis'
-import { ElMessage } from 'element-plus'
-import router from '@/router'
-import { getWDRSnapshot } from '@/api/wdr'
+import { useI18n } from "vue-i18n";
+import LazyLine from "@/components/echarts/LazyLine.vue";
+import { useMonitorStore } from "@/store/monitor";
+import { toFixed } from "@/shared";
+import { storeToRefs } from "pinia";
+import {
+  getCPUMetrics,
+  getTOPCPUProcessNow,
+  TopCPUProcessNow,
+} from "@/api/observability";
+import { useIntervalTime } from "@/hooks/time";
+import { tabKeys } from "@/pages/dashboardV2/common";
+import { useRequest } from "vue-request";
+import { Refresh } from "@element-plus/icons-vue";
+import moment from "moment";
+import { hasSQLDiagnosisModule } from "@/api/sqlDiagnosis";
+import { ElMessage } from "element-plus";
+import router from "@/router";
+import { getWDRSnapshot } from "@/api/wdr";
+import ShowInfo from "@/components/ShowInfo.vue";
+import { useParamsStore } from "@/store/params";
 
-const { t } = useI18n()
+const { t } = useI18n();
 
-const props = withDefaults(defineProps<{ tabId: string }>(), {})
-const tab = 0
+const props = withDefaults(defineProps<{ tabId: string }>(), {});
+const tab = 0;
 
 interface LineData {
-  name: string
-  data: any[]
-  [other: string]: any
+  name: string;
+  data: any[];
+  [other: string]: any;
 }
 interface MetricsData {
-  cpu: LineData[]
-  cpuPayload: LineData[]
-  time: string[]
+  cpu: LineData[];
+  cpuPayload: LineData[];
+  time: string[];
 }
 const metricsData = ref<MetricsData>({
   cpu: [],
   cpuPayload: [],
   time: [],
-})
-const topCPUProcessNowData = ref<void | TopCPUProcessNow[]>([])
-const topCPUDBThreadNowData = ref<void | TopCPUProcessNow[]>([])
-const innerRefreshTime = ref<number>(30)
-const innerRefreshDoneTime = ref<string>('')
-const { updateCounter, sourceType, autoRefreshTime, tabNow, instanceId, isManualRangeSelected, timeRange, node } =
-  storeToRefs(useMonitorStore(props.tabId))
+});
+const topCPUProcessNowData = ref<void | TopCPUProcessNow[]>([]);
+const topCPUDBThreadNowData = ref<void | TopCPUProcessNow[]>([]);
+const innerRefreshTime = ref<number>(30);
+const innerRefreshDoneTime = ref<string>("");
+const {
+  updateCounter,
+  sourceType,
+  autoRefreshTime,
+  tabNow,
+  instanceId,
+  isManualRangeSelected,
+  timeRange,
+  node,
+} = storeToRefs(useMonitorStore(props.tabId));
 
 // same for every page in index
-const timer = ref<number>()
+const timer = ref<number>();
 onMounted(() => {
-  load()
-  loadTOPCPUProcessNow(props.tabId)
-})
+  isLinkage.value = isChartLinkage.value
+  load();
+  loadTOPCPUProcessNow(props.tabId);
+});
 watch(
   updateCounter,
   () => {
-    clearInterval(timer.value)
+    isLinkage.value = isChartLinkage.value
+    clearInterval(timer.value);
     if (tabNow.value === tabKeys.ResourceMonitorCPU) {
       if (updateCounter.value.source === sourceType.value.INSTANCE) {
-        load()
-        loadTOPCPUProcessNow(props.tabId)
+        load();
+        loadTOPCPUProcessNow(props.tabId);
       }
-      if (updateCounter.value.source === sourceType.value.MANUALREFRESH) load()
-      if (updateCounter.value.source === sourceType.value.TIMETYPE) load()
-      if (updateCounter.value.source === sourceType.value.TIMERANGE) load()
-      if (updateCounter.value.source === sourceType.value.TABCHANGE) load()
-      const time = autoRefreshTime.value
+      if (updateCounter.value.source === sourceType.value.MANUALREFRESH) load();
+      if (updateCounter.value.source === sourceType.value.TIMETYPE) load();
+      if (updateCounter.value.source === sourceType.value.TIMERANGE) load();
+      if (updateCounter.value.source === sourceType.value.TABCHANGE) load();
+      const time = autoRefreshTime.value;
       timer.value = useIntervalTime(
         () => {
-          load()
+          load();
         },
         computed(() => time * 1000)
-      )
-      updateTimerInner()
+      );
+      updateTimerInner();
     }
   },
   { immediate: false }
-)
+);
 
 // load data
 const load = (checkTab?: boolean, checkRange?: boolean) => {
-  if (!instanceId.value) return
-  requestData(props.tabId)
-}
+  if (!instanceId.value) return;
+  requestData(props.tabId);
+};
 
 const rowClassName = ({ row }: { row: any }) => {
   if (row.port) {
-    return 'highlight-row'
+    return "highlight-row";
   }
-  return ''
-}
-const { data: indexData, run: requestData } = useRequest(getCPUMetrics, { manual: true })
+  return "";
+};
+const { data: indexData, run: requestData } = useRequest(getCPUMetrics, { manual: true });
 watch(
   indexData,
   () => {
     // clear data
-    metricsData.value.cpu = []
-    metricsData.value.cpuPayload = []
+    metricsData.value.cpu = [];
+    metricsData.value.cpuPayload = [];
+    cpuUseInfo.value.option = [];
+    cpuLoadInfo.value.option = [];
 
-    const baseData = indexData.value
-    if (!baseData) return
+    const baseData = indexData.value;
+    if (!baseData) return;
 
     {
-      let tempData: string[] = []
+      let tempData: string[] = [];
       baseData.CPU_DB.forEach((d: number) => {
-        tempData.push(toFixed(d))
-      })
-      metricsData.value.cpu.push({ data: tempData, name: t('resourceMonitor.cpu.dbThread') })
+        tempData.push(toFixed(d));
+      });
+      metricsData.value.cpu.push({
+        data: tempData,
+        name: t("resourceMonitor.cpu.dbThread"),
+      });
+      cpuUseInfo.value.option.push({
+        name: t("resourceMonitor.cpu.dbThread"),
+        value: t("resourceMonitor.cpu.dbThreadContent"),
+      });
     }
     {
-      let tempData: string[] = []
+      let tempData: string[] = [];
       baseData.CPU_TOTAL.forEach((d: number) => {
-        tempData.push(toFixed(d))
-      })
-      metricsData.value.cpu.push({ data: tempData, name: 'Total' })
+        tempData.push(toFixed(d));
+      });
+      metricsData.value.cpu.push({ data: tempData, name: "Total" });
+      cpuUseInfo.value.option.push({
+        name: "Total",
+        value: t("resourceMonitor.cpu.totalContent"),
+      });
     }
     {
-      let tempData: string[] = []
+      let tempData: string[] = [];
       baseData.CPU_USER.forEach((d: number) => {
-        tempData.push(toFixed(d))
-      })
-      metricsData.value.cpu.push({ data: tempData, areaStyle: {}, stack: 'Total', name: 'User' })
+        tempData.push(toFixed(d));
+      });
+      metricsData.value.cpu.push({
+        data: tempData,
+        areaStyle: {},
+        stack: "Total",
+        name: "User",
+      });
+      cpuUseInfo.value.option.push({
+        name: "User",
+        value: t("resourceMonitor.cpu.userContent"),
+      });
     }
     {
-      let tempData: string[] = []
+      let tempData: string[] = [];
       baseData.CPU_SYSTEM.forEach((d: number) => {
-        tempData.push(toFixed(d))
-      })
-      metricsData.value.cpu.push({ data: tempData, areaStyle: {}, stack: 'Total', name: 'System' })
+        tempData.push(toFixed(d));
+      });
+      metricsData.value.cpu.push({
+        data: tempData,
+        areaStyle: {},
+        stack: "Total",
+        name: "System",
+      });
+      cpuUseInfo.value.option.push({
+        name: "System",
+        value: t("resourceMonitor.cpu.systemContent"),
+      });
     }
     {
-      let tempData: string[] = []
+      let tempData: string[] = [];
       baseData.CPU_IOWAIT.forEach((d: number) => {
-        tempData.push(toFixed(d))
-      })
-      metricsData.value.cpu.push({ data: tempData, areaStyle: {}, stack: 'Total', name: 'IOWait' })
+        tempData.push(toFixed(d));
+      });
+      metricsData.value.cpu.push({
+        data: tempData,
+        areaStyle: {},
+        stack: "Total",
+        name: "IOWait",
+      });
     }
     {
-      let tempData: string[] = []
+      let tempData: string[] = [];
       baseData.CPU_NICE.forEach((d: number) => {
-        tempData.push(toFixed(d))
-      })
-      metricsData.value.cpu.push({ data: tempData, areaStyle: {}, stack: 'Total', name: 'Nice' })
+        tempData.push(toFixed(d));
+      });
+      metricsData.value.cpu.push({
+        data: tempData,
+        areaStyle: {},
+        stack: "Total",
+        name: "Nice",
+      });
+      cpuUseInfo.value.option.push({
+        name: "Nice",
+        value: t("resourceMonitor.cpu.niceContent"),
+      });
     }
     {
-      let tempData: string[] = []
+      let tempData: string[] = [];
       baseData.CPU_IRQ.forEach((d: number) => {
-        tempData.push(toFixed(d))
-      })
-      metricsData.value.cpu.push({ data: tempData, areaStyle: {}, stack: 'Total', name: 'IRQ' })
+        tempData.push(toFixed(d));
+      });
+      metricsData.value.cpu.push({
+        data: tempData,
+        areaStyle: {},
+        stack: "Total",
+        name: "IRQ",
+      });
+      cpuUseInfo.value.option.push({
+        name: "IRQ",
+        value: t("resourceMonitor.cpu.irqContent"),
+      });
     }
     {
-      let tempData: string[] = []
+      let tempData: string[] = [];
       baseData.CPU_SOFTIRQ.forEach((d: number) => {
-        tempData.push(toFixed(d))
-      })
-      metricsData.value.cpu.push({ data: tempData, areaStyle: {}, stack: 'Total', name: 'Soft IRQ' })
+        tempData.push(toFixed(d));
+      });
+      metricsData.value.cpu.push({
+        data: tempData,
+        areaStyle: {},
+        stack: "Total",
+        name: "Soft IRQ",
+      });
+      cpuUseInfo.value.option.push({
+        name: "Soft IRQ",
+        value: t("resourceMonitor.cpu.softirqContent"),
+      });
     }
     {
-      let tempData: string[] = []
+      let tempData: string[] = [];
       baseData.CPU_STEAL.forEach((d: number) => {
-        tempData.push(toFixed(d))
-      })
-      metricsData.value.cpu.push({ data: tempData, areaStyle: {}, stack: 'Total', name: 'Steal' })
+        tempData.push(toFixed(d));
+      });
+      metricsData.value.cpu.push({
+        data: tempData,
+        areaStyle: {},
+        stack: "Total",
+        name: "Steal",
+      });
+      cpuUseInfo.value.option.push({
+        name: "Steal",
+        value: t("resourceMonitor.cpu.stealContent"),
+      });
     }
     {
-      let tempData: string[] = []
+      let tempData: string[] = [];
       baseData.CPU_IDLE.forEach((d: number) => {
-        tempData.push(toFixed(d))
-      })
-      metricsData.value.cpu.push({ data: tempData, areaStyle: {}, stack: 'Total', name: 'Idle' })
+        tempData.push(toFixed(d));
+      });
+      metricsData.value.cpu.push({
+        data: tempData,
+        areaStyle: {},
+        stack: "Total",
+        name: "Idle",
+      });
+      cpuUseInfo.value.option.push({
+        name: "Idle",
+        value: t("resourceMonitor.cpu.idleContent"),
+      });
     }
     {
-      let tempData: string[] = []
+      let tempData: string[] = [];
+      baseData.CPU_TOTAL_1M_LOAD.forEach((d: number) => {
+        tempData.push(toFixed(d));
+      });
+      metricsData.value.cpuPayload.push({
+        data: tempData,
+        name: t("resourceMonitor.cpu.total1mLoad"),
+      });
+      cpuLoadInfo.value.option.push({
+        name: t("resourceMonitor.cpu.total1mLoad"),
+        value: t("resourceMonitor.cpu.total1mLoadContent"),
+      });
+    }
+    {
+      let tempData: string[] = [];
       baseData.CPU_TOTAL_5M_LOAD.forEach((d: number) => {
-        tempData.push(toFixed(d))
-      })
-      metricsData.value.cpuPayload.push({ data: tempData, name: t('resourceMonitor.cpu.total5mLoad') })
+        tempData.push(toFixed(d));
+      });
+      metricsData.value.cpuPayload.push({
+        data: tempData,
+        name: t("resourceMonitor.cpu.total5mLoad"),
+      });
+      cpuLoadInfo.value.option.push({
+        name: t("resourceMonitor.cpu.total5mLoad"),
+        value: t("resourceMonitor.cpu.total5mLoadContent"),
+      });
     }
     {
-      let tempData: string[] = []
+      let tempData: string[] = [];
+      baseData.CPU_TOTAL_15M_LOAD.forEach((d: number) => {
+        tempData.push(toFixed(d));
+      });
+      metricsData.value.cpuPayload.push({
+        data: tempData,
+        name: t("resourceMonitor.cpu.total15mLoad"),
+      });
+      cpuLoadInfo.value.option.push({
+        name: t("resourceMonitor.cpu.total15mLoad"),
+        value: t("resourceMonitor.cpu.total15mLoadContent"),
+      });
+    }
+    {
+      let tempData: string[] = [];
       baseData.CPU_TOTAL_CORE_NUM.forEach((d: number) => {
-        tempData.push(toFixed(d))
-      })
-      metricsData.value.cpuPayload.push({ data: tempData, name: t('resourceMonitor.cpu.coreNum') })
+        tempData.push(toFixed(d));
+      });
+      metricsData.value.cpuPayload.push({
+        data: tempData,
+        name: t("resourceMonitor.cpu.coreNum"),
+      });
+      cpuLoadInfo.value.option.push({
+        name: t("resourceMonitor.cpu.coreNum"),
+        value: t("resourceMonitor.cpu.coreNumContent"),
+      });
     }
 
     metricsData.value.cpu = metricsData.value.cpu.sort((a, b) => {
-      const sorts = ['CPU_TOTAL', 'CPU_USER', 'CPU_SYSTEM', 'CPU_IOWAIT']
-      return sorts.indexOf(a.name) - sorts.indexOf(b.name)
-    })
+      const sorts = ["CPU_TOTAL", "CPU_USER", "CPU_SYSTEM", "CPU_IOWAIT"];
+      return sorts.indexOf(a.name) - sorts.indexOf(b.name);
+    });
     metricsData.value.cpuPayload = metricsData.value.cpuPayload.sort((a, b) => {
-      const sorts = ['CPU_TOTAL_5M_LOAD', 'CPU_TOTAL_CORE_NUM', 'CPU_TOTAL_AVERAGE_UTILIZATION']
-      return sorts.indexOf(a.name) - sorts.indexOf(b.name)
-    })
+      const sorts = [
+        "CPU_TOTAL_5M_LOAD",
+        "CPU_TOTAL_CORE_NUM",
+        "CPU_TOTAL_AVERAGE_UTILIZATION",
+      ];
+      return sorts.indexOf(a.name) - sorts.indexOf(b.name);
+    });
 
     // time
-    metricsData.value.time = baseData.time
+    metricsData.value.time = baseData.time;
   },
   { deep: true }
-)
-const { data: topCPUProcessNowResult, run: loadTOPCPUProcessNow } = useRequest(getTOPCPUProcessNow, { manual: true })
+);
+const {
+  data: topCPUProcessNowResult,
+  run: loadTOPCPUProcessNow,
+} = useRequest(getTOPCPUProcessNow, { manual: true });
 watch(
   topCPUProcessNowResult,
   () => {
-    topCPUProcessNowData.value = topCPUProcessNowResult.value ? topCPUProcessNowResult.value[0] : []
-    topCPUDBThreadNowData.value = topCPUProcessNowResult.value ? topCPUProcessNowResult.value[1] : []
+    topCPUProcessNowData.value = topCPUProcessNowResult.value
+      ? topCPUProcessNowResult.value[0]
+      : [];
+    topCPUDBThreadNowData.value = topCPUProcessNowResult.value
+      ? topCPUProcessNowResult.value[1]
+      : [];
     topCPUProcessNowData.value.forEach((item) => {
       if (item.port) {
-        item.COMMAND += '(' + node.value.publicIp + ':' + item.port
+        item.COMMAND += "(" + node.value.publicIp + ":" + item.port;
         if (node.value.dbPort.toString() === item.port.toString()) {
-          item.COMMAND += t('instanceMonitor.thisInstance')
+          item.COMMAND += t("instanceMonitor.thisInstance");
         }
-        item.COMMAND += ')'
-        item.publicIp = node.value.publicIp
+        item.COMMAND += ")";
+        item.publicIp = node.value.publicIp;
       }
-    })
-    innerRefreshDoneTime.value = moment(new Date()).format('HH:mm:ss')
+    });
+    innerRefreshDoneTime.value = moment(new Date()).format("HH:mm:ss");
   },
   { deep: true }
-)
-const timerInner = ref<number>()
+);
+const timerInner = ref<number>();
 const updateTimerInner = () => {
-  clearInterval(timerInner.value)
-  const timeInner = innerRefreshTime.value
+  clearInterval(timerInner.value);
+  const timeInner = innerRefreshTime.value;
   timerInner.value = useIntervalTime(
     () => {
-      loadTOPCPUProcessNow(props.tabId)
+      loadTOPCPUProcessNow(props.tabId);
     },
     computed(() => timeInner * 1000)
-  )
-}
-const emit = defineEmits(['goto', 'changeCluster'])
+  );
+};
+const emit = defineEmits(["goto", "changeCluster"]);
 const changeCluster = (row: TopCPUProcessNow) => {
-  emit('changeCluster', row.publicIp, row.port)
-}
+  emit("changeCluster", row.publicIp, row.port);
+};
 const goto = (key: string, param: object) => {
-  emit('goto', key, param)
-}
+  emit("goto", key, param);
+};
 const gotoSQLDiagnosis = () => {
   hasSQLDiagnosisModule()
     .then(() => {
-      const curMode = localStorage.getItem('INSTANCE_CURRENT_MODE')
-      if (curMode === 'wujie') {
+      const curMode = localStorage.getItem("INSTANCE_CURRENT_MODE");
+      if (curMode === "wujie") {
         // @ts-ignore plug-in components
         window.$wujie?.props.methods.jump({
           name: `Static-pluginObservability-sql-diagnosisVemHistoryDiagnosis`,
@@ -405,16 +619,16 @@ const gotoSQLDiagnosis = () => {
             startTime: timeRange.value[0],
             endTime: timeRange.value[1],
           },
-        })
-      } else ElMessage.error(t('app.needSQLDiagnosis'))
+        });
+      } else ElMessage.error(t("app.needSQLDiagnosis"));
     })
     .catch(() => {
-      ElMessage.error(t('app.needSQLDiagnosis'))
-    })
-}
+      ElMessage.error(t("app.needSQLDiagnosis"));
+    });
+};
 const gotoSessionDetail = (id: string) => {
-  const curMode = localStorage.getItem('INSTANCE_CURRENT_MODE')
-  if (curMode === 'wujie') {
+  const curMode = localStorage.getItem("INSTANCE_CURRENT_MODE");
+  if (curMode === "wujie") {
     // @ts-ignore plug-in components
     window.$wujie?.props.methods.jump({
       name: `Static-pluginObservability-instanceVemSessionDetail`,
@@ -422,16 +636,16 @@ const gotoSessionDetail = (id: string) => {
         dbid: instanceId.value,
         id,
       },
-    })
+    });
   } else {
     // local
-    window.sessionStorage.setItem('sqlId', id)
-    router.push(`/vem/sessionDetail/${instanceId.value}/${id}`)
+    window.sessionStorage.setItem("sqlId", id);
+    router.push(`/vem/sessionDetail/${instanceId.value}/${id}`);
   }
-}
+};
 const gotoTopsqlDetail = (id: string) => {
-  const curMode = localStorage.getItem('INSTANCE_CURRENT_MODE')
-  if (curMode === 'wujie') {
+  const curMode = localStorage.getItem("INSTANCE_CURRENT_MODE");
+  if (curMode === "wujie") {
     // @ts-ignore plug-in components
     window.$wujie?.props.methods.jump({
       name: `Static-pluginObservability-instanceVemSql_detail`,
@@ -439,40 +653,109 @@ const gotoTopsqlDetail = (id: string) => {
         dbid: instanceId.value,
         id,
       },
-    })
+    });
   } else {
     // local
-    window.sessionStorage.setItem('sqlId', id)
-    router.push(`/vem/sql_detail/${instanceId.value}/${id}`)
+    window.sessionStorage.setItem("sqlId", id);
+    router.push(`/vem/sql_detail/${instanceId.value}/${id}`);
   }
-}
+};
 
-const { data: wdrData, run: wdr, loading: wdrLoading } = useRequest(getWDRSnapshot, { manual: true })
+const { data: wdrData, run: wdr, loading: wdrLoading } = useRequest(getWDRSnapshot, {
+  manual: true,
+});
 watch(
   wdrData,
   (res: any) => {
     // goto wdr
     if (res && res.wdrId && res.wdrId.length > 0) {
-      const { timeRange } = useMonitorStore(props.tabId)
+      const { timeRange } = useMonitorStore(props.tabId);
       let param = {
-        operation: 'search',
-        startTime: timeRange == null ? '' : moment(timeRange[0]).format("YYYY-MM-DD HH:mm:ss"),
-        endTime: timeRange == null ? '' : moment(timeRange[1]).format("YYYY-MM-DD HH:mm:ss"),
-      }
-      emit('goto', tabKeys.WDR, param)
+        operation: "search",
+        startTime:
+          timeRange == null ? "" : moment(timeRange[0]).format("YYYY-MM-DD HH:mm:ss"),
+        endTime:
+          timeRange == null ? "" : moment(timeRange[1]).format("YYYY-MM-DD HH:mm:ss"),
+      };
+      emit("goto", tabKeys.WDR, param);
     } else if (res && res.start && res.end) {
       let param = {
-        operation: 'edit',
+        operation: "edit",
         startId: res.start,
-        endId: res.end
-      }
-      emit('goto', tabKeys.WDR, param)
+        endId: res.end,
+      };
+      emit("goto", tabKeys.WDR, param);
     } else {
-      ElMessage.error(t('wdrReports.wdrErrtip'))
+      ElMessage.error(t("wdrReports.wdrErrtip"));
     }
   },
   { deep: true }
-)
+);
+
+const cpuUse = ref();
+const cpuLoad = ref();
+const download = (title: string, ref: any) => {
+  ref.download(title);
+};
+
+const cpuUseInfo = ref<any>({
+  title: t("app.lineOverview"),
+  option: [],
+});
+const cpuLoadInfo = ref<any>({
+  title: t("app.lineOverview"),
+  option: [],
+});
+
+const topThreadInfo = ref<any>({
+  title: t("app.fieldOverview"),
+  option: [
+    { name: "%CPU", value: t("resourceMonitor.topThread.cpuContent") },
+    { name: "%MEM", value: t("resourceMonitor.topThread.memContent") },
+    { name: "COMMAND", value: t("resourceMonitor.topThread.commandContent") },
+    { name: "NI", value: t("resourceMonitor.topThread.niContent") },
+    { name: "PID", value: t("resourceMonitor.topThread.pidContent") },
+    { name: "PR", value: t("resourceMonitor.topThread.prContent") },
+    { name: "RES", value: t("resourceMonitor.topThread.resContent") },
+    { name: "S", value: t("resourceMonitor.topThread.sContent") },
+    { name: "SHR", value: t("resourceMonitor.topThread.shrContent") },
+    { name: "TIME+", value: t("resourceMonitor.topThread.timeContent") },
+    { name: "USER", value: t("resourceMonitor.topThread.userContent") },
+    { name: "VIRT", value: t("resourceMonitor.topThread.virtContent") },
+    { name: t('session.trans.sessionID'), value: t("resourceMonitor.topThread.sessionIDContent") },
+    { name: 'SQLID', value: t("resourceMonitor.topThread.sqlIDContent") },
+  ],
+});
+const topProcessInfo = ref<any>({
+  title: t("app.fieldOverview"),
+  option: [
+    { name: "%CPU", value: t("resourceMonitor.topProcess.cpuContent") },
+    { name: "%MEM", value: t("resourceMonitor.topProcess.memContent") },
+    { name: "COMMAND", value: t("resourceMonitor.topProcess.commandContent") },
+    { name: "FullCommand", value: t("resourceMonitor.topProcess.fullCommandContent") },
+    { name: "NI", value: t("resourceMonitor.topProcess.niContent") },
+    { name: "PID", value: t("resourceMonitor.topProcess.pidContent") },
+    { name: "PR", value: t("resourceMonitor.topProcess.prContent") },
+    { name: "RES", value: t("resourceMonitor.topProcess.resContent") },
+    { name: "S", value: t("resourceMonitor.topProcess.sContent") },
+    { name: "SHR", value: t("resourceMonitor.topProcess.shrContent") },
+    { name: "TIME+", value: t("resourceMonitor.topProcess.timeContent") },
+    { name: "USER", value: t("resourceMonitor.topProcess.userContent") },
+    { name: "VIRT", value: t("resourceMonitor.topProcess.virtContent") }
+  ]
+})
+
+const { isChartLinkage } = storeToRefs(useParamsStore());
+const paramsStore = useParamsStore();
+const isLinkage = ref<boolean>(false)
+const changeChartLinkage = () => {
+  paramsStore.setChartLinkage(isLinkage.value)
+}
 </script>
 
-<style scoped lang="scss"></style>
+<style scoped lang="scss">
+.chart-link {
+  display: flex;
+  justify-content: flex-end;
+}
+</style>

@@ -61,8 +61,18 @@
   margin-bottom: 16px;
 }
 .card-links {
+  display: flex;
+  flex-direction: row;
   .el-link {
     margin-right: 10px;
+  }
+  &:last-child {
+    .el-link {
+      margin-right: 10px;
+      &:last-child {
+        margin-right: 3px;
+      }
+    }
   }
 }
 

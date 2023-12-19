@@ -1,6 +1,27 @@
 /*
- * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ *  Copyright (c) GBA-NCTI-ISDC. 2022-2024.
+ *
+ *  openGauss DataKit is licensed under Mulan PSL v2.
+ *  You can use this software according to the terms and conditions of the Mulan PSL v2.
+ *  You may obtain a copy of Mulan PSL v2 at:
+ *
+ *  http://license.coscl.org.cn/MulanPSL2
+ *
+ *  THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ *  EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ *  MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ *  See the Mulan PSL v2 for more details.
+ *  -------------------------------------------------------------------------
+ *
+ *  AbstractOpsProvider.java
+ *
+ *  IDENTIFICATION
+ *  plugins/observability-instance/
+ *  src/main/java/com/nctigba/observability/instance/service/provider/AbstractOpsProvider.java
+ *
+ *  -------------------------------------------------------------------------
  */
+
 package com.nctigba.observability.instance.service.provider;
 
 import java.io.IOException;
@@ -16,7 +37,7 @@ import org.opengauss.admin.common.core.domain.model.ops.HostInfoHolder;
 import org.opengauss.admin.common.core.domain.model.ops.JschResult;
 import org.opengauss.admin.common.core.domain.model.ops.WsSession;
 import org.opengauss.admin.common.exception.ops.OpsException;
-import com.nctigba.observability.instance.util.JschUtil;
+import com.nctigba.observability.instance.util.JschUtils;
 import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
 import org.springframework.beans.factory.InitializingBean;
 
@@ -32,7 +53,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public abstract class AbstractOpsProvider implements ClusterOpsProvider, InitializingBean {
 
-    protected void ensureLimits(JschUtil jschUtil, Session rootSession, WsSession retSession) {
+    protected void ensureLimits(JschUtils jschUtil, Session rootSession, WsSession retSession) {
         String limitsCheck = SshCommandConstants.LIMITS_CHECK;
         try {
             JschResult jschResult = null;
@@ -74,15 +95,16 @@ public abstract class AbstractOpsProvider implements ClusterOpsProvider, Initial
         }
     }
 
-    protected String scpInstallPackageToMasterNode(JschUtil jschUtil, Session rootSession, String sourcePath,
-            String targetPath, WsSession retSession) {
+    protected String scpInstallPackageToMasterNode(
+        JschUtils jschUtil, Session rootSession, String sourcePath,
+        String targetPath, WsSession retSession) {
         String installPackageFileName = sourcePath.substring(sourcePath.lastIndexOf(CommonConstants.SLASH) + 1);
         String installPackageFullPath = targetPath + CommonConstants.SLASH + installPackageFileName;
         jschUtil.upload(rootSession, retSession, sourcePath, installPackageFullPath);
         return installPackageFullPath;
     }
 
-    protected void sem(JschUtil jschUtil, Session rootSession, WsSession retSession) {
+    protected void sem(JschUtils jschUtil, Session rootSession, WsSession retSession) {
         String command = SshCommandConstants.SEM;
         try {
             JschResult jschResult = null;
@@ -102,8 +124,9 @@ public abstract class AbstractOpsProvider implements ClusterOpsProvider, Initial
         }
     }
 
-    protected void decompress(JschUtil jschUtil, Session rootSession, String targetPath, String installPackageFullPath,
-            WsSession retSession, String decompressArgs) {
+    protected void decompress(
+        JschUtils jschUtil, Session rootSession, String targetPath, String installPackageFullPath,
+        WsSession retSession, String decompressArgs) {
         String command = MessageFormat.format(SshCommandConstants.DECOMPRESS, decompressArgs, installPackageFullPath,
                 targetPath);
         try {
@@ -119,8 +142,9 @@ public abstract class AbstractOpsProvider implements ClusterOpsProvider, Initial
         }
     }
 
-    protected Session loginWithUser(JschUtil jschUtil, EncryptionUtils encryptionUtils,
-            List<HostInfoHolder> hostInfoHolders, boolean root, String hostId, String userId) {
+    protected Session loginWithUser(
+        JschUtils jschUtil, EncryptionUtils encryptionUtils,
+        List<HostInfoHolder> hostInfoHolders, boolean root, String hostId, String userId) {
         HostInfoHolder hostInfoHolder = hostInfoHolders.stream()
                 .filter(host -> host.getHostEntity().getHostId().equals(hostId)).findFirst()
                 .orElseThrow(() -> new OpsException("host information not found"));
@@ -147,8 +171,9 @@ public abstract class AbstractOpsProvider implements ClusterOpsProvider, Initial
         return sshLogin(jschUtil, encryptionUtils, hostEntity, userEntity);
     }
 
-    protected Session sshLogin(JschUtil jschUtil, EncryptionUtils encryptionUtils, OpsHostEntity hostEntity,
-            OpsHostUserEntity userEntity) {
+    protected Session sshLogin(
+        JschUtils jschUtil, EncryptionUtils encryptionUtils, OpsHostEntity hostEntity,
+        OpsHostUserEntity userEntity) {
         return jschUtil
                 .getSession(hostEntity.getPublicIp(), hostEntity.getPort(), userEntity.getUsername(),
                         encryptionUtils.decrypt(userEntity.getPassword()))
@@ -156,7 +181,7 @@ public abstract class AbstractOpsProvider implements ClusterOpsProvider, Initial
                         "Session establishment exception with host[" + hostEntity.getPublicIp() + "]"));
     }
 
-    protected void chmodFullPath(JschUtil jschUtil, Session rootSession, String path, WsSession wsSession) {
+    protected void chmodFullPath(JschUtils jschUtil, Session rootSession, String path, WsSession wsSession) {
         String chmod = MessageFormat.format(SshCommandConstants.CHMOD, path);
 
         try {
@@ -171,7 +196,7 @@ public abstract class AbstractOpsProvider implements ClusterOpsProvider, Initial
         }
     }
 
-    protected void chmod(JschUtil jschUtil, Session rootSession, String path, WsSession wsSession) {
+    protected void chmod(JschUtils jschUtil, Session rootSession, String path, WsSession wsSession) {
         if (StrUtil.isNotEmpty(path) && path.indexOf(CommonConstants.SLASH, 1) > 0) {
             path = path.substring(0, path.indexOf(CommonConstants.SLASH, 1));
         }
@@ -189,7 +214,7 @@ public abstract class AbstractOpsProvider implements ClusterOpsProvider, Initial
         }
     }
 
-    protected void chmodDataPath(JschUtil jschUtil, Session rootSession, String path, WsSession wsSession) {
+    protected void chmodDataPath(JschUtils jschUtil, Session rootSession, String path, WsSession wsSession) {
         String chmod = MessageFormat.format(SshCommandConstants.CHMOD_DATA_PATH, path);
 
         try {
@@ -204,8 +229,9 @@ public abstract class AbstractOpsProvider implements ClusterOpsProvider, Initial
         }
     }
 
-    protected void ensurePermission(JschUtil jschUtil, Session rootSession, String installUserName, String targetPath,
-            WsSession wsSession) {
+    protected void ensurePermission(
+        JschUtils jschUtil, Session rootSession, String installUserName, String targetPath,
+        WsSession wsSession) {
         chmod(jschUtil, rootSession, targetPath, wsSession);
 
         String chown = MessageFormat.format(SshCommandConstants.CHOWN, installUserName, targetPath);
@@ -229,8 +255,9 @@ public abstract class AbstractOpsProvider implements ClusterOpsProvider, Initial
         }
     }
 
-    protected void ensureDataPathPermission(JschUtil jschUtil, Session rootSession, String installUserName,
-            String targetPath, WsSession wsSession) {
+    protected void ensureDataPathPermission(
+        JschUtils jschUtil, Session rootSession, String installUserName,
+        String targetPath, WsSession wsSession) {
         chmodDataPath(jschUtil, rootSession, targetPath, wsSession);
 
         String chown = MessageFormat.format(SshCommandConstants.CHOWN, installUserName, targetPath);
@@ -254,7 +281,7 @@ public abstract class AbstractOpsProvider implements ClusterOpsProvider, Initial
         }
     }
 
-    protected void ensureDirExist(JschUtil jschUtil, Session rootSession, String targetPath, WsSession retSession) {
+    protected void ensureDirExist(JschUtils jschUtil, Session rootSession, String targetPath, WsSession retSession) {
         String command = MessageFormat.format(SshCommandConstants.MK_DIR, targetPath);
         try {
             JschResult jschResult = null;

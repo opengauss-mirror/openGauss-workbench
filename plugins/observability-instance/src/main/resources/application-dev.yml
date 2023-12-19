@@ -1,7 +1,49 @@
-#
-# Copyright (c) 2023 Huawei Technologies Co.,Ltd.
-#
-
+context:
+  listener:
+    classes:
 spring:
   autoconfigure:
     exclude: org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
+  datasource:
+    dynamic:
+      primary: master
+      datasource:
+        master:
+          url: jdbc:opengauss://192.168.110.32:7001/postgres?currentSchema=public
+          #          url: jdbc:opengauss://192.168.56.51:26000/postgres?currentSchema=public
+          driverClassName: org.opengauss.Driver
+          username: scott
+          password: Test@1234
+        embedded:
+#          url: jdbc:intarkdb:data/observability-instance-data
+#          driverClassName: org.intarkdb.IntarkDBJDBC
+          url: jdbc:sqlite:data/observability-instance-data.db
+          driverClassName: org.sqlite.JDBC
+          init:
+            schema: db/schema.sql
+            data: db/data.sql
+            continue-on-error: true
+            separator: ";"
+    type: com.alibaba.druid.pool.DruidDataSource
+#    driver-class-name: org.opengauss.Driver
+#    url: jdbc:opengauss://192.168.110.31:5432/postgres?currentSchema=public
+#    username: scott
+#    password: Test@1234
+    druid:
+      test-while-idle: false
+      test-on-borrow: true
+      validation-query: "select 1"
+      validation-query-timeout: 10000
+      connection-error-retry-attempts: 0
+      break-after-acquire-failure: true
+      max-wait: 300000
+
+mybatis-plus:
+  typeAliasesPackage: com.nctigba.observability.instance.entity,org.opengauss.admin.common.core.domain.entity
+
+logging:
+  level:
+    root: INFO
+    com.nctigba.observability.instance: DEBUG
+  file:
+    path: ./
