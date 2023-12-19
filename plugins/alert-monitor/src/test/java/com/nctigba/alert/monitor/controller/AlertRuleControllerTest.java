@@ -1,17 +1,36 @@
 /*
- * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ *  Copyright (c) GBA-NCTI-ISDC. 2022-2024.
+ *
+ *  openGauss DataKit is licensed under Mulan PSL v2.
+ *  You can use this software according to the terms and conditions of the Mulan PSL v2.
+ *  You may obtain a copy of Mulan PSL v2 at:
+ *
+ *  http://license.coscl.org.cn/MulanPSL2
+ *
+ *  THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ *  EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ *  MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ *  See the Mulan PSL v2 for more details.
+ *  -------------------------------------------------------------------------
+ *
+ *  AlertRuleControllerTest.java
+ *
+ *  IDENTIFICATION
+ *  plugins/alert-monitor/src/test/java/com/nctigba/alert/monitor/controller/AlertRuleControllerTest.java
+ *
  */
 
 package com.nctigba.alert.monitor.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.nctigba.alert.monitor.constant.CommonConstants;
-import com.nctigba.alert.monitor.entity.AlertRule;
-import com.nctigba.alert.monitor.entity.AlertRuleItemExpSrc;
-import com.nctigba.alert.monitor.entity.AlertRuleItemSrc;
-import com.nctigba.alert.monitor.model.RuleReq;
+import com.nctigba.alert.monitor.model.entity.AlertRuleDO;
+import com.nctigba.alert.monitor.model.entity.AlertRuleItemExpSrcDO;
+import com.nctigba.alert.monitor.model.entity.AlertRuleItemSrcDO;
+import com.nctigba.alert.monitor.model.dto.AlertRuleParamDTO;
+import com.nctigba.alert.monitor.model.query.RuleQuery;
 import com.nctigba.alert.monitor.service.AlertRuleService;
-import com.nctigba.alert.monitor.utils.MessageSourceUtil;
+import com.nctigba.alert.monitor.util.MessageSourceUtils;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
@@ -52,11 +71,11 @@ public class AlertRuleControllerTest {
         try (MockedStatic<ServletUtils> mockedStatic = mockStatic(ServletUtils.class)) {
             mockedStatic.when(() -> ServletUtils.getParameterToInt("pageNum")).thenReturn(1);
             mockedStatic.when(() -> ServletUtils.getParameterToInt("pageSize")).thenReturn(10);
-            Page<AlertRule> page = new Page<>(1, 10);
-            when(alertRuleService.getRulePage(any(RuleReq.class), any(Page.class))).thenReturn(page);
-            RuleReq ruleReq = new RuleReq();
-            TableDataInfo result = alertRuleController.getRuleListPage(ruleReq);
-            verify(alertRuleService, times(1)).getRulePage(any(RuleReq.class), any(Page.class));
+            Page<AlertRuleDO> page = new Page<>(1, 10);
+            when(alertRuleService.getRulePage(any(RuleQuery.class), any(Page.class))).thenReturn(page);
+            RuleQuery ruleQuery = new RuleQuery();
+            TableDataInfo result = alertRuleController.getRuleListPage(ruleQuery);
+            verify(alertRuleService, times(1)).getRulePage(any(RuleQuery.class), any(Page.class));
             assertEquals(page.getRecords(), result.getRows());
             assertEquals(page.getTotal(), result.getTotal());
         }
@@ -64,7 +83,7 @@ public class AlertRuleControllerTest {
 
     @Test
     public void testGetRuleList() {
-        List<AlertRule> list = new ArrayList<>();
+        List<AlertRuleDO> list = new ArrayList<>();
         when(alertRuleService.getRuleList()).thenReturn(list);
         AjaxResult result = alertRuleController.getRuleList();
         verify(alertRuleService, times(1)).getRuleList();
@@ -73,17 +92,17 @@ public class AlertRuleControllerTest {
 
     @Test
     public void testGetRuleById() {
-        AlertRule alertRule = new AlertRule();
-        when(alertRuleService.getRuleById(anyLong())).thenReturn(alertRule);
+        AlertRuleDO alertRuleDO = new AlertRuleDO();
+        when(alertRuleService.getRuleById(anyLong())).thenReturn(alertRuleDO);
         Long id = 1L;
         AjaxResult result = alertRuleController.getRuleById(id);
         verify(alertRuleService, times(1)).getRuleById(anyLong());
-        assertEquals(alertRule, result.get("data"));
+        assertEquals(alertRuleDO, result.get("data"));
     }
 
     @Test
     public void testGetRuleItemSrcList() {
-        List<AlertRuleItemSrc> list = new ArrayList<>();
+        List<AlertRuleItemSrcDO> list = new ArrayList<>();
         when(alertRuleService.getRuleItemSrcList()).thenReturn(list);
         AjaxResult result = alertRuleController.getRuleItemSrcList();
         verify(alertRuleService, times(1)).getRuleItemSrcList();
@@ -92,7 +111,7 @@ public class AlertRuleControllerTest {
 
     @Test
     public void testGetRuleItemExpSrcListByRuleItemSrcId() {
-        List<AlertRuleItemExpSrc> list = new ArrayList<>();
+        List<AlertRuleItemExpSrcDO> list = new ArrayList<>();
         when(alertRuleService.getRuleItemExpSrcListByRuleItemSrcId(anyLong())).thenReturn(list);
         AjaxResult result = alertRuleController.getRuleItemExpSrcListByRuleItemSrcId(anyLong());
         verify(alertRuleService, times(1)).getRuleItemExpSrcListByRuleItemSrcId(anyLong());
@@ -101,18 +120,18 @@ public class AlertRuleControllerTest {
 
     @Test
     public void testSaveIndexRuleWithCheckFail() {
-        try (MockedStatic<MessageSourceUtil> mockedStatic = mockStatic(MessageSourceUtil.class)) {
-            mockedStatic.when(() -> MessageSourceUtil.get(any())).thenReturn("error");
-            AlertRule alertRule = new AlertRule().setRuleType(CommonConstants.INDEX_RULE);
+        try (MockedStatic<MessageSourceUtils> mockedStatic = mockStatic(MessageSourceUtils.class)) {
+            mockedStatic.when(() -> MessageSourceUtils.get(any())).thenReturn("error");
+            AlertRuleParamDTO alertRule = new AlertRuleParamDTO().setRuleType(CommonConstants.INDEX_RULE);
             alertRuleController.saveRule(alertRule);
         }
     }
 
     @Test
     public void testSaveSilenceIndexRuleWithCheckFail() {
-        try (MockedStatic<MessageSourceUtil> mockedStatic = mockStatic(MessageSourceUtil.class)) {
-            mockedStatic.when(() -> MessageSourceUtil.get(any())).thenReturn("error");
-            AlertRule alertRule = new AlertRule().setRuleType(CommonConstants.INDEX_RULE)
+        try (MockedStatic<MessageSourceUtils> mockedStatic = mockStatic(MessageSourceUtils.class)) {
+            mockedStatic.when(() -> MessageSourceUtils.get(any())).thenReturn("error");
+            AlertRuleParamDTO alertRule = new AlertRuleParamDTO().setRuleType(CommonConstants.INDEX_RULE)
                 .setIsSilence(CommonConstants.IS_SILENCE).setIsRepeat(CommonConstants.IS_NOT_REPEAT);
             alertRuleController.saveRule(alertRule);
         }
@@ -120,52 +139,52 @@ public class AlertRuleControllerTest {
 
     @Test
     public void testSaveLogRuleWithCheckFail() {
-        try (MockedStatic<MessageSourceUtil> mockedStatic = mockStatic(MessageSourceUtil.class)) {
-            mockedStatic.when(() -> MessageSourceUtil.get(any())).thenReturn("error");
-            AlertRule alertRule = new AlertRule().setRuleType(CommonConstants.LOG_RULE);
+        try (MockedStatic<MessageSourceUtils> mockedStatic = mockStatic(MessageSourceUtils.class)) {
+            mockedStatic.when(() -> MessageSourceUtils.get(any())).thenReturn("error");
+            AlertRuleParamDTO alertRule = new AlertRuleParamDTO().setRuleType(CommonConstants.LOG_RULE);
             alertRuleController.saveRule(alertRule);
         }
     }
 
     @Test
     public void testSaveLogRule() {
-        try (MockedStatic<MessageSourceUtil> mockedStatic = mockStatic(MessageSourceUtil.class)) {
-            mockedStatic.when(() -> MessageSourceUtil.get(any())).thenReturn("error");
-            AlertRule alertRule =
-                new AlertRule().setRuleType(CommonConstants.LOG_RULE).setCheckFrequency(1)
+        try (MockedStatic<MessageSourceUtils> mockedStatic = mockStatic(MessageSourceUtils.class)) {
+            mockedStatic.when(() -> MessageSourceUtils.get(any())).thenReturn("error");
+            AlertRuleParamDTO alertRule =
+                new AlertRuleParamDTO().setRuleType(CommonConstants.LOG_RULE).setCheckFrequency(1)
                     .setCheckFrequencyUnit("m");
-            doNothing().when(alertRuleService).saveRule(any(AlertRule.class));
+            doNothing().when(alertRuleService).saveRule(any(AlertRuleParamDTO.class));
             AjaxResult result = alertRuleController.saveRule(alertRule);
-            verify(alertRuleService, times(1)).saveRule(any(AlertRule.class));
+            verify(alertRuleService, times(1)).saveRule(any(AlertRuleParamDTO.class));
             assertEquals(AjaxResult.success(), result);
         }
     }
 
     @Test
     public void testSaveIndexRule() {
-        try (MockedStatic<MessageSourceUtil> mockedStatic = mockStatic(MessageSourceUtil.class)) {
-            mockedStatic.when(() -> MessageSourceUtil.get(any())).thenReturn("error");
-            AlertRule alertRule =
-                new AlertRule().setRuleType(CommonConstants.INDEX_RULE).setIsRepeat(CommonConstants.IS_REPEAT)
+        try (MockedStatic<MessageSourceUtils> mockedStatic = mockStatic(MessageSourceUtils.class)) {
+            mockedStatic.when(() -> MessageSourceUtils.get(any())).thenReturn("error");
+            AlertRuleParamDTO alertRule =
+                new AlertRuleParamDTO().setRuleType(CommonConstants.INDEX_RULE).setIsRepeat(CommonConstants.IS_REPEAT)
                     .setIsSilence(CommonConstants.IS_NOT_SILENCE);
             doNothing().when(alertRuleService).saveRule(alertRule);
             AjaxResult result = alertRuleController.saveRule(alertRule);
-            verify(alertRuleService, times(1)).saveRule(any(AlertRule.class));
+            verify(alertRuleService, times(1)).saveRule(any(AlertRuleParamDTO.class));
             assertEquals(AjaxResult.success(), result);
         }
     }
 
     @Test
     public void testSaveIndexSilenceRule() {
-        try (MockedStatic<MessageSourceUtil> mockedStatic = mockStatic(MessageSourceUtil.class)) {
-            mockedStatic.when(() -> MessageSourceUtil.get(any())).thenReturn("error");
-            AlertRule alertRule =
-                new AlertRule().setRuleType(CommonConstants.INDEX_RULE).setIsRepeat(CommonConstants.IS_REPEAT)
+        try (MockedStatic<MessageSourceUtils> mockedStatic = mockStatic(MessageSourceUtils.class)) {
+            mockedStatic.when(() -> MessageSourceUtils.get(any())).thenReturn("error");
+            AlertRuleParamDTO alertRule =
+                new AlertRuleParamDTO().setRuleType(CommonConstants.INDEX_RULE).setIsRepeat(CommonConstants.IS_REPEAT)
                     .setIsSilence(CommonConstants.IS_SILENCE).setSilenceStartTime(LocalDateTime.now().minusHours(1))
                     .setSilenceEndTime(LocalDateTime.now());
             doNothing().when(alertRuleService).saveRule(alertRule);
             AjaxResult result = alertRuleController.saveRule(alertRule);
-            verify(alertRuleService, times(1)).saveRule(any(AlertRule.class));
+            verify(alertRuleService, times(1)).saveRule(any(AlertRuleParamDTO.class));
             assertEquals(AjaxResult.success(), result);
         }
     }

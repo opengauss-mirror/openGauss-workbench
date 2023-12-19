@@ -1,12 +1,31 @@
 /*
- * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ *  Copyright (c) GBA-NCTI-ISDC. 2022-2024.
+ *
+ *  openGauss DataKit is licensed under Mulan PSL v2.
+ *  You can use this software according to the terms and conditions of the Mulan PSL v2.
+ *  You may obtain a copy of Mulan PSL v2 at:
+ *
+ *  http://license.coscl.org.cn/MulanPSL2
+ *
+ *  THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ *  EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ *  MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ *  See the Mulan PSL v2 for more details.
+ *  -------------------------------------------------------------------------
+ *
+ *  AlertRuleItemParamMapper.java
+ *
+ *  IDENTIFICATION
+ *  plugins/alert-monitor/src/main/java/com/nctigba/alert/monitor/mapper/AlertRuleItemParamMapper.java
+ *
+ *  -------------------------------------------------------------------------
  */
 
 package com.nctigba.alert.monitor.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
-import com.nctigba.alert.monitor.entity.AlertRuleItemParam;
+import com.nctigba.alert.monitor.model.entity.AlertRuleItemParamDO;
 
 /**
  * @author wuyuebin
@@ -14,5 +33,5 @@ import com.nctigba.alert.monitor.entity.AlertRuleItemParam;
  * @description
  */
 @Mapper
-public interface AlertRuleItemParamMapper extends BaseMapper<AlertRuleItemParam> {
+public interface AlertRuleItemParamMapper extends BaseMapper<AlertRuleItemParamDO> {
 }

@@ -142,6 +142,9 @@ export default {
     nextRepeat: 'repeatDuration',
     maxRepeatCount: 'maxRepeatTimes',
     filesystemPathTip: 'Please input the filesystem path',
+    updateTemplateRuleTip: 'Should the rules corresponding to the Alert Template be updated?',
+    updateTemplateRuleRadios: ['No updates', 'Some of the rules corresponding to the Alert Template will be updated', 'All the rules corresponding to the Alert Template will be updated'],
+    chooseTemplateTip: 'Please select the Alert Template: '
   },
   alertTemplate: {
     title: 'alert template',
@@ -191,6 +194,13 @@ export default {
   AlertClusterNodeConf: {
     title: 'alert configuration',
     confBtn: 'configuration',
+    unbindConfBtn: "unbind",
+    unbindTip: 'Are you sure you want to unbind the alart template?',
+    unbindSuccess: 'Unbind Success!',
+    unbindFail: 'Unbinding Failed!',
+    tableDataSelectTip: 'Please select at least one data',
+    tableDataSelectTip2: 'Please select at least one data with a binding alert template',
+    tableDataTip: 'The instance does not have a configured alert template, so there is no need to unbind.',
     table: ['cluster/instance', 'datasoure type', 'IP', 'alert template', 'operate'],
     detailTitle: 'alert template config',
     selectedInstance: 'selected instances',
@@ -296,5 +306,16 @@ export default {
     dingSecret: 'app secret',
     inputTip: 'Pleasse input',
     test: 'test',
+  },
+  contentParam: {
+    nodeName: 'cluster node name',
+    hostname: 'hostname',
+    hostIp: 'host IP',
+    port: 'database port',
+    alertTime: 'alert time',
+    alertStatus: 'alert status',
+    level: 'alert level',
+    content: 'alert content',
+    curVal: 'current value'
   }
 }

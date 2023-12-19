@@ -1,11 +1,30 @@
 /*
- * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ *  Copyright (c) GBA-NCTI-ISDC. 2022-2024.
+ *
+ *  openGauss DataKit is licensed under Mulan PSL v2.
+ *  You can use this software according to the terms and conditions of the Mulan PSL v2.
+ *  You may obtain a copy of Mulan PSL v2 at:
+ *
+ *  http://license.coscl.org.cn/MulanPSL2
+ *
+ *  THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ *  EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ *  MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ *  See the Mulan PSL v2 for more details.
+ *  -------------------------------------------------------------------------
+ *
+ *  AlertApiControllerTest.java
+ *
+ *  IDENTIFICATION
+ *  plugins/alert-monitor/src/test/java/com/nctigba/alert/monitor/controller/AlertApiControllerTest.java
+ *
+ *  -------------------------------------------------------------------------
  */
 
 package com.nctigba.alert.monitor.controller;
 
 import cn.hutool.json.JSONObject;
-import com.nctigba.alert.monitor.service.AlertApiService;
+import com.nctigba.alert.monitor.service.impl.AlertApiServiceImpl;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -34,7 +53,7 @@ public class AlertApiControllerTest {
     @InjectMocks
     private AlertApiController alertApiController;
     @Mock
-    private AlertApiService alertApiService;
+    private AlertApiServiceImpl alertApiServiceImpl;
 
     @Before
     public void setUp() {
@@ -61,10 +80,10 @@ public class AlertApiControllerTest {
         List<JSONObject> paramList = new ArrayList<>();
         paramList.add(jsonObject);
 
-        doNothing().when(alertApiService).alerts(anyList());
+        doNothing().when(alertApiServiceImpl).alerts(anyList());
 
         AjaxResult result = alertApiController.alerts(paramList);
-        verify(alertApiService, times(1)).alerts(anyList());
+        verify(alertApiServiceImpl, times(1)).alerts(anyList());
         assertEquals(AjaxResult.success(), result);
     }
 }

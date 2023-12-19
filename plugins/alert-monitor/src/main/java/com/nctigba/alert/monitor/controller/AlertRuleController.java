@@ -1,5 +1,24 @@
 /*
- * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ *  Copyright (c) GBA-NCTI-ISDC. 2022-2024.
+ *
+ *  openGauss DataKit is licensed under Mulan PSL v2.
+ *  You can use this software according to the terms and conditions of the Mulan PSL v2.
+ *  You may obtain a copy of Mulan PSL v2 at:
+ *
+ *  http://license.coscl.org.cn/MulanPSL2
+ *
+ *  THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ *  EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ *  MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ *  See the Mulan PSL v2 for more details.
+ *  -------------------------------------------------------------------------
+ *
+ *  AlertRuleController.java
+ *
+ *  IDENTIFICATION
+ *  plugins/alert-monitor/src/main/java/com/nctigba/alert/monitor/controller/AlertRuleController.java
+ *
+ *  -------------------------------------------------------------------------
  */
 
 package com.nctigba.alert.monitor.controller;
@@ -7,10 +26,11 @@ package com.nctigba.alert.monitor.controller;
 import cn.hutool.core.collection.CollectionUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.nctigba.alert.monitor.constant.CommonConstants;
-import com.nctigba.alert.monitor.entity.AlertRule;
-import com.nctigba.alert.monitor.model.RuleReq;
+import com.nctigba.alert.monitor.model.entity.AlertRuleDO;
+import com.nctigba.alert.monitor.model.dto.AlertRuleParamDTO;
+import com.nctigba.alert.monitor.model.query.RuleQuery;
 import com.nctigba.alert.monitor.service.AlertRuleService;
-import com.nctigba.alert.monitor.utils.MessageSourceUtil;
+import com.nctigba.alert.monitor.util.MessageSourceUtils;
 import org.opengauss.admin.common.core.domain.AjaxResult;
 import org.opengauss.admin.common.core.page.TableDataInfo;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,8 +61,8 @@ public class AlertRuleController extends BaseController {
     private AlertRuleService alertRuleService;
 
     @GetMapping("")
-    public TableDataInfo getRuleListPage(RuleReq ruleReq) {
-        Page<AlertRule> ruleIPage = alertRuleService.getRulePage(ruleReq, startPage());
+    public TableDataInfo getRuleListPage(RuleQuery ruleQuery) {
+        Page<AlertRuleDO> ruleIPage = alertRuleService.getRulePage(ruleQuery, startPage());
         return getDataTable(ruleIPage);
     }
 
@@ -81,22 +101,23 @@ public class AlertRuleController extends BaseController {
     /**
      * save the alertRule
      *
-     * @param alertRule AlertRule
+     * @param alertRule
      * @return AjaxResult.success()
      */
     @PostMapping
-    public AjaxResult saveRule(@RequestBody @Validated AlertRule alertRule) {
+    public AjaxResult saveRule(@RequestBody @Validated AlertRuleParamDTO alertRule) {
         Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
-        String errorMsg = MessageSourceUtil.get("validateFail");
+        String errorMsg = MessageSourceUtils.get("validateFail");
         if (alertRule.getRuleType().equals(CommonConstants.INDEX_RULE)) {
-            Set<ConstraintViolation<AlertRule>> error = validator.validate(alertRule, AlertRule.IndexRuleGroup.class);
+            Set<ConstraintViolation<AlertRuleParamDTO>> error =
+                validator.validate(alertRule, AlertRuleDO.IndexRuleGroup.class);
             if (CollectionUtil.isNotEmpty(error)) {
                 String messages = error.stream().map(item -> item.getPropertyPath() + item.getMessage())
                     .collect(Collectors.joining(CommonConstants.DELIMITER));
                 return AjaxResult.error(errorMsg + ":" + messages);
             }
             if (alertRule.getIsSilence().equals(CommonConstants.IS_SILENCE)) {
-                error = validator.validate(alertRule, AlertRule.SilenceGroup.class);
+                error = validator.validate(alertRule, AlertRuleDO.SilenceGroup.class);
                 if (CollectionUtil.isNotEmpty(error)) {
                     String messages = error.stream().map(item -> item.getPropertyPath() + item.getMessage())
                         .collect(Collectors.joining(CommonConstants.DELIMITER));
@@ -104,7 +125,8 @@ public class AlertRuleController extends BaseController {
                 }
             }
         } else {
-            Set<ConstraintViolation<AlertRule>> error = validator.validate(alertRule, AlertRule.LogRuleGroup.class);
+            Set<ConstraintViolation<AlertRuleParamDTO>> error =
+                validator.validate(alertRule, AlertRuleDO.LogRuleGroup.class);
             if (CollectionUtil.isNotEmpty(error)) {
                 String messages = error.stream().map(item -> item.getPropertyPath() + item.getMessage())
                     .collect(Collectors.joining(CommonConstants.DELIMITER));

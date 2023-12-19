@@ -60,14 +60,14 @@
             <span style="margin: 5px 0 10px 5px;">{{ $t('alertRule.ruleItemExp') }}:</span>
             <el-select v-model="item.ruleExpName" disabled style="width: 130px;margin: 5px 0 5px 5px;">
               <el-option v-for="item0 in ruleItemSrcList" :key="item0.name" :value="item0.name"
-                :label="$t(`alertRule.${item0.name}`)" />
+              :label="i18n.global.locale.value === 'zhCn' && item0.nameZh ? item0.nameZh : item0.nameEn ? item0.nameEn : $t(`alertRule.${item0.name}`)" />
             </el-select>
             <el-input v-for="(val, key) in item.params" v-model="item.params[key]"
               style="width: 120px;margin: 5px 2px;height: 32px;" disabled :key="key"></el-input>
-            <el-select v-model="item.action" disabled style="width: 150px;margin: 5px;">
+            <!-- <el-select v-model="item.action" disabled style="width: 150px;margin: 5px;">
               <el-option v-for="item0 in item.ruleItemExpSrcList" :key="item0.id" :value="item0.action"
                 :label="$t(`alertRule.${item0.action}Action`)" />
-            </el-select>
+            </el-select> -->
             <el-select v-if="item.showLimitValue !== 0" v-model="item.operate" disabled
               style="width: 70px;margin: 5px;">
               <el-option v-for="item0 in compareSymbolList" :key="item0" :value="item0" :label="item0" />
@@ -111,7 +111,7 @@
         </el-col>
         <el-col :span="14">
           <el-form-item>
-            <span>{{ previewContent }}</span>
+            <span style="white-space: pre-wrap">{{ previewContent }}</span>
           </el-form-item>
         </el-col>
       </el-row>
@@ -196,9 +196,10 @@ import "element-plus/es/components/message-box/style/index";
 import { useRequest } from "vue-request";
 import request from "@/request";
 import { ElMessage } from "element-plus";
+import { i18n } from '@/i18n'
 import { useI18n } from "vue-i18n";
 import SvgIcon from "@/components/SvgIcon.vue";
-import { parseContent } from "@/utils/commonUtil"
+import { parseContent, getAlertContentParam } from "@/utils/commonUtil"
 import type { FormInstance, FormRules } from 'element-plus'
 const { t } = useI18n();
 
@@ -502,23 +503,6 @@ const cancel = (num = 1) => {
   emit("cancelUpdateTemplateRule", num - 1)
 }
 
-const requestAlertContentParam = () => {
-  request.get(`/api/v1/environment/alertContentParam`, { type: 'alert' }).then((res: any) => {
-    if (res && res.code === 200) {
-      alertContentParam.value = res.data
-      paramNameList.value = Object.keys(alertContentParam.value)
-      if (alertContentParam.value && formData.value.ruleContent) {
-        let param = {}
-        let keys = Object.keys(alertContentParam.value);
-        for (let key of keys) {
-          param[key] = alertContentParam.value[key]['preVal']
-        }
-        previewContent.value = parseContent(formData.value.ruleContent, param)
-      }
-    }
-  })
-}
-
 const preview = () => {
   if (alertContentParam.value && formData.value.ruleContent) {
     let param = {}
@@ -533,7 +517,18 @@ const preview = () => {
 onMounted(() => {
   requestNotifyWayData()
   requestRuleItemSrcList()
-  requestAlertContentParam();
+
+  alertContentParam.value = getAlertContentParam()
+  paramNameList.value = Object.keys(alertContentParam.value)
+  if (alertContentParam.value && formData.value.ruleContent) {
+    let param = {}
+    let keys = Object.keys(alertContentParam.value);
+    for (let key of keys) {
+      param[key] = alertContentParam.value[key]['preVal']
+    }
+    previewContent.value = parseContent(formData.value.ruleContent, param)
+  }
+
   if (props.templateRuleId || props.ruleId) {
     requestData(props.templateRuleId, props.ruleId)
   }

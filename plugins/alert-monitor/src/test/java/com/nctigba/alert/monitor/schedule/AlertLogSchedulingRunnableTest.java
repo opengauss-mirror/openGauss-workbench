@@ -1,5 +1,24 @@
 /*
- * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ *  Copyright (c) GBA-NCTI-ISDC. 2022-2024.
+ *
+ *  openGauss DataKit is licensed under Mulan PSL v2.
+ *  You can use this software according to the terms and conditions of the Mulan PSL v2.
+ *  You may obtain a copy of Mulan PSL v2 at:
+ *
+ *  http://license.coscl.org.cn/MulanPSL2
+ *
+ *  THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ *  EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ *  MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ *  See the Mulan PSL v2 for more details.
+ *  -------------------------------------------------------------------------
+ *
+ *  AlertLogSchedulingRunnableTest.java
+ *
+ *  IDENTIFICATION
+ *  plugins/alert-monitor/src/test/java/com/nctigba/alert/monitor/schedule/AlertLogSchedulingRunnableTest.java
+ *
+ *  -------------------------------------------------------------------------
  */
 
 package com.nctigba.alert.monitor.schedule;
@@ -10,16 +29,13 @@ import co.elastic.clients.elasticsearch.core.SearchResponse;
 import co.elastic.clients.elasticsearch.core.search.HitsMetadata;
 import co.elastic.clients.elasticsearch.core.search.TotalHits;
 import co.elastic.clients.elasticsearch.core.search.TotalHitsRelation;
-import com.nctigba.alert.monitor.config.ElasticsearchProvider;
+import com.nctigba.alert.monitor.config.ElasticsearchProviderConfig;
 import com.nctigba.alert.monitor.constant.CommonConstants;
-import com.nctigba.alert.monitor.dto.AlertContentParamDto;
-import com.nctigba.alert.monitor.entity.AlertClusterNodeConf;
-import com.nctigba.alert.monitor.entity.AlertSchedule;
-import com.nctigba.alert.monitor.entity.AlertTemplate;
-import com.nctigba.alert.monitor.entity.AlertTemplateRule;
-import com.nctigba.alert.monitor.entity.AlertTemplateRuleItem;
-import com.nctigba.alert.monitor.entity.NotifyTemplate;
-import com.nctigba.alert.monitor.entity.NotifyWay;
+import com.nctigba.alert.monitor.model.entity.AlertClusterNodeConfDO;
+import com.nctigba.alert.monitor.model.entity.AlertScheduleDO;
+import com.nctigba.alert.monitor.model.entity.AlertTemplateRuleDO;
+import com.nctigba.alert.monitor.model.entity.AlertTemplateRuleItemDO;
+import com.nctigba.alert.monitor.model.entity.NotifyWayDO;
 import com.nctigba.alert.monitor.mapper.AlertRecordMapper;
 import com.nctigba.alert.monitor.mapper.NotifyMessageMapper;
 import com.nctigba.alert.monitor.mapper.NotifyTemplateMapper;
@@ -29,8 +45,7 @@ import com.nctigba.alert.monitor.service.AlertScheduleService;
 import com.nctigba.alert.monitor.service.AlertTemplateRuleItemService;
 import com.nctigba.alert.monitor.service.AlertTemplateRuleService;
 import com.nctigba.alert.monitor.service.AlertTemplateService;
-import com.nctigba.alert.monitor.utils.AlertContentParamUtil;
-import com.nctigba.alert.monitor.utils.SpringContextUtils;
+import com.nctigba.alert.monitor.util.SpringContextUtils;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
@@ -40,7 +55,6 @@ import org.snmp4j.mp.SnmpConstants;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -48,7 +62,6 @@ import java.util.function.Function;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.times;
@@ -74,13 +87,11 @@ public class AlertLogSchedulingRunnableTest {
     @Mock
     private AlertTemplateRuleItemService templateRuleItemService;
     @Mock
-    private ElasticsearchProvider elasticsearchProvider;
+    private ElasticsearchProviderConfig elasticsearchProviderConfig;
     @Mock
     private ElasticsearchClient client;
     @Mock
     private NotifyWayMapper notifyWayMapper;
-    @Mock
-    private AlertContentParamUtil alertContentParamUtil;
     @Mock
     private AlertTemplateService templateService;
     @Mock
@@ -95,7 +106,7 @@ public class AlertLogSchedulingRunnableTest {
         try (MockedStatic<SpringContextUtils> mockedStatic = mockStatic(SpringContextUtils.class)) {
             mockedStatic.when(() ->
                 SpringContextUtils.getBean(AlertScheduleService.class)).thenReturn(scheduleService);
-            List<AlertSchedule> list = new ArrayList<>();
+            List<AlertScheduleDO> list = new ArrayList<>();
             when(scheduleService.list(any())).thenReturn(list);
             logSchedulingRunnable.run();
         }
@@ -106,13 +117,13 @@ public class AlertLogSchedulingRunnableTest {
         try (MockedStatic<SpringContextUtils> mockedStatic = mockStatic(SpringContextUtils.class)) {
             mockedStatic.when(() ->
                 SpringContextUtils.getBean(AlertScheduleService.class)).thenReturn(scheduleService);
-            List<AlertSchedule> list = new ArrayList<>();
-            list.add(new AlertSchedule());
+            List<AlertScheduleDO> list = new ArrayList<>();
+            list.add(new AlertScheduleDO());
             when(scheduleService.list(any())).thenReturn(list);
             when(scheduleService.updateById(any())).thenReturn(true);
             mockedStatic.when(() ->
                 SpringContextUtils.getBean(AlertTemplateRuleService.class)).thenReturn(templateRuleService);
-            List<AlertTemplateRule> templateRules = new ArrayList<>();
+            List<AlertTemplateRuleDO> templateRules = new ArrayList<>();
             when(templateRuleService.list(any())).thenReturn(templateRules);
 
             logSchedulingRunnable.run();
@@ -125,16 +136,16 @@ public class AlertLogSchedulingRunnableTest {
         try (MockedStatic<SpringContextUtils> mockedStatic = mockStatic(SpringContextUtils.class)) {
             mockedStatic.when(() ->
                 SpringContextUtils.getBean(AlertScheduleService.class)).thenReturn(scheduleService);
-            List<AlertSchedule> list = new ArrayList<>();
-            list.add(new AlertSchedule());
+            List<AlertScheduleDO> list = new ArrayList<>();
+            list.add(new AlertScheduleDO());
             when(scheduleService.list(any())).thenReturn(list);
             when(scheduleService.updateById(any())).thenReturn(true);
             mockedStatic.when(() ->
                 SpringContextUtils.getBean(AlertTemplateRuleService.class)).thenReturn(templateRuleService);
-            List<AlertTemplateRule> templateRules = new ArrayList<>();
-            templateRules.add(new AlertTemplateRule().setTemplateId(1L));
+            List<AlertTemplateRuleDO> templateRules = new ArrayList<>();
+            templateRules.add(new AlertTemplateRuleDO().setTemplateId(1L));
             when(templateRuleService.list(any())).thenReturn(templateRules);
-            List<AlertClusterNodeConf> clusterNodeConfs = new ArrayList<>();
+            List<AlertClusterNodeConfDO> clusterNodeConfs = new ArrayList<>();
             mockedStatic.when(() ->
                 SpringContextUtils.getBean(AlertClusterNodeConfService.class)).thenReturn(clusterNodeConfService);
             when(clusterNodeConfService.list(any())).thenReturn(clusterNodeConfs);
@@ -149,30 +160,30 @@ public class AlertLogSchedulingRunnableTest {
         try (MockedStatic<SpringContextUtils> mockedStatic = mockStatic(SpringContextUtils.class)) {
             mockedStatic.when(() ->
                 SpringContextUtils.getBean(AlertScheduleService.class)).thenReturn(scheduleService);
-            List<AlertSchedule> list = new ArrayList<>();
-            list.add(new AlertSchedule());
+            List<AlertScheduleDO> list = new ArrayList<>();
+            list.add(new AlertScheduleDO());
             when(scheduleService.list(any())).thenReturn(list);
             when(scheduleService.updateById(any())).thenReturn(true);
             mockedStatic.when(() ->
                 SpringContextUtils.getBean(AlertTemplateRuleService.class)).thenReturn(templateRuleService);
-            List<AlertTemplateRule> templateRules = new ArrayList<>();
-            templateRules.add(new AlertTemplateRule().setTemplateId(1L).setId(1L).setRuleId(1L).setRuleExpComb("A")
+            List<AlertTemplateRuleDO> templateRules = new ArrayList<>();
+            templateRules.add(new AlertTemplateRuleDO().setTemplateId(1L).setId(1L).setRuleId(1L).setRuleExpComb("A")
                 .setNotifyDuration(5).setNotifyDurationUnit(CommonConstants.MINUTE));
             when(templateRuleService.list(any())).thenReturn(templateRules);
-            List<AlertClusterNodeConf> clusterNodeConfs = new ArrayList<>();
-            clusterNodeConfs.add(new AlertClusterNodeConf().setTemplateId(1L).setClusterNodeId("node1"));
+            List<AlertClusterNodeConfDO> clusterNodeConfs = new ArrayList<>();
+            clusterNodeConfs.add(new AlertClusterNodeConfDO().setTemplateId(1L).setClusterNodeId("node1"));
             mockedStatic.when(() ->
                 SpringContextUtils.getBean(AlertClusterNodeConfService.class)).thenReturn(clusterNodeConfService);
             when(clusterNodeConfService.list(any())).thenReturn(clusterNodeConfs);
             mockedStatic.when(() ->
                 SpringContextUtils.getBean(AlertTemplateRuleItemService.class)).thenReturn(templateRuleItemService);
-            List<AlertTemplateRuleItem> templateRuleItems = new ArrayList<>();
-            templateRuleItems.add(new AlertTemplateRuleItem().setRuleMark("A").setKeyword("abc,efg").setBlockWord(
+            List<AlertTemplateRuleItemDO> templateRuleItems = new ArrayList<>();
+            templateRuleItems.add(new AlertTemplateRuleItemDO().setRuleMark("A").setKeyword("abc,efg").setBlockWord(
                 "bcd").setOperate(">").setLimitValue("10"));
             when(templateRuleItemService.list(any())).thenReturn(templateRuleItems);
             mockedStatic.when(() ->
-                SpringContextUtils.getBean(ElasticsearchProvider.class)).thenReturn(elasticsearchProvider);
-            when(elasticsearchProvider.client()).thenReturn(client);
+                SpringContextUtils.getBean(ElasticsearchProviderConfig.class)).thenReturn(elasticsearchProviderConfig);
+            when(elasticsearchProviderConfig.client()).thenReturn(client);
             when(client.search(any(Function.class), eq(HashMap.class))).thenReturn(mockEsResponse());
 
             logSchedulingRunnable.run();
@@ -185,30 +196,30 @@ public class AlertLogSchedulingRunnableTest {
         try (MockedStatic<SpringContextUtils> mockedStatic = mockStatic(SpringContextUtils.class)) {
             mockedStatic.when(() ->
                 SpringContextUtils.getBean(AlertScheduleService.class)).thenReturn(scheduleService);
-            List<AlertSchedule> list = new ArrayList<>();
-            list.add(new AlertSchedule());
+            List<AlertScheduleDO> list = new ArrayList<>();
+            list.add(new AlertScheduleDO());
             when(scheduleService.list(any())).thenReturn(list);
             when(scheduleService.updateById(any())).thenReturn(true);
             mockedStatic.when(() ->
                 SpringContextUtils.getBean(AlertTemplateRuleService.class)).thenReturn(templateRuleService);
-            List<AlertTemplateRule> templateRules = new ArrayList<>();
-            templateRules.add(new AlertTemplateRule().setTemplateId(1L).setId(1L).setRuleId(1L).setRuleExpComb("A")
+            List<AlertTemplateRuleDO> templateRules = new ArrayList<>();
+            templateRules.add(new AlertTemplateRuleDO().setTemplateId(1L).setId(1L).setRuleId(1L).setRuleExpComb("A")
                 .setNotifyDuration(5).setNotifyDurationUnit(CommonConstants.SECOND));
             when(templateRuleService.list(any())).thenReturn(templateRules);
-            List<AlertClusterNodeConf> clusterNodeConfs = new ArrayList<>();
-            clusterNodeConfs.add(new AlertClusterNodeConf().setTemplateId(1L).setClusterNodeId("node1"));
+            List<AlertClusterNodeConfDO> clusterNodeConfs = new ArrayList<>();
+            clusterNodeConfs.add(new AlertClusterNodeConfDO().setTemplateId(1L).setClusterNodeId("node1"));
             mockedStatic.when(() ->
                 SpringContextUtils.getBean(AlertClusterNodeConfService.class)).thenReturn(clusterNodeConfService);
             when(clusterNodeConfService.list(any())).thenReturn(clusterNodeConfs);
             mockedStatic.when(() ->
                 SpringContextUtils.getBean(AlertTemplateRuleItemService.class)).thenReturn(templateRuleItemService);
-            List<AlertTemplateRuleItem> templateRuleItems = new ArrayList<>();
-            templateRuleItems.add(new AlertTemplateRuleItem().setRuleMark("A").setKeyword("abc,efg").setBlockWord(
+            List<AlertTemplateRuleItemDO> templateRuleItems = new ArrayList<>();
+            templateRuleItems.add(new AlertTemplateRuleItemDO().setRuleMark("A").setKeyword("abc,efg").setBlockWord(
                 "bcd").setOperate(">=").setLimitValue("5"));
             when(templateRuleItemService.list(any())).thenReturn(templateRuleItems);
             mockedStatic.when(() ->
-                SpringContextUtils.getBean(ElasticsearchProvider.class)).thenReturn(elasticsearchProvider);
-            when(elasticsearchProvider.client()).thenReturn(client);
+                SpringContextUtils.getBean(ElasticsearchProviderConfig.class)).thenReturn(elasticsearchProviderConfig);
+            when(elasticsearchProviderConfig.client()).thenReturn(client);
             when(client.search(any(Function.class), eq(HashMap.class))).thenReturn(mockEsResponse());
 
             logSchedulingRunnable.run();
@@ -221,157 +232,65 @@ public class AlertLogSchedulingRunnableTest {
         try (MockedStatic<SpringContextUtils> mockedStatic = mockStatic(SpringContextUtils.class)) {
             mockedStatic.when(() ->
                 SpringContextUtils.getBean(AlertScheduleService.class)).thenReturn(scheduleService);
-            List<AlertSchedule> list = new ArrayList<>();
-            list.add(new AlertSchedule());
+            List<AlertScheduleDO> list = new ArrayList<>();
+            list.add(new AlertScheduleDO());
             when(scheduleService.list(any())).thenReturn(list);
             when(scheduleService.updateById(any())).thenReturn(true);
             mockedStatic.when(() ->
                 SpringContextUtils.getBean(AlertTemplateRuleService.class)).thenReturn(templateRuleService);
-            List<AlertTemplateRule> templateRules = new ArrayList<>();
-            templateRules.add(new AlertTemplateRule().setTemplateId(1L).setId(1L).setRuleId(1L).setRuleExpComb("A")
+            List<AlertTemplateRuleDO> templateRules = new ArrayList<>();
+            templateRules.add(new AlertTemplateRuleDO().setTemplateId(1L).setId(1L).setRuleId(1L).setRuleExpComb("A")
                 .setNotifyDuration(5).setNotifyDurationUnit(CommonConstants.HOUR).setNotifyWayIds("1"));
             when(templateRuleService.list(any())).thenReturn(templateRules);
-            List<AlertClusterNodeConf> clusterNodeConfs = new ArrayList<>();
-            clusterNodeConfs.add(new AlertClusterNodeConf().setTemplateId(1L).setClusterNodeId("node1"));
+            List<AlertClusterNodeConfDO> clusterNodeConfs = new ArrayList<>();
+            clusterNodeConfs.add(new AlertClusterNodeConfDO().setTemplateId(1L).setClusterNodeId("node1"));
             mockedStatic.when(() ->
                 SpringContextUtils.getBean(AlertClusterNodeConfService.class)).thenReturn(clusterNodeConfService);
             when(clusterNodeConfService.list(any())).thenReturn(clusterNodeConfs);
             mockedStatic.when(() ->
                 SpringContextUtils.getBean(AlertTemplateRuleItemService.class)).thenReturn(templateRuleItemService);
-            List<AlertTemplateRuleItem> templateRuleItems = new ArrayList<>();
-            templateRuleItems.add(new AlertTemplateRuleItem().setRuleMark("A").setKeyword("abc,efg").setBlockWord(
+            List<AlertTemplateRuleItemDO> templateRuleItems = new ArrayList<>();
+            templateRuleItems.add(new AlertTemplateRuleItemDO().setRuleMark("A").setKeyword("abc,efg").setBlockWord(
                 "bcd").setOperate(">=").setLimitValue("5"));
             when(templateRuleItemService.list(any())).thenReturn(templateRuleItems);
             mockedStatic.when(() ->
-                SpringContextUtils.getBean(ElasticsearchProvider.class)).thenReturn(elasticsearchProvider);
-            when(elasticsearchProvider.client()).thenReturn(client);
+                SpringContextUtils.getBean(ElasticsearchProviderConfig.class)).thenReturn(elasticsearchProviderConfig);
+            when(elasticsearchProviderConfig.client()).thenReturn(client);
             when(client.search(any(Function.class), eq(HashMap.class))).thenReturn(mockEsResponse());
             mockedStatic.when(() ->
                 SpringContextUtils.getBean(NotifyWayMapper.class)).thenReturn(notifyWayMapper);
-            List<NotifyWay> notifyWays = new ArrayList<>();
-            when(notifyWayMapper.selectBatchIds(anyList())).thenReturn(notifyWays);
+            List<NotifyWayDO> notifyWayDOS = new ArrayList<>();
+            when(notifyWayMapper.selectBatchIds(anyList())).thenReturn(notifyWayDOS);
 
             logSchedulingRunnable.run();
             verify(scheduleService, times(2)).updateById(any());
         }
     }
 
-    @Test
-    public void testRunIsSilence() throws IOException {
-        try (MockedStatic<SpringContextUtils> mockedStatic = mockStatic(SpringContextUtils.class)) {
-            mockedStatic.when(() ->
-                SpringContextUtils.getBean(AlertScheduleService.class)).thenReturn(scheduleService);
-            List<AlertSchedule> list = new ArrayList<>();
-            list.add(new AlertSchedule());
-            when(scheduleService.list(any())).thenReturn(list);
-            when(scheduleService.updateById(any())).thenReturn(true);
-            mockedStatic.when(() ->
-                SpringContextUtils.getBean(AlertTemplateRuleService.class)).thenReturn(templateRuleService);
-            List<AlertTemplateRule> templateRules = new ArrayList<>();
-            templateRules.add(new AlertTemplateRule().setTemplateId(1L).setId(1L).setRuleId(1L).setRuleExpComb("A")
-                .setNotifyDuration(5).setNotifyDurationUnit(CommonConstants.DAY).setNotifyWayIds("1")
-                .setIsSilence(CommonConstants.IS_SILENCE).setSilenceStartTime(LocalDateTime.now().minusHours(1))
-                .setSilenceEndTime(LocalDateTime.now().plusHours(1)).setLevel(CommonConstants.WARN).setRuleContent(
-                    "content"));
-            when(templateRuleService.list(any())).thenReturn(templateRules);
-            testRunIsSilenceSub(mockedStatic);
-
-            logSchedulingRunnable.run();
-            verify(scheduleService, times(2)).updateById(any());
-        }
-    }
-
-    @Test
-    public void testRunWithSendMsg() throws IOException {
-        try (MockedStatic<SpringContextUtils> mockedStatic = mockStatic(SpringContextUtils.class)) {
-            mockedStatic.when(() ->
-                SpringContextUtils.getBean(AlertScheduleService.class)).thenReturn(scheduleService);
-            List<AlertSchedule> list = new ArrayList<>();
-            list.add(new AlertSchedule());
-            when(scheduleService.list(any())).thenReturn(list);
-            when(scheduleService.updateById(any())).thenReturn(true);
-            mockedStatic.when(() ->
-                SpringContextUtils.getBean(AlertTemplateRuleService.class)).thenReturn(templateRuleService);
-            List<AlertTemplateRule> templateRules = new ArrayList<>();
-            templateRules.add(new AlertTemplateRule().setTemplateId(1L).setId(1L).setRuleId(1L).setRuleExpComb("A")
-                .setNotifyDuration(5).setNotifyDurationUnit(CommonConstants.DAY).setNotifyWayIds("1")
-                .setIsSilence(CommonConstants.IS_NOT_SILENCE).setLevel(CommonConstants.WARN).setRuleContent("content"));
-            when(templateRuleService.list(any())).thenReturn(templateRules);
-            testRunIsSilenceSub(mockedStatic);
-
-            // send msg test
-            mockedStatic.when(() ->
-                SpringContextUtils.getBean(NotifyTemplateMapper.class)).thenReturn(notifyTemplateMapper);
-            when(notifyTemplateMapper.selectById(anyLong())).thenReturn(new NotifyTemplate().setNotifyTitle("title")
-                .setNotifyContent("content"));
-            mockedStatic.when(() ->
-                SpringContextUtils.getBean(NotifyMessageMapper.class)).thenReturn(notifyMessageMapper);
-            when(notifyMessageMapper.insert(any())).thenReturn(1);
-
-            logSchedulingRunnable.run();
-            verify(scheduleService, times(2)).updateById(any());
-        }
-    }
-
-    private void testRunIsSilenceSub(MockedStatic<SpringContextUtils> mockedStatic) throws IOException {
-        List<AlertClusterNodeConf> clusterNodeConfs = new ArrayList<>();
-        clusterNodeConfs.add(new AlertClusterNodeConf().setTemplateId(1L).setClusterNodeId("node1"));
-        mockedStatic.when(() ->
-            SpringContextUtils.getBean(AlertClusterNodeConfService.class)).thenReturn(clusterNodeConfService);
-        when(clusterNodeConfService.list(any())).thenReturn(clusterNodeConfs);
-        mockedStatic.when(() ->
-            SpringContextUtils.getBean(AlertTemplateRuleItemService.class)).thenReturn(templateRuleItemService);
-        List<AlertTemplateRuleItem> templateRuleItems = new ArrayList<>();
-        templateRuleItems.add(new AlertTemplateRuleItem().setRuleMark("A").setKeyword("abc,efg").setBlockWord(
-            "bcd").setOperate(">=").setLimitValue("5"));
-        when(templateRuleItemService.list(any())).thenReturn(templateRuleItems);
-        mockedStatic.when(() ->
-            SpringContextUtils.getBean(ElasticsearchProvider.class)).thenReturn(elasticsearchProvider);
-        when(elasticsearchProvider.client()).thenReturn(client);
-        when(client.search(any(Function.class), eq(HashMap.class))).thenReturn(mockEsResponse());
-        mockedStatic.when(() ->
-            SpringContextUtils.getBean(NotifyWayMapper.class)).thenReturn(notifyWayMapper);
-        List<NotifyWay> notifyWays = mockNotifyWays();
-        when(notifyWayMapper.selectBatchIds(anyList())).thenReturn(notifyWays);
-        mockedStatic.when(() ->
-            SpringContextUtils.getBean(AlertContentParamUtil.class)).thenReturn(alertContentParamUtil);
-        AlertContentParamDto contentParamDto = new AlertContentParamDto().setNodeName("nodeName").setHostIp("ip")
-            .setLevel(CommonConstants.WARN).setHostname("centos").setPort("8080")
-            .setAlertStatus("recover").setAlertTime("2023-08-27 22:19:01").setContent("content");
-        when(alertContentParamUtil.setAndGetAlertContentParamDto(any(), any(), any(), any())).thenReturn(
-            contentParamDto);
-        mockedStatic.when(() ->
-            SpringContextUtils.getBean(AlertTemplateService.class)).thenReturn(templateService);
-        when(templateService.getById(anyLong())).thenReturn(new AlertTemplate().setTemplateName("name").setId(1L));
-        mockedStatic.when(() ->
-            SpringContextUtils.getBean(AlertRecordMapper.class)).thenReturn(recordMapper);
-        when(recordMapper.insert(any())).thenReturn(1);
-    }
-
-    private List<NotifyWay> mockNotifyWays() {
-        List<NotifyWay> notifyWays = new ArrayList<>();
-        notifyWays.add(new NotifyWay().setId(1L).setName("name").setNotifyType(CommonConstants.EMAIL)
+    private List<NotifyWayDO> mockNotifyWays() {
+        List<NotifyWayDO> notifyWayDOS = new ArrayList<>();
+        notifyWayDOS.add(new NotifyWayDO().setId(1L).setName("name").setNotifyType(CommonConstants.EMAIL)
             .setEmail("email").setNotifyTemplateId(1L));
-        notifyWays.add(new NotifyWay().setId(1L).setName("name").setNotifyType(CommonConstants.WE_COM)
+        notifyWayDOS.add(new NotifyWayDO().setId(1L).setName("name").setNotifyType(CommonConstants.WE_COM)
             .setSendWay(CommonConstants.APP_SEND_WAY).setDeptId("1").setPersonId("1").setNotifyTemplateId(1L));
-        notifyWays.add(new NotifyWay().setId(1L).setName("name").setNotifyType(CommonConstants.WE_COM)
+        notifyWayDOS.add(new NotifyWayDO().setId(1L).setName("name").setNotifyType(CommonConstants.WE_COM)
             .setSendWay(CommonConstants.ROBOT_SEND_WAY).setWebhook("webhook").setNotifyTemplateId(1L));
-        notifyWays.add(new NotifyWay().setId(1L).setName("name").setNotifyType(CommonConstants.DING_TALK)
+        notifyWayDOS.add(new NotifyWayDO().setId(1L).setName("name").setNotifyType(CommonConstants.DING_TALK)
             .setSendWay(CommonConstants.APP_SEND_WAY).setDeptId("1").setPersonId("1").setNotifyTemplateId(1L));
-        notifyWays.add(new NotifyWay().setId(1L).setName("name").setNotifyType(CommonConstants.DING_TALK)
+        notifyWayDOS.add(new NotifyWayDO().setId(1L).setName("name").setNotifyType(CommonConstants.DING_TALK)
             .setSendWay(CommonConstants.ROBOT_SEND_WAY).setWebhook("webhook").setSign("sign").setNotifyTemplateId(1L));
-        notifyWays.add(new NotifyWay().setId(1L).setName("name").setNotifyType(CommonConstants.DING_TALK)
+        notifyWayDOS.add(new NotifyWayDO().setId(1L).setName("name").setNotifyType(CommonConstants.DING_TALK)
             .setSendWay(CommonConstants.ROBOT_SEND_WAY).setWebhook("webhook").setSign("").setNotifyTemplateId(1L));
-        notifyWays.add(new NotifyWay().setId(1L).setName("name").setNotifyType(CommonConstants.WEBHOOK)
+        notifyWayDOS.add(new NotifyWayDO().setId(1L).setName("name").setNotifyType(CommonConstants.WEBHOOK)
             .setWebhook("webhook").setNotifyTemplateId(1L));
-        notifyWays.add(new NotifyWay().setId(1L).setName("name").setNotifyType(CommonConstants.WEBHOOK)
+        notifyWayDOS.add(new NotifyWayDO().setId(1L).setName("name").setNotifyType(CommonConstants.WEBHOOK)
             .setWebhook("webhook").setHeader("{\"a\":\"b\"}").setParams("{\"k\":\"v\"}").setBody("body")
             .setResultCode("{\"errCode\":0}").setNotifyTemplateId(1L));
-        notifyWays.add(new NotifyWay().setId(1L).setName("name").setNotifyType(CommonConstants.SNMP)
+        notifyWayDOS.add(new NotifyWayDO().setId(1L).setName("name").setNotifyType(CommonConstants.SNMP)
             .setSnmpIp("127.0.0.1").setSnmpPort("162").setSnmpVersion(SnmpConstants.version3).setSnmpCommunity(
                 "community").setSnmpOid("oid").setSnmpUsername("user").setSnmpAuthPasswd("123").setSnmpPrivPasswd(
                 "1234").setNotifyTemplateId(1L));
-        return notifyWays;
+        return notifyWayDOS;
     }
 
     private SearchResponse<HashMap> mockEsResponse() {

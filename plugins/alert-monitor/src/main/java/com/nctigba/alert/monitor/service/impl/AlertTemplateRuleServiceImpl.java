@@ -1,5 +1,24 @@
 /*
- * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ *  Copyright (c) GBA-NCTI-ISDC. 2022-2024.
+ *
+ *  openGauss DataKit is licensed under Mulan PSL v2.
+ *  You can use this software according to the terms and conditions of the Mulan PSL v2.
+ *  You may obtain a copy of Mulan PSL v2 at:
+ *
+ *  http://license.coscl.org.cn/MulanPSL2
+ *
+ *  THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ *  EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ *  MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ *  See the Mulan PSL v2 for more details.
+ *  -------------------------------------------------------------------------
+ *
+ *  AlertTemplateRuleServiceImpl.java
+ *
+ *  IDENTIFICATION
+ *  plugins/alert-monitor/src/main/java/com/nctigba/alert/monitor/service/impl/AlertTemplateRuleServiceImpl.java
+ *
+ *  -------------------------------------------------------------------------
  */
 
 package com.nctigba.alert.monitor.service.impl;
@@ -9,14 +28,13 @@ import cn.hutool.core.collection.CollectionUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.nctigba.alert.monitor.constant.CommonConstants;
-import com.nctigba.alert.monitor.dto.AlertTemplateRuleDto;
-import com.nctigba.alert.monitor.entity.AlertTemplateRule;
-import com.nctigba.alert.monitor.entity.AlertTemplateRuleItem;
+import com.nctigba.alert.monitor.model.dto.AlertTemplateRuleDTO;
+import com.nctigba.alert.monitor.model.entity.AlertTemplateRuleDO;
+import com.nctigba.alert.monitor.model.entity.AlertTemplateRuleItemDO;
 import com.nctigba.alert.monitor.mapper.AlertTemplateRuleItemMapper;
 import com.nctigba.alert.monitor.mapper.AlertTemplateRuleMapper;
 import com.nctigba.alert.monitor.service.AlertTemplateRuleItemService;
 import com.nctigba.alert.monitor.service.AlertTemplateRuleService;
-import com.nctigba.alert.monitor.service.PrometheusService;
 import org.opengauss.admin.common.exception.ServiceException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -32,44 +50,44 @@ import java.util.stream.Collectors;
  * @description
  */
 @Service
-public class AlertTemplateRuleServiceImpl extends ServiceImpl<AlertTemplateRuleMapper, AlertTemplateRule>
+public class AlertTemplateRuleServiceImpl extends ServiceImpl<AlertTemplateRuleMapper, AlertTemplateRuleDO>
     implements AlertTemplateRuleService {
     @Autowired
     private AlertTemplateRuleItemMapper alertTemplateRuleItemMapper;
     @Autowired
     private AlertTemplateRuleItemService templateRuleItemService;
     @Autowired
-    private PrometheusService prometheusService;
+    private PrometheusServiceImpl prometheusService;
 
     @Override
-    public AlertTemplateRule getTemplateRule(Long templateRuleId) {
-        AlertTemplateRule alertTemplateRule = this.baseMapper.selectById(templateRuleId);
-        if (alertTemplateRule == null) {
+    public AlertTemplateRuleDO getTemplateRule(Long templateRuleId) {
+        AlertTemplateRuleDO alertTemplateRuleDO = this.baseMapper.selectById(templateRuleId);
+        if (alertTemplateRuleDO == null) {
             throw new ServiceException("the rule is not found");
         }
-        List<AlertTemplateRuleItem> alertTemplateRuleItems = alertTemplateRuleItemMapper.selectList(
-            Wrappers.<AlertTemplateRuleItem>lambdaQuery().eq(AlertTemplateRuleItem::getTemplateRuleId,
-                    alertTemplateRule.getId())
-                .eq(AlertTemplateRuleItem::getIsDeleted, CommonConstants.IS_NOT_DELETE));
-        alertTemplateRule.setAlertRuleItemList(alertTemplateRuleItems);
-        return alertTemplateRule;
+        List<AlertTemplateRuleItemDO> alertTemplateRuleItemDOS = alertTemplateRuleItemMapper.selectList(
+            Wrappers.<AlertTemplateRuleItemDO>lambdaQuery().eq(AlertTemplateRuleItemDO::getTemplateRuleId,
+                    alertTemplateRuleDO.getId())
+                .eq(AlertTemplateRuleItemDO::getIsDeleted, CommonConstants.IS_NOT_DELETE));
+        alertTemplateRuleDO.setAlertRuleItemList(alertTemplateRuleItemDOS);
+        return alertTemplateRuleDO;
     }
 
     @Override
     @Transactional
-    public AlertTemplateRule saveTemplateRule(AlertTemplateRule alertTemplateRule) {
-        if (alertTemplateRule.getId() == null) {
-            alertTemplateRule.setCreateTime(LocalDateTime.now());
+    public AlertTemplateRuleDO saveTemplateRule(AlertTemplateRuleDO alertTemplateRuleDO) {
+        if (alertTemplateRuleDO.getId() == null) {
+            alertTemplateRuleDO.setCreateTime(LocalDateTime.now());
         } else {
-            alertTemplateRule.setUpdateTime(LocalDateTime.now());
+            alertTemplateRuleDO.setUpdateTime(LocalDateTime.now());
         }
-        this.saveOrUpdate(alertTemplateRule);
-        List<AlertTemplateRuleItem> templateRuleItemList = alertTemplateRule.getAlertRuleItemList();
+        this.saveOrUpdate(alertTemplateRuleDO);
+        List<AlertTemplateRuleItemDO> templateRuleItemList = alertTemplateRuleDO.getAlertRuleItemList();
         if (CollectionUtil.isEmpty(templateRuleItemList)) {
-            return alertTemplateRule;
+            return alertTemplateRuleDO;
         }
-        for (AlertTemplateRuleItem templateRuleItem : templateRuleItemList) {
-            templateRuleItem.setTemplateRuleId(alertTemplateRule.getId());
+        for (AlertTemplateRuleItemDO templateRuleItem : templateRuleItemList) {
+            templateRuleItem.setTemplateRuleId(alertTemplateRuleDO.getId());
             if (templateRuleItem.getId() == null) {
                 templateRuleItem.setCreateTime(LocalDateTime.now());
             } else {
@@ -77,28 +95,28 @@ public class AlertTemplateRuleServiceImpl extends ServiceImpl<AlertTemplateRuleM
             }
         }
         templateRuleItemService.saveOrUpdateBatch(templateRuleItemList);
-        if (alertTemplateRule.getRuleType().equals(CommonConstants.INDEX_RULE)
-            && alertTemplateRule.getTemplateId() != null) {
-            prometheusService.updateRuleByTemplateRule(alertTemplateRule);
+        if (alertTemplateRuleDO.getRuleType().equals(CommonConstants.INDEX_RULE)
+            && alertTemplateRuleDO.getTemplateId() != null) {
+            prometheusService.updateRuleByTemplateRule(alertTemplateRuleDO);
         }
-        return alertTemplateRule;
+        return alertTemplateRuleDO;
     }
 
 
-    public List<AlertTemplateRule> getListByTemplateId(Long templateId) {
-        List<AlertTemplateRule> alertRules =
+    public List<AlertTemplateRuleDO> getListByTemplateId(Long templateId) {
+        List<AlertTemplateRuleDO> alertRules =
             this.baseMapper.selectList(
-                Wrappers.<AlertTemplateRule>lambdaQuery().eq(AlertTemplateRule::getTemplateId, templateId).eq(
-                    AlertTemplateRule::getIsDeleted, CommonConstants.IS_NOT_DELETE).orderByDesc(
-                    AlertTemplateRule::getId));
+                Wrappers.<AlertTemplateRuleDO>lambdaQuery().eq(AlertTemplateRuleDO::getTemplateId, templateId).eq(
+                    AlertTemplateRuleDO::getIsDeleted, CommonConstants.IS_NOT_DELETE).orderByDesc(
+                    AlertTemplateRuleDO::getId));
         List<Long> ruleIdList = alertRules.stream().map(item -> item.getId()).collect(Collectors.toList());
-        List<AlertTemplateRuleItem> alertRuleItems = alertTemplateRuleItemMapper.selectList(
-            Wrappers.<AlertTemplateRuleItem>lambdaQuery().in(AlertTemplateRuleItem::getTemplateRuleId,
-                ruleIdList).eq(AlertTemplateRuleItem::getIsDeleted, CommonConstants.IS_NOT_DELETE));
-        for (AlertTemplateRule alertRule : alertRules) {
-            AlertTemplateRuleDto ruleDto = new AlertTemplateRuleDto();
+        List<AlertTemplateRuleItemDO> alertRuleItems = alertTemplateRuleItemMapper.selectList(
+            Wrappers.<AlertTemplateRuleItemDO>lambdaQuery().in(AlertTemplateRuleItemDO::getTemplateRuleId,
+                ruleIdList).eq(AlertTemplateRuleItemDO::getIsDeleted, CommonConstants.IS_NOT_DELETE));
+        for (AlertTemplateRuleDO alertRule : alertRules) {
+            AlertTemplateRuleDTO ruleDto = new AlertTemplateRuleDTO();
             BeanUtil.copyProperties(alertRule, ruleDto);
-            List<AlertTemplateRuleItem> ruleItems = alertRuleItems.stream().filter(
+            List<AlertTemplateRuleItemDO> ruleItems = alertRuleItems.stream().filter(
                 item -> item.getTemplateRuleId().equals(alertRule.getId())).collect(Collectors.toList());
             alertRule.setAlertRuleItemList(ruleItems);
         }
@@ -113,11 +131,11 @@ public class AlertTemplateRuleServiceImpl extends ServiceImpl<AlertTemplateRuleM
     @Override
     @Transactional
     public void enableTemplateRule(Long templateRuleId) {
-        AlertTemplateRule alertTemplateRule = this.baseMapper.selectById(templateRuleId);
-        alertTemplateRule.setEnable(CommonConstants.ENABLE).setUpdateTime(LocalDateTime.now());
-        this.baseMapper.updateById(alertTemplateRule);
-        if (alertTemplateRule.getRuleType().equals(CommonConstants.INDEX_RULE)) {
-            prometheusService.updateRuleByTemplateRule(alertTemplateRule);
+        AlertTemplateRuleDO alertTemplateRuleDO = this.baseMapper.selectById(templateRuleId);
+        alertTemplateRuleDO.setEnable(CommonConstants.ENABLE).setUpdateTime(LocalDateTime.now());
+        this.baseMapper.updateById(alertTemplateRuleDO);
+        if (alertTemplateRuleDO.getRuleType().equals(CommonConstants.INDEX_RULE)) {
+            prometheusService.updateRuleByTemplateRule(alertTemplateRuleDO);
         }
     }
 
@@ -129,11 +147,22 @@ public class AlertTemplateRuleServiceImpl extends ServiceImpl<AlertTemplateRuleM
     @Override
     @Transactional
     public void disableTemplateRule(Long templateRuleId) {
-        AlertTemplateRule alertTemplateRule = this.baseMapper.selectById(templateRuleId);
-        alertTemplateRule.setEnable(CommonConstants.DISABLE).setUpdateTime(LocalDateTime.now());
-        this.baseMapper.updateById(alertTemplateRule);
-        if (alertTemplateRule.getRuleType().equals(CommonConstants.INDEX_RULE)) {
-            prometheusService.removeRuleByTemplateRule(alertTemplateRule);
+        AlertTemplateRuleDO alertTemplateRuleDO = this.baseMapper.selectById(templateRuleId);
+        alertTemplateRuleDO.setEnable(CommonConstants.DISABLE).setUpdateTime(LocalDateTime.now());
+        this.baseMapper.updateById(alertTemplateRuleDO);
+        if (alertTemplateRuleDO.getRuleType().equals(CommonConstants.INDEX_RULE)) {
+            prometheusService.removeRuleByTemplateRule(alertTemplateRuleDO);
         }
+    }
+
+    /**
+     * get AlertTemplateRuleDTO List by ruleId, not templateRuleId
+     *
+     * @param ruleId Long
+     * @return List<AlertTemplateRuleDTO>
+     */
+    @Override
+    public List<AlertTemplateRuleDTO> getDtoListByRuleId(Long ruleId) {
+        return this.baseMapper.getDtoListByRuleId(ruleId);
     }
 }

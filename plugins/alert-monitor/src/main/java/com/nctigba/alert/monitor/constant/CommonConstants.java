@@ -1,5 +1,24 @@
 /*
- * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ *  Copyright (c) GBA-NCTI-ISDC. 2022-2024.
+ *
+ *  openGauss DataKit is licensed under Mulan PSL v2.
+ *  You can use this software according to the terms and conditions of the Mulan PSL v2.
+ *  You may obtain a copy of Mulan PSL v2 at:
+ *
+ *  http://license.coscl.org.cn/MulanPSL2
+ *
+ *  THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ *  EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ *  MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ *  See the Mulan PSL v2 for more details.
+ *  -------------------------------------------------------------------------
+ *
+ *  CommonConstants.java
+ *
+ *  IDENTIFICATION
+ *  plugins/alert-monitor/src/main/java/com/nctigba/alert/monitor/constant/CommonConstants.java
+ *
+ *  -------------------------------------------------------------------------
  */
 
 package com.nctigba.alert.monitor.constant;
@@ -177,4 +196,29 @@ public class CommonConstants {
      * prometheus evaluation_interval
      */
     public static final String EVALUATION_INTERVAL = "15s";
+
+    /**
+     * notify is unsend
+     */
+    public static final Integer UNSEND = 0;
+
+    /**
+     * notify is send
+     */
+    public static final Integer SEND = 1;
+
+    /**
+     * notify is ignored
+     */
+    public static final Integer SEND_IGNORE = 2;
+
+    /**
+     * exception
+     */
+    public static final String NODE_NOT_FOUND = "node not found";
+
+    /**
+     * jdbc protocol
+     */
+    public static final String JDBC_OPENGAUSS = "jdbc:opengauss://";
 }

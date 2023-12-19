@@ -1,5 +1,24 @@
 /*
- * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ *  Copyright (c) GBA-NCTI-ISDC. 2022-2024.
+ *
+ *  openGauss DataKit is licensed under Mulan PSL v2.
+ *  You can use this software according to the terms and conditions of the Mulan PSL v2.
+ *  You may obtain a copy of Mulan PSL v2 at:
+ *
+ *  http://license.coscl.org.cn/MulanPSL2
+ *
+ *  THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ *  EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ *  MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ *  See the Mulan PSL v2 for more details.
+ *  -------------------------------------------------------------------------
+ *
+ *  EnvironmentController.java
+ *
+ *  IDENTIFICATION
+ *  plugins/alert-monitor/src/main/java/com/nctigba/alert/monitor/controller/EnvironmentController.java
+ *
+ *  -------------------------------------------------------------------------
  */
 
 package com.nctigba.alert.monitor.controller;
@@ -9,11 +28,8 @@ import com.nctigba.alert.monitor.service.EnvironmentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
 import java.util.List;
-import java.util.Map;
 
 /**
  * @author wuyuebin
@@ -36,18 +52,5 @@ public class EnvironmentController {
     public AjaxResult checkPrometheus() {
         environmentService.checkPrometheus();
         return AjaxResult.success();
-    }
-
-    /**
-     * get the constant parameters
-     *
-     * @param type: alert and notify,alert: the constant parameters for querying alert content,  notify: the constant
-     *            parameters for notify content
-     * @return return the constant parameters
-     */
-    @GetMapping("/alertContentParam")
-    public AjaxResult getAlertContentParam(@RequestParam String type) {
-        Map<String, Map<String, String>> map = environmentService.getAlertContentParam(type);
-        return AjaxResult.success(map);
     }
 }

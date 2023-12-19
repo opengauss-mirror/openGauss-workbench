@@ -142,6 +142,9 @@ export default {
     nextRepeat: '重复周期',
     maxRepeatCount: '最大重复次数',
     filesystemPathTip: '请输入磁盘路径',
+    updateTemplateRuleTip: '是否更新告警模板对应的规则？',
+    updateTemplateRuleRadios: ['不更新', '部分告警模板规则更新', '更新所有'],
+    chooseTemplateTip: '请选择告警模板：'
   },
   alertTemplate: {
     title: '告警模板',
@@ -191,6 +194,13 @@ export default {
   AlertClusterNodeConf: {
     title: '告警配置',
     confBtn: '配置',
+    unbindConfBtn: "解除",
+    tableDataSelectTip: '至少选择一个数据',
+    tableDataSelectTip2: '至少选择一个有绑定模板的数据',
+    tableDataTip: '该实例没有配置告警模板，无须解除',
+    unbindTip: '确定解除告警模板吗',
+    unbindSuccess: '解除成功',
+    unbindFail: '解除失败',
     table: ['集群/实例', '数据库类型', '主机IP', '告警模板', '操作'],
     detailTitle: '告警模板配置',
     selectedInstance: '已选实例',
@@ -296,5 +306,16 @@ export default {
     dingSecret: 'app密钥',
     inputTip: '请输入',
     test: '测试',
+  },
+  contentParam: {
+    nodeName: '节点名称',
+    hostname: '主机名称',
+    hostIp: '主机IP',
+    port: '数据库端口号',
+    alertTime: '告警时间',
+    alertStatus: '告警状态',
+    level: '告警级别',
+    content: '告警内容',
+    curVal: '当前值'
   }
 }

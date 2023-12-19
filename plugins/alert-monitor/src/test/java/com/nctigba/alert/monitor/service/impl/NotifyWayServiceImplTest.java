@@ -1,5 +1,24 @@
 /*
- * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ *  Copyright (c) GBA-NCTI-ISDC. 2022-2024.
+ *
+ *  openGauss DataKit is licensed under Mulan PSL v2.
+ *  You can use this software according to the terms and conditions of the Mulan PSL v2.
+ *  You may obtain a copy of Mulan PSL v2 at:
+ *
+ *  http://license.coscl.org.cn/MulanPSL2
+ *
+ *  THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ *  EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ *  MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ *  See the Mulan PSL v2 for more details.
+ *  -------------------------------------------------------------------------
+ *
+ *  NotifyWayServiceImplTest.java
+ *
+ *  IDENTIFICATION
+ *  plugins/alert-monitor/src/test/java/com/nctigba/alert/monitor/service/impl/NotifyWayServiceImplTest.java
+ *
+ *  -------------------------------------------------------------------------
  */
 
 package com.nctigba.alert.monitor.service.impl;
@@ -7,16 +26,14 @@ package com.nctigba.alert.monitor.service.impl;
 import com.baomidou.mybatisplus.core.MybatisConfiguration;
 import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.nctigba.alert.monitor.constant.CommonConstants;
-import com.nctigba.alert.monitor.dto.NotifyWayDto;
-import com.nctigba.alert.monitor.entity.AlertRule;
-import com.nctigba.alert.monitor.entity.AlertTemplateRule;
-import com.nctigba.alert.monitor.entity.NotifyWay;
+import com.nctigba.alert.monitor.model.dto.NotifyWayDTO;
+import com.nctigba.alert.monitor.model.entity.AlertRuleDO;
+import com.nctigba.alert.monitor.model.entity.AlertTemplateRuleDO;
+import com.nctigba.alert.monitor.model.entity.NotifyWayDO;
 import com.nctigba.alert.monitor.mapper.NotifyWayMapper;
 import com.nctigba.alert.monitor.service.AlertRuleService;
 import com.nctigba.alert.monitor.service.AlertTemplateRuleService;
-import com.nctigba.alert.monitor.service.ThirdPartyService;
-import com.nctigba.alert.monitor.utils.MessageSourceUtil;
+import com.nctigba.alert.monitor.util.MessageSourceUtils;
 import org.apache.ibatis.builder.MapperBuilderAssistant;
 import org.junit.Before;
 import org.junit.Test;
@@ -37,7 +54,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -59,20 +75,18 @@ public class NotifyWayServiceImplTest {
     private AlertTemplateRuleService templateRuleService;
     @Mock
     private NotifyWayMapper baseMapper;
-    @Mock
-    private ThirdPartyService thirdPartyService;
 
     @Before
     public void before() {
         MockitoAnnotations.initMocks(this);
         TableInfoHelper.initTableInfo(new MapperBuilderAssistant(new MybatisConfiguration(), ""),
-            NotifyWay.class);
+            NotifyWayDO.class);
     }
 
     @Test
     public void testGetListPage() {
         Page page = new Page(1, 10);
-        Page<NotifyWayDto> notifyWayDtoPage = new Page<>(1, 10);
+        Page<NotifyWayDTO> notifyWayDtoPage = new Page<>(1, 10);
         when(baseMapper.selectDtoPage(eq(page), any())).thenReturn(notifyWayDtoPage);
 
         Page result = notifyWayService.getListPage("", "", page);
@@ -83,37 +97,37 @@ public class NotifyWayServiceImplTest {
 
     @Test
     public void testGetList() {
-        List<NotifyWay> list = new ArrayList<>();
+        List<NotifyWayDO> list = new ArrayList<>();
         when(baseMapper.selectList(any())).thenReturn(list);
-        List<NotifyWay> resultList = notifyWayService.getList(anyString());
+        List<NotifyWayDO> resultList = notifyWayService.getList(anyString());
         verify(baseMapper, times(1)).selectList(any());
         assertEquals(list, resultList);
     }
 
     @Test
     public void testSaveNotifyWay1() {
-        NotifyWay notifyWay = new NotifyWay();
-        when(baseMapper.insert(any(NotifyWay.class))).thenReturn(1);
-        notifyWayService.saveNotifyWay(notifyWay);
-        verify(baseMapper, times(1)).insert(any(NotifyWay.class));
+        NotifyWayDO notifyWayDO = new NotifyWayDO();
+        when(baseMapper.insert(any(NotifyWayDO.class))).thenReturn(1);
+        notifyWayService.saveNotifyWay(notifyWayDO);
+        verify(baseMapper, times(1)).insert(any(NotifyWayDO.class));
     }
 
     @Test
     public void testSaveNotifyWay2() {
-        NotifyWay notifyWay = new NotifyWay().setId(1L);
-        when(baseMapper.updateById(any(NotifyWay.class))).thenReturn(1);
-        notifyWayService.saveNotifyWay(notifyWay);
-        verify(baseMapper, times(1)).insert(any(NotifyWay.class));
+        NotifyWayDO notifyWayDO = new NotifyWayDO().setId(1L);
+        when(baseMapper.updateById(any(NotifyWayDO.class))).thenReturn(1);
+        notifyWayService.saveNotifyWay(notifyWayDO);
+        verify(baseMapper, times(1)).insert(any(NotifyWayDO.class));
     }
 
     @Test(expected = ServiceException.class)
     public void testDelByIdThrowException1() {
-        try (MockedStatic<MessageSourceUtil> mockedStatic = mockStatic(MessageSourceUtil.class)) {
-            mockedStatic.when(() -> MessageSourceUtil.get(any())).thenReturn("alertRule");
-            List<AlertRule> ruleList = new ArrayList<>();
-            AlertRule alertRule = new AlertRule();
-            ruleList.add(alertRule);
-            List<AlertTemplateRule> templateRuleList = new ArrayList<>();
+        try (MockedStatic<MessageSourceUtils> mockedStatic = mockStatic(MessageSourceUtils.class)) {
+            mockedStatic.when(() -> MessageSourceUtils.get(any())).thenReturn("alertRule");
+            List<AlertRuleDO> ruleList = new ArrayList<>();
+            AlertRuleDO alertRuleDO = new AlertRuleDO();
+            ruleList.add(alertRuleDO);
+            List<AlertTemplateRuleDO> templateRuleList = new ArrayList<>();
             when(ruleService.list(any())).thenReturn(ruleList);
             when(templateRuleService.list(any())).thenReturn(templateRuleList);
             notifyWayService.delById(anyLong());
@@ -124,12 +138,12 @@ public class NotifyWayServiceImplTest {
 
     @Test(expected = ServiceException.class)
     public void testDelByIdThrowException2() {
-        try (MockedStatic<MessageSourceUtil> mockedStatic = mockStatic(MessageSourceUtil.class)) {
-            mockedStatic.when(() -> MessageSourceUtil.get(any())).thenReturn("alertRule");
-            List<AlertRule> ruleList = new ArrayList<>();
-            List<AlertTemplateRule> templateRuleList = new ArrayList<>();
-            AlertTemplateRule alertTemplateRule = new AlertTemplateRule();
-            templateRuleList.add(alertTemplateRule);
+        try (MockedStatic<MessageSourceUtils> mockedStatic = mockStatic(MessageSourceUtils.class)) {
+            mockedStatic.when(() -> MessageSourceUtils.get(any())).thenReturn("alertRule");
+            List<AlertRuleDO> ruleList = new ArrayList<>();
+            List<AlertTemplateRuleDO> templateRuleList = new ArrayList<>();
+            AlertTemplateRuleDO alertTemplateRuleDO = new AlertTemplateRuleDO();
+            templateRuleList.add(alertTemplateRuleDO);
             when(ruleService.list(any())).thenReturn(ruleList);
             when(templateRuleService.list(any())).thenReturn(templateRuleList);
             notifyWayService.delById(anyLong());
@@ -140,8 +154,8 @@ public class NotifyWayServiceImplTest {
 
     @Test
     public void testDelById() {
-        List<AlertRule> ruleList = new ArrayList<>();
-        List<AlertTemplateRule> templateRuleList = new ArrayList<>();
+        List<AlertRuleDO> ruleList = new ArrayList<>();
+        List<AlertTemplateRuleDO> templateRuleList = new ArrayList<>();
         when(ruleService.list(any())).thenReturn(ruleList);
         when(templateRuleService.list(any())).thenReturn(templateRuleList);
         when(baseMapper.update(any(), any())).thenReturn(1);
@@ -152,25 +166,9 @@ public class NotifyWayServiceImplTest {
         verify(baseMapper, times(1)).update(any(), any());
     }
 
-    @Test
-    public void testTestWebhookNotifyWay() {
-        NotifyWay notifyWay = new NotifyWay().setNotifyType(CommonConstants.WEBHOOK);
-        when(thirdPartyService.testWebhookByNotifyWay(notifyWay)).thenReturn(true);
-        notifyWayService.testNotifyWay(notifyWay);
-        verify(thirdPartyService, times(1)).testWebhookByNotifyWay(notifyWay);
-    }
-
-    @Test
-    public void testTestSnmpNotifyWay() {
-        NotifyWay notifyWay = new NotifyWay().setNotifyType(CommonConstants.SNMP);
-        when(thirdPartyService.testSnmpByNotifyWay(notifyWay)).thenReturn(true);
-        notifyWayService.testNotifyWay(notifyWay);
-        verify(thirdPartyService, times(1)).testSnmpByNotifyWay(notifyWay);
-    }
-
     @Test(expected = ServiceException.class)
     public void testTestErrNotifyWay() {
-        NotifyWay notifyWay = new NotifyWay().setNotifyType("other");
-        notifyWayService.testNotifyWay(notifyWay);
+        NotifyWayDO notifyWayDO = new NotifyWayDO().setNotifyType("other");
+        notifyWayService.testNotifyWay(notifyWayDO);
     }
 }

@@ -1,5 +1,24 @@
 /*
- * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ *  Copyright (c) GBA-NCTI-ISDC. 2022-2024.
+ *
+ *  openGauss DataKit is licensed under Mulan PSL v2.
+ *  You can use this software according to the terms and conditions of the Mulan PSL v2.
+ *  You may obtain a copy of Mulan PSL v2 at:
+ *
+ *  http://license.coscl.org.cn/MulanPSL2
+ *
+ *  THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ *  EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ *  MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ *  See the Mulan PSL v2 for more details.
+ *  -------------------------------------------------------------------------
+ *
+ *  AlertLogSchedulingRunnable.java
+ *
+ *  IDENTIFICATION
+ *  plugins/alert-monitor/src/main/java/com/nctigba/alert/monitor/schedule/AlertLogSchedulingRunnable.java
+ *
+ *  -------------------------------------------------------------------------
  */
 
 package com.nctigba.alert.monitor.schedule;
@@ -7,40 +26,40 @@ package com.nctigba.alert.monitor.schedule;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.StrUtil;
-import cn.hutool.json.JSONObject;
-import cn.hutool.json.JSONUtil;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
 import co.elastic.clients.json.JsonData;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.nctigba.alert.monitor.config.ElasticsearchProvider;
+import com.nctigba.alert.monitor.config.ElasticsearchProviderConfig;
 import com.nctigba.alert.monitor.constant.CommonConstants;
-import com.nctigba.alert.monitor.dto.AlertContentParamDto;
-import com.nctigba.alert.monitor.dto.NotifySnmpDto;
-import com.nctigba.alert.monitor.entity.AlertClusterNodeConf;
-import com.nctigba.alert.monitor.entity.AlertRecord;
-import com.nctigba.alert.monitor.entity.AlertSchedule;
-import com.nctigba.alert.monitor.entity.AlertTemplate;
-import com.nctigba.alert.monitor.entity.AlertTemplateRule;
-import com.nctigba.alert.monitor.entity.AlertTemplateRuleItem;
-import com.nctigba.alert.monitor.entity.NotifyMessage;
-import com.nctigba.alert.monitor.entity.NotifyTemplate;
-import com.nctigba.alert.monitor.entity.NotifyWay;
+import com.nctigba.alert.monitor.mapper.AlertRecordDetailMapper;
+import com.nctigba.alert.monitor.model.entity.AlertClusterNodeConfDO;
+import com.nctigba.alert.monitor.model.entity.AlertRecordDO;
+import com.nctigba.alert.monitor.model.entity.AlertRecordDetailDO;
+import com.nctigba.alert.monitor.model.entity.AlertScheduleDO;
+import com.nctigba.alert.monitor.model.entity.AlertTemplateDO;
+import com.nctigba.alert.monitor.model.entity.AlertTemplateRuleDO;
+import com.nctigba.alert.monitor.model.entity.AlertTemplateRuleItemDO;
+import com.nctigba.alert.monitor.model.entity.NotifyWayDO;
 import com.nctigba.alert.monitor.mapper.AlertRecordMapper;
-import com.nctigba.alert.monitor.mapper.NotifyMessageMapper;
-import com.nctigba.alert.monitor.mapper.NotifyTemplateMapper;
 import com.nctigba.alert.monitor.mapper.NotifyWayMapper;
 import com.nctigba.alert.monitor.service.AlertClusterNodeConfService;
 import com.nctigba.alert.monitor.service.AlertScheduleService;
 import com.nctigba.alert.monitor.service.AlertTemplateRuleItemService;
 import com.nctigba.alert.monitor.service.AlertTemplateRuleService;
 import com.nctigba.alert.monitor.service.AlertTemplateService;
-import com.nctigba.alert.monitor.utils.AlertContentParamUtil;
-import com.nctigba.alert.monitor.utils.MessageSourceUtil;
-import com.nctigba.alert.monitor.utils.SpringContextUtils;
-import com.nctigba.alert.monitor.utils.TextParser;
+import com.nctigba.alert.monitor.util.MessageSourceUtils;
+import com.nctigba.alert.monitor.util.SpringContextUtils;
+import com.nctigba.alert.monitor.util.TextParserUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.opengauss.admin.common.core.domain.entity.ops.OpsClusterEntity;
+import org.opengauss.admin.common.core.domain.entity.ops.OpsClusterNodeEntity;
+import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
+import org.opengauss.admin.common.exception.ServiceException;
+import org.opengauss.admin.system.plugin.facade.HostFacade;
+import org.opengauss.admin.system.service.ops.IOpsClusterNodeService;
+import org.opengauss.admin.system.service.ops.IOpsClusterService;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -71,24 +90,24 @@ public class AlertLogSchedulingRunnable implements Runnable {
     public void run() {
         log.info("the " + jobName + " is start");
         AlertScheduleService scheduleService = SpringContextUtils.getBean(AlertScheduleService.class);
-        AlertSchedule alertSchedule = null;
+        AlertScheduleDO alertScheduleDO = null;
         synchronized (AlertLogSchedulingRunnable.class) {
-            List<AlertSchedule> list = scheduleService.list(
-                Wrappers.<AlertSchedule>lambdaQuery().eq(AlertSchedule::getJobName, jobName).eq(
-                    AlertSchedule::getIsLocked, CommonConstants.UNLOCK));
+            List<AlertScheduleDO> list = scheduleService.list(
+                Wrappers.<AlertScheduleDO>lambdaQuery().eq(AlertScheduleDO::getJobName, jobName).eq(
+                    AlertScheduleDO::getIsLocked, CommonConstants.UNLOCK));
             if (CollectionUtil.isEmpty(list)) {
                 return;
             }
-            alertSchedule = list.get(0).setIsLocked(CommonConstants.LOCKED).setUpdateTime(LocalDateTime.now());
-            scheduleService.updateById(alertSchedule);
+            alertScheduleDO = list.get(0).setIsLocked(CommonConstants.LOCKED).setUpdateTime(LocalDateTime.now());
+            scheduleService.updateById(alertScheduleDO);
         }
 
         try {
             Long ruleId = Long.valueOf(jobName.substring(CommonConstants.THREAD_NAME_PREFIX.length()));
             AlertTemplateRuleService templateRuleService = SpringContextUtils.getBean(AlertTemplateRuleService.class);
-            List<AlertTemplateRule> templateRules = templateRuleService.list(
-                Wrappers.<AlertTemplateRule>lambdaQuery().eq(AlertTemplateRule::getRuleId, ruleId).eq(
-                    AlertTemplateRule::getIsDeleted, CommonConstants.IS_NOT_DELETE).eq(AlertTemplateRule::getEnable,
+            List<AlertTemplateRuleDO> templateRules = templateRuleService.list(
+                Wrappers.<AlertTemplateRuleDO>lambdaQuery().eq(AlertTemplateRuleDO::getRuleId, ruleId).eq(
+                    AlertTemplateRuleDO::getIsDeleted, CommonConstants.IS_NOT_DELETE).eq(AlertTemplateRuleDO::getEnable,
                     CommonConstants.ENABLE));
             if (CollectionUtil.isEmpty(templateRules)) {
                 return;
@@ -97,27 +116,27 @@ public class AlertLogSchedulingRunnable implements Runnable {
                 Collectors.toSet());
             AlertClusterNodeConfService clusterNodeConfService =
                 SpringContextUtils.getBean(AlertClusterNodeConfService.class);
-            List<AlertClusterNodeConf> clusterNodeConfs = clusterNodeConfService.list(
-                Wrappers.<AlertClusterNodeConf>lambdaQuery().in(AlertClusterNodeConf::getTemplateId, templateIds)
-                    .eq(AlertClusterNodeConf::getIsDeleted, CommonConstants.IS_NOT_DELETE));
+            List<AlertClusterNodeConfDO> clusterNodeConfs = clusterNodeConfService.list(
+                Wrappers.<AlertClusterNodeConfDO>lambdaQuery().in(AlertClusterNodeConfDO::getTemplateId, templateIds)
+                    .eq(AlertClusterNodeConfDO::getIsDeleted, CommonConstants.IS_NOT_DELETE));
             if (CollectionUtil.isEmpty(clusterNodeConfs)) {
                 return;
             }
 
             runRuleTask(clusterNodeConfs, templateRules);
         } finally {
-            alertSchedule.setIsLocked(CommonConstants.UNLOCK).setUpdateTime(LocalDateTime.now())
+            alertScheduleDO.setIsLocked(CommonConstants.UNLOCK).setUpdateTime(LocalDateTime.now())
                 .setLastTime(LocalDateTime.now());
-            scheduleService.updateById(alertSchedule);
+            scheduleService.updateById(alertScheduleDO);
             log.info("the " + jobName + " is end");
         }
     }
 
-    private void runRuleTask(List<AlertClusterNodeConf> clusterNodeConfs, List<AlertTemplateRule> templateRules) {
+    private void runRuleTask(List<AlertClusterNodeConfDO> clusterNodeConfs, List<AlertTemplateRuleDO> templateRules) {
         LocalDateTime now = LocalDateTime.now();
-        for (AlertClusterNodeConf clusterNodeConf : clusterNodeConfs) {
+        for (AlertClusterNodeConfDO clusterNodeConf : clusterNodeConfs) {
             try {
-                AlertTemplateRule templateRule = templateRules.stream().filter(
+                AlertTemplateRuleDO templateRule = templateRules.stream().filter(
                     item -> item.getTemplateId().equals(clusterNodeConf.getTemplateId())).findFirst().get();
                 String unit = templateRule.getNotifyDurationUnit();
                 Integer duration = templateRule.getNotifyDuration();
@@ -128,12 +147,12 @@ public class AlertLogSchedulingRunnable implements Runnable {
                 Long templateRuleId = templateRule.getId();
                 AlertTemplateRuleItemService templateRuleItemService =
                     SpringContextUtils.getBean(AlertTemplateRuleItemService.class);
-                List<AlertTemplateRuleItem> templateRuleItems = templateRuleItemService.list(
-                    Wrappers.<AlertTemplateRuleItem>lambdaQuery().eq(AlertTemplateRuleItem::getTemplateRuleId,
-                        templateRuleId).eq(AlertTemplateRuleItem::getIsDeleted, CommonConstants.IS_NOT_DELETE));
+                List<AlertTemplateRuleItemDO> templateRuleItems = templateRuleItemService.list(
+                    Wrappers.<AlertTemplateRuleItemDO>lambdaQuery().eq(AlertTemplateRuleItemDO::getTemplateRuleId,
+                        templateRuleId).eq(AlertTemplateRuleItemDO::getIsDeleted, CommonConstants.IS_NOT_DELETE));
 
                 Map<String, Boolean> boolMap = new HashMap<>();
-                for (AlertTemplateRuleItem ruleItem : templateRuleItems) {
+                for (AlertTemplateRuleItemDO ruleItem : templateRuleItems) {
                     Long count = queryLogCount(clusterNodeConf.getClusterNodeId(), ruleItem.getKeyword(),
                         ruleItem.getBlockWord(), start, now);
                     String ruleMark = ruleItem.getRuleMark();
@@ -148,7 +167,7 @@ public class AlertLogSchedulingRunnable implements Runnable {
                             .reduce((item1, item2) -> item1 && item2).get())
                     .reduce((item1, item2) -> item1 || item2).get();
                 if (isAlert) {
-                    recordAndNotify(clusterNodeConf, templateRule, start, now);
+                    record(clusterNodeConf, templateRule, start, now);
                 }
             } catch (IOException e) {
                 log.error("the task " + jobName + "search fail,nodeId is " + clusterNodeConf.getClusterNodeId(), e);
@@ -159,8 +178,9 @@ public class AlertLogSchedulingRunnable implements Runnable {
     private Long queryLogCount(
         String clusterNodeId, String keyword, String blockWord, LocalDateTime start,
         LocalDateTime end) throws IOException {
-        ElasticsearchProvider elasticsearchProvider = SpringContextUtils.getBean(ElasticsearchProvider.class);
-        ElasticsearchClient client = elasticsearchProvider.client();
+        ElasticsearchProviderConfig elasticsearchProviderConfig = SpringContextUtils.getBean(
+            ElasticsearchProviderConfig.class);
+        ElasticsearchClient client = elasticsearchProviderConfig.client();
         Query.Builder filterBuilder = new Query.Builder();
         filterBuilder.range(range -> range.field("@timestamp")
             .gte(JsonData.of(start.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'+08:00'"))))
@@ -191,107 +211,82 @@ public class AlertLogSchedulingRunnable implements Runnable {
         return response.hits().total().value();
     }
 
-    private void recordAndNotify(
-        AlertClusterNodeConf clusterNodeConf, AlertTemplateRule templateRule,
+    private void record(
+        AlertClusterNodeConfDO clusterNodeConf, AlertTemplateRuleDO templateRule,
         LocalDateTime start, LocalDateTime end) {
         if (StrUtil.isBlank(templateRule.getNotifyWayIds())) {
             return;
         }
         String[] notifyWayIdArr = templateRule.getNotifyWayIds().split(CommonConstants.DELIMITER);
         NotifyWayMapper notifyWayMapper = SpringContextUtils.getBean(NotifyWayMapper.class);
-        List<NotifyWay> notifyWays = notifyWayMapper.selectBatchIds(Arrays.asList(notifyWayIdArr));
-        if (CollectionUtil.isEmpty(notifyWays)) {
+        List<NotifyWayDO> notifyWayDOS = notifyWayMapper.selectBatchIds(Arrays.asList(notifyWayIdArr));
+        if (CollectionUtil.isEmpty(notifyWayDOS)) {
             return;
         }
-        AlertContentParamUtil alertContentParamUtil = SpringContextUtils.getBean(AlertContentParamUtil.class);
-        AlertContentParamDto contentParamDto = alertContentParamUtil.setAndGetAlertContentParamDto(
-            clusterNodeConf.getClusterNodeId(), end, templateRule.getLevel(), templateRule.getRuleContent());
+        Map<String, String> alertParams = generateAlertParams(clusterNodeConf.getClusterNodeId(),
+            CommonConstants.RECOVER_STATUS, end);
         AlertTemplateService templateService = SpringContextUtils.getBean(AlertTemplateService.class);
-        AlertTemplate template = templateService.getById(clusterNodeConf.getTemplateId());
+        AlertTemplateDO template = templateService.getById(clusterNodeConf.getTemplateId());
         String notifyWayNames = "";
-        notifyWayNames = notifyWays.stream().map(item -> item.getName()).collect(
+        notifyWayNames = notifyWayDOS.stream().map(item -> item.getName()).collect(
             Collectors.joining(CommonConstants.DELIMITER));
-        AlertRecord record = new AlertRecord();
-        record.setClusterNodeId(clusterNodeConf.getClusterNodeId())
+        AlertRecordDO record = new AlertRecordDO();
+        record.setClusterNodeId(clusterNodeConf.getClusterNodeId()).setClusterId(alertParams.get("clusterId"))
             .setTemplateId(clusterNodeConf.getTemplateId()).setTemplateRuleId(templateRule.getId())
             .setLevel(templateRule.getLevel()).setRecordStatus(CommonConstants.UNREAD_STATUS)
             .setAlertStatus(CommonConstants.RECOVER_STATUS).setTemplateRuleType(templateRule.getRuleType())
             .setNotifyWayIds(templateRule.getNotifyWayIds()).setNotifyWayNames(notifyWayNames)
             .setStartTime(start).setEndTime(end).setIsDeleted(CommonConstants.IS_NOT_DELETE)
             .setDuration(Duration.between(start, end).toSeconds())
-            .setAlertContent(contentParamDto.getContent()).setTemplateRuleName(templateRule.getRuleName())
+            .setAlertContent(TextParserUtils.parse(templateRule.getRuleContent(), alertParams))
+            .setTemplateRuleName(templateRule.getRuleName())
             .setCreateTime(LocalDateTime.now()).setTemplateName(template.getTemplateName());
         AlertRecordMapper recordMapper = SpringContextUtils.getBean(AlertRecordMapper.class);
         recordMapper.insert(record);
-
-        Integer isSilence = templateRule.getIsSilence();
-        if (isSilence == CommonConstants.IS_SILENCE && end.isAfter(templateRule.getSilenceStartTime())
-            && end.isBefore(templateRule.getSilenceEndTime())) {
-            return;
-        }
-        saveNotifyMessage(notifyWays, contentParamDto, record.getId());
+        AlertRecordDetailDO detail = new AlertRecordDetailDO();
+        BeanUtil.copyProperties(record, detail);
+        detail.setRecordId(record.getId()).setId(null).setNotifyStatus(CommonConstants.UNSEND);
+        AlertRecordDetailMapper detailMapper = SpringContextUtils.getBean(AlertRecordDetailMapper.class);
+        detailMapper.insert(detail);
     }
 
-    private void saveNotifyMessage(List<NotifyWay> notifyWays, AlertContentParamDto contentParamDto, Long recordId) {
-        NotifyTemplateMapper notifyTemplateMapper = SpringContextUtils.getBean(NotifyTemplateMapper.class);
-        NotifyMessageMapper notifyMessageMapper = SpringContextUtils.getBean(NotifyMessageMapper.class);
-        for (NotifyWay notifyWay : notifyWays) {
-            NotifyMessage notifyMessage = new NotifyMessage();
-            Long notifyTemplateId = notifyWay.getNotifyTemplateId();
-            NotifyTemplate notifyTemplate = notifyTemplateMapper.selectById(notifyTemplateId);
-            String notifyType = notifyWay.getNotifyType();
-            notifyMessage.setMessageType(notifyType);
-            notifyMessage.setTitle(notifyTemplate.getNotifyTitle());
-            if (StrUtil.isBlank(contentParamDto.getAlertStatus())) {
-                contentParamDto.setAlertStatus(MessageSourceUtil.get("alerted"));
-            }
-            String content = new TextParser().parse(notifyTemplate.getNotifyContent(), contentParamDto);
-            notifyMessage.setContent(content);
-            if (notifyType.equals(CommonConstants.EMAIL)) {
-                notifyMessage.setEmail(notifyWay.getEmail());
-            } else if (notifyType.equals(CommonConstants.WE_COM) || notifyType.equals(CommonConstants.DING_TALK)) {
-                Integer sendWay = notifyWay.getSendWay();
-                if (sendWay != null && sendWay == 1) {
-                    notifyMessage.setWebhook(notifyWay.getWebhook());
-                    notifyMessage.setSign(notifyType.equals(CommonConstants.DING_TALK) ? notifyWay.getSign() : "");
-                } else {
-                    notifyMessage.setPersonId(notifyWay.getPersonId());
-                    notifyMessage.setDeptId(notifyWay.getDeptId());
-                }
-            } else if (notifyType.equals(CommonConstants.WEBHOOK)) {
-                notifyMessage.setWebhook(notifyWay.getWebhook());
-                notifyMessage.setWebhookInfo(getWebhookInfo(notifyWay));
-            } else {
-                NotifySnmpDto notifySnmpDto = new NotifySnmpDto();
-                BeanUtil.copyProperties(notifyWay, notifySnmpDto);
-                JSONObject snmpJson = JSONUtil.parseObj(notifySnmpDto);
-                notifyMessage.setSnmpInfo(snmpJson.toString());
-            }
-            notifyMessage.setCreateTime(LocalDateTime.now());
-            notifyMessage.setRecordId(recordId);
-            notifyMessageMapper.insert(notifyMessage);
+    private Map<String, String>
+    generateAlertParams(String clusterNodeId, Integer alertStatus, LocalDateTime alertTime) {
+        Map<String, String> alertParams = new HashMap<>();
+        alertParams.put("alertTime", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(alertTime));
+        if (alertStatus.equals(CommonConstants.FIRING_STATUS)) {
+            alertParams.put("alertStatus", MessageSourceUtils.get("alerting"));
+        } else {
+            alertParams.put("alertStatus", MessageSourceUtils.get("alerted"));
         }
-    }
-
-    private String getWebhookInfo(NotifyWay notifyWay) {
-        JSONObject webhookInfo = new JSONObject();
-        String header = notifyWay.getHeader();
-        if (StrUtil.isNotBlank(header)) {
-            webhookInfo.put("header", new JSONObject(header));
+        alertParams.put("clusterNodeId", clusterNodeId);
+        IOpsClusterNodeService clusterNodeService = SpringContextUtils.getBean(IOpsClusterNodeService.class);
+        OpsClusterNodeEntity opsClusterNodeEntity = clusterNodeService.getById(clusterNodeId);
+        if (opsClusterNodeEntity == null) {
+            throw new ServiceException("cluster node is not found");
         }
-        String params = notifyWay.getParams();
-        if (StrUtil.isNotBlank(params)) {
-            webhookInfo.put("params", new JSONObject(params));
+        HostFacade hostFacade = SpringContextUtils.getBean(HostFacade.class);
+        OpsHostEntity opsHost = hostFacade.getById(opsClusterNodeEntity.getHostId());
+        if (opsHost == null) {
+            throw new ServiceException("host is not found");
         }
-        String body = notifyWay.getBody();
-        if (StrUtil.isNotBlank(body)) {
-            webhookInfo.put("body", body);
+        IOpsClusterService clusterService = SpringContextUtils.getBean(IOpsClusterService.class);
+        OpsClusterEntity opsClusterEntity = clusterService.getById(opsClusterNodeEntity.getClusterId());
+        if (opsClusterEntity == null) {
+            throw new ServiceException("cluster is not found");
         }
-        String resultCode = notifyWay.getResultCode();
-        if (StrUtil.isNotBlank(resultCode)) {
-            webhookInfo.put("resultCode", new JSONObject(resultCode));
-        }
-        return webhookInfo.toString();
+        String nodeName =
+            opsClusterEntity.getClusterId() + "/" + opsHost.getPublicIp() + ":" + opsClusterEntity.getPort()
+                + "(" + opsClusterNodeEntity.getClusterRole() + ")";
+        alertParams.put("nodeName", nodeName);
+        alertParams.put("hostname", opsHost.getHostname());
+        alertParams.put("port", opsClusterEntity.getPort() != null ? opsClusterEntity.getPort().toString() : "");
+        alertParams.put("hostIp", opsHost.getPublicIp());
+        alertParams.put("cluster",
+            StrUtil.isNotBlank(opsClusterEntity.getClusterName()) ? opsClusterEntity.getClusterName()
+                : opsClusterEntity.getClusterId());
+        alertParams.put("clusterId", opsClusterEntity.getClusterId());
+        return alertParams;
     }
 
     @Override

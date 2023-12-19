@@ -1,19 +1,35 @@
 /*
- * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ *  Copyright (c) GBA-NCTI-ISDC. 2022-2024.
+ *
+ *  openGauss DataKit is licensed under Mulan PSL v2.
+ *  You can use this software according to the terms and conditions of the Mulan PSL v2.
+ *  You may obtain a copy of Mulan PSL v2 at:
+ *
+ *  http://license.coscl.org.cn/MulanPSL2
+ *
+ *  THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ *  EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ *  MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ *  See the Mulan PSL v2 for more details.
+ *  -------------------------------------------------------------------------
+ *
+ *  EnvironmentServiceTest.java
+ *
+ *  IDENTIFICATION
+ *  plugins/alert-monitor/src/test/java/com/nctigba/alert/monitor/service/EnvironmentServiceTest.java
+ *
+ *  -------------------------------------------------------------------------
  */
 
 package com.nctigba.alert.monitor.service;
 
-import com.nctigba.alert.monitor.entity.NctigbaEnv;
+import com.nctigba.alert.monitor.model.entity.NctigbaEnvDO;
 import com.nctigba.alert.monitor.mapper.NctigbaEnvMapper;
-import com.nctigba.alert.monitor.utils.MessageSourceUtil;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.jupiter.api.Assertions;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockedStatic;
 import org.mockito.MockitoAnnotations;
 import org.opengauss.admin.common.core.domain.model.ops.OpsClusterVO;
 import org.opengauss.admin.common.exception.ServiceException;
@@ -22,11 +38,9 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -61,7 +75,7 @@ public class EnvironmentServiceTest {
 
     @Test(expected = ServiceException.class)
     public void testCheckPrometheusThrowException() {
-        List<NctigbaEnv> envList = new ArrayList<>();
+        List<NctigbaEnvDO> envList = new ArrayList<>();
         when(envMapper.selectList(any())).thenReturn(envList);
         environmentService.checkPrometheus();
         verify(envMapper, times(1)).selectList(any());
@@ -69,28 +83,12 @@ public class EnvironmentServiceTest {
 
     @Test
     public void testCheckPrometheus() {
-        List<NctigbaEnv> envList = new ArrayList<>();
-        NctigbaEnv nctigbaEnv = new NctigbaEnv();
-        nctigbaEnv.setType(NctigbaEnv.Type.PROMETHEUS);
-        envList.add(nctigbaEnv);
+        List<NctigbaEnvDO> envList = new ArrayList<>();
+        NctigbaEnvDO nctigbaEnvDO = new NctigbaEnvDO();
+        nctigbaEnvDO.setType(NctigbaEnvDO.Type.PROMETHEUS);
+        envList.add(nctigbaEnvDO);
         when(envMapper.selectList(any())).thenReturn(envList);
         environmentService.checkPrometheus();
         verify(envMapper, times(1)).selectList(any());
-    }
-
-    @Test
-    public void testGetAlertContentParam1() {
-        try (MockedStatic<MessageSourceUtil> mockedStatic = mockStatic(MessageSourceUtil.class)) {
-            Map<String, Map<String, String>> map = environmentService.getAlertContentParam("alert");
-            Assertions.assertEquals(7, map.keySet().size());
-        }
-    }
-
-    @Test
-    public void testGetAlertContentParam2() {
-        try (MockedStatic<MessageSourceUtil> mockedStatic = mockStatic(MessageSourceUtil.class)) {
-            Map<String, Map<String, String>> map = environmentService.getAlertContentParam("");
-            Assertions.assertEquals(0, map.keySet().size());
-        }
     }
 }

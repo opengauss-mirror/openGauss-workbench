@@ -23,7 +23,7 @@
         </el-select>
       </div>
       <div class="filter">
-        <el-input v-model="formData.notifyTemplateName" style="width: 200px"
+        <el-input v-model="formData.notifyTemplateName" style="width: 200px" @keyup.enter="search"
           :placeholder="$t('notifyTemplate.templateNamePlaceholder')">
           <template #suffix>
             <el-button :icon="Search" @click="search" />

@@ -9,29 +9,24 @@
     </div>
     <div class="search-form">
       <div class="filter">
-        <el-icon color="#F56C6C">
+        <el-icon color="#F56C6C" style="margin-right: 5px">
           <Bell />
         </el-icon>
-        <span>{{ $t(`alertRecord.alertTotal`) }}：</span><span class="statistics">{{ statisticsData.totalNum
-        }}</span>
-        <span style="margin-left: 10px;">{{ $t(`alertRecord.unread`) }}：</span><span class="statistics">{{
-          statisticsData.unReadNum
-        }}</span>
-        <span style="margin-left: 10px;">{{ $t(`alertRecord.read`) }}：</span><span class="statistics">{{
-          statisticsData.readNum
-        }}</span>
+        <span>{{ $t(`alertRecord.alertTotal`) }}：{{ statisticsData.totalNum }}</span>
+        <span style="margin-left: 24px;">{{ $t(`alertRecord.unread`) }}：{{ statisticsData.unReadNum }}</span>
+        <span style="margin-left: 24px;">{{ $t(`alertRecord.read`) }}：{{ statisticsData.readNum }}</span>
       </div>
       <div class="seperator"></div>
-      <div class="filter">
-        <span>{{ $t(`alertRecord.cluster`) }}:&nbsp;</span>
+      <div class="filter" style="margin-right: 20px">
+        <span>{{ $t(`alertRecord.cluster`) }}：</span>
         <el-cascader v-model="formData.clusterNodeId" :options="clusterList" @change="changeClusterNode" clearable />
       </div>
       <div class="filter">
-        <span class="demonstration">{{ $t(`alertRecord.alertTimeRange`) }}:&nbsp;</span>
+        <span class="demonstration">{{ $t(`alertRecord.alertTimeRange`) }}：</span>
         <el-date-picker v-model="alertTimeRange" type="datetimerange" range-separator="~" format="YYYY-MM-DD HH:mm:ss"
           value-format="YYYY-MM-DD HH:mm:ss" :start-placeholder="t(`alertRecord.startTimePlaceholder`)"
           @visible-change="onDatePackerVisible" :end-placeholder="t(`alertRecord.endTimePlaceholder`)"
-          @change="changeAlertTimeRange" />
+          @change="changeAlertTimeRange" style="width: 240px"/>
       </div>
       <div class="filter">
         <el-button type="primary" @click="exportInfo">{{ $t('app.export') }}</el-button>

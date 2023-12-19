@@ -1,17 +1,36 @@
 /*
- * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ *  Copyright (c) GBA-NCTI-ISDC. 2022-2024.
+ *
+ *  openGauss DataKit is licensed under Mulan PSL v2.
+ *  You can use this software according to the terms and conditions of the Mulan PSL v2.
+ *  You may obtain a copy of Mulan PSL v2 at:
+ *
+ *  http://license.coscl.org.cn/MulanPSL2
+ *
+ *  THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ *  EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ *  MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ *  See the Mulan PSL v2 for more details.
+ *  -------------------------------------------------------------------------
+ *
+ *  AlertRecordController.java
+ *
+ *  IDENTIFICATION
+ *  plugins/alert-monitor/src/main/java/com/nctigba/alert/monitor/controller/AlertRecordController.java
+ *
+ *  -------------------------------------------------------------------------
  */
 
 package com.nctigba.alert.monitor.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.nctigba.alert.monitor.dto.AlertRecordDto;
-import com.nctigba.alert.monitor.dto.AlertRelationDto;
-import com.nctigba.alert.monitor.dto.AlertStatisticsDto;
-import com.nctigba.alert.monitor.model.AlertRecordReq;
-import com.nctigba.alert.monitor.model.AlertStatisticsReq;
+import com.nctigba.alert.monitor.model.dto.AlertRecordDTO;
+import com.nctigba.alert.monitor.model.dto.AlertRelationDTO;
+import com.nctigba.alert.monitor.model.dto.AlertStatisticsDTO;
+import com.nctigba.alert.monitor.model.query.AlertRecordQuery;
+import com.nctigba.alert.monitor.model.query.AlertStatisticsQuery;
 import com.nctigba.alert.monitor.service.AlertRecordService;
-import com.nctigba.alert.monitor.utils.MessageSourceUtil;
+import com.nctigba.alert.monitor.util.MessageSourceUtils;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.opengauss.admin.common.core.domain.AjaxResult;
 import org.opengauss.admin.common.core.page.TableDataInfo;
@@ -44,20 +63,20 @@ public class AlertRecordController extends BaseController {
     private AlertRecordService alertRecordService;
 
     @GetMapping("")
-    public TableDataInfo alertRecordListPage(AlertRecordReq alertRecordReq) {
-        Page<AlertRecordDto> page = alertRecordService.getListPage(alertRecordReq, startPage());
+    public TableDataInfo alertRecordListPage(AlertRecordQuery alertRecordQuery) {
+        Page<AlertRecordDTO> page = alertRecordService.getListPage(alertRecordQuery, startPage());
         return getDataTable(page);
     }
 
     @GetMapping("/statistics")
-    public AjaxResult alertRecordStatistics(AlertStatisticsReq alertStatisticsReq) {
-        AlertStatisticsDto statisticsDto = alertRecordService.alertRecordStatistics(alertStatisticsReq);
+    public AjaxResult alertRecordStatistics(AlertStatisticsQuery alertStatisticsQuery) {
+        AlertStatisticsDTO statisticsDto = alertRecordService.alertRecordStatistics(alertStatisticsQuery);
         return AjaxResult.success(statisticsDto);
     }
 
     @GetMapping("/{id}")
     public AjaxResult getById(@PathVariable Long id) {
-        AlertRecordDto alertRecordDto = alertRecordService.getById(id);
+        AlertRecordDTO alertRecordDto = alertRecordService.getById(id);
         return AjaxResult.success(alertRecordDto);
     }
 
@@ -87,7 +106,7 @@ public class AlertRecordController extends BaseController {
 
     @GetMapping("/{id}/relation")
     public AjaxResult getRelationData(@PathVariable Long id) {
-        List<AlertRelationDto> relationData = alertRecordService.getRelationData(id);
+        List<AlertRelationDTO> relationData = alertRecordService.getRelationData(id);
         return AjaxResult.success(relationData);
     }
 
@@ -107,16 +126,16 @@ public class AlertRecordController extends BaseController {
     /**
      * export record list
      *
-     * @param alertStatisticsReq AlertStatisticsReq
+     * @param alertStatisticsQuery AlertStatisticsReq
      * @param response HttpServletResponse
      * @throws IOException IOException
      */
     @GetMapping("/export")
-    public void export(AlertStatisticsReq alertStatisticsReq, HttpServletResponse response) throws IOException {
-        Workbook workbook = alertRecordService.exportWorkbook(alertStatisticsReq);
+    public void export(AlertStatisticsQuery alertStatisticsQuery, HttpServletResponse response) throws IOException {
+        Workbook workbook = alertRecordService.exportWorkbook(alertStatisticsQuery);
         response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
         response.setHeader("Content-Disposition", "attachment; filename=\""
-            + MessageSourceUtil.get("alertRecord") + ".xlsx\"");
+            + MessageSourceUtils.get("alertRecord") + ".xlsx\"");
         workbook.write(response.getOutputStream());
         workbook.close();
     }
@@ -124,19 +143,20 @@ public class AlertRecordController extends BaseController {
     /**
      * export record report
      *
-     * @param alertStatisticsReq AlertStatisticsReq
+     * @param alertStatisticsQuery AlertStatisticsReq
      * @param response HttpServletResponse
      * @throws IOException IOException
      */
     @GetMapping("/exportReport")
-    public void exportReport(AlertStatisticsReq alertStatisticsReq, HttpServletResponse response) throws IOException {
+    public void exportReport(AlertStatisticsQuery alertStatisticsQuery, HttpServletResponse response)
+        throws IOException {
         response.reset();
         response.setContentType("application/octet-stream");
-        response.setHeader("Content-Disposition", URLEncoder.encode(MessageSourceUtil.get("alertRecord") + ".html",
-            StandardCharsets.UTF_8));
+        response.setHeader("Content-Disposition",
+            URLEncoder.encode(MessageSourceUtils.get("alertRecord") + ".html", StandardCharsets.UTF_8));
         response.addHeader("Response-Type", "blob");
         response.setCharacterEncoding("UTF-8");
-        String html = alertRecordService.exportReport(alertStatisticsReq);
+        String html = alertRecordService.exportReport(alertStatisticsQuery);
         try (
             InputStream inputStream = new ByteArrayInputStream(html.getBytes("UTF-8"));
             OutputStream outputStream = response.getOutputStream()
