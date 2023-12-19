@@ -1,15 +1,34 @@
 /*
- * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ *  Copyright (c) GBA-NCTI-ISDC. 2022-2024.
+ *
+ *  openGauss DataKit is licensed under Mulan PSL v2.
+ *  You can use this software according to the terms and conditions of the Mulan PSL v2.
+ *  You may obtain a copy of Mulan PSL v2 at:
+ *
+ *  http://license.coscl.org.cn/MulanPSL2
+ *
+ *  THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ *  EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ *  MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ *  See the Mulan PSL v2 for more details.
+ *  -------------------------------------------------------------------------
+ *
+ *  TestFileSystem.java
+ *
+ *  IDENTIFICATION
+ *  plugins/observability-sql-diagnosis/src/test/java/com/nctigba/observability/sql/history/point/sql/TestFileSystem.java
+ *
+ *  -------------------------------------------------------------------------
  */
 
 package com.nctigba.observability.sql.history.point.sql;
 
-import com.nctigba.observability.sql.model.history.HisDiagnosisResult;
-import com.nctigba.observability.sql.model.history.HisDiagnosisTask;
-import com.nctigba.observability.sql.model.history.dto.AnalysisDTO;
-import com.nctigba.observability.sql.service.history.DataStoreService;
-import com.nctigba.observability.sql.service.history.collection.CollectionItem;
-import com.nctigba.observability.sql.service.history.point.sql.FileSystem;
+import com.nctigba.observability.sql.model.entity.DiagnosisResultDO;
+import com.nctigba.observability.sql.model.entity.DiagnosisTaskDO;
+import com.nctigba.observability.sql.model.dto.point.AnalysisDTO;
+import com.nctigba.observability.sql.service.DataStoreService;
+import com.nctigba.observability.sql.service.CollectionItem;
+import com.nctigba.observability.sql.service.impl.point.sql.FileSystem;
 import org.junit.Test;
 import org.junit.jupiter.api.Assertions;
 import org.junit.runner.RunWith;
@@ -50,9 +69,9 @@ public class TestFileSystem {
 
     @Test
     public void testAnalysisData() {
-        AnalysisDTO result = pointService.analysis(mock(HisDiagnosisTask.class), dataStoreService);
-        Assertions.assertEquals(HisDiagnosisResult.ResultState.SUGGESTIONS, result.getIsHint());
-        Assertions.assertEquals(HisDiagnosisResult.PointType.CENTER, result.getPointType());
+        AnalysisDTO result = pointService.analysis(mock(DiagnosisTaskDO.class), dataStoreService);
+        Assertions.assertEquals(DiagnosisResultDO.ResultState.SUGGESTIONS, result.getIsHint());
+        Assertions.assertEquals(DiagnosisResultDO.PointType.CENTER, result.getPointType());
         assertNotNull(result);
     }
 

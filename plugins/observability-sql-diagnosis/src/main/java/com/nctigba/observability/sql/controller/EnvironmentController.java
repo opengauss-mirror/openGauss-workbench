@@ -1,11 +1,34 @@
+/*
+ *  Copyright (c) GBA-NCTI-ISDC. 2022-2024.
+ *
+ *  openGauss DataKit is licensed under Mulan PSL v2.
+ *  You can use this software according to the terms and conditions of the Mulan PSL v2.
+ *  You may obtain a copy of Mulan PSL v2 at:
+ *
+ *  http://license.coscl.org.cn/MulanPSL2
+ *
+ *  THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ *  EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ *  MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ *  See the Mulan PSL v2 for more details.
+ *  -------------------------------------------------------------------------
+ *
+ *  EnvironmentController.java
+ *
+ *  IDENTIFICATION
+ *  plugins/observability-sql-diagnosis/src/main/java/com/nctigba/observability/sql/controller/EnvironmentController.java
+ *
+ *  -------------------------------------------------------------------------
+ */
+
 package com.nctigba.observability.sql.controller;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType.Type;
 import com.nctigba.observability.sql.mapper.NctigbaEnvMapper;
-import com.nctigba.observability.sql.model.NctigbaEnv;
-import com.nctigba.observability.sql.service.ClusterManager;
+import com.nctigba.observability.sql.model.entity.NctigbaEnvDO;
+import com.nctigba.observability.sql.service.impl.ClusterManager;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.core.domain.model.ops.OpsClusterVO;
 import org.opengauss.admin.system.plugin.facade.HostFacade;
@@ -31,16 +54,18 @@ public class EnvironmentController {
 
     @GetMapping("/basePath")
     public String basePath() {
-        String path = System.getProperty("java.class.path");
-        int firstIndex = path.lastIndexOf(System.getProperty("path.separator")) + 1;
-        int lastIndex = path.lastIndexOf(File.separator) + 1;
-        return path.substring(firstIndex, lastIndex);
+        var full = EnvironmentController.class.getResource(EnvironmentController.class.getSimpleName() + ".class");
+        var path = full.getPath();
+        int jarIndex = path.indexOf(".jar");
+        int lastSlashIndex = path.lastIndexOf(File.separator, jarIndex);
+        int preSlashIndex = path.lastIndexOf(File.separator, lastSlashIndex - 1);
+        return path.substring("file:".length(), preSlashIndex + 1);
     }
 
     @GetMapping("/agent")
     public List<OpsClusterVO> listAgent() {
-        var env = envMapper.selectList(Wrappers.<NctigbaEnv>lambdaQuery().in(NctigbaEnv::getType, List.of(
-                NctigbaEnv.envType.AGENT)));
+        var env = envMapper.selectList(Wrappers.<NctigbaEnvDO>lambdaQuery().in(NctigbaEnvDO::getType, List.of(
+                NctigbaEnvDO.envType.AGENT)));
         var clusters = clusterManager.getAllOpsCluster();
         env.forEach(e -> {
             if (e.getNodeid() == null) {
@@ -57,7 +82,7 @@ public class EnvironmentController {
                 }
             }
         });
-        var hosts = env.stream().map(NctigbaEnv::getNodeid).collect(Collectors.toSet());
+        var hosts = env.stream().map(NctigbaEnvDO::getNodeid).collect(Collectors.toSet());
         return clusters.stream().filter(c -> {
             var nodes = c.getClusterNodes().stream().filter(n -> {
                 return hosts.contains(n.getNodeId());

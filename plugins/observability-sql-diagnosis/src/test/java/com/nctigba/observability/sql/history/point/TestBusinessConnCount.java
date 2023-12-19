@@ -1,33 +1,52 @@
 /*
- * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ *  Copyright (c) GBA-NCTI-ISDC. 2022-2024.
+ *
+ *  openGauss DataKit is licensed under Mulan PSL v2.
+ *  You can use this software according to the terms and conditions of the Mulan PSL v2.
+ *  You may obtain a copy of Mulan PSL v2 at:
+ *
+ *  http://license.coscl.org.cn/MulanPSL2
+ *
+ *  THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ *  EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ *  MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ *  See the Mulan PSL v2 for more details.
+ *  -------------------------------------------------------------------------
+ *
+ *  TestBusinessConnCount.java
+ *
+ *  IDENTIFICATION
+ *  plugins/observability-sql-diagnosis/src/test/java/com/nctigba/observability/sql/history/point/TestBusinessConnCount.java
+ *
+ *  -------------------------------------------------------------------------
  */
 
 package com.nctigba.observability.sql.history.point;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.nctigba.common.web.exception.HisDiagnosisException;
-import com.nctigba.observability.sql.constants.history.MetricCommon;
-import com.nctigba.observability.sql.constants.history.OptionCommon;
-import com.nctigba.observability.sql.constants.history.ThresholdCommon;
-import com.nctigba.observability.sql.mapper.history.HisDiagnosisTaskMapper;
-import com.nctigba.observability.sql.model.history.DataStoreConfig;
-import com.nctigba.observability.sql.model.history.HisDiagnosisResult;
-import com.nctigba.observability.sql.model.history.HisDiagnosisTask;
-import com.nctigba.observability.sql.model.history.HisDiagnosisThreshold;
-import com.nctigba.observability.sql.model.history.data.PrometheusData;
-import com.nctigba.observability.sql.model.history.dto.AnalysisDTO;
-import com.nctigba.observability.sql.model.history.point.AspAnalysisDTO;
-import com.nctigba.observability.sql.model.history.point.MetricDataDTO;
-import com.nctigba.observability.sql.model.history.point.PrometheusDataDTO;
-import com.nctigba.observability.sql.model.history.query.OptionQuery;
-import com.nctigba.observability.sql.service.history.DataStoreService;
-import com.nctigba.observability.sql.service.history.collection.CollectionItem;
-import com.nctigba.observability.sql.service.history.collection.metric.BusinessConnCountItem;
-import com.nctigba.observability.sql.service.history.collection.metric.DbAvgCpuItem;
-import com.nctigba.observability.sql.service.history.point.BusinessConnCount;
-import com.nctigba.observability.sql.util.PointUtil;
-import com.nctigba.observability.sql.util.PrometheusUtil;
+import com.nctigba.observability.sql.exception.HisDiagnosisException;
+import com.nctigba.observability.sql.constant.MetricConstants;
+import com.nctigba.observability.sql.enums.OptionEnum;
+import com.nctigba.observability.sql.constant.ThresholdConstants;
+import com.nctigba.observability.sql.mapper.DiagnosisTaskMapper;
+import com.nctigba.observability.sql.model.entity.DiagnosisResultDO;
+import com.nctigba.observability.sql.model.entity.DiagnosisTaskDO;
+import com.nctigba.observability.sql.model.vo.DataStoreVO;
+import com.nctigba.observability.sql.model.entity.DiagnosisThresholdDO;
+import com.nctigba.observability.sql.model.vo.OptionVO;
+import com.nctigba.observability.sql.model.vo.collection.PrometheusVO;
+import com.nctigba.observability.sql.model.dto.point.AnalysisDTO;
+import com.nctigba.observability.sql.model.dto.point.AspAnalysisDTO;
+import com.nctigba.observability.sql.model.dto.point.MetricDataDTO;
+import com.nctigba.observability.sql.model.dto.point.PrometheusDataDTO;
+import com.nctigba.observability.sql.service.DataStoreService;
+import com.nctigba.observability.sql.service.CollectionItem;
+import com.nctigba.observability.sql.service.impl.collection.metric.BusinessConnCountItem;
+import com.nctigba.observability.sql.service.impl.collection.metric.DbAvgCpuItem;
+import com.nctigba.observability.sql.service.impl.point.history.BusinessConnCount;
+import com.nctigba.observability.sql.util.PointUtils;
+import com.nctigba.observability.sql.util.PrometheusUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.jupiter.api.Assertions;
@@ -58,53 +77,53 @@ import static org.mockito.Mockito.when;
 @RunWith(MockitoJUnitRunner.class)
 public class TestBusinessConnCount {
     @Mock
-    private PrometheusUtil util;
+    private PrometheusUtils util;
     @Mock
-    private PointUtil pointUtil;
+    private PointUtils pointUtils;
     @Mock
     private BusinessConnCountItem countItem;
     @Mock
-    private HisDiagnosisTaskMapper taskMapper;
+    private DiagnosisTaskMapper taskMapper;
     @Mock
     private DbAvgCpuItem dbAvgCpuItem;
     @Mock
     private DataStoreService dataStoreService;
     @InjectMocks
     private BusinessConnCount businessConnCount;
-    private HisDiagnosisTask hisDiagnosisTask;
+    private DiagnosisTaskDO diagnosisTaskDO;
 
     @Before
     public void before() {
-        OptionQuery optionQuery = new OptionQuery();
-        optionQuery.setOption(String.valueOf(OptionCommon.IS_MEMORY));
-        optionQuery.setIsCheck(true);
-        HisDiagnosisThreshold diagnosisThreshold = new HisDiagnosisThreshold();
-        diagnosisThreshold.setThreshold(ThresholdCommon.CONNECTION_NUM);
+        OptionVO optionVO = new OptionVO();
+        optionVO.setOption(String.valueOf(OptionEnum.IS_MEMORY));
+        optionVO.setIsCheck(true);
+        DiagnosisThresholdDO diagnosisThreshold = new DiagnosisThresholdDO();
+        diagnosisThreshold.setThreshold(ThresholdConstants.CONNECTION_NUM);
         diagnosisThreshold.setThresholdValue("20");
-        hisDiagnosisTask = new HisDiagnosisTask();
+        diagnosisTaskDO = new DiagnosisTaskDO();
         String nodeId = "37e8a893-0b7e-49b2-a0b4-e6fdf7dc4345";
         Date sTime = new Date();
         Date eTime = new Date();
-        hisDiagnosisTask.setNodeId(nodeId);
-        hisDiagnosisTask.setHisDataStartTime(sTime);
-        hisDiagnosisTask.setHisDataEndTime(eTime);
-        List<OptionQuery> config = new ArrayList<>() {{
-            add(optionQuery);
+        diagnosisTaskDO.setNodeId(nodeId);
+        diagnosisTaskDO.setHisDataStartTime(sTime);
+        diagnosisTaskDO.setHisDataEndTime(eTime);
+        List<OptionVO> config = new ArrayList<>() {{
+            add(optionVO);
         }};
-        hisDiagnosisTask.setConfigs(config);
-        List<HisDiagnosisThreshold> threshold = new ArrayList<>() {{
+        diagnosisTaskDO.setConfigs(config);
+        List<DiagnosisThresholdDO> threshold = new ArrayList<>() {{
             add(diagnosisThreshold);
         }};
-        hisDiagnosisTask.setThresholds(threshold);
-        hisDiagnosisTask.setSpan("50s");
-        hisDiagnosisTask.setClusterId(nodeId);
-        hisDiagnosisTask.setRemarks("test");
-        hisDiagnosisTask.setCreateTime(new Date());
-        hisDiagnosisTask.setDbName("test");
-        hisDiagnosisTask.setNodeVOSub(new OpsClusterVO());
-        hisDiagnosisTask.setIsDeleted(1);
-        hisDiagnosisTask.setId(1);
-        hisDiagnosisTask.setUpdateTime(new Date());
+        diagnosisTaskDO.setThresholds(threshold);
+        diagnosisTaskDO.setSpan("50s");
+        diagnosisTaskDO.setClusterId(nodeId);
+        diagnosisTaskDO.setRemarks("test");
+        diagnosisTaskDO.setCreateTime(new Date());
+        diagnosisTaskDO.setDbName("test");
+        diagnosisTaskDO.setNodeVOSub(new OpsClusterVO());
+        diagnosisTaskDO.setIsDeleted(1);
+        diagnosisTaskDO.setId(1);
+        diagnosisTaskDO.setUpdateTime(new Date());
     }
 
     @Test
@@ -123,74 +142,74 @@ public class TestBusinessConnCount {
 
     @Test
     public void testAnalysis_NoPrometheusData() {
-        DataStoreConfig config = mock(DataStoreConfig.class);
+        DataStoreVO config = mock(DataStoreVO.class);
         when(dataStoreService.getData(dbAvgCpuItem)).thenReturn(config);
         when(config.getCollectionData()).thenReturn(new ArrayList<>());
-        AnalysisDTO result = businessConnCount.analysis(mock(HisDiagnosisTask.class), dataStoreService);
-        Assertions.assertEquals(HisDiagnosisResult.ResultState.NO_ADVICE, result.getIsHint());
-        Assertions.assertEquals(HisDiagnosisResult.PointType.DIAGNOSIS, result.getPointType());
+        AnalysisDTO result = businessConnCount.analysis(mock(DiagnosisTaskDO.class), dataStoreService);
+        Assertions.assertEquals(DiagnosisResultDO.ResultState.NO_ADVICE, result.getIsHint());
+        Assertions.assertEquals(DiagnosisResultDO.PointType.DIAGNOSIS, result.getPointType());
         assertNull(result.getPointData());
     }
 
     @Test
     public void testAnalysis_hasProData_NoAsp() {
-        DataStoreConfig config = mock(DataStoreConfig.class);
+        DataStoreVO config = mock(DataStoreVO.class);
         config.setCollectionItem(dbAvgCpuItem);
         config.setCount(1);
         when(dataStoreService.getData(dbAvgCpuItem)).thenReturn(config);
-        List<PrometheusData> list = new ArrayList<>();
-        PrometheusData prometheusData = new PrometheusData();
-        prometheusData.setMetric(new JSONObject());
-        list.add(prometheusData);
+        List<PrometheusVO> list = new ArrayList<>();
+        PrometheusVO prometheusVO = new PrometheusVO();
+        prometheusVO.setMetric(new JSONObject());
+        list.add(prometheusVO);
         when(config.getCollectionData()).thenReturn(list);
-        AnalysisDTO result = businessConnCount.analysis(mock(HisDiagnosisTask.class), dataStoreService);
-        Assertions.assertEquals(HisDiagnosisResult.ResultState.NO_ADVICE, result.getIsHint());
-        Assertions.assertEquals(HisDiagnosisResult.PointType.DIAGNOSIS, result.getPointType());
+        AnalysisDTO result = businessConnCount.analysis(mock(DiagnosisTaskDO.class), dataStoreService);
+        Assertions.assertEquals(DiagnosisResultDO.ResultState.NO_ADVICE, result.getIsHint());
+        Assertions.assertEquals(DiagnosisResultDO.PointType.DIAGNOSIS, result.getPointType());
         assertNotNull(result.getPointData());
     }
 
     @Test
     public void testAnalysis_hasProData_hasAsp() {
-        DataStoreConfig config = mock(DataStoreConfig.class);
+        DataStoreVO config = mock(DataStoreVO.class);
         config.setCollectionItem(dbAvgCpuItem);
         config.setCount(1);
         when(dataStoreService.getData(dbAvgCpuItem)).thenReturn(config);
-        List<PrometheusData> list = new ArrayList<>();
-        PrometheusData prometheusData = new PrometheusData();
-        prometheusData.setMetric(new JSONObject());
+        List<PrometheusVO> list = new ArrayList<>();
+        PrometheusVO prometheusVO = new PrometheusVO();
+        prometheusVO.setMetric(new JSONObject());
         JSONArray jsonArray = new JSONArray();
         List<String> stringList = new ArrayList<>();
         stringList.add("100");
         stringList.add("200");
         jsonArray.add(stringList);
-        prometheusData.setValues(jsonArray);
-        list.add(prometheusData);
+        prometheusVO.setValues(jsonArray);
+        list.add(prometheusVO);
         when(config.getCollectionData()).thenReturn(list);
         List<AspAnalysisDTO> analysisDTOList = new ArrayList<>();
         AspAnalysisDTO analysisDTO = new AspAnalysisDTO(1, 2);
         analysisDTOList.add(analysisDTO);
-        when(pointUtil.aspTimeSlot(list)).thenReturn(analysisDTOList);
+        when(pointUtils.aspTimeSlot(list)).thenReturn(analysisDTOList);
         HashMap<String, String> map = new HashMap<>();
-        map.put(ThresholdCommon.CONNECTION_NUM, "10");
-        when(pointUtil.thresholdMap(hisDiagnosisTask.getThresholds())).thenReturn(map);
+        map.put(ThresholdConstants.CONNECTION_NUM, "10");
+        when(pointUtils.thresholdMap(diagnosisTaskDO.getThresholds())).thenReturn(map);
         when(countItem.queryData(any())).thenReturn(list);
-        AnalysisDTO result = businessConnCount.analysis(hisDiagnosisTask, dataStoreService);
-        Assertions.assertEquals(HisDiagnosisResult.ResultState.NO_ADVICE, result.getIsHint());
-        Assertions.assertEquals(HisDiagnosisResult.PointType.DIAGNOSIS, result.getPointType());
+        AnalysisDTO result = businessConnCount.analysis(diagnosisTaskDO, dataStoreService);
+        Assertions.assertEquals(DiagnosisResultDO.ResultState.NO_ADVICE, result.getIsHint());
+        Assertions.assertEquals(DiagnosisResultDO.PointType.DIAGNOSIS, result.getPointType());
         assertNotNull(result.getPointData());
     }
 
     @Test
     public void testAnalysis_hasData_NoPro() {
-        DataStoreConfig config = mock(DataStoreConfig.class);
+        DataStoreVO config = mock(DataStoreVO.class);
         config.setCollectionItem(dbAvgCpuItem);
         config.setCount(1);
         when(dataStoreService.getData(dbAvgCpuItem)).thenReturn(config);
-        List<PrometheusData> list = new ArrayList<>();
+        List<PrometheusVO> list = new ArrayList<>();
         when(config.getCollectionData()).thenReturn(list);
-        AnalysisDTO result = businessConnCount.analysis(mock(HisDiagnosisTask.class), dataStoreService);
-        Assertions.assertEquals(HisDiagnosisResult.ResultState.NO_ADVICE, result.getIsHint());
-        Assertions.assertEquals(HisDiagnosisResult.PointType.DIAGNOSIS, result.getPointType());
+        AnalysisDTO result = businessConnCount.analysis(mock(DiagnosisTaskDO.class), dataStoreService);
+        Assertions.assertEquals(DiagnosisResultDO.ResultState.NO_ADVICE, result.getIsHint());
+        Assertions.assertEquals(DiagnosisResultDO.PointType.DIAGNOSIS, result.getPointType());
         assertNull(result.getPointData());
     }
 
@@ -204,9 +223,9 @@ public class TestBusinessConnCount {
     @Test
     public void testGetShowData() {
         int taskId = 1;
-        when(taskMapper.selectById(taskId)).thenReturn(hisDiagnosisTask);
-        List<PrometheusData> cpuList = new ArrayList<>();
-        PrometheusData cpuData = new PrometheusData();
+        when(taskMapper.selectById(taskId)).thenReturn(diagnosisTaskDO);
+        List<PrometheusVO> cpuList = new ArrayList<>();
+        PrometheusVO cpuData = new PrometheusVO();
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("cpu", "50");
         cpuData.setMetric(jsonObject);
@@ -214,36 +233,36 @@ public class TestBusinessConnCount {
         jsonArray.add("cpu");
         cpuData.setValues(jsonArray);
         cpuList.add(cpuData);
-        when(dbAvgCpuItem.queryData(hisDiagnosisTask)).thenReturn(cpuList);
-        List<PrometheusData> countList = new ArrayList<>();
-        PrometheusData countData = new PrometheusData();
+        when(dbAvgCpuItem.queryData(diagnosisTaskDO)).thenReturn(cpuList);
+        List<PrometheusVO> countList = new ArrayList<>();
+        PrometheusVO countData = new PrometheusVO();
         countData.setMetric(new JSONObject());
         countData.setValues(new JSONArray());
         countList.add(countData);
-        when(countItem.queryData(hisDiagnosisTask)).thenReturn(countList);
-        List<PrometheusData> cpuDataList = new ArrayList<>();
+        when(countItem.queryData(diagnosisTaskDO)).thenReturn(countList);
+        List<PrometheusVO> cpuDataList = new ArrayList<>();
         cpuDataList.add(cpuData);
-        when(pointUtil.dataToObject(cpuList)).thenReturn(cpuDataList);
-        List<PrometheusData> countDataList = new ArrayList<>();
+        when(pointUtils.dataToObject(cpuList)).thenReturn(cpuDataList);
+        List<PrometheusVO> countDataList = new ArrayList<>();
         countDataList.add(countData);
-        when(pointUtil.dataToObject(countList)).thenReturn(countDataList);
+        when(pointUtils.dataToObject(countList)).thenReturn(countDataList);
         PrometheusDataDTO cpuDataDTO = new PrometheusDataDTO();
         cpuDataDTO.setData(new ArrayList<>());
-        cpuDataDTO.setChartName(MetricCommon.DB_AVG_CPU_USAGE_RATE);
+        cpuDataDTO.setChartName(MetricConstants.DB_AVG_CPU_USAGE_RATE);
         List<MetricDataDTO> cpuDataDTOS = new ArrayList<>();
         MetricDataDTO cpuMetricDataDTO = new MetricDataDTO();
         cpuMetricDataDTO.setData(new ArrayList<>());
-        cpuMetricDataDTO.setName(MetricCommon.DB_AVG_CPU_USAGE_RATE);
+        cpuMetricDataDTO.setName(MetricConstants.DB_AVG_CPU_USAGE_RATE);
         cpuDataDTOS.add(cpuMetricDataDTO);
         cpuDataDTO.setDatas(cpuDataDTOS);
         when(util.metricToLine(cpuDataList)).thenReturn(cpuDataDTO);
         PrometheusDataDTO countDataDTO = new PrometheusDataDTO();
         countDataDTO.setData(new ArrayList<>());
-        countDataDTO.setChartName(MetricCommon.BUSINESS_CONN_COUNT);
+        countDataDTO.setChartName(MetricConstants.BUSINESS_CONN_COUNT);
         List<MetricDataDTO> countDataDTOS = new ArrayList<>();
         MetricDataDTO countMetricDataDTO = new MetricDataDTO();
         countMetricDataDTO.setData(new ArrayList<>());
-        countMetricDataDTO.setName(MetricCommon.BUSINESS_CONN_COUNT);
+        countMetricDataDTO.setName(MetricConstants.BUSINESS_CONN_COUNT);
         countDataDTOS.add(countMetricDataDTO);
         countDataDTO.setDatas(countDataDTOS);
         when(util.metricToLine(countDataList)).thenReturn(countDataDTO);

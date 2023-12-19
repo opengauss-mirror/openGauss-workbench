@@ -20,4 +20,6 @@
 ---LockAnalysis CENTER
 ----DeadlockAnalysis DIAGNOSIS
 ----LockTimeout DIAGNOSIS
+---MemoryAnalysis CENTER
+----SwapAnalysis DIAGNOSIS
 --DatabaseHostLowPressure CENTER

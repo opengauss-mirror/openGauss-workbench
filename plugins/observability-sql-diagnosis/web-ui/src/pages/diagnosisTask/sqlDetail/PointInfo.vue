@@ -30,14 +30,14 @@
       :taskId="props.taskId"
     />
 
-    <OldSQLDiagnosis v-else :nodesType="props.nodesType" :taskId="props.taskId" />
+    <AutoShowData v-else :nodesType="props.nodesType" :taskId="props.taskId" :diagnosisType="'sql'" />
   </div>
 </template>
 
 <script lang="ts" setup>
 import TaskInfo from '@/pages/diagnosisTask/sqlDetail/pointInfos/TaskInfo/Index.vue'
 
-import OldSQLDiagnosis from '@/pages/diagnosisTask/sqlDetail/pointInfos/OldSQLDiagnosis/Index.vue'
+import AutoShowData from '@/pages/diagnosisTask/detail/pointInfos/AutoShowData/Index.vue'
 import IndexAdvisor from '@/pages/diagnosisTask/sqlDetail/pointInfos/Plan/IndexAdvisor/Index.vue'
 import SmpParallelQuery from '@/pages/diagnosisTask/sqlDetail/pointInfos/Plan/SmpParallelQuery/Index.vue'
 import ExecPlan from '@/pages/diagnosisTask/sqlDetail/pointInfos/Plan/ExecPlan/Index.vue'

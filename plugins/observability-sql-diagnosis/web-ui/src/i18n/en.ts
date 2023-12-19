@@ -396,6 +396,7 @@ export default {
     paramName: 'parameter name',
     currentValue: 'current value',
     paramDescription: 'parameter description',
+    editSuggestion: 'Edit Suggestion',
     suggestValue: 'suggestion value',
     suggestReason: 'suggestion reason',
     pleaseSelectInstance: 'Please select cluster and instance',

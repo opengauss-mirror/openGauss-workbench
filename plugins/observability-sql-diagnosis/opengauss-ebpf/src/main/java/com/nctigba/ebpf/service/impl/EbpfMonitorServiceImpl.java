@@ -1,10 +1,29 @@
 /*
- * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ *  Copyright (c) GBA-NCTI-ISDC. 2022-2024.
+ *
+ *  openGauss DataKit is licensed under Mulan PSL v2.
+ *  You can use this software according to the terms and conditions of the Mulan PSL v2.
+ *  You may obtain a copy of Mulan PSL v2 at:
+ *
+ *  http://license.coscl.org.cn/MulanPSL2
+ *
+ *  THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ *  EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ *  MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ *  See the Mulan PSL v2 for more details.
+ *  -------------------------------------------------------------------------
+ *
+ *  EbpfMonitorServiceImpl.java
+ *
+ *  IDENTIFICATION
+ *  plugins/observability-sql-diagnosis/opengauss-ebpf/src/main/java/com/nctigba/ebpf/service/impl/EbpfMonitorServiceImpl.java
+ *
+ *  -------------------------------------------------------------------------
  */
 
 package com.nctigba.ebpf.service.impl;
 
-import com.nctigba.ebpf.constants.EbpfType;
+import com.nctigba.ebpf.constant.EbpfTypeConstants;
 import com.nctigba.ebpf.handler.EbpfMonitorHandler;
 import com.nctigba.ebpf.handler.EbpfSendFileHandler;
 import com.nctigba.ebpf.service.EbpfMonitorService;
@@ -25,7 +44,6 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 @Async("ebpfPool")
 public class EbpfMonitorServiceImpl implements EbpfMonitorService {
-
     @Autowired
     private EbpfMonitorHandler monitorHandler;
 
@@ -33,25 +51,25 @@ public class EbpfMonitorServiceImpl implements EbpfMonitorService {
     private EbpfSendFileHandler sendFileHandler;
 
     @Override
-    public void ebpfMonitor(String tid, String taskid, String monitorType) {
+    public void ebpfMonitor(String tid, String taskId, String monitorType) {
         try {
-            String monitorPid = monitorHandler.startMonitor(tid, taskid, monitorType);
+            String monitorPid = monitorHandler.startMonitor(tid, taskId, monitorType);
             boolean isTrue = monitorHandler.monitor(tid);
             if (isTrue) {
                 monitorHandler.stopMonitor(monitorType, monitorPid);
             }
             TimeUnit.SECONDS.sleep(1);
-            if (EbpfType.PROFILE.equals(monitorType) || EbpfType.OFFCPUTIME.equals(monitorType) || EbpfType.MEMLEAK.equals(monitorType)) {
-                sendFileHandler.createSvg(taskid, monitorType);
+            if (EbpfTypeConstants.PROFILE.equals(monitorType) || EbpfTypeConstants.OFFCPUTIME.equals(monitorType)
+                    || EbpfTypeConstants.MEMLEAK.equals(monitorType)) {
+                sendFileHandler.createSvg(taskId, monitorType);
             }
-            sendFileHandler.sendFile(taskid, monitorType);
-        }  catch (InterruptedException e) {
+            sendFileHandler.sendFile(taskId, monitorType);
+        } catch (InterruptedException e) {
             log.info(e.getMessage());
             log.error("Interrupted!", e);
             Thread.currentThread().interrupt();
-        }catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException e) {
             log.info(e.getMessage());
         }
     }
-
 }

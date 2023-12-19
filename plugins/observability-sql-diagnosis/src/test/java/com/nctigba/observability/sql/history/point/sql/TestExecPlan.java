@@ -1,20 +1,39 @@
 /*
- * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ *  Copyright (c) GBA-NCTI-ISDC. 2022-2024.
+ *
+ *  openGauss DataKit is licensed under Mulan PSL v2.
+ *  You can use this software according to the terms and conditions of the Mulan PSL v2.
+ *  You may obtain a copy of Mulan PSL v2 at:
+ *
+ *  http://license.coscl.org.cn/MulanPSL2
+ *
+ *  THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ *  EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ *  MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ *  See the Mulan PSL v2 for more details.
+ *  -------------------------------------------------------------------------
+ *
+ *  TestExecPlan.java
+ *
+ *  IDENTIFICATION
+ *  plugins/observability-sql-diagnosis/src/test/java/com/nctigba/observability/sql/history/point/sql/TestExecPlan.java
+ *
+ *  -------------------------------------------------------------------------
  */
 
 package com.nctigba.observability.sql.history.point.sql;
 
 import com.alibaba.fastjson.JSONObject;
-import com.nctigba.common.web.exception.HisDiagnosisException;
+import com.nctigba.observability.sql.exception.HisDiagnosisException;
 import com.nctigba.observability.sql.handler.TopSQLHandler;
-import com.nctigba.observability.sql.mapper.history.HisDiagnosisTaskMapper;
-import com.nctigba.observability.sql.model.history.HisDiagnosisResult;
-import com.nctigba.observability.sql.model.history.HisDiagnosisTask;
-import com.nctigba.observability.sql.model.history.dto.AnalysisDTO;
-import com.nctigba.observability.sql.service.ClusterManager;
-import com.nctigba.observability.sql.service.history.DataStoreService;
-import com.nctigba.observability.sql.service.history.collection.CollectionItem;
-import com.nctigba.observability.sql.service.history.point.sql.ExecPlan;
+import com.nctigba.observability.sql.mapper.DiagnosisTaskMapper;
+import com.nctigba.observability.sql.model.entity.DiagnosisResultDO;
+import com.nctigba.observability.sql.model.entity.DiagnosisTaskDO;
+import com.nctigba.observability.sql.model.dto.point.AnalysisDTO;
+import com.nctigba.observability.sql.service.impl.ClusterManager;
+import com.nctigba.observability.sql.service.DataStoreService;
+import com.nctigba.observability.sql.service.CollectionItem;
+import com.nctigba.observability.sql.service.impl.point.sql.ExecPlan;
 import org.junit.Test;
 import org.junit.jupiter.api.Assertions;
 import org.junit.runner.RunWith;
@@ -36,7 +55,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
- * TestExecPlan
+ * TestExecPlanVO
  *
  * @author luomeng
  * @since 2023/9/19
@@ -44,7 +63,7 @@ import static org.mockito.Mockito.when;
 @RunWith(MockitoJUnitRunner.class)
 public class TestExecPlan {
     @Mock
-    private HisDiagnosisTaskMapper taskMapper;
+    private DiagnosisTaskMapper taskMapper;
     @Mock
     private ClusterManager clusterManager;
     @Mock
@@ -68,9 +87,9 @@ public class TestExecPlan {
 
     @Test
     public void testAnalysisData() {
-        AnalysisDTO result = pointService.analysis(mock(HisDiagnosisTask.class), dataStoreService);
-        Assertions.assertEquals(HisDiagnosisResult.ResultState.NO_ADVICE, result.getIsHint());
-        Assertions.assertEquals(HisDiagnosisResult.PointType.CENTER, result.getPointType());
+        AnalysisDTO result = pointService.analysis(mock(DiagnosisTaskDO.class), dataStoreService);
+        Assertions.assertEquals(DiagnosisResultDO.ResultState.NO_ADVICE, result.getIsHint());
+        Assertions.assertEquals(DiagnosisResultDO.PointType.CENTER, result.getPointType());
         assertNotNull(result);
     }
 
@@ -87,7 +106,7 @@ public class TestExecPlan {
             when(resultSet.getMetaData()).thenReturn(metaData);
             when(metaData.getColumnCount()).thenReturn(1);
             when(resultSet.next()).thenReturn(true, true, false);
-            HisDiagnosisTask task = new HisDiagnosisTask();
+            DiagnosisTaskDO task = new DiagnosisTaskDO();
             task.setNodeId("1");
             task.setDebugQueryId(1L);
             when(taskMapper.selectById(1)).thenReturn(task);

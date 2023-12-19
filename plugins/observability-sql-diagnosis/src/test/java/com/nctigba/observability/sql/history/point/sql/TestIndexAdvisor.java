@@ -1,19 +1,38 @@
 /*
- * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ *  Copyright (c) GBA-NCTI-ISDC. 2022-2024.
+ *
+ *  openGauss DataKit is licensed under Mulan PSL v2.
+ *  You can use this software according to the terms and conditions of the Mulan PSL v2.
+ *  You may obtain a copy of Mulan PSL v2 at:
+ *
+ *  http://license.coscl.org.cn/MulanPSL2
+ *
+ *  THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ *  EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ *  MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ *  See the Mulan PSL v2 for more details.
+ *  -------------------------------------------------------------------------
+ *
+ *  TestIndexAdvisor.java
+ *
+ *  IDENTIFICATION
+ *  plugins/observability-sql-diagnosis/src/test/java/com/nctigba/observability/sql/history/point/sql/TestIndexAdvisor.java
+ *
+ *  -------------------------------------------------------------------------
  */
 
 package com.nctigba.observability.sql.history.point.sql;
 
-import com.nctigba.common.web.exception.HisDiagnosisException;
-import com.nctigba.observability.sql.constants.TestTxtCommon;
-import com.nctigba.observability.sql.model.history.HisDiagnosisResult;
-import com.nctigba.observability.sql.model.history.HisDiagnosisTask;
-import com.nctigba.observability.sql.model.history.dto.AnalysisDTO;
-import com.nctigba.observability.sql.service.ClusterManager;
-import com.nctigba.observability.sql.service.history.DataStoreService;
-import com.nctigba.observability.sql.service.history.collection.CollectionItem;
-import com.nctigba.observability.sql.service.history.point.sql.IndexAdvisor;
-import com.nctigba.observability.sql.util.PointUtil;
+import com.nctigba.observability.sql.exception.HisDiagnosisException;
+import com.nctigba.observability.sql.constant.TestTxtConstants;
+import com.nctigba.observability.sql.model.entity.DiagnosisResultDO;
+import com.nctigba.observability.sql.model.entity.DiagnosisTaskDO;
+import com.nctigba.observability.sql.model.dto.point.AnalysisDTO;
+import com.nctigba.observability.sql.service.impl.ClusterManager;
+import com.nctigba.observability.sql.service.DataStoreService;
+import com.nctigba.observability.sql.service.CollectionItem;
+import com.nctigba.observability.sql.service.impl.point.sql.IndexAdvisor;
+import com.nctigba.observability.sql.util.PointUtils;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
@@ -44,7 +63,7 @@ public class TestIndexAdvisor {
     @Mock
     private ClusterManager clusterManager;
     @Mock
-    private PointUtil util;
+    private PointUtils util;
     @Mock
     private DataStoreService dataStoreService;
     @InjectMocks
@@ -72,18 +91,18 @@ public class TestIndexAdvisor {
             ResultSet resultSet = mock(ResultSet.class);
             when(statement.executeQuery(any())).thenReturn(resultSet);
             when(resultSet.next()).thenReturn(true, false, true, false, true, false, true, false);
-            String sql = TestTxtCommon.SQL_EXPLAIN;
+            String sql = TestTxtConstants.SQL_EXPLAIN;
             when(resultSet.getString(1)).thenReturn(sql, "tpch", sql);
             when(resultSet.getString(2)).thenReturn("lineitem");
             when(resultSet.getString(3)).thenReturn("l_returnflag, l_linestatus, count(*) AS count_order");
             when(resultSet.getString(4)).thenReturn("");
-            HisDiagnosisTask task = new HisDiagnosisTask();
+            DiagnosisTaskDO task = new DiagnosisTaskDO();
             task.setSql("SELECT l_returnflag, l_linestatus, count(*) AS count_order FROM tpch.lineitem"
                     + " GROUP BY l_returnflag, l_linestatus"
                     + " ORDER BY l_returnflag, l_linestatus");
             AnalysisDTO result = pointService.analysis(task, dataStoreService);
-            assertEquals(HisDiagnosisResult.ResultState.NO_ADVICE, result.getIsHint());
-            assertEquals(HisDiagnosisResult.PointType.DIAGNOSIS, result.getPointType());
+            assertEquals(DiagnosisResultDO.ResultState.NO_ADVICE, result.getIsHint());
+            assertEquals(DiagnosisResultDO.PointType.DIAGNOSIS, result.getPointType());
             assertNotNull(result.getPointData());
         } catch (SQLException e) {
             throw new HisDiagnosisException("execute sql failed!");

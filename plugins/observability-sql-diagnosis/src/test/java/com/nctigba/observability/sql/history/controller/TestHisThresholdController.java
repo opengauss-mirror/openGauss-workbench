@@ -1,15 +1,34 @@
 /*
- * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ *  Copyright (c) GBA-NCTI-ISDC. 2022-2024.
+ *
+ *  openGauss DataKit is licensed under Mulan PSL v2.
+ *  You can use this software according to the terms and conditions of the Mulan PSL v2.
+ *  You may obtain a copy of Mulan PSL v2 at:
+ *
+ *  http://license.coscl.org.cn/MulanPSL2
+ *
+ *  THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ *  EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ *  MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ *  See the Mulan PSL v2 for more details.
+ *  -------------------------------------------------------------------------
+ *
+ *  TestHisThresholdController.java
+ *
+ *  IDENTIFICATION
+ *  plugins/observability-sql-diagnosis/src/test/java/com/nctigba/observability/sql/history/controller/TestHisThresholdController.java
+ *
+ *  -------------------------------------------------------------------------
  */
 
 package com.nctigba.observability.sql.history.controller;
 
-import com.nctigba.observability.sql.constants.history.DiagnosisTypeCommon;
-import com.nctigba.observability.sql.controller.HisThresholdController;
-import com.nctigba.observability.sql.model.history.HisDiagnosisThreshold;
-import com.nctigba.observability.sql.model.history.query.HisThresholdQuery;
-import com.nctigba.observability.sql.service.history.HisThresholdService;
-import com.nctigba.observability.sql.util.LocaleString;
+import com.nctigba.observability.sql.constant.DiagnosisTypeConstants;
+import com.nctigba.observability.sql.controller.ThresholdController;
+import com.nctigba.observability.sql.model.entity.DiagnosisThresholdDO;
+import com.nctigba.observability.sql.model.query.ThresholdQuery;
+import com.nctigba.observability.sql.service.ThresholdService;
+import com.nctigba.observability.sql.util.LocaleStringUtils;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
@@ -26,7 +45,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
- * TestHisThresholdController
+ * TestHisThresholdControllerDO
  *
  * @author luomeng
  * @since 2023/8/24
@@ -34,17 +53,17 @@ import static org.mockito.Mockito.when;
 @RunWith(MockitoJUnitRunner.class)
 public class TestHisThresholdController {
     @Mock
-    private HisThresholdService service;
+    private ThresholdService service;
     @Mock
-    private LocaleString localeToString;
+    private LocaleStringUtils localeToString;
     @InjectMocks
-    private HisThresholdController controller;
+    private ThresholdController controller;
 
     @Test
     public void testSelect() {
-        HisDiagnosisThreshold threshold = mock(HisDiagnosisThreshold.class);
-        List<HisDiagnosisThreshold> list = new ArrayList<>(Collections.singleton(threshold));
-        String diagnosisType = DiagnosisTypeCommon.SQL;
+        DiagnosisThresholdDO threshold = mock(DiagnosisThresholdDO.class);
+        List<DiagnosisThresholdDO> list = new ArrayList<>(Collections.singleton(threshold));
+        String diagnosisType = DiagnosisTypeConstants.SQL;
         when(service.select(diagnosisType)).thenReturn(list);
         Object result = controller.select(diagnosisType);
         assertNotNull(result);
@@ -52,9 +71,9 @@ public class TestHisThresholdController {
 
     @Test
     public void testInsertOrUpdate() {
-        HisThresholdQuery hisThresholdQuery = mock(HisThresholdQuery.class);
-        doNothing().when(service).insertOrUpdate(hisThresholdQuery);
-        controller.insertOrUpdate(hisThresholdQuery);
+        ThresholdQuery thresholdQuery = mock(ThresholdQuery.class);
+        doNothing().when(service).insertOrUpdate(thresholdQuery);
+        controller.insertOrUpdate(thresholdQuery);
     }
 
     @Test

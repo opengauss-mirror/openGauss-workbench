@@ -33,7 +33,7 @@
                         <el-input v-model="formData.callbackPath" style="width: 200px; margin: 0 4px" />
                     </el-form-item>
                     <el-form-item :label="t('install.installPath')" prop="path">
-                        <el-input v-model="formData.path" style="width: 200px; margin: 0 4px" readonly/>
+                        <el-input v-model="formData.path" style="width: 200px; margin: 0 4px" />
                     </el-form-item>
                 </el-form>
             </div>

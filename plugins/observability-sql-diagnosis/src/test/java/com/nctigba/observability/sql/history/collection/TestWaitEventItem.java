@@ -1,13 +1,32 @@
 /*
- * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ *  Copyright (c) GBA-NCTI-ISDC. 2022-2024.
+ *
+ *  openGauss DataKit is licensed under Mulan PSL v2.
+ *  You can use this software according to the terms and conditions of the Mulan PSL v2.
+ *  You may obtain a copy of Mulan PSL v2 at:
+ *
+ *  http://license.coscl.org.cn/MulanPSL2
+ *
+ *  THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ *  EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ *  MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ *  See the Mulan PSL v2 for more details.
+ *  -------------------------------------------------------------------------
+ *
+ *  TestWaitEventItem.java
+ *
+ *  IDENTIFICATION
+ *  plugins/observability-sql-diagnosis/src/test/java/com/nctigba/observability/sql/history/collection/TestWaitEventItem.java
+ *
+ *  -------------------------------------------------------------------------
  */
 
 package com.nctigba.observability.sql.history.collection;
 
-import com.nctigba.observability.sql.constants.history.MetricCommon;
-import com.nctigba.observability.sql.constants.history.ThresholdCommon;
-import com.nctigba.observability.sql.model.history.HisDiagnosisThreshold;
-import com.nctigba.observability.sql.service.history.collection.metric.WaitEventItem;
+import com.nctigba.observability.sql.constant.MetricConstants;
+import com.nctigba.observability.sql.constant.ThresholdConstants;
+import com.nctigba.observability.sql.model.entity.DiagnosisThresholdDO;
+import com.nctigba.observability.sql.service.impl.collection.metric.WaitEventItem;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
@@ -32,19 +51,19 @@ public class TestWaitEventItem {
 
     @Test
     public void testGetPrometheusParam_hasThreshold() {
-        HisDiagnosisThreshold threshold = new HisDiagnosisThreshold();
-        threshold.setThreshold(ThresholdCommon.WAIT_EVENT_NUM);
+        DiagnosisThresholdDO threshold = new DiagnosisThresholdDO();
+        threshold.setThreshold(ThresholdConstants.WAIT_EVENT_NUM);
         threshold.setThresholdValue("20");
-        List<HisDiagnosisThreshold> thresholds = new ArrayList<>() {{
+        List<DiagnosisThresholdDO> thresholds = new ArrayList<>() {{
             add(threshold);
         }};
         String metric = item.getPrometheusParam(thresholds);
-        assertNotEquals(metric, MetricCommon.WAIT_EVENT);
+        assertNotEquals(metric, MetricConstants.WAIT_EVENT);
     }
 
     @Test
     public void testGetPrometheusParam_noThreshold() {
         String metric = item.getPrometheusParam(null);
-        assertEquals(metric, MetricCommon.WAIT_EVENT);
+        assertEquals(metric, MetricConstants.WAIT_EVENT);
     }
 }

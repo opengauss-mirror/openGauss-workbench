@@ -1,135 +1,142 @@
 <template>
   <div class="s-i-base">
     <!-- Task info for root-->
-    <TaskInfo v-if="props.nodesType == 'HisTaskInfo' && props.taskId" :nodesType="'HisTaskInfo'" :taskId="props.taskId" />
+    <TaskInfo
+      v-if="props.nodesType == 'HisTaskInfo' && props.taskId"
+      :nodesType="'HisTaskInfo'"
+      :taskId="props.taskId"
+    />
 
     <!-- CPU -->
     <DbProcessCurrentCpuUsage
-      v-if="props.nodesType == 'DbProcessCurrentCpuUsage' && props.taskId"
+      v-else-if="props.nodesType == 'DbProcessCurrentCpuUsage' && props.taskId"
       :nodesType="'DbProcessCurrentCpuUsage'"
       :taskId="props.taskId"
     />
     <OtherProcessCurrentCpuUsage
-      v-if="props.nodesType == 'OtherProcessCurrentCpuUsage' && props.taskId"
+      v-else-if="props.nodesType == 'OtherProcessCurrentCpuUsage' && props.taskId"
       :nodesType="'OtherProcessCurrentCpuUsage'"
       :taskId="props.taskId"
     />
     <TopDbProcess
-      v-if="props.nodesType == 'TopDbProcess' && props.taskId"
+      v-else-if="props.nodesType == 'TopDbProcess' && props.taskId"
       :nodesType="'TopDbProcess'"
       :taskId="props.taskId"
     />
     <CurrentCpuUsage
-      v-if="props.nodesType == 'CurrentCpuUsage' && props.taskId"
+      v-else-if="props.nodesType == 'CurrentCpuUsage' && props.taskId"
       :nodesType="'CurrentCpuUsage'"
       :taskId="props.taskId"
     />
     <OtherProcessAvgCpuUsage
-      v-if="props.nodesType == 'OtherProcessAvgCpuUsage' && props.taskId"
+      v-else-if="props.nodesType == 'OtherProcessAvgCpuUsage' && props.taskId"
       :nodesType="'OtherProcessAvgCpuUsage'"
       :taskId="props.taskId"
     />
     <DBHostPress
-      v-if="props.nodesType == 'DatabaseHostPressure' && props.taskId"
+      v-else-if="props.nodesType == 'DatabaseHostPressure' && props.taskId"
       :nodesType="'DatabaseHostPressure'"
       :taskId="props.taskId"
     />
     <AspAnalysis
-      v-if="props.nodesType == 'AspAnalysis' && props.taskId"
+      v-else-if="props.nodesType == 'AspAnalysis' && props.taskId"
       :nodesType="'AspAnalysis'"
       :taskId="props.taskId"
     />
     <BusinessConnCount
-      v-if="props.nodesType == 'BusinessConnCount' && props.taskId"
+      v-else-if="props.nodesType == 'BusinessConnCount' && props.taskId"
       :nodesType="'BusinessConnCount'"
       :taskId="props.taskId"
     />
     <DBHostPress
-      v-if="props.nodesType == 'DatabaseHostLowPressure' && props.taskId"
+      v-else-if="props.nodesType == 'DatabaseHostLowPressure' && props.taskId"
       :nodesType="'DatabaseHostLowPressure'"
       :taskId="props.taskId"
     />
 
     <WdrAnalysis
-      v-if="props.nodesType == 'WdrAnalysis' && props.taskId"
+      v-else-if="props.nodesType == 'WdrAnalysis' && props.taskId"
       :nodesType="'WdrAnalysis'"
       :taskId="props.taskId"
     />
 
     <AvgCpuUsageRate
-      v-if="props.nodesType == 'AvgCpuUsageRate' && props.taskId"
+      v-else-if="props.nodesType == 'AvgCpuUsageRate' && props.taskId"
       :nodesType="'AvgCpuUsageRate'"
       :taskId="props.taskId"
     />
 
     <DbProcessAvgCpuUsage
-      v-if="props.nodesType == 'DbProcessAvgCpuUsage' && props.taskId"
+      v-else-if="props.nodesType == 'DbProcessAvgCpuUsage' && props.taskId"
       :nodesType="'DbProcessAvgCpuUsage'"
       :taskId="props.taskId"
     />
 
     <TopCpuTimeSql
-      v-if="props.nodesType == 'TopCpuTimeSql' && props.taskId"
+      v-else-if="props.nodesType == 'TopCpuTimeSql' && props.taskId"
       :nodesType="'TopCpuTimeSql'"
       :taskId="props.taskId"
     />
 
     <CpuTimeTopSql
-      v-if="props.nodesType == 'CpuTimeTopSql' && props.taskId"
+      v-else-if="props.nodesType == 'CpuTimeTopSql' && props.taskId"
       :nodesType="'CpuTimeTopSql'"
       :taskId="props.taskId"
     />
 
     <!-- SQL -->
     <CurrentSlowSql
-      v-if="props.nodesType == 'CurrentSlowSql' && props.taskId"
+      v-else-if="props.nodesType == 'CurrentSlowSql' && props.taskId"
       :nodesType="'CurrentSlowSql'"
       :taskId="props.taskId"
     />
-    <PoorSql v-if="props.nodesType == 'PoorSql' && props.taskId" :nodesType="'PoorSql'" :taskId="props.taskId" />
+    <PoorSql v-else-if="props.nodesType == 'PoorSql' && props.taskId" :nodesType="'PoorSql'" :taskId="props.taskId" />
     <HistorySlowSql
-      v-if="props.nodesType == 'HistorySlowSql' && props.taskId"
+      v-else-if="props.nodesType == 'HistorySlowSql' && props.taskId"
       :nodesType="'HistorySlowSql'"
       :taskId="props.taskId"
     />
 
     <!-- Wait Event -->
     <WaitEventAnalysis
-      v-if="props.nodesType == 'WaitEventAnalysis' && props.taskId"
+      v-else-if="props.nodesType == 'WaitEventAnalysis' && props.taskId"
       :nodesType="'WaitEventAnalysis'"
       :taskId="props.taskId"
     />
     <HistoryWaitEvent
-      v-if="props.nodesType == 'HistoryWaitEvent' && props.taskId"
+      v-else-if="props.nodesType == 'HistoryWaitEvent' && props.taskId"
       :nodesType="'HistoryWaitEvent'"
       :taskId="props.taskId"
     />
     <CurrentWaitEvent
-      v-if="props.nodesType == 'CurrentWaitEvent' && props.taskId"
+      v-else-if="props.nodesType == 'CurrentWaitEvent' && props.taskId"
       :nodesType="'CurrentWaitEvent'"
       :taskId="props.taskId"
     />
 
     <!-- Lock -->
     <LockAnalysis
-      v-if="props.nodesType == 'LockAnalysis' && props.taskId"
+      v-else-if="props.nodesType == 'LockAnalysis' && props.taskId"
       :nodesType="'LockAnalysis'"
       :taskId="props.taskId"
     />
     <DeadlockAnalysis
-      v-if="props.nodesType == 'DeadlockAnalysis' && props.taskId"
+      v-else-if="props.nodesType == 'DeadlockAnalysis' && props.taskId"
       :nodesType="'DeadlockAnalysis'"
       :taskId="props.taskId"
     />
     <LockTimeout
-      v-if="props.nodesType == 'LockTimeout' && props.taskId"
+      v-else-if="props.nodesType == 'LockTimeout' && props.taskId"
       :nodesType="'LockTimeout'"
       :taskId="props.taskId"
     />
+
+    <AutoShowData v-else :nodesType="props.nodesType" :taskId="props.taskId" :diagnosisType="'history'" />
   </div>
 </template>
 
 <script lang="ts" setup>
+import AutoShowData from '@/pages/diagnosisTask/detail/pointInfos/AutoShowData/Index.vue'
 import TaskInfo from '@/pages/diagnosisTask/detail/pointInfos/TaskInfo/Index.vue'
 import DBHostPress from '@/pages/diagnosisTask/detail/pointInfos/DBHostPress/Index.vue'
 // CPU
