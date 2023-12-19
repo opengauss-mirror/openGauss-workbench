@@ -1,3 +1,26 @@
+/*
+ *  Copyright (c) GBA-NCTI-ISDC. 2022-2024.
+ *
+ *  openGauss DataKit is licensed under Mulan PSL v2.
+ *  You can use this software according to the terms and conditions of the Mulan PSL v2.
+ *  You may obtain a copy of Mulan PSL v2 at:
+ *
+ *  http://license.coscl.org.cn/MulanPSL2
+ *
+ *  THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ *  EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ *  MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ *  See the Mulan PSL v2 for more details.
+ *  -------------------------------------------------------------------------
+ *
+ *  EsLogSearchUtils.java
+ *
+ *  IDENTIFICATION
+ *  plugins/observability-log-search/src/main/java/com/nctigba/observability/log/util/EsLogSearchUtils.java
+ *
+ *  -------------------------------------------------------------------------
+ */
+
 package com.nctigba.observability.log.util;
 
 import co.elastic.clients.elasticsearch._types.Conflicts;
@@ -6,6 +29,7 @@ import co.elastic.clients.elasticsearch._types.SortOptions;
 import co.elastic.clients.elasticsearch._types.SortOrder;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
+import co.elastic.clients.elasticsearch.core.search.Highlight;
 import co.elastic.clients.elasticsearch.indices.GetIndexResponse;
 import co.elastic.clients.json.JsonData;
 import co.elastic.clients.util.ObjectBuilder;
@@ -17,7 +41,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TimeZone;
 import java.util.function.Function;
 
 /**
@@ -53,30 +83,10 @@ public class EsLogSearchUtils {
                 s.sort(this.sort(queryParam));
                 s.sort(this.indexsSort(queryParam));
                 s.sort(this.logSort(queryParam));
-                if (queryParam.getSorts() != null && !queryParam.getSorts().isEmpty())
+                if (queryParam.getSorts() != null && !queryParam.getSorts().isEmpty()) {
                     s.searchAfter(queryParam.getSorts());
-                return s;
-            }, HashMap.class);
-            return response;
-        } catch (Exception e) {
-            log.info(e.getMessage());
-            return null;
-        }
-    }
-
-    public SearchResponse<HashMap> queryLogInfoById(EsSearchQuery queryParam) {
-        SearchResponse<HashMap> response;
-        try {
-            var client = clientProvider.client();
-            response = client.search(s -> {
-                s.index(this.getIndexName(queryParam));
-                s.size(queryParam.getRowCount());
-                s.query(this.queryById(queryParam));
-                s.sort(this.sort(queryParam));
-                s.sort(this.indexsSort(queryParam));
-                s.sort(this.logSort(queryParam));
-                if (queryParam.getSorts() != null && !queryParam.getSorts().isEmpty())
-                    s.searchAfter(queryParam.getSorts());
+                }
+                s.highlight(this.highlight());
                 return s;
             }, HashMap.class);
             return response;
@@ -106,7 +116,6 @@ public class EsLogSearchUtils {
             client.indices().forcemerge();
         } catch (Exception e) {
             log.info(e.getMessage());
-            return;
         }
     }
 
@@ -133,6 +142,7 @@ public class EsLogSearchUtils {
     /**
      * ES queryLogCount
      *
+     * @param queryParam query log count by queryParam
      * @return logCount long
      */
     @SuppressWarnings("rawtypes")
@@ -144,7 +154,10 @@ public class EsLogSearchUtils {
                 s.index(this.getIndexName(queryParam));
                 s.size(0);
                 s.query(this.query(queryParam));
-                s.aggregations("agg1", agg -> agg.histogram(histogram -> histogram.field("@timestamp").interval(Double.valueOf(queryParam.getInterval()))).aggregations("agg2", c -> c.terms(t -> t.field("_index"))));
+                s.aggregations(
+                        "agg1", agg -> agg.histogram(histogram -> histogram.field("@timestamp").interval(
+                                (double) queryParam.getInterval())).aggregations(
+                                "agg2", c -> c.terms(t -> t.field("_index"))));
                 return s;
             }, HashMap.class);
             return response;
@@ -268,99 +281,37 @@ public class EsLogSearchUtils {
         boolean isPhrase = StringUtils.isNotBlank(queryParam.getSearchPhrase());
         boolean isLogLevel = queryParam.getLogLevel() != null && queryParam.getLogLevel().size() > 0;
         List<FieldValue> fieldValues = new ArrayList<>();
-        if (!isPhrase && !queryParam.hasDateFilter() && !isLogLevel) {
-            return q -> q.matchAll(f -> f);
-        }
         if (isLogLevel) {
             for (String logLevel : queryParam.getLogLevel()) {
                 fieldValues.add(FieldValue.of(logLevel));
             }
         }
-        if (isLogLevel && queryParam.hasDateFilter() && !isPhrase) {
-            if (queryParam.getStartDate() != null && queryParam.getEndDate() == null) {
-                return q -> {
-                    q.bool(b -> b.filter(f -> f.range(r -> r.field("@timestamp").gte(JsonData.of(sdf.format(queryParam.getStartDate()))))).must(r -> r.terms(f -> f.field("log_level.keyword").terms(g -> g.value(fieldValues)))));
-                    return q;
-                };
-            } else if (queryParam.getEndDate() != null && queryParam.getStartDate() == null) {
-                return q -> {
-                    q.bool(b -> b.filter(f -> f.range(r -> r.field("@timestamp").lt(JsonData.of(sdf.format(queryParam.getEndDate()))))).must(r -> r.terms(f -> f.field("log_level.keyword").terms(g -> g.value(fieldValues)))));
-                    return q;
-                };
-            } else {
-                return q -> {
-                    q.bool(b -> b.filter(f -> f.range(r -> r.field("@timestamp").gte(JsonData.of(sdf.format(queryParam.getStartDate()))).lt(JsonData.of(sdf.format(queryParam.getEndDate()))))).must(r -> r.terms(f -> f.field("log_level.keyword").terms(g -> g.value(fieldValues)))));
-                    return q;
-                };
-            }
-        } else if (isLogLevel && queryParam.hasDateFilter() && isPhrase) {
-            if (queryParam.getStartDate() != null && queryParam.getEndDate() == null) {
-                return q -> {
-                    q.bool(b -> b.filter(f -> f.range(r -> r.field("@timestamp").gte(JsonData.of(sdf.format(queryParam.getStartDate()))))).must(r -> r.terms(f -> f.field("log_level.keyword").terms(g -> g.value(fieldValues)))).must(r -> r.matchPhrase(f -> f.field("message").query(queryParam.getSearchPhrase().toLowerCase()))));
-                    return q;
-                };
-            } else if (queryParam.getEndDate() != null && queryParam.getStartDate() == null) {
-                return q -> {
-                    q.bool(b -> b.filter(f -> f.range(r -> r.field("@timestamp").lt(JsonData.of(sdf.format(queryParam.getEndDate()))))).must(r -> r.terms(f -> f.field("log_level.keyword").terms(g -> g.value(fieldValues)))).must(r -> r.matchPhrase(f -> f.field("message").query(queryParam.getSearchPhrase().toLowerCase()))));
-                    return q;
-                };
-            } else {
-                return q -> {
-                    q.bool(b -> b.filter(f -> f.range(r -> r.field("@timestamp").gte(JsonData.of(sdf.format(queryParam.getStartDate()))).lt(JsonData.of(sdf.format(queryParam.getEndDate()))))).must(r -> r.terms(f -> f.field("log_level.keyword").terms(g -> g.value(fieldValues)))).must(r -> r.matchPhrase(f -> f.field("message").query(queryParam.getSearchPhrase().toLowerCase()))));
-                    return q;
-                };
-            }
-        } else if (!isLogLevel && queryParam.hasDateFilter() && isPhrase) {
-            if (queryParam.getStartDate() != null && queryParam.getEndDate() == null) {
-                return q -> {
-                    q.bool(b -> b.filter(f -> f.range(r -> r.field("@timestamp").gte(JsonData.of(sdf.format(queryParam.getStartDate()))))).must(r -> r.matchPhrase(f -> f.field("message").query(queryParam.getSearchPhrase().toLowerCase()))));
-                    return q;
-                };
-            } else if (queryParam.getEndDate() != null && queryParam.getStartDate() == null) {
-                return q -> {
-                    q.bool(b -> b.filter(f -> f.range(r -> r.field("@timestamp").lt(JsonData.of(sdf.format(queryParam.getEndDate()))))).must(r -> r.matchPhrase(f -> f.field("message").query(queryParam.getSearchPhrase().toLowerCase()))));
-                    return q;
-                };
-            } else {
-                return q -> {
-                    q.bool(b -> b.filter(f -> f.range(r -> r.field("@timestamp").gte(JsonData.of(sdf.format(queryParam.getStartDate()))).lt(JsonData.of(sdf.format(queryParam.getEndDate()))))).must(r -> r.matchPhrase(f -> f.field("message").query(queryParam.getSearchPhrase().toLowerCase()))));
-                    return q;
-                };
-            }
-        } else if (isLogLevel && !queryParam.hasDateFilter() && isPhrase) {
-            return q -> {
-                q.bool(b -> b.must(r -> r.terms(f -> f.field("log_level.keyword").terms(g -> g.value(fieldValues)))).must(r -> r.matchPhrase(f -> f.field("message").query(queryParam.getSearchPhrase().toLowerCase()))));
-                return q;
-            };
-        } else if (isLogLevel && !queryParam.hasDateFilter() && !isPhrase) {
-            return q -> {
-                q.terms(f -> f.field("log_level.keyword").terms(g -> g.value(fieldValues)));
-                return q;
-            };
-        } else if (!isLogLevel && !queryParam.hasDateFilter() && isPhrase) {
-            return q -> {
-                q.matchPhrase(f -> f.field("message").query(queryParam.getSearchPhrase().toLowerCase()));
-                return q;
-            };
-        } else {
-            if (queryParam.getStartDate() != null && queryParam.getEndDate() == null) {
-                return q -> {
-                    q.bool(b -> b.filter(f -> f.range(r -> r.field("@timestamp").gte(JsonData.of(sdf.format(queryParam.getStartDate()))))));
-                    return q;
-                };
-            } else if (queryParam.getEndDate() != null && queryParam.getStartDate() == null) {
-                return q -> {
-                    q.bool(b -> b.filter(f -> f.range(r -> r.field("@timestamp").lt(JsonData.of(sdf.format(queryParam.getEndDate()))))));
-                    return q;
-                };
-            } else {
-                return q -> {
-                    q.bool(b -> b.filter(f -> f.range(r -> r.field("@timestamp").gte(JsonData.of(sdf.format(queryParam.getStartDate()))).lt(JsonData.of(sdf.format(queryParam.getEndDate()))))));
-                    return q;
-                };
-            }
-        }
-
+        return q -> {
+            q.bool(b -> {
+                if (queryParam.hasDateFilter()) {
+                    b.filter(f -> {
+                        if (queryParam.getStartDate() != null) {
+                            return f.range(
+                                    r -> r.field("@timestamp").gte(JsonData.of(sdf.format(queryParam.getStartDate()))));
+                        }
+                        if (queryParam.getEndDate() != null) {
+                            return f.range(
+                                    r -> r.field("@timestamp").lt(JsonData.of(sdf.format(queryParam.getEndDate()))));
+                        }
+                        return f;
+                    });
+                }
+                if (isLogLevel) {
+                    b.must(r -> r.terms(f -> f.field("log_level.keyword").terms(g -> g.value(fieldValues))));
+                }
+                if (isPhrase) {
+                    b.must(r -> r.queryString(
+                            f -> f.query(queryParam.getSearchPhrase())));
+                }
+                return b;
+            });
+            return q;
+        };
     }
 
     /**
@@ -370,7 +321,9 @@ public class EsLogSearchUtils {
      * @return query Function
      */
     public Function<SortOptions.Builder, ObjectBuilder<SortOptions>> sort(EsSearchQuery queryParam) {
-        return queryParam.getOrder() != null ? sort -> sort.field(f -> f.field(queryParam.getSort()).order(SortOrder.Asc)) : sort -> sort.field(f -> f.field(queryParam.getSort()).order(SortOrder.Desc));
+        return queryParam.getOrder() != null ? sort -> sort.field(
+                f -> f.field(queryParam.getSort()).order(SortOrder.Asc)) : sort -> sort.field(
+                f -> f.field(queryParam.getSort()).order(SortOrder.Desc));
     }
 
     /**
@@ -380,7 +333,9 @@ public class EsLogSearchUtils {
      * @return query Function
      */
     public Function<SortOptions.Builder, ObjectBuilder<SortOptions>> indexsSort(EsSearchQuery queryParam) {
-        return queryParam.getOrder() != null ? sort -> sort.field(f -> f.field("_index").order(SortOrder.Asc)) : sort -> sort.field(f -> f.field("_index").order(SortOrder.Desc));
+        return queryParam.getOrder() != null ? sort -> sort.field(
+                f -> f.field("_index").order(SortOrder.Asc)) : sort -> sort.field(
+                f -> f.field("_index").order(SortOrder.Desc));
     }
 
     /**
@@ -390,6 +345,17 @@ public class EsLogSearchUtils {
      * @return query Function
      */
     public Function<SortOptions.Builder, ObjectBuilder<SortOptions>> logSort(EsSearchQuery queryParam) {
-        return queryParam.getOrder() != null ? sort -> sort.field(f -> f.field("log.offset").order(SortOrder.Asc)) : sort -> sort.field(f -> f.field("log.offset").order(SortOrder.Desc));
+        return queryParam.getOrder() != null ? sort -> sort.field(
+                f -> f.field("log.offset").order(SortOrder.Asc)) : sort -> sort.field(
+                f -> f.field("log.offset").order(SortOrder.Desc));
+    }
+
+    /**
+     *
+     * @return highlight Function
+     */
+    public Function<Highlight.Builder, ObjectBuilder<Highlight>> highlight() {
+        return f -> f.fields(
+                "message", m -> m.preTags("<span style=\"background-color: yellow\">").postTags("</span>"));
     }
 }

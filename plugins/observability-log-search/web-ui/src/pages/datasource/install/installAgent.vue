@@ -27,7 +27,7 @@
                         <el-input v-model="formData.rootPassword" show-password style="width: 200px; margin: 0 4px" />
                     </el-form-item> -->
                     <el-form-item :label="t('install.installPath')" prop="path">
-                        <el-input v-model="formData.path" style="width: 200px; margin: 0 4px" readonly/>
+                        <el-input v-model="formData.path" style="width: 200px; margin: 0 4px" />
                     </el-form-item>
                     <el-form-item :label="t('install.ogRunLogPath')" prop="ogRunLogPath">
                         <el-input v-model="formData.ogRunLogPath" style="width: 200px; margin: 0 4px" />

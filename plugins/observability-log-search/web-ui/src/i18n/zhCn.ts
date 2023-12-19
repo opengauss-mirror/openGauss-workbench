@@ -80,7 +80,6 @@ export default {
     datasource: {
         name: '日志检索',
         logSearchTime: '日志时间',
-
         logSearchPlaceholder: '日志内容',
         logDistributionMap: '日志分布图',
         numberofLogs: '日志数量/条',
@@ -90,5 +89,7 @@ export default {
         logSearchTable: ['时间', '类型', '级别', '日志', '集群ID', '实例ID'],
         logContext: '上下文',
         logContextPlaceholder: '请选择',
+        showInfoTitleTip: '支持Lucene语法',
+        showInfoContextTip: "Lucene语法：\n（1）单词查询：word\n（2）多词查询：word1 word2或word1,word2 （支持逗号和空格隔开）\n（3）字段：字段值查询：filed：word\n（4）通配符查询：wo?d或wo* （?匹配单个字符，*匹配0或多个字符）\n（5）模糊查询：wo~ 0.1 （模糊系数[0-1]）\n（6）近似查询：“keyword word”~1 （允许的最大编辑距离）\n（7）范围查询：filed:&#91 10 TO 20 &#125 （&#91&#93：包含临界值，&#123&#125不包含临界值）\n（8）优先级查询：word1 word2^2 （相关度评分，默认为1）\n（9）逻辑操作查询：word1 AND word2 OR word3 NOT word4 +word5 -word6 （AND、OR、NOT、+、-）\n（10）嵌套查询：word1 OR (word2 AND word3) （括号分组）\n（11）转义特殊字符：&#47 (支持转义+ - &#38&#38 &#124&#124 &#33 ( ) &#123 &#125 &#91 &#93 &#94 &#34 &#126 * &#63 : &#47)",
     },
 };

@@ -30,6 +30,11 @@
                 </div>
                 <div class="filter">
                     <el-input v-model="formData.searchText" style="width: 200px" :prefix-icon="Search" :placeholder="$t('datasource.logSearchPlaceholder')" />
+                    <show-info :title="$t('datasource.showInfoTitleTip')">
+                      <template #context>
+                        <div style="white-space: pre-line;" v-html="$t('datasource.showInfoContextTip')"></div>
+                      </template>
+                    </show-info>
                 </div>
                 <div class="filter">
                     <span>{{ $t('datasource.logSearchTime') }}&nbsp;</span>
@@ -168,6 +173,7 @@ import { useWindowStore } from '../../store/window';
 import { storeToRefs } from 'pinia';
 import Install from './install/Index.vue';
 import { useI18n } from "vue-i18n";
+import showInfo from '@/components/ShowInfo.vue'
 const { t } = useI18n();
 
 const { theme } = storeToRefs(useWindowStore());

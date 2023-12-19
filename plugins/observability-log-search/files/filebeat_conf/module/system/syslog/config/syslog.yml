@@ -1,0 +1,18 @@
+type: log
+paths:
+{{ range $i, $path := .paths }}
+ - {{$path}}
+{{ end }}
+fields:
+    log_type: "os-run-log"
+exclude_files: [".gz$"]
+ignore_older: 360h
+multiline:
+  pattern: "^\\s"
+  match: after
+processors:
+  - add_locale: ~
+  - add_fields:
+      target: ''
+      fields:
+        ecs.version: 1.12.0

@@ -215,6 +215,29 @@
 		<plugins>
 
 			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<version>3.3.0</version>
+				<executions>
+					<execution>
+						<id>create-tar-gz-archive</id>
+						<phase>package</phase>
+						<goals>
+							<goal>single</goal>
+						</goals>
+						<configuration>
+							<appendAssemblyId>false</appendAssemblyId>
+							<finalName>filebeat_conf</finalName>
+							<outputDirectory>${basedir}/src/main/resources</outputDirectory>
+							<descriptors>
+								<descriptor>src/main/assembly.xml</descriptor>
+							</descriptors>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
+			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 				<version>2.4.13</version>
@@ -311,6 +334,7 @@
 							<goal>exec</goal>
 						</goals>
 						<configuration>
+							<skip>${web.build.skip}</skip>
 							<executable>npm</executable>
 							<arguments>
 								<argument>install</argument>
@@ -363,8 +387,27 @@
 							</resources>
 						</configuration>
 					</execution>
+					<execution>
+						<id>copy-generated-files</id>
+						<phase>package</phase>
+						<goals>
+							<goal>copy-resources</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>${project.build.directory}/classes</outputDirectory>
+							<resources>
+								<resource>
+									<directory>${basedir}/src/main/resources</directory>
+									<includes>
+										<include>*.tar.gz</include>
+									</includes>
+								</resource>
+							</resources>
+						</configuration>
+					</execution>
 				</executions>
 			</plugin>
+
 		</plugins>
 	</build>
 </project>

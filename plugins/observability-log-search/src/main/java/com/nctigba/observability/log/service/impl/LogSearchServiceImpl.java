@@ -1,3 +1,26 @@
+/*
+ *  Copyright (c) GBA-NCTI-ISDC. 2022-2024.
+ *
+ *  openGauss DataKit is licensed under Mulan PSL v2.
+ *  You can use this software according to the terms and conditions of the Mulan PSL v2.
+ *  You may obtain a copy of Mulan PSL v2 at:
+ *
+ *  http://license.coscl.org.cn/MulanPSL2
+ *
+ *  THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ *  EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ *  MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ *  See the Mulan PSL v2 for more details.
+ *  -------------------------------------------------------------------------
+ *
+ *  LogSearchServiceImpl.java
+ *
+ *  IDENTIFICATION
+ *  plugins/observability-log-search/src/main/java/com/nctigba/observability/log/service/impl/LogSearchServiceImpl.java
+ *
+ *  -------------------------------------------------------------------------
+ */
+
 package com.nctigba.observability.log.service.impl;
 
 import co.elastic.clients.elasticsearch._types.aggregations.Aggregate;
@@ -7,7 +30,13 @@ import co.elastic.clients.elasticsearch._types.aggregations.StringTermsBucket;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
 import co.elastic.clients.elasticsearch.core.search.Hit;
 import com.nctigba.observability.log.constants.CommonConstants;
-import com.nctigba.observability.log.model.dto.*;
+import com.nctigba.observability.log.model.dto.ContextSearchDTO;
+import com.nctigba.observability.log.model.dto.ContextSearchInfoDTO;
+import com.nctigba.observability.log.model.dto.LogDetailInfoDTO;
+import com.nctigba.observability.log.model.dto.LogDistroMapDTO;
+import com.nctigba.observability.log.model.dto.LogDistroMapInfoDTO;
+import com.nctigba.observability.log.model.dto.LogInfoDTO;
+import com.nctigba.observability.log.model.dto.LogTypeTreeDTO;
 import com.nctigba.observability.log.model.query.ContextSearchQuery;
 import com.nctigba.observability.log.model.query.EsSearchQuery;
 import com.nctigba.observability.log.service.LogSearchService;
@@ -16,12 +45,19 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TimeZone;
 
 
 /**
@@ -72,8 +108,10 @@ public class LogSearchServiceImpl implements LogSearchService {
                     queryParam.setEndDate(stringFormat.parse(dateFormat.format(endDate)));
 
                 }
-                LocalDateTime endTime = queryParam.getEndDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
-                LocalDateTime startTime = queryParam.getStartDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
+                LocalDateTime endTime = queryParam.getEndDate().toInstant().atZone(
+                        ZoneId.systemDefault()).toLocalDateTime();
+                LocalDateTime startTime = queryParam.getStartDate().toInstant().atZone(
+                        ZoneId.systemDefault()).toLocalDateTime();
                 long interval = Duration.between(startTime, endTime).toMillis();
                 EsSearchQuery esSearchQuery = new EsSearchQuery();
                 esSearchQuery.setEndDate(queryParam.getEndDate());
@@ -99,9 +137,9 @@ public class LogSearchServiceImpl implements LogSearchService {
                 } else {
                     listType = this.getLogType();
                 }
-                for (int i = 0; i < list.size(); i++) {
+                for (HistogramBucket histogramBucket : list) {
                     LogDistroMapDTO logDistroMapDTO = new LogDistroMapDTO();
-                    logDistroMapDTO.setDateTime(list.get(i).keyAsString());
+                    logDistroMapDTO.setDateTime(histogramBucket.keyAsString());
                     List<LogDistroMapInfoDTO> logDistroMapInfoDTOList = new ArrayList<>();
                     for (LogTypeTreeDTO logTypeTreeDTO : listType) {
                         long totalCount = 0;
@@ -109,10 +147,12 @@ public class LogSearchServiceImpl implements LogSearchService {
                         logDistroMapInfoDTO.setLogType(logTypeTreeDTO.getTypeName());
                         List<LogDistroMapInfoDTO> logDistroMapList = new ArrayList<>();
                         for (int index = 0; index < logTypeTreeDTO.getChildren().size(); index++) {
-                            List<StringTermsBucket> stringTermsBucket = list.get(i).aggregations().get("agg2").sterms().buckets().array();
-                            for (int j = 0; j < stringTermsBucket.size(); j++) {
-                                StringTermsBucket stringTermsBucket1 = stringTermsBucket.get(j);
-                                if (stringTermsBucket1.key().contains(logTypeTreeDTO.getTypeName() + "-" + logTypeTreeDTO.getChildren().get(index).getTypeName())) {
+                            List<StringTermsBucket> stringTermsBucket = histogramBucket.aggregations().get(
+                                    "agg2").sterms().buckets().array();
+                            for (StringTermsBucket stringTermsBucket1 : stringTermsBucket) {
+                                if (stringTermsBucket1.key().contains(
+                                        logTypeTreeDTO.getTypeName() + "-" + logTypeTreeDTO.getChildren().get(
+                                                index).getTypeName())) {
                                     totalCount += stringTermsBucket1.docCount();
                                 } else {
                                     continue;
@@ -127,7 +167,7 @@ public class LogSearchServiceImpl implements LogSearchService {
                         logDistroMapInfoDTO.setChildren(logDistroMapList);
                         logDistroMapInfoDTOList.add(logDistroMapInfoDTO);
                         logDistroMapDTO.setLogCounts(logDistroMapInfoDTOList);
-                        if (lList == null || !lList.contains(logDistroMapDTO)) {
+                        if (CollectionUtils.isEmpty(lList) || !lList.contains(logDistroMapDTO)) {
                             lList.add(logDistroMapDTO);
                         }
                     }
@@ -172,14 +212,14 @@ public class LogSearchServiceImpl implements LogSearchService {
                 for (var decodeBeanHit : hits) {
                     String id = decodeBeanHit.id();
                     var docMap = decodeBeanHit.source();
+                    LogDetailInfoDTO logDetailInfoDTO = new LogDetailInfoDTO();
                     if (docMap != null) {
-                        LogDetailInfoDTO logDetailInfoDTO = new LogDetailInfoDTO();
                         logDetailInfoDTO.setLogTime(docMap.get(CommonConstants.TIMESTAMP));
                         Map logTypeMap = null;
                         if (docMap.get(CommonConstants.FIELDS) instanceof Map) {
                             logTypeMap = (Map) docMap.get(CommonConstants.FIELDS);
                         }
-                        if(logTypeMap!=null){
+                        if (logTypeMap != null) {
                             logDetailInfoDTO.setLogType(logTypeMap.get(CommonConstants.LOG_TYPE));
                         }
                         logDetailInfoDTO.setLogLevel(docMap.get(CommonConstants.LOG_LEVEL));
@@ -189,9 +229,18 @@ public class LogSearchServiceImpl implements LogSearchService {
                         logDetailInfoDTO.setId(id);
                         list.add(logDetailInfoDTO);
                     }
+                    var highlightData = decodeBeanHit.highlight();
+                    if (!CollectionUtils.isEmpty(highlightData) && !CollectionUtils.isEmpty(
+                            highlightData.get(CommonConstants.MESSAGE))) {
+                        List<String> data = highlightData.get(CommonConstants.MESSAGE);
+                        logDetailInfoDTO.setLogData(String.join("", data));
+                    }
                 }
-                if (!hits.isEmpty()) sorts.addAll(hits.get(hits.size() - 1).sort());
-                else sorts.addAll(queryParam.getSorts());
+                if (!hits.isEmpty()) {
+                    sorts.addAll(hits.get(hits.size() - 1).sort());
+                } else {
+                    sorts.addAll(queryParam.getSorts());
+                }
                 logInfoDTO.setSorts(sorts);
                 logInfoDTO.setLogs(list);
             } catch (Exception e) {
@@ -244,13 +293,15 @@ public class LogSearchServiceImpl implements LogSearchService {
         List<String> sortList = new ArrayList<>();
         HashMap<String, List<String>> sortMap = new HashMap<>();
         try {
-            Boolean sortIsEmpty = queryParam.getSorts() == null || "".equals(queryParam.getSorts());
-            Boolean idIsEmpty = queryParam.getId() == null || "".equals(queryParam.getId());
+            boolean sortIsEmpty = queryParam.getSorts() == null;
+            boolean idIsEmpty = queryParam.getId() == null || "".equals(queryParam.getId());
             if (sortIsEmpty && !idIsEmpty) {
                 HashMap<List<String>, ContextSearchDTO> map = this.getSorts(queryParam);
-                for (List<String> list : map.keySet()) {
-                    sortList = list;
-                    contextSearchDTO = map.get(list);
+                if (!CollectionUtils.isEmpty(map)) {
+                    for (List<String> list : map.keySet()) {
+                        sortList = list;
+                        contextSearchDTO = map.get(list);
+                    }
                 }
                 queryParam.setSorts(sortList);
                 queryParam.setId(null);
@@ -272,9 +323,13 @@ public class LogSearchServiceImpl implements LogSearchService {
 
             }
             ContextSearchInfoDTO belowList = this.getBelowList(queryParam);
-            List<ContextSearchDTO> list = belowList.getLogs();
+            List<ContextSearchDTO> list = new ArrayList<>();
+            if (belowList != null) {
+                list = belowList.getLogs();
+            }
+
             String contextSourceId = contextSearchDTO.getId();
-            if (list.stream().filter(z -> z.getId().equals(contextSourceId)).count() == 0) {
+            if (list.stream().noneMatch(z -> z.getId().equals(contextSourceId))) {
                 for (int i = 0; i < list.size(); i++) {
                     if (list.get(i).getId().equals(id)) {
                         list.add(i + 1, contextSearchDTO);
@@ -286,7 +341,7 @@ public class LogSearchServiceImpl implements LogSearchService {
                 queryById.setId(addId);
                 HashMap<List<String>, ContextSearchDTO> addMap = this.getSorts(queryById);
                 ContextSearchDTO contextDto = new ContextSearchDTO();
-                if(addMap!=null){
+                if (addMap != null) {
                     for (List<String> addList : addMap.keySet()) {
                         contextDto = addMap.get(addList);
                     }
@@ -396,28 +451,30 @@ public class LogSearchServiceImpl implements LogSearchService {
         queryParam.setId(param.getId());
         HashMap<List<String>, ContextSearchDTO> map = new HashMap<>();
         try {
-            SearchResponse<HashMap> searchResponse = esLogSearchUtils.queryLogInfoById(queryParam);
+            SearchResponse<HashMap> searchResponse = esLogSearchUtils.queryLogInfo(queryParam);
             if (searchResponse == null) {
                 return null;
             }
             List<Hit<HashMap>> hits = searchResponse.hits().hits();
-            List<String> sorts = new ArrayList<>();
-            if (!hits.isEmpty()) {
-                sorts.addAll(hits.get(hits.size() - 1).sort());
+            if (!CollectionUtils.isEmpty(hits)) {
                 ContextSearchDTO contextSearchDto = new ContextSearchDTO();
-                contextSearchDto.setLogTime(hits.get(0).source().get(CommonConstants.TIMESTAMP));
-                Map logTypeMap = null;
-                if (hits.get(0).source().get(CommonConstants.FIELDS) instanceof Map) {
-                    logTypeMap = (Map) hits.get(0).source().get(CommonConstants.FIELDS);
+                HashMap data = hits.get(0).source();
+                if (!CollectionUtils.isEmpty(data)) {
+                    contextSearchDto.setLogTime(data.get(CommonConstants.TIMESTAMP));
+                    Map logTypeMap = null;
+                    if (data.get(CommonConstants.FIELDS) instanceof Map) {
+                        logTypeMap = (Map) data.get(CommonConstants.FIELDS);
+                    }
+                    if (logTypeMap != null) {
+                        contextSearchDto.setLogType(logTypeMap.get(CommonConstants.LOG_TYPE));
+                    }
+                    contextSearchDto.setLogLevel(data.get(CommonConstants.LOG_LEVEL));
+                    contextSearchDto.setLogData(data.get(CommonConstants.MESSAGE));
+                    contextSearchDto.setLogClusterId(data.get(CommonConstants.CLUSTER_ID));
+                    contextSearchDto.setLogNodeId(data.get(CommonConstants.NODE_ID));
+                    contextSearchDto.setId(param.getId());
                 }
-                if(logTypeMap!=null){
-                    contextSearchDto.setLogType(logTypeMap.get(CommonConstants.LOG_TYPE));
-                }
-                contextSearchDto.setLogLevel(hits.get(0).source().get(CommonConstants.LOG_LEVEL));
-                contextSearchDto.setLogData(hits.get(0).source().get(CommonConstants.MESSAGE));
-                contextSearchDto.setLogClusterId(hits.get(0).source().get(CommonConstants.CLUSTER_ID));
-                contextSearchDto.setLogNodeId(hits.get(0).source().get(CommonConstants.NODE_ID));
-                contextSearchDto.setId(param.getId());
+                List<String> sorts = new ArrayList<>(hits.get(hits.size() - 1).sort());
                 map.put(sorts, contextSearchDto);
             }
             return map;
@@ -474,8 +531,7 @@ public class LogSearchServiceImpl implements LogSearchService {
                     map.put(hits.get(hits.size() - 1).id(), null);
                 }
                 if (!hits.isEmpty()) {
-                    List<String> sorts = new ArrayList<>();
-                    sorts.addAll(hits.get(hits.size() - 1).sort());
+                    List<String> sorts = new ArrayList<>(hits.get(hits.size() - 1).sort());
                     map.put(hits.get(0).id(), sorts);
                 }
                 return map;
@@ -491,7 +547,7 @@ public class LogSearchServiceImpl implements LogSearchService {
      *
      * @return log belowList information
      */
-    @SuppressWarnings({"rawtypes", "unchecked"})
+    @SuppressWarnings({"rawtypes"})
     private ContextSearchInfoDTO getBelowList(ContextSearchQuery param) {
         EsSearchQuery queryParam = new EsSearchQuery();
         queryParam.setSearchPhrase(param.getSearchPhrase());
@@ -538,7 +594,7 @@ public class LogSearchServiceImpl implements LogSearchService {
                         if (docMap.get(CommonConstants.FIELDS) instanceof Map) {
                             logTypeMap = (Map) docMap.get(CommonConstants.FIELDS);
                         }
-                        if(logTypeMap!=null){
+                        if (logTypeMap != null) {
                             contextSearchDto.setLogType(logTypeMap.get(CommonConstants.LOG_TYPE));
                         }
                         contextSearchDto.setLogLevel(docMap.get(CommonConstants.LOG_LEVEL));
@@ -551,7 +607,9 @@ public class LogSearchServiceImpl implements LogSearchService {
                 }
                 if (!hits.isEmpty()) {
                     sorts.addAll(hits.get(hits.size() - 1).sort());
-                } else sorts.addAll(queryParam.getSorts());
+                } else {
+                    sorts.addAll(queryParam.getSorts());
+                }
                 contextSearchInfoDTO.setSorts(sorts);
                 contextSearchInfoDTO.setLogs(list);
                 return contextSearchInfoDTO;
@@ -561,5 +619,4 @@ public class LogSearchServiceImpl implements LogSearchService {
             }
         }
     }
-
 }
