@@ -1,5 +1,24 @@
 /*
- * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ *  Copyright (c) GBA-NCTI-ISDC. 2022-2024.
+ *
+ *  openGauss DataKit is licensed under Mulan PSL v2.
+ *  You can use this software according to the terms and conditions of the Mulan PSL v2.
+ *  You may obtain a copy of Mulan PSL v2 at:
+ *
+ *  http://license.coscl.org.cn/MulanPSL2
+ *
+ *  THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ *  EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ *  MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ *  See the Mulan PSL v2 for more details.
+ *  -------------------------------------------------------------------------
+ *
+ *  TableColumnSQLServiceImpl.java
+ *
+ *  IDENTIFICATION
+ *  plugins/data-studio/src/main/java/com/nctigba/datastudio/compatible/opengauss/TableColumnSQLServiceImpl.java
+ *
+ *  -------------------------------------------------------------------------
  */
 
 package com.nctigba.datastudio.compatible.opengauss;
@@ -648,26 +667,18 @@ public class TableColumnSQLServiceImpl implements TableColumnSQLService {
     }
 
     @Override
-    public String tableDataAddSQL(
-            TableDataEditQuery.TableDataDTO data, String schema, String tableName) {
+    public String tableDataAddSQL(TableDataEditQuery.TableDataDTO data, String schema, String tableName) {
         StringBuilder column = new StringBuilder();
         StringBuilder value = new StringBuilder();
         int size = data.getLine().size();
-        if (size == 1) {
-            TableDataEditQuery.TableDataDTOColumn tableDataDTOColumn = data.getLine().get(0);
+        for (int i = 0; i < size; i++) {
+            TableDataEditQuery.TableDataDTOColumn tableDataDTOColumn = data.getLine().get(i);
             column.append(tableDataDTOColumn.getColumnName());
             value.append(typeChange(tableDataDTOColumn.getColumnData(), tableDataDTOColumn.getTypeNum(),
                     tableDataDTOColumn.getTypeName()));
-        } else {
-            for (int i = 0; i < size; i++) {
-                TableDataEditQuery.TableDataDTOColumn tableDataDTOColumn = data.getLine().get(i);
-                column.append(tableDataDTOColumn.getColumnName());
-                value.append(typeChange(tableDataDTOColumn.getColumnData(), tableDataDTOColumn.getTypeNum(),
-                        tableDataDTOColumn.getTypeName()));
-                if (i != size - 1) {
-                    column.append(COMMA);
-                    value.append(COMMA);
-                }
+            if (i != size - 1) {
+                column.append(COMMA);
+                value.append(COMMA);
             }
         }
         String ddl = String.format(INSERRT_TABLE_SQL, schema, tableName, column, value);
@@ -676,24 +687,20 @@ public class TableColumnSQLServiceImpl implements TableColumnSQLService {
     }
 
     @Override
-    public String tableDataDropSQL(
-            TableDataEditQuery.TableDataDTO data, String schema, String tableName) {
+    public String tableDataDropSQL(TableDataEditQuery.TableDataDTO data, String schema, String tableName) {
         StringBuilder conditions = new StringBuilder();
         int size = data.getLine().size();
-        if (size == 1) {
-            TableDataEditQuery.TableDataDTOColumn tableDataDTOColumn = data.getLine().get(0);
-            conditions.append(String.format(EQUAL_SQL, tableDataDTOColumn.getColumnName(),
-                    typeChange(tableDataDTOColumn.getOldColumnData(), tableDataDTOColumn.getTypeNum(),
-                            tableDataDTOColumn.getTypeName())));
-        } else {
-            for (int i = 0; i < size; i++) {
-                TableDataEditQuery.TableDataDTOColumn tableDataDTOColumn = data.getLine().get(i);
+        for (int i = 0; i < size; i++) {
+            TableDataEditQuery.TableDataDTOColumn tableDataDTOColumn = data.getLine().get(i);
+            if (StringUtils.isNotEmpty(tableDataDTOColumn.getOldColumnData())) {
                 conditions.append(String.format(EQUAL_SQL, tableDataDTOColumn.getColumnName(),
                         typeChange(tableDataDTOColumn.getOldColumnData(), tableDataDTOColumn.getTypeNum(),
                                 tableDataDTOColumn.getTypeName())));
-                if (i != size - 1) {
-                    conditions.append(AND);
-                }
+            } else {
+                conditions.append(String.format(IS_NULL_SQL, tableDataDTOColumn.getColumnName()));
+            }
+            if (i != size - 1) {
+                conditions.append(AND);
             }
         }
         String ddl = String.format(DELETE_TABLE_SQL, schema, tableName, conditions);
