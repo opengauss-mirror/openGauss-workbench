@@ -1,5 +1,24 @@
 /*
- * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ *  Copyright (c) GBA-NCTI-ISDC. 2022-2024.
+ *
+ *  openGauss DataKit is licensed under Mulan PSL v2.
+ *  You can use this software according to the terms and conditions of the Mulan PSL v2.
+ *  You may obtain a copy of Mulan PSL v2 at:
+ *
+ *  http://license.coscl.org.cn/MulanPSL2
+ *
+ *  THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ *  EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ *  MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ *  See the Mulan PSL v2 for more details.
+ *  -------------------------------------------------------------------------
+ *
+ *  TestEsLogSearchUtils.java
+ *
+ *  IDENTIFICATION
+ *  plugins/observability-sql-diagnosis/src/test/java/com/nctigba/observability/sql/history/util/TestEsLogSearchUtils.java
+ *
+ *  -------------------------------------------------------------------------
  */
 
 package com.nctigba.observability.sql.history.util;
@@ -14,9 +33,9 @@ import co.elastic.clients.elasticsearch.indices.GetIndexRequest;
 import co.elastic.clients.elasticsearch.indices.GetIndexResponse;
 import co.elastic.clients.elasticsearch.indices.IndexState;
 import co.elastic.clients.util.ObjectBuilder;
-import com.nctigba.common.web.exception.HisDiagnosisException;
-import com.nctigba.observability.sql.config.ElasticsearchProvider;
-import com.nctigba.observability.sql.model.history.query.EsSearchQuery;
+import com.nctigba.observability.sql.exception.HisDiagnosisException;
+import com.nctigba.observability.sql.config.ElasticsearchConfig;
+import com.nctigba.observability.sql.model.vo.EsSearchVO;
 import com.nctigba.observability.sql.util.EsLogSearchUtils;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -50,7 +69,7 @@ import static org.mockito.Mockito.when;
 @RunWith(MockitoJUnitRunner.class)
 public class TestEsLogSearchUtils {
     @Mock
-    private ElasticsearchProvider clientProvider;
+    private ElasticsearchConfig clientProvider;
 
     @InjectMocks
     private EsLogSearchUtils util;
@@ -64,7 +83,7 @@ public class TestEsLogSearchUtils {
             when(client.search(
                     (Function<SearchRequest.Builder, ObjectBuilder<SearchRequest>>) any(),
                     Mockito.eq(HashMap.class))).thenReturn(searchResponse);
-            EsSearchQuery queryParam = new EsSearchQuery();
+            EsSearchVO queryParam = new EsSearchVO();
             queryParam.setClusterId(new ArrayList<>());
             queryParam.setLogLevel(new ArrayList<>());
             queryParam.setLogType(new ArrayList<>());
@@ -107,7 +126,7 @@ public class TestEsLogSearchUtils {
 
     @Test
     public void testGetIndexName_noData() {
-        EsSearchQuery queryParam = new EsSearchQuery();
+        EsSearchVO queryParam = new EsSearchVO();
         queryParam.setClusterId(new ArrayList<>());
         queryParam.setLogLevel(new ArrayList<>());
         queryParam.setLogType(new ArrayList<>());
@@ -118,7 +137,7 @@ public class TestEsLogSearchUtils {
         queryParam.setId("");
         String result = util.getIndexName(queryParam);
         assertNotNull(result);
-        EsSearchQuery query = new EsSearchQuery();
+        EsSearchVO query = new EsSearchVO();
         query.setStartDate(null);
         query.setEndDate(null);
         String data = util.getIndexName(query);
@@ -127,7 +146,7 @@ public class TestEsLogSearchUtils {
 
     @Test
     public void testGetIndexName_hasData() {
-        EsSearchQuery queryParam = new EsSearchQuery();
+        EsSearchVO queryParam = new EsSearchVO();
         queryParam.setClusterId(new ArrayList<>());
         queryParam.setLogLevel(new ArrayList<>());
         List<String> logType = new ArrayList<>();
@@ -146,7 +165,7 @@ public class TestEsLogSearchUtils {
 
     @Test
     public void testQuery() {
-        EsSearchQuery queryParam = new EsSearchQuery();
+        EsSearchVO queryParam = new EsSearchVO();
         queryParam.setClusterId(new ArrayList<>());
         queryParam.setLogLevel(new ArrayList<>());
         queryParam.setLogType(new ArrayList<>());
@@ -161,7 +180,7 @@ public class TestEsLogSearchUtils {
 
     @Test
     public void testQuery_startNull() {
-        EsSearchQuery queryParam = new EsSearchQuery();
+        EsSearchVO queryParam = new EsSearchVO();
         queryParam.setClusterId(new ArrayList<>());
         queryParam.setLogLevel(new ArrayList<>());
         queryParam.setLogType(new ArrayList<>());
@@ -175,7 +194,7 @@ public class TestEsLogSearchUtils {
 
     @Test
     public void testQuery_endNull() {
-        EsSearchQuery queryParam = new EsSearchQuery();
+        EsSearchVO queryParam = new EsSearchVO();
         queryParam.setClusterId(new ArrayList<>());
         queryParam.setLogLevel(new ArrayList<>());
         queryParam.setLogType(new ArrayList<>());
@@ -189,7 +208,7 @@ public class TestEsLogSearchUtils {
 
     @Test
     public void testSort() {
-        EsSearchQuery queryParam = new EsSearchQuery();
+        EsSearchVO queryParam = new EsSearchVO();
         queryParam.setClusterId(new ArrayList<>());
         queryParam.setLogLevel(new ArrayList<>());
         queryParam.setLogType(new ArrayList<>());
@@ -204,7 +223,7 @@ public class TestEsLogSearchUtils {
 
     @Test
     public void testIndexsSort() {
-        EsSearchQuery queryParam = new EsSearchQuery();
+        EsSearchVO queryParam = new EsSearchVO();
         queryParam.setClusterId(new ArrayList<>());
         queryParam.setLogLevel(new ArrayList<>());
         queryParam.setLogType(new ArrayList<>());
@@ -219,7 +238,7 @@ public class TestEsLogSearchUtils {
 
     @Test
     public void testLogSort() {
-        EsSearchQuery queryParam = new EsSearchQuery();
+        EsSearchVO queryParam = new EsSearchVO();
         queryParam.setClusterId(new ArrayList<>());
         queryParam.setLogLevel(new ArrayList<>());
         queryParam.setLogType(new ArrayList<>());
@@ -234,7 +253,7 @@ public class TestEsLogSearchUtils {
 
     @Test
     public void testSort_NotNull() {
-        EsSearchQuery queryParam = new EsSearchQuery();
+        EsSearchVO queryParam = new EsSearchVO();
         queryParam.setClusterId(new ArrayList<>());
         queryParam.setLogLevel(new ArrayList<>());
         queryParam.setLogType(new ArrayList<>());
@@ -250,7 +269,7 @@ public class TestEsLogSearchUtils {
 
     @Test
     public void testIndexsSort_NotNull() {
-        EsSearchQuery queryParam = new EsSearchQuery();
+        EsSearchVO queryParam = new EsSearchVO();
         queryParam.setClusterId(new ArrayList<>());
         queryParam.setLogLevel(new ArrayList<>());
         queryParam.setLogType(new ArrayList<>());
@@ -266,7 +285,7 @@ public class TestEsLogSearchUtils {
 
     @Test
     public void testLogSort_NotNull() {
-        EsSearchQuery queryParam = new EsSearchQuery();
+        EsSearchVO queryParam = new EsSearchVO();
         queryParam.setClusterId(new ArrayList<>());
         queryParam.setLogLevel(new ArrayList<>());
         queryParam.setLogType(new ArrayList<>());

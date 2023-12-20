@@ -1,20 +1,39 @@
 /*
- * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ *  Copyright (c) GBA-NCTI-ISDC. 2022-2024.
+ *
+ *  openGauss DataKit is licensed under Mulan PSL v2.
+ *  You can use this software according to the terms and conditions of the Mulan PSL v2.
+ *  You may obtain a copy of Mulan PSL v2 at:
+ *
+ *  http://license.coscl.org.cn/MulanPSL2
+ *
+ *  THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ *  EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ *  MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ *  See the Mulan PSL v2 for more details.
+ *  -------------------------------------------------------------------------
+ *
+ *  TestHisDiagnosisController.java
+ *
+ *  IDENTIFICATION
+ *  plugins/observability-sql-diagnosis/src/test/java/com/nctigba/observability/sql/history/controller/TestHisDiagnosisController.java
+ *
+ *  -------------------------------------------------------------------------
  */
 
 package com.nctigba.observability.sql.history.controller;
 
-import com.nctigba.common.web.exception.HisDiagnosisException;
-import com.nctigba.observability.sql.constants.history.DiagnosisTypeCommon;
-import com.nctigba.observability.sql.controller.HisDiagnosisController;
+import com.nctigba.observability.sql.constant.DiagnosisTypeConstants;
+import com.nctigba.observability.sql.controller.DiagnosisResultController;
+import com.nctigba.observability.sql.enums.GrabTypeEnum;
+import com.nctigba.observability.sql.exception.HisDiagnosisException;
 import com.nctigba.observability.sql.mapper.DiagnosisResourceMapper;
-import com.nctigba.observability.sql.model.diagnosis.grab.GrabType;
-import com.nctigba.observability.sql.model.history.HisDiagnosisResult;
-import com.nctigba.observability.sql.model.history.HisDiagnosisTask;
-import com.nctigba.observability.sql.model.history.result.HisTreeNode;
-import com.nctigba.observability.sql.model.history.result.Resource;
-import com.nctigba.observability.sql.service.history.HisDiagnosisService;
-import com.nctigba.observability.sql.util.LocaleString;
+import com.nctigba.observability.sql.model.dto.TreeNodeDTO;
+import com.nctigba.observability.sql.model.entity.DiagnosisResultDO;
+import com.nctigba.observability.sql.model.entity.DiagnosisTaskDO;
+import com.nctigba.observability.sql.model.entity.ResourceDO;
+import com.nctigba.observability.sql.service.DiagnosisService;
+import com.nctigba.observability.sql.util.LocaleStringUtils;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
@@ -38,19 +57,19 @@ import static org.mockito.Mockito.when;
 @RunWith(MockitoJUnitRunner.class)
 public class TestHisDiagnosisController {
     @Mock
-    private HisDiagnosisService service;
+    private DiagnosisService service;
     @Mock
-    private LocaleString localeToString;
+    private LocaleStringUtils localeToString;
     @Mock
     private DiagnosisResourceMapper resourceMapper;
     @InjectMocks
-    private HisDiagnosisController controller;
+    private DiagnosisResultController controller;
 
     @Test
     public void testGetNodeDetail() {
         int taskId = 1;
         String pointName = "offCpu";
-        String diagnosisType = DiagnosisTypeCommon.SQL;
+        String diagnosisType = DiagnosisTypeConstants.SQL;
         when(service.getNodeDetail(taskId, pointName, diagnosisType)).thenReturn(mock(Object.class));
         Object result = controller.getNodeDetail(taskId, pointName, diagnosisType);
         assertNotNull(result);
@@ -60,16 +79,16 @@ public class TestHisDiagnosisController {
     public void testGetTopologyMap() {
         int taskId = 1;
         boolean isAll = true;
-        String diagnosisType = DiagnosisTypeCommon.SQL;
-        HisTreeNode treeNode = new HisTreeNode();
-        treeNode.setIsHidden(false);
-        treeNode.setPointName("");
-        treeNode.setPointType(HisDiagnosisResult.PointType.DIAGNOSIS);
-        treeNode.setTitle("");
-        treeNode.setState(HisDiagnosisResult.PointState.NOT_MATCH_OPTION);
-        treeNode.appendChild(new HisTreeNode());
-        when(service.getTopologyMap(taskId, isAll, diagnosisType)).thenReturn(treeNode);
-        when(localeToString.trapLanguage(treeNode)).thenReturn(mock(Object.class));
+        String diagnosisType = DiagnosisTypeConstants.SQL;
+        TreeNodeDTO treeNodeDTO = new TreeNodeDTO();
+        treeNodeDTO.setIsHidden(false);
+        treeNodeDTO.setPointName("");
+        treeNodeDTO.setPointType(DiagnosisResultDO.PointType.DIAGNOSIS);
+        treeNodeDTO.setTitle("");
+        treeNodeDTO.setState(DiagnosisResultDO.PointState.NOT_MATCH_OPTION);
+        treeNodeDTO.appendChild(new TreeNodeDTO());
+        when(service.getTopologyMap(taskId, isAll, diagnosisType)).thenReturn(treeNodeDTO);
+        when(localeToString.trapLanguage(treeNodeDTO)).thenReturn(mock(Object.class));
         Object result = controller.getTopologyMap(taskId, isAll, diagnosisType);
         assertNotNull(result);
     }
@@ -80,17 +99,17 @@ public class TestHisDiagnosisController {
         ServletOutputStream os = mock(ServletOutputStream.class);
         try {
             when(resp.getOutputStream()).thenReturn(os);
-            HisDiagnosisTask task = mock(HisDiagnosisTask.class);
-            Resource resource = new Resource(task, GrabType.profile);
-            resource.setGrabType(GrabType.offcputime);
-            resource.setId(1);
-            resource.setTaskid(1);
+            DiagnosisTaskDO task = mock(DiagnosisTaskDO.class);
+            ResourceDO resourceDO = new ResourceDO(task, GrabTypeEnum.profile);
+            resourceDO.setGrabType(GrabTypeEnum.offcputime);
+            resourceDO.setId(1);
+            resourceDO.setTaskid(1);
             byte[] f = new byte[1024];
-            resource.setF(f);
+            resourceDO.setF(f);
             String id = "1";
             String type = "svg";
-            resource.to(os);
-            when(resourceMapper.selectById(id)).thenReturn(resource);
+            resourceDO.to(os);
+            when(resourceMapper.selectById(id)).thenReturn(resourceDO);
             controller.res(id, type, resp);
             type = "png";
             controller.res(id, type, resp);

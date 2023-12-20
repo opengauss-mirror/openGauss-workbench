@@ -1,20 +1,39 @@
 /*
- * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ *  Copyright (c) GBA-NCTI-ISDC. 2022-2024.
+ *
+ *  openGauss DataKit is licensed under Mulan PSL v2.
+ *  You can use this software according to the terms and conditions of the Mulan PSL v2.
+ *  You may obtain a copy of Mulan PSL v2 at:
+ *
+ *  http://license.coscl.org.cn/MulanPSL2
+ *
+ *  THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ *  EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ *  MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ *  See the Mulan PSL v2 for more details.
+ *  -------------------------------------------------------------------------
+ *
+ *  TestOnCpu.java
+ *
+ *  IDENTIFICATION
+ *  plugins/observability-sql-diagnosis/src/test/java/com/nctigba/observability/sql/history/point/sql/TestOnCpu.java
+ *
+ *  -------------------------------------------------------------------------
  */
 
 package com.nctigba.observability.sql.history.point.sql;
 
-import com.nctigba.common.web.exception.HisDiagnosisException;
-import com.nctigba.observability.sql.constants.history.OptionCommon;
+import com.nctigba.observability.sql.exception.HisDiagnosisException;
+import com.nctigba.observability.sql.enums.OptionEnum;
 import com.nctigba.observability.sql.mapper.DiagnosisResourceMapper;
-import com.nctigba.observability.sql.model.history.DataStoreConfig;
-import com.nctigba.observability.sql.model.history.HisDiagnosisResult;
-import com.nctigba.observability.sql.model.history.HisDiagnosisTask;
-import com.nctigba.observability.sql.model.history.dto.AnalysisDTO;
-import com.nctigba.observability.sql.service.history.DataStoreService;
-import com.nctigba.observability.sql.service.history.collection.CollectionItem;
-import com.nctigba.observability.sql.service.history.collection.ebpf.ProfileItem;
-import com.nctigba.observability.sql.service.history.point.sql.OnCpu;
+import com.nctigba.observability.sql.model.entity.DiagnosisTaskDO;
+import com.nctigba.observability.sql.model.vo.DataStoreVO;
+import com.nctigba.observability.sql.model.entity.DiagnosisResultDO;
+import com.nctigba.observability.sql.model.dto.point.AnalysisDTO;
+import com.nctigba.observability.sql.service.DataStoreService;
+import com.nctigba.observability.sql.service.CollectionItem;
+import com.nctigba.observability.sql.service.impl.collection.ebpf.ProfileItem;
+import com.nctigba.observability.sql.service.impl.point.sql.OnCpu;
 import org.junit.Test;
 import org.junit.jupiter.api.Assertions;
 import org.junit.runner.RunWith;
@@ -53,7 +72,7 @@ public class TestOnCpu {
 
     @Test
     public void testGetOption() {
-        String actual = String.valueOf(OptionCommon.IS_BCC);
+        String actual = String.valueOf(OptionEnum.IS_BCC);
         List<String> list = pointService.getOption();
         assertEquals(actual, list.get(0));
     }
@@ -68,7 +87,7 @@ public class TestOnCpu {
     @Test
     public void testAnalysisData() {
         try {
-            DataStoreConfig config = mock(DataStoreConfig.class);
+            DataStoreVO config = mock(DataStoreVO.class);
             config.setCollectionItem(item);
             config.setCount(1);
             when(dataStoreService.getData(item)).thenReturn(config);
@@ -77,11 +96,11 @@ public class TestOnCpu {
             InputStream inputStream = mock(InputStream.class);
             when(file.getInputStream()).thenReturn(inputStream);
             when(resourceMapper.insert(any())).thenReturn(1);
-            HisDiagnosisTask task = new HisDiagnosisTask();
+            DiagnosisTaskDO task = new DiagnosisTaskDO();
             task.setId(1);
             AnalysisDTO result = pointService.analysis(task, dataStoreService);
-            Assertions.assertEquals(HisDiagnosisResult.ResultState.SUGGESTIONS, result.getIsHint());
-            Assertions.assertEquals(HisDiagnosisResult.PointType.DIAGNOSIS, result.getPointType());
+            Assertions.assertEquals(DiagnosisResultDO.ResultState.SUGGESTIONS, result.getIsHint());
+            Assertions.assertEquals(DiagnosisResultDO.PointType.DIAGNOSIS, result.getPointType());
             assertNotNull(result);
         } catch (IOException e) {
             throw new HisDiagnosisException("error:", e);

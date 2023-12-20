@@ -1,5 +1,24 @@
 /*
- * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ *  Copyright (c) GBA-NCTI-ISDC. 2022-2024.
+ *
+ *  openGauss DataKit is licensed under Mulan PSL v2.
+ *  You can use this software according to the terms and conditions of the Mulan PSL v2.
+ *  You may obtain a copy of Mulan PSL v2 at:
+ *
+ *  http://license.coscl.org.cn/MulanPSL2
+ *
+ *  THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ *  EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ *  MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ *  See the Mulan PSL v2 for more details.
+ *  -------------------------------------------------------------------------
+ *
+ *  EsLogSearchUtils.java
+ *
+ *  IDENTIFICATION
+ *  plugins/observability-sql-diagnosis/src/main/java/com/nctigba/observability/sql/util/EsLogSearchUtils.java
+ *
+ *  -------------------------------------------------------------------------
  */
 
 package com.nctigba.observability.sql.util;
@@ -11,9 +30,9 @@ import co.elastic.clients.elasticsearch.core.SearchResponse;
 import co.elastic.clients.elasticsearch.indices.GetIndexResponse;
 import co.elastic.clients.json.JsonData;
 import co.elastic.clients.util.ObjectBuilder;
-import com.nctigba.common.web.exception.HisDiagnosisException;
-import com.nctigba.observability.sql.config.ElasticsearchProvider;
-import com.nctigba.observability.sql.model.history.query.EsSearchQuery;
+import com.nctigba.observability.sql.exception.HisDiagnosisException;
+import com.nctigba.observability.sql.config.ElasticsearchConfig;
+import com.nctigba.observability.sql.model.vo.EsSearchVO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,7 +59,7 @@ import java.util.function.Function;
 @Slf4j
 public class EsLogSearchUtils {
     @Autowired
-    private ElasticsearchProvider clientProvider;
+    private ElasticsearchConfig clientProvider;
 
     /**
      * ES queryLogInfo
@@ -49,7 +68,7 @@ public class EsLogSearchUtils {
      * @return logInfo SearchResponse
      */
     @SuppressWarnings("rawtypes")
-    public Optional<SearchResponse<HashMap>> queryLogInfo(EsSearchQuery queryParam) {
+    public Optional<SearchResponse<HashMap>> queryLogInfo(EsSearchVO queryParam) {
         SearchResponse<HashMap> response;
         try {
             var client = clientProvider.client();
@@ -67,7 +86,7 @@ public class EsLogSearchUtils {
             }, HashMap.class);
             return Optional.of(response);
         } catch (IOException | HisDiagnosisException e) {
-            throw new HisDiagnosisException("error" + e.getMessage());
+            throw new HisDiagnosisException("collection error:" + e.getMessage());
         }
     }
 
@@ -96,7 +115,7 @@ public class EsLogSearchUtils {
      * @param queryParam query index name by queryParam
      * @return indexName String
      */
-    public String getIndexName(EsSearchQuery queryParam) {
+    public String getIndexName(EsSearchVO queryParam) {
         List<String> list = new ArrayList<>();
         String indexNames;
         if (queryParam.isEmptyObject()) {
@@ -143,7 +162,7 @@ public class EsLogSearchUtils {
      * @param queryParam build query condition by queryParam
      * @return query Function
      */
-    public Function<Query.Builder, ObjectBuilder<Query>> query(EsSearchQuery queryParam) {
+    public Function<Query.Builder, ObjectBuilder<Query>> query(EsSearchVO queryParam) {
         boolean isPhrase = StringUtils.isNotBlank(queryParam.getSearchPhrase());
         if (!isPhrase && !queryParam.hasDateFilter()) {
             return q -> q.matchAll(f -> f);
@@ -174,7 +193,7 @@ public class EsLogSearchUtils {
      * @param queryParam query order by queryParam
      * @return query Function
      */
-    public Function<SortOptions.Builder, ObjectBuilder<SortOptions>> sort(EsSearchQuery queryParam) {
+    public Function<SortOptions.Builder, ObjectBuilder<SortOptions>> sort(EsSearchVO queryParam) {
         return queryParam.getOrder() != null ? sort -> sort.field(
                 f -> f.field(queryParam.getSort()).order(SortOrder.Asc)) : sort -> sort.field(
                 f -> f.field(queryParam.getSort()).order(SortOrder.Desc));
@@ -186,7 +205,7 @@ public class EsLogSearchUtils {
      * @param queryParam query order by queryParam
      * @return query Function
      */
-    public Function<SortOptions.Builder, ObjectBuilder<SortOptions>> indexsSort(EsSearchQuery queryParam) {
+    public Function<SortOptions.Builder, ObjectBuilder<SortOptions>> indexsSort(EsSearchVO queryParam) {
         return queryParam.getOrder() != null ? sort -> sort.field(
                 f -> f.field("_index").order(SortOrder.Asc)) : sort -> sort.field(
                 f -> f.field("_index").order(SortOrder.Desc));
@@ -198,7 +217,7 @@ public class EsLogSearchUtils {
      * @param queryParam query order by queryParam
      * @return query Function
      */
-    public Function<SortOptions.Builder, ObjectBuilder<SortOptions>> logSort(EsSearchQuery queryParam) {
+    public Function<SortOptions.Builder, ObjectBuilder<SortOptions>> logSort(EsSearchVO queryParam) {
         return queryParam.getOrder() != null ? sort -> sort.field(
                 f -> f.field("log.offset").order(SortOrder.Asc)) : sort -> sort.field(
                 f -> f.field("log.offset").order(SortOrder.Desc));

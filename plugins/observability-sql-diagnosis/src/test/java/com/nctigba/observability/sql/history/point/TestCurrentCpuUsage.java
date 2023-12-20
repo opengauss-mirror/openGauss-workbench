@@ -1,24 +1,43 @@
 /*
- * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ *  Copyright (c) GBA-NCTI-ISDC. 2022-2024.
+ *
+ *  openGauss DataKit is licensed under Mulan PSL v2.
+ *  You can use this software according to the terms and conditions of the Mulan PSL v2.
+ *  You may obtain a copy of Mulan PSL v2 at:
+ *
+ *  http://license.coscl.org.cn/MulanPSL2
+ *
+ *  THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ *  EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ *  MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ *  See the Mulan PSL v2 for more details.
+ *  -------------------------------------------------------------------------
+ *
+ *  TestCurrentCpuUsage.java
+ *
+ *  IDENTIFICATION
+ *  plugins/observability-sql-diagnosis/src/test/java/com/nctigba/observability/sql/history/point/TestCurrentCpuUsage.java
+ *
+ *  -------------------------------------------------------------------------
  */
 
 package com.nctigba.observability.sql.history.point;
 
-import com.nctigba.observability.sql.constants.history.PointTypeCommon;
-import com.nctigba.observability.sql.model.history.DataStoreConfig;
-import com.nctigba.observability.sql.model.history.HisDiagnosisResult;
-import com.nctigba.observability.sql.model.history.HisDiagnosisTask;
-import com.nctigba.observability.sql.model.history.HisDiagnosisThreshold;
-import com.nctigba.observability.sql.model.history.data.AgentData;
-import com.nctigba.observability.sql.model.history.dto.AgentDTO;
-import com.nctigba.observability.sql.model.history.dto.AnalysisDTO;
-import com.nctigba.observability.sql.model.history.query.OptionQuery;
-import com.nctigba.observability.sql.service.history.DataStoreService;
-import com.nctigba.observability.sql.service.history.collection.CollectionItem;
-import com.nctigba.observability.sql.service.history.collection.agent.CurrentCpuUsageItem;
-import com.nctigba.observability.sql.service.history.collection.metric.CpuCoreNumItem;
-import com.nctigba.observability.sql.service.history.point.CurrentCpuUsage;
-import com.nctigba.observability.sql.util.PointUtil;
+import com.nctigba.observability.sql.constant.PointTypeConstants;
+import com.nctigba.observability.sql.model.vo.DataStoreVO;
+import com.nctigba.observability.sql.model.entity.DiagnosisResultDO;
+import com.nctigba.observability.sql.model.entity.DiagnosisTaskDO;
+import com.nctigba.observability.sql.model.entity.DiagnosisThresholdDO;
+import com.nctigba.observability.sql.model.vo.OptionVO;
+import com.nctigba.observability.sql.model.vo.collection.AgentVO;
+import com.nctigba.observability.sql.model.dto.point.AgentDTO;
+import com.nctigba.observability.sql.model.dto.point.AnalysisDTO;
+import com.nctigba.observability.sql.service.DataStoreService;
+import com.nctigba.observability.sql.service.CollectionItem;
+import com.nctigba.observability.sql.service.impl.collection.agent.CurrentCpuUsageItem;
+import com.nctigba.observability.sql.service.impl.collection.metric.CpuCoreNumItem;
+import com.nctigba.observability.sql.service.impl.point.history.CurrentCpuUsage;
+import com.nctigba.observability.sql.util.PointUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.jupiter.api.Assertions;
@@ -52,35 +71,35 @@ public class TestCurrentCpuUsage {
     @Mock
     private DataStoreService dataStoreService;
     @Mock
-    private PointUtil util;
+    private PointUtils util;
     @InjectMocks
     private CurrentCpuUsage currentCpuUsage;
-    private HisDiagnosisTask hisDiagnosisTask;
+    private DiagnosisTaskDO diagnosisTaskDO;
 
     @Before
     public void before() {
-        OptionQuery optionQuery = new OptionQuery();
-        optionQuery.setOption("IS_LOCK");
-        optionQuery.setIsCheck(true);
-        HisDiagnosisThreshold diagnosisThreshold = new HisDiagnosisThreshold();
+        OptionVO optionVO = new OptionVO();
+        optionVO.setOption("IS_LOCK");
+        optionVO.setIsCheck(true);
+        DiagnosisThresholdDO diagnosisThreshold = new DiagnosisThresholdDO();
         diagnosisThreshold.setThreshold("cpuUsageRate");
         diagnosisThreshold.setThresholdValue("20");
-        hisDiagnosisTask = new HisDiagnosisTask();
+        diagnosisTaskDO = new DiagnosisTaskDO();
         String nodeId = "37e8a893-0b7e-49b2-a0b4-e6fdf7dc4345";
         Date sTime = new Date();
         Date eTime = new Date();
-        hisDiagnosisTask.setNodeId(nodeId);
-        hisDiagnosisTask.setHisDataStartTime(sTime);
-        hisDiagnosisTask.setHisDataEndTime(eTime);
-        List<OptionQuery> config = new ArrayList<>() {{
-            add(optionQuery);
+        diagnosisTaskDO.setNodeId(nodeId);
+        diagnosisTaskDO.setHisDataStartTime(sTime);
+        diagnosisTaskDO.setHisDataEndTime(eTime);
+        List<OptionVO> config = new ArrayList<>() {{
+            add(optionVO);
         }};
-        hisDiagnosisTask.setConfigs(config);
-        List<HisDiagnosisThreshold> threshold = new ArrayList<>() {{
+        diagnosisTaskDO.setConfigs(config);
+        List<DiagnosisThresholdDO> threshold = new ArrayList<>() {{
             add(diagnosisThreshold);
         }};
-        hisDiagnosisTask.setThresholds(threshold);
-        hisDiagnosisTask.setSpan("50s");
+        diagnosisTaskDO.setThresholds(threshold);
+        diagnosisTaskDO.setSpan("50s");
     }
 
     @Test
@@ -92,7 +111,7 @@ public class TestCurrentCpuUsage {
     @Test
     public void testGetDiagnosisType() {
         String type = currentCpuUsage.getDiagnosisType();
-        Assertions.assertEquals(PointTypeCommon.CURRENT, type);
+        Assertions.assertEquals(PointTypeConstants.CURRENT, type);
     }
 
     @Test
@@ -104,34 +123,34 @@ public class TestCurrentCpuUsage {
 
     @Test
     public void testAnalysis_NoAgentData() {
-        DataStoreConfig config = mock(DataStoreConfig.class);
+        DataStoreVO config = mock(DataStoreVO.class);
         when(dataStoreService.getData(item)).thenReturn(config);
         when(config.getCollectionData()).thenReturn(new ArrayList<>());
-        AnalysisDTO result = currentCpuUsage.analysis(hisDiagnosisTask, dataStoreService);
+        AnalysisDTO result = currentCpuUsage.analysis(diagnosisTaskDO, dataStoreService);
         assertNotNull(result);
     }
 
     @Test
     public void testAnalysis_haAgentData() {
-        DataStoreConfig config = mock(DataStoreConfig.class);
+        DataStoreVO config = mock(DataStoreVO.class);
         config.setCollectionItem(item);
         config.setCount(1);
         when(dataStoreService.getData(item)).thenReturn(config);
-        DataStoreConfig proConfig = mock(DataStoreConfig.class);
+        DataStoreVO proConfig = mock(DataStoreVO.class);
         when(dataStoreService.getData(cpuCoreNumItem)).thenReturn(proConfig);
-        AgentData agentData = new AgentData();
-        agentData.setParamName("test");
+        AgentVO agentVO = new AgentVO();
+        agentVO.setParamName("test");
         List<AgentDTO> dbValue = new ArrayList<>();
         AgentDTO agentDTO = new AgentDTO();
         agentDTO.setCpu("10");
         dbValue.add(agentDTO);
-        agentData.setDbValue(dbValue);
-        agentData.setSysValue(new ArrayList<>());
-        when(config.getCollectionData()).thenReturn(agentData);
+        agentVO.setDbValue(dbValue);
+        agentVO.setSysValue(new ArrayList<>());
+        when(config.getCollectionData()).thenReturn(agentVO);
         when(util.getCpuCoreNum(any())).thenReturn(8);
-        AnalysisDTO result = currentCpuUsage.analysis(hisDiagnosisTask, dataStoreService);
-        Assertions.assertEquals(HisDiagnosisResult.ResultState.NO_ADVICE, result.getIsHint());
-        Assertions.assertEquals(HisDiagnosisResult.PointType.CENTER, result.getPointType());
+        AnalysisDTO result = currentCpuUsage.analysis(diagnosisTaskDO, dataStoreService);
+        Assertions.assertEquals(DiagnosisResultDO.ResultState.NO_ADVICE, result.getIsHint());
+        Assertions.assertEquals(DiagnosisResultDO.PointType.CENTER, result.getPointType());
         assertNotNull(result.getPointData());
     }
 

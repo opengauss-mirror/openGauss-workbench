@@ -1,23 +1,42 @@
 /*
- * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ *  Copyright (c) GBA-NCTI-ISDC. 2022-2024.
+ *
+ *  openGauss DataKit is licensed under Mulan PSL v2.
+ *  You can use this software according to the terms and conditions of the Mulan PSL v2.
+ *  You may obtain a copy of Mulan PSL v2 at:
+ *
+ *  http://license.coscl.org.cn/MulanPSL2
+ *
+ *  THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ *  EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ *  MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ *  See the Mulan PSL v2 for more details.
+ *  -------------------------------------------------------------------------
+ *
+ *  TestSmpParallelQuery.java
+ *
+ *  IDENTIFICATION
+ *  plugins/observability-sql-diagnosis/src/test/java/com/nctigba/observability/sql/history/point/sql/TestSmpParallelQuery.java
+ *
+ *  -------------------------------------------------------------------------
  */
 
 package com.nctigba.observability.sql.history.point.sql;
 
-import com.nctigba.common.web.exception.HisDiagnosisException;
-import com.nctigba.observability.sql.constants.TestTxtCommon;
-import com.nctigba.observability.sql.model.history.DataStoreConfig;
-import com.nctigba.observability.sql.model.history.HisDiagnosisResult;
-import com.nctigba.observability.sql.model.history.HisDiagnosisTask;
-import com.nctigba.observability.sql.model.history.data.AgentData;
-import com.nctigba.observability.sql.model.history.dto.AgentDTO;
-import com.nctigba.observability.sql.model.history.dto.AnalysisDTO;
-import com.nctigba.observability.sql.service.ClusterManager;
-import com.nctigba.observability.sql.service.history.DataStoreService;
-import com.nctigba.observability.sql.service.history.collection.CollectionItem;
-import com.nctigba.observability.sql.service.history.collection.agent.CurrentCpuUsageItem;
-import com.nctigba.observability.sql.service.history.point.sql.SmpParallelQuery;
-import com.nctigba.observability.sql.util.PointUtil;
+import com.nctigba.observability.sql.exception.HisDiagnosisException;
+import com.nctigba.observability.sql.constant.TestTxtConstants;
+import com.nctigba.observability.sql.model.entity.DiagnosisResultDO;
+import com.nctigba.observability.sql.model.vo.DataStoreVO;
+import com.nctigba.observability.sql.model.entity.DiagnosisTaskDO;
+import com.nctigba.observability.sql.model.vo.collection.AgentVO;
+import com.nctigba.observability.sql.model.dto.point.AgentDTO;
+import com.nctigba.observability.sql.model.dto.point.AnalysisDTO;
+import com.nctigba.observability.sql.service.impl.ClusterManager;
+import com.nctigba.observability.sql.service.DataStoreService;
+import com.nctigba.observability.sql.service.CollectionItem;
+import com.nctigba.observability.sql.service.impl.collection.agent.CurrentCpuUsageItem;
+import com.nctigba.observability.sql.service.impl.point.sql.SmpParallelQuery;
+import com.nctigba.observability.sql.util.PointUtils;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
@@ -49,7 +68,7 @@ public class TestSmpParallelQuery {
     @Mock
     private ClusterManager clusterManager;
     @Mock
-    private PointUtil util;
+    private PointUtils util;
     @Mock
     private CurrentCpuUsageItem item;
     @Mock
@@ -73,7 +92,7 @@ public class TestSmpParallelQuery {
     @Test
     public void testAnalysis_exception() {
         try {
-            DataStoreConfig config = mock(DataStoreConfig.class);
+            DataStoreVO config = mock(DataStoreVO.class);
             config.setCollectionItem(item);
             config.setCount(1);
             when(dataStoreService.getData(item)).thenReturn(config);
@@ -84,15 +103,15 @@ public class TestSmpParallelQuery {
             ResultSet resultSet = mock(ResultSet.class);
             when(statement.executeQuery(any())).thenReturn(resultSet);
             when(resultSet.next()).thenReturn(true, false, true, false, true, false, true, false);
-            String sql = TestTxtCommon.SQL_EXPLAIN;
+            String sql = TestTxtConstants.SQL_EXPLAIN;
             when(resultSet.getString(1)).thenReturn(sql, sql);
-            HisDiagnosisTask task = new HisDiagnosisTask();
+            DiagnosisTaskDO task = new DiagnosisTaskDO();
             task.setSql("SELECT l_returnflag, l_linestatus, count(*) AS count_order FROM tpch.lineitem"
                     + " GROUP BY l_returnflag, l_linestatus"
                     + " ORDER BY l_returnflag, l_linestatus");
             AnalysisDTO result = pointService.analysis(task, dataStoreService);
-            assertEquals(HisDiagnosisResult.ResultState.NO_ADVICE, result.getIsHint());
-            assertEquals(HisDiagnosisResult.PointType.DIAGNOSIS, result.getPointType());
+            assertEquals(DiagnosisResultDO.ResultState.NO_ADVICE, result.getIsHint());
+            assertEquals(DiagnosisResultDO.PointType.DIAGNOSIS, result.getPointType());
             assertNotNull(result.getPointData());
         } catch (SQLException | HisDiagnosisException e) {
             assertEquals("execute sql failed!", e.getMessage());
@@ -102,19 +121,19 @@ public class TestSmpParallelQuery {
     @Test
     public void testAnalysis() {
         try {
-            DataStoreConfig config = mock(DataStoreConfig.class);
+            DataStoreVO config = mock(DataStoreVO.class);
             config.setCollectionItem(item);
             config.setCount(1);
             when(dataStoreService.getData(item)).thenReturn(config);
-            AgentData agentData = new AgentData();
-            agentData.setParamName("test");
+            AgentVO agentVO = new AgentVO();
+            agentVO.setParamName("test");
             List<AgentDTO> dbValue = new ArrayList<>();
             AgentDTO agentDTO = new AgentDTO();
             agentDTO.setCpu("10");
             dbValue.add(agentDTO);
-            agentData.setDbValue(dbValue);
-            agentData.setSysValue(dbValue);
-            when(config.getCollectionData()).thenReturn(agentData);
+            agentVO.setDbValue(dbValue);
+            agentVO.setSysValue(dbValue);
+            when(config.getCollectionData()).thenReturn(agentVO);
             Connection conn = mock(Connection.class);
             when(clusterManager.getConnectionByNodeId(any())).thenReturn(conn);
             Statement statement = mock(Statement.class);
@@ -122,15 +141,15 @@ public class TestSmpParallelQuery {
             ResultSet resultSet = mock(ResultSet.class);
             when(statement.executeQuery(any())).thenReturn(resultSet);
             when(resultSet.next()).thenReturn(true, false, true, false, true, false, true, false);
-            String sql = TestTxtCommon.SQL_EXPLAIN;
+            String sql = TestTxtConstants.SQL_EXPLAIN;
             when(resultSet.getString(1)).thenReturn(sql, sql);
-            HisDiagnosisTask task = new HisDiagnosisTask();
+            DiagnosisTaskDO task = new DiagnosisTaskDO();
             task.setSql("SELECT l_returnflag, l_linestatus, count(*) AS count_order FROM tpch.lineitem"
                     + " GROUP BY l_returnflag, l_linestatus"
                     + " ORDER BY l_returnflag, l_linestatus");
             AnalysisDTO result = pointService.analysis(task, dataStoreService);
-            assertEquals(HisDiagnosisResult.ResultState.NO_ADVICE, result.getIsHint());
-            assertEquals(HisDiagnosisResult.PointType.DIAGNOSIS, result.getPointType());
+            assertEquals(DiagnosisResultDO.ResultState.NO_ADVICE, result.getIsHint());
+            assertEquals(DiagnosisResultDO.PointType.DIAGNOSIS, result.getPointType());
             assertNotNull(result.getPointData());
         } catch (SQLException e) {
             throw new HisDiagnosisException("execute sql failed!");

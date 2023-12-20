@@ -12,7 +12,6 @@
         </keep-alive>
       </my-card>
     </div>
-
     <!-- 930 new points -->
     <div
       class="detail-right"
@@ -41,7 +40,13 @@
             <svg-icon v-if="!showLarge" name="expand" class="shrink-img" @click="showLargeWindow" />
             <svg-icon v-if="showLarge" name="expand" class="shrink-img" @click="hideLargeWindow" />
           </template>
-          <PointInfo @goto-large="showLarge = true" :large="showLarge" :nodesType="nodesType" :taskId="urlParam.dbId" />
+          <PointInfo
+            v-if="nodesType"
+            @goto-large="showLarge = true"
+            :large="showLarge"
+            :nodesType="nodesType"
+            :taskId="urlParam.dbId"
+          />
         </my-card>
       </div>
     </div>
@@ -164,7 +169,7 @@ const pologyList = ref<Array<optionType>>([
 ])
 const nodes = ref<Array<NodesTypes>>([])
 const edges = ref<Array<edgesType>>([])
-const nodesType = ref('SqlTaskInfo')
+const nodesType = ref('')
 const originalHiddenFlag = ref(false)
 const requestType = ref('')
 const pologyType = ref('false')
@@ -194,16 +199,12 @@ const oldKeys = [
   'FileTop',
   'XfsDist',
   'XfsSlower',
-  'Memory',
   'MemLeak',
   'CacheStat',
   'CacheTop',
   'FileSystem',
   'NetWork',
   'ExplainDetail',
-  'ParamTuning',
-  'OsParam',
-  'DatabaseParam',
 ]
 const isOldOnes = computed(() => {
   return oldKeys.indexOf(nodesType.value) >= 0
@@ -243,7 +244,12 @@ const goToTask = () => {
 const getNodeInfo = (obj: any) => {
   requestType.value = ''
   // new points after 930
-  nodesType.value = obj.pointName
+
+  // to trigger point change
+  nodesType.value = ''
+  nextTick(() => {
+    nodesType.value = obj.pointName
+  })
 
   // fit old points
   if (isOldOnes.value) {
@@ -294,6 +300,7 @@ watch(ret, (retOrigin: any) => {
 watch(res, (res: any) => {
   const isAll = queryData.value.all === 'true'
   if (res && Object.keys(res).length) {
+    nodesType.value = 'SqlTaskInfo'
     let node = {
       id: '1',
       pid: '0',

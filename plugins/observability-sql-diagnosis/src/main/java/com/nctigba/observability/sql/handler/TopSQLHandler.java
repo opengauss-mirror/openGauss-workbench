@@ -1,11 +1,34 @@
+/*
+ *  Copyright (c) GBA-NCTI-ISDC. 2022-2024.
+ *
+ *  openGauss DataKit is licensed under Mulan PSL v2.
+ *  You can use this software according to the terms and conditions of the Mulan PSL v2.
+ *  You may obtain a copy of Mulan PSL v2 at:
+ *
+ *  http://license.coscl.org.cn/MulanPSL2
+ *
+ *  THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ *  EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ *  MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ *  See the Mulan PSL v2 for more details.
+ *  -------------------------------------------------------------------------
+ *
+ *  TopSQLHandler.java
+ *
+ *  IDENTIFICATION
+ *  plugins/observability-sql-diagnosis/src/main/java/com/nctigba/observability/sql/handler/TopSQLHandler.java
+ *
+ *  -------------------------------------------------------------------------
+ */
+
 package com.nctigba.observability.sql.handler;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.nctigba.observability.sql.constants.CommonConstants;
-import com.nctigba.observability.sql.model.ExecutionPlan;
-import com.nctigba.observability.sql.service.ClusterManager;
+import com.nctigba.observability.sql.constant.CommonConstants;
+import com.nctigba.observability.sql.model.vo.ExecutionPlanVO;
+import com.nctigba.observability.sql.service.impl.ClusterManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -43,8 +66,8 @@ public class TopSQLHandler {
     private List<String> objectNameList = new ArrayList<>();
 
     /**
-     * deal Execution Plan list
-     * @param rsList Execution Plan list
+     * deal Execution PlanVO list
+     * @param rsList Execution PlanVO list
      * @return JSONObject
      */
     public JSONObject dealExecutionPlan(List<String> rsList) {
@@ -64,7 +87,7 @@ public class TopSQLHandler {
             // get base execution plan object
             totalPlanWidth = 0;
             totalPlanRows = 0;
-            ExecutionPlan plan = processExecutionPlanString(modifySplitLines.get(0));
+            ExecutionPlanVO plan = processExecutionPlanString(modifySplitLines.get(0));
             // get tree shape execution plan object
             assert plan != null;
             processExecutionPlan(modifySplitLines.subList(1, modifySplitLines.size()), 0, plan,
@@ -90,7 +113,7 @@ public class TopSQLHandler {
         if (StringUtils.isEmpty(planStr)) {
             return "";
         }
-        if (planStr.contains("Peak Memory")) {
+        if (planStr.contains("Peak MemoryAnalysis")) {
             String[] planArr = planStr.split("Peak Memory:");
             if (planArr.length > 1) {
                 return planArr[1].substring(0, planArr[1].indexOf("(KB)"));
@@ -219,7 +242,7 @@ public class TopSQLHandler {
                     if ("track_stmt_stat_level".equalsIgnoreCase(name)) {
                         if (StringUtils.startsWith(setting, "OFF") || StringUtils.startsWith(setting, "L0")) {
                             throw new CustomException(
-                                    "To perform Execution Plan, you need to set 'track_stmt_stat_level' parameter Full SQL level to at least 'L1'");
+                                    "To perform Execution PlanVO, you need to set 'track_stmt_stat_level' parameter Full SQL level to at least 'L1'");
                         }
                     }
                 }
@@ -238,8 +261,8 @@ public class TopSQLHandler {
      * @param plan           last level plan
      * @param children       last level plan children
      */
-    private void processExecutionPlan(List<String> lines, int previousIndent, ExecutionPlan plan,
-            List<ExecutionPlan> children) {
+    private void processExecutionPlan(List<String> lines, int previousIndent, ExecutionPlanVO plan,
+            List<ExecutionPlanVO> children) {
         for (int i = 0; i < lines.size(); i++) {
             String line = lines.get(i);
             // process condition
@@ -258,7 +281,7 @@ public class TopSQLHandler {
             // go into next tree level
             if (currentIndent > previousIndent) {
                 lines.set(i, "");
-                ExecutionPlan subPlan = processExecutionPlanString(line);
+                ExecutionPlanVO subPlan = processExecutionPlanString(line);
                 children.add(subPlan);
                 assert subPlan != null;
                 processExecutionPlan(lines.subList(i + 1, lines.size()), currentIndent, subPlan, subPlan.getChildren());
@@ -276,11 +299,11 @@ public class TopSQLHandler {
      * @param line execution plan line string
      * @return execution plan line object
      */
-    private ExecutionPlan processExecutionPlanString(String line) {
+    private ExecutionPlanVO processExecutionPlanString(String line) {
         if (line.contains(CommonConstants.HASH_COND)) {
             return null;
         }
-        ExecutionPlan plan = new ExecutionPlan();
+        ExecutionPlanVO plan = new ExecutionPlanVO();
         // check if first line
         String planString;
         if (line.contains("->")) {

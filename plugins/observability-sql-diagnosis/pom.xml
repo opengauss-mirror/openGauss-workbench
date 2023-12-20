@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.opengauss</groupId>
 	<artifactId>observability-sql-diagnosis</artifactId>
-	<version>5.1.1</version>
+	<version>5.1.0</version>
 	<packaging>jar</packaging>
 	<properties>
 		<!--config-->
@@ -41,7 +41,7 @@
 		<dependency>
 			<groupId>org.opengauss</groupId>
 			<artifactId>visualtool-framework</artifactId>
-			<version>5.1.1</version>
+			<version>5.1.0</version>
 			<scope>provided</scope>
 			<exclusions>
 				<!--druid-spring-boot-starter removed-->
@@ -127,12 +127,6 @@
 			<artifactId>opengauss-jdbc</artifactId>
 			<version>3.0.0</version>
 		</dependency>
-		<!-- https://mvnrepository.com/artifact/org.xerial/sqlite-jdbc -->
-		<dependency>
-			<groupId>org.xerial</groupId>
-			<artifactId>sqlite-jdbc</artifactId>
-			<version>3.39.3.0</version>
-		</dependency>
 		<!-- https://mvnrepository.com/artifact/org.apache.sshd/sshd-scp -->
 		<dependency>
 			<groupId>org.apache.sshd</groupId>
@@ -164,6 +158,18 @@
 			<groupId>jakarta.json</groupId>
 			<artifactId>jakarta.json-api</artifactId>
 			<version>${es-java-client-jakarta.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.intarkdb</groupId>
+			<artifactId>IntarkDB-jdbc</artifactId>
+			<version>1.0</version>
+			<scope>system</scope>
+			<systemPath>${project.basedir}/src/main/resources/lib/IntarkDB-jdbc-1.0.0.1.jar</systemPath>
+		</dependency>
+		<dependency>
+			<groupId>org.xerial</groupId>
+			<artifactId>sqlite-jdbc</artifactId>
+			<version>3.39.3.0</version>
 		</dependency>
 	</dependencies>
 

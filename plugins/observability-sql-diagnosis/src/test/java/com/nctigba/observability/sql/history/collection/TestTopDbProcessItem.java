@@ -1,11 +1,30 @@
 /*
- * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ *  Copyright (c) GBA-NCTI-ISDC. 2022-2024.
+ *
+ *  openGauss DataKit is licensed under Mulan PSL v2.
+ *  You can use this software according to the terms and conditions of the Mulan PSL v2.
+ *  You may obtain a copy of Mulan PSL v2 at:
+ *
+ *  http://license.coscl.org.cn/MulanPSL2
+ *
+ *  THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ *  EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ *  MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ *  See the Mulan PSL v2 for more details.
+ *  -------------------------------------------------------------------------
+ *
+ *  TestTopDbProcessItem.java
+ *
+ *  IDENTIFICATION
+ *  plugins/observability-sql-diagnosis/src/test/java/com/nctigba/observability/sql/history/collection/TestTopDbProcessItem.java
+ *
+ *  -------------------------------------------------------------------------
  */
 
 package com.nctigba.observability.sql.history.collection;
 
-import com.nctigba.observability.sql.constants.history.AgentParamCommon;
-import com.nctigba.observability.sql.service.history.collection.agent.TopDbProcessItem;
+import com.nctigba.observability.sql.constant.AgentParamConstants;
+import com.nctigba.observability.sql.service.impl.collection.agent.TopDbProcessItem;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
@@ -27,6 +46,6 @@ public class TestTopDbProcessItem {
     @Test
     public void testGetHttpParam() {
         String sql = item.getHttpParam();
-        assertEquals(sql, AgentParamCommon.TOP);
+        assertEquals(sql, AgentParamConstants.TOP);
     }
 }

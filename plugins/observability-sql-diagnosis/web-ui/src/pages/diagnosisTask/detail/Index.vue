@@ -38,7 +38,7 @@
             <svg-icon v-if="!showLarge" name="expand" class="shrink-img" @click="showLargeWindow" />
             <svg-icon v-if="showLarge" name="expand" class="shrink-img" @click="hideLargeWindow" />
           </template>
-          <PointInfo @goto-large="showLarge = true" :nodesType="nodesType" :taskId="urlParam.dbId" />
+          <PointInfo v-if="nodesType" @goto-large="showLarge = true" :nodesType="nodesType" :taskId="urlParam.dbId" />
         </my-card>
       </div>
     </div>
@@ -94,7 +94,7 @@ const pologyList = ref<Array<optionType>>([
 ])
 const nodes = ref<Array<NodesTypes>>([])
 const edges = ref<Array<edgesType>>([])
-const nodesType = ref('HisTaskInfo')
+const nodesType = ref('')
 const pologyType = ref('false')
 onMounted(() => {
   let paramsId = router.currentRoute.value.params.id
@@ -127,8 +127,11 @@ const hideLargeWindow = () => {
 }
 const router = useRouter()
 const getNodeInfo = (obj: any) => {
-  nodesType.value = obj.pointName
-  console.log('DEBUG: nodesType.value', nodesType.value)
+  // to trigger point change
+  nodesType.value = ''
+  nextTick(() => {
+    nodesType.value = obj.pointName
+  })
 }
 const getChangeSelect = (val: string) => {
   nodes.value = []
@@ -150,6 +153,7 @@ const { data: res, run: requestData } = useRequest(
 watch(res, (res: any) => {
   const isAll = queryData.value.all === 'true'
   if (res && Object.keys(res).length) {
+    nodesType.value = 'HisTaskInfo'
     let node = {
       id: '1',
       pid: '0',

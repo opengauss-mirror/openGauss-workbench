@@ -61,6 +61,7 @@ export type PointInfo = {
   pointState: string
   pointSuggestion: string
   isHint: string
+  pointType: string
   pointData: any
 }
 export async function getPointData(id: string, pointKey: string, diagnosisType?: string): Promise<PointInfo> {

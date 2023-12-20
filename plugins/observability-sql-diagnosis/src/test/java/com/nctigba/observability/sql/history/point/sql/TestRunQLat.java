@@ -1,19 +1,38 @@
 /*
- * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ *  Copyright (c) GBA-NCTI-ISDC. 2022-2024.
+ *
+ *  openGauss DataKit is licensed under Mulan PSL v2.
+ *  You can use this software according to the terms and conditions of the Mulan PSL v2.
+ *  You may obtain a copy of Mulan PSL v2 at:
+ *
+ *  http://license.coscl.org.cn/MulanPSL2
+ *
+ *  THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ *  EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ *  MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ *  See the Mulan PSL v2 for more details.
+ *  -------------------------------------------------------------------------
+ *
+ *  TestRunQLat.java
+ *
+ *  IDENTIFICATION
+ *  plugins/observability-sql-diagnosis/src/test/java/com/nctigba/observability/sql/history/point/sql/TestRunQLat.java
+ *
+ *  -------------------------------------------------------------------------
  */
 
 package com.nctigba.observability.sql.history.point.sql;
 
-import com.nctigba.observability.sql.constants.TestTxtCommon;
-import com.nctigba.observability.sql.constants.history.OptionCommon;
-import com.nctigba.observability.sql.model.history.DataStoreConfig;
-import com.nctigba.observability.sql.model.history.HisDiagnosisResult;
-import com.nctigba.observability.sql.model.history.HisDiagnosisTask;
-import com.nctigba.observability.sql.model.history.dto.AnalysisDTO;
-import com.nctigba.observability.sql.service.history.DataStoreService;
-import com.nctigba.observability.sql.service.history.collection.CollectionItem;
-import com.nctigba.observability.sql.service.history.collection.ebpf.RunQLatItem;
-import com.nctigba.observability.sql.service.history.point.sql.RunQLat;
+import com.nctigba.observability.sql.constant.TestTxtConstants;
+import com.nctigba.observability.sql.enums.OptionEnum;
+import com.nctigba.observability.sql.model.dto.point.AnalysisDTO;
+import com.nctigba.observability.sql.model.entity.DiagnosisResultDO;
+import com.nctigba.observability.sql.model.entity.DiagnosisTaskDO;
+import com.nctigba.observability.sql.model.vo.DataStoreVO;
+import com.nctigba.observability.sql.service.CollectionItem;
+import com.nctigba.observability.sql.service.DataStoreService;
+import com.nctigba.observability.sql.service.impl.collection.ebpf.RunQlatItem;
+import com.nctigba.observability.sql.service.impl.point.sql.RunQLat;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
@@ -39,7 +58,7 @@ import static org.mockito.Mockito.when;
 @RunWith(MockitoJUnitRunner.class)
 public class TestRunQLat {
     @Mock
-    private RunQLatItem item;
+    private RunQlatItem item;
     @Mock
     private DataStoreService dataStoreService;
     @InjectMocks
@@ -47,7 +66,7 @@ public class TestRunQLat {
 
     @Test
     public void testGetOption() {
-        String actual = String.valueOf(OptionCommon.IS_BCC);
+        String actual = String.valueOf(OptionEnum.IS_BCC);
         List<String> list = pointService.getOption();
         assertEquals(actual, list.get(0));
     }
@@ -61,19 +80,19 @@ public class TestRunQLat {
 
     @Test
     public void testAnalysis() {
-        DataStoreConfig config = mock(DataStoreConfig.class);
+        DataStoreVO config = mock(DataStoreVO.class);
         config.setCollectionItem(item);
         config.setCount(1);
         when(dataStoreService.getData(item)).thenReturn(config);
-        String ioTraceData = TestTxtCommon.BIOLATENCY;
+        String ioTraceData = TestTxtConstants.BIOLATENCY;
         String originalFilename = "test.txt";
         String contentType = "text/plain";
         byte[] content = ioTraceData.getBytes(StandardCharsets.UTF_8);
         MockMultipartFile file = new MockMultipartFile("file", originalFilename, contentType, content);
         when(config.getCollectionData()).thenReturn(file);
-        AnalysisDTO result = pointService.analysis(mock(HisDiagnosisTask.class), dataStoreService);
-        assertEquals(HisDiagnosisResult.ResultState.SUGGESTIONS, result.getIsHint());
-        assertEquals(HisDiagnosisResult.PointType.DIAGNOSIS, result.getPointType());
+        AnalysisDTO result = pointService.analysis(mock(DiagnosisTaskDO.class), dataStoreService);
+        assertEquals(DiagnosisResultDO.ResultState.SUGGESTIONS, result.getIsHint());
+        assertEquals(DiagnosisResultDO.PointType.DIAGNOSIS, result.getPointType());
         assertNotNull(result.getPointData());
     }
 

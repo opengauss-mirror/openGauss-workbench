@@ -1,26 +1,60 @@
-## Spring配置
+## Spring configuration
 context:
   listener:
     classes: com.nctigba.observability.sql.listener.PluginListener
-
+project:
+  version: 5.1.0
 spring:
   servlet:
     multipart:
-      max-file-size: 20MB #单个文件最大为20M
-      max-request-size: 20MB #单次请求文件总数大小为20M
+      max-file-size: 20MB #The maximum size of a single file is 20M
+      max-request-size: 20MB #The total size of a single request file is 20M
   profiles:
     active: '@profiles.active@'
   resources:
     static-locations: classpath:resources,file:D://static
+  datasource:
+    dynamic:
+      #严格匹配数据源,默认false. true未匹配到指定数据源时抛异常,false使用默认数据源
+      strict: false
+      druid:
+        test-while-idle: false
+        test-on-borrow: true
+        validation-query: "select 1"
+        validation-query-timeout: 10000
+        connection-error-retry-attempts: 3
+        break-after-acquire-failure: false
+        time-between-connect-error-millis: 60000
+        max-wait: 300000
+        connection-properties:
+          ApplicationName: DataKit Sql Diagnosis
+        remove-abandoned: true
+        remove-abandoned-timeout-millis: 300000
+        log-abandoned: true
+        max-active: 1
+      datasource:
+        embedded:
+#          url: jdbc:intarkdb:data/observability-sql-diagnosis-data
+#          driverClassName: org.intarkdb.IntarkDBJDBC
+          url: jdbc:sqlite:data/observability-sql-diagnosis-data-init.db
+          driverClassName: org.sqlite.JDBC
+          init:
+            schema: db/schema.sql
+            data: db/data.sql
+            continue-on-error: true
+            separator: ";"
+        instanceAgent:
+          url: jdbc:sqlite:data/observability-instance-data.db
+          driverClassName: org.sqlite.JDBC
 server.compression:
   enabled: true
   mime-types: application/javascript,text/css,application/json,application/xml,text/html,text/xml,text/plain
 mybatis-plus:
-  # 搜索指定包别名
+  # Search for specified package aliases
   typeAliasesPackage: com.nctigba.observability.entity
-  # 配置mapper的扫描，找到所有的mapper.xml映射文件
+  # Configure the scanning of mappers and locate all mapper.xml mapping files
   mapperLocations: classpath*:mapper/*.xml
-  # 加载全局的配置文件
+  # Load global configuration files
   configuration:
     mapUnderscoreToCamelCase: true
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl

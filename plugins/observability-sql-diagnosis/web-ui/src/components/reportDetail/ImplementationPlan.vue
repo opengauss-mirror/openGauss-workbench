@@ -211,7 +211,7 @@ watch(
     }
 
     &:deep(.el-table .warning-row) {
-      --el-table-tr-bg-color: #4e575a;
+      --el-table-tr-bg-color: var(--el-color-table-row-bg-color);
     }
 
     :deep(.el-table) {

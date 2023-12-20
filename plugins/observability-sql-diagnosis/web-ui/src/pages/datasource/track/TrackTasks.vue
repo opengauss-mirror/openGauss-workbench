@@ -262,6 +262,15 @@ onMounted(() => {
   localStorage.removeItem('SQL_DIAGNOSIS_NODEID')
   requestData()
   clusterData()
+  const wujie = window.$wujie
+  if (wujie) {
+    // Monitoring platform language change
+    wujie?.bus.$on('opengauss-locale-change', (val: string) => {
+      nextTick(() => {
+        requestData()
+      })
+    })
+  }
 })
 
 const { data: rer, run: clusterData } = useRequest(

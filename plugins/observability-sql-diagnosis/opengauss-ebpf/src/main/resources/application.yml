@@ -2,6 +2,9 @@
 # Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
 #
 
+project:
+  version: 5.1.0
+
 server:
   port: ${agent_port:2321}
 urlconfig:
@@ -31,5 +34,10 @@ ebpfconfig:
 
 osconfig:
   mpstatP: mpstat -P ALL 1
-  sarq: sqr -q 1
+  sarq: sar -q 1
+  sard: sar -d 1
   pidstat1: pidstat 1
+  cpuAvgLoad: top -d 1
+  vmstat1: vmstat 1
+  iostatX1: iostat -x 1
+  cpuCoreNum: cat /proc/cpuinfo；cat /proc/cpuinfo | grep "cpu cores" | awk '{cores += $4} END {print cores}'

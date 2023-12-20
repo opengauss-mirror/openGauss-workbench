@@ -415,6 +415,7 @@ export default {
     paramName: '参数名称',
     currentValue: '当前值',
     paramDescription: '参数说明',
+    editSuggestion: '修改建议',
     suggestValue: '推荐取值',
     suggestReason: '推荐原因',
     pleaseSelectInstance: '请先选择集群与实例',

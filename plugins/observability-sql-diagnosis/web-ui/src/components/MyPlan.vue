@@ -318,7 +318,7 @@ const tableRowClassName = ({ row }: { row: { id: string } }) => {
     }
 
     &:deep(.el-table .warning-row) {
-      --el-table-tr-bg-color: #4e575a;
+      --el-table-tr-bg-color: var(--el-color-table-row-bg-color);
     }
   }
 }

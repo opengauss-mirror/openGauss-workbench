@@ -2,6 +2,17 @@
 --ObjectInfoCheck DIAGNOSIS
 ---ObjectRecommendedToUpdateStatistics DIAGNOSIS
 --ExecPlan CENTER
+---Hint DIAGNOSIS
+---ObjectInfo DIAGNOSIS
+---DeadTuple DIAGNOSIS
+---PartitionTableReform DIAGNOSIS
+---SeqScan DIAGNOSIS
+---PartitionedSeqScan DIAGNOSIS
+---ExternalMergeDisk DIAGNOSIS
+---GroupAggSort DIAGNOSIS
+---SqlRewrite DIAGNOSIS
+---CoreOptimizerParam DIAGNOSIS
+---RandomPageCost DIAGNOSIS
 ---IndexAdvisor DIAGNOSIS
 ---SmpParallelQuery DIAGNOSIS
 ---BlockSession DIAGNOSIS
@@ -11,6 +22,7 @@
 ---PlanRecommendedToDoVacuumCleaning DIAGNOSIS
 ---PlanRecommendedToOptimizeStatementsOrAddWorkMemSize DIAGNOSIS
 ---CpuAnalysis CENTER
+----OsLoad DIAGNOSIS
 ----OnCpu DIAGNOSIS
 -----HotFunction DISPLAY
 ----UsrCpu DIAGNOSIS
@@ -18,9 +30,8 @@
 -----RunQLen DIAGNOSIS
 ----SysCpu DIAGNOSIS
 ----IdleCpu DIAGNOSIS
------TcpLife DIAGNOSIS
------TcpTop DIAGNOSIS
 ----IoWaitCpu DIAGNOSIS
+-----IoWait DIAGNOSIS
 -----OffCpu DIAGNOSIS
 ------ColdFunction DISPLAY
 -----BioLatency DIAGNOSIS
@@ -29,7 +40,7 @@
 -----XfsDist DIAGNOSIS
 -----XfsSlower DIAGNOSIS
 ---Memory CENTER
-----MemLeak DIAGNOSIS
+----Swap DIAGNOSIS
 ----CacheStat DIAGNOSIS
 --ParamTuning CENTER
 ---OsParam CENTER

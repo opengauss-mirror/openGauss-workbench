@@ -1,5 +1,24 @@
 /*
- * Copyright (c) GBA-NCTI-ISDC. 2022-2023. All rights reserved.
+ *  Copyright (c) GBA-NCTI-ISDC. 2022-2024.
+ *
+ *  openGauss DataKit is licensed under Mulan PSL v2.
+ *  You can use this software according to the terms and conditions of the Mulan PSL v2.
+ *  You may obtain a copy of Mulan PSL v2 at:
+ *
+ *  http://license.coscl.org.cn/MulanPSL2
+ *
+ *  THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ *  EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ *  MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ *  See the Mulan PSL v2 for more details.
+ *  -------------------------------------------------------------------------
+ *
+ *  TestElasticSearchCollectionItem.java
+ *
+ *  IDENTIFICATION
+ *  plugins/observability-sql-diagnosis/src/test/java/com/nctigba/observability/sql/history/collection/TestElasticSearchCollectionItem.java
+ *
+ *  -------------------------------------------------------------------------
  */
 
 package com.nctigba.observability.sql.history.collection;
@@ -7,14 +26,14 @@ package com.nctigba.observability.sql.history.collection;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
 import co.elastic.clients.elasticsearch.core.search.Hit;
 import co.elastic.clients.elasticsearch.core.search.HitsMetadata;
-import com.nctigba.observability.sql.constants.history.ElasticSearchCommon;
-import com.nctigba.observability.sql.constants.history.OptionCommon;
-import com.nctigba.observability.sql.constants.history.ThresholdCommon;
-import com.nctigba.observability.sql.model.history.HisDiagnosisTask;
-import com.nctigba.observability.sql.model.history.HisDiagnosisThreshold;
-import com.nctigba.observability.sql.model.history.query.OptionQuery;
-import com.nctigba.observability.sql.service.history.collection.elastic.DeadlockItem;
-import com.nctigba.observability.sql.service.history.collection.elastic.ElasticSearchCollectionItem;
+import com.nctigba.observability.sql.constant.ElasticSearchConstants;
+import com.nctigba.observability.sql.enums.OptionEnum;
+import com.nctigba.observability.sql.constant.ThresholdConstants;
+import com.nctigba.observability.sql.model.entity.DiagnosisTaskDO;
+import com.nctigba.observability.sql.model.entity.DiagnosisThresholdDO;
+import com.nctigba.observability.sql.model.vo.OptionVO;
+import com.nctigba.observability.sql.service.impl.collection.elastic.DeadlockItem;
+import com.nctigba.observability.sql.service.impl.collection.elastic.ElasticSearchCollectionItem;
 import com.nctigba.observability.sql.util.EsLogSearchUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -52,12 +71,12 @@ public class TestElasticSearchCollectionItem {
     @InjectMocks
     private ElasticSearchCollectionItem collectionItem = new ElasticSearchCollectionItem() {
         @Override
-        public Object collectData(HisDiagnosisTask task) {
+        public Object collectData(DiagnosisTaskDO task) {
             return super.collectData(task);
         }
 
         @Override
-        public Object queryData(HisDiagnosisTask task) {
+        public Object queryData(DiagnosisTaskDO task) {
             return super.queryData(task);
         }
 
@@ -67,54 +86,54 @@ public class TestElasticSearchCollectionItem {
         }
     };
 
-    private HisDiagnosisTask hisDiagnosisTask;
+    private DiagnosisTaskDO diagnosisTaskDO;
 
     @Before
     public void before() {
-        OptionQuery optionQuery = new OptionQuery();
-        optionQuery.setOption(String.valueOf(OptionCommon.IS_CPU));
-        optionQuery.setIsCheck(true);
-        HisDiagnosisThreshold diagnosisThreshold = new HisDiagnosisThreshold();
-        diagnosisThreshold.setThreshold(ThresholdCommon.DURING);
+        OptionVO optionVO = new OptionVO();
+        optionVO.setOption(String.valueOf(OptionEnum.IS_CPU));
+        optionVO.setIsCheck(true);
+        DiagnosisThresholdDO diagnosisThreshold = new DiagnosisThresholdDO();
+        diagnosisThreshold.setThreshold(ThresholdConstants.DURING);
         diagnosisThreshold.setThresholdValue("20");
-        hisDiagnosisTask = new HisDiagnosisTask();
+        diagnosisTaskDO = new DiagnosisTaskDO();
         String nodeId = "37e8a893-0b7e-49b2-a0b4-e6fdf7dc4345";
         Date sTime = new Date();
         Date eTime = new Date();
-        hisDiagnosisTask.setNodeId(nodeId);
-        hisDiagnosisTask.setHisDataStartTime(sTime);
-        hisDiagnosisTask.setHisDataEndTime(eTime);
-        List<OptionQuery> config = new ArrayList<>() {{
-            add(optionQuery);
+        diagnosisTaskDO.setNodeId(nodeId);
+        diagnosisTaskDO.setHisDataStartTime(sTime);
+        diagnosisTaskDO.setHisDataEndTime(eTime);
+        List<OptionVO> config = new ArrayList<>() {{
+            add(optionVO);
         }};
-        hisDiagnosisTask.setConfigs(config);
-        List<HisDiagnosisThreshold> threshold = new ArrayList<>() {{
+        diagnosisTaskDO.setConfigs(config);
+        List<DiagnosisThresholdDO> threshold = new ArrayList<>() {{
             add(diagnosisThreshold);
         }};
-        hisDiagnosisTask.setThresholds(threshold);
-        hisDiagnosisTask.setSpan("50s");
+        diagnosisTaskDO.setThresholds(threshold);
+        diagnosisTaskDO.setSpan("50s");
     }
 
     @Test
     public void testCollectData() {
-        when(item.getQueryParam()).thenReturn(ElasticSearchCommon.DEADLOCK);
-        Object data = collectionItem.collectData(hisDiagnosisTask);
+        when(item.getQueryParam()).thenReturn(ElasticSearchConstants.DEADLOCK);
+        Object data = collectionItem.collectData(diagnosisTaskDO);
         assertNull(data);
     }
 
     @Test
     public void testCollectData_noEndDate() {
-        when(item.getQueryParam()).thenReturn(ElasticSearchCommon.DEADLOCK);
-        hisDiagnosisTask.setHisDataEndTime(null);
-        Object data = collectionItem.collectData(hisDiagnosisTask);
+        when(item.getQueryParam()).thenReturn(ElasticSearchConstants.DEADLOCK);
+        diagnosisTaskDO.setHisDataEndTime(null);
+        Object data = collectionItem.collectData(diagnosisTaskDO);
         assertNull(data);
     }
 
 
     @Test
     public void testQueryData() {
-        when(item.getQueryParam()).thenReturn(ElasticSearchCommon.LOCK_TIMEOUT);
-        hisDiagnosisTask.setHisDataEndTime(null);
+        when(item.getQueryParam()).thenReturn(ElasticSearchConstants.LOCK_TIMEOUT);
+        diagnosisTaskDO.setHisDataEndTime(null);
         Set<String> indexs = new HashSet<>();
         indexs.add("ob-opengauss-error-log-37e8a893-0b7e-49b2-a0b4-e6fdf7dc4345");
         when(dbUtil.indexList(any())).thenReturn(Optional.of(indexs));
@@ -127,7 +146,7 @@ public class TestElasticSearchCollectionItem {
         when(hitsMetadata.hits()).thenReturn(hitList);
         when(hits.source()).thenReturn(mock(HashMap.class));
         when(dbUtil.queryLogInfo(any())).thenReturn(Optional.ofNullable(searchResponse));
-        Object data = collectionItem.queryData(hisDiagnosisTask);
+        Object data = collectionItem.queryData(diagnosisTaskDO);
         assertNotNull(data);
     }
 }
