@@ -3,7 +3,7 @@ openGauss的安装、运维场景对于初级用户或单纯想要测试openGaus
 
 因此需要开发一些有针对性的运维监控工具，为不同配置不同运维要求的客户提供运维技术支撑，这些都将是openGauss社区的宝贵资产。而社区急需一个一体化的平台通过插件的方式将这些工具进行整合，并支持方便快捷的个性化配置。
 
-本项目是基于Web的openGauss的可视化的平台系统，目的是方便客户使用和管理openGauss可视化工具，可以为客户降低openGauss数据库安装使用门槛，做到安全中心管理，插件管理，以及其它功能包括一键化部署、卸载、组件化安装、多版本升级、日常运维和。
+本项目是基于Web的openGauss的可视化的平台系统，目的是方便客户使用和管理openGauss可视化工具，可以为客户降低openGauss数据库安装使用门槛，做到安全中心管理，插件管理，以及其它功能包括一键化部署、卸载、组件化安装、多版本升级、日常运维和监控。
 
 
 ## 项目仓库结构
@@ -37,21 +37,33 @@ https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/Datakit-
 
 ## 使用
 1. 解压安装包，目录如下:
-   ```java
-   $ ls -l
-   total 92389
-   -rw-r--r-- 1 Administrator 197121    22173  8月 29 15:25 alert-monitor-README.md
-   -rw-r--r-- 1 Administrator 197121      977  8月 29 15:22 application-temp.yml
-   -rw-r--r-- 1 Administrator 197121     6923  8月 29 15:30 base-ops-README.md
-   -rw-r--r-- 1 Administrator 197121     1162  8月 29 15:32 datakit-demo-plugin-README.md
-   -rw-r--r-- 1 Administrator 197121     7928  8月 29 15:22 datakit-README.md
-   -rw-r--r-- 1 Administrator 197121     3839  8月 29 15:34 data-migration-README.md
-   -rw-r--r-- 1 Administrator 197121    86951  8月 29 15:36 data-studio-README.md
-   -rw-r--r-- 1 Administrator 197121       69  8月 29 15:37 datasync-mysql-README.md
-   -rw-r--r-- 1 Administrator 197121    18837  8月 29 15:41 observability-instance-README.md
-   -rw-r--r-- 1 Administrator 197121     8931  8月 29 15:44 observability-log-search-README.md
-   -rw-r--r-- 1 Administrator 197121 94425028  8月 29 15:22 openGauss-datakit-5.1.1.jar
-   drwxr-xr-x 1 Administrator 197121        0  8月 29 15:44 visualtool-plugin```
+   ```shell
+   /doc/
+   /doc/alert-monitor-README.md
+   /doc/application-temp.yml
+   /doc/base-ops-README.md
+   /doc/datakit-demo-plugin-README.md
+   /doc/datakit-README.md
+   /doc/data-migration-README.md
+   /doc/data-studio-README.md
+   /doc/datasync-mysql-README.md
+   /doc/observability-instance-README.md
+   /doc/observability-log-search-README.md
+   /visualtool-plugin/
+   /visualtool-plugin/alert-monitor-5.1.1-repackage.jar
+   /visualtool-plugin/base-ops-5.1.1-repackage.jar
+   /visualtool-plugin/compatibility-assessment-5.1.1-repackage.jar
+   /visualtool-plugin/data-migration-5.1.1-repackage.jar
+   /visualtool-plugin/datakit-demo-plugin-5.1.1-repackage.jar
+   /visualtool-plugin/datasync-mysql-5.1.1-repackage.jar
+   /visualtool-plugin/monitor-tools-5.1.1-repackage.jar
+   /visualtool-plugin/observability-instance-5.1.1-repackage.jar
+   /visualtool-plugin/observability-log-search-5.1.1-repackage.jar
+   /visualtool-plugin/observability-sql-diagnosis-5.1.1-repackage.jar
+   /visualtool-plugin/webds-plugin-5.1.1-repackage.jar
+   application-temp.yml
+   openGauss-datakit-5.1.1.jar
+   run.sh```
 2. 创建新的目录
  ```shell
 mkdir config files ssl logs
@@ -86,7 +98,7 @@ mkdir config files ssl logs
 
 停止应用：
 
-`sh ./script.sh stop`
+`sh ./run.sh stop`
 
 重启应用：
 
