@@ -125,6 +125,7 @@ function build_main_pkg() {
       exit 1
     fi
     cp ./visualtool-api/target/openGauss-datakit-*.jar ${output_path}/
+    cp ../run.sh ${output_path}/
     cp ./README.md ${output_path}/${plugin_doc_output}/datakit-README.md
     cp ./config/application-temp.yml ${output_path}/
 }

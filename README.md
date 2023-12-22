@@ -63,7 +63,8 @@ https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/Datakit-
    /visualtool-plugin/webds-plugin-5.1.1-repackage.jar
    application-temp.yml
    openGauss-datakit-5.1.1.jar
-   run.sh```
+   run.sh
+   ```
 2. 创建新的目录
  ```shell
 mkdir config files ssl logs
