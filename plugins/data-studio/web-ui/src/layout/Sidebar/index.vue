@@ -557,6 +557,7 @@
   } from './getSideData';
   import { Tree, ConnectInfo, RefreshOptions, NodeData } from './types';
   import { updateConnectInfo } from './sidebarUtils';
+  import { findNodesByType } from '@/utils/findNode';
 
   const AppStore = useAppStore();
   const UserStore = useUserStore();
@@ -1110,7 +1111,9 @@
       parentId: '',
       uuid: '',
       databaseId: '',
+      databaseName: '',
       schemaId: '',
+      schema: '',
       nodeId: '',
     },
   ) => {
@@ -1153,10 +1156,25 @@
       dbNode.children = [];
       nodeId = options.databaseId;
     } else if (mode == 'schema') {
+      let databaseId = options.databaseId;
+      if (!databaseId && options.databaseName) {
+        const rootData = findNode({ rootId: options.rootId });
+        databaseId =
+          options.databaseId ||
+          findNodesByType(rootData, 'database')?.find((item) => item.name == options.databaseName)
+            ?.id;
+      }
+      let schemaId = options.schemaId;
+      if (!schemaId && options.schema) {
+        const dbNode = findNode({ rootId: options.rootId, databaseId });
+        schemaId =
+          options.schemaId ||
+          findNodesByType(dbNode, 'schema')?.find((item) => item.name == options.schema)?.id;
+      }
       const schemaNode = findNode({
         rootId: options.rootId,
-        databaseId: options.databaseId,
-        schemaId: options.schemaId,
+        databaseId,
+        schemaId,
       });
       schemaNode.children = [];
       nodeId = options.schemaId;
@@ -1333,10 +1351,12 @@
         title: titleMap[type],
         fileName: titleMap[type],
         dbname: connectInfo.dataName,
+        databaseId: currentContextNodeData.databaseId,
         connectInfoName: connectInfo.name,
         connectInfoId: connectInfo.id,
         uuid: currentContextNodeData.uuid,
         schema: currentContextNodeData.schemaName,
+        schemaId: currentContextNodeData.schemaId,
         time,
       },
     });
@@ -1520,9 +1540,9 @@
           ),
         oid: target.oid,
       };
+      const availableUuid = AppStore.getConnectionOneAvailableUuid(rootId);
+      if (!availableUuid) return ElMessage.error(t('message.noConnectionAvailable'));
       if (target.type == 'tablespace') {
-        const availableUuid = AppStore.getConnectionOneAvailableUuid(rootId);
-        if (!availableUuid) return ElMessage.error(t('message.noConnectionAvailable'));
         router.push({
           path: `/editTablespace/${target.id}`,
           query: {
@@ -1568,6 +1588,8 @@
             query: {
               terminalNum,
               ...commonParams,
+              databaseId: target.databaseId,
+              schemaId: target.schemaId,
               isInPackage: isInPackage ? 'y' : 'n',
               time,
             },
@@ -1598,14 +1620,23 @@
           },
         });
       } else if (target.type == 'user' || target.type == 'role') {
-        const availableUuid = AppStore.getConnectionOneAvailableUuid(rootId);
-        if (!availableUuid) return ElMessage.error(t('message.noConnectionAvailable'));
         router.push({
           path: `/editUserRole/${target.id}`,
           query: {
             name: target.label,
             type: target.type,
             ...commonParams,
+            uuid: availableUuid,
+          },
+        });
+      } else if (target.type == 'job') {
+        router.push({
+          path: `/job/${rootId}`,
+          query: {
+            name: target.label,
+            ...commonParams,
+            title: `scheduled_task@${connectInfoName}`,
+            fileName: `scheduled_task@${connectInfoName}`,
             uuid: availableUuid,
           },
         });
@@ -1618,7 +1649,7 @@
     const terminalNum = TagsViewStore.maxTerminalNum + 1;
     const time = String(Date.now());
     const connectInfoName = nodeData.connectInfo.name;
-    const { label, oid, schemaName, databaseName, uuid } = nodeData;
+    const { label, oid, schemaName, schemaId, databaseName, databaseId, uuid } = nodeData;
     router.push({
       path: `/debug/${encodeURIComponent(nodeData.id)}`,
       query: {
@@ -1628,7 +1659,9 @@
         connectInfoName,
         uuid,
         dbname: databaseName,
+        databaseId,
         schema: schemaName,
+        schemaId,
         fileName: label.slice(0, label.indexOf('(') > -1 ? label.indexOf('(') : label.length),
         oid,
         isPackage: 'y',

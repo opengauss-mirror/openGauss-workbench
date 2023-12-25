@@ -49,6 +49,7 @@ import static com.nctigba.datastudio.constants.CommonConstants.SUCCESS;
 import static com.nctigba.datastudio.constants.SqlConstants.QUERY_OID_SQL;
 import static com.nctigba.datastudio.enums.MessageEnum.MESSAGE;
 import static com.nctigba.datastudio.enums.MessageEnum.NEW_FILE;
+import static com.nctigba.datastudio.enums.MessageEnum.REFRESH_SCHEMA;
 import static com.nctigba.datastudio.enums.MessageEnum.TEXT;
 
 /**
@@ -78,6 +79,7 @@ public class CompileImpl implements OperationInterface {
             Map<String, String> messageMap = new HashMap<>();
             messageMap.put(RESULT, LocaleStringUtils.transLanguageWs("1002", webSocketServer));
             webSocketServer.sendMessage(windowName, MESSAGE, SUCCESS, messageMap);
+            webSocketServer.sendMessage(windowName, REFRESH_SCHEMA, SUCCESS, null);
             return;
         }
         String schema = DebugUtils.getSchemaBySql(sql);

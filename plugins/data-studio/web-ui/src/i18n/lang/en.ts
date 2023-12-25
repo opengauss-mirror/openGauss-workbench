@@ -555,6 +555,8 @@ export default {
       'Before creating the appearance, please install the extension specified by the selected external data source type in advance, otherwise it may cause the appearance creation to fail!',
     deleteForeignServerTips: 'Are you sure you want to delete {name} external server?',
     testRemoteConnection: 'Test Remote Connection',
+    confirmSave:
+      'The current appearance does not have a unique key set and does not support setting on the appearance. After manipulating the data, it may affect the existing data. Please confirm whether to continue the operation?',
     foreign: {
       title: 'Foreign',
       foreignName: 'Foreign Name',

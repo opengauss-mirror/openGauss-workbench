@@ -1,5 +1,4 @@
 import { wsHeartbeatTime } from '@/config';
-// import { interceptHttpDisconnection } from '@/utils/activateDisconnection';
 
 export default class WebSocketClass {
   ws: WebSocket;
@@ -48,11 +47,6 @@ export default class WebSocketClass {
 
     this.ws.onmessage = (msg: any) => {
       const res = JSON.parse(msg.data);
-      // if (res.type == 'DISCONNECTION') {
-      //   const uuid = res.data;
-      //   interceptHttpDisconnection(uuid);
-      //   return;
-      // }
       if (this.callback) {
         this.callback.call(this, res);
       }

@@ -111,6 +111,7 @@
   import { useI18n } from 'vue-i18n';
   import { changeRunningTagStatus } from '@/hooks/tagRunning';
   import { interceptHttpDisconnection } from '@/utils/activateDisconnection';
+  import EventBus, { EventTypeName } from '@/utils/event-bus';
 
   const route = useRoute();
   const router = useRouter();
@@ -178,7 +179,9 @@
     uuid: '',
     sessionId: '',
     dbname: '',
+    databaseId: '',
     schema: '',
+    schemaId: '',
     fileName: '',
     oid: '',
     instance: null,
@@ -509,6 +512,13 @@
           });
         }
       }
+      if (res.type == 'REFRESH_SCHEMA') {
+        EventBus.notify(EventTypeName.REFRESH_ASIDER, 'schema', {
+          rootId: ws.rootId,
+          databaseId: ws.databaseId,
+          schemaId: ws.schemaId,
+        });
+      }
       if (res.type == 'SWITCH_WINDOW') {
         const targetView = TagsViewStore.getViewByOid(result);
         if (targetView?.fullPath) {
@@ -777,7 +787,9 @@
       uuid: route.query.uuid,
       sessionId,
       dbname: route.query.dbname,
+      databaseId: route.query.databaseId,
       schema: route.query.schema,
+      schemaId: route.query.schemaId,
       fileName: route.query.fileName,
       oid: route.query.oid,
       parentWindowName: route.query.parentWindowName,

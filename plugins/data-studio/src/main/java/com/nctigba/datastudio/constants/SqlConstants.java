@@ -114,8 +114,9 @@ public class SqlConstants {
     /**
      * query package sql
      */
-    public static final String QUERY_PACKAGE_SQL = "select pkgname, pkgspecsrc, pkgbodydeclsrc from gs_package gp "
-            + "left join pg_namespace pn on gp.pkgnamespace = pn.oid where pn.nspname = '%s' and gp.oid = %s;";
+    public static final String QUERY_PACKAGE_SQL = "select pkgname, nspname, pkgspecsrc, pkgbodydeclsrc "
+            + "from gs_package gp left join pg_namespace pn on gp.pkgnamespace = pn.oid "
+            + "where pn.nspname = '%s' and gp.oid = %s;";
 
     /**
      * query oid sql

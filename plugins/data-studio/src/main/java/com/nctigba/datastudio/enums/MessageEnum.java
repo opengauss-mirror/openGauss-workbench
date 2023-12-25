@@ -127,5 +127,10 @@ public enum MessageEnum {
     /**
      * disconnection
      */
-    DISCONNECTION
+    DISCONNECTION,
+
+    /**
+     * refresh schema
+     */
+    REFRESH_SCHEMA
 }

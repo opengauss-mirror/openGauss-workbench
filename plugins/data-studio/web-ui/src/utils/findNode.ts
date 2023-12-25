@@ -2,9 +2,13 @@ const levelWeight = {
   root: 1,
   databaseCollect: 2,
   userRoleCollect: 2,
+  tablespaceCollect: 2,
+  job: 2,
   database: 3,
   user: 3,
   role: 3,
+  tablespace: 3,
+  schema: 4,
   public: 4,
   person: 4,
   tableCollect: 5,
@@ -46,7 +50,12 @@ const findNodesByType = (node, targetType: keyof typeof levelWeight) => {
       result.push(...nodeItemResults);
     }
   } else {
-    if (node.type === targetType) result.push(node);
+    if (
+      node.type === targetType ||
+      (targetType === 'schema' && ['public', 'person'].includes(node.type))
+    ) {
+      result.push(node);
+    }
     if (levelWeight[node.type] > levelWeight[targetType]) return result;
     if (Array.isArray(node.children) && node.children.length) {
       for (const child of node.children) {

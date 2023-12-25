@@ -11,7 +11,7 @@ import { NodeEnum, FetchNode, ConnectInfo } from './types';
 const t = i18n.global.t;
 
 const getRootChildCollectLabel = (
-  type: 'databaseCollect' | 'userRoleCollect' | 'tablespaceCollect',
+  type: 'databaseCollect' | 'userRoleCollect' | 'tablespaceCollect' | 'job',
   count = null,
   showCount = true,
 ) => {
@@ -20,13 +20,14 @@ const getRootChildCollectLabel = (
     databaseCollect: `${t('database.database')}${countText}`,
     userRoleCollect: `${t('userRole.name')}${countText}`,
     tablespaceCollect: `${t('tablespace.name')}${countText}`,
+    job: `${t('job.name')}`,
   }[type];
 };
 
 const generateRoot = async (connectInfo, uuid: string) => {
   const cloneConnectInfo = JSON.parse(JSON.stringify(connectInfo));
   const { id, name, ip, port } = connectInfo;
-  const rootChildrenType = ['databaseCollect', 'userRoleCollect', 'tablespaceCollect'];
+  const rootChildrenType = ['databaseCollect', 'userRoleCollect', 'tablespaceCollect', 'job'];
   const dbList = await generateDBList(id, `${id}_databaseCollect`, uuid, cloneConnectInfo);
   const userRoleList = await generateUserRoleList(
     id,
@@ -50,30 +51,36 @@ const generateRoot = async (connectInfo, uuid: string) => {
     isLeaf: false,
     children: rootChildrenType.map((childType) => {
       const thisId = `${id}_${childType}`;
-      let dbOrRoleLabel = '';
-      let dbOrRoleList = [];
+      let childLabel = '';
+      let childList = [];
+      let isLeaf = false;
       if (childType === 'databaseCollect') {
-        dbOrRoleList = dbList;
-        dbOrRoleLabel = getRootChildCollectLabel('databaseCollect', dbOrRoleList.length);
+        childList = dbList;
+        childLabel = getRootChildCollectLabel('databaseCollect', childList.length);
       }
       if (childType === 'userRoleCollect') {
-        dbOrRoleList = userRoleList;
-        dbOrRoleLabel = getRootChildCollectLabel('userRoleCollect', dbOrRoleList.length);
+        childList = userRoleList;
+        childLabel = getRootChildCollectLabel('userRoleCollect', childList.length);
       }
       if (childType === 'tablespaceCollect') {
-        dbOrRoleList = tablespaceList;
-        dbOrRoleLabel = getRootChildCollectLabel('tablespaceCollect', dbOrRoleList.length);
+        childList = tablespaceList;
+        childLabel = getRootChildCollectLabel('tablespaceCollect', childList.length);
+      }
+      if (childType === 'job') {
+        childLabel = null;
+        childLabel = getRootChildCollectLabel('job');
+        isLeaf = true;
       }
       return {
         id: thisId,
         rootId: id,
         parentId: id,
-        label: dbOrRoleLabel,
+        label: childLabel,
         name: childType,
         type: childType,
         connectInfo: cloneConnectInfo,
-        isLeaf: false,
-        children: dbOrRoleList,
+        isLeaf,
+        children: childList,
       };
     }),
   };

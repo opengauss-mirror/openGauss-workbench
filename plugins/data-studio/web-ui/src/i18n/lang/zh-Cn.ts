@@ -547,6 +547,8 @@ export default {
     warning: '创建外表前，请提前安装好所选外部数据源类型指定的拓展，否则可能导致外表创建失败！',
     deleteForeignServerTips: '确定要删除{name}外部服务器吗？',
     testRemoteConnection: '测试远端连接',
+    confirmSave:
+      '当前外表未设置唯一键且不支持在外表设置，操作数据后可能对现有数据造成影响，请确认是否继续操作？',
     foreign: {
       title: '外部',
       foreignName: '外部表名',
