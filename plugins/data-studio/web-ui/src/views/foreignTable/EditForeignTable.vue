@@ -443,18 +443,11 @@
 
   const handleSetUniqueKeyGuide = () => {
     return new Promise<void>((resolve, reject) => {
-      ElMessageBox.confirm(
-        t('message.editTableGuide', { name: `${commonParams.schema}.${commonParams.tableName}` }),
-        t('table.editTableGuide'),
-        {
-          confirmButtonText: t('table.customUniqueKey'),
-          type: 'warning',
-          dangerouslyUseHTMLString: true,
-        },
-      )
-        .then(async () => {
-          showUniqueDialog.value = true;
-          await waitSetUniqueKey();
+      ElMessageBox.confirm(t('foreignTable.confirmSave'), t('common.warning'), {
+        type: 'warning',
+        dangerouslyUseHTMLString: true,
+      })
+        .then(() => {
           resolve();
         })
         .catch(() => {
@@ -546,7 +539,13 @@
               };
             }),
         };
-        await updateForeignTableApi(param);
+        const res = (await updateTableData(param)) as unknown as EditDataResponse;
+        if (res?.PKCreate) {
+          loading.value.close();
+          await handleSetUniqueKeyGuide();
+          await updateForeignTableApi(param);
+          // return;
+        }
       }
       ElMessage.success(t('message.editSuccess'));
       if (needNewData) {

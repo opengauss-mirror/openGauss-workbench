@@ -28,11 +28,6 @@
             <use xlink:href="#icon-icon_newserve"></use>
           </svg>
         </div>
-        <div class="operation-icon-wrapper" :title="t('job.name')">
-          <svg class="operation-icon" aria-hidden="true" @click="gotoJobs">
-            <use xlink:href="#icon-a-icon_task2"></use>
-          </svg>
-        </div>
       </div>
       <div class="right">
         <div class="operation-icon-wrapper" :title="t('terminal.SQLAssistant')">
@@ -426,16 +421,6 @@
   const renameTerminal = () => {
     contextMenu.visible = false;
     visibleRenameDialog.value = true;
-  };
-
-  const gotoJobs = () => {
-    const { rootId, uuid } = AppStore.currentTerminalInfo;
-    const connectInfoName = AppStore.connectListMap.find((item) => item.id == rootId)?.connectInfo
-      .name;
-    if (!(uuid && connectInfoName)) return ElMessage.warning(t('message.noConnectionAvailable'));
-    router.push({
-      path: `/jobs/${rootId}`,
-    });
   };
 
   onMounted(() => {

@@ -48,6 +48,8 @@ public class CronJobQuery {
 
     private String interval;
 
+    private String databaseName;
+
     private Integer pageSize;
 
     private Integer pageNum;

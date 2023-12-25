@@ -35,10 +35,10 @@
                 </el-select>
               </el-form-item>
               <el-form-item prop="quote" :label="$t('table.export.quotes')">
-                <el-input v-model="form.quote" :disabled="form.fileType != 'Text'" />
+                <el-input v-model="form.quote" :disabled="!['Text'].includes(form.fileType)" />
               </el-form-item>
               <el-form-item prop="escape" :label="$t('table.export.escape')">
-                <el-input v-model="form.escape" :disabled="form.fileType != 'Text'" />
+                <el-input v-model="form.escape" :disabled="!['Text'].includes(form.fileType)" />
               </el-form-item>
               <el-form-item prop="replaceNull" :label="$t('table.export.replaceNullWith')">
                 <el-input v-model="form.replaceNull" :disabled="form.fileType != 'Text'" />
@@ -51,12 +51,15 @@
             </el-col>
             <el-col :span="11">
               <el-form-item prop="includeHeader" :label="$t('table.export.includeHeader')">
-                <el-checkbox v-model="form.includeHeader" :disabled="form.fileType != 'Text'" />
+                <el-checkbox
+                  v-model="form.includeHeader"
+                  :disabled="!['Text'].includes(form.fileType)"
+                />
               </el-form-item>
               <el-form-item prop="delimiter" :label="$t('table.export.delimiter')">
                 <el-radio-group
                   v-model="form.delimiter"
-                  :disabled="form.fileType != 'Text'"
+                  :disabled="!['Text'].includes(form.fileType)"
                   @change="handleChangeDelimiter"
                 >
                   <el-radio label="comma">{{ t('table.export.comma') }}(,)</el-radio>
@@ -118,7 +121,7 @@
   const ruleFormRef = ref<FormInstance>();
   const tableData = ref([]);
   const multipleTableRef = ref<InstanceType<typeof ElTable>>();
-  const formatList = reactive(['Excel(xlsx)', 'Excel(xls)', 'Text', 'Binary']);
+  const formatList = computed(() => ['Excel(xlsx)', 'Excel(xls)', 'Text', 'Binary']);
   const encodingList = reactive(['UTF-8', 'GBK', 'LATIN1']);
   const form = reactive({
     columnList: [],
@@ -170,7 +173,7 @@
       escape: '',
       replaceNull: '',
       includeHeader: true,
-      delimiter: val == 'Text' ? 'comma' : '',
+      delimiter: ['Text'].includes(val) ? 'comma' : '',
       delimiterOther: '',
     });
   };
@@ -179,6 +182,10 @@
   };
 
   const handleOpen = async () => {
+    Object.assign(form, {
+      fileType: formatList.value[0],
+    });
+    handleChangeFormat(form.fileType);
     loading.value = loadingInstance();
     try {
       const res = await getTableColumn({

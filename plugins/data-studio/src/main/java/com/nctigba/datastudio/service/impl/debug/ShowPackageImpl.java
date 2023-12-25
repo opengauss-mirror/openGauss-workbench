@@ -44,6 +44,7 @@ import java.util.Map;
 
 import static com.nctigba.datastudio.constants.CommonConstants.RESULT;
 import static com.nctigba.datastudio.constants.CommonConstants.SUCCESS;
+import static com.nctigba.datastudio.constants.SqlConstants.POINT;
 import static com.nctigba.datastudio.constants.SqlConstants.QUERY_PACKAGE_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.SPACE;
 import static com.nctigba.datastudio.enums.MessageEnum.VIEW;
@@ -84,13 +85,16 @@ public class ShowPackageImpl implements OperationInterface {
                 String pkgName = resultSet.getString("pkgname");
                 String pkgSrc = resultSet.getString("pkgspecsrc").trim();
                 String pkgBodySrc = resultSet.getString("pkgbodydeclsrc").trim();
+                String nspName = resultSet.getString("nspname");
                 if (StringUtils.isEmpty(pkgName)) {
                     throw new CustomException(LocaleStringUtils.transLanguageWs("2015", webSocketServer));
                 }
 
                 String str = "PACKAGE  DECLARE";
-                pkgSrc = pkgSrc.replace(str, "create or replace package " + pkgName + " is ");
-                pkgBodySrc = pkgBodySrc.replace(str, "create or replace package body " + pkgName + " is ");
+                pkgSrc = pkgSrc.replace(str,
+                        "create or replace package " + nspName + POINT +  pkgName + " is ");
+                pkgBodySrc = pkgBodySrc.replace(str,
+                        "create or replace package body " + nspName + POINT +  pkgName + " is ");
                 definition.append(pkgSrc).append(SPACE).append(pkgName).append(";\n/\n");
                 definition.append(pkgBodySrc).append(SPACE).append(pkgName).append(";\n/");
             }

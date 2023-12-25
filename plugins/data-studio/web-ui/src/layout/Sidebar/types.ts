@@ -3,6 +3,7 @@ export enum NodeEnum {
   DATABASECOLLECT = 'databaseCollect',
   USERROLECOLLECT = 'userRoleCollect',
   TABLESPACECOLLECT = 'tablespaceCollect',
+  JOB = 'job',
   DATABASE = 'database',
   USER = 'user',
   ROLE = 'role',
@@ -90,6 +91,8 @@ export interface RefreshOptions {
   parentId: string;
   uuid: string;
   databaseId: string;
+  databaseName: string;
   schemaId: string;
+  schema: string;
   nodeId: string;
 }

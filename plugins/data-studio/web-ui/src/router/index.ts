@@ -145,15 +145,10 @@ export const constantRoutes: Array<RouteRecordRaw> = [
         meta: { title: '', icon: 'terminal', keepAlive: true },
       },
       {
-        path: '/jobs/:rootId',
+        path: '/job/:rootId',
         component: () => import('@/views/jobs/index.vue'),
         name: 'jobs',
-        meta: {
-          title: 'scheduled task',
-          fileName: 'scheduled task',
-          icon: 'task',
-          keepAlive: true,
-        },
+        meta: { title: '', icon: 'task', keepAlive: true },
       },
     ],
   },

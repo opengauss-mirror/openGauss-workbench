@@ -11,7 +11,7 @@
       <div class="dialog_body">
         <div class="tips">{{
           $t('message.renameTableTips', {
-            name: `${commonParams.schema}.${commonParams.oldName}`,
+            name: `${commonParams.schema ? commonParams.schema + '.' : ''}${commonParams.oldName}`,
             type: typeName,
           })
         }}</div>

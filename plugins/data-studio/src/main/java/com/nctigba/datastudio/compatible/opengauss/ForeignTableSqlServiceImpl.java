@@ -247,9 +247,9 @@ public class ForeignTableSqlServiceImpl implements ForeignTableSqlService {
                 resultList.add(resultSet.getString(REL_NAME));
                 resultList.add(covertType(resultSet.getString(FDW_NAME)));
                 resultList.add(resultSet.getString(SRV_NAME));
-                resultList.add(resultSet.getString(NSP_NAME));
                 resultList.add(serverMap.get("host"));
                 resultList.add(serverMap.get("port"));
+                resultList.add(resultSet.getString(NSP_NAME));
                 resultList.add(tableMap.get("schema_name"));
                 resultList.add(serverMap.get("dbname"));
                 resultList.add(tableMap.get("table_name"));
