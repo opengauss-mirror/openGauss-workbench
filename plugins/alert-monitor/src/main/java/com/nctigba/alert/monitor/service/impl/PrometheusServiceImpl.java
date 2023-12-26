@@ -26,6 +26,7 @@ package com.nctigba.alert.monitor.service.impl;
 
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.io.FileUtil;
+import cn.hutool.core.io.IORuntimeException;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.CryptoException;
@@ -260,7 +261,8 @@ public class PrometheusServiceImpl implements PrometheusService {
             String path = prometheusEnvDto.getPath() + (prometheusEnvDto.getPath().endsWith(CommonConstants.SLASH) ? ""
                 : CommonConstants.SLASH) + CommonConstants.PROMETHEUS_YML;
             uploadConfigFile(session, configMap, path);
-        } catch (IOException | CryptoException | ServiceException | NullPointerException | BaseException e) {
+        } catch (IOException | CryptoException | ServiceException | NullPointerException | BaseException
+                 | IORuntimeException e) {
             log.warn("init prometheus configuration fail: {}", e.getMessage());
         }
     }
@@ -290,7 +292,7 @@ public class PrometheusServiceImpl implements PrometheusService {
             String path = prometheusEnvDto.getPath() + (prometheusEnvDto.getPath().endsWith(CommonConstants.SLASH) ? ""
                 : CommonConstants.SLASH) + CommonConstants.PROMETHEUS_YML;
             uploadConfigFile(session, configMap, path);
-        } catch (IOException | NullPointerException e) {
+        } catch (IOException | NullPointerException | IORuntimeException e) {
             log.error(e.getMessage(), e);
             throw new ServiceException("update the alert config fail");
         }
