@@ -19,33 +19,33 @@
                 </div>
             </div>
             <div class="dialog-content" v-loading="started" v-show="installData.length === 0">
-                <el-form :model="formData" :rules="connectionFormRules" ref="connectionFormRef" label-width="150px">
+                <el-form :model="formData" :rules="connectionFormRules" ref="connectionFormRef" label-width="130px">
                     <el-form-item :label="t('install.collectInstance')" prop="nodeId">
-                        <ClusterCascader width="200" instanceValueKey="nodeId" @getCluster="handleClusterValue" autoSelectFirst notClearable @loaded="getClusterList" />
+                        <ClusterCascader width="300" instanceValueKey="nodeId" @getCluster="handleClusterValue" autoSelectFirst notClearable @loaded="getClusterList" />
                     </el-form-item>
                     <!-- <el-form-item :label="t('install.rootPWD')" prop="rootPassword">
                         <el-input v-model="formData.rootPassword" show-password style="width: 200px; margin: 0 4px" />
                     </el-form-item> -->
                     <el-form-item :label="t('install.installPath')" prop="path">
-                        <el-input v-model="formData.path" style="width: 200px; margin: 0 4px" />
+                        <el-input v-model="formData.path" style="width: 300px; margin: 0 4px" />
                     </el-form-item>
                     <el-form-item :label="t('install.ogRunLogPath')" prop="ogRunLogPath">
-                        <el-input v-model="formData.ogRunLogPath" style="width: 200px; margin: 0 4px" />
+                        <el-input v-model="formData.ogRunLogPath" style="width: 300px; margin: 0 4px" />
                     </el-form-item>
                     <el-form-item :label="t('install.gsCtlLogPath')" >
-                        <el-input v-model="formData.gsCtlLogPath" style="width: 200px; margin: 0 4px" />
+                        <el-input v-model="formData.gsCtlLogPath" style="width: 300px; margin: 0 4px" />
                     </el-form-item>
                     <el-form-item :label="t('install.gsGucLogPath')" >
-                        <el-input v-model="formData.gsGucLogPath" style="width: 200px; margin: 0 4px" />
+                        <el-input v-model="formData.gsGucLogPath" style="width: 300px; margin: 0 4px" />
                     </el-form-item>
                     <el-form-item :label="t('install.gsOmLogPath')" >
-                        <el-input v-model="formData.gsOmLogPath" style="width: 200px; margin: 0 4px" />
+                        <el-input v-model="formData.gsOmLogPath" style="width: 300px; margin: 0 4px" />
                     </el-form-item>
                     <el-form-item :label="t('install.gsInstallLogPath')" >
-                        <el-input v-model="formData.gsInstallLogPath" style="width: 200px; margin: 0 4px" />
+                        <el-input v-model="formData.gsInstallLogPath" style="width: 300px; margin: 0 4px" />
                     </el-form-item>
                     <el-form-item :label="t('install.gsLocalLogPath')" >
-                        <el-input v-model="formData.gsLocalLogPath" style="width: 200px; margin: 0 4px" />
+                        <el-input v-model="formData.gsLocalLogPath" style="width: 300px; margin: 0 4px" />
                     </el-form-item>
                     <el-form-item :label="t('install.installMode')" prop="installMode">
                         <el-radio-group v-model="formData.installMode">
