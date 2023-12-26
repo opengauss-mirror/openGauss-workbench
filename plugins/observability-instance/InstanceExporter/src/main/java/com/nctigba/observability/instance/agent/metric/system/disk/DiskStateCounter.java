@@ -25,6 +25,7 @@
 package com.nctigba.observability.instance.agent.metric.system.disk;
 
 import cn.hutool.core.util.ReUtil;
+import com.nctigba.observability.instance.agent.exception.CMDException;
 import com.nctigba.observability.instance.agent.exception.CollectException;
 import com.nctigba.observability.instance.agent.metric.MetricResult;
 import com.nctigba.observability.instance.agent.metric.MetricType;
@@ -141,7 +142,7 @@ public class DiskStateCounter implements OSMetric {
                     result.get(i - 3).add(new MetricResult(labels, value));
                 }
             });
-        } catch (IOException e) {
+        } catch (IOException | CMDException e) {
             e.printStackTrace();
             throw new CollectException(this, e);
         }

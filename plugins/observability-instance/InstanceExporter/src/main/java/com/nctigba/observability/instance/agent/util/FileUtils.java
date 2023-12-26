@@ -24,6 +24,8 @@
 
 package com.nctigba.observability.instance.agent.util;
 
+import com.nctigba.observability.instance.agent.exception.CMDException;
+
 import java.io.IOException;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -41,10 +43,11 @@ public class FileUtils {
      * @param name     name of file
      * @param consumer consumer
      * @throws IOException Read file error
+     * @throws CMDException Read cmd error
      * @since 2023/12/1
      */
     public static final void readFileLine(String nodeId, String name, Consumer<String> consumer)
-            throws IOException {
+            throws IOException, CMDException {
         if (consumer != null) {
             readFileLine(nodeId, name, (i, line) -> consumer.accept(line));
         }
@@ -57,9 +60,10 @@ public class FileUtils {
      * @param name name of file
      * @param consumer consumer
      * @throws IOException Read yml file error
+     * @throws CMDException Read cmd file error
      */
     public static final void readFileLine(String nodeId, String name, BiConsumer<Integer, String> consumer)
-            throws IOException {
+            throws IOException, CMDException {
         CmdUtils.readFromCmd(nodeId, "cat " + name, consumer);
     }
 }

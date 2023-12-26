@@ -32,5 +32,5 @@ import lombok.experimental.StandardException;
  * @since 2023/12/1
  */
 @StandardException
-public class CMDException extends RuntimeException {
+public class CMDException extends Exception {
 }

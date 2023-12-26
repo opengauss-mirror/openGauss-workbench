@@ -24,6 +24,7 @@
 
 package com.nctigba.observability.instance.service.impl;
 
+import com.baomidou.dynamic.datasource.annotation.DS;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.nctigba.observability.instance.model.dto.param.ParamInfoDTO;
@@ -46,6 +47,7 @@ import java.util.List;
  * @author liupengfei
  * @since 2023/12/1
  */
+@DS("embedded")
 @Service
 public class ParamValueInfoServiceImpl extends ServiceImpl<ParamValueInfoMapper, ParamValueInfoDO>
         implements ParamValueInfoService {

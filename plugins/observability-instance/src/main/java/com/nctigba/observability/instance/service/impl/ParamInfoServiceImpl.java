@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.baomidou.dynamic.datasource.annotation.DS;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.nctigba.observability.instance.model.entity.ParamInfoDO;
@@ -62,6 +63,7 @@ import lombok.extern.slf4j.Slf4j;
  *
  * @since 2023/12/3 10:26
  */
+@DS("embedded")
 @Slf4j
 @Service
 public class ParamInfoServiceImpl extends ServiceImpl<ParamInfoMapper, ParamInfoDO>
@@ -127,9 +129,12 @@ public class ParamInfoServiceImpl extends ServiceImpl<ParamInfoMapper, ParamInfo
                     encryptionUtils.decrypt(paramQuery.getPassword()));
             String[] values = ssh.execute("sysctl -a").split(String.valueOf(StrUtil.C_LF));
             var list = new ArrayList<ParamValueInfoDO>();
-            for (int n = 0; n < values.length; n++) {
-                String name = values[n].substring(0, values[n].lastIndexOf(CommonConstants.EQUAL_SYMBOL)).trim();
-                String paramData = values[n].substring(values[n].indexOf(CommonConstants.EQUAL_SYMBOL) + 1).trim();
+            for (String value : values) {
+                if (!value.contains(CommonConstants.EQUAL_SYMBOL)) {
+                    continue;
+                }
+                String name = value.substring(0, value.lastIndexOf(CommonConstants.EQUAL_SYMBOL)).trim();
+                String paramData = value.substring(value.indexOf(CommonConstants.EQUAL_SYMBOL) + 1).trim();
                 var paramInfo = getParamInfo(ParamType.OS, name);
                 if (paramInfo == null) {
                     continue;

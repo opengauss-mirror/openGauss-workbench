@@ -27,6 +27,7 @@ package com.nctigba.observability.instance.agent.controller;
 import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.StrUtil;
 import com.nctigba.observability.instance.agent.config.model.TargetConfig;
+import com.nctigba.observability.instance.agent.exception.CMDException;
 import com.nctigba.observability.instance.agent.exception.CollectException;
 import com.nctigba.observability.instance.agent.service.TargetService;
 import com.nctigba.observability.instance.agent.util.CmdUtils;
@@ -92,12 +93,13 @@ public class CommandController {
      * @param sort   sort field
      * @return table
      * @throws IOException Read file error
+     * @throws CMDException Read file error
      * @since 2023/12/1
      */
     @GetMapping("/top")
     public Object top(
             @RequestParam String nodeId,
-            @RequestParam(required = false) String sort) throws IOException {
+            @RequestParam(required = false) String sort) throws IOException, CMDException {
         List<String> header = new ArrayList<>();
         List<Map<String, String>> top = new ArrayList<>();
         CmdUtils.readFromCmd(nodeId, TOP, (i, line) -> {

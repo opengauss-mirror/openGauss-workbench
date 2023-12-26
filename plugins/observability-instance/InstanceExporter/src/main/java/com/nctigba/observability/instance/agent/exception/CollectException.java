@@ -27,8 +27,6 @@ package com.nctigba.observability.instance.agent.exception;
 import com.nctigba.observability.instance.agent.metric.Metric;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.IOException;
-
 /**
  * Exception occur when collecting metric value
  *
@@ -43,7 +41,7 @@ public class CollectException extends RuntimeException {
      * @param e      Parent exception
      * @since 2023/12/1
      */
-    public CollectException(Metric metric, IOException e) {
+    public CollectException(Metric metric, Exception e) {
         super(e);
     }
 

@@ -30,7 +30,6 @@ import com.nctigba.observability.instance.agent.metric.MetricResult;
 import com.nctigba.observability.instance.agent.metric.MetricType;
 import com.nctigba.observability.instance.agent.model.dto.CollectParamDTO;
 import com.nctigba.observability.instance.agent.model.dto.CollectTargetDTO;
-import com.nctigba.observability.instance.agent.service.MetricCollectManagerService;
 import com.nctigba.observability.instance.agent.util.DbUtils;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -39,7 +38,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Linux file <code>/proc/stat</code>
@@ -50,10 +48,6 @@ import java.util.Map;
 @Slf4j
 @Data
 public class DBStateGauge implements DBMetric {
-    private static final String SQL = "select 1 as count";
-
-    @Autowired
-    MetricCollectManagerService metricCollectManager;
     @Autowired
     DbUtils dbUtil;
 
@@ -72,13 +66,11 @@ public class DBStateGauge implements DBMetric {
 
         List<MetricResult> result1 = new ArrayList<>();
         result.add(result1);
-        List<Map<String, Object>> query = dbUtil.query(target.getTargetConfig().getNodeId(), SQL);
-        Integer count = 0;
-        if (query.get(0).get("count") instanceof Integer) {
-            count = (Integer) query.get(0).get("count");
-        }
+
+        boolean isConn = dbUtil.test(target.getTargetConfig().getNodeId());
         result1.add(new MetricResult(
-                new String[]{target.getTargetConfig().getHostId(), target.getTargetConfig().getNodeId()}, count));
+                new String[]{target.getTargetConfig().getHostId(), target.getTargetConfig().getNodeId()}, isConn ? 1
+            : 0));
 
         return result;
     }

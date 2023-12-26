@@ -24,6 +24,7 @@
 
 package com.nctigba.observability.instance.agent.metric.system.network;
 
+import com.nctigba.observability.instance.agent.exception.CMDException;
 import com.nctigba.observability.instance.agent.exception.CollectException;
 import com.nctigba.observability.instance.agent.metric.DBMetric;
 import com.nctigba.observability.instance.agent.metric.MetricResult;
@@ -94,7 +95,7 @@ public class SocketGauge implements DBMetric {
                     }
                 }
             });
-        } catch (IOException e) {
+        } catch (IOException | CMDException e) {
             e.printStackTrace();
             throw new CollectException(this, e);
         }
