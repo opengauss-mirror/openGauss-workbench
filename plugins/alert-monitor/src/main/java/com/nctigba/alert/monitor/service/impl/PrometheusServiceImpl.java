@@ -262,7 +262,7 @@ public class PrometheusServiceImpl implements PrometheusService {
                 : CommonConstants.SLASH) + CommonConstants.PROMETHEUS_YML;
             uploadConfigFile(session, configMap, path);
         } catch (IOException | CryptoException | ServiceException | NullPointerException | BaseException
-                 | IORuntimeException e) {
+                | IORuntimeException e) {
             log.warn("init prometheus configuration fail: {}", e.getMessage());
         }
     }
