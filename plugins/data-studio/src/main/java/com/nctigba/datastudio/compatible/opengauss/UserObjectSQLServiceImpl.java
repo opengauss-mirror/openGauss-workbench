@@ -247,11 +247,8 @@ public class UserObjectSQLServiceImpl implements UserObjectSQLService {
 
     @Override
     public String updateUserPassword(UpdateUserPasswordDTO request) {
-        String ddl;
-        ddl = String.format(UPDAT_USER_PASSWORD_SQL, request.getType(), request.getUserName(),
+        return String.format(UPDAT_USER_PASSWORD_SQL, request.getType(), request.getUserName(),
                 desEncrypt(request.getNewPassword()), desEncrypt(request.getOldPassword()));
-        log.info("updateUserPassword response is: " + ddl);
-        return ddl;
     }
 
 

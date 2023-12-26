@@ -102,7 +102,6 @@ public class SqlHistoryTemplateDAO implements ApplicationRunner {
      * @param list list
      */
     public void insertSqlHistory(List<SqlHistoryDO> list) {
-        log.info("AsyncHelper insertSqlHistory list: " + list);
         String webUser = list.get(0).getWebUser();
         Integer lockCount = queryCount(webUser, true);
         Integer unlockCount = queryCount(webUser, false);
@@ -197,6 +196,13 @@ public class SqlHistoryTemplateDAO implements ApplicationRunner {
      */
     public void deleteById(SqlHistoryDO sqlHistoryDO) {
         log.info("SqlHistoryTemplate deleteTable sqlHistoryDO: " + sqlHistoryDO);
+        Integer id = sqlHistoryDO.getId();
+        Boolean isLock = jdbcTemplate.queryForObject(
+                "select lock from sqlHistory where id = " + id + ";", Boolean.class);
+        log.info("SqlHistoryTemplate deleteTable isLock: " + isLock);
+        if (Boolean.TRUE.equals(isLock)) {
+            throw new CustomException(LocaleStringUtils.transLanguage("2021"));
+        }
         jdbcTemplate.execute("delete from sqlHistory where id = " + sqlHistoryDO.getId() + ";");
     }
 

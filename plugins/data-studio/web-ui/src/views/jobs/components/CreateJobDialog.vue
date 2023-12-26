@@ -11,6 +11,20 @@
     >
       <div class="dialog_body">
         <el-form :model="form" ref="ruleFormRef" :rules="rules" label-width="140px">
+          <el-form-item
+            v-if="props.type == 'create'"
+            prop="databaseUuid"
+            :label="$t('database.database')"
+          >
+            <el-select v-model="form.databaseUuid">
+              <el-option
+                v-for="item in availDatabaseList"
+                :key="item.uuid"
+                :label="item.name"
+                :value="item.uuid"
+              />
+            </el-select>
+          </el-form-item>
           <el-form-item prop="jobContent" :label="$t('job.jobContent')">
             <AceEditor
               ref="editorRef"
@@ -82,13 +96,16 @@
   import { useI18n } from 'vue-i18n';
   import { loadingInstance } from '@/utils';
   import { createJobApi, queryAJobApi, editJobApi } from '@/api/job';
+  import { useAppStore } from '@/store/modules/app';
 
   const { t } = useI18n();
+  const AppStore = useAppStore();
   const props = withDefaults(
     defineProps<{
       modelValue: boolean;
       type: 'create' | 'edit';
       uuid: string;
+      rootId: string;
       jobId?: string;
     }>(),
     {
@@ -105,6 +122,7 @@
   const ruleFormRef = ref<FormInstance>();
   const editorRef = ref<InstanceType<typeof AceEditor>>(null);
   const form = reactive({
+    databaseUuid: '',
     jobContent: '',
     nextRunDate: '',
     interval: '',
@@ -134,7 +152,12 @@
     set: (val) => myEmit('update:modelValue', val),
   });
 
+  const availDatabaseList = computed(() => AppStore.getConnectedDatabaseByRootId(props.rootId));
+
   const handleOpen = async () => {
+    if (props.type == 'create') {
+      form.databaseUuid = availDatabaseList.value.find((item) => item.uuid == props.uuid)?.uuid;
+    }
     if (props.type == 'edit') {
       try {
         loading.value = loadingInstance();
@@ -162,7 +185,7 @@
           loading.value = loadingInstance();
           if (props.type == 'create') {
             const params = {
-              uuid: props.uuid,
+              uuid: form.databaseUuid,
               jobContent: editorRef.value.getValue(),
               nextRunDate: form.nextRunDate,
               interval: form.interval,
@@ -170,7 +193,7 @@
             await createJobApi(params);
           } else {
             const params = {
-              uuid: props.uuid,
+              uuid: form.databaseUuid,
               jobId: props.jobId,
               jobContent: editorRef.value.getValue(),
               nextRunDate: form.nextRunDate,
@@ -193,6 +216,9 @@
   .dialog {
     :deep(.el-input) {
       width: calc(100% - 20px);
+    }
+    :deep(.el-select) {
+      width: 100%;
     }
   }
   .icon {

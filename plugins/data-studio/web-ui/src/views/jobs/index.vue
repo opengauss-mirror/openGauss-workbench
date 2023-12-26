@@ -132,6 +132,7 @@
       :type="dialogType"
       :uuid="uuid"
       :jobId="targetJobId"
+      :rootId="rootId"
       @success="getList"
     />
   </div>
@@ -153,7 +154,7 @@
   const multipleTableRef = ref<InstanceType<typeof ElTable>>();
   const multipleSelection = ref([]);
   const visibleCreate = ref(false);
-  const rootId = route.params.rootId;
+  const rootId = route.params.rootId as string;
   const uuid = computed(() => AppStore.getConnectionOneAvailableUuid(rootId));
   const targetJobId = ref('');
   const dialogType = ref<'create' | 'edit'>('create');
@@ -204,6 +205,9 @@
   };
 
   const handleAdd = () => {
+    if (!uuid.value) {
+      return ElMessage.error(t('message.noConnectionAvailable'));
+    }
     visibleCreate.value = true;
     dialogType.value = 'create';
   };
