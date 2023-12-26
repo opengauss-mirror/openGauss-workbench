@@ -132,8 +132,8 @@ public class JdbcUtil {
             String permissionStr = JdbcUtil.selectStringValue(pgConnection,
                 "select rolsystemadmin from pg_roles where rolname= '" + user + "'", "rolsystemadmin");
             isAdmin = permissionStr.equals("t") || permissionStr.equals("1");
-        } catch (SQLException e) {
-            log.error("sql execute failed.");
+        } catch (OpsException | SQLException e) {
+            log.error("get connection or sql execute failed.");
         } finally {
             closeConnection(pgConnection);
         }
