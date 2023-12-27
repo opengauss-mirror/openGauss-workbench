@@ -98,8 +98,8 @@ public class CronJobSqlServiceImpl implements CronJobSqlService {
 
             Object obj = ExecuteUtils.executeGetOne(connection, QUERY_JOB_COUNT_SQL);
             int count = 0;
-            if (obj instanceof Integer) {
-                count = (int) obj;
+            if (obj instanceof Long) {
+                count = Math.toIntExact((Long) obj);
             }
             Map<String, Object> map = new HashMap<>();
             map.put("pageSize", pageSize);
@@ -141,8 +141,8 @@ public class CronJobSqlServiceImpl implements CronJobSqlService {
         try (
                 Connection connection = connectionConfig.connectDatabase(request.getUuid())
         ) {
-            String sql = String.format(CREATE_JOB_SQL, request.getJobContent(), request.getNextRunDate(),
-                    request.getInterval());
+            String sql = String.format(CREATE_JOB_SQL, request.getJobContent().replace("'", "\""),
+                    request.getNextRunDate(), request.getInterval());
             ExecuteUtils.execute(connection, sql);
         }
     }

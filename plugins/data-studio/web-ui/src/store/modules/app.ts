@@ -78,6 +78,9 @@ export const useAppStore = defineStore({
       const selectConnection = this.connectListMap.find((listItem) => listItem.id === rootId);
       return selectConnection?.connectInfo;
     },
+    getConnectedDatabaseByRootId(rootId) {
+      return this.connectListMap.find((listItem) => listItem.id === rootId)?.connectedDatabase;
+    },
     updataLoadEditor(value: boolean) {
       this.isLoadEditor = value;
     },

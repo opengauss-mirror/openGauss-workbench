@@ -313,7 +313,6 @@ public class ForeignTableSqlServiceImpl implements ForeignTableSqlService {
             }
             String mappingSql = String.format(CREATE_MAPPING_SQL, DebugUtils.needQuoteName(request.getRole()),
                     request.getForeignServer(), request.getRemoteUsername(), desEncrypt(request.getRemotePassword()));
-            log.info("ForeignTableSqlServiceImpl createMapping sql: " + mappingSql);
             statement.execute(mappingSql);
         }
     }
@@ -496,7 +495,12 @@ public class ForeignTableSqlServiceImpl implements ForeignTableSqlService {
         String[] split = substring.split(COMMA);
         for (String str : split) {
             String[] item = str.split("=");
-            map.put(item[0], item[1]);
+            if (item[0].contains("\"")) {
+                String newStr = item[1].substring(2, item[1].length() - 3);
+                map.put(item[0].replace("\"", ""), newStr.replace("\\\"\\\"", "\""));
+            } else {
+                map.put(item[0], item[1]);
+            }
         }
         log.info("ForeignTableSqlServiceImpl parseString map: " + map);
         return map;

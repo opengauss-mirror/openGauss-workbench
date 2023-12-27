@@ -142,7 +142,6 @@
     const tableStr = data.reduce((prev, curRow, curRowIndex) => {
       const rowStr = columns.reduce((preStr, curCol, curColIndex) => {
         let cellStr = curRow[curCol.prop] ?? '';
-        console.log(cellStr);
         if (typeof cellStr == 'string') {
           cellStr = cellStr.replaceAll('\n', '\\n');
           cellStr = cellStr.replaceAll('\r', '\\r');
