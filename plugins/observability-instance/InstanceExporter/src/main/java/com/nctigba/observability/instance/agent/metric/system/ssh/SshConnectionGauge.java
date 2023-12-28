@@ -64,7 +64,7 @@ public class SshConnectionGauge implements OSMetric {
         result.add(result1);
 
         String[] labels = {target.getTargetConfig().getHostId()};
-        boolean isConnected = CmdUtils.isConnected(target.getTargetConfig().getNodeId());
+        boolean isConnected = CmdUtils.checkNodeCanBeConnected(target.getTargetConfig());
         if (isConnected) {
             result.get(0).add(new MetricResult(labels, 1));
         } else {

@@ -26,6 +26,7 @@ package com.nctigba.observability.instance.agent.service.impl;
 
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.date.StopWatch;
+import cn.hutool.core.thread.ThreadFactoryBuilder;
 import com.nctigba.observability.instance.agent.collector.AgentCollector;
 import com.nctigba.observability.instance.agent.collector.AgentCounter;
 import com.nctigba.observability.instance.agent.collector.AgentGauge;
@@ -53,6 +54,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -120,7 +122,9 @@ public class CollectServiceImpl implements CollectService {
             if (gapTime >= (CollectConstants.MIN_COLLECT_INTERVAL - 1000)) {
                 log.debug("Cache scrape metrics for node {}: match gapTime {} seconds",
                         target.getTargetConfig().getNodeId(), gapTime);
-                ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
+                ThreadFactory namedThreadFactory = new ThreadFactoryBuilder()
+                        .setNamePrefix("Metric-" + gapTime + "-Collector-" + collectGroupKey).build();
+                ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor(namedThreadFactory);
                 executor.schedule(() -> {
                     // real query job
                     List<List<MetricResult>> resultNext = z.collectData(target, param);

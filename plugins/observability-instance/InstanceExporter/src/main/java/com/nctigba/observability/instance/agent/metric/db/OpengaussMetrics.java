@@ -27,6 +27,7 @@ package com.nctigba.observability.instance.agent.metric.db;
 import cn.hutool.cache.CacheUtil;
 import cn.hutool.cache.impl.TimedCache;
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.thread.ThreadFactoryBuilder;
 import cn.hutool.core.util.StrUtil;
 import com.nctigba.observability.instance.agent.collector.AgentCollector;
 import com.nctigba.observability.instance.agent.collector.AgentCounter;
@@ -60,6 +61,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -154,7 +156,10 @@ public class OpengaussMetrics {
                     long gapTime = metricCollectManager.getGroupCollectGapTime(groupKey);
                     log.debug("Gap time:{}", gapTime);
                     if (gapTime >= (MIN_COLLECT_INTERVAL - 1000)) {
-                        ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
+                        ThreadFactory namedThreadFactory = new ThreadFactoryBuilder()
+                                .setNamePrefix("Metric-DB-" + gapTime + "-Collector-" + groupKey).build();
+                        ScheduledExecutorService executor =
+                                Executors.newSingleThreadScheduledExecutor(namedThreadFactory);
                         executor.schedule(() -> {
                             log.debug("After 5s,run sql and cache");
                             // real query job
@@ -280,6 +285,9 @@ public class OpengaussMetrics {
                     String metricKey = getMetricKey(targetConfig.getNodeId(), entry.getKey(), b.name, query.getDbRole(),
                             metric.getName());
                     log.debug("metricKey:{}", metricKey);
+                    if (metric.getUsage() == QueryInstance.MetricInfo.Usage.LABEL) {
+                        return;
+                    }
                     if (metric.getUsage() == QueryInstance.MetricInfo.Usage.COUNTER) {
                         log.debug("metric:{}", metric.getName());
                         Counter collector =
