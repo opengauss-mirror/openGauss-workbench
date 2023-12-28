@@ -428,48 +428,48 @@ public class TableColumnSQLServiceImpl implements TableColumnSQLService {
             throws SQLException {
         String schema = DebugUtils.needQuoteName(request.getSchema());
         String tableName = DebugUtils.needQuoteName(request.getTableName());
+        String conName = DebugUtils.needQuoteName(obj.getConName());
         if ("u".equals(obj.getConType())) {
             if (obj.getConDeferrable() == null || !obj.getConDeferrable()) {
-                statement.addBatch(
-                        String.format(SqlConstants.CONSTRAINT_UNIQUE_SQL, schema, tableName,
-                                obj.getConName(), obj.getAttName()));
+                statement.addBatch(String.format(SqlConstants.CONSTRAINT_UNIQUE_SQL, schema, tableName, conName,
+                        obj.getAttName()));
             } else {
-                statement.addBatch(String.format(SqlConstants.CONSTRAINT_UNIQUE_IMMEDIATE_SQL, schema,
-                        tableName, obj.getConName(), obj.getAttName()));
+                statement.addBatch(
+                        String.format(SqlConstants.CONSTRAINT_UNIQUE_IMMEDIATE_SQL, schema, tableName, conName,
+                                obj.getAttName()));
             }
         } else if ("p".equals(obj.getConType())) {
             if (obj.getConDeferrable() == null || !obj.getConDeferrable()) {
-                statement.addBatch(
-                        String.format(SqlConstants.CONSTRAINT_PRIMARY_SQL, schema, tableName,
-                                obj.getConName(), obj.getAttName()));
+                statement.addBatch(String.format(SqlConstants.CONSTRAINT_PRIMARY_SQL, schema, tableName, conName,
+                        obj.getAttName()));
             } else {
-                statement.addBatch(String.format(SqlConstants.CONSTRAINT_PRIMARY_IMMEDIATE_SQL, schema,
-                        tableName, obj.getConName(), obj.getAttName()));
+                statement.addBatch(
+                        String.format(SqlConstants.CONSTRAINT_PRIMARY_IMMEDIATE_SQL, schema, tableName, conName,
+                                obj.getAttName()));
             }
         } else if ("c".equals(obj.getConType())) {
             if (org.apache.commons.lang3.StringUtils.isAnyEmpty(obj.getConstraintDef())) {
                 throw new CustomException("Expression is empty");
             }
             if (obj.getConstraintDef() != null && obj.getConstraintDef().toLowerCase().trim().startsWith("check")) {
-                statement.addBatch(
-                        String.format(SqlConstants.CONSTRAINT_NO_CHECK_SQL, schema, tableName,
-                                obj.getConName(), obj.getConstraintDef()));
+                statement.addBatch(String.format(SqlConstants.CONSTRAINT_NO_CHECK_SQL, schema, tableName, conName,
+                        obj.getConstraintDef()));
             } else {
-                statement.addBatch(
-                        String.format(SqlConstants.CONSTRAINT_CHECK_SQL, schema, tableName,
-                                obj.getConName(), obj.getConstraintDef()));
+                statement.addBatch(String.format(SqlConstants.CONSTRAINT_CHECK_SQL, schema, tableName, conName,
+                        obj.getConstraintDef()));
             }
         } else if ("f".equals(obj.getConType())) {
             statement.addBatch(
-                    String.format(SqlConstants.CONSTRAINT_FOREIGN_KEY_SQL, schema, tableName
-                            , obj.getConName(), obj.getAttName(), obj.getNspName(), obj.getTbName(), obj.getColName()));
+                    String.format(SqlConstants.CONSTRAINT_FOREIGN_KEY_SQL, schema, tableName, conName, obj.getAttName(),
+                            obj.getNspName(), obj.getTbName(), obj.getColName()));
         } else if ("s".equals(obj.getConType())) {
-            statement.addBatch(String.format(SqlConstants.CONSTRAINT_PARTIAL_CLUSTER_KEY_SQL, schema,
-                    tableName, obj.getConName(), obj.getAttName()));
+            statement.addBatch(
+                    String.format(SqlConstants.CONSTRAINT_PARTIAL_CLUSTER_KEY_SQL, schema, tableName, conName,
+                            obj.getAttName()));
         }
         if (!StringUtils.isEmpty(obj.getDescription())) {
-            statement.addBatch(String.format(SqlConstants.CONSTRAINT_COMMENT_SQL, obj.getConName(), schema,
-                    tableName, obj.getDescription()));
+            statement.addBatch(String.format(SqlConstants.CONSTRAINT_COMMENT_SQL, conName, schema, tableName,
+                    obj.getDescription()));
         }
     }
 
