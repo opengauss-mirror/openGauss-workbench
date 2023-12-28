@@ -19,10 +19,14 @@ logging:
 spring:
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
-    driver-class-name: org.opengauss.Driver
-    url: jdbc:opengauss://ip:port/database?currentSchema=public&batchMode=off
-    username: dbuser
-    password: dbpassword
+    # For openGauss
+#    driver-class-name: org.opengauss.Driver
+#    url: jdbc:opengauss://ip:port/database?currentSchema=public&batchMode=off
+#    username: dbuser
+#    password: dbpassword
+    # For Intarkdb
+    driver-class-name: org.intarkdb.IntarkdbJDBC
+    url: jdbc:intarkdb:data/datakit
     druid:
       test-while-idle: true
       test-on-borrow: true
@@ -30,7 +34,7 @@ spring:
       validation-query-timeout: 10000
       connection-error-retry-attempts: 0
       break-after-acquire-failure: true
-      max-wait: 6000
+      max-wait: 300000
       keep-alive: true
       max-active: 30
       min-evictable-idle-time-millis: 600000

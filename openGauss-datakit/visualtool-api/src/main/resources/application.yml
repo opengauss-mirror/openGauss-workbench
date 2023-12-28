@@ -19,7 +19,11 @@ spring:
   sql:
     init:
       mode: always
-      data-locations: classpath:db/openGauss-visualtool.sql
+      # For openGauss
+      #data-locations: classpath:db/openGauss-visualtool.sql
+      # For Intarkdb
+      data-locations: classpath:db/intarkDB-init.sql
+      continue-on-error: true
 token:
     header: Authorization
     secret: abcdefghijklmnopqrstuvwxyz

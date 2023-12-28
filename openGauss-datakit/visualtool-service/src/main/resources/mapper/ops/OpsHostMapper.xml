@@ -5,7 +5,8 @@
 <mapper namespace="org.opengauss.admin.system.mapper.ops.OpsHostMapper">
 
     <select id="pageHost" resultType="org.opengauss.admin.common.core.domain.model.ops.host.OpsHostVO">
-        SELECT DISTINCT h.*, a.name azName
+        SELECT DISTINCT h.host_id,h.hostname,h.private_ip,h.public_ip,h.port,h.az_id, h.remark,h.create_by,
+                        h.create_time,h.update_by,h.update_time,h.os,h.cpu_arch,h.name,a.name azName
         FROM ops_host h
         LEFT JOIN ops_az a ON h.az_id = a.az_id
         LEFT JOIN ops_host_tag_rel tr ON h.host_id = tr.host_id
