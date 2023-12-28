@@ -37,10 +37,10 @@ spring:
         max-active: 20
       datasource:
         embedded:
-#          url: jdbc:intarkdb:data/observability-instance-data
-#          driverClassName: org.intarkdb.IntarkDBJDBC
-          url: jdbc:sqlite:data/observability-instance-data.db
-          driverClassName: org.sqlite.JDBC
+          #url: jdbc:sqlite:data/observability-instance-data.db
+          #driverClassName: org.sqlite.JDBC
+          url: jdbc:intarkdb:data/observability-instance-data
+          driverClassName: org.intarkdb.IntarkdbJDBC
           init:
             schema: db/schema.sql
             data: db/data.sql
