@@ -106,7 +106,7 @@ public class NotifyListener implements ApplicationListener<NotifyEvent> {
     @Async
     public void onApplicationEvent(NotifyEvent event) {
         synchronized (this) {
-            if (status == 1) {
+            if (status.equals(1)) {
                 return;
             }
             status = 1;
@@ -137,13 +137,13 @@ public class NotifyListener implements ApplicationListener<NotifyEvent> {
             return false;
         }
         Integer isRepeat = templateRule.getIsRepeat();
-        if (isRepeat != null && isRepeat == CommonConstants.IS_NOT_REPEAT && recordDto.getSendCount() != null
+        if (isRepeat != null && isRepeat.equals(CommonConstants.IS_NOT_REPEAT) && recordDto.getSendCount() != null
             && recordDto.getSendCount() > 0) {
             return false;
         }
         Integer maxRepeatCount = templateRule.getMaxRepeatCount();
         Integer sendCount = recordDto.getSendCount() != null ? recordDto.getSendCount() : 0;
-        if (isRepeat != null && isRepeat == CommonConstants.IS_REPEAT && maxRepeatCount != null
+        if (isRepeat != null && isRepeat.equals(CommonConstants.IS_NOT_REPEAT) && maxRepeatCount != null
             && maxRepeatCount <= sendCount) {
             return false;
         }
@@ -161,7 +161,7 @@ public class NotifyListener implements ApplicationListener<NotifyEvent> {
         }
         Integer isSilence = templateRule.getIsSilence();
         LocalDateTime now = LocalDateTime.now();
-        if (isSilence == CommonConstants.IS_SILENCE && now.isAfter(templateRule.getSilenceStartTime())
+        if (isSilence.equals(CommonConstants.IS_SILENCE) && now.isAfter(templateRule.getSilenceStartTime())
             && now.isBefore(templateRule.getSilenceEndTime())) {
             return false;
         }
@@ -323,7 +323,7 @@ public class NotifyListener implements ApplicationListener<NotifyEvent> {
         }
         List<AlertRecordDO> recordList = new ArrayList<>();
         for (NotifyMessageDO notifyMessageDO : notifyMessageDOS) {
-            if (!notifyMessageDO.getStatus().equals("1")) {
+            if (!notifyMessageDO.getStatus().equals(1)) {
                 continue;
             }
             List<String> recordIds = Arrays.asList(notifyMessageDO.getRecordIds().split(","));
