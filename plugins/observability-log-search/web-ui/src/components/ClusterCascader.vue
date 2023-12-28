@@ -1,7 +1,7 @@
 <template>
     <div class="filter">
         <span>{{ props.title }}&nbsp;</span>
-        <el-cascader v-model="cluster" :options="clusterList" @change="getClusterValue" style="max-width: 200px" :style="{ width: width ? width + 'px' : 'auto' }" :clearable="!notClearable" />
+        <el-cascader v-model="cluster" :options="clusterList" @change="getClusterValue" style="max-width: 300px" :style="{ width: width ? width + 'px' : 'auto' }" :clearable="!notClearable" />
     </div>
 </template>
 

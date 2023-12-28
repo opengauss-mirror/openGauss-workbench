@@ -15,7 +15,7 @@
                 <div class="filter" v-if="showContextCount">
                     <div class="log-context">
                         <span>{{ $t('datasource.logContext') }}&nbsp;&nbsp;</span>
-                        <select v-model="formData.contextCount">
+                        <select v-model="formData.contextCount" style="width: 70px">
                             <option  :value="5">{{t('app.logContextCountLabelList[0]') }}</option> 
                             <option  :value="10">{{t('app.logContextCountLabelList[1]')}}</option> 
                             <option  :value="20">{{t('app.logContextCountLabelList[2]') }}</option> 
@@ -29,7 +29,7 @@
                     </div>
                 </div>
                 <div class="filter">
-                    <el-input v-model="formData.searchText" style="width: 200px" :prefix-icon="Search" :placeholder="$t('datasource.logSearchPlaceholder')" />
+                    <el-input v-model="formData.searchText" style="width: 265px" :prefix-icon="Search" :placeholder="$t('datasource.logSearchPlaceholder')" />
                     <show-info :title="$t('datasource.showInfoTitleTip')">
                       <template #context>
                         <div style="white-space: pre-line;" v-html="$t('datasource.showInfoContextTip')"></div>

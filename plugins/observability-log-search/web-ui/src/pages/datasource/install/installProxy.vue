@@ -21,21 +21,21 @@
             <div class="dialog-content" v-loading="started" v-show="installData.length === 0">
                 <el-form :model="formData" :rules="connectionFormRules" ref="connectionFormRef">
                     <el-form-item :label="t('install.machine')" prop="nodeId">
-                        <Machines width="200" @change="changeMachine" autoSelectFirst notClearable style="width: 200px; margin: 0 4px" />
+                        <Machines width="300" @change="changeMachine" autoSelectFirst notClearable style="width: 200px; margin: 0 4px" />
                     </el-form-item>
                     <el-form-item :label="t('install.installUser')" prop="username">
-                        <el-select v-model="formData.username" style="width: 200px; margin: 0 4px">
-                            <el-option v-for="item in hostUserList" :key="item.hostUserId" :label="item.username" :value="item.username" />
+                        <el-select v-model="formData.username" style="width: 300px; margin: 0 4px">
+                            <el-option v-for="item in hostUserList" :key="item.hostUserId" :label="item.username" :value="item.username" :disabled="item.username === 'root'"/>
                         </el-select>
                     </el-form-item>
                     <el-form-item :label="t('install.rootPWD')" prop="rootPassword" v-if="formData.username === ROOT_USER">
-                        <el-input v-model="formData.rootPassword" show-password style="width: 200px; margin: 0 4px" />
+                        <el-input v-model="formData.rootPassword" show-password style="width: 300px; margin: 0 4px" />
                     </el-form-item>
                     <el-form-item :label="t('install.proxyPort')" prop="port">
-                        <el-input v-model="formData.port" style="width: 200px; margin: 0 4px" />
+                        <el-input v-model="formData.port" style="width: 300px; margin: 0 4px" />
                     </el-form-item>
                     <el-form-item :label="t('install.installPath')" prop="path">
-                        <el-input v-model="formData.path" style="width: 200px; margin: 0 4px" />
+                        <el-input v-model="formData.path" style="width: 300px; margin: 0 4px" />
                     </el-form-item>
                     <el-form-item :label="t('install.installMode')" prop="installMode">
                         <el-radio-group v-model="formData.installMode">
@@ -256,14 +256,14 @@ const onWebSocketMessage = (data: Array<any>) => {
 // action
 const back = () => {
     started.value = false;
-    dialogWith.value = '400px'
+    dialogWith.value = '500px'
     ws.instance.close();
     installData.value = [];
 };
 
 // list Data
 const installData = ref<Array<any>>([]);
-const dialogWith = ref<string>('400px')
+const dialogWith = ref<string>('500px')
 const doingIndex = computed(() => {
     for (let index = 0; index < installData.value.length; index++) {
         const element = installData.value[index];

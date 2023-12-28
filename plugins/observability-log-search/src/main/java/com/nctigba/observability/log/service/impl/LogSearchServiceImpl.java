@@ -223,17 +223,31 @@ public class LogSearchServiceImpl implements LogSearchService {
                             logDetailInfoDTO.setLogType(logTypeMap.get(CommonConstants.LOG_TYPE));
                         }
                         logDetailInfoDTO.setLogLevel(docMap.get(CommonConstants.LOG_LEVEL));
-                        logDetailInfoDTO.setLogData(docMap.get(CommonConstants.MESSAGE));
                         logDetailInfoDTO.setLogClusterId(docMap.get(CommonConstants.CLUSTER_ID));
                         logDetailInfoDTO.setLogNodeId(docMap.get(CommonConstants.NODE_ID));
                         logDetailInfoDTO.setId(id);
+                        Object message = docMap.get(CommonConstants.MESSAGE);
+                        Map<String, List<String>> highlightData = decodeBeanHit.highlight();
+                        if (!CollectionUtils.isEmpty(highlightData) && !CollectionUtils.isEmpty(
+                                highlightData.get(CommonConstants.MESSAGE))) {
+                            List<String> data = highlightData.get(CommonConstants.MESSAGE);
+                            String highlightStr = String.join("", data);
+                            String[] highlights = highlightStr.split("<span style=\"background-color: yellow\">");
+                            String messageStr = message.toString();
+                            for (String s : highlights) {
+                                if (!s.contains("</span>")) {
+                                    continue;
+                                }
+                                String targetStr = s.substring(0, s.indexOf("</span>"));
+                                messageStr = messageStr.replace(
+                                        targetStr,
+                                        "<span style=\"background-color: yellow\">" + targetStr + "</span>");
+                            }
+                            logDetailInfoDTO.setLogData(messageStr);
+                        } else {
+                            logDetailInfoDTO.setLogData(message);
+                        }
                         list.add(logDetailInfoDTO);
-                    }
-                    var highlightData = decodeBeanHit.highlight();
-                    if (!CollectionUtils.isEmpty(highlightData) && !CollectionUtils.isEmpty(
-                            highlightData.get(CommonConstants.MESSAGE))) {
-                        List<String> data = highlightData.get(CommonConstants.MESSAGE);
-                        logDetailInfoDTO.setLogData(String.join("", data));
                     }
                 }
                 if (!hits.isEmpty()) {

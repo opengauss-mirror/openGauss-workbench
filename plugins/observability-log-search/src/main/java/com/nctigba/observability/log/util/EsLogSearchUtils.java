@@ -87,6 +87,7 @@ public class EsLogSearchUtils {
                     s.searchAfter(queryParam.getSorts());
                 }
                 s.highlight(this.highlight());
+                s.ignoreUnavailable(true);
                 return s;
             }, HashMap.class);
             return response;
@@ -158,6 +159,7 @@ public class EsLogSearchUtils {
                         "agg1", agg -> agg.histogram(histogram -> histogram.field("@timestamp").interval(
                                 (double) queryParam.getInterval())).aggregations(
                                 "agg2", c -> c.terms(t -> t.field("_index"))));
+                s.ignoreUnavailable(true);
                 return s;
             }, HashMap.class);
             return response;
@@ -177,7 +179,8 @@ public class EsLogSearchUtils {
         Set<String> indexs;
         try {
             var client = clientProvider.client();
-            GetIndexResponse getIndexResponse = client.indices().get(builder -> builder.index(indexName));
+            GetIndexResponse getIndexResponse = client.indices().get(
+                    builder -> builder.index(indexName).ignoreUnavailable(true));
             indexs = getIndexResponse.result().keySet();
         } catch (Exception e) {
             log.info(e.getMessage());
@@ -201,6 +204,7 @@ public class EsLogSearchUtils {
                 s.size(5000);
                 s.query(this.query(queryParam));
                 s.aggregations("LogLevelMap", a -> a.terms(b -> b.field("log_level.keyword")));
+                s.ignoreUnavailable(true);
                 return s;
             }, Map.class);
         } catch (Exception e) {
@@ -290,6 +294,12 @@ public class EsLogSearchUtils {
             q.bool(b -> {
                 if (queryParam.hasDateFilter()) {
                     b.filter(f -> {
+                        if (queryParam.getStartDate() != null && queryParam.getEndDate() != null) {
+                            return f.range(
+                                    r -> r.field("@timestamp").gte(
+                                            JsonData.of(sdf.format(queryParam.getStartDate()))).lt(
+                                            JsonData.of(sdf.format(queryParam.getEndDate()))));
+                        }
                         if (queryParam.getStartDate() != null) {
                             return f.range(
                                     r -> r.field("@timestamp").gte(JsonData.of(sdf.format(queryParam.getStartDate()))));
@@ -306,7 +316,7 @@ public class EsLogSearchUtils {
                 }
                 if (isPhrase) {
                     b.must(r -> r.queryString(
-                            f -> f.query(queryParam.getSearchPhrase())));
+                            f -> f.defaultField("message").query(queryParam.getSearchPhrase())));
                 }
                 return b;
             });
