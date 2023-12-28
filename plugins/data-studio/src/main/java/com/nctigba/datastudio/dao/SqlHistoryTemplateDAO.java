@@ -33,7 +33,6 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.stereotype.Repository;
 
 import java.sql.PreparedStatement;
@@ -222,11 +221,18 @@ public class SqlHistoryTemplateDAO implements ApplicationRunner {
      */
     public void deleteByIdList(List<Integer> idList) {
         log.info("SqlHistoryTemplate deleteByIdList idList: " + idList);
-        String sql = "delete from sqlHistory where id in (:ids)";
-        MapSqlParameterSource parameter = new MapSqlParameterSource();
-        parameter.addValue("ids", idList);
+        String sql = "delete from sqlHistory where id = ?";
+        int[] counts = jdbcTemplate.batchUpdate(sql, new BatchPreparedStatementSetter() {
+            @Override
+            public void setValues(PreparedStatement ps, int i) throws SQLException {
+                ps.setInt(1, idList.get(i));
+            }
 
-        int count = jdbcTemplate.update(sql, idList);
-        log.info("SqlHistoryTemplate insertTable count: " + count);
+            @Override
+            public int getBatchSize() {
+                return idList.size();
+            }
+        });
+        log.info("SqlHistoryTemplate insertTable counts: " + Arrays.toString(counts));
     }
 }
