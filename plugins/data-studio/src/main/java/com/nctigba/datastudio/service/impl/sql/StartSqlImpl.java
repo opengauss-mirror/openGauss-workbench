@@ -123,6 +123,11 @@ public class StartSqlImpl implements OperationInterface {
                 isSuccess = false;
                 endTime = new Date();
                 try {
+                    if (e.getMessage().contains("FATAL: terminating connection due to administrator command")) {
+                        webSocketServer.sendMessage(windowName, DISCONNECTION,
+                                LocaleStringUtils.transLanguageWs("1004", webSocketServer), paramReq.getUuid());
+                        return;
+                    }
                     webSocketServer.sendMessage(windowName, WINDOW, FIVE_HUNDRED, e.getMessage(), e.getStackTrace());
                     webSocketServer.sendMessage(windowName, BUTTON,
                             LocaleStringUtils.transLanguageWs("2006", webSocketServer), null);
@@ -140,7 +145,6 @@ public class StartSqlImpl implements OperationInterface {
                 sqlHistoryDO.setWebUser(paramReq.getWebUser());
                 list.add(sqlHistoryDO);
                 asyncHelper.insertSqlHistory(list);
-                log.info("StartSqlImpl operate finally: " + list);
 
                 try {
                     stat.close();

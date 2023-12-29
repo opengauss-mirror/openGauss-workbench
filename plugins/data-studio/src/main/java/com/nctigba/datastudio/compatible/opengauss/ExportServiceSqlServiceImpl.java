@@ -260,7 +260,6 @@ public class ExportServiceSqlServiceImpl implements ExportServiceSqlService {
     private void exportExcelFile(ExportQuery request, String sql, String fileName, HttpServletResponse response)
             throws SQLException, IOException {
         log.info("ExportService getXssfWorkBook startTime: " + System.currentTimeMillis());
-
         try (
                 Connection connection = connectionConfig.connectDatabase(request.getUuid());
                 Statement statement = connection.createStatement();
@@ -287,22 +286,26 @@ public class ExportServiceSqlServiceImpl implements ExportServiceSqlService {
             statement.execute(String.format(COURSE_SQL, "DS_" + timeStamp, sql));
             log.info("ExportService getXssfWorkBook timeStamp: " + "DS_" + timeStamp);
 
-            int index = 0;
-            List<String> columnList = request.getColumnList();
-            SXSSFSheet sheet = sxssfWorkbook.createSheet(tableName);
-            SXSSFRow row = sheet.createRow(index);
-            for (int i = 0; i < columnList.size(); i++) {
-                row.createCell(i).setCellValue(columnList.get(i));
-            }
+            int page = count % 1000000 == 0 ? count / 1000000 : count / 1000000 + 1;
+            log.info("ExportService getXssfWorkBook page: " + page);
+            for (int p = 0; p < page; p++) {
+                List<String> columnList = request.getColumnList();
+                SXSSFSheet sheet = sxssfWorkbook.createSheet(tableName + "-" + p);
+                SXSSFRow row = sheet.createRow(0);
+                for (int i = 0; i < columnList.size(); i++) {
+                    row.createCell(i).setCellValue(columnList.get(i));
+                }
 
-            int size = count % 1000 == 0 ? count / 1000 : count / 1000 + 1;
-            log.info("ExportService getXssfWorkBook size: " + size);
-            for (int s = 0; s < size; s++) {
-                ResultSet resultSet = statement.executeQuery(String.format(FETCH_SQL, 1000, "DS_" + timeStamp));
-                while (resultSet.next()) {
-                    row = sheet.createRow(++index);
-                    for (int i = 0; i < columnList.size(); i++) {
-                        row.createCell(i).setCellValue(resultSet.getString(columnList.get(i)));
+                int currentCount = page - 1 == p ? count - p * 1000000 : 1000000;
+                int size = currentCount % 1000 == 0 ? currentCount / 1000 : currentCount / 1000 + 1;
+                int index = 0;
+                for (int s = 0; s < size; s++) {
+                    ResultSet resultSet = statement.executeQuery(String.format(FETCH_SQL, 1000, "DS_" + timeStamp));
+                    while (resultSet.next()) {
+                        row = sheet.createRow(++index);
+                        for (int i = 0; i < columnList.size(); i++) {
+                            row.createCell(i).setCellValue(resultSet.getString(columnList.get(i)));
+                        }
                     }
                 }
             }

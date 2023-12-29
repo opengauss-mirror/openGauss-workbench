@@ -386,13 +386,6 @@ public class SqlConstants {
             + "AND t.relname = seq.sequence_name);";
 
     /**
-     * table data count sql
-     */
-    public static final String TABLE_DATA_COUNT_SQL = "select reltuples from pg_class cla" + LF
-            + "inner join pg_namespace ns on cla.relnamespace = ns.oid and ns.nspname = '%s'" + LF
-            + "where relname = '%s'";
-
-    /**
      * get column sql
      */
     public static final String GET_COLUMN_SQL = "select col.column_name,col.data_type,"
@@ -772,7 +765,7 @@ public class SqlConstants {
      * list sql
      */
     public static final String LIST_SQL = "LIST(%s)(" + LF
-            + "partition %s values (%s) tablespace %s";
+            + "partition %s values (%s) tablespace %s)";
 
     /**
      * hash sql

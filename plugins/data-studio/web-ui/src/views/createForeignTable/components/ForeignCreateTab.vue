@@ -34,18 +34,18 @@
       <el-col :span="12">
         <el-form-item prop="foreignServer" :label="$t('foreignTable.foreign.foreignServer')">
           <el-select v-model="form.foreignServer" ref="foreignServerRef">
+            <el-option value="add">
+              <div class="add-option" @click.stop="handleCreateForeignServer">
+                <el-icon><Plus /></el-icon>
+                {{ $t('button.newBuild') }}
+              </div>
+            </el-option>
             <el-option v-for="item in foreignServerShowList" :key="item.name" :value="item.name">
               <div class="diy-option">
                 <span class="left">{{ item.name }}</span>
                 <el-icon class="right" @click.stop="handleDeleteForeignServer(item.name)">
                   <Delete />
                 </el-icon>
-              </div>
-            </el-option>
-            <el-option value="add">
-              <div class="add-option" @click.stop="handleCreateForeignServer">
-                <el-icon><Plus /></el-icon>
-                {{ $t('button.newBuild') }}
               </div>
             </el-option>
           </el-select>

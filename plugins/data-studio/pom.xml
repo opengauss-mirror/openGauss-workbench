@@ -37,7 +37,7 @@
 			<artifactId>intarkDB-jdbc</artifactId>
 			<version>1.0</version>
 			<scope>system</scope>
-			<systemPath>${project.basedir}/src/main/resources/lib/IntarkDB-jdbc-1.0.0.1.jar</systemPath>
+			<systemPath>${project.basedir}/src/main/resources/lib/intarkdb-jdbc-1.0.0.1.jar</systemPath>
 		</dependency>
 		<dependency>
 			<groupId>org.opengauss</groupId>
