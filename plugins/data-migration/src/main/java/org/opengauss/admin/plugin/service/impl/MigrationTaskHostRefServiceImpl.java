@@ -213,12 +213,7 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
                     }
                     eachOne.setBaseInfos(ListUtil.toList(hostInfo));
                     eachOne.setInstallInfo(installHost);
-                    if (installHost.getInstallStatus().equals(PortalInstallStatus.INSTALLED.getCode())) {
-                        boolean isInstallPortal = PortalHandle.checkInstallPortal(installHost.getHost(), installHost.getPort(), installHost.getRunUser(), password, installHost.getInstallPath());
-                        eachOne.setInstallPortalStatus(isInstallPortal ? PortalInstallStatus.INSTALLED.getCode() : PortalInstallStatus.NOT_INSTALL.getCode());
-                    } else {
-                        eachOne.setInstallPortalStatus(installHost.getInstallStatus());
-                    }
+                    eachOne.setInstallPortalStatus(installHost.getInstallStatus());
                 }
                 return eachOne;
             });
