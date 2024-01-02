@@ -209,7 +209,7 @@ watch(
   updateCounter,
   () => {
     clearInterval(timer.value);
-    if (tabNow.value === tabKeys.InstanceMonitorInstanceBase) {
+    if (tabNow.value === tabKeys.InstanceMonitorInstanceOverload) {
       if (updateCounter.value.source === sourceType.value.INSTANCE) {
         load();
       }

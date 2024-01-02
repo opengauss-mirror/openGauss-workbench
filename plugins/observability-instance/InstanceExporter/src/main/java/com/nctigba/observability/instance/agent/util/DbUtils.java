@@ -75,31 +75,10 @@ public class DbUtils {
     public final List<Map<String, Object>> query(String nodeId, String sql) {
         long startTime = System.currentTimeMillis();
 
-        Optional<TargetConfig> opTarget = targetService.getTargetConfigs()
-                .stream().filter(z -> z.getNodeId().equals(nodeId)).findFirst();
-        if (!opTarget.isPresent()) {
-            throw new CollectException("No match node id target config for node Id:" + nodeId);
+        if (!createAndCacheConnectionIfNotExisted(nodeId)) {
+            return Collections.emptyList();
         }
 
-        if (!conns.containsKey(nodeId)) {
-            synchronized (this) {
-                try {
-                    if (!conns.containsKey(nodeId)) {
-                        String dbType = opTarget.get().getDbType();
-                        DbTypeEnum dbTypeEnum = DbTypeEnum.valueOf(dbType);
-                        Class.forName(dbTypeEnum.getDriverClass());
-                        String url = StrFormatter.format(dbTypeEnum.getUrlPattern(),
-                                opTarget.get().getDbIp(), opTarget.get().getDbPort());
-                        Connection conn = DriverManager.getConnection(url, opTarget.get().getDbUserName(),
-                                opTarget.get().getDbUserPassword());
-                        conns.put(nodeId, conn);
-                    }
-                } catch (SQLException | ClassNotFoundException | NullPointerException e) {
-                    log.error("db connection fail", e);
-                    return Collections.emptyList();
-                }
-            }
-        }
         Connection conn = conns.get(nodeId);
         try {
             var stmt = conn.createStatement();
@@ -128,7 +107,7 @@ public class DbUtils {
             return list;
         } catch (SQLException e) {
             if (!test(conn)) {
-                conn = null;
+                conns.remove(nodeId);
                 return query(nodeId, sql);
             }
             log.error("sql error, cause :{} sql:{}", e.getMessage(), sql);
@@ -143,5 +122,52 @@ public class DbUtils {
         } catch (SQLException e) {
             return false;
         }
+    }
+
+    /**
+     * Test whether the database is available by nodeId.
+     *
+     * @param nodeId String
+     * @return boolean
+     */
+    public boolean test(String nodeId) {
+        if (createAndCacheConnectionIfNotExisted(nodeId)) {
+            return test(conns.get(nodeId));
+        }
+        return false;
+    }
+
+    private Connection createConnection(TargetConfig targetConfig) throws SQLException, ClassNotFoundException,
+        NullPointerException {
+        String dbType = targetConfig.getDbType();
+        DbTypeEnum dbTypeEnum = DbTypeEnum.valueOf(dbType);
+        Class.forName(dbTypeEnum.getDriverClass());
+        String url = StrFormatter.format(dbTypeEnum.getUrlPattern(),
+            targetConfig.getDbIp(), targetConfig.getDbPort());
+        return DriverManager.getConnection(url, targetConfig.getDbUserName(),
+            targetConfig.getDbUserPassword());
+    }
+
+    private boolean createAndCacheConnectionIfNotExisted(String nodeId) {
+        Optional<TargetConfig> opTarget = targetService.getTargetConfigs()
+            .stream().filter(z -> z.getNodeId().equals(nodeId)).findFirst();
+        if (!opTarget.isPresent()) {
+            throw new CollectException("No match node id target config for node Id:" + nodeId);
+        }
+
+        if (!conns.containsKey(nodeId)) {
+            synchronized (this) {
+                try {
+                    if (!conns.containsKey(nodeId)) {
+                        Connection conn = createConnection(opTarget.get());
+                        conns.put(nodeId, conn);
+                    }
+                } catch (SQLException | ClassNotFoundException | NullPointerException e) {
+                    log.error("db connection fail", e);
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 }

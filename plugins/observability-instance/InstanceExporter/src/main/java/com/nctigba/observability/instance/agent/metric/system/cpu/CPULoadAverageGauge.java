@@ -24,6 +24,7 @@
 
 package com.nctigba.observability.instance.agent.metric.system.cpu;
 
+import com.nctigba.observability.instance.agent.exception.CMDException;
 import com.nctigba.observability.instance.agent.exception.CollectException;
 import com.nctigba.observability.instance.agent.metric.MetricResult;
 import com.nctigba.observability.instance.agent.metric.MetricType;
@@ -102,7 +103,7 @@ public class CPULoadAverageGauge implements OSMetric {
                 resultItem.add(new MetricResult(labels, Double.valueOf(part[2])));
                 result.add(resultItem);
             });
-        } catch (IOException e) {
+        } catch (IOException | CMDException e) {
             e.printStackTrace();
             throw new CollectException(this, e);
         }

@@ -24,6 +24,7 @@
 
 package com.nctigba.observability.instance.agent.metric.system.cpu;
 
+import com.nctigba.observability.instance.agent.exception.CMDException;
 import com.nctigba.observability.instance.agent.exception.CollectException;
 import com.nctigba.observability.instance.agent.metric.MetricResult;
 import com.nctigba.observability.instance.agent.metric.MetricType;
@@ -91,7 +92,7 @@ public class CPUUsageCounter implements OSMetric {
                     }
                 }
             });
-        } catch (IOException e) {
+        } catch (IOException | CMDException e) {
             e.printStackTrace();
             throw new CollectException(this, e);
         }

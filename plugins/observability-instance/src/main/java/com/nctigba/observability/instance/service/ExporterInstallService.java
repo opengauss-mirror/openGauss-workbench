@@ -229,7 +229,6 @@ public class ExporterInstallService extends AbstractInstaller {
                     paramItem.put("machinePort", targetHostEntity.getPort());
                     param.add(paramItem);
                 });
-                log.info("agent set config param:{}", JSONUtil.toJsonStr(param));
                 for (int i = 0; i < 11; i++) {
                     try {
                         String url = "http://" + hostEntity.getPublicIp() + ":" + expEnv.getPort() + "/config/set";

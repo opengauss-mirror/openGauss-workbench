@@ -24,6 +24,7 @@
 
 package com.nctigba.observability.instance.agent.metric.system.disk;
 
+import com.nctigba.observability.instance.agent.exception.CMDException;
 import com.nctigba.observability.instance.agent.exception.CollectException;
 import com.nctigba.observability.instance.agent.metric.DBMetric;
 import com.nctigba.observability.instance.agent.metric.MetricResult;
@@ -97,7 +98,7 @@ public class FileSystemGauge implements DBMetric {
                 result.get(4).add(new MetricResult(labels, Double.valueOf(part[2])));
                 result.get(5).add(new MetricResult(labels, Double.valueOf(part[3])));
             });
-        } catch (IOException e) {
+        } catch (IOException | CMDException e) {
             e.printStackTrace();
             throw new CollectException(this, e);
         }

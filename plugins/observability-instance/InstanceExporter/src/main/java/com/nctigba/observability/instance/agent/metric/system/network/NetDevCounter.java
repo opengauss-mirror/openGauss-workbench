@@ -26,6 +26,7 @@ package com.nctigba.observability.instance.agent.metric.system.network;
 
 import cn.hutool.core.util.ReUtil;
 import cn.hutool.core.util.StrUtil;
+import com.nctigba.observability.instance.agent.exception.CMDException;
 import com.nctigba.observability.instance.agent.exception.CollectException;
 import com.nctigba.observability.instance.agent.metric.DBMetric;
 import com.nctigba.observability.instance.agent.metric.MetricResult;
@@ -145,7 +146,7 @@ public class NetDevCounter implements DBMetric {
                             i < part.length ? Double.valueOf(part[i + 1]) : 0));
                 }
             });
-        } catch (IOException e) {
+        } catch (IOException | CMDException e) {
             e.printStackTrace();
             throw new CollectException(this, e);
         }

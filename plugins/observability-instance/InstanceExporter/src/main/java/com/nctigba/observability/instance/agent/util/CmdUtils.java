@@ -140,9 +140,11 @@ public class CmdUtils {
      * @param cmd      Command text
      * @param consumer Consumer for the result
      * @throws IOException Read file error
+     * @throws CMDException read cmd fail
      * @since 2023/12/1
      */
-    public static final void readFromCmd(String nodeId, String cmd, Consumer<String> consumer) throws IOException {
+    public static final void readFromCmd(String nodeId, String cmd, Consumer<String> consumer)
+        throws IOException, CMDException {
         if (consumer != null) {
             readFromCmd(nodeId, cmd, (i, line) -> consumer.accept(line));
         }
@@ -155,10 +157,11 @@ public class CmdUtils {
      * @param cmd      Command text
      * @param consumer Consumer for the result
      * @throws IOException Create session error
+     * @throws CMDException read cmd fail
      * @since 2023/12/1
      */
     public static final void readFromCmd(
-            String nodeId, String cmd, BiConsumer<Integer, String> consumer) throws IOException {
+            String nodeId, String cmd, BiConsumer<Integer, String> consumer) throws IOException, CMDException {
         ClientSession session = sessions.get(nodeId);
         if (session == null) {
             // init cmd util
@@ -207,9 +210,10 @@ public class CmdUtils {
      * @param cmd    Command text
      * @return Command result
      * @throws IOException Read file error
+     * @throws CMDException read cmd fail
      * @since 2023/12/1
      */
-    public static final String readFromCmd(String nodeId, String cmd) throws IOException {
+    public static final String readFromCmd(String nodeId, String cmd) throws IOException, CMDException {
         StringBuilder str = new StringBuilder();
         readFromCmd(nodeId, cmd, line -> {
             str.append(line);

@@ -25,6 +25,7 @@
 package com.nctigba.observability.instance.agent.metric.system.network;
 
 import cn.hutool.core.util.NumberUtil;
+import com.nctigba.observability.instance.agent.exception.CMDException;
 import com.nctigba.observability.instance.agent.exception.CollectException;
 import com.nctigba.observability.instance.agent.metric.DBMetric;
 import com.nctigba.observability.instance.agent.metric.MetricResult;
@@ -128,7 +129,7 @@ public class NetStatUnknown implements DBMetric {
                     }
                 });
             });
-        } catch (IOException e) {
+        } catch (IOException | CMDException e) {
             e.printStackTrace();
             throw new CollectException(this, e);
         }
@@ -137,7 +138,7 @@ public class NetStatUnknown implements DBMetric {
 
 
     private Map<String, Map<String, Long>> getNetStats(
-            String nodeId, String fileName) throws IOException {
+            String nodeId, String fileName) throws IOException, CMDException {
         Map<String, Map<String, Long>> values = new HashMap<String, Map<String, Long>>();
         List<String> keys = new ArrayList<String>();
         FileUtils.readFileLine(nodeId, fileName, (i, line) -> {
@@ -162,7 +163,7 @@ public class NetStatUnknown implements DBMetric {
     }
 
     private Map<String, Map<String, Long>> getSNMP6Stats(
-            String nodeId, String fileName) throws IOException {
+            String nodeId, String fileName) throws IOException, CMDException {
         Map<String, Map<String, Long>> values = new HashMap<String, Map<String, Long>>();
         FileUtils.readFileLine(nodeId, fileName, line -> {
             // Expect to have "6" in metric name, skip line otherwise

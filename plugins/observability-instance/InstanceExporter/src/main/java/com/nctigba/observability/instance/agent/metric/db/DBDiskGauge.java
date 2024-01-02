@@ -27,6 +27,7 @@ package com.nctigba.observability.instance.agent.metric.db;
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.text.StrFormatter;
 import cn.hutool.core.util.StrUtil;
+import com.nctigba.observability.instance.agent.exception.CMDException;
 import com.nctigba.observability.instance.agent.util.CmdUtils;
 import com.nctigba.observability.instance.agent.util.DbUtils;
 import com.nctigba.observability.instance.agent.util.StringUtils;
@@ -103,7 +104,7 @@ public class DBDiskGauge implements DBMetric {
                 String dir = split[1].trim();
                 result.addAll(collect(target, dir, "cm"));
             });
-        } catch (IOException e) {
+        } catch (IOException | CMDException e) {
             throw new CollectException(this, e);
         }
         return result;
@@ -124,7 +125,7 @@ public class DBDiskGauge implements DBMetric {
                 result.get(1).add(new MetricResult(labels, Double.valueOf(part[2])));
                 result.get(2).add(new MetricResult(labels, Double.valueOf(part[3])));
             });
-        } catch (IOException e) {
+        } catch (IOException | CMDException e) {
             throw new CollectException(this, e);
         }
         return result;

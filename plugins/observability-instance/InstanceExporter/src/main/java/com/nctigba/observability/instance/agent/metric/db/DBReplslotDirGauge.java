@@ -26,6 +26,7 @@ package com.nctigba.observability.instance.agent.metric.db;
 
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.StrUtil;
+import com.nctigba.observability.instance.agent.exception.CMDException;
 import com.nctigba.observability.instance.agent.util.CmdUtils;
 import com.nctigba.observability.instance.agent.util.DbUtils;
 import com.nctigba.observability.instance.agent.util.StringUtils;
@@ -86,7 +87,7 @@ public class DBReplslotDirGauge implements DBMetric {
                 String[] labels = {target.getTargetConfig().getHostId()};
                 result.get(0).add(new MetricResult(labels, Double.valueOf(part[0])));
             });
-        } catch (IOException e) {
+        } catch (IOException | CMDException e) {
             throw new CollectException(this, e);
         }
         return result;

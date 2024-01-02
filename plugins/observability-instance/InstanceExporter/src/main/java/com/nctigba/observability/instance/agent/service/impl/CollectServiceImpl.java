@@ -24,11 +24,13 @@
 
 package com.nctigba.observability.instance.agent.service.impl;
 
+import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.date.StopWatch;
 import com.nctigba.observability.instance.agent.collector.AgentCollector;
 import com.nctigba.observability.instance.agent.collector.AgentCounter;
 import com.nctigba.observability.instance.agent.collector.AgentGauge;
 import com.nctigba.observability.instance.agent.constant.CollectConstants;
+import com.nctigba.observability.instance.agent.exception.CollectException;
 import com.nctigba.observability.instance.agent.metric.Metric;
 import com.nctigba.observability.instance.agent.metric.MetricResult;
 import com.nctigba.observability.instance.agent.metric.MetricType;
@@ -100,8 +102,12 @@ public class CollectServiceImpl implements CollectService {
             List<List<MetricResult>> result = metricCollectManager.getCachedGroupCollectData(collectGroupKey);
 
             // no cache, collect data
-            if (result == null) {
-                result = z.collectData(target, param);
+            if (CollectionUtil.isEmpty(result)) {
+                try {
+                    result = z.collectData(target, param);
+                } catch (CollectException e) {
+                    log.error("Collect data error for group: {}", z.getGroupName());
+                }
             }
 
             // if has time range after last scrape, build once timed task after (time range - 2s)
@@ -125,6 +131,9 @@ public class CollectServiceImpl implements CollectService {
                 }, gapTime - CollectConstants.CACHE_TIME_OUT + 1000, TimeUnit.MILLISECONDS);
             }
 
+            if (CollectionUtil.isEmpty(result)) {
+                return;
+            }
             // set collector value
             for (int i = 0; i < z.getNames().length; i++) {
                 String collectKey = z.getCollectorKey(target.getTargetConfig(), i);
