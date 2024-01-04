@@ -131,7 +131,6 @@ public class CreateDatabaseServiceImpl implements CreateDatabaseService {
         connectionDTO.setConnectionDTO(databaseConnectionUrlDO);
         ConnectionMapDAO.setConMap(uuid, connectionDTO);
         databaseConnectionDO.setIsRememberPassword(database.getIsRememberPassword());
-        log.info("connectionDatabase response is: {}", databaseConnectionDO);
         return databaseConnectionDO;
     }
 

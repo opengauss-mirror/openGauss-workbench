@@ -5,7 +5,7 @@ context:
 
 spring:
   datasource:
-    driver-class-name: org.intarkdb.IntarkDBJDBC
+    driver-class-name: org.intarkdb.IntarkdbJDBC
     url: 'jdbc:intarkdb:./data/ds'
   resources:
     static-locations: classpath:resources

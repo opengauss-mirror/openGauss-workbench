@@ -359,11 +359,8 @@ public class DbConnectionServiceImpl implements DbConnectionService {
     private List<Map<String, Object>> parseFunctionResult(
             Map<String, String> typeMap, ResultSet resultSet) throws SQLException {
         log.info("DbConnectionServiceImpl parseFunctionResult start: ");
-        List<Map<String, Object>> list = new ArrayList<>();
         Map<String, List<Map<String, String>>> packageMap = new HashMap<>();
-        while (resultSet.next()) {
-            list = parseResult(typeMap, resultSet, packageMap);
-        }
+        List<Map<String, Object>> list = parseResult(typeMap, resultSet, packageMap);
 
         for (String key : packageMap.keySet()) {
             List<Map<String, String>> childrenList = packageMap.get(key);
@@ -382,40 +379,42 @@ public class DbConnectionServiceImpl implements DbConnectionService {
             Map<String, String> typeMap, ResultSet resultSet,
             Map<String, List<Map<String, String>>> packageMap) throws SQLException {
         List<Map<String, Object>> list = new ArrayList<>();
-        String proArgTypes = resultSet.getString(PRO_ARG_TYPES);
-        String[] split = proArgTypes.split(SPACE);
-        StringBuilder asd = new StringBuilder();
-        for (int i = 0; i < split.length; i++) {
-            if (!StringUtils.isEmpty(split[i])) {
-                asd.append(ParamTypeEnum.parseType(typeMap.get(split[i])));
-                if (split.length - 1 != i) {
-                    asd.append(",");
+        while (resultSet.next()) {
+            String proArgTypes = resultSet.getString(PRO_ARG_TYPES);
+            String[] split = proArgTypes.split(SPACE);
+            StringBuilder asd = new StringBuilder();
+            for (int i = 0; i < split.length; i++) {
+                if (!StringUtils.isEmpty(split[i])) {
+                    asd.append(ParamTypeEnum.parseType(typeMap.get(split[i])));
+                    if (split.length - 1 != i) {
+                        asd.append(",");
+                    }
                 }
             }
-        }
 
-        String proPackageId = resultSet.getString(PRO_PACKAGE_ID);
-        String oid = resultSet.getString(OID);
-        String proName = DebugUtils.needQuoteName(resultSet.getString(PRO_NAME));
-        Map<String, Object> map = new HashMap<>();
-        if ("0".equals(proPackageId)) {
-            map.put(OID, oid);
-            map.put(NAME, proName + "(" + asd + ")");
-            map.put("isPackage", false);
-            list.add(map);
-        } else {
-            Map<String, String> childrenMap = new HashMap<>();
-            childrenMap.put(OID, oid);
-            childrenMap.put(NAME, proName);
-            childrenMap.put(PRO_PACKAGE_ID, proPackageId);
-            childrenMap.put(PKG_NAME, resultSet.getString(PKG_NAME));
-            if (packageMap.containsKey(proPackageId)) {
-                List<Map<String, String>> childrenList = packageMap.get(proPackageId);
-                childrenList.add(childrenMap);
+            String proPackageId = resultSet.getString(PRO_PACKAGE_ID);
+            String oid = resultSet.getString(OID);
+            String proName = DebugUtils.needQuoteName(resultSet.getString(PRO_NAME));
+            Map<String, Object> map = new HashMap<>();
+            if ("0".equals(proPackageId)) {
+                map.put(OID, oid);
+                map.put(NAME, proName + "(" + asd + ")");
+                map.put("isPackage", false);
+                list.add(map);
             } else {
-                List<Map<String, String>> childrenList = new ArrayList<>();
-                childrenList.add(childrenMap);
-                packageMap.put(proPackageId, childrenList);
+                Map<String, String> childrenMap = new HashMap<>();
+                childrenMap.put(OID, oid);
+                childrenMap.put(NAME, proName);
+                childrenMap.put(PRO_PACKAGE_ID, proPackageId);
+                childrenMap.put(PKG_NAME, resultSet.getString(PKG_NAME));
+                if (packageMap.containsKey(proPackageId)) {
+                    List<Map<String, String>> childrenList = packageMap.get(proPackageId);
+                    childrenList.add(childrenMap);
+                } else {
+                    List<Map<String, String>> childrenList = new ArrayList<>();
+                    childrenList.add(childrenMap);
+                    packageMap.put(proPackageId, childrenList);
+                }
             }
         }
         log.info("DbConnectionServiceImpl parseResult list: " + list);

@@ -51,6 +51,7 @@ import static com.nctigba.datastudio.constants.CommonConstants.RESULT;
 import static com.nctigba.datastudio.constants.SqlConstants.ANALYZE_TABLE_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.COMMA;
 import static com.nctigba.datastudio.constants.SqlConstants.COMMENT_TABLE_SQL;
+import static com.nctigba.datastudio.constants.SqlConstants.COUNT_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.DROP_TABLE_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.LIMIT_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.ORDER_SQL;
@@ -62,7 +63,6 @@ import static com.nctigba.datastudio.constants.SqlConstants.TABLESPACE_TABLE_SQL
 import static com.nctigba.datastudio.constants.SqlConstants.TABLE_ANALYSE_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.TABLE_ATTRIBUTE_PARTITION_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.TABLE_ATTRIBUTE_SQL;
-import static com.nctigba.datastudio.constants.SqlConstants.TABLE_DATA_COUNT_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.TABLE_DATA_LIMIT_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.TABLE_DATA_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.TABLE_DDL_SQL;
@@ -120,7 +120,7 @@ public class TableObjectSQLServiceImpl implements TableObjectSQLService {
 
     @Override
     public String tableDataCountSQL(String schema, String tableName) {
-        String ddl = String.format(TABLE_DATA_COUNT_SQL, schema, tableName);
+        String ddl = String.format(COUNT_SQL, schema, tableName);
         log.info("tableDataCountSQL response is: " + ddl);
         return ddl;
     }
