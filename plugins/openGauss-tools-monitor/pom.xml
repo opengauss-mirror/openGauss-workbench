@@ -9,28 +9,20 @@
         <module>monitor-tools</module>
     </modules>
 
-    <parent>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-parent</artifactId>
-        <version>2.6.3</version>
-    </parent>
-
     <groupId>com.tools.monitor</groupId>
     <artifactId>openGauss-tools-monitor</artifactId>
-    <version>5.1.1</version>
+    <parent>
+        <groupId>org.opengauss</groupId>
+        <artifactId>visualtool-parent</artifactId>
+        <version>${admin.version}</version>
+        <relativePath>../../pom.xml</relativePath>
+    </parent>
 
     <name>openGauss-tools-monitor</name>
     <!-- FIXME change it to the project's website -->
     <url>http://www.example.com</url>
 
     <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.source>11</maven.compiler.source>
-        <maven.compiler.target>11</maven.compiler.target>
-        <boot.version>2.6.3</boot.version>
-        <spring-boot.version>2.5.6</spring-boot.version>
-        <spring-brick.version>3.1.0</spring-brick.version>
-        <main.version>5.1.1</main.version>
         <plugin.build.mode>prod</plugin.build.mode>
         <build.frontend.skip>false</build.frontend.skip>
     </properties>
@@ -39,22 +31,18 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter</artifactId>
-            <version>${spring-boot.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-aop</artifactId>
-            <version>${spring-boot.version}</version>
         </dependency>
         <dependency>
             <groupId>com.gitee.starblues</groupId>
             <artifactId>spring-brick-bootstrap</artifactId>
-            <version>${spring-brick.version}</version>
         </dependency>
         <dependency>
             <groupId>org.opengauss</groupId>
             <artifactId>visualtool-framework</artifactId>
-            <version>${main.version}</version>
             <scope>provided</scope>
             <exclusions>
                 <exclusion>
@@ -79,13 +67,27 @@
         <dependency>
             <groupId>cn.hutool</groupId>
             <artifactId>hutool-all</artifactId>
-            <version>5.7.17</version>
         </dependency>
         <!-- 配置 Hutool All 依赖 [END] -->
         <dependency>
             <groupId>org.apache.httpcomponents.client5</groupId>
             <artifactId>httpclient5-fluent</artifactId>
             <version>5.0.3</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents.client5</groupId>
+            <artifactId>httpclient5</artifactId>
+            <version>5.1.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents.core5</groupId>
+            <artifactId>httpcore5-h2</artifactId>
+            <version>5.1.3</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents.core5</groupId>
+            <artifactId>httpcore5</artifactId>
+            <version>5.1.3</version>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
@@ -109,7 +111,6 @@
         <dependency>
             <groupId>com.alibaba</groupId>
             <artifactId>fastjson</artifactId>
-            <version>2.0.12</version>
         </dependency>
         <!-- 配置 MySQL Connector/J 依赖 [BEGIN] -->
         <dependency>
@@ -122,6 +123,11 @@
             <groupId>com.github.pagehelper</groupId>
             <artifactId>pagehelper-spring-boot-starter</artifactId>
             <version>1.4.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.mybatis</groupId>
+            <artifactId>mybatis</artifactId>
+            <version>3.5.7</version>
         </dependency>
         <dependency>
             <groupId>junit</groupId>

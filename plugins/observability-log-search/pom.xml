@@ -3,7 +3,12 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.opengauss</groupId>
 	<artifactId>observability-log-search</artifactId>
-	<version>5.1.1</version>
+	<parent>
+		<groupId>org.opengauss</groupId>
+		<artifactId>visualtool-parent</artifactId>
+		<version>${admin.version}</version>
+		<relativePath>../../pom.xml</relativePath>
+	</parent>
 	<packaging>jar</packaging>
 	<properties>
 		<!--config-->
@@ -12,20 +17,8 @@
 		<web.build.skip>false</web.build.skip>
 		<web.clean.skip>false</web.clean.skip>
 
-		<!--project-->
-		<java.version>11</java.version>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<maven.compiler.source>11</maven.compiler.source>
-		<maven.compiler.target>11</maven.compiler.target>
-
 		<!-- dependency version -->
-		<spring-boot.version>2.5.6</spring-boot.version>
-		<spring-brick.version>3.1.0</spring-brick.version>
 		<junit.version>4.13</junit.version>
-		<mybatis-plus.version>3.5.2</mybatis-plus.version>
-		<fastjson.version>1.2.78</fastjson.version>
-		<lombok.version>1.18.24</lombok.version>
-		<hutool.version>5.0.3</hutool.version>
 
 		<es-java-client.version>8.3.3</es-java-client.version>
 		<es-java-client-jackson-databind.version>2.12.3</es-java-client-jackson-databind.version>
@@ -37,12 +30,10 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter</artifactId>
-			<version>${spring-boot.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.opengauss</groupId>
 			<artifactId>visualtool-framework</artifactId>
-			<version>5.1.1</version>
 			<scope>provided</scope>
 			<exclusions>
 				<!--druid-spring-boot-starter removed-->
@@ -55,13 +46,11 @@
 		<dependency>
 			<groupId>com.gitee.starblues</groupId>
 			<artifactId>spring-brick-bootstrap</artifactId>
-			<version>${spring-brick.version}</version>
 		</dependency>
 
 		<dependency>
 			<groupId>com.gitee.starblues</groupId>
 			<artifactId>spring-brick-maven-packager</artifactId>
-			<version>${spring-brick.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>junit</groupId>
@@ -87,12 +76,10 @@
 		<dependency>
 			<groupId>com.alibaba</groupId>
 			<artifactId>fastjson</artifactId>
-			<version>${fastjson.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>cn.hutool</groupId>
 			<artifactId>hutool-all</artifactId>
-			<version>${hutool.version}</version>
 		</dependency>
 		<!-- common -->
 
@@ -100,17 +87,14 @@
 		<dependency>
 			<groupId>com.baomidou</groupId>
 			<artifactId>mybatis-plus-boot-starter</artifactId>
-			<version>${mybatis-plus.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.alibaba</groupId>
 			<artifactId>druid-spring-boot-starter</artifactId>
-			<version>1.2.8</version>
 		</dependency>
 		<dependency>
 			<groupId>com.baomidou</groupId>
 			<artifactId>dynamic-datasource-spring-boot-starter</artifactId>
-			<version>${mybatis-plus.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.postgresql</groupId>
@@ -120,7 +104,6 @@
 		<dependency>
 			<groupId>org.opengauss</groupId>
 			<artifactId>opengauss-jdbc</artifactId>
-			<version>3.0.0</version>
 		</dependency>
 		<!-- elastic search java client -->
 		<dependency>
@@ -150,19 +133,6 @@
 			<version>2.9.2</version>
 		</dependency>
 	</dependencies>
-
-	<dependencyManagement>
-		<!-- Compiler properties -->
-		<dependencies>
-			<dependency>
-				<groupId>org.springframework.boot</groupId>
-				<artifactId>spring-boot-dependencies</artifactId>
-				<version>${spring-boot.version}</version>
-				<type>pom</type>
-				<scope>import</scope>
-			</dependency>
-		</dependencies>
-	</dependencyManagement>
 
 	<repositories>
 		<repository>
@@ -274,16 +244,6 @@
 						</goals>
 					</execution>
 				</executions>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.1</version>
-				<configuration>
-					<source>${java.version}</source>
-					<target>${java.version}</target>
-					<encoding>${project.build.sourceEncoding}</encoding>
-				</configuration>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>

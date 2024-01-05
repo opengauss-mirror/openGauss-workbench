@@ -8,11 +8,10 @@
     <parent>
         <groupId>com.tools.monitor</groupId>
         <artifactId>openGauss-tools-monitor</artifactId>
-        <version>5.1.1</version>
+        <version>${admin.version}</version>
     </parent>
     <groupId>com.tools.monitor</groupId>
     <artifactId>monitor-tools</artifactId>
-    <version>5.1.1</version>
 
     <name>monitor-tools</name>
     <!-- FIXME change it to the project's website -->
@@ -29,7 +28,6 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
-            <version>${boot.version}</version>
         </dependency>
 
         <dependency>
@@ -48,7 +46,6 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
-            <version>${boot.version}</version>
             <scope>test</scope>
         </dependency>
 
@@ -61,7 +58,6 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-devtools</artifactId>
-            <version>${boot.version}</version>
         </dependency>
         <dependency>
             <groupId>org.postgresql</groupId>
@@ -115,7 +111,7 @@
                     <pluginInfo>
                         <id>monitor-tools</id>
                         <bootstrapClass>org.opengauss.admin.plugin.PluginApplication</bootstrapClass>
-                        <version>5.1.1</version>
+                        <version>${project.version}</version>
                         <provider>openGauss-tools-monitor</provider>
                         <description>数据库监控插件生成工具：提供一键式将openGauss自定义的监控SQL转换为Prometheus、Zabbix、Nagios监控平台插件，覆盖对连接数、动态内存、共享内存、TPS、QPS、长连接等常用指标监控，可快速实现对openGauss的监控部署。</description>
                         <configFileName>application.yml</configFileName>

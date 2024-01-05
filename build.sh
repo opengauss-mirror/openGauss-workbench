@@ -16,7 +16,7 @@
 # ----------------------------------------------------------------------------
 # Description  : shell script for build datakit and plugins.
 #############################################################################
-declare mvn_target="clean install package"
+declare mvn_target="clean package"
 declare mvn_input_args=''
 declare mvn_prod='prod'
 #############################################################################
@@ -24,7 +24,7 @@ function print_help()
 {
     echo "Usage: $0 [OPTION]
     -h|--help              show help information
-    -t|--target            set the mvn build target, default is clean install package
+    -t|--target            set the mvn build target, default is clean package
     -a|--args              set the mvn build args additions, default is empty
     -p|--profile           the profile, default is prod
 example:
@@ -42,7 +42,7 @@ while [ $# -gt 0 ]; do
             ;;
         -t|--target)
             if [ "$2"X = X ]; then
-                echo "no given correct mvn target, such as: clean install package"
+                echo "no given correct mvn target, such as: clean package"
                 exit 1
             fi
             mvn_target=$2
@@ -82,7 +82,7 @@ plugin_doc_output=doc
 echo "we got build cmd: mvn $mvn_target $mvn_args"
 
 export JAVA_TOOL_OPTIONS="-Dfile.encoding=UTF8"
-pom_version=`awk '/<version>[^<]+<\/version>/{gsub(/<version>|<\/version>/,"",$1);print $1;exit;}' ${root_path}/$build_main_pkg/pom.xml`
+pom_version=`awk '/<admin.version>[^<]+<\/admin.version>/{gsub(/<admin.version>|<\/admin.version>/,"",$1);print $1;exit;}' ${root_path}/pom.xml`
 mkdir -p output 
 rm -rf output/*
 mkdir -p output/$plugin_output
@@ -93,20 +93,32 @@ function prepare_java_env()
     echo "We no longer provide java, please makesure java(1.11*) already in PATH!"
     JAVA_VERSION=`java -version 2>&1 | awk -F '"' '/version/ {print $2}'`
     echo java version is $JAVA_VERSION
+    if [ x"$JAVA_VERSION" \< x"11" ]; then
+        echo "java version is not meeting requirements!"
+        exit 1
+    fi
 }
 
 function prepare_maven_env()
 {
-    echo "We no longer provide mvn, please makesure mvn(3.8.0+) already in PATH!"
+    echo "We no longer provide mvn, please makesure mvn(3.6.0+) already in PATH!"
     MAVEN_VERSION=`mvn -v 2>&1 | awk '/Apache Maven / {print $3}'`
     echo maven version is $MAVEN_VERSION
+    if [ x"$MAVEN_VERSION" \< x"3.6" ]; then
+          echo "maven version is not meeting requirements!"
+          exit 1
+    fi
 }
 
 function prepare_npm_env()
 {
-    echo "We no longer provide node/npm, please makesure npm(9.8.0+) already in PATH!"
+    echo "We no longer provide node/npm, please makesure npm(8.11.0+) already in PATH!"
     NPM_VERSION=`npm -v 2>&1 | awk -F '"' '// {print $1}'`
     echo npm version is $NPM_VERSION
+    if [ x"$NPM_VERSION" \< x"8.11" ]; then
+          echo "npm version is not meeting requirements!"
+          exit 1
+    fi
 }
 
 function prepare_env()
@@ -116,21 +128,21 @@ function prepare_env()
     prepare_npm_env
 }
 
-function build_main_pkg() {
-    cd $root_path/$build_main_pkg
-    echo "build dir:${root_path}/${build_main_pkg} ,to run cmd: mvn ${mvn_target} ${mvn_args}"
+function build_pkg() {
+    cd $root_path
+    echo "build dir:${root_path} ,to run cmd: mvn ${mvn_target} ${mvn_args}"
     mvn ${mvn_target} ${mvn_args}
     if [ $? -ne 0 ]; then
       echo "Build datakit failed..."
       exit 1
     fi
-    cp ./visualtool-api/target/openGauss-datakit-*.jar ${output_path}/
-    cp ../run.sh ${output_path}/
-    cp ./README.md ${output_path}/${plugin_doc_output}/datakit-README.md
-    cp ./config/application-temp.yml ${output_path}/
+    cp ./${build_main_pkg}/visualtool-api/target/openGauss-datakit-*.jar ${output_path}/
+    cp ./run.sh ${output_path}/
+    cp ./${build_main_pkg}/README.md ${output_path}/${plugin_doc_output}/datakit-README.md
+    cp ./${build_main_pkg}/config/application-temp.yml ${output_path}/
 }
 
-function build_plugin() {
+function copy_plugin_pkg() {
   local plugin_path=$root_path/plugins
   cd $root_path
   sub_plugin_paths=`ls -D ./plugins`
@@ -138,18 +150,7 @@ function build_plugin() {
   do
       {
         local build_path=$plugin_path/${plugin_name}
-        if [ ! -d $build_path ]; then
-            echo "NOT dir: ${build_path} ,skip now."
-            continue
-        fi
-        echo "build dir:${build_path} ,to run cmd: mvn ${mvn_target} ${mvn_args}"
         cd ${build_path}
-        mvn ${mvn_target} ${mvn_args}
-        if [ $? -ne 0 ]; then
-            echo "build ${plugin_name} failed!!!"
-            exit 1;
-        fi
-        echo "build ${plugin_name} success!!!"
         if [ "$plugin_name" == "openGauss-tools-monitor" ] ; then
             cp ./**/target/*repackage.jar ${output_path}/$plugin_output/ 2>/dev/null
         else
@@ -168,7 +169,7 @@ function build_plugin() {
 }
 
 prepare_env
-build_main_pkg
-build_plugin
+build_pkg
+copy_plugin_pkg
 cd $output_path
 tar -zcf Datakit-${pom_version}.tar.gz ./*

@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.opengauss</groupId>
     <artifactId>visualtool-parent</artifactId>
-    <version>5.1.1</version>
+    <version>${admin.version}</version>
 
     <name>visualtool</name>
     <description>openGauss All-in-one platform</description>
@@ -16,12 +16,11 @@
         <spring-brick.version>3.1.0</spring-brick.version>
         <spring-boot.version>2.5.6</spring-boot.version>
         <admin.version>5.1.1</admin.version>
-        <mybatis-plus.version>3.5.0</mybatis-plus.version>
         <velocity.version>2.2</velocity.version>
         <knife4j.version>3.0.3</knife4j.version>
-        <druid.version>1.2.8</druid.version>
+        <druid.version>1.2.16</druid.version>
         <mybatis-spring-boot.version>2.1.4</mybatis-spring-boot.version>
-        <mybatis-plus.version>3.5.0</mybatis-plus.version>
+        <mybatis-plus.version>3.5.2</mybatis-plus.version>
         <pagehelper.boot.version>1.3.1</pagehelper.boot.version>
         <commons.io.version>2.11.0</commons.io.version>
         <commons.fileupload.version>1.4</commons.fileupload.version>
@@ -33,6 +32,9 @@
         <bitwalker.version>1.21</bitwalker.version>
         <jsch.version>0.2.9</jsch.version>
         <prometheus.version>1.8.1</prometheus.version>
+        <hutool.version>5.3.5</hutool.version>
+        <opengauss-jdbc.version>3.0.0</opengauss-jdbc.version>
+        <servlet-api.version>4.0.1</servlet-api.version>
 
         <web.path/>
         <web.build.path/>
@@ -67,7 +69,11 @@
                 <artifactId>mybatis-plus-boot-starter</artifactId>
                 <version>${mybatis-plus.version}</version>
             </dependency>
-
+            <dependency>
+                <groupId>com.baomidou</groupId>
+                <artifactId>dynamic-datasource-spring-boot-starter</artifactId>
+                <version>${mybatis-plus.version}</version>
+            </dependency>
             <dependency>
                 <groupId>org.projectlombok</groupId>
                 <artifactId>lombok</artifactId>
@@ -98,7 +104,11 @@
                 <artifactId>fastjson</artifactId>
                 <version>${fastjson.version}</version>
             </dependency>
-
+            <dependency>
+                <groupId>org.opengauss</groupId>
+                <artifactId>visualtool-api</artifactId>
+                <version>${admin.version}</version>
+            </dependency>
             <dependency>
                 <groupId>org.opengauss</groupId>
                 <artifactId>visualtool-service</artifactId>
@@ -167,25 +177,54 @@
                 <artifactId>micrometer-registry-prometheus</artifactId>
                 <version>${prometheus.version}</version>
             </dependency>
+            <dependency>
+                <groupId>com.gitee.starblues</groupId>
+                <artifactId>spring-brick-bootstrap</artifactId>
+                <version>${spring-brick.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.gitee.starblues</groupId>
+                <artifactId>spring-brick-maven-packager</artifactId>
+                <version>${spring-brick.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>cn.hutool</groupId>
+                <artifactId>hutool-all</artifactId>
+                <version>${hutool.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.opengauss</groupId>
+                <artifactId>opengauss-jdbc</artifactId>
+                <version>${opengauss-jdbc.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>javax.servlet</groupId>
+                <artifactId>javax.servlet-api</artifactId>
+                <version>${servlet-api.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
-    <dependencies>
-        <dependency>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-compiler-plugin</artifactId>
-            <version>3.10.1</version>
-        </dependency>
-    </dependencies>
     <modules>
-        <module>visualtool-api</module>
-        <module>visualtool-framework</module>
-        <module>visualtool-service</module>
-        <module>visualtool-common</module>
-        <module>cov-analysis</module>
+        <module>openGauss-datakit/visualtool-api</module>
+        <module>openGauss-datakit/visualtool-framework</module>
+        <module>openGauss-datakit/visualtool-service</module>
+        <module>openGauss-datakit/visualtool-common</module>
+        <module>openGauss-datakit/cov-analysis</module>
+        <module>plugins/alert-monitor</module>
+        <module>plugins/base-ops</module>
+        <module>plugins/data-migration</module>
+        <module>plugins/data-studio</module>
+        <module>plugins/datakit-demo-plugin</module>
+        <module>plugins/datasync-mysql</module>
+        <module>plugins/observability-instance</module>
+        <module>plugins/observability-log-search</module>
+        <module>plugins/observability-sql-diagnosis</module>
+        <module>plugins/openGauss-tools-monitor</module>
+        <module>plugins/compatibility-assessment</module>
     </modules>
     <packaging>pom</packaging>
-
-
+    
     <profiles>
         <profile>
             <id>dev</id>

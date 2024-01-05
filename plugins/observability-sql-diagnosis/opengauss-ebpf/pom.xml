@@ -14,7 +14,6 @@
 	</parent>
 	<groupId>com.nctigba.ebpf</groupId>
 	<artifactId>opengauss-ebpf</artifactId>
-	<version>5.1.0</version>
 	<name>opengauss-ebpf</name>
 	<description>Demo project for Spring Boot</description>
 	<dependencies>
