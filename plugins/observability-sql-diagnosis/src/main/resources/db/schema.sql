@@ -41,7 +41,7 @@ CREATE TABLE IF NOT EXISTS his_diagnosis_task_info (
     span TEXT,
     remarks TEXT,
     conf TEXT,
-    threshold TEXT,
+    threshold CLOB,
     task_type TEXT,
     diagnosis_type TEXT,
     node_vo_sub TEXT,
@@ -76,7 +76,7 @@ CREATE TABLE IF NOT EXISTS his_diagnosis_threshold_info (
     cluster_id TEXT,
     node_id TEXT,
     threshold_type TEXT,
-    threshold TEXT,
+    threshold CLOB,
     threshold_name TEXT,
     threshold_value TEXT,
     threshold_unit TEXT,
@@ -118,10 +118,7 @@ CREATE TABLE IF NOT EXISTS diagnosis_resource (
 CREATE TABLE IF NOT EXISTS dictionary_config (
     id TEXT NOT NULL PRIMARY KEY,
     nodeId TEXT,
-    key TEXT,
-    value TEXT
+    "key" TEXT,
+    "value" TEXT
 );
-CREATE TABLE IF NOT EXISTS ThresholdDO (
-    knowledge_key TEXT NOT NULL PRIMARY KEY,
-    v TEXT);
 

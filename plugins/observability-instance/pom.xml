@@ -121,6 +121,17 @@
 <!--        </dependency>-->
         <!-- https://mvnrepository.com/artifact/org.apache.sshd/sshd-scp -->
         <dependency>
+            <groupId>org.xerial</groupId>
+            <artifactId>sqlite-jdbc</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>IntarkDB-jdbc</groupId>
+            <artifactId>IntarkDB-jdbc</artifactId>
+            <version>1.0.0.1</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/../../lib/intarkdb-jdbc-1.0.0.1.jar</systemPath>
+        </dependency>
+        <dependency>
             <groupId>org.apache.sshd</groupId>
             <artifactId>sshd-sftp</artifactId>
             <version>2.9.2</version>
@@ -135,11 +146,6 @@
             <artifactId>springfox-boot-starter</artifactId>
             <version>3.0.0</version>
             <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.xerial</groupId>
-            <artifactId>sqlite-jdbc</artifactId>
-            <version>3.39.3.0</version>
         </dependency>
     </dependencies>
     <repositories>
