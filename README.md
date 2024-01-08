@@ -23,7 +23,7 @@ openGauss的安装、运维场景对于初级用户或单纯想要测试openGaus
 ```
 ## 下载链接
 
-https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/Datakit-5.1.1.tar.gz
+https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/Datakit-6.0.0.tar.gz
 
 ## 说明
 1、插件需要安装在平台上运行，因此需要先将平台项目安装部署后，再将其他插件项目打包安装使用。
@@ -50,19 +50,19 @@ https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/Datakit-
    /doc/observability-instance-README.md
    /doc/observability-log-search-README.md
    /visualtool-plugin/
-   /visualtool-plugin/alert-monitor-5.1.1-repackage.jar
-   /visualtool-plugin/base-ops-5.1.1-repackage.jar
-   /visualtool-plugin/compatibility-assessment-5.1.1-repackage.jar
-   /visualtool-plugin/data-migration-5.1.1-repackage.jar
-   /visualtool-plugin/datakit-demo-plugin-5.1.1-repackage.jar
-   /visualtool-plugin/datasync-mysql-5.1.1-repackage.jar
-   /visualtool-plugin/monitor-tools-5.1.1-repackage.jar
-   /visualtool-plugin/observability-instance-5.1.1-repackage.jar
-   /visualtool-plugin/observability-log-search-5.1.1-repackage.jar
-   /visualtool-plugin/observability-sql-diagnosis-5.1.1-repackage.jar
-   /visualtool-plugin/webds-plugin-5.1.1-repackage.jar
+   /visualtool-plugin/alert-monitor-6.0.0-repackage.jar
+   /visualtool-plugin/base-ops-6.0.0-repackage.jar
+   /visualtool-plugin/compatibility-assessment-6.0.0-repackage.jar
+   /visualtool-plugin/data-migration-6.0.0-repackage.jar
+   /visualtool-plugin/datakit-demo-plugin-6.0.0-repackage.jar
+   /visualtool-plugin/datasync-mysql-6.0.0-repackage.jar
+   /visualtool-plugin/monitor-tools-6.0.0-repackage.jar
+   /visualtool-plugin/observability-instance-6.0.0-repackage.jar
+   /visualtool-plugin/observability-log-search-6.0.0-repackage.jar
+   /visualtool-plugin/observability-sql-diagnosis-6.0.0-repackage.jar
+   /visualtool-plugin/webds-plugin-6.0.0-repackage.jar
    application-temp.yml
-   openGauss-datakit-5.1.1.jar
+   openGauss-datakit-6.0.0.jar
    run.sh
    ```
 2. 创建新的目录
