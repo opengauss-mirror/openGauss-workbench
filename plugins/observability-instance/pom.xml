@@ -322,30 +322,6 @@
                 </executions>
             </plugin>
             <plugin>
-                <groupId>com.mycila</groupId>
-                <artifactId>license-maven-plugin</artifactId>
-                <version>4.2</version>
-                <executions>
-                    <execution>
-                        <phase>generate-sources</phase>
-                        <goals>
-                            <goal>format</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <quiet>true</quiet>
-                    <header>HEADER</header>
-                    <includes>
-                        <include>**/*.java</include>
-                    </includes>
-                    <strictCheck>true</strictCheck>
-                    <mapping>
-                        <java>SLASHSTAR_STYLE</java>
-                    </mapping>
-                </configuration>
-            </plugin>
-            <plugin>
                 <groupId>com.gitee.starblues</groupId>
                 <artifactId>spring-brick-maven-packager</artifactId>
                 <version>${spring-brick.version}</version>
