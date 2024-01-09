@@ -38,7 +38,7 @@
         m.path,
         m.component,
         m.visible,
-        m. STATUS,
+        m.status,
         COALESCE(m.perms, '') AS perms,
         m.is_frame,
         m.is_cache,

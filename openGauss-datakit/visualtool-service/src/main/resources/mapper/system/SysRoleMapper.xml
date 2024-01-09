@@ -30,7 +30,7 @@
 			r.data_scope,
 			r.menu_check_strictly,
 			r.dept_check_strictly,
-			r. STATUS,
+			r.status,
 			r.del_flag,
 			r.create_time,
 			r.remark
