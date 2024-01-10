@@ -70,7 +70,6 @@ public class StartSqlImpl implements OperationInterface {
     @Override
     @Async
     public void operate(WebSocketServer webSocketServer, Object obj) throws SQLException, IOException {
-        log.info("StartSqlImpl operate obj: " + obj);
         PublicParamQuery paramReq = DebugUtils.changeParamType(obj);
         String windowName = paramReq.getWindowName();
         if (!conMap.containsKey(paramReq.getUuid())) {
