@@ -90,7 +90,6 @@ public class WebSocketServer implements SocketExtract {
 
     @Override
     public void processMessage(String sessionId, String message) {
-        log.info("sessionId: " + sessionId + ",message:" + message);
         if (StringUtils.isBlank(message)) {
             return;
         }
