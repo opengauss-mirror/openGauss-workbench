@@ -104,13 +104,13 @@ sed -i 's/gba-cluster/'${clusterid}'/g' module/system/**/ingest/pipeline.yml
 echo -------pipeline-nodeid-------
 mv module/opengauss/errorlog/ingest/pipeline.yml module/opengauss/errorlog/ingest/pipeline-${nodeid}.yml
 mv module/opengauss/errorlog/ingest/pipeline-csv.yml module/opengauss/errorlog/ingest/pipeline-csv-${nodeid}.yml
-mv module/opengauss/errorlog/ingest/pipeline-errorlog.yml module/opengauss/errorlog/ingest/pipeline-errorlog-${nodeid}.yml
+mv module/opengauss/errorlog/ingest/pipeline-log.yml module/opengauss/errorlog/ingest/pipeline-log-${nodeid}.yml
 mv module/opengauss/log/ingest/pipeline.yml module/opengauss/log/ingest/pipeline-${nodeid}.yml
 mv module/opengauss/log/ingest/pipeline-csv.yml module/opengauss/log/ingest/pipeline-csv-${nodeid}.yml
 mv module/opengauss/log/ingest/pipeline-log.yml module/opengauss/log/ingest/pipeline-log-${nodeid}.yml
 mv module/opengauss/slowlog/ingest/pipeline.yml module/opengauss/slowlog/ingest/pipeline-${nodeid}.yml
 mv module/opengauss/slowlog/ingest/pipeline-csv.yml module/opengauss/slowlog/ingest/pipeline-csv-${nodeid}.yml
-mv module/opengauss/slowlog/ingest/pipeline-slowlog.yml module/opengauss/slowlog/ingest/pipeline-slowlog-${nodeid}.yml
+mv module/opengauss/slowlog/ingest/pipeline-log.yml module/opengauss/slowlog/ingest/pipeline-log-${nodeid}.yml
 mv module/system/errorlog/ingest/pipeline.yml module/system/errorlog/ingest/pipeline-${nodeid}.yml
 mv module/system/syslog/ingest/pipeline.yml module/system/syslog/ingest/pipeline-${nodeid}.yml
 mv module/opengauss/gsctl/ingest/pipeline.yml module/opengauss/gsctl/ingest/pipeline-${nodeid}.yml

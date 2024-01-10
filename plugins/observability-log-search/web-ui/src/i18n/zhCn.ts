@@ -62,6 +62,7 @@ export default {
         gsOmLogPath: 'gs_om日志路径',
         gsInstallLogPath: 'gs_install日志路径',
         gsLocalLogPath: 'gs_local日志路径',
+        cmLogPath: 'cm日志路径',
         installServerAlert:'请先安装服务端！',
         installedServerAlert: '只能安装一个服务端',
         continueUpload: '继续上传',

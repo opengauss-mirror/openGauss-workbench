@@ -47,6 +47,9 @@
                     <el-form-item :label="t('install.gsLocalLogPath')" >
                         <el-input v-model="formData.gsLocalLogPath" style="width: 300px; margin: 0 4px" />
                     </el-form-item>
+                    <el-form-item :label="t('install.cmLogPath')" >
+                        <el-input v-model="formData.cmLogPath" style="width: 300px; margin: 0 4px" />
+                    </el-form-item>
                     <el-form-item :label="t('install.installMode')" prop="installMode">
                         <el-radio-group v-model="formData.installMode">
                             <el-radio label="online">{{ t('install.online') }}</el-radio>
@@ -136,12 +139,14 @@ const initFormData = {
     gsOmLogPath: "",
     gsInstallLogPath: "",
     gsLocalLogPath: "",
+    cmLogPath: "",
     // gs: ""
     installMode: 'online',
     pkg: '',
     src: '',
     url: '',
 };
+const logPath = ref<string>('');
 const formData = reactive(cloneDeep(initFormData));
 const connectionFormRef = ref<FormInstance>();
 const connectionFormRules = reactive<FormRules>({
@@ -153,12 +158,22 @@ const connectionFormRules = reactive<FormRules>({
 const handleClusterValue = (val: any) => {
     formData.nodeId = val.length > 1 ? val[1] : "";
     if (formData.nodeId) {
+        getLogPath(formData.nodeId);
         nextTick(() => {
             refreshPkgInfo();
         });
-        formData.path = `${basePath.value}/${formData.nodeId}/filebeat`
+        formData.path = `${basePath.value}/${formData.nodeId}/filebeat`;
     }
 };
+const getLogPath = (nodeId: string) => {
+    ogRequest.get(`/observability/v1/environment/logPath`,{
+        nodeId
+    }).then(res => {
+        if(res) {
+            formData.ogRunLogPath = res;
+        }
+    })
+}
 const clusterList = ref<any[]>();
 const getClusterList = (val: any) => {
     clusterList.value = val;
@@ -229,6 +244,7 @@ const sendData = async () => {
         gsOmLogPath: formData.gsOmLogPath,
         gsInstallLogPath: formData.gsInstallLogPath,
         gsLocalLogPath: formData.gsLocalLogPath,
+        cmLogPath: formData.cmLogPath,
         language: localStorage.getItem('locale') === 'en-US' ? 'en_US' : 'zh_CN'
         // gs: formData.gs
     };
@@ -304,6 +320,7 @@ const getInstallPath = () => {
         }
     })
 }
+
 
 
 const showUpload = ref<boolean>(false);
