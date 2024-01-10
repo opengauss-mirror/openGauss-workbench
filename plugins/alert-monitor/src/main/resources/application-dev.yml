@@ -15,10 +15,6 @@ spring:
           username: scott
           password: Test@1234
     type: com.alibaba.druid.pool.DruidDataSource
-#    driver-class-name: org.opengauss.Driver
-#    url: jdbc:opengauss://192.168.110.31:5432/postgres?currentSchema=public
-#    username: scott
-#    password: Test@1234
     druid:
       test-while-idle: false
       test-on-borrow: true
@@ -27,6 +23,11 @@ spring:
       connection-error-retry-attempts: 0
       break-after-acquire-failure: true
       max-wait: 3000
+  sql:
+    init:
+      mode: always
+      data-locations: classpath:db/alert-monitor.sql
+      continue-on-error: false
 
 mybatis-plus:
   typeAliasesPackage: org.opengauss.plugin.alertcenter.entity,org.opengauss.admin.common.core.domain.entity

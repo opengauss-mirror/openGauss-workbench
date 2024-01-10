@@ -179,6 +179,13 @@
             <artifactId>snmp4j</artifactId>
             <version>3.7.7</version>
         </dependency>
+		<dependency>
+            <groupId>IntarkDB-jdbc</groupId>
+            <artifactId>IntarkDB-jdbc</artifactId>
+            <version>1.0.0.1</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/../../lib/intarkdb-jdbc-1.0.0.1.jar</systemPath>
+        </dependency>
     </dependencies>
 
     <repositories>

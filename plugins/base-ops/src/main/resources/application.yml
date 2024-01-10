@@ -11,14 +11,6 @@ spring:
       test-on-borrow: true
       validation-query: "select 1"
       validation-query-timeout: 30000
-  sql:
-    init:
-      mode: always
-      # For OpenGauss
-      #data-locations: classpath:opengauss-schema.sql
-      # For Intarkdb
-      data-locations: classpath:intarkdb-schema.sql
-      continue-on-error: true
 system:
   defaultStoragePath: /Users/xielibo/uploadPath/gausstool
 # log config
