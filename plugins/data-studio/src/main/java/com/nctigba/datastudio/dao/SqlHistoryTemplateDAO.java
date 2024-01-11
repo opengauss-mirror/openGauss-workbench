@@ -74,7 +74,6 @@ public class SqlHistoryTemplateDAO implements ApplicationRunner {
      * @param sqlHistoryDOList sqlHistoryDOList
      */
     public void insertTable(List<SqlHistoryDO> sqlHistoryDOList) {
-        log.info("SqlHistoryTemplate insertTable sqlHistoryDOList: " + sqlHistoryDOList);
         String sql = "insert into sqlHistory(startTime, success, sql, executeTime, lock, webUser) values(?,?,?,?,?,?)";
         int[] counts = jdbcTemplate.batchUpdate(sql, new BatchPreparedStatementSetter() {
             @Override
@@ -133,7 +132,6 @@ public class SqlHistoryTemplateDAO implements ApplicationRunner {
                 "select id, startTime, success, sql, executeTime, lock, webUser from sqlHistory where webUser = '"
                         + sqlHistoryDO.getWebUser() + "' order by lock desc, startTime desc;",
                 new BeanPropertyRowMapper<>(SqlHistoryDO.class));
-        log.info("SqlHistoryTemplate queryTable list: " + list);
         return list;
     }
 
@@ -174,7 +172,6 @@ public class SqlHistoryTemplateDAO implements ApplicationRunner {
      * @param sqlHistoryDO sqlHistoryDO
      */
     public void updateStatusById(SqlHistoryDO sqlHistoryDO) {
-        log.info("SqlHistoryTemplate updateTable sqlHistoryDO: " + sqlHistoryDO);
         boolean isLock = sqlHistoryDO.isLock();
         if (isLock) {
             Integer count = queryCount(sqlHistoryDO.getWebUser(), true);
@@ -194,7 +191,6 @@ public class SqlHistoryTemplateDAO implements ApplicationRunner {
      * @param sqlHistoryDO sqlHistoryDO
      */
     public void deleteById(SqlHistoryDO sqlHistoryDO) {
-        log.info("SqlHistoryTemplate deleteTable sqlHistoryDO: " + sqlHistoryDO);
         Integer id = sqlHistoryDO.getId();
         Boolean isLock = jdbcTemplate.queryForObject(
                 "select lock from sqlHistory where id = " + id + ";", Boolean.class);
