@@ -105,6 +105,13 @@
 			<groupId>org.opengauss</groupId>
 			<artifactId>opengauss-jdbc</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>org.intarkdb</groupId>
+			<artifactId>IntarkDB-jdbc</artifactId>
+			<version>1.0</version>
+			<scope>system</scope>
+			<systemPath>${project.basedir}/../../lib/intarkdb-jdbc-1.0.0.1.jar</systemPath>
+		</dependency>
 		<!-- elastic search java client -->
 		<dependency>
 			<groupId>co.elastic.clients</groupId>
@@ -205,52 +212,6 @@
 						</configuration>
 					</execution>
 				</executions>
-			</plugin>
-
-			<plugin>
-				<groupId>org.springframework.boot</groupId>
-				<artifactId>spring-boot-maven-plugin</artifactId>
-				<version>2.4.13</version>
-				<configuration>
-					<mainClass>com.nctigba.observability.log.ObservabilityPluginBootApplication</mainClass>
-				</configuration>
-				<executions>
-					<execution>
-						<goals>
-							<goal>repackage</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-
-			<plugin>
-				<groupId>com.gitee.starblues</groupId>
-				<artifactId>spring-brick-maven-packager</artifactId>
-				<version>${spring-brick.version}</version>
-				<configuration>
-					<mode>prod</mode>
-					<pluginInfo>
-						<id>${plugin-id}</id>
-						<bootstrapClass>com.nctigba.observability.log.ObservabilityPluginApplication</bootstrapClass>
-						<version>${project.version}</version>
-						<provider>ncti-gba</provider>
-						<description>Intelligent OPS</description>
-					</pluginInfo>
-				</configuration>
-				<executions>
-					<execution>
-						<goals>
-							<goal>repackage</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-surefire-plugin</artifactId>
-				<configuration>
-					<skip>true</skip>
-				</configuration>
 			</plugin>
 
 			<plugin>
@@ -366,6 +327,52 @@
 						</configuration>
 					</execution>
 				</executions>
+			</plugin>
+
+			<plugin>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+				<version>2.4.13</version>
+				<configuration>
+					<mainClass>com.nctigba.observability.log.ObservabilityPluginBootApplication</mainClass>
+				</configuration>
+				<executions>
+					<execution>
+						<goals>
+							<goal>repackage</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+
+			<plugin>
+				<groupId>com.gitee.starblues</groupId>
+				<artifactId>spring-brick-maven-packager</artifactId>
+				<version>${spring-brick.version}</version>
+				<configuration>
+					<mode>prod</mode>
+					<pluginInfo>
+						<id>${plugin-id}</id>
+						<bootstrapClass>com.nctigba.observability.log.ObservabilityPluginApplication</bootstrapClass>
+						<version>${project.version}</version>
+						<provider>ncti-gba</provider>
+						<description>Intelligent OPS</description>
+					</pluginInfo>
+				</configuration>
+				<executions>
+					<execution>
+						<goals>
+							<goal>repackage</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<configuration>
+					<skip>true</skip>
+				</configuration>
 			</plugin>
 
 		</plugins>

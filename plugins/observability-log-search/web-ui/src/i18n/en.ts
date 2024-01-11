@@ -77,6 +77,7 @@ export default {
         gsOmLogPath: 'gs_om log path',
         gsInstallLogPath: 'gs_install log path',
         gsLocalLogPath: 'gs_local log path',
+        cmLogPath: 'cm log path',
         continueUpload: 'continue to upload',
         installServerAlert:'please install the server first!',
         installedServerAlert: 'it is only allow to install one server!',

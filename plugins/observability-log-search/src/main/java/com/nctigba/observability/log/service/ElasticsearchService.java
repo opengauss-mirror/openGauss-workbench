@@ -24,18 +24,12 @@
 
 package com.nctigba.observability.log.service;
 
-import java.io.File;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.nio.file.Files;
-import java.util.Arrays;
-
-import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
-import org.opengauss.admin.common.core.domain.model.ops.WsSession;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ResourceLoader;
-import org.springframework.stereotype.Service;
-
+import cn.hutool.core.io.FileUtil;
+import cn.hutool.core.thread.ThreadUtil;
+import cn.hutool.core.util.NumberUtil;
+import cn.hutool.core.util.StrUtil;
+import cn.hutool.http.HttpUtil;
+import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.nctigba.observability.log.config.ElasticsearchProvider;
 import com.nctigba.observability.log.model.entity.NctigbaEnvDO;
@@ -44,13 +38,18 @@ import com.nctigba.observability.log.service.AbstractInstaller.Step.status;
 import com.nctigba.observability.log.util.Download;
 import com.nctigba.observability.log.util.SshSession;
 import com.nctigba.observability.log.util.SshSession.command;
+import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
+import org.opengauss.admin.common.core.domain.model.ops.WsSession;
+import org.opengauss.admin.common.exception.CustomException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ResourceLoader;
+import org.springframework.stereotype.Service;
 
-import cn.hutool.core.io.FileUtil;
-import cn.hutool.core.thread.ThreadUtil;
-import cn.hutool.core.util.NumberUtil;
-import cn.hutool.core.util.StrUtil;
-import cn.hutool.http.HttpUtil;
-import cn.hutool.json.JSONUtil;
+import java.io.File;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.nio.file.Files;
+import java.util.Arrays;
 
 @Service
 public class ElasticsearchService extends AbstractInstaller {
@@ -84,8 +83,9 @@ public class ElasticsearchService extends AbstractInstaller {
             curr = nextStep(wsSession, steps, curr);
             var env = envMapper
                     .selectOne(Wrappers.<NctigbaEnvDO>lambdaQuery().eq(NctigbaEnvDO::getType, type.ELASTICSEARCH));
-            if (env != null)
+            if (env != null) {
                 throw new RuntimeException("elasticsearch exists");
+            }
             env = new NctigbaEnvDO().setHostid(hostId).setPort(port).setPath(path).setType(type.ELASTICSEARCH)
                     .setPath(SRC);
             // 生成数据库记录,入库
@@ -94,10 +94,11 @@ public class ElasticsearchService extends AbstractInstaller {
             try {
                 curr = nextStep(wsSession, steps, curr);
                 OpsHostEntity hostEntity = hostFacade.getById(hostId);
-                if (hostEntity == null)
+                if (hostEntity == null) {
                     throw new RuntimeException("host not found");
+                }
                 env.setHost(hostEntity);
-                if (rootPassword != null)
+                if (rootPassword != null) {
                     try (var session = SshSession.connect(hostEntity.getPublicIp(), hostEntity.getPort(), "root",
                             encryptionUtils.decrypt(rootPassword));) {
                         String vm = session.execute("/usr/sbin/sysctl -n vm.max_map_count");
@@ -108,6 +109,7 @@ public class ElasticsearchService extends AbstractInstaller {
                     } catch (Exception e) {
                         throw new RuntimeException("root password error", e);
                     }
+                }
                 var user = getUser(hostEntity, username, rootPassword);
                 env.setUsername(username);
                 try (var session = SshSession.connect(hostEntity.getPublicIp(), hostEntity.getPort(), username,
@@ -116,16 +118,18 @@ public class ElasticsearchService extends AbstractInstaller {
                     curr = nextStep(wsSession, steps, curr);
                     session.execute("mkdir -p " + path);
                     var vm = session.execute("/usr/sbin/sysctl -n vm.max_map_count");
-                    if (NumberUtil.parseInt(vm) < 262144)
+                    if (NumberUtil.parseInt(vm) < 262144) {
                         throw new RuntimeException(
                                 "please set vm.max_map_count to upper than 262144, command:echo vm.max_map_count = 262144 >> /etc/sysctl.conf &&sysctl -p");
+                    }
                     var arch = session.execute(command.ARCH);
                     String name = NAME + arch;
                     String tar = name + TAR;
                     if (!session.test(command.STAT.parse(SRC))) {
                         if (!session.test(command.STAT.parse(tar))) {
                             var pkg = envMapper.selectOne(Wrappers.<NctigbaEnvDO>lambdaQuery()
-                                    .eq(NctigbaEnvDO::getType, type.ELASTICSEARCH_PKG).like(NctigbaEnvDO::getPath, tar));
+                                    .eq(NctigbaEnvDO::getType, type.ELASTICSEARCH_PKG).like(
+                                            NctigbaEnvDO::getPath, tar));
                             if (pkg == null) {
                                 var f = Download.download(PATH + tar, "pkg/" + tar);
                                 pkg = new NctigbaEnvDO().setPath(f.getCanonicalPath()).setType(type.ELASTICSEARCH_PKG);
@@ -143,21 +147,21 @@ public class ElasticsearchService extends AbstractInstaller {
                     // @formatter:off
                     FileUtil.appendUtf8String(
                             "path.data: " + "data" + System.lineSeparator()
-                            + "path.logs: " + "logs" + System.lineSeparator()
-                            + "cluster.name: dbTools-es" + System.lineSeparator()
-                            + "cluster.initial_master_nodes: [\"node1\"]" + System.lineSeparator()
-                            + "discovery.seed_hosts: [\"127.0.0.1\"]" + System.lineSeparator()
-                            + "node.name: node1" + System.lineSeparator()
-                            + "network.host: 0.0.0.0" + System.lineSeparator()
-                            + "http.port: " + port + System.lineSeparator()
-                            + "http.host: 0.0.0.0" + System.lineSeparator()
-                            + "transport.host: 0.0.0.0" + System.lineSeparator()
-                            + "http.cors.enabled: true" + System.lineSeparator()
-                            + "http.cors.allow-origin: \"*\"" + System.lineSeparator()
-                            + "xpack.security.enrollment.enabled: true" + System.lineSeparator()
-                            + "xpack.security.enabled: false" + System.lineSeparator()
-                            + "xpack.security.http.ssl.enabled: false" + System.lineSeparator()
-                            + "xpack.security.transport.ssl.enabled: false"
+                                    + "path.logs: " + "logs" + System.lineSeparator()
+                                    + "cluster.name: dbTools-es" + System.lineSeparator()
+                                    + "cluster.initial_master_nodes: [\"node1\"]" + System.lineSeparator()
+                                    + "discovery.seed_hosts: [\"127.0.0.1\"]" + System.lineSeparator()
+                                    + "node.name: node1" + System.lineSeparator()
+                                    + "network.host: 0.0.0.0" + System.lineSeparator()
+                                    + "http.port: " + port + System.lineSeparator()
+                                    + "http.host: 0.0.0.0" + System.lineSeparator()
+                                    + "transport.host: 0.0.0.0" + System.lineSeparator()
+                                    + "http.cors.enabled: true" + System.lineSeparator()
+                                    + "http.cors.allow-origin: \"*\"" + System.lineSeparator()
+                                    + "xpack.security.enrollment.enabled: true" + System.lineSeparator()
+                                    + "xpack.security.enabled: false" + System.lineSeparator()
+                                    + "xpack.security.http.ssl.enabled: false" + System.lineSeparator()
+                                    + "xpack.security.transport.ssl.enabled: false"
                             , elasticConfigFile);
                     // @formatter:on
                     session.execute("mkdir -p " + path + SRC + "/config");
@@ -178,9 +182,11 @@ public class ElasticsearchService extends AbstractInstaller {
                         ThreadUtil.sleep(3000L);
                         try {
                             HttpUtil.get("http://" + env.getHost().getPublicIp() + ":" + env.getPort());
+                            break;
                         } catch (Exception e) {
-                            if (i == 9)
-                                throw new RuntimeException("elastic.install.start.fail");
+                            if (i == 9) {
+                                throw new CustomException("elastic.install.start.fail" + e.getMessage());
+                            }
                         }
                     }
                 }
@@ -217,13 +223,15 @@ public class ElasticsearchService extends AbstractInstaller {
         try {
             curr = nextStep(wsSession, steps, curr);
             var env = envMapper.selectById(id);
-            if (env == null)
+            if (env == null) {
                 throw new RuntimeException("id not found");
+            }
 
             curr = nextStep(wsSession, steps, curr);
             OpsHostEntity hostEntity = hostFacade.getById(env.getHostid());
-            if (hostEntity == null)
+            if (hostEntity == null) {
                 throw new RuntimeException("host not found");
+            }
             env.setHost(hostEntity);
 
             var user = hostUserFacade.listHostUserByHostId(hostEntity.getHostId()).stream().filter(e -> {

@@ -28,9 +28,9 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType.Type;
+import com.nctigba.observability.log.mapper.NctigbaEnvMapper;
 import com.nctigba.observability.log.model.entity.NctigbaEnvDO;
 import com.nctigba.observability.log.model.entity.NctigbaEnvDO.type;
-import com.nctigba.observability.log.mapper.NctigbaEnvMapper;
 import com.nctigba.observability.log.service.ClusterManager;
 import com.nctigba.observability.log.service.ElasticsearchService;
 import com.nctigba.observability.log.service.FilebeatService;
@@ -92,8 +92,8 @@ public class EnvironmentController {
      * @param nodeId log nodeId
      * @return String
      */
-    @GetMapping("/logPath/{nodeId}")
-    public String logPath(@PathVariable String nodeId) {
+    @GetMapping("/logPath")
+    public String logPath(@RequestParam String nodeId) {
         String logPathSql = "select name,setting from pg_settings where name in ('data_directory','log_directory');";
         try (var conn = clusterManager.getConnectionByNodeId(nodeId);
              var st = conn.createStatement(); var rs = st.executeQuery(logPathSql)) {
@@ -106,10 +106,15 @@ public class EnvironmentController {
                     suffixPath = rs.getString(2);
                 }
             }
-            return prefixPath + "/" + suffixPath;
+            String logPath;
+            if (suffixPath != null && !suffixPath.startsWith("/")) {
+                logPath = prefixPath + "/" + suffixPath;
+            } else {
+                logPath = suffixPath;
+            }
+            return logPath;
         } catch (SQLException e) {
-            e.printStackTrace();
-            return e.getMessage();
+            return "";
         }
     }
 
