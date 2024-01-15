@@ -209,7 +209,7 @@ const cuFinish = (type: string) => {
   }
 }
 const toDetail = (record: KeyValue) => {
-  window.$?.props.methods.jump({
+  window.$wujie?.props.methods.jump({
     name: `Static-pluginBase-opsModelingDataflowDetail`,
     query: { id: record.id }
   })
