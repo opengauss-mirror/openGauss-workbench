@@ -6,7 +6,13 @@
 
 
     <select id="pageBackup" resultType="org.opengauss.admin.plugin.vo.ops.BackupVO">
-        select b.*,h.public_ip,h.private_ip,h.hostname,b.create_time from ops_backup b left join ops_host h on b.host_id = h.host_id
+        select
+        b.backup_id,b.cluster_id,b.host_id,b.cluster_node_id,b.backup_path,b.remark,b.create_by,
+        b.create_time,b.update_by,b.update_time,h.public_ip,h.private_ip,h.hostname,b.create_time from
+        ops_backup
+        b left
+        join ops_host h
+        on b.host_id = h.host_id
         where 1=1
         <if test="clusterId!=null and clusterId!=''">
             AND b.cluster_id = #{clusterId}

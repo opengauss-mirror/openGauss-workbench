@@ -558,7 +558,7 @@ COMMENT ON TABLE "sys_user" IS '用户信息表';
 -- ----------------------------
 
 CREATE TABLE IF NOT EXISTS "sys_user_role" (
-    "id" int8 NOT NULL PRIMARY KEY,
+    "id" int8 NOT NULL PRIMARY KEY AUTOINCREMENT,
     "user_id" int8 NOT NULL,
     "role_id" int8 NOT NULL
 )

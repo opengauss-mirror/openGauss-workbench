@@ -68,7 +68,16 @@ public class OpsHostTagService extends ServiceImpl<OpsHostTagMapper, OpsHostTagE
 
     @Override
     public IPage<HostTagPageVO> page(Page page, String name) {
-        return opsHostTagMapper.page(page,name);
+        IPage<HostTagPageVO> tagPageVOIPage = opsHostTagMapper.page(page, name);
+        if (tagPageVOIPage.getRecords().size() != 0) {
+            List<HostTagPageVO> records = tagPageVOIPage.getRecords();
+            for (HostTagPageVO record : records) {
+                if (record.getRelNum() == null) {
+                    record.setRelNum(0);
+                }
+            }
+        }
+        return tagPageVOIPage;
     }
 
     @Override
