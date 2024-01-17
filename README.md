@@ -74,7 +74,9 @@ mkdir config files ssl logs
    system.defaultStoragePath: /ops/files  
    server.ssl.key-store: /ops/ssl/keystore.p12
    logging.file.path: /ops/logs
-   还有数据库采用openGauss请正确配置连接信息.
+
+   数据库可选用OpenGauss或轻量嵌入式数据库Intarkdb，可参考第6点进行配置与切换.目前datakit、base-ops和alert-monitor在启动时会在数据库初始化数据
+
 4. 生成密钥信息
    ```shell
    keytool -genkey -noprompt \
@@ -91,7 +93,7 @@ mkdir config files ssl logs
 
      **注意: 这里的storepass与配置文件中的key-store-password应该保持一致。keystore路径即为配置文件中的key-store路径** 
 
-5.启动与日常运维
+5. 启动与日常运维
 
 启动应用：
 
@@ -108,6 +110,22 @@ mkdir config files ssl logs
 检查应用状态：
 
 `sh ./run.sh status`
+
+6. 平台默认使用IntarkDB作为后台数据库，如果需要切换使用openGauss，修改application-temp.yml文件数据库驱动及连接信息，将IntarkDB部分注释，并反注释openGauss部分，填写对应的数据库连接信息
+```yml
+  datasource:
+    type: com.alibaba.druid.pool.DruidDataSource
+    
+    # For openGauss
+#    driver-class-name: org.opengauss.Driver
+#    url: jdbc:opengauss://ip:port/database?currentSchema=public&batchMode=off
+#    username: dbuser
+#    password: dbpassword
+    
+    # For Intarkdb
+    driver-class-name: org.intarkdb.IntarkdbJDBC
+    url: jdbc:intarkdb:data/datakit
+```
 
 ## 参与开发
 插件开发请参考 openGauss-datakit/doc 目录下的开发手册

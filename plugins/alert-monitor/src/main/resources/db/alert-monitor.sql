@@ -940,22 +940,22 @@ alter table "public"."alert_rule_item" ALTER COLUMN rule_exp TYPE text;
 delete from public.alert_rule_item_src where id = 18;
 delete from public.alert_rule_item_exp_src where id = 45;
 
-update public.alert_rule_item_src set name_zh = 'CPU使用率' and name_en = 'CPU Usage' where name = 'cpuUsage';
-update public.alert_rule_item_src set name_zh = '内存使用率' and name_en = 'Memory Usage' where name = 'memoryUsage';
-update public.alert_rule_item_src set name_zh = '网络输入速率' and name_en = 'Network Receive Rate' where name =
+update public.alert_rule_item_src set name_zh = 'CPU使用率' , name_en = 'CPU Usage' where name = 'cpuUsage';
+update public.alert_rule_item_src set name_zh = '内存使用率' , name_en = 'Memory Usage' where name = 'memoryUsage';
+update public.alert_rule_item_src set name_zh = '网络输入速率' , name_en = 'Network Receive Rate' where name =
 'networkReceiveRate';
-update public.alert_rule_item_src set name_zh = '网络输出速率' and name_en = 'Network Transmit Rate' where name =
+update public.alert_rule_item_src set name_zh = '网络输出速率' , name_en = 'Network Transmit Rate' where name =
 'networkTransmitRate';
-update public.alert_rule_item_src set name_zh = '锁数量' and name_en = 'Lock Count' where name = 'lockCount';
-update public.alert_rule_item_src set name_zh = '锁时间' and name_en = 'Lock Run Time' where name = 'lockTime';
-update public.alert_rule_item_src set name_zh = '数据库连接数' and name_en = 'Database connection count' where name =
+update public.alert_rule_item_src set name_zh = '锁数量' , name_en = 'Lock Count' where name = 'lockCount';
+update public.alert_rule_item_src set name_zh = '锁时间' , name_en = 'Lock Run Time' where name = 'lockTime';
+update public.alert_rule_item_src set name_zh = '数据库连接数' , name_en = 'Database connection count' where name =
 'connectionCount';
-update public.alert_rule_item_src set name_zh = '慢sql运行时间' and name_en = 'Slow Sql Run Time' where name =
+update public.alert_rule_item_src set name_zh = '慢sql运行时间' , name_en = 'Slow Sql Run Time' where name =
 'slowsqlRunTime';
-update public.alert_rule_item_src set name_zh = '表空间容量' and name_en = 'Tablespace Size', params = '', params_explanation
+update public.alert_rule_item_src set name_zh = '表空间容量' , name_en = 'Tablespace Size', params = '', params_explanation
  = '',alert_params = 'datname' where name = 'tablespaceSize';
-update public.alert_rule_item_src set name_zh = '阻塞会话数' and name_en = 'Blocked Session Count' where name = 'waitingCount';
-update public.alert_rule_item_src set name_zh = '数据库运行状态' and name_en = 'Database Status' where name = 'pgDbStatus';
+update public.alert_rule_item_src set name_zh = '阻塞会话数' , name_en = 'Blocked Session Count' where name = 'waitingCount';
+update public.alert_rule_item_src set name_zh = '数据库运行状态' , name_en = 'Database Status' where name = 'pgDbStatus';
 
 -- 数据库可用性
 delete from public.alert_rule where id = 6;

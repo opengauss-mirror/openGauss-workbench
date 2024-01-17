@@ -25,12 +25,18 @@ package org.opengauss.admin.plugin.config;
 
 import com.gitee.starblues.bootstrap.PluginContextHolder;
 import com.gitee.starblues.spring.environment.EnvironmentProvider;
+import org.opengauss.admin.plugin.enums.DbDataLocationEnum;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.jdbc.DataSourceBuilder;
+import org.springframework.boot.jdbc.init.DataSourceScriptDatabaseInitializer;
+import org.springframework.boot.sql.init.DatabaseInitializationMode;
+import org.springframework.boot.sql.init.DatabaseInitializationSettings;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 
 import javax.sql.DataSource;
+import java.util.Optional;
 
 /**
  * @author LZW
@@ -57,4 +63,20 @@ public class DataSourceConfig {
                 .build();
     }
 
+    @Bean
+    @Profile("!dev")
+    DataSourceScriptDatabaseInitializer dataSourceScriptDatabaseInitializer(DataSource dataSource) {
+        EnvironmentProvider environmentProvider = PluginContextHolder.getEnvironmentProvider();
+        String driverClassName = environmentProvider.getString("spring.datasource.driver-class-name");
+        Optional<DbDataLocationEnum> dbDataLocationEnum = DbDataLocationEnum.of(driverClassName);
+        DatabaseInitializationSettings settings = new DatabaseInitializationSettings();
+        settings.setContinueOnError(true);
+        settings.setSeparator(";");
+        settings.setMode(DatabaseInitializationMode.ALWAYS);
+        if (dbDataLocationEnum.isEmpty()) {
+            return new DataSourceScriptDatabaseInitializer(dataSource, new DatabaseInitializationSettings());
+        }
+        settings.setDataLocations(dbDataLocationEnum.get().getLocations());
+        return new DataSourceScriptDatabaseInitializer(dataSource, settings);
+    }
 }

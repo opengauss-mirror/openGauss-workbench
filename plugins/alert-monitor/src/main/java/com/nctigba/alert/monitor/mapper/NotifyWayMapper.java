@@ -40,7 +40,11 @@ import com.nctigba.alert.monitor.model.dto.NotifyWayDTO;
  */
 @Mapper
 public interface NotifyWayMapper extends BaseMapper<NotifyWayDO> {
-    @Select("select t1.*,t2.notify_template_name from notify_way t1 left join notify_template t2 "
-            + "on t1.notify_template_id = t2.id  ${ew.customSqlSegment}")
+    @Select("select t1.id,t1.name,t1.notify_type,t1.send_way,t1.webhook,t1.sign,t1.phone,t1.email,t1.person_id,"
+        + "t1.dept_id,t1.header,t1.params,t1.body,t1.result_code,t1.snmp_ip,t1.snmp_port,t1.snmp_community,"
+        + "t1.snmp_oid,t1.snmp_version,t1.snmp_username,t1.snmp_auth_passwd,t1.snmp_priv_passwd,t1.notify_template_id,"
+        + "t1.create_time,t1.update_time,t1.is_deleted,t2.notify_template_name "
+        + "from notify_way t1 left join notify_template t2 "
+        + "on t1.notify_template_id = t2.id  ${ew.customSqlSegment}")
     Page<NotifyWayDTO> selectDtoPage(Page page, @Param(Constants.WRAPPER) QueryWrapper queryWrapper);
 }
